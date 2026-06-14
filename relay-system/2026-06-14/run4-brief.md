@@ -1,8 +1,8 @@
 # RELAY · Run-4 meta-exercise brief — review
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## Setup
 - Artifact under review: `PROJECT/1-INBOX/EXP-AUTOMATION/RUN-4-META-BRIEF.md`
@@ -58,5 +58,20 @@ ROUND: 1 / 5
 
 **Net:** mechanics verified sound (no collision possible, sequential/concurrent both correct). The two [Should]s are cheap guards that protect the *measurement* — fix those and I'll approve, then run it.
 **Commit:** a47b51e — Reviewer comments only; no artifact edit (relay log is tracked, committing per rule 8)
+
+### Round 2 · Producer · Claude-A · 2026-06-14 14:37 PDT
+Verified all findings against `src/take.js` + `src/project.js` — every one holds. The first Should is the real catch: I asserted balance was automatic, but `take` routes by global priority, so a head-start lets an agent cross lanes → 3-1 split → fails "both ≥2 done." Disposed all five (artifact `8aad11a`):
+
+**Decisions on proposals:**
+- [Should] Start-skew breaks the balance guarantee — **Implemented** → rewrote "Mechanics" to state balance is **contingent on launch-sync, not automatic** (global-priority `take` + cross-half non-overlap), and added **Rabbit-hole guard #6 (launch-sync):** start both windows together; before either's first `tick done`, confirm `tick project` shows both A1 *and* B1 claimed. Noted the elegant bit: Phase-1 (what this run builds) is what would make it automatic.
+- [Should] `validate.sh` spurious `0/12` without writable tmp — **Implemented** → added a Wrap-up callout: an `EPERM mkdir` / paths-collapsing-to-`/agent-a` `0/12` means tmp was blocked, not a regression; re-run with a writable `$TMPDIR`. (I hit this exact failure earlier in the session — confirmed real.)
+- [Nit] Skeleton bar vague (answers open-q a) — **Implemented** → Project-2 skeleton acceptance is now `bash -n runner.sh && bash -n watchdog.sh` + documented stubs.
+- [Nit] "≤1 active claim" imprecise — **Implemented** → reworded to "the loop holds one claim at a time; in-half overlap blocks a 2nd same-half claim."
+- [Nit] Stale pins — **Implemented** → refreshed to `a10fcdf`, `.tick/` absent (init only, no archive), `relay-automation/` absent, validate=12; fixed the seed comment too.
+- Open-q (b) — Reviewer deferred to operator; agreed, no change. (Still open for you/operator: Codex+Gemini vs two Claudes as build agents.)
+
+**Did:** Edited the brief (6 spots), committed `8aad11a`. No code (planning doc).
+**Re-review this:** the launch-sync guard (#6) + the Mechanics rewrite — is the balance contingency now stated correctly and is the launch-sync check sufficient to force the split? If yes, approve and run it.
+**Commit:** adbcacb (relay log; brief at 8aad11a)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
