@@ -10,7 +10,7 @@ An early skill to let Claude Code, Codex, and Gemini work the same codebase conc
 
 ## What it is
 
-`tick` is a tiny CLI backed by an event log under `.tick/events/`. Each event is a separate JSONL file (one event per file = disjoint files = zero merge conflicts). `tick project` folds events into `.tick/STATE.md`. Coordination is **local-transport** (since Run 2): every verb is a pure append to a shared local `.tick/events/` — no git push or fetch per event. Peer agents see each other's events by reading the same shared directory, and a per-repo `O_EXCL` lock (`withClaimLock`, under `.tick/locks/`) serialises concurrent claims into a real mutex. `git` is still used for exactly one thing: `tick analyze` attributes work commits by author name.
+`tick` is a tiny CLI backed by an event log under `.tick/events/`. Each event is a separate JSONL file (one event per file = disjoint files = zero merge conflicts). `tick project` folds events into `.tick/STATE.md`. Coordination is **local-transport** (since Run 2): every verb is a pure append to a shared local `.tick/events/` — no git push or fetch per event. Peer agents see each other's events by reading the same shared directory, and a per-repo `O_EXCL` lock (`withClaimLock`, under `.tick/locks/`) serialises concurrent claims into a real mutex. `git` is used only incidentally — `tick` locates the repo root via `git rev-parse`, and `tick reap` defaults its actor name from `git config user.name`. Coordination state and `tick analyze` read only `.tick/`.
 
 ## Quickstart (single repo)
 
@@ -42,7 +42,7 @@ No verb touches the network — every verb appends locally to `.tick/events/`.
 | `tick ping <task> --agent <id> [--note "..."]` | Heartbeat on an active claim so `tick analyze` can tell a live claim from a parked/stalled one |
 | `tick info <task>` | Print a task's current state — status, priority, owner, declared paths |
 | `tick reap <agent> [--by <id>]` | Coordinator lever: release every active claim held by a presumed-crashed agent so peers can pick the work back up. Manual and logged — not auto-recovery. |
-| `tick analyze [--format human\|md\|json] [--since <ref>] [--write <file>]` | Audit a multi-agent run: walks `.tick/events/` + `git log` and reports per-agent compliance (claimed before editing? declared paths matched? scope/done/break used?) plus cross-cutting collisions. Reusable across testing phases. |
+| `tick analyze [--format human\|md\|json] [--write <file>]` | Audit a run from the event log alone: run window, **concurrent-claim time** (the primary metric), parked-claim suspects, and per-agent event counts (claims, dones, heartbeats, releases, scope changes, breaks). Drift / file-collision attribution is **not** automated — see [Auditing a real-agent run](#auditing-a-real-agent-run). |
 
 `--paths` accepts comma-separated globs: `--paths "src/auth/**,tests/auth/**"`.
 
@@ -57,7 +57,7 @@ export TICK_REPO_ROOT=/path/to/shared/repo   # same value in every agent's sessi
 
 Each agent passes its own ID with `--agent` on every verb. That flag — not git identity — is authoritative for claims; the old `--agent`-vs-`git config user.name` cross-check was removed in Run 2.
 
-> **Caveat — git identity in a shared tree.** `tick analyze` attributes *work commits* by git author name, but a single working tree has only one `git config user.name` at a time, so per-agent attribution degrades if all agents commit from the same tree (this flipping was observed in Run 2). If you need clean per-agent `analyze` output, give each agent its own checkout that points at the same shared `TICK_REPO_ROOT`, or attribute from the `--agent` field in the event log rather than from commit authorship. This is a known open edge — see [`RECAP.md`](RECAP.md).
+> **Caveat — per-agent attribution is coarse in the shared-tree PoC.** Coordination itself doesn't need git identity (every claim carries `--agent`), so the shared tree is fine for running the protocol. Commit-level attribution is the soft spot: a single working tree has only one `git config user.name` at a time, and that identity was observed flipping between agents in Run 2. Treat the `--agent` field in the event log as the source of truth for who did what; richer multi-checkout attribution is future work — see [`RECAP.md`](RECAP.md).
 
 **Historical note.** Pre-Run-2 builds used a distributed transport: each critical event auto-`fetch`+`rebase`+`commit`+`push` so separate clones on a shared branch could see each other. That model — and its worktree friction (same-branch checkouts refused; per-child-branch pushes invisible to peers) — is what motivated the move to local transport. `bin/tick` no longer pushes.
 
@@ -157,13 +157,13 @@ After any multi-agent session — Day 5 hand-test, future Phase 2 runs, anything
 ./bin/tick analyze --write REAL-AGENT-OBSERVATIONS.md       # append/replace the auto-analyzed section in-place
 ```
 
-The analyzer walks `.tick/events/` and `git log`, attributes each work commit to whichever agent's claim window contains it (using git author name as the agent identifier — set `git config user.name` to your agent ID; see the shared-tree caveat above), and reports per-agent:
+The analyzer reads `.tick/events/` only — the git transport was removed in Run 2, so there are no work commits to attribute. It reports:
 
-- **Claimed before editing?** Counts work commits not covered by any active claim by that agent.
-- **Declared paths matched actual edits?** Per-commit comparison of touched files against the active claim's globs (claim paths ∪ scope_changed paths).
-- **Used `tick scope` / `tick done` / `tick break`?** Direct event counts.
-- **Drift examples + unclaimed work examples** for forensic inspection.
+- **Run window** — earliest to latest event, plus a total event count broken down by type.
+- **Concurrent-claim time (primary metric)** — how much of the run window had two agents holding active claims at once, as both a duration and a percentage.
+- **Parked-claim suspects** — claims that ran too long without a `tick ping` heartbeat; any suspect disqualifies the run.
+- **Per-agent counts** — claims, dones (`tick done`), heartbeats (`tick ping`), releases (and how many were handoffs), breaks, scope changes, comments.
 
-Cross-cutting: file collisions (same file edited by 2+ agents) and wasted work (commits on circuit-broken tasks).
+**Not automated:** per-commit path drift and file-collision attribution. Those depended on the git-author-per-agent signal the old transport provided; in the current PoC the coordinator inspects `git diff` by hand. There is no `--since` flag.
 
 Subjective questions in REAL-AGENT-OBSERVATIONS.md (what the prompt needed, what felt like friction) still require each agent to self-report.

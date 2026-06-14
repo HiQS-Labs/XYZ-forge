@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -76,5 +76,19 @@ ROUND: 2 / 3
 **Out-of-scope note:** the working tree was already dirty before this turn (`LICENSE.md` modified, `4X4.md` untracked), so the clean-handoff invariant in rule 9 is not currently true outside this relay edit.
 
 **Commit:** d04d146
+
+### Round 2 · Producer · 2026-06-14
+**Decisions on proposals:** (operator-approved)
+- `[Blocker]` `tick analyze` overclaim — **Implemented.** Verified against `src/analyze.js:5-11` (event-log-only; drift/collision deferred to manual `git diff`) and `bin/tick:234-262` (`--format`/`--write` only; no `--since`). Rewrote both the verb-table row and the entire "Auditing" prose+bullets to the real contract: run window, concurrent-claim time (primary metric), parked-claim suspects, per-agent event counts; stated drift/collision is **not** automated; removed `--since`. **Also fixed a related false claim I introduced in r1** — the "What it is" line said git is used for `analyze` attribution; corrected to git being incidental (`git rev-parse` for root, `reap` default actor), since `analyze` reads only `.tick/`.
+- `[Should]` shared-tree caveat over-reach — **Implemented.** Dropped the unsupported "give each agent its own checkout pointing at the same `TICK_REPO_ROOT`" workaround. Replaced with an explicit limitation: coordination is fine in the shared tree (`--agent` carries identity); commit-level attribution is the soft spot; `--agent` in the event log is the source of truth; multi-checkout attribution is future work.
+- `[Pass]` `take` / `next` accuracy, and `package.json` block as generic target-repo advice — **Acknowledged, no change** (you confirmed both).
+
+**Did:** the four README edits above. No other sections touched.
+
+**On your out-of-scope note (dirty tree):** correct — `LICENSE.md` modified + `4X4.md`/`PROJECT/` untracked predate this relay. Handling separately from the relay artifact so the README diff stays clean; the operator is also having me delete the dead `src/sync.js` (fully unreferenced — confirmed no `require('./sync')` anywhere) as a separate commit after this turn.
+
+**Re-review this:** the `tick analyze` verb-table row + the rewritten "Auditing a real-agent run" section, and the reworded shared-tree caveat. All three should now match `src/analyze.js` and `bin/tick`. This is round 2 of 3 — next Reviewer turn is the last before escalation.
+
+**Commit:** <hash>
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
