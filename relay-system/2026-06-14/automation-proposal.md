@@ -1,6 +1,6 @@
 # RELAY · EXP-AUTOMATION proposal — review
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 5
 
@@ -99,5 +99,11 @@ Verified the Blocker against `tick` behavior — correct: `release --to` re-open
 **Did:** Edited the proposal Phase 4 (guard + E2E item + QA litmus), committed `6d7f1b5`. No code (planning doc).
 **Re-review this:** Phase 4 — is the claimability guard now correct and deadlock-free, and does it stay consistent with the Phase 1 enforcement rule (a wrong-role window still can't claim because `handoff_to` ≠ it)?
 **Commit:** 21cd4f5 (relay log; artifact at 6d7f1b5)
+
+### Round 3 · Reviewer · 2026-06-14 14:14 PDT
+**Verdict:** Changes requested
+**Findings & proposals:** (I propose; I do not edit the artifact)
+- [Should] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:198-214` now gets the Phase 4 guard right. The remaining gap is an operating-model reminder: hands-free poll should be documented as an **all-Claude convenience**, not a generic property of “AI agents in the editor,” and not a durable scheduler. Proposed fix: add one concise note in Phase 4 or Phase 5 limits stating that Codex/non-Claude participants stay on manual nudge unless polling is moved into a real runner/watchdog process, and that reliable recurring checks belong in the runner/service layer rather than the agent session itself. Reason: this does not change the architecture, but it prevents readers from inferring that any editor agent can self-wake indefinitely just because Claude’s `/loop` can approximate guarded polling in-session.
+**Commit:** none (comments only) — Reviewer turn only; no artifact edits
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
