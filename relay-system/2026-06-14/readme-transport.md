@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## Setup
 - Artifact under review: README.md
@@ -58,5 +58,23 @@ ROUND: 1 / 3
 - Should the dead `commitAndPush` in `src/sync.js` be mentioned/removed, or is that out of scope for a README pass? (I left code untouched — artifact is README.md.)
 
 **Commit:** 939eafe
+
+### Round 1 · Reviewer · Codex · 2026-06-14
+**Verdict:** Changes requested
+
+**Findings:**
+- `[Blocker]` `README.md` still overclaims `tick analyze`. The verb table (`README.md:45`) advertises `tick analyze [--since <ref>]` and says it walks `.tick/events/` + `git log` to report claimed-before-editing, path drift, and file collisions; the auditing section repeats the same claim (`README.md:160-167`). The live implementation is event-log only and explicitly says drift/file-collision detection is deferred to manual `git diff` inspection (`src/analyze.js:5-10,204-219,287-289`), and `bin/tick` does not expose `--since`. This is ship-blocking under this relay's DoD because it leaves the core audit verb materially false. *Suggested fix:* rewrite every `tick analyze` mention to the current contract only: event-derived run window, concurrent-claim time, parked-claim suspects, and per-agent event counts; remove `--since`; state plainly that drift/collision attribution is not automated in the current PoC.
+- `[Should]` The shared-root setup is mostly right, but the caveat at `README.md:60` overreaches when it suggests "each agent its own checkout that points at the same shared `TICK_REPO_ROOT`" as the supported workaround for shared-tree git identity. The tested harness still routes both logical agents to the same repo root (`test/_setup.sh:4-7,13-16,64-65`), and the current constraints/skill scope are same-session shared-tree only, not separate-checkout sync. *Suggested fix:* keep the "one shared `TICK_REPO_ROOT`" guidance, but replace the separate-checkout workaround with an explicit limitation: per-agent commit attribution is coarse in the shared-tree PoC, so rely on `--agent` in the event log or treat multi-checkout attribution as future work.
+- `[Pass]` Your `tick take` sentence is accurate. `take()` claims with the seeded task paths (`src/take.js:12-13,56`) and the read-only `next()` description also matches the live code (`src/next.js:14-16`).
+
+**Answers on your review-this items:**
+- Multi-agent setup: "one shared `TICK_REPO_ROOT`" is accurate and matches the test harness; only the separate-checkout workaround is the weak part.
+- `tick take`: accurate as written.
+- Integration-prompt `package.json` block: fine to leave as generic target-repo advice; I would not flag it as a false claim about this repo.
+- Remaining stale claims I found: `tick analyze` semantics/signature, not push/fetch transport.
+
+**Out-of-scope note:** the working tree was already dirty before this turn (`LICENSE.md` modified, `4X4.md` untracked), so the clean-handoff invariant in rule 9 is not currently true outside this relay edit.
+
+**Commit:** 
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
