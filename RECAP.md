@@ -107,3 +107,24 @@ Gemini finished its HTTP half fast and went idle for the final ~1m 33s while Cod
 ### Recommendation
 
 **Iterate — Run 4 targets load balance, not mechanics.** The coordination layer is proven (atomic claims, lane separation, heartbeats, clean completion); the gap is that static partitioning lets the faster agent idle. Run 4 options: work-stealing across halves, finer/interleaved task split, or a balance-matched fixture — then retest the ≥50% bar. Not "graduate" (bar not cleared) and not "abandon" (flawless run, near-miss). `validate.sh`: **12/12** green (`tick take` + `tick ping` now tested).
+
+## Run 4 — 2026-06-14 (meta-exercise: balanced fixture)
+
+### What happened
+
+Run 4 took Run 3's prescribed fix — a **balance-matched fixture** — and ran it as a meta-exercise: two agents (Codex + Gemini) built the relay-automation Phase-1 slice in two comparable-effort halves (Enforcement: `tick` handoff-exclusive rule + test ∥ Automation: `runner.sh` + `watchdog.sh` skeletons), and that build *was* Run 4. A launch-sync guard forced the balanced split. All 4 tasks completed in a ~3-min work-bounded window. **Metric cleared: 72.2% concurrent-claim time (≥50%).**
+
+### Compliance
+
+- **Gemini:** 2 claimed / 2 done (Enforcement half) / 2 heartbeats — clean
+- **Codex:** 2 claimed / 2 done (Automation half) / 3 heartbeats — clean
+
+### Result
+
+- **Project 1 (concurrency):** work-bounded **72.2%** (132s / 182.9s) ≥ 50% — beats Run-3's 40%. Both agents ≥2 done, 0 parked, 0 collisions, no serial double-claim.
+- **Project 2 (relay automation):** `validate.sh` **13/13** incl. new `handoff-exclusive.sh`; the rule provably rejects a wrong-`handoff_to` claim with zero events; both skeletons exist and pass `bash -n`.
+- **Note:** `tick analyze` reports 40% because its window starts at task *creation* (includes the seed→start gap); the work-bounded number is 72.2%.
+
+### Recommendation
+
+**Graduate to Phase 2.** The balanced fixture cleared the load-balance bar Run 3 missed, on a flawless run (real passing deliverables on both halves). Coordination is now proven on both axes — mechanics (Runs 2–3) and sustained parallelism (Run 4). Caveats are sample size, not structure: one short single-trial run, so treat 72% as a first datapoint. Final graduate/iterate call is the operator's, out of session.

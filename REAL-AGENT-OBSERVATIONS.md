@@ -183,3 +183,92 @@ Run 4 should target balance rather than mechanics:
 - **A balanced fixture** where the two halves take comparable effort.
 
 Then retest the ≥50% bar. Do **not** graduate to Phase 2 until sustained parallelism clears the bar — but note the result is a near-miss on a flawless run, not a structural dead end (so not "abandon").
+
+---
+
+## Run 4 — 2026-06-14 (meta-exercise: balanced fixture)
+
+### Run metadata
+
+- **Date:** 2026-06-14 (single session)
+- **Duration:** work-bounded window **3m 02.9s** (first `task.claimed` 21:48:16.699Z → last `task.done` 21:51:19.580Z). ~2m 30s elapsed between coordinator seeding (21:45:46Z) and agent start — excluded from the metric.
+- **Fixture codebase:** **this repo (`xyz-3-agents-swarm`) itself** — the meta-exercise. The 4 tasks build the relay-automation Phase-1 slice (Project 2), and the act of building it *is* Run 4 (Project 1).
+- **Seeded tasks:** 4 — Enforcement half (TASK-A1 `tick` handoff-exclusive rule, TASK-A2 its test) ∥ Automation half (TASK-B1 `runner.sh` skeleton, TASK-B2 `watchdog.sh` skeleton). Deliberately balanced: a fiddly code change + test ≈ two real skeletons.
+- **Worktree topology:** shared local repo, shared `.tick/events/`, single session, branch `main`
+- **Protocol:** `tick take` + `tick ping`; balanced disjoint lanes; **launch-sync guard (#6)** to force the split
+
+### Outcome: ALL TASKS COMPLETE, mechanically clean — metric PASSED (72% ≥ 50%)
+
+All 4 tasks done; both acceptances met (see below). 0 circuit breaks, 0 file collisions, 0 parked suspects, cap held. The balanced fixture resolved Run-3's load-imbalance by construction: neither agent ran dry — gemini's A1→A2 and codex's B1→B2 stayed near-simultaneous for the whole window.
+
+**Redefined success criterion — PASS:**
+
+| Check | Result | Bar | Pass? |
+|---|---|---|---|
+| Work-bounded concurrent-claim time | **72.2%** (132s / 182.9s) | ≥ 50% | ✅ |
+| Both agents ≥ 2 done | gemini 2, codex 2 | ≥ 2 each | ✅ |
+| Disqualifier — parked claims | 0 suspects | none | ✅ |
+| Disqualifier — serial double-claim | none (lanes never crossed) | none | ✅ |
+| Cross-check — overlap = real edits | validate 13/13 + both skeletons `bash -n` clean | — | ✅ |
+
+**Why the metric passed (vs Run-3's 40%):** the balanced fixture eliminated the idle tail. The launch-sync guard held by construction — A1 claimed 21:48:16.699Z, B1 claimed 21:48:18.949Z (**2.25s apart, before any `done`**), so the in-half overlap exclusion locked each agent into its lane for task 2. No work-stealing needed; the two halves were comparable enough in effort that neither agent drained early.
+
+### Dual acceptance — both met
+
+- **Project 2 (relay automation):**
+  - A1+A2 → `validate.sh` **13/13** incl. the new `handoff-exclusive.sh` (was 12). The rule **provably rejects a wrong-`handoff_to` claim with zero events** — `test/handoff-exclusive.sh` asserts both the refusal and `INITIAL_EVENTS == FINAL_EVENTS`.
+  - B1+B2 → `relay-automation/runner.sh` (4.1K) + `watchdog.sh` (2.6K) exist, both pass `bash -n`, documented stubs.
+- **Project 1 (Run 4 concurrency):** work-bounded concurrent-claim = **72.2%** ≥ 50%. Beats Run-3's 40%.
+
+### Auto-analyzed (tick analyze)
+
+- **Run window (tool default, old metric):** `2026-06-14T21:45:46Z` → `2026-06-14T21:51:19Z` — shows **40%** / 5m 33s, **misleading** (denominator includes the ~2m 30s seed→start gap). The tool's *numerator* (concurrent time 2m 12s ≈ 132s) matches the hand calc; only its window differs. Use the work-bounded **72.2%** above.
+- **Total events:** 17 (created: 4, claimed: 4, heartbeat: 5, done: 4, circuit_break: 0)
+
+#### gemini — 2 claimed / 2 done / 2 heartbeats
+- Enforcement half (A1, A2). Claimed before editing: yes. Used `tick done`: both. Heartbeats: 2 (contract honored). Compliance: clean.
+
+#### codex — 2 claimed / 2 done / 3 heartbeats
+- Automation half (B1, B2). Claimed before editing: yes. Used `tick done`: both. Heartbeats: 3 (contract honored). Compliance: clean.
+
+### Cross-cutting
+
+- File collisions: none (disjoint lanes — `src`/`test`/`validate.sh` vs `relay-automation/`)
+- Parked-claim suspects: none
+- Wasted work on broken tasks: none
+- Cap held: no agent held > 2 claims at any point
+- Claim mechanics: `tick take` produced no observed race; launch-sync forced the balanced split exactly as designed
+
+### Caveats (honest)
+
+- **Small absolute window (~3 min).** The 72.2% is valid and clears the bar, but the run was short — a longer/larger balanced fixture would be a stronger datapoint. The metric is sound; the sample is small.
+- **Single trial.** One balanced run cleared the bar; this is the first ≥50% result, not a distribution.
+
+### Subjective observations
+
+_From the build agents' own feedback, gathered via relay `relay-system/2026-06-14/run4-feedback.md` (Codex `4414059`, Gemini `9d44555`)._
+
+**Codex (Automation half — `runner.sh` + `watchdog.sh` skeletons):**
+- *Prompt clarity:* mostly clear; the one guess was **how much initiative to take inside the lane** — the prompt named files + acceptance shape but not how opinionated the skeleton behavior should be beyond "parse clean" / Phase-1-sized.
+- *Friction:* the file-scoped commit + lane scoping worked but added bookkeeping — caught itself re-checking "am I allowed to touch this" more than thinking about the code.
+- *Protocol:* atomic claim + staying in-lane helped; the **launch-sync wait felt a bit ceremonial** once both agents were clearly active (front-loaded coordination overhead into a short run).
+- *One fix:* add an explicit **initiative bound** to the build prompt, e.g. *"implement the thinnest passing skeleton; no behavior beyond tests/acceptance unless specified."*
+
+**Gemini (Enforcement half — handoff-exclusive rule + `test/handoff-exclusive.sh`):**
+- *Prompt clarity:* clear and precise; paths explicitly bounded, acceptance concrete. Slight ambiguity: inferring that `tick take` yields "(no available task)" when remaining tasks are handoff-reserved for someone else — resolved by reading the CLI code.
+- *Friction:* low; `tick` verbs (`take`/`info`/`ping`/`done`) ergonomic. Minor testing friction: **`TICK_REPO_ROOT` was unbound** when adapting existing tests — had to realize local-transport tests use `$A`.
+- *Protocol:* worked seamlessly; atomic claim removed race cognitive overhead; strict lane = confident isolated work; heartbeats easy to interleave.
+- *One fix:* **standardize the test-harness env vars** (unify `TICK_REPO_ROOT` or document `$A` for test writing) so agents don't stumble on unbound vars when scaffolding new tests.
+
+**Actionable follow-ups (out of session):**
+1. **Build-prompt template** — add an "initiative bound" line (Codex). Cheap, removes a real guess point.
+2. **Test harness** — document/standardize `TICK_REPO_ROOT` vs `$A` for new tests (Gemini).
+3. **Launch-sync UX** — consider downgrading to a quick "both claimed?" confirmation rather than a wait once both agents are active (Codex). *Keep it for now* — it's what guaranteed the balanced split; treat as a polish item, not a protocol change.
+
+Both reports independently confirm the coordination mechanics (atomic claim, lane isolation, heartbeats) were low-friction; the remaining friction was at the **edges** — prompt initiative scope and test-env ergonomics — not the protocol itself. This strengthens, not weakens, the graduate recommendation.
+
+### Recommendation
+
+**Graduate to Phase 2.**
+
+Run 4 cleared the load-balance bar that Run 3 missed — **72.2% work-bounded concurrency** on a flawless run: both agents ≥2 done, zero collisions, zero parked claims, real passing deliverables (validate 13/13, both skeletons parse clean). It did so via the exact fix Run 3 prescribed (a balanced fixture), and the launch-sync guard forced the split by construction. The coordination protocol is now proven on *both* axes — mechanics (Runs 2–3) and sustained parallelism (Run 4). The honest caveats are sample size, not structure: one short single-trial run. Recommend graduating to Phase 2 while treating the 72% as a first datapoint to be confirmed by a longer balanced run if a stronger number is wanted. **Final graduate/iterate call is Noel's, out of session, per the brief.**
