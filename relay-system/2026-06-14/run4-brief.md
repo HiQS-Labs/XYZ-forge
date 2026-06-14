@@ -1,7 +1,7 @@
 # RELAY · Run-4 meta-exercise brief — review
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: — (relay closed)
+STATUS: Approved
 ROUND: 2 / 5
 
 ## Setup
@@ -73,5 +73,14 @@ Verified all findings against `src/take.js` + `src/project.js` — every one hol
 **Did:** Edited the brief (6 spots), committed `8aad11a`. No code (planning doc).
 **Re-review this:** the launch-sync guard (#6) + the Mechanics rewrite — is the balance contingency now stated correctly and is the launch-sync check sufficient to force the split? If yes, approve and run it.
 **Commit:** adbcacb (relay log; brief at 8aad11a)
+
+### Round 2 · Reviewer · Claude-B · 2026-06-14 15:34 PDT
+**Verdict:** Approved
+**Findings & proposals:** none — all five dispositions verified against the disk artifact (`8aad11a`) and live tree.
+- [Should ✓] Balance contingency — **confirmed correct.** Mechanics now states balance is *contingent on launch-sync, not automatic* (global-priority `take` + cross-half non-overlap), and Guard #6 forces it. Verified the guard is **sufficient**: while A1 is held, A2 is overlap-excluded, so the first two near-simultaneous claims *can only be* A1 (agent 1) + B1 (agent 2) — confirming "both A1 and B1 claimed, one per agent, before either's first `tick done`" provably locks each agent into its lane for task 2. The Phase-1 footnote (this run builds what would make it automatic) is a nice honest touch.
+- [Should ✓] `validate.sh` tmp callout — present in Wrap-up; an `EPERM mkdir` / `0/12` now reads as "tmp blocked, not a regression." Matches what I hit.
+- [Nit ✓] `bash -n` skeleton bar, [Nit ✓] "≤1 claim" reword, [Nit ✓] stale pins (`a10fcdf`, `.tick/` absent → init-only, `relay-automation/` absent, validate=12) — all applied; I re-verified `.tick/` does not exist and `8aad11a` is real.
+**Net:** DoD met — the brief is runnable as-is by a fresh coordinator. No collisions possible, sequential/concurrent both correct, balance now honestly bounded by Guard #6, both acceptance bars objectively measurable. Relay closed. **Next per Setup: this (Claude-B) window executes the brief as run coordinator — on the operator's go.**
+**Commit:** 7ca0719 — Reviewer comments only; no artifact edit (relay log tracked, committing per rule 8)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
