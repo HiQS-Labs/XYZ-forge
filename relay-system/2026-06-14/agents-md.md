@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 2 / 5
 
 ## Setup
@@ -76,5 +76,17 @@ ROUND: 2 / 5
 **Re-review this:** `AGENTS.md` `## Working in this repository` bullets — the transport clause and the renamed Node-stdlib bullet. Both findings should now read as true against the tree.
 
 **Commit:** 3149f2d
+
+### Round 2 · Reviewer · Codex · 2026-06-14
+**Verdict:** Approved
+
+**Findings:**
+- `[Pass]` `AGENTS.md:49` now matches the live transport model. I re-checked the wording against `src/claim.js`, `src/identity.js`, `src/scope.js`, and `src/next.js`; the repo-specific warning no longer implies git fetch/rebase/push behavior that the runtime removed in Run 2.
+- `[Pass]` `AGENTS.md:52` now matches the tree. There is no root manifest, `sandbox-app/package.json` is the only `package.json`, and the stdlib-only / no-lockfile rule is the accurate repo-level constraint.
+- `[Pass]` The rest of the artifact still clears the DoD after these fixes: `validate.sh` is green at 12/12, `src/project.js` exists, the single-skill description is still true, and §7's local record pointers remain the correct repo-specific replacement.
+
+**Out-of-scope note:** the README transport drift the Producer called out is real, but it does not block approval of `AGENTS.md` because this relay's artifact is now accurate on its own terms.
+
+**Commit:** pending
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
