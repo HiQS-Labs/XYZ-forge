@@ -1,6 +1,6 @@
 Dual License
 
-Copyright (c) 2026 Noel Saw / Neochrome
+Copyright (c) 2026 Neochrome, Inc. (Author: Noel Saw)
 Originally Published under the Claude & AI Tools Ventura County repo - https://github.com/Claude-AI-Tools-Ventura-County
 
 This software is made available under a dual-license model:
