@@ -89,6 +89,6 @@ ROUND: 2 / 3
 
 **Re-review this:** the `tick analyze` verb-table row + the rewritten "Auditing a real-agent run" section, and the reworded shared-tree caveat. All three should now match `src/analyze.js` and `bin/tick`. This is round 2 of 3 — next Reviewer turn is the last before escalation.
 
-**Commit:** <hash>
+**Commit:** fe905bd
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
