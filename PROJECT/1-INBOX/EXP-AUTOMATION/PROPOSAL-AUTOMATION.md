@@ -7,10 +7,10 @@ repo: Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm
 type: project-plan
 depends_on:
   - tick runtime (bin/tick, src/*.js — claim/lock/ping/analyze/reap/release)
-  - skill/xyz/SKILL.md (use-cases A build, B recon)
 related:
   - /relay skill (the portable, dependency-free protocol — stays standalone)
   - docs/relay-history/ (Run 3 plan, results, and skill-review relays)
+  - skill/xyz/SKILL.md (§4/§4b self-extract pattern; sibling reference only)
 layering_principle: >-
   The portable relay PROTOCOL stays a zero-dependency, tool-agnostic skill.
   This project builds the OPTIONAL automation ENGINE that depends on tick, and
@@ -44,13 +44,25 @@ relay protocol, which stays dependency-free.
 
 ## Scope & non-goals
 
-**In scope:** a `relay-automation` module + runner in this repo, exposed as
-**Use-case C** in `skill/xyz/SKILL.md`, that uses `tick`'s lock, `release --to`,
-`ping`, `analyze`, and `reap` to run a two-role (Producer/Reviewer) relay with
-enforced turn-taking and automatic stall recovery.
+**In scope:** a **sibling** `relay-automation` module + runner + skill in this
+repo (a separate artifact *powered by* `tick` — **not** a use-case of the
+parallel-swarm `xyz` skill, whose charter is partitionable lanes and explicitly
+*excludes* tightly-coupled back-and-forth handoff; see `skill/xyz/SKILL.md` §2a).
+It runs a two-role (Producer/Reviewer) relay with **enforced** turn-taking and
+**automatic** stall recovery.
+
+> **Current vs target — read this first.** Today `tick` only *prioritizes*
+> `handoff_to` (it does **not** exclude other claimers: `src/take.js` falls
+> through to `candidates[0]`, and `src/claim.js` has no handoff check) and only
+> *reports* parked claims (`src/analyze.js`); `reap` is a **manual** coordinator
+> lever (`src/scope.js`). So "enforced turn-taking" and "auto-recovery" are
+> **target behaviors this project adds** (a small `tick` core change in Phase 1 +
+> a watchdog policy in Phase 2) — not capabilities to be claimed as already
+> present. The body below marks every mapping row as **today** or **adds**.
 
 **Non-goals (explicit anti-scope):**
 - Do **not** add a `tick` dependency to the portable `/relay` skill — it must keep working with zero install and any tool (Codex/Gemini/Claude).
+- Do **not** silently broaden the `xyz` parallel-swarm charter — this ships as a sibling, not a smuggled-in use-case.
 - Do **not** invent cross-process *push* wakeup — `tick` is poll-based; we harden the existing `/loop` poll, we do not replace it.
 - Do **not** have `tick` judge the verdict — "Approved" is the LLM's call, read from the turn text by the runner.
 - Do **not** generalize beyond 2 roles / same-session / shared working tree (carry the `xyz` limits forward).
@@ -59,37 +71,49 @@ enforced turn-taking and automatic stall recovery.
 
 ## Core idea: the turn-as-token
 
-Model the relay's `NEXT:` pointer as **one claimable `tick` task, `RELAY-TURN`**:
+Model the relay's `NEXT:` pointer as **one claimable `tick` task, `RELAY-TURN`**.
+Each row is tagged **[today]** (works on current `tick`) or **[adds]** (this
+project must build it):
 
-| Relay concept | tick mechanism |
-|---|---|
-| It's role X's turn | `RELAY-TURN` claimed by X (lock-enforced; out-of-turn action refused) |
-| Hand off to the other role | `tick release RELAY-TURN --to <other>` (re-opens, routes via handoff) |
-| Turn in progress / alive | `tick ping RELAY-TURN` heartbeats |
-| Turn-holder stalled/dead | `tick analyze` parked-claim flag → `tick reap` |
-| Approved → end | `tick done RELAY-TURN` |
-| Escalated → end | `tick break RELAY-TURN` |
+| Relay concept | tick mechanism | Status |
+|---|---|---|
+| It's role X's turn | `RELAY-TURN` claimed by X; the per-clone lock makes the *claim cycle* atomic | **[today]** — but it does **not** stop a wrong role from claiming an open/handed-off token |
+| Out-of-turn action refused | reject `claim`/`take` when `handoff_to` is set and ≠ agent | **[adds]** Phase 1 — small `tick` core change; today only mutating verbs are owner-guarded, the initial claim is not |
+| Hand off to the other role | `tick release RELAY-TURN --to <other>` re-opens + sets `handoff_to`; `take`/`next` *prioritize* it | **[today]** routing only — exclusivity comes from the Phase 1 change |
+| Turn in progress / alive | `tick ping RELAY-TURN` heartbeats | **[today]** |
+| Turn-holder stalled | `tick analyze` flags a parked claim | **[today]** detection/reporting only |
+| Recover a stalled turn | `tick reap` releases it → reassign or escalate | **[today]** `reap` is **manual**; **[adds]** Phase 2 — the *auto*-reap policy/authority |
+| Approved → end | `tick done RELAY-TURN` | **[today]** verb; **[adds]** the runner deciding *when* (verdict grep) |
+| Escalated → end | `tick break RELAY-TURN` | **[today]** verb; **[adds]** the runner's round-cap trigger |
 
-`tick` supplies the mutex, alternation, liveness, and audit. A thin **runner**
-supplies the parts `tick` cannot: poll-wakeup, the clean-tree gate, the verdict
-grep, and the round cap. Honest split: `tick` covers ~60–70% of the mechanical
-glue; the runner + the LLM cover wakeup and the verdict.
+`tick` supplies the mutex primitive, handoff *routing*, liveness *detection*, and
+audit **today**; this project **adds** handoff *exclusivity* (Phase 1) and
+*auto*-recovery (Phase 2). A thin **runner** supplies the parts `tick` will never
+cover: poll-wakeup, the clean-tree gate, the verdict grep, and the round cap.
+Honest split *after* the planned additions: `tick` ≈ the coordination substrate;
+the runner + the LLM cover wakeup and the verdict.
 
 ---
 
 ## Phase 0 — Design spike & seam map
 
-**Goal:** lock the design before code; prove the model needs minimal/zero `tick`-core change.
+**Goal:** lock the design before code; prove the model needs minimal `tick`-core
+change and name every added contract explicitly.
 
-- [ ] Document the `RELAY-TURN` token model (claim = act, `release --to` = handoff, `done`/`break` = terminal) in a `SEAM-MAP.md`
+- [ ] Document the `RELAY-TURN` token model (claim = act, `release --to` = handoff, `done`/`break` = terminal) in a `SEAM-MAP.md`, tagging every row **[today]** vs **[adds]**
 - [ ] Produce the full relay-rule → tick-primitive-or-runner mapping table (every `/relay` ground rule placed in exactly one layer)
-- [ ] Classify each behavior: **pure reuse** vs **runner-only** vs **needs tick-core change** (target: zero core change)
-- [ ] Define the runner's responsibilities explicitly: poll-wakeup, `git status --porcelain` clean-tree gate, verdict grep, round-counter/cap
-- [ ] Confirm placement: module at `relay/` + Use-case C in `skill/xyz/SKILL.md`; portable `/relay` skill stays untouched
+- [ ] Classify each behavior: **pure reuse** vs **runner-only** vs **needs tick-core change**. (Confirmed: exactly **one** core change is in scope — handoff-exclusive claims, Phase 1. Flag if the spike finds others.)
+- [ ] **Enforcement-contract decision (resolved):** Phase 1 adds a `tick` rule that **rejects `claim`/`take` of a task whose `handoff_to` is set and ≠ agent**. Phase 0 writes its exact acceptance criteria + the events it must (not) emit.
+- [ ] **Auto-reap authority decision:** define WHO may auto-reap, the threshold, and the default action — reassign vs human-escalate (today `reap` is manual; this names the policy that makes it automatic). Detection ≠ permission to act.
+- [ ] **Charter decision (resolved):** ship as a **sibling** `relay/` module + its own skill, **not** Use-case C of `xyz` (whose §2a excludes tightly-coupled handoff). Portable `/relay` skill stays untouched.
+- [ ] **Clean-tree gate scope decision:** is the gate repo-global or artifact-scoped? (Resolved target: **artifact-scoped** — name the exact command in Phase 3, e.g. `git status --porcelain -- <artifact> <relay-log>`, so unrelated repo dirt can't block a handoff.)
+- [ ] **Runtime-generation preflight note:** state that this plan targets the **shared-tree, local-event `.tick/events/` runtime** (post-git-transport) — readers must not import stale README/`CLAUDE.md` transport assumptions.
+- [ ] Define the runner's responsibilities explicitly: poll-wakeup, the (artifact-scoped) clean-tree gate, verdict grep, round-counter/cap
 - [ ] Write the rollback rule: the manual relay must run **unchanged** if the automation is removed
 
 ### QA checklist — Phase 0
 - [ ] **DRY:** no behavior assigned to two layers in the mapping table
+- [ ] **Honesty (current vs target):** every mapping row is tagged **[today]** or **[adds]**, cross-checked against `src/` — no current-vs-target conflation survives
 - [ ] **Observability:** seam map names, for every failure mode, which layer detects it
 - [ ] **Anti-goals stated:** doc explicitly lists what the automation will NOT do (push-wakeup, verdict-judging, >2 roles)
 - [ ] **Litmus:** a reader can point at any `/relay` ground rule and say "tick" or "runner" with no ambiguity
@@ -100,13 +124,13 @@ glue; the runner + the LLM cover wakeup and the verdict.
 
 ## Phase 1 — Turn-token core (alternation + mutual exclusion)
 
-**Goal:** two roles strictly alternate, and acting out of turn is *impossible*, not honor-system.
+**Goal:** *add* the one `tick` change that makes acting out of turn impossible (not honor-system), then prove strict alternation on it.
 
+- [ ] **`tick` core change:** `claim`/`take` **reject** a task whose `handoff_to` is set and ≠ the calling agent, writing **zero** events on rejection (today `src/claim.js` has no handoff check and `src/take.js` falls through to `candidates[0]`). Ships with new tests; `validate.sh` stays green (≥ 12/12, expect +N for the new rule)
 - [ ] `relay-init <slug>` scaffolds the relay `.md` AND seeds `RELAY-TURN` (handoff_to = producer)
-- [ ] Manual two-window dry run: Producer → `release --to reviewer` → Reviewer claims → `release --to producer`, ≥2 round-trips
-- [ ] Out-of-turn action is refused by `tick`'s lock/ownership (observable: non-holder window gets a rejection and writes no event)
-- [ ] Alternation enforced by targeted handoff (a wrong-role window cannot claim `RELAY-TURN`)
-- [ ] If any `tick`-core change was required, it ships with tests and `validate.sh` stays green (≥ 12/12)
+- [ ] Manual two-window dry run: Producer → `release --to reviewer` → Reviewer claims → `release --to producer`, ≥ 2 round-trips
+- [ ] **Observable enforcement (post-change):** a wrong-role window's `claim`/`take` of `RELAY-TURN` is rejected and writes no event — verified from `.tick/events/` (turn-taking is now lock+rule-enforced, not honor-system)
+- [ ] Confirm no second core change crept in — the rejection rule is the only addition to `tick`
 
 ### QA checklist — Phase 1
 - [ ] **DRY:** runner wraps `tick` verbs; no reimplementation of claim/lock logic
@@ -122,11 +146,14 @@ glue; the runner + the LLM cover wakeup and the verdict.
 
 **Goal:** the highest-value slice — a dead or stalled turn is detected and recovered, not silently hung.
 
-- [ ] Agent emits `tick ping RELAY-TURN` while a turn is in progress (cadence documented in the agent prompt)
-- [ ] Watchdog loop runs `tick analyze` and flags a turn with no heartbeat > threshold as parked
-- [ ] Watchdog auto-`reap`s a stalled turn and either reassigns (handoff back) or escalates to the human
-- [ ] Demo: kill a mid-turn window → watchdog detects + recovers within the threshold (captured in a log)
-- [ ] New tests cover parked-turn detection, reap-and-reassign, and the "healthy turn is never reaped" case
+Acceptance is split into three distinct gates — detection, false-positive bound, and *authority to act* (the reviewer's point: "parked is detectable" ≠ "safe to auto-reap"; today `reap` is manual):
+
+- [ ] **(detection)** Agent emits `tick ping RELAY-TURN` while a turn is in progress (cadence in the prompt); watchdog runs `tick analyze` and flags a turn with no heartbeat > threshold as parked — reuses today's analyzer, no second detector
+- [ ] **(false-positive bound)** A slow-but-pinging turn is provably **never** flagged; the threshold is justified against real turn durations, not guessed
+- [ ] **(authority)** Auto-reap acts **only** per the Phase-0 authority decision (who/threshold/action); absent that approval it **escalates to a human** rather than reaping. Detection alone never triggers a release.
+- [ ] Watchdog, when authorized, `reap`s a stalled turn and either reassigns (handoff back) or escalates — every action logged with the gap that triggered it
+- [ ] Demo: kill a mid-turn window → watchdog detects + (recovers or escalates) within the threshold (captured in a log)
+- [ ] New tests cover: detection, the "healthy/pinging turn is never reaped" false-positive case, and reap-and-reassign vs escalate
 
 ### QA checklist — Phase 2
 - [ ] **DRY:** reuses `analyze`'s existing parked-claim detector — no second liveness implementation
@@ -144,13 +171,13 @@ glue; the runner + the LLM cover wakeup and the verdict.
 
 - [ ] Runner greps the latest turn block for the verdict; `Approved` → `tick done RELAY-TURN` → loop stops
 - [ ] Round cap reached without Approved → `tick break RELAY-TURN` + `STATUS: Escalated`, hand back to human
-- [ ] Clean-tree gate: handoff refused if `git status --porcelain` is non-empty (commit-before-handoff enforced)
-- [ ] Observable: a P→R→…→Approved run terminates cleanly; an over-cap run escalates; a dirty-tree handoff is blocked
+- [ ] **Artifact-scoped** clean-tree gate: handoff refused only if `git status --porcelain -- <artifact-path> <relay-log-path>` is non-empty — so unrelated repo dirt (e.g. an edited `README.md` elsewhere in the shared checkout) does **not** block the handoff. (Repo-global was rejected in Phase 0.)
+- [ ] Observable: a P→R→…→Approved run terminates cleanly; an over-cap run escalates; an *artifact*-dirty handoff is blocked while unrelated dirt is allowed
 
 ### QA checklist — Phase 3
 - [ ] **DRY:** one verdict-parsing function, one termination path (Approved/Escalated converge on a single "stop")
 - [ ] **Observability:** the terminal event records WHY it ended (approved vs cap vs error)
-- [ ] **Litmus:** an uncommitted change provably blocks the handoff (rule 9 enforced by code, not honor)
+- [ ] **Litmus:** an uncommitted change *to the artifact or relay log* provably blocks the handoff, while unrelated repo dirt does not (rule 9 enforced by code, artifact-scoped, not honor)
 - [ ] **Anti-goal guard:** runner never marks `done` on its own opinion — only on an LLM-written `Approved`
 - [ ] **Edge cases:** max-round-exactly, Approved-on-first-round, and dirty-tree-at-cap all handled
 - [ ] **Remote deploy needed?** No
@@ -180,14 +207,14 @@ glue; the runner + the LLM cover wakeup and the verdict.
 
 **Goal:** ship it inside the skill, prove the extract still works, and (optionally) build it WITH the swarm.
 
-- [ ] Add **Use-case C — automated relay** to `skill/xyz/SKILL.md` with the runner + watchdog embedded in the self-extracting block
+- [ ] Ship the **sibling `relay-automation` skill** (its own self-extracting `SKILL.md` under `skill/relay-automation/`) with the runner + watchdog + the Phase-1 `tick` change embedded — **not** added as a use-case of `skill/xyz/SKILL.md`
 - [ ] `validate.sh` green including new relay-automation tests; full two-block self-extract re-verified (runtime + tests → all pass)
 - [ ] Run a real automated relay on a live artifact; capture metrics (rounds, time/turn, auto-recovered stalls)
 - [ ] _(Optional)_ **Run 4 meta-exercise:** use `xyz` to build/extend this layer concurrently (recon → lane-split → build); record results in `REAL-AGENT-OBSERVATIONS.md`
 - [ ] Update `RECAP.md` + docs with honest limits (wakeup still poll-based; verdict = LLM judgment; ≤ 2 roles)
 
 ### QA checklist — Phase 5
-- [ ] **DRY:** Use-case C reuses the §4/§4b extract pattern; no third bespoke install mechanism
+- [ ] **DRY:** the sibling skill reuses the §4/§4b self-extract pattern; no third bespoke install mechanism
 - [ ] **Observability:** a single `tick analyze` (or runner status) shows the live relay state at a glance
 - [ ] **Litmus:** a fresh clone extracts the SKILL.md and runs an automated relay end-to-end with no extra setup
 - [ ] **Anti-goals re-checked:** no push-wakeup invented, no verdict-judging, protocol still dependency-free
@@ -200,7 +227,8 @@ glue; the runner + the LLM cover wakeup and the verdict.
 
 Two Claude windows complete a Producer/Reviewer relay **with zero human nudges**;
 a turn that stalls is **auto-detected and recovered or escalated** (never a silent
-hang); the loop **ends cleanly on Approved or escalates at the cap with a clean
-tree**; it ships as **Use-case C** in a self-extracting `SKILL.md` that still
-passes `validate.sh`; and the **portable `/relay` protocol remains untouched and
-dependency-free**.
+hang); the loop **ends cleanly on Approved or escalates at the cap with an
+artifact-scoped clean tree**; it ships as a **sibling self-extracting skill**
+(`skill/relay-automation/`, powered by `tick`, **not** folded into `xyz`) that
+still passes `validate.sh`; and the **portable `/relay` protocol remains
+untouched and dependency-free**.
