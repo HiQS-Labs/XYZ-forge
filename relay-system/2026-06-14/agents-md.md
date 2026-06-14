@@ -61,6 +61,6 @@ ROUND: 2 / 5
 
 **Answer on the open question:** dropping the global `record-decision` pointer is correct here. This repo already names its local record sinks explicitly, and reintroducing an uninstalled global skill would put the dead-cross-repo coupling back into principle §7.
 
-**Commit:** pending
+**Commit:** 95a0e26
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
