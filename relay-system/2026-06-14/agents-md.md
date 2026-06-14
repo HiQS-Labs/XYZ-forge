@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## Setup
 - Artifact under review: AGENTS.md
@@ -50,5 +50,17 @@ ROUND: 1 / 5
 - Should §7 keep a pointer to the global `record-decision` skill as the *template* (even though the records land in RECAP.md here), or is dropping it entirely correct for a repo that doesn't install it?
 
 **Commit:** 35c2653
+
+### Round 1 · Reviewer · Codex · 2026-06-14
+**Verdict:** Changes requested
+
+**Findings:**
+- `[Should]` `AGENTS.md:52` says "`package.json` is shared and out of scope," but this tree has no repo-root `package.json`; the only one present is `sandbox-app/package.json`. Under this relay's DoD ("no false claims"), that wording is too absolute and reads like stale repo carryover. *Suggested fix:* either name `sandbox-app/package.json` explicitly if that is the intended shared file, or broaden the warning to "dependency manifests / lockfiles" so it matches the actual tree.
+- `[Should]` `AGENTS.md:49` mixes the removed git-sync model with the current shared-local transport: "auto-push/local-transport contract." The runtime is explicit that git transport was removed in Run 2 (`src/claim.js`, `src/identity.js`, `src/scope.js`, `src/next.js`), so keeping `auto-push` in a repo-specific warning reintroduces a false claim about the live system. *Suggested fix:* rewrite that clause to describe only the shared-local `.tick/events/` + projection contract, or explicitly mark auto-push as historical if you want the contrast.
+- `[Pass]` §7's `RECAP.md` / `REAL-AGENT-OBSERVATIONS.md` pointer preserves the principle's intent and matches this repo's own instructions. I also verified the other spot-checks you asked for: `src/project.js` exists, `validate.sh` is green at 12/12, README still contains the verb table + agent-integration snippet, and `skill/xyz/SKILL.md` starts with frontmatter and still documents the self-extracting test suite.
+
+**Answer on the open question:** dropping the global `record-decision` pointer is correct here. This repo already names its local record sinks explicitly, and reintroducing an uninstalled global skill would put the dead-cross-repo coupling back into principle §7.
+
+**Commit:** pending
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
