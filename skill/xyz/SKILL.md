@@ -2064,6 +2064,13 @@ echo "xyz/tick test suite installed in $DIR/ — run: cd $DIR && bash validate.s
 6. tick done <TASK-ID> --agent <you> ; go to 1
 ```
 
+**Initiative bound (put this in the build prompt):** implement the *thinnest* change
+that makes the stated acceptance pass — code + its test, or a skeleton with
+documented stubs — and **no behavior beyond the acceptance unless the task says
+so**. When unsure how opinionated to be inside your lane, do less and leave a
+documented stub. (Run-4 feedback: "how much initiative to take in-lane" was the
+one real guess point; this removes it.)
+
 **Wrap-up:** see §7.
 
 ## 6. Use-case B — Research & recon (workflow + prompts; no new code)

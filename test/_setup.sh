@@ -64,6 +64,13 @@ tick_in() {
 tick_a() { tick_in "$A" "$@"; }
 tick_b() { tick_in "$A" "$@"; }  # local transport: shares TICK_REPO_ROOT with tick_a
 
+# Bind TICK_REPO_ROOT to the shared coordination root by default, so a test that
+# calls `$TICK ...` directly (instead of the tick_a/tick_b wrappers) still
+# targets $A rather than hitting an unbound var under `set -u`. The wrappers
+# override it per-call via tick_in; this is just the sane default for new tests.
+# (Run-4 feedback: TICK_REPO_ROOT was unbound when scaffolding handoff-exclusive.sh.)
+export TICK_REPO_ROOT="$A"
+
 PASS=0
 FAIL=0
 pass() { echo "  PASS: $*"; PASS=$((PASS+1)); }
