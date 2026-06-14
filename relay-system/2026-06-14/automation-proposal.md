@@ -78,6 +78,6 @@ ROUND: 2 / 5
 
 **Out-of-scope handoff note:** the repo is still dirty outside this artifact pair (`LICENSE.md` modified, `4X4.md` untracked), so rule 9 is not globally satisfied even though this turn's files will be committed cleanly.
 
-**Commit:** 
+**Commit:** 81e59f5
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
