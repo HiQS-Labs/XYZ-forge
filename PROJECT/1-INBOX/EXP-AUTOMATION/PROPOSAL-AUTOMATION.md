@@ -194,6 +194,7 @@ Acceptance is split into three distinct gates — detection, false-positive boun
   - otherwise → **do nothing, keep polling**
 - [ ] End-to-end: two Claude windows finish a full automated relay with no human "your turn" — including the wake-on-handoff step (the waiting side claims the open, routed token rather than waiting to already own it)
 - [ ] Graceful degradation: a non-Claude window (e.g. Codex) can still take turns via the file + manual nudge (automation is additive, not required)
+- [ ] **Operating-model note (documented limit):** hands-free poll is an **all-Claude convenience** — it relies on Claude Code's in-session `/loop` guarded polling. It is **not** a generic "any editor agent self-wakes" capability and **not** a durable scheduler. Non-Claude participants (Codex/Gemini) stay on **manual nudge**. For reliable, unattended recurring checks, polling must move into a **real runner/watchdog process/service**, not the agent session.
 - [ ] Poll interval documented with the cache-warmth tradeoff (≈ 60s default; the lock/heartbeat is the real correctness guard, not the timer)
 
 ### QA checklist — Phase 4
@@ -215,7 +216,7 @@ Acceptance is split into three distinct gates — detection, false-positive boun
 - [ ] `validate.sh` green including new relay-automation tests; full two-block self-extract re-verified (runtime + tests → all pass)
 - [ ] Run a real automated relay on a live artifact; capture metrics (rounds, time/turn, auto-recovered stalls)
 - [ ] _(Optional)_ **Run 4 meta-exercise:** use `xyz` to build/extend this layer concurrently (recon → lane-split → build); record results in `REAL-AGENT-OBSERVATIONS.md`
-- [ ] Update `RECAP.md` + docs with honest limits (wakeup still poll-based; verdict = LLM judgment; ≤ 2 roles)
+- [ ] Update `RECAP.md` + docs with honest limits (wakeup still poll-based and **all-Claude `/loop`-only** — non-Claude stays manual, durable polling needs a runner/service; verdict = LLM judgment; ≤ 2 roles)
 
 ### QA checklist — Phase 5
 - [ ] **DRY:** the sibling skill reuses the §4/§4b self-extract pattern; no third bespoke install mechanism
