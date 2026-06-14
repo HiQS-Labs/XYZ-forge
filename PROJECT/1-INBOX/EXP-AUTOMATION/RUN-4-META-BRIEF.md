@@ -31,16 +31,26 @@ agent idled → 40%. Here the two halves are deliberately comparable in effort
 | TASK-B2 | **Automation** | `relay-automation/**` | 8 | `relay-automation/watchdog.sh` **skeleton** — `tick analyze` → parked detection → escalate-to-human (reap behind an authority flag; stub) |
 
 **Mechanics:** tasks *within* a half share the half-scope, so they overlap → an
-agent works them **sequentially** (take A1 → done → take A2), holding ≤1 active
-claim at a time. The two halves are **disjoint** (`src`/`test`/`validate.sh` vs
-`relay-automation/`), so the two agents run **concurrently** and never collide.
-Whichever agent claims an A-task owns the Enforcement half; the other owns
-Automation. Balance, not assignment, is what matters.
+agent works them **sequentially** (the loop holds one claim at a time; the
+in-half overlap blocks a 2nd same-half claim). The two halves are **disjoint**
+(`src`/`test`/`validate.sh` vs `relay-automation/`), so the two agents run
+**concurrently** and never collide.
+
+**Balance is contingent on launch-sync — not automatic (important).** `take`
+picks by **global** priority and the own-overlap exclusion only blocks *same-half*
+second claims; cross-half claims never overlap. So if one agent finishes A1
+*before the other has claimed anything*, its next `take` prefers **B1 (pri 10)
+over A2 (pri 8)** and crosses into the Automation half → a 3-1 split that breaks
+the "both agents ≥ 2 done" bar (this is exactly Run 3's imbalance). Half-ownership
+only locks in when **both** first-claims (A1 *and* B1) land before either calls
+`done`. Hence the launch-sync guard (#6). *(Footnote: the thing this run builds —
+Phase-1 handoff-exclusive claims — is what would make ownership automatic; until
+it ships, launch-sync is the manual stand-in.)*
 
 ## Runtime context (for the window that executes this)
-Captured 2026-06-14 14:27 PDT — verify before launch, these can drift:
-- **Repo / branch:** `Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`, `main` @ `9cec8bc` (clean).
-- **`tick` is runnable** at `./bin/tick` (no install); `.tick/events/` is **empty** (no archive needed — just `tick init`). `relay-automation/` does **not** exist yet → `mkdir` it (lane B's home).
+Captured 2026-06-14 ~15:15 PDT — verify before launch, these can drift:
+- **Repo / branch:** `Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`, `main` @ `a10fcdf` (plus untracked `snapshot.md` — personal recovery file, ignore).
+- **`tick` is runnable** at `./bin/tick` (no install); `.tick/` does **not exist yet** → `tick init` only, **no archive needed**. `relay-automation/` confirmed **absent** → `mkdir` it (lane B's home).
 - **Baseline:** `validate.sh` = **12 tests** today; acceptance for Project 2 is **≥13** (the new `handoff-exclusive.sh`).
 - **Roles in the *run* (not this relay):** the window executing this brief is the **coordinator/observer** (does not claim/code — see `skill/xyz/SKILL.md` §7). The **two build agents are separate windows** (e.g. Codex + Gemini); confirm which two with the operator before pasting prompts.
 - **Agent loop to paste:** the `xyz` build loop (mantra → `tick take` → work in-lane → `tick ping` → file-scoped `git add` + `[<agent>] <TASK> …` commit → `tick done` → repeat).
@@ -49,7 +59,7 @@ Captured 2026-06-14 14:27 PDT — verify before launch, these can drift:
 ## Coordinator setup (paths are repo-root-relative)
 ```bash
 TICK=./bin/tick
-$TICK init   # after archiving any prior .tick/events to .tick/archive/run-4/
+$TICK init   # .tick/ is absent today → just init. (If a prior run ever left events, archive to .tick/archive/run-4/ first.)
 $TICK log task.created TASK-A1 --agent dispatcher --priority 10 --paths "src/claim.js,src/take.js,src/**,test/**,validate.sh"
 $TICK log task.created TASK-A2 --agent dispatcher --priority 8  --paths "src/claim.js,src/take.js,src/**,test/**,validate.sh"
 $TICK log task.created TASK-B1 --agent dispatcher --priority 10 --paths "relay-automation/**"
@@ -59,7 +69,7 @@ mkdir -p relay-automation   # lane B's empty home so the first commit has somewh
 Then paste the standard `xyz` agent loop (mantra → `tick take` → work → `tick ping` → file-scoped `git add` + tagged commit → `tick done` → repeat) into **two** windows, same session, shared tree.
 
 ## Dual acceptance (both cheap to measure at wrap-up)
-- **Project 2 (relay automation):** TASK-A1+A2 → `validate.sh` green **incl. the new `handoff-exclusive.sh`** (≥ 13/13); the `tick` rule provably rejects a wrong-`handoff_to` claim with zero events. TASK-B1+B2 → both skeletons exist and parse/lint clean with documented stubs.
+- **Project 2 (relay automation):** TASK-A1+A2 → `validate.sh` green **incl. the new `handoff-exclusive.sh`** (≥ 13/13); the `tick` rule provably rejects a wrong-`handoff_to` claim with zero events. TASK-B1+B2 → both skeletons exist and pass `bash -n relay-automation/runner.sh && bash -n relay-automation/watchdog.sh`, with documented stubs.
 - **Project 1 (Run 4 concurrency):** from `.tick/events/`, the **work-bounded** concurrent-claim time (first `claimed` → last `done`) — record the %. Pass target ≥ 50%; **any number is a valid datapoint** vs Run 3's 40%. Both agents ≥ 2 done; parked-suspects = none; no serial double-claim.
 
 ## Rabbit-hole guards (non-negotiable)
@@ -68,6 +78,9 @@ Then paste the standard `xyz` agent loop (mantra → `tick take` → work → `t
 3. **Sub-50% is a result, not a retry trigger** — record it; do **not** re-tune lanes or re-run in-session.
 4. **Lanes are pre-split here** — agents don't renegotiate scope mid-run.
 5. **Wrong-window guard active** — the updated `/relay` identity rule + one-window-at-a-time apply; coordinator nudges one window at a time.
+6. **Launch-sync (forces the balanced split)** — start both build windows together; **before either agent calls its first `tick done`, confirm `tick project` shows both A1 and B1 claimed (one per agent).** If one agent would finish task 1 while the other is still unclaimed, pause it — otherwise the free agent crosses lanes (global-priority `take`) and you get a 3-1 split that fails "both ≥ 2 done." This is the manual stand-in for the not-yet-built handoff-exclusive rule.
 
 ## Wrap-up (coordinator)
 `tick analyze` (parked check) → compute work-bounded % by hand from `.tick/events/` → run `validate.sh` → record both acceptance results + the concurrency datapoint in `REAL-AGENT-OBSERVATIONS.md` (Run 4 section) and `RECAP.md`. Then stop — decide graduate/iterate from the data, out of session.
+
+> **Running `validate.sh`:** it needs a writable `$TMPDIR` — each test's `test/_setup.sh` does `mktemp -d`. If tmp is blocked you get a spurious **`0/12` with `EPERM mkdir`** and paths collapsing to `/agent-a` etc. — that means the env blocked tmp, **not** a regression. Re-run with a writable `$TMPDIR` (outside the command sandbox if needed) before trusting the count.
