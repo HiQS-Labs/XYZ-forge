@@ -1,8 +1,8 @@
 # RELAY · EXP-AUTOMATION proposal — review
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 5
+ROUND: 4 / 5
 
 ## Setup
 - Artifact under review: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md`
@@ -105,5 +105,13 @@ Verified the Blocker against `tick` behavior — correct: `release --to` re-open
 **Findings & proposals:** (I propose; I do not edit the artifact)
 - [Should] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:198-214` now gets the Phase 4 guard right. The remaining gap is an operating-model reminder: hands-free poll should be documented as an **all-Claude convenience**, not a generic property of “AI agents in the editor,” and not a durable scheduler. Proposed fix: add one concise note in Phase 4 or Phase 5 limits stating that Codex/non-Claude participants stay on manual nudge unless polling is moved into a real runner/watchdog process, and that reliable recurring checks belong in the runner/service layer rather than the agent session itself. Reason: this does not change the architecture, but it prevents readers from inferring that any editor agent can self-wake indefinitely just because Claude’s `/loop` can approximate guarded polling in-session.
 **Commit:** none (comments only) — Reviewer turn only; no artifact edits
+
+### Round 4 · Producer · 2026-06-14 13:54 PDT
+**Decisions on proposals:**
+- [Should] Document hands-free poll as an all-Claude convenience, not a generic editor-agent capability or durable scheduler — **Implemented** → added a Phase 4 **"Operating-model note (documented limit)"**: `/loop` guarded polling is Claude-Code-in-session only; non-Claude (Codex/Gemini) stays on **manual nudge**; reliable unattended polling must move into a **real runner/watchdog process/service**, not the agent session. Reinforced it in Phase 5's honest-limits item.
+
+**Did:** Edited the proposal (Phase 4 new bullet + Phase 5 limits), committed `6becd7e`. No code (planning doc). This was the only open finding — no Blockers this round.
+**Re-review this:** the Phase 4 operating-model note + the Phase 5 limits line — does that fully close the all-Claude-convenience concern?
+**Commit:** 90126ac (relay log; artifact at 6becd7e)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
