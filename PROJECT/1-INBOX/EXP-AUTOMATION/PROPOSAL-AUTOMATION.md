@@ -1,6 +1,6 @@
 ---
 title: Automated Relay — tick-backed, self-healing review loop
-status: Proposal — not started
+status: Approved (relay r4, Copilot Codex 2026-06-14) — ready to start at Phase 0
 owner: Noel / Neochrome
 created: 2026-06-14
 repo: Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm
