@@ -2,7 +2,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## Setup
 - Artifact under review: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md`
@@ -39,5 +39,45 @@ ROUND: 1 / 5
 5. **Honesty / scope** — are the non-goals right (no push-wakeup, no verdict-judging by tick, ≤2 roles)? Anything overstated about what automation buys?
 **Open questions:** (a) Is splitting Phase 2 (liveness) from Phase 3 (termination) the right cut, or should termination come first? (b) Is the round-cap + verdict-grep in the runner the right place for semantic gating, or should it be more explicit?
 **Commit:** 2984d8c (relay log; proposal at c2d72cf)
+
+### Round 1 · Reviewer · 2026-06-14 13:49 PDT
+**Verdict:** Changes requested
+**Findings & proposals:** (I propose; I do not edit the artifact)
+- [Blocker] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:47-50` and `:66-69` treat enforced turn-taking and automatic stall recovery as if current `tick` already supplies them. Proposed fix: rewrite Scope + Core idea to distinguish current reuse from new guarantees. Explicitly say `release --to` is routing/handoff metadata today, while strict alternation and auto-recovery are target behaviors the runner and/or `tick` must add. Evidence: `src/claim.js:14-44` allows any agent to claim an open task; `src/next.js:39-47` and `src/take.js:44-58` only prioritize `handoff_to`.
+- [Blocker] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:103-109` says out-of-turn action is impossible and a wrong-role window cannot claim `RELAY-TURN`, but current ownership checks only protect mutating verbs after a claim already exists. Proposed fix: make Phase 1 prove one explicit contract: either (A) runner-level discipline using `tick take`/`tick next` only, which is softer than “impossible”, or (B) a `tick` core change that rejects claims from anyone except `handoff_to` when present. Evidence: `src/scope.js:14-37` guards release/done/break/scope by current owner, not initial claim.
+- [Should] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:125-137` understates the gap between “parked claim detectable” and “safe to auto-reap”. Proposed fix: in Phase 0 add a seam decision for auto-reap authority/policy, then in Phase 2 split acceptance into: detection works, false positives are bounded, and auto-reap is either approved as runner policy or left as human escalation. Evidence: `src/analyze.js:114-155` is an analyzer/reporting path, while `src/scope.js:65-92` labels reap as manual coordinator leverage, not current auto-recovery.
+- [Should] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:47-50`, `:88-89`, and `:187-191` place this inside Use-case C of `skill/xyz/SKILL.md`, but current `xyz` scope excludes tightly-coupled constant handoff work. Proposed fix: make Phase 0 decide whether this broadens `xyz` on purpose or should ship as a sibling wrapper powered by `tick`. Do not present “Use-case C” as settled until that charter change is explicit. Evidence: `skill/xyz/SKILL.md:36-60` says `xyz` is for partitionable lanes and not for tightly-coupled back-and-forth handoff.
+- [Should] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:145-148` uses `git status --porcelain` as a clean-tree gate, but in a shared checkout that is repo-global and can block handoff on unrelated dirt. Proposed fix: specify whether the gate is intentionally repo-global or artifact-scoped. If artifact-scoped, name the exact command/heuristic now so the gate is testable rather than aspirational.
+- [Nit] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:52-56` assumes the current shared-tree local-event runtime, while other repo docs still describe an older transport model. Proposed fix: add a one-line Phase 0 preflight note naming the exact runtime generation this plan targets, so readers do not import stale README assumptions while implementing it.
+**Commit:** none (comments only) — Reviewer turn only; no artifact edits
+
+### Round 2 · Producer · 2026-06-14
+**Decisions on proposals:** (user-directed)
+- `[Blocker]` current-vs-target conflation in Scope/Core idea — **Implemented.** Rewrote Scope + the token-mapping table to mark every row **[today]** vs **[adds]**, and made the current limitations explicit: `claim` has no handoff check, `take` only prioritizes `handoff_to`, `analyze` reports parked claims, and `reap` is manual today.
+- `[Blocker]` overstated "impossible" turn-taking before Phase 1 — **Implemented.** Phase 1 now names one explicit `tick` core change: reject `claim`/`take` when `handoff_to` is set and does not match the caller, with zero event writes on rejection. The goal and acceptance bullets now describe impossibility only *after* that change ships.
+- `[Should]` parked-detection vs auto-reap authority gap — **Implemented.** Phase 0 now requires an explicit authority/policy decision, and Phase 2 is split into detection, false-positive bound, and authority-to-act gates so "detectable" no longer implies "safe to auto-reap."
+- `[Should]` `xyz` charter conflict — **Implemented, plus tightened further.** The plan now treats this as a sibling artifact throughout Scope, Phase 0, Phase 5, and the DoD. I also removed `skill/xyz/SKILL.md` from `depends_on` and kept it only as a related self-extract reference pattern, so the dependency arrow stays automation → tick rather than automation → xyz.
+- `[Should]` repo-global clean-tree gate — **Implemented.** Phase 3 now names the artifact-scoped command contract (`git status --porcelain -- <artifact-path> <relay-log-path>`) and its litmus: artifact dirt blocks handoff; unrelated repo dirt does not.
+- `[Nit]` runtime-generation preflight — **Implemented.** Phase 0 now states this plan targets the shared-tree, local-event `.tick/events/` runtime so readers do not import stale transport assumptions from older docs.
+
+**Additional self-consistency fix (not a separate reviewer finding):**
+- Changed Phase 0's goal from "minimal/zero `tick`-core change" to "minimal `tick`-core change" because the plan now explicitly commits to one Phase 1 core rule. Leaving "zero" there would have made the phase goal falsifiably wrong.
+
+**Answers on the open questions:**
+- `(a)` Keep Phase 2 (liveness/self-healing) separate from Phase 3 (termination/verdict gating). They exercise different failure modes and different evidence: heartbeat/reap policy versus semantic stop conditions / clean-tree enforcement.
+- `(b)` Keep verdict-grep + round-cap in the runner. That is the right layer because `tick` should remain coordination substrate, not parse LLM semantics or decide what "Approved" means.
+
+**Re-review this:**
+1. Scope + Core idea table for current-vs-target honesty.
+2. Phase 1 for the single explicit `tick` core contract and zero-event rejection requirement.
+3. Phase 5 + DoD + frontmatter for the sibling-skill/sibling-artifact story staying consistent end-to-end.
+
+**Verification:** no tests run — doc-only turn.
+
+**Artifact commit:** `11969db` — proposal edits referenced above already land there; this turn's commit records the relay disposition and handoff.
+
+**Out-of-scope handoff note:** the repo is still dirty outside this artifact pair (`LICENSE.md` modified, `4X4.md` untracked), so rule 9 is not globally satisfied even though this turn's files will be committed cleanly.
+
+**Commit:** 
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
