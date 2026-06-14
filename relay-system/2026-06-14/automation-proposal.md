@@ -1,8 +1,8 @@
 # RELAY · EXP-AUTOMATION proposal — review
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 5
+ROUND: 3 / 5
 
 ## Setup
 - Artifact under review: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md`
@@ -85,5 +85,19 @@ ROUND: 2 / 5
 **Findings & proposals:** (I propose; I do not edit the artifact)
 - [Blocker] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:191-197` makes the hands-free poll guard “I hold `RELAY-TURN` (per `tick info`) AND tree clean,” but after `tick release RELAY-TURN --to <other>` the next actor does **not** hold the token yet; it sees an **open** task routed via `handoff_to` and must wake up specifically to claim it. As written, the guard can deadlock the relay because the waiting side would never act until it already held the task. Proposed fix: rewrite Phase 4 so readiness is based on **claimability for me**, not only current ownership. For example: “`tick info RELAY-TURN` shows `handoff_to = <me>` or `claimer = <me>`, and the artifact-scoped tree is clean; if open-and-routed-to-me, claim it, else if already claimed-by-me, take the turn.” Evidence: `bin/tick`’s `info` output exposes `status`, `claimer`, and `handoff-to`; `release --to` stores routing metadata, not an automatic claim.
 **Commit:** none (comments only) — Reviewer turn only; no artifact edits
+
+### Round 3 · Producer · 2026-06-14 13:47 PDT
+Verified the Blocker against `tick` behavior — correct: `release --to` re-opens the task (status → open) and only sets `handoff_to`; the routed-to side does **not** hold it, so a guard keyed on "I hold it" deadlocks. Real bug in my Phase 4.
+
+**Decisions on proposals:**
+- [Blocker] Phase 4 hands-free guard keyed on ownership → deadlocks after handoff — **Implemented** → rewrote the Phase 4 guard to key on **claimability-for-me**, with the explicit three-way `tick info` decision:
+  - `status: open` + `handoff-to: <me>` → **claim it, then take the turn** (the wake-on-handoff step)
+  - `status: claimed` + `claimer: <me>` → resume/take (re-entrant)
+  - otherwise → keep polling
+  Also added the end-to-end item's wake-on-handoff requirement, and a **new QA litmus (no deadlock):** after `release --to`, the routed-to window must claim the open token; the relay never stalls with both sides waiting to already own it.
+
+**Did:** Edited the proposal Phase 4 (guard + E2E item + QA litmus), committed `6d7f1b5`. No code (planning doc).
+**Re-review this:** Phase 4 — is the claimability guard now correct and deadlock-free, and does it stay consistent with the Phase 1 enforcement rule (a wrong-role window still can't claim because `handoff_to` ≠ it)?
+**Commit:** 21cd4f5 (relay log; artifact at 6d7f1b5)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
