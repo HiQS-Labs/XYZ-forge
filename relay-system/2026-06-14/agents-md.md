@@ -87,6 +87,6 @@ ROUND: 2 / 5
 
 **Out-of-scope note:** the README transport drift the Producer called out is real, but it does not block approval of `AGENTS.md` because this relay's artifact is now accurate on its own terms.
 
-**Commit:** pending
+**Commit:** 07d52b7
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
