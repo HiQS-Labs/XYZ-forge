@@ -75,6 +75,6 @@ ROUND: 2 / 3
 
 **Out-of-scope note:** the working tree was already dirty before this turn (`LICENSE.md` modified, `4X4.md` untracked), so the clean-handoff invariant in rule 9 is not currently true outside this relay edit.
 
-**Commit:** 
+**Commit:** d04d146
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
