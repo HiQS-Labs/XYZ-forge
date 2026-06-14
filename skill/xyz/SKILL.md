@@ -89,9 +89,10 @@ Copy the block below into `install.sh` and run `bash install.sh [DIR]`
 `tick` at the repo you're coordinating via `TICK_REPO_ROOT` (or run it from
 inside that repo — it uses `git rev-parse --show-toplevel`).
 
-> This checkpoint embeds the **runtime** (CLI + engine). The **test suite**
-> (`validate.sh` + `test/`) is embedded in the companion section "Install —
-> tests" (added in the next build step); run it to confirm the extract is exact.
+> This block embeds the **runtime** (CLI + engine). The **test suite**
+> (`validate.sh` + `test/`) is in the companion block §4b "Install — test suite";
+> run `bash validate.sh` after extracting both → **12/12** confirms the extract
+> is byte-exact.
 
 ```bash
 #!/usr/bin/env bash
@@ -1303,6 +1304,748 @@ module.exports = { analyze, renderHuman, renderMd, buildClaimWindows, computePar
 echo "xyz/tick runtime installed in $DIR/ — run: TICK_REPO_ROOT=<repo> $DIR/bin/tick --help"
 ```
 
+## 4b. Install — test suite (self-extracting)
+
+Run this **after** the runtime block, with the **same** `DIR`, then
+`cd "$DIR" && bash validate.sh` → expect **12/12**. That proves your extract of
+the runtime is byte-exact (the tests exercise claim/lock/cap/scope/handoff/
+break/analyze/reap/heartbeat/take against the extracted engine).
+
+```bash
+#!/usr/bin/env bash
+# xyz / tick — self-extracting TEST SUITE installer (run after the runtime block)
+set -euo pipefail
+DIR="${1:-xyz-tick}"
+mkdir -p "$DIR/test"
+
+cat > "$DIR/validate.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# Aggregate runner for all tick acceptance tests.
+# Exit 0 = all pass; Exit 1 = at least one failed.
+set -u
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+TESTS=(
+  "projection-idempotent.sh"
+  "concurrent-claim.sh"
+  "path-overlap.sh"
+  "scope-change.sh"
+  "handoff.sh"
+  "circuit-break.sh"
+  "auto-sync.sh"
+  "analyze.sh"
+  "claim-cap.sh"
+  "reap.sh"
+  "heartbeat.sh"
+  "take.sh"
+)
+
+PASSED=()
+FAILED=()
+
+for t in "${TESTS[@]}"; do
+  echo
+  echo "==============================="
+  echo "Running $t"
+  echo "==============================="
+  if bash "$HERE/test/$t"; then
+    PASSED+=("$t")
+  else
+    FAILED+=("$t")
+  fi
+done
+
+echo
+echo "==============================="
+echo "Summary"
+echo "==============================="
+echo "passed: ${#PASSED[@]} / ${#TESTS[@]}"
+for t in "${PASSED[@]}"; do echo "  + $t"; done
+if [ "${#FAILED[@]}" -gt 0 ]; then
+  echo "failed:"
+  for t in "${FAILED[@]}"; do echo "  - $t"; done
+  exit 1
+fi
+exit 0
+===XYZ_FILE===
+chmod +x "$DIR/validate.sh"
+
+cat > "$DIR/test/_setup.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# Shared setup for tick test scripts. Source this from each test.
+#
+# Local transport: both agents share TICK_REPO_ROOT=$A. tick_b is an alias for
+# tick_a; git push/pull between clones is not needed for event visibility. $B and
+# $REMOTE are retained for tests that still use git operations.
+#
+# Usage: source _setup.sh <test-name>
+
+set -u
+set -o pipefail
+
+TEST_NAME="${1:-unnamed}"
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+TICK="$(cd "$HERE/.." && pwd)/bin/tick"
+export TICK
+
+WORK="$(mktemp -d -t "tick-${TEST_NAME}.XXXXXX")"
+export WORK
+trap 'rm -rf "$WORK"' EXIT
+
+REMOTE="$WORK/remote.git"
+A="$WORK/agent-a"
+B="$WORK/agent-b"
+export REMOTE A B
+
+git init -q --bare "$REMOTE"
+
+SEED="$WORK/.seed"
+git init -q "$SEED"
+git -C "$SEED" config user.email seed@t
+git -C "$SEED" config user.name seed
+git -C "$SEED" commit -q --allow-empty -m "init"
+git -C "$SEED" branch -M main
+git -C "$SEED" remote add origin "$REMOTE"
+git -C "$SEED" push -q -u origin main
+rm -rf "$SEED"
+
+git clone -q "$REMOTE" "$A"
+git clone -q "$REMOTE" "$B"
+for d in "$A" "$B"; do
+  git -C "$d" config user.email "${d##*/}@t"
+  git -C "$d" config user.name "${d##*/}"
+done
+
+tick_in() {
+  local dir="$1"; shift
+  TICK_REPO_ROOT="$dir" "$TICK" "$@"
+}
+
+tick_a() { tick_in "$A" "$@"; }
+tick_b() { tick_in "$A" "$@"; }  # local transport: shares TICK_REPO_ROOT with tick_a
+
+PASS=0
+FAIL=0
+pass() { echo "  PASS: $*"; PASS=$((PASS+1)); }
+fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); exit 1; }
+
+echo "== test: $TEST_NAME =="
+echo "  workdir: $WORK"
+===XYZ_FILE===
+
+cat > "$DIR/test/projection-idempotent.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# AC #6: tick project twice produces byte-identical STATE.md
+source "$(dirname "$0")/_setup.sh" projection-idempotent
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-001 --agent dispatcher --priority 10 --paths "src/foo/**" >/dev/null
+TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-002 --agent dispatcher --priority 5 --paths "src/bar/**" >/dev/null
+TICK_TS=2026-05-04T10:00:02.000Z tick_a log task.claimed TASK-001 --agent alice --paths "src/foo/**" >/dev/null
+
+tick_a project >/dev/null
+cp "$A/.tick/STATE.md" "$WORK/state-1.md"
+tick_a project >/dev/null
+cp "$A/.tick/STATE.md" "$WORK/state-2.md"
+
+if diff -q "$WORK/state-1.md" "$WORK/state-2.md" >/dev/null; then
+  pass "STATE.md is byte-identical across two consecutive projections"
+else
+  diff "$WORK/state-1.md" "$WORK/state-2.md" || true
+  fail "STATE.md differs between projections"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/concurrent-claim.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# AC #1: two agents race to claim the same task. The O_EXCL lock serialises
+# them — first writer wins, second gets "lost". No timestamp tie-breaker
+# exists in local transport; the lock is the sole arbiter.
+source "$(dirname "$0")/_setup.sh" concurrent-claim
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-007 --agent dispatcher --priority 10 --paths "src/auth/**" >/dev/null
+
+# Alice claims first.
+tick_a claim TASK-007 --agent alice --paths "src/auth/**" >"$WORK/a.out"
+if grep -q "^won:" "$WORK/a.out"; then
+  pass "alice won the claim"
+else
+  fail "expected alice to win; got: $(cat "$WORK/a.out")"
+fi
+
+# Bob tries to claim the same task — must lose.
+tick_b claim TASK-007 --agent bob --paths "src/auth/**" >"$WORK/b.out"
+if grep -q "^lost:" "$WORK/b.out"; then
+  pass "bob lost the claim (task already held by alice)"
+else
+  fail "expected bob to lose; got: $(cat "$WORK/b.out")"
+fi
+
+# STATE.md must show exactly alice as claimer.
+tick_a project >/dev/null
+if grep -E "^- TASK-007 by alice" "$A/.tick/STATE.md" >/dev/null; then
+  pass "STATE.md shows TASK-007 claimed by alice"
+else
+  cat "$A/.tick/STATE.md"; fail "STATE.md does not show alice as winner"
+fi
+
+# Idempotent re-claim by alice returns won.
+tick_a claim TASK-007 --agent alice --paths "src/auth/**" >"$WORK/a2.out"
+if grep -q "^won:" "$WORK/a2.out"; then
+  pass "alice's idempotent re-claim returns won"
+else
+  fail "idempotent re-claim failed: $(cat "$WORK/a2.out")"
+fi
+
+# Terminal task can't be claimed.
+tick_a done TASK-007 --agent alice >/dev/null
+tick_a claim TASK-007 --agent bob --paths "src/auth/**" >"$WORK/done.out"
+if grep -q "^lost:.*done" "$WORK/done.out"; then
+  pass "done task returns lost with unavailable=done"
+else
+  fail "done task claim unexpected: $(cat "$WORK/done.out")"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/path-overlap.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# AC #2: agent-A claims TASK-007 with paths src/auth/**.
+# TASK-008 (higher priority) also touches src/auth/**.
+# agent-B's `tick next` must NOT return TASK-008; should return next compatible.
+source "$(dirname "$0")/_setup.sh" path-overlap
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-007 --agent dispatcher --priority 5  --paths "src/auth/**" >/dev/null
+TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-008 --agent dispatcher --priority 99 --paths "src/auth/login.js" >/dev/null
+TICK_TS=2026-05-04T10:00:02.000Z tick_a log task.created TASK-009 --agent dispatcher --priority 1  --paths "src/billing/**" >/dev/null
+TICK_TS=2026-05-04T10:00:05.000Z tick_a claim TASK-007 --agent alice --paths "src/auth/**" >/dev/null
+
+# tick_b shares TICK_REPO_ROOT with tick_a — no git pull needed.
+NEXT_FOR_B=$(tick_b next --agent bob)
+echo "  bob's next: $NEXT_FOR_B"
+
+if echo "$NEXT_FOR_B" | grep -q "TASK-008"; then
+  fail "bob got TASK-008 even though it overlaps src/auth/** claimed by alice"
+fi
+if echo "$NEXT_FOR_B" | grep -q "TASK-009"; then
+  pass "bob routed to TASK-009 (non-overlapping) instead of higher-priority TASK-008"
+else
+  fail "bob should have received TASK-009 but got: $NEXT_FOR_B"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/scope-change.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# AC #3: alice claims with src/auth/** then `tick scope` to add src/middleware/**.
+# bob's `tick next` immediately stops returning tasks touching src/middleware/**.
+source "$(dirname "$0")/_setup.sh" scope-change
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-007 --agent dispatcher --priority 5  --paths "src/auth/**" >/dev/null
+TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-010 --agent dispatcher --priority 50 --paths "src/middleware/**" >/dev/null
+TICK_TS=2026-05-04T10:00:02.000Z tick_a log task.created TASK-011 --agent dispatcher --priority 1  --paths "src/billing/**" >/dev/null
+TICK_TS=2026-05-04T10:00:05.000Z tick_a claim TASK-007 --agent alice --paths "src/auth/**" >/dev/null
+
+# tick_b shares TICK_REPO_ROOT with tick_a — no git pull needed.
+NEXT1=$(tick_b next --agent bob)
+echo "  before scope expansion, bob's next: $NEXT1"
+if ! echo "$NEXT1" | grep -q "TASK-010"; then
+  fail "bob should have seen TASK-010 (highest priority, no overlap yet)"
+fi
+
+# Alice expands scope to include middleware.
+TICK_TS=2026-05-04T10:00:10.000Z tick_a scope TASK-007 --agent alice --paths "src/auth/**,src/middleware/**" >/dev/null
+
+NEXT2=$(tick_b next --agent bob)
+echo "  after scope expansion, bob's next: $NEXT2"
+if echo "$NEXT2" | grep -q "TASK-010"; then
+  fail "bob still got TASK-010 after alice expanded scope to src/middleware/**"
+fi
+if echo "$NEXT2" | grep -q "TASK-011"; then
+  pass "bob now routed to TASK-011 after alice's scope expansion"
+else
+  fail "expected TASK-011, got: $NEXT2"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/handoff.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# AC #4: alice releases TASK-007 with --to bob. Bob's `tick next` returns
+# TASK-007 even when other tasks have higher base priority.
+source "$(dirname "$0")/_setup.sh" handoff
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-007 --agent dispatcher --priority 1   --paths "src/auth/**" >/dev/null
+TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-099 --agent dispatcher --priority 100 --paths "src/billing/**" >/dev/null
+# Without handoff, bob would pick TASK-099 (priority 100).
+# tick_b shares TICK_REPO_ROOT with tick_a — no git pull needed.
+PRE=$(tick_b next --agent bob)
+echo "  pre-handoff, bob's next: $PRE"
+if ! echo "$PRE" | grep -q "TASK-099"; then
+  fail "expected TASK-099 pre-handoff, got: $PRE"
+fi
+
+# Alice claims and immediately hands off TASK-007 to bob.
+TICK_TS=2026-05-04T10:00:05.000Z tick_a claim TASK-007 --agent alice --paths "src/auth/**" >/dev/null
+TICK_TS=2026-05-04T10:00:06.000Z tick_a release TASK-007 --agent alice --to bob >/dev/null
+
+POST=$(tick_b next --agent bob)
+echo "  post-handoff, bob's next: $POST"
+if echo "$POST" | grep -q "TASK-007" && echo "$POST" | grep -q "handoff"; then
+  pass "bob's next returns TASK-007 with handoff marker, despite TASK-099 having higher priority"
+else
+  fail "expected handoff TASK-007 to win for bob, got: $POST"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/circuit-break.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# AC #5: alice breaks TASK-007. No agent's `tick next` returns it.
+# STATE.md shows it as broken with reason and breaking agent.
+source "$(dirname "$0")/_setup.sh" circuit-break
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-007 --agent dispatcher --priority 100 --paths "src/auth/**" >/dev/null
+TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-008 --agent dispatcher --priority 1   --paths "src/billing/**" >/dev/null
+# Pre-break: bob would pick TASK-007 (priority 100).
+# tick_b shares TICK_REPO_ROOT with tick_a — no git pull needed.
+PRE=$(tick_b next --agent bob)
+if ! echo "$PRE" | grep -q "TASK-007"; then
+  fail "expected TASK-007 pre-break, got: $PRE"
+fi
+
+# Alice must claim before breaking (ownership enforcement).
+TICK_TS=2026-05-04T10:00:04.000Z tick_a claim TASK-007 --agent alice --paths "src/auth/**" >/dev/null
+TICK_TS=2026-05-04T10:00:05.000Z tick_a break TASK-007 --agent alice --reason "infinite loop in auth tests" >/dev/null
+
+POST=$(tick_b next --agent bob)
+echo "  post-break, bob's next: $POST"
+if echo "$POST" | grep -q "TASK-007"; then
+  fail "bob still got TASK-007 after circuit break"
+fi
+if echo "$POST" | grep -q "TASK-008"; then
+  pass "bob skipped broken TASK-007 and got TASK-008"
+else
+  fail "expected TASK-008, got: $POST"
+fi
+
+# Verify STATE.md shows it under Circuit-Broken with reason and agent.
+if grep -E "^- TASK-007 by alice — reason: \"infinite loop in auth tests\"" "$A/.tick/STATE.md" >/dev/null; then
+  pass "STATE.md shows TASK-007 broken by alice with reason"
+else
+  echo "--- STATE.md ---"; cat "$A/.tick/STATE.md"
+  fail "STATE.md missing expected circuit-break entry"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/auto-sync.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# Run 2: git auto-sync (push-per-verb) was removed with the local transport.
+# This test verifies the O_EXCL claim lock: concurrent shell-level claim calls
+# serialise correctly — exactly one wins, exactly one event written.
+source "$(dirname "$0")/_setup.sh" auto-sync
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-L1 --agent dispatcher --priority 10 --paths "src/lock/**" >/dev/null
+TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-L2 --agent dispatcher --priority  8 --paths "src/other/**" >/dev/null
+
+# Fire two claim attempts in parallel; lock serialises them.
+# Capture stdout+stderr: the lock loser exits 1 with an error on stderr
+# ("another tick claim in progress"), not a "lost:" on stdout.
+tick_a claim TASK-L1 --agent alice --paths "src/lock/**" >"$WORK/a.out" 2>&1 &
+tick_b claim TASK-L1 --agent bob   --paths "src/lock/**" >"$WORK/b.out" 2>&1 &
+wait
+
+A_OUT=$(cat "$WORK/a.out")
+B_OUT=$(cat "$WORK/b.out")
+echo "  alice: $A_OUT"
+echo "  bob:   $B_OUT"
+
+is_winner() { echo "$1" | grep -q "^won:"; }
+is_loser()  { echo "$1" | grep -qE "^lost:|another tick claim is in progress"; }
+
+WINS=0
+is_winner "$A_OUT" && WINS=$((WINS+1)) || true
+is_winner "$B_OUT" && WINS=$((WINS+1)) || true
+LOSSES=0
+is_loser "$A_OUT" && LOSSES=$((LOSSES+1)) || true
+is_loser "$B_OUT" && LOSSES=$((LOSSES+1)) || true
+
+[ "$WINS" = "1" ]   && pass "exactly one agent won the concurrent claim" \
+                    || fail "expected 1 winner, got $WINS"
+[ "$LOSSES" = "1" ] && pass "exactly one agent lost the concurrent claim" \
+                    || fail "expected 1 loser, got $LOSSES"
+
+# Exactly one task.claimed event must exist for TASK-L1 (no double-write).
+CLAIMED_COUNT=$(grep -rl '"task":"TASK-L1"' "$A/.tick/events/" 2>/dev/null \
+  | xargs grep -l '"type":"task.claimed"' 2>/dev/null | wc -l | tr -d ' ')
+[ "$CLAIMED_COUNT" = "1" ] \
+  && pass "exactly one task.claimed event written (lock integrity)" \
+  || fail "expected 1 claimed event for TASK-L1, got $CLAIMED_COUNT"
+
+# Projection must succeed after the concurrent race.
+tick_a project >/dev/null
+pass "projection succeeded after concurrent claims (no corrupted state)"
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/analyze.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# `tick analyze` test: event-log-only metrics (Run 2 — git log analysis removed
+# when the git transport was stripped). Drift/unclaimed detection is deferred.
+source "$(dirname "$0")/_setup.sh" analyze
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-001 --agent dispatcher --priority 10 --paths "src/auth/**"    >/dev/null
+TICK_TS=2026-05-04T10:00:01.000Z tick_a log task.created TASK-002 --agent dispatcher --priority  5 --paths "src/billing/**" >/dev/null
+TICK_TS=2026-05-04T10:00:02.000Z tick_a log task.created TASK-003 --agent dispatcher --priority  1 --paths "src/poison/**"  >/dev/null
+
+# alice: claims TASK-001 at 10:01, done at 10:15.
+# bob:   claims TASK-002 at 10:05 (overlaps alice's window), done at 10:30.
+# → concurrent-claim window = 10:05-10:15 (10 min out of ~40 min run window).
+TICK_TS=2026-05-04T10:01:00.000Z tick_a claim TASK-001 --agent alice --paths "src/auth/**"    >/dev/null
+TICK_TS=2026-05-04T10:05:00.000Z tick_b claim TASK-002 --agent bob   --paths "src/billing/**" >/dev/null
+TICK_TS=2026-05-04T10:15:00.000Z tick_a done  TASK-001 --agent alice                          >/dev/null
+TICK_TS=2026-05-04T10:30:00.000Z tick_b done  TASK-002 --agent bob                            >/dev/null
+
+# alice: claims and breaks TASK-003 at 10:40-10:41.
+TICK_TS=2026-05-04T10:40:00.000Z tick_a claim TASK-003 --agent alice --paths "src/poison/**" >/dev/null
+TICK_TS=2026-05-04T10:41:00.000Z tick_a break TASK-003 --agent alice --reason "loop"         >/dev/null
+
+HUMAN=$(tick_a analyze)
+echo "$HUMAN" >"$WORK/human.txt"
+
+# Event counts.
+echo "$HUMAN" | grep -q "created:3" \
+  && pass "event count: 3 created" \
+  || fail "expected created:3 in: $(echo "$HUMAN" | head -3)"
+
+echo "$HUMAN" | grep -q "claimed:3" \
+  && pass "event count: 3 claimed" \
+  || fail "expected claimed:3"
+
+echo "$HUMAN" | grep -q "done:2" \
+  && pass "event count: 2 done" \
+  || fail "expected done:2"
+
+echo "$HUMAN" | grep -q "circuit_break:1" \
+  && pass "event count: 1 circuit_break" \
+  || fail "expected circuit_break:1"
+
+# Per-agent stats.
+echo "$HUMAN" | grep -A2 "\[alice\]" | grep -q "claims: 2, done: 1" \
+  && pass "alice: 2 claims, 1 done" \
+  || fail "alice per-agent stats unexpected: $(echo "$HUMAN" | grep -A3 '\[alice\]')"
+
+echo "$HUMAN" | grep -A2 "\[bob\]" | grep -q "claims: 1, done: 1" \
+  && pass "bob: 1 claim, 1 done" \
+  || fail "bob per-agent stats unexpected: $(echo "$HUMAN" | grep -A3 '\[bob\]')"
+
+# Concurrent-claim time: alice (10:01-10:15) overlaps bob (10:05-10:30).
+# Overlap = 10:05-10:15 = 10 min > 0. Expect a percentage like (24%).
+if echo "$HUMAN" | grep "concurrent-claim time" | grep -qE "\([1-9][0-9]*%\)"; then
+  pass "concurrent-claim time is non-zero (overlapping claim windows detected)"
+else
+  fail "expected non-zero concurrent-claim time; got: $(echo "$HUMAN" | grep concurrent)"
+fi
+
+# --write: appends auto-analyzed section to a target file.
+TARGET="$WORK/obs.md"
+echo "# Observations" >"$TARGET"
+tick_a analyze --write "$TARGET" >/dev/null
+grep -q "^## Auto-analyzed (tick analyze)" "$TARGET" \
+  && pass "tick analyze --write appended the auto-analyzed section" \
+  || { cat "$TARGET"; fail "missing auto-analyzed section in target"; }
+
+# Second --write replaces, doesn't append twice.
+tick_a analyze --write "$TARGET" >/dev/null
+HITS=$(grep -c "^## Auto-analyzed (tick analyze)" "$TARGET")
+[ "$HITS" = "1" ] \
+  && pass "second --write replaces, doesn't duplicate" \
+  || fail "expected 1 section, got $HITS"
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/claim-cap.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# Run 2 P1/P2: per-agent claim cap (MAX_ACTIVE_CLAIMS_PER_AGENT = 2).
+# An agent may hold at most 2 active claims. The 3rd claim is refused and
+# writes ZERO events; `tick next` reports the limit; after `tick done` frees a
+# slot, the 3rd claim succeeds. Tasks have non-overlapping paths so the cap —
+# not path-routing — is what blocks the 3rd claim.
+source "$(dirname "$0")/_setup.sh" claim-cap
+
+git -C "$A" config user.name alice
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-1 --agent dispatcher --priority 10 --paths "src/one/**"   >/dev/null
+TICK_TS=2026-05-04T10:00:00.100Z tick_a log task.created TASK-2 --agent dispatcher --priority 10 --paths "src/two/**"   >/dev/null
+TICK_TS=2026-05-04T10:00:00.200Z tick_a log task.created TASK-3 --agent dispatcher --priority 10 --paths "src/three/**" >/dev/null
+git -C "$A" add .tick && git -C "$A" commit -q -m "seed tasks" && git -C "$A" push -q origin main
+
+# alice claims two — both win (non-overlapping paths, under the cap).
+TICK_TS=2026-05-04T10:00:01.000Z tick_a claim TASK-1 --agent alice --paths "src/one/**" >"$WORK/c1.out"
+TICK_TS=2026-05-04T10:00:02.000Z tick_a claim TASK-2 --agent alice --paths "src/two/**" >"$WORK/c2.out"
+if grep -q "^won:" "$WORK/c1.out" && grep -q "^won:" "$WORK/c2.out"; then
+  pass "alice claimed two tasks (under cap)"
+else
+  fail "alice could not claim two tasks: $(cat "$WORK/c1.out" "$WORK/c2.out")"
+fi
+
+# Snapshot event count before the capped claim attempt.
+BEFORE=$(ls "$A/.tick/events/" | wc -l | tr -d ' ')
+
+# Third claim must be refused with the limit message.
+TICK_TS=2026-05-04T10:00:03.000Z tick_a claim TASK-3 --agent alice --paths "src/three/**" >"$WORK/c3.out"
+if grep -q "claim limit reached" "$WORK/c3.out"; then
+  pass "third claim refused with limit message"
+else
+  fail "third claim was not refused: $(cat "$WORK/c3.out")"
+fi
+
+# ...and must have written ZERO events.
+AFTER=$(ls "$A/.tick/events/" | wc -l | tr -d ' ')
+if [ "$BEFORE" = "$AFTER" ]; then
+  pass "refused claim wrote zero events ($BEFORE == $AFTER)"
+else
+  fail "refused claim wrote events ($BEFORE -> $AFTER)"
+fi
+
+# `tick next` must report the limit, not hand out TASK-3.
+tick_a next --agent alice >"$WORK/n.out" 2>/dev/null
+if grep -q "claim limit reached" "$WORK/n.out"; then
+  pass "tick next reports the claim limit"
+else
+  fail "tick next did not report the limit: $(cat "$WORK/n.out")"
+fi
+
+# Finish one task — frees a slot.
+TICK_TS=2026-05-04T10:00:04.000Z tick_a done TASK-1 --agent alice >/dev/null
+
+# Now the third claim should succeed.
+TICK_TS=2026-05-04T10:00:05.000Z tick_a claim TASK-3 --agent alice --paths "src/three/**" >"$WORK/c3b.out"
+if grep -q "^won:" "$WORK/c3b.out"; then
+  pass "third claim succeeds after a slot is freed"
+else
+  fail "third claim still refused after done: $(cat "$WORK/c3b.out")"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/reap.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# Run 2 P5: `tick reap <agent>` releases every active claim held by a
+# (presumed crashed) agent so peers can pick the work back up. Manual,
+# logged liveness lever — not auto-recovery.
+source "$(dirname "$0")/_setup.sh" reap
+
+git -C "$A" config user.name alice
+git -C "$B" config user.name bob
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-1 --agent dispatcher --priority 10 --paths "src/one/**" >/dev/null
+TICK_TS=2026-05-04T10:00:00.100Z tick_a log task.created TASK-2 --agent dispatcher --priority 10 --paths "src/two/**" >/dev/null
+
+# alice claims both, then "crashes" (just stops).
+TICK_TS=2026-05-04T10:00:01.000Z tick_a claim TASK-1 --agent alice --paths "src/one/**" >/dev/null
+TICK_TS=2026-05-04T10:00:02.000Z tick_a claim TASK-2 --agent alice --paths "src/two/**" >/dev/null
+
+# Coordinator reaps alice's claims. tick_b shares TICK_REPO_ROOT with tick_a.
+TICK_TS=2026-05-04T10:00:05.000Z tick_b reap alice --by coordinator >"$WORK/reap.out"
+if grep -q "reaped 2 claim(s) from alice" "$WORK/reap.out"; then
+  pass "reap released both of alice's claims"
+else
+  fail "reap output unexpected: $(cat "$WORK/reap.out")"
+fi
+
+# Two task.released events for alice must exist in the log.
+RELEASED=$(ls "$A/.tick/events/" | grep -c "alice-released" || true)
+if [ "$RELEASED" = "2" ]; then
+  pass "two task.released events emitted for alice"
+else
+  fail "expected 2 alice-released events, got $RELEASED"
+fi
+
+# STATE.md: tasks must no longer be claimed by alice.
+tick_b project >/dev/null
+if grep -qE "^- TASK-1 by alice" "$A/.tick/STATE.md"; then
+  fail "TASK-1 still claimed by alice after reap"
+else
+  pass "TASK-1 no longer claimed by alice after reap"
+fi
+
+# A peer can now claim a reaped task.
+TICK_TS=2026-05-04T10:00:10.000Z tick_b claim TASK-1 --agent bob --paths "src/one/**" >"$WORK/bob.out"
+if grep -q "^won:" "$WORK/bob.out"; then
+  pass "a peer can claim a reaped task"
+else
+  fail "peer could not claim reaped task: $(cat "$WORK/bob.out")"
+fi
+
+# Reaping an agent with no active claims is a clean no-op.
+TICK_TS=2026-05-04T10:00:11.000Z tick_b reap alice --by coordinator >"$WORK/reap2.out"
+if grep -q "no active claims held by alice" "$WORK/reap2.out"; then
+  pass "reap of an agent with no claims is a clean no-op"
+else
+  fail "reap no-op output unexpected: $(cat "$WORK/reap2.out")"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/heartbeat.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# Run 3: `tick ping` emits a task.heartbeat liveness event (ownership-guarded),
+# and `tick analyze` flags a claim window with no heartbeat for longer than the
+# parked-claim threshold (10 min) as a parked-claim suspect — the work-activity
+# signal that does NOT depend on git author identity.
+source "$(dirname "$0")/_setup.sh" heartbeat
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-1 --agent dispatcher --priority 10 --paths "src/http/**" >/dev/null
+TICK_TS=2026-05-04T10:00:00.100Z tick_a log task.created TASK-2 --agent dispatcher --priority 10 --paths "src/store/**" >/dev/null
+
+# alice claims both (cross-half, within the cap of 2).
+TICK_TS=2026-05-04T10:00:01.000Z tick_a claim TASK-1 --agent alice --paths "src/http/**" >/dev/null
+TICK_TS=2026-05-04T10:00:02.000Z tick_a claim TASK-2 --agent alice --paths "src/store/**" >/dev/null
+
+# Ownership guard: a non-claimer cannot heartbeat the task.
+if TICK_TS=2026-05-04T10:00:03.000Z tick_a ping TASK-1 --agent bob >"$WORK/bobping.out" 2>&1; then
+  fail "bob (non-owner) was allowed to ping TASK-1: $(cat "$WORK/bobping.out")"
+else
+  pass "ping is ownership-guarded (non-owner rejected)"
+fi
+
+# alice heartbeats TASK-1 mid-window; emits a task.heartbeat event file.
+TICK_TS=2026-05-04T10:05:01.000Z tick_a ping TASK-1 --agent alice >/dev/null
+BEATS=$(ls "$A/.tick/events/" | grep -c "alice-heartbeat-TASK-1" || true)
+if [ "$BEATS" = "1" ]; then
+  pass "tick ping emitted a task.heartbeat event"
+else
+  fail "expected 1 alice-heartbeat-TASK-1 event, got $BEATS"
+fi
+
+# Close both windows. TASK-1: claimed 10:00:01, beat 10:05:01, done 10:08:01
+# (max gap 5m < 10m → healthy). TASK-2: claimed 10:00:02, NO beats, done
+# 10:20:02 (20m gap > 10m → parked suspect).
+TICK_TS=2026-05-04T10:08:01.000Z tick_a done TASK-1 --agent alice >/dev/null
+TICK_TS=2026-05-04T10:20:02.000Z tick_a done TASK-2 --agent alice >/dev/null
+
+tick_a analyze --format json >"$WORK/analyze.json"
+PARKED=$(node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); console.log(r.parked_suspects.map(s=>s.task).sort().join(","))' "$WORK/analyze.json")
+
+if [ "$PARKED" = "TASK-2" ]; then
+  pass "analyze flags only the heartbeat-less claim as parked (TASK-2)"
+else
+  fail "expected parked_suspects=[TASK-2], got [$PARKED]"
+fi
+
+# The heartbeat-covered window must NOT be flagged.
+if echo "$PARKED" | grep -q "TASK-1"; then
+  fail "TASK-1 wrongly flagged parked despite an in-window heartbeat"
+else
+  pass "heartbeat-covered claim window is not flagged parked"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+cat > "$DIR/test/take.sh" <<'===XYZ_FILE==='
+#!/usr/bin/env bash
+# Run 3: `tick take --agent <id>` is the atomic next+claim verb that replaced the
+# `tick next` + `tick claim` two-step (closing the TOCTOU race). This test covers
+# the two properties the Run 3 plan gates on — atomic selection+claim, and the
+# same-half double-claim refusal — plus the claim cap and cross-agent lane
+# separation that fall out of the same candidate filter.
+source "$(dirname "$0")/_setup.sh" take
+
+tick_a init >/dev/null
+TICK_TS=2026-05-04T10:00:00.000Z tick_a log task.created TASK-A1 --agent dispatcher --priority 10 --paths "src/http/**" >/dev/null
+TICK_TS=2026-05-04T10:00:00.100Z tick_a log task.created TASK-A2 --agent dispatcher --priority 8  --paths "src/http/**" >/dev/null
+TICK_TS=2026-05-04T10:00:00.200Z tick_a log task.created TASK-B1 --agent dispatcher --priority 5  --paths "src/store/**" >/dev/null
+
+# 1. Atomic next+claim: take selects the highest-priority available task AND
+#    claims it in one call. The claim event must exist immediately after.
+TICK_TS=2026-05-04T10:00:01.000Z tick_a take --agent alice >"$WORK/t1.out"
+if grep -q "^won: TASK-A1 " "$WORK/t1.out"; then
+  pass "take selects highest-priority task and reports a win (TASK-A1)"
+else
+  fail "take did not win TASK-A1: $(cat "$WORK/t1.out")"
+fi
+CLAIMED=$(ls "$A/.tick/events/" | grep -c "alice-claimed-TASK-A1" || true)
+if [ "$CLAIMED" = "1" ]; then
+  pass "take atomically emitted the task.claimed event"
+else
+  fail "expected 1 alice-claimed-TASK-A1 event, got $CLAIMED"
+fi
+
+# 2. Same-half double-claim refusal + cross-half allowed: alice already holds the
+#    http lane (A1). Her next take must SKIP A2 (http, overlaps her own claim)
+#    and instead get B1 (store, no overlap).
+TICK_TS=2026-05-04T10:00:02.000Z tick_a take --agent alice >"$WORK/t2.out"
+if grep -q "^won: TASK-B1 " "$WORK/t2.out"; then
+  pass "take skips the overlapping same-half task and crosses to the free lane (B1)"
+else
+  fail "take should have won TASK-B1 (not A2): $(cat "$WORK/t2.out")"
+fi
+if grep -q "TASK-A2" "$WORK/t2.out"; then
+  fail "take handed alice TASK-A2, which overlaps her own active claim"
+else
+  pass "take refused the same-half overlapping task (A2 not granted)"
+fi
+
+# 3. Claim cap via take: alice now holds 2 (A1, B1). A third take is refused even
+#    though A2 is still open.
+TICK_TS=2026-05-04T10:00:03.000Z tick_a take --agent alice >"$WORK/t3.out"
+if grep -q "claim limit reached" "$WORK/t3.out"; then
+  pass "take enforces the per-agent claim cap (2)"
+else
+  fail "take did not enforce the claim cap: $(cat "$WORK/t3.out")"
+fi
+
+# 4. Cross-agent lane separation: only A2 (http) is open, and it overlaps alice's
+#    A1 claim — so bob gets nothing rather than colliding into the http lane.
+TICK_TS=2026-05-04T10:00:04.000Z tick_a take --agent bob >"$WORK/t4.out"
+if grep -q "no available task" "$WORK/t4.out"; then
+  pass "take keeps a second agent out of a lane already claimed by the first"
+else
+  fail "bob should have gotten no task (A2 overlaps alice's lane): $(cat "$WORK/t4.out")"
+fi
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0
+===XYZ_FILE===
+
+echo "xyz/tick test suite installed in $DIR/ — run: cd $DIR && bash validate.sh (expect 12/12)"
+```
+
 ## 5. Use-case A — Parallel build
 
 **Coordinator setup (before agents start):**
@@ -1414,9 +2157,8 @@ holding a claim (`tick reap <agent> --by coordinator`), or drift outside a lane.
 
 ## 10. Provenance
 
-Built from the Trinity experiment in `experimental/coordination-layer/`
-(`P1-TRINITY-ROUND2.md`, `REAL-AGENT-OBSERVATIONS.md`, `RECAP.md`). Runtime here
-is embedded verbatim from that source. **Next build step:** embed the test suite
-(`validate.sh` + `test/`) below a companion "Install — tests" section so an
-operator can run `validate.sh` and confirm the extract is byte-exact (the source
-suite is 12/12 green).
+Built from the Trinity experiment (Runs 1–3); see `docs/` for the run plan
+(`P1-TRINITY-ROUND2.md`), `REAL-AGENT-OBSERVATIONS.md`, `RECAP.md`, and the
+`docs/relay-history/` review threads. Both the runtime (§4) and the full test
+suite (§4b) are embedded verbatim; extract both into the same `DIR` and run
+`bash validate.sh` → **12/12** to confirm the extract is byte-exact.
