@@ -1,62 +1,65 @@
-# Trinity — Coordination Layer Spike
+# XYZ - A 3 Agent Coordination System (Beta)
 
-Spike for letting Claude Code, Codex, and Gemini work the same codebase concurrently without colliding. See [`PROJECT/2-WORKING/P1-TRINITY.md`](../../PROJECT/2-WORKING/P1-TRINITY.md) for the full design rationale and acceptance criteria.
+An early skill to let Claude Code, Codex, and Gemini work the same codebase concurrently without colliding. 
 
 ## Status
 
-- All 7 mechanical acceptance criteria pass — run `./validate.sh`.
+- All 12 acceptance tests pass — run `./validate.sh`.
 - Real-agent hand-test results: see [`REAL-AGENT-OBSERVATIONS.md`](REAL-AGENT-OBSERVATIONS.md).
 - Spike recap: see [`RECAP.md`](RECAP.md).
 
 ## What it is
 
-`tick` is a tiny CLI backed by an event log under `.tick/events/`. Each event is a separate JSONL file (one event per file = disjoint files = zero git merge conflicts). `tick project` folds events into `.tick/STATE.md`. Critical events (claims, scope changes, handoffs, breaks, completion) auto-fetch+rebase+commit+push so peer agents see them. `task.commented` is local-only and rides the next normal commit.
+`tick` is a tiny CLI backed by an event log under `.tick/events/`. Each event is a separate JSONL file (one event per file = disjoint files = zero merge conflicts). `tick project` folds events into `.tick/STATE.md`. Coordination is **local-transport** (since Run 2): every verb is a pure append to a shared local `.tick/events/` — no git push or fetch per event. Peer agents see each other's events by reading the same shared directory, and a per-repo `O_EXCL` lock (`withClaimLock`, under `.tick/locks/`) serialises concurrent claims into a real mutex. `git` is still used for exactly one thing: `tick analyze` attributes work commits by author name.
 
 ## Quickstart (single repo)
 
 ```bash
-# from any clone of the coordination branch:
-./experiments/coordination-layer/bin/tick init
-./experiments/coordination-layer/bin/tick log task.created TASK-001 \
+# from the repo root:
+./bin/tick init
+./bin/tick log task.created TASK-001 \
   --agent dispatcher --priority 10 --paths "src/auth/**"
-./experiments/coordination-layer/bin/tick project
+./bin/tick project
 cat .tick/STATE.md
 ```
 
 ## CLI verbs
 
-| Verb | Pushes? | Purpose |
-|---|---|---|
-| `tick init` | no | `mkdir -p .tick/events` |
-| `tick log <type> <task> ...` | no (writes locally) | Append a raw event |
-| `tick project` | no | Rebuild `.tick/STATE.md` from events |
-| `tick claim <task> --agent <id> --paths <globs>` | yes | Optimistic claim with deterministic tie-breaker. Refused if the agent already holds 2 active claims (the cap). |
-| `tick next --agent <id>` | no (fetches first) | Return next compatible task. Reports the claim limit instead of a task if the agent is at the cap. |
-| `tick scope <task> --agent <id> --paths <globs>` | yes | Replace claim's path scope |
-| `tick release <task> --agent <id> [--to <agent>]` | yes | Release claim, optionally hand off |
-| `tick break <task> --agent <id> --reason "..."` | yes | Mark task circuit-broken; excluded from `tick next` for everyone |
-| `tick done <task> --agent <id> [--note "..."]` | yes | Mark complete |
-| `tick reap <agent> [--by <id>]` | yes | Coordinator lever: release every active claim held by a presumed-crashed agent so peers can pick the work back up. Manual and logged — not auto-recovery. |
-| `tick analyze [--format human\|md\|json] [--since <ref>] [--write <file>]` | no | Audit a multi-agent run: walks `.tick/events/` + `git log` and reports per-agent compliance (claimed before editing? declared paths matched? scope/done/break used?) plus cross-cutting collisions. Reusable across testing phases. |
+No verb touches the network — every verb appends locally to `.tick/events/`.
+
+| Verb | Purpose |
+|---|---|
+| `tick init` | `mkdir -p .tick/events` |
+| `tick log <type> <task> ...` | Append a raw event |
+| `tick project` | Rebuild `.tick/STATE.md` from events |
+| `tick claim <task> --agent <id> --paths <globs>` | Claim a task. Serialised by an `O_EXCL` lock so concurrent claims resolve to exactly one winner — a real mutex, no tie-breaker. Refused if the agent already holds 2 active claims (the cap). |
+| `tick take --agent <id>` | Atomic `next` + `claim` under one lock — the recommended way to grab work, since it closes the `next`→`claim` race. Claims the task with the paths it was seeded with. |
+| `tick next --agent <id>` | Return the next compatible task (read-only). Reports the claim limit instead of a task if the agent is at the cap. |
+| `tick scope <task> --agent <id> --paths <globs>` | Replace the claim's path scope |
+| `tick release <task> --agent <id> [--to <agent>]` | Release claim, optionally hand off |
+| `tick break <task> --agent <id> --reason "..."` | Mark task circuit-broken; excluded from `tick next` for everyone |
+| `tick done <task> --agent <id> [--note "..."]` | Mark complete |
+| `tick ping <task> --agent <id> [--note "..."]` | Heartbeat on an active claim so `tick analyze` can tell a live claim from a parked/stalled one |
+| `tick info <task>` | Print a task's current state — status, priority, owner, declared paths |
+| `tick reap <agent> [--by <id>]` | Coordinator lever: release every active claim held by a presumed-crashed agent so peers can pick the work back up. Manual and logged — not auto-recovery. |
+| `tick analyze [--format human\|md\|json] [--since <ref>] [--write <file>]` | Audit a multi-agent run: walks `.tick/events/` + `git log` and reports per-agent compliance (claimed before editing? declared paths matched? scope/done/break used?) plus cross-cutting collisions. Reusable across testing phases. |
 
 `--paths` accepts comma-separated globs: `--paths "src/auth/**,tests/auth/**"`.
 
-## Multi-agent setup: separate clones
+## Multi-agent setup: one shared event log
 
-The architecture requires all coordinating agents to work on the same branch (`.tick/` is branch-scoped, and `tick`'s auto-push targets the current branch). `git worktree` cannot have the same branch checked out twice, so we use **separate clones** instead — one per agent, all tracking `experiment/coordination-layer`.
+Coordination state lives in a single `.tick/events/` directory that every agent reads and writes, so the simplest (and tested) setup is **one shared `TICK_REPO_ROOT`**. There is no per-event push: an agent's `tick claim` is visible to peers the instant the event file lands, and the `O_EXCL` lock serialises concurrent claims. Point every agent's `tick` at the same root:
 
 ```bash
-REMOTE=https://github.com/Hypercart-Dev-Tools/AI-DDTK-Fix-Iterate-Loop.git
-for agent in claude codex gemini; do
-  git clone --branch experiment/coordination-layer "$REMOTE" "../trinity-$agent"
-  git -C "../trinity-$agent" config user.name  "$agent"
-  git -C "../trinity-$agent" config user.email "$agent@trinity.local"
-done
+export TICK_REPO_ROOT=/path/to/shared/repo   # same value in every agent's session
+./bin/tick init
 ```
 
-Each clone has its own `.git/`, so plain `git config user.name` is correctly scoped (no `--worktree` needed). The git author name is what `tick analyze` uses to attribute work commits to agents — set it before agents start.
+Each agent passes its own ID with `--agent` on every verb. That flag — not git identity — is authoritative for claims; the old `--agent`-vs-`git config user.name` cross-check was removed in Run 2.
 
-**Why not worktrees?** A `git worktree` shares its branch space with the parent repo: same-branch checkouts are refused, and per-worktree git identity requires `extensions.worktreeConfig` plus `git config --worktree` (default `git config` writes to the shared repo config and silently overwrites). More importantly, if you put each agent on a child branch, `tick`'s auto-push lands on that child branch and peer agents on different child branches never see the events. Phase 2 may add a shared `.tick/`-only ref (or out-of-band sync daemon) to make worktrees viable; until then, clones.
+> **Caveat — git identity in a shared tree.** `tick analyze` attributes *work commits* by git author name, but a single working tree has only one `git config user.name` at a time, so per-agent attribution degrades if all agents commit from the same tree (this flipping was observed in Run 2). If you need clean per-agent `analyze` output, give each agent its own checkout that points at the same shared `TICK_REPO_ROOT`, or attribute from the `--agent` field in the event log rather than from commit authorship. This is a known open edge — see [`RECAP.md`](RECAP.md).
+
+**Historical note.** Pre-Run-2 builds used a distributed transport: each critical event auto-`fetch`+`rebase`+`commit`+`push` so separate clones on a shared branch could see each other. That model — and its worktree friction (same-branch checkouts refused; per-child-branch pushes invisible to peers) — is what motivated the move to local transport. `bin/tick` no longer pushes.
 
 ## Agent integration prompt snippet
 
@@ -64,19 +67,25 @@ Paste this verbatim into each agent's system prompt or project instructions:
 
 ```
 You are coordinating with other AI agents on this codebase via the `tick` CLI
-at experiments/coordination-layer/bin/tick. Your agent ID is <YOUR-ID>.
+at bin/tick. Your agent ID is <YOUR-ID>.
 
-ONE-TIME SETUP (run once at session start, in your worktree):
+ONE-TIME SETUP (run once at session start):
   git config user.name <YOUR-ID>
   git config user.email <YOUR-ID>@trinity.local
-This is REQUIRED — `tick analyze` uses git author name to attribute each
-work commit to an agent. If you skip this, your compliance can't be measured.
+This lets `tick analyze` attribute your work commits by git author name. (Your
+`--agent <YOUR-ID>` flag is what's authoritative for claims; identity is only
+for post-run attribution.)
 
-BEFORE EDITING ANY FILES:
-  1. Run `tick next --agent <YOUR-ID>` to see what task is yours.
-  2. Run `tick claim <TASK-ID> --agent <YOUR-ID> --paths "<glob1>,<glob2>"`
-     declaring every file glob you intend to touch.
-  3. If the claim returns "lost: ...", do not start work. Run `tick next` again.
+BEFORE EDITING ANY FILES — grab a task first:
+  Preferred: `tick take --agent <YOUR-ID>` — atomically runs `next` + `claim`
+  under one lock, so you never lose a task to the next->claim race. It prints
+  `won: <TASK-ID> ...`, or `(no available task)`.
+
+  Manual equivalent (use if you need to declare extra paths up front):
+    1. `tick next --agent <YOUR-ID>` to see what task is yours.
+    2. `tick claim <TASK-ID> --agent <YOUR-ID> --paths "<glob1>,<glob2>"`
+       declaring every file glob you intend to touch.
+    3. If it prints `lost: ...`, someone else holds it — run `tick next` again.
 
 CLAIM LIMIT: You may hold AT MOST 2 active claims at once. Finish (`tick done`)
 or release (`tick release`) a task before claiming a third. `tick next` and
@@ -105,8 +114,9 @@ history to measure: did you claim before editing? did your declared paths
 match your actual edits? did you use scope/done/break correctly? Behave
 accordingly.
 
-Critical: `tick claim`, `tick scope`, `tick release`, `tick break`, `tick done`
-auto-commit and push. If push fails twice, abort and pick a different task.
+Note: `tick` verbs are local-only — they append an event file under
+`.tick/events/` and never touch the network. Commit your code changes with
+normal git; `tick` does not push for you.
 ```
 
 ## Multi-agent flow
@@ -117,16 +127,16 @@ Seed the event log with non-overlapping tasks before starting agents:
 tick log task.created TASK-A --agent dispatcher --priority 10 --paths "src/auth/**"
 tick log task.created TASK-B --agent dispatcher --priority 10 --paths "src/billing/**"
 tick log task.created TASK-C --agent dispatcher --priority 5  --paths "tests/**"
-git add .tick && git commit -m "seed coordination tasks" && git push
+# events are local — no push needed; peers read the same shared .tick/events/
 ```
 
-Then start each agent in its worktree with the integration prompt loaded.
+Then start each agent (all pointed at the same `TICK_REPO_ROOT`) with the integration prompt loaded.
 
 ## Constraints
 
-- **Same branch only.** All coordinating agents work on the same branch. Cross-branch is Phase 2.
+- **Shared event log.** All coordinating agents read and write one `.tick/events/` (the same `TICK_REPO_ROOT`). Cross-clone / cross-branch sync is Phase 2.
 - **Honest declaration required.** `tick` does not enforce that an agent's edits stay within declared paths. A pre-commit hook is one Phase 2 enforcement option.
-- **Push retry once.** On rejection: fetch + rebase + retry. If second push also fails, the verb aborts with a clear error.
+- **Lock-serialised claims.** Concurrent `tick claim` / `tick take` calls are serialised by an `O_EXCL` lock under `.tick/locks/` — exactly one wins, the other is told to retry. No network, no push.
 
 ## Tests
 
@@ -135,7 +145,7 @@ Then start each agent in its worktree with the integration prompt loaded.
 ./test/handoff.sh    # run one
 ```
 
-Each test sets up a bare remote + two clones in `$TMPDIR` and exercises the protocol end-to-end. Cleanup is automatic.
+Each test runs in an isolated `$TMPDIR` working tree and exercises the protocol end-to-end against a shared local `.tick/events/`. (A bare remote is still scaffolded for the few assertions that touch git-level operations like author identity, but coordination no longer depends on push/pull.) Cleanup is automatic.
 
 ## Auditing a real-agent run
 
@@ -147,7 +157,7 @@ After any multi-agent session — Day 5 hand-test, future Phase 2 runs, anything
 ./bin/tick analyze --write REAL-AGENT-OBSERVATIONS.md       # append/replace the auto-analyzed section in-place
 ```
 
-The analyzer walks `.tick/events/` and `git log`, attributes each work commit to whichever agent's claim window contains it (using git author name as the agent identifier — set `git config user.name` per worktree to your agent ID), and reports per-agent:
+The analyzer walks `.tick/events/` and `git log`, attributes each work commit to whichever agent's claim window contains it (using git author name as the agent identifier — set `git config user.name` to your agent ID; see the shared-tree caveat above), and reports per-agent:
 
 - **Claimed before editing?** Counts work commits not covered by any active claim by that agent.
 - **Declared paths matched actual edits?** Per-commit comparison of touched files against the active claim's globs (claim paths ∪ scope_changed paths).
