@@ -16,6 +16,40 @@ verdict → done/retry) without a human pasting, and a watchdog that actually
 escalates a stuck relay to a human. Phase 1 proved the *shape* parses; Phase 2
 makes it *do the thing*.
 
+## Two use cases the same engine serves (scope decision 2026-06-14)
+
+The runner already greps `VERDICT: PASS|FAIL|PARKED` — a *review* verdict — so the
+same claim→run→verdict→act loop drives **both** turn types. Phase 2 targets both:
+
+1. **xyz build turn** — drive a build agent's `tick take → work → done` loop (the swarm/coordination case).
+2. **/relay review turn** — drive a Producer/Reviewer turn of the portable `/relay` skill end-to-end: run the turn, parse the Reviewer's verdict, advance the relay (flip `NEXT`, commit), loop until `Approved` or escalate. This is **/relay-skill automation** — making the review loop hands-free instead of human-nudged.
+
+**Boundary (keep the layers clean):** the `/relay` *skill* stays portable and
+dependency-free; the **baton pattern gets baked into the skill** as the operator
+UX (one-line paste handoff), but the *tick-dependent driving* lives here in
+relay-automation, never folded into the portable skill or the xyz swarm skill.
+
+## ⚠️ Alignment with the approved proposal (canonical)
+
+`PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md` is the **canonical phase
+plan** (relay-Approved). It numbers the phases differently from this doc's
+working decomposition — follow the proposal's numbering and **build order**:
+
+| Proposal phase (canonical) | This doc's section | Status |
+|---|---|---|
+| Phase 1 — Turn-token core (handoff-exclusive rule) | (done in Run 4) | ✅ shipped + verified |
+| **Phase 2 — Liveness & self-healing (watchdog)** | "Phase 2b — watchdog" below | **← next increment** |
+| Phase 3 — Termination & verdict gating (runner verdict + artifact-scoped clean-tree gate) | "Phase 2a — runner" below | after Phase 2 |
+| Phase 4 — Hands-free poll integration (+ /relay-skill automation use case) | "Phase 2c/2d" below | after Phase 3 |
+| Phase 5 — Package as sibling `skill/relay-automation/` | — | last |
+
+So: this doc is **build detail** for the proposal's Phases 2–4; the proposal's
+QA checklists govern acceptance. The **next thing to build is the watchdog
+(proposal Phase 2)** — not the runner. The execution-contract decision below is
+cross-cutting (needed once runner work starts in proposal Phase 3). The
+section headers below keep their "2a/2b/…" working labels but are sequenced per
+the table above, not by letter.
+
 ## Non-goals (rabbit-hole guards)
 - **Not** a multi-agent orchestrator — Phase 2 drives **one** agent's turn loop. Cross-agent coordination stays with `tick` + the relay thread.
 - **Not** full reap policy — reap stays a guarded stub until its own phase (authority model is a separate decision).
@@ -62,6 +96,11 @@ and tool-agnostic. Revisit toward C if a non-Claude agent must run unattended.
 ### Phase 2c — `/loop` wiring (hands-free driver)
 - A thin `/loop`-able entrypoint: poll `tick`, when a turn is runnable invoke `runner.sh`; when parked, invoke `watchdog.sh`. This is where the [baton pattern](../relay-system/baton-pattern.md) and the relay skill's hands-free poll connect.
 - **Acceptance:** a dry-run mode that logs the decisions it *would* take over a seeded scenario, verified against expected sequence.
+
+### Phase 2d — /relay-skill automation (drive a Producer/Reviewer loop)
+- Make `runner.sh` drive a real `/relay` turn: read the relay thread, invoke the turn's agent (via the 2a execution contract), parse the Reviewer's `VERDICT:`, advance the thread (append block, flip `NEXT`, file-scoped commit), loop until `Approved` or escalate via watchdog. Verdict mapping: `Approved`→close, `Changes requested`/`Blocked`→next Producer turn, parked/no-verdict→watchdog.
+- **Bake the baton into the `/relay` skill** (`~/.claude/skills/relay/SKILL.md`): document the one-line-paste handoff as a first-class hands-free option, keeping the skill itself dependency-free (the tick driver stays in relay-automation).
+- **Acceptance:** an integration test runs a 2-round Producer/Reviewer relay with a fake reviewer emitting `Changes requested` then `Approved`; asserts the thread advanced correctly and closed on `Approved`. The `/relay` skill change is doc-only (no dependency added).
 
 ### Later phases (sketch, out of Phase-2 scope)
 - **Phase 3:** reap policy + authority model (its own decision record).
