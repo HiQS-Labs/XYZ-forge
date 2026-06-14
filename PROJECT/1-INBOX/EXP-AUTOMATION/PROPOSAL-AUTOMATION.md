@@ -188,8 +188,11 @@ Acceptance is split into three distinct gates — detection, false-positive boun
 
 **Goal:** two windows complete a relay with zero human nudges, degrading gracefully for non-Claude tools.
 
-- [ ] Per-window `/loop` guard rewritten to "I hold `RELAY-TURN` (per `tick info`) AND tree clean" — replaces honor-system `NEXT` + manual tree check
-- [ ] End-to-end: two Claude windows finish a full automated relay with no human "your turn"
+- [ ] Per-window `/loop` guard keyed on **claimability-for-me**, not current ownership (a handed-off turn is an *open* task routed via `handoff_to`, which the next actor does **not** yet hold — guarding on "I hold it" would deadlock). Exact guard: from `tick info RELAY-TURN`, with the artifact-scoped tree clean —
+  - `status: open` **and** `handoff-to: <me>` → **claim it, then take the turn**
+  - `status: claimed` **and** `claimer: <me>` → **resume/take the turn** (re-entrant)
+  - otherwise → **do nothing, keep polling**
+- [ ] End-to-end: two Claude windows finish a full automated relay with no human "your turn" — including the wake-on-handoff step (the waiting side claims the open, routed token rather than waiting to already own it)
 - [ ] Graceful degradation: a non-Claude window (e.g. Codex) can still take turns via the file + manual nudge (automation is additive, not required)
 - [ ] Poll interval documented with the cache-warmth tradeoff (≈ 60s default; the lock/heartbeat is the real correctness guard, not the timer)
 
@@ -198,6 +201,7 @@ Acceptance is split into three distinct gates — detection, false-positive boun
 - [ ] **SOLID:** poll guard, turn-runner, and watchdog remain separable
 - [ ] **Observability:** each poll tick logs its decision (acted / not-my-turn / tree-dirty / stop)
 - [ ] **Litmus (race):** two windows polling simultaneously never both act — the lock serializes (verify by hammering)
+- [ ] **Litmus (no deadlock):** after `release --to <other>`, the routed-to window wakes and **claims the open token** — the relay never stalls with both sides waiting to "already hold" it
 - [ ] **Anti-goal guard:** the manual relay path still works with automation disabled; no hard tick dependency added to the protocol
 - [ ] **Remote deploy needed?** No — same-session, shared tree (a remote/async variant is explicitly out of scope)
 
