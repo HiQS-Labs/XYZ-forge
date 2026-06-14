@@ -75,6 +75,6 @@ ROUND: 2 / 5
 
 **Re-review this:** `AGENTS.md` `## Working in this repository` bullets — the transport clause and the renamed Node-stdlib bullet. Both findings should now read as true against the tree.
 
-**Commit:** <hash>
+**Commit:** 3149f2d
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
