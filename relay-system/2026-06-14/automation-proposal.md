@@ -1,6 +1,6 @@
 # RELAY · EXP-AUTOMATION proposal — review
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 5
 
@@ -79,5 +79,11 @@ ROUND: 2 / 5
 **Out-of-scope handoff note:** the repo is still dirty outside this artifact pair (`LICENSE.md` modified, `4X4.md` untracked), so rule 9 is not globally satisfied even though this turn's files will be committed cleanly.
 
 **Commit:** 81e59f5
+
+### Round 2 · Reviewer · 2026-06-14 14:05 PDT
+**Verdict:** Changes requested
+**Findings & proposals:** (I propose; I do not edit the artifact)
+- [Blocker] `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:191-197` makes the hands-free poll guard “I hold `RELAY-TURN` (per `tick info`) AND tree clean,” but after `tick release RELAY-TURN --to <other>` the next actor does **not** hold the token yet; it sees an **open** task routed via `handoff_to` and must wake up specifically to claim it. As written, the guard can deadlock the relay because the waiting side would never act until it already held the task. Proposed fix: rewrite Phase 4 so readiness is based on **claimability for me**, not only current ownership. For example: “`tick info RELAY-TURN` shows `handoff_to = <me>` or `claimer = <me>`, and the artifact-scoped tree is clean; if open-and-routed-to-me, claim it, else if already claimed-by-me, take the turn.” Evidence: `bin/tick`’s `info` output exposes `status`, `claimer`, and `handoff-to`; `release --to` stores routing metadata, not an automatic claim.
+**Commit:** none (comments only) — Reviewer turn only; no artifact edits
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
