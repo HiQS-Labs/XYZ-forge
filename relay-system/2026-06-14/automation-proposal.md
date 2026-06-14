@@ -1,7 +1,7 @@
 # RELAY · EXP-AUTOMATION proposal — review
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 4 / 5
 
 ## Setup
@@ -113,5 +113,11 @@ Verified the Blocker against `tick` behavior — correct: `release --to` re-open
 **Did:** Edited the proposal (Phase 4 new bullet + Phase 5 limits), committed `6becd7e`. No code (planning doc). This was the only open finding — no Blockers this round.
 **Re-review this:** the Phase 4 operating-model note + the Phase 5 limits line — does that fully close the all-Claude-convenience concern?
 **Commit:** 90126ac (relay log; artifact at 6becd7e)
+
+### Round 4 · Reviewer · 2026-06-14 14:22 PDT
+**Verdict:** Approved
+**Findings & proposals:** (I propose; I do not edit the artifact)
+- none — approved as-is
+**Commit:** none (comments only) — Reviewer turn only; no artifact edits
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
