@@ -49,6 +49,6 @@ ROUND: 1 / 5
 **Open questions:**
 - Should §7 keep a pointer to the global `record-decision` skill as the *template* (even though the records land in RECAP.md here), or is dropping it entirely correct for a repo that doesn't install it?
 
-**Commit:** <hash>
+**Commit:** 35c2653
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
