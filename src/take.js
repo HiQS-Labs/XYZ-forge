@@ -38,6 +38,7 @@ function take(repoRoot, { agent }) {
     for (const t of tasks.values()) {
       if (t.status !== 'open') continue;
       if (setsOverlap(t.paths, claimedPaths)) continue;
+      if (t.handoff_to && t.handoff_to !== agent) continue;
       candidates.push(t);
     }
 

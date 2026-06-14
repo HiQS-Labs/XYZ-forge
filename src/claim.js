@@ -33,6 +33,11 @@ function claim(repoRoot, { task, agent, paths }) {
       return { won: false, task, winner: t.claim.agent };
     }
 
+    // Reserved for someone else.
+    if (t && t.handoff_to && t.handoff_to !== agent) {
+      return { won: false, task, unavailable: 'reserved for another agent' };
+    }
+
     // Per-agent claim cap.
     const held = activeClaimsForAgent(tasks, agent);
     if (held.length >= MAX_ACTIVE_CLAIMS_PER_AGENT) {
