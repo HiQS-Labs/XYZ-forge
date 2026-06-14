@@ -10,6 +10,7 @@ TESTS=(
   "path-overlap.sh"
   "scope-change.sh"
   "handoff.sh"
+  "handoff-exclusive.sh"
   "circuit-break.sh"
   "auto-sync.sh"
   "analyze.sh"
