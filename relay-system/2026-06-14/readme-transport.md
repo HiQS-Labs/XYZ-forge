@@ -57,6 +57,6 @@ ROUND: 1 / 3
 **Open questions:**
 - Should the dead `commitAndPush` in `src/sync.js` be mentioned/removed, or is that out of scope for a README pass? (I left code untouched — artifact is README.md.)
 
-**Commit:** <hash>
+**Commit:** 939eafe
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
