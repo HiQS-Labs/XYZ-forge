@@ -37,6 +37,15 @@ claim at a time. The two halves are **disjoint** (`src`/`test`/`validate.sh` vs
 Whichever agent claims an A-task owns the Enforcement half; the other owns
 Automation. Balance, not assignment, is what matters.
 
+## Runtime context (for the window that executes this)
+Captured 2026-06-14 14:27 PDT — verify before launch, these can drift:
+- **Repo / branch:** `Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm`, `main` @ `9cec8bc` (clean).
+- **`tick` is runnable** at `./bin/tick` (no install); `.tick/events/` is **empty** (no archive needed — just `tick init`). `relay-automation/` does **not** exist yet → `mkdir` it (lane B's home).
+- **Baseline:** `validate.sh` = **12 tests** today; acceptance for Project 2 is **≥13** (the new `handoff-exclusive.sh`).
+- **Roles in the *run* (not this relay):** the window executing this brief is the **coordinator/observer** (does not claim/code — see `skill/xyz/SKILL.md` §7). The **two build agents are separate windows** (e.g. Codex + Gemini); confirm which two with the operator before pasting prompts.
+- **Agent loop to paste:** the `xyz` build loop (mantra → `tick take` → work in-lane → `tick ping` → file-scoped `git add` + `[<agent>] <TASK> …` commit → `tick done` → repeat).
+- **Measure at wrap-up:** work-bounded concurrency by hand from `.tick/events/` (first `claimed` → last `done`); `tick analyze` for the parked-suspects line only.
+
 ## Coordinator setup (paths are repo-root-relative)
 ```bash
 TICK=./bin/tick
