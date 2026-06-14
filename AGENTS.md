@@ -46,10 +46,10 @@ When instructions conflict: the current user message wins. Project-level instruc
 
 This repo is the **Trinity coordination spike** — a small `tick` CLI (Node standard library only) that lets Claude Code, Codex, and Gemini work one branch concurrently without colliding. Most changes land in the runtime (`src/`, `bin/`) or its test suite (`test/`), not in docs. Conventions that will bite you if skipped:
 
-- **`validate.sh` is the gate.** It must stay green (currently 12/12). Correctness concentrates in the projection logic (`src/project.js`) — the easy place to break something silently. Any change to projection, the disjoint-files-per-event model, or the auto-push/local-transport contract earns a test before it earns a commit.
+- **`validate.sh` is the gate.** It must stay green (currently 12/12). Correctness concentrates in the projection logic (`src/project.js`) — the easy place to break something silently. Any change to projection, the disjoint-files-per-event model, or the shared-local `.tick/events/` transport (git push was removed in Run 2 — claims resolve from the local event dir, not a remote) earns a test before it earns a commit.
 - **Provenance is append-only.** Run results and the bets behind them live in `RECAP.md` and `REAL-AGENT-OBSERVATIONS.md`. Add a new run section; never rewrite a past run's numbers or recommendation — *especially* not when it turned out wrong (principle #7).
 - **`.tick/` is branch-scoped and load-bearing.** Don't restructure the event-log layout or rename verbs without updating [README.md](README.md) — the verb table and the agent integration snippet both state them — in the same change.
-- **`package.json` is shared and out of scope.** No dependencies, no lockfile. Touching it collides with peer agents and fails the run.
+- **Node standard library only — no dependencies, no lockfile.** The repo ships no root manifest; the only `package.json` is the `sandbox-app/` test fixture. `tick` runs on `node:*` built-ins by contract — don't add deps or a lockfile to either.
 - **ASCII punctuation** — straight quotes, regular hyphens. Em-dashes are fine.
 - **One skill ships here** (`skill/xyz/SKILL.md`): frontmatter on line 1, entry file `SKILL.md` exact-case, triggers observable at fire time. If you touch it, keep its embedded self-extracting test suite passing (12/12).
 

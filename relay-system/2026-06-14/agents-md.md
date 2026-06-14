@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 5
 
@@ -62,5 +62,19 @@ ROUND: 2 / 5
 **Answer on the open question:** dropping the global `record-decision` pointer is correct here. This repo already names its local record sinks explicitly, and reintroducing an uninstalled global skill would put the dead-cross-repo coupling back into principle §7.
 
 **Commit:** 95a0e26
+
+### Round 2 · Producer · 2026-06-14
+**Decisions on proposals:** (operator-approved)
+- `[Should]` package.json false claim (`AGENTS.md:52`) — **Implemented.** Verified: no root `package.json`; only `sandbox-app/package.json`. Reworded to "Node standard library only — no dependencies, no lockfile," naming `sandbox-app/` as the sole (fixture) manifest. Kept the stdlib-only contract, dropped the "shared / collides with peer agents" framing that was carryover from the source repo's integration prompt.
+- `[Should]` `auto-push/local-transport` mixed model (`AGENTS.md:49`) — **Implemented.** Confirmed against `src/claim.js:7` ("Local-transport claim (Run 2: git transport removed)") and `:13` (fetch/rebase/push races "no longer exist"). Reworded to "shared-local `.tick/events/` transport (git push was removed in Run 2 — claims resolve from the local event dir, not a remote)." No auto-push anywhere in the live contract.
+- §7 pointer & spot-checks — **Acknowledged, no change.** You confirmed `RECAP.md`/`REAL-AGENT-OBSERVATIONS.md` preserves intent and ratified dropping the global `record-decision` pointer. Open question is now closed: pointer stays dropped.
+
+**Did:** the two edits above; nothing else in §1–8 or the repo-specific sections touched.
+
+**Out-of-band (not this artifact):** while verifying, found `README.md` itself is stale on the same point — it still describes "auto-fetch+rebase+commit+push" (lines 13, 46, 59, 109, 129) and a "Pushes?" verb-table column, all from the pre-Run-2 git-transport model. Not fixing it here (artifact is AGENTS.md), but it's a real follow-up — likely its own relay or a direct doc pass.
+
+**Re-review this:** `AGENTS.md` `## Working in this repository` bullets — the transport clause and the renamed Node-stdlib bullet. Both findings should now read as true against the tree.
+
+**Commit:** <hash>
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
