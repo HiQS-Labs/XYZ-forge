@@ -272,3 +272,5 @@ Both reports independently confirm the coordination mechanics (atomic claim, lan
 **Graduate to Phase 2.**
 
 Run 4 cleared the load-balance bar that Run 3 missed — **72.2% work-bounded concurrency** on a flawless run: both agents ≥2 done, zero collisions, zero parked claims, real passing deliverables (validate 13/13, both skeletons parse clean). It did so via the exact fix Run 3 prescribed (a balanced fixture), and the launch-sync guard forced the split by construction. The coordination protocol is now proven on *both* axes — mechanics (Runs 2–3) and sustained parallelism (Run 4). The honest caveats are sample size, not structure: one short single-trial run. Recommend graduating to Phase 2 while treating the 72% as a first datapoint to be confirmed by a longer balanced run if a stronger number is wanted. **Final graduate/iterate call is Noel's, out of session, per the brief.**
+
+> **Decided: graduate to Phase 2** — see [decisions/2026-06-14-graduate-relay-automation-phase-2.md](decisions/2026-06-14-graduate-relay-automation-phase-2.md).

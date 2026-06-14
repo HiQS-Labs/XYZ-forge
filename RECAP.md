@@ -128,3 +128,5 @@ Run 4 took Run 3's prescribed fix — a **balance-matched fixture** — and ran 
 ### Recommendation
 
 **Graduate to Phase 2.** The balanced fixture cleared the load-balance bar Run 3 missed, on a flawless run (real passing deliverables on both halves). Coordination is now proven on both axes — mechanics (Runs 2–3) and sustained parallelism (Run 4). Caveats are sample size, not structure: one short single-trial run, so treat 72% as a first datapoint. Final graduate/iterate call is the operator's, out of session.
+
+> **Decided: graduate to Phase 2.** Recorded in [decisions/2026-06-14-graduate-relay-automation-phase-2.md](decisions/2026-06-14-graduate-relay-automation-phase-2.md) — revisit if a real balanced run drops below the 50% bar.
