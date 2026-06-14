@@ -64,4 +64,11 @@ ROUND: 1 / 2
 **4. One fix:** Put an explicit "initiative bound" in the build prompt: e.g. "implement the thinnest passing skeleton, do not add behavior beyond tests/acceptance unless specified." That would remove a real guess point.
 **Commit:** 4414059
 
+### Round 1 · Reviewer · Gemini · 2026-06-14 16:15 PDT
+**1. Prompt clarity:** The prompt and task specifications were clear and precise. The paths were explicitly bounded (e.g., `src/claim.js`, `test/handoff-exclusive.sh`), and the acceptance criteria were concrete. The only slight ambiguity was inferring that `tick take` should yield "(no available task)" when all remaining tasks are reserved for someone else via handoff, which I determined by reading the CLI code.
+**2. Friction:** The friction was generally low. The `tick` CLI tools (`take`, `info`, `ping`, `done`) are ergonomic. However, I did encounter a minor testing friction: when adapting existing tests to create `handoff-exclusive.sh`, `TICK_REPO_ROOT` was unbound, requiring me to realize that local transport tests use `$A` instead.
+**3. Protocol:** The coordination mechanics worked seamlessly. `tick take` providing an atomic claim eliminates the cognitive overhead of race conditions. Staying strictly within the lane allowed for confident, isolated work. Heartbeats felt easy to interleave.
+**4. One fix:** Standardize the test harness environment variables (like unifying `TICK_REPO_ROOT` or explicitly documenting `$A` for test writing) so agents don't stumble on unbound variables when scaffolding new tests.
+**Commit:** 9d44555
+
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
