@@ -1,6 +1,6 @@
 # RELAY · Run-4 meta-exercise brief — review
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 5
 
@@ -39,5 +39,24 @@ ROUND: 1 / 5
 4. **Guards** — do the rabbit-hole guards actually bound the session (one slice, timebox, sub-50%=datapoint)?
 **Open questions:** (a) Should B1/B2 (skeletons) carry a minimal parse/lint acceptance, or is "exists + documented stubs" enough for a skeleton? (b) Build agents = Codex + Gemini, or two Claudes?
 **Commit:** c6d153d (relay log; brief at e753798)
+
+### Round 1 · Reviewer · Claude-B · 2026-06-14 15:12 PDT
+**Verdict:** Changes requested
+**Findings & proposals:** (I propose; I do not edit the artifact. Verified against `src/take.js`, `src/paths.js`, `src/project.js`, `validate.sh`, live tree.)
+
+- [Should] **"Balanced by construction" has a start-skew hole that can fail an acceptance bar.** The collision-free claim is solid, but balance is *not* guaranteed by scopes. `MAX_ACTIVE_CLAIMS_PER_AGENT = 2` (`src/project.js:167`), and the own-overlap exclusion (`take.js:30-44`) only blocks *same-half* second claims — cross-half claims never overlap. `take` picks by **global** priority (A1=10, A2=8, B1=10, B2=8). So if one agent finishes A1 *before the other has claimed anything*, its next `take` prefers **B1 (10) over A2 (8)** and it crosses into the Automation half → 3-1 split (it does A1,B1,B2; the other does only A2). That's exactly Run-3's imbalance, and it breaks Project-1 acceptance **"both agents ≥ 2 done."** Half-ownership only holds when *both* first-claims (A1 **and** B1) land before either calls `done` — then overlap locks each agent in its lane for task 2. The brief asserts ownership is automatic; the code makes it contingent on near-simultaneous start. — Proposed fix: add a **launch-sync step** to Mechanics (or Rabbit-hole guards): *"Start both windows together; before either agent calls its first `tick done`, confirm `tick project` shows **both** A1 and B1 claimed (one per agent). This is what forces the balanced split — don't let one agent finish task 1 while the other is still unclaimed."*
+
+- [Should] **Wrap-up `validate.sh` needs tmp/write access — it spuriously reports 0/12 otherwise.** Each test sources `test/_setup.sh`, which does `mktemp -d`; with no writable tmp the workdir resolves empty and every test EPERMs (I hit exactly this — `0 / 12`, paths collapsing to `/agent-a`, `/t1.out`). The coordinator runs wrap-up in this same harness. — Proposed fix: one line in Wrap-up: *"Run `validate.sh` with a writable `$TMPDIR` (outside the command sandbox if needed); a 0/12 with `EPERM mkdir` means the env blocked tmp, not a real regression."*
+
+- [Nit] **Acceptance "parse/lint clean" for B1/B2 should name the concrete check** (also answers Open-question (a)). For shell skeletons the right, near-free bar is `bash -n`. — Proposed fix: change the Project-2 skeleton bar to *"both skeletons exist and pass `bash -n relay-automation/runner.sh && bash -n relay-automation/watchdog.sh`, with documented stubs."* "Exists + documented stubs" alone lets an unparseable file pass.
+
+- [Nit] **"holding ≤1 active claim at a time" is imprecise.** The cap is 2; the ≤1 comes from the build-loop discipline (take→work→done→take) plus within-half overlap, not from an enforced limit. — Proposed fix: reword to *"works them sequentially (the loop holds one claim at a time; the in-half overlap blocks a 2nd same-half claim)."* Keeps the mechanism honest.
+
+- [Nit] **Stale runtime pins.** Brief pins `main @ 9cec8bc (clean)`; live tree is `main @ a10fcdf` with untracked `snapshot.md`. `.tick/events/` is described as "empty" but the dir doesn't exist at all (so `tick init` alone is right; no archive needed). The brief already says "verify before launch" — just refreshing the values so the executor doesn't re-derive: **a10fcdf**, `relay-automation/` confirmed absent, `validate.sh` = **12 tests** confirmed (→ ≥13 target correct).
+
+**On Open-question (b)** (Codex+Gemini vs two Claudes): operator's call, and the brief correctly defers ("confirm which two with the operator"). Doesn't affect the concurrency metric; only matters for relay independence later. No change needed.
+
+**Net:** mechanics verified sound (no collision possible, sequential/concurrent both correct). The two [Should]s are cheap guards that protect the *measurement* — fix those and I'll approve, then run it.
+**Commit:** a47b51e — Reviewer comments only; no artifact edit (relay log is tracked, committing per rule 8)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
