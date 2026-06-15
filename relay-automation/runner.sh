@@ -20,6 +20,7 @@ Options:
   --round-cap N           Maximum agent rounds before exiting (default: 3).
   --poll-seconds N        Sleep between poll rounds (default: 30).
   --log-file PATH         File whose contents are scanned for a VERDICT line.
+  --agent-cmd CMD         Command to run for each agent turn; stdout is captured to --log-file.
   --help                  Show this message.
   --                      Remaining args are artifact paths checked for a clean tree.
 EOF
@@ -74,15 +75,39 @@ ensure_clean_artifacts() {
 }
 
 claim_task() {
-  printf 'runner: stub claim for %s as %s\n' "$TASK_ID" "$AGENT" >&2
-  printf 'runner: replace with a task-specific tick claim/take call once the contract is finalized\n' >&2
-  return 0
+  local task_paths
+  task_paths="$(read_task_field "paths")"
+  [[ -n "$task_paths" ]] || die "task $TASK_ID has no declared paths"
+  "$TICK_BIN" claim "$TASK_ID" --agent "$AGENT" --paths "$task_paths" >/dev/null
+  run_agent_turn
 }
 
 resume_task() {
-  printf 'runner: stub resume for %s as %s\n' "$TASK_ID" "$AGENT" >&2
-  printf 'runner: wire this to the real agent invocation once the execution contract is finalized\n' >&2
-  return 0
+  run_agent_turn
+}
+
+run_agent_turn() {
+  [[ -n "$AGENT_CMD" ]] || die "--agent-cmd is required"
+  bash -lc "$AGENT_CMD" >"$LOG_FILE"
+}
+
+handle_verdict() {
+  local verdict_line="$1"
+  case "$verdict_line" in
+    "VERDICT: PASS")
+      "$TICK_BIN" done "$TASK_ID" --agent "$AGENT" >/dev/null
+      return 0
+      ;;
+    "VERDICT: FAIL")
+      return 1
+      ;;
+    "VERDICT: PARKED")
+      return 3
+      ;;
+    *)
+      die "unexpected verdict line: $verdict_line"
+      ;;
+  esac
 }
 
 extract_verdict() {
@@ -102,6 +127,7 @@ AGENT=""
 ROUND_CAP=3
 POLL_SECONDS=30
 LOG_FILE=""
+AGENT_CMD=""
 ARTIFACTS=()
 
 while (($# > 0)); do
@@ -126,6 +152,10 @@ while (($# > 0)); do
       LOG_FILE="${2:-}"
       shift 2
       ;;
+    --agent-cmd)
+      AGENT_CMD="${2:-}"
+      shift 2
+      ;;
     --help)
       usage
       exit 0
@@ -145,8 +175,10 @@ done
 [[ -n "$AGENT" ]] || die "--agent is required"
 [[ -n "$LOG_FILE" ]] || die "--log-file is required"
 [[ -f "$LOG_FILE" ]] || die "log file does not exist: $LOG_FILE"
+[[ -n "$AGENT_CMD" ]] || die "--agent-cmd is required"
 
 require_command git
+require_command bash
 require_command grep
 require_command "$TICK_BIN"
 
@@ -169,8 +201,15 @@ for ((round = 1; round <= ROUND_CAP; round++)); do
       ;;
   esac
 
-  extract_verdict
-  exit 0
+  verdict="$(extract_verdict)"
+  if handle_verdict "$verdict"; then
+    exit 0
+  fi
+
+  rc=$?
+  if ((rc == 3)); then
+    exit 3
+  fi
 done
 
 die "round cap exceeded after $ROUND_CAP attempts"
