@@ -20,6 +20,7 @@ TESTS=(
   "take.sh"
   "watchdog-liveness.sh"
   "runner-loop.sh"
+  "poll-driver.sh"
 )
 
 PASSED=()
