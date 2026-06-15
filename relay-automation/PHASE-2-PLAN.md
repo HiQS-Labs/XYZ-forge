@@ -61,7 +61,7 @@ the table above, not by letter.
 | File | Real today | Stubbed (Phase-2 fills) |
 |---|---|---|
 | `runner.sh` | arg parsing, `claimability_mode` (claim/resume/poll), `ensure_clean_artifacts` (artifact-scoped clean-tree gate), `extract_verdict` (greps `VERDICT: PASS\|FAIL\|PARKED`), round-cap loop | `claim_task` (no real `tick take`/`claim`), `resume_task` (no real agent invocation), no `done`/`ping` calls, no per-round verdict→action wiring |
-| `watchdog.sh` | `collect_analysis` (`tick analyze` or file), `find_parked_lines`, `extract_task_id`, round over parked lines | `escalate_to_human` (prints, no channel), `reap_task_stub` (prints, behind `--allow-reap`) |
+| `watchdog.sh` | `collect_analysis` (`tick analyze --format json` or file), `extract_parked_suspects` (node, iterates structured `parked_suspects[]` — no false positives), round over real suspects | `escalate_to_human` (prints, no channel), `reap_task_stub` (prints, behind `--allow-reap`) |
 
 ## The one decision that gates everything: the **execution contract**
 

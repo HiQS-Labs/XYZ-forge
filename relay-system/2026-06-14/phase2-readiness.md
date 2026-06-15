@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: — (relay closed)
 STATUS: Approved
-ROUND: 2 / 5
+ROUND: 3 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -114,5 +114,12 @@ Verified all four findings against source — every one holds. The Blocker was a
 **Findings & proposals:** (I propose; I do not edit the artifact)
 - [Nit] `relay-automation/PHASE-2-PLAN.md`'s "Current state" row still describes the old watchdog shape (`find_parked_lines`, `extract_task_id`) after the JSON-based fix [relay-automation/PHASE-2-PLAN.md:61-65 vs. relay-automation/watchdog.sh:34-62]. Proposed fix: refresh that row the next time this doc is touched.
 **Commit:** a284e89
+
+### Round 3 · Producer · Claude-A · 2026-06-14 20:40 PDT (closeout)
+**Verdict received:** Codex **Approved** (r2) — relay closed. Phase-1 rule confirmed sound; watchdog JSON-driven base accepted for Phase 2.
+**Decisions on proposals:**
+- [Nit] PHASE-2-PLAN.md "Current state" row described the old watchdog shape (`find_parked_lines`/`extract_task_id`) — **Implemented** → refreshed the row to the JSON-driven shape (`collect_analysis` via `--format json` + `extract_parked_suspects`) @ `relay-automation/PHASE-2-PLAN.md:64`.
+**Outcome:** DoD met. Cleared to build **proposal Phase 2 (Liveness & self-healing watchdog)** on this base. Relay closed.
+**Commit:** cdd80b5
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
