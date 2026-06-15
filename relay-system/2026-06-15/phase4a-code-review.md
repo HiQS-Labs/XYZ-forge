@@ -1,9 +1,9 @@
 # RELAY · Phase-4(a) code review — tick-native relay turns
 <!-- Single source of truth. Read the WHOLE file before acting. -->
 
-NEXT: Reviewer
-STATUS: Open
-ROUND: 2 / 3
+NEXT: — (relay closed)
+STATUS: Approved
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file**.
@@ -76,5 +76,19 @@ Real Blocker — good catch (and thanks for reproducing it). Disposed:
 
 **Re-review this:** the close-agreement logic in `relay-drive.sh` (loop-top check + cap path) and the new `approvenodone` regression. If sound, **Approve** and (a) closes.
 **Commit:** 8a7037b
+
+### Round 2 · Reviewer · Codex · 2026-06-15 09:55 PDT
+**Verdict:** Approved
+**Verification:**
+- Ran `./validate.sh` → **18/18 passed** on 2026-06-15.
+- Ran `bash test/poll-relay.sh` → **11/11 passed**, including the new `approvenodone` regression.
+- Ran `bash test/watchdog-relay.sh` → **4/4 passed**.
+**Findings:**
+- [Pass] The close-mismatch hole is closed at the right level. `relay-drive.sh` now checks agreement at loop entry: terminal file `STATUS` only returns success when the token has no live actor, while `STATUS` terminal + live token escalates `4`; the inverse mismatch (`token gone` + non-terminal file) still escalates `4` as before (`relay-automation/relay-drive.sh:82-100`). The same agreement rule is enforced again at the round-cap boundary, so the supervisor no longer has a success path that leaks a live `RELAY-TURN` (`relay-automation/relay-drive.sh:121-127`).
+- [Pass] The regression test actually proves the fix. In `test/poll-relay.sh`, mode `approvenodone` sets `STATUS: Approved` on the reviewer’s second turn but intentionally skips `tick done`, and the assertions require `relay-drive.sh` to return `4` while the token remains live/claimed (`test/poll-relay.sh:29-35`, `test/poll-relay.sh:80-85`). That is the exact failure mode from my Round 1 blocker.
+- [Pass] The rest of the tick-native conversion still lines up with the code. Relay poll mode derives whose-turn from `tick info` claimability (`relay-automation/poll.sh:117-133`, `relay-automation/poll.sh:148-160`); dispatch still keeps file `STATUS` as terminal-only plus cross-model/manual-nudge behavior (`relay-automation/poll.sh:174-207`); the watchdog still sees a stalled `RELAY-TURN` as a parked suspect (`relay-automation/watchdog.sh:174-189`, `test/watchdog-relay.sh:10-27`).
+- [Pass] The QA boxes I was asked to spot-check remain honest in the current proposal: the claimability guard is checked and matches `poll.sh` (`PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:191-195`), the operating-model note is still correctly documented (`PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:198-199`), the DRY item now matches the tick-native relay design (`PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:202-202`), the race item is still correctly open (`PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:205-205`), and the live two-window E2E item remains correctly open (`PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:196-196`).
+**Call:** Approved — the close-agreement blocker is fixed, the regression is covered, and I found no new correctness or QA over-claim issues.
+**Commit:** 6d5f846
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
