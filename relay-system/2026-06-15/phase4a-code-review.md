@@ -1,7 +1,7 @@
 # RELAY · Phase-4(a) code review — tick-native relay turns
 <!-- Single source of truth. Read the WHOLE file before acting. -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -52,5 +52,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 4. **QA checkboxes** — are 191/201/205/198 honestly `[x]` now, and 195/204 correctly still open?
 **Verdict:** Approved = correct + no regressions; Changes requested = otherwise.
 **Commit:** aa14dd2
+
+### Round 1 · Reviewer · Codex · 2026-06-15 09:41 PDT
+**Verdict:** Changes requested
+**Findings & proposals:**
+- [Blocker] `relay-drive.sh` can return success from the file alone while leaving `RELAY-TURN` live. It exits `0` as soon as `STATUS` is terminal at loop entry/end (`relay-automation/relay-drive.sh:82-85`, `relay-automation/relay-drive.sh:103-104`), but the close contract in the same file requires the final turn to do both `STATUS: Approved` and `tick done` (`relay-automation/relay-drive.sh:9-15`, `relay-automation/relay-drive.sh:32-35`). I reproduced this locally with a taker that claimed the token and only rewrote `STATUS: Approved`: `relay-drive.sh` returned `0` while `tick info RELAY-TURN` still showed `status: claimed`, `claimer: ra`. `test/poll-relay.sh` does not cover that mismatch because its approving fake always edits the file and calls `tick done` together (`test/poll-relay.sh:31-38`, `test/poll-relay.sh:60-67`). Proposed fix. Reversibility: Easy — require agreement on close (`STATUS` terminal and token `done`), else escalate `4`, and add a regression test for "Approved without done".
+- [Pass] The main conversion claim is otherwise real. Relay poll mode now derives whose-turn from `RELAY-TURN` claimability instead of file `NEXT` (`relay-automation/poll.sh:148-160`, `relay-automation/poll.sh:174-190`), the handoff-exclusive primitive exists in both `claim` and `take` (`src/claim.js:36-39`, `src/take.js:38-45`), watchdog visibility is genuine (`relay-automation/watchdog.sh:174-189`, `test/watchdog-relay.sh:8-25`), and `./validate.sh` is green locally at 18/18.
+**Answers:**
+- Open-unhandoffed `RELAY-TURN`: not a blocker for this build. `tick_my_turn` does treat `open + no handoff` as claimable by anyone (`relay-automation/poll.sh:127-133`), but the actual winner is still serialized by the claim lock (`src/claim.js:19-49`). That is acceptable raw `tick` behavior; it only becomes ambiguous if a relay taker emits a plain `release` instead of `release --to <other>`. I would treat that as follow-up hardening, not a release-stop.
+- No-progress detection: acceptable as shipped. The supervisor intentionally treats any token movement as progress (`relay-automation/relay-drive.sh:97-109`), so a claimer that never hands off is caught on the next loop rather than missed indefinitely.
+- Release-vs-done: this is the real hole. The code already escalates the `token done + file not terminal` direction (`relay-automation/relay-drive.sh:87-90`, `relay-automation/relay-drive.sh:113-115`), but not the inverse `file terminal + token still live`, which is why the blocker above is enough to reject approval.
+- QA checkbox reality-check: on **2026-06-15**, the current `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md` has line `191` checked honestly, line `198` checked honestly, line `199` checked honestly, line `202` checked honestly, line `204` checked honestly, and line `205` correctly still open. The live two-window E2E item at line `196` is also correctly still open. So the only material code-review failure I found is the close-mismatch gap above, not a docs over-claim.
+**Commit:** 112d451
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
