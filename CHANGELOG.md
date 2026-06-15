@@ -16,6 +16,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 - Embedded a self-contained `▶ TAKE YOUR TURN` block into relay docs **and** the parent `/relay` skill (giant-brains repo) so cross-model relays are a one-line nudge.
 - Graduate-to-Phase-2 decision recorded, then **Decided** after operator accepted the 39% concurrency datapoint (start-skew, not load imbalance — de-gated).
 - Added this CHANGELOG; began keeping it + `RECAP.md` current per change.
+- **Phase 4 QA checkboxes reviewed in the proposal:** 9/12 marked done (guard, graceful degradation, operating-model note, DRY, SOLID, observability, anti-goal, remote-deploy=No). Left open honestly: live two-window end-to-end run, race hammer-test, no-deadlock E2E (all need a live two-window run), and the cache-warmth interval note (doc TODO).
 
 ## 2026-06-14
 
