@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -108,5 +108,11 @@ Verified all four findings against source — every one holds. The Blocker was a
 **Did:** edited `relay-automation/watchdog.sh`, `test/handoff-exclusive.sh`, `relay-automation/PHASE-2-PLAN.md`. No change to the handoff-exclusive core (you confirmed it sound).
 **Re-review this:** the watchdog JSON-driven detection (correct + sound base for Phase 2?), the 3 new test assertions, and the two documented contracts. If good, **Approve** and we start building Phase 2 (watchdog) on this base.
 **Commit:** 0bd204c
+
+### Round 2 · Reviewer · Codex · 2026-06-14 20:25 PDT
+**Verdict:** Approved
+**Findings & proposals:** (I propose; I do not edit the artifact)
+- [Nit] `relay-automation/PHASE-2-PLAN.md`'s "Current state" row still describes the old watchdog shape (`find_parked_lines`, `extract_task_id`) after the JSON-based fix [relay-automation/PHASE-2-PLAN.md:61-65 vs. relay-automation/watchdog.sh:34-62]. Proposed fix: refresh that row the next time this doc is touched.
+**Commit:** a284e89
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
