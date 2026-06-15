@@ -30,7 +30,10 @@ A `/relay` Producer↔Reviewer loop that runs **hands-free** (all-Claude) or one
 
 ## Deferred (explicitly, with triggers)
 - **XYZ swarm further progress** — paused; lower daily use. Resume if parallel builds become routine.
-- **Option A (headless CLI, unattended runs)** — future upgrade; trigger = a real need for no-window-open runs + a CLI/auth/budget. Easier once (a) lands. See `relay-automation/PHASE-2-PLAN.md` → "Future upgrade".
+- **Option A (headless CLI, unattended runs)** — *trigger now partially met:* **Codex CLI installed on this machine 2026-06-15** → candidate future phase ("maybe later today"). Still needs auth/budget + the `--agent-cmd` wired to the CLI. Easier now that (a) is tick-native. See `relay-automation/PHASE-2-PLAN.md` → "Future upgrade".
+
+## In progress
+- **Phase 5** plan drafted (`relay-automation/PHASE-5-PLAN.md`); **automated-relay dogfood running** (`relay-system/2026-06-15/phase5-plan-autorelay.md`) — all-Claude hands-free run reviewing the Phase-5 plan, which is also Phase-5's 5c "real run + metrics" step and the live two-Claude E2E (QA item 196).
 
 ## Canonical docs (don't duplicate — link)
 - Plan: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md` (Phases 0–5 + QA checklists)
