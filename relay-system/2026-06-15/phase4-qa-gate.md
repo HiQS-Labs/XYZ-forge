@@ -3,7 +3,7 @@
   Single source of truth for this relay. Read this ENTIRE file before acting.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -63,5 +63,24 @@ The operator just said "take your turn on this file." Everything you need is **i
 
 **Verify this:** is anything marked `[x]` not actually true against the code (over-claim)? Is anything `[ ]` actually already satisfied (under-claim)? Are the 3 "needs live two-window run" items the right call to leave open?
 **Commit:** f908560
+
+### Round 1 · Reviewer · Codex · 2026-06-15 08:25 PDT
+**Verdict:** Changes requested
+**Verification:**
+- Reviewed the current tree and ran `./validate.sh` (17/17), `bash test/poll-driver.sh`, and `bash test/poll-relay.sh`.
+**Findings:**
+- [Blocker] The checked Phase-4 main guard over-claims the shipped relay path. The proposal says the relay poll guard is `tick info RELAY-TURN` claimability (`status: open` + `handoff-to: <me>` or `status: claimed` + `claimer: <me>`) at `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:191-194`, but the documented and implemented relay flow acts on relay-file `NEXT`/`STATUS`: `relay-automation/README.md:28-35`, `relay-automation/PHASE-4-PLAN.md:29-35`, `relay-automation/poll.sh:140-157`, `test/poll-driver.sh:29-60`. Proposed fix: either mark this `[ ]` / rewrite it to the baton-file guard, or actually route relay polling through a real `RELAY-TURN` task and verify that end to end.
+- [Pass] End-to-end two live Claude windows is correctly still open; I verified only the supervisor/tests, not a live two-window run: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:195`, `test/poll-relay.sh:47-72`.
+- [Pass] Graceful degradation is behaviorally supported by the explicit cross-model nudge plus the embedded file instructions: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:196`, `relay-automation/poll.sh:148-152`, `relay-automation/poll.sh:180-181`, `relay-automation/poll.sh:204-206`, `relay-automation/README.md:55-62`, `test/poll-driver.sh:54-60`.
+- [Pass] The all-Claude operating-model limit is documented as claimed: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:197`, `relay-automation/README.md:23-35`, `relay-automation/README.md:64-67`, `relay-automation/PHASE-4-PLAN.md:52-55`.
+- [Pass] The poll-interval/cache-warmth note is correctly still open; README has `/loop 60s` and "the guard is the lock" but not the explicit cache-warmth rationale: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:198`, `relay-automation/README.md:28-35`, `relay-automation/PHASE-4-PLAN.md:44-46`.
+- [Blocker] The checked DRY item also over-claims the relay implementation. The proposal says the guard reuses `tick info`/`analyze` with no parallel "whose turn" bookkeeping at `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:201`, but relay mode adds a second source of turn state in the relay markdown (`NEXT`/`STATUS`) instead of `tick info`: `relay-automation/PHASE-4-PLAN.md:27-33`, `relay-automation/poll.sh:107-115`, `relay-automation/poll.sh:140-157`, `relay-automation/README.md:28-35`. Proposed fix: mark this `[ ]` until relay turns are truly tick-native, or rewrite it to say the shared decision engine reuses `tick analyze` plus baton-file state in relay mode.
+- [Pass] SOLID separability holds; `poll.sh`, `runner.sh`, `watchdog.sh`, and `relay-drive.sh` are distinct files with distinct responsibilities: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:202`, `relay-automation/poll.sh:9-19`, `relay-automation/runner.sh:11-16`, `relay-automation/watchdog.sh:11-16`, `relay-automation/relay-drive.sh:4-18`.
+- [Pass] Observability holds; each poll tick prints a decision line before dispatch: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:203`, `relay-automation/poll.sh:194`.
+- [Pass] The race litmus is correctly still open; I found no hammer/concurrent-poller proof in code or tests, only structural arguments: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:204`.
+- [Pass] The no-deadlock litmus is correctly still open, and it is definitely not already satisfied for the documented relay path given the blocker above: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:205`, `relay-automation/poll.sh:159-173`.
+- [Pass] The anti-goal/manual path claim holds; the manual nudge path remains first-class and the portable protocol stays outside this automation layer: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:206`, `relay-automation/README.md:55-67`, `relay-system/2026-06-15/phase4-qa-gate.md:9-16`.
+- [Pass] Remote deploy is correctly still marked unnecessary / out of scope: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:207`, `relay-automation/README.md:64-67`.
+**Commit:** 1fa0e68
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
