@@ -1,5 +1,5 @@
 ---
-status: Decided
+status: Validated
 date: 2026-06-15
 reversibility: Costly
 revisit: "if the RELAY-TURN-task rework proves heavier than ~one 4a/4b-sized increment, reassess vs baton"
@@ -25,3 +25,4 @@ decider: "@noelsaw1"
 ## Updates
 <!-- append-only, newest last -->
 - 2026-06-15 — **Scope reality-checked by Codex (single-round-trip relay, `relay-system/2026-06-15/phase4a-scope-check.md`).** My ~2.5-pass estimate was rosy; accepted Codex's **~3.5 passes / ~4–5 hours**. It's conversion work (no new core — the `tick` primitive + handoff-exclusive rule verified sufficient, incl. repeated handoff via projection); the cost is the relay poll/supervisor/**test** rewrite off `NEXT`/`sed` onto a real `RELAY-TURN`. Scope corrected (added role↔agent plumbing + re-priced tests as a full slice + a multi-turn integration test). **Operator deciding whether to commit the 4–5h now or sequence later** — does not change the (a) direction, only its timing/cost.
+- 2026-06-15 — **SHIPPED + Validated.** (a) built in the estimated ~3.5 passes (test-harness rewrite was the cost, as Codex predicted). **Expected signal met:** `test/watchdog-relay.sh` proves the watchdog detects a stalled `RELAY-TURN` (self-healing now covers relays), `validate.sh` 18/18, proposal items 191/201 re-checked `[x]`. **Codex code-review: Approved** (`relay-system/2026-06-15/phase4a-code-review.md`) — it caught + reproduced a close-mismatch Blocker (Approved-without-`done` leaked a live token), fixed via close-agreement + regression. Status → Validated.
