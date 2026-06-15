@@ -14,6 +14,10 @@ set -euo pipefail
 #   RELAY_PEER      — optional: the other agent's id, so the turn hands off "--to <peer>" (else the
 #                     prompt says "the other agent", which a live model may resolve to a role name)
 #   CODEX_BIN       — codex binary (default: codex); tests inject a stub
+#   CODEX_FLAGS     — autonomy flags for `codex exec` (default: -s workspace-write). On a fresh device
+#                     whose ~/.codex/config.toml still prompts/blocks writes, the turn produces no
+#                     changes (field report MBP16 [3]); escalate with e.g.
+#                     CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox' or add -c approval_policy=never.
 #   CODEX_TURN_ROOT — git root to guard (default: this repo); tests point at a fixture
 #   CODEX_LOG       — where to write the codex transcript (default: stderr)
 #
@@ -43,7 +47,10 @@ rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 
 # Run the Codex turn headless (token ops + edit the relay file; NO git), then enforce the boundary.
+# CODEX_FLAGS gives the turn enough autonomy to actually write on a fresh device (default sandbox is
+# read-only); operator-overridable for tighter/looser policies.
+read -ra _cflags <<<"${CODEX_FLAGS:--s workspace-write}"
 rtl_before
-"$CODEX_BIN" exec "$prompt" < /dev/null > "${CODEX_LOG:-/dev/stderr}" 2>&1 \
+"$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "${CODEX_LOG:-/dev/stderr}" 2>&1 \
   || { printf 'codex-turn: codex exec failed\n' >&2; exit 5; }
 rtl_enforce "$t" "$me" "${CODEX_LOG:-}" "codex"

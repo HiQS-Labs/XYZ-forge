@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### Portability hardening from MBP16 cross-repo field report (shared core)
+- **[1] Pre-existing dirty-state safety (high):** `relay-turn-lib.sh` now snapshots the dirty set *before* the turn (`rtl_before` → `RTL_BEFORE`) and only enforces/reverts paths the agent *newly* changed — never pre-existing ambient WIP. Fixes a real data-loss bug (the old guard `rm`/`checkout`'d unrelated dirty files + failed the turn). Applies to **both** Codex and Gemini (shared core).
+- **[2] `.tick/` portability (high = ROADMAP G5):** `.tick/` paths are now exempt from allowlist enforcement *intrinsically*, independent of the host repo's `.gitignore` — so a relay can run in a repo that doesn't ignore `.tick`.
+- **[3] Codex autonomy flags:** `codex-turn.sh` passes `CODEX_FLAGS` (default `-s workspace-write`) to `codex exec`, so a fresh device can actually write the relay file; overridable for tighter/looser policy. QUICKSTART autonomy check updated to one that truly writes.
+- Tests: `test/codex-turn.sh` **16 → 23**, `test/gemini-turn.sh` **13 → 17** (pre-existing-WIP preserved, `.tick` exemption, flag plumbing). `validate.sh` **21/21**; package regenerated. Field report archived at `PROJECT/1-INBOX/EXP-AUTOMATION/FEEDBACK-MBP16.md`. ([4] cross-repo ergonomics deferred.)
+
 ### `ROADMAP.md` — commercial-viability gaps (adversarial proof)
 - New `ROADMAP.md`: maturity ladder (mechanically proven → adversarially proven → commercially viable) + the 5 deliberate-failure proofs a buyer needs: G1 mid-turn termination, G2 duplicate/ambiguous token, **G3 stale-writer fencing (missing mechanism — needs epoch fencing tokens)**, G4 concurrent pollers, G5 cross-repo/model diversity. Each maps to the existing mechanism with honest status; implied hardening items R1–R4. G3 flagged as the credibility keystone (today's `tick` has ownership checks but no epoch fence).
 

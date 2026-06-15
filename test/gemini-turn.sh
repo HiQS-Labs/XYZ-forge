@@ -82,5 +82,21 @@ run_shim RELAY-TURN-space gemini spacefile; rc=$?
 [ "$rc" -eq 6 ] && pass "off-lane path with space -> shim fails (exit 6)" || fail "spacefile should exit 6, got $rc"
 [ ! -f "$A/off lane.md" ] && pass "spaced off-lane file reverted (-z parsing)" || fail "'off lane.md' should be removed"
 
+# --- (6) pre-existing dirty file is NOT reverted; turn still succeeds (MBP16 [1], shared core) ---
+seed_token RELAY-TURN-ambient
+printf 'unrelated WIP\n' > "$A/ambient.md"
+run_shim RELAY-TURN-ambient gemini good; rc=$?
+[ "$rc" -eq 0 ] && pass "pre-existing dirty file -> turn still succeeds" || fail "ambient WIP must not fail the turn (rc=$rc)"
+[ -f "$A/ambient.md" ] && pass "pre-existing ambient WIP left untouched (not reverted)" || fail "ambient.md was destroyed (regression!)"
+rm -f "$A/ambient.md"
+
+# --- (7) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
+printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
+git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "drop .tick gitignore" >/dev/null 2>&1
+seed_token RELAY-TURN-tickexempt
+run_shim RELAY-TURN-tickexempt gemini good; rc=$?
+[ "$rc" -eq 0 ] && pass ".tick writes exempted when host doesn't gitignore .tick (turn succeeds)" || fail "unignored .tick must not fail the turn (rc=$rc)"
+[ -d "$A/.tick" ] && pass ".tick state dir preserved (not rm-rf'd)" || fail ".tick was destroyed"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

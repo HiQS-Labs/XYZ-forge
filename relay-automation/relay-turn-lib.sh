@@ -39,11 +39,28 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     "$agent" "$f" "$task" "$handoff" "$f" "${csv:+ and: $csv}"
 }
 
-rtl_before() { RTL_BEFORE_HEAD="$(git -C "$RTL_ROOT" rev-parse HEAD 2>/dev/null || echo none)"; }
+rtl_before() {
+  RTL_BEFORE_HEAD="$(git -C "$RTL_ROOT" rev-parse HEAD 2>/dev/null || echo none)"
+  # Snapshot the PRE-turn dirty set (raw -z porcelain fields) so enforcement touches only the
+  # agent's OWN changes — never pre-existing ambient WIP in the host repo (field report MBP16 [1]).
+  RTL_BEFORE=()
+  local fld
+  while IFS= read -r -d '' fld; do RTL_BEFORE+=("$fld"); done \
+    < <(git -C "$RTL_ROOT" status --porcelain -z 2>/dev/null)
+}
+
+rtl_was_dirty_before() {  # <porcelain-entry> — true if this exact status+path was dirty pre-turn
+  local e="$1" b
+  for b in ${RTL_BEFORE[@]+"${RTL_BEFORE[@]}"}; do [[ "$b" == "$e" ]] && return 0; done
+  return 1
+}
 
 rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLATION
   local p="$1"
   [[ -n "$p" ]] || return 0
+  # tick's own state dir is coordination state the turn legitimately writes — exempt it intrinsically,
+  # independent of whether the HOST repo gitignores .tick (field report MBP16 [2]).
+  case "$p" in .tick/*|.tick) return 0 ;; esac
   # the shim's own transcript log, if it lands in the tree, is not an agent edit — drop it, don't flag
   if [[ -n "$RTL_LOG_REL" && "$p" == "$RTL_LOG_REL" ]]; then rm -f "$RTL_ROOT/$p"; return 0; fi
   rtl_in_allow "$p" && return 0
@@ -72,6 +89,13 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   while IFS= read -r -d '' entry; do
     [[ -n "$entry" ]] || continue
     xy="${entry:0:2}"; path="${entry:3}"
+    # pre-existing ambient WIP (same status+path as before the turn) — leave it untouched, don't fail.
+    # (Documented minor gap: a file already dirty that the agent edits further to the SAME status code
+    # isn't caught — acceptable for review turns.)
+    if rtl_was_dirty_before "$entry"; then
+      case "$xy" in R*|C*) IFS= read -r -d '' src || true ;; esac   # keep the -z stream aligned
+      continue
+    fi
     case "$xy" in
       R*|C*) IFS= read -r -d '' src || true; rtl_check "$path"; rtl_check "$src" ;;
       *)     rtl_check "$path" ;;

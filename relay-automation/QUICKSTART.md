@@ -16,10 +16,14 @@ full Option-B operator flow and [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-
 ## 1. Prerequisites (check each — all three are assumed by the scripts)
 
 ```bash
-node --version                      # bin/tick is Node
-codex exec "say ok" < /dev/null     # Codex CLI installed + authed; must return WITHOUT prompting
+node --version                                   # bin/tick is Node
+codex exec -s workspace-write "create a file ok.txt with the text ok" < /dev/null  # must actually WRITE
 git --version
 ```
+**Autonomy check matters (MBP16 [3]):** a bare `codex exec "say ok"` returns fine but writes nothing,
+so it does *not* prove the turn-taker can edit the relay file. `codex-turn.sh` defaults to
+`-s workspace-write`; if a fresh device's `~/.codex/config.toml` still blocks writes, set
+`CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` (or add `-c approval_policy=never`).
 If `codex` isn't on PATH or isn't authed, fix that first — the shim shells out to it
 (override the binary with `CODEX_BIN=/path/to/codex`).
 

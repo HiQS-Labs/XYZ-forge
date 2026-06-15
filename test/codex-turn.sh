@@ -20,6 +20,7 @@ STUB="$WORK/codex"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
+printf '%s\n' "$*" > "$WORK/codex-args" 2>/dev/null || true   # record invocation for [3] flag check
 export TICK_REPO_ROOT="$A"
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
 "$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
@@ -95,6 +96,31 @@ run_shim RELAY-TURN-space codex spacefile; rc=$?
 [ "$rc" -eq 6 ] && pass "off-lane path with space -> shim fails (exit 6)" || fail "spacefile should exit 6, got $rc"
 [ ! -f "$A/off lane.md" ] && pass "spaced off-lane file reverted (-z parsing)" || fail "'off lane.md' should be removed"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on spaced-path violation" || fail "should not commit"
+
+# --- (6) pre-existing dirty file is NOT reverted; turn still succeeds (MBP16 [1]) ---
+seed_token RELAY-TURN-ambient
+printf 'unrelated WIP\n' > "$A/ambient.md"      # off-allowlist, dirty BEFORE the turn
+run_shim RELAY-TURN-ambient codex good; rc=$?
+[ "$rc" -eq 0 ] && pass "pre-existing dirty file -> turn still succeeds" || fail "ambient WIP must not fail the turn (rc=$rc)"
+[ -f "$A/ambient.md" ] && pass "pre-existing ambient WIP left untouched (not reverted)" || fail "ambient.md was destroyed (regression!)"
+git -C "$A" show --stat HEAD | grep -q "ambient.md" && fail "commit must NOT include ambient WIP" || pass "commit excludes pre-existing ambient WIP"
+rm -f "$A/ambient.md"
+
+# --- (7) autonomy flags: default + override passed to codex exec (MBP16 [3]) ---
+seed_token RELAY-TURN-flags
+run_shim RELAY-TURN-flags codex good >/dev/null 2>&1
+grep -q -- "-s workspace-write" "$WORK/codex-args" && pass "default CODEX_FLAGS '-s workspace-write' reaches codex exec" || fail "default autonomy flag missing"
+seed_token RELAY-TURN-flags2
+CODEX_FLAGS="--dangerously-bypass-approvals-and-sandbox" run_shim RELAY-TURN-flags2 codex good >/dev/null 2>&1
+grep -q -- "--dangerously-bypass-approvals-and-sandbox" "$WORK/codex-args" && pass "CODEX_FLAGS override is honored" || fail "CODEX_FLAGS override not passed"
+
+# --- (8) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
+printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
+git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "drop .tick gitignore" >/dev/null 2>&1
+seed_token RELAY-TURN-tickexempt
+run_shim RELAY-TURN-tickexempt codex good; rc=$?
+[ "$rc" -eq 0 ] && pass ".tick writes exempted when host doesn't gitignore .tick (turn succeeds)" || fail "unignored .tick must not fail the turn (rc=$rc)"
+[ -d "$A/.tick" ] && pass ".tick state dir preserved (not rm-rf'd)" || fail ".tick was destroyed"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
