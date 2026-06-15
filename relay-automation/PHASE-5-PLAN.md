@@ -24,14 +24,20 @@ the automated relay into a repo. **Not** folded into `skill/xyz/` (sibling skill
 | **E2 — embed the whole `tick` runtime** | tick `src/*` + `bin/tick` + relay scripts | self-contained install anywhere | duplicates tick; version-drift risk vs the xyz skill's tick |
 | **E3 — hybrid: detect-or-extract** | relay scripts always; tick only if absent | works both ways | most install logic |
 
-**Lean E1** (depend on `bin/tick`) for a first cut — relay-automation is
-*tick-backed* by definition; a target without tick isn't a real host. Revisit E3
-if a standalone install is wanted. **Decide in review before building 5a.**
+**Decision (relay review 2026-06-15, Claude-B Blocker): E3 — detect-or-extract.**
+The dependency is the tick **version**, not its mere presence — a host with
+pre-handoff-exclusive tick silently breaks the relay (the `run-runner` guard rides
+`handoff-to` routing from `src/claim.js`/`src/take.js`). So: ship the 4 relay
+scripts always; **provision tick only if absent**, and **gate on a
+handoff-exclusive capability check** (verify the host tick rejects a
+wrong-`handoff_to` claim with **zero** events) — apply/verify the Phase-1 patch if
+the host tick predates it. E3 also unblocks 5b's self-extract test, which needs a
+tick present in its temp dir regardless of production assumptions.
 
 ## Sub-phases
-- **5a — package (`skill/relay-automation/SKILL.md`).** Self-extracting block(s) that write the 4 scripts (+ Phase-1 patch per the chosen E-option). Mirror the xyz skill's self-extract structure. *Accept:* extract into a fresh dir → files present + `bash -n` clean.
-- **5b — self-extract test.** A test that extracts the skill into a temp dir and runs the relay-automation suite green. *Accept:* `test/skill-extract.sh` (or similar) passes; `validate.sh` green (→ ~19).
-- **5c — real automated-relay run + metrics (the dogfood below).** Run a live relay through the tooling; capture **rounds, time/turn, auto-recovered stalls, % turns auto-fired vs nudged**. *Accept:* a captured metrics block in `REAL-AGENT-OBSERVATIONS.md`.
+- **5a — package (`skill/relay-automation/SKILL.md`).** Self-extracting block(s) that write the 4 scripts; **E3**: detect the host tick and extract+patch tick only if absent or lacking the handoff-exclusive capability. Mirror the xyz skill's self-extract structure. *Accept:* extract into a fresh dir → 4 scripts present + `bash -n` clean; **the chosen E-option (E3) + the capability gate are recorded in the SKILL.md header.**
+- **5b — self-extract test.** Extract the skill into a temp dir, **provision tick there via E3 (detect-or-extract)**, run the relay-automation suite green. *Accept:* `test/skill-extract.sh` passes; `validate.sh` green at **19** (adds `skill-extract.sh`).
+- **5c — real automated-relay run + metrics (the dogfood below).** Run a live relay through the tooling; capture **rounds-to-approve, wall-time/turn, auto-recovered stalls, and human interventions required (target 0 — the real hands-free proof)**. *(Dropped "% auto-fired vs nudged": for an all-Claude run it's ~100/0 by construction — meaningful only in a mixed/cross-model run.)* *Accept:* a captured metrics block in `REAL-AGENT-OBSERVATIONS.md`.
 
 ## Non-goals / guards
 - Don't fold into the xyz skill; keep it a sibling.
@@ -39,10 +45,9 @@ if a standalone install is wanted. **Decide in review before building 5a.**
 - Hands-free poll stays all-Claude; cross-model stays nudge (document in the skill).
 
 ## Acceptance (project DoD)
-`validate.sh` green incl. new tests; full self-extract re-verified; a real automated
-relay run captured with metrics; installable as a sibling skill.
+`validate.sh` green at **19**; full self-extract re-verified; **chosen E-option (E3) recorded in 5a**; a real automated relay run captured with metrics; installable as a sibling skill.
 
-## Open questions for review
-1. E1 vs E3 for tick embedding?
-2. Is a Claude↔Codex semi-auto run sufficient to close the live-E2E item (196), or do we need a true two-Claude hands-free run for that box?
-3. Which metrics matter most for "is this worth using daily"?
+## Resolved by relay review (Claude-B, 2026-06-15)
+1. **Tick embedding → E3** (detect-or-extract + handoff-exclusive capability gate). E1 was unsafe (version, not presence, is the dependency).
+2. **Item 196 scope:** an all-Claude hands-free run closes a **transport-E2E** box (token/poll/watchdog loop works end-to-end, shared-model caveat noted); it does **not** prove cross-model coordination. **Action:** disambiguate 196's wording; if it implies cross-model, keep it open and add a Claude↔Codex semi-auto run as separate evidence (now feasible — Codex CLI installed).
+3. **Metrics:** rounds-to-approve, wall-time/turn, auto-recovered stalls, **human-interventions=0**; dropped auto-fired/nudged for all-Claude runs.
