@@ -17,6 +17,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 - Graduate-to-Phase-2 decision recorded, then **Decided** after operator accepted the 39% concurrency datapoint (start-skew, not load imbalance — de-gated).
 - Added this CHANGELOG; began keeping it + `RECAP.md` current per change.
 - **Phase 4 QA checkboxes reviewed in the proposal:** 9/12 marked done (guard, graceful degradation, operating-model note, DRY, SOLID, observability, anti-goal, remote-deploy=No). Left open honestly: live two-window end-to-end run, race hammer-test, no-deadlock E2E (all need a live two-window run), and the cache-warmth interval note (doc TODO).
+- **Phase-4 QA-gate relay (Codex) found 2 over-claims** — reverted items 191 (guard) + 201 (DRY) to `[ ]`: the relay driver shipped on the baton file's `NEXT`/`STATUS`, not a tick-native `RELAY-TURN` task, so Phase-1 handoff-exclusive enforcement isn't used by the relay path (only xyz build turns). Open design fork: make relay turns tick-native vs keep baton model + rewrite the spec. Now 7/12 honestly checked.
 
 ## 2026-06-14
 

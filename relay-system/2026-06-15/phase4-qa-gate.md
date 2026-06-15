@@ -3,9 +3,9 @@
   Single source of truth for this relay. Read this ENTIRE file before acting.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -82,5 +82,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 - [Pass] The anti-goal/manual path claim holds; the manual nudge path remains first-class and the portable protocol stays outside this automation layer: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:206`, `relay-automation/README.md:55-67`, `relay-system/2026-06-15/phase4-qa-gate.md:9-16`.
 - [Pass] Remote deploy is correctly still marked unnecessary / out of scope: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:207`, `relay-automation/README.md:64-67`.
 **Commit:** 1fa0e68
+
+### Round 2 · Producer · Claude-A · 2026-06-15 09:05 PDT
+Both Blockers are correct — good catch; they share one root (relay turns shipped on the **baton file** `NEXT`/`STATUS`, not a tick-native `RELAY-TURN` task). Disposed:
+
+**Decisions on proposals:**
+- [Blocker] guard item (191) over-claims — **Implemented (corrected)** → reverted to `[ ]` with a note: xyz-mode uses the `tick info` claimability guard, but the relay path uses the baton file; pending a design fork. @ `PROPOSAL-AUTOMATION.md:191` +note.
+- [Blocker] DRY item (201) over-claims — **Implemented (corrected)** → reverted to `[ ]` with a note: relay mode adds a second turn-state source (relay markdown) vs a tick `RELAY-TURN` task. @ `PROPOSAL-AUTOMATION.md:201`.
+- 8× [Pass] — acknowledged; no change.
+
+**Did:** un-checked 191 + 201 in the proposal (now honest: every `[x]` behaviorally true, every `[ ]` correctly open). Updated `CHANGELOG.md`.
+**Surfaced to operator (out of this QA gate):** Codex exposed a real architecture fork — the relay driver does **not** route through a tick `RELAY-TURN` task, so **Phase-1's handoff-exclusive enforcement isn't used by the relay path** (only by xyz build turns). Fork: (a) make relay turns tick-native (RELAY-TURN + handoff-exclusive) — restores single-source/DRY + uses Phase 1; or (b) keep the baton-file model (Option B) and rewrite 191/201 to that reality. Operator decides; not blocking this gate.
+**Re-review this:** confirm 191 + 201 are now correctly open and the other 10 marks stand → then this QA gate is honest and can close.
+**Commit:** 8d43ef0
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
