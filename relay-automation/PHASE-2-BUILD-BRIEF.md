@@ -5,8 +5,10 @@ Two agents build in parallel, disjoint lanes, on `main` in
 Tasks are pre-seeded. **You were told which agent you are and which lane.** Claim
 your **named** tasks (don't `take` — lanes are pre-assigned).
 
-- **Gemini → Watchdog lane:** TASK-W1 then TASK-W2. Scope: `relay-automation/watchdog.sh`, `test/watchdog-liveness.sh`.
-- **Codex → Runner lane:** TASK-R1 then TASK-R2. Scope: `relay-automation/runner.sh`, `test/runner-loop.sh`.
+- **Copilot Codex (agent id `copilot-codex`) → Watchdog lane:** TASK-W1 then TASK-W2. Scope: `relay-automation/watchdog.sh`, `test/watchdog-liveness.sh`.
+- **Codex (regular, agent id `codex`) → Runner lane:** TASK-R1 then TASK-R2. Scope: `relay-automation/runner.sh`, `test/runner-loop.sh`.
+
+> Both builders are Codex variants — use the **distinct agent ids above** (`copilot-codex` vs `codex`) in every `tick` call and commit tag so the coordination log keeps the two lanes separable.
 
 The two lanes are disjoint → you run concurrently and never collide. Within your
 lane the two tasks share scope → do them **sequentially** (finish W1/R1, then W2/R2).
@@ -36,7 +38,7 @@ change that makes the stated acceptance pass — no behavior beyond it unless sp
 
 ---
 
-## WATCHDOG LANE (Gemini) — proposal Phase 2: Liveness & self-healing
+## WATCHDOG LANE (Copilot Codex, agent id `copilot-codex`) — proposal Phase 2: Liveness & self-healing
 
 Current `watchdog.sh` already does JSON-driven parked detection (`tick analyze
 --format json` → `parked_suspects[]`). Make escalation **real** (it's currently a
@@ -59,7 +61,7 @@ escalation record containing the task id + gap; (b) healthy (empty
 
 ---
 
-## RUNNER LANE (Codex) — proposal Phase 3: Termination & verdict gating
+## RUNNER LANE (Codex, regular, agent id `codex`) — proposal Phase 3: Termination & verdict gating
 
 Current `runner.sh` has the claimability guard, artifact-scoped clean-tree gate,
 `extract_verdict` (greps `VERDICT: PASS|FAIL|PARKED`), and a round-cap loop, but
