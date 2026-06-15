@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# gemini-drive.sh test: the Gemini turn-taker drives a relay turn behind the SHARED safety
+# gemini-turn.sh test: the Gemini turn-taker drives a relay turn behind the SHARED safety
 # core (relay-turn-lib.sh) — same containment as codex-turn.sh, via a STUB `gemini` that
 # performs the real turn-taker contract (tick + file edit). Proves the boundary is model-agnostic.
-source "$(dirname "$0")/_setup.sh" gemini-drive
+source "$(dirname "$0")/_setup.sh" gemini-turn
 export TICK_BIN="$TICK"
-SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/gemini-drive.sh"
+SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/gemini-turn.sh"
 tick_a init >/dev/null
 
 # committed relay-file baseline; mirror the real repo's .tick/ gitignore (invisible to git status).

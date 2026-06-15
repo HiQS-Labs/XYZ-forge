@@ -13,8 +13,8 @@ tar xzf "$PKG" -C "$D"
 
 want="relay-automation/poll.sh relay-automation/runner.sh relay-automation/watchdog.sh \
 relay-automation/relay-drive.sh relay-automation/relay-turn-lib.sh relay-automation/codex-turn.sh \
-relay-automation/gemini-drive.sh relay-automation/README.md \
-test/poll-driver.sh test/poll-relay.sh test/watchdog-relay.sh test/codex-turn.sh test/gemini-drive.sh"
+relay-automation/gemini-turn.sh relay-automation/README.md \
+test/poll-driver.sh test/poll-relay.sh test/watchdog-relay.sh test/codex-turn.sh test/gemini-turn.sh"
 miss=0
 for f in $want; do [ -f "$D/$f" ] || { echo "  missing: $f" >&2; miss=1; }; done
 [ "$miss" = 0 ] && pass "all 13 packaged files extracted" || fail "package is missing files"

@@ -38,7 +38,7 @@ that run first happens, not a fixed date.
 
 **Reversibility:** Costly — the contract is wired into `codex-turn.sh` + `test/codex-turn.sh`
 (16 assertions) + the packaged skill tarball; changing it touches all three plus any agent-drive
-shim that adopts it (e.g. a future `gemini-drive.sh`).
+shim that adopts it (e.g. a future `gemini-turn.sh`).
 
 **Revisit trigger:** The first real unattended run (above). Also reopen immediately if any
 adopting shim (Codex or Gemini) is observed letting an off-lane change through in a live turn.
@@ -50,15 +50,22 @@ adopting shim (Codex or Gemini) is observed letting an off-lane change through i
   found + cleared two bypasses *through* it — git-commit-bypass and quoted-path — and Approved
   the fixes (r3). `test/codex-turn.sh` 10→16, `validate.sh` 20/20. Strong early signal, but the
   "sufficient for unattended" bet stays **Decided** (not Validated) until a real no-window run.
-- 2026-06-15 — Generalization in progress: **Gemini is building its own `gemini-drive.sh`** (a
+- 2026-06-15 — Generalization in progress: **Gemini is building its own `gemini-turn.sh`** (a
   sibling turn-taker for itself, same role as `codex-turn.sh`). It should adopt these three
   invariants; if it does and behaves, that's corroborating evidence — if it lets an off-lane
   change through, that fires the revisit trigger.
 - 2026-06-15 — **Corroborating evidence (2nd model adopted the boundary, live).** Refactored the
   three invariants into a shared sourced core (`relay-automation/relay-turn-lib.sh`); `codex-turn.sh`
-  + a new `gemini-drive.sh` are thin wrappers over it. A **real `gemini -p` turn** (gemini-cli 0.46.0,
-  GCA auth) took a relay review turn through `gemini-drive.sh`: edited only the relay file, committed
+  + a new `gemini-turn.sh` are thin wrappers over it. A **real `gemini -p` turn** (gemini-cli 0.46.0,
+  GCA auth) took a relay review turn through `gemini-turn.sh`: edited only the relay file, committed
   file-scoped, no push, and **left the reviewed artifact untouched** — containment held for a second
-  independent model. `test/gemini-drive.sh` 13/13, `validate.sh` 21/21. Bet still **Decided** (this
+  independent model. `test/gemini-turn.sh` 13/13, `validate.sh` 21/21. Bet still **Decided** (this
   was a single *supervised* turn, not a real multi-turn *unattended* run). Live run also surfaced a
   prompt-clarity gap (peer agent unnamed → released to a role name) — fixed with optional `RELAY_PEER`.
+- 2026-06-15 — **Reconciliation + a reimplementation-bug datapoint (supports the "share, don't copy"
+  rationale).** Gemini independently committed a *standalone* `gemini-turn.sh` (`fe0bd61`) that copied
+  `codex-turn.sh`'s boundary verbatim — but it invoked **`gemini exec`** (the Gemini CLI has no such
+  subcommand; headless is `-p`) and lacked GCA/`--yolo`/`--skip-trust`, so it could not take a live
+  turn. Converged on one `gemini-turn.sh` = its name + the shared sourced core + the corrected
+  invocation. This is concrete evidence for the Rejected-alternative reasoning: a *copied* boundary is
+  exactly where divergence/breakage enters; the shared `relay-turn-lib.sh` is the durable surface.

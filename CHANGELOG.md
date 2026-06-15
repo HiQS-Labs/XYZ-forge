@@ -4,12 +4,16 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
-### Gemini CLI integrated → `gemini-drive.sh` SHIPPED + live-validated; safety core shared
+### `ROADMAP.md` — commercial-viability gaps (adversarial proof)
+- New `ROADMAP.md`: maturity ladder (mechanically proven → adversarially proven → commercially viable) + the 5 deliberate-failure proofs a buyer needs: G1 mid-turn termination, G2 duplicate/ambiguous token, **G3 stale-writer fencing (missing mechanism — needs epoch fencing tokens)**, G4 concurrent pollers, G5 cross-repo/model diversity. Each maps to the existing mechanism with honest status; implied hardening items R1–R4. G3 flagged as the credibility keystone (today's `tick` has ownership checks but no epoch fence).
+
+### Gemini CLI integrated → `gemini-turn.sh` SHIPPED + live-validated; safety core shared
 - **Installed + authed Gemini CLI** (`brew install gemini-cli`, 0.46.0) — GCA personal-login auth (`GOOGLE_GENAI_USE_GCA=true`, no API key); headless = `gemini --yolo --skip-trust -p`.
-- **Shared-core refactor (the "improved architecture"):** extracted the model-agnostic containment contract into `relay-automation/relay-turn-lib.sh` (sourced). `codex-turn.sh` is now a thin dispatch wrapper over it; **`gemini-drive.sh`** is a new wrapper for the Gemini agent. The boundary (allowlist + commit-bypass + no-push) lives in **one** place — no reimplementation.
+- **Shared-core refactor (the "improved architecture"):** extracted the model-agnostic containment contract into `relay-automation/relay-turn-lib.sh` (sourced). `codex-turn.sh` is now a thin dispatch wrapper over it; **`gemini-turn.sh`** is the Gemini wrapper. The boundary (allowlist + commit-bypass + no-push) lives in **one** place — no reimplementation.
+- **Reconciled the two Gemini drafts.** Gemini independently committed a standalone `gemini-turn.sh` (`fe0bd61`) — same boundary logic, but copied Codex's `codex exec` pattern: it called **`gemini exec`**, which the Gemini CLI does not have (headless is `-p`), and lacked GCA/`--yolo`/`--skip-trust`, so it would not run live. Converged on **one** `gemini-turn.sh` = Gemini's name/convention + the shared-core architecture + the corrected, live-validated invocation. (My parallel `gemini-drive.sh` was removed — I'd missed Gemini's file and duplicated it.)
 - **Live-validated end-to-end:** a real `gemini -p` turn reviewed a seeded `sample.sh` (found 3 correct graded findings + verdict), edited **only** the relay file, committed file-scoped, **no push**; the artifact was never touched (containment held). Isolated temp repo, `bin/tick` passthrough.
 - **Prompt fix from the live run:** Gemini released the token to the literal role "Producer" (peer was unnamed) → added optional `RELAY_PEER` to name the handoff target explicitly.
-- `test/gemini-drive.sh` **13/13** (mirrors the codex guard suite); `validate.sh` **21/21**; package regenerated (13 files).
+- `test/gemini-turn.sh` **13/13** (mirrors the codex guard suite); `validate.sh` **21/21**; package regenerated (13 files).
 
 ### decision recorded + `gemini-drive.sh` in flight
 - `decisions/2026-06-15-unattended-agent-containment.md` — **Decided**: path-allowlist + commit-bypass guard + no-push is sufficient containment for an unattended committing agent. 3-model validated; revisit on the first real unattended Option-A run. Linked from RECAP, 4X4, CROSSMODEL-OPTIONA-PLAN.

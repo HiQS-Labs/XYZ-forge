@@ -24,7 +24,7 @@ TESTS=(
   "poll-relay.sh"
   "watchdog-relay.sh"
   "codex-turn.sh"
-  "gemini-drive.sh"
+  "gemini-turn.sh"
   "skill-extract.sh"
 )
 
