@@ -76,9 +76,26 @@ building 2a:
 | **B. Baton + poll** | runner writes the baton + flips `NEXT`; a `/loop`-polling agent window takes the turn; runner waits for the commit + log | reuses the [baton pattern](../relay-system/baton-pattern.md); no headless auth | still needs a live polling window (not fully unattended); slower |
 | **C. Hybrid** | headless for Claude turns (A), baton for non-Claude windows (B) | best coverage | most code; two contracts to maintain |
 
-**Recommendation: A**, with the agent command injectable (`--agent-cmd`) so tests
-pass a fake script that emits a canned `VERDICT:` line — keeps the runner testable
-and tool-agnostic. Revisit toward C if a non-Claude agent must run unattended.
+**Original recommendation: A** (headless CLI), with the agent command injectable
+(`--agent-cmd`) so tests pass a fake script emitting a canned `VERDICT:` line.
+
+**⚠️ Spike result (2026-06-14) — Option A is NOT available in this environment.**
+Headless-auth spike (Risk #1) found **no `claude`/`codex`/`gemini` CLI** on PATH or
+in any common location (homebrew, `/usr/local/bin`, `~/.local/bin`, `~/bin`, npm
+globals). The agents run as IDE/GUI tools, not shell-invocable CLIs — so `runner.sh`
+has nothing to shell out to. Option A would require **installing an agent CLI**
+(e.g. `npm i -g @anthropic-ai/claude-code` for a `claude` CLI) **and** solving
+non-interactive auth (API key env var, not keychain) — real onboarding + recurring
+cost, not a quick unblock.
+
+**Revised recommendation: B (baton + poll)** as Phase 4's default execution
+contract. It needs no headless CLI — it drives the *existing* windows via the
+[baton pattern](../relay-system/baton-pattern.md) + `/loop` guarded poll (all-Claude)
+or one-line nudge (cross-model), matching how agents are actually run here. Trade-off:
+needs a live window open (not fully unattended), slower. Keep **A** as a future
+upgrade if/when fully-unattended runs are wanted and a CLI is installed + authed.
+The `--agent-cmd` injection seam stays regardless (tests use a fake; B wires it to
+the baton/poll driver, A would wire it to the CLI).
 
 ## Phased breakdown
 
@@ -113,7 +130,7 @@ and tool-agnostic. Revisit toward C if a non-Claude agent must run unattended.
 - **Auto-reap is gated on a recorded authority decision.** `watchdog.sh --allow-reap` is a *stub seam* only. Per the proposal (Phase 2, lines 107/151–156), real `tick reap` may fire **only** per a recorded authority rule, and must otherwise **escalate to a human**. **Before the real reap implementation lands, a decision record must define the authority model** (who/what may auto-reap, under what evidence), and the watchdog must log that policy choice when it acts. Until then: escalate-only. (relay r1 Should.)
 
 ## Risks & open questions
-1. **Headless auth/sandbox** — does `claude -p` / `codex exec` run unattended in this environment? (Mirrors the keychain/tmp sandbox issues we already hit.) Validate in a 2a spike before committing.
+1. ~~**Headless auth/sandbox** — does `claude -p` / `codex exec` run unattended in this environment?~~ **RESOLVED (2026-06-14 spike): No headless CLI present** → execution contract switches to **Option B (baton + poll)**. See the execution-contract section above.
 2. **Verdict contract** — agents must emit a machine-greppable `VERDICT:` line. Needs to be in the turn prompt template (ties back to the xyz build-prompt and the relay block format).
 3. **Idempotency / crash recovery** — if the runner dies mid-turn, the claim is held; the watchdog's parked detection + `tick`'s heartbeat are the safety net. Confirm the round loop is re-entrant (resume an already-claimed task).
 4. **Test transport** — extend `test/_setup.sh` (now exports `TICK_REPO_ROOT=$A`) with a fake `--agent-cmd` helper.
