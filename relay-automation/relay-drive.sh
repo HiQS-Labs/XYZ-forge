@@ -80,11 +80,21 @@ token_state() {
 round=0
 while ((round < ROUND_CAP)); do
   s="$(file_status)"
+  IFS=$'\t' read -r tstatus actor < <(token_state)
+
+  # Terminal CLOSE requires AGREEMENT: file STATUS terminal AND the RELAY-TURN
+  # token no longer live (done/gone). file-terminal-but-token-live is a leaked
+  # close — escalate, never report success. (Codex r1 Blocker.)
   if terminal_status "$s"; then
-    printf 'relay-drive: relay terminated (STATUS: %s) after %d turn(s)\n' "$s" "$round"; exit 0
+    if [[ -n "$actor" ]]; then
+      printf 'relay-drive: STATUS %s but RELAY-TURN still live (%s/%s) — close mismatch, escalating\n' "$s" "$tstatus" "$actor" >&2
+      exit 4
+    fi
+    printf 'relay-drive: relay terminated (STATUS: %s, token done) after %d turn(s)\n' "$s" "$round"
+    exit 0
   fi
 
-  IFS=$'\t' read -r tstatus actor < <(token_state)
+  # file not terminal but the token is gone/done → also a mismatch.
   if [[ -z "$actor" ]]; then
     printf 'relay-drive: RELAY-TURN has no actor (token %s) but STATUS=%s — escalating\n' "${tstatus:-missing}" "$s" >&2
     exit 4
@@ -100,16 +110,18 @@ while ((round < ROUND_CAP)); do
   eval "$AGENT_CMD"
   round=$((round + 1))
 
-  # Terminal yet?
-  terminal_status "$(file_status)" && { printf 'relay-drive: relay terminated after %d turn(s)\n' "$round"; exit 0; }
-  # No-progress guard: the token actor (or its status) must have moved.
+  # No-progress guard (skipped once terminal — the close check at loop top handles that).
   IFS=$'\t' read -r ntstatus nactor < <(token_state)
-  if [[ "$ntstatus:$nactor" == "$prev" ]]; then
+  if ! terminal_status "$(file_status)" && [[ "$ntstatus:$nactor" == "$prev" ]]; then
     printf 'relay-drive: no progress after %s turn (token still %s) — escalating\n' "$actor" "$prev" >&2
     exit 3
   fi
 done
 
-terminal_status "$(file_status)" && { printf 'relay-drive: relay terminated (STATUS: %s)\n' "$(file_status)"; exit 0; }
-printf 'relay-drive: round cap (%d) exceeded without Approved — escalating\n' "$ROUND_CAP" >&2
+# Cap reached: success only if file terminal AND token not live (same agreement).
+s="$(file_status)"; IFS=$'\t' read -r tstatus actor < <(token_state)
+if terminal_status "$s" && [[ -z "$actor" ]]; then
+  printf 'relay-drive: relay terminated (STATUS: %s)\n' "$s"; exit 0
+fi
+printf 'relay-drive: round cap (%d) exceeded (STATUS: %s, token actor: %s) — escalating\n' "$ROUND_CAP" "$s" "${actor:-none}" >&2
 exit 4

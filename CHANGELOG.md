@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### relay-automation — (a) code review (Codex): close-mismatch Blocker fixed
+- Codex caught + reproduced: `relay-drive.sh` reported success (exit 0) when the file `STATUS` was terminal even if the `RELAY-TURN` token was still live (Approved-without-`done` → leaked claim). Fix: terminal success now requires **close agreement** (file terminal AND token done/gone); else escalate exit 4. Regression test `approvenodone` added → `poll-relay` 11, `validate.sh` 18/18.
+
 ### relay-automation — (a) relay turns are now tick-native ✅
 - `poll.sh` relay mode: whose-turn from `tick info RELAY-TURN` claimability (shared with xyz); the relay file's `STATUS` is the terminal signal only; cross-model keyed on the token's handoff agent; dropped `--my-role`/`--roles`, added `--relay-task`.
 - `relay-drive.sh`: supervises the `RELAY-TURN` token (actor = claimer/handoff); turn-taker claims/pings/releases/`done`; no-progress (exit 3) + cap (exit 4) escalation.

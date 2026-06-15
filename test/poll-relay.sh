@@ -28,10 +28,10 @@ printf '\n### Turn · %s (mode=%s)\n' "$me" "$mode" >>"$f"
 if [ "$mode" = noprogress ]; then exit 0; fi
 if [ "$me" = "$RA" ]; then
   c="$WORK/rev.$t.n"; n=0; [ -f "$c" ] && n=$(cat "$c"); n=$((n+1)); echo "$n" >"$c"
-  if [ "$mode" = normal ] && [ "$n" -ge 2 ]; then
+  if [ "$n" -ge 2 ] && { [ "$mode" = normal ] || [ "$mode" = approvenodone ]; }; then
     sed -i.bak 's/^STATUS:.*/STATUS: Approved/' "$f"; rm -f "$f.bak"
     printf '**Verdict:** Approved\n' >>"$f"
-    "$TICK" done "$t" --agent "$me" >/dev/null 2>&1
+    [ "$mode" = normal ] && "$TICK" done "$t" --agent "$me" >/dev/null 2>&1   # approvenodone: skip done -> leaked live token
   else
     printf '**Verdict:** Changes requested\n' >>"$f"
     "$TICK" release "$t" --agent "$me" --to "$other" >/dev/null 2>&1
@@ -76,6 +76,13 @@ bash "$DRIVE" --relay-file "$R3" --relay-task RELAY-TURN-3 --agent-cmd "$(AC loo
 rc=$?
 [ "$rc" -eq 4 ] && pass "round cap without Approved escalates (exit 4)" || fail "expected exit 4, got $rc"
 [ "$(status_of "$R3")" != "Approved" ] && pass "never-approve relay did not close Approved" || fail "should not be Approved"
+
+# --- (3b) close mismatch: STATUS Approved but token never `done` (Codex r1) ---
+R5="$A/relay5.md"; seed RELAY-TURN-5 "$R5"
+bash "$DRIVE" --relay-file "$R5" --relay-task RELAY-TURN-5 --agent-cmd "$(AC approvenodone)" --round-cap 8 >/dev/null 2>&1
+rc=$?
+[ "$rc" -eq 4 ] && pass "close mismatch (STATUS Approved, token not done) escalates (exit 4)" || fail "expected exit 4, got $rc"
+[ "$(task_status RELAY-TURN-5)" = "claimed" ] && pass "leaked live token is NOT reported as a clean close" || fail "token should still be live, got: $(task_status RELAY-TURN-5)"
 
 # --- (4) dry-run: names the actor, mutates nothing -----------------------
 R4="$A/relay4.md"; seed RELAY-TURN-4 "$R4"

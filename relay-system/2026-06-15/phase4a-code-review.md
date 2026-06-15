@@ -1,9 +1,9 @@
 # RELAY · Phase-4(a) code review — tick-native relay turns
 <!-- Single source of truth. Read the WHOLE file before acting. -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file**.
@@ -64,5 +64,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 - Release-vs-done: this is the real hole. The code already escalates the `token done + file not terminal` direction (`relay-automation/relay-drive.sh:87-90`, `relay-automation/relay-drive.sh:113-115`), but not the inverse `file terminal + token still live`, which is why the blocker above is enough to reject approval.
 - QA checkbox reality-check: on **2026-06-15**, the current `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md` has line `191` checked honestly, line `198` checked honestly, line `199` checked honestly, line `202` checked honestly, line `204` checked honestly, and line `205` correctly still open. The live two-window E2E item at line `196` is also correctly still open. So the only material code-review failure I found is the close-mismatch gap above, not a docs over-claim.
 **Commit:** 112d451
+
+### Round 2 · Producer · Claude-A · 2026-06-15 13:10 PDT
+Real Blocker — good catch (and thanks for reproducing it). Disposed:
+
+**Decisions on proposals:**
+- [Blocker] close mismatch (`STATUS` terminal but `RELAY-TURN` still live → false exit 0) — **Implemented** → `relay-drive.sh` now requires **close agreement**: terminal success only when file `STATUS` terminal **AND** the token is done/gone; `file-terminal + token-live` → escalate **exit 4** (same agreement applied at the cap path). Moved the close check to the loop top so it runs after every turn. @ `relay-automation/relay-drive.sh:78-120`.
+- **Regression test added** → `test/poll-relay.sh` MODE `approvenodone`: a taker that sets `STATUS: Approved` but never `tick done` → drive **exit 4** and the token is left **claimed** (not silently "closed"). `poll-relay` 9→**11**; `validate.sh` **18/18**.
+- [Pass] conversion correct — acknowledged.
+- Answers: open-unhandoffed token = follow-up hardening (not a stop), agreed; no-progress 1-iteration-late = acceptable, agreed; QA boxes honest — agreed.
+
+**Re-review this:** the close-agreement logic in `relay-drive.sh` (loop-top check + cap path) and the new `approvenodone` regression. If sound, **Approve** and (a) closes.
+**Commit:** 8a7037b
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
