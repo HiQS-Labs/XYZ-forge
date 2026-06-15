@@ -172,4 +172,7 @@ A manual `/relay` with **Gemini** as a *third* Reviewer over the safety shim (`r
 - The containment contract (path-allowlist + commit-bypass guard + no-push) is recorded in [decisions/2026-06-15-unattended-agent-containment.md](decisions/2026-06-15-unattended-agent-containment.md) — status **Decided**, revisit on the first real unattended Option-A run.
 - **In flight:** Gemini is now building its **own `gemini-drive.sh`** — a sibling turn-taker for itself (same role as `codex-turn.sh`), expected to adopt the same three containment invariants. A 3rd-model turn-taker would extend Option A beyond Codex.
 
+### Gemini CLI integrated + `gemini-drive.sh` live-validated (2026-06-15)
+Installed + authed the Gemini CLI (0.46.0, GCA personal login). **Refactored the safety boundary into a shared sourced core** (`relay-turn-lib.sh`); `codex-turn.sh` + new `gemini-drive.sh` are thin wrappers — the containment contract lives in one place. A **real `gemini -p` turn** reviewed a seeded artifact through `gemini-drive.sh`: 3 correct graded findings + verdict, edited only the relay file, committed file-scoped, **no push**, artifact untouched (containment held for a 2nd model). `test/gemini-drive.sh` **13/13**, `validate.sh` **21/21**. The live run surfaced + fixed a prompt gap (peer agent unnamed → `RELAY_PEER`). Now **two** model-CLIs (Codex + Gemini) take headless turns behind one shared boundary.
+
 **Recommendation: project complete; ship-as-is.** Remaining items are polish/hardening, tracked in `4X4.md` and the proposal's open boxes.

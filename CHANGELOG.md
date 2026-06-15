@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### Gemini CLI integrated → `gemini-drive.sh` SHIPPED + live-validated; safety core shared
+- **Installed + authed Gemini CLI** (`brew install gemini-cli`, 0.46.0) — GCA personal-login auth (`GOOGLE_GENAI_USE_GCA=true`, no API key); headless = `gemini --yolo --skip-trust -p`.
+- **Shared-core refactor (the "improved architecture"):** extracted the model-agnostic containment contract into `relay-automation/relay-turn-lib.sh` (sourced). `codex-turn.sh` is now a thin dispatch wrapper over it; **`gemini-drive.sh`** is a new wrapper for the Gemini agent. The boundary (allowlist + commit-bypass + no-push) lives in **one** place — no reimplementation.
+- **Live-validated end-to-end:** a real `gemini -p` turn reviewed a seeded `sample.sh` (found 3 correct graded findings + verdict), edited **only** the relay file, committed file-scoped, **no push**; the artifact was never touched (containment held). Isolated temp repo, `bin/tick` passthrough.
+- **Prompt fix from the live run:** Gemini released the token to the literal role "Producer" (peer was unnamed) → added optional `RELAY_PEER` to name the handoff target explicitly.
+- `test/gemini-drive.sh` **13/13** (mirrors the codex guard suite); `validate.sh` **21/21**; package regenerated (13 files).
+
 ### decision recorded + `gemini-drive.sh` in flight
 - `decisions/2026-06-15-unattended-agent-containment.md` — **Decided**: path-allowlist + commit-bypass guard + no-push is sufficient containment for an unattended committing agent. 3-model validated; revisit on the first real unattended Option-A run. Linked from RECAP, 4X4, CROSSMODEL-OPTIONA-PLAN.
 - **In flight (built by Gemini):** `gemini-drive.sh` — a sibling turn-taker for Gemini itself (same role as `codex-turn.sh`), expected to adopt the 3 containment invariants. Extends Option A to a 3rd model.

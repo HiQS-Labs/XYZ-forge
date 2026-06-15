@@ -8,10 +8,13 @@ tar czf skill/relay-automation/relay-pkg.tar.gz \
   relay-automation/runner.sh \
   relay-automation/watchdog.sh \
   relay-automation/relay-drive.sh \
+  relay-automation/relay-turn-lib.sh \
   relay-automation/codex-turn.sh \
+  relay-automation/gemini-drive.sh \
   relay-automation/README.md \
   test/poll-driver.sh \
   test/poll-relay.sh \
   test/watchdog-relay.sh \
-  test/codex-turn.sh
+  test/codex-turn.sh \
+  test/gemini-drive.sh
 echo "wrote skill/relay-automation/relay-pkg.tar.gz ($(wc -c < skill/relay-automation/relay-pkg.tar.gz) bytes)"

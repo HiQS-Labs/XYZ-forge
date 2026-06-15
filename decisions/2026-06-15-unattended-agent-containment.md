@@ -54,3 +54,11 @@ adopting shim (Codex or Gemini) is observed letting an off-lane change through i
   sibling turn-taker for itself, same role as `codex-turn.sh`). It should adopt these three
   invariants; if it does and behaves, that's corroborating evidence — if it lets an off-lane
   change through, that fires the revisit trigger.
+- 2026-06-15 — **Corroborating evidence (2nd model adopted the boundary, live).** Refactored the
+  three invariants into a shared sourced core (`relay-automation/relay-turn-lib.sh`); `codex-turn.sh`
+  + a new `gemini-drive.sh` are thin wrappers over it. A **real `gemini -p` turn** (gemini-cli 0.46.0,
+  GCA auth) took a relay review turn through `gemini-drive.sh`: edited only the relay file, committed
+  file-scoped, no push, and **left the reviewed artifact untouched** — containment held for a second
+  independent model. `test/gemini-drive.sh` 13/13, `validate.sh` 21/21. Bet still **Decided** (this
+  was a single *supervised* turn, not a real multi-turn *unattended* run). Live run also surfaced a
+  prompt-clarity gap (peer agent unnamed → released to a role name) — fixed with optional `RELAY_PEER`.
