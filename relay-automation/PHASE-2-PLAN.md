@@ -97,6 +97,31 @@ upgrade if/when fully-unattended runs are wanted and a CLI is installed + authed
 The `--agent-cmd` injection seam stays regardless (tests use a fake; B wires it to
 the baton/poll driver, A would wire it to the CLI).
 
+## Future upgrade — Option A (headless CLI) for fully-unattended runs
+
+*Not scheduled. A sketch for when truly unattended (no window open) automation is
+wanted — the upgrade beyond Phase 4's Option B (baton + poll).*
+
+**What it unlocks:** runs with **no Claude window open** — a cron/CI/service can
+drive `runner.sh`/`watchdog.sh` end-to-end, because `resume_task` shells out to a
+real agent CLI instead of relying on a live polling window.
+
+**What it requires (the spike found none of this present today):**
+1. **An agent CLI on PATH** — e.g. `npm i -g @anthropic-ai/claude-code` (`claude` CLI), or the OpenAI Codex / Gemini CLIs. Pin the version.
+2. **Non-interactive auth** — an API key in an env var (`ANTHROPIC_API_KEY`, etc.), **not** the macOS keychain (sandbox-blocked, and headless hosts have no keychain). Store via the CI/secret manager.
+3. **A headless invocation contract** — `claude -p "<turn prompt>" > "$LOG"` (or `codex exec …`), emitting a greppable `VERDICT:` line. The `--agent-cmd` seam already isolates this — Option A just sets `--agent-cmd` to the real CLI instead of the baton driver.
+4. **Per-turn cost + rate-limit budgeting** — every automated turn is a billed API call; add a spend cap / backoff.
+
+**Migration steps (when triggered):**
+- Stand up the CLI + key in the target runner host; verify `claude -p "Output exactly: VERDICT: PASS"` returns headlessly.
+- Point `runner.sh --agent-cmd` at the CLI; reuse the existing fake-`--agent-cmd` tests as the contract (swap fake → real behind a flag).
+- Add a turn prompt template that instructs the agent to emit `VERDICT:` + stay in-lane.
+- Gate behind a spend cap; keep Option B as the fallback when the CLI/auth is absent.
+
+**Trigger to revisit:** a real need for unattended/scheduled runs (no operator window), **or** a CLI + budget become available. Until then, Option B (Phase 4) is sufficient and cheaper.
+
+**Risks:** auth/secret management, per-token cost, CLI drift across providers, and prompt-injection surface on an unattended agent — all reasons to keep this gated behind an explicit decision when the time comes.
+
 ## Phased breakdown
 
 ### Phase 2a — runner: real claim + execute + verdict loop
