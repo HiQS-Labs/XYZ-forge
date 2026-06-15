@@ -50,22 +50,43 @@ in_allow() { local x="$1" a; for a in "${allow[@]}"; do [[ "$x" == "$a" ]] && re
 
 # 2. Run the Codex turn headless. Codex does token ops + edits the relay file; NO git.
 prompt="You are agent ${me}, taking your turn in a file-based relay. Read ${f} and follow its embedded '▶ TAKE YOUR TURN' steps for your role. Use ./bin/tick for the ${t} token (claim/ping, then release --to the other agent, or done + set STATUS: Approved when approving). Edit ONLY ${f}${ALLOW_PATHS:+ and: ${ALLOW_PATHS}}. Do NOT run git (no add/commit/push) and do NOT touch any other file — the harness commits for you."
+before_head="$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo none)"
 "$CODEX_BIN" exec "$prompt" < /dev/null > "${CODEX_LOG:-/dev/stderr}" 2>&1 || { printf 'codex-turn: codex exec failed\n' >&2; exit 5; }
 
+# 2b. Commit-bypass guard (Gemini r1 Blocker): Codex must NOT git. If it committed, its edits are
+# hidden from `git status` — undo the commit(s) and fail, so off-lane changes can't slip in committed.
+if [[ "$(git -C "$ROOT" rev-parse HEAD 2>/dev/null || echo none)" != "$before_head" ]]; then
+  git -C "$ROOT" reset --hard "$before_head" >/dev/null 2>&1 || true
+  printf 'codex-turn: Codex committed during its turn (forbidden) — reset to %s, failing\n' "${before_head:0:8}" >&2
+  exit 6
+fi
+
 # 3. Enforce the allowlist on tracked-tree changes (.tick is gitignored, so token ops don't show).
-# The shim's own transcript log, if it lands inside the tree, is not a Codex edit — drop it, don't flag.
+# Use -z (NUL-delimited, RAW unquoted paths) so filenames with spaces/special chars can't slip past
+# the match or break the revert, and rename records (R/C, two NUL fields) are both checked (Gemini r1
+# Blocker). The shim's own transcript log, if it lands inside the tree, is not a Codex edit — drop it.
+# NOTE (Gemini r1 Should): git-status does NOT report gitignored files; .tick is *intentionally*
+# written by the turn, so we deliberately do NOT `git clean -Xdf` (that would destroy the coordination
+# state). Ignored-file safety for an unattended agent belongs to the codex sandbox, tracked as future.
 log_rel="${CODEX_LOG:+${CODEX_LOG#"$ROOT"/}}"
 violation=0
-while IFS= read -r line; do
-  [[ -n "$line" ]] || continue
-  path="${line:3}"                      # strip "XY " porcelain prefix
-  if [[ -n "$log_rel" && "$path" == "$log_rel" ]]; then rm -f "$ROOT/$path"; continue; fi
-  if ! in_allow "$path"; then
-    printf 'codex-turn: OFF-ALLOWLIST change: %s — reverting\n' "$path" >&2
-    git -C "$ROOT" checkout -- "$path" 2>/dev/null || rm -rf "$ROOT/${path%/}"
-    violation=1
-  fi
-done < <(git -C "$ROOT" status --porcelain)
+check_path() {
+  local p="$1"
+  [[ -n "$p" ]] || return 0
+  if [[ -n "$log_rel" && "$p" == "$log_rel" ]]; then rm -f "$ROOT/$p"; return 0; fi
+  in_allow "$p" && return 0
+  printf 'codex-turn: OFF-ALLOWLIST change: %s — reverting\n' "$p" >&2
+  git -C "$ROOT" checkout -- "$p" 2>/dev/null || rm -rf "$ROOT/${p%/}"
+  violation=1
+}
+while IFS= read -r -d '' entry; do
+  [[ -n "$entry" ]] || continue
+  xy="${entry:0:2}"; path="${entry:3}"
+  case "$xy" in
+    R*|C*) IFS= read -r -d '' src || true; check_path "$path"; check_path "$src" ;;
+    *)     check_path "$path" ;;
+  esac
+done < <(git -C "$ROOT" status --porcelain -z)
 ((violation == 0)) || { printf 'codex-turn: off-lane edits reverted; failing the turn\n' >&2; exit 6; }
 
 # 4. Stage ONLY the allowlist; commit file-scoped; NO push.

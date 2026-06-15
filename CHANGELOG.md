@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### relay-automation — Gemini (3rd model) hardened `codex-turn.sh` — 2 Blockers fixed
+- Manual `/relay` with **Gemini** as Reviewer over `codex-turn.sh` (`relay-system/2026-06-15/codex-turn-review-gemini.md`) — third model, validates the portable relay generalizes beyond Claude/Codex. It found **two real bypasses neither I nor Codex caught**:
+  - **git-commit bypass** — if Codex commits mid-turn, edits leave `git status` clean → allowlist sees nothing. Fixed: capture `before_head`, `reset --hard` + **exit 6** if HEAD moved.
+  - **quoted-path bypass** — porcelain quotes paths with spaces; `${line:3}` kept the quotes so revert failed. Fixed: `git status --porcelain -z` (raw paths) + `check_path` helper handling `R`/`C` rename two-field records.
+  - **[Should] ignored files** — declined `git clean -Xdf` (would destroy `.tick` coordination state); documented the limit + deferred to the codex sandbox.
+- `test/codex-turn.sh` **10 → 16** (commit-bypass + spaced-path guards); `validate.sh` **20/20**; tarball regenerated.
+
 ### relay-automation — Phase 5 SHIPPED → PROJECT COMPLETE (Phases 1–5) ✅
 - `skill/relay-automation/` — sibling self-contained skill: `SKILL.md` (E3 capability gate + install), `relay-pkg.tar.gz` (the 5 relay scripts + README + 4 tests, regenerable via `make-pkg.sh`), `test/skill-extract.sh` (extract + parse + no-drift). `validate.sh` **20/20**.
 - **All proposal phases done:** 1 turn-token, 2 watchdog, 3 verdict-gating, 4 hands-free poll (+ tick-native relay turns, self-expiring loops), 5 packaging — plus cross-model (Claude↔Codex) + Option-A headless turns live-proven. Project DoD met.

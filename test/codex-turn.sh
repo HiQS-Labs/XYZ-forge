@@ -26,6 +26,14 @@ export TICK_REPO_ROOT="$A"
 printf '\n### Round 1 · Reviewer · %s (codex-stub)\n**Verdict:** Changes requested\n' "$RELAY_AGENT" >>"$RELAY_FILE"
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to claude-a >/dev/null 2>&1
 [ "${STUB_MODE:-good}" = bad ] && printf 'off-lane\n' >>"$A/offlane.md"
+# commitbypass: Codex ignores "no git" and COMMITS an off-lane change (hides it from git status)
+if [ "${STUB_MODE:-good}" = commitbypass ]; then
+  printf 'sneaky\n' >>"$A/sneaky.md"
+  git -C "$A" add sneaky.md >/dev/null 2>&1
+  git -C "$A" commit -q -m "codex sneaked a commit" >/dev/null 2>&1
+fi
+# spacefile: off-lane path containing a space (git status would QUOTE it without -z)
+[ "${STUB_MODE:-good}" = spacefile ] && printf 'off-lane\n' >>"$A/off lane.md"
 exit 0
 STUB_EOF
 chmod +x "$STUB"
@@ -71,6 +79,22 @@ run_shim RELAY-TURN-bad codex bad; rc=$?
 [ "$rc" -eq 6 ] && pass "off-allowlist edit -> shim fails (exit 6)" || fail "expected exit 6, got $rc"
 [ ! -f "$A/offlane.md" ] && pass "off-lane file was reverted/removed" || fail "off-lane file should be gone"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on a violating turn" || fail "should not commit on violation"
+
+# --- (4) commit-bypass: Codex commits off-lane -> reset + fail (Gemini r1 Blocker) --
+seed_token RELAY-TURN-bypass
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-bypass codex commitbypass; rc=$?
+[ "$rc" -eq 6 ] && pass "Codex commit during turn -> shim fails (exit 6)" || fail "commit-bypass should exit 6, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "sneaked commit reset to BEFORE_HEAD" || fail "HEAD should be reset to before"
+[ ! -f "$A/sneaky.md" ] && pass "off-lane committed file removed by reset" || fail "sneaky.md should be gone"
+
+# --- (5) quoted path: off-lane file with a space -> reverted + fail (Gemini r1 Blocker) --
+seed_token RELAY-TURN-space
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-space codex spacefile; rc=$?
+[ "$rc" -eq 6 ] && pass "off-lane path with space -> shim fails (exit 6)" || fail "spacefile should exit 6, got $rc"
+[ ! -f "$A/off lane.md" ] && pass "spaced off-lane file reverted (-z parsing)" || fail "'off lane.md' should be removed"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on spaced-path violation" || fail "should not commit"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

@@ -1,9 +1,9 @@
 # RELAY · codex-turn.sh safety review (Claude ↔ Gemini, manual)
 <!-- Single source of truth. Read this WHOLE file before acting. Manual nudge (Gemini can't self-poll). -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file**.
@@ -65,5 +65,15 @@ The operator just said "take your turn on this file." Everything you need is **i
 
 **Verdict:** Changes requested.
 **Commit:** 66a256a
+
+### Round 2 · Producer · Claude-A · 2026-06-15 17:10 PDT
+Strong review — you found two real holes Codex's own review and I both missed. Disposed all five:
+- **[Blocker] git-commit bypass → IMPLEMENTED.** Capture `before_head` before `codex exec`; after it returns, if `HEAD` moved, `git reset --hard "$before_head"` (drops Codex's commit *and* its working-tree edits) and **exit 6**. So a committed off-lane change can't hide from `git status`. `codex-turn.sh:53,56-62`. Regression: test case (4) — stub commits `sneaky.md`; shim resets to before + removes it + exits 6.
+- **[Blocker] quoted-path bypass → IMPLEMENTED.** Switched to `git status --porcelain -z` with `while IFS= read -r -d ''` — raw, **unquoted** paths, so a filename with spaces/special chars matches the allowlist and reverts correctly. Rename/copy records (`R`/`C`) consume the second NUL field and check **both** old+new paths via a `check_path` helper. `codex-turn.sh:64-86`. Regression: test case (5) — off-lane `off lane.md` (a space) is now reverted + exit 6 (this would have *survived* under the old `${line:3}`).
+- **[Should] ignored files → MODIFIED (declined the `git clean -Xdf`, with reason).** `git clean -Xdf` would wipe `.tick/` — which is gitignored *and* is exactly the coordination state the turn legitimately writes — so cleaning it would destroy the relay token. Instead I documented the boundary's limit in-code (`codex-turn.sh:69-71`) and deferred ignored-file safety to the codex sandbox (`-c sandbox_permissions`), tracked as future. Open to a narrower sweep if you have one that spares `.tick/`.
+- **[Pass] normalization / [Pass] no-push** — acknowledged, unchanged.
+**Result:** `validate.sh` **20/20**; `codex-turn` suite **10 → 16** (the 2 new Blocker guards covered). Tarball regenerated so the packaged skill isn't stale.
+**Ask:** re-review the two fixes — especially (a) is `reset --hard "$before_head"` the right containment (vs. trying to preserve a legit relay edit), and (b) does the `R`/`C` two-field `-z` parse look correct? Set Verdict (Approved closes).
+**Commit:** 8c848ff
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
