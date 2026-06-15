@@ -53,10 +53,13 @@ prompt="You are agent ${me}, taking your turn in a file-based relay. Read ${f} a
 "$CODEX_BIN" exec "$prompt" < /dev/null > "${CODEX_LOG:-/dev/stderr}" 2>&1 || { printf 'codex-turn: codex exec failed\n' >&2; exit 5; }
 
 # 3. Enforce the allowlist on tracked-tree changes (.tick is gitignored, so token ops don't show).
+# The shim's own transcript log, if it lands inside the tree, is not a Codex edit — drop it, don't flag.
+log_rel="${CODEX_LOG:+${CODEX_LOG#"$ROOT"/}}"
 violation=0
 while IFS= read -r line; do
   [[ -n "$line" ]] || continue
   path="${line:3}"                      # strip "XY " porcelain prefix
+  if [[ -n "$log_rel" && "$path" == "$log_rel" ]]; then rm -f "$ROOT/$path"; continue; fi
   if ! in_allow "$path"; then
     printf 'codex-turn: OFF-ALLOWLIST change: %s — reverting\n' "$path" >&2
     git -C "$ROOT" checkout -- "$path" 2>/dev/null || rm -rf "$ROOT/${path%/}"

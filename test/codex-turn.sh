@@ -55,6 +55,15 @@ run_shim RELAY-TURN-good codex good; rc=$?
 git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
 [ "$(git -C "$A" log -1 --format='%s')" != "" ] && [ -z "$(git -C "$A" log -1 --format='%D' | grep -o 'origin/')" ] && pass "no push (no origin ref on the commit)" || pass "no push (local-only fixture)"
 
+# --- (2b) shim's own transcript log inside the tree is ignored, not flagged --
+seed_token RELAY-TURN-log
+before="$(git -C "$A" rev-parse HEAD)"
+RELAY_AGENT=codex RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-log CODEX_AGENT=codex \
+  CODEX_BIN="$STUB" CODEX_TURN_ROOT="$A" CODEX_LOG="$A/codex.log" STUB_MODE=good \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "CODEX_LOG inside the tree is ignored (turn still succeeds)" || fail "log-in-tree should not fail the turn (rc=$rc)"
+[ ! -f "$A/codex.log" ] && pass "transcript log cleaned up (not committed)" || fail "log should be removed"
+
 # --- (3) allowlist violation: off-lane edit -> reverted + fail (exit 6) --
 seed_token RELAY-TURN-bad
 before="$(git -C "$A" rev-parse HEAD)"
