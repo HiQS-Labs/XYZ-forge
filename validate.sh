@@ -23,6 +23,7 @@ TESTS=(
   "poll-driver.sh"
   "poll-relay.sh"
   "watchdog-relay.sh"
+  "codex-turn.sh"
 )
 
 PASSED=()
