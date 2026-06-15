@@ -164,4 +164,10 @@ Phase 4 finished (tick-native relay turns (a), self-expiring loops), Phase 5 pac
 - **Concurrency is start-skew-sensitive** (Run 4 72% vs Run 5 39%, same design) — a metric about launch discipline, not the protocol.
 - **Open polish (not blocking):** Phase-4 race hammer-test, real auto-reap (needs an authority decision), a tighter Codex sandbox for unattended turns, a true zero-setup fresh-clone E2E. The Phase-5 skill packaging deliberately uses a **tarball sidecar**, not the xyz heredoc pattern (markdown linters corrupt embedded base64).
 
+### Post-completion hardening — 3-model review of `codex-turn.sh` (2026-06-15)
+A manual `/relay` with **Gemini** as a *third* Reviewer over the safety shim (`relay-system/2026-06-15/codex-turn-review-gemini.md`) found **two real bypasses** that neither I nor Codex's earlier headless review caught, then Approved the fixes (r3):
+- **git-commit bypass** — Codex committing mid-turn hid edits from `git status`; fixed with a `before_head`/`reset --hard`/exit-6 guard.
+- **quoted-path bypass** — porcelain quotes spaced paths so the revert no-op'd; fixed with `git status --porcelain -z` raw-path parsing (+ `R`/`C` rename handling).
+- `test/codex-turn.sh` **10 → 16**, `validate.sh` still **20/20**. The shim's containment is now **3-model validated** (Claude authored → Codex added allowlist/no-push → Gemini cleared 2 bypasses). Also proves the **portable `/relay` generalizes to a third model** via embedded instructions + manual nudge. Plus `relay-automation/QUICKSTART.md` for a fresh-device test.
+
 **Recommendation: project complete; ship-as-is.** Remaining items are polish/hardening, tracked in `4X4.md` and the proposal's open boxes.
