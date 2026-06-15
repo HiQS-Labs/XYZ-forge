@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### relay-automation — Phase-5 plan drafted + FIRST hands-free dogfood ✅
+- Drafted `PHASE-5-PLAN.md` (package as sibling skill + real-run metrics).
+- **Dogfood: first real end-to-end automated relay** (tick `RELAY-TURN` + `poll.sh`/`/loop`, all-Claude) reviewing the Phase-5 plan → closed **Approved in 2 rounds with 0 turn-advancement nudges**. Claude-B adopted via its `/loop`, Claude-A via cron. Plan review adopted **E3** (detect-or-extract + capability gate) over E1.
+- Findings: fixed `poll.sh` empty-`--claude-agents` crash (+ regression); added `.claude/settings.local.json` relay-automation allowlist (permission gate stalled the loop); parked-detector flags *closed* windows (Phase-2 follow-up); claim-before-release ordering; designate one `--watchdog-authority` poller for real runs. Full metrics in `REAL-AGENT-OBSERVATIONS.md`.
+
 ### relay-automation — (a) COMPLETE: Codex-approved ✅
 - Codex r2 **Approved** (`relay-system/2026-06-15/phase4a-code-review.md`): re-ran validate 18/18, poll-relay 11/11, watchdog-relay 4/4; confirmed the close-agreement fix and no new issues. Decision `relay-turns-tick-native` → **Validated** (expected signal met: watchdog detects a stalled RELAY-TURN). **Only Phase 5 (package as sibling skill) remains.**
 

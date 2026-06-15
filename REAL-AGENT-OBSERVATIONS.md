@@ -304,3 +304,26 @@ The work-bounded concurrency metric is **dominated by how close together the two
 
 ### Recommendation
 **Iterate on launch discipline, not lane design.** This is a sub-50% datapoint (valid, per the brief — not a retry trigger in-session). It does **not** indict the Phase-2 deliverables (real, tested, clean) or the lane model. It re-opens the graduate bet: balance alone doesn't guarantee ≥50% — **simultaneous start does.** See the decision-record update below. Next balanced run should enforce start-together (the manual launch-sync, or automated launch) before reading the metric.
+
+---
+
+## Phase-5 dogfood — first hands-free automated relay (2026-06-15)
+
+First real end-to-end run of the relay-automation tooling (tick `RELAY-TURN` token + `poll.sh` under `/loop`), all-Claude, reviewing the Phase-5 plan. **Outcome: relay closed `Approved` with zero turn-advancement nudges** — the hands-free claim held.
+
+### Metrics
+- **Rounds to approve:** 2 (Producer r1 → Reviewer r1 *Request Changes* → Producer r2 *adopt E3* → Reviewer r2 *Approved*).
+- **Turn-advancement human interventions: 0** — no "your turn" nudges; both windows self-fired (Claude-B via its `/loop`, Claude-A via cron `e2918ffd`). This is the real hands-free proof.
+- **Other human interventions: 1** — a permission gate stalled Claude-B mid-run (now eliminated by the `.claude/settings.local.json` allowlist). Plus the one-time `/loop` launch.
+- **Steady-state turn latency:** Claude-B's turns ~1.5 min and ~47 s; fast. Total wall-time ~40 min was dominated by operator-side detours (the poll bug + claim-ordering debug below), not the loop.
+- **Auto-recovered stalls:** 0 — no window held `--watchdog-authority` this run, so nothing recovered (and nothing needed to).
+
+### Findings (the value of the dogfood)
+1. **[fixed] `poll.sh` crashed on empty `--claude-agents`** (`set -u` empty-array, bash 3.2) — only reachable in a real cross-model-branch poll; tests never hit it. Fixed + regression added.
+2. **[fixed] permission gate** stalled the hands-free loop → added a relay-automation allowlist to `.claude/settings.local.json` (tick, the 4 scripts, git, test runners, relay-path edits).
+3. **[Phase-2 follow-up] parked-detector flags *closed* windows** — it flagged Claude-A's 15-min r1 claim window (already released) as a "parked suspect." For the watchdog/self-healing use case, parked detection should consider only *currently-claimed* windows, else it would escalate already-completed turns.
+4. **[process] claim-before-release ordering** — `release` requires the agent to `claim` the token first; editing the artifact then releasing without claiming hits the ownership guard. The embedded turn-instructions say claim-first; the operator's manual shortcut tripped it.
+5. **[setup] designate one `--watchdog-authority` poller** for real runs, or a genuine stall won't auto-recover.
+
+### Verdict
+The transport works end-to-end hands-free (token/poll/handoff/close). This closes the **transport-E2E** sense of QA item 196 (shared-model caveat noted); cross-model coordination remains separate (now feasible — Codex CLI installed). The Phase-5 plan itself was **Approved** through this run.
