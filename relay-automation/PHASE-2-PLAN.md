@@ -99,8 +99,18 @@ the baton/poll driver, A would wire it to the CLI).
 
 ## Future upgrade — Option A (headless CLI) for fully-unattended runs
 
-*Not scheduled. A sketch for when truly unattended (no window open) automation is
-wanted — the upgrade beyond Phase 4's Option B (baton + poll).*
+*Was a sketch; now **unblocked + spike-passed (2026-06-15)**. The upgrade beyond
+Phase 4's Option B (baton + poll), feasible now that the Codex CLI is installed.*
+
+> **✅ Headless spike PASSED (2026-06-15):** `codex exec "<prompt>"` ran fully
+> non-interactive — already authed (`approval: never`), emitted a parseable
+> `VERDICT: PASS`, exit 0 (Codex v0.139.0, gpt-5.4). Wiring notes: invoke as
+> `codex exec "<turn prompt>" < /dev/null` (it otherwise waits on stdin); the
+> verdict is wrapped in transcript chrome but `grep 'VERDICT:' | tail -1` extracts
+> it; **~11k tokens for a trivial turn** (high reasoning default) → set a per-turn
+> budget. Next: wire `codex exec` as the relay turn-taker's `--agent-cmd` for the
+> Codex side → a real Claude↔Codex cross-model relay (also closes item 196's
+> cross-model sense).
 
 **What it unlocks:** runs with **no Claude window open** — a cron/CI/service can
 drive `runner.sh`/`watchdog.sh` end-to-end, because `resume_task` shells out to a

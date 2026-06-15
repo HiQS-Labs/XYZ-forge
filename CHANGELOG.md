@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### relay-automation — Option A (headless CLI) spike PASSED ✅
+- Codex CLI installed → ran the deferred headless-auth spike: `codex exec "<prompt>"` is non-interactive, authed, emits a parseable `VERDICT:`, exit 0 (~11k tokens/trivial turn; wire as `codex exec ... < /dev/null`). **Option A unblocked.** Next: wire `codex exec` as the relay turn-taker for a Claude↔Codex cross-model relay (closes item 196 cross-model). Recorded in `PHASE-2-PLAN.md` → Future upgrade.
+
 ### relay-automation — Phase-5 plan drafted + FIRST hands-free dogfood ✅
 - Drafted `PHASE-5-PLAN.md` (package as sibling skill + real-run metrics).
 - **Dogfood: first real end-to-end automated relay** (tick `RELAY-TURN` + `poll.sh`/`/loop`, all-Claude) reviewing the Phase-5 plan → closed **Approved in 2 rounds with 0 turn-advancement nudges**. Claude-B adopted via its `/loop`, Claude-A via cron. Plan review adopted **E3** (detect-or-extract + capability gate) over E1.
