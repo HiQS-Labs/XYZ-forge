@@ -1,6 +1,6 @@
 ---
 title: Automated Relay — tick-backed, self-healing review loop
-status: In progress — Phases 1–4 SHIPPED & tested incl. (a) tick-native relay turns (validate 18/18) as of 2026-06-15; Phase 4 QA 10/12 (open: live two-window E2E + race hammer-test); Phase 5 (package as sibling skill) remaining. See CHANGELOG.md + relay-automation/README.md.
+status: ✅ Phases 1–5 SHIPPED (2026-06-15) — relay-automation packaged as a sibling skill (`skill/relay-automation/`), validate 20/20. Tick-native relay turns (a), self-healing watchdog, hands-free poll, self-expiring loops, and cross-model (Claude↔Codex) + Option-A headless turns all live-proven. Phase-4 QA 10/12 (open: race hammer-test; two-window E2E proven via the dogfood). Project DoD met. See CHANGELOG.md + relay-automation/{README,CROSSMODEL-OPTIONA-PLAN}.md.
 owner: Noel / Neochrome
 created: 2026-06-14
 repo: Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm

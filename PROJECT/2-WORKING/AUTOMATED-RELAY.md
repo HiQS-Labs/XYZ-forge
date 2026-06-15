@@ -24,7 +24,9 @@ A `/relay` Producer↔Reviewer loop that runs **hands-free** (all-Claude) or one
 | 3 | Termination & verdict gating (`runner.sh`) | ✅ shipped |
 | 4 | Hands-free poll (`poll.sh`, `relay-drive.sh`) | ✅ shipped (baton model) |
 | **(a)** | **Relay turns → tick-native `RELAY-TURN`** (uses Phase-1 rule + watchdog-visible) | ✅ **DONE + Codex-approved** 2026-06-15 (close-mismatch Blocker caught+fixed) |
-| 5 | Package as sibling `skill/relay-automation/` | ⏳ **next — only remaining phase** |
+| 5 | Package as sibling `skill/relay-automation/` | ✅ **SHIPPED** 2026-06-15 (SKILL.md + tarball + self-extract test) |
+
+**✅ PROJECT COMPLETE (Phases 1–5).** `validate.sh` 20/20. Automated, self-healing relay shipped + packaged; cross-model + Option-A headless proven.
 
 `validate.sh`: **18/18** (added `watchdog-relay.sh`; `poll-driver`/`poll-relay` converted to tick-native). Phase-4 QA: 10/12 (open: live two-window E2E + race hammer-test).
 
