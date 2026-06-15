@@ -8,15 +8,17 @@ usage() {
   cat <<'EOF'
 Usage: relay-automation/watchdog.sh [options]
 
-Skeleton only:
+Watchdog liveness scan:
 - run `tick analyze --format json`
 - iterate the structured parked_suspects[] (no text grep -> no false positives)
-- escalate parked tasks to a human channel
+- emit a structured escalation record for each parked task
 - optionally reap, but only behind an explicit authority flag
 
 Options:
   --analysis-file PATH    Reuse captured `tick analyze --format json` output (JSON) instead of invoking it.
   --human-target LABEL    Human escalation target label (default: human-ops).
+  --channel MODE         Escalation sink: stdout or file (default: stdout).
+  --escalation-log PATH  Append escalation records to PATH when --channel file is used.
   --allow-reap            Enable the reap stub after escalation.
   --help                  Show this message.
 EOF
@@ -61,12 +63,65 @@ extract_parked_suspects() {
   '
 }
 
+now_iso() {
+  if [[ -n "${WATCHDOG_TS:-}" ]]; then
+    printf '%s\n' "$WATCHDOG_TS"
+    return
+  fi
+
+  date -u +"%Y-%m-%dT%H:%M:%SZ"
+}
+
+build_escalation_record() {
+  local task_id="$1"
+  local agent="$2"
+  local max_gap_ms="$3"
+  local heartbeats="$4"
+  local evidence="$5"
+  local ts="$6"
+
+  node -e '
+    const [task, agent, maxGap, heartbeats, evidence, ts] = process.argv.slice(1);
+    process.stdout.write(JSON.stringify({
+      task,
+      agent,
+      max_gap_ms: Number(maxGap),
+      heartbeats: Number(heartbeats),
+      evidence,
+      ts,
+    }));
+  ' "$task_id" "$agent" "$max_gap_ms" "$heartbeats" "$evidence" "$ts"
+}
+
+write_escalation_record() {
+  local record="$1"
+
+  case "$CHANNEL" in
+    stdout)
+      printf '%s\n' "$record"
+      ;;
+    file)
+      [[ -n "$ESCALATION_LOG" ]] || die "--escalation-log is required when --channel file is used"
+      printf '%s\n' "$record" >>"$ESCALATION_LOG"
+      ;;
+    *)
+      die "invalid channel: $CHANNEL"
+      ;;
+  esac
+}
+
 escalate_to_human() {
   local task_id="$1"
-  local evidence="$2"
-  printf 'watchdog: escalate %s to %s\n' "$task_id" "$HUMAN_TARGET" >&2
-  printf 'watchdog: stub only; replace with pager/chat/ticket integration once the escalation contract is finalized\n' >&2
-  printf 'watchdog: evidence: %s\n' "$evidence" >&2
+  local agent="$2"
+  local max_gap_ms="$3"
+  local heartbeats="$4"
+  local evidence="$5"
+  local ts
+  local record
+
+  ts="$(now_iso)"
+  record="$(build_escalation_record "$task_id" "$agent" "$max_gap_ms" "$heartbeats" "$evidence" "$ts")"
+  write_escalation_record "$record"
 }
 
 reap_task_stub() {
@@ -77,6 +132,8 @@ reap_task_stub() {
 
 ANALYSIS_FILE=""
 HUMAN_TARGET="human-ops"
+CHANNEL="stdout"
+ESCALATION_LOG=""
 ALLOW_REAP=0
 
 while (($# > 0)); do
@@ -87,6 +144,14 @@ while (($# > 0)); do
       ;;
     --human-target)
       HUMAN_TARGET="${2:-}"
+      shift 2
+      ;;
+    --channel)
+      CHANNEL="${2:-}"
+      shift 2
+      ;;
+    --escalation-log)
+      ESCALATION_LOG="${2:-}"
       shift 2
       ;;
     --allow-reap)
@@ -115,8 +180,8 @@ fi
 
 while IFS=$'\t' read -r task_id agent max_gap_ms heartbeats; do
   [[ -n "$task_id" ]] || continue
-  evidence="agent=$agent max_gap_ms=$max_gap_ms heartbeats=$heartbeats"
-  escalate_to_human "$task_id" "$evidence"
+  evidence="human_target=$HUMAN_TARGET max_gap_ms=$max_gap_ms heartbeats=$heartbeats"
+  escalate_to_human "$task_id" "$agent" "$max_gap_ms" "$heartbeats" "$evidence"
 
   if ((ALLOW_REAP)); then
     reap_task_stub "$task_id"
