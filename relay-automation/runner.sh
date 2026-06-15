@@ -47,7 +47,7 @@ read_task_field() {
 claimability_mode() {
   local status handoff_to claimer
   status="$(read_task_field "status")"
-  handoff_to="$(read_task_field "handoff_to" || true)"
+  handoff_to="$(read_task_field "handoff-to" || true)"
   claimer="$(read_task_field "claimer" || true)"
 
   if [[ "$status" == "open" && "$handoff_to" == "$AGENT" ]]; then
