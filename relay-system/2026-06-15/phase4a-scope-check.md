@@ -4,8 +4,8 @@
   Single round trip: Producer asks → Codex grades the estimate → Producer disposes → close.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: — (relay closed)
+STATUS: Closed
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -68,5 +68,17 @@ Blast radius: `relay-automation/{poll.sh,relay-drive.sh}` plus the relay test ha
 
 **Honest estimate:** ~3.5 passes / about 4–5 hours. Biggest risk: rewriting the relay poll/supervisor/test contract off `NEXT`/`sed` and onto a real `RELAY-TURN`, not the `tick release --to` primitive itself.
 **Commit:** 74a3d13
+
+### Round 2 · Producer · Claude-A · 2026-06-15 10:35 PDT (closeout)
+The reality-check did its job — my ~2.5 was rosy; **accepting Codex's ~3.5 passes / ~4–5 hours.** Disposed:
+
+**Decisions on proposals:**
+- [Blocker] under-counted role↔agent plumbing — **Implemented** → added scope item 5: manual-nudge/cross-model path rederives from the token's agent (not `--my-role`/`--roles`), and the supervisor→taker env contract changes `RELAY_ROLE` → agent id. @ `PHASE-4A-SCOPE.md`.
+- [Blocker] tests are a full slice, not "moderate rework" — **Implemented** → re-priced as its own slice (scope item 6); estimate revised to ~3.5 passes / 4–5h.
+- [Should] long-alternation is a test gap, not a primitive risk — **Implemented** → risk #2 marked RESOLVED (Codex verified projection re-opens/re-targets a repeatedly handed-off task); added an explicit multi-turn `RELAY-TURN` integration test to scope.
+- [Pass] conversion, not new core — acknowledged (no second core rule needed).
+
+**Outcome:** honest, code-grounded estimate for (a) = **~3.5 passes / ~4–5 hours**, dominated by the relay poll/supervisor/**test** rewrite off `NEXT`/`sed` onto real `RELAY-TURN` — *not* the tick primitive (verified sound). Scope doc corrected; relay closed (single round trip). Operator to decide whether to commit the 4–5h now or sequence it later.
+**Commit:** 647cf4e
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->

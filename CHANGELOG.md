@@ -19,6 +19,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 - **Phase 4 QA checkboxes reviewed in the proposal:** 8/12 initially marked done (guard, graceful degradation, operating-model note, DRY, SOLID, observability, anti-goal, remote-deploy=No). Left open honestly: live two-window end-to-end run, race hammer-test, no-deadlock E2E (all need a live two-window run), and the cache-warmth interval note (doc TODO).
 - **Phase-4 QA-gate relay (Codex) — Approved (r2).** Codex found 2 over-claims → reverted items 191 (guard) + 201 (DRY) to `[ ]`: the relay driver shipped on the baton file's `NEXT`/`STATUS`, not a tick-native `RELAY-TURN` task, so Phase-1 handoff-exclusive enforcement isn't used by the relay path (only xyz build turns). Codex then confirmed all marks honest → **6/12 checked, 6 open**.
 - **Decided: relay turns go tick-native (Option a)** — `decisions/2026-06-15-relay-turns-tick-native.md`. Convert the relay turn-token to a `RELAY-TURN` tick task so the relay path uses the Phase-1 rule + is watchdog-visible (self-healing). Resolves the fork. Next: revise Phase-4 plan → build → Codex review.
+- **(a) scope reality-checked (Codex single-round-trip relay):** my ~2.5-pass estimate was rosy → revised to **~3.5 passes / ~4–5h** (`relay-automation/PHASE-4A-SCOPE.md`). Conversion work, no new core; cost is the relay poll/supervisor/**test** rewrite off `NEXT`/`sed` onto a real `RELAY-TURN`. Operator deciding timing.
 
 ## 2026-06-14
 

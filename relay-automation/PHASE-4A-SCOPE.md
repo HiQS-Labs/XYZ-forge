@@ -20,22 +20,26 @@ secretly a 4–5 hour job. Every claim below is checkable against the current co
 2. **relay-drive.sh** (`relay-drive.sh:~60-110`) — loop selects the actor from `RELAY-TURN` state (not file `NEXT`); the no-progress guard checks that the token moved (claimer/handoff changed) rather than `NEXT`.
 3. **Turn-taker contract** — must now `tick ping RELAY-TURN` during the turn (so the watchdog can see liveness) and `tick release RELAY-TURN --to <other>` (or `done` on approve) instead of `sed`-flipping `NEXT`.
 4. **Relay setup** — seed a `RELAY-TURN` task at relay creation, handed to the first actor. (Role↔agent mapping lives in Setup; the token's `handoff_to` is the agent.)
-5. **Tests:**
-   - `poll-driver.sh` relay cases — seed a `RELAY-TURN` in the test tick repo + set `handoff_to`/`claimer`/`status`; assert decisions from tick state. (parked+authority case already uses an analysis file; dirty-tree still uses git.) — *moderate rework*
-   - `poll-relay.sh` fake turn-taker — do real `tick claim/ping/release/done` instead of `sed NEXT`. — *moderate rework*
-   - **NEW `test/watchdog-relay.sh`** — a stalled `RELAY-TURN` (claim + stale heartbeat) is detected as a parked suspect and escalated. **This is the payoff test** ((a)'s reason for being). Builds on `watchdog-liveness.sh`. — *new*
-6. **Proposal + docs** — re-check items 191 + 201 `[x]`; update README + PHASE-4-PLAN to the tick-native model. `validate.sh` 17 → ~18.
+5. **Role↔agent plumbing** *(added — Codex Blocker)* — once whose-turn moves from file `NEXT` to the token's `handoff_to`/`claimer`, the manual-nudge + cross-model path must rederive from the **token's agent**, not `--my-role`/`--roles`/`--claude-agents` (`poll.sh:41-46,117-130,140-157,180-206`), and the supervisor→taker env contract changes from `RELAY_ROLE` to an **agent id** (`relay-drive.sh:20-22,78-88`). Not trivial wiring.
+6. **Tests — a FULL SLICE, not an add-on** *(re-priced — Codex Blocker)*. Today they are baton-file fakes: `poll-driver.sh` only seeds `NEXT`/`STATUS` + analysis fixtures; `poll-relay.sh` mutates the file with `sed` and the fake taker **never** claims/pings/releases/completes a task. Converting both to drive real `RELAY-TURN` tick state is its own slice of work:
+   - `poll-driver.sh` relay cases → seed a real `RELAY-TURN` (`handoff_to`/`claimer`/`status`) and assert decisions from tick state.
+   - `poll-relay.sh` fake taker → real `tick claim/ping/release/done`.
+   - **NEW `test/watchdog-relay.sh`** — stalled `RELAY-TURN` (claim + stale heartbeat) → parked suspect → escalated. **The payoff test** ((a)'s reason for being).
+   - **NEW multi-turn integration** — one `RELAY-TURN` re-handed across many turns stays exclusive + correctly re-targeted (the long-alternation proof Phase-1 tests never covered).
+7. **Proposal + docs** — re-check items 191 + 201 `[x]`; update README + PHASE-4-PLAN to the tick-native model. `validate.sh` 17 → ~19 (two new tests).
 
-## Effort estimate (claim under review)
+## Effort estimate — REVISED after Codex scope-check (2026-06-15)
+**Original claim ~2.5 passes was rosy.** Codex's independent number, accepted:
 - **Pass 1 — plan/scope** (this doc + apply): ~½ pass.
-- **Pass 2 — build + tests**: ~1–1.5 passes (conversion reuses xyz guard; the time leak is the test fakes doing tick ops + the new watchdog-relay test).
-- **Pass 3 — Codex code review + dispose, re-check boxes, validate**: ~1 pass.
-- **Total claim: ~2.5 passes / 2–3 working sessions.** Not greenfield — a conversion + test rework.
+- **Pass 2 — build (poll.sh + relay-drive.sh) + role↔agent plumbing**: ~1 pass.
+- **Pass 3 — test-harness conversion (its own slice) + 2 new tests**: ~1–1.5 passes (the real time sink — fakes move off `sed`/`NEXT` onto real tick ops).
+- **Pass 4 — Codex code review + dispose, re-check boxes, validate**: ~1 pass.
+- **Revised: ~3.5 passes / ~4–5 hours.** Conversion work, no new core (the `tick` primitive + handoff-exclusive rule are verified sufficient), but the relay poll/supervisor/**test** contract all move off `NEXT`/`sed` together — that's the cost. Biggest risk = exactly that rewrite, not the `tick release --to` primitive.
 
 ## Where I think it could blow up to 4–5h (reviewer: confirm / add / refute)
 1. **Token/verdict split** — termination reads the file's `STATUS` while the token is tick; getting handoff-vs-terminate clean (release on continue, done on approve) without the two fighting.
-2. **`release`/`done` semantics on `RELAY-TURN`** — does the existing `tick release --to` + handoff-exclusive rule behave correctly for a *repeatedly* re-handed single task across many turns? (Phase-1 tests covered a single handoff, not a long alternation.)
-3. **Test-harness tick ops** — rewriting both fake turn-takers to claim/ping/release against the test repo is fiddlier than the current `sed`; this is the most likely time sink.
+2. ~~**`release`/`done` semantics on `RELAY-TURN`**~~ **RESOLVED (Codex):** `release`/`done`/`ping` are ownership-guarded append-only events and projection already re-opens/re-targets a repeatedly handed-off task correctly (`src/scope.js:34-37,46-61`, `src/project.js:45-54,90-100`). Not a runtime risk — just needs the **multi-turn integration test** (now scope item 6).
+3. **Test-harness tick ops (THE time sink, confirmed)** — both fake turn-takers + poll-driver fixtures move off `sed`/`NEXT` onto real `tick claim/ping/release/done`. Codex priced this as a full slice, not an add-on.
 4. **Watchdog-relay test** — new territory; threshold/heartbeat timing in a test.
 
 ## Review ask
