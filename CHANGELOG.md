@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### relay-automation — Cross-model relay (Claude↔Codex) SHIPPED ✅ (Option A live)
+- Plan Codex-reviewed headlessly (`codex exec`) → Changes requested → disposed into a mandatory safety shim.
+- **`codex-turn.sh`**: drives a Codex relay turn via `codex exec` behind a hard path-allowlist — dispatches only for the Codex agent, reverts any off-lane edit + fails, commits file-scoped, **no push** (coordination is shared-local `.tick`). `test/codex-turn.sh` 10/10; `validate.sh` **19/19**.
+- **Live X2 proven:** a real `codex exec` turn (no window) reviewed a seeded artifact, wrote a graded block + verdict, released the token; shim committed only `relay.md`, no push. **Cross-model coordination + Option A end-to-end.** (Self-expiring loops `--deadline` also added.)
+
 ### relay-automation — Option A (headless CLI) spike PASSED ✅
 - Codex CLI installed → ran the deferred headless-auth spike: `codex exec "<prompt>"` is non-interactive, authed, emits a parseable `VERDICT:`, exit 0 (~11k tokens/trivial turn; wire as `codex exec ... < /dev/null`). **Option A unblocked.** Next: wire `codex exec` as the relay turn-taker for a Claude↔Codex cross-model relay (closes item 196 cross-model). Recorded in `PHASE-2-PLAN.md` → Future upgrade.
 

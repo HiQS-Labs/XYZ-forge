@@ -35,7 +35,11 @@ The supervisor's existing **close-mismatch + no-progress escalation** ([Pass]) p
 containment for unattended turns; `poll.sh`'s cross-model branch stays the **manual-nudge
 fallback** for non-headless agents ([Pass]).
 
-## Sub-steps
+## Sub-steps — ✅ SHIPPED 2026-06-15 (X1 + X2 done)
+> **X1 ✅** `codex-turn.sh` built + `test/codex-turn.sh` 10/10 (dispatch-gating, allowlist revert, no-push, log-in-tree handling). `validate.sh` 19/19.
+> **X2 ✅** live run: a real `codex exec` turn (no window) took a relay Reviewer turn in an isolated repo — found the seeded typo, wrote a graded block + verdict, released the token, and the shim committed **only `relay.md`, file-scoped, no push** (verified: repo had no remote; commit touched 1 file). **Cross-model coordination + Option A proven end-to-end.** Cost: a real Codex turn is tens-of-k tokens (cap rounds).
+> **X3** record (this section + CHANGELOG + hub).
+
 - **X1 — `codex-turn.sh` shim (mandatory) + test.** Build the shim per the Design above. *Accept:* a test injecting a **stub `codex`** that performs the *real turn-taker contract* — `tick claim/ping/release|done` **and** mutates the relay file (not just emits `VERDICT:`) — drives one turn through `relay-drive.sh`; plus a negative test: the stub touches an **off-allowlist file** → the shim **reverts it, stages nothing extra, and fails** (proves the allowlist guard). No push occurs.
 - **X2 — live cross-model run:** one real Claude↔Codex relay on a small artifact; Codex turn headless via `codex exec` through the shim. *Accept:* relay closes `Approved`, Codex's block present, only allowlisted files changed, no push; captured metrics (rounds, tokens, human interventions).
 - **X3 — record:** close item 196 cross-model; update Option-A status; capture cost.
