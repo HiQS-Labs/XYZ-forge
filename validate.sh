@@ -18,6 +18,8 @@ TESTS=(
   "reap.sh"
   "heartbeat.sh"
   "take.sh"
+  "watchdog-liveness.sh"
+  "runner-loop.sh"
 )
 
 PASSED=()

@@ -1,5 +1,5 @@
 ---
-status: Decided
+status: Revisited
 date: 2026-06-14
 reversibility: Costly
 revisit: "next real balanced multi-agent run < 50% work-bounded concurrency"
@@ -27,3 +27,4 @@ decider: "@noelsaw1"
 
 ## Updates
 <!-- append-only, newest last -->
+- 2026-06-14 — **Revisit trigger fired.** Run 5 (first real balanced Phase-2 build, `codex` ‖ `copilot-codex`) came in at **39.2%** work-bounded concurrency — below the 50% bar. **But the cause was start-skew, not load imbalance:** both agents did 2 tasks with zero drift/collision; one window simply claimed its first task 116s after the other and ran solo for the first half. Run 4 (2s skew) hit 72% on the same lane design. **Refined finding:** a balanced fixture is necessary but **not sufficient** for ≥50% — *simultaneous start* is the dominant factor. The bet ("balanced runs reliably clear ≥50%") is **not broken structurally**, but is **conditional on start-together discipline** the original bet didn't name. Next step (out of session): re-run with enforced simultaneous launch (manual launch-sync or automated) before re-reading the metric; graduation stands on the Phase-2 deliverables (real, tested, 15/15), but the ≥50% claim is **pending a start-synchronized run**. Status → Revisited.

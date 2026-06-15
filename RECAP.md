@@ -130,3 +130,15 @@ Run 4 took Run 3's prescribed fix — a **balance-matched fixture** — and ran 
 **Graduate to Phase 2.** The balanced fixture cleared the load-balance bar Run 3 missed, on a flawless run (real passing deliverables on both halves). Coordination is now proven on both axes — mechanics (Runs 2–3) and sustained parallelism (Run 4). Caveats are sample size, not structure: one short single-trial run, so treat 72% as a first datapoint. Final graduate/iterate call is the operator's, out of session.
 
 > **Decided: graduate to Phase 2.** Recorded in [decisions/2026-06-14-graduate-relay-automation-phase-2.md](decisions/2026-06-14-graduate-relay-automation-phase-2.md) — revisit if a real balanced run drops below the 50% bar.
+
+## Run 5 — 2026-06-14 (Phase-2 build: watchdog ‖ runner)
+
+### What happened
+Two Codex variants built proposal Phase 2 (watchdog liveness/escalation, `copilot-codex`) ‖ Phase 3 (runner verdict-loop, `codex`) as a balanced 2-lane swarm. All 4 tasks done; `validate.sh` **15/15** (added `watchdog-liveness.sh` + `runner-loop.sh`, 6/6 each). Real deliverables: watchdog emits structured JSON escalation records; runner drives a verdict-gated turn loop with an injectable `--agent-cmd` (real headless wiring deferred). 0 collisions, 0 drift, 0 parked.
+
+### Result
+- **Concurrency: 39.2%** (88s / 225s work-bounded) — **below the 50% bar.** Cause = **start-skew** (`copilot-codex` claimed 116s after `codex`; one agent ran solo for the first half), **not** load imbalance (both did 2 tasks cleanly). Run 4 at 2s skew hit 72% on the same design.
+- **Deliverables: pass** — real, tested, clean.
+
+### Recommendation
+**Iterate on launch discipline, not lane design.** Sub-50% is a valid datapoint, not an in-session retry trigger. The Phase-2 build stands; the ≥50% claim is **pending a start-synchronized re-run**. This fired the graduate decision's revisit trigger → status **Revisited** (start-skew refinement; bet not structurally broken). See the decision record's Updates.

@@ -274,3 +274,33 @@ Both reports independently confirm the coordination mechanics (atomic claim, lan
 Run 4 cleared the load-balance bar that Run 3 missed — **72.2% work-bounded concurrency** on a flawless run: both agents ≥2 done, zero collisions, zero parked claims, real passing deliverables (validate 13/13, both skeletons parse clean). It did so via the exact fix Run 3 prescribed (a balanced fixture), and the launch-sync guard forced the split by construction. The coordination protocol is now proven on *both* axes — mechanics (Runs 2–3) and sustained parallelism (Run 4). The honest caveats are sample size, not structure: one short single-trial run. Recommend graduating to Phase 2 while treating the 72% as a first datapoint to be confirmed by a longer balanced run if a stronger number is wanted. **Final graduate/iterate call is Noel's, out of session, per the brief.**
 
 > **Decided: graduate to Phase 2** — see [decisions/2026-06-14-graduate-relay-automation-phase-2.md](decisions/2026-06-14-graduate-relay-automation-phase-2.md).
+
+---
+
+## Run 5 — 2026-06-14 (Phase-2 build: watchdog ‖ runner)
+
+### Run metadata
+- **Date:** 2026-06-14 (single session); work-bounded window **3m 45s** (first `claimed` 03:54:30.508Z → last `done` 03:58:15.560Z UTC). ~18m elapsed between seeding and first claim — excluded.
+- **Builders:** `codex` (Runner lane, proposal Phase 3) ‖ `copilot-codex` (Watchdog lane, proposal Phase 2) — two Codex variants, distinct agent ids.
+- **Lanes (claim-by-name, pre-assigned — no global `take`):** Runner = `relay-automation/runner.sh` + `test/runner-loop.sh`; Watchdog = `relay-automation/watchdog.sh` + `test/watchdog-liveness.sh`. Disjoint.
+
+### Outcome: ALL TASKS COMPLETE, deliverables real & tested — metric MISSED (39% < 50%)
+All 4 tasks done; `validate.sh` **15/15** (added `watchdog-liveness.sh` 6/6 + `runner-loop.sh` 6/6). 0 collisions, 0 parked, 0 drift, commits correctly tagged by distinct agent ids. Real work: watchdog now emits structured JSON escalation records (`--channel stdout|file`); runner drives a real verdict-gated turn loop with an injectable `--agent-cmd`.
+
+| Check | Result | Bar | Pass? |
+|---|---|---|---|
+| Work-bounded concurrent-claim time | **39.2%** (88s / 225s) | ≥ 50% | ❌ |
+| Both agents ≥ 2 done | codex 2, copilot-codex 2 | ≥ 2 each | ✅ |
+| Parked / serial double-claim | 0 / none | none | ✅ |
+| Deliverables real | 15/15 incl. 2 new tests | — | ✅ |
+
+**Why the metric missed — start-skew, NOT load imbalance.** `codex` claimed TASK-R1 at 03:54:30 and finished it (solo) at 03:56:17; `copilot-codex` didn't claim TASK-W1 until 03:56:26 — a **116s late start**. So one agent ran solo for the first ~half of the window. The lanes themselves stayed perfectly balanced (2 tasks each, no drift). Contrast Run 4: **2s** start-skew → **72%**. Same balanced-lane design; the delta is almost entirely *simultaneity of start*.
+
+### Key finding
+The work-bounded concurrency metric is **dominated by how close together the two windows start**, not by the lane design. A balanced fixture is necessary but **not sufficient** for ≥50% — without a start-together discipline (or automated simultaneous launch), one agent drains its lane before the other begins. Run-4's 72% rode on a near-simultaneous start that this round didn't reproduce.
+
+### Subjective observations
+> _To be filled from `codex` / `copilot-codex` feedback if gathered._
+
+### Recommendation
+**Iterate on launch discipline, not lane design.** This is a sub-50% datapoint (valid, per the brief — not a retry trigger in-session). It does **not** indict the Phase-2 deliverables (real, tested, clean) or the lane model. It re-opens the graduate bet: balance alone doesn't guarantee ≥50% — **simultaneous start does.** See the decision-record update below. Next balanced run should enforce start-together (the manual launch-sync, or automated launch) before reading the metric.
