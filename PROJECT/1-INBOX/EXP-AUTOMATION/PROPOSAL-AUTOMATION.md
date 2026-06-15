@@ -213,19 +213,19 @@ Acceptance is split into three distinct gates — detection, false-positive boun
 
 **Goal:** ship it inside the skill, prove the extract still works, and (optionally) build it WITH the swarm.
 
-- [ ] Ship the **sibling `relay-automation` skill** (its own self-extracting `SKILL.md` under `skill/relay-automation/`) with the runner + watchdog + the Phase-1 `tick` change embedded — **not** added as a use-case of `skill/xyz/SKILL.md`
-- [ ] `validate.sh` green including new relay-automation tests; full two-block self-extract re-verified (runtime + tests → all pass)
-- [ ] Run a real automated relay on a live artifact; capture metrics (rounds, time/turn, auto-recovered stalls)
-- [ ] _(Optional)_ **Run 4 meta-exercise:** use `xyz` to build/extend this layer concurrently (recon → lane-split → build); record results in `REAL-AGENT-OBSERVATIONS.md`
-- [ ] Update `RECAP.md` + docs with honest limits (wakeup still poll-based and **all-Claude `/loop`-only** — non-Claude stays manual, durable polling needs a runner/service; verdict = LLM judgment; ≤ 2 roles)
+- [x] Ship the **sibling `relay-automation` skill** (`skill/relay-automation/SKILL.md` + `relay-pkg.tar.gz` + `make-pkg.sh`) with runner + watchdog + poll + relay-drive + codex-turn; **not** folded into `skill/xyz/`. *(2026-06-15)*
+- [x] `validate.sh` green incl. relay-automation tests; self-extract re-verified — **20/20**; `test/skill-extract.sh` extracts + parses + no-drift. *(Note: packaged as a tarball sidecar, not the §4/§4b two-block heredoc — see DRY note below.)*
+- [x] Run a real automated relay + capture metrics — all-Claude hands-free dogfood (2 rounds, 0 turn-nudges) **and** a live Codex `codex exec` turn; metrics in `REAL-AGENT-OBSERVATIONS.md`.
+- [x] _(Optional)_ **meta-exercise:** Run 4/5 used `xyz` to build this layer concurrently (recorded in `REAL-AGENT-OBSERVATIONS.md`).
+- [x] Update `RECAP.md` + docs with honest limits (all-Claude `/loop`-only hands-free; non-Claude via manual nudge or the `codex-turn.sh` headless shim; durable polling needs a runner/service; verdict = LLM judgment; ≤ 2 roles).
 
 ### QA checklist — Phase 5
-- [ ] **DRY:** the sibling skill reuses the §4/§4b self-extract pattern; no third bespoke install mechanism
-- [ ] **Observability:** a single `tick analyze` (or runner status) shows the live relay state at a glance
-- [ ] **Litmus:** a fresh clone extracts the SKILL.md and runs an automated relay end-to-end with no extra setup
-- [ ] **Anti-goals re-checked:** no push-wakeup invented, no verdict-judging, protocol still dependency-free
-- [ ] **Honesty:** the limits section states what is NOT solved, in the style of the Run 1–3 caveats
-- [ ] **Remote deploy needed?** No — but document the remote/async variant as future work, not done
+- [ ] **DRY:** ~~reuses the §4/§4b self-extract pattern~~ — **deviated, deliberately:** ships a `relay-pkg.tar.gz` sidecar (regenerable via `make-pkg.sh`), not the heredoc two-block, because base64/heredoc-in-markdown gets corrupted by markdown linters. Documented divergence, not an accident.
+- [x] **Observability:** `tick analyze`/`watchdog.sh` surface the live relay-turn state (token + parked suspects) at a glance.
+- [ ] **Litmus:** ~~fresh clone extracts + runs an automated relay E2E with no setup~~ — **partial:** `skill-extract.sh` proves extract+parse+no-drift, and the E3 capability gate is documented, but a true zero-setup fresh-clone *automated-relay* run still needs tick provisioned + tests wired. Tracked as remaining.
+- [x] **Anti-goals re-checked:** no push-wakeup invented (poll-based; unattended turns don't even push), no verdict-judging by the tooling (LLM judges), portable `/relay` protocol stays dependency-free.
+- [x] **Honesty:** limits stated in `RECAP.md` + `relay-automation/README.md` in the Run 1–3 caveat style.
+- [x] **Remote deploy needed?** No — remote/async documented as future work (Option-A unattended), not claimed done.
 
 ---
 

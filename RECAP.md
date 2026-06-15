@@ -151,3 +151,17 @@ Execution contract decided **Option B (baton + poll)** after a headless-CLI spik
 - **4c** `relay-automation/README.md` — `/loop` invocations + designated-watchdog poller + cross-model one-line nudge + all-Claude boundary.
 
 `validate.sh` **17/17**. **Proposal Phases 1–4 shipped; Phase 5 (package as sibling skill) remains.** Full per-change log now in `CHANGELOG.md`.
+
+## 2026-06-15 — relay-automation COMPLETE (Phases 1–5) + cross-model/Option-A
+
+Phase 4 finished (tick-native relay turns (a), self-expiring loops), Phase 5 packaged the whole thing as a sibling skill (`skill/relay-automation/`), and a cross-model **Claude↔Codex** relay with **Option-A headless Codex turns** (`codex exec` behind the `codex-turn.sh` path-allowlist shim) was built + live-proven. `validate.sh` **20/20** (12 test files). First hands-free dogfood: an all-Claude relay closed in 2 rounds with **0 turn-advancement nudges**.
+
+### Honest limits (Run 1–3 caveat style)
+- **Hands-free poll is all-Claude `/loop`-only.** Non-Claude agents take turns via manual nudge **or** the `codex-turn.sh` headless shim (Codex). No generic "any agent self-wakes."
+- **Not a durable scheduler.** Loops are per-session crons (give them `--deadline`); truly unattended/no-window runs need a real runner/service (Option-A direction), not the agent session.
+- **Verdict = LLM judgment**, not tooling — the relay advances the token + parses the verdict; it does not judge correctness.
+- **≤ 2 roles** (Producer/Reviewer); no N-way relays.
+- **Concurrency is start-skew-sensitive** (Run 4 72% vs Run 5 39%, same design) — a metric about launch discipline, not the protocol.
+- **Open polish (not blocking):** Phase-4 race hammer-test, real auto-reap (needs an authority decision), a tighter Codex sandbox for unattended turns, a true zero-setup fresh-clone E2E. The Phase-5 skill packaging deliberately uses a **tarball sidecar**, not the xyz heredoc pattern (markdown linters corrupt embedded base64).
+
+**Recommendation: project complete; ship-as-is.** Remaining items are polish/hardening, tracked in `4X4.md` and the proposal's open boxes.
