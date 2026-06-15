@@ -4,6 +4,10 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### decision recorded + `gemini-drive.sh` in flight
+- `decisions/2026-06-15-unattended-agent-containment.md` — **Decided**: path-allowlist + commit-bypass guard + no-push is sufficient containment for an unattended committing agent. 3-model validated; revisit on the first real unattended Option-A run. Linked from RECAP, 4X4, CROSSMODEL-OPTIONA-PLAN.
+- **In flight (built by Gemini):** `gemini-drive.sh` — a sibling turn-taker for Gemini itself (same role as `codex-turn.sh`), expected to adopt the 3 containment invariants. Extends Option A to a 3rd model.
+
 ### relay-automation — `QUICKSTART.md` for fresh-device test
 - `relay-automation/QUICKSTART.md`: clone → prereq check (node/codex-authed/git) → `validate.sh` 20/20 → one headless Codex turn behind the shim. Notes `.tick/` is per-device local (single-device test, not cross-machine coordination yet) and the no-push contract.
 

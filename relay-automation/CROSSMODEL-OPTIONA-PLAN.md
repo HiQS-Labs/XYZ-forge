@@ -20,6 +20,10 @@ turn (Codex defaults high reasoning). So Codex can read/edit files + run `tick`/
 
 ## Design (hardened by Codex review 2026-06-15 — see footer)
 
+> The containment contract below (path-allowlist + commit-bypass guard + no-push) is recorded in
+> [../decisions/2026-06-15-unattended-agent-containment.md](../decisions/2026-06-15-unattended-agent-containment.md)
+> — **Decided**, 3-model validated (Codex + Gemini reviews); revisit on the first real unattended run.
+
 **A mandatory safety shim `relay-automation/codex-turn.sh` is the turn-taker** (not a raw
 `--agent-cmd` string — too brittle and no place to enforce safety). `relay-drive.sh
 --agent-cmd "relay-automation/codex-turn.sh"` invokes it; the shim:

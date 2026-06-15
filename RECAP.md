@@ -169,5 +169,7 @@ A manual `/relay` with **Gemini** as a *third* Reviewer over the safety shim (`r
 - **git-commit bypass** — Codex committing mid-turn hid edits from `git status`; fixed with a `before_head`/`reset --hard`/exit-6 guard.
 - **quoted-path bypass** — porcelain quotes spaced paths so the revert no-op'd; fixed with `git status --porcelain -z` raw-path parsing (+ `R`/`C` rename handling).
 - `test/codex-turn.sh` **10 → 16**, `validate.sh` still **20/20**. The shim's containment is now **3-model validated** (Claude authored → Codex added allowlist/no-push → Gemini cleared 2 bypasses). Also proves the **portable `/relay` generalizes to a third model** via embedded instructions + manual nudge. Plus `relay-automation/QUICKSTART.md` for a fresh-device test.
+- The containment contract (path-allowlist + commit-bypass guard + no-push) is recorded in [decisions/2026-06-15-unattended-agent-containment.md](decisions/2026-06-15-unattended-agent-containment.md) — status **Decided**, revisit on the first real unattended Option-A run.
+- **In flight:** Gemini is now building its **own `gemini-drive.sh`** — a sibling turn-taker for itself (same role as `codex-turn.sh`), expected to adopt the same three containment invariants. A 3rd-model turn-taker would extend Option A beyond Codex.
 
 **Recommendation: project complete; ship-as-is.** Remaining items are polish/hardening, tracked in `4X4.md` and the proposal's open boxes.
