@@ -22,6 +22,7 @@ TESTS=(
   "runner-loop.sh"
   "poll-driver.sh"
   "poll-relay.sh"
+  "watchdog-relay.sh"
 )
 
 PASSED=()

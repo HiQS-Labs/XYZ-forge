@@ -1,104 +1,92 @@
 #!/usr/bin/env bash
-# Phase 4 (4a): poll.sh decision engine + guarded dispatch.
-# (i) dry-run decision sequence (relay mode), (ii) fake live integration (dispatch under guard).
+# Phase 4(a): poll.sh decision engine + guarded dispatch, relay mode driven by a
+# real tick RELAY-TURN token (not a baton file). (i) dry-run decision sequence,
+# (ii) fake live integration. NOTE: per-agent claim cap is 2, so my-turn cases use
+# open+handoff-to-me (the poller never claims) to stay cap-safe; distinct claimers
+# elsewhere.
 source "$(dirname "$0")/_setup.sh" poll-driver
 
 POLL="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/poll.sh"
-RELAY="$A/relay.md"
-ART="$A/artifact.md"
-ANALYSIS_NONE="$WORK/none.json"
-ANALYSIS_PARKED="$WORK/parked.json"
-printf '{"parked_suspects":[]}' >"$ANALYSIS_NONE"
-printf '{"parked_suspects":[{"task":"T-9","agent":"x","max_gap_ms":900000,"heartbeats":0}]}' >"$ANALYSIS_PARKED"
+export TICK_BIN="$TICK"
+tick_a init >/dev/null
 
-# Write the relay file with a given NEXT/STATUS, and commit it clean (in $A).
-set_relay() { # <next> <status>
-  printf 'NEXT: %s\nSTATUS: %s\n# body\n' "$1" "$2" >"$RELAY"
-  git -C "$A" add relay.md artifact.md >/dev/null 2>&1 || true
-  git -C "$A" commit -q -m "relay state $1/$2" >/dev/null 2>&1 || true
-}
-printf 'artifact\n' >"$ART"
+printf 'STATUS: Open\n# body\n'     >"$A/relay.md"
+printf 'STATUS: Approved\n# body\n' >"$A/relay-approved.md"
+printf 'art\n'        >"$A/art.md"
+printf 'dirty-base\n' >"$A/art-dirty.md"
+git -C "$A" add relay.md relay-approved.md art.md art-dirty.md >/dev/null 2>&1
+git -C "$A" commit -q -m "poll-driver fixtures" >/dev/null 2>&1
+printf 'now-dirty\n' >>"$A/art-dirty.md"   # uncommitted edit in scope → dirty
 
-# Decision helper: run poll.sh --dry-run in relay mode, echo the DECISION token.
-decide() { POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent claude-a --my-role Producer \
-  --relay-file "$RELAY" --artifact "$ART" --dry-run "$@" 2>/dev/null \
-  | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p'; }
+NONE="$WORK/none.json"; PARKED="$WORK/parked.json"
+printf '{"parked_suspects":[]}' >"$NONE"
+printf '{"parked_suspects":[{"task":"T-9","agent":"x","max_gap_ms":900000,"heartbeats":0}]}' >"$PARKED"
+
+# open + handoff_to <agent> (no active claim held → cap-safe); each call uses a fresh seed.
+handoff_to(){ tick_a log task.created "$1" --agent dispatcher >/dev/null; tick_a claim "$1" --agent "seed-$1" --paths "z/**" >/dev/null; tick_a release "$1" --agent "seed-$1" --to "$2" >/dev/null; }
+# claimed by <agent>
+claim_by(){ tick_a log task.created "$1" --agent dispatcher >/dev/null; tick_a claim "$1" --agent "$2" --paths "z/**" >/dev/null; }
+
+# decide <args...> : poll relay dry-run as agent alice, echo the DECISION token
+decide(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice "$@" --dry-run 2>/dev/null | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p'; }
 
 # --- (i) dry-run decision sequence ---------------------------------------
+handoff_to RT-mine alice
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-mine --analysis-file "$NONE")" = "run-runner" ] \
+  && pass "open+handoff-to-me (wake-on-handoff) -> run-runner" || fail "expected run-runner"
 
-set_relay Producer Open
-[ "$(decide --analysis-file "$ANALYSIS_NONE")" = "run-runner" ] \
-  && pass "my-turn + clean -> run-runner" || fail "my-turn+clean expected run-runner"
+claim_by RT-resume alice
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-resume --analysis-file "$NONE")" = "run-runner" ] \
+  && pass "claimed-by-me (resume) -> run-runner" || fail "expected run-runner (resume)"
+tick_a done RT-resume --agent alice >/dev/null   # free alice's slot
 
-set_relay Reviewer Open
-[ "$(decide --analysis-file "$ANALYSIS_NONE")" = "idle" ] \
-  && pass "not-my-turn -> idle" || fail "not-my-turn expected idle"
+claim_by RT-other bob
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-other --analysis-file "$NONE")" = "idle" ] \
+  && pass "claimed-by-other -> idle" || fail "expected idle"
 
-set_relay Producer Open
-printf 'NEXT: Producer\nSTATUS: Open\n# dirty edit\n' >"$RELAY"   # modify tracked file in scope (uncommitted)
-[ "$(decide --analysis-file "$ANALYSIS_NONE")" = "idle" ] \
-  && pass "my-turn + dirty scope -> idle" || fail "dirty scope expected idle"
+handoff_to RT-dirty alice
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art-dirty.md" --relay-task RT-dirty --analysis-file "$NONE")" = "idle" ] \
+  && pass "my-turn + dirty scope -> idle" || fail "expected idle (dirty)"
 
-set_relay Reviewer Open
-[ "$(decide --analysis-file "$ANALYSIS_PARKED" --watchdog-authority)" = "run-watchdog" ] \
-  && pass "parked + authority -> run-watchdog" || fail "parked+authority expected run-watchdog"
+claim_by RT-parked bobp
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-parked --analysis-file "$PARKED" --watchdog-authority)" = "run-watchdog" ] \
+  && pass "parked + authority (not my turn) -> run-watchdog" || fail "expected run-watchdog"
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-parked --analysis-file "$PARKED")" = "idle" ] \
+  && pass "parked + NO authority -> idle" || fail "expected idle (no authority)"
 
-set_relay Reviewer Open
-[ "$(decide --analysis-file "$ANALYSIS_PARKED")" = "idle" ] \
-  && pass "parked + NO authority -> idle" || fail "parked-no-authority expected idle"
+[ "$(decide --relay-file "$A/relay-approved.md" --artifact "$A/art.md" --relay-task RT-none --analysis-file "$NONE")" = "stop" ] \
+  && pass "relay STATUS Approved -> stop" || fail "expected stop"
 
-set_relay Reviewer Approved
-[ "$(decide --analysis-file "$ANALYSIS_NONE")" = "stop" ] \
-  && pass "relay Approved -> stop" || fail "approved expected stop"
+handoff_to RT-xmodel codex
+xm="$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-xmodel --analysis-file "$NONE" --claude-agents alice)"
+[ "$xm" = "nudge-cross-model" ] && pass "RELAY-TURN handed to non-Claude -> nudge-cross-model" || fail "expected nudge, got: $xm"
 
-# cross-model: NEXT is a non-Claude agent's role
-set_relay Reviewer Open
-xm="$(POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent claude-a --my-role Producer \
-  --relay-file "$RELAY" --artifact "$ART" --analysis-file "$ANALYSIS_NONE" \
-  --roles "Producer=claude-a,Reviewer=codex" --claude-agents "claude-a" --dry-run 2>/dev/null \
-  | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p')"
-[ "$xm" = "nudge-cross-model" ] && pass "cross-model turn -> nudge-cross-model" || fail "cross-model expected nudge, got: $xm"
-
-# stop exit code is 10
-set_relay Reviewer Closed
-POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent claude-a --my-role Producer \
-  --relay-file "$RELAY" --artifact "$ART" --analysis-file "$ANALYSIS_NONE" --dry-run >/dev/null 2>&1
+POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay-approved.md" --artifact "$A/art.md" --relay-task RT-none --analysis-file "$NONE" --dry-run >/dev/null 2>&1
 [ "$?" -eq 10 ] && pass "stop exits 10" || fail "stop should exit 10"
 
-# --- (ii) fake live integration: dispatch actually runs, under the guard ---
+# --- (ii) fake live integration: dispatch under the guard ----------------
+SENT="$WORK/ran.txt"; : >"$SENT"
+handoff_to RT-live-ok alice
+POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-live-ok --analysis-file "$NONE" \
+  --runner-cmd "echo ran >>'$SENT'" >/dev/null 2>&1
+[ "$(grep -c ran "$SENT")" -eq 1 ] && pass "live: runner dispatched once under my-turn+clean" || fail "runner should dispatch once"
 
-SENTINEL="$WORK/ran.txt"; : >"$SENTINEL"
-set_relay Producer Open
-POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent claude-a --my-role Producer \
-  --relay-file "$RELAY" --artifact "$ART" --analysis-file "$ANALYSIS_NONE" \
-  --runner-cmd "echo ran-runner >>'$SENTINEL'" >/dev/null 2>&1
-[ "$(grep -c ran-runner "$SENTINEL")" -eq 1 ] \
-  && pass "live: runner dispatched exactly once under my-turn+clean" || fail "runner should dispatch once"
+: >"$SENT"
+handoff_to RT-live-dirty alice
+POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay.md" --artifact "$A/art-dirty.md" --relay-task RT-live-dirty --analysis-file "$NONE" \
+  --runner-cmd "echo ran >>'$SENT'" >/dev/null 2>&1
+[ ! -s "$SENT" ] && pass "live: dirty scope blocks runner dispatch" || fail "dirty must not dispatch"
 
-# dirty scope must NOT dispatch the runner (guard holds in live mode too)
-: >"$SENTINEL"
-printf 'NEXT: Producer\nSTATUS: Open\n# dirty\n' >"$RELAY"   # uncommitted edit
-POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent claude-a --my-role Producer \
-  --relay-file "$RELAY" --artifact "$ART" --analysis-file "$ANALYSIS_NONE" \
-  --runner-cmd "echo ran-runner >>'$SENTINEL'" >/dev/null 2>&1
-[ ! -s "$SENTINEL" ] \
-  && pass "live: dirty scope blocks runner dispatch" || fail "dirty scope must not dispatch runner"
-
-# parked + authority dispatches the watchdog exactly once; no authority -> none
 WLOG="$WORK/wd.txt"; : >"$WLOG"
-set_relay Reviewer Open
-POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent claude-a --my-role Producer \
-  --relay-file "$RELAY" --artifact "$ART" --analysis-file "$ANALYSIS_PARKED" --watchdog-authority \
-  --watchdog-cmd "echo escalated >>'$WLOG'" >/dev/null 2>&1
-[ "$(grep -c escalated "$WLOG")" -eq 1 ] \
-  && pass "live: parked+authority escalates exactly once" || fail "watchdog should escalate once"
+claim_by RT-live-parked bobw
+POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-live-parked --analysis-file "$PARKED" --watchdog-authority \
+  --watchdog-cmd "echo esc >>'$WLOG'" >/dev/null 2>&1
+[ "$(grep -c esc "$WLOG")" -eq 1 ] && pass "live: parked+authority escalates once" || fail "watchdog should escalate once"
 
 : >"$WLOG"
-POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent claude-a --my-role Producer \
-  --relay-file "$RELAY" --artifact "$ART" --analysis-file "$ANALYSIS_PARKED" \
-  --watchdog-cmd "echo escalated >>'$WLOG'" >/dev/null 2>&1
-[ ! -s "$WLOG" ] \
-  && pass "live: parked without authority does NOT escalate (no double-escalate)" || fail "no-authority must not escalate"
+POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-live-parked --analysis-file "$PARKED" \
+  --watchdog-cmd "echo esc >>'$WLOG'" >/dev/null 2>&1
+[ ! -s "$WLOG" ] && pass "live: parked w/o authority does NOT escalate (no double-escalate)" || fail "no-authority must not escalate"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

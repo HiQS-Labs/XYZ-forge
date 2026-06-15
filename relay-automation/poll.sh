@@ -6,9 +6,10 @@ set -euo pipefail
 # It computes a DECISION from coordination state and either dispatches a command
 # or idles. See relay-automation/PHASE-4-PLAN.md.
 #
-# Two modes (one decision engine, two "is-runnable?" adapters):
-#   xyz   — runnable state is tick-native (a task claimable/resumable by --agent)
-#   relay — runnable state is the relay thread's NEXT / STATUS
+# Two modes (one decision engine, shared tick claimability):
+#   xyz   — runnable state = a build task (--task) claimable/resumable by --agent
+#   relay — runnable state = the RELAY-TURN tick task (claimable/resumable by --agent);
+#           the relay file's STATUS is read only as the terminal (Approved/Closed) signal
 #
 # Two distinct guard->dispatch paths (a parked turn is held by the OTHER window,
 # so it cannot use the my-turn guard — recovery is a separate path):
@@ -38,12 +39,12 @@ Common:
   --watchdog-cmd CMD      Command run for a parked suspect (default: <root>/relay-automation/watchdog.sh).
   --help
 
-relay mode:
-  --relay-file PATH       Relay thread file (reads NEXT: / STATUS:).
-  --my-role ROLE          The role THIS agent plays (e.g. Producer | Reviewer).
+relay mode (whose-turn = the RELAY-TURN tick task; STATUS read from the file):
+  --relay-file PATH       Relay thread file (reads STATUS: for the terminal signal).
+  --relay-task ID         The relay turn-token task (default: RELAY-TURN).
   --artifact PATH         Artifact under review (clean-tree scope; with the relay file).
-  --roles "R=agent,..."   Role->agent map, for cross-model detection (optional).
-  --claude-agents "a,b"   Agents that are Claude (can self-poll), for cross-model detection.
+  --claude-agents "a,b"   Agents that are Claude (can self-poll); a RELAY-TURN handed
+                          to a non-Claude agent -> cross-model nudge.
 
 xyz mode:
   --task TASK-ID          The task whose turn this is (my-turn + scope from `tick info`).
@@ -58,7 +59,7 @@ require_command() { command -v "$1" >/dev/null 2>&1 || die "missing command: $1"
 # ---- inputs --------------------------------------------------------------
 MODE=""; AGENT=""; DRY_RUN=0; ANALYSIS_FILE=""; WATCHDOG_AUTHORITY=0
 RUNNER_CMD=""; WATCHDOG_CMD=""
-RELAY_FILE=""; MY_ROLE=""; ARTIFACT=""; ROLES=""; CLAUDE_AGENTS=""
+RELAY_FILE=""; ARTIFACT=""; CLAUDE_AGENTS=""; RELAY_TASK="RELAY-TURN"
 TASK=""
 
 while (($# > 0)); do
@@ -71,9 +72,8 @@ while (($# > 0)); do
     --runner-cmd) RUNNER_CMD="${2:-}"; shift 2 ;;
     --watchdog-cmd) WATCHDOG_CMD="${2:-}"; shift 2 ;;
     --relay-file) RELAY_FILE="${2:-}"; shift 2 ;;
-    --my-role) MY_ROLE="${2:-}"; shift 2 ;;
+    --relay-task) RELAY_TASK="${2:-}"; shift 2 ;;
     --artifact) ARTIFACT="${2:-}"; shift 2 ;;
-    --roles) ROLES="${2:-}"; shift 2 ;;
     --claude-agents) CLAUDE_AGENTS="${2:-}"; shift 2 ;;
     --task) TASK="${2:-}"; shift 2 ;;
     --help) usage; exit 0 ;;
@@ -114,14 +114,22 @@ scope_clean() {
   git -C "$GIT_ROOT" status --porcelain -- "${scope[@]}" | grep -q . && return 1 || return 0
 }
 
-# Map a role to its agent via --roles "R=agent,..."
-role_agent() {
-  local role="$1" pair k v
-  IFS=',' read -ra _pairs <<<"$ROLES"
-  for pair in "${_pairs[@]}"; do
-    k="${pair%%=*}"; v="${pair#*=}"
-    [[ "$k" == "$role" ]] && { printf '%s' "$v"; return; }
-  done
+# Read tick task fields into globals T_STATUS/T_CLAIMER/T_HANDOFF/T_PATHS.
+read_task() {
+  local info
+  info="$("$TICK_BIN" info "$1" 2>/dev/null || true)"
+  T_STATUS="$(printf '%s\n' "$info"  | sed -n 's/^status:[[:space:]]*//p'     | head -1)"
+  T_CLAIMER="$(printf '%s\n' "$info" | sed -n 's/^claimer:[[:space:]]*//p'    | head -1)"
+  T_HANDOFF="$(printf '%s\n' "$info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -1)"
+  T_PATHS="$(printf '%s\n' "$info"   | sed -n 's/^paths:[[:space:]]*//p'      | head -1)"
+}
+
+# Claimability-for-me from the T_* globals (shared by both modes):
+#   open + (no handoff | handoff==me)  OR  claimed + claimer==me
+tick_my_turn() {
+  [[ "$T_STATUS" == "open"    && ( -z "$T_HANDOFF" || "$T_HANDOFF" == "$AGENT" ) ]] && return 0
+  [[ "$T_STATUS" == "claimed" && "$T_CLAIMER" == "$AGENT" ]] && return 0
+  return 1
 }
 
 is_claude_agent() {
@@ -140,36 +148,26 @@ PARKED=0
 if [[ "$MODE" == "relay" ]]; then
   [[ -n "$RELAY_FILE" ]] || die "relay mode requires --relay-file"
   [[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
-  [[ -n "$MY_ROLE" ]] || die "relay mode requires --my-role"
-  next="$(relay_field NEXT)"; status="$(relay_field STATUS)"
-  case "$status" in Approved|Closed) STOP=1 ;; esac
-  if [[ "$next" == "$MY_ROLE" ]]; then
+  # Terminal signal comes from the human-readable thread; whose-turn from tick.
+  case "$(relay_field STATUS)" in Approved|Closed) STOP=1 ;; esac
+  read_task "$RELAY_TASK"
+  if tick_my_turn; then
     MY_TURN=1
-  elif [[ -n "$ROLES" && -n "$next" ]]; then
-    ta="$(role_agent "$next")"
-    if [[ -n "$ta" && "$ta" != "$AGENT" ]] && ! is_claude_agent "$ta"; then
-      CROSS_MODEL=1; CROSS_AGENT="$ta"
-    fi
-  fi
-  if ((MY_TURN)); then
     scope=("$RELAY_FILE"); [[ -n "$ARTIFACT" ]] && scope+=("$ARTIFACT")
     scope_clean "${scope[@]}" && CLEAN=1 || CLEAN=0
+  elif [[ "$T_STATUS" == "open" && -n "$T_HANDOFF" && "$T_HANDOFF" != "$AGENT" ]] \
+       && ! is_claude_agent "$T_HANDOFF"; then
+    CROSS_MODEL=1; CROSS_AGENT="$T_HANDOFF"
   fi
 else # xyz
   [[ -n "$TASK" ]] || die "xyz mode requires --task"
-  info="$("$TICK_BIN" info "$TASK" 2>/dev/null || true)"
-  tstatus="$(printf '%s\n' "$info" | sed -n 's/^status:[[:space:]]*//p' | head -1)"
-  tclaimer="$(printf '%s\n' "$info" | sed -n 's/^claimer:[[:space:]]*//p' | head -1)"
-  thandoff="$(printf '%s\n' "$info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -1)"
-  tpaths="$(printf '%s\n' "$info" | sed -n 's/^paths:[[:space:]]*//p' | head -1)"
-  if [[ "$tstatus" == "open" && ( -z "$thandoff" || "$thandoff" == "$AGENT" ) ]]; then
+  read_task "$TASK"
+  if tick_my_turn; then
     MY_TURN=1
-  elif [[ "$tstatus" == "claimed" && "$tclaimer" == "$AGENT" ]]; then
-    MY_TURN=1
-  fi
-  if ((MY_TURN)) && [[ -n "$tpaths" ]]; then
-    IFS=',' read -ra _sc <<<"$tpaths"
-    scope_clean "${_sc[@]}" && CLEAN=1 || CLEAN=0
+    if [[ -n "$T_PATHS" ]]; then
+      IFS=',' read -ra _sc <<<"$T_PATHS"
+      scope_clean "${_sc[@]}" && CLEAN=1 || CLEAN=0
+    fi
   fi
 fi
 

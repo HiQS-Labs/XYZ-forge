@@ -1,75 +1,87 @@
 #!/usr/bin/env bash
-# Phase 4b: relay-drive.sh supervises a /relay thread to termination via a turn-taker.
+# Phase 4(a): relay-drive.sh supervises a tick-native RELAY-TURN to termination.
+# The fake turn-taker does REAL tick ops (claim/ping/release/done). The happy path
+# is also the multi-turn re-handoff proof (one RELAY-TURN re-handed across 3 turns,
+# staying exclusive + correctly re-targeted).
 source "$(dirname "$0")/_setup.sh" poll-relay
 
 DRIVE="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/relay-drive.sh"
 TAKER="$WORK/taker.sh"
+export TICK_BIN="$TICK"
+tick_a init >/dev/null
 
-# Fake turn-taker: appends a block, then moves NEXT/STATUS per MODE+role.
-#   MODE=normal     -> Reviewer: 1st turn Changes requested (NEXT->Producer),
-#                      2nd turn Approved (STATUS->Approved); Producer: NEXT->Reviewer.
-#   MODE=loop       -> Reviewer always Changes requested (never approves).
-#   MODE=noprogress -> appends a block but never moves NEXT/STATUS.
-cat >"$TAKER" <<'TAKER_EOF'
+# Fake turn-taker (invoked by the supervisor with RELAY_FILE/RELAY_TASK/RELAY_AGENT):
+#   takes the token (claim+ping), appends a block, then per MODE+role:
+#   normal     -> reviewer(RA): 1st turn release-to-producer (changes requested),
+#                 2nd turn STATUS:Approved + `tick done` ; producer(PA): release-to-reviewer
+#   loop       -> reviewer never approves (always release back) — drives the cap
+#   noprogress -> claim+ping but never release/done
+cat >"$TAKER" <<'TK'
 #!/usr/bin/env bash
 set -u
-f="$RELAY_FILE"; role="$RELAY_ROLE"; mode="${MODE:-normal}"
-cnt="$WORK/rev.$(basename "$f").n"; n=0; [ -f "$cnt" ] && n=$(cat "$cnt")
-printf '\n### Turn · %s · faketaker (mode=%s)\n' "$role" "$mode" >>"$f"
-if [ "$mode" = noprogress ]; then
-  :
-elif [ "$role" = Reviewer ]; then
-  n=$((n+1)); echo "$n" >"$cnt"
+export TICK_REPO_ROOT="$A"
+me="$RELAY_AGENT"; t="$RELAY_TASK"; f="$RELAY_FILE"; mode="${MODE:-normal}"
+other="$PA"; [ "$me" = "$PA" ] && other="$RA"
+"$TICK" claim "$t" --agent "$me" --paths "z/**" >/dev/null 2>&1   # idempotent if already held
+"$TICK" ping  "$t" --agent "$me" >/dev/null 2>&1
+printf '\n### Turn · %s (mode=%s)\n' "$me" "$mode" >>"$f"
+if [ "$mode" = noprogress ]; then exit 0; fi
+if [ "$me" = "$RA" ]; then
+  c="$WORK/rev.$t.n"; n=0; [ -f "$c" ] && n=$(cat "$c"); n=$((n+1)); echo "$n" >"$c"
   if [ "$mode" = normal ] && [ "$n" -ge 2 ]; then
-    sed -i.bak 's/^STATUS:.*/STATUS: Approved/' "$f"
-    sed -i.bak 's/^NEXT:.*/NEXT: — (closed)/' "$f"; rm -f "$f.bak"
+    sed -i.bak 's/^STATUS:.*/STATUS: Approved/' "$f"; rm -f "$f.bak"
     printf '**Verdict:** Approved\n' >>"$f"
+    "$TICK" done "$t" --agent "$me" >/dev/null 2>&1
   else
-    sed -i.bak 's/^NEXT:.*/NEXT: Producer/' "$f"; rm -f "$f.bak"
     printf '**Verdict:** Changes requested\n' >>"$f"
+    "$TICK" release "$t" --agent "$me" --to "$other" >/dev/null 2>&1
   fi
 else
-  sed -i.bak 's/^NEXT:.*/NEXT: Reviewer/' "$f"; rm -f "$f.bak"
+  "$TICK" release "$t" --agent "$me" --to "$other" >/dev/null 2>&1
 fi
 git -C "$A" add "$f" >/dev/null 2>&1 || true
-git -C "$A" commit -q -m "fake $role turn" >/dev/null 2>&1 || true
-TAKER_EOF
+git -C "$A" commit -q -m "fake $me turn" >/dev/null 2>&1 || true
+TK
 chmod +x "$TAKER"
 
-new_relay() { # <path>
-  printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$1"
-  git -C "$A" add "$1" >/dev/null 2>&1 || true
-  git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1 || true
+seed(){ # <task>  → relay file STATUS Open + RELAY-TURN handed to reviewer (ra) first
+  printf 'STATUS: Open\n# relay body\n' >"$2"
+  git -C "$A" add "$(basename "$2")" >/dev/null 2>&1; git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
+  tick_a log task.created "$1" --agent dispatcher >/dev/null
+  tick_a claim "$1" --agent dispatcher --paths "z/**" >/dev/null
+  tick_a release "$1" --agent dispatcher --to ra >/dev/null   # open + handoff_to ra
 }
-status_of() { sed -n 's/^STATUS:[[:space:]]*//p' "$1" | head -1 | sed 's/[[:space:]]*$//'; }
-blocks_in() { grep -c '^### Turn ·' "$1" 2>/dev/null || true; }
+status_of(){ sed -n 's/^STATUS:[[:space:]]*//p' "$1" | head -1 | sed 's/[[:space:]]*$//'; }
+blocks(){ grep -c '^### Turn ·' "$1" 2>/dev/null || true; }
+task_status(){ tick_a info "$1" 2>/dev/null | sed -n 's/^status:[[:space:]]*//p' | head -1; }
+AC(){ printf "PA=pa RA=ra MODE=%s bash '%s'" "$1" "$TAKER"; }
 
-# --- (1) happy path: Changes requested then Approved, closes -------------
-R1="$A/relay1.md"; new_relay "$R1"
-bash "$DRIVE" --relay-file "$R1" --agent-cmd "MODE=normal bash '$TAKER'" --round-cap 6 >/dev/null 2>&1
+# --- (1) happy path: 3-turn re-handoff, closes Approved -------------------
+R1="$A/relay1.md"; seed RELAY-TURN-1 "$R1"
+bash "$DRIVE" --relay-file "$R1" --relay-task RELAY-TURN-1 --agent-cmd "$(AC normal)" --round-cap 8 >/dev/null 2>&1
 rc=$?
-[ "$rc" -eq 0 ] && pass "drive returns 0 when relay closes Approved" || fail "expected exit 0, got $rc"
-[ "$(status_of "$R1")" = "Approved" ] && pass "thread closed on STATUS: Approved" || fail "STATUS not Approved: $(status_of "$R1")"
-[ "$(blocks_in "$R1")" -eq 3 ] && pass "thread advanced 3 turns (Reviewer/Producer/Reviewer)" || fail "expected 3 turn blocks, got $(blocks_in "$R1")"
+[ "$rc" -eq 0 ] && pass "drive returns 0 when relay closes Approved" || fail "expected 0, got $rc"
+[ "$(status_of "$R1")" = "Approved" ] && pass "thread closed STATUS: Approved" || fail "STATUS not Approved"
+[ "$(task_status RELAY-TURN-1)" = "done" ] && pass "RELAY-TURN token ended done (re-handed across turns)" || fail "token not done: $(task_status RELAY-TURN-1)"
+[ "$(blocks "$R1")" -ge 3 ] && pass "multi-turn: >=3 turns on one re-handed RELAY-TURN" || fail "expected >=3 blocks, got $(blocks "$R1")"
 
-# --- (2) no-progress escalation -----------------------------------------
-R2="$A/relay2.md"; new_relay "$R2"
-bash "$DRIVE" --relay-file "$R2" --agent-cmd "MODE=noprogress bash '$TAKER'" --round-cap 6 >/dev/null 2>&1
-rc=$?
-[ "$rc" -eq 3 ] && pass "no-progress turn escalates (exit 3)" || fail "expected exit 3, got $rc"
+# --- (2) no-progress escalation ------------------------------------------
+R2="$A/relay2.md"; seed RELAY-TURN-2 "$R2"
+bash "$DRIVE" --relay-file "$R2" --relay-task RELAY-TURN-2 --agent-cmd "$(AC noprogress)" --round-cap 8 >/dev/null 2>&1
+[ "$?" -eq 3 ] && pass "no-progress turn escalates (exit 3)" || fail "expected exit 3"
 
-# --- (3) round-cap escalation (never approves) --------------------------
-R3="$A/relay3.md"; new_relay "$R3"
-bash "$DRIVE" --relay-file "$R3" --agent-cmd "MODE=loop bash '$TAKER'" --round-cap 3 >/dev/null 2>&1
+# --- (3) round-cap escalation (never approves) ---------------------------
+R3="$A/relay3.md"; seed RELAY-TURN-3 "$R3"
+bash "$DRIVE" --relay-file "$R3" --relay-task RELAY-TURN-3 --agent-cmd "$(AC loop)" --round-cap 3 >/dev/null 2>&1
 rc=$?
 [ "$rc" -eq 4 ] && pass "round cap without Approved escalates (exit 4)" || fail "expected exit 4, got $rc"
 [ "$(status_of "$R3")" != "Approved" ] && pass "never-approve relay did not close Approved" || fail "should not be Approved"
 
-# --- (4) dry-run: names the turn, mutates nothing -----------------------
-R4="$A/relay4.md"; new_relay "$R4"
-out="$(bash "$DRIVE" --relay-file "$R4" --dry-run 2>&1)"; rc=$?
-echo "$out" | grep -q "WOULD drive turn for role: Reviewer" && pass "dry-run names the next turn" || fail "dry-run missing WOULD line: $out"
-[ "$rc" -eq 0 ] && [ "$(blocks_in "$R4")" -eq 0 ] && pass "dry-run mutates nothing" || fail "dry-run should not mutate (rc=$rc blocks=$(blocks_in "$R4"))"
+# --- (4) dry-run: names the actor, mutates nothing -----------------------
+R4="$A/relay4.md"; seed RELAY-TURN-4 "$R4"
+out="$(bash "$DRIVE" --relay-file "$R4" --relay-task RELAY-TURN-4 --dry-run 2>&1)"; rc=$?
+echo "$out" | grep -q "WOULD drive turn for agent: ra" && pass "dry-run names the actor" || fail "dry-run missing actor: $out"
+[ "$rc" -eq 0 ] && [ "$(blocks "$R4")" -eq 0 ] && pass "dry-run mutates nothing" || fail "dry-run should not mutate"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
