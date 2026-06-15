@@ -24,6 +24,7 @@ TESTS=(
   "poll-relay.sh"
   "watchdog-relay.sh"
   "codex-turn.sh"
+  "skill-extract.sh"
 )
 
 PASSED=()
