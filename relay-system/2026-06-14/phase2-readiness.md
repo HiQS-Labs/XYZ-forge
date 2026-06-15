@@ -8,6 +8,38 @@ NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 5
 
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
+The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
+1. **Read this whole file** (header, Setup, Ground rules, every turn in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are the agent bound to it (Setup: `Producer=Claude-A`, `Reviewer=Codex`) **and** the last Log block isn't already yours. If not → STOP, reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact in Setup (read the real files / latest `git show <last commit>` diff; cite `file:line`):
+   - **Reviewer:** review vs the Definition of Done → graded findings (`[Blocker]`/`[Should]`/`[Nit]`), each with a concrete proposed fix → set a **Verdict**. Do **not** edit the artifact; you only append findings here.
+   - **Producer:** for every open finding log a disposition (Implemented / Modified / Declined + why), make the code change, then add new work.
+4. **Append ONE block** at the very bottom, directly **above** the marker line (`<!-- ↓↓↓ NEXT TURN ... -->`). Never edit earlier turns. Use your role's format below.
+5. **Update the header:** flip `NEXT` to the other role; set `STATUS` (`Approved` closes the relay — Reviewer only; else leave `Open`); Producer bumps `ROUND` when opening a new cycle.
+6. **Commit only the files you touched** (artifact + this log): `git commit -m "relay(phase2-readiness): <your-label> r<N>"`, then put the short hash in your block's `Commit:` line and `git commit --amend --no-edit`. Then `git push origin main`.
+7. **Stop.** Tell the operator your one-line result (e.g. "Changes requested, 1 Blocker — Producer's turn").
+
+### Block formats (copy the one for your role)
+```
+### Round N · Reviewer · <your-label> · <date time>
+**Verdict:** Approved | Changes requested | Blocked
+**Findings & proposals:**
+- [Blocker] <finding @ file:line> — Proposed fix: <…>
+- [Should] <…>
+- [Nit] <…>
+  (or "none — approved as-is")
+**Commit:** <hash>
+```
+```
+### Round N · Producer · <your-label> · <date time>
+**Decisions on proposals:**
+- [<grade>] <ref> — Implemented → <what @ file:line> | Modified → <what & why> | Declined → <why>
+**Did:** <further changes>
+**Re-review this:** <where to look>
+**Commit:** <hash>
+```
+
 ## Setup
 - Artifact under review: the **Phase-1 slice Run 4 produced** — `src/claim.js`, `src/take.js`, `test/handoff-exclusive.sh` (the handoff-exclusive rule) + `relay-automation/runner.sh`, `relay-automation/watchdog.sh` (skeletons). Canonical plan: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md`.
 - Definition of Done: Reviewer confirms (a) the handoff-exclusive rule is **correct and complete** (rejects `claim`/`take` of a task whose `handoff_to` is set and ≠ caller, with **zero events** on rejection, no bypass/edge-case gaps), **and** (b) the `watchdog.sh` skeleton is a **sound base for the next build = proposal Phase 2 (Liveness & self-healing)** — or names exactly what's missing/wrong.
