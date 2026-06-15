@@ -43,6 +43,13 @@ clean. `poll.sh` exits `10` on a closed relay (file `STATUS: Approved`) so the l
 interval only adds latency, never a race. Use ~`60s` for active relays, longer (e.g. `120s`)
 for the lower-frequency watchdog poller.
 
+**Self-closing loops (no stray cron housekeeping).** Launch each loop with a deadline so it
+ends on the first of: relay `Approved`/`Closed`, **or** the deadline:
+`--deadline "$(date -v+30M +%s)"` (macOS) / `--deadline "$(date -d '+30 min' +%s)"` (GNU).
+Past the deadline `poll.sh` prints `DECISION: stop`; the loop prompt then `CronList`s and
+`CronDelete`s its own job. Cron jobs are per-session — you can't stop another window's loop
+from yours, so always set a deadline. See the `/relay` skill → "Self-closing loops".
+
 ### Designated watchdog (exactly ONE window)
 Only one poller holds watchdog authority, so a stalled turn is recovered without
 double-escalation:

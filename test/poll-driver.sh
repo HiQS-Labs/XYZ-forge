@@ -67,6 +67,13 @@ handoff_to RT-xmodel-noflag zorro
 xm2="$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-xmodel-noflag --analysis-file "$NONE")"
 [ "$xm2" = "nudge-cross-model" ] && pass "empty --claude-agents does not crash (set -u regression)" || fail "empty claude-agents crashed/misdecided: '$xm2'"
 
+# self-expiry: --deadline in the past -> stop (even on my turn); future -> normal
+handoff_to RT-expire alice
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-expire --analysis-file "$NONE" --deadline 1)" = "stop" ] \
+  && pass "--deadline in the past -> stop (self-expire)" || fail "past deadline should stop"
+[ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-expire --analysis-file "$NONE" --deadline 9999999999)" = "run-runner" ] \
+  && pass "--deadline in the future -> normal decision (no premature stop)" || fail "future deadline should not stop"
+
 POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay-approved.md" --artifact "$A/art.md" --relay-task RT-none --analysis-file "$NONE" --dry-run >/dev/null 2>&1
 [ "$?" -eq 10 ] && pass "stop exits 10" || fail "stop should exit 10"
 

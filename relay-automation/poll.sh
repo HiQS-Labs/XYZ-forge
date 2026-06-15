@@ -35,6 +35,8 @@ Common:
   --dry-run               Print the DECISION; do not dispatch.
   --analysis-file PATH    JSON `tick analyze` output (else runs `tick analyze --format json`).
   --watchdog-authority    This poller may run the watchdog path (designate exactly one).
+  --deadline EPOCH        Self-expire: emit DECISION: stop once now >= EPOCH (unix seconds).
+                          The /loop then CronDeletes itself (see relay skill "Self-closing loops").
   --runner-cmd CMD        Command run for a runnable turn (default: <root>/relay-automation/runner.sh).
   --watchdog-cmd CMD      Command run for a parked suspect (default: <root>/relay-automation/watchdog.sh).
   --help
@@ -59,7 +61,7 @@ require_command() { command -v "$1" >/dev/null 2>&1 || die "missing command: $1"
 # ---- inputs --------------------------------------------------------------
 MODE=""; AGENT=""; DRY_RUN=0; ANALYSIS_FILE=""; WATCHDOG_AUTHORITY=0
 RUNNER_CMD=""; WATCHDOG_CMD=""
-RELAY_FILE=""; ARTIFACT=""; CLAUDE_AGENTS=""; RELAY_TASK="RELAY-TURN"
+RELAY_FILE=""; ARTIFACT=""; CLAUDE_AGENTS=""; RELAY_TASK="RELAY-TURN"; DEADLINE=""
 TASK=""
 
 while (($# > 0)); do
@@ -69,6 +71,7 @@ while (($# > 0)); do
     --dry-run) DRY_RUN=1; shift ;;
     --analysis-file) ANALYSIS_FILE="${2:-}"; shift 2 ;;
     --watchdog-authority) WATCHDOG_AUTHORITY=1; shift ;;
+    --deadline) DEADLINE="${2:-}"; shift 2 ;;
     --runner-cmd) RUNNER_CMD="${2:-}"; shift 2 ;;
     --watchdog-cmd) WATCHDOG_CMD="${2:-}"; shift 2 ;;
     --relay-file) RELAY_FILE="${2:-}"; shift 2 ;;
@@ -172,9 +175,15 @@ else # xyz
   fi
 fi
 
+# Self-expiry: once past the deadline, stop regardless of turn state.
+EXPIRED=0
+if [[ -n "$DEADLINE" ]] && (( $(date +%s) >= DEADLINE )); then EXPIRED=1; fi
+
 # ---- decision engine -----------------------------------------------------
 DECISION=""; REASON=""
-if ((STOP)); then
+if ((EXPIRED)); then
+  DECISION="stop"; REASON="deadline reached (self-expire)"
+elif ((STOP)); then
   DECISION="stop"; REASON="relay STATUS is terminal"
 elif ((CROSS_MODEL)); then
   DECISION="nudge-cross-model"; REASON="turn belongs to non-Claude agent '$CROSS_AGENT'"
