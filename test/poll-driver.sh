@@ -61,6 +61,12 @@ handoff_to RT-xmodel codex
 xm="$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-xmodel --analysis-file "$NONE" --claude-agents alice)"
 [ "$xm" = "nudge-cross-model" ] && pass "RELAY-TURN handed to non-Claude -> nudge-cross-model" || fail "expected nudge, got: $xm"
 
+# regression (live dogfood 2026-06-15): open+handoff-to-other with EMPTY --claude-agents
+# must NOT crash on set -u (bash 3.2 empty-array expansion in is_claude_agent).
+handoff_to RT-xmodel-noflag zorro
+xm2="$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-xmodel-noflag --analysis-file "$NONE")"
+[ "$xm2" = "nudge-cross-model" ] && pass "empty --claude-agents does not crash (set -u regression)" || fail "empty claude-agents crashed/misdecided: '$xm2'"
+
 POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay-approved.md" --artifact "$A/art.md" --relay-task RT-none --analysis-file "$NONE" --dry-run >/dev/null 2>&1
 [ "$?" -eq 10 ] && pass "stop exits 10" || fail "stop should exit 10"
 

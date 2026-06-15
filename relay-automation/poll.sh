@@ -134,6 +134,7 @@ tick_my_turn() {
 
 is_claude_agent() {
   local a="$1" x
+  [[ -z "$CLAUDE_AGENTS" ]] && return 1   # empty list: nobody is "known Claude" (avoids set -u empty-array expansion on bash 3.2)
   IFS=',' read -ra _ca <<<"$CLAUDE_AGENTS"
   for x in "${_ca[@]}"; do [[ "$x" == "$a" ]] && return 0; done
   return 1
