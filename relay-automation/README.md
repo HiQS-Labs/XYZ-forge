@@ -24,22 +24,31 @@ fully-unattended Option A is a documented future upgrade (see
 In each Claude window, run a guarded `/loop` that uses `poll.sh` as the gate, then
 takes the turn from the relay file's embedded `▶ TAKE YOUR TURN` instructions:
 ```
-# Producer window
-/loop 60s run relay-automation/poll.sh --mode relay --agent claude-a --my-role Producer \
+# Producer window (agent id = the agent the RELAY-TURN token is handed to)
+/loop 60s run relay-automation/poll.sh --mode relay --agent claude-a \
   --relay-file relay-system/<date>/<slug>.md --artifact <path-under-review> --dry-run ;\
   if it prints "DECISION: run-runner", take your turn on that relay file per its embedded \
-  instructions (review/produce, append your block, flip NEXT, commit, push); otherwise do nothing.
-# Reviewer window: same, with --my-role Reviewer
+  instructions (review/produce, append your block, `tick release RELAY-TURN --to <other>` or
+  `done` on approve, commit, push); otherwise do nothing.
+# Reviewer window: same, with that window's --agent id
 ```
-The guard *is* the lock: a window acts only when `NEXT` names its role **and** the
-artifact scope is clean. `poll.sh` exits `10` on a closed relay so the loop can stop.
+**Whose-turn is the `RELAY-TURN` tick task** (handed off via `tick release --to`), so the
+Phase-1 handoff-exclusive rule + the Phase-2 watchdog both apply. The guard *is* the lock:
+a window acts only when the token is claimable by **its** agent **and** the artifact scope is
+clean. `poll.sh` exits `10` on a closed relay (file `STATUS: Approved`) so the loop can stop.
+*(Default `--relay-task RELAY-TURN`; seed it at relay setup, handed to the first actor.)*
+
+**Poll interval — cache-warmth tradeoff.** `60s` keeps Claude Code's prompt cache warm
+(≈5-min TTL); the **lock/heartbeat is the real correctness guard, not the timer**, so a longer
+interval only adds latency, never a race. Use ~`60s` for active relays, longer (e.g. `120s`)
+for the lower-frequency watchdog poller.
 
 ### Designated watchdog (exactly ONE window)
 Only one poller holds watchdog authority, so a stalled turn is recovered without
 double-escalation:
 ```
 /loop 120s run relay-automation/poll.sh --mode relay --agent coordinator \
-  --my-role none --relay-file relay-system/<date>/<slug>.md --watchdog-authority ;\
+  --relay-file relay-system/<date>/<slug>.md --watchdog-authority ;\
   if it prints "DECISION: run-watchdog", it has escalated the parked turn — surface it to me.
 ```
 

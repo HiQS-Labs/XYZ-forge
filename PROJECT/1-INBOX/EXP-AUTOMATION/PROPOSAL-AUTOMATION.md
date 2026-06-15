@@ -1,6 +1,6 @@
 ---
 title: Automated Relay — tick-backed, self-healing review loop
-status: In progress — Phases 1–4 SHIPPED & tested (validate 17/17) as of 2026-06-15; Phase 5 (package as sibling skill) remaining. See CHANGELOG.md + relay-automation/README.md.
+status: In progress — Phases 1–4 SHIPPED & tested incl. (a) tick-native relay turns (validate 18/18) as of 2026-06-15; Phase 4 QA 10/12 (open: live two-window E2E + race hammer-test); Phase 5 (package as sibling skill) remaining. See CHANGELOG.md + relay-automation/README.md.
 owner: Noel / Neochrome
 created: 2026-06-14
 repo: Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm
@@ -188,22 +188,22 @@ Acceptance is split into three distinct gates — detection, false-positive boun
 
 **Goal:** two windows complete a relay with zero human nudges, degrading gracefully for non-Claude tools.
 
-- [ ] Per-window `/loop` guard keyed on **claimability-for-me**, not current ownership (a handed-off turn is an *open* task routed via `handoff_to`, which the next actor does **not** yet hold — guarding on "I hold it" would deadlock). Exact guard: from `tick info RELAY-TURN`, with the artifact-scoped tree clean —
+- [x] Per-window `/loop` guard keyed on **claimability-for-me**, not current ownership (a handed-off turn is an *open* task routed via `handoff_to`, which the next actor does **not** yet hold — guarding on "I hold it" would deadlock). Exact guard: from `tick info RELAY-TURN`, with the artifact-scoped tree clean —
   - `status: open` **and** `handoff-to: <me>` → **claim it, then take the turn**
   - `status: claimed` **and** `claimer: <me>` → **resume/take the turn** (re-entrant)
   - otherwise → **do nothing, keep polling**
-  - *REVERTED to open (QA-gate relay, Codex Blocker): xyz-mode uses this `tick info` claimability guard, but the **relay** path shipped on the baton file's `NEXT`/`STATUS`, not `tick info RELAY-TURN`. Pending design fork — make relay turns tick-native (route a real `RELAY-TURN` task, using the Phase-1 handoff-exclusive rule) **or** rewrite this item to the baton-file guard.*
+  - *DONE via (a) 2026-06-15: relay poll guard is now `tick info RELAY-TURN` claimability (`poll.sh` `tick_my_turn`, shared with xyz mode); the file's `STATUS` is read only as the terminal signal. Tested in `test/poll-driver.sh` (wake-on-handoff + claimed-by-me).*
 - [ ] End-to-end: two Claude windows finish a full automated relay with no human "your turn" — including the wake-on-handoff step (the waiting side claims the open, routed token rather than waiting to already own it) — *PENDING: mechanism built + unit-tested (relay-drive.sh, poll-relay.sh 8/8) but not yet run live with two real Claude windows*
 - [x] Graceful degradation: a non-Claude window (e.g. Codex) can still take turns via the file + manual nudge (automation is additive, not required) — *embedded `▶ TAKE YOUR TURN` block + poll.sh cross-model nudge; exercised live with Codex this week*
 - [x] **Operating-model note (documented limit):** hands-free poll is an **all-Claude convenience** — it relies on Claude Code's in-session `/loop` guarded polling. It is **not** a generic "any editor agent self-wakes" capability and **not** a durable scheduler. Non-Claude participants (Codex/Gemini) stay on **manual nudge**. For reliable, unattended recurring checks, polling must move into a **real runner/watchdog process/service**, not the agent session.
-- [ ] Poll interval documented with the cache-warmth tradeoff (≈ 60s default; the lock/heartbeat is the real correctness guard, not the timer) — *PARTIAL: README shows `/loop 60s` + "the guard is the lock"; the explicit cache-warmth rationale note is still TODO*
+- [x] Poll interval documented with the cache-warmth tradeoff (≈ 60s default; the lock/heartbeat is the real correctness guard, not the timer) — *DONE: `relay-automation/README.md` "Poll interval — cache-warmth tradeoff" (60s warm-cache, lock-is-the-guard, longer = latency-only).*
 
 ### QA checklist — Phase 4
-- [ ] **DRY:** the guard reuses `tick info`/`analyze` state — no parallel "whose turn" bookkeeping — *REVERTED to open (QA-gate relay, Codex Blocker): xyz-mode reuses `tick info`/`analyze`, but relay mode adds a **second** turn-state source (the relay markdown `NEXT`/`STATUS`) rather than a tick `RELAY-TURN` task. Same design fork as the guard item — resolve before re-checking.*
+- [x] **DRY:** the guard reuses `tick info`/`analyze` state — no parallel "whose turn" bookkeeping — *DONE via (a): whose-turn now comes from the `RELAY-TURN` tick task for both modes; the relay markdown holds content + the terminal `STATUS` only, not a duplicate turn-token.*
 - [x] **SOLID:** poll guard, turn-runner, and watchdog remain separable — *poll.sh / runner.sh / watchdog.sh / relay-drive.sh are distinct files & concerns*
 - [x] **Observability:** each poll tick logs its decision (acted / not-my-turn / tree-dirty / stop) — *poll.sh prints `DECISION: <x> (<reason>)` every tick*
-- [ ] **Litmus (race):** two windows polling simultaneously never both act — the lock serializes (verify by hammering) — *PENDING live verification: structurally serialized by the tick claim lock + per-role NEXT, but not hammer-tested with two concurrent pollers*
-- [ ] **Litmus (no deadlock):** after `release --to <other>`, the routed-to window wakes and **claims the open token** — the relay never stalls with both sides waiting to "already hold" it — *implemented in poll.sh xyz guard (open+handoff-to=me → claim); not yet verified end-to-end live*
+- [ ] **Litmus (race):** two windows polling simultaneously never both act — the lock serializes (verify by hammering) — *now serialized by the real tick claim-lock (relay turns are tick claims after (a)); still not hammer-tested with two concurrent pollers*
+- [x] **Litmus (no deadlock):** after `release --to <other>`, the routed-to window wakes and **claims the open token** — the relay never stalls with both sides waiting to "already hold" it — *DONE via (a): proven by `poll-driver.sh` (open+handoff-to-me → run-runner = wake) + `poll-relay.sh` 3-turn re-handoff; full two-live-window run still tracked by the E2E item.*
 - [x] **Anti-goal guard:** the manual relay path still works with automation disabled; no hard tick dependency added to the protocol — *the portable `/relay` skill stays dependency-free; automation lives in relay-automation/*
 - [x] **Remote deploy needed?** No — same-session, shared tree (a remote/async variant is explicitly out of scope)
 

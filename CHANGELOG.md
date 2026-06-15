@@ -4,6 +4,15 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### relay-automation — (a) relay turns are now tick-native ✅
+- `poll.sh` relay mode: whose-turn from `tick info RELAY-TURN` claimability (shared with xyz); the relay file's `STATUS` is the terminal signal only; cross-model keyed on the token's handoff agent; dropped `--my-role`/`--roles`, added `--relay-task`.
+- `relay-drive.sh`: supervises the `RELAY-TURN` token (actor = claimer/handoff); turn-taker claims/pings/releases/`done`; no-progress (exit 3) + cap (exit 4) escalation.
+- Tests converted to **real tick ops**; **+`test/watchdog-relay.sh`** (a stalled `RELAY-TURN` is detected + escalated — the payoff (a) buys) and a **3-turn re-handoff** proof in `poll-relay.sh`. `validate.sh` 17 → **18**.
+- Phase-4 QA checkboxes: 191 (guard), 201 (DRY), 205 (no-deadlock), 198 (cache-warmth note) now `[x]` → **10/12** (open: live two-window E2E, race hammer-test).
+- Docs: README relay usage + cache-warmth note; PHASE-4-PLAN banner; project hub + proposal status. **Next: Codex code-review relay for (a).**
+- Operator refocus: standalone project hub `PROJECT/2-WORKING/AUTOMATED-RELAY.md`; XYZ-swarm progress deferred (relay is higher daily-use).
+
+
 ### relay-automation — Phase 4 complete (hands-free poll, Option B: baton + poll)
 - **4a** `relay-automation/poll.sh` — per-tick poll driver: two modes (xyz/relay), split guard→dispatch (runner: my-turn+clean · watchdog: parked+designated-authority → no double-escalate), artifact-scoped clean-tree check, cross-model nudge, `--dry-run` + guarded live dispatch. `test/poll-driver.sh` 12/12.
 - **4b** `relay-automation/relay-drive.sh` — relay-turn supervisor: loops a `/relay` Producer↔Reviewer thread to termination via the turn-taker (`--agent-cmd` seam), round cap + no-progress escalation (exit 3) + cap escalation (exit 4). `test/poll-relay.sh` 8/8.

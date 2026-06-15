@@ -8,6 +8,11 @@ execution-contract: Option B (baton + poll) — chosen by the 2026-06-14 headles
 
 # relay-automation — Phase 4 plan: hands-free poll (Option B)
 
+> **UPDATE 2026-06-15 — (a) shipped:** relay turns are now **tick-native** (a `RELAY-TURN`
+> task), not the baton `NEXT`/`STATUS`. So "relay mode" below reads `tick info RELAY-TURN`
+> claimability (the file's `STATUS` is the terminal signal only); the Phase-1 rule + Phase-2
+> watchdog now cover relay turns. See `PHASE-4A-SCOPE.md`. `validate.sh` 18/18.
+
 ## Goal
 Remove the **human nudge** from the loop for all-Claude work. A poll driver watches
 coordination state and, when it's this window's turn and the tree is clean, takes the
