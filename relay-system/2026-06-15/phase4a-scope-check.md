@@ -4,9 +4,9 @@
   Single round trip: Producer asks → Codex grades the estimate → Producer disposes → close.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -55,5 +55,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 
 **Verdict:** Approved = the scope is complete and ~2.5 passes is realistic; Changes requested = it's missing work or the estimate is wrong (say the real number).
 **Commit:** 200ff17
+
+### Round 1 · Reviewer · Codex · 2026-06-15 08:56 PDT
+Blast radius: `relay-automation/{poll.sh,relay-drive.sh}` plus the relay test harnesses and setup/docs; the shipped `tick` core mostly stays as-is. Reversibility: **Costly** — rollback is possible, but this is not one-file surgery because the poller, turn-taker contract, and tests all move together.
+
+**Verdict:** Changes requested
+**Findings:**
+- [Blocker] The scope under-counts the agent/role plumbing you have to rewrite once whose-turn moves from file `NEXT` to token `handoff_to`. Today relay mode still derives manual-nudge behavior from role state (`--my-role`, `--roles`, `--claude-agents`) and emits the cross-model prompt from that path, while `relay-drive.sh` invokes the taker with `RELAY_ROLE`, not an agent id: `relay-automation/PHASE-4A-SCOPE.md:19-22`, `relay-automation/poll.sh:41-46`, `relay-automation/poll.sh:117-130`, `relay-automation/poll.sh:140-157`, `relay-automation/poll.sh:180-206`, `relay-automation/relay-drive.sh:20-22`, `relay-automation/relay-drive.sh:78-88`, `test/poll-driver.sh:54-60`. Proposed fix: make the scope explicit about the new role<->agent mapping, the cross-model/manual-nudge path, and the supervisor/taker env contract change.
+- [Blocker] `~2.5 passes` is rosy because the relay tests are not "moderate rework"; they are still baton-file fakes with no real tick turn state. `test/poll-driver.sh` only seeds `NEXT`/`STATUS` and analysis fixtures, and `test/poll-relay.sh` mutates the file with `sed` while the fake taker never claims, pings, releases, or completes a task: `relay-automation/PHASE-4A-SCOPE.md:23-27`, `test/poll-driver.sh:14-25`, `test/poll-driver.sh:29-60`, `test/poll-relay.sh:8-18`, `test/poll-relay.sh:23-33`, `test/poll-relay.sh:39-72`, `test/_setup.sh:59-72`. Proposed fix: price the test-harness conversion as a full slice of the work, not an add-on.
+- [Should] The primitive `RELAY-TURN` handoff semantics are less scary than the doc makes them sound; the unpriced gap is the long-alternation proof. `release`, `done`, and `ping` are already ownership-guarded append-only events, and projection already re-opens/re-targets a repeatedly handed-off task correctly: `src/scope.js:34-37`, `src/scope.js:46-61`, `src/project.js:45-54`, `src/project.js:90-100`. The shipped handoff tests cover one routed claim/take, but not many turns on the same task: `test/handoff-exclusive.sh:44-62`. Proposed fix: add one explicit multi-turn `RELAY-TURN` integration test to scope instead of carrying this as a vague runtime risk.
+- [Pass] This is still conversion work, not a new `tick`-core design. The handoff-exclusive rule is already shipped in both named claim and atomic take, so the implementation risk lives in relay-side plumbing and tests, not in inventing a second core rule: `src/claim.js:36-39`, `src/take.js:37-45`.
+
+**Honest estimate:** ~3.5 passes / about 4–5 hours. Biggest risk: rewriting the relay poll/supervisor/test contract off `NEXT`/`sed` and onto a real `RELAY-TURN`, not the `tick release --to` primitive itself.
+**Commit:** 74a3d13
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
