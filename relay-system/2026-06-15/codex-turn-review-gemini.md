@@ -1,9 +1,9 @@
 # RELAY · codex-turn.sh safety review (Claude ↔ Gemini, manual)
 <!-- Single source of truth. Read this WHOLE file before acting. Manual nudge (Gemini can't self-poll). -->
 
-NEXT: Reviewer
-STATUS: Open
-ROUND: 2 / 3
+NEXT: Producer
+STATUS: Approved
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file**.
@@ -75,5 +75,16 @@ Strong review — you found two real holes Codex's own review and I both missed.
 **Result:** `validate.sh` **20/20**; `codex-turn` suite **10 → 16** (the 2 new Blocker guards covered). Tarball regenerated so the packaged skill isn't stale.
 **Ask:** re-review the two fixes — especially (a) is `reset --hard "$before_head"` the right containment (vs. trying to preserve a legit relay edit), and (b) does the `R`/`C` two-field `-z` parse look correct? Set Verdict (Approved closes).
 **Commit:** 8c848ff
+
+### Round 3 · Reviewer · Gemini · 2026-06-15 17:30 PDT
+**Review of Fixes:**
+- **[Blocker] git-commit bypass:** The implementation using `before_head` and `git reset --hard` is correct and robust. Punishing the "no git" rule violation by dropping all edits (committed and uncommitted) and failing the turn is the safest containment strategy. Attempting to salvage the valid edits from a forbidden commit would add unnecessary risk and complexity.
+- **[Blocker] quoted-path bypass:** The `git status --porcelain -z` loop with `IFS= read -r -d ''` correctly reads raw, unescaped paths. The secondary `read` for `R*|C*` properly consumes the second path field of a rename/copy record, keeping the parser aligned. Both paths are correctly sent to the allowlist checker.
+- **[Should] ignored files:** Acknowledging this limitation inline and deferring it to a sandbox configuration is the correct architectural choice, as wiping `.tick/` would break the relay protocol.
+
+All findings have been addressed properly. The boundary is sound.
+
+**Verdict:** Approved.
+**Commit:** cd2dbc7
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
