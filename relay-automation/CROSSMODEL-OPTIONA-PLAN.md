@@ -18,18 +18,26 @@ reads the relay file, writes its block, advances the `RELAY-TURN` token, commits
 `sandbox: workspace-write`), emits a parseable `VERDICT:`, exit 0; ~11k tokens for a trivial
 turn (Codex defaults high reasoning). So Codex can read/edit files + run `tick`/`git` in-turn.
 
-## Design decisions (resolve in review)
-1. **Who dispatches the Codex turn?**
-   - **D1 — supervisor:** `relay-drive.sh --agent-cmd "codex exec \"$(turn-prompt)\" < /dev/null"` drives whichever side holds the token; for the Codex side the agent-cmd is `codex exec`.
-   - **D2 — poll cross-model dispatch:** `poll.sh`'s cross-model branch, instead of *printing* the nudge, *runs* `codex exec` when the token is handed to a Codex agent. (Lean **D1** for a first cut — one driver, explicit; keep poll's cross-model branch as the nudge for the non-headless case.)
-2. **The Codex turn prompt.** Pass the embedded ▶ TAKE-YOUR-TURN steps + the relay-file path; instruct Codex to: claim+ping `RELAY-TURN`, append its graded review block + verdict to the relay file, `tick release --to <claude>` (or `done`+`STATUS: Approved` on approve), commit + push. (Codex has workspace-write, so it can.)
-3. **Budget cap.** A per-turn token ceiling and a per-relay round cap (`relay-drive --round-cap`), since each Codex turn is a real API spend. Document a sane default (e.g. cap rounds at 4; note ~tokens/turn).
-4. **Tree-scope safety.** Codex runs with workspace-write over the repo. Constrain its turn to the artifact + relay file (prompt instruction + the artifact-scoped clean-tree gate already in place); flag if a tighter sandbox (`-c sandbox_permissions=...`) is warranted.
-5. **Verdict extraction.** `codex exec` wraps output in transcript chrome; `grep 'VERDICT:' | tail -1` (runner already does this) — confirm robust against Codex's formatting.
+## Design (hardened by Codex review 2026-06-15 — see footer)
+
+**A mandatory safety shim `relay-automation/codex-turn.sh` is the turn-taker** (not a raw
+`--agent-cmd` string — too brittle and no place to enforce safety). `relay-drive.sh
+--agent-cmd "relay-automation/codex-turn.sh"` invokes it; the shim:
+
+1. **Dispatches only for its agent.** Acts only when `RELAY_AGENT` is the Codex agent; for any other actor it **no-ops/defers** (that window drives its own turn). Fixes the "one `--agent-cmd` can't drive both sides" gap — Claude turns stay window-driven, Codex turns go headless.
+2. **Builds the turn prompt** (embedded ▶ TAKE-YOUR-TURN steps + relay-file path) and runs `codex exec "<prompt>" < /dev/null`, capturing the transcript.
+3. **Enforces a path allowlist itself** (the clean-tree gate is in `poll.sh`, NOT `relay-drive.sh`, so the shim owns this): snapshot `git diff --name-only` before; after the turn, **hard-fail + revert if any changed path is outside {relay file, artifact allowlist}**; stage **only** those exact paths.
+4. **Commits file-scoped, NO push.** Coordination is shared-local `.tick/events/`; `tick` no longer depends on push, so unattended turns must not push (drops a failure mode). Push stays a separate operator step.
+5. **Extracts the verdict** from the transcript (`grep 'VERDICT:' | tail -1`) for the supervisor.
+6. **Budget cap:** `relay-drive --round-cap` (default ≤4) + note ~tokens/turn; each Codex turn is real API spend.
+
+The supervisor's existing **close-mismatch + no-progress escalation** ([Pass]) provide the
+containment for unattended turns; `poll.sh`'s cross-model branch stays the **manual-nudge
+fallback** for non-headless agents ([Pass]).
 
 ## Sub-steps
-- **X1 — turn-taker shim:** a small `codex-turn.sh` (or `--agent-cmd` string) that builds the turn prompt from the relay file and runs `codex exec ... < /dev/null`, returning Codex's output for verdict parse. *Accept:* a fake-`codex` test (inject a stub `codex` that emits a block + VERDICT) drives one Codex turn through `relay-drive.sh`.
-- **X2 — live cross-model run:** one real Claude↔Codex relay on a small artifact; Codex turn headless via `codex exec`. *Accept:* relay closes `Approved`, Codex's block present, captured metrics (rounds, tokens, human interventions).
+- **X1 — `codex-turn.sh` shim (mandatory) + test.** Build the shim per the Design above. *Accept:* a test injecting a **stub `codex`** that performs the *real turn-taker contract* — `tick claim/ping/release|done` **and** mutates the relay file (not just emits `VERDICT:`) — drives one turn through `relay-drive.sh`; plus a negative test: the stub touches an **off-allowlist file** → the shim **reverts it, stages nothing extra, and fails** (proves the allowlist guard). No push occurs.
+- **X2 — live cross-model run:** one real Claude↔Codex relay on a small artifact; Codex turn headless via `codex exec` through the shim. *Accept:* relay closes `Approved`, Codex's block present, only allowlisted files changed, no push; captured metrics (rounds, tokens, human interventions).
 - **X3 — record:** close item 196 cross-model; update Option-A status; capture cost.
 
 ## Risks
@@ -38,7 +46,12 @@ turn (Codex defaults high reasoning). So Codex can read/edit files + run `tick`/
 - **Commit/push from Codex** — ensure Codex commits only the relay file + artifact (file-scoped), and that its git identity/attribution is acceptable.
 - **Prompt-injection surface** on an unattended agent (Option-A general caveat).
 
-## Open questions for the reviewer (Codex)
-1. D1 (supervisor `--agent-cmd`) vs D2 (poll dispatches `codex exec`) — right call for a first cut?
-2. Is `codex exec` workspace-write over the whole repo acceptable for a relay turn, or should we pass a tighter `-c sandbox_permissions`/`--cd` scope?
-3. Biggest risk you see in letting `codex exec` take + commit a relay turn unattended, and the cheapest mitigation?
+## Resolved by Codex review (2026-06-15, headless via `codex exec` — the review itself dogfooded Option A)
+**Verdict: Changes requested → all disposed into the Design/Sub-steps above.**
+- [Blocker] D1 had no per-agent dispatch → **shim keyed on `RELAY_AGENT`** (no-op for non-Codex actors).
+- [Blocker] clean-tree gate is in `poll.sh`, not `relay-drive.sh` → **the shim enforces the path allowlist itself** (diff before/after, revert off-lane, stage only allowlisted).
+- [Blocker] `commit + push` is stale (shared-local `.tick`) → **commit file-scoped, NO push.**
+- [Should] don't test a VERDICT-only fake → **X1 stub does the real `tick claim/ping/release/done` + file mutation**, plus a negative allowlist test.
+- [Should] raw `--agent-cmd` brittle → **`codex-turn.sh` is mandatory.**
+- [Pass] supervisor close-mismatch/no-progress guards = solid containment; `poll.sh` cross-model branch stays the manual fallback.
+- Answers: D1-via-shim (D2 risks double-fire); repo-wide workspace-write not acceptable alone → shim allowlist is the real control; biggest risk = unattended off-lane edits getting committed → mitigated by the diff-allowlist + drop-push.
