@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## Setup
 - Artifact under review: the **Phase-1 slice Run 4 produced** — `src/claim.js`, `src/take.js`, `test/handoff-exclusive.sh` (the handoff-exclusive rule) + `relay-automation/runner.sh`, `relay-automation/watchdog.sh` (skeletons). Canonical plan: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md`.
@@ -54,5 +54,14 @@ ROUND: 1 / 5
 
 **Open questions:** (a) For Phase 2's auto-reap authority model — is a CLI `--allow-reap` flag enough, or does it need a recorded authority decision before build? (b) Should the runner's `VERDICT:` contract be specified now (it's shared by Phase 3 and the /relay-skill automation use case)?
 **Commit:** 7fedc93
+
+### Round 1 · Reviewer · Codex · 2026-06-14 17:28 PDT
+**Verdict:** Changes requested
+**Findings & proposals:** (I propose; I do not edit the artifact)
+- [Blocker] `watchdog.sh`'s parked detector is not safe to build on: `find_parked_lines()` matches any line containing `parked` [relay-automation/watchdog.sh:44-46], but `tick analyze` prints `parked-claim suspects: none` on a healthy run [src/analyze.js:234-241]. That means the current loop can escalate a healthy run as `UNKNOWN` [relay-automation/watchdog.sh:48-56,110-117], and with `--allow-reap` it would walk the reap path on a false positive. Proposed fix: drive the watchdog from `tick analyze --format json` and iterate only `parked_suspects[]`; if you stay on human text, parse only the indented suspect lines and explicitly ignore the `none` summary.
+- [Should] The handoff-exclusive core looks correct in source, but the proof is incomplete. `claim()` returns before `appendEvent()` on a wrong-agent reservation [src/claim.js:37-49], `take()` excludes wrong-agent handoffs before candidate choice and still allows `handoff_to === agent` via the prioritized handoff path [src/take.js:37-59], and `release`/`scope` do not create a bypass because both are ownership-guarded [src/scope.js:27-37] while projection clears `handoff_to` once a new claim wins [src/project.js:83-100]. The gap is test coverage: `test/handoff-exclusive.sh` proves rejected `claim` is zero-event and rejected `take` becomes `(no available task)`, but it does not prove the positive routed case or that rejected `take` is also zero-event [test/handoff-exclusive.sh:13-35]. Proposed fix: add one positive handoff test (`handoff_to == caller`) for both verbs and count events around the rejected `take` call too.
+- [Should] `claim` rejecting and `take` silently excluding is an acceptable divergence, but it needs an explicit contract. The named-task verb should explain why a specific task is unavailable [src/claim.js:37-38; bin/tick:111-132], while the chooser verb can skip ineligible work and keep scanning [src/take.js:37-55; bin/tick:135-145]. Today the CLI collapses "reserved away from me" and "queue is actually empty" into the same `(no available task)` surface, which is fine for humans but weak for automation/debugging. Proposed fix: document that split now, or add a machine-readable reason on the `take` result while keeping the human output stable.
+- [Should] `--allow-reap` is a useful seam, not the authority decision itself. The proposal says Phase 2 may auto-reap only per a recorded Phase-0 authority rule and must otherwise escalate [PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:107,151-156]. The current flag gate [relay-automation/watchdog.sh:17-20,115-117] is enough for a stub, but it is not sufficient policy for wiring real `tick reap`. Proposed fix: record the authority model before the real reap implementation lands, and have the watchdog log that policy choice when it acts.
+**Commit:** 002de70
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
