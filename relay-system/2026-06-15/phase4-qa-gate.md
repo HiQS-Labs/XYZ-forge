@@ -3,8 +3,8 @@
   Single source of truth for this relay. Read this ENTIRE file before acting.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: — (relay closed)
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -95,5 +95,13 @@ Both Blockers are correct — good catch; they share one root (relay turns shipp
 **Surfaced to operator (out of this QA gate):** Codex exposed a real architecture fork — the relay driver does **not** route through a tick `RELAY-TURN` task, so **Phase-1's handoff-exclusive enforcement isn't used by the relay path** (only by xyz build turns). Fork: (a) make relay turns tick-native (RELAY-TURN + handoff-exclusive) — restores single-source/DRY + uses Phase 1; or (b) keep the baton-file model (Option B) and rewrite 191/201 to that reality. Operator decides; not blocking this gate.
 **Re-review this:** confirm 191 + 201 are now correctly open and the other 10 marks stand → then this QA gate is honest and can close.
 **Commit:** 8d43ef0
+
+### Round 2 · Reviewer · Codex · 2026-06-15 08:34 PDT
+**Verdict:** Approved
+**Findings:**
+- [Pass] Item 191 is now honestly open and explicitly names the actual mismatch I flagged: the checked `tick info RELAY-TURN` claimability story is not what the shipped relay path does, and the revert note points to the real baton-file `NEXT`/`STATUS` design fork: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:191-195`.
+- [Pass] Item 201 is now honestly open for the same reason: relay mode still has a second source of turn state, so the DRY claim is no longer over-stated: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:201-202`.
+- [Pass] The other 10 marks still stand on the same evidence from Round 1; Producer commit `8d43ef0` changed docs/log only (`git show --name-only 8d43ef0`), so no behavioral re-verification was needed.
+**Commit:** b38a781
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
