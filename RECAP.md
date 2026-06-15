@@ -142,3 +142,12 @@ Two Codex variants built proposal Phase 2 (watchdog liveness/escalation, `copilo
 
 ### Recommendation
 **Iterate on launch discipline, not lane design.** Sub-50% is a valid datapoint, not an in-session retry trigger. The Phase-2 build stands; the ≥50% claim is **pending a start-synchronized re-run**. This fired the graduate decision's revisit trigger → status **Revisited** (start-skew refinement; bet not structurally broken). See the decision record's Updates.
+
+## 2026-06-15 — relay-automation Phase 4 complete (hands-free poll)
+
+Execution contract decided **Option B (baton + poll)** after a headless-CLI spike found no agent CLI present (Option A documented as a future upgrade). Phase-4 plan was Codex relay-reviewed (2 Blockers + 1 Should applied), then built solo across 4a/4b/4c:
+- **4a** `poll.sh` — per-tick poll driver (two modes, split runner/watchdog guard, artifact-scoped clean check, cross-model nudge). `poll-driver.sh` 12/12.
+- **4b** `relay-drive.sh` — relay-turn supervisor (loops to Approved, round-cap + no-progress escalation). `poll-relay.sh` 8/8.
+- **4c** `relay-automation/README.md` — `/loop` invocations + designated-watchdog poller + cross-model one-line nudge + all-Claude boundary.
+
+`validate.sh` **17/17**. **Proposal Phases 1–4 shipped; Phase 5 (package as sibling skill) remains.** Full per-change log now in `CHANGELOG.md`.
