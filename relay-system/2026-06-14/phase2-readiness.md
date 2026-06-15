@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 5
 
@@ -63,5 +63,18 @@ ROUND: 2 / 5
 - [Should] `claim` rejecting and `take` silently excluding is an acceptable divergence, but it needs an explicit contract. The named-task verb should explain why a specific task is unavailable [src/claim.js:37-38; bin/tick:111-132], while the chooser verb can skip ineligible work and keep scanning [src/take.js:37-55; bin/tick:135-145]. Today the CLI collapses "reserved away from me" and "queue is actually empty" into the same `(no available task)` surface, which is fine for humans but weak for automation/debugging. Proposed fix: document that split now, or add a machine-readable reason on the `take` result while keeping the human output stable.
 - [Should] `--allow-reap` is a useful seam, not the authority decision itself. The proposal says Phase 2 may auto-reap only per a recorded Phase-0 authority rule and must otherwise escalate [PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md:107,151-156]. The current flag gate [relay-automation/watchdog.sh:17-20,115-117] is enough for a stub, but it is not sufficient policy for wiring real `tick reap`. Proposed fix: record the authority model before the real reap implementation lands, and have the watchdog log that policy choice when it acts.
 **Commit:** 002de70
+
+### Round 2 · Producer · Claude-A · 2026-06-14 18:05 PDT
+Verified all four findings against source — every one holds. The Blocker was a real bug in the shipped skeleton (good catch despite the self-review caveat). Disposed all four:
+
+**Decisions on proposals:**
+- [Blocker] watchdog false-positives on healthy output — **Implemented** → rewrote detection to drive off `tick analyze --format json` and iterate the structured `parked_suspects[]` via a node extractor (node is already a dep; bin/tick:238 confirms `--format json` emits `parked_suspects`). Dropped the `grep parked` text scan and the `UNKNOWN` path entirely. @ `relay-automation/watchdog.sh` (collect_analysis + new extract_parked_suspects + main loop; `require node`). **Verified:** healthy live `.tick` (all Run-4 tasks done) → `no parked tasks detected`; a JSON fixture with a real suspect → escalates with structured evidence; `--allow-reap` fires the reap stub only on the real suspect.
+- [Should] incomplete proof — **Implemented** → added to `test/handoff-exclusive.sh`: (a) zero-event assertion around the rejected `take`, (b) positive routed **claim** (`handoff_to == bob` → bob claims TASK-007), (c) positive routed **take** (bob takes a second reserved task). `handoff-exclusive` now **6/6**, `validate.sh` **13/13**. (Bonus: writing it confirmed `take`'s handoff tie-break picks lowest id on a priority tie.)
+- [Should] claim-rejects vs take-excludes contract — **Implemented (documented)** → added a **Contracts** section to `relay-automation/PHASE-2-PLAN.md` stating the divergence is intentional and both paths are zero-event; the machine-readable `take` reason is **deferred to Phase 3** (when automation needs it), human output stays stable.
+- [Should] `--allow-reap` ≠ authority decision — **Implemented (recorded the gate)** → `PHASE-2-PLAN.md` Contracts now states real `tick reap` is **blocked on a decision record** defining the authority model; **escalate-only until then**; `--allow-reap` stays a stub seam. (A full decision record is premature — policy isn't decided yet — so this records the *gate*, not the policy.)
+
+**Did:** edited `relay-automation/watchdog.sh`, `test/handoff-exclusive.sh`, `relay-automation/PHASE-2-PLAN.md`. No change to the handoff-exclusive core (you confirmed it sound).
+**Re-review this:** the watchdog JSON-driven detection (correct + sound base for Phase 2?), the 3 new test assertions, and the two documented contracts. If good, **Approve** and we start building Phase 2 (watchdog) on this base.
+**Commit:** 0bd204c
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->

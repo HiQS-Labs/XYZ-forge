@@ -9,13 +9,13 @@ usage() {
 Usage: relay-automation/watchdog.sh [options]
 
 Skeleton only:
-- run `tick analyze`
-- detect parked tasks from the analysis output
+- run `tick analyze --format json`
+- iterate the structured parked_suspects[] (no text grep -> no false positives)
 - escalate parked tasks to a human channel
 - optionally reap, but only behind an explicit authority flag
 
 Options:
-  --analysis-file PATH    Reuse captured `tick analyze` output instead of invoking it.
+  --analysis-file PATH    Reuse captured `tick analyze --format json` output (JSON) instead of invoking it.
   --human-target LABEL    Human escalation target label (default: human-ops).
   --allow-reap            Enable the reap stub after escalation.
   --help                  Show this message.
@@ -38,21 +38,27 @@ collect_analysis() {
     return
   fi
 
-  "$TICK_BIN" analyze
+  "$TICK_BIN" analyze --format json
 }
 
-find_parked_lines() {
-  grep -Ei '\bparked\b'
-}
-
-extract_task_id() {
-  local line="$1"
-  if [[ "$line" =~ (TASK-[A-Z0-9]+) ]]; then
-    printf '%s\n' "${BASH_REMATCH[1]}"
-    return
-  fi
-
-  printf 'UNKNOWN\n'
+# Emit one TSV row (task<TAB>agent<TAB>max_gap_ms<TAB>heartbeats) per REAL parked
+# suspect, read from the structured report. An empty parked_suspects[] yields no
+# rows -> no escalation. This replaces the old `grep parked` text scan, which
+# matched the healthy-run summary line "parked-claim suspects: none" and would
+# escalate (and, with --allow-reap, reap) a HEALTHY run. (relay r1 Blocker, Codex.)
+extract_parked_suspects() {
+  node -e '
+    let raw = "";
+    process.stdin.on("data", d => raw += d);
+    process.stdin.on("end", () => {
+      let report;
+      try { report = JSON.parse(raw); }
+      catch (e) { console.error("watchdog: analysis is not valid JSON: " + e.message); process.exit(3); }
+      for (const s of report.parked_suspects || []) {
+        process.stdout.write([s.task, s.agent, s.max_gap_ms, s.heartbeats].join("\t") + "\n");
+      }
+    });
+  '
 }
 
 escalate_to_human() {
@@ -97,22 +103,22 @@ while (($# > 0)); do
   esac
 done
 
-require_command grep
+require_command node
 require_command "$TICK_BIN"
 
-parked_lines="$(collect_analysis | find_parked_lines || true)"
+parked_suspects="$(collect_analysis | extract_parked_suspects)"
 
-if [[ -z "$parked_lines" ]]; then
+if [[ -z "$parked_suspects" ]]; then
   printf 'watchdog: no parked tasks detected\n'
   exit 0
 fi
 
-while IFS= read -r line; do
-  [[ -n "$line" ]] || continue
-  task_id="$(extract_task_id "$line")"
-  escalate_to_human "$task_id" "$line"
+while IFS=$'\t' read -r task_id agent max_gap_ms heartbeats; do
+  [[ -n "$task_id" ]] || continue
+  evidence="agent=$agent max_gap_ms=$max_gap_ms heartbeats=$heartbeats"
+  escalate_to_human "$task_id" "$evidence"
 
   if ((ALLOW_REAP)); then
     reap_task_stub "$task_id"
   fi
-done <<<"$parked_lines"
+done <<<"$parked_suspects"

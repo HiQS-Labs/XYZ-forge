@@ -107,6 +107,11 @@ and tool-agnostic. Revisit toward C if a non-Claude agent must run unattended.
 - **Phase 4:** real escalation integrations (pager/chat/ticket).
 - **Phase 5:** multi-relay supervision.
 
+## Contracts (from relay r1 review)
+
+- **`claim` rejects, `take` excludes — intentional, now explicit.** The named-task verb (`claim`) explains *why* a specific task is unavailable (`lost: <task> is reserved for another agent — not claimable`); the chooser verb (`take`) silently skips ineligible work and keeps scanning, surfacing only `(no available task)`. Both emit **zero events** on the non-grant path. This is fine for humans but collapses "reserved away from me" and "queue empty" into one surface — **Phase 3** adds a machine-readable reason on the `take` result (for automation/debugging) while keeping the human output stable. (Deferred per relay r1 Should.)
+- **Auto-reap is gated on a recorded authority decision.** `watchdog.sh --allow-reap` is a *stub seam* only. Per the proposal (Phase 2, lines 107/151–156), real `tick reap` may fire **only** per a recorded authority rule, and must otherwise **escalate to a human**. **Before the real reap implementation lands, a decision record must define the authority model** (who/what may auto-reap, under what evidence), and the watchdog must log that policy choice when it acts. Until then: escalate-only. (relay r1 Should.)
+
 ## Risks & open questions
 1. **Headless auth/sandbox** — does `claude -p` / `codex exec` run unattended in this environment? (Mirrors the keychain/tmp sandbox issues we already hit.) Validate in a 2a spike before committing.
 2. **Verdict contract** — agents must emit a machine-greppable `VERDICT:` line. Needs to be in the turn prompt template (ties back to the xyz build-prompt and the relay block format).
