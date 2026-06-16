@@ -154,6 +154,80 @@ function findParkedClaims(windows, events, runEnd, thresholdMs = PARKED_THRESHOL
   return suspects;
 }
 
+const RUN_TYPES = new Set(['symmetric', 'asymmetric']);
+
+// Cost section (Phase 2, COST-OBSERVABILITY-PLAN). Pure function of the cost.* events (which the
+// coordination math deliberately ignores) + the claim windows. Reports tokens / wall-clock /
+// human-minutes and cost-per-unit-of-work. `runType` is operator-set (never auto-guessed): we do
+// not infer whether a comparison is fair, so an unset value reports 'unspecified'.
+function computeCost(allEvents, windows, doneTaskIds, runWindowMs, runType) {
+  const doneCount = doneTaskIds.size;
+  const tokenEvents = allEvents.filter(e => e.type === 'cost.tokens');
+  const humanEvents = allEvents.filter(e => e.type === 'cost.human');
+
+  const byAgent = {};
+  let inT = 0, outT = 0, totT = 0;
+  const instrumentedTasks = new Set();
+  for (const e of tokenEvents) {
+    const i = Number(e.tokens_in) || 0;
+    const o = Number(e.tokens_out) || 0;
+    const t = Number(e.tokens_total);
+    const tt = Number.isFinite(t) ? t : i + o;
+    inT += i; outT += o; totT += tt;
+    if (!byAgent[e.agent]) byAgent[e.agent] = { tokens_in: 0, tokens_out: 0, tokens_total: 0 };
+    byAgent[e.agent].tokens_in += i;
+    byAgent[e.agent].tokens_out += o;
+    byAgent[e.agent].tokens_total += tt;
+    if (e.task) instrumentedTasks.add(e.task);
+  }
+
+  const humanMinutesTotal = humanEvents.reduce((s, e) => s + (Number(e.human_minutes) || 0), 0);
+
+  // Per-task + per-agent wall-clock from CLOSED claim windows (still-open windows have no duration).
+  const walltimeByTask = {};
+  const walltimeByAgent = {};
+  for (const w of windows) {
+    const o = toMs(w.openedAt);
+    const c = w.closedAt ? toMs(w.closedAt) : null;
+    if (o === null || c === null) continue;
+    const d = Math.max(0, c - o);
+    walltimeByTask[w.task] = (walltimeByTask[w.task] || 0) + d;
+    walltimeByAgent[w.agent] = (walltimeByAgent[w.agent] || 0) + d;
+  }
+
+  // Coverage measures how many DONE-tasks carry token data — that's what makes per-done trustworthy.
+  // (Tokens spent on not-yet-done tasks still count toward the total spend, but not toward coverage.)
+  // instrumentedDone < doneCount => tokens are a FLOOR, and the renderers must say so
+  // (Gemini r1 [Should] — never let a floor read as an exact sum).
+  let instrumentedCount = 0;
+  for (const id of doneTaskIds) if (instrumentedTasks.has(id)) instrumentedCount++;
+  const partial = instrumentedCount < doneCount;
+  const perDone = doneCount > 0;
+
+  return {
+    run_type: RUN_TYPES.has(runType) ? runType : 'unspecified',
+    tokens: {
+      tokens_in: inT, tokens_out: outT, tokens_total: totT,
+      by_agent: byAgent,
+      instrumented_tasks: instrumentedCount,
+      done_tasks: doneCount,
+      coverage: `${instrumentedCount}/${doneCount}`,
+      partial,
+    },
+    walltime: {
+      run_window_ms: runWindowMs,
+      by_task: walltimeByTask,
+      by_agent: walltimeByAgent,
+    },
+    human_minutes_total: humanMinutesTotal,
+    per_unit: {
+      // Floor when partial — flagged via tokens.partial so renderers prefix a "≥".
+      tokens_per_done: perDone ? Math.round(totT / doneCount) : null,
+      walltime_per_done_ms: perDone ? Math.round(runWindowMs / doneCount) : null,
+    },
+  };
+}
+
 function analyze(repoRoot) {
   const allEvents = readAllEvents(repoRoot);
   // Coordination metrics are computed from task.* events only. cost.* events (tokens/human-minutes)
@@ -205,6 +279,9 @@ function analyze(repoRoot) {
   const parallelism = computeParallelism(windows, window.earliest_event, window.latest_event);
   const parked_suspects = findParkedClaims(windows, events, window.latest_event);
 
+  const doneTaskIds = new Set(events.filter(e => e.type === 'task.done').map(e => e.task));
+  const cost = computeCost(allEvents, windows, doneTaskIds, parallelism.run_window_ms, process.env.TICK_RUN_TYPE);
+
   return {
     window,
     parallelism,
@@ -220,6 +297,7 @@ function analyze(repoRoot) {
       circuit_break: events.filter(e => e.type === 'task.circuit_break').length,
       commented: events.filter(e => e.type === 'task.commented').length,
     },
+    cost,
   };
 }
 
@@ -250,6 +328,23 @@ function renderHuman(report) {
     out.push(`[${a.agent}]`);
     out.push(`  claims: ${a.claims}, done: ${a.dones}, heartbeats: ${a.heartbeats}`);
     out.push(`  released: ${a.releases} (${a.handoffs} as handoff), broken: ${a.breaks}, scope_changes: ${a.scope_changes}, commented: ${a.comments}`);
+    out.push('');
+  }
+  const c = report.cost;
+  if (c) {
+    const tk = c.tokens;
+    const ge = tk.partial ? '≥' : '';
+    out.push('--- cost ---');
+    out.push(`run type: ${c.run_type}`);
+    out.push(`tokens: ${ge}${tk.tokens_total} total (${ge}${tk.tokens_in} in / ${ge}${tk.tokens_out} out)` +
+      (tk.partial ? ` — PARTIAL, floor only: ${tk.coverage} done-tasks instrumented` : ''));
+    out.push(`human minutes (self-reported): ${c.human_minutes_total}`);
+    out.push(`wall-clock (run window): ${humanDuration(c.walltime.run_window_ms)}`);
+    if (c.per_unit.tokens_per_done !== null) {
+      out.push(`per done-task: ${ge}${c.per_unit.tokens_per_done} tokens, ${humanDuration(c.per_unit.walltime_per_done_ms)} wall-clock`);
+    } else {
+      out.push('per done-task: n/a (0 tasks done)');
+    }
     out.push('');
   }
   return out.join('\n');
@@ -286,6 +381,27 @@ function renderMd(report) {
     out.push(`- **Used \`tick break\`:** ${a.breaks > 0 ? `yes (${a.breaks})` : 'no'}`);
     out.push(`- **Releases:** ${a.releases} (${a.handoffs} as handoff), comments: ${a.comments}`);
     out.push(`- **Heartbeats (\`tick ping\`):** ${a.heartbeats}`);
+    out.push('');
+  }
+  const c = report.cost;
+  if (c) {
+    const tk = c.tokens;
+    const ge = tk.partial ? '≥' : '';
+    out.push('### Cost');
+    out.push('');
+    out.push(`- **Run type:** \`${c.run_type}\`` +
+      (c.run_type === 'unspecified' ? ' _(set `TICK_RUN_TYPE=symmetric|asymmetric` — comparisons across run types are not apples-to-apples)_' : ''));
+    out.push(`- **Tokens:** ${ge}${tk.tokens_total} total (${ge}${tk.tokens_in} in / ${ge}${tk.tokens_out} out)` +
+      (tk.partial
+        ? ` — ⚠️ **PARTIAL (floor only):** ${tk.coverage} done-tasks instrumented; treat as a lower bound, not an exact sum`
+        : ''));
+    out.push(`- **Human minutes (self-reported):** ${c.human_minutes_total}`);
+    out.push(`- **Wall-clock (run window):** ${humanDuration(c.walltime.run_window_ms)}`);
+    if (c.per_unit.tokens_per_done !== null) {
+      out.push(`- **Cost per done-task:** ${ge}${c.per_unit.tokens_per_done} tokens, ${humanDuration(c.per_unit.walltime_per_done_ms)} wall-clock`);
+    } else {
+      out.push('- **Cost per done-task:** n/a (0 tasks done)');
+    }
     out.push('');
   }
   out.push('> Drift / file-collision detection is deferred — the git transport was');

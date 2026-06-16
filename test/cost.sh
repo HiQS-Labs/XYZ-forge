@@ -61,20 +61,41 @@ nullres="$(node -e 'const {parseGeminiStats}=require(process.argv[1]); console.l
 "$TICK" cost TASK-E --agent gemini >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "cost with no signal -> usage error (exit 2)" || fail "expected exit 2, got $rc"
 
-# --- (7) NO REGRESSION: analyzer ignores cost.* events -------------------
-# Seed a real coordination run, snapshot analyze json, add cost events, compare.
-tick_a log task.created REG-1 --agent dispatcher >/dev/null
-tick_a claim REG-1 --agent alpha --paths "x/**" >/dev/null
-tick_a done  REG-1 --agent alpha >/dev/null
-before="$("$TICK" analyze --format json)"
-"$TICK" cost REG-1 --agent gemini --tokens-in 5 --tokens-out 5 >/dev/null
-"$TICK" cost REG-1 --agent noel --human-minutes 3 >/dev/null
-after="$("$TICK" analyze --format json)"
-[ "$before" = "$after" ] && pass "analyze json unchanged by cost.* events (no regression)" \
+# Phase 2 tests run on a FRESH events root so totals/coverage are isolated from tests 1-6.
+P2="$WORK/p2"; mkdir -p "$P2"
+p2() { TICK_REPO_ROOT="$P2" "$TICK" "$@"; }
+p2j() { TICK_REPO_ROOT="$P2" "$TICK" analyze --format json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);let v=r;for(const k of process.argv[1].split("."))v=v[k];process.stdout.write(typeof v==="object"?JSON.stringify(v):String(v))})' "$1"; }
+p2 init >/dev/null
+# Two done coordination tasks (REG-1 by alpha, REG-2 by beta).
+p2 log task.created REG-1 --agent dispatcher >/dev/null; p2 claim REG-1 --agent alpha --paths "x/**" >/dev/null; p2 done REG-1 --agent alpha >/dev/null
+p2 log task.created REG-2 --agent dispatcher >/dev/null; p2 claim REG-2 --agent beta  --paths "y/**" >/dev/null; p2 done REG-2 --agent beta  >/dev/null
+
+# --- (7) NO REGRESSION: cost.* events don't change the COORDINATION metrics ---
+# Phase 2 intentionally REPORTS cost, so the whole json changes; the invariant is narrower —
+# the coordination subset (everything except .cost) must be byte-identical.
+strip_cost() { node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);delete r.cost;process.stdout.write(JSON.stringify(r))})'; }
+before="$(TICK_REPO_ROOT="$P2" "$TICK" analyze --format json | strip_cost)"
+p2 cost REG-1 --agent gemini --tokens-in 5 --tokens-out 5 >/dev/null
+p2 cost REG-1 --agent noel  --human-minutes 3 >/dev/null
+after="$(TICK_REPO_ROOT="$P2" "$TICK" analyze --format json | strip_cost)"
+[ "$before" = "$after" ] && pass "coordination metrics unchanged by cost.* events (no regression)" \
   || fail "cost events leaked into coordination metrics"
-# and the cost-only agents must NOT appear as coordination agents
-echo "$after" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);const names=(r.agents||[]).map(a=>a.agent);process.exit(names.includes("gemini")||names.includes("noel")?1:0)})' \
+TICK_REPO_ROOT="$P2" "$TICK" analyze --format json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const r=JSON.parse(s);const names=(r.agents||[]).map(a=>a.agent);process.exit(names.includes("gemini")||names.includes("noel")?1:0)})' \
   && pass "cost-only agents absent from per-agent coordination table" || fail "cost-only agent leaked into agents[]"
+
+# --- (8) PHASE 2: analyzer computes the cost section ----------------------
+# REG-1 instrumented (5/5), REG-2 not -> 1 of 2 done-tasks instrumented => PARTIAL floor.
+[ "$(p2j cost.tokens.tokens_total)" = "10" ]     && pass "cost.tokens_total summed (10)" || fail "tokens_total=$(p2j cost.tokens.tokens_total)"
+[ "$(p2j cost.human_minutes_total)" = "3" ]      && pass "cost.human_minutes_total summed (3)" || fail "human total wrong"
+[ "$(p2j cost.tokens.partial)" = "true" ]        && pass "partial flag true (1/2 done-tasks instrumented)" || fail "partial should be true"
+[ "$(p2j cost.tokens.coverage)" = "1/2" ]        && pass "coverage reads 1/2 (done-tasks)" || fail "coverage=$(p2j cost.tokens.coverage)"
+[ "$(p2j cost.per_unit.tokens_per_done)" = "5" ] && pass "tokens_per_done = 10/2 = 5 (floor)" || fail "per-done=$(p2j cost.per_unit.tokens_per_done)"
+[ "$(p2j cost.run_type)" = "unspecified" ]       && pass "run_type defaults to unspecified" || fail "run_type=$(p2j cost.run_type)"
+TICK_REPO_ROOT="$P2" "$TICK" analyze --format md | grep -q "PARTIAL (floor only)" && pass "md renders the loud-partial floor marker" || fail "md missing partial marker"
+
+# --- (9) run_type honors TICK_RUN_TYPE; invalid -> unspecified -----------
+[ "$(TICK_RUN_TYPE=symmetric p2j cost.run_type)" = "symmetric" ] && pass "TICK_RUN_TYPE=symmetric honored" || fail "run_type env not honored"
+[ "$(TICK_RUN_TYPE=garbage   p2j cost.run_type)" = "unspecified" ] && pass "invalid TICK_RUN_TYPE -> unspecified (no auto-guess)" || fail "bad run_type not rejected"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-16
 
+### Cost observability — Phase 2 shipped (analyzer computes cost)
+- **`tick analyze` now emits a `cost` section** (human + md + json), additive to the coordination metrics: tokens total + `by_agent`, per-task/per-agent wall-clock (from closed claim windows), `human_minutes_total`, and **cost-per-done-task** (`tokens_per_done`, `walltime_per_done_ms`; `null`→`n/a` on zero done, no divide-by-zero). New pure `computeCost` in `src/analyze.js`.
+- **`run_type` flag** (`symmetric|asymmetric`) — operator-set via `TICK_RUN_TYPE`; invalid/unset → `unspecified`. We never auto-guess whether a comparison is fair (Gemini r1 [Nit]).
+- **Loud-partial floor** (Gemini r1 [Should]): coverage is measured against **distinct done-tasks** (Gemini Q2 — hardest unit to game); when incomplete, totals render as `≥N` with `coverage: X/Y done-tasks` and an explicit "lower bound" note, so a floor never reads as an exact sum.
+- **No regression:** coordination subset of `analyze --format json` is byte-identical before/after cost events; `computeCost` is pure (no clock/LLM/pricing). `cost.sh` **14→23**; full suite **22/22**. Plan: Phase 2 ✅; Phase 3 (dogfood + xyz-vs-relay comparison) next. Added a consolidated **Deferred/backlog** section to the plan so the Codex/Claude token gaps aren't buried.
+
 ### Cost observability — Phase 1 shipped (deterministic cost signals)
 - **New event types** `cost.tokens` + `cost.human` (`src/events.js`) — additive; `appendEvent` stamps cost fields only when present, so non-cost events stay byte-identical.
 - **`tick cost` verb** (`bin/tick`): `--human-minutes <n>` (self-reported operator attention), `--tokens-in/--tokens-out [--tokens-total] [--tool]`, and `--from-gemini-json <file>` (parse + log in one step).

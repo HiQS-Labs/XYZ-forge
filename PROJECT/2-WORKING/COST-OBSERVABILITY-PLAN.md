@@ -29,13 +29,14 @@ non_goals:
 
 | Most recently completed phase | What's next |
 |---|---|
-| **Phase 1 — Capture raw cost signals** ✅ shipped: `cost.tokens`/`cost.human` events, `tick cost` verb, `parseGeminiStats` (verbatim from `gemini -o json`), headless token capture wired into `gemini-turn.sh`, transcripts default to `$TMPDIR`. `cost.sh` 14/14; full suite **22/22** green. | **Phase 2 — Extend the deterministic analyzer to compute cost** |
+| **Phase 2 — Analyzer computes cost** ✅ shipped: `analyze` now emits a `cost` section (tokens total + by-agent, per-task/per-agent wall-clock, human-minutes, cost-per-done), `run_type` flag (operator-set, never guessed), and a loud-partial floor (`≥N`, `coverage X/Y done-tasks`) rendered in human + md + json. Coordination metrics byte-identical (no regression). `cost.sh` **23/23**; full suite **22/22**. | **Phase 3 — Dogfood + xyz-vs-relay cost comparison** |
 
 ## Table of contents
 
 - [Phase 1 — Capture raw cost signals at the source](#phase-1--capture-raw-cost-signals-at-the-source)
 - [Phase 2 — Extend the deterministic analyzer to compute cost](#phase-2--extend-the-deterministic-analyzer-to-compute-cost)
 - [Phase 3 — Dogfood + the xyz-vs-relay cost comparison](#phase-3--dogfood--the-xyz-vs-relay-cost-comparison)
+- [Deferred / backlog](#deferred--backlog)
 - [Open questions for the reviewer](#open-questions-for-the-reviewer)
 
 ---
@@ -94,38 +95,38 @@ formats (human / md / json), staying 100% deterministic — exactly like the exi
 
 ### Checklist (each item is observable)
 
-- [ ] **Sum tokens:** total `tokens_in`/`tokens_out` across the run and per agent.
-      *Observable:* `tick analyze --format json` includes `cost.tokens_total` and `cost.tokens_by_agent`.
-- [ ] **Wall-clock:** report total run-window (already exists) PLUS per-task durations and a per-agent
-      active-time total.
-      *Observable:* json output includes `cost.walltime_by_task` with one entry per completed task.
-- [ ] **Human-minutes:** sum `cost.human` events into `cost.human_minutes_total`.
-      *Observable:* json shows the operator-entered total; absent input → `0`, never null.
-- [ ] **Cost-per-unit-of-work:** divide each cost by the run's output denominator (files touched,
-      passing tests, tasks done) → `cost.tokens_per_task`, `cost.tokens_per_done`, `cost.walltime_per_done`.
-      *Observable:* json shows the ratios; denominator of 0 reports `n/a`, never divide-by-zero.
-- [ ] **Render in human + md:** add a `## Cost` block to the `--write` markdown section alongside the
-      existing auto-analyzed coordination block.
-      *Observable:* `tick analyze --write <file>` adds a Cost section without disturbing the existing one.
-- [ ] **Structured JSON log (folds in ROADMAP Phase 4 R4):** the json format is the SIEM-ingestible
-      timestamped record; note this closes/advances R4. Include a `run_type: symmetric | asymmetric`
-      flag so downstream scripts never blind-compare an asymmetric run as head-to-head _(Gemini r1 [Nit])_.
-      *Observable:* json validates against a one-line schema check and carries `run_type`.
-- [ ] **Loud partial signal:** when token coverage is incomplete, the cost total renders as a FLOOR,
-      not an exact sum — the human/md output says `tokens: ≥N (partial: 2/3 tasks instrumented)` so a
-      reader never mistakes a floor for the truth _(Gemini r1 [Should])_.
-      *Observable:* a run with one uninstrumented task prints the `≥`/`partial` marker, not a bare number.
+- [x] **Sum tokens:** total + per agent (`cost.tokens.{tokens_in,tokens_out,tokens_total}` and
+      `cost.tokens.by_agent`). *Observable:* `cost.sh` asserts `tokens_total=10` from two events. ✅
+- [x] **Wall-clock:** run-window (existing) PLUS `cost.walltime.by_task` and `cost.walltime.by_agent`
+      derived from closed claim windows. *Observable:* json carries both maps (still-open windows skipped). ✅
+- [x] **Human-minutes:** summed into `cost.human_minutes_total`; absent input → `0`, never null.
+      *Observable:* `cost.sh` asserts total `3` and `0` on a run with none. ✅
+- [x] **Cost-per-unit-of-work:** `cost.per_unit.tokens_per_done` + `cost.per_unit.walltime_per_done_ms`;
+      denominator 0 → `null` (rendered `n/a`), never divide-by-zero. Denominator is **distinct done-tasks**
+      (the hardest-to-game unit — Gemini Q2). *Observable:* `cost.sh` asserts `10/2 → 5`. ✅
+- [x] **Render in human + md:** a `### Cost` block in the `--write` markdown (and a `--- cost ---` block
+      in human). *Observable:* `--write` adds the Cost section without disturbing the coordination one. ✅
+- [x] **Structured JSON log + `run_type`:** the `cost` object is the structured record; `run_type:
+      symmetric|asymmetric` is operator-set via `TICK_RUN_TYPE` (invalid/unset → `unspecified`, never
+      auto-guessed) _(Gemini r1 [Nit])_. *Observable:* `cost.sh` asserts env honored + garbage rejected. ✅
+- [x] **Loud partial signal:** when done-task token coverage is incomplete, totals render as a FLOOR
+      (`≥N`) with `coverage: X/Y done-tasks` and an explicit "treat as a lower bound" note _(Gemini r1
+      [Should])_. *Observable:* `cost.sh` asserts `partial:true`, `coverage 1/2`, and the md floor marker. ✅
 
 ### QA checklist — Phase 2
 
-- [ ] **DRY:** cost rendering reuses the existing format dispatch (human/md/json), not a parallel printer.
-- [ ] **SOLID (open/closed):** adding cost is additive — no edits to the concurrency/parked-claim functions.
-- [ ] **Observability:** json is the source of truth; human/md are views over it.
-- [ ] **Determinism litmus:** same events in → identical cost out, across two runs and two machines.
-- [ ] **Edge cases:** zero cost events (old runs) → cost section renders zeros/`n/a`, never crashes.
-- [ ] **No-silent-cap:** if any task is missing a token signal, the report SAYS so (e.g. "tokens: partial,
-      2/3 tasks instrumented") rather than silently summing an undercount.
-- [ ] **Anti-goal check:** still no LLM call anywhere in `analyze.js`.
+- [x] **DRY:** cost rendering reuses the existing `renderHuman`/`renderMd` paths and the same `humanDuration`
+      helper; json is the report object verbatim. No parallel printer.
+- [x] **SOLID (open/closed):** `computeCost` is a new pure function; the concurrency/parked-claim functions
+      were not touched. Cost reads `allEvents`, coordination reads the `task.*` filter.
+- [x] **Observability:** the `cost` object in json is the source of truth; human/md are views over it.
+- [x] **Determinism litmus:** `computeCost` is a pure function of the event log + `TICK_RUN_TYPE`; no clock,
+      no randomness. Same events → identical cost. (`cost.sh` re-derives the same numbers each run.)
+- [x] **Edge cases:** zero cost events → totals `0`, `per_unit` `null`→`n/a`, no crash (the demo + the
+      no-cost-events path exercise this).
+- [x] **No-silent-cap:** incomplete coverage renders `≥`/`coverage X/Y` + a "lower bound" note — never a
+      bare undercount. (`cost.sh` asserts the marker in md.)
+- [x] **Anti-goal check:** no LLM call, no `$`/pricing math in `analyze.js`. Raw tokens only.
 
 ---
 
@@ -167,6 +168,26 @@ artifact the feedback doc was missing: an honest cost-per-unit comparison of xyz
 - [ ] **Reversibility:** the comparison doc + transcripts are additive files; nothing destructive.
 
 ---
+
+## Deferred / backlog
+
+Items consciously NOT done, so they don't masquerade as covered. Each says why + what unblocks it.
+
+- [ ] **Codex token capture** — no `parseCodexStats` yet; the Codex CLI's usage/stats output format
+      isn't probed. `codex-turn.sh` already persists its transcript, so the data exists to parse later.
+      *Unblocks when:* someone runs `codex exec` and inspects its end-of-turn usage block (mirror of the
+      `gemini -o json` probe). Until then Codex turns are a known token gap (Phase 2 renders it as partial).
+- [ ] **Claude orchestrator per-turn tokens** — the main-loop harness exposes no shell-visible per-turn
+      token count, so the orchestrator's own tokens aren't captured. *Unblocks when:* a harness hook /
+      transcript with usage is available. Deliberately NOT faked with an estimate.
+- [ ] **Live tool-using `gemini -o json` relay turn** — the capture path is unit/stub-tested, but a real
+      headless turn that *edits files via tools under `-o json`* hasn't been run end-to-end. **Scheduled:**
+      this is the Phase 3 dogfood (not open-ended). Escape hatch already in `gemini-turn.sh`:
+      `GEMINI_OUTPUT_FORMAT=text` reverts to the proven `-p` path if json mode misbehaves live.
+- [ ] **`$`/pricing conversion** — out of scope by design (anti-goal). Raw tokens only; a price multiply
+      is a trivial downstream step once per-model rates are pinned.
+
+_(Cross-ref: repo-wide backlog lives in `experiments/coordination-layer/BACKLOG.md`; these are plan-local.)_
 
 ## Open questions for the reviewer
 
