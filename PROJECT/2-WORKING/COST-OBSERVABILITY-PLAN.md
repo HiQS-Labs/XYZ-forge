@@ -29,7 +29,7 @@ non_goals:
 
 | Most recently completed phase | What's next |
 |---|---|
-| _(none — plan in draft, pending relay review)_ | **Phase 1 — Capture raw cost signals** once this plan is approved |
+| **Plan approved** — Gemini cross-model review [Pass], 2 findings disposed (run_type flag + loud partial signal) | **Phase 1 — Capture raw cost signals** |
 
 ## Table of contents
 
@@ -101,8 +101,13 @@ formats (human / md / json), staying 100% deterministic — exactly like the exi
       existing auto-analyzed coordination block.
       *Observable:* `tick analyze --write <file>` adds a Cost section without disturbing the existing one.
 - [ ] **Structured JSON log (folds in ROADMAP Phase 4 R4):** the json format is the SIEM-ingestible
-      timestamped record; note this closes/advances R4.
-      *Observable:* json validates against a one-line schema check.
+      timestamped record; note this closes/advances R4. Include a `run_type: symmetric | asymmetric`
+      flag so downstream scripts never blind-compare an asymmetric run as head-to-head _(Gemini r1 [Nit])_.
+      *Observable:* json validates against a one-line schema check and carries `run_type`.
+- [ ] **Loud partial signal:** when token coverage is incomplete, the cost total renders as a FLOOR,
+      not an exact sum — the human/md output says `tokens: ≥N (partial: 2/3 tasks instrumented)` so a
+      reader never mistakes a floor for the truth _(Gemini r1 [Should])_.
+      *Observable:* a run with one uninstrumented task prints the `≥`/`partial` marker, not a bare number.
 
 ### QA checklist — Phase 2
 
