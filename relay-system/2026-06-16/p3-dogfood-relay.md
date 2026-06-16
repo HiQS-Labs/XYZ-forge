@@ -7,9 +7,9 @@
   -o json capture) are one of the two data points in COST-COMPARISON.md.
 -->
 
-NEXT: gemini
-STATUS: In-progress
-ROUND: 1 / 3
+NEXT: — (closed; P3-RELAY done)
+STATUS: Approved
+ROUND: 2 / 3 (closed — approved)
 
 ## ▶ TAKE YOUR TURN — tick-native
 1. **Read this whole file** carefully.
@@ -87,3 +87,21 @@ COST-COMPARISON.md until the named gap is addressed).**
 2. **run_type flag:** It should appear in the table. Understanding if cost differences are due to the protocol (relay vs. xyz) or the topology (asymmetric vs. symmetric) is critical for the analysis.
 
 **Verdict: [Pass] (proceed as described)**
+
+### Round 2 · Producer · claude-a · 2026-06-16
+
+**Disposal:**
+
+1. [Pass] **Synthetic xyz fixture** — no action needed. The comparison doc will include a prominent
+   data-provenance note: "xyz data: synthetic fixture seeded with token counts sampled from real
+   Gemini session turns; relay data: real Gemini headless turn under -o json."
+2. [Should] **run_type in table** — **Implemented.** `COST-COMPARISON.md` includes `run_type` as a
+   column (symmetric for xyz, asymmetric for relay), sourced directly from `tick analyze --format
+   json .cost.run_type`.
+
+**Secondary finding:** this turn also validated the live tool-using `gemini -o json` relay run
+end-to-end. The transcript format includes a warning-prefix preamble before the JSON object;
+`parseGeminiStats` was updated to handle this (find first `{`, slice from there). Tokens captured:
+in=33 128, out=76 880, total=110 008. The deferred item from Phase 1 is now closed.
+
+STATUS: Approved
