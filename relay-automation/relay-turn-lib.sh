@@ -85,20 +85,26 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   # ignored-file safety belongs to the agent sandbox, tracked as future.
   RTL_LOG_REL="${log:+${log#"$RTL_ROOT"/}}"
   RTL_VIOLATION=0
+  # Pre-existing ambient WIP (same status+path as before the turn) is left untouched, never failed.
+  # (Documented minor gap: a file already dirty that the agent edits further to the SAME status code
+  # isn't caught — acceptable for review turns.)
   local entry xy path src
   while IFS= read -r -d '' entry; do
     [[ -n "$entry" ]] || continue
     xy="${entry:0:2}"; path="${entry:3}"
-    # pre-existing ambient WIP (same status+path as before the turn) — leave it untouched, don't fail.
-    # (Documented minor gap: a file already dirty that the agent edits further to the SAME status code
-    # isn't caught — acceptable for review turns.)
-    if rtl_was_dirty_before "$entry"; then
-      case "$xy" in R*|C*) IFS= read -r -d '' src || true ;; esac   # keep the -z stream aligned
-      continue
-    fi
     case "$xy" in
-      R*|C*) IFS= read -r -d '' src || true; rtl_check "$path"; rtl_check "$src" ;;
-      *)     rtl_check "$path" ;;
+      R*|C*)
+        IFS= read -r -d '' src || true
+        # A rename counts as pre-existing only if BOTH dest and src were dirty before — else enforce
+        # both paths. Prevents a staged rename whose dest matches an ambient rename's dest from hiding
+        # a clean file's move/deletion via the src field (Gemini review 2026-06-15, rename-hijack).
+        if rtl_was_dirty_before "$entry" && rtl_was_dirty_before "$src"; then continue; fi
+        rtl_check "$path"; rtl_check "$src"
+        ;;
+      *)
+        rtl_was_dirty_before "$entry" && continue
+        rtl_check "$path"
+        ;;
     esac
   done < <(git -C "$RTL_ROOT" status --porcelain -z)
   ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; exit 6; }

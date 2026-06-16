@@ -1,72 +1,104 @@
-# ROADMAP — from "mechanically proven" to commercially viable
+title: "ROADMAP — from mechanically proven to commercially viable"
+date: "2026-06-15"
+status: "Active"
+description: "Tracks the transition from a mechanically proven happy-path relay stack to an adversarially proven, commercially viable system."
+---
 
-The `tick` + relay-automation stack is **mechanically proven** (happy-path coordination, 21/21
-validate, live Codex + Gemini headless turns behind one safety boundary). Commercial viability
-needs a different bar: **adversarial proof under failure**, with reproducible logs a buyer (or an
-auditor) can replay. This roadmap tracks that gap.
+| Most recently completed phase | What's next |
+| :--- | :--- |
+| **Mechanically Proven:** Happy path works, 21/21 validate, Phase 2 liveness, live Codex + Gemini headless turns behind one safety boundary. | **Adversarially Proven:** Survives kill/dup/stale/race with repeatable evidence. Implementation of epoch fencing and the chaos test suite. |
 
-Maturity ladder:
-1. **Mechanically proven** — happy path works. ✅ (done)
-2. **Adversarially proven** — survives kill/dup/stale/race, with evidence. ⬅ *this roadmap*
-3. **Commercially viable** — adversarial proof + packaging + SLA/observability + a reference deploy.
-
-Each gap below names: the **threat**, what a log must **prove**, the **test to build** (and the
-artifact it emits), the existing **mechanism** it leans on, and honest **status**.
+## Table of Contents
+- [Phase 1: Epoch Fencing & Stale-Writer Prevention (R1 + G3)](#phase-1-epoch-fencing--stale-writer-prevention-r1--g3)
+- [Phase 2: Chaos Suite & Auto-Recovery (G1, G2, G4, R2)](#phase-2-chaos-suite--auto-recovery-g1-g2-g4-r2)
+- [Phase 3: Cross-Repo E2E & Multi-Device Sync (G5, R3)](#phase-3-cross-repo-e2e--multi-device-sync-g5-r3)
+- [Phase 4: Observability & Reference Deploy (R4)](#phase-4-observability--reference-deploy-r4)
 
 ---
 
-## Commercial-proof gaps (the deliberate failure logs)
+## Phase 1: Epoch Fencing & Stale-Writer Prevention (R1 + G3)
 
-### G1 — Mid-turn termination
-- **Threat:** an agent dies *after* `claim` but *before* `release`/`done` — the turn token is held by a corpse; the relay stalls forever.
-- **Must prove:** the watchdog **detects** the stalled turn within a bounded time and either **recovers** it (reap → re-offer to a live agent) or **safely halts** with a structured escalation — never silently hangs, never double-assigns.
-- **Test to build:** `test/chaos-midturn-kill.sh` — seed RELAY-TURN, claim as agent X, `kill -9` the turn-taker before handoff, run `watchdog.sh`; assert it flags `parked_suspects[X]` and emits the escalation record; then assert a recovery path (reap+reoffer) lands the token on a live agent exactly once. **Artifact:** the watchdog JSON escalation + before/after token state.
-- **Leans on:** `watchdog.sh` (Phase 2 liveness, `tick analyze --format json` → `parked_suspects[]`), `relay-drive.sh` no-progress escalation, `tick ping` heartbeats.
-- **Status:** ⚠️ *Partial.* Detection exists and is unit-tested; the **recovery** half (auto-reap) is a stub behind `--allow-reap`, pending an authority decision. No deliberate kill-mid-turn chaos log yet.
+This phase addresses the most critical commercial-hardening gap: ensuring that once ownership of a token moves on, the previous owner cannot write, commit, or advance the relay.
 
-### G2 — Duplicate / ambiguous turn token
-- **Threat:** two `claim`/ownership events for the same token (race, replay, or a malicious/duplicated event file) → ambiguous "whose turn," double-execution.
-- **Must prove:** the projection **kernel deterministically resolves to exactly one owner** (or quarantines the token as un-ownable) — same result on every replay, regardless of event arrival order.
-- **Test to build:** `test/chaos-dup-token.sh` — inject two claims for one RELAY-TURN with crafted ts/agent orderings (incl. equal ts), project repeatedly; assert a single stable winner via the documented tie-breaker (earliest ts, then lex agent id), and that the loser is rejected with zero side effects. Add a malformed/duplicate event-file variant → assert quarantine, not crash. **Artifact:** projection output across N replays (must be identical).
-- **Leans on:** `tick` disjoint-files-per-event log, single-pass projection + deterministic tie-breaker, the **handoff-exclusive** rule (claim of a handed-off token by a non-designee is rejected with zero events).
-- **Status:** ⚠️ *Partial.* The tie-breaker and handoff-exclusivity are tested (`concurrent-claim.sh`, `handoff-exclusive.sh`); the **adversarial duplicate-injection + quarantine** path is not a standalone proof yet.
+- [ ] **R1: Implement monotonic epoch fencing tokens.**
+  - [ ] Update event schema to include an `epoch` field on claim events.
+  - [ ] Modify `tick` projection kernel to track the current owner's epoch.
+  - [ ] Add validation logic to reject mutating events (done/release/edit) if the event's epoch is older than the current owner's epoch.
+- [ ] **G3: Build `test/chaos-stale-writer.sh`.**
+  - [ ] Script claim as agent X, then force reap+reclaim as Y (new epoch).
+  - [ ] Script replay of X's `done`/`release`/scope events.
+  - [ ] Assert that every stale event is rejected and the relay state remains unchanged.
 
-### G3 — Stale-writer fencing  ← **biggest gap**
-- **Threat:** agent X is presumed dead and the token is taken over (reap → reclaim by Y); then X **revives** and issues `done`/`release`/edit. Classic stale-writer: a zombie advances or corrupts the relay after it lost ownership.
-- **Must prove:** once ownership moves on, the **stale epoch cannot write, commit, or advance** — its events are fenced (rejected) by the kernel, not merely ignored by convention.
-- **Test to build:** `test/chaos-stale-writer.sh` — claim as X, reap+reclaim as Y (new epoch), then replay X's `done`/`release`/scope events; assert every one is **rejected as stale-epoch** and the relay state is unchanged. **Artifact:** rejected-event log showing the fence firing.
-- **Leans on:** ownership enforcement (only the claiming agent can mutate) — **but that is not epoch fencing.** Today's `tick` has no monotonic **fencing token / epoch number** on claims, so a revived X with the *same* agent id may still satisfy ownership checks after a takeover.
-- **Status:** ❌ **Missing mechanism.** Needs a per-claim **epoch** (incrementing fencing token) recorded in the claim event and checked on every mutating verb: a write from an epoch older than the current owner's is rejected. This is the single most important commercial-hardening item — it's the difference between "soft coordination" and "a kernel you can trust unattended." Tracked as **R1** below.
-
-### G4 — Concurrent pollers
-- **Threat:** two eligible poller loops (e.g. two windows, or a window + a cron) both see "my turn / parked" and both act → double turn, double escalation, double commit.
-- **Must prove:** under a genuine race, **exactly one poller acts**; the others observe the state change and stand down.
-- **Test to build:** `test/chaos-concurrent-pollers.sh` — launch two `poll.sh` invocations against the same relay/watchdog state simultaneously (background, same tick); assert exactly one dispatches (runner or watchdog) and the other idles, across many iterations. **Artifact:** per-poller decision log over N trials (must be 1-acts every time).
-- **Leans on:** the lock/heartbeat as the real guard (not the timer), `--watchdog-authority` (exactly one authority), the token as the mutex.
-- **Status:** ⚠️ *Partial / by-design but unproven.* The design says the lock is the guard and only one authority escalates; there is **no race-hammer test** yet that drives two pollers concurrently and counts winners. (This is the "Phase-4 race hammer-test" already on the backlog.)
-
-### G5 — Cross-repo / cross-model diversity
-- **Threat:** the protocol is secretly coupled to *this* repo or to all-Claude/manual flows — it won't generalize, so it has no product surface.
-- **Must prove:** the **same protocol runs in a different repository** (zero-setup from the packaged skill) **and** with **heterogeneous agents** taking real turns (not just Claude, not just manual nudge).
-- **Test to build:** `test/e2e-fresh-repo.sh` (or a CI job) — install the skill into a throwaway repo from `relay-pkg.tar.gz`, run a full Producer↔Reviewer relay to `Approved` with a headless turn-taker; assert no dependency on the home repo. Pair with a recorded **cross-model** run (Codex turn + Gemini turn in one thread). **Artifact:** transcript + commit graph from a foreign repo.
-- **Leans on:** the packaged sibling skill (`relay-pkg.tar.gz`, `QUICKSTART.md`), `codex-turn.sh` + `gemini-turn.sh` over the shared core.
-- **Status:** ⚠️ *Partial.* Cross-**model** is live-proven (Codex + Gemini headless turns). Cross-**repo** is documented (`QUICKSTART.md`) but there is **no zero-setup fresh-clone E2E** that proves no home-repo coupling, and `.tick/` is still per-device-local (no cross-machine sync).
+### QA Checklist
+- [ ] `test/chaos-stale-writer.sh` executes successfully and emits a rejected-event log showing the fence firing.
+- [ ] Run `tick validate` and ensure all 21 core tests still pass (no regressions from epoch addition).
+- [ ] Document the schema change in a decision record.
 
 ---
 
-## Hardening items (mechanisms the gaps imply)
+## Phase 2: Chaos Suite & Auto-Recovery (G1, G2, G4, R2)
 
-- **R1 — Epoch fencing tokens** (unblocks G3). Add a monotonic epoch to each claim; stamp it on every mutating event; reject events whose epoch < current owner's. The core distributed-systems primitive the stack currently lacks. *Costly; one-way-ish (touches the event schema + projection).*
-- **R2 — Auto-reap authority decision** (unblocks the recovery half of G1). Decide who may reap and under what evidence; record it; flip `watchdog.sh --allow-reap` from stub to real.
-- **R3 — Cross-machine `.tick/` sync** (unblocks true G5 multi-device). An out-of-band ref or sync daemon so two machines share coordination state.
-- **R4 — Observability surface** (commercial table-stakes, not a gap above). Structured, timestamped logs for every claim/handoff/reject/escalation that a buyer can ship to their SIEM.
+This phase packages the deliberate failure scenarios and operationalizes the auto-recovery mechanisms for the watchdog.
 
-## Suggested sequence
-1. **R1 (epoch fencing) + G3 chaos log** — the credibility keystone; do first.
-2. **G1 + G2 + G4 chaos suite** — package the three "deliberate failure" tests with R2.
-3. **G5 fresh-repo E2E + R3** — prove generality and decouple from this repo.
-4. **R4 observability + reference deploy** — the last mile to "commercially viable."
+- [ ] **R2: Implement Auto-reap authority decision.**
+  - [ ] Formally define who may reap and under what evidence. Record this in a decision markdown.
+  - [ ] Flip `watchdog.sh --allow-reap` from a stub to real functionality.
+- [ ] **G1: Build `test/chaos-midturn-kill.sh`.**
+  - [ ] Script token claim as agent X, then `kill -9` the agent.
+  - [ ] Run `watchdog.sh` and assert it flags `parked_suspects[X]`.
+  - [ ] Assert the script emits the structured JSON escalation record.
+  - [ ] Assert the auto-reap recovery path re-offers the token to a live agent exactly once.
+- [ ] **G2: Build `test/chaos-dup-token.sh`.**
+  - [ ] Inject concurrent/duplicate claims for the same token.
+  - [ ] Assert the projection kernel resolves to exactly one stable winner via the deterministic tie-breaker across N replays.
+  - [ ] Inject malformed/duplicate event files and assert they are safely quarantined without crashing the projection.
+- [ ] **G4: Build `test/chaos-concurrent-pollers.sh`.**
+  - [ ] Launch two concurrent `poll.sh` invocations against the same relay state.
+  - [ ] Assert exactly one poller dispatches (acts) while the other safely idles across N trials.
+- [ ] **R5: Resource / quota limits** (runaway-agent containment; *Gemini review 2026-06-15*).
+  - [ ] Cap per-turn wall-clock, disk usage, and API spend in the turn-taker shim.
+  - [ ] Pairs with the existing `relay-drive.sh` round-cap; the missing piece is per-turn time/spend ceilings.
 
-*Created 2026-06-15. Status legend: ✅ proven · ⚠️ partial/unproven · ❌ missing mechanism.
-Gaps map to backlog items in `4X4.md`; mechanisms that change the event schema get a decision
-record before they land.*
+### QA Checklist
+- [ ] `test/chaos-midturn-kill.sh` passes and artifacts show correct watchdog JSON and token recovery state.
+- [ ] `test/chaos-dup-token.sh` passes and artifacts show identical projection outputs across all replays.
+- [ ] `test/chaos-concurrent-pollers.sh` passes and logs prove exactly one actor per trial.
+- [ ] `watchdog.sh` successfully reaps and re-offers tokens without manual intervention.
+
+---
+
+## Phase 3: Cross-Repo E2E & Multi-Device Sync (G5, R3)
+
+This phase proves the protocol generalizes beyond the home repository and supports true multi-device coordination.
+
+- [ ] **R3: Implement cross-machine `.tick/` sync.**
+  - [ ] Build or document an out-of-band sync mechanism (e.g., git-based or daemon) so multiple machines share the `.tick/` directory securely.
+- [ ] **G5: Build `test/e2e-fresh-repo.sh`.**
+  - [ ] Create an automated test or CI job that instantiates a throwaway repository.
+  - [ ] Install the skill via `relay-pkg.tar.gz`.
+  - [ ] Run a complete Producer↔Reviewer relay to `Approved` using headless agents.
+  - [ ] Assert there are no hardcoded dependencies on the home repository.
+- [ ] **G5: Cross-model demonstration.**
+  - [ ] Execute and record a multi-agent run combining Codex and Gemini headless turns in a single thread.
+
+### QA Checklist
+- [ ] `test/e2e-fresh-repo.sh` succeeds with zero manual setup in the throwaway repository.
+- [ ] The generated transcript and commit graph from the fresh repo are verified.
+- [ ] Cross-machine sync is successfully demonstrated without state conflicts or dropped events.
+
+---
+
+## Phase 4: Observability & Reference Deploy (R4)
+
+The final mile to commercial viability involves ensuring the system is auditable and deployable with SLA-backing.
+
+- [ ] **R4: Build Observability surface.**
+  - [ ] Instrument `tick` and the relay stack to emit structured, timestamped logs (JSON) for every claim, handoff, rejection, and escalation.
+  - [ ] Ensure logs are formatted for easy ingestion by a SIEM.
+- [ ] **Create Reference Deploy documentation.**
+  - [ ] Write a comprehensive guide on deploying the stack with SLA and observability guarantees in a commercial context.
+
+### QA Checklist
+- [ ] All required events (claim, handoff, reject, escalate) reliably emit structured JSON logs.
+- [ ] Log artifacts contain accurate timestamps, epochs, and agent IDs.
+- [ ] The Reference Deploy documentation can be followed by an independent auditor to successfully stand up the environment.

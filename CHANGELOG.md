@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### Live Gemini CLI review of portability fixes + ROADMAP → 1 more bug fixed
+- Drove a **live `gemini -p` review turn** (via `gemini-turn.sh`) over `relay-turn-lib.sh`, `codex-turn.sh`, and `ROADMAP.md`. **2nd live containment win:** Gemini also tried to edit `ROADMAP.md` (off-allowlist) → the shared guard reverted it + failed the turn (exit 6); the review (allowlisted relay file) survived.
+- **[Should] rename-hijack fixed:** Gemini found that the [1] pre-existing-dirty skip matched only a rename's *destination* field — a staged rename could hide a clean file's move. Fixed: a rename is pre-existing only if **both** dest+src were dirty pre-turn, else both paths are enforced. Regression added (`test/codex-turn.sh` case 9). `codex-turn` 23→**24**.
+- **[Nit] R5** (resource/quota limits for runaway agents) added to ROADMAP. `validate.sh` 21/21.
+- Relay thread: `relay-system/2026-06-15/portability-roadmap-gemini-review.md` (Approved/closed).
+
 ### Portability hardening from MBP16 cross-repo field report (shared core)
 - **[1] Pre-existing dirty-state safety (high):** `relay-turn-lib.sh` now snapshots the dirty set *before* the turn (`rtl_before` → `RTL_BEFORE`) and only enforces/reverts paths the agent *newly* changed — never pre-existing ambient WIP. Fixes a real data-loss bug (the old guard `rm`/`checkout`'d unrelated dirty files + failed the turn). Applies to **both** Codex and Gemini (shared core).
 - **[2] `.tick/` portability (high = ROADMAP G5):** `.tick/` paths are now exempt from allowlist enforcement *intrinsically*, independent of the host repo's `.gitignore` — so a relay can run in a repo that doesn't ignore `.tick`.

@@ -35,6 +35,8 @@ if [ "${STUB_MODE:-good}" = commitbypass ]; then
 fi
 # spacefile: off-lane path containing a space (git status would QUOTE it without -z)
 [ "${STUB_MODE:-good}" = spacefile ] && printf 'off-lane\n' >>"$A/off lane.md"
+# renamestage: agent violates "no git" by STAGING a rename of a tracked off-lane file (rename-hijack)
+[ "${STUB_MODE:-good}" = renamestage ] && git -C "$A" mv rtarget.txt rmoved.txt >/dev/null 2>&1
 exit 0
 STUB_EOF
 chmod +x "$STUB"
@@ -113,6 +115,13 @@ grep -q -- "-s workspace-write" "$WORK/codex-args" && pass "default CODEX_FLAGS 
 seed_token RELAY-TURN-flags2
 CODEX_FLAGS="--dangerously-bypass-approvals-and-sandbox" run_shim RELAY-TURN-flags2 codex good >/dev/null 2>&1
 grep -q -- "--dangerously-bypass-approvals-and-sandbox" "$WORK/codex-args" && pass "CODEX_FLAGS override is honored" || fail "CODEX_FLAGS override not passed"
+
+# --- (9) rename-hijack: a staged rename (off-lane) is enforced, not skipped as pre-existing (Gemini review) ---
+printf 'tracked off-lane\n' > "$A/rtarget.txt"; git -C "$A" add rtarget.txt >/dev/null 2>&1; git -C "$A" commit -q -m "seed rename target" >/dev/null 2>&1
+seed_token RELAY-TURN-rename
+run_shim RELAY-TURN-rename codex renamestage; rc=$?
+[ "$rc" -eq 6 ] && pass "staged rename (off-lane) enforced, not skipped as pre-existing" || fail "rename-hijack must fail (exit 6), got $rc"
+git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean staged rename before the next case
 
 # --- (8) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
