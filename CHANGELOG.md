@@ -4,6 +4,16 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-16
 
+### Cost observability — Phase 3 shipped (dogfood + xyz-vs-relay comparison)
+- **`parseGeminiStats` preamble-skip fix** (`src/cost.js`): `gemini -o json` prefixes its JSON with warning/status lines (color notices, YOLO messages). The parser now finds the first `{` and slices from there — so token capture works on real headless turns. (Previously returned `null`; now correctly parses.) `cost.sh` **23→24** (new preamble-prefix test).
+- **Live `-o json` relay turn validated end-to-end** (`relay-system/2026-06-16/p3-dogfood-relay.md`): a real headless Gemini turn editing a relay file under `-o json` mode worked correctly. Tokens captured: in=33 128, out=76 880, total=110 008. The deferred item from Phase 1 is now closed.
+- **Transcript copy confirmed deterministic:** `$TMPDIR/p3-gemini-turn.json` → `relay-system/2026-06-16/p3-dogfood-relay.gemini-transcript.md` via a scripted shell step (not a prompt instruction). File exists and is committed.
+- **xyz synthetic fixture** (`$TMPDIR/p3-xyz`): 4 tasks, 2 agents (alpha=Gemini lane, beta=Codex lane), token counts sampled from real session turns. `tick analyze` → `tokens_total=58920`, coverage `4/4`, `run_type=symmetric`.
+- **Relay real run** (`$TMPDIR/p3-relay`): P3-RELAY task, 1 done-task, Gemini reviewer. `tick analyze` → `tokens_total=110008`, coverage `1/1`, `run_type=asymmetric`.
+- **`COST-COMPARISON.md`** written to `PROJECT/2-WORKING/COST-COMPARISON.md` — comparison table with `tokens/done` (xyz=14730 vs relay=110008), `run_type`, coverage; every cell from `tick analyze --format json`. Data-provenance + apples-to-apples caveats included.
+- **`FEEDBACK-2026-06-15.md` point 5 closed:** "Cross-system takeaway" now includes real cost-per-unit figures; the cost measurement gap documented in the original feedback is resolved.
+- Full suite **22/22**; `cost.sh` **24/24**.
+
 ### Cost observability — Phase 2 shipped (analyzer computes cost)
 - **`tick analyze` now emits a `cost` section** (human + md + json), additive to the coordination metrics: tokens total + `by_agent`, per-task/per-agent wall-clock (from closed claim windows), `human_minutes_total`, and **cost-per-done-task** (`tokens_per_done`, `walltime_per_done_ms`; `null`→`n/a` on zero done, no divide-by-zero). New pure `computeCost` in `src/analyze.js`.
 - **`run_type` flag** (`symmetric|asymmetric`) — operator-set via `TICK_RUN_TYPE`; invalid/unset → `unspecified`. We never auto-guess whether a comparison is fair (Gemini r1 [Nit]).

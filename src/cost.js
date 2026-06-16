@@ -20,7 +20,11 @@
 function parseGeminiStats(input) {
   let obj = input;
   if (typeof input === 'string') {
-    try { obj = JSON.parse(input); } catch { return null; }
+    // gemini -o json may prefix the JSON with warning/status lines (e.g. color warnings, YOLO notices).
+    // Locate the first '{' and parse from there so those preamble lines don't break the parse.
+    const start = input.indexOf('{');
+    const jsonStr = start >= 0 ? input.slice(start) : input;
+    try { obj = JSON.parse(jsonStr); } catch { return null; }
   }
   const models = obj && obj.stats && obj.stats.models;
   if (!models || typeof models !== 'object') return null;

@@ -57,6 +57,17 @@ JSON
 nullres="$(node -e 'const {parseGeminiStats}=require(process.argv[1]); console.log(parseGeminiStats("not json")===null && parseGeminiStats(JSON.stringify({a:1}))===null ? "OK":"BAD")' "$ROOT/src/cost.js")"
 [ "$nullres" = "OK" ] && pass "parseGeminiStats -> null on garbage/no-stats" || fail "parser should return null"
 
+# --- (5b) parseGeminiStats handles warning-prefix preamble (the real gemini-cli format) -------
+# gemini -o json emits color/YOLO warnings before the JSON object; the parser must skip them.
+PREAMBLE_JSON="$(cat <<'PEOF'
+Warning: 256-color support not detected.
+YOLO mode is enabled. All tool calls will be automatically approved.
+{"session_id":"x","response":"ok","stats":{"models":{"flash":{"tokens":{"input":100,"candidates":10,"total":200,"thoughts":90}}}}}
+PEOF
+)"
+preamble_res="$(node -e 'const {parseGeminiStats}=require(process.argv[1]); const r=parseGeminiStats(process.argv[2]); console.log(r && r.tokens_in===100 && r.tokens_total===200 ? "OK" : "BAD:"+JSON.stringify(r))' "$ROOT/src/cost.js" "$PREAMBLE_JSON")"
+[ "$preamble_res" = "OK" ] && pass "parseGeminiStats handles warning-prefix preamble" || fail "preamble parse failed: $preamble_res"
+
 # --- (6) bad input -> usage error, no event ------------------------------
 "$TICK" cost TASK-E --agent gemini >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "cost with no signal -> usage error (exit 2)" || fail "expected exit 2, got $rc"
