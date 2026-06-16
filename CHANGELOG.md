@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-15
 
+### Cost-observability plan drafted + approved via live Gemini relay
+- New plan `PROJECT/2-WORKING/COST-OBSERVABILITY-PLAN.md` — closes point 5 of `FEEDBACK-2026-06-15.md`: the deterministic analyzer (`src/analyze.js`) measures coordination but **no cost**, so xyz vs relay can't be compared on cost-per-unit. Plan adds 3 cost signals (tokens, wall-clock, human-minutes) to the same no-LLM analyzer, in 3 phases each with observable checklists + QA gates.
+- **Drove a live `gemini -p` cross-model review** of the plan (`relay-drive.sh` + `gemini-turn.sh`, token `RELAY-COST`). Verdict **[Pass]**; 2 findings disposed: **[Should]** render incomplete token coverage as a *floor* (`≥N (partial 2/3)`), **[Nit]** add `run_type: symmetric|asymmetric` to json so downstream can't blind-compare asymmetric runs. Gemini answered all 4 open questions (CLI tokens verbatim; `tasks done` denominator; self-report human-min OK; **fresh symmetric fixture** for the comparison).
+- **Transcript-guard finding:** the in-tree log guard (`relay-turn-lib.sh:64-65`) `rm`s any transcript that lands in the tracked tree — so headless transcripts must be written to `$TMPDIR` then copied out. Did exactly that: `relay-system/2026-06-15/cost-observability-plan-review.gemini-transcript.md`. Baked the deterministic copy step into the plan (Phase 3) so it's a scripted step, not an agent reminder.
+- Relay thread: `relay-system/2026-06-15/cost-observability-plan-review.md` (Approved/closed). Committed locally; **not pushed**.
+
 ### Live Gemini CLI review of portability fixes + ROADMAP → 1 more bug fixed
 - Drove a **live `gemini -p` review turn** (via `gemini-turn.sh`) over `relay-turn-lib.sh`, `codex-turn.sh`, and `ROADMAP.md`. **2nd live containment win:** Gemini also tried to edit `ROADMAP.md` (off-allowlist) → the shared guard reverted it + failed the turn (exit 6); the review (allowlisted relay file) survived.
 - **[Should] rename-hijack fixed:** Gemini found that the [1] pre-existing-dirty skip matched only a rename's *destination* field — a staged rename could hide a clean file's move. Fixed: a rename is pre-existing only if **both** dest+src were dirty pre-turn, else both paths are enforced. Regression added (`test/codex-turn.sh` case 9). `codex-turn` 23→**24**.
