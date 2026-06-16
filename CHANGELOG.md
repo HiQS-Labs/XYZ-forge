@@ -2,6 +2,17 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-16
+
+### Cost observability — Phase 1 shipped (deterministic cost signals)
+- **New event types** `cost.tokens` + `cost.human` (`src/events.js`) — additive; `appendEvent` stamps cost fields only when present, so non-cost events stay byte-identical.
+- **`tick cost` verb** (`bin/tick`): `--human-minutes <n>` (self-reported operator attention), `--tokens-in/--tokens-out [--tokens-total] [--tool]`, and `--from-gemini-json <file>` (parse + log in one step).
+- **`src/cost.js` `parseGeminiStats`** — pure, deterministic; sums `stats.models.*.tokens` from `gemini -o json` verbatim (Q1 resolved — the CLI report is the source of truth, no wrapper). `tokens_out = total − input` (captures reasoning "thoughts"). Returns `null` on non-json/no-stats so the caller emits a loud-partial signal, never a fake zero.
+- **Headless token capture wired** into `gemini-turn.sh`: runs `gemini -o json`, then best-effort `tick cost --from-gemini-json` after the boundary holds — **never fails the turn**.
+- **Transcript fix (the headless-mode gap):** `GEMINI_LOG`/`CODEX_LOG` now default to a `$TMPDIR` path, not the repo tree — the guard at `relay-turn-lib.sh:64-65` deletes any in-tree log, which is why headless transcripts kept vanishing. The persisted json transcript doubles as the token source.
+- **No regression:** `analyze.js` explicitly excludes `cost.*` from coordination math (`:158`) — every concurrency/parked/count number stays identical. New `test/cost.sh` **14/14** (incl. a byte-identical `analyze --format json` before/after cost events). Full suite **22/22**. Skill package regenerated (bundles the two changed turn-takers); `skill-extract` confirms not-stale.
+- **Deferred, honestly:** Codex token parsing (format un-probed) and Claude-orchestrator tokens (no shell-visible per-turn count) — both noted in the plan, not faked. Plan: `PROJECT/2-WORKING/COST-OBSERVABILITY-PLAN.md` (Phase 1 ✅; Phase 2 = analyzer cost math next).
+
 ## 2026-06-15
 
 ### Cost-observability plan drafted + approved via live Gemini relay

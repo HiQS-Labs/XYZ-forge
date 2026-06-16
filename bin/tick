@@ -13,6 +13,7 @@ const { next } = require('../src/next');
 const { take } = require('../src/take');
 const { analyze, renderHuman, renderMd } = require('../src/analyze');
 const { gitUserName } = require('../src/identity');
+const { parseGeminiStats } = require('../src/cost');
 
 function repoRoot() {
   if (process.env.TICK_REPO_ROOT) return path.resolve(process.env.TICK_REPO_ROOT);
@@ -66,6 +67,9 @@ Usage:
   tick ping <task> --agent <id> [--note "..."]      (liveness heartbeat)
   tick reap <agent> [--by <id>]
   tick info <task>
+  tick cost <task> --agent <id> --human-minutes <n>          (log operator attention)
+  tick cost <task> --agent <id> --tokens-in <n> --tokens-out <n> [--tokens-total <n>] [--tool <name>]
+  tick cost <task> --agent <id> --from-gemini-json <file> [--tool gemini]   (parse gemini -o json)
   tick analyze [--format human|md|json] [--write <file>]
 
 Event types: ${Array.from(EVENT_TYPES).join(', ')}
@@ -228,6 +232,47 @@ function main(argv) {
       if (t.status === 'circuit_broken') lines.push(`broken-by: ${t.break.agent} — ${t.break.reason}`);
       if (t.handoff_to) lines.push(`handoff-to: ${t.handoff_to}`);
       process.stdout.write(lines.join('\n') + '\n');
+      return 0;
+    }
+
+    case 'cost': {
+      const [task] = positional;
+      if (!task || !flags.agent) { usage(); return 2; }
+      const num = v => (v === undefined || v === true ? undefined : Number(v));
+
+      // (a) human attention — self-reported operator minutes.
+      if (flags['human-minutes'] !== undefined) {
+        const mins = num(flags['human-minutes']);
+        if (!Number.isFinite(mins)) { process.stderr.write('tick cost: --human-minutes must be a number\n'); return 2; }
+        appendEvent(root, { type: 'cost.human', task, agent: flags.agent, human_minutes: mins });
+        process.stdout.write(`cost.human: ${task} +${mins} min by ${flags.agent}\n`);
+        return 0;
+      }
+
+      // (b) tokens from a gemini -o json transcript — parse verbatim (Q1: CLI report is source of truth).
+      let tokensIn, tokensOut, tokensTotal;
+      if (typeof flags['from-gemini-json'] === 'string') {
+        const jf = path.resolve(root, flags['from-gemini-json']);
+        if (!fs.existsSync(jf)) { process.stderr.write(`tick cost: no such file: ${flags['from-gemini-json']}\n`); return 2; }
+        const stats = parseGeminiStats(fs.readFileSync(jf, 'utf8'));
+        if (!stats) { process.stderr.write(`tick cost: no parseable token stats in ${flags['from-gemini-json']} — not captured\n`); return 1; }
+        ({ tokens_in: tokensIn, tokens_out: tokensOut, tokens_total: tokensTotal } = stats);
+      } else {
+        tokensIn = num(flags['tokens-in']);
+        tokensOut = num(flags['tokens-out']);
+        tokensTotal = num(flags['tokens-total']);
+      }
+      if (!Number.isFinite(tokensIn) || !Number.isFinite(tokensOut)) {
+        process.stderr.write('tick cost: need --tokens-in and --tokens-out (or --from-gemini-json, or --human-minutes)\n');
+        return 2;
+      }
+      if (!Number.isFinite(tokensTotal)) tokensTotal = tokensIn + tokensOut;
+      appendEvent(root, {
+        type: 'cost.tokens', task, agent: flags.agent,
+        tokens_in: tokensIn, tokens_out: tokensOut, tokens_total: tokensTotal,
+        tool: typeof flags.tool === 'string' ? flags.tool : undefined,
+      });
+      process.stdout.write(`cost.tokens: ${task} in=${tokensIn} out=${tokensOut} total=${tokensTotal} by ${flags.agent}\n`);
       return 0;
     }
 

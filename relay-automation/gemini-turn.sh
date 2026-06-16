@@ -54,9 +54,23 @@ fi
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 
+# Transcript/log: default to a $TMPDIR file (NOT the repo tree — the safety guard in
+# relay-turn-lib.sh deletes any in-tree log). A persisted transcript is both the debug record AND
+# the token source: `-o json` makes the CLI emit a stats block we parse for cost.tokens (Phase 1).
+GEMINI_LOG="${GEMINI_LOG:-${TMPDIR:-/tmp}/gemini-turn-$$.json}"
+GEMINI_OUTPUT_FORMAT="${GEMINI_OUTPUT_FORMAT:-json}"
+
 # Run the Gemini turn headless (token ops + edit the relay file; NO git), then enforce the boundary.
 rtl_before
 GOOGLE_GENAI_USE_GCA="${GOOGLE_GENAI_USE_GCA:-true}" \
-  "$GEMINI_BIN" --yolo --skip-trust -p "$prompt" < /dev/null > "${GEMINI_LOG:-/dev/stderr}" 2>&1 \
+  "$GEMINI_BIN" --yolo --skip-trust -o "$GEMINI_OUTPUT_FORMAT" -p "$prompt" < /dev/null > "$GEMINI_LOG" 2>&1 \
   || { printf 'gemini-turn: gemini -p failed\n' >&2; exit 5; }
-rtl_enforce "$t" "$me" "${GEMINI_LOG:-}" "gemini"
+rtl_enforce "$t" "$me" "$GEMINI_LOG" "gemini"
+
+# Best-effort cost capture (Phase 1, COST-OBSERVABILITY-PLAN): parse the CLI's own token stats and
+# log a cost.tokens event. NEVER fails the turn — the turn already committed; a missing/unparseable
+# stats block just means "tokens not captured" (the loud-partial signal), not a failed turn.
+if [[ -s "$GEMINI_LOG" ]]; then
+  "${TICK_BIN:-$ROOT/bin/tick}" cost "$t" --agent "$me" --from-gemini-json "$GEMINI_LOG" --tool gemini \
+    || printf 'gemini-turn: tokens not captured for %s (no parseable stats in transcript)\n' "$t" >&2
+fi

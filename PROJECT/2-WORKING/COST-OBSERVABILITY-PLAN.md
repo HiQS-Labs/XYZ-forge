@@ -29,7 +29,7 @@ non_goals:
 
 | Most recently completed phase | What's next |
 |---|---|
-| **Plan approved** — Gemini cross-model review [Pass], 2 findings disposed (run_type flag + loud partial signal) | **Phase 1 — Capture raw cost signals** |
+| **Phase 1 — Capture raw cost signals** ✅ shipped: `cost.tokens`/`cost.human` events, `tick cost` verb, `parseGeminiStats` (verbatim from `gemini -o json`), headless token capture wired into `gemini-turn.sh`, transcripts default to `$TMPDIR`. `cost.sh` 14/14; full suite **22/22** green. | **Phase 2 — Extend the deterministic analyzer to compute cost** |
 
 ## Table of contents
 
@@ -47,36 +47,43 @@ sidecar that the analyzer can read deterministically. No computation yet — jus
 
 ### Checklist (each item is observable)
 
-- [ ] **Tokens (headless turns):** capture token usage emitted by the Gemini/Codex CLI at end of each
-      turn and write it as a `cost.tokens` line into `.tick/events/<agent>.jsonl`
-      (fields: `agent`, `task`, `tokens_in`, `tokens_out`, `ts`).
-      *Observable:* after one turn, `grep cost.tokens .tick/events/*.jsonl` returns ≥1 line with non-zero `tokens_out`.
-- [ ] **Tokens (Claude turns):** same `cost.tokens` shape emitted from the Claude turn path so all
-      agents log identically.
-      *Observable:* a mixed run shows `cost.tokens` lines from every distinct `agent`.
-- [ ] **Wall-clock:** confirm per-task duration is recoverable from existing `claimed`→terminal events;
-      if any task lacks a terminal timestamp, emit one.
-      *Observable:* a one-off script prints a duration (ms) for every `task.claimed` in a fixture run, no nulls.
-- [ ] **Human-minutes:** add an operator input path — `tick cost --task <id> --human-minutes <n>` —
-      that appends a `cost.human` event. Manual by design (only a human knows their own attention).
-      *Observable:* running it appends exactly one `cost.human` line with the given value.
-- [ ] **Transcript capture (the headless-mode gap):** set `GEMINI_LOG`/`CODEX_LOG` to a path under
-      `$TMPDIR` (NOT inside the repo tree — the safety guard in `relay-turn-lib.sh:64-65` deletes any
-      log that lands in the tracked tree).
-      *Observable:* after a headless turn the temp log exists and is non-empty.
+- [x] **Tokens (headless Gemini turns):** `gemini-turn.sh` runs `gemini -o json`, then emits a
+      `cost.tokens` event via `tick cost --from-gemini-json` (`parseGeminiStats` sums `stats.models.*`
+      verbatim — Q1 resolved: the CLI report IS the source of truth). Best-effort: never fails the turn.
+      *Observable:* after a turn, the `.tick/events/*tokens*` file carries non-zero `tokens_out`. ✅ (parser + verb tested in `cost.sh`; live tool-using `-o json` turn validated in Phase 3 dogfood.)
+- [~] **Tokens (Codex turns):** **DEFERRED** — Codex's usage/stats output format isn't probed yet, so
+      no `parseCodexStats` exists. `codex-turn.sh` persists its transcript (below) so the data is there
+      to parse later; until then Codex turns are a known token gap (the loud-partial signal will say so).
+- [~] **Tokens (Claude orchestrator turns):** **DEFERRED** — the main-loop harness exposes no
+      programmatic per-turn token count to the shell here. Honest gap; revisit if/when a hook exists.
+      Not faked.
+- [x] **Wall-clock:** confirmed recoverable from existing `task.claimed`→terminal (`done`/`released`/
+      `circuit_break`) events — every terminal event already carries `ts`, so per-task duration needs
+      NO new capture. (Computation lands in Phase 2; nothing to emit in Phase 1.)
+- [x] **Human-minutes:** `tick cost <task> --agent <id> --human-minutes <n>` appends one `cost.human`
+      event. Manual by design (only a human knows their own attention).
+      *Observable:* `cost.sh` asserts the event carries `human_minutes=12`. ✅
+- [x] **Transcript capture (the headless-mode gap):** `GEMINI_LOG`/`CODEX_LOG` now default to a
+      `$TMPDIR` path (NOT the repo tree — the guard at `relay-turn-lib.sh:64-65` deletes any in-tree
+      log). This is also what makes token capture possible (the json transcript is the token source).
+      *Observable:* after a headless turn the temp transcript exists and is non-empty. ✅
 
 ### QA checklist — Phase 1
 
-- [ ] **DRY:** the `cost.tokens` emit lives in ONE shared place (e.g. `relay-turn-lib.sh`), not copied
-      into each `*-turn.sh` — same rationale as the existing shared safety core.
-- [ ] **SOLID (single responsibility):** capture only writes events; it computes nothing. No analyzer
-      logic leaks into the turn-takers.
-- [ ] **Observability:** every cost signal is a timestamped JSONL line, greppable by `agent` and `task`.
-- [ ] **Determinism litmus:** re-running the analyzer over the same `.tick/events/` produces byte-identical
-      cost output (no clock reads, no randomness at read time).
-- [ ] **No regression:** `tick analyze` self-tests still pass (cost events must be ignored by the
-      coordination metrics, not double-counted).
-- [ ] **Anti-goal check:** no `$`/pricing math introduced here; raw tokens only.
+- [x] **DRY:** the shared seam is `tick cost` (the event write) — every turn-taker and the operator
+      call the SAME verb. The *parser* (`parseGeminiStats`) is deliberately model-specific (each CLI's
+      stats format differs), so it lives in `src/cost.js` and the gemini shim, not a fake-shared blob.
+      Correct seam, not copy-paste.
+- [x] **SOLID (single responsibility):** capture only writes events; it computes nothing. `parseGeminiStats`
+      is pure (no I/O). No analyzer logic leaked into the turn-takers.
+- [x] **Observability:** every cost signal is a timestamped JSONL event, greppable by `agent` and `task`
+      (filename + payload).
+- [x] **Determinism litmus:** `parseGeminiStats` is pure; `tick cost` only writes. The no-regression test
+      proves `analyze --format json` is byte-identical before/after cost events are added.
+- [x] **No regression:** full suite **22/22**; `analyze` excludes `cost.*` events explicitly
+      (`analyze.js:158`), and `cost.sh` asserts the analyze json is unchanged by cost events + that
+      cost-only agents don't leak into the per-agent table.
+- [x] **Anti-goal check:** no `$`/pricing math; raw tokens only.
 
 ---
 
@@ -163,8 +170,9 @@ artifact the feedback doc was missing: an honest cost-per-unit comparison of xyz
 
 ## Open questions for the reviewer
 
-1. **Token source of truth:** is the Gemini/Codex CLI's end-of-turn token report reliable enough to log
-   verbatim, or do we need a token-counting wrapper? (Affects Phase 1 item 1.)
+1. ~~**Token source of truth:**~~ **RESOLVED** — `gemini -o json` emits `stats.models.*.tokens.{input,
+   total,...}`; we log it verbatim (`parseGeminiStats`). No wrapper needed. Codex's format is still
+   un-probed (its capture is deferred).
 2. **Denominator for cost-per-unit:** is `tasks done` the right denominator, or should it be `passing
    tests` / `files touched`? The feedback doc counted tests — but tests-passing is throughput, not
    correctness. Pick the denominator that's hardest to game.

@@ -17,6 +17,7 @@ TESTS=(
   "claim-cap.sh"
   "reap.sh"
   "heartbeat.sh"
+  "cost.sh"
   "take.sh"
   "watchdog-liveness.sh"
   "runner-loop.sh"

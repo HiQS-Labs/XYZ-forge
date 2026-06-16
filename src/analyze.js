@@ -155,7 +155,11 @@ function findParkedClaims(windows, events, runEnd, thresholdMs = PARKED_THRESHOL
 }
 
 function analyze(repoRoot) {
-  const events = readAllEvents(repoRoot);
+  const allEvents = readAllEvents(repoRoot);
+  // Coordination metrics are computed from task.* events only. cost.* events (tokens/human-minutes)
+  // are a separate Phase-2 concern — excluding them here keeps every coordination number (counts,
+  // run window, parked-claims) byte-identical to pre-cost runs. (COST-OBSERVABILITY-PLAN, Phase 1 QA.)
+  const events = allEvents.filter(e => typeof e.type === 'string' && e.type.startsWith('task.'));
   const windows = buildClaimWindows(events);
 
   const perAgent = new Map();

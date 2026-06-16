@@ -14,6 +14,10 @@ const EVENT_TYPES = new Set([
   'task.heartbeat',
   'task.done',
   'task.circuit_break',
+  // Cost signals (Phase 1, COST-OBSERVABILITY-PLAN). Deterministic, additive, ignored by the
+  // coordination metrics — they describe what a turn COST, not how it coordinated.
+  'cost.tokens',
+  'cost.human',
 ]);
 
 const CRITICAL_EVENTS = new Set([
@@ -45,7 +49,10 @@ function safeSegment(s) {
   return String(s).replace(/[^A-Za-z0-9._-]/g, '_');
 }
 
-function appendEvent(repoRoot, { type, task, agent, note, paths, to_agent, reason, priority }) {
+function appendEvent(repoRoot, {
+  type, task, agent, note, paths, to_agent, reason, priority,
+  tokens_in, tokens_out, tokens_total, human_minutes, tool,
+}) {
   if (!EVENT_TYPES.has(type)) {
     throw new Error(`unknown event type: ${type}`);
   }
@@ -55,7 +62,7 @@ function appendEvent(repoRoot, { type, task, agent, note, paths, to_agent, reaso
   ensureEventsDir(repoRoot);
 
   const ts = isoNow();
-  const action = type.replace(/^task\./, '');
+  const action = type.replace(/^(task|cost)\./, '');
   const fname = `${tsForFilename(ts)}-${safeSegment(agent)}-${safeSegment(action)}-${safeSegment(task)}.jsonl`;
   const fpath = path.join(eventsDir(repoRoot), fname);
 
@@ -71,6 +78,12 @@ function appendEvent(repoRoot, { type, task, agent, note, paths, to_agent, reaso
   if (to_agent) event.to_agent = to_agent;
   if (reason !== undefined) event.reason = reason;
   if (priority !== undefined) event.priority = priority;
+  // Cost fields — only stamped when present, so non-cost events stay byte-identical to before.
+  if (tokens_in !== undefined) event.tokens_in = tokens_in;
+  if (tokens_out !== undefined) event.tokens_out = tokens_out;
+  if (tokens_total !== undefined) event.tokens_total = tokens_total;
+  if (human_minutes !== undefined) event.human_minutes = human_minutes;
+  if (tool !== undefined) event.tool = tool;
 
   fs.writeFileSync(fpath, JSON.stringify(event) + '\n');
   return { path: fpath, event };

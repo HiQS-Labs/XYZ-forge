@@ -50,7 +50,11 @@ prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 # CODEX_FLAGS gives the turn enough autonomy to actually write on a fresh device (default sandbox is
 # read-only); operator-overridable for tighter/looser policies.
 read -ra _cflags <<<"${CODEX_FLAGS:--s workspace-write}"
+# Transcript: default to a $TMPDIR file (NOT the repo tree — the in-tree log guard deletes it).
+# Persists the transcript so the headless run is auditable. (Codex token-stats parsing is a follow-up
+# — its usage format isn't probed yet, so cost.tokens for Codex turns stays a Phase-1 partial.)
+CODEX_LOG="${CODEX_LOG:-${TMPDIR:-/tmp}/codex-turn-$$.log}"
 rtl_before
-"$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "${CODEX_LOG:-/dev/stderr}" 2>&1 \
+"$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
   || { printf 'codex-turn: codex exec failed\n' >&2; exit 5; }
-rtl_enforce "$t" "$me" "${CODEX_LOG:-}" "codex"
+rtl_enforce "$t" "$me" "$CODEX_LOG" "codex"
