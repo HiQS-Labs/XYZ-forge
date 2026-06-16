@@ -1,3 +1,48 @@
+# 📸 Snapshot — 2026-06-15 19:44 (Mon)
+
+**Session:** relay-automation cross-model hardening — Gemini CLI integrated; shared safety core (`relay-turn-lib.sh`) with `codex-turn.sh` + `gemini-turn.sh` thin wrappers; MBP16 portability fixes; ROADMAP.md (commercial-viability gaps); two live Gemini-CLI relay reviews
+**Project / repo:** Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (Project 2 — relay-automation, on `tick`)
+**Phase:** relay-automation Phases 1–5 SHIPPED + cross-model (Codex + Gemini headless) live-proven. Next milestone = commercial-viability hardening (ROADMAP Phase 1: R1 epoch fencing / G3 stale-writer — the keystone)
+**Status:** main clean, in sync with origin @ cd16fa5. `validate.sh` 21/21 (codex-turn 24/24, gemini-turn 17/17). All relay threads closed Approved.
+
+## Git state
+- **Branch:** main
+- **HEAD:** cd16fa5 — docs(ROADMAP): merge phased/QA structure with per-gap rationale; fix frontmatter
+- **Working tree:** clean
+- **Ahead/behind remote:** in sync
+
+## Recent findings
+- **Gemini CLI installed + authed** (brew, 0.46.0). Headless recipe: `GOOGLE_GENAI_USE_GCA=true gemini --yolo --skip-trust -p "<prompt>"` (GCA personal Google login, no API key).
+- **Shared safety core refactor:** extracted containment (path-allowlist + commit-bypass guard + no-push) into `relay-automation/relay-turn-lib.sh`; `codex-turn.sh` + new `gemini-turn.sh` are thin wrappers. Boundary lives in ONE place.
+- **Reconciled** my `gemini-drive.sh` with Gemini's standalone `gemini-turn.sh` (commit fe0bd61) → one `gemini-turn.sh` (Gemini's name + shared core + fixed invocation; its `gemini exec` doesn't exist, headless is `-p`). Removed `gemini-drive.sh`.
+- **3 live Gemini-CLI turns**, all containment-clean: (1) reviewed seeded sample.sh; (2)+(3) reviewed the fixes+ROADMAP. Two "stray" events (Gemini edited an off-allowlist artifact) → guard reverted + failed turn (exit 6), review survived. Containment proven on a 2nd model.
+- **MBP16 field-report fixes [1][2][3]** in the shared core: [1] snapshot pre-turn dirty set → never destroy ambient WIP; [2] exempt `.tick/` intrinsically (cross-repo); [3] codex `CODEX_FLAGS` default `-s workspace-write`. Gemini review then found a **rename-hijack** in [1] → fixed (both dest+src must be pre-existing) + regression test.
+- **Decision recorded:** `decisions/2026-06-15-unattended-agent-containment.md` (Decided; revisit on first real unattended run). **ROADMAP.md** created → restructured (Gemini, phased) → merged (phased + per-gap rationale), frontmatter fixed.
+- **Test growth:** codex-turn 10→24, gemini-turn (new) 17, validate 20→21 files.
+- **Collision lesson:** ROADMAP.md was edited concurrently by me + another Gemini session (no coordination) — exactly what tick/relay prevents; reconciled from git history (flat detail safe at d8d856e).
+
+## Next steps
+- **ROADMAP Phase 1 — R1 epoch fencing + G3 chaos test** (the sequenced keystone): add monotonic `epoch` to claim events, reject stale-epoch mutating events, build `test/chaos-stale-writer.sh`. Needs a decision record (event-schema change).
+- Or chip the rest of ROADMAP Phase 2 chaos suite (G1 mid-turn kill, G2 dup-token, G4 concurrent pollers, R2 auto-reap authority, R5 quotas).
+- Optional: route ROADMAP/doc edits through a RELAY-TURN token to avoid another concurrent-edit collision.
+
+## Last response (verbatim)
+No faceplant damage — merged and pushed (`cd16fa5`), tree clean.
+
+**ROADMAP.md now has the best of both:** Gemini's phased structure + QA checklists (your `phase-qa` format), with the per-gap **Threat / Prove / Test-artifact / Leans-on / Status** rationale folded into each phase as a `>` block. Frontmatter fixed (it was missing the opening `---`). R5 retained in Phase 2. The flat original is preserved at `d8d856e` if you ever want to diff.
+
+What landed across this turn:
+- **Portability fixes [1][2][3]** from your MBP16 report — in the shared core, so Codex *and* Gemini both get them. `codex-turn` 16→24, `gemini-turn` 13→17.
+- **Live Gemini CLI relay review** of the fixes + ROADMAP → it found a real **rename-hijack** in my [1] fix (now fixed + regression test) and suggested R5. Verdict Approved, thread closed.
+- **A second live containment win** as a bonus: Gemini strayed and tried to edit ROADMAP.md mid-turn — the shared guard reverted it and failed the turn (exit 6), review intact.
+- ROADMAP collision reconciled.
+
+One worth-saying observation, gently: the collision happened because two agents (me + your other Gemini window) edited `ROADMAP.md` with **no coordination** — which is precisely the failure `tick`/relay exists to prevent. The dogfood lesson: ROADMAP edits should go through a `RELAY-TURN` token (or at least a claim) like the code does, so whoever holds it edits and the other waits. Cheap to adopt now that the machinery exists.
+
+Nothing pending — everything's committed, `validate.sh` 21/21, `main` in sync. Want me to keep going on the ROADMAP itself (Phase 1 / R1 epoch fencing is the sequenced keystone), or pause here?
+
+---
+
 # 📸 Snapshot — 2026-06-14 21:06 (Sun)
 
 **Session:** Phase-2 build of relay-automation (watchdog ‖ runner) as a 2-Codex swarm; relay r1 (Codex review) closed Approved; embedded turn-instructions into relay doc + baked into /relay skill
