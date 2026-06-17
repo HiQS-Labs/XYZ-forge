@@ -1,8 +1,11 @@
-# QUICKSTART — run the automated Claude ↔ Codex relay on a fresh device
+# QUICKSTART — fresh-device bring-up for headless Codex relay turns
 
-Status: **WIP.** This gets a *second device* to the point where it can run a **headless
-Codex relay turn** (`codex-turn.sh` via `relay-drive.sh`). See [README.md](README.md) for the
-full Option-B operator flow and [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md) for design.
+Status: **Current bring-up guide.** This gets a fresh device or fresh clone to the
+point where it can run a **headless Codex relay turn** (`codex-turn.sh` via
+`relay-drive.sh`). [README.md](README.md) is the canonical operator contract for
+relay-automation; this doc is only the device/bootstrap path for the current
+headless Codex flow. See [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md)
+for design.
 
 > **Read this first — what a single-device test does and doesn't prove.**
 > `.tick/` (the coordination event log) is **gitignored = per-device local**. Two clones do
@@ -39,8 +42,8 @@ export TICK_REPO_ROOT="$PWD"        # point tick at this clone root
 ## 3. Smoke test — prove the suite is green here
 
 ```bash
-bash validate.sh                    # expect: passed: 20 / 20
-codex-turn suite alone:  bash test/codex-turn.sh   # expect: 16 pass, 0 fail
+bash validate.sh                    # expect: green; currently passed: 23 / 23
+bash test/codex-turn.sh             # expect: green; currently 24 pass, 0 fail
 ```
 If `validate.sh` can't make tempdirs, it's usually a sandbox blocking `mktemp` — run it in a
 normal shell. Green here = the shim + guards behave on this machine.
@@ -89,5 +92,5 @@ closed-not-approved · `2` usage.  `codex-turn` (shim): `0` acted/deferred · `5
   same relay — the token is the lock, but two takers of the *same* id will thrash.
 
 ---
-*Generated 2026-06-15. Tracks `codex-turn.sh` + `relay-drive.sh` as shipped; update if their
-flags change.*
+*Updated 2026-06-17. Tracks `codex-turn.sh` + `relay-drive.sh` as shipped; update if their
+flags or expected suite counts change.*

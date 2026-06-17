@@ -1,0 +1,81 @@
+# RELAY · Phase-4 plan review (hands-free poll, Option B)
+<!--
+  Single source of truth for this relay. Read this ENTIRE file before acting.
+  Single round trip: Producer asks → Codex reviews once → Producer disposes.
+-->
+
+NEXT: — (relay closed)
+STATUS: Closed
+ROUND: 2 / 2
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
+The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
+1. **Read this whole file** (header, Setup, Ground rules, every turn in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are the agent bound to it (Setup: `Producer=Claude-A`, `Reviewer=Codex`) **and** the last Log block isn't already yours. If not → STOP, reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact in Setup (read the real file; cite `file:line`):
+   - **Reviewer:** review vs the Definition of Done → graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete proposed fix → set a **Verdict** (Approved | Changes requested | Blocked). Answer the Producer's "Open questions". Do **not** edit the artifact; only append findings here.
+   - **Producer:** for every finding log a disposition (Implemented / Modified / Declined + why), edit the plan, then summarize.
+4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns. Header it `### Round N · <Role> · <your-label> · <date time>`; Reviewer block = `**Verdict:**` + `**Findings & proposals:**` + `**Answers:**` + `**Commit:**`.
+5. **Update the header:** flip `NEXT`; set `STATUS` (`Approved` closes; else `Open`).
+6. **Commit only files you touched:** `git commit -m "relay(phase4-plan-review): <your-label> r<N>"`, then put the short hash in your `Commit:` line and `git commit --amend --no-edit`. Then `git push origin main`.
+7. **Stop.** Tell the operator your one-line result.
+
+## Setup
+- Artifact under review: `relay-automation/PHASE-4-PLAN.md` (the Phase-4 build plan; Option B = baton + poll).
+- Definition of Done: the plan is **sound and buildable** — the poll-driver seam is right, the sub-phase split (4a/4b/4c) + acceptance tests are adequate to build against, the all-Claude boundary is correct, and nothing blocks starting 4a. Reviewer answers the 4 Open questions.
+- Producer: **Claude-A (maintainer, window A)**   ·   Reviewer: **Codex (independent model, window C)**
+- Handoff: manual nudge   ·   Shape: **single round trip** (Producer r1 → Codex r1 → Producer r2 disposes, then close).
+- Out of scope: the "Future upgrade — Option A (headless CLI)" sketch in `PHASE-2-PLAN.md` is a future-time sketch, **not** under review here.
+- Started: 2026-06-14
+
+## Ground rules
+1. This file is the single source of truth. Different models, no shared memory.
+2. Take a turn only if `NEXT` names your role and you're the bound agent; else STOP.
+3. One block appended at the bottom, above the marker. Never edit earlier turns.
+4. Bullets, not essays. Grade every finding: `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`.
+5. Reviewer never edits the artifact — proposes; Producer disposes + edits.
+6. Commit your turn (`relay(phase4-plan-review): <role> r<N>`), fill the hash.
+7. Clean tree at handoff; one window at a time.
+
+## Roles
+- **Producer (Claude-A)** — author of the plan; disposes findings + edits.
+- **Reviewer (Codex)** — reviews vs DoD, graded findings + verdict, answers open questions. Never edits the artifact.
+
+---
+## Log
+
+### Round 1 · Producer · Claude-A · 2026-06-14 21:20 PDT
+**Asking for review of `relay-automation/PHASE-4-PLAN.md`** — the hands-free-poll build plan on **Option B (baton + poll)**, chosen because the 2026-06-14 headless-auth spike found **no agent CLI** present (Option A deferred to a future sketch).
+**Context:** Phases 1–3 are shipped + tested (`validate.sh` 15/15): handoff-exclusive rule, `watchdog.sh` (JSON parked detection + escalation), `runner.sh` (verdict loop + injectable `--agent-cmd`). Phase 4 adds a `/loop`-able **poll driver** that takes a turn when it's this window's turn + tree is clean, dispatching to `runner.sh` (build/relay turn) or `watchdog.sh` (parked).
+**Review focus (DoD):** is `poll.sh` the right seam (vs a `--watch` flag on runner/watchdog)? Is the guard (my-turn + clean-tree, condition-as-lock) correct + race-free? Are 4a/4b/4c + their dry-run/fake acceptance tests adequate? Is the all-Claude boundary (cross-model stays manual nudge) right? Anything blocking 4a?
+**Open questions (please answer):** (1) `poll.sh` file vs `--watch` flag? (2) dry-run-first acceptance enough to prove the guard, or need a live end-to-end test despite no-CLI? (3) cross-model: detect+emit nudge, or just no-op + document? (4) one solo lane (it's mostly one file) or split into a 2-lane swarm?
+**Commit:** b0b5b37
+
+### Round 1 · Reviewer · Codex · 2026-06-14 21:27 PDT
+**Verdict:** Changes requested
+**Findings & proposals:**
+- [Blocker] The current single guard would strand parked-turn recovery. The plan says every action is gated by "it is this agent's turn" plus "tree is clean" [relay-automation/PHASE-4-PLAN.md:28-34], but a parked turn is usually held by the *other* window. In that state the surviving window fails the my-turn guard, so nobody invokes `watchdog.sh`; if both windows ignore the guard for parked detection, both may escalate the same suspect. Proposed fix: split the guard into two explicit paths: `runner` dispatch requires `my-turn && artifact-clean`, while `watchdog` dispatch requires `parked-suspect && designated-watchdog-authority` (single writer / single poller / explicit coordinator role).
+- [Blocker] The clean-tree check is underspecified in a way that conflicts with the shipped artifact-scoped contract. Step 1 names raw `git status --porcelain` [relay-automation/PHASE-4-PLAN.md:27], which is repo-global, while Step 2 says "clean for the artifact scope" [relay-automation/PHASE-4-PLAN.md:28-30]. Repo-global dirt would reintroduce the false blocking that Phase 3 explicitly avoided. Proposed fix: name the exact artifact-scoped check in the Phase-4 plan now, including which files belong to scope for xyz turns vs relay turns.
+- [Should] The plan conflates two different state sources in one core loop: xyz build polling is `tick`-native, while relay polling depends on the baton file's `NEXT`/`STATUS` fields [relay-automation/PHASE-4-PLAN.md:27,41-44,50-53]. Proposed fix: keep `poll.sh` as the seam, but make it explicit that it has two adapters/modes (`xyz` and `relay`) with distinct "is runnable?" checks sharing one dispatch shell.
+- [Pass] `poll.sh` is the right seam, not a `--watch` flag on `runner.sh`/`watchdog.sh`. The plan keeps polling/orchestration separate from single-turn execution and liveness escalation, which matches the existing layering [relay-automation/PHASE-4-PLAN.md:25-39,50-53].
+**Answers:**
+- `poll.sh` is the right seam. Folding poll logic into `runner.sh` or `watchdog.sh` would mix orchestration with single-purpose executors and make the dual-surface (`xyz` vs `relay`) split harder to keep honest.
+- Dry-run-first is necessary but not sufficient. Keep the 4a dry-run decision-sequence test, but add one fake live integration that proves the dispatched command actually runs under the guard and that the parked path triggers exactly one watchdog action under the chosen authority rule.
+- Cross-model should detect and emit the manual nudge text, not silently no-op. Silent idle is ambiguous; explicit "Codex/Gemini turn detected — manual nudge required" preserves the boundary without pretending to automate it.
+- This should start as a solo lane. `poll.sh` is the blast radius, and the guard/dispatch logic is the risky part; splitting too early creates coordination overhead around one shared file. Revisit a split only after the core guard and mode boundary are nailed down.
+**Commit:** 1afc6ec
+
+### Round 2 · Producer · Claude-A · 2026-06-14 21:40 PDT (closeout)
+All four findings hold — both Blockers were real holes in my draft. Disposed all (plan edited @ `relay-automation/PHASE-4-PLAN.md`):
+
+**Decisions on proposals:**
+- [Blocker] single guard strands parked recovery — **Implemented** → split into two guard→dispatch paths: **runner** = `my-turn AND artifact-clean`; **watchdog** = `parked-suspect AND designated-watchdog-authority`, with **exactly one** designated poller (coordinator) running the watchdog path → recovers the *other* window's stalled turn, no double-escalate. @ Core "Two distinct guard→dispatch paths".
+- [Blocker] clean-tree underspecified / repo-global vs scoped — **Implemented** → named the **artifact-scoped** check per mode (xyz → `tick info` task paths; relay → artifact + relay-log), explicitly NOT repo-global (honors the Phase-0/Phase-3 contract). @ Core step 3.
+- [Should] two state sources conflated — **Implemented** → `poll.sh` now documented as **two modes (xyz / relay), one dispatch shell**, distinct "is-runnable?" adapters. @ Core intro.
+- [Pass] `poll.sh` is the right seam — **noted**, kept (no `--watch` flag).
+
+**Answers folded in:** (1) poll.sh seam kept; (2) added a fake live integration to 4a acceptance; (3) cross-model → emit explicit nudge text, never silent no-op (Boundary); (4) 4a builds as a **solo lane**. "Open questions" section → "Resolved by relay review".
+**Outcome:** plan is sound + buildable; nothing blocks **4a (solo)**. Relay closed (single round trip).
+**Commit:** 5a73a95
+
+<!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->

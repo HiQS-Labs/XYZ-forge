@@ -39,6 +39,8 @@ A `/relay` Producer↔Reviewer loop that runs **hands-free** (all-Claude) or one
 
 ## Canonical docs (don't duplicate — link)
 - Plan: `PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md` (Phases 0–5 + QA checklists)
+- Phase-2 detail: `PROJECT/2-WORKING/EXP-AUTOMATION/PHASE-2-PLAN.md`
+- Phase-2 build brief: `PROJECT/2-WORKING/EXP-AUTOMATION/PHASE-2-BUILD-BRIEF.md`
 - Phase-4 build: `relay-automation/PHASE-4-PLAN.md`
 - (a) scope/estimate: `relay-automation/PHASE-4A-SCOPE.md`
 - Operator usage: `relay-automation/README.md`

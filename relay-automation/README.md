@@ -1,14 +1,17 @@
 # relay-automation
 
-A tick-backed, self-healing automation layer for the manual `/relay` review loop
-and `xyz` build swarms. Built in phases on top of `tick` (see
+A tick-backed automation layer for the manual `/relay` review loop and `xyz`
+build swarms. Built in phases on top of `tick` (see
 [PROPOSAL-AUTOMATION.md](../PROJECT/1-INBOX/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md)).
 
-**Execution contract: Option B (baton + poll)** — the turn itself is taken by a
-live Claude window (driven by `/loop`) or by a human one-line nudge for non-Claude
-windows. There is **no headless agent CLI** in this environment (spike, 2026-06-14);
-fully-unattended Option A is a documented future upgrade (see
-[PHASE-2-PLAN.md](PHASE-2-PLAN.md) → "Future upgrade — Option A").
+**Execution contract: default live-window flow** — the default operator path is
+still the poll-driven, live-window flow: a Claude window under `/loop`, or a
+human one-line nudge when the turn belongs to a non-Claude window. Headless
+turn-takers now exist for Codex and Gemini (`codex-turn.sh`, `gemini-turn.sh`),
+but the cross-model poll loop still degrades to a manual nudge rather than
+auto-firing those shims. For the current headless path, see
+[QUICKSTART.md](QUICKSTART.md) and
+[CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md).
 
 ## Components
 | Script | Role |
@@ -20,8 +23,9 @@ fully-unattended Option A is a documented future upgrade (see
 | `relay-turn-lib.sh` | **Shared safety core** (sourced, not run): the model-agnostic containment contract — path-allowlist + commit-bypass guard + no-push. Both headless turn-takers source this so the boundary lives in ONE place. See [decisions/2026-06-15-unattended-agent-containment.md](../decisions/2026-06-15-unattended-agent-containment.md). |
 | `codex-turn.sh` | **Option-A** headless turn-taker for the **Codex** agent (`codex exec`); thin dispatch wrapper over `relay-turn-lib.sh`. |
 | `gemini-turn.sh` | **Option-A** headless turn-taker for the **Gemini** agent (`gemini --yolo --skip-trust -p`, GCA auth); thin dispatch wrapper over the same `relay-turn-lib.sh`. First drafted standalone by Gemini, reconciled onto the shared core + corrected invocation; live-validated 2026-06-15. |
+| `consult.sh` | Parallel read-only consult: asks the same question to Codex and Gemini, captures both transcripts, and leaves synthesis to the caller. Advisory-only; not part of the relay loop. |
 
-## Operator usage (Option B)
+## Operator usage (default live-window flow)
 
 ### Hands-free relay turn (all-Claude only)
 In each Claude window, run a guarded `/loop` that uses `poll.sh` as the gate, then
@@ -38,7 +42,7 @@ takes the turn from the relay file's embedded `▶ TAKE YOUR TURN` instructions:
 **Whose-turn is the `RELAY-TURN` tick task** (handed off via `tick release --to`), so the
 Phase-1 handoff-exclusive rule + the Phase-2 watchdog both apply. The guard *is* the lock:
 a window acts only when the token is claimable by **its** agent **and** the artifact scope is
-clean. `poll.sh` exits `10` on a closed relay (file `STATUS: Approved`) so the loop can stop.
+clean. `poll.sh` exits `10` on a closed relay (file `STATUS: Approved|Closed`) so the loop can stop.
 *(Default `--relay-task RELAY-TURN`; seed it at relay setup, handed to the first actor.)*
 
 **Poll interval — cache-warmth tradeoff.** `60s` keeps Claude Code's prompt cache warm
@@ -54,8 +58,8 @@ Past the deadline `poll.sh` prints `DECISION: stop`; the loop prompt then `CronL
 from yours, so always set a deadline. See the `/relay` skill → "Self-closing loops".
 
 ### Designated watchdog (exactly ONE window)
-Only one poller holds watchdog authority, so a stalled turn is recovered without
-double-escalation:
+Only one poller holds watchdog authority, so a stalled turn is escalated once
+without double-escalation:
 ```
 /loop 120s run relay-automation/poll.sh --mode relay --agent coordinator \
   --relay-file relay-system/<date>/<slug>.md --watchdog-authority ;\
@@ -67,20 +71,24 @@ double-escalation:
 relay-automation/relay-drive.sh --relay-file relay-system/<date>/<slug>.md \
   --agent-cmd "<turn-taker>" --round-cap 6
 ```
-`--agent-cmd` is the turn-taker seam (a CLI in a future Option A; in Option B the
-turn is taken by the live window / baton). Exits: `0` closed Approved/Closed,
-`3` no-progress, `4` round cap without Approved.
+`--agent-cmd` is the turn-taker seam. In the live-window flow it can remain a
+window-driven/manual handoff; in the current headless path it can be a shipped
+shim such as `relay-automation/codex-turn.sh` or `relay-automation/gemini-turn.sh`.
+Exits: `0` closed Approved/Closed, `3` no-progress, `4` round cap / closed-not-approved.
 
 ### Cross-model windows (Codex / Gemini) — manual nudge
-Non-Claude windows can't self-wake. The operator's whole job is **one line**:
+In the poll-based multi-window flow, non-Claude windows can't self-wake. The
+operator's whole job is **one line**:
 ```
 take your turn on relay-system/<date>/<slug>.md
 ```
 The relay file embeds the `▶ TAKE YOUR TURN` instructions, so any agent acts from
 the file alone. `poll.sh` detects a cross-model turn and emits this nudge text
-rather than silently idling.
+rather than silently idling. If you want a current headless cross-model path
+instead, use `relay-drive.sh` with a headless shim (`codex-turn.sh` or
+`gemini-turn.sh`) rather than the `/loop` poll flow.
 
 ## Boundary (load-bearing)
 - **Hands-free poll is all-Claude only** — it relies on Claude Code's in-session `/loop`. Cross-model stays on the manual nudge.
-- **Not a durable scheduler / not unattended-without-a-window.** A Claude window must be open and looping. Truly unattended runs need Option A (future).
+- **Not a durable scheduler / not unattended-without-a-window.** A Claude window must be open and looping for the default poll flow. Current headless turns exist, but durable unattended orchestration is still a separate problem.
 - The portable `/relay` skill stays dependency-free; this tick-driven automation lives here.

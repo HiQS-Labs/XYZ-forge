@@ -2,7 +2,7 @@
 title: relay-automation — Phase 4 plan (hands-free poll, Option B: baton + poll)
 status: Draft (for relay review)
 created: 2026-06-14
-builds-on: PHASE-2-PLAN.md (Phases 1–3 shipped) + decisions/2026-06-14-graduate-relay-automation-phase-2.md
+builds-on: PROJECT/2-WORKING/EXP-AUTOMATION/PHASE-2-PLAN.md (Phases 1–3 shipped) + decisions/2026-06-14-graduate-relay-automation-phase-2.md
 execution-contract: Option B (baton + poll) — chosen by the 2026-06-14 headless-auth spike (no agent CLI present)
 ---
 
