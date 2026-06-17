@@ -97,16 +97,25 @@ loops run, we can deterministically measure and eventually halt them based on co
       *Observable:* Each known agent routes correctly; unknown → exit 2.
 - [ ] **Headless `claude -p` spike (gating unknown):** Run a trivial `claude -p` turn with
       `--allowedTools "Bash,Read,Edit,Write" --permission-mode acceptEdits --output-format json`.
-      Confirm: runs non-interactively, edits a file, runs `./bin/tick`, loads CLAUDE.md/skills (no `--bare`).
-      *Observable:* One-shot turn produces a relay block + parseable result; file-write and `tick` both work.
+      Confirm: runs non-interactively, edits a file, runs `./bin/tick`, loads CLAUDE.md/skills
+      (no `--bare` — omitting `--bare` is what gives the builder free CLAUDE.md + skills context).
+      **Primary deliverable of the spike:** the per-turn token + wall-clock number that sizes
+      `--max-turns` and `--max-budget-usd` before committing to Phase 3.
+      *Observable:* One-shot turn produces a relay block + parseable result; token count logged.
 - [ ] **Build `claude-turn.sh` shim:** Mirror `codex-turn.sh` — `rtl_init` → `rtl_before` →
-      `claude -p "$prompt" --allowedTools ... --permission-mode acceptEdits --output-format json` →
-      `rtl_enforce`. Allowlist = `phases/p<N>/RELAY.md` only. Do NOT use `--bare`.
+      `claude -p "$prompt" --allowedTools "Bash,Read,Edit,Write" --permission-mode acceptEdits
+      --output-format json --max-turns <N> --max-budget-usd <$>` → `rtl_enforce`.
+      Allowlist = `phases/p<N>/RELAY.md` only. Do NOT use `--bare`.
+      Builder needs `Edit,Write` to mutate the relay file; reviewers (Gemini, Codex) use the
+      tighter `"Bash,Read"` — Bash only for `./bin/tick`; no file-write surface. `rtl_enforce`
+      is the real guard either way, but tightest allowlist per role.
       *Observable:* Stub `claude` drives one turn through `relay-drive.sh`; off-allowlist edit → exit 6.
 
 ### QA checklist
 
 - [ ] **Containment:** All three shims (`claude`, `codex`, `gemini`) source the SAME `relay-turn-lib.sh` — never reimplement.
+- [ ] **Tool allowlist split:** builder (`claude-turn.sh`) = `"Bash,Read,Edit,Write"`; reviewers (`codex-turn.sh`, `gemini-turn.sh`) = `"Bash,Read"`. Verified before Phase 3.
+- [ ] **Both cost ceilings set:** `claude-turn.sh` passes both `--max-turns` AND `--max-budget-usd` — neither alone is sufficient. Values sized from M2 spike output.
 - [ ] **Round-cap arithmetic:** `--round-cap = 2 × max_review_rounds + 1` (turns ≠ rounds; off-by-one kills phases early). Validated before M3.
 - [ ] **RELAY_PEER threading:** Every turn passes the peer explicitly — unnamed peer caused a live Gemini "release to literal role-string" failure on 2026-06-15.
 
