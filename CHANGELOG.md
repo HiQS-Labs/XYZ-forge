@@ -4,6 +4,27 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-17
 
+### New `consult` skill — one-shot cross-model panel (built + self-dogfooded)
+- **New repo-local skill `consult`** (`skill/consult/SKILL.md` + `relay-automation/consult.sh`): fans the
+  SAME question to Codex + Gemini **in parallel**, reconciled once — distinct from `relay` (iterative 1:1
+  build loop). The script gathers raw opinions; the synthesis (Disagree-first → Agree → reconciled call)
+  is the coordinator's job. Transcripts land in `relay-system/<date>/<label>-<HHMMSS>/`.
+- **Provable repo-isolation boundary:** advisors run with CWD = a **throwaway git worktree** built from the
+  operator's current state (`git stash create` + untracked-non-ignored overlay), so they see WIP/new files
+  but their writes are destroyed with the worktree — the real tree is never their surface. Codex also runs
+  `-s read-only`. Honest scope: this isolates the *repo*, not the *host process*.
+- **Self-dogfooded twice** (the skill reviewing itself via `consult.sh`). Round 1: both models flagged the
+  original best-effort post-hoc revert as unsafe (could clobber operator WIP / miss advisor edits) — Codex
+  pointed at the repo's own `relay-turn-lib.sh` as the pattern to reuse. **Reworked** to worktree isolation.
+  Round 2: both `[Pass]`'d the new boundary ("Blocker-killer"); remaining items applied — narrowed the
+  "read-only" claim to **"repo-isolated"** (Gemini `--yolo` isn't a process sandbox), added a portable
+  **per-advisor `CONSULT_TIMEOUT`** (default 300s; hung CLI → killed → graceful degrade), and noted
+  ignored-file/cost-capture limits honestly. Deferred (logged): Codex-token cost parsing (format un-probed).
+- **Tests:** new `test/consult.sh` (13 assertions: WIP preserved, advisor writes can't leak, worktree
+  cleanup, graceful degrade, all-fail→5, non-git→3, timeout fires) registered in `validate.sh`. Suite **22→23/23**.
+- **Relay skill (Giant Brains repo)** updated separately with a soft pointer: compose with `phase-qa` for
+  doc/spec reviews and give completeness its own omission-diff turn.
+
 ### Planning-doc QA review of `ROADMAP-COMBINED.md` (headless Codex relay) + fixes
 - **Drove a live headless Codex review turn** (`codex exec -s workspace-write`, `gpt-5.4`) over `PROJECT/2-WORKING/ROADMAP-COMBINED.md` via `relay-automation/codex-turn.sh` + the `RELAY-QA` tick token. Codex claimed the token, read the doc + all four `synthesizes:` sources, ran `./validate.sh` itself (22/22), appended graded findings, and closed (`STATUS: Reviewed`, token `done`). Relay thread: `relay-system/2026-06-17/roadmap-combined-qa-review.md` (committed file-scoped `b360e96`, **not pushed**). Containment held — Codex edited only the relay file.
 - **Verdict: Changes requested** — three fixes applied to `ROADMAP-COMBINED.md`:

@@ -26,6 +26,7 @@ TESTS=(
   "watchdog-relay.sh"
   "codex-turn.sh"
   "gemini-turn.sh"
+  "consult.sh"
   "skill-extract.sh"
 )
 
