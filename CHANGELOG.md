@@ -2,6 +2,21 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-17
+
+### Planning-doc QA review of `ROADMAP-COMBINED.md` (headless Codex relay) + fixes
+- **Drove a live headless Codex review turn** (`codex exec -s workspace-write`, `gpt-5.4`) over `PROJECT/2-WORKING/ROADMAP-COMBINED.md` via `relay-automation/codex-turn.sh` + the `RELAY-QA` tick token. Codex claimed the token, read the doc + all four `synthesizes:` sources, ran `./validate.sh` itself (22/22), appended graded findings, and closed (`STATUS: Reviewed`, token `done`). Relay thread: `relay-system/2026-06-17/roadmap-combined-qa-review.md` (committed file-scoped `b360e96`, **not pushed**). Containment held — Codex edited only the relay file.
+- **Verdict: Changes requested** — three fixes applied to `ROADMAP-COMBINED.md`:
+  - **[Blocker] Part A Phase 5 overclaim fixed:** Intent said it dogfooded "the completed system (Cost + Marathon)", but the Marathon dispatcher/builder (Phase 2–4) isn't built (`marathon-agent.sh`/`claude-turn.sh` absent on disk). Reworded to a **relay cost comparison**, with an explicit scope note; checklist "relay/Marathon build" → "relay build".
+  - **[Should] Deferred cost blind spots surfaced:** added a note to Part A Phase 1 that token capture is wired for **Gemini** headless turns only — **Codex** (format un-probed) and **Claude-orchestrator** (no shell-visible count) tokens are NOT captured, so multi-model `tokens_total` is a floor.
+  - **Synthesis source un-phantomed:** `PROJECT/1-INBOX/LOOPS.md` (a listed `synthesizes:` source) had been committed empty (`ce5763d`); now committed with its real content (the loop-architecture checklist the doc cites for Token Budgeting + the five-step cycle).
+- **Concern 3 (worth-it):** keep cost-observability (shipped value) + Part B adversarial hardening (real kernel risks); **gate the Marathon track** on the un-run `claude -p` feasibility spike — Phases 3–5 not "earned" until the builder exists on disk.
+- **Env note:** Codex's first turn failed (exit 5) under the Bash sandbox (blocked `chatgpt.com` backend — TLS/keychain); reran with sandbox disabled.
+
+### `ROADMAP-COMBINED.md` made a true superset of `ROADMAP.md` (prep to make it canonical)
+- **Manual line-level diff** (Claude orchestrator) found COMBINED Part B was a *compression*, not a superset — Codex's relay review had called it a "faithful compression" but missed that the per-gap rationale was dropped. Ported back from `ROADMAP.md` into each Part B phase: the `> Threat / Prove / Test-artifact / Leans-on / Status` blocks for **G3, G1, G2, G4, G5, R4** (6 `Prove:` + 6 `Leans on`), incl. the design specifics that were lost — G2's deterministic tie-breaker (`earliest ts, then lex agent id`), G4's "token as the mutex", G1's `parked_suspects[]` lean, G3's "ownership enforcement is not epoch fencing". Plus the `4X4.md` backlog pointer + "schema change → decision record before it lands" rule, and the buyer/auditor-replay framing.
+- **Promotion done:** `git rm` old root `ROADMAP.md` (the standalone gap-analysis) + `git mv PROJECT/2-WORKING/ROADMAP-COMBINED.md → ROADMAP.md`. The combined roadmap is now the canonical root `ROADMAP.md`. Frontmatter cleaned: dropped the self-referential `ROADMAP.md` from `synthesizes:`, added a `supersedes:` pointer; footer reworded ("now the canonical ROADMAP.md").
+
 ## 2026-06-16
 
 ### Cost observability — Phase 3 shipped (dogfood + xyz-vs-relay comparison)
