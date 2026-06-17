@@ -129,12 +129,20 @@ running one Marathon phase end-to-end. Gated on Phase 2 `claude -p` spike passin
       *Observable:* Loop stops at round cap; does not run forever.
 - [ ] **Transcript capture:** `VERDICT:` and transcript saved under `relay-system/<date>/` and committed.
       *Observable:* Transcript file exists and is committed after the run (scripted step, not a prompt).
+- [ ] **`--pre-advance-cmd` hook:** `marathon-drive.sh` runs a configurable command before emitting
+      `phase.approved` and advancing to the next phase. Default: `bash validate.sh`. Non-zero exit
+      halts with `ESCALATION.md` — same failure path as a relay timeout.
+      *Observable:* A deliberately broken `validate.sh` (one failing test) stops the chain at that
+      phase boundary and writes an escalation record; it does NOT advance to the next phase.
 
 ### QA checklist
 
 - [ ] **Agreement check:** `relay-drive.sh` exits 0 ONLY when `STATUS: Approved` AND token is done (both required).
 - [ ] **Unmodified core:** Chaining works with `relay-drive.sh` completely untouched.
 - [ ] **Only `phases/p1/RELAY.md` changed:** No other tracked file mutated by the headless run.
+- [ ] **Pre-advance gate fires:** `validate.sh` (or the operator-supplied `--pre-advance-cmd`) runs
+      automatically after relay-drive exits 0, before `phase.approved` is emitted. Operator can
+      override to a lighter check for fast inner loops; default must be non-empty.
 
 ---
 
