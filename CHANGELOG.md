@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-17
 
+### ROADMAP model-assignment guidance (Sonnet High vs Opus)
+- **Added a "Model assignment (build-track guidance)" section to `ROADMAP.md`** (right after the Status table): a per-work-item table splitting the two open build tracks by model. **Sonnet High** for mechanical/pattern-following work (the `claude -p` spike, `marathon-agent.sh`/`claude-turn.sh` shims, `marathon-drive.sh`, chaos *test scripts*, E2E/observability/docs); **Opus** for trust-critical kernel-correctness reasoning (R1 epoch-fencing projection diff, G2 dup-token determinism/quarantine, graduate/iterate/abandon synthesis). Part A Ph4 DAG = Sonnet-implements-against-spec → Opus-reviews-edges. Rationale captured: the mechanical bulk is most of the line-count and the Opus-worthy core is small/self-contained, so the split is also the cheapest.
+
 ### Front-door onboarding audit (express) + quick-win doc fixes
 - **Ran the `front-door` skill (express)** on the repo: verdict **✅ Smooth** — a cold newcomer with Node + git reaches `./validate.sh` 23/23 green in ~1–2 min, no auth. Secrets scan clean (tracked tree + quick history). One clear front door (root README → relay-automation README/QUICKSTART). Verified the "23/23" claim is accurate (24 `test/*.sh` files but `_setup.sh` is a sourced helper, not a test) and that the `codex-turn`/`gemini-turn`/`consult` tests run against stubs, so the kernel checkpoint needs no real CLI/auth.
 - **Quick win — QUICKSTART sandbox note:** added a callout to `relay-automation/QUICKSTART.md` §1 that Codex fails under Claude Code's Bash sandbox (keychain + `chatgpt.com` egress blocked) and the error masquerades as a keychain/login problem — run Codex outside the sandbox. Surfaces the documented root-cause at the point of friction.

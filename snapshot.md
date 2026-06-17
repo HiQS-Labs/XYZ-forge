@@ -1,3 +1,120 @@
+# 📸 Snapshot — 2026-06-17 16:11 (Wed)
+
+**Session:** Roadmap "what's next" reconcile + model-fit (Sonnet High vs Opus) for the two open build tracks
+**Project / repo:** Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (Trinity orchestrator; canonical `ROADMAP.md`)
+**Phase:** Planning/triage — both execution tracks un-started; deciding sequencing + which model does which work
+**Status:** Identified next work = Part A Ph2 (`claude -p` spike + dispatcher/shims) and Part B Ph1 (R1 epoch fencing / G3). Mapped each task to Sonnet High vs Opus. No code written; advisory only.
+
+## Git state
+- **Branch:** main
+- **HEAD:** 03da854 docs(front-door): express onboarding audit fixes (✅ Smooth verdict)
+- **Working tree:** 1 modified, 1 untracked
+- **Changed files:**
+```
+ M snapshot.md
+?? AUDIT/XYZ-BRIEF.md
+```
+- **Ahead/behind remote:** in sync with origin/main
+
+## Recent findings
+- **No build-track progress since 2026-06-15** — all recent commits are docs/audit/consult/skill work (roadmap promotion, Codex QA relay, `consult` skill + briefs, front-door audit). The ROADMAP Status table remains the canonical "what's next."
+- **Two open fronts, both un-started:** Part A · Phase 2 (Marathon dispatcher + headless builder; only the Gemini shim done) and Part B · Phase 1 (R1 epoch fencing / G3 stale-writer — flagged highest-priority "keystone," ❌ missing mechanism).
+- **Part A Ph2 gating item = the `claude -p` headless spike** — its only output is a feasibility verdict + per-turn token/wall-clock number that sizes `--max-turns`/`--max-budget-usd`. Phases 3–5 are blocked on it.
+- **Model-fit verdict:** Sonnet High is fine for the spike, all shell shims (`marathon-agent.sh`, `claude-turn.sh`), `marathon-drive.sh`, chaos *test scripts*, E2E/observability/docs. **Keep Opus** for the R1 epoch-fencing kernel diff + G2 dup-token determinism/quarantine (adversarial-correctness invariants) + the graduate/iterate/abandon synthesis. Part A Ph4 (DAG) is borderline — Sonnet against the spec, Opus to review edges.
+- **Orchestrator caveat:** per CLAUDE.md, this Claude is the Trinity observer/co-pilot, not a task-claimer — some of this work may belong to peer agents (Codex/Gemini).
+
+## Next steps
+- Decide sequencing: recommended to run the bounded **`claude -p` spike first** (gates 4 downstream phases) before committing to Part B's heavier kernel work.
+- If proceeding on Part B Ph1: open the **epoch-fencing decision record** before touching the event schema (schema-change-needs-decision-record rule).
+- Confirm whether the spike/shims are meant for this orchestrator or a peer agent.
+
+## Last response (verbatim)
+Here's the honest split. The dividing line isn't the phase — it's **mechanical/pattern-following work** (Sonnet High is excellent) vs. **trust-critical kernel correctness reasoning** (where Opus earns its cost).
+
+## Comfortably Sonnet High
+- **The `claude -p` spike** (Part A Ph2) — it's empirical: run a turn, read the JSON, log the token/wall-clock number. Almost no reasoning depth; just careful observation. *Ideal Sonnet task.*
+- **`marathon-agent.sh` + `claude-turn.sh`** (Part A Ph2) — `case` router and a shim that mirrors the existing `codex-turn.sh`/`gemini-turn.sh` against the shared `relay-turn-lib.sh`. Pure pattern-following with a concrete reference on disk.
+- **`marathon-drive.sh` single-phase loop** (Part A Ph3) — more integration, but it leans on the untouched `relay-drive.sh` and a clear checklist. Sonnet High handles this with the existing scaffolding as a template.
+- **Most chaos *test scripts*** (Part B Ph2) — `kill -9` + watchdog-assertion harnesses are mechanical once the mechanism exists.
+- **E2E fresh-repo script, observability JSON logs, reference-deploy docs** (Part B Ph3/4) — scripting + docs, low ambiguity.
+
+## Keep on Opus
+- **R1 epoch fencing — the projection kernel change** (Part B Ph1). This is the one that genuinely wants Opus: monotonic-epoch semantics, replay determinism, and "stale writer *cannot* advance" is an adversarial-correctness invariant. Get the fencing logic subtly wrong and the whole "kernel you can trust unattended" claim collapses. The *chaos test* around it is Sonnet-fine; the kernel mutation is not.
+- **G2 dup-token determinism + quarantine reasoning** (Part B Ph2) — "identical projection across N replays regardless of arrival order" is a real correctness proof, not a script.
+- **The synthesis/recommendation calls** — graduate vs. iterate vs. abandon. Judgment, not mechanics.
+
+## Borderline (Sonnet with a tight spec)
+- **Part A Phase 4** (MARATHON.yaml DAG, state projection, cross-phase injection) — architectural, but the design is already fully specified in the roadmap. Sonnet High can implement it against that spec; I'd have Opus review the escalation/ordering edges.
+
+**Practical pattern:** let Sonnet High do the spike, all the shell shims, and the test harnesses; reserve Opus for the **epoch-fencing kernel diff and the G2 determinism logic** — the two places where a subtle bug isn't a failing test, it's a silently-corruptible coordinator. That's also the cheapest division: the mechanical bulk is the majority of the line-count, and the Opus-worthy core is small and self-contained.
+
+---
+
+# 📸 Snapshot — 2026-06-17 15:49 (Wed)
+
+**Session:** front-door onboarding audit (express level) — cold-newcomer walk of clone→working path
+**Project / repo:** Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (Project 2 — relay-automation, on `tick`)
+**Phase:** Audit/review of onboarding front door; repo is shipped beta (relay Phases 1–5 + cross-model live-proven)
+**Status:** Front-door audit complete — verdict ✅ Smooth. Report delivered in-chat; no files changed by the audit.
+
+## Git state
+- **Branch:** main
+- **HEAD:** 824da4b Add AUDIT transcripts
+- **Working tree:** 1 modified, 1 untracked
+- **Changed files:**
+```
+ M CHANGELOG.md
+?? AUDIT/XYZ-BRIEF.md
+```
+- **Ahead/behind remote:** in sync with origin/main
+
+## Recent findings
+- **Verdict: ✅ Smooth.** Cold newcomer with Node + git can clone → `./validate.sh` → 23/23 green in ~1–2 min, no auth required.
+- **Secrets: clean.** No live-format keys in tracked tree or quick `git log -S 'sk-'` history scan. `.gitignore` correctly excludes `.tick/` + `.claude/settings.local.json`.
+- **Source of truth: one front door.** Root README explicitly designates relay-automation/README.md (canonical contract) + QUICKSTART.md (device bring-up); no competing install commands. ~12 loose root `.md` files are clutter but navigated by README "Repo map".
+- **"23/23" claim verified accurate, not drift:** validate.sh lists 23 tests; test/ has 24 `.sh` but the 24th (`_setup.sh`) is a sourced helper, not a test.
+- **CLI tests are stubbed** (`CODEX_BIN`/`GEMINI_BIN` → fake binaries) — so `./validate.sh` needs no real codex/gemini CLI or auth. First success is self-contained.
+- **Real walls (product use only):** two transitive auth walls — Codex (ChatGPT login/keychain) + Gemini (GCA auth); plus sandbox/keychain/egress gotcha (Codex fails under Claude Code Bash sandbox: keychain + chatgpt.com blocked).
+
+## Next steps
+- (Inferred) Optional quick win: add a one-line sandbox/keychain note to relay-automation/QUICKSTART.md §1 next to the autonomy check.
+- (Inferred) Optional medium lift: thin the repo root by moving non-onboarding `.md` files (4X4, snapshot, SKILL-BUILD-PLAN, TODO_DEFER) into docs/ or PROJECT/.
+- No action required — audit was advisory; nothing committed.
+
+## Last response (verbatim)
+Verified everything I need. The CLI tests use stubs (`CODEX_BIN`/`GEMINI_BIN` → fake binaries), so `./validate.sh` needs only Node + git — first success is self-contained. Here's the express report.
+
+---
+
+## Front Door audit — `xyz-3-agents-swarm` (express)
+
+**Verdict:** ✅ **Smooth** — a cold newcomer with Node + git clones, runs `./validate.sh`, and reaches a verifiable 23/23 green in a minute or two. The full *product* (live Codex/Gemini relays) sits behind real per-CLI auth walls, but the README is honest that those are a separate, beta surface. Auditing `HEAD` here — working tree is dirty only with `CHANGELOG.md` + an untracked `AUDIT/XYZ-BRIEF.md`, neither of which affects the path.
+
+**🔑 Leaked secrets:** Clean. No live-format keys (`sk-`, `ghp_`, `AKIA`, PEM) in the tracked tree or in a quick `git log -S 'sk-'` history pass. `.gitignore` correctly excludes `.tick/` and `.claude/settings.local.json`; no `.env`/`.pem`/`.key` is tracked.
+
+**Source of truth:** One clear front door. Root [README.md](README.md) explicitly names the canonical chain — "Start here → [relay-automation/README.md](relay-automation/README.md) (operator contract) → [relay-automation/QUICKSTART.md](relay-automation/QUICKSTART.md) (device bring-up)" — and the two sub-docs cross-link with explicit role labels ("README is canonical; QUICKSTART is only the bootstrap path"). No competing install commands. The root *does* carry ~12 loose `.md` files (CLAUDE/AGENTS/CODEX/GEMINI/4X4/RECAP/ROADMAP/snapshot…), but the README "Repo map" section navigates them, so it's clutter, not competition.
+
+**Path walk (kernel — the default first success):**
+1. Clone — `[Smooth] [Agent-soluble]`
+2. `./validate.sh` — `[Smooth] [Agent-soluble]` — needs only Node + git. **Verified** the suite's `codex-turn`/`gemini-turn`/`consult` tests run against stubs (`CODEX_BIN`/`GEMINI_BIN` → fake binaries), so no real CLI or auth is required to go green.
+3. First success = **23/23**. **Verified accurate, not drift**: `validate.sh` lists 23 tests; `test/` holds 24 `.sh` files, but the 24th is `_setup.sh`, a sourced helper, not a test. The README's "23/23" claim matches.
+
+**Path walk (product — live relay automation):**
+4. Install `codex` CLI + `gemini` CLI — `[Bumpy] [Partially gated]` — QUICKSTART documents the prereqs well, including a Codex *autonomy* check (`-s workspace-write` must actually write).
+5. Auth each CLI independently — `[Blocked] [Human-gated]` — **two separate transitive auth walls**: Codex needs a ChatGPT login (reads the OS keychain), Gemini needs GCA auth. The product's docs can't satisfy these for you.
+6. Run a real headless turn **under an AI agent's sandbox** — `[Blocked] [Partially gated]` — known wall: Codex fails under Claude Code's Bash sandbox (blocked keychain + `chatgpt.com` egress). Fix is to run it outside the agent's sandbox. *(This is your own documented operating note — worth a one-line callout in QUICKSTART so the next operator doesn't read the keychain error as the real cause.)*
+
+**The hoops (human-gated, unavoidable):** (1) a ChatGPT account/login for Codex; (2) GCA auth for Gemini. The kernel checkpoint (`./validate.sh`) clears with neither — only the live-relay product needs them.
+
+**Fix order:**
+- *Quick wins (minutes):* Add a one-line "Running under a sandboxed agent? Codex needs the keychain + chatgpt.com egress — run it outside the sandbox" note to QUICKSTART §1, next to the autonomy check. Optionally drop a "👉 New here? Run `./validate.sh` first" line at the very top of the README so the zero-auth success path is the first thing seen.
+- *Medium (an afternoon):* Thin the root — move the non-onboarding `.md` files (4X4, snapshot, SKILL-BUILD-PLAN, TODO_DEFER) into `docs/` or `PROJECT/` so the front door isn't visually buried. Add an explicit "Access you'll need: a ChatGPT login (Codex) + GCA auth (Gemini)" callout in relay-automation/README.md before operator usage.
+- *Heavy:* none warranted — the structure is sound.
+
+**Bottom line:** This is a rare repo where the front door actually works as written. The kernel onboarding is genuinely smooth and auth-free; the only real walls are the two CLI logins for the live product, which the docs are honest about. The single highest-value add is surfacing the sandbox/keychain gotcha so it doesn't masquerade as a different error.
+
+---
+
 # 📸 Snapshot — 2026-06-15 19:44 (Mon)
 
 **Session:** relay-automation cross-model hardening — Gemini CLI integrated; shared safety core (`relay-turn-lib.sh`) with `codex-turn.sh` + `gemini-turn.sh` thin wrappers; MBP16 portability fixes; ROADMAP.md (commercial-viability gaps); two live Gemini-CLI relay reviews

@@ -32,6 +32,28 @@ Two parallel tracks, sequenced independently:
 | **Part A Phase 5 — Cross-system comparison** ✅ shipped: `COST-COMPARISON.md` generated from `tick analyze --format json`; `FEEDBACK-2026-06-15.md` point 5 closed; live `-o json` relay turn validated end-to-end. | **Part A Phase 2 — Marathon dispatcher + headless builder** (`marathon-agent.sh`, `claude-turn.sh`, `claude -p` spike) |
 | **Part B: Mechanically proven** ✅ (`validate.sh` 22/22; live Codex + Gemini headless turns; relay containment 3-model validated) | **Part B Phase 1 — Epoch fencing & stale-writer prevention** (R1 + G3) |
 
+## Model assignment (build-track guidance)
+
+The dividing line is **mechanical/pattern-following work** (Sonnet High is excellent) vs.
+**trust-critical kernel-correctness reasoning** (reserve Opus). The mechanical bulk is most of the
+line-count; the Opus-worthy core is small and self-contained, so this split is also the cheapest one.
+
+| Work item | Model | Why |
+|---|---|---|
+| `claude -p` headless spike (A·P2) | **Sonnet High** | Empirical — run a turn, read the JSON, log the token/wall-clock number. Almost no reasoning depth. |
+| `marathon-agent.sh` + `claude-turn.sh` (A·P2) | **Sonnet High** | `case` router + a shim mirroring the existing `codex-turn.sh`/`gemini-turn.sh` against shared `relay-turn-lib.sh`. Pattern-following with a concrete on-disk reference. |
+| `marathon-drive.sh` single-phase loop (A·P3) | **Sonnet High** | Integration against an untouched `relay-drive.sh` + a clear checklist. Scaffolding acts as template. |
+| Chaos **test scripts** (B·P2: midturn-kill, concurrent-pollers) | **Sonnet High** | `kill -9` + watchdog-assertion harnesses are mechanical once the mechanism exists. |
+| E2E fresh-repo script, observability JSON logs, reference-deploy docs (B·P3/P4) | **Sonnet High** | Scripting + docs, low ambiguity. |
+| Multi-phase DAG: `MARATHON.yaml` parse, state projection, cross-phase injection (A·P4) | **Sonnet High** *(spec)* → **Opus** *(review)* | Design is fully specified in the roadmap; Sonnet implements against the spec, Opus reviews escalation/ordering edges. |
+| **R1 epoch fencing — projection kernel change (B·P1)** | **Opus** | Monotonic-epoch semantics + replay determinism + "stale writer *cannot* advance" is an adversarial-correctness invariant. A subtle bug isn't a failing test — it's a silently-corruptible coordinator. *(The chaos test around it is Sonnet-fine; the kernel mutation is not.)* |
+| **G2 dup-token determinism + quarantine (B·P2)** | **Opus** | "Identical projection across N replays regardless of arrival order" is a correctness proof, not a script. |
+| Graduate / iterate / abandon synthesis | **Opus** | Judgment, not mechanics. |
+
+**Practical pattern:** let Sonnet High do the spike, all the shell shims, and the test harnesses;
+reserve Opus for the **epoch-fencing kernel diff and the G2 determinism logic** — the two places where
+a subtle bug is silent corruption, not a red test.
+
 ## Table of contents
 
 **Part A — Marathon**
