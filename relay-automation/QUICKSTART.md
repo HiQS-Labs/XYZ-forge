@@ -30,6 +30,12 @@ so it does *not* prove the turn-taker can edit the relay file. `codex-turn.sh` d
 If `codex` isn't on PATH or isn't authed, fix that first — the shim shells out to it
 (override the binary with `CODEX_BIN=/path/to/codex`).
 
+> **Running under a sandboxed AI agent? Run Codex outside the sandbox.** Under Claude Code's
+> Bash sandbox, `codex` fails because it can't reach the OS keychain (for its ChatGPT auth) or
+> egress to `chatgpt.com`. The error often *looks* like a keychain or login problem — the real
+> wall is the sandbox boundary, not your credentials. Run the codex turn outside the agent's
+> sandbox (or with sandboxing disabled). Gemini's GCA auth is not affected this way.
+
 ## 2. Clone / pull
 
 ```bash

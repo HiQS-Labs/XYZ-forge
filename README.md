@@ -5,6 +5,10 @@ the same codebase without colliding. The core primitive is `tick`, a tiny local
 event-log CLI; the main product surface built on top of it is
 `relay-automation/`.
 
+> 👉 **New here?** With just Node + git, run `./validate.sh` — it should print **23 / 23**
+> green in a minute, no accounts or API keys required. That's the fastest proof the kernel
+> works. The live relay product (Codex/Gemini turns) needs per-CLI auth — see "Start here" below.
+
 ## Current status
 
 - `validate.sh` is green at **23 / 23**.
