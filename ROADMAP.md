@@ -227,26 +227,51 @@ not just tracked-file edits.
 
 ## Part A · Phase 4 — Multi-Phase Chaining & State (Full Marathon)
 
-**Status: 🔲 Not started**
+**Status: 🟡 M5 shipped + E2E-validated 2026-06-17; M6 + M7 deferred.** A `MARATHON.yaml` plan runs
+end-to-end: parse → resolve `depends_on` order → run each phase via `marathon-drive` → halt on the
+first failure → `marathon.complete` on full success. `validate.sh` 28/28. **Real 2-phase E2E run
+(Claude builder + Codex reviewer, un-stubbed, `depends_on` chain):** both phases reached Approved,
+`marathon.complete` emitted, state cleanliness verified (p2 built from a clean tree), and the
+AI-built cross-phase code worked (p2's test passed against p1's helper). All 3 QA invariants met.
 
 **Intent:** Scale the single loop into an ordered DAG of loops, fulfilling the full MARATHON.md vision.
 
 ### Checklist
 
-- [ ] **Parse `MARATHON.yaml`:** Resolve phases, `depends_on` order, and per-phase `reviewer` fields.
-      *Observable:* Script correctly routes reviewer and resolves execution order from YAML.
-- [ ] **Phase chaining & escalation:** On relay-drive exit 0 → advance; exit 3/4 → write `ESCALATION.md` and halt.
-      *Observable:* Unsatisfiable middle phase halts the chain at that phase; next phase does NOT start.
-- [ ] **State projection (M7):** `MARATHON-STATE.md` projected from `.tick/events/`.
+- [x] **Parse `MARATHON.yaml`:** ✅ **M5 2026-06-17** — zero-dep Node reader (`src/marathon-yaml.js` +
+      `bin/marathon-yaml`): constrained-subset parse, validation (bad reviewer / unknown dep / cycle /
+      dup id), topological `depends_on` order → TSV/JSON. Test `test/marathon-yaml.sh` 11/11.
+- [x] **Phase chaining & escalation:** ✅ **M5 2026-06-17** — `relay-automation/marathon.sh`: per-phase
+      `round-cap = 2*max_review_rounds+1`, routes reviewer/brief/artifact to `marathon-drive --phase-id`,
+      advances on exit 0, HALTS on the first non-zero (later phases never start; the phase's
+      `ESCALATION.md` is already written), emits `marathon.complete` only on full success. `marathon-drive`
+      generalized with `--phase-id` (phases/<id>/, `MARATHON-<ID>-TURN`; 38/38 backward-compat). Test
+      `test/marathon.sh` 11/11 (order, cap math, halt-after-middle-phase, depends_on reorder, error paths).
+- [ ] **State projection (M7):** `MARATHON-STATE.md` projected from `.tick/events/` *(deferred — boundary
+      events already land in `.tick/events/`: phase.start/approved/escalated + marathon.complete)*.
       *Observable:* State file reflects current phase, per-phase round counts, and statuses.
-- [ ] **Cross-phase context injection (M6):** Approved prior-phase artifact prepended into next builder prompt.
+- [ ] **Cross-phase context injection (M6):** Approved prior-phase artifact prepended into next builder
+      prompt *(deferred — spec says "start without this; add only once a phase genuinely needs it")*.
       *Observable:* Phase 2 builder turn visibly references a decision from Phase 1.
 
 ### QA checklist
 
-- [ ] **State cleanliness:** Next phase's `rtl_before` snapshot is clean before it starts.
-- [ ] **Peer threading:** `RELAY_PEER` passed on every turn handoff — no bare "the other agent" strings.
-- [ ] **Emit tick events at phase boundaries:** `marathon.phase.start` / `phase.approved` / `phase.escalated` / `marathon.complete`.
+- [x] **State cleanliness:** Next phase's `rtl_before` snapshot is clean before it starts. ✅ **Verified by
+      a real 2-phase E2E run 2026-06-17** (Claude builder + Codex reviewer, `depends_on` chain): the p2
+      builder commit touched ONLY `phases/p2/RELAY.md` + its own artifact — not p1's files — proving p2
+      started from a clean tree with no p1 residue. Both phases reached Approved, `marathon.complete` emitted.
+- [x] **Peer threading:** `RELAY_PEER` passed on every turn handoff — no bare "the other agent" strings.
+      ✅ `marathon-drive` exports `MARATHON_BUILDER`/`REVIEWER` per phase; `marathon-agent:35` threads `RELAY_PEER`.
+      Confirmed independently by the Gemini QA review (2026-06-17, `relay-system/.../phase4-qa-220946/`).
+- [x] **Emit tick events at phase boundaries:** ✅ `marathon.phase.start` (mdrive:229) / `approved` (288) /
+      `escalated` (262) + `marathon.complete` (marathon.sh:95) — all emitted; seen live in the G4/CI dogfood tick chains.
+
+> **Automated QA review (Gemini, 2026-06-17):** verdict *"ship-ready for dogfood; all 3 invariants met."*
+> No real blockers — its one **[Blocker]** (round-cap "one turn short") was **refuted against `relay-drive:88`**
+> (the cap is a maximum; the relay exits early on approval, so `2N+1` correctly provisions N reviews; the
+> suggested `2N+2` would over-grant a review). It independently confirmed the `tr→\037` tab fix, peer
+> threading, and topo-sort determinism, and flagged the stub-coverage gap (→ the real multi-phase E2E run).
+> *(Single-advisor: Codex died on a resource kill, so each Gemini claim was verified against source.)*
 
 ---
 

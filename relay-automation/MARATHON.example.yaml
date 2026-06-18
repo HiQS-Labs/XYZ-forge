@@ -1,0 +1,31 @@
+# MARATHON.example.yaml — a multi-phase plan for marathon.sh (Phase 4 / M5).
+# Run it with:  relay-automation/marathon.sh --plan relay-automation/MARATHON.example.yaml
+# Each phase runs through marathon-drive.sh in depends_on order; the chain HALTS on the first
+# phase that fails its review/gate (that phase's ESCALATION.md is left behind), and emits a
+# marathon.complete event only when every phase is approved.
+#
+# Per-phase fields:
+#   id                 phase id → phases/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
+#   reviewer           codex* or gemini* — the model that reviews this phase              (required)
+#   brief              path (repo-relative) to the phase's task markdown                  (required)
+#   artifact           comma-separated repo-relative file(s) the builder may create/edit  (optional)
+#   max_review_rounds  round-cap = 2*N+1 (default 2 → cap 5)                              (optional)
+#   depends_on         run this phase only after the named phase is approved              (optional)
+#   name               human label for logs                                              (optional)
+
+name: example-refactor
+phases:
+  - id: p1
+    name: Define the event schema
+    reviewer: codex
+    brief: phases-briefs/p1-schema.md
+    artifact: src/schema.js
+    max_review_rounds: 2
+
+  - id: p2
+    name: Single-writer lease on top of the schema
+    reviewer: gemini
+    brief: phases-briefs/p2-lease.md
+    artifact: src/lease.js
+    depends_on: p1
+    max_review_rounds: 3

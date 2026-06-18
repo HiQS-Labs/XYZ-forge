@@ -1,0 +1,50 @@
+#!/usr/bin/env node
+'use strict';
+
+// marathon-yaml — read + validate MARATHON.yaml, emit phases in execution order (Phase 4 / M5).
+// Zero-dep (Node stdlib). Bash orchestrators consume the TSV; --format json for tooling.
+//
+// Usage:  bin/marathon-yaml <MARATHON.yaml> [--format tsv|json]
+// TSV columns (tab-separated), one phase per line, in resolved depends_on order:
+//   id  reviewer  max_review_rounds  depends_on  brief  artifact  name
+// Exit: 0 ok · 1 parse/validation error · 2 usage.
+
+const fs = require('fs');
+const { parseMarathonYaml, resolveOrder } = require('../src/marathon-yaml');
+
+function die(msg, code) { process.stderr.write(`marathon-yaml: ${msg}\n`); process.exit(code == null ? 1 : code); }
+
+const args = process.argv.slice(2);
+let file = '';
+let format = 'tsv';
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--format') { format = args[++i]; }
+  else if (args[i] === '--help' || args[i] === '-h') {
+    process.stdout.write('Usage: bin/marathon-yaml <MARATHON.yaml> [--format tsv|json]\n'); process.exit(0);
+  } else if (!file) { file = args[i]; }
+  else die(`unexpected argument: ${args[i]}`, 2);
+}
+if (!file) die('a MARATHON.yaml path is required', 2);
+if (format !== 'tsv' && format !== 'json') die(`unknown --format: ${format}`, 2);
+
+let text;
+try { text = fs.readFileSync(file, 'utf8'); } catch (e) { die(`cannot read ${file}: ${e.message}`); }
+
+let order;
+let plan;
+try {
+  plan = parseMarathonYaml(text);
+  order = resolveOrder(plan);
+} catch (e) {
+  die(e.message);
+}
+
+if (format === 'json') {
+  process.stdout.write(JSON.stringify({ name: plan.name, phases: order }, null, 2) + '\n');
+} else {
+  for (const p of order) {
+    process.stdout.write([
+      p.id, p.reviewer, p.max_review_rounds || '', p.depends_on || '', p.brief || '', p.artifact || '', p.name || '',
+    ].join('\t') + '\n');
+  }
+}

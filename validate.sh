@@ -28,7 +28,9 @@ TESTS=(
   "codex-turn.sh"
   "gemini-turn.sh"
   "claude-turn.sh"
+  "marathon-yaml.sh"
   "marathon-drive.sh"
+  "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
 )
