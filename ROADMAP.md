@@ -253,9 +253,21 @@ the first failure → `marathon.complete` on full success. `validate.sh` 28/28.
 
 ### QA checklist
 
-- [ ] **State cleanliness:** Next phase's `rtl_before` snapshot is clean before it starts.
-- [ ] **Peer threading:** `RELAY_PEER` passed on every turn handoff — no bare "the other agent" strings.
-- [ ] **Emit tick events at phase boundaries:** `marathon.phase.start` / `phase.approved` / `phase.escalated` / `marathon.complete`.
+- [ ] **State cleanliness:** Next phase's `rtl_before` snapshot is clean before it starts. *(⚠️ NOT yet
+      verified — can't be checked from code or the stubbed unit tests; needs a real multi-phase run, as the
+      MARATHON.md spec itself flags. The remaining QA gap.)*
+- [x] **Peer threading:** `RELAY_PEER` passed on every turn handoff — no bare "the other agent" strings.
+      ✅ `marathon-drive` exports `MARATHON_BUILDER`/`REVIEWER` per phase; `marathon-agent:35` threads `RELAY_PEER`.
+      Confirmed independently by the Gemini QA review (2026-06-17, `relay-system/.../phase4-qa-220946/`).
+- [x] **Emit tick events at phase boundaries:** ✅ `marathon.phase.start` (mdrive:229) / `approved` (288) /
+      `escalated` (262) + `marathon.complete` (marathon.sh:95) — all emitted; seen live in the G4/CI dogfood tick chains.
+
+> **Automated QA review (Gemini, 2026-06-17):** verdict *"ship-ready for dogfood; all 3 invariants met."*
+> No real blockers — its one **[Blocker]** (round-cap "one turn short") was **refuted against `relay-drive:88`**
+> (the cap is a maximum; the relay exits early on approval, so `2N+1` correctly provisions N reviews; the
+> suggested `2N+2` would over-grant a review). It independently confirmed the `tr→\037` tab fix, peer
+> threading, and topo-sort determinism, and flagged the stub-coverage gap (→ the real multi-phase E2E run).
+> *(Single-advisor: Codex died on a resource kill, so each Gemini claim was verified against source.)*
 
 ---
 
