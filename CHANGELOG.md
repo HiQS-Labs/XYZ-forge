@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-17
 
+### Part A Phase 4 (M5) — REAL 2-phase E2E validated (chaining proven, last QA gap closed)
+First un-stubbed multi-phase run (isolated worktree): a 2-phase `MARATHON.yaml` (p1 builds `src/greet.js`; p2 `depends_on: p1`, builds `test/greet-smoke.sh`), Claude builder + Codex reviewer, `--pre-advance-cmd true`.
+- **Full chain succeeded:** p1 (build → Codex approves, 2 turns) → **p2 starts** (build → Codex approves, 2 turns) → `marathon.complete`. Clean tick chain: `phase.start/approved` ×2 + `marathon.complete`. `marathon.sh` exit 0.
+- **State cleanliness (the last QA invariant) VERIFIED:** git log shows the p2 builder commit touched ONLY `phases/p2/RELAY.md` + its artifact — *not* p1's files — so p2's `rtl_before` started from a clean tree with no p1 residue. (The MARATHON.md spec flagged this as a first-real-run check.)
+- **AI-built cross-phase code works:** p2's test (`node -e` requiring `./src/greet.js`) ran against p1's helper → `PASS: greet('world') => Hello, world!`. The chain autonomously produced real, working, cross-phase-dependent code.
+- **Clean run** (vs the G4/CI dogfoods): no rogue behavior, no integration bug — the Phase 3.6 hardening + the new chaining held; both builders stayed file-scoped. Closes the stub-coverage gap Gemini's QA flagged. Demo artifacts discarded with the worktree; the validation is what we keep.
+
 ### Part A Phase 4 (M5) — multi-phase chaining: MARATHON.yaml runs end-to-end
 The single-phase loop is now an ordered chain. A `MARATHON.yaml` plan runs parse → resolve `depends_on` order → run each phase via `marathon-drive` → halt on the first failure → `marathon.complete` on full success.
 - **`src/marathon-yaml.js` + `bin/marathon-yaml`** — zero-dep (Node stdlib, no `yq`) reader for the constrained MARATHON.yaml subset: parses `name` + a `phases:` list (`id`/`reviewer`/`max_review_rounds`/`depends_on`/`brief`/`artifact`/`name`), validates loudly (bad reviewer, unknown/self/cyclic `depends_on`, duplicate id, missing reviewer), resolves a deterministic topological order, emits TSV (for bash) or `--format json`. Test `test/marathon-yaml.sh` **11/11**.

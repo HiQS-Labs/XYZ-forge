@@ -227,9 +227,12 @@ not just tracked-file edits.
 
 ## Part A · Phase 4 — Multi-Phase Chaining & State (Full Marathon)
 
-**Status: 🟡 M5 shipped 2026-06-17 (chaining works); M6 + M7 deferred.** A `MARATHON.yaml` plan now
-runs end-to-end: parse → resolve `depends_on` order → run each phase via `marathon-drive` → halt on
-the first failure → `marathon.complete` on full success. `validate.sh` 28/28.
+**Status: 🟡 M5 shipped + E2E-validated 2026-06-17; M6 + M7 deferred.** A `MARATHON.yaml` plan runs
+end-to-end: parse → resolve `depends_on` order → run each phase via `marathon-drive` → halt on the
+first failure → `marathon.complete` on full success. `validate.sh` 28/28. **Real 2-phase E2E run
+(Claude builder + Codex reviewer, un-stubbed, `depends_on` chain):** both phases reached Approved,
+`marathon.complete` emitted, state cleanliness verified (p2 built from a clean tree), and the
+AI-built cross-phase code worked (p2's test passed against p1's helper). All 3 QA invariants met.
 
 **Intent:** Scale the single loop into an ordered DAG of loops, fulfilling the full MARATHON.md vision.
 
@@ -253,9 +256,10 @@ the first failure → `marathon.complete` on full success. `validate.sh` 28/28.
 
 ### QA checklist
 
-- [ ] **State cleanliness:** Next phase's `rtl_before` snapshot is clean before it starts. *(⚠️ NOT yet
-      verified — can't be checked from code or the stubbed unit tests; needs a real multi-phase run, as the
-      MARATHON.md spec itself flags. The remaining QA gap.)*
+- [x] **State cleanliness:** Next phase's `rtl_before` snapshot is clean before it starts. ✅ **Verified by
+      a real 2-phase E2E run 2026-06-17** (Claude builder + Codex reviewer, `depends_on` chain): the p2
+      builder commit touched ONLY `phases/p2/RELAY.md` + its own artifact — not p1's files — proving p2
+      started from a clean tree with no p1 residue. Both phases reached Approved, `marathon.complete` emitted.
 - [x] **Peer threading:** `RELAY_PEER` passed on every turn handoff — no bare "the other agent" strings.
       ✅ `marathon-drive` exports `MARATHON_BUILDER`/`REVIEWER` per phase; `marathon-agent:35` threads `RELAY_PEER`.
       Confirmed independently by the Gemini QA review (2026-06-17, `relay-system/.../phase4-qa-220946/`).
