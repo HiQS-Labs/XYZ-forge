@@ -227,19 +227,28 @@ not just tracked-file edits.
 
 ## Part A · Phase 4 — Multi-Phase Chaining & State (Full Marathon)
 
-**Status: 🔲 Not started**
+**Status: 🟡 M5 shipped 2026-06-17 (chaining works); M6 + M7 deferred.** A `MARATHON.yaml` plan now
+runs end-to-end: parse → resolve `depends_on` order → run each phase via `marathon-drive` → halt on
+the first failure → `marathon.complete` on full success. `validate.sh` 28/28.
 
 **Intent:** Scale the single loop into an ordered DAG of loops, fulfilling the full MARATHON.md vision.
 
 ### Checklist
 
-- [ ] **Parse `MARATHON.yaml`:** Resolve phases, `depends_on` order, and per-phase `reviewer` fields.
-      *Observable:* Script correctly routes reviewer and resolves execution order from YAML.
-- [ ] **Phase chaining & escalation:** On relay-drive exit 0 → advance; exit 3/4 → write `ESCALATION.md` and halt.
-      *Observable:* Unsatisfiable middle phase halts the chain at that phase; next phase does NOT start.
-- [ ] **State projection (M7):** `MARATHON-STATE.md` projected from `.tick/events/`.
+- [x] **Parse `MARATHON.yaml`:** ✅ **M5 2026-06-17** — zero-dep Node reader (`src/marathon-yaml.js` +
+      `bin/marathon-yaml`): constrained-subset parse, validation (bad reviewer / unknown dep / cycle /
+      dup id), topological `depends_on` order → TSV/JSON. Test `test/marathon-yaml.sh` 11/11.
+- [x] **Phase chaining & escalation:** ✅ **M5 2026-06-17** — `relay-automation/marathon.sh`: per-phase
+      `round-cap = 2*max_review_rounds+1`, routes reviewer/brief/artifact to `marathon-drive --phase-id`,
+      advances on exit 0, HALTS on the first non-zero (later phases never start; the phase's
+      `ESCALATION.md` is already written), emits `marathon.complete` only on full success. `marathon-drive`
+      generalized with `--phase-id` (phases/<id>/, `MARATHON-<ID>-TURN`; 38/38 backward-compat). Test
+      `test/marathon.sh` 11/11 (order, cap math, halt-after-middle-phase, depends_on reorder, error paths).
+- [ ] **State projection (M7):** `MARATHON-STATE.md` projected from `.tick/events/` *(deferred — boundary
+      events already land in `.tick/events/`: phase.start/approved/escalated + marathon.complete)*.
       *Observable:* State file reflects current phase, per-phase round counts, and statuses.
-- [ ] **Cross-phase context injection (M6):** Approved prior-phase artifact prepended into next builder prompt.
+- [ ] **Cross-phase context injection (M6):** Approved prior-phase artifact prepended into next builder
+      prompt *(deferred — spec says "start without this; add only once a phase genuinely needs it")*.
       *Observable:* Phase 2 builder turn visibly references a decision from Phase 1.
 
 ### QA checklist

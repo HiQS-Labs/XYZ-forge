@@ -14,8 +14,9 @@ set -euo pipefail
 #     [--builder    <AGENT_ID>]  builder agent (default: claude)
 #     [--round-cap  <N>]         relay-drive round cap (default: 5 = 2*2+1)
 #     [--pre-advance-cmd <CMD>]  gate before phase.approved (default: bash validate.sh)
-#     [--phases-dir <DIR>]       where to create phases/p1/ (default: <repo-root>/phases)
-#     [--relay-task <ID>]        tick task name (default: MARATHON-P1-TURN)
+#     [--phases-dir <DIR>]       where to create phases/<id>/ (default: <repo-root>/phases)
+#     [--phase-id <ID>]          which phase to drive: phases/<id>/ (default: p1; the orchestrator sets it)
+#     [--relay-task <ID>]        tick task name (default: MARATHON-<PHASE_ID>-TURN)
 #     [--artifact <PATHS>]       comma-separated repo-relative file(s) the builder may create/edit
 #                                beyond the relay file (passed to the shims as ALLOW_PATHS). Omit for
 #                                a relay-only phase (conversation → approval, no source edit).
@@ -50,8 +51,9 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
   --builder AGENT         Builder agent id (default: claude).
   --round-cap N           relay-drive turn cap (default: 5).
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh).
-  --phases-dir DIR        Where to create phases/p1/ (default: <repo-root>/phases).
-  --relay-task ID         Tick task name (default: MARATHON-P1-TURN).
+  --phases-dir DIR        Where to create phases/<id>/ (default: <repo-root>/phases).
+  --phase-id ID           Which phase to drive: phases/<id>/ (default: p1).
+  --relay-task ID         Tick task name (default: MARATHON-<PHASE_ID>-TURN).
   --artifact PATHS        Comma-separated repo-relative file(s) the builder may create/edit beyond
                           the relay file (ALLOW_PATHS for the turn-takers). Omit for a relay-only phase.
   --require-clean         Hard-stop (exit 2) if the workspace has pre-existing changes before seeding.
@@ -65,7 +67,8 @@ REVIEWER=""
 ROUND_CAP=5
 PRE_ADVANCE_CMD=""   # resolved to default after ROOT is set
 PHASES_DIR=""        # resolved to default after ROOT is set
-RELAY_TASK="MARATHON-P1-TURN"
+PHASE_ID="p1"        # which phase this invocation drives (phases/<id>/); the orchestrator sets it
+RELAY_TASK=""        # resolved to MARATHON-<PHASE_ID>-TURN after parsing, unless given
 ARTIFACT_PATHS=""    # comma-separated repo-relative file(s) the builder may create/edit (beyond RELAY.md)
 REQUIRE_CLEAN=0      # --require-clean: hard-stop if the workspace has pre-existing changes
 DRY_RUN=0
@@ -78,6 +81,7 @@ while (($# > 0)); do
     --round-cap)       ROUND_CAP="${2:-}"; shift 2 ;;
     --pre-advance-cmd) PRE_ADVANCE_CMD="${2:-}"; shift 2 ;;
     --phases-dir)      PHASES_DIR="${2:-}"; shift 2 ;;
+    --phase-id)        PHASE_ID="${2:-}"; shift 2 ;;
     --relay-task)      RELAY_TASK="${2:-}"; shift 2 ;;
     --artifact)        ARTIFACT_PATHS="${2:-}"; shift 2 ;;
     --require-clean)   REQUIRE_CLEAN=1; shift ;;
@@ -91,9 +95,12 @@ done
 [[ -f "$PHASE_BRIEF_FILE" ]] || die "phase brief not found: $PHASE_BRIEF_FILE"
 [[ -n "$REVIEWER"         ]] || { usage; die "--reviewer AGENT required"; }
 [[ -n "$BUILDER"          ]] || die "--builder cannot be empty"
+[[ -n "$PHASE_ID"         ]] || die "--phase-id cannot be empty"
 
 PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
 PRE_ADVANCE_CMD="${PRE_ADVANCE_CMD:-"bash $ROOT/validate.sh"}"
+# Default the tick token name off the phase id (p1 → MARATHON-P1-TURN), keeping the Phase-3 default.
+RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '[:upper:]')-TURN"}"
 
 # Map builder/reviewer to _AGENT env vars for marathon-agent.sh routing.
 # Builder is always Claude in Phase 3; reviewer is Codex or Gemini (detected by name prefix).
@@ -114,8 +121,9 @@ if [[ -n "$ARTIFACT_PATHS" ]]; then
   export ALLOW_PATHS="$ARTIFACT_PATHS"
 fi
 
-PHASE_DIR="$PHASES_DIR/p1"
+PHASE_DIR="$PHASES_DIR/$PHASE_ID"
 RELAY_FILE="$PHASE_DIR/RELAY.md"
+REL_RELAY="${RELAY_FILE#"$ROOT"/}"   # repo-root-relative path the agent edits / declares in claim --paths
 
 # ── Step 0: clean-workspace check (Phase 3.6) ──────────────────────────────
 # Stray pre-existing files distract an autonomous builder — a 2026-06-17 dogfood builder was pulled
@@ -147,21 +155,21 @@ case "$TICK_CLI" in /*) ;; *) TICK_CLI="$ROOT/$TICK_CLI" ;; esac
 # Builder/reviewer instruction text + the tick claim --paths depend on whether this phase targets
 # real artifact file(s) (--artifact) or is relay-only. Built here so the heredoc stays a flat template.
 if [[ -n "$ARTIFACT_PATHS" ]]; then
-  CLAIM_PATHS="phases/p1/RELAY.md,${ARTIFACT_PATHS}"
+  CLAIM_PATHS="${REL_RELAY},${ARTIFACT_PATHS}"
   BUILDER_IMPL_LINE="Implement the brief by creating/editing the artifact file(s): ${ARTIFACT_PATHS}"
-  BUILDER_SCOPE_LINE="Edit ONLY these paths: phases/p1/RELAY.md and ${ARTIFACT_PATHS}. Do NOT run git. Do NOT touch any other file — the harness commits for you."
+  BUILDER_SCOPE_LINE="Edit ONLY these paths: ${REL_RELAY} and ${ARTIFACT_PATHS}. Do NOT run git. Do NOT touch any other file — the harness commits for you."
   REVIEWER_READ_LINE="Read the latest builder block above AND review the artifact file(s) on disk: ${ARTIFACT_PATHS}."
-  REVIEWER_SCOPE_LINE="Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git."
+  REVIEWER_SCOPE_LINE="Edit ONLY ${REL_RELAY} (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git."
 else
-  CLAIM_PATHS="phases/p1/RELAY.md"
+  CLAIM_PATHS="${REL_RELAY}"
   BUILDER_IMPL_LINE="Record your work directly in this relay file (relay-only phase — no source file to edit)."
-  BUILDER_SCOPE_LINE="Edit ONLY phases/p1/RELAY.md. Do NOT run git. Do NOT touch any other file — the harness commits for you."
+  BUILDER_SCOPE_LINE="Edit ONLY ${REL_RELAY}. Do NOT run git. Do NOT touch any other file — the harness commits for you."
   REVIEWER_READ_LINE="Read the latest builder block above."
   REVIEWER_SCOPE_LINE="Do NOT run git. Do NOT touch any other file."
 fi
 
 cat > "$RELAY_FILE" << RELAY_EOF
-# Marathon Phase 1
+# Marathon Phase ${PHASE_ID}
 STATUS: Open
 NEXT: ${BUILDER}
 
@@ -205,14 +213,14 @@ fi
 # ── Step 2: commit the relay file (rtl_before needs a clean HEAD) ───────────
 
 git -C "$ROOT" add -- "$RELAY_FILE"
-git -C "$ROOT" commit -q -m "marathon: render phase 1 relay (${RELAY_TASK})"
+git -C "$ROOT" commit -q -m "marathon: render phase ${PHASE_ID} relay (${RELAY_TASK})"
 log "relay file committed: $RELAY_FILE"
 
 # ── Step 3: seed tick token with handoff → builder ──────────────────────────
 
 export TICK_REPO_ROOT="$ROOT"
 "$TICK_BIN" log task.created "$RELAY_TASK" --agent marathon > /dev/null
-"$TICK_BIN" claim           "$RELAY_TASK" --agent marathon --paths "phases/p1/RELAY.md" > /dev/null
+"$TICK_BIN" claim           "$RELAY_TASK" --agent marathon --paths "$REL_RELAY" > /dev/null
 "$TICK_BIN" release         "$RELAY_TASK" --agent marathon --to "$BUILDER" > /dev/null
 log "tick token seeded: $RELAY_TASK → $BUILDER"
 
@@ -241,16 +249,16 @@ RELAY_FILE="$RELAY_FILE" \
 escalate() {  # <reason> <relay-exit>
   local reason="$1" rexit="$2"
   cat > "$PHASE_DIR/ESCALATION.md" << ESC_EOF
-# ESCALATION — Marathon Phase 1
+# ESCALATION — Marathon Phase ${PHASE_ID}
 
-phase: p1
+phase: ${PHASE_ID}
 task: ${RELAY_TASK}
 relay-drive-exit: ${rexit}
 reason: ${reason}
-relay-file: phases/p1/RELAY.md
+relay-file: ${REL_RELAY}
 ESC_EOF
   git -C "$ROOT" add -- "$PHASE_DIR/ESCALATION.md"
-  git -C "$ROOT" commit -q -m "marathon: phase 1 escalation (${reason})"
+  git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} escalation (${reason})"
   "$TICK_BIN" log marathon.phase.escalated "$RELAY_TASK" --agent marathon > /dev/null || true
   log "escalation written: $PHASE_DIR/ESCALATION.md (reason: $reason)"
 }
@@ -259,10 +267,10 @@ save_transcript() {
   local date_dir; date_dir="$ROOT/relay-system/$(date +%Y-%m-%d)"
   mkdir -p "$date_dir"
   local ts; ts="$(date +%H%M%S)"
-  local dest="$date_dir/marathon-p1-${ts}.md"
+  local dest="$date_dir/marathon-${PHASE_ID}-${ts}.md"
   cp "$RELAY_FILE" "$dest"
   git -C "$ROOT" add -- "$dest"
-  git -C "$ROOT" commit -q -m "marathon: phase 1 transcript saved (${RELAY_TASK})"
+  git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} transcript saved (${RELAY_TASK})"
   log "transcript saved: $dest"
 }
 
@@ -279,7 +287,7 @@ case "$relay_exit" in
     fi
     "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
     save_transcript
-    log "phase 1 complete — STATUS: Approved, gate passed"
+    log "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
     exit 0
     ;;
   3)
