@@ -18,6 +18,13 @@ const EVENT_TYPES = new Set([
   // coordination metrics — they describe what a turn COST, not how it coordinated.
   'cost.tokens',
   'cost.human',
+  // Marathon phase-chain signals (Phase 3, marathon-drive.sh). Emitted at phase boundaries by
+  // marathon-drive, not by individual turn-takers. Not coordination signals — ignored by tick analyze.
+  'marathon.phase.start',
+  'marathon.phase.approved',
+  'marathon.phase.escalated',
+  'marathon.phase.revision',
+  'marathon.complete',
 ]);
 
 const CRITICAL_EVENTS = new Set([
