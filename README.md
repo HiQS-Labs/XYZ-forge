@@ -5,14 +5,16 @@ the same codebase without colliding. The core primitive is `tick`, a tiny local
 event-log CLI; the main product surface built on top of it is
 `relay-automation/`.
 
-> 👉 **New here?** With just Node + git, run `./validate.sh` — it should print **23 / 23**
+> 👉 **New here?** With just Node + git, run `./validate.sh` — it should print **28 / 28**
 > green in a minute, no accounts or API keys required. That's the fastest proof the kernel
 > works. The live relay product (Codex/Gemini turns) needs per-CLI auth — see "Start here" below.
 
 ## Current status
 
-- `validate.sh` is green at **23 / 23**.
+- `validate.sh` is green at **28 / 28**.
 - The relay automation stack is the main active surface in this repo.
+- **Marathon** (`relay-automation/marathon.sh`) chains multiple headless build→review phases from a
+  `MARATHON.yaml`, in `depends_on` order — the multi-agent coordinator built on top of the relay loop.
 - The repo is still a working beta, not a polished product.
 
 ## Start here
