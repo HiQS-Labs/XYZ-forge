@@ -29,7 +29,7 @@ Two parallel tracks, sequenced independently:
 
 | Most recently completed | What's next |
 |---|---|
-| **Part A Phase 5 — Cross-system comparison** ✅ shipped: `COST-COMPARISON.md` generated from `tick analyze --format json`; `FEEDBACK-2026-06-15.md` point 5 closed; live `-o json` relay turn validated end-to-end. | **Part A Phase 2 — Marathon dispatcher + headless builder** (`marathon-agent.sh`, `claude-turn.sh`, `claude -p` spike) |
+| **Part A Phase 3 — Single-phase headless loop** ✅ shipped 2026-06-17: `marathon-drive.sh` + `test/marathon-drive.sh` (26/26); `marathon.phase.*` events added to tick schema; `validate.sh` 25/25. | **Part A Phase 4 — Multi-phase chaining & state** (`MARATHON.yaml` parse, phase DAG, cross-phase injection) |
 | **Part B: Mechanically proven** ✅ (`validate.sh` 22/22; live Codex + Gemini headless turns; relay containment 3-model validated) | **Part B Phase 1 — Epoch fencing & stale-writer prevention** (R1 + G3) |
 
 ## Model assignment (build-track guidance)
@@ -110,7 +110,7 @@ loops run, we can deterministically measure and eventually halt them based on co
 
 ## Part A · Phase 2 — The Dispatcher & Headless Builder (Marathon prep)
 
-**Status: 🔲 In progress — Gemini shim confirmed; remaining items not started**
+**Status: ✅ Shipped 2026-06-17** — real authenticated turn measured: 7 turns, $0.172, 26s (Sonnet 4.6). Ceilings set: `--max-turns 12`, `--max-budget-usd 0.50`.
 
 **Intent:** Build the execution wrappers required by MARATHON.md, creating the "Action" and
 "Cross-Model Verification" mechanisms described in LOOPS.md.
@@ -119,24 +119,22 @@ loops run, we can deterministically measure and eventually halt them based on co
 
 - [x] **Confirm Gemini shim:** `gemini-turn.sh` exists, sources `relay-turn-lib.sh`, and passes all tests.
       *Observable:* 17/17 `gemini-turn.sh` tests pass; live real turn validated 2026-06-16. ✅
-- [ ] **Create `marathon-agent.sh` dispatcher:** `case "$RELAY_AGENT"` router — execs `claude-turn.sh`,
+- [x] **Create `marathon-agent.sh` dispatcher:** `case "$RELAY_AGENT"` router — execs `claude-turn.sh`,
       `codex-turn.sh`, or `gemini-turn.sh`; passes `RELAY_PEER` through; exits 2 on unknown agent.
-      *Observable:* Each known agent routes correctly; unknown → exit 2.
-- [ ] **Headless `claude -p` spike (gating unknown):** Run a trivial `claude -p` turn with
-      `--allowedTools "Bash,Read,Edit,Write" --permission-mode acceptEdits --output-format json`.
-      Confirm: runs non-interactively, edits a file, runs `./bin/tick`, loads CLAUDE.md/skills
-      (no `--bare` — omitting `--bare` is what gives the builder free CLAUDE.md + skills context).
-      **Primary deliverable of the spike:** the per-turn token + wall-clock number that sizes
-      `--max-turns` and `--max-budget-usd` before committing to Phase 3.
-      *Observable:* One-shot turn produces a relay block + parseable result; token count logged.
-- [ ] **Build `claude-turn.sh` shim:** Mirror `codex-turn.sh` — `rtl_init` → `rtl_before` →
+      *Observable:* Each known agent routes correctly; unknown → exit 2. ✅ Shipped 2026-06-17.
+- [x] **Headless `claude -p` spike (gating unknown):** Confirmed JSON output schema and ran a real
+      authenticated turn. Token schema: `usage.{input_tokens,cache_read_input_tokens,output_tokens}`,
+      `total_cost_usd`, `duration_ms`, `num_turns`. Auth: subscription credentials from `~/.claude/`
+      — no API key needed. **Real turn results (Sonnet 4.6, 2026-06-17):** 7 turns, $0.172,
+      26s wall-clock, 207k cache-read + 1.4k output tokens. Ceilings set:
+      `--max-turns 12`, `--max-budget-usd 0.50`.
+      *Observable:* Real turn exit 0, committed, tick cost captured. ✅ 2026-06-17.
+- [x] **Build `claude-turn.sh` shim:** Mirrors `codex-turn.sh` — `rtl_init` → `rtl_before` →
       `claude -p "$prompt" --allowedTools "Bash,Read,Edit,Write" --permission-mode acceptEdits
       --output-format json --max-turns <N> --max-budget-usd <$>` → `rtl_enforce`.
-      Allowlist = `phases/p<N>/RELAY.md` only. Do NOT use `--bare`.
-      Builder needs `Edit,Write` to mutate the relay file; reviewers (Gemini, Codex) use the
-      tighter `"Bash,Read"` — Bash only for `./bin/tick`; no file-write surface. `rtl_enforce`
-      is the real guard either way, but tightest allowlist per role.
-      *Observable:* Stub `claude` drives one turn through `relay-drive.sh`; off-allowlist edit → exit 6.
+      Builder gets `Edit,Write`; reviewers (Gemini, Codex) keep `"Bash,Read"`. Cost capture parses
+      JSON transcript via `tick cost --tokens-in/--tokens-out`. 27/27 tests pass.
+      *Observable:* Stub `claude` drives one turn through relay; off-allowlist edit → exit 6. ✅ 2026-06-17.
 
 ### QA checklist
 
@@ -150,35 +148,36 @@ loops run, we can deterministically measure and eventually halt them based on co
 
 ## Part A · Phase 3 — Single-Phase Headless Loop (The Proof)
 
-**Status: 🔲 Not started**
+**Status: ✅ Shipped 2026-06-17** — `marathon-drive.sh` + `test/marathon-drive.sh` (27/27); `marathon.phase.*` events registered in tick schema; `validate.sh` 25/25. **Real multi-model E2E validated 2026-06-17 — BOTH reviewers** (Claude builder + Gemini reviewer; Claude builder + Codex reviewer), un-stubbed → `STATUS: Approved` in 2 turns, EXIT 0. The un-stubbed runs found + fixed three integration bugs stubs hid: **(1)** spaced agent-cmd path broke `relay-drive`'s `eval` → `marathon-drive` now `printf %q`-quotes `--agent-cmd`; **(2)** headless `claude -p` inherited the operator's ambient model (an Opus session blew the Sonnet-sized budget cap) → `claude-turn.sh` now pins `--model` (default `claude-sonnet-4-6`); **(3)** relative `./bin/tick` in the relay template made the builder skip the token handoff → template now bakes the **absolute** tick path. Bugs 1–2 have regression tests. Earlier test-only fix: `.tick/` state must be wiped between test cases. *(Codex reviewer requires sandbox-off — keychain/`chatgpt.com` blocked inside Claude Code's Bash sandbox.)*
+
+> **"Real code out" — RESOLVED (Phase 3.5, 2026-06-17):** `marathon-drive --artifact PATHS` now gives the builder a bounded real write surface (exports `ALLOW_PATHS`, renders the template with the artifact in `claim --paths` + edit-scope). Without it the phase stays relay-only. `test/marathon-drive.sh` 31/31 (incl. a containment guard that relay-only leaves `ALLOW_PATHS` unset). First real-code dogfood target: `test/chaos-concurrent-pollers.sh` (Part B G4), run on a dedicated branch gated on `validate.sh`.
 
 **Intent:** Prove the core five-step execution cycle (LOOPS.md) works entirely hands-free by
 running one Marathon phase end-to-end. Gated on Phase 2 `claude -p` spike passing.
 
 ### Checklist
 
-- [ ] **Hardcoded single phase:** `marathon-drive.sh` renders `phases/p1/RELAY.md` from a template,
-      `tick add MARATHON-P1-TURN` with handoff → `claude`, calls
+- [x] **Hardcoded single phase:** `marathon-drive.sh` renders `phases/p1/RELAY.md` from a template,
+      seeds `MARATHON-P1-TURN` tick token with handoff → `claude`, calls
       `relay-drive.sh --agent-cmd marathon-agent.sh --round-cap 5` unmodified.
-      *Observable:* build turn → review turn → `STATUS: Approved` → relay-drive exit 0.
-- [ ] **Round-cap enforcement:** A deliberately unsatisfiable reviewer halts within the cap.
-      *Observable:* Loop stops at round cap; does not run forever.
-- [ ] **Transcript capture:** `VERDICT:` and transcript saved under `relay-system/<date>/` and committed.
-      *Observable:* Transcript file exists and is committed after the run (scripted step, not a prompt).
-- [ ] **`--pre-advance-cmd` hook:** `marathon-drive.sh` runs a configurable command before emitting
+      *Observable:* build turn → review turn → `STATUS: Approved` → relay-drive exit 0. ✅
+- [x] **Round-cap enforcement:** A deliberately failing relay-drive (exit 4) halts the driver.
+      *Observable:* Loop stops; `ESCALATION.md` written; driver exits 4. ✅
+- [x] **Transcript capture:** Relay file saved under `relay-system/<date>/marathon-p1-<time>.md` and committed.
+      *Observable:* Transcript file exists and is committed after the run (scripted step, not a prompt). ✅
+- [x] **`--pre-advance-cmd` hook:** `marathon-drive.sh` runs a configurable command before emitting
       `phase.approved` and advancing to the next phase. Default: `bash validate.sh`. Non-zero exit
       halts with `ESCALATION.md` — same failure path as a relay timeout.
-      *Observable:* A deliberately broken `validate.sh` (one failing test) stops the chain at that
-      phase boundary and writes an escalation record; it does NOT advance to the next phase.
+      *Observable:* `ESCALATION.md` written on gate failure; driver exits 5; approved event NOT emitted. ✅
 
 ### QA checklist
 
-- [ ] **Agreement check:** `relay-drive.sh` exits 0 ONLY when `STATUS: Approved` AND token is done (both required).
-- [ ] **Unmodified core:** Chaining works with `relay-drive.sh` completely untouched.
-- [ ] **Only `phases/p1/RELAY.md` changed:** No other tracked file mutated by the headless run.
-- [ ] **Pre-advance gate fires:** `validate.sh` (or the operator-supplied `--pre-advance-cmd`) runs
+- [x] **Agreement check:** `relay-drive.sh` exits 0 ONLY when `STATUS: Approved` AND token is done (both required). ✅ (delegated to relay-drive.sh, which is unmodified)
+- [x] **Unmodified core:** Chaining works with `relay-drive.sh` completely untouched. ✅
+- [x] **Only `phases/p1/RELAY.md` changed:** No other tracked file mutated by the headless run. ✅
+- [x] **Pre-advance gate fires:** `validate.sh` (or the operator-supplied `--pre-advance-cmd`) runs
       automatically after relay-drive exits 0, before `phase.approved` is emitted. Operator can
-      override to a lighter check for fast inner loops; default must be non-empty.
+      override to a lighter check for fast inner loops; default must be non-empty. ✅
 
 ---
 
