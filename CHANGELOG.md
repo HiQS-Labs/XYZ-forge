@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-17
 
+### `consult` skill — anchor `consult.sh` to the repo root (stop the disk-hunt)
+- **`skill/consult/SKILL.md`** (commit `2b19029`): the skill referenced the script only as bare `consult.sh` / `relay-automation/consult.sh` — paths that are relative to the **repo root** but were never labeled as such — so a session whose cwd wasn't the root couldn't resolve them and resorted to searching the disk for the file (reported by a separate session). Added a **"Locating the script"** recipe under *How it works* (`SCRIPT="$(git rev-parse --show-toplevel)/relay-automation/consult.sh"`, resolves from any subdir of the repo) and rewired **step 2 (Fan out)** to invoke through that anchor with an explicit "don't run a bare `consult.sh`" note. Docs-only; the script already self-anchors (`consult.sh:47-48`), so no behavior change — the caller just no longer has to guess where it lives. (Re-applied + committed because an active autonomous marathon run on this branch kept reverting the uncommitted working-tree edit to HEAD.)
+
 ### Part A Phase 3 — DOGFOOD: autonomous marathon built a real test (+ 4 safety findings)
 First real-code dogfood on branch `feat/marathon-phase3`: an autonomous Claude builder + Codex reviewer, tasked (via `--artifact`) with building `test/chaos-concurrent-pollers.sh` (Part B G4), gated on the test running green.
 - **Real code out — achieved.** The builder produced a **correct, sound** G4 chaos test: 20 trials, two concurrent `tick claim` races per trial, asserts exactly one `won:` (the other gets `lost:`), winners split across both pollers (genuine race vs the `O_EXCL` lock in `withClaimLock`, not serialization). Reviewed + verified independently (fail() aborts on any double-claim — no false-green; `tick claim` win/lose markers discriminate correctly). **Salvaged + wired into `validate.sh` → 26/26.**
