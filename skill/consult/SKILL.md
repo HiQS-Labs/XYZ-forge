@@ -36,9 +36,23 @@ Do **not** use it to build or fix an artifact iteratively — that's `relay`.
 
 ## How it works
 
-`relay-automation/consult.sh` fans the question out to both advisors **in parallel** and writes each
-transcript to a per-run dir `relay-system/<today>/<label>-<HHMMSS>/`. The synthesis is **yours** — the
-script only gathers the raw opinions.
+`relay-automation/consult.sh` (path is relative to **this repo's root**, not your cwd) fans the question
+out to both advisors **in parallel** and writes each transcript to a per-run dir
+`relay-system/<today>/<label>-<HHMMSS>/`. The synthesis is **yours** — the script only gathers the raw
+opinions.
+
+**Locating the script — resolve it cwd-independently; never assume your cwd is the repo root.** A bare
+`consult.sh` or `relay-automation/consult.sh` only resolves when you happen to be sitting at the root,
+so invoke it through its repo-root anchor instead:
+
+```
+SCRIPT="$(git rev-parse --show-toplevel)/relay-automation/consult.sh"
+"$SCRIPT" --prompt "…" --label …
+```
+
+`git rev-parse --show-toplevel` works from any subdirectory of the repo. If you are not inside the
+`xyz-3-agents-swarm` worktree at all, `cd` there first — consult is repo-local and its shims live only
+here. (Do **not** go hunting the disk for `consult.sh`; the anchor above always finds it.)
 
 **Provable no-mutation boundary (not best-effort).** Advisors run with their working directory set to a
 **throwaway git worktree** checked out from your *current* state — tracked WIP (via `git stash create`)
@@ -70,7 +84,10 @@ answer still comes back (**graceful degrade**, and the degrade is stated, never 
 1. **Frame one sharp question.** Put it in a prompt file when it references repo paths (the advisors
    read the files themselves). Be explicit about what "good" looks like, just like a relay's
    Definition of Done.
-2. **Fan out:** run `consult.sh` with the prompt + a `--label`. Both models run at once.
+2. **Fan out:** run the script through its repo-root anchor —
+   `"$(git rev-parse --show-toplevel)/relay-automation/consult.sh"` (see "Locating the script" above) —
+   with the prompt + a `--label`. Both models run at once. Don't invoke a bare `consult.sh`; it only
+   resolves at the repo root.
 3. **Read both transcripts** in `relay-system/<today>/<label>-<HHMMSS>/<label>.codex.md` and `…gemini.*`.
 4. **Reconcile — this is the load-bearing step.** Produce a synthesis with three parts, in this order:
    - **Disagree** (first — it's the whole point): every point the two models differ on, with your
