@@ -184,11 +184,12 @@ running one Marathon phase end-to-end. Gated on Phase 2 `claude -p` spike passin
 
 ## Part A · Phase 3.6 — Autonomous-builder hardening (dogfood findings)
 
-**Status: 🔲 Not started — surfaced by the 2026-06-17 G4 dogfood** (real autonomous build of
-`test/chaos-concurrent-pollers.sh`; see CHANGELOG). The build *succeeded* (correct test, salvaged,
-`validate.sh` 26/26) but the builder went off-task — pulled in by stray untracked briefs in the
-repo, it ran `consult` (real Codex+Gemini API calls) on an unrelated question and edited an
-off-lane skill file. Containment caught the tracked edit (✅) but the run exposed real gaps.
+**Status: 🟡 In progress (3 of 4 done) 2026-06-17** — surfaced by the G4 dogfood (real autonomous build
+of `test/chaos-concurrent-pollers.sh`; see CHANGELOG). The build *succeeded* (correct test, salvaged,
+`validate.sh` 26/26) but the builder went off-task — pulled in by stray untracked briefs, it ran
+`consult` (real Codex+Gemini API calls) and edited an off-lane skill file. Containment caught the
+tracked edit (✅). **Done surgically:** tool-surface shadow, clean-workspace precondition, exit-6
+escalation. **Open:** the airtight async/side-effect close (process-group reap + worktree isolation).
 
 **Intent:** make the headless builder safe to run unattended in a real repo — bound *side effects*,
 not just tracked-file edits.
@@ -196,27 +197,31 @@ not just tracked-file edits.
 ### Checklist
 
 - [ ] **Bound the builder's tool surface (root cause).** `Bash,Read,Edit,Write` lets the builder
-      spawn anything (it ran `consult` → external model calls). Scope Bash (deny-list `consult.sh`,
-      `codex`, `gemini`, network) or run the turn in an isolated worktree so side effects can't reach
-      the real repo. *Observable:* a builder turn cannot spawn an external model call or mutate a
-      tracked file outside its allowlist.
-- [ ] **Close the async-side-effect gap.** `rtl_enforce` is point-in-time; a subprocess outlived the
-      turn and re-dirtied a file + left untracked output AFTER enforcement. Reap child processes at
-      turn end and/or sweep untracked files outside the allowlist. *Observable:* no repo mutation
-      survives a turn that spawned a background process.
-- [ ] **Clean-workspace precondition.** Stray untracked context (`AUDIT/*.md` about other projects)
-      hijacked the builder's attention. Have `marathon-drive` refuse to start (or warn loudly) on a
-      dirty/untracked-heavy tree, and document a clean-workspace requirement. *Observable:* the driver
-      flags pre-existing untracked files before seeding the phase.
-- [ ] **`marathon-drive` handles turn exit 6 cleanly.** Today it dies "unexpected code 6"; a
-      containment violation should write `ESCALATION.md` (reason: off-lane-edit) and exit a defined
-      code, like the other escalation paths. *Observable:* an off-lane builder edit → ESCALATION.md, not a bare die.
+      spawn anything (it ran `consult` → external model calls). ✅ **Done 2026-06-17:** `claude-turn.sh`
+      PATH-shadows `codex gemini consult consult.sh marathon-drive.sh relay-drive.sh` for the builder's
+      `claude -p` subprocess ONLY (reviewer turn unaffected); even a path-invoked `consult.sh` is
+      neutered because its internal bare `codex`/`gemini` calls hit the stubs. Override via
+      `CLAUDE_BLOCK_CMDS`. Test: `test/claude-turn.sh` case 7b (builder can't spawn gemini/codex; shadow
+      is subprocess-scoped). *Not airtight* — an absolute-path call to the real binary bypasses it;
+      worktree isolation (below) is the airtight version.
+- [~] **Close the async-side-effect gap.** `rtl_enforce` is point-in-time; a subprocess outlived the
+      turn and re-dirtied a file + left untracked output AFTER enforcement. **Substantially mitigated**
+      by the tool-shadow above (the builder can no longer spawn the external-model processes that caused
+      it). **Still open (airtight):** reap the builder's process group at turn end + run the turn in an
+      **isolated git worktree** so any async side effect lands in the throwaway tree, not the real repo.
+      *Observable:* no repo mutation survives a turn that spawned a background process.
+- [x] **Clean-workspace precondition.** ✅ **Done 2026-06-17:** `marathon-drive` warns (lists pre-existing
+      dirty/untracked files outside `phases/`+`.tick/`) before seeding, and `--require-clean` hard-stops
+      (exit 2) for unattended runs. Test: `test/marathon-drive.sh` case 13.
+- [x] **`marathon-drive` handles turn exit 6 cleanly.** ✅ **Done 2026-06-17:** exit 6 (turn-taker
+      reverted an off-lane edit) now writes `ESCALATION.md` (reason: containment-violation) and exits 6,
+      like the other escalation paths — no more "unexpected code 6" die. Test: `test/marathon-drive.sh` case 8b.
 
 ### QA checklist
 
-- [ ] Containment now bounds side effects (spawned processes, untracked output), not only tracked edits.
-- [ ] A deliberately rogue builder (scripted to spawn a subprocess + edit off-lane) is fully contained + escalated.
-- [ ] `validate.sh` green with no regressions from the hardening.
+- [~] Containment now bounds side effects — tool-shadow stops external-model spawns; worktree isolation (open) closes the rest.
+- [ ] A deliberately rogue builder (scripted to spawn a subprocess + edit off-lane) is fully contained + escalated. *(adversarial test — the right place for "autonomy", per the surgical-not-dogfood call)*
+- [x] `validate.sh` green with no regressions from the hardening — **26/26** (claude-turn 30/30, marathon-drive 38/38).
 
 ---
 

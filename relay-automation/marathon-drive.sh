@@ -19,6 +19,7 @@ set -euo pipefail
 #     [--artifact <PATHS>]       comma-separated repo-relative file(s) the builder may create/edit
 #                                beyond the relay file (passed to the shims as ALLOW_PATHS). Omit for
 #                                a relay-only phase (conversation → approval, no source edit).
+#     [--require-clean]          hard-stop if the workspace has pre-existing changes (unattended runs)
 #     [--dry-run]                render relay file and print tick seed cmd, then exit
 #
 # Environment overrides (for tests):
@@ -28,7 +29,8 @@ set -euo pipefail
 #   TICK_BIN              — tick binary (default: <repo-root>/bin/tick)
 #
 # Exit: 0 phase approved + gate passed · 3 relay no-progress · 4 relay cap/mismatch ·
-#        5 pre-advance gate failed · 2 usage.
+#        5 pre-advance gate failed · 6 containment violation (turn-taker reverted an off-lane edit) ·
+#        2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${MARATHON_ROOT:-"$(cd "$HERE/.." && pwd)"}"
@@ -52,6 +54,7 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
   --relay-task ID         Tick task name (default: MARATHON-P1-TURN).
   --artifact PATHS        Comma-separated repo-relative file(s) the builder may create/edit beyond
                           the relay file (ALLOW_PATHS for the turn-takers). Omit for a relay-only phase.
+  --require-clean         Hard-stop (exit 2) if the workspace has pre-existing changes before seeding.
   --dry-run               Render the relay file and print the tick seed; exit without running.
 EOF
 }
@@ -64,6 +67,7 @@ PRE_ADVANCE_CMD=""   # resolved to default after ROOT is set
 PHASES_DIR=""        # resolved to default after ROOT is set
 RELAY_TASK="MARATHON-P1-TURN"
 ARTIFACT_PATHS=""    # comma-separated repo-relative file(s) the builder may create/edit (beyond RELAY.md)
+REQUIRE_CLEAN=0      # --require-clean: hard-stop if the workspace has pre-existing changes
 DRY_RUN=0
 
 while (($# > 0)); do
@@ -76,6 +80,7 @@ while (($# > 0)); do
     --phases-dir)      PHASES_DIR="${2:-}"; shift 2 ;;
     --relay-task)      RELAY_TASK="${2:-}"; shift 2 ;;
     --artifact)        ARTIFACT_PATHS="${2:-}"; shift 2 ;;
+    --require-clean)   REQUIRE_CLEAN=1; shift ;;
     --dry-run)         DRY_RUN=1; shift ;;
     --help)            usage; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
@@ -111,6 +116,21 @@ fi
 
 PHASE_DIR="$PHASES_DIR/p1"
 RELAY_FILE="$PHASE_DIR/RELAY.md"
+
+# ── Step 0: clean-workspace check (Phase 3.6) ──────────────────────────────
+# Stray pre-existing files distract an autonomous builder — a 2026-06-17 dogfood builder was pulled
+# off-task by unrelated AUDIT/*.md briefs left in the tree. Surface them before seeding. Exclude the
+# marathon's own paths (phases/, .tick/). --require-clean turns the warning into a hard stop for
+# unattended runs (DRY_RUN skips it — nothing is committed).
+if ((! DRY_RUN)); then
+  dirty="$(git -C "$ROOT" status --porcelain 2>/dev/null \
+    | awk '{ p=substr($0,4); if (p !~ /^phases\// && p !~ /^\.tick\//) print p }')"
+  if [[ -n "$dirty" ]]; then
+    log "WARNING: workspace is not clean — an autonomous builder can be distracted by stray files."
+    while IFS= read -r p; do [[ -n "$p" ]] && log "  • $p"; done <<< "$dirty"
+    ((REQUIRE_CLEAN)) && die "--require-clean set and the workspace has pre-existing changes (above)"
+  fi
+fi
 
 # ── Step 1: render phases/p1/RELAY.md ──────────────────────────────────────
 
@@ -271,6 +291,15 @@ case "$relay_exit" in
     log "relay escalated: cap/close-mismatch (relay-drive exit 4)"
     escalate "cap-or-close-mismatch" 4
     exit 4
+    ;;
+  6)
+    # A turn-taker shim hit an off-lane edit, reverted it, and failed the turn (exit 6) — the
+    # containment boundary fired. This is a DEFINED escalation, not an "unexpected" crash: the
+    # builder strayed but the safety core held. Record it like any other escalation. (Dogfood
+    # 2026-06-17: an autonomous builder edited an off-lane file; rtl_enforce caught + reverted it.)
+    log "relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)"
+    escalate "containment-violation (off-lane edit reverted by a turn-taker)" 6
+    exit 6
     ;;
   *)
     die "relay-drive exited with unexpected code $relay_exit"

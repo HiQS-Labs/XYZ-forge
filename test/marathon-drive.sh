@@ -145,6 +145,18 @@ RELAY_DRIVE_EXIT=3 run_driver >/dev/null 2>&1; rc=$?
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (8b) containment violation (exit 6) → ESCALATION.md, driver exits 6 (Phase 3.6) ───
+# A turn-taker shim exits 6 when it reverts an off-lane edit; relay-drive propagates it. The
+# driver must treat that as a DEFINED escalation, not die "unexpected code 6" (dogfood 2026-06-17).
+RELAY_DRIVE_EXIT=6 run_driver >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 6 ] && pass "containment violation escalation exits 6 (not 'unexpected')" || fail "containment exit=$rc (expected 6)"
+[ -f "$A/phases/p1/ESCALATION.md" ] && pass "ESCALATION.md written on containment violation" || fail "ESCALATION.md missing on exit 6"
+grep -q "containment-violation" "$A/phases/p1/ESCALATION.md" \
+  && pass "ESCALATION.md records containment-violation reason" \
+  || fail "containment-violation reason missing in ESCALATION.md"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 # ── (9) MARATHON_BUILDER/MARATHON_REVIEWER exported for peer threading ────
 RELAY_DRIVE_EXIT=0 run_driver --pre-advance-cmd "bash $GATE_CMD" >/dev/null 2>&1 || true
 # We can only verify this indirectly: marathon-agent.sh reads MARATHON_BUILDER/REVIEWER.
@@ -230,6 +242,24 @@ MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGEN
 grep -q "UNSET" "$WORK/allow-paths-seen" 2>/dev/null \
   && pass "relay-only phase leaves ALLOW_PATHS unset (no extra write surface)" \
   || fail "relay-only phase should not export ALLOW_PATHS"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (13) --require-clean: hard-stop on a dirty workspace (Phase 3.6) ───────
+# A clean tree starts fine; a stray untracked file + --require-clean is a hard stop (exit 2),
+# so unattended runs don't proceed with distracting context in the tree.
+RELAY_DRIVE_EXIT=0 run_driver --require-clean >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "--require-clean passes on a clean workspace" || fail "--require-clean exit=$rc on clean tree (expected 0)"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+printf 'stray distracting brief\n' > "$A/STRAY.md"   # an untracked file outside the marathon's paths
+RELAY_DRIVE_EXIT=0 run_driver --require-clean >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 2 ] && pass "--require-clean hard-stops (exit 2) on a dirty workspace" || fail "--require-clean exit=$rc on dirty tree (expected 2)"
+[ ! -f "$A/phases/p1/RELAY.md" ] && pass "dirty + --require-clean does not seed the phase" || fail "phase seeded despite --require-clean on dirty tree"
+# without --require-clean it only warns (still runs)
+RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "dirty workspace only WARNS without --require-clean (still runs)" || fail "dirty tree should warn-not-block without --require-clean (exit=$rc)"
+rm -f "$A/STRAY.md"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 

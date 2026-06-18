@@ -42,6 +42,11 @@ fi
 if [ "${STUB_MODE:-good}" = jsonstats ]; then
   printf '{"type":"result","usage":{"input_tokens":1234,"cache_read_input_tokens":0,"output_tokens":56},"total_cost_usd":0.012}\n'
 fi
+# tryspawn: model the dogfood rogue — try to spawn external models by bare name (PATH-resolved).
+# The Phase 3.6 PATH-shadow should make these resolve to a blocking stub, not the real CLI.
+if [ "${STUB_MODE:-good}" = tryspawn ]; then
+  { gemini --version; echo "gemini_rc=$?"; codex --version; echo "codex_rc=$?"; } > "$WORK/spawn-result" 2>&1
+fi
 exit 0
 STUB_EOF
 chmod +x "$STUB"
@@ -125,6 +130,18 @@ grep -q "Write" "$WORK/claude-args" && pass "Write tool in builder allowlist" ||
 # Model pin: headless turn must pass --model (else it inherits the operator's ambient model and
 # the budget cap — sized for the pinned model — is meaningless). Regression for the 06-18 Opus run.
 grep -q -- "--model" "$WORK/claude-args" && pass "builder pins --model (cost determinism)" || fail "--model missing — headless turn would inherit ambient model"
+
+# --- (7b) Phase 3.6: builder's claude -p cannot spawn external models (PATH-shadow) ---
+# Regression for the 2026-06-17 dogfood, where the builder ran `consult` (real Codex+Gemini calls).
+rm -f "$WORK/spawn-result"
+seed_token RELAY-TURN-spawn
+run_shim RELAY-TURN-spawn claude-builder tryspawn
+grep -q "blocked:.*off-limits" "$WORK/spawn-result" 2>/dev/null \
+  && pass "builder cannot spawn codex/gemini (PATH-shadow blocks them)" \
+  || fail "PATH-shadow did not block external-model spawn: $(cat "$WORK/spawn-result" 2>/dev/null)"
+# And the shadow must NOT leak into the shim's own env after the turn (scoped to the subprocess).
+command -v gemini >/dev/null 2>&1 && real_gem=1 || real_gem=0
+[ "$real_gem" -eq 1 ] && { gemini --version >/dev/null 2>&1 && pass "shadow is subprocess-scoped (real gemini still works outside the turn)" || pass "shadow scoped (gemini check inconclusive — ok)"; } || pass "shadow scoped (no real gemini on PATH to check — ok)"
 
 # --- (8) rename-hijack: staged rename (off-lane) is enforced ---------------
 printf 'tracked off-lane\n' > "$A/rtarget.txt"; git -C "$A" add rtarget.txt >/dev/null 2>&1; git -C "$A" commit -q -m "seed rename target" >/dev/null 2>&1

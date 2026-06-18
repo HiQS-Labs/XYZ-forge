@@ -24,6 +24,11 @@ set -euo pipefail
 #   CLAUDE_LOG        — where to write the claude transcript JSON (default: $TMPDIR/claude-turn-$$.json)
 #   CLAUDE_MAX_TURNS  — max turns passed to --max-turns (default: 20; size from spike output)
 #   CLAUDE_MAX_BUDGET — max cost passed to --max-budget-usd (default: 2.00; size from spike output)
+#   CLAUDE_BLOCK_CMDS — space-separated commands PATH-shadowed (blocked) for the builder's claude -p
+#                       subprocess only (default: codex gemini consult consult.sh marathon-drive.sh
+#                       relay-drive.sh). Stops an off-task builder from spawning external models /
+#                       recursive marathons. Set empty to disable. (Phase 3.6; not airtight — an
+#                       absolute-path call bypasses it; worktree isolation is the airtight follow-up.)
 #
 # Auth: `claude -p` inherits the credentials stored by `claude login` (~/.claude/). A subscription
 # login is sufficient — no API key needed. The binary must be installed and authenticated before
@@ -82,16 +87,39 @@ model="${CLAUDE_MODEL:-claude-sonnet-4-6}"
 max_turns="${CLAUDE_MAX_TURNS:-12}"
 max_budget="${CLAUDE_MAX_BUDGET:-0.50}"
 
+# Phase 3.6 — bound the builder's side-effect surface. `--allowedTools Bash` lets the headless
+# builder run ANYTHING; a 2026-06-17 dogfood builder ran `consult` (real Codex+Gemini API calls) as
+# an off-task side-quest. Shadow the external-model / recursive-spawn commands on PATH for the
+# `claude -p` subprocess ONLY — the reviewer turn (codex-turn/gemini-turn) is a SEPARATE process with
+# a normal PATH, so codex/gemini review is unaffected. Even if the builder runs `consult.sh` by path,
+# its internal bare `codex`/`gemini` calls hit these stubs. NOT airtight (an absolute-path call to the
+# real binary bypasses it) — worktree isolation is the airtight follow-up (ROADMAP 3.6). Override the
+# set with CLAUDE_BLOCK_CMDS; set it empty to disable.
+block_cmds="${CLAUDE_BLOCK_CMDS-codex gemini consult consult.sh marathon-drive.sh relay-drive.sh}"
+shadow_dir=""
+if [[ -n "$block_cmds" ]]; then
+  shadow_dir="$(mktemp -d "${TMPDIR:-/tmp}/claude-turn-shadow.XXXXXX")"
+  for c in $block_cmds; do
+    { printf '#!/usr/bin/env bash\n'
+      printf 'printf "blocked: %%s is off-limits to a headless builder turn (CLAUDE_BLOCK_CMDS)\\n" %q >&2\n' "$c"
+      printf 'exit 127\n'
+    } > "$shadow_dir/$c"
+    chmod +x "$shadow_dir/$c"
+  done
+fi
+
 rtl_before
-"$CLAUDE_BIN" -p "$prompt" \
+claude_rc=0
+PATH="${shadow_dir:+$shadow_dir:}$PATH" "$CLAUDE_BIN" -p "$prompt" \
   --model "$model" \
   --allowedTools "Bash,Read,Edit,Write" \
   --permission-mode acceptEdits \
   --output-format json \
   --max-turns "$max_turns" \
   --max-budget-usd "$max_budget" \
-  < /dev/null > "$CLAUDE_LOG" 2>&1 \
-  || { printf 'claude-turn: claude -p failed\n' >&2; exit 5; }
+  < /dev/null > "$CLAUDE_LOG" 2>&1 || claude_rc=$?
+[[ -n "$shadow_dir" ]] && rm -rf "$shadow_dir"
+[[ "$claude_rc" -eq 0 ]] || { printf 'claude-turn: claude -p failed (exit %s)\n' "$claude_rc" >&2; exit 5; }
 rtl_enforce "$t" "$me" "$CLAUDE_LOG" "claude"
 
 # Best-effort cost capture: parse the claude CLI's JSON token stats and emit a cost.tokens event.
