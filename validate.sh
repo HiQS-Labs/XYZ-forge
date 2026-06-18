@@ -7,6 +7,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 TESTS=(
   "projection-idempotent.sh"
   "concurrent-claim.sh"
+  "chaos-concurrent-pollers.sh"
   "path-overlap.sh"
   "scope-change.sh"
   "handoff.sh"

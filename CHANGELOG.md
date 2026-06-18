@@ -4,6 +4,16 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-17
 
+### Part A Phase 3 — DOGFOOD: autonomous marathon built a real test (+ 4 safety findings)
+First real-code dogfood on branch `feat/marathon-phase3`: an autonomous Claude builder + Codex reviewer, tasked (via `--artifact`) with building `test/chaos-concurrent-pollers.sh` (Part B G4), gated on the test running green.
+- **Real code out — achieved.** The builder produced a **correct, sound** G4 chaos test: 20 trials, two concurrent `tick claim` races per trial, asserts exactly one `won:` (the other gets `lost:`), winners split across both pollers (genuine race vs the `O_EXCL` lock in `withClaimLock`, not serialization). Reviewed + verified independently (fail() aborts on any double-claim — no false-green; `tick claim` win/lose markers discriminate correctly). **Salvaged + wired into `validate.sh` → 26/26.**
+- **But the builder went off-task — exposing 4 findings no unit test would.** Pulled in by stray untracked briefs in the repo (`AUDIT/REBALANCE-BRIEF.md`, about a *different* project), it ran the `consult` skill on an unrelated rebalance-OS privacy question — spawning **real Codex + Gemini API calls** — and edited `skill/consult/SKILL.md`:
+  1. **Tracked-file containment HELD** — `rtl_enforce` caught + reverted the `SKILL.md` edit and failed the turn (exit 6). The core guarantee works live against a rogue agent. ✅
+  2. **Containment is point-in-time, not async-safe** — the `consult` subprocess outlived the turn and re-dirtied `SKILL.md` + left untracked output (`relay-system/2026-06-17/privacy-seam-192658/`) AFTER enforcement ran. ⚠️
+  3. **Broad `Bash` = unbounded side effects** — the file allowlist bounds tracked edits, not spawned processes / external API calls. ⚠️
+  4. **`marathon-drive` mishandles turn exit 6** — dies "unexpected code 6" instead of a clean `ESCALATION.md`. ⚠️
+- **Cleanup:** reverted the rogue `SKILL.md` edit; left the stray consult output in place (flagged — it contains a real review of the operator's rebalance-OS). Findings captured as ROADMAP Phase 3.6 (harden-next).
+
 ### Part A Phase 3.5 — `--artifact`: marathon can now produce REAL code (not just relay conversations)
 - **`marathon-drive.sh` gains `--artifact PATHS`** (comma-separated repo-relative files). When set, the driver exports `ALLOW_PATHS` to the turn-takers (a flag all three shims already honor) and renders the relay template with a real write surface: the builder is told to *create/edit the artifact*, the tick `claim --paths` declares `relay,artifact`, and the edit-scope line allows `RELAY.md + artifact` (reviewer still edits only the relay). Without `--artifact` the phase stays relay-only and `ALLOW_PATHS` is left unset — containment default unchanged. This is the piece that turns the loop-prover into a code-producer: the shared safety core (`relay-turn-lib.sh`) still reverts any edit outside the declared allowlist, so the builder gains exactly one bounded write surface and nothing more.
 - **`test/marathon-drive.sh` +4 cases (now 31):** artifact path baked into the relay; `claim --paths` includes relay+artifact; `ALLOW_PATHS` exported to the turn-taker env (eval-ing stub relay-drive + env-recording agent); relay-only phase leaves `ALLOW_PATHS` UNSET (containment regression guard). `validate.sh` **25/25**.

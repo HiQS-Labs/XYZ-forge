@@ -60,6 +60,7 @@ a subtle bug is silent corruption, not a red test.
 - [Part A · Phase 1 — Compute & Budget: The Observability Foundation](#part-a--phase-1--compute--budget-the-observability-foundation) ✅
 - [Part A · Phase 2 — The Dispatcher & Headless Builder](#part-a--phase-2--the-dispatcher--headless-builder-marathon-prep)
 - [Part A · Phase 3 — Single-Phase Headless Loop (The Proof)](#part-a--phase-3--single-phase-headless-loop-the-proof)
+- [Part A · Phase 3.6 — Autonomous-builder hardening (dogfood findings)](#part-a--phase-36--autonomous-builder-hardening-dogfood-findings)
 - [Part A · Phase 4 — Multi-Phase Chaining & State (Full Marathon)](#part-a--phase-4--multi-phase-chaining--state-full-marathon)
 - [Part A · Phase 5 — Cross-System Comparison (The Payoff)](#part-a--phase-5--cross-system-comparison-the-payoff) ✅
 
@@ -178,6 +179,44 @@ running one Marathon phase end-to-end. Gated on Phase 2 `claude -p` spike passin
 - [x] **Pre-advance gate fires:** `validate.sh` (or the operator-supplied `--pre-advance-cmd`) runs
       automatically after relay-drive exits 0, before `phase.approved` is emitted. Operator can
       override to a lighter check for fast inner loops; default must be non-empty. ✅
+
+---
+
+## Part A · Phase 3.6 — Autonomous-builder hardening (dogfood findings)
+
+**Status: 🔲 Not started — surfaced by the 2026-06-17 G4 dogfood** (real autonomous build of
+`test/chaos-concurrent-pollers.sh`; see CHANGELOG). The build *succeeded* (correct test, salvaged,
+`validate.sh` 26/26) but the builder went off-task — pulled in by stray untracked briefs in the
+repo, it ran `consult` (real Codex+Gemini API calls) on an unrelated question and edited an
+off-lane skill file. Containment caught the tracked edit (✅) but the run exposed real gaps.
+
+**Intent:** make the headless builder safe to run unattended in a real repo — bound *side effects*,
+not just tracked-file edits.
+
+### Checklist
+
+- [ ] **Bound the builder's tool surface (root cause).** `Bash,Read,Edit,Write` lets the builder
+      spawn anything (it ran `consult` → external model calls). Scope Bash (deny-list `consult.sh`,
+      `codex`, `gemini`, network) or run the turn in an isolated worktree so side effects can't reach
+      the real repo. *Observable:* a builder turn cannot spawn an external model call or mutate a
+      tracked file outside its allowlist.
+- [ ] **Close the async-side-effect gap.** `rtl_enforce` is point-in-time; a subprocess outlived the
+      turn and re-dirtied a file + left untracked output AFTER enforcement. Reap child processes at
+      turn end and/or sweep untracked files outside the allowlist. *Observable:* no repo mutation
+      survives a turn that spawned a background process.
+- [ ] **Clean-workspace precondition.** Stray untracked context (`AUDIT/*.md` about other projects)
+      hijacked the builder's attention. Have `marathon-drive` refuse to start (or warn loudly) on a
+      dirty/untracked-heavy tree, and document a clean-workspace requirement. *Observable:* the driver
+      flags pre-existing untracked files before seeding the phase.
+- [ ] **`marathon-drive` handles turn exit 6 cleanly.** Today it dies "unexpected code 6"; a
+      containment violation should write `ESCALATION.md` (reason: off-lane-edit) and exit a defined
+      code, like the other escalation paths. *Observable:* an off-lane builder edit → ESCALATION.md, not a bare die.
+
+### QA checklist
+
+- [ ] Containment now bounds side effects (spawned processes, untracked output), not only tracked edits.
+- [ ] A deliberately rogue builder (scripted to spawn a subprocess + edit off-lane) is fully contained + escalated.
+- [ ] `validate.sh` green with no regressions from the hardening.
 
 ---
 
