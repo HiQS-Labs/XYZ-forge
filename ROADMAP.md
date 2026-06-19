@@ -86,6 +86,9 @@ a subtle bug is silent corruption, not a red test.
 - [Part B · Phase 3 — Cross-Repo E2E & Multi-Device Sync](#part-b--phase-3--cross-repo-e2e--multi-device-sync-g5-r3)
 - [Part B · Phase 4 — Observability & Reference Deploy](#part-b--phase-4--observability--reference-deploy-r4)
 
+**Part C — Autonomous Self-Improvement**
+- [Part C — Autonomous Self-Improvement Loop (the LOOPS.md endgame)](#part-c--autonomous-self-improvement-loop-the-loopsmd-endgame) 🔮
+
 ---
 
 ## Part A — Marathon
@@ -564,6 +567,72 @@ The final mile to commercial viability: the system is auditable and deployable w
 - [ ] All required events (claim, handoff, reject, escalate) emit structured JSON logs.
 - [ ] Log artifacts contain accurate timestamps, epochs, and agent IDs.
 - [ ] Reference deploy doc can be followed by an independent auditor to stand up the environment.
+
+---
+
+## Part C — Autonomous Self-Improvement Loop (the LOOPS.md endgame)
+
+**Status: 🔮 Vision / Not started — gated on the prerequisites below.** Everything to date builds the
+*cage*; this is the experiment the cage exists for. The Phase 6 dogfood is its controlled, bounded,
+human-gated precursor — a single iteration with a binary gate. Part C removes "single" and
+"human-gated": an **unattended loop that measurably improves an artifact against a scalar, behind an
+un-gameable oracle, until a stop condition fires.** Do NOT start it before the prerequisites land —
+an autonomous optimizer without all three pillars is a budget bonfire or a silently-gamed metric.
+
+**Intent:** turn the build↔review *convergence* loop (Part A) into a metric-driven *optimization*
+loop — the LOOPS.md endgame — without sacrificing the trust properties Parts A/B established.
+
+### The three pillars (a loop is illegitimate without all three)
+
+- **Metric — the scalar it optimizes.** A deterministic, machine-readable number emitted after each
+  iteration (test-pass count, benchmark score, perf/throughput, finding count, binary size, coverage).
+  New surface: a pluggable **`--measure-cmd`** (sibling to `--pre-advance-cmd`) that prints ONE number;
+  same input → same number, or the loop chases noise instead of climbing.
+- **Oracle — the un-gameable correctness gate.** Stops the loop "winning" by cheating (deleting tests,
+  hardcoding outputs, editing the benchmark). Two layers we already have: the **mechanical** oracle
+  (`--pre-advance-cmd` test/fixture suite) + the **semantic** oracle (the reviewer turn). The
+  load-bearing rule: **the oracle must live OUTSIDE the builder's write surface** — enforce
+  `ALLOW_PATHS ∩ oracle-paths = ∅`, or the loop optimizes the oracle instead of the artifact.
+- **Stop condition — why it terminates.** Autonomy demands a guaranteed halt. Compose: a **cumulative
+  budget** ceiling ($ / tokens / wall-clock across ALL iterations — new; today's caps are per-turn) +
+  **plateau detection** (K consecutive no-improvement iterations) + a **target** (metric hits goal) +
+  a hard **iteration cap**. Plus a **regression guard**: never accept an iteration whose oracle fails
+  or whose metric regressed — keep the champion.
+
+### The loop (champion/challenger hill-climb with a correctness gate)
+
+1. **Baseline:** measure metric₀ on the starting artifact under the oracle (which must already pass).
+2. **Each iteration, in an isolated worktree:** builder proposes a change → oracle gate (tests +
+   reviewer) → measure metric. **Accept** iff oracle passes AND metric improved; else **reject**
+   (discard the worktree, keep the champion). *Reuses worktree isolation (3.6) + per-turn caps (R5) +
+   epoch fencing (B·P1) — the safety cage is already built.*
+3. **Halt** on: cumulative budget exhausted ∨ plateau(K) ∨ target reached ∨ iteration cap. Emit the
+   **champion** + a provenance log (every accepted/rejected step, the metric trace, the spend).
+
+### Prerequisites (this is why it's gated, not "next")
+
+- [ ] **Cumulative budget ceiling** across iterations (`--max-total-budget`), not just per-turn.
+- [ ] **`--measure-cmd` metric harness** — deterministic scalar capture; floor-vs-exact honesty.
+- [ ] **Oracle-immutability guard** — assert `ALLOW_PATHS` excludes the oracle/test paths; fail loudly otherwise.
+- [ ] **Champion/challenger state** — keep best-so-far; accept-on-improve; rollback-on-regress.
+- [ ] **Anti-gaming / held-out validation** — a second metric the builder cannot see, to catch overfit/gaming.
+- [ ] **Full cost observability** — close the Codex/agy/Claude capture gaps (Phase 1 deferral) so the
+      loop's OWN efficiency (improvement-per-dollar) is measurable, not a floor.
+- [x] **Autonomy safety cage** — worktree isolation (3.6 ✅), per-turn caps (R5 ✅), epoch fencing (B·P1 ✅).
+
+### QA checklist
+
+- [ ] **Termination proof:** the loop provably halts on every stop path (budget/plateau/target/cap) — no infinite run.
+- [ ] **Un-gameable:** an adversarial builder that edits the oracle or hardcodes the benchmark is *contained* (oracle outside write surface) AND *caught* (held-out metric).
+- [ ] **No-regress:** the emitted champion's metric ≥ baseline and oracle-passing — always; a losing run ships *nothing*, never a worse artifact.
+- [ ] **Provenance:** every accept/reject + metric + spend logged deterministically (feeds R4 observability).
+- [ ] **Determinism litmus:** same seed/target → same champion, or the metric noise is explicitly bounded and disclosed.
+
+> **Why this is the capstone, not a side-quest:** Part A proved the loop *runs*; Part B proves it
+> *survives failure*; Part C is the only track where the system changes its own artifacts toward a goal
+> with no human in the inner loop. That is exactly why it is sequenced last — it is safe to attempt
+> *only* once containment (3.6), per-turn limits (R5), and the fencing kernel (B·P1) are trustworthy,
+> and once cost is fully observable (the loop must be able to see — and cap — what it spends on itself).
 
 ---
 

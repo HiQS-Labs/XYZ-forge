@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-18
 
+### ROADMAP — Part C: Autonomous Self-Improvement Loop (vision item)
+Sketched the LOOPS.md endgame as a new gated track: an unattended metric-driven optimization loop on top of the Marathon stack. Names the three pillars (metric = pluggable `--measure-cmd` scalar; oracle = `--pre-advance-cmd` tests + reviewer turn, kept OUTSIDE the builder's write surface; stop = cumulative budget + plateau + target + iteration cap + regression guard), the champion/challenger hill-climb loop, the prerequisites (cumulative budget ceiling, metric harness, oracle-immutability, champion state, held-out anti-gaming metric, full cost observability), and a QA checklist (termination proof, un-gameable, no-regress, provenance, determinism). The autonomy safety cage it requires — worktree isolation (3.6), per-turn caps (R5), epoch fencing (B·P1) — is already built; it is sequenced last by design.
+
 ### Part A Phase 3.6 — worktree isolation (the airtight async/side-effect close)
 Closes the last open Phase 3.6 item: a headless builder turn can no longer mutate the real repo via an async/background subprocess. This is the confirmed gate for the Phase 6 WPCC dogfood — now unblocked.
 - **`relay-turn-lib.sh`** — new shared helpers `rtl_worktree_begin` / `rtl_worktree_end`: run the turn in a THROWAWAY `git worktree` of ROOT@HEAD (seeded with the current allowlist content), copy ONLY the allowlist back, then destroy the worktree. Off-lane change detected in the worktree → no copy-back + `RTL_WT_OFFLANE=1` (contained AND escalated). `.tick` stays SHARED via `TICK_REPO_ROOT`.
