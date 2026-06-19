@@ -1,3 +1,93 @@
+# 📸 Snapshot — 2026-06-18 19:56 (Thu)
+
+**Session:** Antigravity (`agy`) CLI investigation + `agy-turn.sh` shim build → WPCC plan `/xyz` fit + Marathon-dogfood assessment
+**Project / repo:** Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (Trinity orchestrator; canonical `ROADMAP.md`)
+**Phase:** Part B Phase 2 in progress (chaos suite); side-quest = new `agy` worker shim + advisory on dogfooding Marathon against the WPCC scanner
+**Status:** Built + tested the `agy` (Antigravity) turn-taker shim (validate 32/32) as a temporary Gemini stand-in; assessed the WPCC P1 plan — NOT an `/xyz` fit (monolith + deps), better as a Marathon chain; advised a scoped Phase-2 Marathon dogfood. **All this session's code is uncommitted on `main`.**
+
+## Git state
+- **Branch:** main
+- **HEAD:** c47a77f Eve reverse engineering - Paused / Deferred
+- **Working tree:** 15 modified, 3 deleted, 9 untracked (in sync with origin/main)
+- **Changed files:**
+```
+ D AUDIT/XYZ-BRIEF.md
+ M CHANGELOG.md
+ M ROADMAP.md
+ M bin/tick
+ D docs/P1-TRINITY-ROUND2.md
+ D docs/P1-TRINITY.md
+ M relay-automation/claude-turn.sh
+ M relay-automation/codex-turn.sh
+ M relay-automation/consult.sh
+ M relay-automation/gemini-turn.sh
+ M relay-automation/marathon-agent.sh
+ M relay-automation/relay-turn-lib.sh
+ M src/claim.js
+ M src/events.js
+ M src/project.js
+ M src/scope.js
+ M src/take.js
+ M validate.sh
+?? AUDIT/HiQS/
+?? PROJECT/4-MISC/P1-TRINITY-ROUND2.md
+?? PROJECT/4-MISC/P1-TRINITY.md
+?? decisions/2026-06-18-epoch-fencing.md
+?? relay-automation/agy-turn.sh
+?? test/agy-turn.sh
+?? test/chaos-midturn-kill.sh
+?? test/chaos-stale-writer.sh
+?? test/relay-turn-timeout.sh
+```
+
+## Recent findings (since 2026-06-17 16:11 snapshot)
+- **Antigravity CLI exists & is usable:** `agy` at `~/.local/bin/agy` (in PATH, ~141 MB self-contained), **pre-authed** off the signed-in desktop app, has `-p`/`--print` headless mode, and is a **multi-model gateway** (Gemini / Claude / GPT-OSS via `--model`). Two gotchas: (1) under a sandbox `agy -p` exits 0 with **empty output** (backend blocked) — silent false success; (2) **no JSON/token output** → cost-blind. Saved to memory `agy-antigravity-cli`.
+- **Built `relay-automation/agy-turn.sh`** — mirrors `gemini-turn.sh` on the shared `relay-turn-lib.sh` containment core; adds an **empty-output guard (exit 5)** for the silent-sandbox trap and drops token capture. Wired `AGY_AGENT` routing into `marathon-agent.sh`. **`test/agy-turn.sh` 19/19**, **`validate.sh` 31 → 32/32**, no regressions. Added ROADMAP operational note (Gemini false-positive "out of credits" → agy stand-in + revert trigger) + CHANGELOG entry.
+- **Gave a paste-ready prompt** for another Claude session to run an agy-driven code-QA-review relay (sandbox-OFF, agy = read-only reviewer).
+- **WPCC P1 plan assessed for `/xyz`: NOT viable.** `dist/bin/check-performance.sh` is a **6,988-line / 275 KB monolith** edited by **5 of 6 phases**; hard deps (Phase 1 → {3,4}; {2,5} → 6). `/xyz` is for concurrent non-overlapping lanes — wrong tool. Right tool = **Marathon sequential phase chain + per-phase relay** (plan is already relay-shaped: "(Codex r1)" = Codex review round 1).
+- **Worker note (Codex + agy):** both need sandbox-OFF; both are cost-blind/un-probed → `/xyz`'s honest-cost metric would be a floor. `marathon-drive --reviewer` validates id starts with `codex`/`gemini`, so agy reviewer needs a `gemini-`alias or drive `relay-drive.sh --agent-cmd marathon-agent.sh` directly.
+- **Marathon-on-WPCC dogfood = good, IF scoped as a harness experiment** (not autonomous scanner rebuild). Recommended first run: single **Phase 2** (`php-direct-access-entrypoint` — additive, crisp litmus), **Claude builder + Codex reviewer** (proven pair, isolates "harness vs monolith" as the one new variable), dedicated branch, sandbox-OFF, `--require-clean`, fixture suite as `--pre-advance-cmd`. Then a 2nd run swapping in agy. Flagged: open worktree-isolation gap (Phase 3.6), don't run full 6-phase chain first.
+
+## Next steps
+- **Decide the goal fork** that picks the first run: (a) dogfood the harness → Phase 2 / Claude+Codex; (b) validate `agy` as a worker → lightweight agy QA-relay on an easy target first; (c) actually improve WPCC → tighter human review, don't chain unattended.
+- If proceeding with (a): I draft the single-phase `MARATHON.yaml` + Phase 2 builder brief (real `check-performance.sh` + fixtures, ALLOW_PATHS scoped, fixture suite as gate).
+- **Commit this session's work** — the `agy` shim + tests + ROADMAP/CHANGELOG + the chaos/timeout tests + epoch-fencing decision record are all uncommitted on `main` (should branch first per repo norms).
+
+## Last response (verbatim)
+Short answer: **yes — it's a genuinely good dogfood, but only if you scope it as a *harness experiment with WPCC as the substrate*, not as "let Marathon autonomously rebuild my security scanner."** The difference decides whether you get clean data or a confounded mess.
+
+## Why it's a good exercise
+The roadmap explicitly wants a "real code out" dogfood target, and WPCC is a much harder, more realistic substrate than the synthetic `greet.js` phases you've validated so far. A run would stress the parts that have never been tested on real code:
+- **Headless builder vs. a 6,988-line / 275 KB monolith** under `--max-turns 12` + a budget cap. That single question — *can a `claude -p` turn make a correct surgical edit to a 7k-line bash file within the caps?* — is high-value data you don't have yet.
+- **Cross-phase state cleanliness on a real repo** (the M5 invariant, but against gnarly code instead of a toy).
+- **First real Codex + agy multi-turn run** — agy's first live relay turn is still your open validation item.
+- It's also a natural **Phase 3.6 adversarial check**: the last real-repo dogfood is exactly where the builder went off-task (ran `consult`, edited an off-lane skill file). A 7k-line target is fertile ground to see if the tool-shadow + containment guard hold.
+
+## The honest caveats (what would muddy the data)
+1. **Don't test three new variables at once.** Marathon-on-a-monolith *and* agy-as-a-brand-new-worker *and* the WPCC plan — if it fails you won't know which one broke. Confounded experiment. Reduce to one new variable per run.
+2. **Cost data will be a floor, not real.** agy is cost-blind (no token capture) and Codex token parsing is un-probed. So "valuable cost/concurrency data" — one of the things you'd hope to harvest — is exactly the thing these two workers can't give you cleanly. If cost numbers are the goal, use the **Claude builder** lane (it has real `total_cost_usd`).
+3. **Worktree isolation is still OPEN** (Phase 3.6). A headless builder editing a real repo's monolith has a known async-side-effect gap. Mitigate: **dedicated branch, sandbox-off, `--require-clean`, review every diff.** Don't run it on `main`.
+4. **Don't run the full 6-phase chain first.** The deps (1→{3,4}, {2,5}→6) plus the monolith make a first full autonomous run very likely to halt mid-chain — and a mid-chain halt teaches you little about orchestration. Prove one phase clean before chaining.
+
+## The minimal first run I'd actually do
+**One phase, proven workers, dedicated branch.** Target **Phase 2** (`php-direct-access-entrypoint`): it's additive (insert one new rule + fixtures, not a surgical leak-trace), independent (no Phase-1 prereq), and has a crisp litmus you can auto-grade (all 8 KISS scripts flagged, `includes/` clean). Phase 5's grep-track privilege rule is an even *smaller* alternative if you want the lowest-risk possible first edit.
+
+Run it as: **Claude builder + Codex reviewer** (your already-proven pair → isolates "harness vs. monolith" as the only new variable), `--pre-advance-cmd` = the WPCC fixture suite, on a throwaway branch. *Then* a second run swapping in **agy** as the reviewer to validate the new worker against a known-good baseline.
+
+Decide up front what 2–3 questions you want answered (e.g. "did the turn edit the 7k file correctly within budget?", "did the fixture gate pass?", "where did the builder drift?") and capture them in a `REAL-AGENT-OBSERVATIONS`-style note — otherwise the "valuable data" evaporates into vibes.
+
+---
+
+One fork worth naming, because it changes what I'd build first:
+
+- **Goal = dogfood the harness** → Phase 2, Claude+Codex, as above.
+- **Goal = validate agy as a worker** → do the lightweight agy QA-relay (last turn's prompt) on an *easy* target first, then bring agy into Marathon.
+- **Goal = actually improve WPCC** → the harness is a means; you'll want tighter human review and probably shouldn't chain unattended at all.
+
+My recommendation: start with the Phase-2 / Claude+Codex run — it serves the harness goal and produces the file-size data point, with agy as a clean second experiment. Want me to draft the single-phase Marathon config + the Phase 2 builder brief (pointing at the real `check-performance.sh` + fixtures, ALLOW_PATHS scoped, fixture suite as the gate) so you've got a runnable first experiment?
+
+---
+
 # 📸 Snapshot — 2026-06-17 16:11 (Wed)
 
 **Session:** Roadmap "what's next" reconcile + model-fit (Sonnet High vs Opus) for the two open build tracks
