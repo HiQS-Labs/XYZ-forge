@@ -29,8 +29,8 @@ Two parallel tracks, sequenced independently:
 
 | Most recently completed | What's next |
 |---|---|
-| **Part A Phase 3 — Single-phase headless loop** ✅ shipped 2026-06-17: `marathon-drive.sh` + `test/marathon-drive.sh` (26/26); `marathon.phase.*` events added to tick schema; `validate.sh` 25/25. | **Part A Phase 4 — Multi-phase chaining & state** (`MARATHON.yaml` parse, phase DAG, cross-phase injection) |
-| **Part B Phase 1 — Epoch fencing & stale-writer prevention** ✅ shipped 2026-06-18 (R1 + G3): schema 0.2.0 monotonic `epoch`; kernel fences same-id zombie writes; `test/chaos-stale-writer.sh` 13/13; `.tick/rejected.jsonl` audit log; `validate.sh` 29/29. | **Part B Phase 2 — Chaos suite & auto-recovery** (G1 midturn-kill, G2 dup-token, G4 concurrent-pollers, R2 auto-reap authority, R5 per-turn limits) |
+| **Part A Phase 4 (M5) — multi-phase chaining** ✅ shipped + real 2-phase E2E validated 2026-06-17; **Phase 6 — WPCC real-monolith dogfood** plan added + Codex-approved (r2) 2026-06-18. `validate.sh` **32/32**. | **Part A Phase 3.6 — worktree isolation** (airtight unattended containment: process-group reap + isolated git worktree) → **unblocks the Phase 6 WPCC dogfood** (the confirmed gate). |
+| **Part B Phase 1 — Epoch fencing & stale-writer prevention** ✅ shipped 2026-06-18 (R1 + G3) + **Phase 2 partials**: G1 mid-turn-kill **detection** + R5 **wall-clock** cap. `validate.sh` **32/32**. | **Part B Phase 2 remainder** — R2 auto-reap authority, G2 dup-token determinism, G4 concurrent-pollers (+ R5 disk/codex-gemini-spend ceilings). |
 
 > **⚠️ Operational note — Gemini CLI temporarily swapped for Antigravity CLI (`agy`) (2026-06-18).**
 > The Gemini CLI (0.46.0) is throwing **false-positive "out of credits" errors** on this account — a
