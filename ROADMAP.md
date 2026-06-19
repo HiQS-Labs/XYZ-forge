@@ -2,7 +2,7 @@
 title: Combined Roadmap — Cost-Observed Marathon Loops + Adversarial Hardening
 status: Active
 created: 2026-06-16
-updated: 2026-06-17
+updated: 2026-06-18
 branch: main
 supersedes: PROJECT/2-WORKING/ROADMAP-COMBINED.md (promoted to canonical 2026-06-17); folds in the former standalone ROADMAP.md (adversarial-hardening track, now Part B)
 synthesizes:
@@ -78,6 +78,7 @@ a subtle bug is silent corruption, not a red test.
 - [Part A · Phase 3.6 — Autonomous-builder hardening (dogfood findings)](#part-a--phase-36--autonomous-builder-hardening-dogfood-findings)
 - [Part A · Phase 4 — Multi-Phase Chaining & State (Full Marathon)](#part-a--phase-4--multi-phase-chaining--state-full-marathon)
 - [Part A · Phase 5 — Cross-System Comparison (The Payoff)](#part-a--phase-5--cross-system-comparison-the-payoff) ✅
+- [Part A · Phase 6 — Real-Monolith Dogfood (WPCC): the graduation test](#part-a--phase-6--real-monolith-dogfood-wpcc-the-graduation-test) 🔜
 
 **Part B — Adversarial Hardening**
 - [Part B · Phase 1 — Epoch Fencing & Stale-Writer Prevention](#part-b--phase-1--epoch-fencing--stale-writer-prevention-r1--g3)
@@ -204,7 +205,8 @@ of `test/chaos-concurrent-pollers.sh`; see CHANGELOG). The build *succeeded* (co
 `validate.sh` 26/26) but the builder went off-task — pulled in by stray untracked briefs, it ran
 `consult` (real Codex+Gemini API calls) and edited an off-lane skill file. Containment caught the
 tracked edit (✅). **Done surgically:** tool-surface shadow, clean-workspace precondition, exit-6
-escalation. **Open:** the airtight async/side-effect close (process-group reap + worktree isolation).
+escalation. **Open:** the airtight async/side-effect close (process-group reap + worktree isolation)
+— **this open item gates the [Part A · Phase 6 WPCC dogfood](#part-a--phase-6--real-monolith-dogfood-wpcc-the-graduation-test)** (the clean unattended real-repo run).
 
 **Intent:** make the headless builder safe to run unattended in a real repo — bound *side effects*,
 not just tracked-file edits.
@@ -316,6 +318,41 @@ vs. one real Gemini relay turn), **not** a Marathon dogfood — the Marathon dis
 
 - [x] **Apples-to-apples caveat:** Report states xyz = synthetic fixture (symmetric); relay = real Gemini turn (asymmetric). ✅
 - [x] **SOLID:** No metrics manually computed; all from deterministic event log. ✅
+
+---
+
+## Part A · Phase 6 — Real-Monolith Dogfood (WPCC): the graduation test
+
+**Status: 🔜 Planned — sequenced after Part A Phase 3.6 worktree isolation (see Sequencing).**
+Standalone plan (Codex-reviewed, Approved r2):
+`PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md`.
+
+**Why it's in the bigger picture:** Phases 1–5 prove Marathon on *synthetic* code (`greet.js`). This
+is the **graduation test** — the first run of the whole harness against a **real 6,988-line / 275 KB
+production monolith** (WPCC `dist/bin/check-performance.sh`), with **Codex + `agy`** as the workers.
+It harvests the data the toy phases cannot, as pre-registered questions Q1–Q6:
+- **Q1** — feasibility of a headless `claude -p` edit to a 275 KB file at fixed caps,
+- **Q2** — an objective fixture-gate pass/fail on AI-built detector code,
+- **Q3** — containment on a real repo (the live re-test of Phase 3.6),
+- **Q4/Q5** — a *falsifiable* Codex-vs-`agy` reviewer comparison (first live agy relay turn),
+- **Q6** — chain cleanliness across a real dependency edge (conditional).
+
+Output feeds `REAL-AGENT-OBSERVATIONS.md` and a **graduate / iterate / abandon** verdict on the
+harness — closing the Part A "does this work on real code?" question and feeding the Part B
+"adversarially proven → commercially viable" ladder. (An external consumer already rated the
+containment core *"production-quality"* in a real cross-repo run — see `PROJECT/1-INBOX/FEEDBACK/FEEDBACK-KWFS-02.md`.)
+
+**Scope discipline:** it is a HARNESS experiment with WPCC as the substrate — NOT an autonomous
+scanner rebuild. One bounded slice (WPCC Phase 2 `php-direct-access-entrypoint`), one new variable per
+run. A run that fails honestly is a passing experiment.
+
+**Sequencing:** gated on **Phase 3.6 worktree isolation** (the airtight containment for an unattended
+headless builder on a real product repo). It *can* run sooner on a dedicated branch — the plan uses
+the branch as the containment backstop — but the clean unattended run wants 3.6 first. **Independent
+of Part B Phase 2** (chaos suite), which need not block it.
+
+> Pointer, not a duplicate. The pre-registered Q1–Q6, the one-variable-per-run design, the reviewer
+> scoring rubric, and per-phase QA all live in the plan doc above.
 
 ---
 

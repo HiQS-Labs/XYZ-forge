@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-18
 
+### Marathon real-monolith dogfood — plan + ROADMAP Phase 6 integration
+First plan to run the Marathon harness against a real production monolith (WPCC `check-performance.sh`, 6,988 lines) instead of synthetic `greet.js` — the harness "graduation test."
+- **`PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md`** — harness experiment plan: one bounded slice (WPCC Phase 2 detector), pre-registered Q1–Q6, one-variable-per-run design, Codex/agy workers, per-phase QA. **Ran an automated Codex review relay on it** (r1 Changes-requested: 3 blockers/4 improvements/1 nit → applied → r2 **Approved**, no new issues; thread `relay-system/2026-06-18/marathon-dogfood-plan-review.md`).
+- **ROADMAP integration:** added as **Part A · Phase 6** (pointer, not duplicate) — TOC + section linking the plan; **sequenced after Part A Phase 3.6 worktree isolation** (airtight unattended containment), independent of Part B Phase 2. Phase 3.6's open worktree-isolation item now cross-links forward as the gate.
+
 ### Antigravity CLI (`agy`) shim — temporary stand-in for the Gemini lane
 The Gemini CLI (0.46.0) is throwing **false-positive "out of credits" errors** on this account (Google-side account/system bug, not real quota exhaustion). Stood up a parallel turn-taker so the relay/marathon stack keeps a working second lane until Google fixes it.
 - **`relay-automation/agy-turn.sh`** — headless turn-taker for the Antigravity CLI (`agy`), mirroring `gemini-turn.sh` on the shared `relay-turn-lib.sh` containment core (same path-allowlist / commit-bypass / no-push contract). Invocation: `agy --dangerously-skip-permissions --print-timeout <cap>s -p <prompt>`; optional `AGY_MODEL` (agy is a multi-model gateway — Gemini / Claude / GPT-OSS) and `AGY_FLAGS`. Pre-authed off the signed-in Antigravity desktop app.
