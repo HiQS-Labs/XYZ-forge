@@ -40,7 +40,12 @@ set -euo pipefail
 #   reviewers (codex-turn, gemini-turn)   → "Bash,Read"              (read-only; no write surface)
 # rtl_enforce is the real guard either way; the allowlist is a second, tighter layer.
 #
-# Exit: 0 acted/deferred · 5 claude failed · 6 off-allowlist edit (reverted) · 2 usage.
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
+#                          runaway claude CLI is killed after this many seconds; the turn exits 7.
+#                          The existing --max-budget-usd / --max-turns API-spend ceilings are
+#                          complementary and remain unchanged — wall-clock is the NEW dimension.
+#
+# Exit: 0 acted/deferred · 5 claude failed · 6 off-allowlist edit (reverted) · 7 timeout-killed · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=relay-turn-lib.sh
@@ -109,18 +114,29 @@ if [[ -n "$block_cmds" ]]; then
 fi
 
 rtl_before
-claude_rc=0
-PATH="${shadow_dir:+$shadow_dir:}$PATH" "$CLAUDE_BIN" -p "$prompt" \
-  --model "$model" \
-  --allowedTools "Bash,Read,Edit,Write" \
-  --permission-mode acceptEdits \
-  --output-format json \
-  --max-turns "$max_turns" \
-  --max-budget-usd "$max_budget" \
-  < /dev/null > "$CLAUDE_LOG" 2>&1 || claude_rc=$?
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
+bounded_rc=0
+# PATH prefix on a shell function call works in bash: bash sets the var in the current scope for
+# the duration of the call, so rtl_run_bounded's `setsid $CLAUDE_BIN ...` subshell inherits it.
+PATH="${shadow_dir:+$shadow_dir:}$PATH" \
+  rtl_run_bounded "$turn_timeout" "$CLAUDE_BIN" -p "$prompt" \
+    --model "$model" \
+    --allowedTools "Bash,Read,Edit,Write" \
+    --permission-mode acceptEdits \
+    --output-format json \
+    --max-turns "$max_turns" \
+    --max-budget-usd "$max_budget" \
+    < /dev/null > "$CLAUDE_LOG" 2>&1 || bounded_rc=$?
 [[ -n "$shadow_dir" ]] && rm -rf "$shadow_dir"
-[[ "$claude_rc" -eq 0 ]] || { printf 'claude-turn: claude -p failed (exit %s)\n' "$claude_rc" >&2; exit 5; }
+if [[ "$bounded_rc" -eq 7 ]]; then
+  printf 'claude-turn: claude -p exceeded %ss wall-clock cap — killed\n' "$turn_timeout" >&2
+elif [[ "$bounded_rc" -ne 0 ]]; then
+  printf 'claude-turn: claude -p failed (exit %s)\n' "$bounded_rc" >&2; exit 5
+fi
+# Always enforce containment even after a timeout-kill: a killed-mid-edit agent may have left
+# off-lane changes. rtl_enforce may exit 6 (containment violation takes precedence over timeout 7).
 rtl_enforce "$t" "$me" "$CLAUDE_LOG" "claude"
+if [[ "$bounded_rc" -eq 7 ]]; then exit 7; fi
 
 # Best-effort cost capture: parse the claude CLI's JSON token stats and emit a cost.tokens event.
 # NEVER fails the turn — the turn already committed; missing/unparseable stats → loud-partial signal.

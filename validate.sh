@@ -7,7 +7,9 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 TESTS=(
   "projection-idempotent.sh"
   "concurrent-claim.sh"
+  "chaos-stale-writer.sh"
   "chaos-concurrent-pollers.sh"
+  "chaos-midturn-kill.sh"
   "path-overlap.sh"
   "scope-change.sh"
   "handoff.sh"
@@ -27,12 +29,14 @@ TESTS=(
   "watchdog-relay.sh"
   "codex-turn.sh"
   "gemini-turn.sh"
+  "agy-turn.sh"
   "claude-turn.sh"
   "marathon-yaml.sh"
   "marathon-drive.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
+  "relay-turn-timeout.sh"
 )
 
 PASSED=()

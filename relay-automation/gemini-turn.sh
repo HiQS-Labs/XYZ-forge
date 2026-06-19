@@ -29,7 +29,10 @@ set -euo pipefail
 #   --yolo                     — auto-approve tool calls (shell for tick, edit for the relay file)
 #   --skip-trust               — bypass the trusted-folder prompt in an automated environment
 #
-# Exit: 0 acted/deferred · 5 gemini failed · 6 off-allowlist edit (reverted) · 2 usage.
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
+#                          runaway gemini CLI is killed after this many seconds; the turn exits 7.
+#
+# Exit: 0 acted/deferred · 5 gemini failed · 6 off-allowlist edit (reverted) · 7 timeout-killed · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=relay-turn-lib.sh
@@ -62,10 +65,20 @@ GEMINI_OUTPUT_FORMAT="${GEMINI_OUTPUT_FORMAT:-json}"
 
 # Run the Gemini turn headless (token ops + edit the relay file; NO git), then enforce the boundary.
 rtl_before
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
+bounded_rc=0
 GOOGLE_GENAI_USE_GCA="${GOOGLE_GENAI_USE_GCA:-true}" \
-  "$GEMINI_BIN" --yolo --skip-trust -o "$GEMINI_OUTPUT_FORMAT" -p "$prompt" < /dev/null > "$GEMINI_LOG" 2>&1 \
-  || { printf 'gemini-turn: gemini -p failed\n' >&2; exit 5; }
+  rtl_run_bounded "$turn_timeout" "$GEMINI_BIN" --yolo --skip-trust -o "$GEMINI_OUTPUT_FORMAT" -p "$prompt" < /dev/null > "$GEMINI_LOG" 2>&1 \
+  || bounded_rc=$?
+if [[ "$bounded_rc" -eq 7 ]]; then
+  printf 'gemini-turn: gemini -p exceeded %ss wall-clock cap — killed\n' "$turn_timeout" >&2
+elif [[ "$bounded_rc" -ne 0 ]]; then
+  printf 'gemini-turn: gemini -p failed (exit %s)\n' "$bounded_rc" >&2; exit 5
+fi
+# Always enforce containment even after a timeout-kill: a killed-mid-edit agent may have left
+# off-lane changes. rtl_enforce may exit 6 (containment violation takes precedence over timeout 7).
 rtl_enforce "$t" "$me" "$GEMINI_LOG" "gemini"
+if [[ "$bounded_rc" -eq 7 ]]; then exit 7; fi
 
 # Best-effort cost capture (Phase 1, COST-OBSERVABILITY-PLAN): parse the CLI's own token stats and
 # log a cost.tokens event. NEVER fails the turn — the turn already committed; a missing/unparseable

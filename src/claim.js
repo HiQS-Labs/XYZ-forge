@@ -1,7 +1,7 @@
 'use strict';
 
 const { appendEvent, readAllEvents } = require('./events');
-const { project, fold, activeClaimsForAgent, MAX_ACTIVE_CLAIMS_PER_AGENT } = require('./project');
+const { project, fold, nextEpoch, activeClaimsForAgent, MAX_ACTIVE_CLAIMS_PER_AGENT } = require('./project');
 const { withClaimLock } = require('./lock');
 
 // Local-transport claim (Run 2: git transport removed).
@@ -17,7 +17,8 @@ function claim(repoRoot, { task, agent, paths }) {
   }
 
   return withClaimLock(repoRoot, () => {
-    const tasks = fold(readAllEvents(repoRoot));
+    const events = readAllEvents(repoRoot);
+    const tasks = fold(events);
     const t = tasks.get(task);
 
     // Already terminal — not claimable.
@@ -44,7 +45,9 @@ function claim(repoRoot, { task, agent, paths }) {
       return { won: false, limitReached: true, holding: held, task };
     }
 
-    appendEvent(repoRoot, { type: 'task.claimed', task, agent, paths });
+    // Monotonic epoch: strictly above any prior claim on this task, so a
+    // reclaim after reap fences the displaced owner's stale writes.
+    appendEvent(repoRoot, { type: 'task.claimed', task, agent, paths, epoch: nextEpoch(events, task) });
     project(repoRoot);
     return { won: true, task };
   });

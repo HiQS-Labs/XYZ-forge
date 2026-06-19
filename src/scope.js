@@ -16,36 +16,40 @@ function emitEvent(repoRoot, type, payload) {
 //   - task is not currently claimed
 //   - the claimer doesn't match `agent`
 // Only `reap` bypasses this (it explicitly operates on other agents' claims).
+// Returns the claimed task `t` so callers can stamp the owner's epoch onto the
+// mutation they emit (the fence in fold rejects any mutation whose epoch is
+// below the current owner's).
 function assertOwnership(repoRoot, task, agent) {
   const tasks = fold(readAllEvents(repoRoot));
   const t = tasks.get(task);
   if (!t) throw new Error(`task ${task} not found`);
   if (t.status !== 'claimed') throw new Error(`task ${task} is ${t.status} — only the claiming agent can mutate it`);
   if (t.claim.agent !== agent) throw new Error(`task ${task} is claimed by ${t.claim.agent}, not ${agent}`);
+  return t;
 }
 
 function scope(repoRoot, { task, agent, paths }) {
   if (!paths || !paths.length) throw new Error('scope requires --paths');
-  assertOwnership(repoRoot, task, agent);
-  emitEvent(repoRoot, 'task.scope_changed', { task, agent, paths });
+  const t = assertOwnership(repoRoot, task, agent);
+  emitEvent(repoRoot, 'task.scope_changed', { task, agent, paths, epoch: t.claim.epoch });
   return { ok: true };
 }
 
 function release(repoRoot, { task, agent, to_agent }) {
-  assertOwnership(repoRoot, task, agent);
-  emitEvent(repoRoot, 'task.released', { task, agent, to_agent });
+  const t = assertOwnership(repoRoot, task, agent);
+  emitEvent(repoRoot, 'task.released', { task, agent, to_agent, epoch: t.claim.epoch });
   return { ok: true };
 }
 
 function circuitBreak(repoRoot, { task, agent, reason }) {
-  assertOwnership(repoRoot, task, agent);
-  emitEvent(repoRoot, 'task.circuit_break', { task, agent, reason: reason || '' });
+  const t = assertOwnership(repoRoot, task, agent);
+  emitEvent(repoRoot, 'task.circuit_break', { task, agent, reason: reason || '', epoch: t.claim.epoch });
   return { ok: true };
 }
 
 function done(repoRoot, { task, agent, note }) {
-  assertOwnership(repoRoot, task, agent);
-  emitEvent(repoRoot, 'task.done', { task, agent, note });
+  const t = assertOwnership(repoRoot, task, agent);
+  emitEvent(repoRoot, 'task.done', { task, agent, note, epoch: t.claim.epoch });
   return { ok: true };
 }
 
@@ -71,9 +75,11 @@ function reap(repoRoot, { agent, by }) {
   const tasks = fold(readAllEvents(repoRoot));
 
   const held = [];
+  const epochByTask = new Map();
   for (const t of tasks.values()) {
     if (t.status === 'claimed' && t.claim && t.claim.agent === agent) {
       held.push(t.id);
+      epochByTask.set(t.id, t.claim.epoch);
     }
   }
   held.sort();
@@ -84,6 +90,7 @@ function reap(repoRoot, { agent, by }) {
       type: 'task.released',
       task,
       agent,
+      epoch: epochByTask.get(task),
       note: `reaped by ${reapedBy}: agent presumed crashed`,
     });
   }

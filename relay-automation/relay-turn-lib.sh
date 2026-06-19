@@ -14,8 +14,22 @@
 #   rtl_turn_prompt <agent> <relay_file> <task> <csv> — emit the shared ▶ TAKE-YOUR-TURN prompt
 #   rtl_before                                         — snapshot HEAD before the agent runs
 #   rtl_enforce     <task> <agent> <log> <tool>        — guards (2)+(1)+(3); EXITS 6 on violation
+#   rtl_run_bounded <timeout_secs> <cmd...>            — run <cmd...> under a wall-clock cap;
+#                                                        returns 0 on success, the cmd's own exit
+#                                                        code on normal failure, or 7 on timeout-kill.
+#                                                        No dependency on coreutils `timeout` (absent
+#                                                        on stock macOS) — sleep+kill watchdog pattern
+#                                                        (same as consult.sh _guarded). Kills by PID;
+#                                                        see function body for the process-group gap.
 #
 # rtl_enforce deliberately `exit 6`s the calling shell on any violation — that fails the turn.
+# rtl_run_bounded returns 7 on timeout; the CALLER must decide whether to continue to rtl_enforce
+# (it should — a killed agent may have left off-lane changes) and then exit 7 after enforcement.
+# Exit-code priority: containment violation (6) takes precedence over timeout (7). Rationale: a
+# containment violation means unsafe state was left in the repo; that signal is more critical to
+# surface than the mechanism (timeout) that caused the agent to be killed. A shim that detects a
+# timeout should still call rtl_enforce, and if rtl_enforce exits 6 the process exits 6 — correct.
+# If rtl_enforce completes without violation the shim then exits 7 to report the timeout.
 
 rtl_init() {  # <root> <relay_file> <allow_csv>
   RTL_ROOT="$1"; local f="$2" csv="$3"
@@ -28,6 +42,32 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
 }
 
 rtl_in_allow() { local x="$1" a; for a in "${RTL_ALLOW[@]}"; do [[ "$x" == "$a" ]] && return 0; done; return 1; }
+
+rtl_run_bounded() {  # <timeout_secs> <cmd...>
+  # Run <cmd...> under a wall-clock ceiling without coreutils `timeout` (absent on stock macOS).
+  # Mirrors the consult.sh _guarded() pattern: sleep-then-kill watchdog, no external deps.
+  # Process-group note: `setsid` is absent on stock macOS so we kill by PID (same as consult.sh).
+  # A multi-process CLI whose children outlive the leader is a known gap; worktree isolation is
+  # the airtight follow-up (ROADMAP 3.6). The PID kill is sufficient for hung single-process CLIs.
+  # NOTE: disk-quota and per-turn spend ceilings are NOT yet enforced here — wall-clock only (R5
+  # partial). Disk-quota belongs in a TMPDIR watchdog; spend ceilings are model-shim-specific.
+  local secs="$1"; shift
+  local apid kpid rc=0
+  "$@" &
+  apid=$!
+  ( sleep "$secs"; kill -9 "$apid" 2>/dev/null ) >/dev/null 2>&1 &
+  kpid=$!
+  wait "$apid" 2>/dev/null || rc=$?
+  kill "$kpid" 2>/dev/null || true; wait "$kpid" 2>/dev/null || true
+  # Distinguish timeout-kill (signal 9 → exit 137) from a genuine rc=137 from the CLI itself.
+  # We use rc=137 as the proxy for "killed by our watchdog" and map it to 7.
+  # This is the same tradeoff consult.sh accepts: a CLI that genuinely crashes with rc=137 looks
+  # like a timeout. Acceptable — both cases are "turn failed abnormally."
+  if [[ "$rc" -eq 137 ]]; then
+    return 7
+  fi
+  return "$rc"
+}
 
 rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   local agent="$1" f="$2" task="$3" csv="$4" peer="${5:-}"

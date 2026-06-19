@@ -21,7 +21,10 @@ set -euo pipefail
 #   CODEX_TURN_ROOT — git root to guard (default: this repo); tests point at a fixture
 #   CODEX_LOG       — where to write the codex transcript (default: stderr)
 #
-# Exit: 0 acted/deferred · 5 codex failed · 6 off-allowlist edit (reverted) · 2 usage.
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
+#                          runaway codex CLI is killed after this many seconds; the turn exits 7.
+#
+# Exit: 0 acted/deferred · 5 codex failed · 6 off-allowlist edit (reverted) · 7 timeout-killed · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=relay-turn-lib.sh
@@ -55,6 +58,21 @@ read -ra _cflags <<<"${CODEX_FLAGS:--s workspace-write}"
 # — its usage format isn't probed yet, so cost.tokens for Codex turns stays a Phase-1 partial.)
 CODEX_LOG="${CODEX_LOG:-${TMPDIR:-/tmp}/codex-turn-$$.log}"
 rtl_before
-"$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
-  || { printf 'codex-turn: codex exec failed\n' >&2; exit 5; }
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
+bounded_rc=0
+# Billing guard: strip OPENAI_API_KEY from the codex subprocess env so a Codex turn ALWAYS bills
+# against the ChatGPT-subscription login (`~/.codex/auth.json` auth_mode=chatgpt), never per-token API
+# credits — even if some ambient session exported a key. Set CODEX_ALLOW_API_KEY=1 to opt back in.
+codex_env=(env)
+[[ "${CODEX_ALLOW_API_KEY:-0}" == "1" ]] || codex_env+=(-u OPENAI_API_KEY)
+rtl_run_bounded "$turn_timeout" "${codex_env[@]}" "$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
+  || bounded_rc=$?
+if [[ "$bounded_rc" -eq 7 ]]; then
+  printf 'codex-turn: codex exec exceeded %ss wall-clock cap — killed\n' "$turn_timeout" >&2
+elif [[ "$bounded_rc" -ne 0 ]]; then
+  printf 'codex-turn: codex exec failed (exit %s)\n' "$bounded_rc" >&2; exit 5
+fi
+# Always enforce containment even after a timeout-kill: a killed-mid-edit agent may have left
+# off-lane changes. rtl_enforce may exit 6 (containment violation takes precedence over timeout 7).
 rtl_enforce "$t" "$me" "$CODEX_LOG" "codex"
+if [[ "$bounded_rc" -eq 7 ]]; then exit 7; fi

@@ -3,7 +3,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const SCHEMA_VERSION = '0.1.0';
+// 0.2.0 — adds the optional `epoch` field to claim/mutation events (Part B
+// Phase 1, R1 epoch fencing). Events without `epoch` are read as epoch 0, so
+// pre-0.2.0 logs project identically. See decisions/2026-06-18-epoch-fencing.md.
+const SCHEMA_VERSION = '0.2.0';
 
 const EVENT_TYPES = new Set([
   'task.created',
@@ -57,7 +60,7 @@ function safeSegment(s) {
 }
 
 function appendEvent(repoRoot, {
-  type, task, agent, note, paths, to_agent, reason, priority,
+  type, task, agent, note, paths, to_agent, reason, priority, epoch,
   tokens_in, tokens_out, tokens_total, human_minutes, tool,
 }) {
   if (!EVENT_TYPES.has(type)) {
@@ -85,6 +88,9 @@ function appendEvent(repoRoot, {
   if (to_agent) event.to_agent = to_agent;
   if (reason !== undefined) event.reason = reason;
   if (priority !== undefined) event.priority = priority;
+  // Epoch fencing token (R1). Stamped on task.claimed (the owner's epoch) and on
+  // the owner's mutations; absent ⇒ epoch 0, so legacy events stay byte-stable.
+  if (epoch !== undefined) event.epoch = epoch;
   // Cost fields — only stamped when present, so non-cost events stay byte-identical to before.
   if (tokens_in !== undefined) event.tokens_in = tokens_in;
   if (tokens_out !== undefined) event.tokens_out = tokens_out;

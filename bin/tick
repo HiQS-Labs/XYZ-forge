@@ -55,8 +55,9 @@ function usage() {
 
 Usage:
   tick init
-  tick log <type> <task> [--agent <id>] [--note "..."] [--paths a,b] [--priority N]
+  tick log <type> <task> [--agent <id>] [--note "..."] [--paths a,b] [--priority N] [--epoch N]
   tick project
+  tick fences                                      (read-only: fenced-event audit log)
   tick claim <task> --agent <id> --paths <globs>
   tick take --agent <id>                           (atomic next+claim)
   tick next --agent <id>                           (read-only, no STATE.md write)
@@ -101,14 +102,26 @@ function main(argv) {
         to_agent: typeof flags.to === 'string' ? flags.to : undefined,
         reason: typeof flags.reason === 'string' ? flags.reason : undefined,
         priority: flags.priority !== undefined ? Number(flags.priority) : undefined,
+        epoch: flags.epoch !== undefined ? Number(flags.epoch) : undefined,
       });
       process.stdout.write(`${path.relative(root, p)}\n`);
       return 0;
     }
 
     case 'project': {
-      const { stateFile } = project(root);
+      const { stateFile, rejections } = project(root);
       process.stdout.write(`${path.relative(root, stateFile)}\n`);
+      if (rejections.length) {
+        process.stderr.write(`fenced ${rejections.length} stale/non-owner event(s) — see .tick/rejected.jsonl\n`);
+      }
+      return 0;
+    }
+
+    case 'fences': {
+      // Read-only: re-project and print the fenced-event audit log (one JSON
+      // object per line). Shows the epoch fence firing (R1) for operators/SIEM.
+      const { rejections } = project(root);
+      for (const r of rejections) process.stdout.write(`${JSON.stringify(r)}\n`);
       return 0;
     }
 

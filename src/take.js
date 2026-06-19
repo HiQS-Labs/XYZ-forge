@@ -1,7 +1,7 @@
 'use strict';
 
 const { appendEvent, readAllEvents } = require('./events');
-const { project, fold, activeClaimsForAgent, MAX_ACTIVE_CLAIMS_PER_AGENT } = require('./project');
+const { project, fold, nextEpoch, activeClaimsForAgent, MAX_ACTIVE_CLAIMS_PER_AGENT } = require('./project');
 const { setsOverlap } = require('./paths');
 const { withClaimLock } = require('./lock');
 
@@ -16,7 +16,8 @@ const { withClaimLock } = require('./lock');
 //   { limitReached: true, holding: [...] } — agent is at the claim cap
 function take(repoRoot, { agent }) {
   return withClaimLock(repoRoot, () => {
-    const tasks = fold(readAllEvents(repoRoot));
+    const events = readAllEvents(repoRoot);
+    const tasks = fold(events);
 
     const held = activeClaimsForAgent(tasks, agent);
     if (held.length >= MAX_ACTIVE_CLAIMS_PER_AGENT) {
@@ -54,7 +55,7 @@ function take(repoRoot, { agent }) {
 
     if (!chosen) return { won: false, noTask: true };
 
-    appendEvent(repoRoot, { type: 'task.claimed', task: chosen.id, agent, paths: chosen.paths });
+    appendEvent(repoRoot, { type: 'task.claimed', task: chosen.id, agent, paths: chosen.paths, epoch: nextEpoch(events, chosen.id) });
     project(repoRoot);
     return { won: true, task: chosen.id, priority: chosen.priority, handoff: chosen.handoff_to === agent };
   });

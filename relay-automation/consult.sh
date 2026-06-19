@@ -126,8 +126,11 @@ _guarded() {  # <out> <cmd...>
 
 run_codex() {
   local out="$1"; read -ra _f <<<"${CODEX_FLAGS:--s read-only}"
+  # Billing guard: strip OPENAI_API_KEY so a consult ALWAYS bills the ChatGPT-subscription login,
+  # never per-token API credits (CODEX_ALLOW_API_KEY=1 to opt back in). See codex-turn.sh.
+  local cenv=(env); [[ "${CODEX_ALLOW_API_KEY:-0}" == "1" ]] || cenv+=(-u OPENAI_API_KEY)
   # ${_f[@]+...} guards an EMPTY flags array under `set -u` on bash 3.2 (macOS default).
-  _guarded "$out" "$CODEX_BIN" exec ${_f[@]+"${_f[@]}"} "$FULL_PROMPT"
+  _guarded "$out" "${cenv[@]}" "$CODEX_BIN" exec ${_f[@]+"${_f[@]}"} "$FULL_PROMPT"
 }
 run_gemini() {
   local out="$1"
