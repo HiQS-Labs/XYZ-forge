@@ -28,7 +28,13 @@ set -euo pipefail
 #                       subprocess only (default: codex gemini consult consult.sh marathon-drive.sh
 #                       relay-drive.sh). Stops an off-task builder from spawning external models /
 #                       recursive marathons. Set empty to disable. (Phase 3.6; not airtight — an
-#                       absolute-path call bypasses it; worktree isolation is the airtight follow-up.)
+#                       absolute-path call bypasses it; worktree isolation below is the airtight close.)
+#   RELAY_WORKTREE_ISOLATION — 1 = run the builder turn in a THROWAWAY git worktree (ROADMAP 3.6 close):
+#                       async/background writes land in a tree we delete, never ROOT; `.tick` stays
+#                       shared via TICK_REPO_ROOT=ROOT; only the allowlist is copied back. An off-lane
+#                       change detected in the worktree → exit 6 (contained AND escalated). Default OFF
+#                       (unset) → the prior in-ROOT behaviour, byte-for-byte. Opt-in for unattended/
+#                       real-repo runs (the Phase 6 WPCC dogfood gate).
 #
 # Auth: `claude -p` inherits the credentials stored by `claude login` (~/.claude/). A subscription
 # login is sufficient — no API key needed. The binary must be installed and authenticated before
@@ -116,10 +122,28 @@ fi
 rtl_before
 turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
 bounded_rc=0
+
+# Worktree isolation (opt-in; ROADMAP Part A Phase 3.6 — the airtight async/side-effect close).
+# When RELAY_WORKTREE_ISOLATION=1, run the builder in a throwaway git worktree so any async/background
+# write lands in a tree we delete, never ROOT. `.tick` coordination state stays SHARED via
+# TICK_REPO_ROOT=ROOT. Default OFF → the in-ROOT path below is byte-for-byte the prior behaviour.
+wt=""; cwd_wrap=()
+if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
+  if wt="$(rtl_worktree_begin)"; then
+    # Run claude with CWD = the worktree; keep tick pointed at the real repo's shared state.
+    export TICK_REPO_ROOT="$ROOT"
+    cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
+    printf 'claude-turn: worktree isolation ON (%s)\n' "$wt" >&2
+  else
+    printf 'claude-turn: worktree isolation requested but `git worktree add` failed — failing turn\n' >&2
+    [[ -n "$shadow_dir" ]] && rm -rf "$shadow_dir"; exit 5
+  fi
+fi
+
 # PATH prefix on a shell function call works in bash: bash sets the var in the current scope for
-# the duration of the call, so rtl_run_bounded's `setsid $CLAUDE_BIN ...` subshell inherits it.
+# the duration of the call, so rtl_run_bounded's backgrounded `$CLAUDE_BIN ...` inherits it.
 PATH="${shadow_dir:+$shadow_dir:}$PATH" \
-  rtl_run_bounded "$turn_timeout" "$CLAUDE_BIN" -p "$prompt" \
+  rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "$CLAUDE_BIN" -p "$prompt" \
     --model "$model" \
     --allowedTools "Bash,Read,Edit,Write" \
     --permission-mode acceptEdits \
@@ -128,6 +152,19 @@ PATH="${shadow_dir:+$shadow_dir:}$PATH" \
     --max-budget-usd "$max_budget" \
     < /dev/null > "$CLAUDE_LOG" 2>&1 || bounded_rc=$?
 [[ -n "$shadow_dir" ]] && rm -rf "$shadow_dir"
+
+# Worktree teardown FIRST (regardless of rc — a killed/crashed builder may have left work or off-lane
+# edits in the worktree). Copies the allowlist back to ROOT unless an off-lane change was detected.
+wt_offlane=0
+if [[ -n "$wt" ]]; then
+  rtl_worktree_end "$wt"
+  wt_offlane="${RTL_WT_OFFLANE:-0}"
+fi
+# Containment (off-lane → 6) takes precedence over timeout (7) and failure (5), per the exit contract.
+if [[ "$wt_offlane" == "1" ]]; then
+  printf 'claude-turn: builder made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)\n' >&2
+  exit 6
+fi
 if [[ "$bounded_rc" -eq 7 ]]; then
   printf 'claude-turn: claude -p exceeded %ss wall-clock cap — killed\n' "$turn_timeout" >&2
 elif [[ "$bounded_rc" -ne 0 ]]; then

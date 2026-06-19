@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-18
 
+### Part A Phase 3.6 — worktree isolation (the airtight async/side-effect close)
+Closes the last open Phase 3.6 item: a headless builder turn can no longer mutate the real repo via an async/background subprocess. This is the confirmed gate for the Phase 6 WPCC dogfood — now unblocked.
+- **`relay-turn-lib.sh`** — new shared helpers `rtl_worktree_begin` / `rtl_worktree_end`: run the turn in a THROWAWAY `git worktree` of ROOT@HEAD (seeded with the current allowlist content), copy ONLY the allowlist back, then destroy the worktree. Off-lane change detected in the worktree → no copy-back + `RTL_WT_OFFLANE=1` (contained AND escalated). `.tick` stays SHARED via `TICK_REPO_ROOT`.
+- **`claude-turn.sh`** — opt-in via `RELAY_WORKTREE_ISOLATION=1` (builder only; reviewers are read-only). Default OFF → the in-ROOT path is byte-for-byte the prior behaviour. Off-lane in the worktree → exit 6 (precedence over timeout 7 / fail 5). Process-group reap proved unnecessary (ROOT is unreachable regardless; sidesteps macOS's missing `setsid`).
+- **`test/worktree-isolation.sh` 12/12** — incl. the adversarial case ROADMAP 3.6 listed as missing: a builder that spawns a background process writing off-lane *after* the turn → ROOT byte-clean. `validate.sh` 32 → **33/33**, zero regressions (default path unchanged).
+
 ### Marathon real-monolith dogfood — plan + ROADMAP Phase 6 integration
 First plan to run the Marathon harness against a real production monolith (WPCC `check-performance.sh`, 6,988 lines) instead of synthetic `greet.js` — the harness "graduation test."
 - **`PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md`** — harness experiment plan: one bounded slice (WPCC Phase 2 detector), pre-registered Q1–Q6, one-variable-per-run design, Codex/agy workers, per-phase QA. **Ran an automated Codex review relay on it** (r1 Changes-requested: 3 blockers/4 improvements/1 nit → applied → r2 **Approved**, no new issues; thread `relay-system/2026-06-18/marathon-dogfood-plan-review.md`).

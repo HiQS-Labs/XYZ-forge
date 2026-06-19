@@ -29,7 +29,7 @@ Two parallel tracks, sequenced independently:
 
 | Most recently completed | What's next |
 |---|---|
-| **Part A Phase 4 (M5) — multi-phase chaining** ✅ shipped + real 2-phase E2E validated 2026-06-17; **Phase 6 — WPCC real-monolith dogfood** plan added + Codex-approved (r2) 2026-06-18. `validate.sh` **32/32**. | **Part A Phase 3.6 — worktree isolation** (airtight unattended containment: process-group reap + isolated git worktree) → **unblocks the Phase 6 WPCC dogfood** (the confirmed gate). |
+| **Part A Phase 3.6 — worktree isolation** ✅ shipped 2026-06-18 (opt-in `RELAY_WORKTREE_ISOLATION=1`; `test/worktree-isolation.sh` 12/12) — the airtight async/side-effect close, which **unblocks Phase 6**. (Phase 4 M5 + Phase 6 plan done earlier.) `validate.sh` **33/33**. | **Part A Phase 6 — WPCC real-monolith dogfood** 🟢 now unblocked: run the experiment (`PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md`) with isolation on. |
 | **Part B Phase 1 — Epoch fencing & stale-writer prevention** ✅ shipped 2026-06-18 (R1 + G3) + **Phase 2 partials**: G1 mid-turn-kill **detection** + R5 **wall-clock** cap. `validate.sh` **32/32**. | **Part B Phase 2 remainder** — R2 auto-reap authority, G2 dup-token determinism, G4 concurrent-pollers (+ R5 disk/codex-gemini-spend ceilings). |
 
 > **⚠️ Operational note — Gemini CLI temporarily swapped for Antigravity CLI (`agy`) (2026-06-18).**
@@ -200,13 +200,18 @@ running one Marathon phase end-to-end. Gated on Phase 2 `claude -p` spike passin
 
 ## Part A · Phase 3.6 — Autonomous-builder hardening (dogfood findings)
 
-**Status: 🟡 In progress (3 of 4 done) 2026-06-17** — surfaced by the G4 dogfood (real autonomous build
-of `test/chaos-concurrent-pollers.sh`; see CHANGELOG). The build *succeeded* (correct test, salvaged,
-`validate.sh` 26/26) but the builder went off-task — pulled in by stray untracked briefs, it ran
-`consult` (real Codex+Gemini API calls) and edited an off-lane skill file. Containment caught the
-tracked edit (✅). **Done surgically:** tool-surface shadow, clean-workspace precondition, exit-6
-escalation. **Open:** the airtight async/side-effect close (process-group reap + worktree isolation)
-— **this open item gates the [Part A · Phase 6 WPCC dogfood](#part-a--phase-6--real-monolith-dogfood-wpcc-the-graduation-test)** (the clean unattended real-repo run).
+**Status: ✅ Done (4 of 4) — airtight close shipped 2026-06-18 (opt-in).** Surfaced by the G4 dogfood
+(real autonomous build of `test/chaos-concurrent-pollers.sh`; see CHANGELOG). The build *succeeded*
+but the builder went off-task — pulled in by stray untracked briefs, it ran `consult` (real
+Codex+Gemini API calls) and edited an off-lane skill file. Containment caught the tracked edit (✅).
+**Done surgically:** tool-surface shadow, clean-workspace precondition, exit-6 escalation. **Airtight
+close (NEW 2026-06-18):** **worktree isolation** — `RELAY_WORKTREE_ISOLATION=1` runs the builder turn
+in a *throwaway git worktree*, so async/background writes land in a tree we delete, never ROOT;
+`.tick` stays shared via `TICK_REPO_ROOT`; only the allowlist is copied back; an off-lane change in the
+worktree → **exit 6 (contained AND escalated)**. Opt-in (default off → prior behaviour byte-identical).
+`test/worktree-isolation.sh` 12/12 (incl. the adversarial background-spawn case); `validate.sh` 33/33.
+Process-group reap is now redundant for ROOT-safety (isolation makes ROOT unreachable regardless).
+This **unblocks the [Part A · Phase 6 WPCC dogfood](#part-a--phase-6--real-monolith-dogfood-wpcc-the-graduation-test)**.
 
 **Intent:** make the headless builder safe to run unattended in a real repo — bound *side effects*,
 not just tracked-file edits.
@@ -221,12 +226,13 @@ not just tracked-file edits.
       `CLAUDE_BLOCK_CMDS`. Test: `test/claude-turn.sh` case 7b (builder can't spawn gemini/codex; shadow
       is subprocess-scoped). *Not airtight* — an absolute-path call to the real binary bypasses it;
       worktree isolation (below) is the airtight version.
-- [~] **Close the async-side-effect gap.** `rtl_enforce` is point-in-time; a subprocess outlived the
-      turn and re-dirtied a file + left untracked output AFTER enforcement. **Substantially mitigated**
-      by the tool-shadow above (the builder can no longer spawn the external-model processes that caused
-      it). **Still open (airtight):** reap the builder's process group at turn end + run the turn in an
-      **isolated git worktree** so any async side effect lands in the throwaway tree, not the real repo.
-      *Observable:* no repo mutation survives a turn that spawned a background process.
+- [x] **Close the async-side-effect gap.** ✅ **Done 2026-06-18 (opt-in):** the builder turn runs in an
+      **isolated git worktree** (`RELAY_WORKTREE_ISOLATION=1`) — any async side effect lands in the
+      throwaway tree, not the real repo; only the allowlist is copied back; off-lane in the worktree →
+      exit 6. Process-group reap proved unnecessary (ROOT is unreachable regardless). Helpers
+      `rtl_worktree_begin`/`rtl_worktree_end` in `relay-turn-lib.sh`; wired into `claude-turn.sh`
+      (builder; reviewers are read-only). Test: `test/worktree-isolation.sh` case 1.
+      *Observable (now proven):* no repo mutation survives a turn that spawned a background process. ✅
 - [x] **Clean-workspace precondition.** ✅ **Done 2026-06-17:** `marathon-drive` warns (lists pre-existing
       dirty/untracked files outside `phases/`+`.tick/`) before seeding, and `--require-clean` hard-stops
       (exit 2) for unattended runs. Test: `test/marathon-drive.sh` case 13.
@@ -236,9 +242,9 @@ not just tracked-file edits.
 
 ### QA checklist
 
-- [~] Containment now bounds side effects — tool-shadow stops external-model spawns; worktree isolation (open) closes the rest.
-- [ ] A deliberately rogue builder (scripted to spawn a subprocess + edit off-lane) is fully contained + escalated. *(adversarial test — the right place for "autonomy", per the surgical-not-dogfood call)*
-- [x] `validate.sh` green with no regressions from the hardening — **26/26** (claude-turn 30/30, marathon-drive 38/38).
+- [x] Containment now bounds side effects — tool-shadow stops external-model spawns; **worktree isolation (opt-in) closes the rest** (async writes land in the throwaway tree). ✅ 2026-06-18
+- [x] A deliberately rogue builder (scripted to spawn a subprocess + edit off-lane) is fully contained + escalated. ✅ `test/worktree-isolation.sh`: case 1 (background async-spawn → ROOT byte-clean), case 2 (sync off-lane → exit 6, nothing copied back).
+- [x] `validate.sh` green with no regressions from the hardening — **33/33** (worktree isolation is opt-in; the default in-ROOT path is byte-identical, so existing shim tests are unchanged).
 
 ---
 
@@ -323,8 +329,8 @@ vs. one real Gemini relay turn), **not** a Marathon dogfood — the Marathon dis
 
 ## Part A · Phase 6 — Real-Monolith Dogfood (WPCC): the graduation test
 
-**Status: 🔜 Planned — sequenced after Part A Phase 3.6 worktree isolation (see Sequencing).**
-Standalone plan (Codex-reviewed, Approved r2):
+**Status: 🟢 Unblocked 2026-06-18 — the Phase 3.6 worktree-isolation gate shipped (opt-in).** Ready to
+run with `RELAY_WORKTREE_ISOLATION=1`. Standalone plan (Codex-reviewed, Approved r2):
 `PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md`.
 
 **Why it's in the bigger picture:** Phases 1–5 prove Marathon on *synthetic* code (`greet.js`). This
@@ -346,10 +352,10 @@ containment core *"production-quality"* in a real cross-repo run — see `PROJEC
 scanner rebuild. One bounded slice (WPCC Phase 2 `php-direct-access-entrypoint`), one new variable per
 run. A run that fails honestly is a passing experiment.
 
-**Sequencing:** gated on **Phase 3.6 worktree isolation** (the airtight containment for an unattended
-headless builder on a real product repo). It *can* run sooner on a dedicated branch — the plan uses
-the branch as the containment backstop — but the clean unattended run wants 3.6 first. **Independent
-of Part B Phase 2** (chaos suite), which need not block it.
+**Sequencing:** the gate — **Phase 3.6 worktree isolation** — **shipped 2026-06-18** (opt-in
+`RELAY_WORKTREE_ISOLATION=1`), so the clean unattended run is available now. Still **independent of
+Part B Phase 2** (chaos suite). Run on a dedicated branch in `wp-code-check` (the plan's blast-radius
+backstop), with isolation on.
 
 > Pointer, not a duplicate. The pre-registered Q1–Q6, the one-variable-per-run design, the reviewer
 > scoring rubric, and per-phase QA all live in the plan doc above.

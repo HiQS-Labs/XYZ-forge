@@ -31,6 +31,7 @@ TESTS=(
   "gemini-turn.sh"
   "agy-turn.sh"
   "claude-turn.sh"
+  "worktree-isolation.sh"
   "marathon-yaml.sh"
   "marathon-drive.sh"
   "marathon.sh"

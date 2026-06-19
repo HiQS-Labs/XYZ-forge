@@ -69,6 +69,62 @@ rtl_run_bounded() {  # <timeout_secs> <cmd...>
   return "$rc"
 }
 
+# --- Worktree isolation (ROADMAP Part A Phase 3.6 — the airtight async/side-effect close) ----------
+# OPT-IN: callers gate on RELAY_WORKTREE_ISOLATION=1. Default OFF → behaviour is unchanged.
+# Run the agent turn in a THROWAWAY git worktree of RTL_ROOT@HEAD, so any async/background write
+# lands in a tree we delete — RTL_ROOT is never the agent's target. This closes the gap left by the
+# point-in-time `rtl_enforce` + the (macOS-absent) setsid process-group reap: ROOT safety no longer
+# depends on killing the process group, because the agent can't reach ROOT in the first place.
+# Coordination state (.tick) stays SHARED — the caller must run the agent with TICK_REPO_ROOT=RTL_ROOT.
+rtl_worktree_begin() {
+  # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
+  # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
+  # so the caller can fall back to an in-ROOT run. Sets RTL_WT.
+  local wt a
+  wt="$(mktemp -d "${TMPDIR:-/tmp}/rtl-wt.XXXXXX")" || return 1
+  rm -rf "$wt"                         # git worktree add wants a non-existent path
+  if ! git -C "$RTL_ROOT" worktree add --detach "$wt" HEAD >/dev/null 2>&1; then
+    rm -rf "$wt" 2>/dev/null; return 1
+  fi
+  for a in "${RTL_ALLOW[@]}"; do       # seed current content (overwrite HEAD versions)
+    if [[ -e "$RTL_ROOT/$a" ]]; then
+      mkdir -p "$wt/$(dirname "$a")"
+      cp -R "$RTL_ROOT/$a" "$wt/$a"
+    fi
+  done
+  RTL_WT="$wt"
+  printf '%s\n' "$wt"
+}
+
+rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist back unless off-lane found
+  # Contain + DETECT: if the agent touched anything outside {allowlist, .tick} in the worktree, that's
+  # an off-lane attempt — do NOT copy anything back (the turn must fail like an in-ROOT exit-6), set
+  # RTL_WT_OFFLANE=1, and destroy the worktree. Otherwise copy ONLY the allowlist back to RTL_ROOT
+  # (forward-only: edits/creates propagate; deletions do not — v1) and destroy the worktree.
+  local wt="${1:-${RTL_WT:-}}" a entry xy path
+  RTL_WT_OFFLANE=0
+  [[ -n "$wt" && -d "$wt" ]] || return 0
+  while IFS= read -r -d '' entry; do
+    [[ -n "$entry" ]] || continue
+    xy="${entry:0:2}"; path="${entry:3}"
+    case "$xy" in R*|C*) IFS= read -r -d '' _ || true ;; esac   # rename/copy: consume 2nd NUL field
+    case "$path" in .tick/*|.tick) continue ;; esac
+    rtl_in_allow "$path" && continue
+    RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
+  done < <(git -C "$wt" status --porcelain -z 2>/dev/null)
+  if ((RTL_WT_OFFLANE == 0)); then
+    for a in "${RTL_ALLOW[@]}"; do
+      if [[ -e "$wt/$a" ]]; then
+        mkdir -p "$RTL_ROOT/$(dirname "$a")"
+        cp -R "$wt/$a" "$RTL_ROOT/$a"
+      fi
+    done
+  fi
+  git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
+  git -C "$RTL_ROOT" worktree prune >/dev/null 2>&1 || true
+  RTL_WT=""
+}
+
 rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   local agent="$1" f="$2" task="$3" csv="$4" peer="${5:-}"
   # Name the peer explicitly when known — a live Gemini turn (2026-06-15) released the token to the
