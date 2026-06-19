@@ -30,7 +30,22 @@ Two parallel tracks, sequenced independently:
 | Most recently completed | What's next |
 |---|---|
 | **Part A Phase 3 — Single-phase headless loop** ✅ shipped 2026-06-17: `marathon-drive.sh` + `test/marathon-drive.sh` (26/26); `marathon.phase.*` events added to tick schema; `validate.sh` 25/25. | **Part A Phase 4 — Multi-phase chaining & state** (`MARATHON.yaml` parse, phase DAG, cross-phase injection) |
-| **Part B: Mechanically proven** ✅ (`validate.sh` 22/22; live Codex + Gemini headless turns; relay containment 3-model validated) | **Part B Phase 1 — Epoch fencing & stale-writer prevention** (R1 + G3) |
+| **Part B Phase 1 — Epoch fencing & stale-writer prevention** ✅ shipped 2026-06-18 (R1 + G3): schema 0.2.0 monotonic `epoch`; kernel fences same-id zombie writes; `test/chaos-stale-writer.sh` 13/13; `.tick/rejected.jsonl` audit log; `validate.sh` 29/29. | **Part B Phase 2 — Chaos suite & auto-recovery** (G1 midturn-kill, G2 dup-token, G4 concurrent-pollers, R2 auto-reap authority, R5 per-turn limits) |
+
+> **⚠️ Operational note — Gemini CLI temporarily swapped for Antigravity CLI (`agy`) (2026-06-18).**
+> The Gemini CLI (0.46.0) is throwing **false-positive "out of credits" errors** on this account — a
+> Google-side account/system bug, not a real quota exhaustion. Until Google fixes the account and/or
+> their system, the **Antigravity CLI (`agy`) is the stand-in for the Gemini lane.** A parallel shim
+> `relay-automation/agy-turn.sh` (mirrors `gemini-turn.sh` on the shared `relay-turn-lib.sh` core) is
+> routed via `AGY_AGENT` in `marathon-agent.sh`; `test/agy-turn.sh` 19/19, `validate.sh` 32/32.
+> `agy` is authed off the signed-in Antigravity desktop app and is itself a multi-model gateway
+> (Gemini / Claude / GPT-OSS via `--model`). **Two known limitations vs. the Gemini shim** (memory:
+> `agy-antigravity-cli`): (1) `agy -p` exits 0 with **empty output** when its backend is blocked (e.g.
+> under a sandbox) — the shim treats empty-output-on-success as a hard failure (exit 5) so a blocked
+> turn can't read as a phantom success; **run agy turns sandbox-OFF.** (2) `agy` has **no JSON/token
+> output**, so an agy lane is **cost-blind** (a floor, same Phase-1 partial as the Codex lane).
+> **Revert trigger:** Google restores correct credit accounting on the Gemini CLI → switch the lane's
+> agent id back from `AGY_AGENT` to `GEMINI_AGENT`. The Gemini shim is unchanged and ready.
 
 ## Model assignment (build-track guidance)
 
@@ -322,7 +337,15 @@ mechanism).
 
 ## Part B · Phase 1 — Epoch Fencing & Stale-Writer Prevention (R1 + G3)
 
-**Status: 🔲 Not started — ❌ missing mechanism (highest priority in this track)**
+**Status: ✅ Shipped 2026-06-18 — mechanism in place.** Monotonic per-task `epoch` added to the
+event schema (0.1.0 → 0.2.0); the projection kernel (`src/project.js` `fold`) now fences any mutation
+below the current owner's epoch — **including a same-id zombie**, the keystone the threat names.
+`test/chaos-stale-writer.sh` 13/13 (keystone same-id reclaim + cross-agent takeover); fenced events
+land in a deterministic `.tick/rejected.jsonl` (surfaced by `tick fences`). `validate.sh` **29/29**, no
+regressions. Decision record: `decisions/2026-06-18-epoch-fencing.md`. *(Kernel diff written on Opus
+per the model-assignment table; remaining Part B work reverts to Sonnet High.)* **Carried forward:**
+epoch is assigned under the per-clone `withClaimLock` — cross-machine concurrent claims (R3) are out of
+scope and flagged as this record's revisit trigger.
 
 > **G3 — Stale-writer fencing (the keystone).**
 > **Threat:** agent X is presumed dead and the token is taken over (reap → reclaim by Y); then X
@@ -338,19 +361,22 @@ mechanism).
 
 ### Checklist
 
-- [ ] **R1: Implement monotonic epoch fencing tokens.**
-  - [ ] Add `epoch` field to claim events in the event schema.
-  - [ ] Modify `tick` projection kernel to track the current owner's epoch.
-  - [ ] Reject mutating events (`done`/`release`/edit) whose epoch is older than the current owner's.
-- [ ] **G3: Build `test/chaos-stale-writer.sh`.**
-  - [ ] Script: claim as agent X → force reap+reclaim as Y (new epoch) → replay X's `done`/`release`/scope events.
-  - [ ] Assert: every stale event rejected; relay state unchanged.
+- [x] **R1: Implement monotonic epoch fencing tokens.** ✅ 2026-06-18
+  - [x] Add `epoch` field to claim events in the event schema. ✅ (`src/events.js`, schema 0.2.0; absent ⇒ epoch 0)
+  - [x] Modify `tick` projection kernel to track the current owner's epoch. ✅ (`fold`: owner = highest live epoch)
+  - [x] Reject mutating events (`done`/`release`/scope) whose epoch is older than the current owner's. ✅
+        Plus two sub-invariants: a `released` retires a claim only at `epoch >= claim.epoch` (same-id keystone);
+        a handoff is honoured only from the latest epoch (no zombie redirect).
+- [x] **G3: Build `test/chaos-stale-writer.sh`.** ✅ 2026-06-18 (13/13)
+  - [x] Script: claim as agent X → force reap+reclaim (new epoch) → replay X's `done`/`release`/scope events. ✅
+        Keystone scenario uses a **same-id** reclaim so ownership passes and only the epoch fences.
+  - [x] Assert: every stale event rejected; relay state byte-identical; owner still completes. ✅
 
 ### QA checklist
 
-- [ ] `test/chaos-stale-writer.sh` emits a rejected-event log showing the fence firing.
-- [ ] `validate.sh` 22/22 with no regressions from epoch addition.
-- [ ] Schema change documented in a decision record.
+- [x] `test/chaos-stale-writer.sh` emits a rejected-event log showing the fence firing. ✅ (`.tick/rejected.jsonl`, `tick fences`; deterministic across re-projections)
+- [x] `validate.sh` green with no regressions from epoch addition. ✅ **29/29** (28 prior + the new chaos test; baseline is no longer 22).
+- [x] Schema change documented in a decision record. ✅ `decisions/2026-06-18-epoch-fencing.md`
 
 ---
 
@@ -369,8 +395,10 @@ Package the deliberate failure scenarios and operationalize the watchdog's auto-
 > **Test/artifact:** `test/chaos-midturn-kill.sh` → watchdog JSON escalation + before/after token state.
 > **Leans on:** `watchdog.sh` (`tick analyze --format json` → `parked_suspects[]`), `relay-drive.sh`
 > no-progress escalation, `tick ping` heartbeats.
-> **Status:** ⚠️ *Partial* — detection is unit-tested; the recovery half (auto-reap) is a stub behind
-> `--allow-reap` (see R2). No deliberate kill-mid-turn chaos log yet.
+> **Status:** ⚠️ *Partial — detection PROVEN 2026-06-18* (`test/chaos-midturn-kill.sh`, 8 assertions:
+> orphaned claim flagged in `parked_suspects[]` past threshold + false-positive guard; `watchdog.sh`
+> exits 0 with exactly one valid-JSON escalation record — never hangs). The recovery half (auto-reap)
+> remains a stub behind `--allow-reap`, gated on **R2**.
 
 > **G2 — Duplicate / ambiguous turn token.**
 > **Threat:** two claims/ownership events for one token (race, replay, or a duplicated event file) →
@@ -406,22 +434,23 @@ Package the deliberate failure scenarios and operationalize the watchdog's auto-
 - [ ] **R2: Auto-reap authority decision.**
   - [ ] Formally define who may reap and on what evidence; record in a decision markdown.
   - [ ] Flip `watchdog.sh --allow-reap` from stub to real.
-- [ ] **G1: Build `test/chaos-midturn-kill.sh`** (mid-turn termination).
-  - [ ] Claim as agent X → `kill -9` → run `watchdog.sh` → assert `parked_suspects[X]` flagged.
-  - [ ] Assert: structured JSON escalation emitted; auto-reap re-offers token exactly once.
+- [~] **G1: Build `test/chaos-midturn-kill.sh`** (mid-turn termination). *(detection half ✅ 2026-06-18; recovery gated on R2)*
+  - [x] Claim as agent X → simulate death (zero heartbeats, time advanced via `TICK_TS`) → assert `parked_suspects[X]` flagged (+ false-positive guard). ✅
+  - [~] Assert: structured JSON escalation emitted ✅; **auto-reap re-offers token exactly once** ⬅ deferred (R2 `--allow-reap` stub).
 - [ ] **G2: Build `test/chaos-dup-token.sh`** (duplicate/ambiguous token).
   - [ ] Inject concurrent/duplicate claims → assert projection resolves to exactly one stable winner across N replays.
   - [ ] Inject malformed/duplicate event files → assert safely quarantined without crash.
 - [ ] **G4: Build `test/chaos-concurrent-pollers.sh`** (concurrent pollers).
   - [ ] Launch two concurrent `poll.sh` instances against the same relay state.
   - [ ] Assert exactly one poller acts; the other idles — across N trials.
-- [ ] **R5: Resource / quota limits** (per-turn runaway containment; Gemini 2026-06-15).
-  - [ ] Cap per-turn wall-clock, disk, and API spend in the turn-taker shim.
-  - [ ] Pairs with `relay-drive.sh` round-cap; missing piece is per-turn time/spend ceilings.
+- [~] **R5: Resource / quota limits** (per-turn runaway containment; Gemini 2026-06-15). *(wall-clock ✅ 2026-06-18; disk + codex/gemini spend deferred)*
+  - [x] Cap per-turn **wall-clock** in the turn-taker shim. ✅ `rtl_run_bounded` (coreutils-free) in `relay-turn-lib.sh`; all 3 shims via `RELAY_TURN_TIMEOUT_S` (default 300); timeout → exit 7. Test `test/relay-turn-timeout.sh` 9/9.
+  - [~] **disk** + **per-turn API spend (codex/gemini)** ceilings — deferred (claude already has `--max-budget-usd`; disk belongs in a TMPDIR watchdog). In-code `# NOTE:`s mark the gap.
+  - [x] Pairs with `relay-drive.sh` round-cap (turn COUNT); wall-clock adds the per-turn TIME ceiling. ✅
 
 ### QA checklist
 
-- [ ] `test/chaos-midturn-kill.sh` passes with watchdog JSON + correct recovery state.
+- [~] `test/chaos-midturn-kill.sh` passes with watchdog JSON escalation (detection ✅ 8/8); "correct recovery state" deferred to R2.
 - [ ] `test/chaos-dup-token.sh` passes with identical projection outputs across all replays.
 - [ ] `test/chaos-concurrent-pollers.sh` passes: exactly one actor per trial, logged.
 - [ ] `watchdog.sh` reaps and re-offers tokens without manual intervention.
