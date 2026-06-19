@@ -7,7 +7,7 @@ build swarms. Built in phases on top of `tick` (see
 **Execution contract: default live-window flow** — the default operator path is
 still the poll-driven, live-window flow: a Claude window under `/loop`, or a
 human one-line nudge when the turn belongs to a non-Claude window. Headless
-turn-takers now exist for Codex and Gemini (`codex-turn.sh`, `gemini-turn.sh`),
+turn-takers now exist for Codex and agy (`codex-turn.sh`, `agy-turn.sh`),
 but the cross-model poll loop still degrades to a manual nudge rather than
 auto-firing those shims. For the current headless path, see
 [QUICKSTART.md](QUICKSTART.md) and
@@ -22,8 +22,9 @@ auto-firing those shims. For the current headless path, see
 | `relay-drive.sh` | **Phase 4b** relay supervisor: loops a `/relay` Producer↔Reviewer thread to termination via a turn-taker; round cap + no-progress escalation. |
 | `relay-turn-lib.sh` | **Shared safety core** (sourced, not run): the model-agnostic containment contract — path-allowlist + commit-bypass guard + no-push. Both headless turn-takers source this so the boundary lives in ONE place. See [decisions/2026-06-15-unattended-agent-containment.md](../decisions/2026-06-15-unattended-agent-containment.md). |
 | `codex-turn.sh` | **Option-A** headless turn-taker for the **Codex** agent (`codex exec`); thin dispatch wrapper over `relay-turn-lib.sh`. |
-| `gemini-turn.sh` | **Option-A** headless turn-taker for the **Gemini** agent (`gemini --yolo --skip-trust -p`, GCA auth); thin dispatch wrapper over the same `relay-turn-lib.sh`. First drafted standalone by Gemini, reconciled onto the shared core + corrected invocation; live-validated 2026-06-15. |
-| `consult.sh` | Parallel read-only consult: asks the same question to Codex and Gemini, captures both transcripts, and leaves synthesis to the caller. Advisory-only; not part of the relay loop. |
+| `gemini-turn.sh` | **DEPRECATED 2026-06-19** — Gemini CLI retired; use `agy-turn.sh` instead. Kept as historical reference. |
+| `agy-turn.sh` | **Option-A** headless turn-taker for the **agy** (Antigravity CLI) agent (`agy -p`); thin dispatch wrapper over `relay-turn-lib.sh`. Permanent replacement for `gemini-turn.sh`; live-validated 2026-06-18. |
+| `consult.sh` | Parallel read-only consult: asks the same question to Codex and agy, captures both transcripts, and leaves synthesis to the caller. Advisory-only; not part of the relay loop. |
 
 ## Operator usage (default live-window flow)
 
@@ -73,10 +74,10 @@ relay-automation/relay-drive.sh --relay-file relay-system/<date>/<slug>.md \
 ```
 `--agent-cmd` is the turn-taker seam. In the live-window flow it can remain a
 window-driven/manual handoff; in the current headless path it can be a shipped
-shim such as `relay-automation/codex-turn.sh` or `relay-automation/gemini-turn.sh`.
+shim such as `relay-automation/codex-turn.sh` or `relay-automation/agy-turn.sh`.
 Exits: `0` closed Approved/Closed, `3` no-progress, `4` round cap / closed-not-approved.
 
-### Cross-model windows (Codex / Gemini) — manual nudge
+### Cross-model windows (Codex / agy) — manual nudge
 In the poll-based multi-window flow, non-Claude windows can't self-wake. The
 operator's whole job is **one line**:
 ```
@@ -86,7 +87,7 @@ The relay file embeds the `▶ TAKE YOUR TURN` instructions, so any agent acts f
 the file alone. `poll.sh` detects a cross-model turn and emits this nudge text
 rather than silently idling. If you want a current headless cross-model path
 instead, use `relay-drive.sh` with a headless shim (`codex-turn.sh` or
-`gemini-turn.sh`) rather than the `/loop` poll flow.
+`agy-turn.sh`) rather than the `/loop` poll flow.
 
 ## Boundary (load-bearing)
 - **Hands-free poll is all-Claude only** — it relies on Claude Code's in-session `/loop`. Cross-model stays on the manual nudge.

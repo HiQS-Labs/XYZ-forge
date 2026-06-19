@@ -6,7 +6,7 @@
 #
 # Per-phase fields:
 #   id                 phase id → phases/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
-#   reviewer           codex* or gemini* — the model that reviews this phase              (required)
+#   reviewer           codex* or agy* — the model that reviews this phase                 (required)
 #   brief              path (repo-relative) to the phase's task markdown                  (required)
 #   artifact           comma-separated repo-relative file(s) the builder may create/edit  (optional)
 #   max_review_rounds  round-cap = 2*N+1 (default 2 → cap 5)                              (optional)
@@ -24,7 +24,7 @@ phases:
 
   - id: p2
     name: Single-writer lease on top of the schema
-    reviewer: gemini
+    reviewer: agy
     brief: phases-briefs/p2-lease.md
     artifact: src/lease.js
     depends_on: p1

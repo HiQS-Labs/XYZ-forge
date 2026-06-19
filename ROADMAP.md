@@ -32,20 +32,14 @@ Two parallel tracks, sequenced independently:
 | **Part A Phase 3.6 — worktree isolation** ✅ shipped 2026-06-18 (opt-in `RELAY_WORKTREE_ISOLATION=1`; `test/worktree-isolation.sh` 12/12) — the airtight async/side-effect close, which **unblocks Phase 6**. (Phase 4 M5 + Phase 6 plan done earlier.) `validate.sh` **33/33**. | **Part A Phase 6 — WPCC real-monolith dogfood** 🟢 now unblocked: run the experiment (`PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md`) with isolation on. |
 | **Part B Phase 1 — Epoch fencing & stale-writer prevention** ✅ shipped 2026-06-18 (R1 + G3) + **Phase 2 partials**: G1 mid-turn-kill **detection** + R5 **wall-clock** cap. `validate.sh` **32/32**. | **Part B Phase 2 remainder** — R2 auto-reap authority, G2 dup-token determinism, G4 concurrent-pollers (+ R5 disk/codex-gemini-spend ceilings). |
 
-> **⚠️ Operational note — Gemini CLI temporarily swapped for Antigravity CLI (`agy`) (2026-06-18).**
-> The Gemini CLI (0.46.0) is throwing **false-positive "out of credits" errors** on this account — a
-> Google-side account/system bug, not a real quota exhaustion. Until Google fixes the account and/or
-> their system, the **Antigravity CLI (`agy`) is the stand-in for the Gemini lane.** A parallel shim
-> `relay-automation/agy-turn.sh` (mirrors `gemini-turn.sh` on the shared `relay-turn-lib.sh` core) is
-> routed via `AGY_AGENT` in `marathon-agent.sh`; `test/agy-turn.sh` 19/19, `validate.sh` 32/32.
-> `agy` is authed off the signed-in Antigravity desktop app and is itself a multi-model gateway
-> (Gemini / Claude / GPT-OSS via `--model`). **Two known limitations vs. the Gemini shim** (memory:
-> `agy-antigravity-cli`): (1) `agy -p` exits 0 with **empty output** when its backend is blocked (e.g.
-> under a sandbox) — the shim treats empty-output-on-success as a hard failure (exit 5) so a blocked
-> turn can't read as a phantom success; **run agy turns sandbox-OFF.** (2) `agy` has **no JSON/token
-> output**, so an agy lane is **cost-blind** (a floor, same Phase-1 partial as the Codex lane).
-> **Revert trigger:** Google restores correct credit accounting on the Gemini CLI → switch the lane's
-> agent id back from `AGY_AGENT` to `GEMINI_AGENT`. The Gemini shim is unchanged and ready.
+> **Operational note — Gemini CLI retired 2026-06-19; agy (Antigravity CLI) is the permanent cross-model lane.**
+> `relay-automation/agy-turn.sh` (on the shared `relay-turn-lib.sh` core) is routed via `AGY_AGENT`
+> in `marathon-agent.sh`; `test/agy-turn.sh` 19/19. `agy` is authed off the signed-in Antigravity
+> desktop app and is itself a multi-model gateway (Gemini / Claude / GPT-OSS via `--model`).
+> **Two known limitations** (memory: `agy-antigravity-cli`): (1) `agy -p` exits 0 with **empty output**
+> when its backend is blocked (e.g. under a sandbox) — the shim treats this as a hard failure (exit 5);
+> **run agy turns sandbox-OFF.** (2) `agy` has **no JSON/token output**, so an agy lane is
+> **cost-blind** (a floor, same Phase-1 partial as the Codex lane).
 
 ## Model assignment (build-track guidance)
 
@@ -56,7 +50,7 @@ line-count; the Opus-worthy core is small and self-contained, so this split is a
 | Work item | Model | Why |
 |---|---|---|
 | `claude -p` headless spike (A·P2) | **Sonnet High** | Empirical — run a turn, read the JSON, log the token/wall-clock number. Almost no reasoning depth. |
-| `marathon-agent.sh` + `claude-turn.sh` (A·P2) | **Sonnet High** | `case` router + a shim mirroring the existing `codex-turn.sh`/`gemini-turn.sh` against shared `relay-turn-lib.sh`. Pattern-following with a concrete on-disk reference. |
+| `marathon-agent.sh` + `claude-turn.sh` (A·P2) | **Sonnet High** | `case` router + a shim mirroring the existing `codex-turn.sh`/`agy-turn.sh` against shared `relay-turn-lib.sh`. Pattern-following with a concrete on-disk reference. |
 | `marathon-drive.sh` single-phase loop (A·P3) | **Sonnet High** | Integration against an untouched `relay-drive.sh` + a clear checklist. Scaffolding acts as template. |
 | Chaos **test scripts** (B·P2: midturn-kill, concurrent-pollers) | **Sonnet High** | `kill -9` + watchdog-assertion harnesses are mechanical once the mechanism exists. |
 | E2E fresh-repo script, observability JSON logs, reference-deploy docs (B·P3/P4) | **Sonnet High** | Scripting + docs, low ambiguity. |
@@ -121,10 +115,10 @@ loops run, we can deterministically measure and eventually halt them based on co
 - [x] **Determinism litmus:** Same events in → identical cost out. `computeCost` is a pure function. ✅
 - [x] **No-silent-cap:** Undercounted runs explicitly warn; `run_type: unspecified` warns on non-comparable runs. ✅
 
-> **Deferred (honest blind spots — carried from `COST-OBSERVABILITY-PLAN.md`):** token capture is
-> fully wired only for **Gemini** headless turns. **Codex** token parsing (usage format un-probed) and
-> **Claude-orchestrator** tokens (no shell-visible per-turn count) are NOT yet captured — so a multi-model
-> run's `tokens_total` is a floor, not a complete sum. "Cost observability" is complete for Gemini lanes only.
+> **Deferred (honest blind spots — carried from `COST-OBSERVABILITY-PLAN.md`):** token capture was
+> wired for Gemini headless turns (now retired). **agy** has no JSON/token output (cost-blind floor),
+> **Codex** token parsing (usage format un-probed) and **Claude-orchestrator** tokens (no shell-visible
+> per-turn count) are NOT yet captured — so a multi-model run's `tokens_total` is a floor, not a complete sum.
 
 ---
 
@@ -137,10 +131,10 @@ loops run, we can deterministically measure and eventually halt them based on co
 
 ### Checklist
 
-- [x] **Confirm Gemini shim:** `gemini-turn.sh` exists, sources `relay-turn-lib.sh`, and passes all tests.
-      *Observable:* 17/17 `gemini-turn.sh` tests pass; live real turn validated 2026-06-16. ✅
+- [x] **Confirm cross-model shim:** `gemini-turn.sh` (now deprecated) was validated; replaced by `agy-turn.sh`
+      (Antigravity CLI, 19/19 tests); live Gemini turn validated 2026-06-16 before CLI retirement. ✅
 - [x] **Create `marathon-agent.sh` dispatcher:** `case "$RELAY_AGENT"` router — execs `claude-turn.sh`,
-      `codex-turn.sh`, or `gemini-turn.sh`; passes `RELAY_PEER` through; exits 2 on unknown agent.
+      `codex-turn.sh`, or `agy-turn.sh`; passes `RELAY_PEER` through; exits 2 on unknown agent.
       *Observable:* Each known agent routes correctly; unknown → exit 2. ✅ Shipped 2026-06-17.
 - [x] **Headless `claude -p` spike (gating unknown):** Confirmed JSON output schema and ran a real
       authenticated turn. Token schema: `usage.{input_tokens,cache_read_input_tokens,output_tokens}`,
@@ -152,14 +146,14 @@ loops run, we can deterministically measure and eventually halt them based on co
 - [x] **Build `claude-turn.sh` shim:** Mirrors `codex-turn.sh` — `rtl_init` → `rtl_before` →
       `claude -p "$prompt" --allowedTools "Bash,Read,Edit,Write" --permission-mode acceptEdits
       --output-format json --max-turns <N> --max-budget-usd <$>` → `rtl_enforce`.
-      Builder gets `Edit,Write`; reviewers (Gemini, Codex) keep `"Bash,Read"`. Cost capture parses
+      Builder gets `Edit,Write`; reviewers (agy, Codex) keep `"Bash,Read"`. Cost capture parses
       JSON transcript via `tick cost --tokens-in/--tokens-out`. 27/27 tests pass.
       *Observable:* Stub `claude` drives one turn through relay; off-allowlist edit → exit 6. ✅ 2026-06-17.
 
 ### QA checklist
 
-- [ ] **Containment:** All three shims (`claude`, `codex`, `gemini`) source the SAME `relay-turn-lib.sh` — never reimplement.
-- [ ] **Tool allowlist split:** builder (`claude-turn.sh`) = `"Bash,Read,Edit,Write"`; reviewers (`codex-turn.sh`, `gemini-turn.sh`) = `"Bash,Read"`. Verified before Phase 3.
+- [ ] **Containment:** All three shims (`claude`, `codex`, `agy`) source the SAME `relay-turn-lib.sh` — never reimplement.
+- [ ] **Tool allowlist split:** builder (`claude-turn.sh`) = `"Bash,Read,Edit,Write"`; reviewers (`codex-turn.sh`, `agy-turn.sh`) = `"Bash,Read"`. Verified before Phase 3.
 - [ ] **Both cost ceilings set:** `claude-turn.sh` passes both `--max-turns` AND `--max-budget-usd` — neither alone is sufficient. Values sized from M2 spike output.
 - [ ] **Round-cap arithmetic:** `--round-cap = 2 × max_review_rounds + 1` (turns ≠ rounds; off-by-one kills phases early). Validated before M3.
 - [ ] **RELAY_PEER threading:** Every turn passes the peer explicitly — unnamed peer caused a live Gemini "release to literal role-string" failure on 2026-06-15.
@@ -368,7 +362,7 @@ backstop), with isolation on.
 ## Part B — Adversarial Hardening
 
 The `tick` + relay-automation stack is **mechanically proven** (happy-path coordination, 22/22
-`validate.sh`, live Codex + Gemini headless turns behind one safety boundary). Commercial viability
+`validate.sh`, live Codex + agy headless turns behind one safety boundary). Commercial viability
 needs a different bar: **adversarial proof under failure**, with reproducible logs a buyer (or an
 auditor) can replay. This track closes that gap.
 
@@ -516,7 +510,7 @@ Prove the protocol generalizes beyond the home repository and supports true mult
 > **and** with **heterogeneous agents** taking real turns (not just Claude, not just manual nudge).
 > **Test/artifact:** `test/e2e-fresh-repo.sh` → transcript + commit graph from a foreign repo.
 > **Leans on:** the packaged sibling skill (`relay-pkg.tar.gz`, `QUICKSTART.md`), `codex-turn.sh` +
-> `gemini-turn.sh` over the shared core.
+> `agy-turn.sh` over the shared core.
 > **Status:** ⚠️ *Partial* — cross-**model** is live-proven (Codex + Gemini headless turns) and the
 > MBP16 field report drove a real cross-**repo** run; but there's no zero-setup fresh-clone E2E
 > proving no home-repo coupling, and `.tick/` is still per-device-local.
@@ -529,7 +523,7 @@ Prove the protocol generalizes beyond the home repository and supports true mult
   - [ ] Run a complete Producer↔Reviewer relay to `Approved` using headless agents.
   - [ ] Assert no hardcoded dependencies on the home repository.
 - [ ] **G5: Cross-model demonstration.**
-  - [ ] Execute and record a multi-agent run combining Codex + Gemini headless turns in a single thread.
+  - [ ] Execute and record a multi-agent run combining Codex + agy headless turns in a single thread.
 - [ ] **R3: Cross-machine `.tick/` sync.**
   - [ ] Build or document an out-of-band sync mechanism (git-based or daemon) so multiple machines share `.tick/` securely.
 

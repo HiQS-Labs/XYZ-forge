@@ -6,10 +6,9 @@ set -euo pipefail
 # gemini-turn.sh, proving the boundary is model-agnostic
 # (decisions/2026-06-15-unattended-agent-containment.md).
 #
-# WHY THIS EXISTS: temporary stand-in for gemini-turn.sh while the Gemini CLI throws false-positive
-# "out of credits" errors on this account (Google-side bug, 2026-06-18). `agy` is authed off the
-# signed-in Antigravity desktop app and is itself a multi-model gateway (Gemini / Claude / GPT-OSS via
-# --model). Revert to gemini-turn.sh once Google fixes the account/system. See ROADMAP.md Part B note.
+# WHY THIS EXISTS: permanent cross-model lane, replacing gemini-turn.sh. Gemini CLI was retired
+# 2026-06-19. `agy` (Antigravity CLI) is authed off the signed-in Antigravity desktop app and is
+# itself a multi-model gateway (Gemini / Claude / GPT-OSS via --model).
 #
 # Invoked by relay-drive.sh / marathon-agent.sh as --agent-cmd, with env:
 #   RELAY_FILE  — relay thread file (always allowlisted)
@@ -116,4 +115,4 @@ rtl_enforce "$t" "$me" "$AGY_LOG" "agy"
 if [[ "$bounded_rc" -eq 7 ]]; then exit 7; fi
 
 # NOTE: no cost.tokens capture — agy print mode emits no JSON/usage block (see header gotcha (b)).
-# An agy lane is therefore a cost floor, not a complete sum (same Phase-1 partial as the Codex lane).
+# An agy lane is a cost floor, not a complete sum (same Phase-1 partial as the Codex lane).

@@ -1,13 +1,13 @@
 ---
 name: consult
-description: One-shot cross-model CONSULT — fan the same question out to Codex and Gemini in parallel (repo-isolated, advisory), then reconcile their answers into one. Use when the user wants a "second opinion", to "ask Codex and Gemini", a "panel" or "cross-model" check, or an independent gut-check on a decision/design/doc before committing — and does NOT need an iterative build/review loop. NOT a relay: a relay is an iterative 1:1 Producer↔Reviewer loop that converges an artifact; a consult is a parallel 1-shot 1:N second opinion, reconciled once. Repo-local — depends on the codex + gemini CLIs and the relay-automation shims, so it is not portable.
+description: One-shot cross-model CONSULT — fan the same question out to Codex and agy in parallel (repo-isolated, advisory), then reconcile their answers into one. Use when the user wants a "second opinion", to "ask Codex and agy", a "panel" or "cross-model" check, or an independent gut-check on a decision/design/doc before committing — and does NOT need an iterative build/review loop. NOT a relay: a relay is an iterative 1:1 Producer↔Reviewer loop that converges an artifact; a consult is a parallel 1-shot 1:N second opinion, reconciled once. Repo-local — depends on the codex + agy CLIs and the relay-automation shims, so it is not portable.
 ---
 
 # Consult
 
 **One question → N independent models in parallel → one reconciled answer.**
 
-A consult asks Codex and Gemini the *same* question at the same time, isolated from your real tree, and then a
+A consult asks Codex and agy the *same* question at the same time, isolated from your real tree, and then a
 coordinator (Claude) reconciles their answers — surfacing where they **agree**, where they
 **disagree**, and giving a single reconciled **call**. It is the fast "ask the other brains before I
 commit" move: no copy-paste, no window-shuttling, one step.
@@ -27,7 +27,7 @@ first look, the relay is the build loop.
 
 ## When to use
 
-- "Get a second opinion." "Ask Codex and Gemini." "What do the other models think?"
+- "Get a second opinion." "Ask Codex and agy." "What do the other models think?"
 - "Panel review" / "cross-model check" / "sanity-check this before I commit."
 - An independent gut-check on a plan, design, schema, or doc — where you want *divergent* reads, not
   a single model's confident answer.
@@ -66,7 +66,7 @@ post-hoc revert that the skill's own first dogfood flagged as unsafe.
 ```
 consult.sh --prompt-file Q.md            # question is the file's contents (may reference repo paths)
 consult.sh --prompt "Is X sound?"        # inline question
-  [--models codex,gemini]                # which advisors (default both)
+  [--models codex,agy]                   # which advisors (default both)
   [--out DIR]                            # parent dir (default relay-system/<today>/)
   [--label SLUG]                         # run-subdir + transcript stem (default "consult")
 ```
@@ -88,7 +88,7 @@ answer still comes back (**graceful degrade**, and the degrade is stated, never 
    `"$(git rev-parse --show-toplevel)/relay-automation/consult.sh"` (see "Locating the script" above) —
    with the prompt + a `--label`. Both models run at once. Don't invoke a bare `consult.sh`; it only
    resolves at the repo root.
-3. **Read both transcripts** in `relay-system/<today>/<label>-<HHMMSS>/<label>.codex.md` and `…gemini.*`.
+3. **Read both transcripts** in `relay-system/<today>/<label>-<HHMMSS>/<label>.codex.md` and `…agy.*`.
 4. **Reconcile — this is the load-bearing step.** Produce a synthesis with three parts, in this order:
    - **Disagree** (first — it's the whole point): every point the two models differ on, with your
      adjudication and *why*.
@@ -114,29 +114,27 @@ hunts overclaims and misses silent drops: the easy direction satisfices.)
 - **Repo-isolated, not process-sandboxed.** Advisors run in a throwaway worktree and cannot reach
   your real tree, so a consult never changes your code even if an advisor ignores the "advisory only"
   instruction. Be precise about the boundary: this protects your *repository*, not the *host process*.
-  Codex additionally runs `-s read-only`; Gemini runs `--yolo` and is repo-isolated but not a
-  sandboxed process (it can still reach the network / the host outside the worktree). For a hard
-  process boundary, run consult inside your own sandbox. If a fix is needed, *you* (or a relay) apply
-  it — the independent check stays independent.
+  Codex additionally runs `-s read-only`; agy runs with `--dangerously-skip-permissions` and is
+  repo-isolated but not a sandboxed process (it can still reach the network / the host outside the
+  worktree). For a hard process boundary, run consult inside your own sandbox. If a fix is needed,
+  *you* (or a relay) apply it — the independent check stays independent.
 - **The worktree shows tracked + untracked state, not ignored files.** `.gitignore`d local context is
   excluded from what advisors see; reference it inline in the question if it matters.
-- **Cost capture is opt-in.** Default Gemini output is human-readable text. Set `CONSULT_GEMINI_JSON=1`
-  to capture `-o json` instead, which enables best-effort `tick cost` token logging (Codex token
-  parsing is still deferred — its usage format isn't probed yet).
+- **Cost capture is not available for agy.** agy has no JSON/token output, so an agy lane is cost-blind
+  (a floor). Codex token parsing is also still deferred. Neither lane captures `tick cost` events in a consult.
 - **Repo-local, not portable.** Unlike `relay` (model-agnostic, file-only), consult hard-depends on
-  the `codex` + `gemini` CLIs being installed and authed and on the `relay-automation` shims.
+  the `codex` + `agy` CLIs being installed and authed and on the `relay-automation` shims.
 
 ## Gotcha: run consult OUTSIDE Claude Code's Bash sandbox
 
 If you launch `consult.sh` from a Claude Code session, **disable the Bash sandbox for that call**
-(`dangerouslyDisableSandbox: true`). The sandbox blocks the macOS keychain (so the **Codex** CLI
-can't load root CA certs — `no native root CA certificates found` / `No keychain is available`) and
-does not allowlist `chatgpt.com`, so Codex fails every time while **Gemini still answers** (it talks
-to `googleapis.com`, which is allowlisted). The symptom is a one-sided `1 answered, 1 failed` degrade
-with a keychain error in the Codex transcript — it is **not** a Codex auth problem and **not** a
-"restart your computer" problem. Disabling the sandbox here is safe: consult's isolation comes from
-its **throwaway worktree** (and Codex's own `-s read-only`), not from the Bash sandbox, so nothing is
-weakened.
+(`dangerouslyDisableSandbox: true`). **Both advisors fail under the sandbox:**
+- **Codex** — the sandbox blocks the macOS keychain (`no native root CA certificates found` / `No keychain is available`) and does not allowlist `chatgpt.com`.
+- **agy** — the sandbox blocks agy's backend network; `agy -p` exits 0 with **empty output** (the shim treats this as a hard failure, exit 5).
+
+The symptom is a two-sided `0 answered, 2 failed` degrade. Disabling the sandbox here is safe:
+consult's isolation comes from its **throwaway worktree** (and Codex's own `-s read-only`), not from
+the Bash sandbox, so nothing is weakened.
 
 ## What success looks like
 

@@ -1,6 +1,6 @@
 # Trinity orchestrator — Claude Code
 
-You are the orchestrator for a Trinity coordination spike running on the AI-DDTK repo. **Codex and Gemini are the peer agents doing the actual coding work; you are NOT claiming tasks.** Your job is to be Noel's co-pilot during the run and walk him through the final review.
+You are the orchestrator for a Trinity coordination spike running on the AI-DDTK repo. **Codex and agy are the peer agents doing the actual coding work; you are NOT claiming tasks.** Your job is to be Noel's co-pilot during the run and walk him through the final review.
 
 ## Required reading (read all four before doing anything else)
 
@@ -78,7 +78,7 @@ Read REAL-AGENT-OBSERVATIONS.md aloud, section by section. **For each peer agent
 
 After each section, give Noel a one-sentence interpretation, e.g.:
 - "Codex's compliance was clean — claimed every task, no drift."
-- "Gemini drifted twice into shared/utils/ during TASK-B. Worth flagging in the synthesis."
+- "agy drifted twice into shared/utils/ during TASK-B. Worth flagging in the synthesis."
 
 ### Step 4 — Help him capture subjective observations
 

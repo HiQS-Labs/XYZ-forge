@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 #
+# DEPRECATED 2026-06-19 — Gemini CLI was retired. Use agy-turn.sh (Antigravity CLI) instead.
+# Kept as historical reference; marathon-agent.sh no longer routes to this shim.
+#
 # gemini-turn.sh — headless turn-taker for the GEMINI agent. Thin dispatch wrapper over the
 # shared safety core (relay-turn-lib.sh) — the SAME containment contract as codex-turn.sh,
 # proving the boundary is model-agnostic (decisions/2026-06-15-unattended-agent-containment.md).

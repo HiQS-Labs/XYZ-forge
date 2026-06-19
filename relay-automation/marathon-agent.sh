@@ -3,7 +3,7 @@ set -euo pipefail
 #
 # marathon-agent.sh — dispatcher for Marathon multi-phase loops. Routes a relay turn to the
 # correct model shim based on RELAY_AGENT; lets relay-drive.sh use a single --agent-cmd for
-# runs that mix Claude, Codex, Gemini, and agy (Antigravity) turns.
+# runs that mix Claude, Codex, and agy (Antigravity) turns.
 #
 # Invoked by relay-drive.sh as --agent-cmd, with env:
 #   RELAY_FILE  — relay thread file
@@ -13,7 +13,7 @@ set -euo pipefail
 #   CLAUDE_AGENT      — agent id that routes to claude-turn.sh
 #   CODEX_AGENT       — agent id that routes to codex-turn.sh
 #   GEMINI_AGENT      — agent id that routes to gemini-turn.sh
-#   AGY_AGENT         — agent id that routes to agy-turn.sh (Antigravity CLI; temporary Gemini stand-in)
+#   AGY_AGENT         — agent id that routes to agy-turn.sh (Antigravity CLI; permanent cross-model lane)
 # Peer threading (set by marathon-drive.sh — prevents "release to literal role-string" failure):
 #   MARATHON_BUILDER  — builder agent id; when RELAY_AGENT matches this, RELAY_PEER = MARATHON_REVIEWER
 #   MARATHON_REVIEWER — reviewer agent id; when RELAY_AGENT is the reviewer, RELAY_PEER = MARATHON_BUILDER
@@ -30,7 +30,6 @@ me="${RELAY_AGENT:-}"
 
 claude_agent="${CLAUDE_AGENT:-}"
 codex_agent="${CODEX_AGENT:-}"
-gemini_agent="${GEMINI_AGENT:-}"
 agy_agent="${AGY_AGENT:-}"
 
 # RELAY_PEER threading: builder's peer is the reviewer; reviewer's peer is the builder.
@@ -52,15 +51,11 @@ case "$me" in
     [[ -n "$codex_agent" ]] || die "RELAY_AGENT='$me' matched an empty CODEX_AGENT — set CODEX_AGENT"
     exec "$HERE/codex-turn.sh"
     ;;
-  "$gemini_agent")
-    [[ -n "$gemini_agent" ]] || die "RELAY_AGENT='$me' matched an empty GEMINI_AGENT — set GEMINI_AGENT"
-    exec "$HERE/gemini-turn.sh"
-    ;;
   "$agy_agent")
     [[ -n "$agy_agent" ]] || die "RELAY_AGENT='$me' matched an empty AGY_AGENT — set AGY_AGENT"
     exec "$HERE/agy-turn.sh"
     ;;
   *)
-    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/GEMINI_AGENT/AGY_AGENT to map it to a shim"
+    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT to map it to a shim"
     ;;
 esac
