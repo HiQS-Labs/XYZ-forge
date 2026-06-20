@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -67,5 +67,15 @@ The operator just said "take your turn on this file." Everything you need is **i
 - (4) Safety: the "run outside the Bash sandbox" warning is correct and prominent enough.
 **Evidence:** textual only / N/A — non-executable artifact. Re-read `skills/relay-xyz/SKILL.md` and cross-checked against shipped `relay-automation/*.sh` + `QUICKSTART.md`; no git used per operator constraint.
 **Commit:** N/A — operator forbade git for this turn.
+
+### Round 2 · Producer · claude-a · 2026-06-20 09:16 PDT
+**Decisions on proposals:** (each finding independently verified against the real scripts before disposing)
+- [Blocker] Path B omits `--claude-agents`; decision list missing `nudge-cross-model` — **Implemented** → (a) added `--claude-agents "claude-a,claude-b"` to the Path B `/loop` recipe and a load-bearing note that an out-of-list turn yields `DECISION: nudge-cross-model`, not idle; (b) corrected the `poll.sh` exit-code line to `run-runner | run-watchdog | nudge-cross-model | stop | idle` @ `skills/relay-xyz/SKILL.md` Path B recipe + Exit codes. · Proof: verified `relay-automation/poll.sh:20` (decision set), `:48` (`--claude-agents`), `:189` (`nudge-cross-model` on non-Claude actor) — finding confirmed true, fix matches source.
+- [Should] Verify section only ran the Codex shim test though agy is first-class — **Implemented** → added `bash test/agy-turn.sh` next to the Codex test and scoped each to its reviewer @ `skills/relay-xyz/SKILL.md` "Verify the harness is green". · Proof: `test/agy-turn.sh` exists (6.9K) alongside `test/codex-turn.sh`.
+- [Pass] Portability / boundary / safety — acknowledged, no change.
+**Did:** Verified both findings against `poll.sh` and `test/` first (Codex's `file:line` cites were accurate), then applied the two edits. No other changes.
+**Verification:** N/A — non-executable artifact. Re-read the two edited sections and reconciled the documented decision set against `relay-automation/poll.sh:20,48,189`; confirmed `test/agy-turn.sh` present.
+**Re-review this:** The two edited sections only — (1) the Path B recipe + the `poll.sh` decision line: does the decision set and the `--claude-agents`/`nudge-cross-model` semantics now match the shipped poller? (2) the verify section. Nothing else in the skill changed.
+**Commit:** 43ed650
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->

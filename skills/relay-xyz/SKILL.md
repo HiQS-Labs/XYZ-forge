@@ -109,8 +109,10 @@ from the relay file's embedded instructions. The token *is* the lock — a windo
 token is claimable by its agent **and** the artifact scope is clean.
 
 ```
-# In each window (set --agent to that window's id):
+# In each window (set --agent to that window's id). --claude-agents lists EVERY Claude id in
+# the relay so the poller knows whose turns can self-poll vs. which need a cross-model nudge:
 /loop 60s run relay-automation/poll.sh --mode relay --agent <claude-a|claude-b> \
+  --claude-agents "claude-a,claude-b" \
   --relay-file relay-system/<date>/<slug>.md --artifact <path> \
   --deadline "$(date -v+30M +%s)" --dry-run ;\
   if it prints "DECISION: run-runner", take your turn on that relay file per its embedded \
@@ -118,9 +120,13 @@ token is claimable by its agent **and** the artifact scope is clean.
   `tick done` on approve, commit); on "DECISION: stop" CronList+CronDelete this job; else do nothing.
 ```
 
-`60s` keeps the prompt cache warm; the lock/heartbeat is the real correctness guard, not the timer.
-Always set a `--deadline` so the loop self-closes — cron jobs are per-session and you can't stop
-another window's loop from yours. `poll.sh` exits `10` on a closed relay (`STATUS: Approved|Closed`).
+`--claude-agents` is load-bearing: a turn that belongs to an agent **not** in this list yields
+`DECISION: nudge-cross-model` (a one-line "take your turn" for the human to relay to a non-Claude
+window), not `idle`. List both Claude ids and Path B stays fully hands-free; omit one and that
+window's turns surface as a manual nudge. `60s` keeps the prompt cache warm; the lock/heartbeat is
+the real correctness guard, not the timer. Always set a `--deadline` so the loop self-closes — cron
+jobs are per-session and you can't stop another window's loop from yours. `poll.sh` exits `10` on a
+closed relay (`STATUS: Approved|Closed`).
 See `/relay` → "Self-closing loops". Optionally run **one** extra window with `--watchdog-authority`
 (longer interval, e.g. `120s`) so a stalled turn is escalated exactly once.
 
@@ -148,7 +154,9 @@ If a fresh device's `codex` still blocks writes, escalate autonomy:
   `4` round-cap / closed-not-approved · `2` usage.
 - **shims** (`codex-turn.sh` / `agy-turn.sh`): `0` acted or deferred · `5` CLI failed (or agy empty
   output) · `6` off-allowlist edit reverted (or committed mid-turn → reset) · `7` timeout-killed · `2` usage.
-- **`poll.sh`**: `10` relay closed (stop the loop); `DECISION: run-runner|run-watchdog|stop|idle` on stdout.
+- **`poll.sh`**: `10` relay closed (stop the loop); on stdout one of
+  `DECISION: run-runner | run-watchdog | nudge-cross-model | stop | idle`
+  (`nudge-cross-model` = turn belongs to an agent not in `--claude-agents`; relay it as a manual nudge).
 
 ## Safety boundary (what the shim guarantees)
 
@@ -162,10 +170,12 @@ and per-device, so this is single-clone coordination, not cross-machine.
 
 ```bash
 bash validate.sh            # the tick/automation suite
-bash test/codex-turn.sh     # the shim's own tests
+bash test/codex-turn.sh     # the Codex shim's tests   (before a Codex run)
+bash test/agy-turn.sh       # the agy shim's tests      (before an agy run)
 ```
-Run these in a normal (un-sandboxed) shell — `mktemp`/network under the Bash sandbox can fail them
-for reasons unrelated to the code.
+Run the shim test that matches the reviewer you'll drive (both are first-class). Run these in a
+normal (un-sandboxed) shell — `mktemp`/network under the Bash sandbox can fail them for reasons
+unrelated to the code.
 
 ## Relationship to the other skills
 
