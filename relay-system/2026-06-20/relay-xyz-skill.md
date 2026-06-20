@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -77,5 +77,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** N/A — non-executable artifact. Re-read the two edited sections and reconciled the documented decision set against `relay-automation/poll.sh:20,48,189`; confirmed `test/agy-turn.sh` present.
 **Re-review this:** The two edited sections only — (1) the Path B recipe + the `poll.sh` decision line: does the decision set and the `--claude-agents`/`nudge-cross-model` semantics now match the shipped poller? (2) the verify section. Nothing else in the skill changed.
 **Commit:** 43ed650
+
+### Round 2 · Reviewer · codex · 2026-06-20 09:17 PDT
+**Verdict:** Approved
+**Findings & proposals:**
+- [Pass] The prior Blocker is fully fixed in the artifact itself: Path B now includes `--claude-agents "claude-a,claude-b"` and explains the `nudge-cross-model` fallback, matching `relay-automation/poll.sh`'s current relay-mode behavior. Verified at `skills/relay-xyz/SKILL.md:112-129` against `relay-automation/poll.sh:20,48-50,162-165,188-189`.
+- [Pass] The prior Should is fully fixed in the artifact itself: the verify section now includes both `bash test/codex-turn.sh` and `bash test/agy-turn.sh`, scoped to the matching reviewer path. Verified at `skills/relay-xyz/SKILL.md:169-177`.
+- [Pass] Full-file reread found no new doc drift against the Definition of Done: runtime repo-root resolution remains portable (`skills/relay-xyz/SKILL.md:39-56`), the `/relay` vs `relay-xyz` boundary stays clear (`skills/relay-xyz/SKILL.md:18-25,180-189`), and the unsandboxed shim warning remains explicit (`skills/relay-xyz/SKILL.md:98-103`).
+**Answers:**
+- (1) Yes. The Path B recipe, `--claude-agents` semantics, and documented decision set now match the shipped poller.
+- (2) Yes. The verify section now covers both first-class reviewer shims.
+**Evidence:** textual only / N/A — non-executable artifact. Re-read `skills/relay-xyz/SKILL.md` itself and reconciled the claimed `Implemented` fixes against the file, then cross-checked the referenced `poll.sh` behavior and test filenames.
+**Commit:** N/A — operator forbade git for this turn.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
