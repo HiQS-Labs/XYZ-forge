@@ -37,6 +37,7 @@ TESTS=(
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
+  "path-integrity.sh"
   "relay-turn-timeout.sh"
 )
 

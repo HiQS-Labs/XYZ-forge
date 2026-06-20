@@ -50,7 +50,7 @@ from sources via `make-pkg.sh`). Extract into a repo that already has a capable 
 
 ```bash
 DIR="${1:-.}"                        # target repo root (must contain ./bin/tick)
-tar xzf skill/relay-automation/relay-pkg.tar.gz -C "$DIR"
+tar xzf skills/relay-automation/relay-pkg.tar.gz -C "$DIR"
 # wire the 4 tests into validate.sh's TESTS=( ... ), then:
 cd "$DIR" && bash validate.sh        # the relay-automation tests pass alongside tick's
 ```
