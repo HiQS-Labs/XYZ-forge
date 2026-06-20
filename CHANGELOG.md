@@ -2,6 +2,12 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-20
+
+### New skill — `relay-xyz` (route agents to the shipped harness, stop improvising)
+Added [`skills/relay-xyz/SKILL.md`](skills/relay-xyz/SKILL.md): a repo-specific Claude skill that points agents at THIS repo's built `relay-automation/` harness (`relay-drive.sh` + `codex-turn.sh`/`agy-turn.sh`/`poll.sh`) instead of reinventing the CLI-driven handoff turn-by-turn. The portable `/relay` skill still owns the thread template and turn protocol; `relay-xyz` is the thin layer that runs the real scripts. **No hardcoded machine path** — resolves the repo root at runtime via `git rev-parse --show-toplevel`, so it works in any clone. Documents both shims' env contract, all exit codes, the unsandboxed-shim requirement (Codex/agy need keychain + network the Bash sandbox blocks), the safety boundary, and the `/relay` vs `/xyz` vs `consult.sh` split. Symlinked into `~/.claude/skills/relay-xyz` for `/relay-xyz` invocation.
+- **Dogfooded via the harness itself.** Ran an automated Codex review relay on the new skill (`relay-system/2026-06-20/relay-xyz-skill.md`): r1 **Changes requested** — 1 Blocker (Path B `/loop` recipe omitted `--claude-agents`, so the documented `poll.sh` decision set dropped `nudge-cross-model`) + 1 Should (verify section only tested the Codex shim, not the first-class agy shim) → both verified against the real scripts and applied → r2 **Approved**, full-file reread found no new drift. Codex ran headless behind `codex-turn.sh` (file-scoped commits, no push).
+
 ## 2026-06-18
 
 ### ROADMAP — Part C: Autonomous Self-Improvement Loop (vision item)
