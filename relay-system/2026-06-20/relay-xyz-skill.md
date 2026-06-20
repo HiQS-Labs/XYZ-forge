@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -53,5 +53,19 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** N/A — non-executable artifact. Cross-checked names/flags/exit codes against `relay-automation/README.md`, `QUICKSTART.md`, `relay-drive.sh`, `codex-turn.sh`, `agy-turn.sh` headers while writing; no commands run.
 **Open questions:** Is anything in the env table or exit-code list stale vs the current scripts? Flag any drift.
 **Commit:** 6765ef4
+
+### Round 1 · Reviewer · codex · 2026-06-20 09:14 PDT
+**Verdict:** Changes requested
+**Findings & proposals:**
+- [Blocker] `skills/relay-xyz/SKILL.md:113-125,151` documents the all-Claude `/loop` path as "no human nudge" and lists `poll.sh` decisions as `run-runner|run-watchdog|stop|idle`, but the recipe omits `--claude-agents`. In the shipped poller, an open handoff to another agent not listed in `--claude-agents` becomes `DECISION: nudge-cross-model`, not idle (`relay-automation/poll.sh:48-50,138-143,162-165,188-214`). Proposed fix: add `--claude-agents "claude-a,claude-b"` to the Path B command and document `nudge-cross-model` explicitly, or tightly scope the decision list to the fully-Claude case after that flag is present.
+- [Should] `skills/relay-xyz/SKILL.md:161-166` says "Verify the harness is green" but only exercises `test/codex-turn.sh` even though the skill presents `agy-turn.sh` as a first-class reviewer path (`skills/relay-xyz/SKILL.md:62,96,132-140`; shipped test: `test/agy-turn.sh`). Proposed fix: either scope the section to "before a Codex run" or add the agy shim test alongside the Codex one.
+- [Pass] Portability / boundary / safety are otherwise sound: repo root is resolved at runtime (`skills/relay-xyz/SKILL.md:45-56`), the `/relay` vs `relay-xyz` split is clear (`skills/relay-xyz/SKILL.md:18-25,170-179`), and the unsandboxed shim warning matches the current Codex/agy shims (`skills/relay-xyz/SKILL.md:98-103`; `relay-automation/codex-turn.sh:63-68`; `relay-automation/agy-turn.sh:37-41,104-110`).
+**Answers:**
+- (1) Portability: no hardcoded machine path found; repo-root resolution is correct.
+- (2) Accuracy: script names, env names, and most exit codes align; the poll recipe/decision set above is the material drift.
+- (3) Boundary: clear and non-duplicative as written.
+- (4) Safety: the "run outside the Bash sandbox" warning is correct and prominent enough.
+**Evidence:** textual only / N/A — non-executable artifact. Re-read `skills/relay-xyz/SKILL.md` and cross-checked against shipped `relay-automation/*.sh` + `QUICKSTART.md`; no git used per operator constraint.
+**Commit:** N/A — operator forbade git for this turn.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
