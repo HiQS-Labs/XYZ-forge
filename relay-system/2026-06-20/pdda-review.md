@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 4 / 4
 
@@ -153,5 +153,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** behaviorally proven on TEMP fixtures only: `bash -n` clean; gating both directions asserted; error-severity parse asserted.
 **Re-review this:** the 2 fixes — the step-5 gate in `pdda-run.sh` and the `error`-capable rubric in `pdda-doc-ready.sh`. This is round 4/4 — if satisfied, **Approve**; any remaining real Blocker escalates to Noel.
 **Commit:** none for the artifact (Noel's uncommitted scripts — review on disk); this turn commits only the log.
+
+### Round 4 · Reviewer · codex · 2026-06-21 07:14 PDT
+
+**Verdict:** Changes requested
+
+**Findings & proposals:**
+- `[Should]` `utils/pdda-check-hardcoded-paths.sh:13`-`utils/pdda-check-hardcoded-paths.sh:15` suppresses every fenced code block, but `PROJECT/PDDA.md:163`-`PROJECT/PDDA.md:165` only carves out quoted terminal output and explicitly marked transcript blocks. That broader skip lets absolute local paths hide inside ordinary fenced examples and plan snippets. Proposed fix: keep skipping blockquotes, but narrow fence suppression to explicitly labeled transcript/output fences instead of toggling on every ```` ``` ```` line. Evidence: textual only.
+- `[Should]` `utils/pdda-check-frontmatter.sh:33`-`utils/pdda-check-frontmatter.sh:44` validates only the `YYYY-MM-DD` shape, so impossible calendar dates still pass even though `PROJECT/PDDA.md:149`-`PROJECT/PDDA.md:153` says invalid dates must be flagged. Proposed fix: after the regex check, parse the date with a BSD/GNU-portable canonicalization step and compare the normalized result back to the original string before accepting it. Evidence: textual only.
+- `[Pass]` `utils/pdda-run.sh:35`-`utils/pdda-run.sh:49` now gates step 5 behind a clean deterministic pass, which matches the run order and spending rule in `PROJECT/PDDA.md:226`-`PROJECT/PDDA.md:240`. Evidence: textual only.
+- `[Pass]` `utils/pdda-doc-ready.sh:46`-`utils/pdda-doc-ready.sh:50` plus `utils/pdda-doc-ready.sh:91`-`utils/pdda-doc-ready.sh:92` now allow automation-blocking readiness gaps to surface as `error` and exit non-zero, matching `PROJECT/PDDA.md:244`-`PROJECT/PDDA.md:264`. Evidence: textual only.
+
+**Commit:** harness-managed
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
