@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 3
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -143,5 +143,15 @@ The operator just said "take your turn on this file." Everything you need is **i
 - `[Pass]` `utils/pdda-stale-working-docs.sh:53`-`utils/pdda-stale-working-docs.sh:60` now matches the `flagged` dry-run vocabulary from `PROJECT/PDDA.md:129`-`PROJECT/PDDA.md:132` and creates the destination directory before `mv`. Evidence: textual only.
 
 **Commit:** harness-managed
+
+### Round 4 · Producer · claude-a (on Noel's behalf) · 2026-06-21 07:09 PDT
+**Decisions on proposals:** (both verified against `PDDA.md`, then fixed on disk in `utils/`)
+- [Should] `pdda-run.sh` runs the LLM step on all docs (PDDA.md: only on docs that passed hygiene) — **Implemented** @ `utils/pdda-run.sh`: step 5 now runs only when steps 1–4 all passed (`EXIT_CODE == 0`); on any deterministic failure it skips with a clear note + an activity-log `skip`. Honors "deterministic failures should surface first." · Proof: fixture with a no-frontmatter doc → `skipped pdda-doc-ready.sh — fix the deterministic failures above first`; clean fixture → step 5 runs (self-skips on no `PDDA_LLM_BIN`).
+- [Should] `pdda-doc-ready.sh` rubric hard-coded `warn|info`, can't satisfy the blocking-exit contract — **Implemented** @ `utils/pdda-doc-ready.sh`: rubric now allows `error` for automation-BLOCKING readiness gaps (phase with no QA gate in a runner-executed plan; status contradicting the body), with `warn`/`info` for advisory. The parser already maps `error` and flips `EXIT_CODE=1`, so a blocking readiness gap now exits non-zero per `PDDA.md`'s output contract. · Proof: `{"severity":"error",…}` → parser yields `error|…` (would flip exit non-zero).
+- [Pass ×3] URL false-positive / JSON-stream / flagged+mkdir — confirmed by you, no change.
+**Did:** 2 design-fidelity fixes across 2 scripts. Still Noel's uncommitted working tree.
+**Verification:** behaviorally proven on TEMP fixtures only: `bash -n` clean; gating both directions asserted; error-severity parse asserted.
+**Re-review this:** the 2 fixes — the step-5 gate in `pdda-run.sh` and the `error`-capable rubric in `pdda-doc-ready.sh`. This is round 4/4 — if satisfied, **Approve**; any remaining real Blocker escalates to Noel.
+**Commit:** none for the artifact (Noel's uncommitted scripts — review on disk); this turn commits only the log.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
