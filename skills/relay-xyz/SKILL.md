@@ -36,24 +36,47 @@ then use `relay-xyz` to *run* it headless or hands-free.
 don't ship `relay-automation/`, or work that needs a human checkpoint between every turn
 (use plain `/relay` manual mode).
 
-## Preconditions — locate the harness portably (never hardcode a path)
+## Preconditions — locate the harness (bundled locator, never hardcode a path)
 
-Every recipe below assumes you resolved the repo root **at runtime** and `cd`'d into it.
-Do this first; do **not** paste an absolute machine path into any command — other clones
-live at different paths.
+`relay-xyz` ships its own device-agnostic locator: [`find-harness.sh`](find-harness.sh),
+right beside this skill. It resolves the harness repo (the clone that ships
+`relay-automation/`) **relative to its own installed location**, following symlinks — so it
+works from *any* working directory, including a clone that has only `relay-system/` thread
+storage (from the portable `/relay`) but **not** the harness scripts. `$HOME` and the skill's
+own symlink are the only anchors; **no machine path is ever hardcoded.** This is what keeps
+`/relay-xyz` from "complaining the harness isn't in this repo" when you launch it from a clone
+that doesn't carry `relay-automation/` + `bin/tick`.
+
+Run this first. It finds the locator, exports the harness env, `cd`s into the clone that
+actually ships the harness, and prints a one-glance readiness line:
 
 ```bash
-REPO="$(git rev-parse --show-toplevel)" || { echo "not inside a git repo"; exit 1; }
-[ -x "$REPO/relay-automation/relay-drive.sh" ] || {
-  echo "this clone doesn't ship relay-automation/ — use the portable /relay skill instead"; exit 1; }
-cd "$REPO"
-export TICK_REPO_ROOT="$REPO"   # point bin/tick at this clone's event log
+# Find the bundled locator. The skill installs at one of these — all anchored on $HOME or
+# the CWD, never an absolute machine path:
+for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/relay-xyz/find-harness.sh}" \
+         "$HOME/.claude/skills/relay-xyz/find-harness.sh" \
+         "./.claude/skills/relay-xyz/find-harness.sh" \
+         "$(git rev-parse --show-toplevel 2>/dev/null)/skills/relay-xyz/find-harness.sh"; do
+  [ -n "$L" ] && [ -x "$L" ] && break
+done
+[ -x "$L" ] || { echo "relay-xyz: locator not found — set XYZ_HARNESS to your xyz-3-agents-swarm clone"; exit 1; }
+
+eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY}
+cd "$HARNESS"
+"$L" --check           # prints: harness path + which reviewers (codex/agy/tick) are on PATH
 ```
 
-The scripts self-resolve their own location (`$(dirname "$BASH_SOURCE")/..`), so once you
-`cd "$REPO"` you invoke them with the **repo-relative** paths exactly as the
-[QUICKSTART](../../relay-automation/QUICKSTART.md) shows — `relay-automation/relay-drive.sh`,
-`relay-system/<date>/<slug>.md`, etc. No absolute paths anywhere.
+After this, `$HARNESS` is the repo root that ships the harness, `$TICK` is the absolute
+`bin/tick`, and `TICK_REPO_ROOT` points `tick` at that clone's event log. The relay/turn scripts
+self-resolve their own location (`$(dirname "$BASH_SOURCE")/..`), so you invoke them with the
+**repo-relative** paths exactly as the [QUICKSTART](../../relay-automation/QUICKSTART.md) shows.
+The relay always operates on **the harness clone** (its `.tick/` log and the guarded git root
+live there), regardless of which repo you launched the skill from — so a clone that only has
+`relay-system/` thread files still drives the real harness next door.
+
+`$RELAY_HAS_CODEX` / `$RELAY_HAS_AGY` tell you which Path-A reviewer is on PATH *before* you
+pick one; if both are `0`, only Path B (all-Claude poll) is possible. The locator is read-only,
+so it runs fine sandboxed — only the drive/shim calls below need the sandbox off.
 
 ## The two automated paths
 
@@ -72,18 +95,22 @@ all-Claude self-serializing loop (no human nudge, no second model).
 (`codex-turn.sh` or `agy-turn.sh`) that owns the safety boundary: path-allowlist, commit-bypass
 guard, **no push**. Whose-turn is a `tick` `RELAY-TURN` task, handed off with `tick release --to`.
 
-End-to-end Codex review of an artifact (run after `cd "$REPO"` from Preconditions):
+End-to-end Codex review of an artifact (run after the Preconditions block — `$TICK` and
+`$HARNESS` are set, CWD is the harness clone). Confirm `$RELAY_HAS_CODEX` is `1` first:
 
 ```bash
+# 0. The reviewer you want must be on PATH (set by the locator).
+[ "$RELAY_HAS_CODEX" = 1 ] || { echo "codex not on PATH — use agy or Path B"; exit 1; }
+
 # 1. Have a relay thread with an embedded "▶ TAKE YOUR TURN" block + a RELAY-TURN token.
 #    Reuse one under relay-system/<date>/, or scaffold a fresh thread with /relay first.
 RELAY=relay-system/<date>/<slug>.md
 ARTIFACT=<repo-relative-path-the-turn-reviews>     # e.g. skills/relay-xyz/SKILL.md
 
 # 2. Seed the RELAY-TURN token and hand the first turn to the Codex agent.
-./bin/tick log    task.created RELAY-TURN --agent claude-a
-./bin/tick claim  RELAY-TURN --agent claude-a --paths "$ARTIFACT"
-./bin/tick release RELAY-TURN --agent claude-a --to codex
+"$TICK" log     task.created RELAY-TURN --agent claude-a
+"$TICK" claim   RELAY-TURN --agent claude-a --paths "$ARTIFACT"
+"$TICK" release RELAY-TURN --agent claude-a --to codex
 
 # 3. Drive it. The shim dispatches ONLY when the token's actor == CODEX_AGENT.
 CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn.log" \
@@ -93,7 +120,9 @@ relay-automation/relay-drive.sh \
   --round-cap  4
 ```
 
-Swap `agy-turn.sh` + `AGY_AGENT=...` to use agy (a multi-model gateway) as the reviewer instead.
+Swap `agy-turn.sh` + `AGY_AGENT=...` to use agy (a multi-model gateway) as the reviewer instead
+(guard on `$RELAY_HAS_AGY` the same way). `$TICK` is the absolute `bin/tick`, so these work even
+if CWD drifts.
 
 **Important — run the shim OUTSIDE the Bash sandbox.** When *you* (Claude Code) drive this,
 the `codex` / `agy` subprocess needs the OS keychain + outbound network for its auth. Under
@@ -107,6 +136,10 @@ catches this and exits 5, but only if it ran un-sandboxed). Run these Bash calls
 In each Claude window run a guarded `/loop` that uses `poll.sh` as the gate, then takes the turn
 from the relay file's embedded instructions. The token *is* the lock — a window acts only when the
 token is claimable by its agent **and** the artifact scope is clean.
+
+Each window is its own shell, so run the Preconditions block in each one (or `cd` into the
+`find-harness.sh --root` output) before the loop — the `relay-automation/` paths below are
+relative to `$HARNESS`.
 
 ```
 # In each window (set --agent to that window's id). --claude-agents lists EVERY Claude id in
