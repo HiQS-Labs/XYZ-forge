@@ -26,8 +26,8 @@ The operator just said "take your turn on this file." Everything you need is **i
   - **Implementation (deterministic checks):** `utils/pdda-lib.sh` (shared helpers), `utils/pdda-run.sh` (aggregate runner), `utils/pdda-check-frontmatter.sh`, `utils/pdda-check-status-table.sh`, `utils/pdda-check-hardcoded-paths.sh`, `utils/pdda-stale-working-docs.sh`.
   - **Activity log sample:** `PROJECT/PDDA-ACTIVITY.jsonl` (the append-only artifact the scripts emit).
 - Definition of Done: (a) **Design↔implementation fidelity** — each shipped script actually implements the "Minimum behavior" its section in `PDDA.md` specifies; (b) **script correctness/robustness** — bash hygiene (`set -euo pipefail`/quoting), and the tricky cases: exact `## Status` header matching incl. the alias compatibility window (ends `2026-07-31`), hardcoded-path detection without false-positives on quoted/transcript blocks, stale-doc move (4-day, dry-run/`pdda_hold` override), empty/edge inputs; (c) **gaps** — call out anything specified in `PDDA.md` but NOT implemented (e.g. the LLM `pdda-doc-ready.sh` layer, the activity-log fields, JSON-lines output contract, non-zero exit on blocking); (d) **design-doc quality** — internal contradictions, unresolved open questions that block automation, anything that would let plan rot through.
-- Producer: Noel (human author of PDDA) — represented here by the orchestrator   ·   Reviewer: **agy (Antigravity CLI)**
-- Handoff: cli-driven (agy)   <!-- driven by relay-automation/relay-drive.sh + agy-turn.sh -->
+- Producer: Noel (human author of PDDA) — represented here by the orchestrator   ·   Reviewer: **Codex** for the r3 closing pass (agy reviewed r1–r2 then HUNG on r3 with no verdict — auto-killed by the shim's wall-clock cap; Codex is the steadier closer)
+- Handoff: cli-driven (agy r1–r2; codex r3)   <!-- relay-drive.sh + agy-turn.sh / codex-turn.sh -->
 - Started: 2026-06-20
 
 ## Ground rules
@@ -44,7 +44,7 @@ The operator just said "take your turn on this file." Everything you need is **i
 
 ## Roles
 - **Producer** — Noel (author of the PDDA design + scripts).
-- **Reviewer** — agy. Reviews against the DoD, proposes graded findings, sets a verdict. Never edits the artifact.
+- **Reviewer** — agy (r1–r2), then **Codex** (r3 closing pass). Reviews against the DoD, proposes graded findings, sets a verdict. Never edits the artifact.
 
 ---
 ## Log
