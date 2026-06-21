@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -77,5 +77,20 @@ The operator just said "take your turn on this file." Everything you need is **i
 4. *roadmap:* Keep `ROADMAP.md` at root-level only to prevent duplication and plan rot.
 
 **Commit:** pending (harness-managed)
+
+### Round 2 · Producer · claude-a (applying on Noel's behalf) · 2026-06-20 22:16 PDT
+**Decisions on proposals:** (each verified against the source first; fixes applied to the `utils/pdda-*.sh` files on disk — Noel's working tree, uncommitted by design — so re-review them ON DISK)
+- [Blocker] Missing `pdda-doc-ready.sh` — **Implemented.** Created `utils/pdda-doc-ready.sh`: the LLM readiness layer from `PDDA.md`. OPT-IN via `PDDA_LLM_BIN` (+`PDDA_LLM_ARGS`); unset/not-on-PATH → graceful skip (advisory info, exit 0) so the deterministic hourly run never breaks. Rubric flags only readiness gaps (QA-gate-after-phase, actions-without-criteria, stale-vs-body, buried-next-action, duplication, contradictory-status), does NOT re-lint frontmatter/status/paths, does NOT rewrite. Parses model JSON-line output via node; advisory findings (warn/info). Wired into `pdda-run.sh` as step 5 (after deterministic hygiene). · Proof: `bash utils/pdda-doc-ready.sh` with no `PDDA_LLM_BIN` → `skip`, exit 0; runner runs it as step 5.
+- [Should] Quoted dates break the frontmatter check — **Implemented** @ `utils/pdda-check-frontmatter.sh`: trim + strip surrounding `"`/`'` before the `YYYY-MM-DD` regex. · Proof: fixture `created: "2026-06-15"` → errors=0 (was a false error before).
+- [Should] Loose `## Status` header — **Implemented** @ `utils/pdda-check-status-table.sh`: `^##[[:space:]]+Status([[:space:]].*)?$` → `^##[[:space:]]+Status[[:space:]]*$`. · Proof: `## Status At A Glance` → now `missing usable '## Status' table` (error); exact `## Status` still passes.
+- [Should] No JSON-lines on stdout — **Implemented** @ `utils/pdda-lib.sh`: new `PDDA_FORMAT` (`text` default | `json`). `json` emits one JSON object per finding/summary on stdout (same shape as the activity log) via the new `pdda_json_line` helper; the log append is unchanged. · Proof: `PDDA_FORMAT=json` → JSON lines on stdout.
+- [Nit] Unused `cells` in `pdda_normalize_header` (pdda-lib.sh:167) — **Declined (false finding).** Verified: `pdda_normalize_header` has NO `cells` var; the `local cells` at `pdda-lib.sh:153` is in `pdda_table_cells` and IS used (lines 155-159). Nothing to remove.
+- [Nit] dry-run logs `would-move` — **Implemented** @ `utils/pdda-stale-working-docs.sh`: action → `flagged` (matches the doc's moved/flagged/skipped vocabulary). · Proof: dry-run activity log shows `"action":"flagged"`, doc not moved.
+- [Nit] frontmatter `NR==1 && $0=="---"` breaks on BOM/leading blank — **Implemented** @ `utils/pdda-lib.sh` (`pdda_frontmatter_lines` + `pdda_has_frontmatter`): strip a UTF-8 BOM (octal `\357\273\277`) and skip leading blank lines before `---`. · Proof: BOM+leading-blank fixture parses, errors=0.
+- [Open-Q rec] activity-log rotation — **Implemented**: `pdda_rotate_activity` + `PDDA_ACTIVITY_MAX_LINES` (default 10000), called once at the end of `pdda-run.sh`. The other three open-Qs (gh_issue requiredness, compat-window length, project-local roadmap) are policy calls left to Noel.
+**Did:** All 6 actioned findings + log rotation, applied to the 6 scripts + 1 new script. Did NOT touch `PROJECT/PDDA.md` (Noel's doc, the spec — the scripts now conform to it).
+**Verification:** behaviorally proven against TEMP fixtures only (never the real `PROJECT/2-WORKING`, so no docs were moved): `bash -n` clean on all 7 scripts; quoted-date / tight-header / BOM / JSON-mode / flagged-action / doc-ready-skip all asserted; full `pdda-run.sh` (dry-run) → "all checks passed", exit 0.
+**Re-review this:** (1) `utils/pdda-doc-ready.sh` — is the opt-in/graceful-skip + JSON-line parsing sound, and does it honor the design's "do not rewrite / do not re-lint" constraints? (2) the tightened header + quoted-date + BOM fixes — any new false-positive/negative? (3) the `PDDA_FORMAT=json` shape. (4) Was declining the `cells` nit correct?
+**Commit:** none for the artifact (Noel's uncommitted scripts — review on disk); this relay turn commits only the log.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
