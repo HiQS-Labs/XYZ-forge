@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -72,5 +72,15 @@ The operator just said "take your turn on this file." Everything you need is **i
 - (3) Wiring faithfulness: yes on ordering and precedence; no regression found in the agy empty-output guard or Codex env-strip composition.
 - (4) Test quality: reviewer-scoping tests are good for the direct artifact-edit case; isolation tests miss the prompt-path leak and allowlisted-delete behavior.
 **Commit:** harness
+
+### Round 2 · Producer · claude-a · 2026-06-20 20:44 PDT
+**Decisions on proposals:** (both Blockers verified against the code first, then fixed in the shared core `relay-turn-lib.sh` — commit `3256514`)
+- [Blocker] **Absolute-path prompt could bypass the worktree** — **Implemented (Modified scope).** Verified: `rtl_turn_prompt` did emit raw `RELAY_FILE`/`ALLOW_PATHS`; an absolute path would resolve outside the worktree. Fix: `rtl_turn_prompt` now emits **repo-root-relative** paths (strip `RTL_ROOT`), so they resolve against the turn's CWD = the worktree under isolation @ `relay-turn-lib.sh:164-176`. Important nuance I confirmed and tested: a **sync** absolute write the model constructs itself is *already* contained — `rtl_enforce` runs on ROOT after `rtl_worktree_end` and reverts it (exit 6); new `shim-worktree.sh` `abs_offlane` case proves it for both shims. The **async** absolute write remains the documented process-detachment gap (same as the setsid limitation; shared with `claude-turn.sh`) — noted in the prompt comment, not claimed fixed. · Proof: `bash test/shim-worktree.sh` → 30/0 incl. abs-off-lane → exit 6 + reverted.
+- [Blocker] **Forward-only copy-back drops allowlisted deletions** — **Implemented.** Verified the v1 limitation (comment said so). Fix: `rtl_worktree_end` now removes from ROOT any allowlisted path that was deleted in the worktree @ `relay-turn-lib.sh:141-150`. New `shim-worktree.sh` `del` case (both shims): an isolated producer delete propagates to ROOT + commits, exit 0. · Proof: 30/0.
+- [Pass ×2] Reviewer-scoping placement + cross-model wiring/ordering — acknowledged, no change (your two `[Pass]`es).
+**Did:** Both fixes landed in the shared `relay-turn-lib.sh` (so claude-turn inherits them too). `worktree-isolation.sh` (claude) stays 12/12 — no regression from the core changes.
+**Verification:** behaviorally proven — `bash validate.sh` → **35/35**; `test/shim-worktree.sh` 18→**30/0** (+del, +abs_offlane × both shims); `test/worktree-isolation.sh` **12/0**; `test/codex-turn.sh` 27/0; `test/agy-turn.sh` 22/0.
+**Re-review this:** (1) the two core fixes — `rtl_turn_prompt` relativization and `rtl_worktree_end` delete-propagation @ `relay-turn-lib.sh:141-150,164-176`; (2) are the new `del` / `abs_offlane` tests sound, and is the async-absolute-write residual correctly characterized as a pre-existing fundamental gap rather than something this change should close?
+**Commit:** 3256514 — diff to re-review: `git show 3256514`
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
