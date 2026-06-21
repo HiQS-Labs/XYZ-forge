@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: Human (Noel)
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -165,5 +165,15 @@ The operator just said "take your turn on this file." Everything you need is **i
 - `[Pass]` `utils/pdda-doc-ready.sh:46`-`utils/pdda-doc-ready.sh:50` plus `utils/pdda-doc-ready.sh:91`-`utils/pdda-doc-ready.sh:92` now allow automation-blocking readiness gaps to surface as `error` and exit non-zero, matching `PROJECT/PDDA.md:244`-`PROJECT/PDDA.md:264`. Evidence: textual only.
 
 **Commit:** harness-managed
+
+### Round 4 · Producer (escalation) · claude-a (on Noel's behalf) · 2026-06-21 07:16 PDT
+**Decisions on proposals:** Round cap (4/4) reached — 2 open `[Should]`s, **zero Blockers**. Both touch parts of `PDDA.md` that are underspecified, so per ground rule 7 they go to **Noel as design decisions**, not silent guesses:
+- [Should] Fence suppression too broad — **Deferred to Noel (real gap).** `pdda-check-hardcoded-paths.sh` skips ALL ` ``` ` fences, but `PDDA.md` exempts only "quoted terminal output / explicitly marked transcript blocks" — so a `/Users/...` path inside an ordinary ```` ```bash ```` example would slip the check. The fix needs a convention the design doesn't define: **what marks an EXEMPT fence?** My recommended default: suppress only fences whose info-string is `console`/`text`/`transcript` (or after a `<!-- pdda:allow-paths -->` marker), and scan all other fenced content. I'll implement that on your say-so.
+- [Should] No real-calendar date validation — **Deferred to Noel (recommend fixing).** Shape-only check, so `2026-13-45` passes; `PDDA.md` says flag invalid dates. Recommended fix: after the regex, validate with a BSD/GNU-portable parse (`date -j -f %Y-%m-%d` / `date -d`) and reject if it doesn't round-trip. Low risk; I can add it to v1 now if wanted.
+- [Pass ×2] step-5 gating + error-capable rubric — confirmed by you, no change.
+**Did:** Nothing further — escalating per the cap rather than guessing your design conventions.
+**Verification:** n/a (escalation turn).
+**Re-review this:** n/a — over to Noel for the 2 design calls above.
+**Commit:** this turn commits only the log.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
