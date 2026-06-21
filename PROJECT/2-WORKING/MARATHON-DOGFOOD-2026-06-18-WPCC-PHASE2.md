@@ -3,6 +3,8 @@ title: Marathon Dogfood — Headless Relay vs. the WPCC Scanner Monolith
 status: Planned
 created: 2026-06-18
 author: Noel (with Claude Code, Opus 4.8)
+updated: 2026-06-20
+owner: Noel
 harness_repo: xyz-3-agents-swarm (relay-automation/ Marathon stack)
 substrate_repo: wp-code-check (dist/bin/check-performance.sh — 6,988 lines / 275 KB)
 executes_plan: wp-code-check/PROJECT/2-WORKING/P1-2026-06-18-WPCC-PUBLIC-ENTRYPOINT-SECRET-DETECTION.md (Codex-approved r3, b7838ba)
@@ -39,7 +41,7 @@ run so a failure is attributable.
 
 ## Status At A Glance
 
-| Most Recently Completed Phase | What's Next |
+| What was just completed | What's next |
 |---|---|
 | **Pre-flight verification** ✅ 2026-06-18 — WPCC scanner confirmed byte-identical to earlier scan; WPCC plan confirmed Codex-approved (r3). No code drift. | **Phase 0 — Pre-flight & Experiment Setup** (pre-register questions, branch, scope ALLOW_PATHS, wire the gate) |
 

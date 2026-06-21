@@ -1,5 +1,12 @@
 ---
 title: Cost comparison — xyz vs relay (Phase 3, 2026-06-16)
+status: Active reference
+created: 2026-06-16
+updated: 2026-06-20
+owner: Noel
+goal: >
+  Preserve the current xyz-vs-relay cost comparison as a traceable reference artifact
+  until a newer comparison supersedes it.
 slug: cost-comparison
 generated_from: tick analyze --format json
 source_runs:
@@ -15,6 +22,14 @@ related:
 
 All numbers in this document come directly from `tick analyze --format json`
 on the two Phase 3 tick roots. No numbers were typed by hand.
+
+---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase 3 cost comparison was generated on 2026-06-16 from the captured xyz and relay runs. | Keep as the active comparison artifact until a newer comparison run supersedes it. |
 
 ---
 

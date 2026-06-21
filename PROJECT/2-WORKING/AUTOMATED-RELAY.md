@@ -1,8 +1,13 @@
 ---
 title: Automated Relay — project hub (focused)
-status: ACTIVE — Phases 1–4 shipped (baton model); converting relay turns to tick-native (a)
+status: Completed
 created: 2026-06-15
+updated: 2026-06-20
+owner: Noel
 north_star: a fully automated, self-healing /relay loop I can use every day
+goal: >
+  Keep one focused project hub for the automated relay effort, linking outward to the
+  canonical phase plans, operational docs, and completion evidence.
 ---
 
 # Automated Relay — project hub
@@ -11,6 +16,12 @@ north_star: a fully automated, self-healing /relay loop I can use every day
 the **fully automated relay** is the higher-daily-use tool, so XYZ-swarm progress
 is **deferred** in favor of finishing this. This doc is the single focused tracker;
 deep specs live in the linked canonical docs.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **Phases 1-5** shipped and packaged on 2026-06-15; the automated relay project reached its stated definition of done. | **Done** — keep this doc as a completion hub or move it to `PROJECT/3-COMPLETED` when no longer needed as an active reference. |
 
 ## North star
 A `/relay` Producer↔Reviewer loop that runs **hands-free** (all-Claude) or one-line-nudge

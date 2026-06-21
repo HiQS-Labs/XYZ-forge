@@ -4,6 +4,7 @@ slug: cost-observability-plan
 status: Draft — awaiting relay review
 owner: Noel (operator) · Claude (producer)
 created: 2026-06-15
+updated: 2026-06-20
 branch: main
 related:
   - PROJECT/1-INBOX/FEEDBACK-2026-06-15.md   # the gap this plan closes (point 5: track cost, not just output)
@@ -27,7 +28,7 @@ non_goals:
 
 ## Status
 
-| Most recently completed phase | What's next |
+| What was just completed | What's next |
 |---|---|
 | **Phase 3 — Dogfood + cost comparison** ✅ shipped: real Gemini relay run with `-o json` cost capture validated end-to-end (preamble-skip fix in `parseGeminiStats`); synthetic xyz fixture + real relay run analyzed; `COST-COMPARISON.md` generated from `tick analyze --format json`; `FEEDBACK-2026-06-15.md` point 5 closed. `cost.sh` **24/24**; full suite **22/22**. | **Done — all three phases shipped** |
 
