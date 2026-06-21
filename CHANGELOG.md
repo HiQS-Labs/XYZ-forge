@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-20
 
+### Safeguard #2 — worktree isolation wired into the agy + codex shims
+The airtight async/side-effect containment that existed only in `claude-turn.sh` (a throwaway `git worktree` of `ROOT@HEAD`; only the allowlist copies back; off-lane → exit 6) is now opt-in for the cross-model turn-takers too: `RELAY_WORKTREE_ISOLATION=1` runs `agy`/`codex` with `CWD` = the worktree, so a background or absolute-of-CWD write can't reach the real repo. Default OFF → byte-for-byte the prior in-ROOT behaviour. The wiring is a byte-identical mirror of `claude-turn.sh` (begin → `cwd_wrap` → teardown → off-lane exit 6). New `test/shim-worktree.sh` proves both shims contain an off-lane write and copy back a good turn (18/0, OFF baseline included); suite 35/35. Complements Safeguard #1: a reviewer overstep is now contained two ways (allowlist scope + worktree).
+
 ### Safeguard #1 — reviewer turns are scoped to the relay file only
 Headless reviewers were going off the rails: an agy review turn (2026-06-20) edited `validate.sh` because the artifact sat on `ALLOW_PATHS`. Fixed in the shared safety core ([relay-automation/relay-turn-lib.sh](relay-automation/relay-turn-lib.sh)) so every turn-taker (codex/agy/claude) inherits it: when the relay file's `NEXT` header names the **Reviewer**, `rtl_init` drops the caller's `ALLOW_PATHS` (allowlist = relay file only) and `rtl_turn_prompt` tells the model plainly not to edit the artifact. A reviewer that edits anything now gets it reverted + the turn fails (exit 6). Producer turns keep their full allowlist. Detector matches the header `NEXT:` line only (no body false-trigger). New reviewer-scoping tests in `test/codex-turn.sh` (27/0) and `test/agy-turn.sh` (22/0); suite 34/34.
 

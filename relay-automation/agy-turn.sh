@@ -24,6 +24,8 @@ set -euo pipefail
 #   AGY_FLAGS      — optional extra flags appended to the agy invocation (advanced/override)
 #   AGY_TURN_ROOT  — git root to guard (default: this repo); tests point at a fixture
 #   AGY_LOG        — where to write the agy transcript (default: a $TMPDIR file)
+#   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
+#                     async/side-effect containment; off-lane in the worktree → exit 6). Default OFF.
 #
 # Auth/headless contract (validated 2026-06-18, agy from Antigravity.app):
 #   -p "<prompt>"                  — non-interactive (headless) print mode
@@ -94,8 +96,37 @@ read -ra _aflags <<<"${AGY_FLAGS:-}"
 # Run the agy turn headless (token ops + edit the relay file; NO git), then enforce the boundary.
 rtl_before
 bounded_rc=0
-rtl_run_bounded "$turn_timeout" "$AGY_BIN" "${agy_args[@]}" -p "$prompt" < /dev/null > "$AGY_LOG" 2>&1 \
+
+# Worktree isolation (opt-in; ROADMAP Part A Phase 3.6 — same wiring as claude-turn.sh). When
+# RELAY_WORKTREE_ISOLATION=1, run agy with CWD = a THROWAWAY git worktree of ROOT@HEAD, so any
+# async/background write lands in a tree we delete, never ROOT. .tick coordination state stays SHARED
+# via TICK_REPO_ROOT=ROOT. Default OFF → the in-ROOT run below is byte-for-byte the prior behaviour.
+wt=""; cwd_wrap=()
+if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
+  if wt="$(rtl_worktree_begin)"; then
+    export TICK_REPO_ROOT="$ROOT"
+    cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
+    printf 'agy-turn: worktree isolation ON (%s)\n' "$wt" >&2
+  else
+    printf 'agy-turn: worktree isolation requested but `git worktree add` failed — failing turn\n' >&2
+    exit 5
+  fi
+fi
+
+rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "$AGY_BIN" "${agy_args[@]}" -p "$prompt" < /dev/null > "$AGY_LOG" 2>&1 \
   || bounded_rc=$?
+
+# Worktree teardown FIRST (regardless of rc — a killed/crashed agy may have left work or off-lane edits
+# in the worktree). Copies the allowlist back to ROOT unless an off-lane change was detected → exit 6
+# (containment takes precedence over timeout 7 / failure 5 / empty-output 5, per the exit contract).
+if [[ -n "$wt" ]]; then
+  rtl_worktree_end "$wt"
+  if [[ "${RTL_WT_OFFLANE:-0}" == "1" ]]; then
+    printf 'agy-turn: agy made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)\n' >&2
+    exit 6
+  fi
+fi
+
 if [[ "$bounded_rc" -eq 7 ]]; then
   printf 'agy-turn: agy -p exceeded %ss wall-clock cap — killed\n' "$turn_timeout" >&2
 elif [[ "$bounded_rc" -ne 0 ]]; then
