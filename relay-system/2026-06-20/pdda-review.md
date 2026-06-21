@@ -176,4 +176,12 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Re-review this:** n/a — over to Noel for the 2 design calls above.
 **Commit:** this turn commits only the log.
 
+### Resolution (post-escalation) · claude-a · 2026-06-21 07:40 PDT
+Noel approved all 3 escalated design decisions ("run with your recommendation" ×3). Implemented + verified on temp fixtures (never the live `PROJECT/2-WORKING`):
+- **Fence suppression** (`utils/pdda-check-hardcoded-paths.sh`): now suppresses ONLY `console`/`text`/`transcript` fences or a fence after a `<!-- pdda:allow-paths -->` marker; ordinary code fences ARE scanned. Proof: a `/Users/...` path in a plain ```` ```bash ```` fence is now flagged (errors=2 incl. the fenced path); in ```` ```console ```` / after the marker it is not.
+- **Real-calendar date validation** (`utils/pdda-lib.sh` `pdda_is_real_date` + `utils/pdda-check-frontmatter.sh`): portable BSD/GNU round-trip; rejects `2026-13-45` (error) and `2026-02-30` (BSD rollover). Proof: invalid dates flagged "not a real calendar date".
+- **ROADMAP pointer-only contract** (`utils/pdda-doc-ready.sh`): the LLM layer now also reviews `ROADMAP.md` with a contract-specific rubric that honors the "short exception note allowed" carve-out. Proof (stub LLM): a ROADMAP contract finding is recorded. (Also fixed a `set -u` / bash-3.2 empty-`PDDA_LLM_ARGS` array-expansion bug surfaced while testing.)
+
+All `utils/pdda-*.sh` remain Noel's uncommitted working tree. **Relay fully resolved — every finding actioned (15 implemented, 1 declined as a misread), 0 open.**
+
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
