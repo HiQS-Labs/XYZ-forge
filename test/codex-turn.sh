@@ -35,6 +35,8 @@ if [ "${STUB_MODE:-good}" = commitbypass ]; then
 fi
 # spacefile: off-lane path containing a space (git status would QUOTE it without -z)
 [ "${STUB_MODE:-good}" = spacefile ] && printf 'off-lane\n' >>"$A/off lane.md"
+# editartifact: reviewer overstep — edit an ALLOW_PATHS artifact (reviewer-scoping must revert it)
+[ "${STUB_MODE:-good}" = editartifact ] && printf 'reviewer-edit\n' >>"$A/artifact.md"
 # renamestage: agent violates "no git" by STAGING a rename of a tracked off-lane file (rename-hijack)
 [ "${STUB_MODE:-good}" = renamestage ] && git -C "$A" mv rtarget.txt rmoved.txt >/dev/null 2>&1
 exit 0
@@ -122,6 +124,20 @@ seed_token RELAY-TURN-rename
 run_shim RELAY-TURN-rename codex renamestage; rc=$?
 [ "$rc" -eq 6 ] && pass "staged rename (off-lane) enforced, not skipped as pre-existing" || fail "rename-hijack must fail (exit 6), got $rc"
 git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean staged rename before the next case
+
+# --- (10) REVIEWER-turn scoping: artifact on ALLOW_PATHS is dropped -> edit reverted (exit 6) ---
+printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$A/relay-rev.md"
+printf 'orig\n' >"$A/artifact.md"
+git -C "$A" add relay-rev.md artifact.md >/dev/null 2>&1; git -C "$A" commit -q -m "seed reviewer fixture" >/dev/null 2>&1
+seed_token RELAY-TURN-rev
+before="$(git -C "$A" rev-parse HEAD)"
+RELAY_AGENT=codex RELAY_FILE="$A/relay-rev.md" RELAY_TASK=RELAY-TURN-rev CODEX_AGENT=codex \
+  CODEX_BIN="$STUB" CODEX_TURN_ROOT="$A" CODEX_LOG=/dev/null STUB_MODE=editartifact ALLOW_PATHS="artifact.md" \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 6 ] && pass "reviewer turn: artifact on ALLOW_PATHS dropped -> edit reverted (exit 6)" || fail "reviewer-scoping should revert the artifact edit (exit 6), got $rc"
+[ "$(cat "$A/artifact.md" 2>/dev/null)" = "orig" ] && pass "reviewer's artifact edit reverted to original" || fail "artifact.md should be reverted to 'orig'"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on a reviewer-scoping violation" || fail "should not commit"
+git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean the uncommitted reviewer block before the next case
 
 # --- (8) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"

@@ -3,7 +3,10 @@
 # SOURCED by codex-turn.sh and gemini-drive.sh (thin dispatch wrappers); not run on its own.
 #
 # Containment contract — decisions/2026-06-15-unattended-agent-containment.md (3-model validated):
-#   (1) path-allowlist      — revert + FAIL on any change outside {relay file, ALLOW_PATHS}
+#   (1) path-allowlist      — revert + FAIL on any change outside {relay file, ALLOW_PATHS}.
+#                             REVIEWER-turn scoping: when the relay file's NEXT names the Reviewer,
+#                             ALLOW_PATHS is dropped (allowlist = relay file ONLY), so a headless
+#                             reviewer cannot edit the artifact it is reviewing — any such edit reverts.
 #   (2) commit-bypass guard — reset --hard + FAIL if the agent committed during its own turn
 #   (3) no push             — stage only the allowlist, commit file-scoped, never push
 # Keeping this in ONE place means a new turn-taker (gemini-drive.sh, …) inherits the exact
@@ -11,7 +14,9 @@
 #
 # API (all state in namespaced RTL_* globals):
 #   rtl_init        <root> <relay_file> <allow_csv>   — set ROOT + build normalized allowlist
+#                                                       (REVIEWER turn → allowlist = relay file only)
 #   rtl_turn_prompt <agent> <relay_file> <task> <csv> — emit the shared ▶ TAKE-YOUR-TURN prompt
+#                                                       (REVIEWER turn → "do not edit the artifact")
 #   rtl_before                                         — snapshot HEAD before the agent runs
 #   rtl_enforce     <task> <agent> <log> <tool>        — guards (2)+(1)+(3); EXITS 6 on violation
 #   rtl_run_bounded <timeout_secs> <cmd...>            — run <cmd...> under a wall-clock cap;
@@ -31,9 +36,28 @@
 # timeout should still call rtl_enforce, and if rtl_enforce exits 6 the process exits 6 — correct.
 # If rtl_enforce completes without violation the shim then exits 7 to report the timeout.
 
+rtl_is_reviewer_turn() {  # <relay_file> — true if the file's NEXT pointer names the Reviewer role
+  # The relay protocol's NEXT pointer names the ROLE that acts next (Producer | Reviewer). A reviewer
+  # only appends findings to the relay file; it must never edit the artifact. Portable match (no GNU
+  # \b): BSD/macOS grep -E + POSIX classes. Missing/closed (NEXT: None) → not a reviewer turn.
+  local f="$1"
+  [[ -f "$f" ]] || return 1
+  grep -iqE '^[[:space:]]*NEXT:[[:space:]]*Reviewer' "$f"
+}
+
 rtl_init() {  # <root> <relay_file> <allow_csv>
   RTL_ROOT="$1"; local f="$2" csv="$3"
   RTL_ALLOW=("$f")
+  # REVIEWER-turn scoping: a reviewer is near read-only — it only APPENDS findings to the relay file
+  # and must never edit the artifact under review. When NEXT names the Reviewer, drop the caller's
+  # extra allowlist (relay file ONLY) so any artifact edit a headless reviewer makes is reverted by
+  # rtl_enforce. This is the boundary an over-eager agy reviewer crossed on 2026-06-20 (it edited
+  # validate.sh because the artifact sat on ALLOW_PATHS). Producer turns keep the full allowlist —
+  # they legitimately build.
+  if rtl_is_reviewer_turn "$f"; then
+    [[ -n "$csv" ]] && printf 'relay-turn: REVIEWER turn — scoping allowlist to the relay file only (ignoring ALLOW_PATHS=%s)\n' "$csv" >&2
+    csv=""
+  fi
   local _extra p; IFS=',' read -ra _extra <<<"$csv"
   for p in "${_extra[@]:-}"; do [[ -n "$p" ]] && RTL_ALLOW+=("$p"); done
   local _n=() a                       # normalize to repo-root-relative (git status emits relative)
@@ -131,8 +155,16 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # literal role "Producer" because "the other agent" was unnamed. RELAY_PEER closes that ambiguity.
   local handoff="release --to the other agent (the role named by NEXT in the file)"
   [[ -n "$peer" ]] && handoff="release --to ${peer}"
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. Use ./bin/tick for the %s token (claim/ping, then %s, or done + set STATUS: Approved when approving). Edit ONLY %s%s. Do NOT run git (no add/commit/push) and do NOT touch any other file — the harness commits for you.' \
-    "$agent" "$f" "$task" "$handoff" "$f" "${csv:+ and: $csv}"
+  # REVIEWER-turn scoping: drop the csv from the "edit only" clause and tell the model plainly it must
+  # not edit the artifact — so the prompt matches the relay-file-only allowlist rtl_init enforces (an
+  # agent told it MAY edit X and then reverted is needless friction; tell it the truth up front).
+  local role_note=""
+  if rtl_is_reviewer_turn "$f"; then
+    csv=""
+    role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn.'
+  fi
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. Use ./bin/tick for the %s token (claim/ping, then %s, or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s Do NOT run git (no add/commit/push) and do NOT touch any other file — the harness commits for you.' \
+    "$agent" "$f" "$task" "$handoff" "$f" "${csv:+ and: $csv}" "$role_note"
 }
 
 rtl_before() {
