@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -86,5 +86,15 @@ Otherwise the doc is Codex's: a bounded `Roadmap Steward` agent that **proposes*
 **Verification:** textual — doc re-read end to end; still passes the PDDA contract (frontmatter, exact `## Status` table, a QA gate after each of the 4 phases, repo-relative paths only); the new §4 table is the explicit advisory-vs-gated boundary the Phase-0 gate asks for.
 **Re-review this:** (1) is the §4 verb table now an unambiguous advisory-vs-approval-gated boundary? (2) are roadmap actions consistently pointer-only/diff-only across Scope, §3, §4, and Phase 2? (3) is the phase-split surface right-sized? If satisfied this is round 2/2 — **Approve**; else name any real Blocker and it escalates to Noel.
 **Commit:** this turn commits only the relay log; `PROJECT/PDDA-AGENT.md` stays uncommitted (Noel's working tree — review on disk).
+
+### Round 2 · Reviewer · codex · 2026-06-20 23:15 PDT
+**Verdict:** Approved
+**Findings & proposals:**
+- [Should] The artifact now reads as approved, but its status row is stale against the body: it still says "Resolve the 5 open questions ... and get a peer review" even though this revision resolves three questions, leaves two still open, and is itself the peer review pass. `PROJECT/PDDA-AGENT.md:23`, `PROJECT/PDDA-AGENT.md:255`, `PROJECT/PDDA-AGENT.md:260`, `PROJECT/PDDA.md:73`, `PROJECT/PDDA.md:180`. Proposed fix: update the right cell to "Resolve the remaining 2 open questions (priority signals is load-bearing) and fold this review into the implementation-plan draft," or equivalent.
+- [Pass] The approval boundary is now explicit enough to satisfy the doc's own Phase 0 QA gate. The phase-split tool surface and verb table make it clear which verbs are read-only, recommendation-only, diff/PR-only, or out of scope. `PROJECT/PDDA-AGENT.md:127`, `PROJECT/PDDA-AGENT.md:145`, `PROJECT/PDDA-AGENT.md:156`.
+- [Pass] `ROADMAP.md` handling is now consistent with PDDA's pointer-only contract across Scope, the phase surface, the approval table, and the auto-edit lane. `PROJECT/PDDA-AGENT.md:68`, `PROJECT/PDDA-AGENT.md:135`, `PROJECT/PDDA-AGENT.md:151`, `PROJECT/PDDA-AGENT.md:178`, `PROJECT/PDDA.md:193`.
+- [Pass] The first-version surface is now right-sized. Phase 1 stays advisory and proposal-oriented; the consequential prioritization verbs appear only in Phase 3 after explicit approval gates. `PROJECT/PDDA-AGENT.md:130`, `PROJECT/PDDA-AGENT.md:136`, `PROJECT/PDDA-AGENT.md:240`.
+- [Pass] The Claude Agent SDK claims remain grounded and attributed to the right product surface. The local claims about `query()` vs `ClaudeSDKClient`, built-in permissions/hooks/sessions/cost tracking/observability, and API-key or cloud-provider auth are aligned with the listed official Agent SDK overview and Python reference, and the doc now correctly demotes the platform tool-use page to background. `PROJECT/PDDA-AGENT.md:32`, `PROJECT/PDDA-AGENT.md:193`, `PROJECT/PDDA-AGENT.md:264`.
+**Commit:** handled by harness per turn instructions
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
