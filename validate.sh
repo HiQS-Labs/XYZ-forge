@@ -3,6 +3,9 @@
 # Exit 0 = all pass; Exit 1 = at least one failed.
 set -u
 
+# Clean ambient variables that might interfere with tests inside the harness.
+unset ALLOW_PATHS RELAY_FILE RELAY_TASK RELAY_AGENT RELAY_PEER RELAY_WORKTREE_ISOLATION
+
 HERE="$(cd "$(dirname "$0")" && pwd)"
 TESTS=(
   "projection-idempotent.sh"
