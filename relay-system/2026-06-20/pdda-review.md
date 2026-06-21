@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -117,5 +117,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 - `[Pass]` **BOM / leading whitespace parsing:** Handled correctly. (Evidence: textual only)
 
 **Commit:** pending (harness-managed)
+
+### Round 3 · Producer · claude-a (on Noel's behalf) · 2026-06-20 22:41 PDT
+**Decisions on proposals:** (thanks — you confirmed all 5 round-2 fixes as `[Pass]`. The 5 new findings, each verified then fixed on disk in `utils/`; the 6th deferred.)
+- [Should] Drive-letter regex false-positives on URLs (`https://` → `s:/`) — **Implemented** @ `utils/pdda-check-hardcoded-paths.sh`: replaced the two `match()` calls with `/(^|[^[:alnum:]_])[A-Za-z]:[\/\\]/` (drive letter must be at start or after a non-alnum char). · Proof: fixture with `https://`+`http://`+`/Users/...` → only the `/Users/` path is flagged (1 error), URLs clean; real `C:/` still flagged.
+- [Should] `pdda-run.sh` corrupts the JSON stream in `PDDA_FORMAT=json` — **Implemented** @ `utils/pdda-run.sh`: all human decoration now goes through `runner_say`, which routes to **stderr** in json mode (child checks' JSON findings stay on stdout). · Proof: `PDDA_FORMAT=json` run → 8 JSON lines on stdout, **0** `==` decoration lines leaked.
+- [Should] Unquoted `PDDA_LLM_ARGS` breaks spaced args — **Modified** @ `utils/pdda-doc-ready.sh`: flags are `read -ra` into an array; a model NAME with spaces goes via a new `PDDA_LLM_MODEL` env appended as `--model "$PDDA_LLM_MODEL"` (survives as one arg). · Proof: `bash -n` clean; skip path intact.
+- [Should] Stale mover doesn't ensure the dest dir — **Implemented** @ `utils/pdda-stale-working-docs.sh`: `mkdir -p "$PDDA_MISC_DIR"` before the `mv`. · Proof: non-dry-run move into a nonexistent MISC dir → doc moved + dir created.
+- [Nit] Frontmatter fence fails on a trailing space — **Implemented** @ `utils/pdda-lib.sh`: `$0 == "---"` → `$0 ~ /^---[[:space:]]*$/` in both `pdda_frontmatter_lines` and `pdda_has_frontmatter`. · Proof: a `--- ` (trailing space) fence now parses.
+- [Nit] `ROADMAP.md` contract unenforced — **Deferred (declined for now), with rationale.** The design's ROADMAP contract carries a deliberate fuzzy exemption ("a short exception note is allowed when omitting would hide an operationally critical fact"), so a deterministic "no checklists in ROADMAP" lint would be high-false-positive. Better placed in the LLM readiness layer (`pdda-doc-ready.sh`, which can judge the exemption) or a human pass — flagged for Noel as a policy call, not a quick deterministic check.
+**Did:** 5 fixes across 5 scripts + the deferral. All on disk in Noel's working tree (still uncommitted).
+**Verification:** behaviorally proven on TEMP fixtures only (never the real `PROJECT/2-WORKING`): `bash -n` clean on all 7 scripts; URL-no-false-positive, JSON-pure-stdout, mkdir-dest, trailing-space-fence all asserted green.
+**Re-review this:** the 5 fixes (regex anchor; `runner_say` stderr routing; the `_llm_args` array + `PDDA_LLM_MODEL`; `mkdir -p`; the `---` fence regex). This is round 3/3 — if you're satisfied, **Approve**; if a real Blocker remains, say so and it escalates to Noel.
+**Commit:** none for the artifact (Noel's uncommitted scripts — review on disk); this turn commits only the log.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
