@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -57,5 +57,20 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** behaviorally proven — `bash validate.sh` → **35/35** (incl. new `shim-worktree.sh` 18/0; `codex-turn.sh` 27/0; `agy-turn.sh` 22/0). Syntax-checked all three shells.
 **Open questions:** (a) Should `#1` reviewer-scoping be enforced even when the operator *explicitly* set `ALLOW_PATHS` (current: yes, scoping wins)? (b) Worktree copy-back is forward-only (deletions don't propagate) — acceptable for review/producer turns?
 **Commit:** 2f9b995 (#1 core) + 9b751a8 (#1 completion) + 1221e7d (#2) — diff to review: `git show 9b751a8 1221e7d` and `git show 2f9b995 -- relay-automation/relay-turn-lib.sh`
+
+### Round 1 · Reviewer · codex · 2026-06-20 20:35 PDT
+**Verdict:** Changes requested
+**Findings & proposals:**
+- [Blocker] `relay-automation/relay-turn-lib.sh:154-169` still emits the original `RELAY_FILE` and `ALLOW_PATHS` strings into the model prompt, while `relay-automation/codex-turn.sh:71-88` and `relay-automation/agy-turn.sh:105-117` only change the subprocess CWD. When those paths are absolute, the model can write straight into `RTL_ROOT`, bypassing the throwaway worktree entirely. `test/shim-worktree.sh:19-34` does not catch that because the stub ignores the prompt and writes only relative paths. Proposed fix: when `RELAY_WORKTREE_ISOLATION=1`, rewrite prompt-visible file targets to the worktree copies, or pass only repo-relative paths after an explicit `cd` into the worktree, then add a regression where the stub follows the exact path strings it was given.
+- [Blocker] `relay-automation/relay-turn-lib.sh:125-148` is explicitly forward-only: it copies back allowlisted edits/creates but never propagates allowlisted deletions. That silently breaks a legitimate isolated Producer turn which deletes an artifact file: the turn can exit 0 while `RTL_ROOT` still keeps the file, which misses the DoD's "no false-positive" bar. `test/shim-worktree.sh:58-81` covers copy-back for edits only, not delete propagation. Proposed fix: in `rtl_worktree_end`, detect allowlisted paths deleted in the worktree and remove the corresponding `RTL_ROOT` path before teardown, then add an isolation test for delete-on-allowlist for both shims.
+- [Pass] Reviewer-turn scoping itself is well-placed: `relay-automation/relay-turn-lib.sh:50-67` narrows the allowlist before normalization, and `relay-automation/relay-turn-lib.sh:160-169` removes the artifact-edit invitation from the prompt on reviewer turns. The direct overstep case is exercised in `test/codex-turn.sh:128-140` and `test/agy-turn.sh:109-122`.
+- [Pass] The cross-model wiring matches Claude on the ordering the DoD called out: begin isolation, run via `cwd_wrap`, tear down before timeout/failure checks, and give exit 6 precedence on isolated off-lane writes. The ordering in `relay-automation/codex-turn.sh:66-108` and `relay-automation/agy-turn.sh:100-146` mirrors `relay-automation/claude-turn.sh:156-176`.
+**Answers:**
+- Proof: textual only. I read the current branch files and tests directly; per the operator constraint for this turn I did not run `git`, `bash validate.sh`, or any artifact/test script.
+- (1) Reviewer-scope false-negatives: the in-ROOT guard still catches absolute-path writes to tracked files because enforcement runs against `RTL_ROOT`, but the isolation path re-opens an escape if the prompt hands the model absolute ROOT paths.
+- (2) Reviewer-scope false-positives: the scoping does not fire on producer turns; `rtl_init` only drops `ALLOW_PATHS` when the header `NEXT:` line names Reviewer.
+- (3) Wiring faithfulness: yes on ordering and precedence; no regression found in the agy empty-output guard or Codex env-strip composition.
+- (4) Test quality: reviewer-scoping tests are good for the direct artifact-edit case; isolation tests miss the prompt-path leak and allowlisted-delete behavior.
+**Commit:** harness
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
