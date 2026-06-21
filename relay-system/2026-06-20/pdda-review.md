@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -55,5 +55,27 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** N/A from the producer side this round — this is a review request; the reviewer should run the scripts where feasible.
 **Open questions:** The 4 "Open questions" at the bottom of `PDDA.md` (gh_issue requiredness, compat-window length, activity-log rotation, project-local roadmap) — flag which ones actually block a stable v1.
 **Commit:** (artifact files are Noel's working tree, uncommitted by design — review them on disk)
+
+### Round 1 · Reviewer · agy · 2026-06-20 21:45 PDT
+
+**Verdict:** Changes requested
+
+**Findings & proposals:**
+- `[Blocker]` **Missing `pdda-doc-ready.sh` (LLM readiness check):** `PROJECT/PDDA.md` specifies the LLM-assisted readiness review script `pdda-doc-ready.sh` under "2. LLM-assisted doc readiness review" and in the hourly schedule, but no such script has been implemented in the codebase.
+- `[Should]` **Quoted date values break frontmatter check:** In [pdda-check-frontmatter.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/pdda-check-frontmatter.sh#L36), strict regex `^[0-9]{4}-[0-9]{2}-[0-9]{2}$` fails if dates are wrapped in quotes in the frontmatter (e.g., `created: "2026-06-15"`), causing false positive validation errors. Strip quotes before performing the regex check.
+- `[Should]` **Loose header regex:** In [pdda-check-status-table.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/pdda-check-status-table.sh#L18), the status heading matcher `^##[[:space:]]+Status([[:space:]].*)?$` is too loose and permits headings like `## Status At A Glance` instead of enforcing the exact `## Status` specified in `PDDA.md`.
+- `[Should]` **Output format contract implementation gap:** `PDDA.md` specifies that each check script should emit a machine-readable JSON lines format for composability. The current scripts print human-readable text to stdout and append JSON lines to the activity log, but do not directly output JSON lines to stdout.
+- `[Nit]` **Unused local variable `cells`:** In [pdda-lib.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/pdda-lib.sh#L167), `local cells` is declared inside `pdda_normalize_header` but never used.
+- `[Nit]` **Dry-run action naming discrepancy:** In [pdda-stale-working-docs.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/pdda-stale-working-docs.sh#L54), the dry-run action is logged as `would-move` instead of the recommended `flagged` name suggested in `PDDA.md`.
+- `[Nit]` **Frontmatter leading whitespace parsing risk:** [pdda-lib.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/pdda-lib.sh#L117) and [pdda-lib.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/pdda-lib.sh#L125) enforce `NR == 1 && $0 == "---"`, which fails if files contain leading blank lines or a BOM.
+- `[Pass]` **Good platform compatibility:** [pdda-lib.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/pdda-lib.sh#L173) correctly handles BSD (`stat -f`) versus GNU (`stat -c`) parameters for extracting file mtimes, ensuring compatibility on both macOS and Linux.
+
+**Open Questions Recommendations:**
+1. *gh_issue:* Keep optional to minimize intake friction for local/non-GitHub tasks.
+2. *compat deadline:* Keep 2026-07-31 to provide a reasonable manual cleanup window.
+3. *log rotation:* Implement rotation by size or date (e.g. keeping only the last 10,000 entries) to prevent `PDDA-ACTIVITY.jsonl` from growing indefinitely.
+4. *roadmap:* Keep `ROADMAP.md` at root-level only to prevent duplication and plan rot.
+
+**Commit:** pending (harness-managed)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
