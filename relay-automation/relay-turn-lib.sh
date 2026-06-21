@@ -37,12 +37,14 @@
 # If rtl_enforce completes without violation the shim then exits 7 to report the timeout.
 
 rtl_is_reviewer_turn() {  # <relay_file> — true if the file's NEXT pointer names the Reviewer role
-  # The relay protocol's NEXT pointer names the ROLE that acts next (Producer | Reviewer). A reviewer
-  # only appends findings to the relay file; it must never edit the artifact. Portable match (no GNU
-  # \b): BSD/macOS grep -E + POSIX classes. Missing/closed (NEXT: None) → not a reviewer turn.
-  local f="$1"
+  # The relay protocol's NEXT pointer (the FIRST `NEXT:` line — the header) names the ROLE that acts
+  # next (Producer | Reviewer). A reviewer only appends findings to the relay file; it must never edit
+  # the artifact. Match the header line only, so a body/instruction mention of "NEXT: Reviewer" can't
+  # false-trigger. Portable (no GNU \b): BSD/macOS grep -E + POSIX classes. Missing/None → not reviewer.
+  local f="$1" line
   [[ -f "$f" ]] || return 1
-  grep -iqE '^[[:space:]]*NEXT:[[:space:]]*Reviewer' "$f"
+  line="$(grep -iE '^[[:space:]]*NEXT:' "$f" 2>/dev/null | head -1)"
+  printf '%s' "$line" | grep -iqE 'Reviewer'
 }
 
 rtl_init() {  # <root> <relay_file> <allow_csv>

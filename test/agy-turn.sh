@@ -36,6 +36,8 @@ if [ "${STUB_MODE:-good}" = commitbypass ]; then
   git -C "$A" commit -q -m "agy sneaked a commit" >/dev/null 2>&1
 fi
 [ "${STUB_MODE:-good}" = spacefile ] && printf 'off-lane\n' >>"$A/off lane.md"
+# editartifact: reviewer overstep — edit an ALLOW_PATHS artifact (reviewer-scoping must revert it)
+[ "${STUB_MODE:-good}" = editartifact ] && printf 'reviewer-edit\n' >>"$A/artifact.md"
 exit 0
 STUB_EOF
 chmod +x "$STUB"
@@ -103,6 +105,21 @@ run_shim RELAY-TURN-ambient agy good; rc=$?
 [ "$rc" -eq 0 ] && pass "pre-existing dirty file -> turn still succeeds" || fail "ambient WIP must not fail the turn (rc=$rc)"
 [ -f "$A/ambient.md" ] && pass "pre-existing ambient WIP left untouched (not reverted)" || fail "ambient.md was destroyed (regression!)"
 rm -f "$A/ambient.md"
+
+# --- (9) REVIEWER-turn scoping: artifact on ALLOW_PATHS is dropped -> edit reverted (exit 6) ---
+printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$A/relay-rev.md"
+printf 'orig\n' >"$A/artifact.md"
+git -C "$A" add relay-rev.md artifact.md >/dev/null 2>&1; git -C "$A" commit -q -m "seed reviewer fixture" >/dev/null 2>&1
+seed_token RELAY-TURN-rev
+before="$(git -C "$A" rev-parse HEAD)"
+revlog="$WORK/agy-rev.$$.log"; : >"$revlog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay-rev.md" RELAY_TASK=RELAY-TURN-rev AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$revlog" STUB_MODE=editartifact ALLOW_PATHS="artifact.md" \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 6 ] && pass "reviewer turn: artifact on ALLOW_PATHS dropped -> edit reverted (exit 6)" || fail "reviewer-scoping should revert the artifact edit (exit 6), got $rc"
+[ "$(cat "$A/artifact.md" 2>/dev/null)" = "orig" ] && pass "reviewer's artifact edit reverted to original" || fail "artifact.md should be reverted to 'orig'"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on a reviewer-scoping violation" || fail "should not commit"
+git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean the uncommitted reviewer block before the next case
 
 # --- (8) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
