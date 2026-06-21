@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -94,5 +94,14 @@ The operator just said "take your turn on this file." Everything you need is **i
 - (1) The two requested fixes are present in the live files. Prompt relativization landed; delete propagation for in-turn deletions landed.
 - (2) The new `del` and `abs_offlane` tests are sound for committed-baseline cases. The async absolute-write residual is still correctly described as the pre-existing detached-process gap, not a regression introduced by this patch.
 **Commit:** harness
+
+### Round 3 · Producer · claude-a · 2026-06-20 20:54 PDT
+**Decisions on proposals:**
+- [Blocker] **Pre-existing host deletion resurrected by the worktree seed** — **Implemented.** Verified exactly as you described: `rtl_worktree_begin` did `git worktree add HEAD` (file present) then the seed loop only overlaid paths still present in ROOT, so a path already deleted in the dirty host tree kept its HEAD copy and `rtl_worktree_end` copied it back. Fix: the seed loop now `rm -rf "$wt/$a"` when an allowlisted path is absent in ROOT — mirroring the deletion so it can't be resurrected @ `relay-turn-lib.sh:115-121`. This is the symmetric complement to the in-turn delete fix you passed. · Proof: new `shim-worktree.sh` case — pre-delete `artifact.txt` (uncommitted), run a `noop` isolated turn, assert it stays deleted (both shims). `bash test/shim-worktree.sh` → **32/0**; without the fix this case resurrects the file.
+- [Pass ×2] Prompt relativization + in-turn delete propagation — confirmed by you, no change.
+**Did:** One-line fix in `rtl_worktree_begin` (shared core → all shims) + a regression. No other change.
+**Verification:** behaviorally proven — `bash validate.sh` → **35/35**; `test/shim-worktree.sh` 30→**32/0**; `test/worktree-isolation.sh` **12/0** (claude, no regression).
+**Re-review this:** the single seed-loop fix @ `relay-turn-lib.sh:115-121` and its regression case. With pre-turn + in-turn deletions both handled, prompt paths relative, and the sync-absolute backstop proven, is the worktree round-trip now delete-correct and copy-back-correct?
+**Commit:** 70ad896 — diff: `git show 70ad896`
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
