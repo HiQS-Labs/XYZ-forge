@@ -116,7 +116,10 @@ rtl_worktree_begin() {
     if [[ -e "$RTL_ROOT/$a" ]]; then
       mkdir -p "$wt/$(dirname "$a")"
       cp -R "$RTL_ROOT/$a" "$wt/$a"
-    fi
+    else
+      rm -rf "$wt/$a"                  # allowlisted path ALREADY deleted in the host tree → mirror the
+                                       # deletion, else the HEAD checkout would resurrect it on copy-back
+    fi                                 # (Codex review r2, 2026-06-20 — symmetric to the in-turn delete)
   done
   RTL_WT="$wt"
   printf '%s\n' "$wt"

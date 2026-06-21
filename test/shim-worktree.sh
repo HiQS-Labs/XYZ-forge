@@ -28,7 +28,7 @@ export TICK_REPO_ROOT="$A"
 printf 'shimstub: model response for %s\n' "$RELAY_AGENT"   # stdout -> non-empty transcript (agy guard)
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "artifact.txt" >/dev/null 2>&1
 "$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
-printf 'built\n' >> artifact.txt                  # legit allowlist edit (relative to CWD)
+[ "${STUB_MODE:-good}" != noop ] && printf 'built\n' >> artifact.txt   # legit allowlist edit (relative); noop skips it
 printf '\n### Round 1 · Builder\n' >> relay.md     # legit relay edit (relative to CWD)
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to claude-a >/dev/null 2>&1
 [ "${STUB_MODE:-good}" = offlane ] && printf 'sync off-lane\n' > offlane-sync.txt   # relative off-lane
@@ -99,6 +99,14 @@ check_shim(){ # <label> <run-fn> <agent>
   [ "$rc" -eq 6 ] && pass "$label: absolute off-lane write -> rtl_enforce backstop fails the turn (exit 6)" || fail "$label: abs off-lane should exit 6, got $rc"
   [ ! -e "$A/abs-leak.txt" ] && pass "$label: absolute off-lane file reverted from ROOT" || fail "$label: abs-leak.txt leaked into ROOT"
   [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "$label: no commit on the absolute off-lane turn" || fail "$label: should not commit"
+  # (6) isolation ON, PRE-EXISTING allowlisted deletion in the dirty host tree: NOT resurrected by the
+  #     HEAD checkout (Codex review r2: rtl_worktree_begin must mirror the deletion into the worktree).
+  git -C "$A" checkout -- artifact.txt relay.md >/dev/null 2>&1
+  rm -f "$A/artifact.txt"          # delete BEFORE the turn (uncommitted dirty host tree)
+  seed_token "WT-$label-predel" "$agent"
+  "$run" "WT-$label-predel" noop 1; rc=$?
+  [ ! -e "$A/artifact.txt" ] && pass "$label: pre-existing host deletion NOT resurrected by isolation" || fail "$label: artifact.txt was resurrected by the worktree round-trip!"
+  printf 'seed\n' > "$A/artifact.txt"; git -C "$A" add artifact.txt >/dev/null 2>&1; git -C "$A" commit -q -m "restore artifact (predel)" >/dev/null 2>&1   # restore for the next shim
 }
 
 check_shim codex run_codex codex
