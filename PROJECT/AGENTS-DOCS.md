@@ -138,8 +138,16 @@ Write docs so those checks can be deterministic whenever possible.
 
 `blank.md` placeholders are scaffolding only and are excluded from PDDA linting.
 
+These checks run in one of three enforcement modes (`observe` → `light` → `full`, via `PDDA_MODE` or a
+repo-root `.pdda-mode` file); see `PROJECT/PDDA.md` "Enforcement modes". A fresh install starts in
+`observe` (reports only, never moves or blocks); a project graduates to `full` once on the rails.
+
 ## Roadmap rule
 
 `ROADMAP.md` is the repo-level index of work in progress, completed, attempted, and deferred work.
 It should point to project docs. It should not become the place where phase-by-phase execution detail lives,
 except for a short exception note when a pointer would hide something operationally important.
+
+This rule is enforced deterministically by `utils/pdda-check-roadmap.sh` (errors on task checklists and
+`### Checklist` / `### QA checklist` headings, warns on sprawl) plus the `utils/pdda-doc-ready.sh` LLM
+rubric for the fuzzier cases — and the roadmap carries a top banner restating the contract.

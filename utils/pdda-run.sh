@@ -13,13 +13,20 @@ CHECKS="
 pdda-check-frontmatter.sh
 pdda-check-status-table.sh
 pdda-check-hardcoded-paths.sh
+pdda-check-roadmap.sh
 pdda-stale-working-docs.sh
 "
 EXIT_CODE=0
 FAILED=""
 
-runner_say "PDDA run starting"
-pdda_log_activity info "pdda-run" "$PDDA_REPO_ROOT" 0 "starting deterministic PDDA run" "start"
+case "$PDDA_MODE" in
+  observe) MODE_NOTE="observe (report-only; no moves, never blocks)" ;;
+  light)   MODE_NOTE="light (moves stale docs; reports errors but does not block)" ;;
+  full)    MODE_NOTE="full (on rails; errors block with a non-zero exit)" ;;
+  *)       MODE_NOTE="$PDDA_MODE" ;;
+esac
+runner_say "PDDA run starting — mode: $MODE_NOTE"
+pdda_log_activity info "pdda-run" "$PDDA_REPO_ROOT" 0 "starting deterministic PDDA run (mode=$PDDA_MODE)" "start"
 
 for check in $CHECKS; do
   runner_say ""
@@ -60,4 +67,6 @@ fi
 
 pdda_rotate_activity   # keep PROJECT/PDDA-ACTIVITY.jsonl bounded
 
-exit "$EXIT_CODE"
+# Mode gate: only "full" blocks (non-zero). In observe/light the child checks already exit 0, so
+# EXIT_CODE is 0 here regardless; gating the aggregate too makes the contract explicit and robust.
+exit "$(pdda_gated_exit "$EXIT_CODE")"

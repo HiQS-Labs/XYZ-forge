@@ -49,4 +49,4 @@ EOF
 done < <(pdda_list_working_docs)
 
 pdda_emit_summary "$CHECK_NAME" "$EXIT_CODE"
-exit "$EXIT_CODE"
+exit "$(pdda_gated_exit "$EXIT_CODE")"

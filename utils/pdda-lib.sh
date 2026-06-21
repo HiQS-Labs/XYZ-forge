@@ -15,6 +15,36 @@ PDDA_FORMAT="${PDDA_FORMAT:-text}"
 # Activity-log rotation ceiling (lines); pdda_rotate_activity trims to the last N. 0 = never rotate.
 PDDA_ACTIVITY_MAX_LINES="${PDDA_ACTIVITY_MAX_LINES:-10000}"
 
+# --- Enforcement mode (observe | light | full) -------------------------------------------------
+# PDDA's adoption ramp (see PDDA.md "Enforcement modes"). Resolution order:
+#   env PDDA_MODE  ->  first non-comment line of <repo>/.pdda-mode  ->  default "observe".
+# Default is "observe" so a freshly-installed PDDA is non-destructive (sees everything, changes
+# nothing, never fails a build); a project graduates to "light" then "full" deliberately.
+#   observe : report findings only; never move files; every check/the suite exits 0.
+#   light   : report + move stale docs; still exit 0 (warn, don't block the build).
+#   full    : report + move + exit non-zero on errors (strict; fully on rails).
+pdda_resolve_mode() {
+  local m="${PDDA_MODE:-}"
+  if [ -z "$m" ] && [ -f "$PDDA_REPO_ROOT/.pdda-mode" ]; then
+    m="$(awk 'NF && $0 !~ /^[[:space:]]*#/ { gsub(/[[:space:]]/,""); print; exit }' "$PDDA_REPO_ROOT/.pdda-mode" 2>/dev/null)"
+  fi
+  case "$m" in
+    observe|light|full) printf '%s' "$m" ;;
+    *) printf 'observe' ;;
+  esac
+}
+PDDA_MODE="$(pdda_resolve_mode)"
+# observe never mutates the tree: force dry-run so stale-doc moves become report-only.
+[ "$PDDA_MODE" = "observe" ] && PDDA_DRY_RUN=1
+
+# Gate a check's raw exit code by mode: only "full" lets an error block (non-zero exit). observe and
+# light still report every finding but exit 0, so a fresh or transitioning install never fails a
+# build while the project is being brought onto the rails. Each check ends with
+#   exit "$(pdda_gated_exit "$EXIT_CODE")"
+pdda_gated_exit() {
+  if [ "$PDDA_MODE" = "full" ]; then printf '%s' "${1:-0}"; else printf '0'; fi
+}
+
 ERROR_COUNT=0
 WARN_COUNT=0
 INFO_COUNT=0

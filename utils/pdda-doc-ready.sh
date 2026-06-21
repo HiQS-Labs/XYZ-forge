@@ -120,4 +120,4 @@ PDDA_ROADMAP="${PDDA_ROADMAP:-$PDDA_REPO_ROOT/ROADMAP.md}"
 [ -f "$PDDA_ROADMAP" ] && review_one "$PDDA_ROADMAP" "$ROADMAP_RUBRIC"
 
 pdda_emit_summary "$CHECK_NAME" "$EXIT_CODE"
-exit "$EXIT_CODE"
+exit "$(pdda_gated_exit "$EXIT_CODE")"

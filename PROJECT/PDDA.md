@@ -164,6 +164,25 @@ Expected exceptions:
 - quoted terminal output
 - explicitly marked transcript blocks
 
+#### E. `pdda-check-roadmap.sh`
+
+Purpose:
+- enforce the `ROADMAP.md` pointer/ledger contract deterministically (the cheap, hourly guard that
+  does not need an LLM), so detail cannot silently leak back into the roadmap
+
+Minimum behavior:
+- scan `ROADMAP.md` (override via `PDDA_ROADMAP`)
+- `error` on any GFM task-list item (`- [ ]` / `- [x]`) — a ledger carries no task checkboxes
+- `error` on any `### Checklist` / `### QA checklist` heading — phase/QA detail belongs in the project doc
+- `warn` when the file exceeds a line-count / heading-count budget (sprawl signal)
+
+Expected exceptions:
+- fenced `console` / `text` / `transcript` blocks and blockquote lines (the carve-out exception note)
+  are not scanned — same convention as `pdda-check-hardcoded-paths.sh`
+
+The fuzzy judgment ("deep execution notes that belong elsewhere") stays with the LLM layer below; this
+script only catches the unambiguous signals.
+
 ### 2. LLM-assisted doc readiness review
 
 This catches the issues where structure exists but planning quality is weak.
@@ -188,6 +207,28 @@ It should not:
 - invent technical claims not grounded in the doc
 - silently override deterministic lints
 
+## Enforcement modes
+
+PDDA runs in one of three modes, set by `PDDA_MODE` (env) or the first non-comment line of a
+repo-root `.pdda-mode` file; the built-in default is `observe`. The point is an **adoption ramp**: a
+freshly-installed PDDA should never destroy files or break a build on day one, and a project should
+graduate onto the rails deliberately.
+
+| Mode | When | Findings reported | Stale-doc moves | Exit on `error` |
+|---|---|---|---|---|
+| `observe` | just installed | yes | no (forced dry-run) | always `0` |
+| `light` | transitioning | yes | yes | `0` (warn, don't block) |
+| `full` | fully on rails | yes | yes | non-zero (blocks) |
+
+- The default is `observe` so a brand-new install is non-destructive and non-blocking — it shows the
+  team what PDDA *would* flag without touching anything.
+- `light` starts acting (moves stale docs, loud reports) but still never fails a build — the
+  transition phase while the backlog of doc debt is cleared.
+- `full` is the strict end state: `error` findings block with a non-zero exit. A repo declares it by
+  committing `.pdda-mode` with `full`.
+- Mechanics: `pdda-lib.sh` resolves the mode once; in `observe` it forces `PDDA_DRY_RUN=1`; every
+  check ends with `exit "$(pdda_gated_exit "$EXIT_CODE")"`, which returns the real code only in `full`.
+
 ## ROADMAP.md contract
 
 `ROADMAP.md` is a pointer file, not a plan body.
@@ -209,6 +250,17 @@ It should usually not contain:
 Strict exemption:
 - a short exception note is allowed when omitting the note would hide an operationally critical fact
 
+Maintainer rule:
+- when a roadmap entry needs more than a one-line status + a link, that is the signal to put the
+  detail in the entry's `PROJECT/**` doc and leave only the pointer here — do not grow the roadmap
+
+How this is enforced (two layers, so it cannot quietly rot):
+- **deterministic** — `utils/pdda-check-roadmap.sh` errors on task checklists / `### Checklist` /
+  `### QA checklist` headings and warns on size sprawl (runs hourly, free, no model needed)
+- **LLM** — `utils/pdda-doc-ready.sh` reviews `ROADMAP.md` against the full pointer contract for the
+  fuzzier "this paragraph is really execution detail" cases (honors the carve-out)
+- the file itself carries a top banner restating the contract, so a human editing it sees the rule
+
 ## Activity log artifact
 
 PDDA should write an append-only activity log to:
@@ -228,11 +280,14 @@ Run the deterministic checks every hour in this order:
 1. `pdda-check-frontmatter.sh`
 2. `pdda-check-status-table.sh`
 3. `pdda-check-hardcoded-paths.sh`
-4. `pdda-stale-working-docs.sh`
+4. `pdda-check-roadmap.sh`
+5. `pdda-stale-working-docs.sh`
 
 Then run:
 
-5. `pdda-doc-ready.sh`
+6. `pdda-doc-ready.sh`
+
+(`utils/pdda-run.sh` runs exactly this sequence and applies the active `PDDA_MODE` gate.)
 
 Reason for the order:
 
@@ -307,11 +362,12 @@ These need a decision before the automation should be considered stable:
 
 If the goal is "get project docs onto rails quickly," the safest v1 is:
 
+- start in `observe` mode, then graduate `light` → `full` as the doc backlog is cleared
 - enforce exact status-table headers
 - tolerate known old aliases only through `2026-07-31`
 - require QA gates on phased plans
 - forbid hardcoded absolute paths
 - run deterministic checks hourly
 - let the LLM reviewer flag readiness issues
-- keep `ROADMAP.md` pointer-only
+- keep `ROADMAP.md` pointer-only (deterministic `pdda-check-roadmap.sh` + the LLM rubric guard it)
 - append all script activity to `PROJECT/PDDA-ACTIVITY.jsonl`

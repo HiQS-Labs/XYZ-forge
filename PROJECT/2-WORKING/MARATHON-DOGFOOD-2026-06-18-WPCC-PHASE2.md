@@ -39,7 +39,7 @@ run so a failure is attributable.
 
 ---
 
-## Status At A Glance
+## Status
 
 | What was just completed | What's next |
 |---|---|
