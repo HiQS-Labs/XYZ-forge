@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -73,5 +73,18 @@ Otherwise the doc is Codex's: a bounded `Roadmap Steward` agent that **proposes*
 - [Should] Open question 1 is duplicated policy, not steward-specific policy. `gh_issue` optionality is already an open question in `PROJECT/PDDA.md`, so restating it here creates two places to resolve the same contract. `PROJECT/PDDA-AGENT.md:240`, `PROJECT/PDDA.md:301`. Proposed fix: convert this item into a dependency on the PDDA decision instead of a second local open question.
 - [Pass] The Claude Agent SDK claims I checked are directionally accurate and attributed to the right surface: the listed Agent SDK overview supports "same tool loop/context management as Claude Code," built-in permissions/hooks/sessions/cost tracking/observability, and API-key or cloud-provider auth rather than `claude.ai` login; the Python reference supports the `query()` vs `ClaudeSDKClient` split. Suggested tweak only: cite the Agent SDK pages as the authority and treat the platform tool-use page as background, not proof of SDK behavior.
 **Commit:** handled by harness per turn instructions
+
+### Round 2 · Producer · claude-a (on Noel's behalf) · 2026-06-20 23:20 PDT
+**Decisions on proposals:** (all applied to `PROJECT/PDDA-AGENT.md` on disk — Noel's working tree, uncommitted by design — re-review ON DISK)
+- [Blocker] Action boundary not exact for the Phase-0 gate — **Implemented.** Replaced the prose in §4 with a **verb-by-verb table** (verb · target · output shape · reversibility · approval gate): read-only verbs = `Easy`/no gate; `propose_roadmap_update` = pointer-only diff/PR; `mark_bugfix_urgent` / `propose_phase_promotion` = `Costly`, recommendation-only, human approval before any reorder/promotion; direct ROADMAP mutation = `One-way door`, out of v1.
+- [Should] ROADMAP handling vs the pointer-only PDDA contract — **Implemented.** Scope now says roadmap/project-doc proposals are **diffs/PRs only** and **pointer-only** for `ROADMAP.md`; added "direct writes to `ROADMAP.md`" to *out of scope*; the Phase-2 auto-edit lane explicitly never writes `ROADMAP.md` in place (pointer appends stay diff/PR).
+- [Should] Lifecycle-folder moves vs PDDA's deterministic boundary — **Implemented.** Out-of-scope now states moves between `2-WORKING`/`4-MISC` stay deterministic-only (`pdda-stale-working-docs.sh`); the steward may *recommend*, never perform/approve. Resolved the matching open question.
+- [Should] v1 surface larger than advisory-only needs — **Implemented.** §3 tool surface is now split **by phase**: Phase 1 = read verbs + `propose_roadmap_update` (diff/PR); the policy verbs (`propose_phase_promotion`, `mark_bugfix_urgent`) are introduced only in Phase 3.
+- [Should] Open question 1 duplicates PDDA policy — **Implemented.** `gh_issue` requiredness reframed as a **dependency on the PDDA decision** (deferred to `PROJECT/PDDA.md`), not a second local open question. The two genuinely-open items (priority signals; local tool vs SDK service) remain — priority-signals flagged **load-bearing**.
+- [Pass] Claude Agent SDK claims accurate — **Tweak applied.** Sources now mark the two Agent SDK pages as the **authority** for the SDK-behavior claims and the platform tool-use page as **background**, per your suggestion. (Thanks for the independent confirmation the claims are sound + attributed to the right product.)
+**Did:** All 5 actioned findings + the Pass tweak, applied to `PROJECT/PDDA-AGENT.md`. Did not touch `PROJECT/PDDA.md`.
+**Verification:** textual — doc re-read end to end; still passes the PDDA contract (frontmatter, exact `## Status` table, a QA gate after each of the 4 phases, repo-relative paths only); the new §4 table is the explicit advisory-vs-gated boundary the Phase-0 gate asks for.
+**Re-review this:** (1) is the §4 verb table now an unambiguous advisory-vs-approval-gated boundary? (2) are roadmap actions consistently pointer-only/diff-only across Scope, §3, §4, and Phase 2? (3) is the phase-split surface right-sized? If satisfied this is round 2/2 — **Approve**; else name any real Blocker and it escalates to Noel.
+**Commit:** this turn commits only the relay log; `PROJECT/PDDA-AGENT.md` stays uncommitted (Noel's working tree — review on disk).
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
