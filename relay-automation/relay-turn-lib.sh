@@ -37,12 +37,14 @@
 # If rtl_enforce completes without violation the shim then exits 7 to report the timeout.
 
 rtl_is_reviewer_turn() {  # <relay_file> — true if the file's NEXT pointer names the Reviewer role
-  # The relay protocol's NEXT pointer names the ROLE that acts next (Producer | Reviewer). A reviewer
-  # only appends findings to the relay file; it must never edit the artifact. Portable match (no GNU
-  # \b): BSD/macOS grep -E + POSIX classes. Missing/closed (NEXT: None) → not a reviewer turn.
-  local f="$1"
+  # The relay protocol's NEXT pointer (the FIRST `NEXT:` line — the header) names the ROLE that acts
+  # next (Producer | Reviewer). A reviewer only appends findings to the relay file; it must never edit
+  # the artifact. Match the header line only, so a body/instruction mention of "NEXT: Reviewer" can't
+  # false-trigger. Portable (no GNU \b): BSD/macOS grep -E + POSIX classes. Missing/None → not reviewer.
+  local f="$1" line
   [[ -f "$f" ]] || return 1
-  grep -iqE '^[[:space:]]*NEXT:[[:space:]]*Reviewer' "$f"
+  line="$(grep -iE '^[[:space:]]*NEXT:' "$f" 2>/dev/null | head -1)"
+  printf '%s' "$line" | grep -iqE 'Reviewer'
 }
 
 rtl_init() {  # <root> <relay_file> <allow_csv>
@@ -114,7 +116,10 @@ rtl_worktree_begin() {
     if [[ -e "$RTL_ROOT/$a" ]]; then
       mkdir -p "$wt/$(dirname "$a")"
       cp -R "$RTL_ROOT/$a" "$wt/$a"
-    fi
+    else
+      rm -rf "$wt/$a"                  # allowlisted path ALREADY deleted in the host tree → mirror the
+                                       # deletion, else the HEAD checkout would resurrect it on copy-back
+    fi                                 # (Codex review r2, 2026-06-20 — symmetric to the in-turn delete)
   done
   RTL_WT="$wt"
   printf '%s\n' "$wt"
@@ -123,8 +128,10 @@ rtl_worktree_begin() {
 rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist back unless off-lane found
   # Contain + DETECT: if the agent touched anything outside {allowlist, .tick} in the worktree, that's
   # an off-lane attempt — do NOT copy anything back (the turn must fail like an in-ROOT exit-6), set
-  # RTL_WT_OFFLANE=1, and destroy the worktree. Otherwise copy ONLY the allowlist back to RTL_ROOT
-  # (forward-only: edits/creates propagate; deletions do not — v1) and destroy the worktree.
+  # RTL_WT_OFFLANE=1, and destroy the worktree. Otherwise copy ONLY the allowlist back to RTL_ROOT —
+  # edits/creates propagate, AND an allowlisted path the turn DELETED in the worktree is removed from
+  # RTL_ROOT too (so an isolated Producer that deletes an artifact isn't silently undone — Codex review
+  # 2026-06-20) — then destroy the worktree.
   local wt="${1:-${RTL_WT:-}}" a entry xy path
   RTL_WT_OFFLANE=0
   [[ -n "$wt" && -d "$wt" ]] || return 0
@@ -141,6 +148,8 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
       if [[ -e "$wt/$a" ]]; then
         mkdir -p "$RTL_ROOT/$(dirname "$a")"
         cp -R "$wt/$a" "$RTL_ROOT/$a"
+      elif [[ -e "$RTL_ROOT/$a" ]]; then
+        rm -rf "$RTL_ROOT/$a"            # allowlisted path deleted in the worktree → propagate the deletion
       fi
     done
   fi
@@ -155,16 +164,27 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # literal role "Producer" because "the other agent" was unnamed. RELAY_PEER closes that ambiguity.
   local handoff="release --to the other agent (the role named by NEXT in the file)"
   [[ -n "$peer" ]] && handoff="release --to ${peer}"
+  # Emit repo-root-relative paths so they resolve against the turn's CWD — which under worktree
+  # isolation IS the throwaway worktree. An ABSOLUTE path here would invite the model to write straight
+  # into RTL_ROOT, bypassing the worktree (Codex review 2026-06-20). RTL_ROOT is set by rtl_init (always
+  # called first). Residual: a sync absolute write the model constructs itself is still backstopped by
+  # rtl_enforce on ROOT (revert + exit 6); an ASYNC one remains the known process-detachment gap.
+  local root="${RTL_ROOT:-}" f_rel csv_rel="" p _a
+  f_rel="${f#"${root:+$root/}"}"
+  if [[ -n "$csv" ]]; then
+    IFS=',' read -ra _a <<<"$csv"
+    for p in "${_a[@]}"; do [[ -n "$p" ]] && csv_rel+="${csv_rel:+,}${p#"${root:+$root/}"}"; done
+  fi
   # REVIEWER-turn scoping: drop the csv from the "edit only" clause and tell the model plainly it must
   # not edit the artifact — so the prompt matches the relay-file-only allowlist rtl_init enforces (an
   # agent told it MAY edit X and then reverted is needless friction; tell it the truth up front).
   local role_note=""
   if rtl_is_reviewer_turn "$f"; then
-    csv=""
+    csv_rel=""
     role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn.'
   fi
   printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. Use ./bin/tick for the %s token (claim/ping, then %s, or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s Do NOT run git (no add/commit/push) and do NOT touch any other file — the harness commits for you.' \
-    "$agent" "$f" "$task" "$handoff" "$f" "${csv:+ and: $csv}" "$role_note"
+    "$agent" "$f_rel" "$task" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note"
 }
 
 rtl_before() {

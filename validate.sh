@@ -35,6 +35,7 @@ TESTS=(
   "agy-turn.sh"
   "claude-turn.sh"
   "worktree-isolation.sh"
+  "shim-worktree.sh"
   "marathon-yaml.sh"
   "marathon-drive.sh"
   "marathon.sh"

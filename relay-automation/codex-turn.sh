@@ -20,6 +20,8 @@ set -euo pipefail
 #                     CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox' or add -c approval_policy=never.
 #   CODEX_TURN_ROOT — git root to guard (default: this repo); tests point at a fixture
 #   CODEX_LOG       — where to write the codex transcript (default: stderr)
+#   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
+#                     async/side-effect containment; off-lane in the worktree → exit 6). Default OFF.
 #
 #   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
 #                          runaway codex CLI is killed after this many seconds; the turn exits 7.
@@ -60,13 +62,41 @@ CODEX_LOG="${CODEX_LOG:-${TMPDIR:-/tmp}/codex-turn-$$.log}"
 rtl_before
 turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
 bounded_rc=0
+
+# Worktree isolation (opt-in; ROADMAP Part A Phase 3.6 — same wiring as claude-turn.sh / agy-turn.sh).
+# When RELAY_WORKTREE_ISOLATION=1, run codex with CWD = a THROWAWAY git worktree of ROOT@HEAD, so any
+# async/background write lands in a tree we delete, never ROOT. .tick stays SHARED via TICK_REPO_ROOT.
+# Default OFF → the in-ROOT run below is byte-for-byte the prior behaviour.
+wt=""; cwd_wrap=()
+if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
+  if wt="$(rtl_worktree_begin)"; then
+    export TICK_REPO_ROOT="$ROOT"
+    cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
+    printf 'codex-turn: worktree isolation ON (%s)\n' "$wt" >&2
+  else
+    printf 'codex-turn: worktree isolation requested but `git worktree add` failed — failing turn\n' >&2
+    exit 5
+  fi
+fi
+
 # Billing guard: strip OPENAI_API_KEY from the codex subprocess env so a Codex turn ALWAYS bills
 # against the ChatGPT-subscription login (`~/.codex/auth.json` auth_mode=chatgpt), never per-token API
 # credits — even if some ambient session exported a key. Set CODEX_ALLOW_API_KEY=1 to opt back in.
 codex_env=(env)
 [[ "${CODEX_ALLOW_API_KEY:-0}" == "1" ]] || codex_env+=(-u OPENAI_API_KEY)
-rtl_run_bounded "$turn_timeout" "${codex_env[@]}" "$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
+rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "${codex_env[@]}" "$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
   || bounded_rc=$?
+
+# Worktree teardown FIRST (regardless of rc). Copies the allowlist back to ROOT unless an off-lane
+# change was detected → exit 6 (containment takes precedence over timeout 7 / failure 5).
+if [[ -n "$wt" ]]; then
+  rtl_worktree_end "$wt"
+  if [[ "${RTL_WT_OFFLANE:-0}" == "1" ]]; then
+    printf 'codex-turn: codex made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)\n' >&2
+    exit 6
+  fi
+fi
+
 if [[ "$bounded_rc" -eq 7 ]]; then
   printf 'codex-turn: codex exec exceeded %ss wall-clock cap — killed\n' "$turn_timeout" >&2
 elif [[ "$bounded_rc" -ne 0 ]]; then
