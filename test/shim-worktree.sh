@@ -32,6 +32,8 @@ printf 'built\n' >> artifact.txt                  # legit allowlist edit (relati
 printf '\n### Round 1 · Builder\n' >> relay.md     # legit relay edit (relative to CWD)
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to claude-a >/dev/null 2>&1
 [ "${STUB_MODE:-good}" = offlane ] && printf 'sync off-lane\n' > offlane-sync.txt   # relative off-lane
+[ "${STUB_MODE:-good}" = del ] && rm -f artifact.txt                                 # delete an allowlisted file
+[ "${STUB_MODE:-good}" = abs_offlane ] && printf 'abs leak\n' > "$A/abs-leak.txt"    # ABSOLUTE write to ROOT (bypasses CWD)
 exit 0
 STUB_EOF
 chmod +x "$STUB"
@@ -79,6 +81,24 @@ check_shim(){ # <label> <run-fn> <agent>
   "$run" "WT-$label-noiso" good 0; rc=$?
   [ "$rc" -eq 0 ] && pass "$label: non-isolated good turn exits 0 (unchanged path)" || fail "$label: non-isolated rc=$rc"
   [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "$label: non-isolated turn committed normally" || fail "$label: expected a commit (OFF path)"
+  # (4) isolation ON, allowlisted DELETE: the deletion propagates back to ROOT (Codex B2: forward-only fix).
+  git -C "$A" checkout -- artifact.txt relay.md >/dev/null 2>&1
+  seed_token "WT-$label-del" "$agent"
+  before="$(git -C "$A" rev-parse HEAD)"
+  "$run" "WT-$label-del" del 1; rc=$?
+  [ "$rc" -eq 0 ] && pass "$label: isolated delete turn exits 0" || fail "$label: isolated delete rc=$rc"
+  [ ! -e "$A/artifact.txt" ] && pass "$label: allowlisted deletion propagated to ROOT" || fail "$label: artifact.txt should be deleted in ROOT"
+  [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "$label: deletion committed" || fail "$label: expected a commit for the deletion"
+  printf 'seed\n' > "$A/artifact.txt"; git -C "$A" add artifact.txt >/dev/null 2>&1; git -C "$A" commit -q -m "restore artifact" >/dev/null 2>&1   # restore for the next case
+  # (5) isolation ON, ABSOLUTE off-lane write to ROOT: not contained by the worktree, but the rtl_enforce
+  #     ROOT backstop still reverts it + fails the turn (Codex B1: sync absolute write is caught, exit 6).
+  git -C "$A" checkout -- artifact.txt relay.md >/dev/null 2>&1
+  seed_token "WT-$label-abs" "$agent"
+  before="$(git -C "$A" rev-parse HEAD)"
+  "$run" "WT-$label-abs" abs_offlane 1; rc=$?
+  [ "$rc" -eq 6 ] && pass "$label: absolute off-lane write -> rtl_enforce backstop fails the turn (exit 6)" || fail "$label: abs off-lane should exit 6, got $rc"
+  [ ! -e "$A/abs-leak.txt" ] && pass "$label: absolute off-lane file reverted from ROOT" || fail "$label: abs-leak.txt leaked into ROOT"
+  [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "$label: no commit on the absolute off-lane turn" || fail "$label: should not commit"
 }
 
 check_shim codex run_codex codex
