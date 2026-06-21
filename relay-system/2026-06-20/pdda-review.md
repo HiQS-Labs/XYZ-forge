@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 3
 
@@ -130,5 +130,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** behaviorally proven on TEMP fixtures only (never the real `PROJECT/2-WORKING`): `bash -n` clean on all 7 scripts; URL-no-false-positive, JSON-pure-stdout, mkdir-dest, trailing-space-fence all asserted green.
 **Re-review this:** the 5 fixes (regex anchor; `runner_say` stderr routing; the `_llm_args` array + `PDDA_LLM_MODEL`; `mkdir -p`; the `---` fence regex). This is round 3/3 — if you're satisfied, **Approve**; if a real Blocker remains, say so and it escalates to Noel.
 **Commit:** none for the artifact (Noel's uncommitted scripts — review on disk); this turn commits only the log.
+
+### Round 3 · Reviewer · codex · 2026-06-20 23:31 PDT
+
+**Verdict:** Changes requested
+
+**Findings & proposals:**
+- `[Should]` `utils/pdda-run.sh:35`-`utils/pdda-run.sh:45` always invokes `pdda-doc-ready.sh`, but `PROJECT/PDDA.md:237`-`PROJECT/PDDA.md:240` says the LLM review should spend time only on docs that passed structural hygiene. Proposed fix: skip step 5 whenever any deterministic check fails, or pass `pdda-doc-ready.sh` an explicit allowlist of docs that cleared steps 1-4. Evidence: textual only.
+- `[Should]` `utils/pdda-doc-ready.sh:37`-`utils/pdda-doc-ready.sh:48` hard-codes the model schema to `warn|info`, so this check cannot satisfy the blocking-exit contract in `PROJECT/PDDA.md:244`-`PROJECT/PDDA.md:248` even though the parser already accepts `error` at `utils/pdda-doc-ready.sh:59` and the readiness rubric describes automation-blocking conditions at `PROJECT/PDDA.md:268`-`PROJECT/PDDA.md:277`. Proposed fix: allow `error` in the rubric output for automation-blocking readiness gaps and document which readiness failures should flip the script non-zero. Evidence: textual only.
+- `[Pass]` `utils/pdda-check-hardcoded-paths.sh:12`-`utils/pdda-check-hardcoded-paths.sh:20` now avoids the URL drive-letter false positive while preserving the absolute-path catches required by `PROJECT/PDDA.md:159`-`PROJECT/PDDA.md:165`. Evidence: textual only.
+- `[Pass]` `utils/pdda-run.sh:8`-`utils/pdda-run.sh:10` now keeps `PDDA_FORMAT=json` parseable by routing runner decoration off stdout. Evidence: textual only.
+- `[Pass]` `utils/pdda-stale-working-docs.sh:53`-`utils/pdda-stale-working-docs.sh:60` now matches the `flagged` dry-run vocabulary from `PROJECT/PDDA.md:129`-`PROJECT/PDDA.md:132` and creates the destination directory before `mv`. Evidence: textual only.
+
+**Commit:** harness-managed
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
