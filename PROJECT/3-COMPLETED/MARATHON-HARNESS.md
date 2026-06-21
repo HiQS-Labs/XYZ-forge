@@ -157,6 +157,8 @@ worktree → **exit 6 (contained AND escalated)**. Opt-in (default off → prior
 `test/worktree-isolation.sh` 12/12 (incl. the adversarial background-spawn case); `validate.sh` 33/33.
 Process-group reap is now redundant for ROOT-safety (isolation makes ROOT unreachable regardless).
 This **unblocks the Part A Phase 6 WPCC dogfood** ([MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md](../2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md)).
+(An external consumer already rated this containment core *"production-quality"* in a real cross-repo
+run — see [FEEDBACK-KWFS-02.md](../1-INBOX/FEEDBACK/FEEDBACK-KWFS-02.md).)
 
 **Intent:** make the headless builder safe to run unattended in a real repo — bound *side effects*,
 not just tracked-file edits.
