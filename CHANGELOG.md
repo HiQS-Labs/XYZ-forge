@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-20
 
+### Safeguards hardening — Codex review relay (3 rounds, Approved)
+Ran an automated Codex review relay on safeguards #1+#2 (`relay-system/2026-06-20/containment-safeguards-review.md`, driven by `relay-drive.sh --agent-cmd codex-turn.sh`). Codex found **3 real bugs in the shared worktree core** across 3 rounds, each fixed + regression-tested before the next round; **Approved** at r3. (Bonus dogfood: safeguard #1 contained Codex's own reviewer turns live.)
+- **Prompt path relativization** (`rtl_turn_prompt`): emitted raw paths; an absolute path invited the model to write into ROOT, bypassing the worktree. Now emits repo-root-relative paths (resolve against CWD = the worktree under isolation). The residual sync absolute-write is caught by the `rtl_enforce` ROOT backstop (exit 6, tested); async absolute writes remain the documented process-detachment gap.
+- **In-turn delete propagation** (`rtl_worktree_end`): copy-back was forward-only; an allowlisted file deleted *during* an isolated turn wasn't removed from ROOT. Now propagated.
+- **Pre-existing delete resurrection** (`rtl_worktree_begin`): a file already deleted in the dirty host tree kept its `HEAD` copy in the worktree and was copied back, silently undoing the delete. The seed loop now mirrors host deletions into the worktree.
+- `test/shim-worktree.sh` 18→**32**; `test/worktree-isolation.sh` 12/12 (no regression); suite **35/35**. All three fixes live in the shared core, so `claude-turn.sh` inherits them too.
+
 ### Safeguard #2 — worktree isolation wired into the agy + codex shims
 The airtight async/side-effect containment that existed only in `claude-turn.sh` (a throwaway `git worktree` of `ROOT@HEAD`; only the allowlist copies back; off-lane → exit 6) is now opt-in for the cross-model turn-takers too: `RELAY_WORKTREE_ISOLATION=1` runs `agy`/`codex` with `CWD` = the worktree, so a background or absolute-of-CWD write can't reach the real repo. Default OFF → byte-for-byte the prior in-ROOT behaviour. The wiring is a byte-identical mirror of `claude-turn.sh` (begin → `cwd_wrap` → teardown → off-lane exit 6). New `test/shim-worktree.sh` proves both shims contain an off-lane write and copy back a good turn (18/0, OFF baseline included); suite 35/35. Complements Safeguard #1: a reviewer overstep is now contained two ways (allowlist scope + worktree).
 
