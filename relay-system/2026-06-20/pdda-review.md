@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -92,5 +92,30 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** behaviorally proven against TEMP fixtures only (never the real `PROJECT/2-WORKING`, so no docs were moved): `bash -n` clean on all 7 scripts; quoted-date / tight-header / BOM / JSON-mode / flagged-action / doc-ready-skip all asserted; full `pdda-run.sh` (dry-run) → "all checks passed", exit 0.
 **Re-review this:** (1) `utils/pdda-doc-ready.sh` — is the opt-in/graceful-skip + JSON-line parsing sound, and does it honor the design's "do not rewrite / do not re-lint" constraints? (2) the tightened header + quoted-date + BOM fixes — any new false-positive/negative? (3) the `PDDA_FORMAT=json` shape. (4) Was declining the `cells` nit correct?
 **Commit:** none for the artifact (Noel's uncommitted scripts — review on disk); this relay turn commits only the log.
+
+### Round 2 · Reviewer · agy · 2026-06-20 22:30 PDT
+
+**Verdict:** Changes requested
+
+**Findings & proposals:**
+- `[Should]` **Hardcoded paths drive-letter false positive on URLs:** The drive-letter regex `[A-Za-z]:/` matches schemes in URLs like `http://` or `https://` (since `p:/` and `s:/` match the regex), causing false positives on any document containing web links.
+  - *Proposed fix:* Match only when not preceded by an alphanumeric character: change line 20 in `utils/pdda-check-hardcoded-paths.sh` to match `(^|[^[:alnum:]_])[A-Za-z]:[/\\]`. (Evidence: textual only)
+- `[Should]` **Composability gap in `pdda-run.sh` in JSON mode:** When `PDDA_FORMAT=json`, the individual scripts emit JSON lines, but the main runner `pdda-run.sh` still prints human-readable section headers and status text to stdout, corrupting the JSON stream for downstream parsers.
+  - *Proposed fix:* In `utils/pdda-run.sh`, redirect non-JSON `printf` statements to stderr or suppress them when `PDDA_FORMAT=json`. (Evidence: textual only)
+- `[Should]` **Unquoted `PDDA_LLM_ARGS` in `pdda-doc-ready.sh` breaks space-containing arguments:** Unquoted expansion of `PDDA_LLM_ARGS` splits options containing spaces (e.g., `--model "Gemini 3.5"`) into separate arguments, causing command execution failures.
+  - *Proposed fix:* In `utils/pdda-doc-ready.sh` line 69, handle model arguments safely (such as using a bash array). (Evidence: textual only)
+- `[Should]` **Missing destination directory creation in stale docs mover:** `pdda-stale-working-docs.sh` moves files to `$PDDA_MISC_DIR` but does not ensure the directory exists.
+  - *Proposed fix:* Run `mkdir -p "$PDDA_MISC_DIR"` before moving files in `utils/pdda-stale-working-docs.sh`. (Evidence: textual only)
+- `[Nit]` **Frontmatter checks fail on trailing spaces on `---` lines:** `pdda_frontmatter_lines` and `pdda_has_frontmatter` check `$0 == "---"`, which fails if the line has trailing whitespace.
+  - *Proposed fix:* In `utils/pdda-lib.sh` lines 146, 147, and 156, check match against `/^---[[:space:]]*$/` instead of strict equality. (Evidence: textual only)
+- `[Nit]` **Unenforced `ROADMAP.md` contract:** `PDDA.md` defines a "ROADMAP.md contract" specifying it should be a pointer file and not contain detailed checklists, but `ROADMAP.md` currently contains extensive checklists and no script enforces this.
+  - *Proposed fix:* Consider adding a basic validation check or updating the roadmap to conform to the pointer-only contract. (Evidence: textual only)
+- `[Pass]` **Missing `pdda-doc-ready.sh` (LLM readiness check):** Created correctly as step 5, handles graceful skip and parses JSON output correctly. (Evidence: textual only)
+- `[Pass]` **Quoted date values:** Strip quotes before performing date regex check correctly resolved. (Evidence: textual only)
+- `[Pass]` **Loose status table header:** Strict heading matching successfully implemented. (Evidence: textual only)
+- `[Pass]` **Output format contract:** `PDDA_FORMAT` implemented and outputs JSON lines correctly for check scripts. (Evidence: textual only)
+- `[Pass]` **BOM / leading whitespace parsing:** Handled correctly. (Evidence: textual only)
+
+**Commit:** pending (harness-managed)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
