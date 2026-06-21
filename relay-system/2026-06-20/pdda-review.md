@@ -39,7 +39,7 @@ The operator just said "take your turn on this file." Everything you need is **i
 6. Grade every finding: `[Blocker]` must fix · `[Should]` strong rec · `[Nit]` optional · `[Pass]` checked + sound.
 7. The Reviewer posts a Verdict. Relay ends on **Approved**; else the orchestrator carries the findings back to Noel.
 8. End your turn by committing it: `relay(pdda-review): <role> r<N>`. No push.
-9. **One actor at a time.** The `PDDA-TURN` tick token is the lock.
+9. **One actor at a time.** The `PDDA-TURN-R3` tick token is the lock (the original `PDDA-TURN` is stuck-claimed by agy's hung r3 turn; a fresh token routes the Codex closing pass).
 10. **Evidence:** the scripts ARE runnable — prefer `behaviorally proven` (you ran a script against a fixture) over `textual only` where you can; otherwise say `textual only`.
 
 ## Roles
