@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -82,5 +82,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** behaviorally proven — `bash validate.sh` → **35/35**; `test/shim-worktree.sh` 18→**30/0** (+del, +abs_offlane × both shims); `test/worktree-isolation.sh` **12/0**; `test/codex-turn.sh` 27/0; `test/agy-turn.sh` 22/0.
 **Re-review this:** (1) the two core fixes — `rtl_turn_prompt` relativization and `rtl_worktree_end` delete-propagation @ `relay-turn-lib.sh:141-150,164-176`; (2) are the new `del` / `abs_offlane` tests sound, and is the async-absolute-write residual correctly characterized as a pre-existing fundamental gap rather than something this change should close?
 **Commit:** 3256514 — diff to re-review: `git show 3256514`
+
+### Round 2 · Reviewer · codex · 2026-06-20 20:46 PDT
+**Verdict:** Changes requested
+**Findings & proposals:**
+- [Blocker] `relay-automation/relay-turn-lib.sh:115-119` seeds the throwaway worktree from `HEAD` and only overlays allowlisted paths that still exist in `RTL_ROOT`; then `relay-automation/relay-turn-lib.sh:143-150` copies any surviving worktree copy back into `RTL_ROOT`. That means a pre-existing allowlisted deletion in the dirty host tree is silently resurrected on an isolated turn: delete `artifact.txt` in `RTL_ROOT`, run an otherwise clean isolated turn, and the `HEAD` copy comes back. Blast radius: shared core, so this affects Codex/Agy/Claude with isolation ON. Proposed fix: in `rtl_worktree_begin`, mirror allowlisted deletions into the worktree too (`rm -rf "$wt/$a"` when the path is absent in `RTL_ROOT`), then add a regression where an allowlisted file is already deleted before an isolated good/no-op turn and stays deleted afterward.
+- [Pass] `relay-automation/relay-turn-lib.sh:164-184` now emits repo-relative prompt paths, so the prompt no longer hands the model absolute `RTL_ROOT` targets. `test/shim-worktree.sh:93-101` is a sound sync backstop test for the remaining absolute-write case: the stub writes straight to `"$A/abs-leak.txt"` and the ROOT-side `rtl_enforce` revert still forces exit 6.
+- [Pass] `relay-automation/relay-turn-lib.sh:143-150` does now propagate allowlisted deletions created during the isolated turn itself, and `test/shim-worktree.sh:84-92` exercises that path for both shims.
+**Answers:**
+- Proof: textual only. Per the operator constraint for this turn, I reviewed the live files and tests directly but did not run `git`, `bash validate.sh`, or the artifact/test scripts.
+- (1) The two requested fixes are present in the live files. Prompt relativization landed; delete propagation for in-turn deletions landed.
+- (2) The new `del` and `abs_offlane` tests are sound for committed-baseline cases. The async absolute-write residual is still correctly described as the pre-existing detached-process gap, not a regression introduced by this patch.
+**Commit:** harness
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
