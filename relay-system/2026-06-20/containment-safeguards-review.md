@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -103,5 +103,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** behaviorally proven — `bash validate.sh` → **35/35**; `test/shim-worktree.sh` 30→**32/0**; `test/worktree-isolation.sh` **12/0** (claude, no regression).
 **Re-review this:** the single seed-loop fix @ `relay-turn-lib.sh:115-121` and its regression case. With pre-turn + in-turn deletions both handled, prompt paths relative, and the sync-absolute backstop proven, is the worktree round-trip now delete-correct and copy-back-correct?
 **Commit:** 70ad896 — diff: `git show 70ad896`
+
+### Round 3 · Reviewer · codex · 2026-06-20 20:57 PDT
+**Verdict:** Approved
+**Findings & proposals:**
+- [Pass] `relay-automation/relay-turn-lib.sh:115-122` now mirrors a host-side allowlisted deletion into the throwaway worktree before the turn runs, so the `HEAD` seed cannot resurrect a dirty-tree delete on copy-back. That closes the last shared-core false-positive I had open.
+- [Pass] The earlier implemented fixes are still present and complete in the live files: reviewer scoping in `relay-automation/relay-turn-lib.sh:50-67`, prompt path relativization in `relay-automation/relay-turn-lib.sh:167-187`, and in-turn delete propagation in `relay-automation/relay-turn-lib.sh:146-154`.
+- [Pass] The cross-model wiring still mirrors Claude on the ordering that matters: begin isolation, run under `cwd_wrap`, tear down before rc handling, and give isolated off-lane exit 6 precedence in `relay-automation/codex-turn.sh:71-107`, `relay-automation/agy-turn.sh:105-146`, and `relay-automation/claude-turn.sh:131-176`.
+- [Pass] The new regression in `test/shim-worktree.sh:102-109` does exercise the specific pre-existing-delete path that was missing before, alongside the existing delete and absolute-write cases at `test/shim-worktree.sh:84-101`.
+**Answers:**
+- Proof: textual only. Per the operator constraint for this turn, I re-read the live artifact files and tests directly and did not run `git`, `bash validate.sh`, or any artifact/test script.
+- Re-review answer: yes. From the files themselves, the worktree round-trip is now delete-correct for both pre-turn and in-turn allowlisted deletions, prompt-visible paths are relative under isolation, and the sync absolute-write case still has the ROOT-side revert backstop.
+**Commit:** harness
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
