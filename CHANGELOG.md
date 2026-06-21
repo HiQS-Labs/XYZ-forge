@@ -2,6 +2,16 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-21
+
+### ROADMAP.md → PDDA pointer/ledger + 3-mode enforcement
+Brought `ROADMAP.md` onto the PDDA "ROADMAP.md contract" rails: **636 → 74 lines**, now a pure pointer/ledger. All execution detail moved **losslessly** into canonical `PROJECT/**` docs (verified line-by-line), plus two anti-sprawl safeguards and a PDDA enforcement-mode ramp.
+- **Relocated content (new canonical docs):** Part A harness build (Phases 2/3/3.6/4 + model-assignment table + cross-model `agy` note) → `PROJECT/3-COMPLETED/MARATHON-HARNESS.md`; Part B (epoch fencing → chaos → cross-repo E2E → reference deploy) → `PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md`; Part C (gated self-improvement-loop vision) → `PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md`. Phase 1/5 (cost) and Phase 6 (WPCC dogfood) already lived in their docs — pointed at, not duplicated. Only intentional drop: an obsolete "dispatcher not built yet" caveat; the external "production-quality" containment cite was preserved into the harness doc.
+- **ROADMAP is now a ledger** (In progress / Completed / Deferred·vision, one line per Part·Phase with links + anchors) + slim Status, model heuristic, and a short operational carve-out. Top contract banner added.
+- **Safeguard — deterministic:** new `utils/pdda-check-roadmap.sh` errors on task-checklists / `### Checklist` / `### QA checklist` headings, warns on line/heading sprawl (exempts fenced + blockquote carve-outs); wired into `pdda-run.sh`. `PROJECT/PDDA.md` contract hardened (maintainer rule + how-enforced) and synced into `PROJECT/AGENTS-DOCS.md`.
+- **PDDA 3-mode enforcement:** `observe` → `light` → `full` adoption ramp via `PDDA_MODE` / a repo-root `.pdda-mode` (default `observe`; this repo ships `full`). observe = report-only / no moves / never blocks; light = moves stale docs but never blocks; full = errors block. Plumbed through `pdda-lib.sh` (`pdda_gated_exit`), every check, and the runner mode banner; documented in PDDA.md "Enforcement modes".
+- **Verified:** `pdda-run.sh` green in full mode (6/6 checks, no stale moves); negative test confirms the roadmap check blocks in `full` / reports-but-passes in `observe` with the blockquote carve-out exempt; `validate.sh` still passes (sandbox-off).
+
 ## 2026-06-20
 
 ### Safeguards hardening — Codex review relay (3 rounds, Approved)
