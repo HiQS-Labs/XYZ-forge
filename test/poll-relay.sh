@@ -90,5 +90,25 @@ out="$(bash "$DRIVE" --relay-file "$R4" --relay-task RELAY-TURN-4 --dry-run 2>&1
 echo "$out" | grep -q "WOULD drive turn for agent: ra" && pass "dry-run names the actor" || fail "dry-run missing actor: $out"
 [ "$rc" -eq 0 ] && [ "$(blocks "$R4")" -eq 0 ] && pass "dry-run mutates nothing" || fail "dry-run should not mutate"
 
+# --- (5) bare absolute --agent-cmd path WITH SPACES is invoked, not split (regression) ---
+# The sibling-agent bug: a clone under ".../GH Repos/..." passed an absolute --agent-cmd; the old
+# `eval "$AGENT_CMD"` split on the space → exec'd the wrong token → the turn-taker never ran. The fix:
+# relay-drive runs a bare executable path DIRECTLY. We assert the taker actually ran (sentinel file) —
+# the precise behaviour the bug broke; full-closure is already covered by cases 1–4. The taker does a
+# real no-progress turn, so relay-drive escalates (exit 3) — we assert on the sentinel, not the exit.
+SPACED_DIR="$WORK/dir with space"; mkdir -p "$SPACED_DIR"
+STAKER="$SPACED_DIR/taker.sh"; SENTINEL="$WORK/spaced-taker-ran"
+rm -f "$SENTINEL"
+cat >"$STAKER" <<ST
+#!/usr/bin/env bash
+printf 'ran\n' > "$SENTINEL"
+ST
+chmod +x "$STAKER"
+R6="$A/relay6.md"; seed RELAY-TURN-6 "$R6"
+bash "$DRIVE" --relay-file "$R6" --relay-task RELAY-TURN-6 --agent-cmd "$STAKER" --round-cap 2 >/dev/null 2>&1
+[ -f "$SENTINEL" ] \
+  && pass "bare absolute --agent-cmd path with spaces is invoked directly (not split by eval)" \
+  || fail "spaced bare agent-cmd was not invoked — relay-drive split the path instead of running it"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

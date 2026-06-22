@@ -215,6 +215,14 @@ The shim is the containment contract, so an unattended turn can't run away:
 and **no push** (turns commit locally only — `git push` yourself when ready). `.tick/` is gitignored
 and per-device, so this is single-clone coordination, not cross-machine.
 
+**Worktree isolation is ON by default for driven runs.** `relay-drive.sh` exports
+`RELAY_WORKTREE_ISOLATION=1`, so each turn-taker runs in a throwaway `git worktree` of `ROOT@HEAD` and
+an off-task model's stray *creations/renames* (not just tracked edits) can't reach the real tree —
+closing the gap where the allowlist only reverted named tracked files. Opt out per run with
+`RELAY_WORKTREE_ISOLATION=0`. (Direct/attended shim use keeps the leaf default OFF.) Also: pass a
+turn-taker by its path — `--agent-cmd` runs a bare executable path directly, so an **absolute path with
+spaces** (a clone under `…/GH Repos/…`) is safe, no quoting needed.
+
 ## Verify the harness is green before a real run
 
 These are anchored on `$HARNESS` (set by the Preconditions block) so they resolve no matter what your

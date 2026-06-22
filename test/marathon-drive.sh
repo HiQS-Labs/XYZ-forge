@@ -173,11 +173,10 @@ grep -q "9" "$WORK/relay-drive-args" \
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
-# ── (11) agent-cmd path with spaces survives relay-drive's eval ────────────
-# Regression: the real relay-drive `eval "$AGENT_CMD"`s the turn-taker. A repo path with a
-# space (".../GH Repos/...") splits on the space unless marathon-drive shell-quotes it.
-# The default stub above only RECORDS args; this case uses a stub that EVALs them like the real
-# relay-drive (line 110), with the agent script living under a directory that contains a space.
+# ── (11) agent-cmd path with spaces survives relay-drive dispatch ──────────
+# Regression: relay-drive runs a BARE executable --agent-cmd directly (space-safe), falling back to
+# eval only for command strings. marathon-drive passes the path as-is (no %q quoting). This case uses
+# a stub that mirrors relay-drive's smart dispatch, with the agent script under a spaced directory.
 SPACED_AGENT="$WORK/dir with space/agent.sh"
 mkdir -p "$WORK/dir with space"
 cat > "$SPACED_AGENT" <<AG
@@ -191,7 +190,8 @@ cat > "$EVAL_RD" <<'RD'
 set -u
 acmd=""
 while (($# > 0)); do case "$1" in --agent-cmd) acmd="${2:-}"; shift 2 ;; *) shift ;; esac; done
-eval "$acmd"   # mirrors relay-drive.sh:110 — splits a spaced path unless the caller quoted it
+# mirrors relay-drive.sh: bare executable path → run directly (survives spaces); else eval.
+if [[ -x "$acmd" ]]; then "$acmd"; else eval "$acmd"; fi
 exit 0
 RD
 chmod +x "$EVAL_RD"
@@ -201,8 +201,8 @@ MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$SPACED_A
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
     --reviewer gemini --pre-advance-cmd "true" >/dev/null 2>&1 || true
 [ -f "$WORK/spaced-agent-ran" ] \
-  && pass "agent-cmd path with spaces survives relay-drive eval" \
-  || fail "spaced agent-cmd path broke relay-drive eval — marathon-drive must shell-quote --agent-cmd"
+  && pass "agent-cmd path with spaces survives relay-drive dispatch" \
+  || fail "spaced agent-cmd path broke relay-drive dispatch — bare path must be invoked directly"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 

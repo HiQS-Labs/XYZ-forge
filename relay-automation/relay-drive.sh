@@ -58,6 +58,13 @@ done
 [[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
 [[ -n "$AGENT_CMD" || "$DRY_RUN" -eq 1 ]] || { usage; die "--agent-cmd is required"; }
 
+# Containment default for unattended/driven runs: isolate the turn-taker in a throwaway worktree
+# (ROOT@HEAD) so an off-task model's stray creations/renames can't reach the real tree. The leaf
+# shims (codex/agy/claude-turn.sh) read RELAY_WORKTREE_ISOLATION; exporting it here makes every
+# DRIVEN turn contained by default. Opt out per run with RELAY_WORKTREE_ISOLATION=0. (Direct/attended
+# shim use keeps the leaf default OFF — only the orchestration layer defaults it ON.)
+: "${RELAY_WORKTREE_ISOLATION:=1}"; export RELAY_WORKTREE_ISOLATION
+
 file_status() { sed -n 's/^STATUS:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
 terminal_status() { case "$1" in Approved|Closed) return 0 ;; *) return 1 ;; esac; }
 
@@ -107,7 +114,15 @@ while ((round < ROUND_CAP)); do
   prev="$tstatus:$actor"
   RELAY_FILE="$RELAY_FILE" RELAY_TASK="$RELAY_TASK" RELAY_AGENT="$actor"
   export RELAY_FILE RELAY_TASK RELAY_AGENT
-  eval "$AGENT_CMD"
+  # Invoke the turn-taker. A bare executable path (even absolute or containing spaces, e.g. a clone
+  # under ".../GH Repos/...") is run DIRECTLY so it survives spaces; a full command string
+  # (env-prefixed, shell-quoted, or %q-escaped by a caller) falls back to eval. This fixes spaced
+  # absolute --agent-cmd paths without breaking the command-string contract callers/tests rely on.
+  if [[ -x "$AGENT_CMD" ]]; then
+    "$AGENT_CMD"
+  else
+    eval "$AGENT_CMD"
+  fi
   round=$((round + 1))
 
   # No-progress guard (skipped once terminal — the close check at loop top handles that).

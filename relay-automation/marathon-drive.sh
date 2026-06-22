@@ -231,16 +231,14 @@ log "phase start: running relay-drive --round-cap $ROUND_CAP"
 
 # ── Step 5: run relay-drive (the loop — unmodified) ────────────────────────
 
-# relay-drive runs the turn-taker via `eval "$AGENT_CMD"`, so the value must be a shell-quoted
-# command string — an un-quoted path with a space (".../GH Repos/...") would split on the space
-# and try to exec the wrong token. printf %q makes the path eval-safe (relay-drive stays unmodified).
-AGENT_CMD_Q="$(printf '%q' "$AGENT_CMD")"
+# relay-drive runs a bare executable --agent-cmd path directly (space-safe, even ".../GH Repos/..."),
+# falling back to eval only for command strings — so we pass the path as-is, no %q quoting needed.
 relay_exit=0
 RELAY_FILE="$RELAY_FILE" \
   "$RELAY_DRIVE_BIN" \
     --relay-file "$RELAY_FILE" \
     --relay-task "$RELAY_TASK" \
-    --agent-cmd  "$AGENT_CMD_Q" \
+    --agent-cmd  "$AGENT_CMD" \
     --round-cap  "$ROUND_CAP" \
   || relay_exit=$?
 

@@ -25,7 +25,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Ran the shakedown lens on relay-xyz: static path audit + a 6-scenario live matrix. Found the locator is GREEN everywhere; root-caused the real failure to symlink-only discovery (two sibling links already dangling). Applied two fixes: `install.sh` + anchored the SKILL.md verify-block. | Operator decision on the flagged-but-not-touched items: repair the dangling `consult`/`wpcc` symlinks and resolve the `GH Repos` vs `GitHub-Repos` clone split. Then commit + push. |
+| Discovery layer: shakedown lens → locator GREEN, root-caused symlink-only discovery, shipped `install.sh` + anchored the verify-block. Drive layer: a sibling-agent headless run exposed two cracks — fixed both: space-safe `--agent-cmd` dispatch (no more `eval` split on `…/GH Repos/…`) + worktree isolation defaulted ON for driven runs (closes the rogue-model containment gap). Suite green except a pre-existing `runner-loop.sh` failure (reproduces with these changes stashed; unrelated). | Operator decision on the flagged-but-not-touched items: repair the dangling `consult`/`wpcc` symlinks and resolve the `GH Repos` vs `GitHub-Repos` clone split. Optional follow-ups: minor #4a/#4b (role↔model assertion; per-run RELAY-TURN id). |
 
 > **Lens, not import.** Methodology borrowed from the Giant Brains `shakedown` skill; that skill stays
 > in its library. This doc is the native deliverable, written to `PROJECT/2-WORKING/` per the operator
@@ -127,6 +127,37 @@ wpcc    -> …/wp-code-check/skills/wpcc                    (DANGLING: target mi
    path that would 404 from a foreign session.
 3. **`SKILL.md` "First-time setup" section** added above Preconditions, pointing at `install.sh` and
    naming the "skills live in top-level `skills/`, Claude Code doesn't scan it" trap explicitly.
+
+## Drive-layer hardening (from a sibling-agent headless run)
+
+A sibling Claude Code agent drove a real Path-A relay against this harness from a *foreign clone*
+(codex reviewer, agy producer). It independently confirmed the discovery layer holds —
+`find-harness.sh` "worked cleanly from a foreign clone", and the no-push / file-scoped-commit boundary
+and codex turns ran clean — but it exposed two cracks one layer down, both now fixed:
+
+1. **Space-in-path bug — `relay-drive.sh:110` `eval "$AGENT_CMD"`.** An absolute `--agent-cmd` under
+   `…/GH Repos/…` word-split on the space (`…/GH: Permission denied`), so Path A was broken on the
+   operator's own default path. **Fix:** smart dispatch — a bare executable path is invoked directly
+   (`"$AGENT_CMD"`, space-safe); a command string (env-prefixed / shell-quoted / `%q`-escaped, as
+   `poll-relay` and `marathon-drive` pass) still falls back to `eval`. `marathon-drive.sh` simplified to
+   pass the bare path (dropped its `%q` workaround). Regression locked in `test/poll-relay.sh` (spaced
+   bare path is invoked, not split) + updated `test/marathon-drive.sh` case 11. **poll-relay 12/0,
+   marathon-drive 38/0.**
+2. **Containment not airtight under a rogue model.** The agy producer went off-task; the shim reverted
+   the tracked files it modified, but the allowlist sweep doesn't catch untracked *creations/renames*.
+   **Fix (operator-approved): worktree isolation defaulted ON for driven runs** — `relay-drive.sh`
+   exports `RELAY_WORKTREE_ISOLATION=1`, so each turn-taker runs in a throwaway `git worktree` of
+   `ROOT@HEAD` (off-lane creations can't reach ROOT). Override per run with `=0`. Implemented at the
+   drive layer (not the leaf shim default) to avoid the fragile blast radius on the shim unit tests;
+   the leaf default stays OFF for direct/attended use. No test runs `relay-drive → real shim`, so the
+   suite is unaffected by the new default.
+
+Logged, not yet done (sibling #4): (a) turn role follows the `NEXT:` pointer, not the model id — assert
+the acting model matches its assigned role; (b) `RELAY-TURN` is a singleton — a `done` token isn't
+reclaimable, so mint a unique task id per run (matches the known `relay-turn-token-reuse` note).
+
+Transparency: the sibling's 4 `relay(RELAY-SHAKEDOWN…)` turn commits were already on local `main` ahead
+of this work; the discovery-audit push carried them to `origin/main`. Operator elected to leave them.
 
 ## Flagged — NOT touched (needs operator sign-off)
 
