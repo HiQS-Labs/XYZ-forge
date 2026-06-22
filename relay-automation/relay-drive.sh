@@ -35,6 +35,7 @@ Usage: relay-automation/relay-drive.sh --relay-file PATH --agent-cmd CMD [option
                       release --to <other> | done) and commit.
   --relay-task ID     The relay turn-token task (default: RELAY-TURN).
   --round-cap N       Max turns before escalating (default: 6).
+  --target-root DIR   The target git repository root (must be an existing git repo).
   --dry-run           Print the turn it WOULD drive next, then stop (no invocation).
   --help
 EOF
@@ -49,6 +50,7 @@ while (($# > 0)); do
     --agent-cmd) AGENT_CMD="${2:-}"; shift 2 ;;
     --relay-task) RELAY_TASK="${2:-}"; shift 2 ;;
     --round-cap) ROUND_CAP="${2:-}"; shift 2 ;;
+    --target-root) TARGET_ROOT="${2:-}"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
@@ -57,6 +59,13 @@ done
 [[ -n "$RELAY_FILE" ]] || { usage; die "--relay-file is required"; }
 [[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
 [[ -n "$AGENT_CMD" || "$DRY_RUN" -eq 1 ]] || { usage; die "--agent-cmd is required"; }
+
+if [[ -n "${TARGET_ROOT+set}" ]]; then
+  if ! git -C "$TARGET_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
+    die "invalid target root (not a git repo): $TARGET_ROOT"
+  fi
+  export RELAY_TARGET_ROOT="$TARGET_ROOT"
+fi
 
 # Containment default for unattended/driven runs: isolate the turn-taker in a throwaway worktree
 # (ROOT@HEAD) so an off-task model's stray creations/renames can't reach the real tree. The leaf

@@ -3,7 +3,7 @@
   Single source of truth for this two-agent relay. Read this ENTIRE file before doing anything.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -49,5 +49,18 @@ DoD: flag parses + validates + exports; **default (no flag) behavior unchanged**
 
 ---
 ## Log
+
+### Round 1 · Producer · agy · 2026-06-21 23:36 PDT
+**Did:**
+- Added parsing for the `--target-root DIR` flag in the existing arg loop in [relay-drive.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/relay-automation/relay-drive.sh).
+- Validated that `DIR` is an existing git repo by verifying `git -C "$DIR" rev-parse --show-toplevel` succeeds, and `die`s if not.
+- Exported `RELAY_TARGET_ROOT="$DIR"` into the turn-taker env when the flag is present, leaving it unset if the flag is absent.
+- Documented `--target-root DIR` in the usage text of [relay-drive.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/relay-automation/relay-drive.sh).
+**Verified:**
+- Checked syntax of [relay-drive.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/relay-automation/relay-drive.sh) using `bash -n` to ensure clean syntax.
+- Verified all 35 tests passed successfully by running [validate.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/validate.sh).
+- Tested manually that running [relay-drive.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/relay-automation/relay-drive.sh) with an invalid target root `/invalid/path` correctly prints `relay-drive: invalid target root (not a git repo): /invalid/path` and exits with code 2.
+- Tested manually that running [relay-drive.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/relay-automation/relay-drive.sh) with a valid target root (the workspace root) and a dummy `--agent-cmd` correctly exports the environment variable `RELAY_TARGET_ROOT` inside the turn-taker environment.
+**Commit:** harness
 
 <!-- ↓↓↓ NEXT TURN APPENDS BELOW THIS LINE — do not write above it ↓↓↓ -->
