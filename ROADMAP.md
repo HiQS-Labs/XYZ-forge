@@ -68,6 +68,7 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 
 - **Part C — Autonomous self-improvement loop** 🔮 gated — the LOOPS.md endgame; gated on the metric / oracle / stop-condition prerequisites (safety cage already shipped). → [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md)
 - **Part A · Phase 4 — M6 / M7** 🔲 deferred — cross-phase context injection + state projection, until a phase genuinely needs them. → [MARATHON-HARNESS.md → Deferred](PROJECT/3-COMPLETED/MARATHON-HARNESS.md#deferred--m6--m7)
+- **Tooling · relay-xyz install hygiene** 🔲 deferred — repair the dangling `consult`/`wpcc` user-skill symlinks and resolve the `GH Repos` vs `GitHub-Repos` clone split (pick one canonical parent dir); awaits operator sign-off. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 
 ---
 
