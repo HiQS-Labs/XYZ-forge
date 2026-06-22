@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
+### Dueling Claudes inaugural dogfood review — found + fixed 3 real recipe bugs
+Ran the feature on itself: a Giant Brains Claude session (Reporter) reviewed DUELING-CLAUDES through the shared relay file; this session (Maintainer) fixed. Every finding lived in the copy-pasted command strings — proving the review's own "zero new code moves the risk into the commands" point.
+- **Path B needs `--dry-run`** (Blocker) — without it `poll.sh` dispatches `runner.sh` (a Path-A driver needing `--task/--agent`) and the tick crashes. Added to both loop commands + the live loop; documented Path B as advisory-only.
+- **Reporter's `tick release` must use `TICK_REPO_ROOT` + absolute `bin/tick`** (Blocker) — a bare `tick` from the Reporter's foreign CWD silently no-ops and deadlocks the relay. **Reproduced live** — the run deadlocked on this exact bug; recovered manually. Fixed the recipe + the thread's embedded step 6.
+- **`--deadline` must be a literal epoch** computed once in step 0 (Should) — an inline `$(date …)` in the `/loop` string re-evaluates every tick and never expires. Plus 2 nits (token-name drift, rule-9 scope wording). Full thread: [`relay-system/2026-06-22/dueling-claudes.md`](relay-system/2026-06-22/dueling-claudes.md).
+
 ### Dueling Claudes — two-window bug-report → fix relay recipe (zero new code)
 Recipe for two live Claude Code windows on the same machine running a bug-report → fix loop across two repos with no copy-paste: **Claude A** (Reporter, window on another repo) files bugs into a shared relay file; **Claude B** (Maintainer, window on this repo) fixes them and **stops before commit/push for a human "go"** (the one gate). Confirmed it needs **no new code** — it composes the shipped `poll.sh` + `/loop` + `tick` lock with the portable `/relay` protocol; the dirty-relay-file `idle` state *is* the approval gate, and all commits land in this repo so `--target-root` isn't needed.
 - **New:** [`relay-automation/DUELING-CLAUDES.md`](relay-automation/DUELING-CLAUDES.md) — the per-window recipe (one-time `install.sh`, fresh `--relay-task` token per run, the two `/loop` commands, the gate clause, limits).

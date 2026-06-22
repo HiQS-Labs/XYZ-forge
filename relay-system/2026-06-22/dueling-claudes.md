@@ -5,7 +5,7 @@
   Recipe for running this hands-free: relay-automation/DUELING-CLAUDES.md
 -->
 
-NEXT: Maintainer
+NEXT: Reporter
 STATUS: Open
 ROUND: 1 / 5
 
@@ -19,7 +19,7 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
    - **Reporter (claude-a), re-review round:** confirm the fix actually resolves the bug (re-read the file / re-run the repro). If resolved → set `STATUS: Closed`. If not → `Changes requested` with a `[Blocker]`, hand back to the Maintainer.
 4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.
 5. **Update the header:** flip `NEXT`; bump `ROUND` when the Reporter opens a new cycle; set `STATUS` (`Closed` ends the relay).
-6. **Hand off the lock.** `tick release <RELAY-TASK> --agent <you> --to <other>` (or `tick done <RELAY-TASK>` on close). Then commit the files you touched: `git commit -m "relay(dueling-claudes): <you> r<N>"`, fill the hash into your `Commit:` line, `git commit --amend --no-edit`. **Maintainer: only after the operator's "go."**
+6. **Hand off the lock** — from a foreign-CWD window (the Reporter lives in another repo) a bare `tick` silently no-ops and the relay DEADLOCKS; you MUST use the repo-root env + ABSOLUTE binary: `TICK_REPO_ROOT="<harness-repo>" "<harness-repo>/bin/tick" release <RELAY-TASK> --agent <you> --to <other>` (or `… done <RELAY-TASK>` on close). Then commit the files you touched: `git commit -m "relay(dueling-claudes): <you> r<N>"`, fill the hash into your `Commit:` line, `git commit --amend --no-edit`. **Maintainer: only after the operator's "go."**
 7. **Stop.** Tell the operator your one-line result.
 
 ## Setup
@@ -27,7 +27,7 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 - Definition of Done: every `[Blocker]`/`[Should]` finding is dispositioned by the Maintainer (Implemented / Modified / Declined + why); the Reporter re-reads the changed docs and sets `STATUS: Closed` when satisfied.
 - Reporter: **claude-a** (window on the OTHER repo — reads it, files reports here)
 - Maintainer: **claude-b** (window on THIS repo — fixes, gated before push)
-- Lock: `tick` task **RELAY-TURN** (override with a fresh `--relay-task` per run — a `done` token can't be reopened).
+- Lock: `tick` task — **RELAY-TURN** by default; **this run uses `DUELING-REVIEW-0622`** (use a fresh `--relay-task` per run; a `done` token can't be reopened).
 - Handoff: hands-free poll (all-Claude) — see relay-automation/DUELING-CLAUDES.md
 - Started: 2026-06-22
 
@@ -40,7 +40,7 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 6. Grade findings: `[Blocker]` must fix · `[Should]` strong rec · `[Nit]` optional · `[Pass]` checked and sound.
 7. **The Maintainer stops before commit/push every fix turn** — the operator's "go" is the gate. No `git push` without it.
 8. End your turn by committing it (Maintainer: post-"go"): `relay(dueling-claudes): <role> r<N>`, fill the hash into `Commit:`.
-9. **One window at a time, clean tree at every handoff.** The `NEXT` pointer + the `tick` lock serialize turns. Never flip `NEXT` with uncommitted edits in the tree — the dirty tree is also what parks the poll loop during the gate (intended).
+9. **One window at a time, clean *artifact scope* at every handoff** (the relay file + `--artifact` — NOT the whole tree; `poll.sh` runs `git status --porcelain -- <those paths>`, so unrelated dirty files like `snapshot.md` don't park the loop). The `NEXT` pointer + the `tick` lock serialize turns. Never flip `NEXT` with uncommitted edits to that scope — a dirty artifact scope is also what parks the poll loop during the gate (intended).
 10. **Evidence contract.** The Maintainer logs a one-line `Verification:` (what it ran / skipped / couldn't run). The Reporter's close states how it confirmed the fix (`re-ran repro` / `re-read code`).
 11. **Reconcile against the file, not this log.** Before the Reporter sets `Closed` it re-reads the actual fixed code and confirms the bug is gone — not just that the Maintainer claimed it.
 
@@ -75,5 +75,19 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 **Verdict:** Changes requested
 **Open questions:** Is `runner.sh` *intended* to drive Path-B turns (making the missing `--dry-run` a deeper design question), or is Path B always meant to be advisory-only as SKILL.md:166 implies? I read it as advisory-only; confirm.
 **Commit:** 9073b39 (claude-a r1)
+
+### Round 1 · Maintainer · claude-b · 2026-06-22 14:05 PDT
+**Decisions on proposals:** (verified each against source before disposing — protocol rule)
+- [Blocker] Missing `--dry-run` → **Implemented**. Added `--dry-run` to both loop commands in `relay-automation/DUELING-CLAUDES.md` (Window A + Window B) and recreated my own live cron loop with it. Verified: `poll.sh:205-211` evals `$RUNNER_CMD` (default `runner.sh`, `:89`) on `run-runner` when `DRY_RUN=0`; `runner.sh:9` requires `--task/--agent` → `die` under `set -e`. `SKILL.md:166` confirms Path B is `--dry-run`. Also added a Notes bullet stating Path B is advisory-only.
+- [Blocker] Bare `tick release` from foreign CWD → **Implemented**. Fixed Window A's release in DUELING-CLAUDES.md to the `TICK_REPO_ROOT=… …/bin/tick release` form, and fixed the *root cause* — this thread's own embedded step 6 (the bare `tick` there is what your window actually followed and what deadlocked us). Proof: this very turn reproduced it — after your committed handoff the token stayed `claimed by claude-a`; I recovered it manually (`release` from the correct context + re-claim as claude-b).
+- [Should] `$(date …)` deadline re-evaluates → **Implemented**. Step 0 now computes `DEADLINE` once; both loop commands take the literal placeholder; Notes warns never to inline `$(date)`. (My live loop already used a literal, `1782165049`.)
+- [Nit] Token-name drift in Setup → **Implemented**. Setup now names the active token `DUELING-REVIEW-0622`.
+- [Nit] Rule 9 overstates the gate as repo-global → **Implemented**. Reworded to "clean *artifact scope*," citing `poll.sh:114-118`.
+- [Pass ×2] Zero-new-code + no-double-fire → acknowledged; added a Notes bullet that the command strings are the untested risk surface (your caveat is the sharpest point in the review).
+**Did:** 6 fixes — 4 in `relay-automation/DUELING-CLAUDES.md` (step 0, Window A, Window B, Notes), 3 in this thread (Setup token, rule 9, embedded step 6). No code changed (`poll.sh`/`runner.sh` untouched) — every finding was a doc/command-string bug, which is itself evidence for your [Pass] caveat.
+**Answer to your open question:** Path B is **advisory-only** — `runner.sh` drives Path A / `xyz` mode (needs `--task/--agent`); in Path B the live Claude takes the turn, so `poll.sh` must run `--dry-run`. Your reading is correct; I made it explicit in the Notes.
+**Verification:** re-ran `sed`/`grep` against `poll.sh`, `runner.sh`, `SKILL.md` to confirm both Blockers (citations above). Did not execute a full `run-runner` dispatch (that needs a live turn) — textual + path-traced. The F2 deadlock was verified behaviorally (it happened to us).
+**Re-review this:** the 4 changed spots in `relay-automation/DUELING-CLAUDES.md` and the 3 in this thread. Confirm `--dry-run` + literal-deadline + absolute-`tick` release are all present and that nothing else regressed. Note: to release the lock back to me you'll hit the *same* F2 trap — use `TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" release DUELING-REVIEW-0622 --agent claude-a --to claude-b`, not a bare `tick`.
+**Commit:** e3a210f (claude-b r1)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
