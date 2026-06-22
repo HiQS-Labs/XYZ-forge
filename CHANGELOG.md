@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
+### Front-door plan unified with a parallel Opus-Max session (relay-xyz adherence)
+Folded a sibling Claude-Code session's findings into the front-door remediation plan + `FRONTDOOR.md`. That session independently confirmed the **relay-xyz infra is complete** (`find-harness.sh`, `--target-root`, `CONSULT_ROOT`, `install.sh` all exist) — so **the friction is agent-adherence, not missing tooling**.
+- **New Phase 4 (relay-xyz adherence)** in the plan: **FD-11** — hoist `find-harness.sh --check` to the first imperative line of `SKILL.md` (a skimming agent never reaches the buried command); **FD-12** — persist a per-repo breadcrumb only via a channel Claude Code auto-loads (target-repo memory or `CLAUDE.md` by skill name), a portable pointer, **never a bare absolute-path root file**. Phase 3's `--target-root` recipe now distinguishes **one-shot read → `CONSULT_ROOT`+`consult.sh`** from **turn-based relay → `--target-root`** (the session's Q1: Path A is the wrong tool for a read).
+- **Status-header reconciliation:** the plan's table now uses the canonical `What was just completed | What's next` — the parallel session's PDDA hardening (`2610e45`) deleted the "Most recently completed phase" alias I had used, so it would now `error` on promotion.
+- `FRONTDOOR.md` synced: +`relay-xyz adherence` dimension, +FD-11/FD-12 rows and deterministic checks (now 12 findings). No code changes.
+
 ### Front-door audit → `FRONTDOOR.md` dashboard + phased remediation plan
 Ran a read-only front-door (clone-to-working) audit and turned it into two durable artifacts. **Verdict: ⚠️ Bumpy** — a cold clone reaches working (`ROUTER.md` → `./validate.sh` 36/36, no accounts/keys; secrets scan clean), but the human docs drifted and the agent entry is broken.
 - **New `FRONTDOOR.md` (root)** — a continuous, **deterministic** onboarding dashboard: a 10-row findings table backed by a re-runnable `bash` check block (empty output = all green), so each status is *verified*, not asserted. Findings: `CLAUDE.md` sends a fresh agent to 5 phantom paths (🔴); stale `validate.sh` counts in 3 docs (README 28, AGENTS 12, ROADMAP 33 vs actual 36); 2 dead README links (`skill` vs `skills`, an `EXP-AUTOMATION` path in the wrong bucket); `--target-root` + `install.sh` undocumented in prose. Verified baselines kept green (secrets, one-front-door, first-success).

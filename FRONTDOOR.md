@@ -10,6 +10,7 @@ an onboarding-facing doc (`README.md`, `ROUTER.md`, `AGENTS.md`, `CLAUDE.md`, `s
 |---|---|
 | **Last audited** | 2026-06-22 (HEAD — what a cold clone gets) |
 | **Method** | front-door walk, read-only |
+| **Unified with** | parallel Opus-Max session — relay-xyz adherence (FD-11/FD-12) + PDDA hardening (`2610e45`, status-header alias removed) |
 | **Verdict** | ⚠️ **Bumpy** — a newcomer reaches working, but stale numbers, 2 dead links, and a phantom-path `CLAUDE.md` trip the path |
 | **Remediation plan** | [PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md) |
 
@@ -23,6 +24,7 @@ an onboarding-facing doc (`README.md`, `ROUTER.md`, `AGENTS.md`, `CLAUDE.md`, `s
 | Doc ↔ code drift | 🚧 | stale test counts in 3 docs + 2 dead README links |
 | Agent front door | 🚧 | `CLAUDE.md` sends a fresh agent to 5 phantom paths |
 | Recent features documented | ⚠️ | `--target-root`, `install.sh` not in any prose doc |
+| relay-xyz adherence | 🚧 | infra complete, but `find-harness.sh --check` is buried in SKILL.md → agents skip it (parallel session) |
 
 ## Findings
 
@@ -40,6 +42,8 @@ Severity 🔴 high · 🟠 med · 🟡 low — Status ⬜ OPEN · ✅ FIXED
 | FD-08 | Undocumented — `skills/relay-xyz/install.sh` only in SKILL.md (chicken-and-egg) | 🟠 | ⬜ | surface in `README.md`/`ROUTER.md` |
 | FD-09 | Stale — `AGENTS.md` "One skill ships here / `skill/xyz`" (several skills now) | 🟡 | ⬜ | update to the real `skills/` inventory |
 | FD-10 | Missing — no "run un-sandboxed" note for agent users in `README.md` | 🟡 | ⬜ | add a callout |
+| FD-11 | Adherence — `find-harness.sh --check` buried mid-`SKILL.md`; skimming agents skip it | 🔴 | ⬜ | hoist it to the first imperative SKILL.md line (parallel session) |
+| FD-12 | Persistence — no portable per-repo breadcrumb pattern documented (risk: a bad bare pointer file) | 🟡 | ⬜ | document memory / `CLAUDE.md`-by-name, never a cached path |
 
 ## Verified baselines (keep green)
 
@@ -87,6 +91,12 @@ grep -rlq 'install.sh' README.md ROUTER.md 2>/dev/null \
 grep -q 'One skill ships here' AGENTS.md && echo "FD-09 OPEN: AGENTS.md says 'One skill ships here' (several exist)"
 # FD-10 — README mentions the sandbox-off requirement for agents
 grep -qi 'sandbox' README.md || echo "FD-10 OPEN: README has no 'run un-sandboxed' note for agent users"
+# FD-11 — find-harness --check must sit near the top of SKILL.md (first ~25 lines), not buried
+sed -n '1,25p' skills/relay-xyz/SKILL.md | grep -q 'find-harness.sh --check' \
+  || echo "FD-11 OPEN: find-harness.sh --check not in the first 25 lines of SKILL.md (skimming agents skip it)"
+# FD-12 — SKILL.md documents the per-repo persistence pattern (memory / CLAUDE.md by name)
+grep -qi 'per-repo' skills/relay-xyz/SKILL.md \
+  || echo "FD-12 OPEN: SKILL.md has no per-repo persistence note (use memory / CLAUDE.md-by-name, not a bare pointer file)"
 # Baseline — secrets must stay clean
 git grep -IE '(sk-[A-Za-z0-9]{20}|ghp_[A-Za-z0-9]{30}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)' >/dev/null 2>&1 \
   && echo "BASELINE BROKEN: provider-format secret in the tracked tree — rotate then purge"
