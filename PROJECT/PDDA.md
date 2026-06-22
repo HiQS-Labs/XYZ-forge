@@ -100,6 +100,35 @@ Bug-fix docs may use a lighter template than multi-phase project plans, but they
 GitHub issues are a valid source for bug reports and intake. They are not a substitute for the local active-work doc
 once execution starts in this repo.
 
+## GitHub issue intake
+
+GitHub issues are a first-class intake source. The bug-fix stance above states the principle; this
+section owns the *format*. When an issue should be tracked in-repo, capture it as a doc in
+`PROJECT/1-INBOX/` using this convention:
+
+- **Filename:** `GH-<number>-SHORT-DESCRIPTION.md` (e.g. `GH-11-CROSS-REPO-TARGETING.md`).
+  SCREAMING-KEBAB to match the other inbox docs; no zero-padding — mirror the GitHub issue number.
+  `<number>` resolves against `origin` (a single canonical repo), so the bare number is unambiguous.
+- **Minimum frontmatter:** `gh_issue`, `source` (the full issue URL), `title`, `status`
+  (`Proposed (1-INBOX — not yet active)`), `created`, and `doc_type` (`feedback` or `bugfix`).
+- **Body:** transcribe the issue's actionable substance (the asks / acceptance criteria), not the whole
+  thread. The live issue stays the discussion surface; this doc is the in-repo capture and back-reference.
+
+Lifecycle:
+
+- The `GH-` inbox doc is the **capture**, not the active-work doc. It carries no `## Status` table while
+  it sits in `1-INBOX` (the inbox is the rough/untriaged bucket).
+- When execution starts, **promote** it to `PROJECT/2-WORKING/` — keep the `GH-` prefix for provenance —
+  and it must then satisfy the full active-doc contract (frontmatter, exact status table, QA gates if
+  phased), **carrying `gh_issue` forward**. A `ROADMAP.md` pointer is optional at capture and required
+  once the doc is active. This is the concrete mechanism behind "GitHub issues are not a substitute for
+  the local active-work doc once execution starts" (bug-fix stance above).
+- If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note; if it is
+  closed without work, move the doc to `PROJECT/4-MISC`.
+
+A foreign-repo issue (not `origin`) is the rare exception: the `source:` URL disambiguates it, since the
+bare `GH-<number>` only guarantees uniqueness within the canonical repo.
+
 ## Automation layers
 
 PDDA should have two classes of automation:
@@ -409,10 +438,16 @@ These are likely useful for full automation, but they are still policy choices:
 
 These need a decision before the automation should be considered stable:
 
-1. Should `gh_issue` stay optional metadata, or become required for bug-fix docs that originated from GitHub?
-2. Should the compatibility window end on `2026-07-31`, or should it be shorter/longer?
-3. Should `PROJECT/PDDA-ACTIVITY.jsonl` remain append-only forever, or rotate by month once the volume grows?
-4. Should `ROADMAP.md` remain root-level canonical only, or do you also want a project-local roadmap index under `PROJECT/`?
+1. Should the compatibility window end on `2026-07-31`, or should it be shorter/longer?
+2. Should `PROJECT/PDDA-ACTIVITY.jsonl` remain append-only forever, or rotate by month once the volume grows?
+3. Should `ROADMAP.md` remain root-level canonical only, or do you also want a project-local roadmap index under `PROJECT/`?
+
+Resolved:
+
+- ~~Should `gh_issue` stay optional metadata, or become required for bug-fix docs that originated from
+  GitHub?~~ **Resolved 2026-06-21:** `gh_issue` stays optional in general, but is **required** on any
+  doc that originated from a GitHub issue — which the `GH-<number>-…` filename guarantees. See
+  [GitHub issue intake](#github-issue-intake).
 
 ## Recommended v1 stance
 

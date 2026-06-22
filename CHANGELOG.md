@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-21
 
+### GitHub issue intake convention — `GH-<number>-SHORT-DESCRIPTION.md` into 1-INBOX
+Formalized how a GitHub issue enters the doc system, closing a gap where ROUTER/PDDA had no issue-intake concept. PDDA.md owns the contract; ROUTER.md gets a one-line pointer (no duplicate spec — same role-split discipline as the CHANGELOG governance).
+- **`PROJECT/PDDA.md`** — new "GitHub issue intake" section: filename `GH-<number>-SHORT-DESCRIPTION.md` (no zero-padding; `<number>` resolves against `origin`, a single canonical repo, so unambiguous), minimum frontmatter (`gh_issue`, `source`, `title`, `status`, `created`, `doc_type`), and the capture→promote lifecycle (the `GH-` inbox doc is the capture with no status table; on activation it promotes to `2-WORKING` under the full active-doc contract, carrying `gh_issue` forward). Also **resolved Open Question #1**: `gh_issue` stays optional generally but is required on any doc that originated from a GitHub issue (the `GH-` filename guarantees it).
+- **`ROUTER.md`** — added a routing hint pointing GitHub-issue tasks at the new PDDA section + the `1-INBOX` → `2-WORKING` flow.
+- **First instance shipped:** `PROJECT/1-INBOX/GH-11-CROSS-REPO-TARGETING.md` captures issue #11 (relay-xyz cross-repo targeting — `--target-root` on `relay-drive.sh`, surfacing `consult.sh`/`CONSULT_ROOT`, 3 doc fixes), dogfooding the new convention. No ledger entry yet (capture-first; earns one on promotion).
+
 ### New proposal: Antigravity (agy) reliability testing
 Drafted `PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md` — a proposal to systematically characterize and harden the agy cross-model lane, which has repeatedly gone astray (off-task edits, silent-sandbox empty output, role drift, untracked-creation leak, cost-blindness). Seeds a 7-row failure catalog + a 10-scenario test matrix + a 3-phase outline. Per the PDDA document model it stays in 1-INBOX (proposal, lighter burden) and earns the active-doc contract + a ROADMAP ledger line only when testing starts. No ledger entry yet (proposal-first).
 
