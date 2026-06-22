@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -43,3 +43,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 ## Log
 
 <!-- ↓↓↓ NEXT TURN APPENDS BELOW THIS LINE — do not write above it ↓↓↓ -->
+
+### Round 1 · Reviewer · review-findings · 2026-06-21 22:30 PDT
+
+**Verdict:** Changes requested
+
+**Findings & proposals:**
+- `[Blocker]` S9 (model selection) and S10 (useful output) at [AGY-RELIABILITY-TESTING.md:78-79](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.ZVg0mG/PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md#L78-L79) do not map to any cataloged failure mode F1–F7 at [AGY-RELIABILITY-TESTING.md:54-62](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.ZVg0mG/PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md#L54-L62), violating the DoD.
+  - *Proposed fix:* Either add corresponding failure modes (e.g., F8/F9) to the catalog, map them to F4, or remove them.
+- `[Should]` Section "Proposed test matrix (Phase 1 — characterize)" at [AGY-RELIABILITY-TESTING.md:64](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.ZVg0mG/PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md#L64) does not specify how scenarios are executed (manually vs automated script).
+  - *Proposed fix:* Clarify the test runner topology and entry point.
+- `[Nit]` F2 evidence at [AGY-RELIABILITY-TESTING.md:57](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.ZVg0mG/PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md#L57) cites `PROJECT/AGENTS-DOCS.md` which does not exist in the root of the `PROJECT/` workspace.
+  - *Proposed fix:* Update the file path to reflect where it currently resides or remove the incorrect reference.
+
+**Commit:** `pending-harness`
