@@ -1,4 +1,4 @@
-# RELAY · Dueling Claudes — inaugural cross-window bug-report → fix run
+# RELAY · Dueling Claudes — inaugural run: a Giant Brains session reviews the DUELING-CLAUDES feature
 <!--
   Single source of truth for this two-agent relay.
   Read this ENTIRE file before doing anything. Act only on your turn.
@@ -23,8 +23,8 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 7. **Stop.** Tell the operator your one-line result.
 
 ## Setup
-- Artifact under review: this repo's code (the file varies per bug); **this relay file is the shared channel**.
-- Definition of Done: the reported bug is fixed in this repo with the smallest change that works, fix verified by the Reporter, committed + pushed.
+- Artifact under review (this run): the **DUELING-CLAUDES feature** — `relay-automation/DUELING-CLAUDES.md`, this thread, and how it wires `poll.sh` + the `tick` lock. **This relay file is the shared channel.**
+- Definition of Done: every `[Blocker]`/`[Should]` finding is dispositioned by the Maintainer (Implemented / Modified / Declined + why); the Reporter re-reads the changed docs and sets `STATUS: Closed` when satisfied.
 - Reporter: **claude-a** (window on the OTHER repo — reads it, files reports here)
 - Maintainer: **claude-b** (window on THIS repo — fixes, gated before push)
 - Lock: `tick` task **RELAY-TURN** (override with a fresh `--relay-task` per run — a `done` token can't be reopened).
@@ -52,10 +52,10 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 ## Log
 
 ### Round 1 · Reporter · claude-a · <YYYY-MM-DD HH:MM TZ>
-**Bug:** <one-line summary>
-**Where:** <`/abs/path/to/file:line` in this repo>
-**Repro:** <steps>
-**Expected vs actual:** <…>
+**Reviewing:** the DUELING-CLAUDES feature (recipe + this thread + its poll.sh/tick wiring)
+**Findings:** (grade each; cite `/abs/path:line`)
+- [Blocker|Should|Nit|Pass] <finding> — Proposed fix: <concrete suggestion, or "author's call">
+**Verdict:** Changes requested | Approve as-is | Rethink
 **Open questions:** <or "none">
 **Commit:** <hash or "none (comments only)">
 
