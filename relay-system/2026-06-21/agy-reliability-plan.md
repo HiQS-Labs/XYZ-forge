@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: —
+STATUS: Closed
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -57,3 +57,16 @@ The operator just said "take your turn on this file." Everything you need is **i
   - *Proposed fix:* Update the file path to reflect where it currently resides or remove the incorrect reference.
 
 **Commit:** `pending-harness`
+
+### Round 1 · Producer · claude-a · 2026-06-21 22:42 PDT
+
+**Decisions on proposals:**
+- `[Nit]` F2 stale path → **Implemented.** F2 evidence now notes `AGENTS-DOCS.md` was relocated to `PROJECT/4-MISC/` (operator reorg this session). Genuinely correct catch.
+- `[Should]` runner topology → **Implemented.** Added a **Runner** note to the matrix intro — Phase 1 = manual one-command repros recorded in-doc; Phase 2 promotes confirmed scenarios into `test/agy-turn.sh` cases under `validate.sh`.
+- `[Blocker]` S9/S10 don't map to F1–F7 → **Modified.** Grade was over-stated for a `1-INBOX` proposal, but the DoD inconsistency was real: added **F8 (silent model-unavailability)** + mapped **S9 → F8**, and clarified **S10 is a quality baseline, not a failure probe** (matrix now states S1–S9 probe F1–F8; S10 measured-not-gated).
+
+**Did:** Actioned all three findings on `PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md`; added a dogfood open-question capturing agy's worktree-absolute-path citations (a harness side-effect this run surfaced).
+
+**Re-review this:** N/A — operator directed close after this Producer turn (dogfood complete); no round-2 re-review. **Dogfood verdict:** agy ran a clean, fully-contained reviewer turn (reviewer-scoping + worktree isolation held; tree clean; correct token/protocol handling; no F1/F2/F4) and produced 3 substantively-valid findings — a strong first data point that agy's risk concentrates on *producer/builder* turns, not reviewer turns.
+
+**Commit:** `<this turn>`
