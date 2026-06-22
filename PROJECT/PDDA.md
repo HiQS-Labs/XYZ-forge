@@ -76,16 +76,10 @@ The status table is the front door for both humans and automation.
 - The right column is the next action.
 - If either is missing, an agent has to reconstruct state from the body, which is slow and error-prone.
 
-PDDA therefore treats the exact header names as a contract, not a style preference.
-
-Compatibility window:
-
-- older aliases are tolerated only through `2026-07-31`
-- accepted aliases during that window are:
-  - `What was last done | What's next`
-  - `Most recently completed | What's next`
-  - `Most recently completed phase | What's next`
-- after `2026-07-31`, those aliases should be treated as errors
+PDDA therefore treats the exact header names as a contract, not a style preference. The header must be
+exactly `What was just completed | What's next` — there is no alias/compatibility window. (One was
+specced with a `2026-07-31` cutover, but a single-repo system controls its own docs: no doc here used
+an old alias, so a dated, silently-changing branch guarded nothing and was removed 2026-06-22.)
 
 ## Bug-fix doc stance
 
@@ -147,18 +141,20 @@ These catch issues where the answer should be the same every time.
 Purpose:
 - inspect docs in `PROJECT/2-WORKING`
 - detect stale docs based on file modification time
-- move or flag them according to policy
+- **flag** them for a human to move (this check never moves files itself)
 
 Minimum behavior:
 - find docs in `PROJECT/2-WORKING` whose last edit is older than 4 days
-- emit a clear report of which docs were stale
-- move stale docs to `PROJECT/4-MISC` immediately
-- log the action so the move was not silent
+- emit a `warn` finding per stale doc recommending the exact `git mv` to `PROJECT/4-MISC`
+- honor a `pdda_hold: true` frontmatter override (skip the flag for held docs)
+- log every flag to the activity log; **never** auto-move, so this check can never block a build
 
-Recommended safety upgrade:
-- support a dry-run mode
-- support an allowlist or frontmatter override such as `pdda_hold: true`
-- write a summary line per file: `moved`, `flagged`, or `skipped`
+Why flag-only (design call, 2026-06-22):
+- the auto-move was the repo's only destructive mechanic, and the activity log showed it never once
+  fired a real move. The value is the flag; the move is risk with no proven payoff — a human runs one
+  reversible `git mv`. mtime staleness is a deliberately loose signal, and flag-only makes a wrong
+  guess cost nothing but an ignorable line. An opt-in move can be re-added later behind `pdda_hold` +
+  `full` mode if it ever earns the miles.
 
 #### B. `pdda-check-status-table.sh`
 
@@ -271,28 +267,35 @@ It should not:
 - auto-rewrite the plan body without review
 - invent technical claims not grounded in the doc
 - silently override deterministic lints
+- **block a build.** The LLM layer is advisory: its findings are capped at `warn` (any model `error`
+  is clamped to `warn` in `pdda-doc-ready.sh`), so a non-deterministic oracle can never fail a build —
+  the same doc must not pass at 2pm and fail at 3pm. Only deterministic checks earn blocking power.
 
 ## Enforcement modes
 
-PDDA runs in one of three modes, set by `PDDA_MODE` (env) or the first non-comment line of a
-repo-root `.pdda-mode` file; the built-in default is `observe`. The point is an **adoption ramp**: a
-freshly-installed PDDA should never destroy files or break a build on day one, and a project should
-graduate onto the rails deliberately.
+PDDA runs in one of three modes. The mode is resolved in this order: **the `PDDA_MODE` env var wins if
+set; otherwise the first non-comment line of a repo-root `.pdda-mode` file; otherwise the built-in
+default `observe`.** (So an env var overrides a committed `.pdda-mode` — convenient for a one-off
+`PDDA_MODE=observe` pass against a repo otherwise committed to `full`.) The point is an **adoption
+ramp**: a freshly-installed PDDA should never break a build on day one, and a project should graduate
+onto the rails deliberately.
 
-| Mode | When | Findings reported | Stale-doc moves | Exit on `error` |
-|---|---|---|---|---|
-| `observe` | just installed | yes | no (forced dry-run) | always `0` |
-| `light` | transitioning | yes | yes | `0` (warn, don't block) |
-| `full` | fully on rails | yes | yes | non-zero (blocks) |
+| Mode | When | Findings reported | Exit on `error` |
+|---|---|---|---|
+| `observe` | just installed | yes | always `0` |
+| `light` | transitioning | yes | `0` (warn, don't block) |
+| `full` | fully on rails | yes | non-zero (blocks) |
 
-- The default is `observe` so a brand-new install is non-destructive and non-blocking — it shows the
-  team what PDDA *would* flag without touching anything.
-- `light` starts acting (moves stale docs, loud reports) but still never fails a build — the
-  transition phase while the backlog of doc debt is cleared.
+- The default is `observe` so a brand-new install is non-blocking — it shows the team what PDDA
+  *would* flag without failing anything.
+- `light` is the transition phase: loud reports, but still never fails a build, while the backlog of
+  doc debt is cleared.
 - `full` is the strict end state: `error` findings block with a non-zero exit. A repo declares it by
   committing `.pdda-mode` with `full`.
-- Mechanics: `pdda-lib.sh` resolves the mode once; in `observe` it forces `PDDA_DRY_RUN=1`; every
-  check ends with `exit "$(pdda_gated_exit "$EXIT_CODE")"`, which returns the real code only in `full`.
+- **No mode mutates the tree.** Stale docs are *flagged, never auto-moved* — the only destructive
+  mechanic was removed (see the stale-doc check above). Mode controls one thing only: whether an
+  `error` blocks. Every check ends with `exit "$(pdda_gated_exit "$EXIT_CODE")"`, which returns the
+  real code only in `full`.
 
 ## ROADMAP.md contract
 
@@ -467,12 +470,15 @@ These are likely useful for full automation, but they are still policy choices:
 
 These need a decision before the automation should be considered stable:
 
-1. Should the compatibility window end on `2026-07-31`, or should it be shorter/longer?
-2. Should `PROJECT/PDDA-ACTIVITY.jsonl` remain append-only forever, or rotate by month once the volume grows?
-3. Should `ROADMAP.md` remain root-level canonical only, or do you also want a project-local roadmap index under `PROJECT/`?
+1. Should `PROJECT/PDDA-ACTIVITY.jsonl` remain append-only forever, or rotate by month once the volume grows?
+2. Should `ROADMAP.md` remain root-level canonical only, or do you also want a project-local roadmap index under `PROJECT/`?
 
 Resolved:
 
+- ~~Should the compatibility window end on `2026-07-31`, or be shorter/longer?~~ **Resolved
+  2026-06-22:** removed entirely. No doc in the repo used an old alias, so a dated cutover guarded
+  nothing — and a script whose behavior changes silently on a hardcoded date is the same fossilized
+  assumption the hardcoded-path check exists to prevent. Headers are now exact-or-`error`, no window.
 - ~~Should `gh_issue` stay optional metadata, or become required for bug-fix docs that originated from
   GitHub?~~ **Resolved 2026-06-21:** `gh_issue` stays optional in general, but is **required** on any
   doc that originated from a GitHub issue — which the `GH-<number>-…` filename guarantees. See
@@ -483,8 +489,7 @@ Resolved:
 If the goal is "get project docs onto rails quickly," the safest v1 is:
 
 - start in `observe` mode, then graduate `light` → `full` as the doc backlog is cleared
-- enforce exact status-table headers
-- tolerate known old aliases only through `2026-07-31`
+- enforce exact status-table headers (no alias window)
 - require QA gates on phased plans
 - forbid hardcoded absolute paths
 - run deterministic checks hourly

@@ -44,10 +44,9 @@ frontmatter/status-table/hardcoded-path issues (separate deterministic checks ow
 - detail duplicated from another canonical doc
 - contradictory status (e.g. frontmatter says Completed while the body is active)
 Output ONE JSON object per finding, one per line, and NOTHING else. Schema:
-{"severity":"error|warn|info","line":<integer or 0>,"message":"<one concise sentence>"}
-Use "error" ONLY for an automation-BLOCKING readiness gap (e.g. a phased plan a runner would execute
-that has a phase with no QA gate, or a status that directly contradicts the body); "warn" for a strong
-readiness concern; "info" for advisory. An "error" makes this check exit non-zero.
+{"severity":"warn|info","line":<integer or 0>,"message":"<one concise sentence>"}
+This review is advisory and never blocks a build: use "warn" for a strong readiness concern and "info"
+for advisory. Do NOT emit "error" — a non-deterministic review must not gain build-blocking power.
 If the doc is ready, output nothing at all.
 RUBRIC_EOF
 
@@ -62,9 +61,9 @@ execution notes that belong in an individual project doc. IMPORTANT carve-out: a
 is allowed when omitting it would hide an operationally critical fact — do NOT flag those.
 Flag ONLY genuine contract violations (execution detail that should live in a project doc). Do NOT
 rewrite. Output ONE JSON object per finding, one per line, NOTHING else. Schema:
-{"severity":"error|warn|info","line":<integer or 0>,"message":"<one concise sentence>"}
-Use "warn" for a clear violation; "info" for borderline; reserve "error" for roadmap sprawl so severe
-it would mislead an automated planner. If ROADMAP.md honors the contract, output nothing.
+{"severity":"warn|info","line":<integer or 0>,"message":"<one concise sentence>"}
+This review is advisory and never blocks: use "warn" for a clear violation and "info" for borderline.
+Do NOT emit "error". If ROADMAP.md honors the contract, output nothing.
 ROADMAP_EOF
 
 # Parse the model's output: keep only lines that look like a JSON object, extract fields via node
@@ -103,8 +102,10 @@ $(cat "$file")" 2>/dev/null || true)"
     IFS=$'\t' read -r sev ln msg <<PARSED
 $parsed
 PARSED
+    # PDDA contract: the LLM layer is advisory and never blocks (warn-max). A non-deterministic oracle
+    # must not gain blocking power — the same doc could pass at 2pm and fail at 3pm. Clamp any "error".
+    [ "$sev" = "error" ] && sev="warn"
     pdda_record_finding "$sev" "$CHECK_NAME" "$file" "${ln:-0}" "$msg" "llm-readiness"
-    [ "$sev" = "error" ] && EXIT_CODE=1
   done <<RESPONSE
 $response
 RESPONSE

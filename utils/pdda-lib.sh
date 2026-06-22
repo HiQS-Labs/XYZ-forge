@@ -6,7 +6,6 @@ PDDA_REPO_ROOT="$(cd "$PDDA_LIB_DIR/.." && pwd)"
 PDDA_WORKING_DIR="${PDDA_WORKING_DIR:-$PDDA_REPO_ROOT/PROJECT/2-WORKING}"
 PDDA_MISC_DIR="${PDDA_MISC_DIR:-$PDDA_REPO_ROOT/PROJECT/4-MISC}"
 PDDA_ACTIVITY_LOG="${PDDA_ACTIVITY_LOG:-$PDDA_REPO_ROOT/PROJECT/PDDA-ACTIVITY.jsonl}"
-PDDA_COMPAT_STATUS_DEADLINE="${PDDA_COMPAT_STATUS_DEADLINE:-2026-07-31}"
 PDDA_STALE_DAYS="${PDDA_STALE_DAYS:-4}"
 PDDA_DRY_RUN="${PDDA_DRY_RUN:-0}"
 # Output format for findings on stdout: "text" (human, default) or "json" (one JSON object per line,
@@ -20,9 +19,9 @@ PDDA_ACTIVITY_MAX_LINES="${PDDA_ACTIVITY_MAX_LINES:-10000}"
 #   env PDDA_MODE  ->  first non-comment line of <repo>/.pdda-mode  ->  default "observe".
 # Default is "observe" so a freshly-installed PDDA is non-destructive (sees everything, changes
 # nothing, never fails a build); a project graduates to "light" then "full" deliberately.
-#   observe : report findings only; never move files; every check/the suite exits 0.
-#   light   : report + move stale docs; still exit 0 (warn, don't block the build).
-#   full    : report + move + exit non-zero on errors (strict; fully on rails).
+#   observe : report findings only; every check/the suite exits 0.
+#   light   : report findings (incl. stale-doc flags); still exit 0 (warn, don't block the build).
+#   full    : report + exit non-zero on errors (strict; fully on rails).
 pdda_resolve_mode() {
   local m="${PDDA_MODE:-}"
   if [ -z "$m" ] && [ -f "$PDDA_REPO_ROOT/.pdda-mode" ]; then
@@ -34,8 +33,8 @@ pdda_resolve_mode() {
   esac
 }
 PDDA_MODE="$(pdda_resolve_mode)"
-# observe never mutates the tree: force dry-run so stale-doc moves become report-only.
-[ "$PDDA_MODE" = "observe" ] && PDDA_DRY_RUN=1
+# Stale docs are flag-only in every mode (see pdda-stale-working-docs.sh), so no mode mutates the tree.
+# PDDA_DRY_RUN stays a reserved knob for any future opt-in move re-added behind pdda_hold + full.
 
 # Gate a check's raw exit code by mode: only "full" lets an error block (non-zero exit). observe and
 # light still report every finding but exit 0, so a fresh or transitioning install never fails a

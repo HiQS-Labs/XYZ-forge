@@ -7,11 +7,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 
 CHECK_NAME="pdda-check-status-table"
 EXIT_CODE=0
-TODAY="$(pdda_today)"
 EXPECTED_HEADER="What was just completed|What's next"
-ALIASES="What was last done|What's next
-Most recently completed|What's next
-Most recently completed phase|What's next"
 
 while IFS= read -r file; do
   metadata="$(awk '
@@ -45,17 +41,8 @@ while IFS= read -r file; do
   row_text="$4"
 
   normalized_header="$(pdda_normalize_header "$header_text")"
-  if [ "$normalized_header" = "$EXPECTED_HEADER" ]; then
-    :
-  elif printf '%s\n' "$ALIASES" | grep -Fxq "$normalized_header"; then
-    if [ "$TODAY" \> "$PDDA_COMPAT_STATUS_DEADLINE" ]; then
-      pdda_record_finding error "$CHECK_NAME" "$file" "$header_line" "status-table alias expired on $PDDA_COMPAT_STATUS_DEADLINE; normalize to the canonical header" "normalize-status-table"
-      EXIT_CODE=1
-    else
-      pdda_record_finding warn "$CHECK_NAME" "$file" "$header_line" "status-table alias is temporarily accepted through $PDDA_COMPAT_STATUS_DEADLINE; normalize when touched" "normalize-status-table"
-    fi
-  else
-    pdda_record_finding error "$CHECK_NAME" "$file" "$header_line" "unexpected status-table header '$normalized_header'" "normalize-status-table"
+  if [ "$normalized_header" != "$EXPECTED_HEADER" ]; then
+    pdda_record_finding error "$CHECK_NAME" "$file" "$header_line" "status-table header must be exactly '$EXPECTED_HEADER' (got '$normalized_header')" "normalize-status-table"
     EXIT_CODE=1
   fi
 

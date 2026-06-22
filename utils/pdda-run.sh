@@ -22,8 +22,8 @@ EXIT_CODE=0
 FAILED=""
 
 case "$PDDA_MODE" in
-  observe) MODE_NOTE="observe (report-only; no moves, never blocks)" ;;
-  light)   MODE_NOTE="light (moves stale docs; reports errors but does not block)" ;;
+  observe) MODE_NOTE="observe (report-only; never blocks)" ;;
+  light)   MODE_NOTE="light (reports findings incl. stale flags; does not block)" ;;
   full)    MODE_NOTE="full (on rails; errors block with a non-zero exit)" ;;
   *)       MODE_NOTE="$PDDA_MODE" ;;
 esac

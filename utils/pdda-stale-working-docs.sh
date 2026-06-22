@@ -38,7 +38,7 @@ build_target_path() {
 
 while IFS= read -r file; do
   if pdda_frontmatter_true "$file" "pdda_hold"; then
-    pdda_record_finding info "$CHECK_NAME" "$file" 1 "stale auto-move skipped because pdda_hold=true" "skip"
+    pdda_record_finding info "$CHECK_NAME" "$file" 1 "stale flag skipped because pdda_hold=true" "skip"
     continue
   fi
 
@@ -50,18 +50,11 @@ while IFS= read -r file; do
 
   target_path="$(build_target_path "$file")"
   age_days=$((age_seconds / 86400))
-  if [ "$PDDA_DRY_RUN" = "1" ]; then
-    pdda_record_finding warn "$CHECK_NAME" "$file" 1 "dry-run: would move stale doc (${age_days}d old) to $(pdda_relpath "$target_path")" "flagged"
-    continue
-  fi
-
-  mkdir -p "$PDDA_MISC_DIR"
-  if mv "$file" "$target_path"; then
-    pdda_record_finding info "$CHECK_NAME" "$target_path" 1 "moved stale doc immediately (${age_days}d old) from $(pdda_relpath "$file")" "moved"
-  else
-    pdda_record_finding error "$CHECK_NAME" "$file" 1 "failed to move stale doc to $(pdda_relpath "$target_path")" "move-failed"
-    EXIT_CODE=1
-  fi
+  # ponytail: flag-only by design. The auto-move was this repo's ONLY destructive mechanic and never
+  # once fired a real move (zero "moved" actions in PDDA-ACTIVITY.jsonl) — the value is the flag, not
+  # the mv. A human runs one reversible `git mv` on a flagged doc. Re-add an opt-in move behind
+  # pdda_hold + full mode ONLY if it ever earns the miles. Warn-max, so this check never blocks a build.
+  pdda_record_finding warn "$CHECK_NAME" "$file" 1 "stale (${age_days}d old) — recommend: git mv $(pdda_relpath "$file") $(pdda_relpath "$target_path")" "flagged"
 done < <(pdda_list_working_docs)
 
 pdda_emit_summary "$CHECK_NAME" "$EXIT_CODE"
