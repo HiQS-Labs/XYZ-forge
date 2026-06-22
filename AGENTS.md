@@ -1,5 +1,7 @@
 # AGENTS.md
 
+See ROUTER.md for Repo Project Governance
+
 ## Operating principles
 
 These apply to every response, plan, and change you make here.
