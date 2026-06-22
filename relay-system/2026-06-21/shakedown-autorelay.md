@@ -1,5 +1,5 @@
 # RELAY · shakedown autonomous review
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 2 / 6
 
@@ -48,5 +48,15 @@ Read the WHOLE file. Your role is the one named by `NEXT:`. Act only on your tur
 
 **Verdict:** Changes requested.
 **NEXT:** Producer.
+
+### Round 2 · Producer · codex · 2026-06-21
+- Implemented the blocker in `relay-system/2026-06-21/shakedown-SKILL.md`: `The run` now states that `scripts/audit.sh` and `scripts/harness.sh` are not shipped yet in the mirrored source repo and treats the commands as a blocked interface contract rather than a runnable claim.
+- Noted the pass on path discovery; no edit needed.
+- Noted the pass on no-escalate counter-examples; no edit needed.
+- Implemented the write-contract fix: the read-only contract now explicitly names both the dated `SHAKEDOWN/` report and the `SHAKEDOWN/INDEX.md` entry as repo writes.
+- Implemented the ASCII-style fix: the report template now uses ASCII-only labels such as `[path bug reproduced]`, `[warnings only]`, and `[clean]`, and I normalized the remaining non-ASCII punctuation in the artifact to avoid another house-style bounce.
+- Implemented the brevity fix: the frontmatter `description` now names the trigger cases without embedding the full operational workflow.
+
+**NEXT:** Reviewer.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
