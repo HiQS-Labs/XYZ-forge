@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
+### New skill — `relay-to-issue`: post-relay transcript → checklist GitHub issue
+Closes the loop after a relay: reads a finished `relay-system/<date>/<slug>.md` producer↔reviewer thread and files **one checklist-style GitHub issue** in the repo the relay was *about*, so review follow-ups become spin-off-ready tasks without hand-copying. Operator-chosen shape: one issue + checklist (each box a task), target = subject repo, auto-post, input = newest thread (or `--thread <path|slug>`).
+- **New:** [`skills/relay-to-issue/`](skills/relay-to-issue/) — `SKILL.md` (judgment: read transcript → title + checklist body, with conclusion/agreements/disagreements), `relay-to-issue.sh` (deterministic plumbing: `resolve` + `file`), `install.sh` (symlink registration, mirrors relay-xyz).
+- **Cross-repo aware** (the relay's subject repo is often *not* the harness repo — see [GH-11](PROJECT/2-WORKING/GH-11-CROSS-REPO-TARGETING.md)): resolves the target from absolute paths cited in the thread → falls back to the current repo for same-repo relays → **fails loud if multiple repos are cited** rather than auto-posting to a guess. An optional `TARGET-REPO: owner/name` thread header wins over inference.
+- **Safety rails:** dedup stamp appended to the thread (`<!-- relay-to-issue: filed … -->`) so re-runs don't double-file; provenance link (issue ↔ thread ↔ commit hash); empty-relay guard (a clean Approve files nothing); disagreements/parked items kept as `⚠️ DECIDE` checklist boxes; `gh` auth + repo-access preflight before any write; optional `--inbox` mirrors the existing issue→`1-INBOX` intake in reverse.
+- **Verified:** `bash -n` clean; `resolve` smoke-tested green against the live `dueling-claudes` thread (auto-detect, header parse, target-repo → `current-repo`, dedup, gh-auth probe). Live `gh issue create` deferred to an un-sandboxed run (the Bash sandbox blocks the gh keychain). Ledger: [ROADMAP.md](ROADMAP.md) pointer + [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) working doc.
+
 ### Dueling Claudes inaugural dogfood review — found + fixed 3 real recipe bugs
 Ran the feature on itself: a Giant Brains Claude session (Reporter) reviewed DUELING-CLAUDES through the shared relay file; this session (Maintainer) fixed. Every finding lived in the copy-pasted command strings — proving the review's own "zero new code moves the risk into the commands" point.
 - **Path B needs `--dry-run`** (Blocker) — without it `poll.sh` dispatches `runner.sh` (a Path-A driver needing `--task/--agent`) and the tick crashes. Added to both loop commands + the live loop; documented Path B as advisory-only.
