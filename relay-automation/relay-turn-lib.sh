@@ -48,7 +48,11 @@ rtl_is_reviewer_turn() {  # <relay_file> — true if the file's NEXT pointer nam
 }
 
 rtl_init() {  # <root> <relay_file> <allow_csv>
-  RTL_ROOT="$1"; local f="$2" csv="$3"
+  # ROOT routing (GH-11): a foreign --target-root (exported by relay-drive as RELAY_TARGET_ROOT)
+  # routes the WHOLE turn — worktree base, allowlist copyback, file-scoped commit, enforce — from this
+  # one anchor. Unset/empty → the caller's <root> (today's behavior, byte-for-byte). Coordination
+  # (.tick) stays where TICK_REPO_ROOT points (the harness clone); only the ARTIFACT side moves.
+  RTL_ROOT="${RELAY_TARGET_ROOT:-$1}"; local f="$2" csv="$3"
   RTL_ALLOW=("$f")
   # REVIEWER-turn scoping: a reviewer is near read-only — it only APPENDS findings to the relay file
   # and must never edit the artifact under review. When NEXT names the Reviewer, drop the caller's

@@ -61,9 +61,9 @@ done
 [[ -n "$AGENT_CMD" || "$DRY_RUN" -eq 1 ]] || { usage; die "--agent-cmd is required"; }
 
 if [[ -n "${TARGET_ROOT+set}" ]]; then
-  if ! git -C "$TARGET_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
-    die "invalid target root (not a git repo): $TARGET_ROOT"
-  fi
+  [[ -n "$TARGET_ROOT" ]] || die "--target-root requires a non-empty path"   # else git -C '' falls back to CWD
+  git -C "$TARGET_ROOT" rev-parse --show-toplevel >/dev/null 2>&1 \
+    || die "invalid target root (not a git repo): $TARGET_ROOT"
   export RELAY_TARGET_ROOT="$TARGET_ROOT"
 fi
 

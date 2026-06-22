@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Ask 1 flag increment landed** — `--target-root` parse + git-repo validation + `RELAY_TARGET_ROOT` export in `relay-drive.sh` (built by agy, Codex-approved, `validate.sh` 35/35). Inert until the kernel-wiring round. | **Kernel wiring** — `relay-turn-lib.sh` consuming `RELAY_TARGET_ROOT` (worktree base + `ALLOW_PATHS` against the foreign root): Ask 1's load-bearing half. Then Codex's empty-string `[Nit]` + Asks 2–5 (surface consult + doc fixes). |
+| **Ask 1 complete** — `--target-root` flag (parse + non-empty + git-repo validation) **and** the kernel wiring: `relay-turn-lib.sh` routes the whole turn (worktree base + allowlist + file-scoped commit) via `RELAY_TARGET_ROOT`, default unchanged; Codex's empty-string `[Nit]` fixed. Proven by `test/relay-target-root.sh` (7/7) now in the suite — **`validate.sh` 36/36**. | **Asks 2–5** (low-effort docs): surface `consult.sh`'s `CONSULT_ROOT` as a first-class "review a foreign-repo artifact" recipe in `SKILL.md`; the `$TMPDIR` warning; the find-harness credit; the QUICKSTART example fix. |
 
 ## Summary
 

@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
+### GH-11 Ask 1 complete — `--target-root` cross-repo targeting (flag + kernel wiring + test)
+Finished Ask 1's load-bearing half by closing out agy's salvaged test. `--target-root` now actually routes a relay turn to a foreign repo: `relay-turn-lib.sh` resolves `RTL_ROOT` from `RELAY_TARGET_ROOT` (exported by `relay-drive.sh`'s flag) at the one anchor that drives the worktree base, allowlist copyback, file-scoped commit, and enforce — so the artifact worktree/commit lands in the target repo while coordination (`.tick`) stays in the harness clone. **Default (no flag) is byte-for-byte unchanged** (`${RELAY_TARGET_ROOT:-$1}`). Also fixed Codex's empty-string `[Nit]` (`--target-root ""` now dies instead of falling back to CWD via `git -C ""`).
+- **Test closed out:** `test/relay-target-root.sh` (agy's salvage, finished) proves the foreign-repo turn commits in the target + leaves the harness untouched, and the default path commits in the harness — **7/7**, wired into `validate.sh` → **36/36**.
+- Low blast radius / Easy reversibility: one-line root override, default unchanged, only active with the flag. Remaining GH-11: Asks 2–5 (surface `consult.sh` `CONSULT_ROOT` + doc fixes).
+
 ### ROADMAP coverage rule — every `2-WORKING` doc must be reflected in `ROADMAP.md` (new deterministic check)
 Added the *inverse* of the existing roadmap pointer-contract guard. `pdda-check-roadmap.sh` keeps execution detail from leaking *into* `ROADMAP.md`; the new check guards the other direction, so the ledger can't silently fall behind the working set.
 - **New check `utils/pdda-check-roadmap-coverage.sh`** — for each working doc (`blank.md` excluded), `error` unless its repo-relative path (`PROJECT/2-WORKING/<name>.md`) appears in `ROADMAP.md`; a doc that legitimately shouldn't appear opts out with `roadmap_exempt: true` in frontmatter (mirrors the `pdda_hold` escape hatch). Wired into `utils/pdda-run.sh` after `pdda-check-roadmap.sh`, and into the PDDA hourly schedule (now position 5).
