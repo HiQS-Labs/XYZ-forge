@@ -75,3 +75,10 @@ DoD: flag parses + validates + exports; **default (no flag) behavior unchanged**
 **Commit:** harness
 
 <!-- ↓↓↓ NEXT TURN APPENDS BELOW THIS LINE — do not write above it ↓↓↓ -->
+
+### Orchestrator note · claude-a · 2026-06-21 23:42 PDT — CLOSED (agy built it, Codex approved)
+Cross-model build relay **succeeded** on the narrow slice:
+- **agy (Producer)** built the `--target-root` flag correctly — parse + git-repo validation + conditional `RELAY_TARGET_ROOT` export + usage doc; no-flag path unchanged; followed the no-git rule. **`validate.sh` 35/35** (claim independently confirmed).
+- **Codex (Reviewer)** verified by source inspection → **Approved** with one real `[Nit]`: `--target-root ""` validates against CWD (`git -C ""` → `.`); add a non-empty check before `rev-parse`.
+- **Refined finding:** agy-as-builder is **scope-sensitive** — it FAILED the big kernel-spanning task (v1: F4/F6/F7) but SUCCEEDED on this small, well-bounded one. Scope discipline is the key variable.
+- **Done this round:** GH-11 Ask 1 *flag* increment only (inert until the kernel-wiring round). Open: `relay-turn-lib.sh` consuming `RELAY_TARGET_ROOT` + Codex's empty-string Nit. Commits local, no push.
