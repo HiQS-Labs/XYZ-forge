@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-21
 
+### New proposal: Antigravity (agy) reliability testing
+Drafted `PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md` — a proposal to systematically characterize and harden the agy cross-model lane, which has repeatedly gone astray (off-task edits, silent-sandbox empty output, role drift, untracked-creation leak, cost-blindness). Seeds a 7-row failure catalog + a 10-scenario test matrix + a 3-phase outline. Per the PDDA document model it stays in 1-INBOX (proposal, lighter burden) and earns the active-doc contract + a ROADMAP ledger line only when testing starts. No ledger entry yet (proposal-first).
+
 ### CHANGELOG governance consolidated into PDDA (de-fragmented from AGENTS.md)
 Moved the CHANGELOG *governance* (format, append-only rule, bet-recording shape) out of `AGENTS.md` and into `PROJECT/PDDA.md` as the single source — keeping AGENTS.md behavioral and avoiding split project governance.
 - **`PROJECT/PDDA.md`** — the "CHANGELOG.md — end-of-iteration record" contract now owns the full governance: a "Maintained append-only" rule (correct via a dated correction, never rewrite history — the guarantee `RECAP.md` used to carry) and a "Recording a bet" shape (call / bet / expected signal + by-when / reversibility / revisit trigger / graduate-iterate-abandon; durable bets also get a `decisions/` record).
