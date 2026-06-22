@@ -54,7 +54,7 @@ utils/pdda-check-hardcoded-paths.sh
 utils/pdda-check-roadmap.sh
 utils/pdda-check-roadmap-coverage.sh
 utils/pdda-stale-working-docs.sh
-utils/pdda-doc-ready.sh
+utils/pdda-doc-ready.sh   # LLM readiness review — set PDDA_LLM_BIN (codex/claude/agy) for recommendations, else it self-skips
 ```
 
 ## Routing hints
