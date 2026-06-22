@@ -55,6 +55,7 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 
 - **Part A · Phase 6 — WPCC real-monolith dogfood** 🟢 — the graduation test: first run of the whole harness against a 6,988-line production monolith (Codex + agy workers). Unblocked 2026-06-18; run on a dedicated branch with `RELAY_WORKTREE_ISOLATION=1`. → [MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md)
 - **Part B — Adversarial hardening** ⚠️ — Phase 1 (epoch fencing) shipped; Phase 2 chaos-suite *detection* partials landed; Phases 2–4 are the active "adversarially proven → commercially viable" frontier. → [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md)
+- **Tooling · relay-xyz discovery hardening** 🟢 — shakedown-lens audit of why other VS Code sessions can't find the skill: locator proven green, root-caused to symlink-only discovery, shipped `skills/relay-xyz/install.sh` + anchored the SKILL.md verify-block; dangling-symlink + `GH Repos`/`GitHub-Repos` clone-split hygiene flagged for sign-off. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 
 ### Completed
 

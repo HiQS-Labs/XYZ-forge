@@ -36,6 +36,22 @@ then use `relay-xyz` to *run* it headless or hands-free.
 don't ship `relay-automation/`, or work that needs a human checkpoint between every turn
 (use plain `/relay` manual mode).
 
+## First-time setup on a new clone or machine (make the skill discoverable)
+
+This repo keeps its skills in top-level `skills/` — a directory Claude Code does **not** scan. A
+session can only find `relay-xyz` if it is symlinked into the user skills dir (`~/.claude/skills/`).
+A fresh clone or a second machine has no such symlink, so the skill is invisible in **every** session
+there — the exact "other VS Code sessions can't find the relay-xyz files" failure. Run this **once per
+clone** to fix it (idempotent, self-locating, no hardcoded path):
+
+```bash
+bash skills/relay-xyz/install.sh   # symlinks this clone's skills/relay-xyz into ~/.claude/skills/
+```
+
+It also replaces a stale/dangling symlink and verifies `find-harness.sh` resolves the harness. The
+locator below handles *where the harness scripts live*; this step handles *whether Claude Code can
+load the skill at all* — a layer the locator cannot reach, because it only runs after the skill loads.
+
 ## Preconditions — locate the harness (bundled locator, never hardcode a path)
 
 `relay-xyz` ships its own device-agnostic locator: [`find-harness.sh`](find-harness.sh),
@@ -201,10 +217,13 @@ and per-device, so this is single-clone coordination, not cross-machine.
 
 ## Verify the harness is green before a real run
 
+These are anchored on `$HARNESS` (set by the Preconditions block) so they resolve no matter what your
+CWD is — don't drop the `$HARNESS/` prefix or they'll 404 from a foreign session:
+
 ```bash
-bash validate.sh            # the tick/automation suite
-bash test/codex-turn.sh     # the Codex shim's tests   (before a Codex run)
-bash test/agy-turn.sh       # the agy shim's tests      (before an agy run)
+bash "$HARNESS/validate.sh"            # the tick/automation suite
+bash "$HARNESS/test/codex-turn.sh"     # the Codex shim's tests   (before a Codex run)
+bash "$HARNESS/test/agy-turn.sh"       # the agy shim's tests      (before an agy run)
 ```
 Run the shim test that matches the reviewer you'll drive (both are first-class). Run these in a
 normal (un-sandboxed) shell — `mktemp`/network under the Bash sandbox can fail them for reasons
