@@ -25,6 +25,7 @@ This file is the first entry point for an AI agent working in this repo: it tell
 ## Canonical rules
 
 - Do not put phase checklists, build steps, or deep execution notes in `ROADMAP.md`.
+- Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer in `ROADMAP.md` — a one-line ledger entry that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Enforced by `utils/pdda-check-roadmap-coverage.sh`; governance lives in `PROJECT/PDDA.md` → "ROADMAP.md contract".
 - Do not create a second competing plan when a canonical `PROJECT/**` doc already exists.
 - Do not override deterministic PDDA findings with prose.
 - Do not report a win you did not verify with the relevant script or test.
@@ -51,6 +52,7 @@ utils/pdda-check-frontmatter.sh
 utils/pdda-check-status-table.sh
 utils/pdda-check-hardcoded-paths.sh
 utils/pdda-check-roadmap.sh
+utils/pdda-check-roadmap-coverage.sh
 utils/pdda-stale-working-docs.sh
 utils/pdda-doc-ready.sh
 ```

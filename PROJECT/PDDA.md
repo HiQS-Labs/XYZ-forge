@@ -228,6 +228,26 @@ Why warn-only:
 - "did you update the changelog" is a reminder, not a correctness gate — blocking a build because a
   human hasn't written the prose yet is the wrong kind of friction (the calibration principle)
 
+#### G. `pdda-check-roadmap-coverage.sh`
+
+Purpose:
+- enforce the *coverage* direction of the `ROADMAP.md` contract: every active doc in `PROJECT/2-WORKING`
+  must be reflected by a pointer in `ROADMAP.md`, so the ledger can never silently fall behind the
+  working set. This is the inverse of `pdda-check-roadmap.sh` (which keeps execution detail from leaking
+  *into* the roadmap); together they guard the pointer/working-set relationship in both directions.
+
+Minimum behavior:
+- list the working docs (`PROJECT/2-WORKING/*.md`, `blank.md` excluded)
+- `error` on any working doc whose repo-relative path (`PROJECT/2-WORKING/<name>.md`) does not appear in
+  `ROADMAP.md` (override the roadmap location via `PDDA_ROADMAP`) — the action is "add a one-line ledger
+  entry linking it"
+- `error` if `ROADMAP.md` is missing entirely
+
+Expected exceptions:
+- a working doc that should not appear in the ledger opts out with `roadmap_exempt: true` in its
+  frontmatter (mirrors the `pdda_hold` escape hatch in `pdda-stale-working-docs.sh`); the check then
+  emits `info` (skip) for that doc
+
 ### 2. LLM-assisted doc readiness review
 
 This catches the issues where structure exists but planning quality is weak.
@@ -299,9 +319,17 @@ Maintainer rule:
 - when a roadmap entry needs more than a one-line status + a link, that is the signal to put the
   detail in the entry's `PROJECT/**` doc and leave only the pointer here — do not grow the roadmap
 
-How this is enforced (two layers, so it cannot quietly rot):
-- **deterministic** — `utils/pdda-check-roadmap.sh` errors on task checklists / `### Checklist` /
+Coverage rule:
+- every active doc in `PROJECT/2-WORKING` must be reflected here by a pointer (a one-line ledger entry
+  that links it), so the ledger never falls behind the working set. A working doc that legitimately
+  should not appear opts out with `roadmap_exempt: true` in its frontmatter. This is the inverse of the
+  "no detail leaks in" rule above: nothing active goes *missing from* the roadmap either.
+
+How this is enforced (so it cannot quietly rot in either direction):
+- **deterministic (no leak in)** — `utils/pdda-check-roadmap.sh` errors on task checklists / `### Checklist` /
   `### QA checklist` headings and warns on size sprawl (runs hourly, free, no model needed)
+- **deterministic (no gap missing)** — `utils/pdda-check-roadmap-coverage.sh` errors when an active
+  `PROJECT/2-WORKING` doc has no pointer here (honors `roadmap_exempt: true`)
 - **LLM** — `utils/pdda-doc-ready.sh` reviews `ROADMAP.md` against the full pointer contract for the
   fuzzier "this paragraph is really execution detail" cases (honors the carve-out)
 - the file itself carries a top banner restating the contract, so a human editing it sees the rule
@@ -365,12 +393,13 @@ Run the deterministic checks every hour in this order:
 2. `pdda-check-status-table.sh`
 3. `pdda-check-hardcoded-paths.sh`
 4. `pdda-check-roadmap.sh`
-5. `pdda-check-changelog.sh`
-6. `pdda-stale-working-docs.sh`
+5. `pdda-check-roadmap-coverage.sh`
+6. `pdda-check-changelog.sh`
+7. `pdda-stale-working-docs.sh`
 
 Then run:
 
-7. `pdda-doc-ready.sh`
+8. `pdda-doc-ready.sh`
 
 (`utils/pdda-run.sh` runs exactly this sequence and applies the active `PDDA_MODE` gate.)
 

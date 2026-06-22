@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
+### ROADMAP coverage rule — every `2-WORKING` doc must be reflected in `ROADMAP.md` (new deterministic check)
+Added the *inverse* of the existing roadmap pointer-contract guard. `pdda-check-roadmap.sh` keeps execution detail from leaking *into* `ROADMAP.md`; the new check guards the other direction, so the ledger can't silently fall behind the working set.
+- **New check `utils/pdda-check-roadmap-coverage.sh`** — for each working doc (`blank.md` excluded), `error` unless its repo-relative path (`PROJECT/2-WORKING/<name>.md`) appears in `ROADMAP.md`; a doc that legitimately shouldn't appear opts out with `roadmap_exempt: true` in frontmatter (mirrors the `pdda_hold` escape hatch). Wired into `utils/pdda-run.sh` after `pdda-check-roadmap.sh`, and into the PDDA hourly schedule (now position 5).
+- **Rule documented, no duplicate spec:** `ROUTER.md` (canonical rule + targeted-debug list), `PROJECT/PDDA.md` (new check §G + the "ROADMAP.md contract" now states the bidirectional enforcement + a "Coverage rule" maintainer note), and the `ROADMAP.md` contract banner.
+- **Closed the one real gap the rule surfaced:** `AUTOMATED-RELAY.md` (`status: Completed`, parked in `2-WORKING` as a completion hub) had no pointer → added a Completed ledger entry linking it.
+- Verified: new check exits 0 in `full`; `pdda-run.sh` green in `full` (all 8 checks); `roadmap_exempt` opt-out proven with a throwaway probe.
+
 ### Doc governance pass (ROUTER rules) + GH-11 promoted to active; session work pushed
 Brought the session's docs onto the ROUTER/PDDA rails and pushed the local relay work to remote.
 - **GH-11 promoted `1-INBOX` → `2-WORKING`** per the PDDA GitHub-issue-intake lifecycle (execution started: Ask 1's `--target-root` flag landed). Added the full active-doc contract — frontmatter (`status: Active`, `updated`, `owner`, `goal`, `gh_issue` carried) + the exact `## Status` table; removed the restored `1-INBOX` copy; de-linted an inline `/tmp/` path in Ask 3.

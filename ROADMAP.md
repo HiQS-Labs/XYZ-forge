@@ -2,7 +2,7 @@
 title: Combined Roadmap — Cost-Observed Marathon Loops + Adversarial Hardening
 status: Active
 created: 2026-06-16
-updated: 2026-06-21
+updated: 2026-06-22
 branch: main
 supersedes: PROJECT/2-WORKING/ROADMAP-COMBINED.md (promoted to canonical 2026-06-17); folds in the former standalone ROADMAP.md (adversarial-hardening track, now Part B)
 synthesizes:
@@ -19,7 +19,8 @@ goal: >
      Allowed: projects in progress / completed / attempted / deferred + links to PROJECT/** docs.
      NOT allowed: phase checklists, build steps, deep execution notes — put those in the project doc.
      Carve-out: a SHORT exception note is OK only when omitting it would hide an operationally critical fact.
-     Enforced by utils/pdda-check-roadmap.sh (deterministic) + utils/pdda-doc-ready.sh ROADMAP rubric (LLM). -->
+     Coverage rule: every PROJECT/2-WORKING doc must be reflected here by a pointer (or opt out with roadmap_exempt: true).
+     Enforced by utils/pdda-check-roadmap.sh + utils/pdda-check-roadmap-coverage.sh (deterministic) + utils/pdda-doc-ready.sh ROADMAP rubric (LLM). -->
 
 # Combined Roadmap: Cost-Observed Marathon Loops + Adversarial Hardening
 
@@ -65,6 +66,7 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 - **Part A · Phases 2–4 — Marathon harness build** ✅ 2026-06-17/18 — dispatcher + headless single-phase loop + autonomous-builder containment + multi-phase `MARATHON.yaml` chaining (M6/M7 deferred). → [MARATHON-HARNESS.md](PROJECT/3-COMPLETED/MARATHON-HARNESS.md)
 - **Part A · Phase 5 — Cross-system cost comparison** ✅ 2026-06-16 — xyz vs relay, every cell from `tick analyze --format json`. → [COST-COMPARISON.md](PROJECT/2-WORKING/COST-COMPARISON.md)
 - **Part B · Phase 1 — Epoch fencing & stale-writer prevention** ✅ 2026-06-18 — monotonic per-task epoch fences zombie writers in the projection kernel. → [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md#phase-1--epoch-fencing--stale-writer-prevention-r1--g3) · [decision record](decisions/2026-06-18-epoch-fencing.md)
+- **Tooling · Automated /relay loop** ✅ 2026-06-15 — Producer↔Reviewer relay that runs hands-free (all-Claude) or one-line-nudge (cross-model), self-heals on stalls (watchdog), and terminates on `Approved`; shipped + packaged as a sibling skill (Phases 1–5, `validate.sh` 20/20). Kept in `2-WORKING` as a completion hub. → [AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md)
 
 ### Deferred · vision
 
