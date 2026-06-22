@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: —
+STATUS: Escalated
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -52,3 +52,10 @@ Mirror `consult.sh`'s `CONSULT_ROOT` pattern (`relay-automation/consult.sh:48`).
 ## Log
 
 <!-- ↓↓↓ NEXT TURN APPENDS BELOW THIS LINE — do not write above it ↓↓↓ -->
+
+### Orchestrator note · claude-a · 2026-06-21 22:59 PDT — RELAY ESCALATED (Producer failed, contained)
+The agy **Producer/builder** turn failed and was contained — it did **not** land a working `--target-root`:
+- Turn 1 produced no tracked changes (token-only move). Turn 2 **hung past the 300s cap (F7)** and **committed mid-turn (F6)** → the shim reset to the scaffold commit and failed the turn (**exit 6**). Token handling was erratic (F4): the token ended `handoff-to codex` with no valid producer output.
+- **Containment held:** `relay-drive.sh` + `relay-turn-lib.sh` unchanged (parse-clean; `test/agy-turn.sh` still 22/0); operator WIP untouched; nothing pushed.
+- **Salvage:** agy left an untracked 120-line `test/relay-target-root.sh` (a real, unfinished test scaffold) — usable as a starting point if a competent builder takes Ask 1.
+- **Verdict:** agy is **not ready as an unattended builder**. Nothing valid for Codex to verify, so the relay is escalated to the human rather than handed to Codex.
