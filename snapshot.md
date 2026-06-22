@@ -1,3 +1,62 @@
+# 📸 Snapshot — 2026-06-21 14:47 (Sun)
+
+**Session:** ROADMAP.md → PDDA pointer/ledger restructure + anti-sprawl safeguards + 3-mode enforcement
+**Project / repo:** Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (`main`; PDDA doc-operating layer)
+**Phase:** PDDA "ROADMAP.md contract" conformance + enforcement modes — **complete & shipped**
+**Status:** ROADMAP **636 → 74 lines** (pointer/ledger); all detail moved losslessly into canonical `PROJECT/**` docs; new deterministic `pdda-check-roadmap.sh` + 3-mode enforcement (`observe`/`light`/`full`, repo ships `full`); CHANGELOG + RECAP updated. **All committed and pushed to `origin/main` @ `1608888`.** A concurrent session's WIP remains untracked (left untouched).
+
+## Git state
+- **Branch:** main
+- **HEAD:** `1608888` — docs(changelog): 2026-06-21 ROADMAP pointer/ledger + PDDA 3-mode entry
+- **Working tree:** 1 modified, 4 untracked — **all from a concurrent session / intake, not this work**
+- **Changed files:**
+```
+ M skills/relay-xyz/SKILL.md
+?? PROJECT/1-INBOX/FEEDBACK/agy-1.0.10-hang-bug-report.md
+?? PROJECT/1-INBOX/FEEDBACK/agy-1.0.10-relay-harness-repro-2026-06-21.md
+?? relay-system/2026-06-21/
+?? skills/relay-xyz/find-harness.sh
+```
+- **Ahead/behind remote:** in sync with `origin/main`.
+
+## Recent findings
+- ROADMAP reduced 636 → 74 lines; **lossless move verified line-by-line** (only intentional drop = an obsolete "dispatcher not built yet" caveat; external "production-quality" cite preserved into the harness doc).
+- 3 new canonical docs: `PROJECT/3-COMPLETED/MARATHON-HARNESS.md` (Part A), `PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md` (Part B), `PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md` (Part C). Phase 1/5 (cost docs) + Phase 6 (WPCC dogfood doc) pointed at, not duplicated.
+- New `utils/pdda-check-roadmap.sh` wired into `pdda-run.sh`; **negative test passes** — blocks in `full`, reports-but-passes in `observe`, blockquote carve-out exempt.
+- `pdda-run.sh` **green in full mode (6/6 checks, no stale moves)**; `validate.sh` passes **sandbox-off** (sandbox-on fails only on `mktemp` perms).
+- **9 commits on `main`, pushed** (origin @ `1608888`). A concurrent relay turn's containment `git reset` briefly orphaned the RECAP commit; recovered via `cherry-pick`.
+- `git push`/`fetch` require **sandbox OFF** (HTTPS keychain credential helper is sandbox-blocked) — manage via `/sandbox`.
+
+## Next steps
+- **Optional finalize:** run `/phase-qa` or a Codex review relay over the new canonical docs (was offered as optional).
+- **Concurrent-session WIP:** decide what to do with the untracked `skills/relay-xyz/find-harness.sh` (orphaned — its `SKILL.md` wiring was reverted by a relay reset), the `relay-system/2026-06-21/` thread, and the two `agy-1.0.10-*` bug reports — left for that session/triage.
+- Core task is **done**; nothing blocking.
+
+## Last response (verbatim)
+Done — committed (`1608888`) and pushed; local and `origin/main` are in sync. The CHANGELOG was clean again (the relay reset had reverted the other session's entry), so my entry went in without entanglement.
+
+---
+
+## Work session — high-level overview
+
+**Goal:** make `ROADMAP.md` conform to the PDDA "ROADMAP.md contract" (a lean pointer/ledger, not an execution plan), and add safeguards so it stays that way.
+
+**What we did:**
+
+1. **Shrank ROADMAP.md from 636 → 74 lines** — now a pure pointer/ledger (In progress / Completed / Deferred·vision, one line + link per item).
+
+2. **Moved all the detail out, losslessly** into canonical `PROJECT/**` docs — three new docs (Marathon harness build, Adversarial-hardening track, the gated self-improvement-loop vision), with Phase 1/5/6 pointed at the docs that already owned them. Verified line-by-line that nothing was lost.
+
+3. **Added two anti-sprawl safeguards** (your "both levels" ask): a top-of-doc contract banner, and a new deterministic check (`pdda-check-roadmap.sh`) wired into the hourly PDDA run + a hardened contract spec.
+
+4. **Built the 3-mode PDDA enforcement ramp** (your follow-up): `observe → light → full` — a fresh install reports-only, then graduates to blocking. This repo ships `full`.
+
+5. **Verified and shipped** — PDDA suite green, mode behavior tested both ways, `validate.sh` still passes. All on `main` and pushed (9 commits total).
+
+**Two operational notes worth remembering:** a concurrent session was live on this tree the whole time — I checkpointed its earlier WIP, kept my commits to my own files, and recovered one of my commits after a concurrent relay turn's containment reset briefly orphaned it. Its leftover artifacts (an orphaned `relay-xyz/find-harness.sh`, a relay thread, two agy bug-reports) are still untracked — I left those for that session. And pushes needed the sandbox off (keychain credential helper is sandbox-blocked — manageable via `/sandbox`).
+
+---
+
 # 📸 Snapshot — 2026-06-18 19:56 (Thu)
 
 **Session:** Antigravity (`agy`) CLI investigation + `agy-turn.sh` shim build → WPCC plan `/xyz` fit + Marathon-dogfood assessment
