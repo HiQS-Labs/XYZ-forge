@@ -5,7 +5,7 @@
   Recipe for running this hands-free: relay-automation/DUELING-CLAUDES.md
 -->
 
-NEXT: Reporter
+NEXT: Maintainer
 STATUS: Open
 ROUND: 1 / 5
 
@@ -51,12 +51,29 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 ---
 ## Log
 
-### Round 1 · Reporter · claude-a · <YYYY-MM-DD HH:MM TZ>
-**Reviewing:** the DUELING-CLAUDES feature (recipe + this thread + its poll.sh/tick wiring)
+### Round 1 · Reporter · claude-a · 2026-06-22 13:45 PDT
+**Reviewing:** the DUELING-CLAUDES feature — recipe (`relay-automation/DUELING-CLAUDES.md`), this thread, and the `poll.sh` + `tick` wiring. Traced against the live harness; every finding below was re-run, not asserted.
+
 **Findings:** (grade each; cite `/abs/path:line`)
-- [Blocker|Should|Nit|Pass] <finding> — Proposed fix: <concrete suggestion, or "author's call">
-**Verdict:** Changes requested | Approve as-is | Rethink
-**Open questions:** <or "none">
-**Commit:** <hash or "none (comments only)">
+
+- **[Blocker] Missing `--dry-run` makes `poll.sh` fire the skeleton `runner.sh` instead of just advising.** Both loop commands at `/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/DUELING-CLAUDES.md:63` (window A) and `:70` (window B) omit `--dry-run`. In Path B the human/Claude takes the turn, so `poll.sh` must be advisory. Without `--dry-run`, `poll.sh:205-210` skips the dry-run early-exit and runs `eval "$RUNNER_CMD"`, defaulting to `relay-automation/runner.sh` **with no args** (`poll.sh:89`). `runner.sh` is a real driver that requires `--task`/`--agent` (`/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/runner.sh:9-26`), so it `die`s → and because `poll.sh` runs under `set -euo pipefail`, the loop tick exits non-zero. The decision line is printed first (`poll.sh:202`), so the operator sees `DECISION: run-runner` *followed by* a runner crash in the same tick. The known-good reference does this correctly — `skills/relay-xyz/SKILL.md:166` includes `--dry-run`. — Proposed fix: append `--dry-run` to both window commands in DUELING-CLAUDES.md (and to the operator's own loop command), matching SKILL.md:166. With `--dry-run`, `poll.sh` exits 0 on idle and 10 on stop, printing the decision without dispatching.
+
+- **[Blocker] Window A's documented `tick release` has no `TICK_REPO_ROOT` / absolute `bin/tick` — but the Reporter is by definition in another repo.** `DUELING-CLAUDES.md:63` tells claude-a, after taking its turn, to run a bare `tick release $TOKEN --agent claude-a --to claude-b`. The Reporter window's CWD is the *other* repo (the whole premise, `DUELING-CLAUDES.md:7-8`), and `.tick/` is per-clone (`CONSUMING.md:62-67`). A bare `tick` from that CWD isn't on PATH and resolves the wrong (or absent) `.tick/`, so the handoff silently fails to release the lock — the loop then never advances. The loop line itself gets this right via its `env TICK_REPO_ROOT=…` prefix (`:63`), and the operator's own turn mechanics use the correct `TICK_REPO_ROOT="…" "…/bin/tick" release …` form — only the inline release instruction in the prose is wrong. — Proposed fix: in `:63`, show the release as `TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" release $TOKEN --agent claude-a --to claude-b` (absolute bin + repo-root env), as the loop prefix and the operator mechanics already do.
+
+- **[Should] `--deadline "$(date -v+45M +%s)"` re-evaluates every tick → the self-close backstop never fires.** `DUELING-CLAUDES.md:63` and `:70` pass `--deadline "$(date -v+45M +%s)"` *inside* the `/loop … run …` command string. `/loop` re-runs that string each tick, so the command substitution recomputes "now + 45m" every 60s and `now >= DEADLINE` (`poll.sh:180`) is never true. The Notes promise "loops self-close on … the 45-min deadline" (`:77`) and "a dead peer window can't make you spin forever" (`:84`) — both are defeated; a dead peer = infinite spin until a human kills it. Mitigation: the primary close path (`STATUS: Closed`/`Approved` → `poll.sh:156,187`) still works, so this is a dead *backstop*, not a dead feature. Confirmed by contrast: the operator's own loop uses a **literal** `--deadline 1782165049` (≈66 min absolute, verified `now=1782161032`), which expires correctly. — Proposed fix: compute the epoch once before the loop (e.g. seed `DEADLINE=$(date -v+45M +%s)` in step 0 and interpolate the literal), or document the literal-epoch form. Never embed `$(date …)` in the looped string.
+
+- **[Nit] Token-name drift in this thread's Setup.** `…/relay-system/2026-06-22/dueling-claudes.md:30` says the lock is `tick` task **RELAY-TURN**, but the live run uses `DUELING-REVIEW-0622` (verified: `tick info DUELING-REVIEW-0622` → `status: claimed, claimer: claude-a`). The "(override with a fresh `--relay-task` per run)" parenthetical softens it, but a fresh agent reading literally would inspect the wrong token. — Proposed fix: note the active token name, or phrase as "RELAY-TURN by default; this run uses `DUELING-REVIEW-0622`."
+
+- **[Nit] Ground rule 9 overstates the gate as repo-global.** `:43` says "clean tree at every handoff," implying the whole repo. The gate is actually artifact-scoped — `scope_clean` runs `git status --porcelain -- <relay-file> [<artifact>]` (`poll.sh:114-118,160-161`), so unrelated dirty files don't park the loop. (Verified: the repo currently has `M snapshot.md` + an untracked FEEDBACK file, yet the gate is unaffected because they're out of scope.) This scoping is the *right* design — robust to repo noise — but the prose claims something stricter than the code enforces. — Proposed fix: reword rule 9 to "clean *artifact scope* at every handoff (the relay file + `--artifact`), not the whole tree."
+
+- **[Pass] "Zero new code" is accurate.** `runner.sh` (4807 B), `watchdog.sh` (4845 B), `poll.sh`, and `bin/tick` all predate this feature; Dueling Claudes adds only docs + a thread file. Caveat worth naming: "zero code" hides that *the recipe command strings themselves carry the two Blockers above* — the bug surface moved from code into the copy-pasted commands, where there's no test to catch it.
+
+- **[Pass] No double-fire; clean handoff window.** The `tick` token serializes turns — `tick_my_turn` (`poll.sh:132-136`) is true for exactly one agent, so both windows can't both get `run-runner`. During A→B handoff one window idles ("not my turn") while the other runs. Sound.
+
+**Worth-it / blast-radius:** Blast radius is genuinely low — docs + one thread file, zero code, trivially revertible. The machinery (tick lock + poll gate + dirty-scope gate) is about as lean as hands-free serialization gets; I don't see a lazier path that still satisfies *no-copy-paste AND no human relaying*. BUT the core value prop — "hands-free, self-closing, survives a dead peer" — is presently undercut by the two Blockers (the loop misfires `runner.sh`; the Reporter can't release the lock from a foreign CWD) and the dead deadline backstop. Fix those three and the feature delivers what it claims.
+
+**Verdict:** Changes requested
+**Open questions:** Is `runner.sh` *intended* to drive Path-B turns (making the missing `--dry-run` a deeper design question), or is Path B always meant to be advisory-only as SKILL.md:166 implies? I read it as advisory-only; confirm.
+**Commit:** 9073b39 (claude-a r1)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
