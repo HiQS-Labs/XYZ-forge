@@ -55,7 +55,7 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 
 - **Part A · Phase 6 — WPCC real-monolith dogfood** 🟢 — the graduation test: first run of the whole harness against a 6,988-line production monolith (Codex + agy workers). Unblocked 2026-06-18; run on a dedicated branch with `RELAY_WORKTREE_ISOLATION=1`. → [MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md)
 - **Part B — Adversarial hardening** ⚠️ — Phase 1 (epoch fencing) shipped; Phase 2 chaos-suite *detection* partials landed; Phases 2–4 are the active "adversarially proven → commercially viable" frontier. → [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md)
-- **Tooling · relay-xyz durability** 🟢 — **shipped 2026-06-21** (regression-tested, pushed): discovery audit via the shakedown lens (locator proven green; symlink-only discovery → `skills/relay-xyz/install.sh`) + drive-layer fixes from a sibling headless run (space-safe `--agent-cmd` dispatch; worktree isolation default-ON for driven runs). Remaining: operator sign-off on dangling `consult`/`wpcc` symlinks + the `GH Repos`/`GitHub-Repos` clone split; optional role↔model assertion + per-run `RELAY-TURN` id. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
+- **Tooling · relay-xyz durability** 🟢 — **shipped 2026-06-21** (regression-tested, pushed): discovery audit via the shakedown lens (locator proven green; symlink-only discovery → `skills/relay-xyz/install.sh`) + drive-layer fixes from a sibling headless run (space-safe `--agent-cmd` dispatch; worktree isolation default-ON for driven runs). Remaining: operator sign-off on the two dangling `consult`/`wpcc` symlinks; optional role-vs-model assertion + per-run `RELAY-TURN` id. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 
 ### Completed
 
@@ -68,7 +68,7 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 
 - **Part C — Autonomous self-improvement loop** 🔮 gated — the LOOPS.md endgame; gated on the metric / oracle / stop-condition prerequisites (safety cage already shipped). → [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md)
 - **Part A · Phase 4 — M6 / M7** 🔲 deferred — cross-phase context injection + state projection, until a phase genuinely needs them. → [MARATHON-HARNESS.md → Deferred](PROJECT/3-COMPLETED/MARATHON-HARNESS.md#deferred--m6--m7)
-- **Tooling · relay-xyz install hygiene** 🔲 deferred — repair the dangling `consult`/`wpcc` user-skill symlinks and resolve the `GH Repos` vs `GitHub-Repos` clone split (pick one canonical parent dir); awaits operator sign-off. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
+- **Tooling · relay-xyz install hygiene** 🔲 deferred — repair the two dangling user-skill symlinks (`consult` points at `skill/consult`, should be `skills/consult`; `wpcc` target clone is missing); awaits operator sign-off. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 
 ---
 

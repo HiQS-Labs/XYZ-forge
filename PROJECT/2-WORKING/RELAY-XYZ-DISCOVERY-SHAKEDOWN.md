@@ -25,7 +25,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Discovery layer: shakedown lens → locator GREEN, root-caused symlink-only discovery, shipped `install.sh` + anchored the verify-block. Drive layer: a sibling-agent headless run exposed two cracks — fixed both: space-safe `--agent-cmd` dispatch (no more `eval` split on `…/GH Repos/…`) + worktree isolation defaulted ON for driven runs (closes the rogue-model containment gap). Suite green except a pre-existing `runner-loop.sh` failure (reproduces with these changes stashed; unrelated). | Operator decision on the flagged-but-not-touched items: repair the dangling `consult`/`wpcc` symlinks and resolve the `GH Repos` vs `GitHub-Repos` clone split. Optional follow-ups: minor #4a/#4b (role↔model assertion; per-run RELAY-TURN id). |
+| Discovery layer: shakedown lens → locator GREEN, root-caused symlink-only discovery, shipped `install.sh` + anchored the verify-block. Drive layer: a sibling-agent headless run exposed two cracks — fixed both: space-safe `--agent-cmd` dispatch (no more `eval` split on `…/GH Repos/…`) + worktree isolation defaulted ON for driven runs (closes the rogue-model containment gap). Suite green except a pre-existing `runner-loop.sh` failure (reproduces with these changes stashed; unrelated). | Operator decision on the one remaining flagged item: repair the two dangling `consult`/`wpcc` symlinks. (The `GitHub-Repos` "clone split" was a misread — it was a symlink alias to `GH Repos`; alias now deleted, 20 skill symlinks repointed.) Optional follow-ups: minor #4a/#4b (role-vs-model assertion; per-run RELAY-TURN id). |
 
 > **Lens, not import.** Methodology borrowed from the Giant Brains `shakedown` skill; that skill stays
 > in its library. This doc is the native deliverable, written to `PROJECT/2-WORKING/` per the operator
@@ -111,11 +111,12 @@ What is **not** robust is skill discovery itself:
 consult -> …/GH Repos/xyz-3-agents-swarm/skill/consult   (DANGLING: repo has skills/, plural)
 wpcc    -> …/wp-code-check/skills/wpcc                    (DANGLING: target missing)
 ```
-4. **Repo-root naming split is a latent landmine.** User skills point into *both* `Documents/GH Repos/`
-   and `Documents/GitHub-Repos/`, and **both** `giant-brains-claude-skills` clones exist on disk. The
-   `shakedown` skill being edited lives under `GH Repos/giant-brains-claude-skills`, while every
-   giant-brains symlink targets `GitHub-Repos/giant-brains-claude-skills` — so edits to the wrong clone
-   never take effect. Not a relay-xyz bug, but the same fragility class and worth resolving once.
+4. **Repo-root naming — RETRACTED (auditor misread), since resolved.** Skill symlinks referenced both
+   `Documents/GH Repos/` and `Documents/GitHub-Repos/` — but `GitHub-Repos` was a **symlink alias →
+   `GH Repos`** (one physical directory, verified `pwd -P`), not a second clone, so there was never any
+   divergence. The original "clone split" finding was wrong (recorded for honesty — the byte-identical
+   `.git` should have been the tell). Cleanup applied 2026-06-21: the alias was deleted and the 20 skill
+   symlinks repointed straight at `GH Repos`, removing the crutch.
 
 ## Fixes applied (in scope)
 
@@ -164,8 +165,9 @@ of this work; the discovery-audit push carried them to `origin/main`. Operator e
 - **Dangling `consult` and `wpcc` symlinks** — collateral evidence of symlink rot, separate skills.
   `consult` is repairable in place (repoint `skill/consult` → `skills/consult`); `wpcc` needs its
   source clone. Out of relay-xyz's scope — offered, not done.
-- **`GH Repos` vs `GitHub-Repos` clone split** — decide one canonical parent dir and repoint, or
-  delete the stale clone, so "which clone is live" stops being ambiguous.
+- ~~`GH Repos` vs `GitHub-Repos` clone split~~ — **resolved / retracted:** `GitHub-Repos` was a symlink
+  alias to `GH Repos`, not a clone. The alias has been deleted and the 20 skill symlinks repointed to
+  `GH Repos`; nothing further to do.
 
 ## What I could not verify
 
