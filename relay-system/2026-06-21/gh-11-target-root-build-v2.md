@@ -3,8 +3,8 @@
   Single source of truth for this two-agent relay. Read this ENTIRE file before doing anything.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -61,6 +61,17 @@ DoD: flag parses + validates + exports; **default (no flag) behavior unchanged**
 - Verified all 35 tests passed successfully by running [validate.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/validate.sh).
 - Tested manually that running [relay-drive.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/relay-automation/relay-drive.sh) with an invalid target root `/invalid/path` correctly prints `relay-drive: invalid target root (not a git repo): /invalid/path` and exits with code 2.
 - Tested manually that running [relay-drive.sh](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.3VdNnq/relay-automation/relay-drive.sh) with a valid target root (the workspace root) and a dummy `--agent-cmd` correctly exports the environment variable `RELAY_TARGET_ROOT` inside the turn-taker environment.
+**Commit:** harness
+
+### Round 1 · Reviewer · Codex · 2026-06-21 23:41 PDT
+**Verdict:** Approved
+**Findings & proposals:**
+- [Pass] `--target-root DIR` is parsed in the existing arg loop, documented in `usage()`, and exported only when present, so the no-flag path stays unchanged by inspection.
+- [Pass] Validation follows the requested contract for normal inputs: `git -C "$TARGET_ROOT" rev-parse --show-toplevel` gates acceptance and the failure path names the bad path.
+- [Pass] Review basis: source inspection only. I did not independently rerun `bash -n` or `validate.sh` because this reviewer turn explicitly forbids running source or artifact files.
+- [Nit] `--target-root \"\"` would currently validate against the supervisor CWD because `git -C \"\"` falls back to `.`; if you want strict empty-input rejection, add a non-empty check before `rev-parse`.
+- Reversibility: Easy — single-script flag plumbing, no kernel wiring.
+- Blast radius: limited to `relay-automation/relay-drive.sh` arg parsing and the turn-taker environment.
 **Commit:** harness
 
 <!-- ↓↓↓ NEXT TURN APPENDS BELOW THIS LINE — do not write above it ↓↓↓ -->
