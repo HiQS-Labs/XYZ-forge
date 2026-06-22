@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-21
 
+### CHANGELOG governance consolidated into PDDA (de-fragmented from AGENTS.md)
+Moved the CHANGELOG *governance* (format, append-only rule, bet-recording shape) out of `AGENTS.md` and into `PROJECT/PDDA.md` as the single source — keeping AGENTS.md behavioral and avoiding split project governance.
+- **`PROJECT/PDDA.md`** — the "CHANGELOG.md — end-of-iteration record" contract now owns the full governance: a "Maintained append-only" rule (correct via a dated correction, never rewrite history — the guarantee `RECAP.md` used to carry) and a "Recording a bet" shape (call / bet / expected signal + by-when / reversibility / revisit trigger / graduate-iterate-abandon; durable bets also get a `decisions/` record).
+- **`AGENTS.md`** — principle #7 and the provenance bullet now state the behavioral trigger (*record the bet*) and **defer where/how to PDDA**, instead of re-specifying CHANGELOG mechanics.
+- **`ROUTER.md`** — CHANGELOG.md added to the role split (first-class, governed by PDDA), a canonical rule ("don't re-specify CHANGELOG rules in AGENTS.md or elsewhere"), and a routing hint pointing CHANGELOG/provenance tasks at PDDA.
+- Verified: `pdda-run.sh` green in `full`.
+
 ### CHANGELOG is now a first-class PDDA operation; RECAP.md retired
 Promoted `CHANGELOG.md` to a first-class PDDA artifact — the canonical end-of-iteration running log — and retired `RECAP.md` (moving to `PROJECT/4-MISC/`). This entry dogfoods the new rule.
 - **New `utils/pdda-check-changelog.sh`** — warn-only nudge: flags when the newest `## YYYY-MM-DD` entry predates the latest git commit by more than `PDDA_CHANGELOG_STALE_DAYS` days (default `0`), or when CHANGELOG is missing / has no dated entry. **Never `error`, so it never blocks — even in `full` mode** (verified: stale fixture exits 0 under `PDDA_MODE=full`). Wired into `utils/pdda-run.sh` (step 5, after roadmap) and the PDDA.md hourly schedule.

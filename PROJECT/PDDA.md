@@ -295,6 +295,21 @@ It should not contain:
 - per-file diffs or deep execution detail that belongs in the entry's `PROJECT/**` doc
 - aspirational plans — those live in the project doc and the `ROADMAP.md` ledger
 
+Maintained append-only:
+
+- add a new dated entry per iteration; **never rewrite a past entry's numbers, claims, or
+  recommendation** — *especially* not when it turned out wrong. Correct a past entry by appending a
+  dated correction, not by editing history. This is the provenance guarantee `RECAP.md` used to carry.
+
+Recording a bet (when a change is consequential):
+
+- when a decision is Costly, a one-way door, or rides on an assumption that could be wrong, the entry
+  records the call, the bet/assumption, the expected signal with a by-when, the reversibility read, a
+  revisit trigger, and a graduate / iterate / abandon recommendation. Below that threshold a plain
+  entry suffices. Durable bets also earn a `decisions/` record; run-specific compliance findings go in
+  `REAL-AGENT-OBSERVATIONS.md`. (`AGENTS.md` principle #7 supplies the behavioral trigger — *record the
+  bet*; this contract owns the *where and how*, so governance is not fragmented across the two files.)
+
 How this is enforced (a nudge, not a gate):
 - **deterministic** — `utils/pdda-check-changelog.sh` **warns** (never `error`, so it never blocks —
   even in `full`) when the newest dated entry predates the latest git commit by more than
