@@ -2,17 +2,26 @@
 gh_issue: 11
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11
 title: "relay-xyz: hard to target a repo other than the harness clone (cross-repo reviews)"
-status: Proposed (1-INBOX — not yet active)
+status: Active
 created: 2026-06-21
+updated: 2026-06-21
+owner: Noel (operator) · Claude (producer)
 doc_type: feedback
+goal: >
+  Make relay-xyz usable against a repo other than the harness clone — add a `--target-root` flag
+  (Path A worktree base + `ALLOW_PATHS` resolution) and surface `consult.sh`'s `CONSULT_ROOT`, plus the
+  low-effort doc fixes. Promoted from a GH-issue capture on execution start (Ask 1 flag landed).
 ---
 
 # GH-11 — relay-xyz: cross-repo targeting
 
-> **In-repo capture of [issue #11](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11).**
-> The live issue is the discussion surface; this doc is the actionable capture. No `## Status` table
-> while it sits in `1-INBOX` — it gains one (and the full active-doc contract) on promotion to
-> `PROJECT/2-WORKING/`, per `PROJECT/PDDA.md` → "GitHub issue intake".
+> **In-repo capture of [issue #11](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11), promoted to `PROJECT/2-WORKING/` on execution start** (Ask 1's `--target-root` flag landed 2026-06-21). The live issue is the discussion surface; this doc is the canonical active-work record, per `PROJECT/PDDA.md` → "GitHub issue intake".
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **Ask 1 flag increment landed** — `--target-root` parse + git-repo validation + `RELAY_TARGET_ROOT` export in `relay-drive.sh` (built by agy, Codex-approved, `validate.sh` 35/35). Inert until the kernel-wiring round. | **Kernel wiring** — `relay-turn-lib.sh` consuming `RELAY_TARGET_ROOT` (worktree base + `ALLOW_PATHS` against the foreign root): Ask 1's load-bearing half. Then Codex's empty-string `[Nit]` + Asks 2–5 (surface consult + doc fixes). |
 
 ## Summary
 
@@ -45,8 +54,8 @@ inverse: pointing the harness **at** a foreign repo.
 **Low-effort doc fixes (3–5):**
 
 3. **"Run un-sandboxed" guidance collides with `$TMPDIR`-relative paths.** When a prompt/artifact is
-   authored in a sandboxed step (`$TMPDIR=/tmp/claude-501`) and the CLI then runs un-sandboxed
-   (`$TMPDIR=/var/folders/…`), the path doesn't resolve (`prompt file not found`).
+   authored in a sandboxed step (`$TMPDIR` = the sandbox temp dir) and the CLI then runs un-sandboxed
+   (`$TMPDIR` = a different dir, e.g. `/var/folders/…`), the path doesn't resolve (`prompt file not found`).
    **Ask:** add a one-line warning — "when a prompt/artifact is authored in a sandboxed step and
    consumed un-sandboxed, pass it by absolute path, not `$TMPDIR`."
 

@@ -2,6 +2,15 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-22
+
+### Doc governance pass (ROUTER rules) + GH-11 promoted to active; session work pushed
+Brought the session's docs onto the ROUTER/PDDA rails and pushed the local relay work to remote.
+- **GH-11 promoted `1-INBOX` → `2-WORKING`** per the PDDA GitHub-issue-intake lifecycle (execution started: Ask 1's `--target-root` flag landed). Added the full active-doc contract — frontmatter (`status: Active`, `updated`, `owner`, `goal`, `gh_issue` carried) + the exact `## Status` table; removed the restored `1-INBOX` copy; de-linted an inline `/tmp/` path in Ask 3.
+- **ROADMAP ledger** (pointer-only): added **GH-11** (in progress — flag landed) and **agy reliability testing** (⏸️ paused, with the scope-sensitive-builder finding).
+- **`ROUTER-MCP-VS-CLI.md`** (operator's worth-it verdict: an MCP router is *not worth it* — it would re-encode routing and create the second source of truth PDDA exists to prevent) given minimal `1-INBOX` frontmatter.
+- Pushed the 9 local relay commits (agy-reliability + GH-11 review/build dogfoods) to `origin/main`. Verified: `pdda-run` checks clean, `validate.sh` 35/35.
+
 ## 2026-06-21
 
 ### Dogfood retry: agy-as-builder SUCCEEDED on a narrow scope; cross-model relay worked
