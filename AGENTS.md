@@ -30,7 +30,7 @@ Don't optimize what you can't measure. Don't report a win you didn't verify — 
 
 ### 7. Record the bets that matter
 
-When a decision is Costly or a One-way door, or rides on an assumption that could be wrong, write it down at commit time: the call, the bet, the expected signal with a by-when, the reversibility read, a revisit trigger. Records live in `RECAP.md` — append a run/decision section with the call, the expected signal, and the graduate/iterate/abandon recommendation (`REAL-AGENT-OBSERVATIONS.md` for run-specific compliance findings). Updates are append-only — never rewrite a bet that turned out wrong; *especially* not then. Below the threshold, skip the file and say so in one line.
+When a decision is Costly or a One-way door, or rides on an assumption that could be wrong, write it down at commit time: the call, the bet, the expected signal with a by-when, the reversibility read, a revisit trigger. Records live in `CHANGELOG.md` (the first-class end-of-iteration record) — append a dated entry with the call, the expected signal, and the graduate/iterate/abandon recommendation (`REAL-AGENT-OBSERVATIONS.md` for run-specific compliance findings). Updates are append-only — never rewrite a bet that turned out wrong; *especially* not then. Below the threshold, skip the file and say so in one line.
 
 ### 8. Calibration is staying quiet
 
@@ -46,8 +46,10 @@ When instructions conflict: the current user message wins. Project-level instruc
 
 This repo is the **Trinity coordination spike** — a small `tick` CLI (Node standard library only) that lets Claude Code, Codex, and Gemini work one branch concurrently without colliding. Most changes land in the runtime (`src/`, `bin/`) or its test suite (`test/`), not in docs. Conventions that will bite you if skipped:
 
+For startup order and canonical entry points, read [ROUTER.md](ROUTER.md) first; this file stays the behavioral playbook.
+
 - **`validate.sh` is the gate.** It must stay green (currently 12/12). Correctness concentrates in the projection logic (`src/project.js`) — the easy place to break something silently. Any change to projection, the disjoint-files-per-event model, or the shared-local `.tick/events/` transport (git push was removed in Run 2 — claims resolve from the local event dir, not a remote) earns a test before it earns a commit.
-- **Provenance is append-only.** Run results and the bets behind them live in `RECAP.md` and `REAL-AGENT-OBSERVATIONS.md`. Add a new run section; never rewrite a past run's numbers or recommendation — *especially* not when it turned out wrong (principle #7).
+- **Provenance is append-only.** Run results and the bets behind them live in `CHANGELOG.md` (the first-class end-of-iteration record; `RECAP.md` is retired → `PROJECT/4-MISC/`) and `REAL-AGENT-OBSERVATIONS.md`. Add a new dated entry; never rewrite a past entry's numbers or recommendation — *especially* not when it turned out wrong (principle #7).
 - **`.tick/` is branch-scoped and load-bearing.** Don't restructure the event-log layout or rename verbs without updating [README.md](README.md) — the verb table and the agent integration snippet both state them — in the same change.
 - **Node standard library only — no dependencies, no lockfile.** The repo ships no root manifest; the only `package.json` is the `sandbox-app/` test fixture. `tick` runs on `node:*` built-ins by contract — don't add deps or a lockfile to either.
 - **ASCII punctuation** — straight quotes, regular hyphens. Em-dashes are fine.
@@ -58,6 +60,6 @@ This repo is the **Trinity coordination spike** — a small `tick` CLI (Node sta
 In the spirit of principle #7, this file is itself a recorded bet:
 
 - **The bet:** ambient principles in AGENTS.md improve agent behavior in this repo even when no skill fires — and the file transfers usefully to other repos unchanged.
-- **Expected signal:** agent responses here lead with verdicts, state reversibility on consequential changes (the `tick` runtime is full of Costly / one-way-door calls), and stay quiet on trivial ones — observable in session transcripts and in RECAP.md's graduate/iterate/abandon framing.
+- **Expected signal:** agent responses here lead with verdicts, state reversibility on consequential changes (the `tick` runtime is full of Costly / one-way-door calls), and stay quiet on trivial ones — observable in session transcripts and in CHANGELOG.md's graduate/iterate/abandon framing.
 - **Reversibility:** Easy — delete the file.
-- **Revisit:** if the principles here drift from how RECAP.md actually records bets, or the file grows past ~120 lines, prune or reconcile.
+- **Revisit:** if the principles here drift from how CHANGELOG.md actually records bets, or the file grows past ~120 lines, prune or reconcile.

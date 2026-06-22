@@ -183,6 +183,22 @@ Expected exceptions:
 The fuzzy judgment ("deep execution notes that belong elsewhere") stays with the LLM layer below; this
 script only catches the unambiguous signals.
 
+#### F. `pdda-check-changelog.sh`
+
+Purpose:
+- nudge that `CHANGELOG.md` (the first-class end-of-iteration record) was updated this iteration
+
+Minimum behavior:
+- read `CHANGELOG.md` (override via `PDDA_CHANGELOG`); find the newest `## YYYY-MM-DD` entry
+- `warn` (never `error` — does not block, even in `full`) when that entry predates the latest git
+  commit by more than `PDDA_CHANGELOG_STALE_DAYS` days (default `0`)
+- `warn` if `CHANGELOG.md` is missing or has no dated entry; emit `info` (skip the compare) when there
+  is no git history
+
+Why warn-only:
+- "did you update the changelog" is a reminder, not a correctness gate — blocking a build because a
+  human hasn't written the prose yet is the wrong kind of friction (the calibration principle)
+
 ### 2. LLM-assisted doc readiness review
 
 This catches the issues where structure exists but planning quality is weak.
@@ -261,6 +277,30 @@ How this is enforced (two layers, so it cannot quietly rot):
   fuzzier "this paragraph is really execution detail" cases (honors the carve-out)
 - the file itself carries a top banner restating the contract, so a human editing it sees the rule
 
+## CHANGELOG.md — end-of-iteration record (first-class)
+
+`CHANGELOG.md` is a first-class PDDA artifact: the canonical, newest-first running log of what changed,
+updated **at the end of each iteration**. It replaces `RECAP.md` (retired → `PROJECT/4-MISC/`) as the
+running provenance/narrative log. `REAL-AGENT-OBSERVATIONS.md` still holds run-specific compliance
+findings, and durable Costly / one-way-door bets still earn a `decisions/` record.
+
+It should contain:
+
+- newest-first, dated `## YYYY-MM-DD` sections
+- one entry per substantive iteration: what changed, why, and the verification (test / suite result)
+- the bet behind a consequential change when one applies (the call, the expected signal, reversibility)
+
+It should not contain:
+
+- per-file diffs or deep execution detail that belongs in the entry's `PROJECT/**` doc
+- aspirational plans — those live in the project doc and the `ROADMAP.md` ledger
+
+How this is enforced (a nudge, not a gate):
+- **deterministic** — `utils/pdda-check-changelog.sh` **warns** (never `error`, so it never blocks —
+  even in `full`) when the newest dated entry predates the latest git commit by more than
+  `PDDA_CHANGELOG_STALE_DAYS` days (default `0`), i.e. an iteration shipped without a changelog entry
+- whether an entry is actually *substantive* stays a human / LLM judgment, not a regex
+
 ## Activity log artifact
 
 PDDA should write an append-only activity log to:
@@ -281,11 +321,12 @@ Run the deterministic checks every hour in this order:
 2. `pdda-check-status-table.sh`
 3. `pdda-check-hardcoded-paths.sh`
 4. `pdda-check-roadmap.sh`
-5. `pdda-stale-working-docs.sh`
+5. `pdda-check-changelog.sh`
+6. `pdda-stale-working-docs.sh`
 
 Then run:
 
-6. `pdda-doc-ready.sh`
+7. `pdda-doc-ready.sh`
 
 (`utils/pdda-run.sh` runs exactly this sequence and applies the active `PDDA_MODE` gate.)
 

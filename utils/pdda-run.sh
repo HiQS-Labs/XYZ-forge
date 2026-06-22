@@ -14,6 +14,7 @@ pdda-check-frontmatter.sh
 pdda-check-status-table.sh
 pdda-check-hardcoded-paths.sh
 pdda-check-roadmap.sh
+pdda-check-changelog.sh
 pdda-stale-working-docs.sh
 "
 EXIT_CODE=0

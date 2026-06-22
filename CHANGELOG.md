@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-21
 
+### CHANGELOG is now a first-class PDDA operation; RECAP.md retired
+Promoted `CHANGELOG.md` to a first-class PDDA artifact — the canonical end-of-iteration running log — and retired `RECAP.md` (moving to `PROJECT/4-MISC/`). This entry dogfoods the new rule.
+- **New `utils/pdda-check-changelog.sh`** — warn-only nudge: flags when the newest `## YYYY-MM-DD` entry predates the latest git commit by more than `PDDA_CHANGELOG_STALE_DAYS` days (default `0`), or when CHANGELOG is missing / has no dated entry. **Never `error`, so it never blocks — even in `full` mode** (verified: stale fixture exits 0 under `PDDA_MODE=full`). Wired into `utils/pdda-run.sh` (step 5, after roadmap) and the PDDA.md hourly schedule.
+- **`PROJECT/PDDA.md`** — new "CHANGELOG.md — end-of-iteration record (first-class)" contract section (newest-first dated entries; what belongs vs what doesn't; warn-only enforcement), plus the check documented under deterministic scripts (F) and added to the schedule.
+- **RECAP → CHANGELOG references migrated** in `AGENTS.md` (principle #7 + the append-only provenance bullet + two meta-refs), `README.md`, and `PROJECT/2-WORKING/AUTOMATED-RELAY.md`. `REAL-AGENT-OBSERVATIONS.md` still holds run-specific compliance findings; durable bets still earn a `decisions/` record.
+- Verified: `pdda-run.sh` green in `full`; new check green on the current CHANGELOG, warns on a stale/missing fixture.
+
 ### relay harness durability — space-safe `--agent-cmd` + worktree isolation default-ON for driven runs
 A sibling Claude Code agent drove a real headless Path-A relay against this harness from a foreign clone and surfaced two cracks one layer below skill discovery. Both fixed; suite green except a pre-existing `runner-loop.sh` failure (reproduces with these changes stashed — unrelated; "artifact paths have unstaged changes" in the untouched `runner.sh`).
 - **Space-in-path bug fixed (`relay-drive.sh`).** `eval "$AGENT_CMD"` word-split an absolute `--agent-cmd` under `…/GH Repos/…` (`…/GH: Permission denied`) — Path A was broken on the operator's own default path. Now **smart dispatch**: a bare executable path is invoked directly (`"$AGENT_CMD"`, space-safe); a full command string (env-prefixed / shell-quoted / `%q`-escaped, as `poll-relay`/`marathon-drive` pass) still falls back to `eval`. `marathon-drive.sh` simplified to pass the bare path (dropped its `%q` workaround). Regression added to `test/poll-relay.sh` (spaced bare path is invoked, not split) + `test/marathon-drive.sh` case 11 updated. **poll-relay 12/0, marathon-drive 38/0.**

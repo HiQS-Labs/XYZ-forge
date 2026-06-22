@@ -56,7 +56,7 @@ A `/relay` Producer↔Reviewer loop that runs **hands-free** (all-Claude) or one
 - (a) scope/estimate: `relay-automation/PHASE-4A-SCOPE.md`
 - Operator usage: `relay-automation/README.md`
 - Decisions: `decisions/` (graduate-phase-2, relay-turns-tick-native)
-- Running log: `CHANGELOG.md` · narrative: `RECAP.md` · observations: `REAL-AGENT-OBSERVATIONS.md`
+- Running log + narrative: `CHANGELOG.md` (end-of-iteration record; `RECAP.md` retired → `PROJECT/4-MISC/`) · observations: `REAL-AGENT-OBSERVATIONS.md`
 
 ## Definition of done (project)
 Phases 1–5 shipped, relay turns tick-native (a), `validate.sh` green, a real automated

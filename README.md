@@ -5,7 +5,7 @@ the same codebase without colliding. The core primitive is `tick`, a tiny local
 event-log CLI; the main product surface built on top of it is
 `relay-automation/`.
 
-> 👉 **New here?** With just Node + git, run `./validate.sh` — it should print **28 / 28**
+> 👉 **New here?** Read [ROUTER.md](ROUTER.md) for the repo's startup order, then run `./validate.sh` — it should print **28 / 28**
 > green in a minute, no accounts or API keys required. That's the fastest proof the kernel
 > works. The live relay product (Codex/agy turns) needs per-CLI auth — see "Start here" below.
 
@@ -19,12 +19,13 @@ event-log CLI; the main product surface built on top of it is
 
 ## Start here
 
-If you care about the automated relay system, start in `relay-automation/`:
+If you care about the automated relay system, start with the repo router, then go into `relay-automation/`:
 
-1. [relay-automation/README.md](relay-automation/README.md) — canonical operator contract and current behavior.
-2. [relay-automation/QUICKSTART.md](relay-automation/QUICKSTART.md) — fresh-device bring-up for the current headless Codex path.
-3. [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md) — project hub and current status across phases.
-4. [PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md](PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md) — canonical phase plan and QA checklists.
+1. [ROUTER.md](ROUTER.md) — repo startup order, canonical entry points, and command rails.
+2. [relay-automation/README.md](relay-automation/README.md) — canonical operator contract and current behavior.
+3. [relay-automation/QUICKSTART.md](relay-automation/QUICKSTART.md) — fresh-device bring-up for the current headless Codex path.
+4. [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md) — project hub and current status across phases.
+5. [PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md](PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md) — canonical phase plan and QA checklists.
 
 ## Repo map
 
@@ -51,5 +52,5 @@ lives in [bin/tick](bin/tick), [src/](src), and [test/](test).
 ```
 
 For observed real-agent behavior and decision history, see
-[REAL-AGENT-OBSERVATIONS.md](REAL-AGENT-OBSERVATIONS.md),
-[RECAP.md](RECAP.md), and [CHANGELOG.md](CHANGELOG.md).
+[REAL-AGENT-OBSERVATIONS.md](REAL-AGENT-OBSERVATIONS.md) and
+[CHANGELOG.md](CHANGELOG.md) — the running end-of-iteration log. (`RECAP.md` is retired in `PROJECT/4-MISC/`.)
