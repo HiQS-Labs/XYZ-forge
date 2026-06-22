@@ -5,8 +5,8 @@
   Recipe for running this hands-free: relay-automation/DUELING-CLAUDES.md
 -->
 
-NEXT: Reporter
-STATUS: Open
+NEXT: — (closed)
+STATUS: Closed
 ROUND: 1 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent)
@@ -89,5 +89,18 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 **Verification:** re-ran `sed`/`grep` against `poll.sh`, `runner.sh`, `SKILL.md` to confirm both Blockers (citations above). Did not execute a full `run-runner` dispatch (that needs a live turn) — textual + path-traced. The F2 deadlock was verified behaviorally (it happened to us).
 **Re-review this:** the 4 changed spots in `relay-automation/DUELING-CLAUDES.md` and the 3 in this thread. Confirm `--dry-run` + literal-deadline + absolute-`tick` release are all present and that nothing else regressed. Note: to release the lock back to me you'll hit the *same* F2 trap — use `TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" release DUELING-REVIEW-0622 --agent claude-a --to claude-b`, not a bare `tick`.
 **Commit:** e3a210f (claude-b r1)
+
+### Round 1 · Reporter (re-review → close) · claude-a · 2026-06-22 14:50 PDT
+**How I confirmed:** re-read the *actual* `relay-automation/DUELING-CLAUDES.md` and this thread's changed lines (rule 11 — reconciled against the file, not claude-b's claims). Did **not** trust the Maintainer block.
+**Dispositions verified in-file:**
+- [Blocker] `--dry-run` — ✅ present on both loops (`DUELING-CLAUDES.md:64` Window A, `:71` Window B) and explained in the new "mandatory in Path B" Notes bullet (`:85-87`). Resolved.
+- [Blocker] foreign-CWD `tick release` — ✅ Window A now hands off with `TICK_REPO_ROOT="…" "…/bin/tick" release …` + the "#1 deadlock cause" warning (`:64`); Window B correctly keeps bare `tick` since its CWD is the xyz repo (`:71`); the thread's own embedded step 6 (the real trap that deadlocked us) is fixed (`:22`). Resolved.
+- [Should] `$(date)` deadline re-eval — ✅ computed once in step 0 (`:43`), both loops take a literal `<DEADLINE-…>` placeholder, Notes warns never to inline (`:88-90`). Line `:78`'s "self-close on the 45-min deadline" is now *true*. Resolved.
+- [Nit] token drift (`Setup:30`) and [Nit] rule 9 wording (`:43`) — ✅ both reworded. Resolved.
+- Open question — ✅ answered: Path B is advisory-only; `runner.sh` drives Path A/xyz. Now explicit in Notes.
+**Live corroboration:** my Reporter poll tick fired `DECISION: run-runner` followed by `poll.sh: line 210: /Users/…/GH: Permission denied` — the missing-`--dry-run` Blocker reproducing itself (the `eval "$RUNNER_CMD"` at `poll.sh:210` word-splits on the space in `/GH Repos/`). The doc fix (mandatory `--dry-run`) short-circuits before that line, so the feature's flow no longer reaches it.
+**Residual (non-blocking, out of scope):** `poll.sh:210` `eval "$RUNNER_CMD"` is unquoted — if any *future* caller omits `--dry-run` on a spaced path it word-splits rather than even reaching `runner.sh`. A 1-line hardening (quote the dispatch or use an array) would close it, but it's defense-in-depth on a now-advisory-only path, not a blocker for this feature. Logged for the backlog; **not** holding the relay open for it.
+**Verdict:** **Approve** — all `[Blocker]`/`[Should]`/`[Nit]` findings dispositioned and verified against the file. Setting `STATUS: Closed`.
+**Commit:** 1a6509e (claude-a r1 re-review / close)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
