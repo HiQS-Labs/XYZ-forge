@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
+### Dueling Claudes — two-window bug-report → fix relay recipe (zero new code)
+Recipe for two live Claude Code windows on the same machine running a bug-report → fix loop across two repos with no copy-paste: **Claude A** (Reporter, window on another repo) files bugs into a shared relay file; **Claude B** (Maintainer, window on this repo) fixes them and **stops before commit/push for a human "go"** (the one gate). Confirmed it needs **no new code** — it composes the shipped `poll.sh` + `/loop` + `tick` lock with the portable `/relay` protocol; the dirty-relay-file `idle` state *is* the approval gate, and all commits land in this repo so `--target-root` isn't needed.
+- **New:** [`relay-automation/DUELING-CLAUDES.md`](relay-automation/DUELING-CLAUDES.md) — the per-window recipe (one-time `install.sh`, fresh `--relay-task` token per run, the two `/loop` commands, the gate clause, limits).
+- **New:** inaugural scaffolded thread [`relay-system/2026-06-22/dueling-claudes.md`](relay-system/2026-06-22/dueling-claudes.md) with a Reporter/Maintainer-customized `▶ TAKE YOUR TURN` block (the gate is baked into the Maintainer instructions).
+- Load-bearing detail surfaced from reading [`poll.sh`](relay-automation/poll.sh): Claude A's loop must set `env TICK_REPO_ROOT=<this repo>` (else `tick` reads the lock from the wrong repo); both loops use absolute paths since `/loop` runs from each window's own CWD.
+
 ### Front-door plan unified with a parallel Opus-Max session (relay-xyz adherence)
 Folded a sibling Claude-Code session's findings into the front-door remediation plan + `FRONTDOOR.md`. That session independently confirmed the **relay-xyz infra is complete** (`find-harness.sh`, `--target-root`, `CONSULT_ROOT`, `install.sh` all exist) — so **the friction is agent-adherence, not missing tooling**.
 - **New Phase 4 (relay-xyz adherence)** in the plan: **FD-11** — hoist `find-harness.sh --check` to the first imperative line of `SKILL.md` (a skimming agent never reaches the buried command); **FD-12** — persist a per-repo breadcrumb only via a channel Claude Code auto-loads (target-repo memory or `CLAUDE.md` by skill name), a portable pointer, **never a bare absolute-path root file**. Phase 3's `--target-root` recipe now distinguishes **one-shot read → `CONSULT_ROOT`+`consult.sh`** from **turn-based relay → `--target-root`** (the session's Q1: Path A is the wrong tool for a read).
