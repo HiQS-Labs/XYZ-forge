@@ -69,12 +69,12 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 - **Part A · Phase 5 — Cross-system cost comparison** ✅ 2026-06-16 — xyz vs relay, every cell from `tick analyze --format json`. → [COST-COMPARISON.md](PROJECT/2-WORKING/COST-COMPARISON.md)
 - **Part B · Phase 1 — Epoch fencing & stale-writer prevention** ✅ 2026-06-18 — monotonic per-task epoch fences zombie writers in the projection kernel. → [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md#phase-1--epoch-fencing--stale-writer-prevention-r1--g3) · [decision record](decisions/2026-06-18-epoch-fencing.md)
 - **Tooling · Automated /relay loop** ✅ 2026-06-15 — Producer↔Reviewer relay that runs hands-free (all-Claude) or one-line-nudge (cross-model), self-heals on stalls (watchdog), and terminates on `Approved`; shipped + packaged as a sibling skill (Phases 1–5, `validate.sh` 20/20). Kept in `2-WORKING` as a completion hub. → [AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md)
+- **Tooling · relay-xyz install hygiene** ✅ 2026-06-22 — both dangling user-skill symlinks repaired (operator-signed-off): `consult` → `skills/consult` (was the singular-`skill/` typo) and `wpcc` → `…/wp-code-check/skills/wpcc` (the clone is now present at that path; symlink target was already correct). Both resolve to their `SKILL.md` ✓. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 
 ### Deferred · vision
 
 - **Part C — Autonomous self-improvement loop** 🔮 gated — the LOOPS.md endgame; gated on the metric / oracle / stop-condition prerequisites (safety cage already shipped). → [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md)
 - **Part A · Phase 4 — M6 / M7** 🔲 deferred — cross-phase context injection + state projection, until a phase genuinely needs them. → [MARATHON-HARNESS.md → Deferred](PROJECT/3-COMPLETED/MARATHON-HARNESS.md#deferred--m6--m7)
-- **Tooling · relay-xyz install hygiene** 🟡 — `consult` user-skill symlink **repaired 2026-06-22** (operator-signed-off): `~/.claude/skills/consult` now → `skills/consult` (was the singular-`skill/` typo; resolves to SKILL.md ✓). Remaining: the `wpcc` symlink's target clone is missing (a missing repo, not a typo) — repair when that clone exists. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 
 ---
 

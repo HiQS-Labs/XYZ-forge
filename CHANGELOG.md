@@ -4,8 +4,8 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
-### Fixed the `consult` user-skill symlink (install hygiene)
-Repaired the dangling `~/.claude/skills/consult` symlink: it pointed at `…/xyz-3-agents-swarm/skill/consult` (singular `skill/` — a typo; no such dir) instead of the real `skills/consult` (plural). Re-pointed it; `consult/SKILL.md` now resolves and `/consult` is live again. Local-machine fix (the symlink lives outside the repo); ledger updated. One install-hygiene item remains: the `wpcc` symlink's target clone is missing (a missing repo, not a typo) — see [ROADMAP.md](ROADMAP.md) → Deferred · install hygiene.
+### Closed out relay-xyz install hygiene — both user-skill symlinks resolve
+Repaired both dangling `~/.claude/skills/` symlinks (local-machine fix; the symlinks live outside the repo — this is the ledger reflecting it). **`consult`** pointed at `…/xyz-3-agents-swarm/skill/consult` (singular `skill/` — a typo; no such dir) instead of the real `skills/consult` (plural); re-pointed, `/consult` is live again. **`wpcc`** is now resolved too: its symlink target (`…/wp-code-check/skills/wpcc`) was already correct — the `wp-code-check` clone is now present at that path, so it resolves with no change needed. Both reach their `SKILL.md` ✓. The ROADMAP install-hygiene item is now ✅ done (moved Deferred → Completed).
 
 ### New skill — `relay-to-issue`: post-relay transcript → checklist GitHub issue
 Closes the loop after a relay: reads a finished `relay-system/<date>/<slug>.md` producer↔reviewer thread and files **one checklist-style GitHub issue** in the repo the relay was *about*, so review follow-ups become spin-off-ready tasks without hand-copying. Operator-chosen shape: one issue + checklist (each box a task), target = subject repo, auto-post, input = newest thread (or `--thread <path|slug>`).
