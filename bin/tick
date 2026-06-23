@@ -16,11 +16,40 @@ const { gitUserName } = require('../src/identity');
 const { parseGeminiStats } = require('../src/cost');
 
 function repoRoot() {
-  if (process.env.TICK_REPO_ROOT) return path.resolve(process.env.TICK_REPO_ROOT);
+  if (process.env.TICK_REPO_ROOT) return { root: path.resolve(process.env.TICK_REPO_ROOT), source: 'env' };
   try {
-    return execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim();
+    return { root: execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim(), source: 'git' };
   } catch {
-    return process.cwd();
+    return { root: process.cwd(), source: 'cwd' };
+  }
+}
+
+// Coordination-mutation verbs that operate on a task's lock in .tick/events.
+// A bare call from a foreign CWD (no TICK_REPO_ROOT) resolves the wrong root via
+// `git rev-parse` and would silently land in — or auto-create — the wrong repo's
+// log, no-op'ing against the real harness clone. This is the GH-12 foot-gun that
+// stalled a live relay handoff (`claim`/`take` succeed-in-the-wrong-place;
+// `release`/`done` throw a bare "task not found" with no hint it's a wrong-CWD
+// problem). When the root was INFERRED (not pinned via TICK_REPO_ROOT), surface
+// the resolved root and refuse to operate on a repo that was never `tick init`-ed,
+// rather than succeeding-as-noop. Best-effort `cost`/`log` are intentionally left
+// out so a turn's auxiliary cost capture never hard-fails on this.
+const MUTATING_GUARD_VERBS = new Set([
+  'claim', 'take', 'scope', 'release', 'break', 'done', 'ping', 'reap',
+]);
+
+function assertResolvedRoot(verb, root, source) {
+  if (!MUTATING_GUARD_VERBS.has(verb)) return;
+  if (source === 'env') return; // operator pinned the root explicitly — trust it.
+  const how = source === 'git' ? 'git rev-parse' : 'cwd fallback';
+  process.stderr.write(`tick: resolved repo root ${root} via ${how} (set TICK_REPO_ROOT to pin it)\n`);
+  if (!fs.existsSync(path.join(root, '.tick', 'events'))) {
+    throw new Error(
+      `no .tick/events at ${root} (resolved via ${how}). Refusing to create a coordination ` +
+      `log here — this is almost always a wrong-directory mistake that would silently no-op ` +
+      `against the real clone. If this IS the harness repo, run \`tick init\` first; otherwise ` +
+      `set TICK_REPO_ROOT to the harness clone.`
+    );
   }
 }
 
@@ -81,7 +110,8 @@ function main(argv) {
   const verb = argv[0];
   const rest = argv.slice(1);
   const { positional, flags } = parseArgs(rest);
-  const root = repoRoot();
+  const { root, source } = repoRoot();
+  assertResolvedRoot(verb, root, source);
 
   switch (verb) {
     case 'init': {

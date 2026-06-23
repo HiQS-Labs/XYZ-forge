@@ -15,6 +15,7 @@ TESTS=(
   "chaos-midturn-kill.sh"
   "path-overlap.sh"
   "scope-change.sh"
+  "tick-foreign-cwd.sh"
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"

@@ -58,6 +58,17 @@ EOF
 die() { printf 'poll: %s\n' "$*" >&2; exit 2; }
 require_command() { command -v "$1" >/dev/null 2>&1 || die "missing command: $1"; }
 
+# Dispatch a configured command that may be EITHER a bare executable path —
+# possibly absolute and containing spaces, e.g. a clone under ".../GH Repos/..."
+# — OR a full shell command string (env-prefixed / shell-quoted by the caller).
+# A bare path is run DIRECTLY so a space in it is not word-split; only a command
+# string falls back to eval. Mirrors relay-drive.sh's --agent-cmd handling.
+# (GH-12: the default RUNNER_CMD/WATCHDOG_CMD path holds a space → the old bare
+# `eval "$RUNNER_CMD"` exec'd the wrong token, e.g. `/Users/.../GH: not found`.)
+run_cmd() {
+  if [[ -x "$1" ]]; then "$1"; else eval "$1"; fi
+}
+
 # ---- inputs --------------------------------------------------------------
 MODE=""; AGENT=""; DRY_RUN=0; ANALYSIS_FILE=""; WATCHDOG_AUTHORITY=0
 RUNNER_CMD=""; WATCHDOG_CMD=""
@@ -207,8 +218,8 @@ if ((DRY_RUN)); then
 fi
 
 case "$DECISION" in
-  run-runner)   eval "$RUNNER_CMD" ;;
-  run-watchdog) eval "$WATCHDOG_CMD" ;;
+  run-runner)   run_cmd "$RUNNER_CMD" ;;
+  run-watchdog) run_cmd "$WATCHDOG_CMD" ;;
   nudge-cross-model)
     printf 'poll: %s turn detected — manual nudge required: "take your turn on %s"\n' \
       "$CROSS_AGENT" "${RELAY_FILE:-<relay-file>}" >&2 ;;

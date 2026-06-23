@@ -84,6 +84,22 @@ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/rela
   --runner-cmd "echo ran >>'$SENT'" >/dev/null 2>&1
 [ "$(grep -c ran "$SENT")" -eq 1 ] && pass "live: runner dispatched once under my-turn+clean" || fail "runner should dispatch once"
 
+# spaced bare --runner-cmd path is invoked directly, not word-split (GH-12 poll.sh:210 regression).
+# The default RUNNER_CMD is "$ROOT_DIR/relay-automation/runner.sh"; a clone under ".../GH Repos/..."
+# puts a space in that path and the old `eval "$RUNNER_CMD"` split it (exec'd "/Users/.../GH").
+# poll.sh now runs a bare executable path directly; a command-string still falls back to eval.
+SPACED_DIR="$WORK/dir with space"; mkdir -p "$SPACED_DIR"
+SRUNNER="$SPACED_DIR/runner.sh"; SSENT="$WORK/spaced-runner-ran"; rm -f "$SSENT"
+cat >"$SRUNNER" <<RS
+#!/usr/bin/env bash
+printf 'ran\n' > "$SSENT"
+RS
+chmod +x "$SRUNNER"
+handoff_to RT-live-spaced alice
+POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-live-spaced --analysis-file "$NONE" \
+  --runner-cmd "$SRUNNER" >/dev/null 2>&1
+[ -f "$SSENT" ] && pass "live: spaced bare --runner-cmd path invoked directly (not split by eval)" || fail "spaced runner-cmd was word-split instead of run"
+
 : >"$SENT"
 handoff_to RT-live-dirty alice
 POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay.md" --artifact "$A/art-dirty.md" --relay-task RT-live-dirty --analysis-file "$NONE" \
