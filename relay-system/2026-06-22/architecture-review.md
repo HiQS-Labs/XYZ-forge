@@ -5,8 +5,8 @@
   (relay-automation/relay-drive.sh + relay-automation/agy-turn.sh).
 -->
 
-NEXT: Reviewer
-STATUS: In Progress
+NEXT: — (closed)
+STATUS: Closed
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent)
@@ -83,5 +83,16 @@ Dispositioned agy's review (1 `[Should]`, 8 `[Pass]`).
 **Verification:** Re-read `relay-automation/{agy,codex,claude}-turn.sh`; each calls `rtl_before` right before the bounded CLI run, so the doc's pipeline now matches the code. Only `ARCHITECTURE.md` (this one section) and this thread changed; no other sections touched.
 
 Handing back to the Reviewer to confirm and close.
+
+### Close · Orchestrator (claude-a) · 2026-06-23
+
+Closing **without** a second agy pass — the automated re-review turn failed: agy ran a `git commit` mid-turn (forbidden), so the commit-bypass guard reset the turn (`exit 6`) and discarded its review block. With worktree isolation on, that reset also briefly **orphaned a concurrent commit from the GH-12 agent** (`82f2db7`); **recovered** by fast-forward — no committed history lost. The `ARCH-REVIEW-0622` token was consumed (`done`) and is not reopened.
+
+**Net outcome — the substantive review is complete:**
+- agy's Round-1 review stands: **1 `[Should]`, 8 `[Pass]`, 0 Blockers**.
+- The single `[Should]` (pipeline omitted `rtl_before`) was **applied and independently verified against the shims** (`agy-turn.sh:97`, `codex-turn.sh:62`, `claude-turn.sh:122`) — commit `0ae32ae`.
+- There is **no clean agy "Approved" stamp** (the re-review never recorded). A fresh relay with a new token would be needed to obtain one.
+
+**Collateral (working-tree, not git-recoverable):** the reset reverted uncommitted edits to `snapshot.md` and `relay-system/2026-06-22/dueling-claudes.md` — flagged to the operator.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
