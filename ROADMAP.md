@@ -2,7 +2,7 @@
 title: Combined Roadmap — Cost-Observed Marathon Loops + Adversarial Hardening
 status: Active
 created: 2026-06-16
-updated: 2026-06-22
+updated: 2026-06-23
 branch: main
 supersedes: PROJECT/2-WORKING/ROADMAP-COMBINED.md (promoted to canonical 2026-06-17); folds in the former standalone ROADMAP.md (adversarial-hardening track, now Part B)
 synthesizes:
@@ -62,6 +62,8 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 - **Tooling · agy reliability testing** ⏸️ paused — proposal + 3 dogfoods this session: agy **clean as a reviewer** (×2), **scope-sensitive as a builder** (failed a kernel-spanning task → F4/F6/F7 contained; succeeded on a small bounded one). Resume to run the S1–S10 matrix. → [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md)
 - **Tooling · front-door onboarding health** 🟡 — read-only audit shipped → [FRONTDOOR.md](FRONTDOOR.md) (continuous deterministic dashboard; 10 findings, re-runnable checks) + a phased remediation plan. Verdict ⚠️ Bumpy: clone-to-working works (`validate.sh` 36/36, secrets clean), but stale test counts (3 docs) + 2 dead README links + a phantom-path `CLAUDE.md` + undocumented `--target-root`/`install.sh` remain. Phases 1–3 queued (doc-only). → [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md)
 - **Tooling · relay containment-guard hardening** 🟢 — **active (started 2026-06-23)**: harden `relay-turn-lib.sh` so a headless turn can't destroy work — the commit-bypass guard must not orphan a **concurrent peer commit** ([#13](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/13)) and the turn agent must not **self-commit** mid-turn ([#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14)). Both surfaced 2026-06-23 when a driven agy re-review orphaned a peer's commit (recovered via reflog). → [RELAY-CONTAINMENT-HARDENING.md](PROJECT/2-WORKING/RELAY-CONTAINMENT-HARDENING.md)
+
+- **PDDA · feedback-synthesis direction** 🟡 — **proposal (1-INBOX), agy-reviewed 2026-06-23**: reduces the three June 23 external feedback notes (Perplexity/ChatGPT/Gemini) to one direction — keep PDDA a *thin repo-governance + safety layer*. Near-term scope = Phases 1–2 (constitution/positioning + contract/mode hardening); Phases 3–5 (artifact ergonomics, the Perplexity-only evidence bridge, integrations) deferred. Relay-reviewed by agy: 1 Blocker + 3 Should applied → **Approved**. Awaiting promotion decision to `2-WORKING`. → [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md) · relay [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md)
 
 ### Completed
 

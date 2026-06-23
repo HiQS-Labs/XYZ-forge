@@ -2,6 +2,16 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-23
+
+### PDDA feedback-synthesis plan — headless agy relay review (Approved)
+Ran a fully-automated `/relay-xyz` review loop (`relay-drive.sh` + `agy-turn.sh`, worktree-isolated, fresh `RELAY-PDDA-SYNTH` token) over the proposal [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md). agy returned 1 Blocker + 3 Should; all applied, re-reviewed → **Approved**. Thread: [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md).
+- **Blocker — scope creep in Phases 3–5:** scoped the near-term proposal to **Phases 1–2** (constitution/positioning + contract/mode hardening); marked Phases 3–5 `Deferred (future track)`, decision-gated behind the evidence-bridge open question. Keeps PDDA a thin governance/safety layer per its own anti-scope list + Gemini/ChatGPT's freeze-and-contain signal.
+- **Should — PR dependency:** renamed "first three PRs" → "first PRs"; PR 3 (evidence bridge) marked deferred with a dependency guard — its first version must operate only on existing single-file active docs, not the Phase 3 taxonomy (else they deadlock).
+- **Should — missing open question:** added Q5 on offloading the deterministic Bash checks to `markdownlint` (+ Vale/lychee), naming which checks (exact `## Status` header, hardcoded-path ban, pointer-only `ROADMAP.md`) must stay custom — per Gemini + ChatGPT.
+- **Should — faithfulness:** fixed the over-generalized "all three converge on the evidence bridge" claim — verified independently that `rebalance` appears only in Perplexity's note (26 hits; ChatGPT/Gemini 0); reattributed the bridge as Perplexity-only.
+- **Ledger:** [ROADMAP.md](ROADMAP.md) pointer added under *In progress* 🟡 (proposal, awaiting promotion to `2-WORKING`).
+
 ## 2026-06-22
 
 ### Fixed GH-12 — `tick` foreign-CWD silent no-op + `poll.sh` spaced-path dispatch
