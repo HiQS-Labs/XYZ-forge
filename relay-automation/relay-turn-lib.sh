@@ -7,7 +7,9 @@
 #                             REVIEWER-turn scoping: when the relay file's NEXT names the Reviewer,
 #                             ALLOW_PATHS is dropped (allowlist = relay file ONLY), so a headless
 #                             reviewer cannot edit the artifact it is reviewing — any such edit reverts.
-#   (2) commit-bypass guard — reset --hard + FAIL if the agent committed during its own turn
+#   (2) commit-bypass guard — if the agent committed during its own turn: reset --hard + FAIL (in-ROOT).
+#                             In a worktree-isolated turn the agent CANNOT reach ROOT's HEAD, so a moved
+#                             ROOT HEAD is a CONCURRENT PEER commit — PRESERVED, not reset (GH-13).
 #   (3) no push             — stage only the allowlist, commit file-scoped, never push
 # Keeping this in ONE place means a new turn-taker (gemini-drive.sh, …) inherits the exact
 # boundary instead of reimplementing it — reimplementation is where a fourth bypass sneaks in.
@@ -53,6 +55,7 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # one anchor. Unset/empty → the caller's <root> (today's behavior, byte-for-byte). Coordination
   # (.tick) stays where TICK_REPO_ROOT points (the harness clone); only the ARTIFACT side moves.
   RTL_ROOT="${RELAY_TARGET_ROOT:-$1}"; local f="$2" csv="$3"
+  RTL_WT_USED=0          # set to 1 by rtl_worktree_begin; read by rtl_enforce's commit-bypass guard (GH-13)
   RTL_ALLOW=("$f")
   # REVIEWER-turn scoping: a reviewer is near read-only — it only APPENDS findings to the relay file
   # and must never edit the artifact under review. When NEXT names the Reviewer, drop the caller's
@@ -125,7 +128,7 @@ rtl_worktree_begin() {
                                        # deletion, else the HEAD checkout would resurrect it on copy-back
     fi                                 # (Codex review r2, 2026-06-20 — symmetric to the in-turn delete)
   done
-  RTL_WT="$wt"
+  RTL_WT="$wt"; RTL_WT_USED=1   # GH-13: mark the turn worktree-isolated so rtl_enforce won't reset a concurrent peer's ROOT commit
   printf '%s\n' "$wt"
 }
 
@@ -187,7 +190,7 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     csv_rel=""
     role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn.'
   fi
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. Use ./bin/tick for the %s token (claim/ping, then %s, or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s Do NOT run git (no add/commit/push) and do NOT touch any other file — the harness commits for you.' \
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. Use ./bin/tick for the %s token (claim/ping, then %s, or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.' \
     "$agent" "$f_rel" "$task" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note"
 }
 
@@ -226,9 +229,22 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   # (2) commit-bypass guard: the agent must NOT git. If HEAD moved, its edits are hidden from
   # `git status` — undo the commit(s) and fail, so off-lane changes can't slip in committed.
   if [[ "$(git -C "$RTL_ROOT" rev-parse HEAD 2>/dev/null || echo none)" != "$RTL_BEFORE_HEAD" ]]; then
-    git -C "$RTL_ROOT" reset --hard "$RTL_BEFORE_HEAD" >/dev/null 2>&1 || true
-    printf '%s-turn: %s committed during its turn (forbidden) — reset to %s, failing\n' "$RTL_TOOL" "$agent" "${RTL_BEFORE_HEAD:0:8}" >&2
-    exit 6
+    if [[ "${RTL_WT_USED:-0}" == "1" ]]; then
+      # GH-13: this turn ran in a throwaway worktree, so the agent CANNOT have moved ROOT's HEAD — a
+      # moved ROOT HEAD is therefore a CONCURRENT PEER commit. Never reset it: a blind `reset --hard`
+      # here orphaned a peer agent's commit on 2026-06-23 (recovered via reflog). The agent's own writes
+      # were already contained by rtl_worktree_end (off-lane → exit 6; else allowlist copyback), so just
+      # preserve the peer commit and fall through to allowlist enforcement + a file-scoped commit ON TOP.
+      printf '%s-turn: ROOT HEAD moved during a worktree-isolated turn — a concurrent peer committed; preserving it (not resetting), committing this turn on top.\n' "$RTL_TOOL" >&2
+    else
+      # In-ROOT (direct/attended) turn: the agent ran in ROOT and may have committed off-lane changes.
+      # Undo its commit and fail — the documented attended-mode containment. (Residual: a concurrent peer
+      # commit in this mode would also be reset; the default DRIVEN path uses worktree isolation, handled
+      # above. GH-13.)
+      git -C "$RTL_ROOT" reset --hard "$RTL_BEFORE_HEAD" >/dev/null 2>&1 || true
+      printf '%s-turn: %s committed during its turn (forbidden) — reset to %s, failing\n' "$RTL_TOOL" "$agent" "${RTL_BEFORE_HEAD:0:8}" >&2
+      exit 6
+    fi
   fi
   # (1) allowlist enforcement on tracked-tree changes (.tick is gitignored, so token ops don't show).
   # -z = NUL-delimited RAW unquoted paths (spaces/special chars can't slip the match or break the

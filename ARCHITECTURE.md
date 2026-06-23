@@ -206,6 +206,17 @@ handoff-to: <agent>      # when an open task is reserved for the next actor
 The important architectural point is that handoff is encoded in `tick` state, not inferred from
 the thread file body.
 
+### Foreign-CWD safety (GH-12)
+
+The coordination-mutation verbs (`claim` / `take` / `scope` / `release` / `break` / `done` /
+`ping` / `reap`) resolve the repo root as `TICK_REPO_ROOT` → `git rev-parse` → cwd. When that
+root is *inferred* (not pinned via `TICK_REPO_ROOT`), `tick` echoes the resolved root to stderr
+and **refuses** the verb if that repo has no `.tick/events` — so a mutating call from the wrong
+working directory fails loudly instead of silently no-op'ing in (or auto-creating) the wrong
+repo's log. Driven turns and the shims pin `TICK_REPO_ROOT` to the harness clone, so they stay on
+the trusted path. Verified against [bin/tick](bin/tick); detail in
+[PROJECT/3-COMPLETED/GH-12-TICK-FOREIGN-CWD-SILENT-NOOP.md](PROJECT/3-COMPLETED/GH-12-TICK-FOREIGN-CWD-SILENT-NOOP.md).
+
 ## Agent-Specific Behavior
 
 ### Codex shim
