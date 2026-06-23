@@ -2,7 +2,7 @@
 gh_issue: 12
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/12
 title: "GH-12 — tick silently no-ops from a foreign CWD (relay handoff stall)"
-status: Active
+status: Completed
 created: 2026-06-22
 updated: 2026-06-22
 owner: Noel (operator) · Claude (producer)
@@ -17,13 +17,13 @@ goal: >
 
 # GH-12 — `tick` silently no-ops from a foreign CWD
 
-> **In-repo active-work doc for [issue #12](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/12)**, promoted from `PROJECT/1-INBOX/` on execution start, per `PROJECT/PDDA.md` → "GitHub issue intake". The live issue is the discussion surface; this doc is the canonical active-work record, carrying `gh_issue` forward.
+> **Completed build record for [issue #12](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/12)** (intake → 1-INBOX → 2-WORKING → here), per `PROJECT/PDDA.md` → "GitHub issue intake". Both fixes landed in `a1ec735`; issue closed 2026-06-22.
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| **Both fixes landed + regression-tested.** (1) `bin/tick` now surfaces the resolved repo root and **refuses** a coordination-mutation verb (`claim/take/scope/release/break/done/ping/reap`) when the root was *inferred* (not pinned via `TICK_REPO_ROOT`) and the repo has no `.tick/events` — closing the silent succeed-as-noop. (2) `relay-automation/poll.sh` runs a bare executable path **directly** (only command-strings fall back to `eval`), mirroring `relay-drive.sh`, so the space in the default `$ROOT_DIR/relay-automation/runner.sh` path no longer word-splits. New `test/tick-foreign-cwd.sh` (6 assertions) + a spaced-path case in `test/poll-driver.sh`; `relay-pkg.tar.gz` regenerated; **`validate.sh` 37/37**. | Operator review → commit + push → move this doc to `PROJECT/3-COMPLETED/` and close issue #12. Optional follow-ups (not blocking): extend the guard to `cost`/`log`; add a walk-up `.tick/` auto-resolver (direction b) if a sibling-clone-without-pin workflow ever appears. |
+| **Closed.** Both fixes landed in `a1ec735` and shipped to `main`; **issue #12 closed (completed)**; this doc archived to `PROJECT/3-COMPLETED/` and dropped from the ROADMAP ledger. (1) `bin/tick` surfaces the resolved repo root and **refuses** a coordination-mutation verb (`claim/take/scope/release/break/done/ping/reap`) when the root was *inferred* (not pinned via `TICK_REPO_ROOT`) and the repo has no `.tick/events` — closing the silent succeed-as-noop. (2) `relay-automation/poll.sh` runs a bare executable path **directly** (only command-strings fall back to `eval`), mirroring `relay-drive.sh`. New `test/tick-foreign-cwd.sh` + spaced-path `poll-driver.sh` case; `relay-pkg.tar.gz` regenerated; **`validate.sh` 37/37**. | Nothing required. Optional, non-blocking follow-ups if a future need appears: extend the guard to `cost`/`log`; add a walk-up `.tick/` auto-resolver (direction b) for a sibling-clone-without-pin workflow. |
 
 ## Context
 
