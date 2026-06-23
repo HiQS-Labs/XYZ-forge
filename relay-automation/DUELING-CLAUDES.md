@@ -1,13 +1,18 @@
 # Dueling Claudes — two windows, one bug-fix relay, no copy-paste
 
-Two live Claude Code windows run a bug-report → fix loop across two repos on **the same
-machine**, talking only through one shared relay file. **No new code** — this is a recipe over
-the shipped harness ([poll.sh](poll.sh), `/loop`, `tick`) and the portable `/relay` protocol.
+Two live Claude Code windows run a report → fix loop on **the same machine**, talking only
+through one shared relay file. **No new code** — this is a recipe over the shipped harness
+([poll.sh](poll.sh), `/loop`, `tick`) and the portable `/relay` protocol.
 
-- **Claude A** — *Reporter*. Window open on the OTHER repo. Finds/cites a bug, files a report
-  into the shared relay file (which lives in THIS repo). Never edits this repo's code.
-- **Claude B** — *Maintainer*. Window open on THIS repo. Fixes the bug, then **stops before
-  commit/push for your "go"** — the one human gate.
+- **Claude A** — *Reporter*. Finds/cites the problem and files a graded report into the shared
+  relay file. Never edits code. **Two review targets, identical mechanics:** (a) a **bug in
+  another repo** — window open on that OTHER repo, cites findings by absolute path; or (b)
+  **this repo's own code/protocol** (e.g. the Codex relay machinery) — Claude A is a session in a
+  SEPARATE repo / VS Code window that reads THIS repo's code by **absolute path**. Only *what
+  Claude A reads* differs; the loops, lock, and gate are the same. Either way Claude A is on a
+  foreign CWD, so the foreign-CWD rules below (absolute `bin/tick`, `git -C` the xyz repo) apply.
+- **Claude B** — *Maintainer*. Window open on THIS repo. Verifies each finding, fixes with the
+  smallest change, then **stops before commit/push for your "go"** — the one human gate.
 
 All commits land in **this** repo (`xyz-3-agents-swarm`), so no `--target-root` is needed.
 
@@ -29,7 +34,7 @@ can still reach this harness):
 bash "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/skills/relay-xyz/install.sh"
 ```
 
-## Per bug — 3 steps
+## Per run — 3 steps
 
 ### 0. Pick a fresh lock token and seed it
 
@@ -75,7 +80,61 @@ this repo). The **gate** is the clause in caps:
 
 1. Run step 0 + start the two loops (above).
 2. When Claude B shows a fix diff and stops, glance and say **"go"** (or "no, change X").
-3. That's it. The loops self-close on `STATUS: Closed` or the 45-min deadline.
+3. That's it. The loops self-close on `STATUS: Closed` or the deadline.
+
+## Worked examples
+
+Two recorded runs. Copy the matching pair, swap the literals (token, deadline epoch, relay-file
+path), and paste. The command strings ARE the contract — paste them exactly, literals and all.
+
+### A. Bug-fix, cross-repo (the inaugural run, 2026-06-22)
+
+Reporter on the OTHER repo files a bug, Maintainer fixes it here. The two `/loop` blocks under
+[Per run -> step 2](#2-start-one-loop-in-each-window) are this run, against
+[relay-system/2026-06-22/dueling-claudes.md](../relay-system/2026-06-22/dueling-claudes.md).
+
+### B. Code/protocol review, same-repo (2026-06-23)
+
+Claude A (Reporter) is a session in a **separate repo / VS Code window**; it reviews THIS repo's
+own Codex relay machinery (`codex-turn.sh` + `relay-turn-lib.sh`) by absolute path. Claude B
+(Maintainer) is a session on THIS repo. Thread:
+[relay-system/2026-06-23/codex-relay-review.md](../relay-system/2026-06-23/codex-relay-review.md).
+
+Because the Reporter is on a foreign CWD it must (i) read the code-under-review and the relay
+file by **absolute path** (relative paths resolve against ITS repo, not this one); (ii) hand off
+the lock with the env-pinned absolute `bin/tick`; and (iii) stage+commit the relay file with
+`git -C "<xyz repo>"` — a bare `git commit` from its CWD would touch the wrong repo. On the same
+machine the files are reachable, but that Claude session will prompt for permission to read/write
+paths outside its own workspace — approve them (or add the xyz repo as an additional dir).
+
+**Step 0 — seed (run once in this repo).** `tick claim` requires `--paths` (scope the lock to the
+relay file); compute the deadline ONCE and paste the literal — never inline `$(date)` in a loop.
+
+```bash
+cd "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm"
+TOKEN="DUELING-CODEX-0623"                 # fresh name per run; a done token can't reopen
+DEADLINE=$(date -v+60M +%s)                # e.g. 1782251974 — paste this literal into BOTH loops
+RELAY="relay-system/2026-06-23/codex-relay-review.md"
+bin/tick log   task.created "$TOKEN" --agent claude-a
+bin/tick claim "$TOKEN" --agent claude-a --paths "$RELAY"
+echo "TOKEN=$TOKEN  DEADLINE=$DEADLINE"
+```
+
+**Window B — Claude A (Reporter), reviewer of this repo's code.** Even on the same repo, the
+`env TICK_REPO_ROOT=` prefix + absolute `bin/tick` are kept so the command is identical whether
+A sits in this clone or another — a bare `tick` from a foreign CWD silently no-ops (the #1
+deadlock cause):
+
+```
+/loop 60s run env TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/poll.sh" --mode relay --agent claude-a --claude-agents "claude-a,claude-b" --relay-task DUELING-CODEX-0623 --relay-file "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-23/codex-relay-review.md" --artifact "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-23/codex-relay-review.md" --deadline 1782251974 --dry-run ; if it printed "DECISION: run-runner", take your claude-a (Reporter) turn on that relay file per its embedded TAKE YOUR TURN block — do a CODE/PROTOCOL REVIEW of "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/codex-turn.sh" and "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-turn-lib.sh" (you are on a FOREIGN repo — read by ABSOLUTE path, cite findings by ABSOLUTE path:line, grade each [Blocker]/[Should]/[Nit]/[Pass] with a concrete proposed fix, set a Verdict), append your block to the relay file by absolute path, set NEXT: claude-b, then hand off the lock with the repo-root env + ABSOLUTE bin/tick: TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" release DUELING-CODEX-0623 --agent claude-a --to claude-b ; then stage+commit the relay file in the xyz repo (git -C "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" add/commit — a bare git from your CWD hits the wrong repo; do NOT push, claude-b pushes after the operator go). On "DECISION: stop", CronList + CronDelete this loop, then stop. Else do nothing.
+```
+
+**Window A — Claude B (Maintainer), this repo** (no `env` prefix — CWD is this repo; bare `tick`
+is fine). The gate is the clause in caps:
+
+```
+/loop 60s run "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/poll.sh" --mode relay --agent claude-b --claude-agents "claude-a,claude-b" --relay-task DUELING-CODEX-0623 --relay-file "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-23/codex-relay-review.md" --artifact "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-23/codex-relay-review.md" --deadline 1782251974 --dry-run ; if it printed "DECISION: run-runner", take your claude-b (Maintainer) turn: verify each Reporter finding against the REAL code in relay-automation/codex-turn.sh + relay-turn-lib.sh, fix the [Blocker]/[Should] ones with the smallest change, log a disposition for every finding, append your turn block with a one-line Verification, set NEXT: claude-a — then SHOW ME THE DIFF AND STOP. Do NOT commit, push, or release the token until I say "go". After "go": git commit, git push origin main, then release: TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" release DUELING-CODEX-0623 --agent claude-b --to claude-a. On "DECISION: stop", CronList + CronDelete this loop, then stop. Else do nothing.
+```
 
 ## Notes & limits
 
