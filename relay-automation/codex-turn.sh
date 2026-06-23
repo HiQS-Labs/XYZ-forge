@@ -48,6 +48,13 @@ if [[ "$me" != "$codex_agent" ]]; then
   exit 0
 fi
 
+# Anchor tick coordination to the harness root UNCONDITIONALLY (not just under worktree isolation):
+# the turn-prompt and every token op must resolve .tick + bin/tick here regardless of the turn's CWD.
+# Without this, a Codex turn whose CWD isn't ROOT (worktree-isolated, or a CLI that cd's) runs its
+# tick calls against the wrong/absent .tick -> silent no-op -> the token never releases -> deadlock
+# (relay review 2026-06-23 F1/F2). TICK_REPO_ROOT names the HARNESS clone (.tick lives here), which
+# stays ROOT even when RELAY_TARGET_ROOT routes the ARTIFACT side elsewhere (GH-11).
+export TICK_REPO_ROOT="$ROOT"
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 
@@ -70,7 +77,7 @@ bounded_rc=0
 wt=""; cwd_wrap=()
 if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
   if wt="$(rtl_worktree_begin)"; then
-    export TICK_REPO_ROOT="$ROOT"
+    # TICK_REPO_ROOT already exported above (unconditional) — .tick stays SHARED with ROOT here.
     cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
     printf 'codex-turn: worktree isolation ON (%s)\n' "$wt" >&2
   else

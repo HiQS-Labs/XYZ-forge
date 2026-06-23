@@ -109,6 +109,18 @@ rtl_run_bounded() {  # <timeout_secs> <cmd...>
 # point-in-time `rtl_enforce` + the (macOS-absent) setsid process-group reap: ROOT safety no longer
 # depends on killing the process group, because the agent can't reach ROOT in the first place.
 # Coordination state (.tick) stays SHARED — the caller must run the agent with TICK_REPO_ROOT=RTL_ROOT.
+#
+# SEED LIMITATIONS (relay review 2026-06-23 F4/F5 — known constraints, documented; structural fix deferred):
+#   - Cross-repo artifact: the worktree is a checkout of RTL_ROOT@HEAD and seeds only allowlisted paths
+#     UNDER RTL_ROOT (below). An artifact in ANOTHER repo is neither at HEAD nor seeded, so it is invisible
+#     to an isolated turn. Until a read-only out-of-ROOT seed exists, embed a cross-repo artifact inline in
+#     the relay file, or stage it under RTL_ROOT. (RELAY_TARGET_ROOT relocates the single artifact root,
+#     not "harness in repo A + artifact in repo B".)
+#   - Uncommitted artifact on a REVIEWER turn: rtl_init drops ALLOW_PATHS on a reviewer turn, so only the
+#     relay file is seeded. A brand-new (untracked) artifact-under-review is then neither at HEAD nor
+#     seeded — the reviewer reads a missing/stale file. COMMIT review inputs before an isolated reviewer
+#     turn. The real fix — a read-only seed set distinct from the writable allowlist, so a reviewer can
+#     READ but not WRITE the artifact in the worktree — is a tracked follow-up, not done here.
 rtl_worktree_begin() {
   # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
   # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
@@ -171,12 +183,18 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # literal role "Producer" because "the other agent" was unnamed. RELAY_PEER closes that ambiguity.
   local handoff="release --to the other agent (the role named by NEXT in the file)"
   [[ -n "$peer" ]] && handoff="release --to ${peer}"
-  # Emit repo-root-relative paths so they resolve against the turn's CWD — which under worktree
-  # isolation IS the throwaway worktree. An ABSOLUTE path here would invite the model to write straight
-  # into RTL_ROOT, bypassing the worktree (Codex review 2026-06-20). RTL_ROOT is set by rtl_init (always
-  # called first). Residual: a sync absolute write the model constructs itself is still backstopped by
-  # rtl_enforce on ROOT (revert + exit 6); an ASYNC one remains the known process-detachment gap.
-  local root="${RTL_ROOT:-}" f_rel csv_rel="" p _a
+  # Emit repo-root-relative EDIT paths (relay file, artifact) so they resolve against the turn's CWD —
+  # which under worktree isolation IS the throwaway worktree. An ABSOLUTE edit path would invite the
+  # model to write straight into RTL_ROOT, bypassing the worktree (Codex review 2026-06-20). RTL_ROOT
+  # is set by rtl_init (always called first). Residual: a sync absolute write the model constructs
+  # itself is still backstopped by rtl_enforce on ROOT (revert + exit 6); an ASYNC one remains the
+  # known process-detachment gap.
+  # The TICK invocation is the EXCEPTION and is deliberately ABSOLUTE + env-pinned: tick is a tool, not
+  # an edit target, and .tick is SHARED coordination state that must resolve to the harness root no
+  # matter the CWD. A bare/`./bin/tick` from a worktree or foreign CWD silently no-ops -> the token
+  # never releases -> deadlock (relay review 2026-06-23 F1). tickroot = the harness clone (where
+  # bin/tick + .tick live), i.e. TICK_REPO_ROOT (exported by the shim), falling back to RTL_ROOT.
+  local root="${RTL_ROOT:-}" tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}" f_rel csv_rel="" p _a
   f_rel="${f#"${root:+$root/}"}"
   if [[ -n "$csv" ]]; then
     IFS=',' read -ra _a <<<"$csv"
@@ -190,8 +208,8 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     csv_rel=""
     role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn.'
   fi
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. Use ./bin/tick for the %s token (claim/ping, then %s, or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.' \
-    "$agent" "$f_rel" "$task" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note"
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s/bin/tick". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.' \
+    "$agent" "$f_rel" "$task" "$tickroot" "$tickroot" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note"
 }
 
 rtl_before() {
@@ -238,11 +256,15 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
       printf '%s-turn: ROOT HEAD moved during a worktree-isolated turn — a concurrent peer committed; preserving it (not resetting), committing this turn on top.\n' "$RTL_TOOL" >&2
     else
       # In-ROOT (direct/attended) turn: the agent ran in ROOT and may have committed off-lane changes.
-      # Undo its commit and fail — the documented attended-mode containment. (Residual: a concurrent peer
-      # commit in this mode would also be reset; the default DRIVEN path uses worktree isolation, handled
-      # above. GH-13.)
+      # Undo its commit and fail — the documented attended-mode containment. A concurrent PEER commit in
+      # this mode is indistinguishable from a self-commit here, so before discarding it we save the
+      # current HEAD under refs/relay-orphan/<sha>: the reset abandons it from the branch, but the ref
+      # keeps it reachable, so a wrongly-caught peer commit is never lost (recover via
+      # `git log refs/relay-orphan/*`). The default DRIVEN path uses worktree isolation (handled above);
+      # this is the cheap backstop for the in-ROOT path (GH-13, relay review 2026-06-23 F6).
+      git -C "$RTL_ROOT" update-ref "refs/relay-orphan/$(git -C "$RTL_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)" HEAD 2>/dev/null || true
       git -C "$RTL_ROOT" reset --hard "$RTL_BEFORE_HEAD" >/dev/null 2>&1 || true
-      printf '%s-turn: %s committed during its turn (forbidden) — reset to %s, failing\n' "$RTL_TOOL" "$agent" "${RTL_BEFORE_HEAD:0:8}" >&2
+      printf '%s-turn: %s committed during its turn (forbidden) — reset to %s (prior HEAD saved to refs/relay-orphan/), failing\n' "$RTL_TOOL" "$agent" "${RTL_BEFORE_HEAD:0:8}" >&2
       exit 6
     fi
   fi

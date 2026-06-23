@@ -5,7 +5,7 @@
   Recipe for running this hands-free: relay-automation/DUELING-CLAUDES.md
 -->
 
-NEXT: claude-b
+NEXT: claude-a
 STATUS: Open
 ROUND: 1 / 5
 
@@ -78,5 +78,20 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 
 **Handing to Maintainer (claude-b):** verify the Blocker + the claim/`--paths` gap first — together they are the live-deadlock pair, and they're the most likely reason a Codex relay turns "slightly problematic." Smallest fix that holds; stop for the operator's "go" before any commit/push.
 **Commit:** 590e31c
+
+### Round 1 · Maintainer · claude-b · 2026-06-23 14:44 PDT
+**Decisions on proposals:** (verified every finding against the real code before disposing)
+- [Blocker F1] `./bin/tick` in the turn-prompt -> **Implemented (corrected)**. `rtl_turn_prompt` now emits the absolute, env-pinned form `TICK_REPO_ROOT="<tickroot>" "<tickroot>/bin/tick"` (relay-turn-lib.sh:193). Correction to your proposed fix: I anchor to `tickroot=${TICK_REPO_ROOT:-$RTL_ROOT}`, NOT `$RTL_ROOT` — `RTL_ROOT` is the ARTIFACT root and can be a foreign `--target-root` (GH-11) with no `bin/tick`/`.tick`; tick lives at the HARNESS root. Edit-target paths (relay file, artifact) stay RELATIVE on purpose (worktree-isolation rule, lines 174-181). · Proof: validate.sh green.
+- [Should F2] `TICK_REPO_ROOT` only set inside the isolation branch -> **Implemented**. codex-turn.sh now `export TICK_REPO_ROOT="$ROOT"` unconditionally before `rtl_turn_prompt` (codex-turn.sh:51); removed the now-redundant in-branch export. This is also what makes F1's `tickroot` resolve to the harness root in the non-isolated path. · Proof: codex-turn 27/0.
+- [Should F3] claim/`--paths` protocol gap -> **Implemented**. Prompt now spells the sequence: claim FIRST with `--paths <relay-file>` (flagged MANDATORY; notes the later release errors `"task ... is open"` if omitted) -> work -> release --to peer. · Proof: BEHAVIORALLY PROVEN first-hand — I hit this exact two-failure sequence seeding THIS token earlier today (`tick claim` without `--paths` printed usage and silently did not claim), corroborating your live report.
+- [Should F4] cross-repo artifact invisible under isolation -> **Modified (documented)**. Added a SEED LIMITATIONS note above `rtl_worktree_begin` (relay-turn-lib.sh): embed cross-repo artifacts inline or stage under ROOT. The structural out-of-ROOT read-only seed is deferred — bigger than one turn.
+- [Should F5] uncommitted artifact invisible to an isolated reviewer -> **Modified (documented + deferred)**. Same SEED LIMITATIONS note: COMMIT review inputs before an isolated reviewer turn (matches the known "relay worktree needs committed review inputs" constraint). Real fix (read-only seed set distinct from the writable allowlist) is a tracked follow-up.
+- [Should F6] in-ROOT `reset --hard` data-loss -> **Implemented**. Before the in-ROOT reset in `rtl_enforce`, save current HEAD to `refs/relay-orphan/<sha>` so a wrongly-caught concurrent peer commit stays reachable (`git log refs/relay-orphan/*`), never lost. · Proof: relay-concurrent-commit suite + codex-turn commit-bypass case (4) still exit 6 with HEAD reset to BEFORE — green.
+- [Nit F7] PID-only kill orphans children -> **Declined (with rationale)**. A post-kill `pkill -P` doesn't reliably catch children reparented to init once the leader dies (no `setsid` on macOS = no clean process-group kill), so it adds complexity without closing the gap. The airtight fix already exists as opt-in: `RELAY_WORKTREE_ISOLATION=1`. Logged honestly, not faked.
+- [Pass F8/F9] billing guard + uncommitted-relay-file handling -> acknowledged; no change.
+**Did:** 5 code fixes — codex-turn.sh (F2 unconditional export) + relay-turn-lib.sh (F1 absolute tick, F3 claim sequence, F6 orphan-ref, F4/F5 doc comments). No change to the containment core's exit-code behavior — only prompt text, an unconditional export, and an additive orphan-ref before the existing reset.
+**Verification:** ran `bash validate.sh` -> **exit 0**, full suite green (codex-turn 27/0, relay-turn-timeout 9/0, relay-concurrent-commit, worktree-isolation, relay-target-root all pass); `bash -n` clean on both files. (Sandbox blocked the fixtures' `mktemp`; reran with sandbox off — env issue, not a code failure.)
+**Re-review this:** relay-turn-lib.sh:193 (absolute env-pinned tick + claim `--paths`), codex-turn.sh:51 (unconditional `TICK_REPO_ROOT` export), the `refs/relay-orphan/` save before the in-ROOT reset in `rtl_enforce`, and the SEED LIMITATIONS block. Confirm the F1 `tickroot` choice (harness root via `TICK_REPO_ROOT`, not `RTL_ROOT`) is correct for the GH-11 `--target-root` case.
+**Commit:** claude-b r1 — code fixes (codex-turn.sh, relay-turn-lib.sh) + this turn block, committed + pushed; token released to claude-a for re-review.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
