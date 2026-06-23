@@ -32,7 +32,7 @@ reviewed:
 
 | Most recently completed phase | What's next |
 |---|---|
-| **Feedback intake and synthesis** — the three June 23 feedback notes were read side by side, reduced to one common direction, and split into "keep / build / defer / avoid" so future PDDA work has a single planning surface. | **Phase 1 — lock positioning and scope**: write the shared PDDA constitution, the explicit do-not-build boundary, and the rule that deterministic checks may block while LLM review may only warn. |
+| **Feedback intake, synthesis, and agy peer review** — the three June 23 feedback notes were read side by side, reduced to one common direction, split into "keep / build / defer / avoid", and the synthesis was reviewed by agy (relay `relay-system/2026-06-23/pdda-feedback-synthesis.md`: 1 Blocker + 3 Should applied). | **Phase 1 — lock positioning and scope**: write the shared PDDA constitution, the explicit do-not-build boundary, and the rule that deterministic checks may block while LLM review may only warn. *(Near-term proposed scope is Phases 1–2 only; Phases 3–5 are deferred — see Decision summary.)* |
 
 > **Header note:** this inbox proposal uses the user-requested `Most recently completed phase`
 > header. If promoted to `PROJECT/2-WORKING`, rename it to PDDA's active-doc contract header:
@@ -49,21 +49,34 @@ reviewed:
 - [Phase 3 — Improve artifact ergonomics without becoming Spec Kit](#phase-3--improve-artifact-ergonomics-without-becoming-spec-kit)
 - [Phase 4 — Add the evidence bridge to rebalance](#phase-4--add-the-evidence-bridge-to-rebalance)
 - [Phase 5 — Add only the integrations that prove the lane](#phase-5--add-only-the-integrations-that-prove-the-lane)
-- [Recommended first three PRs](#recommended-first-three-prs)
+- [Recommended first PRs](#recommended-first-prs)
 - [Open questions before promotion to 2-WORKING](#open-questions-before-promotion-to-2-working)
 
 ## Decision summary
 
 The verdict is to keep refining PDDA only as a thin repo-governance and safety layer.
 
-The three feedback docs differ in style, but they converge on the same boundary:
+The three feedback docs differ in style. They genuinely converge on the *boundary* (first two
+bullets); the evidence bridge (third bullet) is **Perplexity's distinctive proposal, not a
+three-way agreement** — flagged as such so it is not over-weighted:
 
 - PDDA is strongest when it enforces doc lifecycle, roadmap pointer discipline, deterministic checks,
   advisory LLM review, verified-success reporting, and autonomous-agent safety rails.
+  *(Shared across all three.)*
 - PDDA is weakest when it tries to become a general planning framework, generic docs linter,
   generic multi-agent runner, or full work-management product.
-- The distinctive future surface is the bridge between repo truth and local work evidence
-  (`rebalance`), not "yet another spec/task framework."
+  *(Shared across all three — ChatGPT and Gemini are emphatic here.)*
+- The distinctive *future* surface — the bridge between repo truth and local work evidence
+  (`rebalance`) — is **Perplexity's proposal only**: ChatGPT and Gemini do not mention `rebalance`
+  and instead converge on scope containment (freeze the custom Bash, offload commodity linting).
+  Treated here as a deferred bet, not a consensus mandate.
+
+> **Proposed near-term scope (added after the agy peer review, 2026-06-23):** only **Phase 1**
+> (positioning/constitution) and **Phase 2** (contract + enforcement-mode hardening) are proposed for
+> near-term execution — both are pure thin-layer governance/safety with low maintenance cost.
+> **Phases 3–5 are deferred** to a future/sibling track and must not be built until the open question
+> on the evidence bridge (below) is resolved. This keeps the proposal aligned with its own anti-scope
+> list and with Gemini/ChatGPT's "freeze and contain" signal rather than expanding PDDA into a platform.
 
 ## What the feedback agrees on
 
@@ -160,6 +173,9 @@ recreate the same argument inside every script and planning doc.
 
 ## Phase 3 — Improve artifact ergonomics without becoming Spec Kit
 
+> **Status: Deferred (future track).** Not part of the near-term proposed scope (Phases 1–2). Kept
+> here as forward design only; do not start until the evidence-bridge open question is resolved.
+
 **Intent:** borrow the useful parts of spec/task discipline without cloning another framework.
 
 ### Checklist
@@ -188,8 +204,12 @@ recreate the same argument inside every script and planning doc.
 
 ## Phase 4 — Add the evidence bridge to rebalance
 
-**Intent:** connect repo state to actual work signals, because that is the differentiated lane the
-feedback identified.
+> **Status: Deferred (future track), decision-gated.** Not in the near-term scope. This is
+> **Perplexity's** distinctive proposal (not a three-way consensus — see Decision summary), so it is a
+> deferred bet gated behind the open question on whether it becomes its own sibling track.
+
+**Intent:** connect repo state to actual work signals — the distinctive lane **Perplexity** identified
+(ChatGPT and Gemini did not raise it).
 
 ### Checklist
 
@@ -217,6 +237,9 @@ feedback identified.
 
 ## Phase 5 — Add only the integrations that prove the lane
 
+> **Status: Deferred (future track).** Not in the near-term scope (Phases 1–2). Forward design only;
+> gated behind the same evidence-bridge decision as Phases 3–4.
+
 **Intent:** integrate outward only where it reinforces the governance/evidence contract.
 
 ### Checklist
@@ -242,18 +265,24 @@ feedback identified.
 - [ ] Safety-contract docs match the actual relay/runtime behavior.
 - [ ] External bridges remain auditable and reversible.
 
-## Recommended first three PRs
+## Recommended first PRs
 
-These are the three changes the feedback most strongly supports, in order:
+PRs 1–2 are the near-term, low-maintenance changes the feedback most strongly supports (all three
+sources agree), in order. PR 3 is **deferred and decision-gated** — listed for sequencing only, not
+for near-term execution.
 
-1. **Constitution + do-not-build boundary**
+1. **Constitution + do-not-build boundary** *(near-term)*
    - Why: it prevents scope drift before more tooling is added.
    - Success signal: a new agent or contributor can explain PDDA's lane after one read.
-2. **Enforcement-mode and LLM-severity hardening**
+2. **Enforcement-mode and LLM-severity hardening** *(near-term)*
    - Why: it lowers operational friction and removes the most dangerous policy ambiguity.
    - Success signal: no LLM path can block, and `PDDA_MODE` behavior is explicit.
-3. **Evidence snapshot bridge**
-   - Why: it is the most differentiated next move and directly connects PDDA to rebalance.
+3. **Evidence snapshot bridge** *(deferred — Phase 4; gated by the open question below)*
+   - Why: it is the most differentiated next move (Perplexity's proposal) and connects PDDA to rebalance.
+   - **Dependency guard:** when it does ship, the first version must operate **only on existing
+     single-file active docs** plus git/notes signals — it must **not** depend on the Phase 3 artifact
+     taxonomy, or the two deadlock. Either lock artifact structure (Phase 3) first, or keep the
+     snapshot strictly single-file-scoped.
    - Success signal: PDDA can rank or flag work using cited local evidence rather than docs alone.
 
 ## Open questions before promotion to 2-WORKING
@@ -266,3 +295,9 @@ These are the three changes the feedback most strongly supports, in order:
   `EVIDENCE-SNAPSHOT.md`?
 - Does the repo want one combined PDDA+rebalance plan, or should the evidence bridge become its own
   sibling track once execution starts?
+- Should the custom deterministic Bash checks be replaced (or partly offloaded) by a standard
+  `.markdownlint.json` — plus `Vale`/`lychee` for prose and link hygiene — keeping only the
+  repo-specific agent-operating-contract checks as custom code? Both Gemini (`FEEDBACK-GEMINI.md`) and
+  ChatGPT (`FEEDBACK-CHATGPT.md`) recommend this to cut maintenance overhead. The real question is
+  *which* checks (the exact `## Status` header, the hardcoded-path ban, the pointer-only `ROADMAP.md`
+  contract) are hard to express in off-the-shelf linters and must stay custom.

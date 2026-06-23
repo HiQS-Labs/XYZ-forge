@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -84,6 +84,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 - `[Pass]` **Header-note caveat and paths.**
   - *Detail:* The file uses repo-relative paths correctly. The header-note caveat on lines 37-39 correctly explains why it uses the alternative `Most recently completed phase` status header in `1-INBOX`. Since it is not yet in `2-WORKING`, this does not violate the active-doc contract of `PROJECT/PDDA.md`.
 
+**Commit:** <pending handoff>
+
+### Round 2 · Producer · claude-a (on Noel's behalf) · 2026-06-23
+**Decisions on proposals:** (all applied to `PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md` on disk — re-review the committed file)
+- `[Blocker]` Premature scaffolding / scope creep in Phases 3–5 — **Implemented (defer-in-place).** Rather than delete the forward design, I scoped the **near-term proposal to Phases 1–2 only** and marked **Phases 3, 4, 5 as `Deferred (future track)`** with a blockquote under each header (Phase 4/5 also decision-gated behind the evidence-bridge open question). Added a "Proposed near-term scope" note to the Decision summary and updated the `## Status` row to say the same. This keeps PDDA a thin governance/safety layer and honors Gemini/ChatGPT's freeze-and-contain signal without throwing away the design thinking. (Decision summary; `## Status`; Phase 3/4/5 headers.)
+- `[Should]` Dependency mismatch — PR 3 (evidence bridge, a Phase 4 item) ahead of Phase 3 — **Implemented.** Renamed the section to **"Recommended first PRs"** (TOC anchor updated), marked PRs 1–2 as the near-term pair and **PR 3 as deferred/decision-gated**, and added an explicit **Dependency guard**: the first evidence-snapshot version must operate only on existing single-file active docs + git/notes signals and must NOT depend on the Phase 3 taxonomy (else they deadlock).
+- `[Should]` Missing open question on off-the-shelf linting — **Implemented.** Added a **5th open question**: whether to offload the deterministic Bash checks to a standard `.markdownlint.json` (+ Vale/lychee) and keep only the repo-specific contract checks custom — citing Gemini (`FEEDBACK-GEMINI.md`) and ChatGPT (`FEEDBACK-CHATGPT.md`), and naming which checks are hard to translate (exact `## Status` header, hardcoded-path ban, pointer-only `ROADMAP.md`).
+- `[Should]` Over-generalized "all three converge on the evidence bridge" claim — **Implemented.** Verified independently: `rebalance`/evidence-bridge appears **only** in `FEEDBACK-PERPLEXITY.md` (26 hits; 0 in ChatGPT, 0 in Gemini). Reworded the Decision summary so the first two bullets are marked the genuine three-way agreement and the evidence bridge is labeled **Perplexity's proposal only**, with ChatGPT/Gemini converging on scope containment instead. Phase 4 Intent reattributed to Perplexity.
+- `[Pass]` Header-note caveat + paths — no change needed; thanks for the independent confirmation it's correct for a `1-INBOX` doc.
+**Did:** All 4 actioned findings applied to the artifact (committed). No change to the `[Pass]` item.
+**Verification:** textual — `rebalance` mention counts confirmed by grep across the three notes (P:26 / C:0 / G:0); markdownlint recommendation confirmed at `FEEDBACK-CHATGPT.md:66` and `FEEDBACK-GEMINI.md:5`. Doc re-read; frontmatter, the `## Status` table, per-phase QA checklists, and repo-relative paths all intact; TOC anchor for the renamed PR section updated to match.
+**Re-review this:** (1) Is the Phase 1–2 near-term / Phase 3–5 deferred boundary now unambiguous and consistent across Status, Decision summary, the phase headers, and the PR list? (2) Is the evidence-bridge attribution now faithful to the sources? (3) Does the PR 3 dependency guard resolve the circular-dependency risk? If satisfied this is round 2/3 — **Approve**; else name any real Blocker.
 **Commit:** <pending handoff>
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
