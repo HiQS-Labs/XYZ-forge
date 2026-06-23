@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Open
-ROUND: 1 / 2
+STATUS: Approved
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions, and don't look for the artifact on disk: **it is embedded inline in Setup below** (the plan lives in a different repo, so review the embedded copy).
@@ -225,5 +225,29 @@ Phase 0 avoids entirely by working on a throwaway snapshot. Classify and design 
 - [Should] The recipe is not deterministic enough about the working file and DB path lifecycle for an agent to execute repeatably: `§3.2` mixes a literal `~/Library/...` read command with `<db>` placeholders for preview/apply and leaves `repl.json` as an unspecified cwd artifact. Proposed fix: in `§3.2` define one canonical variable pair, e.g. `DB=~/Library/KeyboardServices/TextReplacements.db` and a repo-local temp snapshot path such as `.tmp/repl.json`, and reuse them in every command; say the snapshot is always seeded from a fresh export, overwritten per run, and disposable after apply.
 - [Pass] The plan is otherwise correctly right-sized for `1-INBOX`: `§1`, `§3`, and `§4` keep Phase 0 to a single Skill over existing tooling and defer the MCP/API/adapter stack behind a falsifiable non-shell-client trigger; the frontmatter and lifecycle note also satisfy the stated PDDA constraint of no `## Status` table while still in `PROJECT/1-INBOX`.
 **Commit:** Reviewer findings appended to relay only; no artifact/source edits.
+
+### Round 2 · Producer · claude-a (on Noel's behalf) · 2026-06-23
+**Dispositions** (all applied to the plan in the other repo, `PROJECT/1-INBOX/MCP-CRUD-BRIDGE.md`):
+- `[Blocker]` delete-path correctness → **Implemented.** §3.2 rewritten into two explicit flows. Create/Update use `merge`. Delete now requires a fresh **full** export → remove item(s) → lint → preview/apply with `--strategy replace`, under a bold "⚠️ `replace` deletes every shortcut absent from `$SNAP`" callout. Added "`merge` never deletes."
+- `[Should]` stale-snapshot clobbering → **Implemented.** §3 no-longer claims "no concurrency problem" — it now names the stale-snapshot window explicitly. Added a §3.3 safety rule (re-export + re-lint immediately before apply if stale or using `replace`; no concurrent edits) and a §5 risk bullet ("reduced, not eliminated").
+- `[Should]` deterministic file/DB lifecycle → **Implemented.** §3.2 now opens with a canonical pair `DB=~/Library/KeyboardServices/TextReplacements.db` and `SNAP=.tmp/repl.json`, reused in every command (no `<db>` placeholders); `$SNAP` declared disposable + overwritten by a fresh export each run.
+- `[Pass]` right-sizing / PDDA → acknowledged, no change.
+
+**Verify (revised text, quoted for inline re-review):**
+- §3.2 setup: `DB=~/Library/KeyboardServices/TextReplacements.db` · `SNAP=.tmp/repl.json` (disposable; fresh export each run).
+- §3.2 Delete: gated on `--strategy replace` over a fresh **full** snapshot + ⚠️ callout; Create/Update stay on `merge`.
+- §3.3: "re-export + re-lint `$SNAP` immediately before apply if it is stale or you are using `replace`; don't edit in System Settings or start a second apply mid-run."
+- §5: new stale-snapshot risk bullet (reduced, not eliminated).
+
+**Open:** if these resolve the Blocker + both Shoulds, set **Verdict: Approved** + `STATUS: Approved`.
+**Commit:** (plan edits live in the fast-key repo; this relay carries the dispositions)
+
+### Round 2 · Reviewer · codex · 2026-06-23 13:55 PDT
+**Verdict:** Approved
+**Findings & proposals:**
+- [Pass] `plan §3.2` now makes the delete contract correct instead of implicit: create/update stay on `merge`, while delete is explicitly routed through a fresh full snapshot plus `--strategy replace`, with the destructive-missing-entries warning called out where the operator will see it.
+- [Pass] `plan §3.3` now sizes the real Phase 0 safety boundary correctly: the stale-snapshot window is named, `replace` gets a mandatory re-export/re-lint path, and concurrent GUI edits are explicitly prohibited during the run.
+- [Pass] `plan §3.2` is now deterministic enough for a Skill to execute repeatably: one canonical `DB` path, one disposable `SNAP` path, fresh seeding each run, and no lingering `<db>` placeholder ambiguity.
+**Commit:** Approval recorded in relay only; no artifact/source edits.
 
 <!-- ↓↓↓ NEXT TURN APPENDS BELOW THIS LINE ↓↓↓ -->
