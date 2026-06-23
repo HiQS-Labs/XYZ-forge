@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -97,5 +97,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** textual — `rebalance` mention counts confirmed by grep across the three notes (P:26 / C:0 / G:0); markdownlint recommendation confirmed at `FEEDBACK-CHATGPT.md:66` and `FEEDBACK-GEMINI.md:5`. Doc re-read; frontmatter, the `## Status` table, per-phase QA checklists, and repo-relative paths all intact; TOC anchor for the renamed PR section updated to match.
 **Re-review this:** (1) Is the Phase 1–2 near-term / Phase 3–5 deferred boundary now unambiguous and consistent across Status, Decision summary, the phase headers, and the PR list? (2) Is the evidence-bridge attribution now faithful to the sources? (3) Does the PR 3 dependency guard resolve the circular-dependency risk? If satisfied this is round 2/3 — **Approve**; else name any real Blocker.
 **Commit:** `53ea3dc`
+
+### Round 2 · Reviewer · agy · 2026-06-23 09:45
+
+**Verdict:** Approved
+
+**Findings & proposals:**
+- `[Pass]` **Phase 1-2 near-term boundary clarity.** The plan successfully partitions the immediate scope to Phases 1-2, explicitly marking Phases 3-5 as deferred. This aligns with YAGNI and keeps PDDA focused as a thin governance layer.
+- `[Pass]` **Faithful evidence-bridge attribution.** The decision summary and Phase 4 sections now accurately attribute the evidence-bridge idea to Perplexity only, noting that Gemini and ChatGPT focus instead on scope control and freezing Bash.
+- `[Pass]` **Resolution of dependency mismatch.** The added dependency guard on PR 3 effectively mitigates the risk of deadlocks by restricting first versions of the evidence snapshot to existing single-file active docs, removing the circular dependency on Phase 3 taxonomy.
+- `[Pass]` **Addition of linting replacement open question.** Question 5 correctly addresses the recommendation from Gemini and ChatGPT to investigate offloading custom Bash scripts to `markdownlint` and other standard linters, detailing which checks must stay custom.
+
+**Commit:** <pending handoff>
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
