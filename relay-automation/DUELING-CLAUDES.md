@@ -136,6 +136,26 @@ is fine). The gate is the clause in caps:
 /loop 60s run "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/poll.sh" --mode relay --agent claude-b --claude-agents "claude-a,claude-b" --relay-task DUELING-CODEX-0623 --relay-file "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-23/codex-relay-review.md" --artifact "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-23/codex-relay-review.md" --deadline 1782251974 --dry-run ; if it printed "DECISION: run-runner", take your claude-b (Maintainer) turn: verify each Reporter finding against the REAL code in relay-automation/codex-turn.sh + relay-turn-lib.sh, fix the [Blocker]/[Should] ones with the smallest change, log a disposition for every finding, append your turn block with a one-line Verification, set NEXT: claude-a — then SHOW ME THE DIFF AND STOP. Do NOT commit, push, or release the token until I say "go". After "go": git commit, git push origin main, then release: TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" release DUELING-CODEX-0623 --agent claude-b --to claude-a. On "DECISION: stop", CronList + CronDelete this loop, then stop. Else do nothing.
 ```
 
+## Fewer permission prompts — run the poll SANDBOXED (target Claude especially)
+
+If the per-minute poll prompts the operator on every tick, the culprit is usually NOT the command
+rule — it's a **sandbox bypass**. In Claude Code, disabling the Bash sandbox
+(`dangerouslyDisableSandbox`) is a SEPARATE per-command approval that **no `permissions.allow`
+entry can suppress** — so a loop that bypasses the sandbox prompts on every single tick, forever.
+
+`poll.sh --dry-run` is **read-only** (a `git -C <root> status` + a `tick` read) and runs fine INSIDE
+the sandbox — confirmed in live runs. So:
+
+- **Run the poll sandboxed** — do NOT pass a sandbox bypass on the poll command. The **target
+  (Reporter) Claude** is the common offender: if it reflexively disables the sandbox to reach the
+  xyz repo from its own foreign CWD, that bypass — not the path — is what keeps prompting you.
+- **Add the poll command to `permissions.allow`** (the prefix rule) so the sandboxed command itself
+  is pre-approved, e.g. an entry matching `Bash(/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/poll.sh:*)`.
+
+Between the two, the per-minute poll stops prompting entirely. (The infrequent turn actions —
+`git -C` commit, `tick release` — fire once per TURN, not per tick; and the Maintainer's commit is
+gated behind your "go" anyway, so they're not the noisy part.)
+
 ## Notes & limits
 
 - **Same machine only.** Both windows share one filesystem (the relay file + `.tick/` lock).
