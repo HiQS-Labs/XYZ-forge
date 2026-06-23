@@ -104,3 +104,5 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 **Commit:** 1a6509e (claude-a r1 re-review / close)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
+
+<!-- relay-to-issue: filed https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/12 (dedup stamp restored 2026-06-23 — original was reverted by a containment-reset; original @hash/date not recoverable) -->
