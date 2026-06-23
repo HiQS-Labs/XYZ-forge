@@ -120,7 +120,7 @@ rtl_run_bounded() {  # <timeout_secs> <cmd...>
 #     relay file is seeded. A brand-new (untracked) artifact-under-review is then neither at HEAD nor
 #     seeded — the reviewer reads a missing/stale file. COMMIT review inputs before an isolated reviewer
 #     turn. The real fix — a read-only seed set distinct from the writable allowlist, so a reviewer can
-#     READ but not WRITE the artifact in the worktree — is a tracked follow-up, not done here.
+#     READ but not WRITE the artifact in the worktree — is tracked as #15, not done here.
 rtl_worktree_begin() {
   # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
   # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
