@@ -62,6 +62,10 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 - **Tooling · agy reliability testing** ⏸️ paused — proposal + 3 dogfoods this session: agy **clean as a reviewer** (×2), **scope-sensitive as a builder** (failed a kernel-spanning task → F4/F6/F7 contained; succeeded on a small bounded one). Resume to run the S1–S10 matrix. → [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md)
 - **Tooling · front-door onboarding health** 🟡 — read-only audit shipped → [FRONTDOOR.md](FRONTDOOR.md) (continuous deterministic dashboard; 10 findings, re-runnable checks) + a phased remediation plan. Verdict ⚠️ Bumpy: clone-to-working works (`validate.sh` 36/36, secrets clean), but stale test counts (3 docs) + 2 dead README links + a phantom-path `CLAUDE.md` + undocumented `--target-root`/`install.sh` remain. Phases 1–3 queued (doc-only). → [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md)
 
+### Queued (captured · not yet active)
+
+- **GH-12 · `tick` silently no-ops from a foreign CWD** 🔲 — captured from [issue #12](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/12) (relay-to-issue follow-up from the dueling-claudes relay). Two code-level tasks the relay left open: (a) make `tick` **fail loudly** instead of succeeding-as-noop when a mutating subcommand runs from a foreign CWD without `TICK_REPO_ROOT` — the root cause that stalled the live handoff, currently only doc-patched; (b) quote the unquoted `eval "$RUNNER_CMD"` dispatch at `relay-automation/poll.sh:210` (space-in-path defense-in-depth). 1-INBOX capture; promotes to `2-WORKING` on execution start. → [GH-12-TICK-FOREIGN-CWD-SILENT-NOOP.md](PROJECT/1-INBOX/GH-12-TICK-FOREIGN-CWD-SILENT-NOOP.md)
+
 ### Completed
 
 - **Part A · Phase 1 — Cost observability foundation** ✅ 2026-06-16 — deterministic token / wall-clock / human-minute capture in `tick analyze`. → [COST-OBSERVABILITY-PLAN.md](PROJECT/2-WORKING/COST-OBSERVABILITY-PLAN.md)

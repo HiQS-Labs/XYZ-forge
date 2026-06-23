@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-22
 
+### Triaged GH-12 (dueling-claudes relay follow-up) into the intake flow
+Validated [issue #12](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/12) — a well-formed `bug`-labeled relay-to-issue follow-up — and ran it through the ROUTER → PDDA "GitHub issue intake" path. Confirmed both cited tasks are real: the unquoted `eval "$RUNNER_CMD"` is exactly at [poll.sh:210](relay-automation/poll.sh#L210); the `tick` foreign-CWD silent no-op is the live root cause the relay hit (doc-patched, code-level fix still open).
+- **New:** [`PROJECT/1-INBOX/GH-12-TICK-FOREIGN-CWD-SILENT-NOOP.md`](PROJECT/1-INBOX/GH-12-TICK-FOREIGN-CWD-SILENT-NOOP.md) — the in-repo capture (issue's actionable substance only, no `## Status` table per the 1-INBOX lifecycle), carrying `gh_issue`/`source`/`doc_type: bugfix` forward for promotion.
+- **Ledger:** added a new **Queued (captured · not yet active)** subsection to [ROADMAP.md](ROADMAP.md) with the GH-12 pointer 🔲 — honestly reflects that it's a 1-INBOX capture awaiting promotion, not in-progress work. PDDA roadmap + coverage + frontmatter checks all green (errors=0).
+
 ### Closed out relay-xyz install hygiene — both user-skill symlinks resolve
 Repaired both dangling `~/.claude/skills/` symlinks (local-machine fix; the symlinks live outside the repo — this is the ledger reflecting it). **`consult`** pointed at `…/xyz-3-agents-swarm/skill/consult` (singular `skill/` — a typo; no such dir) instead of the real `skills/consult` (plural); re-pointed, `/consult` is live again. **`wpcc`** is now resolved too: its symlink target (`…/wp-code-check/skills/wpcc`) was already correct — the `wp-code-check` clone is now present at that path, so it resolves with no change needed. Both reach their `SKILL.md` ✓. The ROADMAP install-hygiene item is now ✅ done (moved Deferred → Completed).
 
