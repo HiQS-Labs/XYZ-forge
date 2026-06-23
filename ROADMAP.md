@@ -74,7 +74,7 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 
 - **Part C — Autonomous self-improvement loop** 🔮 gated — the LOOPS.md endgame; gated on the metric / oracle / stop-condition prerequisites (safety cage already shipped). → [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md)
 - **Part A · Phase 4 — M6 / M7** 🔲 deferred — cross-phase context injection + state projection, until a phase genuinely needs them. → [MARATHON-HARNESS.md → Deferred](PROJECT/3-COMPLETED/MARATHON-HARNESS.md#deferred--m6--m7)
-- **Tooling · relay-xyz install hygiene** 🔲 deferred — repair the two dangling user-skill symlinks (`consult` points at `skill/consult`, should be `skills/consult`; `wpcc` target clone is missing); awaits operator sign-off. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
+- **Tooling · relay-xyz install hygiene** 🟡 — `consult` user-skill symlink **repaired 2026-06-22** (operator-signed-off): `~/.claude/skills/consult` now → `skills/consult` (was the singular-`skill/` typo; resolves to SKILL.md ✓). Remaining: the `wpcc` symlink's target clone is missing (a missing repo, not a typo) — repair when that clone exists. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 
 ---
 
