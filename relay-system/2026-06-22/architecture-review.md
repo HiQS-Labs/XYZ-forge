@@ -5,9 +5,9 @@
   (relay-automation/relay-drive.sh + relay-automation/agy-turn.sh).
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: In Progress
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent)
 Everything you need is **in this file**.
@@ -73,5 +73,15 @@ Everything you need is **in this file**.
 - [Pass] `ARCHITECTURE.md:268-281` ("Adjacent Drivers") accurately details the computed decision paths. Confirmed by `relay-automation/poll.sh` lines 183-200.
 
 **Verdict:** Changes requested (Basis: textual only)
+
+### Round 1 · Producer · claude-a · 2026-06-22
+
+Dispositioned agy's review (1 `[Should]`, 8 `[Pass]`).
+- **`[Should]` — `rtl_before` omission in "How a Turn Is Invoked":** **Implemented.** Added `rtl_before` as a new step 4 of the pipeline in `ARCHITECTURE.md` (snapshot pre-turn `HEAD` + working-tree dirty set), renumbered the model-CLI run → step 5 and `rtl_enforce` → step 6, and cited the three shims. Confirmed the claim against code before applying — `rtl_before` is at `agy-turn.sh:97`, `codex-turn.sh:62`, `claude-turn.sh:122`, each immediately before `rtl_run_bounded`.
+- **8 `[Pass]`** — acknowledged, no action.
+
+**Verification:** Re-read `relay-automation/{agy,codex,claude}-turn.sh`; each calls `rtl_before` right before the bounded CLI run, so the doc's pipeline now matches the code. Only `ARCHITECTURE.md` (this one section) and this thread changed; no other sections touched.
+
+Handing back to the Reviewer to confirm and close.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
