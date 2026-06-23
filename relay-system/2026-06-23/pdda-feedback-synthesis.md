@@ -1,0 +1,68 @@
+# RELAY · PDDA feedback-synthesis plan — design review
+<!--
+  Single source of truth for this two-agent relay.
+  Read this ENTIRE file before doing anything. Act only on your turn.
+-->
+
+NEXT: Reviewer
+STATUS: Open
+ROUND: 1 / 3
+
+## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
+The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
+1. **Read this whole file** (header, Setup, Ground rules, every turn in the Log).
+2. **Check it's your turn:** `NEXT` (top) names the role to act. Confirm you are the agent bound to it (see Setup) **and** the last Log block isn't already yours. If not → STOP and reply "wrong window — nudge the <other> window."
+3. **Do your role's work** on the artifact named in Setup (READ the real files listed; cite `file:line`):
+   - **Reviewer (agy):** review vs the Definition of Done → graded findings (`[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`), each with a concrete proposed fix → set a **Verdict** (Approved | Changes requested | Blocked). Do **not** edit the artifact; you only append findings to THIS relay file.
+   - **Producer (claude-a):** for every open finding log a disposition (Implemented / Modified / Declined + why), make the change on the artifact, then add new work / re-review asks.
+4. **Append ONE block** at the very bottom, directly **above** the marker line (`<!-- ↓↓↓ NEXT TURN ... -->`). Never edit earlier turns. Header it `### Round N · <Role> · <your-label> · <date time>`; a Reviewer block carries `**Verdict:**` + `**Findings & proposals:**` (graded bullets) + `**Commit:**`.
+5. **Update the header:** flip `NEXT` to the other role; set `STATUS` (`Approved` closes the relay — Reviewer only; else leave `Open`).
+6. **Commit only the files you touched** (this relay log; the Producer also commits the artifact): `git commit -m "relay(pdda-feedback-synthesis): <your-label> r<N>"`, then put the short hash in your block's `Commit:` line. Do **not** push.
+7. **Stop.** Tell the operator your one-line result.
+
+## Setup
+- Artifact under review — Noel's **PDDA feedback-synthesis plan**, a proposal-stage planning doc (not code) that reduces three June 23 external feedback notes into one actionable PDDA direction-setting plan. READ all of:
+  - **The artifact:** `PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md` (the synthesis: decision summary, keep/avoid lists, 5 phases each with a checklist + per-phase QA checklist, recommended first three PRs, open questions before promotion to `2-WORKING`).
+  - **The three source notes the synthesis claims to represent** — cite these to verify faithfulness:
+    - `PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md`
+    - `PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md`
+    - `PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md`
+  - **The contract it must obey + advocates:** `PROJECT/PDDA.md` (lifecycle folders, required frontmatter, the exact two-column `## Status` table, QA-gate-per-phase, hardcoded-path ban, the `ROADMAP.md` pointer-only contract) and `ROUTER.md` (the startup path the doc proposes linking new files from).
+- Definition of Done — judge the synthesis on:
+  - **(a) Faithfulness to the three sources:** does the "What the feedback agrees on" section and the keep/avoid/build framing accurately represent Perplexity, ChatGPT, and Gemini, or does it editorialize, misattribute, or invent agreement that isn't in the notes? Cite `FEEDBACK-*.md:line` for any drift.
+  - **(b) Internal consistency + scope discipline:** does the doc honor its own `non_goals` and "What to avoid building" list, or does a later phase (esp. Phase 4 evidence bridge, Phase 5 integrations) smuggle back the platform sprawl it forbids? Does anything contradict the "thin repo-governance and safety layer" thesis?
+  - **(c) Consistency with the PDDA contract it advocates:** does the doc obey `PROJECT/PDDA.md` (minimum frontmatter; the proposal correctly flags the `Most recently completed phase` header vs the active-doc `What was just completed | What's next` contract; repo-relative paths only; no second roadmap)? Is the header-note caveat correct and sufficient, or does it still violate the contract while sitting in `1-INBOX`?
+  - **(d) Actionability / observability:** is every checklist item genuinely observable (each has a concrete *Observable:* line that a script or human could check)? Are the per-phase QA checklists real gates, not restatements? Is the "Recommended first three PRs" order dependency-correct (does PR 2 or 3 depend on PR 1's outputs)?
+  - **(e) Right-sizing / YAGNI:** is a 5-phase plan proportionate for a `1-INBOX` proposal, or is it premature scaffolding? Should Phases 4–5 be deferred to a sibling track (one of the open questions raises exactly this) rather than specified now?
+  - **(f) Open-questions quality:** are the 4 open questions the genuinely blocking ones before promotion to `2-WORKING`, or are any non-blocking / missing a load-bearing one (e.g. where `CONSTITUTION.md` should live, or whether the evidence bridge should be its own track)?
+- Producer: Noel (owner) — represented here by the orchestrator (claude-a)   ·   Reviewer: **agy**
+- Handoff: cli-driven (agy)   <!-- driven by relay-automation/relay-drive.sh + agy-turn.sh -->
+- Started: 2026-06-23
+
+## Ground rules
+1. This file is the single source of truth. The agents are different tools (Claude and agy) and never share memory.
+2. Read the whole file. Take a turn only if `NEXT` names your role.
+3. One turn = one block appended at the very bottom, above the marker. Never edit earlier turns. Then update `NEXT`/`STATUS` at the top.
+4. Stay tight. Findings are graded bullets, not essays.
+5. **The Reviewer (agy) never edits the artifact.** It proposes graded findings with concrete suggested fixes; it appends them to THIS file only.
+6. Grade every finding: `[Blocker]` must fix · `[Should]` strong rec · `[Nit]` optional · `[Pass]` checked + sound.
+7. The Reviewer posts a Verdict. Relay ends on **Approved**; else the orchestrator carries the findings back to the Producer.
+8. End your turn by committing it: `relay(pdda-feedback-synthesis): <role> r<N>`. No push.
+9. **One actor at a time.** The `RELAY-PDDA-SYNTH` tick token is the lock.
+10. **Evidence:** this is a *planning* doc — prefer `textual` evidence with `file:line` citations into the artifact, the three `FEEDBACK-*.md` notes, and `PROJECT/PDDA.md`. Where the synthesis claims the feedback "agrees," verify it against the actual notes.
+
+## Roles
+- **Producer** — Noel (owner), applied here by the orchestrator (claude-a). Applies the Reviewer's findings to the artifact between rounds.
+- **Reviewer** — agy. Reviews against the DoD, proposes graded findings, sets a verdict. Never edits the artifact.
+
+---
+## Log
+
+### Round 1 · Producer · claude-a (on Noel's behalf) · 2026-06-23
+**Did:** Scaffolded this relay for a design review of `PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md` — a proposal-stage synthesis that takes the three June 23 feedback notes (Perplexity / ChatGPT / Gemini) and reduces them to one actionable PDDA direction: keep PDDA a *thin repo-governance and safety layer*, with a 5-phase plan (lock positioning → harden contract/modes → artifact ergonomics → evidence bridge to rebalance → outward integrations), each phase carrying a checklist + a QA checklist, plus a "first three PRs" sequence and 4 open questions before promotion to `2-WORKING`. No edits to the artifact yet — this is the review request.
+**Review this:** Apply the DoD in Setup. I'm most interested in: (a) is the synthesis **faithful** to the three source notes, or does it claim agreement the notes don't support? (b) does any later phase (esp. Phase 4 evidence bridge / Phase 5 integrations) **smuggle back** the platform sprawl the doc's own "What to avoid building" list forbids? (c) does the doc obey the **PDDA contract** it advocates (the `Most recently completed phase` header note, no second roadmap, repo-relative paths)? (d) are the checklist *Observable:* lines genuinely checkable and is the "first three PRs" order dependency-correct? (e) is a 5-phase plan **right-sized** for a `1-INBOX` proposal, or should Phases 4–5 defer to a sibling track?
+**Verification:** N/A from the producer side — this is a review request. By inspection the artifact carries frontmatter, a `## Status` table, per-phase QA checklists, and repo-relative paths; confirm or refute that it actually meets the PDDA contract it advocates.
+**Open questions:** The 4 at the bottom of the artifact (CONSTITUTION.md path; feature-folder promotion timing; which single evidence output ships first; combined vs sibling PDDA+rebalance track) — flag which actually block promotion to `2-WORKING` and whether any load-bearing one is missing.
+**Commit:** (this relay scaffold; the artifact is reviewed on disk in `1-INBOX`)
+
+<!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
