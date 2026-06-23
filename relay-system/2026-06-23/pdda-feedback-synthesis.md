@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -64,5 +64,26 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** N/A from the producer side — this is a review request. By inspection the artifact carries frontmatter, a `## Status` table, per-phase QA checklists, and repo-relative paths; confirm or refute that it actually meets the PDDA contract it advocates.
 **Open questions:** The 4 at the bottom of the artifact (CONSTITUTION.md path; feature-folder promotion timing; which single evidence output ships first; combined vs sibling PDDA+rebalance track) — flag which actually block promotion to `2-WORKING` and whether any load-bearing one is missing.
 **Commit:** (this relay scaffold; the artifact is reviewed on disk in `1-INBOX`)
+
+### Round 1 · Reviewer · agy · 2026-06-23
+**Verdict:** Changes requested
+
+**Findings & proposals:**
+- `[Blocker]` **Premature scaffolding and scope creep in Phases 3-5 contradict YAGNI and the "thin layer" goal.**
+  - *Detail:* The plan defines a heavy 5-phase roadmap. Phase 3 (artifact taxonomy, custom analyzers, clarifying gates) and Phase 4 (weekly prioritization command, morning briefs tracking calendar and Gmail) represent a significant expansion of features. This directly contradicts the non-goal of "not turning PDDA into a general spec-driven-development platform" ([PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L21](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L21)), ChatGPT's warning to "not keep refining it as a broad platform" ([FEEDBACK-CHATGPT.md#L20](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md#L20)), and Gemini's strong recommendation to "freeze the Bash" and let it be "good enough" ([FEEDBACK-GEMINI.md#L3](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md#L3)).
+  - *Proposal:* Truncate the active roadmap to Phase 1 (positioning/constitution) and Phase 2 (hardening modes), and explicitly defer or move Phases 3-5 to a separate track or the rebalance backlog to keep PDDA focused as a thin, low-maintenance governance layer.
+- `[Should]` **Dependency mismatch in the "Recommended first three PRs" sequence.**
+  - *Detail:* The first three PRs sequence places the "Evidence snapshot bridge" as PR 3 ([PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L255](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L255)). However, this bridge (a Phase 4 feature) depends on the artifact ergonomics and taxonomy changes defined in Phase 3 ([PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L165-L181](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L165-L181)) to know what metadata and folder structure to query. Implementing PR 3 before Phase 3 is completed will result in throwaway code or circular dependencies.
+  - *Proposal:* Re-order the recommended PRs, clarify that PR 3 will operate only on single-file active docs, or swap the sequence so that artifact structure is locked before the bridge is built.
+- `[Should]` **Missing open question/task on replacing custom scripts with off-the-shelf linting.**
+  - *Detail:* Both Gemini ([FEEDBACK-GEMINI.md#L5](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md#L5)) and ChatGPT ([FEEDBACK-CHATGPT.md#L66](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md#L66)) recommend replacing custom Bash scripts with standard tools like `markdownlint` to reduce maintenance overhead. The current open questions ([PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L260-L268](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L260-L268)) do not address this, nor does the roadmap plan for this transition.
+  - *Proposal:* Add a 5th open question: "Should we replace custom deterministic Bash scripts with a standard `.markdownlint.json` configuration to minimize maintenance overhead as suggested by Gemini and ChatGPT?"
+- `[Should]` **Over-generalized claim of convergence regarding the evidence bridge/rebalance.**
+  - *Detail:* The decision summary states that the three feedback docs "converge on... the bridge between repo truth and local work evidence (rebalance)" ([PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L65-L66](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L65-L66)). However, only Perplexity's feedback mentions `rebalance` or the evidence bridge. ChatGPT's and Gemini's feedback focus exclusively on scope containment, freezing the custom Bash scripts, and using standard tools (like `markdownlint`).
+  - *Proposal:* Reword [PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L65-L66](file:///var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.CNDaYc/PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md#L65-L66) to clarify that the evidence bridge is a Perplexity-specific proposal to bridge the repo and local workspace, rather than a point of agreement across all three sources.
+- `[Pass]` **Header-note caveat and paths.**
+  - *Detail:* The file uses repo-relative paths correctly. The header-note caveat on lines 37-39 correctly explains why it uses the alternative `Most recently completed phase` status header in `1-INBOX`. Since it is not yet in `2-WORKING`, this does not violate the active-doc contract of `PROJECT/PDDA.md`.
+
+**Commit:** <pending handoff>
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
