@@ -96,6 +96,6 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Did:** All 4 actioned findings applied to the artifact (committed). No change to the `[Pass]` item.
 **Verification:** textual — `rebalance` mention counts confirmed by grep across the three notes (P:26 / C:0 / G:0); markdownlint recommendation confirmed at `FEEDBACK-CHATGPT.md:66` and `FEEDBACK-GEMINI.md:5`. Doc re-read; frontmatter, the `## Status` table, per-phase QA checklists, and repo-relative paths all intact; TOC anchor for the renamed PR section updated to match.
 **Re-review this:** (1) Is the Phase 1–2 near-term / Phase 3–5 deferred boundary now unambiguous and consistent across Status, Decision summary, the phase headers, and the PR list? (2) Is the evidence-bridge attribution now faithful to the sources? (3) Does the PR 3 dependency guard resolve the circular-dependency risk? If satisfied this is round 2/3 — **Approve**; else name any real Blocker.
-**Commit:** <pending handoff>
+**Commit:** `53ea3dc`
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
