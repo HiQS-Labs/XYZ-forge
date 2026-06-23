@@ -5,7 +5,7 @@
   Recipe for running this hands-free: relay-automation/DUELING-CLAUDES.md
 -->
 
-NEXT: claude-a
+NEXT: claude-b
 STATUS: Open
 ROUND: 1 / 5
 
@@ -50,5 +50,33 @@ The operator (or the poll loop) said "take your turn on this file." Everything y
 
 ---
 ## Log
+
+### Round 1 · Reporter · claude-a · 2026-06-23
+**Verdict:** Changes requested
+**Basis:** mixed — F1 and F4 are *behaviorally proven* (I hit both in a live Codex relay earlier today); the rest are *textual only* (read `codex-turn.sh` + `relay-turn-lib.sh`, not re-run here).
+**Scope reviewed:** `/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/codex-turn.sh`, `/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-turn-lib.sh`.
+
+**Findings & proposed fixes:**
+
+- **[Blocker] The shared turn-prompt hands the model `./bin/tick` — the exact CWD-relative form this relay's own header names the "#1 deadlock cause."** `relay-turn-lib.sh:193` emits `Use ./bin/tick for the %s token …`, but the protocol (`/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-23/codex-relay-review.md:22`) mandates the env-pinned **absolute** `bin/tick` because a bare/relative tick from a non-root CWD silently no-ops → the token never releases → deadlock. A worktree-isolated Codex turn runs with CWD = the throwaway worktree (`codex-turn.sh:74`); any foreign-CWD window is worse. *Fix:* in `rtl_turn_prompt`, build the token instruction from the known `RTL_ROOT` — `TICK_REPO_ROOT="$RTL_ROOT" "$RTL_ROOT/bin/tick"` — instead of `./bin/tick`.
+
+- **[Should] `codex-turn.sh` pins `TICK_REPO_ROOT` only inside the worktree-isolation branch** (`codex-turn.sh:73`), so the non-isolated path leaves token ops unanchored. With `RELAY_WORKTREE_ISOLATION` off, `export TICK_REPO_ROOT="$ROOT"` never runs; combined with the Blocker's `./bin/tick`, a Codex turn whose CWD isn't `$ROOT` can't find `.tick` → silent no-op. *Fix:* `export TICK_REPO_ROOT="$ROOT"` unconditionally near line 51, before the isolation branch.
+
+- **[Should] The claim/handoff protocol the prompt teaches is incomplete and deadlocks a live relay.** `relay-turn-lib.sh:193` says "claim/ping, then release," but `tick` requires (a) the receiver of a handed-off token to `claim` it before it may `release`, and (b) `claim` to carry `--paths`. Omitting `--paths` prints usage and silently does **not** claim; the later `release` then fails with `task … is open — only the claiming agent can mutate it`. *I hit this exact two-failure sequence in a live Codex relay earlier today.* *Fix:* spell the sequence into the prompt: `tick claim <task> --agent <you> --paths <relay-file>` → work → `tick release <task> --agent <you> --to <peer>`, noting `--paths` is mandatory on claim.
+
+- **[Should] A worktree-isolated turn can only see artifacts under `RTL_ROOT`; a cross-repo / out-of-ROOT artifact is invisible.** `rtl_worktree_begin` seeds only `$RTL_ROOT/$a` for allowlisted paths (`relay-turn-lib.sh:122-130`) and the worktree is a checkout of `RTL_ROOT@HEAD`, so an artifact in another repo is neither seeded nor at HEAD. *I hit this earlier — my artifact lived in a different repo, so I had to embed it inline in the relay file.* `RELAY_TARGET_ROOT` (`rtl_init:53-57`) relocates the single artifact root but not "harness in repo A, artifact in repo B." *Fix:* document the constraint (embed cross-repo artifacts inline, or stage under ROOT), or support a read-only seed that may include an out-of-ROOT path.
+
+- **[Should] Reviewer-turn isolation seeds only the relay file, so an *uncommitted* artifact-under-review is invisible to the reviewer.** `rtl_init` drops `ALLOW_PATHS` on a reviewer turn (`relay-turn-lib.sh:66-69`) → `rtl_worktree_begin` seeds just the relay file → a brand-new (untracked) artifact is neither seeded nor at HEAD; the reviewer silently reads a missing/old file. (Tracked code like these two files is fine.) *Fix:* separate a read-only "seed set" from the writable allowlist so a reviewer can READ the artifact in the worktree without being able to WRITE it.
+
+- **[Should] In-ROOT (non-isolated) containment `reset --hard`s a concurrent peer commit — data loss.** `rtl_enforce:244` resets to `RTL_BEFORE_HEAD` whenever HEAD moved and the turn wasn't worktree-isolated; the comment (`rtl_enforce:241-243`) admits a concurrent peer commit here is also reset (recovered via reflog on 2026-06-23). *Fix:* before `reset --hard`, save the unexpected commit to `refs/relay-orphan/<sha>`; or detect a peer commit (parent == `RTL_BEFORE_HEAD`, touches no allowlist path) and preserve it as the worktree path already does.
+
+- **[Nit] `rtl_run_bounded` kills by PID only — a multi-process Codex CLI can orphan children past the timeout** (`relay-turn-lib.sh:82-84, 89-94`; self-documented). Orphans = continued ChatGPT-sub spend and possible late writes. *Fix:* best-effort `pkill -P "$apid"` sweep after the kill, or a process-group kill where available.
+
+- **[Pass] Billing guard is sound:** `codex-turn.sh:85-86` strips `OPENAI_API_KEY` from the Codex subprocess so a turn always bills the ChatGPT-subscription login, with `CODEX_ALLOW_API_KEY=1` to opt back in. Verified by read.
+
+- **[Pass] The uncommitted-relay-file case is already handled:** `rtl_worktree_begin` seeds the CURRENT working-tree allowlist over the HEAD checkout (`relay-turn-lib.sh:113-130`), so a freshly-scaffolded, uncommitted relay file IS visible under isolation. (Earlier I disabled isolation fearing the opposite; the code covers it — that workaround was unnecessary.)
+
+**Handing to Maintainer (claude-b):** verify the Blocker + the claim/`--paths` gap first — together they are the live-deadlock pair, and they're the most likely reason a Codex relay turns "slightly problematic." Smallest fix that holds; stop for the operator's "go" before any commit/push.
+**Commit:** 590e31c
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
