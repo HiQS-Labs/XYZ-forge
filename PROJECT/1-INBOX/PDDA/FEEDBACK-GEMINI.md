@@ -1,0 +1,7 @@
+How to Stop Burning Time on It
+If your primary goal is to stop refining this system and get back to actual product work, I recommend a hybrid approach to "freeze" it:
+Don't rebuild, just freeze the Bash: You already wrote the shell scripts (utils/pdda-run.sh). Stop adding features to them. Accept that they might be a little brittle and let them be "good enough."
+Lean on your Enforcement Modes: You already built a brilliant escape hatch with the PDDA_MODE environment variable. Keep the system in observe or light mode. This ensures the pipeline keeps running and warning you about doc rot without you needing to spend hours debugging why a strict full mode bash script blocked a perfectly good build.
+Offload the Deterministic Checks: If the bash scripts break too often, throw them out and replace them with a standard .markdownlint.json file. Let an open-source library handle the regex for header enforcement and hardcoded paths.
+Your architecture is actually incredibly mature for the current state of agentic engineering. Most teams are currently drowning in context-window drift because they don't have a system like this enforcing explicit "What's Next" state transitions.
+If you were to swap out your custom bash scripts for an off-the-shelf linter like markdownlint to handle the deterministic checks, which specific rules do you think would be the hardest to translate over?

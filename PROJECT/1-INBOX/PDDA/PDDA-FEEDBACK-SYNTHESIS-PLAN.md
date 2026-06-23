@@ -1,0 +1,268 @@
+---
+title: PDDA feedback synthesis — actionable planning doc
+status: Proposed (1-INBOX — not yet active)
+created: 2026-06-23
+updated: 2026-06-23
+owner: Noel (operator) · Codex (producer)
+doc_type: plan
+related:
+  - PROJECT/1-INBOX/PDDA/FEEDBACK-PERPLEXITY.md
+  - PROJECT/1-INBOX/PDDA/FEEDBACK-CHATGPT.md
+  - PROJECT/1-INBOX/PDDA/FEEDBACK-GEMINI.md
+  - PROJECT/PDDA.md
+  - ROUTER.md
+goal: >
+  Synthesize the June 23 external feedback into one actionable PDDA direction-setting
+  plan that keeps PDDA as a thin repo-governance and safety layer, identifies what to
+  preserve, what to defer, and what to build next, and sequences the work into phased,
+  observable steps with QA gates.
+non_goals:
+  - Not promoting this to PROJECT/2-WORKING yet; this is a proposal, not active execution.
+  - Not turning PDDA into a general spec-driven-development platform or generic AI method.
+  - Not rewriting existing PDDA scripts or docs in this pass; this document is the synthesis only.
+reviewed:
+  - Perplexity feedback: expansive improvement menu, strongest on evidence-bridge ideas
+  - ChatGPT feedback: strongest on positioning and scope control
+  - Gemini feedback: strongest on freeze/observe-mode pressure and anti-overengineering signal
+---
+
+# PDDA feedback synthesis
+
+## Status
+
+| Most recently completed phase | What's next |
+|---|---|
+| **Feedback intake and synthesis** — the three June 23 feedback notes were read side by side, reduced to one common direction, and split into "keep / build / defer / avoid" so future PDDA work has a single planning surface. | **Phase 1 — lock positioning and scope**: write the shared PDDA constitution, the explicit do-not-build boundary, and the rule that deterministic checks may block while LLM review may only warn. |
+
+> **Header note:** this inbox proposal uses the user-requested `Most recently completed phase`
+> header. If promoted to `PROJECT/2-WORKING`, rename it to PDDA's active-doc contract header:
+> `What was just completed | What's next`.
+
+## Table of Contents
+
+- [Decision summary](#decision-summary)
+- [What the feedback agrees on](#what-the-feedback-agrees-on)
+- [What to preserve](#what-to-preserve)
+- [What to avoid building](#what-to-avoid-building)
+- [Phase 1 — Lock positioning and scope](#phase-1--lock-positioning-and-scope)
+- [Phase 2 — Harden the contract and enforcement modes](#phase-2--harden-the-contract-and-enforcement-modes)
+- [Phase 3 — Improve artifact ergonomics without becoming Spec Kit](#phase-3--improve-artifact-ergonomics-without-becoming-spec-kit)
+- [Phase 4 — Add the evidence bridge to rebalance](#phase-4--add-the-evidence-bridge-to-rebalance)
+- [Phase 5 — Add only the integrations that prove the lane](#phase-5--add-only-the-integrations-that-prove-the-lane)
+- [Recommended first three PRs](#recommended-first-three-prs)
+- [Open questions before promotion to 2-WORKING](#open-questions-before-promotion-to-2-working)
+
+## Decision summary
+
+The verdict is to keep refining PDDA only as a thin repo-governance and safety layer.
+
+The three feedback docs differ in style, but they converge on the same boundary:
+
+- PDDA is strongest when it enforces doc lifecycle, roadmap pointer discipline, deterministic checks,
+  advisory LLM review, verified-success reporting, and autonomous-agent safety rails.
+- PDDA is weakest when it tries to become a general planning framework, generic docs linter,
+  generic multi-agent runner, or full work-management product.
+- The distinctive future surface is the bridge between repo truth and local work evidence
+  (`rebalance`), not "yet another spec/task framework."
+
+## What the feedback agrees on
+
+- **Perplexity:** expand carefully around a constitution, artifact taxonomy, evidence snapshots,
+  clarify/analyze/checklist/converge steps, and prioritization driven by local evidence.
+- **ChatGPT:** do not compete head-on with Spec Kit, Task Master, OpenHands, AGENTS.md, or generic
+  docs-as-code tooling; preserve the strict lifecycle/ledger/checking layer.
+- **Gemini:** freeze the Bash unless a gap is real, lean on `PDDA_MODE` as the escape hatch, and
+  prefer observe/light modes to avoid a brittle strict system eating product time.
+
+The synthesis is not "average the three." It is:
+
+1. Keep the thin, opinionated kernel.
+2. Make the kernel's boundaries explicit.
+3. Add the evidence bridge only where it strengthens that kernel.
+4. Refuse platform sprawl.
+
+## What to preserve
+
+- `ROADMAP.md` as a pointer ledger, never a second plan body.
+- `PROJECT/PDDA.md` as the canonical active-doc contract.
+- Deterministic checks as the only blocking layer.
+- LLM review as advisory only, never a build blocker.
+- "Do not report success unless the relevant validation ran."
+- Relay containment, cost visibility, and recovery/safety work as a separate but related trust layer.
+- The option to stay in `observe` or `light` mode when strictness costs more than it saves.
+
+## What to avoid building
+
+- A generic spec-driven-development framework.
+- A generic PRD-to-tasks generator as a product surface.
+- A generic multi-agent platform or agent marketplace.
+- A full Kanban or visual project-management UI before the CLI/MCP contract is stable.
+- Replacements for commodity Markdown linting when off-the-shelf tools are enough.
+- New Bash or policy complexity unless a measured gap justifies it.
+
+## Phase 1 — Lock positioning and scope
+
+**Intent:** define the lane before adding more mechanics. If this phase is skipped, later work will
+recreate the same argument inside every script and planning doc.
+
+### Checklist
+
+- [ ] Create `PROJECT/CONSTITUTION.md` or equivalent and state the non-negotiables explicitly:
+      local-first privacy, deterministic-before-LLM, verified-success-only, reversibility on
+      destructive actions, and no hidden cloud sync for private notes.
+      *Observable:* file exists, is linked from `ROUTER.md`, and names the required principles.
+- [ ] Create `PROJECT/DO-NOT-BUILD.md` and record the explicit anti-scope list from this synthesis.
+      *Observable:* file exists and lists at least the five avoided product directions above.
+- [ ] Add one positioning section to `PROJECT/PDDA.md` or a sibling doc that states PDDA's lane in
+      one paragraph: "thin repo-governance and safety layer," not "general AI project framework."
+      *Observable:* a grep for `thin repo-governance and safety layer` returns one canonical hit.
+- [ ] Record the deterministic/advisory split as policy: deterministic checks may block; LLM review
+      may warn only.
+      *Observable:* the policy is present in one canonical file, not implied across comments.
+- [ ] Decide whether `PDDA_MODE` default should remain permissive (`observe` or `light`) outside
+      deliberate hardening work.
+      *Observable:* the default and its rationale are documented in one place.
+
+### QA checklist — Phase 1
+
+- [ ] A new agent can answer "what is PDDA for?" by reading one file, not reconstructing it from
+      feedback threads.
+- [ ] The constitution and do-not-build files are linked from the startup path (`ROUTER.md` or a
+      doc it directly points to).
+- [ ] The deterministic-vs-LLM rule is stated once canonically and does not conflict with
+      `PROJECT/PDDA.md`.
+- [ ] Scope-control docs do not introduce a second roadmap or duplicate the plan body.
+
+## Phase 2 — Harden the contract and enforcement modes
+
+**Intent:** make the current system safer and cheaper to live with before adding new features.
+
+### Checklist
+
+- [ ] Document precedence when both `PDDA_MODE` env and any file-based mode indicator are set.
+      *Observable:* one explicit precedence rule exists; no ambiguity remains.
+- [ ] Clamp every LLM readiness or reviewer finding to `warn` max before wider activation.
+      *Observable:* no LLM path is capable of emitting a blocking severity in the documented contract.
+- [ ] Audit the existing deterministic scripts and remove or demote any check that is acting like
+      policy theater rather than catching real drift.
+      *Observable:* each check is tagged internally or documented as blocking vs warn-only.
+- [ ] Make the stale-doc and destructive-action rules explicitly reversible and human-mediated.
+      *Observable:* destructive auto-repair remains absent or clearly gated.
+- [ ] Write a short "when to stay in observe/light mode" operator guide.
+      *Observable:* guide exists and names concrete triggers for not using strict/full mode.
+
+### QA checklist — Phase 2
+
+- [ ] A reviewer can point to one source of truth for enforcement severity and mode precedence.
+- [ ] No documented LLM step can block a build.
+- [ ] Every destructive or quasi-destructive action has an explicit rollback or human gate.
+- [ ] The operator guide uses real examples of when strictness is worth the friction and when it is not.
+
+## Phase 3 — Improve artifact ergonomics without becoming Spec Kit
+
+**Intent:** borrow the useful parts of spec/task discipline without cloning another framework.
+
+### Checklist
+
+- [ ] Define the minimum artifact taxonomy for larger work: when a single active doc is enough and
+      when a feature folder with `SPEC.md`, `PLAN.md`, `TASKS.md`, and `EVIDENCE.md` becomes worth it.
+      *Observable:* one doc states the folder threshold and example shape.
+- [ ] Add a lightweight clarify gate for multi-phase work before promotion to `PROJECT/2-WORKING`.
+      *Observable:* the contract names required clarifications or an explicit exemption field.
+- [ ] Define task requirements for phased plans: ID, dependency note, write scope, verification
+      command, and expected evidence artifact.
+      *Observable:* the task contract is written down in one canonical place.
+- [ ] Add a checklist generator or template only if it covers PDDA-specific categories that generic
+      templates miss: privacy, evidence readiness, rollback path, changelog provenance.
+      *Observable:* categories are listed and justified as PDDA-specific.
+- [ ] Add a warn-only cross-artifact analyzer concept that compares roadmap, plan, tasks, and
+      evidence for contradictions.
+      *Observable:* the analyzer's intended finding classes are enumerated before implementation.
+
+### QA checklist — Phase 3
+
+- [ ] The artifact model is smaller and clearer than Spec Kit, not a local clone of it.
+- [ ] A small bugfix can still stay a single doc without violating the contract.
+- [ ] Multi-phase plans have observable task fields and post-phase QA gates.
+- [ ] Any analyzer remains warn-only until false-positive rate is proven acceptable.
+
+## Phase 4 — Add the evidence bridge to rebalance
+
+**Intent:** connect repo state to actual work signals, because that is the differentiated lane the
+feedback identified.
+
+### Checklist
+
+- [ ] Define one evidence snapshot artifact or command that joins active docs with local evidence:
+      commits, notes, calendar, issues, stale docs, and freshness state.
+      *Observable:* the output contract names both Markdown and machine-readable forms.
+- [ ] Add an evidence-freshness block to high-level answers and reports so stale sources do not
+      masquerade as current truth.
+      *Observable:* freshness categories and wording are specified.
+- [ ] Define one weekly prioritization command for PDDA + rebalance that answers:
+      what got real attention, what is stale, what is over-consuming time, and what lacks provenance.
+      *Observable:* the question set is fixed in the command contract.
+- [ ] Define one morning brief contract that combines active roadmap items, work evidence, calendar
+      constraints, and suggested next action.
+      *Observable:* each recommendation must cite an artifact or evidence source.
+- [ ] Keep the bridge read-first: snapshot and ranking before mutation or auto-rewrite.
+      *Observable:* no silent rewriting is allowed in the first version.
+
+### QA checklist — Phase 4
+
+- [ ] Every recommendation in the evidence snapshot or morning brief cites a local artifact or evidence row.
+- [ ] Freshness is visible enough that a stale source cannot quietly drive prioritization.
+- [ ] The bridge strengthens PDDA's lane instead of turning it into a general personal dashboard.
+- [ ] First versions are additive reports, not hidden mutators.
+
+## Phase 5 — Add only the integrations that prove the lane
+
+**Intent:** integrate outward only where it reinforces the governance/evidence contract.
+
+### Checklist
+
+- [ ] Promote the task-list to GitHub issue bridge only if it round-trips stable source pointers and
+      verification commands.
+      *Observable:* one trial issue links back to its source doc and the source doc links back.
+- [ ] Define agent/integration profiles only if they clarify real operational differences:
+      sandbox needs, cost visibility, MCP/browser support, self-commit rules, multi-repo limits.
+      *Observable:* profile fields are concrete and operational, not marketing descriptions.
+- [ ] Package relay containment as a named safety contract rather than scattering it across comments.
+      *Observable:* one canonical safety artifact names worktree isolation, commit policy, epoch
+      fencing, stale-writer prevention, and recovery boundaries.
+- [ ] Surface scheduler health only if it directly affects freshness and recommendation trust.
+      *Observable:* scheduler status fields map to recommendation suppression or caution rules.
+- [ ] Refuse any integration that exists only because another ecosystem has it.
+      *Observable:* each accepted integration has a one-line statement of differentiated value.
+
+### QA checklist — Phase 5
+
+- [ ] Every integration has a clear reason tied to PDDA's lane.
+- [ ] No integration introduces a second planning framework or duplicate control plane.
+- [ ] Safety-contract docs match the actual relay/runtime behavior.
+- [ ] External bridges remain auditable and reversible.
+
+## Recommended first three PRs
+
+These are the three changes the feedback most strongly supports, in order:
+
+1. **Constitution + do-not-build boundary**
+   - Why: it prevents scope drift before more tooling is added.
+   - Success signal: a new agent or contributor can explain PDDA's lane after one read.
+2. **Enforcement-mode and LLM-severity hardening**
+   - Why: it lowers operational friction and removes the most dangerous policy ambiguity.
+   - Success signal: no LLM path can block, and `PDDA_MODE` behavior is explicit.
+3. **Evidence snapshot bridge**
+   - Why: it is the most differentiated next move and directly connects PDDA to rebalance.
+   - Success signal: PDDA can rank or flag work using cited local evidence rather than docs alone.
+
+## Open questions before promotion to 2-WORKING
+
+- Should the constitution live at `PROJECT/CONSTITUTION.md`, `.rebalance/constitution.md`, or another
+  path that can be shared across repos?
+- Is feature-folder promotion a real need now, or should PDDA first prove the evidence bridge and
+  defer artifact expansion?
+- Which single evidence output should ship first: weekly priorities, morning brief, or a neutral
+  `EVIDENCE-SNAPSHOT.md`?
+- Does the repo want one combined PDDA+rebalance plan, or should the evidence bridge become its own
+  sibling track once execution starts?
