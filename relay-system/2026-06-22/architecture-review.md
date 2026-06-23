@@ -5,7 +5,7 @@
   (relay-automation/relay-drive.sh + relay-automation/agy-turn.sh).
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: In Progress
 ROUND: 1 / 3
 
@@ -58,5 +58,20 @@ Everything you need is **in this file**.
 
 ---
 ## Log
+
+### Round 1 · Reviewer · agy · 2026-06-22
+
+- [Should] `ARCHITECTURE.md:98-105` ("How a Turn Is Invoked") omits the required call to `rtl_before` before running the CLI. Code contradicts: `relay-automation/agy-turn.sh` line 97, `relay-automation/codex-turn.sh` line 62, and `relay-automation/claude-turn.sh` line 122 all call `rtl_before` before running the model CLI. Skipping `rtl_before` leaves `RTL_BEFORE_HEAD` and `RTL_BEFORE` unset, causing `rtl_enforce` (in `relay-turn-lib.sh` lines 228-232) to reset HEAD and exit `6` on any change.
+  *Proposed fix:* Insert a step between steps 3 and 4 documenting that the shim must call `rtl_before` to snapshot repository state.
+- [Pass] `ARCHITECTURE.md:45-67` ("Stack Model") correctly describes the five load-bearing layers. Confirmed by `relay-automation/relay-drive.sh`, `relay-automation/agy-turn.sh`, `relay-automation/codex-turn.sh`, `relay-automation/claude-turn.sh`, `relay-automation/relay-turn-lib.sh`, and `bin/tick`.
+- [Pass] `ARCHITECTURE.md:70-91` ("What Decides Turn Order") accurately reflects the status logic and exit codes. Confirmed by `relay-automation/relay-drive.sh` lines 80-94 (`token_state`), lines 104-108 (exit `4`), and lines 139-142 (exit `3`).
+- [Pass] `ARCHITECTURE.md:112-120` ("Actual CLI invocations") correctly lists the default command strings built by each shim. Confirmed by `relay-automation/codex-turn.sh` lines 85-88, `relay-automation/agy-turn.sh` lines 90-95, and `relay-automation/claude-turn.sh` lines 89-100 & 145-153.
+- [Pass] `ARCHITECTURE.md:125-134` ("Path allowlist") correctly describes how `rtl_init` ignores `ALLOW_PATHS` on Reviewer turns. Confirmed by `relay-automation/relay-turn-lib.sh` lines 39-48 (`rtl_is_reviewer_turn`) and lines 57-66.
+- [Pass] `ARCHITECTURE.md:135-141` ("Commit-bypass guard") correctly describes the hard reset behavior. Confirmed by `relay-automation/relay-turn-lib.sh` lines 228-232.
+- [Pass] `ARCHITECTURE.md:161-179` ("Worktree isolation") accurately details the throwaway worktree logic and `TICK_REPO_ROOT` handling. Confirmed by `relay-automation/relay-drive.sh` line 75 and `relay-automation/relay-turn-lib.sh` lines 109-129 (`rtl_worktree_begin`) & 132-163 (`rtl_worktree_end`).
+- [Pass] `ARCHITECTURE.md:218-230` ("agy shim") correctly specifies timeout pinning, empty log exit-5 handling, and the relative path warning. Confirmed by `relay-automation/agy-turn.sh` lines 76-79, 90-95, and 139-142.
+- [Pass] `ARCHITECTURE.md:268-281` ("Adjacent Drivers") accurately details the computed decision paths. Confirmed by `relay-automation/poll.sh` lines 183-200.
+
+**Verdict:** Changes requested (Basis: textual only)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
