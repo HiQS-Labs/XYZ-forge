@@ -159,11 +159,11 @@ Run 3 passes only if **all** of these hold:
      --paths "experimental/coordination-layer/sandbox-app/src/store/**,experimental/coordination-layer/sandbox-app/test/store/**"
    ```
 4. Clear sandbox-app source files (keep directory structure and `package.json`).
-5. **Do not start the agents until both Run 3 prerequisite checkboxes (above) are complete.** Then paste the contents of `experimental/coordination-layer/run3-prompts/START-HERE.md` into both agent sessions simultaneously.
+5. **Do not start the agents until both Run 3 prerequisite checkboxes (above) are complete.** Then paste the contents of `PROJECT/4-MISC/run3-prompts/START-HERE.md` into both agent sessions simultaneously.
 
 ### Agent start prompt
 
-Paste everything below the `===` in `experimental/coordination-layer/run3-prompts/START-HERE.md`. The Run 3 prompt files (`run3-prompts/codex.md`, `run3-prompts/gemini.md`) are already corrected for the Run 2 changes: they use the single `tick take` verb (no `tick next` + `tick claim`), drop the removed git-identity check, use the `experimental/` path, and note that `tick` verbs are local event appends (no auto-commit/push). The Run 2 prompt files under `run2-prompts/` are kept only as a historical record — **do not paste them.**
+Paste everything below the `===` in `PROJECT/4-MISC/run3-prompts/START-HERE.md`. The Run 3 prompt files (`PROJECT/4-MISC/run3-prompts/codex.md`, `PROJECT/4-MISC/run3-prompts/gemini.md`) are already corrected for the Run 2 changes: they use the single `tick take` verb (no `tick next` + `tick claim`), drop the removed git-identity check, use the `experimental/` path, and note that `tick` verbs are local event appends (no auto-commit/push). The Run 2 prompt files under `PROJECT/4-MISC/run2-prompts/` are kept only as a historical record — **do not paste them.**
 
 ### Stop conditions (same as Run 2)
 

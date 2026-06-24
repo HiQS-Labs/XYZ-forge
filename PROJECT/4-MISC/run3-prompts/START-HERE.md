@@ -12,12 +12,12 @@ identify yourself, then read and execute your own instruction file — read the
 whole file before you begin.
 
 - **If you are Gemini** (Google's model): open and follow
-  `experimental/coordination-layer/run3-prompts/gemini.md` — everything below
-  its `===` line is your instructions.
+  `PROJECT/4-MISC/run3-prompts/gemini.md` — everything below its `===` line is
+  your instructions.
 
 - **If you are Codex / ChatGPT** (OpenAI's model): open and follow
-  `experimental/coordination-layer/run3-prompts/codex.md` — everything below its
-  `===` line is your instructions.
+  `PROJECT/4-MISC/run3-prompts/codex.md` — everything below its `===` line is
+  your instructions.
 
 The path is relative to the root of the shared working tree. Do NOT open or
 execute the other agent's file. If you cannot tell which agent you are, stop and

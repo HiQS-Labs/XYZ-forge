@@ -34,7 +34,7 @@ ROUND: 1 / 5
 ## Log
 
 ### Round 1 · Producer · 2026-06-14 00:26 PDT
-**Did:** Scaffolded this relay and launched Run 3. Coordinator setup is complete on `development` (commit `5f37067`): Run 2 events archived to `.tick/archive/run-2-events/`, `.tick` re-initialized, the 6 tasks re-seeded (A1–A3 http, B1–B3 store), and `sandbox-app/` source cleared to scaffolding. `validate.sh` is 12/12 (incl. `tick take` + `tick ping`). The two coding agents (Codex, Gemini) start in their own windows from `run3-prompts/START-HERE.md`.
+**Did:** Scaffolded this relay and launched Run 3. Coordinator setup is complete on `development` (commit `5f37067`): Run 2 events archived to `.tick/archive/run-2-events/`, `.tick` re-initialized, the 6 tasks re-seeded (A1–A3 http, B1–B3 store), and `sandbox-app/` source cleared to scaffolding. `validate.sh` is 12/12 (incl. `tick take` + `tick ping`). The two coding agents (Codex, Gemini) start in their own windows from the archived prompt set at `PROJECT/4-MISC/run3-prompts/START-HERE.md`.
 **Status: HOLDING for results.** The artifact under review (`REAL-AGENT-OBSERVATIONS.md` Run 3 section + the integrated app) does not exist yet — it is produced *after* the agents finish. `NEXT` stays `Producer`: once Run 3 closes, the coordinator runs the wrap-up (compute the redefined metric, run `tick analyze` for parked-claim suspects, walk compliance, write the observations + recommendation), then takes a real Round 1 review request and flips to `Reviewer`.
 **Review this (later):** against the DoD — metric computed over the work-bounded window (not seeding→latest), both disqualifiers explicitly checked, numbers reproducible from `.tick/events/`, recommendation honestly supported.
 **Open questions:** none yet — pending the run.
