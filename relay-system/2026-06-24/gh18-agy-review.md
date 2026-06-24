@@ -1,7 +1,7 @@
 # RELAY · agy review — GH-18 cross-repo relay friction code fixes
 
-NEXT: agy
-STATUS: In progress
+NEXT: none
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first
@@ -38,3 +38,15 @@ You are **agy**, the Reviewer, taking your turn in a file-based relay. This is a
 
 ---
 ## Log
+
+### Round 1 · Reviewer · agy · 2026-06-24
+**Verdict:** Approved
+**Basis:** textual only (read diff `7709abc` under harness root `/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/`, did not run suite per time-budget constraint)
+
+**Findings:**
+
+- **[Pass] `--relay-file` resolution correctness:** Verified [/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh:70-76](file:///Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh#L70-L76). The check `[[ ! -f "$RELAY_FILE" && -n "${TARGET_ROOT:-}" && "$RELAY_FILE" != /* && -f "$TARGET_ROOT/$RELAY_FILE" ]]` safely avoids mis-resolving absolute paths, resolves relative paths correctly under `--target-root` when they do not exist in the harness CWD, and preserves existing CWD-relative paths. Ordering is correct since `TARGET_ROOT` validation occurs first.
+- **[Pass] token-collision hints:** Verified [/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick:177](file:///Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick#L177) and [/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh:140](file:///Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh#L140). The output hints are clear, accurate, and direct the operator to the `--relay-task` remedy using a dynamically generated task name matching the target file name.
+- **[Pass] `Escalated` terminal-by-design:** Verified [/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh:89](file:///Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh#L89), [L113](file:///Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh#L113), [L166](file:///Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh#L166). Keying on `STATUS: Escalated` is a clean, robust protocol-level discriminator. A true stall (exit 3) remains protected because the no-progress guard triggers if `STATUS` remains unchanged and the token is unmoved. Exiting 4 (clean terminal outcome) rather than 3 prevents misleading alerts on intended human handbacks.
+
+**Commit:** none (handled by harness)
