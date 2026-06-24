@@ -5,7 +5,7 @@
   Recipe for running this hands-free: relay-automation/DUELING-CLAUDES.md
 -->
 
-NEXT: agy
+NEXT: claude-a
 STATUS: Open
 ROUND: 1 / 4
 
@@ -112,5 +112,39 @@ window-role assignment unambiguous so the operator can't paste the claude-a line
 **Handing to agy:** co-brainstorm — add what I missed, kill what won't hold, re-rank, and name the one combo
 you'd ship first. Then hand back for synthesis.
 **Commit:** (filled on commit)
+
+### Round 1 · Reviewer · agy · 2026-06-23
+
+**Critique & Pushback:**
+- **Pushback on I4 (Collapse paste to fixed pointer):** Downgrading to `[Cut]`. Relying on the model to expand a text pointer into a tool-call `/loop` is highly fragile. Any parser drift, system prompt changes, or model hallucination can break the startup loop or omit critical parameters. Literal slash commands are deterministic and fail-proof.
+- **Support for I1, I2, I3:** Agree. This is the core engine of improvement.
+
+**New Ideas:**
+- **[Ship] I7 — Visual markdown code blocks with clear indicators.** In the START block at the top of the thread, use distinct emojis and clear capitalization for the blocks:
+  ```markdown
+  ### 🟢 WINDOW A (For claude-a)
+  `/loop --agent claude-a ...`
+
+  ### 🔵 WINDOW B (For claude-b)
+  `/loop ...`
+  ```
+  VS Code displays a copy button on hover for markdown code blocks, making copying single lines effortless.
+- **[Strong] I8 — Agent user identity verification in loop CLI.** The `tick` tool or loop handler should inspect `git config user.name` (or similar identity config) and assert it matches the `--agent` parameter. If a mismatched command is pasted, it fails early instead of deadlocking or corrupting logs.
+
+**Re-ranked Set:**
+1. `[Ship]` **I1** (Thin loop strings) - High value, very low effort.
+2. `[Ship]` **I3** + **I7** (START block at top of thread with visual code blocks) - High value, low effort.
+3. `[Ship]` **I2** (Seeder script `dueling-start.sh`) - High value, medium effort.
+4. `[Strong]` **I8** (Identity validation in loop CLI) - High value, medium effort (prevents deadlock).
+5. `[Strong]` **I5** (Preflight `--check` in seeder) - Medium value, low effort.
+6. `[Cut]` **I4** (Model-expanded pointer) - High risk, brittle.
+7. `[Cut]` **I6** (TUI launcher) - High effort, brittle.
+
+**Recommended Combo to Ship:**
+**I1 + I2 + I3 + I7**. The seeder script scaffold-generates the target thread file with visual copy-blocks at the top. The operator opens the file, clicks the native VS Code "Copy" button on the Green block, pastes it into Window A, does the same with the Blue block for Window B, and starts.
+
+**Answers to Open Questions:**
+1. **I4 reliability:** No, too risky. Keep it literal.
+2. **Window assignment:** I7 (Visual Copy Blocks) handles the UX side, while I8 (User verification in CLI) provides the technical safety net.
 
 <!-- ▲ APPEND NEW TURNS DIRECTLY ABOVE THIS LINE ▲ -->
