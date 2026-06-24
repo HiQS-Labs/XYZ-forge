@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: agy
+NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-NM2L-R1 builder=agy reviewer=codex round-cap=5 -->
 
@@ -70,3 +70,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-NM2L-R1 --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · agy
+
+Implemented the deterministic near-miss command suggestion tier (`COMMAND_NEAR_MISS_LITE`) at the dead-end mention-dispatch seam.
+
+**Files Touched:**
+- `src/chat-module.js`: Added the provisional constant `NEAR_MISS_SCORE_FLOOR = 5`, implemented the private method `#TryHandleNearMissCommandAsync`, and wired it in the `OnAppMentionAsync` dispatch logic before the generic AI chat fallback.
+- `tests/command-near-miss-lite.test.js`: Created a new unit test suite targeting all three requested behaviors (flag-off bypass, flag-on matching wrong-syntax near-miss command, flag-on conversational chat fallthrough).
+- `phases/p1/RELAY.md`: Changed NEXT pointer to `codex` and appended this round block.
+
+**Key Decisions:**
+- Set the provisional score floor to `5` based on analyzing scores of actual near-miss inputs versus conversational chatter.
+- Followed standard codebase loop-safety guards to bypass bot-generated messages.
+- Used JSDoc casts (`/** @type {any} */`) to satisfy the rigid typescript compilation schema.
