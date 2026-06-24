@@ -60,20 +60,27 @@ The supervisor (`relay-drive.sh`) drives the turn; the shim (`codex-turn.sh`) **
 turn-taker and owns the safety boundary (path-allowlist, commit-bypass guard, **no push**).
 
 ```bash
-# a) a relay thread with embedded ▶ TAKE YOUR TURN instructions + a RELAY-TURN token.
+# a) a relay thread with embedded ▶ TAKE YOUR TURN instructions + a turn token.
 #    Reuse an existing one under relay-system/<date>/, or scaffold a fresh /relay thread.
 RELAY=relay-system/2026-06-15/<your-slug>.md
 ARTIFACT=relay-automation/codex-turn.sh        # whatever the turn reviews/edits
 
-# b) seed the RELAY-TURN token and hand it to the Codex agent
-./bin/tick log task.created RELAY-TURN --agent claude-a
-./bin/tick claim   RELAY-TURN --agent claude-a --paths "$ARTIFACT"
-./bin/tick release RELAY-TURN --agent claude-a --to codex
+# Use a PER-RELAY token id, NOT the literal RELAY-TURN. The token is a tick task, and a tick
+# task is single-shot: once a prior relay `done`s RELAY-TURN, a new relay's claim fails with
+# `lost: RELAY-TURN is done — not claimable` and the seed silently breaks (GH-18 #1). Derive a
+# fresh id from the relay-file slug and pass it through with --relay-task.
+TASK="RELAY-$(basename "$RELAY" .md)"          # e.g. RELAY-<your-slug>
+
+# b) seed the turn token and hand it to the Codex agent
+./bin/tick log task.created "$TASK" --agent claude-a
+./bin/tick claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+./bin/tick release "$TASK" --agent claude-a --to codex
 
 # c) run the supervisor; the shim dispatches ONLY because the actor is the Codex agent
 CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG=/tmp/codex-turn.log \
 relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
+  --relay-task "$TASK" \
   --agent-cmd  relay-automation/codex-turn.sh \
   --round-cap  4
 ```
@@ -87,7 +94,51 @@ releases or `done`s the token), then the shim **reverts anything off the allowli
 closed-not-approved · `2` usage.  `codex-turn` (shim): `0` acted/deferred · `5` codex failed ·
 `6` off-allowlist edit reverted (or Codex committed mid-turn → reset) · `2` usage.
 
-## 5. WIP caveats for this device
+## 5. Review a file in **another** repo (the common cross-repo case)
+
+The usual real goal is "have Codex review **my** repo, not the harness." The thread + artifact live
+in your target repo; the harness clone only supplies the scripts. This is the least-documented path
+and the one that bites (GH-18) — here is the full recipe in one place.
+
+```bash
+HARNESS=/path/to/xyz-3-agents-swarm        # the clone that ships relay-automation/
+TARGET=/path/to/your-repo                   # the repo whose file you want reviewed (a git repo)
+
+# .tick (coordination state) MUST stay anchored to the HARNESS, never the target —
+# the driven shim already forces TICK_REPO_ROOT=<harness>; do the same when you seed by hand
+# so you don't drop an untracked .tick/ into your target repo (GH-18 #3).
+export TICK_REPO_ROOT="$HARNESS"
+
+# Paths are easiest if you run from the TARGET root and pass repo-relative paths there.
+# (--relay-file currently resolves against CWD, not --target-root — GH-18 #2 — so run from $TARGET.)
+cd "$TARGET"
+RELAY=relay-system/$(date +%F)/<your-slug>.md      # lives in the TARGET repo
+ARTIFACT=path/to/file/under/target.ext             # the file Codex reviews, in the TARGET repo
+TASK="RELAY-$(basename "$RELAY" .md)"               # per-relay id (GH-18 #1)
+
+"$HARNESS/bin/tick" log task.created "$TASK" --agent claude-a
+"$HARNESS/bin/tick" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+"$HARNESS/bin/tick" release "$TASK" --agent claude-a --to codex
+
+# CODEX_FLAGS: the default -s workspace-write can't write across repos on many setups; if the turn
+# produces no changes, escalate to the bypass flags (GH-18 #4). --agent-cmd is an ABSOLUTE path.
+CODEX_AGENT=codex \
+ALLOW_PATHS="$ARTIFACT" \
+CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox' \
+CODEX_LOG=/tmp/codex-turn.log \
+"$HARNESS/relay-automation/relay-drive.sh" \
+  --target-root "$TARGET" \
+  --relay-file  "$RELAY" \
+  --relay-task  "$TASK" \
+  --agent-cmd   "$HARNESS/relay-automation/codex-turn.sh" \
+  --round-cap   4
+```
+
+The safety boundary is unchanged: path-allowlist, file-scoped commit, **no push**, worktree isolation
+of `target@HEAD`. Only the **artifact** side moves to `--target-root`; `.tick` + `bin/tick` stay in the
+harness via `TICK_REPO_ROOT`.
+
+## 6. WIP caveats for this device
 
 - **No push by design.** Turns the shim takes commit locally only — `git push origin main`
   yourself when you want them upstream.
@@ -98,5 +149,5 @@ closed-not-approved · `2` usage.  `codex-turn` (shim): `0` acted/deferred · `5
   same relay — the token is the lock, but two takers of the *same* id will thrash.
 
 ---
-*Updated 2026-06-17. Tracks `codex-turn.sh` + `relay-drive.sh` as shipped; update if their
-flags or expected suite counts change.*
+*Updated 2026-06-24 (GH-18: per-relay token id + cross-repo recipe). Tracks `codex-turn.sh` +
+`relay-drive.sh` as shipped; update if their flags or expected suite counts change.*
