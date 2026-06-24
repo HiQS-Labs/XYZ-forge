@@ -25,7 +25,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Epic filed (#16) + Phase 1 bug (#17); local tracking doc + ROADMAP pointer landed | **Phase 1 — fix the macOS case-sensitivity revert in `rtl_in_allow` + regression test** |
+| **Phase 1 shipped (#17)** — `RTL_IGNORECASE` case-fold in `rtl_in_allow` + regression test `test/relay-case-insensitive.sh` (fails before, passes after); **`validate.sh` 39/39** | **Phase 2 — cross-repo target-root routing (#11)** |
 
 ## Problem
 
@@ -44,16 +44,16 @@ same-device quickstart, and verifies the rest on macOS against a foreign target.
 - `rtl_init` ([relay-turn-lib.sh:52-75](../../relay-automation/relay-turn-lib.sh#L52-L75)) builds `RTL_ALLOW` from the literal `RELAY_FILE` arg, normalizing only to repo-root-relative (not case).
 - `rtl_check` ([relay-turn-lib.sh:239-242](../../relay-automation/relay-turn-lib.sh#L239-L242)) reverts off-allowlist paths via `git -C "$RTL_ROOT" checkout -- "$p"` then sets the violation → `rtl_enforce` `exit 6`.
 
-**Fix (chosen approach):**
-- [ ] In `rtl_init`, set `RTL_IGNORECASE` from `git -C "$RTL_ROOT" config --get core.ignorecase`.
-- [ ] In `rtl_in_allow`, when `RTL_IGNORECASE=true`, compare both sides lowercased; otherwise exact compare (Linux byte-for-byte unchanged).
-- [ ] Regression test with a mixed-case tracked path against a case-insensitive repo.
-- [ ] Document recovery for in-flight runs: the agent's review survives in the codex transcript at the real `$TMPDIR/<CODEX_LOG>` (not the sandbox tmp).
+**Fix (shipped):**
+- [x] In `rtl_init`, set `RTL_IGNORECASE` from `git -C "$RTL_ROOT" config --get core.ignorecase` (non-repo/unset → `false`). — [relay-turn-lib.sh:57-64](../../relay-automation/relay-turn-lib.sh#L57-L64)
+- [x] In `rtl_in_allow`, when `RTL_IGNORECASE=true`, compare both sides lowercased (via `tr`, not bash-4 `${,,}` — stock macOS bash is 3.2); otherwise exact compare (Linux byte-for-byte unchanged). — [relay-turn-lib.sh:84-97](../../relay-automation/relay-turn-lib.sh#L84-L97)
+- [x] Regression test with a mixed-case tracked path on a case-insensitive repo. — [test/relay-case-insensitive.sh](../../test/relay-case-insensitive.sh), registered in `validate.sh`.
+- [x] Recovery for in-flight runs documented: an interrupted agent's review survives in the codex transcript at the real `$TMPDIR/<CODEX_LOG>` (not the sandbox tmp) — re-append it to the relay file before re-driving the turn.
 
 **QA**
-- [ ] A reviewer turn that appends to the relay file is accepted (no exit-6, no revert) on default macOS APFS, even with a mixed-case tracked path.
-- [ ] Test fails before the fix, passes after.
-- [ ] Case-sensitive filesystem (Linux CI) behaves byte-for-byte as before.
+- [x] A reviewer turn that appends to the relay file is accepted (no exit-6, no revert) when `core.ignorecase=true`, even with a mixed-case tracked path. (Covered by the test's ignorecase asserts.)
+- [x] Test fails before the fix, passes after. (Verified: 1 fail → 4 pass.)
+- [x] Case-sensitive filesystem (`core.ignorecase=false`, Linux CI) behaves byte-for-byte as before. (Covered by the test's case-sensitive asserts; full suite **39/39**.)
 
 **Anti-goals (Phase 1)**
 - Do not change the reviewer-scoping or commit-bypass guards; this phase only touches the allowlist-path comparison.

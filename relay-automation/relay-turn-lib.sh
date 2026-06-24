@@ -55,6 +55,14 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # one anchor. Unset/empty → the caller's <root> (today's behavior, byte-for-byte). Coordination
   # (.tick) stays where TICK_REPO_ROOT points (the harness clone); only the ARTIFACT side moves.
   RTL_ROOT="${RELAY_TARGET_ROOT:-$1}"; local f="$2" csv="$3"
+  # macOS/APFS (and any case-insensitive fs) reports git-status paths in the case the INDEX tracks
+  # (e.g. RELAY-SYSTEM/…), which can differ from the lowercase invocation arg the allowlist holds
+  # (relay-system/…). Detect it ONCE here so rtl_in_allow can compare case-insensitively on such
+  # filesystems (GH-17) — otherwise a reviewer's legit append to its own relay file is seen as
+  # off-allowlist and reverted with exit 6. Case-sensitive repos (Linux CI) keep a byte-for-byte
+  # exact compare. Non-repo / unset → false (the safe, case-sensitive default).
+  RTL_IGNORECASE="$(git -C "$RTL_ROOT" config --get core.ignorecase 2>/dev/null || echo false)"
+  [[ "$RTL_IGNORECASE" == "true" ]] || RTL_IGNORECASE=false
   RTL_WT_USED=0          # set to 1 by rtl_worktree_begin; read by rtl_enforce's commit-bypass guard (GH-13)
   RTL_ALLOW=("$f")
   # REVIEWER-turn scoping: a reviewer is near read-only — it only APPENDS findings to the relay file
@@ -74,7 +82,20 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   RTL_ALLOW=("${_n[@]}")
 }
 
-rtl_in_allow() { local x="$1" a; for a in "${RTL_ALLOW[@]}"; do [[ "$x" == "$a" ]] && return 0; done; return 1; }
+rtl_in_allow() {  # <path> — is <path> on the allowlist? Case-insensitive when RTL_IGNORECASE=true (GH-17).
+  local x="$1" a
+  if [[ "${RTL_IGNORECASE:-false}" == "true" ]]; then
+    # `tr` not bash-4 `${x,,}`: stock macOS bash is 3.2 (this lib is deliberately BSD/macOS-portable).
+    local xl al; xl="$(printf '%s' "$x" | tr '[:upper:]' '[:lower:]')"
+    for a in "${RTL_ALLOW[@]}"; do
+      al="$(printf '%s' "$a" | tr '[:upper:]' '[:lower:]')"
+      [[ "$xl" == "$al" ]] && return 0
+    done
+    return 1
+  fi
+  for a in "${RTL_ALLOW[@]}"; do [[ "$x" == "$a" ]] && return 0; done
+  return 1
+}
 
 rtl_run_bounded() {  # <timeout_secs> <cmd...>
   # Run <cmd...> under a wall-clock ceiling without coreutils `timeout` (absent on stock macOS).

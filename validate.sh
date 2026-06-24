@@ -46,6 +46,7 @@ TESTS=(
   "relay-turn-timeout.sh"
   "relay-target-root.sh"
   "relay-concurrent-commit.sh"
+  "relay-case-insensitive.sh"
 )
 
 PASSED=()
