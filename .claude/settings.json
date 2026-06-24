@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash skills/relay-to-issue/relay-to-issue.sh resolve)",
+      "Bash(bash skills/relay-to-issue/relay-to-issue.sh resolve --thread dueling-claudes)",
+      "Bash(rtk ls *)",
+      "Bash(rm -f ~/.claude/skills/consult)",
+      "Bash(ln -s \"/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/skills/consult\" ~/.claude/skills/consult)",
+      "Bash(git ls-files *)",
+      "Bash(echo \"claim exit=$?\")",
+      "Bash(rtk du *)",
+      "Bash(chmod +x test/relay-concurrent-commit.sh)",
+      "Bash(bash -n test/relay-concurrent-commit.sh)",
+      "Bash(date -v+45M +%s)",
+      "Bash(bash -n relay-automation/codex-turn.sh)",
+      "Bash(echo \"validate.sh exit=$?\")",
+      "Bash(gh repo *)"
+    ]
+  }
+}
