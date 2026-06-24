@@ -14,7 +14,8 @@
       "Bash(date -v+45M +%s)",
       "Bash(bash -n relay-automation/codex-turn.sh)",
       "Bash(echo \"validate.sh exit=$?\")",
-      "Bash(gh repo *)"
+      "Bash(gh repo *)",
+      "Bash(bash utils/pdda-check-status-table.sh PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md)"
     ]
   }
 }

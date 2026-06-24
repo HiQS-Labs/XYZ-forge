@@ -2,6 +2,14 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-24
+
+### Marathon dogfood re-substrated: WPCC retired → Sleuth "Near-Miss 2-lite" (Phase 0 pre-registered)
+Preflighted the long-stalled WPCC real-monolith dogfood and found the substrate **exhausted**: every rule its plan targeted — `php-direct-access-entrypoint`, `php-hardcoded-credentials` (migrated to JSON), `unsanitized-superglobal-read` — is already built/fixed (the last reproduced live: both reported false-negatives now flag in WPCC v2.2.3). The WPCC maintainer outran the experiment. Re-substrated the graduation test onto a confirmed-unbuilt, **additive + flag-gated + default-OFF** target in `sleuth-app`: **Phase 2-lite** of the Command Near-Miss Recovery plan (deterministic "did you mean?" tier).
+- **Operator decision:** build now, **default-OFF** — jump the Phase-0-counter worth-it gate deliberately; the score floor ships as a documented placeholder, tuned when Phase 0 data lands (~early July). Zero production risk because the flag defaults OFF.
+- **Phase 0 setup done:** experiment branch `marathon-dogfood/near-miss-2lite` cut off `development` (clean); unbuilt-delta confirmed (`#TryHandleNearMissCommandAsync` + `COMMAND_NEAR_MISS_LITE` absent; scoring helper `RetrieveScoredCandidates` already exists from Phase 0 — no collision); seam pinned at `chat-module.js:808`; **gate baseline captured** — `validate:commands` ✓ + seam jest **134/0** ✓; workers smoke-tested sandbox-OFF (codex 0.139.0, agy 1.0.11 → PONG).
+- **New:** pre-registration [MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) (Q1–Q6 + caps + ALLOW_PATHS + objective gate) and the single-phase builder brief [briefs/sleuth-near-miss-2lite-brief.md](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md). Ledger: [ROADMAP.md](ROADMAP.md) Part A · Phase 6 pointer re-substrated.
+
 ## 2026-06-23
 
 ### PDDA feedback-synthesis plan — headless agy relay review (Approved)
