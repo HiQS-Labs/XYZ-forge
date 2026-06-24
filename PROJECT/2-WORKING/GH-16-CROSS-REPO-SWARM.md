@@ -25,7 +25,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 1 shipped (#17)** — `RTL_IGNORECASE` case-fold in `rtl_in_allow` + regression test `test/relay-case-insensitive.sh` (fails before, passes after); **`validate.sh` 39/39** | **Phase 2 — cross-repo target-root routing (#11)** |
+| **Phase 2 verified (#11)** — `--target-root` routes worktree base / allowlist copy-back / file-scoped commit / enforce to the foreign root, incl. **spaces-in-path + nested dirs**; new test `test/relay-target-root-paths.sh`; **`validate.sh` 41/41** | **Phase 3 — worktree isolation for cross-repo artifacts (#15, #13)** |
 
 ## Problem
 
@@ -60,12 +60,13 @@ same-device quickstart, and verifies the rest on macOS against a foreign target.
 
 ## Phase 2 — Cross-repo target-root routing (tracks #11)
 
-- [ ] Confirm `RELAY_TARGET_ROOT` / `--target-root` routes worktree base, allowlist copyback, file-scoped commit, and enforce from the foreign root.
-- [ ] `.tick` coordination stays at `TICK_REPO_ROOT` (harness clone); only the artifact side moves.
-- [ ] Foreign-CWD / nested-dir / spaces-in-path matrix passes on macOS.
+**Verified (the #11 wiring already shipped; Phase 2 confirms it on macOS + hardens the path matrix):**
+- [x] `RELAY_TARGET_ROOT` / `--target-root` routes **worktree base** (`rtl_worktree_begin` checks out `RTL_ROOT@HEAD`), **allowlist copy-back** (`rtl_worktree_end` copies only allowlisted paths back to `RTL_ROOT`), **file-scoped commit** (`git -C "$RTL_ROOT"`), and **enforce** (`rtl_enforce` operates on `RTL_ROOT`) — all anchored on the foreign root. — [relay-turn-lib.sh:145-199](../../relay-automation/relay-turn-lib.sh#L145-L199), [relay-drive.sh:63-67](../../relay-automation/relay-drive.sh#L63-L67)
+- [x] `.tick` coordination stays at `TICK_REPO_ROOT` (harness clone); only the artifact side moves. Proven: the target tree has **no `.tick`** after a driven turn.
+- [x] Nested-dir + spaces-in-path matrix passes on macOS — new test [test/relay-target-root-paths.sh](../../test/relay-target-root-paths.sh) drives a turn against a target repo whose **path contains spaces** and whose relay file + artifact live in **nested dirs with a space in a dir name**. Foreign-CWD `tick` is already covered by the closed-#12 [test/tick-foreign-cwd.sh](../../test/tick-foreign-cwd.sh).
 
 **QA**
-- [ ] Swarm launches with workspace = target repo, harness elsewhere on the same device; no harness files in the target's `git status` unless scoped.
+- [x] Swarm turn runs with the artifact root = target repo, harness (coordination) elsewhere on the same device; the target commit touches **only the scoped relay file + artifact**, no harness/`.tick` leakage. (`test/relay-target-root-paths.sh` asserts 1–6; full suite **41/41**.)
 
 ## Phase 3 — Worktree isolation for cross-repo artifacts (tracks #15, #13)
 
