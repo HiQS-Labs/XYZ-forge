@@ -27,6 +27,7 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - Do not put phase checklists, build steps, or deep execution notes in `ROADMAP.md`.
 - Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer in `ROADMAP.md` — a one-line ledger entry that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Enforced by `utils/pdda-check-roadmap-coverage.sh`; governance lives in `PROJECT/PDDA.md` → "ROADMAP.md contract".
 - Do not create a second competing plan when a canonical `PROJECT/**` doc already exists.
+- Substantive work is issue-first: open a GitHub issue, then a `GH-<number>` pointer doc, before execution begins. The issue is the signal stream; the pointer doc is the execution surface of record. Trivial fixes (typos, path repoints, doc-only one-liners) are exempt. Governed by `PROJECT/PDDA.md` → "GitHub issue intake".
 - Do not override deterministic PDDA findings with prose.
 - Do not report a win you did not verify with the relevant script or test.
 - Update `CHANGELOG.md` at the end of each iteration; its governance lives in `PROJECT/PDDA.md` — do not re-specify CHANGELOG rules in `AGENTS.md` or elsewhere.
@@ -64,4 +65,4 @@ utils/pdda-doc-ready.sh   # LLM readiness review — set PDDA_LLM_BIN (codex/cla
 - If the task is about the CHANGELOG, provenance, or end-of-iteration logging, the governance is in `PROJECT/PDDA.md` (the "CHANGELOG.md — end-of-iteration record" contract).
 - If the task is about the `tick` runtime, event projection, or multi-agent coordination kernel, start in `README.md`, then `bin/`, `src/`, `test/`, and the active project doc.
 - If the task is about a proposed roadmap-steward agent, start here, then read `PROJECT/PDDA.md` and its `Proposed roadmap steward extension` section.
-- If the task originates from a GitHub issue, capture it as `PROJECT/1-INBOX/GH-<number>-SHORT-DESCRIPTION.md` (format + lifecycle owned by `PROJECT/PDDA.md` → "GitHub issue intake"), then follow the normal `1-INBOX` → `2-WORKING` flow.
+- Issue-first SOP: every substantive effort (project plan or non-trivial bug/fix) opens a GitHub issue *first*, then gets a pointer doc at `PROJECT/1-INBOX/GH-<number>-SHORT-DESCRIPTION.md` (format + lifecycle owned by `PROJECT/PDDA.md` → "GitHub issue intake"), following the normal `1-INBOX` → `2-WORKING` flow. Trivial fixes (typos, path repoints, doc-only one-liners) are exempt and commit directly.

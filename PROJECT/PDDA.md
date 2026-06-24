@@ -91,14 +91,24 @@ Bug-fix docs may use a lighter template than multi-phase project plans, but they
 - source of truth for intake, including a GitHub issue when relevant
 - verification steps
 
-GitHub issues are a valid source for bug reports and intake. They are not a substitute for the local active-work doc
-once execution starts in this repo.
+GitHub issues are the default intake for substantive bug reports (issue-first SOP — see below). They are not a
+substitute for the local active-work doc once execution starts in this repo.
 
 ## GitHub issue intake
 
-GitHub issues are a first-class intake source. The bug-fix stance above states the principle; this
-section owns the *format*. When an issue should be tracked in-repo, capture it as a doc in
-`PROJECT/1-INBOX/` using this convention:
+GitHub issues are the **default front door** for substantive work — every project plan and every
+non-trivial bug/fix opens an issue *first*, and that issue gets an in-repo pointer doc. The signal
+stream lives in GitHub (machine-queryable state, labels, commit↔issue linkage); the execution
+surface of record stays in `PROJECT/**`. This is the **issue-first SOP**; the bug-fix stance above
+states the principle, and this section owns the *format*.
+
+**Floor (what needs an issue).** Anything substantive: a project plan, an experiment, or a bug/fix
+worth a working doc — if a change earns a working doc, it earns an issue. **Exempt:** trivial fixes
+(typos, path repoints, doc-only one-liners, formatting) commit directly with a clear message and no
+issue. When in doubt, open the issue — it is a cheap `gh issue create`. The SOP applies to *new*
+efforts going forward; in-flight `1-INBOX`/`2-WORKING` docs are not backfilled.
+
+Capture a tracked issue as a doc in `PROJECT/1-INBOX/` using this convention:
 
 - **Filename:** `GH-<number>-SHORT-DESCRIPTION.md` (e.g. `GH-11-CROSS-REPO-TARGETING.md`).
   SCREAMING-KEBAB to match the other inbox docs; no zero-padding — mirror the GitHub issue number.
