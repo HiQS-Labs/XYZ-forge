@@ -4,7 +4,7 @@ set -euo pipefail
 # poll.sh — Phase 4 hands-free poll driver (Option B: baton + poll).
 # One TICK per invocation (drive it under `/loop`, e.g. `/loop 60s ...`).
 # It computes a DECISION from coordination state and either dispatches a command
-# or idles. See relay-automation/PHASE-4-PLAN.md.
+# or idles. See PROJECT/4-MISC/PHASE-4-PLAN.md.
 #
 # Two modes (one decision engine, shared tick claimability):
 #   xyz   — runnable state = a build task (--task) claimable/resumable by --agent
