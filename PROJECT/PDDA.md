@@ -100,7 +100,9 @@ GitHub issues are the **default front door** for substantive work — every proj
 non-trivial bug/fix opens an issue *first*, and that issue gets an in-repo pointer doc. The signal
 stream lives in GitHub (machine-queryable state, labels, commit↔issue linkage); the execution
 surface of record stays in `PROJECT/**`. This is the **issue-first SOP**; the bug-fix stance above
-states the principle, and this section owns the *format*.
+states the principle, and this section owns the *format*. To prevent duplicate intake and forgotten
+work, every captured `GH-*.md` doc is also **parked immediately in `ROADMAP.md`** as a one-line queue
+entry until it is promoted, deferred, or closed.
 
 **Floor (what needs an issue).** The operational test is **lines of code touched**: any change
 beyond a **2–3 line** fix opens a GitHub issue first, and its local plan doc is named after that
@@ -126,13 +128,17 @@ Lifecycle:
 
 - The `GH-` inbox doc is the **capture**, not the active-work doc. It carries no `## Status` table while
   it sits in `1-INBOX` (the inbox is the rough/untriaged bucket).
+- Capture time also adds a **one-line `ROADMAP.md` queue pointer** linking that inbox doc. This is a
+  temporary parking slot: it makes fresh intake visible to humans and automation before promotion,
+  which is the duplicate-prevention guard.
 - When execution starts, **promote** it to `PROJECT/2-WORKING/` — keep the `GH-` prefix for provenance —
   and it must then satisfy the full active-doc contract (frontmatter, exact status table, QA gates if
-  phased), **carrying `gh_issue` forward**. A `ROADMAP.md` pointer is optional at capture and required
-  once the doc is active. This is the concrete mechanism behind "GitHub issues are not a substitute for
-  the local active-work doc once execution starts" (bug-fix stance above).
+  phased), **carrying `gh_issue` forward**. The `ROADMAP.md` pointer is therefore required twice:
+  first as a queued parking entry at capture, then as an active-work ledger entry after promotion.
+  This is the concrete mechanism behind "GitHub issues are not a substitute for the local active-work
+  doc once execution starts" (bug-fix stance above).
 - If a captured issue is never actioned it ages out of `1-INBOX` like any other untriaged note; if it is
-  closed without work, move the doc to `PROJECT/4-MISC`.
+  closed without work, move the doc to `PROJECT/4-MISC` and remove its queue pointer from `ROADMAP.md`.
 
 A foreign-repo issue (not `origin`) is the rare exception: the `source:` URL disambiguates it, since the
 bare `GH-<number>` only guarantees uniqueness within the canonical repo.
@@ -317,6 +323,7 @@ onto the rails deliberately.
 
 It should contain:
 
+- queued / parked intake pointers for newly captured `GH-*.md` docs
 - projects in progress
 - completed work
 - attempted work
@@ -341,12 +348,16 @@ Coverage rule:
   that links it), so the ledger never falls behind the working set. A working doc that legitimately
   should not appear opts out with `roadmap_exempt: true` in its frontmatter. This is the inverse of the
   "no detail leaks in" rule above: nothing active goes *missing from* the roadmap either.
+- every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be reflected here as a
+  one-line **queued / parked** pointer until it is promoted, deferred out, or closed, so intake cannot
+  quietly disappear and later be duplicated.
 
 How this is enforced (so it cannot quietly rot in either direction):
 - **deterministic (no leak in)** — `utils/pdda-check-roadmap.sh` errors on task checklists / `### Checklist` /
   `### QA checklist` headings and warns on size sprawl (runs hourly, free, no model needed)
-- **deterministic (no gap missing)** — `utils/pdda-check-roadmap-coverage.sh` errors when an active
-  `PROJECT/2-WORKING` doc has no pointer here (honors `roadmap_exempt: true`)
+- **deterministic (no gap missing)** — `utils/pdda-check-roadmap-coverage.sh` errors when either an
+  active `PROJECT/2-WORKING` doc has no pointer here, or a captured `PROJECT/1-INBOX/GH-*.md` doc is
+  not parked here as a queue entry (honors `roadmap_exempt: true`)
 - **LLM** — `utils/pdda-doc-ready.sh` reviews `ROADMAP.md` against the full pointer contract for the
   fuzzier "this paragraph is really execution detail" cases (honors the carve-out)
 - the file itself carries a top banner restating the contract, so a human editing it sees the rule
