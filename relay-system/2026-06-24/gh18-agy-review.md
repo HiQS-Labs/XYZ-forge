@@ -7,6 +7,8 @@ ROUND: 1 / 1
 ## ▶ TAKE YOUR TURN — read this first
 You are **agy**, the Reviewer, taking your turn in a file-based relay. This is a CODE REVIEW, **not** a fix — you do **not** edit any code; you only append your review block to THIS file.
 
+> ⏱️ **TIME-BUDGET — read first.** Do a **textual** review only. **Do NOT run `./validate.sh` or any test** — the author already ran the full suite green (44/44) and the relevant new tests are `test/relay-target-root-relayfile.sh`, `test/relay-token-collision.sh`, `test/relay-escalation-not-stall.sh`. Spend your turn reading the diff (`git show 7709abc`) and **writing your block** — append the review block BEFORE you run out of time. Reading code is fine; running the suite is what burns the turn.
+
 1. **Read the changes under review** in the harness repo (cite by absolute path):
    - `/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/relay-drive.sh`
    - `/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick` (the `claim` not-claimable branch, ~line 174)
@@ -18,14 +20,14 @@ You are **agy**, the Reviewer, taking your turn in a file-based relay. This is a
 3. **Append ONE block** at the very bottom, above the marker line, with graded findings: `[Blocker]` must-fix · `[Should]` strong rec · `[Nit]` optional · `[Pass]` checked and sound. Each finding: what, where (`/abs/path:line`), why it bites, proposed fix.
 4. **Set the header:** `STATUS: Approved` if no `[Blocker]`/`[Should]` survives; else `STATUS: Changes requested`. Add a `Verdict:` and a `Basis:` line (behaviorally proven vs textual only).
 5. **Hand off the lock** with the env-pinned ABSOLUTE tick, then you are done:
-   `TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" done RELAY-gh18-agy-review --agent agy`
+   `TICK_REPO_ROOT="/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm" "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick" done RELAY-gh18-agy-review-2 --agent agy`
 6. **Stop.** One-line result to the operator.
 
 ## Setup
 - Artifact under review: the GH-18 code-phase diff (`7709abc`) — `relay-drive.sh` + `bin/tick`.
 - Definition of Done: agy files graded findings + a Verdict and sets `STATUS`.
 - Reviewer: **agy** (this turn). Author/Maintainer: the operator's Claude session (will read findings).
-- Lock: `tick` task **RELAY-gh18-agy-review** (a per-relay id — GH-18 #1).
+- Lock: `tick` task **RELAY-gh18-agy-review-2** (a per-relay id — GH-18 #1).
 - Started: 2026-06-24
 
 ## Ground rules
