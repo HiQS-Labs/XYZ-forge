@@ -173,6 +173,10 @@ function main(argv) {
       }
       if (result.unavailable) {
         process.stdout.write(`lost: ${task} is ${result.unavailable} — not claimable\n`);
+        // A tick task id is single-shot: once terminal it can't be reclaimed. A relay that reuses a
+        // spent turn-token id (e.g. the literal RELAY-TURN from a prior relay) lands here and the seed
+        // silently breaks. Point at the fix (GH-18 #1): a fresh per-relay id.
+        process.stdout.write(`  → '${task}' is spent; use a fresh per-relay id (e.g. --relay-task RELAY-<your-slug>)\n`);
         return 0;
       }
       process.stdout.write(`lost: ${task} already claimed by ${result.winner || 'unknown'}\n`);

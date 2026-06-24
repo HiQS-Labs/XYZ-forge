@@ -20,7 +20,8 @@ set -euo pipefail
 #   - escalates on no-progress (token actor didn't move) instead of looping forever.
 #
 # Turn-taker env: RELAY_FILE, RELAY_TASK, RELAY_AGENT (the current actor).
-# Exit: 0 = relay closed Approved/Closed · 3 = no-progress · 4 = cap / closed-not-approved · 2 = usage.
+# Exit: 0 = relay closed Approved/Closed · 3 = no-progress (stall) · 4 = cap / closed-not-approved /
+#       escalated-to-human-by-design (STATUS: Escalated) · 2 = usage.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
@@ -57,7 +58,6 @@ while (($# > 0)); do
   esac
 done
 [[ -n "$RELAY_FILE" ]] || { usage; die "--relay-file is required"; }
-[[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
 [[ -n "$AGENT_CMD" || "$DRY_RUN" -eq 1 ]] || { usage; die "--agent-cmd is required"; }
 
 if [[ -n "${TARGET_ROOT+set}" ]]; then
@@ -66,6 +66,16 @@ if [[ -n "${TARGET_ROOT+set}" ]]; then
     || die "invalid target root (not a git repo): $TARGET_ROOT"
   export RELAY_TARGET_ROOT="$TARGET_ROOT"
 fi
+
+# Resolve --relay-file AFTER --target-root is known. With --target-root the thread lives in the
+# TARGET repo, so a repo-relative path must resolve relative to the target root, not the harness CWD
+# (GH-18 #2): if it isn't found as given but exists under --target-root, use that. Absolute paths and
+# CWD-relative paths that already resolve are unchanged. (ALLOW_PATHS is already target-relative — the
+# shim resolves it against RELAY_TARGET_ROOT in relay-turn-lib.sh.)
+if [[ ! -f "$RELAY_FILE" && -n "${TARGET_ROOT:-}" && "$RELAY_FILE" != /* && -f "$TARGET_ROOT/$RELAY_FILE" ]]; then
+  RELAY_FILE="$TARGET_ROOT/$RELAY_FILE"
+fi
+[[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
 
 # Containment default for unattended/driven runs: isolate the turn-taker in a throwaway worktree
 # (ROOT@HEAD) so an off-task model's stray creations/renames can't reach the real tree. The leaf
@@ -76,6 +86,11 @@ fi
 
 file_status() { sed -n 's/^STATUS:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
 terminal_status() { case "$1" in Approved|Closed) return 0 ;; *) return 1 ;; esac; }
+# Escalated is TERMINAL BY DESIGN: the reviewer handed back to a human (e.g. at the round cap),
+# typically WITHOUT releasing the token. The explicit status IS the intent signal — a true stall
+# leaves STATUS unchanged — so this is NOT a no-progress failure. Reported as a clean, distinct
+# outcome (exit 4 = terminal/not-approved) so a correct handback doesn't read as a stall (GH-18 #5).
+escalated_status() { case "$1" in Escalated) return 0 ;; *) return 1 ;; esac; }
 
 # Current actor of the RELAY-TURN token: claimer (if claimed) else handoff_to (if
 # open) else "" (done/missing). Echoes "<status>\t<actor>".
@@ -110,9 +125,19 @@ while ((round < ROUND_CAP)); do
     exit 0
   fi
 
+  # Escalated = terminal by design (handback to human); the token may legitimately stay live, so this
+  # is checked BEFORE the no-actor branch. A clean, distinct outcome — not a stall (GH-18 #5).
+  if escalated_status "$s"; then
+    printf 'relay-drive: relay escalated to human by design (STATUS: %s, token %s) after %d turn(s)\n' "$s" "${actor:-done}" "$round" >&2
+    exit 4
+  fi
+
   # file not terminal but the token is gone/done → also a mismatch.
   if [[ -z "$actor" ]]; then
-    printf 'relay-drive: RELAY-TURN has no actor (token %s) but STATUS=%s — escalating\n' "${tstatus:-missing}" "$s" >&2
+    printf 'relay-drive: %s has no actor (token %s) but STATUS=%s — escalating\n' "$RELAY_TASK" "${tstatus:-missing}" "$s" >&2
+    # A `done` token under a non-terminal thread is the classic reused-token collision (GH-18 #1):
+    # a prior relay spent this id. Point at the fix so recovery isn't a scavenger hunt.
+    [[ "$tstatus" == "done" ]] && printf "  → '%s' is spent from a prior relay; seed + drive with a fresh --relay-task (e.g. RELAY-%s)\n" "$RELAY_TASK" "$(basename "$RELAY_FILE" .md)" >&2
     exit 4
   fi
 
@@ -136,7 +161,14 @@ while ((round < ROUND_CAP)); do
 
   # No-progress guard (skipped once terminal — the close check at loop top handles that).
   IFS=$'\t' read -r ntstatus nactor < <(token_state)
-  if ! terminal_status "$(file_status)" && [[ "$ntstatus:$nactor" == "$prev" ]]; then
+  ns="$(file_status)"
+  # A by-design Escalated handback this turn is terminal, NOT a stall — even if the reviewer left the
+  # token live. Catch it before the no-progress guard so it doesn't read as exit 3 (GH-18 #5).
+  if escalated_status "$ns"; then
+    printf 'relay-drive: relay escalated to human by design (STATUS: %s, token %s:%s) after %d turn(s)\n' "$ns" "$ntstatus" "$nactor" "$round" >&2
+    exit 4
+  fi
+  if ! terminal_status "$ns" && [[ "$ntstatus:$nactor" == "$prev" ]]; then
     printf 'relay-drive: no progress after %s turn (token still %s) — escalating\n' "$actor" "$prev" >&2
     exit 3
   fi

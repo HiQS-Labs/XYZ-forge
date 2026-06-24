@@ -46,8 +46,12 @@ TESTS=(
   "relay-turn-timeout.sh"
   "relay-target-root.sh"
   "relay-target-root-paths.sh"
+  "relay-target-root-relayfile.sh"
+  "relay-token-collision.sh"
+  "relay-escalation-not-stall.sh"
   "relay-concurrent-commit.sh"
   "relay-case-insensitive.sh"
+  "pdda-roadmap-coverage.sh"
 )
 
 PASSED=()
