@@ -102,15 +102,19 @@ stream lives in GitHub (machine-queryable state, labels, commit↔issue linkage)
 surface of record stays in `PROJECT/**`. This is the **issue-first SOP**; the bug-fix stance above
 states the principle, and this section owns the *format*.
 
-**Floor (what needs an issue).** Anything substantive: a project plan, an experiment, or a bug/fix
-worth a working doc — if a change earns a working doc, it earns an issue. **Exempt:** trivial fixes
-(typos, path repoints, doc-only one-liners, formatting) commit directly with a clear message and no
-issue. When in doubt, open the issue — it is a cheap `gh issue create`. The SOP applies to *new*
-efforts going forward; in-flight `1-INBOX`/`2-WORKING` docs are not backfilled.
+**Floor (what needs an issue).** The operational test is **lines of code touched**: any change
+beyond a **2–3 line** fix opens a GitHub issue first, and its local plan doc is named after that
+issue (see Filename below). Project plans, experiments, and features are always above this line.
+**Exempt:** genuinely trivial edits — a ≤2–3 line code fix, a typo, a path repoint, a doc-only
+one-liner, formatting — commit directly with a clear message and no issue. When in doubt, open the
+issue — it is a cheap `gh issue create`. The SOP applies to *new* efforts going forward; in-flight
+`1-INBOX`/`2-WORKING` docs are not backfilled.
 
 Capture a tracked issue as a doc in `PROJECT/1-INBOX/` using this convention:
 
-- **Filename:** `GH-<number>-SHORT-DESCRIPTION.md` (e.g. `GH-11-CROSS-REPO-TARGETING.md`).
+- **Filename:** `GH-<number>-VERY-SHORT-DESCRIPTION.md` — the local plan doc is always named after
+  its GitHub issue (e.g. `GH-1234-SHOWME-COMMAND.md`, `GH-11-CROSS-REPO-TARGETING.md`). Keep the
+  description to ~2–4 words; the issue number is the real key, the slug is just a human hint.
   SCREAMING-KEBAB to match the other inbox docs; no zero-padding — mirror the GitHub issue number.
   `<number>` resolves against `origin` (a single canonical repo), so the bare number is unambiguous.
 - **Minimum frontmatter:** `gh_issue`, `source` (the full issue URL), `title`, `status`
