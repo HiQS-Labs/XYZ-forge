@@ -2,7 +2,7 @@
 title: Combined Roadmap — Cost-Observed Marathon Loops + Adversarial Hardening
 status: Active
 created: 2026-06-16
-updated: 2026-06-23
+updated: 2026-06-24
 branch: main
 supersedes: PROJECT/2-WORKING/ROADMAP-COMBINED.md (promoted to canonical 2026-06-17); folds in the former standalone ROADMAP.md (adversarial-hardening track, now Part B)
 synthesizes:
@@ -10,13 +10,13 @@ synthesizes:
   - PROJECT/2-WORKING/COST-OBSERVABILITY-PLAN.md
   - PROJECT/1-INBOX/MARATHON.md
 goal: >
-  Canonical pointer/ledger index for the repo's work — projects in progress, completed, attempted,
-  and deferred — linking to the canonical PROJECT/** docs that own the execution detail. This is an
-  index, not a plan body.
+  Canonical pointer/ledger index for the repo's work — queued intake, projects in progress,
+  completed, attempted, and deferred — linking to the canonical PROJECT/** docs that own the
+  execution detail. This is an index, not a plan body.
 ---
 
 <!-- PDDA ROADMAP CONTRACT — this file is a POINTER/LEDGER, not a plan body.
-     Allowed: projects in progress / completed / attempted / deferred + links to PROJECT/** docs.
+     Allowed: queued intake / projects in progress / completed / attempted / deferred + links to PROJECT/** docs.
      NOT allowed: phase checklists, build steps, deep execution notes — put those in the project doc.
      Carve-out: a SHORT exception note is OK only when omitting it would hide an operationally critical fact.
      Coverage rule: every PROJECT/2-WORKING doc must be reflected here by a pointer (or opt out with roadmap_exempt: true).
@@ -52,6 +52,13 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 
 ## Ledger
 
+### Queue / parked intake
+
+- **GH-18 · cross-repo driven-relay friction (field feedback)** 🆕 next — **field-validated punch-list** from an actual cross-repo Codex review (`relay-drive.sh` + `codex-turn.sh`, thread/artifact in `rebalance-OS`, harness in this repo via `--target-root`): review quality + safety boundary held, but the cross-repo *plumbing* took ~5 false starts. 5 findings (2 High / 3 Medium / 2 Low): (1) `RELAY-TURN` singleton token carries terminal state across relays → seed silently breaks (cf. [[relay-turn-token-reuse]]); (2) `--relay-file`/`ALLOW_PATHS` resolved against CWD not `--target-root` (GH-11 coherence gap); (3) foreign `.tick/` footgun; (4) Codex can't self-write under default sandbox cross-repo; (5) by-design `Escalated` at ROUND 1/1 reports as a stall (driver success-oracle false-negative). Folds into the **GH-16** cross-repo frontier as a concrete child; mostly doc + path-resolution fixes, not architecture. → [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18)
+- **Tooling · agy reliability testing** ⏸️ parked — proposal + 3 dogfoods this session: agy **clean as a reviewer** (×2), **scope-sensitive as a builder** (failed a kernel-spanning task → F4/F6/F7 contained; succeeded on a small bounded one). Resume to run the S1–S10 matrix. → [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md)
+- **Tooling · front-door onboarding health** 🟡 parked — read-only audit shipped → [FRONTDOOR.md](FRONTDOOR.md) (continuous deterministic dashboard; 10 findings, re-runnable checks) + a phased remediation plan. Verdict ⚠️ Bumpy: clone-to-working works (`validate.sh` 36/36, secrets clean), but stale test counts (3 docs) + 2 dead README links + a phantom-path `CLAUDE.md` + undocumented `--target-root`/`install.sh` remain. Phases 1–3 queued (doc-only). → [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md)
+- **PDDA · feedback-synthesis direction** 🟡 parked — **proposal (1-INBOX), agy-reviewed 2026-06-23**: reduces the three June 23 external feedback notes (Perplexity/ChatGPT/Gemini) to one direction — keep PDDA a *thin repo-governance + safety layer*. Near-term scope = Phases 1–2 (constitution/positioning + contract/mode hardening); Phases 3–5 (artifact ergonomics, the Perplexity-only evidence bridge, integrations) deferred. Relay-reviewed by agy: 1 Blocker + 3 Should applied → **Approved**. Awaiting promotion decision to `2-WORKING`. → [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md) · relay [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md)
+
 ### In progress
 
 - **Part A · Phase 6 — real-substrate dogfood (graduation test)** 🟢 — **re-substrated 2026-06-24**: WPCC retired (its documented backlog was already shipped — preflight found all target rules built/fixed). New substrate = `sleuth-app` **Near-Miss 2-lite** (confirmed unbuilt, additive + flag-gated + default-OFF). Phase 0 pre-registered: branch cut, gate baseline captured (validate ✓ / jest 134/0), workers green (Codex + agy). Build now, default-OFF (operator). → [MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · WPCC retired-substrate record: [MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md)
@@ -59,12 +66,8 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 - **Tooling · relay-to-issue skill** 🟢 — **shipped 2026-06-22**: a post-relay skill that distills a closed `/relay` thread into ONE checklist-style GitHub issue, filed in the repo the relay was *about* (cross-repo aware; dedup-stamped; auto-posts via `gh`). `skills/relay-to-issue/` (SKILL + `relay-to-issue.sh` + `install.sh`); `resolve` smoke-tested green. Remaining: operator `install.sh` + one un-sandboxed live `gh issue create` to confirm posting E2E. → [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md)
 - **Tooling · relay-xyz durability** 🟢 — **shipped 2026-06-21** (regression-tested, pushed): discovery audit via the shakedown lens (locator proven green; symlink-only discovery → `skills/relay-xyz/install.sh`) + drive-layer fixes from a sibling headless run (space-safe `--agent-cmd` dispatch; worktree isolation default-ON for driven runs). Remaining: operator sign-off on the two dangling `consult`/`wpcc` symlinks; optional role-vs-model assertion + per-run `RELAY-TURN` id. → [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md)
 - **GH-11 · relay-xyz cross-repo targeting** 🟢 — **Ask 1 complete**: `--target-root` flag + kernel wiring (`relay-turn-lib.sh` routes worktree/allowlist/commit via `RELAY_TARGET_ROOT`; default unchanged) + Codex's `[Nit]` fixed, proven by `test/relay-target-root.sh` in the suite (**`validate.sh` 36/36**). Remaining: Asks 2–5 (surface consult + doc fixes). → [GH-11-CROSS-REPO-TARGETING.md](PROJECT/2-WORKING/GH-11-CROSS-REPO-TARGETING.md)
-- **Tooling · agy reliability testing** ⏸️ paused — proposal + 3 dogfoods this session: agy **clean as a reviewer** (×2), **scope-sensitive as a builder** (failed a kernel-spanning task → F4/F6/F7 contained; succeeded on a small bounded one). Resume to run the S1–S10 matrix. → [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md)
-- **Tooling · front-door onboarding health** 🟡 — read-only audit shipped → [FRONTDOOR.md](FRONTDOOR.md) (continuous deterministic dashboard; 10 findings, re-runnable checks) + a phased remediation plan. Verdict ⚠️ Bumpy: clone-to-working works (`validate.sh` 36/36, secrets clean), but stale test counts (3 docs) + 2 dead README links + a phantom-path `CLAUDE.md` + undocumented `--target-root`/`install.sh` remain. Phases 1–3 queued (doc-only). → [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md)
 - **Tooling · relay containment-guard hardening** 🟢 — **active (started 2026-06-23)**: harden `relay-turn-lib.sh` so a headless turn can't destroy work — the commit-bypass guard must not orphan a **concurrent peer commit** ([#13](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/13)) and the turn agent must not **self-commit** mid-turn ([#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14)). Both surfaced 2026-06-23 when a driven agy re-review orphaned a peer's commit (recovered via reflog). → [RELAY-CONTAINMENT-HARDENING.md](PROJECT/2-WORKING/RELAY-CONTAINMENT-HARDENING.md)
 - **GH-16 · same-device cross-repo swarm readiness** 🟢 — **active (started 2026-06-24)**: umbrella epic to drive a multi-lane swarm against an external target repo on macOS, same-device, without the harness reverting its own output. Sequences the new Phase-1 macOS case-sensitivity revert ([#17](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/17)) plus existing cross-repo/isolation/concurrency issues (#11, #13, #15, #3, #4, #5; #12 closed). → [GH-16-CROSS-REPO-SWARM.md](PROJECT/2-WORKING/GH-16-CROSS-REPO-SWARM.md)
-
-- **PDDA · feedback-synthesis direction** 🟡 — **proposal (1-INBOX), agy-reviewed 2026-06-23**: reduces the three June 23 external feedback notes (Perplexity/ChatGPT/Gemini) to one direction — keep PDDA a *thin repo-governance + safety layer*. Near-term scope = Phases 1–2 (constitution/positioning + contract/mode hardening); Phases 3–5 (artifact ergonomics, the Perplexity-only evidence bridge, integrations) deferred. Relay-reviewed by agy: 1 Blocker + 3 Should applied → **Approved**. Awaiting promotion decision to `2-WORKING`. → [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md) · relay [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md)
 
 ### Completed
 
