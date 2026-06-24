@@ -5,8 +5,8 @@
   Recipe for running this hands-free: relay-automation/DUELING-CLAUDES.md
 -->
 
-NEXT: claude-a
-STATUS: Open
+NEXT: —
+STATUS: Closed
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent)
@@ -146,5 +146,44 @@ you'd ship first. Then hand back for synthesis.
 **Answers to Open Questions:**
 1. **I4 reliability:** No, too risky. Keep it literal.
 2. **Window assignment:** I7 (Visual Copy Blocks) handles the UX side, while I8 (User verification in CLI) provides the technical safety net.
+
+### Round 1 · Producer (synthesis + close) · claude-a · 2026-06-23
+**Converged.** agy and I agree on the engine (I1+I2+I3) and agy added the two pieces that make it land:
+I7 (VS Code's native copy button turns a fenced one-liner into a true one-click paste) and I8 (an identity
+guard so a wrong-window paste fails fast instead of silently deadlocking — the #1 failure named in the doc).
+I4 is **Cut** by agreement: having the model expand a text pointer into a `/loop` tool-call is non-deterministic;
+literal slash commands are fail-proof, and I7 already makes the literal a one-click copy — so I4 buys nothing.
+
+**Ship list (final):**
+- `[Ship]` **I1** — thin each `/loop` to one line; the turn contract lives in the doc's `▶ TAKE YOUR TURN` block.
+- `[Ship]` **I2** — `dueling-start.sh <slug>`: seeds the token, computes the deadline once, scaffolds the thread
+  with the START block pre-filled, prints nothing the operator must hand-edit.
+- `[Ship]` **I3 + I7** — a `## ▶ START` block at the TOP of the thread: one fenced line per window, colour/emoji
+  labelled, each with VS Code's hover copy button.
+- `[Strong]` **I8** — loop/poll asserts the pasted `--agent` matches the window's identity; mismatch → fail fast.
+- `[Maybe]` **I5** — `dueling-start.sh --check` preflight (token live, deadline future, thread exists). Cheap, fold into I2.
+- `[Cut]` **I4** (brittle), **I6** (TUI launcher, fights the zero-code ethos).
+
+**The deliverable — what the operator actually does after this lands:**
+1. `relay-automation/dueling-start.sh dueling-ux` (one command; replaces all of today's step 0 + literal edits).
+2. Open the generated thread, hover each fenced block, click **Copy**, paste into its window. Two clicks, no edits.
+
+**The shape `dueling-start.sh` writes to the TOP of the thread (I1 thinning makes each a single line):**
+```markdown
+## ▶ START — hover each block, click Copy, paste into its window
+### 🟢 WINDOW A — Reporter (claude-a)
+/loop 60s run env TICK_REPO_ROOT="…/xyz-3-agents-swarm" "…/poll.sh" --mode relay --agent claude-a --claude-agents "claude-a,claude-b" --relay-task DUELING-UX-0623 --relay-file "…/dueling-ux-brainstorm.md" --artifact "…/dueling-ux-brainstorm.md" --deadline 1782255534 --dry-run ; if "DECISION: run-runner" take your turn per the ▶ TAKE YOUR TURN block at the top of this file; on "DECISION: stop" CronList+CronDelete this loop; else nothing.
+### 🔵 WINDOW B — Maintainer (claude-b)
+/loop 60s run "…/poll.sh" --mode relay --agent claude-b --claude-agents "claude-a,claude-b" --relay-task DUELING-UX-0623 --relay-file "…/dueling-ux-brainstorm.md" --artifact "…/dueling-ux-brainstorm.md" --deadline 1782255534 --dry-run ; if "DECISION: run-runner" take your turn per the ▶ TAKE YOUR TURN block at the top of this file; on "DECISION: stop" CronList+CronDelete this loop; else nothing.
+```
+Everything that used to be inlined in the `/loop` string (verify→fix→gate→commit→release) now lives once in the
+doc's `▶ TAKE YOUR TURN` block — so the string is short, the contract can't drift between windows, and the
+operator copies a single line per window instead of a ~15-line paragraph.
+
+**Verdict:** Brainstorm complete. Recommend implementing I1+I2+I3+I7 as one change (seeder writes the thinned
+START block) and I8 as a fast follow. This is a code change to `relay-automation/` — out of scope for this
+brainstorm; next step is to greenlight it or file it.
+**Basis:** design-level (no code written this turn).
+**Commit:** (filled on commit)
 
 <!-- ▲ APPEND NEW TURNS DIRECTLY ABOVE THIS LINE ▲ -->
