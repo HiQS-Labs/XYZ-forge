@@ -33,6 +33,23 @@ objective gate being Sleuth's own test suite.
 
 ---
 
+## Amendment 1 (2026-06-24) — builder swap: Claude → agy
+
+The first fire failed at the builder launch: **no `claude` CLI exists in this VS Code-extension
+environment** (`command -v claude` → not found; `claude -p` → exit 127). Nothing was billed. Per
+operator decision, the run is re-architected:
+
+- **Orchestrator:** this Claude Code session (Opus 4.8) drives the relay.
+- **Builder (main work):** **agy** (was Claude). Q1 feasibility now tests the **agy** builder lane on a
+  real Node monolith — a more valuable signal than the absent Claude lane.
+- **QA / reviewer:** **Codex** (unchanged).
+- **Cost:** the run is now **fully cost-blind** — both agy and Codex emit no token data, and the metered
+  Claude lane is gone. No cost figure is claimed for this experiment (Q-cost = N/A, not estimated).
+- **Harness change required + made:** `marathon-drive.sh` hardcoded a Claude builder; generalized builder
+  routing by name prefix (claude/codex/agy/gemini) so the harness drives cross-model builders. `validate.sh` 38/38.
+
+Q2 (objective gate), Q3 (containment), Q4/Q5 (reviewer rubric, now Codex as the sole reviewer) stand.
+
 ## Status
 
 | What was just completed | What's next |

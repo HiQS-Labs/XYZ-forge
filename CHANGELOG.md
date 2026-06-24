@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-24
 
+### marathon-drive.sh — cross-model BUILDER routing (agy/codex builders, not just Claude)
+First Sleuth dogfood fire failed at builder launch: **no `claude` CLI in the VS Code-extension environment** (`claude -p` → exit 127; nothing billed). Re-architected the run to **agy builds / Codex QAs**, with this session orchestrating. The harness hardcoded a Claude builder (`CLAUDE_AGENT="$BUILDER"`), so generalized builder+reviewer routing by name prefix (claude/codex/agy/gemini → the matching `*_AGENT` var `marathon-agent.sh` routes on), added a builder≠reviewer guard, and kept builder default = claude for back-compat. **`validate.sh` 38/38.** Pre-registration amended (builder Claude→agy; run now fully cost-blind). → [MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md#amendment-1-2026-06-24--builder-swap-claude--agy)
+
 ### marathon-drive.sh — `--target-root` cross-repo forwarding (GH-11, enables the Sleuth dogfood)
 The marathon orchestrator was harness-repo-centric: it rendered/committed the relay thread + seeded the tick token in ROOT but had no way to land the BUILD in a foreign repo — cross-repo targeting only existed one layer down at `relay-drive.sh --target-root`. Added `--target-root DIR` to `marathon-drive.sh`: validates DIR is a git repo, forwards it to the relay-drive call (which exports `RELAY_TARGET_ROOT` for artifact routing), and runs the pre-advance gate with `cwd = DIR` (so a foreign repo's `npm test` resolves). Relay thread + tick token stay in ROOT by design. Default path (no flag) unchanged; `set -u`-safe array forwarding. **`validate.sh` 38/38.** Surfaced by the Sleuth Near-Miss 2-lite dogfood preflight.
 

@@ -112,16 +112,26 @@ PRE_ADVANCE_CMD="${PRE_ADVANCE_CMD:-"bash $ROOT/validate.sh"}"
 # Default the tick token name off the phase id (p1 → MARATHON-P1-TURN), keeping the Phase-3 default.
 RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '[:upper:]')-TURN"}"
 
-# Map builder/reviewer to _AGENT env vars for marathon-agent.sh routing.
-# Builder is always Claude in Phase 3; reviewer is Codex or Gemini (detected by name prefix).
-export CLAUDE_AGENT="$BUILDER"
+# Map builder/reviewer to _AGENT env vars for marathon-agent.sh routing. Both actors are routed to
+# their shim by name prefix (claude/codex/agy/gemini), so the harness supports cross-model BUILDERS
+# (e.g. agy) — not just Claude. Builder defaults to claude for back-compat.
 export MARATHON_BUILDER="$BUILDER"
 export MARATHON_REVIEWER="$REVIEWER"
-case "$REVIEWER" in
-  codex*)  export CODEX_AGENT="$REVIEWER"; export GEMINI_AGENT="" ;;
-  gemini*) export GEMINI_AGENT="$REVIEWER"; export CODEX_AGENT="" ;;
-  *)       die "reviewer '$REVIEWER' not recognized — must start with 'codex' or 'gemini'" ;;
-esac
+export CLAUDE_AGENT="" CODEX_AGENT="" AGY_AGENT="" GEMINI_AGENT=""
+route_agent() {  # <agent-id> → export the matching *_AGENT var marathon-agent.sh routes on
+  case "$1" in
+    claude*) export CLAUDE_AGENT="$1" ;;
+    codex*)  export CODEX_AGENT="$1" ;;
+    agy*)    export AGY_AGENT="$1" ;;
+    gemini*) export GEMINI_AGENT="$1" ;;
+    *)       die "agent '$1' not recognized — must start with claude/codex/agy/gemini" ;;
+  esac
+}
+[[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"
+route_agent "$BUILDER"
+route_agent "$REVIEWER"
+# Reviewer must be a QA-capable model lane (codex/gemini/agy), never the Claude builder lane.
+case "$REVIEWER" in codex*|gemini*|agy*) ;; *) die "reviewer '$REVIEWER' must start with codex/gemini/agy" ;; esac
 
 # Artifact allowlist: when a phase targets real file(s), pass them as ALLOW_PATHS so the turn-takers
 # may create/edit them. The shared safety core (relay-turn-lib.sh) reverts ANY edit outside this
