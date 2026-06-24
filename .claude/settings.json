@@ -15,7 +15,17 @@
       "Bash(bash -n relay-automation/codex-turn.sh)",
       "Bash(echo \"validate.sh exit=$?\")",
       "Bash(gh repo *)",
-      "Bash(bash utils/pdda-check-status-table.sh PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md)"
+      "Bash(bash utils/pdda-check-status-table.sh PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md)",
+      "Bash(awk 'NR>=75 && NR<=98' PROJECT/PDDA.md)",
+      "Bash(awk 'NR>=478 && NR<=490' PROJECT/PDDA.md)",
+      "Bash(utils/pdda-check-frontmatter.sh)",
+      "Bash(utils/pdda-run.sh)",
+      "Bash(rtk ps *)",
+      "Bash(gh --version)",
+      "Bash(chmod +x test/relay-case-insensitive.sh)",
+      "Bash(cp validate.sh __TRACKED_VAR__/validate.combined)",
+      "Bash(cp CHANGELOG.md __TRACKED_VAR__/CHANGELOG.combined)",
+      "Bash(python3 - __TRACKED_VAR__/CHANGELOG.mine)"
     ]
   }
 }
