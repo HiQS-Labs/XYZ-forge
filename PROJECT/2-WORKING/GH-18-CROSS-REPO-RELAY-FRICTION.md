@@ -1,6 +1,6 @@
 ---
 title: Cross-repo driven-relay friction — token collision, path resolution, .tick, sandbox
-status: Active — verification + docs done; code fixes PAUSED for review
+status: Active — verification + docs + code fixes (#2/#1b/#5) shipped, agy-approved; #3/#4 doc-only resolved
 created: 2026-06-24
 updated: 2026-06-24
 owner: noelsaw1
@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 0 verification done** — #1/#2/#5 reproduced locally as real code bugs; #3 found largely STALE for driven runs (mitigated by `codex-turn.sh:57`) → doc-only; #4 doc-only. **Phase 1 docs done** (QUICKSTART). | **PAUSED for review** before the code phase (#1b token default, #2 path resolution, #5 escalation oracle). Awaiting operator go-ahead. |
+| **All phases done.** Phase 0 verification (#1/#2/#5 real bugs; #3/#4 doc-only). Phase 1 docs (QUICKSTART). **Phase 2 code shipped + agy-approved**: #2 relay-file resolution, #1b token-collision hints, #5 Escalated-not-stall oracle — 3 new tests, **`validate.sh` 41→44/44**; agy review **Approved** (3×[Pass], confirmed #5 doesn't mask a true stall). | Close [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18); fold any residual into GH-16. Move this doc to `3-COMPLETED` once #18 is closed. |
 
 ## Problem
 
@@ -63,20 +63,29 @@ Closes the doc-only findings (#3, #4) and the doc halves of #1 and both Low/Nit 
       cross-repo example: `--target-root` + `TICK_REPO_ROOT=<harness>` (NOT `$PWD`) + absolute
       `--agent-cmd` + `CODEX_FLAGS` bypass — the single least-documented, most-common path.
 
-## Phase 2 — Code fixes (PAUSED — awaiting review, do NOT start)
+## Phase 2 — Code fixes (DONE 2026-06-24, commit `7709abc`, agy-approved)
 
-Each item gets a failing test in `validate.sh` first (the Phase 0 repros are the seeds).
+Order shipped: #2 → #1b → #5. Each landed with a failing-first test seeded from the Phase 0 repros.
 
-- [ ] **#1b — token default + error hint.** Default the turn-token to a per-relay id derived from the
-      relay-file slug (or have the skill pass a unique `--relay-task`); make the `tick` "is done — not
-      claimable" path hint `→ use --relay-task <fresh-id>`. *Watch:* tests hardcoding `RELAY-TURN` —
-      grep first. Smallest-diff option may be to leave the script default and only fix the seed sites.
-- [ ] **#2 — resolve `--relay-file` (and `ALLOW_PATHS`) relative to `--target-root`.** ~3 lines before
-      [relay-drive.sh:60](../../relay-automation/relay-drive.sh#L60): if relative + missing in CWD but
-      present under `$TARGET_ROOT`, use that.
-- [ ] **#5 — escalation success oracle.** Treat `STATUS: Escalated` (and round-cap handback) as a
-      terminal-by-design outcome, NOT a stall — discriminated by "did the reviewer append a block this
-      turn." Must NOT blanket-pass: a true stall (no new block) still escalates.
+- [x] **#2 — resolve `--relay-file` relative to `--target-root`.** `relay-drive.sh` validates
+      `--target-root` first, then resolves a repo-relative `--relay-file` under it when not found in CWD
+      (absolute/CWD-relative unchanged; missing files still error). `ALLOW_PATHS` was **already**
+      target-relative (the shim resolves it against `RELAY_TARGET_ROOT` in `relay-turn-lib.sh`), so no
+      change needed there. Test: `test/relay-target-root-relayfile.sh` (4).
+- [x] **#1b — token-collision hints (default unchanged).** `bin/tick`'s `claim` not-claimable branch
+      hints a fresh per-relay id; `relay-drive.sh`'s no-actor branch names the real `--relay-task` and,
+      on a spent `done` token, hints the fix. Default token left as `RELAY-TURN` (the seed is external;
+      changing it would break the seed/drive contract and many tests — QUICKSTART/skill already use a
+      per-relay id). Test: `test/relay-token-collision.sh` (5).
+- [x] **#5 — escalation success oracle.** `STATUS: Escalated` is now terminal-by-design at both the
+      loop top and the post-turn guard → exit 4 with a clean handback message, NOT the stall's exit 3.
+      Discriminator = the explicit `Escalated` status (a true stall leaves STATUS unchanged); the
+      no-progress guard is intact, so a genuine stall still exits 3. Test:
+      `test/relay-escalation-not-stall.sh` (5, incl. a true-stall regression + a pre-escalated case).
+
+**Verification:** `validate.sh` **41 → 44/44** (behavioral). **Review:** agy headless relay
+([relay-system/2026-06-24/gh18-agy-review.md](../../relay-system/2026-06-24/gh18-agy-review.md)) —
+**Approved**, 3×[Pass], basis textual-only; explicitly confirmed #5 does not mask a true stall.
 
 ## Blast radius (summary)
 
