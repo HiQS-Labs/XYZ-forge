@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-24
 
+### marathon-drive.sh — `--target-root` cross-repo forwarding (GH-11, enables the Sleuth dogfood)
+The marathon orchestrator was harness-repo-centric: it rendered/committed the relay thread + seeded the tick token in ROOT but had no way to land the BUILD in a foreign repo — cross-repo targeting only existed one layer down at `relay-drive.sh --target-root`. Added `--target-root DIR` to `marathon-drive.sh`: validates DIR is a git repo, forwards it to the relay-drive call (which exports `RELAY_TARGET_ROOT` for artifact routing), and runs the pre-advance gate with `cwd = DIR` (so a foreign repo's `npm test` resolves). Relay thread + tick token stay in ROOT by design. Default path (no flag) unchanged; `set -u`-safe array forwarding. **`validate.sh` 38/38.** Surfaced by the Sleuth Near-Miss 2-lite dogfood preflight.
+
 ### Marathon dogfood re-substrated: WPCC retired → Sleuth "Near-Miss 2-lite" (Phase 0 pre-registered)
 Preflighted the long-stalled WPCC real-monolith dogfood and found the substrate **exhausted**: every rule its plan targeted — `php-direct-access-entrypoint`, `php-hardcoded-credentials` (migrated to JSON), `unsanitized-superglobal-read` — is already built/fixed (the last reproduced live: both reported false-negatives now flag in WPCC v2.2.3). The WPCC maintainer outran the experiment. Re-substrated the graduation test onto a confirmed-unbuilt, **additive + flag-gated + default-OFF** target in `sleuth-app`: **Phase 2-lite** of the Command Near-Miss Recovery plan (deterministic "did you mean?" tier).
 - **Operator decision:** build now, **default-OFF** — jump the Phase-0-counter worth-it gate deliberately; the score floor ships as a documented placeholder, tuned when Phase 0 data lands (~early July). Zero production risk because the flag defaults OFF.

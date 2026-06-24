@@ -56,6 +56,9 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
   --relay-task ID         Tick task name (default: MARATHON-<PHASE_ID>-TURN).
   --artifact PATHS        Comma-separated repo-relative file(s) the builder may create/edit beyond
                           the relay file (ALLOW_PATHS for the turn-takers). Omit for a relay-only phase.
+  --target-root DIR       Foreign git repo the BUILD lands in (GH-11). The relay thread + tick token
+                          stay in this repo; forwarded to relay-drive.sh, and the pre-advance gate runs
+                          with cwd = DIR. Omit for a same-repo phase.
   --require-clean         Hard-stop (exit 2) if the workspace has pre-existing changes before seeding.
   --dry-run               Render the relay file and print the tick seed; exit without running.
 EOF
@@ -72,6 +75,8 @@ RELAY_TASK=""        # resolved to MARATHON-<PHASE_ID>-TURN after parsing, unles
 ARTIFACT_PATHS=""    # comma-separated repo-relative file(s) the builder may create/edit (beyond RELAY.md)
 REQUIRE_CLEAN=0      # --require-clean: hard-stop if the workspace has pre-existing changes
 DRY_RUN=0
+TARGET_ROOT=""       # --target-root: foreign repo the BUILD lands in (GH-11). Relay thread stays in ROOT;
+                     # forwarded to relay-drive.sh (which exports RELAY_TARGET_ROOT for artifact routing).
 
 while (($# > 0)); do
   case "$1" in
@@ -84,6 +89,7 @@ while (($# > 0)); do
     --phase-id)        PHASE_ID="${2:-}"; shift 2 ;;
     --relay-task)      RELAY_TASK="${2:-}"; shift 2 ;;
     --artifact)        ARTIFACT_PATHS="${2:-}"; shift 2 ;;
+    --target-root)     TARGET_ROOT="${2:-}"; shift 2 ;;
     --require-clean)   REQUIRE_CLEAN=1; shift ;;
     --dry-run)         DRY_RUN=1; shift ;;
     --help)            usage; exit 0 ;;
@@ -96,6 +102,10 @@ done
 [[ -n "$REVIEWER"         ]] || { usage; die "--reviewer AGENT required"; }
 [[ -n "$BUILDER"          ]] || die "--builder cannot be empty"
 [[ -n "$PHASE_ID"         ]] || die "--phase-id cannot be empty"
+if [[ -n "$TARGET_ROOT" ]]; then
+  git -C "$TARGET_ROOT" rev-parse --show-toplevel >/dev/null 2>&1 \
+    || die "invalid --target-root (not a git repo): $TARGET_ROOT"
+fi
 
 PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
 PRE_ADVANCE_CMD="${PRE_ADVANCE_CMD:-"bash $ROOT/validate.sh"}"
@@ -234,12 +244,15 @@ log "phase start: running relay-drive --round-cap $ROUND_CAP"
 # relay-drive runs a bare executable --agent-cmd path directly (space-safe, even ".../GH Repos/..."),
 # falling back to eval only for command strings — so we pass the path as-is, no %q quoting needed.
 relay_exit=0
+target_root_args=()
+[[ -n "$TARGET_ROOT" ]] && target_root_args=(--target-root "$TARGET_ROOT")
 RELAY_FILE="$RELAY_FILE" \
   "$RELAY_DRIVE_BIN" \
     --relay-file "$RELAY_FILE" \
     --relay-task "$RELAY_TASK" \
     --agent-cmd  "$AGENT_CMD" \
     --round-cap  "$ROUND_CAP" \
+    ${target_root_args[@]+"${target_root_args[@]}"} \
   || relay_exit=$?
 
 # ── Step 6: act on relay-drive exit code ───────────────────────────────────
@@ -277,7 +290,8 @@ case "$relay_exit" in
     # relay closed Approved. Run the pre-advance gate before emitting phase.approved.
     log "relay approved — running pre-advance gate: $PRE_ADVANCE_CMD"
     gate_exit=0
-    eval "$PRE_ADVANCE_CMD" || gate_exit=$?
+    # Gate belongs to the target repo when --target-root is set (e.g. a foreign repo's `npm test`).
+    ( [[ -n "$TARGET_ROOT" ]] && cd "$TARGET_ROOT"; eval "$PRE_ADVANCE_CMD" ) || gate_exit=$?
     if [[ "$gate_exit" -ne 0 ]]; then
       log "pre-advance gate FAILED (exit $gate_exit) — escalating"
       escalate "pre-advance-failed" "$relay_exit"
