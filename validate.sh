@@ -51,6 +51,7 @@ TESTS=(
   "relay-escalation-not-stall.sh"
   "relay-concurrent-commit.sh"
   "relay-case-insensitive.sh"
+  "relay-xyz-skill-guard.sh"
   "pdda-roadmap-coverage.sh"
 )
 
