@@ -1,6 +1,6 @@
 ---
 title: relay protocol — independent post-generation quality gate
-status: Parked — triage complete; Gap 1 next, standalone track
+status: Active — promoted to 2-WORKING 2026-06-25; execute Phase 1
 created: 2026-06-25
 updated: 2026-06-25
 owner: noelsaw1
