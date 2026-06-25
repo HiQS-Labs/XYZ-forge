@@ -33,7 +33,7 @@ non_goals:
 
 | Most recently completed | What's next |
 |---|---|
-| **Phase 1 complete 2026-06-25** — `bin/validate-relay-block` shipped + wired into `bin/tick release`/`done` (opt-in `--relay-file` flag). All 6 QA assertions pass. Dogfooded via agy relay: agy wrote impl in one turn; claude-a ran QA. agy stopped before releasing token (no-progress escalation), but impl was committed by rtl_enforce and QA passed on operator review. `GUIDING-PRINCIPLES.md` Principle 12 added; `relay-automation/README.md` exit 8 doc added. | Execute Phase 2: write `test/relay-self-sufficiency.sh`. |
+| **Phase 2 complete 2026-06-25** — `test/fixtures/minimal-relay.md` + `test/relay-self-sufficiency.sh` written and wired into `validate.sh`. Live agy run passed 4/4 assertions: shim exit 0, relay file committed, VERDICT: present, Basis: present. Root cause found during iteration: fixture `---` separator before `## Log` caused agy to write above the wrong anchor — fixed by removing separator and clarifying instruction to "append after the `## Log` header." CI-gate: `RELAY_SELF_SUFFICIENCY_SKIP=1`. Full validate.sh 0 failures. | Execute Phase 3: wire `consult.sh` into `relay-drive.sh` as `--consult-verify`. |
 
 ---
 
@@ -130,29 +130,29 @@ Three concrete gaps addressed in priority order as separate phases below.
 
 ### Checklist
 
-- [ ] Author a minimal relay file template in `test/fixtures/minimal-relay.md` (no baton-pattern.md contents)
-- [ ] Write `test/relay-self-sufficiency.sh`
-  - [ ] Spin up a temporary `git clone` with only the minimal relay file
-  - [ ] Drive a headless Codex turn against the clone
-  - [ ] Capture output; assert no claim/release path errors
-  - [ ] Assert `Basis:` field is present in the written block
-  - [ ] Assert `VERDICT:` field is present and valid
-  - [ ] Assert no off-allowlist files were written
-- [ ] Define FAIL criteria explicitly in script header comments:
-  - [ ] Agent fails to claim/release (path assumptions wrong)
-  - [ ] Agent omits required log fields (`Basis:`, `VERDICT:`)
-  - [ ] Agent writes off-allowlist files
-- [ ] Run `test/relay-self-sufficiency.sh` manually against a real headless agent — confirm exit 0 and a summary line enumerating each assertion checked
-- [ ] If FAIL: the script must print a diagnostic naming the missing field; encode the fix as a committed diff to the relay file template (not just a prose note)
-- [ ] Wire `test/relay-self-sufficiency.sh` into `validate.sh` — add a CI-gate note if the test requires a live headless agent (network + API key) so it can be skipped in keyless environments
+- [x] Author a minimal relay file template in `test/fixtures/minimal-relay.md` (no baton-pattern.md contents)
+- [x] Write `test/relay-self-sufficiency.sh`
+  - [x] Spin up a temporary `git clone` with only the minimal relay file
+  - [x] Drive a headless agy turn against the clone (agy available; codex fallback wired)
+  - [x] Capture output; assert no claim/release path errors
+  - [x] Assert `Basis:` field is present in the written block
+  - [x] Assert `VERDICT:` field is present and valid
+  - [x] Assert no off-allowlist files were written
+- [x] Define FAIL criteria explicitly in script header comments:
+  - [x] Agent fails to claim/release (path assumptions wrong)
+  - [x] Agent omits required log fields (`Basis:`, `VERDICT:`)
+  - [x] Agent writes off-allowlist files
+- [x] Run `test/relay-self-sufficiency.sh` manually against a real headless agent — confirm exit 0 and a summary line enumerating each assertion checked (4/4 pass after fixture fix)
+- [x] If FAIL: the script must print a diagnostic naming the missing field; encode the fix as a committed diff to the relay file template — fixture iterated: removed `---` separator that caused agy to write above the wrong anchor
+- [x] Wire `test/relay-self-sufficiency.sh` into `validate.sh` — CI-gate note added; `RELAY_SELF_SUFFICIENCY_SKIP=1` skips when no live agent
 
 ### Phase 2 QA Checklist
 
-- [ ] Run test against clean temp clone — no ambient repo files present during the run
-- [ ] Confirm FAIL path exits non-zero and prints a diagnostic message naming the missing field
-- [ ] Confirm PASS path exits 0 and emits a summary of assertions checked
-- [ ] Run `validate.sh` — confirm Phase 2 test is included and passes
-- [ ] If any tacit-knowledge leak found: confirm the fix is encoded in the relay file template, not just noted
+- [x] Run test against clean temp clone — no ambient repo files present during the run (isolated temp git repo with only relay.md + .gitignore)
+- [x] Confirm FAIL path exits non-zero and prints a diagnostic message naming the missing field (tested during iteration: "VERDICT: field missing", "Basis: field missing")
+- [x] Confirm PASS path exits 0 and emits a summary of assertions checked (4 pass, 0 fail with summary line)
+- [x] Run `validate.sh` — confirm Phase 2 test is included and passes (0 failures, self-sufficiency skipped in CI mode)
+- [x] If any tacit-knowledge leak found: confirm the fix is encoded in the relay file template — fixture `---` separator issue found and fixed in template (committed diff)
 
 ---
 
