@@ -4,6 +4,26 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-25
 
+### AGENTS.md — reduced and re-aligned to ROUTER, GUIDING PRINCIPLES, and PDDA
+Reduced [AGENTS.md](AGENTS.md) to a thinner behavioral contract and removed stale repo facts plus
+duplicated governance that now belongs in [ROUTER.md](ROUTER.md),
+[GUIDING-PRINCIPLES.md](GUIDING-PRINCIPLES.md), and [PROJECT/PDDA.md](PROJECT/PDDA.md). Kept the
+behavioral rails only: verdict-first communication, explicit bets, shared reversibility vocabulary,
+blast-radius sizing, one-plan-one-list, verified claims, and consequential-bet logging. Dropped the
+stale suite-count / skill-inventory claims and the self-referential experiment section so `AGENTS.md`
+stops competing with the newer operating-system docs.
+- **Verification:** ran `utils/pdda-run.sh` in `full` mode. It still fails on pre-existing unrelated
+  active-doc issues: missing `updated` in
+  [MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md),
+  missing YAML frontmatter in
+  [sleuth-near-miss-2lite-brief.md](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md), and
+  missing usable `## Status` tables in
+  [GH-21-RELAY-QUALITY-GATE.md](PROJECT/2-WORKING/GH-21-RELAY-QUALITY-GATE.md) and
+  [sleuth-near-miss-2lite-brief.md](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md). No
+  AGENTS-specific failure surfaced.
+- **Reversibility:** Easy — two doc edits only; no runtime, event-log, or PDDA-script behavior
+  changed.
+
 ### GH-20 — agy now has first-class footing across the live relay docs
 Shipped the doc-only parity pass so the live relay entry points now present **Codex and agy as co-equal Path-A workers** anywhere the runtime genuinely supports both. Updated the front door ([README.md](README.md)), the canonical operator contract ([relay-automation/README.md](relay-automation/README.md)), both live relay skills ([skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md), [skills/relay-automation/SKILL.md](skills/relay-automation/SKILL.md)), the harness locator labels, the front-door dashboard, and the active automated-relay hub. Kept the real asymmetries explicit instead of flattening them away: Codex and agy still have different auth/sandbox caveats, and the agy lane remains cost-blind in harness logs.
 - **Verification:** `bash test/codex-turn.sh` passed **27/27**; `bash test/agy-turn.sh` passed **22/22**; `bash validate.sh` passed **45/45** on a clean tree via a temporary doc-only stash because `test/runner-loop.sh` intentionally treats a dirty live `README.md` as a failure surface.
