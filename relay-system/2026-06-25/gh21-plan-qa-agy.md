@@ -1,8 +1,9 @@
 # RELAY · QA review (agy) — GH-21 quality gate planning doc
 
-NEXT: agy
-STATUS: Open
+NEXT: none
+STATUS: Approved
 ROUND: 0 / 1
+<!-- Restarted: prior drive lost output to worktree isolation; re-running with RELAY_WORKTREE_ISOLATION=0 -->
 
 ## ▶ TAKE YOUR TURN — read this first
 
@@ -87,3 +88,21 @@ whether claude-b's findings were correctly applied and whether anything was miss
 
 ---
 ## Log
+
+### agy QA review — 2026-06-25
+
+VERDICT: PASS
+
+**[A-Blockers]**
+- [Pass] All of claude-b's blocker findings were correctly resolved. The Phase 1 pre-condition for post-implementation tests is clearly labeled, and the checklist correctly describes the code changes needed for `exit 8` in `bin/tick`'s `main()` and specifies the precise insertion points in the release/done handlers.
+
+**[B-Architecture]**
+- [Pass] `bin/tick` currently has no pre-release hook, so the plan to directly execute `bin/validate-relay-block` before release/done handlers is correct. The four assertions (log entry, status change, verdict, basis) are correct and capture the load-bearing requirements. `exit 8` is correctly scoped to `bin/tick`'s propagation of the validator's failure.
+
+**[C-Missed]**
+- [Pass] The `non_goals` section correctly bounds the scope of the three phases. The checklist items in Phase 1 and 2 are clear, verifiable, and ordered logically according to their dependencies.
+
+**[D-Verdict]**
+- [Pass] The planning doc is ready to promote to `2-WORKING` and begin execution of Phase 1.
+
+Basis: textual only
