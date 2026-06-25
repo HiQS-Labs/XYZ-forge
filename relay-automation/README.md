@@ -131,7 +131,10 @@ The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's
 backend is blocked by a sandbox it can exit `0` with empty output, which the
 shim correctly treats as a failed turn. If `agy` is not on `PATH` or is not
 authenticated through the Antigravity desktop app, fix that before driving the
-lane; override the binary with `AGY_BIN=/path/to/agy` if needed.
+lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity
+installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system
+PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it
+works before adding it to your PATH or passing `AGY_BIN` to every drive command.
 
 If you are running under a sandboxed AI shell, run both workers outside that
 sandbox. Codex often fails there because it cannot reach the OS keychain or
@@ -166,12 +169,22 @@ The supervisor (`relay-drive.sh`) drives the turn; the selected shim
 (`codex-turn.sh` or `agy-turn.sh`) is the turn-taker and owns the safety
 boundary: path allowlist, commit-bypass guard, file-scoped commit, and no push.
 
+**Worktree isolation is ON by default for driven runs.** `relay-drive.sh`
+exports `RELAY_WORKTREE_ISOLATION=1`, so each shim runs inside a throwaway
+`git worktree` of `ROOT@HEAD`. Off-allowlist writes in the worktree are
+discarded and the turn fails with **exit 6**. One important side-effect: agents
+that write to the relay file via **absolute paths** bypass the worktree (those
+writes land in ROOT, not the throwaway tree) — so untracked relay files with
+absolute paths in the `▶ TAKE YOUR TURN` block remain accessible to the agent.
+Opt out per run with `RELAY_WORKTREE_ISOLATION=0` if you need to disable
+isolation (e.g. during testing).
+
 #### Codex worker
 
 ```bash
 # Reuse an existing relay thread or scaffold a fresh one with embedded
 # TAKE YOUR TURN instructions.
-RELAY=relay-system/2026-06-15/<your-slug>.md
+RELAY=relay-system/$(date +%F)/<your-slug>.md
 ARTIFACT=relay-automation/codex-turn.sh
 
 # Use a per-relay token id, not the literal RELAY-TURN.
@@ -199,7 +212,7 @@ allowlisted paths, and skip push. The transcript lands in
 ```bash
 # Reuse an existing relay thread or scaffold a fresh one with embedded
 # TAKE YOUR TURN instructions.
-RELAY=relay-system/2026-06-15/<your-slug>.md
+RELAY=relay-system/$(date +%F)/<your-slug>.md
 ARTIFACT=relay-automation/agy-turn.sh
 
 # Use a per-relay token id, not the literal RELAY-TURN.
@@ -209,7 +222,7 @@ TASK="RELAY-$(basename "$RELAY" .md)"
 ./bin/tick claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
 ./bin/tick release "$TASK" --agent claude-a --to agy
 
-AGY_AGENT=agy AGY_LOG=/tmp/agy-turn.log \
+AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG=/tmp/agy-turn.log \
 relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
@@ -267,6 +280,7 @@ Swap the worker-specific lines to drive agy instead:
 "$HARNESS/bin/tick" release "$TASK" --agent claude-a --to agy
 
 AGY_AGENT=agy \
+ALLOW_PATHS="$ARTIFACT" \
 AGY_LOG=/tmp/agy-turn.log \
 "$HARNESS/relay-automation/relay-drive.sh" \
   --target-root "$TARGET" \
