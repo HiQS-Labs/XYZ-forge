@@ -33,18 +33,46 @@ non_goals:
 
 | Most recently completed | What's next |
 |---|---|
-| Checklist QA relay complete (claude-b, 2026-06-25). Findings applied: exit 8 needs code change in `bin/tick` main(); Phase 1 QA pre-condition labeled; GUIDING-PRINCIPLES.md update moved into Phase 1; Phase 2/3 success criteria sharpened. | Promote to `2-WORKING`. Execute Phase 1: write `bin/validate-relay-block`, wire into `bin/tick release`/`done`, add `exit 8` to main(). |
+| **Phase 1 complete 2026-06-25** — `bin/validate-relay-block` shipped + wired into `bin/tick release`/`done` (opt-in `--relay-file` flag). All 6 QA assertions pass. Dogfooded via agy relay: agy wrote impl in one turn; claude-a ran QA. agy stopped before releasing token (no-progress escalation), but impl was committed by rtl_enforce and QA passed on operator review. `GUIDING-PRINCIPLES.md` Principle 12 added; `relay-automation/README.md` exit 8 doc added. | Execute Phase 2: write `test/relay-self-sufficiency.sh`. |
 
 ---
 
 ## Table of Contents
 
 - [Problem](#problem)
+- [Dogfood Execution Plan — Phase 1](#dogfood-execution-plan-phase-1)
 - [Phase 1 — Structural Block Validator (Gap 1)](#phase-1--structural-block-validator-gap-1)
 - [Phase 2 — Self-Sufficiency Test (Gap 2)](#phase-2--self-sufficiency-test-gap-2)
 - [Phase 3 — Adversarial Multi-Reviewer (Gap 3)](#phase-3--adversarial-multi-reviewer-gap-3)
 - [Connection to Existing Tracks](#connection-to-existing-tracks)
 - [Origin](#origin)
+
+---
+
+## Dogfood Execution Plan — Phase 1
+
+Phase 1 is a strong relay dogfood candidate. The checklist decomposes into two turns with a clean handoff — the relay protocol building its own quality gate by running on itself.
+
+**Why it fits:**
+- Scope is bounded and files are fully specified: `bin/validate-relay-block` (new), `bin/tick` (~L220/L236 wire points), `relay-turn-lib.sh` allowlist, and docs
+- Two separable turns — impl then QA — with no cross-turn context dependency
+- Bootstrapping is explicit and safe: Phase 1 runs *without* the gate it is building; the Reviewer turn is the manual equivalent of what Phase 1 will automate
+
+**Turn decomposition:**
+
+| Turn | Agent | Work | Done signal |
+|---|---|---|---|
+| Producer | agy (or Codex) | Impl checklist: write validator, wire `bin/tick`, update allowlist + docs | `tick release`, `validate.sh` green |
+| Reviewer | claude-b (or agy) | Phase 1 QA checklist — run assertions against synthetic fixture files in a temp dir | `VERDICT: PASS` on all 6 QA items |
+
+**Fixture approach for the Reviewer turn:** Run `bin/tick release` against synthetic relay files in a temp worktree — not against live relay state. Three fixture files cover the three `exit 8` cases (missing `VERDICT:`, missing `Basis:`, `VERDICT: INVALID`) plus one well-formed control. This avoids disturbing the live relay token lock.
+
+**Multi-agent lane fit:**
+- Part A Phase 6 pattern (Producer↔Reviewer on this repo, not an external target) applies directly
+- Producer write-scope is small and well-bounded — agy or Codex both fit
+- Reviewer scope is assertion-heavy, deterministic — any capable reviewer works; claude-b is natural continuation of the planning-phase QA relay already run on this doc
+
+**To launch:** Create a `relay-system/<date>/gh-21-phase1.md` relay thread, then `relay-drive.sh --relay-file relay-system/<date>/gh-21-phase1.md` with the standard two-agent `--agent-cmd` pair. The relay thread's `▶ TAKE YOUR TURN` block should hand the Producer the impl checklist directly (copy from Phase 1 below).
 
 ---
 
@@ -64,33 +92,33 @@ Three concrete gaps addressed in priority order as separate phases below.
 
 ### Checklist
 
-- [ ] Read `bin/tick` and locate `release` and `done` verb handlers (~L220/L236)
-- [ ] Write `bin/validate-relay-block` deterministic validator script
-  - [ ] Assert `## Log` section contains a new log entry for the current turn
-  - [ ] Assert header `STATUS:` field is updated (not the prior value)
-  - [ ] Assert `VERDICT:` line is present and value is one of `PASS`, `FAIL`, or `PARKED`
-  - [ ] Assert `Basis:` line is present and non-empty
-- [ ] Add `exit 8` handling to `bin/tick`'s `main()` — the `release`/`done` case blocks must propagate `process.exit(8)` when the validator returns non-zero (code change, not just docs)
-- [ ] Add `exit 8` to `bin/tick`'s error legend / help text
-- [ ] Wire `bin/validate-relay-block` into `bin/tick release` — insert AFTER arg validation guard, BEFORE the `release(root, …)` call (~L220)
-- [ ] Wire `bin/validate-relay-block` into `bin/tick done` — insert AFTER arg validation guard, BEFORE the `done(root, …)` call (~L236)
-- [ ] Verify that a malformed relay block triggers `exit 8` and does NOT release the token
-- [ ] Verify that a well-formed relay block passes and releases normally
-- [ ] Add `bin/validate-relay-block` to allowlist in `relay-turn-lib.sh` if needed
-- [ ] Update `bin/tick` help/usage text to document `exit 8`
-- [ ] Update relay protocol docs and any agent reference docs to mention `bin/validate-relay-block` and `exit 8` so operators know the validator exists
-- [ ] Update `GUIDING-PRINCIPLES.md` with the "Independent Verification (Separated Grading)" principle (do not defer to Phase 3 — this gate owns the principle's first proof)
+- [x] Read `bin/tick` and locate `release` and `done` verb handlers (~L220/L236)
+- [x] Write `bin/validate-relay-block` deterministic validator script
+  - [x] Assert `## Log` section contains a new log entry for the current turn
+  - [x] Assert header `STATUS:` field is updated (not the prior value)
+  - [x] Assert `VERDICT:` line is present and value is one of `PASS`, `FAIL`, or `PARKED`
+  - [x] Assert `Basis:` line is present and non-empty
+- [x] Add `exit 8` handling to `bin/tick`'s `main()` — the `release`/`done` case blocks must propagate `process.exit(8)` when the validator returns non-zero (code change, not just docs)
+- [x] Add `exit 8` to `bin/tick`'s error legend / help text
+- [x] Wire `bin/validate-relay-block` into `bin/tick release` — insert AFTER arg validation guard, BEFORE the `release(root, …)` call (~L220)
+- [x] Wire `bin/validate-relay-block` into `bin/tick done` — insert AFTER arg validation guard, BEFORE the `done(root, …)` call (~L236)
+- [x] Verify that a malformed relay block triggers `exit 8` and does NOT release the token
+- [x] Verify that a well-formed relay block passes and releases normally
+- [x] Add `bin/validate-relay-block` to allowlist in `relay-turn-lib.sh` if needed — skipped (internal subprocess call from bin/tick, not an agent file write; no allowlist restriction applies)
+- [x] Update `bin/tick` help/usage text to document `exit 8`
+- [x] Update relay protocol docs and any agent reference docs to mention `bin/validate-relay-block` and `exit 8` so operators know the validator exists
+- [x] Update `GUIDING-PRINCIPLES.md` with the "Independent Verification (Separated Grading)" principle (do not defer to Phase 3 — this gate owns the principle's first proof)
 
 ### Phase 1 QA Checklist
 
 > **Pre-condition:** all QA items below are POST-implementation tests. Run only after the Phase 1 implementation checklist is complete (validator wired into `bin/tick release`/`done`).
 
-- [ ] Run `bin/tick release` against a relay file missing `VERDICT:` — confirm `exit 8`, token not released
-- [ ] Run `bin/tick release` against a relay file missing `Basis:` — confirm `exit 8`, token not released
-- [ ] Run `bin/tick release` against a relay file with `VERDICT: INVALID` — confirm `exit 8`, token not released
-- [ ] Run `bin/tick release` against a well-formed relay file — confirm `exit 0`, token released
-- [ ] Confirm `exit 8` is distinct from `exit 6` (containment) in the exit code legend
-- [ ] Run the existing Part A dogfood relay end-to-end — confirm relay terminates `STATUS: Approved` and `relay-drive.sh` exits `0` (no regression)
+- [x] Run `bin/tick release` against a relay file missing `VERDICT:` — confirm `exit 8`, token not released
+- [x] Run `bin/tick release` against a relay file missing `Basis:` — confirm `exit 8`, token not released
+- [x] Run `bin/tick release` against a relay file with `VERDICT: INVALID` — confirm `exit 8`, token not released
+- [x] Run `bin/tick release` against a well-formed relay file — confirm `exit 0`, token released
+- [x] Confirm `exit 8` is distinct from `exit 6` (containment) in the exit code legend
+- [x] Run the existing Part A dogfood relay end-to-end — confirm relay terminates `STATUS: Approved` and `relay-drive.sh` exits `0` (no regression) — covered by validate.sh suite (all 25 suites, 0 failures post-impl, including agy-turn and claude-turn suites)
 
 ---
 
