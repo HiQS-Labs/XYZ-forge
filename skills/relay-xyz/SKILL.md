@@ -83,7 +83,8 @@ cd "$HARNESS"
 After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and
 `TICK_REPO_ROOT` points `tick` at that clone's event log. The relay/turn scripts self-resolve their
 own location (`$(dirname "$BASH_SOURCE")/..`), so invoke them with **repo-relative** paths exactly as
-the [QUICKSTART](../../relay-automation/QUICKSTART.md) shows. The relay always operates on **the
+the [headless Codex bring-up section](../../relay-automation/README.md#headless-codex-bring-up) shows.
+The relay always operates on **the
 harness clone** (its `.tick/` log and guarded git root live there), whatever repo you launched from —
 so a clone with only `relay-system/` thread files still drives the real harness next door.
 
@@ -102,7 +103,7 @@ self-serializing loop: no human nudge, no second model.
 `relay-drive.sh` is the **supervisor** (round cap, no-progress escalation, reads the file's `STATUS:`
 as the terminal signal). The **turn-taker** is `--agent-cmd` — a shipped shim (`codex-turn.sh` or
 `agy-turn.sh`) that owns the safety boundary: path-allowlist, commit-bypass guard, **no push**.
-Whose-turn is a `tick` `RELAY-TURN` task, handed off with `tick release --to`.
+Whose-turn is a `tick` relay task, handed off with `tick release --to`.
 
 End-to-end Codex review of an artifact (run after Preconditions — `$TICK` and `$HARNESS` set, CWD is
 the harness clone). Confirm `$RELAY_HAS_CODEX` is `1`:
@@ -111,20 +112,22 @@ the harness clone). Confirm `$RELAY_HAS_CODEX` is `1`:
 # 0. The reviewer you want must be on PATH (set by the locator).
 [ "$RELAY_HAS_CODEX" = 1 ] || { echo "codex not on PATH — use agy or Path B"; exit 1; }
 
-# 1. Have a relay thread with an embedded "▶ TAKE YOUR TURN" block + a RELAY-TURN token.
+# 1. Have a relay thread with an embedded "▶ TAKE YOUR TURN" block.
 #    Reuse one under relay-system/<date>/, or scaffold a fresh thread with /relay first.
 RELAY=relay-system/<date>/<slug>.md
 ARTIFACT=<repo-relative-path-the-turn-reviews>     # e.g. skills/relay-xyz/SKILL.md
+TASK="RELAY-$(basename "$RELAY" .md)"              # use a per-relay id, not literal RELAY-TURN
 
-# 2. Seed the RELAY-TURN token and hand the first turn to the Codex agent.
-"$TICK" log     task.created RELAY-TURN --agent claude-a
-"$TICK" claim   RELAY-TURN --agent claude-a --paths "$ARTIFACT"
-"$TICK" release RELAY-TURN --agent claude-a --to codex
+# 2. Seed the relay task and hand the first turn to the Codex agent.
+"$TICK" log     task.created "$TASK" --agent claude-a
+"$TICK" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+"$TICK" release "$TASK" --agent claude-a --to codex
 
 # 3. Drive it. The shim dispatches ONLY when the token's actor == CODEX_AGENT.
 CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn.log" \
 relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
+  --relay-task "$TASK" \
   --agent-cmd  relay-automation/codex-turn.sh \
   --round-cap  4
 ```

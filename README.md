@@ -5,13 +5,13 @@ the same codebase without colliding. The core primitive is `tick`, a tiny local
 event-log CLI; the main product surface built on top of it is
 `relay-automation/`.
 
-> 👉 **New here?** Read [ROUTER.md](ROUTER.md) for the repo's startup order, then run `./validate.sh` — it should print **28 / 28**
+> 👉 **New here?** Read [ROUTER.md](ROUTER.md) for the repo's startup order, then run `./validate.sh` — it should print **45 / 45**
 > green in a minute, no accounts or API keys required. That's the fastest proof the kernel
 > works. The live relay product (Codex/agy turns) needs per-CLI auth — see "Start here" below.
 
 ## Current status
 
-- `validate.sh` is green at **28 / 28**.
+- `validate.sh` is green at **45 / 45**.
 - The relay automation stack is the main active surface in this repo.
 - **Marathon** (`relay-automation/marathon.sh`) chains multiple headless build→review phases from a
   `MARATHON.yaml`, in `depends_on` order — the multi-agent coordinator built on top of the relay loop.
@@ -22,15 +22,14 @@ event-log CLI; the main product surface built on top of it is
 If you care about the automated relay system, start with the repo router, then go into `relay-automation/`:
 
 1. [ROUTER.md](ROUTER.md) — repo startup order, canonical entry points, and command rails.
-2. [relay-automation/README.md](relay-automation/README.md) — canonical operator contract and current behavior.
-3. [relay-automation/QUICKSTART.md](relay-automation/QUICKSTART.md) — fresh-device bring-up for the current headless Codex path.
-4. [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md) — project hub and current status across phases.
-5. [PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md](PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md) — canonical phase plan and QA checklists.
+2. [relay-automation/README.md](relay-automation/README.md) — canonical operator contract, including the headless Codex bring-up path.
+3. [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md) — project hub and current status across phases.
+4. [PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md](PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md) — canonical phase plan and QA checklists.
 
 ## Repo map
 
 - `relay-automation/` — scripts and operator docs for poll-driven relays, watchdogs, headless turn-takers, and consult.
-- `skill/relay-automation/` — packaged sibling skill surface.
+- `skills/` — packaged skill surfaces, including `relay-xyz`, `relay-automation`, `xyz`, and consult helpers.
 - `relay-system/` — relay transcripts, reviews, and dogfood runs.
 - `PROJECT/2-WORKING/` — active project docs and working plans.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.

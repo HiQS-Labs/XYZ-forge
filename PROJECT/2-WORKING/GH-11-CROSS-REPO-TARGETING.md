@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Ask 1 complete** — `--target-root` flag (parse + non-empty + git-repo validation) **and** the kernel wiring: `relay-turn-lib.sh` routes the whole turn (worktree base + allowlist + file-scoped commit) via `RELAY_TARGET_ROOT`, default unchanged; Codex's empty-string `[Nit]` fixed. Proven by `test/relay-target-root.sh` (7/7) now in the suite — **`validate.sh` 36/36**. | **Asks 2–5** (low-effort docs): surface `consult.sh`'s `CONSULT_ROOT` as a first-class "review a foreign-repo artifact" recipe in `SKILL.md`; the `$TMPDIR` warning; the find-harness credit; the QUICKSTART example fix. |
+| **Ask 1 complete** — `--target-root` flag (parse + non-empty + git-repo validation) **and** the kernel wiring: `relay-turn-lib.sh` routes the whole turn (worktree base + allowlist + file-scoped commit) via `RELAY_TARGET_ROOT`, default unchanged; Codex's empty-string `[Nit]` fixed. Proven by `test/relay-target-root.sh` (7/7) now in the suite — **`validate.sh` 36/36**. | **Asks 2–5** (low-effort docs): surface `consult.sh`'s `CONSULT_ROOT` as a first-class "review a foreign-repo artifact" recipe in `SKILL.md`; the `$TMPDIR` warning; the find-harness credit; the README bring-up example fix. |
 
 ## Summary
 
@@ -62,7 +62,7 @@ inverse: pointing the harness **at** a foreign repo.
 4. **Credit where due:** `find-harness.sh` resolved the harness from an unrelated repo with zero config.
    Discovery of *the harness itself* is solved; only the inverse is missing.
 
-5. **Doc smell reinforcing the assumption:** the QUICKSTART artifact example
+5. **Doc smell reinforcing the assumption:** the README/skill artifact example
    (`skills/relay-xyz/SKILL.md`) is itself a path *inside* the harness clone. Every example reviews
    something in the harness repo — nothing shows reviewing a file in the repo you launched from, which
    quietly trains users into the Path-A-can't-do-cross-repo trap.

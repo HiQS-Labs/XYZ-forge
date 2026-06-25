@@ -2,6 +2,13 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-25
+
+### relay-automation docs — folded QUICKSTART into the canonical README and removed the duplicate file
+Completed the doc consolidation instead of leaving `relay-automation/QUICKSTART.md` as a second, stale source of truth. The headless Codex bring-up now lives only in [relay-automation/README.md](relay-automation/README.md), with the root [README.md](README.md), the live [skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md), and the active cross-repo working docs updated to point at the consolidated path. While doing that, corrected two drifted facts in the live docs: the suite count is now **45 / 45**, and `codex-turn.sh`'s documented exits now include **`7` timeout-killed** to match the shipped shim. `relay-automation/QUICKSTART.md` was then deleted.
+- **Verification:** targeted stale-reference search across the live operator/docs surfaces returned clean after the rewrite; `bash test/codex-turn.sh` passed before the cleanup; `bash validate.sh` passed **45/45** on a clean tree via a temporary stash/restore of the doc change set, because `test/runner-loop.sh` intentionally treats a dirty live `README.md` as a failure surface.
+- **Reversibility:** Easy — restore the deleted doc and re-point the small set of updated references if a second bring-up file turns out to be useful again.
+
 ## 2026-06-24
 
 ### GH-18 — cross-repo driven-relay friction: code fixes shipped (#2/#1b/#5), agy-approved
