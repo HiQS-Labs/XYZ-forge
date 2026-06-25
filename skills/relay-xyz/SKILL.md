@@ -4,7 +4,7 @@ description: >-
   Drive an automated /relay review loop on THIS repo with the shipped
   relay-automation harness (relay-drive.sh + codex-turn.sh / agy-turn.sh /
   poll.sh) rather than improvising the handoff by hand. Use when the operator
-  wants to "run an automated relay", "have Codex (or agy) review this
+  wants to "run an automated relay", "have Codex or agy review this
   end-to-end", "drive a relay to completion headless", "run the relay harness",
   or set up the all-Claude hands-free poll loop — and the working tree is a
   clone of the xyz-3-agents-swarm repo (it ships relay-automation/). /relay
@@ -26,7 +26,7 @@ Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`),
 ## When to use
 
 - "Run an automated relay" / "drive this relay to completion" / "run the relay harness."
-- "Have Codex review `<file>` end-to-end" / "let agy take the reviewer turns."
+- "Have Codex or agy review `<file>` end-to-end."
 - Setting up the all-Claude hands-free `/loop` poll so two Claude windows self-serialize.
 - You have a relay thread (or are about to scaffold one with `/relay`) **and** the working tree is a
   clone of this repo.
@@ -77,13 +77,13 @@ done
 
 eval "$("$L" --env)"   # exports HARNESS, TICK, TICK_REPO_ROOT, RELAY_HAS_{TICK,CODEX,AGY}
 cd "$HARNESS"
-"$L" --check           # prints: harness path + which reviewers (codex/agy/tick) are on PATH
+"$L" --check           # prints: harness path + which Path-A workers (codex/agy/tick) are on PATH
 ```
 
 After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and
 `TICK_REPO_ROOT` points `tick` at that clone's event log. The relay/turn scripts self-resolve their
 own location (`$(dirname "$BASH_SOURCE")/..`), so invoke them with **repo-relative** paths exactly as
-the [headless Codex bring-up section](../../relay-automation/README.md#headless-codex-bring-up) shows.
+the [headless bring-up section](../../relay-automation/README.md#headless-bring-up-codex--agy) shows.
 The relay always operates on **the
 harness clone** (its `.tick/` log and guarded git root live there), whatever repo you launched from —
 so a clone with only `relay-system/` thread files still drives the real harness next door.
@@ -92,10 +92,10 @@ so a clone with only `relay-system/` thread files still drives the real harness 
 
 | Path | One session? | Models | Driver |
 |---|---|---|---|
-| **A. Headless single-session** | yes — Claude drives both roles | Codex / agy as the reviewer subprocess | `relay-drive.sh` + a turn-taker shim |
+| **A. Headless single-session** | yes — Claude drives both roles | Codex / agy as co-equal headless workers | `relay-drive.sh` + a turn-taker shim |
 | **B. Hands-free poll** | no — two live Claude windows | all-Claude | `poll.sh` under `/loop` in each window |
 
-Path A is the marquee flow — what "have Codex review this for me" means. Path B is the all-Claude
+Path A is the marquee flow — what "have Codex or agy review this for me" means. Path B is the all-Claude
 self-serializing loop: no human nudge, no second model.
 
 ### Path A — headless single-session (relay-drive.sh + a shim)
@@ -105,8 +105,15 @@ as the terminal signal). The **turn-taker** is `--agent-cmd` — a shipped shim 
 `agy-turn.sh`) that owns the safety boundary: path-allowlist, commit-bypass guard, **no push**.
 Whose-turn is a `tick` relay task, handed off with `tick release --to`.
 
-End-to-end Codex review of an artifact (run after Preconditions — `$TICK` and `$HARNESS` set, CWD is
-the harness clone). Confirm `$RELAY_HAS_CODEX` is `1`:
+End-to-end headless review of an artifact (run after Preconditions — `$TICK` and `$HARNESS` set, CWD
+is the harness clone). Choose either worker:
+
+| Worker | Availability check | Handoff target | Env prefix | Shim | Log |
+|---|---|---|---|---|---|
+| Codex | `"$RELAY_HAS_CODEX" = 1` | `codex` | `CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn.log"` | `relay-automation/codex-turn.sh` | `${TMPDIR:-/tmp}/codex-turn.log` |
+| agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn.log` |
+
+Codex example:
 
 ```bash
 # 0. The reviewer you want must be on PATH (set by the locator).
@@ -132,8 +139,28 @@ relay-automation/relay-drive.sh \
   --round-cap  4
 ```
 
-Swap `agy-turn.sh` + `AGY_AGENT=...` to use agy (a multi-model gateway) as the reviewer instead
-(guard on `$RELAY_HAS_AGY` the same way). `$TICK` is absolute, so these work even if CWD drifts.
+agy example:
+
+```bash
+[ "$RELAY_HAS_AGY" = 1 ] || { echo "agy not on PATH — use codex or Path B"; exit 1; }
+
+RELAY=relay-system/<date>/<slug>.md
+ARTIFACT=<repo-relative-path-the-turn-reviews>
+TASK="RELAY-$(basename "$RELAY" .md)"
+
+"$TICK" log     task.created "$TASK" --agent claude-a
+"$TICK" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+"$TICK" release "$TASK" --agent claude-a --to agy
+
+AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn.log" \
+relay-automation/relay-drive.sh \
+  --relay-file "$RELAY" \
+  --relay-task "$TASK" \
+  --agent-cmd  relay-automation/agy-turn.sh \
+  --round-cap  4
+```
+
+`$TICK` is absolute, so either worker path still works if CWD drifts.
 
 **Important — run the shim OUTSIDE the Bash sandbox.** When *you* (Claude Code) drive this, the
 `codex` / `agy` subprocess needs the OS keychain + outbound network to authenticate. Claude Code's
@@ -190,6 +217,8 @@ they share the same env shape:
 
 If a fresh device's `codex` still blocks writes, escalate autonomy:
 `CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` (or `-c approval_policy=never`).
+For agy, the common failure is different: sandboxed runs can exit `0` with empty
+output, so run the lane sandbox-OFF before concluding the worker is broken.
 
 ## Exit codes
 
@@ -224,11 +253,11 @@ drop the `$HARNESS/` prefix or they'll 404 from a foreign session:
 
 ```bash
 bash "$HARNESS/validate.sh"            # the tick/automation suite
-bash "$HARNESS/test/codex-turn.sh"     # the Codex shim's tests   (before a Codex run)
-bash "$HARNESS/test/agy-turn.sh"       # the agy shim's tests      (before an agy run)
+bash "$HARNESS/test/codex-turn.sh"     # before a Codex run
+bash "$HARNESS/test/agy-turn.sh"       # before an agy run
 ```
 
-Run the shim test matching the reviewer you'll drive (both are first-class). Run these un-sandboxed —
+Run the shim test matching the worker you'll drive (both are first-class). Run these un-sandboxed —
 `mktemp`/network under the Bash sandbox can fail them for reasons unrelated to the code.
 
 ## Relationship to the other skills
@@ -245,6 +274,6 @@ Run the shim test matching the reviewer you'll drive (both are first-class). Run
 
 ## Framing
 
-Open with a human sentence ("Driving a headless Codex review of `<artifact>` — round cap 4…") and
+Open with a human sentence ("Driving a headless Codex or agy review of `<artifact>` — round cap 4…") and
 close with the result + exit code. The structured thread lives in the relay file; the operator gets a
 sentence and a verdict, not a wall of transcript.

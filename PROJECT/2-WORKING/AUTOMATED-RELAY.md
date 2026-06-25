@@ -2,7 +2,7 @@
 title: Automated Relay — project hub (focused)
 status: Completed
 created: 2026-06-15
-updated: 2026-06-20
+updated: 2026-06-25
 owner: Noel
 north_star: a fully automated, self-healing /relay loop I can use every day
 goal: >
@@ -37,13 +37,13 @@ A `/relay` Producer↔Reviewer loop that runs **hands-free** (all-Claude) or one
 | **(a)** | **Relay turns → tick-native `RELAY-TURN`** (uses Phase-1 rule + watchdog-visible) | ✅ **DONE + Codex-approved** 2026-06-15 (close-mismatch Blocker caught+fixed) |
 | 5 | Package as sibling `skill/relay-automation/` | ✅ **SHIPPED** 2026-06-15 (SKILL.md + tarball + self-extract test) |
 
-**✅ PROJECT COMPLETE (Phases 1–5).** `validate.sh` 20/20. Automated, self-healing relay shipped + packaged; cross-model + Option-A headless proven.
+**✅ PROJECT COMPLETE (Phases 1–5).** `validate.sh` 20/20 at ship time. Automated, self-healing relay shipped + packaged; cross-model + Option-A headless proven, with the current operator contract now treating Codex and agy as co-equal Path-A workers.
 
 `validate.sh`: **18/18** (added `watchdog-relay.sh`; `poll-driver`/`poll-relay` converted to tick-native). Phase-4 QA: 10/12 (open: live two-window E2E + race hammer-test).
 
 ## Deferred (explicitly, with triggers)
 - **XYZ swarm further progress** — paused; lower daily use. Resume if parallel builds become routine.
-- **Option A (headless CLI) + cross-model relay — ✅ SHIPPED 2026-06-15.** `codex-turn.sh` drives a Codex relay turn via `codex exec` behind a path-allowlist (no push); live X2 proved a real headless Codex turn end-to-end. Cross-model coordination demonstrated. (Unattended *full-loop* + a tighter Codex sandbox are future polish.) See `relay-automation/CROSSMODEL-OPTIONA-PLAN.md`.
+- **Option A (headless CLI) + cross-model relay — ✅ SHIPPED 2026-06-15; current live lane = Codex + agy.** `codex-turn.sh` and `agy-turn.sh` now ship as co-equal Path-A headless workers behind the same path-allowlist / no-push boundary; the operator contract lives in `relay-automation/README.md`. Runtime differences remain explicit: Codex and agy have different auth/sandbox caveats, and the agy lane is currently cost-blind. See `relay-automation/CROSSMODEL-OPTIONA-PLAN.md`.
 
 ## In progress
 - **Phase 5** plan drafted (`relay-automation/PHASE-5-PLAN.md`); **automated-relay dogfood running** (`relay-system/2026-06-15/phase5-plan-autorelay.md`) — all-Claude hands-free run reviewing the Phase-5 plan, which is also Phase-5's 5c "real run + metrics" step and the live two-Claude E2E (QA item 196).

@@ -4,7 +4,7 @@ Continuous, structured, **deterministic** dashboard of the repo's clone-to-worki
 finding carries a check in the [Deterministic checks](#deterministic-checks--re-run-to-refresh) block
 below, so each status is *verified by re-running a command*, not asserted. Refresh this board whenever
 an onboarding-facing doc (`README.md`, `ROUTER.md`, `AGENTS.md`, `CLAUDE.md`, `skills/**/SKILL.md`,
-`relay-automation/QUICKSTART.md`) or the repo structure changes.
+`relay-automation/README.md`) or the repo structure changes.
 
 | | |
 |---|---|
@@ -82,8 +82,8 @@ done
 # FD-06 — README must not reference the non-existent skill/ (singular) dir
 grep -q 'skill/relay-automation' README.md && echo "FD-06 OPEN: README references skill/relay-automation (dir is skills/ plural)"
 # FD-07 — --target-root in at least one prose doc
-grep -rlq 'target-root' skills/relay-xyz/SKILL.md relay-automation/QUICKSTART.md 2>/dev/null \
-  || echo "FD-07 OPEN: --target-root not in SKILL.md/QUICKSTART (only --help)"
+grep -rlq 'target-root' skills/relay-xyz/SKILL.md relay-automation/README.md 2>/dev/null \
+  || echo "FD-07 OPEN: --target-root not in SKILL.md/relay-automation README (only --help)"
 # FD-08 — install.sh reachable from the front door
 grep -rlq 'install.sh' README.md ROUTER.md 2>/dev/null \
   || echo "FD-08 OPEN: skills/relay-xyz/install.sh not surfaced in README/ROUTER"

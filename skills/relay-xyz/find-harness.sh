@@ -83,10 +83,10 @@ case "${1:-}" in
     echo "relay harness readiness:"
     echo "  ok  harness  ($HARNESS)"
     mark "$TICK"       "tick CLI"
-    mark "$CODEX_PATH" "codex CLI (Path A reviewer)"
-    mark "$AGY_PATH"   "agy CLI   (Path A reviewer)"
+    mark "$CODEX_PATH" "codex CLI (Path A worker)"
+    mark "$AGY_PATH"   "agy CLI   (Path A worker)"
     if [ -z "$CODEX_PATH" ] && [ -z "$AGY_PATH" ]; then
-      echo "  !   no cross-model reviewer on PATH — only Path B (all-Claude poll) is available"
+      echo "  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available"
     fi
     ;;
   *)

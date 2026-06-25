@@ -22,7 +22,7 @@ event-log CLI; the main product surface built on top of it is
 If you care about the automated relay system, start with the repo router, then go into `relay-automation/`:
 
 1. [ROUTER.md](ROUTER.md) — repo startup order, canonical entry points, and command rails.
-2. [relay-automation/README.md](relay-automation/README.md) — canonical operator contract, including the headless Codex bring-up path.
+2. [relay-automation/README.md](relay-automation/README.md) — canonical operator contract, including the headless bring-up paths for Codex and agy.
 3. [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md) — project hub and current status across phases.
 4. [PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md](PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md) — canonical phase plan and QA checklists.
 
