@@ -1,7 +1,7 @@
 # RELAY · GH-21 Phase 1 impl — bin/validate-relay-block + bin/tick exit 8
 
-NEXT: agy
-STATUS: In Progress
+NEXT: none
+STATUS: Approved
 ROUND: 0 / 2
 
 ## ▶ TAKE YOUR TURN — read this first
@@ -156,3 +156,33 @@ TICK_REPO_ROOT="/Users/noelsaw/Documents/GitHub Repos/xyz-3-agents-swarm" \
 
 ---
 ## Log
+
+### agy impl turn — 2026-06-25
+
+VERDICT: PASS
+
+- `bin/validate-relay-block` written (61 lines, bash, executable): 4 assertions — STATUS not In Progress, ## Log non-empty, VERDICT: valid, Basis: non-empty. Exits 8 with named diagnostic on any failure.
+- `bin/tick release` + `done` wired: `--relay-file <path>` flag added; validator invoked via `execFileSync` before token release; returns 8 on non-zero validator exit. Backward compatible — no `--relay-file` = no validation.
+- `bin/tick` help text updated: `exit 8` added to usage legend, clearly distinct from `exit 6` (containment).
+- `GUIDING-PRINCIPLES.md`: Principle 12 "Independent Verification (Separated Grading)" appended.
+- `relay-automation/README.md`: `exit 8` note added to exit codes section.
+- `relay-automation/relay-turn-lib.sh` allowlist: no change needed — `bin/validate-relay-block` is an internal subprocess call from `bin/tick`, not an agent file write. Correctly skipped.
+- validate.sh: not confirmed by agy (token not released — agy stopped after writing but before Step 10). Reap issued by operator; QA review took over.
+- Token not released by agy (relay-drive detected no-progress, exit 3). Implementation committed via rtl_enforce in round 1.
+
+Basis: textual only (agy's turn); behaviorally proven for QA items below (claude-a QA review turn).
+
+---
+
+### claude-a QA review — 2026-06-25
+
+VERDICT: PASS
+
+**QA 1** `bin/tick release` vs missing `VERDICT:` → exit 8, token NOT released. PASS (diagnostic: "VERDICT: line is missing or invalid")
+**QA 2** `bin/tick release` vs missing `Basis:` → exit 8, token NOT released. PASS (diagnostic: "Basis: line is missing or empty")
+**QA 3** `bin/tick release` vs `VERDICT: INVALID` → exit 8, token NOT released. PASS (diagnostic: "VERDICT: line is missing or invalid")
+**QA 4** `bin/tick release` vs well-formed relay file → exit 0, "released: QA-VALIDATOR-TEST". PASS
+**QA 5** exit 8 distinct from exit 6: confirmed in `tick --help` Exit codes section. PASS
+**QA 6** Part A regression: validate.sh 0 failures across all 25 suites post-implementation. PASS
+
+Basis: behaviorally proven (QA 1-5 run against synthetic fixtures; QA 6 via validate.sh)
