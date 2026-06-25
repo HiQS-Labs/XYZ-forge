@@ -33,7 +33,7 @@ non_goals:
 
 | Most recently completed | What's next |
 |---|---|
-| Triage complete (agy advisory relay 2026-06-25). Gap 1 first; standalone tooling track, not Part B Phase 2. Architecture for all three gaps resolved. New principle identified for GUIDING-PRINCIPLES.md. | Promote to `2-WORKING`. Execute Gap 1: add structural block validator in `bin/tick`'s `release`/`done` verbs + new `exit 8`. |
+| Checklist QA relay complete (claude-b, 2026-06-25). Findings applied: exit 8 needs code change in `bin/tick` main(); Phase 1 QA pre-condition labeled; GUIDING-PRINCIPLES.md update moved into Phase 1; Phase 2/3 success criteria sharpened. | Promote to `2-WORKING`. Execute Phase 1: write `bin/validate-relay-block`, wire into `bin/tick release`/`done`, add `exit 8` to main(). |
 
 ---
 
@@ -70,22 +70,27 @@ Three concrete gaps addressed in priority order as separate phases below.
   - [ ] Assert header `STATUS:` field is updated (not the prior value)
   - [ ] Assert `VERDICT:` line is present and value is one of `PASS`, `FAIL`, or `PARKED`
   - [ ] Assert `Basis:` line is present and non-empty
-- [ ] Add `exit 8` constant and message to `bin/tick`'s error legend / docs
-- [ ] Wire `bin/validate-relay-block` into `bin/tick release` before lock release
-- [ ] Wire `bin/validate-relay-block` into `bin/tick done` before lock release
+- [ ] Add `exit 8` handling to `bin/tick`'s `main()` — the `release`/`done` case blocks must propagate `process.exit(8)` when the validator returns non-zero (code change, not just docs)
+- [ ] Add `exit 8` to `bin/tick`'s error legend / help text
+- [ ] Wire `bin/validate-relay-block` into `bin/tick release` — insert AFTER arg validation guard, BEFORE the `release(root, …)` call (~L220)
+- [ ] Wire `bin/validate-relay-block` into `bin/tick done` — insert AFTER arg validation guard, BEFORE the `done(root, …)` call (~L236)
 - [ ] Verify that a malformed relay block triggers `exit 8` and does NOT release the token
 - [ ] Verify that a well-formed relay block passes and releases normally
 - [ ] Add `bin/validate-relay-block` to allowlist in `relay-turn-lib.sh` if needed
 - [ ] Update `bin/tick` help/usage text to document `exit 8`
+- [ ] Update relay protocol docs and any agent reference docs to mention `bin/validate-relay-block` and `exit 8` so operators know the validator exists
+- [ ] Update `GUIDING-PRINCIPLES.md` with the "Independent Verification (Separated Grading)" principle (do not defer to Phase 3 — this gate owns the principle's first proof)
 
 ### Phase 1 QA Checklist
 
+> **Pre-condition:** all QA items below are POST-implementation tests. Run only after the Phase 1 implementation checklist is complete (validator wired into `bin/tick release`/`done`).
+
 - [ ] Run `bin/tick release` against a relay file missing `VERDICT:` — confirm `exit 8`, token not released
-- [ ] Run `bin/tick release` against a relay file missing `Basis:` — confirm `exit 8`
-- [ ] Run `bin/tick release` against a relay file with `VERDICT: INVALID` — confirm `exit 8`
+- [ ] Run `bin/tick release` against a relay file missing `Basis:` — confirm `exit 8`, token not released
+- [ ] Run `bin/tick release` against a relay file with `VERDICT: INVALID` — confirm `exit 8`, token not released
 - [ ] Run `bin/tick release` against a well-formed relay file — confirm `exit 0`, token released
 - [ ] Confirm `exit 8` is distinct from `exit 6` (containment) in the exit code legend
-- [ ] Run the existing Part A dogfood relay end-to-end — confirm no regression
+- [ ] Run the existing Part A dogfood relay end-to-end — confirm relay terminates `STATUS: Approved` and `relay-drive.sh` exits `0` (no regression)
 
 ---
 
@@ -109,9 +114,9 @@ Three concrete gaps addressed in priority order as separate phases below.
   - [ ] Agent fails to claim/release (path assumptions wrong)
   - [ ] Agent omits required log fields (`Basis:`, `VERDICT:`)
   - [ ] Agent writes off-allowlist files
-- [ ] Run `test/relay-self-sufficiency.sh` manually against a real headless agent
-- [ ] If FAIL: document which tacit knowledge leaked through ambient context; encode fix into relay file template
-- [ ] Wire `test/relay-self-sufficiency.sh` into `validate.sh`
+- [ ] Run `test/relay-self-sufficiency.sh` manually against a real headless agent — confirm exit 0 and a summary line enumerating each assertion checked
+- [ ] If FAIL: the script must print a diagnostic naming the missing field; encode the fix as a committed diff to the relay file template (not just a prose note)
+- [ ] Wire `test/relay-self-sufficiency.sh` into `validate.sh` — add a CI-gate note if the test requires a live headless agent (network + API key) so it can be skipped in keyless environments
 
 ### Phase 2 QA Checklist
 
@@ -127,7 +132,7 @@ Three concrete gaps addressed in priority order as separate phases below.
 
 **Goal:** Wire `consult.sh` into the relay loop as an opt-in second opinion, so a self-reporting agent's verdict can be independently challenged.
 
-**Architecture:** Add `--consult-verify` flag to `relay-drive.sh` (not in `rtl_enforce` — consult calls are expensive and must not fire on every standard turn). On divergent verdicts: print conflicting verdicts + diff to stderr, append an advisory conflict-warning block to the relay file log, set `STATUS: Escalated` (exit 4) to halt supervisor.
+**Architecture:** Add `--consult-verify` flag to `relay-drive.sh` (not in `rtl_enforce` — consult calls are expensive and must not fire on every standard turn). Insert the consult call AFTER `round=$((round + 1))` (~L160) and BEFORE the no-progress guard (~L163). On divergent verdicts: print conflicting verdicts + diff to stderr, append an advisory conflict-warning block to the relay file log, set `STATUS: Escalated` (exit 4) to halt supervisor.
 
 ### Checklist
 
@@ -149,8 +154,7 @@ Three concrete gaps addressed in priority order as separate phases below.
 - [ ] Run `relay-drive.sh` without `--consult-verify` — confirm consult is never triggered (no extra API calls)
 - [ ] Run with `--consult-verify` and a clean PASS turn — confirm all three verdicts agree, relay continues
 - [ ] Simulate divergent verdict (stub one reviewer to return FAIL) — confirm exit 4, conflict block appended, `STATUS: Escalated`
-- [ ] Confirm conflict-warning block in the log is parseable (does not break Phase 1 structural validator)
-- [ ] Run Phase 1 validator on the escalated relay file — confirm it passes structural check (escalation is a valid state)
+- [ ] Run Phase 1 validator (`bin/validate-relay-block`) on the escalated relay file — confirm it exits `0` (escalation is a valid state; conflict-warning block does not break structural check)
 - [ ] Confirm GUIDING-PRINCIPLES.md updated with "Independent Verification (Separated Grading)" principle after Phase 1 ships
 
 ---
@@ -158,7 +162,7 @@ Three concrete gaps addressed in priority order as separate phases below.
 ## Connection to Existing Tracks
 
 - **Part B adversarial hardening** — closest sibling, but triage decision: standalone tooling track (not folded into Part B Phase 2). Gap 1 is a compliance/correctness gate; Part B Phase 2 is a liveness/concurrency chaos suite. Different threat models.
-- **GUIDING-PRINCIPLES.md quality bar** — "Attested — carries its receipts: source, evidence, confidence. Never a bare verdict" and Principle 5 ("adversarially proven before commercially viable") are the normative hooks. New principle surfaced by triage (agy, 2026-06-25): "Independent Verification (Separated Grading)" — the agent that produces a turn must not be the sole grader of its quality; verification must be performed by an independent deterministic check or separate reviewing agent before the lock releases. Add to GUIDING-PRINCIPLES.md when this track ships Phase 1.
+- **GUIDING-PRINCIPLES.md quality bar** — "Attested — carries its receipts: source, evidence, confidence. Never a bare verdict" and Principle 5 ("adversarially proven before commercially viable") are the normative hooks. New principle surfaced by triage (agy, 2026-06-25): "Independent Verification (Separated Grading)" — the agent that produces a turn must not be the sole grader of its quality; verification must be performed by an independent deterministic check or separate reviewing agent before the lock releases. Update is gated on Phase 1 shipping (see Phase 1 checklist — not Phase 3).
 - **relay-turn-lib.sh containment hardening (GH-13, GH-14)** — scope enforcement, not quality enforcement; these are siblings, not the same problem.
 
 ---
