@@ -1,5 +1,5 @@
 # Marathon Phase gh27
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH27-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -112,3 +112,11 @@ Built the dependency-free renderer, generated the dashboard artifact, and added 
 - Constraint honored: the brief asked to wire `validate.sh`, but this relay turn's allowlist forbids editing it, so I shipped the standalone `bash test/roadmap-dashboard.sh` gate only.
 - Verification: `bash utils/roadmap-dashboard.sh` ✅, `bash utils/roadmap-dashboard.sh --check` ✅, `bash test/roadmap-dashboard.sh` ✅
 - Repo proof: `./validate.sh` finished `46 / 47`; the only failure was pre-existing/unrelated `codex-turn.sh` (`FAIL: default autonomy flag missing`)
+
+### Round 1 · Reviewer · agy
+
+Reviewed the implementation details for the roadmap dashboard renderer and verified it on disk.
+
+- Implementation: The Bash + Node renderer parses the sections of `ROADMAP.md` robustly. Drift detection (`--check`) functions correctly, and the generated file matches counts and formatting expectations.
+- Verification: Standalone regression gate `test/roadmap-dashboard.sh` executes clean and passes all assertions.
+- Verdict: Approved
