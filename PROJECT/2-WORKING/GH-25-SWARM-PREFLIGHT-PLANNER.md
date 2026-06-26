@@ -61,6 +61,16 @@ not another harness loop; it is a repeatable front door that can answer, before 
 
 The durable answer is **one script entrypoint**, not a pile of operator rituals.
 
+**Input modes, reconciled (`GUIDING-PRINCIPLES.md` §11 issue-first, §2 one-canonical-source).**
+The GH-issue mode does not read raw issue threads. Per §11 the GitHub issue is the *signal
+stream*; the `GH-<number>` / `PROJECT/**` capture doc is the *execution surface of record*. The
+planner consumes capture docs in **both** modes — a project doc is one such surface, a GH bundle is
+several — so both normalize to the same shape with no second planning framework. Requiring a local
+capture is not a new ritual: issue-first → `GH-<number>` pointer doc → land is already mandatory for
+every non-trivial change (§11), so the planner only refuses to let a run skip a step the harness
+already requires. Reading the thread directly would split canonical context across thread and doc
+(§2 drift) and risk feeding a stale thread into a marathon (the *Fresh* pillar of the quality bar).
+
 ## Bet / Blast Radius / Reversibility
 
 **Bet:** the planner becomes durable only if we stop scraping free-form prose and require a small,
@@ -125,7 +135,7 @@ semantics.
 - [ ] Implement source resolution for `--gh-issue` bundles:
   - [ ] resolve each issue from GitHub
   - [ ] locate its in-repo `GH-*` capture or active-work doc
-  - [ ] fail loud if an issue has no local capture, instead of inventing context from the thread
+  - [ ] fail loud if an issue has no local capture, instead of inventing context from the thread (`GUIDING-PRINCIPLES.md` §11: issue = signal stream, `GH-*` capture = execution surface of record; §2: one canonical source, no thread/doc drift)
 - [ ] Define the intermediate "run candidate" object the rest of the planner consumes.
 - [ ] Record provenance in the normalized object: source doc(s), issue URL(s), commit/branch snapshot, and target repo root.
 - [ ] Keep ROADMAP pointer-only; do not move execution detail back into `ROADMAP.md`.
