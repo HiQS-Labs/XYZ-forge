@@ -14,6 +14,10 @@ Phase 2 was marked complete.
 
 > ⏱️ **TIME-BUDGET — read first.** QA review only. Do NOT edit any source files. Read the
 > implementation, run the test suite, then write your block.
+>
+> ⚠️ **NO BACKGROUND TASKS.** Run ALL shell commands synchronously (inline) and wait for
+> each to complete before continuing. Do NOT use background processes, `&`, or any "wait
+> for output" pattern — this is a headless session and background tasks will never complete.
 
 ### Step 1 — Read the Phase 2 spec
 
