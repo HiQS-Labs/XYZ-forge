@@ -2,7 +2,7 @@
 gh_issue: 20
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/20
 title: "Give agy first-class footing alongside Codex in live relay docs"
-status: Active
+status: Completed
 created: 2026-06-25
 updated: 2026-06-25
 owner: Noel (operator) · Codex (producer)
@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Rewrote the live operator surfaces so Codex and agy are framed as co-equal Path-A workers where the runtime actually supports both, and removed the stale `QUICKSTART.md` path references that made the consolidation brittle. | Publish the doc-only change set, then close [#20](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/20) and archive this record if no follow-up drift surfaces. |
+| **Shipped + archived 2026-06-25.** Rewrote the live operator surfaces so Codex and agy are framed as co-equal Path-A workers where the runtime actually supports both, and removed the stale `QUICKSTART.md` path references that made the consolidation brittle. `test/codex-turn.sh` 27/27, `test/agy-turn.sh` 22/22, `validate.sh` 45/45. | Closed [#20](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/20) + archived to `3-COMPLETED`. Reopen only if doc drift resurfaces the Codex-first bias. |
 
 ## Summary
 

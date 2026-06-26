@@ -1,8 +1,8 @@
 ---
 title: Cross-repo driven-relay friction — token collision, path resolution, .tick, sandbox
-status: Active — verification + docs + code fixes (#2/#1b/#5) shipped, agy-approved; #3/#4 doc-only resolved
+status: Completed
 created: 2026-06-24
-updated: 2026-06-24
+updated: 2026-06-25
 owner: noelsaw1
 branch: main
 gh_issue: 18
@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| **All phases done.** Phase 0 verification (#1/#2/#5 real bugs; #3/#4 doc-only). Phase 1 docs (headless bring-up now folded into `relay-automation/README.md`). **Phase 2 code shipped + agy-approved**: #2 relay-file resolution, #1b token-collision hints, #5 Escalated-not-stall oracle — 3 new tests, **`validate.sh` 41→44/44**; agy review **Approved** (3×[Pass], confirmed #5 doesn't mask a true stall). | Close [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18); fold any residual into GH-16. Move this doc to `3-COMPLETED` once #18 is closed. |
+| **All phases done; archived 2026-06-25.** Phase 0 verification (#1/#2/#5 real bugs; #3/#4 doc-only). Phase 1 docs (headless bring-up now folded into `relay-automation/README.md`). **Phase 2 code shipped + agy-approved**: #2 relay-file resolution, #1b token-collision hints, #5 Escalated-not-stall oracle — 3 new tests, **`validate.sh` 41→44/44**; agy review **Approved** (3×[Pass], confirmed #5 doesn't mask a true stall). | Closed [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18) + archived to `3-COMPLETED`. Any residual folds into GH-16. |
 
 ## Problem
 
