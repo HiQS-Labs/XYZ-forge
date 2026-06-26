@@ -5,13 +5,13 @@ the same codebase without colliding. The core primitive is `tick`, a tiny local
 event-log CLI; the main product surface built on top of it is
 `relay-automation/`.
 
-> 👉 **New here?** Read [ROUTER.md](ROUTER.md) for the repo's startup order, then run `./validate.sh` — it should print **45 / 45**
+> 👉 **New here?** Read [ROUTER.md](ROUTER.md) for the repo's startup order, then run `./validate.sh` — it should print **47 / 47**
 > green in a minute, no accounts or API keys required. That's the fastest proof the kernel
 > works. The live relay product (Codex/agy turns) needs per-CLI auth — see "Start here" below.
 
 ## Current status
 
-- `validate.sh` is green at **45 / 45**.
+- `validate.sh` is green at **47 / 47**.
 - The relay automation stack is the main active surface in this repo.
 - **Marathon** (`relay-automation/marathon.sh`) chains multiple headless build→review phases from a
   `MARATHON.yaml`, in `depends_on` order — the multi-agent coordinator built on top of the relay loop.
@@ -33,6 +33,7 @@ If you care about the automated relay system, start with the repo router, then g
 - `relay-system/` — relay transcripts, reviews, and dogfood runs.
 - `PROJECT/2-WORKING/` — active project docs and working plans.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
+- `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/2-WORKING/GH-25-SWARM-PREFLIGHT-PLANNER.md).
 
 ## What `tick` is
 
