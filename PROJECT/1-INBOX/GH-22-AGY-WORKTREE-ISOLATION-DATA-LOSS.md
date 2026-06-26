@@ -22,7 +22,15 @@ non_goals:
 
 | Most recently completed | What's next |
 |---|---|
-| Bug confirmed 2026-06-25 during GH-21 quality gate relay. Root cause identified: agy edits ROOT via absolute path in prompt; `rtl_worktree_end` copies stale worktree copy back over ROOT edits. Workaround: `RELAY_WORKTREE_ISOLATION=0`. | Implement Option A: rewrite relay file path to CWD-relative in `agy-turn.sh` before the `agy -p` call so the agent writes into the worktree, not ROOT. |
+| **2026-06-25 (later) — root-cause hypothesis DISPROVEN for same-repo; trigger re-scoped to cross-repo.** A deterministic repro (below) shows the documented mechanism does NOT hold in same-repo mode. **Reproduce the cross-repo case before any fix.** | Build a cross-repo repro (relay file in harness, `RELAY_TARGET_ROOT`=foreign), confirm the path, THEN choose Option A vs a copy-back/`f_rel` fix keyed on the relay file's *own* root. |
+| Bug first seen 2026-06-25 during GH-21 quality gate relay. Original hypothesis: agy edits ROOT via absolute path in prompt; `rtl_worktree_end` copies stale worktree copy back over ROOT edits. Workaround `RELAY_WORKTREE_ISOLATION=0` (confirmed effective). | (superseded by the row above) |
+
+## Verification log (2026-06-25, debug-mantra)
+
+- **Code reading contradicts the original hypothesis.** `rtl_turn_prompt` ([relay-turn-lib.sh:219](../../relay-automation/relay-turn-lib.sh#L219)) already emits a **ROOT-relative** relay path (`f_rel="${f#"$root/"}"`), and `rtl_init` ([relay-turn-lib.sh:81](../../relay-automation/relay-turn-lib.sh#L81)) already **normalizes `RTL_ALLOW` to ROOT-relative**. So "rewrite the absolute path to relative in `agy-turn.sh`" (Option A) is *already effectively done* for the same-repo case.
+- **Deterministic same-repo repro → bug does NOT reproduce.** A throwaway git repo + the real lib functions + a stub editor writing the relay file inside the worktree: with `RELAY_FILE` passed **absolute** AND passed **ROOT-relative**, `rtl_worktree_end` copy-back **PROPAGATED** the edit to ROOT both times (no loss). (Repro harness retained in session scratch; rerun via `bash` not `zsh` — `zsh` mangles `read -a` and PATH.)
+- **Re-scoped hypothesis (UNCONFIRMED — needs a cross-repo repro):** the loss triggers in **cross-repo mode** (`RELAY_TARGET_ROOT` set ⇒ `RTL_ROOT`=foreign target, but the relay file lives in the **harness**, not under `RTL_ROOT`). Then `${f#"$root/"}` does **not** strip (prefix mismatch) ⇒ the prompt path stays **absolute** ⇒ agy writes the harness file directly (outside the worktree) AND copy-back is keyed on the wrong root. The GH-21 origin run's exact invocation (was `--target-root` involved?) is needed to confirm.
+- **Impact on the WPCC TS-lite dogfood:** that run **is** cross-repo (`--target-root WP-Code-Check`, relay thread in the harness), so it is squarely in the suspected-trigger zone — this fix is correctly on its critical path.
 
 ## Problem
 
