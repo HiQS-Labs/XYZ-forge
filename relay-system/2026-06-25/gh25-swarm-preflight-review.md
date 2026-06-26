@@ -1,7 +1,7 @@
 # RELAY · GH-25 — agy review of utils/swarm-preflight.sh
 
 NEXT: agy
-STATUS: Open
+STATUS: Approved
 ROUND: 0 / 4
 
 ## ▶ TAKE YOUR TURN — read this first
@@ -103,3 +103,14 @@ invocation; if you call it yourself, target task **RELAY-gh25-swarm-preflight-re
 3. Evidence over assertion: run the suites and name file:line for any finding.
 
 ## Log
+
+### agy QA review — 2026-06-25
+
+VERDICT: PASS
+
+**[A-Correctness]** All preflight planner phases function exactly as specified. The dual-mode intake correctly normalizes both project documents and GitHub issue bundles into a unified, machine-readable JSON runner schema. The freshness checks (git fetch, dirty state, ahead/behind counts) are deterministic and robust. Probes for `path_absent`, `path_present`, `grep_present`, `grep_absent`, and `command` behave correctly, and exit codes mapped to target states are perfectly distinct.
+**[B-Robustness]** Env handling and temp file cleanup are highly secure via `mktemp -d` and `trap`. Running extracted Node scripts directly from generated temporary JS files avoids Shell/Bash quoting and escaping issues in different environments. Error handling in JSON parsing and regex compile phases is fully wrapped in robust try-catch blocks.
+**[C-Containment]** Script conforms to the core guiding principles: it acts solely as a *producer* of the marathon preflight run packet and never runs or executes the marathon itself (§8). It relies on local `GH-*` capture docs under `PROJECT/2-WORKING/` instead of scraping raw issue threads (§11). Uses only the Node.js standard library with zero external dependencies (§7).
+**[D-Verdict]** The script is clean, robust, adheres to all repository conventions, and is ready for merge. The test suite verifies both happy paths and all failure paths with 18 assertions.
+
+Basis: behaviorally proven
