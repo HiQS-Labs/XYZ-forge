@@ -64,7 +64,7 @@ for date_dir in "$RELAY_SYSTEM"/*/; do
     [[ -f "$relay_file" ]] || continue
 
     # Title: first heading line (strip "# " prefix)
-    title="$(grep -m1 '^# ' "$relay_file" | sed 's/^#[[:space:]]*//' | sed 's/[[:space:]]*$//')"
+    title="$(grep -m1 '^# ' "$relay_file" | sed 's/^#[[:space:]]*//' | sed 's/[[:space:]]*$//')" || true
     [[ -z "$title" ]] && title="$(basename "$relay_file" .md)"
 
     # STATUS from header block (lines before first "## " section heading)
