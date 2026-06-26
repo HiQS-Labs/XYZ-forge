@@ -33,7 +33,7 @@ non_goals:
 
 | Most recently completed | What's next |
 |---|---|
-| **Phase 2 complete 2026-06-25** — `test/fixtures/minimal-relay.md` + `test/relay-self-sufficiency.sh` written and wired into `validate.sh`. Live agy run passed 4/4 assertions: shim exit 0, relay file committed, VERDICT: present, Basis: present. Root cause found during iteration: fixture `---` separator before `## Log` caused agy to write above the wrong anchor — fixed by removing separator and clarifying instruction to "append after the `## Log` header." CI-gate: `RELAY_SELF_SUFFICIENCY_SKIP=1`. Full validate.sh 0 failures. | Execute Phase 3: wire `consult.sh` into `relay-drive.sh` as `--consult-verify`. |
+| **Phase 2 QA complete 2026-06-25** — Retroactive agy QA relay run (`relay-system/2026-06-25/gh21-phase2-qa.md`). agy stalled x2 on `validate.sh` async task (known headless limitation). Mechanical assertions run by claude-a: 46/46 validate.sh pass, FAIL diagnostics verified, fixture has zero ambient-repo leaks, tick wrapper isolation confirmed. VERDICT: PASS. Process finding logged: agy cannot reliably complete QA turns with long-running shell commands — candidate for GH backlog. | Execute Phase 3 via relay dogfood: create `relay-system/<date>/gh21-phase3-impl.md`, run agy Producer turn, then claude-a QA. |
 
 ---
 

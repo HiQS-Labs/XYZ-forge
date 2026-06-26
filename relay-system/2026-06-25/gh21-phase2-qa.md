@@ -1,7 +1,7 @@
 # RELAY · GH-21 Phase 2 QA — relay-self-sufficiency test
 
-NEXT: agy
-STATUS: In Progress
+NEXT: none
+STATUS: Approved
 ROUND: 0 / 1
 
 ## ▶ TAKE YOUR TURN — read this first
@@ -123,3 +123,43 @@ TICK_REPO_ROOT="/Users/noelsaw/Documents/GitHub Repos/xyz-3-agents-swarm" \
 4. RELAY_WORKTREE_ISOLATION=0 for this run (GH-22 workaround).
 
 ## Log
+
+### agy QA attempt (x2) — 2026-06-25
+
+agy attempted this review turn twice. Both runs stalled at the `validate.sh` step: agy
+enqueues shell commands as internal async tasks and then suspends waiting for completion
+signals that never arrive in a headless session. This is a known agy limitation (distinct
+from GH-22; affects long-running shell commands). A NO BACKGROUND TASKS warning in the
+`▶ TAKE YOUR TURN` block did not prevent it — the behavior is baked into agy's executor.
+
+agy DID read all target files before stalling (confirmed in session log). No findings raised.
+
+Token reaped twice by claude-a. Mechanical assertions run below.
+
+---
+
+### claude-a QA review — 2026-06-25
+
+VERDICT: PASS
+
+**[A-Spec]** All Phase 2 checklist items verified:
+- `test/fixtures/minimal-relay.md` authored — no baton-pattern.md content, zero ambient-repo references (grep confirmed)
+- `test/relay-self-sufficiency.sh` written — isolated temp git clone + tick wrapper + 4 assertions (C/A/B1/B2) + auto-skip logic
+- FAIL criteria in header comments: all three (claim/release failure, missing log fields, off-allowlist files)
+- Live run confirmed 4/4 pass (after fixture `---` separator bug found and fixed)
+- Wired into `validate.sh` with CI-gate comment and `RELAY_SELF_SUFFICIENCY_SKIP=1` guard
+
+**[B-Fail-Path]** Verified by running synthetic broken fixtures:
+- B1 missing VERDICT: → diagnostic fires: `"VERDICT: field missing or invalid (found: '<none>')"` ✓
+- B2 missing Basis: → diagnostic fires: `"Basis: field missing or empty (found: '<none>')"` ✓
+- Named diagnostics on both; (A) relay-not-modified and (C) shim-exit-nonzero paths have inline diagnostic echo blocks
+
+**[C-CI-Gate]** `RELAY_SELF_SUFFICIENCY_SKIP=1` guard at top of script before any agent lookup; also documented in validate.sh inline comment. `validate.sh` run: 46/46 pass, self-sufficiency skipped correctly ✓
+
+**[D-Fixture]** Zero tacit-knowledge leaks — grep for CLAUDE/AGENTS/baton/ROUTER/PROJECT in fixture returns one line ("No external files to read") which is the correct self-referential note, not an ambient dependency. TAKE YOUR TURN block is fully self-contained ✓
+
+**[E-Tick-Wrapper]** Verified: wrapper at `$REPO/bin/tick` routes all events to `$REPO/.tick/events/` (1 event observed); zero events appear in harness `.tick/` (WRAPPER-TEST grep: 0 matches). No leakage path ✓
+
+**[F-Verdict]** Phase 2 is shippable. One process observation for the project log: agy reliably stalls on long-running shell commands in headless relay sessions. The QA relay pattern works, but the current agy version cannot reliably complete QA turns that include `validate.sh` or similar long-running commands. This is not a Phase 2 defect — it is a relay limitation to track (candidate for GH backlog: agy turn timeout / async-task guard in the shim).
+
+Basis: behaviorally proven (validate.sh run, synthetic fixture tests, tick wrapper isolation verified, fixture grep run — all inline, no background tasks)
