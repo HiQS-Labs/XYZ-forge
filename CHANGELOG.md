@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-25
 
+### GH-27 — ROADMAP dashboard project registered
+Opened [issue #27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) and created the canonical active-work doc [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) for a reusable, dependency-free refresh path that will render the canonical root [ROADMAP.md](ROADMAP.md) into a static informational dashboard. Added the required in-progress ledger pointer to `ROADMAP.md`, keeping the roadmap pointer-only while giving the work a visible execution surface.
+- **Verification:** targeted doc/ledger registration checks via `utils/pdda-check-roadmap.sh` and `utils/pdda-check-roadmap-coverage.sh`.
+- **Reversibility:** Easy — registration only; no runtime, schema, or renderer code shipped yet.
+
 ### GH-25 — swarm preflight planner implemented (Phases 1–6 + regression lock)
 Shipped [utils/swarm-preflight.sh](utils/swarm-preflight.sh) on branch `gh-25-swarm-preflight`: one operator entrypoint that turns either a `PROJECT/2-WORKING` doc (`--project-doc`) or an explicit GH-issue bundle (`--gh-issue N ...`) into a marathon-ready run packet. Both inputs normalize to one `run-candidate@1` shape; the planner reads the in-repo capture doc's machine-readable preflight contract, never the raw issue thread ([GUIDING-PRINCIPLES.md](GUIDING-PRINCIPLES.md) §11). It runs branch-freshness + "fix still required" probes (grep/path/command), gates remediation readiness with one explicit next action on failure, assigns Codex/agy lanes (agy reviewer-first, kernel paths orchestrator-only), and emits a self-contained packet with `marathon-drive.sh` invocation hints. Producer only — it never executes the marathon (§8). Distinct exit codes: `0` ready · `2` usage · `3` contract missing · `4` stale/already-landed · `5` not-ready · `6` blocked · `7` ambiguous.
 - **Verification:** new [test/swarm-preflight.sh](test/swarm-preflight.sh) (18 assertions: happy path + stale/not-ready/blocked/missing-capture/contract-missing/ambiguous-bundle/dry-run/json-parity/usage), wired into [validate.sh](validate.sh). Full gate `RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh` → **47 / 47** green (exit 0).
