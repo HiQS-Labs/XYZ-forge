@@ -25,6 +25,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
+CONSULT_SH="${CONSULT_SH:-"$ROOT_DIR/relay-automation/consult.sh"}"
 
 usage() {
   cat <<'EOF'
@@ -37,6 +38,9 @@ Usage: relay-automation/relay-drive.sh --relay-file PATH --agent-cmd CMD [option
   --relay-task ID     The relay turn-token task (default: RELAY-TURN).
   --round-cap N       Max turns before escalating (default: 6).
   --target-root DIR   The target git repository root (must be an existing git repo).
+  --consult-verify    After each turn, invoke consult.sh to independently challenge the
+                      turn-taker's VERDICT. Fires 1-2 real API calls per turn (codex +
+                      gemini). Do NOT use in CI or budget-sensitive runs.
   --dry-run           Print the turn it WOULD drive next, then stop (no invocation).
   --help
 EOF
@@ -44,7 +48,7 @@ EOF
 
 die() { printf 'relay-drive: %s\n' "$*" >&2; exit 2; }
 
-RELAY_FILE=""; AGENT_CMD=""; RELAY_TASK="RELAY-TURN"; ROUND_CAP=6; DRY_RUN=0
+RELAY_FILE=""; AGENT_CMD=""; RELAY_TASK="RELAY-TURN"; ROUND_CAP=6; DRY_RUN=0; CONSULT_VERIFY=0
 while (($# > 0)); do
   case "$1" in
     --relay-file) RELAY_FILE="${2:-}"; shift 2 ;;
@@ -52,6 +56,7 @@ while (($# > 0)); do
     --relay-task) RELAY_TASK="${2:-}"; shift 2 ;;
     --round-cap) ROUND_CAP="${2:-}"; shift 2 ;;
     --target-root) TARGET_ROOT="${2:-}"; shift 2 ;;
+    --consult-verify) CONSULT_VERIFY=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     --help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
@@ -158,6 +163,53 @@ while ((round < ROUND_CAP)); do
     eval "$AGENT_CMD"
   fi
   round=$((round + 1))
+
+  # --consult-verify: independent second opinion after each turn.
+  # Invokes consult.sh (codex + gemini) to challenge the turn-taker's self-reported VERDICT.
+  # On divergence: appends a conflict-warning advisory block, sets STATUS: Escalated, exits 4.
+  if ((CONSULT_VERIFY)); then
+    _cv_taker_verdict="$(sed -n '/^## Log/,$p' "$RELAY_FILE" | grep -E '^VERDICT: ' | tail -1 | sed 's/^VERDICT: //')"
+    _cv_label="consult-verify-$(basename "$RELAY_FILE" .md)-r${round}"
+    _cv_out_dir="$ROOT_DIR/relay-system/$(date +%F)"
+    # Write prompt to a temp file — avoids nested variable expansion fragility inside $()
+    _cv_prompt_file="$(mktemp -t cv-prompt.XXXXXX)"
+    printf 'Review the most recent log block in this relay file. Does the turn-taker'"'"'s VERDICT match their stated evidence in the Basis: line? Reply with exactly one of: AGREE-PASS (verdict supported), AGREE-FAIL (verdict supported), or DISAGREE (verdict not supported by evidence). One token only.\n\n=== RELAY FILE ===\n' > "$_cv_prompt_file"
+    cat "$RELAY_FILE" >> "$_cv_prompt_file"
+    _cv_consult_out="$(CONSULT_ROOT="$ROOT_DIR" "$CONSULT_SH" \
+      --prompt-file "$_cv_prompt_file" \
+      --label "$_cv_label" \
+      --out "$_cv_out_dir" 2>/dev/null)" || true
+    rm -f "$_cv_prompt_file"
+
+    # Parse advisor verdicts from transcript file paths in consult stdout ([ok] model -> path)
+    _cv_diverged=0; _cv_advisor_summary=""
+    while IFS= read -r _cv_line; do
+      _cv_path="$(printf '%s\n' "$_cv_line" | sed -n 's/.*-> //p' | sed 's/[[:space:]]*$//')"
+      [[ -z "$_cv_path" || ! -f "$_cv_path" ]] && continue
+      _cv_model="$(printf '%s\n' "$_cv_line" | sed -n 's/.*\[ok\][[:space:]]*//p' | sed 's/[[:space:]]*->.*$//' | sed 's/[[:space:]]*$//')"
+      _cv_response="$(grep -oE '(AGREE-PASS|AGREE-FAIL|DISAGREE)' "$_cv_path" | head -1 || true)"
+      [[ -z "$_cv_response" ]] && _cv_response="(no verdict found)"
+      _cv_advisor_summary+="${_cv_model:-advisor}: $_cv_response"$'\n'
+      [[ "$_cv_response" == "DISAGREE" ]] && _cv_diverged=1
+    done < <(printf '%s\n' "$_cv_consult_out")
+
+    if ((_cv_diverged)); then
+      printf 'relay-drive: consult-verify DIVERGENCE after %s turn (taker: %s)\n%s' \
+        "$actor" "$_cv_taker_verdict" "$_cv_advisor_summary" >&2
+      # Append conflict-warning advisory block (MUST include VERDICT: + Basis: for bin/validate-relay-block)
+      printf '\n### consult-verify advisory — divergence detected (round %d)\n\nVERDICT: FAIL\nBasis: consult disagreed with turn-taker verdict "%s" (see transcripts)\n%s\nTurn-taker self-reported: %s\n' \
+        "$round" "$_cv_taker_verdict" "$_cv_advisor_summary" "$_cv_taker_verdict" >> "$RELAY_FILE"
+      # Set STATUS: Escalated
+      sed -i '' 's/^STATUS:[[:space:]]*.*/STATUS: Escalated/' "$RELAY_FILE"
+      _cv_relay_repo="$(git -C "$(dirname "$RELAY_FILE")" rev-parse --show-toplevel 2>/dev/null || echo "$ROOT_DIR")"
+      git -C "$_cv_relay_repo" add "$RELAY_FILE" 2>/dev/null || true
+      git -C "$_cv_relay_repo" commit -m "relay-drive: consult-verify divergence escalation (round $round)" 2>/dev/null || true
+      printf 'relay-drive: relay escalated by consult-verify (STATUS: Escalated) after %d turn(s)\n' "$round" >&2
+      exit 4
+    else
+      printf 'relay-drive: consult-verify AGREED after %s turn (taker: %s)\n' "$actor" "$_cv_taker_verdict" >&2
+    fi
+  fi
 
   # No-progress guard (skipped once terminal — the close check at loop top handles that).
   IFS=$'\t' read -r ntstatus nactor < <(token_state)
