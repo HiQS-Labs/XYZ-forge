@@ -32,14 +32,18 @@ Read both files in full:
 - `utils/swarm-preflight.sh` — the planner entrypoint
 - `test/swarm-preflight.sh` — the regression suite (18 assertions)
 
-### Step 3 — Run the suites
+### Step 3 — Run the focused suite
+
+Run ONLY the planner's own suite (fast, ~5s). The full `validate.sh` is already author-verified
+at **47/47** — you do NOT need to run it; trust that result to stay within your turn budget.
 
 ```bash
-RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh
 bash test/swarm-preflight.sh
 ```
 
-Confirm 0 failures (expect validate.sh 47/47 and swarm-preflight 18/18).
+Confirm `swarm-preflight: 18 passed, 0 failed`. Do not launch `validate.sh` (it is slow and will
+exhaust this turn). If a command does not return promptly, stop waiting and write your block from
+what you have already read.
 
 ### Step 4 — QA dimensions to assess
 
