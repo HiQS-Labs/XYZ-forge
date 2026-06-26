@@ -156,6 +156,32 @@ Three concrete gaps addressed in priority order as separate phases below.
 
 ---
 
+## Dogfood Execution Plan — Phase 3
+
+Phase 3 must be built via the relay, not written directly by the operator. The pattern mirrors
+Phase 1 (agy implements; independent QA review turn). Phase 3 also self-proves: wiring
+`--consult-verify` via a relay that will eventually use `--consult-verify` is the right
+bootstrapping order (build first; enable the gate after shipping).
+
+**Why it fits:**
+- Scope is bounded: one flag on `relay-drive.sh`, one call to `consult.sh`, a divergence handler, and docs
+- Two separable turns — impl then QA — with no cross-turn context dependency
+- Bootstrapping is explicit and safe: Phase 3 runs *without* `--consult-verify` active while building it; the QA Reviewer turn is the manual equivalent of what Phase 3 will add to the loop
+
+**Turn decomposition:**
+
+| Turn | Agent | Work | Done signal |
+|---|---|---|---|
+| Producer | agy | Impl checklist: `--consult-verify` flag, consult call, divergence handler, docs | `tick release`, `validate.sh` green |
+| Reviewer | claude-a | Phase 3 QA checklist — run assertions (no-flag baseline, PASS divergence, FAIL divergence, Phase 1 validator on escalated file) | `VERDICT: PASS` on all QA items |
+
+**To launch:** Create `relay-system/<date>/gh21-phase3-impl.md`, seed the tick task, and run
+`relay-drive.sh` with the standard agy shim. The Producer turn's `▶ TAKE YOUR TURN` block
+should include the Phase 3 checklist verbatim from the section below, plus the files to edit
+and the exact test commands to verify before releasing.
+
+---
+
 ## Phase 3 — Adversarial Multi-Reviewer (Gap 3)
 
 **Goal:** Wire `consult.sh` into the relay loop as an opt-in second opinion, so a self-reporting agent's verdict can be independently challenged.
