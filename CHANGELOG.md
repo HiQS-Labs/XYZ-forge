@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-25
 
+### GH-25 — active plan opened for the swarm preflight planner
+Opened [issue #25](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/25) and created the canonical active-work doc [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/2-WORKING/GH-25-SWARM-PREFLIGHT-PLANNER.md) after re-checking `PROJECT/2-WORKING/` for duplicates. The plan scopes the missing layer between ROADMAP/PDDA intake and the shipped marathon runtime: one durable `utils/swarm-preflight.sh` entrypoint that accepts either a `PROJECT/2-WORKING` doc or an explicit GH-issue bundle, performs deterministic freshness + "fix still required" checks, gates remediation readiness, and emits a Codex-vs-agy lane plan plus a marathon-ready run packet. [ROADMAP.md](ROADMAP.md) now carries the new active ledger pointer.
+- **Verification:** duplicate check via `rg`/`find` over `PROJECT/2-WORKING` and `ROADMAP.md`; GitHub issue list/search via `gh issue list`; doc/ledger updates verified with `utils/pdda-run.sh` and the targeted roadmap checks noted below.
+- **Reversibility:** Easy — new planning surface + ledger/changelog pointers only; no runtime or event-schema change.
+
 ### AGENTS.md — reduced and re-aligned to ROUTER, GUIDING PRINCIPLES, and PDDA
 Reduced [AGENTS.md](AGENTS.md) to a thinner behavioral contract and removed stale repo facts plus
 duplicated governance that now belongs in [ROUTER.md](ROUTER.md),
