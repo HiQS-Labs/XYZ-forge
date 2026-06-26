@@ -61,3 +61,25 @@ refresh command, and deterministic verification. No `tick`, relay, or schema wor
 1. Define one dependency-free renderer entrypoint that reads the root `ROADMAP.md` and writes one derived dashboard artifact.
 2. Preserve the pointer-ledger contract by treating the dashboard as read-only output, never a second source of execution detail.
 3. Add a deterministic refresh check so the generation path can be re-run and verified, not hand-waved.
+
+## Builder brief
+
+→ [briefs/gh-27-roadmap-dashboard-brief.md](briefs/gh-27-roadmap-dashboard-brief.md) (the single-phase
+`--phase-brief` the Marathon harness feeds the headless Codex builder).
+
+## Swarm Preflight Contract
+
+Consumed by `utils/swarm-preflight.sh` to turn this doc into a marathon-ready packet (same-repo build;
+`target.ref: main` — the renderer is genuinely unbuilt there). Codex lane (a normal code-writing task;
+no kernel/`tick`/relay paths, so nothing is orchestrator-only).
+
+```json
+{
+  "target":      { "repo": ".", "ref": "main" },
+  "gate":        "bash test/roadmap-dashboard.sh",
+  "fix_probes":  [ { "type": "path_absent", "path": "utils/roadmap-dashboard.sh" } ],
+  "artifacts":   [ "utils/roadmap-dashboard.sh", "ROADMAP-DASHBOARD.md", "test/roadmap-dashboard.sh" ],
+  "remediation": { "source": "GH-27#initial-execution-shape", "criteria": "dependency-free renderer + one static ROADMAP-DASHBOARD.md artifact + a deterministic --check refresh test wired into validate.sh" },
+  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```
