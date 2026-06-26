@@ -2,7 +2,24 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-26
+
+### GH-25 — swarm-preflight now honors `target.ref` (was probing the stale checkout)
+Fixed a starvation blind spot in [utils/swarm-preflight.sh](utils/swarm-preflight.sh): the planner recorded the contract's `target.ref` but never acted on it — fix-probes and freshness evaluated whatever branch the target repo happened to have checked out. Found by running it against `WP-Code-Check` (on `main`, **30 commits behind `origin/development`** where all real work lives): it reported `behind=0` / `ready`, the exact already-built-on-a-newer-branch trap GH-25 exists to prevent (the verdict was right only by luck — the target was absent on both branches). The planner now resolves `target.ref` after fetch (**blocking with exit 6** if it can't resolve — a marathon would branch from it), evaluates probes against a **throwaway `git worktree` checked out at that ref** (so path/grep/command probes see the ref's content, not the live/dirty checkout), and surfaces staleness via a new `ref-probed` report line + freshness JSON fields (`evaluated_ref`, `evaluated_ref_commit`, `checkout_matches_ref`, `head_behind_ref`).
+- **Verification:** [test/swarm-preflight.sh](test/swarm-preflight.sh) hardened (`init -b main`) and grown to **22 assertions** — new T11 (a fix landed on a non-checked-out ref is now detected as stale, exit 4 — the regression lock) and T12 (unresolvable ref → exit 6). Full `bash validate.sh` → **47/47**. Re-verified on `WP-Code-Check`: now prints `ref-probed : origin/development @ e939f4b (checkout HEAD is 30 commit(s) behind the evaluated ref — probes read the ref, not your checkout)`.
+- **Reversibility:** Easy — localized to the planner + its test; the ref-worktree is created and torn down per run.
+
+### GH-22 — agy worktree-isolation silent data loss fixed (signature-gated copy-back)
+Fixed the bug where a driven **agy** turn under `RELAY_WORKTREE_ISOLATION=1` silently discarded its output (exit 0, no commit, blank relay file). Real agy resolves the relay file to its **absolute ROOT path** even with `CWD`=worktree, so `rtl_worktree_end` overwrote that ROOT-direct edit with the stale, unmodified worktree seed. [relay-automation/relay-turn-lib.sh](relay-automation/relay-turn-lib.sh) now records each seeded allowlist path's content signature (`_rtl_sig` → a `${wt}.seedsig` sidecar) in `rtl_worktree_begin`, and `rtl_worktree_end` copies back **only paths whose worktree signature changed** — leaving a ROOT-direct edit intact for `rtl_enforce` to commit. Model-agnostic (protects any turn-taker); off-lane writes stay contained (revert + exit 6) as before.
+- **Verification:** [test/agy-turn.sh](test/agy-turn.sh) case 10 drives the stub with isolation ON + an absolute-ROOT write — RED before, GREEN after. Full `bash validate.sh` → **47/47**.
+- **Reversibility:** Easy — the teardown change is additive and falls back to the prior copy-all behavior when no seed signature is recorded.
+
 ## 2026-06-25
+
+### GH-27 — ROADMAP dashboard project registered
+Opened [issue #27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) and created the canonical active-work doc [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) for a reusable, dependency-free refresh path that will render the canonical root [ROADMAP.md](ROADMAP.md) into a static informational dashboard. Added the required in-progress ledger pointer to `ROADMAP.md`, keeping the roadmap pointer-only while giving the work a visible execution surface.
+- **Verification:** targeted doc/ledger registration checks via `utils/pdda-check-roadmap.sh` and `utils/pdda-check-roadmap-coverage.sh`.
+- **Reversibility:** Easy — registration only; no runtime, schema, or renderer code shipped yet.
 
 ### GH-25 — swarm preflight planner implemented (Phases 1–6 + regression lock)
 Shipped [utils/swarm-preflight.sh](utils/swarm-preflight.sh) on branch `gh-25-swarm-preflight`: one operator entrypoint that turns either a `PROJECT/2-WORKING` doc (`--project-doc`) or an explicit GH-issue bundle (`--gh-issue N ...`) into a marathon-ready run packet. Both inputs normalize to one `run-candidate@1` shape; the planner reads the in-repo capture doc's machine-readable preflight contract, never the raw issue thread ([GUIDING-PRINCIPLES.md](GUIDING-PRINCIPLES.md) §11). It runs branch-freshness + "fix still required" probes (grep/path/command), gates remediation readiness with one explicit next action on failure, assigns Codex/agy lanes (agy reviewer-first, kernel paths orchestrator-only), and emits a self-contained packet with `marathon-drive.sh` invocation hints. Producer only — it never executes the marathon (§8). Distinct exit codes: `0` ready · `2` usage · `3` contract missing · `4` stale/already-landed · `5` not-ready · `6` blocked · `7` ambiguous.

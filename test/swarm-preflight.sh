@@ -34,7 +34,7 @@ make_repo() {
     printf -- '---\ntitle: %s\n---\n# %s\n%s\n## Swarm Preflight Contract\n```json\n%s\n```\n' \
       "$name" "$name" "$extra" "$contract"
   } >"$r/PROJECT/2-WORKING/GH-900-$name.md"
-  git -C "$r" init -q
+  git -C "$r" init -q -b main 2>/dev/null || { git -C "$r" init -q; git -C "$r" symbolic-ref HEAD refs/heads/main; }
   git -C "$r" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
   git -C "$r" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
   printf '%s' "$r"
@@ -149,6 +149,38 @@ kg="$(node -e 'const o=JSON.parse(require("fs").readFileSync(0,"utf8"));process.
 # ── T10: usage errors → exit 2 ───────────────────────────────────────────────
 bash "$SP" >/dev/null 2>&1; [[ $? -eq 2 ]] && pass "T10a no input mode → exit 2" || fail "T10a expected exit 2"
 bash "$SP" --project-doc x --gh-issue 1 >/dev/null 2>&1; [[ $? -eq 2 ]] && pass "T10b mutually exclusive → exit 2" || fail "T10b expected exit 2"
+
+# ── T11: ref-honoring — a fix landed on a NON-checked-out ref is detected ─────
+# Regression lock for the starvation trap (the bug this fix closes): probes MUST evaluate
+# target.ref, not the current checkout. Build a repo on main WITHOUT the file, add it on
+# branch `feat`, leave main checked out, and declare ref: feat. Pre-fix this read "ready"
+# (absent on the main working tree); post-fix it must read "stale" (present on feat).
+R="$(make_repo reffix '{
+  "target": { "repo": ".", "ref": "feat" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "LANDED_ON_FEAT.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+git -C "$R" -c user.email=t@t -c user.name=t checkout -q -b feat
+echo x >"$R/LANDED_ON_FEAT.txt"
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null && git -C "$R" -c user.email=t@t -c user.name=t commit -qm landed >/dev/null
+git -C "$R" -c user.email=t@t -c user.name=t checkout -q main   # STALE checkout: main lacks the file feat has
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-reffix.md" 2>&1)"; rc=$?
+[[ $rc -eq 4 ]] && pass "T11 ref-honoring: fix on non-checked-out ref → stale (exit 4)" || fail "T11 expected exit 4 (probe must read target.ref=feat, not main), got $rc — $out"
+grep -q "behind the evaluated ref" <<<"$out" && pass "T11 report surfaces stale checkout vs evaluated ref" || fail "T11 missing staleness signal: $out"
+
+# ── T12: unresolvable target.ref → blocked, exit 6 (fail loud, not blind) ─────
+R="$(make_repo badref '{
+  "target": { "repo": ".", "ref": "origin/does-not-exist" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-badref.md" 2>&1)"; rc=$?
+[[ $rc -eq 6 ]] && pass "T12 unresolvable target.ref → exit 6" || fail "T12 expected exit 6, got $rc — $out"
+grep -q "does not resolve" <<<"$out" && pass "T12 names the unresolvable ref" || fail "T12 missing message: $out"
 
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"

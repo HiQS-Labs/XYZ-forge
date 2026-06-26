@@ -1,6 +1,6 @@
 ---
 title: agy turn edits ROOT directly under RELAY_WORKTREE_ISOLATION=1 — worktree copy-back silently overwrites output
-status: Parked — bug confirmed; fix direction identified; standalone fix track
+status: Fixed 2026-06-26 — deterministic repro + library fix landed; validate.sh 47/47
 created: 2026-06-25
 updated: 2026-06-25
 owner: noelsaw1
@@ -22,7 +22,8 @@ non_goals:
 
 | Most recently completed | What's next |
 |---|---|
-| **2026-06-25 (later) — root-cause hypothesis DISPROVEN for same-repo; trigger re-scoped to cross-repo.** A deterministic repro (below) shows the documented mechanism does NOT hold in same-repo mode. **Reproduce the cross-repo case before any fix.** | Build a cross-repo repro (relay file in harness, `RELAY_TARGET_ROOT`=foreign), confirm the path, THEN choose Option A vs a copy-back/`f_rel` fix keyed on the relay file's *own* root. |
+| **2026-06-26 — FIXED.** The earlier same-repo repro was a false negative: its stub wrote *inside the worktree*, so it never modelled the real failure. Real agy (and the existing `agy-turn.sh` test stub) writes the relay file via its **absolute ROOT path**, which `rtl_worktree_end` then overwrote with the stale, unmodified worktree seed. Reproduced deterministically (`agy-turn.sh` test, worktree-iso ON + absolute-ROOT write → output lost), fixed in `relay-turn-lib.sh`, and the same suite + `validate.sh` (47/47) now pass. See **Resolution** below. | Optional: one live agy relay re-run under `RELAY_WORKTREE_ISOLATION=1` as belt-and-suspenders, then close #22. |
+| **2026-06-25 (later) — root-cause hypothesis DISPROVEN for same-repo; trigger re-scoped to cross-repo.** A deterministic repro (below) shows the documented mechanism does NOT hold in same-repo mode. **Reproduce the cross-repo case before any fix.** | (superseded by the row above — the same-repo case DOES reproduce; the prior repro's stub wrote the worktree, not ROOT) |
 | Bug first seen 2026-06-25 during GH-21 quality gate relay. Original hypothesis: agy edits ROOT via absolute path in prompt; `rtl_worktree_end` copies stale worktree copy back over ROOT edits. Workaround `RELAY_WORKTREE_ISOLATION=0` (confirmed effective). | (superseded by the row above) |
 
 ## Verification log (2026-06-25, debug-mantra)
@@ -31,6 +32,36 @@ non_goals:
 - **Deterministic same-repo repro → bug does NOT reproduce.** A throwaway git repo + the real lib functions + a stub editor writing the relay file inside the worktree: with `RELAY_FILE` passed **absolute** AND passed **ROOT-relative**, `rtl_worktree_end` copy-back **PROPAGATED** the edit to ROOT both times (no loss). (Repro harness retained in session scratch; rerun via `bash` not `zsh` — `zsh` mangles `read -a` and PATH.)
 - **Re-scoped hypothesis (UNCONFIRMED — needs a cross-repo repro):** the loss triggers in **cross-repo mode** (`RELAY_TARGET_ROOT` set ⇒ `RTL_ROOT`=foreign target, but the relay file lives in the **harness**, not under `RTL_ROOT`). Then `${f#"$root/"}` does **not** strip (prefix mismatch) ⇒ the prompt path stays **absolute** ⇒ agy writes the harness file directly (outside the worktree) AND copy-back is keyed on the wrong root. The GH-21 origin run's exact invocation (was `--target-root` involved?) is needed to confirm.
 - **Impact on the WPCC TS-lite dogfood:** that run **is** cross-repo (`--target-root WP-Code-Check`, relay thread in the harness), so it is squarely in the suspected-trigger zone — this fix is correctly on its critical path.
+
+## Resolution (2026-06-26)
+
+**Confirmed root cause.** `rtl_worktree_end` copied the **entire allowlist** from the worktree back
+to ROOT *unconditionally*. `rtl_worktree_begin` seeds the worktree from ROOT's working tree, so an
+allowlisted file the turn never touched in the worktree is byte-identical to its seed. When the agent
+instead writes ROOT directly — which real agy does: it resolves the relay file to its **absolute ROOT
+path** even with `CWD`=worktree — the worktree copy stays at the seed, and the copy-back overwrites
+agy's ROOT edit with that stale seed. `rtl_enforce` then sees no change → exit 0, no commit, blank
+relay file. This reproduces in **same-repo** mode (no `--target-root` needed); the earlier same-repo
+repro missed it only because its stub wrote *inside the worktree* rather than via the absolute path.
+
+**Fix (`relay-turn-lib.sh`).** Copy back **only the paths the turn actually modified in the worktree**:
+- `_rtl_sig <path>` — a content signature (`git hash-object` for files, a sorted recursive hash for
+  dirs, `ABSENT` for missing).
+- `rtl_worktree_begin` records each seeded allowlist path's signature to a sidecar file `${wt}.seedsig`
+  (a sidecar, not a global, because the caller runs `wt="$(rtl_worktree_begin)"` in a subshell whose
+  globals are lost; and not inside the worktree, where it would read as an off-lane untracked file).
+- `rtl_worktree_end` re-reads the sidecar and **skips** any path whose worktree signature is unchanged,
+  leaving ROOT's copy intact so a ROOT-direct edit survives for `rtl_enforce` to commit. Genuine
+  worktree edits/creates/deletes still propagate (signature differs). Off-lane ROOT writes remain
+  contained by `rtl_enforce` (revert + exit 6) as before.
+
+**Why not Option A (prompt-relative path).** The prompt already emits a ROOT-relative path
+(`f_rel`); agy ignores it and uses the absolute ROOT path regardless, so a prompt-layer rewrite can't
+hold. The teardown fix is model-agnostic — it protects ROOT-direct writes from any turn-taker.
+
+**Verification.** `test/agy-turn.sh` case (10) drives the stub with `RELAY_WORKTREE_ISOLATION=1` and
+the absolute-ROOT write: RED before the fix (output lost), GREEN after (block preserved + committed).
+Full `validate.sh` → **47/47**.
 
 ## Problem
 

@@ -259,6 +259,10 @@ process.stdout.write(JSON.stringify({
     ahead: Number(e.SP_AHEAD || 0),
     behind: Number(e.SP_BEHIND || 0),
     dirty: e.SP_DIRTY === "1",
+    evaluated_ref: e.SP_REF || null,
+    evaluated_ref_commit: e.SP_REF_COMMIT || null,
+    checkout_matches_ref: e.SP_CHECKOUT_MATCHES_REF === "1",
+    head_behind_ref: Number(e.SP_HEAD_BEHIND_REF || 0),
     candidate_state: e.SP_STATE,
     probes,
   },
@@ -354,9 +358,33 @@ DIRTY=0
 FRESH_BLOCKED=0
 [[ "$FETCH_OK" -eq 0 ]] && FRESH_BLOCKED=1   # offline / fetch failed is a visible blocked state, not silent
 
-# ── Phase 3: fix-still-required probes (evaluated in node, stdlib only) ───────
-PROBE_SUMMARY="$(SP_ROOT="$TARGET_ROOT" SP_CONTRACT="$TMP/contract.json" SP_OUT="$TMP/probes.json" node "$TMP/eval-probes.mjs")"
+# ── Phase 3: resolve the declared target.ref and evaluate probes AGAINST IT ───
+# The contract's target.ref is the committish the marathon will branch from — NOT whatever
+# the target repo happens to have checked out. Probing the live working tree (a possibly
+# 30-commits-stale `main`) is the exact starvation trap GH-25 exists to kill: a fix already
+# shipped on origin/development reads as "still required" on a stale checkout, and the planner
+# green-lights building something that already exists. So resolve the ref and probe a throwaway
+# worktree OF THAT REF — path/grep/command probes then all see the ref's content, not the
+# (possibly stale or dirty) working tree.
+REF="$(field "$TMP/contract.json" target.ref)"
+REF_COMMIT="$(git -C "$TARGET_ROOT" rev-parse --verify --quiet "${REF}^{commit}" 2>/dev/null || true)"
+if [[ -z "$REF_COMMIT" ]]; then
+  emit "BLOCKED: contract target.ref '$REF' does not resolve in $TARGET_ROOT (fetch_ok=$FETCH_OK)."
+  emit "  The marathon would branch from this ref; if it can't be resolved the preflight is blind."
+  emit "  Remediation: push/fetch the ref, or correct target.ref in the contract."
+  exit 6
+fi
+HEAD_BEHIND_REF="$(git -C "$TARGET_ROOT" rev-list --count "HEAD..${REF_COMMIT}" 2>/dev/null || echo 0)"
+CHECKOUT_MATCHES_REF=0; [[ "$COMMIT" == "$REF_COMMIT" ]] && CHECKOUT_MATCHES_REF=1
+REF_WT="$(mktemp -d "${TMPDIR:-/tmp}/swarm-preflight-ref.XXXXXX")"; rm -rf "$REF_WT"
+if ! git -C "$TARGET_ROOT" worktree add --detach --quiet "$REF_WT" "$REF_COMMIT" 2>/dev/null; then
+  emit "BLOCKED: could not create a worktree at target.ref '$REF' ($REF_COMMIT) in $TARGET_ROOT."
+  exit 6
+fi
+PROBE_SUMMARY="$(SP_ROOT="$REF_WT" SP_CONTRACT="$TMP/contract.json" SP_OUT="$TMP/probes.json" node "$TMP/eval-probes.mjs")"
 read -r STALE BLOCKED AMBIG <<<"$PROBE_SUMMARY"
+git -C "$TARGET_ROOT" worktree remove --force "$REF_WT" >/dev/null 2>&1 || rm -rf "$REF_WT"
+git -C "$TARGET_ROOT" worktree prune >/dev/null 2>&1 || true
 
 CAND_STATE="ready"
 if   [[ "$BLOCKED" -eq 1 || "$FRESH_BLOCKED" -eq 1 ]]; then CAND_STATE="blocked"
@@ -390,6 +418,8 @@ SP_CONTRACT="$TMP/contract.json" SP_PROBES="$TMP/probes.json" SP_LANES="$TMP/lan
   SP_DOCS="$(cat "$TMP/docs.txt")" SP_ISSUES="$ISSUES_CSV" SP_MODE="$MODE" SP_SLUG="$SLUG" \
   SP_BRANCH="$BRANCH" SP_COMMIT="$COMMIT" SP_ROOT="$TARGET_ROOT" SP_NOW="$NOW" SP_STATE="$CAND_STATE" \
   SP_FETCH="$FETCH_OK" SP_UP="$UPSTREAM" SP_AHEAD="$AHEAD" SP_BEHIND="$BEHIND" SP_DIRTY="$DIRTY" \
+  SP_REF="$REF" SP_REF_COMMIT="$REF_COMMIT" SP_HEAD_BEHIND_REF="$HEAD_BEHIND_REF" \
+  SP_CHECKOUT_MATCHES_REF="$CHECKOUT_MATCHES_REF" \
   SP_READY="$READY" SP_NEXT="$READY_NEXT" \
   node "$TMP/normalize.mjs" >"$TMP/run-candidate.json"
 
@@ -416,9 +446,15 @@ INVOCATION="relay-automation/marathon-drive.sh \\
 if [[ "$FORMAT" == "json" ]]; then
   cat "$TMP/run-candidate.json"
 else
+  if [[ "$CHECKOUT_MATCHES_REF" -eq 1 ]]; then
+    REF_NOTE="checkout matches"
+  else
+    REF_NOTE="checkout HEAD is $HEAD_BEHIND_REF commit(s) behind the evaluated ref — probes read the ref, not your checkout"
+  fi
   emit "swarm-preflight · $MODE · slug=$SLUG"
   emit "  target-root : $TARGET_ROOT ($BRANCH @ ${COMMIT:0:9})"
   emit "  freshness   : fetch_ok=$FETCH_OK upstream=${UPSTREAM:-none} ahead=$AHEAD behind=$BEHIND dirty=$DIRTY"
+  emit "  ref-probed  : $REF @ ${REF_COMMIT:0:9} ($REF_NOTE)"
   emit "  candidate   : $CAND_STATE"
   emit "  readiness   : ready=$READY${READY_NEXT:+ — next: $READY_NEXT}"
   emit "  verdict     : $VERDICT (exit $CODE)"

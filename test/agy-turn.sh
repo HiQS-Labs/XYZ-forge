@@ -121,6 +121,24 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay-rev.md" RELAY_TASK=RELAY-TURN-rev AGY_AGENT
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on a reviewer-scoping violation" || fail "should not commit"
 git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean the uncommitted reviewer block before the next case
 
+# --- (10) GH-22: worktree isolation must NOT lose an absolute-ROOT write -------------------
+# Real agy edits the relay file via its ABSOLUTE ROOT path even when CWD=worktree (it treats ROOT as
+# its workspace). The stub models this faithfully: it appends to $RELAY_FILE (= $A/relay.md, an
+# absolute ROOT path). Under RELAY_WORKTREE_ISOLATION=1 the buggy rtl_worktree_end copied the stale
+# (unmodified) worktree seed back over ROOT, silently discarding agy's output (exit 0, no commit, blank
+# relay file). The fix copies back ONLY files the turn actually modified IN THE WORKTREE.
+printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for wt-iso test" >/dev/null 2>&1
+seed_token RELAY-TURN-wt
+before="$(git -C "$A" rev-parse HEAD)"
+wtlog="$WORK/agy-wt.$$.log"; : >"$wtlog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-wt AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$wtlog" STUB_MODE=good RELAY_WORKTREE_ISOLATION=1 \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "wt-iso: absolute-ROOT write turn exits 0" || fail "wt-iso good turn rc=$rc"
+grep -q "agy-stub" "$A/relay.md" && pass "wt-iso: agy's relay block PRESERVED (GH-22)" || fail "GH-22: agy's relay output LOST (stale worktree copy-back overwrote ROOT)"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "wt-iso: turn committed (output not silently dropped)" || fail "GH-22: no commit — output discarded"
+
 # --- (8) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
 git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "drop .tick gitignore" >/dev/null 2>&1
