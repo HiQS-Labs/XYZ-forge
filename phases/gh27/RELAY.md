@@ -102,3 +102,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GitHub-Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH27-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GitHub-Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh27/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Built the dependency-free renderer, generated the dashboard artifact, and added the standalone regression gate within the turn allowlist.
+
+- Files touched: `utils/roadmap-dashboard.sh`, `ROADMAP-DASHBOARD.md`, `test/roadmap-dashboard.sh`
+- Key decisions: parse only the canonical `## Ledger` / `###` section structure plus `- **...**` bullets and markdown links; keep the renderer dependency-free with Bash + Node stdlib; support `--check` drift detection; preserve fixed status tallies while still surfacing an extra live status (`⚠️`) present in the current roadmap.
+- Constraint honored: the brief asked to wire `validate.sh`, but this relay turn's allowlist forbids editing it, so I shipped the standalone `bash test/roadmap-dashboard.sh` gate only.
+- Verification: `bash utils/roadmap-dashboard.sh` ✅, `bash utils/roadmap-dashboard.sh --check` ✅, `bash test/roadmap-dashboard.sh` ✅
+- Repo proof: `./validate.sh` finished `46 / 47`; the only failure was pre-existing/unrelated `codex-turn.sh` (`FAIL: default autonomy flag missing`)
