@@ -21,6 +21,11 @@ a real field finding (a peer Claude that never joins `tick` stranded the poll as
 
 ## ▶ TAKE YOUR TURN — agy (Reviewer)
 
+> **REVIEW ONLY.** Do **NOT** edit `poll.sh`, the tests, or any file except THIS relay file. Do **NOT**
+> run the test suite, `make-pkg.sh`, or any build/validation command. Just **read** the two files and
+> **write your findings** into this relay file. The suite is already green (48/48); your job is judgment,
+> not changes. Keep the turn short — read, then append your block.
+
 1. Read `relay-automation/poll.sh` and `test/poll-driver.sh` (the `(i-file)` block).
 2. Review for: correctness of the file-source decision logic; the bold-key regex
    (`s/^[*]*NEXT[*]*:[*]*…`) and `NEXT:` first-token extraction; the `commit_gate_ok` bash-ERE match
