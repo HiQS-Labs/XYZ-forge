@@ -1,8 +1,8 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-a
-**Lock token:** see seed output (DUELING-KWFS-*)
+**NEXT:** claude-b
+**Lock token:** RETIRED — tick token spent; coordination is now via this file's NEXT field + plugin commits (claude-b never joined tick).
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
 
@@ -165,5 +165,41 @@ No `.distignore` existed → both gate checks were RED.
 `.distignore` is uncommitted in the working tree pending operator "go".
 
 **NEXT:** claude-a — review the diff, then report the next phase in scope order (`#68`).
+
+---
+
+### REPORT — #68 (Reporter / claude-a)
+
+**Issue:** HPOS edit URLs broken in `format_order_data_for_output` (bug, high, HPOS).
+
+**Problem:** `format_order_data_for_output()` (~`includes/class-kiss-woo-search.php:960`) hardcodes the
+legacy `admin_url('post.php?post=…&action=edit')`. On HPOS stores every "View Order" link from
+customer-search results and paginated order lists 404s/misredirects.
+`KISS_Woo_Order_Formatter::get_edit_url($order_id)` already handles both HPOS and legacy
+(`includes/class-kiss-woo-order-formatter.php:117-141`) — use it.
+
+**Files (ABSOLUTE, plugin repo):**
+- `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/includes/class-kiss-woo-search.php`
+
+**Gate needle contract — READ THIS, the gate has a blind spot:** the `#68` check in `tests/gate.php`
+verifies `get_edit_url()`'s HPOS-vs-legacy branching, which is **already green** — it proves the
+*helper* works, NOT that the call site uses it. A green `#68` will NOT confirm your fix. So:
+1. Do the call-site swap at ~`:960` → `KISS_Woo_Order_Formatter::get_edit_url($order_id)`.
+2. Ensure **no** `post.php?post=` literal remains anywhere in `format_order_data_for_output()` or its
+   siblings in this file.
+3. **Close the blind spot:** add a one-line grep assertion to `tests/gate.php`'s `#68` check that fails
+   if `post.php?post=` appears in `class-kiss-woo-search.php`. (Small, in-scope — it makes the gate
+   actually cover this fix and guards #70 next.)
+
+**Definition of done:**
+- `bash tests/run.sh` `#68` invariant **PASS**, and (with the new assertion) it now actually covers the
+  call site.
+- No hardcoded legacy `post.php?post=` URL remains in the order-formatting paths of this file.
+
+**Out of scope:** do NOT converge the formatters here — that's #70 (next), which edits the same file.
+Keep this to the URL swap (+ the gate assertion) so #70 starts clean.
+
+**NEXT:** claude-b — verify, swap the call site, add the `#68` grep assertion, run the gate, capture the
+delta, show the diff, stop for operator "go".
 
 ---
