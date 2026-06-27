@@ -83,7 +83,9 @@ relay-automation/relay-drive.sh --relay-file relay-system/<date>/<slug>.md \
 `--agent-cmd` is the turn-taker seam. In the live-window flow it can remain a
 window-driven/manual handoff; in the current headless path it can be a shipped
 shim such as `relay-automation/codex-turn.sh` or `relay-automation/agy-turn.sh`.
-Exits: `0` closed Approved/Closed, `3` no-progress, `4` round cap / closed-not-approved.
+Exits: `0` closed Approved/Closed, `3` no-progress, `4` round cap / closed-not-approved, `5`
+(with `--review-once`) reviewer completed a single non-approval review. Inspect whose-turn mid-drive
+with `tick info <task>` (the verb is `info`, not `status`).
 
 ### Cross-model windows (Codex / agy) — manual nudge
 In the poll-based multi-window flow, non-Claude windows can't self-wake. The
@@ -244,7 +246,7 @@ allowlisted paths, and skip push. The transcript lands in `/tmp/agy-turn.log`.
 
 Exit codes:
 
-- `relay-drive.sh`: `0` closed Approved or Closed, `3` no progress, `4` round cap or closed-not-approved, `2` usage.
+- `relay-drive.sh`: `0` closed Approved or Closed, `3` no progress, `4` round cap or closed-not-approved, `5` (with `--review-once`) reviewer completed a single non-approval review ("changes requested" — not a stall), `2` usage.
 - `codex-turn.sh`: `0` acted or deferred, `5` Codex failed, `6` off-allowlist edit reverted or Codex committed mid-turn, `7` timeout-killed, `2` usage.
 - `agy-turn.sh`: `0` acted or deferred, `5` agy failed or produced empty output, `6` off-allowlist edit reverted or agy committed mid-turn, `7` timeout-killed, `2` usage.
 - `bin/tick`: exits `8` when structural quality validation fail occurs (`bin/validate-relay-block` exits non-zero when `--relay-file` flag is provided to `release` or `done`).

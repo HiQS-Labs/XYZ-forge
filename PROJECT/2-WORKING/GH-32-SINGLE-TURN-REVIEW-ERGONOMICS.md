@@ -25,7 +25,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Phase 2 shipped: `--review-once` mode in `relay-drive.sh` drives one turn + a review oracle — Approved→0, **changes-requested→5** (distinct from the stall's 3), stall→3, Escalated→4. Test `test/relay-review-once.sh` (5 assertions). `./validate.sh` **50/50**. | Phase 3 — confirm + document the `tick` token-inspect verb in the relay-xyz skill, then GH-31. |
+| **All 3 phases shipped.** Phase 3: confirmed the inspect verb is `tick info <task>` (`tick status` → `unknown verb`); documented `tick info` + `--review-once`/exit-5 in the relay-xyz SKILL and `relay-automation/README.md`. `./validate.sh` **50/50**. | Close #32; move on to GH-31 (Phase 1 = design the `--artifact-file` copy-into-worktree contract). Doc can move to `3-COMPLETED` once #32 is closed. |
 
 ## Table of Contents
 
@@ -73,9 +73,9 @@ Confirmed in code:
 
 ## Phase 3 — Document the token-inspect verb
 
-- [ ] Confirm the correct `tick` verb to inspect a task token mid-drive (`tick show <task>` vs `tick status`).
-- [ ] Add it to the relay-xyz skill command list and the README turn-protocol section.
-- [ ] If `tick status <task>` should work but is silent, file/fix the gap; otherwise document the right verb.
+- [x] Confirmed the correct verb is **`tick info <task>`** (prints status/claimer/handoff-to; the same call the driver uses). `tick status` errors with `unknown verb: status` — the reporter just guessed the wrong verb; no CLI gap to fix.
+- [x] Added it to the relay-xyz SKILL ("Inspecting token state, and a one-shot review" subsection) and the `relay-automation/README.md` exit-code/turn sections.
+- [x] No silent-verb gap — documented the right verb rather than adding an alias.
 
 ### QA checklist — Phase 3
 

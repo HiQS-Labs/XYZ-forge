@@ -171,6 +171,25 @@ and `agy -p` **fails silently — exit 0, empty output** (the shim catches this 
 un-sandboxed). Run these Bash calls with `dangerouslyDisableSandbox: true`. (Memory:
 `codex-cli-needs-sandbox-disabled`, `agy-antigravity-cli`.)
 
+#### Inspecting token state, and a one-shot review
+
+- **Inspect whose-turn mid-drive:** `"$TICK" info <task>` prints the token's `status` / `claimer` /
+  `handoff-to` (this is what the driver reads internally). The verb is **`info`**, not `status` —
+  `tick status` is not a verb and errors with `unknown verb: status`.
+- **Single deliberate review turn:** pass `--review-once` to `relay-drive.sh` to drive exactly ONE
+  turn and classify the outcome by exit code, so a correct "changes requested" review is not mistaken
+  for a stall:
+
+  | Exit | Meaning |
+  |---|---|
+  | `0` | reviewer Approved/Closed |
+  | `5` | reviewer completed a turn and handed back **without** approving ("changes requested") — a *successful* single review, not a stall |
+  | `3` | genuine stall — the reviewer did nothing (token + STATUS unchanged) |
+  | `4` | escalated by design (`STATUS: Escalated`), round cap, or a close mismatch |
+
+  Without `--review-once` a non-approval handback advances the multi-round loop instead (the producer
+  takes the next turn); use `--review-once` when you want exactly one review and a clean exit code.
+
 ### Path B — hands-free poll (all-Claude, two windows)
 
 In each Claude window, run a guarded `/loop` that uses `poll.sh` as the gate, then take the turn from
