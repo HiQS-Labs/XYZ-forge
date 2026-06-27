@@ -1,4 +1,4 @@
-STATUS: Open
+STATUS: Approved
 
 # Relay review — poll.sh `--turn-source file` (token-optional relay advance)
 
@@ -36,3 +36,16 @@ a real field finding (a peer Claude that never joins `tick` stranded the poll as
    concrete file:line and a proposed fix, then a one-line **VERDICT:** (Approved / Changes requested)
    and **Basis:** line.
 4. If Approved, set `STATUS: Approved`. Otherwise leave `STATUS: Open` and hand back to claude-a.
+
+### Review — agy
+
+- **Decision logic correctness**: `[Pass]` ([poll.sh:203-217](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/poll.sh#L203-L217)). Checked the conditional paths; they accurately separate file-source whose-turn derivation from tick-token logic, including correct detection of cross-model handoffs and peer-commit gating.
+- **Bold-key regex & first-token extraction**: `[Pass]` ([poll.sh:138-142](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/poll.sh#L138-L142)). The regex `^[*]*$1[*]*:[*]*[[:space:]]*` elegantly covers bolding styles like `**NEXT:**`, `**NEXT**:`, and default `NEXT:`, and token extraction correctly drops trailing descriptive notes.
+- **`commit_gate_ok` SIGPIPE reasoning**: `[Pass]` ([poll.sh:146-153](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/poll.sh#L146-L153)). Verified. Under `set -o pipefail` and `set -e`, a pipeline like `git log ... | grep -q` causes `grep -q` to terminate early on match, which makes `git` fail with SIGPIPE, aborting the script. Buffering git output into a local variable first and testing via bash ERE match `[[ "$log" =~ ... ]]` safely circumvents this trap.
+- **Backward-compatibility**: `[Pass]` ([poll.sh:218-228](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/poll.sh#L218-L228)). Standard `tick`-based watchdog and runner pathways remain fully functional and run by default.
+- **`set -euo pipefail` traps**: `[Pass]` ([poll.sh:2](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/poll.sh#L2)). Unbound array variable issues (e.g. bash 3.2 on macOS) are avoided via proper empty-check guards (`[[ -z "$CLAUDE_AGENTS" ]]` and array length checks) before expansions.
+- **POSIX Compliancy**: `[Nit]` ([poll.sh:138](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/poll.sh#L138)). `head -1` is used. While widely supported, using `head -n 1` is POSIX compliant and avoids warnings/failures on stricter POSIX environments.
+- **Test coverage**: `[Pass]` ([poll-driver.sh:77-111](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/test/poll-driver.sh#L77-L111)). Tested the file-source paths (mine, other, cross-model, dirty, approved, and commit gates) thoroughly with assertions that pin the correct behavior without false greens.
+
+**VERDICT:** Approved
+**Basis:** All core features function correctly, are backward-compatible, dodge common pipefail/SIGPIPE traps, and have robust test coverage.
