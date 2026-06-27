@@ -25,7 +25,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Issue [#32](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/32) filed; claims verified in code (isolation default `relay-drive.sh:90`, exit-3 stall `:23,224`, Escalated carve-out `:95-97,217-218`). | Phase 1 — add the untracked-relay-file preflight warn (cheapest win, pattern already exists). |
+| Phase 1 shipped: untracked-relay-file preflight warn in `relay-drive.sh` (`warn_if_relay_file_untracked`, isolation-gated, non-blocking) + regression test `test/relay-untracked-file-warn.sh` (5 assertions). `./validate.sh` **49/49**. | Phase 2 — distinct exit code for a completed non-approval ("Changes requested") turn, extending the Escalated→exit-4 carve-out. |
 
 ## Table of Contents
 
@@ -45,10 +45,10 @@ Confirmed in code:
 
 ## Phase 1 — Untracked-relay-file preflight warn
 
-- [ ] In the driver preflight, detect when `RELAY_WORKTREE_ISOLATION=1` and `RELAY_FILE` is **not** present in `HEAD` (`git cat-file -e HEAD:<path>` or `git ls-files --error-unmatch`).
-- [ ] Emit a loud, single-line WARN naming the exact remedy: commit the relay file first, or set `RELAY_WORKTREE_ISOLATION=0`.
-- [ ] Warn only — never block (the file may be intentionally uncommitted in a non-isolated run).
-- [ ] Reuse the existing cross-repo warning style already in the shims (`CROSS-REPO mode …`).
+- [x] In the driver preflight, detect when `RELAY_WORKTREE_ISOLATION=1` and `RELAY_FILE` is **not** present in `HEAD` (uses `git rev-parse --show-prefix` + `git cat-file -e HEAD:<rel>` — symlink-safe on macOS `/var`→`/private/var`).
+- [x] Emit a loud, multi-line WARN naming the exact remedy: commit the relay file first, or set `RELAY_WORKTREE_ISOLATION=0`.
+- [x] Warn only — never block (verified: a true stall after the warn still exits 3).
+- [x] Reuse the existing cross-repo warning style (loud `relay-drive: WARNING …` to stderr).
 
 ### QA checklist — Phase 1
 

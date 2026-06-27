@@ -49,6 +49,7 @@ TESTS=(
   "relay-target-root-relayfile.sh"
   "relay-token-collision.sh"
   "relay-escalation-not-stall.sh"
+  "relay-untracked-file-warn.sh"
   "relay-concurrent-commit.sh"
   "relay-case-insensitive.sh"
   "relay-xyz-skill-guard.sh"

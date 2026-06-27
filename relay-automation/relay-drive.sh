@@ -89,6 +89,28 @@ fi
 # shim use keeps the leaf default OFF — only the orchestration layer defaults it ON.)
 : "${RELAY_WORKTREE_ISOLATION:=1}"; export RELAY_WORKTREE_ISOLATION
 
+# GH-32 #1: under worktree isolation the turn-taker runs in a throwaway worktree at ROOT@HEAD, so a
+# relay file that isn't committed at HEAD is INVISIBLE to it (untracked-not-ignored — relay-system/ is
+# tracked here except two specific files). The reviewer then "finds nothing" and silently does no work.
+# Warn loudly with the exact remedy; never block (a non-isolated run is free to use an uncommitted file,
+# and a relay file outside any git repo is fine too). Mirrors the cross-repo warning style in the shims.
+warn_if_relay_file_untracked() {
+  [[ "${RELAY_WORKTREE_ISOLATION:-1}" != 0 ]] || return 0
+  local dir prefix rel
+  dir="$(cd "$(dirname "$RELAY_FILE")" 2>/dev/null && pwd)" || return 0   # not a real dir → skip
+  # --show-prefix yields the repo-root-relative path of $dir (empty at root); building the relative
+  # path this way avoids subtracting an absolute toplevel, which breaks under macOS /var → /private/var
+  # symlinks (logical pwd vs git's physical toplevel).
+  prefix="$(git -C "$dir" rev-parse --show-prefix 2>/dev/null)" || return 0  # not in a git repo → skip
+  rel="${prefix}$(basename "$RELAY_FILE")"
+  git -C "$dir" cat-file -e "HEAD:$rel" 2>/dev/null && return 0           # present at HEAD → visible
+  printf 'relay-drive: WARNING — relay file is not committed at HEAD: %s\n' "$rel" >&2
+  printf '  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, so this untracked\n' >&2
+  printf '  file is INVISIBLE to the reviewer (it will find nothing and do no work). Remedy: commit\n' >&2
+  printf '  the relay file first, or re-run with RELAY_WORKTREE_ISOLATION=0.\n' >&2
+}
+warn_if_relay_file_untracked
+
 file_status() { sed -n 's/^STATUS:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
 terminal_status() { case "$1" in Approved|Closed) return 0 ;; *) return 1 ;; esac; }
 # Escalated is TERMINAL BY DESIGN: the reviewer handed back to a human (e.g. at the round cap),

@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 12 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 13 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-30 · optional centralized transcript archive | — | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/1-INBOX/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |
 | Dueling/relay · commit-signal advance (file-driven mode) | 🟢 | [test/poll-driver.sh](test/poll-driver.sh) · [poll.sh](relay-automation/poll.sh) · [Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
@@ -25,10 +26,12 @@ Summary: 12 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 9 items | Tally: 🟢 7 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 11 items | Tally: 🟢 7 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-32 · single-turn review ergonomics | — | [GH-32-SINGLE-TURN-REVIEW-ERGONOMICS.md](PROJECT/2-WORKING/GH-32-SINGLE-TURN-REVIEW-ERGONOMICS.md) · [#32](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/32) |
+| GH-31 · cross-repo external-artifact review flow | — | [GH-31-CROSS-REPO-ARTIFACT-REVIEW.md](PROJECT/2-WORKING/GH-31-CROSS-REPO-ARTIFACT-REVIEW.md) · [#31](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/31) |
 | GH-27 · ROADMAP dashboard renderer | 🟢 | [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) · [gh-27-roadmap-dashboard-brief.md](PROJECT/2-WORKING/briefs/gh-27-roadmap-dashboard-brief.md) · [#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) |
 | GH-25 · swarm preflight planner | 🟢 | [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/2-WORKING/GH-25-SWARM-PREFLIGHT-PLANNER.md) · [#25](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/25) |
 | Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
