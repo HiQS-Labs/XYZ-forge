@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-b
+**NEXT:** claude-a
 **Lock token:** RETIRED — tick token spent; coordination is now via this file's NEXT field + plugin commits (claude-b never joined tick).
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -277,5 +277,51 @@ present here, values verified by a human against a store (`tests/HUMAN-VERIFY.md
 
 **NEXT:** claude-b — converge the formatters, run the gate, append `### FIX — #70`, show the diff, stop
 for operator "go". This is the last phase; after your "go" + commit, the run closes.
+
+---
+
+### FIX — #70 (Maintainer / claude-b) — FINAL PHASE
+
+**Canonical contract chosen** = `format_from_raw()`'s shape **+ `payment` + `shipping`** (13 flat keys):
+`id, order_number, status, status_label, total, total_display, currency, date_created, date_display,
+customer{name,email}, payment, shipping, view_url`.
+
+**One deviation from the report's point 5 — could NOT delegate + delete:** the `#70` gate statically
+extracts a literal `return array(...)` from **each** of the three named methods and requires all three to
+exist. Delegating (`return KISS_Woo_Order_Formatter::format_from_raw($data);`) or deleting a method
+leaves no literal to extract → the extractor returns null → gate FAILS. So I kept all three methods with
+**identical flat `return array()` literals** (satisfies gate points 1–4). Convergence is by identical
+contract, not by code-sharing. Flagging this as a real conflict between the report's "delete the
+duplicate" and the gate's "each method must declare the literal."
+
+**Changes (4 files):**
+- `includes/class-kiss-woo-order-formatter.php` — added `payment`/`shipping` to **both** `format_from_raw()`
+  and `format()` (the WC_Order/toolbar 4th shape) so all four paths share one contract.
+- `includes/class-kiss-woo-search.php` —
+  - `format_order_data_for_output()`: `number→order_number`, `date→date_display` (+`date_created`),
+    split `total` into raw `total` + `total_display`, added `currency`, moved `billing_email` into nested
+    `customer{name,email}`, kept `payment`/`shipping`. Flat literals only.
+  - `format_order_for_output()`: same canonical shape from the `WC_Order`.
+- `admin/kiss-woo-admin.js` — `renderOrdersTable()` (also the wholesale/recent renderer) now reads
+  `order.order_number` (was `order.number`) and prefers `date_display`; existing `||` fallbacks retained
+  for safety. Single-order renderer already read `customer.*`/`*_display`.
+
+**Escaping note (no Total regression):** `total_display` is `wp_strip_all_tags`'d + entity-decoded → no
+`<span>` leak; the JS `escapeHtml()`s at insertion. Search methods retain their pre-existing PHP-side
+`esc_*` (defensive for any non-JS consumer such as the native intercept); the formatter methods return
+raw, as they already did. For real numeric/currency totals this yields **no visible double-escape**.
+Payment/Shipping **values** + column correctness are #69 — added to `tests/HUMAN-VERIFY.md`.
+
+**Gate delta (`bash tests/run.sh`):**
+- `#70`: **FAIL → PASS** — all three key sets identical (incl. `payment`+`shipping`).
+- Holistic: `10 passed, 3 failed` → **`12 passed, 1 failed`**. The single remaining red is the `#75`
+  key-method check — the human checkpoint the scope note predicted. `GATE: FAIL` overall is the expected
+  clean-run end state (success = all four phases approved, not GATE: PASS).
+
+**Transcript:** this Claude Code session — plugin window, branch `BUG-FIXES-2026-06-26`. All four files
+uncommitted pending operator "go".
+
+**NEXT:** claude-a — review the diff; if approved this is the final phase, so set `STATUS: Closed`. After
+operator "go" I commit the plugin fix (no push) + this relay file, and the run closes.
 
 ---
