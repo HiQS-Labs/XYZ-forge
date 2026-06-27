@@ -1,3 +1,59 @@
+# 📸 Snapshot — 2026-06-25 21:44 (Thu)
+
+**Session:** ROADMAP triage + cleanup → marathon dogfood substrate hunt (WPCC TS-lite pre-registered, GH-22 blocker, paused before fire)
+**Project / repo:** Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm (Part A Phase 6 — graduation dogfood)
+**Phase:** Part A Phase 6 — WPCC TS-lite dogfood **pre-registered, awaiting GO to fire** (paused by operator)
+**Status:** Triage shipped; two substrates (WPCC-old, Sleuth) found exhausted; WPCC discovery → new target `ts-type-suppression` (WPCC #129) pre-registered. Worker config locked = **Codex-builds + Codex-reviews, isolation ON** (GH-22 dodged). GH-22 (agy worktree silent data loss) NOT reproduced — same-repo repro disproves the doc's root cause; bug stays open. **Operator said "Pause for now" right before firing.** Nothing fired; no WP-Code-Check writes.
+
+## Git state
+- **Branch:** gh-25-swarm-preflight (NOTE: not `main` — a concurrent session switched branches; my commits landed on `main` earlier this session)
+- **HEAD:** `392728f` — docs(marathon): re-substrate Phase 6 dogfood → WPCC TS-lite; GH-22 root-cause re-scoped
+- **Working tree:** 1 modified (concurrent session's GH-25 doc — NOT my work; left untouched)
+- **Changed files:**
+```
+ M PROJECT/2-WORKING/GH-25-SWARM-PREFLIGHT-PLANNER.md
+```
+- **Ahead/behind remote:** my work pushed to `origin/main` (`f04c740`, `392728f`); this branch has no upstream shown
+
+## Recent findings
+- **Triage (committed `f04c740`):** GH-20 + GH-18 were stale-in-ledger → moved to Completed, docs archived to `3-COMPLETED/`, issues #20 (closed by me) + #18 (already closed). GH-24 status corrected (built, not just authored). relay-xyz durability symlink remainder dropped (was resolved). Top Status table refreshed.
+- **Substrate starvation pattern (the session's key finding):** the marathon graduation dogfood keeps getting starved — WPCC's old backlog AND Sleuth Near-Miss 2-lite were both **hand-built before the marathon could fire** (Sleuth: sleuth-app `77a95a7`, same day it was pre-registered). Verified by reading sleuth-app `development` (`#TryHandleNearMissCommandAsync` + `COMMAND_NEAR_MISS_LITE` + test all present + passing).
+- **WPCC discovery (committed `392728f`):** live clone = `~/Documents/GitHub-Repos/WP-Code-Check` (v2.2.9 `main`; freshest work on `origin/development` @ 2026-06-18 — the local `…/AI-DDTK-Fix-Iterate-Loop/tools/wp-code-check` is a STALE v1.3.14, not the substrate). Checked 5 candidates against the FRESHEST branch: `nonstandard-wordpress-translation-alias` = already built; `bootstrap-query-or-hydration-at-file-scope` = unbuilt (HIGH, validator-backed); **#129 TS detection = unbuilt (CHOSEN, scoped to `ts-type-suppression` lite slice)**; #132 help bug = real but wrong shape (1-line, modifies core) → hand-fix later.
+- **Gate finding:** WPCC's full `dist/tests/run-fixture-tests.sh` is **7/10 red at baseline on `development`** (pre-existing expected-count drift, fully-populated JSON — not env). So the marathon gate must be NARROW (new fixture only). Earlier 7/10 "red" under sandbox was a `mktemp: Operation not permitted` artifact — re-ran unsandboxed to confirm the real 7/10.
+- **GH-22 (debug-mantra):** same-repo deterministic repro (real lib fns + stub editor) shows copy-back PROPAGATES for both absolute AND relative `RELAY_FILE` — **disproves** the doc's "absolute path → copy-back overwrites" root cause. Re-scoped (UNCONFIRMED) to cross-repo (relay file not under `RTL_ROOT` → `f_rel` stays absolute). NOT reproduced. Recorded in `PROJECT/1-INBOX/GH-22-...md` verification log.
+- **Process answer:** `relay-system/<date>/` is for `/relay` THREAD files only; discovery/debug work correctly lives in PROJECT docs + ROADMAP (not relay-system). The marathon auto-writes a thread there when it fires.
+
+## Next steps
+- **To fire the WPCC dogfood (operator GO given for Codex/Codex config, then paused):** (1) relay-xyz Preconditions locator (`find-harness.sh --check`, confirm `codex` on PATH sandbox-OFF); (2) update pre-reg doc worker config agy→Codex/Codex + check marathon `builder≠reviewer` guard allows codex/codex (else Codex-builds + this-session-reviews); (3) cut `marathon-dogfood/ts-type-suppression` off `origin/development` in WP-Code-Check, capture narrow-gate baseline; (4) fire `marathon-drive.sh --target-root <WP-Code-Check>` (billable, sandbox-OFF).
+- **Open flag:** Codex-builds + Codex-reviews may trip marathon's `builder≠reviewer` guard → fall back to Codex-builds + this-session-reviews.
+- Pre-registration: [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) + [brief](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md).
+
+## Last response (verbatim)
+Paused — nothing fired, nothing mid-flight. Everything from this session is committed + pushed (`392728f`), and no writes to WP-Code-Check have happened.
+
+## Clean resume point
+
+**Done & durable:**
+- ROADMAP triaged; GH-18/GH-20 archived + issues closed (`f04c740`)
+- WPCC TS-lite dogfood **pre-registered** + brief; ROADMAP Phase 6 updated (`392728f`)
+- GH-22 finding recorded (same-repo repro disproves the doc's root cause; bug stays open)
+- Your transcript question answered: `relay-system/` is `/relay`-thread-only; the discovery/debug work correctly lives in PROJECT docs + ROADMAP
+
+**Decisions locked, ready to execute when you resume:**
+- Target: WPCC `ts-type-suppression` grep pattern (advisory, `.ts/.tsx`, additive)
+- Worker config: **Codex builds + Codex reviews, isolation ON** (GH-22 dodged — no agy turn)
+- Gate: narrow (new fixture only; WPCC's full suite is 7/10 red at baseline)
+
+**Exact next action to fire (the only step left before the marathon runs):**
+1. Run the relay-xyz Preconditions locator (`find-harness.sh --check`) — confirm `codex` is on PATH, sandbox-OFF
+2. Update the pre-reg doc's worker config to Codex/Codex (currently says agy-builds) + check the marathon `builder≠reviewer` guard allows codex/codex (may need this-session-reviews instead)
+3. Cut `marathon-dogfood/ts-type-suppression` off `origin/development` in WP-Code-Check; capture narrow-gate baseline (new fixture absent ⇒ 0 findings)
+4. Fire `marathon-drive.sh --target-root <WP-Code-Check>` (billable, sandbox-OFF, writes to the throwaway branch)
+
+One open flag for when you're back: the **Codex-builds + Codex-reviews** config may trip marathon's `builder≠reviewer` guard — if so, I'll have Codex build and review the frozen artifact from this session instead. Just say the word and I'll pick up at step 1.
+
+---
+
 # 📸 Snapshot — 2026-06-21 14:47 (Sun)
 
 **Session:** ROADMAP.md → PDDA pointer/ledger restructure + anti-sprawl safeguards + 3-mode enforcement

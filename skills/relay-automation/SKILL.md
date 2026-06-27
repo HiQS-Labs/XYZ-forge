@@ -1,14 +1,15 @@
 ---
 name: relay-automation
-description: Tick-backed, self-healing automation for the file-based /relay review loop — a hands-free poll driver (poll.sh), a relay-turn supervisor (relay-drive.sh), a liveness watchdog (watchdog.sh), a verdict-gated runner (runner.sh), and a headless cross-model turn-taker (codex-turn.sh). Sibling to the xyz/tick skill; depends on a tick runtime with handoff-exclusive claims. Use to run a Producer↔Reviewer relay with auto turn-taking, stall recovery, and (Option A) headless Codex turns.
+description: Tick-backed, self-healing automation for the file-based /relay review loop — a hands-free poll driver (poll.sh), a relay-turn supervisor (relay-drive.sh), a liveness watchdog (watchdog.sh), a verdict-gated runner (runner.sh), and headless cross-model turn-takers (`codex-turn.sh`, `agy-turn.sh`). Sibling to the xyz/tick skill; depends on a tick runtime with handoff-exclusive claims. Use to run a Producer↔Reviewer relay with auto turn-taking, stall recovery, and (Option A) headless Codex or agy turns.
 ---
 
 # relay-automation — sibling skill (bundled package)
 
 Automates the portable `/relay` review loop on top of `tick`: turns pass hands-free
-(all-Claude `/loop` poll), a watchdog recovers stalls, and — with the Codex CLI — a
-Codex participant can take its turn **headlessly** (`codex exec`). The portable
-`/relay` skill stays dependency-free; **this** tick-dependent automation is its sibling.
+(all-Claude `/loop` poll), a watchdog recovers stalls, and — with the Codex CLI or
+Antigravity CLI — a cross-model participant can take its turn **headlessly**
+(`codex exec`, `agy -p`). The portable `/relay` skill stays dependency-free; **this**
+tick-dependent automation is its sibling.
 
 ## Components (in `relay-pkg.tar.gz` beside this file)
 | Script | Role |
@@ -18,8 +19,9 @@ Codex participant can take its turn **headlessly** (`codex exec`). The portable
 | `relay-automation/watchdog.sh` | liveness: `tick analyze --format json` → parked `RELAY-TURN` → structured escalation; gated reap stub |
 | `relay-automation/runner.sh` | single verdict-gated turn (`VERDICT: PASS\|FAIL\|PARKED`) + artifact-scoped clean-tree gate |
 | `relay-automation/codex-turn.sh` | **Option A** headless turn-taker: drives a Codex turn via `codex exec` behind a path-allowlist (no push) |
+| `relay-automation/agy-turn.sh` | **Option A** headless turn-taker: drives an agy turn via `agy -p` behind the same path-allowlist boundary (no push) |
 | `relay-automation/README.md` | operator usage (`/loop` invocations, self-closing loops, all-Claude boundary) |
-| `test/{poll-driver,poll-relay,watchdog-relay,codex-turn}.sh` | the relay-automation suite |
+| `test/{poll-driver,poll-relay,watchdog-relay,codex-turn,agy-turn}.sh` | the relay-automation suite |
 
 ## Dependency — E3 detect-or-extract (capability gate, NOT just presence)
 The relay rides the **Phase-1 handoff-exclusive `tick` rule** (a `claim`/`take` of a task
@@ -59,6 +61,6 @@ cd "$DIR" && bash validate.sh        # the relay-automation tests pass alongside
 See the extracted `relay-automation/README.md` — `/loop` invocations (hands-free relay
 turn, designated watchdog poller, single-process supervision), **self-closing loops**
 (`--deadline` + self-delete; cron jobs are per-session — always set a deadline), the
-**all-Claude boundary** (cross-model stays manual nudge unless driven via `codex-turn.sh`),
-and the **Option A** headless Codex path (`codex-turn.sh`: dispatch-gated, path-allowlisted,
-no push).
+**all-Claude boundary** (cross-model stays manual nudge unless driven via `codex-turn.sh`
+or `agy-turn.sh`), and the **Option A** headless bring-up paths for Codex and agy
+(dispatch-gated, path-allowlisted, no push).

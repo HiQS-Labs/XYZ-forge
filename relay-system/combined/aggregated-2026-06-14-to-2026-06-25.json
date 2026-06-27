@@ -1,0 +1,320 @@
+[
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 AGENTS.md repo-alignment fix",
+		"description": "Relay completed: STATUS Approved (round 2 / 5).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 EXP-AUTOMATION proposal \u2014 review",
+		"description": "Relay completed: STATUS Approved (round 4 / 5).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Phase-1 soundness & Phase-2 readiness (relay-automation)",
+		"description": "Relay completed: STATUS Approved (round 3 / 5).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Phase-4 plan review (hands-free poll, Option B)",
+		"description": "Relay completed: STATUS Closed (round 2 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 README local-transport alignment",
+		"description": "Relay in progress or stalled: STATUS Open (round 2 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Run-4 meta-exercise brief \u2014 review",
+		"description": "Relay completed: STATUS Approved (round 2 / 5).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Run-4 subjective feedback (Codex + Gemini)",
+		"description": "Relay completed: STATUS Closed (round 2 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 codex-turn.sh safety review (Claude \u2194 Gemini, manual)",
+		"description": "Relay completed: STATUS Approved (round 3 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "Gemini headless transcript \u2014 cost-observability-plan-review \u00b7 Round 1 Reviewer \u00b7 2026-06-15",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Cost-observability plan review \u2014 AUTOMATED (headless Gemini reviewer)",
+		"description": "Relay completed: STATUS Approved (round 1 / 4 (closed \u2014 approved)).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Phase-4 QA gate (verify the checklist against the code)",
+		"description": "Relay completed: STATUS Approved (round 2 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Phase-4(a) code review \u2014 tick-native relay turns",
+		"description": "Relay completed: STATUS Approved (round 3 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Phase-4(a) scope + estimate reality-check",
+		"description": "Relay completed: STATUS Closed (round 2 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Phase-5 plan review \u2014 AUTOMATED (hands-free, all-Claude dogfood)",
+		"description": "Relay completed: STATUS Approved (round 2 / 4 (closed early \u2014 approved)).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 portability fixes + ROADMAP review (live Gemini CLI turn)",
+		"description": "Relay completed: STATUS Approved (round 2 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "Gemini headless transcript \u2014 p3-dogfood-relay \u00b7 Round 1 Reviewer \u00b7 2026-06-16",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Phase 3 dogfood \u2014 cost-capture methodology validation (headless)",
+		"description": "Relay completed: STATUS Approved (round 2 / 3 (closed \u2014 approved)).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "Consult question \u2014 review the capabilities assessment",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "XYZ 3-Agent Swarm \u2014 Capabilities Assessment",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "consult-dogfood-question",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "consult-dogfood.codex",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "consult-dogfood.gemini",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 Planning-doc QA review \u2014 PROJECT/2-WORKING/ROADMAP-COMBINED.md (headless)",
+		"description": "Relay in progress or stalled: STATUS Reviewed (round 0 / 1).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "Relay \u2014 EVE-STUDY plan review (single round-trip)",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "Relay \u2014 Marathon Dogfood plan review (Producer: Claude \u00b7 Reviewer: Codex)",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Skill-Sync Plan Review",
+		"description": "Relay completed: STATUS Approved (round 2 / 5).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 headless-containment safeguards review",
+		"description": "Relay completed: STATUS Approved (round 3 / 4).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 PDDA Agent (Roadmap Steward sketch) \u2014 design review",
+		"description": "Relay completed: STATUS Approved (round 2 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 PDDA design + implementation review",
+		"description": "Relay in progress or stalled: STATUS Escalated (round 4 / 4).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 relay-xyz skill review",
+		"description": "Relay completed: STATUS Approved (round 2 / 4).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 skill-extract packaging fix QA",
+		"description": "Relay completed: STATUS Approved (round 2 / 4).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 agy reliability-testing plan review",
+		"description": "Relay completed: STATUS Closed (round 1 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 GH-11 cross-repo targeting \u2014 issue review",
+		"description": "Relay completed: STATUS Approved (round 1 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 GH-11 Ask 1 (v2, narrow) \u2014 `--target-root` FLAG only (agy builds, Codex verifies)",
+		"description": "Relay completed: STATUS Approved (round 1 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 GH-11 Ask 1 \u2014 `--target-root` build (agy builds, Codex verifies)",
+		"description": "Relay in progress or stalled: STATUS Escalated (round 1 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 permission-inheritance-check SKILL review \u2014 AUTOMATED (headless, agy reviewer)",
+		"description": "Relay in progress or stalled: STATUS Open (round 1 / 4).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "red",
+		"title": "Shakedown",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 shakedown autonomous review",
+		"description": "Relay in progress or stalled: STATUS Open (round 2 / 6).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 shakedown SKILL.md review (single round trip)",
+		"description": "Relay completed: STATUS Closed (round 1 / 1).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 ARCHITECTURE.md \u2014 accuracy & clarity review (agy reviewer)",
+		"description": "Relay completed: STATUS Closed (round 2 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Dueling Claudes \u2014 inaugural run: a Giant Brains session reviews the DUELING-CLAUDES feature",
+		"description": "Relay completed: STATUS Closed (round 1 / 5).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Dueling Claudes \u2014 code/protocol review of the Codex relay machinery",
+		"description": "Relay completed: STATUS Closed (round 1 / 5).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Brainstorm \u2014 improve the Dueling Claudes operator experience",
+		"description": "Relay completed: STATUS Closed (round 1 / 4).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Claude Code CRUD (Skill-first) plan \u2014 design review",
+		"description": "Relay completed: STATUS Approved (round 2 / 2).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 PDDA feedback-synthesis plan \u2014 design review",
+		"description": "Relay completed: STATUS Approved (round 2 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 agy review \u2014 GH-18 cross-repo relay friction code fixes",
+		"description": "Relay completed: STATUS Approved (round 1 / 1).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Text Replacement Studio \u2014 script-resolution portability fix",
+		"description": "Relay completed: STATUS Closed (round 3 / 3).",
+		"updatedAt": "2026-06-25T18:35:22Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 GH-21 Phase 1 impl \u2014 bin/validate-relay-block + bin/tick exit 8",
+		"description": "Relay completed: STATUS Approved, VERDICT: PASS (round 0 / 2).",
+		"updatedAt": "2026-06-25T21:37:26Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 GH-21 Phase 2 QA \u2014 relay-self-sufficiency test",
+		"description": "Relay completed: STATUS Approved, VERDICT: PASS (round 0 / 1).",
+		"updatedAt": "2026-06-26T00:32:13Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 GH-21 Phase 3 impl \u2014 --consult-verify adversarial multi-reviewer",
+		"description": "Relay in progress or stalled: STATUS Changes requested, last VERDICT: PASS (round 0 / 2).",
+		"updatedAt": "2026-06-26T02:05:39Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 QA review (agy) \u2014 GH-21 quality gate planning doc",
+		"description": "Relay completed: STATUS Approved, VERDICT: PASS (round 0 / 1).",
+		"updatedAt": "2026-06-25T20:37:55Z"
+	},
+	{
+		"health": "red",
+		"title": "RELAY \u00b7 QA review \u2014 GH-21 quality gate planning doc",
+		"description": "Relay failed: STATUS Changes requested, VERDICT: FAIL (round 1 / 1).",
+		"updatedAt": "2026-06-25T20:28:48Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 plan refinement \u2014 GH-21 Relay Quality Gate",
+		"description": "Relay completed: STATUS Approved (round 1 / 2).",
+		"updatedAt": "2026-06-25T20:07:46Z"
+	}
+]

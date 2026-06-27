@@ -51,7 +51,13 @@ TESTS=(
   "relay-escalation-not-stall.sh"
   "relay-concurrent-commit.sh"
   "relay-case-insensitive.sh"
+  "relay-xyz-skill-guard.sh"
   "pdda-roadmap-coverage.sh"
+  "swarm-preflight.sh"
+  "roadmap-dashboard.sh"
+  # Live-agent test — auto-skips when agy/codex not on PATH or RELAY_SELF_SUFFICIENCY_SKIP=1.
+  # Set RELAY_SELF_SUFFICIENCY_SKIP=1 in CI / keyless environments to avoid the real API call.
+  "relay-self-sufficiency.sh"
 )
 
 PASSED=()

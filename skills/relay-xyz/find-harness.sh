@@ -62,6 +62,11 @@ TICK="$HARNESS/bin/tick"; [ -x "$TICK" ] || TICK=""
 _bin() { command -v "${1:-}" 2>/dev/null || true; }
 CODEX_PATH="$(_bin "${CODEX_BIN:-codex}")"
 AGY_PATH="$(_bin "${AGY_BIN:-agy}")"
+# Antigravity installs agy at ~/.local/bin/agy on macOS by default (not on system PATH).
+# Fall back to that well-known location when neither AGY_BIN nor PATH resolves it.
+if [ -z "$AGY_PATH" ] && [ -z "${AGY_BIN:-}" ] && [ -x "$HOME/.local/bin/agy" ]; then
+  AGY_PATH="$HOME/.local/bin/agy"
+fi
 _flag() { [ -n "${1:-}" ] && echo 1 || echo 0; }
 
 case "${1:-}" in
@@ -83,10 +88,10 @@ case "${1:-}" in
     echo "relay harness readiness:"
     echo "  ok  harness  ($HARNESS)"
     mark "$TICK"       "tick CLI"
-    mark "$CODEX_PATH" "codex CLI (Path A reviewer)"
-    mark "$AGY_PATH"   "agy CLI   (Path A reviewer)"
+    mark "$CODEX_PATH" "codex CLI (Path A worker)"
+    mark "$AGY_PATH"   "agy CLI   (Path A worker)"
     if [ -z "$CODEX_PATH" ] && [ -z "$AGY_PATH" ]; then
-      echo "  !   no cross-model reviewer on PATH — only Path B (all-Claude poll) is available"
+      echo "  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available"
     fi
     ;;
   *)

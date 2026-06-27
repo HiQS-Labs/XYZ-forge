@@ -1,0 +1,20 @@
+[
+	{
+		"health": "green",
+		"title": "GitHub sync healthy",
+		"description": "Hourly repo sync completed on schedule with no retries.",
+		"updatedAt": "2026-06-25T14:15:00Z"
+	},
+	{
+		"health": "orange",
+		"title": "Calendar edge lag",
+		"description": "Calendar edge snapshot is 47 minutes old; refresh is behind but not failed.",
+		"updatedAt": "2026-06-25T13:41:00Z"
+	},
+	{
+		"health": "red",
+		"title": "Pulse publish blocked",
+		"description": "Latest pulse publish attempt failed because the target repo remote was unavailable.",
+		"updatedAt": "2026-06-25T12:58:00Z"
+	}
+]

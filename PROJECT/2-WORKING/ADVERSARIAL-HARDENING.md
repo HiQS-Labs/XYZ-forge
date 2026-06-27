@@ -185,7 +185,7 @@ Prove the protocol generalizes beyond the home repository and supports true mult
 > **Prove:** the same protocol runs in a **different repository** (zero-setup from the packaged skill)
 > **and** with **heterogeneous agents** taking real turns (not just Claude, not just manual nudge).
 > **Test/artifact:** `test/e2e-fresh-repo.sh` → transcript + commit graph from a foreign repo.
-> **Leans on:** the packaged sibling skill (`relay-pkg.tar.gz`, `QUICKSTART.md`), `codex-turn.sh` +
+> **Leans on:** the packaged sibling skill (`relay-pkg.tar.gz`, `relay-automation/README.md`), `codex-turn.sh` +
 > `agy-turn.sh` over the shared core.
 > **Status:** ⚠️ *Partial* — cross-**model** is live-proven (Codex + Gemini headless turns) and the
 > MBP16 field report drove a real cross-**repo** run; but there's no zero-setup fresh-clone E2E

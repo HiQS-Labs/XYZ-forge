@@ -27,5 +27,18 @@
       "Bash(cp CHANGELOG.md __TRACKED_VAR__/CHANGELOG.combined)",
       "Bash(python3 - __TRACKED_VAR__/CHANGELOG.mine)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash relay-automation/hooks/relay-xyz-guard.sh"
+          }
+        ]
+      }
+    ]
   }
 }

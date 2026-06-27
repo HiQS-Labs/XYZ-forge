@@ -44,7 +44,6 @@ fi
 # and `docs` when a new top-level tooling dir or operator doc appears.
 docs="README.md \
 relay-automation/README.md \
-relay-automation/QUICKSTART.md \
 skills/relay-automation/SKILL.md \
 skills/relay-xyz/SKILL.md"
 

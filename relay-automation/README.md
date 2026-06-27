@@ -10,7 +10,7 @@ human one-line nudge when the turn belongs to a non-Claude window. Headless
 turn-takers now exist for Codex and agy (`codex-turn.sh`, `agy-turn.sh`),
 but the cross-model poll loop still degrades to a manual nudge rather than
 auto-firing those shims. For the current headless path, see
-[QUICKSTART.md](QUICKSTART.md) and
+[the headless bring-up below](#headless-bring-up-codex--agy), plus
 [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md).
 
 ## Components
@@ -93,3 +93,211 @@ instead, use `relay-drive.sh` with a headless shim (`codex-turn.sh` or
 - **Hands-free poll is all-Claude only** — it relies on Claude Code's in-session `/loop`. Cross-model stays on the manual nudge.
 - **Not a durable scheduler / not unattended-without-a-window.** A Claude window must be open and looping for the default poll flow. Current headless turns exist, but durable unattended orchestration is still a separate problem.
 - The portable `/relay` skill stays dependency-free; this tick-driven automation lives here.
+
+## Headless bring-up (Codex + agy)
+
+This section is the canonical fresh-device bootstrap path for the two shipped
+headless Path-A workers: Codex and agy.
+
+> **What a single-device test proves.** `.tick/` is gitignored and device-local,
+> so two clones do not share token state over git. A fresh-device run proves
+> that the selected headless turn-taker works cleanly in a fresh clone behind
+> the safety shim; it does not prove cross-machine coordination.
+
+### 1. Prerequisites
+
+The shipped scripts assume Node, git, and whichever headless worker you plan to
+drive:
+
+```bash
+node --version
+codex exec -s workspace-write "create a file ok.txt with the text ok" < /dev/null   # Codex lane
+agy -p "Reply with exactly: PONG" < /dev/null                                        # agy lane; run sandbox-OFF
+git --version
+```
+
+Run the worker check for the lane you actually plan to drive; run both if you
+want both workers available on that machine.
+
+The Codex autonomy check matters: a bare `codex exec "say ok"` can succeed without
+proving Codex can write the relay file. `codex-turn.sh` defaults to
+`-s workspace-write`; if your device config still blocks writes, set
+`CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` or add
+`-c approval_policy=never`. If `codex` is not on `PATH` or is not authenticated,
+fix that before running the shim; override the binary with
+`CODEX_BIN=/path/to/codex` if needed.
+
+The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's
+backend is blocked by a sandbox it can exit `0` with empty output, which the
+shim correctly treats as a failed turn. If `agy` is not on `PATH` or is not
+authenticated through the Antigravity desktop app, fix that before driving the
+lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity
+installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system
+PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it
+works before adding it to your PATH or passing `AGY_BIN` to every drive command.
+
+If you are running under a sandboxed AI shell, run both workers outside that
+sandbox. Codex often fails there because it cannot reach the OS keychain or
+`chatgpt.com`; agy can fail "cleanly" with empty output when its backend network
+is blocked.
+
+### 2. Clone or refresh the harness
+
+```bash
+git clone https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm.git
+cd xyz-3-agents-swarm
+# or, in an existing clone: git pull origin main
+export TICK_REPO_ROOT="$PWD"
+```
+
+### 3. Smoke test the local machine
+
+Run the repo gate, then the shim test for the worker you plan to drive:
+
+```bash
+bash validate.sh
+bash test/codex-turn.sh   # before Codex runs
+bash test/agy-turn.sh     # before agy runs
+```
+
+If `validate.sh` cannot make tempdirs, that is usually a sandbox blocking
+`mktemp`; rerun it in a normal shell.
+
+### 4. Drive one headless turn in this repo
+
+The supervisor (`relay-drive.sh`) drives the turn; the selected shim
+(`codex-turn.sh` or `agy-turn.sh`) is the turn-taker and owns the safety
+boundary: path allowlist, commit-bypass guard, file-scoped commit, and no push.
+
+**Worktree isolation is ON by default for driven runs.** `relay-drive.sh`
+exports `RELAY_WORKTREE_ISOLATION=1`, so each shim runs inside a throwaway
+`git worktree` of `ROOT@HEAD`. Off-allowlist writes in the worktree are
+discarded and the turn fails with **exit 6**. One important side-effect: agents
+that write to the relay file via **absolute paths** bypass the worktree (those
+writes land in ROOT, not the throwaway tree) — so untracked relay files with
+absolute paths in the `▶ TAKE YOUR TURN` block remain accessible to the agent.
+Opt out per run with `RELAY_WORKTREE_ISOLATION=0` if you need to disable
+isolation (e.g. during testing).
+
+#### Codex worker
+
+```bash
+# Reuse an existing relay thread or scaffold a fresh one with embedded
+# TAKE YOUR TURN instructions.
+RELAY=relay-system/$(date +%F)/<your-slug>.md
+ARTIFACT=relay-automation/codex-turn.sh
+
+# Use a per-relay token id, not the literal RELAY-TURN.
+TASK="RELAY-$(basename "$RELAY" .md)"
+
+./bin/tick log task.created "$TASK" --agent claude-a
+./bin/tick claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+./bin/tick release "$TASK" --agent claude-a --to codex
+
+CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG=/tmp/codex-turn.log \
+relay-automation/relay-drive.sh \
+  --relay-file "$RELAY" \
+  --relay-task "$TASK" \
+  --agent-cmd relay-automation/codex-turn.sh \
+  --round-cap 4
+```
+
+Expect Codex to claim and ping the token, append its block to the relay file,
+release or `done` the token, revert any off-allowlist edits, commit only the
+allowlisted paths, and skip push. The transcript lands in
+`/tmp/codex-turn.log`.
+
+#### agy worker
+
+```bash
+# Reuse an existing relay thread or scaffold a fresh one with embedded
+# TAKE YOUR TURN instructions.
+RELAY=relay-system/$(date +%F)/<your-slug>.md
+ARTIFACT=relay-automation/agy-turn.sh
+
+# Use a per-relay token id, not the literal RELAY-TURN.
+TASK="RELAY-$(basename "$RELAY" .md)"
+
+./bin/tick log task.created "$TASK" --agent claude-a
+./bin/tick claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+./bin/tick release "$TASK" --agent claude-a --to agy
+
+AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG=/tmp/agy-turn.log \
+relay-automation/relay-drive.sh \
+  --relay-file "$RELAY" \
+  --relay-task "$TASK" \
+  --agent-cmd relay-automation/agy-turn.sh \
+  --round-cap 4
+```
+
+Expect agy to claim and ping the token, append its block to the relay file,
+release or `done` the token, revert any off-allowlist edits, commit only the
+allowlisted paths, and skip push. The transcript lands in `/tmp/agy-turn.log`.
+
+Exit codes:
+
+- `relay-drive.sh`: `0` closed Approved or Closed, `3` no progress, `4` round cap or closed-not-approved, `2` usage.
+- `codex-turn.sh`: `0` acted or deferred, `5` Codex failed, `6` off-allowlist edit reverted or Codex committed mid-turn, `7` timeout-killed, `2` usage.
+- `agy-turn.sh`: `0` acted or deferred, `5` agy failed or produced empty output, `6` off-allowlist edit reverted or agy committed mid-turn, `7` timeout-killed, `2` usage.
+- `bin/tick`: exits `8` when structural quality validation fail occurs (`bin/validate-relay-block` exits non-zero when `--relay-file` flag is provided to `release` or `done`).
+
+### 5. Review a file in another repo
+
+The common case is reviewing a target repo while using this clone only as the
+harness. The thread and artifact live in the target repo; `.tick` and `bin/tick`
+stay anchored to the harness.
+
+```bash
+HARNESS=/path/to/xyz-3-agents-swarm
+TARGET=/path/to/your-repo
+
+export TICK_REPO_ROOT="$HARNESS"
+
+# Run from the target root to keep relay and artifact paths repo-relative.
+cd "$TARGET"
+RELAY=relay-system/$(date +%F)/<your-slug>.md
+ARTIFACT=path/to/file/under/target.ext
+TASK="RELAY-$(basename "$RELAY" .md)"
+
+"$HARNESS/bin/tick" log task.created "$TASK" --agent claude-a
+"$HARNESS/bin/tick" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+"$HARNESS/bin/tick" release "$TASK" --agent claude-a --to codex
+
+CODEX_AGENT=codex \
+ALLOW_PATHS="$ARTIFACT" \
+CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox' \
+CODEX_LOG=/tmp/codex-turn.log \
+"$HARNESS/relay-automation/relay-drive.sh" \
+  --target-root "$TARGET" \
+  --relay-file "$RELAY" \
+  --relay-task "$TASK" \
+  --agent-cmd "$HARNESS/relay-automation/codex-turn.sh" \
+  --round-cap 4
+```
+
+Swap the worker-specific lines to drive agy instead:
+
+```bash
+"$HARNESS/bin/tick" release "$TASK" --agent claude-a --to agy
+
+AGY_AGENT=agy \
+ALLOW_PATHS="$ARTIFACT" \
+AGY_LOG=/tmp/agy-turn.log \
+"$HARNESS/relay-automation/relay-drive.sh" \
+  --target-root "$TARGET" \
+  --relay-file "$RELAY" \
+  --relay-task "$TASK" \
+  --agent-cmd "$HARNESS/relay-automation/agy-turn.sh" \
+  --round-cap 4
+```
+
+The boundary is unchanged: path allowlist, file-scoped commit, no push, and
+worktree isolation of `target@HEAD`. Only the artifact side moves to
+`--target-root`.
+
+### 6. Device caveats
+
+- No push by design. Shim-taken turns commit locally only.
+- `.tick/` is local. Token state on this device is independent of other machines.
+- Each headless turn is real API spend, so keep `--round-cap` small. Codex and agy differ in cost visibility; the agy lane is currently cost-blind in harness logs.
+- Headless runs should not share an agent id with a live `/loop` on the same relay.

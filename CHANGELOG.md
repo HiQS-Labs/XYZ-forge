@@ -2,6 +2,73 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-26
+
+### Marathon graduation — first real end-to-end fire (GH-27 + WPCC), two concurrent dogfoods
+The Marathon harness **fired for real for the first time** (every prior dogfood died at substrate-starvation before launch). Two targets built concurrently in isolated git worktrees (separate indexes, no collision), each `swarm-preflight → marathon-drive → codex build → gate → agy review`:
+- **GH-27 ROADMAP dashboard ✅** — codex built a dependency-free renderer ([utils/roadmap-dashboard.sh](utils/roadmap-dashboard.sh), 201 lines) + the generated [ROADMAP-DASHBOARD.md](ROADMAP-DASHBOARD.md) + [test/roadmap-dashboard.sh](test/roadmap-dashboard.sh); agy **Approved** (3 turns); gate 4/4. Same-repo, on `marathon/gh-27-dashboard`. Completion fix: wired the test into `validate.sh` (codex missed it; agy approved without catching — a dogfood finding) → **`validate.sh` 48/48**.
+- **WPCC `ts-type-suppression` ✅** — codex built the first slice of WP-Code-Check issue #129 (advisory `.ts`/`.tsx` grep detector for `@ts-ignore`/`@ts-nocheck`/bare `@ts-expect-error`); agy **Approved**; gate passed; the scanner detects **3/3** on the fixture (documented `@ts-expect-error // reason` excluded). Committed to `WP-Code-Check` `marathon-dogfood/ts-type-suppression` (`3e22f97`).
+- **Findings (the dogfood's real payload):** (1) **containment held on real load** — WPCC v1 escalated when `pattern-library-manager.sh` regenerated an off-allowlist `PATTERN-LIBRARY.md`; the guard reverted it (exit 6). (2) **GH-22 fix validated live** — agy reviewed under worktree isolation on GH-27 and its block was preserved. (3) **New bug → [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29)**: cross-repo (`--target-root`) builds don't commit the builder's NEW untracked files (`no tracked changes`), so a correct, gate-passing, Approved build lands uncommitted — recovered by hand-commit; `RELAY_WORKTREE_ISOLATION=0` does not fix it.
+- **Telemetry:** per-run transcripts at [marathon-gh27-091627.md](relay-system/2026-06-26/marathon-gh27-091627.md) + [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md). Cost-blind per lane (codex/agy emit no tokens); wall-clock only.
+- **Reversibility:** Easy — both builds are on throwaway branches; the GH-27 build is additive (renderer + derived artifact + test), the WPCC pattern is advisory + `.ts`-scoped (cannot regress existing scans).
+
+### GH-25 — swarm-preflight now honors `target.ref` (was probing the stale checkout)
+Fixed a starvation blind spot in [utils/swarm-preflight.sh](utils/swarm-preflight.sh): the planner recorded the contract's `target.ref` but never acted on it — fix-probes and freshness evaluated whatever branch the target repo happened to have checked out. Found by running it against `WP-Code-Check` (on `main`, **30 commits behind `origin/development`** where all real work lives): it reported `behind=0` / `ready`, the exact already-built-on-a-newer-branch trap GH-25 exists to prevent (the verdict was right only by luck — the target was absent on both branches). The planner now resolves `target.ref` after fetch (**blocking with exit 6** if it can't resolve — a marathon would branch from it), evaluates probes against a **throwaway `git worktree` checked out at that ref** (so path/grep/command probes see the ref's content, not the live/dirty checkout), and surfaces staleness via a new `ref-probed` report line + freshness JSON fields (`evaluated_ref`, `evaluated_ref_commit`, `checkout_matches_ref`, `head_behind_ref`).
+- **Verification:** [test/swarm-preflight.sh](test/swarm-preflight.sh) hardened (`init -b main`) and grown to **22 assertions** — new T11 (a fix landed on a non-checked-out ref is now detected as stale, exit 4 — the regression lock) and T12 (unresolvable ref → exit 6). Full `bash validate.sh` → **47/47**. Re-verified on `WP-Code-Check`: now prints `ref-probed : origin/development @ e939f4b (checkout HEAD is 30 commit(s) behind the evaluated ref — probes read the ref, not your checkout)`.
+- **Reversibility:** Easy — localized to the planner + its test; the ref-worktree is created and torn down per run.
+
+### GH-22 — agy worktree-isolation silent data loss fixed (signature-gated copy-back)
+Fixed the bug where a driven **agy** turn under `RELAY_WORKTREE_ISOLATION=1` silently discarded its output (exit 0, no commit, blank relay file). Real agy resolves the relay file to its **absolute ROOT path** even with `CWD`=worktree, so `rtl_worktree_end` overwrote that ROOT-direct edit with the stale, unmodified worktree seed. [relay-automation/relay-turn-lib.sh](relay-automation/relay-turn-lib.sh) now records each seeded allowlist path's content signature (`_rtl_sig` → a `${wt}.seedsig` sidecar) in `rtl_worktree_begin`, and `rtl_worktree_end` copies back **only paths whose worktree signature changed** — leaving a ROOT-direct edit intact for `rtl_enforce` to commit. Model-agnostic (protects any turn-taker); off-lane writes stay contained (revert + exit 6) as before.
+- **Verification:** [test/agy-turn.sh](test/agy-turn.sh) case 10 drives the stub with isolation ON + an absolute-ROOT write — RED before, GREEN after. Full `bash validate.sh` → **47/47**.
+- **Reversibility:** Easy — the teardown change is additive and falls back to the prior copy-all behavior when no seed signature is recorded.
+
+## 2026-06-25
+
+### GH-27 — ROADMAP dashboard project registered
+Opened [issue #27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) and created the canonical active-work doc [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) for a reusable, dependency-free refresh path that will render the canonical root [ROADMAP.md](ROADMAP.md) into a static informational dashboard. Added the required in-progress ledger pointer to `ROADMAP.md`, keeping the roadmap pointer-only while giving the work a visible execution surface.
+- **Verification:** targeted doc/ledger registration checks via `utils/pdda-check-roadmap.sh` and `utils/pdda-check-roadmap-coverage.sh`.
+- **Reversibility:** Easy — registration only; no runtime, schema, or renderer code shipped yet.
+
+### GH-25 — swarm preflight planner implemented (Phases 1–6 + regression lock)
+Shipped [utils/swarm-preflight.sh](utils/swarm-preflight.sh) on branch `gh-25-swarm-preflight`: one operator entrypoint that turns either a `PROJECT/2-WORKING` doc (`--project-doc`) or an explicit GH-issue bundle (`--gh-issue N ...`) into a marathon-ready run packet. Both inputs normalize to one `run-candidate@1` shape; the planner reads the in-repo capture doc's machine-readable preflight contract, never the raw issue thread ([GUIDING-PRINCIPLES.md](GUIDING-PRINCIPLES.md) §11). It runs branch-freshness + "fix still required" probes (grep/path/command), gates remediation readiness with one explicit next action on failure, assigns Codex/agy lanes (agy reviewer-first, kernel paths orchestrator-only), and emits a self-contained packet with `marathon-drive.sh` invocation hints. Producer only — it never executes the marathon (§8). Distinct exit codes: `0` ready · `2` usage · `3` contract missing · `4` stale/already-landed · `5` not-ready · `6` blocked · `7` ambiguous.
+- **Verification:** new [test/swarm-preflight.sh](test/swarm-preflight.sh) (18 assertions: happy path + stale/not-ready/blocked/missing-capture/contract-missing/ambiguous-bundle/dry-run/json-parity/usage), wired into [validate.sh](validate.sh). Full gate `RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh` → **47 / 47** green (exit 0).
+- **Reversibility:** Easy — a new planner layer on top of the existing harness; no `tick` schema, event-log, or relay-kernel change. Remaining before merge: an agy relay review of the final script.
+
+### GH-25 — active plan opened for the swarm preflight planner
+Opened [issue #25](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/25) and created the canonical active-work doc [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/2-WORKING/GH-25-SWARM-PREFLIGHT-PLANNER.md) after re-checking `PROJECT/2-WORKING/` for duplicates. The plan scopes the missing layer between ROADMAP/PDDA intake and the shipped marathon runtime: one durable `utils/swarm-preflight.sh` entrypoint that accepts either a `PROJECT/2-WORKING` doc or an explicit GH-issue bundle, performs deterministic freshness + "fix still required" checks, gates remediation readiness, and emits a Codex-vs-agy lane plan plus a marathon-ready run packet. [ROADMAP.md](ROADMAP.md) now carries the new active ledger pointer.
+- **Verification:** duplicate check via `rg`/`find` over `PROJECT/2-WORKING` and `ROADMAP.md`; GitHub issue list/search via `gh issue list`; doc/ledger updates verified with `utils/pdda-run.sh` and the targeted roadmap checks noted below.
+- **Reversibility:** Easy — new planning surface + ledger/changelog pointers only; no runtime or event-schema change.
+
+### AGENTS.md — reduced and re-aligned to ROUTER, GUIDING PRINCIPLES, and PDDA
+Reduced [AGENTS.md](AGENTS.md) to a thinner behavioral contract and removed stale repo facts plus
+duplicated governance that now belongs in [ROUTER.md](ROUTER.md),
+[GUIDING-PRINCIPLES.md](GUIDING-PRINCIPLES.md), and [PROJECT/PDDA.md](PROJECT/PDDA.md). Kept the
+behavioral rails only: verdict-first communication, explicit bets, shared reversibility vocabulary,
+blast-radius sizing, one-plan-one-list, verified claims, and consequential-bet logging. Dropped the
+stale suite-count / skill-inventory claims and the self-referential experiment section so `AGENTS.md`
+stops competing with the newer operating-system docs.
+- **Verification:** ran `utils/pdda-run.sh` in `full` mode. It still fails on pre-existing unrelated
+  active-doc issues: missing `updated` in
+  [MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md),
+  missing YAML frontmatter in
+  [sleuth-near-miss-2lite-brief.md](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md), and
+  missing usable `## Status` tables in
+  [GH-21-RELAY-QUALITY-GATE.md](PROJECT/2-WORKING/GH-21-RELAY-QUALITY-GATE.md) and
+  [sleuth-near-miss-2lite-brief.md](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md). No
+  AGENTS-specific failure surfaced.
+- **Reversibility:** Easy — two doc edits only; no runtime, event-log, or PDDA-script behavior
+  changed.
+
+### GH-20 — agy now has first-class footing across the live relay docs
+Shipped the doc-only parity pass so the live relay entry points now present **Codex and agy as co-equal Path-A workers** anywhere the runtime genuinely supports both. Updated the front door ([README.md](README.md)), the canonical operator contract ([relay-automation/README.md](relay-automation/README.md)), both live relay skills ([skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md), [skills/relay-automation/SKILL.md](skills/relay-automation/SKILL.md)), the harness locator labels, the front-door dashboard, and the active automated-relay hub. Kept the real asymmetries explicit instead of flattening them away: Codex and agy still have different auth/sandbox caveats, and the agy lane remains cost-blind in harness logs.
+- **Verification:** `bash test/codex-turn.sh` passed **27/27**; `bash test/agy-turn.sh` passed **22/22**; `bash validate.sh` passed **45/45** on a clean tree via a temporary doc-only stash because `test/runner-loop.sh` intentionally treats a dirty live `README.md` as a failure surface.
+- **Reversibility:** Easy — labels, docs, and skill copy only; no runtime behavior changed.
+
+### relay-automation docs — folded QUICKSTART into the canonical README and removed the duplicate file
+Completed the doc consolidation instead of leaving `relay-automation/QUICKSTART.md` as a second, stale source of truth. The headless bring-up now lives only in [relay-automation/README.md](relay-automation/README.md), with the root [README.md](README.md), the live relay skills, and the active working docs updated to point at the consolidated path. Removed the stale deleted-file expectations from [test/path-integrity.sh](test/path-integrity.sh) and [FRONTDOOR.md](FRONTDOOR.md), so the deletion is now durable instead of depending on a doc-only search. While doing that, corrected two drifted facts in the live docs: the suite count is now **45 / 45**, and `codex-turn.sh`'s documented exits now include **`7` timeout-killed** to match the shipped shim. `relay-automation/QUICKSTART.md` was then deleted.
+- **Verification:** targeted stale-reference search across the live operator/docs surfaces returned clean after the rewrite; `bash test/codex-turn.sh` passed before the cleanup; `bash validate.sh` passed **45/45** on a clean tree via a temporary stash/restore of the doc change set, because `test/runner-loop.sh` intentionally treats a dirty live `README.md` as a failure surface.
+- **Reversibility:** Easy — restore the deleted doc and re-point the small set of updated references if a second bring-up file turns out to be useful again.
+
 ## 2026-06-24
 
 ### GH-18 — cross-repo driven-relay friction: code fixes shipped (#2/#1b/#5), agy-approved

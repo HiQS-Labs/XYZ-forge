@@ -91,9 +91,9 @@ Usage:
   tick take --agent <id>                           (atomic next+claim)
   tick next --agent <id>                           (read-only, no STATE.md write)
   tick scope <task> --agent <id> --paths <globs>
-  tick release <task> --agent <id> [--to <agent>]
+  tick release <task> --agent <id> [--to <agent>] [--relay-file <path>]
   tick break <task> --agent <id> --reason "..."
-  tick done <task> --agent <id> [--note "..."]
+  tick done <task> --agent <id> [--note "..."] [--relay-file <path>]
   tick ping <task> --agent <id> [--note "..."]      (liveness heartbeat)
   tick reap <agent> [--by <id>]
   tick info <task>
@@ -103,6 +103,10 @@ Usage:
   tick analyze [--format human|md|json] [--write <file>]
 
 Event types: ${Array.from(EVENT_TYPES).join(', ')}
+
+Exit codes:
+  6 — containment violation (off-allowlist edit in relay-turn-lib.sh)
+  8 — relay block structural validation failed (bin/validate-relay-block returned non-zero)
 `);
 }
 
@@ -220,6 +224,15 @@ function main(argv) {
     case 'release': {
       const [task] = positional;
       if (!task || !flags.agent) { usage(); return 2; }
+      if (flags['relay-file']) {
+        const validateScript = path.resolve(__dirname, 'validate-relay-block');
+        try {
+          execFileSync(validateScript, [flags['relay-file']], { stdio: 'inherit' });
+        } catch (err) {
+          process.stderr.write(`tick: validation failed for ${flags['relay-file']}\n`);
+          return 8;
+        }
+      }
       release(root, { task, agent: flags.agent, to_agent: typeof flags.to === 'string' ? flags.to : undefined });
       process.stdout.write(`released: ${task}\n`);
       return 0;
@@ -236,6 +249,15 @@ function main(argv) {
     case 'done': {
       const [task] = positional;
       if (!task || !flags.agent) { usage(); return 2; }
+      if (flags['relay-file']) {
+        const validateScript = path.resolve(__dirname, 'validate-relay-block');
+        try {
+          execFileSync(validateScript, [flags['relay-file']], { stdio: 'inherit' });
+        } catch (err) {
+          process.stderr.write(`tick: validation failed for ${flags['relay-file']}\n`);
+          return 8;
+        }
+      }
       done(root, { task, agent: flags.agent, note: typeof flags.note === 'string' ? flags.note : undefined });
       process.stdout.write(`done: ${task}\n`);
       return 0;

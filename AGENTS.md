@@ -1,67 +1,77 @@
 # AGENTS.md
 
-See ROUTER.md for Repo Project Governance
+Read `ROUTER.md` first for startup order and canonical files.
+
+Read `GUIDING-PRINCIPLES.md` for the product north stars.
+
+Read `PROJECT/PDDA.md` when the task touches project docs, `ROADMAP.md`, or `CHANGELOG.md`.
+
+## What this file owns
+
+This file is the behavioral playbook for work in this repo: decision quality, reversibility, blast
+radius, planning shape, and proof.
+
+Do not restate routing, roadmap, changelog, or active-doc contracts here. Those live in
+`ROUTER.md` and `PROJECT/PDDA.md`.
 
 ## Operating principles
 
-These apply to every response, plan, and change you make here.
-
 ### 1. Lead with the line that survives skimming
 
-Your first sentence answers "what happened" or "what's the call" — never setup, never recap, never "Great question." If the reader stopped after one line, they should still leave with the verdict. Supporting detail comes after, for those who want it.
+Your first sentence gives the verdict, current state, or call. No setup first.
 
-### 2. Make the implicit explicit — before committing, not after
+### 2. Make the bet explicit before acting
 
-Every recommendation carries hidden freight: the assumption it bets on, the corner of speed/cost/quality it quietly sacrifices, the things that break if it's wrong. Name that freight out loud *before* acting on it. The one-sentence test: could a future reading of your claim say "this was wrong"? If nothing you stated is falsifiable, you haven't said anything yet.
+State the assumption, tradeoff, and failure mode that matter before you commit to a path. If a future
+reader could not say "that assumption was wrong," you have not made the real bet legible yet.
 
-### 3. Speak one reversibility vocabulary
+### 3. Use one reversibility scale
 
-Every consequential change gets a read on the shared scale — **Easy / Costly / One-way door** — with one line of why. Tiebreaker when the line feels fuzzy: more than a day of focused work to undo means it's at least Costly. Treat the levels differently: Easy earns a bias toward action; Costly earns a stated rollback path; a One-way door earns a pause and an explicit confirmation before you walk through it.
+Consequential changes get a read on the shared scale: **Easy / Costly / One-way door**, with one line
+of why. If undoing it would take more than a day of focused work, it is at least Costly. Costly
+changes need a rollback path. One-way doors need explicit confirmation before proceeding.
 
-### 4. Size the blast radius before you swing
+### 4. Size the blast radius before changing shared surfaces
 
-Before a refactor, schema change, or dependency bump: how far does it ripple, what breaks, who notices? A change you can't size is a change you're not ready to make. Say the radius in one line, then proceed — sizing is a checkpoint, not a workshop.
+Before a refactor, schema change, dependency bump, coordination-kernel change, or relay-containment
+change, say what ripples, what might break, and who notices. A change you cannot size is not ready.
 
-### 5. One plan, one place
+### 5. One plan, one ordered list
 
-When you give steps someone will execute, they live in a single numbered list in execution order — branches as sub-bullets under their parent step, verification inline (`→ expect ...`), nothing actionable after the list. Never scatter half the steps into prose and the rest into a closing paragraph. The reader executes top-to-bottom without re-reading or reverse-engineering.
+When you give executable steps, put them in one numbered list in execution order. Keep verification
+inline (`-> expect ...`). Do not scatter action items across prose.
 
-### 6. Refuse rather than fake it
+### 6. Verified beats plausible
 
-Don't optimize what you can't measure. Don't report a win you didn't verify — if tests fail, say so with the output; if a step was skipped, say that. Don't pad a template with fields that don't apply, and don't manufacture a verdict to sound decisive. "No real improvement found" and "I can't size this without X" are first-class answers. Honest signal beats constant alarm — and beats false confidence worse.
+Do not claim success without the relevant test, script, or observable proof. If verification was
+skipped or failed, say that plainly and include the result.
 
-### 7. Record the bets that matter
+### 7. Record only consequential bets
 
-When a decision is Costly or a One-way door, or rides on an assumption that could be wrong, write it down at commit time: the call, the bet, the expected signal with a by-when, the reversibility read, a revisit trigger. *Where and how* you record it is governed by the PDDA CHANGELOG contract ([PROJECT/PDDA.md](PROJECT/PDDA.md)) — the end-of-iteration log, append-only — not by this file. Below the threshold, skip it and say so in one line.
+If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per
+`PROJECT/PDDA.md`. Below that threshold, skip the ritual.
 
-### 8. Calibration is staying quiet
+### 8. Stay quiet on trivial work
 
-Most changes are small and reversible; treat them that way. Don't run the full ritual on a rename, don't manufacture gravity where there is none, don't escalate to fill space. The principles above earn their interruptions by firing rarely and being right. A suite that flags everything flags nothing.
+Most edits are small and reversible. Do not manufacture ceremony for a rename, typo fix, or other
+local change.
 
-## How the principles chain
+## Repo-specific rails
 
-Frame the decision (#2), price and size it (#2–#4), cut to the call (#1), sequence the execution (#5), prove the result (#6), record the bet (#7) — and at every step, #8 decides whether the moment is big enough to bother. The skills in this repo are these same principles with triggers and output contracts attached; when a skill fires, it takes precedence over this file's ambient version.
+- `ROUTER.md` owns startup order, canonical files, command rails, and the issue-first SOP.
+- `GUIDING-PRINCIPLES.md` owns the product/runtime priorities: local event-log coordination,
+  containment, skill-first relay work, durable fixes, and verified done.
+- `PROJECT/PDDA.md` owns doc lifecycle, `ROADMAP.md` pointer-ledger rules, and `CHANGELOG.md`
+  governance.
+- `validate.sh` is the code/runtime gate. `utils/pdda-run.sh` and the targeted `utils/pdda-*.sh`
+  scripts are the doc-hygiene gates.
+- Changes to `.tick/events/`, `src/project.js`, relay containment, or event/verb shape are usually
+  broader than they look. Treat them as at least Costly until proven otherwise.
 
-When instructions conflict: the current user message wins. Project-level instructions (this file, any repo-level config) override skill defaults. Skill definitions are the floor — they lose to both.
+## Conflict order
 
-## Working in this repository
-
-This repo is the **Trinity coordination spike** — a small `tick` CLI (Node standard library only) that lets Claude Code, Codex, and Gemini work one branch concurrently without colliding. Most changes land in the runtime (`src/`, `bin/`) or its test suite (`test/`), not in docs. Conventions that will bite you if skipped:
-
-For startup order and canonical entry points, read [ROUTER.md](ROUTER.md) first; this file stays the behavioral playbook.
-
-- **`validate.sh` is the gate.** It must stay green (currently 12/12). Correctness concentrates in the projection logic (`src/project.js`) — the easy place to break something silently. Any change to projection, the disjoint-files-per-event model, or the shared-local `.tick/events/` transport (git push was removed in Run 2 — claims resolve from the local event dir, not a remote) earns a test before it earns a commit.
-- **Provenance is governed by PDDA, not here.** Run results and the bets behind them are recorded in the end-of-iteration `CHANGELOG.md` per [PROJECT/PDDA.md](PROJECT/PDDA.md) (append-only; `REAL-AGENT-OBSERVATIONS.md` for run-compliance). This file stays behavioral — it says *record the bet* (#7); PDDA owns the format, the append-only rule, and the freshness check.
-- **`.tick/` is branch-scoped and load-bearing.** Don't restructure the event-log layout or rename verbs without updating [README.md](README.md) — the verb table and the agent integration snippet both state them — in the same change.
-- **Node standard library only — no dependencies, no lockfile.** The repo ships no root manifest; the only `package.json` is the `sandbox-app/` test fixture. `tick` runs on `node:*` built-ins by contract — don't add deps or a lockfile to either.
-- **ASCII punctuation** — straight quotes, regular hyphens. Em-dashes are fine.
-- **One skill ships here** (`skill/xyz/SKILL.md`): frontmatter on line 1, entry file `SKILL.md` exact-case, triggers observable at fire time. If you touch it, keep its embedded self-extracting test suite passing (12/12).
-
-## The experiment, measured
-
-In the spirit of principle #7, this file is itself a recorded bet:
-
-- **The bet:** ambient principles in AGENTS.md improve agent behavior in this repo even when no skill fires — and the file transfers usefully to other repos unchanged.
-- **Expected signal:** agent responses here lead with verdicts, state reversibility on consequential changes (the `tick` runtime is full of Costly / one-way-door calls), and stay quiet on trivial ones — observable in session transcripts and in CHANGELOG.md's graduate/iterate/abandon framing.
-- **Reversibility:** Easy — delete the file.
-- **Revisit:** if the principles here drift from how CHANGELOG.md actually records bets, or the file grows past ~120 lines, prune or reconcile.
+1. The current user request
+2. The canonical doc that owns the surface you are touching (`ROUTER.md`, `GUIDING-PRINCIPLES.md`,
+   `PROJECT/PDDA.md`, or the active `PROJECT/**` doc)
+3. This file
+4. Skill defaults

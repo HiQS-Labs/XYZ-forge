@@ -1,8 +1,8 @@
 ---
 title: Cross-repo driven-relay friction — token collision, path resolution, .tick, sandbox
-status: Active — verification + docs + code fixes (#2/#1b/#5) shipped, agy-approved; #3/#4 doc-only resolved
+status: Completed
 created: 2026-06-24
-updated: 2026-06-24
+updated: 2026-06-25
 owner: noelsaw1
 branch: main
 gh_issue: 18
@@ -20,7 +20,7 @@ related:
   - relay-automation/relay-drive.sh
   - relay-automation/codex-turn.sh
   - relay-automation/relay-turn-lib.sh
-  - relay-automation/QUICKSTART.md
+  - relay-automation/README.md
 non_goals:
   - Cloud / cross-machine relay (out of GH-16 scope)
   - Re-defaulting the token id in the scripts before review (deferred to the code phase)
@@ -30,7 +30,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| **All phases done.** Phase 0 verification (#1/#2/#5 real bugs; #3/#4 doc-only). Phase 1 docs (QUICKSTART). **Phase 2 code shipped + agy-approved**: #2 relay-file resolution, #1b token-collision hints, #5 Escalated-not-stall oracle — 3 new tests, **`validate.sh` 41→44/44**; agy review **Approved** (3×[Pass], confirmed #5 doesn't mask a true stall). | Close [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18); fold any residual into GH-16. Move this doc to `3-COMPLETED` once #18 is closed. |
+| **All phases done; archived 2026-06-25.** Phase 0 verification (#1/#2/#5 real bugs; #3/#4 doc-only). Phase 1 docs (headless bring-up now folded into `relay-automation/README.md`). **Phase 2 code shipped + agy-approved**: #2 relay-file resolution, #1b token-collision hints, #5 Escalated-not-stall oracle — 3 new tests, **`validate.sh` 41→44/44**; agy review **Approved** (3×[Pass], confirmed #5 doesn't mask a true stall). | Closed [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18) + archived to `3-COMPLETED`. Any residual folds into GH-16. |
 
 ## Problem
 
@@ -47,17 +47,17 @@ Each finding was reproduced locally (throwaway tick root, no codex/agy needed) b
 
 | # | Sev | Finding | Verdict | Evidence |
 |---|-----|---------|---------|----------|
-| 1 | High | `RELAY-TURN` singleton token carries terminal state across relays | ✅ **CONFIRMED (code)** | A `done` RELAY-TURN → new relay's `claim` fails `lost: RELAY-TURN is done — not claimable`; a fresh per-relay id (`RELAY-<slug>`) claims cleanly. Default at [relay-drive.sh:46](../../relay-automation/relay-drive.sh#L46); QUICKSTART example seeds the trap. |
+| 1 | High | `RELAY-TURN` singleton token carries terminal state across relays | ✅ **CONFIRMED (code)** | A `done` RELAY-TURN → new relay's `claim` fails `lost: RELAY-TURN is done — not claimable`; a fresh per-relay id (`RELAY-<slug>`) claims cleanly. Default at [relay-drive.sh:46](../../relay-automation/relay-drive.sh#L46); the consolidated README bring-up example now seeds the safe pattern instead. |
 | 2 | High | `--relay-file` resolved vs CWD, not `--target-root` | ✅ **CONFIRMED (code)** | From harness with `--target-root <foreign>` + repo-relative `--relay-file`, driver dies `relay file does not exist` though the file exists under the target. Check at [relay-drive.sh:60](../../relay-automation/relay-drive.sh#L60); `TARGET_ROOT` known by [line 53](../../relay-automation/relay-drive.sh#L53). |
-| 3 | Med | Cross-repo `.tick` footgun (foreign untracked noise) | ⚠️ **LARGELY STALE → doc-only** | Driven runs anchor `.tick` to the harness — [codex-turn.sh:57](../../relay-automation/codex-turn.sh#L57) `export TICK_REPO_ROOT="$ROOT"`; [relay-turn-lib.sh:53-57](../../relay-automation/relay-turn-lib.sh#L53-L57) "only the ARTIFACT side moves." Residual: the **manual seed** step, where QUICKSTART line 45 tells you `export TICK_REPO_ROOT="$PWD"`. Fix = doc. |
-| 4 | Med | Codex can't self-write under default sandbox cross-repo | ⚠️ **Documented limitation → doc-only** | [codex-turn.sh:64](../../relay-automation/codex-turn.sh#L64) defaults `-s workspace-write`; remediation already documented at [lines 17-20](../../relay-automation/codex-turn.sh#L17-L20). Fix = surface the recipe in QUICKSTART. |
+| 3 | Med | Cross-repo `.tick` footgun (foreign untracked noise) | ⚠️ **LARGELY STALE → doc-only** | Driven runs anchor `.tick` to the harness — [codex-turn.sh:57](../../relay-automation/codex-turn.sh#L57) `export TICK_REPO_ROOT="$ROOT"`; [relay-turn-lib.sh:53-57](../../relay-automation/relay-turn-lib.sh#L53-L57) "only the ARTIFACT side moves." Residual was the manual seed step in the headless bring-up docs. Fix = doc. |
+| 4 | Med | Codex can't self-write under default sandbox cross-repo | ⚠️ **Documented limitation → doc-only** | [codex-turn.sh:64](../../relay-automation/codex-turn.sh#L64) defaults `-s workspace-write`; remediation already documented at [lines 17-20](../../relay-automation/codex-turn.sh#L17-L20). Fix = surface the recipe in the consolidated README bring-up. |
 | 5 | Med | By-design `Escalated` round-cap handback reports as a stall | ✅ **CONFIRMED (code)** | A `STATUS: Escalated` relay with the token left `open:codex` (correct at `ROUND 1/1`) trips the no-progress `exit 3`. `terminal_status` matches only `Approved\|Closed` ([relay-drive.sh:78](../../relay-automation/relay-drive.sh#L78)); no-progress guard at [line 139](../../relay-automation/relay-drive.sh#L139). |
 
 ## Phase 1 — Documentation updates (DONE 2026-06-24, docs only)
 
 Closes the doc-only findings (#3, #4) and the doc halves of #1 and both Low/Nit items.
 
-- [x] **QUICKSTART RELAY-TURN example → per-relay id** (closes #1-doc + Low nit). Stop teaching the
+- [x] **README bring-up example → per-relay id** (closes #1-doc + Low nit). Stop teaching the
       collision trap; seed `RELAY-<slug>` derived from the relay file.
 - [x] **Add a "review a file in another repo" recipe** (closes #3-doc, #4-doc, both Lows). One worked
       cross-repo example: `--target-root` + `TICK_REPO_ROOT=<harness>` (NOT `$PWD`) + absolute
@@ -75,7 +75,7 @@ Order shipped: #2 → #1b → #5. Each landed with a failing-first test seeded f
 - [x] **#1b — token-collision hints (default unchanged).** `bin/tick`'s `claim` not-claimable branch
       hints a fresh per-relay id; `relay-drive.sh`'s no-actor branch names the real `--relay-task` and,
       on a spent `done` token, hints the fix. Default token left as `RELAY-TURN` (the seed is external;
-      changing it would break the seed/drive contract and many tests — QUICKSTART/skill already use a
+      changing it would break the seed/drive contract and many tests — README/skill already use a
       per-relay id). Test: `test/relay-token-collision.sh` (5).
 - [x] **#5 — escalation success oracle.** `STATUS: Escalated` is now terminal-by-design at both the
       loop top and the post-turn guard → exit 4 with a clean handback message, NOT the stall's exit 3.

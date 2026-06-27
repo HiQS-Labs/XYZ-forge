@@ -142,6 +142,21 @@ rtl_run_bounded() {  # <timeout_secs> <cmd...>
 #     seeded — the reviewer reads a missing/stale file. COMMIT review inputs before an isolated reviewer
 #     turn. The real fix — a read-only seed set distinct from the writable allowlist, so a reviewer can
 #     READ but not WRITE the artifact in the worktree — is tracked as #15, not done here.
+_rtl_sig() {  # <path> — content signature of a file/dir, or "ABSENT". Used to detect what the turn
+  # actually changed IN THE WORKTREE, so rtl_worktree_end copies back ONLY worktree-modified paths and
+  # never clobbers a ROOT-direct edit with a stale seed (GH-22). git is already required by this lib.
+  local p="$1"
+  if [[ -f "$p" ]]; then
+    git hash-object -- "$p" 2>/dev/null || echo "ERR:$p"
+  elif [[ -d "$p" ]]; then
+    # Stable per-dir signature: hash each tracked-or-untracked file's content in sorted order.
+    ( cd "$p" 2>/dev/null && find . -type f -print0 2>/dev/null | LC_ALL=C sort -z \
+        | xargs -0 git hash-object 2>/dev/null ) | git hash-object --stdin 2>/dev/null || echo "ERR:$p"
+  else
+    echo "ABSENT"
+  fi
+}
+
 rtl_worktree_begin() {
   # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
   # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
@@ -161,6 +176,14 @@ rtl_worktree_begin() {
                                        # deletion, else the HEAD checkout would resurrect it on copy-back
     fi                                 # (Codex review r2, 2026-06-20 — symmetric to the in-turn delete)
   done
+  # GH-22: snapshot each seeded allowlist path's signature so rtl_worktree_end copies back ONLY paths
+  # the turn modified in the worktree — an agent that wrote ROOT directly (real agy resolves the relay
+  # file to its absolute ROOT path even with CWD=worktree) must not be overwritten by the stale seed.
+  # Persist to a sidecar file (NOT inside the worktree — that would read as an off-lane untracked file)
+  # because the caller invokes this via wt="$(rtl_worktree_begin)", a subshell whose globals are lost;
+  # rtl_worktree_end re-reads the sidecar by the worktree path it is handed. One line per RTL_ALLOW entry.
+  : >"${wt}.seedsig"
+  for a in "${RTL_ALLOW[@]}"; do _rtl_sig "$wt/$a" >>"${wt}.seedsig"; done
   RTL_WT="$wt"; RTL_WT_USED=1   # GH-13: mark the turn worktree-isolated so rtl_enforce won't reset a concurrent peer's ROOT commit
   printf '%s\n' "$wt"
 }
@@ -184,7 +207,19 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
   done < <(git -C "$wt" status --porcelain -z 2>/dev/null)
   if ((RTL_WT_OFFLANE == 0)); then
+    local i=0 seedsig nowsig _ln; local _seeds=()
+    # Re-read the seed signatures written by rtl_worktree_begin (one line per RTL_ALLOW entry).
+    if [[ -f "${wt}.seedsig" ]]; then
+      while IFS= read -r _ln; do _seeds+=("$_ln"); done <"${wt}.seedsig"
+    fi
     for a in "${RTL_ALLOW[@]}"; do
+      # GH-22: copy back ONLY paths the turn changed IN THE WORKTREE. If the worktree path is identical
+      # to what was seeded, the turn did not touch it here — leave RTL_ROOT alone so a ROOT-direct edit
+      # (agy writing the absolute ROOT path) survives for rtl_enforce to commit, instead of being
+      # overwritten by the stale seed. No recorded seed signature → copy as before (safe fallback).
+      seedsig="${_seeds[i]-}"; i=$((i+1))
+      nowsig="$(_rtl_sig "$wt/$a")"
+      [[ -n "$seedsig" && "$nowsig" == "$seedsig" ]] && continue
       if [[ -e "$wt/$a" ]]; then
         mkdir -p "$RTL_ROOT/$(dirname "$a")"
         cp -R "$wt/$a" "$RTL_ROOT/$a"
@@ -193,6 +228,7 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
       fi
     done
   fi
+  rm -f "${wt}.seedsig"                  # GH-22: clean up the sidecar signature file
   git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
   git -C "$RTL_ROOT" worktree prune >/dev/null 2>&1 || true
   RTL_WT=""
