@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 7 items | Tally: 🟢 2 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 8 items | Tally: 🟢 2 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | — | [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
 | Marathon candidate · Apple Reminders Phase 2 (rebalance-OS, cross-repo) | 🟡 | [rebalance-OS `APPLE-REMINDERS-UNIFIED-PLAN.md`](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) · [APPLE-REMINDERS-UNIFIED-PLAN.md](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) |
 | GH-24 · relay telemetry extractor | 🟢 | [GH-24-RELAY-TELEMETRY-EXTRACTOR.md](PROJECT/1-INBOX/GH-24-RELAY-TELEMETRY-EXTRACTOR.md) · [#24](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/24) |
 | GH-22 · agy worktree isolation silent data loss | ⏸️ | [GH-22-AGY-WORKTREE-ISOLATION-DATA-LOSS.md](PROJECT/1-INBOX/GH-22-AGY-WORKTREE-ISOLATION-DATA-LOSS.md) · [#22](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/22) |
@@ -20,13 +21,13 @@ Summary: 7 items | Tally: 🟢 2 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 0 · 🔮
 
 ## In progress
 
-Summary: 9 items | Tally: 🟢 8 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 9 items | Tally: 🟢 7 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-27 · ROADMAP dashboard renderer | 🟢 | [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) · [gh-27-roadmap-dashboard-brief.md](PROJECT/2-WORKING/briefs/gh-27-roadmap-dashboard-brief.md) · [#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) |
 | GH-25 · swarm preflight planner | 🟢 | [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/2-WORKING/GH-25-SWARM-PREFLIGHT-PLANNER.md) · [#25](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/25) |
-| Part A · Phase 6 — real-substrate dogfood (graduation test) | 🟢 | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
+| Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟢 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
 | Tooling · relay-xyz durability | 🟢 | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
