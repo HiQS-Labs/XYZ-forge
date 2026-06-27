@@ -74,6 +74,38 @@ handoff_to RT-expire alice
 [ "$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-expire --analysis-file "$NONE" --deadline 9999999999)" = "run-runner" ] \
   && pass "--deadline in the future -> normal decision (no premature stop)" || fail "future deadline should not stop"
 
+# --- (i-file) --turn-source file: whose-turn from the relay NEXT: field, tick token OPTIONAL ---
+# (the dueling-claudes field finding: a peer that never joins tick still advances the relay)
+printf 'STATUS: Open\n**NEXT:** alice — go do the thing\n# body\n' >"$A/relay-next-mine.md"
+printf 'STATUS: Open\nNEXT: bob\n# body\n'                          >"$A/relay-next-other.md"
+printf 'STATUS: Open\nNEXT: codex\n# body\n'                        >"$A/relay-next-codex.md"
+printf 'STATUS: Approved\n**NEXT:** alice\n# body\n'                >"$A/relay-next-approved.md"
+git -C "$A" add relay-next-mine.md relay-next-other.md relay-next-codex.md relay-next-approved.md >/dev/null 2>&1
+git -C "$A" commit -q -m "file-source fixtures" >/dev/null 2>&1
+# file source as agent alice; NO tick token is ever created for these (proves token-optional).
+decide_file(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --turn-source file "$@" --dry-run 2>/dev/null | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p'; }
+
+[ "$(decide_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art.md")" = "run-runner" ] \
+  && pass "file source: bold **NEXT:**==me + clean -> run-runner (no tick token)" || fail "expected run-runner (file/mine)"
+
+[ "$(decide_file --relay-file "$A/relay-next-other.md" --artifact "$A/art.md" --claude-agents alice,bob)" = "idle" ] \
+  && pass "file source: NEXT==other Claude -> idle (not my turn)" || fail "expected idle (file/other)"
+
+[ "$(decide_file --relay-file "$A/relay-next-codex.md" --artifact "$A/art.md" --claude-agents alice)" = "nudge-cross-model" ] \
+  && pass "file source: NEXT==non-Claude -> nudge-cross-model" || fail "expected nudge (file/codex)"
+
+[ "$(decide_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art-dirty.md")" = "idle" ] \
+  && pass "file source: NEXT==me + dirty scope -> idle" || fail "expected idle (file/dirty)"
+
+[ "$(decide_file --relay-file "$A/relay-next-approved.md" --artifact "$A/art.md")" = "stop" ] \
+  && pass "file source: STATUS Approved (terminal) still -> stop" || fail "expected stop (file/approved)"
+
+# commit-signal gate: NEXT==me but run-runner only once a matching peer commit lands
+[ "$(decide_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art.md" --peer-commit-repo "$A" --peer-commit-match 'file-source fixtures')" = "run-runner" ] \
+  && pass "file source: peer-commit present -> run-runner" || fail "expected run-runner (commit present)"
+[ "$(decide_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art.md" --peer-commit-repo "$A" --peer-commit-match 'ZZZ-no-such-subject')" = "idle" ] \
+  && pass "file source: peer-commit missing -> idle (waiting for peer commit)" || fail "expected idle (commit waiting)"
+
 POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay-approved.md" --artifact "$A/art.md" --relay-task RT-none --analysis-file "$NONE" --dry-run >/dev/null 2>&1
 [ "$?" -eq 10 ] && pass "stop exits 10" || fail "stop should exit 10"
 

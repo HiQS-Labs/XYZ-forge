@@ -176,13 +176,21 @@ gated behind your "go" anyway, so they're not the noisy part.)
   put Codex/agy in window B via Path A (see [skills/relay-xyz/SKILL.md](../skills/relay-xyz/SKILL.md)).
   Mitigated when a **runnable gate** is the referee (a fix is accepted on red→green, not on opinion) —
   proven in the 2026-06-26 cross-repo run.
-- **The token only works if BOTH windows run it.** Field finding (2026-06-26): if the Maintainer Claude
-  just reads the relay file and does the work without `tick claim`/`ping`/`release`, the token
-  coordinates nothing — the Reporter's poll idles as `parked suspect but no watchdog authority` and every
-  handoff needs a manual `reap`+`claim`. The token also went **`spent — not claimable`** after several
-  `release --to peer` round-trips. Practical fallback that worked: **retire the token and drive off the
-  relay file's `NEXT:` + the peer's fix commits** (a 2-min commit-watcher auto-advanced the relay). See
+- **The token only works if BOTH windows run it — so prefer `--turn-source file`.** Field finding
+  (2026-06-26): if the Maintainer Claude just reads the relay file and does the work without
+  `tick claim`/`ping`/`release`, the token coordinates nothing — the Reporter's poll idled as
+  `parked suspect but no watchdog authority`, and the token went **`spent — not claimable`** after a few
+  `release --to peer` round-trips. **Shipped fix:** run the poll with **`--turn-source file`**, which reads
+  whose-turn from the relay `NEXT:` field and makes the tick token optional (no claim/heartbeat/release).
+  Add `--peer-commit-repo DIR --peer-commit-match RE` to also gate on the peer's fix commit landing (the
+  hands-free "advance on commit" signal). See
   [PROJECT/2-WORKING/AUTOMATED-RELAY.md → Field findings](../PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26).
+- **Write the gate to assert behavior, not a code shape.** Field finding (2026-06-26): a needle gate that
+  statically requires each of N methods to declare a literal `return array(...)` *blocked* the issue's
+  real fix (delegate to one canonical method + delete the duplicates) — the loop was forced to keep N
+  duplicated-but-identical literals the gate calls "converged." Prefer asserting the runtime output (e.g.
+  output-key equality) or "canonical + delegates," so the gate rewards the refactor instead of pinning a
+  worse shape.
 - **Run the in-loop gate sandbox-OFF.** Re-running the target's `bash tests/run.sh` from a watcher under
   the Claude Bash sandbox false-fails (PHP can't create lock files → bogus "syntax errors"); trust the
   Maintainer's un-sandboxed run and spot-confirm sandbox-off.

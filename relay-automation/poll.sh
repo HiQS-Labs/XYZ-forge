@@ -45,8 +45,17 @@ relay mode (whose-turn = the RELAY-TURN tick task; STATUS read from the file):
   --relay-file PATH       Relay thread file (reads STATUS: for the terminal signal).
   --relay-task ID         The relay turn-token task (default: RELAY-TURN).
   --artifact PATH         Artifact under review (clean-tree scope; with the relay file).
-  --claude-agents "a,b"   Agents that are Claude (can self-poll); a RELAY-TURN handed
+  --claude-agents "a,b"   Agents that are Claude (can self-poll); a turn handed
                           to a non-Claude agent -> cross-model nudge.
+  --turn-source tick|file Where whose-turn comes from (default: tick).
+                          file = read the relay file's NEXT: field; the tick token is
+                          OPTIONAL (no claim/heartbeat needed). Use when a peer won't
+                          join tick, or to avoid the spent-token / parked-stall failure.
+                          STATUS: (terminal) + artifact-scope-clean still apply.
+  --peer-commit-repo DIR  (file source) Also require a matching commit in DIR before
+  --peer-commit-match RE   run-runner — the "advance on the peer's fix commit" signal.
+                          Until a recent commit subject matches RE, the decision is idle
+                          ("waiting for peer commit"). Both flags required to arm.
 
 xyz mode:
   --task TASK-ID          The task whose turn this is (my-turn + scope from `tick info`).
@@ -74,6 +83,7 @@ MODE=""; AGENT=""; DRY_RUN=0; ANALYSIS_FILE=""; WATCHDOG_AUTHORITY=0
 RUNNER_CMD=""; WATCHDOG_CMD=""
 RELAY_FILE=""; ARTIFACT=""; CLAUDE_AGENTS=""; RELAY_TASK="RELAY-TURN"; DEADLINE=""
 TASK=""
+TURN_SOURCE="tick"; PEER_COMMIT_REPO=""; PEER_COMMIT_MATCH=""
 
 while (($# > 0)); do
   case "$1" in
@@ -89,6 +99,9 @@ while (($# > 0)); do
     --relay-task) RELAY_TASK="${2:-}"; shift 2 ;;
     --artifact) ARTIFACT="${2:-}"; shift 2 ;;
     --claude-agents) CLAUDE_AGENTS="${2:-}"; shift 2 ;;
+    --turn-source) TURN_SOURCE="${2:-}"; shift 2 ;;
+    --peer-commit-repo) PEER_COMMIT_REPO="${2:-}"; shift 2 ;;
+    --peer-commit-match) PEER_COMMIT_MATCH="${2:-}"; shift 2 ;;
     --task) TASK="${2:-}"; shift 2 ;;
     --help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
@@ -96,6 +109,8 @@ while (($# > 0)); do
 done
 
 [[ "$MODE" == "xyz" || "$MODE" == "relay" ]] || { usage; die "--mode xyz|relay is required"; }
+[[ "$TURN_SOURCE" == "tick" || "$TURN_SOURCE" == "file" ]] || die "--turn-source must be tick|file"
+[[ "$TURN_SOURCE" == "file" && "$MODE" != "relay" ]] && die "--turn-source file requires --mode relay"
 [[ -n "$AGENT" ]] || die "--agent is required"
 RUNNER_CMD="${RUNNER_CMD:-"$ROOT_DIR/relay-automation/runner.sh"}"
 WATCHDOG_CMD="${WATCHDOG_CMD:-"$ROOT_DIR/relay-automation/watchdog.sh"}"
@@ -118,8 +133,24 @@ parked_count() {
   '
 }
 
-# Read a "Key:" line value from the relay file (NEXT / STATUS).
-relay_field() { sed -n "s/^$1:[[:space:]]*//p" "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
+# Read a "Key:" line value from the relay file (NEXT / STATUS), tolerating a
+# **bold** markdown key (real threads write `**STATUS:** Open` / `**NEXT:** claude-b`).
+relay_field() { sed -n "s/^[*]*$1[*]*:[*]*[[:space:]]*//p" "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
+
+# whose-turn from the relay NEXT: field = its FIRST token (the agent id), dropping any
+# trailing " — description" the writer added. Empty if no NEXT: line.
+relay_next_agent() { relay_field NEXT | awk '{print $1}'; }
+
+# Commit-signal gate (file source): if both --peer-commit-* are set, require a recent
+# commit subject in that repo to match before the turn is runnable. Unset => always pass.
+commit_gate_ok() {
+  [[ -z "$PEER_COMMIT_REPO" || -z "$PEER_COMMIT_MATCH" ]] && return 0
+  # Capture then match with bash ERE — NOT `git … | grep -q`, which trips `set -o pipefail`
+  # (grep -q closes the pipe on first match → git gets SIGPIPE → pipeline reports failure).
+  local log
+  log="$(git -C "$PEER_COMMIT_REPO" log --oneline -30 2>/dev/null || true)"
+  [[ "$log" =~ $PEER_COMMIT_MATCH ]]
+}
 
 # Artifact-scoped clean check (NOT repo-global). Returns 0 = clean.
 scope_clean() {
@@ -155,24 +186,45 @@ is_claude_agent() {
 }
 
 # ---- compute guard booleans ---------------------------------------------
-STOP=0; MY_TURN=0; CLEAN=1; CROSS_MODEL=0; CROSS_AGENT=""
+STOP=0; MY_TURN=0; CLEAN=1; CROSS_MODEL=0; CROSS_AGENT=""; WAIT_COMMIT=0
 
+# Parked/watchdog is a tick-token concept; skip the `tick analyze` read entirely in the
+# token-optional file source (unless the caller supplied an analysis file).
 PARKED=0
-[[ "$(parked_count)" -gt 0 ]] && PARKED=1
+if [[ "$TURN_SOURCE" == "tick" || -n "$ANALYSIS_FILE" ]]; then
+  [[ "$(parked_count)" -gt 0 ]] && PARKED=1
+fi
 
 if [[ "$MODE" == "relay" ]]; then
   [[ -n "$RELAY_FILE" ]] || die "relay mode requires --relay-file"
   [[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
-  # Terminal signal comes from the human-readable thread; whose-turn from tick.
+  # Terminal signal always comes from the human-readable thread.
   case "$(relay_field STATUS)" in Approved|Closed) STOP=1 ;; esac
-  read_task "$RELAY_TASK"
-  if tick_my_turn; then
-    MY_TURN=1
-    scope=("$RELAY_FILE"); [[ -n "$ARTIFACT" ]] && scope+=("$ARTIFACT")
-    scope_clean "${scope[@]}" && CLEAN=1 || CLEAN=0
-  elif [[ "$T_STATUS" == "open" && -n "$T_HANDOFF" && "$T_HANDOFF" != "$AGENT" ]] \
-       && ! is_claude_agent "$T_HANDOFF"; then
-    CROSS_MODEL=1; CROSS_AGENT="$T_HANDOFF"
+  if [[ "$TURN_SOURCE" == "file" ]]; then
+    # whose-turn from the relay NEXT: field — the tick token is not consulted.
+    nxt="$(relay_next_agent)"
+    if [[ -n "$nxt" && "$nxt" == "$AGENT" ]]; then
+      if commit_gate_ok; then
+        MY_TURN=1
+        scope=("$RELAY_FILE"); [[ -n "$ARTIFACT" ]] && scope+=("$ARTIFACT")
+        scope_clean "${scope[@]}" && CLEAN=1 || CLEAN=0
+      else
+        WAIT_COMMIT=1   # NEXT: me, but the peer's fix commit hasn't landed yet
+      fi
+    elif [[ -n "$nxt" && "$nxt" != "$AGENT" ]] && ! is_claude_agent "$nxt"; then
+      CROSS_MODEL=1; CROSS_AGENT="$nxt"
+    fi
+  else
+    # whose-turn from the RELAY-TURN tick token (the default).
+    read_task "$RELAY_TASK"
+    if tick_my_turn; then
+      MY_TURN=1
+      scope=("$RELAY_FILE"); [[ -n "$ARTIFACT" ]] && scope+=("$ARTIFACT")
+      scope_clean "${scope[@]}" && CLEAN=1 || CLEAN=0
+    elif [[ "$T_STATUS" == "open" && -n "$T_HANDOFF" && "$T_HANDOFF" != "$AGENT" ]] \
+         && ! is_claude_agent "$T_HANDOFF"; then
+      CROSS_MODEL=1; CROSS_AGENT="$T_HANDOFF"
+    fi
   fi
 else # xyz
   [[ -n "$TASK" ]] || die "xyz mode requires --task"
@@ -202,6 +254,8 @@ elif ((MY_TURN)) && ((CLEAN)); then
   DECISION="run-runner"; REASON="my turn and artifact scope clean"
 elif ((MY_TURN)); then
   DECISION="idle"; REASON="my turn but artifact scope dirty"
+elif ((WAIT_COMMIT)); then
+  DECISION="idle"; REASON="my turn by NEXT but peer fix commit not yet landed"
 elif ((PARKED)) && ((WATCHDOG_AUTHORITY)); then
   DECISION="run-watchdog"; REASON="parked suspect and I hold watchdog authority"
 elif ((PARKED)); then
