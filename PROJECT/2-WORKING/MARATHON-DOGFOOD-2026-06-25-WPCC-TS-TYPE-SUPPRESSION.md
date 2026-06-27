@@ -1,8 +1,8 @@
 ---
 title: Marathon Dogfood — Headless Relay builds WPCC "TS type-suppression" detector
-status: Phase 0 — pre-registration (locked before any turn fires)
+status: Graduated — fired 2026-06-26; ts-type-suppression built + approved + committed (WP-Code-Check 3e22f97)
 created: 2026-06-25
-updated: 2026-06-25
+updated: 2026-06-26
 owner: Noel (with Claude Code, Opus 4.8)
 harness_repo: xyz-3-agents-swarm (relay-automation/ Marathon stack)
 substrate_repo: WP-Code-Check (bash scanner; grep-based JSON pattern library)
@@ -40,7 +40,18 @@ gate. agy builds, Codex reviews, this session orchestrates.
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 0 discovery + design ✅ 2026-06-25** — live WPCC clone located (`WP-Code-Check`, v2.2.9 on `main`; freshest work on `origin/development` @ 2026-06-18). Target `ts-type-suppression` confirmed **unbuilt on the freshest branch** (no `ts-*` pattern, no `typescript` category, no `@ts-ignore`/`as any` check). Gate designed **narrow** after the full `run-fixture-tests.sh` suite was found **7/10 red at baseline on `development`** (pre-existing expected-count drift — NOT caused by this build). Schema template + registry + validator paths pinned below. | **Operator GO to fire**, then: cut `marathon-dogfood/ts-type-suppression` off `origin/development`, capture the narrow-gate baseline (new fixture absent ⇒ 0 findings), and run the single-phase build (agy builder + Codex reviewer) via `marathon-drive.sh --target-root <WP-Code-Check>` with `RELAY_WORKTREE_ISOLATION=1`. |
+| **FIRED + GRADUATED ✅ 2026-06-26.** codex built, agy reviewed → **Approved**, gate passed, scanner detects **3/3** suppression directives on the fixture. Committed to `WP-Code-Check` `marathon-dogfood/ts-type-suppression` (`3e22f97`). See **Results** below. | Propose the pattern upstream to WP-Code-Check **#129** (this is its first "lite" slice); the remaining #129 TS patterns (`as any`, `: any`, `<any>`, broad `eslint-disable`, non-null abuse) are follow-on slices. Harness follow-up: fix **[#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29)** (cross-repo new-file commit gap) so the next cross-repo dogfood auto-commits. |
+
+## Results (2026-06-26 — actual fire, 3 attempts)
+
+Builder/reviewer were swapped from the pre-registered "agy builds / Codex reviews" to **codex builds / agy reviews** — `marathon-drive.sh` requires the reviewer to differ from the builder and accepts `agy*` as reviewer; codex is the more reliable builder and GH-22 (fixed today) made agy-review-under-isolation safe.
+
+- **Q1 — Feasibility:** ✅ codex produced a correct, surgical pattern + fixture + regenerated registry within caps, all 3 runs.
+- **Q2 — Objective correctness:** ✅ the gate (`check-pattern-library-json.sh` + pattern registered) passed; the scanner flags **exactly 3** findings (`@ts-ignore`, `@ts-nocheck`, bare `@ts-expect-error`) and **excludes** the documented `@ts-expect-error // reason` — the detector works as designed.
+- **Q3 — Containment:** ✅ held on real load. **v1** escalated (exit 6) because `pattern-library-manager.sh` defaults to `--format both`, regenerating an **off-allowlist** `PATTERN-LIBRARY.md`; the guard reverted it. Fixed by widening `ALLOW_PATHS` to include `PATTERN-LIBRARY.md`.
+- **Q4 — Reviewer value (agy):** agy ran clean reviewer turns under isolation (GH-22 fix validated live). One miss noted on the GH-27 sibling run (approved a build that skipped a brief-required `validate.sh` wiring) — reviewer thoroughness is a watch item.
+- **Harness bug found → [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29):** **v2/v3** — cross-repo (`--target-root`) builds report `no tracked changes` and don't commit the builder's NEW untracked files, even when correct + gate-passing + Approved. `RELAY_WORKTREE_ISOLATION=0` did not fix it. The build was sound, so it was committed by hand (`3e22f97`).
+- **Verdict: GRADUATE.** The marathon builds, contains, and reviews a real cross-repo additive feature end-to-end. One commit-path bug (#29) to fix before unattended cross-repo runs are hands-off.
 
 ---
 
