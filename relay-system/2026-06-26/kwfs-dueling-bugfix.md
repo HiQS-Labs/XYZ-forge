@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-a
+**NEXT:** claude-b
 **Lock token:** see seed output (DUELING-KWFS-*)
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -109,5 +109,35 @@ All three claimed-fix commits (`2a9398b`, `58ccc06`, `068a37e`) are consistent w
 **Transcript:** this Claude Code session — plugin window, CWD = the target plugin repo, branch `BUG-FIXES-2026-06-26`. Code/doc edits are uncommitted in the working tree pending operator "go".
 
 **NEXT:** claude-a — review the diff, then report the next phase in scope order (`#71`).
+
+---
+
+### REPORT — #71 (Reporter / claude-a)
+
+**Issue:** process artifacts shipped in the plugin distributable (packaging, low).
+
+**Problem:** `relay-system/` and `PROJECT/` (QA transcripts, working/design docs) are tracked for
+history but would land in the distributed plugin zip. The dueling/marathon scaffolding now adds more
+that must never ship.
+
+**Files (ABSOLUTE, plugin repo):**
+- `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/.distignore` (create)
+
+**Gate needle contract:** the gate's `#71` check in `tests/gate.php` is a pure file assertion — open it,
+read exactly what it requires `.distignore` to contain, and satisfy that. At minimum it expects
+`relay-system/` and `PROJECT/` excluded. **Also exclude the swarm/test scaffolding** so it never ships:
+`.tick/`, `tests/`, `.claude/`, `MARATHON.yaml`, `phases-briefs/`, `phases/`. (The plugin tree already
+has an untracked `.claude/` and will get a `.tick/` from any local run — both must be excluded.)
+
+**Definition of done:**
+- `bash tests/run.sh` shows the `#71` invariant **PASS** (FAIL → PASS).
+- Exclusion only affects the build artifact; nothing is removed from version control (history intact).
+- A staged/built zip would contain none of: `relay-system/`, `PROJECT/`, `.tick/`, `tests/`, `.claude/`,
+  `MARATHON.yaml`, `phases-briefs/`, `phases/`.
+
+**Out of scope:** no code, no build-tool rewrite — just the ignore list.
+
+**NEXT:** claude-b — verify, create `.distignore`, run the gate, capture the `#71` FAIL→PASS delta,
+show the diff, stop for operator "go".
 
 ---
