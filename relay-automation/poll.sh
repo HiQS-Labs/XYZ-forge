@@ -135,7 +135,7 @@ parked_count() {
 
 # Read a "Key:" line value from the relay file (NEXT / STATUS), tolerating a
 # **bold** markdown key (real threads write `**STATUS:** Open` / `**NEXT:** claude-b`).
-relay_field() { sed -n "s/^[*]*$1[*]*:[*]*[[:space:]]*//p" "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
+relay_field() { sed -n "s/^[*]*$1[*]*:[*]*[[:space:]]*//p" "$RELAY_FILE" | head -n 1 | sed 's/[[:space:]]*$//'; }
 
 # whose-turn from the relay NEXT: field = its FIRST token (the agent id), dropping any
 # trailing " — description" the writer added. Empty if no NEXT: line.
@@ -163,10 +163,10 @@ scope_clean() {
 read_task() {
   local info
   info="$("$TICK_BIN" info "$1" 2>/dev/null || true)"
-  T_STATUS="$(printf '%s\n' "$info"  | sed -n 's/^status:[[:space:]]*//p'     | head -1)"
-  T_CLAIMER="$(printf '%s\n' "$info" | sed -n 's/^claimer:[[:space:]]*//p'    | head -1)"
-  T_HANDOFF="$(printf '%s\n' "$info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -1)"
-  T_PATHS="$(printf '%s\n' "$info"   | sed -n 's/^paths:[[:space:]]*//p'      | head -1)"
+  T_STATUS="$(printf '%s\n' "$info"  | sed -n 's/^status:[[:space:]]*//p'     | head -n 1)"
+  T_CLAIMER="$(printf '%s\n' "$info" | sed -n 's/^claimer:[[:space:]]*//p'    | head -n 1)"
+  T_HANDOFF="$(printf '%s\n' "$info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -n 1)"
+  T_PATHS="$(printf '%s\n' "$info"   | sed -n 's/^paths:[[:space:]]*//p'      | head -n 1)"
 }
 
 # Claimability-for-me from the T_* globals (shared by both modes):
