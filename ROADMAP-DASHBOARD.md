@@ -6,10 +6,14 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 8 items | Tally: 🟢 2 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 12 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| Dueling/relay · commit-signal advance (file-driven mode) | 🟢 | [test/poll-driver.sh](test/poll-driver.sh) · [poll.sh](relay-automation/poll.sh) · [Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
+| Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
+| Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
+| Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | — | [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
 | Marathon candidate · Apple Reminders Phase 2 (rebalance-OS, cross-repo) | 🟡 | [rebalance-OS `APPLE-REMINDERS-UNIFIED-PLAN.md`](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) · [APPLE-REMINDERS-UNIFIED-PLAN.md](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) |
 | GH-24 · relay telemetry extractor | 🟢 | [GH-24-RELAY-TELEMETRY-EXTRACTOR.md](PROJECT/1-INBOX/GH-24-RELAY-TELEMETRY-EXTRACTOR.md) · [#24](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/24) |

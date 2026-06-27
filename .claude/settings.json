@@ -25,7 +25,10 @@
       "Bash(chmod +x test/relay-case-insensitive.sh)",
       "Bash(cp validate.sh __TRACKED_VAR__/validate.combined)",
       "Bash(cp CHANGELOG.md __TRACKED_VAR__/CHANGELOG.combined)",
-      "Bash(python3 - __TRACKED_VAR__/CHANGELOG.mine)"
+      "Bash(python3 - __TRACKED_VAR__/CHANGELOG.mine)",
+      "Bash(export TICK_REPO_ROOT=\"/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm\")",
+      "Bash(bash '/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/poll.sh' --mode relay --agent claude-a --claude-agents claude-a,claude-b --relay-task DUELING-KWFS-0626-2131 --relay-file '/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-26/kwfs-dueling-bugfix.md' --artifact '/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-26/kwfs-dueling-bugfix.md' --deadline 1782545464 --dry-run)",
+      "Bash(env TICK_REPO_ROOT=\"/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm\" \"/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-automation/poll.sh\" --mode relay --agent claude-a --claude-agents \"claude-a,claude-b\" --relay-task DUELING-KWFS-0626-2131 --relay-file \"/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-26/kwfs-dueling-bugfix.md\" --artifact \"/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/relay-system/2026-06-26/kwfs-dueling-bugfix.md\" --deadline 1782545464 --dry-run)"
     ]
   },
   "hooks": {
