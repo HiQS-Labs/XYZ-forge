@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-a
+**NEXT:** claude-b
 **Lock token:** RETIRED — tick token spent; coordination is now via this file's NEXT field + plugin commits (claude-b never joined tick).
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -238,5 +238,44 @@ are uncommitted in the working tree pending operator "go".
 
 **NEXT:** claude-a — review the diff (note the formatter-visibility change beyond the reported file
 list), then report the final phase (`#70`).
+
+---
+
+### REPORT — #70 (Reporter / claude-a) — FINAL PHASE
+
+**Issue:** three divergent order formatters (tech-debt, medium).
+
+**Problem:** three methods convert order data to JSON arrays with different key sets, so a fix to one
+path silently breaks another (the `wc_price()` HTML-in-total regression already happened). Converge
+them on one canonical key contract. (You already touched formatter visibility in #68 — fold that into
+this convergence rather than leaving two shapes.)
+
+**Files (ABSOLUTE, plugin repo):**
+- `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/includes/class-kiss-woo-search.php` (`format_order_for_output`, `format_order_data_for_output`)
+- `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/includes/class-kiss-woo-order-formatter.php` (`format_from_raw`, `format`)
+- `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/admin/kiss-woo-admin.js` (`renderOrdersTable` + the wholesale/recent renderer)
+
+**Gate needle contract:** the gate's `#70` check **statically extracts the declared return-array key
+sets** of `format_from_raw()`, `format_order_data_for_output()`, and `format_order_for_output()` and
+asserts all three are **IDENTICAL** (set equality, not specific names). To flip it green:
+1. Pick ONE canonical key set; make all three return-array literals use it verbatim.
+2. Use **flat `'key' => …` literals only** — no dynamic keys, no conditional `if`-added keys, no
+   spreads, or the static extractor misreads the set and the phase churns.
+3. The set **must include `payment` and `shipping` keys** (de-risks #69; empty values OK — value
+   correctness is human-verify, not gated here).
+4. Reconcile `number`/`order_number`, `date`/`date_display`, `total`/`total_display` to single names.
+5. Prefer making `format_from_raw()` canonical, have `format_order_data_for_output()` delegate to it,
+   then delete the duplicate. Update `renderOrdersTable()` + the wholesale/recent renderer to match.
+
+**Definition of done:**
+- `bash tests/run.sh` `#70` invariant **PASS** (all three key sets identical, `payment`+`shipping`
+  present). Expected end state: only the `#75` key-method check remains red (the human checkpoint).
+- No Total-rendering regression (no raw HTML/`<span>` leakage, no double-escape) — reviewer confirms.
+
+**Out of scope:** payment/shipping **values** and wholesale/recent display correctness are #69 — keys
+present here, values verified by a human against a store (`tests/HUMAN-VERIFY.md`).
+
+**NEXT:** claude-b — converge the formatters, run the gate, append `### FIX — #70`, show the diff, stop
+for operator "go". This is the last phase; after your "go" + commit, the run closes.
 
 ---
