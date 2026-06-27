@@ -106,7 +106,9 @@ as the terminal signal). The **turn-taker** is `--agent-cmd` — a shipped shim 
 Whose-turn is a `tick` relay task, handed off with `tick release --to`.
 
 End-to-end headless review of an artifact (run after Preconditions — `$TICK` and `$HARNESS` set, CWD
-is the harness clone). Choose either worker:
+is the harness clone). Choose either worker. The examples below pass `ALLOW_PATHS="$ARTIFACT"`, which
+fits a **build/fix** turn; for a pure **review** turn set `ALLOW_PATHS=""` (relay file only) so the
+reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row:
 
 | Worker | Availability check | Handoff target | Env prefix | Shim | Log |
 |---|---|---|---|---|---|
@@ -213,7 +215,7 @@ they share the same env shape:
 | Env | `codex-turn.sh` | `agy-turn.sh` | Meaning |
 |---|---|---|---|
 | dispatch gate | `CODEX_AGENT` | `AGY_AGENT` | NO-OPS unless `RELAY_AGENT == this` |
-| extra writable paths | `ALLOW_PATHS` | `ALLOW_PATHS` | comma-sep git paths the turn may change (the relay file is always allowed) |
+| extra writable paths | `ALLOW_PATHS` | `ALLOW_PATHS` | comma-sep git paths the turn may change (the relay file is always allowed). **For a review turn, set `ALLOW_PATHS=""` — relay file only.** If the artifact is writable, the reviewer tends to start *editing and building* it instead of reviewing (it can read any path regardless), which over-runs the turn cap (exit 7) — observed 2026-06-26. A build/fix turn is the only case that needs the artifact in `ALLOW_PATHS`. |
 | peer id | `RELAY_PEER` | `RELAY_PEER` | so the turn hands off `--to <peer>` (else "the other agent") |
 | binary | `CODEX_BIN` | `AGY_BIN` | override the CLI path |
 | autonomy | `CODEX_FLAGS` (default `-s workspace-write`) | `AGY_MODEL` / `AGY_FLAGS` | the codex sandbox/approval flags or the agy model |
