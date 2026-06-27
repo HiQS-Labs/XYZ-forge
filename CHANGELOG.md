@@ -2,6 +2,33 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-27
+
+### Single-turn review ergonomics (GH-32) shipped + cross-repo artifact-review design (GH-31 Phase 1)
+From external-consumer relay-xyz feedback, filed as #30/#31/#32 (issue-first) and worked via `/loop`.
+
+**GH-32 — shipped (all 3 phases), `validate.sh` 50/50:**
+- **Phase 1 —** `relay-drive.sh` now warns (non-blocking) when `RELAY_WORKTREE_ISOLATION=1` and the
+  relay file isn't committed at HEAD, so it'd be invisible to the isolated worktree. Symlink-safe via
+  `git rev-parse --show-prefix`. Test `test/relay-untracked-file-warn.sh` (5 assertions).
+- **Phase 2 —** new `--review-once` mode + **exit code 5** for a completed non-approval review
+  ("changes requested"), so a correct single review is no longer indistinguishable from a stall
+  (exit 3). Oracle sits after the Escalated carve-out, before the no-progress guard, so Escalated
+  still exits 4 and a true stall still exits 3. Test `test/relay-review-once.sh` (5 assertions).
+- **Phase 3 —** documented the token-inspect verb `tick info <task>` (the reporter's `tick status`
+  errors with `unknown verb`) + `--review-once`/exit-5 in the relay-xyz SKILL and `relay-automation/README.md`.
+
+**GH-31 — Phase 1 (design only, no code):** `--artifact-file` resolved as the user-facing surface of
+the already-tracked **read-only seed** (open #15): copy the external artifact into the worktree as a
+read-only input — visible to the reviewer, exempt from off-lane detection, never copied back to ROOT.
+GH-31 and #15 to be implemented together.
+- **Bet (Costly):** Phase 2 touches the containment core (`rtl_worktree_begin/end` in
+  `relay-turn-lib.sh`). Expected signal: a cross-repo PR diff reviewable with no manual embedding and
+  no artifact leak into the target tree. **Reversibility: Easy** — additive, default-off (no
+  `--artifact-file` ⇒ byte-for-byte current behavior). Revisit trigger: if exempting the artifact from
+  off-lane detection proves to weaken containment, gate it behind an explicit opt-in. Recommendation:
+  iterate — implement Phase 2 only after operator confirms the diff plan (propose-before-commit).
+
 ## 2026-06-26
 
 ### poll.sh — `--turn-source file` (token-optional relay advance) + commit-signal gate

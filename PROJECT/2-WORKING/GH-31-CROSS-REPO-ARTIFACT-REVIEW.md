@@ -25,7 +25,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Issue [#31](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/31) filed; gap confirmed — no `--artifact-file`/`--external-diff` exists in `relay-automation/`, worktree isolation is `ROOT@HEAD` (`relay-drive.sh:90`). | Phase 1 — design the `--artifact-file` contract (copy-into-worktree vs reference) before touching containment. Sequenced AFTER GH-32's cheap wins. |
+| Phase 1 (design) done: `--artifact-file` resolved as the user surface of the already-tracked **read-only seed** ([#15](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/15)) — copy the artifact into the worktree as a read-only input (visible to the reviewer, exempt from off-lane detection, never copied back). Bet recorded in `CHANGELOG.md`. | **Phase 2 (Costly — touches `rtl_worktree_begin/end` containment): pause for operator confirmation of the design + diff plan BEFORE writing code**, per the propose-before-commit agreement. |
 
 ## Table of Contents
 
@@ -46,10 +46,32 @@ that worktree.
 
 ## Phase 1 — Design the artifact-delivery contract
 
-- [ ] Decide delivery: **copy** the artifact into the worktree (reviewer reads a repo-relative path) vs **reference** an absolute external path (collides with isolation).
-- [ ] Define the option surface: `--artifact-file <path>` and/or `--external-diff <path>`; how it maps to the relay thread's TARGET/Review section.
-- [ ] Specify containment: the copied artifact lands inside the worktree allowlist; no widening of the foreign-repo write scope.
-- [ ] Record the bet in `CHANGELOG.md` (touches worktree/containment ⇒ Costly).
+**Key finding:** `relay-turn-lib.sh:134-144` already documents this exact gap and names the fix — a
+**read-only seed set distinct from the writable allowlist**, tracked as open issue
+[#15](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/15). So `--artifact-file`
+is the *user-facing surface* of #15; GH-31 and #15 should be implemented together (cross-linked).
+
+Design decisions (the Phase 1 outcome):
+
+- [x] **Delivery = copy as a read-only seed.** The artifact is copied INTO the isolated worktree at a
+  stable location (`.relay-artifacts/<basename>`), NOT referenced by an absolute external path (which
+  collides with `ROOT@HEAD` isolation — the documented trap). The reviewer addresses it by that
+  worktree-relative path, which the relay thread's TARGET/Review line points at.
+- [x] **Option surface = `--artifact-file <path>` on `relay-drive.sh`** (repeatable for >1 artifact in a
+  later pass; v1 single). Accepts an absolute path or a path resolved against CWD — a diff file, or any
+  file from another repo. No `--external-diff` alias (one surface; a diff is just a file).
+- [x] **Containment = a new read-only seed set, separate from `RTL_ALLOW` (the writable allowlist):**
+  1. seed it into the worktree in `rtl_worktree_begin` (like the relay file is seeded),
+  2. **exempt it from the off-lane detector** in `rtl_worktree_end` (alongside the relay file + `.tick`),
+     so its presence as an untracked file does not fail the turn,
+  3. **never copy it back to `RTL_ROOT`** — so the artifact cannot leak into the target repo's tree, and
+     any reviewer edit to it is discarded with the worktree (effectively read-only).
+  This widens neither the writable allowlist nor the foreign-repo write scope: it is a READ surface only.
+- [x] **Bet recorded in `CHANGELOG.md`** (2026-06-27): Costly — touches the containment core
+  (`rtl_worktree_begin/end`); additive + default-off, so reversibility is Easy.
+
+> Phase 2 implements this against `rtl_worktree_begin/end` and is **Costly (containment core)** — it
+> pauses for operator confirmation of the concrete diff plan before any code lands.
 
 ### QA checklist — Phase 1
 
