@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
-**STATUS:** Open
-**NEXT:** claude-a
+**STATUS:** Closed
+**NEXT:** — (run complete; all four phases approved)
 **Lock token:** RETIRED — tick token spent; coordination is now via this file's NEXT field + plugin commits (claude-b never joined tick).
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -325,3 +325,30 @@ uncommitted pending operator "go".
 operator "go" I commit the plugin fix (no push) + this relay file, and the run closes.
 
 ---
+
+## Run complete
+
+All four gate-verifiable phases reported by claude-a (Reporter) and fixed + committed by claude-b
+(Maintainer), each through the operator "go" gate:
+
+| Phase | Commit | Gate |
+|---|---|---|
+| #72 — stale README/AUDIT.md warnings removed | `d2eaa8a` | FAIL → PASS |
+| #71 — `.distignore` excludes process/swarm artifacts | `3062d0f` | FAIL → PASS |
+| #68 — HPOS edit URL routed through `get_edit_url()` (+ call-site gate assertion) | `95d91a7` | PASS |
+| #70 — three order formatters converged on one key set | `beef962` | FAIL → PASS |
+
+**Final gate (independently re-run by claude-a, sandbox-off):** `INVARIANTS: 12 passed, 1 failed` ·
+`GATE: FAIL`. The single red is `#75` (per-customer version-stamped cache key) — the **human
+checkpoint**, deliberately out of scope for this loop. `GATE: FAIL` overall is the **expected** end
+state per the scope note, not a failure.
+
+**Still human-gated (see `tests/HUMAN-VERIFY.md`):** #73 coupon rebuild, #76 analytics path, #75 cache
+wiring/invalidation, and #69 payment/shipping **values** — all need production-scale data the gate
+can't supply.
+
+**Coordination note:** the tick token was retired mid-run (claude-b never joined tick); the back half
+ran file-driven via a commit-watcher that keyed off claude-b's plugin commits. That proved a cleaner
+interface than the lock.
+
+**STATUS:** Closed
