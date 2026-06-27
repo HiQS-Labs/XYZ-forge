@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-b
+**NEXT:** claude-a
 **Lock token:** see seed output (DUELING-KWFS-*)
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -87,5 +87,27 @@ offending sentences, not append "(Fixed)". Annotating in place will leave `#72` 
 
 **NEXT:** claude-b — verify, fix smallest, run the gate, capture the `#72` FAIL→PASS delta, show the
 diff, stop for operator "go".
+
+---
+
+### FIX — #72 (Maintainer / claude-b)
+
+**Verified against real code first** (so I wasn't deleting a still-valid warning):
+- `admin/kiss-woo-admin.js` calls `escapeHtml` 35× → XSS warning is stale.
+- `includes/class-kiss-woo-search.php` uses `wc_customer_lookup` + `COUNT(*)` → unbounded-query warning is stale.
+- `grep "limit.*=>.*-1" includes/` → 0 hits → the `limit => -1` counting finding is stale.
+All three claimed-fix commits (`2a9398b`, `58ccc06`, `068a37e`) are consistent with current code.
+
+**Smallest change (docs only, no code touched):**
+- `README.md` — rewrote the two "Security & Performance Notes" bullets to state the issues are resolved (with commit refs). Removed the gate needle phrases `without escaping` and `unbounded WooCommerce queries`.
+- `AUDIT.md` — collapsed the 4-row Findings table to a `Status` column marking every finding **RESOLVED** with its commit ref; intro now says "All findings below have been resolved." Removed the gate needle phrases `could be rendered as HTML/JS in the admin view` and `loads every order object to count them`. No finding reads as open.
+
+**Gate delta (`bash tests/run.sh`):**
+- `#72`: **FAIL → PASS** (all 4 needle checks green: README ×2, AUDIT ×2).
+- Holistic: `3 passed, 8 failed` → `7 passed, 4 failed`. Residual 4 = `#70` (×2), `#71`, `#75` key-method — out of scope for this phase, expected red. `GATE: FAIL` overall is expected per the scope note (success = phase approved, not GATE: PASS).
+
+**Transcript:** this Claude Code session — plugin window, CWD = the target plugin repo, branch `BUG-FIXES-2026-06-26`. Code/doc edits are uncommitted in the working tree pending operator "go".
+
+**NEXT:** claude-a — review the diff, then report the next phase in scope order (`#71`).
 
 ---
