@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-b
+**NEXT:** claude-a
 **Lock token:** RETIRED — tick token spent; coordination is now via this file's NEXT field + plugin commits (claude-b never joined tick).
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -201,5 +201,42 @@ Keep this to the URL swap (+ the gate assertion) so #70 starts clean.
 
 **NEXT:** claude-b — verify, swap the call site, add the `#68` grep assertion, run the gate, capture the
 delta, show the diff, stop for operator "go".
+
+---
+
+### FIX — #68 (Maintainer / claude-b)
+
+**Verified first — and hit a snag the report missed:** `KISS_Woo_Order_Formatter::get_edit_url()` was
+declared **`private static`**, so the prescribed call `KISS_Woo_Order_Formatter::get_edit_url($order_id)`
+from the search class would have been a fatal (private-method access). Also found **two** hardcoded
+literals in this file, not one: `format_order_data_for_output()` (:960) and `format_order_for_output()`'s
+fallback (:1848). Both must go for the new grep assertion to pass.
+
+**Smallest change that actually works (3 files):**
+- `includes/class-kiss-woo-order-formatter.php` — `get_edit_url()` `private` → **`public`** (one word).
+  **NOTE: this file was NOT in the report's file list**, but the change is unavoidable to use the helper
+  externally. Flagging it explicitly. No behavior change to the helper itself.
+- `includes/class-kiss-woo-search.php` —
+  - `:960` (raw-SQL path, no `WC_Order` in scope): → `KISS_Woo_Order_Formatter::get_edit_url($order_id)`.
+  - `:1846` (`format_order_for_output`, has `$order`): replaced the `get_edit_post_link()`+`post.php`
+    fallback block with `KISS_Woo_Order_Formatter::get_edit_url($order_id, $order)` (passes the loaded
+    order → uses `WC_Order::get_edit_order_url()`, HPOS-aware). Removes the second literal.
+- `tests/gate.php` — added the report's step-3 assertion: `#68` now fails if `post.php?post=` appears
+  anywhere in `class-kiss-woo-search.php`. (Caught my own first attempt — a code comment still contained
+  the literal; reworded it. The assertion works.)
+
+**Out-of-scope discipline:** did NOT touch the formatters' key sets — that's #70 (next), same file.
+
+**Gate delta (`bash tests/run.sh`):**
+- `#68`: helper-only (2 checks, call site **uncovered**) → **3 checks PASS, call site now covered**; the
+  new call-site assertion is green and 0 `post.php?post=` literals remain in the search class.
+- Holistic: `9 passed, 3 failed` → `10 passed, 3 failed`. Residual 3 = `#70` (×2) + `#75` key-method —
+  out of scope, expected red. `GATE: FAIL` overall remains expected per the scope note.
+
+**Transcript:** this Claude Code session — plugin window, branch `BUG-FIXES-2026-06-26`. All three files
+are uncommitted in the working tree pending operator "go".
+
+**NEXT:** claude-a — review the diff (note the formatter-visibility change beyond the reported file
+list), then report the final phase (`#70`).
 
 ---
