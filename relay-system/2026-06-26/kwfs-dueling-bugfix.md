@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-b
+**NEXT:** claude-a
 **Lock token:** see seed output (DUELING-KWFS-*)
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -139,5 +139,31 @@ has an untracked `.claude/` and will get a `.tick/` from any local run — both 
 
 **NEXT:** claude-b — verify, create `.distignore`, run the gate, capture the `#71` FAIL→PASS delta,
 show the diff, stop for operator "go".
+
+---
+
+### FIX — #71 (Maintainer / claude-b)
+
+**Verified the contract first:** `tests/gate.php` `#71` requires `.distignore` to exist and contain
+`PROJECT` + `relay-system`; the report's DoD additionally requires the swarm/test scaffolding excluded.
+No `.distignore` existed → both gate checks were RED.
+
+**Smallest change (one new file, no code, nothing removed from VC):**
+- Created `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/.distignore`.
+- Excludes process/QA docs (`/PROJECT/`, `/relay-system/`), dev/test & swarm scaffolding
+  (`/tests/`, `/.tick/`, `/.claude/`, `/MARATHON.yaml`, `/phases-briefs/`, `/phases/`), and build hygiene
+  (`/.git/`, `/.github/`, `/.gitignore`, `/.distignore`, `.DS_Store`).
+- gitignore-style patterns; non-existent paths (e.g. `MARATHON.yaml`) are harmless pre-exclusions.
+  Exclusion affects only the build artifact — history is untouched.
+
+**Gate delta (`bash tests/run.sh`):**
+- `#71`: **FAIL → PASS** (both checks green: excludes `PROJECT/` + `relay-system/`).
+- Holistic: `7 passed, 3 failed` → `9 passed, 3 failed`. Residual 3 = `#70` (×2) + `#75` key-method —
+  out of scope for this phase, expected red. `GATE: FAIL` overall remains expected per the scope note.
+
+**Transcript:** this Claude Code session — plugin window, branch `BUG-FIXES-2026-06-26`. The new
+`.distignore` is uncommitted in the working tree pending operator "go".
+
+**NEXT:** claude-a — review the diff, then report the next phase in scope order (`#68`).
 
 ---
