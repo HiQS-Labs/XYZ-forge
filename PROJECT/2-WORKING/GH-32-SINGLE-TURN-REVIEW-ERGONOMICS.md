@@ -25,7 +25,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 shipped: untracked-relay-file preflight warn in `relay-drive.sh` (`warn_if_relay_file_untracked`, isolation-gated, non-blocking) + regression test `test/relay-untracked-file-warn.sh` (5 assertions). `./validate.sh` **49/49**. | Phase 2 — distinct exit code for a completed non-approval ("Changes requested") turn, extending the Escalated→exit-4 carve-out. |
+| Phase 2 shipped: `--review-once` mode in `relay-drive.sh` drives one turn + a review oracle — Approved→0, **changes-requested→5** (distinct from the stall's 3), stall→3, Escalated→4. Test `test/relay-review-once.sh` (5 assertions). `./validate.sh` **50/50**. | Phase 3 — confirm + document the `tick` token-inspect verb in the relay-xyz skill, then GH-31. |
 
 ## Table of Contents
 
@@ -59,10 +59,10 @@ Confirmed in code:
 
 ## Phase 2 — Distinct exit code for a completed non-approval turn
 
-- [ ] Define the outcome: reviewer **claimed, took its turn, released the token** (or set STATUS to a non-terminal "Changes requested"), without Approve/Escalate.
-- [ ] Give it a distinct exit code (or a `--review-once`/`--single-turn` mode that maps "completed + released" → 0) so it is not conflated with exit 3 (genuine stall = token actor never moved).
-- [ ] Model it on the existing Escalated carve-out (`relay-drive.sh:95-97,217-218`) so the no-progress guard is reached only for a true stall.
-- [ ] Document the new code in the `Exit:` header block and the relay-xyz skill.
+- [x] Define the outcome: reviewer **claimed, took its turn, released the token** (or set STATUS to a non-terminal "Changes requested"), without Approve/Escalate.
+- [x] Give it a distinct exit code: added `--review-once` mode + **exit 5** for a completed non-approval handback (token moved OR STATUS changed), keeping exit 3 for a genuine stall (token state unchanged).
+- [x] Model it on the existing Escalated carve-out: the review oracle sits just after the Escalated check, before the no-progress guard, so Escalated still wins (exit 4).
+- [x] Documented the new code in the `Exit:` header block and `--help`. (relay-xyz skill doc update tracked with Phase 3.)
 
 ### QA checklist — Phase 2
 

@@ -50,6 +50,7 @@ TESTS=(
   "relay-token-collision.sh"
   "relay-escalation-not-stall.sh"
   "relay-untracked-file-warn.sh"
+  "relay-review-once.sh"
   "relay-concurrent-commit.sh"
   "relay-case-insensitive.sh"
   "relay-xyz-skill-guard.sh"

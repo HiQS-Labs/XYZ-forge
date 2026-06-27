@@ -21,7 +21,8 @@ set -euo pipefail
 #
 # Turn-taker env: RELAY_FILE, RELAY_TASK, RELAY_AGENT (the current actor).
 # Exit: 0 = relay closed Approved/Closed · 3 = no-progress (stall) · 4 = cap / closed-not-approved /
-#       escalated-to-human-by-design (STATUS: Escalated) · 2 = usage.
+#       escalated-to-human-by-design (STATUS: Escalated) · 5 = review-once: reviewer completed a turn
+#       (non-approval handback — a successful single review, NOT a stall) · 2 = usage.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
@@ -41,6 +42,10 @@ Usage: relay-automation/relay-drive.sh --relay-file PATH --agent-cmd CMD [option
   --consult-verify    After each turn, invoke consult.sh to independently challenge the
                       turn-taker's VERDICT. Fires 1-2 real API calls per turn (codex +
                       gemini). Do NOT use in CI or budget-sensitive runs.
+  --review-once       Drive exactly ONE turn (a single review) and classify its outcome:
+                      Approved/Closed -> 0; a completed non-approval handback ("changes
+                      requested") -> 5 (NOT the stall's 3); reviewer-did-nothing stall -> 3;
+                      Escalated -> 4. Forces --round-cap 1.
   --dry-run           Print the turn it WOULD drive next, then stop (no invocation).
   --help
 EOF
@@ -48,7 +53,7 @@ EOF
 
 die() { printf 'relay-drive: %s\n' "$*" >&2; exit 2; }
 
-RELAY_FILE=""; AGENT_CMD=""; RELAY_TASK="RELAY-TURN"; ROUND_CAP=6; DRY_RUN=0; CONSULT_VERIFY=0
+RELAY_FILE=""; AGENT_CMD=""; RELAY_TASK="RELAY-TURN"; ROUND_CAP=6; DRY_RUN=0; CONSULT_VERIFY=0; REVIEW_ONCE=0
 while (($# > 0)); do
   case "$1" in
     --relay-file) RELAY_FILE="${2:-}"; shift 2 ;;
@@ -57,6 +62,7 @@ while (($# > 0)); do
     --round-cap) ROUND_CAP="${2:-}"; shift 2 ;;
     --target-root) TARGET_ROOT="${2:-}"; shift 2 ;;
     --consult-verify) CONSULT_VERIFY=1; shift ;;
+    --review-once) REVIEW_ONCE=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     --help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
@@ -64,6 +70,10 @@ while (($# > 0)); do
 done
 [[ -n "$RELAY_FILE" ]] || { usage; die "--relay-file is required"; }
 [[ -n "$AGENT_CMD" || "$DRY_RUN" -eq 1 ]] || { usage; die "--agent-cmd is required"; }
+
+# --review-once drives a single review turn; its success oracle (a completed non-approval handback
+# exits 5, not the stall's 3) replaces the multi-round no-progress/cap logic, so force the cap to 1.
+((REVIEW_ONCE)) && ROUND_CAP=1
 
 if [[ -n "${TARGET_ROOT+set}" ]]; then
   [[ -n "$TARGET_ROOT" ]] || die "--target-root requires a non-empty path"   # else git -C '' falls back to CWD
@@ -242,6 +252,22 @@ while ((round < ROUND_CAP)); do
     printf 'relay-drive: relay escalated to human by design (STATUS: %s, token %s:%s) after %d turn(s)\n' "$ns" "$ntstatus" "$nactor" "$round" >&2
     exit 4
   fi
+  # --review-once: the single review turn is complete. Classify with a review oracle so a correct
+  # "changes requested" handback is NOT conflated with a no-progress stall (GH-32 #2). Mirrors the
+  # Escalated carve-out above — a reviewer that actually DID something is a success, not exit 3.
+  if ((REVIEW_ONCE)); then
+    if terminal_status "$ns"; then
+      printf 'relay-drive: review-once — reviewer approved/closed (STATUS: %s) after 1 turn\n' "$ns"
+      exit 0
+    fi
+    if [[ "$ntstatus:$nactor" != "$prev" || "$ns" != "$s" ]]; then
+      printf 'relay-drive: review-once — reviewer completed a turn (STATUS: %s, token %s:%s); non-approval handback, not a stall\n' "$ns" "$ntstatus" "$nactor"
+      exit 5
+    fi
+    printf 'relay-drive: review-once — reviewer took no action (STATUS unchanged: %s, token still %s) — genuine stall\n' "$ns" "$prev" >&2
+    exit 3
+  fi
+
   if ! terminal_status "$ns" && [[ "$ntstatus:$nactor" == "$prev" ]]; then
     printf 'relay-drive: no progress after %s turn (token still %s) — escalating\n' "$actor" "$prev" >&2
     exit 3
