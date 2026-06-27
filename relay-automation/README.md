@@ -26,6 +26,14 @@ auto-firing those shims. For the current headless path, see
 | `agy-turn.sh` | **Option-A** headless turn-taker for the **agy** (Antigravity CLI) agent (`agy -p`); thin dispatch wrapper over `relay-turn-lib.sh`. Permanent replacement for `gemini-turn.sh`; live-validated 2026-06-18. |
 | `consult.sh` | Parallel read-only consult: asks the same question to Codex and agy, captures both transcripts, and leaves synthesis to the caller. Advisory-only; not part of the relay loop. |
 
+## Recipes & docs (not scripts)
+| Doc | What it gives you |
+|---|---|
+| [DUELING-CLAUDES.md](DUELING-CLAUDES.md) | **"Dueling Claudes"** — copy-paste recipe for two live Claude windows running a Reporter↔Maintainer bug-fix relay on one machine, zero new code, with the single human go-gate before commit. The worked form of the hands-free Path B in the `relay-xyz` skill. |
+| [CONSUMING.md](CONSUMING.md) | How another repo consumes this harness (`--target-root`, cross-machine `.tick/` limits). |
+| [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md) | The Option-A cross-model headless turn-taker plan (Codex / agy shims). |
+| [MARATHON.example.yaml](MARATHON.example.yaml) | Example multi-build marathon manifest for `marathon.sh`. |
+
 ## Operator usage (default live-window flow)
 
 ### Hands-free relay turn (all-Claude only)

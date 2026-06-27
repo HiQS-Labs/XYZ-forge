@@ -200,6 +200,11 @@ relay (`STATUS: Approved|Closed`); see `/relay` → "Self-closing loops". Option
 window with `--watchdog-authority` (longer interval, e.g. `120s`) so a stalled turn escalates exactly
 once.
 
+**Worked recipe — "Dueling Claudes":** for the full copy-paste two-window setup (Reporter↔Maintainer,
+same machine, with the one human go-gate before commit), see
+[relay-automation/DUELING-CLAUDES.md](../../relay-automation/DUELING-CLAUDES.md). It carries the exact
+`/loop` strings, the fresh-token-per-run rule, and the foreign-CWD `tick` pitfalls for Path B.
+
 ## Turn-taker shims & their env
 
 Both shims are thin dispatchers over `relay-turn-lib.sh` (the model-agnostic containment core), so

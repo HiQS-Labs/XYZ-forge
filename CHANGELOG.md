@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-26
 
+### Discoverability — DUELING-CLAUDES.md de-orphaned (was reachable by zero canonical links)
+The "Dueling Claudes" two-window relay recipe ([relay-automation/DUELING-CLAUDES.md](relay-automation/DUELING-CLAUDES.md)) had **no inbound links** from any startup surface (ROUTER, README, the directory's own index, or the `relay-xyz` skill) — only `relay-system/` transcripts pointed back at it — so a fresh session had no path to find it (a real miss, reported by an earlier session). Added inbound cross-links from the three surfaces an agent actually traverses: a new **"Recipes & docs"** table in [relay-automation/README.md](relay-automation/README.md) (also indexing the previously-unlisted `CONSUMING.md` / `CROSSMODEL-OPTIONA-PLAN.md` / `MARATHON.example.yaml`), a pointer appended to the relay routing hint in [ROUTER.md](ROUTER.md), and a "Worked recipe" note at the end of Path B in [skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md) (Path B *is* the dueling flow).
+- **Verification:** all four link targets exist on disk; `grep` confirms `DUELING-CLAUDES.md` is now referenced from ROUTER.md, relay-automation/README.md, and the relay-xyz skill.
+- **Reversibility:** Easy — doc-only cross-linking; no scripts, schema, or runtime touched.
+
 ### Marathon graduation — first real end-to-end fire (GH-27 + WPCC), two concurrent dogfoods
 The Marathon harness **fired for real for the first time** (every prior dogfood died at substrate-starvation before launch). Two targets built concurrently in isolated git worktrees (separate indexes, no collision), each `swarm-preflight → marathon-drive → codex build → gate → agy review`:
 - **GH-27 ROADMAP dashboard ✅** — codex built a dependency-free renderer ([utils/roadmap-dashboard.sh](utils/roadmap-dashboard.sh), 201 lines) + the generated [ROADMAP-DASHBOARD.md](ROADMAP-DASHBOARD.md) + [test/roadmap-dashboard.sh](test/roadmap-dashboard.sh); agy **Approved** (3 turns); gate 4/4. Same-repo, on `marathon/gh-27-dashboard`. Completion fix: wired the test into `validate.sh` (codex missed it; agy approved without catching — a dogfood finding) → **`validate.sh` 48/48**.
