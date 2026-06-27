@@ -1,3 +1,13 @@
+---
+title: XYZ (Forge) Multi-Agent Toolkit — Capabilities Brief
+doc_type: capabilities-brief
+repo: xyz-3-agents-swarm
+generated: 2026-06-17
+refreshed: 2026-06-24
+status: Working Beta
+audience: Business Analysts, Marketing Directors
+---
+
 # XYZ (Forge) Multi-Agent Toolkit — Capabilities Brief
 ### For Business Analysis & Marketing Planning
 *Date: 2026-06-17 · Refreshed: 2026-06-24 · Status: Working Beta · Audience: Business Analysts, Marketing Directors*
