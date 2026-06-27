@@ -1,7 +1,7 @@
 # Dueling Claudes — KISS-woo-fast-search gate-verifiable bug-fix loop
 
 **STATUS:** Open
-**NEXT:** claude-a
+**NEXT:** claude-b
 **Lock token:** see seed output (DUELING-KWFS-*)
 **Reporter (claude-a):** xyz-3-agents-swarm window (this repo) — files graded reports, never edits code.
 **Maintainer (claude-b):** the plugin window, CWD = the plugin repo below — verifies, fixes, runs the gate, stops for operator "go".
@@ -60,4 +60,32 @@ human checkpoint, **not** a loop failure. Success = all four phases approved, no
 
 ## Turn log
 
-_(empty — Reporter takes the first turn when its loop fires)_
+### REPORT — #72 (Reporter / claude-a)
+
+**Issue:** stale README/AUDIT.md security & performance warnings (documentation, low).
+
+**Problem:** The README "Security & Performance Notes" section and all four `AUDIT.md` findings still
+warn users about issues that are **already fixed** — XSS via unescaped JS, unbounded `all_with_meta`
+customer loads, `wc_get_orders limit => -1` counting, and the `esc_attr` benchmark. All resolved in
+commits `2a9398b`, `58ccc06`, `068a37e`. The docs currently scare users about non-existent bugs.
+
+**Files (ABSOLUTE, plugin repo):**
+- `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/README.md`
+- `/Users/noelsaw/Local Sites/bloomz-prod-08-15/app/public/wp-content/plugins/KISS-woo-fast-search/AUDIT.md`
+
+**Gate needle contract:** the gate verifies this by **grepping for specific stale phrases** in
+`tests/gate.php`. Open `tests/gate.php`, find the `#72` needle list, and ensure **none** of those exact
+phrases remain in README.md / AUDIT.md. The gate fails on *presence* — you must **remove** the
+offending sentences, not append "(Fixed)". Annotating in place will leave `#72` RED.
+
+**Definition of done:**
+- `bash tests/run.sh` shows the `#72` invariant **PASS** (FAIL → PASS).
+- No remaining doc text implies any of the four findings is still open; any retained note is phrased as
+  resolved with the commit refs above.
+
+**Out of scope:** docs only — touch no code, no other files.
+
+**NEXT:** claude-b — verify, fix smallest, run the gate, capture the `#72` FAIL→PASS delta, show the
+diff, stop for operator "go".
+
+---
