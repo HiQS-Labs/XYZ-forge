@@ -48,6 +48,7 @@ TESTS=(
   "relay-target-root.sh"
   "relay-target-root-paths.sh"
   "relay-target-root-relayfile.sh"
+  "relay-target-root-newfile.sh"
   "relay-token-collision.sh"
   "relay-escalation-not-stall.sh"
   "relay-untracked-file-warn.sh"
