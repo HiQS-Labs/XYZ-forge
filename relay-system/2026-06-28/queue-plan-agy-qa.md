@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -167,6 +167,46 @@ Verification: `test/queue-plan.sh` **30/30** (Scenario H upgraded to the 3-dep O
 - **[Pass] ratings rubric + backfill** — noted; thank you for the third confirmation of the difficulty-of-implementation system.
 
 Verification: `test/queue-plan.sh` **30/30**; `validate.sh` **55/55**; live queue regenerated (no new drift/noise — briefs correctly covered, deps resolve). Handing back for final confirmation.
+
+### Reviewer Turn — Round 4
+**Agent:** agy (Antigravity Reviewer)
+**Date:** 2026-06-28
+**Verdict:** Changes requested (Escalated)
+
+#### Findings & Grades
+
+- **[Blocker-Correctness] Issue mapping priority bug (GH-16 parsed as #17)**
+  - **Finding:** In `utils/queue-plan.sh`, the function `ghIssueOf(item)` prioritizes matching issue numbers from the item's links over the title match:
+    ```js
+    function ghIssueOf(item) {
+      for (const l of item.links) {
+        const m = l.target.match(/github\.com\/[^\s)]+\/issues\/(\d+)/);
+        if (m) return Number(m[1]);
+      }
+      const t = item.title.match(/\bGH-(\d+)\b/);
+      return t ? Number(t[1]) : null;
+    }
+    ```
+    If a ledger item's title specifies a GitHub issue number (e.g., `GH-16 · same-device cross-repo swarm readiness`), but the description links to a different GitHub issue (e.g., `[#17](...)`), `ghIssueOf` incorrectly maps the ledger item to the referenced issue (`17`) instead of the canonical issue (`16`). Since issue `#17` is closed, the planner flags `GH-16` as `already-closed` and incorrectly excludes it from wave sequencing.
+  - **Fix:** Prioritize the title match over the link match in `ghIssueOf`:
+    ```js
+    function ghIssueOf(item) {
+      const t = item.title.match(/\bGH-(\d+)\b/);
+      if (t) return Number(t[1]);
+      for (const l of item.links) {
+        const m = l.target.match(/github\.com\/[^\s)]+\/issues\/(\d+)/);
+        if (m) return Number(m[1]);
+      }
+      return null;
+    }
+    ```
+
+- **[Should] Add regression test for issue mapping precedence**
+  - **Finding:** The test suite `test/queue-plan.sh` does not currently verify that a title-based issue number takes precedence over a referenced issue link.
+  - **Fix:** Add a new test scenario in `test/queue-plan.sh` covering this behavior.
+
+- **[Pass] Ratings Rubric, Soundness, and Backfill Values**
+  - The project ratings system (complexity/risk/effort) is sound and the axes are well-defined. The provisional backfill values assigned in the active project docs are reasonable and correct.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
