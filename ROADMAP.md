@@ -39,6 +39,10 @@ Three tracks, sequenced independently:
 |---|---|
 | **Part A graduated** — the marathon fired end-to-end 2026-06-26 (WPCC `ts-type-suppression`, codex→agy→Approved, gate passed). Recent relay-ergonomics ships all landed: **GH-25** swarm-preflight planner, **GH-31** cross-repo artifact review, **GH-32** single-turn ergonomics, **GH-22** agy worktree-isolation fix (all closed); **GH-33** /loop integration Phases 0–2 merged to `main` (#35); **GH-27** ROADMAP dashboard renderer built. `validate.sh` **53/53**. | **GH-29** (cross-repo new-file commit gap) is the one bug **blocking unattended cross-repo dogfooding** — fix it next. Then **GH-33 Phases 3–4** (background dispatch + Path A/B unification, gated on operator GO) and **Part B Phase 2** (chaos suite & auto-recovery). Fresh intake: **GH-36/37** headless-friction bugs, **GH-23** Cursor CLI lane. |
 
+> **Active scheduling overlay:** [QUEUE-2026-06-27.md](PROJECT/2-WORKING/QUEUE-2026-06-27.md) groups the
+> open ledger below into **collision-safe parallel lanes** — what can be built simultaneously vs. what must
+> serialize on the `relay-turn-lib.sh` containment kernel. Derived from this ledger; the ledger stays source of truth.
+
 ## Model assignment (heuristic)
 
 Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-correctness reasoning
