@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-27
 
+### ROADMAP catch-up + new parallel-automation queue
+Reconciled [ROADMAP.md](ROADMAP.md) against live GitHub issue state and the working tree, then derived a concurrency plan from it.
+- **ROADMAP cleanup:** moved 4 newly-closed items out of the ledger's active sections into **Completed** — **GH-22** (agy worktree-isolation data loss), **GH-25** (swarm-preflight planner), **GH-31** (cross-repo artifact review, merged #34), **GH-32** (single-turn ergonomics); moved **Part A Phase 6** dogfood (graduated 2026-06-26) into Completed. Updated **GH-33** (Phases 0–2 now **merged to `main`** via #35, no longer an isolated worktree) and **GH-27** (renderer **built**, in suite as `roadmap-dashboard` 4/4, awaiting close). Added the previously-unlisted open issue **GH-23** (Cursor CLI lane) to the queue. Refreshed the status table and the stale `validate.sh` count → **53/53**; `updated:` → 2026-06-27. Both PDDA roadmap checks (`pdda-check-roadmap` + `-coverage`) green; `ROADMAP-DASHBOARD.md` regenerated.
+- **New:** [QUEUE-2026-06-27.md](QUEUE-2026-06-27.md) — a scheduling overlay (not a roadmap) grouping the open ledger into lanes that can run **simultaneously without colliding**. Core insight: `relay-automation/relay-turn-lib.sh` (the containment kernel) is the serialization bottleneck — kernel lanes (GH-29 → GH-33 P3–4 → GH-30 → GH-13/14/3) run one at a time on Opus; shim lanes (GH-37 consult, GH-36 codex, GH-23 cursor) and independent lanes (GH-24/27/19, Part B chaos, front-door docs) fan out. Wave 1 = 5 disjoint lanes fireable now, led by **GH-29** (unblocks cross-repo dogfooding).
+
 ### /loop integration for relays (GH-33) — Phases 0–2 shipped (adaptive cadence)
 From the same external-consumer session as #30/#31/#32, filed as [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) (issue-first) and built in an **isolated git worktree** on branch `gh-33-loop-skill-integration` to avoid colliding with concurrent work on `main`.
 - **Phase 0 — decision:** ship as a **thin wrapper** (`relay-loop.sh`), not a `--driver loop` mode inside `relay-drive.sh` — keeps the deterministic supervisor untouched (smaller blast radius), fully removable.
