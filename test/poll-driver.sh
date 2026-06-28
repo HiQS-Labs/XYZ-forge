@@ -106,6 +106,34 @@ decide_file(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --turn
 [ "$(decide_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art.md" --peer-commit-repo "$A" --peer-commit-match 'ZZZ-no-such-subject')" = "idle" ] \
   && pass "file source: peer-commit missing -> idle (waiting for peer commit)" || fail "expected idle (commit waiting)"
 
+# --- (i-delay) --emit-delay: DECISION -> suggested next-poll delay (GH-33 Phase 1) ---
+# Additive: the DELAY line is a pure function of the already-computed decision state.
+delay_file(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --turn-source file "$@" --emit-delay --dry-run 2>/dev/null | sed -n 's/^DELAY: \([0-9]*\).*/\1/p'; }
+
+[ "$(delay_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art.md")" = "0" ] \
+  && pass "emit-delay: run-runner -> 0 (act now)" || fail "expected delay 0 (run-runner)"
+
+[ "$(delay_file --relay-file "$A/relay-next-other.md" --artifact "$A/art.md" --claude-agents alice,bob)" = "300" ] \
+  && pass "emit-delay: idle (not my turn) -> 300 backoff" || fail "expected delay 300 (idle backoff)"
+
+[ "$(delay_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art-dirty.md")" = "30" ] \
+  && pass "emit-delay: idle (dirty scope) -> 30 retry-soon" || fail "expected delay 30 (dirty)"
+
+[ "$(delay_file --relay-file "$A/relay-next-codex.md" --artifact "$A/art.md" --claude-agents alice)" = "120" ] \
+  && pass "emit-delay: nudge-cross-model -> 120" || fail "expected delay 120 (nudge)"
+
+[ "$(delay_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art.md" --peer-commit-repo "$A" --peer-commit-match 'ZZZ-no-such-subject')" = "90" ] \
+  && pass "emit-delay: waiting-for-peer-commit -> 90" || fail "expected delay 90 (wait-commit)"
+
+# env override of a delay knob is honored (default idle=300 is asserted above)
+[ "$(POLL_DELAY_IDLE=600 POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --turn-source file --relay-file "$A/relay-next-other.md" --artifact "$A/art.md" --claude-agents alice,bob --emit-delay --dry-run 2>/dev/null | sed -n 's/^DELAY: \([0-9]*\).*/\1/p')" = "600" ] \
+  && pass "emit-delay: POLL_DELAY_IDLE override honored (600)" || fail "expected 600 (env override)"
+
+# deadline clamp: a 300s idle backoff is clamped so the next wake lands at the deadline
+_dl=$(( $(date +%s) + 8 ))
+_dc="$(delay_file --relay-file "$A/relay-next-other.md" --artifact "$A/art.md" --claude-agents alice,bob --deadline "$_dl")"
+[ "$_dc" -ge 1 ] && [ "$_dc" -le 8 ] && pass "emit-delay: delay clamped to time-remaining before deadline ($_dc<=8)" || fail "expected clamp to <=8, got $_dc"
+
 POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --relay-file "$A/relay-approved.md" --artifact "$A/art.md" --relay-task RT-none --analysis-file "$NONE" --dry-run >/dev/null 2>&1
 [ "$?" -eq 10 ] && pass "stop exits 10" || fail "stop should exit 10"
 

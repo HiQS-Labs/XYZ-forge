@@ -37,6 +37,11 @@ Common:
   --watchdog-authority    This poller may run the watchdog path (designate exactly one).
   --deadline EPOCH        Self-expire: emit DECISION: stop once now >= EPOCH (unix seconds).
                           The /loop then CronDeletes itself (see relay skill "Self-closing loops").
+  --emit-delay            Also print a "DELAY: <seconds> (<reason>)" line — a suggested
+                          next-poll delay derived from the DECISION, for /loop dynamic
+                          (self-paced) mode. Additive; the DECISION line is unchanged.
+                          Tune via POLL_DELAY_{NUDGE,WAIT_COMMIT,DIRTY,IDLE}. Clamped so
+                          the next wake never overshoots --deadline.
   --runner-cmd CMD        Command run for a runnable turn (default: <root>/relay-automation/runner.sh).
   --watchdog-cmd CMD      Command run for a parked suspect (default: <root>/relay-automation/watchdog.sh).
   --help
@@ -84,6 +89,14 @@ RUNNER_CMD=""; WATCHDOG_CMD=""
 RELAY_FILE=""; ARTIFACT=""; CLAUDE_AGENTS=""; RELAY_TASK="RELAY-TURN"; DEADLINE=""
 TASK=""
 TURN_SOURCE="tick"; PEER_COMMIT_REPO=""; PEER_COMMIT_MATCH=""
+EMIT_DELAY=0
+# Suggested next-poll delays (seconds) for --emit-delay, by state. Env-overridable.
+# Active waits stay sub-300s (the prompt-cache window) so a live relay stays warm;
+# a genuinely-idle relay backs off to 300s to stop the per-tick wake-decide-nothing churn.
+POLL_DELAY_NUDGE="${POLL_DELAY_NUDGE:-120}"
+POLL_DELAY_WAIT_COMMIT="${POLL_DELAY_WAIT_COMMIT:-90}"
+POLL_DELAY_DIRTY="${POLL_DELAY_DIRTY:-30}"
+POLL_DELAY_IDLE="${POLL_DELAY_IDLE:-300}"
 
 while (($# > 0)); do
   case "$1" in
@@ -93,6 +106,7 @@ while (($# > 0)); do
     --analysis-file) ANALYSIS_FILE="${2:-}"; shift 2 ;;
     --watchdog-authority) WATCHDOG_AUTHORITY=1; shift ;;
     --deadline) DEADLINE="${2:-}"; shift 2 ;;
+    --emit-delay) EMIT_DELAY=1; shift ;;
     --runner-cmd) RUNNER_CMD="${2:-}"; shift 2 ;;
     --watchdog-cmd) WATCHDOG_CMD="${2:-}"; shift 2 ;;
     --relay-file) RELAY_FILE="${2:-}"; shift 2 ;;
@@ -265,6 +279,32 @@ else
 fi
 
 printf 'DECISION: %s (%s)\n' "$DECISION" "$REASON"
+
+# ---- suggested next-poll delay (--emit-delay) ----------------------------
+# Map the DECISION (and the idle sub-state) to a suggested seconds-until-next-poll
+# for /loop dynamic mode. Pure function of the already-computed state; additive.
+if ((EMIT_DELAY)); then
+  case "$DECISION" in
+    run-runner|run-watchdog) DELAY=0;                      DREASON="act now" ;;
+    stop)                    DELAY=0;                      DREASON="loop ends" ;;
+    nudge-cross-model)       DELAY="$POLL_DELAY_NUDGE";    DREASON="awaiting cross-model turn" ;;
+    idle)
+      if   ((WAIT_COMMIT)); then DELAY="$POLL_DELAY_WAIT_COMMIT"; DREASON="awaiting peer commit"
+      elif ((MY_TURN));     then DELAY="$POLL_DELAY_DIRTY";       DREASON="scope dirty, retry soon"
+      else                       DELAY="$POLL_DELAY_IDLE";        DREASON="idle backoff"
+      fi ;;
+    *)                       DELAY="$POLL_DELAY_IDLE";     DREASON="idle backoff" ;;
+  esac
+  # Never schedule a wake past the deadline: clamp to the time remaining so the
+  # next tick lands at the deadline and self-expires (DECISION: stop).
+  if [[ -n "$DEADLINE" ]] && (( DELAY > 0 )); then
+    _remaining=$(( DEADLINE - $(date +%s) ))
+    if (( _remaining > 0 && _remaining < DELAY )); then
+      DELAY="$_remaining"; DREASON="$DREASON (clamped to deadline)"
+    fi
+  fi
+  printf 'DELAY: %s (%s)\n' "$DELAY" "$DREASON"
+fi
 
 # ---- dispatch ------------------------------------------------------------
 if ((DRY_RUN)); then

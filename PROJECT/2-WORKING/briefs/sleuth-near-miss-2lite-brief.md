@@ -1,4 +1,23 @@
+---
+title: Builder brief — Sleuth "Near-Miss 2-lite" deterministic "did you mean?" tier
+status: Phase 0 — pre-registration (brief for the Sleuth marathon dogfood)
+created: 2026-06-24
+updated: 2026-06-24
+owner: Noel (with Claude Code, Opus 4.8)
+parent: PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md
+goal: >
+  Builder brief for the headless Marathon turn: insert a deterministic, flag-gated
+  near-miss "did you mean?" recovery tier at Sleuth's mention-dispatch dead-end,
+  reusing the existing scorer — additive, default-OFF, suggest-only.
+---
+
 # Phase brief — Sleuth "Near-Miss 2-lite" deterministic "did you mean?" tier
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase 0 pre-registration brief written (task, dispatch seam, flag, scorer reuse all specified). | Fire the Marathon turn against `sleuth-app` per the parent dogfood doc — or retire the brief if the substrate is superseded. |
 
 **Repo:** sleuth-app (Node) · **Branch:** marathon-dogfood/near-miss-2lite
 **Read first:** `ARCHITECTURE.md` and `PROJECT/1-INBOX/COMMAND-NEAR-MISS-AI-FALLBACK.md` (Phase 2-lite).

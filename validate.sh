@@ -29,6 +29,7 @@ TESTS=(
   "watchdog-liveness.sh"
   "runner-loop.sh"
   "poll-driver.sh"
+  "relay-loop.sh"
   "poll-relay.sh"
   "watchdog-relay.sh"
   "codex-turn.sh"
