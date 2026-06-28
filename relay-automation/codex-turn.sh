@@ -62,6 +62,7 @@ prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 # CODEX_FLAGS gives the turn enough autonomy to actually write on a fresh device (default sandbox is
 # read-only); operator-overridable for tighter/looser policies.
 read -ra _cflags <<<"${CODEX_FLAGS:--s workspace-write}"
+codex_extra_flags=()
 # Transcript: default to a $TMPDIR file (NOT the repo tree — the in-tree log guard deletes it).
 # Persists the transcript so the headless run is auditable. (Codex token-stats parsing is a follow-up
 # — its usage format isn't probed yet, so cost.tokens for Codex turns stays a Phase-1 partial.)
@@ -79,6 +80,9 @@ if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
   if wt="$(rtl_worktree_begin)"; then
     # TICK_REPO_ROOT already exported above (unconditional) — .tick stays SHARED with ROOT here.
     cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
+    # GH-36: the isolated worktree is the primary workspace, so the shared token lock under
+    # $TICK_REPO_ROOT/.tick is outside Codex's default workspace-write sandbox unless we add it.
+    codex_extra_flags=(--add-dir "$ROOT/.tick")
     printf 'codex-turn: worktree isolation ON (%s)\n' "$wt" >&2
   else
     printf 'codex-turn: worktree isolation requested but `git worktree add` failed — failing turn\n' >&2
@@ -91,7 +95,7 @@ fi
 # credits — even if some ambient session exported a key. Set CODEX_ALLOW_API_KEY=1 to opt back in.
 codex_env=(env)
 [[ "${CODEX_ALLOW_API_KEY:-0}" == "1" ]] || codex_env+=(-u OPENAI_API_KEY)
-rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "${codex_env[@]}" "$CODEX_BIN" exec "${_cflags[@]}" "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
+rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "${codex_env[@]}" "$CODEX_BIN" exec "${_cflags[@]}" ${codex_extra_flags[@]+"${codex_extra_flags[@]}"} "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
   || bounded_rc=$?
 
 # Worktree teardown FIRST (regardless of rc). Copies the allowlist back to ROOT unless an off-lane

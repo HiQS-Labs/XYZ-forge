@@ -118,6 +118,20 @@ seed_token RELAY-TURN-flags2
 CODEX_FLAGS="--dangerously-bypass-approvals-and-sandbox" run_shim RELAY-TURN-flags2 codex good >/dev/null 2>&1
 grep -q -- "--dangerously-bypass-approvals-and-sandbox" "$WORK/codex-args" && pass "CODEX_FLAGS override is honored" || fail "CODEX_FLAGS override not passed"
 
+# --- (7b) GH-36: worktree isolation grants codex a writable root for the shared .tick lock ---
+# Under isolation, codex's CWD is a throwaway worktree but .tick/ lives at TICK_REPO_ROOT (outside
+# its workspace-write sandbox) -> tick claim EPERM -> deadlock. The fix passes --add-dir <root>/.tick.
+seed_token RELAY-TURN-gh36iso
+RELAY_WORKTREE_ISOLATION=1 run_shim RELAY-TURN-gh36iso codex good >/dev/null 2>&1
+grep -q -- "--add-dir" "$WORK/codex-args" && grep -q -- ".tick" "$WORK/codex-args" \
+  && pass "GH-36: worktree isolation passes --add-dir <root>/.tick to codex (shared token lock writable)" \
+  || fail "GH-36: --add-dir .tick missing under worktree isolation"
+seed_token RELAY-TURN-gh36noiso
+run_shim RELAY-TURN-gh36noiso codex good >/dev/null 2>&1
+grep -q -- "--add-dir" "$WORK/codex-args" \
+  && fail "GH-36: --add-dir must NOT appear when isolation is off (default unchanged)" \
+  || pass "GH-36: no --add-dir when isolation off (default behavior unchanged)"
+
 # --- (9) rename-hijack: a staged rename (off-lane) is enforced, not skipped as pre-existing (Gemini review) ---
 printf 'tracked off-lane\n' > "$A/rtarget.txt"; git -C "$A" add rtarget.txt >/dev/null 2>&1; git -C "$A" commit -q -m "seed rename target" >/dev/null 2>&1
 seed_token RELAY-TURN-rename
