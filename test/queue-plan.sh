@@ -209,6 +209,7 @@ w700="$(wave_of "$doc" 700)"; w701="$(wave_of "$doc" 701)"
 H="$WORK/H"; mkdir -p "$H"; echo '{}' >"$H/.gh-state.json"; : >"$H/.branches"
 mk_doc "$H" GH-800-k1.md    low low low "$(contract_for MISS_K1 bin/tick)"
 mk_doc "$H" GH-801-k2.md    low low low "$(contract_for MISS_K2 relay-automation/relay-drive.sh)"
+mk_doc "$H" GH-803-k3.md    low low low "$(contract_for MISS_K3 relay-automation/relay-turn-lib.sh)"
 mk_doc "$H" GH-802-multi.md low low low "$(contract_for MISS_M  src/multi.js)"
 cat >"$H/ROADMAP.md" <<EOF
 # Roadmap
@@ -216,11 +217,13 @@ cat >"$H/ROADMAP.md" <<EOF
 ### In progress
 - **GH-800 · kernel1** 🆕 — → [d](PROJECT/2-WORKING/GH-800-k1.md) · [#800](https://github.com/o/r/issues/800)
 - **GH-801 · kernel2** 🆕 — → [d](PROJECT/2-WORKING/GH-801-k2.md) · [#801](https://github.com/o/r/issues/801)
-- **GH-802 · multi-dep** 🆕 — depends on GH-800, GH-801 → [d](PROJECT/2-WORKING/GH-802-multi.md) · [#802](https://github.com/o/r/issues/802)
+- **GH-803 · kernel3** 🆕 — → [d](PROJECT/2-WORKING/GH-803-k3.md) · [#803](https://github.com/o/r/issues/803)
+- **GH-802 · multi-dep** 🆕 — depends on GH-800, GH-801, and GH-803 → [d](PROJECT/2-WORKING/GH-802-multi.md) · [#802](https://github.com/o/r/issues/802)
 EOF
 run_qp "$H" >/dev/null 2>&1; doc="$H/PROJECT/2-WORKING/QUEUE-$DAY.md"
-w800="$(wave_of "$doc" 800)"; w801="$(wave_of "$doc" 801)"; w802="$(wave_of "$doc" 802)"
-[[ -n "$w802" && "$w802" -gt "$w800" && "$w802" -gt "$w801" ]] && pass "H: comma-separated deps both parsed — multi-dep follows BOTH kernels (800=$w800 801=$w801 802=$w802) [agy Should]" || fail "H: comma deps not both honored (800=$w800 801=$w801 802=$w802)"
+w800="$(wave_of "$doc" 800)"; w801="$(wave_of "$doc" 801)"; w803="$(wave_of "$doc" 803)"; w802="$(wave_of "$doc" 802)"
+# Oxford-comma "GH-800, GH-801, and GH-803" — all three must parse, so the dependent follows the LAST (803).
+[[ -n "$w802" && "$w802" -gt "$w800" && "$w802" -gt "$w801" && "$w802" -gt "$w803" ]] && pass "H: oxford-comma deps all parsed — multi-dep follows ALL kernels (800=$w800 801=$w801 803=$w803 802=$w802) [agy Blocker r2]" || fail "H: oxford-comma deps not all honored (800=$w800 801=$w801 803=$w803 802=$w802)"
 
 echo
 echo "  queue-plan: $PASS passed, $FAIL failed"

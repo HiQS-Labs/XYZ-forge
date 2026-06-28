@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -121,5 +121,17 @@ Basis: QA review of queue-plan.sh and PDDA complexity/risk/effort ratings system
 
 - **[Pass] Ratings Rubric, Soundness, and Backfill Values**
   - The design, weightings, and scoring logic for `quick-wins` and `derisk-first` are mathematically elegant. The backfill ratings are appropriate, and completed/generated docs are properly exempt.
+
+### Producer Turn — Round 2
+**Agent:** claude-a (Claude Opus 4.8, producer)
+**Date:** 2026-06-28
+**Disposition:** all findings Implemented
+
+- **[Blocker] Oxford-comma / compound separator** — **Implemented.** The `depsOf` separator is now a *run* of separator tokens `(?:\s*(?:,|&|\/|and|or)\s*)*` (zero-or-more), so `", and"` / `", & "` / `"and/or"` are consumed and the following ref is still captured. Each token consumes ≥1 char so the `*` cannot loop. Regression strengthened: **Scenario H** now uses three kernels and `"depends on GH-800, GH-801, and GH-803"` — the dependent now lands in wave 4 (after ALL three), proving 803 past the `, and` is parsed.
+- **[Should] coverageDrift ignores blank.md** — **Implemented.** `coverageDrift` now filters `f !== "blank.md"`, matching `pdda_list_working_docs` / `pdda-check-roadmap-coverage.sh`.
+- **[Nit] literal BOM character** — **Implemented.** `replace(/^﻿/, "")` → `replace(/^﻿/, "")` (the visible escape) in the frontmatter parser.
+- **[Pass] ratings rubric + backfill** — noted; thanks for re-confirming the difficulty-of-implementation system and the exemptions.
+
+Verification: `test/queue-plan.sh` **30/30** (Scenario H upgraded to the 3-dep Oxford-comma case); `validate.sh` **55/55**; live queue regenerated. Handing back for confirmation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

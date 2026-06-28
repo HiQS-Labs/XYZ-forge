@@ -147,7 +147,7 @@ function existsAt(rel, base) { try { return fs.existsSync(path.resolve(base || R
 function frontmatter(doc) {
   const raw = readFileSafe(doc);
   if (raw == null) return {};
-  const lines = raw.replace(/^﻿/, "").split(/\r?\n/);
+  const lines = raw.replace(/^\ufeff/, "").split(/\r?\n/);  // strip a leading UTF-8 BOM if present
   let i = 0;
   while (i < lines.length && lines[i].trim() === "") i++;
   if (lines[i] == null || !/^---\s*$/.test(lines[i])) return {};
@@ -325,7 +325,10 @@ function depsOf(item) {
   // Match a dependency keyword followed by a LIST of issue refs (comma/and/&/slash separated), so
   // "after GH-29, GH-30 and #31" yields all three. The list stops at the first non-issue token, so
   // "after GH-29 the fix landed" still yields only 29 (no over-capture).
-  const re = /(?:after|once|depends on|gated on|blocked by)\s+((?:(?:GH-|#)\d+(?:\s*(?:,|and|&|\/)\s*)?)+)/gi;
+  // Separator between refs is a RUN of comma/&//conjunction tokens (zero-or-more), so a compound
+  // separator like ", and" / ", & " / "and/or" is consumed and the following ref is still captured
+  // ("GH-100, GH-101, and GH-102" ⇒ all three). Each token consumes ≥1 char, so the `*` can't loop.
+  const re = /(?:after|once|depends on|gated on|blocked by)\s+((?:(?:GH-|#)\d+(?:\s*(?:,|&|\/|and|or)\s*)*)+)/gi;
   let m;
   while ((m = re.exec(item.raw)) !== null) {
     let n; const num = /(?:GH-|#)(\d+)/g;
@@ -447,7 +450,8 @@ for (const r of deduped) {
 // run-level drift: a 2-WORKING doc with no ledger pointer (coverage rule, like pdda-check-roadmap-coverage)
 (function coverageDrift() {
   let docs = [];
-  try { docs = fs.readdirSync(E.QP_QUEUE_DIR).filter((f) => f.endsWith(".md")); } catch { return; }
+  // Skip blank.md scaffolding (PDDA convention — pdda_list_working_docs excludes it too).
+  try { docs = fs.readdirSync(E.QP_QUEUE_DIR).filter((f) => f.endsWith(".md") && f !== "blank.md"); } catch { return; }
   const pointed = new Set(deduped.map((r) => r.docRel && path.basename(r.docRel)).filter(Boolean));
   for (const f of docs) {
     if (/^QUEUE-\d{4}-\d\d-\d\d\.md$/.test(f)) continue; // generated queue docs don't need a pointer
