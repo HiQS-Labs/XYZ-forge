@@ -37,6 +37,24 @@ GH-31 and #15 to be implemented together.
   off-lane detection proves to weaken containment, gate it behind an explicit opt-in. Recommendation:
   iterate — implement Phase 2 only after operator confirms the diff plan (propose-before-commit).
 
+**GH-31 — Phase 2 shipped (operator-confirmed strict-fail variant), closes #15, `validate.sh` 51/51:**
+`relay-drive.sh --artifact-file <path>` seeds a READ-ONLY artifact into the isolated worktree at
+`.relay-artifacts/<basename>`. The reviewer may READ it; an edit changes the dir signature and trips
+off-lane (exit 6) — strict read-only, not a silent discard. Never added to the writable allowlist, so
+never copied back to ROOT (no leak into the target repo). Test `test/relay-artifact-file.sh` (10
+assertions: visible/no-leak/commit-normal/worktree-clean, edit→exit-6/no-commit/no-leak, default-off
+unchanged). **Bug caught + fixed pre-merge:** a trailing `[[ -n .. ]] && assign` made `rtl_init` return
+1 when no artifact was set, which a `set -e` turn shim turned into a silent aborted turn — every
+artifact-less turn (i.e. the whole suite) would have broken; replaced with an `if`-block (returns 0).
+
+**GH-31 — Phases 3+4 shipped (PR), `validate.sh` 52/52:** `relay-automation/new-relay.sh` scaffolds a
+single-artifact review thread (`NEXT:`/`STATUS:`/`ROUND:` + "▶ TAKE YOUR TURN" + Setup + Ground rules +
+Log). Reference mode points the Setup at the `.relay-artifacts/<basename>` seed path (ties to Phase 2);
+`--embed` inlines the artifact in a **fence-collision-safe** block — `fence_for` picks a backtick fence
+longer than the longest run inside the file (Phase 3), so an artifact containing its own ```` ```fences ````
+can't break out. Test `test/new-relay.sh` (14 assertions incl. 3- and 5-backtick nesting). Documented in
+the relay-xyz SKILL. Reversibility: Easy — a new standalone script + additive flag, nothing existing changed.
+
 ## 2026-06-26
 
 ### poll.sh — `--turn-source file` (token-optional relay advance) + commit-signal gate

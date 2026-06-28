@@ -190,6 +190,14 @@ un-sandboxed). Run these Bash calls with `dangerouslyDisableSandbox: true`. (Mem
   Without `--review-once` a non-approval handback advances the multi-round loop instead (the producer
   takes the next turn); use `--review-once` when you want exactly one review and a clean exit code.
 
+- **Review an external / cross-repo artifact (a PR or diff from another repo):** pass
+  `--artifact-file <path>` to `relay-drive.sh` to seed it READ-ONLY into the isolated worktree at
+  `.relay-artifacts/<basename>` — the reviewer reads it there without it being committed into the
+  target repo (a reviewer edit fails the turn). To scaffold the thread for such a review, use
+  `relay-automation/new-relay.sh --title T --reviewer <agent> --artifact-file <path>` (add `--embed`
+  to inline the artifact in a fence-collision-safe block instead of referencing the seed path). The
+  scaffolder only writes a thread; you still drive it with `relay-drive.sh` per the paths above.
+
 ### Path B — hands-free poll (all-Claude, two windows)
 
 In each Claude window, run a guarded `/loop` that uses `poll.sh` as the gate, then take the turn from

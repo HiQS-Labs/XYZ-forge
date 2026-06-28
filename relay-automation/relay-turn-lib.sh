@@ -80,6 +80,18 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   local _n=() a                       # normalize to repo-root-relative (git status emits relative)
   for a in "${RTL_ALLOW[@]}"; do _n+=("${a#"$RTL_ROOT"/}"); done
   RTL_ALLOW=("${_n[@]}")
+  # GH-31 / #15: optional READ-ONLY artifact under review (a cross-repo or uncommitted PR/diff).
+  # RELAY_ARTIFACT_FILE is an ABSOLUTE path to the source (relay-drive absolutizes it). It is seeded
+  # read-only into the worktree by rtl_worktree_begin at .relay-artifacts/<basename> — NOT added to
+  # RTL_ALLOW, so it is never copied back to RTL_ROOT (no leak). The reviewer may READ it; an edit
+  # changes its signature and fails the turn (strict read-only). Empty/unset → no artifact (default).
+  RTL_ARTIFACT="${RELAY_ARTIFACT_FILE:-}"
+  RTL_ARTIFACT_REL=""
+  # NB: a trailing `[[ -n .. ]] && assign` would make rtl_init RETURN the test's status (1 when no
+  # artifact), and a `set -e` caller (the turn shims) would abort the turn. Use an if-block → returns 0.
+  if [[ -n "$RTL_ARTIFACT" ]]; then
+    RTL_ARTIFACT_REL=".relay-artifacts/$(basename "$RTL_ARTIFACT")"
+  fi
 }
 
 rtl_in_allow() {  # <path> — is <path> on the allowlist? Case-insensitive when RTL_IGNORECASE=true (GH-17).
@@ -132,16 +144,14 @@ rtl_run_bounded() {  # <timeout_secs> <cmd...>
 # Coordination state (.tick) stays SHARED — the caller must run the agent with TICK_REPO_ROOT=RTL_ROOT.
 #
 # SEED LIMITATIONS (relay review 2026-06-23 F4/F5 — known constraints, documented; structural fix deferred):
-#   - Cross-repo artifact: the worktree is a checkout of RTL_ROOT@HEAD and seeds only allowlisted paths
-#     UNDER RTL_ROOT (below). An artifact in ANOTHER repo is neither at HEAD nor seeded, so it is invisible
-#     to an isolated turn. Until a read-only out-of-ROOT seed exists, embed a cross-repo artifact inline in
-#     the relay file, or stage it under RTL_ROOT. (RELAY_TARGET_ROOT relocates the single artifact root,
-#     not "harness in repo A + artifact in repo B".)
-#   - Uncommitted artifact on a REVIEWER turn: rtl_init drops ALLOW_PATHS on a reviewer turn, so only the
-#     relay file is seeded. A brand-new (untracked) artifact-under-review is then neither at HEAD nor
-#     seeded — the reviewer reads a missing/stale file. COMMIT review inputs before an isolated reviewer
-#     turn. The real fix — a read-only seed set distinct from the writable allowlist, so a reviewer can
-#     READ but not WRITE the artifact in the worktree — is tracked as #15, not done here.
+#   - Cross-repo / uncommitted artifact: the worktree is a checkout of RTL_ROOT@HEAD and seeds only
+#     allowlisted paths UNDER RTL_ROOT (below). An artifact in ANOTHER repo, or a brand-new uncommitted
+#     one, is neither at HEAD nor on the writable allowlist, so it would be invisible to an isolated turn.
+#     FIX (GH-31 / closes #15): set RELAY_ARTIFACT_FILE (relay-drive `--artifact-file`) to seed it as a
+#     READ-ONLY artifact at .relay-artifacts/<basename> — the read-only seed set distinct from the writable
+#     allowlist. The reviewer may READ it; an edit changes its signature and fails the turn (strict-fail);
+#     it is never copied back to RTL_ROOT (no leak). See rtl_init (RTL_ARTIFACT) + the seed/exempt logic
+#     in rtl_worktree_begin/end. (Embedding inline still works for callers who prefer it.)
 _rtl_sig() {  # <path> — content signature of a file/dir, or "ABSENT". Used to detect what the turn
   # actually changed IN THE WORKTREE, so rtl_worktree_end copies back ONLY worktree-modified paths and
   # never clobbers a ROOT-direct edit with a stale seed (GH-22). git is already required by this lib.
@@ -184,6 +194,15 @@ rtl_worktree_begin() {
   # rtl_worktree_end re-reads the sidecar by the worktree path it is handed. One line per RTL_ALLOW entry.
   : >"${wt}.seedsig"
   for a in "${RTL_ALLOW[@]}"; do _rtl_sig "$wt/$a" >>"${wt}.seedsig"; done
+  # GH-31 / #15: seed the read-only artifact under review so an ISOLATED reviewer can READ it (it is
+  # neither at HEAD nor on the writable allowlist). Snapshot the .relay-artifacts dir signature to a
+  # sidecar so rtl_worktree_end can exempt it from off-lane detection ONLY while unchanged — a reviewer
+  # edit changes the signature and trips off-lane (strict read-only). NOT in RTL_ALLOW ⇒ never copied back.
+  if [[ -n "${RTL_ARTIFACT:-}" && -f "$RTL_ARTIFACT" ]]; then
+    mkdir -p "$wt/.relay-artifacts"
+    cp "$RTL_ARTIFACT" "$wt/$RTL_ARTIFACT_REL"
+    _rtl_sig "$wt/.relay-artifacts" >"${wt}.artifactsig"
+  fi
   RTL_WT="$wt"; RTL_WT_USED=1   # GH-13: mark the turn worktree-isolated so rtl_enforce won't reset a concurrent peer's ROOT commit
   printf '%s\n' "$wt"
 }
@@ -203,6 +222,16 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     xy="${entry:0:2}"; path="${entry:3}"
     case "$xy" in R*|C*) IFS= read -r -d '' _ || true ;; esac   # rename/copy: consume 2nd NUL field
     case "$path" in .tick/*|.tick) continue ;; esac
+    # GH-31 / #15: the read-only artifact seed. Exempt ONLY while unchanged from the seed; a reviewer
+    # edit changes the .relay-artifacts dir signature → strict-fail as off-lane (read-only enforced,
+    # not silently discarded). git collapses an all-untracked dir to ".relay-artifacts/", so match both.
+    case "$path" in
+      .relay-artifacts|.relay-artifacts/|.relay-artifacts/*)
+        if [[ -f "${wt}.artifactsig" ]] && [[ "$(_rtl_sig "$wt/.relay-artifacts")" == "$(cat "${wt}.artifactsig")" ]]; then
+          continue
+        fi
+        RTL_WT_OFFLANE=1; continue ;;
+    esac
     rtl_in_allow "$path" && continue
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
   done < <(git -C "$wt" status --porcelain -z 2>/dev/null)
@@ -228,7 +257,7 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
       fi
     done
   fi
-  rm -f "${wt}.seedsig"                  # GH-22: clean up the sidecar signature file
+  rm -f "${wt}.seedsig" "${wt}.artifactsig"   # GH-22 + GH-31: clean up the sidecar signature files
   git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
   git -C "$RTL_ROOT" worktree prune >/dev/null 2>&1 || true
   RTL_WT=""
@@ -265,8 +294,12 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
     csv_rel=""
     role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn.'
   fi
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s/bin/tick". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.' \
-    "$agent" "$f_rel" "$task" "$tickroot" "$tickroot" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note"
+  # GH-31 / #15: point the reviewer at the seeded read-only artifact (worktree-relative; it is NOT a
+  # writable edit target — an edit fails the turn).
+  local art_note=""
+  [[ -n "${RTL_ARTIFACT_REL:-}" ]] && art_note=" The artifact under review is at ${RTL_ARTIFACT_REL} — READ it for your review, but do NOT edit it (any edit fails your turn)."
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s/bin/tick". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.' \
+    "$agent" "$f_rel" "$task" "$tickroot" "$tickroot" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note"
 }
 
 rtl_before() {

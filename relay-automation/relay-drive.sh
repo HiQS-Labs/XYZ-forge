@@ -42,6 +42,10 @@ Usage: relay-automation/relay-drive.sh --relay-file PATH --agent-cmd CMD [option
   --consult-verify    After each turn, invoke consult.sh to independently challenge the
                       turn-taker's VERDICT. Fires 1-2 real API calls per turn (codex +
                       gemini). Do NOT use in CI or budget-sensitive runs.
+  --artifact-file P   Seed an external read-only artifact (a cross-repo PR/diff or any file) into the
+                      isolated worktree at .relay-artifacts/<basename> so the reviewer can READ it
+                      without it being committed into the target repo. Requires worktree isolation
+                      (the default). The reviewer may not edit it (an edit fails the turn). Implements #15.
   --review-once       Drive exactly ONE turn (a single review) and classify its outcome:
                       Approved/Closed -> 0; a completed non-approval handback ("changes
                       requested") -> 5 (NOT the stall's 3); reviewer-did-nothing stall -> 3;
@@ -53,7 +57,7 @@ EOF
 
 die() { printf 'relay-drive: %s\n' "$*" >&2; exit 2; }
 
-RELAY_FILE=""; AGENT_CMD=""; RELAY_TASK="RELAY-TURN"; ROUND_CAP=6; DRY_RUN=0; CONSULT_VERIFY=0; REVIEW_ONCE=0
+RELAY_FILE=""; AGENT_CMD=""; RELAY_TASK="RELAY-TURN"; ROUND_CAP=6; DRY_RUN=0; CONSULT_VERIFY=0; REVIEW_ONCE=0; ARTIFACT_FILE=""
 while (($# > 0)); do
   case "$1" in
     --relay-file) RELAY_FILE="${2:-}"; shift 2 ;;
@@ -63,6 +67,7 @@ while (($# > 0)); do
     --target-root) TARGET_ROOT="${2:-}"; shift 2 ;;
     --consult-verify) CONSULT_VERIFY=1; shift ;;
     --review-once) REVIEW_ONCE=1; shift ;;
+    --artifact-file) ARTIFACT_FILE="${2:-}"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
@@ -120,6 +125,20 @@ warn_if_relay_file_untracked() {
   printf '  the relay file first, or re-run with RELAY_WORKTREE_ISOLATION=0.\n' >&2
 }
 warn_if_relay_file_untracked
+
+# GH-31 / #15: a read-only artifact under review. Absolutize it (the shim runs with a different CWD)
+# and export it so relay-turn-lib seeds it into the isolated worktree. It only works under isolation —
+# warn loudly if isolation is off, so the reviewer isn't left silently unable to see it.
+if [[ -n "$ARTIFACT_FILE" ]]; then
+  [[ -f "$ARTIFACT_FILE" ]] || die "artifact file not found: $ARTIFACT_FILE"
+  case "$ARTIFACT_FILE" in
+    /*) : ;;
+    *)  ARTIFACT_FILE="$(cd "$(dirname "$ARTIFACT_FILE")" && pwd)/$(basename "$ARTIFACT_FILE")" ;;
+  esac
+  export RELAY_ARTIFACT_FILE="$ARTIFACT_FILE"
+  [[ "$RELAY_WORKTREE_ISOLATION" != 0 ]] || \
+    printf 'relay-drive: WARNING — --artifact-file needs worktree isolation to seed the artifact; with RELAY_WORKTREE_ISOLATION=0 the reviewer will not see it.\n' >&2
+fi
 
 file_status() { sed -n 's/^STATUS:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
 terminal_status() { case "$1" in Approved|Closed) return 0 ;; *) return 1 ;; esac; }

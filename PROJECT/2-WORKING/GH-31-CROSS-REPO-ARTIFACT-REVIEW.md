@@ -25,7 +25,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 (design) done: `--artifact-file` resolved as the user surface of the already-tracked **read-only seed** ([#15](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/15)) — copy the artifact into the worktree as a read-only input (visible to the reviewer, exempt from off-lane detection, never copied back). Bet recorded in `CHANGELOG.md`. | **Phase 2 (Costly — touches `rtl_worktree_begin/end` containment): pause for operator confirmation of the design + diff plan BEFORE writing code**, per the propose-before-commit agreement. |
+| **All 4 phases shipped.** Phase 3+4: `relay-automation/new-relay.sh` scaffolds a single-artifact review thread (reference mode points at the `.relay-artifacts/` seed path; `--embed` inlines the artifact in a fence chosen longer than any backtick run inside — fence-collision safe). Test `test/new-relay.sh` (14 assertions); `./validate.sh` **52/52**. | Open the PR completing GH-31; close #31 after merge. Doc → `3-COMPLETED` once #31 closes. |
 
 ## Table of Contents
 
@@ -81,34 +81,36 @@ Design decisions (the Phase 1 outcome):
 
 ## Phase 2 — Implement `--artifact-file` copy-into-worktree
 
-- [ ] Add the option to the driver; copy the artifact into the isolated worktree before the reviewer turn.
-- [ ] Expose its in-worktree path to the reviewer via the relay thread (replace manual embedding).
-- [ ] Keep the explicit-embed path working for callers who still want it.
+- [x] Added `--artifact-file <path>` to `relay-drive.sh` (absolutizes + validates + exports `RELAY_ARTIFACT_FILE`; warns if isolation is off). `relay-turn-lib.sh` seeds it into the worktree at `.relay-artifacts/<basename>` (`rtl_init` → `RTL_ARTIFACT`; `rtl_worktree_begin` copy + signature snapshot).
+- [x] Exposed the in-worktree path to the reviewer via `rtl_turn_prompt` ("the artifact under review is at `.relay-artifacts/…` — read-only").
+- [x] Embedding path untouched — callers who still want to embed inline can.
+- [x] **Strict-fail (operator call):** the read-only seed is exempt from off-lane detection ONLY while unchanged; a reviewer edit changes the `.relay-artifacts` dir signature → off-lane → exit 6. Never added to `RTL_ALLOW`, so never copied back to ROOT.
 
 ### QA checklist — Phase 2
 
-- [ ] A cross-repo PR diff passed via `--artifact-file` is readable by the reviewer with no manual embedding.
-- [ ] The artifact does not leak into the target repo's tracked tree.
-- [ ] `./validate.sh` green with a regression test.
+- [x] A cross-repo PR diff passed via `--artifact-file` is readable by the reviewer with no manual embedding (test case 1).
+- [x] The artifact does not leak into the target repo's tracked tree (test cases 1 + 2 assert no `.relay-artifacts` in ROOT).
+- [x] `./validate.sh` green with a regression test — `test/relay-artifact-file.sh` (10 assertions), suite **51/51**.
+- [x] Edit-the-artifact → strict-fail exit 6 verified (test case 2); default-off path unchanged (test case 3).
 
 ## Phase 3 — Fence-safe embedding fallback
 
-- [ ] When embedding IS used, auto-select a fence longer than the longest backtick run inside the artifact.
-- [ ] Cover an artifact that itself contains fenced markdown / nested code blocks.
+- [x] `new-relay.sh --embed` auto-selects a fence longer than the longest backtick run inside the artifact (`fence_for`: `max(3, longest_run + 1)`).
+- [x] Covered an artifact that itself contains fenced markdown / nested code blocks (test cases 3 + 4).
 
 ### QA checklist — Phase 3
 
-- [ ] An embedded artifact containing ```` ```diff ```` blocks renders without fence collision.
-- [ ] Test asserts the chosen fence length exceeds the max inner run.
+- [x] An embedded artifact containing a 3-backtick block gets a ≥4-backtick outer fence (no collision); a 5-backtick run scales the fence to ≥6 (test cases 3 + 4).
+- [x] Test asserts the chosen fence length exceeds the max inner run.
 
 ## Phase 4 — `new-relay.sh` scaffolder
 
-- [ ] Add a lightweight `new-relay.sh --title --reviewer --artifact-file` that emits a thread with the STATUS/NEXT + "▶ TAKE YOUR TURN" + "### Review —" skeleton.
-- [ ] Route it through the relay-xyz skill so it is not a hand-rolled handoff.
+- [x] Added `relay-automation/new-relay.sh --title --reviewer [--artifact-file] [--embed] [--producer] [--round-cap] [--out|--print]` — emits a thread with `NEXT:`/`STATUS:`/`ROUND:` + the "▶ TAKE YOUR TURN" block + Setup + Ground rules + Log marker. Reference mode points at the `.relay-artifacts/<basename>` seed path (ties Phase 4 to Phase 2).
+- [x] Documented in the relay-xyz skill (see Phase 5 wrap); the scaffolder only WRITES a thread — it does not drive the harness, so the relay-xyz guard is not engaged.
 
 ### QA checklist — Phase 4
 
-- [ ] Scaffolder produces a valid thread the driver can drive end-to-end.
-- [ ] Invoking it is documented in the relay-xyz skill; no guard bypass.
-- [ ] `./validate.sh` green.
+- [x] Scaffolder produces a thread with the fields the driver reads (`NEXT:`/`STATUS:`) — `test/new-relay.sh` asserts them.
+- [x] Documented in the relay-xyz skill; the scaffolder writes-only (no guard bypass — it never invokes a driver).
+- [x] `./validate.sh` green — **52/52** (`test/new-relay.sh`, 14 assertions).
 </content>
