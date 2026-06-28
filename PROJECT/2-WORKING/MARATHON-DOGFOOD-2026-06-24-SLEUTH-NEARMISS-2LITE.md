@@ -2,6 +2,7 @@
 title: Marathon Dogfood — Headless Relay builds Sleuth "Near-Miss 2-lite"
 status: Phase 0 — pre-registration (locked before any turn fires)
 created: 2026-06-24
+updated: 2026-06-24
 owner: Noel (with Claude Code, Opus 4.8)
 harness_repo: xyz-3-agents-swarm (relay-automation/ Marathon stack)
 substrate_repo: sleuth-app (Node; jest + npm run validate:commands)

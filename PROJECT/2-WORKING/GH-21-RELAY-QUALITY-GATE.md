@@ -29,9 +29,9 @@ non_goals:
   - Blocking the current active tracks (Part A dogfood, Part B adversarial hardening Phase 2)
 ---
 
-## Progress
+## Status
 
-| Most recently completed | What's next |
+| What was just completed | What's next |
 |---|---|
 | **Phase 3 complete 2026-06-25** — `--consult-verify` flag shipped in `relay-drive.sh`. agy attempted impl 3× (each stalled on async validate.sh before writing code). claude-a fallback impl: flag parsing, `CONSULT_SH` env override, consult block with prompt-file + sed-based path parse (fixes macOS ugrep flag collision), divergence handler (STATUS: Escalated + conflict block with VERDICT: FAIL/Basis:), commit to relay file's own repo. QA1 (no-flag: 0 consult calls ✓), QA3 (divergent stub: exit 4, STATUS: Escalated ✓), QA4 (validate-relay-block on escalated file: exit 0 ✓), 46/46 validate.sh. Process finding: agy headless relay cannot complete code-write turns — logs as GH backlog candidate. | GH-21 complete. |
 

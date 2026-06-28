@@ -45,7 +45,7 @@ Confirmed in code:
 
 ## Phase 1 — Untracked-relay-file preflight warn
 
-- [x] In the driver preflight, detect when `RELAY_WORKTREE_ISOLATION=1` and `RELAY_FILE` is **not** present in `HEAD` (uses `git rev-parse --show-prefix` + `git cat-file -e HEAD:<rel>` — symlink-safe on macOS `/var`→`/private/var`).
+- [x] In the driver preflight, detect when `RELAY_WORKTREE_ISOLATION=1` and `RELAY_FILE` is **not** present in `HEAD` (uses `git rev-parse --show-prefix` + `git cat-file -e HEAD:<rel>` — symlink-safe on macOS where `/var` is itself a symlink).
 - [x] Emit a loud, multi-line WARN naming the exact remedy: commit the relay file first, or set `RELAY_WORKTREE_ISOLATION=0`.
 - [x] Warn only — never block (verified: a true stall after the warn still exits 3).
 - [x] Reuse the existing cross-repo warning style (loud `relay-drive: WARNING …` to stderr).
