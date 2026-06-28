@@ -184,6 +184,44 @@ echo "$json" | while IFS= read -r line; do [ -n "$line" ] && printf '%s' "$line"
   && pass "F: --format json emits one valid JSON object per line" || fail "F: json lines not all valid"
 grep -q '"check":"queue-plan/summary"' <<<"$json" && pass "F: json includes a summary record" || fail "F: json summary missing"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario G — agy QA [Blocker]: a dep on a HELD (not-built) item must defer the dependent
+# ─────────────────────────────────────────────────────────────────────────────
+G="$WORK/G"; mkdir -p "$G"; echo '{}' >"$G/.gh-state.json"; : >"$G/.branches"
+mk_doc "$G" GH-700-free.md   low low low "$(contract_for MISS_F  src/free.js)"
+mk_doc "$G" GH-701-dephld.md low low low "$(contract_for MISS_DH src/dephld.js)"
+mk_doc "$G" GH-710-held.md   low -   low "$(contract_for MISS_HE src/held.js)"   # unrated ⇒ held
+cat >"$G/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-700 · free** 🆕 — → [d](PROJECT/2-WORKING/GH-700-free.md) · [#700](https://github.com/o/r/issues/700)
+- **GH-701 · dep on held** 🆕 — depends on GH-710 → [d](PROJECT/2-WORKING/GH-701-dephld.md) · [#701](https://github.com/o/r/issues/701)
+- **GH-710 · held (unrated)** 🆕 — → [d](PROJECT/2-WORKING/GH-710-held.md) · [#710](https://github.com/o/r/issues/710)
+EOF
+run_qp "$G" >/dev/null 2>&1; doc="$G/PROJECT/2-WORKING/QUEUE-$DAY.md"
+w700="$(wave_of "$doc" 700)"; w701="$(wave_of "$doc" 701)"
+[[ "$w700" == "1" && -n "$w701" && "$w701" -gt "$w700" ]] && pass "G: dep on a HELD item defers the dependent (700=$w700 701=$w701) [agy Blocker]" || fail "G: dependent on held item not deferred (700=$w700 701=$w701)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario H — agy QA [Should]: comma-separated deps must ALL be parsed
+# ─────────────────────────────────────────────────────────────────────────────
+H="$WORK/H"; mkdir -p "$H"; echo '{}' >"$H/.gh-state.json"; : >"$H/.branches"
+mk_doc "$H" GH-800-k1.md    low low low "$(contract_for MISS_K1 bin/tick)"
+mk_doc "$H" GH-801-k2.md    low low low "$(contract_for MISS_K2 relay-automation/relay-drive.sh)"
+mk_doc "$H" GH-802-multi.md low low low "$(contract_for MISS_M  src/multi.js)"
+cat >"$H/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-800 · kernel1** 🆕 — → [d](PROJECT/2-WORKING/GH-800-k1.md) · [#800](https://github.com/o/r/issues/800)
+- **GH-801 · kernel2** 🆕 — → [d](PROJECT/2-WORKING/GH-801-k2.md) · [#801](https://github.com/o/r/issues/801)
+- **GH-802 · multi-dep** 🆕 — depends on GH-800, GH-801 → [d](PROJECT/2-WORKING/GH-802-multi.md) · [#802](https://github.com/o/r/issues/802)
+EOF
+run_qp "$H" >/dev/null 2>&1; doc="$H/PROJECT/2-WORKING/QUEUE-$DAY.md"
+w800="$(wave_of "$doc" 800)"; w801="$(wave_of "$doc" 801)"; w802="$(wave_of "$doc" 802)"
+[[ -n "$w802" && "$w802" -gt "$w800" && "$w802" -gt "$w801" ]] && pass "H: comma-separated deps both parsed — multi-dep follows BOTH kernels (800=$w800 801=$w801 802=$w802) [agy Should]" || fail "H: comma deps not both honored (800=$w800 801=$w801 802=$w802)"
+
 echo
 echo "  queue-plan: $PASS passed, $FAIL failed"
 [[ "$FAIL" -eq 0 ]]

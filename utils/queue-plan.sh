@@ -322,9 +322,15 @@ function zoneOf(contract, item) {
 }
 function depsOf(item) {
   const deps = new Set();
-  const re = /(?:after|once|depends on|gated on|blocked by)\s+(?:[^.]*?)\b(?:GH-|#)(\d+)/gi;
+  // Match a dependency keyword followed by a LIST of issue refs (comma/and/&/slash separated), so
+  // "after GH-29, GH-30 and #31" yields all three. The list stops at the first non-issue token, so
+  // "after GH-29 the fix landed" still yields only 29 (no over-capture).
+  const re = /(?:after|once|depends on|gated on|blocked by)\s+((?:(?:GH-|#)\d+(?:\s*(?:,|and|&|\/)\s*)?)+)/gi;
   let m;
-  while ((m = re.exec(item.raw)) !== null) deps.add(Number(m[1]));
+  while ((m = re.exec(item.raw)) !== null) {
+    let n; const num = /(?:GH-|#)(\d+)/g;
+    while ((n = num.exec(m[1])) !== null) deps.add(Number(n[1]));
+  }
   return [...deps];
 }
 function isGoGated(item) {
@@ -372,7 +378,9 @@ for (const item of ledger) {
 const seen = new Set();
 const deduped = [];
 for (const r of records) {
-  const key = `${r.gh || ""}|${r.docRel || ""}|${r.title}`;
+  // Dedup same-issue-different-title by gh when present (one issue = one canonical item); fall back to
+  // docRel+title for issue-less notes so distinct field-findings that share one doc anchor stay separate.
+  const key = r.gh != null ? `gh:${r.gh}` : `doc:${r.docRel || ""}|title:${r.title}`;
   if (seen.has(key)) continue;
   seen.add(key); deduped.push(r);
 }
@@ -443,7 +451,11 @@ for (const r of deduped) {
   const pointed = new Set(deduped.map((r) => r.docRel && path.basename(r.docRel)).filter(Boolean));
   for (const f of docs) {
     if (/^QUEUE-\d{4}-\d\d-\d\d\.md$/.test(f)) continue; // generated queue docs don't need a pointer
-    if (!pointed.has(f)) findings.push({ severity: "info", type: "drift", item: f, file: `PROJECT/2-WORKING/${f}`, message: "2-WORKING doc has no ROADMAP ledger pointer", action: "add a ledger pointer or set roadmap_exempt: true" });
+    if (pointed.has(f)) continue;
+    // Honor roadmap_exempt: true (align with pdda-check-roadmap-coverage.sh) — don't flag an opt-out doc.
+    const fm = frontmatter(path.join(E.QP_QUEUE_DIR, f));
+    if (String(fm.roadmap_exempt || "").toLowerCase() === "true") continue;
+    findings.push({ severity: "info", type: "drift", item: f, file: `PROJECT/2-WORKING/${f}`, message: "2-WORKING doc has no ROADMAP ledger pointer", action: "add a ledger pointer or set roadmap_exempt: true" });
   }
 })();
 
@@ -496,6 +508,10 @@ function scoreOf(r) {
 for (const r of deduped) r.score = scoreOf(r);
 
 // ── wave packing (collision-safe; ≤1 kernel item per wave; deps push later) ───
+// A dependency in one of these states is "resolved" — either genuinely done or deliberately out of the
+// active plan — so it never blocks its dependent. Anything else (ready/unrated/needs-*/gated/partial)
+// must be placed in an earlier wave first.
+const DEP_RESOLVED = new Set(["completed-ref", "already-landed", "already-closed", "deferred", "exempt", "note-only"]);
 const active = deduped.filter((r) => r.state === "ready").sort((a, b) => {
   if (a.score !== b.score) return a.score - b.score;
   if (a.deps.length !== b.deps.length) return a.deps.length - b.deps.length;
@@ -515,8 +531,14 @@ while (pending.length && guard++ < 100) {
   let kernelTaken = false;
   const deferred = [];
   for (const r of pending) {
-    // dependency: a dep issue still active and not yet placed in an earlier wave ⇒ defer.
-    const depUnmet = r.deps.some((d) => active.some((x) => x.gh === d) && !placedIssue.has(d));
+    // dependency: a dep is satisfied only if it is genuinely resolved (done/landed/closed/out-of-scope)
+    // OR already placed in an earlier wave. A dep that is merely HELD (unrated/needs-contract/gated) is
+    // NOT in `active` but is also not built — so it must still block its dependent (agy QA [Blocker]).
+    const depUnmet = r.deps.some((d) => {
+      const dep = deduped.find((x) => x.gh === d);
+      if (!dep || DEP_RESOLVED.has(dep.state)) return false;
+      return !placedIssue.has(d);
+    });
     const collides = r.writeset.some((p) => waveWriteset.has(p));
     const kernelClash = r.zone === "kernel" && kernelTaken;
     // zone-inferred shim items (no proven write-set) conservatively can't share a wave with another shim.
