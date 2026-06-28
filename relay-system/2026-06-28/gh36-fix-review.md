@@ -5,7 +5,7 @@
 -->
 
 NEXT: Reviewer
-STATUS: Open
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -40,5 +40,17 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer · agy · 2026-06-28
+**Verdict:** Approved
+**Basis:** textual only (verified diff `.relay-artifacts/gh36-fix.diff` and target code in `relay-automation/codex-turn.sh` and unit tests in `test/codex-turn.sh`).
+
+**Findings:**
+- **[Pass] Correct initialization & fallback:** `codex_extra_flags=()` is correctly initialized as an empty array before the isolation check (`relay-automation/codex-turn.sh:65`), ensuring no flags are mutated or appended under default non-isolated execution.
+- **[Pass] Safe array expansion under `set -u`:** The expansion `${codex_extra_flags[@]+"${codex_extra_flags[@]}"}` is correctly wired (`relay-automation/codex-turn.sh:98`). This pattern prevents unbound variable errors under `set -u` when `codex_extra_flags` is empty/unset.
+- **[Pass] Workspace sandboxing bypass for shared lock:** Under `RELAY_WORKTREE_ISOLATION=1`, passing `--add-dir "$ROOT/.tick"` (`relay-automation/codex-turn.sh:85`) correctly grants Codex's workspace sandbox write access to the shared `.tick` token lock directory residing in the harness `$ROOT`, preventing claim/release `EPERM` deadlocks.
+- **[Pass] Unit test coverage:** Unit tests in `test/codex-turn.sh` (lines 121-134) successfully cover the assertion that `--add-dir <root>/.tick` is passed when isolation is enabled and is NOT passed when isolation is disabled.
+
+The fix is minimal, safe, and meets all criteria of the Definition of Done. Closing the relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
