@@ -31,7 +31,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0 intake done: issue [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) opened, doc named `GH-33-…`, parked in ROADMAP queue. Design captured from a live external-consumer session (the one that also produced #31/#32). Confirmed `poll.sh` is already a stateless one-shot decision oracle (no internal sleep/loop), so the `/loop`=scheduler ÷ `poll.sh`=decision seam already exists. | Decide the open Phase 0 gate — whether the integration ships as a new thin wrapper (`relay-loop.sh`) or as a `--driver loop` mode inside `relay-drive.sh` — then promote to `2-WORKING` before any code. Queued, not in progress. |
+| **Phase 0 decided + Phase 1 shipped** (on branch `gh-33-loop-skill-integration`, isolated worktree — kept off `main` to avoid the concurrent agent). Phase 0 call: ship as a **thin wrapper** (`relay-loop.sh`), NOT a `--driver loop` mode in `relay-drive.sh` (keeps the deterministic supervisor untouched; lower blast radius). Phase 1: `poll.sh --emit-delay` prints a `DELAY:` line mapping each `DECISION` (+ idle sub-state) to a suggested next-poll delay, deadline-clamped — additive, default-off, env-tunable. 8 new `poll-driver` assertions; **`validate.sh` 50/50**; skill tarball repackaged (`skill-extract.sh` parity). | **Operator GO gate before Phase 2+.** Phase 2 (the `/loop` dynamic-mode recipe + `relay-loop.sh` wrapper) is ready to start; Phases 3–4 (background-Bash dispatch + the Path A/B unification) are **Costly** (touch containment) and should not start without explicit GO. Promote to `2-WORKING` when Phase 2 begins. |
 
 ## Effort & Risk (the question asked)
 
@@ -72,27 +72,27 @@ So today you choose between *hands-free but all-Claude* (Path B) or *cross-model
 - [x] Open a GitHub issue describing the `/loop` integration (issue-first SOP). → [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33)
 - [x] Name this doc `PROJECT/1-INBOX/GH-33-LOOP-SKILL-INTEGRATION.md` and set `gh_issue` in frontmatter.
 - [x] Park a one-line queue pointer in `ROADMAP.md` linking this inbox doc.
-- [ ] Decide the shipping shape: **(A)** a new thin wrapper `relay-automation/relay-loop.sh` that maps `poll.sh` decisions to act / background-dispatch / reschedule, vs **(B)** a `--driver loop` mode inside `relay-drive.sh`. Record the call + reversibility in `CHANGELOG.md`.
-- [ ] Confirm scope ordering with the operator: ship Phase 2 (adaptive cadence, cheap) first, or go straight for Phase 4 (the unification, the capability win).
+- [x] Decide the shipping shape: **chose (A)** — a new thin wrapper `relay-automation/relay-loop.sh` that maps `poll.sh` decisions to act / background-dispatch / reschedule, over (B) a `--driver loop` mode inside `relay-drive.sh`. Rationale: keeps the deterministic supervisor untouched (smaller blast radius), composes with the existing `--dry-run`/`--emit-delay` oracle, and is fully removable. (CHANGELOG entry lands when Phase 2 promotes to `2-WORKING`.)
+- [x] Confirm scope ordering: **Phase 2 (adaptive cadence) first**, then Phases 3–4 (the unification) behind an explicit operator GO — they touch containment (Costly).
 
 ### QA checklist — Phase 0
 
-- [ ] GH issue exists and is linked from both the doc frontmatter and `ROADMAP.md`.
-- [ ] `utils/pdda-check-roadmap-coverage.sh` passes (inbox doc is parked).
-- [ ] Shipping-shape decision (A or B) is written down, not implicit.
-- [ ] No code changed in this phase.
+- [x] GH issue exists and is linked from both the doc frontmatter and `ROADMAP.md`.
+- [x] `utils/pdda-check-roadmap-coverage.sh` passes (inbox doc is parked).
+- [x] Shipping-shape decision (A or B) is written down, not implicit.
+- [x] No code changed in this phase. (Code begins in Phase 1, below.)
 
-## Phase 1 — poll.sh emits a suggested next-delay
+## Phase 1 — poll.sh emits a suggested next-delay ✅ (shipped)
 
-- [ ] Add an optional `--emit-delay` (or always-on extra stdout line) so each `poll.sh` run prints a suggested next-poll delay alongside its `DECISION` (derived from the same state it already computes: `run-runner`→0, `idle`→long, `nudge-cross-model`→medium, near-`--deadline`→tighten).
-- [ ] Keep it purely additive: the existing `DECISION:` line is unchanged; consumers that ignore the new line behave exactly as today.
-- [ ] Unit-cover the delay mapping for each `DECISION` and the near-deadline tightening.
+- [x] Added `--emit-delay` so each `poll.sh` run prints a `DELAY: <seconds> (<reason>)` line alongside its `DECISION`, derived from the same state it already computes: `run-runner`/`run-watchdog`/`stop`→0, idle-dirty→`POLL_DELAY_DIRTY` (30), waiting-for-peer-commit→`POLL_DELAY_WAIT_COMMIT` (90), `nudge-cross-model`→`POLL_DELAY_NUDGE` (120), idle-backoff→`POLL_DELAY_IDLE` (300), then **clamped** so the next wake never overshoots `--deadline`.
+- [x] Purely additive: the existing `DECISION:` line is unchanged; callers that ignore the new line behave exactly as today (flag is opt-in, default off).
+- [x] Unit-covered the delay mapping for each decision + the env override + the near-deadline clamp (8 new assertions in `test/poll-driver.sh`).
 
 ### QA checklist — Phase 1
 
-- [ ] Existing `poll.sh` callers (incl. the current `/loop 60s` recipe) are unaffected when they ignore the new output.
-- [ ] Delay suggestion is a pure function of state (no wall-clock nondeterminism beyond the deadline read).
-- [ ] New tests pass under `./validate.sh`.
+- [x] Existing `poll.sh` callers (incl. the current `/loop 60s` recipe) are unaffected when they ignore the new output.
+- [x] Delay suggestion is a pure function of state (only wall-clock read is the deadline clamp, matching the existing `--deadline` behaviour).
+- [x] New tests pass under `./validate.sh` — **50/50**, skill tarball repackaged so `skill-extract.sh` parity holds.
 
 ## Phase 2 — Adaptive cadence via /loop dynamic mode
 
