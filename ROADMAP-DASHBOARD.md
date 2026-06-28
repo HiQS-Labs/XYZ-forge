@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 15 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 14 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -18,7 +18,6 @@ Summary: 15 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 | Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
-| GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | — | [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
 | Marathon candidate · Apple Reminders Phase 2 (rebalance-OS, cross-repo) | 🟡 | [rebalance-OS `APPLE-REMINDERS-UNIFIED-PLAN.md`](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) · [APPLE-REMINDERS-UNIFIED-PLAN.md](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) |
 | GH-24 · relay telemetry extractor | 🟢 | [GH-24-RELAY-TELEMETRY-EXTRACTOR.md](PROJECT/1-INBOX/GH-24-RELAY-TELEMETRY-EXTRACTOR.md) · [#24](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/24) |
 | GH-19 · relay-xyz skill-skip durability | 🟢 | [relay-automation/hooks/relay-xyz-guard.sh](relay-automation/hooks/relay-xyz-guard.sh) · [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) · [GH-19-RELAY-XYZ-SKILL-GUARD.md](PROJECT/1-INBOX/GH-19-RELAY-XYZ-SKILL-GUARD.md) |
@@ -43,10 +42,11 @@ Summary: 8 items | Tally: 🟢 7 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 14 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
+Summary: 15 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 15 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | ✅ | [relay-target-root-newfile.sh](test/relay-target-root-newfile.sh) · [GH-29-CROSS-REPO-NEWFILE-COMMIT.md](PROJECT/3-COMPLETED/GH-29-CROSS-REPO-NEWFILE-COMMIT.md) · [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
 | Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
 | GH-31 · cross-repo external-artifact review flow | ✅ | [GH-31-CROSS-REPO-ARTIFACT-REVIEW.md](PROJECT/2-WORKING/GH-31-CROSS-REPO-ARTIFACT-REVIEW.md) · [#31](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/31) |
 | GH-32 · single-turn review ergonomics | ✅ | [GH-32-SINGLE-TURN-REVIEW-ERGONOMICS.md](PROJECT/2-WORKING/GH-32-SINGLE-TURN-REVIEW-ERGONOMICS.md) · [#32](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/32) |
