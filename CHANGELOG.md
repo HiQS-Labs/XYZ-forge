@@ -4,6 +4,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-27
 
+### /loop integration for relays (GH-33) — Phases 0–2 shipped (adaptive cadence)
+From the same external-consumer session as #30/#31/#32, filed as [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) (issue-first) and built in an **isolated git worktree** on branch `gh-33-loop-skill-integration` to avoid colliding with concurrent work on `main`.
+- **Phase 0 — decision:** ship as a **thin wrapper** (`relay-loop.sh`), not a `--driver loop` mode inside `relay-drive.sh` — keeps the deterministic supervisor untouched (smaller blast radius), fully removable.
+- **Phase 1 —** `relay-automation/poll.sh --emit-delay` prints a `DELAY: <s> (<reason>)` line mapping the already-computed `DECISION` (+ idle sub-state) to a suggested next-poll delay (act/stop 0, dirty 30, wait-commit 90, nudge 120, idle 300), clamped so the next wake never overshoots `--deadline`. Additive, default-off, env-tunable.
+- **Phase 2 —** `relay-automation/relay-loop.sh` wraps it: default prints `NEXT-POLL: <s>` for a `/loop` dynamic-mode tick to `ScheduleWakeup` from; `--sleep-loop` self-paces in pure bash. Reschedule kept **pluggable** (cron/systemd can consume `NEXT-POLL`/`DELAY`), so `/loop` is one option, not a dependency. Dynamic-mode recipe added to the `relay-xyz` SKILL.
+- **Verification:** 8 new `poll-driver` assertions + new `test/relay-loop.sh` (5 cases); `relay-loop.sh` + test packaged into the skill tarball (`skill-extract.sh` 13→15 files); **`validate.sh` 51/51**.
+- **Bet/reversibility:** Easy — Phases 0–2 are additive and default-off; the fixed `/loop 60s` recipe and every existing `poll.sh` caller are unchanged. The marquee cross-model-hands-free win (Phases 3–4) touches `relay-turn-lib.sh` containment (**Costly**) and is **gated on operator GO** — not started. Plan + FAQ: [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md).
+
 ### Single-turn review ergonomics (GH-32) shipped + cross-repo artifact-review design (GH-31 Phase 1)
 From external-consumer relay-xyz feedback, filed as #30/#31/#32 (issue-first) and worked via `/loop`.
 

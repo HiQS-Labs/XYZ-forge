@@ -1,6 +1,6 @@
 ---
 title: Leverage the built-in /loop skill to drive relays (adaptive cadence + unify Path A/B)
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING)
 created: 2026-06-27
 updated: 2026-06-27
 owner: noel
