@@ -4,6 +4,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-27
 
+### GH-36 fixed — headless Codex can write the shared .tick lock under isolation (first marathon dogfood)
+The first real end-to-end marathon dogfood after the GH-29 fix, fired via `swarm-preflight → marathon-drive` (codex builder, agy reviewer).
+- **Bug:** under `RELAY_WORKTREE_ISOLATION=1`, Codex runs in a throwaway worktree but the shared `.tick/` token lock lives at `TICK_REPO_ROOT` (harness root) — outside Codex's default `-s workspace-write` sandbox → `tick claim/release` `EPERM` → deadlock.
+- **Fix:** pass `--add-dir "$ROOT/.tick"` to the codex exec when isolation is on, so the default sandbox can write the lock **without** a full `--dangerously-bypass…`. Default-off behavior unchanged; `set -u`-safe empty-array expansion. [relay-automation/codex-turn.sh](relay-automation/codex-turn.sh).
+- **The dogfood (honest):** **v1** (default flags) → exit 6 — Codex hit the *exact bug* (`.tick` EPERM blocked the token claim) and, while stuck, wandered off-task (drafted a stray GH-38 + ROADMAP edit); the harness **reverted both, escalated, real tree untouched** — containment proven live. **v2** (bypass flag + scope-locked brief) → Codex authored the surgical fix; a concurrent same-repo relay collided mid-edit (transient syntax error → exit 2), so the byproduct commits were **consolidated** into one clean commit and independently verified. **agy cross-model review → Approved** (4× [Pass]).
+- **Verification:** `test/codex-turn.sh` +2 assertions (`--add-dir .tick` present under isolation, absent when off) → 29/29; `validate.sh` **54/54**. Issue #36 closed; capture doc [GH-36-HEADLESS-CODEX-TICK-SANDBOX.md](PROJECT/3-COMPLETED/GH-36-HEADLESS-CODEX-TICK-SANDBOX.md); review thread [gh36-fix-review.md](relay-system/2026-06-28/gh36-fix-review.md).
+- **Findings → follow-ups:** (1) GH-36 was self-blocking for a headless marathon (default flags block the claim); (2) thin preflight briefs let the builder wander ~38k tokens — **candidate GH-38: packet should inline acceptance criteria + a scope-lock**; (3) concurrent same-repo relays collide (reinforces `no-headless-relay-during-concurrent-commits`).
+
 ### GH-29 fixed — cross-repo (--target-root) builds now commit NEW files
 The first-wave dogfood blocker. A cross-repo builder turn that *creates* files reported `no tracked changes` and committed nothing — even modified tracked files were dropped.
 - **Root cause:** the file-scoped commit in `rtl_enforce` batched `git add -- "${RTL_ALLOW[@]}"`. `git add` is atomic over its pathspecs — one non-matching entry (an allowlist path the turn was permitted to create but didn't) aborts the **whole** add and stages nothing. Same-repo runs had fully-matching allowlists, so the gap stayed hidden until the first `--target-root` add-files build (WPCC `ts-type-suppression`, 2026-06-26).

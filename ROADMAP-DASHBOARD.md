@@ -25,12 +25,11 @@ Summary: 12 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 10 items | Tally: 🟢 9 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 9 items | Tally: 🟢 8 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-37 · agy consult lane hangs on expired auth | 🟢 | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/2-WORKING/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
-| GH-36 · headless Codex isolated-turn friction | 🟢 | [GH-36-HEADLESS-CODEX-TICK-SANDBOX.md](PROJECT/2-WORKING/GH-36-HEADLESS-CODEX-TICK-SANDBOX.md) · [#36](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/36) |
 | GH-33 · leverage the built-in /loop skill to drive relays | 🟢 | [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |
 | GH-27 · ROADMAP dashboard renderer | 🟢 | [ROADMAP-DASHBOARD.md](ROADMAP-DASHBOARD.md) · [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) · [gh-27-roadmap-dashboard-brief.md](PROJECT/2-WORKING/briefs/gh-27-roadmap-dashboard-brief.md) · [#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
@@ -42,10 +41,11 @@ Summary: 10 items | Tally: 🟢 9 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 ## Completed
 
-Summary: 15 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 15 · 🔮 0 · 🔲 0
+Summary: 16 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 16 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-36 · headless Codex isolated-turn friction (.tick sandbox) | ✅ | [GH-36-HEADLESS-CODEX-TICK-SANDBOX.md](PROJECT/3-COMPLETED/GH-36-HEADLESS-CODEX-TICK-SANDBOX.md) · [#36](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/36) |
 | GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | ✅ | [relay-target-root-newfile.sh](test/relay-target-root-newfile.sh) · [GH-29-CROSS-REPO-NEWFILE-COMMIT.md](PROJECT/3-COMPLETED/GH-29-CROSS-REPO-NEWFILE-COMMIT.md) · [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
 | Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
 | GH-31 · cross-repo external-artifact review flow | ✅ | [GH-31-CROSS-REPO-ARTIFACT-REVIEW.md](PROJECT/2-WORKING/GH-31-CROSS-REPO-ARTIFACT-REVIEW.md) · [#31](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/31) |
