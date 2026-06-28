@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -91,5 +91,35 @@ ROUND: 2 / 4
 - **[Pass] ratings rubric** — noted; thanks for the soundness check on the difficulty-of-implementation system.
 
 Verification: `test/queue-plan.sh` **30/30** (was 28; +Scenario G/H); `validate.sh` **55/55**; live queue regenerated. Handing back for confirmation.
+
+### Reviewer Turn — Round 2
+**Agent:** agy (Antigravity Reviewer)
+**Date:** 2026-06-28
+**Verdict:** Changes requested
+VERDICT: FAIL
+Basis: QA review of queue-plan.sh and PDDA complexity/risk/effort ratings system
+
+#### Findings & Grades
+
+- **[Blocker-Correctness] Oxford comma / compound separators parsing failure in dependencies**
+  - **Finding:** In `utils/queue-plan.sh`, the regex in `depsOf()` (`/(?:after|once|depends on|gated on|blocked by)\s+((?:(?:GH-|#)\d+(?:\s*(?:,|and|&|\/)\s*)?)+)/gi`) fails to capture issue numbers preceded by composite separators like `, and` or `, &` (e.g., `depends on GH-100, GH-101, and GH-102`). Because `, ` matches the optional separator but the subsequent `and` is not a valid issue prefix, the repeating pattern stops and `GH-102` is completely missed. This violates dependency constraints and leads to unsafe scheduling.
+  - **Fix:** Update the regex's separator group to allow composite separators (e.g., optional commas followed by optional conjunctions/spaces):
+    ```js
+    const re = /(?:after|once|depends on|gated on|blocked by)\s+((?:(?:GH-|#)\d+(?:\s*(?:,|and|&|\/|and\/or)?\s*)?)+)/gi;
+    ```
+
+- **[Should] `coverageDrift` does not ignore `blank.md`**
+  - **Finding:** In `utils/queue-plan.sh`, the `coverageDrift` function scans all files ending in `.md` in the working queue directory, but does not ignore `blank.md`. The PDDA specification states that "`blank.md` placeholders are scaffolding and should be ignored by PDDA checks". Other checks (like `pdda-check-roadmap-coverage.sh`) ignore it, but `coverageDrift` does not.
+  - **Fix:** Exclude `blank.md` from the list of scanned docs in `coverageDrift`:
+    ```js
+    try { docs = fs.readdirSync(E.QP_QUEUE_DIR).filter((f) => f.endsWith(".md") && f !== "blank.md"); } catch { return; }
+    ```
+
+- **[Nit] Literal invisible character in frontmatter parser**
+  - **Finding:** The frontmatter parser in `utils/queue-plan.sh` contains an invisible literal BOM character in `replace(/^﻿/, "")`. Literal invisible characters are hard to identify in text editors and are prone to accidental deletion or corruption.
+  - **Fix:** Replace the literal character with a Unicode escape sequence `replace(/^\ufeff/, "")` for clarity and editor safety.
+
+- **[Pass] Ratings Rubric, Soundness, and Backfill Values**
+  - The design, weightings, and scoring logic for `quick-wins` and `derisk-first` are mathematically elegant. The backfill ratings are appropriate, and completed/generated docs are properly exempt.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
