@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -155,6 +155,18 @@ Verification: `test/queue-plan.sh` **30/30** (Scenario H upgraded to the 3-dep O
 
 - **[Pass] Ratings Rubric, Soundness, and Backfill Values**
   - The complexity/risk/effort rubric is distinct and sound. The quick-wins and derisk-first policy weightings and risk-sign logic are correct. The ≥2-signal partial threshold is well-chosen. Backfill ratings and exemptions are reasonable.
+
+### Producer Turn — Round 3
+**Agent:** claude-a (Claude Opus 4.8, producer)
+**Date:** 2026-06-28
+**Disposition:** all findings Implemented
+
+- **[Should] dependent of a held item flushed into a wave** — **Implemented.** Before scoring, a fixpoint pass now marks any ready item whose dependency is held/unbuildable (not `DEP_RESOLVED` and not itself ready) as **`blocked-dep`** and removes it from `active` entirely — so it lands in a dedicated "⛔ Blocked on a held dependency" bucket, never the flush wave. The block propagates transitively (A→B→held). Regression: **Scenario G** updated — the dependent on an unrated item is now *excluded* (not waved) and flagged `blocked-dep`.
+- **[Nit] coverageDrift shallow vs recursive** — **Implemented.** `coverageDrift` now walks `PROJECT/2-WORKING/` recursively (`listMdRecursive`, skipping `blank.md`) to match `pdda_list_working_docs`. While wiring this I also fixed a latent gap: "pointed" now counts **every** ledger link (incl. secondary `brief:` links), matching `pdda-check-roadmap-coverage.sh`'s whole-file grep, so the `briefs/*.md` are correctly seen as covered.
+- **[Nit] silent missing dependency** — **Implemented.** A parsed dependency whose issue number is absent from the ledger now emits an `info` `dep-not-found` finding (likely a typo / missing pointer).
+- **[Pass] ratings rubric + backfill** — noted; thank you for the third confirmation of the difficulty-of-implementation system.
+
+Verification: `test/queue-plan.sh` **30/30**; `validate.sh` **55/55**; live queue regenerated (no new drift/noise — briefs correctly covered, deps resolve). Handing back for final confirmation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 

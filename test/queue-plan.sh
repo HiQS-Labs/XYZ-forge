@@ -199,9 +199,9 @@ cat >"$G/ROADMAP.md" <<EOF
 - **GH-701 · dep on held** 🆕 — depends on GH-710 → [d](PROJECT/2-WORKING/GH-701-dephld.md) · [#701](https://github.com/o/r/issues/701)
 - **GH-710 · held (unrated)** 🆕 — → [d](PROJECT/2-WORKING/GH-710-held.md) · [#710](https://github.com/o/r/issues/710)
 EOF
-run_qp "$G" >/dev/null 2>&1; doc="$G/PROJECT/2-WORKING/QUEUE-$DAY.md"
+out="$(run_qp "$G" 2>/dev/null)"; doc="$G/PROJECT/2-WORKING/QUEUE-$DAY.md"
 w700="$(wave_of "$doc" 700)"; w701="$(wave_of "$doc" 701)"
-[[ "$w700" == "1" && -n "$w701" && "$w701" -gt "$w700" ]] && pass "G: dep on a HELD item defers the dependent (700=$w700 701=$w701) [agy Blocker]" || fail "G: dependent on held item not deferred (700=$w700 701=$w701)"
+{ [[ "$w700" == "1" && -z "$w701" ]] && grep -q "blocked-dep]  GH-701" <<<"$out"; } && pass "G: dep on a HELD item EXCLUDES the dependent (700=wave$w700; 701 blocked-dep, not waved) [agy Blocker r1+r3]" || fail "G: dependent-on-held not excluded (700=$w700 701=$w701)"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Scenario H — agy QA [Should]: comma-separated deps must ALL be parsed

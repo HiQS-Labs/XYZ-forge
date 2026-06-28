@@ -447,19 +447,34 @@ for (const r of deduped) {
   // Deferred items never need ratings, so flagging them here would be pure noise.)
 }
 
-// run-level drift: a 2-WORKING doc with no ledger pointer (coverage rule, like pdda-check-roadmap-coverage)
+// run-level drift: a 2-WORKING doc with no ledger pointer (coverage rule, like pdda-check-roadmap-coverage).
+// Walk RECURSIVELY (incl. briefs/ etc.) to match pdda_list_working_docs' `find`, skipping blank.md.
+function listMdRecursive(dir) {
+  const out = [];
+  let ents = [];
+  try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch { return out; }
+  for (const e of ents) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) out.push(...listMdRecursive(full));
+    else if (e.name.endsWith(".md") && e.name !== "blank.md") out.push(full);
+  }
+  return out;
+}
 (function coverageDrift() {
-  let docs = [];
-  // Skip blank.md scaffolding (PDDA convention — pdda_list_working_docs excludes it too).
-  try { docs = fs.readdirSync(E.QP_QUEUE_DIR).filter((f) => f.endsWith(".md") && f !== "blank.md"); } catch { return; }
-  const pointed = new Set(deduped.map((r) => r.docRel && path.basename(r.docRel)).filter(Boolean));
-  for (const f of docs) {
-    if (/^QUEUE-\d{4}-\d\d-\d\d\.md$/.test(f)) continue; // generated queue docs don't need a pointer
-    if (pointed.has(f)) continue;
-    // Honor roadmap_exempt: true (align with pdda-check-roadmap-coverage.sh) — don't flag an opt-out doc.
-    const fm = frontmatter(path.join(E.QP_QUEUE_DIR, f));
+  // "Pointed" = referenced by ANY ledger link (primary doc OR a secondary link like `brief: [...]`),
+  // matching pdda-check-roadmap-coverage.sh which greps the whole ROADMAP — not just each item's primary doc.
+  const pointed = new Set();
+  for (const it of ledger) for (const l of it.links) {
+    const t = l.target.replace(/#.*$/, "");
+    if (t.endsWith(".md")) pointed.add(path.basename(t));
+  }
+  for (const full of listMdRecursive(E.QP_QUEUE_DIR)) {
+    const base = path.basename(full);
+    if (/^QUEUE-\d{4}-\d\d-\d\d\.md$/.test(base)) continue;  // generated queue docs don't need a pointer
+    if (pointed.has(base)) continue;
+    const fm = frontmatter(full);                            // honor roadmap_exempt (align with the coverage check)
     if (String(fm.roadmap_exempt || "").toLowerCase() === "true") continue;
-    findings.push({ severity: "info", type: "drift", item: f, file: `PROJECT/2-WORKING/${f}`, message: "2-WORKING doc has no ROADMAP ledger pointer", action: "add a ledger pointer or set roadmap_exempt: true" });
+    findings.push({ severity: "info", type: "drift", item: base, file: path.relative(ROOT, full), message: "2-WORKING doc has no ROADMAP ledger pointer", action: "add a ledger pointer or set roadmap_exempt: true" });
   }
 })();
 
@@ -495,6 +510,37 @@ if (DEEP && SWARM_PREFLIGHT) {
   }
 }
 
+// ── dependency resolution (before scoring/packing) ───────────────────────────
+// A dependency in one of these states is "resolved" — done or deliberately out of the active plan —
+// so it never blocks its dependent. Anything else (ready/unrated/needs-*/gated/...) must be built first.
+const DEP_RESOLVED = new Set(["completed-ref", "already-landed", "already-closed", "deferred", "exempt", "note-only"]);
+
+// Warn on a dependency that names an issue absent from the ledger (likely a typo / missing pointer).
+for (const r of deduped) for (const d of r.deps) {
+  if (!deduped.some((x) => x.gh === d)) flag("info", "dep-not-found", r, `lists a dependency on #${d}, which is not in the ledger`, "fix the issue number or add a ledger pointer");
+}
+
+// Exclude (don't merely defer) a ready item whose dependency can NEVER be built — a dep that is held/
+// unbuildable (unrated / needs-doc / needs-contract / gated / not-ready / blocked) and not itself ready.
+// Marking it blocked-dep keeps it OUT of the active waves instead of flushing it into a trailing wave
+// (agy QA r3 [Should]). Iterate to a fixpoint so the block propagates transitively (A→B→held).
+let depChanged = true;
+while (depChanged) {
+  depChanged = false;
+  for (const r of deduped) {
+    if (r.state !== "ready") continue;
+    const blockedBy = r.deps.filter((d) => {
+      const dep = deduped.find((x) => x.gh === d);
+      if (!dep || DEP_RESOLVED.has(dep.state) || dep.state === "ready") return false;
+      return true;                                   // dep is held / blocked-dep ⇒ unbuildable
+    });
+    if (blockedBy.length) {
+      r.state = "blocked-dep"; depChanged = true;
+      flag("info", "blocked-dep", r, `depends on a held/unbuildable item (${blockedBy.map((d) => "#" + d).join(", ")}) — excluded from active waves until the dependency is sequenceable`, "rate/unblock the dependency first");
+    }
+  }
+}
+
 // ── scoring (printed per item; deterministic) ─────────────────────────────────
 const W = { eff: 2, cx: 1, risk: 2, dep: 3, zone: 1 };
 const RISK_SIGN = POLICY === "derisk-first" ? -1 : 1;
@@ -512,10 +558,6 @@ function scoreOf(r) {
 for (const r of deduped) r.score = scoreOf(r);
 
 // ── wave packing (collision-safe; ≤1 kernel item per wave; deps push later) ───
-// A dependency in one of these states is "resolved" — either genuinely done or deliberately out of the
-// active plan — so it never blocks its dependent. Anything else (ready/unrated/needs-*/gated/partial)
-// must be placed in an earlier wave first.
-const DEP_RESOLVED = new Set(["completed-ref", "already-landed", "already-closed", "deferred", "exempt", "note-only"]);
 const active = deduped.filter((r) => r.state === "ready").sort((a, b) => {
   if (a.score !== b.score) return a.score - b.score;
   if (a.deps.length !== b.deps.length) return a.deps.length - b.deps.length;
@@ -564,7 +606,7 @@ waves.forEach((w, i) => w.forEach((r) => (r.wave = i + 1)));
 
 // ── exit code from flags ─────────────────────────────────────────────────────
 const hasDrift = deduped.some((r) => r.state === "already-landed" || r.state === "already-closed");
-const held = deduped.filter((r) => ["unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked"].includes(r.state));
+const held = deduped.filter((r) => ["unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep"].includes(r.state));
 let exitCode = 0;
 if (hasDrift) exitCode = 4;
 else if (held.length) exitCode = 5;
@@ -684,6 +726,7 @@ function renderQueueDoc() {
     ["🔧 Reconcile — undocumented partial completion", ["partial"]],
     ["⏸️ Gated on operator GO", ["gated"]],
     ["⚠️ Not yet sequenceable — rate / add doc / add contract", ["unrated", "needs-doc", "needs-contract", "not-ready", "blocked"]],
+    ["⛔ Blocked on a held dependency", ["blocked-dep"]],
     ["🚫 Rating-exempt (completed / hub / superseded)", ["exempt"]],
     ["🗒️ Notes (no issue, no doc)", ["note-only"]],
   ];
