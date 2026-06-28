@@ -39,6 +39,14 @@ unchanged). **Bug caught + fixed pre-merge:** a trailing `[[ -n .. ]] && assign`
 1 when no artifact was set, which a `set -e` turn shim turned into a silent aborted turn — every
 artifact-less turn (i.e. the whole suite) would have broken; replaced with an `if`-block (returns 0).
 
+**GH-31 — Phases 3+4 shipped (PR), `validate.sh` 52/52:** `relay-automation/new-relay.sh` scaffolds a
+single-artifact review thread (`NEXT:`/`STATUS:`/`ROUND:` + "▶ TAKE YOUR TURN" + Setup + Ground rules +
+Log). Reference mode points the Setup at the `.relay-artifacts/<basename>` seed path (ties to Phase 2);
+`--embed` inlines the artifact in a **fence-collision-safe** block — `fence_for` picks a backtick fence
+longer than the longest run inside the file (Phase 3), so an artifact containing its own ```` ```fences ````
+can't break out. Test `test/new-relay.sh` (14 assertions incl. 3- and 5-backtick nesting). Documented in
+the relay-xyz SKILL. Reversibility: Easy — a new standalone script + additive flag, nothing existing changed.
+
 ## 2026-06-26
 
 ### poll.sh — `--turn-source file` (token-optional relay advance) + commit-signal gate
