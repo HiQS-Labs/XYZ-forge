@@ -1,4 +1,8 @@
 ---
+complexity: high
+risk: high
+effort: medium
+ratings_provisional: true
 title: "Relay containment-guard hardening — concurrent-commit safety + no agent self-commit"
 status: Active
 created: 2026-06-23

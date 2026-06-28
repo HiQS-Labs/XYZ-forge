@@ -1,4 +1,8 @@
 ---
+complexity: low
+risk: low
+effort: low
+ratings_provisional: true
 title: relay-xyz discovery shakedown — why other VS Code sessions can't find the skill
 slug: relay-xyz-discovery-shakedown
 status: Active

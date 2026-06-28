@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Cross-repo external-artifact review flow (--artifact-file / scaffolder)
 status: Active (2-WORKING)
 created: 2026-06-27

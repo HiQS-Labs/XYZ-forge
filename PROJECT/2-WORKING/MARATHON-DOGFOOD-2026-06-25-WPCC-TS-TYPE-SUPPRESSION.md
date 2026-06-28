@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Marathon Dogfood — Headless Relay builds WPCC "TS type-suppression" detector
 status: Graduated — fired 2026-06-26; ts-type-suppression built + approved + committed (WP-Code-Check 3e22f97)
 created: 2026-06-25

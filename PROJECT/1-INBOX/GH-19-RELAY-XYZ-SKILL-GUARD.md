@@ -1,4 +1,8 @@
 ---
+complexity: low
+risk: low
+effort: low
+ratings_provisional: true
 title: relay-xyz skill-skip durability — PreToolUse guard + ROUTER rail
 status: Active — guard hook + ROUTER rail + test shipped + verified live; GH issue #19 filed
 created: 2026-06-24

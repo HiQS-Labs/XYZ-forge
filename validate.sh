@@ -61,6 +61,7 @@ TESTS=(
   "pdda-roadmap-coverage.sh"
   "swarm-preflight.sh"
   "roadmap-dashboard.sh"
+  "queue-plan.sh"
   # Live-agent test — auto-skips when agy/codex not on PATH or RELAY_SELF_SUFFICIENCY_SKIP=1.
   # Set RELAY_SELF_SUFFICIENCY_SKIP=1 in CI / keyless environments to avoid the real API call.
   "relay-self-sufficiency.sh"

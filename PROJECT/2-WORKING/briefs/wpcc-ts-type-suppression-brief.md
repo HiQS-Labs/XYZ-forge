@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Builder brief — WPCC ts-type-suppression detector (single-phase Marathon)
 status: Active
 created: 2026-06-25

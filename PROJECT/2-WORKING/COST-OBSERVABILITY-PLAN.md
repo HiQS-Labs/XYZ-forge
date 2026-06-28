@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Cost observability for coordination systems (xyz + relay)
 slug: cost-observability-plan
 status: Draft — awaiting relay review

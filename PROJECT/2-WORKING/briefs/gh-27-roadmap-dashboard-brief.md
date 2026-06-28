@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Builder brief — GH-27 ROADMAP dashboard renderer (single-phase Marathon)
 status: Active
 created: 2026-06-26

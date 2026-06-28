@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Swarm preflight planner — one durable intake script for project docs or GH issue bundles
 status: Active — Phases 1–6 implemented; agy review pending
 created: 2026-06-25

@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Builder brief — Sleuth "Near-Miss 2-lite" deterministic "did you mean?" tier
 status: Phase 0 — pre-registration (brief for the Sleuth marathon dogfood)
 created: 2026-06-24

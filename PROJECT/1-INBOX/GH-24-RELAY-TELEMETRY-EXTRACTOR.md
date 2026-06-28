@@ -1,4 +1,8 @@
 ---
+complexity: low
+risk: low
+effort: low
+ratings_provisional: true
 title: relay telemetry extractor — on-demand ETL to focus5float health feed
 status: Active — intake 2026-06-25; script authored
 created: 2026-06-25

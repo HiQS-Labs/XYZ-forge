@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Automated Relay — project hub (focused)
 status: Completed
 created: 2026-06-15

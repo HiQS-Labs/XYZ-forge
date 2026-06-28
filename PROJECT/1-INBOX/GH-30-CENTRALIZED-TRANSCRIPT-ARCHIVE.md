@@ -10,6 +10,10 @@ goal: >
   centralized archive location instead of writing them into each foreign repo's
   relay-system/ folder. Default behavior is unchanged when the setting is unset.
 doc_type: project
+complexity: medium
+risk: high
+effort: medium
+ratings_provisional: true
 non_goals:
   - Not changing the on-tree default (xyz's own relay-system/ stays put when unset)
   - Not building a transcript viewer/dashboard (telemetry extractor already exists)
