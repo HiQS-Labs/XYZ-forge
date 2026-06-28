@@ -1,4 +1,8 @@
 ---
+complexity: high
+risk: high
+effort: high
+ratings_provisional: true
 title: Same-device cross-repo swarm readiness — drive XYZ/marathon against an external target repo
 status: Active — Phase 1 in progress
 created: 2026-06-24

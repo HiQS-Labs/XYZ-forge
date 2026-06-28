@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Marathon Dogfood — Headless Relay builds Sleuth "Near-Miss 2-lite"
 status: Phase 0 — pre-registration (locked before any turn fires)
 created: 2026-06-24

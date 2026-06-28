@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Cost comparison — xyz vs relay (Phase 3, 2026-06-16)
 status: Active reference
 created: 2026-06-16

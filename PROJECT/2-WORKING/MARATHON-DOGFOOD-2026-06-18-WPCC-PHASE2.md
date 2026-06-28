@@ -1,4 +1,5 @@
 ---
+ratings_exempt: true
 title: Marathon Dogfood — Headless Relay vs. the WPCC Scanner Monolith
 status: Planned
 created: 2026-06-18

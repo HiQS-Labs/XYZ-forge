@@ -8,6 +8,10 @@ branch: main
 gh_issue: 37
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37
 doc_type: project
+complexity: low
+risk: low
+effort: low
+ratings_provisional: true
 goal: >
   Make the agy (Antigravity) lane fail FAST when its session auth has expired, instead of opening an
   interactive browser prompt and hanging to the 300s cap — so a cross-model consult degrades to

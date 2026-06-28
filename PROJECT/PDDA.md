@@ -423,11 +423,12 @@ Run the deterministic checks every hour in this order:
 4. `pdda-check-roadmap.sh`
 5. `pdda-check-roadmap-coverage.sh`
 6. `pdda-check-changelog.sh`
-7. `pdda-stale-working-docs.sh`
+7. `pdda-check-ratings.sh`
+8. `pdda-stale-working-docs.sh`
 
 Then run:
 
-8. `pdda-doc-ready.sh`
+9. `pdda-doc-ready.sh`
 
 (`utils/pdda-run.sh` runs exactly this sequence and applies the active `PDDA_MODE` gate.)
 
@@ -482,12 +483,40 @@ A doc is "automation ready" when:
 - roadmap sprawl where detail leaks into `ROADMAP.md`
 - agent sessions restarting the same reasoning because the doc never captured "what changed"
 
+## Project ratings — `complexity` / `risk` / `effort` (optional, advisory)
+
+Three optional frontmatter keys let a project doc carry a machine-readable triage rating. They exist so
+the queue planner can **sequence** work deterministically instead of by hand; they are an input to
+scheduling, never a gate on the doc itself.
+
+| Key | Question it answers | Values |
+|---|---|---|
+| `complexity` | How hard is this to get *correct* (reasoning depth, subtlety)? | `low` \| `medium` \| `high` |
+| `effort`     | How *big* is it (artifacts touched, time)? | `low` \| `medium` \| `high` |
+| `risk`       | Blast radius / reversibility if it goes wrong (`low` = additive, easily reverted; `high` = Costly / one-way-door — see `AGENTS.md` reversibility) | `low` \| `medium` \| `high` |
+
+Contract:
+
+- **Optional and advisory.** A doc without them is still valid; it is simply *held out of automated
+  sequencing* (flagged `unrated`, never an error) until rated. This keeps the keys non-breaking — every
+  existing doc stays green.
+- **Consumer:** `utils/queue-plan.sh` (the pre-pre-flight planner) reads them to rank surviving ledger
+  work — lower effort/complexity/risk sorts earlier under the default `quick-wins` policy; `derisk-first`
+  inverts the risk term. The score and its inputs are printed so any ordering is verifiable by hand.
+- **Enforced as a nudge, not a gate:** `utils/pdda-check-ratings.sh` **warns** (never `error`, so it
+  never blocks — even in `full`, like `pdda-check-changelog.sh`) when a `2-WORKING` doc is missing a key
+  or carries an out-of-vocabulary value. Generated docs (`generated_by:` set) and explicit opt-outs
+  (`ratings_exempt: true`) are skipped.
+- **Provenance:** a rating seeded automatically (e.g. backfilled from ledger prose) should carry
+  `ratings_provisional: true` so a human knows to confirm it; drop the flag once reviewed.
+
 ## Proposed extensions not yet locked
 
 These are likely useful for full automation, but they are still policy choices:
 
 - a `doc_type` field such as `project`, `bugfix`, `research`, `feedback`, `roadmap`
-- a `priority` field if you want deterministic triage beyond folder placement
+- a `priority` field if you want deterministic triage beyond folder placement (the `complexity`/`risk`/
+  `effort` ratings above are the locked, advisory form of this — `priority` would be an explicit override)
 - a `pdda_hold: true` override for docs that should remain in `2-WORKING` despite inactivity
 - a second generated PDDA summary artifact beyond the activity log
 

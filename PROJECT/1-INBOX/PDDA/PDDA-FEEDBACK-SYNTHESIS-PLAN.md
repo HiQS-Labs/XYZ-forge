@@ -1,4 +1,8 @@
 ---
+complexity: medium
+risk: low
+effort: medium
+ratings_provisional: true
 title: PDDA feedback synthesis — actionable planning doc
 status: Proposed (1-INBOX — not yet active)
 created: 2026-06-23

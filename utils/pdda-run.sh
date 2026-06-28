@@ -16,6 +16,7 @@ pdda-check-hardcoded-paths.sh
 pdda-check-roadmap.sh
 pdda-check-roadmap-coverage.sh
 pdda-check-changelog.sh
+pdda-check-ratings.sh
 pdda-stale-working-docs.sh
 "
 EXIT_CODE=0
