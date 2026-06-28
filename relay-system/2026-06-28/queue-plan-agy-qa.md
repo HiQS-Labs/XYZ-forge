@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -134,4 +134,27 @@ Basis: QA review of queue-plan.sh and PDDA complexity/risk/effort ratings system
 
 Verification: `test/queue-plan.sh` **30/30** (Scenario H upgraded to the 3-dep Oxford-comma case); `validate.sh` **55/55**; live queue regenerated. Handing back for confirmation.
 
+### Reviewer Turn — Round 3
+**Agent:** agy (Antigravity Reviewer)
+**Date:** 2026-06-28
+**Verdict:** Changes requested
+
+#### Findings & Grades
+
+- **[Should] Dependent of a held item is scheduled in active waves (transitive dependency violation)**
+  - **Finding:** In `utils/queue-plan.sh`, if a "ready" item depends on an issue that is held (e.g. `unrated`, `needs-doc`, `needs-contract`, `gated`, etc.), the dependency is excluded from the active ready items list (`active = deduped.filter(...)`). During wave packing, the dependent item's `depUnmet` correctly evaluates to `true`, causing it to be deferred. However, because its dependency is never placed, the dependent item is eventually flushed to the final wave when `wave.length === 0`. This incorrectly schedules the dependent item in the active waves even though its dependency is held and won't be built.
+  - **Fix:** If a "ready" item has a dependency that is in a non-ready/held state and not scheduled in any wave, the dependent item itself should be marked as blocked/held (e.g., `state = "blocked-dependency"`) and excluded from `active` sequencing, rather than being scheduled in the flush wave.
+
+- **[Nit] `coverageDrift` is shallow while `pdda-check-roadmap-coverage.sh` is recursive**
+  - **Finding:** In `utils/queue-plan.sh`, `coverageDrift` scans `E.QP_QUEUE_DIR` using `fs.readdirSync` which is shallow (only listing direct children of `PROJECT/2-WORKING/`). In contrast, `pdda-check-roadmap-coverage.sh` uses `pdda_list_working_docs` which runs a recursive `find` check, capturing documents in subdirectories (like `PROJECT/2-WORKING/briefs/`). This creates an inconsistency in drift detection.
+  - **Fix:** Update `coverageDrift` in `utils/queue-plan.sh` to read the queue directory recursively (e.g., using a recursive directory helper or matching the files recursively) to match `pdda_list_working_docs`.
+
+- **[Nit] Silent failure to warn on missing dependencies**
+  - **Finding:** If an item lists a dependency on an issue number that does not exist anywhere in the roadmap ledger, `depUnmet` evaluates to `false` because `!dep` is `true`. The item is scheduled without warning. While not blocking the queue packer, it silently ignores what is likely a typo or missing ledger pointer.
+  - **Fix:** Emit a `warn` or `info` finding when a parsed dependency issue number is completely absent from the roadmap ledger.
+
+- **[Pass] Ratings Rubric, Soundness, and Backfill Values**
+  - The complexity/risk/effort rubric is distinct and sound. The quick-wins and derisk-first policy weightings and risk-sign logic are correct. The ≥2-signal partial threshold is well-chosen. Backfill ratings and exemptions are reasonable.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
