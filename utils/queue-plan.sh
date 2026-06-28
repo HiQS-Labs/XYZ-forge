@@ -279,12 +279,16 @@ function parseLedger(raw) {
 
 // ── item resolution ──────────────────────────────────────────────────────────
 function ghIssueOf(item) {
+  // The canonical issue is the leading "GH-NN ·" in the TITLE. An in-prose issues/ link (e.g. GH-16's
+  // body cites #17/#11/…) is a reference, not the item's identity — so the title WINS over links; only
+  // fall back to the first issue link when the title carries no GH-NN (agy QA r4 [Blocker]).
+  const t = item.title.match(/\bGH-(\d+)\b/);
+  if (t) return Number(t[1]);
   for (const l of item.links) {
     const m = l.target.match(/github\.com\/[^\s)]+\/issues\/(\d+)/);
     if (m) return Number(m[1]);
   }
-  const t = item.title.match(/\bGH-(\d+)\b/);
-  return t ? Number(t[1]) : null;
+  return null;
 }
 function docOf(item) {
   const mds = item.links.map((l) => l.target).filter((t) => /\.md($|#)/.test(t) && /PROJECT\//.test(t) && !/relay-system\//.test(t));

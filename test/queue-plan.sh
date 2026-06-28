@@ -225,6 +225,21 @@ w800="$(wave_of "$doc" 800)"; w801="$(wave_of "$doc" 801)"; w803="$(wave_of "$do
 # Oxford-comma "GH-800, GH-801, and GH-803" — all three must parse, so the dependent follows the LAST (803).
 [[ -n "$w802" && "$w802" -gt "$w800" && "$w802" -gt "$w801" && "$w802" -gt "$w803" ]] && pass "H: oxford-comma deps all parsed — multi-dep follows ALL kernels (800=$w800 801=$w801 803=$w803 802=$w802) [agy Blocker r2]" || fail "H: oxford-comma deps not all honored (800=$w800 801=$w801 803=$w803 802=$w802)"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario I — agy QA [Blocker r4]: title GH-NN is canonical, beats an in-prose issue link
+# ─────────────────────────────────────────────────────────────────────────────
+I="$WORK/I"; mkdir -p "$I"; : >"$I/.branches"
+echo '{"910":"OPEN","911":"CLOSED"}' >"$I/.gh-state.json"
+mk_doc "$I" GH-910-epic.md low low low "$(contract_for MISS_E2 src/epic.js)"
+cat >"$I/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-910 · epic umbrella** 🆕 — sequences the sub-issue [#911](https://github.com/o/r/issues/911) → [d](PROJECT/2-WORKING/GH-910-epic.md) · [#910](https://github.com/o/r/issues/910)
+EOF
+out="$(run_qp "$I" 2>/dev/null)"; doc="$I/PROJECT/2-WORKING/QUEUE-$DAY.md"
+{ [[ "$(wave_of "$doc" 910)" == "1" ]] && ! grep -q "already-closed" <<<"$out"; } && pass "I: title GH-910 wins over the in-prose closed #911 (item stays active, not already-closed) [agy Blocker r4]" || fail "I: ghIssueOf precedence wrong — $(grep -E 'already-closed' <<<"$out" | head -1)"
+
 echo
 echo "  queue-plan: $PASS passed, $FAIL failed"
 [[ "$FAIL" -eq 0 ]]

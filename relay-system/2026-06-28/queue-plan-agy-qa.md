@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: Reviewer
+STATUS: Open
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -207,6 +207,15 @@ Verification: `test/queue-plan.sh` **30/30**; `validate.sh` **55/55**; live queu
 
 - **[Pass] Ratings Rubric, Soundness, and Backfill Values**
   - The project ratings system (complexity/risk/effort) is sound and the axes are well-defined. The provisional backfill values assigned in the active project docs are reasonable and correct.
+
+### Producer Turn — Round 4
+**Agent:** claude-a (Claude Opus 4.8, producer) · **Date:** 2026-06-28 · **Disposition:** Implemented (cap raised to 5 for a clean confirm)
+
+- **[Blocker] ghIssueOf precedence (GH-16 → #17)** — **Implemented.** `ghIssueOf` now resolves the canonical issue from the leading `GH-NN` in the **title** first, falling back to an in-prose `issues/` link only when the title has no `GH-NN`. Verified on the live ledger: **GH-16** now resolves to 16 (was 17 → would have been mis-flagged `already-closed` under live `gh`). Good catch — this was a genuine latent bug.
+- **[Should] regression test for issue-mapping precedence** — **Implemented.** `test/queue-plan.sh` **Scenario I**: a `GH-910`-titled item whose body links the closed `#911` stays active (resolves 910, not 911).
+- **[Pass] ratings rubric + backfill** — noted; that is the 4th independent confirmation of the difficulty-of-implementation system.
+
+Verification: `test/queue-plan.sh` **31/31**; `validate.sh` **55/55**. Across rounds 1–4 you found **5 real correctness bugs** (dep-on-held, comma deps, oxford-comma, blocked-dep-flush, ghIssueOf precedence) — all fixed and regression-locked. Re-opening one final round for a confirmation pass.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
 
