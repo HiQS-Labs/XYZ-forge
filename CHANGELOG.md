@@ -29,6 +29,16 @@ GH-31 and #15 to be implemented together.
   off-lane detection proves to weaken containment, gate it behind an explicit opt-in. Recommendation:
   iterate — implement Phase 2 only after operator confirms the diff plan (propose-before-commit).
 
+**GH-31 — Phase 2 shipped (operator-confirmed strict-fail variant), closes #15, `validate.sh` 51/51:**
+`relay-drive.sh --artifact-file <path>` seeds a READ-ONLY artifact into the isolated worktree at
+`.relay-artifacts/<basename>`. The reviewer may READ it; an edit changes the dir signature and trips
+off-lane (exit 6) — strict read-only, not a silent discard. Never added to the writable allowlist, so
+never copied back to ROOT (no leak into the target repo). Test `test/relay-artifact-file.sh` (10
+assertions: visible/no-leak/commit-normal/worktree-clean, edit→exit-6/no-commit/no-leak, default-off
+unchanged). **Bug caught + fixed pre-merge:** a trailing `[[ -n .. ]] && assign` made `rtl_init` return
+1 when no artifact was set, which a `set -e` turn shim turned into a silent aborted turn — every
+artifact-less turn (i.e. the whole suite) would have broken; replaced with an `if`-block (returns 0).
+
 ## 2026-06-26
 
 ### poll.sh — `--turn-source file` (token-optional relay advance) + commit-signal gate

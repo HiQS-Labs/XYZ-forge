@@ -25,7 +25,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 (design) done: `--artifact-file` resolved as the user surface of the already-tracked **read-only seed** ([#15](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/15)) — copy the artifact into the worktree as a read-only input (visible to the reviewer, exempt from off-lane detection, never copied back). Bet recorded in `CHANGELOG.md`. | **Phase 2 (Costly — touches `rtl_worktree_begin/end` containment): pause for operator confirmation of the design + diff plan BEFORE writing code**, per the propose-before-commit agreement. |
+| **Phase 2 shipped** (operator-confirmed: strict-fail variant). `--artifact-file` seeds a read-only artifact into the isolated worktree; reviewer can READ it, an edit fails the turn (off-lane exit 6), never copied back to ROOT. Closes [#15](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/15). Test `test/relay-artifact-file.sh` (10 assertions); `./validate.sh` **51/51**. Caught + fixed a `set -e` regression (a trailing `&&` made `rtl_init` return 1 with no artifact). | Phase 3 — fence-safe embed fallback (now LOW value — `--artifact-file` removes the need to embed) and Phase 4 — `new-relay.sh` scaffolder. Decide whether either still earns its keep. |
 
 ## Table of Contents
 
@@ -81,15 +81,17 @@ Design decisions (the Phase 1 outcome):
 
 ## Phase 2 — Implement `--artifact-file` copy-into-worktree
 
-- [ ] Add the option to the driver; copy the artifact into the isolated worktree before the reviewer turn.
-- [ ] Expose its in-worktree path to the reviewer via the relay thread (replace manual embedding).
-- [ ] Keep the explicit-embed path working for callers who still want it.
+- [x] Added `--artifact-file <path>` to `relay-drive.sh` (absolutizes + validates + exports `RELAY_ARTIFACT_FILE`; warns if isolation is off). `relay-turn-lib.sh` seeds it into the worktree at `.relay-artifacts/<basename>` (`rtl_init` → `RTL_ARTIFACT`; `rtl_worktree_begin` copy + signature snapshot).
+- [x] Exposed the in-worktree path to the reviewer via `rtl_turn_prompt` ("the artifact under review is at `.relay-artifacts/…` — read-only").
+- [x] Embedding path untouched — callers who still want to embed inline can.
+- [x] **Strict-fail (operator call):** the read-only seed is exempt from off-lane detection ONLY while unchanged; a reviewer edit changes the `.relay-artifacts` dir signature → off-lane → exit 6. Never added to `RTL_ALLOW`, so never copied back to ROOT.
 
 ### QA checklist — Phase 2
 
-- [ ] A cross-repo PR diff passed via `--artifact-file` is readable by the reviewer with no manual embedding.
-- [ ] The artifact does not leak into the target repo's tracked tree.
-- [ ] `./validate.sh` green with a regression test.
+- [x] A cross-repo PR diff passed via `--artifact-file` is readable by the reviewer with no manual embedding (test case 1).
+- [x] The artifact does not leak into the target repo's tracked tree (test cases 1 + 2 assert no `.relay-artifacts` in ROOT).
+- [x] `./validate.sh` green with a regression test — `test/relay-artifact-file.sh` (10 assertions), suite **51/51**.
+- [x] Edit-the-artifact → strict-fail exit 6 verified (test case 2); default-off path unchanged (test case 3).
 
 ## Phase 3 — Fence-safe embedding fallback
 
