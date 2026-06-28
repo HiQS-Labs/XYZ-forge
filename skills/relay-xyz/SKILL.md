@@ -226,6 +226,32 @@ same machine, with the one human go-gate before commit), see
 [relay-automation/DUELING-CLAUDES.md](../../relay-automation/DUELING-CLAUDES.md). It carries the exact
 `/loop` strings, the fresh-token-per-run rule, and the foreign-CWD `tick` pitfalls for Path B.
 
+### Path B cadence — fixed interval (today) vs adaptive (GH-33)
+
+The `/loop 60s` above is a **fixed** cadence: it wakes every 60s and usually decides "do nothing,"
+burning a re-invocation per idle minute. **Adaptive cadence** lets `poll.sh` suggest *when* to wake
+next from its own `DECISION`:
+
+- `poll.sh --emit-delay` adds a `DELAY: <seconds> (<reason>)` line (act-now → 0, idle backoff → 300,
+  dirty → 30, waiting-for-peer-commit → 90, cross-model → 120; clamped to `--deadline`). Additive —
+  the `DECISION:` line is unchanged, so the fixed `/loop 60s` recipe above still works untouched.
+- `relay-automation/relay-loop.sh` wraps it. **Default** = one tick that prints `NEXT-POLL: <seconds>`
+  and exits `poll.sh`'s code (10 = stop) — the unit a `/loop` **dynamic-mode** tick reads to schedule
+  its next wake (via `ScheduleWakeup`), so an idle relay backs off and a live one stays responsive.
+- The cadence is **not** Claude-locked: `relay-loop.sh --sleep-loop` self-paces in pure bash
+  (tick → sleep `DELAY` → repeat until stop), and the `NEXT-POLL`/`DELAY` output is plain text any
+  scheduler (cron, systemd timer) can consume. `/loop` dynamic mode is one option, not a dependency.
+
+Dynamic-mode `/loop` (self-paced) replacement for the fixed recipe — read `NEXT-POLL`, sleep that long:
+
+```
+/loop run relay-automation/relay-loop.sh --mode relay --agent <claude-a|claude-b> \
+  --claude-agents "claude-a,claude-b" --relay-file relay-system/<date>/<slug>.md \
+  --artifact <path> --deadline "$(date -v+30M +%s)" --dry-run ;\
+  act on "DECISION: run-runner" as above; on "DECISION: stop" CronDelete this job; \
+  otherwise ScheduleWakeup after the printed "NEXT-POLL:" seconds.
+```
+
 ## Turn-taker shims & their env
 
 Both shims are thin dispatchers over `relay-turn-lib.sh` (the model-agnostic containment core), so

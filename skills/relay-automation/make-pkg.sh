@@ -5,6 +5,7 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."   # repo root
 tar czf skills/relay-automation/relay-pkg.tar.gz \
   relay-automation/poll.sh \
+  relay-automation/relay-loop.sh \
   relay-automation/runner.sh \
   relay-automation/watchdog.sh \
   relay-automation/relay-drive.sh \
@@ -13,6 +14,7 @@ tar czf skills/relay-automation/relay-pkg.tar.gz \
   relay-automation/agy-turn.sh \
   relay-automation/README.md \
   test/poll-driver.sh \
+  test/relay-loop.sh \
   test/poll-relay.sh \
   test/watchdog-relay.sh \
   test/codex-turn.sh \

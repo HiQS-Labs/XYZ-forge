@@ -31,7 +31,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 0 decided + Phase 1 shipped** (on branch `gh-33-loop-skill-integration`, isolated worktree — kept off `main` to avoid the concurrent agent). Phase 0 call: ship as a **thin wrapper** (`relay-loop.sh`), NOT a `--driver loop` mode in `relay-drive.sh` (keeps the deterministic supervisor untouched; lower blast radius). Phase 1: `poll.sh --emit-delay` prints a `DELAY:` line mapping each `DECISION` (+ idle sub-state) to a suggested next-poll delay, deadline-clamped — additive, default-off, env-tunable. 8 new `poll-driver` assertions; **`validate.sh` 50/50**; skill tarball repackaged (`skill-extract.sh` parity). | **Operator GO gate before Phase 2+.** Phase 2 (the `/loop` dynamic-mode recipe + `relay-loop.sh` wrapper) is ready to start; Phases 3–4 (background-Bash dispatch + the Path A/B unification) are **Costly** (touch containment) and should not start without explicit GO. Promote to `2-WORKING` when Phase 2 begins. |
+| **Phases 0–2 shipped** (on branch `gh-33-loop-skill-integration`, isolated worktree — kept off `main` to avoid the concurrent agent). Phase 0: chose the **thin wrapper** shape. Phase 1: `poll.sh --emit-delay` → deadline-clamped `DELAY:` line (additive, default-off, env-tunable). Phase 2: `relay-automation/relay-loop.sh` wrapper (default one-tick `NEXT-POLL:` for a `/loop` dynamic tick; `--sleep-loop` self-paces in pure bash) + the dynamic-mode recipe in the `relay-xyz` SKILL, reschedule kept pluggable (no hardcoded `ScheduleWakeup`). New `test/relay-loop.sh` (5 cases) + 8 `poll-driver` cases; script packaged. **`validate.sh` 51/51**, `skill-extract` 15 files. | **Operator GO gate before Phase 3+.** Phases 3–4 (background-Bash dispatch + the Path A/B unification — the cross-model-hands-free win) are **Costly** (touch `relay-turn-lib.sh` containment) and must not start without explicit GO. Phase 2 is a clean, usable stopping point. Promote to `2-WORKING` if continuing. |
 
 ## Effort & Risk (the question asked)
 
@@ -46,6 +46,7 @@ roadmap_exempt: false
 - [Effort & Risk (the question asked)](#effort--risk-the-question-asked)
 - [Problem](#problem)
 - [Why this is cheap (the existing seam)](#why-this-is-cheap-the-existing-seam)
+- [FAQ](#faq)
 - [Phase 0 — Intake & decision gate](#phase-0--intake--decision-gate)
 - [Phase 1 — poll.sh emits a suggested next-delay](#phase-1--pollsh-emits-a-suggested-next-delay)
 - [Phase 2 — Adaptive cadence via /loop dynamic mode](#phase-2--adaptive-cadence-via-loop-dynamic-mode)
@@ -66,6 +67,32 @@ So today you choose between *hands-free but all-Claude* (Path B) or *cross-model
 ## Why this is cheap (the existing seam)
 
 `poll.sh` is already a **stateless, one-shot decision oracle**: it parses args, computes exactly one `DECISION` (`run-runner | idle | nudge-cross-model | run-watchdog | stop`) from coordination state, and exits — it does **no** sleeping or looping itself (`--deadline EPOCH` self-expiry aside). All cadence already comes from the `/loop` wrapper. That clean split — **`/loop` = scheduler/lifecycle, `poll.sh` = pure decision function** — is exactly the factoring this project needs, so most of the work is connecting two existing capabilities rather than building new control flow.
+
+## FAQ
+
+### Does this lock us into Anthropic / Claude models?
+
+**No — not entirely, and the part that does couple is the smallest, most replaceable layer.** Three layers:
+
+- **Workers (who takes the turns):** already multi-vendor. The harness drives **Codex (OpenAI)** and **agy (Antigravity/Gemini)** as first-class turn-takers, plus Claude. GH-33 changes nothing here — zero model lock-in on the content work.
+- **Decision oracle (`poll.sh`, incl. Phase 1's `--emit-delay`):** pure bash, no Anthropic dependency. The `DELAY:` line is plain text any scheduler can read — cron, a systemd timer, a `while sleep` loop, or another agent. Fully portable.
+- **Cadence driver:** *only here* is there Claude-specific coupling, and only if you use `/loop` **dynamic mode** (the `ScheduleWakeup`-backed self-pacing), which lives in Claude Code. It is opt-in and additive — `relay-drive.sh` (model-free, harness-free) and fixed-interval cron stay fully working.
+
+The Phase 0 decision *reduces* lock-in: the thin `relay-loop.sh` wrapper consumes the generic `DELAY:` output, so the reschedule step can be `/loop` **or** cron **or** anything. Phase 2 keeps that reschedule pluggable rather than hardcoding `ScheduleWakeup`, so "drop Claude Code" = "swap the sleeper," not a rewrite.
+
+### What is the next safe-but-usable phase?
+
+**Phase 2.** Phase 1 is safe but is only an enabling primitive (it emits a number nothing consumes yet). Phase 2 (the `/loop` dynamic-mode recipe + the `relay-loop.sh` wrapper that consumes `--emit-delay`) is the next phase that is *both* low-risk **and** independently useful: additive, **no containment touch**, and it delivers a real benefit on its own (idle relays back off → token savings; active loops respond faster). The Costly line starts at **Phase 3**.
+
+### Do we have to go all the way to Phase 6?
+
+**No — each phase is independently shippable; stop at any plateau.**
+
+- **Stop after Phase 2** → adaptive cadence for all-Claude / Path-B relays. Cheap, safe, done. Does *not* include cross-model hands-free.
+- **Phases 3–4** → the marquee feature (cross-model relays advancing **unattended**) — a separate, bigger bet and the Costly/containment part. Opt in only if wanted.
+- **Phase 5** = lifecycle cleanup (optional polish); **Phase 6** = docs + promote to `2-WORKING` (only when graduating it for real).
+
+Honest tension: the cheapest safe phase (2) is **not** the headline benefit — the headline (cross-model hands-free) lives in the **Costly phases (3–4)**. Stopping at 2 buys the token/latency win but not the "walk away from a Codex review" win.
 
 ## Phase 0 — Intake & decision gate
 
@@ -94,17 +121,18 @@ So today you choose between *hands-free but all-Claude* (Path B) or *cross-model
 - [x] Delay suggestion is a pure function of state (only wall-clock read is the deadline clamp, matching the existing `--deadline` behaviour).
 - [x] New tests pass under `./validate.sh` — **50/50**, skill tarball repackaged so `skill-extract.sh` parity holds.
 
-## Phase 2 — Adaptive cadence via /loop dynamic mode
+## Phase 2 — Adaptive cadence via /loop dynamic mode ✅ (shipped)
 
-- [ ] Document a `/loop` **dynamic-mode** recipe (no fixed interval) where the model calls `poll.sh`, then schedules the next wake from the suggested delay (Phase 1) via `ScheduleWakeup`.
-- [ ] Respect the prompt-cache window economics: idle backoff may cross the 5-min cache TTL (acceptable — the win is tokens, not cache), but active turns stay sub-cache-window.
-- [ ] Add a `relay-xyz` SKILL note describing fixed-interval (today) vs dynamic (new) Path B, with the tradeoff.
+- [x] Built `relay-automation/relay-loop.sh` (the Phase-0 thin wrapper): default = one tick that prints `NEXT-POLL: <seconds>` and exits `poll.sh`'s code, for a `/loop` dynamic-mode tick to read and `ScheduleWakeup` from. Documented the dynamic-mode `/loop` recipe in the `relay-xyz` SKILL.
+- [x] Respected the prompt-cache window economics: idle backoff is 300s (crosses the 5-min TTL by design — the win is tokens), active states (dirty 30 / wait-commit 90 / nudge 120) stay sub-cache-window. Encoded in the Phase 1 delay defaults.
+- [x] Added the `relay-xyz` SKILL note ("Path B cadence — fixed interval (today) vs adaptive") describing the tradeoff + the dynamic-mode recipe; **kept the reschedule pluggable** — `relay-loop.sh --sleep-loop` self-paces in pure bash and the `NEXT-POLL`/`DELAY` output is consumable by cron/systemd, so `/loop` is one option, not a dependency (addresses the lock-in FAQ).
 
 ### QA checklist — Phase 2
 
-- [ ] Idle relays back off (fewer ticks/tokens) while a live turn still advances promptly.
-- [ ] The fixed-`60s` recipe still works unchanged (dynamic mode is opt-in).
-- [ ] `tick` claim/heartbeat cadence is unchanged — only the *poll* cadence adapts.
+- [x] Idle relays back off (NEXT-POLL 300) while a live turn still advances promptly (NEXT-POLL 0) — asserted in `test/relay-loop.sh`.
+- [x] The fixed-`60s` recipe still works unchanged (dynamic mode is opt-in; `--emit-delay` is additive, `DECISION:` line untouched).
+- [x] `tick` claim/heartbeat cadence is unchanged — only the *poll* cadence adapts (wrapper touches no token logic).
+- [x] `validate.sh` green with the new `relay-loop.sh` test registered + the script packaged (`skill-extract.sh` 15 files).
 
 ## Phase 3 — Background-Bash turn dispatch
 
