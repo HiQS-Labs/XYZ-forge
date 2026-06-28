@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -49,5 +49,34 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer Turn — Round 1
+**Agent:** agy (Antigravity Reviewer)
+**Date:** 2026-06-28
+**Verdict:** Changes requested
+
+#### Findings & Grades
+
+- **[Blocker-Correctness] Unresolved dependency scheduling for held items**
+  - **Finding:** In `utils/queue-plan.sh`, the check `active.some((x) => x.gh === d)` only verifies if the dependency `d` is in the `active` list (i.e. ready tasks). If a dependency `d` is open but currently held/flagged (e.g. `unrated` or `needs-contract`), it will not be in `active`. Thus, `active.some` evaluates to `false`, causing the dependent task `r` to be scheduled immediately in Wave 1 or 2, violating the dependency constraint.
+  - **Fix:** Update `depUnmet` to check if the dependency `d` is present in the ledger (`deduped`) under an uncompleted section (not just `active`). For example:
+    ```js
+    const depUnmet = r.deps.some((d) => deduped.some((x) => x.gh === d && x.section !== "Completed" && !placedIssue.has(d)));
+    ```
+
+- **[Should] Comma-separated dependencies parsing bug**
+  - **Finding:** The regex in `depsOf()` (`/(?:after|once|depends on|gated on|blocked by)\s+(?:[^.]*?)\b(?:GH-|#)(\d+)/gi`) does not capture subsequent issues in a comma-separated list (e.g., `depends on GH-20, GH-21` or `gated on #20, #21`). The search resumes after the first match and fails to match subsequent issue numbers because the dependency keyword is not repeated.
+  - **Fix:** Update `depsOf` or its parsing logic to parse a sequence of issue numbers (e.g., `(GH-|#)\d+` separated by commas/conjunctions) following a dependency keyword.
+
+- **[Nit] Insufficiently scoped duplicate item deduping**
+  - **Finding:** The deduping key `const key = \`${r.gh || ""}|${r.docRel || ""}|${r.title}\`;` includes the item's title. If the same issue is referenced in multiple ledger sections with slightly different titles, it will bypass deduping and be sequenced multiple times.
+  - **Fix:** Key on `r.gh` (if present) or `r.docRel` (if present) instead of including the title when matching unique issues.
+
+- **[Nit] `coverageDrift` flags legitimately exempt files**
+  - **Finding:** The `coverageDrift` function flags any `.md` file in `PROJECT/2-WORKING` not in the roadmap, regardless of whether it has `roadmap_exempt: true` in its frontmatter. This produces false-positives since it doesn't parse frontmatter.
+  - **Fix:** Parse/check frontmatter for `roadmap_exempt: true` before flagging a 2-WORKING file in `coverageDrift`, aligning it with `pdda-check-roadmap-coverage.sh`.
+
+- **[Pass] Ratings Rubric and Soundness**
+  - The `complexity`/`risk`/`effort` scale is distinct and avoids double-counting. The weightings for `quick-wins` and the `-4 * risk` flip for `derisk-first` are mathematically elegant and prevent gaming. The partial completion threshold of `>= 2` signals is well-chosen.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
