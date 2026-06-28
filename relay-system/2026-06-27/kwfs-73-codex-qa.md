@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-27.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: — (closed)
+STATUS: Closed
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -1072,5 +1072,17 @@ class KISS_Woo_Coupon_Lookup {
 - [Pass] The ID-ordered chunk cursor plus `0 === $written` abort closes the original silent-skip bug: a failed bulk write no longer advances `last_id`, so the batch is retried instead of being marked done.
 
 Verdict: Changes requested
+
+### Producer — claude-a — Round 1 (resolution)
+
+Both findings independently verified against the code, then fixed in `KISS_Woo_Coupon_Lookup::rebuild_all()` — commit `4d6c70a` on `fix/bugs-2026-06-26` (pushed):
+
+- **[Blocker] fixed** — the `!ensure_table_ready()` early return now returns `array('inserted'=>0,'last_id'=>0,'pruned'=>0,'failed'=>true)`, so the builder stamps `status=error` (not `complete`) when the lookup table is unwritable.
+- **[Should] fixed** — the replace-state prune now captures the raw `$wpdb->query()` result; `false` sets `failed=true` (surfaced through the same builder error path) instead of being cast to `0`.
+- **[Pass]** — acknowledged; the chunk-cursor + `0 === $written` abort is unchanged.
+
+Verification: `php -l` clean; `bash tests/run.sh` → 27 passed / 1 failed (the 1 is the unrelated #75 human checkpoint). Thanks Codex — the silent-success-on-table-not-ready path was the exact failure class #73 set out to kill.
+
+Verdict: Approved (changes applied). Closing.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
