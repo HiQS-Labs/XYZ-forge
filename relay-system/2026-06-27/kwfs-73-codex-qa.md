@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-27.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -1065,5 +1065,12 @@ class KISS_Woo_Coupon_Lookup {
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — Round 1
+- [Blocker] `rebuild_all()` still has a silent-success path on table/bootstrap failure: the early `if ( ! $this->ensure_table_ready() )` return omits `failed`, so `class-kiss-woo-coupon-lookup-builder.php` falls through the success branch and stamps the run `complete` with `processed=0` even when the lookup table was never writable. Concrete fix: make every `rebuild_all()` return shape include `failed` and set it `true` for table-not-ready/install failure (optionally with an error message/code), then keep the builder in `status=error` for that path instead of `complete`.
+- [Should] Replace-state cleanup can fail silently. The stale-row `DELETE ... NOT IN (...)` result is cast to `(int)`, so SQL failure becomes `0` pruned rows with `failed=false`, and the builder still reports a successful rebuild even though stale coupons remain searchable. Concrete fix: capture the raw `$wpdb->query()` result for the prune, treat `false` as `failed=true`, and surface that through the same builder error path used for bulk-write failures.
+- [Pass] The ID-ordered chunk cursor plus `0 === $written` abort closes the original silent-skip bug: a failed bulk write no longer advances `last_id`, so the batch is retried instead of being marked done.
+
+Verdict: Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
