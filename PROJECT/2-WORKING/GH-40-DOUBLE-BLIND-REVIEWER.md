@@ -149,13 +149,11 @@ Lazy implementation (reuse what exists; add nothing speculative):
 `validate.sh` stays green. Cut items + their revisit triggers live in
 [Deferred — reconsider when triggered](#deferred--reconsider-when-triggered).
 
-### Phase 4 — Telemetry & degradation pruning ⬜ (later)
-Periodic pruning of accumulated rules to bound context bloat; condense, then re-run `validate.sh` to
-confirm the condensed ruleset still holds the kernel contract.
-
-**QA gate:** **re-derive** all `MARATHON.yaml` integration points and any skill names against the live
-tree when this phase is reached — do not reuse names from the issue thread; `validate.sh` stays green
-across the prune.
+### Phase 4 — rule pruning ⬜ DEFERRED (speculative — no rules exist to prune yet)
+Ponytail rung 1: a periodic pruner for accumulated rules solves a problem that does not exist today and
+may never. Cut to [Deferred — reconsider when triggered](#deferred--reconsider-when-triggered). No
+scheduler, no pruning daemon — if rule bloat ever becomes measurable it's a one-off condense + re-run
+`validate.sh`, not a phase. The active plan ends at Phase 3.
 
 ## Dropped (fabrications — gone, not coming back)
 From the original issue-body proposal, contradicted by the live tree: the `47/47` count, the
@@ -172,7 +170,8 @@ when the trigger fires; until then the simpler Phase 3 above stands.
 | **`IDLE_PENDING_REVIEW` `tick` state** | A new kernel state is Costly + needs a `decisions/` record, to do what a checklist in an existing file + normal termination already does. | Automation (not a human) must *query* the paused state programmatically — e.g. a scheduler that resumes runs after approval. |
 | **Dedicated `SYSTEM_UPGRADES_PENDING.md` file** | A second artifact + convention before a second reader exists. | A consumer other than the human reviewer needs to read proposals on its own path (a dashboard, a digest). |
 | **Fixture Alpha (no-op handoff loop)** | Needs the kernel to emit a per-write content hash first — a real `tick` feature, not a fixture. | The kernel emits per-write content hashes. |
-| **Phase 4 integration specifics** (`MARATHON.yaml` wiring, skill names) | Re-derive against the live tree when reached — names from the issue thread are stale. | Phase 4 actually starts. |
+| **Rule pruning ("Phase 4")** — periodic condense of accumulated rules | Speculative — zero accumulated rules today, no measurable bloat; an optimization, not a safety/recovery control. | Operator rules measurably bloat context (or the rules file is unwieldy) → then a **one-off** condense + re-run `validate.sh`. No scheduler. |
+| **Phase 4 `MARATHON.yaml` integration specifics** (loop wiring, skill names) | Names from the issue thread are stale; re-derive against the live tree. | The loop is greenlit and Phase 4 work actually starts. |
 
 ## Reversibility & blast radius
 - Phases 1–2 (the fixtures) are **Easy** — additive test files + self-reverting/ceiling-guarded
@@ -180,6 +179,7 @@ when the trigger fires; until then the simpler Phase 3 above stands.
 - Phase 3 (Ponytail-minimized) is **Easy** — appends to an existing output + one test; no `tick` state,
   no new file. (The deferred `IDLE_PENDING_REVIEW` state is the Costly part — that's exactly why it's
   deferred behind a trigger, not in the active plan.)
-- Phase 4 touches `MARATHON.yaml`/operator docs and is at least **Costly** per AGENTS.md — size the
-  blast radius and record the bet in `CHANGELOG.md` when it lands. Wiring the reflection loop into the
-  live marathon is gated on operator GO and on Phases 1–2 passing (now met).
+- Phase 4 (rule pruning) is **deferred** as speculative — if it ever lands, only the loop-integration
+  parts touch `MARATHON.yaml` and are at least **Costly**; size the blast radius + record the bet then.
+  Wiring the reflection loop into the live marathon is gated on operator GO and on Phases 1–2 passing
+  (now met).
