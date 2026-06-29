@@ -1,0 +1,19 @@
+{
+  "fetch_ok": true,
+  "upstream": "origin/main",
+  "ahead": 0,
+  "behind": 0,
+  "dirty": false,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "2ae0584eb8b8d721cb052a57d242c7a7c7850ec8",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "grep_absent",
+      "path": "relay-automation/consult.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}

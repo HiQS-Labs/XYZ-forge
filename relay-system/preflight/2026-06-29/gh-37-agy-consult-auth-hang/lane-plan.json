@@ -1,0 +1,1 @@
+{"orchestrator_owned":[],"codex_lane":["relay-automation/consult.sh","relay-automation/agy-turn.sh"],"agy_lane":[],"agy_review_default":true,"coupling_warning":"all artifacts share one top-level dir; treat as coupled","parallelizable":false,"single_lane_only":true}
