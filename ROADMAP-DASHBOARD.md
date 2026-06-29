@@ -6,13 +6,15 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 13 items | Tally: 🟢 2 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 15 items | Tally: 🟢 2 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | — | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
 | GH-23 · Cursor CLI lane (3rd cross-model worker) | — | [#23](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/23) |
 | GH-30 · optional centralized transcript archive | — | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/1-INBOX/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |
+| Marathon dogfood · rebalance-OS parallel build queue (cross-repo, --target-root) | — | — |
+| GH-48 · generalize queue-plan's zone model for cross-repo pre-pre-flight | — | [GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md](PROJECT/1-INBOX/GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md) · [#48](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/48) |
 | Dueling/relay · commit-signal advance (file-driven mode) | 🟡 | [test/poll-driver.sh](test/poll-driver.sh) · [poll.sh](relay-automation/poll.sh) · [Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
@@ -26,13 +28,14 @@ Summary: 13 items | Tally: 🟢 2 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 8 items | Tally: 🟢 3 · 🟡 4 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 9 items | Tally: 🟢 4 · 🟡 4 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | Tooling · queue planner (pre-pre-flight) | 🟢 | [QUEUE-PLANNER.md](PROJECT/2-WORKING/QUEUE-PLANNER.md) |
 | GH-37 · agy consult lane hangs on expired auth | 🟢 | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/2-WORKING/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
-| GH-33 · leverage the built-in /loop skill to drive relays | 🟡 | [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |
+| GH-33 · leverage the built-in /loop skill to drive relays | 🟡 | [#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14) · [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |
+| GH-46 · Phase 4 swarm-preflight contract + cross-model hands-free marathon dogfood | 🟢 | [#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14) · [GH-46-PHASE4-SWARM-PREFLIGHT.md](PROJECT/2-WORKING/GH-46-PHASE4-SWARM-PREFLIGHT.md) · [#46](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/46) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
 | Tooling · relay-xyz durability | 🟡 | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
