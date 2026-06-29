@@ -430,9 +430,17 @@ fi
 # NOT execute the full gate here — that is heavy and side-effectful, e.g. a suite that spawns worktrees.)
 # A `bash`/`sh <script>` gate must have its script; any other leading program must be on PATH.
 if [[ "$READY" -eq 1 && -n "$GATE_CMD" ]]; then
-  read -r _gh39_g0 _gh39_g1 _ <<<"$GATE_CMD"
+  read -r -a _gh39_gw <<<"$GATE_CMD"
+  _gh39_g0="${_gh39_gw[0]}"
   if [[ "$_gh39_g0" == "bash" || "$_gh39_g0" == "sh" ]]; then
-    [[ -n "$_gh39_g1" && -f "$TARGET_ROOT/$_gh39_g1" ]] || { READY=0; READY_NEXT="gate script not found at target.ref: ${_gh39_g1:-<none>}"; }
+    # First NON-FLAG token after the interpreter is the script — so `bash -x script.sh` resolves
+    # `script.sh`, not `-x` (agy GH-39 review Nit).
+    _gh39_script=""
+    for _gh39_t in ${_gh39_gw[@]+"${_gh39_gw[@]:1}"}; do
+      [[ "$_gh39_t" == -* ]] && continue
+      _gh39_script="$_gh39_t"; break
+    done
+    [[ -n "$_gh39_script" && -f "$TARGET_ROOT/$_gh39_script" ]] || { READY=0; READY_NEXT="gate script not found at target.ref: ${_gh39_script:-<none>}"; }
   elif ! command -v "$_gh39_g0" >/dev/null 2>&1; then
     READY=0; READY_NEXT="gate program not on PATH: $_gh39_g0"
   fi

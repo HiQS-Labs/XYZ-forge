@@ -212,6 +212,17 @@ out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gatemiss.md" 2>&1)"; rc=
 [[ $rc -eq 5 ]] && pass "T14 GH-39: unrunnable gate (missing script) → not-ready (exit 5)" || fail "T14 expected exit 5, got $rc — $out"
 grep -q "gate script not found" <<<"$out" && pass "T14 names the missing gate script" || fail "T14 missing message: $out"
 
+# ── T15: GH-39 (A1) — a gate WITH FLAGS (`bash -x <script>`) resolves the SCRIPT, not the flag ──
+R="$(make_repo gateflag '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash -x src/a.js",
+  "fix_probes": [ { "type": "path_absent", "path": "NEVER.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gateflag.md" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T15 GH-39: gate with flags resolves the script, not the flag (ready)" || fail "T15 expected exit 0, got $rc — $out"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1
