@@ -35,7 +35,7 @@ Summary: 9 items | Tally: 🟢 4 · 🟡 4 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 | Tooling · queue planner (pre-pre-flight) | 🟢 | [QUEUE-PLANNER.md](PROJECT/2-WORKING/QUEUE-PLANNER.md) |
 | GH-37 · agy consult lane hangs on expired auth | 🟢 | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/2-WORKING/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
 | GH-33 · leverage the built-in /loop skill to drive relays | 🟡 | [#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14) · [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |
-| GH-46 · Phase 4 swarm-preflight contract + cross-model hands-free marathon dogfood | 🟢 | [#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14) · [GH-46-PHASE4-SWARM-PREFLIGHT.md](PROJECT/2-WORKING/GH-46-PHASE4-SWARM-PREFLIGHT.md) · [#46](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/46) |
+| GH-46 · Phase 4 swarm-preflight contract + cross-model hands-free marathon dogfood | 🟢 | [GH-46-PHASE4-SWARM-PREFLIGHT.md](PROJECT/2-WORKING/GH-46-PHASE4-SWARM-PREFLIGHT.md) · [#46](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/46) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
 | Tooling · relay-xyz durability | 🟡 | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
