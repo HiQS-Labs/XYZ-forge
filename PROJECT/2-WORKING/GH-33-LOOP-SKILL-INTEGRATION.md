@@ -138,33 +138,16 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
 - [x] `tick` claim/heartbeat cadence is unchanged — only the *poll* cadence adapts (wrapper touches no token logic).
 - [x] `validate.sh` green with the new `relay-loop.sh` test registered + the script packaged (`skill-extract.sh` 15 files).
 
-## Swarm Preflight Contract
+## Swarm Preflight Contract → split out to #46
 
-> **Active target: Phase 4** (unify Path A/B — cross-model turns advance unattended).
-> Phase 3 (background dispatch) **shipped 2026-06-28** — its contract probes now read
-> `already-landed`. This contract supersedes it for the next fire (the marathon dogfood).
-
-```json
-{
-  "target": { "repo": ".", "ref": "main" },
-  "gate": "bash validate.sh",
-  "fix_probes": [
-    { "type": "grep_absent", "path": "relay-automation/relay-loop.sh", "pattern": "cross-model-cmd", "note": "Phase 4 adds a --cross-model-cmd flag so --background launches the cross-model shim on nudge-cross-model; the flag is absent today → fix still required" },
-    { "type": "grep_absent", "path": "test/relay-loop.sh", "pattern": "cross-model-cmd", "note": "Phase 4 adds a --cross-model-cmd background-dispatch test case; absent today → fix still required" }
-  ],
-  "artifacts": [
-    "relay-automation/relay-loop.sh",
-    "relay-automation/poll.sh",
-    "test/relay-loop.sh",
-    "relay-automation/README.md"
-  ],
-  "remediation": "Unify Path A/B in relay-loop.sh --background: on DECISION: nudge-cross-model, launch the cross-model turn shim (codex-turn.sh / agy-turn.sh) as a DETACHED background process — reuse the Phase 3 bg_launch + pidfile single-turn lock — instead of printing a human nudge, so a Codex/agy turn advances unattended. Add a --cross-model-cmd flag (mirror --runner-cmd) for the command to run for a cross-model turn; if it is unset OR the agent's CLI is not on PATH, DEGRADE to the existing human-nudge (never a silent stall) — preserve --claude-agents semantics. Containment + token correctness MUST be identical to Path A: do NOT modify relay-turn-lib.sh, do NOT widen any allowlist (the backgrounded shim already enforces the boundary). Keep poll.sh a pure oracle. Extend test/relay-loop.sh with: (a) nudge-cross-model + --background + --cross-model-cmd -> BG-DISPATCH of the shim, single-dispatch lock holds; (b) cross-model CLI absent -> degrades to nudge, no dispatch. Update the relay-loop.sh README row. SCOPE LOCK: edit ONLY the four artifacts; verify with `bash test/relay-loop.sh` ONLY — do NOT run the full validate.sh yourself (it can create files that trip containment and discard your whole turn); the harness runs the gate after your turn.",
-  "lanes": {
-    "orchestrator_only": ["relay-automation/relay-loop.sh", "relay-automation/poll.sh"],
-    "note": "supervisor zone — serialize; one kernel lane per wave. relay-turn-lib.sh / bin/tick are OUT of scope (containment must stay byte-identical)."
-  }
-}
-```
+> **Moved (2026-06-28).** The runnable Phase 4 preflight contract now lives in its own issue + capture
+> doc so it gets its own number and attention instead of being buried in this 6-phase epic:
+> **#46 → [GH-46-PHASE4-SWARM-PREFLIGHT.md](GH-46-PHASE4-SWARM-PREFLIGHT.md)** (authoritative copy).
+>
+> This epic still owns the Phase 4 *design* (below). For the executable contract — the JSON
+> `swarm-preflight` parses, the marathon dogfood, and the acceptance checklist used to fire the lane —
+> see #46. Keep the two in sync; **#46 wins for execution** (it carries the single contract copy, not a
+> second drifting one).
 
 ## Phase 3 — Background-Bash turn dispatch ✅ (shipped 2026-06-28)
 
