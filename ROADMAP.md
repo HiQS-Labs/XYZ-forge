@@ -48,9 +48,10 @@ Three tracks, sequenced independently:
 5. **Keep [GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md](PROJECT/1-INBOX/GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md) behind the live rebalance dogfood.** (The planner generalization is useful, but it is not the immediate unblocker because per-lane `swarm-preflight` already works today for cross-repo work.)
 6. **Pull exactly one proof-sized [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) Phase-2 slice into execution with its own contract.** (This keeps Part B moving without reopening the whole hardening track at once and losing focus.)
 
-> **Active scheduling overlay:** [QUEUE-2026-06-28.md](PROJECT/2-WORKING/QUEUE-2026-06-28.md) groups the
-> open ledger below into **collision-safe parallel lanes** — what can be built simultaneously vs. what must
-> serialize on the `relay-turn-lib.sh` containment kernel. Derived from this ledger; the ledger stays source of truth.
+> **Active scheduling overlay:** [QUEUE-2026-06-29.md](PROJECT/2-WORKING/QUEUE-2026-06-29.md) (regenerated
+> 2026-06-29 — Wave 1 = **#37**) groups the open ledger below into **collision-safe parallel lanes** — what
+> can be built simultaneously vs. what must serialize on the `relay-turn-lib.sh` containment kernel. Derived
+> from this ledger; the ledger stays source of truth.
 
 ## Model assignment (heuristic)
 
