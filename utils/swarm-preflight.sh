@@ -383,6 +383,19 @@ if ! git -C "$TARGET_ROOT" worktree add --detach --quiet "$REF_WT" "$REF_COMMIT"
 fi
 PROBE_SUMMARY="$(SP_ROOT="$REF_WT" SP_CONTRACT="$TMP/contract.json" SP_OUT="$TMP/probes.json" node "$TMP/eval-probes.mjs")"
 read -r STALE BLOCKED AMBIG <<<"$PROBE_SUMMARY"
+# GH-39 (A2): verify every declared artifact path exists at the evaluated ref. A "ready" packet whose
+# artifacts[] is missing/mistyped would fail the marathon at the first edit (the GH-29-adjacent failure
+# class). Checked in REF_WT — the ref's content — BEFORE the worktree is removed below.
+GH39_ART_MISSING=""
+_gh39_art_csv="$(field "$TMP/contract.json" artifacts)"
+if [[ -n "$_gh39_art_csv" ]]; then
+  IFS=',' read -ra _gh39_arts <<<"$_gh39_art_csv"
+  for _gh39_a in "${_gh39_arts[@]}"; do
+    read -r _gh39_a <<<"$_gh39_a"               # trim leading/trailing whitespace
+    [[ -z "$_gh39_a" ]] && continue
+    [[ -e "$REF_WT/$_gh39_a" ]] || { GH39_ART_MISSING="$_gh39_a"; break; }
+  done
+fi
 git -C "$TARGET_ROOT" worktree remove --force "$REF_WT" >/dev/null 2>&1 || rm -rf "$REF_WT"
 git -C "$TARGET_ROOT" worktree prune >/dev/null 2>&1 || true
 
@@ -407,6 +420,26 @@ if [[ "$ART_COUNT" -eq 0 ]]; then READY=0; READY_NEXT="add a bounded artifact / 
 if [[ -z "$REMED_SRC$REMED_CRIT" && "$DOC_HAS_PHASES" -eq 0 ]]; then
   READY=0; READY_NEXT="research more: no phase plan or acceptance criteria — source is not runnable unattended"
 fi
+# GH-39 (A2): an artifact path that doesn't exist at the ref (detected in Phase 3) → not ready.
+# Guarded on READY==1 so the FIRST failure's reason wins (don't clobber an earlier next-action).
+if [[ "$READY" -eq 1 && -n "${GH39_ART_MISSING:-}" ]]; then
+  READY=0; READY_NEXT="artifact path not found at target.ref: $GH39_ART_MISSING — fix the contract artifacts[] or push the file"
+fi
+# GH-39 (A1): the gate command must be RUNNABLE — its program resolves. (Whether the gate currently
+# FAILS, proving the fix is still required, is already covered by fix_probes above; we deliberately do
+# NOT execute the full gate here — that is heavy and side-effectful, e.g. a suite that spawns worktrees.)
+# A `bash`/`sh <script>` gate must have its script; any other leading program must be on PATH.
+if [[ "$READY" -eq 1 && -n "$GATE_CMD" ]]; then
+  read -r _gh39_g0 _gh39_g1 _ <<<"$GATE_CMD"
+  if [[ "$_gh39_g0" == "bash" || "$_gh39_g0" == "sh" ]]; then
+    [[ -n "$_gh39_g1" && -f "$TARGET_ROOT/$_gh39_g1" ]] || { READY=0; READY_NEXT="gate script not found at target.ref: ${_gh39_g1:-<none>}"; }
+  elif ! command -v "$_gh39_g0" >/dev/null 2>&1; then
+    READY=0; READY_NEXT="gate program not on PATH: $_gh39_g0"
+  fi
+fi
+# GH-39 (A3): build-lane CLI presence — ADVISORY only (never blocks: keeps preflight portable in
+# keyless/CI environments where codex/agy aren't installed). Surfaced on the report below.
+GH39_LANE_NOTE="codex=$(command -v codex >/dev/null 2>&1 && echo present || echo absent) agy=$(command -v agy >/dev/null 2>&1 && echo present || echo absent)"
 
 # ── Phase 5: lane assignment ─────────────────────────────────────────────────
 SP_CONTRACT="$TMP/contract.json" node "$TMP/lane-plan.mjs" >"$TMP/lane-plan.json"
@@ -457,6 +490,7 @@ else
   emit "  ref-probed  : $REF @ ${REF_COMMIT:0:9} ($REF_NOTE)"
   emit "  candidate   : $CAND_STATE"
   emit "  readiness   : ready=$READY${READY_NEXT:+ — next: $READY_NEXT}"
+  emit "  lane-cli    : ${GH39_LANE_NOTE:-unknown} (advisory)"
   emit "  verdict     : $VERDICT (exit $CODE)"
 fi
 
