@@ -243,7 +243,6 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
         RTL_WT_OFFLANE=1; continue ;;
     esac
     rtl_in_allow "$path" && continue
-    printf 'RTL-DEBUG: off-lane path flagged: status=[%s] path=[%s]\n' "$xy" "$path" >&2
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
   done < <(git -C "$wt" status --porcelain -z 2>/dev/null)
   if ((RTL_WT_OFFLANE == 0)); then
