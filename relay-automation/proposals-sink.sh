@@ -34,20 +34,27 @@ case "$TARGET_BASE_LC" in
     echo "proposals-sink: refusing to write proposals into a rule/operator doc ($TARGET)" >&2
     exit 2 ;;
 esac
-# Same-inode (hard-link) check: an innocently-named HARD link (notes.md hard-linked to ROUTER.md) is
+# Same-inode (hard-link) check: an innocently-named HARD link (notes.md hard-linked to a rule doc) is
 # neither a symlink nor a protected basename, yet `>>` lands in the protected doc. `test -ef` compares
-# device+inode, so it catches it. Check the protected-name siblings in the target's dir AND the
-# canonical repo-root docs (best-effort; skipped outside a git repo).
-PROTECTED="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md PDDA.md"
-TDIR="$(dirname "$TARGET")"
-GROOT="$(git -C "$TDIR" rev-parse --show-toplevel 2>/dev/null || true)"
-for name in $PROTECTED; do
-  for cand in "$TDIR/$name" ${GROOT:+"$GROOT/$name"}; do
-    if [ -e "$cand" ] && [ "$TARGET" -ef "$cand" ]; then
-      echo "proposals-sink: target is the same file as a rule/operator doc ($cand) — refusing" >&2
-      exit 2
-    fi
+# device+inode. Check against (a) the canonical protected docs in THIS sink's OWN repo — derived from
+# the script's location, not the target's, and covering the NESTED PROJECT/PDDA.md — and (b) a
+# protected-name sibling in the target's own dir. Every candidate is a single quoted arg → space-safe
+# (no unquoted list expansion).
+refuse_if_same() {  # <candidate protected path>
+  [ -n "$1" ] && [ -e "$1" ] && [ "$TARGET" -ef "$1" ] || return 0
+  echo "proposals-sink: target is the same file as a rule/operator doc ($1) — refusing" >&2
+  exit 2
+}
+SINK_DIR="$(cd "$(dirname "$0")" 2>/dev/null && pwd || echo "")"
+SINK_ROOT="$(git -C "${SINK_DIR:-.}" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -n "$SINK_ROOT" ]; then
+  for rel in ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md PROJECT/PDDA.md; do
+    refuse_if_same "$SINK_ROOT/$rel"
   done
+fi
+TDIR="$(dirname "$TARGET")"
+for name in ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md PDDA.md; do
+  refuse_if_same "$TDIR/$name"
 done
 
 PROPOSALS=()

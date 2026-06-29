@@ -73,6 +73,20 @@ else
   pass "sink fails (no false success) when the append can't be written"
 fi
 
+# (1e) Codex r3: the hard-link guard must stay sound when the path contains SPACES (no word-splitting).
+mkdir -p "$A/has space"
+printf '# rules\n' >"$A/has space/ROUTER.md"
+if ln "$A/has space/ROUTER.md" "$A/has space/innocent.md" 2>/dev/null; then
+  sbefore="$(cksum "$A/has space/ROUTER.md")"
+  if printf 'spaced hard link\n' | bash "$SINK" "$A/has space/innocent.md" 2>/dev/null; then
+    fail "sink wrote through a hard link in a path with spaces (space-unsafe -ef)"
+  else
+    pass "sink refuses a hard-link target in a path with spaces (space-safe)"
+  fi
+  [ "$(cksum "$A/has space/ROUTER.md")" = "$sbefore" ] \
+    && pass "spaced rule doc byte-unchanged after refused write" || fail "spaced rule doc modified"
+fi
+
 # --- (2) a Reviewer turn scopes the rule/operator docs OFF its writable allowlist -------------------
 printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$A/relay.md"
 rtl_init "$A" "$A/relay.md" "ROUTER.md,AGENTS.md,GUIDING-PRINCIPLES.md,PDDA.md" 2>/dev/null
