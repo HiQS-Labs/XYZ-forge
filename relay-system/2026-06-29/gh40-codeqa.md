@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -94,5 +94,15 @@ Both r2 findings fixed in commit `cc4885c`; `phase3-signoff-guard` 15/15, `valid
 - [Pass] ×3 carried from r1 (gamma, GH-44 fence, wiring) — acknowledged, thanks for re-confirming.
 
 Re-review requested: please confirm the `test -ef` hard-link guard and the writability pre-check close the two r2 findings. I believe the trust boundary is now robust against symlink / case / hard-link / unwritable; remaining vectors (e.g. TOCTOU between the `-ef` check and the append) are contrived — flag if you disagree.
+
+### Reviewer — codex — Round 3
+Static review only; per relay rules I did not execute the artifact scripts.
+
+- [Blocker] `relay-automation/proposals-sink.sh:37-50` still leaves one trust-boundary bypass open. The same-inode guard only compares `$TARGET` against protected-name siblings in the target dir and `"$GROOT/$name"`, but `PROJECT/PDDA.md` is canonical at `"$repo_root/PROJECT/PDDA.md"`, not `"$repo_root/PDDA.md"`, and `GROOT` is derived from the target's git root rather than the sink repo's root. A hard link like `notes.md -> <this repo>/PROJECT/PDDA.md` from another directory/repo is neither a symlink nor a protected basename, so the append still lands in a protected rule doc. `test/phase3-signoff-guard.sh:59-74` regression-tests only `ROUTER.md`, so this hole is untested. Fix: derive the canonical root from the sink script path, compare against an explicit protected-path list that includes `PROJECT/PDDA.md`, and add a hard-link regression for that nested doc from a non-sibling target dir.
+- [Should] `relay-automation/proposals-sink.sh:45` is not path-with-spaces safe. `${GROOT:+"$GROOT/$name"}` is expanded unquoted in the `for` list, so a repo root like `/tmp/repo with spaces` word-splits and the `test -ef` check stops examining the real canonical path. That violates the shell-hygiene DoD for spaced paths and can silently weaken the hard-link guard. Fix: avoid unquoted list expansion here; check each candidate in separately quoted branches or build a quoted candidate array first.
+- [Pass] `test/fixtures/gamma-poison/verify-fixture.sh:24-56` remains sound: it is count-independent, requires both index and worktree cleanliness, and restores from `HEAD`.
+- [Pass] `validate.sh:55-66` still wires the three non-recursive canaries plus `phase3-signoff-guard.sh`, with Gamma correctly left out to avoid recursive `./validate.sh` nesting.
+
+Verdict: Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
