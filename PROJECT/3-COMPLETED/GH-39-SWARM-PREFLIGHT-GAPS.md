@@ -1,6 +1,6 @@
 ---
 title: Swarm preflight gaps — validate the gate/artifacts/auth + bake a scope-locked brief
-status: Active (2-WORKING)
+status: Completed (3-COMPLETED)
 created: 2026-06-28
 updated: 2026-06-28
 owner: noelsaw1
@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Slice 1 (validation, A1-A3) + Slice 2 (B6 scope-locked brief) shipped 2026-06-28.** Slice 1: A2 artifact-paths-exist, A1 gate-resolves (flag-aware), A3 lane-CLI advisory (agy VERDICT PASS). **B6:** `swarm-preflight` packet now bakes a scope-locked brief — inlined acceptance criteria, an explicit edit-only/no-gate/no-wander block, and a size-based `RELAY_TURN_TIMEOUT_S` rec (#43-1); plus the builder prompt (`rtl_turn_prompt`) forbids self-running the full gate (#43-3, the marathon-v3 killer). `swarm-preflight` 31/31, `codex-turn` 30/30, `validate.sh` 55/55. | **Remaining slices:** A4 cross-packet collisions (**overlaps PR #38 queue-plan — re-scope or drop**); A5 `command`-probe sandboxing; B7 self-block hint. Plus **#43-2** (auto-reap leaked claims) — needs a *liveness-aware* reap, NOT blanket reap (would worsen #42); tracked on #43. |
+| **Slice 1 (validation, A1-A3) + Slice 2 (B6 scope-locked brief) shipped 2026-06-28.** Slice 1: A2 artifact-paths-exist, A1 gate-resolves (flag-aware), A3 lane-CLI advisory (agy VERDICT PASS). **B6:** `swarm-preflight` packet now bakes a scope-locked brief — inlined acceptance criteria, an explicit edit-only/no-gate/no-wander block, and a size-based `RELAY_TURN_TIMEOUT_S` rec (#43-1); plus the builder prompt (`rtl_turn_prompt`) forbids self-running the full gate (#43-3, the marathon-v3 killer). `swarm-preflight` 31/31, `codex-turn` 30/30, `validate.sh` 55/55. | **Closed.** Slice A4 (cross-packet collisions) dropped as SUPERSEDED by the merged queue-plan (PR #38). A5 (`command`-probe sandboxing) and B7 (self-block hint) parked as low-priority. **#43-2** tracked on #43. |
 
 ## Why now — every gap below was hit live this session
 The first real marathon dogfood (GH-36, 2026-06-28) exercised the preflight→marathon path end-to-end and
