@@ -34,7 +34,7 @@ not a competing plan to it.
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 2 canary #1 (token-reuse) built + passed double-blind, 2026-06-28.** Fixture [test/fixtures/canary-token-reuse/](../../test/fixtures/canary-token-reuse/) — 7 **real** RELAY-TURN events + 1 injected epoch-4 claim that silently resurrects a `done` token (fold → status `claimed`, **0 rejections**: the kernel does *not* catch it). `verify-fixture.sh` proves it's real & latent. A blind Reviewer (only `CANDIDATE.md`) found the fault, ran a control experiment, traced *why* the epoch fence misses it in `src/project.js`, confirmed kernel-silent, and proposed the right systemic fix (terminality dominates the fence + explicit `task.reopened`). Phase 1 (Gamma) done 2026-06-28 (committed `191677d`). | **Phase 2 canaries #2–#3** — concurrent-commit HEAD-reset / orphaned-peer-commit (#13/#14) and agy-allowlist-overstep. Both are **git-state / containment** incidents, not pure `.tick` event streams — fixture shape differs from canary #1; brief design call needed before building. Then Phase 3 (operator sign-off gate). |
+| **Phase 2 COMPLETE (3/3 canaries passed double-blind), 2026-06-28.** All three seeded from real artifacts, each passed a blind Reviewer: **#1 token-reuse** ([canary-token-reuse](../../test/fixtures/canary-token-reuse/)) — silent `done`→`claimed` resurrection, kernel logs 0 rejections; **#2 peer-orphan** ([canary-peer-orphan](../../test/fixtures/canary-peer-orphan/)) — in-ROOT commit-bypass guard orphans a concurrent peer commit (false positive, recoverable only via `refs/relay-orphan/`); **#3 reviewer-overstep** ([canary-reviewer-overstep](../../test/fixtures/canary-reviewer-overstep/)) — a reviewer turn edits source, caught as a role-scope violation regardless of edit quality. Each `verify-fixture.sh` drives the **real** kernel + is GH-44-hardened. Phase 1 (Gamma) `191677d`; Phase 2 #1 `a9eb587`. Surfaced **#41** (latent kernel gap) + **#44** (RCA, fixed). | **Phase 3 — operator sign-off gate**: three-bucket findings (auto-approve / needs sign-off / needs call), headless run terminates into `IDLE_PENDING_REVIEW`, human merges approvals. Then Phase 4 (pruning). Costly + gated on operator GO. |
 
 ## Why this doc exists (issue thread, distilled)
 
@@ -92,33 +92,40 @@ first because it maps to a real artifact today (`validate.sh`).
   returns **REJECT** and names the failing check / the 55→54 drop. → it did, with root-cause diagnosis.
 - [x] Fixture self-reverts; tree left clean (verified `git status` clean post-run).
 
-### Phase 2 — Replace Alpha/Beta with canaries seeded from real history 🟡 IN PROGRESS (1/3)
-Drop the invented races. Seed from documented, reproducible near-misses, each built by capturing a
-real stream and mutating it:
+### Phase 2 — Replace Alpha/Beta with canaries seeded from real history ✅ COMPLETE (3/3) 2026-06-28
+Dropped the invented races. Three canaries, each seeded from a real artifact and each passing a blind
+Reviewer:
 
-- **relay turn-token reuse (a `done` token reopened)** — ✅ **DONE 2026-06-28**, passed double-blind.
+- **#1 · relay turn-token reuse (a `done` token reopened)** — ✅ passed double-blind.
   [test/fixtures/canary-token-reuse/](../../test/fixtures/canary-token-reuse/): 7 real RELAY-TURN
   events + 1 injected epoch-4 claim after the epoch-3 `task.done`. Folding silently resurrects the
   task (`done`→`claimed`, **0 rejections**) — the epoch fence guards lower-epoch zombies but not a
-  higher-epoch reclaim of a completed token. This canary's substrate is **"the kernel does NOT catch
-  it"** (proven by `verify-fixture.sh`: mutated→`claimed 0`, control→`done 0`), so it's a pure
-  Reviewer-judgment gate. The blind Reviewer passed: found it, ran a control, traced the miss in
-  `src/project.js`, proposed terminality-dominates-the-fence + an explicit `task.reopened` event.
-- the concurrent-commit HEAD-reset / orphaned-peer-commit case
-  ([RELAY-CONTAINMENT-HARDENING.md](RELAY-CONTAINMENT-HARDENING.md), `#13`/`#14`) — ⬜ TODO
-- the agy-reviewer-oversteps-allowlist case (contained, but a real prior failure) — ⬜ TODO
+  higher-epoch reclaim. **Kernel-silent** (proven by `verify-fixture.sh`: mutated→`claimed 0`,
+  control→`done 0`). Blind Reviewer found it, ran a control, traced the miss, proposed
+  terminality-dominates + `task.reopened`. → surfaced **#41**.
+- **#2 · concurrent-commit HEAD-reset / orphaned-peer-commit** (`#13`/`#14`) — ✅ passed double-blind.
+  [test/fixtures/canary-peer-orphan/](../../test/fixtures/canary-peer-orphan/): drives the **real**
+  `rtl_enforce` (mirrors `test/relay-concurrent-commit.sh` case 1) — an in-ROOT turn + a concurrent
+  peer commit → the commit-bypass guard can't tell peer from self, `reset --hard`s it off the branch
+  (recoverable only via `refs/relay-orphan/`), exit 6. Not silent but a **false positive that loses
+  peer work**. Blind Reviewer caught the misclassification, the branch loss + recovery path, and
+  proposed worktree-isolation + commit-attribution.
+- **#3 · agy-reviewer-oversteps-allowlist** — ✅ passed double-blind.
+  [test/fixtures/canary-reviewer-overstep/](../../test/fixtures/canary-reviewer-overstep/): a reviewer
+  turn that also edits `validate.sh` (a plausible "helpful fix"). `verify-fixture.sh` asserts the real
+  `rtl_init` reviewer-scoping (reviewer → `validate.sh` OFF the allowlist; producer → ON). Blind
+  Reviewer REJECTed it as a role-scope violation *regardless of edit quality* and named the
+  reviewer-scoping guard. (The 2026-06-20 agy overstep.)
 
-**Substrate note (design call before building #2–#3):** canary #1 is a clean `.tick/events/` stream
-with a deterministic projection oracle. #2 and #3 are **git-state / relay-containment** incidents
-(`relay-turn-lib.sh`, git HEAD/commit state) — their telemetry is not a pure event stream, so the
-fixture must reconstruct git state (or a captured containment transcript) rather than just replay
-`.tick/events/`. Decide that fixture shape (event-stream-plus-git-snapshot vs captured-transcript)
-before building, to keep the hard rule honest.
+**Substrate note:** #1 is a clean `.tick/events/` stream with a deterministic projection oracle; #2/#3
+are **git-state / containment** incidents, so their `verify-fixture.sh` drives the **real**
+`relay-turn-lib.sh` on a minimal scenario (more faithful than a static capture) and is **GH-44-hardened**
+(`GIT_CEILING_DIRECTORIES` + a scratch-`.git` assertion, so it can never act on the parent repo).
 
-**QA gate (per canary):** byte-derived from a real captured artifact (provenance recorded, schema/state
-re-verified); `verify-fixture.sh` proves the fault is real (and, where the kernel is silent, that it is
-latent); the blind Reviewer diagnoses the *systemic* fault (proposes a rule/arch change), not the
-surface symptom — "names the symptom only" grades as FAIL. (Canary #1: all met.)
+**QA gate (per canary — all met):** grounded in a real artifact (provenance recorded); `verify-fixture.sh`
+proves the fault is real (and, where the kernel is silent, latent); the blind Reviewer diagnoses the
+*systemic* fault (proposes a rule/arch change), not the surface symptom — "names the symptom only" or
+"judges the edit on its merits" grades as FAIL.
 **Deferred within Phase 2:** the no-op-handoff-loop idea (old "Fixture Alpha") needs the kernel to
 emit a per-write content hash first — a real `tick` feature, not a fixture. Fixture Beta's
 lock-override event is fiction (`tick` claims via atomic `O_EXCL`, never double-emits `LOCK_ACQUIRED`)
