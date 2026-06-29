@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -53,5 +53,16 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — Round 1
+Static review only; per relay rules I did not execute the artifact scripts.
+
+- [Blocker] `relay-automation/proposals-sink.sh:23-27` enforces the protected-doc boundary with a raw `basename` match only. On the stock macOS/APFS case-insensitive path this was written for, `router.md` / `Router.md` can still resolve to `ROUTER.md`, and an alias symlink like `notes.md -> ROUTER.md` bypasses the check entirely and turns the sink back into a self-edit path. Fix: reject symlink targets (`[ -L "$TARGET" ]`), normalize the basename with `tr '[:upper:]' '[:lower:]'`, and compare that normalized name against the protected set before appending.
+- [Should] `test/fixtures/gamma-poison/verify-fixture.sh:22,27-33` claims the target must be clean and self-reverting, but the guard only checks worktree-vs-index (`git diff --quiet -- "$TARGET"`). A staged-but-uncommitted `src/paths.js` change slips through, and `git checkout -- "$TARGET"` restores from the index rather than `HEAD`, so the verifier can run on a dirty target and not truly restore the pre-run state. Fix: require both worktree and index cleanliness (`git diff --quiet -- "$TARGET"` plus `git diff --cached --quiet -- "$TARGET"`), and restore from `HEAD` for both staged and unstaged state.
+- [Should] `test/phase3-signoff-guard.sh:10-16,39-50` does not carry the GH-44 safety fence that the DoD calls out for git-touching fixtures. It relies on `_setup.sh` scratch clones succeeding, but `_setup.sh` is not `set -e`; if the scratch repo setup degrades, `rtl_init` can still run without an explicit ceiling or `.git` assertion. Fix: export `GIT_CEILING_DIRECTORIES` to the scratch root before sourcing `relay-turn-lib.sh`, and assert `[ -d "$A/.git" ]` before each `rtl_init` call that depends on scratch-repo git state.
+- [Pass] `validate.sh:65-72` wires the three canary verifiers and `phase3-signoff-guard.sh` through the existing dynamic pass/fail accounting without hard-coding counts, and Gamma is correctly left out to avoid recursive `./validate.sh` nesting.
+- [Pass] `test/fixtures/canary-peer-orphan/verify-fixture.sh:26-37` and `test/fixtures/canary-reviewer-overstep/verify-fixture.sh:31-37` do the right GH-44 thing for the driven-kernel canaries: ceiling the git search path and aborting if the scratch `.git` repo is missing before they touch the real containment code.
+
+Verdict: Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
