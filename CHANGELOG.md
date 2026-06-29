@@ -2,6 +2,14 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-29
+
+### GH-40 Phase 3 — scaffolding built (no loop), wired into validate.sh (58 → 59)
+The operator sign-off gate, the parts that do NOT require building the (still-gated) self-improvement loop. Ponytail-scoped: kept the human-approval requirement, added only what's testable today.
+- **[`relay-automation/proposals-sink.sh`](relay-automation/proposals-sink.sh)** — formats Reviewer findings into a delimited, operator-sign-off checklist appended to the relay/transcript output the turn already writes. A trust-boundary check **refuses to write into any rule/operator doc** (ROUTER/AGENTS/GUIDING-PRINCIPLES/README/CLAUDE/PDDA), so the sink can never become a self-edit path. ~30 lines, bash 3.2-portable; reuses the existing relay file rather than inventing a store.
+- **[`test/phase3-signoff-guard.sh`](test/phase3-signoff-guard.sh)** (wired into `validate.sh`, 9/9) — the runnable check behind the scaffolding: proves (1) the sink appends a checklist + writes only there + refuses rule docs, and (2) a Reviewer turn scopes the rule/operator docs **OFF** its allowlist, so a headless reviewer **cannot self-edit its own rules** ("nothing self-applied"). (2) reuses the same reviewer-scoping the reviewer-overstep canary proves.
+- **Still deferred (operator GO):** the headless run that invokes the Reviewer against real telemetry to *produce* proposals is the Part C loop. The scaffolding proves the sink + the safety contract without it. Suite **58 → 59/59** un-sandboxed; additive only; no kernel change. Part of PR #47.
+
 ## 2026-06-28
 
 ### GH-40 — wire the 3 lightweight canary verifiers into validate.sh (55 → 58)

@@ -34,7 +34,7 @@ not a competing plan to it.
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 2 COMPLETE (3/3 canaries passed double-blind), 2026-06-28.** All three seeded from real artifacts, each passed a blind Reviewer: **#1 token-reuse** ([canary-token-reuse](../../test/fixtures/canary-token-reuse/)) — silent `done`→`claimed` resurrection, kernel logs 0 rejections; **#2 peer-orphan** ([canary-peer-orphan](../../test/fixtures/canary-peer-orphan/)) — in-ROOT commit-bypass guard orphans a concurrent peer commit (false positive, recoverable only via `refs/relay-orphan/`); **#3 reviewer-overstep** ([canary-reviewer-overstep](../../test/fixtures/canary-reviewer-overstep/)) — a reviewer turn edits source, caught as a role-scope violation regardless of edit quality. Each `verify-fixture.sh` drives the **real** kernel + is GH-44-hardened. The 3 canary verifiers are now **wired into `validate.sh`** (58/58; Gamma stays manual — it runs the suite itself). Phase 1 (Gamma) `191677d`; Phase 2 #1 `a9eb587`. Surfaced **#41** (latent kernel gap) + **#44** (RCA, fixed). | **Phase 3 — operator sign-off gate (Ponytail-minimized)**: Reviewer appends a proposals checklist to the existing relay output; run ends via normal termination; human applies approved items by hand (agent already can't self-apply). One check: zero commits to rule docs. **Easy**, not Costly — no new `tick` state. Cut items (3-bucket triage, `IDLE_PENDING_REVIEW`, dedicated file) parked in *Deferred — reconsider when triggered*. Gated on operator GO; only matters if the loop is greenlit. |
+| **Phase 3 scaffolding built 2026-06-29 (no loop).** [`relay-automation/proposals-sink.sh`](../../relay-automation/proposals-sink.sh) (formats Reviewer findings into an operator-sign-off checklist; **refuses to write into any rule/operator doc**) + [`test/phase3-signoff-guard.sh`](../../test/phase3-signoff-guard.sh) (9/9, **wired into `validate.sh`**) prove the "nothing self-applied" contract *without* building the loop. Earlier: Phases 1–2 = **4 canaries, all passed double-blind** (Gamma `191677d`; token-reuse `a9eb587`; peer-orphan + reviewer-overstep `3a97337`); 3 lightweight verifiers wired into `validate.sh` (**now 59/59**); surfaced **#41** + **#44**; harness PR'd into `main` (**#47**). | **Decide the loop (Part C).** All that's left in GH-40 is the headless run that invokes the Reviewer against real telemetry to *produce* proposals — the gated self-improvement loop. Deferred pending explicit operator GO (Costly: touches the marathon). Otherwise merge **#47** to land the proven harness + wired regression guards on `main`. |
 
 ## Why this doc exists (issue thread, distilled)
 
@@ -66,7 +66,7 @@ time; do not trust any schema or count written in a doc (including this one) —
 
 | Claim | Verified value |
 |---|---|
-| `validate.sh` suite | **58 / 58** (un-sandboxed; was 55 before the 3 canaries were wired in; sandbox false-fails `relay-self-sufficiency`) |
+| `validate.sh` suite | **59 / 59** (un-sandboxed; 55 base + 3 canary verifiers + the Phase 3 guard; sandbox false-fails `relay-self-sufficiency`) |
 | `.tick` event schema | `0.2.0` — `{schema_version, ts, type, task, agent, paths[], epoch}` |
 | event `type` values seen | `task.created` / `task.claimed` / `task.released` / `task.done` / `marathon.phase.start` / `marathon.phase.approved` / `heartbeat` |
 | reflection skill | does **not** exist (no `relay-improve`); Reviewer is a normal relay/consult turn |
@@ -131,7 +131,7 @@ emit a per-write content hash first — a real `tick` feature, not a fixture. Fi
 lock-override event is fiction (`tick` claims via atomic `O_EXCL`, never double-emits `LOCK_ACQUIRED`)
 — **dropped entirely**.
 
-### Phase 3 — Operator sign-off gate ⬜ (gated on GO) — Ponytail-minimized
+### Phase 3 — Operator sign-off gate 🟡 SCAFFOLDING BUILT (loop deferred) — Ponytail-minimized
 **Requirement (kept — never simplified away):** a human approves before any rule change is applied; the
 agent never self-applies. Already enforced for free — containment gives the agent no write access to the
 operator/rule docs, so "nothing self-applied" is true by default, not by new machinery.
@@ -144,9 +144,19 @@ Lazy implementation (reuse what exists; add nothing speculative):
   `tick` state.
 - A human ticks the checklist and applies approved items by hand.
 
-**QA gate (the check it leaves behind — not optional):** one runnable test asserts a headless run
-(a) emits the proposals checklist and (b) makes **zero commits to the operator/rule docs**.
-`validate.sh` stays green. Cut items + their revisit triggers live in
+**Built 2026-06-29 (scaffolding, no loop):**
+- [`relay-automation/proposals-sink.sh`](../../relay-automation/proposals-sink.sh) — formats Reviewer
+  findings into a delimited, operator-sign-off checklist appended to the relay/transcript output; a
+  trust-boundary check **refuses to write into any rule/operator doc** (ROUTER/AGENTS/GUIDING-PRINCIPLES/
+  README/CLAUDE/PDDA), so the sink can never become a self-edit path. ~30 lines, bash 3.2-portable.
+- [`test/phase3-signoff-guard.sh`](../../test/phase3-signoff-guard.sh) — the runnable check, **wired into
+  `validate.sh`**: proves (1) the sink appends a checklist and writes only there + refuses rule docs, and
+  (2) a Reviewer turn scopes the rule/operator docs **OFF** its allowlist (a headless reviewer can't
+  self-edit its rules), reusing the same scoping the reviewer-overstep canary proves. 9/9.
+
+**Still deferred (the loop itself — operator GO required):** the headless run that *invokes the Reviewer
+against real telemetry to produce* those proposals is the Part C loop. Scaffolding proves the sink + the
+"nothing self-applied" safety contract **without** building it. Cut items + revisit triggers live in
 [Deferred — reconsider when triggered](#deferred--reconsider-when-triggered).
 
 ### Phase 4 — rule pruning ⬜ DEFERRED (speculative — no rules exist to prune yet)

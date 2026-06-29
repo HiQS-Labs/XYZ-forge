@@ -69,6 +69,7 @@ TESTS=(
   "fixtures/canary-token-reuse/verify-fixture.sh"
   "fixtures/canary-peer-orphan/verify-fixture.sh"
   "fixtures/canary-reviewer-overstep/verify-fixture.sh"
+  "phase3-signoff-guard.sh"
   # Live-agent test — auto-skips when agy/codex not on PATH or RELAY_SELF_SUFFICIENCY_SKIP=1.
   # Set RELAY_SELF_SUFFICIENCY_SKIP=1 in CI / keyless environments to avoid the real API call.
   "relay-self-sufficiency.sh"
