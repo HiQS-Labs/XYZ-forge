@@ -7,9 +7,10 @@ build swarms. Built in phases on top of `tick` (see
 **Execution contract: default live-window flow** — the default operator path is
 still the poll-driven, live-window flow: a Claude window under `/loop`, or a
 human one-line nudge when the turn belongs to a non-Claude window. Headless
-turn-takers now exist for Codex and agy (`codex-turn.sh`, `agy-turn.sh`),
-but the cross-model poll loop still degrades to a manual nudge rather than
-auto-firing those shims. For the current headless path, see
+turn-takers now exist for Codex and agy (`codex-turn.sh`, `agy-turn.sh`).
+`relay-loop.sh --background --cross-model-cmd <shim>` can now auto-fire one of
+those shims on `DECISION: nudge-cross-model`; without that wrapper-only flag,
+the loop still degrades to the existing manual nudge. For the current headless path, see
 [the headless bring-up below](#headless-bring-up-codex--agy), plus
 [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md).
 
@@ -17,7 +18,7 @@ auto-firing those shims. For the current headless path, see
 | Script | Role |
 |---|---|
 | `poll.sh` | **Phase 4** per-tick poll driver. Reads state, applies the guard, dispatches `runner.sh`/`watchdog.sh` or idles. Run under `/loop`. |
-| `relay-loop.sh` | **GH-33 Phase 2/3** adaptive-cadence wrapper over `poll.sh` (stays a pure oracle). Default = one tick that prints `NEXT-POLL: <s>` for a `/loop` dynamic tick / cron / any scheduler; `--sleep-loop` self-paces in pure bash (no Claude dep). **`--background`** (Phase 3) dispatches the turn DETACHED on `run-runner` and returns at once — the session is freed and the scheduler re-invokes next tick; a pidfile (`<relay-file>.bgpid` or `--bg-pidfile`) is the single-turn lock (a running turn → `BG-RUNNING`, no double-dispatch; a finished turn → stale pidfile cleared, fresh decision acted on). Containment is **inherited** — the backgrounded process is the same runner, so the `relay-turn-lib.sh` boundary is byte-identical (`&` changes only when the parent returns). |
+| `relay-loop.sh` | **GH-33 Phase 2/3 + GH-46 Phase 4** adaptive-cadence wrapper over `poll.sh` (which stays a pure oracle). Default = one tick that prints `NEXT-POLL: <s>` for a `/loop` dynamic tick / cron / any scheduler; `--sleep-loop` self-paces in pure bash (no Claude dep). **`--background`** dispatches the turn DETACHED on `run-runner`, and on `nudge-cross-model` it dispatches `--cross-model-cmd` only when that command is configured and reachable; otherwise it prints the same manual nudge `poll.sh` would have emitted. A pidfile (`<relay-file>.bgpid` or `--bg-pidfile`) is still the single-turn lock (`BG-RUNNING`, no double-dispatch; stale pidfile cleared before the fresh decision acts). Containment is **inherited** — the backgrounded process is the same runner/shim boundary, so the `relay-turn-lib.sh` boundary is byte-identical (`&` changes only when the parent returns). |
 | `runner.sh` | **Phase 3** single agent/turn: claim → run (`--agent-cmd`) → verdict gate (`VERDICT: PASS\|FAIL\|PARKED`) → done/retry; artifact-scoped clean-tree gate. |
 | `watchdog.sh` | **Phase 2** liveness: `tick analyze --format json` → parked `parked_suspects[]` → structured escalation record; reap gated behind `--allow-reap` (stub, pending an authority decision). |
 | `relay-drive.sh` | **Phase 4b** relay supervisor: loops a `/relay` Producer↔Reviewer thread to termination via a turn-taker; round cap + no-progress escalation. |
@@ -88,17 +89,20 @@ Exits: `0` closed Approved/Closed, `3` no-progress, `4` round cap / closed-not-a
 (with `--review-once`) reviewer completed a single non-approval review. Inspect whose-turn mid-drive
 with `tick info <task>` (the verb is `info`, not `status`).
 
-### Cross-model windows (Codex / agy) — manual nudge
-In the poll-based multi-window flow, non-Claude windows can't self-wake. The
-operator's whole job is **one line**:
+### Cross-model windows (Codex / agy)
+In the poll-based multi-window flow, non-Claude windows still need a wake-up path.
+Without `relay-loop.sh --background --cross-model-cmd <shim>`, the operator's
+whole job is **one line**:
 ```
 take your turn on relay-system/<date>/<slug>.md
 ```
 The relay file embeds the `▶ TAKE YOUR TURN` instructions, so any agent acts from
 the file alone. `poll.sh` detects a cross-model turn and emits this nudge text
-rather than silently idling. If you want a current headless cross-model path
-instead, use `relay-drive.sh` with a headless shim (`codex-turn.sh` or
-`agy-turn.sh`) rather than the `/loop` poll flow.
+rather than silently idling. If you want the current headless cross-model path
+inside the `/loop` poll flow, wrap `poll.sh` with `relay-loop.sh --background`
+and pass `--cross-model-cmd relay-automation/codex-turn.sh` (or `agy-turn.sh`);
+the same pidfile lock prevents a second dispatch while that shim is still
+running. `relay-drive.sh` remains the deterministic single-window alternative.
 
 ## Boundary (load-bearing)
 - **Hands-free poll is all-Claude only** — it relies on Claude Code's in-session `/loop`. Cross-model stays on the manual nudge.

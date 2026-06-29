@@ -11,8 +11,9 @@ tick_a init >/dev/null
 
 printf 'STATUS: Open\nNEXT: alice\n# body\n'     >"$A/relay-mine.md"
 printf 'STATUS: Approved\nNEXT: alice\n# body\n' >"$A/relay-done.md"
+printf 'STATUS: Open\nNEXT: codex\n# body\n'     >"$A/relay-cross.md"
 printf 'art\n' >"$A/art.md"
-git -C "$A" add relay-mine.md relay-done.md art.md >/dev/null 2>&1
+git -C "$A" add relay-mine.md relay-done.md relay-cross.md art.md >/dev/null 2>&1
 git -C "$A" commit -q -m "relay-loop fixtures" >/dev/null 2>&1
 
 # file-source as alice; <wrapper-flags...> come before, poll args appended after.
@@ -113,6 +114,42 @@ bg9="$(grep -c ran "$SENT9" 2>/dev/null || true)"
 # (10) --background + --sleep-loop is rejected (one-tick model only)
 loop --background --sleep-loop --bg-pidfile "$WORK/bg10.pid" --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --dry-run >/dev/null 2>&1
 [ "$?" -eq 2 ] && pass "background: rejects --sleep-loop (mutually exclusive, exit 2)" || fail "expected usage exit 2 for --background --sleep-loop"
+
+# ── GH-46 Phase 4: cross-model dispatch/unset degrade ───────────────────────
+
+# (11) background: nudge-cross-model + reachable --cross-model-cmd dispatches
+#      detached and reuses the pidfile single-turn lock.
+BGP11="$WORK/bg11.pid"; SENT11="$WORK/ran11.txt"; : >"$SENT11"
+RUN11="$WORK/run11.sh"
+cat >"$RUN11" <<RS
+#!/usr/bin/env bash
+sleep 2
+echo ran >>"$SENT11"
+RS
+chmod +x "$RUN11"
+out="$(loop --background --bg-pidfile "$BGP11" --cross-model-cmd "$RUN11" --relay-file "$A/relay-cross.md" --artifact "$A/art.md" --claude-agents alice,bob 2>&1)"; rc=$?
+{ printf '%s\n' "$out" | grep -q '^BG-DISPATCH: pid='; } && [ -f "$BGP11" ] \
+  && [ "$(grep -c ran "$SENT11" 2>/dev/null || true)" -eq 0 ] && [ "$rc" -eq 0 ] \
+  && pass "background: nudge-cross-model dispatches the configured cross-model shim" \
+  || fail "expected BG-DISPATCH for cross-model cmd (rc=$rc): $out"
+out="$(loop --background --bg-pidfile "$BGP11" --cross-model-cmd "$RUN11" --relay-file "$A/relay-cross.md" --artifact "$A/art.md" --claude-agents alice,bob 2>&1)"
+{ printf '%s\n' "$out" | grep -q '^BG-RUNNING: pid='; } \
+  && pass "background: cross-model dispatch reuses the single-turn pidfile lock" \
+  || fail "expected BG-RUNNING on second cross-model tick: $out"
+for _ in $(seq 1 60); do p="$(cat "$BGP11" 2>/dev/null || true)"; { [ -n "$p" ] && kill -0 "$p" 2>/dev/null; } || break; sleep 0.1; done
+[ "$(grep -c ran "$SENT11" 2>/dev/null || true)" -eq 1 ] \
+  && pass "background: cross-model shim ran exactly once across both ticks" \
+  || fail "cross-model shim should run once (got $(grep -c ran "$SENT11" 2>/dev/null || true))"
+
+# (12) background: nudge-cross-model without --cross-model-cmd degrades to the
+#      existing human nudge, with no pidfile or dispatch side effect.
+BGP12="$WORK/bg12.pid"; SENT12="$WORK/ran12.txt"; : >"$SENT12"
+out="$(loop --background --bg-pidfile "$BGP12" --relay-file "$A/relay-cross.md" --artifact "$A/art.md" --claude-agents alice,bob 2>&1)"; rc=$?
+{ printf '%s\n' "$out" | grep -q 'manual nudge required'; } \
+  && { printf '%s\n' "$out" | grep -q '^NEXT-POLL: 120$'; } \
+  && [ ! -f "$BGP12" ] && [ "$(grep -c ran "$SENT12" 2>/dev/null || true)" -eq 0 ] && [ "$rc" -eq 0 ] \
+  && pass "background: cross-model without a command degrades to the manual nudge" \
+  || fail "expected manual nudge + no dispatch/pidfile (rc=$rc): $out"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

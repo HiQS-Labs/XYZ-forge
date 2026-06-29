@@ -1,6 +1,6 @@
 # Marathon Phase gh46p4c
 STATUS: Open
-NEXT: codex
+NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH46P4C-TURN builder=codex reviewer=agy round-cap=5 -->
 
@@ -98,3 +98,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH46P4C-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh46p4c/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Files touched: `relay-automation/relay-loop.sh`, `test/relay-loop.sh`, `relay-automation/README.md`, `phases/gh46p4c/RELAY.md`
+- Kept `poll.sh` unchanged so the decision engine remains a pure oracle; Phase 4 dispatch lives only in the wrapper.
+- Added wrapper-only `--cross-model-cmd` handling in `relay-loop.sh`: `--background` now reuses `bg_launch` + the existing pidfile lock for `DECISION: nudge-cross-model` when the command is configured and reachable, and otherwise prints the same manual nudge text as `poll.sh` plus `NEXT-POLL`.
+- Extended `test/relay-loop.sh` with both required Phase 4 cases: detached cross-model dispatch with `BG-RUNNING` on the second tick, and the no-command degrade path with no pidfile/dispatch.
+- Updated `relay-automation/README.md` to document the new `relay-loop.sh --background --cross-model-cmd <shim>` behavior and the unchanged manual fallback.
+- Verification: `bash test/relay-loop.sh` → `15 pass, 0 fail`.
