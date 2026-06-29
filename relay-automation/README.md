@@ -17,6 +17,7 @@ auto-firing those shims. For the current headless path, see
 | Script | Role |
 |---|---|
 | `poll.sh` | **Phase 4** per-tick poll driver. Reads state, applies the guard, dispatches `runner.sh`/`watchdog.sh` or idles. Run under `/loop`. |
+| `relay-loop.sh` | **GH-33 Phase 2/3** adaptive-cadence wrapper over `poll.sh` (stays a pure oracle). Default = one tick that prints `NEXT-POLL: <s>` for a `/loop` dynamic tick / cron / any scheduler; `--sleep-loop` self-paces in pure bash (no Claude dep). **`--background`** (Phase 3) dispatches the turn DETACHED on `run-runner` and returns at once — the session is freed and the scheduler re-invokes next tick; a pidfile (`<relay-file>.bgpid` or `--bg-pidfile`) is the single-turn lock (a running turn → `BG-RUNNING`, no double-dispatch; a finished turn → stale pidfile cleared, fresh decision acted on). Containment is **inherited** — the backgrounded process is the same runner, so the `relay-turn-lib.sh` boundary is byte-identical (`&` changes only when the parent returns). |
 | `runner.sh` | **Phase 3** single agent/turn: claim → run (`--agent-cmd`) → verdict gate (`VERDICT: PASS\|FAIL\|PARKED`) → done/retry; artifact-scoped clean-tree gate. |
 | `watchdog.sh` | **Phase 2** liveness: `tick analyze --format json` → parked `parked_suspects[]` → structured escalation record; reap gated behind `--allow-reap` (stub, pending an authority decision). |
 | `relay-drive.sh` | **Phase 4b** relay supervisor: loops a `/relay` Producer↔Reviewer thread to termination via a turn-taker; round cap + no-progress escalation. |

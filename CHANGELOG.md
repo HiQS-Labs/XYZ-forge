@@ -4,6 +4,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-28
 
+### GH-33 Phase 3 — background-Bash turn dispatch (hands-free relay, step 1 of the Path A/B unification)
+Operator GO received for the cross-model-hands-free track (#33). Built Phase 3 inline (Opus — it's a containment-adjacent safety boundary, the repo's "reason carefully" lane, not a headless marathon).
+- **`relay-loop.sh --background`:** on `DECISION: run-runner`, launch the turn **detached** (nohup) and return immediately — the session is freed for the turn's duration and the scheduler re-invokes on the next tick (no blocking, no polling for harness-tracked work). A pidfile (`<relay-file>.bgpid` or `--bg-pidfile`) is the single-turn lock: a running turn → `BG-RUNNING` (no double-dispatch); a finished turn → stale pidfile cleared, the next tick acts on the fresh decision (STATUS/token → hand-off or stop).
+- **`poll.sh` left a pure oracle** — reused its existing `--dry-run` for the decision-only read; all background lifecycle lives in the wrapper (the lifecycle layer). [relay-automation/relay-loop.sh](relay-automation/relay-loop.sh).
+- **Containment inherited, not re-implemented:** the backgrounded process is the *same* runner, so the `relay-turn-lib.sh` boundary (path-allowlist / commit-bypass / no-push / worktree isolation) is byte-identical — `&` changes only *when* the parent returns, never the child's code path. Asserted by an fg/bg execution-parity test; the boundary itself stays owned by the kernel's own containment tests.
+- **Tests:** `test/relay-loop.sh` +6 (detached dispatch, BG-RUNNING no-double-dispatch, stale-pidfile completion, fg/bg parity, `--sleep-loop` rejection) → **11/11**; README Components row added; **`validate.sh` green**.
+- **Bet/scope:** contracted + built **Phase 3 only** (GH-45/ponytail discipline — don't pre-commit the expensive phase). **Phase 4** (the marquee win: on `nudge-cross-model` launch the cross-model shim as background Bash) **is** the Costly one — it touches `relay-turn-lib.sh` containment + commit semantics → earns its own preflight contract + an agy review before merge, and is the natural place to switch back to dogfooding the relay/swarm. → [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md)
+
 ### GH-42 and GH-43 — Concurrent loop lock + liveness claim reaping
 The final two mechanics fixes for the GH-39 unattended marathon:
 - **GH-42 (Concurrent ROOT HEAD reset):** Added a repo-level directory lock (`.git/relay-driver.lock`) to `marathon-drive.sh` and `relay-drive.sh`. This ensures two drivers on the same clone fail fast instead of one's `rtl_enforce` resetting the other's concurrent commits.

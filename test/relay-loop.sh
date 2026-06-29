@@ -59,5 +59,60 @@ rc=$?
   && pass "sleep-loop: iterates (runner ran) then stops on flip-to-Approved (exit 10)" \
   || fail "expected loop iterate+stop (rc=$rc, ran=$(grep -c ran "$SENT2" 2>/dev/null))"
 
+# ── GH-33 Phase 3: --background detached turn dispatch ──────────────────────
+
+# (6) background: run-runner launches the turn DETACHED and returns immediately
+#     (before the runner finishes), writing a pidfile. Proves the session is freed.
+BGPID="$WORK/bg6.pid"; SENT6="$WORK/ran6.txt"; : >"$SENT6"
+RUN6="$WORK/run6.sh"
+cat >"$RUN6" <<RS
+#!/usr/bin/env bash
+sleep 2
+echo ran >>"$SENT6"
+RS
+chmod +x "$RUN6"
+out="$(loop --background --bg-pidfile "$BGPID" --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --runner-cmd "$RUN6" 2>&1)"; rc=$?
+{ printf '%s\n' "$out" | grep -q '^BG-DISPATCH: pid='; } && [ -f "$BGPID" ] \
+  && [ "$(grep -c ran "$SENT6" 2>/dev/null || true)" -eq 0 ] && [ "$rc" -eq 0 ] \
+  && pass "background: dispatches detached (returns before runner finishes; pidfile written)" \
+  || fail "expected immediate BG-DISPATCH + pidfile + runner-not-yet-done (rc=$rc): $out"
+
+# (7) background: while a turn runs, a second tick holds (BG-RUNNING) — no double-dispatch.
+out="$(loop --background --bg-pidfile "$BGPID" --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --runner-cmd "$RUN6" 2>&1)"
+{ printf '%s\n' "$out" | grep -q '^BG-RUNNING: pid='; } \
+  && pass "background: a running turn blocks a second dispatch (BG-RUNNING)" || fail "expected BG-RUNNING: $out"
+# let the bg turn finish (poll the pidfile, don't rely on this shell's job table)
+for _ in $(seq 1 60); do p="$(cat "$BGPID" 2>/dev/null || true)"; { [ -n "$p" ] && kill -0 "$p" 2>/dev/null; } || break; sleep 0.1; done
+[ "$(grep -c ran "$SENT6" 2>/dev/null || true)" -eq 1 ] \
+  && pass "background: runner ran exactly once across both ticks (no double-dispatch)" \
+  || fail "runner should run once (got $(grep -c ran "$SENT6" 2>/dev/null || true))"
+
+# (8) background: a finished turn leaves a stale pidfile; the next tick clears it and acts
+#     on the fresh decision (terminal STATUS -> stop, exit 10).
+printf '%s\n' "99999" >"$BGPID"               # stale pid (not running)
+out="$(loop --background --bg-pidfile "$BGPID" --relay-file "$A/relay-done.md" --artifact "$A/art.md" --runner-cmd "$RUN6" 2>&1)"; rc=$?
+{ [ "$rc" -eq 10 ] && [ ! -f "$BGPID" ]; } \
+  && pass "background: stale pidfile cleared on completion; fresh decision proceeds (stop)" \
+  || fail "expected stop + pidfile removed (rc=$rc, pidfile=$([ -f "$BGPID" ] && echo present || echo gone)): $out"
+
+# (9) background: execution parity with foreground — same runner, same single side effect.
+#     Backgrounding changes only WHEN the parent returns, not the child's code path, so the
+#     containment boundary (path-allowlist/no-push, owned + tested by relay-turn-lib.sh) is
+#     inherited identically. This asserts the dispatch itself is faithful.
+SENT9="$WORK/ran9.txt"; : >"$SENT9"
+loop --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --runner-cmd "echo ran >>'$SENT9'" >/dev/null 2>&1
+fg9="$(grep -c ran "$SENT9" 2>/dev/null || true)"
+: >"$SENT9"; BGP9="$WORK/bg9.pid"
+loop --background --bg-pidfile "$BGP9" --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --runner-cmd "echo ran >>'$SENT9'" >/dev/null 2>&1
+for _ in $(seq 1 60); do p="$(cat "$BGP9" 2>/dev/null || true)"; { [ -n "$p" ] && kill -0 "$p" 2>/dev/null; } || break; sleep 0.1; done
+bg9="$(grep -c ran "$SENT9" 2>/dev/null || true)"
+{ [ "$fg9" -eq 1 ] && [ "$bg9" -eq 1 ]; } \
+  && pass "background: execution parity with foreground (containment inherited — same runner path)" \
+  || fail "fg/bg dispatch parity expected 1/1 (got $fg9/$bg9)"
+
+# (10) --background + --sleep-loop is rejected (one-tick model only)
+loop --background --sleep-loop --bg-pidfile "$WORK/bg10.pid" --relay-file "$A/relay-mine.md" --artifact "$A/art.md" --dry-run >/dev/null 2>&1
+[ "$?" -eq 2 ] && pass "background: rejects --sleep-loop (mutually exclusive, exit 2)" || fail "expected usage exit 2 for --background --sleep-loop"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

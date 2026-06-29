@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 #
-# relay-loop.sh — GH-33 Phase 2: adaptive-cadence wrapper over poll.sh.
+# relay-loop.sh — GH-33 Phase 2+3: adaptive-cadence wrapper over poll.sh.
 #
 # poll.sh is a stateless one-shot decision oracle; this wrapper turns its
 # DECISION + suggested DELAY (poll.sh --emit-delay) into adaptive cadence.
@@ -17,6 +17,20 @@ set -euo pipefail
 #                 until DECISION: stop / poll.sh exit 10 (or poll.sh's --deadline).
 #                 No /loop, no Claude dependency — proves the cadence is portable.
 #
+#   --background  GH-33 Phase 3: one tick, but on DECISION: run-runner launch the
+#                 turn DETACHED (background process) and return immediately, so the
+#                 session is freed for the turn's duration and the scheduler re-invokes
+#                 on the next tick (no blocking, no polling for harness-tracked work).
+#                 A pidfile is the single-turn lock: while a turn runs, a tick prints
+#                 "BG-RUNNING: pid=N" and does NOT dispatch a second (no double-dispatch).
+#                 When the turn exits, the next tick clears the stale pidfile and acts
+#                 on the fresh DECISION (reads STATUS:/token → hand-off or stop).
+#                 Containment is INHERITED: the backgrounded process is the SAME runner
+#                 (relay-turn-lib.sh path-allowlist / commit-bypass guard / no-push /
+#                 worktree isolation) — `&` changes only WHEN the parent returns, never
+#                 the child's code path. See test/relay-loop.sh (parity) + the kernel's
+#                 own containment tests (test/relay-target-root-newfile.sh).
+#
 # Everything not consumed below is passed straight through to poll.sh, so all of
 # poll.sh's --mode/--agent/--relay-file/--deadline/... flags work unchanged.
 #
@@ -27,17 +41,25 @@ POLL="${POLL_BIN:-"$HERE/poll.sh"}"
 
 usage() {
   cat <<'EOF'
-Usage: relay-automation/relay-loop.sh [--sleep-loop] [--max-ticks N] [--min-delay S] <poll.sh args...>
+Usage: relay-automation/relay-loop.sh [--sleep-loop | --background] [--max-ticks N]
+                                      [--min-delay S] [--bg-pidfile PATH] <poll.sh args...>
 
-Adaptive-cadence wrapper over poll.sh (GH-33 Phase 2). Runs `poll.sh --emit-delay`
+Adaptive-cadence wrapper over poll.sh (GH-33 Phase 2/3). Runs `poll.sh --emit-delay`
 and turns its DECISION + DELAY into cadence.
 
   (default)      one tick; prints "NEXT-POLL: <seconds>"; exits poll.sh's code
                  (10 = stop). For a /loop dynamic tick, cron, or any scheduler.
   --sleep-loop   self-pace in pure bash (tick -> sleep DELAY -> repeat) until
                  DECISION: stop / exit 10. No /loop, no Claude dependency.
+  --background   one tick; on DECISION: run-runner launch the turn DETACHED and return
+                 at once (session freed; scheduler re-invokes next tick). A pidfile
+                 prevents double-dispatch while a turn runs. Requires --relay-file
+                 (default pidfile <relay-file>.bgpid) or an explicit --bg-pidfile.
+                 Mutually exclusive with --sleep-loop.
+  --bg-pidfile P background-turn pidfile (default: <relay-file>.bgpid).
   --max-ticks N  stop after N ticks (sleep-loop; 0 = unbounded). Runaway guard.
-  --min-delay S  floor for the sleep (default 1s) so DELAY:0 never busy-spins.
+  --min-delay S  floor for the sleep (default 1s) so DELAY:0 never busy-spins; also
+                 the re-check interval after a --background dispatch.
 
 All other args pass straight through to poll.sh (--mode/--agent/--relay-file/...).
 Env: POLL_BIN (poll.sh path), RELAY_LOOP_MIN_DELAY.
@@ -45,34 +67,100 @@ EOF
 }
 
 SLEEP_LOOP=0
+BACKGROUND=0
+BG_PIDFILE=""
 MAX_TICKS=0                                   # 0 = unbounded (sleep-loop); runaway guard for tests/CI
 MIN_DELAY="${RELAY_LOOP_MIN_DELAY:-1}"        # floor so DELAY:0 (act-now) never busy-spins
 PASS_ARGS=()
+RELAY_FILE_ARG=""                             # peeked (still forwarded) for the bg pidfile default
+RUNNER_CMD_ARG=""                             # peeked (still forwarded) for the bg launch
 
 while (($# > 0)); do
   case "$1" in
     --sleep-loop) SLEEP_LOOP=1; shift ;;
+    --background) BACKGROUND=1; shift ;;
+    --bg-pidfile) BG_PIDFILE="${2:-}"; shift 2 ;;
     --max-ticks)  MAX_TICKS="${2:-0}"; shift 2 ;;
     --min-delay)  MIN_DELAY="${2:-1}"; shift 2 ;;
     --help|-h)    usage; exit 0 ;;
+    # Peek a few poll.sh flags we also need here, but STILL forward them to poll.sh.
+    --relay-file) RELAY_FILE_ARG="${2:-}"; PASS_ARGS+=("$1" "${2:-}"); shift 2 ;;
+    --runner-cmd) RUNNER_CMD_ARG="${2:-}"; PASS_ARGS+=("$1" "${2:-}"); shift 2 ;;
     *)            PASS_ARGS+=("$1"); shift ;;
   esac
 done
 
 [[ -f "$POLL" ]] || { printf 'relay-loop: poll.sh not found at %s\n' "$POLL" >&2; exit 2; }
 
-# Run one poll tick. Captures combined output (to parse DELAY + echo for the
-# operator), preserves poll.sh's exit code, and never aborts the wrapper on a
-# non-zero (e.g. stop=10) under set -e. Sets global DELAY.
-# Note: ${PASS_ARGS[@]+...} is the set -u-safe empty-array expansion (bash 3.2).
+# Run one poll tick. Captures combined output (to parse DECISION/DELAY + echo for the
+# operator), preserves poll.sh's exit code, and never aborts the wrapper on a non-zero
+# (e.g. stop=10) under set -e. Sets globals DECISION + DELAY. Pass extra poll flags
+# (e.g. --dry-run for the decision-only read the background path needs) as args.
+# Note: ${ARR[@]+...} is the set -u-safe empty-array expansion (bash 3.2).
+DECISION=""
 DELAY=""
-tick() {
+run_poll() {
   local out rc
-  if out="$("$POLL" --emit-delay ${PASS_ARGS[@]+"${PASS_ARGS[@]}"} 2>&1)"; then rc=0; else rc=$?; fi
+  local extra=("$@")
+  if out="$("$POLL" --emit-delay ${extra[@]+"${extra[@]}"} ${PASS_ARGS[@]+"${PASS_ARGS[@]}"} 2>&1)"; then rc=0; else rc=$?; fi
   printf '%s\n' "$out"
   DELAY="$(printf '%s\n' "$out" | sed -n 's/^DELAY: \([0-9]*\).*/\1/p' | head -n 1)"
+  DECISION="$(printf '%s\n' "$out" | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p' | head -n 1)"
   return "$rc"
 }
+tick() { run_poll; }                          # dispatch path (poll.sh acts): default + sleep-loop
+
+# ── --background (GH-33 Phase 3): detached turn dispatch with a single-turn lock ──
+bg_alive() {                                   # 0 = a backgrounded turn is still running
+  [[ -f "$BG_PIDFILE" ]] || return 1
+  local p; p="$(cat "$BG_PIDFILE" 2>/dev/null || true)"
+  [[ -n "$p" ]] || return 1
+  kill -0 "$p" 2>/dev/null
+}
+bg_launch() {                                  # launch the runner detached; record its pid
+  local cmd="$1" log="${BG_PIDFILE}.log"
+  # Mirror poll.sh run_cmd: a bare executable path runs directly (space-safe); a
+  # command STRING falls back to bash -c. nohup + redirect so the turn outlives the
+  # tick process (the session is freed; the scheduler re-invokes on the next tick).
+  if [[ -x "$cmd" ]]; then
+    nohup "$cmd" >"$log" 2>&1 &
+  else
+    nohup bash -c "$cmd" >"$log" 2>&1 &
+  fi
+  printf '%s\n' "$!" > "$BG_PIDFILE"
+  disown 2>/dev/null || true
+}
+
+if ((BACKGROUND)); then
+  ((SLEEP_LOOP)) && { printf 'relay-loop: --background is for the one-tick /loop model, not --sleep-loop\n' >&2; exit 2; }
+  BG_PIDFILE="${BG_PIDFILE:-${RELAY_FILE_ARG:+${RELAY_FILE_ARG}.bgpid}}"
+  [[ -n "$BG_PIDFILE" ]] || { printf 'relay-loop: --background needs --relay-file or --bg-pidfile\n' >&2; exit 2; }
+  RUNNER_CMD_ARG="${RUNNER_CMD_ARG:-"$HERE/runner.sh"}"
+
+  # 1) Decision WITHOUT dispatching — poll.sh stays a pure oracle (--dry-run).
+  rc=0; run_poll --dry-run || rc=$?
+
+  # 2) A turn already running? Hold — never dispatch a second (no double-dispatch).
+  if bg_alive; then
+    printf 'BG-RUNNING: pid=%s\n' "$(cat "$BG_PIDFILE")"
+    printf 'NEXT-POLL: %s\n' "$MIN_DELAY"      # re-check for completion soon
+    exit 0
+  fi
+  # Stale pidfile (turn finished) → clear it, then act on the fresh decision.
+  [[ -f "$BG_PIDFILE" ]] && rm -f "$BG_PIDFILE"
+
+  case "$DECISION" in
+    run-runner)
+      bg_launch "$RUNNER_CMD_ARG"
+      printf 'BG-DISPATCH: pid=%s\n' "$(cat "$BG_PIDFILE")"
+      printf 'NEXT-POLL: %s\n' "$MIN_DELAY"    # come back to detect completion
+      exit 0 ;;
+    stop)
+      printf 'NEXT-POLL: 0\n'; exit 10 ;;
+    *)  # idle / nudge-cross-model / run-watchdog → report, no background dispatch
+      printf 'NEXT-POLL: %s\n' "${DELAY:-$MIN_DELAY}"; exit "$rc" ;;
+  esac
+fi
 
 if ((SLEEP_LOOP)); then
   ticks=0

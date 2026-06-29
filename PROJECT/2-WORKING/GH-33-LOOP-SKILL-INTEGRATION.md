@@ -35,7 +35,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Operator GO received 2026-06-28** for Phases 3–4 (the cross-model-hands-free track). **Phase 3 preflight contract authored** (below) → background-Bash dispatch is now swarm/marathon-ready and scoped (`grep_absent`/`path_absent` probes confirm the work is still required). Phases 0–2 already shipped + merged (#35): `poll.sh --emit-delay`, `relay-automation/relay-loop.sh`, dynamic-mode recipe; `validate.sh` 51/51. | **Build Phase 3 (background-Bash turn dispatch):** add a detached-dispatch mode to the supervisor wrapper so the session is freed during a turn and re-invoked on completion; **prove containment holds identically when backgrounded** (off-allowlist edit reverted, no push, worktree isolation, no double-dispatch). Extend `test/relay-loop.sh` with the bg case. Do **not** touch `relay-turn-lib.sh` here — only verify it. Author the **Phase 4** contract (the Costly containment unification) only once Phase 3 lands. |
+| **Phase 3 shipped** (2026-06-28, inline Opus). `relay-automation/relay-loop.sh --background`: dispatches the turn DETACHED on `run-runner` and returns at once (session freed; scheduler re-invokes next tick), a pidfile is the single-turn lock (`BG-RUNNING` → no double-dispatch; stale pidfile cleared on completion → fresh decision acted on). **Containment inherited** — the backgrounded process is the same runner, so the `relay-turn-lib.sh` boundary is byte-identical (proven by an fg/bg parity test). `poll.sh` stays a pure oracle (reused its `--dry-run`). +6 cases in `test/relay-loop.sh` (**11/11**); README Components row added; **`validate.sh` green**. Phases 0–2 already merged (#35). | **Author the Phase 4 contract** (unify Path A/B — on `nudge-cross-model` launch the cross-model shim as background Bash instead of a human nudge). Phase 4 **is** the Costly one (touches `relay-turn-lib.sh` containment + commit semantics) → its own preflight contract + an **agy review before merge**. Good moment to **dogfood the relay/swarm** to build Phase 4. The Phase 3 contract below now reads `already-landed` (work done). |
 
 ## Effort & Risk (the question asked)
 
@@ -166,17 +166,18 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
 }
 ```
 
-## Phase 3 — Background-Bash turn dispatch
+## Phase 3 — Background-Bash turn dispatch ✅ (shipped 2026-06-28)
 
-- [ ] Document/support running a turn shim (`codex-turn.sh` / `agy-turn.sh` / the Claude turn) as a **background** process so the session is freed during the turn and the harness re-invokes on completion (no polling for harness-tracked work).
-- [ ] Verify the turn shim's safety boundary (path-allowlist, commit-bypass guard, no-push, worktree isolation) holds identically when launched in the background.
-- [ ] On completion, the resuming session reads `STATUS:` / token state and decides hand-off vs stop.
+- [x] Document/support running a turn shim (`codex-turn.sh` / `agy-turn.sh` / the Claude turn) as a **background** process so the session is freed during the turn and the harness re-invokes on completion (no polling for harness-tracked work). → `relay-loop.sh --background` (nohup-detached launch; `poll.sh` left a pure oracle via `--dry-run`).
+- [x] Verify the turn shim's safety boundary (path-allowlist, commit-bypass guard, no-push, worktree isolation) holds identically when launched in the background. → **inherited by construction** (backgrounding via `&` changes only when the parent returns, not the child's code path); asserted by the fg/bg execution-parity test + the kernel's own containment tests (`test/relay-target-root-newfile.sh`).
+- [x] On completion, the resuming session reads `STATUS:` / token state and decides hand-off vs stop. → stale pidfile cleared on the next tick, which then acts on the fresh `poll.sh` decision (stop/idle/handoff).
 
 ### QA checklist — Phase 3
 
-- [ ] A backgrounded turn enforces the same containment as a foreground turn (off-allowlist edit reverted, no push).
-- [ ] Session is not blocked for the turn's duration; completion re-invokes the model.
-- [ ] No double-dispatch: the token/lock prevents a second turn firing while one runs.
+- [x] A backgrounded turn enforces the same containment as a foreground turn (off-allowlist edit reverted, no push). → same runner path; parity test green.
+- [x] Session is not blocked for the turn's duration; completion re-invokes the model. → `--background` returns immediately after launch (test: returns before the runner's `sleep` finishes); the scheduler re-invokes on the next tick.
+- [x] No double-dispatch: the token/lock prevents a second turn firing while one runs. → pidfile lock → `BG-RUNNING` (test: runner ran exactly once across two ticks).
+- [x] `validate.sh` green; `test/relay-loop.sh` 11/11.
 
 ## Phase 4 — Unify Path A and Path B (hands-free + cross-model)
 
