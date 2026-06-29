@@ -165,6 +165,28 @@ with an explicit override fixes exactly that. The declarative-contract / drift-d
 phases all assume the cap won't be enough — an assumption with no evidence yet. Build the ceiling,
 watch one wave, then decide.
 
+## Decision (2026-06-28) — adopt ponytail v1, defer the rest
+
+Per the cost review above, the **committed scope is the ponytail v1 only**:
+
+1. `AGENTS.md` re-anchor + park paragraph (the QUEUE's lane list is the `active_commitment`).
+2. `relay-automation/marathon-drive.sh` (+ mirror in `relay-drive.sh`) — ~15-line attempt-cap:
+   append per-fire to `.tick/attempts/<lane>`, refuse at `LANE_MAX_ATTEMPTS` (default 2) unless
+   `--force`, print the park message.
+3. `test/lane-attempt-cap.sh` regression.
+
+**Deferred (do NOT build now — only if the cap proves insufficient in a real wave):**
+
+- Phase 1 fenced declarative lane-contract block — collapsed to a single `LANE_MAX_ATTEMPTS`
+  default; re-introduce a per-lane override field only when a lane needs a non-default cap.
+- Phase 3 queue-plan drift detector — the cap already surfaces "parked after N."
+- Phase 4 stop-polishing / slice-tier gate + Stop-hook reminder.
+
+**Implementation status:** the v1 code change touches `marathon-drive.sh` / `relay-drive.sh`, which
+are being edited by another worker concurrently, so the build is **handed off / not started here** to
+avoid a collision (the exact single-writer hazard tracked in #42). This doc is the source of truth for
+the agreed scope; whoever picks it up builds items 1–3 above and nothing more.
+
 ## Non-goals
 
 - No new long-running daemon, watcher, or scheduler — enforcement rides existing scripts
