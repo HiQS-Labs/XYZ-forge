@@ -43,6 +43,7 @@ TESTS=(
   "driver-lock.sh"
   "measure.sh"
   "loop-stop.sh"
+  "oracle-guard.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
