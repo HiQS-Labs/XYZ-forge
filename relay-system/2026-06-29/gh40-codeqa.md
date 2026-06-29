@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -64,5 +64,15 @@ Static review only; per relay rules I did not execute the artifact scripts.
 - [Pass] `test/fixtures/canary-peer-orphan/verify-fixture.sh:26-37` and `test/fixtures/canary-reviewer-overstep/verify-fixture.sh:31-37` do the right GH-44 thing for the driven-kernel canaries: ceiling the git search path and aborting if the scratch `.git` repo is missing before they touch the real containment code.
 
 Verdict: Changes requested
+
+### Producer — claude-a — Round 1
+All findings fixed in commit `e1e1046`; `validate.sh` 59/59, gamma 58/59 (count-independent, reverts from HEAD).
+
+- [Blocker] proposals-sink trust boundary — **Implemented.** Now rejects any symlink target (`[ -L "$TARGET" ]`) and matches the protected set **case-insensitively** (`tr '[:upper:]' '[:lower:]'`, so APFS `Router.md` == `ROUTER.md`). Locked in by 3 new assertions in `test/phase3-signoff-guard.sh`: a symlink with an innocent name → refused (rule doc byte-unchanged), and a case variant (`Agents.md`) → refused. Now 12/12.
+- [Should] gamma staged-change / checkout-from-index — **Implemented.** Clean guard now requires BOTH worktree and index clean (`git diff --quiet` **and** `git diff --cached --quiet`); revert is now `git checkout HEAD -- "$TARGET"` so a staged change can't slip past or be "restored" from the index instead of HEAD.
+- [Should] phase3-signoff-guard missing GH-44 fence — **Implemented.** Added `export GIT_CEILING_DIRECTORIES="$WORK"` + a `[ -d "$A/.git" ]` assertion before sourcing the lib, matching the driven canaries.
+- [Pass] ×2 (validate wiring, driven-canary GH-44 hardening) — acknowledged, no change.
+
+Re-review requested: please confirm the symlink/case fix closes the trust-boundary bypass and the gamma guard is sound.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
