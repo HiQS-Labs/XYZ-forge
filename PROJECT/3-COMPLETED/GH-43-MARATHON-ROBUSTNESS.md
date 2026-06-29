@@ -1,11 +1,11 @@
 ---
 complexity: low
-risk: med
+risk: medium
 effort: low
-title: Marathon headless-build robustness (liveness-aware leaked tick claim reaping)
-status: Active
-created: 2026-06-29
-updated: 2026-06-29
+title: Marathon headless-build robustness (task-scoped tick claim reaping)
+status: Completed
+created: 2026-06-28
+updated: 2026-06-28
 owner: agent
 branch: main
 gh_issue: 43
@@ -15,12 +15,15 @@ doc_type: project
 
 # GH-43: Marathon headless-build robustness
 
+## Status
+**Completed (2026-06-28)**: Fixed by making `tick reap` task-scoped and auto-reaping leaked claims in `marathon-drive.sh` before token seeding.
+
 ## Goal
 Implement the remaining fix for marathon robustness: auto-reaping leaked tick claims (GH-43-2). When turns fail (timeout, collision) without properly releasing their tokens, the per-agent claim-cap blocks subsequent runs.
 
 ## Bet / Blast Radius / Reversibility
 **Bet:** Extending `tick reap` to accept a `--task <id>` argument and invoking it in `marathon-drive.sh` *before* seeding is the safest way to clear leaked claims for a specific run without wiping an agent's claims globally.
-**Tradeoff:** A previously running (but stalled) marathon for the same task ID will have its claims ripped out from under it. Given that task IDs like `MARATHON-P1-TURN` are meant to be driven sequentially, this is acceptable and expected.
+**Tradeoff:** Ripping claims from a stalled marathon is safe here because we rely entirely on the GH-42 lock (`.git/relay-driver.lock`) to guarantee no concurrent live peer holds the claim. A blanket task-scoped reap works because we are the only driver running.
 **Failure mode:** If `tick reap` fails, the marathon continues and might hit the claim limit again.
 **Reversibility:** Easy. Can be reverted in the bash script and `src/scope.js`.
 **Blast radius:** Moderate. Touches `tick` core (`scope.js`), but only the `reap` command which is a manual/recovery tool.

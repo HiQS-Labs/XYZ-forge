@@ -1,11 +1,11 @@
 ---
 complexity: low
-risk: med
+risk: medium
 effort: low
 title: Concurrent relay/marathon on one clone resets ROOT HEAD (single-writer guard)
-status: Active
-created: 2026-06-29
-updated: 2026-06-29
+status: Completed
+created: 2026-06-28
+updated: 2026-06-28
 owner: agent
 branch: main
 gh_issue: 42
@@ -14,6 +14,9 @@ doc_type: project
 ---
 
 # GH-42: Concurrent relay/marathon on one clone resets ROOT HEAD
+
+## Status
+**Completed (2026-06-28)**: Fixed by adding a repo-level directory lock (`.git/relay-driver.lock`) to both marathon-drive.sh and relay-drive.sh.
 
 ## Goal
 Prevent a concurrent relay or marathon session from destroying the other's in-progress work. Currently, `rtl_enforce` resets `ROOT HEAD` if it detects changes, which orphans any peer's commits if multiple sessions run on the same clone.
