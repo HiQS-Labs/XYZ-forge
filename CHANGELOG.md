@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-29
 
+### GH-46 / GH-33 Phase 4 SHIPPED via marathon — #14 fix confirmed end-to-end
+The payoff of the #14 fix: the **3rd** GH-46 Phase-4 marathon dogfood (codex builder, agy reviewer) **succeeded** where the prior two failed at the codex self-commit reset.
+- **Phase 4 landed:** `relay-loop.sh --background` now dispatches the **cross-model shim** on `DECISION: nudge-cross-model` via a `--cross-model-cmd` flag (reusing the Phase-3 `bg_launch` + pidfile single-turn lock), and degrades to the human nudge when no command/CLI is available. Built by codex in the marathon, agy-approved; `test/relay-loop.sh` 11 → 15 (4 cross-model cases).
+- **#14 confirmed:** codex `committed codex turn (file-scoped, no push)` with no reset+exit-6 — the exact failure mode of the prior 2 runs is gone. The marathon builder lane is unblocked.
+- **driver-lock.sh test made hermetic:** the marathon's pre-advance gate failed only because `test/driver-lock.sh` inherited `RELAY_DRIVER_LOCKED=1` from the parent marathon and skipped the lock logic (the seeded lock "leaked"). Fixed by `unset RELAY_DRIVER_LOCKED` in the test — a clean dogfood catch (the gate caught a non-hermetic test). `validate.sh` 56/56.
+- **Bet outcome:** the 2026-06-29 `RTL_WT_USED`-persistence diagnosis is validated end-to-end (graduate). Phase 4 was built **by the harness itself** — the first cross-model marathon to land containment-adjacent work post-fix.
+
 ### #14 / #13 root-cause + GH-42 stale-lock self-heal — unblock the marathon builder lane
 The two harness bugs that made the XYZ marathon unusable on 2026-06-29 (the codex Phase-4 dogfood failed 2×).
 - **#14 / #13 (the real fix):** the GH-13 "a moved ROOT HEAD during a worktree turn is a concurrent peer commit — preserve it, don't reset" branch in `rtl_enforce` was **dead code for the real shims**. `rtl_worktree_begin` runs in a `wt="$(…)"` subshell, so the `RTL_WT_USED=1` it set never reached `rtl_enforce` — every codex/agy worktree turn whose ROOT HEAD moved hit the in-ROOT `reset --hard` + exit-6 path and **discarded the build**. The earlier `relay-concurrent-commit.sh` (7/7) hid this by driving the lib in-shell, never through a shim subshell. **Fix:** re-assert `RTL_WT_USED=1` in `rtl_worktree_end` (caller's shell, always before `rtl_enforce`). One line; in-ROOT/attended path byte-for-byte unchanged. [relay-automation/relay-turn-lib.sh](relay-automation/relay-turn-lib.sh).

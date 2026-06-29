@@ -4,6 +4,12 @@
 # it still REFUSES to start when the lock's holder is alive (the real concurrent-driver hazard).
 source "$(dirname "$0")/_setup.sh" driver-lock
 
+# Hermetic: the driver lock block is skipped when RELAY_DRIVER_LOCKED=1 (so a driver delegating to a
+# sub-driver doesn't double-lock). If this test runs UNDER a marathon gate, it would inherit that
+# export and skip the very logic it's testing (the lock would "leak"). Unset it so we always exercise
+# the acquire/reclaim path regardless of how validate.sh was invoked.
+unset RELAY_DRIVER_LOCKED
+
 MD="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/marathon-drive.sh"
 LOCK="$A/.git/relay-driver.lock"
 brief="$WORK/brief.md"; printf '# brief\n' >"$brief"

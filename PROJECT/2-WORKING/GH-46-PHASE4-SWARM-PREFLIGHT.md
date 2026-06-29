@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Split out of #33 (2026-06-28). The Phase 4 preflight contract — previously inline in [GH-33-LOOP-SKILL-INTEGRATION.md](GH-33-LOOP-SKILL-INTEGRATION.md) — is now authored here as the single source of truth; GH-33 points forward to this doc/issue. Contract parses + validates under `swarm-preflight` (BLOCKED only on the dirty working tree, not `contract missing`). | Clean the working tree, then fire the lane via `swarm-preflight --gh-issue 46 → marathon-drive` (**Codex builder, agy reviewer** — this is the Costly containment/dispatch touch the CHANGELOG flagged). |
+| **✅ Phase 4 SHIPPED 2026-06-29 via the marathon dogfood** (codex builder, agy reviewer). After 2 runs failed at the #14 codex-self-commit reset, the #14 fix landed and the 3rd run succeeded: codex built `relay-loop.sh --background --cross-model-cmd` (cross-model shim dispatch on `nudge-cross-model`, degrade-to-nudge fallback, pidfile single-turn lock) + 4 `test/relay-loop.sh` cases; agy approved. End-to-end #14 confirmation. `validate.sh` 56/56 (the marathon's gate-fail was a non-hermetic `driver-lock.sh` test, fixed). | **Close #46** (Phase 4 delivered). Optional follow-ups live in #33 (Phase 5 lifecycle / Phase 6 docs) — not required for the cross-model-hands-free win, which is now done. |
 
 ## Why this doc exists (relationship to #33)
 
