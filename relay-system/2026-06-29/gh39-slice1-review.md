@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-28.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -41,4 +41,18 @@ ROUND: 1 / 2
 
 ## Log
 
+### Round 1 · Reviewer · agy · 2026-06-28
+VERDICT: PASS
+Basis: textual only (verified diff `.relay-artifacts/gh39-slice1.diff` and target code in `utils/swarm-preflight.sh` and unit tests in `test/swarm-preflight.sh`).
+
+**Findings:**
+- **[Pass] A1 (Gate runnable check):** The gate command presence and resolvability check correctly parses the leading command using `read -r` and verifies script existence under `$TARGET_ROOT` for `bash`/`sh` or checks execution via `command -v` on `PATH`.
+- **[Pass] A2 (Artifact paths check):** The artifact paths check is correctly executed inside the temporary worktree `$REF_WT` before cleanup, checking file existence for each declared path.
+- **[Pass] A3 (Lane CLI advisory):** The presence of `codex` and `agy` is surfaced as an advisory report rather than a blocker.
+- **[Pass] Unit test coverage:** Added `T13` (missing artifact path) and `T14` (missing gate script) to `test/swarm-preflight.sh` to ensure exit code 5 is returned and the error output includes descriptive text.
+- **[Nit] Gate command options/flags handling:** The current parsing assumes the second token of `bash`/`sh` commands is the script filename. If a gate command uses flags (e.g. `bash -x script.sh`), the check will fail. This is not a blocker since all current contracts use simple `bash script.sh` formats, but it's worth noting.
+
+The changes are correct and fulfill the requirements of GH-39 slice 1. Closing the relay.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
