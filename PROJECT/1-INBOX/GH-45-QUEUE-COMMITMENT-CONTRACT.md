@@ -130,6 +130,41 @@ Only build if Phases 1–3 prove insufficient in practice.
   as ready without an explicit re-commitment marker. (Defer the Stop-hook unless the doc rule visibly
   fails.)
 
+## /ponytail cost review (run 2026-06-28, before promotion)
+
+Ran the laziness ladder against the four phases above. Verdict: **the plan over-builds. Ship one
+paragraph + ~15 lines + one test, defer the rest.**
+
+| Phase | Ladder verdict | Action |
+|---|---|---|
+| 1 — declarative fenced contract block | **YAGNI.** `definition_of_done`/`out_of_scope` already exist via preflight contracts; `active_commitment` is just the lanes the QUEUE already lists. The only field that earns its keep is one integer, `max_attempts`. A block a renderer emits + a parser reads is machinery with no consumer but the cap. | **Cut.** Keep only `max_attempts` as a global default (`LANE_MAX_ATTEMPTS=2`, env-overridable); add a per-lane override field only when a lane actually needs a non-default cap. The behavioral half → one AGENTS.md paragraph. |
+| 2 — attempt-cap | **Keep — this is the whole fix.** The one mechanism that stops the GH-39 spiral at attempt 2. | **Build, leanest form.** No JSON store/parser: append one line to `.tick/attempts/<lane>` per fire (lane = sanitized `PHASE_ID`); refuse when `wc -l` ≥ `LANE_MAX_ATTEMPTS` unless `--force`; print the park message. One regression test. |
+| 3 — separate drift detector | **YAGNI for now.** The cap already surfaces "parked after N attempts." A second off-wave/sub-issue-count detector is speculative. | **Defer.** Revisit only if drift recurs *despite* the cap. |
+| 4 — stop-polishing gate + Stop-hook | **YAGNI.** Already self-labeled nice-to-have; speculative slice-tier machinery. | **Defer.** The AGENTS.md re-anchor paragraph covers the behavioral need; build machinery only if the doc rule visibly fails. |
+
+**Recommended v1 (do exactly this, nothing more):**
+
+1. **AGENTS.md paragraph** — the commitment + park rule: after each lane attempt re-read the QUEUE's
+   committed lanes; a failed lane parks after `LANE_MAX_ATTEMPTS` (capture findings as an issue, stop);
+   re-firing or going off-wave needs an explicit operator override / replan note. *(The QUEUE doc's
+   lane list already IS the `active_commitment` — no new field, no new header.)*
+2. **`relay-automation/marathon-drive.sh` (+ mirror in `relay-drive.sh`)** — ~15 lines: per-fire
+   append to `.tick/attempts/<lane>`; refuse at the cap with
+   `lane <X> parked after <N> attempts; override with --force`; `--force` bypasses + logs. Default
+   cap 2 via `LANE_MAX_ATTEMPTS`.
+3. **`test/lane-attempt-cap.sh`** — drive a lane to the cap → assert refusal; `--force` → assert it
+   proceeds. Keep `validate.sh` green.
+
+Skipped: the fenced per-lane contract block, the queue-plan drift detector, the slice-tier
+"done by default" gate, the Stop-hook. **Add when:** the attempt-cap demonstrably fails to bound
+drift in a real session (then Phase 3), or a lane genuinely needs a non-default cap / explicit
+out-of-scope enforcement (then re-introduce just that field of Phase 1).
+
+Why this is the lazy-correct cut: the GH-39 failure was *unbounded silent re-fires*. A counted ceiling
+with an explicit override fixes exactly that. The declarative-contract / drift-detector / slice-gate
+phases all assume the cap won't be enough — an assumption with no evidence yet. Build the ceiling,
+watch one wave, then decide.
+
 ## Non-goals
 
 - No new long-running daemon, watcher, or scheduler — enforcement rides existing scripts
