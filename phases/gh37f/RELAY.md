@@ -82,3 +82,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH37F-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh37f/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Implemented a fast agy auth pre-flight in `relay-automation/agy-turn.sh`: bounded `agy whoami`, fail-fast exit `5`, and an explicit `agy login` remedy instead of letting `agy -p` hang on interactive re-auth.
+- Updated `relay-automation/consult.sh` to default to the current `codex,agy` consult pair, skip the agy lane quickly on auth failure with the same remedy, and keep legacy `gemini` support for older callers/tests.
+- Adjusted `test/agy-turn.sh` and `test/shim-worktree.sh` stubs for the extra `whoami` invocation and added an agy-shim auth-preflight failure assertion; containment expectations (`exit 6` for off-lane/commit-bypass/spaced-path) were left intact.
+- Verification was not run here by design: this relay packet explicitly forbids running the shim tests or `validate.sh` inside the isolated worktree because containment would discard the turn.

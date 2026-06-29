@@ -24,6 +24,10 @@ STUB="$WORK/shimstub"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
+if [ "${1:-}" = whoami ]; then
+  printf 'shimstub@example.test\n'
+  exit 0
+fi
 export TICK_REPO_ROOT="$A"
 printf 'shimstub: model response for %s\n' "$RELAY_AGENT"   # stdout -> non-empty transcript (agy guard)
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "artifact.txt" >/dev/null 2>&1
