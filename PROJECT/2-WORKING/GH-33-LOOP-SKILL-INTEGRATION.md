@@ -35,7 +35,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 3 shipped** (2026-06-28, inline Opus). `relay-automation/relay-loop.sh --background`: dispatches the turn DETACHED on `run-runner` and returns at once (session freed; scheduler re-invokes next tick), a pidfile is the single-turn lock (`BG-RUNNING` → no double-dispatch; stale pidfile cleared on completion → fresh decision acted on). **Containment inherited** — the backgrounded process is the same runner, so the `relay-turn-lib.sh` boundary is byte-identical (proven by an fg/bg parity test). `poll.sh` stays a pure oracle (reused its `--dry-run`). +6 cases in `test/relay-loop.sh` (**11/11**); README Components row added; **`validate.sh` green**. Phases 0–2 already merged (#35). | **Author the Phase 4 contract** (unify Path A/B — on `nudge-cross-model` launch the cross-model shim as background Bash instead of a human nudge). Phase 4 **is** the Costly one (touches `relay-turn-lib.sh` containment + commit semantics) → its own preflight contract + an **agy review before merge**. Good moment to **dogfood the relay/swarm** to build Phase 4. The Phase 3 contract below now reads `already-landed` (work done). |
+| **Phase 3 shipped** (2026-06-28, inline Opus). `relay-automation/relay-loop.sh --background`: dispatches the turn DETACHED on `run-runner` and returns at once (session freed; scheduler re-invokes next tick), a pidfile is the single-turn lock (`BG-RUNNING` → no double-dispatch; stale pidfile cleared on completion → fresh decision acted on). **Containment inherited** — the backgrounded process is the same runner, so the `relay-turn-lib.sh` boundary is byte-identical (proven by an fg/bg parity test). `poll.sh` stays a pure oracle (reused its `--dry-run`). +6 cases in `test/relay-loop.sh` (**11/11**); README Components row added; **`validate.sh` green**. Phases 0–2 already merged (#35). | **Phase 4 contract authored** (below) → **firing the marathon dogfood** (`swarm-preflight → marathon-drive`, codex builder + agy reviewer): on `nudge-cross-model` launch the cross-model shim as background Bash (reusing Phase 3's `bg_launch` + pidfile lock) instead of a human nudge, with CLI-absent → degrade-to-nudge. Scope-locked to relay-loop.sh/poll.sh/test/README; `relay-turn-lib.sh` is OUT of scope (containment byte-identical). |
 
 ## Effort & Risk (the question asked)
 
@@ -140,17 +140,17 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
 
 ## Swarm Preflight Contract
 
-> Scoped to **Phase 3 only** (background-Bash dispatch — the contained, additive next slice).
-> Phase 4 (the Costly Path A/B unification that touches `relay-turn-lib.sh`) earns its **own**
-> contract once Phase 3 lands — we do not pre-commit the containment phase (GH-45 discipline).
+> **Active target: Phase 4** (unify Path A/B — cross-model turns advance unattended).
+> Phase 3 (background dispatch) **shipped 2026-06-28** — its contract probes now read
+> `already-landed`. This contract supersedes it for the next fire (the marathon dogfood).
 
 ```json
 {
   "target": { "repo": ".", "ref": "main" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "grep_absent", "path": "relay-automation/relay-loop.sh", "pattern": "background", "note": "Phase 3 adds a detached/background dispatch mode to the supervisor wrapper; the marker is absent today → fix still required" },
-    { "type": "grep_absent", "path": "test/relay-loop.sh", "pattern": "background|bg-dispatch", "note": "Phase 3 extends this test with a background-dispatch containment case; absent today → fix still required" }
+    { "type": "grep_absent", "path": "relay-automation/relay-loop.sh", "pattern": "cross-model", "note": "Phase 4 teaches --background to launch the cross-model shim on nudge-cross-model; relay-loop.sh has no cross-model handling today → fix still required" },
+    { "type": "grep_absent", "path": "test/relay-loop.sh", "pattern": "cross-model", "note": "Phase 4 adds a cross-model background-dispatch test case; absent today → fix still required" }
   ],
   "artifacts": [
     "relay-automation/relay-loop.sh",
@@ -158,10 +158,10 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
     "test/relay-loop.sh",
     "relay-automation/README.md"
   ],
-  "remediation": "Add a background-dispatch mode so a turn shim (codex-turn.sh / agy-turn.sh / the Claude turn) runs detached: the session is freed for the turn's duration and the harness re-invokes on completion. Extend test/relay-loop.sh with the background-dispatch case (do not add a new test file). Prove the safety boundary holds identically when backgrounded — off-allowlist edit reverted, no push, worktree isolation intact, and no double-dispatch (the tick token/lock prevents a second turn firing while one runs). On completion the resuming tick reads STATUS:/token state and decides hand-off vs stop. Do NOT modify relay-turn-lib.sh in this phase — only verify it; the containment-touching unification is Phase 4 (separate contract).",
+  "remediation": "Unify Path A/B in relay-loop.sh --background: on DECISION: nudge-cross-model, launch the cross-model turn shim (codex-turn.sh / agy-turn.sh) as a DETACHED background process — reuse the Phase 3 bg_launch + pidfile single-turn lock — instead of printing a human nudge, so a Codex/agy turn advances unattended. Add a --cross-model-cmd flag (mirror --runner-cmd) for the command to run for a cross-model turn; if it is unset OR the agent's CLI is not on PATH, DEGRADE to the existing human-nudge (never a silent stall) — preserve --claude-agents semantics. Containment + token correctness MUST be identical to Path A: do NOT modify relay-turn-lib.sh, do NOT widen any allowlist (the backgrounded shim already enforces the boundary). Keep poll.sh a pure oracle. Extend test/relay-loop.sh with: (a) nudge-cross-model + --background + --cross-model-cmd -> BG-DISPATCH of the shim, single-dispatch lock holds; (b) cross-model CLI absent -> degrades to nudge, no dispatch. Update the relay-loop.sh README row. SCOPE LOCK: edit ONLY the four artifacts; verify with `bash test/relay-loop.sh` ONLY — do NOT run the full validate.sh yourself (it can create files that trip containment and discard your whole turn); the harness runs the gate after your turn.",
   "lanes": {
     "orchestrator_only": ["relay-automation/relay-loop.sh", "relay-automation/poll.sh"],
-    "note": "supervisor/kernel zone — serialize; at most one kernel lane per wave even in separate worktrees (relay-turn-lib.sh / bin/tick / relay-drive.sh are the serialization bottleneck)"
+    "note": "supervisor zone — serialize; one kernel lane per wave. relay-turn-lib.sh / bin/tick are OUT of scope (containment must stay byte-identical)."
   }
 }
 ```
