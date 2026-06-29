@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-29
 
+### GH-46 + GH-33 — closed and reconciled to 3-COMPLETED
+Wrapped up both `/loop`-integration issues now that the code shipped (Phase 4 landed via the GH-46 marathon dogfood; `validate.sh` green). No code change — closure + ledger reconciliation only.
+- **GH-46** (Phase 4 swarm-preflight contract + cross-model marathon dogfood): all 6 acceptance criteria verified delivered (README cross-model row, `relay-loop.sh --cross-model-cmd` impl, 4 `test/relay-loop.sh` cases, containment byte-identical to Path A). Doc → `PROJECT/3-COMPLETED/`, status `Complete`, issue **#46 closed**.
+- **GH-33** (the 6-phase epic): Phases 0–4 shipped — the marquee (cross-model relays advancing unattended) is delivered. Phase 6 docs/CHANGELOG/default-unchanged items confirmed done; **Phase 5 (let `/loop` own lifecycle) deferred as optional polish** (the deterministic `poll.sh --deadline` self-close already works — re-capture as a fresh issue if wanted). Doc → `PROJECT/3-COMPLETED/`, status `Complete`, issue **#33 closed**.
+- **Ledger:** both ROADMAP entries moved In-progress → Completed; Status table + next-up #1 updated; `ROADMAP-DASHBOARD.md` regenerated; `pdda-check-roadmap` + coverage clean (0 errors).
+
 ### GH-40 — Codex code-QA review of the branch (3 rounds via relay-xyz), all findings fixed
 Drove a headless **Codex** review of the GH-40 branch through the shipped relay harness (`relay-automation/`, review-only turns). Relay thread: [relay-system/2026-06-29/gh40-codeqa.md](relay-system/2026-06-29/gh40-codeqa.md).
 - **Round 1** (1 Blocker + 2 Should): proposals-sink trust boundary was case-sensitive + symlink-followable; gamma's clean-guard missed staged changes / restored from index not HEAD; phase3-guard lacked the GH-44 fence. **All fixed**; Codex re-confirmed all three as [Pass].
