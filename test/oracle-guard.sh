@@ -11,7 +11,7 @@ echo "== test: oracle-guard =="
 run(){ OUT="$(bash "$G" "$@" 2>&1)"; RC=$?; }
 
 # disjoint artifact vs oracle -> safe
-run --allow "src/foo.js" --oracle "test/foo-test.sh,validate.sh"
+run --allow "src/foo.js" --oracle "spec/foo.spec,validate.sh"
 [ "$RC" = 0 ] && pass "disjoint builder/oracle -> OK (exit 0)" || fail "rc=$RC out=$OUT"
 
 # exact same path -> overlap
@@ -31,7 +31,7 @@ run --allow "src/cost.js" --oracle "test/cost.sh,validate.sh,relay-automation/me
 [ "$RC" = 0 ] && pass "realistic disjoint config -> OK" || fail "rc=$RC out=$OUT"
 
 # env-var form (flags absent)
-OUT="$(ALLOW_PATHS='src/foo.js' ORACLE_PATHS='test/foo.sh' bash "$G" 2>&1)"; RC=$?
+OUT="$(ALLOW_PATHS='src/foo.js' ORACLE_PATHS='spec/foo.spec' bash "$G" 2>&1)"; RC=$?
 [ "$RC" = 0 ] && pass "reads ALLOW_PATHS/ORACLE_PATHS from env" || fail "env rc=$RC out=$OUT"
 OUT="$(ALLOW_PATHS='lib/x' ORACLE_PATHS='lib/x' bash "$G" 2>&1)"; RC=$?
 [ "$RC" = 9 ] && pass "env-form overlap still caught" || fail "env overlap rc=$RC out=$OUT"
