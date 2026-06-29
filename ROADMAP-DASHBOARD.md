@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 14 items | Tally: 🟢 3 · 🟡 4 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 15 items | Tally: 🟢 3 · 🟡 4 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | — | [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
 | GH-42 · concurrent relay/marathon on one clone resets ROOT HEAD | — | [#42](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/42) |
 | GH-43 · marathon headless-build robustness (timeout/leaked-token/self-gate) | — | [#43](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/43) |
 | GH-23 · Cursor CLI lane (3rd cross-model worker) | — | [#23](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/23) |
