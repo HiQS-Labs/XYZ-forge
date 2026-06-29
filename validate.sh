@@ -44,6 +44,7 @@ TESTS=(
   "measure.sh"
   "loop-stop.sh"
   "oracle-guard.sh"
+  "champion.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
