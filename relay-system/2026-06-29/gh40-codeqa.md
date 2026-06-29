@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -74,5 +74,16 @@ All findings fixed in commit `e1e1046`; `validate.sh` 59/59, gamma 58/59 (count-
 - [Pass] ×2 (validate wiring, driven-canary GH-44 hardening) — acknowledged, no change.
 
 Re-review requested: please confirm the symlink/case fix closes the trust-boundary bypass and the gamma guard is sound.
+
+### Reviewer — codex — Round 2
+Static review only; per relay rules I did not execute the artifact scripts.
+
+- [Blocker] `relay-automation/proposals-sink.sh:21-35,44-52` still has a same-inode bypass: an innocently named hard link such as `notes.md` hard-linked to `ROUTER.md` is neither a symlink nor a protected basename, so the append lands in the protected doc anyway and reopens the exact self-edit path this sink is supposed to close. `test/phase3-signoff-guard.sh:43-57` regression-tests symlinks and case variants but not this path. Fix: add a same-file check with `test -ef` against the protected docs (at minimum protected-name siblings in the target dir, and ideally the canonical repo docs too), and add a hard-link regression case to `phase3-signoff-guard.sh`.
+- [Should] `relay-automation/proposals-sink.sh:44-54` reports success even when the append itself fails. The grouped append uses `>> "$TARGET"` without checking its exit status; if the parent dir is missing or the file is unwritable, bash returns a redirection error, then the script still prints `appended N proposal(s)` and exits 0. That makes the sink lie about having preserved the Reviewer’s proposals. Fix: gate the append in an `if ! { ...; } >>"$TARGET"; then ...; exit 1; fi` block and only emit the success line after a verified write; add a negative test in `test/phase3-signoff-guard.sh` for an unwritable or nonexistent target path.
+- [Pass] `test/fixtures/gamma-poison/verify-fixture.sh:22-56` now closes the staged-change hole correctly: it requires both index and worktree cleanliness, restores from `HEAD`, and keeps the regression assertion count-independent while still pinning the failure to the expected `path-overlap` claim-routing message.
+- [Pass] `test/fixtures/canary-peer-orphan/verify-fixture.sh:26-37` and `test/fixtures/canary-reviewer-overstep/verify-fixture.sh:31-37`, together with `test/phase3-signoff-guard.sh:14-20`, carry the GH-44 safety fence the DoD asked for: `GIT_CEILING_DIRECTORIES` is set before the lib is sourced, and each scratch repo asserts its own `.git` before any git-dependent containment call.
+- [Pass] `validate.sh:65-75` still wires the three canary verifiers plus `phase3-signoff-guard.sh` through the existing pass/fail accounting without special casing, and Gamma remains correctly excluded to avoid recursive `./validate.sh` nesting.
+
+Verdict: Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
