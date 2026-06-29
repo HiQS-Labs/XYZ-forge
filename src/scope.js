@@ -71,13 +71,14 @@ function heartbeat(repoRoot, { task, agent, note }) {
 // task.released carries `agent = <crashed agent>` — that is what the
 // projection needs to treat the claim as released — plus a note recording the
 // reap. Coordinator-only, manual, logged: not auto-recovery.
-function reap(repoRoot, { agent, by }) {
+function reap(repoRoot, { agent, by, task }) {
   const tasks = fold(readAllEvents(repoRoot));
 
   const held = [];
   const epochByTask = new Map();
   for (const t of tasks.values()) {
     if (t.status === 'claimed' && t.claim && t.claim.agent === agent) {
+      if (task && t.id !== task) continue;
       held.push(t.id);
       epochByTask.set(t.id, t.claim.epoch);
     }

@@ -28,6 +28,16 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
 CONSULT_SH="${CONSULT_SH:-"$ROOT_DIR/relay-automation/consult.sh"}"
 
+if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
+  if ! mkdir "$ROOT_DIR/.git/relay-driver.lock" 2>/dev/null; then
+    printf 'relay-drive: another driver is currently active in this repo (lock: .git/relay-driver.lock).\n' >&2
+    printf 'relay-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).\n' >&2
+    exit 1
+  fi
+  trap 'rmdir "$ROOT_DIR/.git/relay-driver.lock" 2>/dev/null || true' EXIT
+  export RELAY_DRIVER_LOCKED=1
+fi
+
 usage() {
   cat <<'EOF'
 Usage: relay-automation/relay-drive.sh --relay-file PATH --agent-cmd CMD [options]

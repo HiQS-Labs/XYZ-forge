@@ -39,6 +39,16 @@ TICK_BIN="${TICK_BIN:-"$ROOT/bin/tick"}"
 RELAY_DRIVE_BIN="${MARATHON_RELAY_DRIVE:-"$HERE/relay-drive.sh"}"
 AGENT_CMD="${MARATHON_AGENT_CMD:-"$HERE/marathon-agent.sh"}"
 
+if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
+  if ! mkdir "$ROOT/.git/relay-driver.lock" 2>/dev/null; then
+    printf 'marathon-drive: another driver is currently active in this repo (lock: .git/relay-driver.lock).\n' >&2
+    printf 'marathon-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).\n' >&2
+    exit 1
+  fi
+  trap 'rmdir "$ROOT/.git/relay-driver.lock" 2>/dev/null || true' EXIT
+  export RELAY_DRIVER_LOCKED=1
+fi
+
 die()  { printf 'marathon-drive: %s\n' "$*" >&2; exit 2; }
 log()  { printf 'marathon-drive: %s\n' "$*"; }
 
@@ -238,7 +248,11 @@ log "relay file committed: $RELAY_FILE"
 
 # ── Step 3: seed tick token with handoff → builder ──────────────────────────
 
+# Auto-reap any leaked claims from prior failed runs of this task (GH-43-2)
 export TICK_REPO_ROOT="$ROOT"
+"$TICK_BIN" reap "$BUILDER" --by marathon-drive --task "$RELAY_TASK" > /dev/null || true
+"$TICK_BIN" reap "$REVIEWER" --by marathon-drive --task "$RELAY_TASK" > /dev/null || true
+
 "$TICK_BIN" log task.created "$RELAY_TASK" --agent marathon > /dev/null
 "$TICK_BIN" claim           "$RELAY_TASK" --agent marathon --paths "$REL_RELAY" > /dev/null
 "$TICK_BIN" release         "$RELAY_TASK" --agent marathon --to "$BUILDER" > /dev/null
