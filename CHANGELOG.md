@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-28
 
+### GH-40 Phase 2 intake — filed two issues surfaced while building canaries (#41 kernel gap, #44 RCA)
+Two tracked findings captured to `1-INBOX` + parked in `ROADMAP.md`:
+- **#41 — `task.done` not terminal against a higher-epoch reclaim** (found by canary #1). A completed task silently resurrects to `claimed` when a higher-epoch `task.claimed` lands on its token; the epoch fence guards lower-epoch zombies but not a higher-epoch reclaim, and logs **0 rejections**. Repro is read-only (`test/fixtures/canary-token-reuse/verify-fixture.sh`). Fix (per the double-blind Reviewer): terminality dominates the fence + an explicit `task.reopened` event. → [GH-41-DONE-NOT-TERMINAL.md](PROJECT/1-INBOX/GH-41-DONE-NOT-TERMINAL.md)
+- **#44 — RCA: scratch-repo `.git` fall-through polluted the main repo.** While building canary #2, the real `relay-turn-lib.sh` was driven **inline in a sandboxed shell** against an in-tree scratch dir whose `.git` couldn't init; `git -C` fell through to the live repo → a garbage commit + `rtl_enforce` `reset --hard` against `main`. **Contained, fully recovered (`git reset --mixed a9eb587` + ref delete), nothing pushed.** Safeguards that worked: not-pushed discipline, `rtl_enforce`'s own `refs/relay-orphan/` backstop, reflog. Gap: no guard against the fall-through. **Fix applied:** the canary verifier exports `GIT_CEILING_DIRECTORIES` + asserts `[ -d "$SC/.git" ]` before any git op (verified: leaves the repo byte-identical). Proposed: a shared hardened scratch-repo helper + an AGENTS.md rail. → [GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md](PROJECT/1-INBOX/GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md)
+
 ### GH-40 Phase 2 (1/3) — token-reuse canary, seeded from real telemetry, passes double-blind
 First Phase 2 canary: can a Reviewer reading captured `.tick/events/` catch a *silent* FSM violation the kernel itself does not flag?
 - **The canary:** [test/fixtures/canary-token-reuse/](test/fixtures/canary-token-reuse/) — 7 **real** RELAY-TURN events copied verbatim from `.tick/events/` (2026-06-25, claude→agy→claude, epochs 1→2→3, ending `task.done`), plus **one** injected event: a `task.claimed` on the same token at **epoch 4, after** the `done`. The documented "a `done` tick token reopened" near-miss.
