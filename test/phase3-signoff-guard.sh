@@ -11,6 +11,11 @@ source "$(dirname "$0")/_setup.sh" phase3-signoff-guard
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LIB="$ROOT/relay-automation/relay-turn-lib.sh"
 SINK="$ROOT/relay-automation/proposals-sink.sh"
+# GH-44 fence (defense in depth): rtl_init only READS git config, but pin the search ceiling to this
+# test's scratch workdir and assert the scratch repo really exists, so a degraded _setup.sh clone can
+# never make `git -C "$A"` fall through to the real repo.
+export GIT_CEILING_DIRECTORIES="$WORK"
+[ -d "$A/.git" ] || fail "scratch git repo missing at \$A/.git — aborting (won't touch the real repo)"
 # shellcheck source=relay-automation/relay-turn-lib.sh
 source "$LIB"
 
@@ -34,6 +39,22 @@ else
 fi
 [ "$(cksum "$A/ROUTER.md")" = "$before" ] \
   && pass "ROUTER.md byte-unchanged after the refused write" || fail "ROUTER.md was modified"
+
+# (1c) the bypasses Codex's [Blocker] flagged: a symlink with an innocent name, and a case variant.
+ln -s "$A/ROUTER.md" "$A/innocent.md" 2>/dev/null
+rbefore="$(cksum "$A/ROUTER.md")"
+if printf 'via symlink\n' | bash "$SINK" "$A/innocent.md" 2>/dev/null; then
+  fail "sink wrote THROUGH a symlink to a rule doc (trust-boundary bypass)"
+else
+  pass "sink refuses a symlink target (no symlink bypass)"
+fi
+[ "$(cksum "$A/ROUTER.md")" = "$rbefore" ] \
+  && pass "rule doc byte-unchanged after the refused symlink write" || fail "rule doc modified via symlink"
+if printf 'case variant\n' | bash "$SINK" "$A/Agents.md" 2>/dev/null; then
+  fail "sink accepted a case-variant rule-doc name (Agents.md)"
+else
+  pass "sink refuses a case-variant rule-doc name (case-insensitive match)"
+fi
 
 # --- (2) a Reviewer turn scopes the rule/operator docs OFF its writable allowlist -------------------
 printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$A/relay.md"

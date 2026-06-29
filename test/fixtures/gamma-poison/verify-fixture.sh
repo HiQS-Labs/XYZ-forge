@@ -19,14 +19,17 @@ PATCH="$HERE/poison.patch"
 TARGET="src/paths.js"
 cd "$ROOT" || exit 2
 
-cleanup() { git checkout -- "$TARGET" 2>/dev/null; }
+# Restore from HEAD (not the index): undoes BOTH unstaged and staged changes the run made to $TARGET.
+cleanup() { git checkout HEAD -- "$TARGET" 2>/dev/null; }
 trap cleanup EXIT
 
 fail() { echo "FIXTURE FAIL: $*"; exit 1; }
 
-# Guard: tree must be clean for the target so the revert is safe and the count is trustworthy.
-if ! git diff --quiet -- "$TARGET"; then
-  fail "$TARGET has uncommitted changes — commit/stash before verifying the fixture"
+# Guard: $TARGET must be clean in BOTH the worktree AND the index, so the revert is a true restore to
+# HEAD and the count is trustworthy. (A staged-but-uncommitted change would otherwise slip past a
+# worktree-only check, and a checkout-from-index would "restore" the staged change, not the pre-run state.)
+if ! git diff --quiet -- "$TARGET" || ! git diff --cached --quiet -- "$TARGET"; then
+  fail "$TARGET has uncommitted (worktree or staged) changes — commit/stash before verifying the fixture"
 fi
 
 echo "[1/3] applying poison ($PATCH)…"

@@ -20,8 +20,17 @@ TARGET="${1:?usage: proposals-sink.sh <target-file>}"
 
 # Trust boundary (do NOT simplify away): the sink writes proposals, never the rules themselves. Refuse
 # any operator/rule doc as a target, so a misconfigured caller can't turn this into a self-edit path.
-case "$(basename "$TARGET")" in
-  ROUTER.md|AGENTS.md|GUIDING-PRINCIPLES.md|README.md|CLAUDE.md|PDDA.md)
+# Refuse a SYMLINK target outright — an innocently-named symlink (notes.md -> ROUTER.md) would otherwise
+# bypass the basename check and write straight into a rule doc.
+if [ -L "$TARGET" ]; then
+  echo "proposals-sink: refusing a symlink target ($TARGET) — it could point at a rule/operator doc" >&2
+  exit 2
+fi
+# Match case-INSENSITIVELY: stock macOS/APFS is case-insensitive, so Router.md and ROUTER.md are the
+# same file; a case-sensitive match would let Router.md slip through. tr (not bash-4 ${x,,}) keeps 3.2.
+TARGET_BASE_LC="$(basename "$TARGET" | tr '[:upper:]' '[:lower:]')"
+case "$TARGET_BASE_LC" in
+  router.md|agents.md|guiding-principles.md|readme.md|claude.md|pdda.md)
     echo "proposals-sink: refusing to write proposals into a rule/operator doc ($TARGET)" >&2
     exit 2 ;;
 esac
