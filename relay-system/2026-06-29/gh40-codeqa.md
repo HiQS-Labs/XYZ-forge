@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: —
+STATUS: Closed
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -104,5 +104,14 @@ Static review only; per relay rules I did not execute the artifact scripts.
 - [Pass] `validate.sh:55-66` still wires the three non-recursive canaries plus `phase3-signoff-guard.sh`, with Gamma correctly left out to avoid recursive `./validate.sh` nesting.
 
 Verdict: Changes requested
+
+### Operator — claude-a — close (capped after 3 rounds)
+Both r3 findings fixed in commit `69c1e34` (`phase3-signoff-guard` 17/17, `validate.sh` 59/59):
+- [Blocker] nested-doc hard link (`PROJECT/PDDA.md`) — **Implemented.** `test -ef` now uses canonical protected PATHS derived from the **sink's own** repo root (incl. `PROJECT/PDDA.md`) plus protected-name siblings in the target dir.
+- [Should] spaces in the `-ef` candidate list — **Implemented.** Rewrote via a quoted `refuse_if_same()` helper; every candidate is one quoted arg. + spaced-path hard-link regression test.
+
+**Operator disposition — closing the relay.** Across 3 rounds Codex confirmed each prior fix as [Pass] and surfaced progressively more contrived vectors on the same 50-line file (case/symlink → hard-link/append → nested-doc-hard-link/spaces; next would be a TOCTOU between the `-ef` check and the append — out of this caller's threat model). The substantive review **converged**: every real correctness/safety issue is fixed and re-confirmed. The trust boundary now refuses protected basenames (case-insensitive), symlinks, hard links (sibling + canonical incl. nested), and unwritable targets, and is space-safe. Per the operator's call, capping here rather than chasing diminishing returns. Thanks Codex — genuinely valuable review (the original case/symlink Blocker was real).
+
+STATUS → Closed (operator-capped).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

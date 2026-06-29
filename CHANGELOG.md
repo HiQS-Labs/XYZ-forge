@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-29
 
+### GH-40 — Codex code-QA review of the branch (3 rounds via relay-xyz), all findings fixed
+Drove a headless **Codex** review of the GH-40 branch through the shipped relay harness (`relay-automation/`, review-only turns). Relay thread: [relay-system/2026-06-29/gh40-codeqa.md](relay-system/2026-06-29/gh40-codeqa.md).
+- **Round 1** (1 Blocker + 2 Should): proposals-sink trust boundary was case-sensitive + symlink-followable; gamma's clean-guard missed staged changes / restored from index not HEAD; phase3-guard lacked the GH-44 fence. **All fixed**; Codex re-confirmed all three as [Pass].
+- **Round 2** (1 Blocker + 1 Should): same-inode **hard-link** bypass; sink reported success on a failed append. **Fixed** (`test -ef` guard; explicit writability pre-check after finding bash 3.2 doesn't propagate a negated-group redirect failure).
+- **Round 3** (1 Blocker + 1 Should): hard link to the **nested** `PROJECT/PDDA.md`; unquoted candidate list word-split on spaced paths. **Fixed** (canonical protected PATHS from the sink's own repo root; quoted `refuse_if_same()` helper).
+- **Operator-capped after round 3.** The substantive review converged — each round Codex confirmed prior fixes as [Pass] and surfaced progressively more contrived vectors on the same 50-line file. The trust boundary now refuses protected basenames (case-insensitive), symlinks, hard links (sibling + canonical incl. nested), and unwritable targets, and is space-safe. `test/phase3-signoff-guard.sh` grew 9 → 17 assertions locking in every fix; `validate.sh` 59/59. Relay closed (operator disposition logged in-thread).
+
 ### GH-40 Phase 3 — scaffolding built (no loop), wired into validate.sh (58 → 59)
 The operator sign-off gate, the parts that do NOT require building the (still-gated) self-improvement loop. Ponytail-scoped: kept the human-approval requirement, added only what's testable today.
 - **[`relay-automation/proposals-sink.sh`](relay-automation/proposals-sink.sh)** — formats Reviewer findings into a delimited, operator-sign-off checklist appended to the relay/transcript output the turn already writes. A trust-boundary check **refuses to write into any rule/operator doc** (ROUTER/AGENTS/GUIDING-PRINCIPLES/README/CLAUDE/PDDA), so the sink can never become a self-edit path. ~30 lines, bash 3.2-portable; reuses the existing relay file rather than inventing a store.
