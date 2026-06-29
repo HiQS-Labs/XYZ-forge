@@ -149,8 +149,8 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
   "target": { "repo": ".", "ref": "main" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "grep_absent", "path": "relay-automation/relay-loop.sh", "pattern": "cross-model", "note": "Phase 4 teaches --background to launch the cross-model shim on nudge-cross-model; relay-loop.sh has no cross-model handling today → fix still required" },
-    { "type": "grep_absent", "path": "test/relay-loop.sh", "pattern": "cross-model", "note": "Phase 4 adds a cross-model background-dispatch test case; absent today → fix still required" }
+    { "type": "grep_absent", "path": "relay-automation/relay-loop.sh", "pattern": "cross-model-cmd", "note": "Phase 4 adds a --cross-model-cmd flag so --background launches the cross-model shim on nudge-cross-model; the flag is absent today → fix still required" },
+    { "type": "grep_absent", "path": "test/relay-loop.sh", "pattern": "cross-model-cmd", "note": "Phase 4 adds a --cross-model-cmd background-dispatch test case; absent today → fix still required" }
   ],
   "artifacts": [
     "relay-automation/relay-loop.sh",
