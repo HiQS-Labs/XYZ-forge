@@ -2,6 +2,13 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-28
+
+### GH-42 and GH-43 — Concurrent loop lock + liveness claim reaping
+The final two mechanics fixes for the GH-39 unattended marathon:
+- **GH-42 (Concurrent ROOT HEAD reset):** Added a repo-level directory lock (`.git/relay-driver.lock`) to `marathon-drive.sh` and `relay-drive.sh`. This ensures two drivers on the same clone fail fast instead of one's `rtl_enforce` resetting the other's concurrent commits.
+- **GH-43-2 (Leaked claims block restarts):** Enhanced `tick reap` with a `--task <id>` filter and wired `marathon-drive.sh` to auto-reap stale `BUILDER` and `REVIEWER` claims for its specific task before seeding. Stalled/killed loops no longer permanently leak claims against the global cap.
+
 ## 2026-06-27
 
 ### GH-39 slice 2 (B6) + #43 — scope-locked marathon brief + no-self-gate prompt + turn-budget sizing
