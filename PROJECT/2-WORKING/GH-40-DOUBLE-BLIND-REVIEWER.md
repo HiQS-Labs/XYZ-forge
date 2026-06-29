@@ -34,7 +34,7 @@ not a competing plan to it.
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 2 COMPLETE (3/3 canaries passed double-blind), 2026-06-28.** All three seeded from real artifacts, each passed a blind Reviewer: **#1 token-reuse** ([canary-token-reuse](../../test/fixtures/canary-token-reuse/)) — silent `done`→`claimed` resurrection, kernel logs 0 rejections; **#2 peer-orphan** ([canary-peer-orphan](../../test/fixtures/canary-peer-orphan/)) — in-ROOT commit-bypass guard orphans a concurrent peer commit (false positive, recoverable only via `refs/relay-orphan/`); **#3 reviewer-overstep** ([canary-reviewer-overstep](../../test/fixtures/canary-reviewer-overstep/)) — a reviewer turn edits source, caught as a role-scope violation regardless of edit quality. Each `verify-fixture.sh` drives the **real** kernel + is GH-44-hardened. Phase 1 (Gamma) `191677d`; Phase 2 #1 `a9eb587`. Surfaced **#41** (latent kernel gap) + **#44** (RCA, fixed). | **Phase 3 — operator sign-off gate**: three-bucket findings (auto-approve / needs sign-off / needs call), headless run terminates into `IDLE_PENDING_REVIEW`, human merges approvals. Then Phase 4 (pruning). Costly + gated on operator GO. |
+| **Phase 2 COMPLETE (3/3 canaries passed double-blind), 2026-06-28.** All three seeded from real artifacts, each passed a blind Reviewer: **#1 token-reuse** ([canary-token-reuse](../../test/fixtures/canary-token-reuse/)) — silent `done`→`claimed` resurrection, kernel logs 0 rejections; **#2 peer-orphan** ([canary-peer-orphan](../../test/fixtures/canary-peer-orphan/)) — in-ROOT commit-bypass guard orphans a concurrent peer commit (false positive, recoverable only via `refs/relay-orphan/`); **#3 reviewer-overstep** ([canary-reviewer-overstep](../../test/fixtures/canary-reviewer-overstep/)) — a reviewer turn edits source, caught as a role-scope violation regardless of edit quality. Each `verify-fixture.sh` drives the **real** kernel + is GH-44-hardened. Phase 1 (Gamma) `191677d`; Phase 2 #1 `a9eb587`. Surfaced **#41** (latent kernel gap) + **#44** (RCA, fixed). | **Phase 3 — operator sign-off gate (Ponytail-minimized)**: Reviewer appends a proposals checklist to the existing relay output; run ends via normal termination; human applies approved items by hand (agent already can't self-apply). One check: zero commits to rule docs. **Easy**, not Costly — no new `tick` state. Cut items (3-bucket triage, `IDLE_PENDING_REVIEW`, dedicated file) parked in *Deferred — reconsider when triggered*. Gated on operator GO; only matters if the loop is greenlit. |
 
 ## Why this doc exists (issue thread, distilled)
 
@@ -131,15 +131,23 @@ emit a per-write content hash first — a real `tick` feature, not a fixture. Fi
 lock-override event is fiction (`tick` claims via atomic `O_EXCL`, never double-emits `LOCK_ACQUIRED`)
 — **dropped entirely**.
 
-### Phase 3 — Operator sign-off gate ⬜ (gated on GO)
-Keep a human in the loop; the agent never edits its own rules unattended.
+### Phase 3 — Operator sign-off gate ⬜ (gated on GO) — Ponytail-minimized
+**Requirement (kept — never simplified away):** a human approves before any rule change is applied; the
+agent never self-applies. Already enforced for free — containment gives the agent no write access to the
+operator/rule docs, so "nothing self-applied" is true by default, not by new machinery.
 
-- Reviewer sorts findings into three buckets: **auto-approve / needs sign-off / needs call**.
-- Headless run terminates into an `IDLE_PENDING_REVIEW` state with all locks released; the operator
-  merges approvals into the relevant operator docs before the next preflight clears.
+Lazy implementation (reuse what exists; add nothing speculative):
 
-**QA gate:** a headless run ends in the terminal idle state with locks released and **nothing
-self-applied**; the operator checklist is the only path that mutates operator docs.
+- Reviewer **appends its proposed rule changes as a checklist to the relay/transcript output it already
+  writes** — no new artifact, no new file convention.
+- The run ends via the marathon's **existing** termination (locks release on normal exit) — no new
+  `tick` state.
+- A human ticks the checklist and applies approved items by hand.
+
+**QA gate (the check it leaves behind — not optional):** one runnable test asserts a headless run
+(a) emits the proposals checklist and (b) makes **zero commits to the operator/rule docs**.
+`validate.sh` stays green. Cut items + their revisit triggers live in
+[Deferred — reconsider when triggered](#deferred--reconsider-when-triggered).
 
 ### Phase 4 — Telemetry & degradation pruning ⬜ (later)
 Periodic pruning of accumulated rules to bound context bloat; condense, then re-run `validate.sh` to
@@ -149,13 +157,29 @@ confirm the condensed ruleset still holds the kernel contract.
 tree when this phase is reached — do not reuse names from the issue thread; `validate.sh` stays green
 across the prune.
 
-## Dropped / deferred (provenance)
-- Dropped: the `47/47` count, the `relay-improve` skill reference, `src/*.js` (router/db) paths, the
-  `0.1.0` schema, and Fixture Beta's lock-race entirely.
-- Deferred: Fixture Alpha (needs a kernel content-hash feature first); Phase 4 integration specifics.
+## Dropped (fabrications — gone, not coming back)
+From the original issue-body proposal, contradicted by the live tree: the `47/47` count, the
+`relay-improve` skill reference, `src/*.js` (router/db) paths, the `0.1.0` schema, and Fixture Beta's
+lock-race (fiction — `tick` claims via atomic `O_EXCL`, never double-emits `LOCK_ACQUIRED`).
+
+## Deferred — reconsider when triggered
+Cut to stay lazy. **Not lost** — each carries the signal that would justify building it. Add back only
+when the trigger fires; until then the simpler Phase 3 above stands.
+
+| Deferred item | Why cut now | Add it back when… |
+|---|---|---|
+| **Three-bucket triage** (auto-approve / needs sign-off / needs call) | No findings observed yet — sorting categories you haven't seen. And "auto-approve" partly contradicts the human-in-loop requirement. | A real run produces enough findings that a flat checklist is unwieldy and a human asks to triage them. |
+| **`IDLE_PENDING_REVIEW` `tick` state** | A new kernel state is Costly + needs a `decisions/` record, to do what a checklist in an existing file + normal termination already does. | Automation (not a human) must *query* the paused state programmatically — e.g. a scheduler that resumes runs after approval. |
+| **Dedicated `SYSTEM_UPGRADES_PENDING.md` file** | A second artifact + convention before a second reader exists. | A consumer other than the human reviewer needs to read proposals on its own path (a dashboard, a digest). |
+| **Fixture Alpha (no-op handoff loop)** | Needs the kernel to emit a per-write content hash first — a real `tick` feature, not a fixture. | The kernel emits per-write content hashes. |
+| **Phase 4 integration specifics** (`MARATHON.yaml` wiring, skill names) | Re-derive against the live tree when reached — names from the issue thread are stale. | Phase 4 actually starts. |
 
 ## Reversibility & blast radius
-- Phase 1 (the fixture) is **Easy** — additive test files + a self-reverting harness; no kernel change.
-- Phases 2–4 touch `.tick`/`MARATHON.yaml`/operator docs and are at least **Costly** per AGENTS.md —
-  size the blast radius and record the bet in `CHANGELOG.md` when those land. Wiring the reflection
-  loop into the live marathon is gated on operator GO and on Phase 1 passing first (now met).
+- Phases 1–2 (the fixtures) are **Easy** — additive test files + self-reverting/ceiling-guarded
+  harnesses; no kernel change. **Done.**
+- Phase 3 (Ponytail-minimized) is **Easy** — appends to an existing output + one test; no `tick` state,
+  no new file. (The deferred `IDLE_PENDING_REVIEW` state is the Costly part — that's exactly why it's
+  deferred behind a trigger, not in the active plan.)
+- Phase 4 touches `MARATHON.yaml`/operator docs and is at least **Costly** per AGENTS.md — size the
+  blast radius and record the bet in `CHANGELOG.md` when it lands. Wiring the reflection loop into the
+  live marathon is gated on operator GO and on Phases 1–2 passing (now met).
