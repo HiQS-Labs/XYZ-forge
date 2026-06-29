@@ -4,6 +4,15 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-29
 
+### GH-37 — agy consult/relay auth fast-fail SHIPPED via marathon dogfood (#37 closed)
+A fast `agy whoami` auth pre-flight now lives in both `relay-automation/agy-turn.sh` and `relay-automation/consult.sh`: an expired/failed agy session exits in seconds (shim **exit 5**; consult degrades to Codex-only) naming the `agy login` remedy, instead of opening an interactive prompt and hanging to the 300s cap. Built by **Codex**, reviewed by **agy → Approved**, gate `validate.sh` **60/60**. New `agy-turn` test (auth-fail → exit 5, no commit); all existing exit-6 containment assertions preserved (personally verified — codex only added a `whoami` early-return branch + a new test, weakened nothing).
+- **The dogfood's real value was exposing 5 swarm-preflight/marathon harness defects** — the build was correct on the first turn; every failure was a harness gap. Filed as follow-ups:
+  1. **`--target-root .` relay-file off-lane false-positive** (the root-cause blocker): a *same-repo* lane invoked with `--target-root .` routes relay-file path normalization through the cross-repo code path, so the legitimately-edited relay file fails the allowlist match and trips containment (exit 6). Dropping `--target-root` for same-repo lanes fixed it. Pinned with temporary `rtl_worktree_end` debug instrumentation (added + reverted; `relay-turn-lib.sh` byte-identical to baseline).
+  2. **Self-verify trips containment:** the brief told the builder to run `test/agy-turn.sh`/`test/shim-worktree.sh` to self-verify, but those tests create git fixtures in the isolated worktree → off-lane → the *correct* build was discarded. Brief now forbids in-turn test execution; the harness gate verifies post-turn.
+  3. **Artifact-set scope too narrow:** the packet listed only the two shims, but the behavior change also edits their tests → containment reverted the test edits. Expanded the allowlist.
+  4. **Timeout suggestion below its own warning:** the packet suggested `RELAY_TURN_TIMEOUT_S=300` while noting 335 LOC needs more → first run killed mid-build. Bumped to 900s.
+  5. **Leaked-token reuse:** aborted runs left an open/`done` `MARATHON-GH37*-TURN` token in `.tick/` (survives `git reset`); a `done` token can't be re-seeded. Worked around with a fresh `--phase-id` per attempt + manual `claim`→`done` cleanup.
+
 ### GH-46 + GH-33 — closed and reconciled to 3-COMPLETED
 Wrapped up both `/loop`-integration issues now that the code shipped (Phase 4 landed via the GH-46 marathon dogfood; `validate.sh` green). No code change — closure + ledger reconciliation only.
 - **GH-46** (Phase 4 swarm-preflight contract + cross-model marathon dogfood): all 6 acceptance criteria verified delivered (README cross-model row, `relay-loop.sh --cross-model-cmd` impl, 4 `test/relay-loop.sh` cases, containment byte-identical to Path A). Doc → `PROJECT/3-COMPLETED/`, status `Complete`, issue **#46 closed**.
