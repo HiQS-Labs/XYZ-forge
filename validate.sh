@@ -42,6 +42,7 @@ TESTS=(
   "marathon-drive.sh"
   "driver-lock.sh"
   "measure.sh"
+  "loop-stop.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
