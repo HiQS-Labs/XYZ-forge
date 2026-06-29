@@ -2,7 +2,7 @@
 title: Leverage the built-in /loop skill to drive relays (adaptive cadence + unify Path A/B)
 status: Active (2-WORKING)
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 owner: noel
 goal: >
   Use the built-in Claude Code /loop skill (recurring + self-paced "dynamic" mode,
@@ -35,7 +35,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phases 0–2 shipped** (on branch `gh-33-loop-skill-integration`, isolated worktree — kept off `main` to avoid the concurrent agent). Phase 0: chose the **thin wrapper** shape. Phase 1: `poll.sh --emit-delay` → deadline-clamped `DELAY:` line (additive, default-off, env-tunable). Phase 2: `relay-automation/relay-loop.sh` wrapper (default one-tick `NEXT-POLL:` for a `/loop` dynamic tick; `--sleep-loop` self-paces in pure bash) + the dynamic-mode recipe in the `relay-xyz` SKILL, reschedule kept pluggable (no hardcoded `ScheduleWakeup`). New `test/relay-loop.sh` (5 cases) + 8 `poll-driver` cases; script packaged. **`validate.sh` 51/51**, `skill-extract` 15 files. | **Operator GO gate before Phase 3+.** Phases 3–4 (background-Bash dispatch + the Path A/B unification — the cross-model-hands-free win) are **Costly** (touch `relay-turn-lib.sh` containment) and must not start without explicit GO. Phase 2 is a clean, usable stopping point. Promote to `2-WORKING` if continuing. |
+| **Operator GO received 2026-06-28** for Phases 3–4 (the cross-model-hands-free track). **Phase 3 preflight contract authored** (below) → background-Bash dispatch is now swarm/marathon-ready and scoped (`grep_absent`/`path_absent` probes confirm the work is still required). Phases 0–2 already shipped + merged (#35): `poll.sh --emit-delay`, `relay-automation/relay-loop.sh`, dynamic-mode recipe; `validate.sh` 51/51. | **Build Phase 3 (background-Bash turn dispatch):** add a detached-dispatch mode to the supervisor wrapper so the session is freed during a turn and re-invoked on completion; **prove containment holds identically when backgrounded** (off-allowlist edit reverted, no push, worktree isolation, no double-dispatch). Extend `test/relay-loop.sh` with the bg case. Do **not** touch `relay-turn-lib.sh` here — only verify it. Author the **Phase 4** contract (the Costly containment unification) only once Phase 3 lands. |
 
 ## Effort & Risk (the question asked)
 
@@ -137,6 +137,34 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
 - [x] The fixed-`60s` recipe still works unchanged (dynamic mode is opt-in; `--emit-delay` is additive, `DECISION:` line untouched).
 - [x] `tick` claim/heartbeat cadence is unchanged — only the *poll* cadence adapts (wrapper touches no token logic).
 - [x] `validate.sh` green with the new `relay-loop.sh` test registered + the script packaged (`skill-extract.sh` 15 files).
+
+## Swarm Preflight Contract
+
+> Scoped to **Phase 3 only** (background-Bash dispatch — the contained, additive next slice).
+> Phase 4 (the Costly Path A/B unification that touches `relay-turn-lib.sh`) earns its **own**
+> contract once Phase 3 lands — we do not pre-commit the containment phase (GH-45 discipline).
+
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "relay-automation/relay-loop.sh", "pattern": "background", "note": "Phase 3 adds a detached/background dispatch mode to the supervisor wrapper; the marker is absent today → fix still required" },
+    { "type": "grep_absent", "path": "test/relay-loop.sh", "pattern": "background|bg-dispatch", "note": "Phase 3 extends this test with a background-dispatch containment case; absent today → fix still required" }
+  ],
+  "artifacts": [
+    "relay-automation/relay-loop.sh",
+    "relay-automation/poll.sh",
+    "test/relay-loop.sh",
+    "relay-automation/README.md"
+  ],
+  "remediation": "Add a background-dispatch mode so a turn shim (codex-turn.sh / agy-turn.sh / the Claude turn) runs detached: the session is freed for the turn's duration and the harness re-invokes on completion. Extend test/relay-loop.sh with the background-dispatch case (do not add a new test file). Prove the safety boundary holds identically when backgrounded — off-allowlist edit reverted, no push, worktree isolation intact, and no double-dispatch (the tick token/lock prevents a second turn firing while one runs). On completion the resuming tick reads STATUS:/token state and decides hand-off vs stop. Do NOT modify relay-turn-lib.sh in this phase — only verify it; the containment-touching unification is Phase 4 (separate contract).",
+  "lanes": {
+    "orchestrator_only": ["relay-automation/relay-loop.sh", "relay-automation/poll.sh"],
+    "note": "supervisor/kernel zone — serialize; at most one kernel lane per wave even in separate worktrees (relay-turn-lib.sh / bin/tick / relay-drive.sh are the serialization bottleneck)"
+  }
+}
+```
 
 ## Phase 3 — Background-Bash turn dispatch
 
