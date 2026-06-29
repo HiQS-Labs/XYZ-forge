@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-27
 
+### GH-39 slice 1 — swarm-preflight now validates the gate + artifact paths (advises lane CLI)
+Closes agy's GH-38/GH-39 "ready packet that fails mid-air" gaps (validation slice), via the GH-39 marathon then salvaged inline.
+- **A2** — every contract `artifacts[]` path must exist at `target.ref` (checked in the throwaway ref worktree) → a missing/mistyped path is `not-ready`, not a first-edit failure.
+- **A1** — the gate program must resolve (`bash -x script.sh` is flag-aware; else `command -v`); deliberately does NOT execute the heavy gate (fix_probes already prove the fix is required) — which also avoids the worktree-pollution that discarded the marathon's v3 turn.
+- **A3** — codex/agy presence is a portable **advisory** line, never a blocker (keeps preflight green in keyless/CI). Checks guard on `READY==1` (first-failure reason wins). [utils/swarm-preflight.sh](utils/swarm-preflight.sh); `test/swarm-preflight.sh` +T13/T14/T15 → 27/27; `validate.sh` 55/55.
+- **Provenance + a real harness finding:** Codex built this in the GH-39 marathon (v3, 33/33 on the scoped test) but the turn was discarded when it self-ran the full `validate.sh` and polluted its worktree (off-lane). Salvaged inline; **agy review → VERDICT PASS** (4×[Pass] + 1 Nit: gate parser now skips flags). During finalize, a **concurrent relay reset ROOT HEAD and orphaned the fix commit** (GH-13 / `no-headless-relay-during-concurrent-commits`) — recovered via `git cherry-pick` + immediate push. The 4 marathon attempts characterized four distinct failure modes (exploration-timeout, leaked-token claim-cap, validate-pollution, concurrent HEAD-reset) and **validated the GH-36 fix live** (default-flags `.tick` claim works). Slices A4 (overlaps PR #38 queue-plan)/A5/B6/B7 remain. Issue #39 stays open (partial). → [GH-39-SWARM-PREFLIGHT-GAPS.md](PROJECT/2-WORKING/GH-39-SWARM-PREFLIGHT-GAPS.md)
+
 ### GH-36 fixed — headless Codex can write the shared .tick lock under isolation (first marathon dogfood)
 The first real end-to-end marathon dogfood after the GH-29 fix, fired via `swarm-preflight → marathon-drive` (codex builder, agy reviewer).
 - **Bug:** under `RELAY_WORKTREE_ISOLATION=1`, Codex runs in a throwaway worktree but the shared `.tick/` token lock lives at `TICK_REPO_ROOT` (harness root) — outside Codex's default `-s workspace-write` sandbox → `tick claim/release` `EPERM` → deadlock.

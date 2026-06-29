@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured by agy (1-INBOX) + **expanded from the GH-36 marathon dogfood** and promoted to a 2-WORKING capture doc with a Swarm Preflight Contract (2026-06-28). Several of these gaps were hit live this session (auth-health, brief-wander, cross-lane collision). | Fire as a scoped marathon lane (single artifact `utils/swarm-preflight.sh`; **not** self-blocking like GH-36). Builder Codex or agy; agy reviewer. Ensure no other relay is active first (concurrent-commit collisions seen 2026-06-28). |
+| **Slice 1 (validation) shipped + agy-approved 2026-06-28** — A2 (artifact paths exist at ref), A1 (gate program resolves; flag-aware), A3 (lane-CLI advisory). `test/swarm-preflight.sh` 27/27, `validate.sh` 55/55. Built by Codex in the GH-39 marathon (v3, 33/33) then salvaged inline after a concurrent-relay HEAD-reset orphaned the turn; agy review VERDICT PASS (4×[Pass] + 1 Nit, fixed). | **Remaining slices:** A4 cross-packet collisions (**overlaps PR #38 queue-plan — re-scope or drop**); A5 `command`-probe sandboxing; **B6 the scope-locked brief** (highest field-value — make the packet inline acceptance criteria); B7 self-block hint. Each its own bounded marathon/inline slice. |
 
 ## Why now — every gap below was hit live this session
 The first real marathon dogfood (GH-36, 2026-06-28) exercised the preflight→marathon path end-to-end and
