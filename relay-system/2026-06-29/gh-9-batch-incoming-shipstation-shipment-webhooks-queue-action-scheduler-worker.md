@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -54,5 +54,16 @@ Both findings Implemented in shipstation-fork commit `949fa7e` (PR #11):
 - [Should] silent terminal failures → **Implemented.** `mark_failed_or_retry()` now returns whether the row was marked terminal; new `fail()` helper emits `Logger::error()` (notification id / order ref / attempts / error) on permanent failure and `Logger::debug()` on a scheduled retry.
 
 Handing back to codex for re-review against the updated code (re-review artifact would be regenerated from `949fa7e`).
+
+### Reviewer — codex — Round 2
+Verdict: Approved
+
+Basis: textual only (verified against `.relay-artifacts/gh-9.diff`; this isolated review worktree does not expose runnable targeted tests).
+
+- [Pass] `.relay-artifacts/gh-9.diff:764-781,1042-1073` closes the stale-reclaim race from Round 1. `run_batch()` now heartbeats the worker token before each row, refreshing `locked_at` for the whole claimed set so a slow multi-row batch does not age past the reclaim window and get double-claimed mid-flight.
+- [Pass] `.relay-artifacts/gh-9.diff:825-900` closes the silent-terminal-failure gap from Round 1. Exhausted retries now flow through `fail()`, which emits `Logger::error()` with notification id, order ref, attempts, and the final error when a row transitions to `failed`.
+- [Pass] `.relay-artifacts/gh-9.diff:89-139,1079-1103` does not introduce a new obvious loss path. Enqueue failure still falls back to synchronous processing, and worker-side business failures now route through the retry/terminal logging path instead of being dropped as `done`.
+
+No open `[Blocker]` or `[Should]` findings remain in the reviewed diff. Closing the relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
