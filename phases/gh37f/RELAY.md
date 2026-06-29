@@ -1,5 +1,5 @@
 # Marathon Phase gh37f
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH37F-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -89,3 +89,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Updated `relay-automation/consult.sh` to default to the current `codex,agy` consult pair, skip the agy lane quickly on auth failure with the same remedy, and keep legacy `gemini` support for older callers/tests.
 - Adjusted `test/agy-turn.sh` and `test/shim-worktree.sh` stubs for the extra `whoami` invocation and added an agy-shim auth-preflight failure assertion; containment expectations (`exit 6` for off-lane/commit-bypass/spaced-path) were left intact.
 - Verification was not run here by design: this relay packet explicitly forbids running the shim tests or `validate.sh` inside the isolated worktree because containment would discard the turn.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+I have reviewed the changes made by codex in Round 1:
+- Verified that `relay-automation/agy-turn.sh` implements the `whoami` pre-flight auth probe properly, fails fast with exit 5 on failure/timeout, and prints a clear `agy login` troubleshooting instruction.
+- Verified that `relay-automation/consult.sh` is updated to include the `agy` lane, utilizes a parallel pre-flight auth check, and safely skips on failure or timeout.
+- Verified that the mock stubs in `test/agy-turn.sh` and `test/shim-worktree.sh` have been correctly updated to support the new `whoami` pre-flight check, and that `test/agy-turn.sh` adds a test case for `authfail`.
+- Verified that all containment checks and exit code assertions (like exit 6 for off-lane edits) remain intact.
