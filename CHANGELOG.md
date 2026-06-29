@@ -2,6 +2,15 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-29
+
+### #14 / #13 root-cause + GH-42 stale-lock self-heal — unblock the marathon builder lane
+The two harness bugs that made the XYZ marathon unusable on 2026-06-29 (the codex Phase-4 dogfood failed 2×).
+- **#14 / #13 (the real fix):** the GH-13 "a moved ROOT HEAD during a worktree turn is a concurrent peer commit — preserve it, don't reset" branch in `rtl_enforce` was **dead code for the real shims**. `rtl_worktree_begin` runs in a `wt="$(…)"` subshell, so the `RTL_WT_USED=1` it set never reached `rtl_enforce` — every codex/agy worktree turn whose ROOT HEAD moved hit the in-ROOT `reset --hard` + exit-6 path and **discarded the build**. The earlier `relay-concurrent-commit.sh` (7/7) hid this by driving the lib in-shell, never through a shim subshell. **Fix:** re-assert `RTL_WT_USED=1` in `rtl_worktree_end` (caller's shell, always before `rtl_enforce`). One line; in-ROOT/attended path byte-for-byte unchanged. [relay-automation/relay-turn-lib.sh](relay-automation/relay-turn-lib.sh).
+- **GH-42 stale-lock self-heal:** `marathon-drive.sh` / `relay-drive.sh` now record the holder PID in `.git/relay-driver.lock` and **reclaim a stale lock when its holder is dead** (`kill -0`), instead of a crashed/killed driver leaving a lock that blocks every later run until a manual `rmdir` (hit between the two marathon runs). Live holder → still refuses (the real concurrency guard). `ponytail:` small TOCTOU window noted, acceptable for a single-operator clone.
+- **Tests:** new shim-level regression `test/worktree-isolation.sh` test 4 (concurrent ROOT commit mid worktree-turn → exit 0, peer preserved, allowlist copied back) → 15/15; new `test/driver-lock.sh` (stale-reclaim + live-refuse) 4/4. **`validate.sh` 56/56.**
+- **Bet:** the `RTL_WT_USED` fix is the diagnosed cause of the codex marathon failures; reversibility Easy (one line). Next signal: re-fire the GH-46 Phase-4 marathon and confirm the codex builder lane no longer resets+fails — high-confidence diagnosis, not yet end-to-end-proven.
+
 ## 2026-06-28
 
 ### GH-46 — split the Phase 4 swarm-preflight contract out of the GH-33 epic (issue-first)

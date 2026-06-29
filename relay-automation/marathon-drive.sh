@@ -40,12 +40,24 @@ RELAY_DRIVE_BIN="${MARATHON_RELAY_DRIVE:-"$HERE/relay-drive.sh"}"
 AGENT_CMD="${MARATHON_AGENT_CMD:-"$HERE/marathon-agent.sh"}"
 
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
-  if ! mkdir "$ROOT/.git/relay-driver.lock" 2>/dev/null; then
-    printf 'marathon-drive: another driver is currently active in this repo (lock: .git/relay-driver.lock).\n' >&2
-    printf 'marathon-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).\n' >&2
-    exit 1
+  _lock="$ROOT/.git/relay-driver.lock"
+  if ! mkdir "$_lock" 2>/dev/null; then
+    # GH-42 self-heal: the lock exists — reclaim it only if its holder is dead. A crashed/killed/
+    # SIGKILL'd driver used to leave a stale lock that blocked every later run until a manual rmdir.
+    _holder="$(cat "$_lock/pid" 2>/dev/null || true)"
+    if [[ -n "$_holder" ]] && kill -0 "$_holder" 2>/dev/null; then
+      printf 'marathon-drive: another driver is active in this repo (pid %s, lock: .git/relay-driver.lock).\n' "$_holder" >&2
+      printf 'marathon-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).\n' >&2
+      exit 1
+    fi
+    printf 'marathon-drive: reclaiming stale relay-driver.lock (holder pid %s not running).\n' "${_holder:-none}" >&2
+    rm -rf "$_lock"
+    mkdir "$_lock" 2>/dev/null || { printf 'marathon-drive: could not acquire relay-driver.lock after reclaiming a stale one.\n' >&2; exit 1; }
+    # ponytail: tiny TOCTOU window (two drivers could both reclaim a stale lock); acceptable for a
+    # single-operator clone — add an atomic PID-CAS only if true multi-operator concurrency appears.
   fi
-  trap 'rmdir "$ROOT/.git/relay-driver.lock" 2>/dev/null || true' EXIT
+  printf '%s\n' "$$" > "$_lock/pid"
+  trap 'rm -rf "$_lock" 2>/dev/null || true' EXIT
   export RELAY_DRIVER_LOCKED=1
 fi
 

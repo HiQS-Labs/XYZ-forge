@@ -77,5 +77,36 @@ run_shim RELAY-TURN-noiso good 0; rc=$?
 # clean up the async file the non-isolated turn legitimately produced in ROOT (known gap, not tested here)
 rm -f "$A/offlane-async.txt"
 
+# --- (4) isolation ON + a concurrent ROOT commit DURING the turn: PRESERVE it, don't reset+fail ----
+# Regression for GH-13/#14: RTL_WT_USED was set inside rtl_worktree_begin's `wt="$(...)"` subshell and
+# LOST, so rtl_enforce wrongly took the in-ROOT reset+exit-6 path for worktree turns and discarded the
+# whole build whenever ROOT HEAD moved (the 2026-06-29 codex marathon). Now re-asserted in
+# rtl_worktree_end → the peer/harness commit is preserved and the turn commits its allowlist on top.
+STUB2="$WORK/claude-peer"
+cat >"$STUB2" <<STUB_EOF
+#!/usr/bin/env bash
+set -u
+"\$TICK" claim "\$RELAY_TASK" --agent "\$RELAY_AGENT" --paths "artifact.txt" >/dev/null 2>&1
+printf 'built by builder\n' >> artifact.txt
+printf '\n### Round 1 · Builder\n' >> relay.md
+"\$TICK" release "\$RELAY_TASK" --agent "\$RELAY_AGENT" --to reviewer >/dev/null 2>&1
+# simulate a peer/harness commit landing on ROOT during the turn (the moved-ROOT-HEAD trigger)
+git -C "$A" commit --allow-empty -q -m "concurrent peer commit during turn" >/dev/null 2>&1
+printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
+exit 0
+STUB_EOF
+chmod +x "$STUB2"
+seed_token RELAY-TURN-peer
+( cd "$A" && RELAY_AGENT=claude RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-peer \
+    CLAUDE_AGENT=claude CLAUDE_BIN="$STUB2" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude.peer.json" \
+    ALLOW_PATHS="artifact.txt" CLAUDE_BLOCK_CMDS="" RELAY_WORKTREE_ISOLATION=1 \
+    bash "$SHIM" >/dev/null 2>&1 ); rc=$?
+[ "$rc" -ne 6 ] && pass "isolated turn + concurrent ROOT commit: NOT reset+exit-6 (GH-13/#14 preserve)" || fail "regressed: worktree turn reset on a moved ROOT HEAD (rc=$rc)"
+# Capture-then-match (NOT `git log | grep -q`: grep -q closes the pipe on match → git SIGPIPE →
+# pipefail reports failure even on a hit — the documented poll.sh commit_gate_ok pitfall).
+peerlog="$(git -C "$A" log --oneline)"
+case "$peerlog" in *"concurrent peer commit during turn"*) pass "concurrent ROOT commit PRESERVED (not orphaned)" ;; *) fail "peer commit was lost (orphaned by reset)" ;; esac
+case "$(cat "$A/artifact.txt")" in *"built by builder"*) pass "builder's allowlist edit still copied back to ROOT" ;; *) fail "artifact.txt missing builder content after preserve" ;; esac
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

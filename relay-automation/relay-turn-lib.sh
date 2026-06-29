@@ -217,6 +217,16 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
   local wt="${1:-${RTL_WT:-}}" a entry xy path
   RTL_WT_OFFLANE=0
   [[ -n "$wt" && -d "$wt" ]] || return 0
+  # GH-13/#14: rtl_worktree_begin runs in a `wt="$(...)"` subshell, so the RTL_WT_USED=1 it sets there
+  # is LOST before rtl_enforce runs — which left the "a moved ROOT HEAD is a concurrent PEER commit;
+  # preserve it, don't reset" branch in rtl_enforce as DEAD CODE for the command-substitution shims
+  # (codex/agy). Every moved ROOT HEAD then wrongly hit the in-ROOT reset+exit-6 path, discarding a
+  # worktree builder's whole turn (the 2026-06-29 codex marathon, #14). This function runs in the
+  # caller's shell and is always reached before rtl_enforce for a worktree turn, so re-assert the flag
+  # here to restore the GH-13 protection. (The agent ran CWD=worktree, so its OWN commits can't reach
+  # ROOT; a moved ROOT HEAD is genuinely a peer/harness commit. Off-lane worktree content is already
+  # contained below before rtl_enforce sees it.)
+  RTL_WT_USED=1
   while IFS= read -r -d '' entry; do
     [[ -n "$entry" ]] || continue
     xy="${entry:0:2}"; path="${entry:3}"
