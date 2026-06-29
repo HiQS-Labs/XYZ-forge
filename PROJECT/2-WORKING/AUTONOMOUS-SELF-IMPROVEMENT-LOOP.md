@@ -1,10 +1,16 @@
 ---
 title: Autonomous self-improvement loop (the LOOPS.md endgame) — Part C
 slug: autonomous-self-improvement-loop
-status: Deferred
+status: Active
 created: 2026-06-16
-updated: 2026-06-21
+updated: 2026-06-29
 owner: Noel (operator) · Claude (producer)
+gh_issue: 50
+branch: feat/self-improvement-loop
+complexity: high
+risk: high
+effort: high
+ratings_provisional: true
 related:
   - PROJECT/1-INBOX/LOOPS.md                                      # the endgame this realizes
   - PROJECT/3-COMPLETED/MARATHON-HARNESS.md                       # the Part A convergence loop this turns into optimization
@@ -25,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Safety cage complete** — worktree isolation (Phase 3.6 ✅), per-turn caps (R5 ✅), epoch fencing (Part B Phase 1 ✅): the three trust prerequisites are already shipped. | **Gated — do not start.** Build the remaining prerequisites first (cumulative budget ceiling, `--measure-cmd` metric harness, oracle-immutability guard, champion/challenger state, held-out validation, full cost observability). |
+| **Kicked off 2026-06-29 — operator GO.** Branch `feat/self-improvement-loop` cut off the GH-40 lineage (#40 / PR #47 = the **semantic oracle** + Phase 3 sign-off scaffolding this builds on). Issue **#50** opened; 13-item shippable plan set. Safety cage already complete — worktree isolation (3.6 ✅), per-turn caps (R5 ✅), epoch fencing (B·P1 ✅). | Build the 6 prerequisites in order. **Next: the metric/oracle/stop *contract* for the first bounded target** (baseline-spec — a deterministic scalar, an un-gameable oracle outside the write surface, a guaranteed-halt stop). Then `--measure-cmd`. Reconcile `main` (GH-46 marathon infra) before wiring into the driver. |
 
 ---
 
