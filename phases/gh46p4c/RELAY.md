@@ -1,5 +1,5 @@
 # Marathon Phase gh46p4c
-STATUS: Open
+STATUS: Approved
 NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH46P4C-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -107,3 +107,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Extended `test/relay-loop.sh` with both required Phase 4 cases: detached cross-model dispatch with `BG-RUNNING` on the second tick, and the no-command degrade path with no pidfile/dispatch.
 - Updated `relay-automation/README.md` to document the new `relay-loop.sh --background --cross-model-cmd <shim>` behavior and the unchanged manual fallback.
 - Verification: `bash test/relay-loop.sh` → `15 pass, 0 fail`.
+
+### Round 1 · Reviewer · agy
+
+- Verified changes in `relay-automation/relay-loop.sh`, `test/relay-loop.sh`, and `relay-automation/README.md`.
+- Confirmed that `--cross-model-cmd` is correctly registered, checks for reachability, and background-dispatches when appropriate.
+- Confirmed fallback to manual nudge when the command is unset/unreachable is working properly.
+- Ran the specific test suite: `bash test/relay-loop.sh` is fully green (15 pass, 0 fail).
+- **Verdict:** Approved
