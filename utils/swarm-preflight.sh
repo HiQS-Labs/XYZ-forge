@@ -524,6 +524,19 @@ SP_F="$TMP/run-candidate.json" SP_K=freshness node -e 'import("node:fs").then(fs
 SP_F="$TMP/run-candidate.json" SP_K=readiness node -e 'import("node:fs").then(fs=>process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(process.env.SP_F,"utf8"))[process.env.SP_K],null,2)))' >"$OUT_DIR/readiness.json"
 printf '%s\n' "$INVOCATION" >"$OUT_DIR/marathon-invocation.txt"
 
+# GH-39 B6 + #43-1: bake a SCOPE-LOCKED brief so the builder beelines (no doc-chasing, no wander) and
+# size the turn budget to the artifacts. Acceptance criteria are inlined from the capture doc's checklist
+# so the builder doesn't have to go read it (the thin-brief gap that made GH-36 v1 wander ~38k tokens).
+GH39_ACC="$(grep -E '^[[:space:]]*- \[[ xX]\]' "$PRIMARY_DOC" 2>/dev/null | head -25)"
+[[ -n "$GH39_ACC" ]] || GH39_ACC="(no '- [ ]' checklist found in $PRIMARY_DOC — add an Acceptance criteria list)"
+GH39_ART_LOC=0
+IFS=',' read -ra _b6arts <<<"$ART_CSV"
+for _b6a in "${_b6arts[@]}"; do
+  read -r _b6a <<<"$_b6a"; [[ -z "$_b6a" ]] && continue
+  [[ -f "$TARGET_ROOT/$_b6a" ]] && GH39_ART_LOC=$((GH39_ART_LOC + $(wc -l <"$TARGET_ROOT/$_b6a" 2>/dev/null || echo 0)))
+done
+GH39_TIMEOUT=300; [[ "$GH39_ART_LOC" -gt 400 ]] && GH39_TIMEOUT=900
+
 cat >"$OUT_DIR/packet.md" <<EOF
 # Marathon preflight packet — $SLUG
 
@@ -534,9 +547,18 @@ cat >"$OUT_DIR/packet.md" <<EOF
 - Verdict: $VERDICT
 - Gate: \`$GATE_CMD\`
 - Artifacts: $ART_CSV
+- Suggested turn budget: \`RELAY_TURN_TIMEOUT_S=$GH39_TIMEOUT\` (artifacts ≈ $GH39_ART_LOC LOC; large files need more than the 300s default)
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
 (GUIDING-PRINCIPLES.md §8).
+
+## Acceptance criteria — the build is DONE when these hold (inlined from the capture doc)
+$GH39_ACC
+
+## Scope lock — builder, do exactly this and nothing else
+- Edit ONLY: \`$ART_CSV\` (plus the relay file). Any other edit is reverted and FAILS the turn.
+- Do NOT run the full gate (\`$GATE_CMD\`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn.
+- Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
 
 ## Suggested marathon-drive.sh invocation
 

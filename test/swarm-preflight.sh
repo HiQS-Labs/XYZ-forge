@@ -67,6 +67,12 @@ grep -q "verdict     : ready" <<<"$out" && pass "T1 verdict ready" || fail "T1 v
   && pass "T1 packet is self-contained (6 files)" || fail "T1 packet incomplete: $(ls "$R/packet" 2>&1)"
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))' "$R/packet/run-candidate.json" \
   && pass "T1 run-candidate.json is valid JSON" || fail "T1 run-candidate.json invalid JSON"
+# GH-39 B6 + #43-1: the packet bakes a scope-locked brief — inlined acceptance criteria, an explicit
+# scope-lock (incl. "don't run the full gate"), and a size-based turn-budget recommendation.
+grep -q "Scope lock" "$R/packet/packet.md" && pass "T1b packet has a scope-lock block" || fail "T1b packet missing scope-lock"
+grep -q "do not run the full gate\|Do NOT run the full gate" "$R/packet/packet.md" && pass "T1b scope-lock forbids self-running the gate" || fail "T1b scope-lock missing no-gate rule"
+grep -q "build it" "$R/packet/packet.md" && pass "T1b acceptance criteria inlined from the capture doc" || fail "T1b acceptance not inlined"
+grep -q "RELAY_TURN_TIMEOUT_S=" "$R/packet/packet.md" && pass "T1b packet recommends a turn budget" || fail "T1b missing turn-budget recommendation"
 
 # ── T2: stale (fix already landed) → exit 4, no packet ───────────────────────
 R="$(make_repo stale '{
