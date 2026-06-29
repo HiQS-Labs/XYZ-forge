@@ -41,6 +41,7 @@ TESTS=(
   "marathon-yaml.sh"
   "marathon-drive.sh"
   "driver-lock.sh"
+  "measure.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
