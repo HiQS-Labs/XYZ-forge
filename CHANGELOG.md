@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-27
 
+### GH-39 slice 2 (B6) + #43 — scope-locked marathon brief + no-self-gate prompt + turn-budget sizing
+The brief/prompt fixes that make headless marathon builds reliable — done inline (the marathon can't reliably build its own brief-fix; that circularity is #43).
+- **#43-3 (the marathon-v3 killer):** `rtl_turn_prompt` now tells the builder NOT to run the full gate/suite itself — running it creates files that trip containment and discard the turn; verify with the file's specific test, the harness gates after. [relay-automation/relay-turn-lib.sh](relay-automation/relay-turn-lib.sh).
+- **B6 + #43-1:** the `swarm-preflight` packet now bakes a **scope-locked brief** — inlines the capture doc's acceptance checklist (so the builder doesn't doc-chase + wander, the GH-36-v1 ~38k-token failure), an explicit *edit-only `<artifacts>` / don't-run-the-gate / don't-wander* block, and a size-based `RELAY_TURN_TIMEOUT_S` recommendation (300 default, 900 when artifacts >400 LOC, addressing the v1 exploration-timeout). [utils/swarm-preflight.sh](utils/swarm-preflight.sh).
+- **Tests:** `test/swarm-preflight.sh` +4 (scope-lock / no-gate / inlined-acceptance / turn-budget) → 31; `test/codex-turn.sh` +1 (#43-3 prompt lock) → 30; `validate.sh` 55/55.
+- **#43-2 deliberately NOT done:** `tick reap` reaps ALL of an agent's claims (not liveness-gated), so a blanket auto-reap would release a live concurrent peer's claims and **worsen GH-42**. Needs a liveness-aware reap or release-on-failure — left on #43 with that rationale.
+
 ### GH-39 slice 1 — swarm-preflight now validates the gate + artifact paths (advises lane CLI)
 Closes agy's GH-38/GH-39 "ready packet that fails mid-air" gaps (validation slice), via the GH-39 marathon then salvaged inline.
 - **A2** — every contract `artifacts[]` path must exist at `target.ref` (checked in the throwaway ref worktree) → a missing/mistyped path is `not-ready`, not a first-edit failure.
