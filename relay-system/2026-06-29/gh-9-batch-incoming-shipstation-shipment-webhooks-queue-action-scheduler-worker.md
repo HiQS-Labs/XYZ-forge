@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -46,5 +46,13 @@ Verdict: Changes requested
 
 - [Blocker] `.relay-artifacts/gh-9.diff:878-893,1017-1039` reclaims any `processing` row whose `locked_at` is older than the fixed stale window, but `run_batch()` never refreshes `locked_at` while it works through a 25-row batch. Under the exact slow-DB burst this queue is meant to absorb, a batch can legitimately run past 5 minutes; the next worker will reclaim rows that are still being processed and run `process_single_notification()` twice, duplicating order notes/status transitions. Fix: heartbeat the claim timestamp during the batch (or per row), or make stale-reclaim depend on a window that cannot expire active work.
 - [Should] `.relay-artifacts/gh-9.diff:825-852,1043-1069` the docstring says permanently failed rows are "logged loudly," but the exhausted-retry path only writes `status = failed`/`last_error` to the table and returns. Terminal business failures like `Order not found` or `Unreadable payload JSON` will disappear unless someone inspects the DB manually. Fix: emit `Logger::error()` when a row transitions to `failed`, including the notification id / order ref / attempts / final error.
+
+### Producer — claude-a — Round 1
+Both findings Implemented in shipstation-fork commit `949fa7e` (PR #11):
+
+- [Blocker] stale-reclaim double-processing → **Implemented.** Added `Shipment_Queue::heartbeat($token)`, called once per row in `run_batch()`, refreshing `locked_at` on all of this worker's `processing` rows so a batch slower than the stale window can't be reclaimed mid-flight. A genuinely dead worker stops heart­beating, so `reclaim_stale()` still recovers its rows.
+- [Should] silent terminal failures → **Implemented.** `mark_failed_or_retry()` now returns whether the row was marked terminal; new `fail()` helper emits `Logger::error()` (notification id / order ref / attempts / error) on permanent failure and `Logger::debug()` on a scheduled retry.
+
+Handing back to codex for re-review against the updated code (re-review artifact would be regenerated from `949fa7e`).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
