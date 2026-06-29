@@ -56,6 +56,23 @@ else
   pass "sink refuses a case-variant rule-doc name (case-insensitive match)"
 fi
 
+# (1d) Codex r2: a same-inode HARD link (not a symlink, innocent basename), and an unwritable target.
+if ln "$A/ROUTER.md" "$A/hardlink.md" 2>/dev/null; then
+  hbefore="$(cksum "$A/ROUTER.md")"
+  if printf 'via hard link\n' | bash "$SINK" "$A/hardlink.md" 2>/dev/null; then
+    fail "sink wrote THROUGH a hard link to a rule doc (same-inode bypass)"
+  else
+    pass "sink refuses a hard-link target sharing a rule doc's inode (test -ef)"
+  fi
+  [ "$(cksum "$A/ROUTER.md")" = "$hbefore" ] \
+    && pass "rule doc byte-unchanged after the refused hard-link write" || fail "rule doc modified via hard link"
+fi
+if printf 'x\n' | bash "$SINK" "$A/nodir/out.md" 2>/dev/null; then
+  fail "sink reported success writing to a nonexistent/unwritable path"
+else
+  pass "sink fails (no false success) when the append can't be written"
+fi
+
 # --- (2) a Reviewer turn scopes the rule/operator docs OFF its writable allowlist -------------------
 printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$A/relay.md"
 rtl_init "$A" "$A/relay.md" "ROUTER.md,AGENTS.md,GUIDING-PRINCIPLES.md,PDDA.md" 2>/dev/null

@@ -34,12 +34,38 @@ case "$TARGET_BASE_LC" in
     echo "proposals-sink: refusing to write proposals into a rule/operator doc ($TARGET)" >&2
     exit 2 ;;
 esac
+# Same-inode (hard-link) check: an innocently-named HARD link (notes.md hard-linked to ROUTER.md) is
+# neither a symlink nor a protected basename, yet `>>` lands in the protected doc. `test -ef` compares
+# device+inode, so it catches it. Check the protected-name siblings in the target's dir AND the
+# canonical repo-root docs (best-effort; skipped outside a git repo).
+PROTECTED="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md PDDA.md"
+TDIR="$(dirname "$TARGET")"
+GROOT="$(git -C "$TDIR" rev-parse --show-toplevel 2>/dev/null || true)"
+for name in $PROTECTED; do
+  for cand in "$TDIR/$name" ${GROOT:+"$GROOT/$name"}; do
+    if [ -e "$cand" ] && [ "$TARGET" -ef "$cand" ]; then
+      echo "proposals-sink: target is the same file as a rule/operator doc ($cand) — refusing" >&2
+      exit 2
+    fi
+  done
+done
 
 PROPOSALS=()
 while IFS= read -r line; do
   [ -n "${line//[[:space:]]/}" ] && PROPOSALS+=("$line")
 done
 [ "${#PROPOSALS[@]}" -gt 0 ] || { echo "proposals-sink: no proposals on stdin" >&2; exit 3; }
+
+# Verify the append CAN succeed before claiming it did — don't silently lose the Reviewer's proposals
+# while reporting success. (Checked explicitly, not via the redirect's exit status: a failed
+# redirection on a negated group command does not reliably propagate non-zero on bash 3.2.)
+TARGET_DIR="$(dirname "$TARGET")"
+[ -d "$TARGET_DIR" ] || { echo "proposals-sink: target directory does not exist ($TARGET_DIR)" >&2; exit 1; }
+if [ -e "$TARGET" ]; then
+  [ -w "$TARGET" ] || { echo "proposals-sink: target is not writable ($TARGET)" >&2; exit 1; }
+else
+  [ -w "$TARGET_DIR" ] || { echo "proposals-sink: target directory is not writable ($TARGET_DIR)" >&2; exit 1; }
+fi
 
 {
   echo ""
