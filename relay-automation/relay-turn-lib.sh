@@ -217,6 +217,16 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
   local wt="${1:-${RTL_WT:-}}" a entry xy path
   RTL_WT_OFFLANE=0
   [[ -n "$wt" && -d "$wt" ]] || return 0
+  # GH-13/#14: rtl_worktree_begin runs in a `wt="$(...)"` subshell, so the RTL_WT_USED=1 it sets there
+  # is LOST before rtl_enforce runs — which left the "a moved ROOT HEAD is a concurrent PEER commit;
+  # preserve it, don't reset" branch in rtl_enforce as DEAD CODE for the command-substitution shims
+  # (codex/agy). Every moved ROOT HEAD then wrongly hit the in-ROOT reset+exit-6 path, discarding a
+  # worktree builder's whole turn (the 2026-06-29 codex marathon, #14). This function runs in the
+  # caller's shell and is always reached before rtl_enforce for a worktree turn, so re-assert the flag
+  # here to restore the GH-13 protection. (The agent ran CWD=worktree, so its OWN commits can't reach
+  # ROOT; a moved ROOT HEAD is genuinely a peer/harness commit. Off-lane worktree content is already
+  # contained below before rtl_enforce sees it.)
+  RTL_WT_USED=1
   while IFS= read -r -d '' entry; do
     [[ -n "$entry" ]] || continue
     xy="${entry:0:2}"; path="${entry:3}"
@@ -298,7 +308,7 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # writable edit target — an edit fails the turn).
   local art_note=""
   [[ -n "${RTL_ARTIFACT_REL:-}" ]] && art_note=" The artifact under review is at ${RTL_ARTIFACT_REL} — READ it for your review, but do NOT edit it (any edit fails your turn)."
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s/bin/tick". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token.' \
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s/bin/tick". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.' \
     "$agent" "$f_rel" "$task" "$tickroot" "$tickroot" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note"
 }
 

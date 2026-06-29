@@ -28,6 +28,26 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
 CONSULT_SH="${CONSULT_SH:-"$ROOT_DIR/relay-automation/consult.sh"}"
 
+if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
+  _lock="$ROOT_DIR/.git/relay-driver.lock"
+  if ! mkdir "$_lock" 2>/dev/null; then
+    # GH-42 self-heal: reclaim the lock only if its holder is dead. A crashed/killed driver used to
+    # leave a stale lock that blocked every later run until a manual rmdir.
+    _holder="$(cat "$_lock/pid" 2>/dev/null || true)"
+    if [[ -n "$_holder" ]] && kill -0 "$_holder" 2>/dev/null; then
+      printf 'relay-drive: another driver is active in this repo (pid %s, lock: .git/relay-driver.lock).\n' "$_holder" >&2
+      printf 'relay-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).\n' >&2
+      exit 1
+    fi
+    printf 'relay-drive: reclaiming stale relay-driver.lock (holder pid %s not running).\n' "${_holder:-none}" >&2
+    rm -rf "$_lock"
+    mkdir "$_lock" 2>/dev/null || { printf 'relay-drive: could not acquire relay-driver.lock after reclaiming a stale one.\n' >&2; exit 1; }
+  fi
+  printf '%s\n' "$$" > "$_lock/pid"
+  trap 'rm -rf "$_lock" 2>/dev/null || true' EXIT
+  export RELAY_DRIVER_LOCKED=1
+fi
+
 usage() {
   cat <<'EOF'
 Usage: relay-automation/relay-drive.sh --relay-file PATH --agent-cmd CMD [options]

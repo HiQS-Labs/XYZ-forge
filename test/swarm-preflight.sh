@@ -34,6 +34,12 @@ make_repo() {
     printf -- '---\ntitle: %s\n---\n# %s\n%s\n## Swarm Preflight Contract\n```json\n%s\n```\n' \
       "$name" "$name" "$extra" "$contract"
   } >"$r/PROJECT/2-WORKING/GH-900-$name.md"
+  # GH-39 (A2): seed the artifact paths the fixtures declare so a happy-path candidate's artifacts[]
+  # actually exist at the ref (preflight now blocks missing artifact paths). Covers src/a.js,
+  # test/a.test.js, and the single-letter fixtures a/b. Extra files are harmless (only declared
+  # artifacts are checked; no fix_probe in these fixtures targets these paths).
+  mkdir -p "$r/src" "$r/test"
+  : >"$r/src/a.js"; : >"$r/test/a.test.js"; : >"$r/a"; : >"$r/b"
   git -C "$r" init -q -b main 2>/dev/null || { git -C "$r" init -q; git -C "$r" symbolic-ref HEAD refs/heads/main; }
   git -C "$r" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
   git -C "$r" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
@@ -61,6 +67,12 @@ grep -q "verdict     : ready" <<<"$out" && pass "T1 verdict ready" || fail "T1 v
   && pass "T1 packet is self-contained (6 files)" || fail "T1 packet incomplete: $(ls "$R/packet" 2>&1)"
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))' "$R/packet/run-candidate.json" \
   && pass "T1 run-candidate.json is valid JSON" || fail "T1 run-candidate.json invalid JSON"
+# GH-39 B6 + #43-1: the packet bakes a scope-locked brief — inlined acceptance criteria, an explicit
+# scope-lock (incl. "don't run the full gate"), and a size-based turn-budget recommendation.
+grep -q "Scope lock" "$R/packet/packet.md" && pass "T1b packet has a scope-lock block" || fail "T1b packet missing scope-lock"
+grep -q "do not run the full gate\|Do NOT run the full gate" "$R/packet/packet.md" && pass "T1b scope-lock forbids self-running the gate" || fail "T1b scope-lock missing no-gate rule"
+grep -q "build it" "$R/packet/packet.md" && pass "T1b acceptance criteria inlined from the capture doc" || fail "T1b acceptance not inlined"
+grep -q "RELAY_TURN_TIMEOUT_S=" "$R/packet/packet.md" && pass "T1b packet recommends a turn budget" || fail "T1b missing turn-budget recommendation"
 
 # ── T2: stale (fix already landed) → exit 4, no packet ───────────────────────
 R="$(make_repo stale '{
@@ -181,6 +193,41 @@ R="$(make_repo badref '{
 out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-badref.md" 2>&1)"; rc=$?
 [[ $rc -eq 6 ]] && pass "T12 unresolvable target.ref → exit 6" || fail "T12 expected exit 6, got $rc — $out"
 grep -q "does not resolve" <<<"$out" && pass "T12 names the unresolvable ref" || fail "T12 missing message: $out"
+
+# ── T13: GH-39 (A2) — a declared artifact path that doesn't exist at the ref → not-ready (exit 5) ──
+R="$(make_repo artmiss '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEVER.txt" } ],
+  "artifacts": [ "src/does-not-exist.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-artmiss.md" 2>&1)"; rc=$?
+[[ $rc -eq 5 ]] && pass "T13 GH-39: missing artifact path → not-ready (exit 5)" || fail "T13 expected exit 5, got $rc — $out"
+grep -q "artifact path not found" <<<"$out" && pass "T13 names the missing artifact path" || fail "T13 missing message: $out"
+
+# ── T14: GH-39 (A1) — a `bash <script>` gate whose script doesn't exist → not-ready (exit 5) ──
+R="$(make_repo gatemiss '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash no-such-gate.sh",
+  "fix_probes": [ { "type": "path_absent", "path": "NEVER.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gatemiss.md" 2>&1)"; rc=$?
+[[ $rc -eq 5 ]] && pass "T14 GH-39: unrunnable gate (missing script) → not-ready (exit 5)" || fail "T14 expected exit 5, got $rc — $out"
+grep -q "gate script not found" <<<"$out" && pass "T14 names the missing gate script" || fail "T14 missing message: $out"
+
+# ── T15: GH-39 (A1) — a gate WITH FLAGS (`bash -x <script>`) resolves the SCRIPT, not the flag ──
+R="$(make_repo gateflag '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash -x src/a.js",
+  "fix_probes": [ { "type": "path_absent", "path": "NEVER.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gateflag.md" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T15 GH-39: gate with flags resolves the script, not the flag (ready)" || fail "T15 expected exit 0, got $rc — $out"
 
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
