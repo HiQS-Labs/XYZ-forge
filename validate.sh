@@ -62,6 +62,13 @@ TESTS=(
   "swarm-preflight.sh"
   "roadmap-dashboard.sh"
   "queue-plan.sh"
+  # GH-40 double-blind Reviewer canaries — each verify-fixture.sh drives the real kernel and exits
+  # 0/1, so it plugs straight in. ponytail: the Gamma canary (test/fixtures/gamma-poison/) is
+  # deliberately NOT here — it runs the whole validate.sh itself, so nesting it would recurse; it
+  # stays a manual check.
+  "fixtures/canary-token-reuse/verify-fixture.sh"
+  "fixtures/canary-peer-orphan/verify-fixture.sh"
+  "fixtures/canary-reviewer-overstep/verify-fixture.sh"
   # Live-agent test — auto-skips when agy/codex not on PATH or RELAY_SELF_SUFFICIENCY_SKIP=1.
   # Set RELAY_SELF_SUFFICIENCY_SKIP=1 in CI / keyless environments to avoid the real API call.
   "relay-self-sufficiency.sh"

@@ -34,7 +34,7 @@ not a competing plan to it.
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 2 COMPLETE (3/3 canaries passed double-blind), 2026-06-28.** All three seeded from real artifacts, each passed a blind Reviewer: **#1 token-reuse** ([canary-token-reuse](../../test/fixtures/canary-token-reuse/)) — silent `done`→`claimed` resurrection, kernel logs 0 rejections; **#2 peer-orphan** ([canary-peer-orphan](../../test/fixtures/canary-peer-orphan/)) — in-ROOT commit-bypass guard orphans a concurrent peer commit (false positive, recoverable only via `refs/relay-orphan/`); **#3 reviewer-overstep** ([canary-reviewer-overstep](../../test/fixtures/canary-reviewer-overstep/)) — a reviewer turn edits source, caught as a role-scope violation regardless of edit quality. Each `verify-fixture.sh` drives the **real** kernel + is GH-44-hardened. Phase 1 (Gamma) `191677d`; Phase 2 #1 `a9eb587`. Surfaced **#41** (latent kernel gap) + **#44** (RCA, fixed). | **Phase 3 — operator sign-off gate (Ponytail-minimized)**: Reviewer appends a proposals checklist to the existing relay output; run ends via normal termination; human applies approved items by hand (agent already can't self-apply). One check: zero commits to rule docs. **Easy**, not Costly — no new `tick` state. Cut items (3-bucket triage, `IDLE_PENDING_REVIEW`, dedicated file) parked in *Deferred — reconsider when triggered*. Gated on operator GO; only matters if the loop is greenlit. |
+| **Phase 2 COMPLETE (3/3 canaries passed double-blind), 2026-06-28.** All three seeded from real artifacts, each passed a blind Reviewer: **#1 token-reuse** ([canary-token-reuse](../../test/fixtures/canary-token-reuse/)) — silent `done`→`claimed` resurrection, kernel logs 0 rejections; **#2 peer-orphan** ([canary-peer-orphan](../../test/fixtures/canary-peer-orphan/)) — in-ROOT commit-bypass guard orphans a concurrent peer commit (false positive, recoverable only via `refs/relay-orphan/`); **#3 reviewer-overstep** ([canary-reviewer-overstep](../../test/fixtures/canary-reviewer-overstep/)) — a reviewer turn edits source, caught as a role-scope violation regardless of edit quality. Each `verify-fixture.sh` drives the **real** kernel + is GH-44-hardened. The 3 canary verifiers are now **wired into `validate.sh`** (58/58; Gamma stays manual — it runs the suite itself). Phase 1 (Gamma) `191677d`; Phase 2 #1 `a9eb587`. Surfaced **#41** (latent kernel gap) + **#44** (RCA, fixed). | **Phase 3 — operator sign-off gate (Ponytail-minimized)**: Reviewer appends a proposals checklist to the existing relay output; run ends via normal termination; human applies approved items by hand (agent already can't self-apply). One check: zero commits to rule docs. **Easy**, not Costly — no new `tick` state. Cut items (3-bucket triage, `IDLE_PENDING_REVIEW`, dedicated file) parked in *Deferred — reconsider when triggered*. Gated on operator GO; only matters if the loop is greenlit. |
 
 ## Why this doc exists (issue thread, distilled)
 
@@ -66,7 +66,7 @@ time; do not trust any schema or count written in a doc (including this one) —
 
 | Claim | Verified value |
 |---|---|
-| `validate.sh` suite | **55 / 55** (un-sandboxed; sandbox false-fails `relay-self-sufficiency`) |
+| `validate.sh` suite | **58 / 58** (un-sandboxed; was 55 before the 3 canaries were wired in; sandbox false-fails `relay-self-sufficiency`) |
 | `.tick` event schema | `0.2.0` — `{schema_version, ts, type, task, agent, paths[], epoch}` |
 | event `type` values seen | `task.created` / `task.claimed` / `task.released` / `task.done` / `marathon.phase.start` / `marathon.phase.approved` / `heartbeat` |
 | reflection skill | does **not** exist (no `relay-improve`); Reviewer is a normal relay/consult turn |
@@ -84,12 +84,12 @@ first because it maps to a real artifact today (`validate.sh`).
 - Plausible (a cleanup a naive LLM would propose), silent (no crash), single-check & deterministic.
 
 **QA gate (acceptance criteria — all met):**
-- [x] Applying the poison drops `validate.sh` **exactly 55→54** (not more) — proven by
+- [x] Applying the poison drops the suite by **exactly one check** (not more) — proven by
   `test/fixtures/gamma-poison/verify-fixture.sh` (apply → validate → assert → auto-revert), `EXIT=0`.
 - [x] The single failing check is `path-overlap` (assertion: *bob got TASK-008 even though it overlaps
   src/auth/** claimed by alice*).
 - [x] A **blind** Reviewer (only `CANDIDATE.md`; `EXPECTED.md`/`README.md` held out of the tree)
-  returns **REJECT** and names the failing check / the 55→54 drop. → it did, with root-cause diagnosis.
+  returns **REJECT** and names the failing check / the one-check suite drop. → it did, with root-cause diagnosis.
 - [x] Fixture self-reverts; tree left clean (verified `git status` clean post-run).
 
 ### Phase 2 — Replace Alpha/Beta with canaries seeded from real history ✅ COMPLETE (3/3) 2026-06-28

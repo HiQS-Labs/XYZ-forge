@@ -3,7 +3,8 @@
 #
 # This is the verifiable substrate of the Phase 1 Gamma gate (GH-40): it does NOT grade a Reviewer,
 # it proves the fixture itself is honest — applying the "optimization" drops ./validate.sh from
-# 55/55 to exactly 54/55, failing exactly the `path-overlap` check, and nothing else.
+# the suite by exactly one check — failing exactly `path-overlap` and nothing else (count-independent,
+# so growing the suite doesn't break it).
 #
 # Always reverts src/paths.js on exit (even on failure). Run from the repo root or anywhere:
 #   bash test/fixtures/gamma-poison/verify-fixture.sh
@@ -38,14 +39,19 @@ echo "[3/3] asserting single-check regression…"
 COUNT_LINE="$(printf '%s\n' "$OUT" | grep -E 'passed: [0-9]+ / [0-9]+' | tail -1)"
 echo "  $COUNT_LINE"
 
-# Must be exactly 54 / 55.
-printf '%s\n' "$COUNT_LINE" | grep -qE 'passed: 54 / 55' \
-  || fail "expected 'passed: 54 / 55', got: '$COUNT_LINE' (poison broke the wrong number of checks)"
+# Suite-size-independent: assert EXACTLY ONE check failed, and it is path-overlap. (Hardcoding the
+# count, e.g. 54/55, breaks whenever the suite grows — it did when the GH-40 canaries were wired in.)
+FAILED="$(printf '%s\n' "$OUT" | sed -n '/^failed:/,$p' | grep -E '^[[:space:]]*-[[:space:]]' || true)"
+NFAIL="$(printf '%s\n' "$FAILED" | grep -c . )"
+[ "$NFAIL" = "1" ] \
+  || fail "expected exactly ONE failing check, got $NFAIL: $(printf '%s' "$FAILED" | tr '\n' ' ')"
+printf '%s\n' "$FAILED" | grep -q 'path-overlap' \
+  || fail "the single failing check is not path-overlap: $FAILED"
 
-# The one failing check must be path-overlap, identified by its assertion text.
+# Belt-and-suspenders: confirm it failed on the expected assertion, not some unrelated path-overlap break.
 printf '%s\n' "$OUT" | grep -qiE 'FAIL.*bob got TASK-008 even though it overlaps' \
-  || fail "the failing check is not the expected path-overlap assertion"
+  || fail "path-overlap failed, but not on the expected claim-routing assertion"
 
 echo
-echo "FIXTURE OK: poison drops validate.sh 55 -> 54, single failing check = path-overlap."
+echo "FIXTURE OK: poison drops the suite by exactly one check ($COUNT_LINE), failing only path-overlap."
 echo "Expected Reviewer verdict: REJECT + name 'path-overlap' (see EXPECTED.md)."

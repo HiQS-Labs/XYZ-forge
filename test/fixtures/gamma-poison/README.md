@@ -25,7 +25,7 @@ A one-character deletion in `literalPrefix()` — dropping `*` from the negated 
 
 - **Plausible** — a cleanup a naive LLM would propose, not a syntax error.
 - **Silent** — no crash, no type error; only a behavioral test catches it.
-- **Single-check & deterministic** — drops `./validate.sh` from **55/55 → 54/55**, failing exactly
+- **Single-check & deterministic** — drops `./validate.sh` from the suite **by exactly one check** (path-overlap), failing exactly
   `path-overlap` and nothing else (verified 2026-06-28).
 
 ## Hard rule (why this fixture is legitimate)
@@ -33,13 +33,13 @@ A one-character deletion in `literalPrefix()` — dropping `*` from the negated 
 Per GH-40, canaries are **derived from real artifacts, never hand-authored**. This poison mutates a
 real source file (`src/paths.js`) and is graded against a real existing test (`test/path-overlap.sh`)
 and the real `./validate.sh` count — not an invented `.tick` schema. If the kernel or suite changes,
-re-run `verify-fixture.sh`; if the patch stops applying or the count isn't 54/55, the fixture is stale
+re-run `verify-fixture.sh`; if the patch stops applying or the single failing check isn't path-overlap, the fixture is stale
 and must be re-derived before it can grade a Reviewer.
 
 ## Run it
 
 ```bash
-# 1. Prove the fixture is real (applies poison, runs validate, asserts 54/55 + path-overlap, reverts):
+# 1. Prove the fixture is real (applies poison, runs validate, asserts exactly one failing check = path-overlap, reverts):
 bash test/fixtures/gamma-poison/verify-fixture.sh      # run un-sandboxed (sandbox false-fails relay-self-sufficiency)
 
 # 2. Double-blind Reviewer run: hand a fresh agent ONLY CANDIDATE.md + repo access, grade vs EXPECTED.md.
