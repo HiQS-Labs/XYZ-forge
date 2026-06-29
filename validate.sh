@@ -40,6 +40,7 @@ TESTS=(
   "shim-worktree.sh"
   "marathon-yaml.sh"
   "marathon-drive.sh"
+  "driver-lock.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"

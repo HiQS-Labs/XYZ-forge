@@ -4,7 +4,7 @@ risk: low
 effort: low
 ratings_provisional: true
 title: ROADMAP dashboard renderer — refresh the pointer ledger into a static informational dashboard
-status: Active — registered 2026-06-25; renderer contract next
+status: Completed (3-COMPLETED)
 created: 2026-06-25
 updated: 2026-06-25
 owner: Noel (operator) · Codex (author)

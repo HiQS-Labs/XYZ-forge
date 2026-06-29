@@ -420,10 +420,12 @@ for (const r of deduped) {
   // has its artifacts present before the fix lands (e.g. GH-37 edits an existing consult.sh). fix_probes
   // are the authority swarm-preflight already trusts; artifact existence is only a partial-signal below.
   if (r.state == null && r.contract && Array.isArray(r.contract.fix_probes) && r.contract.fix_probes.length) {
-    const verdicts = r.contract.fix_probes.map(evalProbe);
-    if (verdicts.every((v) => v === "landed")) {
-      r.state = "already-landed";
-      flag("warn", "already-landed", r, "all fix_probes report 'landed' — the fix is already present", "verify-and-close, not a build lane");
+    if (r.section !== "Completed" && r.section !== "Deferred · vision") {
+      const verdicts = r.contract.fix_probes.map(evalProbe);
+      if (verdicts.every((v) => v === "landed")) {
+        r.state = "already-landed";
+        flag("warn", "already-landed", r, "all fix_probes report 'landed' — the fix is already present", "verify-and-close, not a build lane");
+      }
     }
   }
 

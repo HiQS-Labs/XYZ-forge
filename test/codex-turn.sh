@@ -161,5 +161,12 @@ run_shim RELAY-TURN-tickexempt codex good; rc=$?
 [ "$rc" -eq 0 ] && pass ".tick writes exempted when host doesn't gitignore .tick (turn succeeds)" || fail "unignored .tick must not fail the turn (rc=$rc)"
 [ -d "$A/.tick" ] && pass ".tick state dir preserved (not rm-rf'd)" || fail ".tick was destroyed"
 
+# GH-39 B6 / #43-3: the builder turn prompt must forbid self-running the full gate suite — doing so
+# creates files that trip containment and discard the turn (observed in the GH-39 marathon v3).
+LIB="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/relay-turn-lib.sh"
+grep -q "Do NOT run the full project test/gate suite" "$LIB" \
+  && pass "turn prompt forbids self-running the full gate (#43-3)" \
+  || fail "#43-3: turn prompt missing the no-gate instruction"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

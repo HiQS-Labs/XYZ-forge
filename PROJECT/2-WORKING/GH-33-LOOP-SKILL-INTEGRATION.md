@@ -2,7 +2,7 @@
 title: Leverage the built-in /loop skill to drive relays (adaptive cadence + unify Path A/B)
 status: Active (2-WORKING)
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 owner: noel
 goal: >
   Use the built-in Claude Code /loop skill (recurring + self-paced "dynamic" mode,
@@ -35,7 +35,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phases 0–2 shipped** (on branch `gh-33-loop-skill-integration`, isolated worktree — kept off `main` to avoid the concurrent agent). Phase 0: chose the **thin wrapper** shape. Phase 1: `poll.sh --emit-delay` → deadline-clamped `DELAY:` line (additive, default-off, env-tunable). Phase 2: `relay-automation/relay-loop.sh` wrapper (default one-tick `NEXT-POLL:` for a `/loop` dynamic tick; `--sleep-loop` self-paces in pure bash) + the dynamic-mode recipe in the `relay-xyz` SKILL, reschedule kept pluggable (no hardcoded `ScheduleWakeup`). New `test/relay-loop.sh` (5 cases) + 8 `poll-driver` cases; script packaged. **`validate.sh` 51/51**, `skill-extract` 15 files. | **Operator GO gate before Phase 3+.** Phases 3–4 (background-Bash dispatch + the Path A/B unification — the cross-model-hands-free win) are **Costly** (touch `relay-turn-lib.sh` containment) and must not start without explicit GO. Phase 2 is a clean, usable stopping point. Promote to `2-WORKING` if continuing. |
+| **Phase 3 shipped** (2026-06-28, inline Opus). `relay-automation/relay-loop.sh --background`: dispatches the turn DETACHED on `run-runner` and returns at once (session freed; scheduler re-invokes next tick), a pidfile is the single-turn lock (`BG-RUNNING` → no double-dispatch; stale pidfile cleared on completion → fresh decision acted on). **Containment inherited** — the backgrounded process is the same runner, so the `relay-turn-lib.sh` boundary is byte-identical (proven by an fg/bg parity test). `poll.sh` stays a pure oracle (reused its `--dry-run`). +6 cases in `test/relay-loop.sh` (**11/11**); README Components row added; **`validate.sh` green**. Phases 0–2 already merged (#35). | **Phase 4 contract authored** (below) → **firing the marathon dogfood** (`swarm-preflight → marathon-drive`, codex builder + agy reviewer): on `nudge-cross-model` launch the cross-model shim as background Bash (reusing Phase 3's `bg_launch` + pidfile lock) instead of a human nudge, with CLI-absent → degrade-to-nudge. Scope-locked to relay-loop.sh/poll.sh/test/README; `relay-turn-lib.sh` is OUT of scope (containment byte-identical). |
 
 ## Effort & Risk (the question asked)
 
@@ -138,17 +138,29 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
 - [x] `tick` claim/heartbeat cadence is unchanged — only the *poll* cadence adapts (wrapper touches no token logic).
 - [x] `validate.sh` green with the new `relay-loop.sh` test registered + the script packaged (`skill-extract.sh` 15 files).
 
-## Phase 3 — Background-Bash turn dispatch
+## Swarm Preflight Contract → split out to #46
 
-- [ ] Document/support running a turn shim (`codex-turn.sh` / `agy-turn.sh` / the Claude turn) as a **background** process so the session is freed during the turn and the harness re-invokes on completion (no polling for harness-tracked work).
-- [ ] Verify the turn shim's safety boundary (path-allowlist, commit-bypass guard, no-push, worktree isolation) holds identically when launched in the background.
-- [ ] On completion, the resuming session reads `STATUS:` / token state and decides hand-off vs stop.
+> **Moved (2026-06-28).** The runnable Phase 4 preflight contract now lives in its own issue + capture
+> doc so it gets its own number and attention instead of being buried in this 6-phase epic:
+> **#46 → [GH-46-PHASE4-SWARM-PREFLIGHT.md](GH-46-PHASE4-SWARM-PREFLIGHT.md)** (authoritative copy).
+>
+> This epic still owns the Phase 4 *design* (below). For the executable contract — the JSON
+> `swarm-preflight` parses, the marathon dogfood, and the acceptance checklist used to fire the lane —
+> see #46. Keep the two in sync; **#46 wins for execution** (it carries the single contract copy, not a
+> second drifting one).
+
+## Phase 3 — Background-Bash turn dispatch ✅ (shipped 2026-06-28)
+
+- [x] Document/support running a turn shim (`codex-turn.sh` / `agy-turn.sh` / the Claude turn) as a **background** process so the session is freed during the turn and the harness re-invokes on completion (no polling for harness-tracked work). → `relay-loop.sh --background` (nohup-detached launch; `poll.sh` left a pure oracle via `--dry-run`).
+- [x] Verify the turn shim's safety boundary (path-allowlist, commit-bypass guard, no-push, worktree isolation) holds identically when launched in the background. → **inherited by construction** (backgrounding via `&` changes only when the parent returns, not the child's code path); asserted by the fg/bg execution-parity test + the kernel's own containment tests (`test/relay-target-root-newfile.sh`).
+- [x] On completion, the resuming session reads `STATUS:` / token state and decides hand-off vs stop. → stale pidfile cleared on the next tick, which then acts on the fresh `poll.sh` decision (stop/idle/handoff).
 
 ### QA checklist — Phase 3
 
-- [ ] A backgrounded turn enforces the same containment as a foreground turn (off-allowlist edit reverted, no push).
-- [ ] Session is not blocked for the turn's duration; completion re-invokes the model.
-- [ ] No double-dispatch: the token/lock prevents a second turn firing while one runs.
+- [x] A backgrounded turn enforces the same containment as a foreground turn (off-allowlist edit reverted, no push). → same runner path; parity test green.
+- [x] Session is not blocked for the turn's duration; completion re-invokes the model. → `--background` returns immediately after launch (test: returns before the runner's `sleep` finishes); the scheduler re-invokes on the next tick.
+- [x] No double-dispatch: the token/lock prevents a second turn firing while one runs. → pidfile lock → `BG-RUNNING` (test: runner ran exactly once across two ticks).
+- [x] `validate.sh` green; `test/relay-loop.sh` 11/11.
 
 ## Phase 4 — Unify Path A and Path B (hands-free + cross-model)
 

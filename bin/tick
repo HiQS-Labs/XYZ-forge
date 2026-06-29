@@ -95,7 +95,7 @@ Usage:
   tick break <task> --agent <id> --reason "..."
   tick done <task> --agent <id> [--note "..."] [--relay-file <path>]
   tick ping <task> --agent <id> [--note "..."]      (liveness heartbeat)
-  tick reap <agent> [--by <id>]
+  tick reap <agent> [--by <id>] [--task <task>]
   tick info <task>
   tick cost <task> --agent <id> --human-minutes <n>          (log operator attention)
   tick cost <task> --agent <id> --tokens-in <n> --tokens-out <n> [--tokens-total <n>] [--tool <name>]
@@ -275,7 +275,11 @@ function main(argv) {
       const [agent] = positional;
       if (!agent) { usage(); return 2; }
       const by = typeof flags.by === 'string' ? flags.by : (gitUserName(root) || 'coordinator');
-      const result = reap(root, { agent, by });
+      const result = reap(root, {
+        agent,
+        by,
+        task: typeof flags.task === 'string' ? flags.task : undefined,
+      });
       if (!result.reaped.length) {
         process.stdout.write(`(no active claims held by ${agent})\n`);
       } else {

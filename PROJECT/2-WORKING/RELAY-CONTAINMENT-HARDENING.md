@@ -6,7 +6,7 @@ ratings_provisional: true
 title: "Relay containment-guard hardening — concurrent-commit safety + no agent self-commit"
 status: Active
 created: 2026-06-23
-updated: 2026-06-23
+updated: 2026-06-29
 owner: Noel (operator) · Claude (producer)
 doc_type: bugfix
 goal: >
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **#13 fixed + tested.** `rtl_enforce`'s commit-bypass guard is now **worktree-aware** (`relay-turn-lib.sh`): `rtl_worktree_begin` sets `RTL_WT_USED=1`, and when a worktree-isolated turn (the default driven path) sees ROOT `HEAD` moved, the agent provably can't have caused it — so it's a **concurrent peer commit, preserved** (not `reset --hard`'d), and the turn commits on top. In-ROOT/attended behavior is byte-for-byte unchanged (HEAD move → reset + exit 6). New `test/relay-concurrent-commit.sh` (7/7) proves both; **`validate.sh` 38/38**. **#14 partial:** `rtl_turn_prompt` now emphatically forbids agent self-commit ("NEVER run git yourself … a self-commit FAILS your whole turn"). | **#14 enforcement-level:** a `git` PATH-shadow/wrapper in the shims that blocks `commit`/`add`/`push`/`reset` (passes reads through) so a self-commit is *prevented*, not just discouraged + caught. **Optional (#13 residual):** the in-ROOT (attended, non-default) path still resets on any HEAD move — a concurrent peer commit there would be reset (low risk; the driven path is isolated). Commit + push. |
+| **#13 + #14 ROOT-CAUSE fixed (2026-06-29).** The GH-13 worktree-preserve branch was **dead code in the real shims**: `rtl_worktree_begin` runs in a `wt="$(…)"` subshell, so the `RTL_WT_USED=1` it set was LOST before `rtl_enforce` — so every codex/agy worktree turn whose ROOT `HEAD` moved hit the **in-ROOT reset + exit-6** path and **discarded the build** (the 2026-06-29 codex Phase-4 marathon, reproduced 2×). `relay-concurrent-commit.sh` (7/7) passed only because it drives the lib in-shell, never through a shim's subshell. **Fix:** `rtl_worktree_end` (runs in the caller's shell, always before `rtl_enforce`) re-asserts `RTL_WT_USED=1` → a moved ROOT HEAD during a worktree turn is **preserved** + the turn commits its allowlist on top. New **shim-level** regression in `test/worktree-isolation.sh` (test 4: concurrent ROOT commit mid worktree-turn → exit 0, peer preserved, allowlist copied back). Also **GH-42 stale-lock self-heal**: `marathon-drive`/`relay-drive` reclaim a dead-holder lock via a PID check instead of blocking forever (`test/driver-lock.sh` 4/4). **`validate.sh` 56/56.** | **Confirm end-to-end:** re-fire a codex marathon (GH-46 Phase 4) — the builder lane should no longer reset+fail. **Optional (not blocking):** a prevent-level `git` PATH-shadow in the shims (block `commit`/`add`/`push`, pass reads) so a self-commit is *prevented*, not just absorbed; the in-ROOT/attended path still resets on any HEAD move (low risk — driven path is isolated). |
 
 ## Problem
 
@@ -63,3 +63,17 @@ forbidden commit. That assumption breaks with concurrent agents on one clone:
   (`agy/codex/claude-turn`) still green, so the in-ROOT path is unchanged.
 - #14 prompt change is wording-only (no behavior/test impact); the enforcement-level shadow is the
   open follow-up.
+
+### 2026-06-29 — root-cause completion (the prior fix was dead code in the shims)
+
+- **Bug:** `RTL_WT_USED=1` was set inside `rtl_worktree_begin`'s `wt="$(…)"` subshell and lost, so
+  `rtl_enforce` always read `RTL_WT_USED=0` for the command-substitution shims (codex/agy/claude) →
+  the GH-13 "preserve a moved ROOT HEAD" branch never ran in real turns; a worktree builder whose ROOT
+  HEAD moved was reset + exit-6, discarding the build (2026-06-29 codex Phase-4 marathon, ×2).
+- **Fix:** persist `RTL_WT_USED=1` in `rtl_worktree_end` (runs in the caller's shell, always before
+  `rtl_enforce`). One line; in-ROOT/attended path unchanged.
+- **GH-42 stale-lock self-heal:** `marathon-drive` / `relay-drive` now write the holder PID into the
+  lock and **reclaim it when the holder is dead** (`kill -0`), instead of a crashed driver leaving a
+  stale lock that blocks every later run until a manual `rmdir`.
+- **Tests:** `test/worktree-isolation.sh` +3 (shim-level concurrent-commit preserve) → 15/15;
+  `test/driver-lock.sh` NEW (stale-reclaim + live-refuse) 4/4; **`validate.sh` 56/56**.

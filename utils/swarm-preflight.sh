@@ -383,6 +383,19 @@ if ! git -C "$TARGET_ROOT" worktree add --detach --quiet "$REF_WT" "$REF_COMMIT"
 fi
 PROBE_SUMMARY="$(SP_ROOT="$REF_WT" SP_CONTRACT="$TMP/contract.json" SP_OUT="$TMP/probes.json" node "$TMP/eval-probes.mjs")"
 read -r STALE BLOCKED AMBIG <<<"$PROBE_SUMMARY"
+# GH-39 (A2): verify every declared artifact path exists at the evaluated ref. A "ready" packet whose
+# artifacts[] is missing/mistyped would fail the marathon at the first edit (the GH-29-adjacent failure
+# class). Checked in REF_WT — the ref's content — BEFORE the worktree is removed below.
+GH39_ART_MISSING=""
+_gh39_art_csv="$(field "$TMP/contract.json" artifacts)"
+if [[ -n "$_gh39_art_csv" ]]; then
+  IFS=',' read -ra _gh39_arts <<<"$_gh39_art_csv"
+  for _gh39_a in "${_gh39_arts[@]}"; do
+    read -r _gh39_a <<<"$_gh39_a"               # trim leading/trailing whitespace
+    [[ -z "$_gh39_a" ]] && continue
+    [[ -e "$REF_WT/$_gh39_a" ]] || { GH39_ART_MISSING="$_gh39_a"; break; }
+  done
+fi
 git -C "$TARGET_ROOT" worktree remove --force "$REF_WT" >/dev/null 2>&1 || rm -rf "$REF_WT"
 git -C "$TARGET_ROOT" worktree prune >/dev/null 2>&1 || true
 
@@ -407,6 +420,34 @@ if [[ "$ART_COUNT" -eq 0 ]]; then READY=0; READY_NEXT="add a bounded artifact / 
 if [[ -z "$REMED_SRC$REMED_CRIT" && "$DOC_HAS_PHASES" -eq 0 ]]; then
   READY=0; READY_NEXT="research more: no phase plan or acceptance criteria — source is not runnable unattended"
 fi
+# GH-39 (A2): an artifact path that doesn't exist at the ref (detected in Phase 3) → not ready.
+# Guarded on READY==1 so the FIRST failure's reason wins (don't clobber an earlier next-action).
+if [[ "$READY" -eq 1 && -n "${GH39_ART_MISSING:-}" ]]; then
+  READY=0; READY_NEXT="artifact path not found at target.ref: $GH39_ART_MISSING — fix the contract artifacts[] or push the file"
+fi
+# GH-39 (A1): the gate command must be RUNNABLE — its program resolves. (Whether the gate currently
+# FAILS, proving the fix is still required, is already covered by fix_probes above; we deliberately do
+# NOT execute the full gate here — that is heavy and side-effectful, e.g. a suite that spawns worktrees.)
+# A `bash`/`sh <script>` gate must have its script; any other leading program must be on PATH.
+if [[ "$READY" -eq 1 && -n "$GATE_CMD" ]]; then
+  read -r -a _gh39_gw <<<"$GATE_CMD"
+  _gh39_g0="${_gh39_gw[0]}"
+  if [[ "$_gh39_g0" == "bash" || "$_gh39_g0" == "sh" ]]; then
+    # First NON-FLAG token after the interpreter is the script — so `bash -x script.sh` resolves
+    # `script.sh`, not `-x` (agy GH-39 review Nit).
+    _gh39_script=""
+    for _gh39_t in ${_gh39_gw[@]+"${_gh39_gw[@]:1}"}; do
+      [[ "$_gh39_t" == -* ]] && continue
+      _gh39_script="$_gh39_t"; break
+    done
+    [[ -n "$_gh39_script" && -f "$TARGET_ROOT/$_gh39_script" ]] || { READY=0; READY_NEXT="gate script not found at target.ref: ${_gh39_script:-<none>}"; }
+  elif ! command -v "$_gh39_g0" >/dev/null 2>&1; then
+    READY=0; READY_NEXT="gate program not on PATH: $_gh39_g0"
+  fi
+fi
+# GH-39 (A3): build-lane CLI presence — ADVISORY only (never blocks: keeps preflight portable in
+# keyless/CI environments where codex/agy aren't installed). Surfaced on the report below.
+GH39_LANE_NOTE="codex=$(command -v codex >/dev/null 2>&1 && echo present || echo absent) agy=$(command -v agy >/dev/null 2>&1 && echo present || echo absent)"
 
 # ── Phase 5: lane assignment ─────────────────────────────────────────────────
 SP_CONTRACT="$TMP/contract.json" node "$TMP/lane-plan.mjs" >"$TMP/lane-plan.json"
@@ -457,6 +498,7 @@ else
   emit "  ref-probed  : $REF @ ${REF_COMMIT:0:9} ($REF_NOTE)"
   emit "  candidate   : $CAND_STATE"
   emit "  readiness   : ready=$READY${READY_NEXT:+ — next: $READY_NEXT}"
+  emit "  lane-cli    : ${GH39_LANE_NOTE:-unknown} (advisory)"
   emit "  verdict     : $VERDICT (exit $CODE)"
 fi
 
@@ -482,6 +524,19 @@ SP_F="$TMP/run-candidate.json" SP_K=freshness node -e 'import("node:fs").then(fs
 SP_F="$TMP/run-candidate.json" SP_K=readiness node -e 'import("node:fs").then(fs=>process.stdout.write(JSON.stringify(JSON.parse(fs.readFileSync(process.env.SP_F,"utf8"))[process.env.SP_K],null,2)))' >"$OUT_DIR/readiness.json"
 printf '%s\n' "$INVOCATION" >"$OUT_DIR/marathon-invocation.txt"
 
+# GH-39 B6 + #43-1: bake a SCOPE-LOCKED brief so the builder beelines (no doc-chasing, no wander) and
+# size the turn budget to the artifacts. Acceptance criteria are inlined from the capture doc's checklist
+# so the builder doesn't have to go read it (the thin-brief gap that made GH-36 v1 wander ~38k tokens).
+GH39_ACC="$(grep -E '^[[:space:]]*- \[[ xX]\]' "$PRIMARY_DOC" 2>/dev/null | head -25)"
+[[ -n "$GH39_ACC" ]] || GH39_ACC="(no '- [ ]' checklist found in $PRIMARY_DOC — add an Acceptance criteria list)"
+GH39_ART_LOC=0
+IFS=',' read -ra _b6arts <<<"$ART_CSV"
+for _b6a in "${_b6arts[@]}"; do
+  read -r _b6a <<<"$_b6a"; [[ -z "$_b6a" ]] && continue
+  [[ -f "$TARGET_ROOT/$_b6a" ]] && GH39_ART_LOC=$((GH39_ART_LOC + $(wc -l <"$TARGET_ROOT/$_b6a" 2>/dev/null || echo 0)))
+done
+GH39_TIMEOUT=300; [[ "$GH39_ART_LOC" -gt 400 ]] && GH39_TIMEOUT=900
+
 cat >"$OUT_DIR/packet.md" <<EOF
 # Marathon preflight packet — $SLUG
 
@@ -492,9 +547,18 @@ cat >"$OUT_DIR/packet.md" <<EOF
 - Verdict: $VERDICT
 - Gate: \`$GATE_CMD\`
 - Artifacts: $ART_CSV
+- Suggested turn budget: \`RELAY_TURN_TIMEOUT_S=$GH39_TIMEOUT\` (artifacts ≈ $GH39_ART_LOC LOC; large files need more than the 300s default)
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
 (GUIDING-PRINCIPLES.md §8).
+
+## Acceptance criteria — the build is DONE when these hold (inlined from the capture doc)
+$GH39_ACC
+
+## Scope lock — builder, do exactly this and nothing else
+- Edit ONLY: \`$ART_CSV\` (plus the relay file). Any other edit is reverted and FAILS the turn.
+- Do NOT run the full gate (\`$GATE_CMD\`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn.
+- Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
 
 ## Suggested marathon-drive.sh invocation
 
