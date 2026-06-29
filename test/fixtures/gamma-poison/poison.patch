@@ -1,0 +1,13 @@
+diff --git a/src/paths.js b/src/paths.js
+index 2c82206..ac17fa4 100644
+--- a/src/paths.js
++++ b/src/paths.js
+@@ -9,7 +9,7 @@
+ // but never misses a real overlap.
+ 
+ function literalPrefix(glob) {
+-  const m = glob.match(/^([^*?[{]*)/);
++  const m = glob.match(/^([^?[{]*)/);
+   return m ? m[1] : '';
+ }
+ 
