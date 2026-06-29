@@ -9,6 +9,10 @@ gh_issue: 39
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/39
 related: PR #38 (utils/queue-plan.sh — the pre-pre-flight stage; reuses swarm-preflight contract/fix_probes)
 doc_type: project
+complexity: medium
+risk: medium
+effort: medium
+ratings_provisional: true
 goal: >
   Close the gaps that let a "ready" swarm-preflight packet still fail the marathon mid-air: verify the
   gate/artifacts/auth at preflight time, warn on cross-lane ALLOW_PATHS collisions, and bake a TIGHT,

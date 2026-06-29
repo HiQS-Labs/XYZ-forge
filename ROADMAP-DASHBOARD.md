@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 12 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 12 items | Tally: 🟢 3 · 🟡 4 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -16,7 +16,7 @@ Summary: 12 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 | Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
-| Marathon candidate · Apple Reminders Phase 2 (rebalance-OS, cross-repo) | 🟡 | [rebalance-OS `APPLE-REMINDERS-UNIFIED-PLAN.md`](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) · [APPLE-REMINDERS-UNIFIED-PLAN.md](../rebalance-OS/PROJECT/2-WORKING/APPLE-REMINDERS-UNIFIED-PLAN.md) |
+| Marathon candidate · Apple Reminders (rebalance-OS, cross-repo) | — | — |
 | GH-24 · relay telemetry extractor | 🟢 | [GH-24-RELAY-TELEMETRY-EXTRACTOR.md](PROJECT/1-INBOX/GH-24-RELAY-TELEMETRY-EXTRACTOR.md) · [#24](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/24) |
 | GH-19 · relay-xyz skill-skip durability | 🟢 | [relay-automation/hooks/relay-xyz-guard.sh](relay-automation/hooks/relay-xyz-guard.sh) · [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) · [GH-19-RELAY-XYZ-SKILL-GUARD.md](PROJECT/1-INBOX/GH-19-RELAY-XYZ-SKILL-GUARD.md) |
 | Tooling · agy reliability testing | ⏸️ | [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md) |
@@ -25,7 +25,7 @@ Summary: 12 items | Tally: 🟢 3 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 10 items | Tally: 🟢 9 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 9 items | Tally: 🟢 8 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -33,20 +33,20 @@ Summary: 10 items | Tally: 🟢 9 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 | GH-37 · agy consult lane hangs on expired auth | 🟢 | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/2-WORKING/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
 | GH-39 · swarm preflight gaps (validation + scope-locked brief) | 🟢 | [GH-39-SWARM-PREFLIGHT-GAPS.md](PROJECT/2-WORKING/GH-39-SWARM-PREFLIGHT-GAPS.md) · [#39](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/39) |
 | GH-33 · leverage the built-in /loop skill to drive relays | 🟢 | [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |
-| GH-27 · ROADMAP dashboard renderer | 🟢 | [ROADMAP-DASHBOARD.md](ROADMAP-DASHBOARD.md) · [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) · [gh-27-roadmap-dashboard-brief.md](PROJECT/2-WORKING/briefs/gh-27-roadmap-dashboard-brief.md) · [#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟢 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
 | Tooling · relay-xyz durability | 🟢 | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
 | GH-11 · relay-xyz cross-repo targeting | 🟢 | [GH-11-CROSS-REPO-TARGETING.md](PROJECT/2-WORKING/GH-11-CROSS-REPO-TARGETING.md) |
 | Tooling · relay containment-guard hardening | 🟢 | [#13](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/13) · [#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14) · [RELAY-CONTAINMENT-HARDENING.md](PROJECT/2-WORKING/RELAY-CONTAINMENT-HARDENING.md) |
-| GH-16 · same-device cross-repo swarm readiness | 🟢 | [#17](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/17) · [GH-16-CROSS-REPO-SWARM.md](PROJECT/2-WORKING/GH-16-CROSS-REPO-SWARM.md) |
 
 ## Completed
 
-Summary: 16 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 16 · 🔮 0 · 🔲 0
+Summary: 18 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 18 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-27 · ROADMAP dashboard renderer | ✅ | [ROADMAP-DASHBOARD.md](ROADMAP-DASHBOARD.md) · [GH-27-ROADMAP-DASHBOARD.md](PROJECT/2-WORKING/GH-27-ROADMAP-DASHBOARD.md) · [gh-27-roadmap-dashboard-brief.md](PROJECT/2-WORKING/briefs/gh-27-roadmap-dashboard-brief.md) · [#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) |
+| GH-16 · same-device cross-repo swarm readiness (umbrella) | ✅ | [GH-16-CROSS-REPO-SWARM.md](PROJECT/2-WORKING/GH-16-CROSS-REPO-SWARM.md) · [#16](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/16) |
 | GH-36 · headless Codex isolated-turn friction (.tick sandbox) | ✅ | [GH-36-HEADLESS-CODEX-TICK-SANDBOX.md](PROJECT/3-COMPLETED/GH-36-HEADLESS-CODEX-TICK-SANDBOX.md) · [#36](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/36) |
 | GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | ✅ | [relay-target-root-newfile.sh](test/relay-target-root-newfile.sh) · [GH-29-CROSS-REPO-NEWFILE-COMMIT.md](PROJECT/3-COMPLETED/GH-29-CROSS-REPO-NEWFILE-COMMIT.md) · [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
 | Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
