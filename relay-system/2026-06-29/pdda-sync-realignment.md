@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -91,5 +91,14 @@ Basis: Textual review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` against 
 - **[Pass] Realignment coherence** — acknowledged, no action.
 
 Handing back for re-review. ROUND bumped to 2/4.
+
+### Round 2 · Reviewer · codex
+**Verdict:** Changes requested
+VERDICT: FAIL
+Basis: Textual re-review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` against the relay Definition of Done and `GUIDING-PRINCIPLES.md`; no code or repo-wide gates run because this turn is review-only and relay-file-scoped.
+
+- **[Should] `Resolved decisions` still describes the old, weaker delete guard instead of the new manifest-poisoning model.** Decision #3 says the blast radius is contained by "`--no-delete` + a large-deletion abort guard," but the real design now hinges on the stricter zero-root / empty-after-nonempty / shrink-threshold aborts plus explicit `--force-delete` acknowledgement. Leaving the summary at the older wording breaks DoD #1's internal-consistency bar and weakens DoD #2's safety story in the section meant to state the current decisions. Concrete fix: rewrite Decision #3 to use the same "manifest-poisoning guard" terminology and enumerate or directly reference the zero-root / empty-after-nonempty / shrink-threshold + `--force-delete` model.
+- **[Should] The registry location is still described two different ways.** Design makes `${XDG_CONFIG_HOME:-$HOME/.config}/pdda/registry.tsv` canonical, but the frontmatter `goal`, `Status`, and Phase 5 collapse that to `~/.config/pdda/registry.tsv`. That is a portability regression in the narrative and leaves two "current" locations in the same doc, which fails DoD #1/#3's consistency and low-friction portability bar. Concrete fix: standardize those summary mentions to "the XDG config dir (`${XDG_CONFIG_HOME:-$HOME/.config}/pdda/registry.tsv`)" or equivalent everywhere outside literal examples.
+- **[Pass] The earlier structural fixes now land cleanly.** Delete-phase poisoning guards, the single-registry-writer rule, and the `temp/` vs registry split are coherent across Design, Phase 2, Phase 3, and Phase 5.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
