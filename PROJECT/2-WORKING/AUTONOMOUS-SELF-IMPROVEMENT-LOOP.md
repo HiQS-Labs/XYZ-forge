@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **BUILT + dogfooded 2026-06-29 (autonomous /loop).** All 6 prerequisites shipped green + the composed loop + QA gates + a real-target dogfood. The loop optimized a real file **6 → 2 lines** while a real oracle preserved the required content, then **halted on plateau** — accept/reject/rollback, no-regress, provenance all proven end-to-end. Branch `feat/self-improvement-loop` (off the GH-40 lineage; `main` merged for the #14-fixed kernel). `validate.sh` **68 → 69** (10 new loop tests). | **Ship (todo 13):** decisions/ record (the Costly autonomy bet), CHANGELOG, open the PR into `main`. Then the **operator-gated real-agent dogfood**: plug `marathon-drive` into `--build-cmd` to drive a live Codex/agy builder (spends real tokens → not run unattended). |
+| **MERGED (PR #53, 2026-06-30) + real-agent run PROVEN 2026-06-30 (operator GO).** All 6 prerequisites + the composed loop + QA gates + a real-target dogfood shipped (`validate.sh` **69**); then the operator-gated **live-agent dogfood fired** — `improve-loop` drove a live **codex builder + agy reviewer** `marathon-drive` as `--build-cmd`: baseline 4 → live build → `KEEP` oracle held → champion ACCEPTed (metric 3) → halted on the iteration cap (all invariants fired live, provenance logged). | **Follow-ups (not blocking the milestone):** fix harness defects **#58** (`--builder claude` not on PATH headless → use codex/agy) + **#59** (allowlisted artifact in an untracked dir → spurious off-lane exit 6). Optional: find a real *optimization* target worth hill-climbing (this repo has no obvious scalar target yet). |
 
 ---
 
@@ -114,9 +114,29 @@ on plateau** once no removable lines remained; the oracle held (both `KEEP:` lin
 champion (2 lines) is what shipped — a losing iteration shipped nothing. Provenance recorded every
 accept/reject. 7/7.
 
-**Not yet run — operator-gated:** the **real-agent dogfood**. The loop's `--build-cmd` is pluggable;
-plugging `marathon-drive` drives a live Codex/agy builder per iteration (the production path). It spends
-real tokens and needs auth, so it is **not** fired unattended — it's the operator's GO after merge.
+**RAN 2026-06-30 — operator GO (the capstone payoff).** The loop's `--build-cmd` is pluggable;
+plugging `marathon-drive` drives a live builder per iteration (the production path). The proven run:
+baseline metric 4 → live build → `KEEP` oracle held → champion ACCEPTed (metric 3) → halted on the
+iteration cap, provenance logged — every safety invariant fired against a real agent build.
+
+**Documented live-run lane: `--builder codex --reviewer agy`** — NOT the marathon default
+`--builder claude`, which is unusable headless (`exec: claude: not found`, [#58]). Commit the artifact
+first: an untracked artifact in a fresh directory trips a spurious off-lane containment failure
+([#59]). Canonical invocation (small, watched — each iteration is a full live marathon, ~2 min + real
+tokens):
+
+```bash
+relay-automation/improve-loop.sh --artifact <committed-file> \
+  --measure-cmd '<deterministic scalar, e.g. grep -c ... file>' \
+  --oracle-cmd  '<un-gameable gate, e.g. KEEP lines survive>' \
+  --build-cmd   'relay-automation/marathon-drive.sh --builder codex --reviewer agy \
+                 --artifact <file> --phase-brief <brief> --round-cap 3 --pre-advance-cmd true \
+                 --phase-id <fresh-id>' \
+  --goal min --max-iterations <small> --state-dir <dir>
+```
+
+[#58]: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/58
+[#59]: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/59
 
 > **Why this is the capstone, not a side-quest:** Part A proved the loop *runs*; Part B proves it
 > *survives failure*; Part C is the only track where the system changes its own artifacts toward a goal
