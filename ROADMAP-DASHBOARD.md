@@ -33,7 +33,7 @@ Summary: 20 items | Tally: 🟢 2 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 7 items | Tally: 🟢 3 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 6 items | Tally: 🟢 2 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -43,14 +43,14 @@ Summary: 7 items | Tally: 🟢 3 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 | Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
 | Tooling · relay-xyz durability | 🟡 | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
 | GH-11 · relay-xyz cross-repo targeting | 🟡 | [GH-11-CROSS-REPO-TARGETING.md](PROJECT/2-WORKING/GH-11-CROSS-REPO-TARGETING.md) |
-| Tooling · relay containment-guard hardening | 🟢 | [#13](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/13) · [#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14) · [RELAY-CONTAINMENT-HARDENING.md](PROJECT/2-WORKING/RELAY-CONTAINMENT-HARDENING.md) |
 
 ## Completed
 
-Summary: 24 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 24 · 🔮 0 · 🔲 0
+Summary: 25 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 25 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| Tooling · relay containment-guard hardening (#13/#14) | ✅ | [RELAY-CONTAINMENT-HARDENING.md](PROJECT/3-COMPLETED/RELAY-CONTAINMENT-HARDENING.md) |
 | GH-37 · agy consult lane hangs on expired auth | ✅ | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/3-COMPLETED/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
 | GH-33 · leverage the built-in /loop skill to drive relays | ✅ | [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/3-COMPLETED/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |
 | GH-46 · Phase 4 swarm-preflight contract + cross-model hands-free marathon dogfood | ✅ | [GH-46-PHASE4-SWARM-PREFLIGHT.md](PROJECT/3-COMPLETED/GH-46-PHASE4-SWARM-PREFLIGHT.md) · [#46](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/46) |
@@ -58,7 +58,7 @@ Summary: 24 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 24 · �
 | GH-43 · marathon headless-build robustness (timeout/leaked-token/self-gate) | ✅ | [GH-43-MARATHON-ROBUSTNESS.md](PROJECT/3-COMPLETED/GH-43-MARATHON-ROBUSTNESS.md) · [#43](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/43) |
 | GH-39 · swarm preflight gaps (validation + scope-locked brief) | ✅ | [GH-39-SWARM-PREFLIGHT-GAPS.md](PROJECT/3-COMPLETED/GH-39-SWARM-PREFLIGHT-GAPS.md) · [#39](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/39) |
 | GH-27 · ROADMAP dashboard renderer | ✅ | [ROADMAP-DASHBOARD.md](ROADMAP-DASHBOARD.md) · [GH-27-ROADMAP-DASHBOARD.md](PROJECT/3-COMPLETED/GH-27-ROADMAP-DASHBOARD.md) · [gh-27-roadmap-dashboard-brief.md](PROJECT/2-WORKING/briefs/gh-27-roadmap-dashboard-brief.md) · [#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) |
-| GH-16 · same-device cross-repo swarm readiness (umbrella) | ✅ | [GH-16-CROSS-REPO-SWARM.md](PROJECT/2-WORKING/GH-16-CROSS-REPO-SWARM.md) · [#16](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/16) |
+| GH-16 · same-device cross-repo swarm readiness (umbrella) | ✅ | [GH-16-CROSS-REPO-SWARM.md](PROJECT/3-COMPLETED/GH-16-CROSS-REPO-SWARM.md) · [#16](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/16) |
 | GH-36 · headless Codex isolated-turn friction (.tick sandbox) | ✅ | [GH-36-HEADLESS-CODEX-TICK-SANDBOX.md](PROJECT/3-COMPLETED/GH-36-HEADLESS-CODEX-TICK-SANDBOX.md) · [#36](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/36) |
 | GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | ✅ | [relay-target-root-newfile.sh](test/relay-target-root-newfile.sh) · [GH-29-CROSS-REPO-NEWFILE-COMMIT.md](PROJECT/3-COMPLETED/GH-29-CROSS-REPO-NEWFILE-COMMIT.md) · [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
 | Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |

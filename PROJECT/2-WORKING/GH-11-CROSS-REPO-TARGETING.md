@@ -1,8 +1,8 @@
 ---
-complexity: medium
-risk: medium
-effort: medium
-ratings_provisional: true
+complexity: low
+risk: low
+effort: low
+ratings_provisional: false
 gh_issue: 11
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11
 title: "relay-xyz: hard to target a repo other than the harness clone (cross-repo reviews)"
