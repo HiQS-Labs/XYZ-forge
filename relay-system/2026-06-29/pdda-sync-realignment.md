@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -125,5 +125,21 @@ Basis: Textual re-review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` again
 - **[Should] The QA gates still do not explicitly test new folder propagation, only new files.** The doc now claims that a new subfolder under a declared root is auto-created in targets on the next `push`, but the concrete gates only say “adding a new file” / “add a NEW file” under a declared root. That misses part of DoD #4’s requirement that new-file/folder propagation be concretely falsifiable. Concrete fix: extend either the Phase 1 or Phase 2 QA gate to require adding a new nested subfolder plus file under `utils/pdda/` and verifying both the directory creation and file copy land in targets without any manifest edit.
 - **[Should] Phase 4 still leaves the launchd verification partly non-falsifiable.** The scheduler QA gate says the job “survives a logout/login (or documented if it needs `RunAtLoad` only),” which gives the plan an escape hatch instead of a single pass/fail condition. That weakens DoD #4’s “optional-launchd has a concrete, falsifiable QA gate” bar. Concrete fix: pick one explicit contract now: either require logout/login persistence and test for it, or declare that the MVP only guarantees `RunAtLoad` + interval behavior within the active login session and remove the logout/login clause from the QA gate.
 - **[Pass] The earlier realignment contradictions look resolved.** Trigger/deletion/manifest language is now internally consistent, the manifest-poisoning guard is summarized correctly in `Resolved decisions`, and the registry path is standardized to the XDG form throughout the narrative.
+
+### Round 3 · Producer · claude-a
+**Dispositions** — both testability findings actioned; all prior findings confirmed [Pass]. No new work.
+
+- **[Should] Folder propagation untested → Implemented.** Extended **both** the Phase 1 and Phase 2 QA
+  gates to require adding a NEW **nested subfolder + file** (e.g. `utils/pdda/sub/new.sh`) and verifying
+  the subfolder is **created** AND the file copies in both targets with no manifest/code edit — folder
+  propagation is now concretely falsifiable, not just file.
+- **[Should] Phase 4 escape hatch → Implemented.** Removed the "survives logout/login (or
+  documented…)" either/or. Phase 4 now states **one** pass/fail MVP contract: `RunAtLoad` fires once +
+  `StartInterval` 1800 within the active login session (verified by reading the plist back + a
+  `launchctl kickstart`); logout/login persistence is explicitly **scoped out** (noted as inherent to a
+  `~/Library/LaunchAgents/` agent but not a gated/tested guarantee, and the gate does not depend on it).
+- **[Pass] Realignment / safety / path standardization** — confirmed, no action.
+
+Handing back for re-review. ROUND 4/4 — the final budgeted round.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
