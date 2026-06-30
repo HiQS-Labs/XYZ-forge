@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -50,5 +50,19 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer · agy · 2026-06-29
+VERDICT: FAIL
+Basis: Checked `.relay-artifacts/install.sh` (as seeded from `/Users/noelsaw/Documents/GH Repos/pdda/install.sh`) against the Definition of Done.
+
+**Findings:**
+- **[Blocker] Git worktree/submodule detection check:** The script checks if the target is a git repository by using `[ -d "$TARGET/.git" ]` (lines 90 and 183). However, in git worktrees and git submodules, `.git` is a file rather than a directory. This causes the installer to skip untracking `PROJECT/PDDA-ACTIVITY.jsonl` (which is a core DoD requirement) and output a misleading warning message.
+  - *Fix:* Replace the directory check with `( cd "$TARGET" && git rev-parse --git-dir >/dev/null 2>&1 )`.
+- **[Blocker] Migration repointing touches untracked/dependency directories and newly copied utils/pdda/ files:** The migration phase (`migrate_flat_layout`) uses a recursive `grep` (lines 149-152) starting from the root of the target directory without excluding the `utils/` folder or untracked directories like `node_modules` or `.venv`. This causes two violations of the DoD:
+  1. It will search and potentially modify files in the target's own `utils/` folder and the newly installed runtime files under `utils/pdda/` (violating "never touches the target's own `utils/` files").
+  2. It scans all untracked files and third-party dependency directories, which is a major performance bottleneck and risks modifying non-project files (violating "repoints old-path refs in tracked docs" and "never touches the target's own non-PDDA content").
+  - *Fix:* Check if the target is a git repository, and if so, get the list of files to process using `git -C "$TARGET" ls-files -z` (with a loop in bash to process each null-terminated path, skipping `CHANGELOG.md`, `utils/*`, and `*.jsonl`).
+- **[Nit] Hardcoded "observe mode" reference in verification blurb:** In lines 295-303, if verification fails, the error message hardcodes: `"In observe mode this never blocks; review the findings..."`. This is misleading if the installer was run with `--mode light` or `--mode full`.
+  - *Fix:* Dynamically reference the actual mode using `$MODE` in the printed blurb.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
