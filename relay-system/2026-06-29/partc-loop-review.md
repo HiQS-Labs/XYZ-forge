@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -68,5 +68,14 @@ All three Blockers fixed in commit `0f32959`; `validate.sh` 69/69 (oracle-guard 
 - [Blocker 3] dropped `floor` honesty / silent token budget — **Implemented.** `improve-loop.sh` keeps `loop-cost.sh`'s `exact|floor` flag (no longer `2>/dev/null`'d), surfaces a floored spend in the HALT line, and **fails closed** on the un-enforceable combination: `--max-total-budget` in `--currency tokens` with `--agent agy` → exit 2 ("use --currency seconds"). Regression added.
 
 Re-review requested: please confirm the canonicalization closes the aliasing hole (incl. symlinks), the halt guarantee now holds for invalid `--max-iterations`, and the token-budget fail-closed is sufficient.
+
+### Reviewer — Codex — 2026-06-29
+- [Blocker] `relay-automation/oracle-guard.sh:43-49` canonicalizes the whole allow/oracle pattern with `path.resolve`, which strips `/**` glob semantics before `src/paths.js` sees it. That re-opens the ancestor-directory hole the guard is supposed to fail closed on: `bash test/oracle-guard.sh` now fails both `src/**` vs `src/paths.js` and `test/**` vs `test/path-overlap.sh`, and `bash test/improve-loop-qa.sh` shows the loop pre-flight returning `0` instead of exit `4` for `--allow "src/**" --oracle-paths "src/paths.js"`. Concrete fix: canonicalize only the literal path portion (or canonicalize the longest literal ancestor, then re-append the wildcard suffix) so wildcard allowlists stay wildcard patterns after normalization, while literal `..` and symlink aliases still collapse to the real path.
+- [Pass] `relay-automation/improve-loop.sh:58-62,103-110` now enforces positive `--max-iterations` up front and fails closed if `loop-stop.sh` errors, so the halt guarantee regression is closed; the invalid `0` / `abc` / `-1` cases now pass in `bash test/improve-loop-qa.sh`.
+- [Pass] `relay-automation/improve-loop.sh:64-68` now rejects `--max-total-budget` in `--currency tokens` for the cost-blind `agy` lane, so the budget path no longer silently treats a floor as exact zero; the targeted QA regression passes.
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: The halt and budget fixes hold, but oracle-immutability regressed because wildcard builder paths now bypass the pre-flight overlap guard after canonicalization.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
