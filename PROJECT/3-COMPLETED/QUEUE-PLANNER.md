@@ -1,10 +1,11 @@
 ---
 title: Queue Planner — deterministic pre-pre-flight queue review + sequencing
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED)
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-30
+closed: 2026-06-30
 owner: noel
-branch: feat/queue-builder
+branch: main
 doc_type: project
 complexity: medium
 risk: low

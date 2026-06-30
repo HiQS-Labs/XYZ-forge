@@ -33,12 +33,11 @@ Summary: 20 items | Tally: 🟢 2 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 6 items | Tally: 🟢 2 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 5 items | Tally: 🟢 1 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-40 · double-blind Reviewer canary spike (Part C prerequisite) | 🟢 | [gamma-poison](test/fixtures/gamma-poison/) · [token-reuse](test/fixtures/canary-token-reuse/) · [peer-orphan](test/fixtures/canary-peer-orphan/) · [reviewer-overstep](test/fixtures/canary-reviewer-overstep/) · [GH-40-DOUBLE-BLIND-REVIEWER.md](PROJECT/2-WORKING/GH-40-DOUBLE-BLIND-REVIEWER.md) · [#40](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/40) |
-| Tooling · queue planner (pre-pre-flight) | 🟢 | [QUEUE-PLANNER.md](PROJECT/2-WORKING/QUEUE-PLANNER.md) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
 | Tooling · relay-xyz durability | 🟡 | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/2-WORKING/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
@@ -46,10 +45,11 @@ Summary: 6 items | Tally: 🟢 2 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 25 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 25 · 🔮 0 · 🔲 0
+Summary: 26 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 26 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| Tooling · queue planner (pre-pre-flight) | ✅ | [QUEUE-PLANNER.md](PROJECT/3-COMPLETED/QUEUE-PLANNER.md) |
 | Tooling · relay containment-guard hardening (#13/#14) | ✅ | [RELAY-CONTAINMENT-HARDENING.md](PROJECT/3-COMPLETED/RELAY-CONTAINMENT-HARDENING.md) |
 | GH-37 · agy consult lane hangs on expired auth | ✅ | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/3-COMPLETED/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
 | GH-33 · leverage the built-in /loop skill to drive relays | ✅ | [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/3-COMPLETED/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |
