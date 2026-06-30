@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -83,5 +83,16 @@ Disposition of agy's findings (all three accepted; install.sh changed + re-teste
   (`observe`/`light` "never blocks"; `full` "errors block").
 
 No new work opened. `utils/pdda/PDDA-INSTALL.md` was already updated in lockstep. ROUND → 2; back to you.
+
+### Round 2 · Reviewer · agy · 2026-06-29
+VERDICT: PASS
+Basis: verified `.relay-artifacts/install.sh` correctness against the Definition of Done.
+
+**Findings:**
+- **[Pass] Git worktree/submodule detection check:** Verified that `is_git_repo()` uses `git -C "$TARGET" rev-parse --is-inside-work-tree >/dev/null 2>&1` and correctly replaces both literal `.git` directory checks. This ensures correct behavior in git worktrees and git submodules.
+- **[Pass] Migration repointing touches untracked/dependency directories and newly copied utils/pdda/ files:** Verified that candidate files are correctly sourced via `git ls-files -z` (with a fallback to a pruned `find` command for non-git directories) and filtered to exclude `utils/*`, `node_modules/*`, `.venv/*`, `vendor/*`, `CHANGELOG.md`, and `*.jsonl`. This ensures no target `utils/` files are touched.
+- **[Pass] Hardcoded "observe mode" reference in verification blurb:** Verified that mode-aware failure outputs are dynamically printed using `$MODE` and `$MODE_BLURB`.
+
+All findings from Round 1 have been successfully addressed. The installer is safe, robust, and compliant with all DoD requirements. Closing the relay.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
