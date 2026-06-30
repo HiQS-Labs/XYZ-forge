@@ -34,7 +34,7 @@ Summary: 11 items | Tally: 🟢 6 · 🟡 4 · ⏸️ 0 · ⛔ 0 · ✅ 0 · �
 
 | Item | Status | Links |
 | --- | --- | --- |
-| Part C · autonomous self-improvement loop (#50) | 🟢 | [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/2-WORKING/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md) · [#50](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/50) |
+| Part C · autonomous self-improvement loop (#50) | 🟢 | [decision](decisions/2026-06-29-self-improvement-loop.md) · [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/2-WORKING/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md) · [#50](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/50) |
 | GH-40 · double-blind Reviewer canary spike | 🟢 | [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md) · [gamma-poison](test/fixtures/gamma-poison/) · [token-reuse](test/fixtures/canary-token-reuse/) · [peer-orphan](test/fixtures/canary-peer-orphan/) · [reviewer-overstep](test/fixtures/canary-reviewer-overstep/) · [GH-40-DOUBLE-BLIND-REVIEWER.md](PROJECT/2-WORKING/GH-40-DOUBLE-BLIND-REVIEWER.md) · [#40](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/40) |
 | Tooling · queue planner (pre-pre-flight) | 🟢 | [QUEUE-PLANNER.md](PROJECT/2-WORKING/QUEUE-PLANNER.md) |
 | GH-37 · agy consult lane hangs on expired auth | 🟢 | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/2-WORKING/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
