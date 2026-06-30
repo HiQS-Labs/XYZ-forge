@@ -18,7 +18,7 @@ Summary: 17 items | Tally: 🟢 0 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 | GH-23 · Cursor CLI lane (3rd cross-model worker) | — | [#23](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/23) |
 | GH-30 · optional centralized transcript archive | — | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/1-INBOX/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |
 | Marathon dogfood · rebalance-OS parallel build queue (cross-repo, --target-root) | — | [GH-51](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/51) |
-| GH-48 · generalize queue-plan's zone model for cross-repo pre-pre-flight | — | [GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md](PROJECT/1-INBOX/GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md) · [#48](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/48) |
+| GH-48 · generalize marathon-plan's zone model for cross-repo pre-pre-flight | — | [GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md](PROJECT/1-INBOX/GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md) · [#48](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/48) |
 | GH-49 · optional vendored local copy of harness scripts (WIP-decoupled fallback) | — | [GH-49-VENDORED-LOCAL-COPY.md](PROJECT/1-INBOX/GH-49-VENDORED-LOCAL-COPY.md) · [#49](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/49) |
 | Dueling/relay · commit-signal advance (file-driven mode) | 🟡 | [test/poll-driver.sh](test/poll-driver.sh) · [poll.sh](relay-automation/poll.sh) · [Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
@@ -48,7 +48,7 @@ Summary: 30 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 30 · �
 | Tooling · relay-xyz durability (discovery shakedown) | ✅ | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/3-COMPLETED/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
 | GH-19 · relay-xyz skill-skip durability | ✅ | [relay-automation/hooks/relay-xyz-guard.sh](relay-automation/hooks/relay-xyz-guard.sh) · [GH-19-RELAY-XYZ-SKILL-GUARD.md](PROJECT/3-COMPLETED/GH-19-RELAY-XYZ-SKILL-GUARD.md) · [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) |
 | GH-24 · relay telemetry extractor | ✅ | [GH-24-RELAY-TELEMETRY-EXTRACTOR.md](PROJECT/3-COMPLETED/GH-24-RELAY-TELEMETRY-EXTRACTOR.md) · [#24](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/24) |
-| Tooling · queue planner (pre-pre-flight) | ✅ | [QUEUE-PLANNER.md](PROJECT/3-COMPLETED/QUEUE-PLANNER.md) |
+| Tooling · marathon planner (pre-pre-flight) | ✅ | [MARATHON-PLANNER.md](PROJECT/3-COMPLETED/MARATHON-PLANNER.md) |
 | Tooling · relay containment-guard hardening (#13/#14) | ✅ | [RELAY-CONTAINMENT-HARDENING.md](PROJECT/3-COMPLETED/RELAY-CONTAINMENT-HARDENING.md) |
 | GH-37 · agy consult lane hangs on expired auth | ✅ | [GH-37-AGY-CONSULT-AUTH-HANG.md](PROJECT/3-COMPLETED/GH-37-AGY-CONSULT-AUTH-HANG.md) · [#37](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/37) |
 | GH-33 · leverage the built-in /loop skill to drive relays | ✅ | [GH-33-LOOP-SKILL-INTEGRATION.md](PROJECT/3-COMPLETED/GH-33-LOOP-SKILL-INTEGRATION.md) · [#33](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/33) |

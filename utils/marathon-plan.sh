@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# utils/queue-plan.sh — deterministic "pre-pre-flight" queue planner.
+# utils/marathon-plan.sh — deterministic "pre-pre-flight" queue planner.
 #
 # Reads the canonical ROADMAP.md ledger (a queue of work: GitHub issues + PROJECT/**.md docs),
 # validates each item is still real (not already fixed / silently half-done), factors in the PDDA
@@ -7,7 +7,7 @@
 #
 #   1. a VALIDATION / DRIFT REPORT on stdout — deterministic signals, each a FLAG for a human,
 #      never an auto-fix (already-closed / already-landed / undocumented-partial / drift / unrated);
-#   2. a SEQUENCED QUEUE doc  PROJECT/2-WORKING/QUEUE-YYYY-MM-DD.md — ratings-ranked, collision-lane
+#   2. a SEQUENCED marathon-plan doc  PROJECT/2-WORKING/MARATHON-PLAN-YYYY-MM-DD.md — ratings-ranked, collision-lane
 #      aware, reproducing the shape of the hand-authored QUEUE-2026-06-27.md.
 #
 # It is the stage BEFORE utils/swarm-preflight.sh (which is per-item readiness). Overlap is intended:
@@ -20,12 +20,12 @@
 # (so --check works as a drift guard in validate.sh, mirroring roadmap-dashboard.sh --check).
 #
 # Usage:
-#   utils/queue-plan.sh                         # report on stdout + write today's QUEUE doc
-#   utils/queue-plan.sh --dry-run               # report only; write nothing
-#   utils/queue-plan.sh --check                 # exit non-zero if today's QUEUE doc is out of sync
-#   utils/queue-plan.sh --policy derisk-first   # high-risk work sorts earlier (default: quick-wins)
-#   utils/queue-plan.sh --deep                  # also delegate to swarm-preflight --dry-run per item
-#   utils/queue-plan.sh --format json           # findings as JSON lines (pdda finding shape)
+#   utils/marathon-plan.sh                         # report on stdout + write today's marathon-plan doc
+#   utils/marathon-plan.sh --dry-run               # report only; write nothing
+#   utils/marathon-plan.sh --check                 # exit non-zero if today's marathon-plan doc is out of sync
+#   utils/marathon-plan.sh --policy derisk-first   # high-risk work sorts earlier (default: quick-wins)
+#   utils/marathon-plan.sh --deep                  # also delegate to swarm-preflight --dry-run per item
+#   utils/marathon-plan.sh --format json           # findings as JSON lines (pdda finding shape)
 #
 # Exit: 0 clean · 2 usage · 3 ROADMAP missing/unparseable ·
 #       4 emitted, drift present (already-landed/closed — reconcile the ledger) ·
@@ -47,17 +47,17 @@ QUEUE_DIR="${QUEUE_PLAN_QUEUE_DIR:-"$ROOT/PROJECT/2-WORKING"}"
 NOW="${QUEUE_PLAN_NOW:-"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}"
 TODAY="${QUEUE_PLAN_TODAY:-"$(date -u +%Y-%m-%d)"}"
 
-die()  { printf 'queue-plan: %s\n' "$*" >&2; exit 2; }
+die()  { printf 'marathon-plan: %s\n' "$*" >&2; exit 2; }
 emit() { printf '%s\n' "$*" >&2; }
 
 usage() {
   cat <<'EOF'
-Usage: utils/queue-plan.sh [--dry-run | --check] [--policy quick-wins|derisk-first]
+Usage: utils/marathon-plan.sh [--dry-run | --check] [--policy quick-wins|derisk-first]
                            [--deep] [--require-gh] [--format text|json]
 
-  (default)        Print the validation report and write PROJECT/2-WORKING/QUEUE-<today>.md.
-  --dry-run        Print the report; write no QUEUE doc.
-  --check          Re-render and compare against today's QUEUE doc; non-zero on drift. Writes nothing.
+  (default)        Print the validation report and write PROJECT/2-WORKING/MARATHON-PLAN-<today>.md.
+  --dry-run        Print the report; write no marathon-plan doc.
+  --check          Re-render and compare against today's marathon-plan doc; non-zero on drift. Writes nothing.
   --policy P       quick-wins (default; momentum, low-cost first) | derisk-first (high-risk first).
   --deep           Additionally delegate to utils/swarm-preflight.sh --dry-run per ready item
                    (authoritative ref-based freshness/probe verdict; slower, needs network).
@@ -92,17 +92,17 @@ case "$FORMAT" in text|json) ;; *) die "--format must be 'text' or 'json'" ;; es
 [[ -f "$ROADMAP" ]] || { emit "ROADMAP not found: $ROADMAP"; exit 3; }
 command -v node >/dev/null 2>&1 || die "node is required (Node stdlib only; no deps) but not found in PATH"
 
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/queue-plan.XXXXXX")"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/marathon-plan.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
-RENDER_OUT="$TMP/QUEUE-$TODAY.md"
-QUEUE_DOC="$QUEUE_DIR/QUEUE-$TODAY.md"
+RENDER_OUT="$TMP/MARATHON-PLAN-$TODAY.md"
+QUEUE_DOC="$QUEUE_DIR/MARATHON-PLAN-$TODAY.md"
 
 # Resolve the swarm-preflight path for --deep delegation (skipped silently if absent).
 SWARM_PREFLIGHT="$HERE/swarm-preflight.sh"
 [[ "$DEEP" -eq 1 && -x "$SWARM_PREFLIGHT" ]] || SWARM_PREFLIGHT=""
 
 # One embedded Node program does the compute (parse ledger → resolve items → signals → score →
-# wave-pack → render). It prints the report to stdout, writes the rendered QUEUE doc to QP_RENDER_OUT,
+# wave-pack → render). It prints the report to stdout, writes the rendered marathon-plan doc to QP_RENDER_OUT,
 # and exits with the flag-derived code. git/gh are reached via execSync, but the test seam env files
 # short-circuit them so the suite stays hermetic. CommonJS (node - <<'NODE') like roadmap-dashboard.sh.
 QP_ROOT="$ROOT" QP_ROADMAP="$ROADMAP" QP_QUEUE_DIR="$QUEUE_DIR" \
@@ -354,9 +354,9 @@ function flag(severity, type, rec, message, action) {
 
 // ── build records ────────────────────────────────────────────────────────────
 const raw = readFileSafe(E.QP_ROADMAP);
-if (raw == null) { process.stderr.write("queue-plan: cannot read ROADMAP\n"); process.exit(3); }
+if (raw == null) { process.stderr.write("marathon-plan: cannot read ROADMAP\n"); process.exit(3); }
 const ledger = parseLedger(raw);
-if (ledger.length === 0) { process.stderr.write("queue-plan: no ledger items parsed (is '## Ledger' present?)\n"); process.exit(3); }
+if (ledger.length === 0) { process.stderr.write("marathon-plan: no ledger items parsed (is '## Ledger' present?)\n"); process.exit(3); }
 
 const records = [];
 for (const item of ledger) {
@@ -476,7 +476,7 @@ function listMdRecursive(dir) {
   }
   for (const full of listMdRecursive(E.QP_QUEUE_DIR)) {
     const base = path.basename(full);
-    if (/^QUEUE-\d{4}-\d\d-\d\d\.md$/.test(base)) continue;  // generated queue docs don't need a pointer
+    if (/^(MARATHON-PLAN|QUEUE)-\d{4}-\d\d-\d\d\.md$/.test(base)) continue;  // generated plan docs don't need a pointer (MARATHON-PLAN- new; QUEUE- historical)
     if (pointed.has(base)) continue;
     const fm = frontmatter(full);                            // honor roadmap_exempt (align with the coverage check)
     if (String(fm.roadmap_exempt || "").toLowerCase() === "true") continue;
@@ -627,11 +627,11 @@ const counts = {
 const weightStr = `eff:${W.eff},cx:${W.cx},risk:${RISK_W}${RISK_SIGN < 0 ? "(−)" : ""},dep:${W.dep},zone:${W.zone}`;
 
 if (FORMAT === "json") {
-  for (const f of findings) process.stdout.write(JSON.stringify({ timestamp: NOW, severity: f.severity, check: `queue-plan/${f.type}`, file: f.file || "", message: f.message, action: f.action }) + "\n");
-  process.stdout.write(JSON.stringify({ timestamp: NOW, severity: exitCode ? "warn" : "info", check: "queue-plan/summary", file: "", message: `items=${deduped.length} active=${active.length} waves=${waves.length} drift=${hasDrift} held=${held.length} gh=${GH_MODE}`, action: "summary" }) + "\n");
+  for (const f of findings) process.stdout.write(JSON.stringify({ timestamp: NOW, severity: f.severity, check: `marathon-plan/${f.type}`, file: f.file || "", message: f.message, action: f.action }) + "\n");
+  process.stdout.write(JSON.stringify({ timestamp: NOW, severity: exitCode ? "warn" : "info", check: "marathon-plan/summary", file: "", message: `items=${deduped.length} active=${active.length} waves=${waves.length} drift=${hasDrift} held=${held.length} gh=${GH_MODE}`, action: "summary" }) + "\n");
 } else {
   const out = [];
-  out.push(`queue-plan · ${TODAY} · policy=${POLICY} · weights{${weightStr}} · gh=${GH_MODE}`);
+  out.push(`marathon-plan · ${TODAY} · policy=${POLICY} · weights{${weightStr}} · gh=${GH_MODE}`);
   out.push(`  ledger items : ${deduped.length}  (queue ${counts.queue} · in-progress ${counts.inprog})`);
   out.push(`  active lanes : ${active.length} across ${waves.length} wave(s)   held: ${held.length}` + (ghUnverified ? `   gh-unverified: ${ghUnverified}` : ""));
   if (GH_MODE === "off") out.push(`  NOTE gh ${E.QP_GH_FORCE === "off" ? "disabled" : "unavailable"}: open/closed state not verified — relying on ledger section only`);
@@ -646,17 +646,17 @@ if (FORMAT === "json") {
     out.push(`        → ${f.action}`);
   }
   out.push("");
-  out.push(`SUMMARY [queue-plan] items=${deduped.length} active=${active.length} waves=${waves.length} drift=${hasDrift} held=${held.length} (exit ${exitCode})`);
+  out.push(`SUMMARY [marathon-plan] items=${deduped.length} active=${active.length} waves=${waves.length} drift=${hasDrift} held=${held.length} (exit ${exitCode})`);
   process.stdout.write(out.join("\n") + "\n");
 }
 
-// ── render the sequenced QUEUE doc ───────────────────────────────────────────
+// ── render the sequenced marathon-plan doc ───────────────────────────────────────────
 function cell(v) { return String(v == null ? "—" : v); }
 const ratingWord = (n) => ({ 1: "low", 2: "med", 3: "high" }[n] || "—");
 function renderQueueDoc() {
   const o = [];
   o.push("---");
-  o.push("title: Sequenced Automation Queue — ranked, freshness-validated, collision-aware");
+  o.push("title: Marathon Plan — ranked, freshness-validated, collision-aware queue");
   o.push("status: Active (2-WORKING)");
   o.push(`created: ${TODAY}`);
   o.push(`updated: ${TODAY}`);
@@ -664,7 +664,7 @@ function renderQueueDoc() {
   o.push("branch: main");
   o.push("doc_type: project");
   o.push("source: ../../ROADMAP.md (open ledger entries)");
-  o.push("generated_by: utils/queue-plan.sh");
+  o.push("generated_by: utils/marathon-plan.sh");
   o.push("roadmap_exempt: true");
   o.push("goal: >");
   o.push("  A sequenced concurrency plan derived from ROADMAP.md: ranks surviving work by PDDA");
@@ -672,9 +672,9 @@ function renderQueueDoc() {
   o.push("  lanes into waves. Generated — edit the ledger, not this file.");
   o.push("---");
   o.push("");
-  o.push("<!-- GENERATED by utils/queue-plan.sh from ROADMAP.md — re-run to refresh; edit the ledger, not this file. -->");
+  o.push("<!-- GENERATED by utils/marathon-plan.sh from ROADMAP.md — re-run to refresh; edit the ledger, not this file. -->");
   o.push("");
-  o.push(`# Sequenced Queue ${TODAY} — Pre-pre-flight Plan`);
+  o.push(`# Marathon Plan ${TODAY} — pre-pre-flight sequenced queue`);
   o.push("");
   o.push(`> Derived from [ROADMAP.md](../../ROADMAP.md) · policy \`${POLICY}\` · weights {${weightStr}} · gh=${GH_MODE}.`);
   o.push("> The roadmap says **what/why**; this says **what is still real and in what order**. Execution");
@@ -685,7 +685,7 @@ function renderQueueDoc() {
   o.push("| What was just completed | What's next |");
   o.push("|---|---|");
   const firstWave = waves[0] ? waves[0].map((r) => r.gh ? `#${r.gh}` : r.slug).join(" ‖ ") : "(none)";
-  o.push(`| Generated by \`utils/queue-plan.sh\` on ${TODAY} from the live ROADMAP ledger (${deduped.length} items; ${active.length} active across ${waves.length} wave(s); ${held.length} held). Drift present: ${hasDrift ? "yes — see Held/Flagged" : "no"}. | **Wave 1:** ${firstWave}. Fire each lane via \`swarm-preflight → marathon-drive\`, scoped by \`ALLOW_PATHS\`. Re-run this script when the ledger changes. |`);
+  o.push(`| Generated by \`utils/marathon-plan.sh\` on ${TODAY} from the live ROADMAP ledger (${deduped.length} items; ${active.length} active across ${waves.length} wave(s); ${held.length} held). Drift present: ${hasDrift ? "yes — see Held/Flagged" : "no"}. | **Wave 1:** ${firstWave}. Fire each lane via \`swarm-preflight → marathon-drive\`, scoped by \`ALLOW_PATHS\`. Re-run this script when the ledger changes. |`);
   o.push("");
   o.push("## The one safety rule");
   o.push("");
@@ -762,7 +762,7 @@ function renderQueueDoc() {
   o.push("");
   o.push("---");
   o.push("");
-  o.push(`*Generated from [ROADMAP.md](../../ROADMAP.md) (source of truth). Re-run \`utils/queue-plan.sh\` after editing the ledger.*`);
+  o.push(`*Generated from [ROADMAP.md](../../ROADMAP.md) (source of truth). Re-run \`utils/marathon-plan.sh\` after editing the ledger.*`);
   return o.join("\n") + "\n";
 }
 
@@ -776,17 +776,17 @@ if [[ "$RC" -eq 3 || "$RC" -eq 2 ]]; then
   exit "$RC"
 fi
 
-# --check: compare the freshly-rendered doc against today's committed QUEUE doc.
+# --check: compare the freshly-rendered doc against today's committed marathon-plan doc.
 if [[ "$RUN_MODE" == "check" ]]; then
   if [[ ! -f "$QUEUE_DOC" ]]; then
     emit "check: missing artifact: ${QUEUE_DOC#$ROOT/}"
     exit 1
   fi
   if cmp -s "$RENDER_OUT" "$QUEUE_DOC"; then
-    emit "check: QUEUE-$TODAY.md is in sync"
+    emit "check: MARATHON-PLAN-$TODAY.md is in sync"
     exit 0
   fi
-  emit "check: drift detected in QUEUE-$TODAY.md"
+  emit "check: drift detected in MARATHON-PLAN-$TODAY.md"
   diff -u "$QUEUE_DOC" "$RENDER_OUT" >&2 || true
   exit 1
 fi
@@ -796,7 +796,7 @@ if [[ "$RUN_MODE" == "dry-run" ]]; then
   exit "$RC"
 fi
 
-# default: write today's QUEUE doc.
+# default: write today's marathon-plan doc.
 mkdir -p "$QUEUE_DIR"
 cp "$RENDER_OUT" "$QUEUE_DOC"
 emit "wrote ${QUEUE_DOC#$ROOT/}"

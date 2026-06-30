@@ -500,7 +500,7 @@ Contract:
 - **Optional and advisory.** A doc without them is still valid; it is simply *held out of automated
   sequencing* (flagged `unrated`, never an error) until rated. This keeps the keys non-breaking — every
   existing doc stays green.
-- **Consumer:** `utils/queue-plan.sh` (the pre-pre-flight planner) reads them to rank surviving ledger
+- **Consumer:** `utils/marathon-plan.sh` (the pre-pre-flight planner) reads them to rank surviving ledger
   work — lower effort/complexity/risk sorts earlier under the default `quick-wins` policy; `derisk-first`
   inverts the risk term. The score and its inputs are printed so any ordering is verifiable by hand.
 - **Enforced as a nudge, not a gate:** `utils/pdda-check-ratings.sh` **warns** (never `error`, so it

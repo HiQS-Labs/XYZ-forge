@@ -2,7 +2,7 @@
 # utils/pdda-check-ratings.sh — advisory check for the optional project ratings contract.
 #
 # Surfaces 2-WORKING docs that are missing a complexity/risk/effort rating (or carry an
-# out-of-vocabulary value), so the queue planner (utils/queue-plan.sh) can sequence them.
+# out-of-vocabulary value), so the marathon planner (utils/marathon-plan.sh) can sequence them.
 #
 # This is a NUDGE, never a gate: it only ever emits `warn` findings and never sets a non-zero
 # exit — even in `full` mode — exactly like pdda-check-changelog.sh. Missing ratings hold a doc
@@ -34,7 +34,7 @@ while IFS= read -r file; do
   for key in $RATING_KEYS; do
     if ! pdda_frontmatter_has_key "$file" "$key"; then
       pdda_record_finding warn "$CHECK_NAME" "$file" 1 \
-        "missing project rating '$key' — held out of queue-plan sequencing until rated" "add-rating-key"
+        "missing project rating '$key' — held out of marathon-plan sequencing until rated" "add-rating-key"
       continue
     fi
     value="$(pdda_trim "$(pdda_frontmatter_value "$file" "$key")")"
