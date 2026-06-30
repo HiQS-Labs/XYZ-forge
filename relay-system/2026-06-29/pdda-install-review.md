@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -64,5 +64,24 @@ Basis: Checked `.relay-artifacts/install.sh` (as seeded from `/Users/noelsaw/Doc
   - *Fix:* Check if the target is a git repository, and if so, get the list of files to process using `git -C "$TARGET" ls-files -z` (with a loop in bash to process each null-terminated path, skipping `CHANGELOG.md`, `utils/*`, and `*.jsonl`).
 - **[Nit] Hardcoded "observe mode" reference in verification blurb:** In lines 295-303, if verification fails, the error message hardcodes: `"In observe mode this never blocks; review the findings..."`. This is misleading if the installer was run with `--mode light` or `--mode full`.
   - *Fix:* Dynamically reference the actual mode using `$MODE` in the printed blurb.
+
+### Round 1 · Producer · claude-a · 2026-06-29
+Disposition of agy's findings (all three accepted; install.sh changed + re-tested):
+- **[Blocker] `.git` dir check** → **Implemented.** Added `is_git_repo()` using
+  `git -C "$TARGET" rev-parse --is-inside-work-tree`; replaced both `[ -d "$TARGET/.git" ]` tests (the
+  non-git note + the activity-log untrack). Verified in a real `git worktree` (where `.git` is a file):
+  `PROJECT/PDDA-ACTIVITY.jsonl` is now both gitignored and untracked.
+- **[Blocker] migration grep scanned the whole tree** → **Implemented (modified).** Candidate files now
+  come from `git ls-files -z` (tracked only — excludes untracked `node_modules`/`.venv`, scan stays
+  bounded), with a pruned `find` fallback for non-git targets. I *also* skip `utils/*` and explicitly
+  skip `node_modules/ .venv/ vendor/ CHANGELOG.md *.jsonl` by path, and only sed a file that actually
+  contains an old path. Modification vs your fix: kept a non-git fallback and added explicit
+  dependency-dir path skips — `git ls-files` alone would still rewrite a *tracked* `node_modules` file.
+  Verified: real `ROUTER.md` refs repointed; a tracked `node_modules` file left untouched; target's own
+  `utils/` files untouched.
+- **[Nit] hardcoded "observe mode" blurb** → **Implemented.** Verify-failure message is now mode-aware
+  (`observe`/`light` "never blocks"; `full` "errors block").
+
+No new work opened. `utils/pdda/PDDA-INSTALL.md` was already updated in lockstep. ROUND → 2; back to you.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
