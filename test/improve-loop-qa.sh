@@ -61,5 +61,18 @@ bash "$IL" --artifact "$RG/art" --allow "src/**" --oracle-paths "src/paths.js" \
   && [ "$(/usr/bin/grep -c '"challenger_metric"' "$W/d1/state/provenance.jsonl")" -ge 1 ]; } \
   && pass "provenance: every judgement records decision + challenger_metric" || fail "provenance missing fields"
 
+# --- Codex review: the halt guarantee rejects an INVALID --max-iterations up front (no infinite spin) -
+RV="$W/v"; mkdir -p "$RV"; echo 50 >"$RV/art"
+for bad in 0 abc -1; do
+  bash "$IL" --artifact "$RV/art" --measure-cmd "cat $RV/art" --oracle-cmd true --build-cmd true \
+       --max-iterations "$bad" --state-dir "$RV/state-$bad" >/dev/null 2>&1; rc=$?
+  [ "$rc" = 2 ] && pass "invalid --max-iterations '$bad' rejected up front (exit 2)" || fail "max-iterations '$bad' got $rc (would spin)"
+done
+
+# --- Codex review: fail closed on an un-enforceable token budget for the cost-blind agy lane ---------
+bash "$IL" --artifact "$RV/art" --measure-cmd "cat $RV/art" --oracle-cmd true --build-cmd true \
+     --max-iterations 3 --max-total-budget 100 --currency tokens --agent agy --state-dir "$RV/state-agy" >/dev/null 2>&1; rc=$?
+[ "$rc" = 2 ] && pass "token --max-total-budget for cost-blind agy refused (exit 2, fail closed)" || fail "agy token budget got $rc"
+
 echo "  improve-loop-qa: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]

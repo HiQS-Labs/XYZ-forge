@@ -29,13 +29,23 @@ done
 [ -n "$ALLOW" ]  || { echo "oracle-guard.sh: --allow (builder write surface) is required" >&2; exit 2; }
 [ -n "$ORACLE" ] || { echo "oracle-guard.sh: --oracle (the protected oracle paths) is required" >&2; exit 2; }
 
-# Find overlapping (allow, oracle) pairs via the kernel's own path-overlap. node exit 0 = disjoint,
-# 1 = overlap (pairs on stderr), 3 = could not load src/paths.js.
+# Find overlapping (allow, oracle) pairs via the kernel's own path-overlap. CANONICALIZE first —
+# resolve `..` (path.resolve) and symlinks (realpathSync, when the path exists) against the repo root —
+# so an alias like `a/../oracle` or a symlink can't slip a builder path past a string-prefix check that
+# only sees the textual form. Globs / not-yet-created paths keep their resolved-but-not-real form (the
+# literal-prefix overlap still catches an ancestor dir). node exit 0 = disjoint, 1 = overlap, 3 = load error.
 HITS="$(node -e '
+  const path = require("path"), fs = require("fs");
   let po;
   try { po = require(process.argv[1] + "/src/paths").patternsOverlap; }
   catch (e) { console.error("cannot load src/paths.js: " + e.message); process.exit(3); }
-  const split = s => s.split(",").map(x => x.trim()).filter(Boolean);
+  const root = process.argv[1];
+  const canon = p => {
+    let r = path.resolve(root, p);            // absolute + collapse ".."
+    try { r = fs.realpathSync(r); } catch (_) {}   // resolve symlinks when the path exists
+    return r;
+  };
+  const split = s => s.split(",").map(x => x.trim()).filter(Boolean).map(canon);
   const allow = split(process.argv[2]), oracle = split(process.argv[3]);
   const hits = [];
   for (const a of allow) for (const o of oracle) if (po(a, o)) hits.push(a + "  ∩  " + o);

@@ -42,5 +42,15 @@ bash "$G" --allow "src/foo.js" >/dev/null 2>&1; rc=$?
 bash "$G" --oracle "test/x" >/dev/null 2>&1; rc=$?
 [ "$rc" = 2 ] && pass "missing --allow -> usage (exit 2)" || fail "expected 2 got $rc"
 
+# Codex review: aliasing must NOT bypass the guard (canonicalize before overlap)
+ROOT="$(cd "$HERE/.." && pwd)"
+run --allow "relay-automation/../src/paths.js" --oracle "src/paths.js"
+[ "$RC" = 9 ] && pass "'..' alias resolving to the oracle is caught (exit 9)" || fail "alias bypass: rc=$RC out=$OUT"
+# a symlink whose target IS an oracle file must be caught
+SL="${TMPDIR:-/tmp}/og-alias.$$.sh"; ln -sf "$ROOT/validate.sh" "$SL"
+run --allow "$SL" --oracle "validate.sh"
+[ "$RC" = 9 ] && pass "symlink to an oracle file is caught (exit 9)" || fail "symlink bypass: rc=$RC out=$OUT"
+rm -f "$SL"
+
 echo "  oracle-guard: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]
