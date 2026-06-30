@@ -20,13 +20,13 @@ This file is the first entry point for an AI agent working in this repo: it tell
 4. Read the linked `PROJECT/**` document that owns the work you are touching. -> expect the near-top `## Status` table to tell you what was just completed and what is next.
 5. If the task touches project docs, read `PROJECT/PDDA.md` and follow the PDDA contract. -> expect `PROJECT/2-WORKING` docs to have frontmatter, the exact status table, and QA gates when phased.
 6. Before reporting success on code or runtime work, run `./validate.sh`. -> expect the suite to stay green; do not claim completion if it fails or was skipped.
-7. Before reporting success on doc-hygiene or roadmap work, run `utils/pdda-run.sh` or the relevant `utils/pdda-*.sh` check. -> expect deterministic findings first, then any LLM review.
+7. Before reporting success on doc-hygiene or roadmap work, run `utils/pdda/pdda.sh run` (or the relevant `utils/pdda/pdda.sh <check>` subcommand). -> expect deterministic findings first, then any LLM review.
 
 ## Canonical rules
 
 - Do not put phase checklists, build steps, or deep execution notes in `ROADMAP.md`.
-- Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer in `ROADMAP.md` — a one-line ledger entry that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Enforced by `utils/pdda-check-roadmap-coverage.sh`; governance lives in `PROJECT/PDDA.md` → "ROADMAP.md contract".
-- Every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be parked in `ROADMAP.md` as a one-line queue entry immediately at intake, then promoted or removed later. Enforced by `utils/pdda-check-roadmap-coverage.sh`; governance lives in `PROJECT/PDDA.md` → "GitHub issue intake" + "ROADMAP.md contract".
+- Every active doc in `PROJECT/2-WORKING/` must be reflected by a pointer in `ROADMAP.md` — a one-line ledger entry that links it. A working doc that should not appear opts out with `roadmap_exempt: true` in its frontmatter. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` → "ROADMAP.md contract".
+- Every captured GitHub issue doc in `PROJECT/1-INBOX/GH-*.md` must also be parked in `ROADMAP.md` as a one-line queue entry immediately at intake, then promoted or removed later. Enforced by `utils/pdda/pdda.sh roadmap-coverage`; governance lives in `PROJECT/PDDA.md` → "GitHub issue intake" + "ROADMAP.md contract".
 - Do not create a second competing plan when a canonical `PROJECT/**` doc already exists.
 - Issue-first: any change beyond a **2–3 line** fix opens a GitHub issue first, then a pointer doc **named after the issue** (`GH-<number>-VERY-SHORT-DESC.md`, e.g. `GH-1234-SHOWME-COMMAND.md`), and that capture is **parked in `ROADMAP.md` immediately** before execution begins. The issue is the signal stream; the pointer doc is the execution surface of record. Genuinely trivial edits (≤2–3 line fixes, typos, path repoints, doc-only one-liners) are exempt. Governed by `PROJECT/PDDA.md` → "GitHub issue intake".
 - Do not override deterministic PDDA findings with prose.
@@ -44,19 +44,21 @@ For repo correctness:
 For document hygiene:
 
 ```bash
-utils/pdda-run.sh
+utils/pdda/pdda.sh run
 ```
 
-For targeted PDDA debugging:
+For targeted PDDA debugging (subcommands of the single dispatcher):
 
 ```bash
-utils/pdda-check-frontmatter.sh
-utils/pdda-check-status-table.sh
-utils/pdda-check-hardcoded-paths.sh
-utils/pdda-check-roadmap.sh
-utils/pdda-check-roadmap-coverage.sh
-utils/pdda-stale-working-docs.sh
-utils/pdda-doc-ready.sh   # LLM readiness review — set PDDA_LLM_BIN (codex/claude/agy) for recommendations, else it self-skips
+utils/pdda/pdda.sh frontmatter
+utils/pdda/pdda.sh status-table
+utils/pdda/pdda.sh hardcoded-paths
+utils/pdda/pdda.sh roadmap
+utils/pdda/pdda.sh roadmap-coverage
+utils/pdda/pdda.sh changelog
+utils/pdda/pdda.sh stale
+utils/pdda/pdda.sh issue-doc-sync   # warn-only: flags 2-WORKING/GH-*.md docs drifted from their GitHub issue state
+utils/pdda/pdda.sh doc-ready        # LLM readiness review — set PDDA_LLM_BIN (codex/claude/agy) for recommendations, else it self-skips
 ```
 
 ## Routing hints

@@ -55,7 +55,7 @@ Severity 🔴 high · 🟠 med · 🟡 low — Status ⬜ OPEN · ✅ FIXED
 ## Deterministic checks — re-run to refresh
 
 Empty output = all green. Any line printed names an OPEN finding. (A future
-`utils/pdda-check-frontdoor.sh` could wrap this onto the existing `pdda-*` / `validate.sh` rail.)
+a future `utils/pdda/pdda.sh frontdoor` check could wrap this onto the existing `utils/pdda/pdda.sh` / `validate.sh` rail.)
 
 ```bash
 # Run from the repo root.

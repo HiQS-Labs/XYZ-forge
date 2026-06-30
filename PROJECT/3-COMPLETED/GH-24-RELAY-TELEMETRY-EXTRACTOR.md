@@ -1,7 +1,7 @@
 ---
-complexity: low
-risk: low
-effort: low
+complexity: 2
+risk: 2
+effort: 2
 ratings_provisional: false
 title: relay telemetry extractor — on-demand ETL to focus5float health feed
 status: Complete (3-COMPLETED)

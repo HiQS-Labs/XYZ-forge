@@ -1,7 +1,7 @@
 ---
-complexity: low
-risk: low
-effort: low
+complexity: 2
+risk: 2
+effort: 2
 ratings_provisional: true
 title: ROADMAP dashboard renderer — refresh the pointer ledger into a static informational dashboard
 status: Completed (3-COMPLETED)

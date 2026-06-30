@@ -9,9 +9,9 @@ gh_issue: 39
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/39
 related: PR #38 (utils/marathon-plan.sh — the pre-pre-flight stage; reuses swarm-preflight contract/fix_probes)
 doc_type: project
-complexity: medium
-risk: medium
-effort: medium
+complexity: 3
+risk: 3
+effort: 3
 ratings_provisional: true
 goal: >
   Close the gaps that let a "ready" swarm-preflight packet still fail the marathon mid-air: verify the

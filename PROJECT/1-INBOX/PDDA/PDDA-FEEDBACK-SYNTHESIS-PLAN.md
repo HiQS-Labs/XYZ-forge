@@ -1,7 +1,7 @@
 ---
-complexity: medium
-risk: low
-effort: medium
+complexity: 3
+risk: 2
+effort: 3
 ratings_provisional: true
 title: PDDA feedback synthesis — actionable planning doc
 status: Proposed (1-INBOX — not yet active)

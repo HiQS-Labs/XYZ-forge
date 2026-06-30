@@ -10,9 +10,9 @@ gh_issue: 46
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/46
 parent_issue: 33
 doc_type: project
-complexity: high
-risk: high
-effort: high
+complexity: 4
+risk: 4
+effort: 4
 ratings_provisional: true
 goal: >
   Hold the AUTHORITATIVE Phase 4 swarm-preflight contract (unify Path A/B so cross-model relay turns

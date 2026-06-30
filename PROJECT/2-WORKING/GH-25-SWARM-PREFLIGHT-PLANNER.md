@@ -239,7 +239,7 @@ semantics.
 - [x] Add fixtures for each failure mode: stale branch, already-landed fix, missing gate, overlapping lanes, missing local GH capture.
 - [x] Add one README/operator section pointing the user at the planner without duplicating the full plan.
 - [x] Update the active doc, ROADMAP pointer, and CHANGELOG with the implementation result.
-- [x] Run `utils/pdda-run.sh` and the repo validation gates before claiming completion.
+- [x] Run `utils/pdda/pdda.sh run` and the repo validation gates before claiming completion.
 
 ### QA checklist
 

@@ -13,9 +13,9 @@ goal: >
   Reconcile the layout AND the semantic divergence (ratings words-vs-integers, dropped/added checks,
   repo-specific tooling that must survive) before repointing hooks, gates, and docs — so the repo
   runs exactly one PDDA, not two.
-complexity: high
-risk: high
-effort: medium
+complexity: 4
+risk: 4
+effort: 3
 ratings_provisional: false
 related:
   - utils/pdda/PDDA-INSTALL.md
@@ -26,18 +26,19 @@ related:
 
 # PDDA Runtime Consolidation — flat `utils/pdda-*.sh` → `utils/pdda/pdda.sh`
 
-**Verdict:** `install.sh` from the upstream pdda repo has **landed** the new consolidated runtime under
-[utils/pdda/](../../utils/pdda/), but it is **dormant** — every hook, gate, and doc in this repo still
-drives the old split implementation. This repo is the *divergent ancestor* of canonical PDDA, so the
-cutover is not a layout swap: it carries a hard **semantic conflict** (triage ratings) plus a
-**check-set delta** that must be resolved by operator decision before anything is repointed. This doc
-is the plan only — **no rewiring has been done.**
+**Verdict:** ✅ **Cutover complete (2026-06-30).** The repo now runs exactly one PDDA — the upstream
+consolidated dispatcher at [utils/pdda/pdda.sh](../../utils/pdda/pdda.sh). The old split implementation
+(12 flat files) is removed; the triage-ratings contract moved to integers `1`–`5`; every hook, gate,
+and operator doc is repointed; repo-specific tooling (`marathon-plan.sh`, `swarm-preflight.sh`,
+telemetry) was preserved. Decisions D1–D3 are recorded in
+[decisions/2026-06-30-pdda-runtime-consolidation.md](../../decisions/2026-06-30-pdda-runtime-consolidation.md).
+The sections below are retained as the migration record (original plan + divergence analysis).
 
 ## Status
 
 | What was just completed | What's next |
 |---|---|
-| **Install landed (2026-06-30, observe-mode verify green).** New runtime copied to `utils/pdda/` (dispatcher `pdda.sh` + `pdda-lib.sh`, `pdda-doc-ready.sh`, `pdda-catchup.sh`, `pdda-gh-refresh.sh`, `pdda-edit-doc-hook.sh`, `pdda-stop-doc-health.sh`, `PDDA-INSTALL.md`). `PROJECT/PDDA.md` refreshed to the new contract; `.gitignore += .pdda-gh-state.tsv`; 3 `blank.md` buckets seeded. Old split implementation left fully intact and still wired in. | **Resolve the 3 open decisions below** (ratings format · dropped `pdda-check-ratings.sh` · `PDDA.md` interim mismatch), then execute the cutover phases. Nothing repoints until D1–D3 are settled. |
+| **Cutover complete 2026-06-30.** Decisions: D1=integers `1`–`5` (rewrote 25 docs `low→2/med→3/high→4` + `marathon-plan.sh` + test), D2=dropped `pdda-check-ratings.sh`, D3=kept refreshed `PROJECT/PDDA.md`. Removed 12 flat files; repointed hooks/gate-test/operator-docs to `utils/pdda/pdda.sh`; kept repo-specific tooling. Gates green: `pdda.sh run` full-mode 0 errors · `test/marathon-plan.sh` 31/31 · `test/pdda-roadmap-coverage.sh` 3/3 · `validate.sh` 0. | **Commit on `fix/upgrade-pdda`** (not yet committed). Optional follow-ups: move this doc to `3-COMPLETED`; re-add a `ratings_provisional` confirm-nudge to `marathon-plan.sh` if missed; fine-tune individual doc ratings toward `1`/`5` where warranted. |
 
 ## Current state (what's on disk now)
 

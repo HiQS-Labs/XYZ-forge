@@ -10,9 +10,9 @@ goal: >
   centralized archive location instead of writing them into each foreign repo's
   relay-system/ folder. Default behavior is unchanged when the setting is unset.
 doc_type: project
-complexity: medium
-risk: high
-effort: medium
+complexity: 3
+risk: 4
+effort: 3
 ratings_provisional: true
 non_goals:
   - Not changing the on-tree default (xyz's own relay-system/ stays put when unset)
@@ -89,7 +89,7 @@ One optional env var (mirroring the existing `*_ROOT` convention): **`XYZ_ARCHIV
 ### QA checklist — Phase 0
 
 - [ ] GH issue exists and is linked from both the doc frontmatter and `ROADMAP.md`.
-- [ ] `utils/pdda-check-roadmap-coverage.sh` passes (inbox doc is parked).
+- [ ] `utils/pdda/pdda.sh roadmap-coverage` passes (inbox doc is parked).
 - [ ] Archive-model decision (A or B) is written down, not implicit.
 - [ ] No code changed in this phase.
 
@@ -105,7 +105,7 @@ One optional env var (mirroring the existing `*_ROOT` convention): **`XYZ_ARCHIV
 - [ ] With `XYZ_ARCHIVE_ROOT` unset, helper output equals the current hardcoded path (regression-safe).
 - [ ] Resolver lives in exactly one place; no writer recomputes the root independently.
 - [ ] New tests pass under `./validate.sh`.
-- [ ] `utils/pdda-check-hardcoded-paths.sh` clean.
+- [ ] `utils/pdda/pdda.sh hardcoded-paths` clean.
 
 ## Phase 2 — Wire the resolver into all writers
 
@@ -163,7 +163,7 @@ One optional env var (mirroring the existing `*_ROOT` convention): **`XYZ_ARCHIV
 ### QA checklist — Phase 5
 
 - [ ] `./validate.sh` green.
-- [ ] `utils/pdda-run.sh` clean (frontmatter, status table, hardcoded paths, roadmap coverage).
+- [ ] `utils/pdda/pdda.sh run` clean (frontmatter, status table, hardcoded paths, roadmap coverage).
 - [ ] Docs describe both default and archive modes; no hardcoded absolute paths in the docs.
 - [ ] `CHANGELOG.md` entry present with the bet recorded.
 </content>

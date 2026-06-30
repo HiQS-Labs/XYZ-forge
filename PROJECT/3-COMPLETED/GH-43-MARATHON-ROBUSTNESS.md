@@ -1,7 +1,7 @@
 ---
-complexity: low
-risk: medium
-effort: low
+complexity: 2
+risk: 3
+effort: 2
 title: Marathon headless-build robustness (task-scoped tick claim reaping)
 status: Completed
 created: 2026-06-28

@@ -344,7 +344,9 @@ function isGoGated(item) {
   return /gated on operator go|gated on (a |an )?operator|operator go\b|awaiting go\b/i.test(item.raw);
 }
 
-const L = (x) => ({ low: 1, medium: 2, med: 2, high: 3 }[String(x || "").toLowerCase()] || null);
+// PDDA triage ratings are integers 1 (low) .. 5 (highest) — see PROJECT/PDDA.md "Triage ratings".
+// Anything outside 1–5 (or absent) is treated as unrated (null) so the doc is held out of sequencing.
+const L = (x) => { const n = parseInt(String(x == null ? "" : x).trim(), 10); return n >= 1 && n <= 5 ? n : null; };
 
 // ── findings (the pdda finding shape) ────────────────────────────────────────
 const findings = [];
@@ -652,7 +654,8 @@ if (FORMAT === "json") {
 
 // ── render the sequenced marathon-plan doc ───────────────────────────────────────────
 function cell(v) { return String(v == null ? "—" : v); }
-const ratingWord = (n) => ({ 1: "low", 2: "med", 3: "high" }[n] || "—");
+// Ratings are integers 1 (low) .. 5 (highest); render the number, or — when unrated.
+const ratingNum = (n) => (n >= 1 && n <= 5 ? String(n) : "—");
 function renderQueueDoc() {
   const o = [];
   o.push("---");
@@ -711,7 +714,7 @@ function renderQueueDoc() {
   o.push("|---|---|---|---|---|---|---|---|");
   for (const r of active) {
     const id = r.gh ? `[#${r.gh}] ${r.title}` : r.title;
-    o.push(`| ${cell(id)} | ${ratingWord(r.ratings.complexity)} | ${ratingWord(r.ratings.risk)} | ${ratingWord(r.ratings.effort)} | ${r.zone}${r.zoneInferred ? "*" : ""} | ${r.deps.length ? r.deps.map((d) => "#" + d).join(",") : "—"} | ${cell(r.score)} | ${cell(r.wave)} |`);
+    o.push(`| ${cell(id)} | ${ratingNum(r.ratings.complexity)} | ${ratingNum(r.ratings.risk)} | ${ratingNum(r.ratings.effort)} | ${r.zone}${r.zoneInferred ? "*" : ""} | ${r.deps.length ? r.deps.map((d) => "#" + d).join(",") : "—"} | ${cell(r.score)} | ${cell(r.wave)} |`);
   }
   if (active.length === 0) o.push("| (no active, ready, rated items) | — | — | — | — | — | — | — |");
   o.push("");

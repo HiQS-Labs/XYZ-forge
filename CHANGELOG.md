@@ -2,6 +2,16 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-30
+
+### PDDA runtime consolidation — adopt the upstream single-dispatcher layout + integer ratings
+Migrated this repo (the *divergent ancestor* of PDDA) off its old split implementation onto the upstream consolidated runtime via `pdda/install.sh`, then cut over every consumer. Decision record: [decisions/2026-06-30-pdda-runtime-consolidation.md](decisions/2026-06-30-pdda-runtime-consolidation.md); plan/divergence analysis: [PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md](PROJECT/2-WORKING/PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md).
+- **One runtime:** removed the 12 flat files (`utils/pdda-run.sh`, `utils/pdda-lib.sh`, `utils/pdda-doc-ready.sh`, 8 `utils/pdda-check-*.sh`, `utils/pdda-stale-working-docs.sh`, `utils/PDDA-INSTALL.md`); the single dispatcher `utils/pdda/pdda.sh` (installed under `utils/pdda/`) now owns all checks. Repo-specific tooling (`marathon-plan.sh`, `swarm-preflight.sh`, `roadmap-dashboard.sh`, `validate-agy.sh`, `telemetry/`) was preserved untouched.
+- **Triage ratings → integers `1`–`5`** (was `low|medium|high`): rewrote all 25 rated `PROJECT/**` docs (`low→2/med→3/high→4`, order-preserving so planner ranking is unchanged); updated `utils/marathon-plan.sh` (`L()` passthrough, `ratingWord`→`ratingNum`) + `test/marathon-plan.sh` fixtures. Contract codified in the refreshed `PROJECT/PDDA.md`.
+- **Dropped** the repo-specific `pdda-check-ratings.sh` — its enforcement is now folded into `pdda.sh frontmatter` (errors on bad values) + `marathon-plan.sh`'s own unrated detection; the one lost capability is the `ratings_provisional` confirm-nudge (cheap to re-add later).
+- **Rewired:** `.claude/settings.json` allowlist, `test/pdda-roadmap-coverage.sh`, `ROUTER.md`, `AGENTS.md`, `GUIDING-PRINCIPLES.md`, `FRONTDOOR.md`, `ROADMAP.md` banner+ledger, `PROJECT/4-MISC/AGENTS-DOCS.md`, and active `PROJECT` docs (GH-30, GH-25). Dated history (CHANGELOG, `relay-system/**`, `3-COMPLETED/**`, verbatim `FEEDBACK-*.md`, RECAP) left as records.
+- **Verification:** `utils/pdda/pdda.sh run` green in **full** mode (0 errors, all 9 checks; only pre-existing warn-level findings); `test/marathon-plan.sh` 31/31; `test/pdda-roadmap-coverage.sh` 3/3; `./validate.sh` green (exit 0) both before (baseline) and after the cutover.
+
 ## 2026-06-29
 
 ### Part C (#50) — Codex code review of the loop, 3 real Blockers fixed + verified
