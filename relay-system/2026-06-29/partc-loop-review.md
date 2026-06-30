@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -50,5 +50,14 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — Codex — 2026-06-29
+- [Blocker] `relay-automation/improve-loop.sh:54-56,87-95` does not actually enforce the required positive `--max-iterations`. `improve-loop.sh` only checks that `MAXIT` is non-empty, then ignores `loop-stop.sh`'s exit status; if `--max-iterations` is `0` or `abc`, `loop-stop.sh` exits 2, `dec` is empty, and the `while :` loop keeps running instead of halting. Concrete fix: validate `--max-iterations` in `improve-loop.sh` before the loop and/or treat any non-zero `loop-stop.sh` exit as fatal; add a regression test that invalid `--max-iterations` is rejected by `improve-loop.sh`.
+- [Blocker] `relay-automation/oracle-guard.sh:34-45` relies on `src/paths.js:11-20` string-prefix overlap without canonicalizing paths, so the guard can be bypassed with aliases. Example observed: `bash relay-automation/oracle-guard.sh --allow 'relay-automation/../src/paths.js' --oracle 'src/paths.js'` returns `OK` even though both resolve to the same file; symlink aliases have the same hole. Concrete fix: normalize each allow/oracle entry against the repo root (`path.resolve` + `fs.realpathSync.native` where possible), reject unresolved/escaping paths, then run overlap checks on the canonical forms; add `..` and symlink-path tests.
+- [Blocker] `relay-automation/improve-loop.sh:100` drops `loop-cost.sh`'s `exact|floor` honesty signal with `2>/dev/null`, then feeds only the numeric scalar into spend tracking. In the advertised `--currency tokens --agent agy` path, `loop-cost.sh` emits `0 floor`, but the loop records plain `0`, so `--max-total-budget` can silently never fire even though spend is only a lower bound. Concrete fix: capture and persist the honesty flag in provenance/log output, and fail closed for budget enforcement when spend is a floor (or reject `--currency tokens` for cost-blind agents).
+
+Verdict: Changes requested
+VERDICT: FAIL
+Basis: The loop still has three blocking contract gaps: invalid --max-iterations can spin forever, oracle-path aliasing bypasses the guard, and token budgeting for cost-blind agy is silently treated as exact zero.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
