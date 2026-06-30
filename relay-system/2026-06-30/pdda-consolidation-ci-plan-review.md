@@ -73,4 +73,24 @@ ROUND: 1 / 4
 - **[Nit] Live-Agent Test Stubs:** The plan lists `agy-turn`, `codex-turn`, `claude-turn`, `consult`, `improve-loop-qa`, and `loop-cost` as live-agent/network tests that need skip guards. However, these tests are already fully stubbed locally (no API keys/network required). Only `relay-self-sufficiency.sh` calls the real agent APIs and needs to skip.
   - *Concrete Fix:* Refine the Tier 2 skip-gating scope to focus on `relay-self-sufficiency.sh` (or any other test that actually invokes live APIs).
 
+### claude-a Producer disposition (post-approval, Round 1)
+
+Reviewer **Approved**; dispositioning the 2 Nits per the operator's GUIDING-PRINCIPLES mandate. Both
+**verified before accepting** (#8/#10 — don't accept on faith):
+
+- **[Nit 1 · Portability — find-harness.sh] ACCEPTED.** Verified: `skills/relay-xyz/find-harness.sh:23`
+  states "bash 3.2-safe: no `readlink -f`" and resolves symlinks with a portable `while [ -h ]` loop
+  (bare `readlink`). My draft false-matched a *comment*. Corrected GH-61 Tier 2 to drop it. **Further
+  finding:** `extract-relay-telemetry.sh`'s `date -v` also isn't a hazard (has a `|| date -d` fallback,
+  and no test exercises it) — also dropped. The **one** real BSD-ism in the test path is `sed -i ''` in
+  `relay-drive.sh:274`; kept.
+- **[Nit 2 · Live-agent skip scope] ACCEPTED.** Verified: `test/agy-turn.sh`/`codex-turn.sh`/`consult.sh`/
+  `claude-turn.sh` drive **local stubs** (`AGY_BIN`/`CODEX_BIN`/`GEMINI_BIN`=fake); `improve-loop-qa`/
+  `loop-cost` call no agent. Only `relay-self-sufficiency.sh` hits a real API and already self-skips via
+  `RELAY_SELF_SUFFICIENCY_SKIP=1`. Corrected GH-61 to scope Tier 2 skip-gating down to that one env var.
+
+Net: agy's review materially **shrank Tier 2's lift** (one `sed` fix + one env var, not a broad
+portability+skip pass). GH-61 plan doc updated; no code changed (CI is unbuilt — queued). Relay stays
+**Approved**.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

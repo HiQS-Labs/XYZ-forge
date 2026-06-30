@@ -43,15 +43,20 @@ malformed JSON, a working doc missing its ROADMAP pointer) each turn the job red
 
 ## Tier 2 — `./validate.sh` regression gate (the real 80%)
 
-Runs the full 69-test suite on PR. **Not a clean drop-in** — two things must be handled first:
+Runs the full 69-test suite on PR. **Smaller lift than first scoped** (corrected by the GH-61 agy
+review, 2026-06-30 — both items below were over-stated in the first draft):
 
-1. **Portability** (if ubuntu): BSD-isms surfaced by audit — `sed -i ''` in
-   `relay-automation/relay-drive.sh`, `readlink -f` in `skills/relay-xyz/find-harness.sh`,
-   `date -v` in `utils/telemetry/extract-relay-telemetry.sh`. Make Linux-clean or guard.
-2. **Live-agent / network tests** must deterministically skip in CI: `agy-turn`, `codex-turn`,
-   `claude-turn`, `consult`, `improve-loop-qa`, `loop-cost`, and `relay-self-sufficiency`
-   (already honors `RELAY_SELF_SUFFICIENCY_SKIP=1`). Audit each for a clean skip path; add env guards
-   where missing. `gh`-dependent tests need either `GITHUB_TOKEN` wiring or a skip.
+1. **Portability** (if ubuntu): the only genuine BSD-ism in the test path is **`sed -i ''`** in
+   [`relay-automation/relay-drive.sh`](../../relay-automation/relay-drive.sh) (GNU `sed` needs
+   `sed -i` — no empty-suffix arg). *Not* hazards: `find-harness.sh` already uses a bash-3.2-safe
+   `while [ -h ]` symlink loop (no `readlink -f`); `extract-relay-telemetry.sh`'s `date -v` already
+   has a `|| date -d` GNU fallback **and** is exercised by no test. So: one small fix (or guard).
+2. **Live-agent / network tests:** nearly all the turn/consult tests (`agy-turn`, `codex-turn`,
+   `claude-turn`, `consult`, plus the pure-logic `improve-loop-qa`/`loop-cost`) run against **local
+   stubs** (`AGY_BIN`/`CODEX_BIN`/`GEMINI_BIN` = a fake binary) and need **no** network/API. The only
+   test that calls a real agent is **`relay-self-sufficiency.sh`**, which already self-skips via
+   `RELAY_SELF_SUFFICIENCY_SKIP=1`. So CI just sets that env var and audits for any straggler. Any
+   `gh`-dependent test needs `GITHUB_TOKEN` wiring or a skip.
 
 **Do NOT make Tier 2 a *required* status check until it is reliably green** — a flaky required gate
 erodes trust faster than no gate. Land it as advisory first, promote to required once stable.
