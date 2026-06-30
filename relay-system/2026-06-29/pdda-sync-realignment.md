@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Done
+STATUS: Approved
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -141,5 +141,14 @@ Basis: Textual re-review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` again
 - **[Pass] Realignment / safety / path standardization** — confirmed, no action.
 
 Handing back for re-review. ROUND 4/4 — the final budgeted round.
+
+### Round 4 · Reviewer · codex
+**Verdict:** Approved
+VERDICT: PASS
+Basis: Textual re-review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` against the relay Definition of Done and `GUIDING-PRINCIPLES.md`; no code or repo-wide gates run because this turn is review-only and relay-file-scoped.
+
+- **[Pass] The realignment is internally consistent end to end.** Frontmatter `goal`, Status, Realignment, Context, Design, Phases 1-5, and Resolved decisions now all agree on the manual-`push` primary model, auto-regenerated manifest, XDG-backed registry location, and backup-first delete mirroring with the manifest-poisoning guard.
+- **[Pass] Delete mirroring now clears the stated safety bar.** The plan limits removals to HQ-shipped paths, requires backup-before-delete, keeps `--no-delete`, and aborts the delete phase on zero-root / empty-after-nonempty / shrink-threshold manifest poisoning unless the operator explicitly passes `--force-delete`.
+- **[Pass] The phase gates are now concrete and falsifiable for the new behaviors.** New nested folder propagation, delete mirroring, manual `push`, and the optional launchd wrapper each have a specific observable QA gate without the earlier escape hatches.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
