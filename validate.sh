@@ -48,6 +48,7 @@ TESTS=(
   "heldout-check.sh"
   "loop-cost.sh"
   "improve-loop.sh"
+  "improve-loop-qa.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
