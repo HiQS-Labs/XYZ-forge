@@ -2,7 +2,7 @@
 complexity: low
 risk: low
 effort: low
-ratings_provisional: true
+ratings_provisional: false
 title: "relay-to-issue — post-relay transcript → checklist GitHub issue"
 status: Active
 created: 2026-06-22
