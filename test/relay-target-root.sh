@@ -116,5 +116,30 @@ bash "$DRIVE" --relay-file "$A/relay.md" --relay-task RELAY-TURN-default \
 # 3. $A/artifact.txt must contain the edit.
 grep -q "edited by agent" "$A/artifact.txt" && pass "default path: artifact edited in A" || fail "artifact not edited in A"
 
+# --- Test case 3 (GH-51 [1-kernel]): same-repo `--target-root .` must NOT flag the relay file off-lane ---
+# A relative --target-root (`.`, run from the repo root) with an ABSOLUTE relay file used to leave
+# RTL_ROOT relative, so the repo-root-relative strip couldn't remove the prefix → the relay file
+# failed the off-lane match and the whole turn was reverted (exit 6; the GH-37 marathon needed
+# --target-root DROPPED to converge). It must now behave exactly like a same-repo no-target-root turn:
+# the relay-file + artifact edits commit. Worktree isolation ON; relay file passed ABSOLUTE as marathon-drive does.
+seed_token RELAY-TURN-samerepo
+A_BEFORE="$(git -C "$A" rev-parse HEAD)"
+AGENT_CMD_SAME="RELAY_AGENT=claude RELAY_FILE=\"$A/relay.md\" RELAY_TASK=RELAY-TURN-samerepo \
+  CLAUDE_AGENT=claude CLAUDE_BIN=\"$STUB\" CLAUDE_TURN_ROOT=\"$A\" CLAUDE_LOG=\"$WORK/c-same.log\" \
+  ALLOW_PATHS=\"artifact.txt\" CLAUDE_BLOCK_CMDS=\"\" RELAY_WORKTREE_ISOLATION=1 \
+  bash \"$SHIM\""
+# Run from CWD=$A so `--target-root .` resolves to the harness repo (the same-repo case).
+( cd "$A" && bash "$DRIVE" --relay-file "$A/relay.md" --relay-task RELAY-TURN-samerepo \
+  --target-root "." --agent-cmd "$AGENT_CMD_SAME" --round-cap 1 ) >/dev/null 2>&1
+
+# The turn must COMMIT (not be reverted off-lane).
+[ "$(git -C "$A" rev-parse HEAD)" != "$A_BEFORE" ] \
+  && pass "GH-51 [1-kernel]: same-repo --target-root . commits (relay file no longer off-lane)" \
+  || fail "GH-51 [1-kernel]: same-repo --target-root . reverted the turn off-lane (no commit)"
+# And the relay-file edit landed (the exact path that was being flagged off-lane).
+grep -q "Round 1 · Agent" "$A/relay.md" \
+  && pass "GH-51 [1-kernel]: same-repo --target-root . — relay-file edit landed" \
+  || fail "GH-51 [1-kernel]: same-repo --target-root . — relay-file edit lost"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

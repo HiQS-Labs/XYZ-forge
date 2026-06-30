@@ -55,6 +55,17 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # one anchor. Unset/empty → the caller's <root> (today's behavior, byte-for-byte). Coordination
   # (.tick) stays where TICK_REPO_ROOT points (the harness clone); only the ARTIFACT side moves.
   RTL_ROOT="${RELAY_TARGET_ROOT:-$1}"; local f="$2" csv="$3"
+  # GH-51 [1-kernel]: a SAME-REPO --target-root (notably `--target-root .`) left RTL_ROOT relative or
+  # redundant, so the repo-root-relative strip below (`${a#"$RTL_ROOT"/}`) could not remove an ABSOLUTE
+  # relay-file prefix — the relay file then failed the off-lane match and a legitimate same-repo turn
+  # was reverted (exit 6; the GH-37 marathon needed --target-root DROPPED to converge). When the target
+  # root resolves to the SAME git repo as the caller's own root, collapse to that root so containment is
+  # byte-identical to the no-target-root path (a same-repo --target-root is a NO-OP). Genuine foreign
+  # roots (a different toplevel) are untouched — the cross-repo path is unchanged.
+  if [[ -n "${RELAY_TARGET_ROOT:-}" ]]; then
+    local _tt; _tt="$(git -C "$RTL_ROOT" rev-parse --show-toplevel 2>/dev/null)"
+    [[ -n "$_tt" && "$_tt" == "$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)" ]] && RTL_ROOT="$1"
+  fi
   # macOS/APFS (and any case-insensitive fs) reports git-status paths in the case the INDEX tracks
   # (e.g. RELAY-SYSTEM/…), which can differ from the lowercase invocation arg the allowlist holds
   # (relay-system/…). Detect it ONCE here so rtl_in_allow can compare case-insensitively on such
