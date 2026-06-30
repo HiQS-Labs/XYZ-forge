@@ -46,6 +46,7 @@ TESTS=(
   "oracle-guard.sh"
   "champion.sh"
   "heldout-check.sh"
+  "loop-cost.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
