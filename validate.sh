@@ -49,6 +49,7 @@ TESTS=(
   "loop-cost.sh"
   "improve-loop.sh"
   "improve-loop-qa.sh"
+  "improve-loop-dogfood.sh"
   "marathon.sh"
   "consult.sh"
   "skill-extract.sh"
