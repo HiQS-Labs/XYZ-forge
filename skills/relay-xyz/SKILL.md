@@ -198,6 +198,28 @@ un-sandboxed). Run these Bash calls with `dangerouslyDisableSandbox: true`. (Mem
   to inline the artifact in a fence-collision-safe block instead of referencing the seed path). The
   scaffolder only writes a thread; you still drive it with `relay-drive.sh` per the paths above.
 
+- **Drive a full relay/build that lands in a DIFFERENT repo (`--target-root`):** the *normal* case —
+  the harness lives in `xyz-3-agents-swarm`, the code you want built or reviewed-and-committed lives in
+  your own repo. Pass `--target-root <repo>` to `relay-drive.sh` (or `marathon-drive.sh`): the relay
+  thread + `tick` token stay in the harness clone, while the worktree base, `ALLOW_PATHS` resolution,
+  and the file-scoped commit all route to `<repo>` (the harness clone is never touched). `find-harness.sh`
+  (Preconditions) solves discovery of *the harness*; `--target-root` is the inverse — pointing the
+  harness **at** your repo. **A same-repo lane must OMIT `--target-root`** — passing it for the harness's
+  own repo trips a relay-file off-lane false-positive (exit 6; see [#51](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/51)).
+
+- **One-shot cross-repo review without a relay loop (`CONSULT_ROOT`):** to apply a lens to a file in a
+  foreign repo with Codex/agy headless — no Producer↔Reviewer loop, advisory only — reach for
+  `consult.sh` with `CONSULT_ROOT` set to that repo. Advisors run in a throwaway worktree of
+  `CONSULT_ROOT`, so they read it but can never mutate it:
+  ```bash
+  CONSULT_ROOT=/path/to/your/repo \
+  relay-automation/consult.sh --models codex \
+    --prompt-file /abs/path/Q.md --out "$TMPDIR/consult"
+  ```
+  **`$TMPDIR` gotcha:** when a prompt/artifact is *authored* in a sandboxed step and *consumed*
+  un-sandboxed (or vice-versa), `$TMPDIR` resolves to a different dir and the path 404s
+  (`prompt file not found`). Pass prompts/artifacts by **absolute path**, never a bare `$TMPDIR`-relative one.
+
 ### Path B — hands-free poll (all-Claude, two windows)
 
 In each Claude window, run a guarded `/loop` that uses `poll.sh` as the gate, then take the turn from

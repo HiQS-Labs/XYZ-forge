@@ -30,21 +30,21 @@ Summary: 17 items | Tally: 🟢 0 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 4 items | Tally: 🟢 1 · 🟡 2 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 3 items | Tally: 🟢 1 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-40 · double-blind Reviewer canary spike (Part C prerequisite) | 🟢 | [gamma-poison](test/fixtures/gamma-poison/) · [token-reuse](test/fixtures/canary-token-reuse/) · [peer-orphan](test/fixtures/canary-peer-orphan/) · [reviewer-overstep](test/fixtures/canary-reviewer-overstep/) · [GH-40-DOUBLE-BLIND-REVIEWER.md](PROJECT/2-WORKING/GH-40-DOUBLE-BLIND-REVIEWER.md) · [#40](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/40) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
-| GH-11 · relay-xyz cross-repo targeting | 🟡 | [GH-11-CROSS-REPO-TARGETING.md](PROJECT/2-WORKING/GH-11-CROSS-REPO-TARGETING.md) |
 
 ## Completed
 
-Summary: 29 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 29 · 🔮 0 · 🔲 0
+Summary: 30 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 30 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-11 · relay-xyz cross-repo targeting | ✅ | [GH-11-CROSS-REPO-TARGETING.md](PROJECT/3-COMPLETED/GH-11-CROSS-REPO-TARGETING.md) · [#11](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11) |
 | Tooling · relay-xyz durability (discovery shakedown) | ✅ | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/3-COMPLETED/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
 | GH-19 · relay-xyz skill-skip durability | ✅ | [relay-automation/hooks/relay-xyz-guard.sh](relay-automation/hooks/relay-xyz-guard.sh) · [GH-19-RELAY-XYZ-SKILL-GUARD.md](PROJECT/3-COMPLETED/GH-19-RELAY-XYZ-SKILL-GUARD.md) · [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) |
 | GH-24 · relay telemetry extractor | ✅ | [GH-24-RELAY-TELEMETRY-EXTRACTOR.md](PROJECT/3-COMPLETED/GH-24-RELAY-TELEMETRY-EXTRACTOR.md) · [#24](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/24) |
