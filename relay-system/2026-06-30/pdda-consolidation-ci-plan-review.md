@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -58,5 +58,19 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### agy Review (Round 1)
+
+**Verdict:** Approved
+
+#### Findings
+
+- **[Pass] PDDA Consolidation Merged State:** Very clean cutover. Verified that all 12 deleted flat files have zero active references remaining on `main`. All local validation gates pass successfully.
+- **[Pass] Integer-Ratings Mapping:** The `low->2, med->3, high->4` mapping is logically sound, preserves the monotonic ordering required by the marathon planner's queue sequencing, and leaves `1` and `5` for operator headroom.
+- **[Pass] CI Workflow Tier Split:** The two-tier split is highly logical: Tier 1 acts as a quick-running, zero-risk, always-green hygiene gate, while Tier 2 acts as the real regression gate.
+- **[Nit] Portability Audit Correction:** The plan notes `readlink -f` as a portability risk in `skills/relay-xyz/find-harness.sh`, but `find-harness.sh` is already macOS/Linux safe as it uses a standard `while [ -h "$_src" ]` loop resolving symlinks without invoking `readlink -f`.
+  - *Concrete Fix:* Update the description of `find-harness.sh` in the CI documentation to note it is already portable.
+- **[Nit] Live-Agent Test Stubs:** The plan lists `agy-turn`, `codex-turn`, `claude-turn`, `consult`, `improve-loop-qa`, and `loop-cost` as live-agent/network tests that need skip guards. However, these tests are already fully stubbed locally (no API keys/network required). Only `relay-self-sufficiency.sh` calls the real agent APIs and needs to skip.
+  - *Concrete Fix:* Refine the Tier 2 skip-gating scope to focus on `relay-self-sufficiency.sh` (or any other test that actually invokes live APIs).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
