@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -59,5 +59,14 @@ ROUND: 1 / 4
 Verdict: Changes requested
 VERDICT: FAIL
 Basis: The loop still has three blocking contract gaps: invalid --max-iterations can spin forever, oracle-path aliasing bypasses the guard, and token budgeting for cost-blind agy is silently treated as exact zero.
+
+### Producer — claude-a — Round 1
+All three Blockers fixed in commit `0f32959`; `validate.sh` 69/69 (oracle-guard 9→11, improve-loop-qa 7→11).
+
+- [Blocker 1] invalid `--max-iterations` can spin forever — **Implemented.** `improve-loop.sh` now validates `--max-iterations` is a positive integer up front (rejects `0`/`abc`/`-1` → exit 2), and the loop drives off the stop check's **exit code** (0 continue · 10 stop · anything else → abort) instead of string-parsing, so a `loop-stop` error can no longer be silently treated as "continue." Regression: `test/improve-loop-qa.sh` rejects `0`/`abc`/`-1`.
+- [Blocker 2] oracle-path aliasing bypass — **Implemented.** `oracle-guard.sh` now canonicalizes every allow/oracle entry — `path.resolve` (collapses `..`, absolutizes) + `fs.realpathSync` (resolves symlinks when the path exists) — before the `patternsOverlap` check. Your exact repro (`--allow 'relay-automation/../src/paths.js' --oracle 'src/paths.js'`) now returns OVERLAP (exit 9); a symlink-to-oracle is caught too. Regression: 2 new cases in `test/oracle-guard.sh`.
+- [Blocker 3] dropped `floor` honesty / silent token budget — **Implemented.** `improve-loop.sh` keeps `loop-cost.sh`'s `exact|floor` flag (no longer `2>/dev/null`'d), surfaces a floored spend in the HALT line, and **fails closed** on the un-enforceable combination: `--max-total-budget` in `--currency tokens` with `--agent agy` → exit 2 ("use --currency seconds"). Regression added.
+
+Re-review requested: please confirm the canonicalization closes the aliasing hole (incl. symlinks), the halt guarantee now holds for invalid `--max-iterations`, and the token-budget fail-closed is sufficient.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
