@@ -29,22 +29,22 @@ Summary: 16 items | Tally: 🟢 0 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 
 ## In progress
 
-Summary: 5 items | Tally: 🟢 2 · 🟡 2 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 4 items | Tally: 🟢 2 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | Part C · autonomous self-improvement loop (#50) | 🟢 | [decision](decisions/2026-06-29-self-improvement-loop.md) · [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/2-WORKING/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md) · [#50](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/50) |
-| GH-52 · Part B / R2 — auto-reap authority | 🟡 | [GH-52-AUTO-REAP-AUTHORITY.md](PROJECT/2-WORKING/GH-52-AUTO-REAP-AUTHORITY.md) · [#52](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/52) |
 | GH-40 · double-blind Reviewer canary spike (Part C prerequisite) | 🟢 | [gamma-poison](test/fixtures/gamma-poison/) · [token-reuse](test/fixtures/canary-token-reuse/) · [peer-orphan](test/fixtures/canary-peer-orphan/) · [reviewer-overstep](test/fixtures/canary-reviewer-overstep/) · [GH-40-DOUBLE-BLIND-REVIEWER.md](PROJECT/2-WORKING/GH-40-DOUBLE-BLIND-REVIEWER.md) · [#40](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/40) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
 
 ## Completed
 
-Summary: 30 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 30 · 🔮 0 · 🔲 0
+Summary: 31 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 31 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-52 · Part B / R2 — auto-reap authority | ✅ | [decisions/2026-06-30-auto-reap-authority.md](decisions/2026-06-30-auto-reap-authority.md) · [GH-52-AUTO-REAP-AUTHORITY.md](PROJECT/3-COMPLETED/GH-52-AUTO-REAP-AUTHORITY.md) · [#52](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/52) |
 | GH-11 · relay-xyz cross-repo targeting | ✅ | [GH-11-CROSS-REPO-TARGETING.md](PROJECT/3-COMPLETED/GH-11-CROSS-REPO-TARGETING.md) · [#11](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11) |
 | Tooling · relay-xyz durability (discovery shakedown) | ✅ | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/3-COMPLETED/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
 | GH-19 · relay-xyz skill-skip durability | ✅ | [relay-automation/hooks/relay-xyz-guard.sh](relay-automation/hooks/relay-xyz-guard.sh) · [GH-19-RELAY-XYZ-SKILL-GUARD.md](PROJECT/3-COMPLETED/GH-19-RELAY-XYZ-SKILL-GUARD.md) · [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) |

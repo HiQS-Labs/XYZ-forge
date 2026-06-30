@@ -1,8 +1,9 @@
 ---
 title: Part B / R2 — auto-reap authority (flip watchdog --allow-reap from stub to real)
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED)
 created: 2026-06-29
 updated: 2026-06-30
+closed: 2026-06-30
 owner: noel
 branch: main
 gh_issue: 52
