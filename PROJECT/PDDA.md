@@ -57,8 +57,12 @@ Every doc in `PROJECT/2-WORKING` should have:
 ```
 
 3. clear phase or work sections if the doc is a plan
-4. QA gates or acceptance criteria after each phase if the plan is multi-phase
-5. repo-relative paths only; no hardcoded absolute local paths
+4. a table of contents (`## Table of contents`) listing each phase, if the plan is multi-phase — so a
+   cold agent can see the full phase span and jump to the live one without scrolling the whole body
+5. QA gates or acceptance criteria after each phase if the plan is multi-phase
+6. for any discovery or spike phase, its findings written **back into this doc** before its QA gate can
+   pass (see [Discovery & spike phases](#discovery--spike-phases))
+7. repo-relative paths only; no hardcoded absolute local paths
 
 Recommended fields when relevant:
 
@@ -67,6 +71,71 @@ Recommended fields when relevant:
 - `branch`
 - `non_goals`
 - `gh_issue`
+- `effort`, `complexity`, `risk`, `phases` — triage ratings; **required for medium-large work** (see
+  [Triage ratings for medium-large work](#triage-ratings-for-medium-large-work))
+
+## Triage ratings for medium-large work
+
+So automation can pick *which* task to pursue without re-reading every plan, every newly recorded
+**medium-large** task or project carries four triage fields in its frontmatter:
+
+| Field | Range | Meaning |
+|---|---|---|
+| `effort` | integer `1`–`5` | how much work — `1` low, `5` highest |
+| `complexity` | integer `1`–`5` | how intricate / how many moving parts — `1` low, `5` highest |
+| `risk` | integer `1`–`5` | blast radius + uncertainty — `1` safe/contained, `5` one-way-door or unknown |
+| `phases` | positive integer | total number of phases in the plan |
+
+```yaml
+effort: 2
+complexity: 3
+risk: 1
+phases: 4
+```
+
+`risk` should track the repo's existing reversibility scale (`Easy / Costly / One-way door`,
+`AGENTS.md` #3): `1`–`2` ≈ Easy, `3` ≈ Costly, `4`–`5` ≈ one-way door / high uncertainty. It is not a
+parallel notion of danger — it is that scale expressed as a number.
+
+**Scope.** Required for medium-large work (project plans, experiments, features, multi-phase efforts).
+Genuinely small/trivial docs (a typo, a path repoint, a ≤2–3 line bug-fix — the same floor as the
+issue-first SOP) do not need them. "Medium-large" is a judgment, so *presence* is enforced by the LLM
+layer, not a regex (below).
+
+### How to combine them — derive, don't store
+
+There is deliberately **no stored composite "score" field.** A frozen aggregate would (a) drift from
+the three numbers it came from, violating Principle #4 (*one canonical place per fact*), and (b) bake a
+weighting choice into every doc that you then cannot re-tune without rewriting them. Compute the
+selection signal **live, at selection time**, from the raw fields:
+
+- **`risk` is a gate, not an addend.** A trivial-but-risky task (`effort 1`, `complexity 1`, `risk 5`)
+  is easy to *do* but exactly what automation should not auto-pick — folding risk into a linear sum
+  lets it slip through mid-ranked. Gate on it instead.
+- **`effort` and `complexity` are correlated** (complex work is usually effortful), so summing them is
+  a rough "size" proxy, not two independent signals — treat the sum as one ease axis, not two.
+
+Reference selection rule (tune the thresholds per repo):
+
+```text
+eligible      = risk <= 2                 # hard safety gate; risk >= 4 => route to a human
+ease          = effort + complexity       # 2..10, lower = easier
+pick          = among eligible, lowest ease, then fewest phases as the tiebreak
+```
+
+This keeps the raw ratings canonical and queryable while letting the "what's the easiest *safe* thing
+to grab" logic live in one place that can evolve. (See the resolved `priority` note under
+[Proposed extensions](#proposed-extensions-not-yet-locked).)
+
+### How this is enforced
+
+- **deterministic (values)** — `pdda.sh frontmatter` validates the fields **only when present**:
+  `effort`/`complexity`/`risk` must be integers `1`–`5`, `phases` a positive integer. A present-but-bad
+  value is unambiguous, so it `error`s. The script does **not** force presence — it cannot know whether
+  a doc is "medium-large."
+- **LLM (presence)** — `pdda-doc-ready.sh` flags a medium-large plan that is *missing* the triage
+  ratings. Whether a doc is medium-large is a judgment, so it stays advisory/warn-capped like every
+  other readiness finding.
 
 ## Why the two-column status header matters
 
@@ -80,6 +149,37 @@ PDDA therefore treats the exact header names as a contract, not a style preferen
 exactly `What was just completed | What's next` — there is no alias/compatibility window. (One was
 specced with a `2026-07-31` cutover, but a single-repo system controls its own docs: no doc here used
 an old alias, so a dated, silently-changing branch guarded nothing and was removed 2026-06-22.)
+
+## Discovery & spike phases
+
+Discovery and spike phases exist to *learn* — reverse-engineer an existing system, probe an unknown,
+prove or kill a risky approach before committing the plan to it. Their output is knowledge, and under
+Principle #1 (*docs are the runtime state, not a record of it*) that knowledge is project state. If it
+lives only in an agent's context or a throwaway scratch note, a cold agent resuming the plan cannot see
+what was learned, why a path was chosen or abandoned, or what the spike actually proved — and the work
+gets re-done.
+
+Contract: **a phase tagged as discovery or spike must write its findings back into the originating plan
+doc before its QA gate can pass.** Concretely, that phase's section (or a clearly linked sibling
+section in the same doc) must capture:
+
+- **what was investigated** — the system/area reverse-engineered or the question the spike asked
+- **what was found** — the concrete mechanics learned, with repo-relative pointers (`file:line`) where
+  the finding lives in code, not a vague summary
+- **what it changes** — how the finding confirms, redirects, or kills the plan's later phases; an
+  unfinished "we'll know after the spike" left dangling is itself the gap
+
+This satisfies Principle #4 (*one canonical place per fact*): the originating plan is that place. A
+spike whose findings sit in chat is the exact drift PDDA exists to prevent. The QA gate for a
+discovery/spike phase therefore includes "findings are written back to this doc" as an acceptance
+criterion alongside the phase's normal checks.
+
+Enforcement is **advisory (LLM layer, warn-capped)** — `pdda-doc-ready.sh` flags a discovery/spike
+phase whose findings were not written back. "Did the agent actually capture what it learned" is a
+judgment a regex cannot make honestly, so it stays with the LLM reviewer and, like every finding from
+that layer, never blocks a build (see [LLM-assisted doc readiness review](#2-llm-assisted-doc-readiness-review)).
+To tag a phase, name it plainly (e.g. `## Phase 2 — Discovery: …` / `## Phase 3 — Spike: …`) or set
+`doc_type: research` / a phase-level marker the reviewer can see.
 
 ## Bug-fix doc stance
 
@@ -121,6 +221,9 @@ Capture a tracked issue as a doc in `PROJECT/1-INBOX/` using this convention:
   `<number>` resolves against `origin` (a single canonical repo), so the bare number is unambiguous.
 - **Minimum frontmatter:** `gh_issue`, `source` (the full issue URL), `title`, `status`
   (`Proposed (1-INBOX — not yet active)`), `created`, and `doc_type` (`feedback` or `bugfix`).
+  For medium-large captures, also include the triage ratings `effort`, `complexity`, `risk`, `phases`
+  at capture time, so the queue can be triaged before promotion (see
+  [Triage ratings for medium-large work](#triage-ratings-for-medium-large-work)).
 - **Body:** transcribe the issue's actionable substance (the asks / acceptance criteria), not the whole
   thread. The live issue stays the discussion surface; this doc is the in-repo capture and back-reference.
 
@@ -149,14 +252,21 @@ PDDA should have two classes of automation:
 
 Implementation note:
 
-- the deterministic shell scripts currently live under `utils/`
-- the aggregate runner is `utils/pdda-run.sh`
+- the automation ships as a single dispatcher, `utils/pdda/pdda.sh`, which sources shared helpers from
+  `utils/pdda/pdda-lib.sh`
+- every deterministic check is a subcommand: `pdda.sh frontmatter`, `pdda.sh status-table`,
+  `pdda.sh hardcoded-paths`, `pdda.sh roadmap`, `pdda.sh roadmap-coverage`, `pdda.sh changelog`,
+  `pdda.sh stale`, `pdda.sh issue-doc-sync`
+- the aggregate runner is `pdda.sh run` (it runs the deterministic checks in order, then the LLM
+  review)
+- each finding still carries a stable `check` id (e.g. `pdda-check-frontmatter`) in stdout and the
+  activity log, independent of how the check is invoked
 
-### 1. Deterministic hygiene scripts
+### 1. Deterministic hygiene checks
 
 These catch issues where the answer should be the same every time.
 
-#### A. `pdda-stale-working-docs.sh`
+#### A. `pdda.sh stale`
 
 Purpose:
 - inspect docs in `PROJECT/2-WORKING`
@@ -176,7 +286,7 @@ Why flag-only (design call, 2026-06-22):
   guess cost nothing but an ignorable line. An opt-in move can be re-added later behind `pdda_hold` +
   `full` mode if it ever earns the miles.
 
-#### B. `pdda-check-status-table.sh`
+#### B. `pdda.sh status-table`
 
 Purpose:
 - verify every doc in `PROJECT/2-WORKING` contains the exact two-column status table
@@ -186,7 +296,7 @@ Minimum behavior:
 - fail if the table headers are not exactly `What was just completed` and `What's next`
 - fail if either first-row cell is blank
 
-#### C. `pdda-check-frontmatter.sh`
+#### C. `pdda.sh frontmatter`
 
 Purpose:
 - ensure active docs expose the minimum machine-readable metadata
@@ -195,8 +305,11 @@ Minimum behavior:
 - verify required keys exist
 - flag empty required values
 - flag invalid or missing dates
+- when the triage ratings are present, validate their values — `effort`/`complexity`/`risk` must be
+  integers `1`–`5`, `phases` a positive integer (presence itself is judged by the LLM layer; see
+  [Triage ratings for medium-large work](#triage-ratings-for-medium-large-work))
 
-#### D. `pdda-check-hardcoded-paths.sh`
+#### D. `pdda.sh hardcoded-paths`
 
 Purpose:
 - catch absolute machine-specific paths before they fossilize into plans
@@ -209,7 +322,7 @@ Expected exceptions:
 - quoted terminal output
 - explicitly marked transcript blocks
 
-#### E. `pdda-check-roadmap.sh`
+#### E. `pdda.sh roadmap`
 
 Purpose:
 - enforce the `ROADMAP.md` pointer/ledger contract deterministically (the cheap, hourly guard that
@@ -223,12 +336,12 @@ Minimum behavior:
 
 Expected exceptions:
 - fenced `console` / `text` / `transcript` blocks and blockquote lines (the carve-out exception note)
-  are not scanned — same convention as `pdda-check-hardcoded-paths.sh`
+  are not scanned — same convention as `pdda.sh hardcoded-paths`
 
 The fuzzy judgment ("deep execution notes that belong elsewhere") stays with the LLM layer below; this
 script only catches the unambiguous signals.
 
-#### F. `pdda-check-changelog.sh`
+#### F. `pdda.sh changelog`
 
 Purpose:
 - nudge that `CHANGELOG.md` (the first-class end-of-iteration record) was updated this iteration
@@ -244,12 +357,12 @@ Why warn-only:
 - "did you update the changelog" is a reminder, not a correctness gate — blocking a build because a
   human hasn't written the prose yet is the wrong kind of friction (the calibration principle)
 
-#### G. `pdda-check-roadmap-coverage.sh`
+#### G. `pdda.sh roadmap-coverage`
 
 Purpose:
 - enforce the *coverage* direction of the `ROADMAP.md` contract: every active doc in `PROJECT/2-WORKING`
   must be reflected by a pointer in `ROADMAP.md`, so the ledger can never silently fall behind the
-  working set. This is the inverse of `pdda-check-roadmap.sh` (which keeps execution detail from leaking
+  working set. This is the inverse of `pdda.sh roadmap` (which keeps execution detail from leaking
   *into* the roadmap); together they guard the pointer/working-set relationship in both directions.
 
 Minimum behavior:
@@ -261,8 +374,35 @@ Minimum behavior:
 
 Expected exceptions:
 - a working doc that should not appear in the ledger opts out with `roadmap_exempt: true` in its
-  frontmatter (mirrors the `pdda_hold` escape hatch in `pdda-stale-working-docs.sh`); the check then
+  frontmatter (mirrors the `pdda_hold` escape hatch in `pdda.sh stale`); the check then
   emits `info` (skip) for that doc
+
+#### H. `pdda.sh issue-doc-sync`
+
+Purpose:
+- catch a `PROJECT/2-WORKING/GH-*.md` doc whose recorded state has drifted from its **GitHub issue**,
+  in either direction — the gap a 2026-06-29 manual reconciliation pass had to cross-reference by hand
+
+Minimum behavior:
+- for each working doc, resolve its issue number from the `gh_issue` frontmatter key (preferred) or the
+  `GH-<number>-` filename; silently skip docs that carry neither (they are not issue-tracked)
+- resolve each issue's state from the best available source (see gh-degrade below), then flag two drifts:
+  - **(a)** issue **CLOSED** but the doc is still in `2-WORKING` -> `warn`, recommending the exact
+    `git mv` to `PROJECT/3-COMPLETED` (flag-only; a human runs the one reversible move)
+  - **(b)** issue **OPEN** but the doc's `status:` lead word declares it done (`complete`, `done`,
+    `shipped`, `fixed`, `closed`, `merged`, `resolved`, `landed`) -> `warn` to reconcile (close the
+    issue or correct the status). Anchoring on the status **lead word** means a mid-status mention like
+    `Active — Phase 0 complete` never false-flags.
+- `warn` (never `error` — does not block, even in `full`, mirroring `pdda.sh changelog`); **flag-only**,
+  never moves a file
+- gh-degrade: with `PDDA_ISSUE_SYNC_SOURCE=auto` (default) it uses live `gh` when that succeeds, else a
+  cached state file (`PDDA_GH_STATE_CACHE`, written by `pdda-gh-refresh.sh`); when neither is available
+  it emits `info` (skip) for the affected doc and evaluates nothing. `gh`/`cache` force one source.
+
+Why warn-only + flag-only:
+- every drift class here is mechanical, so the check carries zero false-judgment risk; a false flag is
+  one ignorable warn line and a missed flag just leaves today's manual reconciliation — both cheap, so
+  warn-only never-blocks is the right calibration (same stance as `pdda.sh stale` and `pdda.sh changelog`)
 
 ### 2. LLM-assisted doc readiness review
 
@@ -277,6 +417,9 @@ It should check for:
 
 - phased plans missing QA gates after a phase
 - phase sections with actions but no observable acceptance criteria
+- multi-phase plans missing a table of contents listing each phase
+- discovery or spike phases whose findings were not written back into the plan doc
+- medium-large plans missing the triage ratings (`effort`, `complexity`, `risk`, `phases`)
 - status tables that are technically present but stale versus the body
 - docs that bury the next action in prose instead of making it explicit
 - plans that duplicate detail already meant to live in another canonical doc
@@ -290,6 +433,42 @@ It should not:
 - **block a build.** The LLM layer is advisory: its findings are capped at `warn` (any model `error`
   is clamped to `warn` in `pdda-doc-ready.sh`), so a non-deterministic oracle can never fail a build —
   the same doc must not pass at 2pm and fail at 3pm. Only deterministic checks earn blocking power.
+
+### 3. Doc-health hooks (event-triggered delivery)
+
+The deterministic checks above can also run automatically from Claude Code hooks, as a two-tier
+doc-health system. The hooks are pure **delivery** — they run the SAME section-1 checks on a trigger;
+they add no new analysis class. Both are **warn-only and fail-open: they always exit `0` and can never
+block** an edit or a stop (a doc-hygiene reminder is never worth interrupting work — the calibration
+principle, same as `pdda.sh changelog`).
+
+- **Tier 1 — `pdda-edit-doc-hook.sh` (`PostToolUse` on `Edit|Write|MultiEdit`).** Reads the edited
+  `tool_input.file_path`; exits `0` instantly unless it is `ROADMAP.md` or a `PROJECT/**/*.md` doc;
+  otherwise runs the fast **local single-file** subset for just that file — `frontmatter`,
+  `status-table`, `hardcoded-paths`, `roadmap-coverage` (and `roadmap` for `ROADMAP.md`), scoped via
+  `PDDA_ONLY_FILE`. **No network, no `gh`, no LLM**, so it stays instant and cannot gate an edit.
+- **Tier 2 — Stop full-scan (`pdda-stop-doc-health.sh`).** The companion that runs one consolidated,
+  system-wide doc-health scan per turn (the deterministic suite plus `issue-doc-sync` against the
+  cached gh-state file). See [Suggested Stop doc-health scan](#suggested-stop-doc-health-scan).
+
+`PDDA_ONLY_FILE=<path>` is the seam that scopes any check to a single file (unset = full scan, the
+default everywhere else). Wiring is repo-local in `.claude/settings.json`; installs receive the hook
+scripts via the manifest and opt in by adding the hook entries.
+
+#### Suggested Stop doc-health scan
+
+Tier 2's `pdda-stop-doc-health.sh` runs **one** system-wide scan per turn and prints a **single
+consolidated report**:
+
+- it runs the deterministic suite with `PDDA_ISSUE_SYNC_SOURCE=cache`, so `issue-doc-sync` reads the
+  cached gh-state file (written by `pdda.sh gh-refresh`) and the scan makes **no network call**;
+- it runs in `observe` mode with the LLM layer disabled — purely deterministic, fast, offline;
+- it aggregates the run into one report: a header with the error/warn totals, then the warn/error
+  finding lines (an `all clear` line when there are none);
+- it **always exits `0`** (proven by `test/pdda-doc-health-hooks.sh`), so it can never block a stop.
+
+Wire it as a `Stop` hook in `.claude/settings.json` (no matcher). Because it reads the cache rather
+than calling `gh`, keep `pdda.sh gh-refresh` on the hourly cadence so the Stop report stays current.
 
 ## Enforcement modes
 
@@ -353,12 +532,12 @@ Coverage rule:
   quietly disappear and later be duplicated.
 
 How this is enforced (so it cannot quietly rot in either direction):
-- **deterministic (no leak in)** — `utils/pdda-check-roadmap.sh` errors on task checklists / `### Checklist` /
+- **deterministic (no leak in)** — `pdda.sh roadmap` errors on task checklists / `### Checklist` /
   `### QA checklist` headings and warns on size sprawl (runs hourly, free, no model needed)
-- **deterministic (no gap missing)** — `utils/pdda-check-roadmap-coverage.sh` errors when either an
+- **deterministic (no gap missing)** — `pdda.sh roadmap-coverage` errors when either an
   active `PROJECT/2-WORKING` doc has no pointer here, or a captured `PROJECT/1-INBOX/GH-*.md` doc is
   not parked here as a queue entry (honors `roadmap_exempt: true`)
-- **LLM** — `utils/pdda-doc-ready.sh` reviews `ROADMAP.md` against the full pointer contract for the
+- **LLM** — `utils/pdda/pdda-doc-ready.sh` reviews `ROADMAP.md` against the full pointer contract for the
   fuzzier "this paragraph is really execution detail" cases (honors the carve-out)
 - the file itself carries a top banner restating the contract, so a human editing it sees the rule
 
@@ -396,7 +575,7 @@ Recording a bet (when a change is consequential):
   bet*; this contract owns the *where and how*, so governance is not fragmented across the two files.)
 
 How this is enforced (a nudge, not a gate):
-- **deterministic** — `utils/pdda-check-changelog.sh` **warns** (never `error`, so it never blocks —
+- **deterministic** — `pdda.sh changelog` **warns** (never `error`, so it never blocks —
   even in `full`) when the newest dated entry predates the latest git commit by more than
   `PDDA_CHANGELOG_STALE_DAYS` days (default `0`), i.e. an iteration shipped without a changelog entry
 - whether an entry is actually *substantive* stays a human / LLM judgment, not a regex
@@ -417,24 +596,33 @@ Each script run should append:
 
 Run the deterministic checks every hour in this order:
 
-1. `pdda-check-frontmatter.sh`
-2. `pdda-check-status-table.sh`
-3. `pdda-check-hardcoded-paths.sh`
-4. `pdda-check-roadmap.sh`
-5. `pdda-check-roadmap-coverage.sh`
-6. `pdda-check-changelog.sh`
-7. `pdda-check-ratings.sh`
-8. `pdda-stale-working-docs.sh`
+1. `pdda.sh frontmatter`
+2. `pdda.sh status-table`
+3. `pdda.sh hardcoded-paths`
+4. `pdda.sh roadmap`
+5. `pdda.sh roadmap-coverage`
+6. `pdda.sh changelog`
+7. `pdda.sh stale`
+8. `pdda.sh issue-doc-sync`
 
 Then run:
 
-9. `pdda-doc-ready.sh`
+9. `pdda.sh doc-ready`
 
-(`utils/pdda-run.sh` runs exactly this sequence and applies the active `PDDA_MODE` gate.)
+(`pdda.sh run` runs exactly this sequence and applies the active `PDDA_MODE` gate. Scheduling the
+single aggregate command is the recommended hourly cron entry.)
+
+The cached GitHub issue-state refresh is a separate, network-only step. Run `pdda.sh gh-refresh`
+(the standalone `utils/pdda/pdda-gh-refresh.sh`) on the same hourly cron/launchd cadence, **before**
+the suite, so `issue-doc-sync` and the Stop doc-health scan read fresh state. It is the only step that
+needs `gh`/the network; it writes `PDDA_GH_STATE_CACHE` atomically and leaves the existing cache
+untouched on any `gh` failure, so the suite itself stays offline-tolerant by reading the cache.
 
 Reason for the order:
 
 - deterministic failures should surface first
+- the network-dependent `issue-doc-sync` runs last among the deterministic checks, so every local
+  check still completes when `gh` is offline (it then degrades to the cache or an `info` skip)
 - the LLM review should spend time only on docs that passed basic structural hygiene
 
 ## Suggested output contract
@@ -470,6 +658,8 @@ A doc is "automation ready" when:
 - it has the exact status table
 - the next action is singular and explicit
 - each phase has a visible QA gate
+- a multi-phase plan has a table of contents listing its phases
+- any discovery or spike phase has its findings written back into the doc
 - links to canonical related docs are present where needed
 - there are no hardcoded absolute paths
 - `ROADMAP.md` is pointing at it rather than duplicating it
@@ -483,40 +673,15 @@ A doc is "automation ready" when:
 - roadmap sprawl where detail leaks into `ROADMAP.md`
 - agent sessions restarting the same reasoning because the doc never captured "what changed"
 
-## Project ratings — `complexity` / `risk` / `effort` (optional, advisory)
-
-Three optional frontmatter keys let a project doc carry a machine-readable triage rating. They exist so
-the queue planner can **sequence** work deterministically instead of by hand; they are an input to
-scheduling, never a gate on the doc itself.
-
-| Key | Question it answers | Values |
-|---|---|---|
-| `complexity` | How hard is this to get *correct* (reasoning depth, subtlety)? | `low` \| `medium` \| `high` |
-| `effort`     | How *big* is it (artifacts touched, time)? | `low` \| `medium` \| `high` |
-| `risk`       | Blast radius / reversibility if it goes wrong (`low` = additive, easily reverted; `high` = Costly / one-way-door — see `AGENTS.md` reversibility) | `low` \| `medium` \| `high` |
-
-Contract:
-
-- **Optional and advisory.** A doc without them is still valid; it is simply *held out of automated
-  sequencing* (flagged `unrated`, never an error) until rated. This keeps the keys non-breaking — every
-  existing doc stays green.
-- **Consumer:** `utils/marathon-plan.sh` (the pre-pre-flight planner) reads them to rank surviving ledger
-  work — lower effort/complexity/risk sorts earlier under the default `quick-wins` policy; `derisk-first`
-  inverts the risk term. The score and its inputs are printed so any ordering is verifiable by hand.
-- **Enforced as a nudge, not a gate:** `utils/pdda-check-ratings.sh` **warns** (never `error`, so it
-  never blocks — even in `full`, like `pdda-check-changelog.sh`) when a `2-WORKING` doc is missing a key
-  or carries an out-of-vocabulary value. Generated docs (`generated_by:` set) and explicit opt-outs
-  (`ratings_exempt: true`) are skipped.
-- **Provenance:** a rating seeded automatically (e.g. backfilled from ledger prose) should carry
-  `ratings_provisional: true` so a human knows to confirm it; drop the flag once reviewed.
-
 ## Proposed extensions not yet locked
 
 These are likely useful for full automation, but they are still policy choices:
 
 - a `doc_type` field such as `project`, `bugfix`, `research`, `feedback`, `roadmap`
-- a `priority` field if you want deterministic triage beyond folder placement (the `complexity`/`risk`/
-  `effort` ratings above are the locked, advisory form of this — `priority` would be an explicit override)
+- ~~a `priority` field if you want deterministic triage beyond folder placement~~ **superseded** by the
+  `effort`/`complexity`/`risk`/`phases` [triage ratings](#triage-ratings-for-medium-large-work), which
+  give richer triage than a single priority scalar — automation derives the selection signal from them
+  rather than storing one frozen number
 - a `pdda_hold: true` override for docs that should remain in `2-WORKING` despite inactivity
 - a second generated PDDA summary artifact beyond the activity log
 
@@ -548,5 +713,5 @@ If the goal is "get project docs onto rails quickly," the safest v1 is:
 - forbid hardcoded absolute paths
 - run deterministic checks hourly
 - let the LLM reviewer flag readiness issues
-- keep `ROADMAP.md` pointer-only (deterministic `pdda-check-roadmap.sh` + the LLM rubric guard it)
+- keep `ROADMAP.md` pointer-only (deterministic `pdda.sh roadmap` + the LLM rubric guard it)
 - append all script activity to `PROJECT/PDDA-ACTIVITY.jsonl`

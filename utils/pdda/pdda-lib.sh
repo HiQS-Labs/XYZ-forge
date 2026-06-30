@@ -2,11 +2,17 @@
 set -u
 
 PDDA_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PDDA_REPO_ROOT="${PDDA_REPO_ROOT:-$(cd "$PDDA_LIB_DIR/.." && pwd)}"
+# Runtime lives in <repo>/utils/pdda/, so the repo root is two levels up from the lib dir.
+PDDA_REPO_ROOT="${PDDA_REPO_ROOT:-$(cd "$PDDA_LIB_DIR/../.." && pwd)}"
 PDDA_INBOX_DIR="${PDDA_INBOX_DIR:-$PDDA_REPO_ROOT/PROJECT/1-INBOX}"
 PDDA_WORKING_DIR="${PDDA_WORKING_DIR:-$PDDA_REPO_ROOT/PROJECT/2-WORKING}"
+PDDA_COMPLETED_DIR="${PDDA_COMPLETED_DIR:-$PDDA_REPO_ROOT/PROJECT/3-COMPLETED}"
 PDDA_MISC_DIR="${PDDA_MISC_DIR:-$PDDA_REPO_ROOT/PROJECT/4-MISC}"
 PDDA_ACTIVITY_LOG="${PDDA_ACTIVITY_LOG:-$PDDA_REPO_ROOT/PROJECT/PDDA-ACTIVITY.jsonl}"
+# Cached GitHub issue-state file (TSV: "<number>\t<STATE>", '#'-comment lines ignored). Written by
+# pdda-gh-refresh.sh; read by `pdda.sh issue-doc-sync` when gh is absent/offline. Gitignored runtime
+# state, regenerated on demand — sits beside .pdda-mode at the repo root by default.
+PDDA_GH_STATE_CACHE="${PDDA_GH_STATE_CACHE:-$PDDA_REPO_ROOT/.pdda-gh-state.tsv}"
 PDDA_STALE_DAYS="${PDDA_STALE_DAYS:-4}"
 PDDA_DRY_RUN="${PDDA_DRY_RUN:-0}"
 # Output format for findings on stdout: "text" (human, default) or "json" (one JSON object per line,
@@ -34,7 +40,7 @@ pdda_resolve_mode() {
   esac
 }
 PDDA_MODE="$(pdda_resolve_mode)"
-# Stale docs are flag-only in every mode (see pdda-stale-working-docs.sh), so no mode mutates the tree.
+# Stale docs are flag-only in every mode (see `pdda.sh stale`), so no mode mutates the tree.
 # PDDA_DRY_RUN stays a reserved knob for any future opt-in move re-added behind pdda_hold + full.
 
 # Gate a check's raw exit code by mode: only "full" lets an error block (non-zero exit). observe and
@@ -165,11 +171,26 @@ pdda_emit_summary() {
     "summary"
 }
 
+# When PDDA_ONLY_FILE is set (the single-file lint used by the PostToolUse doc-health hook), each list
+# returns just that file IF it falls under the list's directory — so every check transparently scopes
+# to the one edited doc with no other change. Unset (the normal case) => full directory scan as before.
 pdda_list_working_docs() {
+  if [ -n "${PDDA_ONLY_FILE:-}" ]; then
+    case "$PDDA_ONLY_FILE" in
+      "$PDDA_WORKING_DIR"/*.md) [ -f "$PDDA_ONLY_FILE" ] && printf '%s\n' "$PDDA_ONLY_FILE" ;;
+    esac
+    return
+  fi
   find "$PDDA_WORKING_DIR" -type f -name '*.md' ! -name 'blank.md' | LC_ALL=C sort
 }
 
 pdda_list_inbox_issue_docs() {
+  if [ -n "${PDDA_ONLY_FILE:-}" ]; then
+    case "$PDDA_ONLY_FILE" in
+      "$PDDA_INBOX_DIR"/GH-*.md) [ -f "$PDDA_ONLY_FILE" ] && printf '%s\n' "$PDDA_ONLY_FILE" ;;
+    esac
+    return
+  fi
   find "$PDDA_INBOX_DIR" -type f -name 'GH-*.md' ! -name 'blank.md' | LC_ALL=C sort
 }
 
@@ -255,4 +276,34 @@ pdda_is_real_date() {
     out="$(date -d "$d" "+%Y-%m-%d" 2>/dev/null)" || return 1
   fi
   [ "$out" = "$d" ]
+}
+
+# --- GitHub issue-state fetch (shared by `pdda.sh issue-doc-sync` and pdda-gh-refresh.sh) ---------
+# One definition of the live-state query + cache row format ("<number>\t<STATE>"), so the cache
+# producer and consumer can never disagree on shape.
+
+# Derive owner/repo from the origin remote so `gh` works regardless of the caller's CWD. Empty on
+# failure (gh then auto-detects from CWD, or callers fall through to the cache).
+_pdda_gh_repo_slug() {
+  local url
+  url="$(git -C "$PDDA_REPO_ROOT" remote get-url origin 2>/dev/null)" || return 0
+  url="${url%.git}"
+  case "$url" in
+    *github.com[:/]*) printf '%s' "${url##*github.com}" | sed -E 's#^[:/]+##' ;;
+    *) : ;;
+  esac
+}
+
+# Live issue-state table from gh, as "<number>\t<STATE>" lines. Non-zero (and empty) when gh fails
+# (absent, unauthenticated, or offline) — callers then degrade to the cached state file.
+_pdda_gh_state_table() {
+  local slug
+  slug="$(_pdda_gh_repo_slug)"
+  if [ -n "$slug" ]; then
+    gh issue list -R "$slug" --state all --limit 1000 --json number,state \
+      --jq '.[] | [.number, .state] | @tsv' 2>/dev/null
+  else
+    gh issue list --state all --limit 1000 --json number,state \
+      --jq '.[] | [.number, .state] | @tsv' 2>/dev/null
+  fi
 }

@@ -7,9 +7,9 @@ closed: 2026-06-30
 owner: noel
 branch: main
 doc_type: project
-complexity: medium
-risk: low
-effort: medium
+complexity: 3
+risk: 2
+effort: 3
 goal: >
   A deterministic "pre-pre-flight" planner (utils/marathon-plan.sh) that reviews the ROADMAP.md
   ledger, validates each item is still real (not already fixed / silently half-done), factors

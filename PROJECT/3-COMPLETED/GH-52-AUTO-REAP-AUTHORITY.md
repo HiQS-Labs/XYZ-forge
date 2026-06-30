@@ -10,9 +10,9 @@ gh_issue: 52
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/52
 parent: PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md
 doc_type: project
-complexity: medium
-risk: medium
-effort: medium
+complexity: 3
+risk: 3
+effort: 3
 ratings_provisional: true
 goal: >
   Close the recovery half of G1 (mid-turn-kill): detection already flags a parked suspect and emits a

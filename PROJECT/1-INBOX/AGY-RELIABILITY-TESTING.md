@@ -1,7 +1,7 @@
 ---
-complexity: medium
-risk: low
-effort: medium
+complexity: 3
+risk: 2
+effort: 3
 ratings_provisional: true
 title: Antigravity (agy) reliability testing — characterize & harden the cross-model lane
 slug: agy-reliability-testing

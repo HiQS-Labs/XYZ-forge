@@ -63,8 +63,8 @@ local change.
   containment, skill-first relay work, durable fixes, and verified done.
 - `PROJECT/PDDA.md` owns doc lifecycle, `ROADMAP.md` pointer-ledger rules, and `CHANGELOG.md`
   governance.
-- `validate.sh` is the code/runtime gate. `utils/pdda-run.sh` and the targeted `utils/pdda-*.sh`
-  scripts are the doc-hygiene gates.
+- `validate.sh` is the code/runtime gate. `utils/pdda/pdda.sh run` and its targeted
+  `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
 - Changes to `.tick/events/`, `src/project.js`, relay containment, or event/verb shape are usually
   broader than they look. Treat them as at least Costly until proven otherwise.
 

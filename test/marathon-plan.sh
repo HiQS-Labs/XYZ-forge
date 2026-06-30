@@ -68,11 +68,11 @@ contract_for() { # contract_for <missing-or-present-path> <artifact1> [artifact2
 # Scenario A — sequencing & collision-safe wave packing (clean, exit 0)
 # ─────────────────────────────────────────────────────────────────────────────
 A="$WORK/A"; mkdir -p "$A"; echo '{}' >"$A/.gh-state.json"; : >"$A/.branches"
-mk_doc "$A" GH-100-kernela.md low low low "$(contract_for MISS_A bin/tick)"
-mk_doc "$A" GH-101-kernelb.md low low low "$(contract_for MISS_B relay-automation/relay-drive.sh)"
-mk_doc "$A" GH-102-indepa.md  low low low "$(contract_for MISS_C src/indepa.js)"
-mk_doc "$A" GH-103-indepb.md  low low low "$(contract_for MISS_D src/indepb.js)"
-mk_doc "$A" GH-104-shimdep.md low low low "$(contract_for MISS_E relay-automation/consult.sh)"
+mk_doc "$A" GH-100-kernela.md 2 2 2 "$(contract_for MISS_A bin/tick)"
+mk_doc "$A" GH-101-kernelb.md 2 2 2 "$(contract_for MISS_B relay-automation/relay-drive.sh)"
+mk_doc "$A" GH-102-indepa.md  2 2 2 "$(contract_for MISS_C src/indepa.js)"
+mk_doc "$A" GH-103-indepb.md  2 2 2 "$(contract_for MISS_D src/indepb.js)"
+mk_doc "$A" GH-104-shimdep.md 2 2 2 "$(contract_for MISS_E relay-automation/consult.sh)"
 cat >"$A/ROADMAP.md" <<EOF
 # Roadmap
 ## Ledger
@@ -101,12 +101,12 @@ B="$WORK/B"; mkdir -p "$B"; : >"$B/.branches"
 echo '{"200":"CLOSED","221":"OPEN"}' >"$B/.gh-state.json"
 touch "$B/LANDED_FILE"                                   # makes the already-landed probe report "landed"
 printf 'changelog mentions gh-220-partial here\n' >"$B/CHANGELOG.md"
-mk_doc "$B" GH-200-closed.md   low low low "$(contract_for MISS_X src/x.js)"
-mk_doc "$B" GH-210-landed.md   low low low "$(contract_for LANDED_FILE src/y.js)"
-mk_doc "$B" GH-220-partial.md  low low low "$(contract_for MISS_P src/p.js)"
-mk_doc "$B" GH-221-onesig.md   low low low "$(contract_for MISS_O src/o.js)"
-mk_doc "$B" GH-230-unrated.md  low -   low "$(contract_for MISS_U src/u.js)"
-mk_doc "$B" GH-250-gated.md    low low low "$(contract_for MISS_G src/g.js)"
+mk_doc "$B" GH-200-closed.md   2 2 2 "$(contract_for MISS_X src/x.js)"
+mk_doc "$B" GH-210-landed.md   2 2 2 "$(contract_for LANDED_FILE src/y.js)"
+mk_doc "$B" GH-220-partial.md  2 2 2 "$(contract_for MISS_P src/p.js)"
+mk_doc "$B" GH-221-onesig.md   2 2 2 "$(contract_for MISS_O src/o.js)"
+mk_doc "$B" GH-230-unrated.md  2 -   2 "$(contract_for MISS_U src/u.js)"
+mk_doc "$B" GH-250-gated.md    2 2 2 "$(contract_for MISS_G src/g.js)"
 cat >"$B/ROADMAP.md" <<EOF
 # Roadmap
 ## Ledger
@@ -141,8 +141,8 @@ grep -q "Gated on operator GO" "$doc" && grep -q "#250" "$doc" && pass "B: gated
 # Scenario C — policy flip (quick-wins vs derisk-first reverse a high-risk item)
 # ─────────────────────────────────────────────────────────────────────────────
 C="$WORK/C"; mkdir -p "$C"; echo '{}' >"$C/.gh-state.json"; : >"$C/.branches"
-mk_doc "$C" GH-300-low.md  low low  low "$(contract_for MISS_L src/low.js)"
-mk_doc "$C" GH-301-high.md low high low "$(contract_for MISS_H src/high.js)"
+mk_doc "$C" GH-300-low.md  2 2  2 "$(contract_for MISS_L src/low.js)"
+mk_doc "$C" GH-301-high.md 2 4 2 "$(contract_for MISS_H src/high.js)"
 cat >"$C/ROADMAP.md" <<EOF
 # Roadmap
 ## Ledger
@@ -188,9 +188,9 @@ grep -q '"check":"marathon-plan/summary"' <<<"$json" && pass "F: json includes a
 # Scenario G — agy QA [Blocker]: a dep on a HELD (not-built) item must defer the dependent
 # ─────────────────────────────────────────────────────────────────────────────
 G="$WORK/G"; mkdir -p "$G"; echo '{}' >"$G/.gh-state.json"; : >"$G/.branches"
-mk_doc "$G" GH-700-free.md   low low low "$(contract_for MISS_F  src/free.js)"
-mk_doc "$G" GH-701-dephld.md low low low "$(contract_for MISS_DH src/dephld.js)"
-mk_doc "$G" GH-710-held.md   low -   low "$(contract_for MISS_HE src/held.js)"   # unrated ⇒ held
+mk_doc "$G" GH-700-free.md   2 2 2 "$(contract_for MISS_F  src/free.js)"
+mk_doc "$G" GH-701-dephld.md 2 2 2 "$(contract_for MISS_DH src/dephld.js)"
+mk_doc "$G" GH-710-held.md   2 -   2 "$(contract_for MISS_HE src/held.js)"   # unrated ⇒ held
 cat >"$G/ROADMAP.md" <<EOF
 # Roadmap
 ## Ledger
@@ -207,10 +207,10 @@ w700="$(wave_of "$doc" 700)"; w701="$(wave_of "$doc" 701)"
 # Scenario H — agy QA [Should]: comma-separated deps must ALL be parsed
 # ─────────────────────────────────────────────────────────────────────────────
 H="$WORK/H"; mkdir -p "$H"; echo '{}' >"$H/.gh-state.json"; : >"$H/.branches"
-mk_doc "$H" GH-800-k1.md    low low low "$(contract_for MISS_K1 bin/tick)"
-mk_doc "$H" GH-801-k2.md    low low low "$(contract_for MISS_K2 relay-automation/relay-drive.sh)"
-mk_doc "$H" GH-803-k3.md    low low low "$(contract_for MISS_K3 relay-automation/relay-turn-lib.sh)"
-mk_doc "$H" GH-802-multi.md low low low "$(contract_for MISS_M  src/multi.js)"
+mk_doc "$H" GH-800-k1.md    2 2 2 "$(contract_for MISS_K1 bin/tick)"
+mk_doc "$H" GH-801-k2.md    2 2 2 "$(contract_for MISS_K2 relay-automation/relay-drive.sh)"
+mk_doc "$H" GH-803-k3.md    2 2 2 "$(contract_for MISS_K3 relay-automation/relay-turn-lib.sh)"
+mk_doc "$H" GH-802-multi.md 2 2 2 "$(contract_for MISS_M  src/multi.js)"
 cat >"$H/ROADMAP.md" <<EOF
 # Roadmap
 ## Ledger
@@ -230,7 +230,7 @@ w800="$(wave_of "$doc" 800)"; w801="$(wave_of "$doc" 801)"; w803="$(wave_of "$do
 # ─────────────────────────────────────────────────────────────────────────────
 I="$WORK/I"; mkdir -p "$I"; : >"$I/.branches"
 echo '{"910":"OPEN","911":"CLOSED"}' >"$I/.gh-state.json"
-mk_doc "$I" GH-910-epic.md low low low "$(contract_for MISS_E2 src/epic.js)"
+mk_doc "$I" GH-910-epic.md 2 2 2 "$(contract_for MISS_E2 src/epic.js)"
 cat >"$I/ROADMAP.md" <<EOF
 # Roadmap
 ## Ledger
