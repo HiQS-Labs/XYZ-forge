@@ -22,9 +22,12 @@ echo "$out" | grep -q 'RELAY-TURN"' && pass "watchdog escalates the stalled RELA
 echo "$out" | grep -q '"agent":"ra"' && pass "escalation names the stalled actor" || fail "escalation missing actor: $out"
 echo "$out" | grep -q 'RELAY-TURN-2"' && fail "healthy RELAY-TURN-2 should NOT escalate" || pass "healthy RELAY-TURN-2 not escalated (no false positive)"
 
-# with --allow-reap, the reap stub fires for the stalled one
+# with --allow-reap, the watchdog REALLY reaps the stalled one (R2 — re-offers the orphaned token),
+# scoped to the stalled claim and never touching the HEALTHY live claim (RELAY-TURN-2 held by rb).
 out2="$(TICK_REPO_ROOT="$A" bash "$WD" --allow-reap 2>&1)"
-echo "$out2" | grep -q 'reap authority granted for RELAY-TURN' && pass "--allow-reap fires reap stub for the stalled RELAY-TURN" || fail "reap stub did not fire: $out2"
+echo "$out2" | grep -q 'reaped 1 claim(s) from ra' && pass "--allow-reap reaps the stalled RELAY-TURN (real re-offer, not a stub)" || fail "real reap did not fire: $out2"
+tick_a info RELAY-TURN | grep -qE 'claimer:[[:space:]]+ra' && fail "RELAY-TURN still held by ra after reap" || pass "RELAY-TURN released after reap (orphaned token re-offered)"
+tick_a info RELAY-TURN-2 | grep -qE 'claimer:[[:space:]]+rb' && pass "healthy RELAY-TURN-2 (rb) NOT reaped — live claim untouched (never reap a live claim)" || fail "healthy RELAY-TURN-2 wrongly disturbed: $(tick_a info RELAY-TURN-2)"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

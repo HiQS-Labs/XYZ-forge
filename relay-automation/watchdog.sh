@@ -19,7 +19,9 @@ Options:
   --human-target LABEL    Human escalation target label (default: human-ops).
   --channel MODE         Escalation sink: stdout or file (default: stdout).
   --escalation-log PATH  Append escalation records to PATH when --channel file is used.
-  --allow-reap            Enable the reap stub after escalation.
+  --allow-reap            Authority grant: after escalating, REAP each parked suspect — re-offer its
+                          orphaned token via `tick reap <agent> --task <task>` (scoped, idempotent,
+                          exactly-once). Default off = escalate-only. See decisions/2026-06-30-auto-reap-authority.md.
   --help                  Show this message.
 EOF
 }
@@ -124,10 +126,23 @@ escalate_to_human() {
   write_escalation_record "$record"
 }
 
-reap_task_stub() {
+# R2 auto-reap (decision: decisions/2026-06-30-auto-reap-authority.md). Re-offer a parked claim's
+# orphaned token by releasing the dead claim — SCOPED to exactly this (agent, task), recorded as
+# reaped `--by watchdog`. Idempotent: `tick reap` is a no-op (still exit 0) if <agent> no longer holds
+# <task_id> (already re-offered / reclaimed), and once released the task is no longer a parked suspect,
+# so a later pass won't re-reap it — exactly-once. Evidence is the caller's parked_suspects[] membership
+# (max gap past the parked threshold); a live/heartbeating claim never reaches here. The release `tick
+# reap` emits is epoch-stamped, so a revived same-id writer stays fenced (Phase 1 epoch fencing).
+reap_task() {
   local task_id="$1"
-  printf 'watchdog: reap authority granted for %s\n' "$task_id" >&2
-  printf 'watchdog: stub only; wire to the real reap workflow once policy is approved\n' >&2
+  local agent="$2"
+  local out
+  if out="$("$TICK_BIN" reap "$agent" --by watchdog --task "$task_id" 2>&1)"; then
+    printf 'watchdog: reap %s (held by %s) — %s\n' "$task_id" "$agent" "$out" >&2
+  else
+    printf 'watchdog: reap of %s (held by %s) FAILED: %s — left escalated for a human\n' "$task_id" "$agent" "$out" >&2
+    return 1
+  fi
 }
 
 ANALYSIS_FILE=""
@@ -184,6 +199,9 @@ while IFS=$'\t' read -r task_id agent max_gap_ms heartbeats; do
   escalate_to_human "$task_id" "$agent" "$max_gap_ms" "$heartbeats" "$evidence"
 
   if ((ALLOW_REAP)); then
-    reap_task_stub "$task_id"
+    # Best-effort recovery: the escalation above is the GUARANTEE; a failed reap is logged (inside
+    # reap_task) but must not crash the watchdog or skip the remaining suspects. `|| true` keeps the
+    # scan going and the exit clean — the human still has every escalation record.
+    reap_task "$task_id" "$agent" || true
   fi
 done <<<"$parked_suspects"

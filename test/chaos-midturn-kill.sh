@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
-# Part B Phase 2 / G1 — Mid-turn kill: DETECTION + structured escalation.
+# Part B Phase 2 / G1+R2 — Mid-turn kill: DETECTION + structured escalation + RECOVERY (auto-reap).
 #
 # Threat (G1): an agent claims a task then dies (SIGKILL, crash, OOM) before
 # it can call `tick done` or `tick release`. The token is held by a corpse. The
 # relay would stall forever if the watchdog/analyzer didn't surface it.
 #
-# This test proves the DETECTION half:
+# This test proves the DETECTION half (G1):
 #   1. Agent claims a task (token taken).
 #   2. Agent dies — simulated by emitting ZERO subsequent heartbeats.
 #   3. Time advances past the parked-claim threshold (~10 min) via TICK_TS.
 #   4. `tick analyze --format json` flags the claim as a `parked_suspects` entry.
 #   5. The watchdog emits a structured (JSON) escalation record — never silently hangs.
 #
-# NOTE: Auto-reap RECOVERY (re-offering the orphaned token) is OUT OF SCOPE here.
-# It is gated on the unmade R2 "auto-reap authority" decision (--allow-reap stub).
-# The assertions below stop at detection + escalation, consistent with the R2
-# "auto-reap authority" item under ROADMAP.md "Part B · Phase 2" (still 🔲).
+# AND the RECOVERY half (R2, decisions/2026-06-30-auto-reap-authority.md):
+#   6. `watchdog.sh --allow-reap` reaps the parked claim — re-offering the orphaned token EXACTLY ONCE.
+#   7. A peer can then reclaim the re-offered token.
+#   8. A second pass is idempotent (no double-reap) and the scoped reap NEVER touches a peer's live claim.
 source "$(dirname "$0")/_setup.sh" chaos-midturn-kill
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -143,10 +143,76 @@ else
   fail "watchdog produced neither stdout nor escalation log — silent hang risk"
 fi
 
-# ── NOTE: Recovery is gated on R2 ─────────────────────────────────────────────
-# The auto-reap (re-offer the orphaned token) is NOT tested here.
-# It is behind the --allow-reap stub and the unmade R2 "auto-reap authority"
-# decision. Detection + escalation above is the complete G1 deliverable.
+# ── R2 RECOVERY: auto-reap re-offers the orphaned token ───────────────────────
+# decisions/2026-06-30-auto-reap-authority.md. The watchdog runs against the REAL tick state
+# (TICK_REPO_ROOT=$A is exported by _setup.sh), so `tick reap` here releases a real claim.
+
+# Precondition sanity: alice still holds TASK-KILL (claimed in setup, never released).
+if tick_a info TASK-KILL | grep -qE 'claimer:[[:space:]]+alice'; then
+  pass "pre-reap: alice still holds the orphaned TASK-KILL claim"
+else
+  fail "pre-reap: expected alice to hold TASK-KILL, got: $(tick_a info TASK-KILL)"
+fi
+
+# Run the watchdog WITH --allow-reap against the captured suspect list (which flags alice/TASK-KILL).
+REAP_ESC="$WORK/reap-esc.ndjson"
+WATCHDOG_TS='2026-06-18T10:31:00Z' "$WD" \
+  --analysis-file "$WORK/analyze.json" \
+  --channel file \
+  --escalation-log "$REAP_ESC" \
+  --allow-reap \
+  >"$WORK/reap.stdout" 2>"$WORK/reap.stderr"
+REAP_EXIT=$?
+
+if [ "$REAP_EXIT" -eq 0 ]; then
+  pass "watchdog --allow-reap exits 0 on a real parked suspect"
+else
+  fail "watchdog --allow-reap exited $REAP_EXIT:\n$(cat "$WORK/reap.stderr")"
+fi
+
+# The REAL reap ran (not the old stub) and released exactly one claim from alice.
+if grep -q 'reaped 1 claim(s) from alice' "$WORK/reap.stderr"; then
+  pass "auto-reap released exactly one orphaned claim (TASK-KILL from alice)"
+else
+  fail "expected a real reap of TASK-KILL from alice, got:\n$(cat "$WORK/reap.stderr")"
+fi
+
+# alice no longer holds TASK-KILL — the orphaned token is re-offered.
+if tick_a info TASK-KILL | grep -qE 'claimer:[[:space:]]+alice'; then
+  fail "TASK-KILL still claimed by alice after reap (not re-offered)"
+else
+  pass "TASK-KILL no longer held by alice after reap (orphaned token re-offered)"
+fi
+
+# A peer can now reclaim the re-offered token.
+if TICK_TS=2026-05-04T10:32:00.000Z tick_b claim TASK-KILL --agent bob --paths "src/feature/**" >/dev/null 2>&1; then
+  pass "a peer (bob) reclaims the re-offered token"
+else
+  fail "peer could not claim the re-offered TASK-KILL after reap"
+fi
+
+# Exactly-once / idempotent: a SECOND --allow-reap pass over the SAME stale suspect list (still naming
+# alice) is a no-op — alice no longer holds it — so the token is not double-reaped, AND the scoped
+# (agent=alice) reap must NOT disturb bob's fresh LIVE claim. This is the "never reap a live claim" proof.
+WATCHDOG_TS='2026-06-18T10:33:00Z' "$WD" \
+  --analysis-file "$WORK/analyze.json" \
+  --channel file \
+  --escalation-log "$WORK/reap2-esc.ndjson" \
+  --allow-reap \
+  >"$WORK/reap2.stdout" 2>"$WORK/reap2.stderr"
+REAP2_EXIT=$?
+
+if [ "$REAP2_EXIT" -eq 0 ] && grep -q 'no active claims held by alice' "$WORK/reap2.stderr"; then
+  pass "second --allow-reap pass is an idempotent no-op for alice (exactly-once: not re-reaped)"
+else
+  fail "expected idempotent no-op on the second reap (exit=$REAP2_EXIT):\n$(cat "$WORK/reap2.stderr")"
+fi
+
+if tick_a info TASK-KILL | grep -qE 'claimer:[[:space:]]+bob'; then
+  pass "peer's live claim survived the second pass (scoped reap targets alice; never a live claim)"
+else
+  fail "bob's live claim was disturbed by the second reap pass: $(tick_a info TASK-KILL)"
+fi
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

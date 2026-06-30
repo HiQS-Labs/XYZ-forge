@@ -1,8 +1,8 @@
 ---
 title: Part B / R2 — auto-reap authority (flip watchdog --allow-reap from stub to real)
-status: Captured (1-INBOX)
+status: Active (2-WORKING)
 created: 2026-06-29
-updated: 2026-06-29
+updated: 2026-06-30
 owner: noel
 branch: main
 gh_issue: 52
@@ -33,12 +33,12 @@ fencing) — does not touch the projection fence, so it is the lowest-risk Phase
 (concurrent-pollers) already has a passing proof (`test/chaos-concurrent-pollers.sh` 20/20); reconcile
 its stale checklist box separately.
 
-## Asks (acceptance criteria)
-- [ ] Decision record under `decisions/` naming the reap authority (the single `--watchdog-authority` holder) + the evidence bar (zero heartbeats past the parked-suspect gap threshold; never a heartbeating claim).
-- [ ] `watchdog.sh --allow-reap` performs a REAL reap of a confirmed parked suspect (not a stub) — re-offers the orphaned token via the `tick` reap/release path.
-- [ ] Re-offer is **exactly once** and idempotent (a second pass with the suspect already reaped is a no-op).
-- [ ] A live/heartbeating claim is NEVER reaped (false-positive guard asserted).
-- [ ] Containment unchanged; `bash validate.sh` green.
+## Asks (acceptance criteria) — ✅ all delivered (2026-06-30)
+- [x] Decision record under `decisions/` naming the reap authority (the `--allow-reap` grant, paired with the single `--watchdog-authority` holder) + the evidence bar (`parked_suspects[]` membership = max gap past the threshold; never a heartbeating claim). → [`decisions/2026-06-30-auto-reap-authority.md`](../../decisions/2026-06-30-auto-reap-authority.md). (Note: the bar is the **gap**, not a `heartbeats==0` count — a claim can heartbeat then die; recorded in the decision's Rejected-alternatives.)
+- [x] `watchdog.sh --allow-reap` performs a REAL scoped reap of a confirmed parked suspect (not a stub) — `tick reap <agent> --by watchdog --task <task>` re-offers the orphaned token.
+- [x] Re-offer is **exactly once** and idempotent — once released the task is no longer a parked suspect (won't re-reap), and `tick reap` is a no-op if the agent no longer holds it. Proven in `chaos-midturn-kill.sh` + `watchdog-liveness.sh`.
+- [x] A live/heartbeating claim is NEVER reaped — proven against real state in `chaos-midturn-kill.sh` (a peer's fresh claim survives a second pass) and `watchdog-relay.sh` (healthy RELAY-TURN-2 untouched).
+- [x] Containment unchanged (no kernel/projection change; reuses `tick reap` + epoch fencing); `bash validate.sh` green. `chaos-midturn-kill` 15/15, `watchdog-liveness` 7/7, `watchdog-relay` 6/6.
 
 ## Swarm Preflight Contract
 ```json
