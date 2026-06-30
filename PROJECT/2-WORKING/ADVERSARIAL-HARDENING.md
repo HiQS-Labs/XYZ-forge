@@ -2,7 +2,7 @@
 complexity: high
 risk: medium
 effort: high
-ratings_provisional: true
+ratings_provisional: false
 title: Adversarial hardening — commercial-viability track (Part B)
 slug: adversarial-hardening
 status: Active
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 1 — epoch fencing & stale-writer prevention** ✅ shipped 2026-06-18 (monotonic per-task epoch in the projection kernel; `test/chaos-stale-writer.sh` 13/13; decision record `decisions/2026-06-18-epoch-fencing.md`). Phase 2 **detection** partials landed: G1 mid-turn-kill detection + R5 per-turn wall-clock cap. | **Phase 2 remainder** — R2 auto-reap authority, G2 dup-token determinism, G4 concurrent-pollers (+ R5 disk / codex-agy spend ceilings); then Phase 3 (cross-repo E2E, R3) and Phase 4 (R4 observability + reference deploy). |
+| **Phase 1 — epoch fencing & stale-writer prevention** ✅ shipped 2026-06-18 (monotonic per-task epoch in the projection kernel; `test/chaos-stale-writer.sh` 13/13; decision record `decisions/2026-06-18-epoch-fencing.md`). Phase 2 landed: G1 mid-turn-kill detection **+ R2 auto-reap recovery (2026-06-30, #52)**, G4 concurrent-pollers (20/20), R5 per-turn wall-clock cap. | **Phase 2 remainder** — G2 dup-token determinism (+ R5 disk / codex-agy spend ceilings); then Phase 3 (cross-repo E2E, R3) and Phase 4 (R4 observability + reference deploy). |
 
 ## Context — the maturity ladder
 
@@ -143,26 +143,28 @@ Package the deliberate failure scenarios and operationalize the watchdog's auto-
 > **Status:** ⚠️ *Partial / by-design but unproven* — no race-hammer test drives two pollers
 > concurrently and counts winners yet.
 
-> **R2 — Auto-reap authority.** Unblocks G1's recovery half: decide who may reap and on what evidence,
-> record it, and flip `watchdog.sh --allow-reap` from stub to real.
+> **R2 — Auto-reap authority.** ✅ **shipped 2026-06-30 (#52).** Unblocked G1's recovery half: authority =
+> the explicit `--allow-reap` grant; evidence = `parked_suspects[]` membership; `watchdog.sh --allow-reap`
+> now does a real scoped/idempotent/exactly-once `tick reap` re-offer (never a live claim). Decision
+> record: `decisions/2026-06-30-auto-reap-authority.md`.
 > **R5 — Resource / quota limits** *(Gemini review 2026-06-15).* Cap per-turn wall-clock, disk, and
 > API spend in the turn-taker shim so a headless agent can't run away; pairs with the `relay-drive.sh`
 > round-cap. **Status:** ❌ not started (per-turn ceilings missing).
 
 ### Checklist
 
-- [ ] **R2: Auto-reap authority decision.**
-  - [ ] Formally define who may reap and on what evidence; record in a decision markdown.
-  - [ ] Flip `watchdog.sh --allow-reap` from stub to real.
-- [~] **G1: Build `test/chaos-midturn-kill.sh`** (mid-turn termination). *(detection half ✅ 2026-06-18; recovery gated on R2)*
+- [x] **R2: Auto-reap authority decision.** ✅ shipped 2026-06-30 (#52)
+  - [x] Formally define who may reap and on what evidence; recorded in [`decisions/2026-06-30-auto-reap-authority.md`](../../decisions/2026-06-30-auto-reap-authority.md) — authority = the explicit `--allow-reap` grant; evidence = `parked_suspects[]` membership (max gap past threshold), never a live claim.
+  - [x] Flip `watchdog.sh --allow-reap` from stub to real — scoped `tick reap <agent> --task <task>`, idempotent, exactly-once, best-effort (escalation stays the guarantee); the release is epoch-stamped (Phase 1).
+- [x] **G1: Build `test/chaos-midturn-kill.sh`** (mid-turn termination). *(detection ✅ 2026-06-18; recovery ✅ 2026-06-30 via R2)*
   - [x] Claim as agent X → simulate death (zero heartbeats, time advanced via `TICK_TS`) → assert `parked_suspects[X]` flagged (+ false-positive guard). ✅
-  - [~] Assert: structured JSON escalation emitted ✅; **auto-reap re-offers token exactly once** ⬅ deferred (R2 `--allow-reap` stub).
+  - [x] Assert: structured JSON escalation emitted ✅; **auto-reap re-offers token exactly once** ✅ — `chaos-midturn-kill.sh` 15/15: real reap → release → peer reclaims → idempotent second pass → a live peer claim is never touched.
 - [ ] **G2: Build `test/chaos-dup-token.sh`** (duplicate/ambiguous token).
   - [ ] Inject concurrent/duplicate claims → assert projection resolves to exactly one stable winner across N replays.
   - [ ] Inject malformed/duplicate event files → assert safely quarantined without crash.
-- [ ] **G4: Build `test/chaos-concurrent-pollers.sh`** (concurrent pollers).
-  - [ ] Launch two concurrent `poll.sh` instances against the same relay state.
-  - [ ] Assert exactly one poller acts; the other idles — across N trials.
+- [x] **G4: Build `test/chaos-concurrent-pollers.sh`** (concurrent pollers). ✅ (in `validate.sh`, 20/20)
+  - [x] Launch two concurrent `poll.sh` instances against the same relay state.
+  - [x] Assert exactly one poller acts; the other idles — across N trials (20 trials, exactly one winner each).
 - [~] **R5: Resource / quota limits** (per-turn runaway containment; Gemini 2026-06-15). *(wall-clock ✅ 2026-06-18; disk + codex/gemini spend deferred)*
   - [x] Cap per-turn **wall-clock** in the turn-taker shim. ✅ `rtl_run_bounded` (coreutils-free) in `relay-turn-lib.sh`; all 3 shims via `RELAY_TURN_TIMEOUT_S` (default 300); timeout → exit 7. Test `test/relay-turn-timeout.sh` 9/9.
   - [~] **disk** + **per-turn API spend (codex/gemini)** ceilings — deferred (claude already has `--max-budget-usd`; disk belongs in a TMPDIR watchdog). In-code `# NOTE:`s mark the gap.

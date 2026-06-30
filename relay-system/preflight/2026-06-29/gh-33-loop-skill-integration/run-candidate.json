@@ -1,0 +1,95 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-06-29T06:29:48Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-33-loop-skill-integration"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/2-WORKING/GH-33-LOOP-SKILL-INTEGRATION.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm",
+    "branch": "main",
+    "commit": "952444b9d4bfd145ec4062e662ed01fffc7c0966"
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "bash validate.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/relay-loop.sh",
+        "pattern": "cross-model-cmd",
+        "note": "Phase 4 adds a --cross-model-cmd flag so --background launches the cross-model shim on nudge-cross-model; the flag is absent today → fix still required"
+      },
+      {
+        "type": "grep_absent",
+        "path": "test/relay-loop.sh",
+        "pattern": "cross-model-cmd",
+        "note": "Phase 4 adds a --cross-model-cmd background-dispatch test case; absent today → fix still required"
+      }
+    ],
+    "artifacts": [
+      "relay-automation/relay-loop.sh",
+      "relay-automation/poll.sh",
+      "test/relay-loop.sh",
+      "relay-automation/README.md"
+    ],
+    "remediation": "Unify Path A/B in relay-loop.sh --background: on DECISION: nudge-cross-model, launch the cross-model turn shim (codex-turn.sh / agy-turn.sh) as a DETACHED background process — reuse the Phase 3 bg_launch + pidfile single-turn lock — instead of printing a human nudge, so a Codex/agy turn advances unattended. Add a --cross-model-cmd flag (mirror --runner-cmd) for the command to run for a cross-model turn; if it is unset OR the agent's CLI is not on PATH, DEGRADE to the existing human-nudge (never a silent stall) — preserve --claude-agents semantics. Containment + token correctness MUST be identical to Path A: do NOT modify relay-turn-lib.sh, do NOT widen any allowlist (the backgrounded shim already enforces the boundary). Keep poll.sh a pure oracle. Extend test/relay-loop.sh with: (a) nudge-cross-model + --background + --cross-model-cmd -> BG-DISPATCH of the shim, single-dispatch lock holds; (b) cross-model CLI absent -> degrades to nudge, no dispatch. Update the relay-loop.sh README row. SCOPE LOCK: edit ONLY the four artifacts; verify with `bash test/relay-loop.sh` ONLY — do NOT run the full validate.sh yourself (it can create files that trip containment and discard your whole turn); the harness runs the gate after your turn.",
+    "lanes": {
+      "agy_safe": [],
+      "orchestrator_only": [
+        "relay-automation/relay-loop.sh",
+        "relay-automation/poll.sh"
+      ]
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/main",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "952444b9d4bfd145ec4062e662ed01fffc7c0966",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/relay-loop.sh",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "grep_absent",
+        "path": "test/relay-loop.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null
+  },
+  "lane_plan": {
+    "orchestrator_owned": [
+      "relay-automation/relay-loop.sh",
+      "relay-automation/poll.sh"
+    ],
+    "codex_lane": [
+      "test/relay-loop.sh",
+      "relay-automation/README.md"
+    ],
+    "agy_lane": [],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

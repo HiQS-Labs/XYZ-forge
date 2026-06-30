@@ -1,0 +1,19 @@
+{
+  "fetch_ok": true,
+  "upstream": "origin/main",
+  "ahead": 0,
+  "behind": 0,
+  "dirty": true,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "de2b5ce7647049a1f56b8d87e5d84562d8a70ad3",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "grep_absent",
+      "path": "utils/swarm-preflight.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}

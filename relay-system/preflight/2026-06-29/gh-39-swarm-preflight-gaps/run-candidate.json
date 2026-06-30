@@ -1,0 +1,83 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-06-29T00:25:43Z",
+  "mode": "gh-bundle",
+  "candidate": {
+    "slug": "gh-39-swarm-preflight-gaps"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/2-WORKING/GH-39-SWARM-PREFLIGHT-GAPS.md"
+    ],
+    "issues": [
+      "39"
+    ],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm",
+    "branch": "main",
+    "commit": "de2b5ce7647049a1f56b8d87e5d84562d8a70ad3"
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "bash validate.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "utils/swarm-preflight.sh",
+        "pattern": "GH-38"
+      }
+    ],
+    "artifacts": [
+      "utils/swarm-preflight.sh"
+    ],
+    "remediation": {
+      "source": "self#acceptance-criteria",
+      "criteria": "Preflight executes the gate, verifies artifact paths + codex/agy auth, warns on cross-packet ALLOW_PATHS collisions, and bakes a scope-locked brief with inlined acceptance criteria. validate.sh green; default packet backward-compatible."
+    },
+    "lanes": {
+      "agy_safe": [],
+      "orchestrator_only": [
+        "bin/",
+        ".tick/",
+        "relay-automation/relay-turn-lib.sh",
+        "relay-automation/marathon-drive.sh"
+      ]
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/main",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "de2b5ce7647049a1f56b8d87e5d84562d8a70ad3",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "utils/swarm-preflight.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "utils/swarm-preflight.sh"
+    ],
+    "agy_lane": [],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": false,
+    "single_lane_only": true
+  }
+}

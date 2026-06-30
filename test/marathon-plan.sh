@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# test/queue-plan.sh — regression lock for utils/queue-plan.sh.
+# test/marathon-plan.sh — regression lock for utils/marathon-plan.sh.
 #
 # Standalone (no tick/relay harness). Builds throwaway repos with a synthetic ROADMAP.md ledger +
 # rated capture docs + preflight contracts, and stubs git/gh via the planner's hermetic env seam
@@ -11,9 +11,9 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
-QP="$ROOT/utils/queue-plan.sh"
+QP="$ROOT/utils/marathon-plan.sh"
 
-WORK="$(mktemp -d "${TMPDIR:-/tmp}/queue-plan.XXXXXX")"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/marathon-plan.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0
@@ -23,7 +23,7 @@ fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 DAY="2026-06-28"
 NOWT="2026-06-28T00:00:00Z"
 
-echo "== test: queue-plan =="
+echo "== test: marathon-plan =="
 echo "  workdir: $WORK"
 
 # mk_doc <root> <filename> <cx> <risk> <eff> <contract-json>   ("-" for a rating ⇒ omit that key;
@@ -84,9 +84,9 @@ cat >"$A/ROADMAP.md" <<EOF
 - **GH-104 · shimDep** 🆕 — shim, scheduled after GH-100 → [d](PROJECT/2-WORKING/GH-104-shimdep.md) · [#104](https://github.com/o/r/issues/104)
 EOF
 out="$(run_qp "$A" 2>/dev/null)"; rc=$?
-doc="$A/PROJECT/2-WORKING/QUEUE-$DAY.md"
+doc="$A/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
 [[ $rc -eq 0 ]] && pass "A: clean plan → exit 0" || fail "A: expected exit 0, got $rc"
-[[ -f "$doc" ]] && pass "A: QUEUE doc written" || fail "A: QUEUE doc not written"
+[[ -f "$doc" ]] && pass "A: MARATHON-PLAN doc written" || fail "A: MARATHON-PLAN doc not written"
 grep -q "active lanes : 5 across 2 wave(s)" <<<"$out" && pass "A: 5 active across 2 waves" || fail "A: wrong active/wave count — $(grep 'active lanes' <<<"$out")"
 [[ "$(wave_of "$doc" 102)" == "1" && "$(wave_of "$doc" 103)" == "1" ]] && pass "A: two disjoint independents share Wave 1" || fail "A: indeps not both Wave 1 (102=$(wave_of "$doc" 102) 103=$(wave_of "$doc" 103))"
 ka="$(wave_of "$doc" 100)"; kb="$(wave_of "$doc" 101)"
@@ -122,7 +122,7 @@ cat >"$B/ROADMAP.md" <<EOF
 - **Just a field note** 🐞 — a finding with no issue and no doc, nothing to build.
 EOF
 out="$(run_qp "$B" 2>/dev/null)"; rc=$?
-doc="$B/PROJECT/2-WORKING/QUEUE-$DAY.md"
+doc="$B/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
 [[ $rc -eq 4 ]] && pass "B: drift present → exit 4" || fail "B: expected exit 4, got $rc"
 grep -q "already-closed.*closed item\|already-closed]  GH-200" <<<"$out" && pass "B: #200 flagged already-closed" || fail "B: #200 not flagged already-closed"
 [[ -z "$(wave_of "$doc" 200)" ]] && pass "B: closed item excluded from waves" || fail "B: closed item appeared in a wave"
@@ -150,7 +150,7 @@ cat >"$C/ROADMAP.md" <<EOF
 - **GH-300 · low risk** 🆕 — → [d](PROJECT/2-WORKING/GH-300-low.md) · [#300](https://github.com/o/r/issues/300)
 - **GH-301 · high risk** 🆕 — → [d](PROJECT/2-WORKING/GH-301-high.md) · [#301](https://github.com/o/r/issues/301)
 EOF
-run_qp "$C" >/dev/null 2>&1; doc="$C/PROJECT/2-WORKING/QUEUE-$DAY.md"
+run_qp "$C" >/dev/null 2>&1; doc="$C/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
 [[ "$(row_index "$doc" 300)" -lt "$(row_index "$doc" 301)" ]] && pass "C: quick-wins ranks low-risk first" || fail "C: quick-wins order wrong"
 run_qp "$C" --policy derisk-first >/dev/null 2>&1
 [[ "$(row_index "$doc" 301)" -lt "$(row_index "$doc" 300)" ]] && pass "C: derisk-first ranks high-risk first (order flipped)" || fail "C: derisk-first did not flip order"
@@ -169,7 +169,7 @@ QUEUE_PLAN_ROOT="$C" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" QUEUE_PLAN_G
 # ─────────────────────────────────────────────────────────────────────────────
 # Scenario E — --check determinism / drift guard
 # ─────────────────────────────────────────────────────────────────────────────
-run_qp "$C" >/dev/null 2>&1                       # write today's QUEUE doc
+run_qp "$C" >/dev/null 2>&1                       # write today's MARATHON-PLAN doc
 run_qp "$C" --check >/dev/null 2>&1; rc=$?
 [[ $rc -eq 0 ]] && pass "E: --check in sync → exit 0" || fail "E: --check expected exit 0, got $rc"
 printf '\n- **Drifted note** 🐞 — a new ledger note, no issue, no doc.\n' >>"$C/ROADMAP.md"
@@ -182,7 +182,7 @@ run_qp "$C" --check >/dev/null 2>&1; rc=$?
 json="$(run_qp "$A" --dry-run --format json 2>/dev/null)"
 echo "$json" | while IFS= read -r line; do [ -n "$line" ] && printf '%s' "$line" | node -e 'JSON.parse(require("fs").readFileSync(0,"utf8"))' || exit 1; done \
   && pass "F: --format json emits one valid JSON object per line" || fail "F: json lines not all valid"
-grep -q '"check":"queue-plan/summary"' <<<"$json" && pass "F: json includes a summary record" || fail "F: json summary missing"
+grep -q '"check":"marathon-plan/summary"' <<<"$json" && pass "F: json includes a summary record" || fail "F: json summary missing"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Scenario G — agy QA [Blocker]: a dep on a HELD (not-built) item must defer the dependent
@@ -199,7 +199,7 @@ cat >"$G/ROADMAP.md" <<EOF
 - **GH-701 · dep on held** 🆕 — depends on GH-710 → [d](PROJECT/2-WORKING/GH-701-dephld.md) · [#701](https://github.com/o/r/issues/701)
 - **GH-710 · held (unrated)** 🆕 — → [d](PROJECT/2-WORKING/GH-710-held.md) · [#710](https://github.com/o/r/issues/710)
 EOF
-out="$(run_qp "$G" 2>/dev/null)"; doc="$G/PROJECT/2-WORKING/QUEUE-$DAY.md"
+out="$(run_qp "$G" 2>/dev/null)"; doc="$G/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
 w700="$(wave_of "$doc" 700)"; w701="$(wave_of "$doc" 701)"
 { [[ "$w700" == "1" && -z "$w701" ]] && grep -q "blocked-dep]  GH-701" <<<"$out"; } && pass "G: dep on a HELD item EXCLUDES the dependent (700=wave$w700; 701 blocked-dep, not waved) [agy Blocker r1+r3]" || fail "G: dependent-on-held not excluded (700=$w700 701=$w701)"
 
@@ -220,7 +220,7 @@ cat >"$H/ROADMAP.md" <<EOF
 - **GH-803 · kernel3** 🆕 — → [d](PROJECT/2-WORKING/GH-803-k3.md) · [#803](https://github.com/o/r/issues/803)
 - **GH-802 · multi-dep** 🆕 — depends on GH-800, GH-801, and GH-803 → [d](PROJECT/2-WORKING/GH-802-multi.md) · [#802](https://github.com/o/r/issues/802)
 EOF
-run_qp "$H" >/dev/null 2>&1; doc="$H/PROJECT/2-WORKING/QUEUE-$DAY.md"
+run_qp "$H" >/dev/null 2>&1; doc="$H/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
 w800="$(wave_of "$doc" 800)"; w801="$(wave_of "$doc" 801)"; w803="$(wave_of "$doc" 803)"; w802="$(wave_of "$doc" 802)"
 # Oxford-comma "GH-800, GH-801, and GH-803" — all three must parse, so the dependent follows the LAST (803).
 [[ -n "$w802" && "$w802" -gt "$w800" && "$w802" -gt "$w801" && "$w802" -gt "$w803" ]] && pass "H: oxford-comma deps all parsed — multi-dep follows ALL kernels (800=$w800 801=$w801 803=$w803 802=$w802) [agy Blocker r2]" || fail "H: oxford-comma deps not all honored (800=$w800 801=$w801 803=$w803 802=$w802)"
@@ -237,9 +237,9 @@ cat >"$I/ROADMAP.md" <<EOF
 ### In progress
 - **GH-910 · epic umbrella** 🆕 — sequences the sub-issue [#911](https://github.com/o/r/issues/911) → [d](PROJECT/2-WORKING/GH-910-epic.md) · [#910](https://github.com/o/r/issues/910)
 EOF
-out="$(run_qp "$I" 2>/dev/null)"; doc="$I/PROJECT/2-WORKING/QUEUE-$DAY.md"
+out="$(run_qp "$I" 2>/dev/null)"; doc="$I/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
 { [[ "$(wave_of "$doc" 910)" == "1" ]] && ! grep -q "already-closed" <<<"$out"; } && pass "I: title GH-910 wins over the in-prose closed #911 (item stays active, not already-closed) [agy Blocker r4]" || fail "I: ghIssueOf precedence wrong — $(grep -E 'already-closed' <<<"$out" | head -1)"
 
 echo
-echo "  queue-plan: $PASS passed, $FAIL failed"
+echo "  marathon-plan: $PASS passed, $FAIL failed"
 [[ "$FAIL" -eq 0 ]]

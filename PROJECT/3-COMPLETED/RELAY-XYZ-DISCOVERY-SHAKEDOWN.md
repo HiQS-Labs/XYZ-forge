@@ -2,12 +2,13 @@
 complexity: low
 risk: low
 effort: low
-ratings_provisional: true
+ratings_provisional: false
 title: relay-xyz discovery shakedown — why other VS Code sessions can't find the skill
 slug: relay-xyz-discovery-shakedown
-status: Active
+status: Complete (3-COMPLETED)
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-30
+closed: 2026-06-30
 owner: Noel (operator) · Claude (auditor)
 branch: main
 related:

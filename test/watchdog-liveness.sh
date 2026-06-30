@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
 # Watchdog liveness contract: escalate real parked suspects, stay quiet on
-# healthy input, and gate the reap stub behind --allow-reap.
+# healthy input, and gate the REAL reap (R2) behind --allow-reap. (This test drives a STATIC
+# analysis fixture with no real tick claim, so it asserts the reap PATH is invoked + the no-op
+# degrades cleanly; the real release/re-offer is proven against live tick state in chaos-midturn-kill.sh.)
 source "$(dirname "$0")/_setup.sh" watchdog-liveness
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WATCHDOG="$ROOT/relay-automation/watchdog.sh"
+
+# Init a (empty) tick repo at the exported TICK_REPO_ROOT so the watchdog's reap has a valid repo to
+# no-op against — these static fixtures hold no real claim, so the scoped reap is always a clean no-op.
+tick_a init >/dev/null
 
 cat >"$WORK/parked.json" <<'EOF'
 {"parked_suspects":[{"task":"TASK-PARKED","agent":"alice","max_gap_ms":600001,"heartbeats":0}]}
@@ -66,10 +72,17 @@ else
   fail "watchdog failed on parked fixture with --allow-reap"
 fi
 
-if grep -q 'reap authority granted for TASK-PARKED' "$WORK/reap.stderr"; then
-  pass "--allow-reap fires the reap stub for a real suspect"
+if grep -q 'watchdog: reap TASK-PARKED (held by alice)' "$WORK/reap.stderr"; then
+  pass "--allow-reap invokes the real scoped reap for the suspect (not the stub)"
 else
-  fail "expected reap stub output for parked suspect"
+  fail "expected real reap invocation for parked suspect, got: $(cat "$WORK/reap.stderr")"
+fi
+
+# The reap is a no-op here (no real TASK-PARKED claim in this test's tick state) and MUST still exit 0.
+if grep -q 'no active claims held by alice' "$WORK/reap.stderr"; then
+  pass "idempotent no-op reap (no live claim) degrades cleanly, exit 0"
+else
+  fail "expected a clean no-op reap against the static fixture, got: $(cat "$WORK/reap.stderr")"
 fi
 
 if WATCHDOG_TS='2026-06-14T12:00:00Z' "$WATCHDOG" \
@@ -83,10 +96,10 @@ else
   fail "healthy run with --allow-reap should exit 0"
 fi
 
-if grep -q 'reap authority granted' "$WORK/healthy-reap.stderr"; then
-  fail "healthy run should not trigger the reap stub"
+if grep -q 'watchdog: reap ' "$WORK/healthy-reap.stderr"; then
+  fail "healthy run should not invoke any reap"
 else
-  pass "healthy run does not trigger the reap stub"
+  pass "healthy run does not invoke reap (no parked suspect, nothing reaped)"
 fi
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"

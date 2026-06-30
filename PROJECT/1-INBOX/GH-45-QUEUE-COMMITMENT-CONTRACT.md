@@ -10,11 +10,11 @@ risk: medium
 effort: medium
 ratings_provisional: true
 related:
-  - PROJECT/2-WORKING/QUEUE-PLANNER.md
+  - PROJECT/3-COMPLETED/MARATHON-PLANNER.md
   - PROJECT/2-WORKING/GH-39-SWARM-PREFLIGHT-GAPS.md
   - relay-automation/marathon-drive.sh
   - relay-automation/relay-drive.sh
-  - utils/queue-plan.sh
+  - utils/marathon-plan.sh
 goal: >
   Turn the QUEUE/wave from a suggestion into a bounded commitment contract so a session cannot
   silently abandon the parallel wave to deep-dive one item. The harness must enforce a per-lane
@@ -50,9 +50,9 @@ surface findings); a session that strays off the committed wave is **flagged, no
 
 ## Where this plugs into the existing architecture (grounding)
 
-- A **lane** = a queue-plan "ready item," keyed by its `PROJECT/**` doc (`--project-doc`). A
+- A **lane** = a marathon-plan "ready item," keyed by its `PROJECT/**` doc (`--project-doc`). A
   **fire** = one `marathon-drive`/`relay-drive` run, keyed by `RELAY_TASK` (`MARATHON-<PHASE_ID>-TURN`).
-- `utils/queue-plan.sh` already (a) reads `ROADMAP.md` + project docs, (b) emits machine-readable
+- `utils/marathon-plan.sh` already (a) reads `ROADMAP.md` + project docs, (b) emits machine-readable
   drift findings (`already-landed`, `not-ready`, `blocked`, coverage gaps), and (c) **generates the
   QUEUE doc**. It is the natural home for the contract fields and the drift signal — no new daemon.
 - There is **no per-lane attempt counter today**; re-fires are unbounded and untracked. This is the
@@ -70,7 +70,7 @@ issue itself is about). The `/ponytail` review section below recommends what to 
 
 Make the commitment **data**, not prose, so both humans and the harness read the same source.
 
-- Extend `utils/queue-plan.sh`'s QUEUE-doc renderer so each emitted lane carries a fenced,
+- Extend `utils/marathon-plan.sh`'s QUEUE-doc renderer so each emitted lane carries a fenced,
   machine-readable block:
   - `definition_of_done` — the acceptance bar (reuse the preflight contract's `gate` when present).
   - `out_of_scope` — what this lane must NOT touch (reinforces the GH-39 scope-lock).
@@ -83,7 +83,7 @@ Make the commitment **data**, not prose, so both humans and the harness read the
 
 **QA gate / acceptance:**
 - A generated QUEUE doc shows, per lane, `definition_of_done` / `out_of_scope` / `max_attempts` /
-  `on_failure`, plus a top-level `active_commitment`. `queue-plan --check` still passes (no drift
+  `on_failure`, plus a top-level `active_commitment`. `marathon-plan --check` still passes (no drift
   regression). `AGENTS.md` states the re-anchor + park rule. One unit test asserts the renderer emits
   the contract block with defaults.
 
@@ -104,18 +104,18 @@ The one mechanism that would have stopped the GH-39 spiral at attempt 2.
   token. `--force` overrides and is logged. A regression test (`test/lane-attempt-cap.sh`) drives a
   lane to the cap, asserts refusal, then asserts `--force` proceeds. `validate.sh` stays green.
 
-### Phase 3 — Drift signal in queue-plan (idea 4)
+### Phase 3 — Drift signal in marathon-plan (idea 4)
 
-Mostly falls out of Phase 2's counter + queue-plan's existing drift machinery.
+Mostly falls out of Phase 2's counter + marathon-plan's existing drift machinery.
 
-- `queue-plan` (and/or `--check`) flags **DRIFT** when: (a) a lane's `attempts` ≥ `max_attempts`
+- `marathon-plan` (and/or `--check`) flags **DRIFT** when: (a) a lane's `attempts` ≥ `max_attempts`
   (parked but un-reconciled), or (b) a lane has spawned > K sub-issues in the session (default K=2),
   or (c) effort/attempts on a **non-`active_commitment`** item exceed a threshold → emit
   `DRIFT: off-wave deep-dive in progress` as a `warn` finding (consistent with existing severity).
 
 **QA gate / acceptance:**
-- With a seeded `.tick/lane-attempts.json` at the cap, `queue-plan --check` emits a `DRIFT` finding
-  and the documented non-zero/`warn` per the existing exit-code contract. Covered by a queue-plan test.
+- With a seeded `.tick/lane-attempts.json` at the cap, `marathon-plan --check` emits a `DRIFT` finding
+  and the documented non-zero/`warn` per the existing exit-code contract. Covered by a marathon-plan test.
 
 ### Phase 4 — Diminishing-returns / "stop polishing" gate (idea 5) — NICE-TO-HAVE, gated
 
@@ -126,7 +126,7 @@ Only build if Phases 1–3 prove insufficient in practice.
   tail. A Stop-hook re-anchor reminder is the optional belt-and-suspenders form of Phase 1's doc rule.
 
 **QA gate / acceptance:**
-- A lane with all `core` slices checked is reported `done (core)` by queue-plan and is not re-emitted
+- A lane with all `core` slices checked is reported `done (core)` by marathon-plan and is not re-emitted
   as ready without an explicit re-commitment marker. (Defer the Stop-hook unless the doc rule visibly
   fails.)
 
@@ -155,7 +155,7 @@ paragraph + ~15 lines + one test, defer the rest.**
 3. **`test/lane-attempt-cap.sh`** — drive a lane to the cap → assert refusal; `--force` → assert it
    proceeds. Keep `validate.sh` green.
 
-Skipped: the fenced per-lane contract block, the queue-plan drift detector, the slice-tier
+Skipped: the fenced per-lane contract block, the marathon-plan drift detector, the slice-tier
 "done by default" gate, the Stop-hook. **Add when:** the attempt-cap demonstrably fails to bound
 drift in a real session (then Phase 3), or a lane genuinely needs a non-default cap / explicit
 out-of-scope enforcement (then re-introduce just that field of Phase 1).
@@ -179,7 +179,7 @@ Per the cost review above, the **committed scope is the ponytail v1 only**:
 
 - Phase 1 fenced declarative lane-contract block — collapsed to a single `LANE_MAX_ATTEMPTS`
   default; re-introduce a per-lane override field only when a lane needs a non-default cap.
-- Phase 3 queue-plan drift detector — the cap already surfaces "parked after N."
+- Phase 3 marathon-plan drift detector — the cap already surfaces "parked after N."
 - Phase 4 stop-polishing / slice-tier gate + Stop-hook reminder.
 
 **Implementation status:** the v1 code change touches `marathon-drive.sh` / `relay-drive.sh`, which
@@ -190,7 +190,7 @@ the agreed scope; whoever picks it up builds items 1–3 above and nothing more.
 ## Non-goals
 
 - No new long-running daemon, watcher, or scheduler — enforcement rides existing scripts
-  (`queue-plan`, `marathon-drive`, `relay-drive`) and existing state (`.tick/`).
+  (`marathon-plan`, `marathon-drive`, `relay-drive`) and existing state (`.tick/`).
 - No change to the relay containment kernel or `tick` claim semantics (out of scope; see #42/#43).
 - Not a replacement for human judgment — the cap *surfaces and pauses*, the operator decides
   (`--force`); it never silently kills work.

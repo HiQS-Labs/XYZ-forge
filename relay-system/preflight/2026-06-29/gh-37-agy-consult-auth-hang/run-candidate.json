@@ -1,0 +1,84 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-06-29T22:33:40Z",
+  "mode": "gh-bundle",
+  "candidate": {
+    "slug": "gh-37-agy-consult-auth-hang"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/2-WORKING/GH-37-AGY-CONSULT-AUTH-HANG.md"
+    ],
+    "issues": [
+      "37"
+    ],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm",
+    "branch": "main",
+    "commit": "2ae0584eb8b8d721cb052a57d242c7a7c7850ec8"
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "bash validate.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/consult.sh",
+        "pattern": "GH-37"
+      }
+    ],
+    "artifacts": [
+      "relay-automation/consult.sh",
+      "relay-automation/agy-turn.sh"
+    ],
+    "remediation": {
+      "source": "self#asks",
+      "criteria": "Fast agy auth pre-flight: expired auth skips the lane in seconds with the agy login remedy; no 300s hang."
+    },
+    "lanes": {
+      "agy_safe": [],
+      "orchestrator_only": [
+        "bin/",
+        ".tick/",
+        "relay-automation/relay-turn-lib.sh"
+      ]
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/main",
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "2ae0584eb8b8d721cb052a57d242c7a7c7850ec8",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/consult.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "relay-automation/consult.sh",
+      "relay-automation/agy-turn.sh"
+    ],
+    "agy_lane": [],
+    "agy_review_default": true,
+    "coupling_warning": "all artifacts share one top-level dir; treat as coupled",
+    "parallelizable": false,
+    "single_lane_only": true
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "fetch_ok": true,
+  "upstream": "origin/main",
+  "ahead": 0,
+  "behind": 0,
+  "dirty": true,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "952444b9d4bfd145ec4062e662ed01fffc7c0966",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "grep_absent",
+      "path": "relay-automation/relay-loop.sh",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "grep_absent",
+      "path": "test/relay-loop.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}

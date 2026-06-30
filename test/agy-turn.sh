@@ -13,15 +13,21 @@ printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
 printf '.tick/\n' >"$A/.gitignore"
 git -C "$A" add relay.md .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
 
-# Stub `agy`: ignores its flags (--dangerously-skip-permissions --print-timeout <d> --model <m> -p
-# <prompt>); performs a real turn as $RELAY_AGENT and ALWAYS prints a response line to stdout (so the
-# shim's non-empty-output guard sees content). STUB_MODE: bad=off-allowlist file; commitbypass=commits
-# one; spacefile=off-lane path with a space; empty=NO output + NO edits (simulates the silent
-# backend-blocked exit 0 that agy produces under a sandbox).
+# Stub `agy`: answers the shim's auth pre-flight (`whoami`) and ignores the turn flags
+# (--dangerously-skip-permissions --print-timeout <d> --model <m> -p <prompt>). For the real turn it
+# performs the contract as $RELAY_AGENT and ALWAYS prints a response line to stdout (so the shim's
+# non-empty-output guard sees content). STUB_MODE: authfail=whoami exits non-zero; bad=off-allowlist
+# file; commitbypass=commits one; spacefile=off-lane path with a space; empty=NO output + NO edits
+# (simulates the silent backend-blocked exit 0 that agy produces under a sandbox).
 STUB="$WORK/agy"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
+if [ "${1:-}" = whoami ]; then
+  [ "${STUB_MODE:-good}" = authfail ] && { printf 'login required\n' >&2; exit 1; }
+  printf 'agy@example.test\n'
+  exit 0
+fi
 if [ "${STUB_MODE:-good}" = empty ]; then exit 0; fi   # silent sandbox failure: exit 0, no output
 export TICK_REPO_ROOT="$A"
 printf 'agy-stub: model response for %s\n' "$RELAY_AGENT"   # stdout -> non-empty transcript
@@ -98,7 +104,14 @@ run_shim RELAY-TURN-empty agy empty; rc=$?
 [ "$rc" -eq 5 ] && pass "empty-output-on-exit-0 (sandbox-blocked) -> shim fails (exit 5)" || fail "empty output should exit 5, got $rc"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on a phantom/empty turn" || fail "empty turn must not commit"
 
-# --- (7) pre-existing dirty file is NOT reverted; turn still succeeds (MBP16 [1], shared core) ---
+# --- (7) auth pre-flight fail -> exit 5 before the turn mutates anything --------------------------
+seed_token RELAY-TURN-authfail
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-authfail agy authfail; rc=$?
+[ "$rc" -eq 5 ] && pass "auth pre-flight fail -> shim exits 5 with no turn" || fail "authfail should exit 5, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on auth pre-flight failure" || fail "authfail must not commit"
+
+# --- (8) pre-existing dirty file is NOT reverted; turn still succeeds (MBP16 [1], shared core) ---
 seed_token RELAY-TURN-ambient
 printf 'unrelated WIP\n' > "$A/ambient.md"
 run_shim RELAY-TURN-ambient agy good; rc=$?
@@ -106,7 +119,7 @@ run_shim RELAY-TURN-ambient agy good; rc=$?
 [ -f "$A/ambient.md" ] && pass "pre-existing ambient WIP left untouched (not reverted)" || fail "ambient.md was destroyed (regression!)"
 rm -f "$A/ambient.md"
 
-# --- (9) REVIEWER-turn scoping: artifact on ALLOW_PATHS is dropped -> edit reverted (exit 6) ---
+# --- (10) REVIEWER-turn scoping: artifact on ALLOW_PATHS is dropped -> edit reverted (exit 6) ---
 printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$A/relay-rev.md"
 printf 'orig\n' >"$A/artifact.md"
 git -C "$A" add relay-rev.md artifact.md >/dev/null 2>&1; git -C "$A" commit -q -m "seed reviewer fixture" >/dev/null 2>&1
@@ -121,7 +134,7 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay-rev.md" RELAY_TASK=RELAY-TURN-rev AGY_AGENT
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on a reviewer-scoping violation" || fail "should not commit"
 git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean the uncommitted reviewer block before the next case
 
-# --- (10) GH-22: worktree isolation must NOT lose an absolute-ROOT write -------------------
+# --- (11) GH-22: worktree isolation must NOT lose an absolute-ROOT write -------------------
 # Real agy edits the relay file via its ABSOLUTE ROOT path even when CWD=worktree (it treats ROOT as
 # its workspace). The stub models this faithfully: it appends to $RELAY_FILE (= $A/relay.md, an
 # absolute ROOT path). Under RELAY_WORKTREE_ISOLATION=1 the buggy rtl_worktree_end copied the stale
@@ -139,7 +152,7 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-wt AGY_AGENT=agy 
 grep -q "agy-stub" "$A/relay.md" && pass "wt-iso: agy's relay block PRESERVED (GH-22)" || fail "GH-22: agy's relay output LOST (stale worktree copy-back overwrote ROOT)"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "wt-iso: turn committed (output not silently dropped)" || fail "GH-22: no commit — output discarded"
 
-# --- (8) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
+# --- (9) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
 git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "drop .tick gitignore" >/dev/null 2>&1
 seed_token RELAY-TURN-tickexempt

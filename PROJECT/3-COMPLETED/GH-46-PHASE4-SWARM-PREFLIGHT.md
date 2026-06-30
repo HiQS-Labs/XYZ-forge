@@ -1,8 +1,9 @@
 ---
 title: Phase 4 swarm-preflight contract + cross-model hands-free marathon dogfood
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED)
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
+closed: 2026-06-29
 owner: noelsaw1
 branch: main
 gh_issue: 46
@@ -23,7 +24,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **✅ Phase 4 SHIPPED 2026-06-29 via the marathon dogfood** (codex builder, agy reviewer). After 2 runs failed at the #14 codex-self-commit reset, the #14 fix landed and the 3rd run succeeded: codex built `relay-loop.sh --background --cross-model-cmd` (cross-model shim dispatch on `nudge-cross-model`, degrade-to-nudge fallback, pidfile single-turn lock) + 4 `test/relay-loop.sh` cases; agy approved. End-to-end #14 confirmation. `validate.sh` 56/56 (the marathon's gate-fail was a non-hermetic `driver-lock.sh` test, fixed). | **Close #46** (Phase 4 delivered). Optional follow-ups live in #33 (Phase 5 lifecycle / Phase 6 docs) — not required for the cross-model-hands-free win, which is now done. |
+| **✅ Phase 4 SHIPPED 2026-06-29 via the marathon dogfood** (codex builder, agy reviewer). After 2 runs failed at the #14 codex-self-commit reset, the #14 fix landed and the 3rd run succeeded: codex built `relay-loop.sh --background --cross-model-cmd` (cross-model shim dispatch on `nudge-cross-model`, degrade-to-nudge fallback, pidfile single-turn lock) + 4 `test/relay-loop.sh` cases; agy approved. End-to-end #14 confirmation. `validate.sh` 56/56 (the marathon's gate-fail was a non-hermetic `driver-lock.sh` test, fixed). | **✅ CLOSED 2026-06-29.** #46 reconciled to `3-COMPLETED`; all acceptance criteria verified delivered (README row, `--cross-model-cmd` impl, 4 test cases, `validate.sh` green). Optional follow-ups live in #33 (Phase 5 lifecycle / Phase 6 docs) — not required for the cross-model-hands-free win, which is done. |
 
 ## Why this doc exists (relationship to #33)
 
@@ -38,14 +39,14 @@ goal: >
 If the scope below ever drifts from GH-33's Phase 4 section, **this doc wins for execution** and GH-33's
 section should be reconciled to match (it carries only a pointer now, not a second contract copy).
 
-## Asks (acceptance criteria)
+## Asks (acceptance criteria) — ✅ all delivered (verified 2026-06-29)
 
-- [ ] `swarm-preflight --gh-issue 46` reaches `ready` (or `BLOCKED` only on a dirty tree), never `contract missing/invalid`.
-- [ ] `relay-loop.sh --background --cross-model-cmd …` dispatches the cross-model shim on `DECISION: nudge-cross-model`; the pidfile single-turn lock holds (no double-dispatch).
-- [ ] Cross-model CLI absent → degrades to the existing human nudge, no dispatch (never a silent stall); `--claude-agents` semantics preserved.
-- [ ] Containment + token correctness identical to Path A: `relay-turn-lib.sh` untouched, no widened allowlist, no orphaned cross-repo commit (GH-29 hazard). `poll.sh` stays a pure oracle. `relay-drive.sh` (deterministic mode) unchanged.
-- [ ] `test/relay-loop.sh` extended: (a) `nudge-cross-model` + `--background` + `--cross-model-cmd` → BG-DISPATCH of the shim, single-dispatch lock holds; (b) cross-model CLI absent → degrades to nudge, no dispatch.
-- [ ] `relay-automation/README.md` row updated; `bash validate.sh` green.
+- [x] `swarm-preflight --gh-issue 46` reaches `ready` (or `BLOCKED` only on a dirty tree), never `contract missing/invalid`.
+- [x] `relay-loop.sh --background --cross-model-cmd …` dispatches the cross-model shim on `DECISION: nudge-cross-model`; the pidfile single-turn lock holds (no double-dispatch).
+- [x] Cross-model CLI absent → degrades to the existing human nudge, no dispatch (never a silent stall); `--claude-agents` semantics preserved.
+- [x] Containment + token correctness identical to Path A: `relay-turn-lib.sh` untouched, no widened allowlist, no orphaned cross-repo commit (GH-29 hazard). `poll.sh` stays a pure oracle. `relay-drive.sh` (deterministic mode) unchanged.
+- [x] `test/relay-loop.sh` extended: (a) `nudge-cross-model` + `--background` + `--cross-model-cmd` → BG-DISPATCH of the shim, single-dispatch lock holds; (b) cross-model CLI absent → degrades to nudge, no dispatch. (4 `--cross-model-cmd` cases present.)
+- [x] `relay-automation/README.md` row updated; `bash validate.sh` green.
 
 ## Swarm Preflight Contract
 

@@ -1,0 +1,8 @@
+relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact relay-automation/relay-loop.sh,relay-automation/poll.sh,test/relay-loop.sh,relay-automation/README.md \
+  --target-root . \
+  --pre-advance-cmd 'bash validate.sh' \
+  --require-clean

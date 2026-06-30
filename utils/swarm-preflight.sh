@@ -473,13 +473,22 @@ case "$CAND_STATE" in
   ready)     [[ "$READY" -eq 0 ]] && { VERDICT="NOT-READY"; CODE=5; } ;;
 esac
 
-REL_TARGET="$TARGET_ROOT"; [[ "$TARGET_ROOT" == "$ROOT" ]] && REL_TARGET="."
+# GH-51 [1]: emit --target-root ONLY for a FOREIGN target. For a same-repo lane it is redundant AND
+# routes relay-file path normalization through the cross-repo code path, which flags the legitimately
+# edited relay file (it lives in the thread repo, not the target) as off-lane → exit 6, discarding the
+# build. Omit the flag when the target IS this repo so same-repo lanes take the default (correct) path.
+TARGET_ROOT_LINE=""
+# Compare CANONICAL paths: TARGET_ROOT is the symlink-resolved git toplevel, but ROOT may be a raw
+# SWARM_PREFLIGHT_ROOT / a /var→/private/var symlink, so a bare string compare misfires (and would
+# wrongly emit --target-root for a same-repo lane). Resolve both with `pwd -P` before comparing.
+_root_canon="$(cd "$ROOT" 2>/dev/null && pwd -P || printf '%s' "$ROOT")"
+_target_canon="$(cd "$TARGET_ROOT" 2>/dev/null && pwd -P || printf '%s' "$TARGET_ROOT")"
+[[ "$_target_canon" != "$_root_canon" ]] && TARGET_ROOT_LINE=$'\n'"  --target-root $TARGET_ROOT \\"
 INVOCATION="relay-automation/marathon-drive.sh \\
   --phase-brief <packet>/packet.md \\
   --reviewer agy \\
   --builder codex \\
-  --artifact $ART_CSV \\
-  --target-root $REL_TARGET \\
+  --artifact $ART_CSV \\$TARGET_ROOT_LINE
   --pre-advance-cmd '$GATE_CMD' \\
   --require-clean"
 
@@ -535,7 +544,13 @@ for _b6a in "${_b6arts[@]}"; do
   read -r _b6a <<<"$_b6a"; [[ -z "$_b6a" ]] && continue
   [[ -f "$TARGET_ROOT/$_b6a" ]] && GH39_ART_LOC=$((GH39_ART_LOC + $(wc -l <"$TARGET_ROOT/$_b6a" 2>/dev/null || echo 0)))
 done
-GH39_TIMEOUT=300; [[ "$GH39_ART_LOC" -gt 400 ]] && GH39_TIMEOUT=900
+# GH-51 [4]: the old single >400-LOC step left mid-size, multi-file builds (e.g. GH-37: 335 LOC across
+# 4 shims+tests) on the 300s default — below the note's own warning — and the builder was killed
+# mid-turn. Scale by BOTH size and artifact count (each extra file adds build+verify coordination cost).
+GH39_ART_N="${#_b6arts[@]}"
+GH39_TIMEOUT=300
+{ [[ "$GH39_ART_LOC" -gt 200 ]] || [[ "$GH39_ART_N" -ge 3 ]]; } && GH39_TIMEOUT=600
+{ [[ "$GH39_ART_LOC" -gt 400 ]] || [[ "$GH39_ART_N" -ge 4 ]]; } && GH39_TIMEOUT=900
 
 cat >"$OUT_DIR/packet.md" <<EOF
 # Marathon preflight packet — $SLUG
@@ -547,7 +562,7 @@ cat >"$OUT_DIR/packet.md" <<EOF
 - Verdict: $VERDICT
 - Gate: \`$GATE_CMD\`
 - Artifacts: $ART_CSV
-- Suggested turn budget: \`RELAY_TURN_TIMEOUT_S=$GH39_TIMEOUT\` (artifacts ≈ $GH39_ART_LOC LOC; large files need more than the 300s default)
+- Suggested turn budget: \`RELAY_TURN_TIMEOUT_S=$GH39_TIMEOUT\` (sized to ≈ $GH39_ART_LOC LOC across $GH39_ART_N artifact(s); a build that also edits tests needs headroom over the 300s default)
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
 (GUIDING-PRINCIPLES.md §8).

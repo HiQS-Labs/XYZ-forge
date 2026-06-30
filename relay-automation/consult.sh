@@ -3,7 +3,7 @@ set -euo pipefail
 #
 # consult.sh — one-shot cross-model CONSULT (a panel of advisors), repo-local.
 #
-# Fans out the SAME question to Codex and Gemini IN PARALLEL, advisory-only, captures each transcript,
+# Fans out the SAME question to Codex and agy IN PARALLEL, advisory-only, captures each transcript,
 # and leaves the synthesis to the caller (Claude). This is NOT a relay: a relay is an iterative 1:1
 # Producer↔Reviewer loop; a consult is a parallel 1-shot 1:N "second opinion," reconciled once.
 #
@@ -12,26 +12,28 @@ set -euo pipefail
 # (tracked WIP via `git stash create` + untracked-not-ignored files copied in). Any file an advisor
 # writes lands in that disposable worktree and is destroyed with it — the operator's real working tree
 # is NEVER the advisors' surface, so there is nothing to revert and ambient WIP can't be clobbered.
-# (Codex stays `-s read-only` on top of that; Gemini's writes, if any, are contained by the worktree.)
+# (Codex stays `-s read-only` on top of that; agy's writes, if any, are contained by the worktree.)
 #
 # Usage:
-#   consult.sh --prompt-file Q.md  [--out DIR] [--models codex,gemini] [--label SLUG]
-#   consult.sh --prompt "question" [--out DIR] [--models codex,gemini] [--label SLUG]
+#   consult.sh --prompt-file Q.md  [--out DIR] [--models codex,agy] [--label SLUG]
+#   consult.sh --prompt "question" [--out DIR] [--models codex,agy] [--label SLUG]
 #
 # Options:
 #   --prompt-file F   File whose contents are the consult question (it may reference repo paths).
 #   --prompt TEXT     Inline question (mutually exclusive with --prompt-file).
 #   --out DIR         Parent dir for the run (default: relay-system/<today>/). Each run gets its own
 #                     timestamped subdir <label>-<HHMMSS>/ so same-day consults never clobber.
-#   --models CSV      Which advisors to run (default: codex,gemini).
+#   --models CSV      Which advisors to run (default: codex,agy). Legacy `gemini` remains accepted
+#                     as an explicit alias for older tests/callers.
 #   --label SLUG      Run-subdir + transcript stem (default: consult).
 #
 # Env config:
-#   CODEX_BIN / GEMINI_BIN     binaries (default: codex / gemini); tests inject stubs
+#   CODEX_BIN / AGY_BIN        binaries (default: codex / agy); tests inject stubs
+#   GEMINI_BIN                 legacy alias for AGY_BIN when `--models ...gemini` is used explicitly
 #   CODEX_FLAGS                codex sandbox flags (default: -s read-only)
-#   GOOGLE_GENAI_USE_GCA       gemini personal-login auth (default: true)
-#   CONSULT_GEMINI_JSON=1      capture gemini as -o json (enables best-effort cost.tokens) instead of
-#                              readable text (Codex token parsing is still deferred — format un-probed)
+#   AGY_AUTH_TIMEOUT_S         short wall-clock cap for the agy auth probe (`agy whoami`); default 5.
+#                              On failure/time-out consult skips the agy lane fast with an `agy login`
+#                              remedy instead of waiting for the main CONSULT_TIMEOUT watchdog.
 #   CONSULT_ROOT               git root to consult against (default: this repo)
 #   CONSULT_TIMEOUT            per-advisor wall-clock cap in seconds (default: 300). A hung CLI is
 #                              killed and reported as failed, so the other model still degrades gracefully.
@@ -47,11 +49,12 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${CONSULT_ROOT:-"$(cd "$HERE/.." && pwd)"}"
 CODEX_BIN="${CODEX_BIN:-codex}"
-GEMINI_BIN="${GEMINI_BIN:-gemini}"
+AGY_BIN="${AGY_BIN:-${GEMINI_BIN:-agy}}"
+GEMINI_BIN="${GEMINI_BIN:-$AGY_BIN}"
 die()  { printf 'consult: %s\n' "$*" >&2; exit 2; }
 warn() { printf 'consult: %s\n' "$*" >&2; }
 
-PROMPT_FILE=""; PROMPT_TEXT=""; OUT=""; MODELS="codex,gemini"; LABEL="consult"
+PROMPT_FILE=""; PROMPT_TEXT=""; OUT=""; MODELS="codex,agy"; LABEL="consult"
 while (($# > 0)); do
   case "$1" in
     --prompt-file) PROMPT_FILE="${2:-}"; shift 2 ;;
@@ -111,9 +114,9 @@ done < <(git -C "$ROOT" ls-files --others --exclude-standard -z 2>/dev/null)
 # Run an advisor (CWD = throwaway worktree) under a wall-clock cap so a HUNG CLI degrades to a failure
 # (collected as [FAIL]) rather than stalling the whole consult. No dependency on coreutils `timeout`
 # (absent on stock macOS) — a sleep-then-kill watchdog. Output redirection handled here.
-_guarded() {  # <out> <cmd...>
-  local out="$1"; shift
-  local secs="${CONSULT_TIMEOUT:-300}" apid kpid rc=0
+_guarded_with_timeout() {  # <out> <secs> <cmd...>
+  local out="$1" secs="$2"; shift 2
+  local apid kpid rc=0
   ( cd "$WT" && "$@" < /dev/null ) > "$out" 2>&1 &
   apid=$!
   ( sleep "$secs"; kill -9 "$apid" 2>/dev/null ) >/dev/null 2>&1 &
@@ -121,6 +124,24 @@ _guarded() {  # <out> <cmd...>
   wait "$apid" || rc=$?
   kill "$kpid" 2>/dev/null || true; wait "$kpid" 2>/dev/null || true
   [[ "$rc" != 0 ]] && printf '\nconsult: advisor failed or exceeded the %ss cap\n' "$secs" >> "$out"
+  return "$rc"
+}
+_guarded() {  # <out> <cmd...>
+  local out="$1"; shift
+  _guarded_with_timeout "$out" "${CONSULT_TIMEOUT:-300}" "$@"
+}
+agy_auth_preflight() {  # <out> — writes the failure reason into <out> on skip
+  local out="$1" secs="${AGY_AUTH_TIMEOUT_S:-5}" tmp rc=0
+  tmp="${out}.auth"
+  _guarded_with_timeout "$tmp" "$secs" "$AGY_BIN" whoami || rc=$?
+  [[ "$rc" -eq 0 ]] && { rm -f "$tmp"; return 0; }
+  cat "$tmp" > "$out" 2>/dev/null || true
+  if [[ "$rc" -eq 7 ]]; then
+    printf '\nconsult: agy auth pre-flight timed out after %ss; likely expired auth opening an interactive login. Run `agy login` in a normal terminal, then retry.\n' "$secs" >> "$out"
+  else
+    printf '\nconsult: agy auth pre-flight failed (exit %s). Run `agy login` in a normal terminal, then retry.\n' "$rc" >> "$out"
+  fi
+  rm -f "$tmp"
   return "$rc"
 }
 
@@ -131,6 +152,11 @@ run_codex() {
   local cenv=(env); [[ "${CODEX_ALLOW_API_KEY:-0}" == "1" ]] || cenv+=(-u OPENAI_API_KEY)
   # ${_f[@]+...} guards an EMPTY flags array under `set -u` on bash 3.2 (macOS default).
   _guarded "$out" "${cenv[@]}" "$CODEX_BIN" exec ${_f[@]+"${_f[@]}"} "$FULL_PROMPT"
+}
+run_agy() {
+  local out="$1" secs="${CONSULT_TIMEOUT:-300}"
+  agy_auth_preflight "$out" || return $?
+  _guarded "$out" "$AGY_BIN" --dangerously-skip-permissions --print-timeout "${secs}s" -p "$FULL_PROMPT"
 }
 run_gemini() {
   local out="$1"
@@ -151,6 +177,9 @@ for m in "${_models[@]}"; do
     codex)
       f="$RUN_DIR/${LABEL}.codex.md"
       run_codex "$f" & PIDS+=("$!"); PMODELS+=("codex"); POUTS+=("$f") ;;
+    agy)
+      f="$RUN_DIR/${LABEL}.agy.md"
+      run_agy "$f" & PIDS+=("$!"); PMODELS+=("agy"); POUTS+=("$f") ;;
     gemini)
       ext="md"; [[ "${CONSULT_GEMINI_JSON:-0}" == "1" ]] && ext="json"
       f="$RUN_DIR/${LABEL}.gemini.$ext"

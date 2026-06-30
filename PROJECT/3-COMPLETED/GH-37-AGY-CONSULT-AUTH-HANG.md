@@ -1,8 +1,9 @@
 ---
 title: agy consult lane hangs on expired auth — fast pre-flight probe
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED)
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
+closed: 2026-06-29
 owner: noelsaw1
 branch: main
 gh_issue: 37
@@ -22,16 +23,14 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from `1-INBOX` to a marathon-ready capture doc with a Swarm Preflight Contract (2026-06-28). Root cause confirmed: expired token → agy attempts interactive re-auth in a non-interactive context (stdin `/dev/null`, no TTY) → blocks on a `[Y/n]` it can never receive → `consult.sh` SIGKILLs at 300s. | Fire the lane (**Codex builder** — agy is the broken subject, so it cannot reliably build its own fix; agy stays reviewer-only if authed). Add a fast auth pre-flight in the agy shim path; skip the lane in seconds naming `agy auth expired → run \`agy login\``. |
+| **✅ SHIPPED + CLOSED 2026-06-29 via marathon dogfood** (Codex builder + agy reviewer → **Approved**, `validate.sh` **60/60**). Codex added a fast `agy whoami` auth pre-flight to both `agy-turn.sh` and `consult.sh`: on failure the lane exits in seconds (shim exit 5; consult degrades) naming the `agy login` remedy, instead of the 300s interactive-prompt hang. New `agy-turn` test (auth-fail → exit 5, no commit) added; all existing exit-6 containment assertions preserved (personally verified). | **Done.** Marathon landed after surfacing 5 harness defects (see GH-37 dogfood findings, filed separately) — the build itself was correct on the first turn; the blockers were swarm-preflight/marathon harness gaps (timeout sizing, artifact-set scope, leaked-token reuse, self-verify-trips-containment, and the `--target-root .` relay-file off-lane false-positive). |
 
-## Asks (acceptance criteria)
-- [ ] Fast pre-flight auth probe (e.g. a short-timeout `agy whoami`/token check) in the agy shim /
-  `consult.sh`; on failure **skip the agy lane within seconds** with a message naming the remedy
-  (`agy auth expired → run \`agy login\``), not a 300s hang.
-- [ ] Alternatively force non-interactive failure so an expired token exits non-zero immediately.
-- [ ] Document the `agy login` re-auth step where the agy harness is described.
-- [ ] Re-verify: valid auth → agy lane answers; expired auth → consult degrades fast with the real cause.
-- [ ] `bash validate.sh` green; Codex lane behavior unchanged.
+## Asks (acceptance criteria) — ✅ all delivered (verified 2026-06-29)
+- [x] Fast pre-flight auth probe (`agy whoami`) in the agy shim + `consult.sh`; on failure **skip the agy lane within seconds** naming the remedy (`agy login`), not a 300s hang.
+- [x] Forces non-interactive failure: expired token / `whoami` non-zero → shim exits 5 immediately, no turn.
+- [x] Documents the `agy login` re-auth step in both shim headers.
+- [x] Re-verified by the marathon gate: valid auth → agy lane answered (agy reviewed + Approved); auth-fail path covered by a new `agy-turn.sh` test (exit 5, no commit).
+- [x] `bash validate.sh` green (**60/60**); Codex lane behavior unchanged.
 
 ## Lane note
 **Builder = Codex** (deliberate): GH-37 is the agy-auth failure itself, so an agy builder lane would hit

@@ -1,7 +1,7 @@
 ---
 gh_issue: 48
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/48
-title: Generalize queue-plan's zone model for true cross-repo pre-pre-flight
+title: Generalize marathon-plan's zone model for true cross-repo pre-pre-flight
 status: Proposed (1-INBOX — not yet active)
 created: 2026-06-29
 doc_type: feedback
@@ -13,7 +13,7 @@ doc_type: feedback
 
 ## Problem
 
-`utils/queue-plan.sh` (the pre-pre-flight planner) computes swarm-vs-serialize batching from a
+`utils/marathon-plan.sh` (the pre-pre-flight planner) computes swarm-vs-serialize batching from a
 **zone model hardcoded to this repo's architecture**. `zoneOf()` labels each item
 `kernel | shim | independent`:
 
@@ -28,7 +28,7 @@ collapses to `independent` — the classifier has no model of that repo's own co
 `scripts/apple_reminders_helper_app.swift`, which the rebalance QUEUE explicitly flags as
 "one writer at a time."
 
-Separately, queue-plan reads **this** repo's `ROADMAP.md` ledger format; a foreign repo's
+Separately, marathon-plan reads **this** repo's `ROADMAP.md` ledger format; a foreign repo's
 hand-authored queue (e.g. rebalance's `QUEUE-2026-06-27.md`) is a different shape it can't parse.
 
 The generic part already exists: `swarm-preflight`'s **write-set disjointness** (`artifacts[]` /
@@ -36,13 +36,13 @@ The generic part already exists: `swarm-preflight`'s **write-set disjointness** 
 
 ## Goal
 
-Make queue-plan usable as a **true cross-repo pre-pre-flight**: the swarm-vs-serialize decision
+Make marathon-plan usable as a **true cross-repo pre-pre-flight**: the swarm-vs-serialize decision
 should come from **declarative, per-repo collision zones** (or purely from contract write-set
 disjointness), not hardcoded xyz filenames.
 
 ## Ideas (park-and-discuss — not committed)
 
-1. **Configurable zone rules** — a `.queue-plan-zones.json` (or a contract field) declaring
+1. **Configurable zone rules** — a `.marathon-plan-zones.json` (or a contract field) declaring
    serialization zones as path globs + a "max 1 per wave" flag, replacing the hardcoded
    `kernel`/`shim` regexes. xyz ships its current rules as the default config (no behavior change here).
 2. **Contract-only mode** — when every item carries a swarm-preflight contract, derive collision
@@ -50,12 +50,12 @@ disjointness), not hardcoded xyz filenames.
    inference entirely. This is the cheapest path and already correct for repos whose lanes are
    contract-backed (e.g. the rebalance 3-lane queue once each lane has a contract).
 3. **Foreign roadmap/queue input** — `--target-root` + a small queue-format adapter so
-   `queue-plan --target-root <repo>` reads another repo's ledger (or a directory of per-lane
+   `marathon-plan --target-root <repo>` reads another repo's ledger (or a directory of per-lane
    contracts) and emits that repo's wave plan.
 
 ## Acceptance (when worked)
 
-- queue-plan computes a correct swarm/serialize wave plan for an external repo (validated against the
+- marathon-plan computes a correct swarm/serialize wave plan for an external repo (validated against the
   rebalance-OS 3-lane queue) without xyz-specific keyword coupling.
 - A shared write-set across two lanes is detected as a serialize constraint **regardless of repo**
   (the rebalance shared-helper case).
@@ -65,7 +65,7 @@ disjointness), not hardcoded xyz filenames.
 
 Filed 2026-06-29 while planning the rebalance-OS cross-repo marathon dogfood (the ROADMAP queue
 entry). The swarm-vs-relay compute was found to be **generic in `swarm-preflight`** (write-set
-disjointness, `--target-root`) but **xyz-coupled in `queue-plan`** (ledger format + kernel/shim
+disjointness, `--target-root`) but **xyz-coupled in `marathon-plan`** (ledger format + kernel/shim
 keywords). Recommended near-term path: use `swarm-preflight` per lane for cross-repo work today;
-this issue generalizes `queue-plan` so cross-repo *ranking/batching* becomes first-class. Relates to
+this issue generalizes `marathon-plan` so cross-repo *ranking/batching* becomes first-class. Relates to
 the rebalance dogfood ROADMAP entry and GH-33 / #46 (the marathon path itself).

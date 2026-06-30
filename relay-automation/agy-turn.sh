@@ -24,6 +24,8 @@ set -euo pipefail
 #   AGY_FLAGS      — optional extra flags appended to the agy invocation (advanced/override)
 #   AGY_TURN_ROOT  — git root to guard (default: this repo); tests point at a fixture
 #   AGY_LOG        — where to write the agy transcript (default: a $TMPDIR file)
+#   AGY_AUTH_TIMEOUT_S — short wall-clock cap for the auth pre-flight probe (`agy whoami`);
+#                        default 5. On failure/time-out the shim exits 5 with an `agy login` remedy.
 #   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
 #                     async/side-effect containment; off-lane in the worktree → exit 6). Default OFF.
 #
@@ -32,6 +34,9 @@ set -euo pipefail
 #   --dangerously-skip-permissions — auto-approve tool calls (shell for tick, edit for the relay file)
 #   --print-timeout <dur>          — agy's own print-mode wait; pinned to the wall-clock cap so agy
 #                                    returns on its own before the rtl watchdog has to kill it
+#   `agy whoami`                   — cheap pre-flight auth probe; if it fails or hangs, the shim skips
+#                                    the lane fast with "run `agy login`" instead of letting `agy -p`
+#                                    open an interactive auth prompt that deadlocks the headless turn
 #
 #   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
 #                          runaway agy CLI is killed after this many seconds; the turn exits 7.
@@ -54,6 +59,23 @@ source "$HERE/relay-turn-lib.sh"
 ROOT="${AGY_TURN_ROOT:-"$(cd "$HERE/.." && pwd)"}"
 AGY_BIN="${AGY_BIN:-agy}"
 die() { printf 'agy-turn: %s\n' "$*" >&2; exit 2; }
+agy_auth_preflight() {
+  local secs="${AGY_AUTH_TIMEOUT_S:-5}" out rc=0 line
+  out="${TMPDIR:-/tmp}/agy-auth-$$.log"
+  rtl_run_bounded "$secs" "$AGY_BIN" whoami < /dev/null > "$out" 2>&1 || rc=$?
+  [[ "$rc" -eq 0 ]] && { rm -f "$out"; return 0; }
+  if [[ "$rc" -eq 7 ]]; then
+    printf 'agy-turn: agy auth pre-flight timed out after %ss; likely expired auth opening an interactive login. Run `agy login` in a normal terminal, then retry.\n' "$secs" >&2
+  else
+    printf 'agy-turn: agy auth pre-flight failed (exit %s). Run `agy login` in a normal terminal, then retry.\n' "$rc" >&2
+  fi
+  while IFS= read -r line; do
+    [[ -n "$line" ]] || continue
+    printf 'agy-turn: auth pre-flight: %s\n' "$line" >&2
+  done < <(sed -n '1,3p' "$out")
+  rm -f "$out"
+  return 1
+}
 
 me="${RELAY_AGENT:-}"; f="${RELAY_FILE:-}"; t="${RELAY_TASK:-RELAY-TURN}"
 agy_agent="${AGY_AGENT:-}"
@@ -67,6 +89,7 @@ if [[ "$me" != "$agy_agent" ]]; then
   exit 0
 fi
 
+agy_auth_preflight || exit 5
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 
 # Cross-repo footgun guard (consumer feedback KWFS-02 B2): agy reads file paths relative to its

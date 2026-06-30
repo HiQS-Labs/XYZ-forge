@@ -1,8 +1,9 @@
 ---
 title: Leverage the built-in /loop skill to drive relays (adaptive cadence + unify Path A/B)
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED)
 created: 2026-06-27
-updated: 2026-06-28
+updated: 2026-06-29
+closed: 2026-06-29
 owner: noel
 goal: >
   Use the built-in Claude Code /loop skill (recurring + self-paced "dynamic" mode,
@@ -35,7 +36,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 3 shipped** (2026-06-28, inline Opus). `relay-automation/relay-loop.sh --background`: dispatches the turn DETACHED on `run-runner` and returns at once (session freed; scheduler re-invokes next tick), a pidfile is the single-turn lock (`BG-RUNNING` → no double-dispatch; stale pidfile cleared on completion → fresh decision acted on). **Containment inherited** — the backgrounded process is the same runner, so the `relay-turn-lib.sh` boundary is byte-identical (proven by an fg/bg parity test). `poll.sh` stays a pure oracle (reused its `--dry-run`). +6 cases in `test/relay-loop.sh` (**11/11**); README Components row added; **`validate.sh` green**. Phases 0–2 already merged (#35). | **Phase 4 contract authored** (below) → **firing the marathon dogfood** (`swarm-preflight → marathon-drive`, codex builder + agy reviewer): on `nudge-cross-model` launch the cross-model shim as background Bash (reusing Phase 3's `bg_launch` + pidfile lock) instead of a human nudge, with CLI-absent → degrade-to-nudge. Scope-locked to relay-loop.sh/poll.sh/test/README; `relay-turn-lib.sh` is OUT of scope (containment byte-identical). |
+| **✅ CLOSED 2026-06-29 — Phases 0–4 shipped.** Phase 4 (the marquee: Path A/B unification, cross-model relays advancing **unattended**) landed via the **GH-46 marathon dogfood** — codex builder built `relay-loop.sh --background --cross-model-cmd`, agy approved, once [#14](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/14) was fixed. The headline benefit — "walk away from a Codex/agy review" — is delivered. `validate.sh` green. | **Phase 5 (let `/loop` own lifecycle) deferred as optional polish** — the deterministic `poll.sh --deadline` self-close already works; moving lifecycle into `/loop` is a nice-to-have, re-capture as a fresh issue if wanted. **Phase 6 (docs/defaults) done** (README modes row, CHANGELOG bet entry, default-unchanged guarantee, doc promoted). Issue closed. |
 
 ## Effort & Risk (the question asked)
 
@@ -162,39 +163,39 @@ Honest tension: the cheapest safe phase (2) is **not** the headline benefit — 
 - [x] No double-dispatch: the token/lock prevents a second turn firing while one runs. → pidfile lock → `BG-RUNNING` (test: runner ran exactly once across two ticks).
 - [x] `validate.sh` green; `test/relay-loop.sh` 11/11.
 
-## Phase 4 — Unify Path A and Path B (hands-free + cross-model)
+## Phase 4 — Unify Path A and Path B (hands-free + cross-model) ✅ (shipped 2026-06-29 via #46)
 
-- [ ] In the `/loop`-driven supervisor (shape from Phase 0), on `DECISION: run-runner` take the turn; on `DECISION: nudge-cross-model` **launch the cross-model shim (`codex-turn.sh` / `agy-turn.sh`) as background Bash** instead of surfacing a human nudge.
-- [ ] Preserve the `--claude-agents` semantics: an agent genuinely unreachable headless (no CLI on PATH) still degrades to a manual nudge rather than a silent stall.
-- [ ] Terminal `STATUS: Approved|Closed` (and `--deadline`) stop the loop cleanly — a "Changes requested, handed back" turn is *continue*, not a confusing `exit 3`.
+- [x] In the `/loop`-driven supervisor (shape from Phase 0), on `DECISION: run-runner` take the turn; on `DECISION: nudge-cross-model` **launch the cross-model shim (`codex-turn.sh` / `agy-turn.sh`) as background Bash** instead of surfacing a human nudge. → `relay-loop.sh --background --cross-model-cmd <shim>`.
+- [x] Preserve the `--claude-agents` semantics: an agent genuinely unreachable headless (no CLI on PATH) still degrades to a manual nudge rather than a silent stall.
+- [x] Terminal `STATUS: Approved|Closed` (and `--deadline`) stop the loop cleanly — a "Changes requested, handed back" turn is *continue*, not a confusing `exit 3`.
 
 ### QA checklist — Phase 4
 
-- [ ] A relay whose next turn is Codex/agy advances **without** a human nudge when the CLI is on PATH.
-- [ ] Containment + token correctness identical to Path A (no widened allowlist, no orphaned cross-repo commit — see the `rtl_enforce` hazard and GH-29).
-- [ ] `relay-drive.sh` (deterministic mode) remains fully functional and unchanged.
-- [ ] `./validate.sh` green.
+- [x] A relay whose next turn is Codex/agy advances **without** a human nudge when the CLI is on PATH. (Proven by the GH-46 marathon dogfood: codex built it + agy approved.)
+- [x] Containment + token correctness identical to Path A (no widened allowlist, no orphaned cross-repo commit — see the `rtl_enforce` hazard and GH-29). `relay-turn-lib.sh` untouched.
+- [x] `relay-drive.sh` (deterministic mode) remains fully functional and unchanged.
+- [x] `./validate.sh` green. (`test/relay-loop.sh` 15/15.)
 
-## Phase 5 — Let /loop own lifecycle
+## Phase 5 — Let /loop own lifecycle ⏸️ DEFERRED (optional polish)
+
+> **Not required for the closed scope.** The deterministic `poll.sh --deadline` self-close already
+> works for standalone and `/loop` callers alike; moving lifecycle ownership fully into `/loop` is
+> nice-to-have, not a blocker for the hands-free + cross-model headline. Re-capture as a fresh issue
+> if it is ever wanted.
 
 - [ ] Reduce `poll.sh` `--deadline` self-expiry to a pure oracle output (it already emits `DECISION: stop` past the deadline); let the `/loop` mode own start/stop so lifecycle isn't reimplemented in bash.
 - [ ] Keep the bash `--deadline` for the standalone (`/loop`-less) poll usage — do not regress the existing self-close guarantee.
 
-### QA checklist — Phase 5
+## Phase 6 — Docs, defaults, and validation ✅ (done)
 
-- [ ] Standalone `poll.sh --deadline …` still self-closes (no regression for non-`/loop` callers).
-- [ ] The `/loop` mode stops on terminal STATUS and on its own deadline without bash duplicating the timer.
-
-## Phase 6 — Docs, defaults, and validation
-
-- [ ] Document the new mode in `relay-automation/README.md` and the `relay-xyz` SKILL (Path A = deterministic/CI, Path B-fixed = today, Path B-dynamic = adaptive, Unified = hands-free + cross-model).
-- [ ] State the default-unchanged guarantee and the "keep `relay-drive.sh`" rationale.
-- [ ] Add a `CHANGELOG.md` entry recording the bet (Costly: containment/dispatch touch in Phase 4) with the reversibility read and a revisit trigger.
-- [ ] Promote this doc to `PROJECT/2-WORKING/` with the full active-doc contract intact.
+- [x] Document the new mode in `relay-automation/README.md` and the `relay-xyz` SKILL (Path A = deterministic/CI, Path B-fixed = today, Path B-dynamic = adaptive, Unified = hands-free + cross-model). → README Components row + cross-model usage section.
+- [x] State the default-unchanged guarantee and the "keep `relay-drive.sh`" rationale. (README: "without that wrapper-only flag" path; `relay-drive.sh` unchanged.)
+- [x] Add a `CHANGELOG.md` entry recording the bet (Costly: containment/dispatch touch in Phase 4) with the reversibility read and a revisit trigger. → CHANGELOG 2026-06-29 "GH-46 / GH-33 Phase 4 SHIPPED via marathon".
+- [x] Promote this doc to `PROJECT/2-WORKING/` with the full active-doc contract intact. (Now reconciled to `3-COMPLETED`.)
 
 ### QA checklist — Phase 6
 
-- [ ] `./validate.sh` green.
-- [ ] `utils/pdda-run.sh` clean (frontmatter, status table, hardcoded paths, roadmap coverage).
-- [ ] Docs describe every mode; no hardcoded absolute paths in the docs.
-- [ ] `CHANGELOG.md` entry present with the bet recorded.
+- [x] `./validate.sh` green.
+- [x] `utils/pdda-run.sh` clean (frontmatter, status table, hardcoded paths, roadmap coverage).
+- [x] Docs describe every mode; no hardcoded absolute paths in the docs.
+- [x] `CHANGELOG.md` entry present with the bet recorded.

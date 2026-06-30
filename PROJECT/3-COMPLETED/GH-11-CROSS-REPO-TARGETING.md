@@ -1,14 +1,15 @@
 ---
-complexity: medium
-risk: medium
-effort: medium
-ratings_provisional: true
+complexity: low
+risk: low
+effort: low
+ratings_provisional: false
 gh_issue: 11
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11
 title: "relay-xyz: hard to target a repo other than the harness clone (cross-repo reviews)"
-status: Active
+status: Complete (3-COMPLETED)
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-06-30
+closed: 2026-06-30
 owner: Noel (operator) · Claude (producer)
 doc_type: feedback
 goal: >
@@ -25,7 +26,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Ask 1 complete** — `--target-root` flag (parse + non-empty + git-repo validation) **and** the kernel wiring: `relay-turn-lib.sh` routes the whole turn (worktree base + allowlist + file-scoped commit) via `RELAY_TARGET_ROOT`, default unchanged; Codex's empty-string `[Nit]` fixed. Proven by `test/relay-target-root.sh` (7/7) now in the suite — **`validate.sh` 36/36**. | **Asks 2–5** (low-effort docs): surface `consult.sh`'s `CONSULT_ROOT` as a first-class "review a foreign-repo artifact" recipe in `SKILL.md`; the `$TMPDIR` warning; the find-harness credit; the README bring-up example fix. |
+| **✅ ALL ASKS COMPLETE + CLOSED 2026-06-30.** Ask 1 (the `--target-root` flag + `relay-turn-lib.sh` kernel wiring, `test/relay-target-root.sh` 7/7) shipped 2026-06-21. **Asks 2–5 swept 2026-06-30** into `skills/relay-xyz/SKILL.md` — a new cross-repo subsection documents **`--target-root`** (full relay/build landing in a foreign repo; with the #51 same-repo caveat) and **`CONSULT_ROOT`** (one-shot advisory review of a foreign-repo file), with foreign-repo examples (Ask 5), the **`$TMPDIR` absolute-path warning** (Ask 3), and the find-harness-solves-the-inverse note (Ask 4). `skill-extract` + `path-integrity` green (SKILL.md is not tarball-packaged). | Done. |
 
 ## Summary
 

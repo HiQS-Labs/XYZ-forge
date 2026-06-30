@@ -13,9 +13,10 @@ goal: >
   fault — using canary fixtures derived by replaying real telemetry, never hand-authored — before any
   self-reflection loop is wired into the marathon. Gating prerequisite for the deferred Part C endgame.
 complexity: high
-risk: medium
-effort: medium
-ratings_provisional: true
+risk: high
+effort: high
+ratings_provisional: false
+gated: operator-GO (remaining work is the Part C self-improvement loop — touches the marathon, Costly)
 related:
   - PROJECT/1-INBOX/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md
   - PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md

@@ -73,6 +73,39 @@ grep -q "Scope lock" "$R/packet/packet.md" && pass "T1b packet has a scope-lock 
 grep -q "do not run the full gate\|Do NOT run the full gate" "$R/packet/packet.md" && pass "T1b scope-lock forbids self-running the gate" || fail "T1b scope-lock missing no-gate rule"
 grep -q "build it" "$R/packet/packet.md" && pass "T1b acceptance criteria inlined from the capture doc" || fail "T1b acceptance not inlined"
 grep -q "RELAY_TURN_TIMEOUT_S=" "$R/packet/packet.md" && pass "T1b packet recommends a turn budget" || fail "T1b missing turn-budget recommendation"
+# GH-51 [1]: a SAME-REPO lane (root==target, as T1 is) must NOT emit --target-root — it routes relay-file
+# path normalization through the cross-repo code path, flagging the legitimately edited relay file as
+# off-lane (exit 6) and discarding the build (the GH-37 dogfood's root-cause blocker).
+grep -q -- '--target-root' "$R/packet/marathon-invocation.txt" \
+  && fail "T1c same-repo invocation must OMIT --target-root (GH-51 off-lane fix)" \
+  || pass "T1c same-repo invocation omits --target-root (GH-51 off-lane fix)"
+# GH-51 [4]: the small happy fixture (2 artifacts, 0 LOC) keeps the 300s default budget.
+grep -q "RELAY_TURN_TIMEOUT_S=300" "$R/packet/packet.md" \
+  && pass "T1d small build keeps the 300s budget" || fail "T1d expected 300s budget for the small fixture: $(grep RELAY_TURN_TIMEOUT_S "$R/packet/packet.md")"
+
+# ── T16 (GH-51 [1]+[4]): foreign target emits --target-root; 4-artifact build scales budget to 900s ──
+R16="$(make_repo budgetscale '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "src/a.js", "test/a.test.js", "a", "b" ],
+  "remediation": { "source": "self#phases", "criteria": "Phase 1" }
+}' '## Phase 1
+- [ ] build it')"
+out="$(run "$R16" --project-doc "PROJECT/2-WORKING/GH-900-budgetscale.md" --out "$R16/packet" 2>&1)"; rc=$?
+grep -q "RELAY_TURN_TIMEOUT_S=900" "$R16/packet/packet.md" \
+  && pass "T16 GH-51[4]: 4-artifact build scales the budget to 900s" \
+  || fail "T16 expected 900s budget for 4 artifacts: $(grep RELAY_TURN_TIMEOUT_S "$R16/packet/packet.md")"
+# Foreign target (root != target) MUST still emit --target-root (cross-repo build needs it).
+fout="$(SWARM_PREFLIGHT_ROOT="$ROOT" bash "$SP" --target-root "$R16" --project-doc "$R16/PROJECT/2-WORKING/GH-900-budgetscale.md" --out "$R16/packet-foreign" 2>&1)"; frc=$?
+if [[ -f "$R16/packet-foreign/marathon-invocation.txt" ]]; then
+  # emitted path is the symlink-resolved git toplevel, so assert flag PRESENCE (not the raw $R16 path).
+  grep -q -- '--target-root ' "$R16/packet-foreign/marathon-invocation.txt" \
+    && pass "T16b foreign target emits --target-root <repo>" \
+    || fail "T16b foreign target must emit --target-root: $(cat "$R16/packet-foreign/marathon-invocation.txt")"
+else
+  fail "T16b foreign-target packet not written (rc=$frc): $fout"
+fi
 
 # ── T2: stale (fix already landed) → exit 4, no packet ───────────────────────
 R="$(make_repo stale '{

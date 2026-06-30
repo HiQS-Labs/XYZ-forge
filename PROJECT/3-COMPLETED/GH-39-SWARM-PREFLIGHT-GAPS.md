@@ -7,7 +7,7 @@ owner: noelsaw1
 branch: main
 gh_issue: 39
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/39
-related: PR #38 (utils/queue-plan.sh — the pre-pre-flight stage; reuses swarm-preflight contract/fix_probes)
+related: PR #38 (utils/marathon-plan.sh — the pre-pre-flight stage; reuses swarm-preflight contract/fix_probes)
 doc_type: project
 complexity: medium
 risk: medium
@@ -84,7 +84,7 @@ self-blocking (unlike GH-36). Builder Codex or agy; agy reviewer (auth-verified 
 }
 ```
 
-## Relationship to PR #38 (`utils/queue-plan.sh`)
+## Relationship to PR #38 (`utils/marathon-plan.sh`)
 Open PR **#38** adds a **pre-pre-flight** stage — `queue-plan.sh` reviews the ROADMAP ledger, validates
 each item is still real, ranks by new PDDA complexity/risk/effort ratings, and writes a collision-aware
 sequenced queue (≤1 kernel lane/wave). The pipeline becomes **queue-plan → swarm-preflight → marathon**.

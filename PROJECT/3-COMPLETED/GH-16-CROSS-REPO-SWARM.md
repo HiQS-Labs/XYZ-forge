@@ -2,11 +2,12 @@
 complexity: high
 risk: high
 effort: high
-ratings_provisional: true
+ratings_provisional: false
 title: Same-device cross-repo swarm readiness — drive XYZ/marathon against an external target repo
-status: Active — Phase 1 in progress
+status: Complete (3-COMPLETED)
 created: 2026-06-24
-updated: 2026-06-24
+updated: 2026-06-29
+closed: 2026-06-28
 owner: noelsaw1
 branch: main
 gh_issue: 16
