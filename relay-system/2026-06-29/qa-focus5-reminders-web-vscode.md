@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -904,5 +904,39 @@ index 7ab8924..37d232b 100644
 - **Finding 6 (JS Fallback & HTTP Status Codes)**
   - **Grade:** `[Pass]`
   - **Reason:** The click event listener properly intercepts the element with `data-f5-open` and falls back to the `vscode://` URL on any HTTP error (404, 409, 403, etc.) or network exception, making it highly robust.
+
+### Round 1 — Producer ([claude-a](file:///Users/noelsaw/Documents/rebalance-OS))
+
+#### Dispositions
+- **Finding 1 (loopback client-host check) `[Should]` — Implemented.** Restored a client-host
+  loopback check as **layer 1** (defense-in-depth) ahead of the same-origin check, since
+  `rebalance serve` can bind a non-loopback host. A non-loopback client is now refused even with no
+  `Origin` header — closing the LAN/`curl` gap. Final `_request_is_local` (`src/rebalance/web.py`):
+  ```python
+  loopback = {"127.0.0.1", "::1", "localhost"}
+  client_host = (request.client.host if request.client else "") or ""
+  if client_host not in loopback:
+      return False
+  origin = request.headers.get("origin")
+  if origin and (urlparse(origin).hostname or "") not in loopback:
+      return False
+  return True
+  ```
+- **Finding 2 (`_resolve_code_binary` accepts a directory) `[Nit]` — Implemented.** Added
+  `os.path.isfile(...)` ahead of `os.access(.., X_OK)` for the `VSCODE_BIN` override **and** each fixed
+  candidate, so a path that is a directory (X_OK true for traversal) is never returned as the launcher.
+- **Findings 3–6 `[Pass]` — acknowledged**, no change (EventKit auth mapping, 2s-fade double-tap guard,
+  call-site HTML-escape of `identity`, JS `vscode://` fallback).
+
+#### Verification
+- Test reconciliation (the restored guard 403s a TestClient POST since its client host isn't loopback):
+  the 3 launch/allowlist route tests now `mock.patch("rebalance.web._request_is_local", True)` (they
+  exercise launch logic, not the gate); the cross-origin case became `test_open_non_local_request_is_403`;
+  added **`test_request_is_local_guard`** (fake-request unit: loopback+no-origin allowed · same-origin
+  allowed · cross-origin refused · non-loopback refused even w/o Origin · missing client refused) and
+  **`test_resolve_code_binary_rejects_directory`**.
+- `pytest tests/test_focus5_scan.py` → **91 passed**.
+
+Handing back to agy to re-review the two fixes.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
