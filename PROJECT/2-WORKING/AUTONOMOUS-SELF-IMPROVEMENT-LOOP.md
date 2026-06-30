@@ -1,10 +1,16 @@
 ---
 title: Autonomous self-improvement loop (the LOOPS.md endgame) — Part C
 slug: autonomous-self-improvement-loop
-status: Deferred
+status: Active
 created: 2026-06-16
-updated: 2026-06-21
+updated: 2026-06-29
 owner: Noel (operator) · Claude (producer)
+gh_issue: 50
+branch: feat/self-improvement-loop
+complexity: high
+risk: high
+effort: high
+ratings_provisional: true
 related:
   - PROJECT/1-INBOX/LOOPS.md                                      # the endgame this realizes
   - PROJECT/3-COMPLETED/MARATHON-HARNESS.md                       # the Part A convergence loop this turns into optimization
@@ -25,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Safety cage complete** — worktree isolation (Phase 3.6 ✅), per-turn caps (R5 ✅), epoch fencing (Part B Phase 1 ✅): the three trust prerequisites are already shipped. | **Gated — do not start.** Build the remaining prerequisites first (cumulative budget ceiling, `--measure-cmd` metric harness, oracle-immutability guard, champion/challenger state, held-out validation, full cost observability). |
+| **BUILT + dogfooded 2026-06-29 (autonomous /loop).** All 6 prerequisites shipped green + the composed loop + QA gates + a real-target dogfood. The loop optimized a real file **6 → 2 lines** while a real oracle preserved the required content, then **halted on plateau** — accept/reject/rollback, no-regress, provenance all proven end-to-end. Branch `feat/self-improvement-loop` (off the GH-40 lineage; `main` merged for the #14-fixed kernel). `validate.sh` **68 → 69** (10 new loop tests). | **Ship (todo 13):** decisions/ record (the Costly autonomy bet), CHANGELOG, open the PR into `main`. Then the **operator-gated real-agent dogfood**: plug `marathon-drive` into `--build-cmd` to drive a live Codex/agy builder (spends real tokens → not run unattended). |
 
 ---
 
@@ -84,6 +90,33 @@ loop — the LOOPS.md endgame — without sacrificing the trust properties Parts
 - [ ] **No-regress:** the emitted champion's metric ≥ baseline and oracle-passing — always; a losing run ships *nothing*, never a worse artifact.
 - [ ] **Provenance:** every accept/reject + metric + spend logged deterministically (feeds R4 observability).
 - [ ] **Determinism litmus:** same seed/target → same champion, or the metric noise is explicitly bounded and disclosed.
+
+### Built — 2026-06-29 (autonomous /loop)
+
+All six prerequisites + the composed loop + the QA gates are shipped on `feat/self-improvement-loop`,
+each with a test wired into `validate.sh` (**69/69**). The checklists above are satisfied by:
+
+| Prerequisite / gate | Shipped as | Test |
+|---|---|---|
+| Metric harness (`--measure-cmd`) | `relay-automation/measure.sh` — deterministic scalar, `--check-deterministic`, floor/exact | `test/measure.sh` 12/12 |
+| Cumulative stop / guaranteed halt | `relay-automation/loop-stop.sh` — target · iteration-cap · budget · plateau | `test/loop-stop.sh` 13/13 |
+| Oracle-immutability | `relay-automation/oracle-guard.sh` — `ALLOW_PATHS ∩ oracle = ∅` (reuses `src/paths.js`) | `test/oracle-guard.sh` 9/9 |
+| Champion/challenger + provenance | `relay-automation/champion.sh` — accept-on-improve / rollback-on-regress / `provenance.jsonl` | `test/champion.sh` 13/13 |
+| Held-out anti-gaming | `relay-automation/heldout-check.sh` — visible-gain + held-out-loss ⇒ veto | `test/heldout-check.sh` 10/10 |
+| Cost observability | `relay-automation/loop-cost.sh` — seconds=exact universal; tokens exact except cost-blind agy | `test/loop-cost.sh` 8/8 |
+| **The loop** | `relay-automation/improve-loop.sh` — composes all six | `test/improve-loop.sh` 11/11 |
+| QA-checklist gates | termination · un-gameable · no-regress · provenance · **determinism litmus** | `test/improve-loop-qa.sh` 7/7 |
+
+**Dogfood (real bounded target):** `test/improve-loop-dogfood.sh` runs the loop on a real file —
+shrink line-count (minimize) under a real oracle that requires both `KEEP:` lines to survive. Result:
+the loop drove the file **6 → 2 lines** (4 accepts), **rolled back** the no-op iterations, and **halted
+on plateau** once no removable lines remained; the oracle held (both `KEEP:` lines preserved), and the
+champion (2 lines) is what shipped — a losing iteration shipped nothing. Provenance recorded every
+accept/reject. 7/7.
+
+**Not yet run — operator-gated:** the **real-agent dogfood**. The loop's `--build-cmd` is pluggable;
+plugging `marathon-drive` drives a live Codex/agy builder per iteration (the production path). It spends
+real tokens and needs auth, so it is **not** fired unattended — it's the operator's GO after merge.
 
 > **Why this is the capstone, not a side-quest:** Part A proved the loop *runs*; Part B proves it
 > *survives failure*; Part C is the only track where the system changes its own artifacts toward a goal
