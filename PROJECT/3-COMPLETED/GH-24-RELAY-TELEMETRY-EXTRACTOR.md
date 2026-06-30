@@ -2,11 +2,12 @@
 complexity: low
 risk: low
 effort: low
-ratings_provisional: true
+ratings_provisional: false
 title: relay telemetry extractor — on-demand ETL to focus5float health feed
-status: Active — intake 2026-06-25; script authored
+status: Complete (3-COMPLETED)
 created: 2026-06-25
-updated: 2026-06-25
+updated: 2026-06-30
+closed: 2026-06-30
 owner: noelsaw1
 branch: main
 gh_issue: 24
@@ -23,7 +24,7 @@ goal: >
 
 | Most recently completed | What's next |
 |---|---|
-| GH-24 opened + `utils/telemetry/extract-relay-telemetry.sh` authored 2026-06-25. | Run against relay-system/ to validate output, close issue. |
+| **✅ VALIDATED + CLOSED 2026-06-30.** `utils/telemetry/extract-relay-telemetry.sh` run against live `relay-system/` (2026-06-27→06-30): **14 records, valid JSON, exact schema** (`health/title/description/updatedAt`), health histogram 8 green / 4 orange / 2 red, mapping correct (green = STATUS Closed/Approved). Output: `relay-system/combined/aggregated-2026-06-27-to-2026-06-30.json`. | Done. (Output-only tool — no `validate.sh` integration by design; re-run on demand with `--from/--to`.) |
 
 ## Scope
 

@@ -1,0 +1,86 @@
+[
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 QA #73 coupon bulk rebuild (KISS-woo-fast-search)",
+		"description": "Relay completed: STATUS Closed (round 1 / 4).",
+		"updatedAt": "2026-06-28T04:36:41Z"
+	},
+	{
+		"health": "red",
+		"title": "QA Review Packet \u2014 KISS-woo-fast-search issue #73 (coupon lookup bulk rebuild)",
+		"description": "Relay has no VERDICT in log: STATUS unknown. Possibly abandoned.",
+		"updatedAt": "2026-06-28T04:36:41Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 QA review: PDDA sync-to-other-repos plan",
+		"description": "Relay in progress or stalled: STATUS Open (round 1 / 4).",
+		"updatedAt": "2026-06-28T06:31:22Z"
+	},
+	{
+		"health": "orange",
+		"title": "Relay review \u2014 PR #77 \"Resolve #61 audit findings\" (kissplugins/KISS-woo-fast-search)",
+		"description": "Relay in progress or stalled: STATUS Open.",
+		"updatedAt": "2026-06-27T17:50:39Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Review GH-36 fix: --add-dir .tick writable-root for headless Codex under worktree isolation",
+		"description": "Relay completed: STATUS Approved (round 1 / 2).",
+		"updatedAt": "2026-06-28T15:18:06Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 QA: queue-plan.sh + PDDA complexity/risk/effort ratings system",
+		"description": "Relay completed: STATUS Approved, VERDICT: FAIL (round 5 / 5).",
+		"updatedAt": "2026-06-28T23:46:30Z"
+	},
+	{
+		"health": "red",
+		"title": "RELAY \u00b7 rpr skill review (giant-brains 3f83f46)",
+		"description": "Relay failed: STATUS Open, VERDICT: FAIL (round 1 / 4).",
+		"updatedAt": "2026-06-29T03:44:37Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 GH-9: batch incoming ShipStation shipment webhooks (queue + Action Scheduler worker)",
+		"description": "Relay completed: STATUS Approved (round 2 / 4).",
+		"updatedAt": "2026-06-29T22:29:41Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Review GH-39 slice 1: swarm-preflight gate + artifact-path validation (A1-A3)",
+		"description": "Relay completed: STATUS Approved, VERDICT: PASS (round 1 / 2).",
+		"updatedAt": "2026-06-29T03:48:39Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 GH-40 branch code QA (Codex review)",
+		"description": "Relay completed: STATUS Closed (round 3 / 4).",
+		"updatedAt": "2026-06-29T21:32:50Z"
+	},
+	{
+		"health": "green",
+		"title": "Marathon Phase gh37f",
+		"description": "Relay completed: STATUS Approved.",
+		"updatedAt": "2026-06-29T23:41:58Z"
+	},
+	{
+		"health": "green",
+		"title": "RELAY \u00b7 Review PDDA install.sh",
+		"description": "Relay completed: STATUS Approved, VERDICT: PASS (round 2 / 4).",
+		"updatedAt": "2026-06-30T01:31:26Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 QA PR #77 remediation (KISS-woo-fast-search)",
+		"description": "Relay in progress or stalled: STATUS Open (round 1 / 4).",
+		"updatedAt": "2026-06-29T15:40:51Z"
+	},
+	{
+		"health": "orange",
+		"title": "RELAY \u00b7 QA review: Focus5 reminders panel + card restack + web vscode focus-if-open",
+		"description": "Relay in progress or stalled: STATUS Open (round 1 / 4).",
+		"updatedAt": "2026-06-30T02:06:12Z"
+	}
+]
