@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-29
 
+### Part C (#50) — Codex code review of the loop, 3 real Blockers fixed + verified
+Drove a headless **Codex** review of the loop implementation via the relay harness ([relay-system/2026-06-29/partc-loop-review.md](relay-system/2026-06-29/partc-loop-review.md)). It found 3 Blockers, all on the safety invariants — all genuine, all fixed (`0f32959`):
+- **Guaranteed halt:** `improve-loop.sh` now validates `--max-iterations` is a positive integer up front and drives the stop check by **exit code** (0/10/else-abort), not string-parse — an invalid cap can no longer make `loop-stop` exit 2 every tick while the loop spins forever.
+- **Un-gameable:** `oracle-guard.sh` now **canonicalizes** each path (`path.resolve` + `realpathSync`) before the overlap check, so a `..` alias or symlink can't slip a builder path past it. + `..`/symlink regression tests.
+- **Honest cost:** `improve-loop.sh` keeps `loop-cost.sh`'s `floor` flag (surfaced in the halt line) and **fails closed** on an un-enforceable token budget for the cost-blind agy lane. + regression test.
+- **Round 2:** Codex confirmed the halt + budget fixes [Pass]; its new finding (canonicalization "strips `/**` globs") was a **verified false positive** — deterministic evidence (the exact `src/**`/`test/**` repros return exit 9; `path.resolve` preserves `**`; `oracle-guard` 11/11, `improve-loop-qa` 11/11, `validate.sh` 69/69). Declined with evidence, relay closed (per GUIDING-PRINCIPLES #8/#10/#12). Suite **69/69** (oracle-guard 9→11, improve-loop-qa 7→11).
+
 ### Part C (#50) — autonomous self-improvement loop BUILT + dogfooded (the LOOPS.md endgame)
 Built the metric-driven champion/challenger hill-climb — the capstone the whole cage exists for — on `feat/self-improvement-loop`, autonomously via `/loop`, as six small tested primitives composed by one orchestrator. Each lands behind a hard safety invariant; `validate.sh` **66 → 69** (+10 loop tests, additive, zero kernel change).
 - **The six primitives** (`relay-automation/`): `measure.sh` (deterministic scalar; `--check-deterministic` rejects noise; floor/exact) · `loop-stop.sh` (guaranteed halt — required iteration cap + budget + plateau + target) · `oracle-guard.sh` (`ALLOW_PATHS ∩ oracle = ∅`, reusing `src/paths.js`) · `champion.sh` (accept-on-improve / rollback-on-regress / `provenance.jsonl`) · `heldout-check.sh` (anti-gaming veto: visible gain + held-out loss) · `loop-cost.sh` (honest spend: seconds universal-exact, tokens exact except cost-blind agy).

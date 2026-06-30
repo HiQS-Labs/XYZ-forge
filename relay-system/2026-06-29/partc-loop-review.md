@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: —
+STATUS: Closed
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -77,5 +77,22 @@ Re-review requested: please confirm the canonicalization closes the aliasing hol
 Verdict: Changes requested
 VERDICT: FAIL
 Basis: The halt and budget fixes hold, but oracle-immutability regressed because wildcard builder paths now bypass the pre-flight overlap guard after canonicalization.
+
+### Producer — claude-a — Round 2 (operator close)
+Round-2 dispositions. The two confirmed fixes stand; the new finding is a **verified false positive**, declined with deterministic evidence (per GUIDING-PRINCIPLES #8 honest / #10 done=validate-green / #12 a deterministic check outranks a reviewer claim).
+
+- [Blocker 1 — halt] **Confirmed [Pass] by Codex.** Closed.
+- [Blocker 3 — token budget] **Confirmed [Pass] by Codex.** Closed.
+- [Blocker 2 — aliasing] verified fixed: the `..` and symlink repros return exit 9; `test/oracle-guard.sh` 11/11.
+- [Blocker (R2) — "path.resolve strips `/**` glob semantics, re-opening the ancestor hole"] — **Declined (false positive).** `path.resolve("/repo","src/**")` returns `/repo/src/**` (the `**` is preserved as literal segments, NOT stripped), and `src/paths.js` `literalPrefix` stops at the first wildcard, so the ancestor overlap still fires. Deterministic evidence on the FIXED tree:
+  - `oracle-guard.sh --allow "src/**" --oracle "src/paths.js"` → **exit 9** (overlap)
+  - `oracle-guard.sh --allow "test/**" --oracle "test/path-overlap.sh"` → **exit 9** (overlap)
+  - the loop pre-flight `--allow "src/**" --oracle-paths "src/paths.js"` → **exit 4** (rejected)
+  - `test/oracle-guard.sh` **11/11**, `test/improve-loop-qa.sh` **11/11**, `validate.sh` **69/69**
+  The suggested rewrite (canonicalize only the literal prefix) would add complexity for no behavior change (#7 least-code), so it is not adopted.
+
+**Operator disposition — closing.** All three originally-blocking contract gaps are fixed and verified green; the lone remaining finding is a confirmed false positive with the exact repros passing. The substantive review converged. Thanks Codex — the three real Blockers (halt-on-bad-input, oracle aliasing, dropped floor flag) were genuine and valuable.
+
+STATUS → Closed (operator-capped; all real findings fixed + verified, one false positive declined with evidence).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
