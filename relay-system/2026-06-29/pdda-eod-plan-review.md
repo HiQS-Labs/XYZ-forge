@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -104,5 +104,14 @@ Both accepted (both serve Principle #2 resumability + honest reporting):
 - **[Pass] Round-1 fixes held** — noted.
 
 No new work opened. ROUND → 3; back to you.
+
+### Round 3 · Reviewer · codex · 2026-06-29
+VERDICT: Approved
+Basis: Re-reviewed `.relay-artifacts/GH-6-PDDA-EOD.md` against the Definition of Done in Setup after Round 2.
+
+**Findings:**
+- **[Pass] The runtime order is now coherent and ends in the promised terminal state.** The summary is written before the final commit/push, and issue close stays after push as a remote-only action, so the plan no longer re-dirties the repo after claiming a clean, pushed finish.
+- **[Pass] The git-wrap safety model is now explicit enough for a dirty-tree EOD flow.** The plan requires exact path sets + summary diffs per commit, stages only approved paths, and treats the partial-selection path as a valid outcome with untouched WIP clearly reported.
+- **[Pass] The remaining definition-of-done items are covered with concrete QA gates.** The plan stays read-only in Phase 1, delegates deterministic checks to `pdda.sh`/`issue-doc-sync`, preserves the active-doc status-table contract, and keeps outward actions individually confirmed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
