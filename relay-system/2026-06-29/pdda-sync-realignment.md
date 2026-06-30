@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -69,5 +69,27 @@ Basis: Textual review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` against 
 - **[Should] Phase 3 duplicates registry ownership instead of keeping `install.sh` canonical.** Context/Design say the registry foundation is already shipped and `install.sh` writes `~/.config/pdda/registry.tsv` on every install/upgrade, but Phase 3 still says `register` should run `install.sh` and then "append to the registry." That creates two writers for the same fact and directly cuts against GUIDING-PRINCIPLES #4 / the doc's own DRY story. Concrete fix: rewrite Phase 3 so `register` delegates the initial copy + registry write to `install.sh` (or a shared helper) and only seeds sync state/manifest snapshot afterward; do not describe a second append path unless the design explicitly moves registry writes out of `install.sh`.
 - **[Should] Phase 5 has a leftover location contradiction about the registry.** The doc correctly says the registry lives in `${XDG_CONFIG_HOME:-$HOME/.config}/pdda/registry.tsv`, but Phase 5 says to note in `.gitignore` that `temp/` holds "the registry/state/manifest/backups." `temp/` does not hold the registry under this design. Concrete fix: change that Phase-5 docs bullet to say `temp/` holds sync state, expanded-manifest snapshots, backups, log, and lockfiles, while the registry remains machine-local under XDG config.
 - **[Pass] The trigger/manifest/deletion realignment is otherwise coherent.** `goal`, Realignment, Context, Phases 2/4, and Resolved decisions all consistently describe manual `push` as primary, launchd as optional, and the manifest as auto-regenerated rather than static.
+
+### Round 1 · Producer · claude-a
+**Dispositions** — all 3 open findings actioned in the artifact; no new work added beyond the fixes.
+
+- **[Blocker] Delete-mirror manifest-poisoning → Implemented.** Replaced the vague "large-deletion
+  abort" with an explicit **manifest-poisoning guard** in Design + Phase 2. The delete phase now aborts
+  before touching ANY target on: (a) any declared root resolving to **zero** tracked files; (b) the
+  expanded manifest **empty after being non-empty**; (c) **shrink** beyond a threshold (default 25%,
+  `PDDA_SYNC_MAX_SHRINK`). Each abort logs the offending root + prior/current counts; override only via
+  an explicit `--force-delete` operator ack. **Copies are never gated** by the guard. Added a
+  falsifiable Phase-2 QA gate: point a root at an empty/non-existent path (or empty the manifest) ⇒
+  delete aborts, copies still apply, non-zero exit with reason, `--force-delete` required.
+- **[Should] Phase 3 double registry writer → Implemented.** Rewrote Phase 3 to name `install.sh` the
+  **single registry writer** (it already records the target on every run). `register` no longer writes
+  the registry — after `install.sh` returns it only seeds the per-target sync **state stamps + manifest
+  snapshot** under `temp/`. The "append to the registry" path is gone. Resolves the two-writer / #4 issue.
+- **[Should] Phase 5 registry-location contradiction → Implemented.** The Phase 5 `.gitignore` note now
+  says `temp/` holds sync **state, expanded-manifest snapshots, backups, run log, and lockfile**; the
+  registry stays machine-local under `~/.config/pdda/registry.tsv`, **never in `temp/`**.
+- **[Pass] Realignment coherence** — acknowledged, no action.
+
+Handing back for re-review. ROUND bumped to 2/4.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
