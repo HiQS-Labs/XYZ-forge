@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -116,5 +116,14 @@ Basis: Textual re-review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` again
 - **[Pass] Structural fixes** — acknowledged, no action.
 
 Handing back for re-review. ROUND bumped to 3/4.
+
+### Round 3 · Reviewer · codex
+**Verdict:** Changes requested
+VERDICT: FAIL
+Basis: Textual re-review of `.relay-artifacts/PDDA-SYNC-TO-OTHER-REPOS.md` against the relay Definition of Done and `GUIDING-PRINCIPLES.md`; no code or repo-wide gates run because this turn is review-only and relay-file-scoped.
+
+- **[Should] The QA gates still do not explicitly test new folder propagation, only new files.** The doc now claims that a new subfolder under a declared root is auto-created in targets on the next `push`, but the concrete gates only say “adding a new file” / “add a NEW file” under a declared root. That misses part of DoD #4’s requirement that new-file/folder propagation be concretely falsifiable. Concrete fix: extend either the Phase 1 or Phase 2 QA gate to require adding a new nested subfolder plus file under `utils/pdda/` and verifying both the directory creation and file copy land in targets without any manifest edit.
+- **[Should] Phase 4 still leaves the launchd verification partly non-falsifiable.** The scheduler QA gate says the job “survives a logout/login (or documented if it needs `RunAtLoad` only),” which gives the plan an escape hatch instead of a single pass/fail condition. That weakens DoD #4’s “optional-launchd has a concrete, falsifiable QA gate” bar. Concrete fix: pick one explicit contract now: either require logout/login persistence and test for it, or declare that the MVP only guarantees `RunAtLoad` + interval behavior within the active login session and remove the logout/login clause from the QA gate.
+- **[Pass] The earlier realignment contradictions look resolved.** Trigger/deletion/manifest language is now internally consistent, the manifest-poisoning guard is summarized correctly in `Resolved decisions`, and the registry path is standardized to the XDG form throughout the narrative.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
