@@ -2,7 +2,9 @@
 # test/pdda-roadmap-coverage.sh — ROADMAP coverage must include active docs and parked GH inbox captures
 source "$(dirname "$0")/_setup.sh" pdda-roadmap-coverage
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-CHECK="$ROOT/utils/pdda-check-roadmap-coverage.sh"
+# Consolidated runtime: roadmap-coverage is now a subcommand of the single utils/pdda/pdda.sh dispatcher.
+CHECK="$ROOT/utils/pdda/pdda.sh"
+CHECK_ARGS="roadmap-coverage"
 TMP="$WORK/pdda"
 
 mkdir -p "$TMP/PROJECT/1-INBOX" "$TMP/PROJECT/2-WORKING" "$TMP/PROJECT/4-MISC"
@@ -53,7 +55,7 @@ OUTPUT="$(
   PDDA_INBOX_DIR="$TMP/PROJECT/1-INBOX" \
   PDDA_ROADMAP="$TMP/ROADMAP.md" \
   PDDA_ACTIVITY_LOG="$TMP/activity.jsonl" \
-  bash "$CHECK" 2>&1
+  bash "$CHECK" $CHECK_ARGS 2>&1
 )"
 STATUS=$?
 set -e
@@ -77,7 +79,7 @@ PDDA_WORKING_DIR="$TMP/PROJECT/2-WORKING" \
 PDDA_INBOX_DIR="$TMP/PROJECT/1-INBOX" \
 PDDA_ROADMAP="$TMP/ROADMAP.md" \
 PDDA_ACTIVITY_LOG="$TMP/activity.jsonl" \
-bash "$CHECK" >/dev/null 2>&1 \
+bash "$CHECK" $CHECK_ARGS >/dev/null 2>&1 \
   && pass "coverage check passes once the GH inbox capture is parked in ROADMAP.md" \
   || fail "coverage check still failed after adding the GH inbox capture to ROADMAP.md"
 

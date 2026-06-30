@@ -12,9 +12,9 @@ goal: >
   (not replacing) the blocking model-free supervisor relay-drive.sh of Path A.
   Net target: one relay mode that is BOTH hands-free AND cross-model.
 doc_type: project
-complexity: high
-risk: high
-effort: high
+complexity: 4
+risk: 4
+effort: 4
 ratings_provisional: true
 non_goals:
   - Not replacing relay-drive.sh — its blocking, model-free determinism stays the unattended/CI mode

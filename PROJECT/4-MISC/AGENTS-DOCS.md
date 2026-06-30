@@ -148,6 +148,6 @@ repo-root `.pdda-mode` file); see `PROJECT/PDDA.md` "Enforcement modes". A fresh
 It should point to project docs. It should not become the place where phase-by-phase execution detail lives,
 except for a short exception note when a pointer would hide something operationally important.
 
-This rule is enforced deterministically by `utils/pdda-check-roadmap.sh` (errors on task checklists and
-`### Checklist` / `### QA checklist` headings, warns on sprawl) plus the `utils/pdda-doc-ready.sh` LLM
+This rule is enforced deterministically by `utils/pdda/pdda.sh roadmap` (errors on task checklists and
+`### Checklist` / `### QA checklist` headings, warns on sprawl) plus the `utils/pdda/pdda.sh doc-ready` LLM
 rubric for the fuzzier cases — and the roadmap carries a top banner restating the contract.

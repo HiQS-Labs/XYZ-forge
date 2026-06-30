@@ -7,9 +7,9 @@ updated: 2026-06-29
 owner: Noel (operator) · Claude (producer)
 gh_issue: 50
 branch: feat/self-improvement-loop
-complexity: high
-risk: high
-effort: high
+complexity: 4
+risk: 4
+effort: 4
 ratings_provisional: true
 related:
   - PROJECT/1-INBOX/LOOPS.md                                      # the endgame this realizes

@@ -1,7 +1,7 @@
 ---
-complexity: low
-risk: low
-effort: low
+complexity: 2
+risk: 2
+effort: 2
 ratings_provisional: false
 title: "relay-to-issue — post-relay transcript → checklist GitHub issue"
 status: Active

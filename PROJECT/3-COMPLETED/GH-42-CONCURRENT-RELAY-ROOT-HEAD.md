@@ -1,7 +1,7 @@
 ---
-complexity: low
-risk: medium
-effort: low
+complexity: 2
+risk: 3
+effort: 2
 title: Concurrent relay/marathon on one clone resets ROOT HEAD (single-writer guard)
 status: Completed
 created: 2026-06-28

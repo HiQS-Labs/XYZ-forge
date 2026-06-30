@@ -1,7 +1,7 @@
 ---
-complexity: high
-risk: medium
-effort: high
+complexity: 4
+risk: 3
+effort: 4
 ratings_provisional: false
 title: Adversarial hardening — commercial-viability track (Part B)
 slug: adversarial-hardening

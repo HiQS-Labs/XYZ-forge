@@ -1,7 +1,7 @@
 ---
-complexity: high
-risk: high
-effort: medium
+complexity: 4
+risk: 4
+effort: 3
 ratings_provisional: false
 title: "Relay containment-guard hardening — concurrent-commit safety + no agent self-commit"
 status: Complete (3-COMPLETED)

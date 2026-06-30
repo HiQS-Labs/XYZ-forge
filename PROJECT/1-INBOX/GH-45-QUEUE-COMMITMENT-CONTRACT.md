@@ -5,9 +5,9 @@ title: QUEUE 'must-complete' commitment contract + anti-rabbit-hole / WIP-discip
 status: Proposed (1-INBOX — not yet active)
 created: 2026-06-28
 doc_type: feedback
-complexity: medium
-risk: medium
-effort: medium
+complexity: 3
+risk: 3
+effort: 3
 ratings_provisional: true
 related:
   - PROJECT/3-COMPLETED/MARATHON-PLANNER.md

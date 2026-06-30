@@ -12,9 +12,9 @@ goal: >
   Prove double-blind that a Reviewer agent rejects a poisoned "optimization" and catches a seeded
   fault — using canary fixtures derived by replaying real telemetry, never hand-authored — before any
   self-reflection loop is wired into the marathon. Gating prerequisite for the deferred Part C endgame.
-complexity: high
-risk: high
-effort: high
+complexity: 4
+risk: 4
+effort: 4
 ratings_provisional: false
 gated: operator-GO (remaining work is the Part C self-improvement loop — touches the marathon, Costly)
 related:

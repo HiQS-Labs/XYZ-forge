@@ -1,7 +1,7 @@
 ---
-complexity: high
-risk: high
-effort: high
+complexity: 4
+risk: 4
+effort: 4
 ratings_provisional: false
 title: Same-device cross-repo swarm readiness — drive XYZ/marathon against an external target repo
 status: Complete (3-COMPLETED)

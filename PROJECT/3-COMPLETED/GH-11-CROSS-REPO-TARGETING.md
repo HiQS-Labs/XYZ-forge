@@ -1,7 +1,7 @@
 ---
-complexity: low
-risk: low
-effort: low
+complexity: 2
+risk: 2
+effort: 2
 ratings_provisional: false
 gh_issue: 11
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11
