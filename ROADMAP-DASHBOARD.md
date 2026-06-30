@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 19 items | Tally: 🟢 1 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 18 items | Tally: 🟢 0 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -25,7 +25,6 @@ Summary: 19 items | Tally: 🟢 1 · 🟡 6 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 | Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Marathon candidate · Apple Reminders (rebalance-OS, cross-repo) | — | — |
-| GH-19 · relay-xyz skill-skip durability | 🟢 | [relay-automation/hooks/relay-xyz-guard.sh](relay-automation/hooks/relay-xyz-guard.sh) · [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) · [GH-19-RELAY-XYZ-SKILL-GUARD.md](PROJECT/1-INBOX/GH-19-RELAY-XYZ-SKILL-GUARD.md) |
 | Tooling · agy reliability testing | ⏸️ | [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md) |
 | Tooling · front-door onboarding health | 🟡 | [FRONTDOOR.md](FRONTDOOR.md) · [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md) |
 | PDDA · feedback-synthesis direction | 🟡 | [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md) · [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md) |
@@ -44,10 +43,11 @@ Summary: 5 items | Tally: 🟢 1 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 27 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 27 · 🔮 0 · 🔲 0
+Summary: 28 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 28 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-19 · relay-xyz skill-skip durability | ✅ | [relay-automation/hooks/relay-xyz-guard.sh](relay-automation/hooks/relay-xyz-guard.sh) · [GH-19-RELAY-XYZ-SKILL-GUARD.md](PROJECT/3-COMPLETED/GH-19-RELAY-XYZ-SKILL-GUARD.md) · [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) |
 | GH-24 · relay telemetry extractor | ✅ | [GH-24-RELAY-TELEMETRY-EXTRACTOR.md](PROJECT/3-COMPLETED/GH-24-RELAY-TELEMETRY-EXTRACTOR.md) · [#24](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/24) |
 | Tooling · queue planner (pre-pre-flight) | ✅ | [QUEUE-PLANNER.md](PROJECT/3-COMPLETED/QUEUE-PLANNER.md) |
 | Tooling · relay containment-guard hardening (#13/#14) | ✅ | [RELAY-CONTAINMENT-HARDENING.md](PROJECT/3-COMPLETED/RELAY-CONTAINMENT-HARDENING.md) |

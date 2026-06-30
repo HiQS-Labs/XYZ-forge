@@ -2,11 +2,12 @@
 complexity: low
 risk: low
 effort: low
-ratings_provisional: true
+ratings_provisional: false
 title: relay-xyz skill-skip durability — PreToolUse guard + ROUTER rail
-status: Active — guard hook + ROUTER rail + test shipped + verified live; GH issue #19 filed
+status: Complete (3-COMPLETED)
 created: 2026-06-24
-updated: 2026-06-24
+updated: 2026-06-30
+closed: 2026-06-30
 owner: noelsaw1
 branch: main
 gh_issue: 19
@@ -37,7 +38,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| **Built, verified live, issue filed.** Diagnosed the failure as a behavioral skip (skill loads, agent never opens it). Shipped a deterministic `PreToolUse` guard ([relay-automation/hooks/relay-xyz-guard.sh](../../relay-automation/hooks/relay-xyz-guard.sh)) wired via [.claude/settings.json](../../.claude/settings.json) on `Bash\|Skill`; added a ROUTER routing rail; added [test/relay-xyz-skill-guard.sh](../../test/relay-xyz-skill-guard.sh) (11 assertions) to the suite — **`validate.sh` 44→45/45**. Guard confirmed **live in-session** (blocked a real `relay-drive.sh` call, exit 2). [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) filed (gh auth was a sandbox artifact, not a real expiry). | Promote to `2-WORKING` or close once a fresh session confirms the guard catches an organic skip. Commit the staged changes. |
+| **Built, verified live, issue filed.** Diagnosed the failure as a behavioral skip (skill loads, agent never opens it). Shipped a deterministic `PreToolUse` guard ([relay-automation/hooks/relay-xyz-guard.sh](../../relay-automation/hooks/relay-xyz-guard.sh)) wired via [.claude/settings.json](../../.claude/settings.json) on `Bash\|Skill`; added a ROUTER routing rail; added [test/relay-xyz-skill-guard.sh](../../test/relay-xyz-skill-guard.sh) (11 assertions) to the suite — **`validate.sh` 44→45/45**. Guard confirmed **live in-session** (blocked a real `relay-drive.sh` call, exit 2). [#19](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/19) filed (gh auth was a sandbox artifact, not a real expiry). | **✅ ORGANIC CATCH CONFIRMED + CLOSED 2026-06-30.** In a genuinely fresh session that had not loaded the skill, a model asked to run `relay-automation/relay-drive.sh --help` was **blocked by the PreToolUse guard** (`PreToolUse:Bash hook error: skill has not been loaded`), read the message, **self-corrected by invoking the relay-xyz skill**, and retried via the skill's Preconditions — the exact block→load→retry flow, organically. Plus: `test/relay-xyz-skill-guard.sh` 11/11, and the real hook entrypoint verified block(exit 2)→load→allow(exit 0) on synthetic cold/warm events. All four validation layers green. |
 
 ## Problem
 
