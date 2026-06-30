@@ -2,6 +2,16 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-06-30
+
+### Part C (#50) — self-improvement loop PROVEN with a live agent (operator GO)
+The one remaining gated step after the PR #53 merge — the **real-agent dogfood** — was fired this session on operator GO. The loop (`improve-loop.sh`) ran end-to-end for the first time with a **live model in the builder seat**, `marathon-drive` plugged into `--build-cmd`:
+- **Wiring that worked:** `--builder codex --reviewer agy` (a live cross-model marathon as the loop's challenger generator), target file committed first, `--goal min --max-iterations 1`, watched.
+- **Result:** baseline metric 4 → live codex+agy build → `KEEP` oracle held (un-gameable) → metric 4→3 → **ACCEPT** (137s) → **HALT** on the iteration cap → **CHAMPION 3**, with `baseline`+`accept` provenance (metric trace + spend). Every safety invariant fired against a *real* build. The scripted machine is also still green (dogfood 7/7 + QA 11/11) post-merge.
+- **Two harness defects surfaced + filed** (both confirmed, neither a loop bug):
+  - **[#58](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/58)** — `marathon-drive --builder claude` is unusable headless: `exec: claude: not found` (the `claude` CLI isn't on PATH in the turn subprocess the way codex/agy are). The working live-builder lane is **codex+agy**.
+  - **[#59](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/59)** — an allowlisted artifact in an *otherwise-untracked directory* trips a spurious off-lane containment failure (exit 6) under worktree isolation: `git status --porcelain` collapses the untracked dir to `<dir>/`, which the exact-match `rtl_in_allow` can't match against the file-level allowlist entry (`.relay-artifacts` is special-cased for the same collapse; the allowlist case wasn't generalized). Workaround: commit the artifact first.
+
 ## 2026-06-29
 
 ### Part C (#50) — Codex code review of the loop, 3 real Blockers fixed + verified
