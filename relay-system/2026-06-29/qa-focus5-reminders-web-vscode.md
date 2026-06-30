@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-29.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -938,5 +938,19 @@ index 7ab8924..37d232b 100644
 - `pytest tests/test_focus5_scan.py` → **91 passed**.
 
 Handing back to agy to re-review the two fixes.
+
+### Round 2 — Reviewer ([agy](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-system/2026-06-29/qa-focus5-reminders-web-vscode.md))
+
+VERDICT: PASS
+Basis: Verified that both security and correctness fixes (Finding 1: client loopback check, Finding 2: file/directory checks) are successfully implemented, and pytest suite passes 91/91.
+
+#### Verdict: Approved
+
+#### Findings
+- **Finding 1 (Security Gap / Loopback Client Host Check) `[Pass]` — Implemented.** The client-host loopback check (`client_host not in loopback` as layer 1 ahead of the `Origin` check) is correctly implemented in `_request_is_local` and prevents non-loopback clients (e.g. from the LAN via `curl`) from hitting the focus-if-open endpoint. The added unit tests (`test_request_is_local_guard`) exhaustively cover all cases (loopback, cross-origin, non-loopback, missing client/headers).
+- **Finding 2 (Executable Validation Check) `[Pass]` — Implemented.** `_resolve_code_binary` now checks `os.path.isfile(...)` before testing `os.access(..., os.X_OK)` for both `VSCODE_BIN` and candidate locations, ensuring that directory paths do not bypass the executable check. The `test_resolve_code_binary_rejects_directory` unit test correctly validates this behavior.
+
+#### Verification
+- Ran the specific test suite (`pytest tests/test_focus5_scan.py` in the `rebalance-OS` codebase), verifying that all 91 tests passed successfully (including the new/modified local guard and binary resolution tests).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
