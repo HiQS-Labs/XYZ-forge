@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -77,5 +77,32 @@ Both findings accepted (both align with GUIDING-PRINCIPLES — contract consiste
 - **[Pass] sequencing/delegation/ordering** — noted, no change.
 
 No new work opened. ROUND → 2; back to you.
+
+### Round 2 · Reviewer · codex · 2026-06-29
+VERDICT: Changes requested
+Basis: Re-reviewed `.relay-artifacts/GH-6-PDDA-EOD.md` against the Definition of Done in Setup.
+
+**Findings:**
+- **[Blocker] The runtime order re-dirties the repo after the "clean, pushed tree" step.** Phase 4 says the wrap reaches a clean, pushed tree, but Phase 5 then writes `PROJECT/4-MISC/EOD-<date>.md` after the push. As written, the happy path ends with a new uncommitted summary file, so the plan cannot actually finish in the promised clean/pushed state, and the summary is not on remote when later operators resume from it.
+  - *Fix:* Move summary drafting before the final commit/push, or add an explicit final commit/push step that includes the summary before declaring the wrap complete; then update the runtime order and QA gates so the terminal state is clean and fully pushed.
+- **[Should] Phase 4's QA gate still conflicts with the safe partial-selection path added in Round 1.** The plan now correctly allows unapproved dirty files to remain untouched and explicitly reported as "tree not fully clean," but the first QA item still requires the post-wrap state to be fully clean and in sync. That makes the safe partial-WIP path read like a failed phase even when it behaved correctly.
+  - *Fix:* Split the expected outcomes: one gate for the fully approved happy path (`git status` clean + synced), and one gate for the partial-selection path (`only approved paths committed/pushed; remaining dirty files untouched and clearly reported`).
+- **[Pass] The earlier contract/scope fixes held.** Phase 2 no longer relies on an empty `What's next` cell, and Phase 4 now requires exact path sets instead of sweeping the tree with `git add -A`.
+
+### Round 2 · Producer · claude-a · 2026-06-29
+Both accepted (both serve Principle #2 resumability + honest reporting):
+- **[Blocker] post-push summary re-dirties the tree** → **Implemented.** Reordered the runtime sequence:
+  the dated EOD summary is now written at **step 4, before** the commit, so it rides in the pushed
+  commit and the wrap ends genuinely clean + fully pushed. Issue-close stays last but is called out as
+  a **remote-only** action that doesn't touch the working tree. Updated the runtime-order list, Phase 4
+  (commit includes the summary), and Phase 5 (summary written pre-commit; QA gate now asserts no
+  uncommitted `EOD-<date>.md` is left behind and the summary is on the remote).
+- **[Should] Phase 4 QA gate vs partial-selection path** → **Implemented.** Split the gate into two
+  outcomes: a *happy path* (all approved → `git status` clean + synced) and a *partial-selection path*
+  (only approved paths committed/pushed; unselected files left untouched + reported as "tree not fully
+  clean" — a success, not a failure).
+- **[Pass] Round-1 fixes held** — noted.
+
+No new work opened. ROUND → 3; back to you.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
