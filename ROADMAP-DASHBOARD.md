@@ -6,11 +6,10 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 17 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-62 · XYZ install registry (call-home to remember install locations) | — | [GH-62-XYZ-INSTALL-REGISTRY.md](PROJECT/1-INBOX/GH-62-XYZ-INSTALL-REGISTRY.md) · [#62](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/62) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | — | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-51 · marathon/swarm-preflight harness defects (GH-37 dogfood) | ✅ | [#51](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/51) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | — | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
@@ -43,10 +42,11 @@ Summary: 5 items | Tally: 🟢 2 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 31 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 31 · 🔮 0 · 🔲 0
+Summary: 32 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 32 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-62 · XYZ install registry (call-home to remember install locations) | ✅ | [GH-62-XYZ-INSTALL-REGISTRY.md](PROJECT/3-COMPLETED/GH-62-XYZ-INSTALL-REGISTRY.md) · [gh62-install-registry-qa.md](relay-system/2026-06-30/gh62-install-registry-qa.md) · [#62](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/62) |
 | GH-52 · Part B / R2 — auto-reap authority | ✅ | [decisions/2026-06-30-auto-reap-authority.md](decisions/2026-06-30-auto-reap-authority.md) · [GH-52-AUTO-REAP-AUTHORITY.md](PROJECT/3-COMPLETED/GH-52-AUTO-REAP-AUTHORITY.md) · [#52](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/52) |
 | GH-11 · relay-xyz cross-repo targeting | ✅ | [GH-11-CROSS-REPO-TARGETING.md](PROJECT/3-COMPLETED/GH-11-CROSS-REPO-TARGETING.md) · [#11](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11) |
 | Tooling · relay-xyz durability (discovery shakedown) | ✅ | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/3-COMPLETED/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
