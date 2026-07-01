@@ -40,13 +40,21 @@ RELAY_DRIVE_BIN="${MARATHON_RELAY_DRIVE:-"$HERE/relay-drive.sh"}"
 AGENT_CMD="${MARATHON_AGENT_CMD:-"$HERE/marathon-agent.sh"}"
 
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
-  _lock="$ROOT/.git/relay-driver.lock"
+  # GH-49b: the lock lives in .git/ (never committed) for a normal clone; a vendored .xyz/ copy has no
+  # .git/, so fall back to a hidden lock beside the scripts (the .xyz/ dir is itself gitignored in the
+  # foreign repo, so it stays uncommitted just the same). Same lock NAME as relay-drive so a marathon
+  # and a relay driver still mutually exclude in one clone. Unchanged when .git/ exists.
+  if [[ -d "$ROOT/.git" ]]; then
+    _lock="$ROOT/.git/relay-driver.lock"; _lock_label=".git/relay-driver.lock"
+  else
+    _lock="$ROOT/.relay-driver.lock";     _lock_label=".relay-driver.lock"
+  fi
   if ! mkdir "$_lock" 2>/dev/null; then
     # GH-42 self-heal: the lock exists — reclaim it only if its holder is dead. A crashed/killed/
     # SIGKILL'd driver used to leave a stale lock that blocked every later run until a manual rmdir.
     _holder="$(cat "$_lock/pid" 2>/dev/null || true)"
     if [[ -n "$_holder" ]] && kill -0 "$_holder" 2>/dev/null; then
-      printf 'marathon-drive: another driver is active in this repo (pid %s, lock: .git/relay-driver.lock).\n' "$_holder" >&2
+      printf 'marathon-drive: another driver is active in this repo (pid %s, lock: %s).\n' "$_holder" "$_lock_label" >&2
       printf 'marathon-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).\n' >&2
       exit 1
     fi

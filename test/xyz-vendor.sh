@@ -25,11 +25,18 @@ mkdir -p "$WORK/foreign"; git init -q "$WORK/foreign"; REPO="$(cd "$WORK/foreign
 "$VENDOR" "$REPO" >/dev/null 2>&1 || fail "vendor exited non-zero"
 relay_n=$(find "$REPO/.xyz/relay-automation" -type f 2>/dev/null | wc -l | tr -d ' ')
 test_n=$(find "$REPO/.xyz/test" -type f 2>/dev/null | wc -l | tr -d ' ')
-[ "$((relay_n + test_n))" = 16 ] && pass "16 relay files vendored ($relay_n relay-automation + $test_n test)" || fail "expected 16 relay files, got $((relay_n + test_n))"
+# 16 relay-pkg files (10 relay-automation + 6 test) + 4 GH-49b marathon files (in relay-automation) = 20.
+[ "$((relay_n + test_n))" = 20 ] && pass "20 harness scripts vendored ($relay_n relay-automation + $test_n test)" || fail "expected 20 (16 relay-pkg + 4 marathon), got $((relay_n + test_n))"
 src_repo=$(find "$ROOT/src" -name '*.js' | wc -l | tr -d ' ')
 src_van=$(find "$REPO/.xyz/src" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')
 [ "$src_van" = "$src_repo" ] && [ "$src_van" -gt 0 ] && pass "all $src_van src/*.js vendored" || fail "src/*.js mismatch: vendored $src_van vs harness $src_repo"
 [ -x "$REPO/.xyz/bin/tick" ] && pass "bin/tick vendored + executable" || fail "bin/tick missing or not executable"
+# GH-49b: the marathon runtime is vendored too (so the copy can run marathons, not just relays).
+mcount=0
+for mf in marathon-drive.sh marathon.sh marathon-agent.sh claude-turn.sh; do
+  [ -f "$REPO/.xyz/relay-automation/$mf" ] && bash -n "$REPO/.xyz/relay-automation/$mf" 2>/dev/null && mcount=$((mcount+1))
+done
+[ "$mcount" = 4 ] && pass "GH-49b: marathon runtime vendored + parses (4 files)" || fail "marathon runtime incomplete ($mcount/4)"
 vfields=$(grep -cE '^(source_commit|tick_version|vendored_utc)=' "$REPO/.xyz/VERSION" 2>/dev/null)
 [ "$vfields" = 3 ] && pass "VERSION has all 3 fields" || fail "VERSION malformed ($vfields/3 fields)"
 grep -Fqx '.xyz/' "$REPO/.gitignore" && pass ".xyz/ gitignored" || fail ".xyz/ not in .gitignore"

@@ -152,6 +152,16 @@ EOF
 
   [ "$copied" -gt 0 ] || die "failed to derive relay manifest from skills/relay-automation/make-pkg.sh"
 
+  # GH-49b: the marathon runtime is NOT in the relay-pkg manifest — vendor it explicitly so the copy
+  # can run marathons (marathon-drive), not just relays. marathon-agent dispatches to the turn shims
+  # (claude/codex/agy), so claude-turn.sh comes along too even though it's absent from the relay set.
+  for mrel in relay-automation/marathon-drive.sh relay-automation/marathon.sh \
+              relay-automation/marathon-agent.sh relay-automation/claude-turn.sh; do
+    [ -f "$HARNESS_ROOT/$mrel" ] || die "marathon runtime missing from harness: $mrel"
+    mkdir -p "$STAGE_DIR/$(dirname "$mrel")"
+    cp -p "$HARNESS_ROOT/$mrel" "$STAGE_DIR/$mrel"
+  done
+
   mkdir -p "$STAGE_DIR/bin" "$STAGE_DIR/src"
   cp -p "$HARNESS_ROOT/bin/tick" "$STAGE_DIR/bin/tick"
 
