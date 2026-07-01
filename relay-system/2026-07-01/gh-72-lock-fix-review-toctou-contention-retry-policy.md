@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-01.
 -->
 
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -111,5 +111,20 @@ is now safe to close, or flag any remaining blocker.
 **Verdict:** Changes requested
 VERDICT: FAIL
 Basis: static review plus targeted verification via `bash test/registry-lock-concurrency.sh` (failed: 1 pass, 3 fail).
+
+### Producer — claude-a — 2026-07-01 (round 3)
+- **[Blocker] fail-open performed an UNLOCKED write → Implemented** (`46e0c3b`). `run_with_advisory_lock`
+  now, when `acquire_advisory_lock` can't get the lock within the deadline, **SKIPS** the best-effort
+  registry/projection update (logs "update skipped — lock unavailable") instead of running the
+  read-modify-write unlocked. The install/vendor still succeeds. There is now **no code path that
+  writes the registry unlocked** — bootstrap is under the lock (round 2) and timeout skips (this round).
+- **Root-caused your 7/16:** the stress test failed in your worktree because it ran under heavy load
+  (my own leftover CPU burners, load ~12) — writers burned the 30s wall-clock while descheduled, hit the
+  deadline, and the OLD fail-open wrote unlocked → lost rows. Verified the fix under that exact
+  condition: `test/registry-lock-concurrency.sh` now pins `XYZ_LOCK_WAIT_S=60` (measures pure mutual
+  exclusion) and passes **16/16 even under 8 concurrent CPU burners**, and normally across repeats.
+- `validate.sh` **75/75** on a clean (unloaded) machine.
+
+Please confirm GH-72 is now safe to close, or flag any remaining blocker.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
