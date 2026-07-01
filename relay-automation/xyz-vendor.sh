@@ -197,13 +197,20 @@ manifest_from_make_pkg() {
 write_registry_row() {
   local reg="$1" target="$2" row="$3" tmp
   tmp="$reg.tmp.$$"
-  if awk -F '\t' -v t="$target" 'BEGIN{OFS="\t"} /^#/{print; next} NF==0{next} $1 != t {print}' "$reg" > "$tmp" 2>/dev/null; then
-    if printf '%s\n' "$row" >> "$tmp" && mv "$tmp" "$reg"; then
-      note "registry: updated $reg"
-    else
-      rm -f "$tmp" 2>/dev/null
-      note "registry: write failed; skipped"
-    fi
+  # GH-72: build the WHOLE file under the lock — header (when $reg is new) + existing rows minus this
+  # target + our row — then atomic mv. Bootstrapping the header here (instead of an UNLOCKED `> "$reg"`
+  # in the caller) closes the first-writer truncation race: two "file missing" writers could otherwise
+  # both `>`-truncate, dropping a peer's just-written row (codex review, GH-72).
+  if {
+       if [ -f "$reg" ]; then
+         awk -F '\t' -v t="$target" 'BEGIN{OFS="\t"} /^#/{print; next} NF==0{next} $1 != t {print}' "$reg"
+       else
+         printf '# XYZ install registry — per-user, per-device. Machine-local; do NOT commit.\n'
+         printf '# install_dir\tlast_install_utc\ttick_version\tsource_commit\tcoordinated_repo\n'
+       fi
+       printf '%s\n' "$row"
+     } > "$tmp" 2>/dev/null && mv "$tmp" "$reg"; then
+    note "registry: updated $reg"
   else
     rm -f "$tmp" 2>/dev/null
     note "registry: write failed; skipped"
@@ -233,13 +240,7 @@ register_vendor() {
   ver="$(tick_version)"
   src_commit="$(git -C "$HARNESS_ROOT" rev-parse HEAD 2>/dev/null || printf 'unknown')"
 
-  if [ ! -f "$reg" ]; then
-    {
-      printf '# XYZ install registry — per-user, per-device. Machine-local; do NOT commit.\n'
-      printf '# install_dir\tlast_install_utc\ttick_version\tsource_commit\tcoordinated_repo\n'
-    } > "$reg" 2>/dev/null || { note "registry: $reg not writable; skipped"; return 0; }
-  fi
-
+  # GH-72: header bootstrap now happens INSIDE the locked write_registry_row (no unlocked `> "$reg"`).
   # Schema stays aligned with install.sh; vendored copies are identified by install_dir=.xyz and
   # coordinated_repo=<target repo>.
   row="$(printf '%s\t%s\t%s\t%s\t%s' "$VENDOR_DIR" "$ts" "$ver" "$src_commit" "$TARGET_REPO")"

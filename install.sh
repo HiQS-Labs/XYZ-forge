@@ -262,16 +262,23 @@ publish_registry_projection() {
 write_install_registry_row() {
   local reg="$1" target="$2" row="$3" ver="$4" src_commit="$5" coord="$6" tmp
   tmp="$reg.tmp.$$"
-  if awk -F'\t' -v t="$target" '$1 != t' "$reg" > "$tmp" 2>/dev/null; then
-    if printf '%s\n' "$row" >> "$tmp" && mv "$tmp" "$reg"; then
-      say "  register  $target -> $reg (tick $ver, $src_commit, repo=$coord)"
-      publish_registry_projection   # best-effort multi-device rollup; never fails the install
-    else
-      rm -f "$tmp" 2>/dev/null
-      say "  (registry write failed — skipped)"
-    fi
+  # GH-72: build the WHOLE file under the lock — header (when $reg is new) + existing rows minus this
+  # target + our row — then atomic mv. Bootstrapping the header here (instead of an UNLOCKED `> "$reg"`
+  # in the caller) closes the first-writer truncation race where two "file missing" writers could both
+  # `>`-truncate and drop a peer's just-written row (codex review, GH-72).
+  if {
+       if [ -f "$reg" ]; then
+         awk -F'\t' -v t="$target" '$1 != t' "$reg"
+       else
+         printf '# XYZ install registry — per-user, per-device. Machine-local; do NOT commit.\n'
+         printf '# install_dir\tlast_install_utc\ttick_version\tsource_commit\tcoordinated_repo\n'
+       fi
+       printf '%s\n' "$row"
+     } > "$tmp" 2>/dev/null && mv "$tmp" "$reg"; then
+    say "  register  $target -> $reg (tick $ver, $src_commit, repo=$coord)"
+    publish_registry_projection   # best-effort multi-device rollup; never fails the install
   else
-    rm -f "$tmp"
+    rm -f "$tmp" 2>/dev/null
     say "  (registry write failed — skipped)"
   fi
   return 0
@@ -294,13 +301,8 @@ register_install() {
   [ -n "$coord" ] && [ "$coord" != "-" ] && coord="$(cd "$coord" 2>/dev/null && pwd || printf '%s' "$COORD_REPO")"
   coord="${coord:--}"
 
-  if [ ! -f "$reg" ]; then
-    {
-      printf '# XYZ install registry — per-user, per-device. Machine-local; do NOT commit.\n'
-      printf '# install_dir\tlast_install_utc\ttick_version\tsource_commit\tcoordinated_repo\n'
-    } > "$reg" 2>/dev/null || { say "  (registry not writable — skipped)"; return 0; }
-  fi
-
+  # GH-72: header bootstrap now happens INSIDE the locked write_install_registry_row (no unlocked
+  # `> "$reg"` here) so two concurrent first-writers can't truncate each other's row.
   # One row per install dir: drop any prior row for this exact path (tab col 1), then append fresh.
   row="$(printf '%s\t%s\t%s\t%s\t%s' "$TARGET" "$ts" "$ver" "$src_commit" "$coord")"
   run_with_advisory_lock "$reg" "registry" write_install_registry_row "$reg" "$TARGET" "$row" "$ver" "$src_commit" "$coord"
