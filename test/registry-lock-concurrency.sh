@@ -24,7 +24,10 @@ run_round() { # <reg> — fire N concurrent install.sh, all writing the same reg
     # XYZ_LOCK_WAIT_S generous so no writer fail-opens/skips even on a loaded machine — this asserts
     # PURE mutual exclusion (every row lands via the lock). Fail-open (skip) is correct behavior but
     # would make the count non-deterministic under CPU starvation; the deadline removes that noise.
-    ( XYZ_REGISTRY="$reg" XYZ_GITPULSE_DIR="" XYZ_LOCK_WAIT_S=60 \
+    # XYZ_GITPULSE_DIR must point at a NON-git dir to truly disable the projection follow-on — empty
+    # "" means "auto-discover git-pulse" (which finds a real ~/git-pulse-sync on some hosts), NOT
+    # disabled (codex review r3). This isolates the test to registry mutual exclusion.
+    ( XYZ_REGISTRY="$reg" XYZ_GITPULSE_DIR="$TMP/no-git-pulse" XYZ_LOCK_WAIT_S=60 \
         "$REPO/install.sh" --repo "-" "$TMP/t$i" >/dev/null 2>&1 ) &
     pids="$pids $!"
   done

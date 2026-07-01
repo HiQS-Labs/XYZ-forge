@@ -281,7 +281,6 @@ write_install_registry_row() {
        printf '%s\n' "$row"
      } > "$tmp" 2>/dev/null && mv "$tmp" "$reg"; then
     say "  register  $target -> $reg (tick $ver, $src_commit, repo=$coord)"
-    publish_registry_projection   # best-effort multi-device rollup; never fails the install
   else
     rm -f "$tmp" 2>/dev/null
     say "  (registry write failed — skipped)"
@@ -311,6 +310,10 @@ register_install() {
   # One row per install dir: drop any prior row for this exact path (tab col 1), then append fresh.
   row="$(printf '%s\t%s\t%s\t%s\t%s' "$TARGET" "$ts" "$ver" "$src_commit" "$coord")"
   run_with_advisory_lock "$reg" "registry" write_install_registry_row "$reg" "$TARGET" "$row" "$ver" "$src_commit" "$coord"
+  # GH-72: the git-pulse projection is a SEPARATE best-effort side-effect with its OWN lock. Publish it
+  # AFTER the registry lock is released — never inside the registry critical section — so slow git-pulse
+  # discovery/write can't widen that section and starve concurrent registry writers (codex review r3).
+  publish_registry_projection
 }
 
 say ""
