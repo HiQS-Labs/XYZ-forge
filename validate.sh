@@ -77,6 +77,7 @@ TESTS=(
   "marathon-plan.sh"
   "transcript-audit.sh"
   "security-scan.sh"
+  "registry-lock-concurrency.sh"
   # GH-40 double-blind Reviewer canaries — each verify-fixture.sh drives the real kernel and exits
   # 0/1, so it plugs straight in. ponytail: the Gamma canary (test/fixtures/gamma-poison/) is
   # deliberately NOT here — it runs the whole validate.sh itself, so nesting it would recurse; it

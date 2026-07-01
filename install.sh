@@ -85,10 +85,15 @@ fi
 say() { printf '%s\n' "$*"; }
 
 cleanup() {
-  local entry
+  local entry owner
   while IFS= read -r entry; do
     [ -n "$entry" ] || continue
-    rm -rf "$entry" 2>/dev/null || true
+    # GH-72: only delete a lock we still own (pid names us, or is gone) — never a peer's lock we may
+    # have lost to a reclaim.
+    owner="$(cat "$entry/pid" 2>/dev/null || true)"
+    if [ -z "$owner" ] || [ "$owner" = "$$" ]; then
+      rm -rf "$entry" 2>/dev/null || true
+    fi
   done <<EOF
 $HELD_LOCKS
 EOF
@@ -124,9 +129,13 @@ advisory_lock_path() {
 }
 
 acquire_advisory_lock() {
-  local target="$1" label="$2" lockdir holder attempt
+  local target="$1" label="$2" lockdir holder deadline empty_streak
   lockdir="$(advisory_lock_path "$target")"
-  attempt=0
+  # Fail-open only after a real WALL-CLOCK wait on a stuck holder — never after a few lost fast races
+  # (GH-72: the old attempt-count + `sleep 1` gave up in ~5s under contention and wrote UNLOCKED,
+  # losing rows). Critical sections here are milliseconds, so retry fast (0.1s) and everyone drains.
+  deadline=$(( $(date +%s) + ${XYZ_LOCK_WAIT_S:-30} ))
+  empty_streak=0
   while :; do
     if mkdir "$lockdir" 2>/dev/null; then
       printf '%s\n' "$$" > "$lockdir/pid" 2>/dev/null || true
@@ -134,31 +143,43 @@ acquire_advisory_lock() {
       ADVISORY_LOCK_DIR="$lockdir"
       return 0
     fi
-    attempt=$((attempt + 1))
-    holder="$(cat "$lockdir/pid" 2>/dev/null || true)"
-    if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
-      if [ "$attempt" -ge 5 ]; then
-        say "  ($label lock busy at $lockdir, pid $holder — proceeding without lock)"
-        ADVISORY_LOCK_DIR=""
-        return 1
-      fi
-      sleep 1
-      continue
-    fi
-    if [ "$attempt" -ge 5 ]; then
-      say "  ($label could not acquire $lockdir after stale-lock retries — proceeding without lock)"
+    if [ "$(date +%s)" -ge "$deadline" ]; then
+      say "  ($label lock $lockdir held too long — proceeding without lock)"
       ADVISORY_LOCK_DIR=""
       return 1
     fi
-    say "  ($label reclaiming stale lock at $lockdir, pid ${holder:-none})"
+    holder="$(cat "$lockdir/pid" 2>/dev/null || true)"
+    if [ -z "$holder" ]; then
+      # GH-72: empty pid = winner mkdir'd but hasn't written its pid yet (sub-ms) — NOT stale; wait.
+      # Only a pid ABSENT for ~2s straight is a genuinely orphaned mkdir (acquirer crashed) -> reclaim.
+      empty_streak=$((empty_streak + 1))
+      if [ "$empty_streak" -ge 20 ]; then
+        say "  ($label reclaiming orphaned lock at $lockdir — no pid)"
+        rm -rf "$lockdir" 2>/dev/null || true
+        empty_streak=0
+      fi
+      sleep 0.1 2>/dev/null || sleep 1
+      continue
+    fi
+    empty_streak=0
+    if kill -0 "$holder" 2>/dev/null; then
+      sleep 0.1 2>/dev/null || sleep 1   # live holder — wait for its (fast) release, then retry
+      continue
+    fi
+    say "  ($label reclaiming stale lock at $lockdir, dead pid $holder)"
     rm -rf "$lockdir" 2>/dev/null || true
   done
 }
 
 release_advisory_lock() {
-  local lockdir="${1:-}"
+  local lockdir="${1:-}" owner
   [ -n "$lockdir" ] || return 0
-  rm -rf "$lockdir" 2>/dev/null || true
+  # GH-72: only delete the lock if WE still own it (pid names us, or is gone) — never a peer's lock
+  # that a reclaim may have handed off.
+  owner="$(cat "$lockdir/pid" 2>/dev/null || true)"
+  if [ -z "$owner" ] || [ "$owner" = "$$" ]; then
+    rm -rf "$lockdir" 2>/dev/null || true
+  fi
   forget_lock "$lockdir"
 }
 
