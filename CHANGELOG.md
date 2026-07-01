@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-01
 
+### Concurrent dogfood — GH-72 + GH-73 built by two headless builders AT ONCE (proves the concurrency)
+Surfaced by the `/relay-xyz` codex review of the GH-70 "definitive unlock" claim (verdict: necessary-but-not-sufficient), then **built by exercising the exact feature they harden**: two headless builders on disjoint lanes of this repo, concurrently.
+- **Lane A (agy) → GH-73 (#73)**: doc fix — every fixed `/tmp` transcript-log example in `skills/relay-xyz/SKILL.md` + `relay-automation/README.md` switched to per-PID `-$$.log` (+ a note that fixed paths break concurrent same-machine runs). The shims already defaulted to per-PID; only the docs lagged.
+- **Lane B (codex) → GH-72 (#72)**: a `mkdir`-based per-user **advisory lock** (acquire/release/EXIT-trap, bounded wait, stale-reclaim, **fail-open**) wrapping the registry + git-pulse read-modify-writes in `relay-automation/xyz-vendor.sh` + `install.sh`, so concurrent vendor/install ops can't lose a row. TSV bytes unchanged.
+- **The concurrency was proven live, not asserted:** both tick tokens `claimed` simultaneously (codex + agy), two throwaway worktrees, both CLI procs running at once. When codex committed on top of agy's already-landed commit, the kernel logged *"ROOT HEAD moved during a worktree-isolated turn — a concurrent peer committed; preserving it (not resetting), committing this turn on top"* — **GH-13 peer-preserve fired for real (no clobber)**, and **GH-67 auto-handed-off both tokens**. Driven via direct shim invocation (the `/xyz` model), which sidesteps the per-clone driver lock that would serialize two supervised `relay-drive`s (that lock IS GH-70's limitation).
+- Merged to `main` (`d427a90`) after `validate.sh` **74/74** on the branch. Method note: `test/xyz-vendor.sh` is not hermetic under a git worktree (the locator resolves to the real clone via the `~/.claude/skills` symlink) — a test-env artifact, not a product bug; passes 30/0 in the real clone.
+
 ### Marathon 2026-07-01 — Wave 1 kernel lanes SHIPPED (GH-67, GH-68)
 Executed the two serialized kernel lanes of [MARATHON-PLAN-2026-07-01.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-01.md). One kernel lane per wave (serialized per the plan's safety rule); Opus-direct because the harness can't run Opus headless.
 
