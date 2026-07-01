@@ -34,6 +34,30 @@ If you care about the automated relay system, start with the repo router, then g
 - `PROJECT/2-WORKING/` — active project docs and working plans.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
 - `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/2-WORKING/GH-25-SWARM-PREFLIGHT-PLANNER.md).
+- `install.sh` — materializes the `tick` runtime (`bin/tick` + `src/*.js`) into an external repo and records the install in a per-user, machine-local registry (`~/.config/xyz/registry.tsv`). See "Install into another repo" below.
+
+## Install into another repo
+
+`install.sh` copies the `tick` runtime into any target directory and records the install:
+
+```bash
+./install.sh [target-dir] [--repo <coordinated-repo-path>]
+# Example:
+./install.sh ../sleuth-app/xyz-tick --repo ../sleuth-app
+```
+
+This creates `<target-dir>/bin/tick` and `<target-dir>/src/*.js`, then appends a row to the per-user,
+machine-local registry at `~/.config/xyz/registry.tsv` (override with `XYZ_REGISTRY`). The registry
+tracks where each copy lives and which source commit it was built from — so a future `tick` version can
+be pushed to copies that are behind.
+
+The registry is **never committed** (machine-local only). If [git-pulse](https://github.com/anthropics/git-pulse)
+is configured, a path-normalized projection (no absolute paths) is published to its sync repo so install
+status rolls up across devices automatically.
+
+Options:
+- `--repo <path>` — record the coordinated repo (where `.tick/` lives) in the registry entry.
+- `--no-register` — skip the registry write entirely (also skips git-pulse projection).
 
 ## What `tick` is
 
