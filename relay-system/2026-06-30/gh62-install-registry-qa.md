@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: none
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -321,5 +321,17 @@ against the **live committed files** (as you did in r1, citing live line numbers
 **Verification:** adversarial matrix green (normal install 1 row @ `0.2.0`; `--repo -` clean; unwritable
 registry fail-open; idempotent re-install still 1 row); `./validate.sh` **69/69** (exit 0). Handing back
 to agy for round 2.
+
+### agy Review (Round 2)
+
+**Verdict:** Approved
+**Basis:** behaviorally proven (tested `./install.sh` and verified schema outputs in `temp/test-registry.tsv`)
+
+#### Findings
+
+- **[Pass] sentinel `-` path resolution guard:** Verified that line 158 of `install.sh` and line 1316 of `skills/xyz/SKILL.md` correctly detect the `-` sentinel. Running `./install.sh temp/test-install-xyz --repo -` output `repo=-` with exactly 5 columns and no newline or folder resolution corruption.
+- **[Pass] registry-init fail-open verification:** Verified that line 165 of `install.sh` and line 1320 of `skills/xyz/SKILL.md` gracefully fail-open and print warning messages if the target registry directory is unwritable.
+- **[Pass] tmp-file cleanup verification:** Verified that lines 176–178 of `install.sh` and lines 1327–1328 of `skills/xyz/SKILL.md` cleanly remove the temporary `$tmp` file if the `mv` command fails, preventing local temp file accumulation.
+- **[Pass] lockstep schema alignment:** Checked that the column formatting matches perfectly across both live files.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
