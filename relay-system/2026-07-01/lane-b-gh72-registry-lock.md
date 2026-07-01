@@ -38,4 +38,11 @@ inlining the lock in three places, define it once and call it (DRY).
 
 ## Log
 
+### codex
+VERDICT: PASS
+Basis: Added per-file `mkdir` advisory locks around the two registry writers and the git-pulse projection writer, with stale-lock reclaim, bounded wait, EXIT cleanup, and fail-open warnings; verified the lock behavior with focused parse + concurrency checks, and the remaining `bash test/xyz-vendor.sh` failure is the pre-existing no-`.xyz` locator assertion, outside these lock edits.
+- `relay-automation/xyz-vendor.sh`: added a local `registry.lock` helper and wrapped the registry read-modify-write without changing the TSV row bytes.
+- `install.sh`: added the same helper pattern and wrapped both the install registry writer and the git-pulse projection writer so each temp-file `mv` happens under its per-file lock.
+- Verification: `bash -n relay-automation/xyz-vendor.sh`; `bash -n install.sh`; focused concurrency smoke passed (`2x ./install.sh` => 2 registry rows + 2 projection rows, stale lock reclaimed, live-holder contention fell back to warning + unlocked proceed).
+
 <!-- ↓↓↓ NEXT TURN goes here ↓↓↓ -->
