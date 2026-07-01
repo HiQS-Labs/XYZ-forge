@@ -183,6 +183,7 @@ If `validate.sh` cannot make tempdirs, that is usually a sandbox blocking
 The supervisor (`relay-drive.sh`) drives the turn; the selected shim
 (`codex-turn.sh` or `agy-turn.sh`) is the turn-taker and owns the safety
 boundary: path allowlist, commit-bypass guard, file-scoped commit, and no push.
+*(Note: Fixed log paths break concurrent same-machine runs. Prefer using the shims' default per-PID paths or specifying a per-PID log file path with `$$`.)*
 
 **Worktree isolation is ON by default for driven runs.** `relay-drive.sh`
 exports `RELAY_WORKTREE_ISOLATION=1`, so each shim runs inside a throwaway
@@ -209,7 +210,7 @@ TASK="RELAY-$(basename "$RELAY" .md)"
 ./bin/tick claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
 ./bin/tick release "$TASK" --agent claude-a --to codex
 
-CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG=/tmp/codex-turn.log \
+CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log" \
 relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
@@ -220,7 +221,7 @@ relay-automation/relay-drive.sh \
 Expect Codex to claim and ping the token, append its block to the relay file,
 release or `done` the token, revert any off-allowlist edits, commit only the
 allowlisted paths, and skip push. The transcript lands in
-`/tmp/codex-turn.log`.
+`"${TMPDIR:-/tmp}/codex-turn-$$.log"`.
 
 #### agy worker
 
@@ -237,7 +238,7 @@ TASK="RELAY-$(basename "$RELAY" .md)"
 ./bin/tick claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
 ./bin/tick release "$TASK" --agent claude-a --to agy
 
-AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG=/tmp/agy-turn.log \
+AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log" \
 relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
@@ -247,7 +248,7 @@ relay-automation/relay-drive.sh \
 
 Expect agy to claim and ping the token, append its block to the relay file,
 release or `done` the token, revert any off-allowlist edits, commit only the
-allowlisted paths, and skip push. The transcript lands in `/tmp/agy-turn.log`.
+allowlisted paths, and skip push. The transcript lands in `"${TMPDIR:-/tmp}/agy-turn-$$.log"`.
 
 Exit codes:
 
@@ -281,7 +282,7 @@ TASK="RELAY-$(basename "$RELAY" .md)"
 CODEX_AGENT=codex \
 ALLOW_PATHS="$ARTIFACT" \
 CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox' \
-CODEX_LOG=/tmp/codex-turn.log \
+CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log" \
 "$HARNESS/relay-automation/relay-drive.sh" \
   --target-root "$TARGET" \
   --relay-file "$RELAY" \
@@ -297,7 +298,7 @@ Swap the worker-specific lines to drive agy instead:
 
 AGY_AGENT=agy \
 ALLOW_PATHS="$ARTIFACT" \
-AGY_LOG=/tmp/agy-turn.log \
+AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log" \
 "$HARNESS/relay-automation/relay-drive.sh" \
   --target-root "$TARGET" \
   --relay-file "$RELAY" \

@@ -14,6 +14,8 @@ USAGE
 note() { printf '%s\n' "$*"; }
 die() { printf 'xyz-vendor.sh: %s\n' "$*" >&2; exit 1; }
 
+HELD_LOCKS=""
+
 # Resolve this script's real path without readlink -f (bash 3.2 / macOS safe).
 _src="${BASH_SOURCE[0]}"
 while [ -h "$_src" ]; do
@@ -55,11 +57,97 @@ VENDOR_DIR="$TARGET_REPO/.xyz"
 STAGE_DIR="$TARGET_REPO/.xyz.tmp.$$"
 
 cleanup() {
+  local entry
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    rm -rf "$entry" 2>/dev/null || true
+  done <<EOF
+$HELD_LOCKS
+EOF
   if [ -n "${STAGE_DIR:-}" ] && [ -e "${STAGE_DIR:-}" ]; then
     rm -rf "$STAGE_DIR"
   fi
 }
 trap cleanup EXIT INT TERM HUP
+
+remember_lock() {
+  HELD_LOCKS="${HELD_LOCKS}${HELD_LOCKS:+
+}$1"
+}
+
+forget_lock() {
+  local needle="$1" kept="" entry
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    [ "$entry" = "$needle" ] && continue
+    kept="${kept}${kept:+
+}$entry"
+  done <<EOF
+$HELD_LOCKS
+EOF
+  HELD_LOCKS="$kept"
+}
+
+advisory_lock_path() {
+  local target="$1" dir stem
+  dir="$(dirname "$target")"
+  stem="$(basename "$target")"
+  case "$stem" in
+    *.*) stem="${stem%.*}" ;;
+  esac
+  printf '%s/%s.lock' "$dir" "$stem"
+}
+
+acquire_advisory_lock() {
+  local target="$1" label="$2" lockdir holder attempt
+  lockdir="$(advisory_lock_path "$target")"
+  attempt=0
+  while :; do
+    if mkdir "$lockdir" 2>/dev/null; then
+      printf '%s\n' "$$" > "$lockdir/pid" 2>/dev/null || true
+      remember_lock "$lockdir"
+      ADVISORY_LOCK_DIR="$lockdir"
+      return 0
+    fi
+    attempt=$((attempt + 1))
+    holder="$(cat "$lockdir/pid" 2>/dev/null || true)"
+    if [ -n "$holder" ] && kill -0 "$holder" 2>/dev/null; then
+      if [ "$attempt" -ge 5 ]; then
+        note "$label: lock busy ($lockdir, pid $holder); proceeding without lock"
+        ADVISORY_LOCK_DIR=""
+        return 1
+      fi
+      sleep 1
+      continue
+    fi
+    if [ "$attempt" -ge 5 ]; then
+      note "$label: could not acquire $lockdir after stale-lock retries; proceeding without lock"
+      ADVISORY_LOCK_DIR=""
+      return 1
+    fi
+    note "$label: reclaiming stale lock ($lockdir, pid ${holder:-none})"
+    rm -rf "$lockdir" 2>/dev/null || true
+  done
+}
+
+release_advisory_lock() {
+  local lockdir="${1:-}"
+  [ -n "$lockdir" ] || return 0
+  rm -rf "$lockdir" 2>/dev/null || true
+  forget_lock "$lockdir"
+}
+
+run_with_advisory_lock() {
+  local target="$1" label="$2" lockdir="" rc
+  shift 2
+  if acquire_advisory_lock "$target" "$label"; then
+    lockdir="$ADVISORY_LOCK_DIR"
+  fi
+  "$@"
+  rc=$?
+  release_advisory_lock "$lockdir"
+  return "$rc"
+}
 
 tick_version() {
   local v
@@ -85,6 +173,23 @@ manifest_from_make_pkg() {
   ' "$HARNESS_ROOT/skills/relay-automation/make-pkg.sh"
 }
 
+write_registry_row() {
+  local reg="$1" target="$2" row="$3" tmp
+  tmp="$reg.tmp.$$"
+  if awk -F '\t' -v t="$target" 'BEGIN{OFS="\t"} /^#/{print; next} NF==0{next} $1 != t {print}' "$reg" > "$tmp" 2>/dev/null; then
+    if printf '%s\n' "$row" >> "$tmp" && mv "$tmp" "$reg"; then
+      note "registry: updated $reg"
+    else
+      rm -f "$tmp" 2>/dev/null
+      note "registry: write failed; skipped"
+    fi
+  else
+    rm -f "$tmp" 2>/dev/null
+    note "registry: write failed; skipped"
+  fi
+  return 0
+}
+
 ensure_gitignore() {
   local gitignore="$TARGET_REPO/.gitignore"
   if [ ! -f "$gitignore" ]; then
@@ -98,7 +203,7 @@ ensure_gitignore() {
 register_vendor() {
   [ "$REGISTER" -eq 1 ] || return 0
 
-  local reg dir ts ver src_commit row tmp
+  local reg dir ts ver src_commit row
   reg="$XYZ_REGISTRY"
   dir="$(dirname "$reg")"
   mkdir -p "$dir" 2>/dev/null || { note "registry: $dir not writable; skipped"; return 0; }
@@ -117,18 +222,7 @@ register_vendor() {
   # Schema stays aligned with install.sh; vendored copies are identified by install_dir=.xyz and
   # coordinated_repo=<target repo>.
   row="$(printf '%s\t%s\t%s\t%s\t%s' "$VENDOR_DIR" "$ts" "$ver" "$src_commit" "$TARGET_REPO")"
-  tmp="$reg.tmp.$$"
-  if awk -F '\t' -v t="$VENDOR_DIR" 'BEGIN{OFS="\t"} /^#/{print; next} NF==0{next} $1 != t {print}' "$reg" > "$tmp" 2>/dev/null; then
-    if printf '%s\n' "$row" >> "$tmp" && mv "$tmp" "$reg"; then
-      note "registry: updated $reg"
-    else
-      rm -f "$tmp" 2>/dev/null
-      note "registry: write failed; skipped"
-    fi
-  else
-    rm -f "$tmp" 2>/dev/null
-    note "registry: write failed; skipped"
-  fi
+  run_with_advisory_lock "$reg" "registry" write_registry_row "$reg" "$VENDOR_DIR" "$row"
   return 0
 }
 
