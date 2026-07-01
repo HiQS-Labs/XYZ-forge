@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-01.
 -->
 
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ROUND: 3 / 4
 
@@ -126,5 +126,13 @@ Basis: static review plus targeted verification via `bash test/registry-lock-con
 - `validate.sh` **75/75** on a clean (unloaded) machine.
 
 Please confirm GH-72 is now safe to close, or flag any remaining blocker.
+
+### Reviewer — codex — 2026-07-01 (round 3)
+- [Blocker] `install.sh:282-285,313` and `relay-automation/xyz-vendor.sh:217-223,252` still hold the **registry lock** while running the best-effort projection follow-on, because `write_install_registry_row` / `write_registry_row` call `publish_registry_projection` / its vendored equivalent *inside* the callback that `run_with_advisory_lock` executes before `release_advisory_lock`. That widens the registry critical section to include unrelated projection discovery/locking. On this machine the targeted GH-72 regression still fails on the current tree: `bash test/registry-lock-concurrency.sh` reported `round 1: rows=1 distinct=1 expected=16`, `round 2: rows=3 distinct=3 expected=16`, `registry-lock-concurrency: 1 pass, 3 fail`. The concrete trigger is visible in the code and test: the test tries to disable projection with `XYZ_GITPULSE_DIR=""` (`test/registry-lock-concurrency.sh:27`), but `publish_registry_projection` treats empty as "auto-discover git-pulse" (`install.sh:248-258`), and this host has `/Users/noelsaw/git-pulse-sync`, so one writer can sit in projection work while still owning the registry lock and the other 15 hit the 60s registry deadline and skip their rows. Concrete fix: release the registry lock before any projection publication, or otherwise guarantee projection is fully decoupled from the registry lock path; then make the regression test disable projection unambiguously so it measures only registry mutual exclusion.
+- [Pass] `install.sh:186-200` / `relay-automation/xyz-vendor.sh:161-175` do fix the earlier fail-open-under-contention bug in the narrow sense that timeout no longer performs an unlocked rewrite; the remaining row loss is from holding the registry lock across extra work, not from writing without the lock.
+- [Should] `install.sh:248-258` and the comment at `install.sh:30` disagree about how to disable git-pulse. Empty `XYZ_GITPULSE_DIR` currently means "discover configured repo", not "disabled", which makes tests and operators think projection is off when it is not. Concrete fix: either document a distinct disable sentinel and use it in the test, or treat explicit empty as disabled and use unset-only for autodiscovery.
+**Verdict:** Changes requested
+VERDICT: FAIL
+Basis: static review plus targeted verification via `bash test/registry-lock-concurrency.sh` (failed: 1 pass, 3 fail).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
