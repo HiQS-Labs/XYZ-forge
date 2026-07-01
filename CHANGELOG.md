@@ -4,6 +4,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-01
 
+### Marathon 2026-07-01 — Wave 1 kernel lanes SHIPPED (GH-67, GH-68)
+Executed the two serialized kernel lanes of [MARATHON-PLAN-2026-07-01.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-01.md). One kernel lane per wave (serialized per the plan's safety rule); Opus-direct because the harness can't run Opus headless.
+
+- **Wave 1a — GH-67 (fix, `102cc74`)**: `rtl_enforce` now authoritatively hands off / closes the RELAY-TURN token after its file-scoped commit — relay `STATUS` Approved|Closed → `tick done`, else `tick release --to <RELAY_PEER>`. Both worker shims previously left the token `open` with no handoff (observed on codex stalls AND agy Approved turns), deadlocking the relay; manual `tick log task.done` was the only recovery. Idempotent (skips a token already done or handed to the peer) and ownership-guarded by tick itself, so a mis-fire is a WARN, never a turn failure. Contained to the shared kernel (`relay-turn-lib.sh`). New `test/relay-turn-handoff.sh` proves both branches.
+- **Wave 1b — GH-68 (feat, `94558c5`)**: warn-only cross-agent dependency-drift signal (Phase 1), per [decisions/2026-07-01-cross-agent-dep-conflict.md](decisions/2026-07-01-cross-agent-dep-conflict.md). `dependency.drift` event verb (`src/events.js` + `tick drift` subcommand, best-effort like cost/log — never in `MUTATING_GUARD_VERBS`, so it can't fail a turn); post-commit detection in `relay-turn-lib.sh` emits when a landed turn changed the containment kernel / `src/project.js` / `src/events.js`; `rtl_drift_brief` reads UNREAD peer drift (per-agent watermark under `.tick`, capped at 5) and both shims prepend it to the next turn brief. `src/project.js` skips the verb in the fold so its synthetic task id never seeds a phantom `open` task. **Costly** (kernel event-schema extension) — decision record is the contract; revert is ~the same files, accrued events become inert unknown verbs. New `test/relay-dep-drift.sh` (12 checks).
+- **Gate**: `RELAY_SELF_SUFFICIENCY_SKIP=1 validate.sh` → exit 0, all 72 tests green with both lanes in place.
+- **Wave 2** (GH-64 security scanner, GH-66 transcript audit) dispatched as parallel Sonnet lanes; **GH-63-upgrade held** (mislabeled issue number — needs its own GH issue before execution, per the plan).
+
 ### GH-67 scope update + ROADMAP queue entry
 Broadened GH-67 ("codex tick-release watch item") after confirming agy-turn.sh has the identical bug.
 - Root is `relay-turn-lib.sh` (shared containment core), not per-worker shim — both codex and agy inherit the gap.

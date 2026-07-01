@@ -36,7 +36,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Parked GH-64 + GH-66; flagged GH-63-signal-triage collision; reviewed all open items. | **Wave 1 (kernel, serialize):** GH-67 tick-release fix. **Wave 2 (parallel):** GH-64 + GH-66 + GH-63-upgrade Phase 1. **Operator-driven:** rebalance-OS cross-repo dogfood + G2 dup-token. |
+| **EXECUTED 2026-07-01.** Wave 1a **GH-67 SHIPPED** (`102cc74`, `test/relay-turn-handoff.sh`). Wave 1b **GH-68 Phase 1 SHIPPED** (`94558c5`, `test/relay-dep-drift.sh`, `validate.sh` 72/72). Wave 2 (GH-64 + GH-66) dispatched as parallel Sonnet lanes. | Integrate Wave 2 lanes + gate green. **GH-63-upgrade held** — needs its own GH issue (file mislabeled; #63 is signal-triage) before firing. **Operator-driven (unchanged):** rebalance-OS cross-repo dogfood + G2 dup-token as a second Wave 1. |
 
 ## The one safety rule
 
