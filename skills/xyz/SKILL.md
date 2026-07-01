@@ -1301,6 +1301,35 @@ function renderMd(report) {
 module.exports = { analyze, renderHuman, renderMd, buildClaimWindows, computeParallelism, findParkedClaims, PARKED_THRESHOLD_MS };
 ===XYZ_FILE===
 
+# --- call home (keep in lockstep with the repo's install.sh register_install) ---------------------
+# Record WHERE this copy was installed in a per-user, machine-local registry so a future tick version
+# can be pushed to copies that are behind. Lives in $HOME; never committed. Opt out: XYZ_NO_REGISTER=1.
+# Best-effort / fail-open — never fails the install (each risky step is guarded; function returns 0).
+_xyz_register() {
+  [ "${XYZ_NO_REGISTER:-0}" = "1" ] && return 0
+  local reg dir instdir ver src coord ts tmp
+  reg="${XYZ_REGISTRY:-${XDG_CONFIG_HOME:-$HOME/.config}/xyz/registry.tsv}"
+  dir="$(dirname "$reg")"; mkdir -p "$dir" 2>/dev/null || return 0
+  instdir="$(cd "$DIR" && pwd)" || return 0
+  ver="$(sed -n "s/.*SCHEMA_VERSION[[:space:]]*=[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" "$instdir/src/events.js" 2>/dev/null | head -1)"; ver="${ver:-unknown}"
+  src="skill"   # self-extract has no source-repo commit
+  coord="${TICK_REPO_ROOT:-}"; { [ -n "$coord" ] && coord="$(cd "$coord" 2>/dev/null && pwd || printf '%s' "$TICK_REPO_ROOT")"; } || true; coord="${coord:--}"
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  if [ ! -f "$reg" ]; then
+    { printf '# XYZ install registry — per-user, per-device. Machine-local; do NOT commit.\n'
+      printf '# install_dir\tlast_install_utc\ttick_version\tsource_commit\tcoordinated_repo\n'; } > "$reg" 2>/dev/null || return 0
+  fi
+  tmp="$reg.tmp.$$"
+  awk -F'\t' -v t="$instdir" '$1 != t' "$reg" > "$tmp" 2>/dev/null || { rm -f "$tmp"; return 0; }
+  if printf '%s\t%s\t%s\t%s\t%s\n' "$instdir" "$ts" "$ver" "$src" "$coord" >> "$tmp" && mv "$tmp" "$reg" 2>/dev/null; then
+    printf 'xyz: registered %s (tick %s) in %s\n' "$instdir" "$ver" "$reg"
+  else
+    rm -f "$tmp" 2>/dev/null
+  fi
+  return 0
+}
+_xyz_register || true
+
 echo "xyz/tick runtime installed in $DIR/ — run: TICK_REPO_ROOT=<repo> $DIR/bin/tick --help"
 ```
 

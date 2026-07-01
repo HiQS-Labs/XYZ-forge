@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-06-30
 
+### GH-62 — XYZ install registry (call-home to remember install locations)
+Borrowed PDDA's install→call-home pattern so a future `tick` version can be pushed to the copies that are behind. Filed while preflighting the rebalance-OS Marathon Queue, which surfaced that we keep no record of where `tick` is installed. Issue [#62](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/62); capture [GH-62-XYZ-INSTALL-REGISTRY.md](PROJECT/1-INBOX/GH-62-XYZ-INSTALL-REGISTRY.md).
+- **New `install.sh`** (repo root): materializes the canonical modular runtime (`bin/tick` + all `src/*.js`) into a target dir, then registers the install in a per-user, machine-local `~/.config/xyz/registry.tsv` (override `XYZ_REGISTRY`; opt out `--no-register`). Key = `install_dir` (dedup, latest wins); columns `last_install_utc · tick_version · source_commit · coordinated_repo`. `--repo <path>` (or `$TICK_REPO_ROOT`) records the coordinated repo. Best-effort git-pulse projection for multi-device rollup (path-normalized; fail-open). Never committed — lives in `$HOME`.
+- **`/xyz` SKILL parity:** added the same fail-open register step to the self-extract block in **both** `skills/xyz/SKILL.md` (source of truth) and the global `~/.claude/skills/xyz/SKILL.md`, with a keep-in-lockstep comment. Self-extract installs stamp `tick_version` from the embedded `src/events.js` and `source_commit=skill`.
+- **Provenance payoff (verified):** `install.sh` registers `0.2.0` / `5f95a2b`; the SKILL self-extract registers `0.1.0` / `skill` — the registry now makes the known `bin/tick`(0.2.0) ↔ SKILL-embed(0.1.0) drift visible per-install. Fixing that embed drift + an `xyz-sync` push tool are tracked as follow-ons, out of scope here.
+- **Tests:** manual install matrix green — idempotent re-install (1 row), second dir (2 rows), `coordinated_repo` default `-`, `--no-register` no-op; the extracted SKILL block runs clean under `set -euo pipefail` and registers. Reversibility Easy (additive; delete the file + registry). **Gates:** `./validate.sh` **69/69** (exit 0); `utils/pdda/pdda.sh run` all checks passed.
+
 ### Part C (#50) — self-improvement loop PROVEN with a live agent (operator GO)
 The one remaining gated step after the PR #53 merge — the **real-agent dogfood** — was fired this session on operator GO. The loop (`improve-loop.sh`) ran end-to-end for the first time with a **live model in the builder seat**, `marathon-drive` plugged into `--build-cmd`:
 - **Wiring that worked:** `--builder codex --reviewer agy` (a live cross-model marathon as the loop's challenger generator), target file committed first, `--goal min --max-iterations 1`, watched.
