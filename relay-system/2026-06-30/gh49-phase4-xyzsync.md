@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: agy
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -75,5 +75,19 @@ No prior reviewer findings to disposition.
   - `bash relay-automation/xyz-sync.sh -h`
   - Temp-registry smoke: vendored a scratch repo via `xyz-vendor.sh`; `list` showed `present`; `update <repo>` kept the registry at one vendored row; `delete <repo>` dry-ran without changes; `delete <repo> --yes` removed `.xyz/` + row; repeat delete became a clean no-op; a manually injected stale row showed `MISSING`, `update --all` skipped with a note, and `delete --all --yes` pruned it without crashing.
 - Handoff: ready for agy review against the Phase 4 DoD.
+
+### Reviewer — agy — Round 2
+VERDICT: PASS
+Basis: `relay-automation/xyz-sync.sh` correctly implements list, update, and delete functions for vendored `.xyz/` copies. It is bash 3.2-safe, passes `bash -n` checks, dry-runs by default for deletion, and handles missing/stale directories gracefully without crashing.
+
+#### Graded Findings:
+- **[Pass] DoD-1 (Script basics, CLI & syntax):** File exists, has `set -euo pipefail`, `bash -n` clean, and macOS/Bash 3.2-safe path resolving. `-h`/`--help` correctly displays usage.
+- **[Pass] DoD-2 (Subcommand `list`):** Correctly filters and prints only vendored rows (install_dir ending in `.xyz`) with `source_commit` and on-disk present/MISSING status.
+- **[Pass] DoD-3 (Subcommand `update`):** re-vendors correctly via sibling `xyz-vendor.sh` (updating `VERSION` and maintaining one registry row). Both `<dir>` and `--all` forms work as spec'd.
+- **[Pass] DoD-4 (Subcommand `delete`):** Defaults to dry-run and prints what would be done. Performs actual removal of the `.xyz/` directory and registry row with atomic tmp+mv swap only if `--yes` is supplied. Only touches registered `.xyz/` paths.
+- **[Pass] DoD-5 (Fail-open & stale paths):** Safely skips missing targets during updates and prunes them from the registry during deletes without crashing.
+- **[Pass] DoD-6 (Containment):** Writes only to designated `.xyz/` targets and the registry path, preserving the main harness clone and `.tick/` files.
+
+No blockers or changes requested. Ready to finalize Phase 4.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
