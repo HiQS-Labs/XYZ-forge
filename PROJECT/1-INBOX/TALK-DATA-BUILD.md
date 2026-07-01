@@ -1,7 +1,7 @@
 ---
 title: "Talk With Your Data — Project Plan - in-house XYZ dog food spin off"
 project: greaney-campaign-data-platform
-version: 0.1.0
+version: 0.1.1
 status: draft — not started
 last_updated: 2026-07-01
 owners:
@@ -53,31 +53,53 @@ related_docs:
 
 ## Swarm Preflight & Relay Architecture
 
-This plan is structured for the **XYZ multi-agent swarm** (`tick` kernel + `relay-automation/` stack). Lanes are scheduled via `utils/marathon-plan.sh` and launched via `swarm-preflight.sh` → `marathon-drive.sh`.
+This plan is built to run on the **XYZ harness** (`tick` kernel + `relay-automation/` stack), which lives in the `xyz-3-agents-swarm` repo. Two distinct rails do two different jobs — do **not** conflate them:
 
-**The one rule that makes concurrency work:** No lane starts until Phase 0 freezes `CONTRACTS.md`. Every lane builds against the frozen DB schema, module interfaces, and env-var contract — never against another lane's live code. Cross-lane calls go through interfaces that can be mocked, so a lane is never blocked waiting on a sibling.
+- **`tick` / `xyz` swarm = concurrent, path-scoped lanes.** Multiple agents edit **non-overlapping path globs** of ONE shared checkout, in ONE session, claiming lanes with `tick take` / `tick scope --paths <globs>`, heartbeating with `tick ping`, releasing with `tick done`. This is the only rail that gives us *concurrency* (Phase-1 A/B/C and Phase-2 D/E in parallel).
+- **`marathon` = serial, phase-gated relay.** `relay-automation/marathon.sh --plan MARATHON.yaml` runs each phase through one producer↔reviewer relay loop in `depends_on` order, advancing on approval and **halting on the first phase failure**. Marathon does **not** run lanes in parallel — it is the gate that chains phases and enforces review.
 
-**Lane Legend (Swarm Contracts):**
+**Preflight is a planner, not a launcher.** `utils/swarm-preflight.sh` reads a capture doc's machine-readable preflight contract (see below), proves the fix is still required, assigns lanes, and *emits a run packet*. The **operator** then launches `relay-automation/marathon-drive.sh` with that packet — preflight never executes the run (GUIDING-PRINCIPLES §8).
 
-| Lane | Swarm Allowlist (`ALLOW_PATHS`) | Depends on |
+**The one rule that makes concurrency work:** No lane starts until Phase 0 freezes `CONTRACTS.md`. Every lane builds against the frozen DB schema, module interfaces, and env-var contract — never against another lane's live code. Cross-lane calls go through interfaces that can be mocked, so a lane is never blocked waiting on a sibling. (`CONTRACTS.md` is the **human** source of truth; the machine surface the harness actually reads is the JSON preflight contract + each lane's `tick --paths` globs.)
+
+**Cross-repo note.** This plan targets a *separate* greenfield repo (`campaign-data-platform`); the XYZ harness (`swarm-preflight`, `marathon`, `tick`, `validate.sh`, `utils/pdda/pdda.sh`) lives in `xyz-3-agents-swarm`. Phase 0 must therefore **install the harness into the target repo** (via its `install.sh`) so `validate.sh` and `utils/pdda/pdda.sh run` exist locally — or every run must be driven cross-repo with `swarm-preflight --target-root <target>`. Pick one; Phase 0 below assumes the install path.
+
+**Lane Legend (`tick --paths` scopes):**
+
+| Lane | Path scope (`tick scope --paths`) | Depends on |
 | --- | --- | --- |
-| **A — Platform** | `infra/`, `.github/workflows/` | Phase 0 |
-| **B — Auth** | `auth/`, `middleware/` | Phase 0 (user contract) |
-| **C — Data** | `models/`, `ingest/`, `db/` | Phase 0 (schema contract) |
-| **D — Intelligence** | `analysis/`, `reports/` | Phase 0 (query contract) |
-| **E — UI** | `ui/`, `pages/`, `components/` | Phase 0 (API contract) |
+| **A — Platform** | `infra/**`, `.github/workflows/**` | Phase 0 |
+| **B — Auth** | `auth/**`, `middleware/**` | Phase 0 (user contract) |
+| **C — Data** | `models/**`, `ingest/**`, `db/**` | Phase 0 (schema contract) |
+| **D — Intelligence** | `analysis/**`, `reports/**` | Phase 0 (query contract) |
+| **E — UI** | `ui/**`, `pages/**`, `components/**` | Phase 0 (API contract) |
 
-**Marathon Wave Map:**
+**Wave Map (which rail runs each phase):**
 
-- **Phase 0** — Single lane. Blocking gate. Nobody else starts.
-- **Phase 1** — Wave 1: Lanes **A, B, C** run concurrently (disjoint `ALLOW_PATHS`).
-- **Phase 2** — Wave 2: Lanes **D, E** run concurrently (A/B/C feed them via merged contracts).
-- **Phase 3** — Serial integration; parallel hardening/test sub-tasks allowed.
-- **Phase 4** — Serial ops.
+- **Phase 0** — Single lane, single agent. Blocking gate. Nobody else starts.
+- **Phase 1** — `xyz` swarm: Lanes **A, B, C** claim disjoint `--paths` and run concurrently in one shared tree.
+- **Phase 2** — `xyz` swarm: Lanes **D, E** run concurrently (A/B/C feed them via merged contracts + mocks).
+- **Phase 3** — Serial integration via `marathon` (`depends_on` chain); independent hardening/test sub-tasks may still parallelize as tick lanes.
+- **Phase 4** — Serial ops via `marathon`.
 
-**Merge discipline:** Trunk-based. Every lane must pass its preflight `gate` (e.g., `bash validate.sh`) before its `O_EXCL` claim unlocks. Changes to `CONTRACTS.md` require a dedicated synchronous PR and ping to affected lanes — contracts change by agreement, never silently.
+**Merge discipline:** Trunk-based. Each lane declares its editable `artifacts` in the preflight contract; a **path-allowlist containment** boundary rejects edits outside a lane's scope. After a lane's turn, marathon-drive runs the contract's `gate` (`bash validate.sh`); `fix_probes` are what proved the work was still required going in. Changes to `CONTRACTS.md` require a dedicated synchronous PR and ping to affected lanes — contracts change by agreement, never silently.
 
-**Intra-lane order matters, inter-lane order does not.** Tasks tagged with the same lane run in listed order; different lanes have no ordering between them within a phase.
+**Intra-lane order matters, inter-lane order does not.** Tasks in the same lane run in listed order; disjoint lanes have no ordering between them within a phase (that is exactly what lets the swarm run them at once).
+
+### Swarm Preflight Contract
+
+Machine-readable contract consumed by `utils/swarm-preflight.sh --project-doc` (required, or preflight exits 3). Freeze the concrete values in Phase 0 alongside `CONTRACTS.md`; the `artifacts` / `lanes` here are the top-level Phase-0 scaffold — each parallel lane gets its own capture doc + contract scoped to its `tick --paths` globs when it is promoted to `2-WORKING`.
+
+```json
+{
+  "target":      { "repo": ".", "ref": "main" },
+  "gate":        "bash validate.sh",
+  "fix_probes":  [ { "type": "path_absent", "path": "CONTRACTS.md" } ],
+  "artifacts":   [ "CONTRACTS.md", "docker-compose.yml", ".env.example" ],
+  "remediation": { "source": "self#phases", "criteria": "Phase 0 checklist below" },
+  "lanes":       { "agy_safe": [], "orchestrator_only": [ ".github/workflows/" ] }
+}
+```
 
 ---
 
@@ -105,6 +127,8 @@ Two data stores by design: **Postgres = app/metadata (OLTP)**, **BigQuery = the 
 *Single lane. Blocking gate. Keep it short — the goal is to unblock parallel work, not to build features.*
 
 - [ ] GitHub repo created, trunk-based branch strategy documented in `CONTRIBUTING.md`
+- [ ] XYZ harness installed into the target repo (via `install.sh`) so `validate.sh`, `utils/pdda/pdda.sh`, and `tick` resolve locally — OR the operator commits to driving every run cross-repo with `swarm-preflight --target-root <target>` (decide and record here)
+- [ ] Swarm Preflight Contract (JSON block above) frozen with concrete `gate` / `artifacts` / `lanes` values; `utils/swarm-preflight.sh --project-doc <this doc> --dry-run` reports `ready`
 - [ ] `CONTRACTS.md` committed and frozen, containing:
   - [ ] Postgres schema (tables: `users`, `projects`, `memberships`, `datasets`, `reports`, `audit_log`) with columns + types
   - [ ] Module interface signatures for `data-ingest`, `analysis-engine`, `reports` (function names, inputs, outputs)
@@ -119,7 +143,8 @@ Two data stores by design: **Postgres = app/metadata (OLTP)**, **BigQuery = the 
 - [ ] Fresh clone + `docker compose up` yields a running Reflex "hello" page with zero manual steps
 - [ ] Every lane's stub is importable and returns contract-shaped data
 - [ ] `CONTRACTS.md` reviewed and explicitly signed off (no lane may edit it unilaterally after this)
-- [ ] `validate.sh` and `utils/pdda/pdda.sh run` pass cleanly
+- [ ] `utils/swarm-preflight.sh --project-doc <this doc> --dry-run` returns `ready` (contract parses, gate resolves, artifacts exist at ref)
+- [ ] `validate.sh` and `utils/pdda/pdda.sh run` pass cleanly (in the target repo, per the harness-install decision above)
 - [ ] Status table updated → completed: Phase 0 / next: Phase 1
 
 ---
