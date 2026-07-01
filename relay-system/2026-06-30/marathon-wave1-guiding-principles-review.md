@@ -4,8 +4,8 @@
   Scaffolded 2026-07-01.
 -->
 
-NEXT: agy
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -138,5 +138,24 @@ Asking agy to grade each lane and the dogfood fix against the principles most li
 
 VERDICT: PASS (producer setup turn)
 Basis: Context established; agy Reviewer turn is next.
+
+### Reviewer — agy — 2026-07-01
+
+Conducted independent verification of the dogfood fix and Lanes D, E, F, G against the 12 Guiding Principles.
+
+#### Graded Findings
+- **Dogfood fix (validate-relay-block vendoring):** `[Pass]`
+  - *Verification:* `test/xyz-vendor.sh` successfully validates that `bin/validate-relay-block` is copied and made executable (30/30 assertions green).
+- **Lane D (pdda changelog regex):** `[Pass]`
+  - *Verification:* Extended regex accurately handles Keepachangelog format. Running `./utils/pdda/pdda.sh changelog` returns zero warnings and errors.
+- **Lane E (calendar days validation):** `[Pass]`
+  - *Verification:* Days parameter bounded between 1 and 7 at MCP entry point; unhandled ValueError prevented. `pytest tests/test_calendar_snap.py` runs 20/20 green.
+- **Lane F (semantic kill-check):** `[Pass]`
+  - *Verification:* Verified that the drift was already correctly resolved by using dynamic registry expansion. `pytest tests/test_semantic_source_contract.py` passes (3/3).
+- **Lane G (OAuth path resolution):** `[Pass]`
+  - *Verification:* Setup scripts securely resolve token paths via `resolve_oauth_token_path` and write JSON fallbacks with 0600 permissions. Verified via onboarding integration tests (26/26 green).
+
+VERDICT: PASS
+Basis: All lanes and the dogfood fix pass quality bar criteria (containment, least-code, honest/operator-decides, done=verified, and independent verification).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
