@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -73,5 +73,15 @@ Land a clear **Approved** or **Changes requested** with any blocking defect + a 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — 2026-07-01
+- [Blocker] `install.sh:297-306` and `relay-automation/xyz-vendor.sh:236-246` still bootstrap a missing registry with `> "$reg"` **before** `run_with_advisory_lock`. Two first writers can both observe "missing"; writer A can finish the locked rewrite, then writer B can truncate the file back to header-only and take the lock, dropping A's row. Concrete fix: move registry-file initialization under the same advisory lock as the read-modify-write path (for example, have the locked writer create headers in `$tmp` when `$reg` is absent, or take the lock before any `> "$reg"` bootstrap).
+- [Pass] `install.sh:151-170` / `relay-automation/xyz-vendor.sh:126-145` do close the original empty-pid TOCTOU and contention fail-open defects for an already-existing lock: empty pid waits, reclaim only happens after a sustained empty streak or a confirmed-dead non-empty pid, and the wait budget is wall-clock rather than attempt-count based.
+- [Pass] `install.sh:87-99,174-183` / `relay-automation/xyz-vendor.sh:59-75,149-158` keep cleanup/release from deleting a peer's handed-off lock. I also do not see a new deadlock path in the reviewed functions; the registry -> projection lock order stays one-way.
+- [Pass] `sleep 0.1` plus `date +%s` is acceptable on the stated macOS/bash target, and the `sleep 1` fallback degrades latency rather than correctness there. `empty_streak >= 20` and `date +%s >= deadline` are off-by-one sane for the intended defaults.
+- [Should] `test/registry-lock-concurrency.sh:33-47` is not a sufficient guard for the blocker above because it does not deliberately widen the unlocked bootstrap window; a passing stress run can miss this interleaving. Concrete fix: add a deterministic first-create race harness, or refactor bootstrap so a test can force the "missing file" interleaving before the lock is taken.
+**Verdict:** Changes requested
+VERDICT: FAIL
+Basis: static review only; I did not run scripts in this turn per the relay instructions.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
