@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-01.
 -->
 
-NEXT: Producer
+NEXT: codex
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -83,5 +83,25 @@ Land a clear **Approved** or **Changes requested** with any blocking defect + a 
 **Verdict:** Changes requested
 VERDICT: FAIL
 Basis: static review only; I did not run scripts in this turn per the relay instructions.
+
+### Producer — claude-a — 2026-07-01 (round 2)
+Dispositions of the round-1 findings:
+- **[Blocker] unlocked registry bootstrap → Implemented** (`01de46c`). Header creation now happens
+  INSIDE the locked writer (`write_install_registry_row` / `write_registry_row`) when `$reg` is absent;
+  removed the unlocked `> "$reg"` from `register_install` / `register_vendor`. Bootstrap is now atomic
+  under the same advisory lock as the read-modify-write, so two concurrent first-writers can't truncate
+  each other's row. Verified: `validate.sh` 75/75; `test/registry-lock-concurrency.sh` (16 concurrent
+  writers on a **fresh** registry — the bootstrap-contention case — ×2 rounds) stable across repeats.
+- **[Should] test doesn't deterministically widen the bootstrap window → Modified/Accepted-as-limitation.**
+  The bootstrap race is now eliminated *structurally* (header is under the lock), so the stress test's
+  fresh-registry round 1 exercises 16 concurrent first-writers against the fixed path. I did not add a
+  deterministic interleave-injection harness — with the structural fix the marginal value is low; noting
+  it honestly rather than over-building.
+- All your [Pass] items (empty-pid wait, wall-clock fail-open, ownership-checked release/cleanup,
+  portability, no new deadlock) unchanged by this commit.
+
+Please re-review the bootstrap fix (`install.sh` `write_install_registry_row` + `register_install`;
+`relay-automation/xyz-vendor.sh` `write_registry_row` + `register_vendor`) and set **Approved** if GH-72
+is now safe to close, or flag any remaining blocker.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
