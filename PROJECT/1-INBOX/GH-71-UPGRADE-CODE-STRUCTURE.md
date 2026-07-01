@@ -1,12 +1,18 @@
 ---
-title: GH-63 · Code Structure & Implementation Upgrade
+title: GH-71 · Code Structure & Implementation Upgrade
+gh_issue: 71
+source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/71
 status: Captured
 created: 2026-06-30
+updated: 2026-07-01
 owner: noelsaw
 roadmap_exempt: false
 ---
 
-# GH-63: Code Structure & Implementation Upgrade
+# GH-71: Code Structure & Implementation Upgrade
+
+> **Issue-number history:** captured 2026-06-30 as `GH-63-UPGRADE-CODE-STRUCTURE.md`, but GitHub #63
+> is the signal-triage stage. Correct issue of record is **[#71](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/71)** (opened 2026-07-01); file renamed accordingly.
 
 ## Problem
 The current codebase architecture relies heavily on Bash for complex process supervision (`relay-drive.sh`, `poll.sh`) while the core kernel (`tick`) is cleanly written in Node.js. Although this fits a UNIX-philosophy design, process supervision and state machines in Bash become brittle and hard to maintain as the system scales. Additionally, the root directory is heavy with markdown documents, increasing cognitive load for new operators.

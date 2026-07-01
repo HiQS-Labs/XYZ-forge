@@ -28,7 +28,7 @@ goal: >
 - **3 self-healing inbox docs** committed from untracked state (all from a 2026-06-30 external harness review):
   - **GH-64** — security-scanning guardrail (parked ✅)
   - **GH-66** — session/transcript-log audit (parked ✅)
-  - **GH-63-SIGNAL-TRIAGE-STAGE** — ⚠️ issue-number collision with existing GH-63-UPGRADE-CODE-STRUCTURE; blocked until the GitHub issue number is confirmed and the file is renamed.
+  - **GH-63-SIGNAL-TRIAGE-STAGE** — ✅ collision RESOLVED 2026-07-01: the upgrade doc got its own issue **#71** and was renamed to `GH-71-UPGRADE-CODE-STRUCTURE.md`; #63 stays the signal-triage issue.
 - **Rebalance-OS cross-repo dogfood** remains unblocked (GH-51 [1-kernel] closed 2026-06-30).
 - Previous plan (2026-06-30) showed **0 active lanes** — all items held; today opens 4.
 
@@ -75,7 +75,7 @@ serialization bottleneck: **at most one kernel lane per wave**, even in separate
 |---|---|---|---|---|
 | A | GH-64 security-scanning guardrail | Additive; wraps existing hooks; no kernel or relay mutation. Pairs naturally with GH-61 CI. Ratings: cx=2 risk=2 eff=2. | Sonnet High | `relay-automation/hooks/`, `bin/validate-relay-block`, `validate.sh` |
 | B | GH-66 session/transcript-log audit | Read-only, additive; periodic audit script over `relay-system/**` + `AUDIT/`; no relay mutation. Ratings: cx=2 risk=2 eff=2. | Sonnet High | `utils/`, `AUDIT/` |
-| C | Code Structure upgrade Phase 1 (root-dir cleanup) | Root cleanup only — remove stale stubs, tighten directory layout. Independent of all kernel/shim work. ⚠️ Needs a new GH issue first: the capture doc was named GH-63 but #63 is the signal-triage issue. Open an issue, then fire. Ratings: cx=2 risk=2 eff=2. | Sonnet High | top-level `*.md`, scripts listed in GH-63-UPGRADE-CODE-STRUCTURE.md |
+| C | Code Structure upgrade Phase 1 (root-dir cleanup) | Root cleanup only — remove stale stubs, tighten directory layout. Independent of all kernel/shim work. ✅ Unblocked 2026-07-01 (now **issue #71**, doc renamed) — not executed this run; ready for a future wave. Ratings: cx=2 risk=2 eff=2. | Sonnet High | top-level `*.md`, scripts listed in GH-71-UPGRADE-CODE-STRUCTURE.md |
 
 ## Outside the wave plan (operator-driven, any order)
 
@@ -89,7 +89,7 @@ serialization bottleneck: **at most one kernel lane per wave**, even in separate
 | Item | Reason |
 |---|---|
 | **GH-69 marathon branch prompt** | 🆕 Captured today — needs contract before execution. Low-cost; independent lane candidate for a future wave. |
-| **Code Structure upgrade** (GH-63-UPGRADE-CODE-STRUCTURE.md) | ⚠️ No confirmed GH issue: the file was named GH-63 but GitHub #63 is the signal-triage issue. Open a new issue, update the file/ROADMAP label, then sequence as Wave 2 Lane C. |
+| **Code Structure upgrade** (GH-71-UPGRADE-CODE-STRUCTURE.md) | ✅ Issue-number resolved 2026-07-01 (now #71, doc renamed, ROADMAP relabelled). Not executed this run — ready to sequence as a Wave 2 lane in a future marathon. |
 | GH-41 task.done not terminal | Unrated — add PDDA ratings to unblock. Kernel territory once rated. |
 | GH-44 scratch-repo git fall-through | Unrated — add ratings to unblock. |
 | GH-48 cross-repo zone model | Behind the rebalance-OS dogfood — keep it there. |
@@ -112,7 +112,7 @@ relay-automation/marathon-drive.sh ...
 # Wave 2 lanes (parallel-safe after Wave 1 merges)
 utils/swarm-preflight.sh --project-doc PROJECT/1-INBOX/GH-64-SECURITY-SCANNING-GUARDRAIL.md
 utils/swarm-preflight.sh --project-doc PROJECT/1-INBOX/GH-66-SESSION-LOG-AUDIT.md
-utils/swarm-preflight.sh --project-doc PROJECT/1-INBOX/GH-63-UPGRADE-CODE-STRUCTURE.md
+utils/swarm-preflight.sh --project-doc PROJECT/1-INBOX/GH-71-UPGRADE-CODE-STRUCTURE.md
 
 # Rebalance-OS cross-repo (operator-driven)
 utils/swarm-preflight.sh --target-root <path-to-rebalance-OS-clone> ...
