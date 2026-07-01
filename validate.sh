@@ -64,6 +64,7 @@ TESTS=(
   "relay-untracked-file-warn.sh"
   "relay-review-once.sh"
   "relay-artifact-file.sh"
+  "relay-turn-handoff.sh"
   "new-relay.sh"
   "xyz-vendor.sh"
   "relay-concurrent-commit.sh"

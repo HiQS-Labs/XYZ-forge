@@ -439,4 +439,48 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     git -C "$RTL_ROOT" commit -q -m "relay(${task}): ${agent} turn (${RTL_TOOL} headless; no push)"
     printf '%s-turn: committed %s turn (file-scoped, no push)\n' "$RTL_TOOL" "$agent"
   fi
+  # (4) authoritative token handoff (GH-67). The turn prompt asks the worker to release/done the
+  # token itself, but headless workers frequently DON'T — both codex (stall) and agy (Approved) turns
+  # were observed leaving the token `open` with no handoff, which DEADLOCKS the relay (manual
+  # `tick log task.done` was the only recovery). Close or hand off deterministically here, from the
+  # harness, after the file-scoped commit. Design (GH-67 Option A): inspect the relay file STATUS —
+  # Approved|Closed → `tick done`, else → `tick release --to <RELAY_PEER>`.
+  #   - Idempotent: a token already `done`/`circuit_broken`, or already `open`+handed-to-peer (the
+  #     worker DID release), is left untouched — no duplicate event.
+  #   - Ownership-guarded by tick itself: release/done throw unless `agent` is the current claimer, so
+  #     a token this agent never claimed yields a WARN, never a turn failure (the commit already stood).
+  #   - CWD-independent: absolute env-pinned tick (TICK_REPO_ROOT + $tickroot/bin/tick), exactly as the
+  #     turn prompt mandates; the relay file lives in the HARNESS clone (tickroot), not RELAY_TARGET_ROOT.
+  local _relay_file="${RELAY_FILE:-}" _peer="${RELAY_PEER:-}"
+  local _tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}" _tickbin
+  _tickbin="$_tickroot/bin/tick"
+  [[ "$_relay_file" != /* && -n "$_relay_file" && ! -f "$_relay_file" && -f "$_tickroot/$_relay_file" ]] \
+    && _relay_file="$_tickroot/$_relay_file"
+  if [[ -n "$task" && -n "$_relay_file" && -x "$_tickbin" ]]; then
+    local _info _tstatus _thandoff _rstatus
+    _info="$(TICK_REPO_ROOT="$_tickroot" "$_tickbin" info "$task" 2>/dev/null || true)"
+    _tstatus="$(printf '%s\n' "$_info"  | sed -n 's/^status:[[:space:]]*//p'     | head -n1)"
+    _thandoff="$(printf '%s\n' "$_info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -n1)"
+    # Same bold-markdown-tolerant STATUS read poll.sh uses (real threads write `**STATUS:** Approved`).
+    _rstatus="$(sed -n 's/^[*]*STATUS[*]*:[*]*[[:space:]]*//p' "$_relay_file" 2>/dev/null | head -n1 | sed 's/[[:space:]]*$//')"
+    if [[ "$_tstatus" == "done" || "$_tstatus" == "circuit_broken" ]]; then
+      : # worker (or a prior step) already closed the token — nothing to hand off
+    elif [[ "$_rstatus" == "Approved" || "$_rstatus" == "Closed" ]]; then
+      if TICK_REPO_ROOT="$_tickroot" "$_tickbin" done "$task" --agent "$agent" >/dev/null 2>&1; then
+        printf '%s-turn: relay STATUS=%s → closed token (tick done %s)\n' "$RTL_TOOL" "$_rstatus" "$task"
+      else
+        printf '%s-turn: WARN could not `tick done %s` as %s (not current owner?) — inspect `tick info %s`\n' "$RTL_TOOL" "$task" "$agent" "$task" >&2
+      fi
+    elif [[ "$_tstatus" == "open" && -n "$_peer" && "$_thandoff" == "$_peer" ]]; then
+      : # worker already handed the token to the peer — nothing to do
+    elif [[ -n "$_peer" ]]; then
+      if TICK_REPO_ROOT="$_tickroot" "$_tickbin" release "$task" --agent "$agent" --to "$_peer" >/dev/null 2>&1; then
+        printf '%s-turn: handed off token %s → %s (tick release --to)\n' "$RTL_TOOL" "$task" "$_peer"
+      else
+        printf '%s-turn: WARN could not `tick release %s --to %s` as %s (not current owner?) — inspect `tick info %s`\n' "$RTL_TOOL" "$task" "$_peer" "$agent" "$task" >&2
+      fi
+    else
+      printf '%s-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token %s left as-is (set RELAY_PEER for auto-handoff)\n' "$RTL_TOOL" "$task" >&2
+    fi
+  fi
 }
