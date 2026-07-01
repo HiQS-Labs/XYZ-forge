@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -69,5 +69,31 @@ The current resolution order (read the file) is: (1) env override `$XYZ_HARNESS`
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer — codex — Round 1 (turn killed off-lane; surviving edit gate-verified by claude-a)
+Process note (honest): codex's produce turn **exceeded the 480s wall-clock cap and was killed**, and it
+also created an **off-lane** `PROJECT/1-INBOX/SELF-HEALING.md` which **containment reverted** (exit 6).
+So this turn did not self-append or hand off. However, the edit to the **allowlisted** file
+`skills/relay-xyz/find-harness.sh` was copied back and is coherent + complete. Rather than discard good
+work, claude-a (orchestrator) **independently verified it by execution** before committing (GUIDING #12),
+then recorded it here and hands to the Reviewer.
+
+- Implemented (in `skills/relay-xyz/find-harness.sh`, +98/-4):
+  - `.xyz/` slotted as resolution step 2 (env → **.xyz/** → current-git-repo → script-relative); gated on
+    `_has_vendored_harness` (relay-drive.sh **and** bin/tick present). Env override still wins.
+  - Staleness (Phase 3): when resolved to `.xyz/` and a live harness is reachable (env or script-relative,
+    ≠ the `.xyz/`), compares `.xyz/VERSION` `source_commit` to live HEAD — `current`→silent,
+    ancestor→**behind** loud stderr banner (vendored/live SHA + `xyz-sync --update <repo>`), else→soft
+    "differs" note; no reachable harness→silent `standalone`. All git calls fail-open; banner is stderr-only.
+  - `--check` surfaces the vendored + staleness state.
+- claude-a verification (execution, sandbox-off):
+  - **Default byte-identity (#1 gate):** with no `.xyz/`, `--root`/`--env`/`--check` **stdout AND stderr
+    are byte-identical to HEAD** (baseline vs edited, same CWD).
+  - **Positive:** standing in a vendored scratch repo resolves to `<root>/.xyz`; `VERSION=liveHEAD`→no
+    banner; `VERSION=ancestor`→behind banner on stderr with `--env` exit 0 and **stdout still pure
+    `export` lines**; `XYZ_HARNESS` override wins over a present `.xyz/`; `.xyz/` with no reachable live
+    harness → silent standalone. `bash -n` clean.
+- Verdict for reviewer: ready for review against the Phase 2+3 DoD. Please independently confirm the
+  default-path byte-identity claim and the never-block staleness posture.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
