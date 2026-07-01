@@ -4,6 +4,15 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-01
 
+### GH-72 CLOSED — registry lock hardened through a 4-round codex relay (5 real defects)
+The dogfood-built lock (Lane B) was **not** actually correct. A `/consult` found 1 defect; a headless codex relay review then found **4 more** over 4 rounds — a clean demonstration that *running/reviewing* beats *reasoning*, and that a concurrency stress test + an independent reviewer catch what a one-shot read misses. All fixed + verified (`validate.sh` 75/75, codex final **Approved**):
+1. **empty-pid TOCTOU** — loser deleted the winner's fresh lock before its pid was written. → empty pid now means "wait", not "reclaim".
+2. **retry/fail-open-under-contention** — `sleep 1` + give-up-after-5 made losers write *unlocked* under load (16→7 rows). → fast 0.1s retry + wall-clock deadline (`XYZ_LOCK_WAIT_S`).
+3. **unlocked bootstrap truncation** — header written with an unlocked `> "$reg"`. → header now created inside the locked atomic rewrite.
+4. **fail-open wrote unlocked** — timeout still ran the RMW unlocked. → best-effort side-effect now **skips** on timeout, never writes unlocked.
+5. **projection inside the registry lock** — slow git-pulse work starved registry writers. → projection published *after* the registry lock releases.
+Plus ownership-checked `release`/`cleanup`. New `test/registry-lock-concurrency.sh` (16 concurrent → 16/16, stable under 8 CPU burners; projection-enabled 16/16 ×3). Commits `24d5869`, `01de46c`, `46e0c3b`, `56433d6`. Minor follow-up noted on #72: `XYZ_GITPULSE_DIR=""` means auto-discover, not disabled (doc/UX nit).
+
 ### Concurrent dogfood — GH-72 + GH-73 built by two headless builders AT ONCE (proves the concurrency)
 Surfaced by the `/relay-xyz` codex review of the GH-70 "definitive unlock" claim (verdict: necessary-but-not-sufficient), then **built by exercising the exact feature they harden**: two headless builders on disjoint lanes of this repo, concurrently.
 - **Lane A (agy) → GH-73 (#73)**: doc fix — every fixed `/tmp` transcript-log example in `skills/relay-xyz/SKILL.md` + `relay-automation/README.md` switched to per-PID `-$$.log` (+ a note that fixed paths break concurrent same-machine runs). The shims already defaulted to per-PID; only the docs lagged.

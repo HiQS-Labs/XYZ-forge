@@ -6,11 +6,10 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 21 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 20 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-72 · Registry/projection write-lock | ⚠️ | [#72](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/72) |
 | GH-74 · test/xyz-vendor.sh not hermetic under a git worktree | — | [#74](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/74) |
 | GH-70 · relay-xyz: per-repo harness for concurrent automated relays | — | [GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md](PROJECT/1-INBOX/GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md) · [#70](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/70) |
 | GH-69 · Marathon branch suggestion + agent confirmation prompt | — | [GH-69-MARATHON-BRANCH-PROMPT.md](PROJECT/1-INBOX/GH-69-MARATHON-BRANCH-PROMPT.md) · [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) |
@@ -44,10 +43,11 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 41 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 41 · 🔮 0 · 🔲 0
+Summary: 42 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 42 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-72 · Registry/projection write-lock | ✅ | [#72](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/72) |
 | GH-73 · Docs pin fixed /tmp transcript log paths | ✅ | [#73](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/73) |
 | GH-66 · Session/transcript-log audit for stale-instruction drift | ✅ | [GH-66-SESSION-LOG-AUDIT.md](PROJECT/1-INBOX/GH-66-SESSION-LOG-AUDIT.md) · [#66](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/66) |
 | GH-64 · Security-scanning guardrail in the review chain | ✅ | [GH-64-SECURITY-SCANNING-GUARDRAIL.md](PROJECT/1-INBOX/GH-64-SECURITY-SCANNING-GUARDRAIL.md) · [#64](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/64) |
