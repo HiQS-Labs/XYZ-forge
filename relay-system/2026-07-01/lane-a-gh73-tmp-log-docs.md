@@ -1,6 +1,6 @@
 # RELAY · Lane A — GH-73 fixed-/tmp-log docs (BUILD turn, agy)
 
-NEXT: agy
+NEXT: claude-a
 STATUS: Open
 ROUND: 1 / 1
 
@@ -34,5 +34,9 @@ Do NOT change any code or the shims — docs only. Keep all other prose intact.
 unchanged; `skill-extract` / `path-integrity` gates stay green.
 
 ## Log
+
+### Builder — agy — 2026-07-01
+- Edited `skills/relay-xyz/SKILL.md` to update all `CODEX_LOG` and `AGY_LOG` example values to use concurrency-safe per-PID paths (`...-$$.log`), and added a note warning that fixed log paths break concurrent same-machine runs.
+- Edited `relay-automation/README.md` to update all `/tmp/codex-turn.log` and `/tmp/agy-turn.log` example occurrences to their per-PID forms, and added a corresponding note warning that fixed log paths break concurrent same-machine runs.
 
 <!-- ↓↓↓ NEXT TURN goes here ↓↓↓ -->

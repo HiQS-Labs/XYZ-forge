@@ -108,12 +108,12 @@ Whose-turn is a `tick` relay task, handed off with `tick release --to`.
 End-to-end headless review of an artifact (run after Preconditions — `$TICK` and `$HARNESS` set, CWD
 is the harness clone). Choose either worker. The examples below pass `ALLOW_PATHS="$ARTIFACT"`, which
 fits a **build/fix** turn; for a pure **review** turn set `ALLOW_PATHS=""` (relay file only) so the
-reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row:
+reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row (note that fixed log paths break concurrent same-machine runs; prefer the shims' per-PID default or use per-PID `$$` variables):
 
 | Worker | Availability check | Handoff target | Env prefix | Shim | Log |
 |---|---|---|---|---|---|
-| Codex | `"$RELAY_HAS_CODEX" = 1` | `codex` | `CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn.log"` | `relay-automation/codex-turn.sh` | `${TMPDIR:-/tmp}/codex-turn.log` |
-| agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn.log` |
+| Codex | `"$RELAY_HAS_CODEX" = 1` | `codex` | `CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log"` | `relay-automation/codex-turn.sh` | `${TMPDIR:-/tmp}/codex-turn-$$.log` |
+| agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn-$$.log` |
 
 Codex example:
 
@@ -133,7 +133,7 @@ TASK="RELAY-$(basename "$RELAY" .md)"              # use a per-relay id, not lit
 "$TICK" release "$TASK" --agent claude-a --to codex
 
 # 3. Drive it. The shim dispatches ONLY when the token's actor == CODEX_AGENT.
-CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn.log" \
+CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log" \
 relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
@@ -154,7 +154,7 @@ TASK="RELAY-$(basename "$RELAY" .md)"
 "$TICK" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
 "$TICK" release "$TASK" --agent claude-a --to agy
 
-AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn.log" \
+AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log" \
 relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
