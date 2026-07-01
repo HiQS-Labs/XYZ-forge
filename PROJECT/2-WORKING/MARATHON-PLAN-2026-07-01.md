@@ -53,14 +53,21 @@ serialization bottleneck: **at most one kernel lane per wave**, even in separate
 | independent | ✅ one lane per file | GH-64, GH-66, GH-63-upgrade Ph1 |
 | cross-repo | ✅ separate target root | Rebalance-OS dogfood |
 
-## Wave 1 — Kernel (serialize; run before Wave 2)
+## Wave 1a — Kernel (serialize first; must complete before Wave 1b or Wave 2)
 
 | Lane | Item | Why now | Model | Allow paths |
 |---|---|---|---|---|
 | GH-67 | tick-release missing in `relay-turn-lib.sh` | Bug: both worker shims leave tick tokens `open` after every turn; manual `tick log task.done` force-close is the only recovery today. Root fix: one `post-commit` branch in the shared kernel (`relay-turn-lib.sh`) that inspects relay `STATUS:` → `tick done` or `tick release --to <RELAY_PEER>`. Clean containment-only change. | Opus (kernel correctness) | `relay-automation/relay-turn-lib.sh` |
 
-**Gating:** complete and merge Wave 1 before starting Wave 2 shim-adjacent lanes.  
-**GH-68** (also kernel) is HIGH PRIORITY but needs a `decisions/` record before touching `.tick/events/` schema + both shims — hold until the contract is written.
+**Gating:** complete and merge Wave 1a before starting Wave 1b or Wave 2. GH-67 and GH-68 are both kernel — they must serialize.
+
+### Wave 1b — Kernel (after Wave 1a merges; operator-confirmed 2026-07-01)
+
+| Lane | Item | Why now | Model | Allow paths |
+|---|---|---|---|---|
+| GH-68 | Cross-agent dependency conflict detection | 🔴 HIGH PRIORITY — operator confirmed for today's marathon. Write the `decisions/` record as the first step of this lane (before any code). Warn-only Phase 1: post-commit hook diffs shared surfaces + emits `dependency.drift` event to `.tick/events/`; both shims read unacknowledged drift events and inject a summary into the next turn brief. | Opus (kernel + schema) | `relay-automation/relay-turn-lib.sh`, `relay-automation/codex-turn.sh`, `relay-automation/agy-turn.sh`, `src/project.js`, `.tick/events/` |
+
+**GH-68 pre-condition:** write `decisions/2026-07-01-cross-agent-dep-conflict.md` (schema contract + warn-only invariant) before touching any code.
 
 ## Wave 2 — Independent (parallel-safe after Wave 1)
 
@@ -81,7 +88,7 @@ serialization bottleneck: **at most one kernel lane per wave**, even in separate
 
 | Item | Reason |
 |---|---|
-| **GH-68 cross-agent dep conflict** | 🔴 HIGH PRIORITY — costly: touches `.tick/events/` verb schema + both shims + `relay-turn-lib.sh`. Needs `decisions/` record first; only then promote to Wave 1. |
+| **GH-69 marathon branch prompt** | 🆕 Captured today — needs contract before execution. Low-cost; independent lane candidate for a future wave. |
 | **Code Structure upgrade** (GH-63-UPGRADE-CODE-STRUCTURE.md) | ⚠️ No confirmed GH issue: the file was named GH-63 but GitHub #63 is the signal-triage issue. Open a new issue, update the file/ROADMAP label, then sequence as Wave 2 Lane C. |
 | GH-41 task.done not terminal | Unrated — add PDDA ratings to unblock. Kernel territory once rated. |
 | GH-44 scratch-repo git fall-through | Unrated — add ratings to unblock. |
