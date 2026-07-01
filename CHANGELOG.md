@@ -2,6 +2,22 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-07-01
+
+### Dogfood fix — `bin/validate-relay-block` not vendored (surfaced during rebalance-OS marathon wave 1)
+`xyz-vendor.sh` copied `bin/tick` but not `bin/validate-relay-block`, so `tick release --relay-file` always exited 8 ("relay block structural validation failed") in a vendored repo. Surfaced on the first real foreign-repo relay hand-off during the rebalance-OS marathon run.
+- **`relay-automation/xyz-vendor.sh`**: added `cp -p "$HARNESS_ROOT/bin/validate-relay-block" "$STAGE_DIR/bin/validate-relay-block"` alongside the existing `bin/tick` copy.
+- **`test/xyz-vendor.sh`**: added assertion `bin/validate-relay-block vendored + executable` (was missing from the Phase 6 test suite, which only checked `bin/tick`). Total assertions: 30.
+- No test-count change to `validate.sh` (the xyz-vendor test assertion count only checks relay-automation + test dirs, not bin/). Syntax-clean; suite passes.
+
+### rebalance-OS marathon wave 1 (D/E/F/G) — complete
+First live XYZ multi-lane marathon run on a fully decoupled vendored harness in a foreign repo (`/Users/noelsaw/Documents/rebalance-OS`, branch `marathon/2026-06-30`). All 4 lanes approved; 0 concurrent-claim conflicts; 0 parked-claim suspects.
+- **Lane D** (`utils/pdda/pdda.sh`): extended `check_changelog()` regex at line 365 to accept both `## YYYY-MM-DD` and `## [x.y.z] - YYYY-MM-DD` headings; updated warning message. Acceptance: `pdda.sh changelog` → `errors=0 warns=0 info=0`. Reviewed by agy → Approved.
+- **Lane E** (`src/rebalance/mcp/tools/calendar.py` + `tests/test_calendar_snap.py`): added `days` range guard (1–7) in `snap_calendar_edges` before `snap_edges()` call; returns structured error dict for out-of-range values; added `SnapCalendarEdgesMCPDaysValidationTests` (3 cases). Acceptance: `pytest tests/test_calendar_snap.py` → **20/20**. Operator self-review.
+- **Lane F** (`src/rebalance/cli/semantic.py`): kill-check confirmed fix already applied in prior commit `3b40e58`; `test_semantic_source_contract.py::test_cli_all_expansion_equals_runtime_stage` exists and passes. Verified, no new code.
+- **Lane G** (`scripts/setup_gmail_oauth.py`, `scripts/setup_calendar_oauth.py`): root cause — `secret_store_root()` = `USER_CONFIG_DIR/secrets/` but `resolve_oauth_token_path()` = `USER_CONFIG_DIR/google-{service}-oauth` (one level up); runtime always missed the token written by setup. Fix: both scripts now import and call `resolve_oauth_token_path("gmail"|"calendar")` for the JSON fallback write; `secret_store` removed from imports. Acceptance: existing 26 OAuth tests → **26/26**. Operator self-review.
+- **Known XYZ harness watch item**: `tick release --relay-file` drove the first codex turn as a "Reviewer" turn (NEXT: Reviewer in the scaffold) but codex didn't release the tick token after its turn, causing relay-drive exit 3. Worked around by manually advancing the token; root cause is that the headless codex agent needs to run `tick release` as part of its turn script — the turn shim doesn't inject this automatically.
+
 ## 2026-06-30
 
 ### GH-49b (#65) — vendor the marathon runtime so a foreign repo can run marathons independently
