@@ -28,6 +28,9 @@ Use `/relay` to *create* the thread (or reuse one under `relay-system/<date>/`),
 - "Run an automated relay" / "drive this relay to completion" / "run the relay harness."
 - "Have Codex or agy review `<file>` end-to-end."
 - Setting up the all-Claude hands-free `/loop` poll so two Claude windows self-serialize.
+- Running automated relays in **two different repos at the same time on one machine** — see
+  [Concurrent relays across repos](#concurrent-relays-across-repos-same-machine) (each repo needs its own
+  vendored `.xyz/`).
 - You have a relay thread (or are about to scaffold one with `/relay`) **and** the working tree is a
   clone of this repo.
 
@@ -87,6 +90,29 @@ the [headless bring-up section](../../relay-automation/README.md#headless-bring-
 The relay always operates on **the
 harness clone** (its `.tick/` log and guarded git root live there), whatever repo you launched from —
 so a clone with only `relay-system/` thread files still drives the real harness next door.
+
+## Concurrent relays across repos (same machine)
+
+`relay-drive.sh`/`marathon-drive.sh` hold **one global driver lock per harness clone**
+(`.git/relay-driver.lock`, or `.relay-driver.lock` in a vendored `.xyz/`). This is intentional — two
+worktrees on the same `ROOT@HEAD` can corrupt git state (GH-42) — but it means **every repo pointed at
+the same harness clone shares that one lock**, so their automated relays *serialize*: a second one
+blocks (`exit 1`) until the first frees.
+
+To run relays in **different repos at the same time on one machine**, give each repo its **own harness**
+so each gets its own lock, `.tick/`, and worktrees:
+
+| Install path | Ships | Relay capability | Lock |
+|---|---|---|---|
+| `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | shared (serializes) |
+| **`xyz-vendor.sh vendor <repo>`** | full harness (`relay-automation/` + tick + src) into a gitignored `.xyz/` | ✅ per-repo | **own** `.xyz/.relay-driver.lock` |
+
+So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
+`.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative), and
+`find-harness.sh --check` **warns** when you're in a foreign repo with no `.xyz/` (using the shared
+harness) and points you at the vendor command. Two vendored repos each run `relay-drive.sh` from their
+own `.xyz/relay-automation/`, holding independent locks — no contention. (Editing the central harness
+clone also can't disturb a vendored run, since it uses its own pinned `.xyz/` copy.)
 
 ## The two automated paths
 

@@ -187,6 +187,23 @@ case "${1:-}" in
     if [ -z "$CODEX_PATH" ] && [ -z "$AGY_PATH" ]; then
       echo "  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available"
     fi
+    # GH-70: concurrency-readiness. When a FOREIGN repo (not the harness clone) has no local .xyz/, it
+    # resolves to the CENTRALIZED harness, whose single global driver lock serializes ALL relays run
+    # through it — so it cannot run a relay concurrently with another repo pointed at the same harness.
+    # Advise vendoring for per-repo lock isolation. Fail-open: this only prints; --check still exits 0.
+    if [ "$VENDORED" = 0 ]; then
+      _caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+      if [ -n "$_caller" ] && [ "$(_canon_dir "$_caller")" != "$HARNESS" ]; then
+        echo "  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and"
+        echo "      share ONE global driver lock (can't run concurrently with another repo's relay). For"
+        echo "      per-repo isolation / concurrent relays, vendor this repo:"
+        echo "        relay-automation/xyz-vendor.sh vendor $_caller"
+        for _lk in "$HARNESS/.git/relay-driver.lock" "$HARNESS/.relay-driver.lock"; do
+          [ -d "$_lk" ] && { echo "  !   a driver lock is currently HELD ($_lk) — a relay started here will BLOCK until it frees"; break; }
+        done
+      fi
+    fi
+    true   # --check is advisory: always exit 0 (fail-open), never block a relay on a warning
     ;;
   *)
     echo "usage: find-harness.sh [--root|--env|--check]" >&2

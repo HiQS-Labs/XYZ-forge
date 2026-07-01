@@ -71,6 +71,7 @@ TESTS=(
   "relay-concurrent-commit.sh"
   "relay-case-insensitive.sh"
   "relay-xyz-skill-guard.sh"
+  "find-harness.sh"
   "pdda-roadmap-coverage.sh"
   "swarm-preflight.sh"
   "roadmap-dashboard.sh"
