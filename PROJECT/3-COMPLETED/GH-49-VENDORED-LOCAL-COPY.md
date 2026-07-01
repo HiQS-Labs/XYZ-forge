@@ -1,8 +1,9 @@
 ---
 title: Optional vendored local copy of harness scripts (WIP-decoupled fallback for foreign repos)
-status: Active (2-WORKING)
+status: Completed 2026-06-30
 created: 2026-06-29
 updated: 2026-06-30
+completed: 2026-06-30
 owner: noel
 gh_issue: 49
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/49
@@ -30,7 +31,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 5 — session reminder hook.** `relay-automation/hooks/xyz-vendor-reminder.sh` (print-only, non-blocking) + wired as a **SessionStart** hook in `.claude/settings.json`. Emits a heads-up **only when an on-disk vendored `.xyz/` copy exists** (else silent — zero noise), listing the paths + the `xyz-sync` remedy; opt out with `XYZ_NO_VENDOR_REMINDER=1`; always exit 0, never deletes. Authored directly (trivial additive print-only) + **execution-verified** (silent when none / moved; fires with count+path when present; opt-out silent; exit 0). SessionStart chosen because its stdout is the visible channel (SessionEnd output isn't surfaced live) — the nudge greets the next session, when cleanup is actionable. *(Phases 1–4 before: vendor cmd + locator/staleness + xyz-sync, all swarm+execution-verified.)* | **Phase 6 — tests wired into `validate.sh` + the Level-2 dogfood** (relay-xyz running *from* the vendored copy, live harness hidden). |
+| **Phase 6 — tests + the self-hosting dogfood. ALL 6 PHASES DONE.** `test/xyz-vendor.sh` (28 assertions) wired into `validate.sh` (**70/70**). **Level-2 dogfood succeeded**: the vendored `.xyz/` harness (relay-drive + agy-turn + relay-turn-lib + bin/tick, *no live clone*) drove **agy** to review a foreign-repo artifact, catch both planted issues (`rm -rf /`, hardcoded key) as `[Blocker]`s, and commit its turn file-scoped in the foreign repo — **the harness self-hosts from its snapshot.** The dogfood also surfaced + **fixed 2 containment-kernel gaps** (driver-lock assumed `.git/`; GH-51 collapse rooted at the `.xyz/` subdir not the toplevel) — byte-identical for a normal clone, `relay-target-root.sh` 9/9. | **Complete** — move to `3-COMPLETED`, close #49. |
 
 ## Table of Contents
 
@@ -177,12 +178,26 @@ Two operator decisions (2026-06-30) shape the build:
 
 ## Phase 6 — tests + dogfood acceptance
 
-- [ ] Unit: a `test/xyz-vendor.sh` (vendor into scratch → assert complete `.xyz/`, locator prefers it,
-      staleness banner fires when behind, `xyz-sync --delete` cleans up).
-- [ ] `./validate.sh` green (new test wired in); `utils/pdda/pdda.sh run` clean.
-- [ ] **Dogfood (Level 2):** vendor into a scratch foreign repo, hide the live harness clone, drive a
-      real `relay-xyz` review turn that resolves *only* from `.xyz/` — proving the harness self-hosts
-      from its own snapshot.
+**Done. `test/xyz-vendor.sh` (28 assertions) in `validate.sh` (70/70); Level-2 dogfood self-hosted.**
+
+- [x] Unit: `test/xyz-vendor.sh` (vendor completeness, idempotency, `--no-register`, locator
+      default-path-intact + `.xyz/` preference + `XYZ_HARNESS` precedence, staleness
+      current-silent/behind-banner/stdout-pure, `xyz-sync` list/update/delete, reminder hook).
+- [x] `./validate.sh` **70/70** (new test wired in); `utils/pdda/pdda.sh run` clean.
+- [x] **Dogfood (Level 2):** vendored into a scratch foreign repo and drove a real `relay-xyz` agy
+      review turn using **only** the `.xyz/` scripts + `bin/tick` (no live clone referenced). agy caught
+      both planted issues (`rm -rf /`, hardcoded key) as `[Blocker]`s and committed file-scoped in the
+      foreign repo. **Self-hosting proven.**
+
+### Kernel fixes the dogfood surfaced (both byte-identical for a normal clone; suite 70/70)
+
+Driving a foreign repo from its *own* nested `.xyz/` (the primary usage) exposed two spots where the
+kernel assumed the harness root is a normal clone — see [decisions/2026-06-30-vendored-harness-locator.md](../../decisions/2026-06-30-vendored-harness-locator.md):
+
+- [x] **Driver lock** (`relay-drive.sh`): `$ROOT_DIR/.git/relay-driver.lock` → falls back to
+      `$ROOT_DIR/.relay-driver.lock` when `.git/` is absent (a vendored `.xyz/` has no `.git/`).
+- [x] **`rtl_init` GH-51 collapse** (`relay-turn-lib.sh`): collapse to the git **toplevel** when the
+      caller root is a subdir (nested `.xyz/`), keeping `$1` when it *is* the repo root (GH-51 unchanged).
 
 ## Dogfood plan (why GH-49 self-hosts)
 

@@ -71,9 +71,26 @@ git-ignored, opt-in, deletable, and writes nothing outside the foreign repo + `$
 - **Symlink into a live clone instead of a snapshot.** Doesn't decouple from the clone's live state
   (the whole point) and breaks when the clone moves / is on another machine.
 
+**Two containment-kernel fixes the self-hosting dogfood surfaced (Phase 6b):** driving a foreign repo
+from its *own* vendored `.xyz/` (the primary usage) exposed that two pieces of the kernel assumed the
+harness's own root is a normal git clone. Both fixed, byte-identical for a real clone, suite 70/70:
+- **Driver lock (`relay-drive.sh`).** The lock lived at `$ROOT_DIR/.git/relay-driver.lock`; a vendored
+  `.xyz/` has no `.git/`, so `mkdir` the lock failed and the vendored harness couldn't drive at all.
+  Fix: fall back to `$ROOT_DIR/.relay-driver.lock` when `.git/` is absent (`.xyz/` is itself gitignored
+  in the foreign repo, so the lock is still never committed); the `.git/` path is unchanged for a clone.
+- **`rtl_init` same-repo collapse (`relay-turn-lib.sh`, the GH-51 mechanism).** The collapse rooted
+  `RTL_ROOT` at the caller root `$1`. For a normal `--target-root .` clone `$1` IS the toplevel, but a
+  vendored `.xyz/` is a **subdir** of the foreign repo, so `$1` (`…/.xyz`) is not the repo root — the
+  foreign repo's own relay file then failed its off-lane match (exit 6). Fix: when `$1` is the repo root
+  use `$1` (preserves the exact path/symlink form the rest of the turn uses — GH-51 unchanged); when
+  `$1` is a subdir, collapse to the git **toplevel** instead. This generalizes the GH-51 collapse to
+  the nested-vendored case without changing the original one (`relay-target-root.sh` 9/9).
+
 **Backward compatibility:** No `.xyz/` in the repo ⇒ the new locator branch is skipped entirely
 (byte-identical resolution). `vendor` is a new opt-in command; nothing auto-vendors. `.xyz/` is
-git-ignored so it can never leak into the (eventually public) repo.
+git-ignored so it can never leak into the (eventually public) repo. The two kernel fixes above are
+no-ops for a normal clone (they only take a different branch when the harness root lacks `.git/` or is
+a subdir of the repo).
 
 **Reversibility:** **Easy.** Delete `.xyz/` (or `xyz-sync --delete`); remove the additive locator
 branch to restore prior resolution. No schema/projection change; the registry row is machine-local.

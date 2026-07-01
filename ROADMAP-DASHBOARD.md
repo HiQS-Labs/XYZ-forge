@@ -29,11 +29,10 @@ Summary: 16 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 1 · �
 
 ## In progress
 
-Summary: 6 items | Tally: 🟢 2 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 5 items | Tally: 🟢 2 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-49 · optional vendored local copy of harness scripts (WIP-decoupled fallback) | — | [decision](decisions/2026-06-30-vendored-harness-locator.md) · [GH-49-VENDORED-LOCAL-COPY.md](PROJECT/2-WORKING/GH-49-VENDORED-LOCAL-COPY.md) · [#49](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/49) |
 | Tooling · PDDA runtime consolidation (upgrade) | ✅ | [decision](decisions/2026-06-30-pdda-runtime-consolidation.md) · [PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md](PROJECT/2-WORKING/PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md) |
 | Part C · autonomous self-improvement loop (#50) | 🟢 | [decision](decisions/2026-06-29-self-improvement-loop.md) · [AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md](PROJECT/2-WORKING/AUTONOMOUS-SELF-IMPROVEMENT-LOOP.md) · [#50](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/50) |
 | GH-40 · double-blind Reviewer canary spike (Part C prerequisite) | 🟢 | [gamma-poison](test/fixtures/gamma-poison/) · [token-reuse](test/fixtures/canary-token-reuse/) · [peer-orphan](test/fixtures/canary-peer-orphan/) · [reviewer-overstep](test/fixtures/canary-reviewer-overstep/) · [GH-40-DOUBLE-BLIND-REVIEWER.md](PROJECT/2-WORKING/GH-40-DOUBLE-BLIND-REVIEWER.md) · [#40](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/40) |
@@ -42,10 +41,11 @@ Summary: 6 items | Tally: 🟢 2 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 32 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 32 · 🔮 0 · 🔲 0
+Summary: 33 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 33 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-49 · optional vendored local copy of harness scripts (WIP-decoupled fallback) | ✅ | [decision](decisions/2026-06-30-vendored-harness-locator.md) · [GH-49-VENDORED-LOCAL-COPY.md](PROJECT/3-COMPLETED/GH-49-VENDORED-LOCAL-COPY.md) · [p1](relay-system/2026-06-30/gh49-phase1-vendor.md) · [p2+3](relay-system/2026-06-30/gh49-phase23-locator.md) · [p4](relay-system/2026-06-30/gh49-phase4-xyzsync.md) · [#49](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/49) |
 | GH-62 · XYZ install registry (call-home to remember install locations) | ✅ | [GH-62-XYZ-INSTALL-REGISTRY.md](PROJECT/3-COMPLETED/GH-62-XYZ-INSTALL-REGISTRY.md) · [gh62-install-registry-qa.md](relay-system/2026-06-30/gh62-install-registry-qa.md) · [#62](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/62) |
 | GH-52 · Part B / R2 — auto-reap authority | ✅ | [decisions/2026-06-30-auto-reap-authority.md](decisions/2026-06-30-auto-reap-authority.md) · [GH-52-AUTO-REAP-AUTHORITY.md](PROJECT/3-COMPLETED/GH-52-AUTO-REAP-AUTHORITY.md) · [#52](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/52) |
 | GH-11 · relay-xyz cross-repo targeting | ✅ | [GH-11-CROSS-REPO-TARGETING.md](PROJECT/3-COMPLETED/GH-11-CROSS-REPO-TARGETING.md) · [#11](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11) |
