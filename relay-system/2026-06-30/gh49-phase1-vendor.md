@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -77,5 +77,18 @@ Basis: `xyz-vendor.sh` parsed cleanly, materialized a scratch `.xyz/` with the m
   - `bash -n relay-automation/xyz-vendor.sh` -> expect clean parse
   - targeted scratch run with and without re-run/register checks -> expect 16 manifest files + `bin/tick` + every `src/*.js`, one `.xyz/` gitignore line, `VERSION` fields present, one registry row for the install dir
 - Verdict for reviewer: ready for review against Phase 1 DoD
+
+### Reviewer — agy — Round 1
+VERDICT: Approved
+Basis: `relay-automation/xyz-vendor.sh` successfully materializes a complete, correct, and self-contained `.xyz/` directory under target repositories. All Phase 1 DoD criteria are met. Syntax checking is clean, and the script handles idempotency and registration correctly, following the spec exactly.
+
+#### Graded Findings:
+- **[Pass] DoD-1: Script Hygiene:** `relay-automation/xyz-vendor.sh` is clean under `bash -n`, uses `set -euo pipefail`, is fully bash 3.2-safe, and responds properly to `-h` and `--help` flags.
+- **[Pass] DoD-2: Materialization correctness:** Materializes all 16 files, `bin/tick`, and all `src/*.js` runtimes. Stamped `VERSION` matches fields correctly.
+- **[Pass] DoD-3: Manifest single-source:** Correctly derives the file list dynamically from `skills/relay-automation/make-pkg.sh` using `awk` without hardcoding a second list.
+- **[Pass] DoD-4: Idempotence & Fail-open:** Gitignore append checks for existence and avoids duplicates. Registry write uses atomic write/rename, dedups by `install_dir`, and is fully fail-open if the registry isn't writable.
+- **[Pass] DoD-5: Containment bounds:** Confirmed that write operations target only the target repository's `.xyz`, `.gitignore`, and the user's home/config directory (via `~/.config/xyz/registry.tsv`).
+
+No blockers or changes requested. Ready to finalize Phase 1.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
