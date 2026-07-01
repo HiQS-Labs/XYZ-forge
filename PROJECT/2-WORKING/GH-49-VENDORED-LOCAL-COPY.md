@@ -30,7 +30,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 2+3 — `.xyz/` locator preference + warn-continue staleness banner** (`find-harness.sh`, the containment-critical edit). codex-produced (its turn was killed off-lane at the cap + created an off-lane file that **containment reverted** — the allowlisted edit survived), then **claude-a gate-verified by execution** (default no-`.xyz/` path byte-identical to HEAD on stdout+stderr; `.xyz/` preferred; behind→stderr banner + `--env` exit 0 + pure-export stdout; `XYZ_HARNESS` wins; standalone silent), then **agy-reviewed → Approved** (all 5 DoD Pass). Relay [gh49-phase23-locator.md](../../relay-system/2026-06-30/gh49-phase23-locator.md). *(Phase 1 before: `xyz-vendor.sh`, codex+agy+execution-verified.)* | **Phase 4 — `xyz-sync`** (registry-backed update/delete of vendored copies). |
+| **Phase 4 — `xyz-sync` (registry-backed list/update/delete of vendored copies).** `relay-automation/xyz-sync.sh` codex-produced → **agy-reviewed → Approved (6/6 DoD Pass)** → **execution-verified**: `list` shows present/MISSING; `update` re-vendors (restamps a corrupted VERSION back to real HEAD, keeps 1 row); `delete` **dry-runs by default** (WOULD REMOVE/PRUNE), `--yes` removes `.xyz/`+row but **leaves the repo dir untouched** (containment); stale-row `delete --all --yes` prunes → 0. **Closes the GH-62 `xyz-sync` follow-on.** Relay [gh49-phase4-xyzsync.md](../../relay-system/2026-06-30/gh49-phase4-xyzsync.md). *(Phases 1–3 before: vendor cmd + locator/staleness, all swarm+execution-verified.)* | **Phase 5 — session-end reminder hook** (non-blocking notice per the decision record). |
 
 ## Table of Contents
 
@@ -138,17 +138,23 @@ Two operator decisions (2026-06-30) shape the build:
 
 ## Phase 4 — `xyz-sync` update/delete
 
-- [ ] `xyz-sync` reads the registry and, for a chosen (or all) vendored copy: **update** =
-      re-materialize the snapshot from the current harness (Phase 1 path) + restamp `VERSION`.
-- [ ] **delete** = remove `<repo>/.xyz/` + drop its registry row (atomic tmp+mv, matching GH-62).
-- [ ] Also closes the GH-62 follow-on ("an `xyz-sync` push tool that re-materializes stale copies").
-- [ ] Dry-run/confirm before deleting (never delete without an explicit act; GUIDING #8).
+**Shipped as `relay-automation/xyz-sync.sh` (codex-produced, agy-approved 6/6, execution-verified).**
+
+- [x] `xyz-sync update <dir>|--all` re-vendors via `xyz-vendor.sh` (restamps `VERSION`, keeps 1 row);
+      resolves the target repo from `coordinated_repo` (else `dirname install_dir`).
+- [x] `xyz-sync delete <dir>|--all` removes `<repo>/.xyz/` + drops its row (atomic tmp+mv), only ever
+      touching a registered `.xyz/` path.
+- [x] `xyz-sync list` shows vendored rows with `source_commit` + on-disk present/**MISSING**.
+- [x] Closes the GH-62 follow-on (the `xyz-sync` push tool that re-materializes stale copies).
+- [x] **Dry-run by default; `--yes` required to actually delete** (never delete without an explicit act; GUIDING #8).
 
 ### QA checklist — Phase 4
 
-- [ ] `xyz-sync --update <dir>` refreshes a stale `.xyz/` and clears the staleness banner.
-- [ ] `xyz-sync --delete <dir>` removes `.xyz/` + the registry row; re-run is a clean no-op.
-- [ ] A missing/moved dir is handled fail-open (prune the stale row, don't crash).
+- [x] `update <dir>` refreshes a corrupted `.xyz/VERSION` back to the live HEAD (verified).
+- [x] `delete <dir>` dry-runs (WOULD REMOVE/PRUNE, no change); `delete <dir> --yes` removes `.xyz/` + row,
+      leaves the repo dir itself intact; re-run is a clean no-op (verified).
+- [x] A missing/moved `.xyz/` is fail-open — `list`=MISSING, `delete --all --yes` prunes the orphan
+      row, `update` skips; never crashes (verified).
 
 ## Phase 5 — session-end reminder hook
 
