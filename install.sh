@@ -154,14 +154,15 @@ register_install() {
   ver="$(tick_version)"
   src_commit="$(git -C "$SOURCE_DIR" rev-parse --short HEAD 2>/dev/null || printf 'unknown')"
   coord="${COORD_REPO:-}"
-  [ -n "$coord" ] && coord="$(cd "$coord" 2>/dev/null && pwd || printf '%s' "$COORD_REPO")"
+  # Guard the literal "-" sentinel: cd "-" would jump to $OLDPWD and corrupt the row (agy QA r1).
+  [ -n "$coord" ] && [ "$coord" != "-" ] && coord="$(cd "$coord" 2>/dev/null && pwd || printf '%s' "$COORD_REPO")"
   coord="${coord:--}"
 
   if [ ! -f "$reg" ]; then
     {
       printf '# XYZ install registry — per-user, per-device. Machine-local; do NOT commit.\n'
       printf '# install_dir\tlast_install_utc\ttick_version\tsource_commit\tcoordinated_repo\n'
-    } > "$reg"
+    } > "$reg" 2>/dev/null || { say "  (registry not writable — skipped)"; return 0; }
   fi
 
   # One row per install dir: drop any prior row for this exact path (tab col 1), then append fresh.
@@ -171,6 +172,9 @@ register_install() {
     if printf '%s\n' "$row" >> "$tmp" && mv "$tmp" "$reg"; then
       say "  register  $TARGET -> $reg (tick $ver, $src_commit, repo=$coord)"
       publish_registry_projection   # best-effort multi-device rollup; never fails the install
+    else
+      rm -f "$tmp" 2>/dev/null
+      say "  (registry write failed — skipped)"
     fi
   else
     rm -f "$tmp"

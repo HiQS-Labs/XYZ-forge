@@ -1313,7 +1313,7 @@ _xyz_register() {
   instdir="$(cd "$DIR" && pwd)" || return 0
   ver="$(sed -n "s/.*SCHEMA_VERSION[[:space:]]*=[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" "$instdir/src/events.js" 2>/dev/null | head -1)"; ver="${ver:-unknown}"
   src="skill"   # self-extract has no source-repo commit
-  coord="${TICK_REPO_ROOT:-}"; { [ -n "$coord" ] && coord="$(cd "$coord" 2>/dev/null && pwd || printf '%s' "$TICK_REPO_ROOT")"; } || true; coord="${coord:--}"
+  coord="${TICK_REPO_ROOT:-}"; { [ -n "$coord" ] && [ "$coord" != "-" ] && coord="$(cd "$coord" 2>/dev/null && pwd || printf '%s' "$TICK_REPO_ROOT")"; } || true; coord="${coord:--}"
   ts="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   if [ ! -f "$reg" ]; then
     { printf '# XYZ install registry — per-user, per-device. Machine-local; do NOT commit.\n'
