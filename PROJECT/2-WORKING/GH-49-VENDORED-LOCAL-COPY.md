@@ -30,7 +30,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 0 — PDDA scaffold.** Promoted 1-INBOX→2-WORKING; added this status table + the 6-phase breakdown; wrote the containment decision record [decisions/2026-06-30-vendored-harness-locator.md](../../decisions/2026-06-30-vendored-harness-locator.md) (staleness posture = **warn-loudly-continue**, per operator 2026-06-30); moved the ROADMAP ledger entry Queue→In-progress; regenerated the dashboard. | Set up the GH-49 relay thread and drive **Phase 1 (vendor command)** swarm-produced. |
+| **Phase 1 — vendor command shipped (swarm-produced).** `relay-automation/xyz-vendor.sh` built by **codex** and reviewed by **agy → Approved** (cross-model relay [gh49-phase1-vendor.md](../../relay-system/2026-06-30/gh49-phase1-vendor.md)), then **independently verified by execution** (GUIDING #12): vendored into a scratch repo → 16 relay files + `bin/tick` + 12/12 `src/*.js` with subpaths intact, 3-field `VERSION` (tick_version 0.2.0), idempotent `.gitignore` + registry (3 runs → 1 row), `--no-register`/`-h` correct, manifest single-sourced from `make-pkg.sh`. (Phase 0 before: promote + decision record + ROADMAP In-progress.) | **Phase 2 — locator preference** in `find-harness.sh` (containment-critical; I author + swarm-review, every edit independently verified). |
 
 ## Table of Contents
 
@@ -81,21 +81,26 @@ Two operator decisions (2026-06-30) shape the build:
 
 ## Phase 1 — the `vendor` command
 
-- [ ] Add an opt-in `vendor` entry point (a `relay-automation/xyz-vendor.sh`, or a `--vendor <repo>`
-      mode) that materializes into `<repo>/.xyz/`: the 16-file relay set (from the same manifest
-      `make-pkg.sh` uses — **single source of truth**, don't re-list) + `bin/tick` + `src/*.js`.
-- [ ] Write `<repo>/.xyz/VERSION` stamping: harness source commit SHA, `tick` `SCHEMA_VERSION`, UTC.
-- [ ] Add `.xyz/` to the foreign repo's `.gitignore` (idempotent; never commit the snapshot).
-- [ ] Register the install in the GH-62 registry, marked as a **vendored** copy (so `xyz-sync` can act
-      on it) — reuse the existing register step; fail-open (a registry failure never fails the vendor).
-- [ ] `--no-register` opt-out; `-h` usage.
+**Shipped as `relay-automation/xyz-vendor.sh` (codex-produced, agy-approved, execution-verified).**
+
+- [x] Add an opt-in `vendor` entry point — `relay-automation/xyz-vendor.sh <target-repo> [--no-register]
+      [-h]` — that materializes into `<repo>/.xyz/`: the 16-file relay set (list parsed from
+      `make-pkg.sh`'s `tar` args — **single source of truth**, not re-listed) + `bin/tick` + `src/*.js`.
+- [x] Write `<repo>/.xyz/VERSION` stamping: `source_commit` (harness HEAD SHA), `tick_version`
+      (`SCHEMA_VERSION` from `src/events.js`), `vendored_utc`.
+- [x] Add `.xyz/` to the foreign repo's `.gitignore` (idempotent via `grep -Fqx`; creates it if absent).
+- [x] Register the install in the GH-62 registry (`~/.config/xyz/registry.tsv`), keyed on the `.xyz/`
+      path, `coordinated_repo=<target>` marking it vendored — atomic tmp+mv, dedup latest-wins,
+      **fail-open** (a registry failure prints a note and returns 0). `--no-register` opts out.
+- [x] `-h` usage; bash 3.2-safe; `set -euo pipefail`; symlink-safe self-location.
 
 ### QA checklist — Phase 1
 
-- [ ] `vendor <scratch-repo>` writes a complete `.xyz/` (all 16 relay files + `bin/tick` + every
-      `src/*.js` the tick runtime `require`s) and a well-formed `VERSION`.
-- [ ] Re-running updates in place (idempotent; `.gitignore` not double-appended).
-- [ ] The snapshot's manifest is derived from `make-pkg.sh`, not a second hardcoded list (no drift).
+- [x] `vendor <scratch-repo>` writes a complete `.xyz/` — verified: 16 relay files (10 relay-automation
+      + 6 test) + `bin/tick` (exec) + **12/12** `src/*.js` with subpaths intact + a 3-field `VERSION`.
+- [x] Re-running updates in place — verified: 3 runs → 1 `.gitignore` line, 1 registry row.
+- [x] The snapshot's manifest is derived from `make-pkg.sh` (awk-parsed), not a second hardcoded list.
+- [x] `--no-register` writes no registry; `-h` prints usage (both smoke-verified).
 
 ## Phase 2 — locator preference chain (containment-critical)
 
