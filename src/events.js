@@ -28,6 +28,12 @@ const EVENT_TYPES = new Set([
   'marathon.phase.escalated',
   'marathon.phase.revision',
   'marathon.complete',
+  // Cross-agent dependency-drift signal (GH-68, warn-only Phase 1). Emitted by relay-turn-lib.sh
+  // post-commit when a landed turn changes a shared surface, so the NEXT agent's shim can inject a
+  // heads-up. Purely informational: carries no epoch, claims no task, is NOT a state-transition —
+  // the projection kernel ignores it exactly like cost.*/marathon.* signals.
+  // See decisions/2026-07-01-cross-agent-dep-conflict.md.
+  'dependency.drift',
 ]);
 
 const CRITICAL_EVENTS = new Set([
@@ -62,6 +68,7 @@ function safeSegment(s) {
 function appendEvent(repoRoot, {
   type, task, agent, note, paths, to_agent, reason, priority, epoch,
   tokens_in, tokens_out, tokens_total, human_minutes, tool,
+  surface, prior_sha, current_sha, diff_lines, turn,
 }) {
   if (!EVENT_TYPES.has(type)) {
     throw new Error(`unknown event type: ${type}`);
@@ -97,6 +104,13 @@ function appendEvent(repoRoot, {
   if (tokens_total !== undefined) event.tokens_total = tokens_total;
   if (human_minutes !== undefined) event.human_minutes = human_minutes;
   if (tool !== undefined) event.tool = tool;
+  // Dependency-drift fields (GH-68) — only stamped for dependency.drift events, so every other
+  // event type stays byte-identical to before.
+  if (surface !== undefined) event.surface = surface;
+  if (prior_sha !== undefined) event.prior_sha = prior_sha;
+  if (current_sha !== undefined) event.current_sha = current_sha;
+  if (diff_lines !== undefined) event.diff_lines = diff_lines;
+  if (turn !== undefined) event.turn = turn;
 
   fs.writeFileSync(fpath, JSON.stringify(event) + '\n');
   return { path: fpath, event };

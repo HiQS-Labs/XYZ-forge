@@ -65,6 +65,7 @@ TESTS=(
   "relay-review-once.sh"
   "relay-artifact-file.sh"
   "relay-turn-handoff.sh"
+  "relay-dep-drift.sh"
   "new-relay.sh"
   "xyz-vendor.sh"
   "relay-concurrent-commit.sh"

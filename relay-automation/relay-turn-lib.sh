@@ -483,4 +483,73 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
       printf '%s-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token %s left as-is (set RELAY_PEER for auto-handoff)\n' "$RTL_TOOL" "$task" >&2
     fi
   fi
+  # (5) GH-68: cross-agent dependency-drift signal (warn-only, additive, non-blocking). If this turn's
+  # commit changed a shared surface — the containment kernel (relay-turn-lib.sh), the projection API
+  # (src/project.js), or the event-verb schema (src/events.js) — emit a `dependency.drift` event so
+  # the NEXT agent's shim can inject a heads-up into its turn brief. Best-effort: a failed emit never
+  # fails the turn; the no-surface-change path emits nothing and is byte-identical to before.
+  # Contract: decisions/2026-07-01-cross-agent-dep-conflict.md.
+  if [[ -n "$task" && -x "$_tickbin" && -n "${RTL_BEFORE_HEAD:-}" ]]; then
+    local _newhead
+    _newhead="$(git -C "$RTL_ROOT" rev-parse HEAD 2>/dev/null || echo none)"
+    if [[ "$_newhead" != none && "$_newhead" != "$RTL_BEFORE_HEAD" ]]; then
+      local _surf _psha _csha _dl
+      for _surf in relay-automation/relay-turn-lib.sh src/project.js src/events.js; do
+        _psha="$(git -C "$RTL_ROOT" rev-parse "$RTL_BEFORE_HEAD:$_surf" 2>/dev/null || true)"
+        _csha="$(git -C "$RTL_ROOT" rev-parse "$_newhead:$_surf" 2>/dev/null || true)"
+        [[ "$_psha" == "$_csha" ]] && continue   # unchanged (or absent at both revs) — no drift
+        _dl="$(git -C "$RTL_ROOT" diff --numstat "$RTL_BEFORE_HEAD" "$_newhead" -- "$_surf" 2>/dev/null \
+                | awk '{a+=$1+0; d+=$2+0} END{print a+d+0}')"
+        if TICK_REPO_ROOT="$_tickroot" "$_tickbin" drift "$_surf" \
+             --agent "$agent" --task "$task" \
+             --prior-sha "${_psha:-none}" --current-sha "${_csha:-none}" \
+             --diff-lines "${_dl:-0}" >/dev/null 2>&1; then
+          printf '%s-turn: dependency.drift — %s changed %s (%s lines); signalled for the next turn\n' "$RTL_TOOL" "$agent" "$_surf" "${_dl:-0}"
+        fi
+      done
+    fi
+  fi
+}
+
+# GH-68 warn-only: build a heads-up block of UNREAD cross-agent dependency-drift events for <agent>,
+# for a shim to PREPEND to its turn brief. The watermark is per-agent under .tick (coordination state,
+# per-device, gitignored): only drift events NEWER than the watermark and NOT authored by <agent> are
+# surfaced; the watermark then advances past everything scanned. Idempotent — a crash before the
+# advance just re-injects the same notice next turn, which is harmless. Capped at the 5 most recent
+# (older ones summarized as a count). Echoes NOTHING when there is no unread drift, so the default
+# turn-prompt path is unchanged. See decisions/2026-07-01-cross-agent-dep-conflict.md §4–5.
+rtl_drift_brief() {  # <agent> <tickroot>
+  local me="$1" tickroot="$2"
+  [[ -n "$me" && -n "$tickroot" ]] || return 0
+  local evdir="$tickroot/.tick/events"
+  [[ -d "$evdir" ]] || return 0
+  local seg; seg="$(printf '%s' "$me" | tr -c 'A-Za-z0-9._-' '_')"
+  local wmfile="$tickroot/.tick/dep-drift-watermark-$seg"
+  local wm=""; [[ -f "$wmfile" ]] && wm="$(head -n1 "$wmfile" 2>/dev/null || true)"
+  local f base newest="$wm"
+  local -a unread=()
+  # drift event filenames embed the action token 'dependency.drift' (appendEvent naming); the ISO-ts
+  # prefix makes lexicographic order == chronological (LC_ALL=C for a stable ASCII sort).
+  while IFS= read -r f; do
+    [[ -n "$f" ]] || continue
+    base="$(basename "$f")"
+    if [[ -n "$wm" ]] && ! [[ "$base" > "$wm" ]]; then continue; fi   # already processed (<= watermark)
+    [[ "$base" > "$newest" ]] && newest="$base"
+    grep -Fq "\"agent\":\"$me\"" "$f" 2>/dev/null && continue          # skip the agent's OWN changes
+    unread+=("$f")
+  done < <(LC_ALL=C ls -1 "$evdir"/*dependency.drift*.jsonl 2>/dev/null | LC_ALL=C sort)
+  [[ -n "$newest" ]] && printf '%s\n' "$newest" > "$wmfile" 2>/dev/null || true
+  local n=${#unread[@]}
+  ((n)) || return 0
+  local start=0; ((n>5)) && start=$((n-5))
+  printf '\n[cross-agent dependency drift — informational, warn-only; re-check if your task depends on these]\n'
+  local i surf dl ag
+  for ((i=start;i<n;i++)); do
+    surf="$(sed -n 's/.*"surface":"\([^"]*\)".*/\1/p' "${unread[$i]}" | head -n1)"
+    dl="$(sed -n 's/.*"diff_lines":\([0-9]*\).*/\1/p' "${unread[$i]}" | head -n1)"
+    ag="$(sed -n 's/.*"agent":"\([^"]*\)".*/\1/p' "${unread[$i]}" | head -n1)"
+    printf -- '- %s changed %s (%s lines) since your last turn.\n' "${ag:-a peer}" "${surf:-?}" "${dl:-?}"
+  done
+  ((n>5)) && printf -- '+%d earlier drift event(s) omitted — see .tick/events/ for full history.\n' "$((n-5))"
+  return 0
 }

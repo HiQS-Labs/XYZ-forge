@@ -102,6 +102,11 @@ if [[ -n "$_cwd_git_root" && "$(cd "$ROOT" 2>/dev/null && pwd)" != "$_cwd_git_ro
 fi
 
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
+# GH-68 warn-only: prepend any UNREAD cross-agent dependency-drift heads-up to the turn brief, so a
+# builder learns a peer changed a shared surface (kernel/projection/schema) since its last turn. No
+# unread drift → empty → prompt unchanged. Never blocks. (decisions/2026-07-01-cross-agent-dep-conflict.md)
+drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
+[[ -n "$drift_brief" ]] && prompt="${drift_brief}"$'\n'"${prompt}"
 
 # Transcript/log: default to a $TMPDIR file (NOT the repo tree — the in-tree log guard in
 # relay-turn-lib.sh deletes any in-tree log). Persisted so the headless run is auditable. Unlike the

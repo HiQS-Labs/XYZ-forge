@@ -94,6 +94,7 @@ Usage:
   tick release <task> --agent <id> [--to <agent>] [--relay-file <path>]
   tick break <task> --agent <id> --reason "..."
   tick done <task> --agent <id> [--note "..."] [--relay-file <path>]
+  tick drift <surface> --agent <id> [--task <id>] [--prior-sha <sha>] [--current-sha <sha>] [--diff-lines <n>] [--turn <id>]
   tick ping <task> --agent <id> [--note "..."]      (liveness heartbeat)
   tick reap <agent> [--by <id>] [--task <task>]
   tick info <task>
@@ -260,6 +261,27 @@ function main(argv) {
       }
       done(root, { task, agent: flags.agent, note: typeof flags.note === 'string' ? flags.note : undefined });
       process.stdout.write(`done: ${task}\n`);
+      return 0;
+    }
+
+    case 'drift': {
+      // GH-68 warn-only cross-agent dependency-drift signal. Emits a dependency.drift event when a
+      // landed relay turn changed a shared surface, so the next agent's shim can inject a heads-up.
+      // Purely informational — best-effort like `cost`/`log`, deliberately NOT in MUTATING_GUARD_VERBS
+      // so it can never hard-fail a turn (the warn-only invariant, decisions/2026-07-01-cross-agent-dep-conflict.md).
+      const [surface] = positional;
+      if (!surface) { usage(); return 2; }
+      const { path: p } = appendEvent(root, {
+        type: 'dependency.drift',
+        task: typeof flags.task === 'string' ? flags.task : 'post-commit',
+        agent: flags.agent || process.env.TICK_AGENT || 'unknown',
+        surface,
+        prior_sha: typeof flags['prior-sha'] === 'string' ? flags['prior-sha'] : undefined,
+        current_sha: typeof flags['current-sha'] === 'string' ? flags['current-sha'] : undefined,
+        diff_lines: flags['diff-lines'] !== undefined ? Number(flags['diff-lines']) : undefined,
+        turn: typeof flags.turn === 'string' ? flags.turn : undefined,
+      });
+      process.stdout.write(`${path.relative(root, p)}\n`);
       return 0;
     }
 

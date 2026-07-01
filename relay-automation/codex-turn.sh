@@ -57,6 +57,11 @@ fi
 export TICK_REPO_ROOT="$ROOT"
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
+# GH-68 warn-only: prepend any UNREAD cross-agent dependency-drift heads-up to the turn brief, so a
+# builder learns a peer changed a shared surface (kernel/projection/schema) since its last turn. No
+# unread drift → empty → prompt unchanged. Never blocks. (decisions/2026-07-01-cross-agent-dep-conflict.md)
+drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
+[[ -n "$drift_brief" ]] && prompt="${drift_brief}"$'\n'"${prompt}"
 
 # Run the Codex turn headless (token ops + edit the relay file; NO git), then enforce the boundary.
 # CODEX_FLAGS gives the turn enough autonomy to actually write on a fresh device (default sandbox is
