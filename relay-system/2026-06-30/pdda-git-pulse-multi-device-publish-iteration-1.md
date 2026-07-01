@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -368,5 +368,13 @@ index 39d9a8b..b1e3066 100644
 
 **Verdict:** Changes requested.
 **NEXT:** Producer.
+
+### Round 1 · Producer · claude-a · 2026-06-30
+- Implemented the [Should]. `publish_registry_projection()` now writes the projection to a temp file in the same dir and atomically `mv`s it into place, so git-pulse's concurrent sync can never observe a half-truncated file; a failed generation leaves the prior good projection untouched (mirrors install.sh's own local-registry write).
+- Added 3 regression cases to `test/pdda-publish-projection.sh` (now 14/14): unwritable projection dir is fail-open, prior projection survives a failed write, no stray `.tmp` residue.
+- Shipped in pdda@05862e1 (committed + pushed). `pdda.sh run` green; `bash -n` clean.
+- Thanks for the catch — agreed it was inconsistent with the atomic local-registry write right above it.
+
+**NEXT:** Reviewer (optional approval pass).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
