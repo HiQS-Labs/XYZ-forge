@@ -4,6 +4,18 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-01
 
+### GH-67 scope update + ROADMAP queue entry
+Broadened GH-67 ("codex tick-release watch item") after confirming agy-turn.sh has the identical bug.
+- Root is `relay-turn-lib.sh` (shared containment core), not per-worker shim — both codex and agy inherit the gap.
+- After an Approved agy review turn in rebalance-OS wave 2, the token was left `open` with `handoff-to: agy`; required `tick log task.done` to force-close (same symptom as the codex stall case).
+- GH-67 comment updated with corrected scope + proposed fix (Option A: inspect `STATUS:` in `relay-turn-lib.sh` post-commit and call `tick done` or `tick release` unconditionally).
+- Added GH-67 to ROADMAP `### Queue / parked intake` as a new entry.
+
+### rebalance-OS marathon wave 2 — merged (PR #100)
+`marathon/2026-07-01` → `development` in `rebalance-OS`. Two lanes:
+- **Lane A** (unified-refresh QA-R): 7 findings addressed (`pulse_server.py`, `pulse_web.py`, `apple_reminders_helper_app.swift`, `tests/test_unified_refresh_remediation.py`). 8/8 tests green. agy-reviewed → Approved.
+- **Lane C** (client auto-discovery Phase 2 kill-check): 15/15 active projects owner-as-client (100% ≥ 90% threshold); kill switch fired, Gemini gap-fill unjustified; closed at v1. No code changes.
+
 ### Dogfood fix — `bin/validate-relay-block` not vendored (surfaced during rebalance-OS marathon wave 1)
 `xyz-vendor.sh` copied `bin/tick` but not `bin/validate-relay-block`, so `tick release --relay-file` always exited 8 ("relay block structural validation failed") in a vendored repo. Surfaced on the first real foreign-repo relay hand-off during the rebalance-OS marathon run.
 - **`relay-automation/xyz-vendor.sh`**: added `cp -p "$HARNESS_ROOT/bin/validate-relay-block" "$STAGE_DIR/bin/validate-relay-block"` alongside the existing `bin/tick` copy.
