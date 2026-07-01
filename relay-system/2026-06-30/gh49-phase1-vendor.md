@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -64,5 +64,18 @@ Keep it to **this one file**. Do not edit `make-pkg.sh`, `find-harness.sh`, or t
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer — codex — Round 1
+VERDICT: PASS
+Basis: `xyz-vendor.sh` parsed cleanly, materialized a scratch `.xyz/` with the manifest-derived relay payload plus `bin/tick` and every `src/*.js`, kept `.gitignore` idempotent across re-runs, and wrote a single deduped registry row for the vendored install.
+- Assumption: the `make-pkg.sh` tar argument block remains the single manifest source; failure mode is parser drift if that block shape changes.
+- Disposition: no open reviewer findings at start of round 1; initial implementation turn.
+- Implemented:
+  - added `relay-automation/xyz-vendor.sh` with bash-3.2-safe self-location, manifest-derived staging into `<target-repo>/.xyz/`, `bin/tick` + `src/*.js` copy, `VERSION` stamping, idempotent `.gitignore` append, and fail-open registry registration using the GH-62 schema (`install_dir=.xyz`, `coordinated_repo=<target repo>` marks vendored copies without changing columns)
+  - re-runs replace the managed `.xyz/` tree cleanly via a same-parent staging dir + `mv`
+- Verification:
+  - `bash -n relay-automation/xyz-vendor.sh` -> expect clean parse
+  - targeted scratch run with and without re-run/register checks -> expect 16 manifest files + `bin/tick` + every `src/*.js`, one `.xyz/` gitignore line, `VERSION` fields present, one registry row for the install dir
+- Verdict for reviewer: ready for review against Phase 1 DoD
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
