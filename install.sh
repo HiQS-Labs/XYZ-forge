@@ -184,11 +184,16 @@ release_advisory_lock() {
 }
 
 run_with_advisory_lock() {
-  local target="$1" label="$2" lockdir="" rc
+  local target="$1" label="$2"
   shift 2
-  if acquire_advisory_lock "$target" "$label"; then
-    lockdir="$ADVISORY_LOCK_DIR"
+  if ! acquire_advisory_lock "$target" "$label"; then
+    # GH-72: lock unavailable within the deadline (only under a genuinely stuck holder or pathological
+    # load). This is a best-effort registry/projection side-effect, so SKIP the update rather than
+    # perform an UNLOCKED read-modify-write that could drop a peer's row. The install still succeeds.
+    say "  ($label update skipped — lock unavailable)"
+    return 0
   fi
+  local lockdir="$ADVISORY_LOCK_DIR" rc
   "$@"
   rc=$?
   release_advisory_lock "$lockdir"

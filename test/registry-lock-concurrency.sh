@@ -21,7 +21,11 @@ echo "registry-lock-concurrency (GH-72): $N concurrent writers -> 1 registry"
 run_round() { # <reg> — fire N concurrent install.sh, all writing the same registry
   local reg="$1" i pids=""
   for i in $(seq 1 "$N"); do
-    ( XYZ_REGISTRY="$reg" XYZ_GITPULSE_DIR="" "$REPO/install.sh" --repo "-" "$TMP/t$i" >/dev/null 2>&1 ) &
+    # XYZ_LOCK_WAIT_S generous so no writer fail-opens/skips even on a loaded machine — this asserts
+    # PURE mutual exclusion (every row lands via the lock). Fail-open (skip) is correct behavior but
+    # would make the count non-deterministic under CPU starvation; the deadline removes that noise.
+    ( XYZ_REGISTRY="$reg" XYZ_GITPULSE_DIR="" XYZ_LOCK_WAIT_S=60 \
+        "$REPO/install.sh" --repo "-" "$TMP/t$i" >/dev/null 2>&1 ) &
     pids="$pids $!"
   done
   for p in $pids; do wait "$p" 2>/dev/null || true; done
