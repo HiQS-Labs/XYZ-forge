@@ -31,6 +31,7 @@ src_repo=$(find "$ROOT/src" -name '*.js' | wc -l | tr -d ' ')
 src_van=$(find "$REPO/.xyz/src" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')
 [ "$src_van" = "$src_repo" ] && [ "$src_van" -gt 0 ] && pass "all $src_van src/*.js vendored" || fail "src/*.js mismatch: vendored $src_van vs harness $src_repo"
 [ -x "$REPO/.xyz/bin/tick" ] && pass "bin/tick vendored + executable" || fail "bin/tick missing or not executable"
+[ -x "$REPO/.xyz/bin/validate-relay-block" ] && pass "bin/validate-relay-block vendored + executable" || fail "bin/validate-relay-block missing or not executable"
 # GH-49b: the marathon runtime is vendored too (so the copy can run marathons, not just relays).
 mcount=0
 for mf in marathon-drive.sh marathon.sh marathon-agent.sh claude-turn.sh; do

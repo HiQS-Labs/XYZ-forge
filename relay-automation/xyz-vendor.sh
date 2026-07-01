@@ -164,6 +164,7 @@ EOF
 
   mkdir -p "$STAGE_DIR/bin" "$STAGE_DIR/src"
   cp -p "$HARNESS_ROOT/bin/tick" "$STAGE_DIR/bin/tick"
+  cp -p "$HARNESS_ROOT/bin/validate-relay-block" "$STAGE_DIR/bin/validate-relay-block"
 
   for src_file in "$HARNESS_ROOT"/src/*.js; do
     [ -e "$src_file" ] || die "no src/*.js found under $HARNESS_ROOT/src"
