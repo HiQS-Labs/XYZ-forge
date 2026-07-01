@@ -65,6 +65,7 @@ TESTS=(
   "relay-review-once.sh"
   "relay-artifact-file.sh"
   "new-relay.sh"
+  "xyz-vendor.sh"
   "relay-concurrent-commit.sh"
   "relay-case-insensitive.sh"
   "relay-xyz-skill-guard.sh"
