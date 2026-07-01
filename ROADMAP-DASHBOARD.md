@@ -6,14 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 21 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-70 · relay-xyz: per-repo harness for concurrent automated relays | — | [GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md](PROJECT/1-INBOX/GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md) · [#70](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/70) |
 | GH-69 · Marathon branch suggestion + agent confirmation prompt | — | [GH-69-MARATHON-BRANCH-PROMPT.md](PROJECT/1-INBOX/GH-69-MARATHON-BRANCH-PROMPT.md) · [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) |
-| GH-66 · Session/transcript-log audit for stale-instruction drift | — | [GH-66-SESSION-LOG-AUDIT.md](PROJECT/1-INBOX/GH-66-SESSION-LOG-AUDIT.md) · [#66](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/66) |
-| GH-64 · Security-scanning guardrail in the review chain | — | [GH-64-SECURITY-SCANNING-GUARDRAIL.md](PROJECT/1-INBOX/GH-64-SECURITY-SCANNING-GUARDRAIL.md) · [#64](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/64) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | — | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/1-INBOX/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
 | Code Structure & Implementation Upgrade | ⚠️ | [GH-63-UPGRADE-CODE-STRUCTURE.md](PROJECT/1-INBOX/GH-63-UPGRADE-CODE-STRUCTURE.md) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | — | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
@@ -44,10 +42,12 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 38 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 38 · 🔮 0 · 🔲 0
+Summary: 40 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 40 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-66 · Session/transcript-log audit for stale-instruction drift | ✅ | [GH-66-SESSION-LOG-AUDIT.md](PROJECT/1-INBOX/GH-66-SESSION-LOG-AUDIT.md) · [#66](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/66) |
+| GH-64 · Security-scanning guardrail in the review chain | ✅ | [GH-64-SECURITY-SCANNING-GUARDRAIL.md](PROJECT/1-INBOX/GH-64-SECURITY-SCANNING-GUARDRAIL.md) · [#64](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/64) |
 | GH-67 · tick-release missing from relay-turn-lib.sh (both shims) | ✅ | [#67](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/67) |
 | GH-68 · Cross-agent dependency conflict detection | ✅ | [decision](decisions/2026-07-01-cross-agent-dep-conflict.md) · [GH-68-CROSS-AGENT-DEP-CONFLICT.md](PROJECT/1-INBOX/GH-68-CROSS-AGENT-DEP-CONFLICT.md) · [#68](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/68) |
 | GH-51 · marathon/swarm-preflight harness defects (GH-37 dogfood) | ✅ | [#51](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/51) |

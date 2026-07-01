@@ -12,6 +12,12 @@ Executed the two serialized kernel lanes of [MARATHON-PLAN-2026-07-01.md](PROJEC
 - **Gate**: `RELAY_SELF_SUFFICIENCY_SKIP=1 validate.sh` → exit 0, all 72 tests green with both lanes in place.
 - **Wave 2** (GH-64 security scanner, GH-66 transcript audit) dispatched as parallel Sonnet lanes; **GH-63-upgrade held** (mislabeled issue number — needs its own GH issue before execution, per the plan).
 
+### Marathon 2026-07-01 — Wave 2 additive lanes SHIPPED (GH-64, GH-66)
+Two independent additive lanes, built as parallel Sonnet subagents on disjoint paths, each verified by the orchestrator (Opus) before commit; `validate.sh` owned by the orchestrator to avoid a shared-file race.
+- **Lane B — GH-66 (`ff2ea44`)**: `utils/transcript-audit.sh` — periodic, READ-ONLY audit over a transcript dir; structured report of `stale-ref` / `repeat-explore` / `unbounded-stall`; never mutates a transcript. `test/transcript-audit.sh` (7 checks incl. read-only checksum/mtime guarantee). Ran clean against the real 37-file corpus (7 unbounded-stalls).
+- **Lane A — GH-64 (`a0cc84e`)**: `relay-automation/hooks/security-scan.sh` — self-contained, no-network fail-loud static scanner (eval-of-var, curl/wget|shell, AWS/PEM/GitHub/Slack secrets, credential literals); `test/security-scan.sh` (20 checks). **Deliberately scoped like GH-68's warn-only-first**: the test is wired into the gate; an active repo-wide BLOCKING scan is a follow-on (needs a suppression/baseline for legit `eval "$1"` in `poll.sh` + its own fixtures; pair with GH-61 CI). **Security note:** a full-tree scan confirmed NO real secret leak — all secret-pattern hits are the test's own fixtures + doc comments.
+- Both new tests registered in `validate.sh`; full suite re-run green.
+
 ### GH-67 scope update + ROADMAP queue entry
 Broadened GH-67 ("codex tick-release watch item") after confirming agy-turn.sh has the identical bug.
 - Root is `relay-turn-lib.sh` (shared containment core), not per-worker shim — both codex and agy inherit the gap.

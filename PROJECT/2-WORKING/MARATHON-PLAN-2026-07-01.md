@@ -36,7 +36,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **EXECUTED 2026-07-01.** Wave 1a **GH-67 SHIPPED** (`102cc74`, `test/relay-turn-handoff.sh`). Wave 1b **GH-68 Phase 1 SHIPPED** (`94558c5`, `test/relay-dep-drift.sh`, `validate.sh` 72/72). Wave 2 (GH-64 + GH-66) dispatched as parallel Sonnet lanes. | Integrate Wave 2 lanes + gate green. **GH-63-upgrade held** — needs its own GH issue (file mislabeled; #63 is signal-triage) before firing. **Operator-driven (unchanged):** rebalance-OS cross-repo dogfood + G2 dup-token as a second Wave 1. |
+| **EXECUTED + COMPLETE 2026-07-01.** Wave 1a **GH-67 SHIPPED** (`102cc74`). Wave 1b **GH-68 Phase 1 SHIPPED** (`94558c5`). Wave 2 **GH-66 SHIPPED** (`ff2ea44`) + **GH-64 tool/test SHIPPED** (`a0cc84e`), both parallel Sonnet lanes, orchestrator-verified. Full `validate.sh` green with all 4 new tests. | **GH-63-upgrade held** — needs its own GH issue (file mislabeled; #63 is signal-triage) before firing. **GH-64 active-gate wiring** deferred (needs a suppression/baseline; pair with GH-61 CI). **Operator-driven (unchanged):** rebalance-OS cross-repo dogfood + G2 dup-token as a second Wave 1. |
 
 ## The one safety rule
 
