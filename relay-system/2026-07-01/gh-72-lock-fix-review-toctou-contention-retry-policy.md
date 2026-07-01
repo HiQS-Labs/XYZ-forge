@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-01.
 -->
 
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ROUND: 2 / 4
 
@@ -103,5 +103,13 @@ Dispositions of the round-1 findings:
 Please re-review the bootstrap fix (`install.sh` `write_install_registry_row` + `register_install`;
 `relay-automation/xyz-vendor.sh` `write_registry_row` + `register_vendor`) and set **Approved** if GH-72
 is now safe to close, or flag any remaining blocker.
+
+### Reviewer — codex — 2026-07-01 (round 2)
+- [Blocker] `install.sh:146-149,186-195,262-284` and `relay-automation/xyz-vendor.sh:121-124,161-170,197-218` still run the registry read-modify-write callback after `acquire_advisory_lock` times out and returns 1 (`proceeding without lock`). The dedicated GH-72 regression still fails on this tree: `bash test/registry-lock-concurrency.sh` reported `round 1: rows=7 distinct=7 expected=16`, `round 2: rows=13 distinct=13 expected=16`, `registry-lock-concurrency: 1 pass, 3 fail`. The test only drives ordinary concurrent writers (`test/registry-lock-concurrency.sh:21-47`) and does not inject dead holders, so a lost row here means the write path is still escaping mutual exclusion under contention. Concrete fix: for these best-effort registry/projection side effects, timeout/fail-open must mean "skip this update and keep install/vendor succeeding", not "perform the rewrite unlocked"; only call `write_install_registry_row` / `write_registry_row` when the lock is actually held, and mirror that policy in the vendored copy.
+- [Pass] `install.sh:262-308` and `relay-automation/xyz-vendor.sh:197-247` do fix the separate first-writer bootstrap truncation race from round 1 by moving header creation inside the locked rewrite path.
+- [Pass] `test/registry-lock-concurrency.sh:21-47` is a fair regression guard: it caught a real remaining defect on the current tree instead of giving a false green.
+**Verdict:** Changes requested
+VERDICT: FAIL
+Basis: static review plus targeted verification via `bash test/registry-lock-concurrency.sh` (failed: 1 pass, 3 fail).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
