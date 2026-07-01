@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-01.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -61,5 +61,13 @@ Land a clear Verdict: is GH-70 the definitive unlock, or necessary-but-not-suffi
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — 2026-07-01
+- [Blocker] GH-70 still leaves the critical isolation step as an optional advisory, so calling it the "definitive unlock" is overstated. `find-harness.sh` silently resolves to the centralized harness when no local `.xyz/` exists (`skills/relay-xyz/find-harness.sh:18-22`, `:58-82`, `:149-162`), and its `--check` path only prints readiness text instead of enforcing vendoring or blocking unsafe centralized reuse (`skills/relay-xyz/find-harness.sh:163-190`; the project doc explicitly says "Fail-open" at `PROJECT/1-INBOX/GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md:82-107`). The common installer still has no `--with-harness` path (`install.sh:44-50`). Concrete fix: make per-repo harness isolation the default/required foreign-repo path, not a manual warning branch; at minimum land `install.sh --with-harness` now and surface a loud non-vendored warning on the default locator/export path, not only `--check`.
+- [Should] Machine-global install state is still shared and unlocked, so same-device multi-repo operations can still clobber each other outside the relay lock itself. Both `relay-automation/xyz-vendor.sh` and `install.sh` rewrite `~/.config/xyz/registry.tsv` by reading the current file into `"$reg.tmp.$$"` and `mv`ing it back with no lock (`relay-automation/xyz-vendor.sh:98-131`, `install.sh:144-183`); `install.sh` also rewrites the git-pulse projection the same way (`install.sh:112-140`). Two concurrent vendor/install/update operations can lose one writer's row. Concrete fix: serialize registry/projection writes with a per-user lock (for example a `mkdir` lock beside the registry) or switch to an append-plus-merge scheme.
+- [Should] The docs still prescribe fixed transcript paths under `/tmp`, which reintroduces same-machine cross-run interference in the operator-facing copy/paste flow even though the shims themselves default to per-PID log names. The skill examples pin `CODEX_LOG="${TMPDIR:-/tmp}/codex-turn.log"` / `AGY_LOG="${TMPDIR:-/tmp}/agy-turn.log"` (`skills/relay-xyz/SKILL.md:113-116`, `:136-157`), and the relay README repeats `/tmp/codex-turn.log` / `/tmp/agy-turn.log` (`relay-automation/README.md:212-223`, `:240-250`, `:281-300`). By contrast the actual shims default to unique `...-$$.log` files (`relay-automation/codex-turn.sh:71-75`, `relay-automation/agy-turn.sh:111-115`). Concrete fix: remove the explicit log env vars from the examples or switch every example to `.../codex-turn-$$.log` and `.../agy-turn-$$.log`.
+- [Pass] The actual runtime coordination surfaces look correctly per-repo once each repo has its own vendored harness: the driver lock is rooted under that harness clone (`relay-automation/relay-drive.sh:37-55`, `relay-automation/marathon-drive.sh:47-65`), throwaway worktrees are unique per turn via `mktemp` (`relay-automation/relay-turn-lib.sh:196-198`), and heartbeat/reap operate only on the selected repo root's `.tick/` event log (`relay-automation/relay-turn-lib.sh:56`, `src/scope.js:56-96`). I did not find a cross-repo collision on those core runtime paths.
+
+Verdict: Changes requested — GH-70 is necessary, but not sufficient to call same-device concurrent multi-repo XYZ "definitively solved" yet.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
