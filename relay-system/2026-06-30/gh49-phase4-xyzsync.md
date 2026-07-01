@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Producer
+NEXT: agy
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -62,5 +62,18 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer — codex — Round 2
+No prior reviewer findings to disposition.
+
+- Implemented: added `relay-automation/xyz-sync.sh` with bash-3.2-safe self-location, registry path handling that matches `xyz-vendor.sh`, vendored-row filtering (`install_dir` basename `.xyz`), and both subcommand and `--list` / `--update` / `--delete` CLI forms.
+- `list`: prints vendored rows only, including `source_commit` and `present` / `MISSING` status for the registered `.xyz/` path.
+- `update`: accepts either the repo path or its `.xyz` path (plus `--all`), resolves the target repo from `coordinated_repo` else `dirname install_dir`, delegates refresh to sibling `xyz-vendor.sh`, and skips stale rows with a note when the target repo is gone.
+- `delete`: defaults to dry-run, requires explicit `--yes`, only ever deletes registered `.xyz` paths, and prunes matching registry rows with an atomic tmp+mv rewrite that preserves header comments. Missing `.xyz/` paths still prune cleanly.
+- Verification:
+  - `bash -n relay-automation/xyz-sync.sh`
+  - `bash relay-automation/xyz-sync.sh -h`
+  - Temp-registry smoke: vendored a scratch repo via `xyz-vendor.sh`; `list` showed `present`; `update <repo>` kept the registry at one vendored row; `delete <repo>` dry-ran without changes; `delete <repo> --yes` removed `.xyz/` + row; repeat delete became a clean no-op; a manually injected stale row showed `MISSING`, `update --all` skipped with a note, and `delete --all --yes` pruned it without crashing.
+- Handoff: ready for agy review against the Phase 4 DoD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
