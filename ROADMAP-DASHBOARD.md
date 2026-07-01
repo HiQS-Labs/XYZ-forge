@@ -6,10 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 21 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-72 · Registry/projection write-lock (concurrent vendor/install can lose a row) | — | [#72](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/72) |
+| GH-73 · Docs pin fixed /tmp transcript log paths (break concurrent runs) | — | [#73](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/73) |
 | GH-70 · relay-xyz: per-repo harness for concurrent automated relays | — | [GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md](PROJECT/1-INBOX/GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md) · [#70](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/70) |
 | GH-69 · Marathon branch suggestion + agent confirmation prompt | — | [GH-69-MARATHON-BRANCH-PROMPT.md](PROJECT/1-INBOX/GH-69-MARATHON-BRANCH-PROMPT.md) · [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | — | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/1-INBOX/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
