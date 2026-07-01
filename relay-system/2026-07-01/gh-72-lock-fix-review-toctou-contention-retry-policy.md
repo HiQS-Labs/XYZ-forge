@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-01.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -152,5 +152,14 @@ Basis: static review plus targeted verification via `bash test/registry-lock-con
 
 No code path now writes the registry unlocked, and projection is fully decoupled. Please Approve if GH-72
 is safe to close, or flag any remaining blocker (final round).
+
+### Reviewer — codex — 2026-07-01 (round 4)
+- [Pass] `install.sh:131-200` now closes the two lock defects without reopening a row-loss path: empty `pid` waits and is reclaimed only after a sustained empty streak, live holders are retried on a wall-clock deadline, and timeout no longer performs an unlocked rewrite because `run_with_advisory_lock` skips the update instead (`install.sh:186-200`). The vendored copy matches the same policy at `relay-automation/xyz-vendor.sh:106-175`.
+- [Pass] `install.sh:267-316` now keeps both bootstrap and follow-on work on the correct side of the registry lock. The missing-registry header is created inside the locked atomic rewrite (`install.sh:270-282`), and `publish_registry_projection` runs only after `run_with_advisory_lock` has released the registry lock (`install.sh:312-316`), so projection discovery/write can no longer starve registry writers. `relay-automation/xyz-vendor.sh:202-250` mirrors the locked bootstrap fix and has no projection work in its registry critical section.
+- [Pass] `install.sh:174-183` and `relay-automation/xyz-vendor.sh:149-158` still enforce ownership-checked release, so cleanup/release will not delete a peer's lock after a reclaim handoff.
+- [Pass] `test/registry-lock-concurrency.sh:21-58` is now a fair GH-72 guard: it disables projection by pointing `XYZ_GITPULSE_DIR` at a non-git dir, stretches `XYZ_LOCK_WAIT_S` to measure pure mutual exclusion, and the targeted run on this tree passed cleanly (`round 1: rows=16 distinct=16 expected=16`, `round 2: rows=16 distinct=16 expected=16`, `registry-lock-concurrency: 4 pass, 0 fail`).
+**Verdict:** Approved
+VERDICT: PASS
+Basis: static review plus targeted verification via `bash test/registry-lock-concurrency.sh` (passed: 4 pass, 0 fail).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
