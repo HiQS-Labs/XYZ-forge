@@ -59,12 +59,22 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # redundant, so the repo-root-relative strip below (`${a#"$RTL_ROOT"/}`) could not remove an ABSOLUTE
   # relay-file prefix — the relay file then failed the off-lane match and a legitimate same-repo turn
   # was reverted (exit 6; the GH-37 marathon needed --target-root DROPPED to converge). When the target
-  # root resolves to the SAME git repo as the caller's own root, collapse to that root so containment is
-  # byte-identical to the no-target-root path (a same-repo --target-root is a NO-OP). Genuine foreign
-  # roots (a different toplevel) are untouched — the cross-repo path is unchanged.
+  # root resolves to the SAME git repo as the caller's own root, collapse so containment is
+  # byte-identical to the no-target-root path (a same-repo --target-root is a NO-OP). WHICH root string
+  # to collapse to matters: prefer the caller's own root ($1) when $1 IS the repo root, because $1 is
+  # the exact path form the rest of the turn uses (symlink-consistent — git rev-parse returns the
+  # PHYSICAL path, e.g. /private/var, while $1/the relay file may be the /var form; GH-51). But a GH-49
+  # vendored .xyz/ copy is a SUBDIR of the foreign repo, so its caller root ($1 = …/.xyz) is NOT the
+  # repo root — collapsing to $1 would root containment at .xyz/ and the foreign repo's own relay file
+  # would fail its off-lane match. Detect that (physical $1 != physical toplevel) and use the toplevel.
+  # Genuine foreign roots (a different toplevel) are untouched — the cross-repo path is unchanged.
   if [[ -n "${RELAY_TARGET_ROOT:-}" ]]; then
-    local _tt; _tt="$(git -C "$RTL_ROOT" rev-parse --show-toplevel 2>/dev/null)"
-    [[ -n "$_tt" && "$_tt" == "$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)" ]] && RTL_ROOT="$1"
+    local _tt _ct _c1; _tt="$(git -C "$RTL_ROOT" rev-parse --show-toplevel 2>/dev/null)"
+    _ct="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)"
+    _c1="$(cd "$1" 2>/dev/null && pwd -P)"
+    if [[ -n "$_tt" && "$_tt" == "$_ct" ]]; then
+      if [[ "$_c1" == "$_ct" ]]; then RTL_ROOT="$1"; else RTL_ROOT="$_tt"; fi
+    fi
   fi
   # macOS/APFS (and any case-insensitive fs) reports git-status paths in the case the INDEX tracks
   # (e.g. RELAY-SYSTEM/…), which can differ from the lowercase invocation arg the allowlist holds

@@ -29,13 +29,21 @@ TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
 CONSULT_SH="${CONSULT_SH:-"$ROOT_DIR/relay-automation/consult.sh"}"
 
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
-  _lock="$ROOT_DIR/.git/relay-driver.lock"
+  # The driver lock lives in .git/ (never committed) for a normal harness clone. A GH-49 vendored
+  # .xyz/ copy has no .git/, so mkdir'ing a lock there would fail — fall back to a hidden lock beside
+  # the scripts (the .xyz/ dir is itself gitignored in the foreign repo, so it stays uncommitted just
+  # the same). When .git/ exists the path is unchanged, so a normal clone behaves byte-identically.
+  if [[ -d "$ROOT_DIR/.git" ]]; then
+    _lock="$ROOT_DIR/.git/relay-driver.lock"; _lock_label=".git/relay-driver.lock"
+  else
+    _lock="$ROOT_DIR/.relay-driver.lock";     _lock_label=".relay-driver.lock"
+  fi
   if ! mkdir "$_lock" 2>/dev/null; then
     # GH-42 self-heal: reclaim the lock only if its holder is dead. A crashed/killed driver used to
     # leave a stale lock that blocked every later run until a manual rmdir.
     _holder="$(cat "$_lock/pid" 2>/dev/null || true)"
     if [[ -n "$_holder" ]] && kill -0 "$_holder" 2>/dev/null; then
-      printf 'relay-drive: another driver is active in this repo (pid %s, lock: .git/relay-driver.lock).\n' "$_holder" >&2
+      printf 'relay-drive: another driver is active in this repo (pid %s, lock: %s).\n' "$_holder" "$_lock_label" >&2
       printf 'relay-drive: Concurrent runs in the same clone are unsafe (GH-42 ROOT HEAD hazard).\n' >&2
       exit 1
     fi
