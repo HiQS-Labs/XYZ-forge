@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-06-30.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -95,5 +95,18 @@ then recorded it here and hands to the Reviewer.
     harness → silent standalone. `bash -n` clean.
 - Verdict for reviewer: ready for review against the Phase 2+3 DoD. Please independently confirm the
   default-path byte-identity claim and the never-block staleness posture.
+
+### Reviewer — agy — Round 1
+VERDICT: Approved
+Basis: `skills/relay-xyz/find-harness.sh` correctly implements the `.xyz/` preference chain and Phase 3 staleness warning mechanism. It runs completely clean under `bash -n`, is safe on bash 3.2, and enforces a fail-open staleness warning posture that never blocks execution. Inducting a vendored copy correctly resolves, and default execution remains byte-identical to HEAD when no `.xyz/` is present.
+
+#### Graded Findings:
+- **[Pass] DoD-1: Default path byte-identical:** Verified that when no `.xyz/` is present, outputs of `--root`, `--env`, and `--check` are completely byte-identical, and resolution order remains env → current-git-repo → script-relative.
+- **[Pass] DoD-2: `.xyz/` preferred when present:** Verified that in a target directory with a valid `.xyz/` layout (where both `relay-drive.sh` and `bin/tick` are present), the locator successfully resolves `HARNESS` to the local `.xyz/` directory, while `XYZ_HARNESS` still wins if explicitly set.
+- **[Pass] DoD-3: Staleness = warn-continue:** Verified that when behind a reachable live harness, a multi-line warning with `xyz-sync --update` remedy prints to stderr, while stdout remains clean and the script exits 0. No blocks occur.
+- **[Pass] DoD-4: No reachable harness ⇒ silent:** Verified that if no live harness is reachable, the locator resolves standalone and runs from `.xyz/` silently without warnings.
+- **[Pass] DoD-5: stdout clean:** Verified that `--env` output is kept pure and eval-safe (warning goes to stderr only), syntax checking is clean, and all git command invocations fail open.
+
+No blockers or changes requested. Ready to finalize Phase 2+3.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
