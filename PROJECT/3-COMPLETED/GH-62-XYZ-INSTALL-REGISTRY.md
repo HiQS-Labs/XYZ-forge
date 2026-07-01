@@ -2,14 +2,16 @@
 gh_issue: 62
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/62
 title: XYZ install registry — call-home to remember install locations (borrow PDDA pattern)
-status: Proposed (1-INBOX — not yet active)
+status: Completed 2026-06-30
 created: 2026-06-30
+completed: 2026-06-30
 doc_type: feedback
 ---
 
-> **Inbox capture.** Per PDDA, a `1-INBOX/GH-*.md` doc carries no `## Status` table while it sits
-> here; it is the capture, not the active-work doc. Promote to `2-WORKING/` (keeping the `GH-62`
-> prefix + adding the exact status table) when execution starts.
+> **Completed capture (built directly, no 2-WORKING phase).** Shipped `install.sh` + the call-home
+> registry, then independently QA'd via an automated agy `/relay-xyz` (2 rounds → **Approved**, 3
+> hardening fixes folded in). Landed on `main` and recorded in `CHANGELOG.md` (2026-06-30). Kept as a
+> record; the `xyz-sync` push tool + the `bin/tick`↔SKILL-embed drift fix remain as follow-ons.
 
 ## Problem
 
