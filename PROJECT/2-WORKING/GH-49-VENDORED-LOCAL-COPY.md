@@ -30,7 +30,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 4 — `xyz-sync` (registry-backed list/update/delete of vendored copies).** `relay-automation/xyz-sync.sh` codex-produced → **agy-reviewed → Approved (6/6 DoD Pass)** → **execution-verified**: `list` shows present/MISSING; `update` re-vendors (restamps a corrupted VERSION back to real HEAD, keeps 1 row); `delete` **dry-runs by default** (WOULD REMOVE/PRUNE), `--yes` removes `.xyz/`+row but **leaves the repo dir untouched** (containment); stale-row `delete --all --yes` prunes → 0. **Closes the GH-62 `xyz-sync` follow-on.** Relay [gh49-phase4-xyzsync.md](../../relay-system/2026-06-30/gh49-phase4-xyzsync.md). *(Phases 1–3 before: vendor cmd + locator/staleness, all swarm+execution-verified.)* | **Phase 5 — session-end reminder hook** (non-blocking notice per the decision record). |
+| **Phase 5 — session reminder hook.** `relay-automation/hooks/xyz-vendor-reminder.sh` (print-only, non-blocking) + wired as a **SessionStart** hook in `.claude/settings.json`. Emits a heads-up **only when an on-disk vendored `.xyz/` copy exists** (else silent — zero noise), listing the paths + the `xyz-sync` remedy; opt out with `XYZ_NO_VENDOR_REMINDER=1`; always exit 0, never deletes. Authored directly (trivial additive print-only) + **execution-verified** (silent when none / moved; fires with count+path when present; opt-out silent; exit 0). SessionStart chosen because its stdout is the visible channel (SessionEnd output isn't surfaced live) — the nudge greets the next session, when cleanup is actionable. *(Phases 1–4 before: vendor cmd + locator/staleness + xyz-sync, all swarm+execution-verified.)* | **Phase 6 — tests wired into `validate.sh` + the Level-2 dogfood** (relay-xyz running *from* the vendored copy, live harness hidden). |
 
 ## Table of Contents
 
@@ -158,18 +158,22 @@ Two operator decisions (2026-06-30) shape the build:
 
 ## Phase 5 — session-end reminder hook
 
-- [ ] A Stop/SessionEnd hook that, when `.xyz/` copies exist (per the registry), emits a
-      **non-blocking** reminder: "vendored `.xyz/` copies exist — `xyz-sync --delete <dir>` to remove."
-- [ ] **Cannot** auto-delete and **cannot** truly block for an interactive yes/no — a hook can only
-      emit a notice (GUIDING #8). The reminder is honest about that; the registry is what makes
-      later update/delete possible.
-- [ ] Opt-out env so a long-lived intentional vendored copy doesn't nag every session.
+**Shipped as `relay-automation/hooks/xyz-vendor-reminder.sh`, wired SessionStart in `.claude/settings.json`.**
+
+- [x] A session-lifecycle hook that, when a vendored `.xyz/` copy exists **on disk** (per the registry),
+      emits a **non-blocking** reminder listing the paths + `xyz-sync.sh list` / `delete <dir> --yes`.
+- [x] **Cannot** auto-delete and **cannot** truly block for an interactive yes/no — it only prints a
+      notice (GUIDING #8). Wired at **SessionStart** because that's the channel whose stdout Claude Code
+      surfaces (a SessionEnd hook's output isn't shown live); the nudge lands at the next session, when
+      cleanup is actionable. For cross-repo coverage the operator can copy the one-liner into
+      `~/.claude/settings.json` (the registry is global).
+- [x] Opt-out `XYZ_NO_VENDOR_REMINDER=1` so a long-lived intentional copy doesn't nag.
 
 ### QA checklist — Phase 5
 
-- [ ] With a vendored copy registered → the notice prints at session end.
-- [ ] With none → silent.
-- [ ] The hook never blocks or deletes.
+- [x] With a vendored copy on disk → the notice prints (count + path + remedy). Verified.
+- [x] With none / a moved-away copy → silent (no nag). Verified.
+- [x] The hook never blocks or deletes (always exit 0). Verified; `.claude/settings.json` JSON valid.
 
 ## Phase 6 — tests + dogfood acceptance
 

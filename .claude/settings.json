@@ -42,6 +42,16 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash relay-automation/hooks/xyz-vendor-reminder.sh"
+          }
+        ]
+      }
     ]
   }
 }
