@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-01
 
+### GH-70 Phases 1–2 — per-repo harness concurrency (doc + find-harness warning)
+Closes the concurrency-guidance gap the `/relay-xyz` review surfaced. **Phase 1:** `skills/relay-xyz/SKILL.md` gains a "Concurrent relays across repos" section — the per-clone global driver lock (GH-42) serializes every relay sharing one harness; `xyz-vendor.sh` (not `install.sh`) gives each repo its own `.xyz/` → own lock → concurrency. **Phase 2:** `find-harness.sh --check` now warns when a foreign repo has no local `.xyz/` (using the centralized harness + shared lock), points at `xyz-vendor.sh`, and flags a currently-held lock — fail-open, `--check` always exits 0. `test/find-harness.sh` (8 checks: harness-clone / foreign-no-.xyz / vendored-.xyz). `validate.sh` 76/76. Phase 3 (`install.sh --with-harness`) deferred. `e8d9999`.
+
 ### GH-72 CLOSED — registry lock hardened through a 4-round codex relay (5 real defects)
 The dogfood-built lock (Lane B) was **not** actually correct. A `/consult` found 1 defect; a headless codex relay review then found **4 more** over 4 rounds — a clean demonstration that *running/reviewing* beats *reasoning*, and that a concurrency stress test + an independent reviewer catch what a one-shot read misses. All fixed + verified (`validate.sh` 75/75, codex final **Approved**):
 1. **empty-pid TOCTOU** — loser deleted the winner's fresh lock before its pid was written. → empty pid now means "wait", not "reclaim".

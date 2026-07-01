@@ -36,7 +36,37 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **EXECUTED + COMPLETE 2026-07-01.** Wave 1a **GH-67 SHIPPED** (`102cc74`). Wave 1b **GH-68 Phase 1 SHIPPED** (`94558c5`). Wave 2 **GH-66 SHIPPED** (`ff2ea44`) + **GH-64 tool/test SHIPPED** (`a0cc84e`), both parallel Sonnet lanes, orchestrator-verified. Full `validate.sh` green with all 4 new tests. | **GH-63-upgrade held** — needs its own GH issue (file mislabeled; #63 is signal-triage) before firing. **GH-64 active-gate wiring** deferred (needs a suppression/baseline; pair with GH-61 CI). **Operator-driven (unchanged):** rebalance-OS cross-repo dogfood + G2 dup-token as a second Wave 1. |
+| **2026-07-01 — big day, all pushed to `origin/main`.** Marathon: **GH-67** tick-handoff (`102cc74`), **GH-68** dep-drift (`94558c5`), **GH-66** transcript audit (`ff2ea44`), **GH-64** security scanner (`a0cc84e`). Then a `/relay-xyz` concurrency review spun off **GH-72/73/74**: **GH-73** closed (`d427a90`), **GH-72** registry lock closed after a 5-defect codex relay (`56433d6`), **GH-70** Phase 1–2 shipped (`e8d9999`). **GH-71** issue opened (code-structure upgrade). `validate.sh` **76/76**. | See **Resume on another device** below — the ranked remaining queue + exact setup to continue elsewhere. |
+
+## Resume on another device (cross-device handoff)
+
+Everything below is pushed to `origin/main` (`git pull` to get it). To continue this queue on a
+different machine:
+
+**One-time setup on the new device**
+1. Clone (or pull) `xyz-3-agents-swarm`, then make the relay skill discoverable + disable the sandbox:
+   - `bash skills/relay-xyz/install.sh` — symlinks `relay-xyz` into `~/.claude/skills/` (Claude Code doesn't scan top-level `skills/`).
+   - Run Claude Code with the Bash sandbox **off** — every workflow here (codex/agy, `gh`, `git push`) needs it. See memory `git-push-needs-sandbox-disabled`.
+2. Workers: `codex` (ChatGPT-sub auth) and `agy` (Antigravity) must be installed + authed for headless relay/marathon lanes. `claude` is **not** a headless builder yet (#58).
+3. Orient: read `ROUTER.md` → `AGENTS.md` → `ROADMAP.md`; run `utils/pdda/pdda.sh run` (docs) and `RELAY_SELF_SUFFICIENCY_SKIP=1 ./validate.sh` (code) to confirm green.
+
+**Ranked remaining queue (pick up here)**
+| Rank | Item | Size | Notes / next action |
+|---|---|---|---|
+| 1 | **GH-74** — `test/xyz-vendor.sh` not hermetic under a git worktree | S | Root-caused 2026-07-01: locator resolves to the real clone via the `~/.claude/skills` symlink. Pin the locator anchor to the fixture for the `no-.xyz` assertion. → [#74](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/74) |
+| 2 | **GH-71** — code-structure upgrade Phase 1+2 | M | Phase 1 root-dir cleanup + Phase 2 JSDoc/`checkJs` (wires GH-61). Both low-risk, no supervisor rewrite. Phases 3–4 (Node ports) deferred behind a concrete trigger. → [#71](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/71) |
+| 3 | **GH-69** — marathon branch suggestion + confirm prompt | S–M | `marathon-plan.sh` emits `suggested_branch`; `swarm-preflight` emits `branch_ready`; orchestrator asks before `marathon-drive`. → [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) |
+| 4 | **GH-64 active-gate wiring** | M | Scanner + test shipped; making it a *blocking* repo-wide gate needs a suppression/baseline (legit `eval "$1"` in `poll.sh`); pair with GH-61 CI. |
+| 5 | **#72 nit** — `XYZ_GITPULSE_DIR=""` = auto-discover, not disabled | S | Doc/UX: add a distinct disable sentinel, or treat empty as disabled + unset-only for autodiscovery. Noted on #72; not yet its own issue. |
+| 6 | **GH-70 Phase 3** — `install.sh --with-harness` | M | Deferred: wrap `xyz-vendor.sh`. Only if a real user finds `xyz-vendor.sh` too indirect. |
+| — | **#58** — headless `claude` builder | L | The external-independence keystone, but blocked: no `claude` CLI on this device (IDE-only). Needs the standalone CLI + a nested-`claude -p` dogfood. |
+
+**Operator-driven (any device, unchanged):** rebalance-OS cross-repo dogfood (`swarm-preflight --target-root <clone> → marathon-drive`), and G2 dup-token determinism (Part B Phase 2).
+
+**How to fire a lane through the harness** (proven this session): invoke the `relay-xyz` skill, then
+either a `/relay` review (`relay-drive.sh --review-once`, `ALLOW_PATHS=""`) or a build lane
+(direct `codex-turn.sh`/`agy-turn.sh` for true concurrency — the `/xyz` model — since two supervised
+`relay-drive`s serialize on the per-clone lock). Always `dangerouslyDisableSandbox`.
 
 ## The one safety rule
 
