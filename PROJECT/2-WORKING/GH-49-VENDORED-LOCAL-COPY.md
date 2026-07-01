@@ -30,7 +30,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 1 — vendor command shipped (swarm-produced).** `relay-automation/xyz-vendor.sh` built by **codex** and reviewed by **agy → Approved** (cross-model relay [gh49-phase1-vendor.md](../../relay-system/2026-06-30/gh49-phase1-vendor.md)), then **independently verified by execution** (GUIDING #12): vendored into a scratch repo → 16 relay files + `bin/tick` + 12/12 `src/*.js` with subpaths intact, 3-field `VERSION` (tick_version 0.2.0), idempotent `.gitignore` + registry (3 runs → 1 row), `--no-register`/`-h` correct, manifest single-sourced from `make-pkg.sh`. (Phase 0 before: promote + decision record + ROADMAP In-progress.) | **Phase 2 — locator preference** in `find-harness.sh` (containment-critical; I author + swarm-review, every edit independently verified). |
+| **Phase 2+3 — `.xyz/` locator preference + warn-continue staleness banner** (`find-harness.sh`, the containment-critical edit). codex-produced (its turn was killed off-lane at the cap + created an off-lane file that **containment reverted** — the allowlisted edit survived), then **claude-a gate-verified by execution** (default no-`.xyz/` path byte-identical to HEAD on stdout+stderr; `.xyz/` preferred; behind→stderr banner + `--env` exit 0 + pure-export stdout; `XYZ_HARNESS` wins; standalone silent), then **agy-reviewed → Approved** (all 5 DoD Pass). Relay [gh49-phase23-locator.md](../../relay-system/2026-06-30/gh49-phase23-locator.md). *(Phase 1 before: `xyz-vendor.sh`, codex+agy+execution-verified.)* | **Phase 4 — `xyz-sync`** (registry-backed update/delete of vendored copies). |
 
 ## Table of Contents
 
@@ -104,34 +104,37 @@ Two operator decisions (2026-06-30) shape the build:
 
 ## Phase 2 — locator preference chain (containment-critical)
 
-- [ ] Extend `find-harness.sh` resolution order to: **env override → local `.xyz/` (vendored) →
-      current git-repo harness → script-relative**. The vendored copy wins when present in the repo you
-      are standing in, so a foreign repo with `.xyz/` resolves to its own snapshot.
-- [ ] The default path (no `.xyz/`) must stay **byte-for-byte unchanged** — the vendored branch is only
-      taken when `<cwd-repo>/.xyz/relay-automation/relay-drive.sh` exists.
-- [ ] `_has_harness` must accept a `.xyz/`-rooted layout (relay scripts + `bin/tick` present).
+**Shipped in `find-harness.sh` (codex-produced, execution-verified, agy-approved).**
+
+- [x] Extend `find-harness.sh` resolution order to: **env override → local `.xyz/` (vendored) →
+      current git-repo harness → script-relative**. A foreign repo with `.xyz/` resolves to its own snapshot.
+- [x] The default path (no `.xyz/`) stays **byte-for-byte unchanged** — the vendored branch is only
+      taken when `_has_vendored_harness` (relay-drive.sh **and** `bin/tick` present under `<root>/.xyz/`).
+- [x] `_has_vendored_harness` accepts the `.xyz/`-rooted layout.
 
 ### QA checklist — Phase 2
 
-- [ ] Foreign repo with `.xyz/` present → locator resolves to `.xyz/`.
-- [ ] No `.xyz/` → resolution identical to today (regression-proven).
-- [ ] `XYZ_HARNESS` override still wins over a present `.xyz/`.
+- [x] Foreign repo with `.xyz/` present → locator resolves to `<root>/.xyz` (Test 1).
+- [x] No `.xyz/` → `--root`/`--env`/`--check` stdout+stderr **byte-identical to HEAD** (baseline diff).
+- [x] `XYZ_HARNESS` override still wins over a present `.xyz/` (Test 4).
 
 ## Phase 3 — staleness gate (warn loudly, continue)
 
-- [ ] When resolved to `.xyz/` **and** a live harness is reachable (env/git/script-relative), compare
-      `.xyz/VERSION`'s source commit to the reachable harness; if the snapshot is behind, print a loud
-      multi-line staleness banner to stderr (name the vendored SHA, the live SHA, and the
-      `xyz-sync --update` remedy).
-- [ ] **Never block** — the relay proceeds from `.xyz/` regardless (locked decision #1).
-- [ ] No reachable harness → no banner (can't compare; expected WIP/offline case).
-- [ ] Surface the same signal in `find-harness.sh --check`.
+**Shipped in `find-harness.sh` (same edit as Phase 2).**
+
+- [x] When resolved to `.xyz/` **and** a live harness is reachable (env or script-relative, ≠ the `.xyz/`),
+      compare `.xyz/VERSION` `source_commit` to the reachable harness HEAD (`merge-base --is-ancestor`);
+      if behind, print a loud multi-line stderr banner (vendored SHA, live SHA, `xyz-sync --update` remedy).
+- [x] **Never blocks** — resolves and exits 0 regardless (verified: `--env` exit 0 with banner on stderr).
+- [x] No reachable harness → no banner (silent `standalone`).
+- [x] `find-harness.sh --check` surfaces the vendored + staleness state.
 
 ### QA checklist — Phase 3
 
-- [ ] `.xyz/` behind a reachable harness → banner fires, run still proceeds.
-- [ ] `.xyz/` current with the harness → no banner.
-- [ ] `.xyz/` present, no harness reachable → no banner, resolves to `.xyz/`.
+- [x] `.xyz/` behind a reachable harness → banner fires on stderr, run still proceeds (Test 3).
+- [x] `.xyz/` current with the harness → no banner (Test 2).
+- [x] `.xyz/` present, no harness reachable → no banner, resolves to `.xyz/` (Test 5).
+- [x] stdout stays pure (`--env` = only `export …` lines; banner stderr-only).
 
 ## Phase 4 — `xyz-sync` update/delete
 
