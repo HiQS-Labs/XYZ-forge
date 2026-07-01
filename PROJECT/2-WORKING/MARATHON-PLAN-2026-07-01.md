@@ -68,7 +68,7 @@ serialization bottleneck: **at most one kernel lane per wave**, even in separate
 |---|---|---|---|---|
 | A | GH-64 security-scanning guardrail | Additive; wraps existing hooks; no kernel or relay mutation. Pairs naturally with GH-61 CI. Ratings: cx=2 risk=2 eff=2. | Sonnet High | `relay-automation/hooks/`, `bin/validate-relay-block`, `validate.sh` |
 | B | GH-66 session/transcript-log audit | Read-only, additive; periodic audit script over `relay-system/**` + `AUDIT/`; no relay mutation. Ratings: cx=2 risk=2 eff=2. | Sonnet High | `utils/`, `AUDIT/` |
-| C | GH-63-upgrade Phase 1 (root-dir cleanup) | Root cleanup only — remove stale stubs, tighten the directory layout. Independent of all kernel/shim work. Phase 2 (JSDoc/checkJs) can follow in a Wave 2b. Ratings: cx=2 risk=2 eff=2. | Sonnet High | top-level `*.md`, scripts listed in GH-63-UPGRADE-CODE-STRUCTURE.md |
+| C | Code Structure upgrade Phase 1 (root-dir cleanup) | Root cleanup only — remove stale stubs, tighten directory layout. Independent of all kernel/shim work. ⚠️ Needs a new GH issue first: the capture doc was named GH-63 but #63 is the signal-triage issue. Open an issue, then fire. Ratings: cx=2 risk=2 eff=2. | Sonnet High | top-level `*.md`, scripts listed in GH-63-UPGRADE-CODE-STRUCTURE.md |
 
 ## Outside the wave plan (operator-driven, any order)
 
@@ -82,7 +82,7 @@ serialization bottleneck: **at most one kernel lane per wave**, even in separate
 | Item | Reason |
 |---|---|
 | **GH-68 cross-agent dep conflict** | 🔴 HIGH PRIORITY — costly: touches `.tick/events/` verb schema + both shims + `relay-turn-lib.sh`. Needs `decisions/` record first; only then promote to Wave 1. |
-| **GH-63-SIGNAL-TRIAGE-STAGE** | ⚠️ Issue-number collision: `gh_issue: 63` conflicts with GH-63-UPGRADE-CODE-STRUCTURE. Confirm GitHub issue # (likely #65); rename file; then re-park and sequence. |
+| **Code Structure upgrade** (GH-63-UPGRADE-CODE-STRUCTURE.md) | ⚠️ No confirmed GH issue: the file was named GH-63 but GitHub #63 is the signal-triage issue. Open a new issue, update the file/ROADMAP label, then sequence as Wave 2 Lane C. |
 | GH-41 task.done not terminal | Unrated — add PDDA ratings to unblock. Kernel territory once rated. |
 | GH-44 scratch-repo git fall-through | Unrated — add ratings to unblock. |
 | GH-48 cross-repo zone model | Behind the rebalance-OS dogfood — keep it there. |
