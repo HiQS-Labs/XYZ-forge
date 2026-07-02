@@ -19,6 +19,12 @@ goal: >
 > from `ROADMAP.md`; PR reviews are a manual overlay because a review evaluates an existing diff
 > rather than remediating a ledger item.
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Overlay captured 2026-07-02 — two PR-review lanes defined (R1 = PR #79/GH-77 aider lane, R2 = PR #81/GH-78 doc-preflight), reviewer split + read-only artifact flow documented. Both PRs confirmed **STALE against main** (`mergeable: CONFLICTING`) after this session's merges. | Run each review lane (content review is valuable now; merge-readiness verdict is premature until each PR is rebased). **Blocker to flag to authors:** PR #79 collides with #56's `reconcile_relay_task` change in `marathon-drive.sh` — needs rebase before a merge-readiness pass. |
+
 ## Number mapping (the ask used the issue numbers)
 
 | Asked | Is an issue | The PR to review |

@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-84 filed + queued (runner-loop non-hermetic) · PR-REVIEW-QUEUE doc fixed · marathon plan regenerated
+Triage follow-ups after GH-83.
+
+- **Filed [#84](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/84)** for the test-hermeticity leak GH-83 surfaced (`test/runner-loop.sh` false-fails when the real `README.md` is dirty because `runner.sh`'s dirty-guard resolves `ROOT_DIR` to the real repo, not `TICK_REPO_ROOT`). Captured [GH-84-RUNNER-LOOP-NONHERMETIC.md](PROJECT/1-INBOX/GH-84-RUNNER-LOOP-NONHERMETIC.md) **rated (1/1/1) + with a `## Swarm Preflight Contract`** so it's a marathon-ready lane, parked in ROADMAP.
+- **Fixed `PROJECT/2-WORKING/PR-REVIEW-QUEUE-2026-07-02.md`** — it was missing the required `## Status` table (failed `pdda status-table`, pre-existing from `02ee12a`). Added the table (both PRs stale/conflicting; #79 collides with #56's `reconcile_relay_task`). `pdda run` now **all checks passed**.
+- **Regenerated `MARATHON-PLAN-2026-07-02.md`** from the ledger: **Wave 1 = #84** (the one ready lane; independent zone, suggested branch `marathon/gh-84-runner-loop-nonhermetic-2026-07-02`); 15 items held (unrated / needs-doc / needs-contract). Dashboard regenerated. GH-83 marked ✅ shipped in the ledger.
+
 ### GH-83 — README onboarding-UX rewrite (single operator path; de-brittled a stale test count)
 A `/consult` on `README.md` (Codex `gpt-5.4` + agy, run cold as a brand-new operator) flagged the top of the file as **[Blocker]** on two counts both models reached independently, plus a freshness bug. Rewrote the landing page to fix them; docs-only, trim + reorder (no runtime/kernel change). Issue-first: [#83](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/83) → [GH-83-README-ONBOARDING-UX.md](PROJECT/1-INBOX/GH-83-README-ONBOARDING-UX.md), parked in ROADMAP.
 
