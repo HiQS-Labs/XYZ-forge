@@ -2,7 +2,7 @@
 gh_issue: 75
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/75
 title: XYZ.json — final completion telemetry appended at relay/swarm/marathon session end
-status: Proposed (1-INBOX — relay-reviewed by agy, Approved; not yet promoted to 2-WORKING; GH-75 is provisional until filed)
+status: Proposed (1-INBOX — relay-reviewed by agy, Approved; not yet promoted to 2-WORKING)
 created: 2026-07-01
 updated: 2026-07-01
 owner: noel
