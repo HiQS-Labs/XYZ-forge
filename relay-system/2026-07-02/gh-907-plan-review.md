@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-02.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -169,5 +169,17 @@ pauses — i.e. it is the very mechanism #907 calls self-amplifying. So all five
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — Round 1
+- [Pass] Root-cause diagnosis is substantially accurate against the real v0.2.0 plugin source: `flush_pending_events()` drains `self::$pending_events` into `queue_event_for_order()`, which inserts one queue row and immediately calls `schedule_queue_item($queue_id, 0)`, and `process_event()` sends each row with one `wp_remote_post(... '/ingest/woo/events')`. Keep the existing note that `mark_pending_event()` only de-dups within one request so this does not read as “every hook fire always becomes a row.”
+- [Pass] The sweep bug is real, and the narrow claim is safe: `sweep_due_events()` selects due `pending`/`retry` rows and re-calls `schedule_queue_item(..., 0)` without changing `status` or `next_attempt_gmt`, and that function body matches the stale `0.1.1` copy as well.
+- [Should] Tighten the self-amplification wording. `defer_queue_row()` does reschedule via `schedule_queue_item($queue_id, $delay_seconds)`, but the dangerous growth comes from rescheduling an still-unclaimed row, not from delay alone. Concrete fix: say the rate limiter becomes self-amplifying under concurrency because multiple workers or sweep requeues can all defer the same `pending` row and each schedule another future action.
+- [Should] Fixes 3 and 4 need explicit lease semantics, not just “claim rows” / “claimed state.” As written, a worker crash after claim could strand rows forever, and `process_event()` currently has no atomic state transition before send. Concrete fix: specify an atomic claim step that moves rows into a recoverable in-flight state with lease expiry (or advances `next_attempt_gmt` as the lease), plus the reclaim rule when a worker dies mid-batch.
+- [Should] Fix 1 plus the acceptance criterion overstate transport compatibility. The current plugin posts one raw snapshot JSON body per request; batching will necessarily change the HTTP body shape or envelope even if each per-order snapshot stays byte-for-byte the same. Concrete fix: rewrite this to “preserve each snapshot payload generated from the existing order serializer, while changing only the transport envelope,” and explicitly call out that `/ingest/woo/events` batch semantics must be confirmed or changed in lockstep with the buffer server.
+- [Should] Fix 2 is too narrow for the actual emitters. The plugin also emits `refund_created` and subscription-renewal-driven `order_created`, and `handle_refund_created()` forces `$parent->save()`, which can cascade into more order-update hooks. Concrete fix: coalesce all due outbound rows by `order_id` per drain cycle, then merge/retain the event metadata needed for observability instead of naming only `order_created` / `order_updated` / `order_status_changed`.
+- [Should] Fix 5 is underspecified from the plugin side. The code has a client-side rate limiter and honors HTTP retry metadata, but there is no server-load signal in this plugin today. Concrete fix: name the pause source explicitly, such as `429/503 + Retry-After`, a dedicated buffer-health endpoint, or an operator-controlled pause flag, and state how the recurring drain resumes.
+- [Nit] The divergence section mixes a GitHub org name with a local filesystem path. The local stale copy I verified is under `/Users/noelsaw/Documents/GH Repos/WP-DB-Toolkit/...`; keep `Hypercart-Dev-Tools/WP-DB-Toolkit` as the repository identity, not as the local path. The `Version: 0.2.0` vs `const VERSION = '0.2.1'` mismatch is accurate and worth keeping because it changes emitted `plugin_version`.
+
+Verdict: Changes requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
