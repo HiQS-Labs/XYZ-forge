@@ -6,13 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 17 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-69 · Marathon branch suggestion + agent confirmation prompt | — | [GH-69-MARATHON-BRANCH-PROMPT.md](PROJECT/1-INBOX/GH-69-MARATHON-BRANCH-PROMPT.md) · [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | — | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/1-INBOX/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
-| GH-71 · Code Structure & Implementation Upgrade | — | [GH-71-UPGRADE-CODE-STRUCTURE.md](PROJECT/1-INBOX/GH-71-UPGRADE-CODE-STRUCTURE.md) · [#71](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/71) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | — | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | — | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
 | GH-44 · scratch-repo .git fall-through can pollute the parent repo (RCA) | — | [GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md](PROJECT/1-INBOX/GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md) · [#44](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/44) |
@@ -41,10 +40,11 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 44 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 44 · 🔮 0 · 🔲 0
+Summary: 45 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 45 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-71 · Code Structure & Implementation Upgrade | ✅ | [GH-71-UPGRADE-CODE-STRUCTURE.md](PROJECT/1-INBOX/GH-71-UPGRADE-CODE-STRUCTURE.md) · [#71](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/71) |
 | GH-74 · test/xyz-vendor.sh not hermetic under a git worktree | ✅ | [#74](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/74) |
 | GH-70 · relay-xyz: per-repo harness for concurrent automated relays | ✅ | [GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md](PROJECT/1-INBOX/GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md) · [#70](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/70) |
 | GH-72 · Registry/projection write-lock | ✅ | [#72](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/72) |
