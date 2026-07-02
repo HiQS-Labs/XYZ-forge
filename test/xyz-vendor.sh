@@ -5,7 +5,10 @@
 #   xyz-sync.sh list/update/delete, and the SessionStart reminder hook.
 source "$(dirname "$0")/_setup.sh" xyz-vendor
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# -P: physical/canonical, matching find-harness.sh's own `cd -P` self-resolution — a worktree
+# under /tmp or /var (macOS symlinks to /private/...) would otherwise compare a logical ROOT
+# against find-harness.sh's canonical HARNESS and false-fail the "default path intact" assertion.
+ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
 VENDOR="$ROOT/relay-automation/xyz-vendor.sh"
 SYNC="$ROOT/relay-automation/xyz-sync.sh"
 FH="$ROOT/skills/relay-xyz/find-harness.sh"
