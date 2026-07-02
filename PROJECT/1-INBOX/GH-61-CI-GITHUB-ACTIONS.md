@@ -78,3 +78,22 @@ path. Surface this to the operator before implementing Tier 2.
   portability/skip-gating sub-task and the runner decision.
 - Ratings: low blast radius (CI is additive, not in the runtime path; a red check is Easy to revert),
   modest effort (Tier 1 trivial, Tier 2 needs the skip-gating pass).
+
+## Swarm Preflight Contract
+
+Consumed by `utils/swarm-preflight.sh` to turn this doc into a marathon-ready packet. **Scope: Tier 1
+only** (same-repo build; `target.ref: main`; `.github/workflows/` is genuinely unbuilt). Tier 2's
+runner choice (`macos-latest` vs `ubuntu-latest` + skip-gating) is an **operator decision** and is
+deliberately excluded from this auto-fireable lane. Codex lane — a normal code-writing task, fully
+additive (CI is not in the runtime path), so nothing is orchestrator-only.
+
+```json
+{
+  "target":      { "repo": ".", "ref": "main" },
+  "gate":        "bash test/ci-workflow.sh",
+  "fix_probes":  [ { "type": "path_absent", "path": ".github/workflows/ci.yml" } ],
+  "artifacts":   [ ".github/workflows/ci.yml", "test/ci-workflow.sh", "validate.sh" ],
+  "remediation": { "source": "GH-61#tier-1--lint--doc-hygiene", "criteria": "One additive Tier-1 GitHub Actions workflow (.github/workflows/ci.yml, single ubuntu-latest job, no secrets) that runs shellcheck + bash -n over tracked *.sh, node --check on JS sources, JSON-validate on .claude/settings*.json, and utils/pdda/pdda.sh run in full mode; plus a dependency-free deterministic test/ci-workflow.sh asserting the workflow exists, is well-formed, and references those exact checks — wired into validate.sh. Tier 2 (validate.sh regression gate) is explicitly OUT OF SCOPE for this lane." },
+  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```

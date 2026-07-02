@@ -4,6 +4,15 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### Ledger reconciliation + new Marathon plan (GH-61 Tier 1 CI preflighted)
+Post-marathon housekeeping after the 2026-07-01 drive and the GH-75 (PR #76) merge.
+
+- **Ledger reconciled** — closed the GitHub issues the ROADMAP already marked ✅ but that were still open: **#75/#67/#66** (fully shipped) and **#71/#70/#68** (core phases shipped; each closed with its deferred later-phase documented as an explicit reopen trigger, per the GH-51 close-with-remainders convention). #64/#72/#73/#74 were already closed. ROADMAP `## Status` table + scheduling-overlay pointer refreshed; `updated: 2026-07-02`.
+- **New Marathon plan** — `utils/marathon-plan.sh` regenerated the scheduling overlay to [MARATHON-PLAN-2026-07-02.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-02.md): **Wave 1 = #61** (GH-61 Tier 1 CI), the one auto-fireable independent lane; 14 items held pending a rating / doc / preflight contract.
+- **GH-61 preflighted** — added a Tier-1-scoped `## Swarm Preflight Contract` block to `GH-61-CI-GITHUB-ACTIONS.md` (Tier 2's runner decision deliberately left to the operator) + a single-phase builder brief (`PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md`) for the marathon build lane (codex builder, agy reviewer).
+
+Baseline confirmed `RELAY_SELF_SUFFICIENCY_SKIP=1 ./validate.sh` **79/79** unsandboxed; `utils/pdda/pdda.sh run` clean (7 pre-existing warn-only `issue-doc-sync` notices for closed-issue docs still in `2-WORKING` — deferred hygiene, not introduced here). Reversibility: Easy (docs + additive contract, no runtime/kernel change).
+
 ### GH-75 SHIPPED — XYZ.json final-completion telemetry at every harness session end
 All three harnesses (relay, marathon, swarm) now append a durable, newest-first completion record to a gitignored `XYZ.json` at the harness repo root — the live per-session signal GH-24's on-demand batch extractor never provided. Schema extends GH-24's `{health, title, description, updatedAt}` with `{harness, sessionId}`.
 

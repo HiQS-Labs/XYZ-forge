@@ -2,7 +2,7 @@
 title: Combined Roadmap — Cost-Observed Marathon Loops + Adversarial Hardening
 status: Active
 created: 2026-06-16
-updated: 2026-07-01
+updated: 2026-07-02
 branch: main
 supersedes: PROJECT/2-WORKING/ROADMAP-COMBINED.md (promoted to canonical 2026-06-17); folds in the former standalone ROADMAP.md (adversarial-hardening track, now Part B)
 synthesizes:
@@ -37,7 +37,7 @@ Three tracks, sequenced independently:
 
 | What was just completed | What's next |
 |---|---|
-| **Big 2026-06-30 session:** **GH-49 (portable vendored `.xyz/` harness)** shipped end-to-end — swarm-produced (codex+agy) + execution-verified, self-hosting dogfood proven, suite **70/70** (surfaced+fixed 2 containment-kernel gaps); **GH-51 [1-kernel]** fixed + closed; **GH-62 (XYZ install registry)** shipped + agy-QA'd; **GH-52 (R2 auto-reap)** + **Part C loop (#50, PR #53)** landed; housekeeping closed 8 issues. | Immediate next-up: the **rebalance-OS cross-repo dogfood** (unblocked by GH-51 — and now runnable from a vendored `.xyz/` per GH-49) and **G2 dup-token** (Part B Phase-2 remainder). |
+| **2026-07-01 marathon + relay sweep (all pushed to `origin/main`):** shipped **GH-64** security scanner + active gate, **GH-66** transcript audit, **GH-67** tick-release handoff, **GH-68** dep-drift signal, **GH-69** marathon branch prompt, **GH-71** code-structure Ph1–2; then a `/relay-xyz` concurrency review spun off + resolved **GH-72** registry lock, **GH-73** doc path fix, **GH-74** worktree-hermetic test, **GH-70** concurrent-relay Ph1–2. **2026-07-02:** **GH-75** XYZ.json completion telemetry merged (PR #76). **Ledger reconciled 2026-07-02** — closed #75/#67/#66 (fully shipped) and #71/#70/#68 (core shipped; later phases deferred behind a documented reopen trigger); #64/#72/#73/#74 already closed. `validate.sh` **79/79** (unsandboxed). | **Fired this session:** **GH-61 Tier 1 CI** (independent additive lane) via the marathon harness — see the generated overlay. **Still operator-driven:** **rebalance-OS cross-repo dogfood** (unblocked; vendored `.xyz/` per GH-49) and **G2 dup-token** (Part B Phase-2 remainder). |
 
 ### Immediate next-up (ordered)
 
@@ -47,9 +47,9 @@ Three tracks, sequenced independently:
 4. **Part B Phase-2 remainder: G2 dup-token determinism** (`test/chaos-dup-token.sh`) — the next adversarial-hardening slice now that **R2 (#52) + G4 are done**. Kernel epoch-fence territory → Opus + `decisions/` record.
 5. ✅ **Done — Part C real-agent run PROVEN (2026-06-30, operator GO).** `improve-loop` drove a live `marathon-drive` (**codex builder + agy reviewer**) as `--build-cmd`: baseline 4 → live build → `KEEP` oracle held → champion ACCEPTed (metric 3) → halted on the iteration cap, with provenance. Every safety invariant fired against a real build. The run surfaced two harness defects (neither a loop bug): **#58** (`--builder claude` not on PATH headless — use codex/agy) and **#59** (allowlisted artifact in an untracked dir → spurious off-lane exit 6). → [#50](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/50)
 
-> **Active scheduling overlay:** [MARATHON-PLAN-2026-06-30.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-06-30.md) (regenerated
-> 2026-06-30 after #52 closed — **no auto-fireable wave**: the next lane, GH-51 [1-kernel], is a manual Opus
-> kernel fix that needs a contract first; everything else is held/gated) groups the open
+> **Active scheduling overlay:** [MARATHON-PLAN-2026-07-02.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-02.md) (machine-generated
+> by `utils/marathon-plan.sh` on 2026-07-02 from this ledger — **Wave 1 = #61** GH-61 Tier 1 CI, the one
+> auto-fireable independent lane; 14 items held pending a rating / doc / preflight contract) groups the open
 > ledger below into **collision-safe parallel lanes** — what can be built simultaneously vs. what must
 > serialize on the `relay-turn-lib.sh` containment kernel. Derived from this ledger; the ledger stays source of truth.
 
