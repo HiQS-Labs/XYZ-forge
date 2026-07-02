@@ -1,0 +1,81 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-07-02T18:46:07Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-56-marathon-leaked-token-reconcile"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/1-INBOX/GH-56-MARATHON-LEAKED-TOKEN-RECONCILE.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm",
+    "branch": "marathon/gh-56-leaked-token-2026-07-02",
+    "commit": "424bff2710b545708728d4cc34777aeaf448ca71",
+    "suggested_branch": "marathon/gh-56-marathon-leaked-token-reconcile-2026-07-02",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "bash test/marathon-drive.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/marathon-drive.sh",
+        "pattern": "GH-56"
+      }
+    ],
+    "artifacts": [
+      "relay-automation/marathon-drive.sh",
+      "test/marathon-drive.sh"
+    ],
+    "remediation": {
+      "source": "GH-56#fix-direction",
+      "criteria": "marathon-drive reconciles (reaps/terminates an open handoff) or fresh-ids a leftover same-phase MARATHON-<PHASE>-TURN token before re-seeding, so re-running a phase-id after an aborted run no longer fails with 'task ... is open'; a live claim is never reaped; regression case added to test/marathon-drive.sh; the change carries a GH-56 marker comment."
+    },
+    "lanes": {
+      "agy_safe": [],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": true,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "424bff2710b545708728d4cc34777aeaf448ca71",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/marathon-drive.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "relay-automation/marathon-drive.sh",
+      "test/marathon-drive.sh"
+    ],
+    "agy_lane": [],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "fetch_ok": true,
+  "upstream": null,
+  "ahead": 0,
+  "behind": 0,
+  "dirty": true,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "424bff2710b545708728d4cc34777aeaf448ca71",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "grep_absent",
+      "path": "relay-automation/marathon-drive.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}
