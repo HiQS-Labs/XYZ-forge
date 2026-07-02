@@ -373,11 +373,16 @@ for (const item of ledger) {
   const ratingsExempt = String(fm.ratings_exempt || "").toLowerCase() === "true";
   const contract = docExists ? extractContract(docAbs) : null;
   const z = zoneOf(contract, item);
+  // GH-69: deterministic branch suggestion for this lane — from slug + run date, no git writes.
+  // swarm-preflight (stage 2) checks it against `git branch -a`; the orchestrator (stage 3) prompts
+  // the operator before cutting it. Carve-out (low-risk, independent zone) is applied by the
+  // orchestrator, not here — this planner emits the same deterministic name for every item.
+  const suggestedBranch = `marathon/${slug}-${TODAY}`;
   const rec = {
     title: item.title, section: item.section, emoji: item.status, raw: item.raw,
     gh, docRel, docExists, slug, ratings, rated, ratingsExempt, contract,
     zone: z.zone, zoneInferred: z.inferred, writeset: z.writeset,
-    deps: depsOf(item), goGated: isGoGated(item),
+    deps: depsOf(item), goGated: isGoGated(item), suggestedBranch,
     flags: [], signals: [], state: null, score: null, wave: null, ghState: null,
   };
   records.push(rec);
@@ -727,6 +732,13 @@ function renderQueueDoc() {
     const lanes = w.map((r) => r.gh ? `#${r.gh}` : r.slug).join(" ‖ ");
     o.push(`**Wave ${i + 1}:** ${lanes || "(empty)"}`);
     o.push("");
+    // GH-69: suggested_branch per lane, on its own line so the "**Wave N:** #a ‖ #b" line above
+    // stays single-line and grep-stable (test/marathon-plan.sh's wave_of() greps that exact line).
+    for (const r of w) {
+      const id = r.gh ? `#${r.gh}` : r.slug;
+      o.push(`- ${id} → suggested_branch: \`${r.suggestedBranch}\``);
+    }
+    if (w.length) o.push("");
   });
   o.push("## Held / flagged — excluded from active waves");
   o.push("");

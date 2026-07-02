@@ -262,6 +262,89 @@ R="$(make_repo gateflag '{
 out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gateflag.md" 2>&1)"; rc=$?
 [[ $rc -eq 0 ]] && pass "T15 GH-39: gate with flags resolves the script, not the flag (ready)" || fail "T15 expected exit 0, got $rc — $out"
 
+# make_repo_risk <name> <risk> <contract-json> [extra-doc-body] → echoes the repo root
+# Same as make_repo but injects a `risk:` frontmatter field (GH-69 carve-out reads this).
+make_repo_risk() {
+  local name="$1" risk="$2" contract="$3" extra="${4:-}"
+  local r="$WORK/$name"
+  mkdir -p "$r/PROJECT/2-WORKING"
+  {
+    printf -- '---\ntitle: %s\nrisk: %s\n---\n# %s\n%s\n## Swarm Preflight Contract\n```json\n%s\n```\n' \
+      "$name" "$risk" "$name" "$extra" "$contract"
+  } >"$r/PROJECT/2-WORKING/GH-900-$name.md"
+  mkdir -p "$r/src" "$r/test" "$r/relay-automation" "$r/bin"
+  : >"$r/src/a.js"; : >"$r/test/a.test.js"; : >"$r/a"; : >"$r/b"
+  : >"$r/relay-automation/relay-turn-lib.sh"; : >"$r/bin/tick"; : >"$r/relay-automation/relay-drive.sh"
+  git -C "$r" init -q -b main 2>/dev/null || { git -C "$r" init -q; git -C "$r" symbolic-ref HEAD refs/heads/main; }
+  git -C "$r" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+  git -C "$r" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+  printf '%s' "$r"
+}
+
+# ── T17 (GH-69): branch_ready reflects real branch existence; suggested_branch is slug+date ──
+R="$(make_repo_risk branchready 2 '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-branchready.md" --out "$R/packet" 2>&1)"
+grep -q "suggested=marathon/gh-900-branchready-2026-06-25" <<<"$out" \
+  && pass "T17a suggested_branch is slug+run-date" || fail "T17a wrong suggested_branch: $out"
+grep -q "branch_ready=false" <<<"$out" \
+  && pass "T17b branch_ready=false when the branch doesn't exist yet" || fail "T17b: $out"
+node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1]));process.exit(j.provenance.suggested_branch==="marathon/gh-900-branchready-2026-06-25"&&j.provenance.branch_ready===false?0:1)' \
+  "$R/packet/run-candidate.json" \
+  && pass "T17c run-candidate.json.provenance carries suggested_branch + branch_ready=false" \
+  || fail "T17c packet JSON shape wrong: $(cat "$R/packet/run-candidate.json")"
+grep -q "ask the operator before proceeding" "$R/packet/packet.md" \
+  && pass "T17d packet.md tells the orchestrator to ask before proceeding" || fail "T17d missing ask-operator note"
+
+# Now actually cut the suggested branch and re-run — branch_ready must flip to true.
+git -C "$R" branch marathon/gh-900-branchready-2026-06-25 >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-branchready.md" --out "$R/packet2" 2>&1)"
+grep -q "branch_ready=true" <<<"$out" \
+  && pass "T17e branch_ready=true once the suggested branch exists" || fail "T17e: $out"
+
+# ── T18 (GH-69): skip_branch_prompt carve-out — risk=1 + independent zone ──
+R="$(make_repo_risk lowrisk 1 '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-lowrisk.md" --out "$R/packet" 2>&1)"
+grep -q "skip_branch_prompt=true" <<<"$out" \
+  && pass "T18a risk=1 + independent artifacts → skip_branch_prompt=true" || fail "T18a: $out"
+grep -q "carve-out: risk=1/independent zone" "$R/packet/packet.md" \
+  && pass "T18b packet.md documents the carve-out instead of the ask-operator note" || fail "T18b: $(cat "$R/packet/packet.md" | grep 'Suggested branch')"
+
+# ── T19 (GH-69): carve-out does NOT apply when risk != 1 ──
+R="$(make_repo_risk midrisk 2 '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-midrisk.md" 2>&1)"
+grep -q "skip_branch_prompt=false" <<<"$out" \
+  && pass "T19a risk=2 → skip_branch_prompt=false (carve-out needs risk==1)" || fail "T19a: $out"
+
+# ── T20 (GH-69): carve-out does NOT apply when the zone is kernel, even at risk=1 ──
+R="$(make_repo_risk kernelrisk1 1 '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "bin/tick" ],
+  "remediation": { "criteria": "x" }
+}')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-kernelrisk1.md" 2>&1)"
+grep -q "skip_branch_prompt=false" <<<"$out" \
+  && pass "T20a risk=1 but kernel-zone artifact → skip_branch_prompt=false" || fail "T20a: $out"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1

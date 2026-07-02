@@ -33,6 +33,16 @@
 # Exit: 0 ready (packet emitted) · 2 usage · 3 contract missing/invalid ·
 #       4 stale/already-landed (fix not required) · 5 not marathon-ready ·
 #       6 blocked/missing-target · 7 ambiguous.
+#
+# Branch prompt (GH-69) — orchestrating-agent contract: a ready packet's provenance carries
+# `suggested_branch` (deterministic: marathon/<slug>-<run-date>) and `branch_ready` (does it already
+# exist?). If `branch_ready: false` and `skip_branch_prompt: false`, ASK THE OPERATOR before invoking
+# marathon-drive.sh — "This lane will commit to <branch>. Suggested branch: <suggested_branch>. Cut it
+# now? [yes / no / custom name]" (never auto-cut — GUIDING-PRINCIPLES.md §8). `skip_branch_prompt: true`
+# (risk==1 in the doc frontmatter AND an independent-zone artifact set — no kernel/shim path) means
+# proceed on the current branch without asking. packet.md/packet.json both carry these fields inline,
+# and the packet.md "Suggested branch" line already states which of the two applies — a driving agent
+# reading the packet doesn't need to recompute it.
 
 set -uo pipefail
 
@@ -251,6 +261,9 @@ process.stdout.write(JSON.stringify({
     target_root: e.SP_ROOT,
     branch: e.SP_BRANCH,
     commit: e.SP_COMMIT,
+    suggested_branch: e.SP_SUGGESTED_BRANCH,
+    branch_ready: e.SP_BRANCH_READY === "1",
+    skip_branch_prompt: e.SP_SKIP_BRANCH_PROMPT === "1",
   },
   contract,
   freshness: {
@@ -345,6 +358,16 @@ SLUG="$(basename "$PRIMARY_DOC" .md | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9
 BRANCH="$(git -C "$TARGET_ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || echo "(detached)")"
 COMMIT="$(git -C "$TARGET_ROOT" rev-parse HEAD 2>/dev/null || echo "(none)")"
 
+# GH-69: deterministic branch suggestion for this lane (same slug+date convention as
+# marathon-plan.sh's suggested_branch), and whether it already exists — the orchestrator prompts
+# the operator to cut it only when branch_ready=false (GUIDING-PRINCIPLES §8: never auto-cut).
+SUGGESTED_BRANCH="marathon/${SLUG}-${TODAY}"
+BRANCH_READY=0
+if git -C "$TARGET_ROOT" show-ref --verify --quiet "refs/heads/$SUGGESTED_BRANCH" \
+   || git -C "$TARGET_ROOT" show-ref --verify --quiet "refs/remotes/origin/$SUGGESTED_BRANCH"; then
+  BRANCH_READY=1
+fi
+
 # ── Phase 3: freshness ───────────────────────────────────────────────────────
 FETCH_OK=1
 git -C "$TARGET_ROOT" fetch --prune --quiet 2>/dev/null || FETCH_OK=0
@@ -410,6 +433,35 @@ READY=1; READY_NEXT=""
 GATE_CMD="$(field "$TMP/contract.json" gate)"
 ART_CSV="$(field "$TMP/contract.json" artifacts)"
 ART_COUNT=0; [[ -n "$ART_CSV" ]] && ART_COUNT="$(awk -F, '{print NF}' <<<"$ART_CSV")"
+
+# GH-69 carve-out: a doc-only/trivial lane (risk==1, zone==independent) skips the branch-cut prompt
+# and proceeds on the current branch — ratings make this deterministic. Mirrors marathon-plan.sh's
+# KERNEL_PATHS/SHIM_RE zone heuristic (deliberately re-derived here, not imported, so the packet stays
+# self-contained without a marathon-plan.sh dependency).
+FM_RISK="$(grep -m1 -E '^risk:[[:space:]]*[0-9]+' "$PRIMARY_DOC" 2>/dev/null | grep -oE '[0-9]+' || true)"
+ZONE="independent"
+if [[ -n "$ART_CSV" ]]; then
+  IFS=',' read -ra _z_arts <<<"$ART_CSV"
+  for _z_a in "${_z_arts[@]}"; do
+    read -r _z_a <<<"$_z_a"
+    case "$_z_a" in
+      relay-automation/relay-turn-lib.sh|bin/tick|relay-automation/relay-drive.sh) ZONE="kernel" ;;
+    esac
+    [[ "$ZONE" == "kernel" ]] && break
+  done
+  if [[ "$ZONE" != "kernel" ]]; then
+    for _z_a in "${_z_arts[@]}"; do
+      read -r _z_a <<<"$_z_a"
+      case "$_z_a" in
+        relay-automation/*-turn.sh|relay-automation/consult.sh) ZONE="shim" ;;
+      esac
+      [[ "$ZONE" == "shim" ]] && break
+    done
+  fi
+fi
+SKIP_BRANCH_PROMPT=0
+[[ "$FM_RISK" == "1" && "$ZONE" == "independent" ]] && SKIP_BRANCH_PROMPT=1
+
 REMED_SRC="$(field "$TMP/contract.json" remediation.source)"
 REMED_CRIT="$(field "$TMP/contract.json" remediation.criteria)"
 DOC_HAS_PHASES=0
@@ -457,7 +509,9 @@ ISSUES_CSV="$(IFS=,; printf '%s' "${SOURCE_ISSUES[*]:-}")"
 printf '%s\n' "${SOURCE_DOCS[@]}" >"$TMP/docs.txt"
 SP_CONTRACT="$TMP/contract.json" SP_PROBES="$TMP/probes.json" SP_LANES="$TMP/lane-plan.json" \
   SP_DOCS="$(cat "$TMP/docs.txt")" SP_ISSUES="$ISSUES_CSV" SP_MODE="$MODE" SP_SLUG="$SLUG" \
-  SP_BRANCH="$BRANCH" SP_COMMIT="$COMMIT" SP_ROOT="$TARGET_ROOT" SP_NOW="$NOW" SP_STATE="$CAND_STATE" \
+  SP_BRANCH="$BRANCH" SP_COMMIT="$COMMIT" SP_SUGGESTED_BRANCH="$SUGGESTED_BRANCH" SP_BRANCH_READY="$BRANCH_READY" \
+  SP_SKIP_BRANCH_PROMPT="$SKIP_BRANCH_PROMPT" \
+  SP_ROOT="$TARGET_ROOT" SP_NOW="$NOW" SP_STATE="$CAND_STATE" \
   SP_FETCH="$FETCH_OK" SP_UP="$UPSTREAM" SP_AHEAD="$AHEAD" SP_BEHIND="$BEHIND" SP_DIRTY="$DIRTY" \
   SP_REF="$REF" SP_REF_COMMIT="$REF_COMMIT" SP_HEAD_BEHIND_REF="$HEAD_BEHIND_REF" \
   SP_CHECKOUT_MATCHES_REF="$CHECKOUT_MATCHES_REF" \
@@ -503,6 +557,7 @@ else
   fi
   emit "swarm-preflight · $MODE · slug=$SLUG"
   emit "  target-root : $TARGET_ROOT ($BRANCH @ ${COMMIT:0:9})"
+  emit "  branch      : suggested=$SUGGESTED_BRANCH branch_ready=$([[ "$BRANCH_READY" -eq 1 ]] && echo true || echo false) skip_branch_prompt=$([[ "$SKIP_BRANCH_PROMPT" -eq 1 ]] && echo true || echo false)"
   emit "  freshness   : fetch_ok=$FETCH_OK upstream=${UPSTREAM:-none} ahead=$AHEAD behind=$BEHIND dirty=$DIRTY"
   emit "  ref-probed  : $REF @ ${REF_COMMIT:0:9} ($REF_NOTE)"
   emit "  candidate   : $CAND_STATE"
@@ -559,6 +614,7 @@ cat >"$OUT_DIR/packet.md" <<EOF
 - Mode: $MODE
 - Sources: $(printf '%s ' "${SOURCE_DOCS[@]}")
 - Target root: $TARGET_ROOT ($BRANCH @ ${COMMIT:0:9})
+- Suggested branch: \`$SUGGESTED_BRANCH\` (branch_ready=$([[ "$BRANCH_READY" -eq 1 ]] && echo true || echo false)$([[ "$BRANCH_READY" -eq 0 && "$SKIP_BRANCH_PROMPT" -eq 0 ]] && echo " — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8")$([[ "$SKIP_BRANCH_PROMPT" -eq 1 ]] && echo " — carve-out: risk=1/independent zone, proceed on the current branch without asking"))
 - Verdict: $VERDICT
 - Gate: \`$GATE_CMD\`
 - Artifacts: $ART_CSV

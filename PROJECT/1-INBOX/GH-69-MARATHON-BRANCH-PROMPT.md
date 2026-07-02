@@ -2,7 +2,7 @@
 gh_issue: 69
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69
 title: marathon-plan/swarm-preflight — suggest branch name + agent confirmation prompt before execution
-status: Proposed (1-INBOX — not yet active)
+status: Shipped
 created: 2026-07-01
 updated: 2026-07-01
 owner: noel
@@ -27,7 +27,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Issue [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) opened, doc captured, parked in ROADMAP. | Confirm scope, promote to `2-WORKING`, implement in three stages (marathon-plan → swarm-preflight → agent prompt). |
+| **SHIPPED 2026-07-01.** All three stages implemented and tested. `marathon-plan.sh` emits a deterministic `suggested_branch: marathon/<slug>-<date>` per active wave lane. `swarm-preflight.sh` checks real branch existence (`git show-ref`) and emits `branch_ready`/`skip_branch_prompt` in the packet (JSON + packet.md + text report). The orchestrating-agent contract is documented inline in `swarm-preflight.sh`'s header and self-stated in every packet's "Suggested branch" line, so a driving agent doesn't need to recompute it. `test/marathon-plan.sh` 34/34, `test/swarm-preflight.sh` 44/44, `validate.sh` 77/77. | Nothing — fully shipped, no deferred remainder. |
 
 ## Design
 
@@ -44,15 +44,15 @@ Three-stage addition staying within each tool's existing role:
 
 ## Checklist
 
-- [ ] `marathon-plan.sh`: generate `suggested_branch: marathon/<slug>-<date>` per active wave lane
-- [ ] `swarm-preflight.sh`: check branch existence, emit `branch_ready: true/false` in run packet
-- [ ] Orchestrating agent instruction: surface branch prompt when `branch_ready: false`
-- [ ] Carve-out: skip prompt when `risk == 1` and zone is `independent`
-- [ ] `test/marathon-plan.sh` + `test/swarm-preflight.sh`: regression assertions
+- [x] `marathon-plan.sh`: generate `suggested_branch: marathon/<slug>-<date>` per active wave lane
+- [x] `swarm-preflight.sh`: check branch existence, emit `branch_ready: true/false` in run packet
+- [x] Orchestrating agent instruction: surface branch prompt when `branch_ready: false`
+- [x] Carve-out: skip prompt when `risk == 1` and zone is `independent`
+- [x] `test/marathon-plan.sh` + `test/swarm-preflight.sh`: regression assertions
 
 ## QA gate
 
-- [ ] `marathon-plan.sh` on a kernel-lane queue produces `suggested_branch` in the wave table
-- [ ] `swarm-preflight.sh` on a non-existent branch emits `branch_ready: false`
-- [ ] `swarm-preflight.sh` on an existing branch emits `branch_ready: true`
-- [ ] No branch is auto-created without operator confirmation
+- [x] `marathon-plan.sh` on a kernel-lane queue produces `suggested_branch` in the wave table
+- [x] `swarm-preflight.sh` on a non-existent branch emits `branch_ready: false`
+- [x] `swarm-preflight.sh` on an existing branch emits `branch_ready: true`
+- [x] No branch is auto-created without operator confirmation

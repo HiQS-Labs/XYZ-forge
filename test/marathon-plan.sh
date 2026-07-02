@@ -94,6 +94,19 @@ ka="$(wave_of "$doc" 100)"; kb="$(wave_of "$doc" 101)"
 sd="$(wave_of "$doc" 104)"
 [[ -n "$sd" && -n "$ka" && "$sd" -gt "$ka" ]] && pass "A: shim dep-on-kernel sequenced strictly later (shim=$sd kernel=$ka)" || fail "A: shim not after its kernel dep (shim=$sd kernel=$ka)"
 
+# GH-69: deterministic suggested_branch per active lane, from slug + run date — no git writes.
+grep -qF 'suggested_branch: `marathon/gh-100-kernela-'"$DAY"'`' "$doc" \
+  && pass "A: #100 gets a deterministic suggested_branch" \
+  || fail "A: #100 missing suggested_branch line"
+[[ "$(grep -cF 'suggested_branch: `marathon/' "$doc")" -eq 5 ]] \
+  && pass "A: all 5 active lanes carry a suggested_branch" \
+  || fail "A: expected 5 suggested_branch lines, got $(grep -cF 'suggested_branch: `marathon/' "$doc")"
+# Same-day re-run is deterministic (byte-identical slug+date ⇒ same branch name).
+run_qp "$A" >/dev/null 2>&1
+grep -qF 'suggested_branch: `marathon/gh-100-kernela-'"$DAY"'`' "$doc" \
+  && pass "A: suggested_branch is stable across a same-day re-run" \
+  || fail "A: suggested_branch drifted on re-run"
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Scenario B — validation signals (drift present, exit 4)
 # ─────────────────────────────────────────────────────────────────────────────
