@@ -4,6 +4,15 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-61 Tier 1 CI SHIPPED via marathon dogfood — and reproduced #59 live
+Fired the GH-61 Tier 1 lane through `marathon-drive.sh` (codex builder + agy reviewer) on branch `marathon/gh-61-ci-github-actions-2026-07-02`; STATUS **Approved** after 2 turns, pre-advance gate green, merged `--no-ff` to main (`d9b8a14`). `validate.sh` **80/80** (was 79 + the new `ci-workflow` test).
+
+- **`.github/workflows/ci.yml`** (NEW) — single additive Tier-1 job, `ubuntu-latest`, `on: [push, pull_request]` to `main`, `permissions: contents: read`. Steps: install+run `shellcheck -S error` on tracked `*.sh`, `bash -n` on tracked `*.sh`, `node --check` on `src/*.js`+`bin/*.js`, `.claude/settings*.json` JSON-validate, and `utils/pdda/pdda.sh run`. **Tier 2 (running `./validate.sh` in CI) intentionally deferred** — it carries an unresolved `macos-latest` vs `ubuntu-latest` runner decision reserved for the operator, so #61 stays open for Tier 2.
+- **`test/ci-workflow.sh`** (NEW) — dependency-free (bash 3.2/BSD), self-skips the YAML-parse sub-check when PyYAML is absent; asserts the workflow's shape by content markers + that it's wired into `validate.sh`. Registered in `validate.sh`.
+- **Harness finding — issue #59 reproduced live.** The build was correct on the first turn and its scoped gate passed, but containment discarded it with `exit 6`: the allowlisted artifact `.github/workflows/ci.yml` sits in a brand-new untracked directory, which `git status --porcelain` collapses to `.github/` — not an exact match for the allowlist entry, so `rtl_worktree_end` false-flags it off-lane. Documented on [#59](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/59) with the mechanism + a proposed ancestor-prefix fix (mirroring the existing `.relay-artifacts` handling). Worked around by pre-committing an empty tracked `ci.yml` stub (`32c6535`) so the dir was no longer entirely-untracked; the re-run passed clean. First run also hit a leaked `MARATHON-P1-TURN` tick token (issue #56) — sidestepped with a fresh `--relay-task` id per run.
+
+Reversibility: Easy — CI is additive and not in the runtime path; a red check reverts trivially.
+
 ### Ledger reconciliation + new Marathon plan (GH-61 Tier 1 CI preflighted)
 Post-marathon housekeeping after the 2026-07-01 drive and the GH-75 (PR #76) merge.
 
