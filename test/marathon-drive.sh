@@ -271,13 +271,14 @@ rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 # (c) relay-only (no --artifact) leaves ALLOW_PATHS UNSET — containment default unchanged
 rm -f "$WORK/allow-paths-seen"
+ALLOW_PATHS="leaked/from/parent" \
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
     --reviewer gemini --pre-advance-cmd "true" >/dev/null 2>&1 || true
 grep -q "UNSET" "$WORK/allow-paths-seen" 2>/dev/null \
-  && pass "relay-only phase leaves ALLOW_PATHS unset (no extra write surface)" \
-  || fail "relay-only phase should not export ALLOW_PATHS"
+  && pass "relay-only phase clears inherited ALLOW_PATHS (no extra write surface)" \
+  || fail "relay-only phase should unset inherited ALLOW_PATHS"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 

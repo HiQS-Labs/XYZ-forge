@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Open
-NEXT: codex
+NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH56-P1 builder=codex reviewer=agy round-cap=6 -->
 
@@ -97,3 +97,10 @@ else
   unset ALLOW_PATHS
 fi
 ```
+
+### Round 2 · Builder · codex
+Applied the requested relay-only containment fix in `relay-automation/marathon-drive.sh` and tightened the matching regression in `test/marathon-drive.sh`.
+
+- Explicitly `unset ALLOW_PATHS` when `--artifact` is omitted, so a parent harness env cannot leak extra write scope into a relay-only phase.
+- Updated the relay-only test to seed `ALLOW_PATHS=leaked/from/parent` and assert the turn-taker sees `UNSET`, which makes the regression deterministic.
+- Verified with a targeted reproduction of that single inherited-env scenario only; it passed with `ALLOW_PATHS=UNSET`.

@@ -192,6 +192,8 @@ case "$REVIEWER" in codex*|gemini*|agy*) ;; *) die "reviewer '$REVIEWER' must st
 # real write surface. Without --artifact, ALLOW_PATHS stays unset and the phase is relay-only.
 if [[ -n "$ARTIFACT_PATHS" ]]; then
   export ALLOW_PATHS="$ARTIFACT_PATHS"
+else
+  unset ALLOW_PATHS
 fi
 
 PHASE_DIR="$PHASES_DIR/$PHASE_ID"
