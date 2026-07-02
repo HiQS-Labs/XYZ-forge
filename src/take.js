@@ -10,10 +10,16 @@ const { withClaimLock } = require('./lock');
 // between the two calls.
 //
 // Uses the task's own declared paths as the claim paths (the agent can call
-// `tick scope` afterward if they need to narrow or expand). Returns:
-//   { won: true, task, priority }          — task claimed
-//   { won: false, noTask: true }           — no available task
-//   { limitReached: true, holding: [...] } — agent is at the claim cap
+// `tick scope` afterward if they need to narrow or expand).
+/**
+ * Atomically picks the next available task for `agent` and claims it.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.agent - the claiming agent
+ * @returns {{won: true, task: string, priority: number, handoff: boolean}
+ *         | {won: false, noTask: true}
+ *         | {limitReached: true, holding: string[]}}
+ */
 function take(repoRoot, { agent }) {
   return withClaimLock(repoRoot, () => {
     const events = readAllEvents(repoRoot);

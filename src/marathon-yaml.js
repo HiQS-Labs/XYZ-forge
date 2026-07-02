@@ -42,6 +42,14 @@ function indentOf(line) {
   return n;
 }
 
+/**
+ * Parses the constrained MARATHON.yaml subset (a top-level `name:` plus a
+ * `phases:` list — see the file header for the exact grammar). Not a general
+ * YAML parser; anything outside the documented shape throws, on purpose.
+ * @param {string} text - raw MARATHON.yaml file contents
+ * @returns {{name: string, phases: Object[]}}
+ * @throws {Error} on any line outside the documented grammar (unknown field, malformed key:value, etc.)
+ */
 function parseMarathonYaml(text) {
   const out = { name: '', phases: [] };
   let inPhases = false;
@@ -86,8 +94,15 @@ function parseMarathonYaml(text) {
   return out;
 }
 
-// Validate + resolve depends_on into a deterministic execution order (topological).
-// Throws on: empty plan, duplicate id, missing required field, bad reviewer, unknown/self/cyclic dep.
+/**
+ * Validates a parsed marathon plan and resolves `depends_on` into a
+ * deterministic topological execution order (authoring order preserved among
+ * equally-ready phases).
+ * @param {{phases: Object[]}} plan - as returned by {@link parseMarathonYaml}
+ * @returns {Object[]} phases in execution order
+ * @throws {Error} on an empty plan, duplicate id, missing required field, bad
+ *   `reviewer`, or an unknown/self/cyclic `depends_on`
+ */
 function resolveOrder(plan) {
   const phases = plan.phases || [];
   if (phases.length === 0) throw new Error('no phases defined');

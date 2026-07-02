@@ -6,17 +6,20 @@
 // trivially testable and the analyzer can trust it the same way it trusts the
 // event-log math.
 
-// Parse the token stats from `gemini -o json` output (validated against gemini-cli 0.46.0).
-// Shape: { stats: { models: { "<model>": { tokens: { input, prompt, candidates, total, ... } } } } }
-// Sums across ALL models used in the turn (a single turn may route across a flash + a main model).
-//
-//   tokens_in    = Σ tokens.input         (prompt/context fed in)
-//   tokens_total = Σ tokens.total         (input + candidates + thoughts, per the CLI's own sum)
-//   tokens_out   = tokens_total - tokens_in   (generated: candidates + reasoning "thoughts")
-//
-// Accepts a JSON string or an already-parsed object. Returns null when the input has no parseable
-// model-token stats (e.g. a non-json transcript or a stub) — the caller treats null as "not
-// captured" and emits the loud-partial signal rather than a fake zero.
+/**
+ * Parses token stats from `gemini -o json` output (validated against gemini-cli
+ * 0.46.0). Shape: `{ stats: { models: { "<model>": { tokens: { input, prompt,
+ * candidates, total, ... } } } } }`. Sums across ALL models used in the turn (a
+ * single turn may route across a flash + a main model):
+ *   - `tokens_in`    = Σ `tokens.input` (prompt/context fed in)
+ *   - `tokens_total` = Σ `tokens.total` (input + candidates + thoughts, per the CLI's own sum)
+ *   - `tokens_out`   = `tokens_total - tokens_in` (generated: candidates + reasoning "thoughts")
+ * @param {string|Object} input - a JSON string (optionally prefixed with CLI
+ *   preamble lines) or an already-parsed object
+ * @returns {{tokens_in: number, tokens_out: number, tokens_total: number}|null}
+ *   `null` when the input has no parseable model-token stats (e.g. a non-JSON
+ *   transcript or a stub) — callers treat `null` as "not captured", not a fake zero.
+ */
 function parseGeminiStats(input) {
   let obj = input;
   if (typeof input === 'string') {

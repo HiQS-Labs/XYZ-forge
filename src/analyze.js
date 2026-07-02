@@ -26,11 +26,15 @@ function humanDuration(ms) {
   return `${s}s`;
 }
 
-// Per-(agent, task) claim windows from the event timeline. A window opens at
-// task.claimed and closes at the next terminal event for that task
-// (task.released / task.done / task.circuit_break). With the git transport
-// gone there is no tie-breaker and no auto-release — claim.js refuses a second
-// claimer outright — so at most one window is open per task at a time.
+/**
+ * Derives per-(agent, task) claim windows from the event timeline. A window
+ * opens at `task.claimed` and closes at the next terminal event for that task
+ * (`task.released` / `task.done` / `task.circuit_break`). At most one window
+ * is open per task at a time (claim.js refuses a second concurrent claimer).
+ * @param {Object[]} events - task.* events, chronological order
+ * @returns {Object[]} windows: `{task, agent, paths, openedAt, closedAt, closedBy}`
+ *   (`closedAt: null, closedBy: 'still_open'` for a window with no terminal event yet)
+ */
 function buildClaimWindows(events) {
   const windows = [];
   const byTask = new Map();
@@ -64,11 +68,17 @@ function buildClaimWindows(events) {
   return windows;
 }
 
-// Concurrent-claim-time metric (Run 2, P4). How much of the run window had
-// >= 2 distinct agents each holding >= 1 active claim simultaneously. This is
-// the primary success metric — per-agent task counts can be fooled by a
-// lopsided split, this can't. An agent may hold up to 2 claims at once (the
-// cap), so we measure distinct *agents* with an open window, not raw overlap.
+/**
+ * Concurrent-claim-time metric (Run 2, P4): how much of the run window had
+ * >= 2 distinct agents each holding >= 1 active claim simultaneously. The
+ * primary success metric — per-agent task counts can be fooled by a lopsided
+ * split, this can't. An agent may hold up to 2 claims at once (the cap), so
+ * this measures distinct *agents* with an open window, not raw overlap.
+ * @param {Object[]} windows - as returned by {@link buildClaimWindows}
+ * @param {string} runStart - ISO timestamp of the run window start
+ * @param {string} runEnd - ISO timestamp of the run window end
+ * @returns {{concurrent_ms: number, run_window_ms: number, concurrent_pct: number|null}}
+ */
 function computeParallelism(windows, runStart, runEnd) {
   const startMs = toMs(runStart);
   const endMs = toMs(runEnd);
@@ -121,6 +131,17 @@ function computeParallelism(windows, runStart, runEnd) {
 // 3 criterion disqualifies a run with any parked-claim suspect.
 const PARKED_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
 
+/**
+ * Flags claim windows with no work-activity heartbeat for longer than
+ * `thresholdMs` at any point — a "parked-claim suspect", which disqualifies a
+ * run (Run 3 criterion). Activity points: the claim itself, every
+ * `task.heartbeat` inside the window, and the window close.
+ * @param {Object[]} windows - as returned by {@link buildClaimWindows}
+ * @param {Object[]} events - task.* events (heartbeats read from here)
+ * @param {string} runEnd - ISO timestamp used as the close time for still-open windows
+ * @param {number} [thresholdMs] - defaults to {@link PARKED_THRESHOLD_MS} (10 minutes)
+ * @returns {Object[]} suspects: `{task, agent, max_gap_ms, heartbeats, opened_at, closed_at}`
+ */
 function findParkedClaims(windows, events, runEnd, thresholdMs = PARKED_THRESHOLD_MS) {
   const endMs = toMs(runEnd);
   const suspects = [];
@@ -228,6 +249,13 @@ function computeCost(allEvents, windows, doneTaskIds, runWindowMs, runType) {
   };
 }
 
+/**
+ * Reads the full event log and computes the coordination + cost report:
+ * per-agent activity counts, the concurrent-claim-time metric, parked-claim
+ * suspects, and (from `cost.*` events) token/wall-clock/human-minute spend.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @returns {Object} report — see {@link renderHuman}/{@link renderMd} for the rendered shape
+ */
 function analyze(repoRoot) {
   const allEvents = readAllEvents(repoRoot);
   // Coordination metrics are computed from task.* events only. cost.* events (tokens/human-minutes)
@@ -301,6 +329,11 @@ function analyze(repoRoot) {
   };
 }
 
+/**
+ * Renders an {@link analyze} report as plain-text, for terminal output.
+ * @param {Object} report - as returned by {@link analyze}
+ * @returns {string}
+ */
 function renderHuman(report) {
   const out = [];
   out.push('=== tick analyze ===');
@@ -350,6 +383,11 @@ function renderHuman(report) {
   return out.join('\n');
 }
 
+/**
+ * Renders an {@link analyze} report as markdown, for embedding in a doc/PR.
+ * @param {Object} report - as returned by {@link analyze}
+ * @returns {string}
+ */
 function renderMd(report) {
   const out = [];
   out.push('## Auto-analyzed (tick analyze)');

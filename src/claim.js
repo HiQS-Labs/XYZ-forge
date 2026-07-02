@@ -11,6 +11,18 @@ const { withClaimLock } = require('./lock');
 // state, decide, append — atomically. No git, no deterministic tie-breaker,
 // no auto-release. Those existed only to reconcile the old distributed
 // fetch/rebase/push transport's races, which no longer exist.
+/**
+ * Attempts to claim `task` for `agent`, declaring the path globs it intends to
+ * touch. Serialized per-clone via {@link withClaimLock} so two concurrent
+ * claims can't both pass the cap check before either writes.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.task - task id
+ * @param {string} opts.agent - claiming agent id
+ * @param {string[]} opts.paths - glob patterns the agent intends to touch (required, non-empty)
+ * @returns {{won: boolean, task: string, winner?: string, unavailable?: string, limitReached?: boolean, holding?: string[]}}
+ * @throws {Error} if `paths` is missing or empty
+ */
 function claim(repoRoot, { task, agent, paths }) {
   if (!paths || !paths.length) {
     throw new Error('claim requires --paths (declare every glob you intend to touch)');

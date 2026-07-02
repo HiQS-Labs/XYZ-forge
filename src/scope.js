@@ -28,6 +28,16 @@ function assertOwnership(repoRoot, task, agent) {
   return t;
 }
 
+/**
+ * Replaces the claimed task's declared paths (replacement, not merge).
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.task - task id (must be claimed by `agent`)
+ * @param {string} opts.agent - the claiming agent
+ * @param {string[]} opts.paths - new glob patterns (required, non-empty)
+ * @returns {{ok: true}}
+ * @throws {Error} if `paths` is missing/empty, or {@link assertOwnership} fails
+ */
 function scope(repoRoot, { task, agent, paths }) {
   if (!paths || !paths.length) throw new Error('scope requires --paths');
   const t = assertOwnership(repoRoot, task, agent);
@@ -35,18 +45,49 @@ function scope(repoRoot, { task, agent, paths }) {
   return { ok: true };
 }
 
+/**
+ * Releases the claiming agent's hold on `task`, optionally handing it off to
+ * another agent (`to_agent`).
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.task - task id (must be claimed by `agent`)
+ * @param {string} opts.agent - the claiming agent
+ * @param {string} [opts.to_agent] - agent to reserve the task for on release
+ * @returns {{ok: true}}
+ * @throws {Error} if {@link assertOwnership} fails
+ */
 function release(repoRoot, { task, agent, to_agent }) {
   const t = assertOwnership(repoRoot, task, agent);
   emitEvent(repoRoot, 'task.released', { task, agent, to_agent, epoch: t.claim.epoch });
   return { ok: true };
 }
 
+/**
+ * Terminates `task` as circuit-broken (failed) — a terminal state, same as `done`.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.task - task id (must be claimed by `agent`)
+ * @param {string} opts.agent - the claiming agent
+ * @param {string} [opts.reason] - why the task broke
+ * @returns {{ok: true}}
+ * @throws {Error} if {@link assertOwnership} fails
+ */
 function circuitBreak(repoRoot, { task, agent, reason }) {
   const t = assertOwnership(repoRoot, task, agent);
   emitEvent(repoRoot, 'task.circuit_break', { task, agent, reason: reason || '', epoch: t.claim.epoch });
   return { ok: true };
 }
 
+/**
+ * Terminates `task` as done (successful) — a terminal state, same as `circuitBreak`.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.task - task id (must be claimed by `agent`)
+ * @param {string} opts.agent - the claiming agent
+ * @param {string} [opts.note]
+ * @returns {{ok: true}}
+ * @throws {Error} if {@link assertOwnership} fails
+ */
 function done(repoRoot, { task, agent, note }) {
   const t = assertOwnership(repoRoot, task, agent);
   emitEvent(repoRoot, 'task.done', { task, agent, note, epoch: t.claim.epoch });
@@ -60,6 +101,17 @@ function done(repoRoot, { task, agent, note }) {
 // suspected parked claim by `tick analyze`. Heartbeats never change projected
 // state — they are pure liveness evidence. Ownership-guarded so an agent can
 // only heartbeat a task it currently holds.
+/**
+ * Emits a liveness signal for a claim in progress. Never changes projected
+ * state — pure evidence consumed by {@link module:analyze.findParkedClaims}.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.task - task id (must be claimed by `agent`)
+ * @param {string} opts.agent - the claiming agent
+ * @param {string} [opts.note]
+ * @returns {{ok: true}}
+ * @throws {Error} if {@link assertOwnership} fails
+ */
 function heartbeat(repoRoot, { task, agent, note }) {
   assertOwnership(repoRoot, task, agent);
   emitEvent(repoRoot, 'task.heartbeat', { task, agent, note });
@@ -71,6 +123,17 @@ function heartbeat(repoRoot, { task, agent, note }) {
 // task.released carries `agent = <crashed agent>` — that is what the
 // projection needs to treat the claim as released — plus a note recording the
 // reap. Coordinator-only, manual, logged: not auto-recovery.
+/**
+ * Manual coordinator lever: releases every active claim held by `agent`
+ * (presumed crashed) so peers can reclaim the work. Not auto-recovery — always
+ * explicitly invoked and logged.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.agent - the (presumed crashed) agent whose claims to release
+ * @param {string} [opts.by] - who invoked the reap (defaults to `'coordinator'`)
+ * @param {string} [opts.task] - if set, reap only this task instead of all of `agent`'s claims
+ * @returns {{reaped: string[]}} the task ids that were released
+ */
 function reap(repoRoot, { agent, by, task }) {
   const tasks = fold(readAllEvents(repoRoot));
 

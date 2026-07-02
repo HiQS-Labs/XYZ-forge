@@ -4,15 +4,20 @@ const { fold, activeClaimsForAgent, MAX_ACTIVE_CLAIMS_PER_AGENT } = require('./p
 const { readAllEvents } = require('./events');
 const { setsOverlap } = require('./paths');
 
-// Returns the next available task for `agent`:
-//   0. If the agent is already at the claim cap, return { limitReached } —
-//      don't route new work until a slot is freed.
-//   1. Targeted handoff to this agent wins immediately.
-//   2. Otherwise, highest-priority open task whose paths don't overlap any
-//      currently-claimed paths held by *other* agents.
-//
 // Run 2: no git transport — reads the shared local .tick/events/ directly.
 // Read-only: folds events in memory without writing STATE.md.
+/**
+ * Looks up (without claiming) the next available task for `agent`:
+ * 0. If the agent is already at the claim cap, returns `{ limitReached }` —
+ *    don't route new work until a slot is freed.
+ * 1. A targeted handoff to this agent wins immediately.
+ * 2. Otherwise, the highest-priority open task whose paths don't overlap any
+ *    currently-claimed paths held by *other* agents.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} opts
+ * @param {string} opts.agent
+ * @returns {Object|null} the chosen task, `{limitReached: true, holding: string[]}`, or `null` if none available
+ */
 function next(repoRoot, { agent }) {
   const tasks = fold(readAllEvents(repoRoot));
 

@@ -17,14 +17,26 @@ const path = require('path');
 // Known limitation: a hard process kill mid-claim leaves a stale lock. Recovery
 // is `rm <repo>/.tick/locks/claim.lock`. Stale-detection is Phase 2.
 
+/**
+ * Path to the per-clone claim lock file, creating its parent directory if needed.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @returns {string} absolute path to `<repoRoot>/.tick/locks/claim.lock`
+ */
 function lockPath(repoRoot) {
   const locksDir = path.join(repoRoot, '.tick', 'locks');
   fs.mkdirSync(locksDir, { recursive: true });
   return path.join(locksDir, 'claim.lock');
 }
 
-// Run `fn` while holding the per-clone claim lock. `fs.openSync(.., 'wx')` is an
-// atomic create-or-fail (O_EXCL): if the lock already exists it throws EEXIST.
+/**
+ * Runs `fn` while holding the per-clone claim lock. `fs.openSync(.., 'wx')` is an
+ * atomic create-or-fail (O_EXCL): if the lock already exists it throws EEXIST.
+ * The lock is always released (closed + unlinked) before returning, including on throw.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {function(): *} fn - callback to run while the lock is held
+ * @returns {*} whatever `fn` returns
+ * @throws {Error} if the lock is already held by another process
+ */
 function withClaimLock(repoRoot, fn) {
   const lp = lockPath(repoRoot);
   let fd;

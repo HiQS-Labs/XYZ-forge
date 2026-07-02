@@ -44,14 +44,28 @@ const CRITICAL_EVENTS = new Set([
   'task.done',
 ]);
 
+/**
+ * Path to the shared local event-log directory for a repo clone.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @returns {string} absolute path to `<repoRoot>/.tick/events`
+ */
 function eventsDir(repoRoot) {
   return path.join(repoRoot, '.tick', 'events');
 }
 
+/**
+ * Creates the events directory (and any missing parents) if it doesn't exist yet.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @returns {void}
+ */
 function ensureEventsDir(repoRoot) {
   fs.mkdirSync(eventsDir(repoRoot), { recursive: true });
 }
 
+/**
+ * Current timestamp in ISO-8601, overridable via `TICK_TS` for deterministic tests.
+ * @returns {string} ISO-8601 timestamp
+ */
 function isoNow() {
   if (process.env.TICK_TS) return process.env.TICK_TS;
   return new Date().toISOString();
@@ -65,6 +79,35 @@ function safeSegment(s) {
   return String(s).replace(/[^A-Za-z0-9._-]/g, '_');
 }
 
+/**
+ * Appends one event to the log as a new `.jsonl` file (one event per file — the
+ * projection's unit of atomicity). Fields present in the event depend on `type`;
+ * unset optional fields are omitted from the written JSON, not written as null,
+ * so unrelated event types stay byte-identical across schema additions.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @param {Object} fields
+ * @param {string} fields.type - one of {@link EVENT_TYPES}
+ * @param {string} fields.task - task id
+ * @param {string} fields.agent - acting agent id
+ * @param {string} [fields.note]
+ * @param {string[]} [fields.paths] - glob patterns the event declares/claims
+ * @param {string} [fields.to_agent] - handoff target (task.released)
+ * @param {string} [fields.reason] - circuit-break reason
+ * @param {number} [fields.priority]
+ * @param {number} [fields.epoch] - monotonic per-task ownership fence (R1)
+ * @param {number} [fields.tokens_in]
+ * @param {number} [fields.tokens_out]
+ * @param {number} [fields.tokens_total]
+ * @param {number} [fields.human_minutes]
+ * @param {string} [fields.tool]
+ * @param {string} [fields.surface] - dependency.drift: the shared surface that changed
+ * @param {string} [fields.prior_sha]
+ * @param {string} [fields.current_sha]
+ * @param {number} [fields.diff_lines]
+ * @param {string} [fields.turn]
+ * @returns {{path: string, event: Object}} the written file path and the event object
+ * @throws {Error} if `type` is unrecognized, or `task`/`agent` is missing
+ */
 function appendEvent(repoRoot, {
   type, task, agent, note, paths, to_agent, reason, priority, epoch,
   tokens_in, tokens_out, tokens_total, human_minutes, tool,
@@ -116,6 +159,12 @@ function appendEvent(repoRoot, {
   return { path: fpath, event };
 }
 
+/**
+ * Reads every event in the log, sorted by filename (which encodes ISO timestamp),
+ * so callers see events in chronological arrival order.
+ * @param {string} repoRoot - absolute path to the repo root
+ * @returns {Object[]} parsed event objects, each carrying a `_file` provenance field
+ */
 function readAllEvents(repoRoot) {
   const dir = eventsDir(repoRoot);
   if (!fs.existsSync(dir)) return [];
