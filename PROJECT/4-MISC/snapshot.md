@@ -26,7 +26,7 @@
 ## Next steps
 - **To fire the WPCC dogfood (operator GO given for Codex/Codex config, then paused):** (1) relay-xyz Preconditions locator (`find-harness.sh --check`, confirm `codex` on PATH sandbox-OFF); (2) update pre-reg doc worker config agy→Codex/Codex + check marathon `builder≠reviewer` guard allows codex/codex (else Codex-builds + this-session-reviews); (3) cut `marathon-dogfood/ts-type-suppression` off `origin/development` in WP-Code-Check, capture narrow-gate baseline; (4) fire `marathon-drive.sh --target-root <WP-Code-Check>` (billable, sandbox-OFF).
 - **Open flag:** Codex-builds + Codex-reviews may trip marathon's `builder≠reviewer` guard → fall back to Codex-builds + this-session-reviews.
-- Pre-registration: [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) + [brief](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md).
+- Pre-registration: [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](../2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) + [brief](../2-WORKING/briefs/wpcc-ts-type-suppression-brief.md).
 
 ## Last response (verbatim)
 Paused — nothing fired, nothing mid-flight. Everything from this session is committed + pushed (`392728f`), and no writes to WP-Code-Check have happened.
@@ -297,7 +297,7 @@ Verified everything I need. The CLI tests use stubs (`CODEX_BIN`/`GEMINI_BIN` �
 
 **🔑 Leaked secrets:** Clean. No live-format keys (`sk-`, `ghp_`, `AKIA`, PEM) in the tracked tree or in a quick `git log -S 'sk-'` history pass. `.gitignore` correctly excludes `.tick/` and `.claude/settings.local.json`; no `.env`/`.pem`/`.key` is tracked.
 
-**Source of truth:** One clear front door. Root [README.md](README.md) explicitly names the canonical chain — "Start here → [relay-automation/README.md](relay-automation/README.md) (operator contract) → [relay-automation/QUICKSTART.md](relay-automation/QUICKSTART.md) (device bring-up)" — and the two sub-docs cross-link with explicit role labels ("README is canonical; QUICKSTART is only the bootstrap path"). No competing install commands. The root *does* carry ~12 loose `.md` files (CLAUDE/AGENTS/CODEX/GEMINI/4X4/RECAP/ROADMAP/snapshot…), but the README "Repo map" section navigates them, so it's clutter, not competition.
+**Source of truth:** One clear front door. Root [README.md](../../README.md) explicitly names the canonical chain — "Start here → [relay-automation/README.md](../../relay-automation/README.md) (operator contract) → [relay-automation/QUICKSTART.md](../../relay-automation/QUICKSTART.md) (device bring-up)" — and the two sub-docs cross-link with explicit role labels ("README is canonical; QUICKSTART is only the bootstrap path"). No competing install commands. The root *does* carry ~12 loose `.md` files (CLAUDE/AGENTS/CODEX/GEMINI/4X4/RECAP/ROADMAP/snapshot…), but the README "Repo map" section navigates them, so it's clutter, not competition.
 
 **Path walk (kernel — the default first success):**
 1. Clone — `[Smooth] [Agent-soluble]`
@@ -448,13 +448,13 @@ All three next steps done and committed. Here's where we landed:
 
 ## Done
 
-**1. Graduate decision recorded** — [decisions/2026-06-14-graduate-relay-automation-phase-2.md](decisions/2026-06-14-graduate-relay-automation-phase-2.md). States the bet (one balanced run generalizes), reversibility (Costly, not one-way), and a *metric* revisit trigger (next real balanced run < 50% → re-open). Link-backs added to RECAP and the observations doc.
+**1. Graduate decision recorded** — [decisions/2026-06-14-graduate-relay-automation-phase-2.md](../../decisions/2026-06-14-graduate-relay-automation-phase-2.md). States the bet (one balanced run generalizes), reversibility (Costly, not one-way), and a *metric* revisit trigger (next real balanced run < 50% → re-open). Link-backs added to RECAP and the observations doc.
 
 **2. Agent-feedback follow-ups** (both verified, suite still **13/13**):
-- *Codex* → [SKILL.md](skill/xyz/SKILL.md) build prompt now carries an explicit "thinnest passing change" initiative bound.
+- *Codex* → [SKILL.md](../../skill/xyz/SKILL.md) build prompt now carries an explicit "thinnest passing change" initiative bound.
 - *Gemini* → [test/_setup.sh](test/_setup.sh) exports `TICK_REPO_ROOT=$A` so new tests don't hit an unbound var.
 
-**3. Phase 2 plan** — [relay-automation/PHASE-2-PLAN.md](relay-automation/PHASE-2-PLAN.md). Maps each stub to its fill, and surfaces the one decision that gates everything: the **execution contract** (how `runner.sh` actually invokes an agent). I recommend **headless CLI with an injectable `--agent-cmd`** (testable, tool-agnostic). Phased as 2a runner ‖ 2b watchdog (disjoint files → a natural balanced 2-lane xyz run, which doubles as the next concurrency datapoint for the graduate bet) → 2c `/loop` wiring.
+**3. Phase 2 plan** — [relay-automation/PHASE-2-PLAN.md](../../relay-automation/PHASE-2-PLAN.md). Maps each stub to its fill, and surfaces the one decision that gates everything: the **execution contract** (how `runner.sh` actually invokes an agent). I recommend **headless CLI with an injectable `--agent-cmd`** (testable, tool-agnostic). Phased as 2a runner ‖ 2b watchdog (disjoint files → a natural balanced 2-lane xyz run, which doubles as the next concurrency datapoint for the graduate bet) → 2c `/loop` wiring.
 
 3 commits sit on local `main`, **ahead of `origin/main` by 3** — I held the push since your earlier authorization was scoped to the Run-4 wrap-up.
 

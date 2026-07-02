@@ -12,7 +12,7 @@ an onboarding-facing doc (`README.md`, `ROUTER.md`, `AGENTS.md`, `CLAUDE.md`, `s
 | **Method** | front-door walk, read-only |
 | **Unified with** | parallel Opus-Max session — relay-xyz adherence (FD-11/FD-12) + PDDA hardening (`2610e45`, status-header alias removed) |
 | **Verdict** | ⚠️ **Bumpy** — a newcomer reaches working, but stale numbers, 2 dead links, and a phantom-path `CLAUDE.md` trip the path |
-| **Remediation plan** | [PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md) |
+| **Remediation plan** | [PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md](../1-INBOX/FRONT-DOOR/2026-06-22.md) |
 
 ## Health at a glance
 

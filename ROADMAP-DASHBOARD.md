@@ -6,11 +6,10 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 18 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-74 · test/xyz-vendor.sh not hermetic under a git worktree | — | [#74](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/74) |
 | GH-69 · Marathon branch suggestion + agent confirmation prompt | — | [GH-69-MARATHON-BRANCH-PROMPT.md](PROJECT/1-INBOX/GH-69-MARATHON-BRANCH-PROMPT.md) · [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | — | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/1-INBOX/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
 | GH-71 · Code Structure & Implementation Upgrade | — | [GH-71-UPGRADE-CODE-STRUCTURE.md](PROJECT/1-INBOX/GH-71-UPGRADE-CODE-STRUCTURE.md) · [#71](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/71) |
@@ -27,7 +26,7 @@ Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 0 · �
 | Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Tooling · agy reliability testing | ⏸️ | [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md) |
-| Tooling · front-door onboarding health | 🟡 | [FRONTDOOR.md](FRONTDOOR.md) · [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md) |
+| Tooling · front-door onboarding health | 🟡 | [FRONTDOOR.md](PROJECT/4-MISC/FRONTDOOR.md) · [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md) |
 | PDDA · feedback-synthesis direction | 🟡 | [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md) · [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md) |
 
 ## In progress
@@ -42,10 +41,11 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 43 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 43 · 🔮 0 · 🔲 0
+Summary: 44 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 44 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-74 · test/xyz-vendor.sh not hermetic under a git worktree | ✅ | [#74](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/74) |
 | GH-70 · relay-xyz: per-repo harness for concurrent automated relays | ✅ | [GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md](PROJECT/1-INBOX/GH-70-CONCURRENT-RELAY-LOCAL-HARNESS.md) · [#70](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/70) |
 | GH-72 · Registry/projection write-lock | ✅ | [#72](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/72) |
 | GH-73 · Docs pin fixed /tmp transcript log paths | ✅ | [#73](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/73) |
