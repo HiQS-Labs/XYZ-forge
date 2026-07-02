@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
+Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -16,6 +16,7 @@ Summary: 18 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 2 · �
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | — | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
 | GH-44 · scratch-repo .git fall-through can pollute the parent repo (RCA) | — | [GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md](PROJECT/1-INBOX/GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md) · [#44](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/44) |
+| GH-58 · marathon --builder claude fails headless (exec: claude: not found) | — | [GH-58-CLAUDE-TURN-PATH-DISCOVERY.md](PROJECT/1-INBOX/GH-58-CLAUDE-TURN-PATH-DISCOVERY.md) · [#58](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/58) |
 | GH-41 · task.done not terminal vs higher-epoch reclaim (silent token resurrection) | — | [GH-41-DONE-NOT-TERMINAL.md](PROJECT/1-INBOX/GH-41-DONE-NOT-TERMINAL.md) · [#41](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41) |
 | GH-23 · Cursor CLI lane (3rd cross-model worker) | — | [#23](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/23) |
 | GH-30 · optional centralized transcript archive | — | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/1-INBOX/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |

@@ -4,6 +4,17 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### Marathon-plan preflight sweep — 3 new ready lanes; GH-41 escalated to a consult; hygiene closes
+Reviewed every held/open issue against a strict "is this a fireable lane" bar (5 parallel assessment agents, each verifying paths + code), then filled the rating/contract gaps for the ones GUIDING-PRINCIPLES already covers. Marathon plan now **3 active lanes** (was 1). `pdda run` all-green.
+
+- **Preflighted 3 ready lanes** (rating + `## Swarm Preflight Contract` added, parked in ROADMAP):
+  - **GH-45** (`#45`) commitment-contract / anti-rabbit-hole — v1 scope per its dated ponytail Decision (AGENTS.md re-anchor+park + per-lane attempt cap in `marathon-drive.sh`/`relay-drive.sh` + `test/lane-attempt-cap.sh`). 3/3/3, **serialized kernel lane**.
+  - **GH-58** (`#58`) marathon `--builder claude` fails headless — new pointer doc; fix = `CLAUDE_BIN` PATH+`~/.claude/local/claude` discovery then fail-fast with a clear message; new `test/claude-turn.sh`. 2/2/2, shim.
+  - **GH-44** (`#44`) scratch-repo `.git` fall-through — rated 2/2/2 + contract (shared `test/_scratch-repo.sh` helper + AGENTS.md rail). The planner correctly holds it in the **reconcile** bucket (prior partial work: one canary fixture already hardened) — a 1-line done-vs-remaining confirm unblocks it. Not overridden (deterministic finding).
+- **GH-41** (`#41`) task.done-not-terminal — rated 4/4/3 (advisory) but marked **BLOCKED**: it changes the tick fold + (option B) adds a `task.reopened` verb → GUIDING-PRINCIPLES #2 requires a `decisions/` record first. Ran a **`/consult`** (Codex + agy, GP as tie-breaker) framing Option A (terminality-seal only) vs Option B (seal + reopen verb) + a technical spike; transcripts in `relay-system/2026-07-02/gh41-terminality-160149/`.
+- **Hygiene:** closed **#83** (README rewrite, shipped) and **#65** (GH-49b vendor-marathon-runtime — code complete in-tree with GH-49b markers; only a manual vendored dogfood remains). Both were cluttering the held list.
+- **Assessed-but-not-preflighted (reported for a decision):** GH-30 (archive-model Phase-0 decision), GH-63 (classification-taxonomy decision), #54/#55 (swarm-preflight test-handling — collide, same files), GH-23 (needs a capture doc + Cursor-CLI headless capability check), GH-48 (deferred-by-design behind the rebalance dogfood). Stale held items found already-done: PDDA runtime consolidation (cutover complete), relay-to-issue skill (shipped), front-door Phase 1 (fixed on disk); agy-reliability is manual (agy can't run headless under the sandbox); PDDA feedback-synthesis is a governance decision.
+
 ### GH-84 filed + queued (runner-loop non-hermetic) · PR-REVIEW-QUEUE doc fixed · marathon plan regenerated
 Triage follow-ups after GH-83.
 

@@ -202,3 +202,23 @@ Filed from the GH-39 session retrospective (the operator caught the drift). Rela
 [GH-39](../2-WORKING/GH-39-SWARM-PREFLIGHT-GAPS.md) (scope-lock brief / B6), #42 (concurrency),
 #43 (build robustness). The `/ponytail` cost review below was run before promotion to scope the
 leanest viable build.
+
+## Swarm Preflight Contract
+
+Consumed by `utils/swarm-preflight.sh`. **v1 scope only** (the 2026-06-28 `/ponytail` Decision:
+AGENTS.md paragraph + a per-lane attempt cap in the two drive scripts + a regression test — NOT the
+deferred Phase-1 fenced-contract block, Phase-3 drift detector, or Phase-4 slice-tier/Stop-hook).
+`marathon-drive.sh` + `relay-drive.sh` are **kernel/serialize** scripts and are concurrency-contended
+(#42) — run this as a **single serialized kernel lane, never a parallel agy lane**. Gate is a new
+regression test.
+
+```json
+{
+  "target":      { "repo": ".", "ref": "main" },
+  "gate":        "bash test/lane-attempt-cap.sh",
+  "fix_probes":  [ { "type": "grep_absent", "path": "relay-automation/marathon-drive.sh", "pattern": "LANE_MAX_ATTEMPTS" }, { "type": "grep_absent", "path": "relay-automation/relay-drive.sh", "pattern": "LANE_MAX_ATTEMPTS" } ],
+  "artifacts":   [ "relay-automation/marathon-drive.sh", "relay-automation/relay-drive.sh", "test/lane-attempt-cap.sh", "AGENTS.md" ],
+  "remediation": { "source": "GH-45#ponytail-v1", "criteria": "ponytail-v1 ONLY: (1) AGENTS.md re-anchor+park paragraph (the QUEUE's committed lane list IS the active_commitment — no new field); (2) marathon-drive.sh + a byte-consistent mirror in relay-drive.sh append one line per fire to .tick/attempts/<lane> (lane = sanitized PHASE_ID / project-doc path, stable across re-fires) and REFUSE to start a lane at >= LANE_MAX_ATTEMPTS (default 2, env-overridable) with a non-zero exit + park message, writing no relay token; --force bypasses for one fire and logs the override; a parked lane emits its findings summary; (3) NEW test/lane-attempt-cap.sh drives a lane to the cap (assert refuse+park+no-token) and asserts --force proceeds+logs, wired into validate.sh. Do NOT touch relay-turn-lib.sh or bin/tick (claim/containment semantics byte-identical). GH-45 marker comment." },
+  "lanes":       { "agy_safe": [], "orchestrator_only": [ "relay-automation/marathon-drive.sh", "relay-automation/relay-drive.sh" ] }
+}
+```
