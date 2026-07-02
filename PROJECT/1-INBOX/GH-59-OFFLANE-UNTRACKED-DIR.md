@@ -49,11 +49,14 @@ before it lands. The guard against over-broadening: match only true *ancestors* 
 allowlist file entry, never a bare prefix.
 
 ## Acceptance
-- A greenfield-artifact-in-a-new-dir turn (allowlisted file in an otherwise-untracked dir) commits
-  file-scoped with **no** spurious exit 6.
-- A genuinely off-lane change (a new file NOT under any allowlisted ancestor) still trips exit 6.
-- `decisions/2026-07-02-offlane-untracked-dir.md` written first (schema/behavior contract).
-- Regression case added to `test/worktree-isolation.sh`; `validate.sh` green.
+- [ ] `rtl_in_allow` (or the `rtl_worktree_end` off-lane loop) treats a git-collapsed untracked-directory prefix as allowed WHEN it is an ancestor of an allowlisted **file** entry — mirroring the existing `.relay-artifacts` special-case, but generalized.
+- [ ] A greenfield-artifact-in-a-new-dir turn (allowlisted file in an otherwise-untracked dir) commits file-scoped with **no** spurious exit 6.
+- [ ] A genuinely off-lane change (a new file NOT under any allowlisted ancestor) STILL trips exit 6 (strictness preserved — match only true ancestors of a concrete allowlist file, never a bare prefix).
+- [ ] The change carries a `GH-59` marker comment at the generalization site in `relay-automation/relay-turn-lib.sh`.
+- [ ] A regression case is added to `test/worktree-isolation.sh` covering both the fixed greenfield case AND the still-rejected genuine off-lane case; it fails without the fix and passes with it.
+- [ ] `bash test/worktree-isolation.sh` passes; no edit outside `relay-automation/relay-turn-lib.sh` + `test/worktree-isolation.sh`.
+
+> **Build precondition:** `decisions/2026-07-02-offlane-untracked-dir.md` (the behavior contract) is authored by the orchestrator BEFORE this lane fires — it is not part of the builder's allowlist.
 
 ## Swarm Preflight Contract
 

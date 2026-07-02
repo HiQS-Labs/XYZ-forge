@@ -41,10 +41,11 @@ radius (Easy to revert); the only care is not to reap a *live* claim (mirror GH-
 never-reap-a-live-claim guard).
 
 ## Acceptance
-- Re-running the same phase-id after an aborted run seeds cleanly (no `task ... is open`).
-- A live claim of the same token is never reaped.
-- Regression case added to `test/marathon-drive.sh` reproducing the leaked-token collision + asserting
-  the clean re-seed; `validate.sh` green.
+- [ ] Re-running the same phase-id after an aborted run seeds cleanly (no `task ... is open`) — either by reconciling/terminating the leftover `open`/handoff token before `task.created`, or by deriving a fresh per-attempt token id.
+- [ ] A live claim of the same token is NEVER reaped (mirror GH-43's epoch-safe, never-reap-a-live-claim guard).
+- [ ] The change carries a `GH-56` marker comment at the reconcile/fresh-id site in `relay-automation/marathon-drive.sh`.
+- [ ] A regression case is added to `test/marathon-drive.sh` that reproduces the leaked-token collision (seed a token, leave it open/handed-off, re-seed the same phase-id) and asserts the clean re-seed; it fails without the fix and passes with it.
+- [ ] `bash test/marathon-drive.sh` passes; no edit outside `relay-automation/marathon-drive.sh` + `test/marathon-drive.sh`.
 
 ## Swarm Preflight Contract
 
