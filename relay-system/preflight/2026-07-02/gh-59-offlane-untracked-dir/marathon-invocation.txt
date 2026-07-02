@@ -1,0 +1,7 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-59-offlane-untracked-dir relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact relay-automation/relay-turn-lib.sh,test/worktree-isolation.sh \
+  --pre-advance-cmd 'bash test/worktree-isolation.sh' \
+  --require-clean

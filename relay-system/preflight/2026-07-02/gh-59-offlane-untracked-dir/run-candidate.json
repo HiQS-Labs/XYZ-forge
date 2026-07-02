@@ -1,0 +1,81 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-07-02T19:01:33Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "gh-59-offlane-untracked-dir"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/1-INBOX/GH-59-OFFLANE-UNTRACKED-DIR.md"
+    ],
+    "issues": [],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm",
+    "branch": "marathon/gh-59-offlane-2026-07-02",
+    "commit": "29a86639a4bbb301001ede13a20efa69acb04f4d",
+    "suggested_branch": "marathon/gh-59-offlane-untracked-dir-2026-07-02",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "bash test/worktree-isolation.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/relay-turn-lib.sh",
+        "pattern": "GH-59"
+      }
+    ],
+    "artifacts": [
+      "relay-automation/relay-turn-lib.sh",
+      "test/worktree-isolation.sh"
+    ],
+    "remediation": {
+      "source": "GH-59#fix-direction",
+      "criteria": "rtl_in_allow (or the rtl_worktree_end off-lane loop) treats a git-collapsed untracked-directory prefix as allowed when it is an ancestor of an allowlisted file entry, mirroring the existing .relay-artifacts special-case; a greenfield-artifact-in-a-new-dir turn commits file-scoped with no spurious off-lane exit 6, while a change outside any allowlisted ancestor still trips off-lane; regression case added to test/worktree-isolation.sh; carries a GH-59 marker comment. Costly containment-kernel change — write decisions/2026-07-02-offlane-untracked-dir.md first."
+    },
+    "lanes": {
+      "agy_safe": [],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "d679fc417d60c937682f12c8bfee81322ab0d1fe",
+    "checkout_matches_ref": false,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/relay-turn-lib.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "relay-automation/relay-turn-lib.sh",
+      "test/worktree-isolation.sh"
+    ],
+    "agy_lane": [],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

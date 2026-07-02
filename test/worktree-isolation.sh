@@ -19,31 +19,43 @@ git -C "$A" commit -q -m "seed" >/dev/null 2>&1
 
 # Stub `claude`: edits RELATIVE paths (CWD = worktree when isolated). Token ops via $TICK (shared
 # .tick). STUB_MODE: good = legit artifact edit + a BACKGROUND async off-lane write (fires AFTER the
-# turn returns); offlane = a SYNC off-lane write during the turn.
+# turn returns); offlane = a SYNC off-lane write during the turn; greenfield = create an allowlisted
+# file inside a brand-new dir; greenfield-offlane = that allowlisted create plus a genuinely off-lane dir.
 STUB="$WORK/claude"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-"$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "artifact.txt" >/dev/null 2>&1
+"$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "$ALLOW_PATHS" >/dev/null 2>&1
 "$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
-printf 'built by builder\n' >> artifact.txt          # legit allowlist edit (relative to CWD)
+TARGET_PATH="${ALLOW_PATHS%%,*}"
+case "${STUB_MODE:-good}" in
+  greenfield|greenfield-offlane)
+    mkdir -p "$(dirname "$TARGET_PATH")"
+    printf 'built in greenfield dir\n' > "$TARGET_PATH"
+    ;;
+  *)
+    printf 'built by builder\n' >> artifact.txt      # legit allowlist edit (relative to CWD)
+    ;;
+esac
 printf '\n### Round 1 · Builder\n' >> relay.md        # legit relay edit
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to reviewer >/dev/null 2>&1
 if [ "${STUB_MODE:-good}" = good ]; then
   ( sleep 1; printf 'async junk\n' > offlane-async.txt ) &   # async side effect AFTER the turn
 fi
 [ "${STUB_MODE:-good}" = offlane ] && printf 'sync off-lane\n' > offlane-sync.txt
+[ "${STUB_MODE:-good}" = greenfield-offlane ] && { mkdir -p greenfield-offlane; printf 'not allowed\n' > greenfield-offlane/nope.txt; }
 printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'   # minimal cost JSON
 exit 0
 STUB_EOF
 chmod +x "$STUB"
 
-seed_token(){ tick_a log task.created "$1" --agent claude --paths "artifact.txt" >/dev/null; tick_a claim "$1" --agent claude --paths "artifact.txt" >/dev/null 2>&1; tick_a release "$1" --agent claude --to claude >/dev/null 2>&1; }
+seed_token(){ local task="$1" allow_paths="${2:-artifact.txt}"; tick_a log task.created "$task" --agent claude --paths "$allow_paths" >/dev/null; tick_a claim "$task" --agent claude --paths "$allow_paths" >/dev/null 2>&1; tick_a release "$task" --agent claude --to claude >/dev/null 2>&1; }
 
-run_shim(){ # <task> <stub-mode> <isolation 0|1>
+run_shim(){ # <task> <stub-mode> <isolation 0|1> [allow-paths]
+  local allow_paths="${4:-artifact.txt}"
   ( cd "$A" && RELAY_AGENT=claude RELAY_FILE="$A/relay.md" RELAY_TASK="$1" \
       CLAUDE_AGENT=claude CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude.$1.json" \
-      ALLOW_PATHS="artifact.txt" CLAUDE_BLOCK_CMDS="" STUB_MODE="$2" RELAY_WORKTREE_ISOLATION="$3" \
+      ALLOW_PATHS="$allow_paths" CLAUDE_BLOCK_CMDS="" STUB_MODE="$2" RELAY_WORKTREE_ISOLATION="$3" \
       bash "$SHIM" >/dev/null 2>&1 )
 }
 
@@ -68,7 +80,28 @@ run_shim RELAY-TURN-off offlane 1; rc=$?
 git -C "$A" diff --quiet -- artifact.txt relay.md && pass "off-lane turn left ROOT working tree unmodified (all-or-nothing copy-back)" || fail "off-lane turn dirtied ROOT (partial copy-back)"
 [ "$(git -C "$A" worktree list | wc -l | tr -d ' ')" = "1" ] && pass "worktree cleaned up after off-lane fail" || fail "worktree leaked on off-lane"
 
-# --- (3) isolation OFF (default): in-ROOT path unchanged — regression baseline -------------------
+# --- (3) isolation ON, new allowlisted file in a new dir: allow the collapsed `?? dir/` ----------
+# GH-59 regression: git status collapses an all-untracked dir to `greenfield-ok/`, while the allowlist
+# carries the concrete file path (`greenfield-ok/output.txt`). The turn should treat the dir as allowed
+# only because it is the true ancestor of that allowlisted file, then copy the file back and commit.
+seed_token RELAY-TURN-greenfield "greenfield-ok/output.txt"
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-greenfield greenfield 1 "greenfield-ok/output.txt"; rc=$?
+[ "$rc" -eq 0 ] && pass "greenfield allowlisted dir exits 0" || fail "greenfield rc=$rc"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "greenfield allowlisted dir committed cleanly" || fail "expected greenfield commit"
+grep -q "built in greenfield dir" "$A/greenfield-ok/output.txt" && pass "greenfield allowlisted file copied back from collapsed dir" || fail "greenfield-ok/output.txt missing allowlisted content"
+[ ! -e "$A/greenfield-offlane/nope.txt" ] && pass "greenfield case did not leak unrelated off-lane dir" || fail "unexpected greenfield-offlane leak"
+
+# --- (4) isolation ON, unrelated new dir: still reject the genuine off-lane create ---------------
+seed_token RELAY-TURN-greenfield-off "greenfield-new/output.txt"
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-greenfield-off greenfield-offlane 1 "greenfield-new/output.txt"; rc=$?
+[ "$rc" -eq 6 ] && pass "genuine off-lane dir still exits 6" || fail "expected greenfield-offlane exit 6, got $rc"
+[ ! -e "$A/greenfield-new/output.txt" ] && pass "off-lane greenfield turn copied back nothing" || fail "greenfield-new/output.txt should not copy back on off-lane fail"
+[ ! -e "$A/greenfield-offlane/nope.txt" ] && pass "genuine off-lane dir never reached ROOT" || fail "greenfield-offlane/nope.txt leaked into ROOT!"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "genuine off-lane dir made NO commit" || fail "greenfield-offlane turn should not commit"
+
+# --- (5) isolation OFF (default): in-ROOT path unchanged — regression baseline -------------------
 seed_token RELAY-TURN-noiso
 before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-noiso good 0; rc=$?
@@ -77,7 +110,7 @@ run_shim RELAY-TURN-noiso good 0; rc=$?
 # clean up the async file the non-isolated turn legitimately produced in ROOT (known gap, not tested here)
 rm -f "$A/offlane-async.txt"
 
-# --- (4) isolation ON + a concurrent ROOT commit DURING the turn: PRESERVE it, don't reset+fail ----
+# --- (6) isolation ON + a concurrent ROOT commit DURING the turn: PRESERVE it, don't reset+fail ----
 # Regression for GH-13/#14: RTL_WT_USED was set inside rtl_worktree_begin's `wt="$(...)"` subshell and
 # LOST, so rtl_enforce wrongly took the in-ROOT reset+exit-6 path for worktree turns and discarded the
 # whole build whenever ROOT HEAD moved (the 2026-06-29 codex marathon). Now re-asserted in
