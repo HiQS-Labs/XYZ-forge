@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -79,6 +79,26 @@ Basis: behaviorally proven and textual only
 * [Pass] **Preflight Git Operations are Read-Only**: Confirmed that `SKIP_BRANCH_PROMPT` and `BRANCH_READY` paths only execute read-only Git commands (`git show-ref`, `git symbolic-ref`, etc.). No branch writing or destructive operations exist.
 
 **Commit:** none — review only (harness-committed after handoff)
+
+### Round 2 · Producer · 2026-07-01 23:45 PT
+**Decisions on proposals:**
+- [Blocker] Credential exclusion fail-open → **Implemented**. Confirmed the exploit behaviorally first (`password=$REF; api_key=hunter2supersecretvalue` and a trailing `# password=$VAR` comment both hid the real secret, exit 0). Rewrote R7 in `relay-automation/hooks/security-scan.sh` to match+exclude PER OCCURRENCE (`grep -noE`, bounded value token, one row per key=value) instead of per whole line. Re-verified both exploits now caught; re-verified existing clean fixtures (`password="$ENV_PASSWORD"`, `api_key="${API_KEY}"`) still pass with no false positive.
+- [Should] Grep read-errors fail-open → **Implemented**, with a self-caught correction. First version added `_grep_or_fail_loud()` but its early `return` (bare, no explicit code) propagated a nonzero exit through `_check()` → `scan_file()` → `main()`'s file loop, and under this script's `set -euo pipefail` that silently **aborted the entire scan** after the first unreadable file — a worse failure mode than the one being fixed (never got to fail-loud on the OTHER files). Caught this by testing a directory with an unreadable file followed by a file with a real finding; the real finding never printed. Fixed with explicit `return 0` at both early-return call sites, plus a per-file dedup guard (was reporting the same scan-error once per rule, 7x noise per file). Re-verified: unreadable file now fails loud AND the scan continues to the next file.
+- [Should] Kernel-path exact-match vs `marathon-plan.sh`'s prefix-match → **Implemented**. `utils/swarm-preflight.sh` now loops `ZONE_KERNEL_PATHS` with `[[ "$a" == "$k" || "$a" == "$k"* ]]`, mirroring `a === k || a.startsWith(k)`.
+- [Nit] Shim case-sensitivity → **Implemented**. Lowercase the artifact path with `tr '[:upper:]' '[:lower:]'` before the shim `case` match — NOT bash-4 `${x,,}`, which I initially reached for and then caught myself: this repo's default `bash` (macOS stock) is 3.2.57, confirmed by running `bash --version`, and `${x,,}` errors under it. Also caught the same trap in the [Should] grep-error fix — my first draft used `local -n` (nameref, bash 4.3+) to return a value from `_grep_or_fail_loud()`; also fails under 3.2. Replaced with a shared local variable (`$_GREP_OUT`) convention instead.
+- [Pass] both — no changes.
+
+**Did:**
+- All four fixes landed in `a255a6a`, each with a behaviorally-verified regression test (crafted exploit/error fixtures, not just re-reading the code): `test/security-scan.sh` 20→34 checks (+14: 2 adjacent-ref exploits, 4 baseline-drift updates from the R7 rewrite, 4 scan-error/continuation checks, 4 new fixture-triggered baseline entries), `test/swarm-preflight.sh` 44→46 checks (+2: T21 kernel-adjacent prefix match, T22 case-insensitive shim match).
+- Renamed the T21 test fixture from `bin/tick-helper.sh` to `bin/tick+helper.sh` after `test/path-integrity.sh` flagged the hyphenated form as a broken path reference (it textually pattern-matches any tracked `.sh` file for `bin/...\.sh`-shaped substrings) — the `+` char falls outside path-integrity's allowed-char class, so it extracts the real, existing `bin/tick` token instead of the fake full name. Confirmed `test/path-integrity.sh` clean again.
+
+**Re-review this:**
+- Does the per-occurrence R7 rewrite (`grep -noE` + bounded value token `[^[:space:];]{4,}`) miss any credential shape the old greedy `.{4,}` line-level match used to catch? (I checked: quoted values with internal spaces, e.g. `password="my secret pass"`, would now only capture up to the first internal space as the "value" — a completeness tradeoff I judged acceptable for a heuristic scanner, but flagging for a second opinion.)
+- Any other bash-3.2 incompatibility I might have missed elsewhere in these two files (I checked for `${x,,}`/`${x^^}` and `local -n` specifically, prompted by catching those twice, but didn't do an exhaustive sweep of the full diff for other bash-4+isms like `mapfile`, `readarray`, associative arrays, or `**` globstar).
+- Is a per-file (not per-rule) scan-error dedup the right granularity, or should a scan-error on file N still cause the overall exit code to distinguish "N files unreadable, M real findings" from "M+N findings, can't tell which is which" in the summary line?
+
+**Verification:** `test/security-scan.sh` 34/34, `test/swarm-preflight.sh` 46/46, `validate.sh` 77/77, `pdda.sh run` clean — all at commit `a255a6a`. Both R7 exploits and the grep-error/scan-continuation behavior re-verified by hand (crafted fixtures, actual runs, not read-only).
+**Commit:** a255a6a
 
 <!-- ↓↓↓ NEXT TURN GOES HERE — append below this line, do not edit above ↓↓↓ -->
 
