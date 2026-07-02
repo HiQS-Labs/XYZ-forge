@@ -4,6 +4,39 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-01
 
+### Agy relay QA of the marathon queue drive — 1 Blocker + 3 Should + 2 Nit, all fixed
+A `/relay-xyz` headless review with agy of the two highest-blast-radius pieces from the marathon
+queue drive below (`relay-automation/hooks/security-scan.sh`'s baseline mechanism,
+`utils/swarm-preflight.sh`'s branch/carve-out logic) — `relay-system/2026-07-01/marathon-critical-qa.md`,
+3 rounds, closed **Approved**.
+
+Real findings, all confirmed behaviorally (crafted exploit fixtures, not just re-reading) before
+fixing: **[Blocker]** the R7 credential-literal rule's exclude filter dropped an entire LINE when
+any part matched a "variable reference" pattern, so a real secret sharing a line with an excluded
+reference (`password=$REF; api_key=realsecret`) was completely hidden — pre-existing in the
+scanner shipped earlier today, now load-bearing since this session wired it up as a real blocking
+gate. **[Should] ×2:** grep read-errors (permission denied, etc.) silently read as "clean" instead
+of failing loud; `swarm-preflight.sh`'s kernel-path check was exact-match where `marathon-plan.sh`'s
+is prefix-match, letting a kernel-adjacent artifact wrongly skip the carve-out's branch prompt;
+quoted credential values with internal spaces matched nothing after the first fix's per-occurrence
+rewrite. **[Nit] ×2:** shim-path matching was case-sensitive vs. `marathon-plan.sh`'s case-insensitive,
+and crossed subdirectories where `marathon-plan.sh`'s regex class can't.
+
+Self-caught two bugs while fixing agy's findings, worth recording as their own lesson: (1) the first
+version of the grep-error fix propagated its nonzero return through `set -e` all the way to `main`'s
+file loop, silently **aborting the entire scan** after the first unreadable file — a worse failure
+mode than the one being fixed; caught by testing a directory with an unreadable file followed by one
+with a real finding, and seeing the second finding never print. (2) reached for `${x,,}` and
+`local -n` (bash 4+) while writing the case-sensitivity and grep-error fixes, on a repo whose
+default `bash` is macOS-stock 3.2.57 — caught both before committing (`bash --version` + a direct
+repro), fixed with `tr` and a shared-variable convention respectively, per this repo's existing
+`relay-turn-lib.sh` precedent for exactly this trap.
+
+`test/security-scan.sh` 20→35 checks, `test/swarm-preflight.sh` 44→47 checks — every new check
+proves a real exploit is closed or a real discrepancy resolved, not just re-asserting existing
+behavior. `validate.sh` 77/77, `pdda.sh run` clean at every commit
+(`a255a6a`, `9b6704f`). Three commits total for the fixes + two for the relay log turns.
+
 ### Marathon queue drive — GH-74, GH-71 Phases 1–2, GH-69, GH-64 active gate
 Picked up the ranked remaining queue from `MARATHON-PLAN-2026-07-01.md` and drove it to completion, item by item, each independently verified and pushed.
 
