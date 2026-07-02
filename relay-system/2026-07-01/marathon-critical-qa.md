@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 3
 
@@ -99,6 +99,32 @@ Basis: behaviorally proven and textual only
 
 **Verification:** `test/security-scan.sh` 34/34, `test/swarm-preflight.sh` 46/46, `validate.sh` 77/77, `pdda.sh run` clean — all at commit `a255a6a`. Both R7 exploits and the grep-error/scan-continuation behavior re-verified by hand (crafted fixtures, actual runs, not read-only).
 **Commit:** a255a6a
+
+### Round 2 · Reviewer · agy-findings · 2026-07-01 23:30 PT
+
+**Verdict:** CHANGES REQUESTED
+Basis: behaviorally proven and textual only
+
+**Findings & proposals:**
+* [Should] **Quoted Credential Values with Spaces Not Tokenized Correctly**: In `relay-automation/hooks/security-scan.sh`, `PATTERN_CRED_ASSIGN` uses `[^[:space:];]{4,}` for matching value tokens. If a quoted credential value contains spaces (e.g. `password="pw secret"`), the match stops at the first space (yielding `"pw`), which is shorter than 4 characters and is thus completely missed.
+  * *Proposed Fix:* Update the regex to support quoted strings with internal spaces: `PATTERN_CRED_ASSIGN='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*("[^"]{3,}"|'\''[^'\'']{3,}'\''|[^[:space:];]{4,})'`
+* [Nit] **Shim Zone Classification Discrepancy on Subdirectories**: In `utils/swarm-preflight.sh`, the case pattern `relay-automation/*-turn.sh` matches subdirectories (e.g., `relay-automation/subdir/foo-turn.sh`), classifying them as `shim`. However, in `utils/marathon-plan.sh`, `SHIM_RE` only matches files directly under `relay-automation/`. This can lead to a zone mismatch between the two scripts.
+  * *Proposed Fix:* Guard the case match in `swarm-preflight.sh` to ensure there are no additional subdirectories:
+    ```bash
+    case "$_z_a_lc" in
+      relay-automation/*-turn.sh|relay-automation/consult.sh)
+        if [[ "$_z_a_lc" != relay-automation/*/* ]]; then
+          ZONE="shim"
+        fi
+        ;;
+    esac
+    ```
+* [Pass] **Exact Literal Baseline Matches**: Re-verified that `baseline_hit` in `relay-automation/hooks/security-scan.sh` performs exact literal string matches, and baseline entries only cover legitimate prose/dispatcher patterns or test fixtures. No real credentials are in the baseline file.
+* [Pass] **Preflight Git Operations are Read-Only**: Re-verified that `utils/swarm-preflight.sh` branch-logic and worktree commands are entirely read-only with respect to git references (e.g. `show-ref`, `fetch`). No git writes or branch-creation paths exist in the script itself.
+* [Pass] **Kernel Zone Alignment**: Verified that the prefix matching loop `[[ "$_z_a" == "$_z_k" || "$_z_a" == "$_z_k"* ]]` in `utils/swarm-preflight.sh` correctly mirrors `marathon-plan.sh`'s `a === k || a.startsWith(k)` logic for kernel paths.
+* [Pass] **Scan Continuation and Error Dedup**: Verified that the grep scan error logging in `relay-automation/hooks/security-scan.sh` successfully fails the scan on unreadable files, continues scanning remaining files without aborting, and dedups grep errors to one error per file.
+
+**Commit:** none — review only
 
 <!-- ↓↓↓ NEXT TURN GOES HERE — append below this line, do not edit above ↓↓↓ -->
 
