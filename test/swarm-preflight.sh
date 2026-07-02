@@ -381,6 +381,27 @@ grep -q "skip_branch_prompt=false" <<<"$out" \
   && pass "T22a differently-cased shim path (Codex-turn.sh) still classifies as shim, not independent" \
   || fail "T22a: $out"
 
+# ── T23 (GH-69, agy relay QA r2 [Nit]): a NESTED subdirectory under relay-automation/ must NOT
+# classify as shim — bash case globs match `/` (unlike marathon-plan.sh's SHIM_RE, whose
+# [a-z0-9-]+ class can't cross a path separator), so relay-automation/subdir/foo+turn.sh must be
+# independent, not shim. At risk=1 that makes it independent-zone → skip_branch_prompt=TRUE (the
+# opposite of T22, which is a direct, non-nested shim and should NOT skip).
+R="$(make_repo_risk shimnested 1 '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "relay-automation/subdir/foo+turn.sh" ],
+  "remediation": { "criteria": "x" }
+}')"
+mkdir -p "$R/relay-automation/subdir"
+: >"$R/relay-automation/subdir/foo+turn.sh"
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm "add nested foo+turn.sh" >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-shimnested.md" 2>&1)"
+grep -q "skip_branch_prompt=true" <<<"$out" \
+  && pass "T23a nested-subdirectory shim-shaped path is independent zone, not shim (risk=1 skips)" \
+  || fail "T23a: $out"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1

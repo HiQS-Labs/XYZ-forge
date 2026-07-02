@@ -465,7 +465,16 @@ if [[ -n "$ART_CSV" ]]; then
       # `${x,,}` — stock macOS bash is 3.2 (this repo's scripts stay 3.2-portable; see relay-turn-lib.sh).
       _z_a_lc="$(printf '%s' "$_z_a" | tr '[:upper:]' '[:lower:]')"
       case "$_z_a_lc" in
-        relay-automation/*-turn.sh|relay-automation/consult.sh) ZONE="shim" ;;
+        relay-automation/*-turn.sh|relay-automation/consult.sh)
+          # Bash case globs match `/` too (unlike marathon-plan.sh's SHIM_RE, whose [a-z0-9-]+ class
+          # can't cross a path separator) — reject a nested subdirectory explicitly, or
+          # relay-automation/subdir/foo+turn.sh would wrongly classify as shim (agy relay QA r2, [Nit]).
+          _z_rest="${_z_a_lc#relay-automation/}"
+          case "$_z_rest" in
+            */*) ;;
+            *) ZONE="shim" ;;
+          esac
+          ;;
       esac
       [[ "$ZONE" == "shim" ]] && break
     done

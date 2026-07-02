@@ -257,6 +257,24 @@ grep -qF "ALSO_BAD" "$STDERR_UNREAD" 2>/dev/null \
   || fail "unreadable file: scan stopped before reaching the next file — set -e propagation bug"
 
 # ---------------------------------------------------------------------------
+# Regression (agy relay QA round 2, 2026-07-01, [Should]): the per-occurrence R7 rewrite's unquoted
+# value token stops at the first space, so a QUOTED value containing an internal space matched
+# nothing at all — completely missed, not just truncated.
+# ---------------------------------------------------------------------------
+check_quoted_value_with_spaces() {
+  local tmpf="$WORK/quoted-space.sh"
+  printf 'password="pw secret"\n' > "$tmpf"
+  local rc=0 stderr_out
+  stderr_out="$(bash "$SCANNER" --no-baseline "$tmpf" 2>&1 >/dev/null)" || rc=$?
+  if [[ "$rc" -ne 0 ]] && echo "$stderr_out" | grep -qF 'password="pw secret"'; then
+    pass "quoted value with internal space is caught (previously matched nothing)"
+  else
+    fail "quoted value with internal space NOT caught (rc=$rc): $stderr_out"
+  fi
+}
+check_quoted_value_with_spaces
+
+# ---------------------------------------------------------------------------
 # Baseline (GH-64) — a pre-approved finding is still printed but doesn't fail the scan;
 # --no-baseline bypasses it; a NON-baselined finding in the same file still fails.
 # ---------------------------------------------------------------------------

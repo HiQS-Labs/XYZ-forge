@@ -91,16 +91,20 @@ PATTERN_GH_PAT='ghp_[A-Za-z0-9]{36,}'
 PATTERN_SLACK='xox[baprs]-[A-Za-z0-9]'
 
 # R7: Generic credential assignment with a literal value (not a variable reference).
-# PATTERN_CRED_ASSIGN's value is bounded to a single whitespace/semicolon-free token (not `.{4,}`,
-# which used to run to end-of-line) so `grep -noE` yields ONE match PER key=value occurrence, even
-# when several sit on the same line. PATTERN_CRED_EXCLUDE is then tested against each individual
-# matched SNIPPET (not the whole line) in _check_credential() below — exclude when the value
-# immediately after = starts with $, (, or { (a variable/subshell reference), optionally behind a
-# quote. Matching+excluding per-occurrence (not per-line) closes a real bypass: a line combining a
-# legitimate reference with a hardcoded secret (`password=$REF; api_key=realsecret`, or a trailing
-# `# password=$VAR` comment on the same line as a real secret) used to have the WHOLE line dropped
-# by the old line-level exclude filter, hiding the real secret (agy relay QA, 2026-07-01, [Blocker]).
-PATTERN_CRED_ASSIGN='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*[^[:space:];]{4,}'
+# PATTERN_CRED_ASSIGN's value is bounded to ONE occurrence (not `.{4,}`, which used to run to
+# end-of-line) so `grep -noE` yields ONE match PER key=value, even when several sit on the same
+# line. The value is either a quoted string (3+ inner chars, spaces allowed — `password="pw
+# secret"`) or an unquoted whitespace/semicolon-free token (4+ chars). PATTERN_CRED_EXCLUDE is then
+# tested against each individual matched SNIPPET (not the whole line) in _check_credential() below —
+# exclude when the value immediately after = starts with $, (, or { (a variable/subshell reference),
+# optionally behind a quote. Matching+excluding per-occurrence (not per-line) closes a real bypass: a
+# line combining a legitimate reference with a hardcoded secret (`password=$REF; api_key=realsecret`,
+# or a trailing `# password=$VAR` comment on the same line as a real secret) used to have the WHOLE
+# line dropped by the old line-level exclude filter, hiding the real secret (agy relay QA,
+# 2026-07-01, [Blocker]). The quoted-value alternative closes a follow-on gap from the first fix: a
+# quoted value containing spaces (`password="pw secret"`) previously matched nothing at all, since
+# the unquoted-token alternative alone stops at the first space (agy relay QA r2, [Should]).
+PATTERN_CRED_ASSIGN='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*("[^"]{3,}"|'"'"'[^'"'"']{3,}'"'"'|[^[:space:];]{4,})'
 PATTERN_CRED_EXCLUDE='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*"?[$({]'
 
 # ---------------------------------------------------------------------------

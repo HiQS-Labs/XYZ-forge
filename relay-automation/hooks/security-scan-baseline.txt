@@ -17,6 +17,7 @@ relay-automation/hooks/security-scan.sh	eval-unsanitized	# Matches: eval "$foo",
 relay-automation/hooks/security-scan.sh	pipe-remote-shell	#   R2  piped remote execution                   curl/wget ... | sh/bash
 relay-automation/hooks/security-scan.sh	credential-literal	password=/secret=/api_key=
 relay-automation/hooks/security-scan.sh	credential-literal	api_key=realsecret`,
+relay-automation/hooks/security-scan.sh	credential-literal	password="pw secret"
 relay-automation/improve-loop.sh	eval-unsanitized	if ! eval "$ORACLE_CMD" >/dev/null 2>&1; then echo "improve-loop: baseline FAILS the oracle — refusing to optimize a broken artifact" >&2; exit 3; fi
 relay-automation/improve-loop.sh	eval-unsanitized	  eval "$BUILD_CMD" >/dev/null 2>&1 || true
 relay-automation/improve-loop.sh	eval-unsanitized	  op=1; eval "$ORACLE_CMD" >/dev/null 2>&1 || op=0
@@ -55,6 +56,7 @@ test/xyz-vendor.sh	eval-unsanitized	( unset HARNESS; eval "$(cat "$WORK/plain.en
 # --- added 2026-07-01: GH-64's own baseline-mechanism test fixtures (test/security-scan.sh) ---
 test/security-scan.sh	credential-literal	api_key=hunter2supersecretvalue'
 test/security-scan.sh	credential-literal	api_key=hunter2supersecretvalue
+test/security-scan.sh	credential-literal	password="pw secret"
 test/security-scan.sh	eval-unsanitized	printf '#!/usr/bin/env bash\neval "$X"\n' > "$UNREADABLE_FILE"
 test/security-scan.sh	eval-unsanitized	printf '#!/usr/bin/env bash\neval "$ALSO_BAD"\n' > "$OTHER_FILE"
 test/security-scan.sh	eval-unsanitized	eval "$KNOWN_GOOD"
