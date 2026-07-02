@@ -196,6 +196,67 @@ check_clean_pattern "api-key-ref"   'api_key="${API_KEY}"'
 check_clean_pattern "curl-pipe-grep" 'curl https://x.io/data | grep foo'
 
 # ---------------------------------------------------------------------------
+# Regression (agy relay QA, 2026-07-01, [Blocker]): a real secret sharing a line with an excluded
+# variable/subshell reference used to be hidden — the old whole-line exclude dropped the ENTIRE
+# line when ANY part of it matched the exclude pattern. Per-occurrence matching (grep -noE) fixes
+# this; these assert the real secret is still caught even next to a legitimate reference.
+# ---------------------------------------------------------------------------
+
+check_secret_survives_adjacent_ref() {
+  local label="$1" content="$2" real_secret_substr="$3"
+  local tmpf="$WORK/adjref-${label}.sh"
+  printf '%s\n' "$content" > "$tmpf"
+  local rc=0 stderr_out
+  stderr_out="$(bash "$SCANNER" "$tmpf" 2>&1 >/dev/null)" || rc=$?
+  if [[ "$rc" -ne 0 ]] && echo "$stderr_out" | grep -qF "$real_secret_substr"; then
+    pass "adjacent-ref[$label]: real secret still caught next to an excluded reference"
+  else
+    fail "adjacent-ref[$label]: real secret NOT caught (rc=$rc) — stderr: $stderr_out"
+  fi
+}
+
+check_secret_survives_adjacent_ref "same-line-two-assigns" \
+  'password=$REF; api_key=hunter2supersecretvalue' \
+  'api_key=hunter2supersecretvalue'
+check_secret_survives_adjacent_ref "trailing-comment" \
+  'api_key=hunter2supersecretvalue  # password=$VAR' \
+  'api_key=hunter2supersecretvalue'
+
+# ---------------------------------------------------------------------------
+# Regression (agy relay QA, 2026-07-01, [Should] + a self-caught fix-of-the-fix): an unreadable file
+# (grep exit 2+, not the "no match" exit 1) must fail loud, not silently read as clean — AND the
+# error report must not abort the rest of the scan under `set -e` (the first version of this fix
+# propagated the error's nonzero return through _check() to scan_file() to main()'s file loop,
+# silently ending the ENTIRE scan after the first unreadable file — worse than the bug it fixed).
+# ---------------------------------------------------------------------------
+
+UNREADABLE_DIR="$WORK/unreadable-fixture"
+mkdir -p "$UNREADABLE_DIR"
+UNREADABLE_FILE="$UNREADABLE_DIR/locked.sh"
+printf '#!/usr/bin/env bash\neval "$X"\n' > "$UNREADABLE_FILE"
+OTHER_FILE="$UNREADABLE_DIR/z-also-bad.sh"
+printf '#!/usr/bin/env bash\neval "$ALSO_BAD"\n' > "$OTHER_FILE"
+chmod 000 "$UNREADABLE_FILE"
+
+RC=0
+STDOUT_UNREAD="$WORK/stdout-unreadable.txt"
+STDERR_UNREAD="$WORK/stderr-unreadable.txt"
+bash "$SCANNER" --no-baseline "$UNREADABLE_DIR" >"$STDOUT_UNREAD" 2>"$STDERR_UNREAD" || RC=$?
+chmod 644 "$UNREADABLE_FILE"
+
+[[ "$RC" -ne 0 ]] && pass "unreadable file: scanner fails loud (exit $RC), not silently clean" \
+  || fail "unreadable file: scanner should fail, got exit 0"
+grep -q "scan-error" "$STDERR_UNREAD" 2>/dev/null \
+  && pass "unreadable file: flagged with [scan-error], not silently skipped" \
+  || fail "unreadable file: no [scan-error] finding: $(cat "$STDERR_UNREAD")"
+[[ "$(grep -c "scan-error" "$STDERR_UNREAD" 2>/dev/null)" -eq 1 ]] \
+  && pass "unreadable file: scan-error reported once per file, not once per rule" \
+  || fail "unreadable file: expected 1 scan-error line, got $(grep -c "scan-error" "$STDERR_UNREAD" 2>/dev/null)"
+grep -qF "ALSO_BAD" "$STDERR_UNREAD" 2>/dev/null \
+  && pass "unreadable file: scan CONTINUES to the next file (not silently aborted mid-scan)" \
+  || fail "unreadable file: scan stopped before reaching the next file — set -e propagation bug"
+
+# ---------------------------------------------------------------------------
 # Baseline (GH-64) — a pre-approved finding is still printed but doesn't fail the scan;
 # --no-baseline bypasses it; a NON-baselined finding in the same file still fails.
 # ---------------------------------------------------------------------------

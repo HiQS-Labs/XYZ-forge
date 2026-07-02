@@ -345,6 +345,42 @@ out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-kernelrisk1.md" 2>&1)"
 grep -q "skip_branch_prompt=false" <<<"$out" \
   && pass "T20a risk=1 but kernel-zone artifact → skip_branch_prompt=false" || fail "T20a: $out"
 
+# ── T21 (GH-69, agy relay QA [Should]): kernel-path match is a PREFIX match, mirroring
+# marathon-plan.sh's `a === k || a.startsWith(k)` — a kernel-ADJACENT artifact (bin/tick+helper.sh,
+# which startsWith "bin/tick" but isn't an exact match) must still classify as kernel, not
+# independent, or the two planners disagree and the carve-out wrongly fires on a kernel-adjacent lane.
+R="$(make_repo_risk kernelprefix 1 '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "bin/tick+helper.sh" ],
+  "remediation": { "criteria": "x" }
+}')"
+: >"$R/bin/tick+helper.sh"
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm "add tick-helper" >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-kernelprefix.md" 2>&1)"
+grep -q "skip_branch_prompt=false" <<<"$out" \
+  && pass "T21a risk=1 but kernel-ADJACENT artifact (bin/tick+helper.sh) → skip_branch_prompt=false" \
+  || fail "T21a: $out"
+
+# ── T22 (GH-69, agy relay QA [Nit]): shim match is case-INSENSITIVE, mirroring SHIM_RE's `/i` — a
+# differently-cased shim path must still classify as shim (not independent), same as marathon-plan.sh.
+R="$(make_repo_risk shimcase 1 '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "relay-automation/Codex-turn.sh" ],
+  "remediation": { "criteria": "x" }
+}')"
+: >"$R/relay-automation/Codex-turn.sh"
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm "add Codex-turn.sh" >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-shimcase.md" 2>&1)"
+grep -q "skip_branch_prompt=false" <<<"$out" \
+  && pass "T22a differently-cased shim path (Codex-turn.sh) still classifies as shim, not independent" \
+  || fail "T22a: $out"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1

@@ -438,21 +438,33 @@ ART_COUNT=0; [[ -n "$ART_CSV" ]] && ART_COUNT="$(awk -F, '{print NF}' <<<"$ART_C
 # and proceeds on the current branch — ratings make this deterministic. Mirrors marathon-plan.sh's
 # KERNEL_PATHS/SHIM_RE zone heuristic (deliberately re-derived here, not imported, so the packet stays
 # self-contained without a marathon-plan.sh dependency).
+#
+# Match semantics MUST mirror marathon-plan.sh exactly, or the two planners can disagree on a lane's
+# zone: marathon-plan.sh's KERNEL_PATHS check is a PREFIX match (`a === k || a.startsWith(k)`), not
+# exact — an exact-match `case` here would classify e.g. `bin/tick+helper.sh` as `independent` (wrongly
+# skipping the branch prompt on a kernel-adjacent lane) while marathon-plan.sh classifies it `kernel`.
+# Likewise SHIM_RE is case-insensitive (`/i`); an unqualified case-sensitive match here could let a
+# differently-cased shim path (`relay-automation/Codex-turn.sh`) slip through as `independent`.
+# (agy relay QA, 2026-07-01, [Should] + [Nit].)
 FM_RISK="$(grep -m1 -E '^risk:[[:space:]]*[0-9]+' "$PRIMARY_DOC" 2>/dev/null | grep -oE '[0-9]+' || true)"
+ZONE_KERNEL_PATHS=(relay-automation/relay-turn-lib.sh bin/tick relay-automation/relay-drive.sh)
 ZONE="independent"
 if [[ -n "$ART_CSV" ]]; then
   IFS=',' read -ra _z_arts <<<"$ART_CSV"
   for _z_a in "${_z_arts[@]}"; do
     read -r _z_a <<<"$_z_a"
-    case "$_z_a" in
-      relay-automation/relay-turn-lib.sh|bin/tick|relay-automation/relay-drive.sh) ZONE="kernel" ;;
-    esac
+    for _z_k in "${ZONE_KERNEL_PATHS[@]}"; do
+      [[ "$_z_a" == "$_z_k" || "$_z_a" == "$_z_k"* ]] && { ZONE="kernel"; break; }
+    done
     [[ "$ZONE" == "kernel" ]] && break
   done
   if [[ "$ZONE" != "kernel" ]]; then
     for _z_a in "${_z_arts[@]}"; do
       read -r _z_a <<<"$_z_a"
-      case "$_z_a" in
+      # Case-insensitive shim match: lowercase the path, mirroring SHIM_RE's `/i`. `tr`, not bash-4
+      # `${x,,}` — stock macOS bash is 3.2 (this repo's scripts stay 3.2-portable; see relay-turn-lib.sh).
+      _z_a_lc="$(printf '%s' "$_z_a" | tr '[:upper:]' '[:lower:]')"
+      case "$_z_a_lc" in
         relay-automation/*-turn.sh|relay-automation/consult.sh) ZONE="shim" ;;
       esac
       [[ "$ZONE" == "shim" ]] && break

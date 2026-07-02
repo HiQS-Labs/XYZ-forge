@@ -91,12 +91,17 @@ PATTERN_GH_PAT='ghp_[A-Za-z0-9]{36,}'
 PATTERN_SLACK='xox[baprs]-[A-Za-z0-9]'
 
 # R7: Generic credential assignment with a literal value (not a variable reference).
-# Step 1 (PATTERN_CRED_ASSIGN): match any credential key assignment with a value of 4+ chars.
-# Step 2 (PATTERN_CRED_EXCLUDE): exclude lines where the value immediately after = starts
-#   with $, (, or { — those are variable/subshell references, not literal secrets.
-# Two-pass approach: grep for matches, then filter out the exclusions.
-PATTERN_CRED_ASSIGN='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=.{4,}'
-PATTERN_CRED_EXCLUDE='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*[$({]|(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*"[$({]|(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*'"'"'[$({]'
+# PATTERN_CRED_ASSIGN's value is bounded to a single whitespace/semicolon-free token (not `.{4,}`,
+# which used to run to end-of-line) so `grep -noE` yields ONE match PER key=value occurrence, even
+# when several sit on the same line. PATTERN_CRED_EXCLUDE is then tested against each individual
+# matched SNIPPET (not the whole line) in _check_credential() below — exclude when the value
+# immediately after = starts with $, (, or { (a variable/subshell reference), optionally behind a
+# quote. Matching+excluding per-occurrence (not per-line) closes a real bypass: a line combining a
+# legitimate reference with a hardcoded secret (`password=$REF; api_key=realsecret`, or a trailing
+# `# password=$VAR` comment on the same line as a real secret) used to have the WHOLE line dropped
+# by the old line-level exclude filter, hiding the real secret (agy relay QA, 2026-07-01, [Blocker]).
+PATTERN_CRED_ASSIGN='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*[^[:space:];]{4,}'
+PATTERN_CRED_EXCLUDE='(password|secret|api_key|API_KEY|SECRET|PASSWORD)[[:space:]]*=[[:space:]]*"?[$({]'
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -128,40 +133,86 @@ scan_file() {
   # Baseline entries store the file path relative to the repo root (portable across clones/CI),
   # matching how they were authored — resolve once per file.
   local f_rel="${f#"$REPO_ROOT_CONST"/}"
+  # Every rule re-greps the same file, so an unreadable/errored file would otherwise report the
+  # identical scan-error once per rule (7x). One report per file is enough to fail loud without the
+  # noise; reset per scan_file() call.
+  local _scan_error_reported=0
 
-  # _check <label> <include-pattern> [<exclude-pattern>]
-  # Greps for include-pattern; if exclude-pattern given, filters those lines out.
-  # Use -e <pattern> so patterns that start with '-' (e.g. PEM key headers) are
-  # not misinterpreted as grep flags.  grep exits 1 with no matches — expected.
+  # _report <label> <lineno> <text> — shared by _check() and _check_credential(): baseline lookup,
+  # TSV/human output, and the FINDINGS/BASELINED tally.
+  _report() {
+    local label="$1" lineno="$2" text="$3"
+    local baselined=0
+    baseline_hit "$f_rel" "$label" "$text" && baselined=1
+    if [[ "$TSV_OUT" -eq 1 ]]; then
+      # Machine-parseable form for authoring/reviewing baseline entries: paste a line straight
+      # into $BASELINE_FILE (already tab-separated in the right column order) after confirming
+      # by hand it's a false positive / accepted pattern, never automatically.
+      printf '%s\t%s\t%s\n' "$f_rel" "$label" "$text"
+    elif [[ "$baselined" -eq 1 ]]; then
+      echo "SECURITY (baselined): $f:$lineno:$text  [$label]" >&2
+    else
+      echo "SECURITY: $f:$lineno:$text  [$label]" >&2
+    fi
+    if [[ "$baselined" -eq 1 ]]; then
+      BASELINED=$((BASELINED + 1))
+    else
+      FINDINGS=$((FINDINGS + 1))
+    fi
+  }
+
+  # _grep_or_fail_loud <grep-args...> — runs grep, leaving stdout in $_GREP_OUT (bash-3.2-safe: no
+  # `local -n` nameref, which stock macOS bash doesn't support — see relay-turn-lib.sh). grep exit 1
+  # (no match — the overwhelmingly common case) is silently treated as "no hits", but any OTHER
+  # nonzero exit (2+: bad pattern, unreadable file, etc.) is a real scan error and must NOT read as
+  # "file is clean" — that would be exactly the masked failure GUIDING-PRINCIPLES.md #8 forbids.
+  # Reports a `[scan-error]` finding (counts toward FINDINGS, fails the scan) instead. Returns 1 if
+  # the caller should stop processing this pattern (real error), 0 otherwise (matches or none).
+  local _GREP_OUT=""
+  _grep_or_fail_loud() {
+    local rc=0
+    _GREP_OUT="$(/usr/bin/grep "$@" 2>/dev/null)" || rc=$?
+    if [[ "$rc" -gt 1 ]]; then
+      if [[ "$_scan_error_reported" -eq 0 ]]; then
+        _scan_error_reported=1
+        _report "scan-error" "-" "grep exited $rc scanning $f — treating as a finding, not silently clean"
+      fi
+      return 1
+    fi
+    return 0
+  }
+
+  # _check <label> <pattern> — greps for pattern, one finding per matching LINE (whole-line text).
+  # Use -e <pattern> so patterns that start with '-' (e.g. PEM key headers) are not misinterpreted
+  # as grep flags.
   _check() {
-    local label="$1" pattern="$2" exclude="${3:-}"
+    local label="$1" pattern="$2"
     local hits
-    hits="$(/usr/bin/grep -nE -e "$pattern" "$f" 2>/dev/null || true)"
-    if [[ -n "$exclude" && -n "$hits" ]]; then
-      hits="$(printf '%s\n' "$hits" | /usr/bin/grep -vE -e "$exclude" 2>/dev/null || true)"
-    fi
-    if [[ -n "$hits" ]]; then
-      while IFS= read -r line; do
-        local text="${line#*:}"
-        local baselined=0
-        baseline_hit "$f_rel" "$label" "$text" && baselined=1
-        if [[ "$TSV_OUT" -eq 1 ]]; then
-          # Machine-parseable form for authoring/reviewing baseline entries: paste a line straight
-          # into $BASELINE_FILE (already tab-separated in the right column order) after confirming
-          # by hand it's a false positive / accepted pattern, never automatically.
-          printf '%s\t%s\t%s\n' "$f_rel" "$label" "$text"
-        elif [[ "$baselined" -eq 1 ]]; then
-          echo "SECURITY (baselined): $f:$line  [$label]" >&2
-        else
-          echo "SECURITY: $f:$line  [$label]" >&2
-        fi
-        if [[ "$baselined" -eq 1 ]]; then
-          BASELINED=$((BASELINED + 1))
-        else
-          FINDINGS=$((FINDINGS + 1))
-        fi
-      done <<< "$hits"
-    fi
+    _grep_or_fail_loud -nE -e "$pattern" "$f" || return 0
+    hits="$_GREP_OUT"
+    [[ -z "$hits" ]] && return
+    while IFS= read -r line; do
+      _report "$label" "${line%%:*}" "${line#*:}"
+    done <<< "$hits"
+  }
+
+  # _check_credential <label> <pattern> <exclude> — R7 only. Unlike _check(), matches and excludes
+  # PER OCCURRENCE (via `grep -noE`, one row per key=value token) instead of per whole line, so a
+  # line combining a real secret with an excluded variable reference (`password=$REF;
+  # api_key=realsecret`, or a trailing `# password=$VAR` comment next to a real assignment) can't
+  # hide the real one behind the excluded one — the old whole-line exclude dropped the entire line
+  # when ANY part of it matched the exclude pattern (agy relay QA, 2026-07-01, [Blocker]).
+  _check_credential() {
+    local label="$1" pattern="$2" exclude="$3"
+    local hits
+    _grep_or_fail_loud -noE -e "$pattern" "$f" || return 0
+    hits="$_GREP_OUT"
+    [[ -z "$hits" ]] && return
+    while IFS= read -r hit; do
+      local lineno="${hit%%:*}" snippet="${hit#*:}"
+      /usr/bin/grep -qE -e "$exclude" <<< "$snippet" 2>/dev/null && continue
+      _report "$label" "$lineno" "$snippet"
+    done <<< "$hits"
   }
 
   _check "eval-unsanitized"   "$PATTERN_EVAL"
@@ -170,7 +221,7 @@ scan_file() {
   _check "pem-private-key"    "$PATTERN_PEM_KEY"
   _check "github-pat"         "$PATTERN_GH_PAT"
   _check "slack-token"        "$PATTERN_SLACK"
-  _check "credential-literal" "$PATTERN_CRED_ASSIGN" "$PATTERN_CRED_EXCLUDE"
+  _check_credential "credential-literal" "$PATTERN_CRED_ASSIGN" "$PATTERN_CRED_EXCLUDE"
 }
 
 # collect_files <path>...
