@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### Doc-hygiene sweep + queued #56/#59 (both preflight-ready) + merged #82
+Follow-on housekeeping to the GH-61 marathon.
+
+- **Doc sweep** — `git mv`'d the 7 closed-issue docs still lingering in `2-WORKING` (#50/#21/#25/#31/#32/#40 + the gh-27 brief) into `3-COMPLETED` and repointed the live references (`ROADMAP.md`, `README.md`, GH-41/GH-44 inbox docs); historical references (CHANGELOG / decisions / relay-system / 3-COMPLETED) left as point-in-time records. `pdda issue-doc-sync` 0 warns (was 7); `path-integrity` green.
+- **Queued the two harness bugs the GH-61 run surfaced**, each as a proper capture doc with ratings + a `## Swarm Preflight Contract`, parked in ROADMAP: **[#59](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/59)** (relay-turn-lib off-lane false-positive for an allowlisted artifact in a new untracked dir — kernel, cx/risk/eff 3/3/3) and **[#56](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/56)** (marathon-drive leaked-token reconcile — independent, 2/2/2). Regenerated `MARATHON-PLAN-2026-07-02.md`: **Wave 1 = #56 ‖ #59** (disjoint write-sets: `marathon-drive.sh` vs `relay-turn-lib.sh`). Both contracts point their gate/artifacts at the existing tests they extend (`test/marathon-drive.sh`, `test/worktree-isolation.sh`), so `swarm-preflight` reaches **ready (exit 0)** for each rather than the greenfield A2 block GH-61 hit.
+- **Merged [#82](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/82)** (GH-80) — `test/path-integrity.sh` skips the intentional `relay-automation/Codex-turn.sh` fixture literal so `validate.sh` is green on case-sensitive Linux, not just macOS. Directly unblocks GH-61 Tier 2's ubuntu-runner path.
+
 ### GH-61 Tier 1 CI SHIPPED via marathon dogfood — and reproduced #59 live
 Fired the GH-61 Tier 1 lane through `marathon-drive.sh` (codex builder + agy reviewer) on branch `marathon/gh-61-ci-github-actions-2026-07-02`; STATUS **Approved** after 2 turns, pre-advance gate green, merged `--no-ff` to main (`d9b8a14`). `validate.sh` **80/80** (was 79 + the new `ci-workflow` test).
 
