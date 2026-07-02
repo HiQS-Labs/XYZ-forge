@@ -291,10 +291,42 @@ log "relay file committed: $RELAY_FILE"
 
 # ── Step 3: seed tick token with handoff → builder ──────────────────────────
 
-# Auto-reap any leaked claims from prior failed runs of this task (GH-43-2)
 export TICK_REPO_ROOT="$ROOT"
-"$TICK_BIN" reap "$BUILDER" --by marathon-drive --task "$RELAY_TASK" > /dev/null || true
-"$TICK_BIN" reap "$REVIEWER" --by marathon-drive --task "$RELAY_TASK" > /dev/null || true
+
+reconcile_relay_task() {
+  local info status handoff claimer
+  if ! info="$("$TICK_BIN" info "$RELAY_TASK" 2>/dev/null)"; then
+    return 0  # no prior task state to reconcile
+  fi
+
+  status="$(printf '%s\n' "$info" | sed -n 's/^status:[[:space:]]*//p' | head -n1)"
+  handoff="$(printf '%s\n' "$info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -n1)"
+  claimer="$(printf '%s\n' "$info" | sed -n 's/^claimer:[[:space:]]*//p' | head -n1)"
+
+  case "$status" in
+    claimed)
+      die "relay task $RELAY_TASK already has a live claim by ${claimer:-unknown}; refusing to reap a live claim"
+      ;;
+    open)
+      [[ -n "$handoff" ]] || return 0
+      case "$handoff" in
+        "$BUILDER"|"$REVIEWER")
+          # GH-56: a rerun can inherit an OPEN handoff from the previous pass. Clear only that stale
+          # reservation by consuming it as its routed target, then releasing it unreserved. Never reap a
+          # live claim here; parked claims are the watchdog's authority path.
+          "$TICK_BIN" claim "$RELAY_TASK" --agent "$handoff" --paths "$REL_RELAY" > /dev/null
+          "$TICK_BIN" release "$RELAY_TASK" --agent "$handoff" > /dev/null
+          log "reconciled leaked open handoff: $RELAY_TASK (cleared stale reservation for $handoff)"
+          ;;
+        *)
+          die "relay task $RELAY_TASK is open but reserved for unexpected agent '$handoff'"
+          ;;
+      esac
+      ;;
+  esac
+}
+
+reconcile_relay_task
 
 "$TICK_BIN" log task.created "$RELAY_TASK" --agent marathon > /dev/null
 "$TICK_BIN" claim           "$RELAY_TASK" --agent marathon --paths "$REL_RELAY" > /dev/null

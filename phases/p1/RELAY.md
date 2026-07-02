@@ -75,3 +75,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH56-P1 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+Implemented `GH-56` in `relay-automation/marathon-drive.sh` and `test/marathon-drive.sh`.
+
+- Replaced the unconditional phase-token `reap` calls with targeted reconciliation for leaked `open + handoff` state only; the driver now clears a stale builder/reviewer reservation and explicitly refuses to reap a live claim.
+- Added regressions for the leaked open-token collision and the live-claim guard.
+- Verified with a targeted inline reproduction of those two scenarios only; both passed.
