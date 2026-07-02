@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH59-P1 builder=codex reviewer=agy round-cap=6 -->
@@ -83,3 +83,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Added a `GH-59` allowlist rule in `rtl_in_allow`: when porcelain collapses an all-untracked directory to `dir/`, that directory now counts as allowed only if it is the true ancestor of a concrete allowlisted file entry. Bare prefixes still fail.
 - Extended `test/worktree-isolation.sh` with two regressions: a greenfield allowlisted file under a brand-new directory that now passes, and a separate genuine off-lane directory that still exits `6` with no copy-back.
 - Verification: `bash test/worktree-isolation.sh` -> `23 pass, 0 fail`.
+
+### Round 1 · Reviewer · agy
+
+- Reviewed the changes in `relay-automation/relay-turn-lib.sh` and `test/worktree-isolation.sh`.
+- The generalization of the `GH-59` untracked directory collapsed prefix allowlist is correctly implemented.
+- Checked that case-insensitivity behaves as expected.
+- Verified that all 23 tests pass cleanly.
+
+**Verdict:** Approved
