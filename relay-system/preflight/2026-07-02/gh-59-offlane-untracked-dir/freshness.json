@@ -1,0 +1,19 @@
+{
+  "fetch_ok": true,
+  "upstream": null,
+  "ahead": 0,
+  "behind": 0,
+  "dirty": false,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "d679fc417d60c937682f12c8bfee81322ab0d1fe",
+  "checkout_matches_ref": false,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "grep_absent",
+      "path": "relay-automation/relay-turn-lib.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}
