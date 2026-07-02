@@ -15,6 +15,8 @@ is the main active surface.
 
 ## Quickstart — prove it works (no accounts needed)
 
+Requires **Node 18+** and **git** (the `tick` kernel runs on Node). No accounts or API keys.
+
 ```bash
 ./validate.sh
 ```
@@ -96,5 +98,5 @@ Options:
 ---
 
 For observed real-agent behavior and decision history, see
-[REAL-AGENT-OBSERVATIONS.md](REAL-AGENT-OBSERVATIONS.md) and
+[REAL-AGENT-OBSERVATIONS.md](PROJECT/4-MISC/REAL-AGENT-OBSERVATIONS.md) and
 [CHANGELOG.md](CHANGELOG.md) — the running end-of-iteration log. (`RECAP.md` is retired in `PROJECT/4-MISC/`.)
