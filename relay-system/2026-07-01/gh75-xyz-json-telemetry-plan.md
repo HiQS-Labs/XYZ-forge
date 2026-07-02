@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 5
 
@@ -63,5 +63,27 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** N/A — non-executable artifact (design/plan doc; no code written yet)
 **Open questions:** see "Review this" above
 **Commit:** 81071b9
+
+### Round 1 · Reviewer · agy-findings · 2026-07-01 20:35 Local
+
+**Verdict:** Changes requested
+VERDICT: FAIL
+Basis: static review (non-executable design/plan doc)
+
+**Answers to "Review this":**
+1. The `XYZ_HARNESS_CONTEXT` env var context flag is a clean and lightweight approach to passing the execution state down the process hierarchy without modifying CLI signatures.
+2. Deferring the `orange` health case for marathon runs is correct for now; a binary green/red health outcome aligns well with the existing marathon halt-on-first-failure logic.
+3. Reusing the `mkdir`-based advisory lock from GH-72 is appropriate, but we recommend implementing atomic file replacement (write temp file + rename) to safeguard `XYZ.json` from corruption during aborts.
+4. Yes, Phase 1's shared writer and relay hook can be built and tested independently using a standalone relay run before Phase 2 is introduced.
+
+**Findings & proposals:**
+- [Blocker] Swarm runs will not emit telemetry if `marathon-drive.sh` lacks a completion hook: The plan specifies that swarm runs are invoked via `marathon-drive.sh` directly (not `marathon.sh`), and that `marathon-drive.sh` sets `XYZ_HARNESS_CONTEXT=marathon-phase` around its internal relay loop. This prevents `relay-drive.sh` from writing to `XYZ.json`. However, the plan only wires completion hooks into `relay-drive.sh` and `marathon.sh`, leaving `marathon-drive.sh` without a hook. Thus, swarm runs will not emit any telemetry. To fix this, `marathon-drive.sh` must also have a completion/halt hook that fires when `XYZ_HARNESS_CONTEXT=swarm`.
+- [Should] Standalone relay telemetry misses failure/escalation outcomes: The plan only wires the telemetry hook into the successful exit path of `relay-drive.sh` (lines 208-209), meaning any standalone relay runs that end in `Escalated` (exit 4/5 by design) or stall/cap-exceeded (exit 3/4) will not emit any telemetry to `XYZ.json`. Since marathon runs log both green and red (halt) outcomes, standalone relays should similarly log non-green outcomes to ensure telemetry completeness.
+- [Should] Clarify how `marathon.sh`/`swarm-preflight.sh` generates `title` and `description`: The schema requires `title` and `description`. For a standalone relay, these are extracted from the relay file's markdown headers. But for a marathon or swarm run, there is no single markdown file to extract them from. The plan should specify how `marathon.sh` and `swarm-preflight.sh` will construct these values (e.g., using the top-level plan name for `title` and phase counts/exit codes for `description`).
+- [Should] Explicitly include `XYZ_HARNESS_CONTEXT=swarm` in the generated command in `marathon-invocation.txt`: The plan states that `swarm-preflight.sh` sets `XYZ_HARNESS_CONTEXT=swarm` to propagate it to `marathon-drive.sh`. Since `swarm-preflight.sh` is a non-executing planner and the operator executes the run manually via the command in `marathon-invocation.txt`, this environment variable must be explicitly prefixing the command written to `marathon-invocation.txt` (e.g., `XYZ_HARNESS_CONTEXT=swarm relay-automation/marathon-drive.sh ...`).
+- [Nit] Clarify which repo root contains `XYZ.json` during cross-repo runs: When running with a foreign `--target-root` (cross-repo run), it should be explicitly stated whether `XYZ.json` is written to the harness repository root or the target repository root. (Telemetry is usually collected in the harness repository root where execution is driven).
+- [Nit] Use atomic file replacement when writing `XYZ.json`: To prevent `XYZ.json` corruption if the runner is killed or crashes mid-write, the Python script should write the updated JSON array to a temporary file in the same directory and then atomically rename/move it over `XYZ.json` (e.g., using `os.replace` in Python).
+
+**Commit:** pending (harness-committed)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
