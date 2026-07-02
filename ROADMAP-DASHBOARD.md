@@ -6,12 +6,10 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 16 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-59 · relay-turn-lib: allowlisted artifact in an untracked dir trips spurious off-lane (exit 6) | — | [GH-59-OFFLANE-UNTRACKED-DIR.md](PROJECT/1-INBOX/GH-59-OFFLANE-UNTRACKED-DIR.md) · [#59](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/59) |
-| GH-56 · marathon-drive: reconcile/fresh-id a leaked tick token before re-seed | — | [GH-56-MARATHON-LEAKED-TOKEN-RECONCILE.md](PROJECT/1-INBOX/GH-56-MARATHON-LEAKED-TOKEN-RECONCILE.md) · [#56](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/56) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | — | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/1-INBOX/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | — | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
@@ -41,10 +39,12 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 47 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 47 · 🔮 0 · 🔲 0
+Summary: 49 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 49 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-59 · relay-turn-lib: allowlisted artifact in an untracked dir trips spurious off-lane (exit 6) | ✅ | [decision](decisions/2026-07-02-offlane-untracked-dir.md) · [GH-59-OFFLANE-UNTRACKED-DIR.md](PROJECT/1-INBOX/GH-59-OFFLANE-UNTRACKED-DIR.md) · [#59](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/59) |
+| GH-56 · marathon-drive: reconcile/fresh-id a leaked tick token before re-seed | ✅ | [GH-56-MARATHON-LEAKED-TOKEN-RECONCILE.md](PROJECT/1-INBOX/GH-56-MARATHON-LEAKED-TOKEN-RECONCILE.md) · [#56](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/56) |
 | GH-75 · XYZ.json — final completion telemetry at relay/swarm/marathon session end | ✅ | [GH-75-XYZ-JSON-COMPLETION-TELEMETRY.md](PROJECT/1-INBOX/GH-75-XYZ-JSON-COMPLETION-TELEMETRY.md) · [#75](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/75) |
 | GH-69 · Marathon branch suggestion + agent confirmation prompt | ✅ | [GH-69-MARATHON-BRANCH-PROMPT.md](PROJECT/1-INBOX/GH-69-MARATHON-BRANCH-PROMPT.md) · [#69](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/69) |
 | GH-71 · Code Structure & Implementation Upgrade | ✅ | [GH-71-UPGRADE-CODE-STRUCTURE.md](PROJECT/1-INBOX/GH-71-UPGRADE-CODE-STRUCTURE.md) · [#71](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/71) |

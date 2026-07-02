@@ -4,6 +4,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-56 + GH-59 SHIPPED — two marathon-run improvements, both marathon-built
+Resolved the two harness bugs the GH-61 marathon surfaced, each via its own marathon lane (codex builder + agy reviewer → Approved), landed on their own branches and merged to main. Both remove a workaround from the marathon flow. `validate.sh` **80/80** after each.
+
+- **GH-56** (`d679fc4`) — `marathon-drive.sh` now runs `reconcile_relay_task()` before seeding a phase token: it **dies on a live claim** (never reaps one), clears a stale `open` handoff routed to the builder/reviewer, else proceeds. Re-running a phase-id after an aborted run no longer fails `task ... is open` — retiring the manual "fresh `--relay-task` id per run" workaround. Regression coverage in `test/marathon-drive.sh` (45 checks: leaked-handoff reconcile, clean re-seed, live-claim-never-reaped). **Self-hosting caveat found:** because this lane edits `marathon-drive.sh` itself, the copy-back rewrote the running script mid-execution → a transient `line 368 syntax error` in the driver's own post-relay bookkeeping. The committed file is valid (`bash -n` clean) and the gate passes standalone; the relay had already reached Approved. No effect on the landed fix.
+- **GH-59** (`ac6dacb`) — containment-kernel fix: `rtl_in_allow` now allows a git-collapsed untracked-directory entry (`dir/`) when it is a **true ancestor** of a concrete allowlisted **file** entry (`greenfield/` ⊂ `greenfield/output.txt`), never a bare prefix (`green/` still fails for `greenfield/output.txt`) — generalizing the `.relay-artifacts` exemption; case-insensitive variant mirrored, bash-3.2-portable. **Retires the empty-stub-directory workaround** for every greenfield-artifact-in-a-new-dir marathon lane (the GH-61 case). [decision](decisions/2026-07-02-offlane-untracked-dir.md) records the contract + three invariants; `test/worktree-isolation.sh` enforces all three (greenfield-fixed / off-lane-still-rejected / no copy-back widening — 23/0). Costly containment-kernel change; reversibility Easy (localized one-matcher refinement with a mirrored precedent). The lane ran clean (no self-hosting crash — `relay-turn-lib.sh` is *sourced*, not re-read by byte offset).
+
+Marathon plan regenerated → **0 active lanes** (all three of GH-61 Tier 1 / GH-56 / GH-59 shipped; 14 items held pending a rating / doc / contract).
+
 ### Doc-hygiene sweep + queued #56/#59 (both preflight-ready) + merged #82
 Follow-on housekeeping to the GH-61 marathon.
 
