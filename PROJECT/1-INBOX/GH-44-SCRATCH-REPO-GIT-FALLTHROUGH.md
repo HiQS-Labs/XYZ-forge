@@ -6,7 +6,7 @@ status: Proposed (1-INBOX — not yet active)
 created: 2026-06-28
 doc_type: bugfix
 related:
-  - PROJECT/2-WORKING/GH-40-DOUBLE-BLIND-REVIEWER.md
+  - PROJECT/3-COMPLETED/GH-40-DOUBLE-BLIND-REVIEWER.md
 ---
 
 # GH-44 · scratch-repo `.git` fall-through can pollute the parent repo
