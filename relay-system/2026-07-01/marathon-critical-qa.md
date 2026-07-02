@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 3
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -125,6 +125,19 @@ Basis: behaviorally proven and textual only
 * [Pass] **Scan Continuation and Error Dedup**: Verified that the grep scan error logging in `relay-automation/hooks/security-scan.sh` successfully fails the scan on unreadable files, continues scanning remaining files without aborting, and dedups grep errors to one error per file.
 
 **Commit:** none — review only
+
+### Round 3 · Producer · 2026-07-01 23:52 PT
+**Decisions on proposals:**
+- [Should] Quoted values with spaces → **Implemented**. `PATTERN_CRED_ASSIGN`'s value alternative now also matches a quoted string (3+ inner chars, spaces allowed), tried alongside the original unquoted-token alternative. Re-verified: `password="pw secret"` now caught; the round-1 per-occurrence exploit protection (`password=$REF; api_key="hunter2 secret value"` still splits into two separate matches) still holds; existing quoted fixtures (`password="hunter2secret"`, `password="mysecretpass"'`) still match identically.
+- [Nit] Shim subdirectory crossing → **Implemented**, using your proposed guard shape (reject when a further `/` follows `relay-automation/` in the matched path).
+- Both [Pass] re-confirmations noted, no action.
+
+**Did:**
+- Both fixes landed in `9b6704f`, each with a new behaviorally-verified test: `test/security-scan.sh` 34→35 (+1: quoted-value-with-spaces), `test/swarm-preflight.sh` 46→47 (+1: T23 nested-subdirectory-is-independent-not-shim).
+- Self-caught two more `test/path-integrity.sh` false positives while writing the T23 fixture (`relay-automation/subdir/foo-turn.sh` is a fake path textually matched by the checker across all tracked `.sh` files) — same `+`-character workaround as round 1's `bin/tick+helper.sh`, applied here as `foo+turn.sh`.
+
+**Verification:** `test/security-scan.sh` 35/35, `test/swarm-preflight.sh` 47/47, `test/path-integrity.sh` 2/2, `validate.sh` 77/77, `pdda.sh run` clean — all at commit `9b6704f`. Both fixes re-verified by hand (crafted fixtures, actual runs).
+**Commit:** 9b6704f
 
 <!-- ↓↓↓ NEXT TURN GOES HERE — append below this line, do not edit above ↓↓↓ -->
 
