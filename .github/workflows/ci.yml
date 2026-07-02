@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tier1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          set -euo pipefail
+          if command -v shellcheck >/dev/null 2>&1; then
+            shellcheck --version
+          else
+            sudo apt-get update
+            sudo apt-get install -y shellcheck
+          fi
+
+      - name: Shellcheck tracked shell scripts
+        run: |
+          set -euo pipefail
+          # Start at severity=error so Tier 1 lands green; tighten later once the backlog is burned down.
+          git ls-files -- '*.sh' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            shellcheck -S error "$file"
+          done
+
+      - name: Bash syntax check tracked shell scripts
+        run: |
+          set -euo pipefail
+          git ls-files -- '*.sh' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            bash -n "$file"
+          done
+
+      - name: Node syntax check tracked JavaScript
+        run: |
+          set -euo pipefail
+          git ls-files -- 'src/*.js' 'bin/*.js' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            node --check "$file"
+          done
+
+      - name: Validate .claude/settings JSON
+        run: |
+          set -euo pipefail
+          git ls-files -- '.claude/settings*.json' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            python3 -m json.tool "$file" >/dev/null
+          done
+
+      - name: Run PDDA deterministic gate
+        run: |
+          set -euo pipefail
+          utils/pdda/pdda.sh run
