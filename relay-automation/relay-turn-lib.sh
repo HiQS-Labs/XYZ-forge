@@ -117,6 +117,22 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
 
 rtl_in_allow() {  # <path> — is <path> on the allowlist? Case-insensitive when RTL_IGNORECASE=true (GH-17).
   local x="$1" a
+  # GH-59: git collapses an all-untracked new dir to `dir/` in porcelain output. Treat that as
+  # allowlisted ONLY when it is a TRUE ancestor of a concrete allowlisted file entry (e.g.
+  # greenfield/ -> greenfield/output.txt). This generalizes the old .relay-artifacts dir exemption
+  # without widening to bare prefixes such as `green/` for `greenfield/output.txt`.
+  if [[ "$x" == */ ]]; then
+    local dir="${x%/}"
+    if [[ "${RTL_IGNORECASE:-false}" == "true" ]]; then
+      local dl al; dl="$(printf '%s' "$dir/" | tr '[:upper:]' '[:lower:]')"
+      for a in "${RTL_ALLOW[@]}"; do
+        al="$(printf '%s' "$a" | tr '[:upper:]' '[:lower:]')"
+        [[ "$al" == "$dl"* && "$al" != "$dl" ]] && return 0
+      done
+    else
+      for a in "${RTL_ALLOW[@]}"; do [[ "$a" == "$dir/"* && "$a" != "$dir/" ]] && return 0; done
+    fi
+  fi
   if [[ "${RTL_IGNORECASE:-false}" == "true" ]]; then
     # `tr` not bash-4 `${x,,}`: stock macOS bash is 3.2 (this lib is deliberately BSD/macOS-portable).
     local xl al; xl="$(printf '%s' "$x" | tr '[:upper:]' '[:lower:]')"

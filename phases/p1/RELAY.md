@@ -76,3 +76,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH59-P1 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Touched `relay-automation/relay-turn-lib.sh` and `test/worktree-isolation.sh`.
+- Added a `GH-59` allowlist rule in `rtl_in_allow`: when porcelain collapses an all-untracked directory to `dir/`, that directory now counts as allowed only if it is the true ancestor of a concrete allowlisted file entry. Bare prefixes still fail.
+- Extended `test/worktree-isolation.sh` with two regressions: a greenfield allowlisted file under a brand-new directory that now passes, and a separate genuine off-lane directory that still exits `6` with no copy-back.
+- Verification: `bash test/worktree-isolation.sh` -> `23 pass, 0 fail`.
