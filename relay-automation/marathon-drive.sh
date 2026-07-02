@@ -72,6 +72,29 @@ fi
 die()  { printf 'marathon-drive: %s\n' "$*" >&2; exit 2; }
 log()  { printf 'marathon-drive: %s\n' "$*"; }
 
+XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT/utils/telemetry/append-xyz-completion.sh"}"
+
+# GH-75: append ONE final-completion record for a run whose WHOLE completion IS this single-phase
+# marathon-drive — i.e. a bare `marathon-drive.sh` run (harness:"marathon") or a swarm-preflight-
+# originated run (harness:"swarm", tagged via XYZ_HARNESS_CONTEXT=swarm baked into the generated
+# invocation). Stays SILENT when marathon.sh drives us per-phase (XYZ_HARNESS_CONTEXT=marathon-phase):
+# marathon.sh emits the single whole-run record itself. Health is binary green/red (halt-on-first-
+# failure has no distinct "escalated mid-chain" state). Best-effort — never changes marathon-drive's
+# own exit code.
+xyz_marathon_emit() {  # <health> <description>
+  local ctx="${XYZ_HARNESS_CONTEXT:-}"
+  [[ "$ctx" == "marathon-phase" ]] && return 0
+  [[ -x "$XYZ_APPEND_BIN" ]] || return 0
+  local health="$1" desc="$2" harness title sid
+  case "$ctx" in swarm) harness="swarm" ;; *) harness="marathon" ;; esac
+  title="$(basename "$PHASE_BRIEF_FILE" .md 2>/dev/null)"; [[ -n "$title" ]] || title="$PHASE_ID"
+  # sessionId: PHASE_ID defaults to "p1", which is a constant across every swarm/bare run — useless for
+  # telling one run from another. Let the invoker override it (swarm-preflight bakes the per-run slug
+  # into its generated command via XYZ_SESSION_ID); fall back to PHASE_ID otherwise (GH-75 review).
+  sid="${XYZ_SESSION_ID:-$PHASE_ID}"
+  "$XYZ_APPEND_BIN" "$harness" "$sid" "$health" "$title" "$desc" >/dev/null 2>&1 || true
+}
+
 usage() {
   cat <<'EOF'
 Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [options]
@@ -290,7 +313,13 @@ log "phase start: running relay-drive --round-cap $ROUND_CAP"
 relay_exit=0
 target_root_args=()
 [[ -n "$TARGET_ROOT" ]] && target_root_args=(--target-root "$TARGET_ROOT")
+# GH-75: the nested relay loop reaches its own terminal exit once PER PHASE. Force its XYZ.json hook
+# silent (XYZ_HARNESS_CONTEXT=marathon-phase) so a per-phase relay completion never emits its own
+# record — this marathon-drive run (or marathon.sh above it) owns the single whole-run record. This is
+# scoped to the relay-drive child only; marathon-drive's OWN context (swarm|unset) is left intact for
+# its hook below.
 RELAY_FILE="$RELAY_FILE" \
+XYZ_HARNESS_CONTEXT=marathon-phase \
   "$RELAY_DRIVE_BIN" \
     --relay-file "$RELAY_FILE" \
     --relay-task "$RELAY_TASK" \
@@ -339,21 +368,25 @@ case "$relay_exit" in
     if [[ "$gate_exit" -ne 0 ]]; then
       log "pre-advance gate FAILED (exit $gate_exit) — escalating"
       escalate "pre-advance-failed" "$relay_exit"
+      xyz_marathon_emit red "halted at phase ${PHASE_ID} — pre-advance gate failed"
       exit 5
     fi
     "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
     save_transcript
     log "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
+    xyz_marathon_emit green "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
     exit 0
     ;;
   3)
     log "relay escalated: no-progress (relay-drive exit 3)"
     escalate "no-progress" 3
+    xyz_marathon_emit red "halted at phase ${PHASE_ID} — relay no-progress"
     exit 3
     ;;
   4)
     log "relay escalated: cap/close-mismatch (relay-drive exit 4)"
     escalate "cap-or-close-mismatch" 4
+    xyz_marathon_emit red "halted at phase ${PHASE_ID} — relay cap/close-mismatch"
     exit 4
     ;;
   6)
@@ -363,6 +396,7 @@ case "$relay_exit" in
     # 2026-06-17: an autonomous builder edited an off-lane file; rtl_enforce caught + reverted it.)
     log "relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)"
     escalate "containment-violation (off-lane edit reverted by a turn-taker)" 6
+    xyz_marathon_emit red "halted at phase ${PHASE_ID} — containment violation (off-lane edit reverted)"
     exit 6
     ;;
   *)

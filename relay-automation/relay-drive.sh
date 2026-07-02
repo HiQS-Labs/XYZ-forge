@@ -27,6 +27,24 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
 CONSULT_SH="${CONSULT_SH:-"$ROOT_DIR/relay-automation/consult.sh"}"
+XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT_DIR/utils/telemetry/append-xyz-completion.sh"}"
+
+# GH-75: append ONE final-completion record to XYZ.json at the harness repo root when a STANDALONE
+# /relay session terminates. Stays SILENT when this relay-drive runs nested inside a marathon/swarm
+# phase — marathon-drive.sh sets XYZ_HARNESS_CONTEXT for the nested call (marathon-phase|swarm) and the
+# outer harness owns the whole-run record, so a per-phase relay completion must not double-emit.
+# Best-effort: a telemetry failure must never change the relay's own exit path.
+xyz_relay_emit() {  # <health>
+  case "${XYZ_HARNESS_CONTEXT:-relay}" in relay) ;; *) return 0 ;; esac
+  [[ -x "$XYZ_APPEND_BIN" ]] || return 0
+  local health="$1" slug title s desc
+  slug="$(basename "$RELAY_FILE" .md)"
+  title="$(grep -m1 '^# ' "$RELAY_FILE" 2>/dev/null | sed 's/^#[[:space:]]*//; s/[[:space:]]*$//')" || true
+  [[ -n "$title" ]] || title="$slug"
+  s="$(file_status)"
+  desc="Relay session ended: STATUS ${s:-unknown} (health ${health})."
+  "$XYZ_APPEND_BIN" relay "$slug" "$health" "$title" "$desc" >/dev/null 2>&1 || true
+}
 
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # The driver lock lives in .git/ (never committed) for a normal harness clone. A GH-49 vendored
@@ -206,6 +224,7 @@ while ((round < ROUND_CAP)); do
       exit 4
     fi
     printf 'relay-drive: relay terminated (STATUS: %s, token done) after %d turn(s)\n' "$s" "$round"
+    xyz_relay_emit green
     exit 0
   fi
 
@@ -213,6 +232,7 @@ while ((round < ROUND_CAP)); do
   # is checked BEFORE the no-actor branch. A clean, distinct outcome — not a stall (GH-18 #5).
   if escalated_status "$s"; then
     printf 'relay-drive: relay escalated to human by design (STATUS: %s, token %s) after %d turn(s)\n' "$s" "${actor:-done}" "$round" >&2
+    xyz_relay_emit orange
     exit 4
   fi
 
@@ -297,26 +317,34 @@ while ((round < ROUND_CAP)); do
   # token live. Catch it before the no-progress guard so it doesn't read as exit 3 (GH-18 #5).
   if escalated_status "$ns"; then
     printf 'relay-drive: relay escalated to human by design (STATUS: %s, token %s:%s) after %d turn(s)\n' "$ns" "$ntstatus" "$nactor" "$round" >&2
+    xyz_relay_emit orange
     exit 4
   fi
   # --review-once: the single review turn is complete. Classify with a review oracle so a correct
   # "changes requested" handback is NOT conflated with a no-progress stall (GH-32 #2). Mirrors the
   # Escalated carve-out above — a reviewer that actually DID something is a success, not exit 3.
   if ((REVIEW_ONCE)); then
+    # --review-once bypasses the loop's normal terminal/cap exits, so it needs its own XYZ.json emits
+    # (approval → green, a completed changes-requested handback → orange, a genuine stall → red) — else
+    # this repo's own recommended one-shot review flow would never record a completion (GH-75 review).
     if terminal_status "$ns"; then
       printf 'relay-drive: review-once — reviewer approved/closed (STATUS: %s) after 1 turn\n' "$ns"
+      xyz_relay_emit green
       exit 0
     fi
     if [[ "$ntstatus:$nactor" != "$prev" || "$ns" != "$s" ]]; then
       printf 'relay-drive: review-once — reviewer completed a turn (STATUS: %s, token %s:%s); non-approval handback, not a stall\n' "$ns" "$ntstatus" "$nactor"
+      xyz_relay_emit orange
       exit 5
     fi
     printf 'relay-drive: review-once — reviewer took no action (STATUS unchanged: %s, token still %s) — genuine stall\n' "$ns" "$prev" >&2
+    xyz_relay_emit red
     exit 3
   fi
 
   if ! terminal_status "$ns" && [[ "$ntstatus:$nactor" == "$prev" ]]; then
     printf 'relay-drive: no progress after %s turn (token still %s) — escalating\n' "$actor" "$prev" >&2
+    xyz_relay_emit red
     exit 3
   fi
 done
@@ -324,7 +352,8 @@ done
 # Cap reached: success only if file terminal AND token not live (same agreement).
 s="$(file_status)"; IFS=$'\t' read -r tstatus actor < <(token_state)
 if terminal_status "$s" && [[ -z "$actor" ]]; then
-  printf 'relay-drive: relay terminated (STATUS: %s)\n' "$s"; exit 0
+  printf 'relay-drive: relay terminated (STATUS: %s)\n' "$s"; xyz_relay_emit green; exit 0
 fi
 printf 'relay-drive: round cap (%d) exceeded (STATUS: %s, token actor: %s) — escalating\n' "$ROUND_CAP" "$s" "${actor:-none}" >&2
+xyz_relay_emit red
 exit 4

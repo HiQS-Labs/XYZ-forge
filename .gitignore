@@ -14,3 +14,7 @@ PROJECT/1-INBOX/.DS_Store
 /temp/
 .pdda-gh-state.tsv
 PROJECT/.DS_Store
+# GH-75: XYZ.json is a local, machine-specific completion-telemetry log every harness session prepends
+# to (relay/marathon/swarm). Kept out of git to avoid per-session merge-conflict churn.
+XYZ.json
+XYZ.json.lock/

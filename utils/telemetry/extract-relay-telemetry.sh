@@ -14,6 +14,10 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 RELAY_SYSTEM="$ROOT_DIR/relay-system"
 
+# GH-75: the STATUS/VERDICT → health mapping now lives in a shared lib so the live XYZ.json completion
+# hook and this on-demand extractor stay in lockstep. Behavior here is unchanged.
+. "$(dirname "${BASH_SOURCE[0]}")/health-lib.sh"
+
 FROM_DATE="$(date -v-7d '+%Y-%m-%d' 2>/dev/null || date -d '7 days ago' '+%Y-%m-%d')"
 TO_DATE="$(date '+%Y-%m-%d')"
 OUT_PATH=""
@@ -89,29 +93,8 @@ for date_dir in "$RELAY_SYSTEM"/*/; do
       || date -d "@$mtime_epoch" -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null \
       || echo "${date_name}T00:00:00Z")"
 
-    # --- health mapping ---
-    case "$status" in
-      Approved|Closed)
-        health="green"
-        ;;
-      Escalated|"Changes requested")
-        health="orange"
-        ;;
-      "In Progress"|"")
-        if [[ "$log_content" -eq 0 || -z "$verdict" ]]; then
-          health="red"
-        else
-          health="orange"
-        fi
-        ;;
-      *)
-        health="orange"
-        ;;
-    esac
-    # VERDICT: FAIL under a non-terminal STATUS overrides to red
-    if [[ "$health" != "green" && "$verdict" == "FAIL" ]]; then
-      health="red"
-    fi
+    # --- health mapping (shared lib — GH-75) ---
+    health="$(xyz_health_from_status "$status" "$log_content" "$verdict")"
 
     # --- description ---
     rounds_str=""

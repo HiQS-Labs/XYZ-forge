@@ -67,6 +67,11 @@ grep -q "verdict     : ready" <<<"$out" && pass "T1 verdict ready" || fail "T1 v
   && pass "T1 packet is self-contained (6 files)" || fail "T1 packet incomplete: $(ls "$R/packet" 2>&1)"
 node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))' "$R/packet/run-candidate.json" \
   && pass "T1 run-candidate.json is valid JSON" || fail "T1 run-candidate.json invalid JSON"
+# GH-75: the generated invocation self-propagates the swarm harness tag — the operator runs it verbatim
+# and the marathon-drive run records harness:"swarm" (not "marathon") in XYZ.json, no extra step.
+head -1 "$R/packet/marathon-invocation.txt" | grep -q '^XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=[^ ]* relay-automation/marathon-drive.sh' \
+  && pass "T1 marathon-invocation.txt carries XYZ_HARNESS_CONTEXT=swarm + per-run XYZ_SESSION_ID (GH-75)" \
+  || fail "T1 invocation missing swarm tag / session id: $(head -1 "$R/packet/marathon-invocation.txt")"
 # GH-39 B6 + #43-1: the packet bakes a scope-locked brief — inlined acceptance criteria, an explicit
 # scope-lock (incl. "don't run the full gate"), and a size-based turn-budget recommendation.
 grep -q "Scope lock" "$R/packet/packet.md" && pass "T1b packet has a scope-lock block" || fail "T1b packet missing scope-lock"

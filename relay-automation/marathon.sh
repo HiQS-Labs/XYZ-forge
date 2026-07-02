@@ -36,6 +36,19 @@ YAML_BIN="${MARATHON_YAML_BIN:-"$ROOT/bin/marathon-yaml"}"
 die() { printf 'marathon: %s\n' "$*" >&2; exit 2; }
 log() { printf 'marathon: %s\n' "$*"; }
 
+XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT/utils/telemetry/append-xyz-completion.sh"}"
+
+# GH-75: the ONE whole-run completion record for a marathon.sh-orchestrated run. Each per-phase
+# marathon-drive runs with XYZ_HARNESS_CONTEXT=marathon-phase (its own hook silent), so this is the
+# only place a marathon.sh run is recorded — on BOTH the success tail AND the halt path, so a failed
+# run isn't silently absent from XYZ.json (GH-75 review: an early halt used to skip the tail entirely,
+# emitting nothing — worse than a bare marathon-drive halt, which does emit red). Best-effort.
+xyz_marathon_run_emit() {  # <health> <description>
+  [[ -x "$XYZ_APPEND_BIN" ]] || return 0
+  local plan; plan="$(basename "$PLAN")"; plan="${plan%.*}"; [[ -n "$plan" ]] || plan="marathon"
+  "$XYZ_APPEND_BIN" marathon "$plan" "$1" "$plan" "$2" >/dev/null 2>&1 || true
+}
+
 PLAN=""; BUILDER="claude"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0
 while (($# > 0)); do
   case "$1" in
@@ -81,9 +94,21 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact name; do
   if ((DRY_RUN)); then drive_args+=( --dry-run ); fi
 
   phase_exit=0
-  MARATHON_ROOT="$ROOT" TICK_BIN="$TICK_BIN" bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?
+  # GH-75: mark each per-phase marathon-drive call so its (and its nested relay-drive's) XYZ.json hook
+  # stays silent — this orchestrator emits a SINGLE harness:"marathon" whole-run record below, never
+  # one per phase.
+  MARATHON_ROOT="$ROOT" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
+    bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?
   if [[ "$phase_exit" -ne 0 ]]; then
     log "HALT: phase $id failed (marathon-drive exit $phase_exit) — chain stops; later phases NOT started"
+    case "$phase_exit" in
+      3) _halt_reason="relay no-progress" ;;
+      4) _halt_reason="relay cap/close-mismatch" ;;
+      5) _halt_reason="pre-advance gate failed" ;;
+      6) _halt_reason="containment violation" ;;
+      *) _halt_reason="marathon-drive exit $phase_exit" ;;
+    esac
+    xyz_marathon_run_emit red "halted at phase $idx of $phase_count ($id) — $_halt_reason"
     exit "$phase_exit"
   fi
 done < <(printf '%s\n' "$PLAN_TSV" | tr '\t' '\037')
@@ -93,5 +118,9 @@ if ((DRY_RUN)); then
   exit 0
 fi
 "$TICK_BIN" log marathon.complete "MARATHON-RUN" --agent marathon > /dev/null 2>&1 || true
+
+# GH-75: the whole-run success record (title/sessionId = plan name, "N of M phase(s) approved").
+xyz_marathon_run_emit green "$phase_count of $phase_count phase(s) approved"
+
 log "marathon complete — all $phase_count phase(s) approved"
 exit 0
