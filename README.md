@@ -1,30 +1,53 @@
-# XYZ - Multi-Agent Coordination Beta
+# XYZ — Multi-Agent Coordination Beta
 
-This repo is a coordination spike for running Claude Code, Codex, and agy (Antigravity CLI) on
-the same codebase without colliding. The core primitive is `tick`, a tiny local
-event-log CLI; the main product surface built on top of it is
-`relay-automation/`.
+XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) —
+work on the **same repo at the same time without overwriting each other's work**. It's built in
+two layers:
 
-> 👉 **New here?** Read [ROUTER.md](ROUTER.md) for the repo's startup order, then run `./validate.sh` — it should print **47 / 47**
-> green in a minute, no accounts or API keys required. That's the fastest proof the kernel
-> works. The live relay product (Codex/agy turns) needs per-CLI auth — see "Start here" below.
+- **`tick`** — the kernel: a tiny local event-log CLI that hands out collision-free, path-scoped
+  work claims, so two agents never edit the same thing at once. No server, no API keys, no remote.
+- **`relay-automation/`** — the product on top of `tick`: it runs agents in **turns** (one builds,
+  another reviews) headlessly, so you can hand a task to Codex or agy and let them iterate toward
+  done without babysitting the handoff.
 
-## Current status
+It's a working beta, not a polished product — but the kernel is test-covered and the relay stack
+is the main active surface.
 
-- `validate.sh` is green at **47 / 47**.
-- The relay automation stack is the main active surface in this repo.
-- **Marathon** (`relay-automation/marathon.sh`) chains multiple headless build→review phases from a
-  `MARATHON.yaml`, in `depends_on` order — the multi-agent coordinator built on top of the relay loop.
-- The repo is still a working beta, not a polished product.
+## Quickstart — prove it works (no accounts needed)
 
-## Start here
+```bash
+./validate.sh
+```
 
-If you care about the automated relay system, start with the repo router, then go into `relay-automation/`:
+That runs the full kernel + coordination test suite green in about a minute, with **no accounts
+or API keys required** — the fastest proof the coordination kernel actually works. The suite
+prints its own pass count; if it's green, you're good.
 
-1. [ROUTER.md](ROUTER.md) — repo startup order, canonical entry points, and command rails.
-2. [relay-automation/README.md](relay-automation/README.md) — canonical operator contract, including the headless bring-up paths for Codex and agy.
-3. [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md) — project hub and current status across phases.
-4. [PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md](PROJECT/2-WORKING/EXP-AUTOMATION/PROPOSAL-AUTOMATION.md) — canonical phase plan and QA checklists.
+## Then pick your path
+
+- **Run a live relay** — hand a real task to Codex/agy and let them build→review it →
+  start at **[relay-automation/README.md](relay-automation/README.md)**. Live turns need each CLI
+  authenticated first: see **[Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy)**.
+  For phase/status context, the project hub is
+  [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md).
+- **Here for the kernel** — how the `tick` coordination primitive works →
+  read [What `tick` is](#what-tick-is), then the source in [bin/tick](bin/tick), [src/](src), [test/](test).
+- **Install `tick` into another repo** → see [Install into another repo](#install-into-another-repo).
+
+> **Editing this repo as an agent?** Read [ROUTER.md](ROUTER.md) for the startup order and canonical
+> entry points. It's the map for *working on* the repo, not for *using* it — a human landing here
+> should start with the Quickstart above.
+
+## Glossary — the four terms you'll hit first
+
+- **`tick`** — the coordination kernel: a shared local event log (`.tick/events/`) that agents
+  claim work through, serialized by an `O_EXCL` lock.
+- **relay** — a turn-based loop where one agent builds and another reviews, handing off through
+  files instead of a human copy-pasting between windows.
+- **Marathon** (`relay-automation/marathon.sh`) — chains several relay build→review phases from a
+  `MARATHON.yaml`, in `depends_on` order. The multi-agent coordinator built on the relay loop.
+- **agy** — the Antigravity CLI (Google), one of the agents XYZ coordinates alongside Claude Code
+  and Codex.
 
 ## Repo map
 
@@ -35,6 +58,17 @@ If you care about the automated relay system, start with the repo router, then g
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
 - `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/3-COMPLETED/GH-25-SWARM-PREFLIGHT-PLANNER.md).
 - `install.sh` — materializes the `tick` runtime (`bin/tick` + `src/*.js`) into an external repo and records the install in a per-user, machine-local registry (`~/.config/xyz/registry.tsv`). See "Install into another repo" below.
+
+## What `tick` is
+
+`tick` coordinates agents through a shared local event log under `.tick/events/`.
+Claims are serialized by an `O_EXCL` lock, and projection folds events into
+`.tick/STATE.md`. Coordination is local-transport only: no per-event push/fetch,
+no remote dependency, one shared `.tick/` directory per active run.
+
+If you are here for the kernel rather than the relay layer, the implementation
+lives in [bin/tick](bin/tick), [src/](src), and [test/](test). Run the full suite with
+`./validate.sh`.
 
 ## Install into another repo
 
@@ -59,21 +93,7 @@ Options:
 - `--repo <path>` — record the coordinated repo (where `.tick/` lives) in the registry entry.
 - `--no-register` — skip the registry write entirely (also skips git-pulse projection).
 
-## What `tick` is
-
-`tick` coordinates agents through a shared local event log under `.tick/events/`.
-Claims are serialized by an `O_EXCL` lock, and projection folds events into
-`.tick/STATE.md`. Coordination is local-transport only: no per-event push/fetch,
-no remote dependency, one shared `.tick/` directory per active run.
-
-If you are here for the kernel rather than the relay layer, the implementation
-lives in [bin/tick](bin/tick), [src/](src), and [test/](test).
-
-## Run the suite
-
-```bash
-./validate.sh
-```
+---
 
 For observed real-agent behavior and decision history, see
 [REAL-AGENT-OBSERVATIONS.md](REAL-AGENT-OBSERVATIONS.md) and

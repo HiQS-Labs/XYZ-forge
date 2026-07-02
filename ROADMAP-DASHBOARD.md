@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 16 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 17 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 1 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-83 · README onboarding UX — single operator path + de-brittle stale test count | — | [GH-83-README-ONBOARDING-UX.md](PROJECT/1-INBOX/GH-83-README-ONBOARDING-UX.md) · [#83](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/83) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | — | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/1-INBOX/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | — | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |

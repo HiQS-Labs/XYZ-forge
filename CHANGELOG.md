@@ -4,6 +4,17 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-83 — README onboarding-UX rewrite (single operator path; de-brittled a stale test count)
+A `/consult` on `README.md` (Codex `gpt-5.4` + agy, run cold as a brand-new operator) flagged the top of the file as **[Blocker]** on two counts both models reached independently, plus a freshness bug. Rewrote the landing page to fix them; docs-only, trim + reorder (no runtime/kernel change). Issue-first: [#83](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/83) → [GH-83-README-ONBOARDING-UX.md](PROJECT/1-INBOX/GH-83-README-ONBOARDING-UX.md), parked in ROADMAP.
+
+- **One operator path.** The top used to fire four "first" moves at once (read `ROUTER.md`, run `./validate.sh`, follow a 4-step "Start here", eye `install.sh`). Replaced with: plain-language two-layer value prop → **one** Step 1 (`./validate.sh`, no accounts) → an explicit three-way branch (live relay / kernel / install) → a 4-line glossary (`tick`, relay, Marathon, agy).
+- **Scoped the `ROUTER.md` pointer as agent-facing** ("editing this repo as an agent"), not the human first move — ROUTER self-declares it's the AI-agent entry point and README the human overview, so sending a human there first was the wrong surface (both models).
+- **Direct auth pointer** — the "per-CLI auth: see Start here below" indirection now links straight to [relay-automation/README.md#headless-bring-up-codex--agy](relay-automation/README.md#headless-bring-up-codex--agy) (agy's catch).
+- **De-brittled the test count (freshness fix).** README hard-coded `47/47` twice; the suite is actually `80/80`. Docs disagreeing with reality = the docs are the bug (GUIDING-PRINCIPLES #9). Removed the hard-coded count entirely — the Quickstart now says the suite "prints its own pass count", so it can't rot again.
+- **Moved install/kernel mechanics below the concept sections** (was: "Install into another repo" appeared before "What `tick` is").
+
+**Harness finding (not shipped, surfaced for triage):** `test/runner-loop.sh` is **non-hermetic** — it passes `README.md` as the runner's artifact path, and `runner.sh`'s dirty-tree guard (`git -C "$ROOT_DIR" diff --quiet -- README.md`) resolves `$ROOT_DIR` to the **real repo**, so the test fails with `runner: artifact paths have unstaged changes` whenever the real `README.md` has uncommitted edits (as it did mid-rewrite). Same test-isolation-leak class as GH-74/GH-44. Committing README (clean tree) makes it pass; `validate.sh` green post-commit. Candidate follow-up: point the fixture at a synthetic artifact path or bind the guard to `TICK_REPO_ROOT`.
+
 ### GH-56 + GH-59 SHIPPED — two marathon-run improvements, both marathon-built
 Resolved the two harness bugs the GH-61 marathon surfaced, each via its own marathon lane (codex builder + agy reviewer → Approved), landed on their own branches and merged to main. Both remove a workaround from the marathon flow. `validate.sh` **80/80** after each.
 
