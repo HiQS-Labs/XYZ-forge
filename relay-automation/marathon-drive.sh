@@ -85,10 +85,14 @@ xyz_marathon_emit() {  # <health> <description>
   local ctx="${XYZ_HARNESS_CONTEXT:-}"
   [[ "$ctx" == "marathon-phase" ]] && return 0
   [[ -x "$XYZ_APPEND_BIN" ]] || return 0
-  local health="$1" desc="$2" harness title
+  local health="$1" desc="$2" harness title sid
   case "$ctx" in swarm) harness="swarm" ;; *) harness="marathon" ;; esac
   title="$(basename "$PHASE_BRIEF_FILE" .md 2>/dev/null)"; [[ -n "$title" ]] || title="$PHASE_ID"
-  "$XYZ_APPEND_BIN" "$harness" "$PHASE_ID" "$health" "$title" "$desc" >/dev/null 2>&1 || true
+  # sessionId: PHASE_ID defaults to "p1", which is a constant across every swarm/bare run — useless for
+  # telling one run from another. Let the invoker override it (swarm-preflight bakes the per-run slug
+  # into its generated command via XYZ_SESSION_ID); fall back to PHASE_ID otherwise (GH-75 review).
+  sid="${XYZ_SESSION_ID:-$PHASE_ID}"
+  "$XYZ_APPEND_BIN" "$harness" "$sid" "$health" "$title" "$desc" >/dev/null 2>&1 || true
 }
 
 usage() {

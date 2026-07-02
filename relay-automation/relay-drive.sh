@@ -324,20 +324,27 @@ while ((round < ROUND_CAP)); do
   # "changes requested" handback is NOT conflated with a no-progress stall (GH-32 #2). Mirrors the
   # Escalated carve-out above — a reviewer that actually DID something is a success, not exit 3.
   if ((REVIEW_ONCE)); then
+    # --review-once bypasses the loop's normal terminal/cap exits, so it needs its own XYZ.json emits
+    # (approval → green, a completed changes-requested handback → orange, a genuine stall → red) — else
+    # this repo's own recommended one-shot review flow would never record a completion (GH-75 review).
     if terminal_status "$ns"; then
       printf 'relay-drive: review-once — reviewer approved/closed (STATUS: %s) after 1 turn\n' "$ns"
+      xyz_relay_emit green
       exit 0
     fi
     if [[ "$ntstatus:$nactor" != "$prev" || "$ns" != "$s" ]]; then
       printf 'relay-drive: review-once — reviewer completed a turn (STATUS: %s, token %s:%s); non-approval handback, not a stall\n' "$ns" "$ntstatus" "$nactor"
+      xyz_relay_emit orange
       exit 5
     fi
     printf 'relay-drive: review-once — reviewer took no action (STATUS unchanged: %s, token still %s) — genuine stall\n' "$ns" "$prev" >&2
+    xyz_relay_emit red
     exit 3
   fi
 
   if ! terminal_status "$ns" && [[ "$ntstatus:$nactor" == "$prev" ]]; then
     printf 'relay-drive: no progress after %s turn (token still %s) — escalating\n' "$actor" "$prev" >&2
+    xyz_relay_emit red
     exit 3
   fi
 done

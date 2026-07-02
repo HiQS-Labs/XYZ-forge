@@ -15,6 +15,13 @@ All three harnesses (relay, marathon, swarm) now append a durable, newest-first 
 
 **Bet:** the writer's health/title/description are computed by each caller at its terminal exit rather than re-derived from the file, because the exit path already knows the outcome authoritatively — cheaper and avoids a second parse. Reversibility: Easy — additive scripts + best-effort call sites (a telemetry failure never changes a harness's own exit code), no kernel/schema/event-shape change.
 
+**Follow-up (PR review, 3 gaps found by running the code, all fixed + covered):**
+- **Blocker — a `marathon.sh`-orchestrated HALT emitted zero records.** Each phase is silenced (`marathon-phase`) and the whole-run record was only written on the success tail, which an early halt skips — so a failed orchestrated run was *silently absent* (worse than a bare `marathon-drive` halt, which emits red). Fixed: `marathon.sh` now emits a single `red` whole-run record on the halt path too (`"halted at phase K of M (id) — <reason>"`, reason mapped from the phase exit code). Test `test/xyz-harness-hooks.sh` M6.
+- **Should — `relay-drive.sh --review-once` never emitted** (its three early exits bypass the loop's emit sites), despite being this repo's recommended one-shot review flow. Fixed: approval→green, changes-requested handback→orange, stall→red. Same class of bypass on the multi-round no-progress exit — also now emits red. Tests RO1–RO3 + R5.
+- **Should — swarm/bare-marathon records carried a constant `sessionId:"p1"`** (the default `PHASE_ID`; swarm-preflight's generated invocation passed no `--phase-id`), making the field useless for telling swarm runs apart. Fixed telemetry-only (no change to phases-dir / tick-task naming): `marathon-drive` honors an optional `XYZ_SESSION_ID` override, and `swarm-preflight`'s generated command self-propagates the per-run slug via `XYZ_SESSION_ID=<slug>`. Tests M7 + the swarm-preflight invocation assertion.
+
+`validate.sh` 79/79 after the fixes (`test/xyz-harness-hooks.sh` grew 31→47 checks).
+
 ## 2026-07-01
 
 ### Marathon queue drive — GH-74, GH-71 Phases 1–2, GH-69, GH-64 active gate
