@@ -56,11 +56,23 @@ while IFS= read -r p; do shfiles+=("$p"); done < <(cd "$ROOT" && git ls-files '*
 # placeholders (relay-system/<date>/<slug>.md) are skipped by construction.
 ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.gz)'
 
+# Intentional FIXTURE LITERALS — path-like tokens that are test DATA (a file a test creates in a
+# throwaway temp repo at runtime), NOT references to a real file in this tree. Check B must skip them,
+# otherwise it false-positives on a case-sensitive filesystem: e.g. test/swarm-preflight.sh T22a asserts
+# case-INSENSITIVE shim classification using `relay-automation/Codex-turn.sh` (a deliberate case-variant
+# of the real lowercase codex-turn.sh). That literal resolves on case-insensitive macOS but not on
+# case-sensitive Linux, so scanning it made `validate.sh` green on macOS and red on Linux. Skipping it
+# keeps Check B FS-portable without weakening it for genuine references (the capital-C file can never
+# exist in this tree — the real shim is lowercase — so this can never mask a real path break). See #80.
+# Space-delimited; a token matches only when flanked by spaces (exact-token match, no substring slip).
+fixture_literals=" relay-automation/Codex-turn.sh "
+
 bad=0
 for f in "${shfiles[@]}" $docs; do
   [ -f "$ROOT/$f" ] || continue
   while IFS= read -r tok; do
     [ -n "$tok" ] || continue
+    case "$fixture_literals" in *" $tok "*) continue ;; esac
     if [ ! -e "$ROOT/$tok" ]; then
       echo "  broken path reference '$tok' in $f" >&2
       bad=1
