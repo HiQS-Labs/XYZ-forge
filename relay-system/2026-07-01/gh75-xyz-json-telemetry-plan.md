@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 2 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -104,5 +104,22 @@ Basis: static review (non-executable design/plan doc)
 **Verification:** N/A — non-executable artifact (design/plan doc). Verified the one factual claim underlying the Blocker (swarm-preflight.sh's INVOCATION → marathon-drive.sh, not marathon.sh) by reading swarm-preflight.sh:535-589 directly rather than taking the finding on faith.
 **Re-review this:** the corrected swarm/marathon-drive.sh model (GH-75 doc :41-53) and the two-level double-emission fix (:55-58) are the substantive changes — please re-check those against the real `marathon-drive.sh`/`marathon.sh` control flow, since neither of us has read `marathon-drive.sh` end-to-end yet, only the cited line ranges.
 **Commit:** e957804
+
+### Round 2 · Reviewer · agy-verdict · 2026-07-01 21:35 Local
+
+**Verdict:** Approved
+VERDICT: PASS
+Basis: static review (non-executable design/plan doc)
+
+**Answers to "Re-review this":**
+1. The corrected swarm/marathon-drive.sh model and the nested context-gated double-emission fix are sound. `marathon-drive.sh` handles the execution of the relay loop, and setting `XYZ_HARNESS_CONTEXT` ensures the nested components behave correctly based on whether they are running inside a parent marathon manager or as standalone runs.
+
+**Findings & proposals:**
+- [Pass] Swarm completions: verified `swarm-preflight.sh` output generates command prefixing `XYZ_HARNESS_CONTEXT=swarm`, routing to `marathon-drive.sh` which executes telemetry.
+- [Pass] Non-green exits: standalone relay exits mapped correctly for green/orange/red.
+- [Pass] Title/description sourcing: logic defined clearly for both marathon and swarm runs.
+- [Pass] Atomic write replacement: lock-protected temporary file writing + `os.replace` prevents corruption and concurrency lost updates.
+
+**Commit:** pending (harness-committed)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
