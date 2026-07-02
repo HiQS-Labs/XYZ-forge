@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -85,5 +85,24 @@ Basis: static review (non-executable design/plan doc)
 - [Nit] Use atomic file replacement when writing `XYZ.json`: To prevent `XYZ.json` corruption if the runner is killed or crashes mid-write, the Python script should write the updated JSON array to a temporary file in the same directory and then atomically rename/move it over `XYZ.json` (e.g., using `os.replace` in Python).
 
 **Commit:** pending (harness-committed)
+
+### Round 2 · Producer · 2026-07-01 21:10 PT
+
+**Decisions on proposals:** (all verified against `swarm-preflight.sh`/`marathon-drive.sh` before disposing — the Blocker's premise checked out: `grep -n "invocation\|marathon-drive.sh" utils/swarm-preflight.sh` confirmed `INVOCATION` at `:541-547` invokes `marathon-drive.sh` directly and is written to `marathon-invocation.txt` at `:589`, with no `marathon.sh` involvement)
+- [Blocker] marathon-drive.sh lacks a completion hook, so swarm runs emit nothing — Implemented → replaced the "swarm completes at the same path as marathon" claim with a corrected model: `marathon-drive.sh` gets its own hook at `:344-347`, gated by `XYZ_HARNESS_CONTEXT` (table + "Consequence" paragraph) @ PROJECT/1-INBOX/GH-75-XYZ-JSON-COMPLETION-TELEMETRY.md:45-53, Phase 2 checklist :101-106, QA gate :117-119 · Proof: textual only (design doc, no code yet — matches the doc's own non-executable-artifact convention)
+- [Should] standalone relay failure/escalation outcomes never logged — Implemented → relay-drive.sh hook now spans all three terminal exits (:208-209 green, :214-217 orange, :324-330 red/green) @ GH-75 doc :43, Phase 1 checklist :97, QA gate :116
+- [Should] no spec for marathon/swarm title+description sourcing — Implemented → new "Title/description for marathon and swarm records" section @ GH-75 doc :63-67, Phase 2 checklist :105
+- [Should] XYZ_HARNESS_CONTEXT=swarm must be explicit in the generated invocation, not assumed — Implemented → swarm-preflight.sh prefixes its own INVOCATION string (verified real at swarm-preflight.sh:541-547,589) @ GH-75 doc :61, Phase 2 checklist :104
+- [Nit] cross-repo XYZ.json location unstated — Implemented → "Location + git tracking" now states harness-repo-root explicitly, never `--target-root` @ GH-75 doc :90, QA gate :121
+- [Nit] atomic file replacement for XYZ.json writes — Implemented → write mechanics now specify temp-file + `os.replace`, plus a note that the lock is still needed separately for lost-update prevention @ GH-75 doc :86, Phase 1 checklist :96, QA gate :120
+
+**Did:**
+- Corrected the swarm-completion model (was factually wrong pre-review — swarm never touches `marathon.sh`) and added the invoker/context/hook table
+- Rewrote "Avoiding double-emission" to cover both nesting levels now that marathon-drive.sh has its own gated hook, not just the relay-loop level
+- Updated Status table to record the review outcome
+
+**Verification:** N/A — non-executable artifact (design/plan doc). Verified the one factual claim underlying the Blocker (swarm-preflight.sh's INVOCATION → marathon-drive.sh, not marathon.sh) by reading swarm-preflight.sh:535-589 directly rather than taking the finding on faith.
+**Re-review this:** the corrected swarm/marathon-drive.sh model (GH-75 doc :41-53) and the two-level double-emission fix (:55-58) are the substantive changes — please re-check those against the real `marathon-drive.sh`/`marathon.sh` control flow, since neither of us has read `marathon-drive.sh` end-to-end yet, only the cited line ranges.
+**Commit:** e957804
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
