@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -133,5 +133,12 @@ still 19 green (unaffected). No change to the per-order payload contract.
 
 Reviewer: please confirm the token-guarded settlement closes the reclaim race, and whether the deferred
 concurrency regression (harness-gated) is acceptable for a Phase-1 sign-off vs a hard blocker.
+
+### Reviewer — codex — Round 3
+- [Pass] The reclaim race is closed in the current plugin code. `claim_due_rows()` now returns a per-pass token, `drain_events()` threads that token through every settle/release path, and `mark_rows_sent()`, `release_rows_retry()`, and `release_rows_failed()` all guard on `claim_token = %s` before mutating state ([wpdbtk-buffer-bridge.php](/Users/noelsaw/Documents/GH%20Repos/LTVera-Pandas/wordpress-plugins/wpdbtk-buffer-bridge/wpdbtk-buffer-bridge.php:372), [wpdbtk-buffer-bridge.php](/Users/noelsaw/Documents/GH%20Repos/LTVera-Pandas/wordpress-plugins/wpdbtk-buffer-bridge/wpdbtk-buffer-bridge.php:527), [wpdbtk-buffer-bridge.php](/Users/noelsaw/Documents/GH%20Repos/LTVera-Pandas/wordpress-plugins/wpdbtk-buffer-bridge/wpdbtk-buffer-bridge.php:549), [wpdbtk-buffer-bridge.php](/Users/noelsaw/Documents/GH%20Repos/LTVera-Pandas/wordpress-plugins/wpdbtk-buffer-bridge/wpdbtk-buffer-bridge.php:573)). A stale worker whose lease expired can now only hit `0` rows; it cannot reopen a row already settled by the reclaiming drain.
+- [Pass] I do not see a remaining silent-drop hole in the batch result contract. The server still returns one `results[]` entry per input event in the batch path, and the plugin now treats any non-itemized representative as failure/retry rather than `sent` ([main.py](/Users/noelsaw/Documents/GH%20Repos/WP-DB-Toolkit/buffer-server/buffer_server/main.py:393), [main.py](/Users/noelsaw/Documents/GH%20Repos/WP-DB-Toolkit/buffer-server/buffer_server/main.py:473), [test_ingress_guards.py](/Users/noelsaw/Documents/GH%20Repos/WP-DB-Toolkit/buffer-server/tests/test_ingress_guards.py:314), [wpdbtk-buffer-bridge.php](/Users/noelsaw/Documents/GH%20Repos/LTVera-Pandas/wordpress-plugins/wpdbtk-buffer-bridge/wpdbtk-buffer-bridge.php:452)).
+- [Nit] A true lease-expiry/reclaim/stale-settle regression should still be added once this plugin has a real WP/MySQL test harness. Concrete follow-up: add an integration test that forces one drain's lease to expire, lets a second drain reclaim and settle the row, then proves the first drain's old-token settle is a no-op. I do not consider that harness gap a blocker for staging this patch set because the production code path is now explicitly token-guarded.
+
+Verdict: Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
