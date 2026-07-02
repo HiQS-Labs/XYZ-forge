@@ -2,85 +2,113 @@
 STATUS: Open
 NEXT: codex
 
-<!-- marathon-drive: task=MARATHON-NM2L-R1 builder=agy reviewer=codex round-cap=5 -->
+<!-- marathon-drive: task=MARATHON-GH61-P1B builder=codex reviewer=agy round-cap=6 -->
 
 ## Phase Brief
 
-# Phase brief — Sleuth "Near-Miss 2-lite" deterministic "did you mean?" tier
+---
+ratings_exempt: true
+title: Builder brief — GH-61 Tier 1 CI GitHub Actions (single-phase Marathon)
+status: Active
+created: 2026-07-02
+updated: 2026-07-02
+owner: Noel (operator) · Codex (builder) · agy (reviewer)
+parent: PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md
+substrate_repo: xyz-3-agents-swarm (same-repo build; CWD is the repo root)
+gh_issue: 61
+goal: >
+  Single-phase --phase-brief for the headless Marathon builder: add ONE additive Tier-1 GitHub
+  Actions workflow (lint + doc-hygiene, always-green, no secrets) plus a dependency-free deterministic
+  test that pins the workflow's shape and is wired into validate.sh. Tier 2 (running the full
+  validate.sh suite inside CI) is explicitly OUT OF SCOPE — it carries an unresolved runner decision.
+---
 
-**Repo:** sleuth-app (Node) · **Branch:** marathon-dogfood/near-miss-2lite
-**Read first:** `ARCHITECTURE.md` and `PROJECT/1-INBOX/COMMAND-NEAR-MISS-AI-FALLBACK.md` (Phase 2-lite).
-**Match repo conventions:** `Arg`-prefixed params, `#Try…Async` private methods, PascalCase functions.
+# Builder brief: GH-61 Tier 1 CI GitHub Actions
 
-## Task (additive, flag-gated, default-OFF — NO regression when OFF)
+## Status
 
-Insert a deterministic near-miss recovery tier at the mention-dispatch dead-end, reusing the existing
-scorer. **No LLM, no auto-execution, suggest-only.**
+| What was just completed | What's next |
+|---|---|
+| Brief authored 2026-07-02 as the single-phase `--phase-brief` for GH-61 Tier 1; ALLOW_PATHS + gate pinned. | Fed to the headless Codex builder (agy reviewer) when the marathon fires. |
 
-1. **Flag:** add `COMMAND_NEAR_MISS_LITE` (default OFF), read the same way other Sleuth feature flags
-   are read. OFF ⇒ behavior is byte-for-byte unchanged.
-2. **Tier:** add `#TryHandleNearMissCommandAsync(ArgSlackApp, ArgEventInfo, NormalizedCommandText)` to
-   `src/chat-module.js`, called at the seam **between the Phase 0 probe (line ~807) and the generic-AI-chat
-   fallthrough (line ~809)** — i.e. after all deterministic routes + web-search auto-routes declined.
-   - When the flag is OFF → return `false` immediately (fall through).
-   - Score the message via the existing `RetrieveScoredCandidates` (`src/command-intent-resolver.js:459`,
-     surfaces `{ Entry, Score }`). Do NOT use `RetrieveCandidateCommands` (it discards the score).
-   - If the top candidate's `Score` ≥ a **score floor** (a named placeholder constant, e.g.
-     `NEAR_MISS_SCORE_FLOOR`, with a comment that it is provisional pending Phase 0 counter data):
-     reply with that candidate's syntax example — *"Did you mean the `<id>` command? Try `<syntax>`."* —
-     and return `true`.
-   - Below the floor → return `false` (fall through to today's generic chat).
-3. **Loop safety:** never act on the bot's own messages (mirror existing guards).
+You are a headless builder in the **xyz-3-agents-swarm** repo (CWD = repo root). Build ONE additive
+GitHub Actions workflow + a deterministic test that pins its shape. **Additive only.** Do NOT change
+any runtime script, and touch ONLY the allowlisted paths.
 
-## Constraints
-- **ALLOW_PATHS only:** `src/chat-module.js`, `src/command-intent-resolver.js` (only if a one-line
-  export of `RetrieveScoredCandidates` is needed), `tests/command-near-miss-lite.test.js` (new). Touch
-  nothing else.
-- **Suggest-only:** no execution, no model call, no nagging on genuine conversation.
+## What to build
 
-## Definition of done (the objective gate)
-- New `tests/command-near-miss-lite.test.js` proves: (a) flag OFF → no near-miss reply (current
-  behavior); (b) a high-score wrong-syntax miss → exactly one "did you mean" suggestion; (c) a
-  below-floor conversational message → falls through, no suggestion.
-- `npm run validate:commands` passes.
-- `npx jest command-intent-resolver catalog-regex-aliases chat-module --silent` passes at **≥134/0**
-  (clean baseline was 134/0; your new tests add to it).
-- Bump `package.json` version + CHANGELOG per AGENTS.md.
+1. **`.github/workflows/ci.yml`** (NEW) — a single Tier-1 job, `runs-on: ubuntu-latest`, no secrets,
+   triggered `on: [push, pull_request]` (both `main`). It must run these deterministic, network-free
+   checks (each a distinct step, each failing the job loudly on error):
+   - **`shellcheck`** on all tracked `*.sh` (install via the distro or the `ludeeus/action-shellcheck`
+     is NOT available offline — prefer `sudo apt-get install -y shellcheck` then run it, or use the
+     runner's preinstalled `shellcheck`). Start permissive: `shellcheck -S error` (or an explicit
+     exclude list) so it lands green, with a comment that the severity can be tightened later.
+   - **`bash -n`** syntax check on every tracked `*.sh`.
+   - **`node --check`** on each tracked `*.js` (JS sources under `src/` and `bin/`).
+   - **JSON validate** `.claude/settings*.json` (via `python3 -m json.tool` or `jq`).
+   - **`utils/pdda/pdda.sh run`** in full mode — the deterministic doc/roadmap/path-drift gate.
+   Use `git ls-files` to enumerate tracked files (portable, no `find` surprises). Keep each step's
+   command copy-pasteable so the same checks can be run locally.
+
+2. **`test/ci-workflow.sh`** (NEW) — a standalone, **dependency-free** test (mirror
+   `test/swarm-preflight.sh` style: `pass`/`fail` counters, exit 1 on any fail; stock macOS **bash
+   3.2** + BSD tools; do NOT require `shellcheck`, `yq`, or a YAML library to be installed). It asserts:
+   - `.github/workflows/ci.yml` exists and is non-empty.
+   - It declares `runs-on: ubuntu-latest` and triggers on both `push` and `pull_request`.
+   - It references each required check by its literal command marker: `shellcheck`, `bash -n`,
+     `node --check`, a JSON-validate of `.claude/settings`, and `utils/pdda/pdda.sh run`.
+   - **If** `python3` can `import yaml`, the file parses as valid YAML; otherwise that one sub-check
+     self-skips (printed as a skip, never a fail) — so the test is green on a machine without PyYAML.
+   - `test/ci-workflow.sh` is itself wired into `validate.sh` (grep `validate.sh` for `ci-workflow`).
+
+3. **`validate.sh`** (EDIT, one line) — register `test/ci-workflow.sh` in the suite exactly the way
+   the other `test/*.sh` are wired (match the surrounding pattern; don't restructure the file).
+
+## Objective gate (what the marathon's --pre-advance-cmd runs)
+```
+bash test/ci-workflow.sh
+```
+It must pass: workflow present + well-formed, all required check markers present, wired into validate.sh.
+
+## How to verify before you hand off
+```
+bash test/ci-workflow.sh        # the gate — all assertions pass
+grep -n ci-workflow validate.sh # confirm the one-line wiring landed
+```
+
+## Hard rules
+- **Tier 1 ONLY.** Do NOT add a job that runs `./validate.sh` inside CI (that's Tier 2 — it has an
+  unresolved `macos-latest` vs `ubuntu-latest` runner decision reserved for the operator). Do NOT make
+  any check a *required* status check.
+- **Additive.** The only non-new file you may touch is `validate.sh`, and only to add the one wiring
+  line. Do NOT edit any runtime script, `bin/tick`, `src/*.js`, relay code, or `ROADMAP.md`.
+- **bash 3.2 + BSD-portable** for `test/ci-workflow.sh` (no bash-4 `${,,}`; use `tr`; POSIX classes).
+- **Do not `git commit`** — the harness commits. Do not push. Touch ONLY the three allowlisted paths:
+  `.github/workflows/ci.yml`, `test/ci-workflow.sh`, `validate.sh`.
+- Keep `test/ci-workflow.sh` resilient (match on content markers, not exact line numbers) so a later
+  reformat of the workflow doesn't false-fail it.
 
 ---
 
-▶ TAKE YOUR TURN (agy — BUILDER role)
+▶ TAKE YOUR TURN (codex — BUILDER role)
 
 You are the BUILDER for this phase. Read the phase brief above and implement it.
-1. Implement the brief by creating/editing the artifact file(s): src/chat-module.js,src/command-intent-resolver.js,tests/command-near-miss-lite.test.js
-2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
+1. Implement the brief by creating/editing the artifact file(s): .github/workflows/ci.yml,test/ci-workflow.sh,validate.sh
+2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-NM2L-R1 --agent agy --paths "phases/p1/RELAY.md,src/chat-module.js,src/command-intent-resolver.js,tests/command-near-miss-lite.test.js"
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-NM2L-R1 --agent agy
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-NM2L-R1 --agent agy --to codex
-4. Edit ONLY these paths: phases/p1/RELAY.md and src/chat-module.js,src/command-intent-resolver.js,tests/command-near-miss-lite.test.js. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH61-P1B --agent codex --paths "phases/p1/RELAY.md,.github/workflows/ci.yml,test/ci-workflow.sh,validate.sh"
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH61-P1B --agent codex
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH61-P1B --agent codex --to agy
+4. Edit ONLY these paths: phases/p1/RELAY.md and .github/workflows/ci.yml,test/ci-workflow.sh,validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 
 ---
 
-▶ TAKE YOUR TURN (codex — REVIEWER role)
+▶ TAKE YOUR TURN (agy — REVIEWER role)
 
-You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: src/chat-module.js,src/command-intent-resolver.js,tests/command-near-miss-lite.test.js.
-1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested` then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-NM2L-R1 --agent codex --to agy
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-NM2L-R1 --agent codex
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: .github/workflows/ci.yml,test/ci-workflow.sh,validate.sh.
+1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested` then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH61-P1B --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH61-P1B --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
-
-### Round 1 · Builder · agy
-
-Implemented the deterministic near-miss command suggestion tier (`COMMAND_NEAR_MISS_LITE`) at the dead-end mention-dispatch seam.
-
-**Files Touched:**
-- `src/chat-module.js`: Added the provisional constant `NEAR_MISS_SCORE_FLOOR = 5`, implemented the private method `#TryHandleNearMissCommandAsync`, and wired it in the `OnAppMentionAsync` dispatch logic before the generic AI chat fallback.
-- `tests/command-near-miss-lite.test.js`: Created a new unit test suite targeting all three requested behaviors (flag-off bypass, flag-on matching wrong-syntax near-miss command, flag-on conversational chat fallthrough).
-- `phases/p1/RELAY.md`: Changed NEXT pointer to `codex` and appended this round block.
-
-**Key Decisions:**
-- Set the provisional score floor to `5` based on analyzing scores of actual near-miss inputs versus conversational chatter.
-- Followed standard codebase loop-safety guards to bypass bot-generated messages.
-- Used JSDoc casts (`/** @type {any} */`) to satisfy the rigid typescript compilation schema.
