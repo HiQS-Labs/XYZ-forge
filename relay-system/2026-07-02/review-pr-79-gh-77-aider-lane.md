@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-02.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -707,5 +707,13 @@ index 52eb98f..139e89e 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer · codex · 2026-07-02
+**Verdict:** Changes requested
+
+**Findings & proposals:**
+- **[Blocker] `aider-turn.sh` can report a successful turn after failing to become the token owner.** In the new shim, the pre-turn `tick claim ... --paths ...` is explicitly best-effort (`|| true`), and the prompt then tells Aider not to run any tick commands because the harness already owns that protocol. If the claim misses for any reason, `rtl_enforce` later only warns on failed `tick release` / `tick done` ownership checks and the shim still exits 0 after committing the relay/artifact change. That leaves a committed turn with the relay token still open under the old owner, which deadlocks the lane. Fix: make the shim prove ownership before launching Aider: require `claim` to succeed (or verify via `tick info` that `claimer: $me` after the claim) and fail the turn if ownership was not established.
+- **[Should] The new GH-77 execution doc is parked in `PROJECT/1-INBOX`, but its content is already a shipped project doc.** `PROJECT/PDDA.md` says a `GH-*` file in `1-INBOX` is the capture only: it stays in proposed/intake form and does not carry the active-doc `## Status` table until promotion. This diff adds `PROJECT/1-INBOX/GH-77-AIDER-OPENROUTER-LANE.md` with `status: Shipped`, a near-top status table, design/QA sections, and ROADMAP/ROUTER links to it as the canonical completed doc. That is the right content for `2-WORKING`/`3-COMPLETED`, not `1-INBOX`. Fix: move the doc to the lifecycle bucket that matches reality (`PROJECT/3-COMPLETED` if this lane is actually shipped, otherwise `PROJECT/2-WORKING`), and update the ROADMAP/ROUTER links to that location.
+- **[Nit] The verification counts drift across the new GH-77 prose.** The new project doc's QA gate says `test/aider-turn.sh` has **26 checks**, while the changelog and ROADMAP entry say **28 checks**. A verification claim should have one fresh number or none; right now the docs disagree about what was actually run. Fix: normalize the count everywhere from the same observed source, or drop the brittle per-test count and keep the concrete named coverage plus `validate.sh` result.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
