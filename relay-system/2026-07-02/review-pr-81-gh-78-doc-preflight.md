@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-02.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -678,7 +678,7 @@ index 52eb98f..dd064bc 100755
    "marathon-plan.sh"
    "transcript-audit.sh"
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: Validate that the preflight-docs automation, test/preflight-docs.sh, and GH-78-DOC-PREFLIGHT-AUTOMATION.md conform to PDDA rules, are fully isolated and offline-testable, and correctly wired into the validation gate.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -689,5 +689,14 @@ index 52eb98f..dd064bc 100755
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — agy — 2026-07-02 (round 1)
+- [Pass] `utils/telemetry/preflight-docs.sh` implements the reviews, safe edits, telemetry logging, and warning logic with a robust deterministic safety valve (rejecting any edit that worsens deterministic checks or exceeds 30 changed lines).
+- [Pass] `test/preflight-docs.sh` provides thorough offline coverage using a stub model CLI, testing no-LLM warnings, clean pass, safe edits applied, unsafe edits reverted, model declines, and JSON validity.
+- [Pass] `.gitignore` correctly ignores the local telemetry logs to avoid churn, and `CHANGELOG.md` records the change with a clear Easy/reversible bet and revisit triggers.
+- [Pass] `PROJECT/1-INBOX/GH-78-DOC-PREFLIGHT-AUTOMATION.md` has correct status table, frontmatter with valid triage ratings, and detailed design summary / phases.
+**Verdict:** Approved
+VERDICT: PASS
+Basis: static review of the PR 81 diff (`pr81.diff` embedded in the setup).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
