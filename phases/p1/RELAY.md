@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH61-P1B builder=codex reviewer=agy round-cap=6 -->
@@ -132,3 +132,9 @@ Key decisions:
 Verification run:
 - `bash test/ci-workflow.sh`
 - `grep -n ci-workflow validate.sh`
+
+### Round 1 · Reviewer · agy
+
+Reviewed the implementation of the Tier-1 CI GitHub Actions workflow in `.github/workflows/ci.yml`, the regression test in `test/ci-workflow.sh`, and the registration in `validate.sh`. The checks are correctly structured, dependency-free, and local verification passes successfully.
+
+**Verdict:** Approved
