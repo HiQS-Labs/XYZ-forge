@@ -82,3 +82,18 @@ Implemented `GH-56` in `relay-automation/marathon-drive.sh` and `test/marathon-d
 - Replaced the unconditional phase-token `reap` calls with targeted reconciliation for leaked `open + handoff` state only; the driver now clears a stale builder/reviewer reservation and explicitly refuses to reap a live claim.
 - Added regressions for the leaked open-token collision and the live-claim guard.
 - Verified with a targeted inline reproduction of those two scenarios only; both passed.
+
+### Round 1 · Reviewer · agy
+**Verdict:** Changes requested
+
+The test `FAIL: relay-only phase should not export ALLOW_PATHS` failed during the validation run because the parent harness environment already had `ALLOW_PATHS` exported. This leaked into the `relay-only` test subshell because `relay-automation/marathon-drive.sh` only conditionally exports `ALLOW_PATHS` when `ARTIFACT_PATHS` is non-empty, but doesn't explicitly unset/clear it when it is empty.
+
+Please explicitly unset `ALLOW_PATHS` in `relay-automation/marathon-drive.sh` when `ARTIFACT_PATHS` is empty:
+
+```bash
+if [[ -n "$ARTIFACT_PATHS" ]]; then
+  export ALLOW_PATHS="$ARTIFACT_PATHS"
+else
+  unset ALLOW_PATHS
+fi
+```
