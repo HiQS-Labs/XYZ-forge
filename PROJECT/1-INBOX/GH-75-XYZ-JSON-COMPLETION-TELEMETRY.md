@@ -2,9 +2,9 @@
 gh_issue: 75
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/75
 title: XYZ.json — final completion telemetry appended at relay/swarm/marathon session end
-status: Proposed (1-INBOX — relay-reviewed by agy, Approved; not yet promoted to 2-WORKING)
+status: Shipped
 created: 2026-07-01
-updated: 2026-07-01
+updated: 2026-07-02
 owner: noel
 doc_type: feature
 complexity: 3
@@ -30,7 +30,7 @@ related:
 
 | Most recently completed | What's next |
 |---|---|
-| **Proposed 2026-07-01, relay-reviewed by agy → Approved (round 2).** Plan captured from an operator request; no code written yet. Round 1 found 1 Blocker (swarm invokes `marathon-drive.sh` directly, not `marathon.sh` — needed its own hook) + 3 Should + 2 Nit, all disposed as Implemented; round 2 re-verified each fix against the artifact and passed all 4 re-checks. Full thread: `relay-system/2026-07-01/gh75-xyz-json-telemetry-plan.md`. | File the GitHub issue → promote to `2-WORKING` → Phase 1 (relay hook + shared writer) is the first fireable slice. |
+| **✅ SHIPPED 2026-07-02 — all three phases.** Shared `utils/telemetry/health-lib.sh` (STATUS/VERDICT→health, factored out of `extract-relay-telemetry.sh` with byte-identical extractor output) + `utils/telemetry/append-xyz-completion.sh` (locked, atomic temp-file+`os.replace` newest-first prepend to a gitignored `XYZ.json` at the harness repo root). Wired into `relay-drive.sh`'s terminal exits (green/orange×2/red), `marathon-drive.sh`'s own per-run hook (gated by `XYZ_HARNESS_CONTEXT`, tag swarm|marathon), `marathon.sh`'s single whole-run record, and `swarm-preflight.sh`'s generated invocation (self-propagating `XYZ_HARNESS_CONTEXT=swarm`). `XYZ.json` gitignored. Tests: `test/xyz-completion.sh` (writer + concurrency + health-lib), `test/xyz-harness-hooks.sh` (all harness terminal paths + nesting), `test/swarm-preflight.sh` (invocation tag). `validate.sh` green. | Merge the PR. Follow-ons per non-goals: rotation/size-cap for `XYZ.json` if it grows unwieldy. |
 
 ## Problem
 
@@ -94,32 +94,32 @@ Unlike relay (which extracts `title`/`description` from a single markdown file's
 ## Phases
 
 **Phase 1 — shared writer + relay hook**
-- [ ] Factor GH-24's STATUS/VERDICT→health mapping into a shared lib function, reused by both `extract-relay-telemetry.sh` (unchanged behavior) and the new writer
-- [ ] `utils/telemetry/append-xyz-completion.sh <harness> <sessionId> <health> <title> <description>` — locked, atomic (temp-file + `os.replace`) read-modify-write-prepend to `XYZ.json` at the harness repo root
-- [ ] Wire into `relay-drive.sh`'s three terminal exits: `:208-209` (`health:"green"`), `:214-217` Escalated handback (`health:"orange"`), `:324-330` round-cap fallback (`health:"red"`/`"green"` per its own pass/fail check) — gated on `XYZ_HARNESS_CONTEXT` being unset/`relay`
-- [ ] Add `XYZ.json` to `.gitignore`
-- [ ] `test/relay-drive.sh` (or equivalent): a terminal relay run produces exactly one well-formed `XYZ.json` record for each of the three exit paths; re-running twice prepends, doesn't clobber
+- [x] Factor GH-24's STATUS/VERDICT→health mapping into a shared lib function, reused by both `extract-relay-telemetry.sh` (unchanged behavior) and the new writer
+- [x] `utils/telemetry/append-xyz-completion.sh <harness> <sessionId> <health> <title> <description>` — locked, atomic (temp-file + `os.replace`) read-modify-write-prepend to `XYZ.json` at the harness repo root
+- [x] Wire into `relay-drive.sh`'s three terminal exits: `:208-209` (`health:"green"`), `:214-217` Escalated handback (`health:"orange"`), `:324-330` round-cap fallback (`health:"red"`/`"green"` per its own pass/fail check) — gated on `XYZ_HARNESS_CONTEXT` being unset/`relay`
+- [x] Add `XYZ.json` to `.gitignore`
+- [x] `test/relay-drive.sh` (or equivalent): a terminal relay run produces exactly one well-formed `XYZ.json` record for each of the three exit paths; re-running twice prepends, doesn't clobber
 
 **Phase 2 — marathon-drive.sh hook + swarm tagging**
-- [ ] Wire the completion hook into `marathon-drive.sh:344-347` (its own per-phase/per-run completion point) — this is the ONE hook shared by bare `marathon-drive.sh` runs and swarm-originated runs (agy r1 Blocker: `marathon.sh:95` alone misses swarm entirely, since swarm invokes `marathon-drive.sh` directly)
-- [ ] `marathon.sh` sets `XYZ_HARNESS_CONTEXT=marathon-phase` around each `marathon-drive.sh` phase call, so the hook stays silent per-phase; `marathon.sh:95` fires its own single `harness:"marathon"` record at whole-run completion instead
-- [ ] `swarm-preflight.sh` prefixes its generated `INVOCATION` (`swarm-preflight.sh:541-547`, written to `marathon-invocation.txt` at line 589) with `XYZ_HARNESS_CONTEXT=swarm `, so the operator-run command self-propagates the tag with no manual step
-- [ ] Title/description sourcing for marathon-drive.sh's hook: phase-brief/packet basename + `"N of M phase(s) approved"` / `"halted at phase K of M — <reason>"` (reusing `marathon-drive.sh:346`'s existing wording)
-- [ ] `test/marathon-plan.sh` / `test/swarm-preflight.sh`: a swarm-originated run produces `harness:"swarm"`; a bare `marathon-drive.sh` run produces `harness:"marathon"`; a `marathon.sh`-orchestrated N-phase run produces exactly 1 record, not N+1
+- [x] Wire the completion hook into `marathon-drive.sh:344-347` (its own per-phase/per-run completion point) — this is the ONE hook shared by bare `marathon-drive.sh` runs and swarm-originated runs (agy r1 Blocker: `marathon.sh:95` alone misses swarm entirely, since swarm invokes `marathon-drive.sh` directly)
+- [x] `marathon.sh` sets `XYZ_HARNESS_CONTEXT=marathon-phase` around each `marathon-drive.sh` phase call, so the hook stays silent per-phase; `marathon.sh:95` fires its own single `harness:"marathon"` record at whole-run completion instead
+- [x] `swarm-preflight.sh` prefixes its generated `INVOCATION` (`swarm-preflight.sh:541-547`, written to `marathon-invocation.txt` at line 589) with `XYZ_HARNESS_CONTEXT=swarm `, so the operator-run command self-propagates the tag with no manual step
+- [x] Title/description sourcing for marathon-drive.sh's hook: phase-brief/packet basename + `"N of M phase(s) approved"` / `"halted at phase K of M — <reason>"` (reusing `marathon-drive.sh:346`'s existing wording)
+- [x] `test/marathon-plan.sh` / `test/swarm-preflight.sh`: a swarm-originated run produces `harness:"swarm"`; a bare `marathon-drive.sh` run produces `harness:"marathon"`; a `marathon.sh`-orchestrated N-phase run produces exactly 1 record, not N+1
 
 **Phase 3 — QA + docs**
-- [ ] `validate.sh` green with the new tests included
-- [ ] `ROUTER.md` routing hint (mirrors the existing GH-24 telemetry hint) pointing at this doc + `XYZ.json`'s location/schema
-- [ ] Confirm concurrent-write safety: two harness sessions completing within the same second don't corrupt `XYZ.json` (reuse GH-72's lock-concurrency test pattern) and don't lose either record (atomic replacement prevents corruption but not a lost update without the lock)
+- [x] `validate.sh` green with the new tests included
+- [x] `ROUTER.md` routing hint (mirrors the existing GH-24 telemetry hint) pointing at this doc + `XYZ.json`'s location/schema
+- [x] Confirm concurrent-write safety: two harness sessions completing within the same second don't corrupt `XYZ.json` (reuse GH-72's lock-concurrency test pattern) and don't lose either record (atomic replacement prevents corruption but not a lost update without the lock)
 
 ## QA gate
 
-- [ ] A standalone `/relay` session reaching STATUS Approved/Closed appends exactly one `harness:"relay"` `health:"green"` record
-- [ ] A standalone `/relay` session that escalates or hits the round cap appends exactly one `harness:"relay"` record with `health:"orange"`/`"red"` (not silently absent)
-- [ ] A `marathon.sh`-orchestrated multi-phase run appends exactly one `harness:"marathon"` record (not one per phase)
-- [ ] A bare `marathon-drive.sh` run (no `marathon.sh` wrapper) appends one `harness:"marathon"` record
-- [ ] A swarm-preflight-initiated run (via its generated `marathon-invocation.txt` command) appends `harness:"swarm"`, not `"marathon"`
-- [ ] `XYZ.json` stays valid JSON after N sequential appends, after concurrent appends, and after a simulated kill mid-write (atomic replacement leaves the prior valid array intact)
-- [ ] `XYZ.json` is written to the harness repo root even when the run used `--target-root <foreign repo>`
-- [ ] `XYZ.json` is gitignored; `git status` stays clean after a session completes
-- [ ] `extract-relay-telemetry.sh`'s existing output is byte-identical before/after the health-mapping refactor into a shared lib (no regression to GH-24)
+- [x] A standalone `/relay` session reaching STATUS Approved/Closed appends exactly one `harness:"relay"` `health:"green"` record
+- [x] A standalone `/relay` session that escalates or hits the round cap appends exactly one `harness:"relay"` record with `health:"orange"`/`"red"` (not silently absent)
+- [x] A `marathon.sh`-orchestrated multi-phase run appends exactly one `harness:"marathon"` record (not one per phase)
+- [x] A bare `marathon-drive.sh` run (no `marathon.sh` wrapper) appends one `harness:"marathon"` record
+- [x] A swarm-preflight-initiated run (via its generated `marathon-invocation.txt` command) appends `harness:"swarm"`, not `"marathon"`
+- [x] `XYZ.json` stays valid JSON after N sequential appends, after concurrent appends, and after a simulated kill mid-write (atomic replacement leaves the prior valid array intact)
+- [x] `XYZ.json` is written to the harness repo root even when the run used `--target-root <foreign repo>`
+- [x] `XYZ.json` is gitignored; `git status` stays clean after a session completes
+- [x] `extract-relay-telemetry.sh`'s existing output is byte-identical before/after the health-mapping refactor into a shared lib (no regression to GH-24)

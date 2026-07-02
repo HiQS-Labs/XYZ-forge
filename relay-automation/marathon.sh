@@ -81,7 +81,11 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact name; do
   if ((DRY_RUN)); then drive_args+=( --dry-run ); fi
 
   phase_exit=0
-  MARATHON_ROOT="$ROOT" TICK_BIN="$TICK_BIN" bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?
+  # GH-75: mark each per-phase marathon-drive call so its (and its nested relay-drive's) XYZ.json hook
+  # stays silent — this orchestrator emits a SINGLE harness:"marathon" whole-run record below, never
+  # one per phase.
+  MARATHON_ROOT="$ROOT" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
+    bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?
   if [[ "$phase_exit" -ne 0 ]]; then
     log "HALT: phase $id failed (marathon-drive exit $phase_exit) — chain stops; later phases NOT started"
     exit "$phase_exit"
@@ -93,5 +97,17 @@ if ((DRY_RUN)); then
   exit 0
 fi
 "$TICK_BIN" log marathon.complete "MARATHON-RUN" --agent marathon > /dev/null 2>&1 || true
+
+# GH-75: one final-completion record for the whole multi-phase run (harness:"marathon"), sourced from
+# data already in hand — the MARATHON.yaml plan name as title/sessionId, "N of M phase(s) approved" as
+# description. Best-effort: never fails the marathon on a telemetry error.
+XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT/utils/telemetry/append-xyz-completion.sh"}"
+if [[ -x "$XYZ_APPEND_BIN" ]]; then
+  _xyz_plan="$(basename "$PLAN")"; _xyz_plan="${_xyz_plan%.*}"
+  [[ -n "$_xyz_plan" ]] || _xyz_plan="marathon"
+  "$XYZ_APPEND_BIN" marathon "$_xyz_plan" green "$_xyz_plan" \
+    "$phase_count of $phase_count phase(s) approved" >/dev/null 2>&1 || true
+fi
+
 log "marathon complete — all $phase_count phase(s) approved"
 exit 0

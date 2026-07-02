@@ -2,6 +2,19 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-07-02
+
+### GH-75 SHIPPED — XYZ.json final-completion telemetry at every harness session end
+All three harnesses (relay, marathon, swarm) now append a durable, newest-first completion record to a gitignored `XYZ.json` at the harness repo root — the live per-session signal GH-24's on-demand batch extractor never provided. Schema extends GH-24's `{health, title, description, updatedAt}` with `{harness, sessionId}`.
+
+- **Shared health mapping** — `utils/telemetry/health-lib.sh` factors GH-24's STATUS/VERDICT→health (green/orange/red) `case` block out of `extract-relay-telemetry.sh`; the extractor now sources it. Verified **byte-identical** extractor output over the full corpus before/after — no GH-24 regression.
+- **Shared writer** — `utils/telemetry/append-xyz-completion.sh <harness> <sessionId> <health> <title> <description>` does a **locked** (GH-72 `mkdir` advisory lock + empty-pid-TOCTOU handling — prevents a lost update when two sessions finish in the same second) + **atomic** (temp-file + `os.replace` — prevents a truncated/partial file if killed mid-write; a corrupt/absent file self-heals to a fresh array) read-modify-write-prepend. Always writes to the harness repo root, never a `--target-root` foreign repo.
+- **Relay** — `relay-drive.sh` emits at its terminal exits: `green` on Approved/Closed, `orange` on Escalated handback (both loop-top and post-turn), `red` on the round-cap fallback. Silent when nested (`XYZ_HARNESS_CONTEXT` set).
+- **Marathon/swarm** — `marathon-drive.sh` has its own per-run hook (swarm invokes it directly, not via `marathon.sh`): fires for a bare run (`harness:"marathon"`) or a swarm-preflight-originated run (`harness:"swarm"`, self-propagated by prefixing the generated `marathon-invocation.txt` command with `XYZ_HARNESS_CONTEXT=swarm`), and stays silent under `marathon-phase`. `marathon.sh` sets `XYZ_HARNESS_CONTEXT=marathon-phase` per phase and emits a single whole-run `harness:"marathon"` record — so an N-phase run produces exactly one record, never N/N+1. Marathon/swarm health is binary green/red.
+- **Tests** — `test/xyz-completion.sh` (prepend order, 25 sequential, 16-way concurrency no-lost-update, corrupt-file self-heal, arg validation, health-lib table), `test/xyz-harness-hooks.sh` (real relay-drive green/orange/red + nested-silent; bare/swarm/marathon-phase marathon-drive; marathon.sh N-phase = 1 record), and a swarm-tag assertion in `test/swarm-preflight.sh`. `XYZ.json` added to `.gitignore`; `ROUTER.md` routing hint added. `relay-pkg.tar.gz` regenerated (make-pkg) so the packaged `relay-drive.sh` carries the hook. `validate.sh` green (pre-existing macOS `._*`-tarball `path-integrity` drift resolved as a side effect of the regen; `registry-lock-concurrency` is an install.sh load-flake, passes in isolation).
+
+**Bet:** the writer's health/title/description are computed by each caller at its terminal exit rather than re-derived from the file, because the exit path already knows the outcome authoritatively — cheaper and avoids a second parse. Reversibility: Easy — additive scripts + best-effort call sites (a telemetry failure never changes a harness's own exit code), no kernel/schema/event-shape change.
+
 ## 2026-07-01
 
 ### Marathon queue drive — GH-74, GH-71 Phases 1–2, GH-69, GH-64 active gate
