@@ -83,7 +83,7 @@ One optional env var (mirroring the existing `*_ROOT` convention): **`XYZ_ARCHIV
 - [x] Open a GitHub issue describing the optional centralized-archive setting (issue-first SOP). → [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30)
 - [x] Rename this doc to `PROJECT/1-INBOX/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md` and set `gh_issue` in frontmatter.
 - [x] Park a one-line queue pointer in `ROADMAP.md` linking the inbox doc.
-- [ ] Decide the archive model: **(A)** separate git repo (committed) vs **(B)** plain directory (uncommitted). Record the call + reversibility in `CHANGELOG.md`.
+- [x] Decide the archive model: **(A)** separate git repo (committed) vs **(B)** plain directory (uncommitted). → **DECIDED 2026-07-02: Model A (separate committed git repo)** — see the "Phase 0 — DECIDED" section below; recorded in `CHANGELOG.md`.
 - [ ] Confirm the namespacing scheme (`<repo-slug>` from the target git remote/basename) avoids cross-repo collisions.
 
 ### QA checklist — Phase 0
@@ -166,5 +166,33 @@ One optional env var (mirroring the existing `*_ROOT` convention): **`XYZ_ARCHIV
 - [ ] `utils/pdda/pdda.sh run` clean (frontmatter, status table, hardcoded paths, roadmap coverage).
 - [ ] Docs describe both default and archive modes; no hardcoded absolute paths in the docs.
 - [ ] `CHANGELOG.md` entry present with the bet recorded.
-</content>
-</invoke>
+
+## Phase 0 — DECIDED 2026-07-02: archive model **A (separate committed git repo)**
+
+The operator chose **Model A**: `XYZ_ARCHIVE_ROOT` points at a **separate git repo** transcripts are
+committed into (durable, shareable history across devices), NOT a plain uncommitted directory. This
+contract must honor the cross-repo commit consequences: (a) keep `TICK_REPO_ROOT` + the allowlist
+anchored on the **target** repo (never the archive); (b) commit to the archive repo only via an
+isolated archive-commit step that can never orphan a peer commit in the target tree (the documented
+`rtl_enforce` reset/orphan hazard when token-tree ≠ transcript-tree); (c) hard-error on a
+set-but-missing / non-git `XYZ_ARCHIVE_ROOT` (never silent fallback). Namespacing: `<repo-slug>` from
+the git remote basename (fallback dir basename), collision-checked.
+
+## Swarm Preflight Contract
+
+Consumed by `utils/swarm-preflight.sh`. Same-repo build (`target.ref: main`). **Orchestrator-only
+kernel lane** (`relay-turn-lib.sh` is the containment kernel) — serialized, never parallel. Model A's
+cross-repo commit semantics are why risk is 4. Gate is a new test. Because this is phased + Costly,
+build it phase-gated (Phase 1 resolver first is a safe standalone slice; Phase 3 containment is the
+risky one).
+
+```json
+{
+  "target":      { "repo": ".", "ref": "main" },
+  "gate":        "bash test/archive-root.sh",
+  "fix_probes":  [ { "type": "grep_absent", "path": "relay-automation/relay-turn-lib.sh", "pattern": "XYZ_ARCHIVE_ROOT" } ],
+  "artifacts":   [ "relay-automation/relay-turn-lib.sh", "relay-automation/consult.sh", "relay-automation/marathon-drive.sh", "relay-automation/relay-drive.sh", "utils/swarm-preflight.sh", "utils/telemetry/extract-relay-telemetry.sh", "relay-automation/CONSUMING.md", "relay-automation/README.md", "test/archive-root.sh" ],
+  "remediation": { "source": "GH-30#phase-0-model-A", "criteria": "A single resolver in relay-turn-lib.sh returns $XYZ_ARCHIVE_ROOT/relay-system/<repo-slug> when set (absolute + existing git repo, else HARD ERROR — never silent fallback) and $ROOT/relay-system when unset (byte-for-byte current path); all transcript writers (consult/marathon-drive/relay-drive/swarm-preflight/extract-relay-telemetry) call it; explicit per-call overrides (OUT=/--relay-file) still win. MODEL A: commit the transcript into the SEPARATE archive git repo via an isolated step that keeps TICK_REPO_ROOT + allowlist anchored on the TARGET repo and never orphans a peer commit in the target tree. NEW test/archive-root.sh covers unset / set / set-but-missing / non-git-archive (hard error) + a cross-repo turn leaving the target tree free of relay-system/. Costly containment-kernel change; GH-30 marker comment." },
+  "lanes":       { "agy_safe": [], "orchestrator_only": [ "relay-automation/relay-turn-lib.sh" ] }
+}
+```
