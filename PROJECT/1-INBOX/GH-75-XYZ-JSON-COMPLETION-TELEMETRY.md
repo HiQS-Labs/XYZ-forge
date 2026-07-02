@@ -2,7 +2,7 @@
 gh_issue: 75
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/75
 title: XYZ.json — final completion telemetry appended at relay/swarm/marathon session end
-status: Proposed (1-INBOX — pre-issue draft, under relay review; GH-75 is provisional until filed)
+status: Proposed (1-INBOX — relay-reviewed by agy, Approved; not yet promoted to 2-WORKING; GH-75 is provisional until filed)
 created: 2026-07-01
 updated: 2026-07-01
 owner: noel
@@ -30,7 +30,7 @@ related:
 
 | Most recently completed | What's next |
 |---|---|
-| **Proposed 2026-07-01.** Plan captured from an operator request; no code written yet. Agy relay review round 1 (`relay-system/2026-07-01/gh75-xyz-json-telemetry-plan.md`) found 1 Blocker (swarm invokes `marathon-drive.sh` directly, not `marathon.sh` — needed its own hook) + 3 Should + 2 Nit, all disposed as Implemented (design updated, no code changes needed at plan stage). | File the GitHub issue → promote to `2-WORKING` → Phase 1 (relay hook + shared writer) is the first fireable slice. |
+| **Proposed 2026-07-01, relay-reviewed by agy → Approved (round 2).** Plan captured from an operator request; no code written yet. Round 1 found 1 Blocker (swarm invokes `marathon-drive.sh` directly, not `marathon.sh` — needed its own hook) + 3 Should + 2 Nit, all disposed as Implemented; round 2 re-verified each fix against the artifact and passed all 4 re-checks. Full thread: `relay-system/2026-07-01/gh75-xyz-json-telemetry-plan.md`. | File the GitHub issue → promote to `2-WORKING` → Phase 1 (relay hook + shared writer) is the first fireable slice. |
 
 ## Problem
 
