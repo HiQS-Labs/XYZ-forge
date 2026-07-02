@@ -196,6 +196,70 @@ check_clean_pattern "api-key-ref"   'api_key="${API_KEY}"'
 check_clean_pattern "curl-pipe-grep" 'curl https://x.io/data | grep foo'
 
 # ---------------------------------------------------------------------------
+# Baseline (GH-64) — a pre-approved finding is still printed but doesn't fail the scan;
+# --no-baseline bypasses it; a NON-baselined finding in the same file still fails.
+# ---------------------------------------------------------------------------
+
+BASE_DIR="$WORK/baseline-fixture"
+mkdir -p "$BASE_DIR"
+BASE_FIXTURE="$BASE_DIR/mixed.sh"
+cat > "$BASE_FIXTURE" <<'MIXEDEOF'
+#!/usr/bin/env bash
+eval "$KNOWN_GOOD"
+eval "$BRAND_NEW_ONE"
+MIXEDEOF
+BASE_FILE="$WORK/baseline.txt"
+printf '# comment line, ignored\n\nmixed.sh\teval-unsanitized\teval "$KNOWN_GOOD"\n' > "$BASE_FILE"
+
+RC=0
+STDERR_BASE="$WORK/stderr-baseline.txt"
+( cd "$BASE_DIR" && bash "$SCANNER" --baseline "$BASE_FILE" "mixed.sh" ) >/dev/null 2>"$STDERR_BASE" || RC=$?
+[[ "$RC" -ne 0 ]] && pass "baseline: still exits non-zero when a non-baselined finding remains" \
+  || fail "baseline: should still fail on the non-baselined line, got exit 0"
+grep -q "SECURITY (baselined):.*KNOWN_GOOD" "$STDERR_BASE" 2>/dev/null \
+  && pass "baseline: baselined finding is still PRINTED (not hidden)" \
+  || fail "baseline: baselined finding missing from output — GUIDING-PRINCIPLES #8 violation risk"
+grep -qE '^SECURITY: .*BRAND_NEW_ONE' "$STDERR_BASE" 2>/dev/null \
+  && pass "baseline: non-baselined finding still reported as a plain SECURITY line" \
+  || fail "baseline: non-baselined finding not reported: $(cat "$STDERR_BASE")"
+
+# Baseline every line in the fixture → clean, exit 0.
+printf '# comment\nmixed.sh\teval-unsanitized\teval "$KNOWN_GOOD"\nmixed.sh\teval-unsanitized\teval "$BRAND_NEW_ONE"\n' > "$BASE_FILE"
+RC=0
+( cd "$BASE_DIR" && bash "$SCANNER" --baseline "$BASE_FILE" "mixed.sh" ) >/dev/null 2>/dev/null || RC=$?
+[[ "$RC" -eq 0 ]] && pass "baseline: fully-baselined fixture exits 0" || fail "baseline: expected exit 0, got $RC"
+
+# --no-baseline bypasses the baseline file entirely, even when it would fully cover the fixture.
+RC=0
+STDERR_NOBASE="$WORK/stderr-nobaseline.txt"
+( cd "$BASE_DIR" && bash "$SCANNER" --no-baseline --baseline "$BASE_FILE" "mixed.sh" ) >/dev/null 2>"$STDERR_NOBASE" || RC=$?
+[[ "$RC" -ne 0 ]] && pass "baseline: --no-baseline ignores the baseline file (raw scan fails)" \
+  || fail "baseline: --no-baseline should still fail raw, got exit 0"
+! grep -q "baselined" "$STDERR_NOBASE" 2>/dev/null \
+  && pass "baseline: --no-baseline output has no 'baselined' labels" \
+  || fail "baseline: --no-baseline leaked a baselined label"
+
+# --tsv emits `file\trule\ttext` — the format the baseline file itself uses, so a reviewer can
+# paste a row straight in.
+TSV_OUT="$(cd "$BASE_DIR" && bash "$SCANNER" --no-baseline --tsv "mixed.sh" 2>/dev/null || true)"
+TSV_EXPECT="$(printf 'mixed.sh\teval-unsanitized\teval "$KNOWN_GOOD"')"
+printf '%s\n' "$TSV_OUT" | grep -qF "$TSV_EXPECT" \
+  && pass "baseline: --tsv emits tab-separated file/rule/text" \
+  || fail "baseline: --tsv output malformed: $TSV_OUT"
+
+# ---------------------------------------------------------------------------
+# GH-64 active gate: the REAL repo, scanned with the checked-in baseline, must be clean. This is
+# what turns the scanner from an advisory tool into a genuine blocking gate in validate.sh — any
+# newly introduced eval/secret/curl-pipe pattern fails validate.sh until it's fixed or (after human
+# review) added to relay-automation/hooks/security-scan-baseline.txt.
+# ---------------------------------------------------------------------------
+
+RC=0
+REAL_OUT="$(bash "$SCANNER" 2>&1)" || RC=$?
+[[ "$RC" -eq 0 ]] && pass "GH-64 active gate: the real repo tree is clean against the checked-in baseline" \
+  || fail "GH-64 active gate: real repo has NON-baselined findings — fix them or review+add to the baseline: $REAL_OUT"
+
+# ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
 
