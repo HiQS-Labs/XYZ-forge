@@ -80,6 +80,42 @@ ls "$A/.tick/events/" 2>/dev/null | grep -q "MARATHON-P1-TURN" \
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (3b) leaked open handoff is reconciled before re-seeding the same phase-id (GH-56) ─
+tick_a log task.created MARATHON-P1-TURN --agent seed >/dev/null
+tick_a claim MARATHON-P1-TURN --agent seed --paths "phases/p1/RELAY.md" >/dev/null
+tick_a release MARATHON-P1-TURN --agent seed --to claude >/dev/null
+LEAK_INFO="$(tick_a info MARATHON-P1-TURN 2>&1 || true)"
+printf '%s\n' "$LEAK_INFO" | grep -qE '^status:[[:space:]]+open$' \
+  && printf '%s\n' "$LEAK_INFO" | grep -qE '^handoff-to:[[:space:]]+claude$' \
+  && pass "seeded the leaked open handoff fixture" \
+  || fail "expected leaked open handoff fixture, got: $LEAK_INFO"
+RERUN_OUT="$(RELAY_DRIVE_EXIT=0 run_driver 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "driver reconciles leaked handoff and re-seeds cleanly" \
+  || fail "driver should succeed after reconciling leaked handoff: $RERUN_OUT"
+printf '%s\n' "$RERUN_OUT" | grep -q "task MARATHON-P1-TURN is open" \
+  && fail "driver hit the old leaked-token collision: $RERUN_OUT" \
+  || pass "driver avoids the old 'task ... is open' collision"
+tick_a info MARATHON-P1-TURN | grep -qE '^handoff-to:[[:space:]]+claude$' \
+  && pass "driver re-seeds the token back to the builder handoff" \
+  || fail "driver did not restore the builder handoff: $(tick_a info MARATHON-P1-TURN)"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (3c) a live claim is never reaped during re-seed (GH-56) ──────────────
+tick_a log task.created MARATHON-P1-TURN --agent seed >/dev/null
+tick_a claim MARATHON-P1-TURN --agent claude --paths "phases/p1/RELAY.md" >/dev/null
+LIVE_OUT="$(RELAY_DRIVE_EXIT=0 run_driver 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] && pass "live claim blocks re-seed instead of being reaped" \
+  || fail "re-seed should refuse a live claim, not reap it"
+printf '%s\n' "$LIVE_OUT" | grep -q "refusing to reap a live claim" \
+  && pass "live-claim refusal is explicit" \
+  || fail "expected explicit live-claim refusal, got: $LIVE_OUT"
+tick_a info MARATHON-P1-TURN | grep -qE '^claimer:[[:space:]]+claude$' \
+  && pass "live claude claim survives the failed re-seed" \
+  || fail "live claim was disturbed by re-seed attempt: $(tick_a info MARATHON-P1-TURN)"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 # ── (4) relay-drive called with correct args ──────────────────────────────
 RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1 || true
 grep -q -- "--relay-file" "$WORK/relay-drive-args" \
@@ -235,13 +271,14 @@ rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 # (c) relay-only (no --artifact) leaves ALLOW_PATHS UNSET — containment default unchanged
 rm -f "$WORK/allow-paths-seen"
+ALLOW_PATHS="leaked/from/parent" \
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
     --reviewer gemini --pre-advance-cmd "true" >/dev/null 2>&1 || true
 grep -q "UNSET" "$WORK/allow-paths-seen" 2>/dev/null \
-  && pass "relay-only phase leaves ALLOW_PATHS unset (no extra write surface)" \
-  || fail "relay-only phase should not export ALLOW_PATHS"
+  && pass "relay-only phase clears inherited ALLOW_PATHS (no extra write surface)" \
+  || fail "relay-only phase should unset inherited ALLOW_PATHS"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 

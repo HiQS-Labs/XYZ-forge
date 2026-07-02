@@ -1,140 +1,112 @@
 # Marathon Phase p1
 STATUS: Approved
-NEXT: codex
+NEXT: agy
 
-<!-- marathon-drive: task=MARATHON-GH61-P1B builder=codex reviewer=agy round-cap=6 -->
+<!-- marathon-drive: task=MARATHON-GH56-P1 builder=codex reviewer=agy round-cap=6 -->
 
 ## Phase Brief
 
----
-ratings_exempt: true
-title: Builder brief — GH-61 Tier 1 CI GitHub Actions (single-phase Marathon)
-status: Active
-created: 2026-07-02
-updated: 2026-07-02
-owner: Noel (operator) · Codex (builder) · agy (reviewer)
-parent: PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md
-substrate_repo: xyz-3-agents-swarm (same-repo build; CWD is the repo root)
-gh_issue: 61
-goal: >
-  Single-phase --phase-brief for the headless Marathon builder: add ONE additive Tier-1 GitHub
-  Actions workflow (lint + doc-hygiene, always-green, no secrets) plus a dependency-free deterministic
-  test that pins the workflow's shape and is wired into validate.sh. Tier 2 (running the full
-  validate.sh suite inside CI) is explicitly OUT OF SCOPE — it carries an unresolved runner decision.
----
+# Marathon preflight packet — gh-56-marathon-leaked-token-reconcile
 
-# Builder brief: GH-61 Tier 1 CI GitHub Actions
+- Generated: 2026-07-02T18:46:07Z
+- Mode: project-doc
+- Sources: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/1-INBOX/GH-56-MARATHON-LEAKED-TOKEN-RECONCILE.md 
+- Target root: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm (marathon/gh-56-leaked-token-2026-07-02 @ 424bff271)
+- Suggested branch: `marathon/gh-56-marathon-leaked-token-reconcile-2026-07-02` (branch_ready=false — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8)
+- Verdict: ready
+- Gate: `bash test/marathon-drive.sh`
+- Artifacts: relay-automation/marathon-drive.sh,test/marathon-drive.sh
+- Suggested turn budget: `RELAY_TURN_TIMEOUT_S=900` (sized to ≈ 672 LOC across 2 artifact(s); a build that also edits tests needs headroom over the 300s default)
 
-## Status
+This packet is the producer's output. The orchestrator launches the run; the planner does not
+(GUIDING-PRINCIPLES.md §8).
 
-| What was just completed | What's next |
-|---|---|
-| Brief authored 2026-07-02 as the single-phase `--phase-brief` for GH-61 Tier 1; ALLOW_PATHS + gate pinned. | Fed to the headless Codex builder (agy reviewer) when the marathon fires. |
+## Acceptance criteria — the build is DONE when these hold (inlined from the capture doc)
+- [ ] Re-running the same phase-id after an aborted run seeds cleanly (no `task ... is open`) — either by reconciling/terminating the leftover `open`/handoff token before `task.created`, or by deriving a fresh per-attempt token id.
+- [ ] A live claim of the same token is NEVER reaped (mirror GH-43's epoch-safe, never-reap-a-live-claim guard).
+- [ ] The change carries a `GH-56` marker comment at the reconcile/fresh-id site in `relay-automation/marathon-drive.sh`.
+- [ ] A regression case is added to `test/marathon-drive.sh` that reproduces the leaked-token collision (seed a token, leave it open/handed-off, re-seed the same phase-id) and asserts the clean re-seed; it fails without the fix and passes with it.
+- [ ] `bash test/marathon-drive.sh` passes; no edit outside `relay-automation/marathon-drive.sh` + `test/marathon-drive.sh`.
 
-You are a headless builder in the **xyz-3-agents-swarm** repo (CWD = repo root). Build ONE additive
-GitHub Actions workflow + a deterministic test that pins its shape. **Additive only.** Do NOT change
-any runtime script, and touch ONLY the allowlisted paths.
+## Scope lock — builder, do exactly this and nothing else
+- Edit ONLY: `relay-automation/marathon-drive.sh,test/marathon-drive.sh` (plus the relay file). Any other edit is reverted and FAILS the turn.
+- Do NOT run the full gate (`bash test/marathon-drive.sh`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn.
+- Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
 
-## What to build
+## Suggested marathon-drive.sh invocation
 
-1. **`.github/workflows/ci.yml`** (NEW) — a single Tier-1 job, `runs-on: ubuntu-latest`, no secrets,
-   triggered `on: [push, pull_request]` (both `main`). It must run these deterministic, network-free
-   checks (each a distinct step, each failing the job loudly on error):
-   - **`shellcheck`** on all tracked `*.sh` (install via the distro or the `ludeeus/action-shellcheck`
-     is NOT available offline — prefer `sudo apt-get install -y shellcheck` then run it, or use the
-     runner's preinstalled `shellcheck`). Start permissive: `shellcheck -S error` (or an explicit
-     exclude list) so it lands green, with a comment that the severity can be tightened later.
-   - **`bash -n`** syntax check on every tracked `*.sh`.
-   - **`node --check`** on each tracked `*.js` (JS sources under `src/` and `bin/`).
-   - **JSON validate** `.claude/settings*.json` (via `python3 -m json.tool` or `jq`).
-   - **`utils/pdda/pdda.sh run`** in full mode — the deterministic doc/roadmap/path-drift gate.
-   Use `git ls-files` to enumerate tracked files (portable, no `find` surprises). Keep each step's
-   command copy-pasteable so the same checks can be run locally.
-
-2. **`test/ci-workflow.sh`** (NEW) — a standalone, **dependency-free** test (mirror
-   `test/swarm-preflight.sh` style: `pass`/`fail` counters, exit 1 on any fail; stock macOS **bash
-   3.2** + BSD tools; do NOT require `shellcheck`, `yq`, or a YAML library to be installed). It asserts:
-   - `.github/workflows/ci.yml` exists and is non-empty.
-   - It declares `runs-on: ubuntu-latest` and triggers on both `push` and `pull_request`.
-   - It references each required check by its literal command marker: `shellcheck`, `bash -n`,
-     `node --check`, a JSON-validate of `.claude/settings`, and `utils/pdda/pdda.sh run`.
-   - **If** `python3` can `import yaml`, the file parses as valid YAML; otherwise that one sub-check
-     self-skips (printed as a skip, never a fail) — so the test is green on a machine without PyYAML.
-   - `test/ci-workflow.sh` is itself wired into `validate.sh` (grep `validate.sh` for `ci-workflow`).
-
-3. **`validate.sh`** (EDIT, one line) — register `test/ci-workflow.sh` in the suite exactly the way
-   the other `test/*.sh` are wired (match the surrounding pattern; don't restructure the file).
-
-## Objective gate (what the marathon's --pre-advance-cmd runs)
-```
-bash test/ci-workflow.sh
-```
-It must pass: workflow present + well-formed, all required check markers present, wired into validate.sh.
-
-## How to verify before you hand off
-```
-bash test/ci-workflow.sh        # the gate — all assertions pass
-grep -n ci-workflow validate.sh # confirm the one-line wiring landed
+```bash
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-56-marathon-leaked-token-reconcile relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact relay-automation/marathon-drive.sh,test/marathon-drive.sh \
+  --pre-advance-cmd 'bash test/marathon-drive.sh' \
+  --require-clean
 ```
 
-## Hard rules
-- **Tier 1 ONLY.** Do NOT add a job that runs `./validate.sh` inside CI (that's Tier 2 — it has an
-  unresolved `macos-latest` vs `ubuntu-latest` runner decision reserved for the operator). Do NOT make
-  any check a *required* status check.
-- **Additive.** The only non-new file you may touch is `validate.sh`, and only to add the one wiring
-  line. Do NOT edit any runtime script, `bin/tick`, `src/*.js`, relay code, or `ROADMAP.md`.
-- **bash 3.2 + BSD-portable** for `test/ci-workflow.sh` (no bash-4 `${,,}`; use `tr`; POSIX classes).
-- **Do not `git commit`** — the harness commits. Do not push. Touch ONLY the three allowlisted paths:
-  `.github/workflows/ci.yml`, `test/ci-workflow.sh`, `validate.sh`.
-- Keep `test/ci-workflow.sh` resilient (match on content markers, not exact line numbers) so a later
-  reformat of the workflow doesn't false-fail it.
+## Files in this packet
+- `run-candidate.json` — normalized run candidate (provenance + contract + checks)
+- `freshness.json` — branch state + fix-still-required probes
+- `readiness.json` — remediation readiness verdict
+- `lane-plan.json` — Codex / agy / orchestrator lane assignment
+- `marathon-invocation.txt` — the invocation hint above
 
 ---
 
 ▶ TAKE YOUR TURN (codex — BUILDER role)
 
 You are the BUILDER for this phase. Read the phase brief above and implement it.
-1. Implement the brief by creating/editing the artifact file(s): .github/workflows/ci.yml,test/ci-workflow.sh,validate.sh
+1. Implement the brief by creating/editing the artifact file(s): relay-automation/marathon-drive.sh,test/marathon-drive.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH61-P1B --agent codex --paths "phases/p1/RELAY.md,.github/workflows/ci.yml,test/ci-workflow.sh,validate.sh"
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH61-P1B --agent codex
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH61-P1B --agent codex --to agy
-4. Edit ONLY these paths: phases/p1/RELAY.md and .github/workflows/ci.yml,test/ci-workflow.sh,validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH56-P1 --agent codex --paths "phases/p1/RELAY.md,relay-automation/marathon-drive.sh,test/marathon-drive.sh"
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH56-P1 --agent codex
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH56-P1 --agent codex --to agy
+4. Edit ONLY these paths: phases/p1/RELAY.md and relay-automation/marathon-drive.sh,test/marathon-drive.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 
 ---
 
 ▶ TAKE YOUR TURN (agy — REVIEWER role)
 
-You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: .github/workflows/ci.yml,test/ci-workflow.sh,validate.sh.
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: relay-automation/marathon-drive.sh,test/marathon-drive.sh.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested` then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH61-P1B --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH61-P1B --agent agy
+2. If changes needed: add `**Verdict:** Changes requested` then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH56-P1 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH56-P1 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 
 ### Round 1 · Builder · codex
+Implemented `GH-56` in `relay-automation/marathon-drive.sh` and `test/marathon-drive.sh`.
 
-Implemented the Tier-1 additive CI lane in `.github/workflows/ci.yml`, added the standalone
-`test/ci-workflow.sh` guard, and wired that test into `validate.sh`.
-
-Files touched: `phases/p1/RELAY.md`, `.github/workflows/ci.yml`, `test/ci-workflow.sh`,
-`validate.sh`.
-
-Key decisions:
-- Kept the workflow to one `ubuntu-latest` job with distinct copy-pasteable steps and `git ls-files`
-  enumeration for tracked shell/JS/JSON inputs only.
-- Installed `shellcheck` only if absent and started at `-S error`, matching the brief's permissive
-  landing requirement.
-- Made `test/ci-workflow.sh` dependency-free by default; the YAML parse sub-check self-skips unless
-  `python3` can import `yaml`.
-
-Verification run:
-- `bash test/ci-workflow.sh`
-- `grep -n ci-workflow validate.sh`
+- Replaced the unconditional phase-token `reap` calls with targeted reconciliation for leaked `open + handoff` state only; the driver now clears a stale builder/reviewer reservation and explicitly refuses to reap a live claim.
+- Added regressions for the leaked open-token collision and the live-claim guard.
+- Verified with a targeted inline reproduction of those two scenarios only; both passed.
 
 ### Round 1 · Reviewer · agy
+**Verdict:** Changes requested
 
-Reviewed the implementation of the Tier-1 CI GitHub Actions workflow in `.github/workflows/ci.yml`, the regression test in `test/ci-workflow.sh`, and the registration in `validate.sh`. The checks are correctly structured, dependency-free, and local verification passes successfully.
+The test `FAIL: relay-only phase should not export ALLOW_PATHS` failed during the validation run because the parent harness environment already had `ALLOW_PATHS` exported. This leaked into the `relay-only` test subshell because `relay-automation/marathon-drive.sh` only conditionally exports `ALLOW_PATHS` when `ARTIFACT_PATHS` is non-empty, but doesn't explicitly unset/clear it when it is empty.
 
+Please explicitly unset `ALLOW_PATHS` in `relay-automation/marathon-drive.sh` when `ARTIFACT_PATHS` is empty:
+
+```bash
+if [[ -n "$ARTIFACT_PATHS" ]]; then
+  export ALLOW_PATHS="$ARTIFACT_PATHS"
+else
+  unset ALLOW_PATHS
+fi
+```
+
+### Round 2 · Builder · codex
+Applied the requested relay-only containment fix in `relay-automation/marathon-drive.sh` and tightened the matching regression in `test/marathon-drive.sh`.
+
+- Explicitly `unset ALLOW_PATHS` when `--artifact` is omitted, so a parent harness env cannot leak extra write scope into a relay-only phase.
+- Updated the relay-only test to seed `ALLOW_PATHS=leaked/from/parent` and assert the turn-taker sees `UNSET`, which makes the regression deterministic.
+- Verified with a targeted reproduction of that single inherited-env scenario only; it passed with `ALLOW_PATHS=UNSET`.
+
+### Round 2 · Reviewer · agy
 **Verdict:** Approved
+
+I have reviewed the changes in `relay-automation/marathon-drive.sh` and `test/marathon-drive.sh`. The containment fix unsets `ALLOW_PATHS` cleanly when no artifacts are specified, and the regression tests verify this behavior successfully.
+All tests have passed.

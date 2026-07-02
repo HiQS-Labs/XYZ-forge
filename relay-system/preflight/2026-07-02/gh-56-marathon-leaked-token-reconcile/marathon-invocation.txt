@@ -1,0 +1,7 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-56-marathon-leaked-token-reconcile relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact relay-automation/marathon-drive.sh,test/marathon-drive.sh \
+  --pre-advance-cmd 'bash test/marathon-drive.sh' \
+  --require-clean
