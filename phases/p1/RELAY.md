@@ -112,3 +112,23 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH61-P1B --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Implemented the Tier-1 additive CI lane in `.github/workflows/ci.yml`, added the standalone
+`test/ci-workflow.sh` guard, and wired that test into `validate.sh`.
+
+Files touched: `phases/p1/RELAY.md`, `.github/workflows/ci.yml`, `test/ci-workflow.sh`,
+`validate.sh`.
+
+Key decisions:
+- Kept the workflow to one `ubuntu-latest` job with distinct copy-pasteable steps and `git ls-files`
+  enumeration for tracked shell/JS/JSON inputs only.
+- Installed `shellcheck` only if absent and started at `-S error`, matching the brief's permissive
+  landing requirement.
+- Made `test/ci-workflow.sh` dependency-free by default; the YAML parse sub-check self-skips unless
+  `python3` can import `yaml`.
+
+Verification run:
+- `bash test/ci-workflow.sh`
+- `grep -n ci-workflow validate.sh`

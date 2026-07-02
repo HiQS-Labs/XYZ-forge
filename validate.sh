@@ -74,6 +74,7 @@ TESTS=(
   "find-harness.sh"
   "pdda-roadmap-coverage.sh"
   "swarm-preflight.sh"
+  "ci-workflow.sh"
   "xyz-completion.sh"
   "xyz-harness-hooks.sh"
   "roadmap-dashboard.sh"
