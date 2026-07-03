@@ -23,6 +23,7 @@ function assertOwnership(repoRoot, task, agent) {
   const tasks = fold(readAllEvents(repoRoot));
   const t = tasks.get(task);
   if (!t) throw new Error(`task ${task} not found`);
+  if (t.status === 'open') throw new Error(`task ${task} is open (never claimed) — nothing to break; use a fresh --relay-task id`);
   if (t.status !== 'claimed') throw new Error(`task ${task} is ${t.status} — only the claiming agent can mutate it`);
   if (t.claim.agent !== agent) throw new Error(`task ${task} is claimed by ${t.claim.agent}, not ${agent}`);
   return t;

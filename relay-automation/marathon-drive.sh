@@ -145,7 +145,7 @@ usage() {
 Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [options]
 
   --phase-brief FILE      Phase brief markdown baked into the relay template (required).
-  --reviewer AGENT        Reviewer agent id; must start with 'codex' or 'gemini' (required).
+  --reviewer AGENT        Reviewer agent id; must start with 'codex', 'gemini', or 'agy' (required).
   --builder AGENT         Builder agent id (default: claude).
   --round-cap N           relay-drive turn cap (default: 5).
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh).
@@ -218,15 +218,14 @@ RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '
 # (e.g. agy) — not just Claude. Builder defaults to claude for back-compat.
 export MARATHON_BUILDER="$BUILDER"
 export MARATHON_REVIEWER="$REVIEWER"
-export CLAUDE_AGENT="" CODEX_AGENT="" AGY_AGENT="" GEMINI_AGENT="" AIDER_AGENT=""
+export CLAUDE_AGENT="" CODEX_AGENT="" AGY_AGENT="" AIDER_AGENT=""
 route_agent() {  # <agent-id> → export the matching *_AGENT var marathon-agent.sh routes on
   case "$1" in
     claude*) export CLAUDE_AGENT="$1" ;;
     codex*)  export CODEX_AGENT="$1" ;;
     agy*)    export AGY_AGENT="$1" ;;
-    gemini*) export GEMINI_AGENT="$1" ;;
     aider*)  export AIDER_AGENT="$1" ;;
-    *)       die "agent '$1' not recognized — must start with claude/codex/agy/gemini/aider" ;;
+    *)       die "agent '$1' not recognized — must start with claude/codex/agy/aider" ;;
   esac
 }
 [[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"
