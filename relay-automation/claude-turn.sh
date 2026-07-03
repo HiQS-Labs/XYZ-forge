@@ -51,14 +51,14 @@ set -euo pipefail
 #                          The existing --max-budget-usd / --max-turns API-spend ceilings are
 #                          complementary and remain unchanged — wall-clock is the NEW dimension.
 #
-# Exit: 0 acted/deferred · 5 claude failed · 6 off-allowlist edit (reverted) · 7 timeout-killed · 2 usage.
+# Exit: 0 acted/deferred · 3 claude not found · 5 claude failed · 6 off-allowlist edit (reverted) · 7 timeout-killed · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=relay-turn-lib.sh
 source "$HERE/relay-turn-lib.sh"
 
 ROOT="${CLAUDE_TURN_ROOT:-"$(cd "$HERE/.." && pwd)"}"
-CLAUDE_BIN="${CLAUDE_BIN:-claude}"
+CLAUDE_BIN="${CLAUDE_BIN:-}"
 die() { printf 'claude-turn: %s\n' "$*" >&2; exit 2; }
 
 me="${RELAY_AGENT:-}"; f="${RELAY_FILE:-}"; t="${RELAY_TASK:-RELAY-TURN}"
@@ -72,6 +72,26 @@ if [[ "$me" != "$claude_agent" ]]; then
   printf 'claude-turn: actor %s is not the Claude agent (%s) — deferring (window-driven)\n' "$me" "$claude_agent" >&2
   exit 0
 fi
+
+# GH-58: Discovery of claude binary + fail-fast
+resolved_claude=""
+if [[ -n "${CLAUDE_BIN:-}" ]]; then
+  if command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
+    resolved_claude="$CLAUDE_BIN"
+  fi
+else
+  if command -v claude >/dev/null 2>&1; then
+    resolved_claude="claude"
+  elif [[ -x "$HOME/.claude/local/claude" ]]; then
+    resolved_claude="$HOME/.claude/local/claude"
+  fi
+fi
+
+if [[ -z "$resolved_claude" ]]; then
+  printf 'claude CLI not found on PATH; set CLAUDE_BIN or use a codex/agy builder\n' >&2
+  exit 3
+fi
+CLAUDE_BIN="$resolved_claude"
 
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"

@@ -35,7 +35,7 @@ TESTS=(
   "codex-turn.sh"
   "gemini-turn.sh"
   "agy-turn.sh"
-  "claude-turn.sh"
+  "claude-turn.sh"             # GH-58
   "worktree-isolation.sh"
   "shim-worktree.sh"
   "marathon-yaml.sh"
