@@ -2,6 +2,15 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-07-03
+
+### Marathon Wave 1 SHIPPED — GH-88 + GH-63 + GH-44 (3 independent lanes, parallel Sonnet build)
+Ran the deferred Wave 1 as parallel Sonnet subagents on disjoint write-sets (Opus reviewed + integrated + committed centrally to avoid the concurrent-git hazard). #87 was **parked** — its doc is still `status: Proposed` and its rewrite leans on an unverified "Agy CLI grounded-search" backend (the operator is having Agy flesh it out). Kernel lanes #30/#41 held for a serial pass. Full `validate.sh` green.
+- **GH-88** (`#88`) — cross-repo marathon monitor: `relay-automation/marathon-{ls,detail,tui}.sh` (fzf TUI) + `test/marathon-monitor.sh` (**13/13**). Read-only; joins the xyz registry + `relay-driver.lock` + `.tick` events into LIVE/STALE/IDLE/GONE rows, writing no new state. **Review caught 2 real bugs** the green-looking parallel build masked: the registry header row was parsed as data (spurious GONE), and the test built `${TMPDIR}/…` paths with a `//` that broke exact-match assertions (agent's env had no trailing slash, so it passed for the agent but failed elsewhere). Both fixed.
+- **GH-63** (`#63`) — `utils/signal-triage.sh` + `test/signal-triage.sh` (**44/44**): deterministic first-match, source-keyed classifier (bug/drift/enhancement/noise), dedupe-first, inspectable JSON note with the matched-rule id in `evidence`; no `.tick/` writes.
+- **GH-44** (`#44`) — factored the scratch-repo fall-through guard into a shared `test/_scratch-repo.sh` helper (`GIT_CEILING_DIRECTORIES` + hard `.git` assertion); both canary fixtures now source it instead of duplicating it inline; green.
+- Wired `marathon-monitor.sh` + `signal-triage.sh` into `validate.sh`. Deferred (small follow-ups on concurrently-edited files): GH-63's `ROUTER.md` hint and GH-44's `AGENTS.md` rail.
+
 ## 2026-07-02
 
 ### GH-77 live E2E: real Aider↔OpenRouter turn — surfaced + fixed an aux-file containment bug

@@ -6,16 +6,13 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 15 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-88 · Cross-repo marathon monitor v1.0 (read-only fzf TUI) | — | [GH-88-CROSS-REPO-MARATHON-MONITOR.md](PROJECT/1-INBOX/GH-88-CROSS-REPO-MARATHON-MONITOR.md) · [#88](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88) |
 | GH-87 · Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter) | — | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/1-INBOX/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
 | GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | — | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/1-INBOX/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
-| GH-63 · Signal triage stage for inbound signals before GH-*.md capture | — | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/1-INBOX/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
-| GH-44 · scratch-repo .git fall-through can pollute the parent repo (RCA) | — | [GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md](PROJECT/1-INBOX/GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md) · [#44](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/44) |
 | GH-41 · task.done not terminal vs higher-epoch reclaim (silent token resurrection) | — | [decisions/2026-07-02-terminality-seal.md](decisions/2026-07-02-terminality-seal.md) · [GH-41-DONE-NOT-TERMINAL.md](PROJECT/1-INBOX/GH-41-DONE-NOT-TERMINAL.md) · [#41](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41) |
 | GH-23 · Cursor CLI lane (3rd cross-model worker) | ⏸️ | [#23](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/23) |
 | GH-30 · optional centralized transcript archive | — | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/1-INBOX/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |
@@ -41,10 +38,13 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 56 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 56 · 🔮 0 · 🔲 0
+Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 59 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-88 · Cross-repo marathon monitor v1.0 (read-only fzf TUI) | ✅ | [GH-88-CROSS-REPO-MARATHON-MONITOR.md](PROJECT/3-COMPLETED/GH-88-CROSS-REPO-MARATHON-MONITOR.md) · [#88](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88) |
+| GH-63 · Signal triage stage for inbound signals before GH-*.md capture | ✅ | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/3-COMPLETED/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
+| GH-44 · scratch-repo .git fall-through can pollute the parent repo (RCA) | ✅ | [GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md](PROJECT/3-COMPLETED/GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md) · [#44](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/44) |
 | GH-77 · Aider ↔ OpenRouter turn-taker lane (discrete from Codex) | ✅ | [GH-77-AIDER-OPENROUTER-LANE.md](PROJECT/3-COMPLETED/GH-77-AIDER-OPENROUTER-LANE.md) · [#79](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/79) · [#77](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/77) |
 | GH-78 · optional hourly doc-preflight (contract-enforcing auto-edits + telemetry) | ✅ | [GH-78-DOC-PREFLIGHT-AUTOMATION.md](PROJECT/1-INBOX/GH-78-DOC-PREFLIGHT-AUTOMATION.md) · [#81](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/81) · [#78](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/78) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | ✅ | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#91](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/91) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |

@@ -23,19 +23,15 @@ cleanup() { rm -rf "$SC"; }
 trap cleanup EXIT
 fail() { echo "FIXTURE FAIL: $*"; exit 1; }
 
-# Safety: stop git from ever searching ABOVE the scratch dir for a .git — if the scratch repo's own
-# .git can't be created (e.g. a constrained sandbox), git would otherwise fall through to THIS repo and
-# commit/reset against it. GIT_CEILING_DIRECTORIES + the explicit .git assertion below make that
-# impossible: a failed init aborts instead of polluting the parent.
-export GIT_CEILING_DIRECTORIES="$HERE"
-
 # shellcheck source=/dev/null
 source "$LIB"
 
-rm -rf "$SC"; mkdir -p "$SC"
-git init -q "$SC" 2>/dev/null
-[ -d "$SC/.git" ] || fail "could not create scratch git repo at $SC/.git — aborting (won't touch the parent repo)"
-git -C "$SC" config user.email t@t; git -C "$SC" config user.name t
+# Scratch-repo hardening (GH-44): the GIT_CEILING_DIRECTORIES + .git-assertion guard against
+# parent-repo fall-through now lives in the shared test/_scratch-repo.sh helper, so every
+# scratch-repo fixture uses the identical guard instead of duplicating it inline.
+source "$HERE/../../_scratch-repo.sh"
+rm -rf "$SC"
+make_scratch_repo "$SC" || fail "could not create scratch git repo at $SC/.git — aborting (won't touch the parent repo)"
 printf 'STATUS: Open\n# relay body\n' >"$SC/relay.md"
 printf '.tick/\n' >"$SC/.gitignore"
 git -C "$SC" add relay.md .gitignore >/dev/null 2>&1

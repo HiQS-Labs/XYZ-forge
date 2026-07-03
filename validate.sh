@@ -86,6 +86,8 @@ TESTS=(
   "security-scan.sh"
   "checkjs.sh"
   "registry-lock-concurrency.sh"
+  "marathon-monitor.sh"          # GH-88 (cross-repo marathon monitor)
+  "signal-triage.sh"             # GH-63 (signal triage stage)
   # GH-40 double-blind Reviewer canaries — each verify-fixture.sh drives the real kernel and exits
   # 0/1, so it plugs straight in. ponytail: the Gamma canary (test/fixtures/gamma-poison/) is
   # deliberately NOT here — it runs the whole validate.sh itself, so nesting it would recurse; it

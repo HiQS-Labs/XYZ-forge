@@ -28,13 +28,13 @@ cleanup() { rm -rf "$SC"; }
 trap cleanup EXIT
 fail() { echo "FIXTURE FAIL: $*"; exit 1; }
 
-export GIT_CEILING_DIRECTORIES="$HERE"
 # shellcheck source=/dev/null
 source "$LIB"
 
-rm -rf "$SC"; mkdir -p "$SC"
-git init -q "$SC" 2>/dev/null
-[ -d "$SC/.git" ] || fail "could not create scratch git repo at $SC/.git — aborting (won't touch the parent repo)"
+# Scratch-repo hardening (GH-44): shared guard via test/_scratch-repo.sh (see canary-peer-orphan).
+source "$HERE/../../_scratch-repo.sh"
+rm -rf "$SC"
+make_scratch_repo "$SC" || fail "could not create scratch git repo at $SC/.git — aborting (won't touch the parent repo)"
 
 echo "[1/3] reviewer turn (NEXT: Reviewer) + ALLOW_PATHS=validate.sh …"
 printf 'NEXT: Reviewer\nSTATUS: Open\n# relay body\n' >"$SC/relay.md"
