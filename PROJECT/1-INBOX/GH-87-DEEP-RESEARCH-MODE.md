@@ -80,6 +80,31 @@ without reworking the tool contract or global provider config.
 - [ ] Search failures never silently fall back to the default provider.
 - [ ] Tests cover request shape, normalization, missing config, transport failures, and citation parsing.
 
+## Implementation Plan
+
+**Confirmation of Agy Grounded Search:**
+The Antigravity CLI (`agy`) has Google grounded search built-in. By leveraging this built-in capability, we can retrieve real-time, cited answers and parse the citation links directly from the CLI's output. This removes the need for a third-party subscription or new external dependencies for Phase 1.
+
+**Reversibility & Blast Radius:**
+- **Reversibility:** Easy. This introduces a standalone adapter module that is not yet wired into the core `tick` loop or the agent planner. If the design needs to change, it can be reverted entirely.
+- **Blast Radius:** None (Leaf-util). It does not touch `relay-turn-lib.sh`, the `tick` event log kernel, or Aider's global configuration.
+
+### Execution Steps
+1. **Create `relay-automation/deep-research.mjs`**:
+   - Use the Node standard library (`child_process.execFile` or `spawn`) to invoke the Agy CLI safely without new `package.json` dependencies.
+2. **Parse and Normalize Output**:
+   - Extract the core text and citation links from the Agy CLI stdout.
+   - Construct the normalized JSON payload: `{answer, citations, query, provider: "agy", model: "gemini", raw: <full output>}`.
+3. **Fail-Closed Error Handling**:
+   - If the `agy` CLI is missing, times out, or returns a non-zero exit code, emit a typed error.
+   - Never silently fall back to a default model.
+4. **Create `test/deep-research.sh`**:
+   - Assert normalized extraction works for mock standard outputs.
+   - Assert fail-closed behavior for CLI missing / timeout / non-zero exit states.
+5. **Verify**:
+   - Run `bash test/deep-research.sh` locally. `-> expect 0`
+   - Run `bash validate.sh` for global regressions. `-> expect 0`
+
 ## Swarm Preflight Contract
 ```json
 {
