@@ -41,7 +41,19 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${QUEUE_PLAN_ROOT:-"$(cd "$HERE/.." && pwd)"}"
+# Vendored install: HERE is <target>/.xyz/utils → parent is .xyz → target root is grandparent.
+_here_parent="$(cd "$HERE/.." && pwd)"
+if [ "$(basename "$_here_parent")" = ".xyz" ]; then
+  ROOT="${QUEUE_PLAN_ROOT:-"$(cd "$_here_parent/.." && pwd)"}"
+  _SP_CMD=".xyz/utils/swarm-preflight.sh"
+  _MD_CMD=".xyz/relay-automation/marathon-drive.sh"
+  _MP_CMD=".xyz/utils/marathon-plan.sh"
+else
+  ROOT="${QUEUE_PLAN_ROOT:-"$_here_parent"}"
+  _SP_CMD="utils/swarm-preflight.sh"
+  _MD_CMD="relay-automation/marathon-drive.sh"
+  _MP_CMD="utils/marathon-plan.sh"
+fi
 ROADMAP="${QUEUE_PLAN_ROADMAP:-"$ROOT/ROADMAP.md"}"
 QUEUE_DIR="${QUEUE_PLAN_QUEUE_DIR:-"$ROOT/PROJECT/2-WORKING"}"
 NOW="${QUEUE_PLAN_NOW:-"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}"
@@ -108,6 +120,7 @@ SWARM_PREFLIGHT="$HERE/swarm-preflight.sh"
 QP_ROOT="$ROOT" QP_ROADMAP="$ROADMAP" QP_QUEUE_DIR="$QUEUE_DIR" \
 QP_TODAY="$TODAY" QP_NOW="$NOW" QP_POLICY="$POLICY" QP_FORMAT="$FORMAT" \
 QP_DEEP="$DEEP" QP_REQUIRE_GH="$REQUIRE_GH" QP_SWARM_PREFLIGHT="$SWARM_PREFLIGHT" \
+QP_SP_CMD="$_SP_CMD" QP_MD_CMD="$_MD_CMD" QP_MP_CMD="$_MP_CMD" \
 QP_RENDER_OUT="$RENDER_OUT" \
 QP_GH_STATE_FILE="${QUEUE_PLAN_GH_STATE_FILE:-}" QP_BRANCHES_FILE="${QUEUE_PLAN_BRANCHES_FILE:-}" \
 QP_GH_FORCE="${QUEUE_PLAN_GH:-}" QP_BASE_FILES_FILE="${QUEUE_PLAN_BASE_FILES_FILE:-}" \
@@ -126,6 +139,9 @@ const FORMAT = E.QP_FORMAT;
 const DEEP = E.QP_DEEP === "1";
 const REQUIRE_GH = E.QP_REQUIRE_GH === "1";
 const SWARM_PREFLIGHT = E.QP_SWARM_PREFLIGHT || "";
+const SP_CMD = E.QP_SP_CMD || "utils/swarm-preflight.sh";
+const MD_CMD = E.QP_MD_CMD || "relay-automation/marathon-drive.sh";
+const MP_CMD = E.QP_MP_CMD || "utils/marathon-plan.sh";
 const BASE_FILES_FILE = E.QP_BASE_FILES_FILE || "";
 
 // ── kernel write-set: the serialization bottleneck (QUEUE-2026-06-27 "the one safety rule") ──
@@ -758,7 +774,7 @@ function renderQueueDoc() {
   o.push("branch: main");
   o.push("doc_type: project");
   o.push("source: ../../ROADMAP.md (open ledger entries)");
-  o.push("generated_by: utils/marathon-plan.sh");
+  o.push(`generated_by: ${MP_CMD}`);
   o.push("roadmap_exempt: true");
   o.push("goal: >");
   o.push("  A sequenced concurrency plan derived from ROADMAP.md: ranks surviving work by PDDA");
@@ -871,9 +887,9 @@ function renderQueueDoc() {
   o.push("Per lane, the existing pipeline applies — no new control plane:");
   o.push("");
   o.push("```");
-  o.push("utils/swarm-preflight.sh --project-doc <PROJECT/**/doc.md>   # or --gh-issue N");
+  o.push(`${SP_CMD} --project-doc <PROJECT/**/doc.md>   # or --gh-issue N`);
   o.push("   → ready packet (candidate/freshness/fix-still-required + lane assignment)");
-  o.push("relay-automation/marathon-drive.sh ...   # build→gate→review, contained");
+  o.push(`${MD_CMD} ...   # build→gate→review, contained`);
   o.push("```");
   o.push("");
   o.push("- **Lane scoping:** give each lane an `ALLOW_PATHS` matching only its zone above.");
@@ -881,7 +897,7 @@ function renderQueueDoc() {
   o.push("");
   o.push("---");
   o.push("");
-  o.push(`*Generated from [ROADMAP.md](../../ROADMAP.md) (source of truth). Re-run \`utils/marathon-plan.sh\` after editing the ledger.*`);
+  o.push(`*Generated from [ROADMAP.md](../../ROADMAP.md) (source of truth). Re-run \`${MP_CMD}\` after editing the ledger.*`);
   return o.join("\n") + "\n";
 }
 

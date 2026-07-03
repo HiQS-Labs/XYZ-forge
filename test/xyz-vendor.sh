@@ -40,6 +40,15 @@ test_van=$(find "$REPO/.xyz/test" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
 src_repo=$(find "$ROOT/src" -name '*.js' | wc -l | tr -d ' ')
 src_van=$(find "$REPO/.xyz/src" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')
 [ "$src_van" = "$src_repo" ] && [ "$src_van" -gt 0 ] && pass "all $src_van src/*.js vendored" || fail "src/*.js mismatch: vendored $src_van vs harness $src_repo"
+utils_repo=$(find "$ROOT/utils" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
+utils_van=$(find "$REPO/.xyz/utils" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
+{ [ "$utils_van" = "$utils_repo" ] && [ "$utils_van" -gt 0 ]; } \
+  && pass "utils/ vendored ($utils_van *.sh)" \
+  || fail "utils/ vendor incomplete: vendored $utils_van vs harness $utils_repo"
+[ -f "$REPO/.xyz/utils/swarm-preflight.sh" ] && bash -n "$REPO/.xyz/utils/swarm-preflight.sh" 2>/dev/null \
+  && pass "vendored swarm-preflight.sh parses" || fail "vendored swarm-preflight.sh missing or parse-fail"
+[ -f "$REPO/.xyz/utils/marathon-plan.sh" ] && bash -n "$REPO/.xyz/utils/marathon-plan.sh" 2>/dev/null \
+  && pass "vendored marathon-plan.sh parses" || fail "vendored marathon-plan.sh missing or parse-fail"
 [ -x "$REPO/.xyz/bin/tick" ] && pass "bin/tick vendored + executable" || fail "bin/tick missing or not executable"
 [ -x "$REPO/.xyz/bin/validate-relay-block" ] && pass "bin/validate-relay-block vendored + executable" || fail "bin/validate-relay-block missing or not executable"
 # GH-49b: the marathon runtime is vendored too (so the copy can run marathons, not just relays).
@@ -117,6 +126,20 @@ out="$(printf '{}' | XYZ_NO_VENDOR_REMINDER=1 "$HOOK" 2>/dev/null)"
 "$SYNC" delete "$REPO" --yes >/dev/null 2>&1
 out="$(printf '{}' | "$HOOK" 2>/dev/null)"
 [ -z "$out" ] && pass "reminder hook silent when no copy on disk" || fail "reminder hook nagged with no copy"
+
+# --- collision safety: target repo with pre-existing src/, utils/, bin/ is untouched ---
+# The vendor writes ONLY under .xyz/ — never into the target's own top-level dirs.
+mkdir -p "$WORK/collide"; git init -q "$WORK/collide"
+CREPO="$(cd "$WORK/collide" && pwd -P)"
+mkdir -p "$CREPO/src" "$CREPO/utils" "$CREPO/bin"
+printf 'app-source\n' > "$CREPO/src/app.js"
+printf 'app-util\n'   > "$CREPO/utils/helper.sh"
+printf 'app-bin\n'    > "$CREPO/bin/myapp"
+"$VENDOR" "$CREPO" >/dev/null 2>&1 || fail "collision-repo vendor exited non-zero"
+[ "$(cat "$CREPO/src/app.js")"     = "app-source" ] && pass "collision: target src/ untouched"   || fail "collision: target src/ was modified"
+[ "$(cat "$CREPO/utils/helper.sh")"= "app-util"   ] && pass "collision: target utils/ untouched" || fail "collision: target utils/ was modified"
+[ "$(cat "$CREPO/bin/myapp")"      = "app-bin"    ] && pass "collision: target bin/ untouched"   || fail "collision: target bin/ was modified"
+[ -d "$CREPO/.xyz/relay-automation" ] && pass "collision: harness landed under .xyz/" || fail "collision: .xyz/relay-automation missing"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

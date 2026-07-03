@@ -34,8 +34,16 @@ set -euo pipefail
 #        8 lane parked (GH-45 attempt cap — no token seeded; re-fire with --force) · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${MARATHON_ROOT:-"$(cd "$HERE/.." && pwd)"}"
-TICK_BIN="${TICK_BIN:-"$ROOT/bin/tick"}"
+# _xyz_harness: the directory containing relay-automation/ (and bin/, src/, utils/).
+# Vendored install: HERE is <target>/.xyz/relay-automation → _xyz_harness is <target>/.xyz
+# (basename ".xyz"). ROOT = work root = where git ops, phases/, .tick/, validate.sh live.
+_xyz_harness="$(cd "$HERE/.." && pwd)"
+if [ "$(basename "$_xyz_harness")" = ".xyz" ]; then
+  ROOT="${MARATHON_ROOT:-"$(cd "$_xyz_harness/.." && pwd)"}"
+else
+  ROOT="${MARATHON_ROOT:-"$_xyz_harness"}"
+fi
+TICK_BIN="${TICK_BIN:-"$_xyz_harness/bin/tick"}"
 RELAY_DRIVE_BIN="${MARATHON_RELAY_DRIVE:-"$HERE/relay-drive.sh"}"
 AGENT_CMD="${MARATHON_AGENT_CMD:-"$HERE/marathon-agent.sh"}"
 
@@ -106,7 +114,7 @@ fi
 die()  { printf 'marathon-drive: %s\n' "$*" >&2; exit 2; }
 log()  { printf 'marathon-drive: %s\n' "$*"; }
 
-XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT/utils/telemetry/append-xyz-completion.sh"}"
+XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$_xyz_harness/utils/telemetry/append-xyz-completion.sh"}"
 
 # GH-75: append ONE final-completion record for a run whose WHOLE completion IS this single-phase
 # marathon-drive — i.e. a bare `marathon-drive.sh` run (harness:"marathon") or a swarm-preflight-

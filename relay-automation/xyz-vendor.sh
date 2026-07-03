@@ -247,7 +247,7 @@ register_vendor() {
 #   src/               the tick/marathon JS core
 #   test/              the shim + feature tests, so a vendored repo can self-verify
 #   skills/            the consult / relay-xyz / xyz skill definitions travel with the harness
-VENDOR_DIRS="relay-automation bin src test skills"
+VENDOR_DIRS="relay-automation bin src utils test skills"
 
 materialize_vendor() {
   local d

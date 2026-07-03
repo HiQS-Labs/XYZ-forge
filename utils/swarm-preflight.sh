@@ -47,7 +47,15 @@
 set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${SWARM_PREFLIGHT_ROOT:-"$(cd "$HERE/.." && pwd)"}"
+# Vendored install: HERE is <target>/.xyz/utils → parent is .xyz → target root is grandparent.
+_here_parent="$(cd "$HERE/.." && pwd)"
+if [ "$(basename "$_here_parent")" = ".xyz" ]; then
+  ROOT="${SWARM_PREFLIGHT_ROOT:-"$(cd "$_here_parent/.." && pwd)"}"
+  _DRIVE_CMD=".xyz/relay-automation/marathon-drive.sh"
+else
+  ROOT="${SWARM_PREFLIGHT_ROOT:-"$_here_parent"}"
+  _DRIVE_CMD="relay-automation/marathon-drive.sh"
+fi
 NOW="${SWARM_PREFLIGHT_NOW:-"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}"
 TODAY="${SWARM_PREFLIGHT_TODAY:-"$(date -u +%Y-%m-%d)"}"
 
@@ -559,7 +567,7 @@ TARGET_ROOT_LINE=""
 _root_canon="$(cd "$ROOT" 2>/dev/null && pwd -P || printf '%s' "$ROOT")"
 _target_canon="$(cd "$TARGET_ROOT" 2>/dev/null && pwd -P || printf '%s' "$TARGET_ROOT")"
 [[ "$_target_canon" != "$_root_canon" ]] && TARGET_ROOT_LINE=$'\n'"  --target-root $TARGET_ROOT \\"
-INVOCATION="XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=$SLUG relay-automation/marathon-drive.sh \\
+INVOCATION="XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=$SLUG $_DRIVE_CMD \\
   --phase-brief <packet>/packet.md \\
   --reviewer agy \\
   --builder codex \\
