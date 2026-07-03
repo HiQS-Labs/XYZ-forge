@@ -65,7 +65,9 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # keeps Check B FS-portable without weakening it for genuine references (the capital-C file can never
 # exist in this tree — the real shim is lowercase — so this can never mask a real path break). See #80.
 # Space-delimited; a token matches only when flanked by spaces (exact-token match, no substring slip).
-fixture_literals=" relay-automation/Codex-turn.sh "
+# GH-85: test/marathon-plan.sh creates `$J/test/gh-951-genuine-test.sh` in a throwaway temp repo to
+# simulate the "tests-reference-slug" partial signal — a fixture literal, not a real reference.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do
