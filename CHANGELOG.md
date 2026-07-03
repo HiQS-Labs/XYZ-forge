@@ -4,7 +4,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-03
 
-### GH-5 SHIPPED (Plan A lane 4, PR #102) — contract-seam warning for coupled lanes
+### GH-5 SHIPPED (Plan A lane 4, PR #103) — contract-seam warning for coupled lanes
 The one thing that made two lanes *actually* independent in the real run was a coordinator-pinned shared contract (both coded TO the contract, not to each other's source) — but nothing detected coupling, so operators found it only when an agent stalled waiting on another lane. `marathon-plan.sh`'s wave-packer defers only on an **exact** write-set collision, so two lanes writing disjoint files under a common directory (e.g. `src/schema/producer.js` ‖ `src/schema/consumer.js`) co-wave and *look* independent while the consumer stalls on the producer.
 - **`sharedSpine`** detects the seam: the deepest directory of ≥2 segments shared by two same-wave lanes' write-sets (top-level-only sharing — both under `src/` — is intentionally not a seam). Every coupled pair becomes a `warn`/`coupled-lanes` finding.
 - New **"## Contract seams — pin a contract before launching (GH-5)"** plan section names each pair + the shared dir + the fix (pin a short `CONTRACT.md`, point each lane prompt at it) — making the "pin the contract" step first-class (fix 1) alongside the coupled-lane warning (fix 2). Deferred-coupled-work (fix 3) is the existing Held/flagged section. **Advisory** — never re-waves the lanes (they parallelize fine once a contract is pinned); exit code unchanged.
