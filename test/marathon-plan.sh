@@ -295,6 +295,82 @@ else
   fail "J: (b) lane with genuine partial signals was not flagged partial or got sequenced in waves"
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario K — GH-5: contract-seam detection (coupled same-wave lanes)
+# ─────────────────────────────────────────────────────────────────────────────
+K="$WORK/K"; mkdir -p "$K"; echo '{}' >"$K/.gh-state.json"; : >"$K/.branches"
+# 920 + 921 are write-disjoint (producer.js vs consumer.js) but share the src/schema/ spine → coupled.
+# 922 lives in a different subtree (utils/report.js) → NOT coupled with either.
+mk_doc "$K" GH-920-producer.md 2 2 2 "$(contract_for MISS_SP src/schema/producer.js)"
+mk_doc "$K" GH-921-consumer.md 2 2 2 "$(contract_for MISS_SC src/schema/consumer.js)"
+mk_doc "$K" GH-922-report.md   2 2 2 "$(contract_for MISS_RP utils/report.js)"
+cat >"$K/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-920 · producer** 🆕 — independent → [d](PROJECT/2-WORKING/GH-920-producer.md) · [#920](https://github.com/o/r/issues/920)
+- **GH-921 · consumer** 🆕 — independent → [d](PROJECT/2-WORKING/GH-921-consumer.md) · [#921](https://github.com/o/r/issues/921)
+- **GH-922 · report** 🆕 — independent → [d](PROJECT/2-WORKING/GH-922-report.md) · [#922](https://github.com/o/r/issues/922)
+EOF
+run_qp "$K" >/dev/null 2>&1
+doc="$K/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+# all three write-disjoint → same wave; the seam detector must flag ONLY 920‖921 on src/schema.
+seamline="$(grep -E '^\- \*\*Wave .*share ' "$doc" | grep 'src/schema')"
+if [[ -n "$seamline" ]] && grep -q "#920" <<<"$seamline" && grep -q "#921" <<<"$seamline"; then
+  pass "K: contract seam flagged — #920 ‖ #921 share src/schema/ (pin a contract)"
+else
+  fail "K: expected a src/schema seam warning for #920‖#921, got: $(grep -A3 'Contract seams' "$doc" | head -6)"
+fi
+# 922 shares no deep dir with 920/921 → must NOT appear in any seam line.
+if grep -E '^\- \*\*Wave .*share ' "$doc" | grep -q "#922"; then
+  fail "K: #922 (utils/report.js) wrongly flagged as a contract seam"
+else
+  pass "K: #922 in a disjoint subtree is NOT flagged as coupled (no false seam)"
+fi
+# the section names the fix (pin a CONTRACT.md) — the 'pin the contract' step made explicit (fix 1).
+grep -qi "pin a .*CONTRACT" "$doc" && pass "K: plan states the 'pin a contract' step for the seam" || fail "K: no pin-a-contract guidance in the seam section"
+
+# ── Scenario L — GH-5 (PR #103 review): trailing-slash DIRECTORY artifact still yields a seam.
+# 930's write-set is a bare dir `src/api/`; only the trailing-slash fix keeps `src/api` in its
+# prefix tree (the old dirPrefixes popped `api`), so the seam vs 931's `src/api/handler.js` fires.
+L="$WORK/L"; mkdir -p "$L"; echo '{}' >"$L/.gh-state.json"; : >"$L/.branches"
+mk_doc "$L" GH-930-dir.md  2 2 2 "$(contract_for MISS_DIR src/api/)"
+mk_doc "$L" GH-931-file.md 2 2 2 "$(contract_for MISS_FILE src/api/handler.js)"
+cat >"$L/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-930 · dir** 🆕 — independent → [d](PROJECT/2-WORKING/GH-930-dir.md) · [#930](https://github.com/o/r/issues/930)
+- **GH-931 · file** 🆕 — independent → [d](PROJECT/2-WORKING/GH-931-file.md) · [#931](https://github.com/o/r/issues/931)
+EOF
+run_qp "$L" >/dev/null 2>&1
+doc="$L/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+grep -E '^\- \*\*Wave .*share ' "$doc" | grep -q "src/api" \
+  && pass "L: trailing-slash directory artifact (src/api/) still produces a seam on src/api" \
+  || fail "L: trailing-slash dir artifact dropped the seam: $(grep -A3 'Contract seams' "$doc" | head -6)"
+
+# ── Scenario M — GH-5 (PR #103 review): "deepest" = most SEGMENTS, not longest string.
+# 940‖941 share `src/loooongname` (depth 2, long name) AND `x/a/b/c` (depth 4, short). The deepest
+# by segment count is x/a/b/c; the old string-length proxy would have wrongly chosen src/loooongname.
+M="$WORK/M"; mkdir -p "$M"; echo '{}' >"$M/.gh-state.json"; : >"$M/.branches"
+mk_doc "$M" GH-940-a.md 2 2 2 "$(contract_for MISS_MA src/loooongname/a.js x/a/b/c/p.js)"
+mk_doc "$M" GH-941-b.md 2 2 2 "$(contract_for MISS_MB src/loooongname/b.js x/a/b/c/q.js)"
+cat >"$M/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-940 · a** 🆕 — independent → [d](PROJECT/2-WORKING/GH-940-a.md) · [#940](https://github.com/o/r/issues/940)
+- **GH-941 · b** 🆕 — independent → [d](PROJECT/2-WORKING/GH-941-b.md) · [#941](https://github.com/o/r/issues/941)
+EOF
+run_qp "$M" >/dev/null 2>&1
+doc="$M/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+seam="$(grep -E '^\- \*\*Wave .*share ' "$doc")"
+if grep -q 'x/a/b/c' <<<"$seam" && ! grep -q 'loooongname' <<<"$seam"; then
+  pass "M: deepest seam chosen by SEGMENT COUNT (x/a/b/c), not string length (src/loooongname)"
+else
+  fail "M: wrong deepest spine — expected x/a/b/c, got: $seam"
+fi
+
 echo
 echo "  marathon-plan: $PASS passed, $FAIL failed"
 [[ "$FAIL" -eq 0 ]]
