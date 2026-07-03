@@ -56,6 +56,10 @@ else
   ROOT="${SWARM_PREFLIGHT_ROOT:-"$_here_parent"}"
   _DRIVE_CMD="relay-automation/marathon-drive.sh"
 fi
+# GH-30 Phase 2: transcript-root resolver (rtl_transcript_root) — redirects relay-system/ to
+# $XYZ_ARCHIVE_ROOT when set, else byte-for-byte "$ROOT/relay-system". relay-turn-lib.sh is a sibling
+# dir of utils/ (both under the harness root, or both under .xyz/ in a vendored install).
+source "$HERE/../relay-automation/relay-turn-lib.sh"
 NOW="${SWARM_PREFLIGHT_NOW:-"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}"
 TODAY="${SWARM_PREFLIGHT_TODAY:-"$(date -u +%Y-%m-%d)"}"
 
@@ -600,16 +604,23 @@ if [[ "$CODE" -ne 0 ]]; then
   exit "$CODE"
 fi
 
+# GH-30 Phase 2: resolve the packet output dir ONCE (honors XYZ_ARCHIVE_ROOT), so the dry-run preview
+# and the real emit agree. An explicit --out (OUT_DIR set) wins and skips the resolver entirely, so an
+# invalid XYZ_ARCHIVE_ROOT can't override a named --out. Resolver hard-errors loudly on set-but-invalid.
+if [[ -z "$OUT_DIR" ]]; then
+  _sp_ts_base="$(rtl_transcript_root "$ROOT")" || exit 1
+  OUT_DIR="$_sp_ts_base/preflight/$TODAY/$SLUG"
+fi
+
 if [[ "$DRY_RUN" -eq 1 ]]; then
   [[ "$FORMAT" == "json" ]] || {
-    emit ""; emit "DRY-RUN: ready, but packet not written. Would emit to: ${OUT_DIR:-relay-system/preflight/$TODAY/$SLUG}"
+    emit ""; emit "DRY-RUN: ready, but packet not written. Would emit to: $OUT_DIR"
     emit "Would suggest:"; emit "$INVOCATION"
   }
   exit 0
 fi
 
 # ── Phase 6: emit the packet ─────────────────────────────────────────────────
-OUT_DIR="${OUT_DIR:-"$ROOT/relay-system/preflight/$TODAY/$SLUG"}"
 mkdir -p "$OUT_DIR"
 cp "$TMP/run-candidate.json" "$OUT_DIR/run-candidate.json"
 cp "$TMP/lane-plan.json" "$OUT_DIR/lane-plan.json"

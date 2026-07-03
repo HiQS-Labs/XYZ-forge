@@ -65,6 +65,7 @@ TESTS=(
   "relay-target-root-relayfile.sh"
   "relay-target-root-newfile.sh"
   "archive-root.sh"              # GH-30 Phase 1 (transcript-root resolver: unset/set/missing/non-git)
+  "archive-writers.sh"           # GH-30 Phase 2 (writers honor the resolver: consult e2e + structural)
   "relay-token-collision.sh"
   "relay-escalation-not-stall.sh"
   "relay-untracked-file-warn.sh"

@@ -179,6 +179,30 @@ out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-dryrun.md" --out "$R/pac
 [[ $rc -eq 0 ]] && pass "T8 dry-run exit 0" || fail "T8 expected exit 0, got $rc — $out"
 [[ ! -d "$R/packet" ]] && pass "T8 dry-run writes no packet" || fail "T8 dry-run must not write packet"
 
+# ── T8b/T8c/T8d: GH-30 Phase 2 — dry-run "Would emit to" follows the transcript-root resolver ──
+# Unset XYZ_ARCHIVE_ROOT → byte-for-byte the old "$ROOT/relay-system/preflight/…" path.
+out8b="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-dryrun.md" --dry-run 2>&1)"
+grep -q "Would emit to: $R/relay-system/preflight/" <<<"$out8b" \
+  && pass "T8b dry-run, XYZ_ARCHIVE_ROOT unset → \$ROOT/relay-system/preflight/ (regression-safe)" \
+  || fail "T8b expected \$R/relay-system/preflight/, got: $(grep 'Would emit' <<<"$out8b")"
+# Set XYZ_ARCHIVE_ROOT (a git repo, Model A) → namespaced $archive/relay-system/<repo-slug>/preflight/.
+# Fixture repo has no origin remote, so <repo-slug> falls back to its dir basename "dryrun".
+ARCH="$WORK/sp-archive"; git init -q "$ARCH"
+out8c="$(XYZ_ARCHIVE_ROOT="$ARCH" run "$R" --project-doc "PROJECT/2-WORKING/GH-900-dryrun.md" --dry-run 2>&1)"
+grep -q "Would emit to: $ARCH/relay-system/dryrun/preflight/" <<<"$out8c" \
+  && pass "T8c dry-run, XYZ_ARCHIVE_ROOT set → \$archive/relay-system/<slug>/preflight/ (namespaced)" \
+  || fail "T8c expected \$ARCH/relay-system/dryrun/preflight/, got: $(grep 'Would emit' <<<"$out8c")"
+# Explicit --out wins over BOTH the default and the archive redirect.
+out8d="$(XYZ_ARCHIVE_ROOT="$ARCH" run "$R" --project-doc "PROJECT/2-WORKING/GH-900-dryrun.md" --out "$R/named" --dry-run 2>&1)"
+grep -q "Would emit to: $R/named" <<<"$out8d" \
+  && pass "T8d explicit --out wins over the resolver/archive default" \
+  || fail "T8d expected \$R/named, got: $(grep 'Would emit' <<<"$out8d")"
+# T8e: set-but-invalid XYZ_ARCHIVE_ROOT (no --out) → hard fail, no packet (fail-loud, no silent fallback).
+# swarm runs `set -uo` (NO -e), so this proves the explicit `|| exit 1` catches the resolver failure.
+out8e="$(XYZ_ARCHIVE_ROOT="$WORK/nope-not-a-dir" run "$R" --project-doc "PROJECT/2-WORKING/GH-900-dryrun.md" 2>&1)"; rc8e=$?
+[[ $rc8e -ne 0 ]] && pass "T8e invalid XYZ_ARCHIVE_ROOT → hard fail (rc=$rc8e)" || fail "T8e expected non-zero, got 0 — $out8e"
+[[ ! -d "$R/relay-system" ]] && pass "T8e no packet leaked into \$ROOT on invalid archive" || fail "T8e leaked a packet into \$R/relay-system"
+
 # ── T9: project-doc and gh-bundle normalize to the same shape (keys parity) ──
 R="$(make_repo parity '{
   "target": { "repo": ".", "ref": "main" },

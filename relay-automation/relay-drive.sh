@@ -26,6 +26,9 @@ set -euo pipefail
 #       8 = lane parked (GH-45 attempt cap — no token seeded; re-fire with --force) · 2 = usage.
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# GH-30 Phase 2: transcript-root resolver (rtl_transcript_root) — redirects relay-system/ to
+# $XYZ_ARCHIVE_ROOT when set, else byte-for-byte "$ROOT_DIR/relay-system". Sourced beside this script.
+source "$(dirname "${BASH_SOURCE[0]}")/relay-turn-lib.sh"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
 CONSULT_SH="${CONSULT_SH:-"$ROOT_DIR/relay-automation/consult.sh"}"
 XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT_DIR/utils/telemetry/append-xyz-completion.sh"}"
@@ -315,7 +318,13 @@ while ((round < ROUND_CAP)); do
   if ((CONSULT_VERIFY)); then
     _cv_taker_verdict="$(sed -n '/^## Log/,$p' "$RELAY_FILE" | grep -E '^VERDICT: ' | tail -1 | sed 's/^VERDICT: //')"
     _cv_label="consult-verify-$(basename "$RELAY_FILE" .md)-r${round}"
-    _cv_out_dir="$ROOT_DIR/relay-system/$(date +%F)"
+    # GH-30 Phase 2: consult-verify transcripts follow the resolver (honors XYZ_ARCHIVE_ROOT). The
+    # relay thread + token stay in ROOT_DIR; only this transcript side can redirect. Capture the
+    # resolver in its OWN assignment so its exit status isn't masked by the trailing $(date) — a
+    # second command substitution in the same assignment would swallow a hard-error (cross-model
+    # review Blocker) and silently use a bogus "/<date>" path. Hard-error loud.
+    _cv_out_base="$(rtl_transcript_root "$ROOT_DIR")" || exit 1
+    _cv_out_dir="$_cv_out_base/$(date +%F)"
     # Write prompt to a temp file — avoids nested variable expansion fragility inside $()
     _cv_prompt_file="$(mktemp -t cv-prompt.XXXXXX)"
     printf 'Review the most recent log block in this relay file. Does the turn-taker'"'"'s VERDICT match their stated evidence in the Basis: line? Reply with exactly one of: AGREE-PASS (verdict supported), AGREE-FAIL (verdict supported), or DISAGREE (verdict not supported by evidence). One token only.\n\n=== RELAY FILE ===\n' > "$_cv_prompt_file"

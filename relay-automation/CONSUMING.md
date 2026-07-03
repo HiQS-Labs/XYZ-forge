@@ -49,6 +49,28 @@ export RELAY_TURN_TIMEOUT_S=600
 bash relay-automation/agy-turn.sh              # sandbox-OFF
 ```
 
+### Optional: keep transcripts OUT of repo B (`XYZ_ARCHIVE_ROOT`, GH-30)
+
+By default the operational transcripts (relay threads, consult runs, marathon logs, swarm-preflight
+packets) are written **inside repo B** under `repoB/relay-system/…` — that's the `RELAY_FILE` path
+above. To collect them in one central archive instead of polluting each product repo, export
+`XYZ_ARCHIVE_ROOT` to an **absolute path of an existing git repo** (Model A — a committed archive):
+
+```bash
+export XYZ_ARCHIVE_ROOT=/abs/path/to/transcript-archive   # must be absolute + exist + be a git repo
+```
+
+- **Unset (default):** byte-for-byte today's behavior — transcripts stay under `repoB/relay-system/…`.
+- **Set:** `consult.sh`, `marathon-drive.sh`, `relay-drive.sh`, and `swarm-preflight.sh` emit under
+  `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>/…`, namespaced per source repo (slug = origin remote
+  basename, else dir basename). Derive `RELAY_FILE` from that base rather than hardcoding
+  `repoB/relay-system/…`. Set-but-invalid (relative / missing / non-git) is a **hard error**, never a
+  silent fallback into repo B. An explicit `--out` / `RELAY_FILE` always wins over the resolver.
+- **Not yet redirected (Phase 3):** the relay *containment + commit* path still anchors on repo B, so
+  a headless turn's own relay-file writes are governed by the target-repo allowlist. Off-tree
+  archive-commit semantics land in GH-30 Phase 3; until then, the redirect covers the transcript
+  *writers* above, not the containment kernel.
+
 ### ⚠ The sharp edge: TARGET paths must be ABSOLUTE
 
 `agy`'s process CWD is the **tooling repo (A)**, so any **relative** file path in the relay file

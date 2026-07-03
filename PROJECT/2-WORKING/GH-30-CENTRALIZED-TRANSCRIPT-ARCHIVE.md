@@ -1,6 +1,6 @@
 ---
 title: Centralized Transcript Archive (optional setting)
-status: Active (2-WORKING — Phase 1 shipped 2026-07-03; Phases 2–5 pending)
+status: Active (2-WORKING — Phases 1–2 shipped 2026-07-03; Phases 3–5 pending)
 created: 2026-06-27
 updated: 2026-07-03
 owner: noel
@@ -31,7 +31,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **✅ Phase 1 SHIPPED 2026-07-03 (Plan A lane 5).** The single transcript-root resolver `rtl_transcript_root` (+ `rtl_repo_slug`) is live in `relay-turn-lib.sh` — the ONE place the relay-system base is decided. Unset `XYZ_ARCHIVE_ROOT` → byte-for-byte today's `$root/relay-system`; set → `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>` with Model-A validation (absolute + exists + is a git repo, else HARD ERROR — never a silent fallback into repo B). New `test/archive-root.sh` (7 checks) covers unset / set / relative / missing / non-git / slug-fallback; wired into `validate.sh` (89/89 green). No writer is wired yet, so runtime behavior is unchanged. | **Phase 2** — call the resolver from `consult.sh`, `marathon-drive.sh`, `relay-drive.sh`, `swarm-preflight.sh` (each still honoring explicit `OUT=`/`--relay-file` overrides). Then the risky **Phase 3** (off-tree containment allowlist + commit-into-archive semantics — the risk-4 core). |
+| **✅ Phases 1–2 SHIPPED 2026-07-03.** **Phase 1** — the single transcript-root resolver `rtl_transcript_root` (+ `rtl_repo_slug`) is live in `relay-turn-lib.sh` (the ONE place the relay-system base is decided): unset `XYZ_ARCHIVE_ROOT` → byte-for-byte today's `$root/relay-system`; set → `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>` with Model-A validation (absolute + exists + git repo, else HARD ERROR). **Phase 2** — all four writers (`consult.sh`, `marathon-drive.sh`, `relay-drive.sh`, `swarm-preflight.sh`) now source the lib and derive their transcript base from the resolver; explicit `--out`/`OUT_DIR` still wins; set-but-invalid fails loud. `test/archive-root.sh` (13) + `test/archive-writers.sh` (8, consult end-to-end + structural) → `validate.sh` **90/90**. Transcript *writers* redirect today; the containment/commit kernel does not yet. | **Phase 3** (risk-4 core) — extend the containment allowlist to the archive root + commit-into-archive semantics that never orphan a peer commit; keep `.tick/` anchored to the target repo. Then Phase 4 (telemetry reads the archive) + Phase 5 (docs/validation, promote out of 2-WORKING). |
 
 ## Effort & Risk (the question asked)
 
@@ -112,21 +112,26 @@ Both models independently flagged the same **[Blocker]**: `rtl_repo_slug`'s `tr 
 - [x] New tests pass under `./validate.sh` (89/89 green; also fixed a pre-existing `test/xyz-vendor.sh` typo that was reddening the suite).
 - [x] `utils/pdda/pdda.sh hardcoded-paths` clean (0 errors).
 
-## Phase 2 — Wire the resolver into all writers
+## Phase 2 — Wire the resolver into all writers ✅ SHIPPED 2026-07-03
 
-- [ ] `consult.sh` — replace `OUT="${OUT:-$ROOT/relay-system/$(date +%F)}"` with the resolver.
-- [ ] `marathon-drive.sh` — replace the `date_dir="$ROOT/relay-system/…"` derivation.
-- [ ] `relay-drive.sh` — replace `_cv_out_dir` (consult-verify output).
-- [ ] `swarm-preflight.sh` — replace the preflight `OUT_DIR` default.
-- [ ] `RELAY_FILE` convention in `CONSUMING.md` — document deriving it from the resolver instead of hardcoding `repoB/relay-system/…`.
-- [ ] Each writer still honors an explicit per-call override (`OUT=`, `--relay-file`) above the resolver default.
+Each writer now sources `relay-turn-lib.sh` (by the script's own dir, so a foreign `CONSULT_ROOT`/`--target-root` doesn't break discovery) and derives its transcript base from `rtl_transcript_root "$ROOT"`. The resolver is invoked **only when no explicit override is set**, so an explicit `--out`/`OUT=` fully wins — even against an invalid `XYZ_ARCHIVE_ROOT` — and each call fails loud (`|| exit/return 1`) under both `set -e` and `set -uo`.
+
+- [x] `consult.sh` — `OUT` default now `rtl_transcript_root "$ROOT"/<date>` (guarded on empty `$OUT`).
+- [x] `marathon-drive.sh` — `save_transcript` derives `date_dir` from the resolver (declare-then-assign so `local` doesn't mask the rc).
+- [x] `relay-drive.sh` — `_cv_out_dir` (consult-verify output) derives from the resolver.
+- [x] `swarm-preflight.sh` — `OUT_DIR` default resolved **once** before the dry-run gate, so the `Would emit to:` preview and the real emit agree.
+- [x] `CONSUMING.md` — new "keep transcripts OUT of repo B (`XYZ_ARCHIVE_ROOT`)" section; derive `RELAY_FILE` from the base instead of hardcoding `repoB/relay-system/…`.
+- [x] Each writer still honors an explicit per-call override (`--out`/`OUT_DIR`) above the resolver default (asserted).
 
 ### QA checklist — Phase 2
 
-- [ ] Each writer, run with the var unset, produces the same path as before the change.
-- [ ] Each writer, run with the var set, writes under `$XYZ_ARCHIVE_ROOT/relay-system/<slug>/…`.
-- [ ] Explicit overrides still win over the resolver default.
-- [ ] `./validate.sh` green.
+- [x] Each writer, run with the var unset, produces the same path as before (consult e2e `T1`, swarm dry-run `T8b`).
+- [x] Each writer, run with the var set, writes under `$XYZ_ARCHIVE_ROOT/relay-system/<slug>/…` (consult e2e `T2`, swarm dry-run `T8c`).
+- [x] Explicit overrides still win over the resolver default (consult `T3`, swarm `T8d`).
+- [x] Set-but-invalid archive fails loud with no silent fallback into the target repo (consult `T4`).
+- [x] `./validate.sh` green (**90/90**; new `test/archive-writers.sh` = consult end-to-end + a structural regression lock over all four writers; marathon-drive/relay-drive covered structurally + by the resolver unit test, since a full relay loop needs codex/agy + network). `hardcoded-paths` clean.
+
+> **Scope note:** Phase 2 redirects the transcript *writers*. A cross-repo relay *turn* is not fully redirected until **Phase 3** (containment allowlist + commit-into-archive), because the turn's own relay-file writes are still governed by the target-repo write-allowlist in `relay-turn-lib.sh`. `consult.sh` and `swarm-preflight.sh` (no containment) are fully redirected today.
 
 ## Phase 3 — Off-tree containment & commit semantics
 

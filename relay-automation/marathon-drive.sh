@@ -43,6 +43,9 @@ if [ "$(basename "$_xyz_harness")" = ".xyz" ]; then
 else
   ROOT="${MARATHON_ROOT:-"$_xyz_harness"}"
 fi
+# GH-30 Phase 2: transcript-root resolver (rtl_transcript_root) — redirects relay-system/ to
+# $XYZ_ARCHIVE_ROOT when set, else byte-for-byte "$ROOT/relay-system". Sourced beside this script.
+source "$HERE/relay-turn-lib.sh"
 TICK_BIN="${TICK_BIN:-"$_xyz_harness/bin/tick"}"
 RELAY_DRIVE_BIN="${MARATHON_RELAY_DRIVE:-"$HERE/relay-drive.sh"}"
 AGENT_CMD="${MARATHON_AGENT_CMD:-"$HERE/marathon-agent.sh"}"
@@ -434,7 +437,10 @@ ESC_EOF
 }
 
 save_transcript() {
-  local date_dir; date_dir="$ROOT/relay-system/$(date +%Y-%m-%d)"
+  # GH-30 Phase 2: resolve the transcript base (honors XYZ_ARCHIVE_ROOT; hard-errors if set-invalid).
+  # Declare then assign separately so the resolver's exit code isn't masked by `local` under set -e.
+  local date_dir _ts_base; _ts_base="$(rtl_transcript_root "$ROOT")" || return 1
+  date_dir="$_ts_base/$(date +%Y-%m-%d)"
   mkdir -p "$date_dir"
   local ts; ts="$(date +%H%M%S)"
   local dest="$date_dir/marathon-${PHASE_ID}-${ts}.md"

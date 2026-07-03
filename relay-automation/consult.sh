@@ -51,6 +51,10 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${CONSULT_ROOT:-"$(cd "$HERE/.." && pwd)"}"
+# GH-30 Phase 2: the single transcript-root resolver (rtl_transcript_root) — redirects relay-system/
+# to $XYZ_ARCHIVE_ROOT when that is set, else byte-for-byte "$ROOT/relay-system". consult.sh lives
+# beside relay-turn-lib.sh, so source it by the script's own dir (NOT $ROOT, which may be a foreign repo).
+source "$HERE/relay-turn-lib.sh"
 CODEX_BIN="${CODEX_BIN:-codex}"
 AGY_BIN="${AGY_BIN:-${GEMINI_BIN:-agy}}"
 GEMINI_BIN="${GEMINI_BIN:-$AGY_BIN}"
@@ -81,7 +85,13 @@ fi
 git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
   || { warn "consult requires a git repo (advisor isolation uses a throwaway worktree): $ROOT"; exit 3; }
 
-OUT="${OUT:-$ROOT/relay-system/$(date +%F)}"
+# GH-30 Phase 2: default the run parent to the transcript-root resolver (honors XYZ_ARCHIVE_ROOT).
+# An explicit --out (OUT already set) wins and skips the resolver entirely, so an invalid
+# XYZ_ARCHIVE_ROOT can never override a caller who named their own --out. Resolver hard-errors loudly.
+if [[ -z "$OUT" ]]; then
+  _ts_base="$(rtl_transcript_root "$ROOT")" || exit 1
+  OUT="$_ts_base/$(date +%F)"
+fi
 RUN_DIR="$OUT/${LABEL}-$(date +%H%M%S)"
 mkdir -p "$RUN_DIR"
 
