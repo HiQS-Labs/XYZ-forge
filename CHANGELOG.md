@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-77 live E2E: real Aider↔OpenRouter turn — surfaced + fixed an aux-file containment bug
+Ran the first **real** Aider turn through `relay-automation/aider-turn.sh` (installed Aider from the local repo into a throwaway venv; `gpt-4o-mini` via OpenRouter). It failed **exit 6** on the very first turn — a genuine defect the 31 stub tests couldn't catch: Aider writes its own `.aider.chat.history.md` + `.aider.input.history` into CWD, which (with `--no-gitignore`) land as untracked off-allowlist files and trip `rtl_enforce`. **Every real turn would have failed.**
+- **Fix** — the shim redirects Aider's chat/input/llm history to a throwaway dir outside the repo via `--chat-history-file`/`--input-history-file`/`--llm-history-file` (`AIDER_AUX_DIR`, default `$TMPDIR/aider-aux-$$`). Re-run confirmed **exit 0**, a file-scoped commit (relay file only), **no `.aider.*` leak**, token handed to the peer.
+- **Regression** — the `test/aider-turn.sh` stub now mimics Aider's aux-file write (honors `--chat-history-file`, defaults to CWD), so dropping the redirect flips the good turn to exit 6. New no-leak assertion; **32/32** (verified by a strip-and-restore teeth-check). Doc moved earlier to `PROJECT/3-COMPLETED`; the "live E2E" follow-on is now done.
+
 ### GH-77 aider ↔ OpenRouter lane SHIPPED (PR #79) — token-ownership [Blocker] fixed on merge
 Took the codex-reviewed PR #79 to merge directly: rebased onto main (churn conflicts + a one-line `validate.sh` test-list merge resolved; `marathon-drive.sh` auto-merged with GH-45's attempt-cap and GH-56's `reconcile_relay_task` both intact), fixed the review's `[Blocker]`, and cleared the two `[Should]`/`[Nit]` items.
 - **[Blocker] fixed** — `relay-automation/aider-turn.sh` now **proves token ownership before launching Aider**: after the best-effort `claim`, it asserts `claimer == self` via `tick info` and fails the turn (exit 5, before any mutation) if the claim didn't stick. Previously a missed claim still committed + exited 0, leaving the token open under the old owner and deadlocking the lane. New regression test (unowned token → exit 5, no commit, claimer unchanged).

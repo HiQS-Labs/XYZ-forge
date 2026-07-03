@@ -121,11 +121,22 @@ fi
 
 AIDER_LOG="${AIDER_LOG:-${TMPDIR:-/tmp}/aider-turn-$$.log}"
 
+# GH-77 live-E2E fix: redirect Aider's own aux/history files OUT of the target repo. By default Aider
+# writes `.aider.chat.history.md` + `.aider.input.history` (and `.aider.llm.history`) into CWD; with
+# `--no-gitignore` they land as UNTRACKED files in the working tree and trip rtl_enforce's off-allowlist
+# guard (exit 6) — so every REAL turn failed even though the stub tests (which never create them) passed.
+# Point them at a throwaway dir outside the repo so containment only ever sees the intended relay/artifact
+# edits. (`--map-tokens 0` already suppresses the `.aider.tags.cache.*` repo-map; `--no-analytics` the rest.)
+AIDER_AUX_DIR="${AIDER_AUX_DIR:-${TMPDIR:-/tmp}/aider-aux-$$}"; mkdir -p "$AIDER_AUX_DIR" 2>/dev/null || true
+
 # Build the aider invocation. --no-auto-commits is LOAD-BEARING (see WHY #2). AIDER_FLAGS is an escape
 # hatch for version-specific flag differences.
 turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
 aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits --no-gitignore
             --no-check-update --no-analytics --no-show-model-warnings --no-stream --map-tokens 0
+            --chat-history-file "$AIDER_AUX_DIR/chat.history.md"
+            --input-history-file "$AIDER_AUX_DIR/input.history"
+            --llm-history-file  "$AIDER_AUX_DIR/llm.history"
             "${file_args[@]}")
 read -ra _xflags <<<"${AIDER_FLAGS:-}"
 [[ "${#_xflags[@]}" -gt 0 ]] && aider_args+=("${_xflags[@]}")
