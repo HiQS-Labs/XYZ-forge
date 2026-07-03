@@ -49,6 +49,70 @@ rtl_is_reviewer_turn() {  # <relay_file> — true if the file's NEXT pointer nam
   printf '%s' "$line" | grep -iqE 'Reviewer'
 }
 
+# GH-30 Phase 1 — single transcript-root resolver (the ONLY place the relay-system base is decided).
+# Every transcript writer (consult.sh, marathon-drive.sh, relay-drive.sh, swarm-preflight.sh,
+# extract-relay-telemetry.sh) is meant to call this instead of hardcoding "$ROOT/relay-system"
+# (writer wiring lands in Phase 2). It emits the relay-system BASE dir; callers append their own
+# "/<date>/<slug>" tail exactly as they do today.
+#
+#   rtl_transcript_root <target_root>   # <target_root> = the repo transcripts default under
+#
+# Contract:
+#   - XYZ_ARCHIVE_ROOT unset/empty → "$target_root/relay-system"   (byte-for-byte today's path)
+#   - XYZ_ARCHIVE_ROOT set         → "$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>", namespaced per
+#                                    source repo so one central archive holds many repos collision-free.
+# Model A (decided 2026-07-02 — separate COMMITTED git archive repo) → when set, XYZ_ARCHIVE_ROOT
+# MUST be absolute, exist, AND be a git repo. Any failure is a HARD ERROR (stderr + return 1) — never
+# a silent fallback into the foreign tree (the whole point of the setting is to keep transcripts OUT
+# of repo B). The commit-into-archive semantics ride on top of this in Phase 3; Phase 1 only resolves
+# the path and validates the target.
+rtl_transcript_root() {  # <target_root> → prints relay-system base; returns 1 on invalid archive
+  # Strip a trailing slash so a caller passing "/repo/" can't yield "/repo//relay-system" (a `//`
+  # prefix is implementation-defined under POSIX). Real caller roots are git-rev-parse output with no
+  # trailing slash, so this is byte-identical to today's "$ROOT/relay-system" on the common path.
+  local target_root="${1%/}"
+  if [[ -z "${XYZ_ARCHIVE_ROOT:-}" ]]; then
+    printf '%s/relay-system' "$target_root"
+    return 0
+  fi
+  local ar="$XYZ_ARCHIVE_ROOT"
+  if [[ "$ar" != /* ]]; then
+    printf 'rtl_transcript_root: XYZ_ARCHIVE_ROOT must be an ABSOLUTE path, got: %s\n' "$ar" >&2
+    return 1
+  fi
+  if [[ ! -d "$ar" ]]; then
+    printf 'rtl_transcript_root: XYZ_ARCHIVE_ROOT does not exist (or is not a directory): %s\n' "$ar" >&2
+    return 1
+  fi
+  # Model A: the archive is a committed git repo. A non-git dir would silently drop transcripts on the
+  # floor in Phase 3, so reject it now at the resolver rather than at commit time.
+  if ! git -C "$ar" rev-parse --git-dir >/dev/null 2>&1; then
+    printf 'rtl_transcript_root: XYZ_ARCHIVE_ROOT is not a git repo (Model A requires a committed archive): %s\n' "$ar" >&2
+    return 1
+  fi
+  printf '%s/relay-system/%s' "$ar" "$(rtl_repo_slug "$target_root")"
+}
+
+# Deterministic per-repo slug for archive namespacing: origin remote basename (…/<name>[.git]),
+# else the target dir's basename. Sanitized to a SAFE single path segment: [A-Za-z0-9._-] only, never
+# empty, never "."/".." (a path-traversal segment would let a writer escape the relay-system base),
+# never leading "-" (option-shaped for a later `cd`/`git -C` consumer). Falls back to "repo".
+rtl_repo_slug() {  # <target_root>
+  local target_root="$1" url slug
+  url="$(git -C "$target_root" remote get-url origin 2>/dev/null || true)"
+  while [[ "$url" == */ ]]; do url="${url%/}"; done   # tolerate a trailing-slash remote (…/foo/ or …/foo.git/)
+  url="${url%.git}"
+  while [[ "$url" == */ ]]; do url="${url%/}"; done
+  if [[ -n "$url" ]]; then
+    slug="${url##*/}"; slug="${slug##*:}"   # strip path AND scp-style host: prefix
+  fi
+  [[ -z "${slug:-}" ]] && slug="$(basename -- "$target_root" 2>/dev/null || true)"
+  slug="$(printf '%s' "${slug:-repo}" | tr -c 'A-Za-z0-9._-' '_')"
+  while [[ "$slug" == -* ]]; do slug="${slug#-}"; done   # never option-shaped
+  case "$slug" in ''|.|..) slug="repo" ;; esac           # never empty or a path-traversal segment
+  printf '%s' "$slug"
+}
+
 rtl_init() {  # <root> <relay_file> <allow_csv>
   # ROOT routing (GH-11): a foreign --target-root (exported by relay-drive as RELAY_TARGET_ROOT)
   # routes the WHOLE turn — worktree base, allowlist copyback, file-scoped commit, enforce — from this

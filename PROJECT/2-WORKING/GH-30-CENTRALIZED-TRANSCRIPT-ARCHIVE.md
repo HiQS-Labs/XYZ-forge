@@ -1,8 +1,8 @@
 ---
 title: Centralized Transcript Archive (optional setting)
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING — Phase 1 shipped 2026-07-03; Phases 2–5 pending)
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-07-03
 owner: noel
 goal: >
   Add ONE optional setting that redirects all multi-agent operational transcripts
@@ -31,7 +31,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0 intake done: issue [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) opened, doc renamed `GH-30-…`, parked in ROADMAP. Plan drafted with per-phase QA gates. | Decide the archive model (separate-repo vs. plain-dir) — the last open Phase 0 item — then promote to `2-WORKING` before any code. |
+| **✅ Phase 1 SHIPPED 2026-07-03 (Plan A lane 5).** The single transcript-root resolver `rtl_transcript_root` (+ `rtl_repo_slug`) is live in `relay-turn-lib.sh` — the ONE place the relay-system base is decided. Unset `XYZ_ARCHIVE_ROOT` → byte-for-byte today's `$root/relay-system`; set → `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>` with Model-A validation (absolute + exists + is a git repo, else HARD ERROR — never a silent fallback into repo B). New `test/archive-root.sh` (7 checks) covers unset / set / relative / missing / non-git / slug-fallback; wired into `validate.sh` (89/89 green). No writer is wired yet, so runtime behavior is unchanged. | **Phase 2** — call the resolver from `consult.sh`, `marathon-drive.sh`, `relay-drive.sh`, `swarm-preflight.sh` (each still honoring explicit `OUT=`/`--relay-file` overrides). Then the risky **Phase 3** (off-tree containment allowlist + commit-into-archive semantics — the risk-4 core). |
 
 ## Effort & Risk (the question asked)
 
@@ -93,19 +93,24 @@ One optional env var (mirroring the existing `*_ROOT` convention): **`XYZ_ARCHIV
 - [ ] Archive-model decision (A or B) is written down, not implicit.
 - [ ] No code changed in this phase.
 
-## Phase 1 — Single transcript-root resolver
+## Phase 1 — Single transcript-root resolver ✅ SHIPPED 2026-07-03
 
-- [ ] Add a `rtl_archive_root` (or `xyz_transcript_root`) helper to `relay-automation/relay-turn-lib.sh` that returns `$XYZ_ARCHIVE_ROOT/relay-system/<slug>` when set, else `$ROOT/relay-system`.
-- [ ] Helper validates: if `XYZ_ARCHIVE_ROOT` is set it MUST be absolute and exist (fail loud, never silently fall back to the foreign tree).
-- [ ] Helper derives `<slug>` deterministically from the target repo (remote basename, fallback to dir basename).
-- [ ] Unit-cover the helper for: unset → today's path; set → namespaced path; set-but-missing → hard error.
+- [x] Add a `rtl_transcript_root` helper to `relay-automation/relay-turn-lib.sh` that returns `$XYZ_ARCHIVE_ROOT/relay-system/<slug>` when set, else `$root/relay-system`. (Companion `rtl_repo_slug` derives the slug.)
+- [x] Helper validates: if `XYZ_ARCHIVE_ROOT` is set it MUST be absolute, exist, **and be a git repo** (Model A) — fail loud (stderr + `return 1`), never silently fall back to the foreign tree.
+- [x] Helper derives `<slug>` deterministically from the target repo (origin remote basename, fallback to dir basename, sanitized to a single `[A-Za-z0-9._-]` segment).
+- [x] Unit-cover the helper for: unset → today's path; trailing-slash target; set → namespaced path; set-relative/missing/non-git → hard error (+ stderr); slug-fallback; scp-style remote; trailing-slash remote; `..`/`.` traversal → `repo`; leading-dash → stripped; space → `_`. (`test/archive-root.sh`, **13 checks** after the cross-model review below.)
+
+### Cross-model review (Codex + agy, PR #105) — 1 Blocker + 2 Shoulds fixed before merge
+
+Both models independently flagged the same **[Blocker]**: `rtl_repo_slug`'s `tr -c 'A-Za-z0-9._-'` sanitizer *preserved* `.` and `-`, so a target basename of `..` produced slug `..` → `$XYZ_ARCHIVE_ROOT/relay-system/..` **escaped the namespace** (path traversal), and a leading-`-` slug was option-shaped for a later `cd`/`git -C`. Plus two **[Should]**s: a trailing-slash origin URL (`…/foo.git/`) yielded an empty remote basename → wrong dir-basename fallback; a trailing-slash `target_root` → `//relay-system`. **Fixed:** strip trailing slashes off the remote URL (before + after `.git`); strip leading dashes; collapse `.`/`..`/empty → `repo`; normalize one trailing slash off `target_root` (byte-identical on the normalized roots callers pass). Both graded fail-loud, `set -u/-e` safety, and determinism **[Pass]**. Tests grew 7 → 13 to pin every case.
 
 ### QA checklist — Phase 1
 
-- [ ] With `XYZ_ARCHIVE_ROOT` unset, helper output equals the current hardcoded path (regression-safe).
-- [ ] Resolver lives in exactly one place; no writer recomputes the root independently.
-- [ ] New tests pass under `./validate.sh`.
-- [ ] `utils/pdda/pdda.sh hardcoded-paths` clean.
+- [x] With `XYZ_ARCHIVE_ROOT` unset, helper output equals the current hardcoded path (regression-safe — asserted; trailing-slash target normalized so no `//`).
+- [x] Resolver lives in exactly one place; no writer recomputes the root independently. (Writers wired in Phase 2.)
+- [x] Slug is always a safe single path segment — no `/`, no `.`/`..` traversal, no leading `-`, never empty (cross-model-reviewed + asserted).
+- [x] New tests pass under `./validate.sh` (89/89 green; also fixed a pre-existing `test/xyz-vendor.sh` typo that was reddening the suite).
+- [x] `utils/pdda/pdda.sh hardcoded-paths` clean (0 errors).
 
 ## Phase 2 — Wire the resolver into all writers
 

@@ -137,7 +137,7 @@ printf 'app-util\n'   > "$CREPO/utils/helper.sh"
 printf 'app-bin\n'    > "$CREPO/bin/myapp"
 "$VENDOR" "$CREPO" >/dev/null 2>&1 || fail "collision-repo vendor exited non-zero"
 [ "$(cat "$CREPO/src/app.js")"     = "app-source" ] && pass "collision: target src/ untouched"   || fail "collision: target src/ was modified"
-[ "$(cat "$CREPO/utils/helper.sh")"= "app-util"   ] && pass "collision: target utils/ untouched" || fail "collision: target utils/ was modified"
+[ "$(cat "$CREPO/utils/helper.sh")" = "app-util"  ] && pass "collision: target utils/ untouched" || fail "collision: target utils/ was modified"
 [ "$(cat "$CREPO/bin/myapp")"      = "app-bin"    ] && pass "collision: target bin/ untouched"   || fail "collision: target bin/ was modified"
 [ -d "$CREPO/.xyz/relay-automation" ] && pass "collision: harness landed under .xyz/" || fail "collision: .xyz/relay-automation missing"
 
