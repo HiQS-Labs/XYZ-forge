@@ -31,7 +31,7 @@ set -euo pipefail
 #
 # Exit: 0 phase approved + gate passed · 3 relay no-progress · 4 relay cap/mismatch ·
 #        5 pre-advance gate failed · 6 containment violation (turn-taker reverted an off-lane edit) ·
-#        2 usage.
+#        8 lane parked (GH-45 attempt cap — no token seeded; re-fire with --force) · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="${MARATHON_ROOT:-"$(cd "$HERE/.." && pwd)"}"
@@ -40,18 +40,20 @@ RELAY_DRIVE_BIN="${MARATHON_RELAY_DRIVE:-"$HERE/relay-drive.sh"}"
 AGENT_CMD="${MARATHON_AGENT_CMD:-"$HERE/marathon-agent.sh"}"
 
 # GH-45 — QUEUE commitment contract: per-lane attempt cap (anti-rabbit-hole / WIP discipline).
-# Appends one line per fire to .tick/attempts/<lane> and REFUSES to start a lane at
+# lane_attempt_gate appends one line per fire to .tick/attempts/<lane> and REFUSES to start a lane at
 # >= LANE_MAX_ATTEMPTS (default 2, env-overridable) with exit 8 + a park message, seeding NO relay
-# token. --force bypasses for one fire and logs it. A nested call (marathon-drive → relay-drive) is
-# guarded by LANE_ATTEMPT_COUNTED so the same lane is counted exactly once. Byte-consistent mirror in
-# relay-drive.sh; relay-turn-lib.sh / bin/tick are NOT touched.
+# token. --force bypasses for one fire and logs it. lane_attempt_reset clears the counter when a lane
+# COMPLETES successfully (Approved), so the cap counts CONSECUTIVE failures and can never permanently
+# wedge a lane (reviewer feedback: without a reset a default-keyed lane parks forever). A nested call
+# (marathon-drive → relay-drive) is guarded by LANE_ATTEMPT_COUNTED so the same lane is counted (and
+# reset) exactly once. Byte-consistent mirror in relay-drive.sh; relay-turn-lib.sh/bin/tick untouched.
+_lane_key() { printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '_'; }
 lane_attempt_gate() {
   local root="$1" raw="$2" force="${3:-0}"
   [ -n "${LANE_ATTEMPT_COUNTED:-}" ] && return 0
-  local key; key=$(printf '%s' "$raw" | tr -c 'A-Za-z0-9._-' '_')
-  local max="${LANE_MAX_ATTEMPTS:-2}"
-  local dir="$root/.tick/attempts" file count
-  file="$dir/$key"
+  [ -n "$raw" ] || return 0
+  local max="${LANE_MAX_ATTEMPTS:-2}"; case "$max" in ''|*[!0-9]*) max=2 ;; esac
+  local key dir file count; key=$(_lane_key "$raw"); dir="$root/.tick/attempts"; file="$dir/$key"
   mkdir -p "$dir" 2>/dev/null || true
   count=0; [ -f "$file" ] && count=$(wc -l < "$file" 2>/dev/null | tr -d ' '); [ -n "$count" ] || count=0
   if [ "$force" = "1" ]; then
@@ -63,6 +65,12 @@ lane_attempt_gate() {
   fi
   printf '%s fire\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo fire)" >> "$file"
   return 0
+}
+lane_attempt_reset() {  # clear a lane's counter after it completes successfully (Approved)
+  local root="$1" raw="$2"
+  [ -n "${LANE_ATTEMPT_COUNTED:-}" ] && return 0
+  [ -n "$raw" ] || return 0
+  rm -f "$root/.tick/attempts/$(_lane_key "$raw")" 2>/dev/null || true
 }
 
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
@@ -139,6 +147,7 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
                           stay in this repo; forwarded to relay-drive.sh, and the pre-advance gate runs
                           with cwd = DIR. Omit for a same-repo phase.
   --require-clean         Hard-stop (exit 2) if the workspace has pre-existing changes before seeding.
+  --force                 GH-45: bypass the per-lane attempt cap for this fire (re-fire a parked lane).
   --dry-run               Render the relay file and print the tick seed; exit without running.
 EOF
 }
@@ -440,6 +449,7 @@ case "$relay_exit" in
       exit 5
     fi
     "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
+    lane_attempt_reset "${TICK_REPO_ROOT:-$ROOT}" "$PHASE_ID"   # GH-45: success clears the attempt counter
     save_transcript
     log "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
     xyz_marathon_emit green "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"

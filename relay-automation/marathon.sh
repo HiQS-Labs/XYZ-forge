@@ -49,7 +49,7 @@ xyz_marathon_run_emit() {  # <health> <description>
   "$XYZ_APPEND_BIN" marathon "$plan" "$1" "$plan" "$2" >/dev/null 2>&1 || true
 }
 
-PLAN=""; BUILDER="claude"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0
+PLAN=""; BUILDER="claude"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0
 while (($# > 0)); do
   case "$1" in
     --plan)            PLAN="${2:-}"; shift 2 ;;
@@ -57,7 +57,8 @@ while (($# > 0)); do
     --phases-dir)      PHASES_DIR="${2:-}"; shift 2 ;;
     --pre-advance-cmd) PRE_ADVANCE_CMD="${2:-}"; shift 2 ;;
     --dry-run)         DRY_RUN=1; shift ;;
-    --help)            printf 'Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-advance-cmd C] [--dry-run]\n'; exit 0 ;;
+    --force)           FORCE=1; shift ;;   # GH-45: forward to each phase so a parked lane can be re-fired
+    --help)            printf 'Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-advance-cmd C] [--dry-run] [--force]\n'; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
   esac
 done
@@ -91,6 +92,7 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact name; do
                --phase-brief "$brief_path" --round-cap "$cap" --phases-dir "$PHASES_DIR" )
   [[ -n "$artifact" ]] && drive_args+=( --artifact "$artifact" )
   [[ -n "$PRE_ADVANCE_CMD" ]] && drive_args+=( --pre-advance-cmd "$PRE_ADVANCE_CMD" )
+  ((FORCE)) && drive_args+=( --force )   # GH-45: bypass the per-lane attempt cap for this run
   if ((DRY_RUN)); then drive_args+=( --dry-run ); fi
 
   phase_exit=0
