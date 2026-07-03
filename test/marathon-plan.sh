@@ -110,7 +110,7 @@ grep -qF 'suggested_branch: `marathon/gh-100-kernela-'"$DAY"'`' "$doc" \
 # ─────────────────────────────────────────────────────────────────────────────
 # Scenario B — validation signals (drift present, exit 4)
 # ─────────────────────────────────────────────────────────────────────────────
-B="$WORK/B"; mkdir -p "$B"; : >"$B/.branches"
+B="$WORK/B"; mkdir -p "$B"; echo "gh-220-partial" >"$B/.branches"
 echo '{"200":"CLOSED","221":"OPEN"}' >"$B/.gh-state.json"
 touch "$B/LANDED_FILE"                                   # makes the already-landed probe report "landed"
 printf 'changelog mentions gh-220-partial here\n' >"$B/CHANGELOG.md"
@@ -252,6 +252,48 @@ cat >"$I/ROADMAP.md" <<EOF
 EOF
 out="$(run_qp "$I" 2>/dev/null)"; doc="$I/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
 { [[ "$(wave_of "$doc" 910)" == "1" ]] && ! grep -q "already-closed" <<<"$out"; } && pass "I: title GH-910 wins over the in-prose closed #911 (item stays active, not already-closed) [agy Blocker r4]" || fail "I: ghIssueOf precedence wrong — $(grep -E 'already-closed' <<<"$out" | head -1)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario J — GH-85 regression cases for undocumented-partial-completion false-positives
+# ─────────────────────────────────────────────────────────────────────────────
+J="$WORK/J"; mkdir -p "$J"; : >"$J/.branches"
+echo '{}' >"$J/.gh-state.json"
+
+# (a) A rated+contracted lane whose artifacts all pre-exist AND whose #n is in CHANGELOG is classified READY / active (not partial).
+printf 'changelog mentions gh-950-existing here (#950)\n' >"$J/CHANGELOG.md"
+mkdir -p "$J/src"
+touch "$J/src/existing_art.js"
+echo "src/existing_art.js" >"$J/.base-files"
+mk_doc "$J" GH-950-existing.md 2 2 2 "$(contract_for MISS_EXP src/existing_art.js)"
+
+# (b) A lane with genuine partial signals (branch-matches-slug + tests-reference-slug) is STILL partial.
+echo "gh-951-genuine" >"$J/.branches"
+mkdir -p "$J/test"
+touch "$J/test/gh-951-genuine-test.sh"
+mk_doc "$J" GH-951-genuine.md 2 2 2 "$(contract_for MISS_GEN src/genuine_art.js)"
+
+cat >"$J/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-950 · existing artifact** 🆕 — all artifacts pre-exist → [d](PROJECT/2-WORKING/GH-950-existing.md) · [#950](https://github.com/o/r/issues/950)
+- **GH-951 · genuine partial** 🆕 — genuine partial signals → [d](PROJECT/2-WORKING/GH-951-genuine.md) · [#951](https://github.com/o/r/issues/951)
+EOF
+
+out="$(QUEUE_PLAN_BASE_FILES_FILE="$J/.base-files" run_qp "$J" 2>/dev/null)"
+doc="$J/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+
+if ! grep -q "undocumented-partial-completion.*GH-950" <<<"$out" && [[ "$(wave_of "$doc" 950)" == "1" ]]; then
+  pass "J: (a) edit-existing-file lane in CHANGELOG is READY / active (not partial) [GH-85]"
+else
+  fail "J: (a) edit-existing-file lane was wrongly flagged partial or excluded from waves"
+fi
+
+if grep -q "undocumented-partial-completion.*GH-951" <<<"$out" && [[ -z "$(wave_of "$doc" 951)" ]]; then
+  pass "J: (b) lane with genuine partial signals is STILL partial [GH-85]"
+else
+  fail "J: (b) lane with genuine partial signals was not flagged partial or got sequenced in waves"
+fi
 
 echo
 echo "  marathon-plan: $PASS passed, $FAIL failed"
