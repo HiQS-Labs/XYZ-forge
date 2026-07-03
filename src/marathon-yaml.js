@@ -6,7 +6,7 @@
 //   phases:
 //     - id: p1
 //       name: <phase name>
-//       reviewer: codex | gemini (or codex*/gemini*)
+//       reviewer: codex | agy (or codex*/agy*)
 //       max_review_rounds: <int>
 //       depends_on: <phase id>        (optional)
 // Disambiguation is by indent: a top-level `name:` (indent 0) is the marathon name; an indented
@@ -111,8 +111,8 @@ function resolveOrder(plan) {
     if (!p.id) throw new Error('a phase is missing its id');
     if (byId.has(p.id)) throw new Error(`duplicate phase id: ${p.id}`);
     if (!p.reviewer) throw new Error(`phase ${p.id}: missing reviewer`);
-    if (!/^(codex|gemini)/.test(p.reviewer)) {
-      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex or gemini`);
+    if (!/^(codex|gemini|agy)/.test(p.reviewer)) {
+      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex, gemini, or agy`);
     }
     if (p.depends_on === p.id) throw new Error(`phase ${p.id}: depends_on itself`);
     byId.set(p.id, p);

@@ -12,7 +12,6 @@ set -euo pipefail
 # Routing config (all optional; leave unset to skip that model):
 #   CLAUDE_AGENT      — agent id that routes to claude-turn.sh
 #   CODEX_AGENT       — agent id that routes to codex-turn.sh
-#   GEMINI_AGENT      — agent id that routes to gemini-turn.sh
 #   AGY_AGENT         — agent id that routes to agy-turn.sh (Antigravity CLI; permanent cross-model lane)
 #   AIDER_AGENT       — agent id that routes to aider-turn.sh (Aider via OpenRouter; OpenAI-standard lane)
 # Peer threading (set by marathon-drive.sh — prevents "release to literal role-string" failure):
