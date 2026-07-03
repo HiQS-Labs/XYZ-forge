@@ -85,6 +85,14 @@ if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"
 else
   fail "GH-3: TICK_PARKED_THRESHOLD_MS override did not raise the threshold"
 fi
+# GH-3 (PR #100 review): a NON-FINITE override (Infinity) must NOT disable the gate — it falls back to
+# the default, so TASK-4's 15m gap is still flagged (can't accidentally turn parked-detection off).
+TICK_PARKED_THRESHOLD_MS=Infinity tick_a analyze --format json >"$WORK/analyze4c.json"
+if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit((r.parked_suspects||[]).some(s=>s.task==="TASK-4")?0:1)' "$WORK/analyze4c.json"; then
+  pass "GH-3: non-finite TICK_PARKED_THRESHOLD_MS=Infinity falls back to default (gate not disabled)"
+else
+  fail "GH-3: Infinity threshold silently disabled parked detection"
+fi
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

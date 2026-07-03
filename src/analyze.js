@@ -137,8 +137,13 @@ function computeParallelism(windows, runStart, runEnd) {
 // The threshold is operator-tunable via TICK_PARKED_THRESHOLD_MS (default 10 min) so
 // an autonomous-agent marathon can raise it without a code change.
 const DEFAULT_PARKED_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
-const PARKED_THRESHOLD_MS = Number(process.env.TICK_PARKED_THRESHOLD_MS) > 0
-  ? Number(process.env.TICK_PARKED_THRESHOLD_MS)
+// Require a FINITE positive number: unset/empty/0/negative/non-numeric fall back to the default,
+// and — per the cross-model review of PR #100 — Infinity/NaN are rejected too, so a stray
+// `TICK_PARKED_THRESHOLD_MS=Infinity` can't silently make `maxGap > threshold` impossible (disabling
+// the gate entirely). A large FINITE value is still honored — that is a legitimate operator suppress.
+const _envParkedThresholdMs = Number(process.env.TICK_PARKED_THRESHOLD_MS);
+const PARKED_THRESHOLD_MS = Number.isFinite(_envParkedThresholdMs) && _envParkedThresholdMs > 0
+  ? _envParkedThresholdMs
   : DEFAULT_PARKED_THRESHOLD_MS;
 
 /**
