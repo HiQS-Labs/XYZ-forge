@@ -3,6 +3,9 @@
 # FAIL, and stop without done when the round cap is exceeded.
 source "$(dirname "$0")/_setup.sh" runner-loop
 
+# GH-84
+export RUNNER_ROOT_DIR="$A"
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RUNNER="$(cd "$HERE/.." && pwd)/relay-automation/runner.sh"
 
@@ -123,6 +126,42 @@ if [ "$CAP_DONE_EVENTS" = "0" ] && [ "$(status_of TASK-CAP)" = "claimed" ]; then
 else
   fail "expected TASK-CAP to stay claimed with no done event"
 fi
+
+# 4. Regression: with a deliberately-dirtied tracked file in the REAL repo,
+# run_runner still passes (proving the guard no longer reaches the real tree).
+# GH-84
+README_BAK="$WORK/README.md.bak"
+REAL_README="$HERE/../README.md"
+cp "$REAL_README" "$README_BAK"
+cleanup() {
+  if [ -f "$README_BAK" ]; then
+    cp "$README_BAK" "$REAL_README"
+  fi
+  rm -rf "$WORK"
+}
+trap cleanup EXIT
+
+echo "dirty" >> "$REAL_README"
+
+# Create a clean task in $A. The runner should pass despite the real README.md being dirty.
+TICK_TS=2026-05-04T10:03:00.000Z tick_a log task.created TASK-REGRESSION --agent dispatcher --priority 5 --paths "README.md" >/dev/null
+TICK_TS=2026-05-04T10:03:01.000Z tick_a claim TASK-REGRESSION --agent alice --paths "README.md" >/dev/null
+TICK_TS=2026-05-04T10:03:02.000Z tick_a release TASK-REGRESSION --agent alice --to codex >/dev/null
+
+REG_LOG="$WORK/regression.log"
+make_log "$REG_LOG"
+
+if run_runner TASK-REGRESSION "$REG_LOG" "$PASS_CMD"; then
+  pass "runner passes regression test with dirty real repo tracked file"
+else
+  # Restore before failing so we don't leave the repo dirty
+  cp "$README_BAK" "$REAL_README"
+  fail "runner failed regression test with dirty real repo tracked file"
+fi
+
+# Restore README.md
+cp "$README_BAK" "$REAL_README"
+rm -f "$README_BAK"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
