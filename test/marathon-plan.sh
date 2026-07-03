@@ -295,6 +295,41 @@ else
   fail "J: (b) lane with genuine partial signals was not flagged partial or got sequenced in waves"
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario K — GH-5: contract-seam detection (coupled same-wave lanes)
+# ─────────────────────────────────────────────────────────────────────────────
+K="$WORK/K"; mkdir -p "$K"; echo '{}' >"$K/.gh-state.json"; : >"$K/.branches"
+# 920 + 921 are write-disjoint (producer.js vs consumer.js) but share the src/schema/ spine → coupled.
+# 922 lives in a different subtree (utils/report.js) → NOT coupled with either.
+mk_doc "$K" GH-920-producer.md 2 2 2 "$(contract_for MISS_SP src/schema/producer.js)"
+mk_doc "$K" GH-921-consumer.md 2 2 2 "$(contract_for MISS_SC src/schema/consumer.js)"
+mk_doc "$K" GH-922-report.md   2 2 2 "$(contract_for MISS_RP utils/report.js)"
+cat >"$K/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-920 · producer** 🆕 — independent → [d](PROJECT/2-WORKING/GH-920-producer.md) · [#920](https://github.com/o/r/issues/920)
+- **GH-921 · consumer** 🆕 — independent → [d](PROJECT/2-WORKING/GH-921-consumer.md) · [#921](https://github.com/o/r/issues/921)
+- **GH-922 · report** 🆕 — independent → [d](PROJECT/2-WORKING/GH-922-report.md) · [#922](https://github.com/o/r/issues/922)
+EOF
+run_qp "$K" >/dev/null 2>&1
+doc="$K/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+# all three write-disjoint → same wave; the seam detector must flag ONLY 920‖921 on src/schema.
+seamline="$(grep -E '^\- \*\*Wave .*share ' "$doc" | grep 'src/schema')"
+if [[ -n "$seamline" ]] && grep -q "#920" <<<"$seamline" && grep -q "#921" <<<"$seamline"; then
+  pass "K: contract seam flagged — #920 ‖ #921 share src/schema/ (pin a contract)"
+else
+  fail "K: expected a src/schema seam warning for #920‖#921, got: $(grep -A3 'Contract seams' "$doc" | head -6)"
+fi
+# 922 shares no deep dir with 920/921 → must NOT appear in any seam line.
+if grep -E '^\- \*\*Wave .*share ' "$doc" | grep -q "#922"; then
+  fail "K: #922 (utils/report.js) wrongly flagged as a contract seam"
+else
+  pass "K: #922 in a disjoint subtree is NOT flagged as coupled (no false seam)"
+fi
+# the section names the fix (pin a CONTRACT.md) — the 'pin the contract' step made explicit (fix 1).
+grep -qi "pin a .*CONTRACT" "$doc" && pass "K: plan states the 'pin a contract' step for the seam" || fail "K: no pin-a-contract guidance in the seam section"
+
 echo
 echo "  marathon-plan: $PASS passed, $FAIL failed"
 [[ "$FAIL" -eq 0 ]]

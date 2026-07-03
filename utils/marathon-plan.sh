@@ -375,6 +375,32 @@ function isGoGated(item) {
   return /gated on operator go|gated on (a |an )?operator|operator go\b|awaiting go\b/i.test(item.raw);
 }
 
+// GH-5: a "contract seam" is a directory two lanes SHARE (deeper than a top-level dir) even though
+// their exact write-sets are disjoint — a strong hint they depend on a common not-yet-built module or
+// schema. The wave-packer only defers on EXACT path collision, so such lanes co-wave and look
+// independent; in practice the consumer stalls on the producer's handoff unless the operator pins a
+// shared contract first. This detects the seam so the plan can say "pin a CONTRACT.md" up front.
+function dirPrefixes(p) {
+  const parts = String(p).split("/").filter(Boolean);
+  parts.pop(); // drop the file / trailing glob segment (e.g. a.js, **)
+  const out = []; let acc = "";
+  for (const seg of parts) { acc = acc ? acc + "/" + seg : seg; out.push(acc); }
+  return out; // "src/schema/a.js" -> ["src", "src/schema"]
+}
+function sharedSpine(wsA, wsB) {
+  // Deepest directory of >= 2 segments (contains a "/") shared by any path in A and any in B.
+  // Top-level-only sharing (both under "src/" or "test/") is intentionally NOT a seam — too coarse.
+  let best = null;
+  for (const pa of wsA) {
+    const pref = dirPrefixes(pa);
+    for (const pb of wsB) {
+      const setB = new Set(dirPrefixes(pb));
+      for (const d of pref) if (d.includes("/") && setB.has(d) && (!best || d.length > best.length)) best = d;
+    }
+  }
+  return best;
+}
+
 // PDDA triage ratings are integers 1 (low) .. 5 (highest) — see PROJECT/PDDA.md "Triage ratings".
 // Anything outside 1–5 (or absent) is treated as unrated (null) so the doc is held out of sequencing.
 const L = (x) => { const n = parseInt(String(x == null ? "" : x).trim(), 10); return n >= 1 && n <= 5 ? n : null; };
@@ -647,6 +673,26 @@ while (pending.length && guard++ < 100) {
 }
 waves.forEach((w, i) => w.forEach((r) => (r.wave = i + 1)));
 
+// GH-5: within each wave, flag pairs of write-disjoint lanes that share a directory spine — they
+// likely share a contract seam. Advisory (never re-waves them): the fix is to pin a contract, after
+// which they run parallel safely. Only lanes with a PROVEN write-set (from a contract) are judged.
+const contractSeams = [];
+for (const w of waves) {
+  for (let i = 0; i < w.length; i++) {
+    for (let j = i + 1; j < w.length; j++) {
+      const a = w[i], b = w[j];
+      if (!a.writeset.length || !b.writeset.length) continue;
+      const spine = sharedSpine(a.writeset, b.writeset);
+      if (spine) {
+        contractSeams.push({ wave: a.wave, a, b, spine });
+        flag("warn", "coupled-lanes", a,
+          `same-wave lane shares the \`${spine}/\` spine with ${b.gh ? "#" + b.gh : b.slug} — write-disjoint but likely a shared contract seam`,
+          `pin a CONTRACT.md for the ${spine}/ interface and point both lane prompts at it before launching`);
+      }
+    }
+  }
+}
+
 // ── exit code from flags ─────────────────────────────────────────────────────
 const hasDrift = deduped.some((r) => r.state === "already-landed" || r.state === "already-closed");
 const held = deduped.filter((r) => ["unrated", "needs-doc", "needs-contract", "note-only", "not-ready", "blocked", "blocked-dep"].includes(r.state));
@@ -770,6 +816,24 @@ function renderQueueDoc() {
     }
     if (w.length) o.push("");
   });
+  // GH-5: contract seams — coupled lanes that need a pinned contract before they can truly parallelize.
+  o.push("## Contract seams — pin a contract before launching (GH-5)");
+  o.push("");
+  if (contractSeams.length === 0) {
+    o.push("_None — no two same-wave lanes share a directory spine (deeper than a top-level dir)._");
+    o.push("");
+  } else {
+    o.push("These same-wave lanes are **write-disjoint but share a directory spine**, so they likely share");
+    o.push("an interface (a not-yet-built module/schema). xyz is not for tightly-coupled work: pin a short");
+    o.push("`CONTRACT.md` for the seam and point **each** lane's prompt at it (code TO the contract, not to");
+    o.push("the other lane's source), or the split can stall when the consumer waits on the producer's handoff.");
+    o.push("");
+    for (const s of contractSeams) {
+      const an = s.a.gh ? `#${s.a.gh}` : s.a.slug, bn = s.b.gh ? `#${s.b.gh}` : s.b.slug;
+      o.push(`- **Wave ${s.wave}:** ${an} ‖ ${bn} share \`${s.spine}/\` → pin a contract for that seam.`);
+    }
+    o.push("");
+  }
   o.push("## Held / flagged — excluded from active waves");
   o.push("");
   const buckets = [
