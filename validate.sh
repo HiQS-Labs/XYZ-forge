@@ -22,6 +22,7 @@ TESTS=(
   "terminality-seal.sh"          # GH-41 (terminal seal edge cases — cross-model review of PR #99)
   "auto-sync.sh"
   "analyze.sh"
+  "workstealing-verdict.sh"      # GH-4 (work-stealing via take + lane-count-independent verdict)
   "claim-cap.sh"
   "reap.sh"
   "heartbeat.sh"

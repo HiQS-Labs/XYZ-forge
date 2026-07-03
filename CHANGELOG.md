@@ -4,6 +4,13 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-03
 
+### GH-4 SHIPPED (Plan A lane 3, PR #101) — lane-count-independent verdict + work-stealing unblocked
+The run success bar was `concurrency% AND each agent ≥2 done` — but a clean 2-lane/2-agent split gives 1 done each *by construction*, so a flawless run failed the bar, and the manual `handoff-exclusive` rule *blocked* a fast agent from crossing lanes precisely to protect that (broken) per-agent bar — leaving idle tail-time on the table. Fixed all three ways (events-only):
+- **(1) `tick analyze` emits a VERDICT** (`pass`/`fail`/`incomplete`) gating on concurrency% + zero-parked + **all-lanes-done** + **zero-collisions**, and explicitly **not** on per-agent done count (`computeVerdict`; target `TICK_CONCURRENCY_TARGET_PCT`, finite-tunable, default 50). A `circuit_broken` or still-open lane counts as not-done → FAIL.
+- **(2) Work-stealing** needed no new mechanism: `src/take.js` already selects the highest-priority `open` task whose paths don't overlap *any* active claim, so a free agent that `take`s after finishing pulls a collision-free item from another lane. Removing the per-agent bar makes the resulting imbalance a *win* — the verdict now PASSES a 2-vs-1 done split.
+- **(3) Lane balance** — a per-agent idle-tail line surfaces imbalance; `computeCollisions` reports overlapping concurrent claims (should be 0 — verifies the claim-lock containment invariant held).
+- `test/workstealing-verdict.sh` (6, end-to-end: beta steals C1 from a free lane → board drains all-done → **VERDICT PASS on a 2-vs-1 split**, the exact case the old bar failed) + `test/analyze.sh` (+2: 0 collisions, FAIL on an undone/broken lane). Additive JSON fields → `watchdog.sh`/`poll.sh` unaffected. `validate.sh` **87/87**. Deferred: runner auto-`take`-loop + wiring the verdict into a marathon exit gate.
+
 ### GH-3 SHIPPED (Plan A lane 2, PR #100) — parked-claim detector no longer false-flags active autonomous agents
 `tick analyze`'s parked-claim detector (`src/analyze.js`) disqualified a fully-active 90%-concurrency run: its liveness signal was **`task.heartbeat`-only** and the fixed 10-min threshold is human-paced, but an autonomous subagent in a single long atomic tool call has **no yield point** to emit a `tick ping`, so it looked parked. Fixed events-only (keeps the detector's "no git" invariant):
 - **(2) Liveness = any `task.*` event from the agent** for that task inside the window — `scope_changed`, `commented`, a re-claim, `done` — not just `task.heartbeat`. The truest events-only proxy for "work happening."

@@ -1,6 +1,7 @@
 'use strict';
 
 const { readAllEvents } = require('./events');
+const { setsOverlap } = require('./paths'); // GH-4: collision detection (overlapping concurrent claims)
 
 // Run 2: event-log-only analyzer.
 //
@@ -119,6 +120,99 @@ function computeParallelism(windows, runStart, runEnd) {
     run_window_ms: runMs,
     concurrent_pct: runMs > 0 ? Math.round((concurrentMs / runMs) * 100) : null,
   };
+}
+
+// GH-4: the run verdict must NOT gate on a fixed per-agent `done` count — a clean 2-lane / 2-agent
+// split gives 1 done each by construction, so ">= 2 done/agent" fails a flawless run. Gate instead on
+// what actually signals a good concurrent run: enough concurrency, zero parked suspects, every claimed
+// lane reached done, and zero collisions. This also unblocks work-stealing: a fast agent that `take`s a
+// second item from another lane (turning idle tail-time into real parallel work) produces an *imbalanced*
+// per-agent count that the old bar punished but this verdict rewards.
+const DEFAULT_CONCURRENCY_TARGET_PCT = 50;
+const _envConcTarget = Number(process.env.TICK_CONCURRENCY_TARGET_PCT);
+const CONCURRENCY_TARGET_PCT = Number.isFinite(_envConcTarget) && _envConcTarget >= 0
+  ? _envConcTarget
+  : DEFAULT_CONCURRENCY_TARGET_PCT;
+
+/**
+ * Collisions = pairs of time-overlapping claim windows held by DIFFERENT agents whose paths overlap.
+ * The claim lock should make this impossible, so a non-zero count is a real containment failure — the
+ * verdict's "zero collisions" gate verifies the invariant held rather than assuming it.
+ * @param {Object[]} windows - as returned by {@link buildClaimWindows}
+ * @returns {Object[]} `{tasks:[a,b], agents:[a,b]}` collision pairs
+ */
+function computeCollisions(windows) {
+  const iv = windows
+    .map(w => ({ task: w.task, agent: w.agent, paths: w.paths || [], o: toMs(w.openedAt), c: w.closedAt ? toMs(w.closedAt) : Infinity }))
+    .filter(w => w.o !== null);
+  const collisions = [];
+  for (let i = 0; i < iv.length; i++) {
+    for (let j = i + 1; j < iv.length; j++) {
+      const a = iv[i], b = iv[j];
+      if (a.agent === b.agent) continue;
+      if (Math.min(a.c, b.c) <= Math.max(a.o, b.o)) continue; // no time overlap
+      if (setsOverlap(a.paths, b.paths)) collisions.push({ tasks: [a.task, b.task], agents: [a.agent, b.agent] });
+    }
+  }
+  return collisions;
+}
+
+/**
+ * Per-agent idle-tail (lane balance): the wall-clock between an agent's LAST event and the run end.
+ * A large tail is the imbalance signal (fix 3) — the fast agent finished and idled while a slower lane
+ * ran on. Sorted worst-first.
+ * @param {Object[]} events - task.* events
+ * @param {string} runEnd - ISO run-window end
+ * @param {string[]} agentNames - agents to report (dispatcher already excluded)
+ * @returns {Object[]} `{agent, last_event, idle_tail_ms}` worst tail first
+ */
+function computeBalance(events, runEnd, agentNames) {
+  const endMs = toMs(runEnd);
+  const balance = [];
+  for (const name of agentNames) {
+    let last = null, lastTs = null;
+    for (const e of events) {
+      if (e.agent !== name) continue;
+      const t = toMs(e.ts);
+      if (t !== null && (last === null || t > last)) { last = t; lastTs = e.ts; }
+    }
+    if (last === null) continue;
+    balance.push({ agent: name, last_event: lastTs, idle_tail_ms: endMs !== null ? Math.max(0, endMs - last) : 0 });
+  }
+  balance.sort((a, b) => b.idle_tail_ms - a.idle_tail_ms || a.agent.localeCompare(b.agent));
+  return balance;
+}
+
+/**
+ * The run verdict (GH-4): pass/fail/incomplete on concurrency + parked + all-lanes-done + collisions,
+ * deliberately NOT on per-agent done counts.
+ * @returns {{verdict: 'pass'|'fail'|'incomplete', checks: Object, reasons: string[]}}
+ */
+function computeVerdict(parallelism, parkedSuspects, windows, doneTaskIds, collisions) {
+  const claimedTasks = new Set(windows.map(w => w.task));
+  const undone = Array.from(claimedTasks).filter(t => !doneTaskIds.has(t)).sort();
+  const pct = parallelism.concurrent_pct;
+  const checks = {
+    concurrency_pct: pct,
+    concurrency_target_pct: CONCURRENCY_TARGET_PCT,
+    concurrency_ok: pct !== null && pct >= CONCURRENCY_TARGET_PCT,
+    parked_ok: parkedSuspects.length === 0,
+    all_lanes_done: claimedTasks.size > 0 && undone.length === 0,
+    undone_tasks: undone,
+    no_collisions: collisions.length === 0,
+    collisions: collisions.length,
+  };
+  const reasons = [];
+  if (!checks.concurrency_ok) {
+    reasons.push(pct === null ? 'concurrency not computable' : `concurrency ${pct}% < ${CONCURRENCY_TARGET_PCT}% target`);
+  }
+  if (!checks.parked_ok) reasons.push(`${parkedSuspects.length} parked-claim suspect(s)`);
+  if (!checks.all_lanes_done) reasons.push(claimedTasks.size === 0 ? 'no lanes claimed' : `lanes not done: ${undone.join(', ')}`);
+  if (!checks.no_collisions) reasons.push(`${collisions.length} collision(s)`);
+  let verdict;
+  if (pct === null) verdict = 'incomplete';
+  else verdict = reasons.length === 0 ? 'pass' : 'fail';
+  return { verdict, checks, reasons };
 }
 
 // Parked-claim detection (Run 3). A claim window is a "parked-claim suspect" if
@@ -336,10 +430,18 @@ function analyze(repoRoot) {
   const doneTaskIds = new Set(events.filter(e => e.type === 'task.done').map(e => e.task));
   const cost = computeCost(allEvents, windows, doneTaskIds, parallelism.run_window_ms, process.env.TICK_RUN_TYPE);
 
+  // GH-4: collisions, lane balance, and a lane-count-independent verdict.
+  const collisions = computeCollisions(windows);
+  const balance = computeBalance(events, window.latest_event, Array.from(perAgent.keys()));
+  const verdict = computeVerdict(parallelism, parked_suspects, windows, doneTaskIds, collisions);
+
   return {
     window,
     parallelism,
     parked_suspects,
+    collisions,
+    balance,
+    verdict,
     agents: Array.from(perAgent.values()).sort((a, b) => a.agent.localeCompare(b.agent)),
     event_counts: {
       created: events.filter(e => e.type === 'task.created').length,
@@ -380,6 +482,26 @@ function renderHuman(report) {
     }
   } else {
     out.push('parked-claim suspects: none');
+  }
+  // GH-4: collisions, lane balance, and the lane-count-independent verdict.
+  const cols = report.collisions || [];
+  if (cols.length) {
+    out.push(`collisions (overlapping concurrent claims): ${cols.length}`);
+    for (const x of cols) out.push(`  ${x.tasks.join(' ↔ ')} (${x.agents.join(' / ')})`);
+  } else {
+    out.push('collisions (overlapping concurrent claims): 0');
+  }
+  const bal = report.balance || [];
+  if (bal.length && bal[0].idle_tail_ms > 0) {
+    out.push(`lane balance: ${bal[0].agent} idle ${humanDuration(bal[0].idle_tail_ms)} tail (finished first) — a fast agent can \`tick take\` a free lane to fill it`);
+  } else if (bal.length) {
+    out.push('lane balance: even (no idle tail)');
+  }
+  const v = report.verdict;
+  if (v) {
+    out.push(v.verdict === 'pass'
+      ? 'VERDICT: PASS (concurrency + zero-parked + all-lanes-done + zero-collisions; NOT gated on per-agent done count)'
+      : `VERDICT: ${v.verdict.toUpperCase()} — ${v.reasons.join('; ') || 'run window too short'}`);
   }
   out.push('');
   out.push('--- per agent ---');

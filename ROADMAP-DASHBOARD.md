@@ -38,10 +38,11 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 60 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 60 · 🔮 0 · 🔲 0
+Summary: 61 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 61 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-4 · Lane imbalance + no work-stealing undercuts the bars | ✅ | [GH-4-WORKSTEALING-VERDICT.md](PROJECT/3-COMPLETED/GH-4-WORKSTEALING-VERDICT.md) · [#4](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/4) |
 | GH-3 · Parked-claim threshold false-positive for autonomous agents | ✅ | [GH-3-PARKED-CLAIM-FALSE-POSITIVE.md](PROJECT/3-COMPLETED/GH-3-PARKED-CLAIM-FALSE-POSITIVE.md) · [#3](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/3) |
 | GH-88 · Cross-repo marathon monitor v1.0 (read-only fzf TUI) | ✅ | [GH-88-CROSS-REPO-MARATHON-MONITOR.md](PROJECT/3-COMPLETED/GH-88-CROSS-REPO-MARATHON-MONITOR.md) · [#88](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | ✅ | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/3-COMPLETED/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |

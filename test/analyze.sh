@@ -57,6 +57,16 @@ else
   fail "expected non-zero concurrent-claim time; got: $(echo "$HUMAN" | grep concurrent)"
 fi
 
+# GH-4: verdict + collisions on this board. TASK-003 was circuit_broken (not done) and the two lanes
+# never path-overlap, so: 0 collisions, and VERDICT FAIL because a claimed lane didn't reach done
+# (proves the verdict counts a broken/undone lane as a failure — and is not fooled by the 2 done).
+echo "$HUMAN" | grep -q "collisions (overlapping concurrent claims): 0" \
+  && pass "verdict: 0 collisions on disjoint lanes" \
+  || fail "expected 0 collisions in: $(echo "$HUMAN" | grep -i collision)"
+echo "$HUMAN" | grep -qE "VERDICT: FAIL" && echo "$HUMAN" | grep -q "TASK-003" \
+  && pass "verdict: FAIL — a claimed lane (TASK-003) did not reach done" \
+  || fail "expected VERDICT: FAIL citing TASK-003 in: $(echo "$HUMAN" | grep -i verdict)"
+
 # --write: appends auto-analyzed section to a target file.
 TARGET="$WORK/obs.md"
 echo "# Observations" >"$TARGET"
