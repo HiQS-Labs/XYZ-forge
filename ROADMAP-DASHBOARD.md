@@ -38,10 +38,11 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 62 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 62 · 🔮 0 · 🔲 0
+Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 63 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-104 · Full-mirror vendor install (foreign repos get the COMPLETE XYZ file set) | ✅ | [#104](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/104) |
 | GH-5 · Contract-seam warning for coupled lanes | ✅ | [GH-5-CONTRACT-SEAM-WARNING.md](PROJECT/3-COMPLETED/GH-5-CONTRACT-SEAM-WARNING.md) · [#5](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/5) |
 | GH-4 · Lane imbalance + no work-stealing undercuts the bars | ✅ | [GH-4-WORKSTEALING-VERDICT.md](PROJECT/3-COMPLETED/GH-4-WORKSTEALING-VERDICT.md) · [#4](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/4) |
 | GH-3 · Parked-claim threshold false-positive for autonomous agents | ✅ | [GH-3-PARKED-CLAIM-FALSE-POSITIVE.md](PROJECT/3-COMPLETED/GH-3-PARKED-CLAIM-FALSE-POSITIVE.md) · [#3](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/3) |
