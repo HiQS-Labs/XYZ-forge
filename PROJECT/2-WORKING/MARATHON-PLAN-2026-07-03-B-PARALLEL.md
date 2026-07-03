@@ -25,28 +25,25 @@ execution: parallel · dogfood via swarm-preflight → marathon-drive (or Sonnet
 > **parallel dogfood**: the lane set was chosen so that most lanes are write-disjoint, and the
 > few that aren't force the harness to serialize them itself.
 
-## ⛔ HELD — do not kick off (2026-07-03)
+## ✅ HOLD LIFTED (2026-07-03)
 
-A **concurrent AI is editing the vendor installer** (`install.sh` / `relay-automation/xyz-vendor.sh`)
-to make it **fully independent for external repos** (a vendored install ships the *complete* XYZ file
-set). Operator's call: **wait for that work to finish before firing either plan.** It is *not* fixing
-#94's heredoc bug and is *not* editing individual harness files — but it holds the same installer files.
+The concurrent vendor-installer work **landed in `5972ef4`** (*full-mirror XYZ install + vendor-aware
+consult*) and is pushed. Contention is over. Re-confirmed against that commit:
 
-- **#94 — HELD-contested.** Still a real lane (the heredoc `!`-mangling bug is unfixed), but blocked on
-  `install.sh` / `xyz-vendor.sh` until the other AI lands. Do not run it in any wave meanwhile.
-- **#96 — WATCH.** The "full XYZ file set / independent vendor" work plausibly touches
-  `relay-automation/xyz-sync.sh` (this lane's write-set). Re-confirm disjointness before Wave 1, or the
-  vendor change may have already moved #96's ground.
-- Every other lane's write-set is clear of the installer, so the plan below is unchanged once the hold lifts.
-- **Plan A is unaffected** (kernel/scheduler files only) — it could run during the hold if desired.
+- **#94 — UNBLOCKED, but RE-VERIFY first.** `5972ef4` rewrote `relay-automation/xyz-vendor.sh` (73 lines,
+  mostly deletions) and did **not** touch `install.sh`. So the ground under #94 moved: **reproduce the
+  heredoc `!`→`\!` mangling against the new `xyz-vendor.sh`/`install.sh` before building** — the bug may
+  have been incidentally fixed. If it no longer repros, close #94 as fixed-by-5972ef4 instead of building.
+- **#96 — CLEAR.** `relay-automation/xyz-sync.sh` was **not** touched by the vendor work (last change
+  `f2a52a9`), so #96 is genuinely independent. WATCH flag removed.
+- **Plan A is unaffected** (kernel/scheduler files only) and is being started now.
 
 ## Can we dogfood it with parallel runs? — Yes.
 
-11 lanes (10 active + **#94 held**) → **3 waves, ~7 lanes wide at peak** (was 8 before the vendor-installer
-hold). Five active lanes are fully write-disjoint and run together; two shared-file zones are each 2 deep;
-one lane (#54) edits the brief template in *both* zone files, so it runs last, alone. This is a *good*
-dogfood precisely because it isn't embarrassingly parallel — it makes `swarm-preflight`'s write-set
-disjointness check do real work.
+11 lanes → **3 waves, ~8 lanes wide at peak** (#94 rejoins Wave 1 pending its re-verify gate). Six lanes
+are fully write-disjoint and run together; two shared-file zones are each 2 deep; one lane (#54) edits the
+brief template in *both* zone files, so it runs last, alone. This is a *good* dogfood precisely because it
+isn't embarrassingly parallel — it makes `swarm-preflight`'s write-set disjointness check do real work.
 
 ## The one safety rule
 
@@ -60,8 +57,7 @@ Two lanes are safe to run concurrently **iff their write-sets are disjoint**. Co
 | `utils/swarm-preflight.sh` | ❌ serialize | **#89** → **#55** |
 | `utils/marathon-plan.sh` | ❌ serialize | **#86** → **#48** |
 | `swarm-preflight.sh` **and** `marathon-plan.sh` (brief template) | ❌ cross-zone — run alone, last | **#54** |
-| `install.sh` / `xyz-vendor.sh` | ⛔ **HELD** — concurrent AI editing vendor installer | **#94** (blocked until they land) |
-| independent (one lane per distinct file) | ✅ parallel | #92, #93, #23, #61 · #96 (⚠️ watch vendor overlap) |
+| independent (one lane per distinct file) | ✅ parallel | #92, #93, #96, #23, #61, #94 (⚠️ re-verify repro vs 5972ef4 first) |
 
 ## Per-lane write-sets (confirmed)
 
@@ -69,9 +65,9 @@ Two lanes are safe to run concurrently **iff their write-sets are disjoint**. Co
 |---|------|---------------------|------|
 | #92 | poll.sh whole-line-bold pointer → turn-1 deadlock (🔴) | `relay-automation/poll.sh` (+test) | independent |
 | #93 | tick analyze % spans whole log, not the run | `src/analyze.js` (+`bin/tick`, +test) | independent* |
-| #96 | XYZ⇄Rebalance: xyz-sync check · XYZ.json emit · tick-lane consume | `relay-automation/xyz-sync.sh` + `src/take.js` | independent* · ⚠️ **watch** vendor-installer overlap |
+| #96 | XYZ⇄Rebalance: xyz-sync check · XYZ.json emit · tick-lane consume | `relay-automation/xyz-sync.sh` + `src/take.js` | independent* (xyz-sync.sh clear of 5972ef4) |
 | #23 | Cursor CLI lane (3rd cross-model worker) | **new** `relay-automation/cursor-turn.sh` + routing in `marathon-agent.sh`/`marathon-drive.sh` | independent |
-| #94 | Installer heredoc mangles `!`→`\!` | `install.sh` / `xyz-vendor.sh` (installer runtime) | ⛔ **HELD** — concurrent AI editing vendor installer |
+| #94 | Installer heredoc mangles `!`→`\!` | `install.sh` / `xyz-vendor.sh` (installer runtime) | independent · ⚠️ **re-verify repro vs 5972ef4 before building** |
 | #61 | CI: GitHub Actions Tier-1 lint + Tier-2 validate gate | **new** `.github/workflows/*.yml` | independent |
 | #89 | swarm-preflight: no greenfield (new-file) ready path | `utils/swarm-preflight.sh` (+test) | swarm-preflight |
 | #55 | swarm-preflight: auto-include changed artifact's tests | `utils/swarm-preflight.sh` (+test) | swarm-preflight |
@@ -85,10 +81,9 @@ files (`analyze.js` vs `take.js`), so they're parallel-safe unless a lane needs 
 
 ## Recommended waves
 
-**Wave 1 (7 lanes ‖):** #92 ‖ #93 ‖ #96 ‖ #23 ‖ #61 ‖ **#89** ‖ **#86**  *(#94 HELD — see hold banner)*
+**Wave 1 (8 lanes ‖):** #92 ‖ #93 ‖ #96 ‖ #23 ‖ #94 ‖ #61 ‖ **#89** ‖ **#86**  *(#94 gated on its re-verify — see hold-lifted note)*
 **Wave 2 (2 lanes ‖):** **#55** ‖ **#48**  *(second lane of each shared-file zone)*
 **Wave 3 (1 lane):** **#54**  *(cross-zone brief template — after both zones settle)*
-**Deferred:** **#94** — fires only after the concurrent vendor-installer work lands (then re-confirm `install.sh`/`xyz-vendor.sh` write-set).
 
 Suggested branches: `marathon/gh-<n>-<slug>-2026-07-03` per lane (one per worktree).
 
