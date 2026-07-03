@@ -1,5 +1,5 @@
 # Marathon Phase gh85
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH85-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -86,3 +86,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   - Added regression test cases in `test/marathon-plan.sh` Scenario J verifying both that edit-existing-file lanes are READY/active and that genuine partial lanes are still flagged `partial`.
   - Ran `bash test/marathon-plan.sh` to confirm all 36 test cases pass successfully.
 
+### Round 1 · Reviewer · codex
+
+**Verdict:** Approved
+
+- Reviewed the on-disk changes in `utils/marathon-plan.sh` and `test/marathon-plan.sh` against the GH-85 brief.
+- Confirmed the partial detector now requires evidence of a net-new artifact at the contract base ref before adding `some-artifacts-exist`, and `changelog-mentions-it` is no longer used as a signal.
+- Confirmed the new Scenario J regression cases cover both sides of the brief: edit-existing-file lanes documented in `CHANGELOG.md` stay active, while genuine branch+test partial work still resolves to `partial`.
+- Verification: `bash test/marathon-plan.sh` -> 36 passed, 0 failed.
