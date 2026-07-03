@@ -67,7 +67,9 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # Space-delimited; a token matches only when flanked by spaces (exact-token match, no substring slip).
 # GH-85: test/marathon-plan.sh creates `$J/test/gh-951-genuine-test.sh` in a throwaway temp repo to
 # simulate the "tests-reference-slug" partial signal — a fixture literal, not a real reference.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh "
+# GH-63: test/signal-triage.sh passes `test/foo.sh` / `test/some-test.sh` as synthetic `--test` inputs
+# to exercise the classifier (they name no real file) — same class, skip them.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

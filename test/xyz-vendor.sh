@@ -26,10 +26,17 @@ mkdir -p "$WORK/foreign"; git init -q "$WORK/foreign"; REPO="$(cd "$WORK/foreign
 
 # --- vendor materializes a complete .xyz/ ---
 "$VENDOR" "$REPO" >/dev/null 2>&1 || fail "vendor exited non-zero"
-relay_n=$(find "$REPO/.xyz/relay-automation" -type f 2>/dev/null | wc -l | tr -d ' ')
-test_n=$(find "$REPO/.xyz/test" -type f 2>/dev/null | wc -l | tr -d ' ')
-# 16 relay-pkg files (10 relay-automation + 6 test) + 4 GH-49b marathon files (in relay-automation) = 20.
-[ "$((relay_n + test_n))" = 20 ] && pass "20 harness scripts vendored ($relay_n relay-automation + $test_n test)" || fail "expected 20 (16 relay-pkg + 4 marathon), got $((relay_n + test_n))"
+# The vendor mirrors whole dirs VERBATIM (VENDOR_DIRS="relay-automation bin src test skills"), so
+# assert the vendored copy MATCHES the harness — like the src/*.js check below — not a magic count.
+# The old `== 20` was for the curated relay-pkg manifest; the full-mirror change (5972ef4) ships every
+# harness script, so a fixed number is wrong. Count *.sh so transient fixture/data files can't flake it.
+relay_repo=$(find "$ROOT/relay-automation" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
+relay_van=$(find "$REPO/.xyz/relay-automation" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
+test_repo=$(find "$ROOT/test" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
+test_van=$(find "$REPO/.xyz/test" -name '*.sh' 2>/dev/null | wc -l | tr -d ' ')
+{ [ "$relay_van" = "$relay_repo" ] && [ "$test_van" = "$test_repo" ] && [ "$relay_van" -gt 0 ]; } \
+  && pass "full mirror matches harness ($relay_van relay-automation + $test_van test *.sh)" \
+  || fail "vendor mirror incomplete: relay-automation $relay_van/$relay_repo, test $test_van/$test_repo"
 src_repo=$(find "$ROOT/src" -name '*.js' | wc -l | tr -d ' ')
 src_van=$(find "$REPO/.xyz/src" -name '*.js' 2>/dev/null | wc -l | tr -d ' ')
 [ "$src_van" = "$src_repo" ] && [ "$src_van" -gt 0 ] && pass "all $src_van src/*.js vendored" || fail "src/*.js mismatch: vendored $src_van vs harness $src_repo"
