@@ -3,6 +3,7 @@
 # core (relay-turn-lib.sh) — same containment as codex-turn.sh/gemini-turn.sh, via a STUB
 # `claude` that performs the real turn-taker contract (tick + file edit).
 source "$(dirname "$0")/_setup.sh" claude-turn
+unset ALLOW_PATHS RELAY_FILE RELAY_TASK RELAY_AGENT RELAY_PEER RELAY_WORKTREE_ISOLATION
 export TICK_BIN="$TICK"
 SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/claude-turn.sh"
 tick_a init >/dev/null
@@ -157,6 +158,68 @@ seed_token RELAY-TURN-tickexempt
 run_shim RELAY-TURN-tickexempt claude-builder good; rc=$?
 [ "$rc" -eq 0 ] && pass ".tick writes exempted when host doesn't gitignore .tick (turn succeeds)" || fail "unignored .tick must not fail the turn (rc=$rc)"
 [ -d "$A/.tick" ] && pass ".tick state dir preserved (not rm-rf'd)" || fail ".tick was destroyed"
+
+filter_claude_from_path() {
+  local new_path="" dir
+  IFS=: read -ra parts <<< "$PATH"
+  for dir in "${parts[@]}"; do
+    [[ -n "$dir" ]] || continue
+    if [[ ! -x "$dir/claude" ]]; then
+      if [[ -z "$new_path" ]]; then
+        new_path="$dir"
+      else
+        new_path="$new_path:$dir"
+      fi
+    fi
+  done
+  echo "$new_path"
+}
+
+# --- (10) GH-58: discovery + fail-fast when not found -----------------------
+seed_token RELAY-TURN-missing
+(
+  empty_home="$WORK/empty-home"
+  mkdir -p "$empty_home"
+  err_log="$WORK/missing-err.log"
+  
+  clean_path="$(filter_claude_from_path)"
+  
+  PATH="$clean_path" HOME="$empty_home" RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-missing \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+    bash "$SHIM" >"$err_log" 2>&1; rc=$?
+    
+  [ "$rc" -eq 3 ] && pass "GH-58: missing claude -> exit 3" || fail "expected exit 3, got $rc"
+  grep -q "claude CLI not found on PATH; set CLAUDE_BIN or use a codex/agy builder" "$err_log" \
+    && pass "GH-58: clear error message printed" || fail "missing or incorrect error message: $(cat "$err_log")"
+) || exit 1
+
+# --- (11) GH-58: discovery succeeds with ~/.claude/local/claude ------------
+seed_token RELAY-TURN-localpath
+(
+  local_home="$WORK/local-home"
+  mkdir -p "$local_home/.claude/local"
+  
+  cp "$STUB" "$local_home/.claude/local/claude"
+  chmod +x "$local_home/.claude/local/claude"
+  
+  clean_path="$(filter_claude_from_path)"
+  
+  PATH="$clean_path" HOME="$local_home" RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-localpath \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+    bash "$SHIM" >/dev/null 2>&1; rc=$?
+    
+  [ "$rc" -eq 0 ] && pass "GH-58: resolves ~/.claude/local/claude -> exit 0" || fail "expected exit 0, got $rc"
+) || exit 1
+
+# --- (12) GH-58: resolves explicitly set CLAUDE_BIN ------------------------
+seed_token RELAY-TURN-explicit
+(
+  RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-explicit \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
+    bash "$SHIM" >/dev/null 2>&1; rc=$?
+    
+  [ "$rc" -eq 0 ] && pass "GH-58: resolves explicit CLAUDE_BIN -> exit 0" || fail "expected exit 0, got $rc"
+) || exit 1
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

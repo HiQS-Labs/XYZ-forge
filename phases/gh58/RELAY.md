@@ -70,3 +70,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH58-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh58/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · agy
+
+- **Files touched:**
+  - [claude-turn.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/claude-turn.sh)
+  - [claude-turn.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/test/claude-turn.sh) (test suite)
+  - [validate.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/validate.sh)
+  - [RELAY.md](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/phases/gh58/RELAY.md)
+- **Key decisions & implementation:**
+  - Implemented dynamic discovery of the `claude` CLI: check `PATH` via `command -v`, then probe `$HOME/.claude/local/claude`.
+  - Implemented a clear fail-fast exit if `claude` is unresolvable: exit with distinct non-zero code `3` and print a clear error message `claude CLI not found on PATH; set CLAUDE_BIN or use a codex/agy builder` to stderr.
+  - Added new test cases (10, 11, 12) to `test/claude-turn.sh` covering missing binary (exit 3 + message validation), local `~/.claude/local/claude` resolution, and explicit `CLAUDE_BIN` override.
+  - Sourced `test/_setup.sh` and cleaned environment variables to protect the test run from ambient runner environment leakage.
+  - Touched `validate.sh` with a tracking issue comment.
+- **Verification:** Ran `bash test/claude-turn.sh` which succeeded with 30 passes (0 failures).
