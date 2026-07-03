@@ -113,17 +113,49 @@ function foldWithMeta(events) {
     const staleReason = (ev) =>
       ev.agent !== winner.agent ? 'non-owner-agent' : 'stale-epoch';
 
-    // Terminal (done/break) — FENCED. Only the current owner, at an epoch >= the
-    // owner's, may terminate the task. This is the keystone: even a revived
-    // writer with the SAME agent id is stopped, because its epoch is below the
-    // current owner's. Stale / non-owner terminals are rejected, never applied.
+    // GH-41 (terminality-seal): the owner AS OF a given ts — the highest-epoch
+    // live claim placed at or before that ts. A terminal must be authorized
+    // against THIS owner, not the global `winner`: a *later*, higher-epoch
+    // reclaim would otherwise retroactively de-authorize an already-legitimate
+    // `task.done` (winner.agent/epoch move past it), silently resurrecting the
+    // token (done -> claimed, 0 rejections). liveClaims is pre-sorted highest
+    // epoch first, so the first with ts <= the target is the owner at that ts.
+    const ownerAsOf = (ts) => liveClaims.find(c => c.ts <= ts) || null;
+
+    // Terminal (done/break) — FENCED. Only the owner AT THE TERMINAL'S ts, at an
+    // epoch >= that owner's, may terminate the task. This is the keystone: even a
+    // revived writer with the SAME agent id is stopped, because its epoch is below
+    // the owner's. Stale / non-owner terminals are rejected, never applied.
+    //
+    // GH-41 (terminality-seal): authorize against `ownerAsOf(ev.ts)`, NOT the global
+    // `winner`. A later higher-epoch reclaim makes `winner` the usurper, which used
+    // to de-authorize the earlier legitimate `task.done` — yet the done predates the
+    // reclaim so `isStaleWrite` didn't log it either: net done -> claimed, 0
+    // rejections (silent resurrection). Judging by owner-at-terminal-time keeps the
+    // terminal authorized; the seal below then rejects the post-terminal reclaim.
     let terminal = null;
     for (const ev of evs) {
       if (ev.type !== 'task.done' && ev.type !== 'task.circuit_break') continue;
-      const authorized = winner && ev.agent === winner.agent && epochOf(ev) >= ownerEpoch;
+      const ownerAtTs = ownerAsOf(ev.ts);
+      const authorized = ownerAtTs && ev.agent === ownerAtTs.agent && epochOf(ev) >= epochOf(ownerAtTs);
       if (authorized) { terminal = ev; continue; } // last surviving terminal wins
       if (!winner) { rejections.push(makeRejection(ev, null, 'no-live-owner')); continue; }
       if (isStaleWrite(ev)) rejections.push(makeRejection(ev, winner, staleReason(ev)));
+    }
+
+    // GH-41 (terminality-seal): once an authorized terminal exists the token is
+    // SEALED — any claim placed AFTER the terminal's ts (higher OR lower epoch) is a
+    // reuse of a completed token, rejected into the audit log with the new distinct
+    // reason `claim-after-terminal` (a lifecycle violation, NOT an epoch/ownership
+    // one — never folded into stale-epoch/non-owner-agent). It is never applied as a
+    // done -> claimed flip: `terminal` still wins the status below. Rework of a
+    // completed unit of work must mint a fresh task id, not reclaim the sealed one.
+    // Reorder-safe: terminal.ts and the claim set are pure functions of the events.
+    if (terminal) {
+      const sealOwner = ownerAsOf(terminal.ts);
+      for (const c of claims) {
+        if (c.ts > terminal.ts) rejections.push(makeRejection(c, sealOwner, 'claim-after-terminal'));
+      }
     }
 
     // Walk events to set priority, paths, handoff_to, and (if winner exists)

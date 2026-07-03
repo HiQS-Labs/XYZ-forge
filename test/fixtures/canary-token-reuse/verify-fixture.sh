@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# verify-fixture.sh — prove the token-reuse canary is a *real, latent* fault.
+# verify-fixture.sh — prove the kernel SEALS a terminal token (GH-41 terminality-seal).
 #
-# Unlike the Gamma poison (which has a validate.sh oracle), this canary's whole point is that the
-# kernel does NOT catch it — so the "substrate" we verify is: folding the mutated stream silently
-# resurrects a done task (status done -> claimed) with ZERO rejections logged. If the kernel ever
-# starts catching it (status stays done, or a rejection is logged), this canary is obsolete and must
-# be retired — re-run this script after any src/project.js change.
+# History: this canary was authored (GH-40 Phase 2) to prove a *real, latent* fault — the kernel did
+# NOT catch token reuse, so folding the mutated stream silently resurrected a done task
+# (status done -> claimed) with ZERO rejections. GH-41 (decisions/2026-07-02-terminality-seal.md)
+# fixed foldWithMeta, so this oracle is now INVERTED: it asserts the kernel catches it — the mutated
+# stream folds to `done` + exactly ONE rejection (reason `claim-after-terminal`), the injected
+# post-terminal epoch-4 reclaim. If this ever regresses to `claimed 0` (or any rejections != 1), the
+# terminality seal has broken — re-run after any src/project.js change.
 #
 #   bash test/fixtures/canary-token-reuse/verify-fixture.sh
 #
@@ -22,7 +24,7 @@ trap cleanup EXIT
 
 fail() { echo "FIXTURE FAIL: $*"; exit 1; }
 
-project_status() {  # $1 = events dir -> prints "status rejections"
+project_status() {  # $1 = events dir -> prints "status count reasons" (reasons = comma-joined, or '-')
   local evdir="$1"
   local run="$SCRATCH/run"
   rm -rf "$run"; mkdir -p "$run/.tick/events"
@@ -32,27 +34,29 @@ project_status() {  # $1 = events dir -> prints "status rejections"
     const {readAllEvents}=require("./src/events");
     const r=foldWithMeta(readAllEvents(process.argv[1]));
     const t=r.tasks.get("RELAY-TURN");
-    process.stdout.write((t?t.status:"<none>")+" "+r.rejections.length);
+    const reasons=r.rejections.map(x=>x.reason).join(",")||"-";
+    process.stdout.write((t?t.status:"<none>")+" "+r.rejections.length+" "+reasons);
   ' "$run"
 }
 
 echo "[1/2] folding the mutated stream (7 real events + 1 injected epoch-4 claim)…"
 MUT="$(project_status "$HERE/events")"
-echo "  -> status='${MUT% *}' rejections=${MUT#* }"
-[ "$MUT" = "claimed 0" ] \
-  || fail "expected 'claimed 0' (silent resurrection); got '$MUT'. If status=done, the injected event is missing; if rejections>0 the kernel now catches it — retire this canary."
+echo "  -> '$MUT'  (status count reasons)"
+[ "$MUT" = "done 1 claim-after-terminal" ] \
+  || fail "expected 'done 1 claim-after-terminal' (kernel seals the terminal — GH-41); got '$MUT'. If 'claimed 0' the terminality seal has REGRESSED (silent resurrection is back); if the reason differs the seal is mis-classifying a lifecycle violation."
 
-echo "[2/2] control: same stream WITHOUT the injected event should be terminal…"
+echo "[2/2] control: same stream WITHOUT the injected event should be a clean terminal…"
 CTLDIR="$SCRATCH/control-src"
 rm -rf "$CTLDIR"; mkdir -p "$CTLDIR"
 for f in "$HERE"/events/*.jsonl; do
   grep -q '"ts":"2026-06-25T04:01:00.000Z"' "$f" || cp "$f" "$CTLDIR/"
 done
 CTL="$(project_status "$CTLDIR")"
-echo "  -> status='${CTL% *}' rejections=${CTL#* }"
-[ "$CTL" = "done 0" ] \
-  || fail "control stream should fold to 'done 0' (real terminal lifecycle); got '$CTL'"
+echo "  -> '$CTL'  (status count reasons)"
+[ "$CTL" = "done 0 -" ] \
+  || fail "control stream should fold to 'done 0 -' (real terminal lifecycle, nothing to seal); got '$CTL'"
 
 echo
-echo "FIXTURE OK: injected epoch-4 claim silently resurrects a done task (done->claimed, 0 rejections)."
-echo "The kernel does NOT catch token reuse — a Reviewer must. Expected verdict: see EXPECTED.md."
+echo "FIXTURE OK (GH-41): the injected post-terminal epoch-4 reclaim is SEALED —"
+echo "the token stays 'done' and the reclaim is rejected as 'claim-after-terminal' (1 rejection)."
+echo "Control (no reclaim) folds clean to 'done 0'. The kernel now catches token reuse."
