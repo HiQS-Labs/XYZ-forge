@@ -6,14 +6,14 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 15 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 15 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-87 · Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter) | — | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/1-INBOX/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
 | GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | — | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/1-INBOX/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
-| GH-41 · task.done not terminal vs higher-epoch reclaim (silent token resurrection) | — | [decisions/2026-07-02-terminality-seal.md](decisions/2026-07-02-terminality-seal.md) · [GH-41-DONE-NOT-TERMINAL.md](PROJECT/1-INBOX/GH-41-DONE-NOT-TERMINAL.md) · [#41](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41) |
+| GH-41 · task.done not terminal vs higher-epoch reclaim (silent token resurrection) | ✅ | [decisions/2026-07-02-terminality-seal.md](decisions/2026-07-02-terminality-seal.md) · [GH-41-DONE-NOT-TERMINAL.md](PROJECT/3-COMPLETED/GH-41-DONE-NOT-TERMINAL.md) · [#41](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41) |
 | GH-23 · Cursor CLI lane (3rd cross-model worker) | ⏸️ | [#23](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/23) |
 | GH-30 · optional centralized transcript archive | — | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/1-INBOX/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |
 | Marathon dogfood · rebalance-OS parallel build queue (cross-repo, --target-root) | — | — |
@@ -38,10 +38,11 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 59 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 59 · 🔮 0 · 🔲 0
+Summary: 60 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 60 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-3 · Parked-claim threshold false-positive for autonomous agents | ✅ | [GH-3-PARKED-CLAIM-FALSE-POSITIVE.md](PROJECT/3-COMPLETED/GH-3-PARKED-CLAIM-FALSE-POSITIVE.md) · [#3](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/3) |
 | GH-88 · Cross-repo marathon monitor v1.0 (read-only fzf TUI) | ✅ | [GH-88-CROSS-REPO-MARATHON-MONITOR.md](PROJECT/3-COMPLETED/GH-88-CROSS-REPO-MARATHON-MONITOR.md) · [#88](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88) |
 | GH-63 · Signal triage stage for inbound signals before GH-*.md capture | ✅ | [GH-63-SIGNAL-TRIAGE-STAGE.md](PROJECT/3-COMPLETED/GH-63-SIGNAL-TRIAGE-STAGE.md) · [#63](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63) |
 | GH-44 · scratch-repo .git fall-through can pollute the parent repo (RCA) | ✅ | [GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md](PROJECT/3-COMPLETED/GH-44-SCRATCH-REPO-GIT-FALLTHROUGH.md) · [#44](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/44) |
