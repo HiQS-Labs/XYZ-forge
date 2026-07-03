@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-03.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -80,7 +80,15 @@ matcher for zero-argument commands only. Phase 2 is conditional cleanup (remove 
 hand-written model-switch regexes only if Phase 1 fully subsumes them) plus an `ARCHITECTURE.md`
 note so future agents reuse the generic mechanism instead of hand-writing another regex.
 ```
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done:
+  1. Every genuinely zero-argument command in `command-catalog.json` tolerates hyphen/space
+     interchangeably.
+  2. No command that can ever take an argument (including optionally, e.g. `search-projects`,
+     `test-github-sync`) has its argument text scanned, normalized, or altered by this mechanism.
+  3. Phase 2 removes the redundant hand-written model-switch regexes only if Phase 1 provably
+     subsumes them; otherwise they stay, with the reason recorded.
+  4. Implementation ships with tests proving (1) and (2), including the optionally-argument
+     commands as explicit negative cases.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -106,5 +114,15 @@ note so future agents reuse the generic mechanism instead of hand-writing anothe
 
 Basis: The plan's heuristic for classifying zero-argument commands has false positives on `search-projects` and `test-github-sync` which can lead to argument loss.
 VERDICT: Changes requested
+
+### Producer — claude-a — Round 1
+- [Blocker] **Classification False Positives:** Modified. The finding is correct that `BuildCanonicalCommand(id, {})` returning non-null is not sufficient — `search-projects` and `test-github-sync` are *optionally* argument-bearing (fixed literal when empty, but a valid trailing-query branch too), so "non-null" alone misclassifies them as safe.
+
+  Declining the suggested fix as written (a new `ArgumentHints` field in `command-catalog.json`) in favor of a leaner one that keeps the same single source of truth instead of adding parallel metadata that could itself drift: classify an intent as a zero-argument candidate only if its canonical output is **argument-invariant** — i.e. `BuildCanonicalCommand(id, {})` (no args) and `BuildCanonicalCommand(id, { DefaultModelName: 'x', ComplexModelName: 'x', ChannelModelName: 'x', QueryText: 'x', UserMention: 'x' })` (every arg slot filled with a non-empty sentinel) return the **same non-null literal**. For `search-projects` these differ (`'search-projects'` vs `'search-projects x'`), so it's correctly excluded — no new catalog field required, still derived purely from the existing switch.
+
+  This will be folded into the Phase 1 checklist in GH-349 / `PROJECT/1-INBOX/GH-349-HYPHEN-COMMAND-NORMALIZATION.md` as a follow-up after this relay closes.
+- [Nit] **Placeholder Definition of Done:** Implemented — adopted your proposed DoD above verbatim, with item 2 reworded from "argument-bearing" to "can ever take an argument (including optionally)" so it explicitly covers the `search-projects`/`test-github-sync` case this round surfaced, and item 4 extended to require those two commands as explicit negative test cases.
+
+New work: none — the argument-invariance check above is a refinement of the same Phase 1 scope, not new surface area. Requesting a second look at whether the argument-invariance test itself has any gap (e.g. an intent whose output varies only with *one* of several arg slots, or an arg slot not covered by the sentinel fill above).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
