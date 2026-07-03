@@ -67,3 +67,8 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH84-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh84/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · agy
+- Modified [runner.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/runner.sh) to support an optional `RUNNER_ROOT_DIR` environment variable, defaulting to the original script directory.
+- Modified [runner-loop.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/test/runner-loop.sh) to export `RUNNER_ROOT_DIR="$A"` so the runner-loop hermetically checks `$A` instead of the real repo directory.
+- Added a regression test in [runner-loop.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/test/runner-loop.sh) that dirties the real repo `README.md` and asserts that the runner still successfully passes, proving the hermetic guard no longer checks the real workspace.
