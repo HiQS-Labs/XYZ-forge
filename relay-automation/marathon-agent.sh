@@ -14,6 +14,7 @@ set -euo pipefail
 #   CODEX_AGENT       — agent id that routes to codex-turn.sh
 #   GEMINI_AGENT      — agent id that routes to gemini-turn.sh
 #   AGY_AGENT         — agent id that routes to agy-turn.sh (Antigravity CLI; permanent cross-model lane)
+#   AIDER_AGENT       — agent id that routes to aider-turn.sh (Aider via OpenRouter; OpenAI-standard lane)
 # Peer threading (set by marathon-drive.sh — prevents "release to literal role-string" failure):
 #   MARATHON_BUILDER  — builder agent id; when RELAY_AGENT matches this, RELAY_PEER = MARATHON_REVIEWER
 #   MARATHON_REVIEWER — reviewer agent id; when RELAY_AGENT is the reviewer, RELAY_PEER = MARATHON_BUILDER
@@ -31,6 +32,7 @@ me="${RELAY_AGENT:-}"
 claude_agent="${CLAUDE_AGENT:-}"
 codex_agent="${CODEX_AGENT:-}"
 agy_agent="${AGY_AGENT:-}"
+aider_agent="${AIDER_AGENT:-}"
 
 # RELAY_PEER threading: builder's peer is the reviewer; reviewer's peer is the builder.
 # A live turn that lacks an explicit peer can release to a literal role-string (Gemini 2026-06-15).
@@ -55,7 +57,11 @@ case "$me" in
     [[ -n "$agy_agent" ]] || die "RELAY_AGENT='$me' matched an empty AGY_AGENT — set AGY_AGENT"
     exec "$HERE/agy-turn.sh"
     ;;
+  "$aider_agent")
+    [[ -n "$aider_agent" ]] || die "RELAY_AGENT='$me' matched an empty AIDER_AGENT — set AIDER_AGENT"
+    exec "$HERE/aider-turn.sh"
+    ;;
   *)
-    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT to map it to a shim"
+    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT/AIDER_AGENT to map it to a shim"
     ;;
 esac

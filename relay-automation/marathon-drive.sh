@@ -207,14 +207,15 @@ RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '
 # (e.g. agy) — not just Claude. Builder defaults to claude for back-compat.
 export MARATHON_BUILDER="$BUILDER"
 export MARATHON_REVIEWER="$REVIEWER"
-export CLAUDE_AGENT="" CODEX_AGENT="" AGY_AGENT="" GEMINI_AGENT=""
+export CLAUDE_AGENT="" CODEX_AGENT="" AGY_AGENT="" GEMINI_AGENT="" AIDER_AGENT=""
 route_agent() {  # <agent-id> → export the matching *_AGENT var marathon-agent.sh routes on
   case "$1" in
     claude*) export CLAUDE_AGENT="$1" ;;
     codex*)  export CODEX_AGENT="$1" ;;
     agy*)    export AGY_AGENT="$1" ;;
     gemini*) export GEMINI_AGENT="$1" ;;
-    *)       die "agent '$1' not recognized — must start with claude/codex/agy/gemini" ;;
+    aider*)  export AIDER_AGENT="$1" ;;
+    *)       die "agent '$1' not recognized — must start with claude/codex/agy/gemini/aider" ;;
   esac
 }
 [[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"

@@ -92,5 +92,33 @@ elapsed=$(( $(date +%s) - start ))
 [ "$elapsed" -lt 20 ] && pass "timeout actually fired (${elapsed}s < 20s, not the 30s sleep)" \
   || fail "timeout did not fire: waited ${elapsed}s"
 
+# --- (7) AIDER advisor: answers via a stub, transcript captured (Aider↔OpenRouter lane) ----------
+# Non-secret key via a var (not a literal) so the security-scan credential rule's variable exclusion applies.
+FAKE_ORK="orkey-not-real"
+AIDER_STUB="$WORK/aider-stub"
+cat >"$AIDER_STUB" <<'EOF'
+#!/usr/bin/env bash
+set -u
+# Aider advisory stub: prints an answer to stdout (consult captures it). Ignores flags; never edits.
+printf 'ANSWER from aider stub\n[Pass] looks fine\nRECOMMENDATION: ship\n'
+exit "${AIDER_RC:-0}"
+EOF
+chmod +x "$AIDER_STUB"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" OPENROUTER_API_KEY="$FAKE_ORK" \
+  bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "aider advisor answers (exit 0)" || fail "aider exit=$rc ($out)"
+afile="$(ls "$OUT"/t-*/t.aider.md 2>/dev/null | head -1)"
+{ [ -s "$afile" ] && grep -q "ANSWER from aider" "$afile"; } && pass "aider transcript captured" || fail "no aider transcript"
+printf '%s' "$out" | grep -q "1 answered, 0 failed" && pass "aider counted as an answered advisor" || fail "aider not counted answered: $out"
+
+# --- (8) AIDER no OPENROUTER_API_KEY -> that advisor fails fast (all-fail exit 5, with the remedy) --
+rm -rf "$OUT"
+out="$(env -u OPENROUTER_API_KEY CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" \
+  bash "$CONSULT" --prompt "x" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
+[ "$rc" -eq 5 ] && pass "aider with no OPENROUTER_API_KEY -> all-fail exit 5" || fail "no-key aider exit=$rc (expected 5)"
+afile="$(ls "$OUT"/t-*/t.aider.md 2>/dev/null | head -1)"
+grep -q "OPENROUTER_API_KEY not set" "$afile" 2>/dev/null && pass "aider no-key transcript states the remedy" || fail "no-key remedy missing from transcript"
+
 echo "  consult: $PASS passed, $FAIL failed"
 exit 0

@@ -41,10 +41,11 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮
 
 ## Completed
 
-Summary: 55 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 55 · 🔮 0 · 🔲 0
+Summary: 56 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 56 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-77 · Aider ↔ OpenRouter turn-taker lane (discrete from Codex) | ✅ | [GH-77-AIDER-OPENROUTER-LANE.md](PROJECT/3-COMPLETED/GH-77-AIDER-OPENROUTER-LANE.md) · [#79](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/79) · [#77](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/77) |
 | GH-78 · optional hourly doc-preflight (contract-enforcing auto-edits + telemetry) | ✅ | [GH-78-DOC-PREFLIGHT-AUTOMATION.md](PROJECT/1-INBOX/GH-78-DOC-PREFLIGHT-AUTOMATION.md) · [#81](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/81) · [#78](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/78) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | ✅ | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#91](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/91) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
 | GH-58 · marathon --builder claude fails headless (exec: claude: not found) | ✅ | [GH-58-CLAUDE-TURN-PATH-DISCOVERY.md](PROJECT/1-INBOX/GH-58-CLAUDE-TURN-PATH-DISCOVERY.md) · [#58](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/58) |

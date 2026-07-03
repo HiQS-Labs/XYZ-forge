@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-77 aider ↔ OpenRouter lane SHIPPED (PR #79) — token-ownership [Blocker] fixed on merge
+Took the codex-reviewed PR #79 to merge directly: rebased onto main (churn conflicts + a one-line `validate.sh` test-list merge resolved; `marathon-drive.sh` auto-merged with GH-45's attempt-cap and GH-56's `reconcile_relay_task` both intact), fixed the review's `[Blocker]`, and cleared the two `[Should]`/`[Nit]` items.
+- **[Blocker] fixed** — `relay-automation/aider-turn.sh` now **proves token ownership before launching Aider**: after the best-effort `claim`, it asserts `claimer == self` via `tick info` and fails the turn (exit 5, before any mutation) if the claim didn't stick. Previously a missed claim still committed + exited 0, leaving the token open under the old owner and deadlocking the lane. New regression test (unowned token → exit 5, no commit, claimer unchanged).
+- **Test hygiene** — the new assertion exposed a latent ordering fragility: tick caps concurrent claims per agent (`MAX_ACTIVE_CLAIMS_PER_AGENT`), and the exit-6/5 failure cases left aider holding un-released tokens, so a later claim silently missed. `test/aider-turn.sh` now releases aider's slot after each failure case (as the real driver reaps a failed lane). **31/31**.
+- **[Should]/[Nit]** — moved the shipped `GH-77` doc from `PROJECT/1-INBOX` → `PROJECT/3-COMPLETED` and repointed the ROUTER link; normalized the test-count drift (26/28) to the one observed number, **31**.
+
 ### PR close-out — GH-78 doc-preflight merged (#81), #79 deferred; ledger hygiene (5 closed items → Completed)
 Finished the two open harness-review PRs (both content-reviewed via `relay-xyz` on 2026-07-02) and cleared the marathon plan's `already-closed` backlog.
 - **GH-78 / PR [#81](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/81) MERGED** (`115713f`) — agy-Approved opt-in doc-preflight (`utils/telemetry/preflight-docs.sh` + `test/preflight-docs.sh`). Rebased onto main via an isolated worktree (churn conflicts in `ROADMAP.md`/`CHANGELOG.md`/`ROADMAP-DASHBOARD.md` resolved to main; feature files clean), full `validate.sh` **green (exit 0)**, own test **14/14**, then squash-merged.

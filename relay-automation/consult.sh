@@ -23,12 +23,15 @@ set -euo pipefail
 #   --prompt TEXT     Inline question (mutually exclusive with --prompt-file).
 #   --out DIR         Parent dir for the run (default: relay-system/<today>/). Each run gets its own
 #                     timestamped subdir <label>-<HHMMSS>/ so same-day consults never clobber.
-#   --models CSV      Which advisors to run (default: codex,agy). Legacy `gemini` remains accepted
+#   --models CSV      Which advisors to run (default: codex,agy). Also: `aider` (Aider↔OpenRouter,
+#                     OpenAI-standard — needs OPENROUTER_API_KEY). Legacy `gemini` remains accepted
 #                     as an explicit alias for older tests/callers.
 #   --label SLUG      Run-subdir + transcript stem (default: consult).
 #
 # Env config:
 #   CODEX_BIN / AGY_BIN        binaries (default: codex / agy); tests inject stubs
+#   AIDER_BIN / AIDER_MODEL    Aider binary + OpenRouter model (default: aider / openrouter/anthropic/
+#                              claude-3.5-sonnet) for `--models ...,aider`; reads OPENROUTER_API_KEY.
 #   GEMINI_BIN                 legacy alias for AGY_BIN when `--models ...gemini` is used explicitly
 #   CODEX_FLAGS                codex sandbox flags (default: -s read-only)
 #   AGY_AUTH_TIMEOUT_S         short wall-clock cap for the agy auth probe (`agy whoami`); default 5.
@@ -51,6 +54,7 @@ ROOT="${CONSULT_ROOT:-"$(cd "$HERE/.." && pwd)"}"
 CODEX_BIN="${CODEX_BIN:-codex}"
 AGY_BIN="${AGY_BIN:-${GEMINI_BIN:-agy}}"
 GEMINI_BIN="${GEMINI_BIN:-$AGY_BIN}"
+AIDER_BIN="${AIDER_BIN:-aider}"   # --models ...,aider → advisory via Aider↔OpenRouter (needs OPENROUTER_API_KEY)
 die()  { printf 'consult: %s\n' "$*" >&2; exit 2; }
 warn() { printf 'consult: %s\n' "$*" >&2; }
 
@@ -167,6 +171,21 @@ run_gemini() {
     _guarded "$out" "$GEMINI_BIN" --yolo --skip-trust -p "$FULL_PROMPT"
   fi
 }
+run_aider() {
+  local out="$1"
+  # OpenRouter is pure API-key; a missing key would make Aider prompt interactively (deadlock under the
+  # cap). Skip fast with the remedy — this advisor is counted [FAIL], the others still answer.
+  if [[ -z "${OPENROUTER_API_KEY:-}" ]]; then
+    printf 'consult: OPENROUTER_API_KEY not set — Aider cannot reach OpenRouter. Export it (your OpenRouter key), then retry.\n' > "$out"
+    return 5
+  fi
+  # ADVISORY only: pass NO --file (Aider edits nothing) + --no-auto-commits; it answers to stdout, which
+  # is exactly what a consult captures. `--model openrouter/…` + OPENROUTER_API_KEY is Aider-native.
+  local model="${AIDER_MODEL:-openrouter/anthropic/claude-3.5-sonnet}"
+  _guarded "$out" "$AIDER_BIN" --model "$model" --message "$FULL_PROMPT" \
+    --yes-always --no-auto-commits --no-gitignore --no-check-update --no-analytics \
+    --no-show-model-warnings --no-stream --map-tokens 0
+}
 
 # --- fan out in parallel (indexed arrays — macOS bash 3.2 has no `declare -A`) --------------------
 PIDS=(); PMODELS=(); POUTS=()
@@ -184,6 +203,9 @@ for m in "${_models[@]}"; do
       ext="md"; [[ "${CONSULT_GEMINI_JSON:-0}" == "1" ]] && ext="json"
       f="$RUN_DIR/${LABEL}.gemini.$ext"
       run_gemini "$f" & PIDS+=("$!"); PMODELS+=("gemini"); POUTS+=("$f") ;;
+    aider)
+      f="$RUN_DIR/${LABEL}.aider.md"
+      run_aider "$f" & PIDS+=("$!"); PMODELS+=("aider"); POUTS+=("$f") ;;
     *) warn "unknown model '$m' — skipping" ;;
   esac
 done
