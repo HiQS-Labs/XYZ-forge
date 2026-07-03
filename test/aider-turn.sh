@@ -31,15 +31,21 @@ STUB="$WORK/aider"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-files=(); while (($#)); do
+files=(); chf=".aider.chat.history.md"; while (($#)); do
   case "$1" in
-    --file)    files+=("$2"); shift 2 ;;
-    --message) shift 2 ;;
-    *)         shift ;;
+    --file)              files+=("$2"); shift 2 ;;
+    --message)           shift 2 ;;
+    --chat-history-file) chf="$2"; shift 2 ;;
+    *)                   shift ;;
   esac
 done
 [ "${STUB_MODE:-good}" = empty ] && exit 0           # blocked backend: exit 0, no output, no edit
 printf 'aider-stub: edited for %s\n' "${RELAY_AGENT:-?}"   # stdout -> non-empty transcript
+# Mimic real Aider: it ALWAYS writes a chat-history file, defaulting to .aider.chat.history.md in CWD.
+# The shim MUST redirect it out of the repo (--chat-history-file); if it doesn't, the file lands as an
+# untracked off-allowlist change and trips the guard (exit 6) — the GH-77 live-E2E bug. Honoring the
+# flag here makes a future removal of the redirect detectable (the good-turn case would flip to exit 6).
+mkdir -p "$(dirname "$chf")" 2>/dev/null || true; printf 'stub chat history\n' >>"$chf"
 relay="${files[0]:-relay.md}"
 if [ "${STUB_MODE:-good}" = approve ]; then
   tmp="$(mktemp)"; sed 's/^STATUS:.*/STATUS: Approved/' "$relay" > "$tmp" && mv "$tmp" "$relay"
@@ -88,6 +94,10 @@ git -C "$A" log -1 --format='%s' | grep -q "aider headless" && pass "commit mess
 [ "$(tok_field RELAY-TURN-good status)" = "open" ] && [ "$(tok_field RELAY-TURN-good handoff-to)" = "claude-a" ] \
   && pass "shim handed the token to the peer (rtl_enforce GH-67, non-terminal STATUS)" \
   || fail "token not handed to peer: status=$(tok_field RELAY-TURN-good status) handoff=$(tok_field RELAY-TURN-good handoff-to)"
+# GH-77 live-E2E regression: real Aider writes .aider.chat.history.md (the stub now mimics this). The shim
+# MUST redirect it out of the repo via --chat-history-file; if the redirect is dropped, the file leaks
+# untracked into the tree and the good turn above flips to exit 6. Assert nothing .aider.* leaked.
+[ -z "$(ls -a "$A" 2>/dev/null | grep -i '^\.aider')" ] && pass "aider aux/history files redirected out of the tree (no .aider.* leak)" || fail "an .aider.* aux file leaked into the working tree (would trip off-allowlist, exit 6)"
 
 # --- (2b) GH-77 [Blocker]: token NOT owned by aider -> shim refuses (exit 5) before any mutation ---
 # Seed a token claimed by boss and NOT handed to aider. aider's best-effort claim must miss, so the
