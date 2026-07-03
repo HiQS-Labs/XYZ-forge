@@ -73,6 +73,7 @@ local change.
   `relay-drive.sh`) refuses to re-fire it (exit 8, no token), you capture the findings as an issue and
   stop. Re-firing a parked lane or going off-wave to deep-dive one item requires an explicit operator
   override (`--force`) or a replan note — never a quiet slide off the plan.
+- **Do not create new git branches** automatically. Only create a new branch if explicitly requested by the user.
 
 ## Conflict order
 
