@@ -4,6 +4,15 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-87 + GH-88 fit into the marathon and preflighted — surfaces a greenfield-artifact gap in `swarm-preflight`
+Reviewed both freshly-captured items ([#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) deep-research, [#88](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88) cross-repo marathon monitor) against the current marathon queue. Also synced remote [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87)'s title/body to match the local provider-agnostic capture doc.
+- Added a `## Swarm Preflight Contract` + checklist-style Definition of done to both [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/1-INBOX/GH-87-DEEP-RESEARCH-MODE.md) and [GH-88-CROSS-REPO-MARATHON-MONITOR.md](PROJECT/1-INBOX/GH-88-CROSS-REPO-MARATHON-MONITOR.md), so `utils/marathon-plan.sh`'s phase/acceptance-criteria gate treats them as unattended-runnable.
+- Re-ran `utils/marathon-plan.sh`: both score into today's **Wave 1** — independent zone, disjoint write-sets from #44/#63/#30 (GH-88 all-new `relay-automation/marathon-{ls,detail,tui}.sh`; GH-87 all-new `relay-automation/deep-research.mjs`). → [MARATHON-PLAN-2026-07-03.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-03.md).
+- `utils/swarm-preflight.sh --project-doc` on both returns **NOT-READY (exit 5)** — not a doc defect. The GH-39 A2 artifact-existence check requires every declared `artifacts[]` path to already exist at the evaluated ref; both are pure greenfield builds where none of the artifacts exist yet. `swarm-preflight` currently has no ready path for a from-scratch new-file lane (it assumes edit-existing-file lanes — the same assumption GH-85 names). Not fixed here; flagging as a follow-up gap rather than faking readiness with placeholder files.
+
+### GH-87 queued — provider-agnostic deep-research intake
+Captured [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) into [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/1-INBOX/GH-87-DEEP-RESEARCH-MODE.md) and parked it in `ROADMAP.md` per the PDDA issue-first SOP. The local capture keeps **Perplexity** as the first desired grounded-search backend but rewrites the project seam as **provider-agnostic** so the new Aider-capable harness does not hard-wire its search surface to one vendor or mutate Aider's default OpenAI-compatible provider settings.
+
 ### Marathon Wave 1 SHIPPED — GH-84 + GH-58 + GH-85, all agy-built / codex-Approved / merged (`82fbf0e`)
 Kicked off the marathon on the three collision-safe ready lanes (GH-45 excluded — it edits the driver scripts `marathon-drive.sh`/`relay-drive.sh`, a self-hosting hazard). Each ran headless via `marathon-drive.sh` (builder **agy**, reviewer **codex**) on its own `marathon/gh-<n>-…` branch, reached **STATUS: Approved** in 2 turns, passed its per-lane pre-advance gate, then all three merged `--no-ff` to main behind a **full `validate.sh` green** gate.
 

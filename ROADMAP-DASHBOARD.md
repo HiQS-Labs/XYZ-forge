@@ -6,10 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 21 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 5 · 🔮 0 · 🔲 0
+Summary: 23 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 5 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-88 · Cross-repo marathon monitor v1.0 (read-only fzf TUI) | — | [GH-88-CROSS-REPO-MARATHON-MONITOR.md](PROJECT/1-INBOX/GH-88-CROSS-REPO-MARATHON-MONITOR.md) · [#88](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88) |
+| GH-87 · Deep Research mode — provider-agnostic grounded search seam (Perplexity first adapter) | — | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/1-INBOX/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
 | GH-85 · marathon-plan undocumented-partial-completion false-positives on edit-existing-file lanes | ✅ | [GH-85-MARATHON-PLAN-PARTIAL-FALSE-POSITIVE.md](PROJECT/1-INBOX/GH-85-MARATHON-PLAN-PARTIAL-FALSE-POSITIVE.md) · [#85](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/85) |
 | GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | — | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/1-INBOX/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
 | GH-84 · test/runner-loop.sh non-hermetic — runner.sh dirty-guard checks the real repo | ✅ | [GH-84-RUNNER-LOOP-NONHERMETIC.md](PROJECT/1-INBOX/GH-84-RUNNER-LOOP-NONHERMETIC.md) · [#84](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/84) |

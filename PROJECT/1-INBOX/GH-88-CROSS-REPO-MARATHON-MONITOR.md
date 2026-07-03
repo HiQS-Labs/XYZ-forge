@@ -65,6 +65,30 @@ touches no kernel drive scripts — agy-safe, parallel-safe.
 
 ## Definition of done
 
-- `marathon-tui.sh` shows every registered repo's marathon state live, LIVE/STALE/IDLE/GONE correct.
-- Selecting a row previews that session's live RELAY.md status + recent tick events.
-- The monitor writes no new files to any monitored repo.
+- [ ] `marathon-tui.sh` shows every registered repo's marathon state live, LIVE/STALE/IDLE/GONE correct.
+- [ ] Selecting a row previews that session's live RELAY.md status + recent tick events.
+- [ ] The monitor writes no new files to any monitored repo.
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "path_absent", "path": "relay-automation/marathon-ls.sh" },
+    { "type": "path_absent", "path": "relay-automation/marathon-tui.sh" }
+  ],
+  "artifacts": [
+    "relay-automation/marathon-ls.sh",
+    "relay-automation/marathon-detail.sh",
+    "relay-automation/marathon-tui.sh",
+    "test/marathon-monitor.sh"
+  ],
+  "remediation": "Build the three read-only viewer scripts per the Deliverable section: marathon-ls.sh (registry col5 + lockfile liveness via kill -0 pid + newest tick marathon event -> one TSV row/repo), marathon-detail.sh <repo> (STATUS:/NEXT: + last ~10 tick events preview), marathon-tui.sh (fzf wrapper over marathon-ls.sh with a 2s reload-sync and --preview marathon-detail.sh {1}). Writes no new state to any monitored repo; row states (LIVE/STALE/IDLE/GONE) are derived, never stored. Add test/marathon-monitor.sh covering the lock-path branch (.git/relay-driver.lock for clones vs .relay-driver.lock for vendored .xyz/ installs) and all four row states.",
+  "lanes": {
+    "agy_safe": ["relay-automation/marathon-ls.sh", "relay-automation/marathon-detail.sh", "relay-automation/marathon-tui.sh", "test/marathon-monitor.sh"],
+    "orchestrator_only": [],
+    "note": "Independent leaf-util zone: read-only viewer, no kernel/relay-drive touch. agy-safe, parallel-safe with any other wave lane."
+  }
+}
+```
