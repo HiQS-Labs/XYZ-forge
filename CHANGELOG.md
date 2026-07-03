@@ -4,6 +4,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### Marathon Wave 1 SHIPPED — GH-84 + GH-58 + GH-85, all agy-built / codex-Approved / merged (`82fbf0e`)
+Kicked off the marathon on the three collision-safe ready lanes (GH-45 excluded — it edits the driver scripts `marathon-drive.sh`/`relay-drive.sh`, a self-hosting hazard). Each ran headless via `marathon-drive.sh` (builder **agy**, reviewer **codex**) on its own `marathon/gh-<n>-…` branch, reached **STATUS: Approved** in 2 turns, passed its per-lane pre-advance gate, then all three merged `--no-ff` to main behind a **full `validate.sh` green** gate.
+
+- **GH-84** (`#84`) — `relay-automation/runner.sh` gains an additive `RUNNER_ROOT_DIR` override (default = current self-location, byte-for-byte unchanged for live relay); `test/runner-loop.sh` binds it to `$A` + a dirty-real-repo regression test. Gate `test/runner-loop.sh` **7/7**.
+- **GH-58** (`#58`) — `relay-automation/claude-turn.sh` resolves `CLAUDE_BIN` via `PATH` then `~/.claude/local/claude`, else fails fast with a clear message + distinct exit (no raw `exec: not found`); `test/claude-turn.sh` +4 GH-58 checks, wired into `validate.sh`. Gate **30/30**.
+- **GH-85** (`#85`) — `utils/marathon-plan.sh`'s `undocumented-partial-completion` no longer false-flags edit-existing-file lanes (`some-artifacts-exist` now requires a NEW/created artifact; `changelog-mentions-it` dropped); genuine partials still flag. Gate `test/marathon-plan.sh` **36/36** (+2 GH-85 cases). **Fixes the queue-display flicker** — GH-45/GH-30 will no longer be falsely held.
+- **Merge-gate caught a real defect:** the full `validate.sh` flagged `path-integrity.sh` on GH-85's new test, which creates `$J/test/gh-951-genuine-test.sh` in a throwaway temp repo — a fixture literal the per-lane gate didn't scan. Added it to `path-integrity.sh`'s `fixture_literals` allowlist (GH-80 precedent). Re-ran full `validate.sh` → **green (960 passes, 0 fail)**. Merged branches deleted; #84/#58/#85 closed.
+
 ### GH-85 preflighted (added to the marathon); gh-907 plan-review thread closed
 - **GH-85** (`#85`) — added a `## Swarm Preflight Contract` (independent zone: `utils/marathon-plan.sh` + `test/marathon-plan.sh`); the fix makes `some-artifacts-exist` require a NEW/created artifact and drops `changelog-mentions-it` as a partial signal, keeping GH-44-style true positives. Now a ready marathon lane — active count 4→5. (The Wave-1 text renderer still shows only 3 lanes; that lag is the very display bug GH-85 fixes.)
 - **Closed** the idle `relay-system/2026-07-02/gh-907-plan-review.md` thread (LTVera/Pandas Buffer Bridge flood plan review) — Reviewer had returned Changes requested but the Producer turn never followed here; superseded by LTVera running on its own vendored `.xyz/` harness. `STATUS: Closed`, no approval implied.
