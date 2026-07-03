@@ -181,24 +181,6 @@ tick_version() {
   printf '%s' "${v:-unknown}"
 }
 
-manifest_from_make_pkg() {
-  awk '
-    $1 == "tar" && $2 == "czf" && $3 ~ /relay-pkg\.tar\.gz$/ { in_block = 1; next }
-    in_block {
-      line = $0
-      sub(/[[:space:]]*#.*/, "", line)
-      gsub(/[[:space:]]*\\[[:space:]]*$/, "", line)
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
-      if (line == "") next
-      if (line ~ /^(relay-automation|test)\//) {
-        print line
-        next
-      }
-      exit
-    }
-  ' "$HARNESS_ROOT/skills/relay-automation/make-pkg.sh"
-}
-
 write_registry_row() {
   local reg="$1" target="$2" row="$3" tmp
   tmp="$reg.tmp.$$"
@@ -253,44 +235,37 @@ register_vendor() {
   return 0
 }
 
+# Directories mirrored VERBATIM into the vendored copy. This is a full mirror, not a curated
+# manifest: the old make-pkg-derived list silently dropped any newly-added lane (e.g. the aider ↔
+# OpenRouter gateway shipped in GH-77 but was never added to the manifest, so vendored repos never
+# got it). Copying whole dirs makes the vendored .xyz a COMPLETE, drift-free XYZ install — every
+# relay / marathon / consult / aider / self-improve feature runs standalone, per repo, with no
+# dependency on the central xyz-3-agents-swarm checkout.
+#   relay-automation/  all turn shims (codex/agy/aider/gemini/claude), consult, marathon runtime,
+#                      the self-improve loop, hooks/, docs, example configs
+#   bin/               tick, validate-relay-block, marathon-yaml
+#   src/               the tick/marathon JS core
+#   test/              the shim + feature tests, so a vendored repo can self-verify
+#   skills/            the consult / relay-xyz / xyz skill definitions travel with the harness
+VENDOR_DIRS="relay-automation bin src test skills"
+
 materialize_vendor() {
-  local rel src_file copied
+  local d
 
   rm -rf "$STAGE_DIR"
   mkdir -p "$STAGE_DIR"
-  copied=0
 
-  while IFS= read -r rel; do
-    [ -n "$rel" ] || continue
-    src_file="$HARNESS_ROOT/$rel"
-    [ -f "$src_file" ] || die "manifest entry missing from harness: $rel"
-    mkdir -p "$STAGE_DIR/$(dirname "$rel")"
-    cp -p "$src_file" "$STAGE_DIR/$rel"
-    copied=$((copied + 1))
-  done <<EOF
-$(manifest_from_make_pkg)
-EOF
-
-  [ "$copied" -gt 0 ] || die "failed to derive relay manifest from skills/relay-automation/make-pkg.sh"
-
-  # GH-49b: the marathon runtime is NOT in the relay-pkg manifest — vendor it explicitly so the copy
-  # can run marathons (marathon-drive), not just relays. marathon-agent dispatches to the turn shims
-  # (claude/codex/agy), so claude-turn.sh comes along too even though it's absent from the relay set.
-  for mrel in relay-automation/marathon-drive.sh relay-automation/marathon.sh \
-              relay-automation/marathon-agent.sh relay-automation/claude-turn.sh; do
-    [ -f "$HARNESS_ROOT/$mrel" ] || die "marathon runtime missing from harness: $mrel"
-    mkdir -p "$STAGE_DIR/$(dirname "$mrel")"
-    cp -p "$HARNESS_ROOT/$mrel" "$STAGE_DIR/$mrel"
+  for d in $VENDOR_DIRS; do
+    [ -d "$HARNESS_ROOT/$d" ] || die "missing $d/ under $HARNESS_ROOT (cannot build a complete vendor)"
+    mkdir -p "$STAGE_DIR/$d"
+    # Trailing '/.' copies the directory *contents* (incl. nested hooks/, fixtures/) into the stage.
+    cp -Rp "$HARNESS_ROOT/$d/." "$STAGE_DIR/$d/"
   done
 
-  mkdir -p "$STAGE_DIR/bin" "$STAGE_DIR/src"
-  cp -p "$HARNESS_ROOT/bin/tick" "$STAGE_DIR/bin/tick"
-  cp -p "$HARNESS_ROOT/bin/validate-relay-block" "$STAGE_DIR/bin/validate-relay-block"
-
-  for src_file in "$HARNESS_ROOT"/src/*.js; do
-    [ -e "$src_file" ] || die "no src/*.js found under $HARNESS_ROOT/src"
-    cp -p "$src_file" "$STAGE_DIR/src/$(basename "$src_file")"
-  done
+  # Runnability sanity — the two files every feature ultimately depends on.
+  [ -f "$STAGE_DIR/bin/tick" ] || die "vendor incomplete: bin/tick missing after mirror"
+  [ -f "$STAGE_DIR/relay-automation/relay-turn-lib.sh" ] \
+    || die "vendor incomplete: relay-turn-lib.sh missing after mirror"
 
   {
     printf 'source_commit=%s\n' "$(git -C "$HARNESS_ROOT" rev-parse HEAD 2>/dev/null || printf 'unknown')"

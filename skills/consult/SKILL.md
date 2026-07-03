@@ -1,6 +1,6 @@
 ---
 name: consult
-description: One-shot cross-model CONSULT — fan the same question out to Codex and agy in parallel (repo-isolated, advisory), then reconcile their answers into one. Use when the user wants a "second opinion", to "ask Codex and agy", a "panel" or "cross-model" check, or an independent gut-check on a decision/design/doc before committing — and does NOT need an iterative build/review loop. NOT a relay: a relay is an iterative 1:1 Producer↔Reviewer loop that converges an artifact; a consult is a parallel 1-shot 1:N second opinion, reconciled once. Repo-local — depends on the codex + agy CLIs and the relay-automation shims, so it is not portable.
+description: One-shot cross-model CONSULT — fan the same question out to Codex and agy in parallel (repo-isolated, advisory), then reconcile their answers into one. Use when the user wants a "second opinion", to "ask Codex and agy", a "panel" or "cross-model" check, or an independent gut-check on a decision/design/doc before committing — and does NOT need an iterative build/review loop. NOT a relay: a relay is an iterative 1:1 Producer↔Reviewer loop that converges an artifact; a consult is a parallel 1-shot 1:N second opinion, reconciled once. Depends on the codex + agy CLIs and the relay-automation shims; runs in any repo that ships them at the repo root OR in a vendored `.xyz/` install (the skill resolves either).
 ---
 
 # Consult
@@ -43,16 +43,25 @@ opinions.
 
 **Locating the script — resolve it cwd-independently; never assume your cwd is the repo root.** A bare
 `consult.sh` or `relay-automation/consult.sh` only resolves when you happen to be sitting at the root,
-so invoke it through its repo-root anchor instead:
+so invoke it through its repo-root anchor instead. Two homes are supported so consult works both in
+the `xyz-3-agents-swarm` checkout **and** in any repo that has a vendored `.xyz/` install: the
+top-level `relay-automation/` if present, otherwise the vendored `.xyz/relay-automation/`.
 
 ```
-SCRIPT="$(git rev-parse --show-toplevel)/relay-automation/consult.sh"
-"$SCRIPT" --prompt "…" --label …
+ROOT="$(git rev-parse --show-toplevel)"
+SCRIPT="$ROOT/relay-automation/consult.sh"
+[ -f "$SCRIPT" ] || SCRIPT="$ROOT/.xyz/relay-automation/consult.sh"
+# CONSULT_ROOT MUST be the repo root: consult.sh otherwise infers its root as the script's parent-of-
+# parent, which for the vendored copy is `.xyz/` (wrong). Setting it pins the consult to the real repo
+# and its `relay-system/` output. Harmless (a no-op) for the top-level copy.
+CONSULT_ROOT="$ROOT" "$SCRIPT" --prompt "…" --label …
 ```
 
-`git rev-parse --show-toplevel` works from any subdirectory of the repo. If you are not inside the
-`xyz-3-agents-swarm` worktree at all, `cd` there first — consult is repo-local and its shims live only
-here. (Do **not** go hunting the disk for `consult.sh`; the anchor above always finds it.)
+`git rev-parse --show-toplevel` works from any subdirectory of the repo. If you are not inside a repo
+that has consult (no top-level `relay-automation/` and no `.xyz/`), either `cd` into the
+`xyz-3-agents-swarm` worktree, or vendor a `.xyz/` into the target repo first
+(`relay-automation/xyz-vendor.sh <repo>`). (Do **not** go hunting the disk for `consult.sh`; the
+anchor above always finds it.)
 
 **Provable no-mutation boundary (not best-effort).** Advisors run with their working directory set to a
 **throwaway git worktree** checked out from your *current* state — tracked WIP (via `git stash create`)
@@ -84,10 +93,10 @@ answer still comes back (**graceful degrade**, and the degrade is stated, never 
 1. **Frame one sharp question.** Put it in a prompt file when it references repo paths (the advisors
    read the files themselves). Be explicit about what "good" looks like, just like a relay's
    Definition of Done.
-2. **Fan out:** run the script through its repo-root anchor —
-   `"$(git rev-parse --show-toplevel)/relay-automation/consult.sh"` (see "Locating the script" above) —
-   with the prompt + a `--label`. Both models run at once. Don't invoke a bare `consult.sh`; it only
-   resolves at the repo root.
+2. **Fan out:** run the script through its repo-root anchor (see "Locating the script" above — prefer
+   `$ROOT/relay-automation/consult.sh`, fall back to `$ROOT/.xyz/relay-automation/consult.sh`, and
+   always pass `CONSULT_ROOT="$ROOT"`) with the prompt + a `--label`. Both models run at once. Don't
+   invoke a bare `consult.sh`; it only resolves at the repo root.
 3. **Read both transcripts** in `relay-system/<today>/<label>-<HHMMSS>/<label>.codex.md` and `…agy.*`.
 4. **Reconcile — this is the load-bearing step.** Produce a synthesis with three parts, in this order:
    - **Disagree** (first — it's the whole point): every point the two models differ on, with your
@@ -122,8 +131,10 @@ hunts overclaims and misses silent drops: the easy direction satisfices.)
   excluded from what advisors see; reference it inline in the question if it matters.
 - **Cost capture is not available for agy.** agy has no JSON/token output, so an agy lane is cost-blind
   (a floor). Codex token parsing is also still deferred. Neither lane captures `tick cost` events in a consult.
-- **Repo-local, not portable.** Unlike `relay` (model-agnostic, file-only), consult hard-depends on
-  the `codex` + `agy` CLIs being installed and authed and on the `relay-automation` shims.
+- **Needs the shims present, but is not tied to one repo.** Unlike `relay` (model-agnostic, file-only),
+  consult hard-depends on the `codex` + `agy` CLIs being installed and authed and on the
+  `relay-automation` shims. Those shims can live at the repo root **or** in a vendored `.xyz/` install,
+  so any repo carrying a `.xyz/` (see `relay-automation/xyz-vendor.sh`) can run consult standalone.
 
 ## Gotcha: run consult OUTSIDE Claude Code's Bash sandbox
 
