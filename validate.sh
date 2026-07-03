@@ -19,6 +19,7 @@ TESTS=(
   "handoff.sh"
   "handoff-exclusive.sh"
   "circuit-break.sh"
+  "terminality-seal.sh"          # GH-41 (terminal seal edge cases — cross-model review of PR #99)
   "auto-sync.sh"
   "analyze.sh"
   "claim-cap.sh"

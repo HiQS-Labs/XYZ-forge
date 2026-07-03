@@ -2,9 +2,9 @@
 gh_issue: 41
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41
 title: task.done not terminal against a higher-epoch reclaim (silent token resurrection)
-status: Ready (decision recorded + spike-validated — orchestrator-only kernel lane)
+status: Shipped (2026-07-03 — Plan A lane 1, PR #99)
 created: 2026-06-28
-updated: 2026-07-02
+updated: 2026-07-03
 doc_type: bugfix
 complexity: 4
 risk: 4

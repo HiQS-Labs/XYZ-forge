@@ -113,17 +113,67 @@ function foldWithMeta(events) {
     const staleReason = (ev) =>
       ev.agent !== winner.agent ? 'non-owner-agent' : 'stale-epoch';
 
-    // Terminal (done/break) — FENCED. Only the current owner, at an epoch >= the
-    // owner's, may terminate the task. This is the keystone: even a revived
-    // writer with the SAME agent id is stopped, because its epoch is below the
-    // current owner's. Stale / non-owner terminals are rejected, never applied.
+    // GH-41 (terminality-seal): the owner AS OF a given ts — the highest-epoch claim
+    // ACTIVE at that ts (placed at ts' <= ts and not retired by a same-agent release
+    // at ts'' <= ts, epoch >= the claim's), optionally capped at `maxEpoch`. It must
+    // be computed from the claim set at that instant, NOT the globally-filtered
+    // `liveClaims`: a claim that a *later* release retires is absent from liveClaims,
+    // so authorizing a terminal against liveClaims would let a release that lands
+    // AFTER the terminal retroactively de-authorize it (a done->open corruption).
+    // The `maxEpoch` cap (used with the terminal's own epoch) closes the boundary
+    // where a same-ts higher-epoch reclaim would otherwise masquerade as the owner.
+    const ownerAt = (ts, maxEpoch) => {
+      let best = null;
+      for (const c of claims) {
+        if (c.ts > ts) continue;
+        if (maxEpoch !== undefined && epochOf(c) > maxEpoch) continue;
+        if (releases.some(r => r.agent === c.agent && r.ts >= c.ts && r.ts <= ts && epochOf(r) >= epochOf(c))) continue;
+        if (best === null) { best = c; continue; }
+        const ec = epochOf(c), eb = epochOf(best);
+        if (ec !== eb) { if (ec > eb) best = c; continue; }
+        if (c.ts !== best.ts) { if (c.ts < best.ts) best = c; continue; }
+        if (c.agent < best.agent) best = c;
+      }
+      return best;
+    };
+
+    // Terminal (done/break) — FENCED. Only the owner AT THE TERMINAL'S ts, at an epoch
+    // >= that owner's, may terminate the task. The FIRST authorized terminal seals the
+    // token: any later terminal is post-terminal and skipped (the seal below rejects
+    // the post-terminal claim that begot it). Judging by owner-at-terminal-time (capped
+    // at the terminal's epoch) keeps the legitimate terminal authorized even when a
+    // higher-epoch reclaim lands later; the seal then rejects that reclaim.
     let terminal = null;
     for (const ev of evs) {
       if (ev.type !== 'task.done' && ev.type !== 'task.circuit_break') continue;
-      const authorized = winner && ev.agent === winner.agent && epochOf(ev) >= ownerEpoch;
-      if (authorized) { terminal = ev; continue; } // last surviving terminal wins
+      if (terminal) continue; // already sealed by the first authorized terminal
+      const ownerAtTs = ownerAt(ev.ts, epochOf(ev));
+      const authorized = ownerAtTs && ev.agent === ownerAtTs.agent && epochOf(ev) >= epochOf(ownerAtTs);
+      if (authorized) { terminal = ev; continue; }
       if (!winner) { rejections.push(makeRejection(ev, null, 'no-live-owner')); continue; }
       if (isStaleWrite(ev)) rejections.push(makeRejection(ev, winner, staleReason(ev)));
+    }
+
+    // GH-41 (terminality-seal): once an authorized terminal exists the token is SEALED.
+    // Every later mutation on it — a `task.claimed` (reclaim), `task.released`, or
+    // `task.scope_changed` — is a reuse of a completed token, rejected with the new
+    // distinct lifecycle reason `claim-after-terminal` (NOT folded into stale-epoch/
+    // non-owner-agent, which are ownership/epoch failures) and never applied: `terminal`
+    // still wins the status below, and the walk-pass below skips these events so they
+    // can neither set handoff_to/scope nor double-log. "Later" = strictly after the
+    // terminal's ts, OR at the exact terminal ts but at an epoch above the terminal
+    // owner's (a same-ts higher-epoch reclaim — never the owner's own claim), which
+    // closes the ts==terminal.ts boundary. Rework of a completed unit must mint a fresh
+    // task id. Reorder-safe: a pure function of `terminal` + the event set.
+    const sealOwner = terminal ? ownerAt(terminal.ts, epochOf(terminal)) : null;
+    const sealOwnerEpoch = sealOwner ? epochOf(sealOwner) : 0;
+    const isPostTerminal = (ev) => !!terminal &&
+      (ev.ts > terminal.ts || (ev.ts === terminal.ts && epochOf(ev) > sealOwnerEpoch));
+    if (terminal) {
+      for (const ev of evs) {
+        if (ev.type !== 'task.claimed' && ev.type !== 'task.released' && ev.type !== 'task.scope_changed') continue;
+        if (isPostTerminal(ev)) rejections.push(makeRejection(ev, sealOwner, 'claim-after-terminal'));
+      }
     }
 
     // Walk events to set priority, paths, handoff_to, and (if winner exists)
@@ -135,6 +185,7 @@ function foldWithMeta(events) {
           if (ev.paths) t.paths = ev.paths;
           break;
         case 'task.released':
+          if (isPostTerminal(ev)) break; // GH-41: sealed post-terminal mutation — rejected by the seal loop
           // Releases are agent-scoped (a displaced owner's release only retires
           // its own already-dead claim), so a stale release is inert against the
           // current claim — but its handoff is fenced (threshold) and a genuine
@@ -144,6 +195,7 @@ function foldWithMeta(events) {
           break;
         case 'task.scope_changed':
           if (!ev.paths) break;
+          if (isPostTerminal(ev)) break; // GH-41: sealed post-terminal mutation — rejected by the seal loop
           if (winner && ev.agent === winner.agent && epochOf(ev) >= ownerEpoch && ev.ts >= winner.ts) {
             // Latest in-epoch scope_changed wins (replacement semantics).
             t._scopedPaths = ev.paths;

@@ -1,4 +1,10 @@
-# Token-reuse canary — GH-40 Phase 2
+# Token-reuse canary — GH-40 Phase 2 · SEALED by GH-41
+
+> **RESOLVED 2026-07-03 (GH-41).** The kernel now catches this. `foldWithMeta` seals an authorized
+> terminal, so the injected post-`done` reclaim folds to `done` + one `claim-after-terminal` rejection
+> instead of silently resurrecting the token. `verify-fixture.sh`'s oracle is **inverted** to assert
+> the seal (see [decisions/2026-07-02-terminality-seal.md](../../../decisions/2026-07-02-terminality-seal.md)).
+> The double-blind framing below is retained as the historical GH-40 record.
 
 A **double-blind Reviewer canary** seeded from real telemetry: can a Reviewer reading a captured
 `.tick/events/` stream catch a *silent* FSM violation the kernel itself does not flag — a `done` task
