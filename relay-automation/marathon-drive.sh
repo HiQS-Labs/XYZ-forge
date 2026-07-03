@@ -39,6 +39,32 @@ TICK_BIN="${TICK_BIN:-"$ROOT/bin/tick"}"
 RELAY_DRIVE_BIN="${MARATHON_RELAY_DRIVE:-"$HERE/relay-drive.sh"}"
 AGENT_CMD="${MARATHON_AGENT_CMD:-"$HERE/marathon-agent.sh"}"
 
+# GH-45 — QUEUE commitment contract: per-lane attempt cap (anti-rabbit-hole / WIP discipline).
+# Appends one line per fire to .tick/attempts/<lane> and REFUSES to start a lane at
+# >= LANE_MAX_ATTEMPTS (default 2, env-overridable) with exit 8 + a park message, seeding NO relay
+# token. --force bypasses for one fire and logs it. A nested call (marathon-drive → relay-drive) is
+# guarded by LANE_ATTEMPT_COUNTED so the same lane is counted exactly once. Byte-consistent mirror in
+# relay-drive.sh; relay-turn-lib.sh / bin/tick are NOT touched.
+lane_attempt_gate() {
+  local root="$1" raw="$2" force="${3:-0}"
+  [ -n "${LANE_ATTEMPT_COUNTED:-}" ] && return 0
+  local key; key=$(printf '%s' "$raw" | tr -c 'A-Za-z0-9._-' '_')
+  local max="${LANE_MAX_ATTEMPTS:-2}"
+  local dir="$root/.tick/attempts" file count
+  file="$dir/$key"
+  mkdir -p "$dir" 2>/dev/null || true
+  count=0; [ -f "$file" ] && count=$(wc -l < "$file" 2>/dev/null | tr -d ' '); [ -n "$count" ] || count=0
+  if [ "$force" = "1" ]; then
+    printf 'lane-attempt-cap: --force override — lane %s at %s attempt(s) (cap %s), proceeding.\n' "$key" "$count" "$max" >&2
+  elif [ "$count" -ge "$max" ]; then
+    printf 'lane-attempt-cap: lane %s PARKED after %s attempt(s) (cap %s) — no relay token seeded.\n' "$key" "$count" "$max" >&2
+    printf '  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: %s\n' "$file" >&2
+    return 8
+  fi
+  printf '%s fire\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo fire)" >> "$file"
+  return 0
+}
+
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # GH-49b: the lock lives in .git/ (never committed) for a normal clone; a vendored .xyz/ copy has no
   # .git/, so fall back to a hidden lock beside the scripts (the .xyz/ dir is itself gitignored in the
@@ -127,6 +153,7 @@ PHASE_ID="p1"        # which phase this invocation drives (phases/<id>/); the or
 RELAY_TASK=""        # resolved to MARATHON-<PHASE_ID>-TURN after parsing, unless given
 ARTIFACT_PATHS=""    # comma-separated repo-relative file(s) the builder may create/edit (beyond RELAY.md)
 REQUIRE_CLEAN=0      # --require-clean: hard-stop if the workspace has pre-existing changes
+FORCE=0              # --force: bypass the GH-45 per-lane attempt cap for this one fire
 DRY_RUN=0
 TARGET_ROOT=""       # --target-root: foreign repo the BUILD lands in (GH-11). Relay thread stays in ROOT;
                      # forwarded to relay-drive.sh (which exports RELAY_TARGET_ROOT for artifact routing).
@@ -144,6 +171,7 @@ while (($# > 0)); do
     --artifact)        ARTIFACT_PATHS="${2:-}"; shift 2 ;;
     --target-root)     TARGET_ROOT="${2:-}"; shift 2 ;;
     --require-clean)   REQUIRE_CLEAN=1; shift ;;
+    --force)           FORCE=1; shift ;;
     --dry-run)         DRY_RUN=1; shift ;;
     --help)            usage; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
@@ -328,6 +356,11 @@ reconcile_relay_task() {
   esac
 }
 
+# GH-45: per-lane attempt cap — refuse to start this phase once it has hit LANE_MAX_ATTEMPTS
+# (keyed on PHASE_ID, stable across re-fires), seeding no token; --force overrides. Counted here, so
+# the nested relay-drive below (LANE_ATTEMPT_COUNTED=1) does not double-count this same lane.
+lane_attempt_gate "${TICK_REPO_ROOT:-$ROOT}" "$PHASE_ID" "$FORCE" || exit $?
+
 reconcile_relay_task
 
 "$TICK_BIN" log task.created "$RELAY_TASK" --agent marathon > /dev/null
@@ -353,6 +386,7 @@ target_root_args=()
 # scoped to the relay-drive child only; marathon-drive's OWN context (swarm|unset) is left intact for
 # its hook below.
 RELAY_FILE="$RELAY_FILE" \
+LANE_ATTEMPT_COUNTED=1 \
 XYZ_HARNESS_CONTEXT=marathon-phase \
   "$RELAY_DRIVE_BIN" \
     --relay-file "$RELAY_FILE" \

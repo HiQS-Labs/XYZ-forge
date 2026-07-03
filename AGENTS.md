@@ -67,6 +67,12 @@ local change.
   `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
 - Changes to `.tick/events/`, `src/project.js`, relay containment, or event/verb shape are usually
   broader than they look. Treat them as at least Costly until proven otherwise.
+- **Commit to the QUEUE; re-anchor, don't rabbit-hole (GH-45).** A wave's committed lane list *is* the
+  active commitment — after each lane attempt, re-read it before acting further. A driven lane that
+  fails **parks** after `LANE_MAX_ATTEMPTS` (default 2): the driver (`marathon-drive.sh` /
+  `relay-drive.sh`) refuses to re-fire it (exit 8, no token), you capture the findings as an issue and
+  stop. Re-firing a parked lane or going off-wave to deep-dive one item requires an explicit operator
+  override (`--force`) or a replan note — never a quiet slide off the plan.
 
 ## Conflict order
 

@@ -40,6 +40,7 @@ TESTS=(
   "shim-worktree.sh"
   "marathon-yaml.sh"
   "marathon-drive.sh"
+  "lane-attempt-cap.sh"
   "driver-lock.sh"
   "measure.sh"
   "loop-stop.sh"
