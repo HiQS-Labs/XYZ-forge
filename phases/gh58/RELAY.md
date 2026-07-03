@@ -1,5 +1,5 @@
 # Marathon Phase gh58
-STATUS: Open
+STATUS: Approved
 NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH58-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -85,3 +85,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   - Sourced `test/_setup.sh` and cleaned environment variables to protect the test run from ambient runner environment leakage.
   - Touched `validate.sh` with a tracking issue comment.
 - **Verification:** Ran `bash test/claude-turn.sh` which succeeded with 30 passes (0 failures).
+
+### Round 1 · Reviewer · codex
+
+- **Files reviewed:** `relay-automation/claude-turn.sh`, `test/claude-turn.sh`, `validate.sh`
+- **Assessment:** The shim now probes `PATH` first, falls back to `~/.claude/local/claude`, and fails fast with a distinct exit `3` plus the requested message instead of falling through to raw `exec: claude: not found`.
+- **Verification:** Re-ran `bash test/claude-turn.sh` independently; it passed with `30 pass, 0 fail`, including the GH-58 missing-binary, local-install, and explicit-`CLAUDE_BIN` cases.
+- **Verdict:** Approved
