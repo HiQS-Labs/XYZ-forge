@@ -110,7 +110,7 @@ QP_TODAY="$TODAY" QP_NOW="$NOW" QP_POLICY="$POLICY" QP_FORMAT="$FORMAT" \
 QP_DEEP="$DEEP" QP_REQUIRE_GH="$REQUIRE_GH" QP_SWARM_PREFLIGHT="$SWARM_PREFLIGHT" \
 QP_RENDER_OUT="$RENDER_OUT" \
 QP_GH_STATE_FILE="${QUEUE_PLAN_GH_STATE_FILE:-}" QP_BRANCHES_FILE="${QUEUE_PLAN_BRANCHES_FILE:-}" \
-QP_GH_FORCE="${QUEUE_PLAN_GH:-}" \
+QP_GH_FORCE="${QUEUE_PLAN_GH:-}" QP_BASE_FILES_FILE="${QUEUE_PLAN_BASE_FILES_FILE:-}" \
 node - <<'NODE'
 "use strict";
 const fs = require("fs");
@@ -126,6 +126,7 @@ const FORMAT = E.QP_FORMAT;
 const DEEP = E.QP_DEEP === "1";
 const REQUIRE_GH = E.QP_REQUIRE_GH === "1";
 const SWARM_PREFLIGHT = E.QP_SWARM_PREFLIGHT || "";
+const BASE_FILES_FILE = E.QP_BASE_FILES_FILE || "";
 
 // ── kernel write-set: the serialization bottleneck (QUEUE-2026-06-27 "the one safety rule") ──
 const KERNEL_PATHS = [
@@ -142,6 +143,36 @@ const KNOWN_EMOJI = ["🟢", "🟡", "⏸️", "⛔", "✅", "🔮", "🔲", "�
 // ── tiny readers ─────────────────────────────────────────────────────────────
 function readFileSafe(p) { try { return fs.readFileSync(p, "utf8"); } catch { return null; } }
 function existsAt(rel, base) { try { return fs.existsSync(path.resolve(base || ROOT, rel)); } catch { return false; } }
+
+// Check if file existed at a given ref (to identify net-new artifacts).
+// Hermetic test seam: if BASE_FILES_FILE is set, read it as a list of existing base paths.
+let BASE_FILES = null;
+function fileExistedAtBaseRef(relPath, ref) {
+  let normalized = relPath;
+  if (normalized.startsWith("./")) normalized = normalized.slice(2);
+  if (BASE_FILES_FILE) {
+    if (!BASE_FILES) {
+      try {
+        BASE_FILES = new Set(
+          fs.readFileSync(BASE_FILES_FILE, "utf8")
+            .split(/\r?\n/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+        );
+      } catch {
+        BASE_FILES = new Set();
+      }
+    }
+    return BASE_FILES.has(normalized);
+  }
+  try {
+    // Check if the file existed at the base ref using git
+    execSync(`git cat-file -e "${ref}:${normalized}"`, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 // Frontmatter line reader — same simple `key: value` contract pdda-lib.sh enforces.
 function frontmatter(doc) {
@@ -437,17 +468,16 @@ for (const r of deduped) {
   }
 
   // undocumented partial completion: ≥2 independent signals, ledger status not done.
+  // GH-85: stop marathon-plan undocumented-partial-completion false-positives on edit-existing-file lanes
   if (r.state == null) {
     const sig = [];
     if (r.contract && Array.isArray(r.contract.artifacts)) {
-      const arts = r.contract.artifacts;
-      const some = arts.some((a) => existsAt(a)), all = arts.length > 0 && arts.every((a) => existsAt(a));
-      if (some && !all) sig.push("some-artifacts-exist");
+      const ref = (r.contract.target && r.contract.target.ref) || "HEAD";
+      const hasNewArtifact = r.contract.artifacts.some((a) => existsAt(a) && !fileExistedAtBaseRef(a, ref));
+      if (hasNewArtifact) sig.push("some-artifacts-exist");
     }
     if (branchMatchesSlug(r.slug)) sig.push("branch-matches-slug");
     try { if (fs.readdirSync(path.join(ROOT, "test")).some((f) => f.toLowerCase().includes(r.slug))) sig.push("tests-reference-slug"); } catch {}
-    const cl = readFileSafe(path.join(ROOT, "CHANGELOG.md"));
-    if (cl && (r.gh != null && new RegExp(`#${r.gh}\\b`).test(cl) || (r.slug.length > 6 && cl.toLowerCase().includes(r.slug)))) sig.push("changelog-mentions-it");
     if (r.emoji === "🟢" && r.section !== "Completed") sig.push("built-not-closed-emoji");
     r.signals = sig;
     if (sig.length >= 2) {

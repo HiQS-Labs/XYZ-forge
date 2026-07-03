@@ -1,6 +1,6 @@
 # Marathon Phase gh85
 STATUS: Open
-NEXT: agy
+NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH85-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -73,3 +73,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH85-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh85/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · agy
+
+- **Files modified**:
+  - [utils/marathon-plan.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/utils/marathon-plan.sh)
+  - [test/marathon-plan.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/test/marathon-plan.sh)
+- **Key Decisions & Implementation**:
+  - Implemented `fileExistedAtBaseRef` in `utils/marathon-plan.sh` to check if an artifact was pre-existing in the base ref (stubbed via `QUEUE_PLAN_BASE_FILES_FILE` in tests, otherwise verified via `git cat-file -e`).
+  - Modified `some-artifacts-exist` logic to only check for existence of newly created artifacts (net-new), resolving the false-positive on edit-existing-file lanes at 0% completion.
+  - Dropped the `changelog-mentions-it` signal from the `undocumented-partial-completion` detector.
+  - Added regression test cases in `test/marathon-plan.sh` Scenario J verifying both that edit-existing-file lanes are READY/active and that genuine partial lanes are still flagged `partial`.
+  - Ran `bash test/marathon-plan.sh` to confirm all 36 test cases pass successfully.
+
