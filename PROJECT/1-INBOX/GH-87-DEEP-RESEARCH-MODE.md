@@ -1,7 +1,7 @@
 ---
 gh_issue: 87
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87
-title: Deep Research mode — provider-agnostic grounded search seam (Perplexity first adapter)
+title: Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter)
 status: Proposed (1-INBOX — not yet active)
 created: 2026-07-02
 updated: 2026-07-02
@@ -14,7 +14,7 @@ phases: 3
 roadmap_exempt: false
 non_goals:
   - Not changing the harness's default model provider or Aider's global OpenAI-compatible base URL
-  - Not hard-coding the design to Perplexity only; Perplexity is the first desired backend, not the lasting abstraction
+  - Not hard-coding the design to Agy Gemini Search only; Agy Gemini Search is the first desired backend, not the lasting abstraction
 related:
   - skills/consult/SKILL.md
 ---
@@ -25,7 +25,7 @@ related:
 
 The harness now supports Aider CLI as a headless runner, and agents need a grounded web-search
 capability that can return fresh, cited answers without coupling the rest of the harness to one
-provider. The GitHub ask names Perplexity Sonar as the first desired backend, but the local plan
+provider. The GitHub ask originally named Perplexity Sonar as the first desired backend, but the local plan
 should keep the **search-provider seam provider-agnostic** so a second backend can be added later
 without reworking the tool contract or global provider config.
 
@@ -33,8 +33,7 @@ without reworking the tool contract or global provider config.
 
 - Treat grounded search as a **dedicated provider seam**, isolated from the harness's default model
   client and from Aider's general OpenAI-compatible model configuration.
-- Use **Perplexity's OpenAI-compatible API** as the **first concrete adapter/backend**, not the only
-  design shape.
+- Use **Agy Gemini Search** as the **first concrete adapter/backend** via an isolated CLI wrapper, with Perplexity as a follow-up phase.
 - Keep failures **fail-closed**: if the grounded-search backend is unavailable, return a typed tool
   error and never silently fall back to the default model provider.
 
@@ -53,8 +52,8 @@ without reworking the tool contract or global provider config.
   - `model`
   - `raw`
 - Build a dedicated grounded-search adapter/client with:
-  - isolated API key / base URL / model config
-  - an OpenAI-compatible chat-completions request shape
+  - isolated CLI wrapper for Agy Gemini Search
+  - normalized response parsing from the CLI output
   - preserved unknown provider payload fields in `raw`
   - latency / model / citation-presence logging
 - Use a factual, citation-oriented system prompt that forbids fabricated URLs, titles, or quotes.
@@ -69,15 +68,15 @@ without reworking the tool contract or global provider config.
 
 - The underlying seam is generic enough that a second grounded-search backend can be added without
   changing the normalized result schema or the harness's default model-provider configuration.
-- Perplexity remains the first implementation target and may still be surfaced as a
-  `perplexity_search` tool if external compatibility wants that name, but the local architecture
-  must not assume Perplexity-only semantics.
+- Agy Gemini Search remains the first implementation target and may still be surfaced as an
+  `agy_search` tool if external compatibility wants that name, but the local architecture
+  must not assume Agy Gemini Search-only semantics.
 - Aider's default provider settings remain untouched; search uses its own isolated adapter/client.
 
 ## Definition of done
 
 - [ ] The repo has a dedicated grounded-search adapter/client with isolated env/config.
-- [ ] Perplexity works as the first backend and returns normalized cited output.
+- [ ] Agy Gemini Search works as the first backend via the Agy CLI and returns normalized cited output.
 - [ ] Search failures never silently fall back to the default provider.
 - [ ] Tests cover request shape, normalization, missing config, transport failures, and citation parsing.
 
@@ -93,7 +92,7 @@ without reworking the tool contract or global provider config.
     "relay-automation/deep-research.mjs",
     "test/deep-research.sh"
   ],
-  "remediation": "Build the grounded-search adapter/client as an isolated relay-automation/ module (Node stdlib fetch only, no new dependency), mirroring the isolated-adapter pattern already used by relay-automation/aider-turn.sh and consult.sh: request construction against Perplexity's OpenAI-compatible chat-completions API (PERPLEXITY_API_KEY / PERPLEXITY_BASE_URL default https://api.perplexity.ai / PERPLEXITY_MODEL default sonar), normalized {answer, citations, query, provider, model, raw} output, fail-closed typed error on missing key/timeout/non-200 (never a silent fallback to the default model provider), and latency/model/citation-presence logging. Keep the tool side-effect free. Add test/deep-research.sh covering request construction, response normalization, missing API key, timeout/non-200 handling, and citation extraction.",
+  "remediation": "Build the grounded-search adapter/client as an isolated relay-automation/ module utilizing the Agy CLI (e.g., `agy <search_command>`) for the first backend, mirroring the isolated-adapter pattern already used by relay-automation/aider-turn.sh and consult.sh. Parse the CLI output to construct normalized {answer, citations, query, provider, model, raw} output. Ensure a fail-closed typed error on CLI failure or timeout (never a silent fallback to the default model provider), and include latency/model/citation-presence logging. Keep the tool side-effect free. Add test/deep-research.sh covering CLI invocation, response normalization, CLI missing/failure handling, and citation extraction.",
   "lanes": {
     "agy_safe": ["relay-automation/deep-research.mjs", "test/deep-research.sh"],
     "orchestrator_only": [],
