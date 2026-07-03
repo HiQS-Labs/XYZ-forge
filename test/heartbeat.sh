@@ -51,5 +51,40 @@ else
   pass "heartbeat-covered claim window is not flagged parked"
 fi
 
+# --- GH-3: liveness = ANY task.* event, not just task.heartbeat ---
+# TASK-3: alice claims 10:30:00, emits a task.scope_changed (NOT a heartbeat) at 10:39:00,
+# done 10:48:00. Both gaps are 9m < 10m, so a truthful liveness signal must NOT flag it —
+# but a heartbeat-ONLY signal would see an 18m gap and wrongly flag it (the false positive #3).
+TICK_TS=2026-05-04T10:29:59.000Z tick_a log task.created TASK-3 --agent dispatcher --priority 10 --paths "src/x/**" >/dev/null
+TICK_TS=2026-05-04T10:30:00.000Z tick_a claim TASK-3 --agent alice --paths "src/x/**" >/dev/null
+TICK_TS=2026-05-04T10:39:00.000Z tick_a log task.scope_changed TASK-3 --agent alice --paths "src/x/**,src/y/**" >/dev/null
+TICK_TS=2026-05-04T10:48:00.000Z tick_a done TASK-3 --agent alice >/dev/null
+tick_a analyze --format json >"$WORK/analyze3.json"
+if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit((r.parked_suspects||[]).some(s=>s.task==="TASK-3")?1:0)' "$WORK/analyze3.json"; then
+  pass "GH-3: a non-heartbeat task.* event (scope_changed) counts as liveness — TASK-3 not flagged"
+else
+  fail "GH-3: TASK-3 wrongly flagged parked despite an in-window scope_changed (liveness must not be heartbeat-only)"
+fi
+
+# --- GH-3: TICK_PARKED_THRESHOLD_MS operator override ---
+# TASK-4: alice claims 11:00:00, no activity, done 11:15:00 -> a real 15m idle gap.
+TICK_TS=2026-05-04T10:59:59.000Z tick_a log task.created TASK-4 --agent dispatcher --priority 10 --paths "src/z/**" >/dev/null
+TICK_TS=2026-05-04T11:00:00.000Z tick_a claim TASK-4 --agent alice --paths "src/z/**" >/dev/null
+TICK_TS=2026-05-04T11:15:00.000Z tick_a done TASK-4 --agent alice >/dev/null
+# default 10m threshold: the 15m gap IS flagged.
+tick_a analyze --format json >"$WORK/analyze4a.json"
+if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit((r.parked_suspects||[]).some(s=>s.task==="TASK-4")?0:1)' "$WORK/analyze4a.json"; then
+  pass "GH-3: 15m-gap TASK-4 flagged at the default 10m threshold"
+else
+  fail "GH-3: TASK-4 (15m gap) not flagged at the default threshold"
+fi
+# raised to 30m: the same 15m gap is NOT flagged.
+TICK_PARKED_THRESHOLD_MS=1800000 tick_a analyze --format json >"$WORK/analyze4b.json"
+if node -e 'const r=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); process.exit((r.parked_suspects||[]).some(s=>s.task==="TASK-4")?1:0)' "$WORK/analyze4b.json"; then
+  pass "GH-3: TICK_PARKED_THRESHOLD_MS=30m suppresses the 15m-gap flag (operator-tunable)"
+else
+  fail "GH-3: TICK_PARKED_THRESHOLD_MS override did not raise the threshold"
+fi
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

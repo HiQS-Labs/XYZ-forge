@@ -122,25 +122,36 @@ function computeParallelism(windows, runStart, runEnd) {
 }
 
 // Parked-claim detection (Run 3). A claim window is a "parked-claim suspect" if
-// the holding agent showed no work-activity heartbeat for longer than the
-// threshold at any point in the window. Activity points are: the claim itself
-// (openedAt), every task.heartbeat the agent emitted for that task inside the
-// window, and the window close. The largest gap between consecutive activity
-// points is the parked gap. This reads only .tick/events/ — no git author /
-// timestamp dependency (Run 2 removed distinct git identity). The redefined Run
-// 3 criterion disqualifies a run with any parked-claim suspect.
-const PARKED_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+// the holding agent showed no work-activity for longer than the threshold at any
+// point in the window. Activity points are: the claim itself (openedAt), every
+// `task.*` event the agent emitted for that task inside the window, and the window
+// close. The largest gap between consecutive activity points is the parked gap.
+// This reads only .tick/events/ — no git author / timestamp dependency (Run 2
+// removed distinct git identity). The criterion disqualifies a run with any
+// parked-claim suspect.
+//
+// GH-3: liveness is ANY `task.*` event from the agent, not just `task.heartbeat` —
+// an autonomous subagent in one long atomic tool call can't interleave a `tick ping`
+// (no yield point), but a `task.scope_changed`/`task.commented`/re-claim still proves
+// it's alive. The heartbeat-only signal false-flagged a fully-active run as parked.
+// The threshold is operator-tunable via TICK_PARKED_THRESHOLD_MS (default 10 min) so
+// an autonomous-agent marathon can raise it without a code change.
+const DEFAULT_PARKED_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+const PARKED_THRESHOLD_MS = Number(process.env.TICK_PARKED_THRESHOLD_MS) > 0
+  ? Number(process.env.TICK_PARKED_THRESHOLD_MS)
+  : DEFAULT_PARKED_THRESHOLD_MS;
 
 /**
  * Flags claim windows with no work-activity heartbeat for longer than
  * `thresholdMs` at any point — a "parked-claim suspect", which disqualifies a
  * run (Run 3 criterion). Activity points: the claim itself, every
- * `task.heartbeat` inside the window, and the window close.
+ * any `task.*` event the agent emitted for that task inside the window (GH-3), and
+ * the window close.
  * @param {Object[]} windows - as returned by {@link buildClaimWindows}
- * @param {Object[]} events - task.* events (heartbeats read from here)
+ * @param {Object[]} events - task.* events (agent activity read from here)
  * @param {string} runEnd - ISO timestamp used as the close time for still-open windows
- * @param {number} [thresholdMs] - defaults to {@link PARKED_THRESHOLD_MS} (10 minutes)
- * @returns {Object[]} suspects: `{task, agent, max_gap_ms, heartbeats, opened_at, closed_at}`
+ * @param {number} [thresholdMs] - defaults to {@link PARKED_THRESHOLD_MS} (10 minutes, TICK_PARKED_THRESHOLD_MS-tunable)
+ * @returns {Object[]} suspects: `{task, agent, max_gap_ms, heartbeats, activity, opened_at, closed_at}`
  */
 function findParkedClaims(windows, events, runEnd, thresholdMs = PARKED_THRESHOLD_MS) {
   const endMs = toMs(runEnd);
@@ -151,12 +162,21 @@ function findParkedClaims(windows, events, runEnd, thresholdMs = PARKED_THRESHOL
     const closeMs = w.closedAt ? toMs(w.closedAt) : endMs;
     if (closeMs === null || closeMs <= openMs) continue;
 
-    const beats = events
-      .filter(e => e.type === 'task.heartbeat' && e.task === w.task && e.agent === w.agent)
+    // GH-3: liveness = ANY task.* event from the holding agent for this task inside
+    // the window (not just task.heartbeat). The claim open and window close already
+    // bound it; these are the intermediate proofs the agent was alive.
+    const activityTs = events
+      .filter(e => e.agent === w.agent && e.task === w.task &&
+        typeof e.type === 'string' && e.type.startsWith('task.'))
       .map(e => toMs(e.ts))
-      .filter(t => t !== null && t >= openMs && t <= closeMs);
+      .filter(t => t !== null && t > openMs && t < closeMs);
+    // Reported heartbeat count stays the real task.heartbeat count (for the message).
+    const beats = events.filter(e =>
+      e.type === 'task.heartbeat' && e.task === w.task && e.agent === w.agent &&
+      (() => { const t = toMs(e.ts); return t !== null && t >= openMs && t <= closeMs; })()
+    ).length;
 
-    const points = [openMs, ...beats, closeMs].sort((a, b) => a - b);
+    const points = [openMs, ...activityTs, closeMs].sort((a, b) => a - b);
     let maxGap = 0;
     for (let i = 0; i < points.length - 1; i++) {
       maxGap = Math.max(maxGap, points[i + 1] - points[i]);
@@ -166,7 +186,8 @@ function findParkedClaims(windows, events, runEnd, thresholdMs = PARKED_THRESHOL
         task: w.task,
         agent: w.agent,
         max_gap_ms: maxGap,
-        heartbeats: beats.length,
+        heartbeats: beats,
+        activity: activityTs.length,
         opened_at: w.openedAt,
         closed_at: w.closedAt || null,
       });
