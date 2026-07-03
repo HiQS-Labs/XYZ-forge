@@ -1,0 +1,179 @@
+---
+gh_issue: 110
+source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110
+title: "Fable 5 Max audit: shellcheck + vendor integrity + strict-mode hardening"
+status: parked
+created: 2026-07-03
+updated: 2026-07-03
+owner: noel
+doc_type: bug-fix-and-hardening
+complexity: 3
+risk: 2
+effort: 3
+phases: 3
+ratings_provisional: false
+non_goals:
+  - Not rebuilding the test runner or changing the 85-test suite structure
+  - Not touching the tick kernel, relay-turn-lib, or projection logic (all rated clean)
+  - Not adding CI runners — that is GH-61's scope
+related:
+  - test/xyz-vendor.sh
+  - skills/relay-automation/relay-pkg.tar.gz
+  - utils/marathon-plan.sh
+  - checkjs.sh
+  - PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md
+  - ROADMAP.md (GH-104 note: install.sh/relay-pkg.tar.gz stale — Phase 2 here closes it)
+roadmap_exempt: false
+---
+
+# GH-110 · Fable 5 Max audit — shellcheck + vendor integrity + strict-mode hardening
+
+**Why:** Fable 5 Max ran a full shellcheck pass (63 findings across 146 scripts), executed all 85
+tests in a clean Linux container, and diffed the vendor tarball against live sources. Verdict:
+overall quality high (77/85 pass hermetically, no findings on the core kernel). Five concrete
+defects identified — one broken test assertion, a stale safety-critical tarball, vendor self-test
+failures, an uncheckable 788-line JS heredoc, and an undocumented strict-mode convention.
+
+**Note on GH-104 overlap:** The ROADMAP GH-104 entry explicitly flags `install.sh`/`relay-pkg.tar.gz`
+as "remaining follow-up." Phase 2 of this doc closes that gap.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| GH-110 captured 2026-07-03; all 5 findings evaluated as valid. | Phase 1 quick fixes (broken assertion + cosmetic vendor payload issues). |
+
+## Table of contents
+
+- [Phase 1 — Quick fixes](#phase-1--quick-fixes-~1-hr)
+- [Phase 2 — Vendor integrity](#phase-2--vendor-integrity-~2-3-hrs)
+- [Phase 3 — Code quality hardening](#phase-3--code-quality-hardening-~1-day)
+
+---
+
+## Phase 1 — Quick fixes (~1 hr)
+
+Three cosmetic/trivial issues from Fable's items 1 and 3 that can land as a single commit.
+
+### Checklist
+
+- [ ] **Fix broken assertion in `test/xyz-vendor.sh:140`** — `[ "$(cat ...)"= "app-util" ]` is
+      missing the space before `=`, so the comparison always errors into the fail branch even when
+      content is correct. The resulting SC1073 parse error also blocks shellcheck from checking the
+      rest of the file. One-char fix.
+- [ ] **Remove `.DS_Store` from the vendor payload** — `utils/.DS_Store` is currently materialized
+      into the vendored copy via `materialize_vendor`. Add an exclusion in the relevant copy step
+      (e.g., `rsync --exclude='.DS_Store'` or equivalent `find -not -name`).
+- [ ] **Delete or fill `skills/swe/SKILL.md`** — currently 0 bytes; either populate with a stub
+      directive or remove the file so it does not mislead consumers of the skill.
+
+### QA gate — Phase 1
+
+- [ ] `./validate.sh` stays green (all tests pass, none newly broken).
+- [ ] `utils/pdda/pdda.sh run` reports 0 errors.
+- [ ] `shellcheck test/xyz-vendor.sh` produces no SC1073 parse error.
+- [ ] A fresh `materialize_vendor` run into a temp dir contains no `.DS_Store` files.
+
+---
+
+## Phase 2 — Vendor integrity (~2–3 hrs)
+
+Addresses the two inter-related vendor issues from Fable's items 2 and 3: the stale tarball
+(safety core ships outdated `relay-turn-lib.sh`) and the 8 vendored-copy test failures caused by
+tests that assume repo-root files that don't travel.
+
+### Checklist
+
+#### 2a — Stale `skills/relay-automation/relay-pkg.tar.gz`
+
+The tarball's `relay-turn-lib.sh` (39,052 bytes) and `relay-drive.sh` (21,206) differ from live
+sources (39,892 / 24,286). Anyone installing via the skill gets an outdated containment boundary.
+
+Choose one of two approaches (operator decision):
+
+- [ ] **Option A (preferred — remove binary):** Stop committing the tarball. Have `install.sh`
+      build it on demand from live sources (`make-pkg.sh && install`). Add a `--dry-run` check in
+      `install.sh` that verifies the build is possible before proceeding.
+- [ ] **Option B (keep binary + freshness gate):** Add a test to `validate.sh` that extracts the
+      tarball into a temp dir and `cmp`s `relay-turn-lib.sh` and `relay-drive.sh` against live
+      sources — fails if they drift. This is the pattern Fable explicitly recommended.
+
+#### 2b — Vendored-copy test failures (8/85 tests)
+
+These tests assume repo-root files that don't travel with the vendor payload:
+`validate.sh`, `.github/workflows/ci.yml`, `ROADMAP-DASHBOARD.md`, and the `oracle-guard` symlink
+test that dangles without `validate.sh`. Three others require >60s budgets.
+
+- [ ] Add `skip()` guards (using the guard pattern already in `test/ci-workflow.sh`) to each
+      root-dependent test — skip when the required file is absent, not error.
+- [ ] Add a lightweight `run-tests.sh` entry point to the vendor payload so consumers have a clear
+      "how to self-verify" path without discovering the suite manually.
+- [ ] Confirm the `oracle-guard` symlink test either resolves gracefully without `validate.sh` or
+      gets its own skip guard.
+
+### QA gate — Phase 2
+
+- [ ] `./validate.sh` green (all tests pass).
+- [ ] A fresh vendor install (into a clean temp dir, simulating a foreign repo) runs `run-tests.sh`
+      and passes ≥77/85 tests (the pre-fix baseline) with 0 unexpected errors (only expected skips).
+- [ ] If Option B chosen: `validate.sh` freshness gate catches a hand-corrupted `relay-pkg.tar.gz`
+      and fails with a clear message.
+- [ ] No `.DS_Store` or 0-byte stubs in the fresh vendor install.
+
+---
+
+## Phase 3 — Code quality hardening (~1 day)
+
+Two structural improvements from Fable's items 4 and 5. Each is a zero-behavior-change hardening
+move; either can land independently.
+
+### Checklist
+
+#### 3a — Extract marathon-plan's 788-line JS heredoc into `src/marathon-plan.js`
+
+The largest JS program in the repo lives in a heredoc inside `utils/marathon-plan.sh`, making it
+invisible to the existing `checkjs.sh` Tier-1 gate (`src/*.js` only), unreachable by
+`node --check`, and unable to `require()` src/ modules it shares logic with.
+
+- [ ] Move the heredoc body to `src/marathon-plan.js`.
+- [ ] Have the wrapper in `marathon-plan.sh` invoke it via `node src/marathon-plan.js` (or
+      `.xyz/src/marathon-plan.js` for vendored installs — use the `_xyz_harness` path variable
+      already established by GH-104).
+- [ ] Confirm `checkjs.sh`'s dir-arg mode covers `src/marathon-plan.js` (it already takes a dir;
+      check it is passed `src/` or equivalent).
+- [ ] Confirm `node --check src/marathon-plan.js` passes cleanly.
+- [ ] Update `checkjs.sh`'s Tier-1 gate scope comment if needed.
+
+#### 3b — Declare a strict-mode policy
+
+36/146 scripts set `set -e*`; the three largest scripts (`utils/pdda/`, `marathon-plan.sh`,
+`swarm-preflight.sh`) run without it, while all relay-automation drivers have `set -euo pipefail`.
+Some exemptions are deliberate (hooks shouldn't hard-fail) but none are documented.
+
+- [ ] Decide the policy: either (a) default-strict with explicit per-script `# strict-mode: exempt
+      — <reason>` header, or (b) strict-mode is per-subsystem (relay-automation strict,
+      utils/ exempt by default with rationale). Document the decision in one place
+      (e.g., `GUIDING-PRINCIPLES.md` or a `decisions/` record).
+- [ ] Add a header comment to each currently-exempt script that either states the exemption reason
+      or adds `set -euo pipefail` if it was just never set.
+- [ ] Optional enforcement: add a `pdda.sh strict-mode` check (or extend `pdda.sh frontmatter`) to
+      flag scripts with neither `set -e*` nor an explicit exemption comment.
+
+### QA gate — Phase 3
+
+- [ ] `./validate.sh` green after each sub-task (3a and 3b independently).
+- [ ] `node --check src/marathon-plan.js` passes (3a).
+- [ ] `checkjs.sh` run against `src/` includes `marathon-plan.js` in its check scope (3a).
+- [ ] Every script in `utils/pdda/`, `marathon-plan.sh`, `swarm-preflight.sh` either has
+      `set -euo pipefail` or a one-line exemption comment explaining why (3b).
+- [ ] No regression in `test/marathon-plan.sh` (functional parity after heredoc extraction) (3a).
+
+---
+
+## Passing notes (not actionable — logged for awareness)
+
+- **Exit-code 5 collision:** exit code `5` means "gemini failed" in one shim and "review-once
+  success" in `relay-drive`. Each is documented at its declaration and callers map correctly; not
+  a current bug, but a future-consumer hazard. No action taken — logged here.
+- **`skills/xyz/SKILL.md` at 84KB:** large context load for a skill. Fable suggests progressive
+  disclosure / split into reference files. Deferred; no issue opened yet.
