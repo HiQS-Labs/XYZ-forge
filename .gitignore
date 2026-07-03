@@ -18,3 +18,5 @@ PROJECT/.DS_Store
 # to (relay/marathon/swarm). Kept out of git to avoid per-session merge-conflict churn.
 XYZ.json
 XYZ.json.lock/
+# GH-78: hourly doc-preflight telemetry — per-machine, per-run edit/warn logs; gitignored to avoid churn.
+utils/telemetry/preflight-log/

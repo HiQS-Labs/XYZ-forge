@@ -78,6 +78,7 @@ TESTS=(
   "ci-workflow.sh"
   "xyz-completion.sh"
   "xyz-harness-hooks.sh"
+  "preflight-docs.sh"
   "roadmap-dashboard.sh"
   "marathon-plan.sh"
   "transcript-audit.sh"
