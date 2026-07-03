@@ -2,7 +2,7 @@
 gh_issue: 85
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/85
 title: marathon-plan undocumented-partial-completion false-positives on edit-existing-file lanes
-status: Queued
+status: Ready (rated + contracted — marathon lane)
 created: 2026-07-02
 updated: 2026-07-02
 owner: noel
@@ -45,3 +45,22 @@ exists), and/or drop `changelog-mentions-it` as a partial signal, and/or require
 - An edit-existing-file lane documented in CHANGELOG is NOT flagged `partial`.
 - A genuinely partial lane still is.
 - `test/marathon-plan.sh` covers both.
+
+## Swarm Preflight Contract
+
+Consumed by `utils/swarm-preflight.sh`. Same-repo build (`target.ref: main`). **Independent zone** —
+`marathon-plan.sh` is a planner (pre-pre-flight advisory), NOT a kernel-serialization file — so this
+lane can run in the same wave as the other independent/shim lanes and never contends for the kernel
+slot. Both artifacts already exist (a fix that extends them), and `test/marathon-plan.sh` is in the
+`validate.sh` roster. agy-safe.
+
+```json
+{
+  "target":      { "repo": ".", "ref": "main" },
+  "gate":        "bash test/marathon-plan.sh",
+  "fix_probes":  [ { "type": "grep_absent", "path": "utils/marathon-plan.sh", "pattern": "GH-85" } ],
+  "artifacts":   [ "utils/marathon-plan.sh", "test/marathon-plan.sh" ],
+  "remediation": { "source": "GH-85#fix-direction", "criteria": "In utils/marathon-plan.sh's undocumented-partial-completion detector (~line 439), stop the two false-positive signals from firing on an edit-existing-file lane: the `some-artifacts-exist` signal must require a NEW/created artifact to be present (e.g. the contract's gate test path, or an artifact the contract marks net-new) rather than ANY listed (existing, being-edited) path; and drop `changelog-mentions-it` as a partial-completion signal (a queued/contracted CHANGELOG mention is not evidence of completion). A genuinely partial lane (GH-44 style: real prior work on disk — e.g. a branch matching the slug AND tests referencing it) is STILL flagged. test/marathon-plan.sh adds two regression cases: (a) a rated+contracted edit-existing-file lane whose artifacts all pre-exist and whose #n is in CHANGELOG is classified READY (not partial); (b) a lane with genuine partial signals is still `partial`. Carries a GH-85 marker comment. Verify with `bash test/marathon-plan.sh`." },
+  "lanes":       { "agy_safe": [ "utils/marathon-plan.sh", "test/marathon-plan.sh" ], "orchestrator_only": [] }
+}
+```

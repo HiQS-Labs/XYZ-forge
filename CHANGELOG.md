@@ -4,6 +4,10 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### GH-85 preflighted (added to the marathon); gh-907 plan-review thread closed
+- **GH-85** (`#85`) — added a `## Swarm Preflight Contract` (independent zone: `utils/marathon-plan.sh` + `test/marathon-plan.sh`); the fix makes `some-artifacts-exist` require a NEW/created artifact and drops `changelog-mentions-it` as a partial signal, keeping GH-44-style true positives. Now a ready marathon lane — active count 4→5. (The Wave-1 text renderer still shows only 3 lanes; that lag is the very display bug GH-85 fixes.)
+- **Closed** the idle `relay-system/2026-07-02/gh-907-plan-review.md` thread (LTVera/Pandas Buffer Bridge flood plan review) — Reviewer had returned Changes requested but the Producer turn never followed here; superseded by LTVera running on its own vendored `.xyz/` harness. `STATUS: Closed`, no approval implied.
+
 ### Marathon-plan preflight sweep — 3 new ready lanes; GH-41 escalated to a consult; hygiene closes
 Reviewed every held/open issue against a strict "is this a fireable lane" bar (5 parallel assessment agents, each verifying paths + code), then filled the rating/contract gaps for the ones GUIDING-PRINCIPLES already covers. Marathon plan now **3 active lanes** (was 1). `pdda run` all-green.
 
