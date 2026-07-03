@@ -1,5 +1,5 @@
 # Marathon Phase gh84
-STATUS: Open
+STATUS: Approved
 NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH84-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -72,3 +72,8 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Modified [runner.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/relay-automation/runner.sh) to support an optional `RUNNER_ROOT_DIR` environment variable, defaulting to the original script directory.
 - Modified [runner-loop.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/test/runner-loop.sh) to export `RUNNER_ROOT_DIR="$A"` so the runner-loop hermetically checks `$A` instead of the real repo directory.
 - Added a regression test in [runner-loop.sh](file:///Users/noelsaw/Documents/GH%20Repos/xyz-3-agents-swarm/test/runner-loop.sh) that dirties the real repo `README.md` and asserts that the runner still successfully passes, proving the hermetic guard no longer checks the real workspace.
+
+### Round 1 · Reviewer · codex
+**Verdict:** Approved
+- Reviewed `relay-automation/runner.sh` and `test/runner-loop.sh` on disk. The `RUNNER_ROOT_DIR` override is additive, and the default `ROOT_DIR` path remains unchanged when the env var is unset.
+- Verified the regression path stays hermetic by running `bash test/runner-loop.sh`; result: `7 pass, 0 fail`, including the dirty-real-README regression assertion.
