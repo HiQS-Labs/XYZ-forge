@@ -381,21 +381,31 @@ function isGoGated(item) {
 // independent; in practice the consumer stalls on the producer's handoff unless the operator pins a
 // shared contract first. This detects the seam so the plan can say "pin a CONTRACT.md" up front.
 function dirPrefixes(p) {
-  const parts = String(p).split("/").filter(Boolean);
-  parts.pop(); // drop the file / trailing glob segment (e.g. a.js, **)
+  const s = String(p);
+  const endsDir = /\/$/.test(s); // a trailing slash means the artifact IS a directory — keep its last segment
+  const parts = s.split("/").filter(Boolean);
+  // Drop the last segment only when it's a FILE or glob leaf (e.g. a.js, **, *.js); a trailing-slash
+  // directory keeps all of its segments (PR #103 review: `src/schema/` must yield `src/schema`).
+  if (!endsDir && parts.length) parts.pop();
   const out = []; let acc = "";
   for (const seg of parts) { acc = acc ? acc + "/" + seg : seg; out.push(acc); }
-  return out; // "src/schema/a.js" -> ["src", "src/schema"]
+  return out; // "src/schema/a.js" -> ["src", "src/schema"] ; "src/schema/" -> ["src", "src/schema"]
 }
 function sharedSpine(wsA, wsB) {
   // Deepest directory of >= 2 segments (contains a "/") shared by any path in A and any in B.
   // Top-level-only sharing (both under "src/" or "test/") is intentionally NOT a seam — too coarse.
+  // "Deepest" = most path SEGMENTS (PR #103 review: string length is not depth — `src/long-name`
+  // must not beat `src/a/b/c`); ties break lexically so the choice is canonical + deterministic.
+  const depth = (x) => x.split("/").length;
   let best = null;
   for (const pa of wsA) {
     const pref = dirPrefixes(pa);
     for (const pb of wsB) {
       const setB = new Set(dirPrefixes(pb));
-      for (const d of pref) if (d.includes("/") && setB.has(d) && (!best || d.length > best.length)) best = d;
+      for (const d of pref) {
+        if (!d.includes("/") || !setB.has(d)) continue;
+        if (!best || depth(d) > depth(best) || (depth(d) === depth(best) && d < best)) best = d;
+      }
     }
   }
   return best;
@@ -721,7 +731,7 @@ if (FORMAT === "json") {
   out.push("");
   out.push("FLAGS (deterministic signals — never auto-resolved)");
   const order = { warn: 0, info: 1 };
-  const sorted = findings.slice().sort((a, b) => (order[a.severity] - order[b.severity]) || (a.type < b.type ? -1 : 1));
+  const sorted = findings.slice().sort((a, b) => (order[a.severity] - order[b.severity]) || (a.type < b.type ? -1 : a.type > b.type ? 1 : 0));
   if (sorted.length === 0) out.push("  (none)");
   for (const f of sorted) {
     out.push(`  ${f.severity.toUpperCase().padEnd(4)} [${f.type}]  ${f.item}`);
