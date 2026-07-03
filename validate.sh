@@ -23,6 +23,7 @@ TESTS=(
   "auto-sync.sh"
   "analyze.sh"
   "workstealing-verdict.sh"      # GH-4 (work-stealing via take + lane-count-independent verdict)
+  "verdict-edge.sh"              # GH-4 (verdict/collision edge cases — cross-model review of PR #101)
   "claim-cap.sh"
   "reap.sh"
   "heartbeat.sh"

@@ -49,10 +49,17 @@ function buildClaimWindows(events) {
     for (const ev of evs) {
       if (ev.type === 'task.claimed') {
         if (!open) {
-          open = { task: taskId, agent: ev.agent, paths: ev.paths || [], openedAt: ev.ts };
+          // GH-4: `paths` is the LATEST scope (current claim); `pathsUnion` is every path the window
+          // ever held (claim + all its scope_changed). Collision detection uses the union so a scope
+          // change mid-window can't hide an overlap that existed while both windows were open (a
+          // conservative over-approximation — it never MISSES a real overlap; per PR #101 review).
+          open = { task: taskId, agent: ev.agent, paths: ev.paths || [], pathsUnion: (ev.paths || []).slice(), openedAt: ev.ts };
         }
       } else if (ev.type === 'task.scope_changed') {
-        if (open && open.agent === ev.agent && ev.paths) open.paths = ev.paths;
+        if (open && open.agent === ev.agent && ev.paths) {
+          open.paths = ev.paths;
+          for (const p of ev.paths) if (!open.pathsUnion.includes(p)) open.pathsUnion.push(p);
+        }
       } else if (
         ev.type === 'task.released' ||
         ev.type === 'task.done' ||
@@ -130,8 +137,10 @@ function computeParallelism(windows, runStart, runEnd) {
 // per-agent count that the old bar punished but this verdict rewards.
 const DEFAULT_CONCURRENCY_TARGET_PCT = 50;
 const _envConcTarget = Number(process.env.TICK_CONCURRENCY_TARGET_PCT);
+// Finite, in [0,100]. 0 disables the concurrency gate (operator escape hatch); clamp the top so a
+// stray >100 (e.g. 120) can't silently make PASS impossible — per the PR #101 cross-model review.
 const CONCURRENCY_TARGET_PCT = Number.isFinite(_envConcTarget) && _envConcTarget >= 0
-  ? _envConcTarget
+  ? Math.min(_envConcTarget, 100)
   : DEFAULT_CONCURRENCY_TARGET_PCT;
 
 /**
@@ -143,7 +152,13 @@ const CONCURRENCY_TARGET_PCT = Number.isFinite(_envConcTarget) && _envConcTarget
  */
 function computeCollisions(windows) {
   const iv = windows
-    .map(w => ({ task: w.task, agent: w.agent, paths: w.paths || [], o: toMs(w.openedAt), c: w.closedAt ? toMs(w.closedAt) : Infinity }))
+    .map(w => {
+      // Null-safe close: an unparseable closedAt must NOT coerce to 0 in Math.min (that would make the
+      // no-overlap test always true — a silent false negative; caught in the PR #101 review). Fall back
+      // to Infinity (treat as open through run end). Use pathsUnion so a scoped-away overlap still counts.
+      const cm = w.closedAt ? toMs(w.closedAt) : null;
+      return { task: w.task, agent: w.agent, paths: w.pathsUnion || w.paths || [], o: toMs(w.openedAt), c: cm !== null ? cm : Infinity };
+    })
     .filter(w => w.o !== null);
   const collisions = [];
   for (let i = 0; i < iv.length; i++) {
