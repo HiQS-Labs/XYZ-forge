@@ -54,6 +54,12 @@ After install, use it with:
   export PATH="<target-dir>/bin:$PATH"
   export TICK_REPO_ROOT="<repo to coordinate>"   # where .tick/ lives
   tick --help
+
+Remote / foreign installs — keeping vendored harness copies in sync:
+  relay-automation/xyz-vendor.sh list              # show all vendored .xyz/ copies
+  relay-automation/xyz-vendor.sh sync              # push latest harness to all copies
+  relay-automation/xyz-vendor.sh delete <dir>      # remove a vendored copy
+  Run from a clone of this repo. See relay-automation/xyz-vendor.sh --help.
 USAGE
 }
 
