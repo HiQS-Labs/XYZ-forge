@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-02
 
+### PR close-out — GH-78 doc-preflight merged (#81), #79 deferred; ledger hygiene (5 closed items → Completed)
+Finished the two open harness-review PRs (both content-reviewed via `relay-xyz` on 2026-07-02) and cleared the marathon plan's `already-closed` backlog.
+- **GH-78 / PR [#81](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/81) MERGED** (`115713f`) — agy-Approved opt-in doc-preflight (`utils/telemetry/preflight-docs.sh` + `test/preflight-docs.sh`). Rebased onto main via an isolated worktree (churn conflicts in `ROADMAP.md`/`CHANGELOG.md`/`ROADMAP-DASHBOARD.md` resolved to main; feature files clean), full `validate.sh` **green (exit 0)**, own test **14/14**, then squash-merged.
+- **PR [#79](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/79) (GH-77 aider lane) deferred** — held for the author: a real `[Blocker]` (`aider-turn.sh` can report a successful turn without proving relay-token ownership) + a logic collision with #56's `reconcile_relay_task` on `marathon-drive.sh`/`marathon-agent.sh`; still `CONFLICTING`. Triage/deferral comment posted; content review already on the PR.
+- **Ledger hygiene** — moved 5 CLOSED-but-still-queued items (GH-45/58/83/84/85) from `ROADMAP.md` "Queue / parked intake" → "Completed" (GH-45's entry updated to reflect PR #91). `utils/marathon-plan.sh` `already-closed` warnings **7→0**; `utils/pdda/pdda.sh run` all-green.
+
 ### GH-87 + GH-88 fit into the marathon and preflighted — surfaces a greenfield-artifact gap in `swarm-preflight`
 Reviewed both freshly-captured items ([#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) deep-research, [#88](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88) cross-repo marathon monitor) against the current marathon queue. Also synced remote [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87)'s title/body to match the local provider-agnostic capture doc.
 - Added a `## Swarm Preflight Contract` + checklist-style Definition of done to both [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/1-INBOX/GH-87-DEEP-RESEARCH-MODE.md) and [GH-88-CROSS-REPO-MARATHON-MONITOR.md](PROJECT/1-INBOX/GH-88-CROSS-REPO-MARATHON-MONITOR.md), so `utils/marathon-plan.sh`'s phase/acceptance-criteria gate treats them as unattended-runnable.
