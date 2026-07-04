@@ -82,7 +82,7 @@ Two lanes are safe to run concurrently **iff their write-sets are disjoint**. Co
 |---|------|---------------------|------|
 | #92 | poll.sh whole-line-bold pointer → turn-1 deadlock (🔴) | `relay-automation/poll.sh` (+test) | independent |
 | #93 | tick analyze % spans whole log, not the run | `src/analyze.js` (+`bin/tick`, +test) | independent* |
-| #96 | XYZ⇄Rebalance: xyz-sync check · XYZ.json emit · tick-lane consume | `relay-automation/xyz-sync.sh` + `src/take.js` | independent* (xyz-sync.sh clear of 5972ef4) |
+| #96 | XYZ⇄Rebalance: xyz-sync check (Seam #2 only — this lane's actual scope; XYZ.json emit and tick-lane consume are separate seams, not built here) | `relay-automation/xyz-sync.sh` (corrected 2026-07-04: dropped `src/take.js` — zero relevance to Seam #2, see [GH-96-XYZ-REBALANCE-SYNC-CHECK.md](GH-96-XYZ-REBALANCE-SYNC-CHECK.md)) | independent (xyz-sync.sh clear of 5972ef4) |
 | #94 | Installer heredoc mangles `!`→`\!` | `install.sh` / `xyz-vendor.sh` (installer runtime) | independent · ⚠️ **re-verify repro vs 5972ef4 before building** — not fired this round |
 | #89 | swarm-preflight: no greenfield (new-file) ready path | `utils/swarm-preflight.sh` (+test) | swarm-preflight |
 | #55 | swarm-preflight: auto-include changed artifact's tests | `utils/swarm-preflight.sh` (+test) | swarm-preflight — queued behind #89 |
@@ -90,9 +90,10 @@ Two lanes are safe to run concurrently **iff their write-sets are disjoint**. Co
 | #48 | marathon-plan: generalize zone model for cross-repo | `utils/marathon-plan.sh` (+test) | marathon-plan — consult-vetted design ready ([doc](GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md)), queued behind #86, not fired this round |
 | #54 | marathon brief: forbid in-turn fs-touching tests | brief template in **both** `swarm-preflight.sh` + `marathon-plan.sh` | cross-zone — queued behind both zones settling |
 
-`*` #93 and #96 both may touch `bin/tick` (subcommand dispatch). They edit *different* `src/*.js`
-files (`analyze.js` vs `take.js`), so they're parallel-safe unless a lane needs to register a new
-`bin/tick` verb — if so, serialize those two on `bin/tick` only. Flag for the driver.
+`*` #93 may touch `bin/tick` (subcommand dispatch) if `analyze`'s report fields need surfacing
+there. #96 was originally flagged alongside it on the same basis (`take.js`'s `bin/tick` dispatch)
+but corrected 2026-07-04 — Seam #2 (this lane's actual scope) is `relay-automation/xyz-sync.sh`'s
+own dispatcher, not `bin/tick`, so #93 and #96 no longer share any potential file.
 
 ## Recommended waves
 
