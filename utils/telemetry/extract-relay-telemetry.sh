@@ -12,7 +12,27 @@ set -euo pipefail
 #   red    — no VERDICT in log, empty log section, or VERDICT: FAIL under non-terminal STATUS
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-RELAY_SYSTEM="$ROOT_DIR/relay-system"
+
+# GH-30 Phase 4: honor the transcript-root resolver so telemetry finds ARCHIVED transcripts when
+# XYZ_ARCHIVE_ROOT is set. Two on-disk layouts:
+#   - unset → "$ROOT_DIR/relay-system/<date>/*.md"                     (local; byte-for-byte today)
+#   - set   → "$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>/<date>/*.md" (archive; namespaced per source
+#             repo, so one feed can aggregate many repos without colliding on <date>/<slug>)
+# The resolver validates a set-but-invalid archive (absolute + existing git repo) and fails loud, so a
+# bad var never silently reads the wrong tree. ARCHIVE_MODE flips the scan from one date level to the
+# extra <repo-slug>/ level below.
+# shellcheck source=../../relay-automation/relay-turn-lib.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)/relay-automation/relay-turn-lib.sh"
+if [[ -n "${XYZ_ARCHIVE_ROOT:-}" ]]; then
+  # rtl_transcript_root bakes in THIS repo's slug; strip it back to the shared relay-system base so
+  # every <repo-slug>/ dir in the archive is scanned (cross-repo aggregation).
+  _rs_slugged="$(rtl_transcript_root "$ROOT_DIR")" || { printf 'extract-relay-telemetry: invalid XYZ_ARCHIVE_ROOT\n' >&2; exit 1; }
+  RELAY_SYSTEM="${_rs_slugged%/*}"
+  ARCHIVE_MODE=1
+else
+  RELAY_SYSTEM="$ROOT_DIR/relay-system"
+  ARCHIVE_MODE=0
+fi
 
 # GH-75: the STATUS/VERDICT → health mapping now lives in a shared lib so the live XYZ.json completion
 # hook and this on-demand extractor stay in lockstep. Behavior here is unchanged.
@@ -59,7 +79,14 @@ trap 'rm -f "$tmp_tsv"' EXIT
 
 count=0
 
-for date_dir in "$RELAY_SYSTEM"/*/; do
+# GH-30 Phase 4: in archive mode the date dirs sit one level deeper under <repo-slug>/; `basename` of
+# either layout is still the trailing <date> segment, so the date filter + inner loop are unchanged.
+if (( ARCHIVE_MODE )); then
+  date_dirs=("$RELAY_SYSTEM"/*/*/)
+else
+  date_dirs=("$RELAY_SYSTEM"/*/)
+fi
+for date_dir in "${date_dirs[@]}"; do
   date_name="$(basename "$date_dir")"
   [[ "$date_name" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || continue
   [[ ! "$date_name" < "$FROM_DATE" && ! "$date_name" > "$TO_DATE" ]] || continue

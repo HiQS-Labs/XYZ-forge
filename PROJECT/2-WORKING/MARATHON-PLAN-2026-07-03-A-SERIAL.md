@@ -28,7 +28,7 @@ execution: serial · Opus 4.8 · reasoning=high · operator-direct kernel pass
 
 | What was just completed | What's next |
 |---|---|
-| 4 of 5 lanes closed: **#41** (terminality-seal, foundation), **#3** (parked-claim false-positive), **#4** (work-stealing verdict), **#5** (contract-seam warning) — all shipped and closed per the serial sequence above. | **#30** remains **open** (partial): Phases 1–2 (transcript-root resolver + writer wiring) shipped; Phases 3–5 (off-tree containment allowlist, telemetry, docs) still pending — tracked in [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md), not re-detailed here. |
+| **All 5 lanes closed.** **#41** (terminality-seal, foundation), **#3** (parked-claim false-positive), **#4** (work-stealing verdict), **#5** (contract-seam warning), and now **#30** (centralized transcript archive) — **all phases shipped 2026-07-03**: Phase 3 (Model A off-tree transcript commit via isolated `git -C`, `.tick`+code stay on target, no orphaned peer commit) + Phase 4 (telemetry aggregates the archive) + Phase 5 (docs/CHANGELOG, promoted to 3-COMPLETED). `validate.sh` 92/92, PDDA clean. | **Plan A complete.** Follow-on (not in this plan): live end-to-end archive dogfood against a real foreign repo. See [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](../3-COMPLETED/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md). |
 
 ## Why serial, why Opus-direct
 

@@ -11,6 +11,12 @@
 #                             In a worktree-isolated turn the agent CANNOT reach ROOT's HEAD, so a moved
 #                             ROOT HEAD is a CONCURRENT PEER commit — PRESERVED, not reset (GH-13).
 #   (3) no push             — stage only the allowlist, commit file-scoped, never push
+#   (3b) archive transcript — GH-30 Phase 3 (Model A): when XYZ_ARCHIVE_ROOT redirected the relay file
+#                             into a SEPARATE git repo (the archive), rtl_init flags RTL_ARCHIVE_MODE and
+#                             rtl_enforce commits the transcript into THAT repo via an isolated `git -C`
+#                             step — never RTL_ROOT. Code artifacts + the .tick token stay on RTL_ROOT,
+#                             so token-tree and transcript-tree can differ without the (2) reset hazard.
+#                             Unset var / same-repo relay file → mode 0, byte-for-byte the paths above.
 # Keeping this in ONE place means a new turn-taker (gemini-drive.sh, …) inherits the exact
 # boundary instead of reimplementing it — reimplementation is where a fourth bypass sneaks in.
 #
@@ -165,6 +171,28 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   local _n=() a                       # normalize to repo-root-relative (git status emits relative)
   for a in "${RTL_ALLOW[@]}"; do _n+=("${a#"$RTL_ROOT"/}"); done
   RTL_ALLOW=("${_n[@]}")
+  # GH-30 Phase 3 (Model A): the relay file may live in a SEPARATE git repo (the ARCHIVE) when
+  # XYZ_ARCHIVE_ROOT redirected the transcript out of RTL_ROOT. Detect that here so rtl_enforce
+  # commits the transcript INTO the archive repo (never RTL_ROOT), while the code artifacts AND the
+  # .tick token stay anchored on RTL_ROOT. An out-of-root relay file survived the `${a#"$RTL_ROOT"/}`
+  # strip above as an ABSOLUTE path (leading '/'), so it is already inert to the RTL_ROOT status/commit
+  # loop (git-status there never lists it) and to the worktree machinery (which skips absolute entries);
+  # this block just records WHICH repo to commit it into and its path within that repo. Default — relay
+  # file under RTL_ROOT, or archive == target (a same-repo redirect) — leaves RTL_ARCHIVE_MODE=0, so
+  # every existing path is byte-for-byte unchanged. Non-git RTL_ROOT / non-git relay dir → mode 0 too.
+  RTL_ARCHIVE_MODE=0; RTL_RELAY_REPO=""; RTL_RELAY_ARCHIVE_REL=""
+  local _fdir _frepo _rroot_top _fabs
+  _fdir="$(cd "$(dirname "$f")" 2>/dev/null && pwd -P || true)"
+  if [[ -n "$_fdir" ]]; then
+    _frepo="$(git -C "$_fdir" rev-parse --show-toplevel 2>/dev/null || true)"
+    _rroot_top="$(git -C "$RTL_ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
+    if [[ -n "$_frepo" && -n "$_rroot_top" && "$_frepo" != "$_rroot_top" ]]; then
+      RTL_ARCHIVE_MODE=1
+      RTL_RELAY_REPO="$_frepo"
+      _fabs="$_fdir/$(basename "$f")"
+      RTL_RELAY_ARCHIVE_REL="${_fabs#"$_frepo"/}"
+    fi
+  fi
   # GH-31 / #15: optional READ-ONLY artifact under review (a cross-repo or uncommitted PR/diff).
   # RELAY_ARTIFACT_FILE is an ABSOLUTE path to the source (relay-drive absolutizes it). It is seeded
   # read-only into the worktree by rtl_worktree_begin at .relay-artifacts/<basename> — NOT added to
@@ -279,6 +307,10 @@ rtl_worktree_begin() {
     rm -rf "$wt" 2>/dev/null; return 1
   fi
   for a in "${RTL_ALLOW[@]}"; do       # seed current content (overwrite HEAD versions)
+    # GH-30 Phase 3: an ABSOLUTE allowlist entry is the archive relay file — it lives in a DIFFERENT
+    # repo, not this RTL_ROOT worktree. Skip it: the agent edits it at its real location and rtl_enforce
+    # commits it to the archive. (Keeps seedsig index aligned with the copyback loop, which skips it too.)
+    [[ "$a" == /* ]] && continue
     if [[ -e "$RTL_ROOT/$a" ]]; then
       mkdir -p "$wt/$(dirname "$a")"
       cp -R "$RTL_ROOT/$a" "$wt/$a"
@@ -294,7 +326,7 @@ rtl_worktree_begin() {
   # because the caller invokes this via wt="$(rtl_worktree_begin)", a subshell whose globals are lost;
   # rtl_worktree_end re-reads the sidecar by the worktree path it is handed. One line per RTL_ALLOW entry.
   : >"${wt}.seedsig"
-  for a in "${RTL_ALLOW[@]}"; do _rtl_sig "$wt/$a" >>"${wt}.seedsig"; done
+  for a in "${RTL_ALLOW[@]}"; do [[ "$a" == /* ]] && continue; _rtl_sig "$wt/$a" >>"${wt}.seedsig"; done
   # GH-31 / #15: seed the read-only artifact under review so an ISOLATED reviewer can READ it (it is
   # neither at HEAD nor on the writable allowlist). Snapshot the .relay-artifacts dir signature to a
   # sidecar so rtl_worktree_end can exempt it from off-lane detection ONLY while unchanged — a reviewer
@@ -353,6 +385,9 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
       while IFS= read -r _ln; do _seeds+=("$_ln"); done <"${wt}.seedsig"
     fi
     for a in "${RTL_ALLOW[@]}"; do
+      # GH-30 Phase 3: skip the absolute archive relay-file entry — never seeded here (committed to the
+      # archive by rtl_enforce). Skipped in lockstep with the begin seedsig loop, so `i` stays aligned.
+      [[ "$a" == /* ]] && continue
       # GH-22: copy back ONLY paths the turn changed IN THE WORKTREE. If the worktree path is identical
       # to what was seeded, the turn did not touch it here — leave RTL_ROOT alone so a ROOT-direct edit
       # (agy writing the absolute ROOT path) survives for rtl_enforce to commit, instead of being
@@ -518,6 +553,27 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   else
     git -C "$RTL_ROOT" commit -q -m "relay(${task}): ${agent} turn (${RTL_TOOL} headless; no push)"
     printf '%s-turn: committed %s turn (file-scoped, no push)\n' "$RTL_TOOL" "$agent"
+  fi
+  # (3b) GH-30 Phase 3 (Model A): commit the TRANSCRIPT (relay file) into the SEPARATE archive repo,
+  # never RTL_ROOT. This is an ISOLATED `git -C "$RTL_RELAY_REPO"` step — it CANNOT move RTL_ROOT's HEAD,
+  # so it can never orphan a concurrent peer commit in the target tree (the GH-13 hazard is guarded at
+  # the top of this function on RTL_ROOT only, and holds even when token-tree ≠ transcript-tree). The
+  # .tick token handoff (step 4 below) stays anchored to TICK_REPO_ROOT — the target/harness clone —
+  # so token and transcript may live in different trees safely. A pathspec commit isolates it to the
+  # relay file alone (other repos' transcripts already sitting in the archive are untouched). Best
+  # effort: a failed archive commit WARNs (the transcript file is still on disk) and NEVER fails the
+  # turn — the file-scoped code commit already stood, and this transcript is a record, not the gate.
+  if [[ "${RTL_ARCHIVE_MODE:-0}" == "1" && -n "${RTL_RELAY_REPO:-}" && -n "${RTL_RELAY_ARCHIVE_REL:-}" ]]; then
+    git -C "$RTL_RELAY_REPO" add -- "$RTL_RELAY_ARCHIVE_REL" 2>/dev/null || true
+    if git -C "$RTL_RELAY_REPO" diff --cached --quiet -- "$RTL_RELAY_ARCHIVE_REL" 2>/dev/null; then
+      printf '%s-turn: archive transcript unchanged — nothing to commit to %s\n' "$RTL_TOOL" "$RTL_RELAY_REPO"
+    elif git -C "$RTL_RELAY_REPO" commit -q \
+           -m "relay(${task}): ${agent} transcript (${RTL_TOOL} headless; archive; no push)" \
+           -- "$RTL_RELAY_ARCHIVE_REL" 2>/dev/null; then
+      printf '%s-turn: committed transcript to archive %s (%s; no push)\n' "$RTL_TOOL" "$RTL_RELAY_REPO" "$RTL_RELAY_ARCHIVE_REL"
+    else
+      printf '%s-turn: WARN could not commit transcript to archive %s (%s) — file written but uncommitted; check the archive repo git identity\n' "$RTL_TOOL" "$RTL_RELAY_REPO" "$RTL_RELAY_ARCHIVE_REL" >&2
+    fi
   fi
   # (4) authoritative token handoff (GH-67). The turn prompt asks the worker to release/done the
   # token itself, but headless workers frequently DON'T — both codex (stall) and agy (Approved) turns
