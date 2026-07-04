@@ -262,6 +262,11 @@ materialize_vendor() {
     cp -Rp "$HARNESS_ROOT/$d/." "$STAGE_DIR/$d/"
   done
 
+  # GH-110: cp -Rp on macOS/BSD faithfully mirrors Finder-created .DS_Store cruft from the source
+  # tree into every vendored copy. Strip it post-copy rather than reaching for rsync --exclude (no
+  # new dependency, stays consistent with the existing cp -Rp pattern above).
+  find "$STAGE_DIR" -name '.DS_Store' -delete
+
   # Runnability sanity — the two files every feature ultimately depends on.
   [ -f "$STAGE_DIR/bin/tick" ] || die "vendor incomplete: bin/tick missing after mirror"
   [ -f "$STAGE_DIR/relay-automation/relay-turn-lib.sh" ] \
