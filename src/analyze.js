@@ -433,13 +433,33 @@ function analyze(repoRoot) {
   perAgent.delete('dispatcher');
 
   const eventTs = events.map(e => e.ts).sort();
+  // GH-93: `earliest_event`/`latest_event` (below) span the WHOLE .tick/events/ log, which
+  // accumulates across every run with no run-scoping — leftover events from a prior marathon
+  // widen that span far outside the actual run. SKILL.md documents the correct metric as
+  // work-bounded (first `task.claimed` -> last `task.done`); this computes that window from the
+  // task.* events already filtered above, so a genuinely concurrent run doesn't misreport as ~0%
+  // just because the whole-log span is stale-widened. Falls back to the whole-log span (today's
+  // existing behavior) when the log has no claim or no done event yet (a run still in progress,
+  // or an empty log) rather than computing a window from a missing timestamp.
+  const claimTs = events.filter(e => e.type === 'task.claimed').map(e => e.ts).sort();
+  const doneTs = events.filter(e => e.type === 'task.done').map(e => e.ts).sort();
+  const hasWorkBoundedWindow = claimTs.length > 0 && doneTs.length > 0;
+  const workBoundStart = hasWorkBoundedWindow ? claimTs[0] : (eventTs[0] || null);
+  const workBoundEnd = hasWorkBoundedWindow ? doneTs[doneTs.length - 1] : (eventTs[eventTs.length - 1] || null);
+
   const window = {
     earliest_event: eventTs[0] || null,
     latest_event: eventTs[eventTs.length - 1] || null,
+    // GH-93: work-bounded window (first task.claimed -> last task.done) — the metric SKILL.md
+    // prescribes and the one concurrent_pct/the verdict gate are actually computed from. Kept
+    // alongside earliest_event/latest_event (not replacing them) so the whole-log span stays
+    // visible and the discrepancy, if any, is never hidden.
+    work_bound_start: workBoundStart,
+    work_bound_end: workBoundEnd,
     total_events: events.length,
   };
 
-  const parallelism = computeParallelism(windows, window.earliest_event, window.latest_event);
+  const parallelism = computeParallelism(windows, window.work_bound_start, window.work_bound_end);
   const parked_suspects = findParkedClaims(windows, events, window.latest_event);
 
   const doneTaskIds = new Set(events.filter(e => e.type === 'task.done').map(e => e.task));
@@ -480,7 +500,8 @@ function analyze(repoRoot) {
 function renderHuman(report) {
   const out = [];
   out.push('=== tick analyze ===');
-  out.push(`window: ${report.window.earliest_event || '(none)'} → ${report.window.latest_event || '(none)'}`);
+  out.push(`window (whole log): ${report.window.earliest_event || '(none)'} → ${report.window.latest_event || '(none)'}`);
+  out.push(`window (work-bounded, first claimed → last done): ${report.window.work_bound_start || '(none)'} → ${report.window.work_bound_end || '(none)'}`);
   out.push(`events: ${report.window.total_events} (` +
     Object.entries(report.event_counts).map(([k, v]) => `${k}:${v}`).join(', ') + ')');
   const p = report.parallelism;
@@ -555,7 +576,8 @@ function renderMd(report) {
   const out = [];
   out.push('## Auto-analyzed (tick analyze)');
   out.push('');
-  out.push(`- **Run window:** \`${report.window.earliest_event || '(none)'}\` → \`${report.window.latest_event || '(none)'}\``);
+  out.push(`- **Run window (whole log):** \`${report.window.earliest_event || '(none)'}\` → \`${report.window.latest_event || '(none)'}\``);
+  out.push(`- **Run window (work-bounded, first claimed → last done):** \`${report.window.work_bound_start || '(none)'}\` → \`${report.window.work_bound_end || '(none)'}\``);
   out.push(`- **Total events:** ${report.window.total_events} (${Object.entries(report.event_counts).filter(([_, v]) => v).map(([k, v]) => `${k}: ${v}`).join(', ') || 'none'})`);
   const p = report.parallelism;
   if (p && p.concurrent_pct !== null) {
