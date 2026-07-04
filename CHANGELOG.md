@@ -4,6 +4,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### deep-research.mjs (GH-87) had shipped un-run against real `agy` — 2 hangs fixed + grounded #111 research
+Dogfooding the merged grounded-search adapter to research #111 (Python cutover lessons) revealed it **hung on every real `agy` call** — it had been merged with stub-only tests, so it was never actually run against the real backend. Two independent bugs, both fixed + regression-tested:
+- **Missing `--dangerously-skip-permissions`** (`91f17f2`): `agy -p` blocked on a tool-permission prompt for its web-search tool until `--print-timeout`.
+- **`execFile` silently ignores the `stdio` option** (`74cd553`): `stdio:['ignore',…]` did nothing, so `agy`'s stdin was left an open pipe it blocked reading — every wrapper call hung. Switched `runAgy` to `spawn` (which honors `stdio`). Measured: `execFile` 75s→timeout/0-bytes vs `spawn` 10s→ok; the stub missed it because it never reads stdin.
+Now returns in ~27–52s with real citations; `test/deep-research.sh` **23/23** (added a `--dangerously-skip-permissions` assertion + a stdin-reading `needstdin` stub that hangs unless stdin is EOF'd). **Lesson: a stub can't prove a CLI adapter works against its real backend** — filed **#124** for hardening (opt-in real-`agy` smoke test + a runaway-grounding guard: `--search-context-size high` over-searches and can approach the timeout). First real use: ran 4 grounded searches (reframed for the XYZ→Python port, drawing applicable lessons from #111) and posted them to **#111**.
+
 ### Doc-hygiene sweep: MARATHON-PLAN-2026-07-04 was already fully shipped, plus two stale-open issues
 Reconciling ROADMAP.md against actual shipped code (in the course of scoping the next marathon) found that [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md)'s 5 Wave-1 lanes (Fable GH-110 P1 + Gemini GH-109 P1 + Aider/OpenRouter GH-119/GH-120) had all landed already but the doc and two of its source issues were never closed out:
 
