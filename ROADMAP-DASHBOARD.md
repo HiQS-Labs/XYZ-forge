@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 25 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 7 · 🔮 0 · 🔲 0
+Summary: 25 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 8 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ Summary: 25 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 7 · �
 | GH-112 · Spike: progressive Python port — boundary decision + dogfood architecture | — | [GH-112-PYTHON-PORT-SPIKE.md](PROJECT/1-INBOX/GH-112-PYTHON-PORT-SPIKE.md) · [#112](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112) |
 | GH-109 · Gemini 3.1 Deep Think audit — watchdog process leak, tmp collision, DRY turn scripts, Python inline extraction | — | [GH-109-GEMINI-FEEDBACK.md](PROJECT/1-INBOX/GH-109-GEMINI-FEEDBACK.md) · [#109](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/109) |
 | GH-110 · Fable 5 Max audit — shellcheck + vendor integrity + strict-mode hardening | — | [GH-110-SHELLCHECK-VENDOR-FIXES.md](PROJECT/1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) · [#110](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110) |
-| GH-87 · Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter) | — | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/1-INBOX/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
+| GH-87 · Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter) | ✅ | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/2-WORKING/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
 | GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | — | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/1-INBOX/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-41 · task.done not terminal vs higher-epoch reclaim (silent token resurrection) | ✅ | [decisions/2026-07-02-terminality-seal.md](decisions/2026-07-02-terminality-seal.md) · [GH-41-DONE-NOT-TERMINAL.md](PROJECT/3-COMPLETED/GH-41-DONE-NOT-TERMINAL.md) · [#41](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41) |
