@@ -4,6 +4,17 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### Doc-hygiene sweep: MARATHON-PLAN-2026-07-04 was already fully shipped, plus two stale-open issues
+Reconciling ROADMAP.md against actual shipped code (in the course of scoping the next marathon) found that [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md)'s 5 Wave-1 lanes (Fable GH-110 P1 + Gemini GH-109 P1 + Aider/OpenRouter GH-119/GH-120) had all landed already but the doc and two of its source issues were never closed out:
+
+- Lane A — `.DS_Store` exclusion in `xyz-vendor.sh`'s `materialize_vendor`, and empty `skills/swe/` removed entirely (the empty-dir option, not the stub option).
+- Lane B (`ed2f9a1`) — `$UID`-scoped tmp state dir in `relay-xyz-guard.sh` (GH-109 P1b, multi-user collision fix).
+- Lane C (`aceffe3`) — `pkill -P` reaps `consult.sh`'s watchdog `sleep` grandchild before killing the subshell (GH-109 P1a, orphaned-process leak).
+- Lane D (`93e2366`) — GH-119, `aider-turn.sh` pre-seeds a review-only turn's diff files as `--read` so a scope-creep edit can't waste the whole turn.
+- Lane E (`17e2681`) — GH-120, `openrouter-model-aliases.yml` + fuzzy `resolve-model-alias.sh` lookup table.
+
+Moved the plan doc to `3-COMPLETED` with a status update; closed **#113** (marathon-yaml agy-reviewer regex, landed `2b5f8a3`) and **#114** (gemini-turn.sh removal + dead-reference scrub, landed `bb9138b`/`29082f1`) — both fixed in code but left open. **#109**/**#110** stay open (their Phase 2+ scope is separate); ROADMAP.md ledger entries updated to note P1 shipped via this doc.
+
 ### Marathon Plan B Wave 1 SHIPPED — 5 lanes, parallel Sonnet subagents, centrally integrated
 Fired the 5 clean lanes from [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) as parallel worktree-isolated Sonnet subagents, one per lane with disjoint `ALLOW_PATHS`, then integrated centrally one at a time — cherry-picking each lane's commit onto `main` and re-running the *full* `validate.sh` at every integration point (per the plan's own explicit warning not to trust a per-agent green).
 

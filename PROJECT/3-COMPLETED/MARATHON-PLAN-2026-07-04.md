@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan 2026-07-04 — low-risk blend (Fable GH-110 + Gemini GH-109 Phase 1 + Aider/OpenRouter GH-119/GH-120)
-status: Active (2-WORKING)
+status: Shipped — all 5 lanes confirmed landed in code (closed out retroactively 2026-07-04)
 created: 2026-07-03
-updated: 2026-07-03
+updated: 2026-07-04
 owner: noel
 branch: main
 doc_type: project
@@ -35,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan pre-flighted 2026-07-04 from audit findings; extended 2026-07-03 with two lanes from live GH-118 follow-on testing (GH-119, GH-120); write-sets verified disjoint across all 5 lanes; all in Wave 1. | **Wave 1 (all parallel):** Lane A ‖ Lane B ‖ Lane C ‖ Lane D ‖ Lane E. Fire each via `swarm-preflight → marathon-drive` scoped by `ALLOW_PATHS`. |
+| **All 5 lanes SHIPPED** (confirmed directly against the code 2026-07-04, retroactively — this doc's own Wave 1 firing was never marked done): **Lane A** (`.DS_Store` exclusion in `xyz-vendor.sh` landed; `skills/swe/` removed entirely — the empty-dir option, not the stub option), **Lane B** (`ed2f9a1`, `$UID` isolation in `relay-xyz-guard.sh`), **Lane C** (`aceffe3`, `pkill -P` grandchild reap in `consult.sh`), **Lane D** (`93e2366`, GH-119, `--read` pre-seed in `aider-turn.sh`), **Lane E** (`17e2681`, GH-120, `openrouter-model-aliases.yml` + `resolve-model-alias.sh`, later extended with Qwen3-Coder/DeepSeek V4-Pro). `test/model-alias.sh` 12/12. Source issues #119/#120 already closed; #109/#110 stay open for their own later (P2/P3) phases only — this doc's Phase-1 scope is done. | Nothing — done. #109/#110's remaining phases are tracked in their own source docs, not here. |
 
 ## The one safety rule
 
