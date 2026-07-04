@@ -36,7 +36,6 @@ TESTS=(
   "poll-relay.sh"
   "watchdog-relay.sh"
   "codex-turn.sh"
-  "gemini-turn.sh"
   "agy-turn.sh"
   "aider-turn.sh"
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)

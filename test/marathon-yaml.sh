@@ -17,7 +17,7 @@ phases:
     artifact: src/schema.js
   - id: p2
     name: single-writer lease
-    reviewer: gemini               # gemini for architecture
+    reviewer: agy                  # agy for architecture
     depends_on: p1
     max_review_rounds: 3
   - id: p3
@@ -31,7 +31,7 @@ out="$(run "$WORK/m1.yaml")"; rc=$?
 [ "$(printf '%s\n' "$out" | cut -f1 | paste -sd, -)" = "p1,p2,p3" ] \
   && pass "execution order resolves to p1,p2,p3" || fail "order wrong: [$out]"
 p2row="$(printf '%s\n' "$out" | awk -F'\t' '$1=="p2"{print $2"|"$3"|"$4}')"
-[ "$p2row" = "gemini|3|p1" ] \
+[ "$p2row" = "agy|3|p1" ] \
   && pass "p2 fields parsed (reviewer|rounds|depends_on, inline comment stripped)" || fail "p2 fields wrong: [$p2row]"
 p1ba="$(printf '%s\n' "$out" | awk -F'\t' '$1=="p1"{print $5"|"$6}')"
 [ "$p1ba" = "briefs/p1.md|src/schema.js" ] \
@@ -45,7 +45,7 @@ phases:
     reviewer: codex
     depends_on: a
   - id: a
-    reviewer: gemini
+    reviewer: agy
 YAML
 out="$(run "$WORK/m2.yaml")"
 [ "$(printf '%s\n' "$out" | cut -f1 | paste -sd, -)" = "a,b" ] \
@@ -70,16 +70,21 @@ run "$WORK/m5.yaml" >/dev/null; rc=$?
   && pass "dependency cycle -> error" || fail "should detect cycle (rc=$rc)"
 
 # --- (6) duplicate id -> error --------------------------------------------
-printf 'name: x\nphases:\n  - id: p1\n    reviewer: codex\n  - id: p1\n    reviewer: gemini\n' > "$WORK/m6.yaml"
+printf 'name: x\nphases:\n  - id: p1\n    reviewer: codex\n  - id: p1\n    reviewer: agy\n' > "$WORK/m6.yaml"
 run "$WORK/m6.yaml" >/dev/null; rc=$?
 { [ "$rc" -ne 0 ] && grep -q "duplicate" "$WORK/err"; } \
   && pass "duplicate phase id -> error" || fail "should error on duplicate id (rc=$rc)"
 
-# --- (7) non-codex/gemini reviewer -> error -------------------------------
+# --- (7) unsupported reviewer -> error ------------------------------------
+# Checks rejection + the "must start with codex" hint substring, not the full message verbatim —
+# src/marathon-yaml.js's accepted-prefix list (currently codex/gemini/agy) is untouched by this
+# lane (GH-113/114 follow-up: this test previously hardcoded the pre-agy message text, which went
+# stale the moment 'agy' was appended to it), so a hardcoded exact string here would drift again
+# on the next legitimate prefix-list change.
 printf 'name: x\nphases:\n  - id: p1\n    reviewer: claude\n' > "$WORK/m7.yaml"
 run "$WORK/m7.yaml" >/dev/null; rc=$?
-{ [ "$rc" -ne 0 ] && grep -q "must start with codex or gemini" "$WORK/err"; } \
-  && pass "reviewer must be codex*/gemini* -> error" || fail "should reject 'claude' reviewer (rc=$rc)"
+{ [ "$rc" -ne 0 ] && grep -q "must start with codex" "$WORK/err"; } \
+  && pass "reviewer must be an accepted prefix -> error" || fail "should reject 'claude' reviewer (rc=$rc)"
 
 # --- (8) json format emits the marathon name ------------------------------
 run "$WORK/m1.yaml" --format json | grep -q '"name": "trinity-sync-refactor"' \

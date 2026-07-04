@@ -2,7 +2,7 @@
 # relay-turn-timeout.sh — test the per-turn wall-clock cap added to rtl_run_bounded in
 # relay-turn-lib.sh. Verifies that a hung CLI is killed and the shim exits 7 (not hung, not 0),
 # and that a fast CLI under the same cap still succeeds (exit 0 — no false-positive kill).
-# Tests all three shims (codex, gemini, claude) with a tiny cap (1s) and a stub that sleeps 5s.
+# Tests all three shims (codex, agy, claude) with a tiny cap (1s) and a stub that sleeps 5s.
 source "$(dirname "$0")/_setup.sh" relay-turn-timeout
 export TICK_BIN="$TICK"
 tick_a init >/dev/null
@@ -36,6 +36,34 @@ exit 0
 STUB_EOF
 chmod +x "$FAST_STUB"
 
+# agy-specific stubs: agy-turn.sh runs an auth pre-flight (`agy whoami`, 5s default cap) BEFORE
+# the real turn — unlike codex-turn.sh/claude-turn.sh, which have no such pre-flight. The shared
+# SLOW/FAST stubs above sleep/exit unconditionally, so agy's pre-flight would itself hit the slow
+# path and mask the timeout behavior this test targets. These variants answer `whoami` instantly
+# (successful auth) and only then apply the slow/fast behavior to the REAL turn invocation.
+AGY_SLOW_STUB="$WORK/agy-slow-cli"
+cat >"$AGY_SLOW_STUB" <<'STUB_EOF'
+#!/usr/bin/env bash
+[ "${1:-}" = whoami ] && { echo ok; exit 0; }
+sleep 5
+exit 0
+STUB_EOF
+chmod +x "$AGY_SLOW_STUB"
+
+AGY_FAST_STUB="$WORK/agy-fast-cli"
+cat >"$AGY_FAST_STUB" <<'STUB_EOF'
+#!/usr/bin/env bash
+[ "${1:-}" = whoami ] && { echo ok; exit 0; }
+printf 'agy-stub: fast-turn complete\n'   # agy-turn.sh treats an empty AGY_LOG as failure (exit 5)
+export TICK_REPO_ROOT="$A"
+"$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
+"$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
+printf '\n### Round 1 · %s (fast-stub)\n' "$RELAY_AGENT" >>"$RELAY_FILE"
+"$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to other >/dev/null 2>&1
+exit 0
+STUB_EOF
+chmod +x "$AGY_FAST_STUB"
+
 # Helper: seed a token handed to the target agent
 seed_token() { tick_a log task.created "$1" --agent claude-a >/dev/null; tick_a claim "$1" --agent claude-a --paths "z/**" >/dev/null; tick_a release "$1" --agent claude-a --to codex >/dev/null; }
 
@@ -65,32 +93,31 @@ RELAY_AGENT=codex RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-codex-fast \
 [ "$rc" -eq 0 ] && pass "codex: fast stub under cap -> exit 0 (no false-positive kill)" || fail "codex: fast stub should exit 0, got $rc"
 
 # ============================================================================
-# Gemini shim timeout tests
+# agy shim timeout tests (GH-114: agy-turn.sh is the permanent replacement for
+# the deleted gemini-turn.sh — see relay-automation/README.md)
 # ============================================================================
-GEMINI_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/gemini-turn.sh"
+AGY_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
 
-# --- (3) SLOW gemini: cap fires -> exit 7 -----------------------------------
-seed_token RELAY-TURN-gemini-slow
+# --- (3) SLOW agy: cap fires -> exit 7 --------------------------------------
+seed_token RELAY-TURN-agy-slow
 t_start="$(date +%s)"
-RELAY_AGENT=gemini RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-gemini-slow \
-  GEMINI_AGENT=gemini GEMINI_BIN="$SLOW_STUB" GEMINI_TURN_ROOT="$A" GEMINI_LOG=/dev/null \
-  GOOGLE_GENAI_USE_GCA=false \
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-agy-slow \
+  AGY_AGENT=agy AGY_BIN="$AGY_SLOW_STUB" AGY_TURN_ROOT="$A" AGY_LOG=/dev/null \
   RELAY_TURN_TIMEOUT_S=1 \
-  bash "$GEMINI_SHIM" >/dev/null 2>&1; rc=$?
+  bash "$AGY_SHIM" >/dev/null 2>&1; rc=$?
 t_end="$(date +%s)"
 elapsed=$(( t_end - t_start ))
-[ "$rc" -eq 7 ] && pass "gemini: timed-out stub -> shim exits 7" || fail "gemini: expected exit 7, got $rc"
-[ "$elapsed" -lt 5 ] && pass "gemini: turn killed fast (${elapsed}s < stub's 5s sleep)" || fail "gemini: cap did not fire fast enough (${elapsed}s)"
+[ "$rc" -eq 7 ] && pass "agy: timed-out stub -> shim exits 7" || fail "agy: expected exit 7, got $rc"
+[ "$elapsed" -lt 5 ] && pass "agy: turn killed fast (${elapsed}s < stub's 5s sleep)" || fail "agy: cap did not fire fast enough (${elapsed}s)"
 
-# --- (4) FAST gemini: completes before cap -> exit 0 -------------------------
+# --- (4) FAST agy: completes before cap -> exit 0 ----------------------------
 # Re-seed token (slow run claimed then timed out; fast-stub token needs its own slot)
-seed_token RELAY-TURN-gemini-fast
-RELAY_AGENT=gemini RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-gemini-fast \
-  GEMINI_AGENT=gemini GEMINI_BIN="$FAST_STUB" GEMINI_TURN_ROOT="$A" GEMINI_LOG=/dev/null \
-  GOOGLE_GENAI_USE_GCA=false \
+seed_token RELAY-TURN-agy-fast
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-agy-fast \
+  AGY_AGENT=agy AGY_BIN="$AGY_FAST_STUB" AGY_TURN_ROOT="$A" AGY_LOG="$WORK/agy-fast.log" \
   RELAY_TURN_TIMEOUT_S=1 \
-  bash "$GEMINI_SHIM" >/dev/null 2>&1; rc=$?
-[ "$rc" -eq 0 ] && pass "gemini: fast stub under cap -> exit 0 (no false-positive kill)" || fail "gemini: fast stub should exit 0, got $rc"
+  bash "$AGY_SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "agy: fast stub under cap -> exit 0 (no false-positive kill)" || fail "agy: fast stub should exit 0, got $rc"
 
 # ============================================================================
 # Claude shim timeout tests

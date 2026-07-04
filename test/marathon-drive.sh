@@ -35,7 +35,7 @@ run_driver() {  # <extra-args…>
   bash "$DRIVER" \
     --phases-dir "$A/phases" \
     --phase-brief "$BRIEF" \
-    --reviewer gemini \
+    --reviewer agy \
     --pre-advance-cmd "true" \
     "$@"
 }
@@ -58,7 +58,7 @@ RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1 || true
 grep -q "TAKE YOUR TURN.*claude.*BUILDER" "$A/phases/p1/RELAY.md" 2>/dev/null \
   && pass "relay file has builder TAKE YOUR TURN section" \
   || fail "builder TAKE YOUR TURN section missing"
-grep -q "TAKE YOUR TURN.*gemini.*REVIEWER" "$A/phases/p1/RELAY.md" 2>/dev/null \
+grep -q "TAKE YOUR TURN.*agy.*REVIEWER" "$A/phases/p1/RELAY.md" 2>/dev/null \
   && pass "relay file has reviewer TAKE YOUR TURN section" \
   || fail "reviewer TAKE YOUR TURN section missing"
 grep -q "STATUS: Open" "$A/phases/p1/RELAY.md" 2>/dev/null \
@@ -235,7 +235,7 @@ rm -f "$WORK/spaced-agent-ran"
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$SPACED_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-    --reviewer gemini --pre-advance-cmd "true" >/dev/null 2>&1 || true
+    --reviewer agy --pre-advance-cmd "true" >/dev/null 2>&1 || true
 [ -f "$WORK/spaced-agent-ran" ] \
   && pass "agent-cmd path with spaces survives relay-drive dispatch" \
   || fail "spaced agent-cmd path broke relay-drive dispatch — bare path must be invoked directly"
@@ -263,7 +263,7 @@ rm -f "$WORK/allow-paths-seen"
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-    --reviewer gemini --artifact "$ART" --pre-advance-cmd "true" >/dev/null 2>&1 || true
+    --reviewer agy --artifact "$ART" --pre-advance-cmd "true" >/dev/null 2>&1 || true
 grep -q "$ART" "$WORK/allow-paths-seen" 2>/dev/null \
   && pass "ALLOW_PATHS exported to the turn-taker env" \
   || fail "ALLOW_PATHS not propagated to agent-cmd (builder would have no write surface)"
@@ -275,7 +275,7 @@ ALLOW_PATHS="leaked/from/parent" \
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-    --reviewer gemini --pre-advance-cmd "true" >/dev/null 2>&1 || true
+    --reviewer agy --pre-advance-cmd "true" >/dev/null 2>&1 || true
 grep -q "UNSET" "$WORK/allow-paths-seen" 2>/dev/null \
   && pass "relay-only phase clears inherited ALLOW_PATHS (no extra write surface)" \
   || fail "relay-only phase should unset inherited ALLOW_PATHS"

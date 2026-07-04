@@ -116,7 +116,7 @@ run_md() {  # <xyz-json> <ctx-or-empty> <relay-exit> <extra-args…>
     TICK_REPO_ROOT="$A" TICK_BIN="$TICK" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
     XYZ_JSON_PATH="$xj" STUB_RD_EXIT="$rexit" XYZ_HARNESS_CONTEXT="$ctx" \
     bash "$MARATHON_DRIVE" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-      --reviewer gemini --pre-advance-cmd "true" "$@"
+      --reviewer agy --pre-advance-cmd "true" "$@"
 }
 
 # ── (M1) bare marathon-drive success → harness:marathon, green ─────────────
@@ -157,7 +157,7 @@ phases:
     reviewer: codex
     brief: briefs/p1.md
   - id: p2
-    reviewer: gemini
+    reviewer: agy
     depends_on: p1
     brief: briefs/p2.md
 YAML
@@ -184,7 +184,7 @@ phases:
     reviewer: codex
     brief: briefs/p1.md
   - id: p2
-    reviewer: gemini
+    reviewer: agy
     depends_on: p1
     brief: briefs/p2.md
 YAML
@@ -206,7 +206,7 @@ run_md_sid() {  # <xyz-json> <ctx> <session-id>
     TICK_REPO_ROOT="$A" TICK_BIN="$TICK" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
     XYZ_JSON_PATH="$1" STUB_RD_EXIT=0 XYZ_HARNESS_CONTEXT="$2" XYZ_SESSION_ID="$3" \
     bash "$MARATHON_DRIVE" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-      --reviewer gemini --pre-advance-cmd "true"
+      --reviewer agy --pre-advance-cmd "true"
 }
 run_md_sid "$XSID" swarm gh-99-run-alpha >/dev/null 2>&1
 [ "$(field "$XSID" 0 sessionId)" = "gh-99-run-alpha" ] && pass "XYZ_SESSION_ID overrides sessionId (not the constant p1)" || fail "sessionId=$(field "$XSID" 0 sessionId)"
