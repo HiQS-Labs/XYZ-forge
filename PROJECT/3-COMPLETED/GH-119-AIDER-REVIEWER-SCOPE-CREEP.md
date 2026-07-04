@@ -2,7 +2,7 @@
 gh_issue: 119
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/119
 title: "aider-turn.sh: reviewer can auto-add and edit out-of-scope tracked files under --yes-always; all-or-nothing containment discards the valid in-lane edit too [sibling of #54/#107]"
-status: Shipped (93e2366) — issue #119 still open pending operator close decision
+status: Shipped (93e2366) — issue #119 closed 2026-07-04
 created: 2026-07-03
 updated: 2026-07-03
 owner: noel
@@ -32,7 +32,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Shipped 2026-07-03 as marathon Lane D (`93e2366`): `aider-turn.sh` now pre-seeds a review-only turn's diff-changed files as `--read`; new `test/aider-turn.sh` case (12) proves a diff-referenced file is passed `--read`, never `--file`. `validate.sh`: 36/36 for this shim. Independently re-verified twice via reverse-dogfood reviews (GLM 5.2 succeeded at 24-file scale; Nemotron Ultra 3 did not engage meaningfully at any scale tested) — both confirmed zero writable surface, zero scope-creep, even across large multi-file diffs. | Nothing code-side remains. Issue #119 is still open — operator has not yet decided whether to close it (only #120 was explicitly closed 2026-07-03). |
+| Shipped 2026-07-03 as marathon Lane D (`93e2366`): `aider-turn.sh` now pre-seeds a review-only turn's diff-changed files as `--read`; new `test/aider-turn.sh` case (12) proves a diff-referenced file is passed `--read`, never `--file`. `validate.sh`: 36/36 for this shim. Independently re-verified twice via reverse-dogfood reviews (GLM 5.2 succeeded at 24-file scale; Nemotron Ultra 3 did not engage meaningfully at any scale tested) — both confirmed zero writable surface, zero scope-creep, even across large multi-file diffs. Issue #119 closed 2026-07-04. | Nothing — done. |
 
 ## Bug
 
