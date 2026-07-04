@@ -2,6 +2,13 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-07-04
+
+### GH-87 Phase 1 merged (PR #122); GH-48 design committed, queued for /consult
+GH-87's deep-research.mjs branch was reviewed via an automated agy relay (Approved), pushed, and merged. Doc moved `PROJECT/2-WORKING` → `PROJECT/3-COMPLETED`; ROADMAP link fixed.
+
+Also: promoted GH-48 (marathon-plan's cross-repo zone-model generalization) from a 1-INBOX park-and-discuss capture to a committed design in `PROJECT/2-WORKING`. Re-reading `utils/marathon-plan.sh`'s actual `zoneOf()` code surfaced a detail the original capture missed — the hardcoded `KERNEL_PATHS`/`SHIM_RE` classification runs even on contract-backed items, so "contract-only mode" (idea #2) alone wouldn't fix the rebalance-OS cross-repo case. Committed instead to idea #1 (configurable, data-driven zone rules defaulting to xyz's exact current behavior); idea #3 (foreign ledger/queue-format adapter) deferred. Posted as a GH-48 comment; queued for `/consult` (Agy + Codex) review before any code is written — explicitly excluded from the current Plan B marathon firing round.
+
 ## 2026-07-03
 
 ## 2026-07-04

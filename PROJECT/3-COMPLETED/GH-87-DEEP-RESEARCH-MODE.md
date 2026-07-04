@@ -2,9 +2,9 @@
 gh_issue: 87
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87
 title: Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter)
-status: Phase 1 implemented on branch, awaiting review/merge and issue #87 close-out
+status: Shipped (Phase 1) — PR #122 merged, issue #87 closed 2026-07-04
 created: 2026-07-02
-updated: 2026-07-03
+updated: 2026-07-04
 owner: noel
 doc_type: feature
 goal: >
