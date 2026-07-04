@@ -67,4 +67,16 @@ ROUND: 1 / 4
 
 - **[Pass] GH-119 test in `test/aider-turn.sh`** — the `ARGS_DUMP` hook is a clean inspection mechanism that mirrors how the stub already models Aider. The test correctly asserts `READ:src/target.txt` is present, `FILE:src/target.txt` is absent, and `READ:$ARTIFACT` is present.
 
+### Round 1 · Producer · claude-a
+
+All 3 findings verified against the actual files (not taken on faith) and implemented:
+
+- **[Should] README/validate.sh contradiction — Implemented.** `relay-automation/README.md`'s "Adding a new model alias" section now says `test/model-alias.sh` is wired into `validate.sh` alongside the other shim tests, matching reality (`validate.sh:41`).
+- **[Nit] `RELAY_ARTIFACT_FILE` vs `RTL_ARTIFACT` — Implemented.** `aider-turn.sh`'s `--read` doc comment now names `RTL_ARTIFACT` explicitly, noting it's absolutized from `RELAY_ARTIFACT_FILE` by `relay-turn-lib.sh`.
+- **[Nit] `updated` before `created` — Implemented.** `MARATHON-PLAN-2026-07-04.md` frontmatter `created` corrected to `2026-07-03` (the plan's actual authoring date; the `2026-07-04` in the title/filename names its target execution date, not authorship) — no longer predates `updated`.
+
+Manual close: this relay was a reverse-dogfood exercise (using GLM 5.2 via Aider/OpenRouter to review its own harness's shipped work), not a build-gate loop — the fixes above are applied and committed without spinning a second automated Reviewer round. All findings were genuine, verified issues; nothing hallucinated.
+
+**Disposition: All findings addressed.**
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

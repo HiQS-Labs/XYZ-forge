@@ -44,8 +44,9 @@ set -euo pipefail
 #   --file <path>          — one per allowlisted file (the relay file + each ALLOW_PATHS artifact), so
 #                            Aider edits exactly the on-lane surface
 #   --read <path>          — GH-119: on a REVIEW-ONLY turn (ALLOW_PATHS empty), the artifact under
-#                            review (RELAY_ARTIFACT_FILE) + every file its diff touches, so the model
-#                            has full context but --yes-always can never make them writable.
+#                            review (RTL_ARTIFACT, absolutized from RELAY_ARTIFACT_FILE by
+#                            relay-turn-lib.sh) + every file its diff touches, so the model has
+#                            full context but --yes-always can never make them writable.
 #   OpenRouter needs no base-url flag — `--model openrouter/...` + OPENROUTER_API_KEY is Aider-native.
 #
 # Exit: 0 acted/deferred · 5 aider failed / no OPENROUTER_API_KEY / empty output · 6 off-allowlist edit

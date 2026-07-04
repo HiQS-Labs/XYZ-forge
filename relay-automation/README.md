@@ -340,5 +340,5 @@ on a usage error.
 `openrouter-model-aliases.yml` in `alias: canonical-slug` format (get the
 canonical slug from the OpenRouter models list), then add a matching
 assertion in `test/model-alias.sh` and run `bash test/model-alias.sh` to
-confirm it resolves. `test/model-alias.sh` is a standalone script, not yet
-wired into `validate.sh`'s runner.
+confirm it resolves. `test/model-alias.sh` is wired into `validate.sh`
+alongside the other shim tests.

@@ -1,7 +1,7 @@
 ---
 title: Marathon Plan 2026-07-04 — low-risk blend (Fable GH-110 + Gemini GH-109 Phase 1 + Aider/OpenRouter GH-119/GH-120)
 status: Active (2-WORKING)
-created: 2026-07-04
+created: 2026-07-03
 updated: 2026-07-03
 owner: noel
 branch: main
