@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XYZ — Multi-Agent Coordination System</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2330; --muted: #6b7280;
+    --line: #9aa4b2; --edge-label-bg: #f6f7f9; --border: #d8dee6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1c212b; --ink: #e6e9ef; --muted: #9aa4b2;
+      --line: #5c6675; --edge-label-bg: #12151b; --border: #333c4a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink);
+         font: 14px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  .swe-canvas { position: relative; width: 100vw; height: 100vh;
+                overflow: hidden; cursor: grab; }
+  .swe-canvas.swe-grabbing { cursor: grabbing; }
+  .swe-viewport { position: absolute; transform-origin: 0 0; }
+  .swe-edges { position: absolute; overflow: visible; width: 1px; height: 1px; }
+  .swe-nodes { position: absolute; }
+
+  .swe-node { position: absolute; background: var(--panel);
+              border: 1px solid var(--border); border-radius: 8px;
+              border-top: 3px solid var(--node-color, #6b7280);
+              box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: move;
+              user-select: none; }
+  .swe-node-head { font-size: 9px; letter-spacing: .08em; font-weight: 700;
+                   color: var(--node-color, #6b7280); padding: 6px 10px 0; }
+  .swe-node-body { padding: 2px 10px 8px; }
+  .swe-node-label { font-weight: 600; }
+  .swe-node-tech { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .swe-node-group { position: absolute; top: -18px; left: 0; font-size: 10px;
+                    color: var(--muted); }
+
+  .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6; }
+  .swe-arrow { fill: var(--line); }
+  .swe-edge-label { font-size: 11px; fill: var(--muted); text-anchor: middle;
+                    paint-order: stroke; stroke: var(--edge-label-bg);
+                    stroke-width: 4px; }
+
+  .swe-title { position: absolute; top: 14px; left: 18px; font-size: 16px;
+               font-weight: 700; pointer-events: none; }
+  .swe-controls { position: absolute; bottom: 16px; left: 16px;
+                  display: flex; flex-direction: column; gap: 4px; }
+  .swe-btn { width: 30px; height: 30px; border: 1px solid var(--border);
+             border-radius: 6px; background: var(--panel); color: var(--ink);
+             font-size: 15px; cursor: pointer; }
+  .swe-btn:hover { border-color: var(--line); }
+  .swe-legend { position: absolute; bottom: 16px; right: 16px;
+                background: var(--panel); border: 1px solid var(--border);
+                border-radius: 8px; padding: 8px 12px; display: flex;
+                flex-wrap: wrap; gap: 10px; font-size: 11px;
+                color: var(--muted); max-width: 40vw; }
+  .swe-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .swe-legend-dot { width: 9px; height: 9px; border-radius: 50%;
+                    display: inline-block; }
+</style>
+</head>
+<body>
+<div id="diagram"></div>
+<script>
+/*
+ * swe-diagram renderer — vanilla xyflow-style system diagram.
+ * No dependencies. Reads a diagram spec object and renders:
+ *   - layered left→right auto-layout (longest-path ranking)
+ *   - draggable HTML nodes with type-colored headers
+ *   - SVG bezier edges with arrowheads + optional labels
+ *   - pan (drag canvas), zoom (wheel / buttons), fit-to-view
+ *   - light/dark via prefers-color-scheme
+ *
+ * Spec shape (see SKILL.md for the authoring contract):
+ * {
+ *   title: string,
+ *   nodes: [{ id, label, type?, group?, description?, tech? }],
+ *   edges: [{ source, target, label?, kind? }],   // kind: "sync"|"async"|"data"
+ *   groups?: [{ id, label }]
+ * }
+ */
+(function () {
+  'use strict';
+
+  var NODE_W = 200;
+  var NODE_MIN_H = 56;
+  var COL_GAP = 120;
+  var ROW_GAP = 36;
+
+  var TYPE_COLORS = {
+    service:  '#4f7cff',
+    ui:       '#9a5cff',
+    api:      '#00a5a5',
+    database: '#e07b00',
+    queue:    '#c94f7c',
+    external: '#7a8699',
+    job:      '#5c9a3d',
+    storage:  '#b0892b',
+    default:  '#6b7280'
+  };
+
+  var EDGE_DASH = { async: '6,5', data: '2,4' };
+
+  function el(tag, cls, parent) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function svgEl(tag, parent) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  // ---- layout: longest-path layering, groups kept adjacent within a column
+  function layout(spec) {
+    var nodes = spec.nodes || [];
+    var edges = (spec.edges || []).filter(function (e) { return e.source !== e.target; });
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+
+    // Rank by longest path, but drop cycle back-edges first so a bidirectional
+    // pair (A->B, B->A) stays in adjacent columns instead of drifting apart.
+    var adj = {};
+    nodes.forEach(function (n) { adj[n.id] = []; });
+    edges.forEach(function (e) {
+      if (byId[e.source] && byId[e.target]) adj[e.source].push(e.target);
+    });
+    var state = {}, back = {};   // DFS: flag any edge into a node still on the stack
+    function walk(u) {
+      state[u] = 1;
+      adj[u].forEach(function (v) {
+        if (state[v] === 1) (back[u] || (back[u] = {}))[v] = true;
+        else if (!state[v]) walk(v);
+      });
+      state[u] = 2;
+    }
+    nodes.forEach(function (n) { if (!state[n.id]) walk(n.id); });
+    var forward = edges.filter(function (e) {
+      return byId[e.source] && byId[e.target] &&
+             !(back[e.source] && back[e.source][e.target]);
+    });
+
+    var rank = {};
+    nodes.forEach(function (n) { rank[n.id] = 0; });
+    for (var pass = 0; pass < nodes.length; pass++) {   // DAG: converges in <= |V| passes
+      var changed = false;
+      forward.forEach(function (e) {
+        if (rank[e.target] < rank[e.source] + 1) {
+          rank[e.target] = rank[e.source] + 1;
+          changed = true;
+        }
+      });
+      if (!changed) break;
+    }
+
+    var cols = {};
+    nodes.forEach(function (n) {
+      (cols[rank[n.id]] = cols[rank[n.id]] || []).push(n);
+    });
+
+    var positions = {};
+    Object.keys(cols).sort(function (a, b) { return a - b; }).forEach(function (r) {
+      var col = cols[r];
+      col.sort(function (a, b) {
+        var ga = a.group == null ? 1 : 0, gb = b.group == null ? 1 : 0;
+        return ga - gb ||
+               String(a.group || '').localeCompare(String(b.group || '')) ||
+               String(a.label).localeCompare(String(b.label));
+      });
+      var y = 0;
+      col.forEach(function (n) {
+        var h = nodeHeight(n);
+        positions[n.id] = { x: r * (NODE_W + COL_GAP), y: y, w: NODE_W, h: h };
+        y += h + ROW_GAP;
+      });
+      // center column vertically against tallest column later via fitView
+    });
+    return positions;
+  }
+
+  function nodeHeight(n) {
+    var h = NODE_MIN_H;
+    if (n.tech) h += 18;
+    return h;
+  }
+
+  // ---- main
+  window.renderDiagram = function (spec, mount) {
+    mount = mount || document.getElementById('diagram');
+    mount.innerHTML = '';
+    mount.classList.add('swe-canvas');
+
+    var viewport = el('div', 'swe-viewport', mount);
+    var svg = svgEl('svg', viewport);
+    svg.setAttribute('class', 'swe-edges');
+    var defs = svgEl('defs', svg);
+    ['sync', 'async', 'data'].forEach(function (kind) {
+      var m = svgEl('marker', defs);
+      m.setAttribute('id', 'arrow-' + kind);
+      m.setAttribute('viewBox', '0 0 10 10');
+      m.setAttribute('refX', '9'); m.setAttribute('refY', '5');
+      m.setAttribute('markerWidth', '7'); m.setAttribute('markerHeight', '7');
+      m.setAttribute('orient', 'auto-start-reverse');
+      var p = svgEl('path', m);
+      p.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+      p.setAttribute('class', 'swe-arrow');
+    });
+    var edgeLayer = svgEl('g', svg);
+    var nodeLayer = el('div', 'swe-nodes', viewport);
+
+    var pos = layout(spec);
+    var nodeEls = {};
+
+    var groupLabels = {};   // honor spec.groups: render the human label, not the raw id
+    (spec.groups || []).forEach(function (g) {
+      if (g && g.id != null) groupLabels[g.id] = g.label || g.id;
+    });
+
+    (spec.nodes || []).forEach(function (n) {
+      var p = pos[n.id];
+      var d = el('div', 'swe-node', nodeLayer);
+      d.style.left = p.x + 'px';
+      d.style.top = p.y + 'px';
+      d.style.width = p.w + 'px';
+      var color = TYPE_COLORS[n.type] || TYPE_COLORS.default;
+      d.style.setProperty('--node-color', color);
+      var head = el('div', 'swe-node-head', d);
+      head.textContent = n.type ? n.type.toUpperCase() : 'COMPONENT';
+      var body = el('div', 'swe-node-body', d);
+      el('div', 'swe-node-label', body).textContent = n.label || n.id;
+      if (n.tech) el('div', 'swe-node-tech', body).textContent = n.tech;
+      if (n.description) d.title = n.description;
+      if (n.group) el('div', 'swe-node-group', d).textContent = groupLabels[n.group] || n.group;
+      nodeEls[n.id] = d;
+      makeDraggable(d, n.id);
+    });
+
+    // layout() estimated node heights before the DOM existed; a wrapped label or
+    // tech line makes the real node taller. Correct pos[].h from the measured
+    // heights and re-stack each column so nodes don't overlap and edge anchors
+    // (which use pos.h) land on the true vertical midpoint.
+    var byCol = {};
+    (spec.nodes || []).forEach(function (n) {
+      var p = pos[n.id];
+      p.h = nodeEls[n.id].offsetHeight || p.h;
+      (byCol[p.x] = byCol[p.x] || []).push(n.id);
+    });
+    Object.keys(byCol).forEach(function (x) {
+      var ids = byCol[x].sort(function (a, b) { return pos[a].y - pos[b].y; });
+      var y = 0;
+      ids.forEach(function (id) {
+        pos[id].y = y;
+        nodeEls[id].style.top = y + 'px';
+        y += pos[id].h + ROW_GAP;
+      });
+    });
+
+    var edgeEls = [];
+    (spec.edges || []).forEach(function (e) {
+      if (!pos[e.source] || !pos[e.target]) return;
+      var kind = EDGE_DASH[e.kind] ? e.kind : 'sync';
+      var path = svgEl('path', edgeLayer);
+      path.setAttribute('class', 'swe-edge swe-edge-' + kind);
+      if (EDGE_DASH[kind]) path.setAttribute('stroke-dasharray', EDGE_DASH[kind]);
+      path.setAttribute('marker-end', 'url(#arrow-' + kind + ')');
+      var label = null;
+      if (e.label) {
+        label = svgEl('text', edgeLayer);
+        label.setAttribute('class', 'swe-edge-label');
+        label.textContent = e.label;
+      }
+      edgeEls.push({ e: e, path: path, label: label });
+    });
+
+    function edgePath(a, b) {
+      var x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      var x2 = b.x, y2 = b.y + b.h / 2;
+      if (b.x < a.x + a.w) { // backward edge: route from left side
+        x1 = a.x; x2 = b.x + b.w;
+      }
+      var dx = Math.max(40, Math.abs(x2 - x1) / 2);
+      var c1 = x1 < x2 ? x1 + dx : x1 - dx;
+      var c2 = x1 < x2 ? x2 - dx : x2 + dx;
+      return { d: 'M' + x1 + ',' + y1 + ' C' + c1 + ',' + y1 + ' ' + c2 + ',' + y2 + ' ' + x2 + ',' + y2,
+               mx: (x1 + x2) / 2, my: (y1 + y2) / 2 - 6 };
+    }
+
+    function drawEdges() {
+      edgeEls.forEach(function (ee) {
+        var p = edgePath(pos[ee.e.source], pos[ee.e.target]);
+        ee.path.setAttribute('d', p.d);
+        if (ee.label) { ee.label.setAttribute('x', p.mx); ee.label.setAttribute('y', p.my); }
+      });
+    }
+
+    // ---- pan & zoom
+    var view = { x: 40, y: 40, k: 1 };
+    function applyView() {
+      viewport.style.transform =
+        'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.k + ')';
+    }
+    mount.addEventListener('wheel', function (ev) {
+      ev.preventDefault();
+      var k = Math.min(2.5, Math.max(0.2, view.k * (ev.deltaY < 0 ? 1.1 : 0.9)));
+      var r = mount.getBoundingClientRect();
+      var mx = ev.clientX - r.left, my = ev.clientY - r.top;
+      view.x = mx - (mx - view.x) * (k / view.k);
+      view.y = my - (my - view.y) * (k / view.k);
+      view.k = k;
+      applyView();
+    }, { passive: false });
+
+    var panning = null;
+    mount.addEventListener('mousedown', function (ev) {
+      if (ev.target.closest('.swe-node')) return;
+      panning = { x: ev.clientX - view.x, y: ev.clientY - view.y };
+      mount.classList.add('swe-grabbing');
+    });
+    window.addEventListener('mousemove', function (ev) {
+      if (!panning) return;
+      view.x = ev.clientX - panning.x;
+      view.y = ev.clientY - panning.y;
+      applyView();
+    });
+    window.addEventListener('mouseup', function () {
+      panning = null;
+      mount.classList.remove('swe-grabbing');
+    });
+
+    function makeDraggable(d, id) {
+      d.addEventListener('mousedown', function (ev) {
+        ev.stopPropagation();
+        var start = { mx: ev.clientX, my: ev.clientY, x: pos[id].x, y: pos[id].y };
+        function move(mv) {
+          pos[id].x = start.x + (mv.clientX - start.mx) / view.k;
+          pos[id].y = start.y + (mv.clientY - start.my) / view.k;
+          d.style.left = pos[id].x + 'px';
+          d.style.top = pos[id].y + 'px';
+          drawEdges();
+        }
+        function up() {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+        }
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+      });
+    }
+
+    function fitView() {
+      var ids = Object.keys(pos);
+      if (!ids.length) return;
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      ids.forEach(function (id) {
+        var p = pos[id];
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + p.w); maxY = Math.max(maxY, p.y + p.h);
+      });
+      var r = mount.getBoundingClientRect();
+      var k = Math.min(1.5, Math.max(0.2,
+        Math.min((r.width - 80) / (maxX - minX), (r.height - 80) / (maxY - minY))));
+      view.k = k;
+      view.x = (r.width - (maxX - minX) * k) / 2 - minX * k;
+      view.y = (r.height - (maxY - minY) * k) / 2 - minY * k;
+      applyView();
+    }
+
+    // ---- controls + legend
+    var controls = el('div', 'swe-controls', mount);
+    [['+', function () { view.k = Math.min(2.5, view.k * 1.2); applyView(); }],
+     ['−', function () { view.k = Math.max(0.2, view.k / 1.2); applyView(); }],
+     ['▣', fitView]].forEach(function (c) {
+      var b = el('button', 'swe-btn', controls);
+      b.textContent = c[0];
+      b.addEventListener('click', c[1]);
+    });
+
+    var usedTypes = {};
+    (spec.nodes || []).forEach(function (n) { usedTypes[n.type || 'default'] = true; });
+    var legend = el('div', 'swe-legend', mount);
+    Object.keys(usedTypes).sort().forEach(function (t) {
+      var item = el('span', 'swe-legend-item', legend);
+      var dot = el('span', 'swe-legend-dot', item);
+      dot.style.background = TYPE_COLORS[t] || TYPE_COLORS.default;
+      item.appendChild(document.createTextNode(t));
+    });
+
+    if (spec.title) {
+      el('div', 'swe-title', mount).textContent = spec.title;
+    }
+
+    drawEdges();
+    fitView();
+  };
+})();
+
+</script>
+<script>
+renderDiagram({
+  "title": "XYZ \u2014 Multi-Agent Coordination System",
+  "generated": "2026-07-04",
+  "sources": [
+    "ARCHITECTURE.md (relay stack map, verified against relay-drive.sh / relay-turn-lib.sh / *-turn.sh / poll.sh / bin/tick)",
+    "ROUTER.md (canonical entry points, subsystem routing hints)",
+    "README.md (two-layer model: tick kernel + relay-automation product)",
+    "repo directory structure: bin/, src/, relay-automation/, utils/pdda, utils/telemetry"
+  ],
+  "groups": [
+    {
+      "id": "kernel",
+      "label": "tick kernel (coordination primitive)"
+    },
+    {
+      "id": "orchestration",
+      "label": "relay-automation (orchestration)"
+    },
+    {
+      "id": "shims",
+      "label": "Per-agent turn shims"
+    },
+    {
+      "id": "agents",
+      "label": "Agent CLIs (external subprocesses)"
+    },
+    {
+      "id": "external",
+      "label": "External services"
+    },
+    {
+      "id": "state",
+      "label": "Shared on-disk state"
+    },
+    {
+      "id": "governance",
+      "label": "Governance (dev-time gates)"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "tick",
+      "label": "tick CLI",
+      "type": "api",
+      "group": "kernel",
+      "tech": "Node \u00b7 bin/tick + src/*.js",
+      "description": "The kernel: a local event-log CLI that hands out collision-free, path-scoped work claims (claim/scope/ping/release/done/cost). Answers 'whose turn is it?' via the RELAY-TURN task. No server, no API keys."
+    },
+    {
+      "id": "eventlog",
+      "label": ".tick/events log",
+      "type": "database",
+      "group": "kernel",
+      "tech": "append-only JSON events + O_EXCL lock",
+      "description": "Shared append-only event log serialized by an O_EXCL lock (src/lock.js). tick appends events and projects current task state (status/claimer/handoff-to) from them."
+    },
+    {
+      "id": "relay-drive",
+      "label": "relay-drive.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "supervisor loop",
+      "description": "Supervisor: reads tick + thread STATUS, derives the active actor, exports RELAY_AGENT/RELAY_FILE/RELAY_TASK, and invokes exactly one turn shim per round. Enforces round cap, no-progress (exit 3), and close-mismatch (exit 4)."
+    },
+    {
+      "id": "relay-lib",
+      "label": "relay-turn-lib.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "containment core (model-agnostic)",
+      "description": "Shared safety core: path allowlist, worktree isolation at ROOT@HEAD, timeout watchdog (rtl_run_bounded), commit-bypass guard (hard reset + exit 6), and one file-scoped commit \u2014 never pushes."
+    },
+    {
+      "id": "poll",
+      "label": "poll.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "decision engine (Path B)",
+      "description": "Hands-free decision engine for two live Claude windows: decides run-runner / watchdog / idle / stop / nudge-cross-model. tick decides whose turn is runnable; thread STATUS decides terminal."
+    },
+    {
+      "id": "marathon",
+      "label": "marathon.sh",
+      "type": "job",
+      "group": "orchestration",
+      "tech": "MARATHON.yaml phase chain",
+      "description": "Chains several relay build->review phases in depends_on order from a MARATHON.yaml. The multi-agent coordinator built on the relay loop (marathon-drive.sh)."
+    },
+    {
+      "id": "deep-research",
+      "label": "deep-research.mjs",
+      "type": "job",
+      "group": "orchestration",
+      "tech": "zero-dep Node adapter (GH-87)",
+      "description": "Provider-agnostic grounded-search adapter. Spawns agy in print mode in a throwaway tmpdir, normalizes to {answer, citations, query, provider, model, raw}. Fail-closed typed errors, no silent fallback."
+    },
+    {
+      "id": "claude-turn",
+      "label": "claude-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "description": "Claude Code turn shim: pins the model, sets --allowedTools, shadows blocked commands on PATH, and captures token counts into tick cost. No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "codex-turn",
+      "label": "codex-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "description": "Codex turn shim: strips OPENAI_API_KEY unless allowed, runs 'codex exec -s workspace-write'. No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "agy-turn",
+      "label": "agy-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "description": "agy (Antigravity) turn shim: runs 'agy -p --dangerously-skip-permissions --print-timeout', treats exit-0-with-empty-log as a hard failure (exit 5). No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "aider-turn",
+      "label": "aider-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim (GH-77)",
+      "description": "Aider \u003c-> OpenRouter build lane. Owns tick token ops (Aider can't run shell mid-turn), asserts token ownership, runs Aider --no-auto-commits so the harness commits."
+    },
+    {
+      "id": "claude-cli",
+      "label": "Claude Code CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "claude -p",
+      "description": "Claude Code headless subprocess run inside the isolated worktree; edits the relay thread and moves the tick token."
+    },
+    {
+      "id": "codex-cli",
+      "label": "Codex CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "codex exec",
+      "description": "Codex headless subprocess; builds/reviews within the allowlist, moves the tick token via ./bin/tick."
+    },
+    {
+      "id": "agy-cli",
+      "label": "agy CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "Antigravity / Gemini",
+      "description": "Google Antigravity CLI. Serves both relay turns (build/review) and deep-research grounded search via its built-in Google search tool."
+    },
+    {
+      "id": "aider-cli",
+      "label": "Aider CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "OpenAI-standard client",
+      "description": "Aider headless build runner using an OpenAI-compatible client; talks to models through OpenRouter."
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter",
+      "type": "external",
+      "group": "external",
+      "tech": "model gateway",
+      "description": "OpenAI-compatible model gateway for the Aider lane (e.g. GLM 5.2, Nemotron). Key read from a local secrets file, never hardcoded."
+    },
+    {
+      "id": "google-search",
+      "label": "Google grounded search",
+      "type": "external",
+      "group": "external",
+      "tech": "Gemini grounding",
+      "description": "Google's grounded web search, reached through the agy CLI's built-in search tool; returns cited answers to deep-research."
+    },
+    {
+      "id": "relay-thread",
+      "label": "relay thread file",
+      "type": "storage",
+      "group": "state",
+      "tech": "relay-system/\u003cdate>/\u003cslug>.md",
+      "description": "Human-readable review state: STATUS header (terminal signal) + per-turn review blocks. Holds review content, but NOT turn ownership (that is tick state)."
+    },
+    {
+      "id": "telemetry",
+      "label": "XYZ.json + telemetry",
+      "type": "storage",
+      "group": "state",
+      "tech": "utils/telemetry (gitignored)",
+      "description": "Per-session completion feed appended by every relay/marathon/swarm session (harness/sessionId/health/title). Local + machine-specific; extractors read the event log."
+    },
+    {
+      "id": "validate",
+      "label": "validate.sh",
+      "type": "job",
+      "group": "governance",
+      "tech": "test/*.sh suite",
+      "description": "Repo correctness gate: runs the full kernel + coordination test suite (Node 18+, no API keys). Must be green before reporting code/runtime success."
+    },
+    {
+      "id": "pdda",
+      "label": "pdda.sh",
+      "type": "job",
+      "group": "governance",
+      "tech": "utils/pdda",
+      "description": "Document-hygiene engine (PDDA contract): frontmatter, status-table, roadmap-coverage, changelog, stale, and issue-doc-sync checks over the PROJECT docs."
+    },
+    {
+      "id": "project-docs",
+      "label": "PROJECT docs + ledgers",
+      "type": "storage",
+      "group": "governance",
+      "tech": "ROADMAP.md / CHANGELOG.md / PROJECT/**",
+      "description": "PDDA-governed doc system: ROUTER/AGENTS entry points, ROADMAP pointer ledger, CHANGELOG record, and PROJECT/** execution docs (1-INBOX -> 2-WORKING -> 3-COMPLETED)."
+    }
+  ],
+  "edges": [
+    {
+      "source": "tick",
+      "target": "eventlog",
+      "label": "appends + projects",
+      "kind": "data"
+    },
+    {
+      "source": "relay-drive",
+      "target": "tick",
+      "label": "reads RELAY-TURN actor",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "claude-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "codex-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "agy-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "aider-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "tick",
+      "label": "moves token (claim/release/done)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "relay-thread",
+      "label": "file-scoped commit",
+      "kind": "data"
+    },
+    {
+      "source": "claude-turn",
+      "target": "claude-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "codex-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "agy-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "aider-cli",
+      "label": "runs CLI (--no-auto-commits)",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "codex-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "agy-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "relay-thread",
+      "label": "writes edits",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "openrouter",
+      "label": "model API",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-cli",
+      "target": "google-search",
+      "label": "grounded search",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "tick",
+      "label": "reads whose-turn",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "relay-thread",
+      "label": "reads STATUS",
+      "kind": "data"
+    },
+    {
+      "source": "marathon",
+      "target": "relay-drive",
+      "label": "chains build->review phases",
+      "kind": "sync"
+    },
+    {
+      "source": "deep-research",
+      "target": "agy-cli",
+      "label": "spawns agy -p (grounded)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "telemetry",
+      "label": "appends completion",
+      "kind": "data"
+    },
+    {
+      "source": "validate",
+      "target": "tick",
+      "label": "runs kernel + coordination suite",
+      "kind": "sync"
+    },
+    {
+      "source": "pdda",
+      "target": "project-docs",
+      "label": "doc-hygiene gates",
+      "kind": "sync"
+    }
+  ]
+});
+</script>
+</body>
+</html>
