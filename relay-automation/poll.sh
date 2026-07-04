@@ -148,8 +148,16 @@ parked_count() {
 }
 
 # Read a "Key:" line value from the relay file (NEXT / STATUS), tolerating a
-# **bold** markdown key (real threads write `**STATUS:** Open` / `**NEXT:** claude-b`).
-relay_field() { sed -n "s/^[*]*$1[*]*:[*]*[[:space:]]*//p" "$RELAY_FILE" | head -n 1 | sed 's/[[:space:]]*$//'; }
+# **bold** or `` `backtick` `` markdown key (real threads write `**STATUS:** Open` /
+# `**NEXT:** claude-b`, whole-line-bold `**NEXT: claude-b**`, or backtick-wrapped
+# `` `NEXT: claude-b` ``).
+# GH-92: the leading strip now also tolerates a leading backtick (not just `*`), and a
+# second sed stage strips trailing markdown (`*`/`` ` ``) left over from a whole-line-wrapped
+# pointer BEFORE the pre-existing trailing-whitespace trim — otherwise a naturally-authored
+# `**NEXT: claude-reb**` parsed to the literal `claude-reb**`, which then failed the
+# --claude-agents membership check downstream and silently deadlocked the poller on
+# `nudge-cross-model` forever.
+relay_field() { sed -n "s/^[\`*]*$1[\`*]*:[\`*]*[[:space:]]*//p" "$RELAY_FILE" | head -n 1 | sed -E 's/[`*]+[[:space:]]*$//; s/[[:space:]]*$//'; }
 
 # whose-turn from the relay NEXT: field = its FIRST token (the agent id), dropping any
 # trailing " — description" the writer added. Empty if no NEXT: line.
@@ -279,6 +287,17 @@ else
 fi
 
 printf 'DECISION: %s (%s)\n' "$DECISION" "$REASON"
+
+# GH-92 diagnostic: nudge-cross-model with a parsed value that isn't a recognized Claude
+# agent (per --claude-agents) AND doesn't even look like a clean bare non-Claude id (e.g.
+# leftover markdown residue such as a trailing `**`/`` ` `` the relay_field sed pipeline
+# didn't strip) — log it loudly here so a future unhandled pointer format fails loud
+# instead of silently repeating nudge-cross-model forever (this exact silent failure mode
+# stalled a live relay duel ~90 minutes before it was hand-diagnosed).
+if ((CROSS_MODEL)) && [[ ! "$CROSS_AGENT" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  printf 'poll: WARNING (GH-92) parsed NEXT value "%s" is neither a recognized Claude agent nor a clean bare non-Claude id -- relay_field may need additional markdown stripping for this pointer format\n' \
+    "$CROSS_AGENT" >&2
+fi
 
 # ---- suggested next-poll delay (--emit-delay) ----------------------------
 # Map the DECISION (and the idle sub-state) to a suggested seconds-until-next-poll

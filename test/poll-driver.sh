@@ -80,7 +80,19 @@ printf 'STATUS: Open\n**NEXT:** alice — go do the thing\n# body\n' >"$A/relay-
 printf 'STATUS: Open\nNEXT: bob\n# body\n'                          >"$A/relay-next-other.md"
 printf 'STATUS: Open\nNEXT: codex\n# body\n'                        >"$A/relay-next-codex.md"
 printf 'STATUS: Approved\n**NEXT:** alice\n# body\n'                >"$A/relay-next-approved.md"
-git -C "$A" add relay-next-mine.md relay-next-other.md relay-next-codex.md relay-next-approved.md >/dev/null 2>&1
+# GH-92 fixtures: whole-line-bold (**NEXT: x**) and backtick-wrapped (`NEXT: x`) pointers —
+# a naturally-authored whole-line-bold pointer used to leave a trailing `**`/`` ` `` on the
+# parsed value (e.g. "claude-reb**"), which then failed the --claude-agents membership check
+# and silently deadlocked the poller on nudge-cross-model forever.
+printf 'STATUS: Open\n**NEXT: alice**\n# body\n'                   >"$A/relay-next-wholebold-mine.md"
+printf 'STATUS: Open\n**NEXT: bob**\n# body\n'                     >"$A/relay-next-wholebold-other.md"
+printf 'STATUS: Open\n**NEXT: codex**\n# body\n'                   >"$A/relay-next-wholebold-codex.md"
+printf 'STATUS: Open\n`NEXT: alice`\n# body\n'                     >"$A/relay-next-backtick-mine.md"
+printf 'STATUS: Open\n`NEXT: bob`\n# body\n'                       >"$A/relay-next-backtick-other.md"
+printf 'STATUS: Open\n`NEXT: codex`\n# body\n'                     >"$A/relay-next-backtick-codex.md"
+git -C "$A" add relay-next-mine.md relay-next-other.md relay-next-codex.md relay-next-approved.md \
+  relay-next-wholebold-mine.md relay-next-wholebold-other.md relay-next-wholebold-codex.md \
+  relay-next-backtick-mine.md relay-next-backtick-other.md relay-next-backtick-codex.md >/dev/null 2>&1
 git -C "$A" commit -q -m "file-source fixtures" >/dev/null 2>&1
 # file source as agent alice; NO tick token is ever created for these (proves token-optional).
 decide_file(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --turn-source file "$@" --dry-run 2>/dev/null | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p'; }
@@ -93,6 +105,27 @@ decide_file(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice --turn
 
 [ "$(decide_file --relay-file "$A/relay-next-codex.md" --artifact "$A/art.md" --claude-agents alice)" = "nudge-cross-model" ] \
   && pass "file source: NEXT==non-Claude -> nudge-cross-model" || fail "expected nudge (file/codex)"
+
+# GH-92 regression: whole-line-bold (**NEXT: x**) and backtick-wrapped (`NEXT: x`) pointers
+# must classify identically to the bold-on-key (**NEXT:** x) case above, for the same
+# agent-id scenarios (mine/other-Claude/non-Claude).
+[ "$(decide_file --relay-file "$A/relay-next-wholebold-mine.md" --artifact "$A/art.md")" = "run-runner" ] \
+  && pass "file source: whole-line-bold **NEXT: x**==me + clean -> run-runner (GH-92)" || fail "expected run-runner (wholebold/mine)"
+
+[ "$(decide_file --relay-file "$A/relay-next-wholebold-other.md" --artifact "$A/art.md" --claude-agents alice,bob)" = "idle" ] \
+  && pass "file source: whole-line-bold NEXT==other Claude -> idle (GH-92)" || fail "expected idle (wholebold/other)"
+
+[ "$(decide_file --relay-file "$A/relay-next-wholebold-codex.md" --artifact "$A/art.md" --claude-agents alice)" = "nudge-cross-model" ] \
+  && pass "file source: whole-line-bold NEXT==non-Claude -> nudge-cross-model (GH-92)" || fail "expected nudge (wholebold/codex)"
+
+[ "$(decide_file --relay-file "$A/relay-next-backtick-mine.md" --artifact "$A/art.md")" = "run-runner" ] \
+  && pass "file source: backtick-wrapped \`NEXT: x\`==me + clean -> run-runner (GH-92)" || fail "expected run-runner (backtick/mine)"
+
+[ "$(decide_file --relay-file "$A/relay-next-backtick-other.md" --artifact "$A/art.md" --claude-agents alice,bob)" = "idle" ] \
+  && pass "file source: backtick-wrapped NEXT==other Claude -> idle (GH-92)" || fail "expected idle (backtick/other)"
+
+[ "$(decide_file --relay-file "$A/relay-next-backtick-codex.md" --artifact "$A/art.md" --claude-agents alice)" = "nudge-cross-model" ] \
+  && pass "file source: backtick-wrapped NEXT==non-Claude -> nudge-cross-model (GH-92)" || fail "expected nudge (backtick/codex)"
 
 [ "$(decide_file --relay-file "$A/relay-next-mine.md" --artifact "$A/art-dirty.md")" = "idle" ] \
   && pass "file source: NEXT==me + dirty scope -> idle" || fail "expected idle (file/dirty)"
