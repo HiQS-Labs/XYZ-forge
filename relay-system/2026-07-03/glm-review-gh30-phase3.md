@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-03.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 1
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -40,5 +40,31 @@ ROUND: 1 / 1
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer (glm — GLM 5.2 via Aider/OpenRouter, `--edit-format diff`)
+
+> Recorded by the harness operator: GLM 5.2 produced this review live (157k sent / 7.4k received, ~$0.17). Aider's SEARCH/REPLACE append to this file did not apply mechanically (known edit-format fragility), so the review is transcribed here verbatim from the turn transcript.
+
+**Artifact reviewed:** `gh30-phase3-review.diff` — GH-30 Phases 3–5 (Model A off-tree transcript commit + telemetry + docs).
+
+**Summary:** The implementation is clean, well-documented, and follows existing conventions. The core safety invariant — the archive commit is isolated in a separate repo via `git -C` and can never move the target's HEAD, so it can never orphan a concurrent peer commit — is correctly maintained. The worktree seed/copyback skip for absolute allowlist entries is properly aligned with the seedsig index. Tests cover all three required scenarios.
+
+**[Pass] — `rtl_init` archive detection (`relay-turn-lib.sh`):** Detecting that the relay file lives in a separate git repo is correct. Uses `pwd -P` for the physical path of the relay dir, compares `git rev-parse --show-toplevel` of both the relay dir and `RTL_ROOT` (both physical, so reliable). Non-git `RTL_ROOT`/relay dir → `RTL_ARCHIVE_MODE=0`. The out-of-root relay file survives the `${a#"$RTL_ROOT"/}` strip as an absolute path, making it inert to the `RTL_ROOT` status/commit loop — clean.
+
+**[Pass] — Worktree seed/copyback skip for absolute entries:** The `[[ "$a" == /* ]] && continue` guard is applied in lockstep across the three loops (begin seed, begin seedsig, end copyback); `i` increments only for non-absolute entries, so it stays aligned with the seedsig file lines. Correct.
+
+**[Pass] — `rtl_enforce` archive commit (step 3b):** The isolated `git -C "$RTL_RELAY_REPO"` pathspec commit is correctly placed after the file-scoped code commit. It cannot move the target's HEAD (different repo), so the GH-13 peer-preserve guard is unaffected even when token-tree ≠ transcript-tree. Best-effort design correct: a failed archive commit warns and never fails the turn.
+
+**[Pass] — GH-13 peer-preserve interaction:** The archive commit is in a separate repo via `git -C`, so it is structurally impossible for it to orphan a peer commit in the target tree. `archive-commit.sh` T3 (peer-case) proves this end-to-end.
+
+**[Pass] — `extract-relay-telemetry.sh` archive aggregation:** The `${_rs_slugged%/*}` strip removes exactly the `<slug>` component (sanitized, no `/`), yielding the shared `relay-system/` base; the `*/*/` glob matches `<repo-slug>/<date>/` dirs and `basename` still yields the date. Unset path byte-for-byte unchanged.
+
+**[Pass] — `new-relay.sh` resolver wiring:** Sources the lib only when `XYZ_ARCHIVE_ROOT` is set; `|| exit 1` propagates a resolver failure loudly; the `_nr_root` fallback to `pwd` is safe.
+
+**[Pass] — Test coverage & Documentation:** `archive-commit.sh` (16) + `archive-telemetry.sh` (3) cover archive-mode turn, default-unchanged, peer-preserve, cross-repo aggregation, and the unset `[]` regression; both wired into `validate.sh`. `CONSUMING.md`/`README.md` document the full Phase-3 contract; CHANGELOG records the bet; GH-30 promoted to 3-COMPLETED.
+
+**[Nit] — Empty task in test T3:** `rtl_enforce "" claude "$WORK/peer.log" claude` produces a commit message `relay(): claude transcript (...)` with empty parens. Harmless (test-only), but a non-empty placeholder task id reads cleaner. → **Producer disposition: fixed** — T3 now passes `RELAY-PEER-CASE` (no `.tick` binary in the fixture repo, so the token-handoff/drift blocks stay skipped; assertion still matches "transcript").
+
+**Verdict: Approved.** No Blockers or Shoulds.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

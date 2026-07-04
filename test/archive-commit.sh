@@ -129,7 +129,10 @@ grep -q "Round 1 · Builder" "$A/relay.md" && pass "in-tree relay edit committed
   printf 'built in peer case\n' >> "$A/artifact.txt"    # the turn's own allowlisted edit
   printf '\n### Peer-case round\n' >> "$ARCHIVE_RELAY"  # the turn's transcript edit (archive)
   git -C "$A" commit --allow-empty -q -m "concurrent peer commit during turn" >/dev/null 2>&1  # peer lands on target
-  rtl_enforce "" claude "$WORK/peer.log" claude >/dev/null 2>&1
+  # A non-empty placeholder task id keeps the archive commit message clean (relay(RELAY-PEER-CASE): …);
+  # the fixture repo ($A) has no bin/tick and RELAY_FILE is unset here, so the token-handoff/drift blocks
+  # stay skipped regardless of the task id (GLM-5.2 review nit, 2026-07-03).
+  rtl_enforce "RELAY-PEER-CASE" claude "$WORK/peer.log" claude >/dev/null 2>&1
 ) ; rc=$?
 [ "$rc" -eq 0 ] && pass "peer-case direct-lib enforce exits 0 (no reset+fail)" || fail "peer-case enforce rc=$rc (GH-13 regressed?)"
 peerlog="$(git -C "$A" log --oneline)"
