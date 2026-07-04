@@ -156,6 +156,19 @@ if (!Array.isArray(obj.fix_probes) || obj.fix_probes.length === 0) {
 if (!Array.isArray(obj.artifacts) || obj.artifacts.length === 0) {
   process.stderr.write(`contract in ${doc} needs at least one artifacts path\n`); process.exit(3);
 }
+// GH-89: artifacts_new is an OPTIONAL subset marker — every path in it must also appear in
+// artifacts[] (it is not a separate path list). A typo'd or stray entry is a contract error
+// (exit 3), same severity as a missing required field, not a silent no-op.
+if (obj.artifacts_new !== undefined) {
+  if (!Array.isArray(obj.artifacts_new)) {
+    process.stderr.write(`contract in ${doc}: artifacts_new must be an array of strings\n`); process.exit(3);
+  }
+  for (const a of obj.artifacts_new) {
+    if (!obj.artifacts.includes(a)) {
+      process.stderr.write(`contract in ${doc}: artifacts_new entry not present in artifacts[]: ${a}\n`); process.exit(3);
+    }
+  }
+}
 process.stdout.write(JSON.stringify(obj));
 JS
 
@@ -168,6 +181,7 @@ const out = {
   gate: base.gate,
   fix_probes: [...(base.fix_probes || [])],
   artifacts: [...(base.artifacts || [])],
+  artifacts_new: [...(base.artifacts_new || [])],
   remediation: base.remediation || null,
   lanes: {
     agy_safe: [...((base.lanes || {}).agy_safe || [])],
@@ -182,10 +196,32 @@ for (const c of rows.slice(1)) {
   if (c.gate !== out.gate) { process.stderr.write(`bundle disagreement: gate commands differ\n`); process.exit(7); }
   out.fix_probes.push(...(c.fix_probes || []));
   for (const a of c.artifacts || []) if (!out.artifacts.includes(a)) out.artifacts.push(a);
+  for (const a of c.artifacts_new || []) if (!out.artifacts_new.includes(a)) out.artifacts_new.push(a);
   for (const a of (c.lanes || {}).agy_safe || []) if (!out.lanes.agy_safe.includes(a)) out.lanes.agy_safe.push(a);
   for (const a of (c.lanes || {}).orchestrator_only || []) if (!out.lanes.orchestrator_only.includes(a)) out.lanes.orchestrator_only.push(a);
 }
 process.stdout.write(JSON.stringify(out));
+JS
+
+# GH-89: the greenfield safety check. artifacts_new is an exemption from the GH-39 A2 existence
+# check (below), so it must not become a way to dodge that check on a path that should already
+# exist. Every artifacts_new entry needs a fix_probes entry of type path_absent on the EXACT same
+# path — proof, in a form the harness can check, that the lane author is asserting the path is
+# genuinely unbuilt. Run against the MERGED contract (not per-doc) so a multi-issue bundle's
+# artifacts_new and its matching path_absent probe are allowed to live in different docs of the
+# same bundle, same as fix_probes/artifacts themselves are unioned above.
+cat >"$TMP/check-artifacts-new.mjs" <<'JS'
+import { readFileSync } from "node:fs";
+const c = JSON.parse(readFileSync(process.env.SP_CONTRACT, "utf8"));
+const artsNew = Array.isArray(c.artifacts_new) ? c.artifacts_new : [];
+const probes = Array.isArray(c.fix_probes) ? c.fix_probes : [];
+for (const a of artsNew) {
+  const has = probes.some(p => p && p.type === "path_absent" && p.path === a);
+  if (!has) {
+    process.stderr.write(`contract error: artifacts_new entry '${a}' has no matching fix_probes entry of type path_absent on the same path\n`);
+    process.exit(3);
+  }
+}
 JS
 
 cat >"$TMP/eval-probes.mjs" <<'JS'
@@ -363,6 +399,15 @@ if [[ $rc -ne 0 ]]; then
 fi
 printf '%s' "$MERGED" >"$TMP/contract.json"
 
+# GH-89: validate the artifacts_new / fix_probes(path_absent) pairing on the MERGED contract before
+# it's ever used to exempt anything from the GH-39 A2 existence check below. A contract error here
+# (exit 3) is the same severity as a missing required field — never a silent pass.
+SP_CONTRACT="$TMP/contract.json" node "$TMP/check-artifacts-new.mjs"; rc=$?
+if [[ $rc -ne 0 ]]; then
+  emit "CONTRACT ERROR: see message above."
+  exit "$rc"
+fi
+
 # ── slug + provenance (Phase 2) ──────────────────────────────────────────────
 PRIMARY_DOC="${SOURCE_DOCS[0]}"
 SLUG="$(basename "$PRIMARY_DOC" .md | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9' '-' | sed 's/--*/-/g; s/^-//; s/-$//')"
@@ -421,13 +466,28 @@ read -r STALE BLOCKED AMBIG <<<"$PROBE_SUMMARY"
 # GH-39 (A2): verify every declared artifact path exists at the evaluated ref. A "ready" packet whose
 # artifacts[] is missing/mistyped would fail the marathon at the first edit (the GH-29-adjacent failure
 # class). Checked in REF_WT — the ref's content — BEFORE the worktree is removed below.
+# GH-89: an artifacts[] entry also listed in artifacts_new is an intentionally net-new (greenfield)
+# path, already proven safe by the artifacts_new/fix_probes(path_absent) pairing check above — skip
+# the existence check for those entries only. Everything not marked artifacts_new keeps today's
+# strict-by-default existence check exactly.
 GH39_ART_MISSING=""
 _gh39_art_csv="$(field "$TMP/contract.json" artifacts)"
+_gh39_new_csv="$(field "$TMP/contract.json" artifacts_new)"
+_gh39_new_set=","
+if [[ -n "$_gh39_new_csv" ]]; then
+  IFS=',' read -ra _gh39_news <<<"$_gh39_new_csv"
+  for _gh39_n in "${_gh39_news[@]}"; do
+    read -r _gh39_n <<<"$_gh39_n"
+    [[ -z "$_gh39_n" ]] && continue
+    _gh39_new_set="${_gh39_new_set}${_gh39_n},"
+  done
+fi
 if [[ -n "$_gh39_art_csv" ]]; then
   IFS=',' read -ra _gh39_arts <<<"$_gh39_art_csv"
   for _gh39_a in "${_gh39_arts[@]}"; do
     read -r _gh39_a <<<"$_gh39_a"               # trim leading/trailing whitespace
     [[ -z "$_gh39_a" ]] && continue
+    [[ "$_gh39_new_set" == *",${_gh39_a},"* ]] && continue   # GH-89: declared net-new — skip
     [[ -e "$REF_WT/$_gh39_a" ]] || { GH39_ART_MISSING="$_gh39_a"; break; }
   done
 fi

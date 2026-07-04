@@ -431,6 +431,130 @@ grep -q "skip_branch_prompt=true" <<<"$out" \
   && pass "T23a nested-subdirectory shim-shaped path is independent zone, not shim (risk=1 skips)" \
   || fail "T23a: $out"
 
+# ── T24 (GH-89 baseline): an unmarked new-file artifact still fails GH-39 A2 exactly as before —
+# strict-by-default is unchanged. This is the "previously read NOT-READY" half of T25's regression.
+R="$(make_repo greenbaseline '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "src/new-thing.js" } ],
+  "artifacts": [ "src/new-thing.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-greenbaseline.md" 2>&1)"; rc=$?
+[[ $rc -eq 5 ]] && pass "T24 GH-89 baseline: unmarked new-file artifact still NOT-READY (exit 5) — strict-by-default unchanged" || fail "T24 expected exit 5, got $rc — $out"
+grep -q "artifact path not found" <<<"$out" && pass "T24 names the missing artifact path" || fail "T24 missing message: $out"
+
+# ── T25 (GH-89): the SAME contract, plus artifacts_new + a matching fix_probes path_absent entry,
+# now reads READY (exit 0) — the whole point of a greenfield lane.
+R="$(make_repo greenfield '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "src/new-thing.js" } ],
+  "artifacts": [ "src/new-thing.js" ],
+  "artifacts_new": [ "src/new-thing.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-greenfield.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T25 GH-89: greenfield contract (artifacts_new + matching path_absent probe) reads READY where T24's unmarked twin reads NOT-READY" || fail "T25 expected exit 0, got $rc — $out"
+grep -q "verdict     : ready" <<<"$out" && pass "T25 verdict ready" || fail "T25 verdict not ready: $out"
+[[ -f "$R/packet/run-candidate.json" ]] && pass "T25 packet written for the greenfield lane" || fail "T25 packet not written: $(ls "$R/packet" 2>&1)"
+
+# ── T26 (GH-89): an artifacts_new entry with NO matching fix_probes path_absent entry on the same
+# path is a contract error (exit 3), never a silent pass — the exemption must not become a way to
+# dodge the check on a path that should already exist.
+R="$(make_repo greennoprobe '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "OTHER_FILE.txt" } ],
+  "artifacts": [ "src/new-thing2.js" ],
+  "artifacts_new": [ "src/new-thing2.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-greennoprobe.md" 2>&1)"; rc=$?
+[[ $rc -eq 3 ]] && pass "T26 GH-89: artifacts_new entry with no matching path_absent probe → contract error (exit 3)" || fail "T26 expected exit 3, got $rc — $out"
+grep -q "no matching fix_probes entry of type path_absent" <<<"$out" && pass "T26 names the pairing violation" || fail "T26 missing message: $out"
+
+# ── T27 (GH-89): an artifacts_new entry that isn't ALSO in artifacts[] is a contract error (exit 3) —
+# artifacts_new is a subset marker, not a separate path list.
+R="$(make_repo greennotinarts '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "src/stray.js" } ],
+  "artifacts": [ "src/a.js" ],
+  "artifacts_new": [ "src/stray.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-greennotinarts.md" 2>&1)"; rc=$?
+[[ $rc -eq 3 ]] && pass "T27 GH-89: artifacts_new entry not present in artifacts[] → contract error (exit 3)" || fail "T27 expected exit 3, got $rc — $out"
+grep -q 'not present in artifacts\[\]' <<<"$out" && pass "T27 names the subset violation" || fail "T27 missing message: $out"
+
+# ── T28 (GH-89 live regression): a contract shaped like GH-87's actual historical one
+# (relay-automation/deep-research.mjs + test/deep-research.sh, a pure new-file build) — extended
+# with artifacts_new + the second path_absent probe GH-89 requires — now reads READY. Pre-GH-89 this
+# returned NOT-READY (exit 5) purely because the artifacts didn't exist yet.
+R="$(make_repo gh87mirror '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [
+    { "type": "path_absent", "path": "relay-automation/deep-research.mjs" },
+    { "type": "path_absent", "path": "test/deep-research.sh" }
+  ],
+  "artifacts": [
+    "relay-automation/deep-research.mjs",
+    "test/deep-research.sh"
+  ],
+  "artifacts_new": [
+    "relay-automation/deep-research.mjs",
+    "test/deep-research.sh"
+  ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh87mirror.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T28 GH-89 regression: GH-87-shaped contract (deep-research.mjs) now reads READY" || fail "T28 expected exit 0, got $rc — $out"
+
+# ── T29 (GH-89 live regression): a contract shaped like GH-88's actual historical one (3 marathon
+# viewer scripts + test/marathon-monitor.sh, a pure new-file build) — extended with artifacts_new +
+# the two additional path_absent probes GH-89 requires — now reads READY.
+R="$(make_repo gh88mirror '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [
+    { "type": "path_absent", "path": "relay-automation/marathon-ls.sh" },
+    { "type": "path_absent", "path": "relay-automation/marathon-detail.sh" },
+    { "type": "path_absent", "path": "relay-automation/marathon-tui.sh" },
+    { "type": "path_absent", "path": "test/marathon-monitor.sh" }
+  ],
+  "artifacts": [
+    "relay-automation/marathon-ls.sh",
+    "relay-automation/marathon-detail.sh",
+    "relay-automation/marathon-tui.sh",
+    "test/marathon-monitor.sh"
+  ],
+  "artifacts_new": [
+    "relay-automation/marathon-ls.sh",
+    "relay-automation/marathon-detail.sh",
+    "relay-automation/marathon-tui.sh",
+    "test/marathon-monitor.sh"
+  ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh88mirror.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T29 GH-89 regression: GH-88-shaped contract (3 viewer scripts + test) now reads READY" || fail "T29 expected exit 0, got $rc — $out"
+
+# ── T30 (GH-89 bundle merge): artifacts_new declared in ONE bundle doc, its matching fix_probes
+# path_absent entry declared in a SIBLING doc of the same --gh-issue bundle. merge-contracts.mjs
+# unions both fields across the bundle (same as artifacts/lanes already do), so the pairing check
+# (run on the MERGED contract) is satisfied and the bundle reads READY.
+R="$WORK/bundle89"; mkdir -p "$R/PROJECT/2-WORKING" "$R/src"
+: >"$R/src/a.js"
+mkcap bundlenew '{ "target": { "repo": ".", "ref": "main" }, "gate": "true", "fix_probes": [ { "type": "path_absent", "path": "x" } ], "artifacts": [ "src/bundle-new.js" ], "artifacts_new": [ "src/bundle-new.js" ], "remediation": { "criteria": "x" } }' 15
+mkcap bundleprobe '{ "target": { "repo": ".", "ref": "main" }, "gate": "true", "fix_probes": [ { "type": "path_absent", "path": "src/bundle-new.js" } ], "artifacts": [ "src/a.js" ] }' 16
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --gh-issue 15 --gh-issue 16 --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T30 GH-89: artifacts_new in one bundle doc + matching path_absent probe in a sibling doc → bundle merge satisfies the pairing, reads READY" || fail "T30 expected exit 0, got $rc — $out"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1
