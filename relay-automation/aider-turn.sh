@@ -43,6 +43,9 @@ set -euo pipefail
 #   --no-gitignore --no-check-update --no-analytics --no-show-model-warnings --no-stream --map-tokens 0
 #   --file <path>          — one per allowlisted file (the relay file + each ALLOW_PATHS artifact), so
 #                            Aider edits exactly the on-lane surface
+#   --read <path>          — GH-119: on a REVIEW-ONLY turn (ALLOW_PATHS empty), the artifact under
+#                            review (RELAY_ARTIFACT_FILE) + every file its diff touches, so the model
+#                            has full context but --yes-always can never make them writable.
 #   OpenRouter needs no base-url flag — `--model openrouter/...` + OPENROUTER_API_KEY is Aider-native.
 #
 # Exit: 0 acted/deferred · 5 aider failed / no OPENROUTER_API_KEY / empty output · 6 off-allowlist edit
@@ -98,6 +101,27 @@ if [[ -n "${ALLOW_PATHS:-}" ]]; then
   for _ap in "${_aps[@]}"; do _ap="${_ap#"${_ap%%[![:space:]]*}"}"; _ap="${_ap%"${_ap##*[![:space:]]}"}"; [[ -n "$_ap" ]] && { file_args+=(--file "$_ap"); claim_paths="$claim_paths,$_ap"; }; done
 fi
 
+# GH-119: on a REVIEW-ONLY turn (ALLOW_PATHS empty — the Reviewer must never edit the artifact), give
+# Aider structural READ access to the artifact under review plus every file its diff actually touches.
+# Root cause of the bug this closes: with --yes-always, ANY file a model names in a SEARCH/REPLACE
+# block becomes writable, regardless of role — a reviewer that spots a referenced file in the diff can
+# emit an edit for it, and the harness's all-or-nothing containment then discards the WHOLE turn
+# (including the correctly-scoped relay-file edit) when that off-lane write is caught. --read is
+# structurally read-only in Aider even under --yes-always, so this gives full context with no writable
+# surface — the build/fix path (ALLOW_PATHS set) is completely untouched.
+read_args=()
+if [[ -z "${ALLOW_PATHS:-}" && -n "${RTL_ARTIFACT:-}" && -f "$RTL_ARTIFACT" ]]; then
+  # Absolute path: RELAY_ARTIFACT_FILE is always absolutized by the caller (relay-turn-lib.sh), so it
+  # resolves correctly whether the turn runs CWD=ROOT or CWD=<isolated worktree> — it is never an edit
+  # target (never added to RTL_ALLOW / copied back), so no worktree-relative form is needed.
+  read_args+=(--read "$RTL_ARTIFACT")
+  # Parse changed-file paths out of the diff (git-show / unified-diff format) and add each, resolved
+  # repo-relative so it resolves under worktree isolation too (a tracked file exists at HEAD there).
+  while IFS= read -r _cp; do
+    [[ -n "$_cp" && -f "$ROOT/$_cp" && "$_cp" != "$rel_relay" ]] && read_args+=(--read "$_cp")
+  done < <(sed -nE 's#^diff --git a/(.+) b/.+$#\1#p; s#^\+\+\+ b/(.+)$#\1#p' "$RTL_ARTIFACT" | sort -u)
+fi
+
 # The shim performs the token ops Aider can't (claim THIS handed-off task + ping). rtl_enforce (GH-67)
 # does the authoritative release/done AFTER the file-scoped commit, but it is ownership-guarded — it
 # only fires if THIS agent is the token's claimer. Use `claim <task> --paths` (NOT `take`, which grabs
@@ -137,7 +161,7 @@ aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits --no-gitignore
             --chat-history-file "$AIDER_AUX_DIR/chat.history.md"
             --input-history-file "$AIDER_AUX_DIR/input.history"
             --llm-history-file  "$AIDER_AUX_DIR/llm.history"
-            "${file_args[@]}")
+            "${file_args[@]}" ${read_args[@]+"${read_args[@]}"})
 read -ra _xflags <<<"${AIDER_FLAGS:-}"
 [[ "${#_xflags[@]}" -gt 0 ]] && aider_args+=("${_xflags[@]}")
 

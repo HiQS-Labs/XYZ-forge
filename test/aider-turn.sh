@@ -31,14 +31,23 @@ STUB="$WORK/aider"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
-files=(); chf=".aider.chat.history.md"; while (($#)); do
+files=(); reads=(); chf=".aider.chat.history.md"; while (($#)); do
   case "$1" in
     --file)              files+=("$2"); shift 2 ;;
+    --read)              reads+=("$2"); shift 2 ;;
     --message)           shift 2 ;;
     --chat-history-file) chf="$2"; shift 2 ;;
     *)                   shift ;;
   esac
 done
+# GH-119 test hook: when the test sets ARGS_DUMP, record exactly what the shim constructed —
+# --file (writable) vs --read (structurally read-only) — so the test can assert on the split
+# without inventing a new inspection mechanism (mirrors how this stub already models Aider itself).
+if [ -n "${ARGS_DUMP:-}" ]; then
+  : >"$ARGS_DUMP"
+  for f in "${files[@]}"; do printf 'FILE:%s\n' "$f" >>"$ARGS_DUMP"; done
+  for r in "${reads[@]}"; do printf 'READ:%s\n' "$r" >>"$ARGS_DUMP"; done
+fi
 [ "${STUB_MODE:-good}" = empty ] && exit 0           # blocked backend: exit 0, no output, no edit
 printf 'aider-stub: edited for %s\n' "${RELAY_AGENT:-?}"   # stdout -> non-empty transcript
 # Mimic real Aider: it ALWAYS writes a chat-history file, defaulting to .aider.chat.history.md in CWD.
@@ -199,6 +208,37 @@ env RELAY_AGENT=aider RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-disp AIDER_
   bash "$DISPATCH" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "marathon-agent.sh dispatches RELAY_AGENT=aider -> aider-turn.sh (exit 0)" || fail "dispatch exit=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "dispatched aider relay turn committed (reachable via relay --agent-cmd)" || fail "dispatched turn did not commit"
+
+# --- (12) GH-119: review-only turn (ALLOW_PATHS unset) — a file the reviewed diff touches must be
+# passed as --read (structurally read-only, even under --yes-always), NEVER as --file (writable), so
+# a model that spots the file in the diff text cannot slip an off-lane edit past containment.
+mkdir -p "$A/src"; printf 'target content\n' >"$A/src/target.txt"
+git -C "$A" add src/target.txt >/dev/null 2>&1; git -C "$A" commit -q -m "seed GH-119 target file" >/dev/null 2>&1
+ARTIFACT="$WORK/gh119-review.diff"
+cat >"$ARTIFACT" <<'DIFF_EOF'
+diff --git a/src/target.txt b/src/target.txt
+index 1111111..2222222 100644
+--- a/src/target.txt
++++ b/src/target.txt
+@@ -1 +1 @@
+-target content
++target content, revised
+DIFF_EOF
+ARGS_DUMP="$WORK/gh119-args.$$"
+seed_token RELAY-TURN-gh119
+run_shim RELAY-TURN-gh119 aider good RELAY_ARTIFACT_FILE="$ARTIFACT" ARGS_DUMP="$ARGS_DUMP"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-119: review-only turn with a reviewed artifact still exits 0" || fail "GH-119 turn rc=$rc"
+grep -qx "READ:src/target.txt" "$ARGS_DUMP" 2>/dev/null \
+  && pass "GH-119: diff-referenced file passed as --read" \
+  || fail "GH-119: src/target.txt not passed as --read (dump: $(cat "$ARGS_DUMP" 2>/dev/null))"
+if grep -qx "FILE:src/target.txt" "$ARGS_DUMP" 2>/dev/null; then
+  fail "GH-119: src/target.txt must NOT be passed as --file (writable) on a review-only turn"
+else
+  pass "GH-119: diff-referenced file NOT passed as --file (structurally un-writable)"
+fi
+grep -qx "READ:$ARTIFACT" "$ARGS_DUMP" 2>/dev/null \
+  && pass "GH-119: the reviewed artifact itself is passed as --read" \
+  || fail "GH-119: artifact path not passed as --read"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
