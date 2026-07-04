@@ -371,6 +371,56 @@ else
   fail "M: wrong deepest spine — expected x/a/b/c, got: $seam"
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario N — GH-86: surface the manual PR-review-lane overlay (Level 1 only)
+# ─────────────────────────────────────────────────────────────────────────────
+N="$WORK/N"; mkdir -p "$N"; echo '{}' >"$N/.gh-state.json"; : >"$N/.branches"
+mk_doc "$N" GH-960-solo.md 2 2 2 "$(contract_for MISS_SOLO src/solo.js)"
+cat >"$N/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-960 · solo item** 🆕 — → [d](PROJECT/2-WORKING/GH-960-solo.md) · [#960](https://github.com/o/r/issues/960)
+EOF
+doc="$N/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+
+# (a) no PR-REVIEW-QUEUE-<today>.md overlay -> no new section at all (zero-output-diff no-op).
+run_qp "$N" >/dev/null 2>&1
+! grep -q "## Review lanes" "$doc" \
+  && pass "N: (a) no PR-REVIEW-QUEUE doc -> no Review lanes section [GH-86]" \
+  || fail "N: (a) Review lanes section appeared with no overlay doc present"
+
+# (b) a PR-REVIEW-QUEUE-<today>.md WITH 2 lanes in its ## Lanes table -> section appears, lists both.
+cat >"$N/PROJECT/2-WORKING/PR-REVIEW-QUEUE-$DAY.md" <<EOF
+---
+title: PR review queue — $DAY
+status: Active (2-WORKING)
+roadmap_exempt: true
+---
+
+# PR review queue — $DAY
+
+## Lanes
+
+| Lane | PR | Reviewer | Artifact (read-only) | Fire (preflight → review) |
+|---|---|---|---|---|
+| R1 | #79 GH-77 aider lane | codex (harness/shim code) | \`gh pr diff 79\` | prep thread w/ \`--artifact-file\` → \`relay-drive --review-once\` |
+| R2 | #81 GH-78 doc-preflight | agy (script + telemetry) | \`gh pr diff 81\` | prep thread w/ \`--artifact-file\` → \`relay-drive --review-once\` |
+EOF
+run_qp "$N" >/dev/null 2>&1
+grep -qF "## Review lanes (manual overlay — run via relay-xyz)" "$doc" \
+  && pass "N: (b) overlay present -> Review lanes section appears [GH-86]" \
+  || fail "N: (b) Review lanes section missing with overlay doc present"
+grep -q '| R1 | #79 GH-77 aider lane | codex (harness/shim code) |' "$doc" \
+  && pass "N: (b) lane R1 listed with PR + reviewer [GH-86]" \
+  || fail "N: (b) lane R1 not listed correctly"
+grep -q '| R2 | #81 GH-78 doc-preflight | agy (script + telemetry) |' "$doc" \
+  && pass "N: (b) lane R2 listed with PR + reviewer [GH-86]" \
+  || fail "N: (b) lane R2 not listed correctly"
+grep -qF "[PR-REVIEW-QUEUE-$DAY.md](PR-REVIEW-QUEUE-$DAY.md)" "$doc" \
+  && pass "N: (b) section links the overlay doc [GH-86]" \
+  || fail "N: (b) overlay doc link missing"
+
 echo
 echo "  marathon-plan: $PASS passed, $FAIL failed"
 [[ "$FAIL" -eq 0 ]]

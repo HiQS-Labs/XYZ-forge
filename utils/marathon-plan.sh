@@ -324,6 +324,36 @@ function parseLedger(raw) {
   return out;
 }
 
+// GH-86: parse a "## Lanes" markdown table from the manual PR-review-queue overlay doc
+// (PROJECT/2-WORKING/PR-REVIEW-QUEUE-<date>.md) — a different shape from the ROADMAP ledger: each row
+// reviews an existing PR diff rather than remediating a ledger item, so it doesn't fit parseBullet's
+// `- **title**` bullet shape. Generalized instead by column NAME (Lane/PR/Reviewer), so header-cell
+// wording (e.g. "Artifact (read-only)") doesn't need to match exactly. Degrades to [] on any
+// malformed shape — never throws (same "flag, don't die" contract as the rest of this planner).
+function parseLanesTable(raw) {
+  const lines = raw.split(/\r?\n/);
+  const h = lines.findIndex((l) => /^##\s+Lanes\s*$/.test(l.trim()));
+  if (h < 0) return [];
+  const splitRow = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => stripMd(c.trim()));
+  let i = h + 1;
+  while (i < lines.length && !/^\s*\|/.test(lines[i]) && !/^#{1,6}\s+/.test(lines[i])) i++;
+  if (i >= lines.length || !/^\s*\|/.test(lines[i])) return []; // no table before the next heading
+  const header = splitRow(lines[i]); i++;
+  if (i < lines.length && /^\s*\|?\s*-{2,}/.test(lines[i])) i++; // separator row (|---|---|...)
+  const col = (name) => header.findIndex((c) => c.toLowerCase() === name.toLowerCase());
+  const laneIdx = col("Lane"), prIdx = col("PR"), revIdx = col("Reviewer");
+  const rows = [];
+  for (; i < lines.length && /^\s*\|/.test(lines[i]); i++) {
+    const cells = splitRow(lines[i]);
+    rows.push({
+      lane: laneIdx >= 0 ? (cells[laneIdx] || "") : (cells[0] || ""),
+      pr: prIdx >= 0 ? (cells[prIdx] || "") : "",
+      reviewer: revIdx >= 0 ? (cells[revIdx] || "") : "",
+    });
+  }
+  return rows;
+}
+
 // ── item resolution ──────────────────────────────────────────────────────────
 function ghIssueOf(item) {
   // The canonical issue is the leading "GH-NN ·" in the TITLE. An in-prose issues/ link (e.g. GH-16's
@@ -882,6 +912,34 @@ function renderQueueDoc() {
     }
     o.push("");
   }
+
+  // GH-86: surface the manual PR-review-lane overlay (PROJECT/2-WORKING/PR-REVIEW-QUEUE-<date>.md) —
+  // a different shape from a ROADMAP build lane (reviewing an existing PR diff, not remediating a
+  // ledger item) — so its existence isn't silently invisible next to the generated plan. This is how
+  // two real review lanes went unrun until the operator noticed by hand (2026-07-02). Level 1
+  // (surface) only: no per-lane run/verdict tracking (Level 2), no auto-generation from `gh pr list`
+  // (Level 3) — see PROJECT/2-WORKING/GH-86-SURFACE-REVIEW-LANES.md's non-goals. File absent ⇒ push
+  // nothing at all (zero output diff from before this fix, the common case).
+  const reviewQueueRel = `PR-REVIEW-QUEUE-${TODAY}.md`;
+  const reviewQueueRaw = readFileSafe(path.join(E.QP_QUEUE_DIR, reviewQueueRel));
+  if (reviewQueueRaw != null) {
+    const reviewLanes = parseLanesTable(reviewQueueRaw);
+    o.push("## Review lanes (manual overlay — run via relay-xyz)");
+    o.push("");
+    o.push(`A separate manual overlay — [${reviewQueueRel}](${reviewQueueRel}) — is not derived from`);
+    o.push("ROADMAP.md and does not appear in the waves above (a review lane evaluates an existing PR");
+    o.push("diff; it doesn't remediate a ledger item). Fire each via `relay-xyz`, per the overlay doc.");
+    o.push("");
+    if (reviewLanes.length) {
+      o.push("| Lane | PR | Reviewer |");
+      o.push("|---|---|---|");
+      for (const l of reviewLanes) o.push(`| ${cell(l.lane)} | ${cell(l.pr)} | ${cell(l.reviewer)} |`);
+    } else {
+      o.push(`_${reviewQueueRel} exists but its \`## Lanes\` table could not be parsed._`);
+    }
+    o.push("");
+  }
+
   o.push("## How to fire a lane");
   o.push("");
   o.push("Per lane, the existing pipeline applies — no new control plane:");
