@@ -1,18 +1,39 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Manage vendored .xyz copies recorded in the local XYZ registry: list, update, delete, and check.
+#
+# `check` (GH-96) drift-detection contract: registry.tsv stamps `tick_version` and `source_commit`
+# ONCE, at install/vendor time (register_vendor(), xyz-vendor.sh). `check` recomputes the CURRENT
+# values the exact same way register_vendor() does -- tick_version() re-reads SCHEMA_VERSION from
+# THIS harness's src/events.js; source_commit is `git -C "$HARNESS_ROOT" rev-parse HEAD` of the
+# harness root -- and compares them against what's recorded per row. The comparison key is the
+# PAIR (tick_version, source_commit): a mismatch in EITHER field counts as drift (a tick_version
+# bump without a fresh source_commit, or vice versa a source_commit change that didn't bump
+# SCHEMA_VERSION, both mean the installed copy no longer matches what's canonically shipped).
+# This is report-only: a mismatch prints a warning naming the drifted field(s) and both values
+# (recorded vs current) -- it is NEVER a hard error and NEVER auto-pulls. Updates land only via an
+# explicit `xyz-sync update` / `xyz-vendor.sh` re-run (pinned + manual, by design).
+
 usage() {
   cat <<'USAGE'
 Usage:
   xyz-sync.sh list
   xyz-sync.sh update <dir> | --all
   xyz-sync.sh delete <dir> | --all [--yes]
+  xyz-sync.sh check <dir> | --all
   xyz-sync.sh --list
   xyz-sync.sh --update <dir> | --all
   xyz-sync.sh --delete <dir> | --all [--yes]
+  xyz-sync.sh --check <dir> | --all
   xyz-sync.sh -h | --help
 
 Manage vendored .xyz copies recorded in the local XYZ registry.
+
+`check` compares each selected row's recorded (tick_version, source_commit) against the values
+this harness currently ships. Exact match on both -> "ok" line. Mismatch on either field -> a
+"DRIFT" warning naming the drifted field(s) and both recorded/current values. Report-only: never
+a hard error, never an auto-pull.
 USAGE
 }
 
@@ -28,11 +49,23 @@ while [ -h "$_src" ]; do
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 VENDOR_SCRIPT="$SELF_DIR/xyz-vendor.sh"
+# GH-96: same HARNESS_ROOT resolution as xyz-vendor.sh -- this repo's own root, one level up from
+# relay-automation/ -- so `check` compares against what THIS harness currently ships.
+HARNESS_ROOT="$(cd "$SELF_DIR/.." >/dev/null 2>&1 && pwd)"
 XYZ_REGISTRY="${XYZ_REGISTRY:-${XDG_CONFIG_HOME:-$HOME/.config}/xyz/registry.tsv}"
 
 SELECTED_INSTALL_DIRS=()
 SELECTED_SOURCE_COMMITS=()
+SELECTED_TICK_VERSIONS=()
 SELECTED_TARGET_REPOS=()
+
+# GH-96: mirrors tick_version() in xyz-vendor.sh byte-for-byte -- both must read SCHEMA_VERSION
+# the same way, or `check` would report false drift against a correctly-vendored install.
+tick_version() {
+  local v
+  v="$(sed -n "s/.*SCHEMA_VERSION[[:space:]]*=[[:space:]]*['\"]\([^'\"]*\)['\"].*/\1/p" "$HARNESS_ROOT/src/events.js" 2>/dev/null | head -1)"
+  printf '%s' "${v:-unknown}"
+}
 
 trim_cr() {
   printf '%s' "${1%$'\r'}"
@@ -96,6 +129,7 @@ select_vendored_rows() {
 
   SELECTED_INSTALL_DIRS=()
   SELECTED_SOURCE_COMMITS=()
+  SELECTED_TICK_VERSIONS=()
   SELECTED_TARGET_REPOS=()
 
   [ -f "$XYZ_REGISTRY" ] || return 0
@@ -108,6 +142,7 @@ select_vendored_rows() {
     install_dir="$(trim_cr "${install_dir:-}")"
     coordinated_repo="$(trim_cr "${coordinated_repo:-}")"
     source_commit="$(trim_cr "${source_commit:-}")"
+    tick_version="$(trim_cr "${tick_version:-}")"
 
     [ -n "$install_dir" ] || continue
     case "$install_dir" in
@@ -127,6 +162,7 @@ select_vendored_rows() {
 
     SELECTED_INSTALL_DIRS[${#SELECTED_INSTALL_DIRS[@]}]="$install_dir"
     SELECTED_SOURCE_COMMITS[${#SELECTED_SOURCE_COMMITS[@]}]="${source_commit:-unknown}"
+    SELECTED_TICK_VERSIONS[${#SELECTED_TICK_VERSIONS[@]}]="${tick_version:-unknown}"
     SELECTED_TARGET_REPOS[${#SELECTED_TARGET_REPOS[@]}]="$target_repo"
   done < "$XYZ_REGISTRY"
 }
@@ -257,6 +293,47 @@ delete_rows() {
   note "registry: pruned ${#SELECTED_INSTALL_DIRS[@]} row(s)"
 }
 
+# GH-96: report-only drift check. Compares each selected row's recorded (tick_version,
+# source_commit) against the CURRENT values this harness computes the same way register_vendor()
+# does. Mismatch on either field is drift; a match is silent/"ok". Never mutates the registry or
+# the install, never exits non-zero for drift -- this is a warning, not a gate.
+check_rows() {
+  local target i cur_ver cur_commit rec_ver rec_commit drifted
+
+  target="${1:-}"
+
+  if [ -z "$target" ]; then
+    die "check requires <dir> or --all"
+  fi
+
+  if [ "$target" = "--all" ]; then
+    select_vendored_rows
+  else
+    select_vendored_rows "$target"
+  fi
+
+  require_selection "${target}" || return 0
+
+  cur_ver="$(tick_version)"
+  cur_commit="$(git -C "$HARNESS_ROOT" rev-parse HEAD 2>/dev/null || printf 'unknown')"
+
+  for ((i = 0; i < ${#SELECTED_INSTALL_DIRS[@]}; i++)); do
+    rec_ver="${SELECTED_TICK_VERSIONS[$i]}"
+    rec_commit="${SELECTED_SOURCE_COMMITS[$i]}"
+    drifted=""
+    [ "$rec_ver" = "$cur_ver" ] || drifted="${drifted}${drifted:+,}tick_version"
+    [ "$rec_commit" = "$cur_commit" ] || drifted="${drifted}${drifted:+,}source_commit"
+
+    if [ -z "$drifted" ]; then
+      printf 'ok    %s\n' "${SELECTED_INSTALL_DIRS[$i]}"
+    else
+      printf 'DRIFT %s (%s drifted)\n' "${SELECTED_INSTALL_DIRS[$i]}" "$drifted"
+      printf '  recorded: tick_version=%s source_commit=%s\n' "$rec_ver" "$rec_commit"
+      printf '  current:  tick_version=%s source_commit=%s\n' "$cur_ver" "$cur_commit"
+    fi
+  done
+}
+
 COMMAND="${1:-}"
 [ "$#" -gt 0 ] || { usage >&2; exit 2; }
 shift || true
@@ -279,6 +356,22 @@ case "$COMMAND" in
       *)
         [ "$#" -eq 1 ] || { usage >&2; exit 2; }
         update_rows "$1"
+        ;;
+    esac
+    ;;
+  check|--check)
+    case "${1:-}" in
+      --all)
+        [ "$#" -eq 1 ] || { usage >&2; exit 2; }
+        check_rows --all
+        ;;
+      "")
+        usage >&2
+        exit 2
+        ;;
+      *)
+        [ "$#" -eq 1 ] || { usage >&2; exit 2; }
+        check_rows "$1"
         ;;
     esac
     ;;
