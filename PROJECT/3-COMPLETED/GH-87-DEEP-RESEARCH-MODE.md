@@ -136,3 +136,19 @@ The Antigravity CLI (`agy`) has Google grounded search built-in. By leveraging t
   }
 }
 ```
+
+## Lessons learned & operational usage (post-merge, 2026-07-04)
+
+Surfaced dogfooding the merged adapter to run grounded research for #111.
+
+**Root-cause lessons (both bugs fixed):**
+- **A stub can't prove a CLI adapter works against its real backend.** All 21 original tests used a stub, so the tool merged never having been run against real `agy` — and it hung on *every* real call. Two independent causes:
+  1. Missing `--dangerously-skip-permissions` → `agy -p` blocks on a tool-permission prompt for its web-search tool until `--print-timeout` (`91f17f2`).
+  2. `execFile` **silently ignores the `stdio` option** → `agy`'s stdin was left an open pipe it blocked reading; switched `runAgy` to `spawn`, which honors `stdio:['ignore',…]` (`74cd553`). Measured: `execFile` 75s→timeout/0-bytes vs `spawn` 10s→ok.
+- Regression coverage added for both (a `--dangerously-skip-permissions` assertion + a stdin-reading `needstdin` stub that hangs unless stdin is EOF'd) → `test/deep-research.sh` **23/23**. But a stub still can't catch a real-backend break → **#124** proposes an opt-in real-`agy` smoke test.
+
+**Operational usage (how to run it well):**
+- **Run it sandbox-OFF** — `agy` needs network + keychain; it fails/hangs under a sandboxed shell.
+- **Use `--search-context-size medium` with focused, single-intent queries** → returns ~27–52s. **Avoid `high`**: its "cite as many sources as available" hint drives `agy` into runaway grounding that can approach/exceed the timeout. Split broad multi-claim questions.
+- Default `DEEP_RESEARCH_TIMEOUT_MS` is 120000 (2 min); override via env for thorough queries. Runs are side-effect-free (throwaway tmpdir) and fail-closed (typed errors).
+- Hardening follow-ups (real-`agy` smoke test, runaway-grounding guard, revisit default timeout): **#124**.
