@@ -18,7 +18,7 @@
 // Exit: 0 = normalized JSON on stdout · 1 = typed error JSON on stderr (CLI missing, timeout, non-zero
 // exit, empty output) · 2 = usage error.
 
-import { execFile } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -120,18 +120,36 @@ async function runAgy(args) {
   // the model attempts a file write despite the system prompt's instruction not to.
   const workDir = await mkdtemp(join(tmpdir(), 'deep-research-'));
   try {
-    const { stdout } = await new Promise((resolve, reject) => {
-      execFile(
+    // spawn, NOT execFile: execFile silently IGNORES the `stdio` option, so agy's stdin was left an
+    // OPEN pipe that never EOF'd — real `agy -p` then blocks reading stdin until --print-timeout and
+    // the whole call hangs (measured 2026-07-04: execFile 75s→timeout/0-bytes vs spawn 10s→ok). The
+    // stub tests never caught it because the stub does not read stdin. spawn honors stdio:['ignore',…]
+    // so stdin is /dev/null (immediate EOF) and the run is non-interactive.
+    // --dangerously-skip-permissions: a non-interactive grounded search MUST auto-approve agy's
+    // web-search/grounding tool, or print mode blocks on a permission prompt that never comes. Safe
+    // here: the run is confined to the throwaway tmpdir below and the system prompt forbids file/shell
+    // tools. --print-timeout mirrors our own wall-clock cap as agy's internal ceiling.
+    const stdout = await new Promise((resolve, reject) => {
+      const child = spawn(
         bin,
-        // --dangerously-skip-permissions: a non-interactive grounded search MUST auto-approve agy's
-        // web-search/grounding tool. Without it, `agy -p` blocks on a permission prompt that never
-        // comes in print mode and hangs until --print-timeout (observed against real agy 2026-07-04;
-        // the stub tests never caught it). Safe here: the run is confined to the throwaway tmpdir
-        // below and the system prompt forbids file/shell tools.
         ['-p', prompt, '--dangerously-skip-permissions', '--print-timeout', `${Math.ceil(timeoutMs / 1000)}s`],
-        { cwd: workDir, timeout: timeoutMs, killSignal: 'SIGKILL', encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
-        (err, stdout, stderr) => (err ? reject(Object.assign(err, { stdout, stderr })) : resolve({ stdout, stderr }))
+        { cwd: workDir, timeout: timeoutMs, killSignal: 'SIGKILL', stdio: ['ignore', 'pipe', 'pipe'] }
       );
+      let out = '';
+      let err = '';
+      child.stdout.setEncoding('utf8');
+      child.stdout.on('data', (d) => { out += d; });
+      child.stderr.setEncoding('utf8');
+      child.stderr.on('data', (d) => { err += d; });
+      // 'error' fires for spawn failures (e.g. ENOENT when the binary is missing) → binary_missing.
+      child.on('error', (e) => reject(Object.assign(e, { stdout: out, stderr: err })));
+      child.on('close', (code, signal) => {
+        // Node kills the child with killSignal after the timeout → a non-null signal here → classified
+        // as a timeout by classifyError (err.signal). A non-zero exit with no signal is a backend_error.
+        if (signal) { reject(Object.assign(new Error(`agy killed by ${signal} (timeout ${timeoutMs}ms)`), { killed: true, signal, stdout: out, stderr: err })); return; }
+        if (code !== 0) { reject(Object.assign(new Error(`agy exited ${code}: ${err.trim()}`), { exitCode: code, stdout: out, stderr: err })); return; }
+        resolve(out);
+      });
     });
     const answer = stdout.trim();
     if (!answer) throw Object.assign(new Error('agy returned no output'), { emptyOutput: true });

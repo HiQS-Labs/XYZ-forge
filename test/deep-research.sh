@@ -38,6 +38,9 @@ ANSWER
   empty)    exit 0 ;;
   nonzero)  echo "boom" >&2; exit 1 ;;
   hang)     sleep 5 ;;
+  # reads stdin to EOF FIRST — blocks forever if the adapter leaves agy's stdin an open pipe (the
+  # execFile-ignores-stdio bug). With spawn stdio:['ignore',…] stdin is /dev/null → immediate EOF.
+  needstdin) cat >/dev/null 2>&1; printf 'answered after stdin EOF\nCITATIONS:\n- Example — https://example.com/x\n' ;;
 esac
 STUB_EOF
 chmod +x "$STUB"
@@ -89,6 +92,13 @@ STUB_ARGS_MARKER="$amarker" STUB_MODE=good AGY_BIN="$STUB" node "$DR" --query q 
 grep -q -- '--dangerously-skip-permissions' "$amarker" 2>/dev/null \
   && pass "agy invoked with --dangerously-skip-permissions (no interactive hang in print mode)" \
   || fail "expected --dangerously-skip-permissions in agy args, got: $(cat "$amarker" 2>/dev/null)"
+
+# --- (4c) agy's stdin is EOF'd, so a backend that reads stdin doesn't block (regression for the
+# execFile-ignores-stdio hang where stdin stayed an open pipe until --print-timeout, 2026-07-04) ----
+out="$(DEEP_RESEARCH_TIMEOUT_MS=8000 run needstdin --query q 2>/dev/null)"; rc=$?
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q 'example.com/x'; } \
+  && pass "agy stdin closed (a stdin-reading backend returns; no open-pipe hang)" \
+  || fail "expected exit 0 with output (stdin not EOF'd -> hang), rc=$rc out='$out'"
 
 # --- (5) fail-closed: empty output (agy exits 0, prints nothing) -> exit 1, typed error, no fallback
 out="$(run empty --query q 2>"$WORK/err")"; rc=$?
