@@ -6,17 +6,17 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 25 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
+Summary: 25 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 7 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-118 · Make Aider edit formats more forgiving for OpenRouter models | — | [GH-118-AIDER-OPENROUTER-FORMAT.md](PROJECT/1-INBOX/GH-118-AIDER-OPENROUTER-FORMAT.md) · [#118](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/118) |
-| GH-119 · aider-turn.sh: reviewer can auto-add and edit out-of-scope tracked files under --yes-always; all-or-nothing containment discards the valid in-lane edit too | — | [GH-119-AIDER-REVIEWER-SCOPE-CREEP.md](PROJECT/2-WORKING/GH-119-AIDER-REVIEWER-SCOPE-CREEP.md) · [#119](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/119) |
-| GH-120 · Build a fuzzy-match OpenRouter model-name lookup table (alias → canonical slug) | — | [GH-120-OPENROUTER-MODEL-ALIAS-TABLE.md](PROJECT/2-WORKING/GH-120-OPENROUTER-MODEL-ALIAS-TABLE.md) · [#120](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/120) |
+| GH-119 · aider-turn.sh: reviewer can auto-add and edit out-of-scope tracked files under --yes-always; all-or-nothing containment discards the valid in-lane edit too | ✅ | [GH-119-AIDER-REVIEWER-SCOPE-CREEP.md](PROJECT/3-COMPLETED/GH-119-AIDER-REVIEWER-SCOPE-CREEP.md) · [#119](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/119) |
+| GH-120 · Build a fuzzy-match OpenRouter model-name lookup table (alias → canonical slug) | ✅ | [GH-120-OPENROUTER-MODEL-ALIAS-TABLE.md](PROJECT/3-COMPLETED/GH-120-OPENROUTER-MODEL-ALIAS-TABLE.md) · [#120](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/120) |
 | GH-117 · fix(marathon-drive): --dry-run must probe builder/reviewer binary before mutating tick state | — | [#117](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/117) |
 | GH-116 · fix(tick): misleading 'break' error on open tasks + marathon retry flag | — | [#116](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/116) |
-| GH-114 · chore: remove deprecated gemini-turn.sh and scrub dead GEMINI references | — | [#114](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/114) |
-| GH-113 · fix(marathon-yaml): validator rejects agy reviewer — blocks multi-phase YAML plans | — | [#113](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/113) |
+| GH-114 · chore: remove deprecated gemini-turn.sh and scrub dead GEMINI references | ✅ | [#114](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/114) |
+| GH-113 · fix(marathon-yaml): validator rejects agy reviewer — blocks multi-phase YAML plans | ✅ | [#113](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/113) |
 | GH-112 · Spike: progressive Python port — boundary decision + dogfood architecture | — | [GH-112-PYTHON-PORT-SPIKE.md](PROJECT/1-INBOX/GH-112-PYTHON-PORT-SPIKE.md) · [#112](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112) |
 | GH-109 · Gemini 3.1 Deep Think audit — watchdog process leak, tmp collision, DRY turn scripts, Python inline extraction | — | [GH-109-GEMINI-FEEDBACK.md](PROJECT/1-INBOX/GH-109-GEMINI-FEEDBACK.md) · [#109](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/109) |
 | GH-110 · Fable 5 Max audit — shellcheck + vendor integrity + strict-mode hardening | — | [GH-110-SHELLCHECK-VENDOR-FIXES.md](PROJECT/1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) · [#110](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110) |
@@ -25,13 +25,13 @@ Summary: 25 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 2 · �
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-41 · task.done not terminal vs higher-epoch reclaim (silent token resurrection) | ✅ | [decisions/2026-07-02-terminality-seal.md](decisions/2026-07-02-terminality-seal.md) · [GH-41-DONE-NOT-TERMINAL.md](PROJECT/3-COMPLETED/GH-41-DONE-NOT-TERMINAL.md) · [#41](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41) |
 | GH-23 · Cursor CLI lane (3rd cross-model worker) | ⏸️ | [#23](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/23) |
-| GH-30 · optional centralized transcript archive | — | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/2-WORKING/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |
+| GH-30 · optional centralized transcript archive | ✅ | [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](PROJECT/3-COMPLETED/GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md) · [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30) |
 | Marathon dogfood · rebalance-OS parallel build queue (cross-repo, --target-root) | — | — |
 | GH-48 · generalize marathon-plan's zone model for cross-repo pre-pre-flight | — | [GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md](PROJECT/1-INBOX/GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md) · [#48](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/48) |
-| Dueling/relay · commit-signal advance (file-driven mode) | 🟡 | [test/poll-driver.sh](test/poll-driver.sh) · [poll.sh](relay-automation/poll.sh) · [Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
-| Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
-| Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
-| Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/2-WORKING/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
+| Dueling/relay · commit-signal advance (file-driven mode) | 🟡 | [test/poll-driver.sh](test/poll-driver.sh) · [poll.sh](relay-automation/poll.sh) · [Field findings](PROJECT/4-MISC/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
+| Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/4-MISC/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
+| Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/4-MISC/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
+| Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/4-MISC/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Tooling · agy reliability testing | ⏸️ | [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md) |
 | Tooling · front-door onboarding health | 🟡 | [FRONTDOOR.md](PROJECT/4-MISC/FRONTDOOR.md) · [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md) |
 | PDDA · feedback-synthesis direction | 🟡 | [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md) · [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md) |
@@ -101,7 +101,7 @@ Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 63 · �
 | GH-16 · same-device cross-repo swarm readiness (umbrella) | ✅ | [GH-16-CROSS-REPO-SWARM.md](PROJECT/3-COMPLETED/GH-16-CROSS-REPO-SWARM.md) · [#16](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/16) |
 | GH-36 · headless Codex isolated-turn friction (.tick sandbox) | ✅ | [GH-36-HEADLESS-CODEX-TICK-SANDBOX.md](PROJECT/3-COMPLETED/GH-36-HEADLESS-CODEX-TICK-SANDBOX.md) · [#36](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/36) |
 | GH-29 · cross-repo (--target-root) build doesn't commit NEW untracked files | ✅ | [relay-target-root-newfile.sh](test/relay-target-root-newfile.sh) · [GH-29-CROSS-REPO-NEWFILE-COMMIT.md](PROJECT/3-COMPLETED/GH-29-CROSS-REPO-NEWFILE-COMMIT.md) · [#29](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/29) |
-| Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/2-WORKING/briefs/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/2-WORKING/briefs/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
+| Part A · Phase 6 — real-substrate dogfood (graduation test) | ✅ | [MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md](PROJECT/4-MISC/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md) · [wpcc-ts-type-suppression-brief.md](PROJECT/4-MISC/wpcc-ts-type-suppression-brief.md) · [marathon-wpcc-095945.md](relay-system/2026-06-26/marathon-wpcc-095945.md) · [Sleuth](PROJECT/4-MISC/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md) · [brief](PROJECT/4-MISC/sleuth-near-miss-2lite-brief.md) · [WPCC-old](PROJECT/4-MISC/MARATHON-DOGFOOD-2026-06-18-WPCC-PHASE2.md) |
 | GH-31 · cross-repo external-artifact review flow | ✅ | [GH-31-CROSS-REPO-ARTIFACT-REVIEW.md](PROJECT/3-COMPLETED/GH-31-CROSS-REPO-ARTIFACT-REVIEW.md) · [#31](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/31) |
 | GH-32 · single-turn review ergonomics | ✅ | [GH-32-SINGLE-TURN-REVIEW-ERGONOMICS.md](PROJECT/3-COMPLETED/GH-32-SINGLE-TURN-REVIEW-ERGONOMICS.md) · [#32](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/32) |
 | GH-25 · swarm preflight planner | ✅ | [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/3-COMPLETED/GH-25-SWARM-PREFLIGHT-PLANNER.md) · [#25](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/25) |
@@ -109,11 +109,11 @@ Summary: 63 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 63 · �
 | GH-20 · agy first-class footing in live relay docs | ✅ | [README.md](README.md) · [relay-automation/README.md](relay-automation/README.md) · [#20](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/20) · [GH-20-AGY-FIRST-CLASS-FOOTING.md](PROJECT/3-COMPLETED/GH-20-AGY-FIRST-CLASS-FOOTING.md) |
 | GH-18 · cross-repo driven-relay friction | ✅ | [codex-turn.sh:57](relay-automation/codex-turn.sh#L57) · [GH-18-CROSS-REPO-RELAY-FRICTION.md](PROJECT/3-COMPLETED/GH-18-CROSS-REPO-RELAY-FRICTION.md) · [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18) |
 | GH-21 · relay quality gate — independent post-generation validator | ✅ | [GH-21-RELAY-QUALITY-GATE.md](PROJECT/3-COMPLETED/GH-21-RELAY-QUALITY-GATE.md) · [#21](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/21) |
-| Part A · Phase 1 — Cost observability foundation | ✅ | [COST-OBSERVABILITY-PLAN.md](PROJECT/2-WORKING/COST-OBSERVABILITY-PLAN.md) |
+| Part A · Phase 1 — Cost observability foundation | ✅ | [COST-OBSERVABILITY-PLAN.md](PROJECT/4-MISC/COST-OBSERVABILITY-PLAN.md) |
 | Part A · Phases 2–4 — Marathon harness build | ✅ | [MARATHON-HARNESS.md](PROJECT/3-COMPLETED/MARATHON-HARNESS.md) |
-| Part A · Phase 5 — Cross-system cost comparison | ✅ | [COST-COMPARISON.md](PROJECT/2-WORKING/COST-COMPARISON.md) |
+| Part A · Phase 5 — Cross-system cost comparison | ✅ | [COST-COMPARISON.md](PROJECT/4-MISC/COST-COMPARISON.md) |
 | Part B · Phase 1 — Epoch fencing & stale-writer prevention | ✅ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md#phase-1--epoch-fencing--stale-writer-prevention-r1--g3) · [decision record](decisions/2026-06-18-epoch-fencing.md) |
-| Tooling · Automated /relay loop | ✅ | [AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md) |
+| Tooling · Automated /relay loop | ✅ | [AUTOMATED-RELAY.md](PROJECT/4-MISC/AUTOMATED-RELAY.md) |
 | Tooling · relay-xyz install hygiene | ✅ | [RELAY-XYZ-DISCOVERY-SHAKEDOWN.md](PROJECT/3-COMPLETED/RELAY-XYZ-DISCOVERY-SHAKEDOWN.md) |
 
 ## Deferred · vision
