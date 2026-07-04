@@ -75,6 +75,11 @@ local change.
   override (`--force`) or a replan note — never a quiet slide off the plan.
 - **Do not create new git branches** automatically. Only create a new branch if explicitly requested by the user.
 - **Aider Configuration (AIDER.md / GH-77)**: When using Aider as a headless runner against OpenRouter, do not hardcode the API key or attempt to use a secrets manager. The `OPENROUTER_API_KEY` is securely stored at `/Users/noelsaw/secrets/openrouter/openrouter.txt` and is exported dynamically by `~/.zshrc`.
+- **Aider edit-format compat for OpenRouter models (GH-118)**: many OpenRouter-proxied models
+  (confirmed: GLM-5.2, Nemotron Ultra 3) default to Aider's `whole` edit format and fail to emit
+  parseable edits, stalling the turn. Fix is `AIDER_FLAGS=--edit-format diff` (existing passthrough
+  in `aider-turn.sh`) — see `relay-automation/README.md`'s "Known OpenRouter edit-format quirks"
+  section before adding a new OpenRouter model to a driven lane.
 
 ## Conflict order
 

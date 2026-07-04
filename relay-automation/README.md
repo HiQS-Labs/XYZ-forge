@@ -342,3 +342,27 @@ canonical slug from the OpenRouter models list), then add a matching
 assertion in `test/model-alias.sh` and run `bash test/model-alias.sh` to
 confirm it resolves. `test/model-alias.sh` is wired into `validate.sh`
 alongside the other shim tests.
+
+## Known OpenRouter edit-format quirks (GH-118)
+
+Aider auto-detects an edit format per model, but many models proxied through
+OpenRouter aren't in Aider's model-settings database, so Aider falls back to
+the `whole` edit format — which some models don't reliably produce, causing
+`aider-turn.sh` to report "aider turn produced no tracked changes" even
+though the model's response was otherwise a valid review/fix.
+
+Live-confirmed 2026-07-03 against two models with no entry in Aider's
+`model-settings.yml`:
+
+| Model | Symptom on default (`whole`) format | Fix |
+|---|---|---|
+| `openrouter/z-ai/glm-5.2` | Model chats instead of emitting an edit | `AIDER_FLAGS=--edit-format diff` |
+| `openrouter/nvidia/nemotron-3-ultra-550b-a55b:free` | Model emits a raw unified-diff hunk, unparseable by Aider | `AIDER_FLAGS=--edit-format diff` |
+
+There is no dedicated `AIDER_EDIT_FORMAT` variable — `aider-turn.sh` already
+exposes `AIDER_FLAGS` as a generic passthrough, so set
+`AIDER_FLAGS=--edit-format diff` (or `--edit-format udiff`, per model) rather
+than adding a new env var that would just shadow it. If you bring a new
+OpenRouter model into a driven lane and see the "no tracked changes" failure,
+try `--edit-format diff` first and add a row to the table above once
+confirmed.
