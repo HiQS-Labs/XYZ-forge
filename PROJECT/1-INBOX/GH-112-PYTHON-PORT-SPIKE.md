@@ -1,8 +1,8 @@
 ---
 gh_issue: 112
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112
-title: "Spike: progressive Python port — boundary decision + dogfood architecture"
-status: parked
+title: "Python port of relay-automation harness — full 4-phase rewrite (scope exceeded original spike, unreviewed)"
+status: scope exceeded — spike became a full unreviewed rewrite (PR #121, branch GH-112-python-port); see callout below
 created: 2026-07-03
 updated: 2026-07-03
 owner: noel
@@ -30,7 +30,17 @@ related:
 roadmap_exempt: false
 ---
 
-# GH-112 · Spike: progressive Python port — boundary decision + dogfood architecture
+# GH-112 · Python port of relay-automation harness — full 4-phase rewrite (scope exceeded original spike, unreviewed)
+
+> **2026-07-04 scope-change callout:** this was scoped as a spike (see `non_goals` below —
+> "Not writing any production Python code during the spike"). The actual work on
+> `GH-112-python-port` (PR #121) shipped a full 4-phase production rewrite of the harness
+> (turn scripts, `poll.sh`, `consult.sh`, `marathon-drive.sh`, `swarm-preflight.sh`) instead —
+> 2,836 lines added across 35 files, unreviewed and unmerged. Renamed to reflect what actually
+> happened. Active development has moved to a `development` branch (cut from `main`); PR #121 is
+> retargeted there rather than `main`, and `main` stays the stable branch. Codex review of the
+> branch on its own technical merits is queued separately — see the relay-system consult transcript
+> once run.
 
 **Why:** Gemini 3.1 (GH-109) observed that the harness performs Python-appropriate work in Bash:
 process orchestration, JSON parsing, watchdog timers, and structured concurrency. A full rewrite
