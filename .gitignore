@@ -20,3 +20,7 @@ XYZ.json
 XYZ.json.lock/
 # GH-78: hourly doc-preflight telemetry — per-machine, per-run edit/warn logs; gitignored to avoid churn.
 utils/telemetry/preflight-log/
+# Aider aux files: a MANUAL (non-shim) aider run drops .aider.chat.history.md / .aider.input.history /
+# .aider.llm.history into the tree. The aider-turn.sh shim already redirects these via AIDER_AUX_DIR;
+# this guards ad-hoc runs so they can't re-leak as untracked noise.
+.aider*
