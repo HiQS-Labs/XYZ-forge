@@ -4,6 +4,18 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### Marathon Plan C authored — dogfood-reliability cluster (Plan B follow-through)
+With Plan B (all 3 waves) and the 2026-07-04 Fable/Gemini/Aider blend plan both fully shipped, surveyed the open queue for the next cohesive marathon and found one: reliability findings from a live vendored-install dogfood run plus two follow-ups from this session's own PR #125 review. Authored [MARATHON-PLAN-2026-07-04-C-RELIABILITY.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-04-C-RELIABILITY.md) and 6 capture docs, all verified against current `main` (none already fixed) and rated:
+
+- **#106** — `codex-turn.sh`'s default `CODEX_FLAGS` hangs on an approval prompt in headless runs.
+- **#107** — containment (`relay-turn-lib.sh`) discards a complete, passing turn on an off-lane tool-cache dir; sibling of #54. **Kernel zone — routed to the Opus-serial track, not a parallel lane.**
+- **#108 + #126 + #127** — bundled into one lane (same file, `utils/swarm-preflight.sh`): a gate-scoping caveat, the covering-test substring-match tightening, and the fs-touching bare-`>` gap.
+- **#116** — `marathon.sh --retry <phase-id>` (Bug B only; Bug A already shipped in `bb9138b`).
+- **#117** — `marathon-drive.sh` probes builder/reviewer binaries before mutating tick state.
+- **#124** — `deep-research.mjs` real-`agy` smoke test + runaway-grounding guard.
+
+Collision map: zero write-set overlap across the 5 parallel lanes (#106/#108/#116/#117/#124); `pdda.sh run` 0 errors after fixing 3 missing-frontmatter/status-table gaps caught by the check itself. Not yet fired — awaiting go-ahead.
+
 ### PDDA compliance sweep after PR #125 merge (GH-48/54/55) + #126/#127 filing
 `utils/pdda/pdda.sh run` (full mode) was already 0 errors, but a manual accuracy pass found and fixed drift the automated checks don't catch:
 
