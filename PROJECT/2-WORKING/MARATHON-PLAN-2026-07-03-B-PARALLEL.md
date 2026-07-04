@@ -2,7 +2,7 @@
 title: Marathon Plan B (2026-07-03) — reliability + cross-repo, PARALLEL dogfood
 status: Active (2-WORKING)
 created: 2026-07-03
-updated: 2026-07-03
+updated: 2026-07-04
 owner: noel
 branch: main
 doc_type: project
@@ -14,7 +14,7 @@ goal: >
   dogfood of the swarm harness itself: fan out disjoint-write-set lanes concurrently,
   and let the two shared-file zones (swarm-preflight.sh, marathon-plan.sh) plus the one
   cross-zone lane (#54) exercise the collision engine that this harness exists to run.
-lanes: [92, 93, 96, 23, 94, 61, 89, 55, 86, 48, 54]
+lanes: [92, 93, 96, 94, 89, 55, 86, 48, 54]
 execution: parallel · dogfood via swarm-preflight → marathon-drive (or Sonnet subagents, Opus integrates)
 ---
 
@@ -29,7 +29,7 @@ execution: parallel · dogfood via swarm-preflight → marathon-drive (or Sonnet
 
 | What was just completed | What's next |
 |---|---|
-| Hold lifted, waves planned (below), collision map confirmed by grep. Not yet fired — all 11 lanes (#92, #93, #96, #23, #94, #61, #89, #55, #86, #48, #54) remain **open** as of 2026-07-03 (checked live, not inferred). Sibling [Plan A](MARATHON-PLAN-2026-07-03-A-SERIAL.md) is 4/5 shipped in the meantime, so its recommended sequencing ("Plan A first, then Plan B") is nearly satisfied. | Fire Wave 1 (8 lanes) once #94's re-verify-vs-`5972ef4` gate is resolved one way or the other (fix-if-still-broken, or close-as-already-fixed). |
+| Re-validated 2026-07-04: all 9 remaining lanes confirmed OPEN live on GitHub. **Plan A is now fully shipped 5/5** (not the 4/5 this doc said on 2026-07-03) — its "Plan A first, then Plan B" sequencing precondition is cleanly satisfied, not just nearly. **#23 removed** (operator-parked 2026-07-02, predates this plan — building it would have contradicted that decision). **#61 removed** (Tier 1 already shipped `d9b8a14`; the remainder, Tier 2, is blocked on an operator runner-flavor decision no lane can resolve autonomously). **#48 excluded from firing** — promoted to its own consult-vetted design doc ([GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md](GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md)), ready to build later but not part of this round. | Fire Wave 1 with the **5 clean lanes** (#92, #93, #96, #89, #86) — each promoted to `2-WORKING` with a capture doc + preflight contract as of 2026-07-04. #94 stays queued behind its own unresolved re-verify-vs-`5972ef4` gate (untouched this round); #55/#54 stay queued behind #89/#86 landing per the collision map. |
 
 ## ✅ HOLD LIFTED (2026-07-03)
 
@@ -44,12 +44,15 @@ consult*) and is pushed. Contention is over. Re-confirmed against that commit:
   `f2a52a9`), so #96 is genuinely independent. WATCH flag removed.
 - **Plan A is unaffected** (kernel/scheduler files only) and is being started now.
 
-## Can we dogfood it with parallel runs? — Yes.
+## Can we dogfood it with parallel runs? — Yes, on the 5 clean lanes today.
 
-11 lanes → **3 waves, ~8 lanes wide at peak** (#94 rejoins Wave 1 pending its re-verify gate). Six lanes
-are fully write-disjoint and run together; two shared-file zones are each 2 deep; one lane (#54) edits the
-brief template in *both* zone files, so it runs last, alone. This is a *good* dogfood precisely because it
-isn't embarrassingly parallel — it makes `swarm-preflight`'s write-set disjointness check do real work.
+9 remaining lanes (post #23/#61 removal) → **3 waves**. This round fires only **Wave 1's 5 clean
+lanes** (#92, #93, #96, #89, #86); #94 stays out pending its own re-verify gate, #55/#54/#48 stay
+queued behind the lanes/design they depend on. Four of the 5 fired lanes are fully write-disjoint;
+#89 and #86 are each the *first* lane of their shared-file zone (`swarm-preflight.sh`,
+`marathon-plan.sh`), so #55/#48 must wait for them regardless. This is a *good* dogfood precisely
+because it isn't embarrassingly parallel — it makes `swarm-preflight`'s write-set disjointness check
+do real work.
 
 ## The one safety rule
 
@@ -63,7 +66,15 @@ Two lanes are safe to run concurrently **iff their write-sets are disjoint**. Co
 | `utils/swarm-preflight.sh` | ❌ serialize | **#89** → **#55** |
 | `utils/marathon-plan.sh` | ❌ serialize | **#86** → **#48** |
 | `swarm-preflight.sh` **and** `marathon-plan.sh` (brief template) | ❌ cross-zone — run alone, last | **#54** |
-| independent (one lane per distinct file) | ✅ parallel | #92, #93, #96, #23, #61, #94 (⚠️ re-verify repro vs 5972ef4 first) |
+| independent (one lane per distinct file) | ✅ parallel | #92, #93, #96, #94 (⚠️ re-verify repro vs 5972ef4 first) |
+
+**Removed 2026-07-04 (operator instruction):**
+- **#23** (Cursor CLI lane) — ROADMAP shows the operator explicitly parked this 2026-07-02
+  ("skip/park — Codex + agy already give cross-model coverage"), predating this plan; this doc had
+  scheduled it in Wave 1 anyway.
+- **#61** (CI Tier 1/2) — Tier 1 already shipped (`d9b8a14`, 2026-07-02); the scope as written here
+  would have duplicated shipped work. The genuine remainder (Tier 2) is blocked on an operator
+  runner-flavor decision (`macos-latest` vs `ubuntu-latest`), not something a lane can resolve.
 
 ## Per-lane write-sets (confirmed)
 
@@ -72,14 +83,12 @@ Two lanes are safe to run concurrently **iff their write-sets are disjoint**. Co
 | #92 | poll.sh whole-line-bold pointer → turn-1 deadlock (🔴) | `relay-automation/poll.sh` (+test) | independent |
 | #93 | tick analyze % spans whole log, not the run | `src/analyze.js` (+`bin/tick`, +test) | independent* |
 | #96 | XYZ⇄Rebalance: xyz-sync check · XYZ.json emit · tick-lane consume | `relay-automation/xyz-sync.sh` + `src/take.js` | independent* (xyz-sync.sh clear of 5972ef4) |
-| #23 | Cursor CLI lane (3rd cross-model worker) | **new** `relay-automation/cursor-turn.sh` + routing in `marathon-agent.sh`/`marathon-drive.sh` | independent |
-| #94 | Installer heredoc mangles `!`→`\!` | `install.sh` / `xyz-vendor.sh` (installer runtime) | independent · ⚠️ **re-verify repro vs 5972ef4 before building** |
-| #61 | CI: GitHub Actions Tier-1 lint + Tier-2 validate gate | **new** `.github/workflows/*.yml` | independent |
+| #94 | Installer heredoc mangles `!`→`\!` | `install.sh` / `xyz-vendor.sh` (installer runtime) | independent · ⚠️ **re-verify repro vs 5972ef4 before building** — not fired this round |
 | #89 | swarm-preflight: no greenfield (new-file) ready path | `utils/swarm-preflight.sh` (+test) | swarm-preflight |
-| #55 | swarm-preflight: auto-include changed artifact's tests | `utils/swarm-preflight.sh` (+test) | swarm-preflight |
+| #55 | swarm-preflight: auto-include changed artifact's tests | `utils/swarm-preflight.sh` (+test) | swarm-preflight — queued behind #89 |
 | #86 | marathon-plan: surface PR-review lanes (don't drop) | `utils/marathon-plan.sh` (+test) | marathon-plan |
-| #48 | marathon-plan: generalize zone model for cross-repo | `utils/marathon-plan.sh` (+test) | marathon-plan |
-| #54 | marathon brief: forbid in-turn fs-touching tests | brief template in **both** `swarm-preflight.sh` + `marathon-plan.sh` | cross-zone |
+| #48 | marathon-plan: generalize zone model for cross-repo | `utils/marathon-plan.sh` (+test) | marathon-plan — consult-vetted design ready ([doc](GH-48-QUEUE-PLAN-CROSS-REPO-ZONES.md)), queued behind #86, not fired this round |
+| #54 | marathon brief: forbid in-turn fs-touching tests | brief template in **both** `swarm-preflight.sh` + `marathon-plan.sh` | cross-zone — queued behind both zones settling |
 
 `*` #93 and #96 both may touch `bin/tick` (subcommand dispatch). They edit *different* `src/*.js`
 files (`analyze.js` vs `take.js`), so they're parallel-safe unless a lane needs to register a new
@@ -87,11 +96,14 @@ files (`analyze.js` vs `take.js`), so they're parallel-safe unless a lane needs 
 
 ## Recommended waves
 
-**Wave 1 (8 lanes ‖):** #92 ‖ #93 ‖ #96 ‖ #23 ‖ #94 ‖ #61 ‖ **#89** ‖ **#86**  *(#94 gated on its re-verify — see hold-lifted note)*
-**Wave 2 (2 lanes ‖):** **#55** ‖ **#48**  *(second lane of each shared-file zone)*
-**Wave 3 (1 lane):** **#54**  *(cross-zone brief template — after both zones settle)*
+**Wave 1 — firing now (5 lanes ‖):** #92 ‖ #93 ‖ #96 ‖ **#89** ‖ **#86**
+**Not fired this round:** #94 (own unresolved re-verify gate), #55/#48 (each the second lane of a
+shared-file zone — must wait for #89/#86 respectively), #54 (cross-zone, after both zones settle).
 
-Suggested branches: `marathon/gh-<n>-<slug>-2026-07-03` per lane (one per worktree).
+**Wave 2 (when picked up, 2 lanes ‖):** **#55** ‖ **#48**  *(second lane of each shared-file zone)*
+**Wave 3 (when picked up, 1 lane):** **#54**  *(cross-zone brief template — after both zones settle)*
+
+Suggested branches: `marathon/gh-<n>-<slug>-2026-07-04` per lane (one per worktree).
 
 ## Execution contract (dogfood)
 
@@ -106,10 +118,11 @@ Suggested branches: `marathon/gh-<n>-<slug>-2026-07-03` per lane (one per worktr
 - **Per lane:** GH-<n> pointer doc (issue-first), branch, implement, extend the *covering* test,
   `./validate.sh` green at integration, file-scoped commit, push, INBOX→COMPLETED, ROADMAP/CHANGELOG.
 - **Rate before firing:** several lanes are unrated — a quick `utils/pdda/pdda.sh frontmatter` pass
-  gives `swarm-preflight` the cx/risk/eff it needs; greenfield lanes (#23, #61) will exercise #89's
-  own gap (new-file artifacts), so expect #89 to land before those two can get a clean "ready" packet.
+  gives `swarm-preflight` the cx/risk/eff it needs.
 
 ## Sequencing note vs Plan A
 Plan B lanes assume Plan A's token model. If run before Plan A, the parallel waves still work
 (disjoint writes), but the concurrency *metrics* (#93) and work-stealing safety are only fully
 trustworthy after #41. Recommended: **Plan A first (serial), then Plan B (parallel).**
+**Satisfied as of 2026-07-04** — Plan A shows 5/5 lanes shipped (re-verified live, not just per its
+own doc), so this precondition is cleanly cleared for the Wave 1 fire below.
