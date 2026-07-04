@@ -123,7 +123,12 @@ async function runAgy(args) {
     const { stdout } = await new Promise((resolve, reject) => {
       execFile(
         bin,
-        ['-p', prompt, '--print-timeout', `${Math.ceil(timeoutMs / 1000)}s`],
+        // --dangerously-skip-permissions: a non-interactive grounded search MUST auto-approve agy's
+        // web-search/grounding tool. Without it, `agy -p` blocks on a permission prompt that never
+        // comes in print mode and hangs until --print-timeout (observed against real agy 2026-07-04;
+        // the stub tests never caught it). Safe here: the run is confined to the throwaway tmpdir
+        // below and the system prompt forbids file/shell tools.
+        ['-p', prompt, '--dangerously-skip-permissions', '--print-timeout', `${Math.ceil(timeoutMs / 1000)}s`],
         { cwd: workDir, timeout: timeoutMs, killSignal: 'SIGKILL', encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
         (err, stdout, stderr) => (err ? reject(Object.assign(err, { stdout, stderr })) : resolve({ stdout, stderr }))
       );

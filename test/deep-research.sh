@@ -23,6 +23,7 @@ cat >"$STUB" <<'STUB_EOF'
 set -u
 mode="${STUB_MODE:-good}"
 [ -n "${STUB_CWD_MARKER:-}" ] && pwd > "$STUB_CWD_MARKER"
+[ -n "${STUB_ARGS_MARKER:-}" ] && printf '%s\n' "$*" > "$STUB_ARGS_MARKER"
 case "$mode" in
   good)
     cat <<'ANSWER'
@@ -80,6 +81,14 @@ invoked_cwd="$(cat "$marker" 2>/dev/null)"
 { [ -n "$invoked_cwd" ] && [ "$invoked_cwd" != "$WORK" ] && [ ! -d "$invoked_cwd" ]; } \
   && pass "agy invoked from a throwaway tmpdir, cleaned up after (side-effect free)" \
   || fail "expected a cleaned-up tmpdir distinct from \$WORK, got '$invoked_cwd'"
+
+# --- (4b) non-interactive: agy is invoked with --dangerously-skip-permissions so print mode can't
+# block on a tool-permission prompt and hang until --print-timeout (real-agy fix, 2026-07-04) -------
+amarker="$WORK/args-marker"
+STUB_ARGS_MARKER="$amarker" STUB_MODE=good AGY_BIN="$STUB" node "$DR" --query q >/dev/null 2>&1
+grep -q -- '--dangerously-skip-permissions' "$amarker" 2>/dev/null \
+  && pass "agy invoked with --dangerously-skip-permissions (no interactive hang in print mode)" \
+  || fail "expected --dangerously-skip-permissions in agy args, got: $(cat "$amarker" 2>/dev/null)"
 
 # --- (5) fail-closed: empty output (agy exits 0, prints nothing) -> exit 1, typed error, no fallback
 out="$(run empty --query q 2>"$WORK/err")"; rc=$?
