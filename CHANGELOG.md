@@ -10,6 +10,21 @@ Dogfooding the merged grounded-search adapter to research #111 (Python cutover l
 - **`execFile` silently ignores the `stdio` option** (`74cd553`): `stdio:['ignore',…]` did nothing, so `agy`'s stdin was left an open pipe it blocked reading — every wrapper call hung. Switched `runAgy` to `spawn` (which honors `stdio`). Measured: `execFile` 75s→timeout/0-bytes vs `spawn` 10s→ok; the stub missed it because it never reads stdin.
 Now returns in ~27–52s with real citations; `test/deep-research.sh` **23/23** (added a `--dangerously-skip-permissions` assertion + a stdin-reading `needstdin` stub that hangs unless stdin is EOF'd). **Lesson: a stub can't prove a CLI adapter works against its real backend** — filed **#124** for hardening (opt-in real-`agy` smoke test + a runaway-grounding guard: `--search-context-size high` over-searches and can approach the timeout). First real use: ran 4 grounded searches (reframed for the XYZ→Python port, drawing applicable lessons from #111) and posted them to **#111**.
 
+### Marathon Plan B Waves 2+3 landed — GH-55, GH-48, GH-54
+Followed Wave 1 through with the remaining planned lanes except the intentionally parked `#94`.
+
+- **GH-55** — `utils/swarm-preflight.sh` no longer treats contract `artifacts[]` as the whole builder write surface. It now derives an **effective allowlist** by auto-including explicit covering tests under `test/**` plus recursively sourced local test helpers, then uses that expanded set in `packet.md` and `marathon-invocation.txt`. Locked by new `test/swarm-preflight.sh` fixtures T31/T32.
+- **GH-48** — `utils/marathon-plan.sh`'s hardcoded xyz-only zone classifier (`KERNEL_PATHS` / `SHIM_RE`) was replaced with a configurable zone-rules layer (`--zones-config`, `QUEUE_PLAN_ZONES_FILE`, root-local `.marathon-plan-zones.json`, built-in `utils/marathon-plan-zones.default.json`). Added regression coverage for foreign zone names, `pathRegexCaseInsensitive`, `escalateOrchestratorOnly`, config-precedence, and fail-loud behavior; README now documents the schema. **Live rebalance-OS proof corrected one design assumption:** the BACKEND lane now classifies correctly as `signed-helper`, but the real 3-lane queue still stays one wave because only one lane touches that capped zone.
+- **GH-54** — both planner surfaces now warn that allowlisted filesystem-touching tests are **read-only specs in-turn**: the builder must not run them inside the isolated worktree, and the outer harness gate remains the verification authority. Locked by `test/swarm-preflight.sh` T33 + `test/marathon-plan.sh` N(c).
+
+Verification:
+
+- `bash test/swarm-preflight.sh` → **75/75 green**
+- `bash test/marathon-plan.sh` → **57/57 green**
+- `bash test/path-integrity.sh` → **2/2 green**
+- `bash test/relay-dep-drift.sh` rerun green after one full-suite flake
+- Full `./validate.sh` rerun remained **red only on `test/relay-self-sufficiency.sh`**, a live-network agy turn unrelated to these files
+
 ### Doc-hygiene sweep: MARATHON-PLAN-2026-07-04 was already fully shipped, plus two stale-open issues
 Reconciling ROADMAP.md against actual shipped code (in the course of scoping the next marathon) found that [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md)'s 5 Wave-1 lanes (Fable GH-110 P1 + Gemini GH-109 P1 + Aider/OpenRouter GH-119/GH-120) had all landed already but the doc and two of its source issues were never closed out:
 

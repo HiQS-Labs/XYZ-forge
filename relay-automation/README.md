@@ -37,6 +37,27 @@ the loop still degrades to the existing manual nudge. For the current headless p
 | [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md) | The Option-A cross-model headless turn-taker plan (Codex / agy shims). |
 | [MARATHON.example.yaml](MARATHON.example.yaml) | Example multi-build marathon manifest for `marathon.sh`. |
 
+## `marathon-plan.sh` zone config
+
+`utils/marathon-plan.sh` can now load a repo-specific zone model instead of hardcoding xyz's own
+`kernel` / `shim` filenames:
+
+- Resolution order: `--zones-config <file>` → `QUEUE_PLAN_ZONES_FILE` → `QUEUE_PLAN_ROOT/.marathon-plan-zones.json` → built-in `utils/marathon-plan-zones.default.json`.
+- Explicit files fail loud on read/JSON/schema errors; only an absent root-local file falls through.
+- Schema:
+  - `zones[]`: ordered first-match rules.
+  - `name`: emitted zone label.
+  - `pathPrefixes` / `pathRegex` / `pathRegexCaseInsensitive`: proven write-set matching.
+  - `inferKeywordRegex`: fallback keyword inference when no contract write-set exists.
+  - `maxPerWave`: per-zone cap.
+  - `penalty`: planner score penalty.
+  - `conservativeWhenInferred`: do not co-wave multiple inferred lanes in that zone.
+  - `escalateOrchestratorOnly`: if true, an artifact under `contract.lanes.orchestrator_only` is promoted into that zone before normal path matching.
+  - `defaultZone`: fallback `{name, penalty}` object (may also carry `maxPerWave` / `conservativeWhenInferred`).
+
+The built-in default file reproduces xyz's prior behavior byte-for-byte; foreign repos can override
+only the classifier rules without changing the rest of the planner.
+
 ## Operator usage (default live-window flow)
 
 ### Hands-free relay turn (all-Claude only)

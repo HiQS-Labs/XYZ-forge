@@ -555,6 +555,129 @@ git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
 out="$(run "$R" --gh-issue 15 --gh-issue 16 --out "$R/packet" 2>&1)"; rc=$?
 [[ $rc -eq 0 ]] && pass "T30 GH-89: artifacts_new in one bundle doc + matching path_absent probe in a sibling doc → bundle merge satisfies the pairing, reads READY" || fail "T30 expected exit 0, got $rc — $out"
 
+# ── T31 (GH-55): a declared artifact auto-pulls its explicit covering test and sourced helper into
+# the generated builder allowlist / packet, without rewriting the contract itself.
+R="$WORK/gh55-covering"; mkdir -p "$R/PROJECT/2-WORKING" "$R/relay-automation" "$R/test"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh55-covering.md" <<'EOF'
+---
+title: gh55-covering
+---
+# gh55-covering
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH55" } ],
+  "artifacts": [ "relay-automation/consult.sh" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+printf '#!/usr/bin/env bash\n' >"$R/relay-automation/consult.sh"
+printf '# helper\n' >"$R/test/_setup.sh"
+cat >"$R/test/consult.sh" <<'EOF'
+#!/usr/bin/env bash
+source "$(dirname "$0")/_setup.sh"
+CONSULT="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/consult.sh"
+EOF
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh55-covering.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T31 GH-55: covering-test fixture reads READY" || fail "T31 expected exit 0, got $rc — $out"
+grep -q 'Auto-included covering tests/helpers: test/consult.sh,test/_setup.sh' "$R/packet/packet.md" \
+  && pass "T31 GH-55: packet names the auto-included covering test + helper" \
+  || fail "T31 packet missing auto-included test/helper note: $(grep 'Auto-included' "$R/packet/packet.md" 2>/dev/null)"
+grep -q 'Artifacts: relay-automation/consult.sh,test/consult.sh,test/_setup.sh' "$R/packet/packet.md" \
+  && pass "T31 GH-55: effective artifact list includes declared artifact + test + helper" \
+  || fail "T31 wrong effective artifact list: $(grep '^- Artifacts:' "$R/packet/packet.md")"
+grep -q -- '--artifact relay-automation/consult.sh,test/consult.sh,test/_setup.sh' "$R/packet/marathon-invocation.txt" \
+  && pass "T31 GH-55: marathon invocation uses the expanded allowlist" \
+  || fail "T31 invocation missing expanded allowlist: $(cat "$R/packet/marathon-invocation.txt")"
+
+# ── T32 (GH-55): if the covering test is already declared in artifacts[], it is not duplicated in the
+# effective builder allowlist.
+R="$WORK/gh55-dedupe"; mkdir -p "$R/PROJECT/2-WORKING" "$R/relay-automation" "$R/test"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh55-dedupe.md" <<'EOF'
+---
+title: gh55-dedupe
+---
+# gh55-dedupe
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH55D" } ],
+  "artifacts": [ "relay-automation/consult.sh", "test/consult.sh" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+printf '#!/usr/bin/env bash\n' >"$R/relay-automation/consult.sh"
+printf '# helper\n' >"$R/test/_setup.sh"
+cat >"$R/test/consult.sh" <<'EOF'
+#!/usr/bin/env bash
+source "$(dirname "$0")/_setup.sh"
+CONSULT="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/consult.sh"
+EOF
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh55-dedupe.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T32 GH-55: dedupe fixture reads READY" || fail "T32 expected exit 0, got $rc — $out"
+[[ "$(grep -o 'test/consult.sh' "$R/packet/marathon-invocation.txt" | wc -l | tr -d ' ')" -eq 1 ]] \
+  && pass "T32 GH-55: already-declared covering test is not duplicated in the invocation" \
+  || fail "T32 duplicate covering test in invocation: $(cat "$R/packet/marathon-invocation.txt")"
+
+# ── T33 (GH-54): filesystem-touching allowlisted tests trigger the stronger packet rule — do NOT run
+# any test or gate yourself; read the tests as specs and rely on the outer harness gate.
+R="$WORK/gh54-fstouch"; mkdir -p "$R/PROJECT/2-WORKING" "$R/relay-automation" "$R/test"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh54-fstouch.md" <<'EOF'
+---
+title: gh54-fstouch
+---
+# gh54-fstouch
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash validate.sh",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH54" } ],
+  "artifacts": [ "relay-automation/agy-turn.sh" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+printf '#!/usr/bin/env bash\n' >"$R/relay-automation/agy-turn.sh"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$R/validate.sh"
+cat >"$R/test/agy-turn.sh" <<'EOF'
+#!/usr/bin/env bash
+TMP="$(mktemp -d)"
+printf 'x\n' >"$TMP/out"
+AGY_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
+EOF
+cat >"$R/test/shim-worktree.sh" <<'EOF'
+#!/usr/bin/env bash
+git init tmp-fixture >/dev/null 2>&1
+SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
+EOF
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh54-fstouch.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T33 GH-54: fs-touching fixture reads READY" || fail "T33 expected exit 0, got $rc — $out"
+grep -q 'Do NOT run ANY test or gate yourself' "$R/packet/packet.md" \
+  && pass "T33 GH-54: packet escalates to the stronger no-test rule" \
+  || fail "T33 missing stronger no-test rule: $(grep 'Do NOT run' "$R/packet/packet.md")"
+grep -q 'test/agy-turn.sh,test/shim-worktree.sh' "$R/packet/packet.md" \
+  && pass "T33 GH-54: packet names the fs-touching tests it is forbidding in-turn" \
+  || fail "T33 missing named fs-touching tests: $(grep 'Do NOT run ANY test' "$R/packet/packet.md")"
+! grep -q 'Verify with ONLY the specific test' "$R/packet/packet.md" \
+  && pass "T33 GH-54: generic self-verify instruction is suppressed for fs-touching tests" \
+  || fail "T33 generic self-verify rule should be suppressed for fs-touching tests"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1

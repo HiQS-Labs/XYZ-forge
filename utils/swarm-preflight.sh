@@ -264,10 +264,95 @@ const ambig = stale && counts.unfixed > 0 ? 1 : 0;
 process.stdout.write(`${stale} ${blocked} ${ambig}`);
 JS
 
+cat >"$TMP/expand-artifacts.mjs" <<'JS'
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
+
+const root = process.env.SP_TARGET_ROOT;
+const contract = JSON.parse(readFileSync(process.env.SP_CONTRACT, "utf8"));
+const declared = Array.isArray(contract.artifacts) ? contract.artifacts : [];
+const included = [];
+const inferredTests = [];
+const inferredHelpers = [];
+const testRoot = path.join(root, "test");
+
+const add = (list, p) => {
+  if (!p || included.includes(p)) return false;
+  included.push(p);
+  if (list && !list.includes(p)) list.push(p);
+  return true;
+};
+const read = (rel) => {
+  try { return readFileSync(path.join(root, rel), "utf8"); }
+  catch { return ""; }
+};
+const walk = (dir) => {
+  const out = [];
+  let ents = [];
+  try { ents = readdirSync(dir, { withFileTypes: true }); } catch { return out; }
+  for (const ent of ents) {
+    const abs = path.join(dir, ent.name);
+    if (ent.isDirectory()) out.push(...walk(abs));
+    else out.push(abs);
+  }
+  return out;
+};
+const normalize = (rel) => rel.replace(/\\/g, "/");
+const helperRefs = (raw) => {
+  const refs = [];
+  const pats = [
+    /\$\(dirname "\$0"\)\/([^"' )]+)/g,
+    /\$\(dirname "\$\{BASH_SOURCE\[0\]\}"\)\/([^"' )]+)/g,
+    /\btest\/(_[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*)/g,
+  ];
+  for (const re of pats) {
+    let m;
+    while ((m = re.exec(raw)) !== null) {
+      const rel = m[0].startsWith("test/") ? m[0] : `test/${m[1]}`;
+      refs.push(normalize(rel));
+    }
+  }
+  return refs;
+};
+const isFsTouching = (raw) => /(mktemp|git(?:\s+-C\s+\S+)?\s+(?:worktree|init)|mkdir\s|touch\s|rm\s+-|cat\s+>|printf\s+.*>|>>|writeFileSync|appendFileSync|mkdtempSync)/s.test(raw);
+
+for (const rel of declared) add(null, rel);
+if (existsSync(testRoot)) {
+  for (const abs of walk(testRoot)) {
+    const rel = normalize(path.relative(root, abs));
+    if (!/^test\/.+/.test(rel)) continue;
+    const raw = read(rel);
+    if (declared.some((artifact) => raw.includes(artifact))) add(inferredTests, rel);
+  }
+}
+
+const queue = [...inferredTests, ...declared.filter((p) => /^test\/.+/.test(p))];
+const seenHelpers = new Set(queue);
+while (queue.length) {
+  const rel = queue.shift();
+  for (const helper of helperRefs(read(rel))) {
+    if (!helper.startsWith("test/")) continue;
+    if (!existsSync(path.join(root, helper)) || seenHelpers.has(helper)) continue;
+    seenHelpers.add(helper);
+    add(inferredHelpers, helper);
+    queue.push(helper);
+  }
+}
+
+const fsTouching = included.filter((rel) => /^test\/.+\.sh$/.test(rel) && isFsTouching(read(rel)));
+process.stdout.write(JSON.stringify({
+  artifacts: included,
+  inferred_tests: inferredTests,
+  inferred_helpers: inferredHelpers,
+  fs_touching_tests: fsTouching,
+}));
+JS
+
 cat >"$TMP/lane-plan.mjs" <<'JS'
 import { readFileSync } from "node:fs";
 const c = JSON.parse(readFileSync(process.env.SP_CONTRACT, "utf8"));
-const arts = c.artifacts || [];
+const effective = JSON.parse(readFileSync(process.env.SP_EFFECTIVE_ARTIFACTS, "utf8"));
+const arts = Array.isArray(effective.artifacts) ? effective.artifacts : (c.artifacts || []);
 const orchOnly = (c.lanes && c.lanes.orchestrator_only) || ["bin/", ".tick/", "relay-automation/relay-turn-lib.sh"];
 const agySafe = (c.lanes && c.lanes.agy_safe) || [];
 const isOrch = (p) => orchOnly.some(o => p === o || p.startsWith(o));
@@ -284,6 +369,10 @@ process.stdout.write(JSON.stringify({
   orchestrator_owned: orchestrator,
   codex_lane: codex,
   agy_lane: agy,
+  effective_artifacts: arts,
+  inferred_test_artifacts: effective.inferred_tests || [],
+  inferred_test_helpers: effective.inferred_helpers || [],
+  fs_touching_tests: effective.fs_touching_tests || [],
   agy_review_default: true,                       // agy's sanctioned role is reviewer-first (Phase 5)
   coupling_warning: coupled ? "all artifacts share one top-level dir; treat as coupled" : null,
   parallelizable: !coupled && buildable.length >= 2,
@@ -314,6 +403,7 @@ process.stdout.write(JSON.stringify({
     skip_branch_prompt: e.SP_SKIP_BRANCH_PROMPT === "1",
   },
   contract,
+  allow_paths: lanes.effective_artifacts || [],
   freshness: {
     fetch_ok: e.SP_FETCH === "1",
     upstream: e.SP_UP || null,
@@ -407,6 +497,11 @@ if [[ $rc -ne 0 ]]; then
   emit "CONTRACT ERROR: see message above."
   exit "$rc"
 fi
+
+# GH-55: keep contract artifacts[] canonical for freshness/readiness, but derive the EFFECTIVE
+# builder allowlist from them by auto-including covering tests under target-root/test that
+# explicitly reference those artifacts, plus any sourced local test helpers (e.g. test/_setup.sh).
+SP_TARGET_ROOT="$TARGET_ROOT" SP_CONTRACT="$TMP/contract.json" node "$TMP/expand-artifacts.mjs" >"$TMP/effective-artifacts.json"
 
 # ── slug + provenance (Phase 2) ──────────────────────────────────────────────
 PRIMARY_DOC="${SOURCE_DOCS[0]}"
@@ -503,7 +598,10 @@ fi
 # ── Phase 4: remediation readiness gate ──────────────────────────────────────
 READY=1; READY_NEXT=""
 GATE_CMD="$(field "$TMP/contract.json" gate)"
-ART_CSV="$(field "$TMP/contract.json" artifacts)"
+ART_CSV="$(field "$TMP/effective-artifacts.json" artifacts)"
+FS_TOUCHING_TESTS_CSV="$(field "$TMP/effective-artifacts.json" fs_touching_tests)"
+GH55_INFERRED_TESTS_CSV="$(field "$TMP/effective-artifacts.json" inferred_tests)"
+GH55_INFERRED_HELPERS_CSV="$(field "$TMP/effective-artifacts.json" inferred_helpers)"
 ART_COUNT=0; [[ -n "$ART_CSV" ]] && ART_COUNT="$(awk -F, '{print NF}' <<<"$ART_CSV")"
 
 # GH-69 carve-out: a doc-only/trivial lane (risk==1, zone==independent) skips the branch-cut prompt
@@ -595,7 +693,7 @@ fi
 GH39_LANE_NOTE="codex=$(command -v codex >/dev/null 2>&1 && echo present || echo absent) agy=$(command -v agy >/dev/null 2>&1 && echo present || echo absent)"
 
 # ── Phase 5: lane assignment ─────────────────────────────────────────────────
-SP_CONTRACT="$TMP/contract.json" node "$TMP/lane-plan.mjs" >"$TMP/lane-plan.json"
+SP_CONTRACT="$TMP/contract.json" SP_EFFECTIVE_ARTIFACTS="$TMP/effective-artifacts.json" node "$TMP/lane-plan.mjs" >"$TMP/lane-plan.json"
 
 # ── assemble the normalized run-candidate object (Phase 2 output shape) ───────
 ISSUES_CSV="$(IFS=,; printf '%s' "${SOURCE_ISSUES[*]:-}")"
@@ -706,6 +804,15 @@ GH39_ART_N="${#_b6arts[@]}"
 GH39_TIMEOUT=300
 { [[ "$GH39_ART_LOC" -gt 200 ]] || [[ "$GH39_ART_N" -ge 3 ]]; } && GH39_TIMEOUT=600
 { [[ "$GH39_ART_LOC" -gt 400 ]] || [[ "$GH39_ART_N" -ge 4 ]]; } && GH39_TIMEOUT=900
+GH55_AUTO_CSV="$GH55_INFERRED_TESTS_CSV"
+[[ -n "$GH55_INFERRED_HELPERS_CSV" ]] && GH55_AUTO_CSV="${GH55_AUTO_CSV}${GH55_AUTO_CSV:+,}$GH55_INFERRED_HELPERS_CSV"
+GH55_AUTO_LINE=""
+[[ -n "$GH55_AUTO_CSV" ]] && GH55_AUTO_LINE="- Auto-included covering tests/helpers: $GH55_AUTO_CSV"
+if [[ -n "$FS_TOUCHING_TESTS_CSV" ]]; then
+  GH54_VERIFY_RULE="- Do NOT run ANY test or gate yourself — not \`$GATE_CMD\`, and NOT \`$FS_TOUCHING_TESTS_CSV\` either. Those tests create temporary git fixtures/files inside your isolated worktree, which containment treats as off-lane edits and can discard your whole turn. Read them as specs instead; the harness runs the real gate after your turn, outside the worktree."
+else
+  GH54_VERIFY_RULE="- Do NOT run the full gate (\`$GATE_CMD\`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn."
+fi
 
 cat >"$OUT_DIR/packet.md" <<EOF
 # Marathon preflight packet — $SLUG
@@ -718,6 +825,7 @@ cat >"$OUT_DIR/packet.md" <<EOF
 - Verdict: $VERDICT
 - Gate: \`$GATE_CMD\`
 - Artifacts: $ART_CSV
+$GH55_AUTO_LINE
 - Suggested turn budget: \`RELAY_TURN_TIMEOUT_S=$GH39_TIMEOUT\` (sized to ≈ $GH39_ART_LOC LOC across $GH39_ART_N artifact(s); a build that also edits tests needs headroom over the 300s default)
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
@@ -728,7 +836,7 @@ $GH39_ACC
 
 ## Scope lock — builder, do exactly this and nothing else
 - Edit ONLY: \`$ART_CSV\` (plus the relay file). Any other edit is reverted and FAILS the turn.
-- Do NOT run the full gate (\`$GATE_CMD\`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn.
+$GH54_VERIFY_RULE
 - Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
 
 ## Suggested marathon-drive.sh invocation

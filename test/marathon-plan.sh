@@ -56,6 +56,7 @@ wave_of() {
 }
 # row_index <queue-doc> <issue-number> → line number of its per-item scoring row (sequence order)
 row_index() { grep -nE "\[#$2\]" "$1" | head -1 | cut -d: -f1; }
+zone_cell() { grep -E "\[#$2\]" "$1" | head -1 | awk -F'|' '{gsub(/^ +| +$/, "", $6); print $6}'; }
 
 contract_for() { # contract_for <missing-or-present-path> <artifact1> [artifact2]
   local probe="$1"; shift
@@ -420,6 +421,138 @@ grep -q '| R2 | #81 GH-78 doc-preflight | agy (script + telemetry) |' "$doc" \
 grep -qF "[PR-REVIEW-QUEUE-$DAY.md](PR-REVIEW-QUEUE-$DAY.md)" "$doc" \
   && pass "N: (b) section links the overlay doc [GH-86]" \
   || fail "N: (b) overlay doc link missing"
+grep -q 'filesystem-touching `test/\*\.sh`' "$doc" \
+  && pass "N: (c) How-to-fire guidance warns that fs-touching tests are read-only specs in-turn [GH-54]" \
+  || fail "N: (c) missing fs-touching-test warning in the generated plan"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario O — GH-48: explicit default zones config is byte-identical to the built-in default
+# ─────────────────────────────────────────────────────────────────────────────
+O="$WORK/O"; mkdir -p "$O"; echo '{}' >"$O/.gh-state.json"; : >"$O/.branches"
+mk_doc "$O" GH-990-kernel.md 2 2 2 "$(contract_for MISS_OK bin/tick)"
+mk_doc "$O" GH-991-shim.md   2 2 2 "$(contract_for MISS_OS relay-automation/consult.sh)"
+mk_doc "$O" GH-992-indep.md  2 2 2 "$(contract_for MISS_OI src/indep.js)"
+cat >"$O/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-990 · kernel** 🆕 — → [d](PROJECT/2-WORKING/GH-990-kernel.md) · [#990](https://github.com/o/r/issues/990)
+- **GH-991 · shim** 🆕 — → [d](PROJECT/2-WORKING/GH-991-shim.md) · [#991](https://github.com/o/r/issues/991)
+- **GH-992 · indep** 🆕 — → [d](PROJECT/2-WORKING/GH-992-indep.md) · [#992](https://github.com/o/r/issues/992)
+EOF
+run_qp "$O" >/dev/null 2>&1
+cp "$O/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" "$O/default.md"
+run_qp "$O" --zones-config "$ROOT/utils/marathon-plan-zones.default.json" >/dev/null 2>&1
+cmp -s "$O/default.md" "$O/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" \
+  && pass "O: explicit default zones config is byte-identical to the built-in default [GH-48]" \
+  || fail "O: explicit default config changed planner output"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario P — GH-48: foreign zone names, case-insensitive regex, and orchestrator_only escalation
+# ─────────────────────────────────────────────────────────────────────────────
+P="$WORK/P"; mkdir -p "$P"; echo '{}' >"$P/.gh-state.json"; : >"$P/.branches"
+mk_doc "$P" GH-970-helpera.md 2 2 2 "$(contract_for MISS_PA scripts/apple_reminders_helper_app.swift)"
+mk_doc "$P" GH-971-helperb.md 2 2 2 "$(contract_for MISS_PB scripts/apple_reminders_helper_app.swift/entitlements.plist)"
+mk_doc "$P" GH-972-turn.md    2 2 2 "$(contract_for MISS_PT relay-automation/agy-turn.sh)"
+mk_doc "$P" GH-973-orch.md    2 2 2 '{"target":{"repo":".","ref":"main"},"gate":"true","fix_probes":[{"type":"path_absent","path":"MISS_PO"}],"artifacts":["src/worker.js"],"lanes":{"orchestrator_only":["src/"]}}'
+cat >"$P/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-970 · helper a** 🆕 — → [d](PROJECT/2-WORKING/GH-970-helpera.md) · [#970](https://github.com/o/r/issues/970)
+- **GH-971 · helper b** 🆕 — → [d](PROJECT/2-WORKING/GH-971-helperb.md) · [#971](https://github.com/o/r/issues/971)
+- **GH-972 · turn shim** 🆕 — → [d](PROJECT/2-WORKING/GH-972-turn.md) · [#972](https://github.com/o/r/issues/972)
+- **GH-973 · orch escalation** 🆕 — → [d](PROJECT/2-WORKING/GH-973-orch.md) · [#973](https://github.com/o/r/issues/973)
+EOF
+cat >"$P/foreign-zones.json" <<'EOF'
+{
+  "zones": [
+    {
+      "name": "review-gate",
+      "pathPrefixes": ["bin/review"],
+      "maxPerWave": 1,
+      "penalty": 2,
+      "escalateOrchestratorOnly": true
+    },
+    {
+      "name": "signed-helper",
+      "pathPrefixes": ["scripts/apple_reminders_helper_app.swift"],
+      "maxPerWave": 1,
+      "penalty": 2
+    },
+    {
+      "name": "turn-shim",
+      "pathRegex": "RELAY-AUTOMATION/AGY-TURN\\.SH$",
+      "pathRegexCaseInsensitive": true,
+      "inferKeywordRegex": "agy-turn\\.sh",
+      "conservativeWhenInferred": true,
+      "penalty": 1
+    }
+  ],
+  "defaultZone": { "name": "independent", "penalty": 0 }
+}
+EOF
+run_qp "$P" --zones-config "$P/foreign-zones.json" >/dev/null 2>&1
+doc="$P/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+[[ "$(zone_cell "$doc" 972)" == "turn-shim" ]] \
+  && pass "P: case-insensitive pathRegex classifies relay-automation/agy-turn.sh into a foreign zone name [GH-48]" \
+  || fail "P: expected #972 zone=turn-shim, got $(zone_cell "$doc" 972)"
+[[ "$(zone_cell "$doc" 973)" == "review-gate" ]] \
+  && pass "P: escalateOrchestratorOnly reclassifies an artifact under lanes.orchestrator_only [GH-48]" \
+  || fail "P: expected #973 zone=review-gate, got $(zone_cell "$doc" 973)"
+[[ -n "$(wave_of "$doc" 970)" && -n "$(wave_of "$doc" 971)" && "$(wave_of "$doc" 970)" != "$(wave_of "$doc" 971)" ]] \
+  && pass "P: foreign maxPerWave=1 zone serializes helper lanes without exact write-set collision [GH-48]" \
+  || fail "P: expected helper lanes in different waves (970=$(wave_of "$doc" 970) 971=$(wave_of "$doc" 971))"
+grep -q '| signed-helper | ❌ serialize — one at a time |' "$doc" \
+  && pass "P: collision map renders a foreign capped zone row [GH-48]" \
+  || fail "P: signed-helper collision-map row missing"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario Q — GH-48: precedence --zones-config > QUEUE_PLAN_ZONES_FILE > root-local file
+# ─────────────────────────────────────────────────────────────────────────────
+Q="$WORK/Q"; mkdir -p "$Q"; echo '{}' >"$Q/.gh-state.json"; : >"$Q/.branches"
+mk_doc "$Q" GH-980-zonepick.md 2 2 2 "$(contract_for MISS_Q src/zonepick.js)"
+cat >"$Q/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-980 · zone pick** 🆕 — → [d](PROJECT/2-WORKING/GH-980-zonepick.md) · [#980](https://github.com/o/r/issues/980)
+EOF
+cat >"$Q/.marathon-plan-zones.json" <<'EOF'
+{ "zones": [ { "name": "root-zone", "pathPrefixes": ["src/zonepick.js"], "penalty": 1 } ], "defaultZone": { "name": "independent", "penalty": 0 } }
+EOF
+cat >"$Q/env-zones.json" <<'EOF'
+{ "zones": [ { "name": "env-zone", "pathPrefixes": ["src/zonepick.js"], "penalty": 1 } ], "defaultZone": { "name": "independent", "penalty": 0 } }
+EOF
+cat >"$Q/cli-zones.json" <<'EOF'
+{ "zones": [ { "name": "cli-zone", "pathPrefixes": ["src/zonepick.js"], "penalty": 1 } ], "defaultZone": { "name": "independent", "penalty": 0 } }
+EOF
+run_qp "$Q" >/dev/null 2>&1
+doc="$Q/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+[[ "$(zone_cell "$doc" 980)" == "root-zone" ]] \
+  && pass "Q: root-local .marathon-plan-zones.json applies when no higher tier is set [GH-48]" \
+  || fail "Q: expected root-zone, got $(zone_cell "$doc" 980)"
+QUEUE_PLAN_ZONES_FILE="$Q/env-zones.json" run_qp "$Q" >/dev/null 2>&1
+[[ "$(zone_cell "$doc" 980)" == "env-zone" ]] \
+  && pass "Q: QUEUE_PLAN_ZONES_FILE overrides the root-local file [GH-48]" \
+  || fail "Q: expected env-zone, got $(zone_cell "$doc" 980)"
+QUEUE_PLAN_ZONES_FILE="$Q/env-zones.json" run_qp "$Q" --zones-config "$Q/cli-zones.json" >/dev/null 2>&1
+[[ "$(zone_cell "$doc" 980)" == "cli-zone" ]] \
+  && pass "Q: --zones-config overrides QUEUE_PLAN_ZONES_FILE [GH-48]" \
+  || fail "Q: expected cli-zone, got $(zone_cell "$doc" 980)"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario R — GH-48: malformed zone config fails loud, no silent fallback
+# ─────────────────────────────────────────────────────────────────────────────
+printf '{ bad json\n' >"$Q/bad-zones.json"
+run_qp "$Q" --zones-config "$Q/bad-zones.json" >/dev/null 2>&1; rc=$?
+[[ $rc -eq 3 ]] \
+  && pass "R: malformed --zones-config fails loud (exit 3), no silent fallback [GH-48]" \
+  || fail "R: expected exit 3 from malformed --zones-config, got $rc"
+QUEUE_PLAN_ZONES_FILE="$Q/bad-zones.json" run_qp "$Q" >/dev/null 2>&1; rc=$?
+[[ $rc -eq 3 ]] \
+  && pass "R: malformed QUEUE_PLAN_ZONES_FILE also fails loud (exit 3) [GH-48]" \
+  || fail "R: expected exit 3 from malformed QUEUE_PLAN_ZONES_FILE, got $rc"
 
 echo
 echo "  marathon-plan: $PASS passed, $FAIL failed"
