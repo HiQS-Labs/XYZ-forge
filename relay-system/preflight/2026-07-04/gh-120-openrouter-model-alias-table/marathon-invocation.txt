@@ -1,0 +1,7 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-120-openrouter-model-alias-table relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact relay-automation/openrouter-model-aliases.yml,test/model-alias.sh \
+  --pre-advance-cmd 'bash test/model-alias.sh' \
+  --require-clean

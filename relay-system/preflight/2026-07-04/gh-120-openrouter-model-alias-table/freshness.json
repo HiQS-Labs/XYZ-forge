@@ -1,0 +1,19 @@
+{
+  "fetch_ok": true,
+  "upstream": "origin/main",
+  "ahead": 4,
+  "behind": 0,
+  "dirty": true,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "e8dd88fd7f3e69320b56b0f3c030c0614270b5e4",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "grep_absent",
+      "path": "relay-automation/openrouter-model-aliases.yml",
+      "verdict": "unfixed"
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-07-04T03:41:06Z",
+  "mode": "gh-bundle",
+  "candidate": {
+    "slug": "gh-120-openrouter-model-alias-table"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/2-WORKING/GH-120-OPENROUTER-MODEL-ALIAS-TABLE.md"
+    ],
+    "issues": [
+      "120"
+    ],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm",
+    "branch": "main",
+    "commit": "e8dd88fd7f3e69320b56b0f3c030c0614270b5e4",
+    "suggested_branch": "marathon/gh-120-openrouter-model-alias-table-2026-07-04",
+    "branch_ready": false,
+    "skip_branch_prompt": true
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "bash test/model-alias.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/openrouter-model-aliases.yml",
+        "pattern": "glm-5.2:"
+      }
+    ],
+    "artifacts": [
+      "relay-automation/openrouter-model-aliases.yml",
+      "test/model-alias.sh"
+    ],
+    "remediation": {
+      "source": "GH-120#fix-direction",
+      "criteria": "relay-automation/openrouter-model-aliases.yml exists seeded with at least glm-5.2, 'nemotron ultra 3', and 'nemotron ultra 3 free' mapped to their canonical OpenRouter slugs; a lookup helper normalizes and fuzzy-matches an input name against the table; usage documented; new test/model-alias.sh asserts the seeded aliases resolve, including a fuzzy variant, and is wired into validate.sh."
+    },
+    "lanes": {
+      "agy_safe": [
+        "relay-automation/openrouter-model-aliases.yml",
+        "test/model-alias.sh"
+      ],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/main",
+    "ahead": 4,
+    "behind": 0,
+    "dirty": true,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "e8dd88fd7f3e69320b56b0f3c030c0614270b5e4",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/openrouter-model-aliases.yml",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [],
+    "agy_lane": [
+      "relay-automation/openrouter-model-aliases.yml",
+      "test/model-alias.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}
