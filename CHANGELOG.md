@@ -4,6 +4,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### PDDA compliance sweep after PR #125 merge (GH-48/54/55) + #126/#127 filing
+`utils/pdda/pdda.sh run` (full mode) was already 0 errors, but a manual accuracy pass found and fixed drift the automated checks don't catch:
+
+- GH-54/GH-55/GH-48 docs and their ROADMAP ledger lines now reference the actual **PR #125 merge** (`d9db49d`) and the two follow-up issues (**#126**, **#127**) filed during its review, instead of a pre-merge "built" status.
+- Corrected a factual claim repeated in 4 places (ROADMAP.md ×3, both completed docs): "`validate.sh` blocked only by the live-network `relay-self-sufficiency.sh` agy turn" was wrong — independently reran the suite and traced the actual non-green cause to pre-existing, order-dependent flakiness in `oracle-guard.sh`/`improve-loop-qa.sh` (neither touches the PR's files; both pass 100% on repeated standalone reruns).
+- `PROJECT/2-WORKING/PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md` had recorded its own cutover as complete since 2026-06-30 but was never relocated out of `2-WORKING`, and its ROADMAP entry was still filed under "In progress" instead of "Completed" — moved to `3-COMPLETED`, ledger entry moved to the right section, link fixed.
+- Confirmed (not moved): PDDA's `pdda-stale-working-docs` check also flagged `ADVERSARIAL-HARDENING.md` and `RELAY-TO-ISSUE-SKILL.md` as 4+ days old — both are genuinely still active per ROADMAP's own "In progress" language, so left in place; the staleness check is a mechanical age heuristic, not itself evidence of a gap.
+
 ### deep-research.mjs (GH-87) had shipped un-run against real `agy` — 2 hangs fixed + grounded #111 research
 Dogfooding the merged grounded-search adapter to research #111 (Python cutover lessons) revealed it **hung on every real `agy` call** — it had been merged with stub-only tests, so it was never actually run against the real backend. Two independent bugs, both fixed + regression-tested:
 - **Missing `--dangerously-skip-permissions`** (`91f17f2`): `agy -p` blocked on a tool-permission prompt for its web-search tool until `--print-timeout`.

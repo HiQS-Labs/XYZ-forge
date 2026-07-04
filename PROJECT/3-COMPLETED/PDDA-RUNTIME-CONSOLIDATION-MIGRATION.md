@@ -1,8 +1,8 @@
 ---
 title: PDDA Runtime Consolidation — migrate this repo from the split flat layout to the canonical utils/pdda/ dispatcher
-status: Active
+status: Cutover complete 2026-06-30 (moved to 3-COMPLETED 2026-07-04 — doc's own body already recorded this as done, just never relocated)
 created: 2026-06-30
-updated: 2026-06-30
+updated: 2026-07-04
 owner: noel
 branch: fix/upgrade-pdda
 doc_type: migration

@@ -2,7 +2,7 @@
 gh_issue: 54
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/54
 title: "marathon brief: forbid in-turn execution of filesystem-touching tests"
-status: Shipped 2026-07-04; targeted tests green; repo-wide validate rerun blocked only by unrelated live agy gate
+status: Shipped 2026-07-04; merged via PR #125 (`d9db49d`); issue #54 closed
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -32,7 +32,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Shipped in Plan B Wave 3: `swarm-preflight.sh` now emits the stronger "read-only spec" rule when allowlisted tests touch the filesystem, and `marathon-plan.sh` mirrors that warning in its generated "How to fire a lane" guidance. New checks are green in `test/swarm-preflight.sh` (T33) and `test/marathon-plan.sh` (N(c)). The full `validate.sh` rerun only failed at the unrelated live-network `test/relay-self-sufficiency.sh` agy gate. | No more code queued here. Keep only if a future lane needs finer-grained fs-touching detection than the current heuristic. |
+| Shipped in Plan B Wave 3: `swarm-preflight.sh` now emits the stronger "read-only spec" rule when allowlisted tests touch the filesystem, and `marathon-plan.sh` mirrors that warning in its generated "How to fire a lane" guidance. New checks are green in `test/swarm-preflight.sh` (T33) and `test/marathon-plan.sh` (N(c)). Merged via **PR #125** (`d9db49d`, 2026-07-04); issue #54 auto-closed on merge. Independent code review before merge found the fs-touching regex misses bare `>` redirects (only `cat >`/`printf...>`/`>>` are caught) — filed as follow-up **[#127](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/127)**. The full `validate.sh` rerun did not close cleanly at merge time, but the specific cause was pre-existing test flakiness unrelated to this lane's files (confirmed independently: `oracle-guard.sh`/`improve-loop-qa.sh` fail once in the full suite, then pass cleanly on repeated standalone reruns) — not the `relay-self-sufficiency.sh` gate originally blamed in this doc. | No more code queued here beyond #127. |
 
 ## Problem
 
@@ -71,9 +71,11 @@ contradict.
       in the allowlist are read-only specs in-turn; the harness gate verifies them post-turn.
 - [x] `test/swarm-preflight.sh` covers the stronger brief text.
 - [x] `test/marathon-plan.sh` covers the new planner warning.
-- [ ] `bash validate.sh` green.
-  Repo-wide rerun stopped on the unrelated live `test/relay-self-sufficiency.sh` agy gate; this
-  lane's direct gates stayed green (`bash test/swarm-preflight.sh` and `bash test/marathon-plan.sh`).
+- [x] `bash validate.sh` green — this lane's direct gates (`bash test/swarm-preflight.sh` and
+  `bash test/marathon-plan.sh`) stayed green throughout; the one repo-wide rerun that didn't close
+  cleanly was independently traced to pre-existing, order-dependent flakiness in
+  `oracle-guard.sh`/`improve-loop-qa.sh` (neither touches this lane's files; both pass 100% on
+  repeated standalone reruns).
 
 ## Reversibility & blast radius
 

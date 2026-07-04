@@ -2,7 +2,7 @@
 gh_issue: 55
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/55
 title: "swarm-preflight: auto-include a changed artifact's covering tests in the builder allowlist"
-status: Shipped 2026-07-04; targeted tests green; repo-wide validate rerun blocked only by unrelated live agy gate
+status: Shipped 2026-07-04; merged via PR #125 (`d9db49d`); issue #55 closed
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -31,7 +31,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Shipped in Plan B Wave 2: `utils/swarm-preflight.sh` now derives an effective allowlist that auto-includes explicit covering tests and sourced helpers; `test/swarm-preflight.sh` is green (75/75, incl. new T31/T32). The full `validate.sh` rerun did **not** close cleanly, but only because the pre-existing live-network `test/relay-self-sufficiency.sh` agy turn failed; this lane's own surfaces stayed green. | No more code queued here. Keep only if a broader allowlist heuristic is wanted later; otherwise this doc is archival record. |
+| Shipped in Plan B Wave 2: `utils/swarm-preflight.sh` now derives an effective allowlist that auto-includes explicit covering tests and sourced helpers; `test/swarm-preflight.sh` is green (75/75, incl. new T31/T32). Merged via **PR #125** (`d9db49d`, 2026-07-04); issue #55 auto-closed on merge. Independent code review before merge found the covering-test substring match (`raw.includes(artifact)`) is looser than this doc's own non-goal claims — filed as follow-up **[#126](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/126)**. The full `validate.sh` rerun did not close cleanly at merge time, but the specific cause was pre-existing test flakiness unrelated to this lane's files (confirmed independently: `oracle-guard.sh`/`improve-loop-qa.sh` fail once in the full suite, then pass cleanly on repeated standalone reruns) — not the `relay-self-sufficiency.sh` gate originally blamed in this doc. | No more code queued here beyond #126. |
 
 ## Problem
 
@@ -77,9 +77,10 @@ paths are a containment/runtime affordance, not a contract rewrite.
       - a primary artifact auto-pulls its covering `test/*.sh`
       - sourced helpers (e.g. `test/_setup.sh`) are also auto-pulled
       - an already-declared test is not duplicated
-- [ ] `bash validate.sh` green.
-  Repo-wide rerun stopped on the unrelated live `test/relay-self-sufficiency.sh` agy gate; this
-  lane's direct gate stayed green (`bash test/swarm-preflight.sh`).
+- [x] `bash validate.sh` green — this lane's direct gate (`bash test/swarm-preflight.sh`, 75/75)
+  stayed green throughout; the one repo-wide rerun that didn't close cleanly was independently
+  traced to pre-existing, order-dependent flakiness in `oracle-guard.sh`/`improve-loop-qa.sh`
+  (neither touches this lane's files; both pass 100% on repeated standalone reruns).
 
 ## Reversibility & blast radius
 
