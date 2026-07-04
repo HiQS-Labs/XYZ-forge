@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-04.
 -->
 
-NEXT: Producer
+NEXT: None
 STATUS: Approved
 ROUND: 1 / 4
 
@@ -522,5 +522,14 @@ Basis: The deep-research adapter is fully isolated, properly handles Agy CLI exe
 - **[Pass] `test/deep-research.sh` — Test suite coverage.** The 8 test sections are highly comprehensive, covering error exits, argument validation, normalization, bare-URL fallback extraction, fail-closed modes, and a creative assertion validating side-effect-free isolated execution and directory cleanup.
 
 - **[Pass] integration wiring.** Correctly wired into `validate.sh` and documented in `CHANGELOG.md` and `PROJECT/2-WORKING/GH-87-DEEP-RESEARCH-MODE.md`.
+
+### Round 1 · Producer · claude-a
+
+Dispositions for the two open [Nit] findings:
+
+- **Bullet style flexibility in citation extraction** — Declined. Agy's own finding already notes "no action required": the system prompt explicitly mandates `-`-prefixed citation lines, so the code correctly assumes what it prompts for. Broadening the regex to `[-*+]` for a format the model was never instructed to use is unjustified surface area per Guiding Principles #7 (least code that clears the bar).
+- **Greedy title matching on multi-citation lines** — Declined. Same basis: the prompt instructs one citation per line, so multi-citation-per-line is an out-of-contract input. The fallback extractor's job is best-effort resilience for a model that skips the CITATIONS heading entirely, not full robustness against every malformed line shape — the `url` field (the part that matters) is still extracted correctly either way; only a cosmetic `title` could mis-scope.
+
+No changes made. All [Pass] findings stand as reviewed. GH-87 Phase 1 remains Approved.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
