@@ -2,7 +2,7 @@
 gh_issue: 48
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/48
 title: Generalize marathon-plan's zone model for true cross-repo pre-pre-flight
-status: Consulted 2026-07-04 (Agy + Codex, both "build with named fixes") — design corrected below, not yet built
+status: Built 2026-07-04; targeted tests green; live rebalance validation captured below
 created: 2026-06-29
 updated: 2026-07-04
 owner: noel
@@ -35,7 +35,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| `/consult` (Agy + Codex, transcripts: [relay-system/2026-07-04/gh48-zone-design-review-074511/](../../relay-system/2026-07-04/gh48-zone-design-review-074511/)) reviewed the original design. Both independently recommended **"build with named fixes,"** not "build as designed" — see [Consult outcome](#consult-outcome-2026-07-04) below. All 5 required fixes are now folded into the Design section; the doc below is the **corrected** design, not the original. | Build this lane (`utils/marathon-plan.sh`, `utils/marathon-plan-zones.default.json`, `test/marathon-plan.sh`) per the contract below. Explicitly **excluded** from the current Plan B firing round — shares a file with #86 (must land after it). |
+| Built `utils/marathon-plan.sh` + `utils/marathon-plan-zones.default.json` + `test/marathon-plan.sh`; targeted gate `bash test/marathon-plan.sh` is green (57/57). Also ran the promised rebalance-OS live check via a throwaway translated ledger under `temp/gh48-marathon-plan-livecheck/`: the foreign config correctly classifies the BACKEND lane as `signed-helper` and renders `signed-helper<=1/wave`, but the real 3-lane queue still stays **one wave** because only one lane touches that zone. | Decide whether that observed one-wave outcome is sufficient closure for #48 (the classifier is now correct cross-repo) or whether a follow-up issue is needed for a stricter "serialize a lone special-zone lane" policy, which this design never implemented. |
 
 ## Problem (grounded in the current code)
 
@@ -235,9 +235,39 @@ it's idea #3's own follow-up issue, not retroactively assumed here.
 - [ ] Resolution-order precedence tested: `--zones-config` > `QUEUE_PLAN_ZONES_FILE` >
   `$QUEUE_PLAN_ROOT/.marathon-plan-zones.json` > built-in default; fail-fast (non-zero exit) on a
   malformed config at any explicit tier, never a silent fallback.
-- [ ] Live validation (Phase 2): the actual rebalance-OS 3-lane queue produces the correct wave
-  split, run against the real repo, output captured in this doc's Status table.
-- [ ] Schema documented in `utils/marathon-plan.sh`'s header comment and `relay-automation/README.md`.
+- [x] Live validation (Phase 2): ran against the real rebalance-OS write-sets using a throwaway
+  translated ledger. Outcome captured below: the BACKEND lane is correctly reclassified as
+  `signed-helper`, the collision map renders `signed-helper<=1/wave`, and the queue remains one
+  wave because only one lane touches that zone.
+- [x] Schema documented in `utils/marathon-plan.sh`'s header comment and `relay-automation/README.md`.
+
+## Live validation (2026-07-04)
+
+Ran from this repo's worktree against the real rebalance-OS clone, but with a throwaway
+ROADMAP-shaped translation ledger and isolated queue dir so unrelated rebalance docs would not
+trip coverage drift:
+
+```bash
+REBALANCE_ROOT=/path/to/rebalance-OS
+LIVECHECK_DIR="$REBALANCE_ROOT/temp/gh48-marathon-plan-livecheck"
+QUEUE_PLAN_ROOT="$REBALANCE_ROOT" \
+QUEUE_PLAN_ROADMAP="$LIVECHECK_DIR/ROADMAP.md" \
+QUEUE_PLAN_QUEUE_DIR="$LIVECHECK_DIR/PROJECT/2-WORKING" \
+QUEUE_PLAN_GH=off \
+bash utils/marathon-plan.sh \
+  --zones-config "$LIVECHECK_DIR/rebalance-zones.json"
+```
+
+Observed result:
+
+- `Rebalance lane B · BACKEND` classified as **`signed-helper`** (the core cross-repo fix).
+- Collision map rendered **`signed-helper | serialize — one at a time`**.
+- The real rebalance queue stayed **1 wave**, not 2: `reb-spike ‖ reb-swift-app ‖ reb-backend`.
+
+Why the earlier expectation was wrong: `maxPerWave: 1` only limits **multiple lanes in the same
+zone**. The live rebalance queue has exactly **one** helper-writing lane, so there is nothing for
+that cap to serialize against. The implementation now matches the actual planner semantics; the
+design doc's prior "helper lane alone in its own wave" wording was the mistaken part.
 
 ## Reversibility & blast radius
 

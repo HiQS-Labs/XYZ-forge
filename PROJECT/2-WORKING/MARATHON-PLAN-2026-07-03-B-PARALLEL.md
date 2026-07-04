@@ -29,7 +29,7 @@ execution: parallel · dogfood via swarm-preflight → marathon-drive (or Sonnet
 
 | What was just completed | What's next |
 |---|---|
-| **Wave 1 SHIPPED 2026-07-04.** All 5 clean lanes built via parallel worktree-isolated Sonnet subagents (disjoint `ALLOW_PATHS`, per this doc's own execution contract), integrated centrally one at a time with `validate.sh` re-run at each integration point (not trusted per-agent green): **#92** (`aabc04d`+`dcbdadd`, closed), **#93** (`f86d8cf`, closed), **#96** (`21d9d79`, Seam #2 only — issue stays open for Seams #1/#3), **#89** (`e6f418c`, closed), **#86** (`2ce409b`, closed). `validate.sh` full-suite green after every integration; one real cross-lane side effect caught centrally — GH-92's `poll.sh` fix went on to break `skill-extract.sh`'s packaged-tarball snapshot check, fixed with a `make-pkg.sh` regen (`dcbdadd`), not by the GH-92 agent (out of its file scope by design). | **Wave 1 done.** #94 stays queued behind its own unresolved re-verify-vs-`5972ef4` gate; #55/#54 stay queued behind #89/#86 (now landed — Wave 2/3 can fire when picked up); #48 stays queued behind its own consult-vetted design doc, excluded from this plan's firing entirely. |
+| **Waves 1–3 fired 2026-07-04, with #94 still intentionally parked.** Wave 1 remained as recorded here (**#92**, **#93**, **#96**, **#89**, **#86**). **Wave 2** then landed **#55** (auto-include covering tests/helpers in the builder allowlist) and **#48** (configurable cross-repo zone model, README docs, live rebalance validation). **Wave 3** then landed **#54** (fs-touching tests are read-only specs in-turn). Relevant targeted tests stayed green throughout; the repo-wide `validate.sh` rerun was blocked only by the live-network `test/relay-self-sufficiency.sh` agy gate. | Only **#94** remains from this plan, still behind its own "re-verify the repro vs `5972ef4`" gate. GH-48's live rebalance proof corrected one design assumption: a lone helper-writing lane classifies as `signed-helper`, but it does **not** become a solo wave without a second lane in that same capped zone. |
 
 ## ✅ HOLD LIFTED (2026-07-03)
 
@@ -46,13 +46,10 @@ consult*) and is pushed. Contention is over. Re-confirmed against that commit:
 
 ## Can we dogfood it with parallel runs? — Yes, on the 5 clean lanes today.
 
-9 remaining lanes (post #23/#61 removal) → **3 waves**. This round fires only **Wave 1's 5 clean
-lanes** (#92, #93, #96, #89, #86); #94 stays out pending its own re-verify gate, #55/#54/#48 stay
-queued behind the lanes/design they depend on. Four of the 5 fired lanes are fully write-disjoint;
-#89 and #86 are each the *first* lane of their shared-file zone (`swarm-preflight.sh`,
-`marathon-plan.sh`), so #55/#48 must wait for them regardless. This is a *good* dogfood precisely
-because it isn't embarrassingly parallel — it makes `swarm-preflight`'s write-set disjointness check
-do real work.
+9 remaining lanes (post #23/#61 removal) → **3 waves**. All three planned waves were fired on
+2026-07-04 except **#94**, which stayed out exactly as this doc required. The key dogfood property
+held: the harness serialized the two shared-file zones correctly (`#89 → #55`, `#86 → #48`) and
+kept the cross-zone brief lane `#54` for the final pass.
 
 ## The one safety rule
 
@@ -97,12 +94,10 @@ own dispatcher, not `bin/tick`, so #93 and #96 no longer share any potential fil
 
 ## Recommended waves
 
-**Wave 1 — firing now (5 lanes ‖):** #92 ‖ #93 ‖ #96 ‖ **#89** ‖ **#86**
-**Not fired this round:** #94 (own unresolved re-verify gate), #55/#48 (each the second lane of a
-shared-file zone — must wait for #89/#86 respectively), #54 (cross-zone, after both zones settle).
-
-**Wave 2 (when picked up, 2 lanes ‖):** **#55** ‖ **#48**  *(second lane of each shared-file zone)*
-**Wave 3 (when picked up, 1 lane):** **#54**  *(cross-zone brief template — after both zones settle)*
+**Wave 1 — SHIPPED 2026-07-04 (5 lanes ‖):** #92 ‖ #93 ‖ #96 ‖ **#89** ‖ **#86**
+**Wave 2 — SHIPPED 2026-07-04 (2 lanes ‖):** **#55** ‖ **#48**
+**Wave 3 — SHIPPED 2026-07-04 (1 lane):** **#54**
+**Not fired from this plan:** #94 (its own unresolved re-verify gate).
 
 Suggested branches: `marathon/gh-<n>-<slug>-2026-07-04` per lane (one per worktree).
 
