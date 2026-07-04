@@ -37,16 +37,16 @@ Summary: 24 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 8 · �
 
 ## In progress
 
-Summary: 9 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 9 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 7 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
-| Marathon Plan B Wave 1 (5 lanes) | — | [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) |
-| GH-92 · poll.sh: relay-pointer parser rejects whole-line bold (` | — | [GH-92-POLL-BOLD-POINTER-DEADLOCK.md](PROJECT/2-WORKING/GH-92-POLL-BOLD-POINTER-DEADLOCK.md) · [#92](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/92) |
-| GH-93 · tick analyze: concurrency % spans the whole event log, not the run → reports 0% for a ~51% run | — | [GH-93-ANALYZE-CONCURRENCY-SPAN.md](PROJECT/2-WORKING/GH-93-ANALYZE-CONCURRENCY-SPAN.md) · [#93](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/93) |
-| GH-96 · XYZ⇄Rebalance integration (XYZ side): xyz-sync check | — | [GH-96-XYZ-REBALANCE-SYNC-CHECK.md](PROJECT/2-WORKING/GH-96-XYZ-REBALANCE-SYNC-CHECK.md) · [#96](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96) |
-| GH-89 · swarm-preflight: no ready path for greenfield (new-file) lanes | — | [GH-89-SWARM-PREFLIGHT-GREENFIELD.md](PROJECT/2-WORKING/GH-89-SWARM-PREFLIGHT-GREENFIELD.md) · [#89](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/89) |
-| GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | — | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/2-WORKING/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
+| Marathon Plan B Wave 1 (5 lanes) | ✅ | [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) |
+| GH-92 · poll.sh: relay-pointer parser rejects whole-line bold (` | ✅ | [GH-92-POLL-BOLD-POINTER-DEADLOCK.md](PROJECT/3-COMPLETED/GH-92-POLL-BOLD-POINTER-DEADLOCK.md) · [#92](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/92) |
+| GH-93 · tick analyze: concurrency % spans the whole event log, not the run → reports 0% for a ~51% run | ✅ | [GH-93-ANALYZE-CONCURRENCY-SPAN.md](PROJECT/3-COMPLETED/GH-93-ANALYZE-CONCURRENCY-SPAN.md) · [#93](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/93) |
+| GH-96 · XYZ⇄Rebalance integration (XYZ side): xyz-sync check | ✅ | [GH-96-XYZ-REBALANCE-SYNC-CHECK.md](PROJECT/3-COMPLETED/GH-96-XYZ-REBALANCE-SYNC-CHECK.md) · [#96](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96) |
+| GH-89 · swarm-preflight: no ready path for greenfield (new-file) lanes | ✅ | [GH-89-SWARM-PREFLIGHT-GREENFIELD.md](PROJECT/3-COMPLETED/GH-89-SWARM-PREFLIGHT-GREENFIELD.md) · [#89](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/89) |
+| GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | ✅ | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/3-COMPLETED/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
 | Tooling · PDDA runtime consolidation (upgrade) | ✅ | [decision](decisions/2026-06-30-pdda-runtime-consolidation.md) · [PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md](PROJECT/2-WORKING/PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
 | Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |

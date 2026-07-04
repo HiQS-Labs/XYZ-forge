@@ -2,7 +2,7 @@
 gh_issue: 96
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96
 title: "XYZ⇄Rebalance integration (XYZ side, mirrors rebalance#102): xyz-sync check · XYZ.json emit contract · tick-lane consume"
-status: Ready — promoted for Marathon Plan B Wave 1 (2026-07-04), scoped to Seam #2 only
+status: Shipped (`21d9d79`) — Seam #2 done; issue #96 stays open for Seams #1/#3
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -37,7 +37,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from GitHub issue capture, scoped to Seam #2 only (the "ship first" seam), grounded against the live `xyz-sync.sh` dispatcher and the existing `registry.tsv` schema (`relay-automation/xyz-vendor.sh:178-233`, `install.sh:225-307`). Not yet built. | Add the `check` subcommand, decide + document the pin/stamp comparison format, extend test coverage, `validate.sh` green, close the Seam #2 portion of #96 (issue stays open for Seams #1/#3 as separate future work). |
+| **Shipped** (`21d9d79`): `xyz-sync check [<install_dir>|--all]` added, reusing `select_vendored_rows()` (extended to also capture `tick_version` per row). Compares recorded vs current `(tick_version, source_commit)`; drift → a named `DRIFT` warning with both values, exact match → a silent `ok` line; report-only, never auto-pulls. Contract documented in `xyz-sync.sh`'s header comment and a new `relay-automation/README.md` Components-table row. New `test/xyz-sync-check.sh` (12/12 pass), `test/xyz-vendor.sh` regression (37/37 pass), `validate.sh` full-suite green at integration. | Seams #1 (XYZ.json emit contract) and #3 (tick-lane consume, gated) remain — issue #96 **stays open** for those; only the Seam #2 portion is done. |
 
 ## Problem (grounded in the current code)
 
@@ -80,18 +80,18 @@ alongside `list`/`delete`):
 
 ## Definition of done
 
-- [ ] `xyz-sync check [<install_dir>|--all]` added to the dispatcher, reusing the existing row-selection
+- [x] `xyz-sync check [<install_dir>|--all]` added to the dispatcher, reusing the existing row-selection
   helper.
-- [ ] Drift detection compares both `tick_version` and `source_commit`, warns (not errors) on
+- [x] Drift detection compares both `tick_version` and `source_commit`, warns (not errors) on
   mismatch, names the specific field(s) and both values.
-- [ ] No installs registered / target not found → the same graceful no-op behavior `list`/`delete`
+- [x] No installs registered / target not found → the same graceful no-op behavior `list`/`delete`
   already have for that case (no new failure mode).
-- [ ] Pin/stamp comparison contract documented in `xyz-sync.sh`'s header comment and
+- [x] Pin/stamp comparison contract documented in `xyz-sync.sh`'s header comment and
   `relay-automation/README.md`.
-- [ ] `test/xyz-vendor.sh` (or a new `test/xyz-sync-check.sh`) covers: exact match → ok/no warning,
+- [x] New `test/xyz-sync-check.sh` covers: exact match → ok/no warning,
   `tick_version` drift only, `source_commit` drift only, both drifted, `--all` over multiple
-  installs, no-match/not-found graceful behavior.
-- [ ] `bash validate.sh` green.
+  installs, no-match/not-found graceful behavior. (12/12 pass.)
+- [x] `bash validate.sh` green.
 
 ## Reversibility & blast radius
 

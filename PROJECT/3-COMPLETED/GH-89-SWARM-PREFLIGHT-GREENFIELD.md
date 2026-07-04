@@ -2,7 +2,7 @@
 gh_issue: 89
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/89
 title: "swarm-preflight: no ready path for greenfield (new-file) lanes — GH-39 A2 artifact-existence check assumes edit-existing-file lanes"
-status: Ready — promoted for Marathon Plan B Wave 1 (2026-07-04)
+status: Shipped (`e6f418c`) — issue #89 closed 2026-07-04
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -32,7 +32,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from GitHub issue capture, root cause + fix grounded against the live contract-parsing/merge/GH-39-A2 code (`utils/swarm-preflight.sh:145-185`, `:421-433`, `:508-511`). Not yet built. | Add `artifacts_new` schema support + the matching-`path_absent`-probe safety check, extend `test/swarm-preflight.sh`, `validate.sh` green, close #89. |
+| **Shipped** (`e6f418c`): `artifacts_new: string[]` accepted (must be a subset of `artifacts[]`, else contract error); unioned across multi-issue bundles in `merge-contracts.mjs`; GH-39 A2 skips the existence check only for exempted paths. Safety constraint enforced via a new `check-artifacts-new.mjs` heredoc (same convention as `eval-probes.mjs`): every `artifacts_new` entry needs a matching `fix_probes` `path_absent` entry on the same path, checked post-merge so a bundle can split the declaration and its probe across sibling docs — else contract error (exit 3), never a silent pass. 7 new test cases (T24-T30) including live regressions against GH-87's and GH-88's actual historical contracts, both now READY. `test/swarm-preflight.sh` 65/65, `validate.sh` full-suite green at integration. | Nothing — done. |
 
 ## Problem (grounded in the current code)
 
@@ -81,21 +81,21 @@ path listed must also appear in `artifacts[]` (a subset marker, not a separate p
 
 ## Definition of done
 
-- [ ] `artifacts_new: string[]` accepted in the contract schema; every entry must also be in
+- [x] `artifacts_new: string[]` accepted in the contract schema; every entry must also be in
   `artifacts[]`, else contract error (exit 3).
-- [ ] Bundle merge unions `artifacts_new` across a multi-issue `--gh-issue` bundle, same as the
+- [x] Bundle merge unions `artifacts_new` across a multi-issue `--gh-issue` bundle, same as the
   other array fields.
-- [ ] GH-39 A2 skips the existence check only for `artifacts[]` entries also in `artifacts_new`.
-- [ ] An `artifacts_new` entry with no matching `fix_probes` `path_absent` entry on the same path is
+- [x] GH-39 A2 skips the existence check only for `artifacts[]` entries also in `artifacts_new`.
+- [x] An `artifacts_new` entry with no matching `fix_probes` `path_absent` entry on the same path is
   a contract error (exit 3), not a silent pass.
-- [ ] Everything not marked `artifacts_new` keeps today's strict-by-default existence check exactly.
-- [ ] `test/swarm-preflight.sh` gets cases: a genuine greenfield contract (artifacts_new + matching
+- [x] Everything not marked `artifacts_new` keeps today's strict-by-default existence check exactly.
+- [x] `test/swarm-preflight.sh` gets cases: a genuine greenfield contract (artifacts_new + matching
   path_absent probe) reads READY where it previously read NOT-READY; an artifacts_new entry missing
   its path_absent probe is rejected; an artifacts_new entry not present in artifacts[] is rejected;
-  an existing (non-greenfield) contract's behavior is unchanged.
-- [ ] Re-run swarm-preflight against GH-87's and GH-88's actual historical contracts (or fixtures
-  mirroring them) as a live regression check — both should now read READY.
-- [ ] `bash validate.sh` green.
+  an existing (non-greenfield) contract's behavior is unchanged. (T24-T27.)
+- [x] Re-run swarm-preflight against GH-87's and GH-88's actual historical contracts (fixtures
+  mirroring them, T28/T29) as a live regression check — both now read READY.
+- [x] `bash validate.sh` green.
 
 ## Reversibility & blast radius
 

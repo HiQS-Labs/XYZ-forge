@@ -4,6 +4,17 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### Marathon Plan B Wave 1 SHIPPED — 5 lanes, parallel Sonnet subagents, centrally integrated
+Fired the 5 clean lanes from [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) as parallel worktree-isolated Sonnet subagents, one per lane with disjoint `ALLOW_PATHS`, then integrated centrally one at a time — cherry-picking each lane's commit onto `main` and re-running the *full* `validate.sh` at every integration point (per the plan's own explicit warning not to trust a per-agent green).
+
+- **GH-92** (`aabc04d`, `dcbdadd`) — `poll.sh`'s `relay_field` now strips trailing markdown (and widened its leading-strip to cover a leading backtick too), so whole-line-bold (`**NEXT: x**`) and backtick-wrapped pointers no longer silently misclassify a Claude agent as non-Claude and deadlock the poll loop. Added a `WARNING (GH-92)` diagnostic for any future unhandled format. The agent correctly caught a downstream break — `skill-extract.sh`'s packaged-tarball snapshot went stale against the fix — flagged it rather than silently fixing it outside its file scope; fixed centrally with a `make-pkg.sh` regen.
+- **GH-93** (`f86d8cf`) — `tick analyze`'s concurrency percentage now defaults to the work-bounded window (first `task.claimed` → last `task.done`, matching `SKILL.md`'s existing guidance) instead of the whole `.tick/events/` log span, so leftover events from a prior marathon no longer collapse a genuinely concurrent run's reported percentage toward 0%.
+- **GH-96** (`21d9d79`) — added `xyz-sync check [<install_dir>|--all]`, scoped to Seam #2 only (the issue's own "ship first" seam for the rebalance-OS integration); warns on `(tick_version, source_commit)` drift, never auto-pulls. Issue stays open for Seams #1/#3.
+- **GH-89** (`e6f418c`) — `swarm-preflight`'s GH-39 A2 artifact-existence check now accepts an opt-in `artifacts_new: string[]` exemption (gated on a matching `fix_probes` `path_absent` entry, so it can't be used to dodge the check on a path that should exist), unblocking greenfield/new-file lanes that previously always read `NOT-READY` — confirmed live against GH-87's and GH-88's actual historical contracts, both now READY.
+- **GH-86** (`2ce409b`) — `marathon-plan.sh` now surfaces a `## Review lanes` section when today's `PR-REVIEW-QUEUE-<date>.md` manual overlay exists, so a defined PR-review lane can no longer silently drop the way PR #79/#81 did.
+
+`validate.sh` full-suite green after every integration (one pre-existing, order-dependent `relay-dep-drift.sh` flake observed and reconfirmed unrelated — passes 12/12 standalone). `#23` (Cursor CLI, operator-parked 2026-07-02) and `#61` (CI, Tier 1 already shipped / Tier 2 blocked on an operator decision) were dropped from this firing round before it started; `#48` (its own consult-vetted design, see below) stayed excluded entirely; `#94`/`#55`/`#54` remain queued behind their own gates.
+
 ### GH-87 Phase 1 merged (PR #122); GH-48 design committed, queued for /consult
 GH-87's deep-research.mjs branch was reviewed via an automated agy relay (Approved), pushed, and merged. Doc moved `PROJECT/2-WORKING` → `PROJECT/3-COMPLETED`; ROADMAP link fixed.
 

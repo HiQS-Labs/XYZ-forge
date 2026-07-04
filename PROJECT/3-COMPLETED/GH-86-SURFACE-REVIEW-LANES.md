@@ -2,7 +2,7 @@
 gh_issue: 86
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86
 title: marathon-plan — surface PR-review lanes so they don't silently drop
-status: Ready — promoted for Marathon Plan B Wave 1 (2026-07-04)
+status: Shipped (`2ce409b`) — issue #86 closed 2026-07-04
 created: 2026-07-02
 updated: 2026-07-04
 owner: noel
@@ -33,7 +33,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from GitHub issue capture, scope confirmed against the live `renderQueueDoc()` structure (`utils/marathon-plan.sh:766-921`) and the real overlay doc shape (`PROJECT/2-WORKING/PR-REVIEW-QUEUE-2026-07-02.md`). Not yet built. | Add the detection + render section, extend `test/marathon-plan.sh`, `validate.sh` green, close #86. |
+| **Shipped** (`2ce409b`): added `parseLanesTable()` (a dedicated parser for the overlay's `## Lanes` table, keyed by column name rather than reusing the ledger's fixed bullet shape) and a `renderQueueDoc()` section that pushes `## Review lanes (manual overlay — run via relay-xyz)` + a Lane/PR/Reviewer table only when `PR-REVIEW-QUEUE-${TODAY}.md` exists — verified zero output diff for the absent case. 2 new `test/marathon-plan.sh` scenarios (46/46 pass), `validate.sh` full-suite green at integration. Level 1 only, as scoped. | Nothing — done. Level 2 (tracking) / Level 3 (auto-generation) remain explicit non-goals, follow-up if ever wanted. |
 
 ## Problem (grounded in the current code)
 
@@ -70,13 +70,13 @@ auto-generating lanes from `gh pr list` (Level 3, stretch) are explicitly out of
 
 ## Definition of done
 
-- [ ] A day with no `PR-REVIEW-QUEUE-<today>.md` renders identically to today (no new section,
+- [x] A day with no `PR-REVIEW-QUEUE-<today>.md` renders identically to today (no new section,
   zero output diff for the common case).
-- [ ] A day **with** the overlay renders a `## Review lanes` section naming the doc and listing each
+- [x] A day **with** the overlay renders a `## Review lanes` section naming the doc and listing each
   lane from its `## Lanes` table.
-- [ ] `test/marathon-plan.sh` gets fixtures for both cases (overlay absent → no section; overlay
+- [x] `test/marathon-plan.sh` gets fixtures for both cases (overlay absent → no section; overlay
   present with N lanes → section lists all N).
-- [ ] `bash validate.sh` green.
+- [x] `bash validate.sh` green.
 
 ## Reversibility & blast radius
 

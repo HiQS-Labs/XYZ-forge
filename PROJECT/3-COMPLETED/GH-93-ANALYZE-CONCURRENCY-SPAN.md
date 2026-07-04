@@ -2,7 +2,7 @@
 gh_issue: 93
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/93
 title: "tick analyze: concurrency % spans the whole event log, not the run → reports 0% for a ~51% run"
-status: Ready — promoted for Marathon Plan B Wave 1 (2026-07-04)
+status: Shipped (`f86d8cf`) — issue #93 closed 2026-07-04
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -33,7 +33,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from GitHub issue capture, root cause confirmed against the live code (`src/analyze.js:435-438,442`). Not yet built. | Compute the work-bounded window, use it for the concurrency percentage, keep the whole-log span as a separate informational field, extend `test/analyze.js`, `validate.sh` green, close #93. |
+| **Shipped** (`f86d8cf`): `workBoundStart`/`workBoundEnd` (first `task.claimed` → last `task.done`) now drive `computeParallelism`/`concurrent_pct`/the verdict gate; `earliest_event`/`latest_event` kept as-is, new work-bounded fields added alongside in text/markdown/JSON output. Falls back to whole-log behavior when there's no claim or done event yet. Test harness is actually `test/analyze.sh` (not `.js` as this doc originally assumed) — added a GH-93 regression fixture (8736h whole-log span, 65s/~85%-concurrent real window); confirmed it fails against the pre-fix code and passes with the fix. `test/analyze.sh` 18/18, `validate.sh` full-suite green at integration. | Nothing — done. |
 
 ## Problem (grounded in the current code)
 
@@ -86,15 +86,16 @@ gracefully when given no meaningful window (existing behavior, unchanged).
 
 ## Definition of done
 
-- [ ] `analyze()`'s work-bounded window (first `task.claimed` → last `task.done`) replaces the
+- [x] `analyze()`'s work-bounded window (first `task.claimed` → last `task.done`) replaces the
   whole-log span as the input to `computeParallelism` / `concurrent_pct` / the concurrency verdict
   gate.
-- [ ] The report's `window` object keeps `earliest_event`/`latest_event` (whole-log, informational)
+- [x] The report's `window` object keeps `earliest_event`/`latest_event` (whole-log, informational)
   **and** adds the new work-bounded start/end, both visible in text and JSON output.
-- [ ] `test/analyze.js` gets a fixture: events spanning a wide whole-log range but a narrow, highly
+- [x] `test/analyze.sh` (this repo's actual test harness — the doc's original `test/analyze.js` name
+  doesn't exist) gets a fixture: events spanning a wide whole-log range but a narrow, highly
   concurrent `claimed`→`done` window — asserts the printed percentage reflects the narrow window,
   not the wide one (the exact regression this issue reports).
-- [ ] `bash validate.sh` green.
+- [x] `bash validate.sh` green.
 
 ## Reversibility & blast radius
 

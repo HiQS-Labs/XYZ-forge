@@ -2,7 +2,7 @@
 gh_issue: 92
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/92
 title: "poll.sh: relay-pointer parser rejects whole-line bold (`**NEXT: x**`) → silent turn-1 deadlock"
-status: Ready — promoted for Marathon Plan B Wave 1 (2026-07-04)
+status: Shipped (`aabc04d`, `dcbdadd`) — issue #92 closed 2026-07-04
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -29,7 +29,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted from GitHub issue capture, root cause confirmed against the live code (`relay-automation/poll.sh:152`). Not yet built. | Fix `relay_field`, add regression coverage to `test/poll-driver.sh`, `validate.sh` green, file-scoped commit, close #92. |
+| **Shipped** (`aabc04d`): `relay_field()` now strips trailing markdown (widened leading-strip too, to also cover a leading backtick) — whole-line-bold and backtick-wrapped pointers both parse correctly. Added a `WARNING (GH-92)` diagnostic when a parsed NEXT value still carries residue. 6 new `test/poll-driver.sh` cases (37/37 pass). One side effect caught by the agent and fixed centrally: the packaged `skills/relay-automation/relay-pkg.tar.gz` snapshot went stale against the fixed `poll.sh` — regenerated via `make-pkg.sh` (`dcbdadd`). `validate.sh` full-suite green at integration. | Nothing — done. |
 
 ## Problem (grounded in the current code)
 
@@ -73,15 +73,17 @@ fails loud (visible in output) instead of silently repeating forever.
 
 ## Definition of done
 
-- [ ] `relay_field`/`relay_next_agent` correctly parse `**NEXT: claude-reb**` (whole-line bold),
+- [x] `relay_field`/`relay_next_agent` correctly parse `**NEXT: claude-reb**` (whole-line bold),
   `` `NEXT: claude-reb` `` (backtick-wrapped), and the already-working `**NEXT:** claude-reb`
-  (bold-on-key) to the bare agent id `claude-reb` in all three cases.
-- [ ] `test/poll-driver.sh` gets new cases for whole-line-bold and backtick-wrapped pointers,
+  (bold-on-key) to the bare agent id `claude-reb` in all three cases. (The leading-strip character
+  class also had to widen to `` [`*]* `` — the backtick-wrapped case wasn't parseable with a
+  trailing-only fix, since the original leading regex only tolerated `*`.)
+- [x] `test/poll-driver.sh` gets new cases for whole-line-bold and backtick-wrapped pointers,
   asserting `run-runner`/`idle`/`nudge-cross-model` classify identically to the existing bold-on-key
-  case for the same agent-id scenarios.
-- [ ] The `nudge-cross-model` decision path logs the parsed value when it's not a recognized
+  case for the same agent-id scenarios. (6 new cases, 37/37 total pass.)
+- [x] The `nudge-cross-model` decision path logs the parsed value when it's not a recognized
   Claude/non-Claude id.
-- [ ] `bash validate.sh` green.
+- [x] `bash validate.sh` green.
 
 ## Reversibility & blast radius
 
