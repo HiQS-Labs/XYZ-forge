@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-03
 
+### GH-87 Phase 1 — deep-research.mjs grounded-search adapter (branch, not yet merged)
+Built on branch `marathon/gh-87-deep-research-mode-2026-07-03` in an isolated worktree. `relay-automation/deep-research.mjs` is a zero-dep Node adapter wrapping the `agy` CLI as the first grounded-search backend (Agy Gemini Search), normalizing output to `{answer, citations, query, provider, model, raw}` so a second backend (Perplexity) can be added later without reworking the contract. Runs `agy -p` in a throwaway tmpdir (side-effect free) under a hard timeout; fail-closed typed errors (`binary_missing`/`timeout`/`empty_output`/`backend_error`) on stderr, never a silent fallback to the default model provider. `test/deep-research.sh` (21 assertions) covers request construction, CITATIONS-heading normalization, bare-URL fallback extraction, side-effect-free isolation, and all four failure modes. `validate.sh` **91/91** (live-agent test skipped via `RELAY_SELF_SUFFICIENCY_SKIP=1` to avoid real API spend). Doc promoted `PROJECT/1-INBOX` → `PROJECT/2-WORKING`; issue #87 stays open pending review/merge.
+
 ### Aider permanently installed and OpenRouter GLM v5.2 verified
 Installed Aider permanently to `~/.local/bin/aider` using a dedicated Python virtual environment (`~/.aider-venv`). Verified connectivity to OpenRouter's `z-ai/glm-5.2` model using the OpenRouter API key. 
 *(Note: Test successfully connected to OpenRouter but encountered an out-of-credits error for the GLM model).*

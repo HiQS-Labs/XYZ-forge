@@ -2,11 +2,16 @@
 gh_issue: 87
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87
 title: Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter)
-status: Proposed (1-INBOX — not yet active)
+status: Phase 1 implemented on branch, awaiting review/merge and issue #87 close-out
 created: 2026-07-02
-updated: 2026-07-02
+updated: 2026-07-03
 owner: noel
 doc_type: feature
+goal: >
+  Ship a provider-agnostic grounded-search adapter, isolated from the harness's default model
+  client and Aider's OpenAI-compatible config, with Agy Gemini Search as the first backend and a
+  normalized {answer, citations, query, provider, model, raw} contract so a second backend
+  (Perplexity) can be added later without reworking the seam.
 complexity: 3
 risk: 2
 effort: 3
@@ -20,6 +25,12 @@ related:
 ---
 
 # GH-87 — Deep Research mode
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase 1 shipped on branch `marathon/gh-87-deep-research-mode-2026-07-03` (worktree build): `relay-automation/deep-research.mjs` — a zero-dep Node adapter wrapping the `agy` CLI as the first grounded-search backend, normalizing output to `{answer, citations, query, provider, model, raw}`. Runs `agy -p` in a throwaway tmpdir (side-effect free) with a hard timeout via `execFile`'s `timeout` option; fail-closed typed errors (`binary_missing`/`timeout`/`empty_output`/`backend_error`) on stderr, never a silent fallback. `test/deep-research.sh` (21 assertions) covers request construction, CITATIONS-heading normalization, bare-URL fallback extraction, side-effect-free isolation, and all four failure modes. Wired into `validate.sh` (91/91 passing, full suite, live-agent test skipped via `RELAY_SELF_SUFFICIENCY_SKIP=1` to avoid real API spend). | Review + merge the branch, then close issue #87. Perplexity remains a follow-up phase (not started) — the normalized schema and adapter boundary are already provider-agnostic to receive it without a rework. |
 
 ## Problem
 
@@ -75,10 +86,10 @@ without reworking the tool contract or global provider config.
 
 ## Definition of done
 
-- [ ] The repo has a dedicated grounded-search adapter/client with isolated env/config.
-- [ ] Agy Gemini Search works as the first backend via the Agy CLI and returns normalized cited output.
-- [ ] Search failures never silently fall back to the default provider.
-- [ ] Tests cover request shape, normalization, missing config, transport failures, and citation parsing.
+- [x] The repo has a dedicated grounded-search adapter/client with isolated env/config (`relay-automation/deep-research.mjs`; `AGY_BIN`/`DEEP_RESEARCH_TIMEOUT_MS` env, no shared state with Aider's config).
+- [x] Agy Gemini Search works as the first backend via the Agy CLI and returns normalized cited output.
+- [x] Search failures never silently fall back to the default provider (typed error + exit 1 on missing binary/timeout/empty output/non-zero exit).
+- [x] Tests cover request shape, normalization, missing config, transport failures, and citation parsing (`test/deep-research.sh`, 21 assertions; "missing config" realized as CLI-missing/binary_missing since Agy auth has no API-key config to test, unlike the original Perplexity framing).
 
 ## Implementation Plan
 

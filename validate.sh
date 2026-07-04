@@ -57,6 +57,7 @@ TESTS=(
   "improve-loop-dogfood.sh"
   "marathon.sh"
   "consult.sh"
+  "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "skill-extract.sh"
   "path-integrity.sh"
   "relay-turn-timeout.sh"
