@@ -136,6 +136,11 @@ _guarded_with_timeout() {  # <out> <secs> <cmd...>
   ( sleep "$secs"; kill -9 "$apid" 2>/dev/null ) >/dev/null 2>&1 &
   kpid=$!
   wait "$apid" || rc=$?
+  # GH-109: kill the watchdog's `sleep` GRANDCHILD before the watchdog subshell itself. If we kill
+  # $kpid first, its still-running `sleep "$secs"` is orphaned (reparented to PID 1) and keeps
+  # sleeping to completion silently — harmless alone, but it accumulates on rapid/repeated consults.
+  # `pkill -P "$kpid"` (direct children of the watchdog subshell, macOS/BSD-compatible) reaps it first.
+  pkill -P "$kpid" 2>/dev/null || true
   kill "$kpid" 2>/dev/null || true; wait "$kpid" 2>/dev/null || true
   [[ "$rc" != 0 ]] && printf '\nconsult: advisor failed or exceeded the %ss cap\n' "$secs" >> "$out"
   return "$rc"
