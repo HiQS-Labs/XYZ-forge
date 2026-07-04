@@ -59,7 +59,7 @@ IFS=$'\t' read -r SESSION TOOL FIELD <<EOF
 $parsed
 EOF
 
-STATE_DIR="${TMPDIR:-/tmp}/relay-xyz-guard"
+STATE_DIR="${TMPDIR:-/tmp}/relay-xyz-guard-${UID}"
 mkdir -p "$STATE_DIR" 2>/dev/null || true
 MARKER="$STATE_DIR/${SESSION//[^A-Za-z0-9_-]/_}"
 
