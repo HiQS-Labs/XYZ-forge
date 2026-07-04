@@ -5,7 +5,7 @@ status: Active
 created: 2026-06-25
 updated: 2026-06-25
 owner: Noel (with Claude Code, Opus 4.8)
-parent: PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md
+parent: PROJECT/4-MISC/MARATHON-DOGFOOD-2026-06-25-WPCC-TS-TYPE-SUPPRESSION.md
 substrate_repo: WP-Code-Check (cwd is the target repo root via --target-root)
 goal: >
   Single-phase --phase-brief fed to the headless Marathon builder: add one additive grep detector pattern

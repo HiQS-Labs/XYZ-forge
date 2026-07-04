@@ -145,7 +145,7 @@ artifact the feedback doc was missing: an honest cost-per-unit comparison of xyz
 - [x] **DETERMINISTIC transcript write:** transcript copied from `$TMPDIR/p3-gemini-turn.json` to
       `relay-system/2026-06-16/p3-dogfood-relay.gemini-transcript.md` via a scripted shell step (not a
       prompt instruction). File exists and is committed. ✅
-- [x] **Comparison report:** `PROJECT/2-WORKING/COST-COMPARISON.md` — table: system × {tokens, wall-clock,
+- [x] **Comparison report:** `PROJECT/4-MISC/COST-COMPARISON.md` — table: system × {tokens, wall-clock,
       human-min, tokens/done, run_type, coverage}. Every cell from `tick analyze --format json`. ✅
 - [x] **Update the feedback doc:** `FEEDBACK-2026-06-15.md` now cites real cost-per-unit figures (point 5
       closed) under "Cost comparison — point 5 closed". ✅

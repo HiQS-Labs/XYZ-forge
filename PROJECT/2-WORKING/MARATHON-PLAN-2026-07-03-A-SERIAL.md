@@ -24,6 +24,12 @@ execution: serial · Opus 4.8 · reasoning=high · operator-direct kernel pass
 > [Plan B (parallel dogfood)](MARATHON-PLAN-2026-07-03-B-PARALLEL.md). Each lane's execution
 > detail lives in its `PROJECT/**` doc / GH issue; this is the scheduling + rationale overlay.
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| 4 of 5 lanes closed: **#41** (terminality-seal, foundation), **#3** (parked-claim false-positive), **#4** (work-stealing verdict), **#5** (contract-seam warning) — all shipped and closed per the serial sequence above. | **#30** remains **open** (partial): Phases 1–2 (transcript-root resolver + writer wiring) shipped; Phases 3–5 (off-tree containment allowlist, telemetry, docs) still pending — tracked in [GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md](GH-30-CENTRALIZED-TRANSCRIPT-ARCHIVE.md), not re-detailed here. |
+
 ## Why serial, why Opus-direct
 
 Every lane here mutates the **serialization bottleneck** — the projection kernel

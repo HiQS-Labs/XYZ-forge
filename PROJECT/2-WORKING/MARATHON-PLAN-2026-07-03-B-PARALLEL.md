@@ -25,6 +25,12 @@ execution: parallel · dogfood via swarm-preflight → marathon-drive (or Sonnet
 > **parallel dogfood**: the lane set was chosen so that most lanes are write-disjoint, and the
 > few that aren't force the harness to serialize them itself.
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Hold lifted, waves planned (below), collision map confirmed by grep. Not yet fired — all 11 lanes (#92, #93, #96, #23, #94, #61, #89, #55, #86, #48, #54) remain **open** as of 2026-07-03 (checked live, not inferred). Sibling [Plan A](MARATHON-PLAN-2026-07-03-A-SERIAL.md) is 4/5 shipped in the meantime, so its recommended sequencing ("Plan A first, then Plan B") is nearly satisfied. | Fire Wave 1 (8 lanes) once #94's re-verify-vs-`5972ef4` gate is resolved one way or the other (fix-if-still-broken, or close-as-already-fixed). |
+
 ## ✅ HOLD LIFTED (2026-07-03)
 
 The concurrent vendor-installer work **landed in `5972ef4`** (*full-mirror XYZ install + vendor-aware

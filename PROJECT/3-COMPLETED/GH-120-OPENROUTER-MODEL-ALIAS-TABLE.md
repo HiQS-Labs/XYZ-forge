@@ -2,7 +2,7 @@
 gh_issue: 120
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/120
 title: "Build a fuzzy-match OpenRouter model-name lookup table (alias -> canonical slug) for relay-automation"
-status: Queued (rated + contracted — marathon-ready)
+status: Shipped (17e2681) — issue #120 closed 2026-07-03
 created: 2026-07-03
 updated: 2026-07-03
 owner: noel
@@ -11,6 +11,10 @@ complexity: 1
 risk: 1
 effort: 2
 roadmap_exempt: false
+goal: >
+  Ship a local, fuzzy-match OpenRouter model-name lookup table so relay-automation tooling can
+  resolve a colloquial model name (e.g. "GLM 5.2", "Nemotron Ultra 3") to its canonical
+  provider/slug id without a live API query on every lookup.
 non_goals:
   - Not building the optional `--verify` re-query mode against OpenRouter's live model list in
     this lane — that is explicit follow-up work, not required for acceptance here.
@@ -21,6 +25,12 @@ related:
 ---
 
 # GH-120 — OpenRouter model-alias fuzzy lookup table
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Shipped 2026-07-03 as marathon Lane E (`17e2681`, wired into `validate.sh` in `973a4d3`): `openrouter-model-aliases.yml` + `resolve-model-alias.sh` (4-tier fuzzy matcher: normalized exact → squashed → sorted-token → substring) + `test/model-alias.sh` (10/10 pass). Independently re-verified via a GLM 5.2 reverse-dogfood review (2026-07-03), which traced the fuzzy-match tiers by hand and confirmed the free-variant collision case resolves correctly; that review also caught a stale README claim ("not yet wired into validate.sh"), fixed in `1642304`. Issue #120 closed 2026-07-03. | Nothing — done. Optional follow-up (explicitly out of scope, not queued): a `--verify` mode re-querying OpenRouter's live catalog to flag stale aliases. |
 
 ## Motivation
 

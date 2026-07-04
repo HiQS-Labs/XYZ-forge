@@ -1,6 +1,6 @@
 ---
 title: Marathon Plan — ranked, freshness-validated, collision-aware queue
-status: Active (2-WORKING)
+status: Archived (4-MISC) — moved from 2-WORKING 2026-07-03, stale (PDDA maintenance sweep)
 created: 2026-06-30
 updated: 2026-06-30
 owner: noel

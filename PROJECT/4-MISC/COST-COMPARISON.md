@@ -14,7 +14,7 @@ source_runs:
   xyz_root: $TMPDIR/p3-xyz        # synthetic fixture; see data-provenance below
   relay_root: $TMPDIR/p3-relay    # real Gemini headless turn under -o json
 related:
-  - PROJECT/2-WORKING/COST-OBSERVABILITY-PLAN.md
+  - PROJECT/4-MISC/COST-OBSERVABILITY-PLAN.md
   - relay-system/2026-06-16/p3-dogfood-relay.md
   - relay-system/2026-06-16/p3-dogfood-relay.gemini-transcript.md
 ---

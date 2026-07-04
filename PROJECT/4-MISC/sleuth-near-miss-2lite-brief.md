@@ -5,7 +5,7 @@ status: Phase 0 — pre-registration (brief for the Sleuth marathon dogfood)
 created: 2026-06-24
 updated: 2026-06-24
 owner: Noel (with Claude Code, Opus 4.8)
-parent: PROJECT/2-WORKING/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md
+parent: PROJECT/4-MISC/MARATHON-DOGFOOD-2026-06-24-SLEUTH-NEARMISS-2LITE.md
 goal: >
   Builder brief for the headless Marathon turn: insert a deterministic, flag-gated
   near-miss "did you mean?" recovery tier at Sleuth's mention-dispatch dead-end,
