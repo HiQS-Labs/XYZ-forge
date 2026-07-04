@@ -4,6 +4,10 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-03
 
+### Aider permanently installed and OpenRouter GLM v5.2 verified
+Installed Aider permanently to `~/.local/bin/aider` using a dedicated Python virtual environment (`~/.aider-venv`). Verified connectivity to OpenRouter's `z-ai/glm-5.2` model using the OpenRouter API key. 
+*(Note: Test successfully connected to OpenRouter but encountered an out-of-credits error for the GLM model).*
+
 ### GH-30 Phase 2 SHIPPED — the four transcript writers honor the `XYZ_ARCHIVE_ROOT` resolver
 Phase 1 built the resolver but wired it to nothing. Phase 2 makes each writer call it, so setting `XYZ_ARCHIVE_ROOT` actually redirects transcripts out of a foreign product repo. Done in an isolated git worktree while another agent worked `main`.
 - **Four writers wired** — `consult.sh` (`OUT` default), `marathon-drive.sh` (`save_transcript`'s `date_dir`), `relay-drive.sh` (consult-verify `_cv_out_dir`), `swarm-preflight.sh` (`OUT_DIR`, resolved once *before* the dry-run gate so the `Would emit to:` preview matches the real emit). Each sources `relay-turn-lib.sh` by the script's own dir (not `$ROOT`, which may be a foreign `CONSULT_ROOT`).

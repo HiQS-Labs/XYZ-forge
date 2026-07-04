@@ -74,6 +74,7 @@ local change.
   stop. Re-firing a parked lane or going off-wave to deep-dive one item requires an explicit operator
   override (`--force`) or a replan note — never a quiet slide off the plan.
 - **Do not create new git branches** automatically. Only create a new branch if explicitly requested by the user.
+- **Aider Configuration (AIDER.md / GH-77)**: When using Aider as a headless runner against OpenRouter, do not hardcode the API key or attempt to use a secrets manager. The `OPENROUTER_API_KEY` is securely stored at `/Users/noelsaw/secrets/openrouter/openrouter.txt` and is exported dynamically by `~/.zshrc`.
 
 ## Conflict order
 
