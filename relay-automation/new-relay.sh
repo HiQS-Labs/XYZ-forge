@@ -139,7 +139,23 @@ if (( PRINT )); then
   exit 0
 fi
 
-[[ -n "$OUT" ]] || OUT="relay-system/$TODAY/$SLUG.md"
+# GH-30 Phase 3: when XYZ_ARCHIVE_ROOT is set, default the thread location through the transcript-root
+# resolver so a scaffolded thread lands in the archive ($XYZ_ARCHIVE_ROOT/relay-system/<slug>/…) — the
+# same redirect the other transcript writers already honor (Phase 2). Unset var → byte-for-byte the
+# prior relative "relay-system/$TODAY/$SLUG.md" default (kept so the default path stays cwd-relative).
+# An explicit --out still wins (resolver not consulted). The resolver fails loud on a set-but-invalid
+# archive, so a bad var never silently writes into the cwd.
+if [[ -z "$OUT" ]]; then
+  if [[ -n "${XYZ_ARCHIVE_ROOT:-}" ]]; then
+    # shellcheck source=relay-turn-lib.sh
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/relay-turn-lib.sh"
+    _nr_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    _nr_base="$(rtl_transcript_root "$_nr_root")" || exit 1
+    OUT="$_nr_base/$TODAY/$SLUG.md"
+  else
+    OUT="relay-system/$TODAY/$SLUG.md"
+  fi
+fi
 mkdir -p "$(dirname "$OUT")"
 emit >"$OUT"
 printf 'new-relay: wrote %s (NEXT: Reviewer, reviewer=%s%s)\n' "$OUT" "$REVIEWER" "$( ((EMBED)) && printf ', embedded' || true )" >&2

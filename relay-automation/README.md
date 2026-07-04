@@ -311,6 +311,32 @@ The boundary is unchanged: path allowlist, file-scoped commit, no push, and
 worktree isolation of `target@HEAD`. Only the artifact side moves to
 `--target-root`.
 
+#### Optional: collect transcripts in one archive (`XYZ_ARCHIVE_ROOT`, GH-30)
+
+By default a cross-repo turn writes its transcript into the target repo's
+`relay-system/` tree and commits it into that repo's history. Set
+`XYZ_ARCHIVE_ROOT` to an **absolute path of an existing git repo** to redirect
+every transcript out of the product repos into one namespaced archive instead:
+
+```bash
+export XYZ_ARCHIVE_ROOT=/abs/path/to/transcript-archive   # absolute + exists + is a git repo
+```
+
+- **Unset (default):** byte-for-byte today's behavior.
+- **Set:** all transcript writers (`consult.sh`, `marathon-drive.sh`,
+  `relay-drive.sh`, `swarm-preflight.sh`, `new-relay.sh`) emit under
+  `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>/…`, namespaced per source repo.
+  A headless **turn** then commits the transcript **into the archive repo**
+  (Model A) while the code artifact and the `.tick` token stay anchored to the
+  target — so the target tree stays free of `relay-system/` and its history
+  carries no transcript commit. The archive commit is isolated from the target's
+  HEAD, so it never orphans a concurrent peer commit there. Configure a git
+  identity in the archive repo (a failed archive commit warns; it never fails the
+  turn). Set-but-invalid (relative / missing / non-git) is a **hard error**; an
+  explicit `--out` / `RELAY_FILE` always wins. `extract-relay-telemetry.sh`
+  aggregates across all `<repo-slug>/` dirs when the var is set. Full contract:
+  [CONSUMING.md](CONSUMING.md#optional-keep-transcripts-out-of-repo-b-xyz_archive_root-gh-30).
+
 ### 6. Device caveats
 
 - No push by design. Shim-taken turns commit locally only.

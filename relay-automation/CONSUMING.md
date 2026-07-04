@@ -61,15 +61,21 @@ export XYZ_ARCHIVE_ROOT=/abs/path/to/transcript-archive   # must be absolute + e
 ```
 
 - **Unset (default):** byte-for-byte today's behavior — transcripts stay under `repoB/relay-system/…`.
-- **Set:** `consult.sh`, `marathon-drive.sh`, `relay-drive.sh`, and `swarm-preflight.sh` emit under
-  `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>/…`, namespaced per source repo (slug = origin remote
-  basename, else dir basename). Derive `RELAY_FILE` from that base rather than hardcoding
+- **Set:** `consult.sh`, `marathon-drive.sh`, `relay-drive.sh`, `swarm-preflight.sh`, and `new-relay.sh`
+  emit under `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>/…`, namespaced per source repo (slug = origin
+  remote basename, else dir basename). Derive `RELAY_FILE` from that base rather than hardcoding
   `repoB/relay-system/…`. Set-but-invalid (relative / missing / non-git) is a **hard error**, never a
   silent fallback into repo B. An explicit `--out` / `RELAY_FILE` always wins over the resolver.
-- **Not yet redirected (Phase 3):** the relay *containment + commit* path still anchors on repo B, so
-  a headless turn's own relay-file writes are governed by the target-repo allowlist. Off-tree
-  archive-commit semantics land in GH-30 Phase 3; until then, the redirect covers the transcript
-  *writers* above, not the containment kernel.
+- **Full turn redirect (Phase 3, Model A — shipped):** when the relay file lives in the archive repo,
+  the containment kernel commits the **transcript into the archive** via an isolated `git -C` step,
+  while the **code artifact + the `.tick` token stay anchored to repo B**. Repo B's tree stays free of
+  `relay-system/` and its history carries no transcript commit. Because the archive commit can never
+  move repo B's HEAD, it can never orphan a concurrent peer commit in repo B (the `rtl_enforce` reset
+  hazard applies to the target tree only). A failed archive commit warns (the transcript file is still
+  written) and never fails the turn — so the archive repo should have a git identity configured.
+- **Telemetry:** with `XYZ_ARCHIVE_ROOT` set, `utils/telemetry/extract-relay-telemetry.sh` scans the
+  archive across all `<repo-slug>/` dirs, so one feed can aggregate many source repos without colliding
+  on `<date>/<slug>`.
 
 ### ⚠ The sharp edge: TARGET paths must be ABSOLUTE
 

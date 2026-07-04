@@ -1,6 +1,6 @@
 ---
 title: Centralized Transcript Archive (optional setting)
-status: Active (2-WORKING — Phases 1–2 shipped 2026-07-03; Phases 3–5 pending)
+status: Complete (3-COMPLETED — all phases shipped 2026-07-03)
 created: 2026-06-27
 updated: 2026-07-03
 owner: noel
@@ -31,7 +31,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **✅ Phases 1–2 SHIPPED 2026-07-03.** **Phase 1** — the single transcript-root resolver `rtl_transcript_root` (+ `rtl_repo_slug`) is live in `relay-turn-lib.sh` (the ONE place the relay-system base is decided): unset `XYZ_ARCHIVE_ROOT` → byte-for-byte today's `$root/relay-system`; set → `$XYZ_ARCHIVE_ROOT/relay-system/<repo-slug>` with Model-A validation (absolute + exists + git repo, else HARD ERROR). **Phase 2** — all four writers (`consult.sh`, `marathon-drive.sh`, `relay-drive.sh`, `swarm-preflight.sh`) now source the lib and derive their transcript base from the resolver; explicit `--out`/`OUT_DIR` still wins; set-but-invalid fails loud. `test/archive-root.sh` (13) + `test/archive-writers.sh` (8, consult end-to-end + structural) → `validate.sh` **90/90**. Transcript *writers* redirect today; the containment/commit kernel does not yet. | **Phase 3** (risk-4 core) — extend the containment allowlist to the archive root + commit-into-archive semantics that never orphan a peer commit; keep `.tick/` anchored to the target repo. Then Phase 4 (telemetry reads the archive) + Phase 5 (docs/validation, promote out of 2-WORKING). |
+| **✅ ALL PHASES SHIPPED 2026-07-03.** Phases 1–2 (resolver + writer wiring) plus **Phase 3** (Model A off-tree commit): `rtl_init` flags `RTL_ARCHIVE_MODE` when the relay file lives in a git repo distinct from `RTL_ROOT`, and `rtl_enforce` commits the **transcript into the archive** via an isolated `git -C` pathspec commit while the **code artifact + `.tick` token stay on the target** — the target tree stays free of `relay-system/`, no transcript commit lands in target history, and the isolated archive commit can never orphan a concurrent peer commit (GH-13 guard is target-only, holds when token-tree ≠ transcript-tree). Worktree seed/copyback skip the absolute archive entry in lockstep. **Phase 4** — `extract-relay-telemetry.sh` reads the resolver and aggregates across all `<repo-slug>/` dirs when set. **Phase 5** — `new-relay.sh` wired to the resolver; `CONSUMING.md` + `README.md` document the full contract; CHANGELOG bet recorded. New `test/archive-commit.sh` (16) + `test/archive-telemetry.sh` (3) wired into `validate.sh`. | **Done** — promote to `3-COMPLETED`, close [#30](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/30). Follow-on (not this issue): live end-to-end archive dogfood against a real foreign repo. |
 
 ## Effort & Risk (the question asked)
 
@@ -133,49 +133,49 @@ Each writer now sources `relay-turn-lib.sh` (by the script's own dir, so a forei
 
 > **Scope note:** Phase 2 redirects the transcript *writers*. A cross-repo relay *turn* is not fully redirected until **Phase 3** (containment allowlist + commit-into-archive), because the turn's own relay-file writes are still governed by the target-repo write-allowlist in `relay-turn-lib.sh`. `consult.sh` and `swarm-preflight.sh` (no containment) are fully redirected today.
 
-## Phase 3 — Off-tree containment & commit semantics
+## Phase 3 — Off-tree containment & commit semantics ✅ SHIPPED 2026-07-03
 
-> The actual risk lives here. The relay turn guards restrict writes to the turn root and commit the transcript into the target repo's history. An off-tree archive collides with both.
+> The actual risk lived here. The relay turn guards restrict writes to the turn root and commit the transcript into the target repo's history. An off-tree archive collides with both. Resolved by a **split commit**: transcript → archive repo (isolated `git -C`), code artifact + `.tick` → target repo.
 
-- [ ] Extend the containment allowlist so the resolved archive root is a permitted write target (without widening the foreign-repo allowlist).
-- [ ] Decide commit behavior per Phase-0 model:
-  - [ ] Model A (separate repo): commit the transcript to the **archive** repo, never to repo B — verify no orphaned cross-repo commit (see the known `rtl_enforce` reset hazard).
-  - [ ] Model B (plain dir): write transcript **uncommitted**; only `.tick/` token/commits (if any) stay with repo B.
-- [ ] Ensure the relay turn-token (`.tick/`) stays anchored to the **target** repo even when the transcript is redirected (token and transcript may now live in different trees).
-- [ ] Re-scope reviewer `ALLOW_PATHS` (recently tightened to the relay file) to the relay file at its new archive location.
+- [x] Extend the containment allowlist so the resolved archive root is a permitted write target (without widening the foreign-repo allowlist). — `rtl_init` flags `RTL_ARCHIVE_MODE` when the relay file's git toplevel ≠ `RTL_ROOT`; the out-of-root relay file is an absolute allowlist entry, inert to the `RTL_ROOT` status/commit loop, and the worktree seed/copyback skip absolute entries in lockstep (seedsig index preserved).
+- [x] Commit behavior per Phase-0 model:
+  - [x] Model A (separate repo): `rtl_enforce` commits the transcript to the **archive** repo via an isolated `git -C "$RTL_RELAY_REPO"` pathspec commit, never to the target — the archive commit can't move the target's HEAD, so it can never orphan a concurrent peer commit (`test/archive-commit.sh` peer-case).
+  - [x] ~~Model B (plain dir)~~ — not chosen (Model A decided 2026-07-02).
+- [x] Ensure the relay turn-token (`.tick/`) stays anchored to the **target** repo even when the transcript is redirected — the GH-67 handoff already uses `TICK_REPO_ROOT`; archive mode never touches it, so token-tree and transcript-tree differ safely.
+- [x] Reviewer `ALLOW_PATHS` scoping is preserved — reviewer-turn detection (relay file only) is upstream of archive detection and unchanged; the single relay file is the only writable target whether in-tree or in the archive.
 
 ### QA checklist — Phase 3
 
-- [ ] A cross-repo relay turn with the var set writes its transcript to the archive and leaves repo B's tree free of `relay-system/`.
-- [ ] No relay commit lands in repo B's history under the chosen model (verify with `git log` in repo B).
-- [ ] Concurrent-commit guard does not reset/orphan a peer commit (the documented `rtl_enforce` hazard) when token and transcript trees differ.
-- [ ] Reviewer allowlist still scopes to exactly one relay file.
+- [x] A cross-repo relay turn with the var set writes its transcript to the archive and leaves the target tree free of `relay-system/`. (`archive-commit.sh` T1)
+- [x] No relay commit lands in the target's history under Model A. (`archive-commit.sh` T1: no `transcript` commit in target log)
+- [x] Concurrent-commit guard does not reset/orphan a peer commit when token and transcript trees differ. (`archive-commit.sh` T3: peer commit preserved, artifact on top, archive transcript still committed)
+- [x] Reviewer allowlist still scopes to exactly one relay file. (unchanged; `worktree-isolation.sh` + `relay-artifact-file.sh` still green)
 
-## Phase 4 — Telemetry & discovery of archived transcripts
+## Phase 4 — Telemetry & discovery of archived transcripts ✅ SHIPPED 2026-07-03
 
-- [ ] `utils/telemetry/extract-relay-telemetry.sh` reads `$RELAY_SYSTEM` from the resolver, so it finds archived transcripts (currently `$ROOT_DIR/relay-system`).
-- [ ] Telemetry handles the `<repo-slug>` namespacing layer when aggregating across repos.
-- [ ] `relay-to-issue` / discovery paths that auto-detect `relay-system/<date>/<slug>.md` honor the archive root.
+- [x] `utils/telemetry/extract-relay-telemetry.sh` reads the resolver, so it finds archived transcripts (was `$ROOT_DIR/relay-system`).
+- [x] Telemetry handles the `<repo-slug>` namespacing layer when aggregating across repos — archive mode scans `$XYZ_ARCHIVE_ROOT/relay-system/*/*/` (slug/date).
+- [~] `relay-to-issue` / discovery auto-detect honoring the archive root — `relay-to-issue` is an external Claude skill (not a repo script); the repo-side extractor honors the archive, and the skill should resolve `XYZ_ARCHIVE_ROOT` the same way when archived. Tracked as a follow-on note, not a repo deliverable.
 
 ### QA checklist — Phase 4
 
-- [ ] Telemetry extractor produces a feed from an archived (off-tree) transcript set.
-- [ ] Aggregation across two source repos does not collide on date/slug.
-- [ ] Auto-detect of "newest relay thread" resolves correctly when archived.
+- [x] Telemetry extractor produces a feed from an archived (off-tree) transcript set. (`archive-telemetry.sh`)
+- [x] Aggregation across two source repos does not collide on date/slug. (`archive-telemetry.sh`: same-named threads in two slugs → distinct records)
+- [x] Unset path still yields a valid feed. (`archive-telemetry.sh`: empty range → `[]`)
 
-## Phase 5 — Docs, defaults, and validation
+## Phase 5 — Docs, defaults, and validation ✅ SHIPPED 2026-07-03
 
-- [ ] Document `XYZ_ARCHIVE_ROOT` in `relay-automation/CONSUMING.md` (cross-repo recipe) and `relay-automation/README.md`.
-- [ ] Note the default-unchanged guarantee and the namespacing scheme.
-- [ ] Add a `CHANGELOG.md` entry recording the bet (Costly: containment touch) with the reversibility read and revisit trigger.
-- [ ] Promote this doc to `PROJECT/2-WORKING/` with the full active-doc contract intact.
+- [x] Document `XYZ_ARCHIVE_ROOT` in `relay-automation/CONSUMING.md` (cross-repo recipe) and `relay-automation/README.md`.
+- [x] Note the default-unchanged guarantee and the namespacing scheme.
+- [x] Add a `CHANGELOG.md` entry recording the bet (Costly: containment touch) with the reversibility read and revisit trigger.
+- [x] Promote this doc to `PROJECT/3-COMPLETED/` with the full active-doc contract intact.
 
 ### QA checklist — Phase 5
 
-- [ ] `./validate.sh` green.
-- [ ] `utils/pdda/pdda.sh run` clean (frontmatter, status table, hardcoded paths, roadmap coverage).
-- [ ] Docs describe both default and archive modes; no hardcoded absolute paths in the docs.
-- [ ] `CHANGELOG.md` entry present with the bet recorded.
+- [x] `./validate.sh` green.
+- [x] `utils/pdda/pdda.sh run` clean (frontmatter, status table, hardcoded paths, roadmap coverage).
+- [x] Docs describe both default and archive modes; no hardcoded absolute paths in the docs.
+- [x] `CHANGELOG.md` entry present with the bet recorded.
 
 ## Phase 0 — DECIDED 2026-07-02: archive model **A (separate committed git repo)**
 
