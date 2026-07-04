@@ -1,0 +1,7 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-119-aider-reviewer-scope-creep relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact relay-automation/aider-turn.sh,test/aider-turn.sh \
+  --pre-advance-cmd 'bash test/aider-turn.sh' \
+  --require-clean

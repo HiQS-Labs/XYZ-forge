@@ -1,28 +1,33 @@
 ---
-title: Marathon Plan 2026-07-04 — low-risk blend (Fable GH-110 + Gemini GH-109 Phase 1)
+title: Marathon Plan 2026-07-04 — low-risk blend (Fable GH-110 + Gemini GH-109 Phase 1 + Aider/OpenRouter GH-119/GH-120)
 status: Active (2-WORKING)
 created: 2026-07-04
-updated: 2026-07-04
+updated: 2026-07-03
 owner: noel
 branch: main
 doc_type: project
-source: PROJECT/1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md, PROJECT/1-INBOX/GH-109-GEMINI-FEEDBACK.md
-generated_by: hand (pre-flighted from audit findings)
+source: PROJECT/1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md, PROJECT/1-INBOX/GH-109-GEMINI-FEEDBACK.md, GH-119, GH-120
+generated_by: hand (pre-flighted from audit findings; extended 2026-07-03 with GH-119/GH-120 from live Aider/OpenRouter testing)
 roadmap_exempt: true
 goal: >
-  Three collision-free Phase-1 lanes drawn from the Fable 5 (GH-110) and Gemini (GH-109)
-  audit findings. All low-risk, all disjoint write-sets — wave-packable in parallel.
-  Assertion fix from Fable item 1 already landed in 84ff078; three items remain open.
+  Five collision-free Phase-1 lanes: three from the Fable 5 (GH-110) and Gemini (GH-109)
+  audit findings, plus two from live Aider/OpenRouter model testing (GH-119, GH-120).
+  All low-risk, all disjoint write-sets — wave-packable in parallel.
+  Assertion fix from Fable item 1 already landed in 84ff078; five items remain open.
 ---
 
-<!-- Pre-flighted from GH-109 + GH-110 Phase 1 findings. Write-sets verified disjoint below.
-     Edit the source docs (1-INBOX/GH-109*, 1-INBOX/GH-110*), not this plan. -->
+<!-- Pre-flighted from GH-109 + GH-110 Phase 1 findings, extended 2026-07-03 with GH-119/GH-120.
+     Write-sets verified disjoint below. Edit the source docs (1-INBOX/GH-109*, 1-INBOX/GH-110*,
+     the GH-119/GH-120 issues), not this plan. -->
 
-# Marathon Plan 2026-07-04 — low-risk Fable + Gemini blend
+# Marathon Plan 2026-07-04 — low-risk Fable + Gemini + Aider/OpenRouter blend
 
-> Scoped to Phase 1 items from the two external audit issues. Execution detail lives in
-> [GH-110-SHELLCHECK-VENDOR-FIXES.md](../1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) and
-> [GH-109-GEMINI-FEEDBACK.md](../1-INBOX/GH-109-GEMINI-FEEDBACK.md).
+> Scoped to Phase 1 items from the two external audit issues, plus two Aider/OpenRouter harness
+> fixes surfaced by live testing on 2026-07-03. Execution detail lives in
+> [GH-110-SHELLCHECK-VENDOR-FIXES.md](../1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md),
+> [GH-109-GEMINI-FEEDBACK.md](../1-INBOX/GH-109-GEMINI-FEEDBACK.md),
+> [#119](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/119), and
+> [#120](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/120).
 > **Note:** Fable's item 1 (broken assertion at `test/xyz-vendor.sh:140`) already landed in
 > `84ff078` — excluded from this plan.
 
@@ -30,7 +35,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan pre-flighted 2026-07-04 from audit findings; write-sets verified disjoint; all 3 lanes in Wave 1. | **Wave 1 (all parallel):** Lane A ‖ Lane B ‖ Lane C. Fire each via `swarm-preflight → marathon-drive` scoped by `ALLOW_PATHS`. |
+| Plan pre-flighted 2026-07-04 from audit findings; extended 2026-07-03 with two lanes from live GH-118 follow-on testing (GH-119, GH-120); write-sets verified disjoint across all 5 lanes; all in Wave 1. | **Wave 1 (all parallel):** Lane A ‖ Lane B ‖ Lane C ‖ Lane D ‖ Lane E. Fire each via `swarm-preflight → marathon-drive` scoped by `ALLOW_PATHS`. |
 
 ## The one safety rule
 
@@ -44,8 +49,10 @@ Two lanes are safe to run concurrently **iff their write-sets are disjoint.** No
 | A — vendor payload cleanup | `relay-automation/xyz-vendor.sh`, `skills/swe/SKILL.md` | independent | ✅ |
 | B — tmp UID isolation | `relay-automation/hooks/relay-xyz-guard.sh` | independent | ✅ |
 | C — watchdog leak fix | `relay-automation/consult.sh` | shim | ✅ |
+| D — reviewer read-only pre-seed (GH-119) | `relay-automation/aider-turn.sh` | shim | ✅ |
+| E — model-alias lookup table (GH-120) | `relay-automation/openrouter-model-aliases.yml` (new) | independent | ✅ |
 
-All write-sets are disjoint. No kernel zone entries. **All three run in Wave 1.**
+All write-sets are disjoint. No kernel zone entries. **All five run in Wave 1.**
 
 ## Per-lane scoring
 
@@ -54,14 +61,18 @@ All write-sets are disjoint. No kernel zone entries. **All three run in Wave 1.*
 | A — vendor payload cleanup | 1 | 1 | 1 | independent | 5 | 1 |
 | B — tmp UID isolation | 1 | 1 | 1 | independent | 5 | 1 |
 | C — watchdog orphaned-sleep | 2 | 2 | 2 | shim | 11 | 1 |
+| D — reviewer read-only pre-seed (GH-119) | 2 | 2 | 2 | shim | 11 | 1 |
+| E — model-alias lookup table (GH-120) | 1 | 1 | 2 | independent | 6 | 1 |
 
 ## Recommended wave
 
-**Wave 1:** Lane A ‖ Lane B ‖ Lane C
+**Wave 1:** Lane A ‖ Lane B ‖ Lane C ‖ Lane D ‖ Lane E
 
 - Lane A → `marathon/gh-110-vendor-payload-cleanup-2026-07-04`
 - Lane B → `marathon/gh-109-tmp-uid-isolation-2026-07-04`
 - Lane C → `marathon/gh-109-watchdog-orphaned-sleep-2026-07-04`
+- Lane D → `marathon/gh-119-reviewer-readonly-preseed-2026-07-04`
+- Lane E → `marathon/gh-120-model-alias-lookup-2026-07-04`
 
 ---
 
@@ -177,11 +188,77 @@ All write-sets are disjoint. No kernel zone entries. **All three run in Wave 1.*
 
 ---
 
+### Lane D — Reviewer read-only pre-seed in aider-turn.sh (GH-119)
+
+**Source:** [#119](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/119) — sibling of #54/#107, surfaced live 2026-07-03 testing GH-118's fix.
+**Effort:** ~45 min · **Risk:** 2
+
+**ALLOW_PATHS:** `relay-automation/aider-turn.sh`
+
+**Prompt for agent:**
+
+> Fix a scope-creep gap in `relay-automation/aider-turn.sh` found via live testing (GH-119):
+> when a review-only turn (`ALLOW_PATHS=""`) is driven with `--edit-format diff`, a model can
+> emit a valid SEARCH/REPLACE edit for a file it was never given via `--file`/`--read` — Aider's
+> `--yes-always` auto-confirms the implicit "add this file to the chat?" prompt and applies the
+> edit. The harness's off-lane guard in `relay-turn-lib.sh` correctly catches this and discards
+> the whole turn (including any otherwise-valid, in-lane edit) — but the turn is wasted.
+>
+> **Fix:** for review-only turns (when `ALLOW_PATHS` is empty), derive the set of files changed
+> in the reviewed diff/artifact and pass each as an additional `--read` flag (alongside the
+> existing `--read .relay-artifacts/<artifact>`) in the `aider_args` construction (around
+> `relay-automation/aider-turn.sh:135-142`). `--read` files are structurally read-only to Aider
+> even under `--yes-always`, so the Reviewer gets full file context to reason about without a
+> path it can write to.
+>
+> **Do not** change the build/fix-turn path (where `ALLOW_PATHS` is non-empty and the artifact
+> IS meant to be edited) — this fix is scoped to `ALLOW_PATHS=""` review-only turns only.
+>
+> Gate: `./validate.sh` green. `shellcheck relay-automation/aider-turn.sh` passes. Add/extend
+> `test/aider-turn.sh` with a case asserting a review-only turn cannot apply an edit to a
+> non-allowlisted, `--read`-seeded file (turn should still succeed — it should simply have no
+> path to write there, not fail containment).
+
+---
+
+### Lane E — OpenRouter model-alias lookup table (GH-120)
+
+**Source:** [#120](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/120) — captured 2026-07-03 from repeated live model-name lookups during GH-118 testing.
+**Effort:** ~30 min · **Risk:** 1
+
+**ALLOW_PATHS:** `relay-automation/openrouter-model-aliases.yml`
+
+**Prompt for agent:**
+
+> Build a small fuzzy-match lookup table for OpenRouter model names (GH-120), so future sessions
+> don't need a live API query to resolve a colloquial model name to its canonical slug.
+>
+> 1. Create `relay-automation/openrouter-model-aliases.yml` seeded with the models already tested:
+>    ```yaml
+>    glm-5.2: z-ai/glm-5.2
+>    nemotron ultra 3: nvidia/nemotron-3-ultra-550b-a55b
+>    nemotron ultra 3 free: nvidia/nemotron-3-ultra-550b-a55b:free
+>    ```
+> 2. Add a small lookup helper (a `resolve-model-alias.sh` or inline function in
+>    `relay-automation/`) that normalizes input (lowercase, strip punctuation/hyphens) and does a
+>    token/substring fuzzy match against the table's keys, returning the canonical slug.
+> 3. Document in `relay-automation/README.md` (or the `relay-xyz` skill) how to add a new alias
+>    when testing a new model.
+>
+> **Out of scope for this lane:** the optional `--verify` re-query mode against OpenRouter's
+> live model list — that's a follow-up, not required for this lane's acceptance.
+>
+> Gate: `./validate.sh` green. A new `test/model-alias.sh` (or equivalent) asserts the three
+> seeded aliases resolve correctly, including a fuzzy variant (e.g. "Nemotron 3 Ultra" or
+> "nemotron-ultra3") for at least one entry.
+
+---
+
 ## How to fire a lane
 
 ```bash
 # Per lane:
-utils/swarm-preflight.sh --gh-issue 109   # or 110 for Lane A
+utils/swarm-preflight.sh --gh-issue 109   # or 110 for Lane A, 119 for Lane D, 120 for Lane E
 # → generates packet.md with freshness + fix-still-required confirmation
 
 relay-automation/marathon-drive.sh \
@@ -191,10 +268,10 @@ relay-automation/marathon-drive.sh \
   --branch "<suggested_branch above>"
 ```
 
-- Run all three lanes concurrently in separate terminals or worktrees — write-sets are verified disjoint.
+- Run all five lanes concurrently in separate terminals or worktrees — write-sets are verified disjoint.
 - Never let any lane touch `relay-turn-lib.sh`, `bin/tick`, or `relay-drive.sh` — those are kernel zone; block with ALLOW_PATHS.
 - After all lanes complete: `./validate.sh` must be green end-to-end before merging.
 
 ---
 
-*Source docs: [GH-109](../1-INBOX/GH-109-GEMINI-FEEDBACK.md) · [GH-110](../1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) · re-derive from source docs if scope changes.*
+*Source docs: [GH-109](../1-INBOX/GH-109-GEMINI-FEEDBACK.md) · [GH-110](../1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) · [#118](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/118) · [#119](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/119) · [#120](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/120) · re-derive from source docs if scope changes.*

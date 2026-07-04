@@ -1,0 +1,86 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-07-04T03:38:13Z",
+  "mode": "gh-bundle",
+  "candidate": {
+    "slug": "gh-119-aider-reviewer-scope-creep"
+  },
+  "provenance": {
+    "source_docs": [
+      "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/2-WORKING/GH-119-AIDER-REVIEWER-SCOPE-CREEP.md"
+    ],
+    "issues": [
+      "119"
+    ],
+    "target_root": "/Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm",
+    "branch": "main",
+    "commit": "5a1e6e2e8aa0e3b704efe0368066a458399c15c0",
+    "suggested_branch": "marathon/gh-119-aider-reviewer-scope-creep-2026-07-04",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "bash test/aider-turn.sh",
+    "fix_probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/aider-turn.sh",
+        "pattern": "GH-119"
+      }
+    ],
+    "artifacts": [
+      "relay-automation/aider-turn.sh",
+      "test/aider-turn.sh"
+    ],
+    "remediation": {
+      "source": "GH-119#fix-direction",
+      "criteria": "For review-only turns (ALLOW_PATHS empty), aider-turn.sh derives the diff/artifact's changed files and passes each as an additional --read flag alongside the existing artifact --read; --read files are structurally unwritable by Aider even under --yes-always; build/fix-turn behavior (ALLOW_PATHS non-empty) is unchanged; test/aider-turn.sh gets a new case asserting a review-only turn cannot apply an edit to a non-allowlisted, --read-seeded file; GH-119 marker comment."
+    },
+    "lanes": {
+      "agy_safe": [
+        "relay-automation/aider-turn.sh",
+        "test/aider-turn.sh"
+      ],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": "origin/main",
+    "ahead": 2,
+    "behind": 0,
+    "dirty": true,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "5a1e6e2e8aa0e3b704efe0368066a458399c15c0",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "grep_absent",
+        "path": "relay-automation/aider-turn.sh",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [],
+    "agy_lane": [
+      "relay-automation/aider-turn.sh",
+      "test/aider-turn.sh"
+    ],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}
