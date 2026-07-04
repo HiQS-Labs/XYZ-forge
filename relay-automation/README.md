@@ -317,3 +317,28 @@ worktree isolation of `target@HEAD`. Only the artifact side moves to
 - `.tick/` is local. Token state on this device is independent of other machines.
 - Each headless turn is real API spend, so keep `--round-cap` small. Codex and agy differ in cost visibility; the agy lane is currently cost-blind in harness logs.
 - Headless runs should not share an agent id with a live `/loop` on the same relay.
+
+## OpenRouter model-alias lookup (GH-120)
+
+`openrouter-model-aliases.yml` + `resolve-model-alias.sh` resolve a colloquial
+OpenRouter model name (e.g. "GLM 5.2", "Nemotron Ultra 3") to its canonical
+`provider/slug[:variant]` id locally, without a live query against
+`https://openrouter.ai/api/v1/models` on every lookup.
+
+```bash
+relay-automation/resolve-model-alias.sh "Nemotron 3 Ultra"
+# -> nvidia/nemotron-3-ultra-550b-a55b
+```
+
+Matching is fuzzy: case, punctuation, hyphens, and whitespace are normalized,
+and both reordered tokens ("Nemotron 3 Ultra") and squashed/concatenated
+variants ("nemotron-ultra3") resolve to the same entry. Exit codes: `0` +
+canonical slug on stdout for a match, `1` (no stdout) if nothing matches, `2`
+on a usage error.
+
+**Adding a new model alias when testing a new model:** append one line to
+`openrouter-model-aliases.yml` in `alias: canonical-slug` format (get the
+canonical slug from the OpenRouter models list), then add a matching
+assertion in `test/model-alias.sh` and run `bash test/model-alias.sh` to
+confirm it resolves. `test/model-alias.sh` is a standalone script, not yet
+wired into `validate.sh`'s runner.
