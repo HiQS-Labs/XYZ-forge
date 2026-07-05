@@ -113,7 +113,7 @@ run_md() {  # <xyz-json> <ctx-or-empty> <relay-exit> <extra-args…>
   # (→ harness:marathon) — the bare-run case.
   local xj="$1" ctx="$2" rexit="$3"; shift 3
   MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" MARATHON_AGENT_CMD="$NOOP" \
-    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
+    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
     XYZ_JSON_PATH="$xj" STUB_RD_EXIT="$rexit" XYZ_HARNESS_CONTEXT="$ctx" \
     bash "$MARATHON_DRIVE" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
       --reviewer agy --pre-advance-cmd "true" "$@"
@@ -163,6 +163,7 @@ phases:
 YAML
 MARATHON_ROOT="$A" MARATHON_DRIVE="$MARATHON_DRIVE" MARATHON_RELAY_DRIVE="$STUB_RD" \
   MARATHON_AGENT_CMD="$NOOP" MARATHON_YAML_BIN="$YBIN" TICK_BIN="$TICK" TICK_REPO_ROOT="$A" \
+  CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" \
   XYZ_APPEND_BIN="$XYZ_APPEND_BIN" XYZ_JSON_PATH="$XMS" STUB_RD_EXIT=0 \
   bash "$MARATHON_SH" --plan "$A/gh75plan.yaml" --pre-advance-cmd "true" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "marathon.sh 2-phase run exits 0" || fail "marathon.sh exit=$rc"
@@ -190,6 +191,7 @@ phases:
 YAML
 MARATHON_ROOT="$A" MARATHON_DRIVE="$MARATHON_DRIVE" MARATHON_RELAY_DRIVE="$STUB_RD" \
   MARATHON_AGENT_CMD="$NOOP" MARATHON_YAML_BIN="$YBIN" TICK_BIN="$TICK" TICK_REPO_ROOT="$A" \
+  CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" \
   XYZ_APPEND_BIN="$XYZ_APPEND_BIN" XYZ_JSON_PATH="$XMH" STUB_RD_EXIT=4 \
   bash "$MARATHON_SH" --plan "$A/gh75halt.yaml" --pre-advance-cmd "true" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 4 ] && pass "marathon.sh halt propagates the phase exit (4)" || fail "marathon.sh halt exit=$rc"
@@ -203,7 +205,7 @@ reset_a
 XSID="$WORK/md-sid.json"; reset_a
 run_md_sid() {  # <xyz-json> <ctx> <session-id>
   MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" MARATHON_AGENT_CMD="$NOOP" \
-    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
+    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
     XYZ_JSON_PATH="$1" STUB_RD_EXIT=0 XYZ_HARNESS_CONTEXT="$2" XYZ_SESSION_ID="$3" \
     bash "$MARATHON_DRIVE" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
       --reviewer agy --pre-advance-cmd "true"

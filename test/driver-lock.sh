@@ -16,7 +16,10 @@ brief="$WORK/brief.md"; printf '# brief\n' >"$brief"
 
 # --dry-run acquires the lock then renders + exits BEFORE spawning any agent, so it exercises the
 # lock cheaply. reviewer=agy (a valid QA lane); builder defaults to claude (≠ reviewer).
-run_md(){ MARATHON_ROOT="$A" TICK_BIN="$TICK" bash "$MD" --phase-brief "$brief" --reviewer agy --dry-run >/dev/null 2>&1; }
+# GH-117: marathon-drive now probes builder/reviewer binaries up front (before lock-protected work),
+# and the default builder `claude` is not resolvable headless — stub both so this stays a LOCK test.
+STUB_BIN="$WORK/stub-bin"; printf '#!/bin/sh\nexit 0\n' >"$STUB_BIN"; chmod +x "$STUB_BIN"
+run_md(){ MARATHON_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_BIN" AGY_BIN="$STUB_BIN" bash "$MD" --phase-brief "$brief" --reviewer agy --dry-run >/dev/null 2>&1; }
 
 # (1) STALE lock — holder pid not running → reclaimed → driver proceeds (dry-run exit 0) → lock freed.
 mkdir -p "$LOCK"; printf '999999\n' >"$LOCK/pid"     # 999999: not a live pid
