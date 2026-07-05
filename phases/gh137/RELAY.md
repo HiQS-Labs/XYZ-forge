@@ -129,3 +129,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH137-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh137/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Implemented GH-137 in `utils/swarm-preflight.sh` and `test/swarm-preflight.sh`.
+
+- Added a `GH-137` sanitization step inside the embedded `expand-artifacts.mjs` helper so only inferred paths that stay inside the repo `test/` subtree are admitted; any inferred path with a `..` segment, a repo-root/out-of-tree normalization, `__pycache__/`, or a trailing `.pyc` is dropped before it can widen the emitted allowlist. Declared `artifacts[]` are unchanged.
+- Added `T35b GH-137`, a regression fixture that creates a real covering test/helper alongside `$(dirname "$0")/..` and `$(dirname "$0")/__pycache__/generated.pyc` references, then asserts the effective artifacts keep only `relay-automation/consult.sh`, `test/consult.sh`, and `test/_setup.sh`.
+- Verified with `bash test/swarm-preflight.sh` -> `87 passed, 0 failed`.

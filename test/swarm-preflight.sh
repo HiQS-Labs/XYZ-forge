@@ -777,6 +777,58 @@ grep -q 'Auto-included covering tests/helpers:.*test/target.test.js' "$R/packet/
   && pass "T35 GH-126: a bare substring mention (comment) is NOT auto-included" \
   || fail "T35 bare substring mention wrongly auto-included: $(grep -E 'Auto-included|Artifacts:' "$R/packet/packet.md")"
 
+# ── T35b (GH-137): inferred covering-test/helper paths are sanitized before they widen ALLOW_PATHS:
+# a real sibling covering test + helper still land, while `test/..` and `__pycache__/*.pyc` are dropped.
+R="$WORK/gh137-sanitize"; mkdir -p "$R/PROJECT/2-WORKING" "$R/relay-automation" "$R/test/__pycache__"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh137-sanitize.md" <<'EOF'
+---
+title: gh137-sanitize
+---
+# gh137-sanitize
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH137" } ],
+  "artifacts": [ "relay-automation/consult.sh" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+printf '#!/usr/bin/env bash\n' >"$R/relay-automation/consult.sh"
+printf '# helper\n' >"$R/test/_setup.sh"
+printf 'compiled\n' >"$R/test/__pycache__/generated.pyc"
+cat >"$R/test/consult.sh" <<'EOF'
+#!/usr/bin/env bash
+source "$(dirname "$0")/_setup.sh"
+ESCAPE_REF="$(dirname "$0")/.."
+PYCACHE_REF="$(dirname "$0")/__pycache__/generated.pyc"
+CONSULT="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/consult.sh"
+EOF
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh137-sanitize.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T35b GH-137: sanitized inference fixture reads READY" || fail "T35b expected exit 0, got $rc — $out"
+node -e '
+  const j = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+  const arts = j.effective_artifacts || [];
+  const tests = j.inferred_test_artifacts || [];
+  const helpers = j.inferred_test_helpers || [];
+  const exact = ["relay-automation/consult.sh", "test/consult.sh", "test/_setup.sh"];
+  const clean = [...arts, ...tests, ...helpers].every((p) => !p.includes("..") && !p.includes("__pycache__") && !p.endsWith(".pyc"));
+  process.exit(
+    arts.length === exact.length &&
+    exact.every((p, i) => arts[i] === p) &&
+    tests.includes("test/consult.sh") &&
+    helpers.includes("test/_setup.sh") &&
+    clean ? 0 : 1
+  );
+' "$R/packet/lane-plan.json" \
+  && pass "T35b GH-137: effective artifacts keep the declared artifact + real covering test/helper only" \
+  || fail "T35b wrong effective artifacts/helpers: $(cat "$R/packet/lane-plan.json")"
+
 # ── T36 (GH-127): isFsTouching also catches a bare '>' redirect (not just cat>/>>/ mktemp/etc.), while
 # NOT misclassifying '2>&1' (fd dup, no fs write), '->' (arrow), or '>=' (comparison) as fs-touching.
 R="$WORK/gh127-redirect"; mkdir -p "$R/PROJECT/2-WORKING" "$R/test"

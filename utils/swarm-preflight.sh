@@ -343,6 +343,20 @@ const isGenuineRef = (raw, artifact) => {
   const esc = artifact.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return new RegExp(`(?:/|\\b(?:source|bash|node)\\b\\s*["'\`]?|require\\(\\s*["'\`])${esc}`).test(raw);
 };
+const isGeneratedInferredPath = (rel) => /(?:^|\/)__pycache__(?:\/|$)|\.pyc$/i.test(rel);
+// GH-137: only inferred additions are sanitized. Declared artifacts stay authoritative, but inferred
+// covering tests/helpers must stay inside repo test/ and must not widen ALLOW_PATHS via `test/..` or
+// generated/gitignored entries such as `__pycache__/x.pyc`.
+const sanitizeInferredPath = (rel) => {
+  const candidate = normalize(String(rel || "").replace(/^\.\/+/, ""));
+  if (!candidate.startsWith("test/")) return null;
+  if (candidate.split("/").includes("..")) return null;
+  if (isGeneratedInferredPath(candidate)) return null;
+  const resolved = path.resolve(root, candidate);
+  const underTest = normalize(path.relative(testRoot, resolved));
+  if (!underTest || underTest.startsWith("..") || path.isAbsolute(underTest)) return null;
+  return normalize(path.relative(root, resolved));
+};
 
 for (const rel of declared) add(null, rel);
 if (existsSync(testRoot)) {
@@ -350,7 +364,8 @@ if (existsSync(testRoot)) {
     const rel = normalize(path.relative(root, abs));
     if (!/^test\/.+/.test(rel)) continue;
     const raw = read(rel);
-    if (declared.some((artifact) => isGenuineRef(raw, artifact))) add(inferredTests, rel);
+    const inferred = sanitizeInferredPath(rel);
+    if (inferred && declared.some((artifact) => isGenuineRef(raw, artifact))) add(inferredTests, inferred);
   }
 }
 
@@ -358,8 +373,9 @@ const queue = [...inferredTests, ...declared.filter((p) => /^test\/.+/.test(p))]
 const seenHelpers = new Set(queue);
 while (queue.length) {
   const rel = queue.shift();
-  for (const helper of helperRefs(read(rel))) {
-    if (!helper.startsWith("test/")) continue;
+  for (const rawHelper of helperRefs(read(rel))) {
+    const helper = sanitizeInferredPath(rawHelper);
+    if (!helper) continue;
     if (!existsSync(path.join(root, helper)) || seenHelpers.has(helper)) continue;
     seenHelpers.add(helper);
     add(inferredHelpers, helper);
