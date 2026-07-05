@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-07-05
+
+### Cross-repo intake: Focus5Float top-left hide button (rebalance-OS#113)
+Captured an operator feature request for the **RebalanceOS `Focus5Float`** Mac app as HQ cross-repo intake. Filed the issue in the target repo — [Hypercart-Dev-Tools/rebalance-OS#113](https://github.com/Hypercart-Dev-Tools/rebalance-OS/issues/113) — with a scoped implementation note (add a top-left in-header hide button that routes through the existing `togglePanel()` → `hidePanel()` → `panel.orderOut(nil)` path so it behaves identically to the menu-bar **"F5"** status item; the native traffic-light close button stays hidden by design). Parked a single cross-repo pointer line in [ROADMAP.md](ROADMAP.md) → *Queue / parked intake*; no HQ pointer doc — the execution surface lives in rebalance-OS's own `PROJECT/`. `pdda.sh roadmap` + `roadmap-coverage` green (errors=0).
+
 ## 2026-07-04
 
 ### GH-112 Python-mode dogfood: `XYZ_PYTHON=1` Codex self-review → 3 fixes → Approved
