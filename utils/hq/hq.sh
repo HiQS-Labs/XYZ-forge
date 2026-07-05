@@ -283,14 +283,18 @@ cmd_park(){
     echo '  ! no ROADMAP.md in target — skipped the queue pointer (add one to complete intake)'
   fi
 
+  local fm_ok=1
   if [ -f "$path/utils/pdda/pdda.sh" ]; then
     if ( cd "$path" && PDDA_ONLY_FILE="$relpath" utils/pdda/pdda.sh frontmatter >/dev/null 2>&1 ); then
       echo '  ✓ pdda:    capture doc passes the target frontmatter check'
     else
-      echo '  ! pdda:    target frontmatter check flagged the capture doc — review before promoting' >&2
+      fm_ok=0
+      echo '  ✗ pdda:    target frontmatter check FAILED on the capture doc — intake is incomplete' >&2
     fi
   fi
   echo "  (files written but NOT committed — review, then commit in the target repo)"
+  # GH-132: don't report success on an invalid capture doc — fail hard so the operator fixes it.
+  [ "$fm_ok" = 1 ] || { echo "  hq park: capture doc is not PDDA-valid — fix the frontmatter before promoting." >&2; return 1; }
 }
 
 # cmd_queue <create 0|1> <issue|-> <project> <request...>
@@ -386,7 +390,7 @@ cmd_next(){
     [ -n "$name" ] || continue
     i=$((i + 1))
     repo="$(hq_bare "$name")"
-    fields="$(hq_repo_resolve "$repo")"
+    fields="$(hq_repo_resolve "$repo" "$name")"   # GH-132: name is owner/repo -> disambiguates collisions
     path="$(printf '%s\n' "$fields" | val REPO_PATH)"
     has_xyz=0; has_pdda=0
     [ -n "$(printf '%s\n' "$fields" | val XYZ_PATH)" ] && has_xyz=1
