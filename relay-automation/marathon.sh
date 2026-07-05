@@ -13,7 +13,14 @@ set -euo pipefail
 #
 # Usage:
 #   relay-automation/marathon.sh --plan MARATHON.yaml [--builder claude] [--phases-dir DIR]
-#                                [--pre-advance-cmd CMD] [--dry-run]
+#                                [--pre-advance-cmd CMD] [--dry-run] [--retry PHASE-ID]
+#
+# GH-116: --retry <phase-id> recovers a phase whose relay task was left open/never-claimed
+# (permanently spent, per this repo's claim-then-abandon constraint) WITHOUT manually renaming the
+# phase id in MARATHON.yaml. It overrides just that one phase's --relay-task with the first unused
+# MARATHON-<ID>-TURN-<N> suffix (N starts at 2, checked via `tick info`) — every other phase derives
+# its task name exactly as before. marathon-drive.sh already supports --relay-task natively; this is
+# purely a marathon.sh-side task-name override, no change to marathon-drive.sh itself.
 #
 # The MARATHON.yaml phase fields drive each marathon-drive call: id→--phase-id, reviewer→--reviewer,
 # brief→--phase-brief (required to run), artifact→--artifact, max_review_rounds→--round-cap.
@@ -49,7 +56,7 @@ xyz_marathon_run_emit() {  # <health> <description>
   "$XYZ_APPEND_BIN" marathon "$plan" "$1" "$plan" "$2" >/dev/null 2>&1 || true
 }
 
-PLAN=""; BUILDER="claude"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0
+PLAN=""; BUILDER="claude"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0; RETRY_PHASE=""
 while (($# > 0)); do
   case "$1" in
     --plan)            PLAN="${2:-}"; shift 2 ;;
@@ -58,7 +65,8 @@ while (($# > 0)); do
     --pre-advance-cmd) PRE_ADVANCE_CMD="${2:-}"; shift 2 ;;
     --dry-run)         DRY_RUN=1; shift ;;
     --force)           FORCE=1; shift ;;   # GH-45: forward to each phase so a parked lane can be re-fired
-    --help)            printf 'Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-advance-cmd C] [--dry-run] [--force]\n'; exit 0 ;;
+    --retry)           RETRY_PHASE="${2:-}"; shift 2 ;;   # GH-116: retry one phase with a fresh relay-task suffix
+    --help)            printf 'Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-advance-cmd C] [--dry-run] [--force] [--retry PHASE-ID]\n'; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
   esac
 done
@@ -93,6 +101,20 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact name; do
   [[ -n "$artifact" ]] && drive_args+=( --artifact "$artifact" )
   [[ -n "$PRE_ADVANCE_CMD" ]] && drive_args+=( --pre-advance-cmd "$PRE_ADVANCE_CMD" )
   ((FORCE)) && drive_args+=( --force )   # GH-45: bypass the per-lane attempt cap for this run
+  # GH-116: only the phase named by --retry gets a task-name override — every other phase still lets
+  # marathon-drive.sh derive its default MARATHON-<ID>-TURN name, unaffected.
+  if [[ -n "$RETRY_PHASE" && "$id" == "$RETRY_PHASE" ]]; then
+    id_upper="$(printf '%s' "$id" | tr '[:lower:]' '[:upper:]')"
+    retry_n=2
+    # First unused suffix, not a hardcoded -2: keep bumping while that task name already exists
+    # (tick info exits 0 once a task has any recorded state — spent or not, it's not reusable).
+    while "$TICK_BIN" info "MARATHON-${id_upper}-TURN-${retry_n}" >/dev/null 2>&1; do
+      retry_n=$((retry_n + 1))
+    done
+    retry_task="MARATHON-${id_upper}-TURN-${retry_n}"
+    log "phase $id: --retry requested — overriding relay task to $retry_task (first unused suffix)"
+    drive_args+=( --relay-task "$retry_task" )
+  fi
   if ((DRY_RUN)); then drive_args+=( --dry-run ); fi
 
   phase_exit=0
