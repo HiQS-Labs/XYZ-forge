@@ -238,6 +238,36 @@ rtl_in_allow() {  # <path> — is <path> on the allowlist? Case-insensitive when
   return 1
 }
 
+# GH-107: opt-in tool-cache exemption for rtl_worktree_end's off-lane loop. A builder's own tooling
+# can write an untracked cache dir as a side effect of an otherwise fully-allowlisted turn (observed
+# live: .codebase-memory/ from a codebase-memory MCP server discarded a 442-line, 67/67-green build);
+# without an exemption that single stray dir fails the whole turn (sibling of #54 — same mechanism,
+# different trigger). Built-in list = tool caches this harness has already had to gitignore for the
+# same reason; CONTAINMENT_IGNORE (comma-separated glob patterns, empty by default) extends it with
+# no code change. Deliberately additive and root-anchored: tracked-file detection and every
+# non-matching path keep today's off-lane behavior byte-for-byte; a nested cache (e.g.
+# sub/.codebase-memory/) is NOT exempted by the built-ins — opt in explicitly via CONTAINMENT_IGNORE.
+rtl_is_containment_ignored() {  # <path> — is <path> an exempted tool-cache side-effect write?
+  local x="$1" pat
+  local pats=('.codebase-memory' '.aider*' 'node_modules/.cache')
+  if [[ -n "${CONTAINMENT_IGNORE:-}" ]]; then
+    # read -ra (not an unquoted for-loop) so a glob pattern like `.mytool*` is never pathname-expanded
+    # against the CWD; bash-3.2/BSD-portable like the rest of this lib.
+    local extra=()
+    IFS=',' read -ra extra <<<"$CONTAINMENT_IGNORE"
+    pats+=("${extra[@]}")
+  fi
+  for pat in "${pats[@]}"; do
+    pat="${pat%/}"
+    [[ -n "$pat" ]] || continue
+    # Match the path itself, git's collapsed all-untracked form `dir/`, and anything under it.
+    # $pat is intentionally unquoted: case-glob matching is the contract.
+    # shellcheck disable=SC2254
+    case "$x" in $pat|$pat/|$pat/*) return 0 ;; esac
+  done
+  return 1
+}
+
 rtl_run_bounded() {  # <timeout_secs> <cmd...>
   # Run <cmd...> under a wall-clock ceiling without coreutils `timeout` (absent on stock macOS).
   # Mirrors the consult.sh _guarded() pattern: sleep-then-kill watchdog, no external deps.
@@ -376,6 +406,7 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
         RTL_WT_OFFLANE=1; continue ;;
     esac
     rtl_in_allow "$path" && continue
+    rtl_is_containment_ignored "$path" && continue   # GH-107: opt-in tool-cache exemption
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
   done < <(git -C "$wt" status --porcelain -z 2>/dev/null)
   if ((RTL_WT_OFFLANE == 0)); then

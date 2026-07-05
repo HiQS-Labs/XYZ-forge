@@ -678,6 +678,151 @@ grep -q 'test/agy-turn.sh,test/shim-worktree.sh' "$R/packet/packet.md" \
   && pass "T33 GH-54: generic self-verify instruction is suppressed for fs-touching tests" \
   || fail "T33 generic self-verify rule should be suppressed for fs-touching tests"
 
+# ── T34 (GH-108): a GATE_CMD that heuristically LOOKS like a filtered-runner invocation (a test-looking
+# command followed by ' -- ') gets an explicit scoping caveat in the generated packet — a Level-1
+# documented-caveat, no cross-runner auto-detection. An already-plain gate is unaffected.
+R="$WORK/gh108-caveat"; mkdir -p "$R/PROJECT/2-WORKING" "$R/src"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh108-caveat.md" <<'EOF'
+---
+title: gh108-caveat
+---
+# gh108-caveat
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "echo test -- fooTestName",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH108" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+: >"$R/src/a.js"
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh108-caveat.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T34 GH-108: filtered-looking gate fixture reads READY" || fail "T34 expected exit 0, got $rc — $out"
+grep -q 'Gate-scoping caveat (GH-108)' "$R/packet/packet.md" \
+  && pass "T34 GH-108: packet emits the gate-scoping caveat for a ' -- ' filtered-looking gate" \
+  || fail "T34 missing gate-scoping caveat: $(grep -i 'gate' "$R/packet/packet.md")"
+
+# ── T34b (GH-108): a plain gate with no ' -- ' passthrough is unaffected — no caveat emitted.
+R="$WORK/gh108-plain"; mkdir -p "$R/PROJECT/2-WORKING" "$R/src"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh108-plain.md" <<'EOF'
+---
+title: gh108-plain
+---
+# gh108-plain
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH108B" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+: >"$R/src/a.js"
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh108-plain.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T34b GH-108: plain gate fixture reads READY" || fail "T34b expected exit 0, got $rc — $out"
+! grep -q 'Gate-scoping caveat' "$R/packet/packet.md" \
+  && pass "T34b GH-108: an already-plain gate (no ' -- ') is unaffected — no caveat emitted" \
+  || fail "T34b unexpected gate-scoping caveat for a plain gate: $(grep -i 'gate-scoping' "$R/packet/packet.md")"
+
+# ── T35 (GH-126): covering-test inference now requires a genuine reference — immediately preceded by
+# a path separator (the `$(cd .. && pwd)/<artifact>` idiom, per T31/T32) or a source/bash/node keyword
+# or require( — not a bare substring anywhere in the file's text (a comment, an unrelated mention).
+R="$WORK/gh126-tighten"; mkdir -p "$R/PROJECT/2-WORKING" "$R/src" "$R/test"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh126-tighten.md" <<'EOF'
+---
+title: gh126-tighten
+---
+# gh126-tighten
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH126" } ],
+  "artifacts": [ "src/target.js" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+: >"$R/src/target.js"
+cat >"$R/test/target.test.js" <<'EOF'
+const target = require('src/target.js');
+EOF
+cat >"$R/test/comment-only.sh" <<'EOF'
+#!/usr/bin/env bash
+# See src/target.js for the implementation notes -- not a real reference.
+echo "not a covering test"
+EOF
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh126-tighten.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T35 GH-126: tightened covering-test fixture reads READY" || fail "T35 expected exit 0, got $rc — $out"
+grep -q 'Auto-included covering tests/helpers:.*test/target.test.js' "$R/packet/packet.md" \
+  && pass "T35 GH-126: a genuine require()-adjacent reference is still auto-included" \
+  || fail "T35 missing genuine covering-test inclusion: $(grep 'Auto-included' "$R/packet/packet.md" 2>/dev/null)"
+! grep -q 'comment-only.sh' "$R/packet/packet.md" \
+  && pass "T35 GH-126: a bare substring mention (comment) is NOT auto-included" \
+  || fail "T35 bare substring mention wrongly auto-included: $(grep -E 'Auto-included|Artifacts:' "$R/packet/packet.md")"
+
+# ── T36 (GH-127): isFsTouching also catches a bare '>' redirect (not just cat>/>>/ mktemp/etc.), while
+# NOT misclassifying '2>&1' (fd dup, no fs write), '->' (arrow), or '>=' (comparison) as fs-touching.
+R="$WORK/gh127-redirect"; mkdir -p "$R/PROJECT/2-WORKING" "$R/test"
+cat >"$R/PROJECT/2-WORKING/GH-900-gh127-redirect.md" <<'EOF'
+---
+title: gh127-redirect
+---
+# gh127-redirect
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash validate.sh",
+  "fix_probes": [ { "type": "path_absent", "path": "MISS_GH127" } ],
+  "artifacts": [ "test/bare-redirect.sh", "test/no-touch.sh" ],
+  "remediation": { "criteria": "x" }
+}
+```
+EOF
+printf '#!/usr/bin/env bash\nexit 0\n' >"$R/validate.sh"
+cat >"$R/test/bare-redirect.sh" <<'EOF'
+#!/usr/bin/env bash
+echo hello > "$TMP/out"
+EOF
+cat >"$R/test/no-touch.sh" <<'EOF'
+#!/usr/bin/env bash
+some_cmd 2>&1
+echo "1 -> 2 is an arrow, not a redirect"
+echo "a >= b is a comparison, not a redirect"
+EOF
+git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
+git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
+git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-gh127-redirect.md" --out "$R/packet" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T36 GH-127: bare-redirect fixture reads READY" || fail "T36 expected exit 0, got $rc — $out"
+grep -q 'Do NOT run ANY test or gate yourself' "$R/packet/packet.md" \
+  && pass "T36 GH-127: bare-redirect artifact escalates the packet to the stronger no-test rule" \
+  || fail "T36 missing stronger no-test rule: $(grep 'Do NOT run' "$R/packet/packet.md")"
+node -e '
+  const j = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
+  const fs = j.fs_touching_tests || [];
+  process.exit((fs.includes("test/bare-redirect.sh") && !fs.includes("test/no-touch.sh")) ? 0 : 1);
+' "$R/packet/lane-plan.json" \
+  && pass "T36 GH-127: bare '>' redirect classified fs-touching; '2>&1'/'->'/'>=' usage is not" \
+  || fail "T36 fs_touching_tests wrong: $(cat "$R/packet/lane-plan.json")"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1

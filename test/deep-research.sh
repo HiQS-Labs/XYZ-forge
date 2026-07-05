@@ -256,5 +256,66 @@ or_stop
 { [ "$rc" -eq 1 ] && [ -z "$out" ]; } && pass "openrouter: timeout -> exit 1, no stdout" || fail "rc=$rc out='$out'"
 grep -q '"error":"timeout"' "$WORK/err" && pass "openrouter: timeout -> typed timeout error" || fail "missing typed error: $(cat "$WORK/err")"
 
+# ===================================================================================================
+# GH-124: opt-in real-agy smoke test. Gated on DEEP_RESEARCH_LIVE=1; self-skips by default (no real
+# agy call, no network) printing a clear reason, mirroring test/relay-self-sufficiency.sh's skip
+# convention. Runs ONE real, small deep-research.mjs query against the actual `agy` CLI and asserts a
+# real answer + at least one citation come back within DEEP_RESEARCH_TIMEOUT_MS. Never part of the
+# default validate.sh required-green set — same opt-in posture as relay-self-sufficiency.sh. When
+# skipped it does not touch $PASS/$FAIL, so the tally above stays exactly 45/45 non-live.
+# ===================================================================================================
+echo ""
+echo "== test: deep-research-real-agy (GH-124, opt-in) =="
+
+if [ "${DEEP_RESEARCH_LIVE:-0}" != "1" ]; then
+  echo "  SKIPPED: DEEP_RESEARCH_LIVE=1 not set (opt-in real-agy smoke test — set DEEP_RESEARCH_LIVE=1 to run one real, billed agy call)"
+  echo "  deep-research-real-agy: 0 pass, 0 fail (skipped)"
+else
+  LIVE_AGY_BIN="${AGY_BIN:-}"
+  if [ -z "$LIVE_AGY_BIN" ] && command -v agy >/dev/null 2>&1; then
+    LIVE_AGY_BIN="agy"
+  fi
+  if [ -z "$LIVE_AGY_BIN" ]; then
+    echo "  SKIPPED: no real agy binary found (DEEP_RESEARCH_LIVE=1 was set, but agy is not on PATH; set AGY_BIN to override)"
+    echo "  deep-research-real-agy: 0 pass, 0 fail (skipped)"
+  else
+    LIVE_PASS=0; LIVE_FAIL=0
+    live_pass(){ echo "  PASS: $*"; LIVE_PASS=$((LIVE_PASS+1)); }
+    live_fail(){ echo "  FAIL: $*" >&2; LIVE_FAIL=$((LIVE_FAIL+1)); }
+
+    echo "  agy: $LIVE_AGY_BIN"
+    echo "  (live API call — requires network + credentials; up to ${DEEP_RESEARCH_TIMEOUT_MS:-120000}ms)"
+
+    live_out="$(AGY_BIN="$LIVE_AGY_BIN" node "$DR" --query "What year was the Eiffel Tower completed?" --search-context-size low 2>"$WORK/live-err")"
+    live_rc=$?
+
+    if [ "$live_rc" -eq 0 ]; then
+      live_pass "real agy turn exits 0 within DEEP_RESEARCH_TIMEOUT_MS"
+    else
+      live_fail "real agy turn rc=$live_rc: $(cat "$WORK/live-err" 2>/dev/null)"
+    fi
+
+    if echo "$live_out" | grep -q '"answer":""'; then
+      live_fail "real agy answer field empty: $live_out"
+    elif echo "$live_out" | grep -q '"answer":"'; then
+      live_pass "real agy returned a non-empty answer"
+    else
+      live_fail "real agy answer field missing: $live_out"
+    fi
+
+    if echo "$live_out" | grep -q '"citations":\[\]'; then
+      live_fail "real agy returned zero citations: $live_out"
+    elif echo "$live_out" | grep -q '"citations":\['; then
+      live_pass "real agy returned at least one citation"
+    else
+      live_fail "real agy citations field missing: $live_out"
+    fi
+
+    echo ""
+    echo "  deep-research-real-agy: $LIVE_PASS pass, $LIVE_FAIL fail"
+    PASS=$((PASS+LIVE_PASS)); FAIL=$((FAIL+LIVE_FAIL))
+  fi
+fi
+
 echo "  deep-research: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]

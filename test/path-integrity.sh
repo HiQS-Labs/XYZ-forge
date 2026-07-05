@@ -69,7 +69,10 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # simulate the "tests-reference-slug" partial signal — a fixture literal, not a real reference.
 # GH-63: test/signal-triage.sh passes `test/foo.sh` / `test/some-test.sh` as synthetic `--test` inputs
 # to exercise the classifier (they name no real file) — same class, skip them.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh "
+# GH-108/GH-126/GH-127: test/swarm-preflight.sh's T35/T36 fixtures create test/bare-redirect.sh,
+# test/no-touch.sh, and test/comment-only.sh in a throwaway temp repo to exercise the genuine-ref
+# and bare-`>` fs-touching detectors — fixture literals, not references to files in this tree.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

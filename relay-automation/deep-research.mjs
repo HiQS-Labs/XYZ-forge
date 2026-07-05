@@ -9,13 +9,25 @@
 // model-provider config. Fail-closed: any backend failure prints a typed error to stderr and exits
 // non-zero — never a silent fallback to a different provider. Node stdlib only, no new deps.
 //
+// Runaway-grounding risk (GH-124): --search-context-size high, combined with the citation-heavy
+// system prompt below, can drive a backend to search unboundedly on a multi-claim query — pushing
+// close to DEEP_RESEARCH_TIMEOUT_MS's default (120000ms). That default is fine for the ~30s focused
+// queries seen so far, but tight for a thorough one. Prefer --search-context-size medium (the
+// default) for anything but a single, narrow, focused claim; reserve high for queries you expect to
+// resolve with a handful of sources, and raise DEEP_RESEARCH_TIMEOUT_MS explicitly if you do use high
+// on a multi-claim query.
+//
 // Usage:
 //   node relay-automation/deep-research.mjs --query "..." [--provider agy|openrouter] \
 //     [--search-context-size low|medium|high] [--temperature 0.0] [--max-tokens N]
 //
 // Env:
 //   AGY_BIN                          agy binary (default: agy; tests inject a stub)
-//   DEEP_RESEARCH_TIMEOUT_MS         wall-clock cap in ms (default: 120000)
+//   DEEP_RESEARCH_TIMEOUT_MS         wall-clock cap in ms (default: 120000 / 120s). Override upward
+//                                    (e.g. 180000) for a thorough, multi-claim --search-context-size
+//                                    high query that needs more headroom than the default — see the
+//                                    runaway-grounding note above (GH-124). The default is left
+//                                    unchanged for everyone else.
 //   OPENROUTER_API_KEY               required for --provider openrouter (fail-closed if missing)
 //   DEEP_RESEARCH_OPENROUTER_MODEL   OpenRouter model slug (default: perplexity/sonar)
 //   OPENROUTER_BASE_URL              OpenRouter API base (default: https://openrouter.ai/api/v1;
