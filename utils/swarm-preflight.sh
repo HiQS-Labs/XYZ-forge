@@ -314,7 +314,24 @@ const helperRefs = (raw) => {
   }
   return refs;
 };
-const isFsTouching = (raw) => /(mktemp|git(?:\s+-C\s+\S+)?\s+(?:worktree|init)|mkdir\s|touch\s|rm\s+-|cat\s+>|printf\s+.*>|>>|writeFileSync|appendFileSync|mkdtempSync)/s.test(raw);
+// GH-127: also catch a bare `>` redirect following a command (e.g. `echo x > file`), not just the
+// already-covered `cat >`/`>>`/`printf ...>`/mktemp/etc. forms. Guarded with a negative lookbehind for
+// `-` (so an arrow `->` doesn't misfire) and a negative lookahead for `=`/`>`/`&` (so `>=`, `>>` — a
+// duplicate of the existing `>>` alt, harmless — and an fd-dup redirect like `2>&1`, which touches no
+// filesystem path, are NOT misclassified as fs-touching).
+const isFsTouching = (raw) => /(mktemp|git(?:\s+-C\s+\S+)?\s+(?:worktree|init)|mkdir\s|touch\s|rm\s+-|cat\s+>|printf\s+.*>|>>|writeFileSync|appendFileSync|mkdtempSync|(?<!-)>(?![=>&]))/s.test(raw);
+
+// GH-126: a raw substring match (`raw.includes(artifact)`) treats ANY mention of the artifact path —
+// a comment, an error string, an unrelated mention — as a "covering test," which feeds directly into
+// the generated ALLOW_PATHS and so widens what the builder may write beyond the intended covering
+// test. Require the mention to look like an actual reference: immediately preceded by a path separator
+// (the `$(cd ... && pwd)/<artifact>` idiom this repo's own tests use to locate the file under test) or
+// directly preceded by a `source`/`bash`/`node` keyword or a `require(` call — not merely present
+// anywhere in the file's text.
+const isGenuineRef = (raw, artifact) => {
+  const esc = artifact.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:/|\\b(?:source|bash|node)\\b\\s*["'\`]?|require\\(\\s*["'\`])${esc}`).test(raw);
+};
 
 for (const rel of declared) add(null, rel);
 if (existsSync(testRoot)) {
@@ -322,7 +339,7 @@ if (existsSync(testRoot)) {
     const rel = normalize(path.relative(root, abs));
     if (!/^test\/.+/.test(rel)) continue;
     const raw = read(rel);
-    if (declared.some((artifact) => raw.includes(artifact))) add(inferredTests, rel);
+    if (declared.some((artifact) => isGenuineRef(raw, artifact))) add(inferredTests, rel);
   }
 }
 
@@ -814,6 +831,21 @@ else
   GH54_VERIFY_RULE="- Do NOT run the full gate (\`$GATE_CMD\`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn."
 fi
 
+# GH-108: Level-1 documented-caveat only — no cross-runner auto-detection (non-goal). When GATE_CMD
+# heuristically LOOKS like a filtered-runner invocation (a " -- " passthrough after something that
+# looks like a test command), whether it actually scopes to one test depends entirely on the target
+# repo's own test-runner config — reproduced live: a target's `jest --forceExit && npm run test:node`
+# did NOT filter, so a "scoped" gate ran the whole suite. Surface that ambiguity in the packet instead
+# of silently trusting the contract author's `-- <name>` assumption. An already-plain gate (no " -- ")
+# is unaffected.
+GH108_GATE_CAVEAT=""
+if [[ "$GATE_CMD" == *" -- "* ]]; then
+  _gh108_pre="${GATE_CMD%% -- *}"
+  if grep -qiE '\btest\b' <<<"$_gh108_pre"; then
+    GH108_GATE_CAVEAT="- Gate-scoping caveat (GH-108): \`$GATE_CMD\` is passed through verbatim; whether the \`-- ...\` passthrough actually filters to a single test depends on the target repo's own test-runner configuration (a runner script can ignore or misroute passthrough args). Pre-green the full suite, or independently verify the filter genuinely scopes, before firing this lane."
+  fi
+fi
+
 cat >"$OUT_DIR/packet.md" <<EOF
 # Marathon preflight packet — $SLUG
 
@@ -824,6 +856,7 @@ cat >"$OUT_DIR/packet.md" <<EOF
 - Suggested branch: \`$SUGGESTED_BRANCH\` (branch_ready=$([[ "$BRANCH_READY" -eq 1 ]] && echo true || echo false)$([[ "$BRANCH_READY" -eq 0 && "$SKIP_BRANCH_PROMPT" -eq 0 ]] && echo " — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8")$([[ "$SKIP_BRANCH_PROMPT" -eq 1 ]] && echo " — carve-out: risk=1/independent zone, proceed on the current branch without asking"))
 - Verdict: $VERDICT
 - Gate: \`$GATE_CMD\`
+$GH108_GATE_CAVEAT
 - Artifacts: $ART_CSV
 $GH55_AUTO_LINE
 - Suggested turn budget: \`RELAY_TURN_TIMEOUT_S=$GH39_TIMEOUT\` (sized to ≈ $GH39_ART_LOC LOC across $GH39_ART_N artifact(s); a build that also edits tests needs headroom over the 300s default)
