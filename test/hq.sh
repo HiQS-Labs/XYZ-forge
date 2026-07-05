@@ -18,6 +18,7 @@ trap 'rm -rf "$TMP"' EXIT
 PDDA_DIR="$TMP/gitpulse/pdda"; mkdir -p "$PDDA_DIR"
 { printf '# comment header ignored\n'
   printf 'acme-app\t2026-07-04T00:00:00Z\tobserve\tabc1234\tyes\n'
+  printf 'acme-api\t2026-07-04T00:00:00Z\tobserve\tabc9999\tno\n'   # shares the "acme" prefix -> ambiguity
   printf 'orphan-pdda\t2026-07-04T00:00:00Z\tfull\tdef5678\tno\n'
 } > "$PDDA_DIR/registry-testdev.tsv"
 
@@ -103,9 +104,26 @@ bash "$HQ" status nope-not-here >/dev/null 2>&1; rc=$?
 bash "$HQ" status nope-not-here 2>&1 | grep -q "UNRESOLVED" && pass "unresolved card shown" \
   || fail "no UNRESOLVED marker"
 
-# ---- 6. write verbs are gated (Phase 2/3 not built) ----
-bash "$HQ" fire acme-app >/dev/null 2>&1; rc=$?
-[ "$rc" = 3 ] && pass "fire verb gated rc=3 (not built)" || fail "fire rc=$rc"
+# ---- 5b. fuzzy resolution: a loose name normalizes to the canonical repo ----
+R="$(bash "$HQ" resolve AcmeApp)"; rc=$?
+[ "$rc" = 0 ] && pass "fuzzy 'AcmeApp' resolves rc=0" || fail "fuzzy rc=$rc"
+[ "$(printf '%s\n' "$R" | field REPO)" = "acme-app" ] \
+  && pass "fuzzy -> REPO=acme-app" || fail "fuzzy REPO: $(printf '%s\n' "$R" | field REPO)"
+[ "$(printf '%s\n' "$R" | field RESOLVED_VIA)" = "fuzzy" ] \
+  && pass "RESOLVED_VIA=fuzzy" || fail "via: $(printf '%s\n' "$R" | field RESOLVED_VIA)"
+[ "$(bash "$HQ" resolve acme-app | field RESOLVED_VIA)" = "exact" ] \
+  && pass "exact match stays RESOLVED_VIA=exact" || fail "exact via mislabeled"
+
+# ---- 5c. ambiguous name -> rc=2 + candidates listed (no guess) ----
+bash "$HQ" resolve acme >/dev/null 2>&1; rc=$?
+[ "$rc" = 2 ] && pass "ambiguous 'acme' rc=2" || fail "ambiguous rc=$rc"
+CANDS="$(bash "$HQ" resolve acme | field CANDIDATES)"
+{ printf '%s' "$CANDS" | grep -q "acme-app" && printf '%s' "$CANDS" | grep -q "acme-api"; } \
+  && pass "ambiguous lists both candidates" || fail "candidates: $CANDS"
+bash "$HQ" park acme "do a thing" >/dev/null 2>&1; rc=$?
+[ "$rc" = 2 ] && pass "park refuses ambiguous rc=2" || fail "park ambiguous rc=$rc"
+
+# ---- 6. dispatch verbs (queue/fire) covered by test/hq-dispatch.sh ----
 
 echo "== hq: $PASS passed, $FAIL failed =="
 [ "$FAIL" = 0 ]

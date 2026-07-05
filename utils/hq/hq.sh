@@ -62,8 +62,18 @@ cmd_status(){
   xyz_tick="$(printf '%s\n' "$R"  | val XYZ_TICK)"
   xyz_commit="$(printf '%s\n' "$R" | val XYZ_COMMIT)"
 
+  local via cands
+  via="$(printf '%s\n' "$R" | val RESOLVED_VIA)"
+  cands="$(printf '%s\n' "$R" | val CANDIDATES)"
+
   echo "HQ · project card"
   printf '  query:        %s\n' "$q"
+  if [ "$rc" = 2 ]; then
+    echo   '  path:         AMBIGUOUS — the name matches more than one repo'
+    printf '  candidates:   %s\n' "${cands//,/, }"
+    echo   '  Re-run with a more specific name (a candidate above).'
+    return 2
+  fi
   if [ "$rc" != 0 ] || [ -z "$path" ]; then
     printf '  repo:         %s (candidate)\n' "$repo"
     echo   '  path:         UNRESOLVED — no registry or filesystem match'
@@ -97,7 +107,7 @@ cmd_status(){
     C) tierdesc="bare repo (plain issue only)";;
   esac
 
-  printf '  repo:         %s\n' "$repo"
+  printf '  repo:         %s%s\n' "$repo" "$([ "$via" = fuzzy ] && echo '  (fuzzy match — confirm this is right)')"
   printf '  path:         %s  (via %s)\n' "$path" "$psrc"
   printf '  capability:   Tier %s — %s\n' "$tier" "$tierdesc"
   echo
@@ -173,6 +183,12 @@ cmd_park(){
   local repo path tier has_pdda=0 has_xyz=0
   repo="$(printf '%s\n' "$R" | val REPO)"
   path="$(printf '%s\n' "$R" | val REPO_PATH)"
+  if [ "$rc" = 2 ]; then
+    local cands; cands="$(printf '%s\n' "$R" | val CANDIDATES)"
+    echo "hq park: '$project' is AMBIGUOUS — matches: ${cands//,/, }" >&2
+    echo "  re-run with a specific repo name so intake lands in the right repo." >&2
+    return 2
+  fi
   if [ "$rc" != 0 ] || [ -z "$path" ]; then
     echo "hq park: '$project' is UNRESOLVED — cannot file intake without a target repo." >&2
     printf '  find ~ -type d -name "%s" -exec test -d "{}/.git" \\; -print\n' "$repo" >&2
