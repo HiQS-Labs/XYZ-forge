@@ -2,7 +2,7 @@
 gh_issue: 129
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/129
 title: "deep-research: add Perplexity grounded search (Sonar) via OpenRouter as the second backend"
-status: captured 2026-07-04, rated, in execution (worktree build this session)
+status: built + live-verified 2026-07-04, PR open
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -36,7 +36,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-04. GH-87 built the seam explicitly anticipating this: "a second backend (Perplexity) can be added later without reworking the seam." OpenRouter is already the repo's OpenAI-compatible gateway (GH-77 Aider lane, GH-118/120), so Perplexity Sonar arrives with zero new vendor accounts or deps. | Build in an isolated worktree: `--provider openrouter` backend + stub-server tests + README/header docs, then PR. |
+| Built 2026-07-04 on branch `gh-129-perplexity-openrouter` (worktree): `--provider agy\|openrouter` flag (default `agy`, byte-identical), `runOpenRouter` via Node global `fetch` (stdlib only), `web_search_options.search_context_size` mapping, annotations→`citations[]`→URL-scan citation normalization, typed `missing_api_key` + AbortController `timeout`. `test/deep-research.sh` **45/45** (23 agy untouched + 22 new stub-HTTP-server assertions); the fake stub credential is hand-baselined in `security-scan-baseline.txt`; `validate.sh` exit 0. **Live-verified against real OpenRouter→Perplexity Sonar the same day (GH-124's lesson applied pre-merge): 4.5s, 15 real citations with titles, normalized correctly.** | PR review + merge; then move this doc to `3-COMPLETED` and close #129. GH-124's lane (same write-set) fires only after this merges — serialize. |
 
 ## Problem (grounded in the current code)
 
