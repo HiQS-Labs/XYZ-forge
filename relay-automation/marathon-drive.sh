@@ -234,6 +234,40 @@ route_agent "$REVIEWER"
 # Reviewer must be a QA-capable model lane (codex/gemini/agy), never the Claude builder lane.
 case "$REVIEWER" in codex*|gemini*|agy*) ;; *) die "reviewer '$REVIEWER' must start with codex/gemini/agy" ;; esac
 
+# GH-117: probe the builder/reviewer binary's existence on PATH here — before ANY tick state
+# mutation (task.created/claim/release at :386+ below) or even Step 0's clean-workspace check —
+# on both --dry-run and live paths. A missing binary used to only surface deep inside the turn-taker
+# dispatch, by which point the relay task was already seeded: a live dogfood run against rebalance-OS
+# hit a missing `claude` builder and left MARATHON-P1-TURN permanently `open` (this repo's tick-token
+# model can't reopen a spent task — recovering it needed #116's --retry flag or a manual phase rename).
+# Failing here instead means a missing binary dies clean, with no spent token and no manual cleanup.
+_probe_bin() {  # <bin> <role-label> <agent-id> — die if not found on PATH
+  command -v "$1" >/dev/null 2>&1 \
+    || die "$2 binary '$1' not found on PATH (--$2 agent '$3')"
+}
+_probe_claude_bin() {  # <role-label> — mirrors claude-turn.sh's own CLAUDE_BIN resolution (GH-58):
+                       # explicit CLAUDE_BIN override, else `claude` on PATH, else the local Claude
+                       # Code install fallback. Kept in lockstep so this probe never rejects a setup
+                       # the real dispatch would still accept.
+  if [[ -n "${CLAUDE_BIN:-}" ]]; then
+    command -v "$CLAUDE_BIN" >/dev/null 2>&1 && return 0
+  else
+    command -v claude >/dev/null 2>&1 && return 0
+    [[ -x "$HOME/.claude/local/claude" ]] && return 0
+  fi
+  die "$1 binary 'claude' not found on PATH (set CLAUDE_BIN or use a codex/agy --$1 agent)"
+}
+_probe_agent_bin() {  # <agent-id> <role-label>
+  case "$1" in
+    claude*) _probe_claude_bin "$2" ;;
+    codex*)  _probe_bin "${CODEX_BIN:-codex}" "$2" "$1" ;;
+    agy*)    _probe_bin "${AGY_BIN:-agy}"     "$2" "$1" ;;
+    aider*)  _probe_bin "${AIDER_BIN:-aider}" "$2" "$1" ;;
+  esac
+}
+_probe_agent_bin "$BUILDER"  builder
+_probe_agent_bin "$REVIEWER" reviewer
+
 # Artifact allowlist: when a phase targets real file(s), pass them as ALLOW_PATHS so the turn-takers
 # may create/edit them. The shared safety core (relay-turn-lib.sh) reverts ANY edit outside this
 # allowlist + the always-allowed relay file — so containment still holds; the builder just gains a

@@ -27,11 +27,24 @@ chmod +x "$STUB_RD"
 BRIEF="$WORK/brief.md"
 printf '## Implement a hello-world function\nWrite a function that returns "hello".\n' > "$BRIEF"
 
+# GH-117: stub builder/reviewer binaries so marathon-drive's binary-existence probe (added ahead of
+# any tick mutation) sees a resolvable claude/agy on every pre-existing test below — this suite never
+# invokes the real CLI (relay-drive is stubbed), so it must not depend on claude/agy actually being
+# installed on the test machine either.
+STUB_CLAUDE_BIN="$WORK/stub-claude"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_CLAUDE_BIN"
+chmod +x "$STUB_CLAUDE_BIN"
+STUB_AGY_BIN="$WORK/stub-agy"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_AGY_BIN"
+chmod +x "$STUB_AGY_BIN"
+MISSING_BIN="$WORK/does-not-exist-bin"   # deliberately never created
+
 run_driver() {  # <extra-args…>
   MARATHON_ROOT="$A" \
   MARATHON_RELAY_DRIVE="$STUB_RD" \
   MARATHON_AGENT_CMD="$WORK/noop-agent" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  CLAUDE_BIN="${CLAUDE_BIN:-$STUB_CLAUDE_BIN}" AGY_BIN="${AGY_BIN:-$STUB_AGY_BIN}" \
   bash "$DRIVER" \
     --phases-dir "$A/phases" \
     --phase-brief "$BRIEF" \
@@ -234,6 +247,7 @@ chmod +x "$EVAL_RD"
 rm -f "$WORK/spaced-agent-ran"
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$SPACED_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
     --reviewer agy --pre-advance-cmd "true" >/dev/null 2>&1 || true
 [ -f "$WORK/spaced-agent-ran" ] \
@@ -262,6 +276,7 @@ chmod +x "$ENV_AGENT"
 rm -f "$WORK/allow-paths-seen"
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
     --reviewer agy --artifact "$ART" --pre-advance-cmd "true" >/dev/null 2>&1 || true
 grep -q "$ART" "$WORK/allow-paths-seen" 2>/dev/null \
@@ -274,6 +289,7 @@ rm -f "$WORK/allow-paths-seen"
 ALLOW_PATHS="leaked/from/parent" \
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGENT" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
     --reviewer agy --pre-advance-cmd "true" >/dev/null 2>&1 || true
 grep -q "UNSET" "$WORK/allow-paths-seen" 2>/dev/null \
@@ -297,6 +313,45 @@ RELAY_DRIVE_EXIT=0 run_driver --require-clean >/dev/null 2>&1; rc=$?
 RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "dirty workspace only WARNS without --require-clean (still runs)" || fail "dirty tree should warn-not-block without --require-clean (exit=$rc)"
 rm -f "$A/STRAY.md"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (14) GH-117: missing builder binary fails clean BEFORE any tick mutation ──
+# A builder binary not on PATH must die() here — not deep inside the turn-taker dispatch after
+# task.created/claim/release already ran (that used to leave a permanently spent relay task).
+BUILD_OUT="$(CLAUDE_BIN="$MISSING_BIN" run_driver 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && pass "GH-117: missing builder binary exits 2" || fail "GH-117: missing builder exit=$rc (expected 2): $BUILD_OUT"
+printf '%s\n' "$BUILD_OUT" | grep -qi "not found on PATH" \
+  && pass "GH-117: missing builder error names the missing binary" \
+  || fail "GH-117: expected a clear 'not found on PATH' message, got: $BUILD_OUT"
+[ ! -f "$A/phases/p1/RELAY.md" ] && pass "GH-117: missing builder — relay file never rendered" \
+  || fail "GH-117: relay file should not exist when the builder binary is missing"
+[ -z "$(ls "$A/.tick/events/" 2>/dev/null | grep 'MARATHON-P1-TURN')" ] \
+  && pass "GH-117: missing builder — no tick task created (no spent token)" \
+  || fail "GH-117: tick task must not be seeded when the builder binary is missing"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (15) GH-117: missing reviewer binary fails clean BEFORE any tick mutation ─
+REV_OUT="$(AGY_BIN="$MISSING_BIN" run_driver 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && pass "GH-117: missing reviewer binary exits 2" || fail "GH-117: missing reviewer exit=$rc (expected 2): $REV_OUT"
+printf '%s\n' "$REV_OUT" | grep -qi "not found on PATH" \
+  && pass "GH-117: missing reviewer error names the missing binary" \
+  || fail "GH-117: expected a clear 'not found on PATH' message, got: $REV_OUT"
+[ ! -f "$A/phases/p1/RELAY.md" ] && pass "GH-117: missing reviewer — relay file never rendered" \
+  || fail "GH-117: relay file should not exist when the reviewer binary is missing"
+[ -z "$(ls "$A/.tick/events/" 2>/dev/null | grep 'MARATHON-P1-TURN')" ] \
+  && pass "GH-117: missing reviewer — no tick task created (no spent token)" \
+  || fail "GH-117: tick task must not be seeded when the reviewer binary is missing"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (16) GH-117: both binaries present — probe is a no-op, dry-run unaffected ─
+BOTH_OUT="$(CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" run_driver --dry-run 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-117: both binaries present — dry-run still exits 0" \
+  || fail "GH-117: both-present dry-run exit=$rc (expected 0): $BOTH_OUT"
+[ -f "$A/phases/p1/RELAY.md" ] && pass "GH-117: both-present — relay file still rendered" \
+  || fail "GH-117: relay file missing when both binaries are present"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
