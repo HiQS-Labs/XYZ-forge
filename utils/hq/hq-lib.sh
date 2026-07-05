@@ -313,3 +313,19 @@ hq_target_slug(){
   [ -n "$url" ] || return 0
   printf '%s' "$url" | sed -E 's#^git@[^:]+:##; s#^https?://[^/]+/##; s#\.git$##'
 }
+
+# ---- Phase 3 (dispatch) helpers -----------------------------------------------------------------
+
+# hq_queue_lane_block <title> <created> <tier> <issue|-> -> a non-destructive lane block appended to
+# the target's Marathon Plan. Deliberately an explicit "HQ-queued" appendix, NOT an in-schema lane —
+# a human/planner rates it and slots it into the wave/collision map before it is ever fired.
+hq_queue_lane_block(){
+  local title="$1" created="$2" tier="$3" issue="$4" ref=""
+  [ "$issue" != "-" ] && ref=" → #$issue"
+  cat <<EOF
+
+<!-- HQ-queued lane — appended $created; reconcile into a wave + collision map before firing. -->
+- **HQ-queued: $title** (Tier $tier, queued $created$ref)
+  - [ ] rate effort/complexity/risk, then slot into a wave (respect the plan's collision map, GH-45).
+EOF
+}

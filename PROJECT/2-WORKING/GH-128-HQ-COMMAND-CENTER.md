@@ -2,7 +2,7 @@
 gh_issue: 128
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128
 title: "HQ — multi-repo command-center skill: one utterance → registry-resolved repo → PDDA-compliant intake → marathon queue/dispatch"
-status: Active — Phases 0–2 built & verified; Phase 3 (dispatch) next
+status: Active — Phases 0–3 + fuzzy (1.x) built & verified; live-exec of fire held (§8)
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -24,13 +24,16 @@ related:
   - utils/hq/hq.sh
   - utils/hq/hq-lib.sh
   - test/hq.sh
+  - test/hq-park.sh
+  - test/hq-dispatch.sh
   - GH-128-HQ-system-diagram.html
 non_goals:
-  - "Phase 2/3 write paths (issue-first intake, queue/fire dispatch) are NOT built in this iteration —
-    the prototype is read-only. The `park`/`queue`/`fire` verbs exist only as gated not-yet-built notices."
+  - "HQ never executes a marathon. `fire` prepares + gates + emits the swarm-preflight command; the
+    operator runs it and drives via the relay-xyz skill (GUIDING-PRINCIPLES §8). Harness driving is
+    owned by relay-xyz, not HQ."
   - "Rebalance is read-only in HQ's direction, always (mirrors #96 / rebalance-OS#102 seam discipline)."
-  - "No fuzzy/alias resolution yet — Phase 1 matches exact repo names or a project's repo-part; the
-    fuzzy rung + operator-confirm loop is Phase 1.x / future."
+  - "Fuzzy resolution is name-normalization + candidate matching, not semantic search: a genuinely
+    ambiguous name returns CANDIDATES for the operator to disambiguate — HQ does not pick one."
 ---
 
 # HQ — multi-repo command-center skill
@@ -46,15 +49,17 @@ on *that repo's* PDDA rails with explicit-verb-only dispatch. Issue [#128].
 
 | What was just completed | What's next |
 |---|---|
-| **Phases 0–2 built and verified — the first runnable end-to-end prototype.** Phase 0 (registry discovery, written back below) + Phase 1 (read-only resolver + project card: `skills/hq/SKILL.md`, `utils/hq/hq.sh`, `utils/hq/hq-lib.sh`, `test/hq.sh` 18/18) + **Phase 2 (`park` intake writer)**: `hq.sh park [--create] <project> <request>` resolves the target, then **previews by default** (writes nothing) or, with `--create`, files the real GitHub issue → writes the PDDA `PROJECT/1-INBOX/GH-<n>-<SLUG>.md` capture → inserts the `ROADMAP.md` queue pointer → runs the target's own `pdda.sh frontmatter`. Dup-guard + Tier-C-is-plain-issue-only + `HQ_GH_BIN` stub seam. Hermetic `test/hq-park.sh` (19/19, in `validate.sh`); `gh`-stubbed `--create` proven to write correct frontmatter and a Queue-placed pointer. Preview proven live against `sleuth-app` (Tier A). | **Phase 3 (dispatch):** `queue` (append a rated lane to the target's Marathon Plan) + `fire` (`swarm-preflight --target-root → marathon-drive`), with the `risk >= 3` gate. **Phase 1.x:** fuzzy/alias resolution. Firing a **real** `park --create` against a live repo awaits a concrete operator request. |
+| **Phases 0–3 + fuzzy resolution (1.x) built and verified.** Phase 0 (discovery) + Phase 1 (read-only resolver/card) + Phase 2 (`park` intake writer, proven live filing rebalance-OS #109/#110) + **Phase 1.x fuzzy** (`hq_norm`/`hq_candidates`: loose names like "rebalanceOS" resolve; ambiguous names return rc=2 + `CANDIDATES` instead of guessing) + **Phase 3 dispatch**: `queue [--create]` appends a non-destructive HQ-queued lane to the target's Marathon Plan; `fire --gh-issue N --risk R` is a **gated prepare-and-hand-off** — resolve + gate (Tier A, `risk<3`) + emit the `swarm-preflight` command, **never driving the harness itself** (operator decides — GUIDING-PRINCIPLES §8; the relay-xyz guard owns driving). Tests: `hq.sh` 24/24, `hq-park.sh` 23/23, `hq-dispatch.sh` 18/18 — all in `validate.sh`; shellcheck clean. | **Held by design:** live execution of a marathon from `fire` (the operator runs the emitted command and drives via the relay-xyz skill). **Phase 4 (deferred):** promote `/hq` user-level + Rebalance-priority promotion suggestions. |
 
 ## Table of contents
 
 - [Phase 0 — Discovery: registry schemas, coverage & resolution order](#phase-0--discovery-registry-schemas-coverage--resolution-order) ✅
 - [Phase 1 — Read-only resolver + `hq status` project card](#phase-1--read-only-resolver--hq-status-project-card) ✅ (prototype)
 - [Phase 2 — Intake writer (issue → capture → roadmap parking)](#phase-2--intake-writer-issue--capture--roadmap-parking) ✅ (`park`)
-- [Phase 3 — Dispatch (`queue` / `fire`)](#phase-3--dispatch-queue--fire) ⏳
+- [Phase 3 — Dispatch (`queue` / `fire`)](#phase-3--dispatch-queue--fire) ✅ (queue + gated fire)
 - [Phase 4 — Deferred: user-level skill + Rebalance-priority promotion](#phase-4--deferred-user-level-skill--rebalance-priority-promotion)
+
+Fuzzy resolution (Phase 1.x) is folded into Phase 1's resolver — see the Phase 1 build notes.
 
 ## Capability tiers (what HQ may do per repo)
 
@@ -217,15 +222,38 @@ Surfaced the fuzzy-resolution gap (needed canonical `rebalance-OS`, not "rebalan
 
 ## Phase 3 — Dispatch (`queue` / `fire`)
 
-**Goal:** `queue` appends a rated lane to the target's current Marathon Plan (honoring its collision
-map + the GH-45 queue-commitment contract); `fire` drives a contained lane via
-`swarm-preflight --target-root <repo> → marathon-drive`. Park-by-default preserved.
+**Goal:** move captured intake toward execution — `queue` batches it into the target's Marathon Plan;
+`fire` prepares an immediate, gated dispatch. Both respect that **the operator decides** when a
+marathon actually runs (GUIDING-PRINCIPLES §8).
+
+**Design decision — HQ prepares, it does not drive.** `swarm-preflight` is the *producer* of the run
+packet; the harness *executor* (`marathon-drive`) is owned by the relay-xyz skill (which holds the
+sandbox rules, containment, and exit codes — and a `PreToolUse` guard blocks anyone hand-rolling it).
+So `fire` deliberately stops at emitting the `swarm-preflight` command + a hand-off instruction; it
+never execs the harness. This is the same restraint as `park`'s preview-first outward step, applied to
+the heaviest action in the system.
+
+**Built:**
+
+- `queue [--create] [--gh-issue N] <project> <request>` — resolves + requires PDDA rails + an existing
+  `MARATHON-PLAN-*.md`; **previews** the lane block by default, or `--create` **appends** it as a
+  clearly-marked, non-destructive `HQ-queued` appendix (a human rates it and slots it into a wave +
+  collision map, GH-45 — HQ never silently injects an in-schema lane). Refuses Tier C / no-plan.
+- `fire --gh-issue N [--risk 1-5] <project>` — resolves + gates: **Tier A required**, **`risk` is a
+  hard gate** (`>=3` routes to a human; unknown risk holds), then emits
+  `utils/swarm-preflight.sh --gh-issue N --target-root <path>` and instructs to drive the packet via
+  the relay-xyz skill. Requires `--gh-issue` (dispatch operates on captured intake, not a raw request).
+- Hermetic `test/hq-dispatch.sh` (**18/18**, in `validate.sh`).
 
 ### QA gate — Phase 3
 
-- [ ] `queue` appends a lane without violating the plan's collision map.
-- [ ] `fire` refuses when `risk >= 3`, on Tier B/C repos, or when `xyz-sync check` reports drift.
-- [ ] Every dispatch is traceable to its intake issue.
+- [x] `queue --create` appends a lane **non-destructively** (existing plan content preserved; verified)
+      and records the intake issue link; refuses Tier C and repos with no open Marathon Plan.
+- [x] `fire` refuses when `risk >= 3`, on non-Tier-A repos, when `--gh-issue` is missing, and when
+      unresolved; on pass it emits the `swarm-preflight` command and states nothing was executed.
+- [x] Every dispatch is traceable to its intake issue (`--gh-issue` threaded into queue lanes + fire).
+- [x] `test/hq-dispatch.sh` hermetic and green in `validate.sh`.
+- [ ] **Held by design:** live execution of the emitted marathon (operator runs it via relay-xyz — §8).
 
 ## Phase 4 — Deferred: user-level skill + Rebalance-priority promotion
 

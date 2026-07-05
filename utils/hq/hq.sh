@@ -34,8 +34,13 @@ usage:
                                           issue-first intake in the target repo
                                           (PREVIEWS by default; --create writes;
                                            --title sets a clean title, request = body)
-
-not yet built (Phase 3 dispatch): queue | fire
+  hq.sh queue [--create] [--gh-issue N] <project> <req…>
+                                          append an HQ-queued lane to the target's Marathon Plan
+                                          (PREVIEWS by default; --create appends, non-destructive)
+  hq.sh fire --gh-issue N [--risk 1-5] <project>
+                                          GATED prepare-and-hand-off: resolve + gate (Tier A,
+                                          risk<3) + emit the swarm-preflight command. Never drives
+                                          the harness itself (operator decides — §8).
 EOF
 }
 
@@ -287,6 +292,81 @@ cmd_park(){
   echo "  (files written but NOT committed — review, then commit in the target repo)"
 }
 
+# cmd_queue <create 0|1> <issue|-> <project> <request...>
+# Preview or --create: append an HQ-queued lane to the target's newest Marathon Plan (non-destructive).
+cmd_queue(){
+  local create="$1" issue="$2" project="$3"; shift 3; local request="$*"
+  local R rc; R="$(hq_resolve "$project")"; rc=$?
+  local repo path; repo="$(printf '%s\n' "$R" | val REPO)"; path="$(printf '%s\n' "$R" | val REPO_PATH)"
+  if [ "$rc" = 2 ]; then
+    echo "hq queue: '$project' is AMBIGUOUS — matches: $(printf '%s\n' "$R" | val CANDIDATES | tr ',' ' ')" >&2; return 2
+  fi
+  [ "$rc" = 0 ] && [ -n "$path" ] || { echo "hq queue: '$project' is UNRESOLVED — no target repo." >&2; return 1; }
+
+  # need PDDA rails + an existing marathon plan to queue into
+  local has_pdda=0; { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
+  [ "$has_pdda" = 1 ] || { echo "hq queue: $repo is Tier C (no PDDA) — nothing to queue into; use 'park' for a plain issue." >&2; return 1; }
+  local mara; mara="$(hq_inspect_repo "$path" | val LOCAL_MARATHON)"
+  if [ -z "$mara" ]; then
+    echo "hq queue: $repo has no open MARATHON-PLAN-*.md in PROJECT/2-WORKING — create one first, or 'park' the request." >&2
+    return 1
+  fi
+  local plan="$path/PROJECT/2-WORKING/$mara" title created tier
+  title="$(hq_issue_title "$project" "$request")"
+  created="$(date +%F)"
+  tier="$(hq_tier "$has_pdda" "$([ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && echo 1 || echo 0)")"
+
+  if [ "$create" != 1 ]; then
+    echo "HQ queue · PREVIEW (writes nothing) — would append to $mara"
+    printf '  target plan:  %s\n' "PROJECT/2-WORKING/$mara"
+    echo "  --- lane block that would be appended ---"
+    hq_queue_lane_block "$title" "$created" "$tier" "$issue" | sed 's/^/  | /'
+    echo "  [preview only] re-run with --create to append the lane."
+    return 0
+  fi
+  hq_queue_lane_block "$title" "$created" "$tier" "$issue" >> "$plan"
+  echo "HQ queue · appended an HQ-queued lane to $repo"
+  printf '  ✓ plan:    %s\n' "PROJECT/2-WORKING/$mara"
+  echo "  (appended, NOT committed — review + rate + slot into a wave before firing)"
+}
+
+# cmd_fire <project> <issue> <risk|-> — GATED prepare-and-handoff. NEVER drives the harness itself:
+# it resolves, gates, and emits the swarm-preflight command; the operator runs it + drives via the
+# relay-xyz skill (GUIDING-PRINCIPLES §8 "operator decides"; the relay-xyz guard owns harness driving).
+cmd_fire(){
+  local project="$1" issue="$2" risk="$3"
+  local R rc; R="$(hq_resolve "$project")"; rc=$?
+  local repo path; repo="$(printf '%s\n' "$R" | val REPO)"; path="$(printf '%s\n' "$R" | val REPO_PATH)"
+  if [ "$rc" = 2 ]; then
+    echo "hq fire: '$project' is AMBIGUOUS — matches: $(printf '%s\n' "$R" | val CANDIDATES | tr ',' ' ')" >&2; return 2
+  fi
+  [ "$rc" = 0 ] && [ -n "$path" ] || { echo "hq fire: '$project' is UNRESOLVED — no target repo." >&2; return 1; }
+  [ -n "$issue" ] || { echo "hq fire: requires --gh-issue <n> (dispatch operates on captured intake, not a raw request)." >&2; return 2; }
+
+  # gate 1: Tier A (dispatch-eligible)
+  local has_pdda=0 has_xyz=0
+  { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
+  [ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && has_xyz=1
+  if [ "$(hq_tier "$has_pdda" "$has_xyz")" != A ]; then
+    echo "hq fire: $repo is not Tier A (needs PDDA + a vendored XYZ install to run driven lanes) — refusing." >&2
+    return 1
+  fi
+  # gate 2: risk (a hard gate, not an addend — risk>=3 routes to a human; unknown risk holds)
+  case "$risk" in
+    ''|-) echo "hq fire: risk unknown — pass --risk N (1-5). Refusing to arm without it." >&2; return 1;;
+    [3-5]) echo "hq fire: risk $risk >= 3 — routes to a human, not an auto-fire. Refusing." >&2; return 1;;
+    [12]) : ;;
+    *) echo "hq fire: --risk must be 1-5." >&2; return 2;;
+  esac
+
+  echo "HQ fire · GATES PASS — prepared dispatch for $repo #$issue (Tier A, risk $risk)"
+  echo "  HQ does not drive the harness itself (operator decides — GUIDING-PRINCIPLES §8)."
+  echo "  1) produce the run packet:"
+  printf '       utils/swarm-preflight.sh --gh-issue %s --target-root %q\n' "$issue" "$path"
+  echo "  2) drive the emitted packet via the relay-xyz skill (it owns sandbox rules + containment)."
+  echo "  (nothing was executed — this is the armed, gated hand-off)"
+}
+
 case "${1:-}" in
   resolve)    shift; [ $# -ge 1 ] || { usage; exit 2; }; cmd_resolve "$@";;
   status)     shift; [ $# -ge 1 ] || { usage; exit 2; }; cmd_status "$@";;
@@ -305,10 +385,35 @@ case "${1:-}" in
     done
     [ "${#pargs[@]}" -ge 2 ] || { echo "usage: hq.sh park [--create] [--title T] <project> <request...>" >&2; exit 2; }
     cmd_park "$create" "$ptitle" "${pargs[@]}";;
-  queue|fire)
-    echo "hq: '$1' is a Phase 3 verb (dispatch) — not built yet." >&2
-    echo "    Available now: resolve, status, registries, park." >&2
-    exit 3;;
+  queue)
+    shift
+    create=0; issue="-"; qargs=()
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --create|--yes) create=1;;
+        --gh-issue) shift; issue="${1:-}";;
+        --gh-issue=*) issue="${1#--gh-issue=}";;
+        *) qargs+=("$1");;
+      esac
+      shift
+    done
+    [ "${#qargs[@]}" -ge 2 ] || { echo "usage: hq.sh queue [--create] [--gh-issue N] <project> <request...>" >&2; exit 2; }
+    cmd_queue "$create" "$issue" "${qargs[@]}";;
+  fire)
+    shift
+    issue=""; risk="-"; fargs=()
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --gh-issue) shift; issue="${1:-}";;
+        --gh-issue=*) issue="${1#--gh-issue=}";;
+        --risk) shift; risk="${1:-}";;
+        --risk=*) risk="${1#--risk=}";;
+        *) fargs+=("$1");;
+      esac
+      shift
+    done
+    [ "${#fargs[@]}" -ge 1 ] || { echo "usage: hq.sh fire --gh-issue N [--risk 1-5] <project>" >&2; exit 2; }
+    cmd_fire "${fargs[0]}" "$issue" "$risk";;
   ''|-h|--help) usage;;
   *) echo "hq: unknown subcommand '$1'" >&2; usage; exit 2;;
 esac

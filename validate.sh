@@ -93,6 +93,7 @@ TESTS=(
   "marathon-plan.sh"
   "hq.sh"                        # GH-128 Phase 1 (HQ resolver + read-only project card)
   "hq-park.sh"                   # GH-128 Phase 2 (HQ issue-first intake writer: preview + --create)
+  "hq-dispatch.sh"               # GH-128 Phase 3 (HQ queue: append lane · fire: gated hand-off)
   "transcript-audit.sh"
   "security-scan.sh"
   "checkjs.sh"
