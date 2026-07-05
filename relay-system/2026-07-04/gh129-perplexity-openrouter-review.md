@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -38,7 +38,24 @@ ROUND: 1 / 4
 4. Stay tight — findings are bullets, not essays. Grade every finding.
 5. **The Reviewer never edits the artifact.** It proposes graded findings; the Producer implements.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
-
 ## Log
 
+### Round 1 · Reviewer · agy
+
+VERDICT: PASS
+Basis: Perplexity Sonar via OpenRouter is cleanly integrated as the second deep-research backend. The implementation perfectly satisfies the Definition of Done: it maps providers cleanly, normalizes citations in the requested order (annotations → citations array → bare URL fallback), has robust error mapping, and contains comprehensive tests with a Node-stdlib mock HTTP server.
+
+**Verdict details:** No blockers, no shoulds, no nits. The implementation is of extremely high quality.
+
+**Findings:**
+
+- **[Pass] `relay-automation/deep-research.mjs` — Provider configuration and dispatching.** Adds the `--provider` flag and validates it. Correctly dispatches to `runAgy` or `runOpenRouter`.
+- **[Pass] `relay-automation/deep-research.mjs` — `runOpenRouter` implementation.** Integrates global `fetch` properly, manages API key validations, sets up correct payload structure with `web_search_options.search_context_size` and timeout abort controller.
+- **[Pass] `relay-automation/deep-research.mjs` — Citation normalization.** Handles annotations, citations array, and fallback URL extraction in the exact requested order of preference.
+- **[Pass] `relay-automation/deep-research.mjs` — Error mapping.** Maps timeouts, missing API keys, and HTTP failures cleanly to the project's standard error classifications.
+- **[Pass] `test/deep-research.sh` — Test coverage.** Implements a Node.js stub HTTP server to comprehensively mock the API and test request payloads, citation pathways, and all error conditions.
+- **[Pass] `relay-automation/hooks/security-scan-baseline.txt` — Security scans.** Baselined the stub's fake API key properly.
+- **[Pass] Documentation.** README, file headers, changelog, and inbox tracking documents are fully updated.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
