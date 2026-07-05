@@ -2,7 +2,7 @@
 gh_issue: 128
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128
 title: "HQ — multi-repo command-center skill: one utterance → registry-resolved repo → PDDA-compliant intake → marathon queue/dispatch"
-status: Active — Phases 0–4 (hq next) + fuzzy built; fire live-exec + user-level hq deferred
+status: Active — Phases 0–4 built (hq next + user-level locator) + fuzzy; only fire live-exec held by design
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -26,6 +26,10 @@ related:
   - test/hq.sh
   - test/hq-park.sh
   - test/hq-dispatch.sh
+  - test/hq-next.sh
+  - test/hq-locator.sh
+  - skills/hq/find-hq.sh
+  - skills/hq/install.sh
   - GH-128-HQ-system-diagram.html
 non_goals:
   - "HQ never executes a marathon. `fire` prepares + gates + emits the swarm-preflight command; the
@@ -49,7 +53,7 @@ on *that repo's* PDDA rails with explicit-verb-only dispatch. Issue [#128].
 
 | What was just completed | What's next |
 |---|---|
-| **Phases 0–3 + fuzzy resolution (1.x) built and verified.** Phase 0 (discovery) + Phase 1 (read-only resolver/card) + Phase 2 (`park` intake writer, proven live filing rebalance-OS #109/#110) + **Phase 1.x fuzzy** (`hq_norm`/`hq_candidates`: loose names like "rebalanceOS" resolve; ambiguous names return rc=2 + `CANDIDATES` instead of guessing) + **Phase 3 dispatch**: `queue [--create]` appends a non-destructive HQ-queued lane to the target's Marathon Plan; `fire --gh-issue N --risk R` is a **gated prepare-and-hand-off** — resolve + gate (Tier A, `risk<3`) + emit the `swarm-preflight` command, **never driving the harness itself** (operator decides — GUIDING-PRINCIPLES §8; the relay-xyz guard owns driving). Tests: `hq.sh` 24/24, `hq-park.sh` 23/23, `hq-dispatch.sh` 18/18 — all in `validate.sh`; shellcheck clean. | **Held by design:** live execution of a marathon from `fire` (the operator runs the emitted command and drives via the relay-xyz skill). **Phase 4 (deferred):** promote `/hq` user-level + Rebalance-priority promotion suggestions. |
+| **Phases 0–4 + fuzzy resolution (1.x) built and verified.** Phase 0 (discovery) + Phase 1 (read-only resolver/card) + Phase 2 (`park` intake writer, proven live filing rebalance-OS #109/#110) + **Phase 1.x fuzzy** (`hq_norm`/`hq_candidates`: loose names like "rebalanceOS" resolve; ambiguous names return rc=2 + `CANDIDATES` instead of guessing) + **Phase 3 dispatch** (`queue [--create]` appends a non-destructive HQ-queued lane; `fire --gh-issue N --risk R` is a **gated prepare-and-hand-off** — Tier A + `risk<3`, emits the `swarm-preflight` command, **never driving the harness itself**) + **Phase 4**: `hq next` Rebalance-priority board **and** the **user-level locator** — `skills/hq/find-hq.sh` resolves `hq.sh` from any CWD (symlink-safe, no hardcoded path) + `skills/hq/install.sh` symlinks the skill into `~/.claude/skills/`, so `/hq` runs from a session in **any** repo. Tests: `hq.sh` 24/24, `hq-park.sh` 23/23, `hq-dispatch.sh` 18/18, `hq-next.sh` 6/6, `hq-locator.sh` 8/8 — all in `validate.sh`; shellcheck clean. | **Only remaining, held by design:** live execution of a marathon from `fire` (the operator runs the emitted command and drives via the relay-xyz skill — GUIDING-PRINCIPLES §8). GH-128 is otherwise feature-complete; open the merge of PR #131. |
 
 ## Table of contents
 
@@ -57,7 +61,7 @@ on *that repo's* PDDA rails with explicit-verb-only dispatch. Issue [#128].
 - [Phase 1 — Read-only resolver + `hq status` project card](#phase-1--read-only-resolver--hq-status-project-card) ✅ (prototype)
 - [Phase 2 — Intake writer (issue → capture → roadmap parking)](#phase-2--intake-writer-issue--capture--roadmap-parking) ✅ (`park`)
 - [Phase 3 — Dispatch (`queue` / `fire`)](#phase-3--dispatch-queue--fire) ✅ (queue + gated fire)
-- [Phase 4 — Rebalance-priority board (`hq next`) + user-level (partial)](#phase-4--rebalance-priority-board-hq-next--user-level-partial) ✅ (`hq next`; user-level deferred)
+- [Phase 4 — Rebalance-priority board (`hq next`) + user-level locator](#phase-4--rebalance-priority-board-hq-next--user-level-locator) ✅ (`hq next`; user-level deferred)
 
 Fuzzy resolution (Phase 1.x) is folded into Phase 1's resolver — see the Phase 1 build notes.
 
@@ -255,7 +259,7 @@ the heaviest action in the system.
 - [x] `test/hq-dispatch.sh` hermetic and green in `validate.sh`.
 - [ ] **Held by design:** live execution of the emitted marathon (operator runs it via relay-xyz — §8).
 
-## Phase 4 — Rebalance-priority board (`hq next`) + user-level (partial)
+## Phase 4 — Rebalance-priority board (`hq next`) + user-level locator
 
 **Built — `hq next` (the Rebalance-priority-promotion half):** `hq next [--limit N]` ranks projects
 from Rebalance `project_registry` by `priority_tier` (1 highest .. 5 lowest, per rebalance
@@ -268,14 +272,29 @@ read-only (mirrors the #96 seam). Hermetic `test/hq-next.sh` (**6/6**, in `valid
 gap, not a tool gap: `hq next` becomes discriminating the moment tiers/value are actually set. Left
 as-is; surfaced so the operator knows the ranking is only as good as the priorities in Rebalance.
 
-**Remaining — user-level promotion (deferred):** make `/hq` runnable from *any* repo's session, not
-just the harness repo. The scripts are already self-contained (`hq.sh` + `hq-lib.sh` read `$HOME`
-registries and resolve targets), so the open work is a robust harness-locator (find `utils/hq/hq.sh`
-regardless of CWD, à la `relay-automation/find-harness.sh`) + an install path — deliberately **not**
-bundled here to avoid a locator rabbit-hole; tracked as the Phase 4 remainder.
+**Built — user-level promotion:** `/hq` now runs from *any* repo's session, not just the harness
+clone. Two self-locating anchors, neither hardcoding a machine path (both mirror the proven
+relay-xyz pattern):
+
+- **`skills/hq/find-hq.sh`** — device-agnostic locator that prints the absolute path to
+  `utils/hq/hq.sh`. Resolution order: `$XYZ_HARNESS`/`$XYZ_REPO_ROOT` override → current git repo →
+  **this script's own real (symlink-followed) location** (`…/skills/hq → <repo>`). HQ is centralized
+  (one `hq.sh`, reading `$HOME` registries), so — unlike `find-harness.sh` — there is no vendored
+  per-repo copy to reconcile, keeping the locator simple. Modes: `--sh` (default) / `--root` /
+  `--env` (evalable `HQ_ROOT`/`HQ_SH`) / `--check` (readiness: root, sqlite3, rebalance registry).
+- **`skills/hq/install.sh`** — idempotent symlink of `skills/hq` into `~/.claude/skills/` (the dir
+  Claude Code actually scans), so a fresh clone / second machine can load `/hq` at all; verifies the
+  locator resolves after linking.
+
+SKILL.md now opens with an **install-once + locate-every-invocation** preamble; the cross-repo case
+(standing in a foreign repo, calling the symlinked locator with no override → resolves the *real*
+harness) is proven by `test/hq-locator.sh` (**8/8**).
 
 ### QA gate — Phase 4
 
 - [x] `hq next` ranks projects by Rebalance priority (verified 1→3→5) and labels each project's HQ
       capability tier without auto-acting; degrades cleanly with no rebalance DB. `test/hq-next.sh` green.
-- [ ] **Deferred:** `/hq` resolves + reports from a session in a non-HQ repo (needs the harness locator).
+- [x] `/hq` resolves from a session in a non-HQ repo: `find-hq.sh` follows its own symlink back to the
+      real harness from a foreign git-root CWD with no override. `test/hq-locator.sh` 8/8, in `validate.sh`.
+- [x] `install.sh` is idempotent, refuses to clobber a real directory, replaces a stale symlink, and
+      verifies the locator chain (mirrors `skills/relay-xyz/install.sh`).

@@ -95,6 +95,7 @@ TESTS=(
   "hq-park.sh"                   # GH-128 Phase 2 (HQ issue-first intake writer: preview + --create)
   "hq-dispatch.sh"               # GH-128 Phase 3 (HQ queue: append lane · fire: gated hand-off)
   "hq-next.sh"                   # GH-128 Phase 4 (HQ next: Rebalance-priority project board)
+  "hq-locator.sh"                # GH-128 Phase 4 (find-hq.sh: device-agnostic locator, user-level /hq)
   "transcript-audit.sh"
   "security-scan.sh"
   "checkjs.sh"

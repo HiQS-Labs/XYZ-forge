@@ -9,9 +9,44 @@ HQ is the front door for one-utterance, multi-repo tasking: resolve a project na
 report its governance state, land the request on that repo's own PDDA rails, and prepare dispatch.
 **Read paths are safe; every write path previews by default.**
 
+## Preconditions — install once, then locate (never hardcode a path)
+
+`/hq` is **user-level**: it works from a session opened in *any* repo, not just the harness clone.
+Two anchors make that true, both self-locating and free of any hardcoded machine path.
+
+**Install (once per clone).** Claude Code only scans `~/.claude/skills/`, not the repo's top-level
+`skills/`. Symlink this skill in so a session can load it at all:
+
+```bash
+bash skills/hq/install.sh   # symlinks this clone's skills/hq into ~/.claude/skills/ (idempotent)
+```
+
+**Locate (every invocation).** HQ is centralized — there is one `utils/hq/hq.sh`, shipping in the
+harness clone beside this skill. The bundled locator [`find-hq.sh`](find-hq.sh) resolves it relative
+to its own installed location (symlink-safe), so it works from any CWD. Run this first, then call
+`$HQ_SH`:
+
+```bash
+# Find the bundled locator — anchored on $HOME or the CWD, never an absolute machine path:
+for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/hq/find-hq.sh}" \
+         "$HOME/.claude/skills/hq/find-hq.sh" \
+         "./.claude/skills/hq/find-hq.sh" \
+         "$(git rev-parse --show-toplevel 2>/dev/null)/skills/hq/find-hq.sh"; do
+  [ -n "$L" ] && [ -x "$L" ] && break
+done
+[ -x "$L" ] || { echo "hq: locator not found — set XYZ_HARNESS to your xyz-3-agents-swarm clone"; exit 1; }
+
+eval "$("$L" --env)"   # exports HQ_ROOT and HQ_SH (absolute path to hq.sh)
+"$L" --check           # one-glance readiness: hq root, sqlite3, rebalance registry
+```
+
+After this, `$HQ_SH` is the absolute dispatcher path. **When standing in the harness repo you can
+still call `bash utils/hq/hq.sh …` directly** — the examples below use that short form; substitute
+`bash "$HQ_SH" …` when you're in another repo.
+
 ## What it does now
 
-The skill drives `utils/hq/hq.sh`:
+The skill drives `utils/hq/hq.sh` (or `$HQ_SH` from a foreign repo — see Preconditions):
 
 - `hq.sh status <project|repo>` — the **project card**: resolved repo + path (with a fuzzy-match note
   if the name was loose), capability tier (A/B/C), Rebalance priority, PDDA mode + startup docs,
