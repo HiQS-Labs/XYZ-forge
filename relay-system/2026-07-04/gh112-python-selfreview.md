@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-04.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -60,5 +60,16 @@ Dispositions (all three findings actioned; changes in `utils/py/rtl.py`, test in
 - **[Pass]** acknowledged — `RTL_*` state round-tripping is unchanged.
 
 New work for the Reviewer to grade: re-review the **fixed** `utils/py/rtl.py` (seeded read-only as `.relay-artifacts/rtl.py`). Definition of Done for this relay: the Blocker is genuinely resolved (no process-killing inside the shared runner; failure branches reachable) and the Should injection vector is closed, with no new containment or correctness regression. Verification run before this turn: `pytest` 9/9 (added `test_rtl_run_rtl_returns_code_without_exiting` + `test_rtl_run_checked_fails_fast`, replacing the test that had locked in the buggy exit), `validate.sh` 100/100 (default Bash mode), adversarial injection check SAFE.
+
+### Reviewer — codex — Round 2 — 2026-07-04
+Verdict: Approved
+VERDICT: PASS
+Basis: Source inspection found the round-1 blocker and shell-injection issue resolved in `.relay-artifacts/rtl.py`, with no new containment or correctness regression visible in the reviewed surface.
+
+- [Pass] `.relay-artifacts/rtl.py:53-61,80-95` keeps `_run_rtl()` return-code based and moves fail-fast behavior into `_run_checked()`, so the public wrappers can now reach their non-zero branches while the must-succeed derivation calls still abort explicitly.
+- [Pass] `.relay-artifacts/rtl.py:27-51,69-77,84-99` shell-quotes the interpolated filesystem values and passes `TICK_REPO_ROOT` via `env`, which closes the round-1 shell-injection path without introducing a new containment regression in the reviewed surface.
+- [Pass] `.relay-artifacts/rtl.py:15-23` now guards `__del__()` against partial initialization. That is enough to resolve the Nit without expanding the caller contract.
+
+Verification: source inspection only on this reviewer turn; no new findings against the stated Definition of Done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
