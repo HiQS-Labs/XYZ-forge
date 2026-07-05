@@ -1,6 +1,6 @@
 # Marathon Phase gh112b
 STATUS: Open
-NEXT: codex
+NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH112B-TURN builder=codex reviewer=agy round-cap=4 -->
 
@@ -133,3 +133,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH112B-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh112b/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+Files touched: `utils/py/marathon_drive.py`, `utils/py/swarm_preflight.py`, `test/test_python_layer.py`, `validate.sh`, `phases/gh112b/RELAY.md`
+
+- `utils/py/codex-turn.py` already carried the GH-106 default `CODEX_FLAGS` + marker comment, so I left the code path intact and added an explicit parity test instead of rewriting it.
+- Added the GH-117 preflight binary probes to `utils/py/marathon_drive.py` so missing builder/reviewer CLIs fail before any clean-workspace scan or tick mutation.
+- Added GH-108/126/127 helper logic to `utils/py/swarm_preflight.py`: genuine artifact-reference detection, bare-`>` fs-touch detection, and the emitted gate-scoping caveat / packet scope text that depends on those helpers.
+- Extended `test/test_python_layer.py` with focused parity coverage for GH-106, GH-117, GH-108, plus a GH-107 inheritance assertion through `rtl.py`.
+- Wired `python3 -m pytest test/test_python_layer.py` into `validate.sh`; I did not run full `validate.sh` because this phase explicitly forbids the full gate.
+
+Verification:
+- `python3 -m pytest test/test_python_layer.py` (`13 passed`)
