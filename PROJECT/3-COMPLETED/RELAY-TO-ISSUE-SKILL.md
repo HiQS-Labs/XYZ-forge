@@ -4,9 +4,9 @@ risk: 2
 effort: 2
 ratings_provisional: false
 title: "relay-to-issue — post-relay transcript → checklist GitHub issue"
-status: Active
+status: Shipped
 created: 2026-06-22
-updated: 2026-06-22
+updated: 2026-07-05
 owner: Noel (operator) · Claude (builder)
 doc_type: tooling
 goal: >
@@ -24,7 +24,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Skill shipped** — `skills/relay-to-issue/` (`SKILL.md` + `relay-to-issue.sh` + `install.sh`). `resolve` smoke-tested green against the live `dueling-claudes` thread (thread auto-detect, header parse, target-repo resolution → `current-repo`, dedup, gh-auth probe all working; `bash -n` clean). | Operator to (a) `bash skills/relay-to-issue/install.sh` to register `/relay-to-issue`, then (b) run it un-sandboxed against a real closed relay to confirm an actual `gh issue create` end-to-end (sandbox blocks the gh keychain, so live posting wasn't exercised here). |
+| **Shipped + verified end-to-end (2026-07-05).** `skills/relay-to-issue/` (`SKILL.md` + `relay-to-issue.sh` + `install.sh`). The full `resolve → file → provenance-stamp → dedup` loop was exercised un-sandboxed against a real closed relay (`relay-system/2026-07-04/hq-gh-128-code-review.md`): a live `gh issue create` posted **[#139](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/139)** with the checklist body + `relay-followup` label, the provenance stamp landed back in the thread, and a re-run correctly reported `ALREADY_FILED: …/139` (dedup holds). #139 was then closed as a verification artifact — its four findings had already shipped under [GH-132](GH-132-HQ-RESOLUTION-HARDENING.md) (PR #131). | Nothing outstanding — project complete. Reuse: `/relay-to-issue` after any closed relay with actionable findings. |
 
 ## Summary
 

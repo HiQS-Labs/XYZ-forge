@@ -70,3 +70,5 @@ Verdict: Changes requested
 - [Pass] Feature-specific verification is green: `bash test/hq.sh`, `bash test/hq-park.sh`, `bash test/hq-dispatch.sh`, `bash test/hq-next.sh`, and `bash test/hq-locator.sh` all passed. The gaps above are untested edge cases, not existing red tests.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+<!-- relay-to-issue: filed https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/139 @ f032e97 on 2026-07-05 -->
