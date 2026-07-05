@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### HQ (GH-128) shipped — PR #131 merged; post-merge PDDA sweep (#128)
+Merged **PR #131** (merge commit `2bcd36c`), landing HQ Phases 1.x/3/4 on `main`. Post-merge sweep: moved [GH-128-HQ-COMMAND-CENTER.md](PROJECT/3-COMPLETED/GH-128-HQ-COMMAND-CENTER.md) (+ its companion system diagram) from `2-WORKING` to `3-COMPLETED`, marked the doc **Shipped**, moved the ROADMAP ledger entry from *In progress* to *Completed*, and **closed issue #128**. GH-128 is feature-complete; the one non-goal — live execution of a `fire` marathon — is held by design (the operator drives via relay-xyz, GUIDING-PRINCIPLES §8). The worktree branch `worktree-hq-gh128-followups` was removed (local + remote) after merge.
+
 ### HQ Phase 4 — `hq next` Rebalance-priority board (#128)
 Added `hq next [--limit N]`: ranks projects from Rebalance `project_registry` by `priority_tier` (1 highest .. 5 lowest) and resolves each to its HQ capability tier (A dispatch-eligible / B / C / unresolved) — a read-only "what to pick up next across my repos?" board (Rebalance stays read-only). Hermetic `test/hq-next.sh` 6/6 (in `validate.sh`); shellcheck clean. Same worktree branch as the fuzzy + Phase 3 work (extends the open PR).
 

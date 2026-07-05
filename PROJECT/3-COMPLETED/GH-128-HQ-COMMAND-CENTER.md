@@ -2,7 +2,7 @@
 gh_issue: 128
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128
 title: "HQ — multi-repo command-center skill: one utterance → registry-resolved repo → PDDA-compliant intake → marathon queue/dispatch"
-status: Active — Phases 0–4 built (hq next + user-level locator) + fuzzy; only fire live-exec held by design
+status: Shipped — PR #131 merged (2bcd36c, 2026-07-04); Phases 0–4 complete; only live fire-exec held by design (§8)
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -53,7 +53,7 @@ on *that repo's* PDDA rails with explicit-verb-only dispatch. Issue [#128].
 
 | What was just completed | What's next |
 |---|---|
-| **Phases 0–4 + fuzzy resolution (1.x) built and verified.** Phase 0 (discovery) + Phase 1 (read-only resolver/card) + Phase 2 (`park` intake writer, proven live filing rebalance-OS #109/#110) + **Phase 1.x fuzzy** (`hq_norm`/`hq_candidates`: loose names like "rebalanceOS" resolve; ambiguous names return rc=2 + `CANDIDATES` instead of guessing) + **Phase 3 dispatch** (`queue [--create]` appends a non-destructive HQ-queued lane; `fire --gh-issue N --risk R` is a **gated prepare-and-hand-off** — Tier A + `risk<3`, emits the `swarm-preflight` command, **never driving the harness itself**) + **Phase 4**: `hq next` Rebalance-priority board **and** the **user-level locator** — `skills/hq/find-hq.sh` resolves `hq.sh` from any CWD (symlink-safe, no hardcoded path) + `skills/hq/install.sh` symlinks the skill into `~/.claude/skills/`, so `/hq` runs from a session in **any** repo. Tests: `hq.sh` 24/24, `hq-park.sh` 23/23, `hq-dispatch.sh` 18/18, `hq-next.sh` 6/6, `hq-locator.sh` 8/8 — all in `validate.sh`; shellcheck clean. | **Only remaining, held by design:** live execution of a marathon from `fire` (the operator runs the emitted command and drives via the relay-xyz skill — GUIDING-PRINCIPLES §8). GH-128 is otherwise feature-complete; open the merge of PR #131. |
+| **Phases 0–4 + fuzzy resolution (1.x) built and verified.** Phase 0 (discovery) + Phase 1 (read-only resolver/card) + Phase 2 (`park` intake writer, proven live filing rebalance-OS #109/#110) + **Phase 1.x fuzzy** (`hq_norm`/`hq_candidates`: loose names like "rebalanceOS" resolve; ambiguous names return rc=2 + `CANDIDATES` instead of guessing) + **Phase 3 dispatch** (`queue [--create]` appends a non-destructive HQ-queued lane; `fire --gh-issue N --risk R` is a **gated prepare-and-hand-off** — Tier A + `risk<3`, emits the `swarm-preflight` command, **never driving the harness itself**) + **Phase 4**: `hq next` Rebalance-priority board **and** the **user-level locator** — `skills/hq/find-hq.sh` resolves `hq.sh` from any CWD (symlink-safe, no hardcoded path) + `skills/hq/install.sh` symlinks the skill into `~/.claude/skills/`, so `/hq` runs from a session in **any** repo. Tests: `hq.sh` 24/24, `hq-park.sh` 23/23, `hq-dispatch.sh` 18/18, `hq-next.sh` 6/6, `hq-locator.sh` 8/8 — all in `validate.sh`; shellcheck clean. **Shipped: PR #131 merged (merge commit `2bcd36c`); doc moved to `3-COMPLETED`; issue #128 closed.** | **Nothing — GH-128 is complete.** The one non-goal (live execution of a marathon from `fire`) is **held by design**, not deferred work: the operator runs the emitted `swarm-preflight` command and drives via the relay-xyz skill (GUIDING-PRINCIPLES §8; harness driving is owned by relay-xyz, not HQ). |
 
 ## Table of contents
 
