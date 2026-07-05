@@ -75,6 +75,17 @@ awk '/### Queue/{q=NR} /GH-777/{g=NR} /### In progress/{p=NR} END{exit !(q<g && 
   && pass "pointer placed under Queue heading" || fail "pointer misplaced"
 printf '%s\n' "$OUT" | grep -q "NOT committed" && pass "reports files left uncommitted" || fail "no uncommitted notice"
 
+# ---- 2b. --title overrides the derived (truncated) title; slug + filename follow the title ----
+bash "$HQ" park --create --title "focus5: clean custom title" beta-app "$REQ" >/dev/null 2>&1
+DOCT="$BETA/PROJECT/1-INBOX/GH-777-FOCUS5-CLEAN-CUSTOM-TITLE.md"
+[ -f "$DOCT" ] && pass "--title drives the capture filename (slug from title)" \
+  || fail "no title-slug doc: $(ls "$BETA/PROJECT/1-INBOX")"
+grep -q '^title: "focus5: clean custom title"' "$DOCT" && pass "--title overrides frontmatter title" \
+  || fail "--title not applied to frontmatter"
+grep -q '^# focus5: clean custom title' "$DOCT" && pass "--title used as doc H1" || fail "--title H1 missing"
+grep -q 'CI status badge' "$DOCT" && pass "full request preserved as body under --title" \
+  || fail "request body lost under --title"
+
 # ---- 3. dup-guard aborts before writing ----
 rm -f "$BETA/PROJECT/1-INBOX/GH-778-"*.md
 OUT="$(HQ_TEST_DUP=1 bash "$HQ" park --create beta-app "a different new request here" 2>&1)"; rc=$?

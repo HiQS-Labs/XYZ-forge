@@ -30,8 +30,10 @@ usage:
   hq.sh resolve <project|repo>            machine-readable KEY=value resolution
   hq.sh status  <project|repo>            human-readable project card
   hq.sh registries                        what each registry knows (Phase-0 introspection)
-  hq.sh park [--create] <project> <req…>  issue-first intake in the target repo
-                                          (PREVIEWS by default; --create writes)
+  hq.sh park [--create] [--title T] <project> <req…>
+                                          issue-first intake in the target repo
+                                          (PREVIEWS by default; --create writes;
+                                           --title sets a clean title, request = body)
 
 not yet built (Phase 3 dispatch): queue | fire
 EOF
@@ -166,7 +168,7 @@ cmd_registries(){
 # Preview (default) or --create the issue-first intake in the RESOLVED TARGET repo:
 # GH issue -> PROJECT/1-INBOX/GH-<n>-<SLUG>.md capture -> ROADMAP queue pointer -> target pdda check.
 cmd_park(){
-  local create="$1" project="$2"; shift 2; local request="$*"
+  local create="$1" ptitle="$2" project="$3"; shift 3; local request="$*"
   local R rc; R="$(hq_resolve "$project")"; rc=$?
   local repo path tier has_pdda=0 has_xyz=0
   repo="$(printf '%s\n' "$R" | val REPO)"
@@ -181,8 +183,9 @@ cmd_park(){
   tier="$(hq_tier "$has_pdda" "$has_xyz")"
 
   local title slug created oslug src
-  title="$(hq_issue_title "$project" "$request")"
-  slug="$(hq_slug "$request")"
+  # --title (if given) is used verbatim for the issue + capture-doc title; the request stays the body.
+  title="${ptitle:-$(hq_issue_title "$project" "$request")}"
+  slug="$(hq_slug "${ptitle:-$request}")"
   created="$(date +%F)"
   oslug="$(hq_target_slug "$path")"
 
@@ -274,12 +277,18 @@ case "${1:-}" in
   registries) cmd_registries;;
   park)
     shift
-    create=0; pargs=()
-    for a in "$@"; do
-      case "$a" in --create|--yes) create=1;; *) pargs+=("$a");; esac
+    create=0; ptitle=""; pargs=()
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --create|--yes) create=1;;
+        --title) shift; ptitle="${1:-}";;
+        --title=*) ptitle="${1#--title=}";;
+        *) pargs+=("$1");;
+      esac
+      shift
     done
-    [ "${#pargs[@]}" -ge 2 ] || { echo "usage: hq.sh park [--create] <project> <request...>" >&2; exit 2; }
-    cmd_park "$create" "${pargs[@]}";;
+    [ "${#pargs[@]}" -ge 2 ] || { echo "usage: hq.sh park [--create] [--title T] <project> <request...>" >&2; exit 2; }
+    cmd_park "$create" "$ptitle" "${pargs[@]}";;
   queue|fire)
     echo "hq: '$1' is a Phase 3 verb (dispatch) — not built yet." >&2
     echo "    Available now: resolve, status, registries, park." >&2

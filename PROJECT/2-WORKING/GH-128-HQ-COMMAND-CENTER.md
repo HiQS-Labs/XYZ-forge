@@ -187,10 +187,21 @@ stay gated notices.
   frontmatter` on the new doc. Files are **written but not committed** (operator reviews, then commits).
 - **Tier C** repos get a plain issue only (no partial doc structure) + a PDDA-install suggestion.
 - `HQ_GH_BIN` seam lets the test stub `gh` (no network / no real issue).
+- **`--title` (added from first-use feedback):** `park [--title "…"]` sets a clean issue + capture-doc
+  title (and drives the filename slug) while the full request stays the issue body — the derived title
+  truncated the raw request awkwardly on the first real run.
 
-**Proof:** hermetic `test/hq-park.sh` (**19/19**, in `validate.sh`) exercises preview-writes-nothing,
+**Proof:** hermetic `test/hq-park.sh` (**23/23**, in `validate.sh`) exercises preview-writes-nothing,
 `--create` writing correct frontmatter (`gh_issue`, `source`, `status`) + a Queue-placed pointer,
-stopword-aware slugging, dup-guard abort, Tier C, and unresolved. Preview run live against `sleuth-app`.
+`--title` override, stopword-aware slugging, dup-guard abort, Tier C, and unresolved.
+
+**First live run — 2026-07-04 (first real end-to-end HQ intake).** Operator request "for rebalance-OS,
+fix the focus5 refresh button for removed worktrees + shrink repo names 20%" → filed as **two** issues
+into `rebalance-OS` (Tier A), each landing a GH issue + a PDDA capture doc + a ROADMAP Queue pointer,
+both passing `rebalance-OS`'s own `pdda.sh frontmatter`:
+- [#109](https://github.com/Hypercart-Dev-Tools/rebalance-OS/issues/109) — focus5 refresh button does not drop Git Worktrees removed from disk.
+- [#110](https://github.com/Hypercart-Dev-Tools/rebalance-OS/issues/110) — focus5: shrink repo-name font size by 20%.
+Surfaced the fuzzy-resolution gap (needed canonical `rebalance-OS`, not "rebalanceOS") — Phase 1.x.
 
 ### QA gate — Phase 2
 
@@ -201,8 +212,8 @@ stopword-aware slugging, dup-guard abort, Tier C, and unresolved. Preview run li
 - [x] Preview writes nothing (verified: 1-INBOX + ROADMAP unchanged); `--create` writes only inside the
       resolved target repo and reports a receipt per artifact.
 - [x] `test/hq-park.sh` hermetic (stubbed `gh`, fixture repos) and green in `validate.sh`.
-- [ ] **Deferred to real use:** fire a genuine `park --create` against a live repo (awaits a concrete
-      operator request — the harness is proven, only the live outward call is held).
+- [x] **Fired for real:** a genuine `park --create` filed rebalance-OS #109 + #110 end-to-end
+      (issue + capture doc + ROADMAP pointer, validated by rebalance-OS's own PDDA). First live intake.
 
 ## Phase 3 — Dispatch (`queue` / `fire`)
 
