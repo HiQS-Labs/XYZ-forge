@@ -10,6 +10,11 @@ def die(msg):
     print(f"codex-turn: {msg}", file=sys.stderr)
     sys.exit(2)
 
+def default_codex_flags():
+    # GH-106: mirror the Bash default so a headless Codex turn never hangs on an
+    # interactive approval prompt while still staying inside workspace-write.
+    return os.environ.get("CODEX_FLAGS", "-s workspace-write -c approval_policy=never").split()
+
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = os.environ.get("CODEX_TURN_ROOT", xyz_root)
@@ -39,7 +44,7 @@ def main():
     if drift_brief:
         prompt = drift_brief + "\n" + prompt
 
-    cflags = os.environ.get("CODEX_FLAGS", "-s workspace-write").split()
+    cflags = default_codex_flags()
     codex_extra_flags = []
     
     codex_log = os.environ.get("CODEX_LOG", os.path.join(tempfile.gettempdir(), f"codex-turn-{os.getpid()}.log"))
