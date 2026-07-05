@@ -2,7 +2,7 @@
 gh_issue: 129
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/129
 title: "deep-research: add Perplexity grounded search (Sonar) via OpenRouter as the second backend"
-status: built + live-verified 2026-07-04, PR open
+status: Shipped — PR #130 merged (79395ee), #129 closed 2026-07-04
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -36,7 +36,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Built 2026-07-04 on branch `gh-129-perplexity-openrouter` (worktree): `--provider agy\|openrouter` flag (default `agy`, byte-identical), `runOpenRouter` via Node global `fetch` (stdlib only), `web_search_options.search_context_size` mapping, annotations→`citations[]`→URL-scan citation normalization, typed `missing_api_key` + AbortController `timeout`. `test/deep-research.sh` **45/45** (23 agy untouched + 22 new stub-HTTP-server assertions); the fake stub credential is hand-baselined in `security-scan-baseline.txt`; `validate.sh` exit 0. **Live-verified against real OpenRouter→Perplexity Sonar the same day (GH-124's lesson applied pre-merge): 4.5s, 15 real citations with titles, normalized correctly.** | PR review + merge; then move this doc to `3-COMPLETED` and close #129. GH-124's lane (same write-set) fires only after this merges — serialize. |
+| Built 2026-07-04 on branch `gh-129-perplexity-openrouter` (worktree): `--provider agy\|openrouter` flag (default `agy`, byte-identical), `runOpenRouter` via Node global `fetch` (stdlib only), `web_search_options.search_context_size` mapping, annotations→`citations[]`→URL-scan citation normalization, typed `missing_api_key` + AbortController `timeout`. `test/deep-research.sh` **45/45** (23 agy untouched + 22 new stub-HTTP-server assertions); the fake stub credential is hand-baselined in `security-scan-baseline.txt`; `validate.sh` exit 0. **Live-verified against real OpenRouter→Perplexity Sonar the same day (GH-124's lesson applied pre-merge): 4.5s, 15 real citations with titles, normalized correctly.** | **DONE 2026-07-04:** independent headless agy relay review returned **VERDICT: PASS, zero findings** ([thread](../../relay-system/2026-07-04/gh129-perplexity-openrouter-review.md)); **PR #130 merged (`79395ee`)**, #129 auto-closed, branch + worktree deleted. GH-124's lane (same write-set) is now unblocked — it fires **after** this merge, never same-wave with it. |
 
 ## Problem (grounded in the current code)
 
@@ -71,16 +71,16 @@ OpenRouter is the follow-up phase GH-87's own doc names.
 
 ## Definition of done
 
-- [ ] `--provider openrouter` returns normalized cited output from Perplexity Sonar via OpenRouter;
-      no flag / `--provider agy` byte-identical to today.
-- [ ] Typed fail-closed errors: `missing_api_key`, `timeout`, `backend_error`, `empty_output` on
+- [x] `--provider openrouter` returns normalized cited output from Perplexity Sonar via OpenRouter;
+      no flag / `--provider agy` byte-identical to today (live-verified: 4.5s, 15 real citations).
+- [x] Typed fail-closed errors: `missing_api_key`, `timeout`, `backend_error`, `empty_output` on
       the OpenRouter path; never a silent fallback to another provider.
-- [ ] `test/deep-research.sh`: existing 23 assertions green and untouched; new OpenRouter
-      stub-server assertions green.
-- [ ] `relay-automation/README.md` + adapter header document the backend, env vars
+- [x] `test/deep-research.sh`: existing 23 assertions green and untouched; new OpenRouter
+      stub-server assertions green (45/45 total).
+- [x] `relay-automation/README.md` + adapter header document the backend, env vars
       (`OPENROUTER_API_KEY`, `DEEP_RESEARCH_OPENROUTER_MODEL`, `OPENROUTER_BASE_URL`), and the
       GH-124 serialization note.
-- [ ] `bash validate.sh` green.
+- [x] `bash validate.sh` green (exit 0).
 
 ## Reversibility & blast radius
 
