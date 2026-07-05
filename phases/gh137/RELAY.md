@@ -1,5 +1,5 @@
 # Marathon Phase gh137
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH137-TURN builder=codex reviewer=agy round-cap=4 -->
@@ -137,3 +137,15 @@ Implemented GH-137 in `utils/swarm-preflight.sh` and `test/swarm-preflight.sh`.
 - Added a `GH-137` sanitization step inside the embedded `expand-artifacts.mjs` helper so only inferred paths that stay inside the repo `test/` subtree are admitted; any inferred path with a `..` segment, a repo-root/out-of-tree normalization, `__pycache__/`, or a trailing `.pyc` is dropped before it can widen the emitted allowlist. Declared `artifacts[]` are unchanged.
 - Added `T35b GH-137`, a regression fixture that creates a real covering test/helper alongside `$(dirname "$0")/..` and `$(dirname "$0")/__pycache__/generated.pyc` references, then asserts the effective artifacts keep only `relay-automation/consult.sh`, `test/consult.sh`, and `test/_setup.sh`.
 - Verified with `bash test/swarm-preflight.sh` -> `87 passed, 0 failed`.
+
+### Round 1 · Reviewer · agy
+
+Reviewed the changes in `utils/swarm-preflight.sh` and `test/swarm-preflight.sh`.
+
+- Confirmed that `sanitizeInferredPath` correctly filters out any inferred path containing `..`, resolving outside the `test/` subdirectory, or matching generated/gitignored patterns (`__pycache__/`, trailing `.pyc`).
+- Verified that declared `artifacts[]` pass through unchanged.
+- Confirmed the regression test `T35b` in `test/swarm-preflight.sh` correctly asserts the sanitization logic and successfully passed.
+- Ran `bash test/swarm-preflight.sh` successfully with `87 passed, 0 failed`.
+
+**Verdict:** Approved
+
