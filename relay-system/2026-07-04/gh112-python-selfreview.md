@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-04.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -40,5 +40,15 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — Round 1 — 2026-07-04
+Verdict: Changes requested
+
+- [Blocker] `.relay-artifacts/rtl.py:44-45` exits the whole Python process from `_run_rtl()` on any non-zero shell status. That makes `before()`, `enforce()`, and the failure branch in `worktree_begin()` unreachable as written (`.relay-artifacts/rtl.py:62-76`). Concrete fix: do not call `sys.exit()` inside `_run_rtl()`; return the `CompletedProcess` and let each public method decide whether to propagate the code, raise, or map it to `None`/`False`.
+- [Should] `.relay-artifacts/rtl.py:24-27,37-38` interpolates `self.xyz_root`, `self.state_file`, and `TICK_REPO_ROOT` directly into a shell script inside double quotes. A path or env value containing `"`/command substitutions/newlines can break the script or inject shell syntax. Concrete fix: shell-quote every interpolated value with `shlex.quote(...)`, or pass `TICK_REPO_ROOT` through `subprocess.run(..., env=...)` instead of embedding it in the script.
+- [Nit] `.relay-artifacts/rtl.py:16-20` relies on `__del__()` for temp-file cleanup. Destructor timing is not guaranteed, and a partially initialized instance can hit `__del__` without a valid `state_file`. Concrete fix: add an explicit `close()` or context-manager path for cleanup and guard the destructor with `hasattr(self, "state_file")`.
+- [Pass] `.relay-artifacts/rtl.py:26-39` preserves `RTL_*` shell state across calls, which is the right shape for a thin Python wrapper over the existing relay shell library.
+
+Verification: source inspection only; no tests run on this reviewer turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
