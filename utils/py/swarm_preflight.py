@@ -248,6 +248,109 @@ def normalize(e):
         "lane_plan": lanes
     }
 
+def normalize_path(rel_path):
+    return rel_path.replace("\\", "/")
+
+def helper_refs(raw):
+    refs = []
+    patterns = [
+        r'\$\(dirname "\$0"\)/([^"\' )]+)',
+        r'\$\(dirname "\$\{BASH_SOURCE\[0\]\}"\)/([^"\' )]+)',
+        r'\btest/(_[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*)',
+    ]
+    for pattern in patterns:
+        for match in re.finditer(pattern, raw):
+            rel_path = match.group(0) if match.group(0).startswith("test/") else f"test/{match.group(1)}"
+            refs.append(normalize_path(rel_path))
+    return refs
+
+def is_fs_touching(raw):
+    # GH-127: bare `>` redirections touch files too; keep arrows/redirect operators
+    # like `->`, `>=`, `>>`, and `2>&1` out of the containment-sensitive bucket.
+    pattern = r'(mktemp|git(?:\s+-C\s+\S+)?\s+(?:worktree|init)|mkdir\s|touch\s|rm\s+-|cat\s+>|printf\s+.*>|>>|writeFileSync|appendFileSync|mkdtempSync|(?<!-)>(?![=>&]))'
+    return re.search(pattern, raw, flags=re.S) is not None
+
+def is_genuine_ref(raw, artifact):
+    # GH-126: a mere substring mention is not enough; require the artifact to look
+    # like a real command/path reference in the covering test.
+    escaped = re.escape(artifact)
+    pattern = rf'(?:/|\b(?:source|bash|node)\b\s*["\'`]?|require\(\s*["\'`]?)' + escaped
+    return re.search(pattern, raw) is not None
+
+def expand_effective_artifacts(root, contract):
+    declared = contract.get("artifacts", [])
+    included = []
+    inferred_tests = []
+    inferred_helpers = []
+    test_root = os.path.join(root, "test")
+
+    def add(bucket, rel_path):
+        if not rel_path or rel_path in included:
+            return
+        included.append(rel_path)
+        if bucket is not None and rel_path not in bucket:
+            bucket.append(rel_path)
+
+    def read(rel_path):
+        try:
+            with open(os.path.join(root, rel_path), "r") as f:
+                return f.read()
+        except OSError:
+            return ""
+
+    for rel_path in declared:
+        add(None, rel_path)
+
+    if os.path.isdir(test_root):
+        for dirpath, _, filenames in os.walk(test_root):
+            for filename in filenames:
+                abs_path = os.path.join(dirpath, filename)
+                rel_path = normalize_path(os.path.relpath(abs_path, root))
+                if not rel_path.startswith("test/"):
+                    continue
+                raw = read(rel_path)
+                if any(is_genuine_ref(raw, artifact) for artifact in declared):
+                    add(inferred_tests, rel_path)
+
+    queue = list(inferred_tests) + [p for p in declared if p.startswith("test/")]
+    seen_helpers = set(queue)
+    while queue:
+        rel_path = queue.pop(0)
+        for helper in helper_refs(read(rel_path)):
+            if not helper.startswith("test/"):
+                continue
+            if not os.path.exists(os.path.join(root, helper)) or helper in seen_helpers:
+                continue
+            seen_helpers.add(helper)
+            add(inferred_helpers, helper)
+            queue.append(helper)
+
+    fs_touching = [
+        rel_path for rel_path in included
+        if rel_path.startswith("test/") and rel_path.endswith(".sh") and is_fs_touching(read(rel_path))
+    ]
+    return {
+        "artifacts": included,
+        "inferred_tests": inferred_tests,
+        "inferred_helpers": inferred_helpers,
+        "fs_touching_tests": fs_touching,
+    }
+
+def gate_scoping_caveat(gate_cmd):
+    # GH-108: a ` -- ` passthrough only scopes if the target repo's own runner honors it.
+    if " -- " not in gate_cmd:
+        return ""
+    pre = gate_cmd.split(" -- ", 1)[0]
+    if re.search(r'\btest\b', pre, re.IGNORECASE):
+        return (
+            f"- Gate-scoping caveat (GH-108): `{gate_cmd}` is passed through verbatim; whether "
+            "the `-- ...` passthrough actually filters to a single test depends on the target "
+            "repo's own test-runner configuration (a runner script can ignore or misroute "
+            "passthrough args). Pre-green the full suite, or independently verify the filter "
+            "genuinely scopes, before firing this lane."
+        )
+    return ""
+
 def main():
     parser = argparse.ArgumentParser(description="swarm-preflight", add_help=False)
     parser.add_argument("--project-doc", dest="project_doc")
@@ -334,6 +437,8 @@ def main():
     except SystemExit as e:
         emit("AMBIGUOUS: the issue bundle's contracts disagree (see message above). Split the bundle or align the contracts.")
         sys.exit(e.code)
+
+    effective_artifacts = expand_effective_artifacts(target_root, merged)
 
     primary_doc = source_docs[0]
     slug = re.sub(r'[^a-z0-9]', '-', os.path.splitext(os.path.basename(primary_doc))[0].lower())
@@ -434,9 +539,26 @@ def main():
     ready = 1
     ready_next = ""
     gate_cmd = merged.get("gate", "")
-    all_artifacts = list(dict.fromkeys(merged.get("artifacts", []) + merged.get("artifacts_new", [])))
+    all_artifacts = effective_artifacts["artifacts"]
     art_csv = ",".join(all_artifacts)
     art_count = len(all_artifacts)
+    gh55_auto_csv = ",".join(effective_artifacts["inferred_tests"] + effective_artifacts["inferred_helpers"])
+    gh55_auto_line = f"- Auto-included covering tests/helpers: {gh55_auto_csv}" if gh55_auto_csv else ""
+    fs_touching_tests_csv = ",".join(effective_artifacts["fs_touching_tests"])
+    if fs_touching_tests_csv:
+        gh54_verify_rule = (
+            f"- Do NOT run ANY test or gate yourself — not `{gate_cmd}`, and NOT `{fs_touching_tests_csv}` "
+            "either. Those tests create temporary git fixtures/files inside your isolated worktree, which "
+            "containment treats as off-lane edits and can discard your whole turn. Read them as specs "
+            "instead; the harness runs the real gate after your turn, outside the worktree."
+        )
+    else:
+        gh54_verify_rule = (
+            f"- Do NOT run the full gate (`{gate_cmd}`) yourself — it can create files that trip containment "
+            "and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the "
+            "harness runs the gate after your turn."
+        )
+    gh108_gate_caveat = gate_scoping_caveat(gate_cmd)
     
     fm_risk = ""
     try:
@@ -509,7 +631,10 @@ def main():
     has_agy = "present" if shutil.which("agy") else "missing"
     gh39_lane_note = f"codex={has_codex} agy={has_agy}"
     
-    lane_plan_res = lane_plan(merged)
+    lane_contract = dict(merged)
+    lane_contract["artifacts"] = list(all_artifacts)
+    lane_contract["artifacts_new"] = []
+    lane_plan_res = lane_plan(lane_contract)
     
     e = {
         "SP_CONTRACT": merged,
@@ -647,8 +772,10 @@ def main():
 - Suggested branch: `{suggested_branch}` (branch_ready={br_ready_str}{br_prompt_str})
 - Verdict: {verdict}
 - Gate: `{gate_cmd}`
+{gh108_gate_caveat}
 - Artifacts: {art_csv}
 - Suggested turn budget: `RELAY_TURN_TIMEOUT_S={gh39_timeout}` (sized to ≈ {gh39_art_loc} LOC across {gh39_art_n} artifact(s); a build that also edits tests needs headroom over the 300s default)
+{gh55_auto_line}
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
 (GUIDING-PRINCIPLES.md §8).
@@ -658,7 +785,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 
 ## Scope lock — builder, do exactly this and nothing else
 - Edit ONLY: `{art_csv}` (plus the relay file). Any other edit is reverted and FAILS the turn.
-- Do NOT run the full gate (`{gate_cmd}`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn.
+{gh54_verify_rule}
 - Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
 
 ## Suggested marathon-drive.sh invocation

@@ -60,13 +60,15 @@ DoD asserts this by test rather than porting it.
 
 ## Acceptance criteria — the build is DONE when these hold
 
-- [ ] `utils/py/codex-turn.py` default `CODEX_FLAGS` matches the post-#134 Bash default (includes `approval_policy=never`), with a `GH-106` marker comment at the change site.
-- [ ] `utils/py/marathon_drive.py` probes builder/reviewer binaries before mutating tick state (matching `marathon-drive.sh`'s GH-117 behavior), with a `GH-117` marker comment.
-- [ ] `utils/py/swarm_preflight.py` carries the GH-108/126/127 gate-scoping + genuine-ref + bare-`>` logic (matching `swarm-preflight.sh`), with a `GH-108` marker comment.
-- [ ] `test/test_python_layer.py` gains a behavioral parity test for **each** ported fix (GH-106/117/108), run against the Python module.
-- [ ] `test/test_python_layer.py` also asserts GH-107's containment exemption is honored in Python mode (proving inheritance via `rtl.py` — do NOT reimplement GH-107).
-- [ ] `validate.sh` runs `python3 -m pytest test/test_python_layer.py` as part of the suite, so the Python layer is gated going forward (today it is exercised by neither `validate.sh` nor CI).
-- [ ] `python3 -m pytest test/test_python_layer.py` is green AND `validate.sh` is green in default mode (no Bash-path regression); `relay-turn-lib.sh` is untouched and `XYZ_PYTHON` is NOT flipped to default.
+- [x] `utils/py/codex-turn.py` default `CODEX_FLAGS` matches the post-#134 Bash default (includes `approval_policy=never`), with a `GH-106` marker comment at the change site.
+- [x] `utils/py/marathon_drive.py` probes builder/reviewer binaries before mutating tick state (matching `marathon-drive.sh`'s GH-117 behavior), with a `GH-117` marker comment.
+- [x] `utils/py/swarm_preflight.py` carries the GH-108/126/127 gate-scoping + genuine-ref + bare-`>` logic (matching `swarm-preflight.sh`), with a `GH-108` marker comment.
+- [x] `test/test_python_layer.py` gains a behavioral parity test for **each** ported fix (GH-106/117/108), run against the Python module.
+- [x] `test/test_python_layer.py` also asserts GH-107's containment exemption is honored in Python mode (proving inheritance via `rtl.py` — do NOT reimplement GH-107).
+- [x] `validate.sh` runs `python3 -m pytest test/test_python_layer.py` as part of the suite, so the Python layer is gated going forward (today it is exercised by neither `validate.sh` nor CI).
+- [x] `python3 -m pytest test/test_python_layer.py` is green AND `validate.sh` is green in default mode (no Bash-path regression); `relay-turn-lib.sh` is untouched and `XYZ_PYTHON` is NOT flipped to default.
+
+**Landed 2026-07-05** — built by a `marathon-drive` lane (codex builder / agy reviewer). Verification: pytest 13/13, `validate.sh` 101/101 (with the new pytest step). See CHANGELOG 2026-07-05.
 
 ## Swarm Preflight Contract
 

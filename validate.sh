@@ -133,9 +133,20 @@ done
 
 echo
 echo "==============================="
+echo "Running python3 -m pytest test/test_python_layer.py"
+echo "==============================="
+if python3 -m pytest "$HERE/test/test_python_layer.py"; then
+  PASSED+=("python:test_python_layer.py")
+else
+  FAILED+=("python:test_python_layer.py")
+fi
+
+echo
+echo "==============================="
 echo "Summary"
 echo "==============================="
-echo "passed: ${#PASSED[@]} / ${#TESTS[@]}"
+TOTAL=$(( ${#TESTS[@]} + 1 ))
+echo "passed: ${#PASSED[@]} / ${TOTAL}"
 for t in "${PASSED[@]}"; do echo "  + $t"; done
 if [ "${#FAILED[@]}" -gt 0 ]; then
   echo "failed:"

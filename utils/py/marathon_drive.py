@@ -19,6 +19,36 @@ def die(msg):
 def log(msg):
     print(f"marathon-drive: {msg}")
 
+def _probe_bin(bin_name, role_label, agent_id):
+    if shutil.which(bin_name):
+        return
+    die(f"{role_label} binary '{bin_name}' not found on PATH (--{role_label} agent '{agent_id}')")
+
+def _probe_claude_bin(role_label):
+    claude_bin = get_env("CLAUDE_BIN")
+    if claude_bin:
+        if shutil.which(claude_bin):
+            return
+    else:
+        if shutil.which("claude"):
+            return
+        local_claude = os.path.join(os.path.expanduser("~"), ".claude", "local", "claude")
+        if os.access(local_claude, os.X_OK):
+            return
+    die(f"{role_label} binary 'claude' not found on PATH (set CLAUDE_BIN or use a codex/agy --{role_label} agent)")
+
+def _probe_agent_bin(agent_id, role_label):
+    # GH-117: fail before any tick mutation or clean-workspace scan if the lane's
+    # builder/reviewer binary would be undispatchable.
+    if agent_id.startswith("claude"):
+        _probe_claude_bin(role_label)
+    elif agent_id.startswith("codex"):
+        _probe_bin(get_env("CODEX_BIN", "codex"), role_label, agent_id)
+    elif agent_id.startswith("agy"):
+        _probe_bin(get_env("AGY_BIN", "agy"), role_label, agent_id)
+    elif agent_id.startswith("aider"):
+        _probe_bin(get_env("AIDER_BIN", "aider"), role_label, agent_id)
+
 def main():
     parser = argparse.ArgumentParser(description="marathon-drive", add_help=False)
     parser.add_argument("--phase-brief", dest="phase_brief_file")
@@ -209,6 +239,9 @@ def main():
     
     if not (args.reviewer.startswith("codex") or args.reviewer.startswith("gemini") or args.reviewer.startswith("agy")):
         die(f"reviewer '{args.reviewer}' must start with codex/gemini/agy")
+
+    _probe_agent_bin(args.builder, "builder")
+    _probe_agent_bin(args.reviewer, "reviewer")
 
     if args.artifact_paths:
         os.environ["ALLOW_PATHS"] = args.artifact_paths
