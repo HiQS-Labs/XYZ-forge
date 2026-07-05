@@ -44,6 +44,9 @@ if [ "${STUB_MODE:-good}" = good ]; then
 fi
 [ "${STUB_MODE:-good}" = offlane ] && printf 'sync off-lane\n' > offlane-sync.txt
 [ "${STUB_MODE:-good}" = greenfield-offlane ] && { mkdir -p greenfield-offlane; printf 'not allowed\n' > greenfield-offlane/nope.txt; }
+# GH-107: a builder tool's own cache dir as an untracked side effect of an otherwise-clean turn
+[ "${STUB_MODE:-good}" = toolcache ] && { mkdir -p .codebase-memory; printf 'index\n' > .codebase-memory/index.json; }
+[ "${STUB_MODE:-good}" = customcache ] && { mkdir -p .mytool-cache; printf 'blob\n' > .mytool-cache/blob; }
 printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'   # minimal cost JSON
 exit 0
 STUB_EOF
@@ -140,6 +143,31 @@ seed_token RELAY-TURN-peer
 peerlog="$(git -C "$A" log --oneline)"
 case "$peerlog" in *"concurrent peer commit during turn"*) pass "concurrent ROOT commit PRESERVED (not orphaned)" ;; *) fail "peer commit was lost (orphaned by reset)" ;; esac
 case "$(cat "$A/artifact.txt")" in *"built by builder"*) pass "builder's allowlist edit still copied back to ROOT" ;; *) fail "artifact.txt missing builder content after preserve" ;; esac
+
+# --- (7) GH-107: built-in tool-cache dir (.codebase-memory/) no longer discards a clean turn -------
+seed_token RELAY-TURN-toolcache
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-toolcache toolcache 1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-107: built-in tool-cache side-effect does NOT fail the turn" || fail "toolcache rc=$rc (expected 0)"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "GH-107: turn with tool-cache side-effect still committed its allowlist" || fail "expected a commit despite tool-cache dir"
+[ ! -e "$A/.codebase-memory" ] && pass "GH-107: ignored cache dir was discarded with the worktree, never copied to ROOT" || fail ".codebase-memory leaked into ROOT!"
+
+# --- (8) GH-107: CONTAINMENT_IGNORE env extends the built-ins without a code change ----------------
+seed_token RELAY-TURN-customcache
+before="$(git -C "$A" rev-parse HEAD)"
+CONTAINMENT_IGNORE=".mytool*" run_shim RELAY-TURN-customcache customcache 1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-107: CONTAINMENT_IGNORE glob exempts a custom cache dir" || fail "customcache rc=$rc (expected 0)"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "GH-107: custom-ignored turn committed its allowlist" || fail "expected a commit with CONTAINMENT_IGNORE set"
+[ ! -e "$A/.mytool-cache" ] && pass "GH-107: custom cache dir never reached ROOT" || fail ".mytool-cache leaked into ROOT!"
+
+# --- (9) GH-107 control: the same non-built-in path WITHOUT CONTAINMENT_IGNORE still trips ---------
+# (opt-in means opt-in: default behavior for a non-built-in untracked path is byte-for-byte unchanged;
+# cases (2)/(4) above prove the plain off-lane baselines still fail exactly as before GH-107.)
+seed_token RELAY-TURN-customcache-off
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-customcache-off customcache 1; rc=$?
+[ "$rc" -eq 6 ] && pass "GH-107 control: non-built-in cache dir WITHOUT the env still exits 6" || fail "expected exit 6 without CONTAINMENT_IGNORE, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "GH-107 control: default-off turn made NO commit" || fail "default-off turn should not commit"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
