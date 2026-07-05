@@ -159,3 +159,88 @@ hq_tier(){
   elif [ "$1" = 1 ]; then echo B
   else echo C; fi
 }
+
+# ---- Phase 2 (intake writer) helpers ------------------------------------------------------------
+
+# hq_slug <request text> -> SCREAMING-KEBAB of up to 4 meaningful words (stopwords dropped).
+# Falls back to REQUEST when nothing survives. Used for the GH-<n>-<SLUG>.md capture filename.
+hq_slug(){
+  local s
+  s="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cs '[:alnum:]' '\n' \
+        | grep -vxE '(the|a|an|to|for|of|and|do|this|that|please|add|make|it)' \
+        | head -4 | tr '[:lower:]' '[:upper:]' | paste -sd- -)"
+  [ -n "$s" ] && printf '%s' "$s" || printf 'REQUEST'
+}
+
+# hq_issue_title <project> <request> -> a concise (<=72 char) issue title.
+hq_issue_title(){
+  local t="$2"
+  [ "${#t}" -le 72 ] || t="${t:0:69}..."
+  printf '%s' "$t"
+}
+
+# hq_render_capture <issue_num> <source_url> <title> <created> <doc_type> <project> <repo> <request>
+# Emits a PDDA-compliant 1-INBOX capture doc (frontmatter matches PROJECT/PDDA.md GitHub-issue intake).
+hq_render_capture(){
+  local num="$1" src="$2" title="$3" created="$4" dtype="$5" project="$6" repo="$7" request="$8"
+  cat <<EOF
+---
+gh_issue: $num
+source: $src
+title: "$title"
+status: Proposed (1-INBOX — not yet active)
+created: $created
+doc_type: $dtype
+---
+
+# $title
+
+Captured via HQ (\`/hq park\`) for project **$project** → repo \`$repo\`.
+The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference.
+
+## Request
+
+$request
+
+## Notes
+
+- Filed under the PDDA issue-first SOP. Promote to \`PROJECT/2-WORKING/\` when execution starts,
+  carrying \`gh_issue\` forward, and satisfy the full active-doc contract (status table, QA gates).
+EOF
+}
+
+# hq_roadmap_line <issue_num> <title> <created> <doc_relpath> <doc_basename> <issue_url>
+hq_roadmap_line(){
+  printf -- '- **GH-%s · %s** 🆕 **captured %s via HQ** — [%s](%s) · [#%s](%s)\n' \
+    "$1" "$2" "$3" "$5" "$4" "$1" "$6"
+}
+
+# hq_roadmap_insert <roadmap_file> <line> -> inserts <line> after the first "### Queue" heading,
+# else after the first "## " heading, else appends. Writes atomically via a temp file. Returns where.
+hq_roadmap_insert(){
+  local file="$1" line="$2" tmp where
+  tmp="$(mktemp "${TMPDIR:-/tmp}/hq-roadmap.XXXXXX")" || return 1
+  if grep -qiE '^### .*queue' "$file" 2>/dev/null; then
+    where="after '### … queue' heading"
+    awk -v ins="$line" 'BEGIN{done=0}
+      { print }
+      (!done && tolower($0) ~ /^### .*queue/){ print ins; done=1 }' "$file" > "$tmp"
+  elif grep -qE '^## ' "$file" 2>/dev/null; then
+    where="after first '## ' heading"
+    awk -v ins="$line" 'BEGIN{done=0}
+      { print }
+      (!done && $0 ~ /^## /){ print ins; done=1 }' "$file" > "$tmp"
+  else
+    where="appended (no heading found)"
+    cat "$file" > "$tmp"; printf '%s\n' "$line" >> "$tmp"
+  fi
+  mv "$tmp" "$file" && printf '%s' "$where"
+}
+
+# hq_target_slug <path> -> owner/repo from the target's origin remote (for the source: URL / gh -R).
+hq_target_slug(){
+  local url
+  url="$(git -C "$1" config --get remote.origin.url 2>/dev/null)" || return 0
+  [ -n "$url" ] || return 0
+  printf '%s' "$url" | sed -E 's#^git@[^:]+:##; s#^https?://[^/]+/##; s#\.git$##'
+}

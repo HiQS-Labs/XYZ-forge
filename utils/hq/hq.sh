@@ -12,8 +12,13 @@
 #   hq.sh registries                Phase-0 introspection: what each registry knows + coverage
 #
 # See utils/hq/hq-lib.sh for the resolution ladder and the HQ_* env seams.
+#
+# Phase 2 adds `park` — the first WRITE path — which PREVIEWS by default and only writes with
+# --create (creating a real GitHub issue is outward-facing; preview-first is the safe default).
+# `queue`/`fire` remain Phase 3 (gated notices).
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
+HQ_GH_BIN="${HQ_GH_BIN:-gh}"   # seam: tests point this at a stub
 # shellcheck source=utils/hq/hq-lib.sh
 . "$HERE/hq-lib.sh"
 
@@ -22,11 +27,13 @@ usage(){
 HQ — multi-repo command-center (read-only prototype, GH-128)
 
 usage:
-  hq.sh resolve <project|repo>   machine-readable KEY=value resolution
-  hq.sh status  <project|repo>   human-readable project card
-  hq.sh registries               what each registry knows (Phase-0 introspection)
+  hq.sh resolve <project|repo>            machine-readable KEY=value resolution
+  hq.sh status  <project|repo>            human-readable project card
+  hq.sh registries                        what each registry knows (Phase-0 introspection)
+  hq.sh park [--create] <project> <req…>  issue-first intake in the target repo
+                                          (PREVIEWS by default; --create writes)
 
-not yet built (Phase 2/3): park | queue | fire
+not yet built (Phase 3 dispatch): queue | fire
 EOF
 }
 
@@ -155,13 +162,127 @@ cmd_registries(){
   echo "Resolution order: rebalance NAME -> repo -> XYZ path (else filesystem find) -> PDDA governance."
 }
 
+# cmd_park <create 0|1> <project> <request...>
+# Preview (default) or --create the issue-first intake in the RESOLVED TARGET repo:
+# GH issue -> PROJECT/1-INBOX/GH-<n>-<SLUG>.md capture -> ROADMAP queue pointer -> target pdda check.
+cmd_park(){
+  local create="$1" project="$2"; shift 2; local request="$*"
+  local R rc; R="$(hq_resolve "$project")"; rc=$?
+  local repo path tier has_pdda=0 has_xyz=0
+  repo="$(printf '%s\n' "$R" | val REPO)"
+  path="$(printf '%s\n' "$R" | val REPO_PATH)"
+  if [ "$rc" != 0 ] || [ -z "$path" ]; then
+    echo "hq park: '$project' is UNRESOLVED — cannot file intake without a target repo." >&2
+    printf '  find ~ -type d -name "%s" -exec test -d "{}/.git" \\; -print\n' "$repo" >&2
+    return 1
+  fi
+  { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
+  [ -n "$(printf '%s\n' "$R" | val XYZ_PATH)" ] && has_xyz=1
+  tier="$(hq_tier "$has_pdda" "$has_xyz")"
+
+  local title slug created oslug src
+  title="$(hq_issue_title "$project" "$request")"
+  slug="$(hq_slug "$request")"
+  created="$(date +%F)"
+  oslug="$(hq_target_slug "$path")"
+
+  # ---- Tier C: bare repo -> plain issue only, no PDDA doc structure ----
+  if [ "$tier" = C ]; then
+    echo "HQ park · Tier C (bare repo) — plain GitHub issue only"
+    printf '  target repo:  %s  (%s)\n' "$repo" "${oslug:-no origin}"
+    printf '  issue title:  %s\n' "$title"
+    echo   '  (no PDDA rails here — not writing a capture doc or ROADMAP pointer)'
+    echo   "  suggestion:   install PDDA to unlock full intake — see install.sh / utils/pdda"
+    if [ "$create" = 1 ]; then
+      local out url
+      out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$request" 2>&1)" || {
+        echo "  gh issue create failed: $out" >&2; return 1; }
+      url="$(printf '%s\n' "$out" | grep -oE 'https?://[^ ]+/issues/[0-9]+' | tail -1)"
+      printf '  ✓ issue created: %s\n' "${url:-$out}"
+    else
+      echo; echo "  [preview only] re-run with --create to file the issue."
+    fi
+    return 0
+  fi
+
+  # ---- Tier A/B: full PDDA intake ----
+  local num relpath docname roadmap="$path/ROADMAP.md"
+  if [ "$create" != 1 ]; then
+    num="<N>"; src="<assigned when the issue is created>"
+    docname="GH-${num}-${slug}.md"; relpath="PROJECT/1-INBOX/$docname"
+    echo "HQ park · Tier $tier — issue-first intake PREVIEW (writes nothing)"
+    printf '  target repo:  %s  →  %s  (%s)\n' "$project" "$repo" "$path"
+    printf '  GitHub issue: %s\n' "$title"
+    printf '  capture doc:  %s\n' "$relpath"
+    printf '  ROADMAP line: %s\n' "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "#")"
+    echo
+    echo "  --- capture doc that would be written ---"
+    hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
+      | sed 's/^/  | /'
+    echo
+    echo "  [preview only] re-run with --create to file the issue + write the two docs into the target."
+    return 0
+  fi
+
+  # --create: real intake
+  echo "HQ park · Tier $tier — creating intake in $repo …"
+  # dup-guard (best-effort; never blocks on gh error)
+  local dup
+  dup="$(cd "$path" && "$HQ_GH_BIN" issue list --search "$title" --state open --json number,title 2>/dev/null)" || dup=""
+  if printf '%s' "$dup" | grep -q '"number"'; then
+    echo "  ! possible duplicate open issue matching this title — aborting to avoid double-filing:" >&2
+    printf '    %s\n' "$dup" >&2
+    echo "    (refine the request or file manually if this is genuinely new)" >&2
+    return 1
+  fi
+  local out url
+  out="$(cd "$path" && "$HQ_GH_BIN" issue create --title "$title" --body "$request" 2>&1)" || {
+    echo "  gh issue create failed: $out" >&2; return 1; }
+  url="$(printf '%s\n' "$out" | grep -oE 'https?://[^ ]+/issues/[0-9]+' | tail -1)"
+  num="$(printf '%s' "$url" | grep -oE '[0-9]+$')"
+  [ -n "$num" ] || { echo "  could not parse issue number from: $out" >&2; return 1; }
+  src="$url"
+  docname="GH-${num}-${slug}.md"; relpath="PROJECT/1-INBOX/$docname"
+
+  mkdir -p "$path/PROJECT/1-INBOX"
+  hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
+    > "$path/$relpath"
+  printf '  ✓ issue:   %s\n' "$url"
+  printf '  ✓ capture: %s\n' "$relpath"
+
+  if [ -f "$roadmap" ]; then
+    local where
+    where="$(hq_roadmap_insert "$roadmap" "$(hq_roadmap_line "$num" "$title" "$created" "$relpath" "$docname" "$url")")"
+    printf '  ✓ ROADMAP: pointer added (%s)\n' "$where"
+  else
+    echo '  ! no ROADMAP.md in target — skipped the queue pointer (add one to complete intake)'
+  fi
+
+  if [ -f "$path/utils/pdda/pdda.sh" ]; then
+    if ( cd "$path" && PDDA_ONLY_FILE="$relpath" utils/pdda/pdda.sh frontmatter >/dev/null 2>&1 ); then
+      echo '  ✓ pdda:    capture doc passes the target frontmatter check'
+    else
+      echo '  ! pdda:    target frontmatter check flagged the capture doc — review before promoting' >&2
+    fi
+  fi
+  echo "  (files written but NOT committed — review, then commit in the target repo)"
+}
+
 case "${1:-}" in
   resolve)    shift; [ $# -ge 1 ] || { usage; exit 2; }; cmd_resolve "$@";;
   status)     shift; [ $# -ge 1 ] || { usage; exit 2; }; cmd_status "$@";;
   registries) cmd_registries;;
-  park|queue|fire)
-    echo "hq: '$1' is a Phase 2/3 verb — not built yet (this prototype is read-only)." >&2
-    echo "    Phase 1 provides: resolve, status, registries." >&2
+  park)
+    shift
+    create=0; pargs=()
+    for a in "$@"; do
+      case "$a" in --create|--yes) create=1;; *) pargs+=("$a");; esac
+    done
+    [ "${#pargs[@]}" -ge 2 ] || { echo "usage: hq.sh park [--create] <project> <request...>" >&2; exit 2; }
+    cmd_park "$create" "${pargs[@]}";;
+  queue|fire)
+    echo "hq: '$1' is a Phase 3 verb (dispatch) — not built yet." >&2
+    echo "    Available now: resolve, status, registries, park." >&2
     exit 3;;
   ''|-h|--help) usage;;
   *) echo "hq: unknown subcommand '$1'" >&2; usage; exit 2;;

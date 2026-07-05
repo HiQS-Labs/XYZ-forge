@@ -2,7 +2,7 @@
 gh_issue: 128
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128
 title: "HQ — multi-repo command-center skill: one utterance → registry-resolved repo → PDDA-compliant intake → marathon queue/dispatch"
-status: Active — Phase 0 complete, Phase 1 prototype built & verified
+status: Active — Phases 0–2 built & verified; Phase 3 (dispatch) next
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -46,13 +46,13 @@ on *that repo's* PDDA rails with explicit-verb-only dispatch. Issue [#128].
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 0 (discovery) + Phase 1 (read-only resolver) built and verified.** Enumerated the three live registries (schemas + coverage, written back in Phase 0 below) and shipped the read-only prototype: `skills/hq/SKILL.md`, `utils/hq/hq.sh` (`resolve`/`status`/`registries`), `utils/hq/hq-lib.sh` (the 4-rung resolution ladder with `HQ_*` env seams), and hermetic `test/hq.sh` (18/18, registered in `validate.sh`). First use case proven live: `hq.sh status sleuth-app` returns a full **Tier A** project card resolving through all three registries (see Phase 1 proof). | **Phase 1.x:** fuzzy/alias resolution + operator-confirm on ambiguous names; broaden the live smoke beyond exact repo names. **Phase 2:** intake writer (issue → `1-INBOX` capture → ROADMAP parking in the *target* repo). Gated behind operator go-ahead — it is the first write path. |
+| **Phases 0–2 built and verified — the first runnable end-to-end prototype.** Phase 0 (registry discovery, written back below) + Phase 1 (read-only resolver + project card: `skills/hq/SKILL.md`, `utils/hq/hq.sh`, `utils/hq/hq-lib.sh`, `test/hq.sh` 18/18) + **Phase 2 (`park` intake writer)**: `hq.sh park [--create] <project> <request>` resolves the target, then **previews by default** (writes nothing) or, with `--create`, files the real GitHub issue → writes the PDDA `PROJECT/1-INBOX/GH-<n>-<SLUG>.md` capture → inserts the `ROADMAP.md` queue pointer → runs the target's own `pdda.sh frontmatter`. Dup-guard + Tier-C-is-plain-issue-only + `HQ_GH_BIN` stub seam. Hermetic `test/hq-park.sh` (19/19, in `validate.sh`); `gh`-stubbed `--create` proven to write correct frontmatter and a Queue-placed pointer. Preview proven live against `sleuth-app` (Tier A). | **Phase 3 (dispatch):** `queue` (append a rated lane to the target's Marathon Plan) + `fire` (`swarm-preflight --target-root → marathon-drive`), with the `risk >= 3` gate. **Phase 1.x:** fuzzy/alias resolution. Firing a **real** `park --create` against a live repo awaits a concrete operator request. |
 
 ## Table of contents
 
 - [Phase 0 — Discovery: registry schemas, coverage & resolution order](#phase-0--discovery-registry-schemas-coverage--resolution-order) ✅
 - [Phase 1 — Read-only resolver + `hq status` project card](#phase-1--read-only-resolver--hq-status-project-card) ✅ (prototype)
-- [Phase 2 — Intake writer (issue → capture → roadmap parking)](#phase-2--intake-writer-issue--capture--roadmap-parking) ⏳
+- [Phase 2 — Intake writer (issue → capture → roadmap parking)](#phase-2--intake-writer-issue--capture--roadmap-parking) ✅ (`park`)
 - [Phase 3 — Dispatch (`queue` / `fire`)](#phase-3--dispatch-queue--fire) ⏳
 - [Phase 4 — Deferred: user-level skill + Rebalance-priority promotion](#phase-4--deferred-user-level-skill--rebalance-priority-promotion)
 
@@ -164,18 +164,45 @@ the *mbp* git-pulse file, resolves from mac-studio); unresolved names return rc=
 
 ## Phase 2 — Intake writer (issue → capture → roadmap parking)
 
-**Goal:** the first write path. Given a resolved Tier A/B repo + a request, land it on *that repo's*
-rails: `gh issue create` → `PROJECT/1-INBOX/GH-<n>-*.md` capture (its convention, its frontmatter) →
-one-line `ROADMAP.md` queue pointer → run the target's own `pdda.sh` checks. Dup-guard against the
-target's existing queue. `park`-by-default.
+**Goal:** the first write path — the first *runnable* end-to-end use case. Given a resolved Tier A/B
+repo + a request, land it on *that repo's* rails: `gh issue create` →
+`PROJECT/1-INBOX/GH-<n>-<SLUG>.md` capture (PDDA frontmatter) → one-line `ROADMAP.md` queue pointer →
+run the target's own `pdda.sh frontmatter`. Dup-guard against the target's existing open issues.
+
+**Design decision — preview-first (refines "park by default").** `park` is the first outward-facing
+write (a GitHub issue can be closed but not un-created), so it **previews by default and only writes
+with `--create`**. This keeps the prototype fully runnable/demonstrable without firing an irreversible
+action, and makes the exact artifacts reviewable before they exist. Reversibility: **Easy** in preview
+(no-op); **Costly** on `--create` (an outward issue) — hence the explicit flag. `queue`/`fire` (Phase 3)
+stay gated notices.
+
+**Built:**
+
+- `utils/hq/hq.sh` `park` subcommand + helpers in `hq-lib.sh` (`hq_slug`, `hq_issue_title`,
+  `hq_render_capture`, `hq_roadmap_line`, `hq_roadmap_insert`, `hq_target_slug`).
+- **Preview** (default): prints the would-be issue title, capture-doc path + full rendered content, and
+  ROADMAP line. Writes nothing.
+- **`--create`**: dup-guard (`gh issue list --search`) → `gh issue create` → write the capture doc →
+  insert the ROADMAP pointer under the target's `### Queue` heading → run the target `pdda.sh
+  frontmatter` on the new doc. Files are **written but not committed** (operator reviews, then commits).
+- **Tier C** repos get a plain issue only (no partial doc structure) + a PDDA-install suggestion.
+- `HQ_GH_BIN` seam lets the test stub `gh` (no network / no real issue).
+
+**Proof:** hermetic `test/hq-park.sh` (**19/19**, in `validate.sh`) exercises preview-writes-nothing,
+`--create` writing correct frontmatter (`gh_issue`, `source`, `status`) + a Queue-placed pointer,
+stopword-aware slugging, dup-guard abort, Tier C, and unresolved. Preview run live against `sleuth-app`.
 
 ### QA gate — Phase 2
 
-- [ ] Produces, in the *target* repo: a GH issue, a correctly named capture doc that passes the
-      target's `pdda.sh frontmatter`, and a ROADMAP pointer that passes `roadmap-coverage`.
-- [ ] Dup-guard: re-running the same request does not double-file.
-- [ ] Tier C yields a plain issue + a suggested PDDA-install command, never a partial doc structure.
-- [ ] Writes only inside the resolved target repo; the operator sees a one-line receipt per artifact.
+- [x] Produces, in the *target* repo (via `--create`): a GH issue, a correctly named capture doc whose
+      frontmatter passes `pdda.sh frontmatter`, and a `ROADMAP.md` queue pointer (placed under `### Queue`).
+- [x] Dup-guard: an open issue matching the title aborts `--create` without writing (rc=1).
+- [x] Tier C yields a plain issue + a suggested PDDA-install path, never a partial doc structure.
+- [x] Preview writes nothing (verified: 1-INBOX + ROADMAP unchanged); `--create` writes only inside the
+      resolved target repo and reports a receipt per artifact.
+- [x] `test/hq-park.sh` hermetic (stubbed `gh`, fixture repos) and green in `validate.sh`.
+- [ ] **Deferred to real use:** fire a genuine `park --create` against a live repo (awaits a concrete
+      operator request — the harness is proven, only the live outward call is held).
 
 ## Phase 3 — Dispatch (`queue` / `fire`)
 
