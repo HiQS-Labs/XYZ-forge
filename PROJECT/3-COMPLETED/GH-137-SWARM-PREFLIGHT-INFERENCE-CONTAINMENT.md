@@ -58,12 +58,12 @@ safe.
 
 ## Acceptance criteria — the build is DONE when these hold
 
-- [ ] Inferred covering-test/helper paths are sanitized: any path containing a `..` segment, or that normalizes to a location outside the repo `test/` subtree (including the repo root), is dropped before it can reach `included` / the emitted `artifacts`.
-- [ ] Generated/gitignored paths (`__pycache__/`, `*.pyc`) are excluded from inference.
-- [ ] The emitted `artifacts` / ALLOW_PATHS can never contain a path that normalizes to ROOT or escapes the repo; operator-declared `artifacts[]` still pass through unchanged.
-- [ ] `test/swarm-preflight.sh` gains regression coverage: a fixture whose covering-test/helper inference previously yielded `test/..` now excludes it; a `__pycache__/*.pyc` reference is excluded; a genuine sibling covering test is still included; declared artifacts still pass through.
-- [ ] A `GH-137` marker comment sits at the sanitization site.
-- [ ] Gate green: `bash test/swarm-preflight.sh`; and `validate.sh` green in default mode (no regression to the existing preflight suite).
+- [x] Inferred covering-test/helper paths are sanitized: any path containing a `..` segment, or that normalizes to a location outside the repo `test/` subtree (including the repo root), is dropped before it can reach `included` / the emitted `artifacts`.
+- [x] Generated/gitignored paths (`__pycache__/`, `*.pyc`) are excluded from inference.
+- [x] The emitted `artifacts` / ALLOW_PATHS can never contain a path that normalizes to ROOT or escapes the repo; operator-declared `artifacts[]` still pass through unchanged.
+- [x] `test/swarm-preflight.sh` gains regression coverage: a fixture whose covering-test/helper inference previously yielded `test/..` now excludes it; a `__pycache__/*.pyc` reference is excluded; a genuine sibling covering test is still included; declared artifacts still pass through.
+- [x] A `GH-137` marker comment sits at the sanitization site.
+- [x] Gate green: `bash test/swarm-preflight.sh`; and `validate.sh` green in default mode (no regression to the existing preflight suite).
 
 ## Swarm Preflight Contract
 

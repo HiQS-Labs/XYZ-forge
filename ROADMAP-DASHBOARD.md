@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 31 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 10 · 🔮 0 · 🔲 0
+Summary: 31 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ Summary: 31 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 10 · �
 | GH-116 · fix(tick): misleading 'break' error on open tasks + marathon retry flag | ✅ | [Marathon Plan C](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-04-C-RELIABILITY.md) · [GH-116-MARATHON-RETRY-FLAG.md](PROJECT/2-WORKING/GH-116-MARATHON-RETRY-FLAG.md) · [#116](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/116) |
 | GH-114 · chore: remove deprecated gemini-turn.sh and scrub dead GEMINI references | ✅ | [#114](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/114) |
 | GH-113 · fix(marathon-yaml): validator rejects agy reviewer — blocks multi-phase YAML plans | ✅ | [#113](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/113) |
-| GH-112 · Progressive Python port — boundary decision + opt-in Python layer | — | [decision record](decisions/2026-07-04-python-port-boundary.md) · [GH-112-PYTHON-134-PARITY.md](PROJECT/2-WORKING/GH-112-PYTHON-134-PARITY.md) · [GH-112-PYTHON-PORT-SPIKE.md](PROJECT/3-COMPLETED/GH-112-PYTHON-PORT-SPIKE.md) · [#112](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112) |
+| GH-112 · Progressive Python port — boundary decision + opt-in Python layer | ✅ | [decision record](decisions/2026-07-04-python-port-boundary.md) · [GH-112-PYTHON-134-PARITY.md](PROJECT/3-COMPLETED/GH-112-PYTHON-134-PARITY.md) · [GH-112-PYTHON-PORT-SPIKE.md](PROJECT/3-COMPLETED/GH-112-PYTHON-PORT-SPIKE.md) · [#112](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112) |
 | GH-109 · Gemini 3.1 Deep Think audit — watchdog process leak, tmp collision, DRY turn scripts, Python inline extraction | — | [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md) · [GH-109-GEMINI-FEEDBACK.md](PROJECT/1-INBOX/GH-109-GEMINI-FEEDBACK.md) · [#109](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/109) |
 | GH-110 · Fable 5 Max audit — shellcheck + vendor integrity + strict-mode hardening | — | [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md) · [GH-110-SHELLCHECK-VENDOR-FIXES.md](PROJECT/1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) · [#110](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110) |
 | GH-87 · Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter) | ✅ | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/3-COMPLETED/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
@@ -44,11 +44,12 @@ Summary: 31 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 10 · �
 
 ## In progress
 
-Summary: 10 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 6 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 11 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 7 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-138 · HQ hardening: add promote command + fix marathon-plan detection glob | 🟡 | [hq-lib.sh:286](utils/hq/hq-lib.sh) · [GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md](PROJECT/2-WORKING/GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md) · [#138](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/138) |
+| GH-137 · swarm-preflight: covering-test inference can inject test/.. (repo root) + generated files into ALLOW_PATHS | ✅ | [utils/swarm-preflight.sh](utils/swarm-preflight.sh) · [GH-137-SWARM-PREFLIGHT-INFERENCE-CONTAINMENT.md](PROJECT/3-COMPLETED/GH-137-SWARM-PREFLIGHT-INFERENCE-CONTAINMENT.md) · [#137](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/137) |
 | GH-132 · HQ resolution/dispatch hardening (Codex-review follow-ups) | 🟡 | [GH-132-HQ-RESOLUTION-HARDENING.md](PROJECT/2-WORKING/GH-132-HQ-RESOLUTION-HARDENING.md) · [#132](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/132) |
 | Marathon Plan B Waves 1–3 | ✅ | [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) |
 | GH-92 · poll.sh: relay-pointer parser rejects whole-line bold (` | ✅ | [GH-92-POLL-BOLD-POINTER-DEADLOCK.md](PROJECT/3-COMPLETED/GH-92-POLL-BOLD-POINTER-DEADLOCK.md) · [#92](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/92) |
