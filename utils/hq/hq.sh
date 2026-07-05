@@ -19,6 +19,7 @@
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 HQ_GH_BIN="${HQ_GH_BIN:-gh}"   # seam: tests point this at a stub
+HQ_GIT_BIN="${HQ_GIT_BIN:-git}"   # seam: promote's git mv (tests can point at a stub)
 # shellcheck source=utils/hq/hq-lib.sh
 . "$HERE/hq-lib.sh"
 
@@ -38,6 +39,9 @@ usage:
   hq.sh queue [--create] [--gh-issue N] <project> <req…>
                                           append an HQ-queued lane to the target's Marathon Plan
                                           (PREVIEWS by default; --create appends, non-destructive)
+  hq.sh promote [--create] --gh-issue N <project>
+                                          PDDA 1-INBOX → 2-WORKING: git mv GH-N-*.md + scaffold the
+                                          2-WORKING contract (PREVIEWS by default; --create moves)
   hq.sh fire --gh-issue N [--risk 1-5] <project>
                                           GATED prepare-and-hand-off: resolve + gate (Tier A,
                                           risk<3) + emit the swarm-preflight command. Never drives
@@ -313,7 +317,7 @@ cmd_queue(){
   [ "$has_pdda" = 1 ] || { echo "hq queue: $repo is Tier C (no PDDA) — nothing to queue into; use 'park' for a plain issue." >&2; return 1; }
   local mara; mara="$(hq_inspect_repo "$path" | val LOCAL_MARATHON)"
   if [ -z "$mara" ]; then
-    echo "hq queue: $repo has no open MARATHON-PLAN-*.md in PROJECT/2-WORKING — create one first, or 'park' the request." >&2
+    echo "hq queue: $repo has no open MARATHON-*.md in PROJECT/2-WORKING — create one first, or 'park' the request." >&2
     return 1
   fi
   local plan="$path/PROJECT/2-WORKING/$mara" title created tier
@@ -333,6 +337,48 @@ cmd_queue(){
   echo "HQ queue · appended an HQ-queued lane to $repo"
   printf '  ✓ plan:    %s\n' "PROJECT/2-WORKING/$mara"
   echo "  (appended, NOT committed — review + rate + slot into a wave before firing)"
+}
+
+# cmd_promote <create> <issue> <project> — PDDA 1-INBOX → 2-WORKING transition (GH-138). Mirrors
+# cmd_park/cmd_queue: PREVIEWS by default, --create moves + scaffolds. Mechanical + honest — it does
+# the git mv + fills the derivable frontmatter/status-table so the result passes the enforced
+# 2-WORKING contract, then tells the operator to rate + fill the real Status + QA gates.
+cmd_promote(){
+  local create="$1" issue="$2" project="$3"
+  local R rc; R="$(hq_resolve "$project")"; rc=$?
+  local repo path; repo="$(printf '%s\n' "$R" | val REPO)"; path="$(printf '%s\n' "$R" | val REPO_PATH)"
+  if [ "$rc" = 2 ]; then
+    echo "hq promote: '$project' is AMBIGUOUS — matches: $(printf '%s\n' "$R" | val CANDIDATES | tr ',' ' ')" >&2; return 2
+  fi
+  [ "$rc" = 0 ] && [ -n "$path" ] || { echo "hq promote: '$project' is UNRESOLVED — no target repo." >&2; return 1; }
+  [ -n "$issue" ] && [ "$issue" != "-" ] || { echo "hq promote: --gh-issue N is required (which 1-INBOX capture to promote)." >&2; return 2; }
+  local has_pdda=0; { [ -n "$(printf '%s\n' "$R" | val PDDA_MODE)" ] || [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; } && has_pdda=1
+  [ "$has_pdda" = 1 ] || { echo "hq promote: $repo is Tier C (no PDDA) — no 1-INBOX/2-WORKING lifecycle to promote within." >&2; return 1; }
+
+  local src_doc base
+  src_doc="$(find "$path/PROJECT/1-INBOX" -maxdepth 1 -name "GH-${issue}-*.md" 2>/dev/null | sort | head -1)"
+  [ -n "$src_doc" ] || { echo "hq promote: no PROJECT/1-INBOX/GH-${issue}-*.md in $repo — nothing to promote." >&2; return 1; }
+  base="$(basename "$src_doc")"
+  local dest="$path/PROJECT/2-WORKING/$base"
+  [ -e "$dest" ] && { echo "hq promote: PROJECT/2-WORKING/$base already exists — refusing to overwrite." >&2; return 1; }
+
+  local updated; updated="$(date +%F)"
+  if [ "$create" != 1 ]; then
+    echo "HQ promote · PREVIEW (writes nothing)"
+    printf '  target repo:  %s  →  %s\n' "$project" "$repo"
+    printf '  git mv:       PROJECT/1-INBOX/%s  →  PROJECT/2-WORKING/%s\n' "$base" "$base"
+    echo   "  upgrade:      status→active · ensure updated/owner/goal · add a '## Status' table (2-WORKING contract)"
+    echo   "  [preview only] re-run with --create to move + scaffold the doc."
+    return 0
+  fi
+
+  echo "HQ promote · moving $base into 2-WORKING in $repo …"
+  if ! ( cd "$path" && "$HQ_GIT_BIN" mv "PROJECT/1-INBOX/$base" "PROJECT/2-WORKING/$base" 2>/dev/null ); then
+    mv "$src_doc" "$dest" || { echo "  move failed" >&2; return 1; }   # fallback: not git-tracked
+  fi
+  hq_promote_upgrade_doc "$dest" "$updated" || { echo "  frontmatter upgrade failed" >&2; return 1; }
+  printf '  ✓ promoted: PROJECT/2-WORKING/%s\n' "$base"
+  echo   "  (moved + scaffolded, NOT committed — set cx/risk/eff ratings, write the real ## Status, add QA gates, then commit)"
 }
 
 # cmd_fire <project> <issue> <risk|-> — GATED prepare-and-handoff. NEVER drives the harness itself:
@@ -455,6 +501,20 @@ case "${1:-}" in
     done
     [ "${#qargs[@]}" -ge 2 ] || { echo "usage: hq.sh queue [--create] [--gh-issue N] <project> <request...>" >&2; exit 2; }
     cmd_queue "$create" "$issue" "${qargs[@]}";;
+  promote)
+    shift
+    create=0; issue=""; prargs=()
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --create|--yes) create=1;;
+        --gh-issue) shift; issue="${1:-}";;
+        --gh-issue=*) issue="${1#--gh-issue=}";;
+        *) prargs+=("$1");;
+      esac
+      shift
+    done
+    [ "${#prargs[@]}" -ge 1 ] || { echo "usage: hq.sh promote [--create] --gh-issue N <project>" >&2; exit 2; }
+    cmd_promote "$create" "$issue" "${prargs[0]}";;
   fire)
     shift
     issue=""; risk="-"; fargs=()

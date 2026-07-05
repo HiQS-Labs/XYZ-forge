@@ -283,7 +283,9 @@ hq_inspect_repo(){
     local n mp
     n="$(find "$p/PROJECT/2-WORKING" -maxdepth 1 -name '*.md' ! -name 'blank.md' 2>/dev/null | wc -l | tr -d ' ')"
     printf 'LOCAL_ACTIVE_DOCS=%s\n' "$n"
-    mp="$(find "$p/PROJECT/2-WORKING" -maxdepth 1 -name 'MARATHON-PLAN-*.md' 2>/dev/null | sort | tail -1)"
+    # Broadened from 'MARATHON-PLAN-*.md' to 'MARATHON-*.md' (GH-138): a target repo may name its
+    # plan MARATHON-<date>.md (e.g. rebalance-OS) rather than this repo's MARATHON-PLAN-<date>.md.
+    mp="$(find "$p/PROJECT/2-WORKING" -maxdepth 1 -name 'MARATHON-*.md' 2>/dev/null | sort | tail -1)"
     [ -n "$mp" ] && printf 'LOCAL_MARATHON=%s\n' "$(basename "$mp")"
   fi
 }
@@ -343,6 +345,48 @@ $request
 - Filed under the PDDA issue-first SOP. Promote to \`PROJECT/2-WORKING/\` when execution starts,
   carrying \`gh_issue\` forward, and satisfy the full active-doc contract (status table, QA gates).
 EOF
+}
+
+# GH-138: upgrade a just-moved 1-INBOX capture doc in place so it satisfies the MINIMUM enforced
+# 2-WORKING contract (check_frontmatter: title status created updated owner goal; check_status_table:
+# a '## Status' table with the exact header + non-blank cells). Mechanical + honest — it fills the
+# derivable fields and leaves cx/risk/eff + the real Status + QA gates as loud operator TODOs.
+# hq_promote_upgrade_doc <file> <updated_date> [owner]
+hq_promote_upgrade_doc(){
+  local file="$1" updated="$2" owner="${3:-unassigned}" tmp="$1.hqtmp"
+  local goaltxt="Promoted from 1-INBOX by hq promote — replace with the real goal (see the Request section)."
+  awk -v updated="$updated" -v owner="$owner" -v goaltxt="$goaltxt" '
+    BEGIN{ infm=0; seen_updated=0; seen_owner=0; seen_goal=0 }
+    NR==1 && $0=="---"{ infm=1; print; next }
+    infm && $0=="---"{
+      if(!seen_updated) print "updated: " updated
+      if(!seen_owner)   print "owner: " owner
+      if(!seen_goal)    print "goal: \"" goaltxt "\""
+      print "---"; infm=0; next
+    }
+    infm && /^status:[[:space:]]*/{
+      if($0 ~ /Proposed|1-INBOX|not yet active/)
+        print "status: Promoted from 1-INBOX via HQ on " updated " — awaiting operator rating + scoping"
+      else print
+      next
+    }
+    infm && /^updated:[[:space:]]*/{ seen_updated=1; print "updated: " updated; next }
+    infm && /^owner:[[:space:]]*/{ seen_owner=1; print; next }
+    infm && /^goal:[[:space:]]*/{ seen_goal=1; print; next }
+    { print }
+  ' "$file" > "$tmp" || return 1
+  mv "$tmp" "$file"
+  # append a checker-valid Status table only if the body has none
+  if ! grep -qE '^##[[:space:]]+Status[[:space:]]*$' "$file"; then
+    cat >> "$file" <<EOF
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Promoted from PROJECT/1-INBOX to PROJECT/2-WORKING via \`hq promote\` on $updated. | Operator: set complexity/risk/effort ratings, replace this row with the real state, and add phase QA gates before execution. |
+EOF
+  fi
 }
 
 # hq_roadmap_line <issue_num> <title> <created> <doc_relpath> <doc_basename> <issue_url>

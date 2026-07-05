@@ -97,6 +97,7 @@ TESTS=(
   "hq-next.sh"                   # GH-128 Phase 4 (HQ next: Rebalance-priority project board)
   "hq-locator.sh"                # GH-128 Phase 4 (find-hq.sh: device-agnostic locator, user-level /hq)
   "hq-hardening.sh"              # GH-132 (resolution/dispatch hardening: owner/repo, stale-path, YAML, glob)
+  "hq-promote.sh"                # GH-138 (HQ promote: 1-INBOX→2-WORKING scaffolder + marathon glob broadening)
   "transcript-audit.sh"
   "security-scan.sh"
   "checkjs.sh"
