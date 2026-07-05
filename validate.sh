@@ -91,6 +91,7 @@ TESTS=(
   "preflight-docs.sh"
   "roadmap-dashboard.sh"
   "marathon-plan.sh"
+  "hq.sh"                        # GH-128 (HQ multi-repo command center: read-only resolver + card)
   "transcript-audit.sh"
   "security-scan.sh"
   "checkjs.sh"
