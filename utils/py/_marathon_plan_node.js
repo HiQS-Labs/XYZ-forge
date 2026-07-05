@@ -1,147 +1,3 @@
-#!/usr/bin/env bash
-
-# GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
-# utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash
-# implementation below — Bash stays the supported default until the port is promoted.
-if [[ "${XYZ_PYTHON:-0}" == "1" ]]; then
-  _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-  export XYZ_ROOT="$_xyz_root"
-  export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
-  exec python3 "$_xyz_root/utils/py/marathon_plan.py" "$@"
-fi
-
-# utils/marathon-plan.sh — deterministic "pre-pre-flight" queue planner.
-#
-# Reads the canonical ROADMAP.md ledger (a queue of work: GitHub issues + PROJECT/**.md docs),
-# validates each item is still real (not already fixed / silently half-done), factors in the PDDA
-# complexity/risk/effort ratings, and emits TWO artifacts:
-#
-#   1. a VALIDATION / DRIFT REPORT on stdout — deterministic signals, each a FLAG for a human,
-#      never an auto-fix (already-closed / already-landed / undocumented-partial / drift / unrated);
-#   2. a SEQUENCED marathon-plan doc  PROJECT/2-WORKING/MARATHON-PLAN-YYYY-MM-DD.md — ratings-ranked, collision-lane
-#      aware, reproducing the shape of the hand-authored QUEUE-2026-06-27.md.
-#
-# It is the stage BEFORE utils/swarm-preflight.sh (which is per-item readiness). Overlap is intended:
-# this planner REUSES swarm-preflight's contract shape + probe semantics, and can DELEGATE to it
-# per-item with --deep. The planner is a PRODUCER of a plan; it never executes a marathon
-# (GUIDING-PRINCIPLES.md §8 — the operator decides).
-#
-# Determinism: the score for every item is printed alongside its inputs so any ordering is
-# reproducible by hand. Same ledger + same ratings + same NOW/TODAY ⇒ byte-identical output
-# (so --check works as a drift guard in validate.sh, mirroring roadmap-dashboard.sh --check).
-#
-# Usage:
-#   utils/marathon-plan.sh                         # report on stdout + write today's marathon-plan doc
-#   utils/marathon-plan.sh --dry-run               # report only; write nothing
-#   utils/marathon-plan.sh --check                 # exit non-zero if today's marathon-plan doc is out of sync
-#   utils/marathon-plan.sh --policy derisk-first   # high-risk work sorts earlier (default: quick-wins)
-#   utils/marathon-plan.sh --deep                  # also delegate to swarm-preflight --dry-run per item
-#   utils/marathon-plan.sh --format json           # findings as JSON lines (pdda finding shape)
-#   utils/marathon-plan.sh --zones-config FILE     # explicit zone-rules override
-#
-# Exit: 0 clean · 2 usage · 3 ROADMAP missing/unparseable ·
-#       4 emitted, drift present (already-landed/closed — reconcile the ledger) ·
-#       5 emitted, items held out of sequencing (unrated / note-only / not-ready) ·
-#       6 gh required but unavailable (--require-gh only).
-#
-# Test seam (all optional; unset in production):
-#   QUEUE_PLAN_ROOT / QUEUE_PLAN_ROADMAP / QUEUE_PLAN_QUEUE_DIR / QUEUE_PLAN_NOW / QUEUE_PLAN_TODAY
-#   QUEUE_PLAN_GH_STATE_FILE   JSON map {"24":"CLOSED",...} used instead of calling `gh` (hermetic)
-#   QUEUE_PLAN_BRANCHES_FILE   newline list of branch names used instead of calling `git branch`
-#   QUEUE_PLAN_GH              force gh mode: off|stub (off ⇒ gh-unverified; stub needs *_STATE_FILE)
-#   QUEUE_PLAN_ZONES_FILE      planner zone-rules override (2nd-precedence tier; see --zones-config)
-
-set -uo pipefail
-
-HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Vendored install: HERE is <target>/.xyz/utils → parent is .xyz → target root is grandparent.
-_here_parent="$(cd "$HERE/.." && pwd)"
-if [ "$(basename "$_here_parent")" = ".xyz" ]; then
-  ROOT="${QUEUE_PLAN_ROOT:-"$(cd "$_here_parent/.." && pwd)"}"
-  _SP_CMD=".xyz/utils/swarm-preflight.sh"
-  _MD_CMD=".xyz/relay-automation/marathon-drive.sh"
-  _MP_CMD=".xyz/utils/marathon-plan.sh"
-else
-  ROOT="${QUEUE_PLAN_ROOT:-"$_here_parent"}"
-  _SP_CMD="utils/swarm-preflight.sh"
-  _MD_CMD="relay-automation/marathon-drive.sh"
-  _MP_CMD="utils/marathon-plan.sh"
-fi
-ROADMAP="${QUEUE_PLAN_ROADMAP:-"$ROOT/ROADMAP.md"}"
-QUEUE_DIR="${QUEUE_PLAN_QUEUE_DIR:-"$ROOT/PROJECT/2-WORKING"}"
-NOW="${QUEUE_PLAN_NOW:-"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}"
-TODAY="${QUEUE_PLAN_TODAY:-"$(date -u +%Y-%m-%d)"}"
-
-die()  { printf 'marathon-plan: %s\n' "$*" >&2; exit 2; }
-emit() { printf '%s\n' "$*" >&2; }
-
-usage() {
-  cat <<'EOF'
-Usage: utils/marathon-plan.sh [--dry-run | --check] [--policy quick-wins|derisk-first]
-                           [--deep] [--require-gh] [--format text|json]
-                           [--zones-config <file>]
-
-  (default)        Print the validation report and write PROJECT/2-WORKING/MARATHON-PLAN-<today>.md.
-  --dry-run        Print the report; write no marathon-plan doc.
-  --check          Re-render and compare against today's marathon-plan doc; non-zero on drift. Writes nothing.
-  --policy P       quick-wins (default; momentum, low-cost first) | derisk-first (high-risk first).
-  --deep           Additionally delegate to utils/swarm-preflight.sh --dry-run per ready item
-                   (authoritative ref-based freshness/probe verdict; slower, needs network).
-  --require-gh     Treat an unavailable/offline `gh` as a hard error (exit 6) instead of degrading.
-  --format F       text (default) | json (findings as one JSON object per line).
-  --zones-config   Explicit planner zone-rules override. Relative paths resolve from the caller CWD.
-
-Exit: 0 clean · 2 usage · 3 ROADMAP unparseable · 4 drift present · 5 items held · 6 gh required-but-absent.
-EOF
-}
-
-POLICY="quick-wins"
-FORMAT="text"
-RUN_MODE="write"     # write | dry-run | check
-DEEP=0
-REQUIRE_GH=0
-ZONES_CONFIG=""
-
-while (($# > 0)); do
-  case "$1" in
-    --dry-run)    RUN_MODE="dry-run"; shift ;;
-    --check)      RUN_MODE="check"; shift ;;
-    --policy)     POLICY="${2:-}"; shift 2 ;;
-    --deep)       DEEP=1; shift ;;
-    --require-gh) REQUIRE_GH=1; shift ;;
-    --format)     FORMAT="${2:-}"; shift 2 ;;
-    --zones-config) ZONES_CONFIG="${2:-}"; shift 2 ;;
-    --help|-h)    usage; exit 0 ;;
-    *)            usage; die "unknown argument: $1" ;;
-  esac
-done
-
-case "$POLICY" in quick-wins|derisk-first) ;; *) die "--policy must be 'quick-wins' or 'derisk-first'" ;; esac
-case "$FORMAT" in text|json) ;; *) die "--format must be 'text' or 'json'" ;; esac
-[[ -f "$ROADMAP" ]] || { emit "ROADMAP not found: $ROADMAP"; exit 3; }
-command -v node >/dev/null 2>&1 || die "node is required (Node stdlib only; no deps) but not found in PATH"
-
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/marathon-plan.XXXXXX")"
-trap 'rm -rf "$TMP"' EXIT
-RENDER_OUT="$TMP/MARATHON-PLAN-$TODAY.md"
-QUEUE_DOC="$QUEUE_DIR/MARATHON-PLAN-$TODAY.md"
-
-# Resolve the swarm-preflight path for --deep delegation (skipped silently if absent).
-SWARM_PREFLIGHT="$HERE/swarm-preflight.sh"
-[[ "$DEEP" -eq 1 && -x "$SWARM_PREFLIGHT" ]] || SWARM_PREFLIGHT=""
-
-# One embedded Node program does the compute (parse ledger → resolve items → signals → score →
-# wave-pack → render). It prints the report to stdout, writes the rendered marathon-plan doc to QP_RENDER_OUT,
-# and exits with the flag-derived code. git/gh are reached via execSync, but the test seam env files
-# short-circuit them so the suite stays hermetic. CommonJS (node - <<'NODE') like roadmap-dashboard.sh.
-QP_ROOT="$ROOT" QP_ROADMAP="$ROADMAP" QP_QUEUE_DIR="$QUEUE_DIR" \
-QP_TODAY="$TODAY" QP_NOW="$NOW" QP_POLICY="$POLICY" QP_FORMAT="$FORMAT" \
-QP_DEEP="$DEEP" QP_REQUIRE_GH="$REQUIRE_GH" QP_SWARM_PREFLIGHT="$SWARM_PREFLIGHT" \
-QP_SP_CMD="$_SP_CMD" QP_MD_CMD="$_MD_CMD" QP_MP_CMD="$_MP_CMD" \
-QP_RENDER_OUT="$RENDER_OUT" QP_UTILS_DIR="$HERE" QP_ZONES_CONFIG="$ZONES_CONFIG" \
-QP_GH_STATE_FILE="${QUEUE_PLAN_GH_STATE_FILE:-}" QP_BRANCHES_FILE="${QUEUE_PLAN_BRANCHES_FILE:-}" \
-QP_GH_FORCE="${QUEUE_PLAN_GH:-}" QP_BASE_FILES_FILE="${QUEUE_PLAN_BASE_FILES_FILE:-}" \
-node - <<'NODE'
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -160,8 +16,14 @@ const SP_CMD = E.QP_SP_CMD || "utils/swarm-preflight.sh";
 const MD_CMD = E.QP_MD_CMD || "relay-automation/marathon-drive.sh";
 const MP_CMD = E.QP_MP_CMD || "utils/marathon-plan.sh";
 const BASE_FILES_FILE = E.QP_BASE_FILES_FILE || "";
-const UTILS_DIR = E.QP_UTILS_DIR || process.cwd();
-const EXPLICIT_ZONES_CONFIG = E.QP_ZONES_CONFIG || "";
+
+// ── kernel write-set: the serialization bottleneck (QUEUE-2026-06-27 "the one safety rule") ──
+const KERNEL_PATHS = [
+  "relay-automation/relay-turn-lib.sh",
+  "bin/tick",
+  "relay-automation/relay-drive.sh",
+];
+const SHIM_RE = /relay-automation\/[a-z0-9-]+-turn\.sh$|relay-automation\/consult\.sh$/i;
 
 // Ledger sections we sequence from vs. only reference.
 const SECTIONS = ["Queue / parked intake", "In progress", "Completed", "Deferred · vision"];
@@ -170,104 +32,6 @@ const KNOWN_EMOJI = ["🟢", "🟡", "⏸️", "⛔", "✅", "🔮", "🔲", "�
 // ── tiny readers ─────────────────────────────────────────────────────────────
 function readFileSafe(p) { try { return fs.readFileSync(p, "utf8"); } catch { return null; } }
 function existsAt(rel, base) { try { return fs.existsSync(path.resolve(base || ROOT, rel)); } catch { return false; } }
-function readJsonOrThrow(absPath, label) {
-  let raw;
-  try { raw = fs.readFileSync(absPath, "utf8"); }
-  catch (e) { throw new Error(`${label}: cannot read ${absPath}: ${e.message}`); }
-  try { return JSON.parse(raw); }
-  catch (e) { throw new Error(`${label}: invalid JSON in ${absPath}: ${e.message}`); }
-}
-function compileZoneConfig(raw, sourcePath) {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
-    throw new Error(`zones config must be an object (${sourcePath})`);
-  }
-  if (!Array.isArray(raw.zones)) {
-    throw new Error(`zones config missing zones[] (${sourcePath})`);
-  }
-  if (!raw.defaultZone || typeof raw.defaultZone !== "object" || Array.isArray(raw.defaultZone) || typeof raw.defaultZone.name !== "string" || raw.defaultZone.name.trim() === "") {
-    throw new Error(`zones config missing defaultZone.name (${sourcePath})`);
-  }
-  const names = new Set();
-  const zones = raw.zones.map((zone, idx) => {
-    if (!zone || typeof zone !== "object" || Array.isArray(zone)) {
-      throw new Error(`zones[${idx}] must be an object (${sourcePath})`);
-    }
-    if (typeof zone.name !== "string" || zone.name.trim() === "") {
-      throw new Error(`zones[${idx}] missing name (${sourcePath})`);
-    }
-    if (names.has(zone.name)) {
-      throw new Error(`duplicate zone name '${zone.name}' (${sourcePath})`);
-    }
-    names.add(zone.name);
-    let pathRegex = null;
-    let inferKeywordRegex = null;
-    if (zone.pathRegex != null) {
-      try { pathRegex = new RegExp(zone.pathRegex, zone.pathRegexCaseInsensitive ? "i" : ""); }
-      catch (e) { throw new Error(`zones[${idx}] invalid pathRegex '${zone.pathRegex}' (${sourcePath}): ${e.message}`); }
-    }
-    if (zone.inferKeywordRegex != null) {
-      try { inferKeywordRegex = new RegExp(zone.inferKeywordRegex); }
-      catch (e) { throw new Error(`zones[${idx}] invalid inferKeywordRegex '${zone.inferKeywordRegex}' (${sourcePath}): ${e.message}`); }
-    }
-    return {
-      name: zone.name,
-      pathPrefixes: Array.isArray(zone.pathPrefixes) ? zone.pathPrefixes.slice() : [],
-      pathRegex,
-      inferKeywordRegex,
-      maxPerWave: Number.isInteger(zone.maxPerWave) ? zone.maxPerWave : null,
-      penalty: Number.isFinite(Number(zone.penalty)) ? Number(zone.penalty) : 0,
-      conservativeWhenInferred: zone.conservativeWhenInferred === true,
-      escalateOrchestratorOnly: zone.escalateOrchestratorOnly === true,
-    };
-  });
-  if (names.has(raw.defaultZone.name)) {
-    throw new Error(`defaultZone.name '${raw.defaultZone.name}' duplicates a named zone (${sourcePath})`);
-  }
-  return {
-    sourcePath,
-    zones,
-    defaultZone: {
-      name: raw.defaultZone.name,
-      penalty: Number.isFinite(Number(raw.defaultZone.penalty)) ? Number(raw.defaultZone.penalty) : 0,
-      maxPerWave: Number.isInteger(raw.defaultZone.maxPerWave) ? raw.defaultZone.maxPerWave : null,
-      conservativeWhenInferred: raw.defaultZone.conservativeWhenInferred === true,
-      escalateOrchestratorOnly: raw.defaultZone.escalateOrchestratorOnly === true,
-      pathPrefixes: [],
-      pathRegex: null,
-      inferKeywordRegex: null,
-    },
-  };
-}
-function resolveZoneConfig() {
-  const explicit = EXPLICIT_ZONES_CONFIG ? path.resolve(process.cwd(), EXPLICIT_ZONES_CONFIG) : "";
-  if (explicit) return compileZoneConfig(readJsonOrThrow(explicit, "--zones-config"), explicit);
-  if (process.env.QUEUE_PLAN_ZONES_FILE) {
-    const envPath = path.resolve(process.cwd(), process.env.QUEUE_PLAN_ZONES_FILE);
-    return compileZoneConfig(readJsonOrThrow(envPath, "QUEUE_PLAN_ZONES_FILE"), envPath);
-  }
-  const rootLocal = path.join(ROOT, ".marathon-plan-zones.json");
-  if (fs.existsSync(rootLocal)) return compileZoneConfig(readJsonOrThrow(rootLocal, rootLocal), rootLocal);
-  const builtin = path.join(UTILS_DIR, "marathon-plan-zones.default.json");
-  return compileZoneConfig(readJsonOrThrow(builtin, "built-in zones config"), builtin);
-}
-function zoneByName(cfg, name) {
-  return cfg.zones.find((z) => z.name === name) || (cfg.defaultZone.name === name ? cfg.defaultZone : null);
-}
-function zoneRank(cfg, name) {
-  const idx = cfg.zones.findIndex((z) => z.name === name);
-  return idx >= 0 ? idx : cfg.zones.length;
-}
-function zoneMatchesPath(zone, artifactPath) {
-  if (zone.pathPrefixes.some((prefix) => artifactPath === prefix || artifactPath.startsWith(prefix))) return true;
-  if (zone.pathRegex && zone.pathRegex.test(artifactPath)) return true;
-  return false;
-}
-let ZONES;
-try { ZONES = resolveZoneConfig(); }
-catch (e) {
-  process.stderr.write(`marathon-plan: ${e.message}\n`);
-  process.exit(3);
-}
 
 // Check if file existed at a given ref (to identify net-new artifacts).
 // Hermetic test seam: if BASE_FILES_FILE is set, read it as a list of existing base paths.
@@ -433,36 +197,6 @@ function parseLedger(raw) {
   return out;
 }
 
-// GH-86: parse a "## Lanes" markdown table from the manual PR-review-queue overlay doc
-// (PROJECT/2-WORKING/PR-REVIEW-QUEUE-<date>.md) — a different shape from the ROADMAP ledger: each row
-// reviews an existing PR diff rather than remediating a ledger item, so it doesn't fit parseBullet's
-// `- **title**` bullet shape. Generalized instead by column NAME (Lane/PR/Reviewer), so header-cell
-// wording (e.g. "Artifact (read-only)") doesn't need to match exactly. Degrades to [] on any
-// malformed shape — never throws (same "flag, don't die" contract as the rest of this planner).
-function parseLanesTable(raw) {
-  const lines = raw.split(/\r?\n/);
-  const h = lines.findIndex((l) => /^##\s+Lanes\s*$/.test(l.trim()));
-  if (h < 0) return [];
-  const splitRow = (l) => l.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => stripMd(c.trim()));
-  let i = h + 1;
-  while (i < lines.length && !/^\s*\|/.test(lines[i]) && !/^#{1,6}\s+/.test(lines[i])) i++;
-  if (i >= lines.length || !/^\s*\|/.test(lines[i])) return []; // no table before the next heading
-  const header = splitRow(lines[i]); i++;
-  if (i < lines.length && /^\s*\|?\s*-{2,}/.test(lines[i])) i++; // separator row (|---|---|...)
-  const col = (name) => header.findIndex((c) => c.toLowerCase() === name.toLowerCase());
-  const laneIdx = col("Lane"), prIdx = col("PR"), revIdx = col("Reviewer");
-  const rows = [];
-  for (; i < lines.length && /^\s*\|/.test(lines[i]); i++) {
-    const cells = splitRow(lines[i]);
-    rows.push({
-      lane: laneIdx >= 0 ? (cells[laneIdx] || "") : (cells[0] || ""),
-      pr: prIdx >= 0 ? (cells[prIdx] || "") : "",
-      reviewer: revIdx >= 0 ? (cells[revIdx] || "") : "",
-    });
-  }
-  return rows;
-}
-
 // ── item resolution ──────────────────────────────────────────────────────────
 function ghIssueOf(item) {
   // The canonical issue is the leading "GH-NN ·" in the TITLE. An in-prose issues/ link (e.g. GH-16's
@@ -491,23 +225,24 @@ function zoneOf(contract, item) {
   if (contract && Array.isArray(contract.artifacts)) {
     const arts = contract.artifacts;
     const orchOnly = (contract.lanes && contract.lanes.orchestrator_only) || [];
-    for (const zone of ZONES.zones) {
-      if (!zone.escalateOrchestratorOnly) continue;
-      const touchesOrchOnly = arts.some((a) => orchOnly.some((o) => a === o || a.startsWith(o)));
-      if (touchesOrchOnly) return { zone: zone.name, inferred: false, writeset: arts, zoneRule: zone };
-    }
-    for (const zone of ZONES.zones) {
-      if (arts.some((a) => zoneMatchesPath(zone, a))) return { zone: zone.name, inferred: false, writeset: arts, zoneRule: zone };
-    }
-    return { zone: ZONES.defaultZone.name, inferred: false, writeset: arts, zoneRule: ZONES.defaultZone };
+    // Zone is derived from the WRITE-SET (artifacts) only. orchestrator_only is a guardrail — paths the
+    // lane must NOT touch — so it never adds to the write-set; it only reclassifies an artifact that
+    // falls UNDER an orchestrator_only prefix as kernel-owned. (Unioning it in wrongly serialized any
+    // shim whose contract merely names relay-turn-lib.sh as off-limits.)
+    const touchesKernel = arts.some(
+      (a) => KERNEL_PATHS.some((k) => a === k || a.startsWith(k)) ||
+             orchOnly.some((o) => a === o || a.startsWith(o))
+    );
+    if (touchesKernel) return { zone: "kernel", inferred: false, writeset: arts };
+    if (arts.some((a) => SHIM_RE.test(a))) return { zone: "shim", inferred: false, writeset: arts };
+    return { zone: "independent", inferred: false, writeset: arts };
   }
   const hay = (item.title + " " + item.raw).toLowerCase();
-  for (const zone of ZONES.zones) {
-    if (zone.inferKeywordRegex && zone.inferKeywordRegex.test(hay)) {
-      return { zone: zone.name, inferred: true, writeset: [], zoneRule: zone };
-    }
-  }
-  return { zone: ZONES.defaultZone.name, inferred: true, writeset: [], zoneRule: ZONES.defaultZone };
+  if (/relay-turn-lib|containment kernel|bin\/tick|relay-drive|commit semantics|epoch fenc/.test(hay))
+    return { zone: "kernel", inferred: true, writeset: [] };
+  if (/-turn\.sh|consult\.sh|\bshim\b/.test(hay))
+    return { zone: "shim", inferred: true, writeset: [] };
+  return { zone: "independent", inferred: true, writeset: [] };
 }
 function depsOf(item) {
   const deps = new Set();
@@ -602,7 +337,7 @@ for (const item of ledger) {
   const rec = {
     title: item.title, section: item.section, emoji: item.status, raw: item.raw,
     gh, docRel, docExists, slug, ratings, rated, ratingsExempt, contract,
-    zone: z.zone, zoneInferred: z.inferred, writeset: z.writeset, zoneRule: z.zoneRule,
+    zone: z.zone, zoneInferred: z.inferred, writeset: z.writeset,
     deps: depsOf(item), goGated: isGoGated(item), suggestedBranch,
     flags: [], signals: [], state: null, score: null, wave: null, ghState: null,
   };
@@ -778,13 +513,13 @@ while (depChanged) {
 const W = { eff: 2, cx: 1, risk: 2, dep: 3, zone: 1 };
 const RISK_SIGN = POLICY === "derisk-first" ? -1 : 1;
 const RISK_W = POLICY === "derisk-first" ? 4 : W.risk;
+const ZONE_PEN = { independent: 0, shim: 1, kernel: 2 };
 function scoreOf(r) {
   // Held-but-scored (gated) items get the GO penalty so they sort after active work but keep a
   // sensible relative order. Only items with full ratings are scored; others are held out.
   if (!r.rated) return null;
   let s = W.eff * r.ratings.effort + W.cx * r.ratings.complexity + RISK_SIGN * RISK_W * r.ratings.risk;
-  const zonePenalty = r.zoneRule && Number.isFinite(r.zoneRule.penalty) ? r.zoneRule.penalty : 0;
-  s += W.dep * r.deps.length + W.zone * zonePenalty;
+  s += W.dep * r.deps.length + W.zone * ZONE_PEN[r.zone];
   if (r.state === "gated") s += 100;
   return s;
 }
@@ -794,8 +529,8 @@ for (const r of deduped) r.score = scoreOf(r);
 const active = deduped.filter((r) => r.state === "ready").sort((a, b) => {
   if (a.score !== b.score) return a.score - b.score;
   if (a.deps.length !== b.deps.length) return a.deps.length - b.deps.length;
-  const za = zoneRank(ZONES, a.zone), zb = zoneRank(ZONES, b.zone);
-  if (za !== zb) return za - zb;
+  const zr = { independent: 0, shim: 1, kernel: 2 };
+  if (zr[a.zone] !== zr[b.zone]) return zr[a.zone] - zr[b.zone];
   if ((a.gh || 1e9) !== (b.gh || 1e9)) return (a.gh || 1e9) - (b.gh || 1e9);
   return a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0;
 });
@@ -807,7 +542,7 @@ let guard = 0;
 while (pending.length && guard++ < 100) {
   const wave = [];
   const waveWriteset = new Set();
-  const waveZoneCounts = new Map();
+  let kernelTaken = false;
   const deferred = [];
   for (const r of pending) {
     // dependency: a dep is satisfied only if it is genuinely resolved (done/landed/closed/out-of-scope)
@@ -819,13 +554,13 @@ while (pending.length && guard++ < 100) {
       return !placedIssue.has(d);
     });
     const collides = r.writeset.some((p) => waveWriteset.has(p));
-    const cap = r.zoneRule && Number.isInteger(r.zoneRule.maxPerWave) ? r.zoneRule.maxPerWave : null;
-    const zoneCapClash = cap != null && (waveZoneCounts.get(r.zone) || 0) >= cap;
-    const inferredZoneClash = !!(r.zoneRule && r.zoneRule.conservativeWhenInferred && r.zoneInferred && wave.some((w) => w.zone === r.zone));
-    if (depUnmet || collides || zoneCapClash || inferredZoneClash) { deferred.push(r); continue; }
+    const kernelClash = r.zone === "kernel" && kernelTaken;
+    // zone-inferred shim items (no proven write-set) conservatively can't share a wave with another shim.
+    const inferredShimClash = r.zone === "shim" && r.zoneInferred && wave.some((w) => w.zone === "shim");
+    if (depUnmet || collides || kernelClash || inferredShimClash) { deferred.push(r); continue; }
     wave.push(r);
     r.writeset.forEach((p) => waveWriteset.add(p));
-    waveZoneCounts.set(r.zone, (waveZoneCounts.get(r.zone) || 0) + 1);
+    if (r.zone === "kernel") kernelTaken = true;
   }
   if (wave.length === 0) { // unbreakable dep cycle / all deferred — flush remainder to its own wave
     waves.push(deferred); deferred.forEach((r) => { if (r.gh != null) placedIssue.set(r.gh, waves.length - 1); });
@@ -902,9 +637,6 @@ function cell(v) { return String(v == null ? "—" : v); }
 // Ratings are integers 1 (low) .. 5 (highest); render the number, or — when unrated.
 const ratingNum = (n) => (n >= 1 && n <= 5 ? String(n) : "—");
 function renderQueueDoc() {
-  const zoneRows = [...ZONES.zones, ZONES.defaultZone];
-  const cappedZones = zoneRows.filter((z) => Number.isInteger(z.maxPerWave));
-  const capSummary = cappedZones.length ? cappedZones.map((z) => `${z.name}≤${z.maxPerWave}/wave`).join(", ") : "none";
   const o = [];
   o.push("---");
   o.push("title: Marathon Plan — ranked, freshness-validated, collision-aware queue");
@@ -940,22 +672,18 @@ function renderQueueDoc() {
   o.push("");
   o.push("## The one safety rule");
   o.push("");
-  o.push("Two lanes are safe to run concurrently **iff their write-sets are disjoint** and their zone");
-  o.push(`caps are respected. Current caps: ${capSummary}.`);
+  o.push("Two lanes are safe to run concurrently **iff their write-sets are disjoint**. The kernel");
+  o.push("(`relay-automation/relay-turn-lib.sh`, `bin/tick`, `relay-automation/relay-drive.sh`) is the");
+  o.push("serialization bottleneck: **at most one kernel lane per wave**, even in separate worktrees.");
   o.push("");
   o.push("## Collision map");
   o.push("");
   o.push("| Zone | Parallel-safe? | Active items here |");
   o.push("|---|---|---|");
-  for (const zone of zoneRows) {
-    const items = active.filter((r) => r.zone === zone.name).map((r) => r.gh ? `#${r.gh}` : r.slug);
-    let safe = "✅ one lane per file";
-    if (Number.isInteger(zone.maxPerWave)) {
-      safe = zone.maxPerWave === 1 ? "❌ serialize — one at a time" : `❌ cap ${zone.maxPerWave} per wave`;
-    } else if (zone.conservativeWhenInferred) {
-      safe = "✅ one lane per file (serialize when inferred)";
-    }
-    o.push(`| ${zone.name} | ${safe} | ${items.length ? items.join(", ") : "—"} |`);
+  for (const zone of ["kernel", "shim", "independent"]) {
+    const items = active.filter((r) => r.zone === zone).map((r) => r.gh ? `#${r.gh}` : r.slug);
+    const safe = zone === "kernel" ? "❌ serialize — one at a time" : "✅ one lane per file";
+    o.push(`| ${zone} | ${safe} | ${items.length ? items.join(", ") : "—"} |`);
   }
   o.push("");
   o.push("## Per-item scoring");
@@ -1027,34 +755,6 @@ function renderQueueDoc() {
     }
     o.push("");
   }
-
-  // GH-86: surface the manual PR-review-lane overlay (PROJECT/2-WORKING/PR-REVIEW-QUEUE-<date>.md) —
-  // a different shape from a ROADMAP build lane (reviewing an existing PR diff, not remediating a
-  // ledger item) — so its existence isn't silently invisible next to the generated plan. This is how
-  // two real review lanes went unrun until the operator noticed by hand (2026-07-02). Level 1
-  // (surface) only: no per-lane run/verdict tracking (Level 2), no auto-generation from `gh pr list`
-  // (Level 3) — see PROJECT/2-WORKING/GH-86-SURFACE-REVIEW-LANES.md's non-goals. File absent ⇒ push
-  // nothing at all (zero output diff from before this fix, the common case).
-  const reviewQueueRel = `PR-REVIEW-QUEUE-${TODAY}.md`;
-  const reviewQueueRaw = readFileSafe(path.join(E.QP_QUEUE_DIR, reviewQueueRel));
-  if (reviewQueueRaw != null) {
-    const reviewLanes = parseLanesTable(reviewQueueRaw);
-    o.push("## Review lanes (manual overlay — run via relay-xyz)");
-    o.push("");
-    o.push(`A separate manual overlay — [${reviewQueueRel}](${reviewQueueRel}) — is not derived from`);
-    o.push("ROADMAP.md and does not appear in the waves above (a review lane evaluates an existing PR");
-    o.push("diff; it doesn't remediate a ledger item). Fire each via `relay-xyz`, per the overlay doc.");
-    o.push("");
-    if (reviewLanes.length) {
-      o.push("| Lane | PR | Reviewer |");
-      o.push("|---|---|---|");
-      for (const l of reviewLanes) o.push(`| ${cell(l.lane)} | ${cell(l.pr)} | ${cell(l.reviewer)} |`);
-    } else {
-      o.push(`_${reviewQueueRel} exists but its \`## Lanes\` table could not be parsed._`);
-    }
-    o.push("");
-  }
-
   o.push("## How to fire a lane");
   o.push("");
   o.push("Per lane, the existing pipeline applies — no new control plane:");
@@ -1066,7 +766,7 @@ function renderQueueDoc() {
   o.push("```");
   o.push("");
   o.push("- **Lane scoping:** give each lane an `ALLOW_PATHS` matching only its zone above.");
-  o.push("- If the lane's allowlist includes filesystem-touching `test/*.sh`, treat those tests as read-only specs in-turn; the outer harness gate verifies them after the turn, outside the isolated worktree.");
+  o.push("- **Never** run two kernel lanes at once, even in separate worktrees.");
   o.push("");
   o.push("---");
   o.push("");
@@ -1076,36 +776,3 @@ function renderQueueDoc() {
 
 fs.writeFileSync(E.QP_RENDER_OUT, renderQueueDoc());
 process.exit(exitCode);
-NODE
-RC=$?
-
-# Node failed hard (parse error / exit 3) — pass the code straight through.
-if [[ "$RC" -eq 3 || "$RC" -eq 2 ]]; then
-  exit "$RC"
-fi
-
-# --check: compare the freshly-rendered doc against today's committed marathon-plan doc.
-if [[ "$RUN_MODE" == "check" ]]; then
-  if [[ ! -f "$QUEUE_DOC" ]]; then
-    emit "check: missing artifact: ${QUEUE_DOC#$ROOT/}"
-    exit 1
-  fi
-  if cmp -s "$RENDER_OUT" "$QUEUE_DOC"; then
-    emit "check: MARATHON-PLAN-$TODAY.md is in sync"
-    exit 0
-  fi
-  emit "check: drift detected in MARATHON-PLAN-$TODAY.md"
-  diff -u "$QUEUE_DOC" "$RENDER_OUT" >&2 || true
-  exit 1
-fi
-
-# --dry-run: report already printed; write nothing.
-if [[ "$RUN_MODE" == "dry-run" ]]; then
-  exit "$RC"
-fi
-
-# default: write today's marathon-plan doc.
-mkdir -p "$QUEUE_DIR"
-cp "$RENDER_OUT" "$QUEUE_DOC"
-emit "wrote ${QUEUE_DOC#$ROOT/}"
-exit "$RC"

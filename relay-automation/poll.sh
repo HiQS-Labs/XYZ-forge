@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
+
+# GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
+# utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash
+# implementation below — Bash stays the supported default until the port is promoted.
+if [[ "${XYZ_PYTHON:-0}" == "1" ]]; then
+  _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  export XYZ_ROOT="$_xyz_root"
+  export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
+  exec python3 "$_xyz_root/utils/py/poll.py" "$@"
+fi
 #
 # poll.sh — Phase 4 hands-free poll driver (Option B: baton + poll).
 # One TICK per invocation (drive it under `/loop`, e.g. `/loop 60s ...`).

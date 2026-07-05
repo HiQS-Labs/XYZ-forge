@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+
+# GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
+# utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash
+# implementation below — Bash stays the supported default until the port is promoted.
+if [[ "${XYZ_PYTHON:-0}" == "1" ]]; then
+  _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  export XYZ_ROOT="$_xyz_root"
+  export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
+  exec python3 "$_xyz_root/utils/py/swarm_preflight.py" "$@"
+fi
+
 # utils/swarm-preflight.sh — one durable intake planner for marathon runs (GH-25).
 #
 # Turns EITHER a single project doc OR an explicit bundle of GitHub issues into a
