@@ -32,19 +32,35 @@ def test_marathon_plan_module_load():
 
 from unittest.mock import patch, MagicMock
 
-def test_rtl_returncode_check():
+def test_rtl_run_rtl_returns_code_without_exiting():
+    # Contract (GH-112 Codex-review Blocker fix): _run_rtl must NOT sys.exit on a
+    # non-zero shell status — callers (before/enforce/worktree_begin) need to inspect
+    # the code to route containment (exit 6) and worktree-failure (exit 5) branches.
     import rtl
-    import sys
-    
+
     r = rtl.RelayTurnLib("/fake/root", "/fake/xyz", "/fake/relay", "")
-    
-    # Mock subprocess.run to return a non-zero exit code
+
     mock_res = MagicMock()
     mock_res.returncode = 5
-    
-    with patch('subprocess.run', return_value=mock_res) as mock_run:
+
+    with patch('subprocess.run', return_value=mock_res):
+        res = r._run_rtl("some_cmd")   # must not raise
+        assert res.returncode == 5
+
+
+def test_rtl_run_checked_fails_fast():
+    # The must-succeed derivation calls (artifact/prompt/drift) still fail fast, but
+    # now explicitly at _run_checked — one layer up from the shared runner.
+    import rtl
+
+    r = rtl.RelayTurnLib("/fake/root", "/fake/xyz", "/fake/relay", "")
+
+    mock_res = MagicMock()
+    mock_res.returncode = 5
+
+    with patch('subprocess.run', return_value=mock_res):
         with pytest.raises(SystemExit) as excinfo:
-            r._run_rtl("some_cmd")
+            r._run_checked("some_cmd")
         assert excinfo.value.code == 5
         
 def test_poll_relay_field():
