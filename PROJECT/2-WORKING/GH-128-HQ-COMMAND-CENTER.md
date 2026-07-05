@@ -2,7 +2,7 @@
 gh_issue: 128
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128
 title: "HQ — multi-repo command-center skill: one utterance → registry-resolved repo → PDDA-compliant intake → marathon queue/dispatch"
-status: Active — Phases 0–3 + fuzzy (1.x) built & verified; live-exec of fire held (§8)
+status: Active — Phases 0–4 (hq next) + fuzzy built; fire live-exec + user-level hq deferred
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel
@@ -57,7 +57,7 @@ on *that repo's* PDDA rails with explicit-verb-only dispatch. Issue [#128].
 - [Phase 1 — Read-only resolver + `hq status` project card](#phase-1--read-only-resolver--hq-status-project-card) ✅ (prototype)
 - [Phase 2 — Intake writer (issue → capture → roadmap parking)](#phase-2--intake-writer-issue--capture--roadmap-parking) ✅ (`park`)
 - [Phase 3 — Dispatch (`queue` / `fire`)](#phase-3--dispatch-queue--fire) ✅ (queue + gated fire)
-- [Phase 4 — Deferred: user-level skill + Rebalance-priority promotion](#phase-4--deferred-user-level-skill--rebalance-priority-promotion)
+- [Phase 4 — Rebalance-priority board (`hq next`) + user-level (partial)](#phase-4--rebalance-priority-board-hq-next--user-level-partial) ✅ (`hq next`; user-level deferred)
 
 Fuzzy resolution (Phase 1.x) is folded into Phase 1's resolver — see the Phase 1 build notes.
 
@@ -255,12 +255,27 @@ the heaviest action in the system.
 - [x] `test/hq-dispatch.sh` hermetic and green in `validate.sh`.
 - [ ] **Held by design:** live execution of the emitted marathon (operator runs it via relay-xyz — §8).
 
-## Phase 4 — Deferred: user-level skill + Rebalance-priority promotion
+## Phase 4 — Rebalance-priority board (`hq next`) + user-level (partial)
 
-Promote `/hq` to user level (usable from any repo's session) and use Rebalance `priority_tier` to
-*suggest* which parked HQ intake to promote next. Deferred until Phases 2–3 prove out.
+**Built — `hq next` (the Rebalance-priority-promotion half):** `hq next [--limit N]` ranks projects
+from Rebalance `project_registry` by `priority_tier` (1 highest .. 5 lowest, per rebalance
+`next_actions.py`) and resolves each to its HQ capability tier (A dispatch-eligible / B / C /
+unresolved) — a read-only "what should I pick up next across my repos?" board. Rebalance stays
+read-only (mirrors the #96 seam). Hermetic `test/hq-next.sh` (**6/6**, in `validate.sh`).
+
+**Finding (2026-07-04):** the live Rebalance data is nearly flat — 14 of 15 projects sit at
+`priority_tier 3` (one at 4), so the board's *ranking* signal is weak **today**. This is a data-entry
+gap, not a tool gap: `hq next` becomes discriminating the moment tiers/value are actually set. Left
+as-is; surfaced so the operator knows the ranking is only as good as the priorities in Rebalance.
+
+**Remaining — user-level promotion (deferred):** make `/hq` runnable from *any* repo's session, not
+just the harness repo. The scripts are already self-contained (`hq.sh` + `hq-lib.sh` read `$HOME`
+registries and resolve targets), so the open work is a robust harness-locator (find `utils/hq/hq.sh`
+regardless of CWD, à la `relay-automation/find-harness.sh`) + an install path — deliberately **not**
+bundled here to avoid a locator rabbit-hole; tracked as the Phase 4 remainder.
 
 ### QA gate — Phase 4
 
-- [ ] `/hq` resolves + reports from a session in a non-HQ repo.
-- [ ] Promotion suggestions rank by Rebalance priority without auto-acting.
+- [x] `hq next` ranks projects by Rebalance priority (verified 1→3→5) and labels each project's HQ
+      capability tier without auto-acting; degrades cleanly with no rebalance DB. `test/hq-next.sh` green.
+- [ ] **Deferred:** `/hq` resolves + reports from a session in a non-HQ repo (needs the harness locator).

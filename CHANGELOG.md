@@ -4,6 +4,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### HQ Phase 4 — `hq next` Rebalance-priority board (#128)
+Added `hq next [--limit N]`: ranks projects from Rebalance `project_registry` by `priority_tier` (1 highest .. 5 lowest) and resolves each to its HQ capability tier (A dispatch-eligible / B / C / unresolved) — a read-only "what to pick up next across my repos?" board (Rebalance stays read-only). Hermetic `test/hq-next.sh` 6/6 (in `validate.sh`); shellcheck clean. Same worktree branch as the fuzzy + Phase 3 work (extends the open PR).
+
+Finding: the live Rebalance data is nearly flat (14/15 projects at tier 3), so the ranking signal is weak *today* — a data-entry gap, not a tool gap; `hq next` discriminates the moment tiers are actually set. Phase 4's other half (user-level `/hq` runnable from any repo) is deferred behind a robust harness-locator, deliberately not started here to avoid a locator rabbit-hole.
+
 ### HQ fuzzy resolution (1.x) + Phase 3 dispatch (queue/fire) — on a worktree branch → PR (#128)
 Built on an isolated worktree (`worktree-hq-gh128-followups`) to avoid congesting `main`.
 

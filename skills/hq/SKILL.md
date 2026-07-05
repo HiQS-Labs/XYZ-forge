@@ -19,6 +19,9 @@ The skill drives `utils/hq/hq.sh`:
 - `hq.sh resolve <project|repo>` — machine-readable `KEY=value` resolution (adds `RESOLVED_VIA`
   exact|fuzzy; ambiguous names return rc=2 with `CANDIDATES`).
 - `hq.sh registries` — introspection: what each registry knows and its coverage.
+- `hq.sh next [--limit N]` — a **Rebalance-priority board**: projects ranked by `priority_tier`
+  (1 highest) with each one's resolved HQ capability tier (A dispatch-eligible / B / C / unresolved),
+  answering "what should I pick up next across my repos?" Read-only.
 - `hq.sh park [--create] [--title T] <project> <request…>` — **issue-first intake** in the target
   repo (GH issue → `1-INBOX` capture → ROADMAP parking → target `pdda.sh`). Previews unless `--create`.
 - `hq.sh queue [--create] [--gh-issue N] <project> <request…>` — append an **HQ-queued lane** to the

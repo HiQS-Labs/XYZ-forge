@@ -329,3 +329,20 @@ hq_queue_lane_block(){
   - [ ] rate effort/complexity/risk, then slot into a wave (respect the plan's collision map, GH-45).
 EOF
 }
+
+# ---- Phase 4 (Rebalance-priority board) helpers -------------------------------------------------
+
+# hq_projects_by_priority [limit] -> `tier|value|status|name` rows from Rebalance project_registry,
+# ranked by priority_tier ASC (1 = highest .. 5 = lowest, per rebalance next_actions.py), then name.
+# Read-only; degrades to empty when the DB / sqlite3 is unavailable.
+hq_projects_by_priority(){
+  local limit="${1:-8}"
+  case "$limit" in ''|*[!0-9]*) limit=8;; esac
+  [ -f "$HQ_REBALANCE_DB" ] || return 0
+  command -v sqlite3 >/dev/null 2>&1 || return 0
+  sqlite3 -separator '|' "$HQ_REBALANCE_DB" \
+    "SELECT priority_tier, COALESCE(value_level,''), COALESCE(status,''), name
+       FROM project_registry
+       ORDER BY priority_tier ASC, name
+       LIMIT $limit;" 2>/dev/null
+}

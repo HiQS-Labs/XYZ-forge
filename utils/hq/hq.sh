@@ -30,6 +30,7 @@ usage:
   hq.sh resolve <project|repo>            machine-readable KEY=value resolution
   hq.sh status  <project|repo>            human-readable project card
   hq.sh registries                        what each registry knows (Phase-0 introspection)
+  hq.sh next [--limit N]                   projects ranked by Rebalance priority + HQ capability tier
   hq.sh park [--create] [--title T] <project> <req…>
                                           issue-first intake in the target repo
                                           (PREVIEWS by default; --create writes;
@@ -367,10 +368,61 @@ cmd_fire(){
   echo "  (nothing was executed — this is the armed, gated hand-off)"
 }
 
+# cmd_next [limit] — Phase 4: a Rebalance-priority-ranked board of projects with their HQ capability
+# tier, so "what should I pick up next across my repos?" has one read-only answer. Rebalance stays
+# read-only (mirrors the #96 seam discipline).
+cmd_next(){
+  local limit="${1:-8}" rows
+  rows="$(hq_projects_by_priority "$limit")"
+  if [ -z "$rows" ]; then
+    echo "hq next: no Rebalance project_registry available (need the rebalance.db + sqlite3)." >&2
+    return 1
+  fi
+  echo "HQ · next — projects by Rebalance priority (tier 1 = highest .. 5 = lowest)"
+  echo
+  printf '  %-3s %-26s %-4s %-4s %s\n' "#" "project" "tier" "cap" "status"
+  local i=0 tier value status name repo fields path has_xyz has_pdda cap sw
+  while IFS='|' read -r tier value status name; do
+    [ -n "$name" ] || continue
+    i=$((i + 1))
+    repo="$(hq_bare "$name")"
+    fields="$(hq_repo_resolve "$repo")"
+    path="$(printf '%s\n' "$fields" | val REPO_PATH)"
+    has_xyz=0; has_pdda=0
+    [ -n "$(printf '%s\n' "$fields" | val XYZ_PATH)" ] && has_xyz=1
+    { [ -n "$(printf '%s\n' "$fields" | val PDDA_MODE)" ] \
+        || { [ -n "$path" ] && { [ -f "$path/utils/pdda/pdda.sh" ] || [ -f "$path/.pdda-mode" ]; }; }; } && has_pdda=1
+    if [ -n "$path" ]; then cap="$(hq_tier "$has_pdda" "$has_xyz")"; else cap="-"; fi
+    case "$cap" in
+      A) sw="dispatch-eligible";;
+      B) sw="intake only";;
+      C) sw="bare repo";;
+      *) sw="unresolved on this device";;
+    esac
+    printf '  %-3s %-26s %-4s %-4s %s\n' "$i" "$repo" "$tier" "$cap" "$sw"
+  done <<EOF
+$rows
+EOF
+  echo
+  echo "  Priority from Rebalance project_registry (read-only). 'cap' = HQ capability tier."
+  echo "  Run 'hq status <project>' for the full card, or 'hq park <project> \"<request>\"' to file work."
+}
+
 case "${1:-}" in
   resolve)    shift; [ $# -ge 1 ] || { usage; exit 2; }; cmd_resolve "$@";;
   status)     shift; [ $# -ge 1 ] || { usage; exit 2; }; cmd_status "$@";;
   registries) cmd_registries;;
+  next)
+    shift
+    nlimit=8
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --limit) shift; nlimit="${1:-8}";;
+        --limit=*) nlimit="${1#--limit=}";;
+      esac
+      shift
+    done
+    cmd_next "$nlimit";;
   park)
     shift
     create=0; ptitle=""; pargs=()
