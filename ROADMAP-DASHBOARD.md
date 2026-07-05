@@ -6,12 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 32 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 9 · 🔮 0 · 🔲 0
+Summary: 31 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 10 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-129 · deep-research: add Perplexity grounded search (Sonar) via OpenRouter as the second backend | — | [GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md](PROJECT/1-INBOX/GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md) · [#129](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/129) |
-| GH-128 · HQ — multi-repo command-center skill: "For project X, do Y" → registry-resolved repo → PDDA-compliant intake → marathon queue/dispatch | — | [GH-128-HQ-COMMAND-CENTER.md](PROJECT/1-INBOX/GH-128-HQ-COMMAND-CENTER.md) · [#128](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128) |
+| GH-129 · deep-research: add Perplexity grounded search (Sonar) via OpenRouter as the second backend | ✅ | [GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md](PROJECT/3-COMPLETED/GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md) · [#129](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/129) |
 | GH-126 · swarm-preflight: GH-55 covering-test inference uses naive substring match — false-positive risk in ALLOW_PATHS | — | [#126](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/126) |
 | GH-127 · swarm-preflight: GH-54 fs-touching test detector misses bare &gt; redirects | — | [#127](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/127) |
 | GH-106 · codex-turn: default CODEX_FLAGS hangs on approvals in headless runs | — | [Marathon Plan C](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-04-C-RELIABILITY.md) · [GH-106-CODEX-FLAGS-HEADLESS-HANG.md](PROJECT/2-WORKING/GH-106-CODEX-FLAGS-HEADLESS-HANG.md) · [#106](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/106) |
@@ -25,7 +24,7 @@ Summary: 32 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 9 · �
 | GH-116 · fix(tick): misleading 'break' error on open tasks + marathon retry flag | ✅ | [Marathon Plan C](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-04-C-RELIABILITY.md) · [GH-116-MARATHON-RETRY-FLAG.md](PROJECT/2-WORKING/GH-116-MARATHON-RETRY-FLAG.md) · [#116](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/116) |
 | GH-114 · chore: remove deprecated gemini-turn.sh and scrub dead GEMINI references | ✅ | [#114](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/114) |
 | GH-113 · fix(marathon-yaml): validator rejects agy reviewer — blocks multi-phase YAML plans | ✅ | [#113](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/113) |
-| GH-112 · Spike: progressive Python port — boundary decision + dogfood architecture | — | [GH-112-PYTHON-PORT-SPIKE.md](PROJECT/1-INBOX/GH-112-PYTHON-PORT-SPIKE.md) · [#112](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112) |
+| GH-112 · Progressive Python port — boundary decision + opt-in Python layer (`XYZ_PYTHON=1`) | — | [GH-112-PYTHON-PORT-SPIKE.md](PROJECT/3-COMPLETED/GH-112-PYTHON-PORT-SPIKE.md) · [#112](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112) |
 | GH-109 · Gemini 3.1 Deep Think audit — watchdog process leak, tmp collision, DRY turn scripts, Python inline extraction | — | [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md) · [GH-109-GEMINI-FEEDBACK.md](PROJECT/1-INBOX/GH-109-GEMINI-FEEDBACK.md) · [#109](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/109) |
 | GH-110 · Fable 5 Max audit — shellcheck + vendor integrity + strict-mode hardening | — | [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md) · [GH-110-SHELLCHECK-VENDOR-FIXES.md](PROJECT/1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) · [#110](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110) |
 | GH-87 · Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter) | ✅ | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/3-COMPLETED/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
@@ -45,10 +44,11 @@ Summary: 32 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 9 · �
 
 ## In progress
 
-Summary: 8 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 6 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 9 items | Tally: 🟢 0 · 🟡 2 · ⏸️ 0 · ⛔ 0 · ✅ 6 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-132 · HQ resolution/dispatch hardening (Codex-review follow-ups) | 🟡 | [GH-132-HQ-RESOLUTION-HARDENING.md](PROJECT/2-WORKING/GH-132-HQ-RESOLUTION-HARDENING.md) · [#132](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/132) |
 | Marathon Plan B Waves 1–3 | ✅ | [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) |
 | GH-92 · poll.sh: relay-pointer parser rejects whole-line bold (` | ✅ | [GH-92-POLL-BOLD-POINTER-DEADLOCK.md](PROJECT/3-COMPLETED/GH-92-POLL-BOLD-POINTER-DEADLOCK.md) · [#92](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/92) |
 | GH-93 · tick analyze: concurrency % spans the whole event log, not the run → reports 0% for a ~51% run | ✅ | [GH-93-ANALYZE-CONCURRENCY-SPAN.md](PROJECT/3-COMPLETED/GH-93-ANALYZE-CONCURRENCY-SPAN.md) · [#93](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/93) |
@@ -60,10 +60,11 @@ Summary: 8 items | Tally: 🟢 0 · 🟡 1 · ⏸️ 0 · ⛔ 0 · ✅ 6 · 🔮
 
 ## Completed
 
-Summary: 66 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 66 · 🔮 0 · 🔲 0
+Summary: 67 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 67 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-128 · HQ — multi-repo command center: registry-resolved project card + PDDA-compliant intake/dispatch | ✅ | [GH-128-HQ-COMMAND-CENTER.md](PROJECT/3-COMPLETED/GH-128-HQ-COMMAND-CENTER.md) · [#128](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128) |
 | Tooling · PDDA runtime consolidation (upgrade) | ✅ | [decision](decisions/2026-06-30-pdda-runtime-consolidation.md) · [PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md](PROJECT/3-COMPLETED/PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md) |
 | GH-55 · swarm-preflight: auto-include a changed artifact's covering tests in the builder allowlist | ✅ | [#126](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/126) · [GH-55-AUTO-INCLUDE-COVERING-TESTS.md](PROJECT/3-COMPLETED/GH-55-AUTO-INCLUDE-COVERING-TESTS.md) · [#55](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/55) |
 | GH-54 · marathon brief: forbid in-turn execution of filesystem-touching tests | ✅ | [#127](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/127) · [GH-54-FORBID-FS-TOUCHING-TESTS.md](PROJECT/3-COMPLETED/GH-54-FORBID-FS-TOUCHING-TESTS.md) · [#54](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/54) |

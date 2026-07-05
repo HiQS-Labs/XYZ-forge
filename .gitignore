@@ -24,3 +24,6 @@ utils/telemetry/preflight-log/
 # .aider.llm.history into the tree. The aider-turn.sh shim already redirects these via AIDER_AUX_DIR;
 # this guards ad-hoc runs so they can't re-leak as untracked noise.
 .aider*
+# GH-112 Python layer: bytecode caches from pytest / XYZ_PYTHON=1 runs.
+__pycache__/
+*.pyc
