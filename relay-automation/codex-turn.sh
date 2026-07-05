@@ -14,10 +14,14 @@ set -euo pipefail
 #   RELAY_PEER      — optional: the other agent's id, so the turn hands off "--to <peer>" (else the
 #                     prompt says "the other agent", which a live model may resolve to a role name)
 #   CODEX_BIN       — codex binary (default: codex); tests inject a stub
-#   CODEX_FLAGS     — autonomy flags for `codex exec` (default: -s workspace-write). On a fresh device
-#                     whose ~/.codex/config.toml still prompts/blocks writes, the turn produces no
-#                     changes (field report MBP16 [3]); escalate with e.g.
-#                     CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox' or add -c approval_policy=never.
+#   CODEX_FLAGS     — autonomy flags for `codex exec` (default: -s workspace-write -c
+#                     approval_policy=never — GH-106: the old bare `-s workspace-write` default still
+#                     gated some actions behind an interactive approval prompt, which hangs forever in
+#                     a headless run until RELAY_TURN_TIMEOUT_S kills it (exit 7), burning a lane
+#                     attempt). If codex still blocks on some other prompt type, escalate with e.g.
+#                     CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox' (removes codex's own
+#                     sandbox entirely; this repo's containment then relies solely on
+#                     relay-turn-lib.sh's worktree isolation, same as every other headless worker).
 #   CODEX_TURN_ROOT — git root to guard (default: this repo); tests point at a fixture
 #   CODEX_LOG       — where to write the codex transcript (default: stderr)
 #   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
@@ -66,7 +70,10 @@ drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
 # Run the Codex turn headless (token ops + edit the relay file; NO git), then enforce the boundary.
 # CODEX_FLAGS gives the turn enough autonomy to actually write on a fresh device (default sandbox is
 # read-only); operator-overridable for tighter/looser policies.
-read -ra _cflags <<<"${CODEX_FLAGS:--s workspace-write}"
+# GH-106: default adds `-c approval_policy=never` to the sandbox flag so a headless run no longer
+# hangs on an interactive approval prompt until RELAY_TURN_TIMEOUT_S kills it (exit 7). Keeps the
+# workspace-write sandbox restriction (still can't touch outside the workspace) — fully overridable.
+read -ra _cflags <<<"${CODEX_FLAGS:--s workspace-write -c approval_policy=never}"
 codex_extra_flags=()
 # Transcript: default to a $TMPDIR file (NOT the repo tree — the in-tree log guard deletes it).
 # Persists the transcript so the headless run is auditable. (Codex token-stats parsing is a follow-up

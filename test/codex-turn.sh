@@ -110,10 +110,13 @@ run_shim RELAY-TURN-ambient codex good; rc=$?
 git -C "$A" show --stat HEAD | grep -q "ambient.md" && fail "commit must NOT include ambient WIP" || pass "commit excludes pre-existing ambient WIP"
 rm -f "$A/ambient.md"
 
-# --- (7) autonomy flags: default + override passed to codex exec (MBP16 [3]) ---
+# --- (7) autonomy flags: default + override passed to codex exec (MBP16 [3] / GH-106) ---
 seed_token RELAY-TURN-flags
 run_shim RELAY-TURN-flags codex good >/dev/null 2>&1
 grep -q -- "-s workspace-write" "$WORK/codex-args" && pass "default CODEX_FLAGS '-s workspace-write' reaches codex exec" || fail "default autonomy flag missing"
+# GH-106: default must also disable the interactive approval gate, else a headless run hangs on an
+# approval prompt until RELAY_TURN_TIMEOUT_S kills it (exit 7).
+grep -q -- "-c approval_policy=never" "$WORK/codex-args" && pass "GH-106: default CODEX_FLAGS includes '-c approval_policy=never' (no headless approval hang)" || fail "GH-106: default should disable interactive approval prompts"
 seed_token RELAY-TURN-flags2
 CODEX_FLAGS="--dangerously-bypass-approvals-and-sandbox" run_shim RELAY-TURN-flags2 codex good >/dev/null 2>&1
 grep -q -- "--dangerously-bypass-approvals-and-sandbox" "$WORK/codex-args" && pass "CODEX_FLAGS override is honored" || fail "CODEX_FLAGS override not passed"
