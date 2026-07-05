@@ -25,6 +25,9 @@
 hq_lc(){ printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 hq_bare(){ printf '%s' "${1##*/}"; }                       # strip any owner/ prefix
 hq_sanitize(){ printf '%s' "$1" | tr -cd '[:alnum:]/_.- '; } # defang before SQL interpolation
+# hq_yaml_dq <string> -> escape for a YAML double-quoted scalar (backslash + double-quote). Without
+# this, a title containing " (or \) produces invalid frontmatter — GH-132.
+hq_yaml_dq(){ printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
 
 # hq_rebalance_lookup <query> -> REBAL_NAME / REBAL_TIER / REBAL_VALUE / REBAL_STATUS / REBAL_REPOS
 # Matches the human project NAME (owner/repo) exactly, or on its repo-part, case-insensitively.
@@ -50,22 +53,56 @@ hq_rebalance_lookup(){
   printf 'REBAL_REPOS=%s\n'  "$repos"
 }
 
-# hq_xyz_lookup <repo> -> XYZ_PATH / XYZ_INSTALL / XYZ_TICK / XYZ_COMMIT  (first basename match wins)
+# hq_xyz_lookup <repo> [<slug_hint>] -> XYZ_PATH / XYZ_INSTALL / XYZ_TICK / XYZ_COMMIT for the LIVE
+# install whose coord basename matches <repo>. GH-132 hardening:
+#   * Blocker 2 — a registry row whose coord no longer exists on disk is NOT a usable install; skip it
+#     (so a stale row can't arm Tier A / `fire` at a dead path).
+#   * Blocker 1 — on a basename COLLISION among live installs, disambiguate by full `owner/repo` slug
+#     (authoritative: each candidate's git origin remote) when <slug_hint> carries an owner. If it still
+#     can't uniquely resolve, emit `XYZ_AMBIGUOUS=<paths>` and return 2 rather than guessing a path.
 hq_xyz_lookup(){
   [ -f "$HQ_XYZ_REGISTRY" ] || return 0
-  local repo; repo="$(hq_lc "$(hq_bare "$1")")"
-  local install tick commit coord
-  while IFS=$'\t' read -r install _ tick commit coord; do
+  local repo slug install _f tick commit coord
+  repo="$(hq_lc "$(hq_bare "$1")")"
+  slug="$(hq_lc "${2:-}")"
+  local matches=()
+  while IFS=$'\t' read -r install _f tick commit coord; do
     case "$install" in ''|'#'*) continue;; esac
     [ -n "$coord" ] || continue
-    if [ "$(hq_lc "$(hq_bare "$coord")")" = "$repo" ]; then
-      printf 'XYZ_PATH=%s\n'    "$coord"
-      printf 'XYZ_INSTALL=%s\n' "$install"
-      printf 'XYZ_TICK=%s\n'    "$tick"
-      printf 'XYZ_COMMIT=%s\n'  "$commit"
-      return 0
-    fi
+    [ -d "$coord" ] || continue                          # stale row -> not a usable install (Blocker 2)
+    [ "$(hq_lc "$(hq_bare "$coord")")" = "$repo" ] || continue
+    matches+=("$install"$'\t'"$coord"$'\t'"$tick"$'\t'"$commit")
   done < "$HQ_XYZ_REGISTRY"
+
+  local n="${#matches[@]}"
+  [ "$n" -gt 0 ] || return 0
+
+  local chosen=""
+  if [ "$n" = 1 ]; then
+    chosen="${matches[0]}"
+  elif [ -n "$slug" ] && printf '%s' "$slug" | grep -q '/'; then
+    # basename collision + an owner-carrying hint: keep only candidates whose real git slug matches
+    local m mslug hits=()
+    for m in "${matches[@]}"; do
+      mslug="$(hq_lc "$(hq_target_slug "$(printf '%s' "$m" | cut -f2)")")"
+      [ -n "$mslug" ] && [ "$mslug" = "$slug" ] && hits+=("$m")
+    done
+    [ "${#hits[@]}" = 1 ] && chosen="${hits[0]}"
+  fi
+
+  if [ -n "$chosen" ]; then
+    printf 'XYZ_PATH=%s\n'    "$(printf '%s' "$chosen" | cut -f2)"
+    printf 'XYZ_INSTALL=%s\n' "$(printf '%s' "$chosen" | cut -f1)"
+    printf 'XYZ_TICK=%s\n'    "$(printf '%s' "$chosen" | cut -f3)"
+    printf 'XYZ_COMMIT=%s\n'  "$(printf '%s' "$chosen" | cut -f4)"
+    return 0
+  fi
+
+  # collision we won't resolve -> refuse to guess (Blocker 1)
+  local paths=() m sIFS
+  for m in "${matches[@]}"; do paths+=("$(printf '%s' "$m" | cut -f2)"); done
+  sIFS="$IFS"; IFS=,; printf 'XYZ_AMBIGUOUS=%s\n' "${paths[*]}"; IFS="$sIFS"
+  return 2
 }
 
 # hq_pdda_lookup <repo> -> PDDA_MODE / PDDA_STARTUP / PDDA_DEVICE  (scans every device registry)
@@ -90,6 +127,10 @@ hq_pdda_lookup(){
 # hq_fs_find <repo> -> first git working tree named <repo> under the search roots (depth-capped)
 hq_fs_find(){
   local repo; repo="$(hq_bare "$1")"
+  # GH-132: a glob-metachar token would be a `find -name` PATTERN, not a literal name — e.g. `resolve
+  # '*'` would match the first repo under the roots. A real repo name has no glob chars, so refuse to
+  # fall through to a filesystem match on one (return empty -> UNRESOLVED, not a wrong guess).
+  case "$repo" in *[\*\?\[]*) return 0;; esac
   local saved="$IFS" root hit
   IFS=':'
   for root in $HQ_SEARCH_ROOTS; do
@@ -153,12 +194,21 @@ hq_candidates(){
   fi
 }
 
-# hq_repo_resolve <repo> -> XYZ_*/PDDA_* + REPO_PATH= + REPO_PATH_SOURCE=(xyz-registry|filesystem|'')
+# hq_repo_resolve <repo> [<slug_hint>] -> XYZ_*/PDDA_* + REPO_PATH= + REPO_PATH_SOURCE=
+# (xyz-registry|filesystem|ambiguous|''). <slug_hint> (an owner/repo) is only used to break an XYZ
+# basename collision (GH-132). On an unresolved collision it emits XYZ_AMBIGUOUS + empty REPO_PATH.
 hq_repo_resolve(){
-  local repo="$1" xyz path src="" pdda
-  xyz="$(hq_xyz_lookup "$repo")"
-  path="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_PATH=//p')"
-  if [ -n "$path" ]; then src="xyz-registry"
+  local repo="$1" slug="${2:-}" xyz xrc amb path src="" pdda xyz_path
+  xyz="$(hq_xyz_lookup "$repo" "$slug")"; xrc=$?
+  if [ "$xrc" = 2 ]; then
+    amb="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_AMBIGUOUS=//p')"
+    printf 'XYZ_AMBIGUOUS=%s\n' "$amb"
+    printf 'REPO_PATH=\n'
+    printf 'REPO_PATH_SOURCE=ambiguous\n'
+    return 0
+  fi
+  xyz_path="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_PATH=//p')"   # already existence-filtered
+  if [ -n "$xyz_path" ]; then src="xyz-registry"; path="$xyz_path"
   else path="$(hq_fs_find "$repo")"; [ -n "$path" ] && src="filesystem"; fi
   pdda="$(hq_pdda_lookup "$repo")"
   [ -n "$xyz" ]  && printf '%s\n' "$xyz"
@@ -171,11 +221,21 @@ hq_repo_resolve(){
 # Exit 0 if a REPO_PATH was resolved (exact or fuzzy), 2 if the name is ambiguous (CANDIDATES listed),
 # 1 if unresolved.
 hq_resolve(){
-  local query="$1" rebal repo fields path via="exact"
+  local query="$1" rebal repo fields path via="exact" slug_hint amb
   rebal="$(hq_rebalance_lookup "$query")"
   repo="$(printf '%s\n' "$rebal" | sed -n 's/^REBAL_REPOS=//p' | cut -d, -f1)"
   [ -n "$repo" ] || repo="$(hq_bare "$query")"
-  fields="$(hq_repo_resolve "$repo")"
+  # GH-132: slug hint for an XYZ basename collision — prefer an owner-carrying query, else the
+  # Rebalance project NAME (owner/repo). Bare names give no owner, so a collision stays ambiguous.
+  case "$query" in */*) slug_hint="$query";; *) slug_hint="";; esac
+  [ -n "$slug_hint" ] || slug_hint="$(printf '%s\n' "$rebal" | sed -n 's/^REBAL_NAME=//p')"
+  fields="$(hq_repo_resolve "$repo" "$slug_hint")"
+  amb="$(printf '%s\n' "$fields" | sed -n 's/^XYZ_AMBIGUOUS=//p')"
+  if [ -n "$amb" ]; then
+    printf 'QUERY=%s\nREPO=%s\nRESOLVED_VIA=ambiguous\nCANDIDATES=%s\nREPO_PATH=\nREPO_PATH_SOURCE=ambiguous\n' \
+      "$query" "$repo" "$amb"
+    return 2
+  fi
   path="$(printf '%s\n' "$fields" | sed -n 's/^REPO_PATH=//p' | head -1)"
 
   if [ -z "$path" ]; then
@@ -185,7 +245,13 @@ hq_resolve(){
     if [ "$count" = 1 ]; then
       repo="$cands"; via="fuzzy"
       rebal="$(hq_rebalance_lookup "$repo")"
-      fields="$(hq_repo_resolve "$repo")"
+      fields="$(hq_repo_resolve "$repo" "$(printf '%s\n' "$rebal" | sed -n 's/^REBAL_NAME=//p')")"
+      amb="$(printf '%s\n' "$fields" | sed -n 's/^XYZ_AMBIGUOUS=//p')"
+      if [ -n "$amb" ]; then
+        printf 'QUERY=%s\nREPO=%s\nRESOLVED_VIA=ambiguous\nCANDIDATES=%s\nREPO_PATH=\nREPO_PATH_SOURCE=ambiguous\n' \
+          "$query" "$repo" "$amb"
+        return 2
+      fi
       path="$(printf '%s\n' "$fields" | sed -n 's/^REPO_PATH=//p' | head -1)"
     elif [ "$count" -gt 1 ]; then
       printf 'QUERY=%s\nREPO=\nRESOLVED_VIA=ambiguous\nCANDIDATES=%s\nREPO_PATH=\nREPO_PATH_SOURCE=ambiguous\n' \
@@ -252,11 +318,12 @@ hq_issue_title(){
 # Emits a PDDA-compliant 1-INBOX capture doc (frontmatter matches PROJECT/PDDA.md GitHub-issue intake).
 hq_render_capture(){
   local num="$1" src="$2" title="$3" created="$4" dtype="$5" project="$6" repo="$7" request="$8"
+  local title_dq; title_dq="$(hq_yaml_dq "$title")"   # GH-132: keep the YAML scalar valid
   cat <<EOF
 ---
 gh_issue: $num
 source: $src
-title: "$title"
+title: "$title_dq"
 status: Proposed (1-INBOX — not yet active)
 created: $created
 doc_type: $dtype

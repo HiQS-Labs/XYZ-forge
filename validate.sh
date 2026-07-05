@@ -96,6 +96,7 @@ TESTS=(
   "hq-dispatch.sh"               # GH-128 Phase 3 (HQ queue: append lane · fire: gated hand-off)
   "hq-next.sh"                   # GH-128 Phase 4 (HQ next: Rebalance-priority project board)
   "hq-locator.sh"                # GH-128 Phase 4 (find-hq.sh: device-agnostic locator, user-level /hq)
+  "hq-hardening.sh"              # GH-132 (resolution/dispatch hardening: owner/repo, stale-path, YAML, glob)
   "transcript-audit.sh"
   "security-scan.sh"
   "checkjs.sh"
