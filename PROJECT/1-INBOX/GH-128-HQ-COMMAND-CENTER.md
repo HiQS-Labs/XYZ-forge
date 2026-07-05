@@ -24,6 +24,12 @@ related:
 Capture of issue #128. The live issue is the discussion surface; this doc is the in-repo
 back-reference and the seed of the eventual `2-WORKING` plan.
 
+**Companion system diagram** (proposed architecture): interactive
+[GH-128-HQ-system-diagram.html](GH-128-HQ-system-diagram.html) — open in a browser (pan/zoom,
+16 nodes, 19 typed edges) — built from the [JSON spec](GH-128-HQ-system-diagram.json) via the
+`swe-diagram` skill. It maps the utterance → resolver ladder → collector → capability gate → intake
+→ dispatch flow described below.
+
 ## The ask
 
 From a Claude Code session in this repo, the operator says **"For project Acme, do this and do

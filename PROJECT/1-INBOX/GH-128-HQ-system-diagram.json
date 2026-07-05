@@ -1,0 +1,168 @@
+{
+  "title": "HQ — Multi-Repo Command-Center (proposed, GH-128)",
+  "generated": "2026-07-04",
+  "sources": [
+    "PROJECT/1-INBOX/GH-128-HQ-COMMAND-CENTER.md (design capture)",
+    "GitHub issue #128 (proposed pipeline + safety rails)",
+    "PROJECT/3-COMPLETED/GH-96-XYZ-REBALANCE-SYNC-CHECK.md (seam discipline)",
+    "PROJECT/3-COMPLETED/GH-62-XYZ-INSTALL-REGISTRY.md (registry.tsv schema)",
+    "git-pulse-sync/pdda/registry-<device>.tsv (PDDA install registry schema)"
+  ],
+  "groups": [
+    { "id": "input", "label": "Operator" },
+    { "id": "hq", "label": "HQ Skill (this repo)" },
+    { "id": "registries", "label": "Resolution Registries" },
+    { "id": "target", "label": "Target Repo Rails" }
+  ],
+  "nodes": [
+    {
+      "id": "operator",
+      "label": "Operator (VS Code Claude Code)",
+      "type": "external",
+      "group": "input",
+      "tech": "utterance",
+      "description": "Says: \"For project Acme, do this and that.\" One utterance, any session in this repo."
+    },
+    {
+      "id": "hq_skill",
+      "label": "/hq Skill — Front Door",
+      "type": "service",
+      "group": "hq",
+      "tech": "Claude skill",
+      "description": "Parses the utterance into project name + intent (park | queue | fire | status). Default intent: park (intake only)."
+    },
+    {
+      "id": "resolver",
+      "label": "Project Resolver (registry ladder)",
+      "type": "service",
+      "group": "hq",
+      "tech": "name → repo",
+      "description": "Resolves the project name to a real repo path via the registry ladder, then fuzzy-match + operator confirm as the last rung."
+    },
+    {
+      "id": "collector",
+      "label": "Governance Collector",
+      "type": "service",
+      "group": "hq",
+      "tech": "read-only",
+      "description": "Reads the target repo's state: .pdda-mode, ROUTER/AGENTS, ROADMAP.md, PROJECT/** layout, open MARATHON-PLAN-*.md, gh origin, dup check."
+    },
+    {
+      "id": "gate",
+      "label": "Capability Gate (Tier A/B/C)",
+      "type": "service",
+      "group": "hq",
+      "tech": "policy",
+      "description": "Tier A (PDDA+XYZ): full flow, dispatch allowed. Tier B (PDDA only): intake, no dispatch. Tier C (bare repo): plain issue + offer PDDA install."
+    },
+    {
+      "id": "intake",
+      "label": "Intake Writer (issue-first)",
+      "type": "service",
+      "group": "hq",
+      "tech": "PDDA SOP",
+      "description": "Lands the request on the TARGET repo's rails: gh issue → GH-<n>-*.md capture in its 1-INBOX → one-line ROADMAP parking → its own pdda.sh checks."
+    },
+    {
+      "id": "dispatch",
+      "label": "Dispatch Router (explicit verb only)",
+      "type": "service",
+      "group": "hq",
+      "tech": "queue | fire",
+      "description": "Only on an explicit verb. Honors the risk gate (risk >= 3 routes to a human), queue-commitment contract (GH-45), and Tier gating."
+    },
+    {
+      "id": "gitpulse_reg",
+      "label": "Git Pulse PDDA Registry",
+      "type": "database",
+      "group": "registries",
+      "tech": "registry-<device>.tsv",
+      "description": "Primary name→repo resolver: repo · last_install_utc · mode · source_commit · startup_docs. Per-device index of repos on PDDA rails."
+    },
+    {
+      "id": "xyz_reg",
+      "label": "XYZ Install Registry",
+      "type": "database",
+      "group": "registries",
+      "tech": "registry.tsv",
+      "description": "Which repos can RUN driven lanes: install_dir · last_install_utc · tick_version · source_commit · coordinated_repo (GH-62)."
+    },
+    {
+      "id": "rebalance_reg",
+      "label": "Rebalance Registry (read-only)",
+      "type": "database",
+      "group": "registries",
+      "tech": "rebalance.db",
+      "description": "Aliases + priority/attention metadata. HQ reads only — never writes Rebalance state (mirrors #96 / rebalance-OS#102 seam discipline)."
+    },
+    {
+      "id": "xyz_sync",
+      "label": "xyz-sync check (drift signal)",
+      "type": "job",
+      "group": "registries",
+      "tech": "relay-automation/xyz-sync.sh",
+      "description": "Reports whether a target's vendored harness has drifted (recorded vs current tick_version/source_commit). Gates fire (GH-96 Seam #2)."
+    },
+    {
+      "id": "github",
+      "label": "GitHub Issues",
+      "type": "external",
+      "group": "target",
+      "tech": "gh CLI",
+      "description": "The issue is the signal stream; the in-repo capture doc is the execution surface of record."
+    },
+    {
+      "id": "target_repo",
+      "label": "Target Repo (Acme)",
+      "type": "storage",
+      "group": "target",
+      "tech": "PROJECT/**, ROADMAP.md",
+      "description": "The resolved repo. HQ writes its 1-INBOX capture + ROADMAP parking here; cross-repo writes go through the containment-correct --target-root path (GH-51)."
+    },
+    {
+      "id": "pdda",
+      "label": "PDDA Checks",
+      "type": "job",
+      "group": "target",
+      "tech": "utils/pdda/pdda.sh",
+      "description": "Runs against the target's own contract: frontmatter, status-table, roadmap-coverage — so intake passes the target repo's rails, not just this one's."
+    },
+    {
+      "id": "marathon_plan",
+      "label": "Marathon Plan Queue",
+      "type": "queue",
+      "group": "target",
+      "tech": "MARATHON-PLAN-*.md",
+      "description": "queue verb: append a rated lane to the target's current Marathon Plan (or regenerate via utils/marathon-plan.sh), respecting its collision map."
+    },
+    {
+      "id": "marathon_drive",
+      "label": "swarm-preflight → marathon-drive",
+      "type": "job",
+      "group": "target",
+      "tech": "--target-root lane",
+      "description": "fire verb: drives a contained lane in the target repo. Refuses on Tier B/C or on xyz-sync drift."
+    }
+  ],
+  "edges": [
+    { "source": "operator", "target": "hq_skill", "label": "\"For project X, do Y\"", "kind": "sync" },
+    { "source": "hq_skill", "target": "resolver", "label": "project name + intent", "kind": "sync" },
+    { "source": "resolver", "target": "gitpulse_reg", "label": "name → repo (primary)", "kind": "data" },
+    { "source": "resolver", "target": "xyz_reg", "label": "runnable? install_dir", "kind": "data" },
+    { "source": "resolver", "target": "rebalance_reg", "label": "alias + priority (read-only)", "kind": "data" },
+    { "source": "resolver", "target": "collector", "label": "resolved repo path", "kind": "sync" },
+    { "source": "collector", "target": "target_repo", "label": "read governance state", "kind": "data" },
+    { "source": "collector", "target": "gate", "label": "repo capability tier", "kind": "sync" },
+    { "source": "gate", "target": "xyz_sync", "label": "drift check (fire gate)", "kind": "sync" },
+    { "source": "xyz_sync", "target": "xyz_reg", "label": "recorded vs current", "kind": "data" },
+    { "source": "gate", "target": "intake", "label": "gated request (park default)", "kind": "sync" },
+    { "source": "intake", "target": "github", "label": "gh issue create", "kind": "sync" },
+    { "source": "intake", "target": "target_repo", "label": "1-INBOX capture + ROADMAP parking", "kind": "data" },
+    { "source": "intake", "target": "pdda", "label": "run checks", "kind": "sync" },
+    { "source": "pdda", "target": "target_repo", "label": "validate docs", "kind": "data" },
+    { "source": "intake", "target": "dispatch", "label": "explicit verb only", "kind": "sync" },
+    { "source": "dispatch", "target": "marathon_plan", "label": "queue: append lane", "kind": "async" },
+    { "source": "dispatch", "target": "marathon_drive", "label": "fire: --target-root lane", "kind": "async" },
+    { "source": "marathon_drive", "target": "target_repo", "label": "drives contained changes", "kind": "data" }
+  ]
+}

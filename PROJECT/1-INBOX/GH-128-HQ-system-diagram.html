@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HQ — Multi-Repo Command-Center (proposed, GH-128)</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2330; --muted: #6b7280;
+    --line: #9aa4b2; --edge-label-bg: #f6f7f9; --border: #d8dee6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1c212b; --ink: #e6e9ef; --muted: #9aa4b2;
+      --line: #5c6675; --edge-label-bg: #12151b; --border: #333c4a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink);
+         font: 14px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  .swe-canvas { position: relative; width: 100vw; height: 100vh;
+                overflow: hidden; cursor: grab; }
+  .swe-canvas.swe-grabbing { cursor: grabbing; }
+  .swe-viewport { position: absolute; transform-origin: 0 0; }
+  .swe-edges { position: absolute; overflow: visible; width: 1px; height: 1px; }
+  .swe-nodes { position: absolute; }
+
+  .swe-node { position: absolute; background: var(--panel);
+              border: 1px solid var(--border); border-radius: 8px;
+              border-top: 3px solid var(--node-color, #6b7280);
+              box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: move;
+              user-select: none; }
+  .swe-node-head { font-size: 9px; letter-spacing: .08em; font-weight: 700;
+                   color: var(--node-color, #6b7280); padding: 6px 10px 0; }
+  .swe-node-body { padding: 2px 10px 8px; }
+  .swe-node-label { font-weight: 600; }
+  .swe-node-tech { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .swe-node-group { position: absolute; top: -18px; left: 0; font-size: 10px;
+                    color: var(--muted); }
+
+  .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6; }
+  .swe-arrow { fill: var(--line); }
+  .swe-edge-label { font-size: 11px; fill: var(--muted); text-anchor: middle;
+                    paint-order: stroke; stroke: var(--edge-label-bg);
+                    stroke-width: 4px; }
+
+  .swe-title { position: absolute; top: 14px; left: 18px; font-size: 16px;
+               font-weight: 700; pointer-events: none; }
+  .swe-controls { position: absolute; bottom: 16px; left: 16px;
+                  display: flex; flex-direction: column; gap: 4px; }
+  .swe-btn { width: 30px; height: 30px; border: 1px solid var(--border);
+             border-radius: 6px; background: var(--panel); color: var(--ink);
+             font-size: 15px; cursor: pointer; }
+  .swe-btn:hover { border-color: var(--line); }
+  .swe-legend { position: absolute; bottom: 16px; right: 16px;
+                background: var(--panel); border: 1px solid var(--border);
+                border-radius: 8px; padding: 8px 12px; display: flex;
+                flex-wrap: wrap; gap: 10px; font-size: 11px;
+                color: var(--muted); max-width: 40vw; }
+  .swe-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .swe-legend-dot { width: 9px; height: 9px; border-radius: 50%;
+                    display: inline-block; }
+</style>
+</head>
+<body>
+<div id="diagram"></div>
+<script>
+/*
+ * swe-diagram renderer — vanilla xyflow-style system diagram.
+ * No dependencies. Reads a diagram spec object and renders:
+ *   - layered left→right auto-layout (longest-path ranking)
+ *   - draggable HTML nodes with type-colored headers
+ *   - SVG bezier edges with arrowheads + optional labels
+ *   - pan (drag canvas), zoom (wheel / buttons), fit-to-view
+ *   - light/dark via prefers-color-scheme
+ *
+ * Spec shape (see SKILL.md for the authoring contract):
+ * {
+ *   title: string,
+ *   nodes: [{ id, label, type?, group?, description?, tech? }],
+ *   edges: [{ source, target, label?, kind? }],   // kind: "sync"|"async"|"data"
+ *   groups?: [{ id, label }]
+ * }
+ */
+(function () {
+  'use strict';
+
+  var NODE_W = 200;
+  var NODE_MIN_H = 56;
+  var COL_GAP = 120;
+  var ROW_GAP = 36;
+
+  var TYPE_COLORS = {
+    service:  '#4f7cff',
+    ui:       '#9a5cff',
+    api:      '#00a5a5',
+    database: '#e07b00',
+    queue:    '#c94f7c',
+    external: '#7a8699',
+    job:      '#5c9a3d',
+    storage:  '#b0892b',
+    default:  '#6b7280'
+  };
+
+  var EDGE_DASH = { async: '6,5', data: '2,4' };
+
+  function el(tag, cls, parent) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function svgEl(tag, parent) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  // ---- layout: longest-path layering, groups kept adjacent within a column
+  function layout(spec) {
+    var nodes = spec.nodes || [];
+    var edges = (spec.edges || []).filter(function (e) { return e.source !== e.target; });
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+
+    // Rank by longest path, but drop cycle back-edges first so a bidirectional
+    // pair (A->B, B->A) stays in adjacent columns instead of drifting apart.
+    var adj = {};
+    nodes.forEach(function (n) { adj[n.id] = []; });
+    edges.forEach(function (e) {
+      if (byId[e.source] && byId[e.target]) adj[e.source].push(e.target);
+    });
+    var state = {}, back = {};   // DFS: flag any edge into a node still on the stack
+    function walk(u) {
+      state[u] = 1;
+      adj[u].forEach(function (v) {
+        if (state[v] === 1) (back[u] || (back[u] = {}))[v] = true;
+        else if (!state[v]) walk(v);
+      });
+      state[u] = 2;
+    }
+    nodes.forEach(function (n) { if (!state[n.id]) walk(n.id); });
+    var forward = edges.filter(function (e) {
+      return byId[e.source] && byId[e.target] &&
+             !(back[e.source] && back[e.source][e.target]);
+    });
+
+    var rank = {};
+    nodes.forEach(function (n) { rank[n.id] = 0; });
+    for (var pass = 0; pass < nodes.length; pass++) {   // DAG: converges in <= |V| passes
+      var changed = false;
+      forward.forEach(function (e) {
+        if (rank[e.target] < rank[e.source] + 1) {
+          rank[e.target] = rank[e.source] + 1;
+          changed = true;
+        }
+      });
+      if (!changed) break;
+    }
+
+    var cols = {};
+    nodes.forEach(function (n) {
+      (cols[rank[n.id]] = cols[rank[n.id]] || []).push(n);
+    });
+
+    var positions = {};
+    Object.keys(cols).sort(function (a, b) { return a - b; }).forEach(function (r) {
+      var col = cols[r];
+      col.sort(function (a, b) {
+        var ga = a.group == null ? 1 : 0, gb = b.group == null ? 1 : 0;
+        return ga - gb ||
+               String(a.group || '').localeCompare(String(b.group || '')) ||
+               String(a.label).localeCompare(String(b.label));
+      });
+      var y = 0;
+      col.forEach(function (n) {
+        var h = nodeHeight(n);
+        positions[n.id] = { x: r * (NODE_W + COL_GAP), y: y, w: NODE_W, h: h };
+        y += h + ROW_GAP;
+      });
+      // center column vertically against tallest column later via fitView
+    });
+    return positions;
+  }
+
+  function nodeHeight(n) {
+    var h = NODE_MIN_H;
+    if (n.tech) h += 18;
+    return h;
+  }
+
+  // ---- main
+  window.renderDiagram = function (spec, mount) {
+    mount = mount || document.getElementById('diagram');
+    mount.innerHTML = '';
+    mount.classList.add('swe-canvas');
+
+    var viewport = el('div', 'swe-viewport', mount);
+    var svg = svgEl('svg', viewport);
+    svg.setAttribute('class', 'swe-edges');
+    var defs = svgEl('defs', svg);
+    ['sync', 'async', 'data'].forEach(function (kind) {
+      var m = svgEl('marker', defs);
+      m.setAttribute('id', 'arrow-' + kind);
+      m.setAttribute('viewBox', '0 0 10 10');
+      m.setAttribute('refX', '9'); m.setAttribute('refY', '5');
+      m.setAttribute('markerWidth', '7'); m.setAttribute('markerHeight', '7');
+      m.setAttribute('orient', 'auto-start-reverse');
+      var p = svgEl('path', m);
+      p.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+      p.setAttribute('class', 'swe-arrow');
+    });
+    var edgeLayer = svgEl('g', svg);
+    var nodeLayer = el('div', 'swe-nodes', viewport);
+
+    var pos = layout(spec);
+    var nodeEls = {};
+
+    var groupLabels = {};   // honor spec.groups: render the human label, not the raw id
+    (spec.groups || []).forEach(function (g) {
+      if (g && g.id != null) groupLabels[g.id] = g.label || g.id;
+    });
+
+    (spec.nodes || []).forEach(function (n) {
+      var p = pos[n.id];
+      var d = el('div', 'swe-node', nodeLayer);
+      d.style.left = p.x + 'px';
+      d.style.top = p.y + 'px';
+      d.style.width = p.w + 'px';
+      var color = TYPE_COLORS[n.type] || TYPE_COLORS.default;
+      d.style.setProperty('--node-color', color);
+      var head = el('div', 'swe-node-head', d);
+      head.textContent = n.type ? n.type.toUpperCase() : 'COMPONENT';
+      var body = el('div', 'swe-node-body', d);
+      el('div', 'swe-node-label', body).textContent = n.label || n.id;
+      if (n.tech) el('div', 'swe-node-tech', body).textContent = n.tech;
+      if (n.description) d.title = n.description;
+      if (n.group) el('div', 'swe-node-group', d).textContent = groupLabels[n.group] || n.group;
+      nodeEls[n.id] = d;
+      makeDraggable(d, n.id);
+    });
+
+    // layout() estimated node heights before the DOM existed; a wrapped label or
+    // tech line makes the real node taller. Correct pos[].h from the measured
+    // heights and re-stack each column so nodes don't overlap and edge anchors
+    // (which use pos.h) land on the true vertical midpoint.
+    var byCol = {};
+    (spec.nodes || []).forEach(function (n) {
+      var p = pos[n.id];
+      p.h = nodeEls[n.id].offsetHeight || p.h;
+      (byCol[p.x] = byCol[p.x] || []).push(n.id);
+    });
+    Object.keys(byCol).forEach(function (x) {
+      var ids = byCol[x].sort(function (a, b) { return pos[a].y - pos[b].y; });
+      var y = 0;
+      ids.forEach(function (id) {
+        pos[id].y = y;
+        nodeEls[id].style.top = y + 'px';
+        y += pos[id].h + ROW_GAP;
+      });
+    });
+
+    var edgeEls = [];
+    (spec.edges || []).forEach(function (e) {
+      if (!pos[e.source] || !pos[e.target]) return;
+      var kind = EDGE_DASH[e.kind] ? e.kind : 'sync';
+      var path = svgEl('path', edgeLayer);
+      path.setAttribute('class', 'swe-edge swe-edge-' + kind);
+      if (EDGE_DASH[kind]) path.setAttribute('stroke-dasharray', EDGE_DASH[kind]);
+      path.setAttribute('marker-end', 'url(#arrow-' + kind + ')');
+      var label = null;
+      if (e.label) {
+        label = svgEl('text', edgeLayer);
+        label.setAttribute('class', 'swe-edge-label');
+        label.textContent = e.label;
+      }
+      edgeEls.push({ e: e, path: path, label: label });
+    });
+
+    function edgePath(a, b) {
+      var x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      var x2 = b.x, y2 = b.y + b.h / 2;
+      if (b.x < a.x + a.w) { // backward edge: route from left side
+        x1 = a.x; x2 = b.x + b.w;
+      }
+      var dx = Math.max(40, Math.abs(x2 - x1) / 2);
+      var c1 = x1 < x2 ? x1 + dx : x1 - dx;
+      var c2 = x1 < x2 ? x2 - dx : x2 + dx;
+      return { d: 'M' + x1 + ',' + y1 + ' C' + c1 + ',' + y1 + ' ' + c2 + ',' + y2 + ' ' + x2 + ',' + y2,
+               mx: (x1 + x2) / 2, my: (y1 + y2) / 2 - 6 };
+    }
+
+    function drawEdges() {
+      edgeEls.forEach(function (ee) {
+        var p = edgePath(pos[ee.e.source], pos[ee.e.target]);
+        ee.path.setAttribute('d', p.d);
+        if (ee.label) { ee.label.setAttribute('x', p.mx); ee.label.setAttribute('y', p.my); }
+      });
+    }
+
+    // ---- pan & zoom
+    var view = { x: 40, y: 40, k: 1 };
+    function applyView() {
+      viewport.style.transform =
+        'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.k + ')';
+    }
+    mount.addEventListener('wheel', function (ev) {
+      ev.preventDefault();
+      var k = Math.min(2.5, Math.max(0.2, view.k * (ev.deltaY < 0 ? 1.1 : 0.9)));
+      var r = mount.getBoundingClientRect();
+      var mx = ev.clientX - r.left, my = ev.clientY - r.top;
+      view.x = mx - (mx - view.x) * (k / view.k);
+      view.y = my - (my - view.y) * (k / view.k);
+      view.k = k;
+      applyView();
+    }, { passive: false });
+
+    var panning = null;
+    mount.addEventListener('mousedown', function (ev) {
+      if (ev.target.closest('.swe-node')) return;
+      panning = { x: ev.clientX - view.x, y: ev.clientY - view.y };
+      mount.classList.add('swe-grabbing');
+    });
+    window.addEventListener('mousemove', function (ev) {
+      if (!panning) return;
+      view.x = ev.clientX - panning.x;
+      view.y = ev.clientY - panning.y;
+      applyView();
+    });
+    window.addEventListener('mouseup', function () {
+      panning = null;
+      mount.classList.remove('swe-grabbing');
+    });
+
+    function makeDraggable(d, id) {
+      d.addEventListener('mousedown', function (ev) {
+        ev.stopPropagation();
+        var start = { mx: ev.clientX, my: ev.clientY, x: pos[id].x, y: pos[id].y };
+        function move(mv) {
+          pos[id].x = start.x + (mv.clientX - start.mx) / view.k;
+          pos[id].y = start.y + (mv.clientY - start.my) / view.k;
+          d.style.left = pos[id].x + 'px';
+          d.style.top = pos[id].y + 'px';
+          drawEdges();
+        }
+        function up() {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+        }
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+      });
+    }
+
+    function fitView() {
+      var ids = Object.keys(pos);
+      if (!ids.length) return;
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      ids.forEach(function (id) {
+        var p = pos[id];
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + p.w); maxY = Math.max(maxY, p.y + p.h);
+      });
+      var r = mount.getBoundingClientRect();
+      var k = Math.min(1.5, Math.max(0.2,
+        Math.min((r.width - 80) / (maxX - minX), (r.height - 80) / (maxY - minY))));
+      view.k = k;
+      view.x = (r.width - (maxX - minX) * k) / 2 - minX * k;
+      view.y = (r.height - (maxY - minY) * k) / 2 - minY * k;
+      applyView();
+    }
+
+    // ---- controls + legend
+    var controls = el('div', 'swe-controls', mount);
+    [['+', function () { view.k = Math.min(2.5, view.k * 1.2); applyView(); }],
+     ['−', function () { view.k = Math.max(0.2, view.k / 1.2); applyView(); }],
+     ['▣', fitView]].forEach(function (c) {
+      var b = el('button', 'swe-btn', controls);
+      b.textContent = c[0];
+      b.addEventListener('click', c[1]);
+    });
+
+    var usedTypes = {};
+    (spec.nodes || []).forEach(function (n) { usedTypes[n.type || 'default'] = true; });
+    var legend = el('div', 'swe-legend', mount);
+    Object.keys(usedTypes).sort().forEach(function (t) {
+      var item = el('span', 'swe-legend-item', legend);
+      var dot = el('span', 'swe-legend-dot', item);
+      dot.style.background = TYPE_COLORS[t] || TYPE_COLORS.default;
+      item.appendChild(document.createTextNode(t));
+    });
+
+    if (spec.title) {
+      el('div', 'swe-title', mount).textContent = spec.title;
+    }
+
+    drawEdges();
+    fitView();
+  };
+})();
+
+</script>
+<script>
+renderDiagram({
+  "title": "HQ \u2014 Multi-Repo Command-Center (proposed, GH-128)",
+  "generated": "2026-07-04",
+  "sources": [
+    "PROJECT/1-INBOX/GH-128-HQ-COMMAND-CENTER.md (design capture)",
+    "GitHub issue #128 (proposed pipeline + safety rails)",
+    "PROJECT/3-COMPLETED/GH-96-XYZ-REBALANCE-SYNC-CHECK.md (seam discipline)",
+    "PROJECT/3-COMPLETED/GH-62-XYZ-INSTALL-REGISTRY.md (registry.tsv schema)",
+    "git-pulse-sync/pdda/registry-\u003cdevice>.tsv (PDDA install registry schema)"
+  ],
+  "groups": [
+    {
+      "id": "input",
+      "label": "Operator"
+    },
+    {
+      "id": "hq",
+      "label": "HQ Skill (this repo)"
+    },
+    {
+      "id": "registries",
+      "label": "Resolution Registries"
+    },
+    {
+      "id": "target",
+      "label": "Target Repo Rails"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "operator",
+      "label": "Operator (VS Code Claude Code)",
+      "type": "external",
+      "group": "input",
+      "tech": "utterance",
+      "description": "Says: \"For project Acme, do this and that.\" One utterance, any session in this repo."
+    },
+    {
+      "id": "hq_skill",
+      "label": "/hq Skill \u2014 Front Door",
+      "type": "service",
+      "group": "hq",
+      "tech": "Claude skill",
+      "description": "Parses the utterance into project name + intent (park | queue | fire | status). Default intent: park (intake only)."
+    },
+    {
+      "id": "resolver",
+      "label": "Project Resolver (registry ladder)",
+      "type": "service",
+      "group": "hq",
+      "tech": "name \u2192 repo",
+      "description": "Resolves the project name to a real repo path via the registry ladder, then fuzzy-match + operator confirm as the last rung."
+    },
+    {
+      "id": "collector",
+      "label": "Governance Collector",
+      "type": "service",
+      "group": "hq",
+      "tech": "read-only",
+      "description": "Reads the target repo's state: .pdda-mode, ROUTER/AGENTS, ROADMAP.md, PROJECT/** layout, open MARATHON-PLAN-*.md, gh origin, dup check."
+    },
+    {
+      "id": "gate",
+      "label": "Capability Gate (Tier A/B/C)",
+      "type": "service",
+      "group": "hq",
+      "tech": "policy",
+      "description": "Tier A (PDDA+XYZ): full flow, dispatch allowed. Tier B (PDDA only): intake, no dispatch. Tier C (bare repo): plain issue + offer PDDA install."
+    },
+    {
+      "id": "intake",
+      "label": "Intake Writer (issue-first)",
+      "type": "service",
+      "group": "hq",
+      "tech": "PDDA SOP",
+      "description": "Lands the request on the TARGET repo's rails: gh issue \u2192 GH-\u003cn>-*.md capture in its 1-INBOX \u2192 one-line ROADMAP parking \u2192 its own pdda.sh checks."
+    },
+    {
+      "id": "dispatch",
+      "label": "Dispatch Router (explicit verb only)",
+      "type": "service",
+      "group": "hq",
+      "tech": "queue | fire",
+      "description": "Only on an explicit verb. Honors the risk gate (risk >= 3 routes to a human), queue-commitment contract (GH-45), and Tier gating."
+    },
+    {
+      "id": "gitpulse_reg",
+      "label": "Git Pulse PDDA Registry",
+      "type": "database",
+      "group": "registries",
+      "tech": "registry-\u003cdevice>.tsv",
+      "description": "Primary name\u2192repo resolver: repo \u00b7 last_install_utc \u00b7 mode \u00b7 source_commit \u00b7 startup_docs. Per-device index of repos on PDDA rails."
+    },
+    {
+      "id": "xyz_reg",
+      "label": "XYZ Install Registry",
+      "type": "database",
+      "group": "registries",
+      "tech": "registry.tsv",
+      "description": "Which repos can RUN driven lanes: install_dir \u00b7 last_install_utc \u00b7 tick_version \u00b7 source_commit \u00b7 coordinated_repo (GH-62)."
+    },
+    {
+      "id": "rebalance_reg",
+      "label": "Rebalance Registry (read-only)",
+      "type": "database",
+      "group": "registries",
+      "tech": "rebalance.db",
+      "description": "Aliases + priority/attention metadata. HQ reads only \u2014 never writes Rebalance state (mirrors #96 / rebalance-OS#102 seam discipline)."
+    },
+    {
+      "id": "xyz_sync",
+      "label": "xyz-sync check (drift signal)",
+      "type": "job",
+      "group": "registries",
+      "tech": "relay-automation/xyz-sync.sh",
+      "description": "Reports whether a target's vendored harness has drifted (recorded vs current tick_version/source_commit). Gates fire (GH-96 Seam #2)."
+    },
+    {
+      "id": "github",
+      "label": "GitHub Issues",
+      "type": "external",
+      "group": "target",
+      "tech": "gh CLI",
+      "description": "The issue is the signal stream; the in-repo capture doc is the execution surface of record."
+    },
+    {
+      "id": "target_repo",
+      "label": "Target Repo (Acme)",
+      "type": "storage",
+      "group": "target",
+      "tech": "PROJECT/**, ROADMAP.md",
+      "description": "The resolved repo. HQ writes its 1-INBOX capture + ROADMAP parking here; cross-repo writes go through the containment-correct --target-root path (GH-51)."
+    },
+    {
+      "id": "pdda",
+      "label": "PDDA Checks",
+      "type": "job",
+      "group": "target",
+      "tech": "utils/pdda/pdda.sh",
+      "description": "Runs against the target's own contract: frontmatter, status-table, roadmap-coverage \u2014 so intake passes the target repo's rails, not just this one's."
+    },
+    {
+      "id": "marathon_plan",
+      "label": "Marathon Plan Queue",
+      "type": "queue",
+      "group": "target",
+      "tech": "MARATHON-PLAN-*.md",
+      "description": "queue verb: append a rated lane to the target's current Marathon Plan (or regenerate via utils/marathon-plan.sh), respecting its collision map."
+    },
+    {
+      "id": "marathon_drive",
+      "label": "swarm-preflight \u2192 marathon-drive",
+      "type": "job",
+      "group": "target",
+      "tech": "--target-root lane",
+      "description": "fire verb: drives a contained lane in the target repo. Refuses on Tier B/C or on xyz-sync drift."
+    }
+  ],
+  "edges": [
+    {
+      "source": "operator",
+      "target": "hq_skill",
+      "label": "\"For project X, do Y\"",
+      "kind": "sync"
+    },
+    {
+      "source": "hq_skill",
+      "target": "resolver",
+      "label": "project name + intent",
+      "kind": "sync"
+    },
+    {
+      "source": "resolver",
+      "target": "gitpulse_reg",
+      "label": "name \u2192 repo (primary)",
+      "kind": "data"
+    },
+    {
+      "source": "resolver",
+      "target": "xyz_reg",
+      "label": "runnable? install_dir",
+      "kind": "data"
+    },
+    {
+      "source": "resolver",
+      "target": "rebalance_reg",
+      "label": "alias + priority (read-only)",
+      "kind": "data"
+    },
+    {
+      "source": "resolver",
+      "target": "collector",
+      "label": "resolved repo path",
+      "kind": "sync"
+    },
+    {
+      "source": "collector",
+      "target": "target_repo",
+      "label": "read governance state",
+      "kind": "data"
+    },
+    {
+      "source": "collector",
+      "target": "gate",
+      "label": "repo capability tier",
+      "kind": "sync"
+    },
+    {
+      "source": "gate",
+      "target": "xyz_sync",
+      "label": "drift check (fire gate)",
+      "kind": "sync"
+    },
+    {
+      "source": "xyz_sync",
+      "target": "xyz_reg",
+      "label": "recorded vs current",
+      "kind": "data"
+    },
+    {
+      "source": "gate",
+      "target": "intake",
+      "label": "gated request (park default)",
+      "kind": "sync"
+    },
+    {
+      "source": "intake",
+      "target": "github",
+      "label": "gh issue create",
+      "kind": "sync"
+    },
+    {
+      "source": "intake",
+      "target": "target_repo",
+      "label": "1-INBOX capture + ROADMAP parking",
+      "kind": "data"
+    },
+    {
+      "source": "intake",
+      "target": "pdda",
+      "label": "run checks",
+      "kind": "sync"
+    },
+    {
+      "source": "pdda",
+      "target": "target_repo",
+      "label": "validate docs",
+      "kind": "data"
+    },
+    {
+      "source": "intake",
+      "target": "dispatch",
+      "label": "explicit verb only",
+      "kind": "sync"
+    },
+    {
+      "source": "dispatch",
+      "target": "marathon_plan",
+      "label": "queue: append lane",
+      "kind": "async"
+    },
+    {
+      "source": "dispatch",
+      "target": "marathon_drive",
+      "label": "fire: --target-root lane",
+      "kind": "async"
+    },
+    {
+      "source": "marathon_drive",
+      "target": "target_repo",
+      "label": "drives contained changes",
+      "kind": "data"
+    }
+  ]
+});
+</script>
+</body>
+</html>
