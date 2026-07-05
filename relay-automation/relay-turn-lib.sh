@@ -261,7 +261,8 @@ rtl_is_containment_ignored() {  # <path> — is <path> an exempted tool-cache si
     pat="${pat%/}"
     [[ -n "$pat" ]] || continue
     # Match the path itself, git's collapsed all-untracked form `dir/`, and anything under it.
-    # shellcheck disable=SC2254 — $pat is intentionally unquoted: case-glob matching is the contract.
+    # $pat is intentionally unquoted: case-glob matching is the contract.
+    # shellcheck disable=SC2254
     case "$x" in $pat|$pat/|$pat/*) return 0 ;; esac
   done
   return 1
