@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-04.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -59,5 +59,14 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — codex — Round 1
+Verdict: Changes requested
+
+- [Blocker] [utils/hq/hq-lib.sh](/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.xNouMl/utils/hq/hq-lib.sh:45) strips `owner/` out of `repos_json`, and [utils/hq/hq-lib.sh](/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.xNouMl/utils/hq/hq-lib.sh:54) / [utils/hq/hq.sh](/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.xNouMl/utils/hq/hq.sh:176) resolve by bare basename only. Repro: with `FooOrg/api` in Rebalance and two XYZ installs named `api`, `bash utils/hq/hq.sh resolve FooOrg/api` returned the first unrelated `bar/api` path. This violates the “never guess a path” contract and can park/queue/fire against the wrong repo. Fix: preserve full `owner/repo` identity through Rebalance and registry resolution, prefer exact slug matches, and only fall back to basename matching when no exact slug candidate exists.
+- [Blocker] [utils/hq/hq-lib.sh](/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.xNouMl/utils/hq/hq-lib.sh:159) trusts any non-empty `XYZ_PATH` without checking that it exists, and [utils/hq/hq.sh](/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.xNouMl/utils/hq/hq.sh:347) treats that as sufficient for Tier A. Repro: a stale XYZ row pointing at a deleted repo still made `bash utils/hq/hq.sh fire --gh-issue 9 --risk 2 stale-app` print `GATES PASS` and emit `swarm-preflight.sh --target-root <missing path>`. On a degraded registry, `fire` should refuse or fall back, not arm dispatch at a dead target. Fix: validate `XYZ_PATH` before returning it, degrade to filesystem lookup when possible, and require an existing repo path before Tier A / `fire` passes.
+- [Should] [utils/hq/hq-lib.sh](/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.xNouMl/utils/hq/hq-lib.sh:255) writes raw `--title` text into YAML frontmatter. Repro: `bash utils/hq/hq.sh park --create --title 'bad \"quoted\" title' beta-app body` wrote `title: "bad "quoted" title"` and still exited 0 after only warning that PDDA frontmatter failed. That leaves HQ reporting success while creating an invalid capture doc. Fix: escape YAML scalars or emit a safe block style, then make `park --create` fail hard if the post-write frontmatter check fails.
+- [Should] [utils/hq/hq-lib.sh](/private/var/folders/69/3l_82qtj7fzglnt_jjg07jh40000gn/T/rtl-wt.xNouMl/utils/hq/hq-lib.sh:92) passes the raw repo token to `find -name`, so shell glob metacharacters are treated as patterns. Repro: with one repo under the search roots, `bash utils/hq/hq.sh resolve '*'` resolved that repo and returned `RC=0`. That is another silent mis-resolution path from crafted input. Fix: escape `find -name` metacharacters or reject non-literal repo tokens before filesystem fallback.
+- [Pass] Feature-specific verification is green: `bash test/hq.sh`, `bash test/hq-park.sh`, `bash test/hq-dispatch.sh`, `bash test/hq-next.sh`, and `bash test/hq-locator.sh` all passed. The gaps above are untested edge cases, not existing red tests.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
