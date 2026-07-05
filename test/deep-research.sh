@@ -120,5 +120,141 @@ out="$(STUB_MODE=hang AGY_BIN="$STUB" DEEP_RESEARCH_TIMEOUT_MS=500 node "$DR" --
 { [ "$rc" -eq 1 ] && [ -z "$out" ]; } && pass "timeout -> exit 1, no stdout" || fail "rc=$rc out='$out'"
 grep -q '"error":"timeout"' "$WORK/err" && pass "timeout -> typed error on stderr" || fail "missing typed error: $(cat "$WORK/err")"
 
+# ===================================================================================================
+# GH-129: OpenRouter backend (Perplexity Sonar). Stub HTTP server injected via OPENROUTER_BASE_URL —
+# same posture as the agy stub: request-shape capture + normalization + every failure mode, no live
+# network. The agy assertions above are untouched (default provider stays byte-identical).
+# ===================================================================================================
+OR_SRV="$WORK/or-stub-server.mjs"
+cat >"$OR_SRV" <<'OR_STUB_EOF'
+import { createServer } from 'node:http';
+import { writeFileSync } from 'node:fs';
+const [mode, portFile, reqFile] = process.argv.slice(2);
+const srv = createServer((req, res) => {
+  let body = '';
+  req.on('data', (d) => { body += d; });
+  req.on('end', () => {
+    try {
+      writeFileSync(reqFile, JSON.stringify({ url: req.url, auth: req.headers.authorization || '', body: JSON.parse(body || 'null') }));
+    } catch {}
+    const send = (code, payload) => {
+      res.writeHead(code, { 'Content-Type': 'application/json' });
+      res.end(typeof payload === 'string' ? payload : JSON.stringify(payload));
+    };
+    switch (mode) {
+      case 'good':
+        send(200, {
+          citations: ['https://example.com/passthrough'],
+          choices: [{ message: {
+            content: 'Perplexity grounded answer about deep research.',
+            annotations: [{ type: 'url_citation', url_citation: { url: 'https://example.com/anno', title: 'Anno Doc' } }],
+          } }],
+        });
+        break;
+      case 'citearray':
+        send(200, { citations: ['https://example.com/c1', 'https://example.com/c2'], choices: [{ message: { content: 'Answer without annotations.' } }] });
+        break;
+      case 'inline':
+        send(200, { choices: [{ message: { content: 'Answer citing https://example.com/inline1 and https://example.com/inline2 inline.' } }] });
+        break;
+      case 'http500': send(500, { error: 'boom' }); break;
+      case 'badjson': send(200, 'not json {'); break;
+      case 'empty':   send(200, { choices: [{ message: { content: '' } }] }); break;
+      case 'hang':    break; // never respond — the adapter's AbortController must fire
+      default:        send(500, { error: `unknown stub mode ${mode}` });
+    }
+  });
+});
+srv.listen(0, '127.0.0.1', () => { writeFileSync(portFile, String(srv.address().port)); });
+OR_STUB_EOF
+
+OR_PID=""
+or_start() {  # or_start <mode> -> sets OR_PORT; request capture lands in $WORK/or-req.json
+  rm -f "$WORK/or-port" "$WORK/or-req.json"
+  node "$OR_SRV" "$1" "$WORK/or-port" "$WORK/or-req.json" &
+  OR_PID=$!
+  for _ in $(seq 1 50); do [ -s "$WORK/or-port" ] && break; sleep 0.1; done
+  OR_PORT="$(cat "$WORK/or-port" 2>/dev/null)"
+}
+or_stop() { [ -n "$OR_PID" ] && kill "$OR_PID" 2>/dev/null; wait "$OR_PID" 2>/dev/null; OR_PID=""; }
+or_run() {  # or_run <deep-research args...> — against the running stub, with a test API key
+  OPENROUTER_API_KEY="test-key" OPENROUTER_BASE_URL="http://127.0.0.1:$OR_PORT/api/v1" node "$DR" --provider openrouter "$@"
+}
+
+# --- (9) usage: unknown --provider -> exit 2, no stdout --------------------------------------------
+out="$(node "$DR" --provider sonar --query q 2>/dev/null)"; rc=$?
+{ [ "$rc" -eq 2 ] && [ -z "$out" ]; } && pass "unknown --provider -> usage (exit 2)" || fail "rc=$rc out='$out'"
+
+# --- (10) fail-closed: OPENROUTER_API_KEY missing -> exit 1, typed error, no network attempt --------
+out="$(OPENROUTER_API_KEY="" node "$DR" --provider openrouter --query q 2>"$WORK/err")"; rc=$?
+{ [ "$rc" -eq 1 ] && [ -z "$out" ]; } && pass "openrouter: missing API key -> exit 1, no stdout" || fail "rc=$rc out='$out'"
+grep -q '"error":"missing_api_key"' "$WORK/err" && pass "openrouter: missing key -> typed missing_api_key error" || fail "missing typed error: $(cat "$WORK/err")"
+
+# --- (11) good turn: request construction + normalization (annotations first, then passthrough) -----
+or_start good
+out="$(or_run --query "what is deep research" --search-context-size low --temperature 0.3 --max-tokens 256)"; rc=$?
+or_stop
+[ "$rc" -eq 0 ] && pass "openrouter: good turn exits 0" || fail "openrouter good turn rc=$rc"
+echo "$out" | grep -q '"provider":"openrouter"' && pass "openrouter: provider field" || fail "provider field wrong: $out"
+echo "$out" | grep -q '"model":"perplexity/sonar"' && pass "openrouter: default model perplexity/sonar" || fail "model field wrong: $out"
+echo "$out" | grep -q '"url":"https://example.com/anno","title":"Anno Doc"' && pass "openrouter: annotation citation with title" || fail "annotation citation missing: $out"
+echo "$out" | grep -q 'https://example.com/passthrough' && pass "openrouter: citations[] passthrough merged" || fail "passthrough citation missing: $out"
+grep -q '"url":"/api/v1/chat/completions"' "$WORK/or-req.json" && pass "openrouter: POSTs to <base>/chat/completions" || fail "request url wrong: $(cat "$WORK/or-req.json")"
+grep -q '"auth":"Bearer test-key"' "$WORK/or-req.json" && pass "openrouter: Authorization bearer header" || fail "auth header wrong: $(cat "$WORK/or-req.json")"
+grep -q '"model":"perplexity/sonar"' "$WORK/or-req.json" && pass "openrouter: request body carries model" || fail "request model wrong: $(cat "$WORK/or-req.json")"
+grep -q '"web_search_options":{"search_context_size":"low"}' "$WORK/or-req.json" && pass "openrouter: --search-context-size -> web_search_options" || fail "web_search_options wrong: $(cat "$WORK/or-req.json")"
+grep -q '"max_tokens":256' "$WORK/or-req.json" && pass "openrouter: --max-tokens -> max_tokens" || fail "max_tokens missing: $(cat "$WORK/or-req.json")"
+
+# --- (12) model override via DEEP_RESEARCH_OPENROUTER_MODEL ----------------------------------------
+or_start good
+out="$(DEEP_RESEARCH_OPENROUTER_MODEL="perplexity/sonar-pro" or_run --query q)"; rc=$?
+or_stop
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q '"model":"perplexity/sonar-pro"'; } \
+  && grep -q '"model":"perplexity/sonar-pro"' "$WORK/or-req.json" \
+  && pass "openrouter: DEEP_RESEARCH_OPENROUTER_MODEL overrides model (result + request)" \
+  || fail "model override failed: rc=$rc out='$out' req=$(cat "$WORK/or-req.json" 2>/dev/null)"
+
+# --- (13) citations[] passthrough only (no annotations) --------------------------------------------
+or_start citearray
+out="$(or_run --query q)"; rc=$?
+or_stop
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q 'https://example.com/c1' && echo "$out" | grep -q 'https://example.com/c2'; } \
+  && pass "openrouter: citations[] passthrough extracted without annotations" || fail "citearray failed: rc=$rc out='$out'"
+
+# --- (14) bare-URL fallback when neither annotations nor citations[] present -----------------------
+or_start inline
+out="$(or_run --query q)"; rc=$?
+or_stop
+{ [ "$rc" -eq 0 ] && echo "$out" | grep -q 'https://example.com/inline1' && echo "$out" | grep -q 'https://example.com/inline2'; } \
+  && pass "openrouter: bare-URL scan fallback" || fail "inline fallback failed: rc=$rc out='$out'"
+
+# --- (15) fail-closed: non-200 -> exit 1, typed backend_error, no fallback -------------------------
+or_start http500
+out="$(or_run --query q 2>"$WORK/err")"; rc=$?
+or_stop
+{ [ "$rc" -eq 1 ] && [ -z "$out" ]; } && pass "openrouter: HTTP 500 -> exit 1, no stdout" || fail "rc=$rc out='$out'"
+grep -q '"error":"backend_error"' "$WORK/err" && pass "openrouter: HTTP 500 -> typed backend_error" || fail "missing typed error: $(cat "$WORK/err")"
+
+# --- (16) fail-closed: malformed JSON body -> backend_error ----------------------------------------
+or_start badjson
+out="$(or_run --query q 2>"$WORK/err")"; rc=$?
+or_stop
+{ [ "$rc" -eq 1 ] && grep -q '"error":"backend_error"' "$WORK/err"; } \
+  && pass "openrouter: non-JSON body -> typed backend_error" || fail "rc=$rc err=$(cat "$WORK/err")"
+
+# --- (17) fail-closed: empty answer content -> empty_output ----------------------------------------
+or_start empty
+out="$(or_run --query q 2>"$WORK/err")"; rc=$?
+or_stop
+{ [ "$rc" -eq 1 ] && grep -q '"error":"empty_output"' "$WORK/err"; } \
+  && pass "openrouter: empty content -> typed empty_output" || fail "rc=$rc err=$(cat "$WORK/err")"
+
+# --- (18) fail-closed: gateway never responds -> AbortController timeout ---------------------------
+or_start hang
+out="$(DEEP_RESEARCH_TIMEOUT_MS=500 or_run --query q 2>"$WORK/err")"; rc=$?
+or_stop
+{ [ "$rc" -eq 1 ] && [ -z "$out" ]; } && pass "openrouter: timeout -> exit 1, no stdout" || fail "rc=$rc out='$out'"
+grep -q '"error":"timeout"' "$WORK/err" && pass "openrouter: timeout -> typed timeout error" || fail "missing typed error: $(cat "$WORK/err")"
+
 echo "  deep-research: $PASS pass, $FAIL fail"
 [ "$FAIL" = 0 ]
