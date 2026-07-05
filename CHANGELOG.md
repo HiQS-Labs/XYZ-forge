@@ -4,6 +4,9 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-04
 
+### HQ command-center skill captured (issue-first intake, #128)
+Brainstormed and captured **HQ** — a `/hq` skill turning this repo into the command center for one-utterance multi-repo tasking ("For project Acme, do this and that"): resolve the project name via a registry ladder (Git Pulse `pdda/registry-<device>.tsv` → XYZ install registry → rebalance-OS registry), read the target repo's governance state, and land the request on *that repo's* PDDA rails (issue → `1-INBOX` capture → roadmap parking), with explicit-verb-only dispatch (`queue` appends to the target's Marathon Plan; `fire` drives a `--target-root` lane). Safety rails inherited, not invented: park-by-default, PDDA `risk` as a hard gate, Tier A/B/C capability gating per repo, Rebalance read-only (mirrors the #96 / rebalance-OS#102 seam discipline). Filed [#128](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128), captured [GH-128-HQ-COMMAND-CENTER.md](PROJECT/1-INBOX/GH-128-HQ-COMMAND-CENTER.md), parked in the ROADMAP queue. Intake only — no execution started.
+
 ### Marathon Plan C authored — dogfood-reliability cluster (Plan B follow-through)
 With Plan B (all 3 waves) and the 2026-07-04 Fable/Gemini/Aider blend plan both fully shipped, surveyed the open queue for the next cohesive marathon and found one: reliability findings from a live vendored-install dogfood run plus two follow-ups from this session's own PR #125 review. Authored [MARATHON-PLAN-2026-07-04-C-RELIABILITY.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-04-C-RELIABILITY.md) and 6 capture docs, all verified against current `main` (none already fixed) and rated:
 
