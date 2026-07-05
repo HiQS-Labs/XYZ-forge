@@ -4,6 +4,15 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ## 2026-07-05
 
+### Docs: full HQ instructions in README + AGENTS pointer
+Documented the HQ multi-repo command center for humans and agents. [README.md](README.md) gains a
+top-level **HQ — multi-repo command center** section (install-once + locate, the full
+`status`/`resolve`/`registries`/`next`/`park`/`promote`/`queue`/`fire` command table, the
+`park → promote → queue → fire` pipeline, the 4-step resolution ladder, and capability tiers) plus a
+repo-map entry for `utils/hq/`. [AGENTS.md](AGENTS.md) gains a repo-rails pointer to that section (and
+to [skills/hq/SKILL.md](skills/hq/SKILL.md)) so agents route cross-repo tasking through `/hq` instead
+of hand-editing another repo's docs. Doc-only; `pdda.sh run` errors=0.
+
 ### HQ hardening: `hq promote` command + marathon-plan glob fix (GH-138)
 Two gaps surfaced dogfooding `/hq` on the rebalance-OS#113 intake, both fixed. **(1) marathon-plan detection glob** — [hq-lib.sh](utils/hq/hq-lib.sh) hardcoded `MARATHON-PLAN-*.md`, so `hq status`/`hq queue` reported *"marathon: (none open)"* for rebalance-OS even though it has `MARATHON-2026-07-04.md`; broadened to `MARATHON-*.md` (still newest-by-sort), unblocking cross-repo queueing. **(2) new `hq promote [--create] --gh-issue N <project>`** — closes the one PDDA lifecycle verb HQ lacked (`1-INBOX → 2-WORKING`). Mirrors `park`/`queue`: previews by default, `--create` does the `git mv` + scaffolds the moved doc's frontmatter (`status`→active, ensures `updated`/`owner`/`goal`) and appends a `## Status` table so the result passes the **minimum enforced** 2-WORKING contract — then loudly leaves cx/risk/eff ratings + the real Status + QA gates as operator TODOs (it scaffolds, doesn't decide). Refuses on no-matching-doc and on overwrite. New `HQ_GIT_BIN` seam. Proof: new hermetic [test/hq-promote.sh](test/hq-promote.sh) **8/8** (validates the promoted doc against the *real* `pdda.sh frontmatter`+`status-table`, plus a `MARATHON-<date>.md` glob-regression case), wired into `validate.sh` (**102/102**); `shellcheck -S warning` clean; `pdda.sh run` errors=0. Then dogfooded end-to-end: `hq queue --create --gh-issue 113 rebalanceOS …` appended an HQ-queued lane to rebalance-OS's marathon plan (uncommitted, by design). → [GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md](PROJECT/2-WORKING/GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md) · [#138](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/138)
 

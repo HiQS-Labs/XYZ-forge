@@ -60,6 +60,7 @@ prints its own pass count; if it's green, you're good.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
 - `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/3-COMPLETED/GH-25-SWARM-PREFLIGHT-PLANNER.md).
 - `install.sh` — materializes the `tick` runtime (`bin/tick` + `src/*.js`) into an external repo and records the install in a per-user, machine-local registry (`~/.config/xyz/registry.tsv`). See "Install into another repo" below.
+- `utils/hq/` — **HQ**, the multi-repo command center (`hq.sh` + `hq-lib.sh`); driven by the user-level `/hq` skill in `skills/hq/`. See [HQ — multi-repo command center](#hq--multi-repo-command-center) below.
 
 ## What `tick` is
 
@@ -94,6 +95,58 @@ status rolls up across devices automatically.
 Options:
 - `--repo <path>` — record the coordinated repo (where `.tick/` lives) in the registry entry.
 - `--no-register` — skip the registry write entirely (also skips git-pulse projection).
+
+## HQ — multi-repo command center
+
+Where `tick` and the relay coordinate agents **inside one repo**, **HQ** is the operator front door
+**across every repo on this device**. It turns a single utterance — *"for project Acme, do X"* — into
+governance-aware action: resolve a fuzzy project name to a real repo, report its state, and land the
+request on that repo's own PDDA rails. It ships as `utils/hq/hq.sh` and the user-level `/hq` skill.
+
+**Read paths are safe; every write path previews by default and acts only with `--create`.** HQ never
+drives a marathon itself — `fire` stops at a gated hand-off you run.
+
+### Install once, then it works from any repo
+
+Claude Code only scans `~/.claude/skills/`, so symlink the skill in once per clone (idempotent):
+
+```bash
+bash skills/hq/install.sh      # symlinks this clone's skills/hq into ~/.claude/skills/
+bash skills/hq/find-hq.sh --check   # one-glance readiness: hq root, sqlite3, rebalance registry
+```
+
+After that, `/hq …` works from a session opened in **any** repo. Standing in this harness clone you
+can also call `bash utils/hq/hq.sh …` directly (the forms below use that short form).
+
+### Command surface
+
+| Command | What it does |
+|---|---|
+| `hq.sh status <project>` | **Project card** — resolved repo + path, capability tier (A/B/C), Rebalance priority, PDDA mode + startup docs, active-doc count, open marathon plan, XYZ install/drift stamps. |
+| `hq.sh resolve <project>` | Machine-readable `KEY=value` resolution (`RESOLVED_VIA=exact\|fuzzy`; an ambiguous name returns rc=2 with `CANDIDATES`). |
+| `hq.sh registries` | Introspection — what each registry knows and its coverage. |
+| `hq.sh next [--limit N]` | **Priority board** — projects ranked by Rebalance `priority_tier` with each one's HQ capability tier. Read-only. |
+| `hq.sh park [--create] [--title T] <project> <req…>` | **Issue-first intake** in the target repo: GH issue → `PROJECT/1-INBOX/` capture → ROADMAP parking. Previews unless `--create`. |
+| `hq.sh promote [--create] --gh-issue N <project>` | **PDDA `1-INBOX → 2-WORKING`** (GH-138): `git mv GH-N-*.md` + scaffold the moved doc so it satisfies the enforced 2-WORKING contract (leaves ratings/QA gates as operator TODOs). Previews unless `--create`. |
+| `hq.sh queue [--create] [--gh-issue N] <project> <req…>` | Append an **HQ-queued lane** to the target's newest `MARATHON-*.md` plan (non-destructive). Previews unless `--create`. |
+| `hq.sh fire --gh-issue N [--risk 1-5] <project>` | **Gated prepare-and-hand-off** — resolves, gates (Tier A, `risk < 3`), and emits the `swarm-preflight` command for the operator to run. Never drives the harness (GUIDING-PRINCIPLES §8). |
+
+The intake-to-dispatch pipeline is **`park → promote → queue → fire`** — capture on the rails, promote
+into active work, queue a marathon lane, then hand off. Each step previews first.
+
+### How a name becomes a repo (resolution ladder)
+
+1. **Rebalance `project_registry`** (`rebalance-OS/rebalance.db`) — semantic catalog: NAME → repos + priority. No path.
+2. **XYZ install registry** (`~/.config/xyz/registry.tsv`) — repo → absolute path + drift stamps (the path resolver).
+3. **Git Pulse PDDA registry** (`~/git-pulse-sync/pdda/registry-<device>.tsv`) — repo → PDDA mode + startup docs, cross-device.
+4. **Filesystem `find`** — fallback when no registry knows the path.
+
+**Capability tiers:** **A** = PDDA + XYZ install → dispatch-eligible · **B** = PDDA only → intake only ·
+**C** = bare repo → plain issue only (offer a PDDA install). Test/non-default overrides:
+`HQ_PDDA_REGISTRY_DIR`, `HQ_XYZ_REGISTRY`, `HQ_REBALANCE_DB`, `HQ_SEARCH_ROOTS` (see `utils/hq/hq-lib.sh`).
+
+Full agent-facing detail — invocation flow, guardrails, and the locator contract — lives in the skill:
+[skills/hq/SKILL.md](skills/hq/SKILL.md). Tracks [GH-128](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128).
 
 ---
 
