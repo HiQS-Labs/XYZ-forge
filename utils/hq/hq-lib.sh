@@ -102,36 +102,105 @@ hq_fs_find(){
   return 0
 }
 
-# hq_resolve <query> -> QUERY / REPO / REPO_PATH / REPO_PATH_SOURCE + any REBAL_/XYZ_/PDDA_ fields.
-# Exit 0 if a REPO_PATH was resolved, 1 if unresolved.
-hq_resolve(){
-  local query="$1" rebal repo xyz path src pdda
-  rebal="$(hq_rebalance_lookup "$query")"
-  repo="$(printf '%s' "$rebal" | sed -n 's/^REBAL_REPOS=//p' | cut -d, -f1)"
-  [ -n "$repo" ] || repo="$(hq_bare "$query")"
+# ---- Fuzzy resolution (Phase 1.x) --------------------------------------------------------------
+# Loose names ("rebalanceOS", "rebalance os", "REBALANCE-OS") should resolve to the canonical repo,
+# but a genuinely ambiguous name must return candidates rather than guess.
 
-  xyz="$(hq_xyz_lookup "$repo")"
-  path="$(printf '%s' "$xyz" | sed -n 's/^XYZ_PATH=//p')"
-  if [ -n "$path" ]; then
-    src="xyz-registry"
-  else
-    path="$(hq_fs_find "$repo")"
-    [ -n "$path" ] && src="filesystem"
+hq_norm(){ printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:]'; }  # lower + alnum-only
+hq_contains(){ case "$1" in *"$2"*) return 0;; *) return 1;; esac; }
+
+# hq_known_repos -> every distinct repo name any registry knows (one per line). Filesystem is NOT
+# enumerated here (too broad); the exact path-resolve already covers on-disk repos.
+hq_known_repos(){
+  {
+    if [ -f "$HQ_REBALANCE_DB" ] && command -v sqlite3 >/dev/null 2>&1; then
+      sqlite3 "$HQ_REBALANCE_DB" 'SELECT name FROM project_registry;' 2>/dev/null | sed 's#.*/##'
+    fi
+    if [ -f "$HQ_XYZ_REGISTRY" ]; then
+      local install coord
+      while IFS=$'\t' read -r install _ _ _ coord; do
+        case "$install" in ''|'#'*) continue;; esac
+        [ -n "$coord" ] && basename "$coord"
+      done < "$HQ_XYZ_REGISTRY"
+    fi
+    if [ -d "$HQ_PDDA_REGISTRY_DIR" ]; then
+      local f rrepo
+      for f in "$HQ_PDDA_REGISTRY_DIR"/registry-*.tsv; do
+        [ -f "$f" ] || continue
+        while IFS=$'\t' read -r rrepo _; do
+          case "$rrepo" in ''|'#'*) continue;; esac
+          printf '%s\n' "$rrepo"
+        done < "$f"
+      done
+    fi
+  } | awk 'NF' | sort -u
+}
+
+# hq_candidates <query> -> matching repo names. Normalized-EQUAL matches win outright; only if there
+# are none does it fall back to substring matches (either direction). Deduped, one per line.
+hq_candidates(){
+  local q; q="$(hq_norm "$1")"
+  [ -n "$q" ] || return 0
+  local name n equal=() sub=()
+  while IFS= read -r name; do
+    n="$(hq_norm "$name")"
+    if [ "$n" = "$q" ]; then equal+=("$name")
+    elif hq_contains "$n" "$q" || hq_contains "$q" "$n"; then sub+=("$name")
+    fi
+  done < <(hq_known_repos)
+  if   [ "${#equal[@]}" -gt 0 ]; then printf '%s\n' "${equal[@]}" | sort -u
+  elif [ "${#sub[@]}"   -gt 0 ]; then printf '%s\n' "${sub[@]}"   | sort -u
   fi
-  pdda="$(hq_pdda_lookup "$repo")"
+}
 
-  printf 'QUERY=%s\n' "$query"
-  printf 'REPO=%s\n'  "$repo"
+# hq_repo_resolve <repo> -> XYZ_*/PDDA_* + REPO_PATH= + REPO_PATH_SOURCE=(xyz-registry|filesystem|'')
+hq_repo_resolve(){
+  local repo="$1" xyz path src="" pdda
+  xyz="$(hq_xyz_lookup "$repo")"
+  path="$(printf '%s\n' "$xyz" | sed -n 's/^XYZ_PATH=//p')"
+  if [ -n "$path" ]; then src="xyz-registry"
+  else path="$(hq_fs_find "$repo")"; [ -n "$path" ] && src="filesystem"; fi
+  pdda="$(hq_pdda_lookup "$repo")"
+  [ -n "$xyz" ]  && printf '%s\n' "$xyz"
+  [ -n "$pdda" ] && printf '%s\n' "$pdda"
+  printf 'REPO_PATH=%s\n' "$path"
+  printf 'REPO_PATH_SOURCE=%s\n' "$src"
+}
+
+# hq_resolve <query> -> QUERY / REPO / RESOLVED_VIA / REPO_PATH / REPO_PATH_SOURCE + REBAL_/XYZ_/PDDA_.
+# Exit 0 if a REPO_PATH was resolved (exact or fuzzy), 2 if the name is ambiguous (CANDIDATES listed),
+# 1 if unresolved.
+hq_resolve(){
+  local query="$1" rebal repo fields path via="exact"
+  rebal="$(hq_rebalance_lookup "$query")"
+  repo="$(printf '%s\n' "$rebal" | sed -n 's/^REBAL_REPOS=//p' | cut -d, -f1)"
+  [ -n "$repo" ] || repo="$(hq_bare "$query")"
+  fields="$(hq_repo_resolve "$repo")"
+  path="$(printf '%s\n' "$fields" | sed -n 's/^REPO_PATH=//p' | head -1)"
+
+  if [ -z "$path" ]; then
+    local cands count
+    cands="$(hq_candidates "$query")"
+    count="$(printf '%s' "$cands" | grep -c .)"
+    if [ "$count" = 1 ]; then
+      repo="$cands"; via="fuzzy"
+      rebal="$(hq_rebalance_lookup "$repo")"
+      fields="$(hq_repo_resolve "$repo")"
+      path="$(printf '%s\n' "$fields" | sed -n 's/^REPO_PATH=//p' | head -1)"
+    elif [ "$count" -gt 1 ]; then
+      printf 'QUERY=%s\nREPO=\nRESOLVED_VIA=ambiguous\nCANDIDATES=%s\nREPO_PATH=\nREPO_PATH_SOURCE=ambiguous\n' \
+        "$query" "$(printf '%s' "$cands" | paste -sd, -)"
+      return 2
+    fi
+  fi
+
+  printf 'QUERY=%s\nREPO=%s\nRESOLVED_VIA=%s\n' "$query" "$repo" "$via"
   [ -n "$rebal" ] && printf '%s\n' "$rebal"
-  [ -n "$xyz" ]   && printf '%s\n' "$xyz"
-  [ -n "$pdda" ]  && printf '%s\n' "$pdda"
   if [ -n "$path" ]; then
-    printf 'REPO_PATH=%s\n'        "$path"
-    printf 'REPO_PATH_SOURCE=%s\n' "$src"
+    printf '%s\n' "$fields"
     return 0
   fi
-  printf 'REPO_PATH=\n'
-  printf 'REPO_PATH_SOURCE=unresolved\n'
+  printf '%s\n' "$fields" | sed 's/^REPO_PATH_SOURCE=$/REPO_PATH_SOURCE=unresolved/'
   return 1
 }
 
@@ -243,4 +312,37 @@ hq_target_slug(){
   url="$(git -C "$1" config --get remote.origin.url 2>/dev/null)" || return 0
   [ -n "$url" ] || return 0
   printf '%s' "$url" | sed -E 's#^git@[^:]+:##; s#^https?://[^/]+/##; s#\.git$##'
+}
+
+# ---- Phase 3 (dispatch) helpers -----------------------------------------------------------------
+
+# hq_queue_lane_block <title> <created> <tier> <issue|-> -> a non-destructive lane block appended to
+# the target's Marathon Plan. Deliberately an explicit "HQ-queued" appendix, NOT an in-schema lane —
+# a human/planner rates it and slots it into the wave/collision map before it is ever fired.
+hq_queue_lane_block(){
+  local title="$1" created="$2" tier="$3" issue="$4" ref=""
+  [ "$issue" != "-" ] && ref=" → #$issue"
+  cat <<EOF
+
+<!-- HQ-queued lane — appended $created; reconcile into a wave + collision map before firing. -->
+- **HQ-queued: $title** (Tier $tier, queued $created$ref)
+  - [ ] rate effort/complexity/risk, then slot into a wave (respect the plan's collision map, GH-45).
+EOF
+}
+
+# ---- Phase 4 (Rebalance-priority board) helpers -------------------------------------------------
+
+# hq_projects_by_priority [limit] -> `tier|value|status|name` rows from Rebalance project_registry,
+# ranked by priority_tier ASC (1 = highest .. 5 = lowest, per rebalance next_actions.py), then name.
+# Read-only; degrades to empty when the DB / sqlite3 is unavailable.
+hq_projects_by_priority(){
+  local limit="${1:-8}"
+  case "$limit" in ''|*[!0-9]*) limit=8;; esac
+  [ -f "$HQ_REBALANCE_DB" ] || return 0
+  command -v sqlite3 >/dev/null 2>&1 || return 0
+  sqlite3 -separator '|' "$HQ_REBALANCE_DB" \
+    "SELECT priority_tier, COALESCE(value_level,''), COALESCE(status,''), name
+       FROM project_registry
+       ORDER BY priority_tier ASC, name
+       LIMIT $limit;" 2>/dev/null
 }
