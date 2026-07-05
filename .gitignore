@@ -27,3 +27,5 @@ utils/telemetry/preflight-log/
 # GH-112 Python layer: bytecode caches from pytest / XYZ_PYTHON=1 runs.
 __pycache__/
 *.pyc
+# codebase-memory MCP index — a per-device local tool cache (like .tick/); never committed.
+.codebase-memory/
