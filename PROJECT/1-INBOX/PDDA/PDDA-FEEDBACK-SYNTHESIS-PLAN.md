@@ -1,4 +1,6 @@
 ---
+gh_issue: 144
+source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/144
 complexity: 3
 risk: 2
 effort: 3
@@ -305,3 +307,9 @@ for near-term execution.
   ChatGPT (`FEEDBACK-CHATGPT.md`) recommend this to cut maintenance overhead. The real question is
   *which* checks (the exact `## Status` header, the hardcoded-path ban, the pointer-only `ROADMAP.md`
   contract) are hard to express in off-the-shelf linters and must stay custom.
+
+## Swarm Preflight Contract
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"true","fix_probes":[{"type":"path_absent","path":"PROJECT/CONSTITUTION.md"},{"type":"path_absent","path":"PROJECT/DO-NOT-BUILD.md"}],"artifacts":["PROJECT/CONSTITUTION.md","PROJECT/DO-NOT-BUILD.md"],"artifacts_new":["PROJECT/CONSTITUTION.md","PROJECT/DO-NOT-BUILD.md"],"lanes":{"orchestrator_only":[]}}
+```

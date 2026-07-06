@@ -1,4 +1,6 @@
 ---
+gh_issue: 142
+source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/142
 complexity: 3
 risk: 2
 effort: 3
@@ -99,3 +101,9 @@ baseline, not a failure probe** (measured, never gated).
 - **Kill switch:** if Phase 1 shows agy's failure surface is irreducibly unsafe for *unattended* turns even with worktree isolation, the honest outcome is "agy stays an **attended** cross-model lane" — a valid result, not a failure.
 - **Open:** is the empty-output sandbox failure (F1) reliably distinguishable from a legitimate empty turn? Should cost-blindness (F5) be a hard flag that down-weights agy lanes in `tick analyze`, or just surfaced? Does role-drift (F4) warrant a hard assertion in `relay-turn-lib.sh`, or a prompt-level fix?
 - **Dogfood note (2026-06-21):** the first live agy *reviewer* run was clean and fully contained (reviewer-scoping + worktree isolation held; tree clean; no F1/F2/F4) — a positive early signal that agy's risk concentrates on *producer/builder* turns, not reviewer turns. One cosmetic side-effect: agy cited **worktree-absolute paths** (the throwaway `rtl-wt.*` isolation worktree) instead of repo-relative. Should the harness rewrite a reviewer's citations to repo-relative on copy-back?
+
+## Swarm Preflight Contract
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"true","fix_probes":[{"type":"grep_absent","path":"test/agy-turn.sh","pattern":"S1 sandbox-detection"}],"artifacts":["test/agy-turn.sh"],"lanes":{"orchestrator_only":[]}}
+```
