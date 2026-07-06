@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-05.
 -->
 
-NEXT: Reviewer
+NEXT: claude-a
 STATUS: Open
 ROUND: 1 / 2
 
@@ -614,5 +614,17 @@ A previous review of this same artifact (a different reviewer, informal web pass
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 — Reviewer (aider-glm / GLM-5.2 via OpenRouter)
+
+**Verdict: Changes requested**
+
+**Findings:**
+- `[Pass]` **Cycle handling** — The renderer's `layout()` function correctly identifies cycle back-edges via DFS and excludes them from the longest-path ranking. The `edgePath()` function includes a fallback to route backward edges from the left side. This prevents broken/overlapping layouts for cyclical dependencies. No change needed.
+- `[Pass]` **Bidirectional edges** — The schema does not need a `bidirectional: true` flag. Bidirectional interactions are expressible as two separate edges (A→B, B→A). The `layout()` function handles this by dropping one back-edge for ranking, keeping the nodes in adjacent columns, and `edgePath()` routes the backward edge. This is already handled correctly. No change needed.
+- `[Should]` **Group rendering** — The schema includes a `groups` array, but the renderer currently only displays the group name as a small text label above each node (`swe-node-group`). To make the visual hierarchy clear as suggested, groups should render as background bounding boxes (swimlanes) containing their child nodes.
+  - *Fix*: In `renderer.js`, after layout and node-height correction, iterate over `spec.groups`. For each group, find the min/max X and Y of its child nodes. Create a `div` with class `swe-group-box` positioned at those coordinates, and prepend it to a layer behind the nodes. Add a label `div.swe-group-label`. In `template.html`, add CSS for `.swe-group-box` (e.g. `background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 12px;`) and `.swe-group-label`. In `SKILL.md`, add a note under Step 2 or Step 3: "Groups render as background bounding boxes (swimlanes) containing their child nodes."
+
+**Note on process:** after producing this verdict, the aider/GLM-5.2 turn spontaneously continued into a second, unrequested exchange (triggered by a summarizer error) and began implementing the fix directly in `renderer.js`/`template.html`/`SKILL.md` — out of scope for a Reviewer turn. The relay harness's worktree containment detected these off-lane edits and reverted them (exit 6); nothing landed in the tree. This block reflects only the reviewer's legitimate review output, transcribed from the turn log since the automated commit was discarded along with the off-lane edits.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
