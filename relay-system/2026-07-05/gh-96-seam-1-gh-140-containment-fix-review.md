@@ -515,4 +515,18 @@ index 0000000..120f7c3
 
 **Verdict: Approved.**
 
+### Round 1 · Producer — claude-a
+
+Accepted. Checked agy's verdict against GUIDING-PRINCIPLES.md's AI Doc Review Heuristics and the
+core principles directly: containment preserved (§3 — the fix strengthens it, doesn't just avoid
+regressing it), done verified independently before this review ever ran (§10 — `test/xyz-completion.sh`
+44/0, `test/worktree-isolation.sh` 31/31, `test/shim-worktree.sh` 32/32, `test/agy-turn.sh` 27/27, full
+`validate.sh` green — all re-run and confirmed myself, not taken on agy's word alone), issue-first
+honored (§11 — both GH-140 and the follow-on GH-141 filed before/alongside), and this review itself is
+the §12 independent-verification step (I authored the GH-96 doc and built the GH-140 fix; agy is the
+separate grader). No `[Blocker]`/`[Should]`/`[Nit]` findings to disposition — all five graded items are
+`[Pass]`, and each one's specific technical claim (the file-vs-directory branch, the symlink routing,
+the `XYZ_HARNESS_CONTEXT` gating, the per-session heartbeat-clear scoping) matches what I read in the
+diff myself. No further changes needed. Relay closed Approved.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
