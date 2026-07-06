@@ -2,7 +2,7 @@
 gh_issue: 147
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/147
 title: LM Studio local-LLM lane for consult, relay, and swarm
-status: Active (2-WORKING) — Phase 0 spike complete; Phase 1 consult/Aider truthfulness next
+status: Active (2-WORKING) — Phase 0 spike + Phase 1 (consult/Aider truthfulness) complete; Phase 2 relay seam next
 created: 2026-07-05
 updated: 2026-07-06
 owner: noel
@@ -46,7 +46,7 @@ OpenRouter defaults unless LM Studio is explicitly selected.
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 0 — technical spike and seam choice** ✅ completed 2026-07-05. Manual LM Studio transport worked; the repo seam readout narrowed the first implementation path to **Aider bridge first**; the spike also exposed one real consult bug: Aider auth/config failures can currently false-green if the process exits 0 but prints an error transcript. | **Phase 1 — consult + Aider truthfulness**: generalize the existing Aider consult path for OpenAI-compatible base URL/auth/model settings, fail closed on transcripted config/auth failures, and document the reasoning-token / empty-content caveat before any relay/planner routing is added. |
+| **Phase 1 — consult + Aider truthfulness** ✅ completed 2026-07-06. The Aider consult path (both `relay-automation/consult.sh` and `utils/py/consult.py`) now (a) accepts an OpenAI-compatible base URL via `AIDER_OPENAI_API_BASE` + `AIDER_OPENAI_API_KEY` (dummy default) without requiring `OPENROUTER_API_KEY`, and (b) **fails closed**: an exit-0 Aider run whose transcript shows an auth/config error or has no visible content is now counted `[FAIL]`, not a false `[ok]`. 5 new tests in `test/consult.sh` (auth false-green, empty answer, LM Studio seam) — 23/23 green on both shell and Python ports. Phase 0 spike (Aider-bridge-first seam) remains the basis. | **Phase 2 — reuse the Aider relay seam**: thread the same LM Studio base-URL/model/dummy-key contract through the existing Aider turn shim (`utils/py/aider-turn.py`), proving review-only and single-file edit turns under containment before any planner routing. |
 
 ## Table of contents
 
@@ -231,24 +231,34 @@ limited to the existing Aider/OpenAI-compatible seam.
 
 ### Checklist
 
-- [ ] Define one explicit LM Studio config contract for the Aider-backed consult path:
+- [x] Define one explicit LM Studio config contract for the Aider-backed consult path:
       base URL, model id, and the client-side auth rule (including the dummy-key case).
-- [ ] Generalize the current consult/Aider path so an OpenAI-compatible base URL can be supplied
-      without pretending the path is OpenRouter-only.
-- [ ] Make consult fail closed when Aider prints a transcripted auth/config failure or returns no
-      visible answer, instead of counting success from process exit alone.
-- [ ] Record the visible-content minimum for the characterized local model so consult does not default
-      to a token budget that routinely yields empty `content`.
-- [ ] Add tests for:
+      → `AIDER_OPENAI_API_BASE` (base URL) + `AIDER_OPENAI_API_KEY` (default `dummy`) +
+      `AIDER_MODEL` (default `openai/agents-a1` when a base URL is set).
+- [x] Generalize the current consult/Aider path so an OpenAI-compatible base URL can be supplied
+      without pretending the path is OpenRouter-only. → `run_aider` / aider branch now branch on
+      `AIDER_OPENAI_API_BASE`; OpenRouter remains the default when it is unset.
+- [x] Make consult fail closed when Aider prints a transcripted auth/config failure or returns no
+      visible answer, instead of counting success from process exit alone. → `_aider_answer_ok`
+      (shell) / `aider_answer_ok` (py) downgrade an exit-0 aider run to `[FAIL]`.
+- [x] Record the visible-content minimum for the characterized local model so consult does not default
+      to a token budget that routinely yields empty `content`. → consult does not override Aider's
+      token budget; instead it now **detects and fails** the empty-content case at collection time, and
+      the `reasoning_content`/empty-content caveat is documented in code comments + spike 0.1 above.
+- [x] Add tests for:
       missing config, auth/config transcript failure, successful consult invocation, and the existing
-      non-LM-Studio default path staying intact.
+      non-LM-Studio default path staying intact. → `test/consult.sh` cases 8–11 (+ existing 1/7).
 
 ### QA checklist — Phase 1
 
-- [ ] A real consult invocation against LM Studio returns visible content and is counted as success.
-- [ ] A missing or bad LM Studio config fails loudly and is counted as failure, not "answered."
-- [ ] Existing default consult paths remain byte-identical unless LM Studio is explicitly selected.
-- [ ] The doc or code comments explain the `reasoning_content` / empty-visible-content caveat.
+- [x] A real consult invocation against LM Studio returns visible content and is counted as success.
+      (Seam + success-counting proven with a stub — case 11; a *live* LM Studio run is the Phase 4
+      operator proof, consistent with the repo's network-free test idiom.)
+- [x] A missing or bad LM Studio config fails loudly and is counted as failure, not "answered."
+      (cases 8/9/10 — no-key, exit-0 auth-error transcript, exit-0 empty answer all → exit 5.)
+- [x] Existing default consult paths remain byte-identical unless LM Studio is explicitly selected.
+      (OpenRouter path unchanged; cases 1/7 still green.)
+- [x] The doc or code comments explain the `reasoning_content` / empty-visible-content caveat.
 
 ## Phase 2 — Reuse the Aider relay seam for LM Studio turns
 

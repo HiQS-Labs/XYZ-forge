@@ -120,5 +120,39 @@ out="$(env -u OPENROUTER_API_KEY CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" \
 afile="$(ls "$OUT"/t-*/t.aider.md 2>/dev/null | head -1)"
 grep -q "OPENROUTER_API_KEY not set" "$afile" 2>/dev/null && pass "aider no-key transcript states the remedy" || fail "no-key remedy missing from transcript"
 
+# --- (9) AIDER truthfulness: exit 0 + auth-error transcript is counted FAILED, not a false [ok] ----
+# GH-147 spike 0.4: Aider can exit 0 while printing an auth/config error. Trusting the exit code alone
+# false-greened the consult; consult must fail closed on the transcript.
+AIDER_BADAUTH="$WORK/aider-badauth-stub"
+cat >"$AIDER_BADAUTH" <<'EOF'
+#!/usr/bin/env bash
+set -u
+# Impersonates Aider hitting a bad key: prints a litellm auth error to stdout, then EXITS 0.
+printf 'litellm.AuthenticationError: OpenAIException - Incorrect API key provided\n'
+exit 0
+EOF
+chmod +x "$AIDER_BADAUTH"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" AIDER_BIN="$AIDER_BADAUTH" OPENROUTER_API_KEY="$FAKE_ORK" \
+  bash "$CONSULT" --prompt "x" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
+[ "$rc" -eq 5 ] && pass "aider exit-0 auth-error transcript -> FAILED (all-fail exit 5)" || fail "false-green auth: exit=$rc (expected 5) ($out)"
+printf '%s' "$out" | grep -q "0 answered, 1 failed" && pass "aider auth-error counted as failed, not answered" || fail "auth-error miscounted: $out"
+
+# --- (10) AIDER truthfulness: exit 0 with an EMPTY answer (reasoning-only) is counted FAILED ---------
+AIDER_EMPTY="$WORK/aider-empty-stub"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$AIDER_EMPTY"; chmod +x "$AIDER_EMPTY"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" AIDER_BIN="$AIDER_EMPTY" OPENROUTER_API_KEY="$FAKE_ORK" \
+  bash "$CONSULT" --prompt "x" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
+[ "$rc" -eq 5 ] && pass "aider exit-0 empty answer -> FAILED (all-fail exit 5)" || fail "empty answer: exit=$rc (expected 5) ($out)"
+
+# --- (11) LM Studio seam: AIDER_OPENAI_API_BASE runs WITHOUT OPENROUTER_API_KEY (GH-147) -------------
+rm -rf "$OUT"
+out="$(env -u OPENROUTER_API_KEY CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" \
+  AIDER_OPENAI_API_BASE="http://127.0.0.1:1234/v1" \
+  bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "LM Studio base URL answers with no OPENROUTER_API_KEY (exit 0)" || fail "lmstudio seam exit=$rc ($out)"
+printf '%s' "$out" | grep -q "1 answered, 0 failed" && pass "LM Studio-backed aider counted answered" || fail "lmstudio not counted: $out"
+
 echo "  consult: $PASS passed, $FAIL failed"
 exit 0

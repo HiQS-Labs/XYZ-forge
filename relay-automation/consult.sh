@@ -34,14 +34,18 @@ fi
 #   --out DIR         Parent dir for the run (default: relay-system/<today>/). Each run gets its own
 #                     timestamped subdir <label>-<HHMMSS>/ so same-day consults never clobber.
 #   --models CSV      Which advisors to run (default: codex,agy). Also: `aider` (Aider↔OpenRouter,
-#                     OpenAI-standard — needs OPENROUTER_API_KEY). Legacy `gemini` remains accepted
-#                     as an explicit alias for older tests/callers.
+#                     OpenAI-standard — needs OPENROUTER_API_KEY; or set AIDER_OPENAI_API_BASE for an
+#                     OpenAI-compatible/LM Studio endpoint). Legacy `gemini` remains accepted as an
+#                     explicit alias for older tests/callers.
 #   --label SLUG      Run-subdir + transcript stem (default: consult).
 #
 # Env config:
 #   CODEX_BIN / AGY_BIN        binaries (default: codex / agy); tests inject stubs
-#   AIDER_BIN / AIDER_MODEL    Aider binary + OpenRouter model (default: aider / openrouter/anthropic/
-#                              claude-3.5-sonnet) for `--models ...,aider`; reads OPENROUTER_API_KEY.
+#   AIDER_BIN / AIDER_MODEL    Aider binary + model for `--models ...,aider`. Default model tracks the
+#                              seam: openrouter/anthropic/claude-3.5-sonnet (OpenRouter) or openai/
+#                              agents-a1 when AIDER_OPENAI_API_BASE is set. Reads OPENROUTER_API_KEY.
+#   AIDER_OPENAI_API_BASE      OpenAI-compatible base URL (e.g. http://127.0.0.1:1234/v1 for LM Studio).
+#   AIDER_OPENAI_API_KEY       client key for that base URL (default: dummy — local servers ignore it).
 #   GEMINI_BIN                 legacy alias for AGY_BIN when `--models ...gemini` is used explicitly
 #   CODEX_FLAGS                codex sandbox flags (default: -s read-only)
 #   AGY_AUTH_TIMEOUT_S         short wall-clock cap for the agy auth probe (`agy whoami`); default 5.
@@ -196,20 +200,46 @@ run_gemini() {
     _guarded "$out" "$GEMINI_BIN" --yolo --skip-trust -p "$FULL_PROMPT"
   fi
 }
-run_aider() {
+# Fail closed: Aider can exit 0 while printing an auth/config error transcript, or return only
+# reasoning tokens with empty visible content (GH-147 spike 0.1/0.4). Either is a failed advisor, not
+# a real answer — trusting the exit code alone false-greens the consult. Scoped to the aider lane.
+_aider_answer_ok() {  # <out> — nonzero if the transcript shows failure or has no visible answer
   local out="$1"
-  # OpenRouter is pure API-key; a missing key would make Aider prompt interactively (deadlock under the
-  # cap). Skip fast with the remedy — this advisor is counted [FAIL], the others still answer.
-  if [[ -z "${OPENROUTER_API_KEY:-}" ]]; then
-    printf 'consult: OPENROUTER_API_KEY not set — Aider cannot reach OpenRouter. Export it (your OpenRouter key), then retry.\n' > "$out"
+  if [[ ! -s "$out" ]] || ! grep -qE '[^[:space:]]' "$out"; then
+    printf '\nconsult: Aider returned no visible content (empty answer — likely reasoning-only or a silent failure).\n' >> "$out"
     return 5
   fi
+  if grep -qiE 'litellm\.[A-Za-z]*Error|AuthenticationError|Incorrect API key|invalid_api_key|Unable to list models|No API key was provided|NotFoundError|Traceback \(most recent call last\)' "$out"; then
+    printf '\nconsult: Aider transcript shows an auth/config failure — counted as FAILED (was exit 0).\n' >> "$out"
+    return 5
+  fi
+  return 0
+}
+run_aider() {
+  local out="$1" model
+  local -a auth=()
+  # Two seams share the Aider/OpenAI-compatible client (GH-147). If AIDER_OPENAI_API_BASE is set this
+  # is the LM Studio / OpenAI-compatible path; otherwise it's the OpenRouter default (byte-identical).
+  if [[ -n "${AIDER_OPENAI_API_BASE:-}" ]]; then
+    # LM Studio etc.: the client still requires a non-empty key even when the local server ignores it,
+    # so a dummy is fine for a keyless endpoint (spike 0.2). No OPENROUTER_API_KEY needed here.
+    model="${AIDER_MODEL:-openai/agents-a1}"
+    auth=(--openai-api-base "$AIDER_OPENAI_API_BASE" --openai-api-key "${AIDER_OPENAI_API_KEY:-dummy}")
+  else
+    # OpenRouter is pure API-key; a missing key would make Aider prompt interactively (deadlock under
+    # the cap). Skip fast with the remedy — this advisor is counted [FAIL], the others still answer.
+    if [[ -z "${OPENROUTER_API_KEY:-}" ]]; then
+      printf 'consult: OPENROUTER_API_KEY not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.\n' > "$out"
+      return 5
+    fi
+    model="${AIDER_MODEL:-openrouter/anthropic/claude-3.5-sonnet}"
+  fi
   # ADVISORY only: pass NO --file (Aider edits nothing) + --no-auto-commits; it answers to stdout, which
-  # is exactly what a consult captures. `--model openrouter/…` + OPENROUTER_API_KEY is Aider-native.
-  local model="${AIDER_MODEL:-openrouter/anthropic/claude-3.5-sonnet}"
-  _guarded "$out" "$AIDER_BIN" --model "$model" --message "$FULL_PROMPT" \
+  # is exactly what a consult captures.
+  _guarded "$out" "$AIDER_BIN" --model "$model" ${auth[@]+"${auth[@]}"} --message "$FULL_PROMPT" \
     --yes-always --no-auto-commits --no-gitignore --no-check-update --no-analytics \
-    --no-show-model-warnings --no-stream --map-tokens 0
+    --no-show-model-warnings --no-stream --map-tokens 0 || return 5
+  _aider_answer_ok "$out"
 }
 
 # --- fan out in parallel (indexed arrays — macOS bash 3.2 has no `declare -A`) --------------------

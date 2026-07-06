@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import sys
 import tempfile
 import subprocess
@@ -9,12 +10,37 @@ from datetime import datetime
 import shutil
 from rtl import RelayTurnLib
 
+# Aider can exit 0 while printing an auth/config error transcript, or return only reasoning tokens with
+# empty visible content (GH-147 spike 0.1/0.4). Either is a failed advisor, not a real answer — trusting
+# the exit code alone false-greens the consult.
+_AIDER_FAIL_RE = re.compile(
+    r"litellm\.[A-Za-z]*Error|AuthenticationError|Incorrect API key|invalid_api_key"
+    r"|Unable to list models|No API key was provided|NotFoundError|Traceback \(most recent call last\)"
+)
+
 def die(msg):
     print(f"consult: {msg}", file=sys.stderr)
     sys.exit(2)
 
 def warn(msg):
     print(f"consult: {msg}", file=sys.stderr)
+
+def aider_answer_ok(out_path):
+    """False if the Aider transcript shows an auth/config failure or has no visible answer."""
+    try:
+        with open(out_path, "r", errors="replace") as f:
+            text = f.read()
+    except OSError:
+        return False
+    if not text.strip():
+        with open(out_path, "a") as f:
+            f.write("\nconsult: Aider returned no visible content (empty answer — likely reasoning-only or a silent failure).\n")
+        return False
+    if _AIDER_FAIL_RE.search(text):
+        with open(out_path, "a") as f:
+            f.write("\nconsult: Aider transcript shows an auth/config failure — counted as FAILED (was exit 0).\n")
+        return False
+    return True
 
 def guarded_with_timeout(cmd, cwd, log_file, timeout_s, env=None):
     try:
@@ -185,13 +211,21 @@ def main():
                 procs.append((proc, "gemini", f_out, time.time(), cmd))
             elif m == "aider":
                 f_out = os.path.join(run_dir, f"{label}.aider.md")
-                if not os.environ.get("OPENROUTER_API_KEY"):
-                    with open(f_out, "w") as f:
-                        f.write("consult: OPENROUTER_API_KEY not set — Aider cannot reach OpenRouter. Export it (your OpenRouter key), then retry.\n")
-                    procs.append((None, "aider", f_out, time.time(), None))
-                    continue
-                aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-3.5-sonnet")
-                cmd = [aider_bin, "--model", aider_model, "--message", full_prompt, "--yes-always", "--no-auto-commits", "--no-gitignore", "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0"]
+                aider_base = os.environ.get("AIDER_OPENAI_API_BASE", "")
+                auth_args = []
+                if aider_base:
+                    # LM Studio / OpenAI-compatible seam (GH-147): the client still needs a non-empty key
+                    # even when the local server ignores it, so a dummy is fine for a keyless endpoint.
+                    aider_model = os.environ.get("AIDER_MODEL", "openai/agents-a1")
+                    auth_args = ["--openai-api-base", aider_base, "--openai-api-key", os.environ.get("AIDER_OPENAI_API_KEY", "dummy")]
+                else:
+                    if not os.environ.get("OPENROUTER_API_KEY"):
+                        with open(f_out, "w") as f:
+                            f.write("consult: OPENROUTER_API_KEY not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.\n")
+                        procs.append((None, "aider", f_out, time.time(), None))
+                        continue
+                    aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-3.5-sonnet")
+                cmd = [aider_bin, "--model", aider_model] + auth_args + ["--message", full_prompt, "--yes-always", "--no-auto-commits", "--no-gitignore", "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0"]
                 proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(os.environ))
                 procs.append((proc, "aider", f_out, time.time(), cmd))
             else:
@@ -213,9 +247,13 @@ def main():
             try:
                 rem = max(0, timeout_s - (time.time() - start_time))
                 proc.wait(timeout=rem)
-                if proc.returncode == 0:
+                if proc.returncode == 0 and (m != "aider" or aider_answer_ok(out)):
                     answered += 1
                     summary += f"\n  [ok]   {m} -> {out}"
+                elif proc.returncode == 0:
+                    # exit 0 but the aider transcript proved an auth/config failure or empty answer
+                    failed += 1
+                    summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                 else:
                     failed += 1
                     summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
