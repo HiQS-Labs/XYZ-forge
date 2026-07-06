@@ -1,5 +1,105 @@
 # XYZ — Multi-Agent Coordination Beta
 
+> **⏳ Beta-testing period:** the onboarding guide below leads this README for the duration of the
+> beta. Once the beta wraps, this section moves out and the normal README resumes at
+> [What XYZ is](#what-xyz-is). Discussion: [issue #123](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/123).
+
+## Beta Tester Onboarding
+
+**TL;DR:** You can get immediate value from **Relay** and **Consult** with just this XYZ repo — no
+PDDA required. PDDA installation is only needed if you want the full eventual automation path
+(**Swarm** and especially **Marathon**). Start with the fast path, graduate to PDDA later if you
+like what you see.
+
+Background links (not required for this test):
+
+- GiantBrains Claude Skills — https://github.com/Claude-AI-Tools-Ventura-County/giant-brains-claude-skills
+- PDDA (the doc-governance half of the system) — https://github.com/Hypercart-Dev-Tools/pdda
+
+### The four modes of operation
+
+XYZ has four modes. They stack — each one builds on the trust you develop with the previous:
+
+1. **Consult** — a one-shot, parallel second opinion. The same question fans out to Codex and agy
+   at the same time, each answers independently in an isolated copy of the repo, and the answers
+   are reconciled into one. Nothing is modified; it's purely advisory. Lowest risk, fastest payoff.
+2. **Relay** — an iterative, turn-based loop between two agents on one shared file: a **Producer**
+   builds an artifact, a **Reviewer** critiques and proposes fixes, and they hand off back and
+   forth until the artifact converges. This replaces you copy-pasting output between two agent
+   windows. Changes are confined to the relay thread file and the artifact under review.
+3. **Swarm** — two or more agents working **concurrently** on the same repo, each claiming a
+   non-overlapping, path-scoped lane (via the `tick` kernel) so they never collide. Good for
+   parallel builds or parallel codebase recon. This is where PDDA's doc structure starts to matter,
+   because lanes are carved from well-defined task docs.
+4. **Marathon** — the full automation payoff: a queue of pre-flighted tasks (built up during the
+   day) fired as one long autonomous run, typically end-of-day or overnight. Marathon **requires**
+   PDDA, because the preflight scripts rely on PDDA's opinionated docs/roadmap structure to verify
+   every queued task is well-specified before anything runs unattended.
+
+How they fit together: **Consult** answers "what do the other models think?", **Relay** answers
+"build this and have it reviewed until it's right", **Swarm** answers "do several independent
+things at once", and **Marathon** answers "do all of today's queued work while I sleep." Consult
+and Relay need only this XYZ repo. Swarm and Marathon are where PDDA earns its setup cost.
+
+### Before you start — safety and reversibility
+
+Everything below is designed to be reversible, but please help it along:
+
+- **Create a fresh branch (or git worktree) in *both* repos you touch** — one in your clone of
+  XYZ, and one in each target project where you'll run relays or install PDDA. E.g.
+  `git checkout -b xyz-beta-test`. If anything goes sideways, recovery is just
+  `git checkout main` and deleting the branch.
+- **What each step actually touches** (so you know how to undo it):
+  - *Skill install* — copies skill files into `~/.claude/skills/` (user-level). Undo: delete those
+    skill folders. Your repos are untouched.
+  - *Relay runs* — write a dated thread file under `relay-system/<date>/` plus the artifact being
+    reviewed, on your branch. Undo: discard the branch.
+  - *Consult runs* — advisory only; agents work in isolated copies. Nothing to undo.
+  - *PDDA install* — adds scripts and an opinionated `PROJECT/` docs structure to the target repo.
+    Undo: it's all ordinary tracked files on your branch, so discarding the branch fully reverts it.
+- **Prerequisites:** both the **Codex CLI** and **agy CLI** installed and pre-authenticated (XYZ
+  shells out to them; a relay or consult will fail mid-run if either isn't logged in). See
+  [Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy).
+- Clone this XYZ repo locally. Clone PDDA **only** if you're going for the full automation path.
+
+### Fast path: immediate value, no PDDA
+
+1. Create a working branch in your XYZ clone.
+2. In the XYZ repo, ask Claude Code to: *"install the /relay-xyz and /consult skills for me
+   system-wide."*
+3. In any target project (on its own fresh branch), you can now:
+   - Run a **Consult** for a cross-model second opinion on a design, doc, or decision.
+   - Run a **Relay** to have a Producer/Reviewer pair converge a real artifact.
+
+No PDDA compliance is enforced on the target project for either of these. This is the recommended
+starting point for all beta testers.
+
+### Full automation path: PDDA + Swarm/Marathon
+
+Only take this path once the fast path works for you and you want unattended, queued execution:
+
+1. In the target project repo, **create a new branch first**, then run PDDA's `install.sh`.
+2. Ask Claude Code to help make the project's docs folder structure PDDA-compliant so XYZ can
+   operate on it cleanly. (PDDA ships auto-triage scripts that do most of this restructuring for
+   you.)
+3. Ask Claude Code to create a **Marathon Plan** file, and add tasks to it throughout the day as
+   they come up.
+4. Near end of day, ask Claude Code to run the **preflight scripts** — these check your docs and
+   GitHub issues for Marathon/Swarm viability so nothing under-specified runs unattended.
+5. When preflight is green, ask Claude Code to **fire the Marathon**.
+
+### Important note on PDDA's structure
+
+PDDA's folder structure is deliberately opinionated. That setup cost is the trade for what
+Marathon gives you: because every task lives in a predictable doc structure, the system can
+preflight, queue, and execute a full day's work without you babysitting it. If that trade doesn't
+appeal yet, stay on the fast path — Relay and Consult deliver value on day one with zero
+restructuring.
+
+---
+
+## What XYZ is
+
 XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) —
 work on the **same repo at the same time without overwriting each other's work**. It's built in
 two layers:
@@ -31,7 +131,7 @@ prints its own pass count; if it's green, you're good.
   start at **[relay-automation/README.md](relay-automation/README.md)**. Live turns need each CLI
   authenticated first: see **[Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy)**.
   For phase/status context, the project hub is
-  [PROJECT/2-WORKING/AUTOMATED-RELAY.md](PROJECT/2-WORKING/AUTOMATED-RELAY.md).
+  [PROJECT/4-MISC/AUTOMATED-RELAY.md](PROJECT/4-MISC/AUTOMATED-RELAY.md).
 - **Here for the kernel** — how the `tick` coordination primitive works →
   read [What `tick` is](#what-tick-is), then the source in [bin/tick](bin/tick), [src/](src), [test/](test).
 - **Install `tick` into another repo** → see [Install into another repo](#install-into-another-repo).
@@ -41,6 +141,9 @@ prints its own pass count; if it's green, you're good.
 > should start with the Quickstart above.
 
 ## Glossary — the four terms you'll hit first
+
+(For how the operating modes — Consult, Relay, Swarm, Marathon — relate to each other, see
+[The four modes of operation](#the-four-modes-of-operation) in the beta section above.)
 
 - **`tick`** — the coordination kernel: a shared local event log (`.tick/events/`) that agents
   claim work through, serialized by an `O_EXCL` lock.
