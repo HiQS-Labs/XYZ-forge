@@ -7,9 +7,9 @@ effort: 1
 ratings_provisional: false
 title: Front-door remediation + relay-xyz adherence — unified plan (refreshed 2026-06-23)
 slug: front-door-remediation
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING) — Phase 0 baseline green; FD-11/FD-12 landed (`67068da`); FD-01…FD-10 + Phase 1-3 drift fixes OPEN (6/45 checklist items done). Issue #143 stays open.
 created: 2026-06-22
-updated: 2026-06-23
+updated: 2026-07-06
 owner: Noel (operator) · Claude (producer)
 related:
   - FRONTDOOR.md                                       # the live deterministic dashboard this plan drives to green

@@ -7,9 +7,9 @@ effort: 3
 ratings_provisional: true
 title: Antigravity (agy) reliability testing — characterize & harden the cross-model lane
 slug: agy-reliability-testing
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING) — Phase 1 characterization done 2026-07-06 (found a REAL bug S9/F8: unavailable `--model` silently degrades to default, exit 0); Phase 2 hardening + Phase 3 graduate-decision OPEN. Issue #142 stays open.
 created: 2026-06-21
-updated: 2026-06-21
+updated: 2026-07-06
 owner: Noel (operator) · Claude (author)
 goal: >
   Systematically characterize WHEN and WHY the Antigravity CLI (agy) goes astray as the harness's

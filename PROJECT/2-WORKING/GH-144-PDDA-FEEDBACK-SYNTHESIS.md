@@ -6,9 +6,9 @@ risk: 2
 effort: 3
 ratings_provisional: true
 title: PDDA feedback synthesis — actionable planning doc
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING) — Phase 1 CONSTITUTION.md + DO-NOT-BUILD.md created (`1019503`/`52f4521`); remaining Phase 1-2 scope + Phase 3-5 (deferred/decision-gated) OPEN (0/45 checklist items formally checked). Issue #144 stays open.
 created: 2026-06-23
-updated: 2026-06-23
+updated: 2026-07-06
 owner: Noel (operator) · Codex (producer)
 doc_type: plan
 related:
@@ -36,7 +36,7 @@ reviewed:
 
 ## Status
 
-| Most recently completed phase | What's next |
+| What was just completed | What's next |
 |---|---|
 | **Feedback intake, synthesis, and agy peer review** — the three June 23 feedback notes were read side by side, reduced to one common direction, split into "keep / build / defer / avoid", and the synthesis was reviewed by agy (relay `relay-system/2026-06-23/pdda-feedback-synthesis.md`: 1 Blocker + 3 Should applied). | **Phase 1 — lock positioning and scope**: write the shared PDDA constitution, the explicit do-not-build boundary, and the rule that deterministic checks may block while LLM review may only warn. *(Near-term proposed scope is Phases 1–2 only; Phases 3–5 are deferred — see Decision summary.)* |
 
