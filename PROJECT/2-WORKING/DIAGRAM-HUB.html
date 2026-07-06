@@ -1,0 +1,102 @@
+---
+gh_issue: 146
+source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/146
+title: swe-diagram — hub & ring (radial) layout option
+slug: diagram-hub
+status: In progress
+created: 2026-07-05
+updated: 2026-07-05
+owner: noel
+doc_type: feature
+branch: relay/swe-diagram-glm-review
+complexity: 2
+risk: 1
+effort: 2
+goal: >
+  Add an optional radial "hub & ring" layout to utils/swe-diagram alongside the existing
+  left-to-right layered layout, for event-driven architectures where a central broker or
+  gateway communicates radially with independent services. Captured from a GLM-5.2 chat
+  brainstorm (chat.z.ai); implemented as a same-branch follow-on to the GLM-5.2 relay review
+  in PR #145 (relay/swe-diagram-glm-review).
+related:
+  - relay-system/2026-07-05/swe-diagram-glm-review.md
+---
+
+# swe-diagram — Hub & Ring (Radial) Layout
+
+Yes, a **hub & ring** (radial) layout is absolutely possible with this setup. Because you are using a dependency-free vanilla JS renderer, the layout algorithm is entirely under your control. 
+
+Since the `SKILL.md` explicitly says *"Layout is automatic (layered left→right from edge direction); do not put coordinates in the JSON,"* implementing a hub & ring layout requires tweaking both the **JSON schema** (to allow the user to request it) and the **JS renderer** (to calculate radial coordinates).
+
+Here is how you would implement it:
+
+### 1. Update the JSON Schema (Optional `layout` field)
+You can add an optional `layout` property to the root of the JSON spec. If omitted, it defaults to your layered left-to-right layout.
+
+```json
+{
+  "title": "MyApp — Event-Driven Architecture",
+  "layout": "hub-ring",  // <--- New field
+  "generated": "2026-07-04",
+  "sources": ["ask_self RAG docs"],
+  "groups": [],
+  "nodes": [
+    { "id": "event-bus", "label": "Kafka", "type": "queue", "description": "Central message broker" },
+    { "id": "auth-svc", "label": "Auth Service", "type": "service" },
+    { "id": "user-svc", "label": "User Service", "type": "service" }
+    // ... up to 25 nodes
+  ],
+  "edges": [
+    { "source": "auth-svc", "target": "event-bus", "kind": "async" },
+    { "source": "user-svc", "target": "event-bus", "kind": "async" }
+  ]
+}
+```
+
+### 2. The Layout Logic in `renderer.js`
+In your vanilla JS renderer, when you parse the JSON, you check the `layout` field. If it's `hub-ring`, you apply a radial layout algorithm instead of the layered one. 
+
+Here is the conceptual vanilla JS code you would use to calculate the `x` and `y` coordinates for the nodes:
+
+```javascript
+function applyHubAndRingLayout(nodes, edges) {
+    // 1. Identify the hub. 
+    // Option A: Look for the node with the most connections.
+    // Option B: Look for a specific type (e.g., type === 'queue' or 'api').
+    const hubNode = nodes.find(n => n.type === 'queue') || nodes[0];
+    
+    // 2. Separate hub from ring nodes
+    const ringNodes = nodes.filter(n => n.id !== hubNode.id);
+    
+    // 3. Place Hub at center (0, 0)
+    hubNode.x = 0;
+    hubNode.y = 0;
+    
+    // 4. Place Ring nodes in a circle around the hub
+    const radius = 350; // Adjust based on canvas size
+    const angleStep = (2 * Math.PI) / ringNodes.length;
+    
+    ringNodes.forEach((node, index) => {
+        const angle = index * angleStep;
+        // Standard math: x = r * cos(theta), y = r * sin(theta)
+        // Subtract PI/2 to start the first node at the top (12 o'clock)
+        node.x = radius * Math.cos(angle - Math.PI / 2);
+        node.y = radius * Math.sin(angle - Math.PI / 2);
+    });
+
+    // Optional: If there are too many nodes (e.g., >12), 
+    // you could create multiple concentric rings based on node `group`.
+}
+```
+
+### 3. When to use Hub & Ring vs. Left-to-Right
+You might want to add a note to your `SKILL.md` so the LLM knows *when* to request this layout:
+* **Left-to-Right (Default):** Best for synchronous request/response pipelines (UI -> API -> DB) or strict microservice call chains.
+* **Hub & Ring:** Best for event-driven architectures where a central message broker (Kafka, RabbitMQ, Redis Pub/Sub) or a central API Gateway communicates radially with independent services.
+
+### Handling Large Numbers of Nodes
+If you have the maximum 25 nodes, a single ring gets very crowded. You can enhance the layout algorithm to group nodes into **concentric rings by type**. 
+* **Ring 1 (Inner):** External API Gateways / Load Balancers
+* **Ring 2 (Middle):** Core Services
+* **Ring 3 (Outer):** Databases / External Storage
+
