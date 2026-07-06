@@ -59,6 +59,7 @@ TESTS=(
   "marathon.sh"
   "consult.sh"
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
+  "relay-pkg-freshness.sh"
   "skill-extract.sh"
   "path-integrity.sh"
   "relay-turn-timeout.sh"
