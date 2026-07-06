@@ -6,7 +6,7 @@ risk: 2
 effort: 3
 ratings_provisional: true
 title: PDDA feedback synthesis — actionable planning doc
-status: Active (2-WORKING) — Phases 1-2 verified/completed (marathon Lane C, 2026-07-06): CONSTITUTION.md + DO-NOT-BUILD.md already met their observables; PDDA.md gained a Constitution/DO-NOT-BUILD cross-link, a check severity (blocking vs warn-only) table, and a link to the new PDDA-MODE-GUIDE.md. Phases 3-5 remain deferred, decision-gated on the evidence-bridge open questions below. Issue #144 stays open pending operator decision on Phase 3-5 disposition.
+status: Active (2-WORKING) — Phases 1-2 verified/completed (marathon Lane C, 2026-07-06): CONSTITUTION.md + DO-NOT-BUILD.md already met their observables; PDDA.md gained a Constitution/DO-NOT-BUILD cross-link, a check severity (blocking vs warn-only) table, and a link to the new PDDA-MODE-GUIDE.md. Phases 3-5 remain deferred, decision-gated on the evidence-bridge open questions below. **Operator decision (2026-07-06): keep #144 OPEN as the Phases 3-5 tracker** — no new issue spun; Phases 3-5 stay parked until the evidence-bridge direction (the `rebalance` bridge — Perplexity's proposal only, not a three-way consensus) is decided.
 created: 2026-06-23
 updated: 2026-07-06
 owner: Noel (operator) · Codex (producer)
