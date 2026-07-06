@@ -39,6 +39,7 @@ TESTS=(
   "agy-turn.sh"
   "aider-turn.sh"
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
+  "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
   "worktree-isolation.sh"
   "shim-worktree.sh"

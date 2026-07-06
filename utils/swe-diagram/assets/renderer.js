@@ -125,6 +125,18 @@
     return h;
   }
 
+  // ---- search + type filter predicate: dims (never hides/re-layouts) a node
+  // that doesn't match the current text query or whose type has been toggled
+  // off in the legend. Pure so it's independently testable; renderDiagram's
+  // nodeMatches() below just supplies the closure's live query/excludedTypes.
+  function matchesQuery(n, query, excludedTypes) {
+    if (excludedTypes[n.type || 'default']) return false;
+    if (!query) return true;
+    var haystack = [n.label, n.id, n.type, n.tech, n.description]
+      .filter(Boolean).join(' ').toLowerCase();
+    return haystack.indexOf(query) !== -1;
+  }
+
   // ---- hub & ring: a radial layout for event-driven architectures (a central
   // broker/gateway talking to independent services) where the layered
   // left→right pipeline reading doesn't fit. Every non-hub node sits on a
@@ -462,16 +474,13 @@
 
     // ---- search + type filter: dims (never hides/re-layouts) nodes and
     // edges that don't match the current text query or whose type has been
-    // toggled off in the legend. A node matches when BOTH conditions hold;
-    // an edge is dimmed if either endpoint is dimmed.
+    // toggled off in the legend. An edge is dimmed if either endpoint is
+    // dimmed. Matching itself is matchesQuery() above (pure, testable); this
+    // just binds it to the live closure state.
     var excludedTypes = {};
     var query = '';
     function nodeMatches(n) {
-      if (excludedTypes[n.type || 'default']) return false;
-      if (!query) return true;
-      var haystack = [n.label, n.id, n.type, n.tech, n.description]
-        .filter(Boolean).join(' ').toLowerCase();
-      return haystack.indexOf(query) !== -1;
+      return matchesQuery(n, query, excludedTypes);
     }
     function applyFilter() {
       var matched = {};
@@ -532,4 +541,11 @@
     drawEdges();
     fitView();
   };
+
+  // Node-only export for test/swe-diagram.sh (pure-logic fixtures, no
+  // browser). `module` is undefined when this file is inlined into a
+  // <script> tag, so this is a no-op there — zero behavior change shipped.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { hubRingLayout: hubRingLayout, matchesQuery: matchesQuery, layout: layout };
+  }
 })();
