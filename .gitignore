@@ -30,3 +30,6 @@ __pycache__/
 *.pyc
 # codebase-memory MCP index — a per-device local tool cache (like .tick/); never committed.
 .codebase-memory/
+
+# Aider Studio (auto-added)
+REPO_MAP.md

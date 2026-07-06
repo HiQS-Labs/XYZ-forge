@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 34 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0
+Summary: 35 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-147 · LM Studio local-LLM lane for consult, relay, and swarm | — | [GH-147-LM-STUDIO.md](PROJECT/1-INBOX/GH-147-LM-STUDIO.md) · [#147](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/147) |
 | GH-141 · Containment: rtl_enforce's pre-turn dirty snapshot can't see a concurrent peer session's edit that lands mid-turn, reverting it as off-lane | — | [GH-141-CONCURRENT-PEER-EDIT-RACE.md](PROJECT/1-INBOX/GH-141-CONCURRENT-PEER-EDIT-RACE.md) · [#141](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/141) |
 | GH-133 · flaky: relay-dep-drift.sh case 4 "turn still committed" fails ~1-in-3, reproducible on untouched main | — | [GH-133-RELAY-DEP-DRIFT-FLAKE.md](PROJECT/1-INBOX/GH-133-RELAY-DEP-DRIFT-FLAKE.md) · [#133](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/133) |
 | GH-94 · Installer self-extracting heredoc mangles !→\! when materialized programmatically | — | [GH-94-INSTALLER-HEREDOC-ESCAPE.md](PROJECT/1-INBOX/GH-94-INSTALLER-HEREDOC-ESCAPE.md) · [#94](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/94) |
@@ -47,10 +48,11 @@ Summary: 34 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · �
 
 ## In progress
 
-Summary: 12 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 8 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 13 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 9 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-148 · Python-layer swarm_preflight: inferred-path check lacked GH-137 sanitizer | ✅ | [relay-system/2026-07-05/gh112-134-parity-codex-review.md](relay-system/2026-07-05/gh112-134-parity-codex-review.md) · [#148](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/148) |
 | GH-146 · swe-diagram: add hub & ring (radial) layout option | ✅ | [DIAGRAM-HUB.html](PROJECT/3-COMPLETED/DIAGRAM-HUB.html) · [#146](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/146) |
 | GH-138 · HQ hardening: add promote command + fix marathon-plan detection glob | 🟡 | [hq-lib.sh:286](utils/hq/hq-lib.sh) · [GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md](PROJECT/2-WORKING/GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md) · [#138](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/138) |
 | GH-137 · swarm-preflight: covering-test inference can inject test/.. (repo root) + generated files into ALLOW_PATHS | ✅ | [utils/swarm-preflight.sh](utils/swarm-preflight.sh) · [GH-137-SWARM-PREFLIGHT-INFERENCE-CONTAINMENT.md](PROJECT/3-COMPLETED/GH-137-SWARM-PREFLIGHT-INFERENCE-CONTAINMENT.md) · [#137](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/137) |
