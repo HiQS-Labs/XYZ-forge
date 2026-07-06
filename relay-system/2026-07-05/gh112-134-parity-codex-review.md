@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-05.
 -->
 
-NEXT: Producer
+NEXT: codex
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -91,5 +91,37 @@ signal quality > implementation speed, specifically:
 - [Should] I could confirm the current Python path still delegates to `relay-turn-lib.sh`, but under this turn's no-`git` constraint I could not independently produce a commit-scoped receipt that `cd4c215` left `relay-turn-lib.sh` byte-identical/untouched. Fix: when you answer this finding, attach a deterministic receipt for that commit (for example the commit's name-only diff or equivalent CI artifact) so DoD #4 is explicitly closed instead of inferred from the working tree.
 
 **Verdict:** Changes requested
+
+### Round 2 · Producer · claude-a
+Independently re-verified all four findings before acting on them (source inspection, not just trusting
+the review): confirmed the Blocker directly by diffing `utils/swarm-preflight.sh:346-378`'s
+`sanitizeInferredPath` against the Python port's bare `.startswith("test/")` checks — a
+`"test/../src/x.js"` string genuinely passes that check, so the finding is real, not a false positive.
+Also independently confirmed both `[Pass]` findings (binary-probe ordering in `marathon_drive.py`;
+`rtl.py:26-58` sourcing `relay-turn-lib.sh` directly rather than reimplementing the exemption logic).
+
+Dispositions:
+- **[Blocker] Implemented.** Added `is_generated_inferred_path()` + `sanitize_inferred_path()` to
+  `utils/py/swarm_preflight.py`, mirroring the Bash function exactly (reject `..` path segments, reject
+  `__pycache__`/`.pyc`, resolve-and-check against `test_root` before accepting). Gated both the
+  inferred-test walk and the inferred-helper walk through it (previously only a raw `.startswith`
+  check). Added `test/test_python_layer.py::test_swarm_preflight_sanitizes_inferred_paths_gh137` (mirrors
+  the Bash T35b fixture: real covering test/helper still land, `test/..` and generated `.pyc` don't) and
+  `::test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated` (direct unit coverage
+  of the new function, including the exact bypass string this finding named). `pytest test/test_python_layer.py`
+  15/15 (13 pre-existing + 2 new), `python3 -m py_compile utils/py/swarm_preflight.py` clean.
+- **[Pass] Acknowledged, no change.** Confirmed independently.
+- **[Pass] Acknowledged, no change.** Confirmed independently.
+- **[Should] Implemented.** Receipt: `git show --stat cd4c215` lists exactly 6 changed files
+  (`CHANGELOG.md`, `PROJECT/2-WORKING/GH-112-PYTHON-134-PARITY.md`, `test/test_python_layer.py`,
+  `utils/py/marathon_drive.py`, `utils/py/swarm_preflight.py`, `validate.sh`) —
+  `relay-automation/relay-turn-lib.sh` is not among them; the one textual mention of
+  "relay-turn-lib.sh" in that output is inside the commit message body ("relay-turn-lib.sh untouched"),
+  not a changed-file line. DoD #4 closed by direct evidence, not inference.
+
+New work for the Reviewer: re-review `utils/py/swarm_preflight.py`'s `sanitize_inferred_path()` +
+its two call sites, and the new tests, against the original Blocker. Definition of Done for this round:
+the sanitizer genuinely closes the string-prefix bypass (a `test/..`-style path must be rejected) with
+no new containment or correctness regression in the reviewed surface.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

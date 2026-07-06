@@ -168,3 +168,62 @@ def test_poll_relay_field():
         assert poll.relay_field(name, "NEXT") == "claimer"
     finally:
         os.remove(name)
+
+def test_swarm_preflight_sanitizes_inferred_paths_gh137():
+    # Python-parity regression for the independent Codex review Blocker (GH-146 follow-up,
+    # relay-system/2026-07-05/gh112-134-parity-codex-review.md): the Bash swarm-preflight.sh
+    # gates every INFERRED test/helper through sanitizeInferredPath (GH-137) before it can
+    # widen ALLOW_PATHS; the initial Python port only checked `.startswith("test/")`, which a
+    # `test/../...` string or a __pycache__/*.pyc path defeats. Mirrors
+    # test/swarm-preflight.sh's T35b fixture: a real sibling covering test + helper still land,
+    # a `test/..` escape and a generated .pyc do not.
+    import swarm_preflight
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        os.makedirs(os.path.join(tmpdir, "relay-automation"))
+        os.makedirs(os.path.join(tmpdir, "test", "__pycache__"))
+
+        artifact = "relay-automation/consult.sh"
+        with open(os.path.join(tmpdir, artifact), "w") as f:
+            f.write("#!/usr/bin/env bash\n")
+
+        with open(os.path.join(tmpdir, "test", "_setup.sh"), "w") as f:
+            f.write("# helper\n")
+
+        with open(os.path.join(tmpdir, "test", "__pycache__", "generated.pyc"), "w") as f:
+            f.write("compiled\n")
+
+        # The real covering test: genuinely references the declared artifact + a helper.
+        with open(os.path.join(tmpdir, "test", "consult.sh"), "w") as f:
+            f.write(
+                '#!/usr/bin/env bash\n'
+                'source "$(dirname "$0")/_setup.sh"\n'
+                'CONSULT="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/consult.sh"\n'
+            )
+
+        contract = {"artifacts": [artifact]}
+        result = swarm_preflight.expand_effective_artifacts(tmpdir, contract)
+
+        all_paths = result["artifacts"] + result["inferred_tests"] + result["inferred_helpers"]
+        assert not any(".." in p.split("/") for p in all_paths), all_paths
+        assert not any("__pycache__" in p or p.endswith(".pyc") for p in all_paths), all_paths
+        assert "test/consult.sh" in result["inferred_tests"]
+        assert "test/_setup.sh" in result["inferred_helpers"]
+
+def test_swarm_preflight_sanitize_inferred_path_rejects_traversal_and_generated():
+    import swarm_preflight
+
+    root = REPO_ROOT
+    test_root = os.path.join(root, "test")
+
+    # A genuine in-repo test path passes through normalized.
+    assert swarm_preflight.sanitize_inferred_path(root, test_root, "test/test_python_layer.py") \
+        == "test/test_python_layer.py"
+    # String-prefix bypass that a naive `.startswith("test/")` check would accept.
+    assert swarm_preflight.sanitize_inferred_path(root, test_root, "test/../src/project.js") is None
+    assert swarm_preflight.sanitize_inferred_path(root, test_root, "test/../../etc/passwd") is None
+    # Generated/gitignored entries never widen ALLOW_PATHS.
+    assert swarm_preflight.sanitize_inferred_path(root, test_root, "test/__pycache__/x.pyc") is None
+    assert swarm_preflight.sanitize_inferred_path(root, test_root, "test/sub/mod.pyc") is None
+    # Not under test/ at all.
+    assert swarm_preflight.sanitize_inferred_path(root, test_root, "src/project.js") is None

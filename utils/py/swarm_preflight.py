@@ -277,6 +277,30 @@ def is_genuine_ref(raw, artifact):
     pattern = rf'(?:/|\b(?:source|bash|node)\b\s*["\'`]?|require\(\s*["\'`]?)' + escaped
     return re.search(pattern, raw) is not None
 
+def is_generated_inferred_path(rel_path):
+    return re.search(r'(?:^|/)__pycache__(?:/|$)|\.pyc$', rel_path, flags=re.IGNORECASE) is not None
+
+def sanitize_inferred_path(root, test_root, rel_path):
+    # GH-137 (Python parity, GH-146-follow-up relay review): only INFERRED additions are
+    # sanitized here — declared artifacts stay authoritative. An inferred covering test or
+    # helper must stay inside repo test/ and must not widen ALLOW_PATHS via a `test/..`
+    # escape or a generated/gitignored entry like `__pycache__/x.pyc`. Mirrors
+    # utils/swarm-preflight.sh's sanitizeInferredPath exactly (same containment boundary,
+    # same rejection order) so XYZ_PYTHON=1 mode can't reopen the bug GH-137 closed in Bash.
+    candidate = normalize_path(str(rel_path or ""))
+    candidate = re.sub(r'^(?:\./)+', '', candidate)
+    if not candidate.startswith("test/"):
+        return None
+    if ".." in candidate.split("/"):
+        return None
+    if is_generated_inferred_path(candidate):
+        return None
+    resolved = os.path.abspath(os.path.join(root, candidate))
+    under_test = normalize_path(os.path.relpath(resolved, test_root))
+    if not under_test or under_test == ".." or under_test.startswith("../") or os.path.isabs(under_test):
+        return None
+    return normalize_path(os.path.relpath(resolved, root))
+
 def expand_effective_artifacts(root, contract):
     declared = contract.get("artifacts", [])
     included = []
@@ -306,7 +330,8 @@ def expand_effective_artifacts(root, contract):
             for filename in filenames:
                 abs_path = os.path.join(dirpath, filename)
                 rel_path = normalize_path(os.path.relpath(abs_path, root))
-                if not rel_path.startswith("test/"):
+                rel_path = sanitize_inferred_path(root, test_root, rel_path)
+                if not rel_path:
                     continue
                 raw = read(rel_path)
                 if any(is_genuine_ref(raw, artifact) for artifact in declared):
@@ -316,8 +341,9 @@ def expand_effective_artifacts(root, contract):
     seen_helpers = set(queue)
     while queue:
         rel_path = queue.pop(0)
-        for helper in helper_refs(read(rel_path)):
-            if not helper.startswith("test/"):
+        for raw_helper in helper_refs(read(rel_path)):
+            helper = sanitize_inferred_path(root, test_root, raw_helper)
+            if not helper:
                 continue
             if not os.path.exists(os.path.join(root, helper)) or helper in seen_helpers:
                 continue
