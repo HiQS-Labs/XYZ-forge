@@ -11,6 +11,8 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - `CHANGELOG.md` = the end-of-iteration running log (first-class PDDA artifact; governed by `PROJECT/PDDA.md`)
 - `PROJECT/**` docs = canonical execution detail for a specific effort
 - `PROJECT/PDDA.md` = document contract and automation rules (incl. the CHANGELOG contract)
+- `PROJECT/CONSTITUTION.md` = the policy of record: PDDA's lane and its non-negotiables (deterministic-before-LLM, verified-success-only, reversibility, local-first)
+- `PROJECT/DO-NOT-BUILD.md` = the anti-scope list — product directions PDDA must not become (companion to `CONSTITUTION.md`)
 
 ## Startup sequence
 
