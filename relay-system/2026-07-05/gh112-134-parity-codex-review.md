@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-05.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -83,5 +83,13 @@ signal quality > implementation speed, specifically:
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer · codex
+- [Blocker] `utils/py/swarm_preflight.py:304-326` does not mirror the shell's inferred-path containment boundary. The Bash source sanitizes every inferred test/helper through `sanitizeInferredPath` before widening `ALLOW_PATHS` (`utils/swarm-preflight.sh:346-378`), rejecting `test/..` escapes and generated entries like `__pycache__/x.pyc`; the Python port adds raw `rel_path`/`helper` values as soon as `is_genuine_ref` passes. In `XYZ_PYTHON=1` mode that means the same contract can widen beyond repo-local real test files, which breaks DoD #1 and #2 on containment/parity. Fix: port the shell sanitizer into Python and gate both inferred tests and inferred helpers through it; add the Python-layer regression equivalent of `test/swarm-preflight.sh:780-832` (GH-137/T35b).
+- [Pass] `utils/py/marathon_drive.py:243-245` probes the builder and reviewer binaries before the dirty-workspace scan (`:261-276`), before relay rendering (`:278-333`), and before the first tick-mutating calls (`:377-379`). The same ordering also holds on `--dry-run` because the dry-run exit is later at `:335-338`. No change needed.
+- [Pass] GH-107's containment exemption is still inherited, not reimplemented: the Python bridge sources `relay-automation/relay-turn-lib.sh` and routes enforcement through it (`utils/py/rtl.py:26-58`), while the exemption logic itself remains solely in `relay-automation/relay-turn-lib.sh:241-269` and is consumed in the off-lane scan at `:409`. No change needed.
+- [Should] I could confirm the current Python path still delegates to `relay-turn-lib.sh`, but under this turn's no-`git` constraint I could not independently produce a commit-scoped receipt that `cd4c215` left `relay-turn-lib.sh` byte-identical/untouched. Fix: when you answer this finding, attach a deterministic receipt for that commit (for example the commit's name-only diff or equivalent CI artifact) so DoD #4 is explicitly closed instead of inferred from the working tree.
+
+**Verdict:** Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
