@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-07-06
+
+### Inbox marathon-triage sweep + new `marathon-triage` skill
+Triaged `PROJECT/1-INBOX` lowest-GH-number-first to build a collision-safe marathon queue, and codified the recurring workflow as a machine-wide Claude skill (`~/.claude/skills/marathon-triage`). Reconciled every `GH-*` capture doc against live issue state: **16 stale docs** for already-CLOSED issues (GH-22/45/56/58/59/64/66/68/69/70/71/75/78/83/84/85) archived to `3-COMPLETED`. **Closed [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61)** — `swarm-preflight` returns STALE (Tier-1 CI already live on PR #145); doc archived. Promoted the four preflight-ready open issues to `2-WORKING` with `GH-<n>-*.md` names so `swarm-preflight --gh-issue` resolves them: **GH-133** (relay-dep-drift flake → `test/relay-dep-drift.sh`), **GH-142** (agy reliability → `test/agy-turn.sh`+`swarm-preflight.sh`+`_setup.sh`), **GH-143** (front-door → `skills/relay-xyz/SKILL.md`), **GH-144** (PDDA synthesis → `PROJECT/CONSTITUTION.md`+`DO-NOT-BUILD.md`); all four verdict `ready (0)`, disjoint write-sets → one 4-wide parallel wave. Authored preflight contracts for **GH-138** (now preflights STALE — `test/hq-promote.sh` already exists, candidate to close like #61) and **GH-141** (orchestrator-only lane on `relay-turn-lib.sh`; fix direction unratified, honestly flagged). Broadened **GH-94**'s contract write-set (`skills/xyz/SKILL.md` is the real bug site; added `install.sh`+`package.json` for the npx path). Kicked off Wave 1 Lane A (GH-133) via `marathon-drive` in an isolated worktree.
+
 ## 2026-07-05
 
 ### GH-148: independent Codex review of GH-112's #134 Python parity port finds + fixes a real containment gap

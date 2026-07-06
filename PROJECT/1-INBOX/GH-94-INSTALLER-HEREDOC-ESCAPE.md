@@ -56,5 +56,5 @@ heredoc bug against a fresh programmatic materialization before assuming it's fi
 ## Swarm Preflight Contract
 
 ```json
-{"target":{"repo":".","ref":"main"},"gate":"true","fix_probes":[{"type":"path_absent","path":"package.json"}],"artifacts":["skills/xyz/SKILL.md"],"remediation":{"source":"self#fix-direction","criteria":"Reproduced against a fresh programmatic materialization; if still broken, either the self-extract block's escaping is fixed/documented, or an alternative install path (release tarball / npx) is shipped."},"lanes":{"orchestrator_only":[]}}
+{"target":{"repo":".","ref":"main"},"gate":"true","fix_probes":[{"type":"path_absent","path":"package.json"}],"artifacts":["skills/xyz/SKILL.md","install.sh","package.json"],"remediation":{"source":"self#fix-direction","criteria":"Reproduced against a fresh programmatic materialization; if still broken, either the self-extract block's escaping is fixed/documented, or an alternative install path (release tarball / npx) is shipped."},"lanes":{"orchestrator_only":[]}}
 ```

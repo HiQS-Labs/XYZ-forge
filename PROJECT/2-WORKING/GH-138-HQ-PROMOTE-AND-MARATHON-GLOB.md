@@ -44,3 +44,9 @@ related:
 - [ ] **Litmus (contract):** the promoted doc passes `utils/pdda/pdda.sh frontmatter` + `utils/pdda/pdda.sh status-table` in isolation.
 - [ ] **Litmus (regression):** `test/hq-promote.sh` proves a `MARATHON-<date>.md` (no `-PLAN-`) fixture is now detected; both new-command and glob cases hermetic (tmp fixture repo, no network).
 - [ ] **No silent scope:** promote refuses (non-zero) when no matching 1-INBOX doc exists rather than creating an empty 2-WORKING file.
+
+## Swarm Preflight Contract
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"path_absent","path":"test/hq-promote.sh"}],"artifacts":["utils/hq/hq.sh","utils/hq/hq-lib.sh","test/hq-promote.sh"],"remediation":{"source":"self#status","criteria":"hq-lib.sh marathon-plan glob broadened MARATHON-PLAN-*.md -> MARATHON-*.md; cmd_promote + hq_render_promote_frontmatter added (preview-by-default, --create acts, refuses with no GH-N-*.md in 1-INBOX); hermetic test/hq-promote.sh wired into validate.sh proves both the new command and the MARATHON-<date>.md detection regression; validate.sh green."},"lanes":{"orchestrator_only":[]}}
+```

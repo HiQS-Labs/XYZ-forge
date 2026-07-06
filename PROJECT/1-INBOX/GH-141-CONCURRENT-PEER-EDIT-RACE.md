@@ -75,3 +75,14 @@ Not yet scoped — no fix direction has been chosen or rated. Whichever directio
   survives.
 - Confirmation that `test/agy-turn.sh` case (8)'s pre-existing-WIP protection is unaffected.
 - `bash validate.sh` green.
+
+## Swarm Preflight Contract
+
+> Fix direction not yet chosen (see Candidate fix directions). Leading candidate encoded below:
+> re-snapshot `git status --porcelain` immediately before the final off-lane scan and diff against
+> a live re-check. Preflight may report this NOT marathon-ready until the direction is ratified —
+> that is the honest state.
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_present","path":"relay-automation/relay-turn-lib.sh","pattern":"RTL_BEFORE"}],"artifacts":["relay-automation/relay-turn-lib.sh","test/agy-turn.sh"],"remediation":{"source":"self#definition-of-done","criteria":"A deterministic before/after test (in test/agy-turn.sh or a new file) injects a peer-session-style edit MID-turn and shows it survives rtl_enforce; case (8) pre-existing-WIP protection still passes; bash validate.sh green."},"lanes":{"orchestrator_only":["relay-automation/relay-turn-lib.sh"]}}
+```
