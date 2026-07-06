@@ -81,6 +81,10 @@ Schema (`ARCHITECTURE/system-diagram.json`):
 - Layout is automatic (layered left→right from edge direction); do not put
   coordinates in the JSON. Point `source → target` in the direction of the
   call/flow — layout quality depends on it.
+- `groups` render as background bounding boxes (swimlanes) containing their
+  child nodes, labeled top-left with the group's `label`. A node opts into a
+  group via its own `group` field, matched against a `groups[].id`; groups
+  with no member nodes are skipped.
 
 ## Step 3 — Build the HTML
 
@@ -98,8 +102,8 @@ do the substitution yourself: copy the template and replace `__TITLE__`,
 
 The output is a single file: open it in any browser. It supports pan (drag
 background), zoom (wheel or +/− buttons), fit-to-view (▣), draggable nodes,
-hover tooltips from `description`, edge labels, a type legend, and follows the
-OS light/dark theme.
+hover tooltips from `description`, edge labels, group swimlanes, a type
+legend, and follows the OS light/dark theme.
 
 ## Step 4 — Verify and report
 

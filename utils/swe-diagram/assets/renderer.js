@@ -145,6 +145,8 @@
     });
     var edgeLayer = svgEl('g', svg);
     var nodeLayer = el('div', 'swe-nodes', viewport);
+    var groupLayer = el('div', 'swe-groups', viewport);
+    viewport.insertBefore(groupLayer, viewport.firstChild); // paint behind edges + nodes
 
     var pos = layout(spec);
     var nodeEls = {};
@@ -168,7 +170,6 @@
       el('div', 'swe-node-label', body).textContent = n.label || n.id;
       if (n.tech) el('div', 'swe-node-tech', body).textContent = n.tech;
       if (n.description) d.title = n.description;
-      if (n.group) el('div', 'swe-node-group', d).textContent = groupLabels[n.group] || n.group;
       nodeEls[n.id] = d;
       makeDraggable(d, n.id);
     });
@@ -190,6 +191,47 @@
         pos[id].y = y;
         nodeEls[id].style.top = y + 'px';
         y += pos[id].h + ROW_GAP;
+      });
+    });
+
+    // ---- group bounding boxes (swimlanes): drawn once per-node heights are
+    // final (after the byCol re-stack correction above). A group's members
+    // are not guaranteed to land in adjacent layout columns (e.g. an async
+    // worker two ranks downstream of its sibling) — a single box spanning the
+    // group's full min/max would then swallow unrelated nodes sitting between
+    // the runs, so draw one box per contiguous run of columns instead.
+    var colStride = NODE_W + COL_GAP;
+    (spec.groups || []).forEach(function (g) {
+      if (!g || g.id == null) return;
+      var colsOfGroup = {};
+      (spec.nodes || []).forEach(function (n) {
+        if (n.group !== g.id || !pos[n.id]) return;
+        var col = Math.round(pos[n.id].x / colStride);
+        (colsOfGroup[col] = colsOfGroup[col] || []).push(n.id);
+      });
+      var cols = Object.keys(colsOfGroup).map(Number).sort(function (a, b) { return a - b; });
+      if (!cols.length) return; // empty group
+      var runs = [[cols[0]]];
+      for (var i = 1; i < cols.length; i++) {
+        if (cols[i] === cols[i - 1] + 1) runs[runs.length - 1].push(cols[i]);
+        else runs.push([cols[i]]);
+      }
+      runs.forEach(function (run) {
+        var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        run.forEach(function (col) {
+          colsOfGroup[col].forEach(function (id) {
+            var p = pos[id];
+            minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x + p.w); maxY = Math.max(maxY, p.y + p.h);
+          });
+        });
+        var pad = 22;
+        var box = el('div', 'swe-group-box', groupLayer);
+        box.style.left = (minX - pad) + 'px';
+        box.style.top = (minY - pad) + 'px';
+        box.style.width = (maxX - minX + pad * 2) + 'px';
+        box.style.height = (maxY - minY + pad * 2) + 'px';
+        el('div', 'swe-group-label', box).textContent = groupLabels[g.id] || g.id;
       });
     });
 
