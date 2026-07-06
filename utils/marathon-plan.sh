@@ -476,10 +476,16 @@ function ghIssueOf(item) {
   }
   return null;
 }
-function docOf(item) {
+function docOf(item, gh = null) {
   const mds = item.links.map((l) => l.target).filter((t) => /\.md($|#)/.test(t) && /PROJECT\//.test(t) && !/relay-system\//.test(t));
   if (mds.length === 0) return null;
-  const pick = mds.find((t) => /2-WORKING\/GH-\d+-/i.test(t)) || mds.find((t) => /2-WORKING\//.test(t)) || mds[0];
+  const issue = gh ?? ghIssueOf(item);
+  const ownDoc = issue == null ? null : new RegExp(`(^|/)GH-${issue}-[^/]+\\.md($|#)`, "i");
+  const pick =
+    mds.find((t) => ownDoc && /2-WORKING\//.test(t) && ownDoc.test(t)) ||
+    mds.find((t) => ownDoc && ownDoc.test(t)) ||
+    mds.find((t) => /2-WORKING\//.test(t)) ||
+    mds[0];
   return pick.replace(/#.*$/, "");
 }
 function slugOf(docRel, title) {
@@ -584,7 +590,7 @@ if (ledger.length === 0) { process.stderr.write("marathon-plan: no ledger items 
 const records = [];
 for (const item of ledger) {
   const gh = ghIssueOf(item);
-  const docRel = docOf(item);
+  const docRel = docOf(item, gh);
   const docAbs = docRel ? path.resolve(ROOT, docRel) : null;
   const docExists = docRel ? existsAt(docRel) : false;
   const slug = slugOf(docRel, item.title);

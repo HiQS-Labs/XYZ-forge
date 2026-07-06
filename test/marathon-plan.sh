@@ -554,6 +554,45 @@ QUEUE_PLAN_ZONES_FILE="$Q/bad-zones.json" run_qp "$Q" >/dev/null 2>&1; rc=$?
   && pass "R: malformed QUEUE_PLAN_ZONES_FILE also fails loud (exit 3) [GH-48]" \
   || fail "R: expected exit 3 from malformed QUEUE_PLAN_ZONES_FILE, got $rc"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario S — GH-150: docOf prefers the lane's own GH-<n> pointer over an earlier PROJECT doc link
+# ─────────────────────────────────────────────────────────────────────────────
+S="$WORK/S"; mkdir -p "$S/PROJECT/1-INBOX" "$S/PROJECT/3-COMPLETED"; echo '{}' >"$S/.gh-state.json"; : >"$S/.branches"
+cat >"$S/PROJECT/1-INBOX/GH-111-right-doc.md" <<EOF
+---
+title: GH-111 right doc
+complexity: 2
+risk: 1
+effort: 2
+---
+
+# GH-111 right doc
+
+## Swarm Preflight Contract
+\`\`\`json
+$(contract_for MISS_S src/right.js)
+\`\`\`
+EOF
+cat >"$S/PROJECT/3-COMPLETED/MARATHON-PLAN-$DAY.md" <<EOF
+---
+title: Distractor marathon plan
+---
+
+# Distractor marathon plan
+EOF
+cat >"$S/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### Queue / parked intake
+- **GH-111 · right doc outside 2-WORKING** 🆕 — referenced by [plan](PROJECT/3-COMPLETED/MARATHON-PLAN-$DAY.md) before the real pointer → [d](PROJECT/1-INBOX/GH-111-right-doc.md) · [#111](https://github.com/o/r/issues/111)
+EOF
+out="$(run_qp "$S" 2>/dev/null)"; doc="$S/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+if ! grep -q "unrated.*GH-111" <<<"$out" && [[ "$(wave_of "$doc" 111)" == "1" ]]; then
+  pass "S: docOf prefers the lane's own GH-111 pointer over an earlier PROJECT doc link [GH-150]"
+else
+  fail "S: docOf chose the distractor PROJECT doc (out=$(grep -E 'unrated.*GH-111|needs-contract.*GH-111' <<<\"$out\" | head -1) wave=$(wave_of \"$doc\" 111))"
+fi
+
 echo
 echo "  marathon-plan: $PASS passed, $FAIL failed"
 [[ "$FAIL" -eq 0 ]]
