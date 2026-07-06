@@ -2,11 +2,15 @@
 ratings_exempt: true
 title: Cost observability for coordination systems (xyz + relay)
 slug: cost-observability-plan
-status: Draft — awaiting relay review
+status: Phases 1–3 shipped ✅; v2 coverage-honesty tranche (Phase 4 spike → 7) OPEN 2026-07-06
 owner: Noel (operator) · Claude (producer)
 created: 2026-06-15
-updated: 2026-06-20
+updated: 2026-07-06
 branch: main
+gh_issues:
+  - 151  # reconcile SSOT + orphaned Gemini relay-lane token capture (Phase 4 spike + 5)
+  - 152  # auto-surface tick analyze cost at end of driven runs (Phase 6)
+  - 153  # Codex per-turn token capture — parseCodexStats (Phase 7)
 related:
   - PROJECT/1-INBOX/FEEDBACK-2026-06-15.md   # the gap this plan closes (point 5: track cost, not just output)
   - src/analyze.js                           # the deterministic analyzer we extend
@@ -31,13 +35,17 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 3 — Dogfood + cost comparison** ✅ shipped: real Gemini relay run with `-o json` cost capture validated end-to-end (preamble-skip fix in `parseGeminiStats`); synthetic xyz fixture + real relay run analyzed; `COST-COMPARISON.md` generated from `tick analyze --format json`; `FEEDBACK-2026-06-15.md` point 5 closed. `cost.sh` **24/24**; full suite **22/22**. | **Done — all three phases shipped** |
+| **Phases 1–3 shipped ✅** (2026-06-16): raw cost signals captured, deterministic analyzer computes cost, `COST-COMPARISON.md` generated from `tick analyze --format json`. **Post-ship coverage audit (2026-07-06)** found the capture lane has drifted from the plan: `gemini-turn.sh` was retired for cost-blind `agy-turn.sh`, so the `parseGeminiStats` **relay** path is orphaned (survives only in `consult.sh:251-255` behind the legacy `gemini` alias); `claude-turn.sh` now meters *its* lane (new since Phase 1); and no driver auto-surfaces cost. Three follow-on issues filed (#151/#152/#153). | **Phase 4 — Coverage-truth spike** (#151): probe Codex + agy usage surfaces, decide reconnect-vs-retire for the Gemini relay path, and write findings back into this doc before its gate can pass. Then Phase 5 reconcile (#151), Phase 6 auto-surface cost (#152), Phase 7 Codex capture (#153). |
 
 ## Table of contents
 
 - [Phase 1 — Capture raw cost signals at the source](#phase-1--capture-raw-cost-signals-at-the-source)
 - [Phase 2 — Extend the deterministic analyzer to compute cost](#phase-2--extend-the-deterministic-analyzer-to-compute-cost)
 - [Phase 3 — Dogfood + the xyz-vs-relay cost comparison](#phase-3--dogfood--the-xyz-vs-relay-cost-comparison)
+- [Phase 4 — Coverage-truth spike (discovery gate)](#phase-4--coverage-truth-spike-discovery-gate)
+- [Phase 5 — Reconcile the SSOT + fix the coverage-honesty regression](#phase-5--reconcile-the-ssot--fix-the-coverage-honesty-regression)
+- [Phase 6 — Auto-surface cost at end of driven runs](#phase-6--auto-surface-cost-at-end-of-driven-runs)
+- [Phase 7 — Codex per-turn token capture](#phase-7--codex-per-turn-token-capture)
 - [Deferred / backlog](#deferred--backlog)
 - [Open questions for the reviewer](#open-questions-for-the-reviewer)
 
@@ -169,14 +177,160 @@ artifact the feedback doc was missing: an honest cost-per-unit comparison of xyz
 
 ---
 
+# v2 — Coverage-honesty tranche (opened 2026-07-06)
+
+> Phases 1–3 shipped the deterministic cost subsystem. A post-ship audit found the **capture side has
+> drifted from the plan** and coverage is thinner than "shipped" implies. This tranche re-aligns the
+> SSOT with reality, closes the silent regression, and makes cost visible without a manual pull.
+> It changes NO anti-goal: still raw tokens only, still no LLM scoring, still no `$` conversion.
+
+## Phase 4 — Coverage-truth spike (discovery gate)
+
+**Intent:** before writing any parser or driver code, probe the *actual* usage surfaces of each live
+lane and pin the current-state facts. This is the phase-0-equivalent discovery gate for the tranche:
+its **findings must be written back into this doc** (per PDDA's spike rule) before its QA gate can pass.
+No production code changes in this phase — probe and record only.
+
+**Verified going in (2026-07-06 audit — to be confirmed/extended by the spike):**
+- `relay-automation/gemini-turn.sh` — **retired.** Live turn shims: `agy-turn.sh`, `aider-turn.sh`,
+  `claude-turn.sh`, `codex-turn.sh`.
+- `parseGeminiStats` / `tick cost --from-gemini-json` — referenced only by `src/cost.js` (def),
+  `bin/tick` (verb), `test/cost.sh` (test), and `relay-automation/consult.sh:251-255` (consult
+  one-shot, behind the legacy `gemini`/`GEMINI_BIN` alias). **No relay/marathon turn lane feeds it.**
+- `relay-automation/claude-turn.sh:210-221` now meters its lane (usage.input_tokens + cache_read,
+  output_tokens, total_cost_usd → `tick cost --tool claude`) — new since Phase 1's "Claude DEFERRED".
+- `agy-turn.sh` — structurally cost-blind (no `-o json`/usage block); token spend is always a floor of 0.
+
+### Checklist (each item is observable)
+
+- [ ] **Probe Codex usage surface:** run `codex exec` and inspect its end-of-turn output for a
+      usage/stats block (JSON or parseable). *Observable:* a captured sample transcript in the findings
+      below with the exact field path (or a recorded "no usable surface" verdict). Feeds #153.
+- [ ] **Probe agy usage surface:** check `agy` print mode for ANY usage output (flag, stderr, sidecar
+      file). *Observable:* findings record either the surface or "structurally cost-blind — confirmed".
+- [ ] **Confirm the Gemini relay-lane state:** verify no live turn shim calls `--from-gemini-json`
+      and that `consult.sh` is the only remaining caller. *Observable:* the grep result is pasted below.
+- [ ] **Confirm claude-lane metering is live + correct:** drive one `claude-turn.sh` turn and confirm a
+      `.tick/events/*tokens*` file with non-zero `tokens_out` and `--tool claude`. *Observable:* event file.
+- [ ] **Decision record:** write the three go/no-go calls back into this doc — (a) Codex capture
+      feasible? (b) agy capture feasible? (c) reconnect vs **retire** the Gemini relay-lane path.
+- [ ] **Findings written back** into the section below before this phase's QA gate is checked.
+
+### Findings written back from the spike
+
+_(to be filled by the spike before the QA gate — leave the checklist above unchecked until then.)_
+
+### QA checklist — Phase 4
+
+- [ ] **Discovery-before-build:** no parser/driver code shipped in this phase; only probes + findings.
+- [ ] **Findings-back rule:** the "Findings written back" section is populated before the gate passes
+      (PDDA discovery-phase contract).
+- [ ] **Observability:** every claim in the findings cites a command output or a `file:line`, not memory.
+- [ ] **Determinism litmus:** each probe is a re-runnable command; the findings record the exact invocation.
+- [ ] **No-silent-cap:** any lane found cost-blind is named explicitly as a floor, not omitted.
+- [ ] **Anti-goal check:** no `$`/pricing and no LLM scoring introduced by the probes.
+
+---
+
+## Phase 5 — Reconcile the SSOT + fix the coverage-honesty regression
+
+**Intent:** make the plan, the code, and `CONSUMING.md` tell the *same* honest story, and close the
+orphaned-Gemini-lane regression (#151) one way or the other. Gated on the Phase 4 decision.
+
+### Checklist (each item is observable)
+
+- [ ] **Resolve the Gemini relay path:** per the Phase 4 call, either (a) **retire** it — mark
+      `parseGeminiStats` / `--from-gemini-json` as consult-only in `src/cost.js` + `bin/tick` help, or
+      (b) **reconnect** it to a live lane. *Observable:* the chosen path is reflected in code comments +
+      `tick cost --help`, and no doc still implies a live `gemini-turn.sh` relay lane.
+- [ ] **Correct the Phase 1 record:** annotate that the Claude *lane* (`claude-turn.sh`) is now metered
+      while the *orchestrator* remains deferred (the two were conflated). *Observable:* Phase 1 note updated.
+- [ ] **Sync `relay-automation/CONSUMING.md`:** its "cost-blind lanes" statement matches the Phase 4
+      findings (which lanes are metered vs floors). *Observable:* `CONSUMING.md` diff.
+- [ ] **Prove the floor signal on a real multi-lane run:** drive a run mixing a metered lane (claude)
+      and a cost-blind lane (agy), then `tick analyze` renders `≥` + `coverage X/Y` + the lower-bound note.
+      *Observable:* the rendered md/human cost block shows the floor marker with correct coverage.
+
+### QA checklist — Phase 5
+
+- [ ] **DRY:** no second source of "which lanes are metered" — `CONSUMING.md` is the prose SSOT, this
+      plan links it rather than re-listing.
+- [ ] **SOLID:** capture vs report seams unchanged; this phase edits docs + one help string, not analyzer logic.
+- [ ] **Observability:** the multi-lane run's floor marker is shown from real `tick analyze` output, not asserted.
+- [ ] **No-silent-cap:** the regression fix must not let a cost-blind lane read as `0` exact — it stays a floor.
+- [ ] **Reversibility:** doc + comment edits are additive/revertible; no event-schema change.
+- [ ] **Anti-goal check:** no `$`/pricing, no LLM scoring.
+
+---
+
+## Phase 6 — Auto-surface cost at end of driven runs
+
+**Intent:** stop requiring a manual `tick analyze` pull. Print the cost block at end-of-run for driven
+relay/marathon sessions, honoring the floor/partial markers so cost-blind lanes never read as exact (#152).
+
+### Checklist (each item is observable)
+
+- [ ] **End-of-run cost summary:** the driver emits the `tick analyze` cost block (human/md) to its
+      run summary / stderr at completion. *Observable:* a driven run's tail shows the `### Cost` block.
+- [ ] **Floor markers preserved:** partial coverage renders `≥` + `coverage X/Y` + the lower-bound note
+      in the auto-surfaced output. *Observable:* a mixed metered/blind run shows the marker inline.
+- [ ] **Opt-in / non-disturbing:** gated by an env toggle (default-on acceptable only if additive);
+      failure to analyze never fails the run. *Observable:* toggling the env removes/keeps the block; a
+      forced analyze error still exits the driver green.
+- [ ] **No new metric:** reuses the existing `tick analyze` output verbatim — no recomputation in the driver.
+
+### QA checklist — Phase 6
+
+- [ ] **DRY:** the driver calls `tick analyze`; it does not re-derive any cost number itself.
+- [ ] **SOLID (single responsibility):** the driver only *renders* an existing report at end-of-run.
+- [ ] **Observability:** the surfaced block is the same object `tick analyze --format json` produces.
+- [ ] **No-silent-cap:** partial coverage is shown as a floor in the auto output, identical to the manual pull.
+- [ ] **Reversibility:** behind an env toggle; removing it restores byte-identical prior driver behavior.
+- [ ] **Anti-goal check:** no `$`/pricing, no LLM scoring.
+
+---
+
+## Phase 7 — Codex per-turn token capture
+
+**Intent:** close the Codex token gap by mirroring the Gemini parser (#153). **Hard-gated on Phase 4**
+confirming Codex emits a usable usage surface — do NOT build against an un-probed format, do NOT fake.
+
+### Checklist (each item is observable)
+
+- [ ] **Gate check:** Phase 4 recorded a usable Codex usage surface. If not, this phase stays blocked and
+      says so (no speculative parser). *Observable:* the Phase 4 decision record shows "Codex feasible: yes".
+- [ ] **`parseCodexStats`:** a pure parser in `src/cost.js` mirroring `parseGeminiStats` (no I/O).
+      *Observable:* `test/cost.sh` asserts a known token total from a Codex fixture.
+- [ ] **Wire `codex-turn.sh`:** emit `cost.tokens --tool codex` best-effort — never fails the turn; loud
+      stderr on zero/unparseable. *Observable:* after a Codex turn, `.tick/events/*tokens*` carries
+      non-zero `tokens_out` for `--tool codex`.
+- [ ] **Coverage rises:** on a Codex-inclusive run, `tick analyze` coverage moves toward `done_tasks`
+      (fewer floors). *Observable:* the coverage fraction increases vs a pre-Phase-7 run.
+
+### QA checklist — Phase 7
+
+- [ ] **DRY:** reuses the `tick cost` write seam and the same event schema; only the parser is Codex-specific.
+- [ ] **SOLID:** `parseCodexStats` is pure; no analyzer logic changes.
+- [ ] **Observability:** each Codex turn writes a timestamped `cost.tokens` event greppable by `--tool codex`.
+- [ ] **Determinism litmus:** `parseCodexStats` is a pure function of the transcript; same input → same tokens.
+- [ ] **No-silent-cap:** if capture fails, the loud-partial signal still marks the turn as an un-metered floor.
+- [ ] **Anti-goal check:** raw tokens only; no `$`/pricing, no LLM scoring.
+
+---
+
 ## Deferred / backlog
 
 Items consciously NOT done, so they don't masquerade as covered. Each says why + what unblocks it.
 
-- [ ] **Codex token capture** — no `parseCodexStats` yet; the Codex CLI's usage/stats output format
-      isn't probed. `codex-turn.sh` already persists its transcript, so the data exists to parse later.
-      *Unblocks when:* someone runs `codex exec` and inspects its end-of-turn usage block (mirror of the
-      `gemini -o json` probe). Until then Codex turns are a known token gap (Phase 2 renders it as partial).
+- [ ] **Codex token capture** — **now tracked as Phase 7 (#153)**, gated on the Phase 4 (#151) probe of
+      `codex exec`'s usage block. `codex-turn.sh` already persists its transcript, so the data exists to
+      parse later. Until then Codex turns are a known token gap (Phase 2 renders it as partial).
+- [ ] **Orphaned Gemini relay-lane capture (regression, #151)** — the plan built for `gemini-turn.sh`
+      under `-o json`, but that shim was retired for cost-blind `agy-turn.sh`. `parseGeminiStats` /
+      `--from-gemini-json` now survives only in `consult.sh:251-255` (legacy `gemini` alias); no relay/
+      marathon turn lane feeds it. *Unblocks in:* Phase 4 spike (decide reconnect vs retire) → Phase 5.
+- [ ] **Cost never auto-surfaced by drivers (#152)** — `relay-drive.sh` / `marathon-drive.sh` don't run
+      `tick analyze`, so a run's cost total is invisible without a manual pull. *Unblocks in:* Phase 6.
 - [ ] **Claude orchestrator per-turn tokens** — the main-loop harness exposes no shell-visible per-turn
       token count, so the orchestrator's own tokens aren't captured. *Unblocks when:* a harness hook /
       transcript with usage is available. Deliberately NOT faked with an estimate.
