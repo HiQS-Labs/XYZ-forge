@@ -8,11 +8,20 @@ an onboarding-facing doc (`README.md`, `ROUTER.md`, `AGENTS.md`, `CLAUDE.md`, `s
 
 | | |
 |---|---|
-| **Last audited** | 2026-06-22 (HEAD — what a cold clone gets) |
+| **Last audited** | 2026-07-06 (HEAD — what a cold clone gets) |
 | **Method** | front-door walk, read-only |
 | **Unified with** | parallel Opus-Max session — relay-xyz adherence (FD-11/FD-12) + PDDA hardening (`2610e45`, status-header alias removed) |
-| **Verdict** | ⚠️ **Bumpy** — a newcomer reaches working, but stale numbers, 2 dead links, and a phantom-path `CLAUDE.md` trip the path |
-| **Remediation plan** | [PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md](../1-INBOX/FRONT-DOOR/2026-06-22.md) |
+| **Verdict** | ✅ **Onboarding drift clear** (FD-01…FD-13 all fixed) and the suite is **100% green**: `validate.sh` is `104 / 104`. (A `relay-pkg-freshness.sh` failure — the packaged tarball had drifted from the S9-fixed `agy-turn.sh` — was resolved by rebuilding `relay-pkg.tar.gz` during the 2026-07-06 marathon.) |
+| **Remediation plan** | [PROJECT/2-WORKING/GH-143-FRONT-DOOR-ONBOARDING.md](../2-WORKING/GH-143-FRONT-DOOR-ONBOARDING.md) |
+
+> **Note (2026-07-06):** the true current suite count is **104 / 104**, not the 36/38 this board
+> previously tracked. Most of the FD-01…FD-13 remediation had already landed via *other* work
+> (GH-83's README rewrite, `67068da`'s FD-11/FD-12 hoist) before this pass; this audit verified each
+> observable, fixed the two still-open items (FD-08 install.sh discoverability, FD-10 sandbox
+> callout), and confirms all 13 are green. A `relay-pkg-freshness.sh` failure surfaced during the
+> audit (`relay-automation/agy-turn.sh`/`test/agy-turn.sh` had drifted from `relay-pkg.tar.gz` after
+> the S9 fix) was **resolved** by rebuilding the tarball (`skills/relay-automation/make-pkg.sh`) in
+> the same marathon — the suite is fully green.
 
 ## Health at a glance
 
@@ -20,11 +29,11 @@ an onboarding-facing doc (`README.md`, `ROUTER.md`, `AGENTS.md`, `CLAUDE.md`, `s
 |---|---|---|
 | One front door | ✅ | `ROUTER.md` is the single canonical entry (README points to it) |
 | 🔑 Leaked secrets | ✅ | 0 provider-format keys (tree + history spot-check) |
-| First success works | ✅ | `./validate.sh` → 36/36, no accounts or keys |
-| Doc ↔ code drift | 🚧 | stale test counts in 3 docs + 2 dead README links |
-| Agent front door | 🚧 | `CLAUDE.md` sends a fresh agent to 5 phantom paths |
-| Recent features documented | ⚠️ | `--target-root`, `install.sh` not in any prose doc |
-| relay-xyz adherence | 🚧 | infra complete, but `find-harness.sh --check` is buried in SKILL.md → agents skip it (parallel session) |
+| First success works | ✅ | `./validate.sh` → 104/104 green, no accounts or keys needed |
+| Doc ↔ code drift | ✅ | stale counts, both dead README links, and the `skill/` typo are all gone |
+| Agent front door | ✅ | `CLAUDE.md` is a clean pointer to `ROUTER.md`/`AGENTS.md`; no phantom paths |
+| Recent features documented | ✅ | `--target-root`, `CONSULT_ROOT`, and `skills/relay-xyz/install.sh` are all now in prose docs |
+| relay-xyz adherence | ✅ | `find-harness.sh --check` hoisted to line 21 of `SKILL.md`; per-repo persistence section present |
 
 ## Findings
 
@@ -32,24 +41,25 @@ Severity 🔴 high · 🟠 med · 🟡 low — Status ⬜ OPEN · ✅ FIXED
 
 | ID | Area | Sev | Status | Fix (doc-only) |
 |---|---|---|---|---|
-| FD-01 | Agent door — `CLAUDE.md` cats 5 phantom paths + a phantom branch | 🔴 | ⬜ | point it at `ROUTER.md`, or gate it if it's a different-repo file |
-| FD-02 | Drift — `README.md` claims `28/28` (lines 8, 14) | 🟠 | ⬜ | 28 → 36 |
-| FD-03 | Drift — `AGENTS.md` claims `12/12` (line 53) | 🟠 | ⬜ | 12 → 36 |
-| FD-04 | Drift — `ROADMAP.md` status table claims `33/33` (line 40) | 🟡 | ⬜ | 33 → 36 |
-| FD-05 | Dead link — `README.md:28` → `2-WORKING/EXP-AUTOMATION/…` (file is in `1-INBOX`) | 🟠 | ⬜ | repoint to `1-INBOX`, or move the file |
-| FD-06 | Wrong path — `README.md:33` `skill/relay-automation/` (no such dir) | 🟠 | ⬜ | `skill` → `skills` (plural) |
-| FD-07 | Undocumented — `--target-root` absent from prose docs (only `--help`) | 🟠 | ⬜ | add a recipe (GH-11 Asks 2–5) |
-| FD-08 | Undocumented — `skills/relay-xyz/install.sh` only in SKILL.md (chicken-and-egg) | 🟠 | ⬜ | surface in `README.md`/`ROUTER.md` |
-| FD-09 | Stale — `AGENTS.md` "One skill ships here / `skill/xyz`" (several skills now) | 🟡 | ⬜ | update to the real `skills/` inventory |
-| FD-10 | Missing — no "run un-sandboxed" note for agent users in `README.md` | 🟡 | ⬜ | add a callout |
+| FD-01 | Agent door — `CLAUDE.md` cats 5 phantom paths + a phantom branch | 🔴 | ✅ | Already a clean pointer to `ROUTER.md`/`AGENTS.md` — no phantom paths remain (verified 2026-07-06) |
+| FD-02 | Drift — `README.md` claims `28/28` (lines 8, 14) | 🟠 | ✅ | Fixed via GH-83's README rewrite — no hardcoded pass count remains |
+| FD-03 | Drift — `AGENTS.md` claims `12/12` (line 53) | 🟠 | ✅ | Fixed via other work — no stale count remains |
+| FD-04 | Drift — `ROADMAP.md` status table claims `33/33` (line 40) | 🟡 | ✅ | Fixed via other work — no stale count remains (verified only; `ROADMAP.md` is orchestrator-owned, not edited by this pass) |
+| FD-05 | Dead link — `README.md:28` → `2-WORKING/EXP-AUTOMATION/…` (file is in `1-INBOX`) | 🟠 | ✅ | Both dead links fixed — every relative link in `README.md` resolves |
+| FD-06 | Wrong path — `README.md:33` `skill/relay-automation/` (no such dir) | 🟠 | ✅ | Fixed — no `skill/` (singular) reference remains |
+| FD-07 | Undocumented — `--target-root` absent from prose docs (only `--help`) | 🟠 | ✅ | `skills/relay-xyz/SKILL.md` and `relay-automation/README.md` both document `--target-root` (turn-based relay) vs `CONSULT_ROOT` (one-shot read), with the distinction spelled out |
+| FD-08 | Undocumented — `skills/relay-xyz/install.sh` only in SKILL.md (chicken-and-egg) | 🟠 | ✅ | Fixed 2026-07-06 — `README.md`'s Repo map now names `bash skills/relay-xyz/install.sh` and links to SKILL.md's setup section |
+| FD-09 | Stale — `AGENTS.md` "One skill ships here / `skill/xyz`" (several skills now) | 🟡 | ✅ | Fixed via other work — the phrase is gone |
+| FD-10 | Missing — no "run un-sandboxed" note for agent users in `README.md` | 🟡 | ✅ | Fixed 2026-07-06 — new "Agent users: run un-sandboxed" callout added |
 | FD-11 | Adherence — `find-harness.sh --check` buried mid-`SKILL.md`; skimming agents skip it | 🔴 | ✅ | DONE (GH-143, `67068da`): hoisted to SKILL.md line 21, right after the H1 as a hard gate |
 | FD-12 | Persistence — no portable per-repo breadcrumb pattern documented (risk: a bad bare pointer file) | 🟡 | ✅ | DONE (GH-143, `67068da`): new "Per-repo persistence" section — memory / `CLAUDE.md`-by-name, never a cached path |
+| FD-13 | Stale path — `relay-automation/poll.sh:7` comment pointed at the pre-reorg `PHASE-4-PLAN.md` location | 🟠 | ✅ | DONE (Phase 0, 2026-06-23): repointed to `PROJECT/4-MISC/PHASE-4-PLAN.md`; `path-integrity.sh` green |
 
 ## Verified baselines (keep green)
 
 - ✅ **Secrets clean** — no provider-format key in the tracked tree or the history spot-check.
 - ✅ **One front door** — `README.md`'s first pointer is `ROUTER.md`; `ROUTER.md` owns startup order.
-- ✅ **First success** — `./validate.sh` prints `passed: 36 / 36`, no accounts or keys required.
+- ✅ **First success** — `./validate.sh` prints `passed: 104 / 104`. No accounts or keys required.
 - ✅ **No human-gated wall on the kernel path** — auth is only for the *live* relay (codex / agy each need their own install + login).
 
 ## Deterministic checks — re-run to refresh
@@ -97,6 +107,12 @@ sed -n '1,25p' skills/relay-xyz/SKILL.md | grep -q 'find-harness.sh --check' \
 # FD-12 — SKILL.md documents the per-repo persistence pattern (memory / CLAUDE.md by name)
 grep -qi 'per-repo' skills/relay-xyz/SKILL.md \
   || echo "FD-12 OPEN: SKILL.md has no per-repo persistence note (use memory / CLAUDE.md-by-name, not a bare pointer file)"
+# FD-13 — relay-automation/poll.sh must not reference the pre-reorg PHASE-4-PLAN.md path
+grep -q 'relay-automation/PHASE-4-PLAN.md' relay-automation/poll.sh \
+  && echo "FD-13 OPEN: poll.sh still references the moved PHASE-4-PLAN.md at its pre-reorg path"
+# FD-13 (path-integrity assertion) — the repo-wide path-reference scan must stay green
+bash test/path-integrity.sh >/dev/null 2>&1 \
+  || echo "FD-13 OPEN: test/path-integrity.sh failed — a referenced path has drifted (see poll.sh-class regressions)"
 # Baseline — secrets must stay clean
 git grep -IE '(sk-[A-Za-z0-9]{20}|ghp_[A-Za-z0-9]{30}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)' >/dev/null 2>&1 \
   && echo "BASELINE BROKEN: provider-format secret in the tracked tree — rotate then purge"

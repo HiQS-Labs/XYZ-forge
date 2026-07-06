@@ -60,6 +60,11 @@ Everything below is designed to be reversible, but please help it along:
 - **Prerequisites:** both the **Codex CLI** and **agy CLI** installed and pre-authenticated (XYZ
   shells out to them; a relay or consult will fail mid-run if either isn't logged in). See
   [Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy).
+- **Agent users: run un-sandboxed.** If you're driving this from Claude Code (or another sandboxed
+  agent harness), relay and consult runs need real keychain access and outbound network egress to
+  reach Codex/agy — a sandboxed shell will fail with "Operation not permitted" or a blocked-host
+  error that looks like a bug but is really the sandbox. Disable the sandbox for these commands
+  before concluding something is broken.
 - Clone this XYZ repo locally. Clone PDDA **only** if you're going for the full automation path.
 
 ### Fast path: immediate value, no PDDA
@@ -158,6 +163,9 @@ prints its own pass count; if it's green, you're good.
 
 - `relay-automation/` — scripts and operator docs for poll-driven relays, watchdogs, headless turn-takers, and consult.
 - `skills/` — packaged skill surfaces, including `relay-xyz`, `relay-automation`, `xyz`, and consult helpers.
+  Claude Code only scans `~/.claude/skills/`, so a fresh clone won't see these until you symlink them in —
+  run `bash skills/relay-xyz/install.sh` once per clone/machine to make the `/relay-xyz` skill discoverable
+  (see [skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md#first-time-setup-on-a-new-clone-or-machine-make-the-skill-discoverable)).
 - `relay-system/` — relay transcripts, reviews, and dogfood runs.
 - `PROJECT/2-WORKING/` — active project docs and working plans.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
