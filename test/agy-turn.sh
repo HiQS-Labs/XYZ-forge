@@ -13,12 +13,12 @@ printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
 printf '.tick/\n' >"$A/.gitignore"
 git -C "$A" add relay.md .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
 
-# Stub `agy`: answers the shim's auth pre-flight (`whoami`) and ignores the turn flags
-# (--dangerously-skip-permissions --print-timeout <d> --model <m> -p <prompt>). For the real turn it
-# performs the contract as $RELAY_AGENT and ALWAYS prints a response line to stdout (so the shim's
-# non-empty-output guard sees content). STUB_MODE: authfail=whoami exits non-zero; bad=off-allowlist
-# file; commitbypass=commits one; spacefile=off-lane path with a space; empty=NO output + NO edits
-# (simulates the silent backend-blocked exit 0 that agy produces under a sandbox).
+# Stub `agy`: answers the shim's auth/model pre-flights (`whoami`, `models`) and ignores the turn
+# flags (--dangerously-skip-permissions --print-timeout <d> --model <m> -p <prompt>). For the real
+# turn it performs the contract as $RELAY_AGENT and ALWAYS prints a response line to stdout (so the
+# shim's non-empty-output guard sees content). STUB_MODE: authfail=whoami exits non-zero;
+# bad=off-allowlist file; commitbypass=commits one; spacefile=off-lane path with a space; empty=NO
+# output + NO edits (simulates the silent backend-blocked exit 0 that agy produces under a sandbox).
 STUB="$WORK/agy"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
@@ -27,6 +27,15 @@ if [ "${1:-}" = whoami ]; then
   [ "${STUB_MODE:-good}" = authfail ] && { printf 'login required\n' >&2; exit 1; }
   printf 'agy@example.test\n'
   exit 0
+fi
+if [ "${1:-}" = models ]; then
+  [ "${STUB_MODE:-good}" = modelsfail ] && { printf 'models unavailable\n' >&2; exit 1; }
+  printf '%s\n' "${STUB_MODELS:-Gemini 3.5 Flash}"
+  exit 0
+fi
+if [ -n "${STUB_ARGS_LOG:-}" ]; then
+  : >"$STUB_ARGS_LOG"
+  printf '%s\n' "$@" >"$STUB_ARGS_LOG"
 fi
 if [ "${STUB_MODE:-good}" = empty ]; then exit 0; fi   # silent sandbox failure: exit 0, no output
 export TICK_REPO_ROOT="$A"
@@ -104,7 +113,34 @@ run_shim RELAY-TURN-empty agy empty; rc=$?
 [ "$rc" -eq 5 ] && pass "empty-output-on-exit-0 (sandbox-blocked) -> shim fails (exit 5)" || fail "empty output should exit 5, got $rc"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on a phantom/empty turn" || fail "empty turn must not commit"
 
-# --- (7) auth pre-flight fail -> exit 5 before the turn mutates anything --------------------------
+# --- (7) S9: unavailable AGY_MODEL -> exit 5 before the turn/commit -------------------------------
+seed_token RELAY-TURN-model-bad
+before="$(git -C "$A" rev-parse HEAD)"
+before_relay="$(cksum "$A/relay.md")"
+badmodellog="$WORK/agy-model-bad.$$.log"; : >"$badmodellog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-model-bad AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$badmodellog" STUB_MODE=good \
+  STUB_MODELS=$'Gemini 3.5 Flash\nGPT-OSS 120B' AGY_MODEL='Totally Bogus Model' \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 5 ] && pass "S9: unavailable AGY_MODEL -> shim fails loudly (exit 5)" || fail "unavailable AGY_MODEL should exit 5, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "S9: unavailable AGY_MODEL -> no commit" || fail "unavailable AGY_MODEL must not commit"
+[ "$(cksum "$A/relay.md")" = "$before_relay" ] && pass "S9: unavailable AGY_MODEL -> no relay edit" || fail "unavailable AGY_MODEL should fail before the turn writes"
+
+# --- (8) S9: listed AGY_MODEL -> turn proceeds and passes through --model -------------------------
+seed_token RELAY-TURN-model-good
+before="$(git -C "$A" rev-parse HEAD)"
+goodmodellog="$WORK/agy-model-good.$$.log"; : >"$goodmodellog"
+argslog="$WORK/agy-model-good.$$.args"; rm -f "$argslog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-model-good AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$goodmodellog" STUB_MODE=good \
+  STUB_MODELS=$'Gemini 3.5 Flash\nGPT-OSS 120B' STUB_ARGS_LOG="$argslog" AGY_MODEL='Gemini 3.5 Flash' \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "S9: listed AGY_MODEL -> shim proceeds" || fail "listed AGY_MODEL should succeed, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "S9: listed AGY_MODEL -> committed normal turn" || fail "listed AGY_MODEL should still commit"
+grep -Fxq -- "--model" "$argslog" && grep -Fxq "Gemini 3.5 Flash" "$argslog" \
+  && pass "S9: listed AGY_MODEL passed through to agy" || fail "listed AGY_MODEL should be forwarded to agy"
+
+# --- (9) auth pre-flight fail -> exit 5 before the turn mutates anything --------------------------
 seed_token RELAY-TURN-authfail
 before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-authfail agy authfail; rc=$?

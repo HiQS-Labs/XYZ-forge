@@ -86,6 +86,32 @@ agy_auth_preflight() {
   rm -f "$out"
   return 1
 }
+agy_validate_model() {
+  local model="${AGY_MODEL:-}" secs="${AGY_AUTH_TIMEOUT_S:-5}" out rc=0 line
+  [[ -n "$model" ]] || return 0
+  out="${TMPDIR:-/tmp}/agy-models-$$.log"
+  rtl_run_bounded "$secs" "$AGY_BIN" models < /dev/null > "$out" 2>&1 || rc=$?
+  if [[ "$rc" -ne 0 ]]; then
+    if [[ "$rc" -eq 7 ]]; then
+      printf 'agy-turn: agy models probe timed out after %ss while validating AGY_MODEL=%q. Refusing to fall back silently.\n' "$secs" "$model" >&2
+    else
+      printf 'agy-turn: agy models probe failed (exit %s) while validating AGY_MODEL=%q. Refusing to fall back silently.\n' "$rc" "$model" >&2
+    fi
+    while IFS= read -r line; do
+      [[ -n "$line" ]] || continue
+      printf 'agy-turn: models probe: %s\n' "$line" >&2
+    done < <(sed -n '1,3p' "$out")
+    rm -f "$out"
+    return 1
+  fi
+  while IFS= read -r line; do
+    line="${line%$'\r'}"
+    [[ "$line" == "$model" ]] && { rm -f "$out"; return 0; }
+  done < "$out"
+  printf 'agy-turn: requested AGY_MODEL=%q is unavailable on this agy account. Run `agy models` to choose a listed model; refusing to fall back silently.\n' "$model" >&2
+  rm -f "$out"
+  return 1
+}
 
 me="${RELAY_AGENT:-}"; f="${RELAY_FILE:-}"; t="${RELAY_TASK:-RELAY-TURN}"
 agy_agent="${AGY_AGENT:-}"
@@ -100,6 +126,7 @@ if [[ "$me" != "$agy_agent" ]]; then
 fi
 
 agy_auth_preflight || exit 5
+agy_validate_model || exit 5
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 
 # Cross-repo footgun guard (consumer feedback KWFS-02 B2): agy reads file paths relative to its

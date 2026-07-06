@@ -42,6 +42,65 @@ def agy_auth_preflight(agy_bin):
         pass
     return False
 
+def agy_validate_model(agy_bin):
+    model = os.environ.get("AGY_MODEL", "")
+    if not model:
+        return True
+
+    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", 5))
+    out_file = os.path.join(tempfile.gettempdir(), f"agy-models-{os.getpid()}.log")
+    try:
+        with open(out_file, "w") as out_f:
+            subprocess.run([agy_bin, "models"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
+    except subprocess.TimeoutExpired:
+        print(f"agy-turn: agy models probe timed out after {secs}s while validating AGY_MODEL={model!r}. Refusing to fall back silently.", file=sys.stderr)
+        try:
+            if os.path.exists(out_file):
+                with open(out_file) as f:
+                    for line in f.readlines()[:3]:
+                        line = line.strip()
+                        if line:
+                            print(f"agy-turn: models probe: {line}", file=sys.stderr)
+        except Exception:
+            pass
+        if os.path.exists(out_file):
+            os.remove(out_file)
+        return False
+    except subprocess.CalledProcessError as e:
+        print(f"agy-turn: agy models probe failed (exit {e.returncode}) while validating AGY_MODEL={model!r}. Refusing to fall back silently.", file=sys.stderr)
+        try:
+            if os.path.exists(out_file):
+                with open(out_file) as f:
+                    for line in f.readlines()[:3]:
+                        line = line.strip()
+                        if line:
+                            print(f"agy-turn: models probe: {line}", file=sys.stderr)
+        except Exception:
+            pass
+        if os.path.exists(out_file):
+            os.remove(out_file)
+        return False
+    except Exception:
+        print(f"agy-turn: agy models probe failed while validating AGY_MODEL={model!r}. Refusing to fall back silently.", file=sys.stderr)
+        if os.path.exists(out_file):
+            os.remove(out_file)
+        return False
+
+    try:
+        with open(out_file) as f:
+            available = [line.rstrip("\r\n") for line in f if line.rstrip("\r\n")]
+    except Exception:
+        available = []
+    finally:
+        if os.path.exists(out_file):
+            os.remove(out_file)
+
+    if model in available:
+        return True
+
+    print(f"agy-turn: requested AGY_MODEL={model!r} is unavailable on this agy account. Run `agy models` to choose a listed model; refusing to fall back silently.", file=sys.stderr)
+    return False
+
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = os.environ.get("AGY_TURN_ROOT", xyz_root)
@@ -61,6 +120,8 @@ def main():
         sys.exit(0)
 
     if not agy_auth_preflight(agy_bin):
+        sys.exit(5)
+    if not agy_validate_model(agy_bin):
         sys.exit(5)
         
     allow_paths = os.environ.get("ALLOW_PATHS", "")

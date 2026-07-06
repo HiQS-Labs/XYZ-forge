@@ -22,6 +22,9 @@
 set -u
 set -o pipefail
 
+# Clean up ambient environment variables that can leak and break tests
+unset RELAY_WORKTREE_ISOLATION
+
 TEST_NAME="${1:-unnamed}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TICK="$(cd "$HERE/.." && pwd)/bin/tick"
