@@ -2,7 +2,7 @@
 gh_issue: 110
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110
 title: "Fable 5 Max audit: shellcheck + vendor integrity + strict-mode hardening"
-status: Active (2-WORKING) — P1 shipped; P2a (stale tarball) scoped + contracted as next fireable lane 2026-07-06; P2b/P3 open
+status: Active (2-WORKING) — P1 + P2a shipped (2026-07-06, `073857a`: tarball rebuilt + freshness guard); P2b (vendored-copy test skips) + P3 (code quality) open
 created: 2026-07-03
 updated: 2026-07-03
 owner: noel
