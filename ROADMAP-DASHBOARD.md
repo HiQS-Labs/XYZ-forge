@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 31 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0
+Summary: 32 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-141 · Containment: rtl_enforce's pre-turn dirty snapshot can't see a concurrent peer session's edit that lands mid-turn, reverting it as off-lane | — | [GH-141-CONCURRENT-PEER-EDIT-RACE.md](PROJECT/1-INBOX/GH-141-CONCURRENT-PEER-EDIT-RACE.md) · [#141](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/141) |
 | GH-129 · deep-research: add Perplexity grounded search (Sonar) via OpenRouter as the second backend | ✅ | [GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md](PROJECT/3-COMPLETED/GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md) · [#129](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/129) |
 | GH-126 · swarm-preflight: GH-55 covering-test inference uses naive substring match — false-positive risk in ALLOW_PATHS | — | [#126](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/126) |
 | GH-127 · swarm-preflight: GH-54 fs-touching test detector misses bare &gt; redirects | — | [#127](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/127) |
@@ -54,7 +55,7 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 7 · �
 | Marathon Plan B Waves 1–3 | ✅ | [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) |
 | GH-92 · poll.sh: relay-pointer parser rejects whole-line bold (` | ✅ | [GH-92-POLL-BOLD-POINTER-DEADLOCK.md](PROJECT/3-COMPLETED/GH-92-POLL-BOLD-POINTER-DEADLOCK.md) · [#92](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/92) |
 | GH-93 · tick analyze: concurrency % spans the whole event log, not the run → reports 0% for a ~51% run | ✅ | [GH-93-ANALYZE-CONCURRENCY-SPAN.md](PROJECT/3-COMPLETED/GH-93-ANALYZE-CONCURRENCY-SPAN.md) · [#93](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/93) |
-| GH-96 · XYZ⇄Rebalance integration (XYZ side): xyz-sync check + emit contract | ✅ | [GH-96-XYZ-REBALANCE-SYNC-CHECK.md](PROJECT/3-COMPLETED/GH-96-XYZ-REBALANCE-SYNC-CHECK.md) · [GH-96-XYZ-JSON-EMIT-CONTRACT-HEARTBEAT.md](PROJECT/3-COMPLETED/GH-96-XYZ-JSON-EMIT-CONTRACT-HEARTBEAT.md) · [#96](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96) · [#140](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/140) |
+| GH-96 · XYZ⇄Rebalance integration (XYZ side): xyz-sync check + emit contract | ✅ | [GH-96-XYZ-REBALANCE-SYNC-CHECK.md](PROJECT/3-COMPLETED/GH-96-XYZ-REBALANCE-SYNC-CHECK.md) · [GH-96-XYZ-JSON-EMIT-CONTRACT-HEARTBEAT.md](PROJECT/3-COMPLETED/GH-96-XYZ-JSON-EMIT-CONTRACT-HEARTBEAT.md) · [GH-140-CONTAINMENT-ATOMIC-COPYBACK.md](PROJECT/3-COMPLETED/GH-140-CONTAINMENT-ATOMIC-COPYBACK.md) · [#96](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96) · [#140](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/140) · [#141](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/141) |
 | GH-89 · swarm-preflight: no ready path for greenfield (new-file) lanes | ✅ | [GH-89-SWARM-PREFLIGHT-GREENFIELD.md](PROJECT/3-COMPLETED/GH-89-SWARM-PREFLIGHT-GREENFIELD.md) · [#89](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/89) |
 | GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | ✅ | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/3-COMPLETED/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
