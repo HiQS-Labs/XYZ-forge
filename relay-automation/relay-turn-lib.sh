@@ -428,7 +428,29 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
       [[ -n "$seedsig" && "$nowsig" == "$seedsig" ]] && continue
       if [[ -e "$wt/$a" ]]; then
         mkdir -p "$RTL_ROOT/$(dirname "$a")"
-        cp -R "$wt/$a" "$RTL_ROOT/$a"
+        # GH-140: copy into a temp path beside the destination, then atomically rename it into place —
+        # NOT a direct in-place `cp -R` onto $RTL_ROOT/$a. A plain cp truncates+rewrites an existing
+        # destination at the SAME inode; if $a is a script actively being interpreted right now (this
+        # very marathon-drive.sh, or its relay-drive.sh subprocess — both are legitimate copyback
+        # targets for a Seam #1-style lane), the live reader can observe a half-old/half-new file mid
+        # execution. A 2026-07-05 run hit exactly this: the outer process crashed with a garbled parse
+        # immediately after copyback, then corrupted further into wiping the working tree. `mv` on the
+        # same filesystem is an atomic rename (same pattern as append-xyz-completion.sh's os.replace) —
+        # an fd already open on the old $RTL_ROOT/$a keeps reading the old inode until it closes, and it
+        # never observes a nonexistent or half-written path in between.
+        local _tmp="$RTL_ROOT/$(dirname "$a")/.rtl-copyback.$$.$(basename "$a")"
+        rm -rf "$_tmp"
+        cp -R "$wt/$a" "$_tmp"
+        if [[ -d "$_tmp" && ! -L "$_tmp" ]]; then
+          # rename(2) cannot atomically replace a non-empty directory — remove the old one first.
+          # No live process reads a directory as an executing script, so this narrow window is safe.
+          rm -rf "$RTL_ROOT/$a"
+          mv "$_tmp" "$RTL_ROOT/$a"
+        else
+          # Regular file (or symlink): rename(2) atomically clobbers an existing destination directly —
+          # no separate rm, no window where the path is missing.
+          mv -f "$_tmp" "$RTL_ROOT/$a"
+        fi
       elif [[ -e "$RTL_ROOT/$a" ]]; then
         rm -rf "$RTL_ROOT/$a"            # allowlisted path deleted in the worktree → propagate the deletion
       fi
