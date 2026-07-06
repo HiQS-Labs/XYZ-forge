@@ -2,7 +2,7 @@
 gh_issue: 110
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110
 title: "Fable 5 Max audit: shellcheck + vendor integrity + strict-mode hardening"
-status: parked
+status: Active (2-WORKING) — P1 shipped; P2a (stale tarball) scoped + contracted as next fireable lane 2026-07-06; P2b/P3 open
 created: 2026-07-03
 updated: 2026-07-03
 owner: noel
@@ -177,3 +177,16 @@ Some exemptions are deliberate (hooks shouldn't hard-fail) but none are document
   a current bug, but a future-consumer hazard. No action taken — logged here.
 - **`skills/xyz/SKILL.md` at 84KB:** large context load for a skill. Fable suggests progressive
   disclosure / split into reference files. Deferred; no issue opened yet.
+
+## Swarm Preflight Contract
+
+> Scoped to **Phase 2a** (the confirmed-stale `relay-pkg.tar.gz`) as the next fireable slice.
+> Re-verified stale 2026-07-06: packaged `relay-turn-lib.sh` 50204 B vs live 51853 B; packaged
+> `relay-drive.sh` 25600 B vs live 26099 B. Approach fixed to **Option B** (keep the committed
+> binary + add a freshness gate — Fable's recommendation, lowest blast radius). `make-pkg.sh`
+> already regenerates the tarball; this lane rebuilds it and adds the drift guard so it can't
+> silently rot again. Phase 2b (vendored-copy test skips) and Phase 3 (code quality) stay open.
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"path_absent","path":"test/relay-pkg-freshness.sh"}],"artifacts":["skills/relay-automation/relay-pkg.tar.gz","test/relay-pkg-freshness.sh","validate.sh"],"artifacts_new":["test/relay-pkg-freshness.sh"],"remediation":{"source":"self#phase-2a","criteria":"relay-pkg.tar.gz rebuilt from live sources via skills/relay-automation/make-pkg.sh so every packaged member byte-matches its live source (esp. relay-turn-lib.sh + relay-drive.sh); new hermetic test/relay-pkg-freshness.sh extracts the committed tarball and cmps each packaged file against its live counterpart, failing on any drift, wired into validate.sh; validate.sh green (greenfield-test lane: gate is validate.sh since the new test does not exist at HEAD)."},"lanes":{"orchestrator_only":[]}}
+```
