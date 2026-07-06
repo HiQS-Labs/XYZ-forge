@@ -83,7 +83,8 @@ drift_events="$(ls -1 "$D2/.tick/events/"*dependency.drift*.jsonl 2>/dev/null | 
 ok "rtl_enforce emitted a drift event for the changed surface" "[[ '$drift_events' -ge 1 ]]"
 ok "emitted drift names src/project.js" "grep -lq '\"surface\":\"src/project.js\"' $D2/.tick/events/*dependency.drift*.jsonl 2>/dev/null"
 # warn-only: the turn still committed (drift never fails the turn)
-ok "turn still committed (warn-only, non-blocking)" "git -C '$D2' log --oneline | grep -q 'RELAY-T'"
+turn_log="$(git -C "$D2" log --oneline 2>/dev/null || true)"
+ok "turn still committed (warn-only, non-blocking)" "[[ \"\$turn_log\" == *RELAY-T* ]]"
 rm -rf "$D2"
 
 echo "  relay-dep-drift: $pass pass, $fail fail"
