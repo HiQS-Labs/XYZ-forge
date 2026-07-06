@@ -7,7 +7,7 @@ effort: 3
 ratings_provisional: true
 title: Antigravity (agy) reliability testing — characterize & harden the cross-model lane
 slug: agy-reliability-testing
-status: Active (2-WORKING) — Phase 1 characterization done 2026-07-06 (found a REAL bug S9/F8: unavailable `--model` silently degrades to default, exit 0); Phase 2 hardening + Phase 3 graduate-decision OPEN. Issue #142 stays open.
+status: Complete — ready to close #142. Phase 1 characterized S1–S10; Phase 2 fixed + regression-locked the one confirmed failure (S9/F8, `dcc1505`, both shims + `test/agy-turn.sh` cases 7-8, wired into validate.sh); Phase 3 recommendation = KEEP-GATED (S2/S5/S8 gaps + intermittent S10 → follow-up #155).
 created: 2026-06-21
 updated: 2026-07-06
 owner: Noel (operator) · Claude (author)
@@ -34,7 +34,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 1 characterization run 2026-07-06** (live agy 1.0.16, un-sandboxed) — see "Phase 1 characterization results" below. Containment scenarios S1/S3/S4/S6/S7 confirmed **contained** via shipped stub tests; **S9/F8 confirmed a real failure** (unavailable `--model` silently degrades to default, exit 0); **S10** mostly-OK but showed **intermittent** off-prompt exit-0 output (not re-triggerable on demand). S2/S5/S8 remain characterized **gaps** (not live-probed). | **Phase 2 (harden):** fix S9 first (validate/record the acting model, fail loudly on unavailable) with a regression test; add agy cases for S2 (role adherence) + S8 (cost-blind, not `0`); attempt a controlled S10 off-prompt repro before asserting it. Then Phase 3 graduate/keep-gated recommendation. |
+| **Phase 2 + 3 complete 2026-07-06.** Phase 2 fixed the one confirmed failure — S9/F8 (unavailable `AGY_MODEL` silently degrading to default) now **fails loudly (exit 5)** in *both* shims (`agy_validate_model` pre-validates against `agy models`), regression-locked by `test/agy-turn.sh` cases 7-8 (unavailable → exit 5/no commit/no relay edit; listed → proceeds + forwards `--model`), shipped in `dcc1505` and wired into `validate.sh:39`. Phase 3 recommendation recorded below: **KEEP-GATED**. | **Close #142.** The remaining matrix gaps (S2 role-adherence, S5 distraction, S8 cost-blind, + a controlled S10 off-prompt repro) were deferred by the Phase-2 contract as "separate later slices" → tracked in follow-up **#155**. |
 
 > **Active (2-WORKING).** Phase 1 characterization has run; the failure catalog below is filled with
 > per-scenario outcomes + one-command repros. Phases 2–3 (harden + recommendation) remain.
@@ -114,9 +114,20 @@ Every scenario has a recorded outcome + a one-command repro; none left "unknown"
 
 ## Phases (graduation-ready outline)
 
-- **Phase 1 — Characterize.** Run S1–S10; produce the filled failure catalog (expected vs actual per scenario) + a repro for each. *QA gate:* every scenario has a recorded outcome + a one-command repro; no scenario left "unknown."
-- **Phase 2 — Harden.** Close each real gap the matrix surfaces; one fix = one regression test. *QA gate:* each fix has a test; `validate.sh` green; the relevant `test/agy-turn.sh` cases extended.
-- **Phase 3 — Regression-lock + recommendation.** Wire the new cases into the suite; record a **graduate** (agy is a trustworthy unattended lane) / **keep-gated** (agy stays attended-only or behind isolation) recommendation in CHANGELOG per the PDDA contract. *QA gate:* suite green; recommendation + the bet behind it recorded.
+- **Phase 1 — Characterize.** ✅ DONE 2026-07-06. Ran S1–S10; filled failure catalog + repro per scenario; no scenario left "unknown."
+- **Phase 2 — Harden.** ✅ DONE 2026-07-06 (`dcc1505`). Closed the one **confirmed** gap (S9): both shims pre-validate `AGY_MODEL` against `agy models` and fail loudly (exit 5) instead of silently falling back; regression-locked by `test/agy-turn.sh` cases 7-8. `validate.sh` green. S2/S5/S8/S10 deferred as separate slices (contract) → **#155**.
+- **Phase 3 — Regression-lock + recommendation.** ✅ DONE 2026-07-06. The S9 cases are wired into the suite (`validate.sh:39` runs `agy-turn.sh`, 33/0). Recommendation recorded below + in CHANGELOG.
+
+### Phase 3 recommendation (2026-07-06): **KEEP-GATED**
+
+**Call:** agy stays a **gated** cross-model lane, not a graduated fully-unattended producer lane.
+
+**The bet behind it:**
+- **Reviewer turns are trustworthy now** — the 2026-06-21 live dogfood reviewer run was clean and fully contained (reviewer-scoping + worktree isolation held; no F1/F2/F4), and containment scenarios S1/S3/S4/S6/S7 are proven by shipped tests. agy's risk concentrates on *producer/builder* turns.
+- **Producer turns should run behind `RELAY_WORKTREE_ISOLATION=1`** until S2/S5/S8 close — role-adherence (S2), distraction (S5), and cost-blindness (S8) are still honor-system/uncaught, and S10 showed intermittent exit-0 *off-prompt* output the empty-output guard cannot catch. Worktree isolation contains the blast radius even when those fire.
+- **Graduation gate:** flip to "graduate" only after **#155** closes S2/S5/S8 and either reproduces+guards S10 or rules it a non-issue.
+
+This is a valid outcome, not a failure (see Kill switch): the one *confirmed* unsafe behavior (S9 silent degrade) is fixed and locked; the rest is contained-by-isolation pending #155.
 
 ## Kill switch / open questions
 
