@@ -89,6 +89,15 @@ Copy the block below into `install.sh` and run `bash install.sh [DIR]`
 `tick` at the repo you're coordinating via `TICK_REPO_ROOT` (or run it from
 inside that repo — it uses `git rev-parse --show-toplevel`).
 
+> **Agents materializing this block programmatically:** write the raw fenced
+> content to a file, then run `bash install.sh` — the heredoc delimiters are
+> single-quoted, so a byte-exact file write reproduces every `!`/`!==` intact.
+> Do **not** route the block through a `bash -c "…"` wrapper or any
+> history-expansion / double-quote escaping layer: that turns `!` into `\!`
+> *before* it reaches the (quoted) heredoc, which then writes the backslash
+> literally and corrupts the extracted JS (GH-94). The human copy-paste path is
+> unaffected.
+
 > This block embeds the **runtime** (CLI + engine). The **test suite**
 > (`validate.sh` + `test/`) is in the companion block §4b "Install — test suite";
 > run `bash validate.sh` after extracting both → **12/12** confirms the extract
@@ -1339,6 +1348,11 @@ Run this **after** the runtime block, with the **same** `DIR`, then
 `cd "$DIR" && bash validate.sh` → expect **12/12**. That proves your extract of
 the runtime is byte-exact (the tests exercise claim/lock/cap/scope/handoff/
 break/analyze/reap/heartbeat/take against the extracted engine).
+
+> Same materialization caveat as §4 (GH-94): agents must write the raw block to
+> a file, never through a `!`-escaping `bash -c`/history-expansion layer. If
+> `validate.sh` reports failures, first `grep -rn '\!' "$DIR"` — a stray `\!`
+> means the block was mangled in transit, not that the extract is wrong.
 
 ```bash
 #!/usr/bin/env bash
