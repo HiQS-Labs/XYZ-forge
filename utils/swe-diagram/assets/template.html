@@ -8,11 +8,13 @@
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2330; --muted: #6b7280;
     --line: #9aa4b2; --edge-label-bg: #f6f7f9; --border: #d8dee6;
+    --group-bg: rgba(15, 23, 42, .035);
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #12151b; --panel: #1c212b; --ink: #e6e9ef; --muted: #9aa4b2;
       --line: #5c6675; --edge-label-bg: #12151b; --border: #333c4a;
+      --group-bg: rgba(255, 255, 255, .035);
     }
   }
   * { box-sizing: border-box; }
@@ -26,25 +28,33 @@
   .swe-viewport { position: absolute; transform-origin: 0 0; }
   .swe-edges { position: absolute; overflow: visible; width: 1px; height: 1px; }
   .swe-nodes { position: absolute; }
+  .swe-groups { position: absolute; }
+  .swe-group-box { position: absolute; background: var(--group-bg);
+                    border: 1px dashed var(--border); border-radius: 12px;
+                    pointer-events: none; }
+  .swe-group-label { position: absolute; top: 6px; left: 12px; font-size: 10px;
+                      font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+                      color: var(--muted); pointer-events: none; }
 
   .swe-node { position: absolute; background: var(--panel);
               border: 1px solid var(--border); border-radius: 8px;
               border-top: 3px solid var(--node-color, #6b7280);
               box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: move;
-              user-select: none; }
+              user-select: none; transition: opacity .15s; }
   .swe-node-head { font-size: 9px; letter-spacing: .08em; font-weight: 700;
                    color: var(--node-color, #6b7280); padding: 6px 10px 0; }
   .swe-node-body { padding: 2px 10px 8px; }
   .swe-node-label { font-weight: 600; }
   .swe-node-tech { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .swe-node-group { position: absolute; top: -18px; left: 0; font-size: 10px;
-                    color: var(--muted); }
+  .swe-node.swe-dimmed { opacity: .22; }
 
-  .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6; }
+  .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6;
+              transition: opacity .15s; }
   .swe-arrow { fill: var(--line); }
   .swe-edge-label { font-size: 11px; fill: var(--muted); text-anchor: middle;
                     paint-order: stroke; stroke: var(--edge-label-bg);
                     stroke-width: 4px; }
+  .swe-edge.swe-dimmed, .swe-edge-label.swe-dimmed { opacity: .12; }
 
   .swe-title { position: absolute; top: 14px; left: 18px; font-size: 16px;
                font-weight: 700; pointer-events: none; }
@@ -59,9 +69,24 @@
                 border-radius: 8px; padding: 8px 12px; display: flex;
                 flex-wrap: wrap; gap: 10px; font-size: 11px;
                 color: var(--muted); max-width: 40vw; }
-  .swe-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .swe-legend-item { display: inline-flex; align-items: center; gap: 5px;
+                     cursor: pointer; user-select: none; }
+  .swe-legend-item.swe-dimmed { opacity: .35; }
   .swe-legend-dot { width: 9px; height: 9px; border-radius: 50%;
                     display: inline-block; }
+
+  .swe-search { position: absolute; top: 14px; right: 16px;
+                display: flex; align-items: center; gap: 6px; }
+  .swe-search-input { width: 180px; padding: 6px 10px; font-size: 12px;
+                       border: 1px solid var(--border); border-radius: 6px;
+                       background: var(--panel); color: var(--ink); }
+  .swe-search-input::placeholder { color: var(--muted); }
+  .swe-search-clear { border: 1px solid var(--border); border-radius: 6px;
+                       background: var(--panel); color: var(--muted);
+                       width: 24px; height: 24px; cursor: pointer; font-size: 13px;
+                       line-height: 1; display: none; }
+  .swe-search-clear:hover { border-color: var(--line); color: var(--ink); }
+  .swe-search.swe-search-active .swe-search-clear { display: block; }
 </style>
 </head>
 <body>

@@ -78,9 +78,25 @@ Schema (`ARCHITECTURE/system-diagram.json`):
   `queue`, `external`, `job`, `storage` — anything else falls back to gray.
 - `kind` (drives edge style): `sync` (solid), `async` (dashed), `data`
   (dotted). Default `sync`.
-- Layout is automatic (layered left→right from edge direction); do not put
-  coordinates in the JSON. Point `source → target` in the direction of the
-  call/flow — layout quality depends on it.
+- Layout is automatic; do not put coordinates in the JSON. Two layouts:
+  - **`"layout": "layered"` (default, omit the field for this)** — left→right
+    from edge direction. Point `source → target` in the direction of the
+    call/flow — layout quality depends on it. Use for synchronous
+    request/response pipelines and strict call chains (`UI → API → DB`).
+  - **`"layout": "hub-ring"`** — radial: one hub node at the center, every
+    other node placed on a ring around it (overflow beyond ~8 nodes spills to
+    a wider concentric ring). Use for event-driven architectures where a
+    central broker or gateway (Kafka, RabbitMQ, an API Gateway) talks to
+    otherwise-independent services, not a linear pipeline. Optionally set
+    `"hub": "<node id>"` to force which node is the center; omit it and the
+    renderer picks the highest-degree (most-connected) node.
+  - `groups` swimlanes are a **`layered`-layout-only** feature (the boxes are
+    computed from column position, which `hub-ring`'s radial coordinates
+    don't have) — they render as background bounding boxes containing their
+    child nodes, labeled top-left with the group's `label`, and are silently
+    skipped under `hub-ring`. A node opts into a group via its own `group`
+    field, matched against a `groups[].id`; groups with no member nodes are
+    skipped.
 
 ## Step 3 — Build the HTML
 
@@ -98,8 +114,11 @@ do the substitution yourself: copy the template and replace `__TITLE__`,
 
 The output is a single file: open it in any browser. It supports pan (drag
 background), zoom (wheel or +/− buttons), fit-to-view (▣), draggable nodes,
-hover tooltips from `description`, edge labels, a type legend, and follows the
-OS light/dark theme.
+hover tooltips from `description`, edge labels, group swimlanes, a type
+legend, and follows the OS light/dark theme. A top-right search box filters
+by label/id/type/tech/description (case-insensitive substring); clicking a
+legend type toggles it. Non-matching nodes and edges are **dimmed, not
+hidden** — no re-layout, nothing disappears, easy to reset.
 
 ## Step 4 — Verify and report
 

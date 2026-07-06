@@ -1,3 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XYZ — Multi-Agent Coordination System (hub &amp; ring layout)</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2330; --muted: #6b7280;
+    --line: #9aa4b2; --edge-label-bg: #f6f7f9; --border: #d8dee6;
+    --group-bg: rgba(15, 23, 42, .035);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1c212b; --ink: #e6e9ef; --muted: #9aa4b2;
+      --line: #5c6675; --edge-label-bg: #12151b; --border: #333c4a;
+      --group-bg: rgba(255, 255, 255, .035);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink);
+         font: 14px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  .swe-canvas { position: relative; width: 100vw; height: 100vh;
+                overflow: hidden; cursor: grab; }
+  .swe-canvas.swe-grabbing { cursor: grabbing; }
+  .swe-viewport { position: absolute; transform-origin: 0 0; }
+  .swe-edges { position: absolute; overflow: visible; width: 1px; height: 1px; }
+  .swe-nodes { position: absolute; }
+  .swe-groups { position: absolute; }
+  .swe-group-box { position: absolute; background: var(--group-bg);
+                    border: 1px dashed var(--border); border-radius: 12px;
+                    pointer-events: none; }
+  .swe-group-label { position: absolute; top: 6px; left: 12px; font-size: 10px;
+                      font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+                      color: var(--muted); pointer-events: none; }
+
+  .swe-node { position: absolute; background: var(--panel);
+              border: 1px solid var(--border); border-radius: 8px;
+              border-top: 3px solid var(--node-color, #6b7280);
+              box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: move;
+              user-select: none; transition: opacity .15s; }
+  .swe-node-head { font-size: 9px; letter-spacing: .08em; font-weight: 700;
+                   color: var(--node-color, #6b7280); padding: 6px 10px 0; }
+  .swe-node-body { padding: 2px 10px 8px; }
+  .swe-node-label { font-weight: 600; }
+  .swe-node-tech { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .swe-node.swe-dimmed { opacity: .22; }
+
+  .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6;
+              transition: opacity .15s; }
+  .swe-arrow { fill: var(--line); }
+  .swe-edge-label { font-size: 11px; fill: var(--muted); text-anchor: middle;
+                    paint-order: stroke; stroke: var(--edge-label-bg);
+                    stroke-width: 4px; }
+  .swe-edge.swe-dimmed, .swe-edge-label.swe-dimmed { opacity: .12; }
+
+  .swe-title { position: absolute; top: 14px; left: 18px; font-size: 16px;
+               font-weight: 700; pointer-events: none; }
+  .swe-controls { position: absolute; bottom: 16px; left: 16px;
+                  display: flex; flex-direction: column; gap: 4px; }
+  .swe-btn { width: 30px; height: 30px; border: 1px solid var(--border);
+             border-radius: 6px; background: var(--panel); color: var(--ink);
+             font-size: 15px; cursor: pointer; }
+  .swe-btn:hover { border-color: var(--line); }
+  .swe-legend { position: absolute; bottom: 16px; right: 16px;
+                background: var(--panel); border: 1px solid var(--border);
+                border-radius: 8px; padding: 8px 12px; display: flex;
+                flex-wrap: wrap; gap: 10px; font-size: 11px;
+                color: var(--muted); max-width: 40vw; }
+  .swe-legend-item { display: inline-flex; align-items: center; gap: 5px;
+                     cursor: pointer; user-select: none; }
+  .swe-legend-item.swe-dimmed { opacity: .35; }
+  .swe-legend-dot { width: 9px; height: 9px; border-radius: 50%;
+                    display: inline-block; }
+
+  .swe-search { position: absolute; top: 14px; right: 16px;
+                display: flex; align-items: center; gap: 6px; }
+  .swe-search-input { width: 180px; padding: 6px 10px; font-size: 12px;
+                       border: 1px solid var(--border); border-radius: 6px;
+                       background: var(--panel); color: var(--ink); }
+  .swe-search-input::placeholder { color: var(--muted); }
+  .swe-search-clear { border: 1px solid var(--border); border-radius: 6px;
+                       background: var(--panel); color: var(--muted);
+                       width: 24px; height: 24px; cursor: pointer; font-size: 13px;
+                       line-height: 1; display: none; }
+  .swe-search-clear:hover { border-color: var(--line); color: var(--ink); }
+  .swe-search.swe-search-active .swe-search-clear { display: block; }
+</style>
+</head>
+<body>
+<div id="diagram"></div>
+<script>
 /*
  * swe-diagram renderer — vanilla xyflow-style system diagram.
  * No dependencies. Reads a diagram spec object and renders:
@@ -533,3 +627,404 @@
     fitView();
   };
 })();
+
+</script>
+<script>
+renderDiagram({
+  "title": "XYZ \u2014 Multi-Agent Coordination System (hub & ring layout)",
+  "generated": "2026-07-04",
+  "sources": [
+    "ARCHITECTURE.md (relay stack map, verified against relay-drive.sh / relay-turn-lib.sh / *-turn.sh / poll.sh / bin/tick)",
+    "ROUTER.md (canonical entry points, subsystem routing hints)",
+    "README.md (two-layer model: tick kernel + relay-automation product)",
+    "repo directory structure: bin/, src/, relay-automation/, utils/pdda, utils/telemetry"
+  ],
+  "groups": [
+    {
+      "id": "kernel",
+      "label": "tick kernel (coordination primitive)"
+    },
+    {
+      "id": "orchestration",
+      "label": "relay-automation (orchestration)"
+    },
+    {
+      "id": "shims",
+      "label": "Per-agent turn shims"
+    },
+    {
+      "id": "agents",
+      "label": "Agent CLIs (external subprocesses)"
+    },
+    {
+      "id": "external",
+      "label": "External services"
+    },
+    {
+      "id": "state",
+      "label": "Shared on-disk state"
+    },
+    {
+      "id": "governance",
+      "label": "Governance (dev-time gates)"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "tick",
+      "label": "tick CLI",
+      "type": "api",
+      "group": "kernel",
+      "tech": "Node \u00b7 bin/tick + src/*.js",
+      "description": "The kernel: a local event-log CLI that hands out collision-free, path-scoped work claims (claim/scope/ping/release/done/cost). Answers 'whose turn is it?' via the RELAY-TURN task. No server, no API keys."
+    },
+    {
+      "id": "eventlog",
+      "label": ".tick/events log",
+      "type": "database",
+      "group": "kernel",
+      "tech": "append-only JSON events + O_EXCL lock",
+      "description": "Shared append-only event log serialized by an O_EXCL lock (src/lock.js). tick appends events and projects current task state (status/claimer/handoff-to) from them."
+    },
+    {
+      "id": "relay-drive",
+      "label": "relay-drive.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "supervisor loop",
+      "description": "Supervisor: reads tick + thread STATUS, derives the active actor, exports RELAY_AGENT/RELAY_FILE/RELAY_TASK, and invokes exactly one turn shim per round. Enforces round cap, no-progress (exit 3), and close-mismatch (exit 4)."
+    },
+    {
+      "id": "relay-lib",
+      "label": "relay-turn-lib.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "containment core (model-agnostic)",
+      "description": "Shared safety core: path allowlist, worktree isolation at ROOT@HEAD, timeout watchdog (rtl_run_bounded), commit-bypass guard (hard reset + exit 6), and one file-scoped commit \u2014 never pushes."
+    },
+    {
+      "id": "poll",
+      "label": "poll.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "decision engine (Path B)",
+      "description": "Hands-free decision engine for two live Claude windows: decides run-runner / watchdog / idle / stop / nudge-cross-model. tick decides whose turn is runnable; thread STATUS decides terminal."
+    },
+    {
+      "id": "marathon",
+      "label": "marathon.sh",
+      "type": "job",
+      "group": "orchestration",
+      "tech": "MARATHON.yaml phase chain",
+      "description": "Chains several relay build->review phases in depends_on order from a MARATHON.yaml. The multi-agent coordinator built on the relay loop (marathon-drive.sh)."
+    },
+    {
+      "id": "deep-research",
+      "label": "deep-research.mjs",
+      "type": "job",
+      "group": "orchestration",
+      "tech": "zero-dep Node adapter (GH-87)",
+      "description": "Provider-agnostic grounded-search adapter. Spawns agy in print mode in a throwaway tmpdir, normalizes to {answer, citations, query, provider, model, raw}. Fail-closed typed errors, no silent fallback."
+    },
+    {
+      "id": "claude-turn",
+      "label": "claude-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "description": "Claude Code turn shim: pins the model, sets --allowedTools, shadows blocked commands on PATH, and captures token counts into tick cost. No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "codex-turn",
+      "label": "codex-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "description": "Codex turn shim: strips OPENAI_API_KEY unless allowed, runs 'codex exec -s workspace-write'. No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "agy-turn",
+      "label": "agy-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "description": "agy (Antigravity) turn shim: runs 'agy -p --dangerously-skip-permissions --print-timeout', treats exit-0-with-empty-log as a hard failure (exit 5). No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "aider-turn",
+      "label": "aider-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim (GH-77)",
+      "description": "Aider \u003c-> OpenRouter build lane. Owns tick token ops (Aider can't run shell mid-turn), asserts token ownership, runs Aider --no-auto-commits so the harness commits."
+    },
+    {
+      "id": "claude-cli",
+      "label": "Claude Code CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "claude -p",
+      "description": "Claude Code headless subprocess run inside the isolated worktree; edits the relay thread and moves the tick token."
+    },
+    {
+      "id": "codex-cli",
+      "label": "Codex CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "codex exec",
+      "description": "Codex headless subprocess; builds/reviews within the allowlist, moves the tick token via ./bin/tick."
+    },
+    {
+      "id": "agy-cli",
+      "label": "agy CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "Antigravity / Gemini",
+      "description": "Google Antigravity CLI. Serves both relay turns (build/review) and deep-research grounded search via its built-in Google search tool."
+    },
+    {
+      "id": "aider-cli",
+      "label": "Aider CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "OpenAI-standard client",
+      "description": "Aider headless build runner using an OpenAI-compatible client; talks to models through OpenRouter."
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter",
+      "type": "external",
+      "group": "external",
+      "tech": "model gateway",
+      "description": "OpenAI-compatible model gateway for the Aider lane (e.g. GLM 5.2, Nemotron). Key read from a local secrets file, never hardcoded."
+    },
+    {
+      "id": "google-search",
+      "label": "Google grounded search",
+      "type": "external",
+      "group": "external",
+      "tech": "Gemini grounding",
+      "description": "Google's grounded web search, reached through the agy CLI's built-in search tool; returns cited answers to deep-research."
+    },
+    {
+      "id": "relay-thread",
+      "label": "relay thread file",
+      "type": "storage",
+      "group": "state",
+      "tech": "relay-system/\u003cdate>/\u003cslug>.md",
+      "description": "Human-readable review state: STATUS header (terminal signal) + per-turn review blocks. Holds review content, but NOT turn ownership (that is tick state)."
+    },
+    {
+      "id": "telemetry",
+      "label": "XYZ.json + telemetry",
+      "type": "storage",
+      "group": "state",
+      "tech": "utils/telemetry (gitignored)",
+      "description": "Per-session completion feed appended by every relay/marathon/swarm session (harness/sessionId/health/title). Local + machine-specific; extractors read the event log."
+    },
+    {
+      "id": "validate",
+      "label": "validate.sh",
+      "type": "job",
+      "group": "governance",
+      "tech": "test/*.sh suite",
+      "description": "Repo correctness gate: runs the full kernel + coordination test suite (Node 18+, no API keys). Must be green before reporting code/runtime success."
+    },
+    {
+      "id": "pdda",
+      "label": "pdda.sh",
+      "type": "job",
+      "group": "governance",
+      "tech": "utils/pdda",
+      "description": "Document-hygiene engine (PDDA contract): frontmatter, status-table, roadmap-coverage, changelog, stale, and issue-doc-sync checks over the PROJECT docs."
+    },
+    {
+      "id": "project-docs",
+      "label": "PROJECT docs + ledgers",
+      "type": "storage",
+      "group": "governance",
+      "tech": "ROADMAP.md / CHANGELOG.md / PROJECT/**",
+      "description": "PDDA-governed doc system: ROUTER/AGENTS entry points, ROADMAP pointer ledger, CHANGELOG record, and PROJECT/** execution docs (1-INBOX -> 2-WORKING -> 3-COMPLETED)."
+    }
+  ],
+  "edges": [
+    {
+      "source": "tick",
+      "target": "eventlog",
+      "label": "appends + projects",
+      "kind": "data"
+    },
+    {
+      "source": "relay-drive",
+      "target": "tick",
+      "label": "reads RELAY-TURN actor",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "claude-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "codex-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "agy-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "aider-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "tick",
+      "label": "moves token (claim/release/done)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "relay-thread",
+      "label": "file-scoped commit",
+      "kind": "data"
+    },
+    {
+      "source": "claude-turn",
+      "target": "claude-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "codex-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "agy-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "aider-cli",
+      "label": "runs CLI (--no-auto-commits)",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "codex-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "agy-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "relay-thread",
+      "label": "writes edits",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "openrouter",
+      "label": "model API",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-cli",
+      "target": "google-search",
+      "label": "grounded search",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "tick",
+      "label": "reads whose-turn",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "relay-thread",
+      "label": "reads STATUS",
+      "kind": "data"
+    },
+    {
+      "source": "marathon",
+      "target": "relay-drive",
+      "label": "chains build->review phases",
+      "kind": "sync"
+    },
+    {
+      "source": "deep-research",
+      "target": "agy-cli",
+      "label": "spawns agy -p (grounded)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "telemetry",
+      "label": "appends completion",
+      "kind": "data"
+    },
+    {
+      "source": "validate",
+      "target": "tick",
+      "label": "runs kernel + coordination suite",
+      "kind": "sync"
+    },
+    {
+      "source": "pdda",
+      "target": "project-docs",
+      "label": "doc-hygiene gates",
+      "kind": "sync"
+    }
+  ],
+  "layout": "hub-ring"
+});
+</script>
+</body>
+</html>
