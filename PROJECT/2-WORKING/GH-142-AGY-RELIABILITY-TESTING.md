@@ -126,6 +126,12 @@ Every scenario has a recorded outcome + a one-command repro; none left "unknown"
 
 ## Swarm Preflight Contract
 
+> **Phase 2 — fix S9/F8 first** (the confirmed live failure: an unavailable `AGY_MODEL` silently
+> degrades to the default). agy exposes `agy models` (a newline list of valid models), so the fix is
+> a clean pre-validation: if `AGY_MODEL` is set and not in `agy models`, fail loudly instead of
+> letting agy fall back. Both shims (canonical bash + the `XYZ_PYTHON` Python port) must change in
+> parity (GH-112). S2/S5/S8 remain separate later slices.
+
 ```json
-{"target":{"repo":".","ref":"main"},"gate":"true","fix_probes":[{"type":"grep_absent","path":"test/agy-turn.sh","pattern":"S1 sandbox-detection"}],"artifacts":["test/agy-turn.sh"],"lanes":{"orchestrator_only":[]}}
+{"target":{"repo":".","ref":"main"},"gate":"bash test/agy-turn.sh","fix_probes":[{"type":"grep_absent","path":"test/agy-turn.sh","pattern":"S9"}],"artifacts":["relay-automation/agy-turn.sh","utils/py/agy-turn.py","test/agy-turn.sh"],"remediation":{"source":"self#phase-1-characterization-results","criteria":"When AGY_MODEL is set, both shims (bash relay-automation/agy-turn.sh + Python utils/py/agy-turn.py, kept in parity per GH-112) pre-validate it against `agy models` output before running the turn and FAIL LOUDLY (exit 5, clear message naming the unavailable model) instead of letting agy silently fall back to its default; a hermetic regression in test/agy-turn.sh (labelled 'S9') stubs the AGY_BIN `models` subcommand and asserts an unavailable AGY_MODEL -> exit 5 with no turn/commit, while a listed AGY_MODEL proceeds normally; bash test/agy-turn.sh green; validate.sh green."},"lanes":{"orchestrator_only":[]}}
 ```
