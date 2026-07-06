@@ -42,8 +42,8 @@ Severity 🔴 high · 🟠 med · 🟡 low — Status ⬜ OPEN · ✅ FIXED
 | FD-08 | Undocumented — `skills/relay-xyz/install.sh` only in SKILL.md (chicken-and-egg) | 🟠 | ⬜ | surface in `README.md`/`ROUTER.md` |
 | FD-09 | Stale — `AGENTS.md` "One skill ships here / `skill/xyz`" (several skills now) | 🟡 | ⬜ | update to the real `skills/` inventory |
 | FD-10 | Missing — no "run un-sandboxed" note for agent users in `README.md` | 🟡 | ⬜ | add a callout |
-| FD-11 | Adherence — `find-harness.sh --check` buried mid-`SKILL.md`; skimming agents skip it | 🔴 | ⬜ | hoist it to the first imperative SKILL.md line (parallel session) |
-| FD-12 | Persistence — no portable per-repo breadcrumb pattern documented (risk: a bad bare pointer file) | 🟡 | ⬜ | document memory / `CLAUDE.md`-by-name, never a cached path |
+| FD-11 | Adherence — `find-harness.sh --check` buried mid-`SKILL.md`; skimming agents skip it | 🔴 | ✅ | DONE (GH-143, `67068da`): hoisted to SKILL.md line 21, right after the H1 as a hard gate |
+| FD-12 | Persistence — no portable per-repo breadcrumb pattern documented (risk: a bad bare pointer file) | 🟡 | ✅ | DONE (GH-143, `67068da`): new "Per-repo persistence" section — memory / `CLAUDE.md`-by-name, never a cached path |
 
 ## Verified baselines (keep green)
 
