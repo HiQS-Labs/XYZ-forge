@@ -12,6 +12,7 @@
 # WARN-ONLY and FAIL-OPEN: it ALWAYS exits 0, so it can NEVER block the edit. Findings print to stderr
 # for visibility only. Wire it in .claude/settings.json (PostToolUse, matcher "Edit|Write|MultiEdit").
 set -u
+# strict-mode: -e exempt — WARN-ONLY fail-open hook; must never abort mid-scan. See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=utils/pdda/pdda-lib.sh

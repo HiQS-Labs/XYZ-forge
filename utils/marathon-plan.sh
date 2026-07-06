@@ -52,6 +52,7 @@ fi
 #   QUEUE_PLAN_ZONES_FILE      planner zone-rules override (2nd-precedence tier; see --zones-config)
 
 set -uo pipefail
+# strict-mode: -e exempt — analysis tool with expected-nonzero probes (git/gh/grep); errors handled explicitly. See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Vendored install: HERE is <target>/.xyz/utils → parent is .xyz → target root is grandparent.

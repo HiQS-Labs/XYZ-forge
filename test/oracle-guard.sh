@@ -3,9 +3,10 @@
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 G="$HERE/../relay-automation/oracle-guard.sh"
-PASS=0; FAIL=0
+PASS=0; FAIL=0; SKIP=0
 pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
+skip(){ echo "  SKIP: $*"; SKIP=$((SKIP+1)); }
 echo "== test: oracle-guard =="
 
 run(){ OUT="$(bash "$G" "$@" 2>&1)"; RC=$?; }
@@ -46,11 +47,17 @@ bash "$G" --oracle "test/x" >/dev/null 2>&1; rc=$?
 ROOT="$(cd "$HERE/.." && pwd)"
 run --allow "relay-automation/../src/paths.js" --oracle "src/paths.js"
 [ "$RC" = 9 ] && pass "'..' alias resolving to the oracle is caught (exit 9)" || fail "alias bypass: rc=$RC out=$OUT"
-# a symlink whose target IS an oracle file must be caught
-SL="${TMPDIR:-/tmp}/og-alias.$$.sh"; ln -sf "$ROOT/validate.sh" "$SL"
-run --allow "$SL" --oracle "validate.sh"
-[ "$RC" = 9 ] && pass "symlink to an oracle file is caught (exit 9)" || fail "symlink bypass: rc=$RC out=$OUT"
-rm -f "$SL"
+# a symlink whose target IS an oracle file must be caught.
+# GH-110 P2b: this sub-test needs a real oracle target on disk ($ROOT/validate.sh) to canonicalize;
+# in a vendored copy validate.sh does not travel, so skip (don't dangle-fail) when it is absent.
+if [ -e "$ROOT/validate.sh" ]; then
+  SL="${TMPDIR:-/tmp}/og-alias.$$.sh"; ln -sf "$ROOT/validate.sh" "$SL"
+  run --allow "$SL" --oracle "validate.sh"
+  [ "$RC" = 9 ] && pass "symlink to an oracle file is caught (exit 9)" || fail "symlink bypass: rc=$RC out=$OUT"
+  rm -f "$SL"
+else
+  skip "symlink-to-oracle sub-test needs \$ROOT/validate.sh (absent in a vendored copy)"
+fi
 
-echo "  oracle-guard: $PASS pass, $FAIL fail"
+echo "  oracle-guard: $PASS pass, $FAIL fail, $SKIP skip"
 [ "$FAIL" = 0 ]

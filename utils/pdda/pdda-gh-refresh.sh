@@ -11,6 +11,7 @@
 # suite, so `issue-doc-sync` and the Stop scan read fresh state. See PROJECT/PDDA.md "Suggested hourly
 # schedule". One-off: `utils/pdda/pdda-gh-refresh.sh`.
 set -u
+# strict-mode: -e exempt — expected-nonzero gh probes handled explicitly (leaves cache intact on failure). See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=utils/pdda/pdda-lib.sh

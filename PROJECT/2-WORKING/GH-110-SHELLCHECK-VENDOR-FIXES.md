@@ -2,7 +2,7 @@
 gh_issue: 110
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110
 title: "Fable 5 Max audit: shellcheck + vendor integrity + strict-mode hardening"
-status: Active (2-WORKING) — P1 + P2a shipped (2026-07-06, `073857a`: tarball rebuilt + freshness guard); P2b (vendored-copy test skips) + P3 (code quality) open
+status: Active (2-WORKING) — P1 + P2a shipped (`073857a`); P3b (strict-mode policy) shipped 2026-07-06; P2b partial (oracle-guard skip-guard landed; broader test sweep + run-tests.sh + foreign-install ≥77/85 verification remain); P3a RE-SCOPED → deferred (shell↔py JS port drift, needs its own issue)
 created: 2026-07-03
 updated: 2026-07-03
 owner: noel
@@ -23,6 +23,11 @@ related:
   - checkjs.sh
   - PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md
   - ROADMAP.md (GH-104 note: install.sh/relay-pkg.tar.gz stale — Phase 2 here closes it)
+goal: >
+  Land the five concrete defects from the Fable 5 Max audit (broken test assertion, stale
+  safety-critical vendor tarball, vendored-copy self-test failures, an uncheckable JS heredoc, and
+  an undocumented strict-mode convention) as small, independently-shippable hardening slices — with
+  no behavior change to the tick kernel, relay-turn-lib, or projection logic.
 roadmap_exempt: false
 ---
 
@@ -105,11 +110,16 @@ These tests assume repo-root files that don't travel with the vendor payload:
 test that dangles without `validate.sh`. Three others require >60s budgets.
 
 - [ ] Add `skip()` guards (using the guard pattern already in `test/ci-workflow.sh`) to each
-      root-dependent test — skip when the required file is absent, not error.
+      root-dependent test — skip when the required file is absent, not error. **Partial:** the
+      root-dependent tests are `test/oracle-guard.sh` (validate.sh symlink target), `test/roadmap-dashboard.sh`
+      (ROADMAP-DASHBOARD.md), and `test/ci-workflow.sh` (.github/workflows/ci.yml — already guarded).
+      roadmap-dashboard still needs a guard.
 - [ ] Add a lightweight `run-tests.sh` entry point to the vendor payload so consumers have a clear
-      "how to self-verify" path without discovering the suite manually.
-- [ ] Confirm the `oracle-guard` symlink test either resolves gracefully without `validate.sh` or
-      gets its own skip guard.
+      "how to self-verify" path without discovering the suite manually. **(remaining)**
+- [x] Confirm the `oracle-guard` symlink test either resolves gracefully without `validate.sh` or
+      gets its own skip guard. → **done 2026-07-06**: `test/oracle-guard.sh` now `skip()`s the
+      symlink-to-oracle sub-test when `$ROOT/validate.sh` is absent. Verified both ways (present →
+      11 pass/0 skip; validate.sh hidden → 10 pass/1 skip/0 fail; previously a dangling fail).
 
 ### QA gate — Phase 2
 
@@ -129,20 +139,35 @@ move; either can land independently.
 
 ### Checklist
 
-#### 3a — Extract marathon-plan's 788-line JS heredoc into `src/marathon-plan.js`
+#### 3a — Extract marathon-plan's JS heredoc — ⚠️ RE-SCOPED (port drift) → DEFERRED
 
-The largest JS program in the repo lives in a heredoc inside `utils/marathon-plan.sh`, making it
-invisible to the existing `checkjs.sh` Tier-1 gate (`src/*.js` only), unreachable by
-`node --check`, and unable to `require()` src/ modules it shares logic with.
+**Blocked by a finding discovered 2026-07-06 while scoping this task.** The premise ("extract the
+heredoc into a fresh `src/marathon-plan.js`") is no longer correct, because the extraction *already
+partly exists* — and the two copies have **diverged**:
 
-- [ ] Move the heredoc body to `src/marathon-plan.js`.
-- [ ] Have the wrapper in `marathon-plan.sh` invoke it via `node src/marathon-plan.js` (or
-      `.xyz/src/marathon-plan.js` for vendored installs — use the `_xyz_harness` path variable
-      already established by GH-104).
-- [ ] Confirm `checkjs.sh`'s dir-arg mode covers `src/marathon-plan.js` (it already takes a dir;
-      check it is passed `src/` or equivalent).
-- [ ] Confirm `node --check src/marathon-plan.js` passes cleanly.
-- [ ] Update `checkjs.sh`'s Tier-1 gate scope comment if needed.
+- The shell heredoc in `utils/marathon-plan.sh` (`node - <<'NODE'`, ~940 lines) is the **current**
+  logic: it carries GH-48's **configurable zone model** (`QP_ZONES_CONFIG`, `compileZoneConfig`,
+  `EXPLICIT_ZONES_CONFIG`).
+- `utils/py/_marathon_plan_node.js` (778 lines), which the `XYZ_PYTHON=1` port
+  (`utils/py/marathon_plan.py`) invokes via `node _marathon_plan_node.js`, is a **stale pre-GH-48
+  copy**: it still hardcodes `const KERNEL_PATHS = [...]` and has **no** zone-config support (`grep`
+  count: shell 8 / extracted 0). GH-48 is CLOSED, so the Python port silently runs superseded zone
+  logic.
+
+Blindly extracting the shell heredoc into a *new* `src/marathon-plan.js` would create a **third**
+copy of an 800-line program alongside a divergent twin — the opposite of the DRY intent. The correct
+move is a **reconciliation**: promote the current (940-line) logic to one canonical JS module, point
+**both** the shell wrapper and the Python port at it, delete the stale `_marathon_plan_node.js`, and
+add a `test/marathon-plan.sh` parity assertion that the two entry points produce identical output.
+
+That is a larger, higher-blast-radius change than GH-110's original P3a (it touches the Python port
+and its test seams) and deserves its **own issue** — filed as
+**[#154](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/154)**. Not
+doing a partial/blind extraction under GH-110.
+
+- [ ] *(tracked in [#154](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/154))*
+      Reconcile the divergence into one canonical JS module used by both the shell wrapper and the
+      Python port; delete the stale extracted copy; add a parity test.
 
 #### 3b — Declare a strict-mode policy
 
@@ -150,14 +175,18 @@ invisible to the existing `checkjs.sh` Tier-1 gate (`src/*.js` only), unreachabl
 `swarm-preflight.sh`) run without it, while all relay-automation drivers have `set -euo pipefail`.
 Some exemptions are deliberate (hooks shouldn't hard-fail) but none are documented.
 
-- [ ] Decide the policy: either (a) default-strict with explicit per-script `# strict-mode: exempt
+- [x] Decide the policy: either (a) default-strict with explicit per-script `# strict-mode: exempt
       — <reason>` header, or (b) strict-mode is per-subsystem (relay-automation strict,
       utils/ exempt by default with rationale). Document the decision in one place
-      (e.g., `GUIDING-PRINCIPLES.md` or a `decisions/` record).
-- [ ] Add a header comment to each currently-exempt script that either states the exemption reason
-      or adds `set -euo pipefail` if it was just never set.
+      (e.g., `GUIDING-PRINCIPLES.md` or a `decisions/` record). → **Chose (b)**, documented in
+      `GUIDING-PRINCIPLES.md` under **Conventions → Strict-mode policy** (relay-automation drivers
+      `set -euo pipefail`; utils/ analysis tools `set -uo pipefail`/`set -u` deliberately without `-e`).
+- [x] Add a header comment to each currently-exempt script that either states the exemption reason
+      or adds `set -euo pipefail` if it was just never set. → Added a one-line `# strict-mode: -e
+      exempt — …` header to all 9 exempt scripts (`utils/pdda/*.sh` ×7, `utils/marathon-plan.sh`,
+      `utils/swarm-preflight.sh`). All 9 pass `bash -n`.
 - [ ] Optional enforcement: add a `pdda.sh strict-mode` check (or extend `pdda.sh frontmatter`) to
-      flag scripts with neither `set -e*` nor an explicit exemption comment.
+      flag scripts with neither `set -e*` nor an explicit exemption comment. **(optional — deferred)**
 
 ### QA gate — Phase 3
 

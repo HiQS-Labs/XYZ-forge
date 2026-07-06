@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -u
+# strict-mode: -e exempt — analysis tool with expected-nonzero probes (git/gh/grep); errors handled explicitly. See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 # PDDA unified entry point. One dispatcher for every deterministic hygiene check plus the aggregate
 # run. The LLM-assisted readiness review stays in its own file (utils/pdda/pdda-doc-ready.sh) — it is a

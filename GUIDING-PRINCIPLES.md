@@ -49,6 +49,27 @@ Adding a feature or weighing a tradeoff, ask: *does this keep agents coordinated
 
 ---
 
+## Conventions
+
+### Strict-mode policy (bash `set -e`)
+
+Strict mode is **per-subsystem, not repo-wide** (GH-110 P3b). The split is deliberate:
+
+- **`relay-automation/` drivers and turn shims run `set -euo pipefail`.** They orchestrate risky,
+  multi-step, containment-sensitive turns where a silently-ignored failure can commit off-lane or
+  orphan a peer. Abort-on-error (`-e`) is the correct default there.
+- **`utils/` analysis tools (`pdda/*`, `marathon-plan.sh`, `swarm-preflight.sh`) run `set -uo pipefail`
+  or `set -u`, deliberately *without* `-e`.** These are long single-pass scripts whose normal control
+  flow includes many expected-nonzero probes (`git rev-parse`, `gh` lookups, `grep` misses). Under
+  `-e` a benign "no match" would abort the whole run, so they set `-u` (catch unset vars) + explicit
+  per-call error handling instead. This is an exemption, not an oversight.
+
+Every currently `-e`-exempt script carries a one-line `# strict-mode: -e exempt — …` header next to
+its `set -` line so the exemption is self-documenting. New scripts default to `set -euo pipefail`
+unless they fit the analysis-tool profile above, in which case they add the exemption header.
+
+---
+
 ## Appendix: AI Doc Review Heuristics
 
 When reviewing any repo doc (roadmap entries, plans, architecture notes, audits, task writeups), apply these. Priority: containment > coordination correctness > signal quality > implementation speed and operator friction.

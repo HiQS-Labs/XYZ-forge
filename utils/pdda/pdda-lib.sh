@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -u
+# strict-mode: -e exempt — analysis tool with expected-nonzero probes (git/gh/grep); errors handled explicitly. See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 PDDA_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Runtime lives in <repo>/utils/pdda/, so the repo root is two levels up from the lib dir.

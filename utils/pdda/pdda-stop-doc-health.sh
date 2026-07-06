@@ -8,6 +8,7 @@
 # visibility only. Wire it in .claude/settings.json as a `Stop` hook. Pairs with tier 1,
 # pdda-edit-doc-hook.sh (the per-edit single-file lint).
 set -u
+# strict-mode: -e exempt — Stop-hook that ALWAYS exits 0; must never abort mid-scan. See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=utils/pdda/pdda-lib.sh
