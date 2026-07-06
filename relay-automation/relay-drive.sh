@@ -42,6 +42,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/relay-turn-lib.sh"
 TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
 CONSULT_SH="${CONSULT_SH:-"$ROOT_DIR/relay-automation/consult.sh"}"
 XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT_DIR/utils/telemetry/append-xyz-completion.sh"}"
+XYZ_HEARTBEAT_BIN="${XYZ_HEARTBEAT_BIN:-"$ROOT_DIR/utils/telemetry/write-xyz-heartbeat.sh"}"
 
 # GH-45 — QUEUE commitment contract: per-lane attempt cap (anti-rabbit-hole / WIP discipline).
 # lane_attempt_gate appends one line per fire to .tick/attempts/<lane> and REFUSES to start a lane at
@@ -82,11 +83,20 @@ lane_attempt_reset() {  # clear a lane's counter after it completes successfully
 # phase — marathon-drive.sh sets XYZ_HARNESS_CONTEXT for the nested call (marathon-phase|swarm) and the
 # outer harness owns the whole-run record, so a per-phase relay completion must not double-emit.
 # Best-effort: a telemetry failure must never change the relay's own exit path.
+xyz_relay_heartbeat_write() {
+  case "${XYZ_HARNESS_CONTEXT:-relay}" in relay) ;; *) return 0 ;; esac
+  [[ -x "$XYZ_HEARTBEAT_BIN" ]] || return 0
+  local slug
+  slug="$(basename "$RELAY_FILE" .md)"
+  "$XYZ_HEARTBEAT_BIN" relay "$slug" >/dev/null 2>&1 || true
+}
+
 xyz_relay_emit() {  # <health>
   case "${XYZ_HARNESS_CONTEXT:-relay}" in relay) ;; *) return 0 ;; esac
-  [[ -x "$XYZ_APPEND_BIN" ]] || return 0
   local health="$1" slug title s desc
   slug="$(basename "$RELAY_FILE" .md)"
+  [[ -x "$XYZ_HEARTBEAT_BIN" ]] && XYZ_HEARTBEAT_CLEAR=1 "$XYZ_HEARTBEAT_BIN" relay "$slug" >/dev/null 2>&1 || true
+  [[ -x "$XYZ_APPEND_BIN" ]] || return 0
   title="$(grep -m1 '^# ' "$RELAY_FILE" 2>/dev/null | sed 's/^#[[:space:]]*//; s/[[:space:]]*$//')" || true
   [[ -n "$title" ]] || title="$slug"
   s="$(file_status)"
@@ -308,6 +318,7 @@ while ((round < ROUND_CAP)); do
     printf 'relay-drive: WOULD drive turn for agent: %s (token %s, STATUS: %s)\n' "$actor" "$tstatus" "$s"; exit 0
   fi
 
+  xyz_relay_heartbeat_write
   prev="$tstatus:$actor"
   RELAY_FILE="$RELAY_FILE" RELAY_TASK="$RELAY_TASK" RELAY_AGENT="$actor"
   export RELAY_FILE RELAY_TASK RELAY_AGENT

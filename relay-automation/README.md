@@ -30,6 +30,65 @@ the loop still degrades to the existing manual nudge. For the current headless p
 | `consult.sh` | Parallel read-only consult: asks the same question to **Codex, agy, and (opt-in) Aider↔OpenRouter** (`--models codex,agy,aider`), captures each transcript, and leaves synthesis to the caller. Advisory-only; also the engine behind `relay-drive.sh --consult-verify`. |
 | `xyz-vendor.sh` / `xyz-sync.sh` | Vendoring pair for `.xyz/` copies materialized into another repo. `xyz-vendor.sh <target-repo>` mirrors this harness into `<target-repo>/.xyz/` and stamps a row in the local `registry.tsv` (`install_dir`, `last_install_utc`, `tick_version`, `source_commit`, `coordinated_repo`) at that moment. `xyz-sync.sh list \| update \| delete \| check` manages those registered rows: `list` shows them, `update <dir>\|--all` re-vendors, `delete <dir>\|--all [--yes]` removes a copy and prunes its row. **`check <dir>\|--all`** (GH-96) is report-only drift detection: it recomputes the CURRENT `tick_version`/`source_commit` this harness ships and compares against each row's recorded pair — a mismatch in **either** field counts as drift. Exact match on both → a silent `ok` line; drift → a warning naming the drifted field(s) and both recorded/current values. Never a hard error, never an auto-pull — updates land only via an explicit `update`/`xyz-vendor.sh` re-run (pinned + manual by design). This is the harness-side "is this install stale?" signal a downstream consumer (e.g. rebalance-OS) can poll instead of guessing. |
 
+## XYZ completion telemetry
+
+`XYZ.json` is the harness repo root's gitignored, newest-first completion log. It is always written in
+the harness clone that owns `relay-automation/`; it is never redirected into a `--target-root`
+foreign repo.
+
+Each array element has this schema:
+
+```json
+{
+	"harness": "relay",
+	"sessionId": "gh96seam1",
+	"health": "green",
+	"title": "Marathon Phase gh96seam1",
+	"description": "Relay session ended: STATUS Approved (health green).",
+	"updatedAt": "2026-07-05T00:00:00Z"
+}
+```
+
+Field contract:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `harness` | string | `relay`, `marathon`, or `swarm` |
+| `sessionId` | string | Relay thread slug, marathon run id, or caller-supplied `XYZ_SESSION_ID` |
+| `health` | string | `green`, `orange`, or `red` |
+| `title` | string | Short human-readable label for the run |
+| `description` | string | One-line outcome summary |
+| `updatedAt` | string | UTC timestamp in ISO-8601 `YYYY-MM-DDTHH:MM:SSZ` form |
+
+Emit cadence:
+
+| Flow | `XYZ.json` emit contract |
+|---|---|
+| Standalone `relay-drive.sh` | Exactly one record when the relay terminates: `Approved`/`Closed` => `green`; explicit `Escalated` / review handback => `orange`; no-progress / review-once stall / round-cap => `red` |
+| Bare `marathon-drive.sh` | Exactly one `marathon` record per invocation |
+| Swarm-originated `marathon-drive.sh` (`XYZ_HARNESS_CONTEXT=swarm`) | Exactly one `swarm` record per invocation |
+| `marathon.sh` orchestrated multi-phase run | Exactly one `marathon` record for the whole run; nested phase-level `marathon-drive.sh` completion hooks stay silent |
+
+`XYZ.heartbeat.json` is the companion in-flight marker. It is a single mutable object, not an array:
+
+```json
+{
+	"harness": "marathon",
+	"sessionId": "gh96-seam1",
+	"updatedAt": "2026-07-05T00:00:00Z"
+}
+```
+
+Heartbeat cadence:
+
+| Flow | `XYZ.heartbeat.json` behavior |
+|---|---|
+| Standalone `relay-drive.sh` | Overwritten once per round before the turn-taker runs |
+| Any `marathon-drive.sh` phase | Overwritten once right after `marathon.phase.start` |
+| Nested `relay-drive.sh` inside `marathon-drive.sh` | Silent; the phase-level marathon heartbeat owns freshness so a nested relay round does not double-write |
+| Terminal completion for the same harness + `sessionId` | The heartbeat file is cleared before the completion record is appended, so finished runs leave no stale in-progress marker |
+| Crash / kill / hang | No completion record is appended, so the last heartbeat remains in place and goes stale naturally for freshness-aware consumers |
+
 ## Recipes & docs (not scripts)
 | Doc | What it gives you |
 |---|---|

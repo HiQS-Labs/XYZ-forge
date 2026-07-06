@@ -15,6 +15,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 WRITER="$ROOT/utils/telemetry/append-xyz-completion.sh"
+HEARTBEAT="$ROOT/utils/telemetry/write-xyz-heartbeat.sh"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/xyz-completion.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
@@ -27,8 +28,10 @@ echo "== test: xyz-completion =="
 echo "  workdir: $WORK"
 
 valid_json()  { python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$1" >/dev/null 2>&1; }
+valid_obj()   { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys.exit(0 if isinstance(d, dict) else 1)" "$1" >/dev/null 2>&1; }
 count()       { python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$1" 2>/dev/null; }
 field()       { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[int(sys.argv[2])][sys.argv[3]])" "$1" "$2" "$3" 2>/dev/null; }
+obj_field()   { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[sys.argv[2]])" "$1" "$2" 2>/dev/null; }
 
 # ── (1) basic prepend + schema ──────────────────────────────────────────────
 X="$WORK/x1.json"
@@ -88,7 +91,46 @@ XYZ_JSON_PATH="$WORK/bad.json" bash "$WRITER" relay slug purple T d >/dev/null 2
 XYZ_JSON_PATH="$WORK/bad.json" bash "$WRITER" relay slug green T >/dev/null 2>&1; rc=$?
 [ "$rc" -ne 0 ] && pass "missing arg rejected (exit $rc)" || fail "too-few-args accepted"
 
-# ── (7) health-lib mapping matches GH-24's table ───────────────────────────
+# ── (7) heartbeat companion file: overwrite, stale-while-running, clear, concurrency ───────────
+HB="$WORK/heartbeat.json"
+XYZ_HEARTBEAT_JSON_PATH="$HB" bash "$HEARTBEAT" marathon hb-1
+valid_obj "$HB" && pass "heartbeat file is a single valid JSON object" || fail "invalid heartbeat JSON: $(cat "$HB")"
+[ "$(obj_field "$HB" harness)" = "marathon" ] && pass "heartbeat harness field carried" || fail "heartbeat harness wrong"
+[ "$(obj_field "$HB" sessionId)" = "hb-1" ] && pass "heartbeat sessionId field carried" || fail "heartbeat sessionId wrong"
+[ -n "$(obj_field "$HB" updatedAt)" ] && pass "heartbeat updatedAt stamped" || fail "heartbeat updatedAt missing"
+
+XYZ_HEARTBEAT_JSON_PATH="$HB" bash "$HEARTBEAT" marathon hb-2
+valid_obj "$HB" && pass "heartbeat overwrite stays valid JSON" || fail "heartbeat overwrite invalid: $(cat "$HB")"
+[ "$(obj_field "$HB" sessionId)" = "hb-2" ] && pass "heartbeat overwrites instead of appending" || fail "heartbeat did not overwrite: $(cat "$HB")"
+
+XH="$WORK/x-heartbeat.json"
+XYZ_JSON_PATH="$XH" bash "$WRITER" marathon done-1 green "Done 1" "completed 1"
+XYZ_HEARTBEAT_JSON_PATH="$HB" bash "$HEARTBEAT" marathon run-inflight
+[ "$(count "$XH")" = "1" ] && [ "$(field "$XH" 0 sessionId)" = "done-1" ] && pass "mid-run heartbeat does not change prior completed XYZ.json" || fail "completion log changed during heartbeat write"
+[ "$(obj_field "$HB" sessionId)" = "run-inflight" ] && pass "mid-run heartbeat marks the current in-flight session" || fail "heartbeat missing current session"
+
+XYZ_HEARTBEAT_JSON_PATH="$HB" XYZ_HEARTBEAT_CLEAR=1 bash "$HEARTBEAT" marathon run-inflight
+XYZ_JSON_PATH="$XH" bash "$WRITER" marathon run-inflight green "Run inflight" "completed inflight"
+[ ! -e "$HB" ] && pass "matching completion clears heartbeat before final append" || fail "heartbeat still present after matching clear"
+[ "$(field "$XH" 0 sessionId)" = "run-inflight" ] && pass "matching completion still appends the final XYZ.json record" || fail "final completion record missing"
+
+XYZ_HEARTBEAT_JSON_PATH="$HB" bash "$HEARTBEAT" relay crash-1
+XYZ_HEARTBEAT_JSON_PATH="$HB" XYZ_HEARTBEAT_CLEAR=1 bash "$HEARTBEAT" relay other-session
+[ -e "$HB" ] && [ "$(obj_field "$HB" sessionId)" = "crash-1" ] && pass "non-matching clear leaves a stale/crashed heartbeat in place" || fail "non-matching clear removed the wrong heartbeat"
+
+HB2="$WORK/heartbeat-concurrent.json"
+M2=16
+pids=""
+for i in $(seq 1 "$M2"); do
+  ( XYZ_HEARTBEAT_JSON_PATH="$HB2" bash "$HEARTBEAT" relay "hb-$i" ) &
+  pids="$pids $!"
+done
+for p in $pids; do wait "$p" 2>/dev/null || true; done
+valid_obj "$HB2" && pass "heartbeat stays valid JSON under concurrent overwrites" || fail "concurrent heartbeat corrupt: $(cat "$HB2")"
+case "$(obj_field "$HB2" sessionId)" in hb-*) pass "concurrent heartbeat ends with one complete winning sessionId";; *) fail "unexpected concurrent sessionId=$(obj_field "$HB2" sessionId)";; esac
+[ -z "$(find "$WORK" -name '.xyz-heartbeat.*.tmp' 2>/dev/null)" ] && pass "heartbeat writer leaves no temp files behind" || fail "heartbeat temp file leaked: $(find "$WORK" -name '.xyz-heartbeat.*.tmp')"
+
+# ── (8) health-lib mapping matches GH-24's table ───────────────────────────
 . "$ROOT/utils/telemetry/health-lib.sh"
 h() { xyz_health_from_status "$1" "$2" "$3"; }
 [ "$(h Approved 1 PASS)" = "green" ]        && pass "STATUS Approved → green" || fail "Approved not green"

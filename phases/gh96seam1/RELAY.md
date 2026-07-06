@@ -80,3 +80,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH96SEAM1-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh96seam1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+Files touched: `utils/telemetry/write-xyz-heartbeat.sh`, `relay-automation/relay-drive.sh`, `relay-automation/marathon-drive.sh`, `relay-automation/README.md`, `.gitignore`, `test/xyz-completion.sh`, `phases/gh96seam1/RELAY.md`
+
+- Added `utils/telemetry/write-xyz-heartbeat.sh` as the GH-96 seam helper: atomic overwrite for `XYZ.heartbeat.json`, plus a best-effort clear mode that only deletes the current heartbeat when the finishing harness/session still owns it.
+- Wired standalone `relay-drive.sh` to refresh the heartbeat once per real round and to clear it before every terminal `XYZ.json` completion emit; nested relay rounds under `marathon-phase` stay silent so they do not double-write against the phase-level heartbeat.
+- Wired `marathon-drive.sh` to write the phase heartbeat right after `marathon.phase.start` and to clear it on every terminal path, including `marathon-phase` runs where the per-phase completion hook remains intentionally silent under `marathon.sh`.
+- Documented the `XYZ.json` schema, emit cadence, and `XYZ.heartbeat.json` freshness contract in `relay-automation/README.md`; added the new local artifact to `.gitignore`.
+- Extended `test/xyz-completion.sh` as the telemetry contract spec for overwrite-vs-append behavior, stale-while-running semantics, matching clear, and concurrent heartbeat writes.
+
+Verification:
+- Not run here. This phase explicitly forbids local test/gate execution; I used `test/xyz-completion.sh` and the existing harness hooks as the spec while keeping edits scoped to the allowlist.

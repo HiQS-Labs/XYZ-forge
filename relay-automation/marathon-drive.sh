@@ -128,6 +128,7 @@ die()  { printf 'marathon-drive: %s\n' "$*" >&2; exit 2; }
 log()  { printf 'marathon-drive: %s\n' "$*"; }
 
 XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$_xyz_harness/utils/telemetry/append-xyz-completion.sh"}"
+XYZ_HEARTBEAT_BIN="${XYZ_HEARTBEAT_BIN:-"$_xyz_harness/utils/telemetry/write-xyz-heartbeat.sh"}"
 
 # GH-75: append ONE final-completion record for a run whose WHOLE completion IS this single-phase
 # marathon-drive — i.e. a bare `marathon-drive.sh` run (harness:"marathon") or a swarm-preflight-
@@ -136,6 +137,22 @@ XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$_xyz_harness/utils/telemetry/append-xyz-comp
 # marathon.sh emits the single whole-run record itself. Health is binary green/red (halt-on-first-
 # failure has no distinct "escalated mid-chain" state). Best-effort — never changes marathon-drive's
 # own exit code.
+xyz_marathon_heartbeat_write() {
+  [[ -x "$XYZ_HEARTBEAT_BIN" ]] || return 0
+  local ctx="${XYZ_HARNESS_CONTEXT:-}" harness sid
+  case "$ctx" in swarm) harness="swarm" ;; *) harness="marathon" ;; esac
+  sid="${XYZ_SESSION_ID:-$PHASE_ID}"
+  "$XYZ_HEARTBEAT_BIN" "$harness" "$sid" >/dev/null 2>&1 || true
+}
+
+xyz_marathon_heartbeat_clear() {
+  [[ -x "$XYZ_HEARTBEAT_BIN" ]] || return 0
+  local ctx="${XYZ_HARNESS_CONTEXT:-}" harness sid
+  case "$ctx" in swarm) harness="swarm" ;; *) harness="marathon" ;; esac
+  sid="${XYZ_SESSION_ID:-$PHASE_ID}"
+  XYZ_HEARTBEAT_CLEAR=1 "$XYZ_HEARTBEAT_BIN" "$harness" "$sid" >/dev/null 2>&1 || true
+}
+
 xyz_marathon_emit() {  # <health> <description>
   local ctx="${XYZ_HARNESS_CONTEXT:-}"
   [[ "$ctx" == "marathon-phase" ]] && return 0
@@ -435,6 +452,7 @@ log "tick token seeded: $RELAY_TASK → $BUILDER"
 # ── Step 4: emit phase.start ────────────────────────────────────────────────
 
 "$TICK_BIN" log marathon.phase.start "$RELAY_TASK" --agent marathon > /dev/null
+xyz_marathon_heartbeat_write
 log "phase start: running relay-drive --round-cap $ROUND_CAP"
 
 # ── Step 5: run relay-drive (the loop — unmodified) ────────────────────────
@@ -503,12 +521,14 @@ case "$relay_exit" in
     if [[ "$gate_exit" -ne 0 ]]; then
       log "pre-advance gate FAILED (exit $gate_exit) — escalating"
       escalate "pre-advance-failed" "$relay_exit"
+      xyz_marathon_heartbeat_clear
       xyz_marathon_emit red "halted at phase ${PHASE_ID} — pre-advance gate failed"
       exit 5
     fi
     "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
     lane_attempt_reset "${TICK_REPO_ROOT:-$ROOT}" "$PHASE_ID"   # GH-45: success clears the attempt counter
     save_transcript
+    xyz_marathon_heartbeat_clear
     log "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
     xyz_marathon_emit green "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
     exit 0
@@ -516,12 +536,14 @@ case "$relay_exit" in
   3)
     log "relay escalated: no-progress (relay-drive exit 3)"
     escalate "no-progress" 3
+    xyz_marathon_heartbeat_clear
     xyz_marathon_emit red "halted at phase ${PHASE_ID} — relay no-progress"
     exit 3
     ;;
   4)
     log "relay escalated: cap/close-mismatch (relay-drive exit 4)"
     escalate "cap-or-close-mismatch" 4
+    xyz_marathon_heartbeat_clear
     xyz_marathon_emit red "halted at phase ${PHASE_ID} — relay cap/close-mismatch"
     exit 4
     ;;
@@ -532,6 +554,7 @@ case "$relay_exit" in
     # 2026-06-17: an autonomous builder edited an off-lane file; rtl_enforce caught + reverted it.)
     log "relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)"
     escalate "containment-violation (off-lane edit reverted by a turn-taker)" 6
+    xyz_marathon_heartbeat_clear
     xyz_marathon_emit red "halted at phase ${PHASE_ID} — containment violation (off-lane edit reverted)"
     exit 6
     ;;
