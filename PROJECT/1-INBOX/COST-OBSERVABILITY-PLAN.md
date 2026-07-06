@@ -2,7 +2,7 @@
 ratings_exempt: true
 title: Cost observability for coordination systems (xyz + relay)
 slug: cost-observability-plan
-status: Phases 1–3 shipped ✅; v2 coverage-honesty tranche (Phase 4 spike → 7) OPEN 2026-07-06
+status: Phases 1–3 shipped ✅; v2 coverage-honesty tranche (Phase 4 spike → 7) Tier 2 Priority - Paused until more Tier 1 items are crossed off; And users request build out
 owner: Noel (operator) · Claude (producer)
 created: 2026-06-15
 updated: 2026-07-06
