@@ -460,14 +460,69 @@
       b.addEventListener('click', c[1]);
     });
 
+    // ---- search + type filter: dims (never hides/re-layouts) nodes and
+    // edges that don't match the current text query or whose type has been
+    // toggled off in the legend. A node matches when BOTH conditions hold;
+    // an edge is dimmed if either endpoint is dimmed.
+    var excludedTypes = {};
+    var query = '';
+    function nodeMatches(n) {
+      if (excludedTypes[n.type || 'default']) return false;
+      if (!query) return true;
+      var haystack = [n.label, n.id, n.type, n.tech, n.description]
+        .filter(Boolean).join(' ').toLowerCase();
+      return haystack.indexOf(query) !== -1;
+    }
+    function applyFilter() {
+      var matched = {};
+      (spec.nodes || []).forEach(function (n) {
+        var m = nodeMatches(n);
+        matched[n.id] = m;
+        nodeEls[n.id].classList.toggle('swe-dimmed', !m);
+      });
+      edgeEls.forEach(function (ee) {
+        var dim = !matched[ee.e.source] || !matched[ee.e.target];
+        ee.path.classList.toggle('swe-dimmed', dim);
+        if (ee.label) ee.label.classList.toggle('swe-dimmed', dim);
+      });
+    }
+
     var usedTypes = {};
     (spec.nodes || []).forEach(function (n) { usedTypes[n.type || 'default'] = true; });
     var legend = el('div', 'swe-legend', mount);
+    var legendItems = {};
     Object.keys(usedTypes).sort().forEach(function (t) {
       var item = el('span', 'swe-legend-item', legend);
       var dot = el('span', 'swe-legend-dot', item);
       dot.style.background = TYPE_COLORS[t] || TYPE_COLORS.default;
       item.appendChild(document.createTextNode(t));
+      item.title = 'Click to toggle ' + t + ' nodes';
+      item.addEventListener('click', function () {
+        excludedTypes[t] = !excludedTypes[t];
+        item.classList.toggle('swe-dimmed', !!excludedTypes[t]);
+        applyFilter();
+      });
+      legendItems[t] = item;
+    });
+
+    var search = el('div', 'swe-search', mount);
+    var searchInput = el('input', 'swe-search-input', search);
+    searchInput.type = 'search';
+    searchInput.placeholder = 'Filter nodes…';
+    var searchClear = el('button', 'swe-search-clear', search);
+    searchClear.type = 'button';
+    searchClear.textContent = '×';
+    searchInput.addEventListener('input', function () {
+      query = searchInput.value.trim().toLowerCase();
+      search.classList.toggle('swe-search-active', query.length > 0);
+      applyFilter();
+    });
+    searchClear.addEventListener('click', function () {
+      searchInput.value = '';
+      query = '';
+      search.classList.remove('swe-search-active');
+      applyFilter();
+      searchInput.focus();
     });
 
     if (spec.title) {

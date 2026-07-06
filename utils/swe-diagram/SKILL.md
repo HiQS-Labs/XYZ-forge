@@ -115,7 +115,10 @@ do the substitution yourself: copy the template and replace `__TITLE__`,
 The output is a single file: open it in any browser. It supports pan (drag
 background), zoom (wheel or +/− buttons), fit-to-view (▣), draggable nodes,
 hover tooltips from `description`, edge labels, group swimlanes, a type
-legend, and follows the OS light/dark theme.
+legend, and follows the OS light/dark theme. A top-right search box filters
+by label/id/type/tech/description (case-insensitive substring); clicking a
+legend type toggles it. Non-matching nodes and edges are **dimmed, not
+hidden** — no re-layout, nothing disappears, easy to reset.
 
 ## Step 4 — Verify and report
 
