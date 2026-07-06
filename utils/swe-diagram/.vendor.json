@@ -1,0 +1,10 @@
+{
+  "name": "swe-diagram",
+  "description": "System architecture diagraming tool",
+  "target_dir_name": ".swe-diagram",
+  "registry_key": "swe-diagram",
+  "vendor_paths": [
+    "SKILL.md",
+    "assets/"
+  ]
+}

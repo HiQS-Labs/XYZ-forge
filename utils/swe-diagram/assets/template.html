@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__TITLE__</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2330; --muted: #6b7280;
+    --line: #9aa4b2; --edge-label-bg: #f6f7f9; --border: #d8dee6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1c212b; --ink: #e6e9ef; --muted: #9aa4b2;
+      --line: #5c6675; --edge-label-bg: #12151b; --border: #333c4a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink);
+         font: 14px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif; }
+
+  .swe-canvas { position: relative; width: 100vw; height: 100vh;
+                overflow: hidden; cursor: grab; }
+  .swe-canvas.swe-grabbing { cursor: grabbing; }
+  .swe-viewport { position: absolute; transform-origin: 0 0; }
+  .swe-edges { position: absolute; overflow: visible; width: 1px; height: 1px; }
+  .swe-nodes { position: absolute; }
+
+  .swe-node { position: absolute; background: var(--panel);
+              border: 1px solid var(--border); border-radius: 8px;
+              border-top: 3px solid var(--node-color, #6b7280);
+              box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: move;
+              user-select: none; }
+  .swe-node-head { font-size: 9px; letter-spacing: .08em; font-weight: 700;
+                   color: var(--node-color, #6b7280); padding: 6px 10px 0; }
+  .swe-node-body { padding: 2px 10px 8px; }
+  .swe-node-label { font-weight: 600; }
+  .swe-node-tech { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .swe-node-group { position: absolute; top: -18px; left: 0; font-size: 10px;
+                    color: var(--muted); }
+
+  .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6; }
+  .swe-arrow { fill: var(--line); }
+  .swe-edge-label { font-size: 11px; fill: var(--muted); text-anchor: middle;
+                    paint-order: stroke; stroke: var(--edge-label-bg);
+                    stroke-width: 4px; }
+
+  .swe-title { position: absolute; top: 14px; left: 18px; font-size: 16px;
+               font-weight: 700; pointer-events: none; }
+  .swe-controls { position: absolute; bottom: 16px; left: 16px;
+                  display: flex; flex-direction: column; gap: 4px; }
+  .swe-btn { width: 30px; height: 30px; border: 1px solid var(--border);
+             border-radius: 6px; background: var(--panel); color: var(--ink);
+             font-size: 15px; cursor: pointer; }
+  .swe-btn:hover { border-color: var(--line); }
+  .swe-legend { position: absolute; bottom: 16px; right: 16px;
+                background: var(--panel); border: 1px solid var(--border);
+                border-radius: 8px; padding: 8px 12px; display: flex;
+                flex-wrap: wrap; gap: 10px; font-size: 11px;
+                color: var(--muted); max-width: 40vw; }
+  .swe-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+  .swe-legend-dot { width: 9px; height: 9px; border-radius: 50%;
+                    display: inline-block; }
+</style>
+</head>
+<body>
+<div id="diagram"></div>
+<script>
+__RENDERER_JS__
+</script>
+<script>
+renderDiagram(__DIAGRAM_JSON__);
+</script>
+</body>
+</html>
