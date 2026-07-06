@@ -1,0 +1,19 @@
+{
+  "fetch_ok": true,
+  "upstream": "origin/main",
+  "ahead": 0,
+  "behind": 0,
+  "dirty": true,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "c7f84316a3b03fb952268e9fcffec58b8caca2a4",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "path_absent",
+      "path": "utils/telemetry/write-xyz-heartbeat.sh",
+      "verdict": "unfixed"
+    }
+  ]
+}
