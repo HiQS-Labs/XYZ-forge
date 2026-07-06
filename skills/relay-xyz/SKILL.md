@@ -15,6 +15,18 @@ description: >-
 
 # relay-xyz — automated relays on the shipped harness
 
+**ALWAYS run this first — never claim the harness is missing without running it:**
+
+```bash
+bash skills/relay-xyz/find-harness.sh --check
+```
+
+That one command locates the harness from wherever your CWD is and reports which workers
+(codex/agy/tick) are on PATH. See
+[Preconditions](#preconditions--locate-the-harness-bundled-locator-never-hardcode-a-path) below for the
+full env-exporting form (`eval "$(... --env)"` + `cd`) that every recipe in this doc assumes has already
+run.
+
 This repo **already ships** the relay automation. Don't reinvent the CLI handoff turn by turn — call
 the scripts under [`relay-automation/`](../../relay-automation/). `/relay` defines the thread format
 and turn protocol and scaffolds the dated file; **`relay-xyz` is the thin repo-specific layer that
@@ -113,6 +125,25 @@ So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo rela
 harness) and points you at the vendor command. Two vendored repos each run `relay-drive.sh` from their
 own `.xyz/relay-automation/`, holding independent locks — no contention. (Editing the central harness
 clone also can't disturb a vendored run, since it uses its own pinned `.xyz/` copy.)
+
+## Per-repo persistence (don't cache a path)
+
+Once a target repo has used relay-xyz once, don't leave behind a machine-specific breadcrumb so the
+next session skips the "run `find-harness.sh` first" gate above. The only two persistence channels
+Claude Code **auto-loads** are:
+
+- **The target repo's memory** — seed a line the first time a run succeeds there, e.g. "this repo uses
+  relay-xyz; run `find-harness.sh --check` first."
+- **That repo's own `CLAUDE.md`, by skill name** — a pointer such as "for automated relays, use the
+  `relay-xyz` skill" (not a path).
+
+Either breadcrumb must be a **portable pointer** — the skill name or the `find-harness.sh` command —
+**never a cached absolute path and never a bare root pointer file** dropped into the target repo. A
+bare file isn't auto-loaded (a skimming agent skips it exactly like it skips this doc's own body), it's
+machine-specific (breaks on the next clone or device), a stale cached path is *worse* than no path at
+all, and cleaning one up later has cross-repo blast radius. **relay-xyz never auto-installs any file
+into a target repo** — only `install.sh` writes anything, and it writes only into `~/.claude/skills/`
+on the machine running it, never into the target repo itself.
 
 ## The two automated paths
 
