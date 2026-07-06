@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-05.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -123,5 +123,12 @@ New work for the Reviewer: re-review `utils/py/swarm_preflight.py`'s `sanitize_i
 its two call sites, and the new tests, against the original Blocker. Definition of Done for this round:
 the sanitizer genuinely closes the string-prefix bypass (a `test/..`-style path must be rejected) with
 no new containment or correctness regression in the reviewed surface.
+
+### Round 2 · Reviewer · codex
+- [Pass] `utils/py/swarm_preflight.py:283-302` now mirrors the shell boundary at `utils/swarm-preflight.sh:350-358`: inferred paths must stay under `test/`, reject `..` segments, reject `__pycache__` / `.pyc`, then resolve back under `test_root` before widening anything. The two widening sites also now gate through it at `utils/py/swarm_preflight.py:328-338` and `:340-352`, which closes the original `test/../...` prefix bypass instead of only renaming it.
+- [Pass] The new regression coverage is pointed at the right failure mode. `test/test_python_layer.py:172-211` proves real inferred test/helper paths still land while traversal and generated entries do not; `:213-229` directly exercises `sanitize_inferred_path()` on the named bypass strings. I re-ran `pytest -q test/test_python_layer.py -k 'gh137 or builder_binary_missing'` and `python3 -m py_compile utils/py/swarm_preflight.py utils/py/marathon_drive.py utils/py/rtl.py`; both passed.
+- [Pass] Re-checked the two Round 1 passes and they still hold: the binary probes remain before the first tick mutation in `utils/py/marathon_drive.py:243-245` vs. `:377-379`, and the Python path still delegates containment through `utils/py/rtl.py` rather than reimplementing the GH-107 exemption.
+
+**Verdict:** Approved
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
