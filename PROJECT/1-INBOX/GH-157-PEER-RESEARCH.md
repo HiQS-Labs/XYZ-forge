@@ -1,3 +1,32 @@
+---
+gh_issue: 157
+source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/157
+title: "Peer research: competitive analysis dashboard for XYZ multi-agent coordination"
+status: Draft - Paused
+created: 2026-07-06
+updated: 2026-07-06
+owner: noel
+doc_type: research
+complexity: 2
+risk: 1
+effort: 2
+phases: 1
+ratings_provisional: false
+non_goals:
+  - Not an active build plan
+  - Not a source of product claims until benchmark methodology is verified
+  - Not a commitment to adopt competitor features verbatim
+related:
+  - ROADMAP.md
+  - PROJECT/1-INBOX/GH-156-SWARMABILITY-PRELIGHT.md
+roadmap_exempt: false
+---
+
+# GH-157 · Peer research — competitive analysis dashboard for XYZ multi-agent coordination
+
+Status: paused research intake. Preserve the content, keep it GitHub-backed, and only promote it
+when someone intentionally wants to turn the findings into roadmap or benchmark work.
+
 # XYZ Multi-Agent Coordination — Competitive Analysis Dashboard
 
 > Beta snapshot · July 2026  
