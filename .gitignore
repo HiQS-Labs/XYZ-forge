@@ -6,14 +6,9 @@ node_modules/
 .DS_Store
 **/.DS_Store
 PROJECT/PDDA-ACTIVITY.jsonl
-PROJECT/1-INBOX/.DS_Store
-PROJECT/2-WORKING/.DS_Store
-PROJECT/2-WORKING/.DS_Store
 relay-system/2026-06-21/shakedown-lib.sh
-PROJECT/1-INBOX/.DS_Store
 /temp/
 .pdda-gh-state.tsv
-PROJECT/.DS_Store
 # GH-75 / GH-96: XYZ.json is the local newest-first completion log; XYZ.heartbeat.json is the mutable
 # in-flight companion marker. Both are machine-specific and kept out of git to avoid churn.
 XYZ.json
