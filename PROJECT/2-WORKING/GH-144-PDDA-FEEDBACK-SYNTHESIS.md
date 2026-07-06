@@ -6,7 +6,7 @@ risk: 2
 effort: 3
 ratings_provisional: true
 title: PDDA feedback synthesis — actionable planning doc
-status: Active (2-WORKING) — Phase 1 CONSTITUTION.md + DO-NOT-BUILD.md created (`1019503`/`52f4521`); remaining Phase 1-2 scope + Phase 3-5 (deferred/decision-gated) OPEN (0/45 checklist items formally checked). Issue #144 stays open.
+status: Active (2-WORKING) — Phases 1-2 verified/completed (marathon Lane C, 2026-07-06): CONSTITUTION.md + DO-NOT-BUILD.md already met their observables; PDDA.md gained a Constitution/DO-NOT-BUILD cross-link, a check severity (blocking vs warn-only) table, and a link to the new PDDA-MODE-GUIDE.md. Phases 3-5 remain deferred, decision-gated on the evidence-bridge open questions below. Issue #144 stays open pending operator decision on Phase 3-5 disposition.
 created: 2026-06-23
 updated: 2026-07-06
 owner: Noel (operator) · Codex (producer)
@@ -38,11 +38,11 @@ reviewed:
 
 | What was just completed | What's next |
 |---|---|
-| **Feedback intake, synthesis, and agy peer review** — the three June 23 feedback notes were read side by side, reduced to one common direction, split into "keep / build / defer / avoid", and the synthesis was reviewed by agy (relay `relay-system/2026-06-23/pdda-feedback-synthesis.md`: 1 Blocker + 3 Should applied). | **Phase 1 — lock positioning and scope**: write the shared PDDA constitution, the explicit do-not-build boundary, and the rule that deterministic checks may block while LLM review may only warn. *(Near-term proposed scope is Phases 1–2 only; Phases 3–5 are deferred — see Decision summary.)* |
+| **Phases 1-2 verified/completed** (marathon Lane C, 2026-07-06) — `CONSTITUTION.md`/`DO-NOT-BUILD.md` already satisfied all Phase 1 observables (created in `1019503`/`52f4521`); the deterministic/advisory split, `PDDA_MODE` precedence, and the LLM `error`→`warn` clamp were already documented and verified live in `utils/pdda/pdda-doc-ready.sh:115` (per `2610e45`). Added in this pass: a `PDDA.md`↔`CONSTITUTION.md` cross-link, a "Check severity contract" blocking-vs-warn-only table in `PDDA.md` (audited against the actual `pdda.sh` severities — none found mislabeled), and a new `PROJECT/PDDA-MODE-GUIDE.md` operator guide with concrete observe/light/full triggers. `pdda.sh run` (`full` mode): 0 errors/warns attributable to this lane's files (1 pre-existing unrelated error in a concurrent marathon lane's `MARATHON-142-143-144.md`, outside this lane's edit scope). | **Operator decision needed on Phase 3-5 disposition**: Phases 3–5 (artifact ergonomics, evidence bridge to rebalance, outward integrations) remain deferred and decision-gated — see "Open questions before promotion to 2-WORKING" below. Once decided, either spin 3–5 to a new deferred/future issue and close #144, or keep #144 open pending that work. |
 
-> **Header note:** this inbox proposal uses the user-requested `Most recently completed phase`
-> header. If promoted to `PROJECT/2-WORKING`, rename it to PDDA's active-doc contract header:
-> `What was just completed | What's next`.
+> **Header note (resolved):** this doc has been promoted to `PROJECT/2-WORKING` and already uses
+> PDDA's exact active-doc contract header, `What was just completed | What's next` (see the table
+> above). This note is kept only as provenance that the rename happened; there is nothing left to do.
 
 ## Table of Contents
 
@@ -126,31 +126,45 @@ recreate the same argument inside every script and planning doc.
 
 ### Checklist
 
-- [ ] Create `PROJECT/CONSTITUTION.md` or equivalent and state the non-negotiables explicitly:
+- [x] Create `PROJECT/CONSTITUTION.md` or equivalent and state the non-negotiables explicitly:
       local-first privacy, deterministic-before-LLM, verified-success-only, reversibility on
       destructive actions, and no hidden cloud sync for private notes.
       *Observable:* file exists, is linked from `ROUTER.md`, and names the required principles.
-- [ ] Create `PROJECT/DO-NOT-BUILD.md` and record the explicit anti-scope list from this synthesis.
+      **Already done** (`1019503`) — verified 2026-07-06: `ROUTER.md:14` links it; all five
+      non-negotiables are named under "Non-negotiables".
+- [x] Create `PROJECT/DO-NOT-BUILD.md` and record the explicit anti-scope list from this synthesis.
       *Observable:* file exists and lists at least the five avoided product directions above.
-- [ ] Add one positioning section to `PROJECT/PDDA.md` or a sibling doc that states PDDA's lane in
+      **Already done** (`52f4521`) — verified 2026-07-06: 6 entries in the table plus 2 restated
+      items, all attributed to their source feedback doc.
+- [x] Add one positioning section to `PROJECT/PDDA.md` or a sibling doc that states PDDA's lane in
       one paragraph: "thin repo-governance and safety layer," not "general AI project framework."
       *Observable:* a grep for `thin repo-governance and safety layer` returns one canonical hit.
-- [ ] Record the deterministic/advisory split as policy: deterministic checks may block; LLM review
+      **Already done** — the phrase lives once, canonically, in `PROJECT/CONSTITUTION.md:3` (the
+      "sibling doc" the observable allows). Done-now: added a cross-link from `PROJECT/PDDA.md`'s
+      intro back to `CONSTITUTION.md`/`DO-NOT-BUILD.md` (without repeating the exact phrase, so the
+      one-canonical-hit grep still holds) for startup-path symmetry.
+- [x] Record the deterministic/advisory split as policy: deterministic checks may block; LLM review
       may warn only.
       *Observable:* the policy is present in one canonical file, not implied across comments.
-- [ ] Decide whether `PDDA_MODE` default should remain permissive (`observe` or `light`) outside
+      **Already done** — `PROJECT/CONSTITUTION.md` → "Deterministic vs. advisory split".
+- [x] Decide whether `PDDA_MODE` default should remain permissive (`observe` or `light`) outside
       deliberate hardening work.
       *Observable:* the default and its rationale are documented in one place.
+      **Already done** — default is `observe`, documented + rationale in
+      `PROJECT/CONSTITUTION.md` → "Enforcement-mode default" and mechanically in `PROJECT/PDDA.md` →
+      "Enforcement modes".
 
 ### QA checklist — Phase 1
 
-- [ ] A new agent can answer "what is PDDA for?" by reading one file, not reconstructing it from
-      feedback threads.
-- [ ] The constitution and do-not-build files are linked from the startup path (`ROUTER.md` or a
-      doc it directly points to).
-- [ ] The deterministic-vs-LLM rule is stated once canonically and does not conflict with
-      `PROJECT/PDDA.md`.
-- [ ] Scope-control docs do not introduce a second roadmap or duplicate the plan body.
+- [x] A new agent can answer "what is PDDA for?" by reading one file, not reconstructing it from
+      feedback threads. — `PROJECT/CONSTITUTION.md`'s opening paragraph answers this in one read.
+- [x] The constitution and do-not-build files are linked from the startup path (`ROUTER.md` or a
+      doc it directly points to). — confirmed `ROUTER.md:14-15`.
+- [x] The deterministic-vs-LLM rule is stated once canonically and does not conflict with
+      `PROJECT/PDDA.md`. — `CONSTITUTION.md` explicitly names `PDDA.md` as the implementation of
+      record for the same split; no conflict found.
+- [x] Scope-control docs do not introduce a second roadmap or duplicate the plan body. — confirmed;
+      both docs are governance/policy, not plan bodies, and carry no task checklists.
 
 ## Phase 2 — Harden the contract and enforcement modes
 
@@ -158,24 +172,48 @@ recreate the same argument inside every script and planning doc.
 
 ### Checklist
 
-- [ ] Document precedence when both `PDDA_MODE` env and any file-based mode indicator are set.
+- [x] Document precedence when both `PDDA_MODE` env and any file-based mode indicator are set.
       *Observable:* one explicit precedence rule exists; no ambiguity remains.
-- [ ] Clamp every LLM readiness or reviewer finding to `warn` max before wider activation.
+      **Already done** (`2610e45`) — `PROJECT/PDDA.md` → "Enforcement modes": env `PDDA_MODE` wins
+      if set, else first non-comment line of `.pdda-mode`, else built-in default `observe`.
+- [x] Clamp every LLM readiness or reviewer finding to `warn` max before wider activation.
       *Observable:* no LLM path is capable of emitting a blocking severity in the documented contract.
-- [ ] Audit the existing deterministic scripts and remove or demote any check that is acting like
+      **Already done, verified live** (`2610e45`) — documented in `PROJECT/PDDA.md` → "LLM-assisted
+      doc readiness review", and confirmed in code: `utils/pdda/pdda-doc-ready.sh:115` clamps any
+      `error` severity to `warn` before it can be recorded.
+- [x] Audit the existing deterministic scripts and remove or demote any check that is acting like
       policy theater rather than catching real drift.
       *Observable:* each check is tagged internally or documented as blocking vs warn-only.
-- [ ] Make the stale-doc and destructive-action rules explicitly reversible and human-mediated.
+      **Done now** — audited all 8 deterministic checks' actual `pdda_record_finding` severities in
+      `utils/pdda/pdda.sh` and added a "Check severity contract" table to `PROJECT/PDDA.md` (after
+      section 1). Finding: severities were already correctly calibrated — no check found acting as
+      policy theater; `changelog`, `stale`, and `issue-doc-sync` were already warn-only per `2610e45`,
+      now made explicit in one table instead of implied across script comments.
+- [x] Make the stale-doc and destructive-action rules explicitly reversible and human-mediated.
       *Observable:* destructive auto-repair remains absent or clearly gated.
-- [ ] Write a short "when to stay in observe/light mode" operator guide.
+      **Already done, verified live** (`2610e45`) — `pdda.sh stale` and `pdda.sh issue-doc-sync` only
+      emit a `warn` recommending the exact `git mv`; grepped `utils/pdda/*.sh` for any auto-move/
+      auto-rm of a repo doc and found none (only tmp-file cleanup in `pdda-gh-refresh.sh`, unrelated).
+- [x] Write a short "when to stay in observe/light mode" operator guide.
       *Observable:* guide exists and names concrete triggers for not using strict/full mode.
+      **Done now** — created `PROJECT/PDDA-MODE-GUIDE.md` with concrete stay-below-`full` triggers
+      (fresh install, known untriaged backlog, active migration, new/changed check, low value-to-
+      friction ratio, single-operator repo) and graduate-to-`full` triggers, linked from both
+      `PROJECT/PDDA.md` and `PROJECT/CONSTITUTION.md`.
 
 ### QA checklist — Phase 2
 
-- [ ] A reviewer can point to one source of truth for enforcement severity and mode precedence.
-- [ ] No documented LLM step can block a build.
-- [ ] Every destructive or quasi-destructive action has an explicit rollback or human gate.
-- [ ] The operator guide uses real examples of when strictness is worth the friction and when it is not.
+- [x] A reviewer can point to one source of truth for enforcement severity and mode precedence. —
+      `PROJECT/PDDA.md` → "Enforcement modes" (precedence + mode table) and the new "Check severity
+      contract" table (per-check severity capability).
+- [x] No documented LLM step can block a build. — confirmed in doc and in code
+      (`pdda-doc-ready.sh:115`).
+- [x] Every destructive or quasi-destructive action has an explicit rollback or human gate. —
+      confirmed: stale-doc and issue-doc-sync drift are both flag-only, recommending a human-run
+      `git mv`; no code path executes the move.
+- [x] The operator guide uses real examples of when strictness is worth the friction and when it is
+      not. — `PROJECT/PDDA-MODE-GUIDE.md` names six concrete stay-below-`full` scenarios and three
+      graduate-to-`full` scenarios, not abstract advice.
 
 ## Phase 3 — Improve artifact ergonomics without becoming Spec Kit
 

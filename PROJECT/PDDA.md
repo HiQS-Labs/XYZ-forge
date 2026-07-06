@@ -10,6 +10,13 @@ The core idea is simple:
 - an LLM reviewer flags structural or planning-quality gaps that are hard to express as regex alone
 - `ROADMAP.md` stays a pointer/index, while project detail lives in the individual project docs
 
+PDDA's one-line positioning statement and its non-negotiables (local-first privacy,
+deterministic-before-LLM, verified-success-only, reversibility on destructive actions) are canonical in
+[`PROJECT/CONSTITUTION.md`](CONSTITUTION.md); the anti-scope list is canonical in
+[`PROJECT/DO-NOT-BUILD.md`](DO-NOT-BUILD.md). This document is the enforcement mechanics that implement
+those non-negotiables — see [Enforcement modes](#enforcement-modes) and the check severity table below
+for how the deterministic-before-LLM split is actually wired.
+
 ## Goals
 
 - Keep `PROJECT/2-WORKING` limited to docs that are truly active.
@@ -404,6 +411,31 @@ Why warn-only + flag-only:
   one ignorable warn line and a missed flag just leaves today's manual reconciliation — both cheap, so
   warn-only never-blocks is the right calibration (same stance as `pdda.sh stale` and `pdda.sh changelog`)
 
+#### Check severity contract — blocking vs warn-only
+
+Each check's severity capability is fixed in code, not a matter of judgment per run. This table is the
+one canonical place that audits and states which checks *can* block (in `full` mode) versus which are
+structurally warn-only regardless of mode — the Phase 2 audit item from
+[`PROJECT/2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md`](2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md).
+
+| Check | Can emit `error`? | Blocking in `full` mode? |
+|---|---|---|
+| `pdda.sh frontmatter` | yes | yes |
+| `pdda.sh status-table` | yes | yes |
+| `pdda.sh hardcoded-paths` | yes | yes |
+| `pdda.sh roadmap` | yes (checklist/task-list leak into `ROADMAP.md`) — sprawl-size finding is `warn` | yes, for the `error` findings only |
+| `pdda.sh roadmap-coverage` | yes | yes |
+| `pdda.sh changelog` | no — `warn` only, by design | never |
+| `pdda.sh stale` | no — `warn` only, flag-only (never auto-moves a file) | never |
+| `pdda.sh issue-doc-sync` | no — `warn` only, flag-only (never auto-moves a file) | never |
+| `pdda-doc-ready.sh` (LLM layer) | no — any model `error` is clamped to `warn` in code | never |
+
+None of the always-`warn` checks (`changelog`, `stale`, `issue-doc-sync`, the LLM layer) were demoted
+from a prior blocking state in this pass — they were already warn-only per `2610e45` (2026-06-22). This
+table exists to make that fact auditable in one place instead of implied across four scripts' comments.
+No check in this repo was found acting as policy theater (blocking on a finding with no real drift
+signal); the audit found the existing severities already correctly calibrated.
+
 ### 2. LLM-assisted doc readiness review
 
 This catches the issues where structure exists but planning quality is weak.
@@ -495,6 +527,9 @@ onto the rails deliberately.
   mechanic was removed (see the stale-doc check above). Mode controls one thing only: whether an
   `error` blocks. Every check ends with `exit "$(pdda_gated_exit "$EXIT_CODE")"`, which returns the
   real code only in `full`.
+
+For concrete triggers on *when* to pick `observe`/`light` over `full` (not just the mechanics above),
+see [`PROJECT/PDDA-MODE-GUIDE.md`](PDDA-MODE-GUIDE.md).
 
 ## ROADMAP.md contract
 

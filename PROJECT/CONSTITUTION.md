@@ -50,7 +50,9 @@ matching Gemini's freeze/observe-mode signal from the June 23 feedback: a system
 about doc rot, not block a perfectly good build, until a repo deliberately opts into `full`. The
 precedence rule between `PDDA_MODE` (env) and a committed `.pdda-mode` file, and the `observe` /
 `light` / `full` ladder, are already documented canonically in `PROJECT/PDDA.md` → "Enforcement
-modes" — this document does not restate the mechanics, only ratifies the default as policy.
+modes" — this document does not restate the mechanics, only ratifies the default as policy. For
+concrete operator triggers on when to stay below `full`, see
+[`PROJECT/PDDA-MODE-GUIDE.md`](PDDA-MODE-GUIDE.md).
 
 ## Scope boundary
 
