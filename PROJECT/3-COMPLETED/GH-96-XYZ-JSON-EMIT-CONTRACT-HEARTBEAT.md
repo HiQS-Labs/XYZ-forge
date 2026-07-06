@@ -2,9 +2,9 @@
 gh_issue: 96
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96
 title: "XYZ⇄Rebalance integration — Seam #1: XYZ.json emit contract (schema doc + heartbeat)"
-status: Active (2-WORKING)
+status: "Shipped (`f1e5223`) — Seam #1 done; issue #96 stays open for Seam #3"
 created: 2026-07-05
-updated: 2026-07-05
+updated: 2026-07-06
 owner: noel
 doc_type: feature
 goal: >
@@ -45,7 +45,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted 2026-07-05 from the still-open GH-96 issue text (Seam #1 was never its own capture doc — only Seam #2 was split out and shipped). Not yet built. | Run `utils/swarm-preflight.sh` against this doc; if READY, fire a marathon lane scoped to the artifacts below. |
+| **Shipped 2026-07-06 (`f1e5223`)**, on the second marathon attempt. The first attempt built+approved cleanly (codex → agy Approved, 2 turns) but crashed `marathon-drive.sh` itself immediately after relay-approval with a garbled `syntax error`, then wiped this repo's working tree + `.git` internals down to a handful of surviving dot-dirs (`origin/main` was unaffected — recovered via re-clone). Root cause: `relay-turn-lib.sh`'s `rtl_worktree_end()` copied artifacts back via a non-atomic in-place `cp -R`; since this lane's own artifacts include the actively-executing `marathon-drive.sh`/`relay-drive.sh`, the live interpreter read a half-old/half-new file mid-script. Fixed as its own kernel patch ([GH-140](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/140), `f64a051`): atomic temp-file+rename copyback (same `os.replace` pattern GH-75's writer already uses). Re-fired the identical lane on a temp branch with close monitoring — completed cleanly end-to-end this time (gate 44/0, agy Approved), confirming the fix. Verified independently (gate 44/0, `test/relay-self-sufficiency.sh`'s one full-suite flake reproduced clean 4/4 in isolation — pre-existing, unrelated), fast-forward merged to `main`, pushed. | Nothing outstanding for Seam #1. Seam #3 (tick-lane consume) stays gated behind Rebalance-OS proving the forward signal moves their ranking, per issue #96's own text — not actionable yet. |
 
 ## Problem (grounded in the current code)
 
@@ -108,22 +108,22 @@ the harness root, never `--target-root`; gitignored alongside it) holding a sing
 
 ## Definition of done
 
-- [ ] `relay-automation/README.md` gains a documented `XYZ.json` schema + emit-cadence section
-- [ ] `utils/telemetry/write-xyz-heartbeat.sh <harness> <sessionId>` — atomic overwrite of
+- [x] `relay-automation/README.md` gains a documented `XYZ.json` schema + emit-cadence section
+- [x] `utils/telemetry/write-xyz-heartbeat.sh <harness> <sessionId>` — atomic overwrite of
       `XYZ.heartbeat.json` at the harness repo root
-- [ ] `marathon-drive.sh:437` calls the heartbeat writer right after `marathon.phase.start`
-- [ ] `relay-drive.sh`'s round-loop top calls the heartbeat writer once per round, gated by
+- [x] `marathon-drive.sh:437` calls the heartbeat writer right after `marathon.phase.start`
+- [x] `relay-drive.sh`'s round-loop top calls the heartbeat writer once per round, gated by
       `XYZ_HARNESS_CONTEXT` the same way GH-75's completion hook already is (no double-write when
       nested inside a marathon phase)
-- [ ] Each harness's existing terminal `append-xyz-completion.sh` call also clears
+- [x] Each harness's existing terminal `append-xyz-completion.sh` call also clears
       `XYZ.heartbeat.json` when its `sessionId` matches
-- [ ] `XYZ.heartbeat.json` (+ its lock artifact, if any) added to `.gitignore` alongside `XYZ.json`
-- [ ] `test/xyz-completion.sh` extended (already covers `append-xyz-completion.sh`/health-lib; add the
+- [x] `XYZ.heartbeat.json` (+ its lock artifact, if any) added to `.gitignore` alongside `XYZ.json`
+- [x] `test/xyz-completion.sh` extended (already covers `append-xyz-completion.sh`/health-lib; add the
       heartbeat writer to the same file rather than a new one): writer overwrites (not appends), a
       mid-run heartbeat exists while `XYZ.json` shows only the prior completed record, heartbeat is
       cleared on matching completion, a crashed/killed run leaves the heartbeat in place (simulated),
       concurrent writers don't corrupt the file
-- [ ] `bash validate.sh` green
+- [x] `bash validate.sh` green
 
 ## Swarm Preflight Contract
 
