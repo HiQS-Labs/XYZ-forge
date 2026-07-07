@@ -2,7 +2,7 @@
 gh_issue: 156
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156
 title: "Prelight: swarmability scoring using codebase-memory-mcp graph signals"
-status: parked
+status: Active (2-WORKING) — planning doc opened; Phase 0 scoring contract next
 created: 2026-07-06
 updated: 2026-07-06
 owner: noel

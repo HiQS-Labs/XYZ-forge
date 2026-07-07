@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased]
+
+### Added
+- **HQ Rollup**: Added `utils/hq/rollup.sh`, an automated cross-repo dashboard generator that parses `ROADMAP.md` active/parked items across registered repositories and synthesizes them into Obsidian via `agy` ([#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) ad-hoc detour).
+
 ## 2026-07-06
 
 ### Marathon Lane B — #143 front-door CLOSED (+ fixed a real relay-pkg freshness drift → 104/104)

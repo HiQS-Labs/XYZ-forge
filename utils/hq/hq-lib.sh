@@ -16,11 +16,13 @@
 #   HQ_XYZ_REGISTRY       default ${XDG_CONFIG_HOME:-$HOME/.config}/xyz/registry.tsv
 #   HQ_REBALANCE_DB       default $HOME/Documents/rebalance-OS/rebalance.db
 #   HQ_SEARCH_ROOTS       default "$HOME/Documents/GH Repos:$HOME/Documents:$HOME" (colon-separated)
+#   HQ_OBSIDIAN_VAULT     default "$HOME/Documents/Noel Saw/Dashboards" (for rollup synthesis)
 
 : "${HQ_PDDA_REGISTRY_DIR:=$HOME/git-pulse-sync/pdda}"
 : "${HQ_XYZ_REGISTRY:=${XDG_CONFIG_HOME:-$HOME/.config}/xyz/registry.tsv}"
 : "${HQ_REBALANCE_DB:=$HOME/Documents/rebalance-OS/rebalance.db}"
 : "${HQ_SEARCH_ROOTS:=$HOME/Documents/GH Repos:$HOME/Documents:$HOME}"
+: "${HQ_OBSIDIAN_VAULT:=$HOME/Documents/Noel Saw/Dashboards}"
 
 hq_lc(){ printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 hq_bare(){ printf '%s' "${1##*/}"; }                       # strip any owner/ prefix

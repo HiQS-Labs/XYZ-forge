@@ -6,14 +6,17 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 35 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0
+Summary: 38 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-147 · LM Studio local-LLM lane for consult, relay, and swarm | — | [GH-147-LM-STUDIO.md](PROJECT/1-INBOX/GH-147-LM-STUDIO.md) · [#147](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/147) |
+| GH-156 · Prelight: swarmability scoring using codebase-memory-mcp graph signals | — | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/1-INBOX/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
+| GH-157 · Peer research: competitive analysis dashboard for XYZ multi-agent coordination | ⏸️ | [GH-157-PEER-RESEARCH.md](PROJECT/1-INBOX/GH-157-PEER-RESEARCH.md) · [#157](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/157) |
+| GH-147 · LM Studio local-LLM lane for consult, relay, and swarm | 🟢 | [GH-147-LM-STUDIO.md](PROJECT/2-WORKING/GH-147-LM-STUDIO.md) · [#147](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/147) |
 | GH-141 · Containment: rtl_enforce's pre-turn dirty snapshot can't see a concurrent peer session's edit that lands mid-turn, reverting it as off-lane | — | [GH-141-CONCURRENT-PEER-EDIT-RACE.md](PROJECT/1-INBOX/GH-141-CONCURRENT-PEER-EDIT-RACE.md) · [#141](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/141) |
-| GH-133 · flaky: relay-dep-drift.sh case 4 "turn still committed" fails ~1-in-3, reproducible on untouched main | — | [GH-133-RELAY-DEP-DRIFT-FLAKE.md](PROJECT/1-INBOX/GH-133-RELAY-DEP-DRIFT-FLAKE.md) · [#133](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/133) |
-| GH-94 · Installer self-extracting heredoc mangles !→\! when materialized programmatically | — | [GH-94-INSTALLER-HEREDOC-ESCAPE.md](PROJECT/1-INBOX/GH-94-INSTALLER-HEREDOC-ESCAPE.md) · [#94](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/94) |
+| GH-150 · marathon-plan: docOf() picks wrong doc → false "unrated" | ✅ | [GH-150-MARATHON-PLAN-DOCOF-POINTER.md](PROJECT/3-COMPLETED/GH-150-MARATHON-PLAN-DOCOF-POINTER.md) · [#150](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/150) |
+| GH-133 · flaky: relay-dep-drift.sh case 4 "turn still committed" fails ~1-in-3, reproducible on untouched main | ✅ | [GH-133-RELAY-DEP-DRIFT-FLAKE.md](PROJECT/3-COMPLETED/GH-133-RELAY-DEP-DRIFT-FLAKE.md) · [#133](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/133) |
+| GH-94 · Installer self-extracting heredoc mangles !→\! when materialized programmatically | ✅ | [GH-94-INSTALLER-HEREDOC-ESCAPE.md](PROJECT/3-COMPLETED/GH-94-INSTALLER-HEREDOC-ESCAPE.md) · [#94](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/94) |
 | GH-129 · deep-research: add Perplexity grounded search (Sonar) via OpenRouter as the second backend | ✅ | [GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md](PROJECT/3-COMPLETED/GH-129-DEEP-RESEARCH-PERPLEXITY-OPENROUTER.md) · [#129](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/129) |
 | GH-126 · swarm-preflight: GH-55 covering-test inference uses naive substring match — false-positive risk in ALLOW_PATHS | — | [#126](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/126) |
 | GH-127 · swarm-preflight: GH-54 fs-touching test detector misses bare &gt; redirects | — | [#127](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/127) |
@@ -30,7 +33,7 @@ Summary: 35 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · �
 | GH-113 · fix(marathon-yaml): validator rejects agy reviewer — blocks multi-phase YAML plans | ✅ | [#113](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/113) |
 | GH-112 · Progressive Python port — boundary decision + opt-in Python layer | ✅ | [decision record](decisions/2026-07-04-python-port-boundary.md) · [GH-112-PYTHON-134-PARITY.md](PROJECT/3-COMPLETED/GH-112-PYTHON-134-PARITY.md) · [GH-112-PYTHON-PORT-SPIKE.md](PROJECT/3-COMPLETED/GH-112-PYTHON-PORT-SPIKE.md) · [#112](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112) |
 | GH-109 · Gemini 3.1 Deep Think audit — watchdog process leak, tmp collision, DRY turn scripts, Python inline extraction | — | [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md) · [GH-109-GEMINI-FEEDBACK.md](PROJECT/1-INBOX/GH-109-GEMINI-FEEDBACK.md) · [#109](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/109) |
-| GH-110 · Fable 5 Max audit — shellcheck + vendor integrity + strict-mode hardening | — | [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md) · [GH-110-SHELLCHECK-VENDOR-FIXES.md](PROJECT/1-INBOX/GH-110-SHELLCHECK-VENDOR-FIXES.md) · [#110](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110) |
+| GH-110 · Fable 5 Max audit — shellcheck + vendor integrity + strict-mode hardening | — | [MARATHON-PLAN-2026-07-04.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-04.md) · [GH-110-SHELLCHECK-VENDOR-FIXES.md](PROJECT/2-WORKING/GH-110-SHELLCHECK-VENDOR-FIXES.md) · [#110](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110) |
 | GH-87 · Deep Research mode — provider-agnostic grounded search seam (Agy Gemini Search first adapter) | ✅ | [GH-87-DEEP-RESEARCH-MODE.md](PROJECT/3-COMPLETED/GH-87-DEEP-RESEARCH-MODE.md) · [#87](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/87) |
 | GH-61 · CI GitHub Actions (Tier 1 lint/doc-hygiene + Tier 2 validate.sh) | ✅ | [GH-61-CI-GITHUB-ACTIONS.md](PROJECT/1-INBOX/GH-61-CI-GITHUB-ACTIONS.md) · [gh-61-ci-tier1-brief.md](PROJECT/2-WORKING/briefs/gh-61-ci-tier1-brief.md) · [#61](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61) |
 | GH-41 · task.done not terminal vs higher-epoch reclaim (silent token resurrection) | ✅ | [decisions/2026-07-02-terminality-seal.md](decisions/2026-07-02-terminality-seal.md) · [GH-41-DONE-NOT-TERMINAL.md](PROJECT/3-COMPLETED/GH-41-DONE-NOT-TERMINAL.md) · [#41](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/41) |
@@ -42,19 +45,20 @@ Summary: 35 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 11 · �
 | Dueling/relay · token resilience for a non-participating peer + multi-round reuse | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/4-MISC/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Gate design · convergence gates that pin a worse code shape | — | [AUTOMATED-RELAY.md → Field findings](PROJECT/4-MISC/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
 | Orchestration · in-loop gate verification must run sandbox-off | 🟡 | [AUTOMATED-RELAY.md → Field findings](PROJECT/4-MISC/AUTOMATED-RELAY.md#field-findings--first-cross-repo-dueling-run-2026-06-26) |
-| GH-142 · Tooling · agy reliability testing | ⏸️ | [AGY-RELIABILITY-TESTING.md](PROJECT/1-INBOX/AGY-RELIABILITY-TESTING.md) · [#142](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/142) |
-| GH-143 · Tooling · front-door onboarding health | 🟡 | [FRONT-DOOR/2026-06-22.md](PROJECT/1-INBOX/FRONT-DOOR/2026-06-22.md) · [#143](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/143) |
-| GH-144 · PDDA · feedback-synthesis direction | 🟡 | [PDDA-FEEDBACK-SYNTHESIS-PLAN.md](PROJECT/1-INBOX/PDDA/PDDA-FEEDBACK-SYNTHESIS-PLAN.md) · [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md) · [#144](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/144) |
+| GH-142 · Tooling · agy reliability testing | 🟢 | [GH-142-AGY-RELIABILITY-TESTING.md](PROJECT/2-WORKING/GH-142-AGY-RELIABILITY-TESTING.md) · [#142](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/142) |
+| GH-143 · Tooling · front-door onboarding health | 🟢 | [GH-143-FRONT-DOOR-ONBOARDING.md](PROJECT/2-WORKING/GH-143-FRONT-DOOR-ONBOARDING.md) · [#143](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/143) |
+| GH-144 · PDDA · feedback-synthesis direction | 🟢 | [GH-144-PDDA-FEEDBACK-SYNTHESIS.md](PROJECT/2-WORKING/GH-144-PDDA-FEEDBACK-SYNTHESIS.md) · [pdda-feedback-synthesis.md](relay-system/2026-06-23/pdda-feedback-synthesis.md) · [#144](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/144) |
 
 ## In progress
 
-Summary: 13 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 9 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 14 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 10 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-156 · Prelight swarmability scoring using codebase-memory-mcp graph signals | 🟡 | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/2-WORKING/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
 | GH-148 · Python-layer swarm_preflight: inferred-path check lacked GH-137 sanitizer | ✅ | [relay-system/2026-07-05/gh112-134-parity-codex-review.md](relay-system/2026-07-05/gh112-134-parity-codex-review.md) · [#148](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/148) |
 | GH-146 · swe-diagram: add hub & ring (radial) layout option | ✅ | [DIAGRAM-HUB.html](PROJECT/3-COMPLETED/DIAGRAM-HUB.html) · [#146](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/146) |
-| GH-138 · HQ hardening: add promote command + fix marathon-plan detection glob | 🟡 | [hq-lib.sh:286](utils/hq/hq-lib.sh) · [GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md](PROJECT/2-WORKING/GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md) · [#138](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/138) |
+| GH-138 · HQ hardening: add promote command + fix marathon-plan detection glob | ✅ | [GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md](PROJECT/3-COMPLETED/GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md) · [#138](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/138) |
 | GH-137 · swarm-preflight: covering-test inference can inject test/.. (repo root) + generated files into ALLOW_PATHS | ✅ | [utils/swarm-preflight.sh](utils/swarm-preflight.sh) · [GH-137-SWARM-PREFLIGHT-INFERENCE-CONTAINMENT.md](PROJECT/3-COMPLETED/GH-137-SWARM-PREFLIGHT-INFERENCE-CONTAINMENT.md) · [#137](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/137) |
 | GH-132 · HQ resolution/dispatch hardening (Codex-review follow-ups) | 🟡 | [GH-132-HQ-RESOLUTION-HARDENING.md](PROJECT/3-COMPLETED/GH-132-HQ-RESOLUTION-HARDENING.md) · [#132](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/132) |
 | Marathon Plan B Waves 1–3 | ✅ | [MARATHON-PLAN-2026-07-03-B-PARALLEL.md](PROJECT/3-COMPLETED/MARATHON-PLAN-2026-07-03-B-PARALLEL.md) |
@@ -133,7 +137,7 @@ Summary: 67 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 67 · �
 | GH-20 · agy first-class footing in live relay docs | ✅ | [README.md](README.md) · [relay-automation/README.md](relay-automation/README.md) · [#20](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/20) · [GH-20-AGY-FIRST-CLASS-FOOTING.md](PROJECT/3-COMPLETED/GH-20-AGY-FIRST-CLASS-FOOTING.md) |
 | GH-18 · cross-repo driven-relay friction | ✅ | [codex-turn.sh:57](relay-automation/codex-turn.sh#L57) · [GH-18-CROSS-REPO-RELAY-FRICTION.md](PROJECT/3-COMPLETED/GH-18-CROSS-REPO-RELAY-FRICTION.md) · [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18) |
 | GH-21 · relay quality gate — independent post-generation validator | ✅ | [GH-21-RELAY-QUALITY-GATE.md](PROJECT/3-COMPLETED/GH-21-RELAY-QUALITY-GATE.md) · [#21](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/21) |
-| Part A · Phase 1 — Cost observability foundation | ✅ | [COST-OBSERVABILITY-PLAN.md](PROJECT/4-MISC/COST-OBSERVABILITY-PLAN.md) |
+| Part A · Phase 1 — Cost observability foundation | ✅ | [#151](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/151) · [#152](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/152) · [#153](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/153) · [COST-OBSERVABILITY-PLAN.md](PROJECT/4-MISC/COST-OBSERVABILITY-PLAN.md) |
 | Part A · Phases 2–4 — Marathon harness build | ✅ | [MARATHON-HARNESS.md](PROJECT/3-COMPLETED/MARATHON-HARNESS.md) |
 | Part A · Phase 5 — Cross-system cost comparison | ✅ | [COST-COMPARISON.md](PROJECT/4-MISC/COST-COMPARISON.md) |
 | Part B · Phase 1 — Epoch fencing & stale-writer prevention | ✅ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md#phase-1--epoch-fencing--stale-writer-prevention-r1--g3) · [decision record](decisions/2026-06-18-epoch-fencing.md) |

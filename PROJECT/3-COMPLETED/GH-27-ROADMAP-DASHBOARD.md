@@ -66,6 +66,13 @@ refresh command, and deterministic verification. No `tick`, relay, or schema wor
 2. Preserve the pointer-ledger contract by treating the dashboard as read-only output, never a second source of execution detail.
 3. Add a deterministic refresh check so the generation path can be re-run and verified, not hand-waved.
 
+## Ad-Hoc Detour: HQ Rollup
+
+Following the success of this dependency-free parser, an ad-hoc detour project was executed to build a cross-repo HQ Rollup system (`utils/hq/rollup.sh`).
+- It extracts active and queued items from `ROADMAP.md` across all `hq_known_repos` (reusing the parser logic).
+- It synthesizes the data using `agy` and writes a clean markdown dashboard to the user's Obsidian Vault.
+- This is registered as a daily LaunchAgent (`com.neochro.hq-rollup`) that runs at 5:50 PM PT.
+
 ## Builder brief
 
 → [briefs/gh-27-roadmap-dashboard-brief.md](briefs/gh-27-roadmap-dashboard-brief.md) (the single-phase
