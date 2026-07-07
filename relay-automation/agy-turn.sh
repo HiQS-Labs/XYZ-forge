@@ -132,6 +132,10 @@ fi
 
 agy_auth_preflight || exit 5
 agy_validate_model || exit 5
+# Preserve an inherited harness tick root from the orchestrator (e.g. vendored .xyz marathon runs);
+# default to this shim's ROOT only when the caller did not already pin TICK_REPO_ROOT. (GH-171)
+: "${TICK_REPO_ROOT:=$ROOT}"
+export TICK_REPO_ROOT
 # GH-161: resolve the transcript path and export RTL_LOG BEFORE rtl_init (same reasoning as
 # codex-turn.sh) so its decision-trace line, and every later rtl_trace/rtl_log_always call, lands in
 # this turn's transcript. Persistent by default; falls back to the historical PID-keyed tmp path on
@@ -155,6 +159,30 @@ prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 # unread drift → empty → prompt unchanged. Never blocks. (decisions/2026-07-01-cross-agent-dep-conflict.md)
 drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
 [[ -n "$drift_brief" ]] && prompt="${drift_brief}"$'\n'"${prompt}"
+
+# GH-171 follow-up: mirror the Codex/Aider claim-before-launch guard. A driven agy turn that edits the
+# relay/artifact but never claims the specific handed-off token leaves GH-67's post-commit handoff with
+# no authority, so the lane deadlocks as apparent "no-progress". Claiming here is idempotent when agy
+# already holds the token.
+claim_paths="${f#"$RTL_ROOT"/}"
+if [[ -n "${ALLOW_PATHS:-}" ]]; then
+  IFS=',' read -ra _claim_allow <<<"${ALLOW_PATHS}"
+  for _ap in "${_claim_allow[@]}"; do
+    _ap="${_ap#"${_ap%%[![:space:]]*}"}"
+    _ap="${_ap%"${_ap##*[![:space:]]}"}"
+    [[ -n "$_ap" ]] && claim_paths="$claim_paths,$_ap"
+  done
+fi
+_tickroot="${TICK_REPO_ROOT:-$ROOT}"; _tickbin="$(rtl_tick_bin "$_tickroot")"
+if [[ -x "$_tickbin" ]]; then
+  TICK_REPO_ROOT="$_tickroot" "$_tickbin" claim "$t" --agent "$me" --paths "$claim_paths" >/dev/null 2>&1 || true
+  _claimer="$(TICK_REPO_ROOT="$_tickroot" "$_tickbin" info "$t" 2>/dev/null | sed -n 's/^claimer:[[:space:]]*//p' | head -n1)"
+  if [[ "$_claimer" != "$me" ]]; then
+    printf 'agy-turn: could not establish token ownership of %s (claimer=%s, expected %s) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info %s`\n' "$t" "${_claimer:-none}" "$me" "$t" >&2
+    exit 5
+  fi
+  TICK_REPO_ROOT="$_tickroot" "$_tickbin" ping "$t" --agent "$me" >/dev/null 2>&1 || true
+fi
 
 # Transcript/log: AGY_LOG is already resolved above (persistent-by-default via rtl_default_log, or a
 # tmp fallback — see the comment at the RTL_LOG export). Persisted so the headless run is auditable.
@@ -180,7 +208,6 @@ bounded_rc=0
 wt=""; cwd_wrap=()
 if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
   if wt="$(rtl_worktree_begin)"; then
-    export TICK_REPO_ROOT="$ROOT"
     cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
     printf 'agy-turn: worktree isolation ON (%s)\n' "$wt" >&2
   else

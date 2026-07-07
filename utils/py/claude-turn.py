@@ -45,6 +45,7 @@ def main():
         
     allow_paths = os.environ.get("ALLOW_PATHS", "")
     peer = os.environ.get("RELAY_PEER", "")
+    tick_repo_root = os.environ.get("TICK_REPO_ROOT", root)
     
     rtl = RelayTurnLib(root, xyz_root, f, allow_paths)
     
@@ -84,7 +85,7 @@ def main():
     if os.environ.get("RELAY_WORKTREE_ISOLATION", "0") == "1":
         wt = rtl.worktree_begin()
         if wt:
-            run_env["TICK_REPO_ROOT"] = root
+            run_env["TICK_REPO_ROOT"] = tick_repo_root
             run_cwd = wt
             print(f"claude-turn: worktree isolation ON ({wt})", file=sys.stderr)
         else:
@@ -142,7 +143,7 @@ def main():
             if tokens_in > 0 or tokens_out > 0:
                 tick_bin = os.environ.get("TICK_BIN", os.path.join(root, "bin", "tick"))
                 tick_env = dict(os.environ)
-                tick_env["TICK_REPO_ROOT"] = root
+                tick_env["TICK_REPO_ROOT"] = tick_repo_root
                 tick_res = subprocess.run(
                     [tick_bin, "cost", t, "--agent", me, "--tokens-in", str(tokens_in), "--tokens-out", str(tokens_out), "--tool", "claude"],
                     env=tick_env, capture_output=True

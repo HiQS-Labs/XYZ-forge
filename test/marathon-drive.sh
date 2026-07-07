@@ -355,5 +355,78 @@ BOTH_OUT="$(CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" run_driver --d
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (17) GH-171: vendored full chain keeps claims in the consumer repo's .tick ─
+# Reproduces the live downstream shape: a consumer repo vendors this harness under .xyz/, then runs
+# marathon-drive -> relay-drive -> marathon-agent -> codex-turn/agy-turn with worktree isolation ON
+# and no --target-root. The regression is a shim clobbering the inherited TICK_REPO_ROOT, silently
+# creating .xyz/.tick and claiming there while relay-drive watches the consumer repo's real .tick.
+V="$WORK/vendor-consumer"
+mkdir -p "$V"
+git -C "$V" init -q
+git -C "$V" config user.email t@example.com
+git -C "$V" config user.name test
+printf '.tick/\n.xyz/.tick/\n' > "$V/.gitignore"
+mkdir -p "$V/src"
+printf 'module.exports = 1\n' > "$V/src/feature.js"
+printf '# brief\n\nUpdate src/feature.js and append the relay.\n' > "$V/brief.md"
+git -C "$V" add . >/dev/null 2>&1
+git -C "$V" commit -q -m "consumer init" >/dev/null 2>&1
+mkdir -p "$V/.xyz"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/relay-automation" "$V/.xyz/"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/bin" "$V/.xyz/"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/src" "$V/.xyz/"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/utils" "$V/.xyz/"
+VSTUBS="$WORK/vendor-stubs"
+mkdir -p "$VSTUBS"
+VCODEX="$VSTUBS/codex"
+cat > "$VCODEX" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '\n### Round 1 · Builder · %s (stub)\nVERDICT: FAIL\nBasis: test builder\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+printf 'module.exports = 2\n' > "$PWD/src/feature.js"
+exit 0
+EOF
+chmod +x "$VCODEX"
+VAGY="$VSTUBS/agy"
+cat > "$VAGY" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  whoami) printf 'agy-stub\n'; exit 0 ;;
+esac
+printf 'agy review stub\n'
+printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Changes requested\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+exit 0
+EOF
+chmod +x "$VAGY"
+(
+  cd "$V"
+  PATH="$VSTUBS:$PATH" CODEX_BIN="$VCODEX" AGY_BIN="$VAGY" \
+    ./.xyz/relay-automation/marathon-drive.sh \
+      --phase-brief brief.md \
+      --builder codex \
+      --reviewer agy \
+      --artifact src/feature.js \
+      --pre-advance-cmd "true" \
+      --round-cap 2
+) >/dev/null 2>&1
+rc=$?
+[ "$rc" -eq 4 ] && pass "GH-171: vendored full chain advances twice and exits on cap, not no-progress" \
+  || fail "GH-171: vendored full chain should exit 4 after two advancing turns, got $rc"
+TICK_REPO_ROOT="$V" "$V/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^handoff-to:[[:space:]]+codex$' \
+  && pass "GH-171: final handoff stays in the consumer repo tick log" \
+  || fail "GH-171: consumer repo tick log missing final codex handoff"
+find "$V/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
+  | xargs -0 grep -l '"type":"task.claimed".*"agent":"codex"' >/dev/null 2>&1 \
+  && pass "GH-171: codex claim event lands in the consumer repo .tick" \
+  || fail "GH-171: consumer repo .tick missing codex claim event"
+find "$V/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
+  | xargs -0 grep -l '"type":"task.claimed".*"agent":"agy"' >/dev/null 2>&1 \
+  && pass "GH-171: reviewer claim event lands in the consumer repo .tick" \
+  || fail "GH-171: consumer repo .tick missing reviewer claim event"
+[ ! -d "$V/.xyz/.tick/events" ] \
+  && pass "GH-171: vendored .xyz does not grow a stray .tick event log" \
+  || fail "GH-171: vendored .xyz/.tick should stay absent"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

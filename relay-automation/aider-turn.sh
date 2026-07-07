@@ -143,7 +143,7 @@ fi
 # must not proceed: the turn would still edit + commit while the token stayed open under the OLD owner,
 # and rtl_enforce — being ownership-guarded — could then only WARN, deadlocking the lane. So after
 # claiming, assert `claimer == self` via `tick info` and fail the turn (exit 5, before any mutation).
-_tickroot="${TICK_REPO_ROOT:-$ROOT}"; _tickbin="$_tickroot/bin/tick"
+_tickroot="${TICK_REPO_ROOT:-$ROOT}"; _tickbin="$(rtl_tick_bin "$_tickroot")"
 if [[ -x "$_tickbin" ]]; then
   TICK_REPO_ROOT="$_tickroot" "$_tickbin" claim "$t" --agent "$me" --paths "$claim_paths" >/dev/null 2>&1 || true
   _claimer="$(TICK_REPO_ROOT="$_tickroot" "$_tickbin" info "$t" 2>/dev/null | sed -n 's/^claimer:[[:space:]]*//p' | head -n1)"

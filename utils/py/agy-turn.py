@@ -126,6 +126,7 @@ def main():
         
     allow_paths = os.environ.get("ALLOW_PATHS", "")
     peer = os.environ.get("RELAY_PEER", "")
+    tick_repo_root = os.environ.get("TICK_REPO_ROOT", root)
     
     rtl = RelayTurnLib(root, xyz_root, f, allow_paths)
 
@@ -138,7 +139,6 @@ def main():
         pass
 
     prompt = rtl.turn_prompt(me, t, peer)
-    tick_repo_root = os.environ.get("TICK_REPO_ROOT", root)
     drift_brief = rtl.drift_brief(me, tick_repo_root)
     if drift_brief:
         prompt = drift_brief + "\n" + prompt
@@ -164,7 +164,7 @@ def main():
     if os.environ.get("RELAY_WORKTREE_ISOLATION", "0") == "1":
         wt = rtl.worktree_begin()
         if wt:
-            run_env["TICK_REPO_ROOT"] = root
+            run_env["TICK_REPO_ROOT"] = tick_repo_root
             run_cwd = wt
             print(f"agy-turn: worktree isolation ON ({wt})", file=sys.stderr)
         else:
