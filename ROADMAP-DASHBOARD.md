@@ -6,13 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 43 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
+Summary: 42 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-165 · codex-turn: Codex can edit+commit without first owning the relay token, leaving no-progress stalls even after GH-67's release backstop | — | [GH-165-CODEX-TOKEN-OWNERSHIP.md](PROJECT/2-WORKING/GH-165-CODEX-TOKEN-OWNERSHIP.md) · [#165](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/165) |
 | Marathon Plan D · explore-and-plan cluster (GH-161..164) | — | [MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md) |
-| GH-164 · Idea → queue → plan docs & GH issue → queue → marathon: quick automated intake pipeline | — | [GH-164-IDEA-TO-MARATHON-PIPELINE.md](PROJECT/1-INBOX/GH-164-IDEA-TO-MARATHON-PIPELINE.md) · [#164](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/164) |
 | GH-163 · Review wp-code-check / WP-DB-Toolkit for existing fast AST tooling reusable for swarmability | — | [GH-163-WP-SIBLING-AST-REVIEW.md](PROJECT/1-INBOX/GH-163-WP-SIBLING-AST-REVIEW.md) · [#163](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/163) |
 | GH-159 · hq-lib.sh: hq_repo_resolve reports ambiguous when the same path appears twice as a candidate | — | [#159](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/159) |
 | GH-156 · Prelight: swarmability scoring using codebase-memory-mcp graph signals | — | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/1-INBOX/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
@@ -77,10 +76,11 @@ Summary: 14 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 10 · �
 
 ## Completed
 
-Summary: 71 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 71 · 🔮 0 · 🔲 0
+Summary: 72 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 72 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-164 · Idea → queue → plan docs & GH issue → queue → marathon: quick automated intake pipeline | ✅ | [GH-164-IDEA-TO-MARATHON-PIPELINE.md](PROJECT/3-COMPLETED/GH-164-IDEA-TO-MARATHON-PIPELINE.md) · [#164](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/164) |
 | GH-162 · Add a "code debugging mantra" harness file/mode that builds the mantra into the harness itself | ✅ | [GH-162-DEBUG-MANTRA-HARNESS-MODE.md](PROJECT/3-COMPLETED/GH-162-DEBUG-MANTRA-HARNESS-MODE.md) · [#162](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/162) |
 | GH-161 · Audit and add more observability into the harness and individual files | ✅ | [GH-161-HARNESS-OBSERVABILITY.md](PROJECT/3-COMPLETED/GH-161-HARNESS-OBSERVABILITY.md) · [#161](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/161) |
 | GH-160 · codex CLI intermittently reports off-lane/unwritable target files inside isolated worktrees (false containment violations) | ✅ | [#160](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/160) |

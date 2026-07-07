@@ -58,7 +58,13 @@ The skill drives `utils/hq/hq.sh` (or `$HQ_SH` from a foreign repo — see Preco
   (1 highest) with each one's resolved HQ capability tier (A dispatch-eligible / B / C / unresolved),
   answering "what should I pick up next across my repos?" Read-only.
 - `hq.sh park [--create] [--title T] <project> <request…>` — **issue-first intake** in the target
-  repo (GH issue → `1-INBOX` capture → ROADMAP parking → target `pdda.sh`). Previews unless `--create`.
+  repo (GH issue → `1-INBOX` capture → ROADMAP parking → dashboard regen if present → target
+  `pdda.sh`). Previews unless `--create`. The capture doc renders the full PDDA skeleton (ratings,
+  `non_goals`/`related`/`goal`, Key Concepts/Idea/Why/Phase 0 checklist) with TODO stubs by default;
+  a synthesis front end (e.g. a future `/idea` skill) can fill the judgment-heavy fields in by
+  exporting `HQ_PARK_WHY` / `HQ_PARK_KEY_CONCEPTS` / `HQ_PARK_NON_GOALS` / `HQ_PARK_RELATED` /
+  `HQ_PARK_COMPLEXITY` / `HQ_PARK_RISK` / `HQ_PARK_EFFORT` / `HQ_PARK_PHASES` before calling
+  `--create` — bare `hq.sh park` needs none of these (GH-164 Phase 1).
 - `hq.sh queue [--create] [--gh-issue N] <project> <request…>` — append an **HQ-queued lane** to the
   target's newest Marathon Plan (non-destructive appendix). Previews unless `--create`.
 - `hq.sh fire --gh-issue N [--risk 1-5] <project>` — **gated prepare-and-hand-off**: resolve + gate

@@ -319,10 +319,52 @@ hq_issue_title(){
 }
 
 # hq_render_capture <issue_num> <source_url> <title> <created> <doc_type> <project> <repo> <request>
-# Emits a PDDA-compliant 1-INBOX capture doc (frontmatter matches PROJECT/PDDA.md GitHub-issue intake).
+#                    [<complexity>] [<risk>] [<effort>] [<phases>]
+#                    [<why>] [<key_concepts_pipe>] [<non_goals_pipe>] [<related_pipe>]
+# Emits a PDDA-compliant 1-INBOX capture doc: the full skeleton shape (frontmatter ratings/non_goals/
+# related/goal + Key Concepts/Idea/Why/Phase-0-checklist/QA-checklist body) that GH-161-164's real
+# docs use — not the older thin Request/Notes template. GH-164 Phase 1, item 1.
+#
+# The 8 trailing params are OPTIONAL and default to a generic TODO-stub value when omitted, so a bare
+# `hq park <project> <request>` (no synthesis input) still renders a valid, promotable skeleton — the
+# same "cold operator, zero flags" contract as before this change. A synthesis front end (e.g. the
+# `/idea` skill) fills them in by exporting HQ_PARK_WHY / HQ_PARK_KEY_CONCEPTS / HQ_PARK_NON_GOALS /
+# HQ_PARK_RELATED / HQ_PARK_COMPLEXITY / HQ_PARK_RISK / HQ_PARK_EFFORT / HQ_PARK_PHASES before calling
+# `hq park --create` (cmd_park reads these and passes them through positionally) — env vars, not new
+# CLI flags, matching this repo's existing passthrough convention (MARATHON_ROOT, CODEX_LOG, etc.) and
+# keeping the bare invocation's argument count unchanged.
 hq_render_capture(){
   local num="$1" src="$2" title="$3" created="$4" dtype="$5" project="$6" repo="$7" request="$8"
+  local complexity="${9:-}" risk="${10:-}" effort="${11:-}" phases="${12:-}"
+  local why="${13:-}" key_concepts="${14:-}" non_goals="${15:-}" related="${16:-}"
   local title_dq; title_dq="$(hq_yaml_dq "$title")"   # GH-132: keep the YAML scalar valid
+
+  # Ratings: a generic provisional starting point when not supplied. Always ratings_provisional —
+  # marathon-plan.sh already parks an unrated/under-rated doc out of active waves rather than
+  # misfiring on a bad guess, so shipping a rough default here is safe (GH-164 Phase 0 finding 3).
+  [ -n "$complexity" ] || complexity=2
+  [ -n "$risk" ]       || risk=1
+  [ -n "$effort" ]     || effort=2
+  [ -n "$phases" ]     || phases=1
+
+  local kc_body ng_body rel_body
+  if [ -n "$key_concepts" ]; then
+    kc_body="$(printf '%s' "$key_concepts" | tr '|' '\n' | sed 's/^[[:space:]]*/- /')"
+  else
+    kc_body="- TODO: 2-4 bullets on what this idea concretely is and why it matters."
+  fi
+  if [ -n "$non_goals" ]; then
+    ng_body="$(printf '%s' "$non_goals" | tr '|' '\n' | sed 's/^[[:space:]]*/  - /')"
+  else
+    ng_body="  - TODO: what this explicitly is NOT (scope boundary)."
+  fi
+  if [ -n "$related" ]; then
+    rel_body="$(printf '%s' "$related" | tr '|' '\n' | sed 's/^[[:space:]]*/  - /')"
+  else
+    rel_body="  - TODO: related files/docs, if any."
+  fi
+  local why_body="${why:-TODO: why this matters now -- what prompted it, what breaks or slows without it.}"
+
   cat <<EOF
 ---
 gh_issue: $num
@@ -330,22 +372,53 @@ source: $src
 title: "$title_dq"
 status: Proposed (1-INBOX — not yet active)
 created: $created
+owner: unassigned
 doc_type: $dtype
+complexity: $complexity
+risk: $risk
+effort: $effort
+phases: $phases
+ratings_provisional: true
+non_goals:
+$ng_body
+related:
+$rel_body
+goal: >
+  TODO: one-paragraph statement of what "done" looks like for this idea.
 ---
+
+## Key concepts
+
+$kc_body
+
+> **Note for plan writers:** apply the \`/ponytail\` lens — favor the laziest approach that actually
+> works over new infrastructure, and question whether new surface needs to exist at all.
 
 # $title
 
-Captured via HQ (\`/hq park\`) for project **$project** → repo \`$repo\`.
-The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference.
+## Status
 
-## Request
+| What was just completed | What's next |
+|---|---|
+| Captured via HQ (\`/hq park\`) for project **$project** → repo \`$repo\`. The GitHub issue is the signal stream; this doc is the in-repo capture and back-reference. | Fill in Why/Key Concepts, correct the provisional ratings above, and run a Phase 0 explore pass before promoting to \`2-WORKING\`. |
+
+## Idea
 
 $request
 
-## Notes
+## Why
 
-- Filed under the PDDA issue-first SOP. Promote to \`PROJECT/2-WORKING/\` when execution starts,
-  carrying \`gh_issue\` forward, and satisfy the full active-doc contract (status table, QA gates).
+$why_body
+
+## Phase 0 — Explore & scope
+
+### Checklist
+
+- [ ] TODO: scope-specific checklist items for this idea's Phase 0 pass.
+
+### QA checklist — Phase 0
+
+- [ ] TODO: acceptance criteria for the Phase 0 pass above.
 EOF
 }
 
