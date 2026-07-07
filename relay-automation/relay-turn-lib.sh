@@ -35,6 +35,21 @@
 #                                                        (same as consult.sh _guarded). Kills by PID;
 #                                                        see function body for the process-group gap.
 #
+# GH-161 observability (see PROJECT/1-INBOX/GH-161-HARNESS-OBSERVABILITY.md for the survey behind
+# this): instrumentation writes into the turn's own transcript, never a separate log file.
+#   rtl_trace       <message...>       — NEW fine-grained decision-point line. Opt-in: fires only when
+#                                        RTL_TRACE=1 AND RTL_LOG is set (the routine/successful path is
+#                                        silent by default, to avoid noise on every turn forever).
+#   rtl_log_always  <message...>       — routes an EXISTING unconditional diagnostic (one already
+#                                        printed to stderr elsewhere in this file) into RTL_LOG too.
+#                                        Requires only RTL_LOG to be set — no new gating.
+#   rtl_default_log <root> <tool> <task> — persistent default transcript path (reuses
+#                                        rtl_transcript_root; falls back to the historical PID-keyed
+#                                        tmp path on any resolver/mkdir failure). The shim exports
+#                                        RTL_LOG to this same path before calling rtl_init, so
+#                                        rtl_trace/rtl_log_always land in the file a human already
+#                                        opens to debug a turn.
+#
 # rtl_enforce deliberately `exit 6`s the calling shell on any violation — that fails the turn.
 # rtl_run_bounded returns 7 on timeout; the CALLER must decide whether to continue to rtl_enforce
 # (it should — a killed agent may have left off-lane changes) and then exit 7 after enforcement.
@@ -119,6 +134,42 @@ rtl_repo_slug() {  # <target_root>
   printf '%s' "$slug"
 }
 
+# GH-161: minimal decision-point tracing, written into the turn's own transcript (CODEX_LOG/AGY_LOG,
+# via RTL_LOG — exported by the shim before rtl_init runs) instead of a new log file. See
+# PROJECT/1-INBOX/GH-161-HARNESS-OBSERVABILITY.md for the survey/decisions this implements.
+rtl_trace() {  # <message...> — see the API note above rtl_init; opt-in fine-grained trace line
+  [[ "${RTL_TRACE:-0}" == "1" && -n "${RTL_LOG:-}" ]] || return 0
+  # 2>/dev/null listed BEFORE the >>"$RTL_LOG" append target: bash opens redirects left-to-right, so
+  # an append-target open failure (e.g. an unwritable/missing dir) reports to the ALREADY-redirected
+  # fd 2, keeping this silent-on-failure per the "logging must never fail a turn" contract.
+  printf '[trace] %s\n' "$*" 2>/dev/null >>"$RTL_LOG" || true
+}
+
+rtl_log_always() {  # <message...> — see the API note above rtl_init; mirrors an existing stderr printf
+  [[ -n "${RTL_LOG:-}" ]] || return 0
+  printf '[trace] %s\n' "$*" 2>/dev/null >>"$RTL_LOG" || true
+}
+
+# Persistent default transcript path, reusing rtl_transcript_root so no new path-resolution logic is
+# introduced. IMPORTANT: the resolved directory ("$root/relay-system/logs" on the common path) MUST
+# stay gitignored (see .gitignore's "relay-system/logs/" entry) — rtl_check already removes any file
+# that lands in the tracked tree matching RTL_LOG_REL ("the shim's own transcript log ... is not an
+# agent edit"), so an UN-ignored path here would be silently deleted at the end of every single turn,
+# defeating the entire point of "persistent." Falls back to today's PID-keyed tmp path (byte-identical
+# to the pre-GH-161 default) on any resolver or mkdir failure — logging must never fail a turn.
+rtl_default_log() {  # <root> <tool-turn-name> <task> — e.g. rtl_default_log "$ROOT" codex-turn "$t"
+  local root="$1" tool="$2" task="$3" base tslug day path
+  base="$(rtl_transcript_root "$root" 2>/dev/null)" || { printf '%s/%s-%s.log' "${TMPDIR:-/tmp}" "$tool" "$$"; return 0; }
+  tslug="$(printf '%s' "$task" | tr -c 'A-Za-z0-9._-' '_')"
+  day="$(date +%Y-%m-%d 2>/dev/null || echo unknown-date)"
+  path="$base/logs/$day/${tool}-${tslug}-$$.log"
+  if mkdir -p "$(dirname "$path")" 2>/dev/null; then
+    printf '%s' "$path"
+  else
+    printf '%s/%s-%s.log' "${TMPDIR:-/tmp}" "$tool" "$$"
+  fi
+}
+
 rtl_init() {  # <root> <relay_file> <allow_csv>
   # ROOT routing (GH-11): a foreign --target-root (exported by relay-drive as RELAY_TARGET_ROOT)
   # routes the WHOLE turn — worktree base, allowlist copyback, file-scoped commit, enforce — from this
@@ -138,11 +189,13 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # repo root — collapsing to $1 would root containment at .xyz/ and the foreign repo's own relay file
   # would fail its off-lane match. Detect that (physical $1 != physical toplevel) and use the toplevel.
   # Genuine foreign roots (a different toplevel) are untouched — the cross-repo path is unchanged.
+  local _gh51_collapsed=0 _gh160_collapsed=0
   if [[ -n "${RELAY_TARGET_ROOT:-}" ]]; then
     local _tt _ct _c1; _tt="$(git -C "$RTL_ROOT" rev-parse --show-toplevel 2>/dev/null)"
     _ct="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)"
     _c1="$(cd "$1" 2>/dev/null && pwd -P)"
     if [[ -n "$_tt" && "$_tt" == "$_ct" ]]; then
+      _gh51_collapsed=1
       if [[ "$_c1" == "$_ct" ]]; then RTL_ROOT="$1"; else RTL_ROOT="$_tt"; fi
     fi
   fi
@@ -169,6 +222,7 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   local _gh160_prefix
   _gh160_prefix="$(git -C "$RTL_ROOT" rev-parse --show-prefix 2>/dev/null)"
   if [[ -n "$_gh160_prefix" ]]; then
+    _gh160_collapsed=1
     RTL_ROOT="${RTL_ROOT%/"${_gh160_prefix%/}"}"
   fi
   # macOS/APFS (and any case-insensitive fs) reports git-status paths in the case the INDEX tracks
@@ -230,6 +284,7 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   if [[ -n "$RTL_ARTIFACT" ]]; then
     RTL_ARTIFACT_REL=".relay-artifacts/$(basename "$RTL_ARTIFACT")"
   fi
+  rtl_trace "rtl_init: RTL_ROOT=$RTL_ROOT (gh51_collapsed=$_gh51_collapsed gh160_collapsed=$_gh160_collapsed ignorecase=$RTL_IGNORECASE)"
 }
 
 rtl_in_allow() {  # <path> — is <path> on the allowlist? Case-insensitive when RTL_IGNORECASE=true (GH-17).
@@ -361,17 +416,23 @@ rtl_worktree_begin() {
   if ! git -C "$RTL_ROOT" worktree add --detach "$wt" HEAD >/dev/null 2>&1; then
     rm -rf "$wt" 2>/dev/null; return 1
   fi
+  rtl_trace "rtl_worktree_begin: WT=$wt"
   for a in "${RTL_ALLOW[@]}"; do       # seed current content (overwrite HEAD versions)
     # GH-30 Phase 3: an ABSOLUTE allowlist entry is the archive relay file — it lives in a DIFFERENT
     # repo, not this RTL_ROOT worktree. Skip it: the agent edits it at its real location and rtl_enforce
     # commits it to the archive. (Keeps seedsig index aligned with the copyback loop, which skips it too.)
-    [[ "$a" == /* ]] && continue
+    if [[ "$a" == /* ]]; then
+      rtl_trace "rtl_worktree_begin: SKIP (archive-absolute) $a"
+      continue
+    fi
     if [[ -e "$RTL_ROOT/$a" ]]; then
       mkdir -p "$wt/$(dirname "$a")"
       cp -R "$RTL_ROOT/$a" "$wt/$a"
+      rtl_trace "rtl_worktree_begin: SEED $a"
     else
       rm -rf "$wt/$a"                  # allowlisted path ALREADY deleted in the host tree → mirror the
                                        # deletion, else the HEAD checkout would resurrect it on copy-back
+      rtl_trace "rtl_worktree_begin: SEED-DELETE $a (already absent in ROOT)"
     fi                                 # (Codex review r2, 2026-06-20 — symmetric to the in-turn delete)
   done
   # GH-22: snapshot each seeded allowlist path's signature so rtl_worktree_end copies back ONLY paths
@@ -405,6 +466,7 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
   local wt="${1:-${RTL_WT:-}}" a entry xy path
   RTL_WT_OFFLANE=0
   [[ -n "$wt" && -d "$wt" ]] || return 0
+  rtl_trace "rtl_worktree_end: WT=$wt"
   # GH-13/#14: rtl_worktree_begin runs in a `wt="$(...)"` subshell, so the RTL_WT_USED=1 it sets there
   # is LOST before rtl_enforce runs — which left the "a moved ROOT HEAD is a concurrent PEER commit;
   # preserve it, don't reset" branch in rtl_enforce as DEAD CODE for the command-substitution shims
@@ -428,12 +490,15 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
         if [[ -f "${wt}.artifactsig" ]] && [[ "$(_rtl_sig "$wt/.relay-artifacts")" == "$(cat "${wt}.artifactsig")" ]]; then
           continue
         fi
+        rtl_trace "rtl_worktree_end: OFFLANE path=$path (artifact modified)"
         RTL_WT_OFFLANE=1; continue ;;
     esac
     rtl_in_allow "$path" && continue
     rtl_is_containment_ignored "$path" && continue   # GH-107: opt-in tool-cache exemption
+    rtl_trace "rtl_worktree_end: OFFLANE path=$path"
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
   done < <(git -C "$wt" status --porcelain -z 2>/dev/null)
+  rtl_trace "rtl_worktree_end: OFFLANE_VERDICT=$RTL_WT_OFFLANE"
   if ((RTL_WT_OFFLANE == 0)); then
     local i=0 seedsig nowsig _ln; local _seeds=()
     # Re-read the seed signatures written by rtl_worktree_begin (one line per RTL_ALLOW entry).
@@ -450,7 +515,10 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
       # overwritten by the stale seed. No recorded seed signature → copy as before (safe fallback).
       seedsig="${_seeds[i]-}"; i=$((i+1))
       nowsig="$(_rtl_sig "$wt/$a")"
-      [[ -n "$seedsig" && "$nowsig" == "$seedsig" ]] && continue
+      if [[ -n "$seedsig" && "$nowsig" == "$seedsig" ]]; then
+        rtl_trace "rtl_worktree_end: UNCHANGED $a (left ROOT alone)"
+        continue
+      fi
       if [[ -e "$wt/$a" ]]; then
         mkdir -p "$RTL_ROOT/$(dirname "$a")"
         # GH-140: copy into a temp path beside the destination, then atomically rename it into place —
@@ -476,8 +544,10 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
           # no separate rm, no window where the path is missing.
           mv -f "$_tmp" "$RTL_ROOT/$a"
         fi
+        rtl_trace "rtl_worktree_end: COPIED $a"
       elif [[ -e "$RTL_ROOT/$a" ]]; then
         rm -rf "$RTL_ROOT/$a"            # allowlisted path deleted in the worktree → propagate the deletion
+        rtl_trace "rtl_worktree_end: DELETED $a (removed from ROOT)"
       fi
     done
   fi
@@ -550,8 +620,12 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   case "$p" in .tick/*|.tick) return 0 ;; esac
   # the shim's own transcript log, if it lands in the tree, is not an agent edit — drop it, don't flag
   if [[ -n "$RTL_LOG_REL" && "$p" == "$RTL_LOG_REL" ]]; then rm -f "$RTL_ROOT/$p"; return 0; fi
-  rtl_in_allow "$p" && return 0
+  if rtl_in_allow "$p"; then
+    rtl_trace "rtl_check: ALLOW path=$p"
+    return 0
+  fi
   printf '%s-turn: OFF-ALLOWLIST change: %s — reverting\n' "$RTL_TOOL" "$p" >&2
+  rtl_log_always "rtl_check: OFF-ALLOWLIST path=$p tool=$RTL_TOOL — reverting"
   git -C "$RTL_ROOT" checkout -- "$p" 2>/dev/null || rm -rf "$RTL_ROOT/${p%/}"
   RTL_VIOLATION=1
 }
@@ -568,6 +642,7 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
       # were already contained by rtl_worktree_end (off-lane → exit 6; else allowlist copyback), so just
       # preserve the peer commit and fall through to allowlist enforcement + a file-scoped commit ON TOP.
       printf '%s-turn: ROOT HEAD moved during a worktree-isolated turn — a concurrent peer committed; preserving it (not resetting), committing this turn on top.\n' "$RTL_TOOL" >&2
+      rtl_log_always "rtl_enforce: HEAD_MOVED branch=peer-preserve (worktree-isolated; concurrent peer commit kept)"
     else
       # In-ROOT (direct/attended) turn: the agent ran in ROOT and may have committed off-lane changes.
       # Undo its commit and fail — the documented attended-mode containment. A concurrent PEER commit in
@@ -579,6 +654,7 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
       git -C "$RTL_ROOT" update-ref "refs/relay-orphan/$(git -C "$RTL_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown)" HEAD 2>/dev/null || true
       git -C "$RTL_ROOT" reset --hard "$RTL_BEFORE_HEAD" >/dev/null 2>&1 || true
       printf '%s-turn: %s committed during its turn (forbidden) — reset to %s (prior HEAD saved to refs/relay-orphan/), failing\n' "$RTL_TOOL" "$agent" "${RTL_BEFORE_HEAD:0:8}" >&2
+      rtl_log_always "rtl_enforce: HEAD_MOVED branch=in-root-reset agent=$agent reset_to=${RTL_BEFORE_HEAD:0:8}"
       exit 6
     fi
   fi
@@ -611,7 +687,8 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
         ;;
     esac
   done < <(git -C "$RTL_ROOT" status --porcelain -z)
-  ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; exit 6; }
+  rtl_trace "rtl_enforce: RTL_VIOLATION=$RTL_VIOLATION"
+  ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; rtl_log_always "rtl_enforce: VIOLATION off-lane edits reverted; failing the turn"; exit 6; }
   # (3) stage ONLY the allowlist; commit file-scoped; NO push.
   # Stage each allowlisted path INDEPENDENTLY (not one batched `git add -- a b c`): a single pathspec
   # that matches nothing — e.g. an allowlist entry the turn was permitted to create but didn't — makes
@@ -628,9 +705,11 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   done
   if git -C "$RTL_ROOT" diff --cached --quiet; then
     printf '%s-turn: %s turn produced no tracked changes (token-only move?)\n' "$RTL_TOOL" "$agent"
+    rtl_log_always "rtl_enforce: COMMIT none (no tracked changes) agent=$agent"
   else
     git -C "$RTL_ROOT" commit -q -m "relay(${task}): ${agent} turn (${RTL_TOOL} headless; no push)"
     printf '%s-turn: committed %s turn (file-scoped, no push)\n' "$RTL_TOOL" "$agent"
+    rtl_log_always "rtl_enforce: COMMIT $(git -C "$RTL_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown) agent=$agent"
   fi
   # (3b) GH-30 Phase 3 (Model A): commit the TRANSCRIPT (relay file) into the SEPARATE archive repo,
   # never RTL_ROOT. This is an ISOLATED `git -C "$RTL_RELAY_REPO"` step — it CANNOT move RTL_ROOT's HEAD,
@@ -645,12 +724,15 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     git -C "$RTL_RELAY_REPO" add -- "$RTL_RELAY_ARCHIVE_REL" 2>/dev/null || true
     if git -C "$RTL_RELAY_REPO" diff --cached --quiet -- "$RTL_RELAY_ARCHIVE_REL" 2>/dev/null; then
       printf '%s-turn: archive transcript unchanged — nothing to commit to %s\n' "$RTL_TOOL" "$RTL_RELAY_REPO"
+      rtl_log_always "rtl_enforce: ARCHIVE_COMMIT none (unchanged) repo=$RTL_RELAY_REPO"
     elif git -C "$RTL_RELAY_REPO" commit -q \
            -m "relay(${task}): ${agent} transcript (${RTL_TOOL} headless; archive; no push)" \
            -- "$RTL_RELAY_ARCHIVE_REL" 2>/dev/null; then
       printf '%s-turn: committed transcript to archive %s (%s; no push)\n' "$RTL_TOOL" "$RTL_RELAY_REPO" "$RTL_RELAY_ARCHIVE_REL"
+      rtl_log_always "rtl_enforce: ARCHIVE_COMMIT ok repo=$RTL_RELAY_REPO rel=$RTL_RELAY_ARCHIVE_REL"
     else
       printf '%s-turn: WARN could not commit transcript to archive %s (%s) — file written but uncommitted; check the archive repo git identity\n' "$RTL_TOOL" "$RTL_RELAY_REPO" "$RTL_RELAY_ARCHIVE_REL" >&2
+      rtl_log_always "rtl_enforce: ARCHIVE_COMMIT FAILED repo=$RTL_RELAY_REPO rel=$RTL_RELAY_ARCHIVE_REL"
     fi
   fi
   # (4) authoritative token handoff (GH-67). The turn prompt asks the worker to release/done the
@@ -678,23 +760,28 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     # Same bold-markdown-tolerant STATUS read poll.sh uses (real threads write `**STATUS:** Approved`).
     _rstatus="$(sed -n 's/^[*]*STATUS[*]*:[*]*[[:space:]]*//p' "$_relay_file" 2>/dev/null | head -n1 | sed 's/[[:space:]]*$//')"
     if [[ "$_tstatus" == "done" || "$_tstatus" == "circuit_broken" ]]; then
-      : # worker (or a prior step) already closed the token — nothing to hand off
+      rtl_trace "rtl_enforce: token-handoff branch=already-terminal status=$_tstatus task=$task"
     elif [[ "$_rstatus" == "Approved" || "$_rstatus" == "Closed" ]]; then
       if TICK_REPO_ROOT="$_tickroot" "$_tickbin" done "$task" --agent "$agent" >/dev/null 2>&1; then
         printf '%s-turn: relay STATUS=%s → closed token (tick done %s)\n' "$RTL_TOOL" "$_rstatus" "$task"
+        rtl_log_always "rtl_enforce: token-handoff branch=done status=$_rstatus task=$task"
       else
         printf '%s-turn: WARN could not `tick done %s` as %s (not current owner?) — inspect `tick info %s`\n' "$RTL_TOOL" "$task" "$agent" "$task" >&2
+        rtl_log_always "rtl_enforce: token-handoff branch=done-FAILED task=$task agent=$agent"
       fi
     elif [[ "$_tstatus" == "open" && -n "$_peer" && "$_thandoff" == "$_peer" ]]; then
-      : # worker already handed the token to the peer — nothing to do
+      rtl_trace "rtl_enforce: token-handoff branch=already-handed-off peer=$_peer task=$task"
     elif [[ -n "$_peer" ]]; then
       if TICK_REPO_ROOT="$_tickroot" "$_tickbin" release "$task" --agent "$agent" --to "$_peer" >/dev/null 2>&1; then
         printf '%s-turn: handed off token %s → %s (tick release --to)\n' "$RTL_TOOL" "$task" "$_peer"
+        rtl_log_always "rtl_enforce: token-handoff branch=release-to-peer peer=$_peer task=$task"
       else
         printf '%s-turn: WARN could not `tick release %s --to %s` as %s (not current owner?) — inspect `tick info %s`\n' "$RTL_TOOL" "$task" "$_peer" "$agent" "$task" >&2
+        rtl_log_always "rtl_enforce: token-handoff branch=release-FAILED task=$task peer=$_peer"
       fi
     else
       printf '%s-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token %s left as-is (set RELAY_PEER for auto-handoff)\n' "$RTL_TOOL" "$task" >&2
+      rtl_log_always "rtl_enforce: token-handoff branch=warn-stuck task=$task"
     fi
   fi
   # (5) GH-68: cross-agent dependency-drift signal (warn-only, additive, non-blocking). If this turn's
@@ -721,6 +808,33 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
           printf '%s-turn: dependency.drift — %s changed %s (%s lines); signalled for the next turn\n' "$RTL_TOOL" "$agent" "$_surf" "${_dl:-0}"
         fi
       done
+    fi
+  fi
+  # GH-161: our own rtl_trace/rtl_log_always calls above may have APPENDED to RTL_LOG after the
+  # earlier in-loop cleanup (rtl_check drops the shim's own transcript log when it happens to land
+  # inside the tracked tree — "not an agent edit"), recreating that file. Sweep it again here, once,
+  # so a log path that happens to sit inside RTL_ROOT still leaves the tree exactly as clean as before
+  # this instrumentation existed. Gate on `git status --porcelain` (NOT tracked-vs-untracked): a
+  # gitignored persistent log (the GH-161 default, under relay-system/logs/) must NEVER be swept here —
+  # it is untracked BY DESIGN and is meant to survive. `git status --porcelain` naturally excludes
+  # ignored paths, so it only flags the genuine stray case rtl_check already handles mid-loop (an
+  # un-ignored log path that reappeared after our late writes) — never a tracked file, never an
+  # intentionally-ignored one.
+  # RTL_LOG_REL is only genuinely "in RTL_ROOT" when the earlier `${log#"$RTL_ROOT"/}` strip actually
+  # matched, leaving a RELATIVE path — the overwhelmingly common CODEX_LOG=/dev/null case (used by most
+  # of the test suite, and any operator override outside the repo) leaves RTL_LOG_REL as the ORIGINAL
+  # absolute path unstripped. Passing that straight to `git status --porcelain --` as a pathspec is a
+  # FATAL git error ("outside repository", exit 128) that — unguarded — would trip the caller's `set -e`
+  # and silently kill an otherwise-successful turn. Skip entirely unless it is repo-relative.
+  if [[ -n "$RTL_LOG_REL" && "$RTL_LOG_REL" != /* ]]; then
+    local _rtl_log_leftover
+    _rtl_log_leftover="$(git -C "$RTL_ROOT" status --porcelain -- "$RTL_LOG_REL" 2>/dev/null || true)"
+    # NB: an `if`/`fi` here, not `[[ .. ]] && rm ..` — as the LAST statement of this function, a bare
+    # `test && action` returns the test's own (false) status when there is nothing to sweep, which
+    # under the caller's `set -e` (every turn-taker shim) would silently exit the whole turn nonzero.
+    # An `if` with no `else` always returns 0 when its condition is false.
+    if [[ -n "$_rtl_log_leftover" ]]; then
+      rm -f "$RTL_ROOT/$RTL_LOG_REL"
     fi
   fi
 }

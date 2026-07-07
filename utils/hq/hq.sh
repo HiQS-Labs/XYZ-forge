@@ -36,6 +36,10 @@ usage:
                                           issue-first intake in the target repo
                                           (PREVIEWS by default; --create writes;
                                            --title sets a clean title, request = body)
+                                          Capture doc renders the full PDDA skeleton (TODO stubs by
+                                          default); optional synthesis passthrough via env vars
+                                          HQ_PARK_{WHY,KEY_CONCEPTS,NON_GOALS,RELATED,COMPLEXITY,
+                                          RISK,EFFORT,PHASES} (GH-164 Phase 1).
   hq.sh queue [--create] [--gh-issue N] <project> <req…>
                                           append an HQ-queued lane to the target's Marathon Plan
                                           (PREVIEWS by default; --create appends, non-destructive)
@@ -187,8 +191,20 @@ cmd_registries(){
 # cmd_park <create 0|1> <project> <request...>
 # Preview (default) or --create the issue-first intake in the RESOLVED TARGET repo:
 # GH issue -> PROJECT/1-INBOX/GH-<n>-<SLUG>.md capture -> ROADMAP queue pointer -> target pdda check.
+#
+# GH-164 Phase 1: optional synthesis passthrough via env vars (unset -> hq_render_capture's own
+# TODO-stub defaults; a bare zero-flag `hq park <project> <request>` is byte-identical to before).
+# A front end (e.g. the /idea skill) exports these before calling `hq park --create` to fill in the
+# judgment-heavy prose a deterministic bash template cannot synthesize itself:
+#   HQ_PARK_COMPLEXITY / HQ_PARK_RISK / HQ_PARK_EFFORT / HQ_PARK_PHASES  — integers 1-5 / phase count
+#   HQ_PARK_WHY                                                          — the ## Why paragraph
+#   HQ_PARK_KEY_CONCEPTS / HQ_PARK_NON_GOALS / HQ_PARK_RELATED           — pipe ('|')-delimited lists
 cmd_park(){
   local create="$1" ptitle="$2" project="$3"; shift 3; local request="$*"
+  # GH-164 Phase 1: read the optional synthesis passthrough once; all unset -> hq_render_capture's
+  # own TODO-stub defaults (empty strings here reproduce the pre-Phase-1 bare-call behavior exactly).
+  local p_complexity="${HQ_PARK_COMPLEXITY:-}" p_risk="${HQ_PARK_RISK:-}" p_effort="${HQ_PARK_EFFORT:-}" p_phases="${HQ_PARK_PHASES:-}"
+  local p_why="${HQ_PARK_WHY:-}" p_kc="${HQ_PARK_KEY_CONCEPTS:-}" p_ng="${HQ_PARK_NON_GOALS:-}" p_rel="${HQ_PARK_RELATED:-}"
   local R rc; R="$(hq_resolve "$project")"; rc=$?
   local repo path tier has_pdda=0 has_xyz=0
   repo="$(printf '%s\n' "$R" | val REPO)"
@@ -247,6 +263,7 @@ cmd_park(){
     echo
     echo "  --- capture doc that would be written ---"
     hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
+      "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" \
       | sed 's/^/  | /'
     echo
     echo "  [preview only] re-run with --create to file the issue + write the two docs into the target."
@@ -275,6 +292,7 @@ cmd_park(){
 
   mkdir -p "$path/PROJECT/1-INBOX"
   hq_render_capture "$num" "$src" "$title" "$created" "feedback" "$project" "$repo" "$request" \
+    "$p_complexity" "$p_risk" "$p_effort" "$p_phases" "$p_why" "$p_kc" "$p_ng" "$p_rel" \
     > "$path/$relpath"
   printf '  ✓ issue:   %s\n' "$url"
   printf '  ✓ capture: %s\n' "$relpath"
@@ -285,6 +303,17 @@ cmd_park(){
     printf '  ✓ ROADMAP: pointer added (%s)\n' "$where"
   else
     echo '  ! no ROADMAP.md in target — skipped the queue pointer (add one to complete intake)'
+  fi
+
+  # GH-164 Phase 1 item 2: regenerate the dashboard right after the ROADMAP write, closing the gap
+  # the manual GH-161-164 trace hit twice (forgetting this step is exactly why it is automated here).
+  # "Only if present" mirrors the pdda.sh frontmatter check below — never required, never fatal.
+  if [ -f "$path/utils/roadmap-dashboard.sh" ]; then
+    if ( cd "$path" && bash utils/roadmap-dashboard.sh >/dev/null 2>&1 ); then
+      echo '  ✓ dashboard: ROADMAP-DASHBOARD.md regenerated'
+    else
+      echo '  ! dashboard: utils/roadmap-dashboard.sh failed — regenerate manually' >&2
+    fi
   fi
 
   local fm_ok=1

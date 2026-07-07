@@ -37,6 +37,7 @@ TESTS=(
   "watchdog-relay.sh"
   "codex-turn.sh"
   "agy-turn.sh"
+  "relay-turn-trace.sh"          # GH-161 (rtl_trace/rtl_log_always/rtl_default_log instrumentation)
   "aider-turn.sh"
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
@@ -45,6 +46,7 @@ TESTS=(
   "shim-worktree.sh"
   "marathon-yaml.sh"
   "marathon-drive.sh"
+  "debug-mantra.sh"              # GH-162 (debug-mantra auto-trigger note on a phase's prior attempt)
   "lane-attempt-cap.sh"
   "driver-lock.sh"
   "measure.sh"
@@ -95,6 +97,7 @@ TESTS=(
   "marathon-plan.sh"
   "hq.sh"                        # GH-128 Phase 1 (HQ resolver + read-only project card)
   "hq-park.sh"                   # GH-128 Phase 2 (HQ issue-first intake writer: preview + --create)
+  "hq-park-synthesis.sh"         # GH-164 Phase 1 (fuller PDDA skeleton template + synthesis passthrough + dashboard regen)
   "hq-dispatch.sh"               # GH-128 Phase 3 (HQ queue: append lane · fire: gated hand-off)
   "hq-next.sh"                   # GH-128 Phase 4 (HQ next: Rebalance-priority project board)
   "hq-locator.sh"                # GH-128 Phase 4 (find-hq.sh: device-agnostic locator, user-level /hq)

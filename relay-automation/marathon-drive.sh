@@ -94,6 +94,38 @@ lane_attempt_reset() {  # clear a lane's counter after it completes successfully
   rm -f "$root/.tick/attempts/$(_lane_key "$raw")" 2>/dev/null || true
 }
 
+# GH-162 — debug-mantra auto-trigger. NOT part of the GH-45 byte-identical mirror block above
+# (test/lane-attempt-cap.sh diffs _lane_key..lane_attempt_reset between the two drivers verbatim) —
+# kept below it deliberately so that contract stays untouched.
+#
+# debug_mantra_prior_attempts is a READ-ONLY peek at the SAME .tick/attempts/<lane> file GH-45 already
+# maintains (via _lane_key, defined above) — it never writes. lane_attempt_gate is still the only
+# writer/park authority; this only answers "did the last attempt at this phase fail to reach Approved"
+# so the render step below (Step 1) can decide whether to inject the debug-mantra note, which must
+# happen BEFORE lane_attempt_gate's own call (Step 3) appends this fire's own line.
+debug_mantra_prior_attempts() {  # <root> <lane-key-raw>
+  local root="$1" raw="$2" key file count
+  key=$(_lane_key "$raw"); file="$root/.tick/attempts/$key"
+  count=0; [ -f "$file" ] && count=$(wc -l < "$file" 2>/dev/null | tr -d ' '); [ -n "$count" ] || count=0
+  printf '%s' "$count"
+}
+
+# Renders the note injected into the relay file when a prior attempt exists; empty output on a first
+# attempt (prior=0) — mirrors relay-turn-lib.sh's rtl_drift_brief "say nothing when there is nothing to
+# say" convention, so a normal first-fire relay file is byte-identical to before this feature existed.
+# Cites the last ESCALATION.md reason (if any) as the concrete breadcrumb, rather than inventing a new
+# ledger — GH-162 Phase 0 found the harness already persists exactly this evidence.
+debug_mantra_note() {  # <prior-count> <phase-dir> <debug-mantra-file>
+  local prior="$1" phase_dir="$2" mantra_file="$3" reason=""
+  [ "${prior:-0}" -ge 1 ] 2>/dev/null || return 0
+  [ -f "$phase_dir/ESCALATION.md" ] && reason="$(sed -n 's/^reason:[[:space:]]*//p' "$phase_dir/ESCALATION.md" | head -1)"
+  printf '\n## Debug mantra (auto-triggered — %s prior attempt(s) on this phase did not reach Approved)\n\n' "$prior"
+  printf 'Before trying again, read %s and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.\n' "$mantra_file"
+  if [ -n "$reason" ]; then
+    printf 'Last recorded reason (%s/ESCALATION.md): `%s`. Read it before re-guessing.\n' "$phase_dir" "$reason"
+  fi
+}
+
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # GH-49b: the lock lives in .git/ (never committed) for a normal clone; a vendored .xyz/ copy has no
   # .git/, so fall back to a hidden lock beside the scripts (the .xyz/ dir is itself gitignored in the
@@ -309,6 +341,12 @@ PHASE_DIR="$PHASES_DIR/$PHASE_ID"
 RELAY_FILE="$PHASE_DIR/RELAY.md"
 REL_RELAY="${RELAY_FILE#"$ROOT"/}"   # repo-root-relative path the agent edits / declares in claim --paths
 
+# GH-162: peek at prior attempts BEFORE rendering (read-only; lane_attempt_gate in Step 3 still owns
+# the append/park write) so a re-fired phase's relay file can carry the debug-mantra note. Empty
+# DEBUG_MANTRA_TEXT on a first fire (prior=0) — the render below is then byte-identical to before.
+DEBUG_MANTRA_PRIOR="$(debug_mantra_prior_attempts "${TICK_REPO_ROOT:-$ROOT}" "$PHASE_ID")"
+DEBUG_MANTRA_TEXT="$(debug_mantra_note "$DEBUG_MANTRA_PRIOR" "$PHASE_DIR" "$HERE/DEBUG-MANTRA.md")"
+
 # ── Step 0: clean-workspace check (Phase 3.6) ──────────────────────────────
 # Stray pre-existing files distract an autonomous builder — a 2026-06-17 dogfood builder was pulled
 # off-task by unrelated AUDIT/*.md briefs left in the tree. Surface them before seeding. Exclude the
@@ -362,7 +400,7 @@ NEXT: ${BUILDER}
 ## Phase Brief
 
 ${BRIEF_TEXT}
-
+${DEBUG_MANTRA_TEXT}
 ---
 
 ▶ TAKE YOUR TURN (${BUILDER} — BUILDER role)

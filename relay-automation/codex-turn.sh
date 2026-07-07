@@ -33,7 +33,13 @@ fi
 #                     sandbox entirely; this repo's containment then relies solely on
 #                     relay-turn-lib.sh's worktree isolation, same as every other headless worker).
 #   CODEX_TURN_ROOT — git root to guard (default: this repo); tests point at a fixture
-#   CODEX_LOG       — where to write the codex transcript (default: stderr)
+#   CODEX_LOG       — where to write the codex transcript (default: GH-161 persistent path under
+#                     rtl_transcript_root(ROOT)/logs/, gitignored; falls back to a $TMPDIR file on any
+#                     resolver failure). Also exported as RTL_LOG so relay-turn-lib.sh's rtl_trace/
+#                     rtl_log_always decision-point instrumentation lands in this same transcript.
+#   RTL_TRACE       — 1 = also emit fine-grained decision-point trace lines (root resolution,
+#                     allowlist match, worktree seed/copy-back, containment verdict) into CODEX_LOG.
+#                     Default off — the routine successful path stays quiet unless requested.
 #   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
 #                     async/side-effect containment; off-lane in the worktree → exit 6). Default OFF.
 #
@@ -70,6 +76,12 @@ fi
 # (relay review 2026-06-23 F1/F2). TICK_REPO_ROOT names the HARNESS clone (.tick lives here), which
 # stays ROOT even when RELAY_TARGET_ROOT routes the ARTIFACT side elsewhere (GH-11).
 export TICK_REPO_ROOT="$ROOT"
+# GH-161: resolve the transcript path and export RTL_LOG BEFORE rtl_init, so its own decision-trace
+# line (and every later rtl_trace/rtl_log_always call) lands in this turn's transcript. Persistent by
+# default (rtl_transcript_root-anchored, gitignored — see .gitignore); falls back to the historical
+# PID-keyed tmp path on any resolver failure. CODEX_LOG stays fully operator-overridable.
+CODEX_LOG="${CODEX_LOG:-$(rtl_default_log "$ROOT" codex-turn "$t")}"
+export RTL_LOG="$CODEX_LOG"
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 # GH-68 warn-only: prepend any UNREAD cross-agent dependency-drift heads-up to the turn brief, so a
@@ -111,10 +123,10 @@ fi
 # workspace-write sandbox restriction (still can't touch outside the workspace) — fully overridable.
 read -ra _cflags <<<"${CODEX_FLAGS:--s workspace-write -c approval_policy=never}"
 codex_extra_flags=()
-# Transcript: default to a $TMPDIR file (NOT the repo tree — the in-tree log guard deletes it).
-# Persists the transcript so the headless run is auditable. (Codex token-stats parsing is a follow-up
-# — its usage format isn't probed yet, so cost.tokens for Codex turns stays a Phase-1 partial.)
-CODEX_LOG="${CODEX_LOG:-${TMPDIR:-/tmp}/codex-turn-$$.log}"
+# Transcript: CODEX_LOG is already resolved above (persistent-by-default via rtl_default_log, or a
+# tmp fallback — see the comment at the RTL_LOG export). Persists the transcript so the headless run
+# is auditable. (Codex token-stats parsing is a follow-up — its usage format isn't probed yet, so
+# cost.tokens for Codex turns stays a Phase-1 partial.)
 rtl_before
 turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
 bounded_rc=0
@@ -143,7 +155,10 @@ fi
 # credits — even if some ambient session exported a key. Set CODEX_ALLOW_API_KEY=1 to opt back in.
 codex_env=(env)
 [[ "${CODEX_ALLOW_API_KEY:-0}" == "1" ]] || codex_env+=(-u OPENAI_API_KEY)
-rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "${codex_env[@]}" "$CODEX_BIN" exec "${_cflags[@]}" ${codex_extra_flags[@]+"${codex_extra_flags[@]}"} "$prompt" < /dev/null > "$CODEX_LOG" 2>&1 \
+# GH-161: >> (append), not > (truncate) — rtl_init already wrote its trace line into CODEX_LOG above
+# (RTL_LOG was exported before rtl_init ran); a truncating redirect here would silently wipe it. Still
+# effectively a fresh file per turn under the persistent default (each run's filename embeds $$).
+rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "${codex_env[@]}" "$CODEX_BIN" exec "${_cflags[@]}" ${codex_extra_flags[@]+"${codex_extra_flags[@]}"} "$prompt" < /dev/null >> "$CODEX_LOG" 2>&1 \
   || bounded_rc=$?
 
 # Worktree teardown FIRST (regardless of rc). Copies the allowlist back to ROOT unless an off-lane

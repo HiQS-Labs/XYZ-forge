@@ -33,7 +33,12 @@ fi
 #   AGY_MODEL      — optional model for the turn (e.g. "Gemini 3.1 Pro (High)"); unset ⇒ agy default
 #   AGY_FLAGS      — optional extra flags appended to the agy invocation (advanced/override)
 #   AGY_TURN_ROOT  — git root to guard (default: this repo); tests point at a fixture
-#   AGY_LOG        — where to write the agy transcript (default: a $TMPDIR file)
+#   AGY_LOG        — where to write the agy transcript (default: GH-161 persistent path under
+#                    rtl_transcript_root(ROOT)/logs/, gitignored; falls back to a $TMPDIR file on any
+#                    resolver failure). Also exported as RTL_LOG so relay-turn-lib.sh's rtl_trace/
+#                    rtl_log_always decision-point instrumentation lands in this same transcript.
+#   RTL_TRACE      — 1 = also emit fine-grained decision-point trace lines (root resolution, allowlist
+#                    match, worktree seed/copy-back, containment verdict) into AGY_LOG. Default off.
 #   AGY_AUTH_TIMEOUT_S — short wall-clock cap for the auth pre-flight probe (`agy whoami`);
 #                        default 5. On failure/time-out the shim exits 5 with an `agy login` remedy.
 #   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
@@ -127,6 +132,12 @@ fi
 
 agy_auth_preflight || exit 5
 agy_validate_model || exit 5
+# GH-161: resolve the transcript path and export RTL_LOG BEFORE rtl_init (same reasoning as
+# codex-turn.sh) so its decision-trace line, and every later rtl_trace/rtl_log_always call, lands in
+# this turn's transcript. Persistent by default; falls back to the historical PID-keyed tmp path on
+# any resolver failure. AGY_LOG stays fully operator-overridable.
+AGY_LOG="${AGY_LOG:-$(rtl_default_log "$ROOT" agy-turn "$t")}"
+export RTL_LOG="$AGY_LOG"
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 
 # Cross-repo footgun guard (consumer feedback KWFS-02 B2): agy reads file paths relative to its
@@ -145,10 +156,10 @@ prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
 [[ -n "$drift_brief" ]] && prompt="${drift_brief}"$'\n'"${prompt}"
 
-# Transcript/log: default to a $TMPDIR file (NOT the repo tree — the in-tree log guard in
-# relay-turn-lib.sh deletes any in-tree log). Persisted so the headless run is auditable. Unlike the
-# Gemini shim there is no `-o json`, so this transcript is debug-only — no token stats to parse.
-AGY_LOG="${AGY_LOG:-${TMPDIR:-/tmp}/agy-turn-$$.log}"
+# Transcript/log: AGY_LOG is already resolved above (persistent-by-default via rtl_default_log, or a
+# tmp fallback — see the comment at the RTL_LOG export). Persisted so the headless run is auditable.
+# Unlike the Gemini shim there is no `-o json`, so this transcript is debug-only — no token stats to
+# parse.
 
 # Build the agy invocation. --print-timeout is pinned to the wall-clock cap so agy returns on its own
 # just before the rtl watchdog would kill it; --model and AGY_FLAGS are optional pass-throughs.
@@ -178,7 +189,10 @@ if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
   fi
 fi
 
-rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "$AGY_BIN" "${agy_args[@]}" -p "$prompt" < /dev/null > "$AGY_LOG" 2>&1 \
+# GH-161: >> (append), not > (truncate) — rtl_init already wrote its trace line into AGY_LOG above
+# (RTL_LOG was exported before rtl_init ran); a truncating redirect here would silently wipe it. Still
+# effectively a fresh file per turn under the persistent default (each run's filename embeds $$).
+rtl_run_bounded "$turn_timeout" ${cwd_wrap[@]+"${cwd_wrap[@]}"} "$AGY_BIN" "${agy_args[@]}" -p "$prompt" < /dev/null >> "$AGY_LOG" 2>&1 \
   || bounded_rc=$?
 
 # Worktree teardown FIRST (regardless of rc — a killed/crashed agy may have left work or off-lane edits
@@ -201,6 +215,10 @@ fi
 # unreachable (sandboxed network). Treat that as a failed turn, NOT a successful no-op — otherwise an
 # automated relay reads a blocked turn as "agent had nothing to do" and advances on a phantom success.
 # (Only enforced on a clean exit; a timeout-kill at rc=7 is reported below after containment.)
+# GH-161 KNOWN INTERACTION: this checks file SIZE, so RTL_TRACE=1 (which writes rtl_init's trace line
+# into AGY_LOG before agy ever runs) makes AGY_LOG non-empty regardless of agy's own output, masking
+# this guard for that one opt-in debug combination. Default posture (RTL_TRACE unset) is unaffected —
+# rtl_trace is a no-op then, so AGY_LOG stays genuinely empty until agy writes to it.
 if [[ "$bounded_rc" -eq 0 && ! -s "$AGY_LOG" ]]; then
   printf 'agy-turn: agy -p exited 0 but produced NO output — likely a blocked backend (run sandbox-OFF). Failing the turn.\n' >&2
   exit 5
