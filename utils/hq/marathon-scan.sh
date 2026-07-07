@@ -451,6 +451,9 @@ scope: >
   Repos with marathon docs under PROJECT/2-WORKING/, enumerated from the HQ PDDA registry and
   resolved via hq-lib.sh. Active docs are preflighted lane-by-lane with each repo's own
   utils/swarm-preflight.sh --dry-run; Held docs are surfaced but never counted as fireable.
+goal: >
+  Give the operator one at-a-glance cross-repo rollup of every marathon doc's status and
+  preflight verdict on this device, regenerated fresh each run rather than hand-maintained.
 roadmap_exempt: true
 generated_by: utils/hq/marathon-scan.sh
 ---
@@ -493,6 +496,12 @@ EOF
   done <"$LANE_TSV"
 
   cat <<EOF
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Scanned $repos_total repo(s), found $docs_total marathon doc(s), preflighted $active_lanes active lane(s): $fireable_ready ready, $blocked_not_promoted blocked-not-promoted, $blocked_other blocked-other, $stale_already_landed stale-already-landed, $ambiguous_count ambiguous; $held_docs held marathon(s) surfaced but not counted. | Re-run \`utils/hq/marathon-scan.sh\` to refresh; fire any ready lane via that repo's own \`swarm-preflight.sh\` → \`marathon-drive.sh\`. |
 
 ## Net result
 

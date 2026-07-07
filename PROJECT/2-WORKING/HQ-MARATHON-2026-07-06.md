@@ -12,13 +12,23 @@ generated_by: >
   Manual HQ cross-repo pass — first of its kind. No automated tool does this yet; GH-88 explicitly
   deferred "cross-repo launching" to v1.1 (stays `cd repo && marathon.sh`). This file is HQ's first
   attempt at the *aggregation* step; firing each lane still happens inside its own repo.
+goal: >
+  Manually aggregate every repo with an open marathon into one rollup so the operator can see and
+  sequence cross-repo work without opening each repo in turn — the precursor to the automated
+  utils/hq/marathon-scan.sh that later replaced this hand-rolled pass.
 ---
 
 # HQ MARATHON — 2026-07-06
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Manual cross-repo scan of 4 device-registered PDDA repos via the local Git Pulse Sync registry; 2 repos had an open, actionable marathon (xyz-3-agents-swarm, sleuth-app), rebalance-OS's `-B` file tracked but held by design. | Superseded by the automated `utils/hq/marathon-scan.sh` rollup (see `GLOBAL-HQ-MARATHON.md`) — this doc stays as the historical first pass, no further updates expected. |
+
 ## Source registry
 
-`Git Pulse Sync` PDDA registry (`/Users/noelsaw/git-pulse-sync/pdda/registry-*.tsv`, surfaced via
+The local Git Pulse Sync PDDA registry (path is operator/device-specific; surfaced via
 `utils/hq/hq.sh registries`) lists 4 PDDA-compliant repos, device-partitioned:
 
 | Repo | Marathon file | Status | In scope? |

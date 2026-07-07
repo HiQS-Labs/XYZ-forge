@@ -6,14 +6,17 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 42 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
+Summary: 45 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 17 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-165 · codex-turn: Codex can edit+commit without first owning the relay token, leaving no-progress stalls even after GH-67's release backstop | — | [GH-165-CODEX-TOKEN-OWNERSHIP.md](PROJECT/2-WORKING/GH-165-CODEX-TOKEN-OWNERSHIP.md) · [#165](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/165) |
-| Marathon Plan D · explore-and-plan cluster (GH-161..164) | — | [MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md) |
-| GH-163 · Review wp-code-check / WP-DB-Toolkit for existing fast AST tooling reusable for swarmability | — | [GH-163-WP-SIBLING-AST-REVIEW.md](PROJECT/1-INBOX/GH-163-WP-SIBLING-AST-REVIEW.md) · [#163](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/163) |
-| GH-159 · hq-lib.sh: hq_repo_resolve reports ambiguous when the same path appears twice as a candidate | — | [#159](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/159) |
+| Marathon Plan E · acorn-integration + aider-turn.sh + hq-resolve bugfix cluster (GH-159, GH-168, GH-169) | — | [MARATHON-PLAN-2026-07-07-E-BUILD.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md) |
+| GH-169 · Acorn integration (first pass): vendor acorn+acorn-walk as a lightweight JS symbol/call-site extractor for GH-156 | — | [GH-169-ACORN-FIRST-PASS-INTEGRATION.md](PROJECT/1-INBOX/GH-169-ACORN-FIRST-PASS-INTEGRATION.md) · [#169](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/169) |
+| GH-168 · aider-turn.sh: --no-gitignore doesn't enable reading gitignored files — missing --add-gitignore-files silently skips relay threads in gitignored dirs | — | [GH-168-AIDER-TURN-GITIGNORE-BUG.md](PROJECT/1-INBOX/GH-168-AIDER-TURN-GITIGNORE-BUG.md) · [#168](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/168) |
+| GH-165 · codex-turn: Codex can edit+commit without first owning the relay token, leaving no-progress stalls even after GH-67's release backstop | ✅ | [GH-165-CODEX-TOKEN-OWNERSHIP.md](PROJECT/3-COMPLETED/GH-165-CODEX-TOKEN-OWNERSHIP.md) · [#165](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/165) |
+| Marathon Plan D · explore-and-plan cluster (GH-161..164) | ✅ | [MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md) |
+| GH-163 · Review wp-code-check / WP-DB-Toolkit for existing fast AST tooling reusable for swarmability | ✅ | [GH-163-WP-SIBLING-AST-REVIEW.md](PROJECT/1-INBOX/GH-163-WP-SIBLING-AST-REVIEW.md) · [#163](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/163) |
+| GH-159 · hq-lib.sh: hq_repo_resolve reports ambiguous when the same path appears twice as a candidate | — | [GH-159-HQ-REPO-RESOLVE-DEDUPE.md](PROJECT/1-INBOX/GH-159-HQ-REPO-RESOLVE-DEDUPE.md) · [#159](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/159) |
 | GH-156 · Prelight: swarmability scoring using codebase-memory-mcp graph signals | — | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/1-INBOX/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
 | GH-157 · Peer research: competitive analysis dashboard for XYZ multi-agent coordination | ⏸️ | [GH-157-PEER-RESEARCH.md](PROJECT/1-INBOX/GH-157-PEER-RESEARCH.md) · [#157](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/157) |
 | GH-147 · LM Studio local-LLM lane for consult, relay, and swarm | 🟢 | [GH-147-LM-STUDIO.md](PROJECT/2-WORKING/GH-147-LM-STUDIO.md) · [#147](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/147) |
@@ -72,7 +75,7 @@ Summary: 14 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 10 · �
 | GH-89 · swarm-preflight: no ready path for greenfield (new-file) lanes | ✅ | [GH-89-SWARM-PREFLIGHT-GREENFIELD.md](PROJECT/3-COMPLETED/GH-89-SWARM-PREFLIGHT-GREENFIELD.md) · [#89](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/89) |
 | GH-86 · marathon-plan — surface PR-review lanes so they don't silently drop | ✅ | [GH-86-SURFACE-REVIEW-LANES.md](PROJECT/3-COMPLETED/GH-86-SURFACE-REVIEW-LANES.md) · [#86](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/86) |
 | Part B — Adversarial hardening | ⚠️ | [ADVERSARIAL-HARDENING.md](PROJECT/2-WORKING/ADVERSARIAL-HARDENING.md) |
-| Tooling · relay-to-issue skill | 🟡 | [RELAY-TO-ISSUE-SKILL.md](PROJECT/2-WORKING/RELAY-TO-ISSUE-SKILL.md) |
+| Tooling · relay-to-issue skill | 🟡 | [MARATHON-PLAN-2026-07-07.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07.md) · [RELAY-TO-ISSUE-SKILL.md](PROJECT/3-COMPLETED/RELAY-TO-ISSUE-SKILL.md) |
 
 ## Completed
 
