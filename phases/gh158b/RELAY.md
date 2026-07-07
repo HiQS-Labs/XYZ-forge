@@ -76,3 +76,23 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH158B-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh158b/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Files touched: `utils/hq/marathon-scan.sh`, `test/hq-marathon-scan.sh`.
+
+Implemented a new read-only HQ scanner that:
+- enumerates PDDA-known repos via `hq-lib.sh`
+- finds non-issue marathon docs under each repo's `PROJECT/2-WORKING/`
+- parses frontmatter status + active wave lanes
+- runs each target repo's own `utils/swarm-preflight.sh --dry-run` per active lane
+- classifies `ready`, `blocked-not-promoted`, `blocked-other`, `stale-already-landed`, and `ambiguous`
+- surfaces Held marathons separately and excludes them from the fireable count
+- writes only the hub-side aggregate markdown report
+
+Key decision: named wave entries that are not bare `#<issue>` tokens resolve by searching repo docs
+and ROADMAP pointers, preferring a real existing doc over a stale dead link. That makes ghost lanes
+like `relay-to-issue-skill` resolve to the shipped `PROJECT/3-COMPLETED/...` doc and classify
+`stale-already-landed` instead of falsely reading as a generic block.
+
+Verification: `bash test/hq-marathon-scan.sh` (11/11 passing).
