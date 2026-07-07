@@ -856,7 +856,14 @@ GH55_AUTO_LINE=""
 if [[ -n "$FS_TOUCHING_TESTS_CSV" ]]; then
   GH54_VERIFY_RULE="- Do NOT run ANY test or gate yourself — not \`$GATE_CMD\`, and NOT \`$FS_TOUCHING_TESTS_CSV\` either. Those tests create temporary git fixtures/files inside your isolated worktree, which containment treats as off-lane edits and can discard your whole turn. Read them as specs instead; the harness runs the real gate after your turn, outside the worktree."
 else
-  GH54_VERIFY_RULE="- Do NOT run the full gate (\`$GATE_CMD\`) yourself — it can create files that trip containment and discard your turn. Verify with ONLY the specific test for the file(s) you changed; the harness runs the gate after your turn."
+  # GH-108-class fix: the prior wording ("verify with ONLY the specific test") left the builder to
+  # guess a scoping invocation — observed live guessing `npm test -- <file>` against a compound
+  # `jest --forceExit && npm run test:node` gate script, where `--` doesn't propagate through the
+  # `&&` and the full suite ran anyway, tripping containment on stray test artifacts (same failure
+  # class GH-108 already documented for the declared gate itself, just self-inflicted here by the
+  # builder's own verify choice). Simplest durable fix: never self-verify — the harness always runs
+  # the real gate after the turn regardless, so a self-check only adds risk with no compensating gain.
+  GH54_VERIFY_RULE="- Do NOT run the full gate (\`$GATE_CMD\`) or any scoped/single-file variant of it yourself — even a single-file invocation can silently run the whole suite if the gate script is a compound (e.g. \`a && b\`) command, and any resulting artifacts trip containment as off-lane. Read the acceptance criteria and your own diff as the verification; the harness runs the real gate after your turn, outside the worktree."
 fi
 
 # GH-108: Level-1 documented-caveat only — no cross-runner auto-detection (non-goal). When GATE_CMD
