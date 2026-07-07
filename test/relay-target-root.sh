@@ -141,5 +141,44 @@ grep -q "Round 1 · Agent" "$A/relay.md" \
   && pass "GH-51 [1-kernel]: same-repo --target-root . — relay-file edit landed" \
   || fail "GH-51 [1-kernel]: same-repo --target-root . — relay-file edit lost"
 
+
+# --- Test case 4 (GH-160): a VENDORED .xyz/ install's own default ROOT (a SUBDIR of the repo it's
+# vendored into) must not anchor containment there, even with NO --target-root at all. ---
+# codex-turn.sh/agy-turn.sh/claude-turn.sh each default their TURN_ROOT to their own script's
+# parent directory when the orchestrator doesn't export e.g. CODEX_TURN_ROOT (it never does) — for
+# a vendored `<repo>/.xyz/relay-automation/codex-turn.sh`, that default is `<repo>/.xyz`, NOT
+# `<repo>`. Simulate that here: CLAUDE_TURN_ROOT points at a subdirectory of $A, no --target-root
+# is passed at all (RELAY_TARGET_ROOT unset — the GH-51 block above only fires when it IS set, so
+# this exercises a genuinely different code path). Before the fix: the relay-file's absolute path
+# never strips to repo-relative under the wrong root, failing its off-lane match; and the
+# worktree's `-e "$RTL_ROOT/artifact.txt"` seed check resolves under the wrong root, finds nothing,
+# and deletes the real artifact from the worktree handed to the agent. After the fix: RTL_ROOT
+# collapses to $A (its real toplevel) and the turn commits exactly like the no-target-root case.
+mkdir -p "$A/.xyz/relay-automation"
+seed_token RELAY-TURN-vendored
+A_BEFORE="$(git -C "$A" rev-parse HEAD)"
+ARTIFACT_LINES_BEFORE="$(wc -l <"$A/artifact.txt")"
+AGENT_CMD_VENDORED="RELAY_AGENT=claude RELAY_FILE=\"$A/relay.md\" RELAY_TASK=RELAY-TURN-vendored \
+  CLAUDE_AGENT=claude CLAUDE_BIN=\"$STUB\" CLAUDE_TURN_ROOT=\"$A/.xyz\" CLAUDE_LOG=\"$WORK/c-vendored.log\" \
+  ALLOW_PATHS=\"artifact.txt\" CLAUDE_BLOCK_CMDS=\"\" RELAY_WORKTREE_ISOLATION=1 \
+  bash \"$SHIM\""
+bash "$DRIVE" --relay-file "$A/relay.md" --relay-task RELAY-TURN-vendored \
+  --agent-cmd "$AGENT_CMD_VENDORED" --round-cap 1 >/dev/null 2>&1
+
+# The turn must COMMIT (not be reverted off-lane, and not silently drop the artifact).
+[ "$(git -C "$A" rev-parse HEAD)" != "$A_BEFORE" ] \
+  && pass "GH-160: vendored-subdir TURN_ROOT commits (relay file no longer off-lane)" \
+  || fail "GH-160: vendored-subdir TURN_ROOT reverted the turn off-lane (no commit)"
+# The relay-file edit landed (this round's append, not an earlier round's).
+tail -5 "$A/relay.md" | grep -q "Round 1 · Agent" \
+  && pass "GH-160: vendored-subdir TURN_ROOT — relay-file edit landed" \
+  || fail "GH-160: vendored-subdir TURN_ROOT — relay-file edit lost"
+# The artifact GREW by this round's append (proves the worktree seed step did NOT wrongly delete
+# the pre-existing content and start the file over — a plain content grep would pass even if the
+# file were deleted and recreated with just this round's line, since prior rounds wrote the same text).
+[ "$(wc -l <"$A/artifact.txt")" -gt "$ARTIFACT_LINES_BEFORE" ] \
+  && pass "GH-160: vendored-subdir TURN_ROOT — artifact survived worktree seeding" \
+  || fail "GH-160: vendored-subdir TURN_ROOT — artifact was wrongly deleted from the worktree"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

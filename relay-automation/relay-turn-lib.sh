@@ -146,6 +146,31 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
       if [[ "$_c1" == "$_ct" ]]; then RTL_ROOT="$1"; else RTL_ROOT="$_tt"; fi
     fi
   fi
+  # GH-160: a VENDORED .xyz/ install's own $1 (codex-turn.sh/agy-turn.sh's default ROOT, used
+  # whenever marathon-drive/relay-drive don't export CODEX_TURN_ROOT/AGY_TURN_ROOT — they never do)
+  # is the .xyz/ SUBDIR itself, not the repo it's vendored into — even with NO --target-root at all
+  # (the GH-51 block above only runs when RELAY_TARGET_ROOT is set). Left uncorrected, RTL_ROOT
+  # anchors containment at .xyz/: the repo-root-relative strip below never matches an ABSOLUTE
+  # relay-file path (it isn't under .xyz/), so the relay file's own turn-append fails its off-lane
+  # match — and rtl_worktree_begin's `-e "$RTL_ROOT/$a"` seed check for every OTHER allowlisted
+  # artifact resolves under .xyz/ too, finds nothing there, and deletes the artifact from the
+  # worktree handed to the agent (the "codex says the worktree doesn't contain my files" symptom —
+  # codex was telling the truth). Unconditional (not gated on RELAY_TARGET_ROOT, unlike the GH-51
+  # block above): whenever RTL_ROOT is not itself the toplevel of the git repo it resolves into —
+  # i.e. it is some ancestor's subdirectory, exactly the vendored-.xyz shape — collapse to that
+  # toplevel. A normal (non-vendored) RTL_ROOT already IS its own toplevel, so this is a no-op there.
+  # STRING-based, not `rev-parse --show-toplevel` (physical path, e.g. /private/var): the relay file
+  # and artifact paths are built by the CALLER from RTL_ROOT's own (possibly symlinked, e.g. /var)
+  # string form, so correcting to the physical toplevel would just move the mismatch — the relay
+  # file's absolute prefix would then fail to strip against a /private/var-rooted RTL_ROOT instead of
+  # a .xyz-rooted one (caught live: an early version of this fix did exactly that). `--show-prefix`
+  # gives the repo-root-relative form of RTL_ROOT itself; stripping that suffix off RTL_ROOT's own
+  # string yields the toplevel in RTL_ROOT's OWN symlink form, matching what the rest of the turn uses.
+  local _gh160_prefix
+  _gh160_prefix="$(git -C "$RTL_ROOT" rev-parse --show-prefix 2>/dev/null)"
+  if [[ -n "$_gh160_prefix" ]]; then
+    RTL_ROOT="${RTL_ROOT%/"${_gh160_prefix%/}"}"
+  fi
   # macOS/APFS (and any case-insensitive fs) reports git-status paths in the case the INDEX tracks
   # (e.g. RELAY-SYSTEM/…), which can differ from the lowercase invocation arg the allowlist holds
   # (relay-system/…). Detect it ONCE here so rtl_in_allow can compare case-insensitively on such

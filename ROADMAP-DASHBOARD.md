@@ -6,11 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 39 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
+Summary: 40 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-158 · HQ marathon scan: automate cross-repo marathon aggregation + preflight | — | [GH-158-HQ-MARATHON-SCAN.md](PROJECT/2-WORKING/GH-158-HQ-MARATHON-SCAN.md) · [#158](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/158) |
+| GH-160 · codex CLI intermittently reports off-lane/unwritable target files inside isolated worktrees (false containment violations) | — | [#160](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/160) |
+| GH-159 · hq-lib.sh: hq_repo_resolve reports ambiguous when the same path appears twice as a candidate | — | [#159](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/159) |
 | GH-156 · Prelight: swarmability scoring using codebase-memory-mcp graph signals | — | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/1-INBOX/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
 | GH-157 · Peer research: competitive analysis dashboard for XYZ multi-agent coordination | ⏸️ | [GH-157-PEER-RESEARCH.md](PROJECT/1-INBOX/GH-157-PEER-RESEARCH.md) · [#157](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/157) |
 | GH-147 · LM Studio local-LLM lane for consult, relay, and swarm | 🟢 | [GH-147-LM-STUDIO.md](PROJECT/2-WORKING/GH-147-LM-STUDIO.md) · [#147](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/147) |
@@ -73,10 +74,11 @@ Summary: 14 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 10 · �
 
 ## Completed
 
-Summary: 67 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 67 · 🔮 0 · 🔲 0
+Summary: 68 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 68 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-158 · HQ marathon scan: automate cross-repo marathon aggregation + preflight | ✅ | [GH-158-HQ-MARATHON-SCAN.md](PROJECT/3-COMPLETED/GH-158-HQ-MARATHON-SCAN.md) · [#158](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/158) |
 | GH-128 · HQ — multi-repo command center: registry-resolved project card + PDDA-compliant intake/dispatch | ✅ | [GH-128-HQ-COMMAND-CENTER.md](PROJECT/3-COMPLETED/GH-128-HQ-COMMAND-CENTER.md) · [#128](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128) |
 | Tooling · PDDA runtime consolidation (upgrade) | ✅ | [decision](decisions/2026-06-30-pdda-runtime-consolidation.md) · [PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md](PROJECT/3-COMPLETED/PDDA-RUNTIME-CONSOLIDATION-MIGRATION.md) |
 | GH-55 · swarm-preflight: auto-include a changed artifact's covering tests in the builder allowlist | ✅ | [#126](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/126) · [GH-55-AUTO-INCLUDE-COVERING-TESTS.md](PROJECT/3-COMPLETED/GH-55-AUTO-INCLUDE-COVERING-TESTS.md) · [#55](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/55) |
