@@ -32,7 +32,7 @@ execution: parallel Sonnet subagents, one per lane — no builder/reviewer/gate;
 
 | What was just completed | What's next |
 |---|---|
-| GH-161, GH-162, GH-163, GH-164 filed 2026-07-07 as part of a five-item follow-up batch; each got a skeleton plan doc in `PROJECT/1-INBOX/` (frontmatter + Key Concepts + Idea/Why + a Phase 0 checklist), and a light-touch ROADMAP queue line. Nothing has been explored yet. | Fire all 4 lanes in parallel (fully independent — each touches only its own doc, plus GH-163 reads two foreign repos read-only). Each lane completes its doc's Phase 0 checklist in place and records a verdict. |
+| GH-161, GH-162, GH-163, GH-164 filed 2026-07-07 as part of a five-item follow-up batch; each got a skeleton plan doc in `PROJECT/1-INBOX/` (frontmatter + Key Concepts + Idea/Why + a Phase 0 checklist), and a light-touch ROADMAP queue line. **#163 fired on this device (has `wp-code-check`/`WP-DB-Toolkit` on disk) — Phase 0 complete, verdict recorded, finding also written into GH-156's Phase 0 section.** #161/#162/#164 not touched here. | Fire #161, #162, #164 (elsewhere/another device or session). Each lane completes its doc's Phase 0 checklist in place and records a verdict. |
 
 ## Why this cluster, why now
 

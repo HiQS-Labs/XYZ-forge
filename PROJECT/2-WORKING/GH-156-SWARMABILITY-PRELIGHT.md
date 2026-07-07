@@ -90,6 +90,17 @@ Proposed first-pass gates:
 Purpose: decide what the score actually means before building anything. A bad metric here creates a
 false precision problem that is worse than no score at all.
 
+> **Input from GH-163** (2026-07-07): reviewed `wp-code-check` and `WP-DB-Toolkit` for reusable
+> AST/call-graph infra. Verdict: **not applicable as-is** — neither repo ships a general symbol/call
+> graph. `wp-code-check` has a real but narrow PHP-only AST subsystem (nikic/php-parser,
+> CLI-only, not wired into its own scanner, external non-vendored dependency) whose output is flat
+> findings/hook-wiring lists, not a graph; `WP-DB-Toolkit` has no code-AST infra at all (only a
+> stdlib-`ast` docstring linter and a regex-based RAG chunker). **Implication for this Phase 0:**
+> budget for building fresh parsing infra (e.g. `nikic/php-parser` + a JS parser) if graph signals
+> ever need source-level symbol/call data beyond what `codebase-memory-mcp` already provides — do
+> not plan around reusing either sibling repo's tooling. Full detail:
+> [GH-163](../1-INBOX/GH-163-WP-SIBLING-AST-REVIEW.md).
+
 ### Checklist
 
 - [ ] Define the score inputs explicitly:
