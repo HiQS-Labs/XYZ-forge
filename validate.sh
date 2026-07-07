@@ -37,6 +37,7 @@ TESTS=(
   "watchdog-relay.sh"
   "codex-turn.sh"
   "agy-turn.sh"
+  "relay-turn-trace.sh"          # GH-161 (rtl_trace/rtl_log_always/rtl_default_log instrumentation)
   "aider-turn.sh"
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
