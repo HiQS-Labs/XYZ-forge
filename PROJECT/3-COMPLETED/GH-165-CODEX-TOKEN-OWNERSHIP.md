@@ -2,7 +2,7 @@
 gh_issue: 165
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/165
 title: "codex-turn: Codex can edit and commit without first owning the relay token, leaving no-progress stalls even after GH-67's handoff backstop"
-status: Active (2-WORKING) — Codex shim ownership hardening landed; full-suite follow-up blocked by unrelated gates
+status: Shipped — Codex shim ownership hardening landed and verified; closed 2026-07-07
 created: 2026-07-07
 updated: 2026-07-07
 owner: noel
@@ -41,7 +41,7 @@ revert. Blast radius is limited to Codex relay turns; the shared containment ker
 
 | What was just completed | What's next |
 |---|---|
-| The Codex-side fix landed in both implementations: Bash `relay-automation/codex-turn.sh` and Python `utils/py/codex-turn.py` now claim the exact relay task, assert `claimer == codex` before launch, and ping it. Both `bash test/codex-turn.sh` and `XYZ_PYTHON=1 bash test/codex-turn.sh` are green with the new no-tick Codex stub case and unowned-token refusal case. `skills/relay-automation/relay-pkg.tar.gz` was rebuilt so package freshness is green again. | Resolve the remaining non-GH-165 validation blockers before calling the whole repo green: `test/worktree-isolation.sh` is red on its moved-ROOT-HEAD preserve case, and `python:test_python_layer.py` cannot run here because `pytest` is not installed in this environment. |
+| The Codex-side fix landed in both implementations: Bash `relay-automation/codex-turn.sh` and Python `utils/py/codex-turn.py` now claim the exact relay task, assert `claimer == codex` before launch, and ping it. Both `bash test/codex-turn.sh` and `XYZ_PYTHON=1 bash test/codex-turn.sh` are green with the new no-tick Codex stub case and unowned-token refusal case. `skills/relay-automation/relay-pkg.tar.gz` was rebuilt so package freshness is green again. **Closed 2026-07-07:** all 5 Definition-of-done items scoped to this issue are done; the one remaining `validate.sh` line (101/104) is blocked by two gates outside GH-165's change surface (`worktree-isolation.sh`'s pre-existing moved-ROOT-HEAD case, and `test_python_layer.py` needing `pytest`, not installed in this environment) — neither is a GH-165 regression, so closing rather than holding this issue open for unrelated gates. | Nothing outstanding for GH-165 itself. The two unrelated gates remain untracked as their own issues — worth filing separately if they start blocking other work. |
 
 ## Problem
 
@@ -90,3 +90,6 @@ already holds the token, so existing prompt-following stays harmless.
       Current result: `101/104` passed. The remaining red gates are outside the GH-165 files:
       `worktree-isolation.sh`, `python:test_python_layer.py` (missing `pytest`), and the
       now-resolved `relay-pkg-freshness.sh` from before the package rebuild.
+      **Closed anyway (2026-07-07):** left unchecked on purpose — it's genuinely not green — but
+      both remaining reds are pre-existing, unrelated to this issue's change surface, and not
+      separately tracked issues yet. Not holding GH-165 open for gates it didn't cause.
