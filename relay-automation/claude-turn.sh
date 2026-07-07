@@ -83,6 +83,11 @@ if [[ "$me" != "$claude_agent" ]]; then
   exit 0
 fi
 
+# Preserve an inherited harness tick root from the orchestrator (e.g. vendored .xyz marathon runs);
+# default to this shim's ROOT only when the caller did not already pin TICK_REPO_ROOT. (GH-171)
+: "${TICK_REPO_ROOT:=$ROOT}"
+export TICK_REPO_ROOT
+
 # GH-58: Discovery of claude binary + fail-fast
 resolved_claude=""
 if [[ -n "${CLAUDE_BIN:-}" ]]; then
@@ -161,7 +166,6 @@ wt=""; cwd_wrap=()
 if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
   if wt="$(rtl_worktree_begin)"; then
     # Run claude with CWD = the worktree; keep tick pointed at the real repo's shared state.
-    export TICK_REPO_ROOT="$ROOT"
     cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
     printf 'claude-turn: worktree isolation ON (%s)\n' "$wt" >&2
   else

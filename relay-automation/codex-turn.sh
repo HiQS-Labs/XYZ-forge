@@ -69,13 +69,13 @@ if [[ "$me" != "$codex_agent" ]]; then
   exit 0
 fi
 
-# Anchor tick coordination to the harness root UNCONDITIONALLY (not just under worktree isolation):
-# the turn-prompt and every token op must resolve .tick + bin/tick here regardless of the turn's CWD.
-# Without this, a Codex turn whose CWD isn't ROOT (worktree-isolated, or a CLI that cd's) runs its
-# tick calls against the wrong/absent .tick -> silent no-op -> the token never releases -> deadlock
-# (relay review 2026-06-23 F1/F2). TICK_REPO_ROOT names the HARNESS clone (.tick lives here), which
-# stays ROOT even when RELAY_TARGET_ROOT routes the ARTIFACT side elsewhere (GH-11).
-export TICK_REPO_ROOT="$ROOT"
+# Anchor tick coordination to the harness root (not just under worktree isolation): the turn-prompt
+# and every token op must resolve .tick + bin/tick there regardless of the turn's CWD. Preserve an
+# inherited TICK_REPO_ROOT from marathon-drive/relay-drive (notably a vendored .xyz run whose real
+# harness root is the CONSUMER repo, not .xyz itself); default to ROOT only when the caller did not
+# already pin it. (GH-171)
+: "${TICK_REPO_ROOT:=$ROOT}"
+export TICK_REPO_ROOT
 # GH-161: resolve the transcript path and export RTL_LOG BEFORE rtl_init, so its own decision-trace
 # line (and every later rtl_trace/rtl_log_always call) lands in this turn's transcript. Persistent by
 # default (rtl_transcript_root-anchored, gitignored — see .gitignore); falls back to the historical
@@ -104,7 +104,7 @@ if [[ -n "${ALLOW_PATHS:-}" ]]; then
     [[ -n "$_ap" ]] && claim_paths="$claim_paths,$_ap"
   done
 fi
-_tickroot="${TICK_REPO_ROOT:-$ROOT}"; _tickbin="$_tickroot/bin/tick"
+_tickroot="${TICK_REPO_ROOT:-$ROOT}"; _tickbin="$(rtl_tick_bin "$_tickroot")"
 if [[ -x "$_tickbin" ]]; then
   TICK_REPO_ROOT="$_tickroot" "$_tickbin" claim "$t" --agent "$me" --paths "$claim_paths" >/dev/null 2>&1 || true
   _claimer="$(TICK_REPO_ROOT="$_tickroot" "$_tickbin" info "$t" 2>/dev/null | sed -n 's/^claimer:[[:space:]]*//p' | head -n1)"
@@ -142,7 +142,7 @@ if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
     cwd_wrap=(bash -c 'cd "$1" || exit 127; shift; exec "$@"' bash "$wt")
     # GH-36: the isolated worktree is the primary workspace, so the shared token lock under
     # $TICK_REPO_ROOT/.tick is outside Codex's default workspace-write sandbox unless we add it.
-    codex_extra_flags=(--add-dir "$ROOT/.tick")
+    codex_extra_flags=(--add-dir "$TICK_REPO_ROOT/.tick")
     printf 'codex-turn: worktree isolation ON (%s)\n' "$wt" >&2
   else
     printf 'codex-turn: worktree isolation requested but `git worktree add` failed — failing turn\n' >&2

@@ -77,7 +77,9 @@ def main():
             except Exception:
                 pass
 
-    tick_bin = os.path.join(tick_repo_root, "bin", "tick")
+    tick_bin = os.environ.get("TICK_BIN") or os.path.join(tick_repo_root, "bin", "tick")
+    if not (os.path.isfile(tick_bin) and os.access(tick_bin, os.X_OK)):
+        tick_bin = os.path.join(xyz_root, "bin", "tick")
     if os.path.isfile(tick_bin) and os.access(tick_bin, os.X_OK):
         tick_env = dict(os.environ)
         tick_env["TICK_REPO_ROOT"] = tick_repo_root

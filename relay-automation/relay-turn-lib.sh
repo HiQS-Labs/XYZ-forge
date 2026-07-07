@@ -170,6 +170,16 @@ rtl_default_log() {  # <root> <tool-turn-name> <task> — e.g. rtl_default_log "
   fi
 }
 
+rtl_tick_bin() {  # [<tick_repo_root>] → absolute tick executable path
+  local tickroot="${1:-${TICK_REPO_ROOT:-${RTL_ROOT:-}}}"
+  [[ -n "${TICK_BIN:-}" ]] && { printf '%s' "$TICK_BIN"; return 0; }
+  [[ -n "$tickroot" && -x "$tickroot/bin/tick" ]] && { printf '%s/bin/tick' "$tickroot"; return 0; }
+  local _rtl_here _rtl_harness
+  _rtl_here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  _rtl_harness="$(cd "$_rtl_here/.." && pwd)"
+  printf '%s/bin/tick' "$_rtl_harness"
+}
+
 rtl_init() {  # <root> <relay_file> <allow_csv>
   # ROOT routing (GH-11): a foreign --target-root (exported by relay-drive as RELAY_TARGET_ROOT)
   # routes the WHOLE turn — worktree base, allowlist copyback, file-scoped commit, enforce — from this
@@ -574,7 +584,8 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # matter the CWD. A bare/`./bin/tick` from a worktree or foreign CWD silently no-ops -> the token
   # never releases -> deadlock (relay review 2026-06-23 F1). tickroot = the harness clone (where
   # bin/tick + .tick live), i.e. TICK_REPO_ROOT (exported by the shim), falling back to RTL_ROOT.
-  local root="${RTL_ROOT:-}" tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}" f_rel csv_rel="" p _a
+  local root="${RTL_ROOT:-}" tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}" tickbin f_rel csv_rel="" p _a
+  tickbin="$(rtl_tick_bin "$tickroot")"
   f_rel="${f#"${root:+$root/}"}"
   if [[ -n "$csv" ]]; then
     IFS=',' read -ra _a <<<"$csv"
@@ -592,8 +603,8 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # writable edit target — an edit fails the turn).
   local art_note=""
   [[ -n "${RTL_ARTIFACT_REL:-}" ]] && art_note=" The artifact under review is at ${RTL_ARTIFACT_REL} — READ it for your review, but do NOT edit it (any edit fails your turn)."
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s/bin/tick". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.' \
-    "$agent" "$f_rel" "$task" "$tickroot" "$tickroot" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note"
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.' \
+    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note"
 }
 
 rtl_before() {
@@ -745,11 +756,11 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   #     worker DID release), is left untouched — no duplicate event.
   #   - Ownership-guarded by tick itself: release/done throw unless `agent` is the current claimer, so
   #     a token this agent never claimed yields a WARN, never a turn failure (the commit already stood).
-  #   - CWD-independent: absolute env-pinned tick (TICK_REPO_ROOT + $tickroot/bin/tick), exactly as the
-  #     turn prompt mandates; the relay file lives in the HARNESS clone (tickroot), not RELAY_TARGET_ROOT.
+  #   - CWD-independent: absolute env-pinned tick (TICK_REPO_ROOT + rtl_tick_bin), exactly as the turn
+  #     prompt mandates; the relay file lives in the HARNESS clone (tickroot), not RELAY_TARGET_ROOT.
   local _relay_file="${RELAY_FILE:-}" _peer="${RELAY_PEER:-}"
   local _tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}" _tickbin
-  _tickbin="$_tickroot/bin/tick"
+  _tickbin="$(rtl_tick_bin "$_tickroot")"
   [[ "$_relay_file" != /* && -n "$_relay_file" && ! -f "$_relay_file" && -f "$_tickroot/$_relay_file" ]] \
     && _relay_file="$_tickroot/$_relay_file"
   if [[ -n "$task" && -n "$_relay_file" && -x "$_tickbin" ]]; then
