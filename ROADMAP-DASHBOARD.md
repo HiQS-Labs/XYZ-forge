@@ -6,10 +6,14 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 39 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
+Summary: 43 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-164 · Idea → queue → plan docs & GH issue → queue → marathon: quick automated intake pipeline | — | [#164](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/164) |
+| GH-163 · Review wp-code-check / WP-DB-Toolkit for existing fast AST tooling reusable for swarmability | — | [#163](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/163) |
+| GH-162 · Add a "code debugging mantra" harness file/mode that builds the mantra into the harness itself | — | [#162](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/162) |
+| GH-161 · Audit and add more observability into the harness and individual files | — | [#161](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/161) |
 | GH-159 · hq-lib.sh: hq_repo_resolve reports ambiguous when the same path appears twice as a candidate | — | [#159](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/159) |
 | GH-156 · Prelight: swarmability scoring using codebase-memory-mcp graph signals | — | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/1-INBOX/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
 | GH-157 · Peer research: competitive analysis dashboard for XYZ multi-agent coordination | ⏸️ | [GH-157-PEER-RESEARCH.md](PROJECT/1-INBOX/GH-157-PEER-RESEARCH.md) · [#157](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/157) |
