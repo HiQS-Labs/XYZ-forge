@@ -23,8 +23,9 @@ related:
   - utils/swarm-preflight.sh
 goal: >
   Audit the harness for observability gaps and add structured instrumentation at key decision
-  points, so root-causing a future containment/allowlist/worktree bug doesn't require manually
-  sourcing relay-turn-lib.sh and hand-constructing an empirical repro from scratch.
+  points, written into the turn's own transcript (CODEX_LOG/AGY_LOG) rather than a separate log,
+  so root-causing a future containment/allowlist/worktree bug doesn't require manually sourcing
+  relay-turn-lib.sh and hand-constructing an empirical repro from scratch.
 roadmap_exempt: false
 ---
 
@@ -36,7 +37,13 @@ roadmap_exempt: false
   `marathon-drive.sh`) and `utils/swarm-preflight.sh`.
 - Candidate instrumentation points: root resolution, allowlist matching, worktree seed/copy-back,
   containment verdicts.
-- Open question: log format/destination and opt-in-vs-always-on, still undecided.
+- Destination decided: inject into the existing per-turn transcript (`CODEX_LOG`/`AGY_LOG`), not a
+  new/separate log file — a transcript is already the artifact someone opens to debug a turn, so a
+  second file just adds a place to forget to look. Format/verbosity still open.
+
+> **Note for plan writers:** apply the `/ponytail` lens to whatever you propose here — favor the
+> laziest instrumentation that actually works (existing log streams, plain `printf`, one line per
+> decision point) over new logging infrastructure, config surface, or a bespoke format.
 
 # GH-161 · Audit and add more observability into the harness and individual files
 
@@ -61,6 +68,11 @@ benefit from built-in tracing/logging at key decision points (root resolution, a
 worktree seed/copy-back, containment verdicts) rather than requiring source-level reconstruction
 every time something goes wrong.
 
+The instrumentation should land **inside the transcript files each turn already produces**
+(`CODEX_LOG`/`AGY_LOG`), not a separate diagnostic log — a transcript is already the file someone
+opens to debug a turn (see GH-165, where the missing piece of evidence was simply that `CODEX_LOG`
+wasn't pinned to a persistent path), so a second log location is one more place to forget to check.
+
 ## Phase 0 — Explore & scope
 
 Purpose: this is a review/spike, not yet a build — decide what "more observability" concretely means
@@ -73,15 +85,23 @@ before writing any instrumentation.
 - [ ] List the specific decision points worth instrumenting (root resolution, allowlist match/reject,
       worktree seed/copy-back, containment verdict, tick token transitions) and what each needs to
       emit to have mattered for GH-160/GH-165-style investigations.
-- [ ] Decide log format and destination: structured (JSON lines) vs. plain text; per-PID temp file
-      (like `CODEX_LOG` today) vs. a persistent, append-only location.
+- [ ] Confirm the destination: instrumentation writes into the turn's own transcript
+      (`CODEX_LOG`/`AGY_LOG`), not a new file. Decide format within that constraint: structured
+      (JSON lines) vs. plain text prefixed lines (e.g. `[trace] <point>: <state>`).
+- [ ] As part of this, decide whether `CODEX_LOG`/`AGY_LOG` need to default to a persistent path
+      instead of today's PID-keyed `${TMPDIR:-/tmp}/codex-turn-$$.log` (ephemeral, gone once the
+      process exits) — the transcript-injection approach only pays off if the transcript itself
+      survives past the run.
 - [ ] Decide default posture: opt-in via an env var (e.g. `RTL_TRACE=1`) vs. always-on at a low
       verbosity level.
 - [ ] Propose the concrete change set (files touched, new env vars, output shape) as this doc's next
-      phase — do not implement in this phase.
+      phase — do not implement in this phase. Apply the `/ponytail` lens here: the lazy version is
+      a handful of `printf` lines into the already-open log file descriptor, not a new logging
+      library or format.
 
 ### QA checklist — Phase 0
 
 - [ ] The proposal names concrete decision points, not just "more logging."
+- [ ] The proposal writes into the existing transcript stream, not a new/separate log file.
 - [ ] The proposal states whether it's opt-in or always-on, with a stated reason.
 - [ ] The proposal doesn't touch containment/allowlist/commit control flow — logging only.

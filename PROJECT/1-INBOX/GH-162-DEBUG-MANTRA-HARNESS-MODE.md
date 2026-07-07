@@ -39,6 +39,10 @@ roadmap_exempt: false
 - Open question: which of those three (or a combination) is the right seam — undecided pending
   exploration.
 
+> **Note for plan writers:** apply the `/ponytail` lens here — favor the laziest integration seam
+> that actually works (a static reference file a turn is told to read beats a new relay-drive mode)
+> over new harness machinery, and question whether a seam needs to exist at all before adding one.
+
 # GH-162 · Add a "code debugging mantra" harness file/mode
 
 ## Status
@@ -82,6 +86,9 @@ Purpose: this is a review/spike — decide the integration seam before writing a
       single-turn, stateless builder — or whether that step only makes sense for a human/skill
       session with persistent context across a debug session.
 - [ ] Propose the concrete change set as this doc's next phase — do not implement in this phase.
+      Apply the `/ponytail` lens: prefer the seam that adds the least new harness surface (a
+      reference file over a new mode/flag) unless the worked example proves the simpler seam
+      doesn't actually work.
 
 ### QA checklist — Phase 0
 

@@ -58,12 +58,12 @@ read-only, so it doesn't need `--target-root` or cross-repo containment.
 
 ## Per-lane summary
 
-| # | Item | Deliverable | Write-set | cx/risk/eff |
-|---|------|-------------|-----------|-------------|
-| #161 | Harness observability audit | Phase 0 findings + instrumentation proposal | `PROJECT/1-INBOX/GH-161-HARNESS-OBSERVABILITY.md` | 3/1/3 |
-| #162 | Debug-mantra harness mode | Phase 0 findings + chosen integration seam | `PROJECT/1-INBOX/GH-162-DEBUG-MANTRA-HARNESS-MODE.md` | 2/1/2 |
-| #163 | WP-sibling AST tooling review | Phase 0 findings + reuse verdict | `PROJECT/1-INBOX/GH-163-WP-SIBLING-AST-REVIEW.md` | 1/1/1 |
-| #164 | Idea→marathon intake pipeline | Phase 0 findings + proposed tool shape | `PROJECT/1-INBOX/GH-164-IDEA-TO-MARATHON-PIPELINE.md` | 3/2/3 |
+| # | Item | Deliverable | Write-set | cx/risk/eff | Lens |
+|---|------|-------------|-----------|-------------|------|
+| #161 | Harness observability audit | Phase 0 findings + instrumentation proposal (into existing transcripts, not a new log) | `PROJECT/1-INBOX/GH-161-HARNESS-OBSERVABILITY.md` | 3/1/3 | `/ponytail` |
+| #162 | Debug-mantra harness mode | Phase 0 findings + chosen integration seam | `PROJECT/1-INBOX/GH-162-DEBUG-MANTRA-HARNESS-MODE.md` | 2/1/2 | `/ponytail` |
+| #163 | WP-sibling AST tooling review | Phase 0 findings + reuse verdict | `PROJECT/1-INBOX/GH-163-WP-SIBLING-AST-REVIEW.md` | 1/1/1 | — (fact-finding review, not a design) |
+| #164 | Idea→marathon intake pipeline | Phase 0 findings + proposed tool shape | `PROJECT/1-INBOX/GH-164-IDEA-TO-MARATHON-PIPELINE.md` | 3/2/3 | `/ponytail` |
 
 ## Recommended waves
 

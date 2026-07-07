@@ -40,6 +40,11 @@ roadmap_exempt: false
 - Open question: how much of the plan doc gets auto-drafted vs. human-reviewed before it's queued,
   and how this composes with HQ's existing commands rather than becoming a second, parallel path.
 
+> **Note for plan writers:** apply the `/ponytail` lens here — the manual trace is a handful of
+> mechanical steps (create issue, write doc, add a ROADMAP line, regenerate the dashboard); favor
+> composing existing commands/scripts over new automation infrastructure, and question whether a
+> new tool needs to exist at all versus a short script or an `hq` subcommand addition.
+
 # GH-164 · Idea → queue → plan docs & GH issue → queue → marathon
 
 ## Status
@@ -81,7 +86,8 @@ trace to design against, rather than designing in the abstract.
 - [ ] Decide the human checkpoint: does the auto-drafted issue/doc get created directly, or staged
       for a one-line human approval before it's real?
 - [ ] Propose the concrete tool/command shape (a new `hq` subcommand, a standalone script, or a
-      Claude Code skill) as this doc's next phase — do not implement in this phase.
+      Claude Code skill) as this doc's next phase — do not implement in this phase. Apply the
+      `/ponytail` lens: prefer extending an existing command over standing up a new tool surface.
 
 ### QA checklist — Phase 0
 
