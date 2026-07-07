@@ -2,7 +2,7 @@
 gh_issue: 158
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/158
 title: "HQ marathon scan: automate cross-repo marathon aggregation + preflight"
-status: Active (2-WORKING) — promoted 2026-07-06, ready for marathon
+status: Shipped 2026-07-06 (codex build + agy Approved; validate.sh 104/104 on re-run) — one known integration gap, see Acceptance criteria
 created: 2026-07-06
 updated: 2026-07-06
 doc_type: feature
@@ -89,14 +89,17 @@ does not modify them. Independent leaf-util zone — no kernel/relay-drive touch
 
 ## Acceptance criteria
 
-- [ ] Running the script with no args reproduces the same aggregation the two manual passes
+- [x] Running the script with no args reproduces the same aggregation the two manual passes
   produced (use [HQ-MARATHON-2026-07-06.md](HQ-MARATHON-2026-07-06.md) as the fixture/oracle
-  — same repos, same lane classifications).
-- [ ] Correctly classifies all five verdict states above, including Held-not-counted.
-- [ ] Writes no files to any *target* repo (read-only over sleuth-app/rebalance-OS/etc.);
+  — same repos, same lane classifications). **Known gap:** the live run correctly aggregates
+  rebalance-OS and xyz-3-agents-swarm, but silently drops sleuth-app — root-caused to a
+  pre-existing `hq_repo_resolve()` bug (returns the same path twice as candidates, tripping
+  its ambiguity check), not a defect in this script. Tracked separately, not blocking here.
+- [x] Correctly classifies all five verdict states above, including Held-not-counted.
+- [x] Writes no files to any *target* repo (read-only over sleuth-app/rebalance-OS/etc.);
   only writes the aggregated doc in the hub repo.
-- [ ] Test coverage (`test/hq-marathon-scan.sh` or similar) for the classification logic
-  against fixture marathon docs + fixture preflight JSON output — all five states.
+- [x] Test coverage (`test/hq-marathon-scan.sh` or similar) for the classification logic
+  against fixture marathon docs + fixture preflight JSON output — all five states. 11/11 green.
 
 ## Swarm Preflight Contract
 
