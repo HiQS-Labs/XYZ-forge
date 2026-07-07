@@ -6,10 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 45 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 17 · 🔮 0 · 🔲 0
+Summary: 47 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 17 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| Marathon Plan F · validate.sh's 9 pre-existing failing tests (GH-170) | — | [MARATHON-PLAN-2026-07-07-F-VALIDATE-FIXES.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-F-VALIDATE-FIXES.md) |
+| GH-170 · validate.sh: 9 pre-existing failing tests | — | [GH-170-VALIDATE-FAILING-TESTS.md](PROJECT/1-INBOX/GH-170-VALIDATE-FAILING-TESTS.md) · [#170](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/170) |
 | Marathon Plan E · acorn-integration + aider-turn.sh + hq-resolve bugfix cluster (GH-159, GH-168, GH-169) | — | [MARATHON-PLAN-2026-07-07-E-BUILD.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md) |
 | GH-169 · Acorn integration (first pass): vendor acorn+acorn-walk as a lightweight JS symbol/call-site extractor for GH-156 | — | [GH-169-ACORN-FIRST-PASS-INTEGRATION.md](PROJECT/1-INBOX/GH-169-ACORN-FIRST-PASS-INTEGRATION.md) · [#169](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/169) |
 | GH-168 · aider-turn.sh: --no-gitignore doesn't enable reading gitignored files — missing --add-gitignore-files silently skips relay threads in gitignored dirs | — | [GH-168-AIDER-TURN-GITIGNORE-BUG.md](PROJECT/1-INBOX/GH-168-AIDER-TURN-GITIGNORE-BUG.md) · [#168](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/168) |
