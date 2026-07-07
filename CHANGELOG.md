@@ -7,6 +7,11 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ### Added
 - **HQ Rollup**: Added `utils/hq/rollup.sh`, an automated cross-repo dashboard generator that parses `ROADMAP.md` active/parked items across registered repositories and synthesizes them into Obsidian via `agy` ([#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) ad-hoc detour).
 
+## 2026-07-07
+
+### GH-165 Codex shim now owns the relay token before launch
+Captured [GH-165](PROJECT/2-WORKING/GH-165-CODEX-TOKEN-OWNERSHIP.md) on the repo's PDDA rails and fixed the narrowed root cause in both implementations: Bash [relay-automation/codex-turn.sh](relay-automation/codex-turn.sh) and Python [utils/py/codex-turn.py](utils/py/codex-turn.py) no longer rely entirely on prompt-following for the **claim** half of the relay protocol. Before launching Codex they now build the exact `claim --paths` set, best-effort claim the handed-off task, prove `claimer == codex`, and ping the token; if ownership is missing they fail fast with exit 5 before any mutation, rather than allowing a commit with the token still open under the old owner. This complements GH-67's post-commit `release/done` backstop: GH-67 handled "Codex forgot to release", while GH-165 closes "Codex never owned the token in the first place." Added two regressions in [test/codex-turn.sh](test/codex-turn.sh): a **no-tick** Codex stub that edits the relay file but runs zero token commands (the shim must still hand off to the peer), and an **unowned-token refusal** case that proves no edit/commit happens when another agent still owns the task. Verification: `bash test/codex-turn.sh` **37/0** green, `XYZ_PYTHON=1 bash test/codex-turn.sh` **37/0** green, `python3 -m py_compile utils/py/codex-turn.py` green, and `bash test/relay-pkg-freshness.sh` green after rebuilding `skills/relay-automation/relay-pkg.tar.gz`. A full `./validate.sh` run reached **101/104** with the remaining red gates outside this change surface: `worktree-isolation.sh` (moved-ROOT-HEAD preserve case) and `python:test_python_layer.py` (environment lacks `pytest`).
+
 ## 2026-07-06
 
 ### Marathon Lane B — #143 front-door CLOSED (+ fixed a real relay-pkg freshness drift → 104/104)

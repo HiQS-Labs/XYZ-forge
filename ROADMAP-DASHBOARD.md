@@ -10,7 +10,7 @@ Summary: 45 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · �
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-165 · Codex builder turns edit the relay file's handoff marker but don't reliably execute tick release — token stays open, escalates no-progress | — | [#165](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/165) |
+| GH-165 · codex-turn: Codex can edit+commit without first owning the relay token, leaving no-progress stalls even after GH-67's release backstop | — | [GH-165-CODEX-TOKEN-OWNERSHIP.md](PROJECT/2-WORKING/GH-165-CODEX-TOKEN-OWNERSHIP.md) · [#165](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/165) |
 | Marathon Plan D · explore-and-plan cluster (GH-161..164) | — | [MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md) |
 | GH-164 · Idea → queue → plan docs & GH issue → queue → marathon: quick automated intake pipeline | — | [GH-164-IDEA-TO-MARATHON-PIPELINE.md](PROJECT/1-INBOX/GH-164-IDEA-TO-MARATHON-PIPELINE.md) · [#164](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/164) |
 | GH-163 · Review wp-code-check / WP-DB-Toolkit for existing fast AST tooling reusable for swarmability | — | [GH-163-WP-SIBLING-AST-REVIEW.md](PROJECT/1-INBOX/GH-163-WP-SIBLING-AST-REVIEW.md) · [#163](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/163) |

@@ -6,26 +6,36 @@ export TICK_BIN="$TICK"
 SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/codex-turn.sh"
 tick_a init >/dev/null
 
+# Production shape: bin/tick + src co-located with .tick under TICK_REPO_ROOT.
+# codex-turn + rtl_enforce resolve tick as "$TICK_REPO_ROOT/bin/tick", so provide it in the fixture
+# root and gitignore bin/ so the symlink never trips containment.
+mkdir -p "$A/bin"; ln -sf "$TICK" "$A/bin/tick"
+
 # committed relay-file baseline in the fixture repo ($A). Mirror the real repo's
 # .tick/ gitignore so tick's coordination dir is invisible to git status (else it
 # looks like an off-lane change to the shim — exactly what production avoids).
 printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
-printf '.tick/\n' >"$A/.gitignore"
+printf '.tick/\nbin/\n' >"$A/.gitignore"
 git -C "$A" add relay.md .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
 
 # Stub `codex`: ignores its args; performs a real turn as $RELAY_AGENT — claim/ping the
-# token, append a block to $RELAY_FILE, release to claude-a. STUB_MODE=bad also writes an
-# off-allowlist file (must be reverted by the shim).
+# token, append a block to $RELAY_FILE, release to claude-a. STUB_MODE=notick skips the token ops
+# entirely so the shim must establish ownership + handoff itself (GH-165). STUB_MODE=bad also writes
+# an off-allowlist file (must be reverted by the shim).
 STUB="$WORK/codex"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
 printf '%s\n' "$*" > "$WORK/codex-args" 2>/dev/null || true   # record invocation for [3] flag check
 export TICK_REPO_ROOT="$A"
-"$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
-"$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
+if [ "${STUB_MODE:-good}" != notick ]; then
+  "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
+  "$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
+fi
 printf '\n### Round 1 · Reviewer · %s (codex-stub)\n**Verdict:** Changes requested\n' "$RELAY_AGENT" >>"$RELAY_FILE"
-"$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to claude-a >/dev/null 2>&1
+if [ "${STUB_MODE:-good}" != notick ]; then
+  "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to claude-a >/dev/null 2>&1
+fi
 [ "${STUB_MODE:-good}" = bad ] && printf 'off-lane\n' >>"$A/offlane.md"
 # commitbypass: Codex ignores "no git" and COMMITS an off-lane change (hides it from git status)
 if [ "${STUB_MODE:-good}" = commitbypass ]; then
@@ -45,11 +55,13 @@ chmod +x "$STUB"
 
 # seed RELAY-TURN handed to codex
 seed_token(){ tick_a log task.created "$1" --agent claude-a >/dev/null; tick_a claim "$1" --agent claude-a --paths "z/**" >/dev/null; tick_a release "$1" --agent claude-a --to codex >/dev/null; }
+tok_field(){ tick_a info "$1" 2>/dev/null | sed -n "s/^$2:[[:space:]]*//p" | head -1; }
 
-run_shim(){ # <relay-task> <agent> <stub-mode>
-  RELAY_AGENT="$2" RELAY_FILE="$A/relay.md" RELAY_TASK="$1" CODEX_AGENT=codex \
-  CODEX_BIN="$STUB" CODEX_TURN_ROOT="$A" CODEX_LOG=/dev/null STUB_MODE="$3" \
-  bash "$SHIM" >/dev/null 2>&1
+run_shim(){ # <relay-task> <agent> <stub-mode> [extra env assignments...]
+  local task="$1" agent="$2" mode="$3"; shift 3
+  env RELAY_AGENT="$agent" RELAY_FILE="$A/relay.md" RELAY_TASK="$task" CODEX_AGENT=codex \
+    CODEX_BIN="$STUB" CODEX_TURN_ROOT="$A" CODEX_LOG=/dev/null STUB_MODE="$mode" "$@" \
+    bash "$SHIM" >/dev/null 2>&1
 }
 
 # --- (1) defer: non-Codex actor -> no-op, no commit ----------------------
@@ -68,7 +80,26 @@ run_shim RELAY-TURN-good codex good; rc=$?
 git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the relay file" || fail "commit should include relay.md"
 [ "$(git -C "$A" log -1 --format='%s')" != "" ] && [ -z "$(git -C "$A" log -1 --format='%D' | grep -o 'origin/')" ] && pass "no push (no origin ref on the commit)" || pass "no push (local-only fixture)"
 
-# --- (2b) shim's own transcript log inside the tree is ignored, not flagged --
+# --- (2a) GH-165: stub skips tick entirely -> shim establishes ownership + handoff ---
+seed_token RELAY-TURN-gh165
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-gh165 codex notick RELAY_PEER=claude-a; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-165: no-tick Codex turn still exits 0" || fail "GH-165 no-tick turn rc=$rc"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "GH-165: no-tick Codex turn still commits" || fail "GH-165 no-tick turn should commit"
+[ "$(tok_field RELAY-TURN-gh165 status)" = "open" ] && [ "$(tok_field RELAY-TURN-gh165 handoff-to)" = "claude-a" ] \
+  && pass "GH-165: shim handed the token to the peer after a no-tick Codex turn" \
+  || fail "GH-165: token not handed off: status=$(tok_field RELAY-TURN-gh165 status) handoff=$(tok_field RELAY-TURN-gh165 handoff-to)"
+
+# --- (2b) GH-165: token NOT owned by codex -> shim refuses before any mutation ---
+tick_a log task.created RELAY-TURN-noown --agent boss >/dev/null
+tick_a claim RELAY-TURN-noown --agent boss --paths "z/**" >/dev/null
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-noown codex good RELAY_PEER=claude-a; rc=$?
+[ "$rc" -eq 5 ] && pass "GH-165: unowned token -> shim refuses before the turn (exit 5)" || fail "GH-165 unowned token should exit 5, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "GH-165: unowned token -> no commit made" || fail "GH-165 should not commit without token ownership"
+[ "$(tok_field RELAY-TURN-noown claimer)" = "boss" ] && pass "GH-165: unowned token -> claimer still boss" || fail "GH-165 claimer changed: $(tok_field RELAY-TURN-noown claimer)"
+
+# --- (2c) shim's own transcript log inside the tree is ignored, not flagged --
 seed_token RELAY-TURN-log
 before="$(git -C "$A" rev-parse HEAD)"
 RELAY_AGENT=codex RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-log CODEX_AGENT=codex \

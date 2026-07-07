@@ -40,7 +40,8 @@ fi
 #   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
 #                          runaway codex CLI is killed after this many seconds; the turn exits 7.
 #
-# Exit: 0 acted/deferred · 5 codex failed · 6 off-allowlist edit (reverted) · 7 timeout-killed · 2 usage.
+# Exit: 0 acted/deferred · 5 codex failed / token ownership missing · 6 off-allowlist edit
+#       (reverted) · 7 timeout-killed · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=relay-turn-lib.sh
@@ -76,6 +77,31 @@ prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
 # unread drift → empty → prompt unchanged. Never blocks. (decisions/2026-07-01-cross-agent-dep-conflict.md)
 drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
 [[ -n "$drift_brief" ]] && prompt="${drift_brief}"$'\n'"${prompt}"
+
+# GH-165: claim the specific handed-off task in the shim and prove ownership BEFORE launching Codex.
+# GH-67 already backstops release/done after the commit, but that path is ownership-guarded by tick:
+# if Codex edits the relay/artifacts without first becoming the claimer, rtl_enforce can only WARN
+# and the lane deadlocks as apparent "no-progress". Claiming here is safe because `tick claim` is
+# idempotent when this agent already holds the token.
+claim_paths="${f#"$ROOT"/}"
+if [[ -n "${ALLOW_PATHS:-}" ]]; then
+  IFS=',' read -ra _claim_allow <<<"${ALLOW_PATHS}"
+  for _ap in "${_claim_allow[@]}"; do
+    _ap="${_ap#"${_ap%%[![:space:]]*}"}"
+    _ap="${_ap%"${_ap##*[![:space:]]}"}"
+    [[ -n "$_ap" ]] && claim_paths="$claim_paths,$_ap"
+  done
+fi
+_tickroot="${TICK_REPO_ROOT:-$ROOT}"; _tickbin="$_tickroot/bin/tick"
+if [[ -x "$_tickbin" ]]; then
+  TICK_REPO_ROOT="$_tickroot" "$_tickbin" claim "$t" --agent "$me" --paths "$claim_paths" >/dev/null 2>&1 || true
+  _claimer="$(TICK_REPO_ROOT="$_tickroot" "$_tickbin" info "$t" 2>/dev/null | sed -n 's/^claimer:[[:space:]]*//p' | head -n1)"
+  if [[ "$_claimer" != "$me" ]]; then
+    printf 'codex-turn: could not establish token ownership of %s (claimer=%s, expected %s) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info %s`\n' "$t" "${_claimer:-none}" "$me" "$t" >&2
+    exit 5
+  fi
+  TICK_REPO_ROOT="$_tickroot" "$_tickbin" ping "$t" --agent "$me" >/dev/null 2>&1 || true
+fi
 
 # Run the Codex turn headless (token ops + edit the relay file; NO git), then enforce the boundary.
 # CODEX_FLAGS gives the turn enough autonomy to actually write on a fresh device (default sandbox is
