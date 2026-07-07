@@ -207,3 +207,47 @@ obligation), passes the lightweight bar (~6.7K LOC total, zero deps), and empiri
 the "build fresh JS parsing infra" line item from the original verdict to "wire up `acorn` +
 `acorn-walk`," rather than building or evaluating a heavier option (`@babel/parser`,
 `tree-sitter`) from scratch.
+
+## Addendum 2 (2026-07-07) — extensive test round (5-minute time-boxed)
+
+One round of broader testing on `acorn`, beyond the two-file smoke test above.
+
+**Test 1 — whole-repo parse sweep.** Walked every `.js`/`.mjs`/`.cjs` file in
+`xyz-3-agents-swarm` (excluding `node_modules`/`.git`): **28/28 files parsed OK, 0 failures.**
+182,561 bytes total, 35.7ms total parse time (avg **1.27ms/file**). Largest file
+(`utils/py/_marathon_plan_node.js`, 41KB) parsed fine.
+
+**Test 2 — modern syntax feature coverage.** 20/20 features parsed correctly with
+`ecmaVersion: "latest"`: optional chaining, nullish coalescing, async/await, generators + async
+generators, spread/rest, template literals, private class fields (`#x`), static class blocks,
+dynamic `import()`, top-level `await`, `BigInt`, numeric separators (`1_000_000`), logical
+assignment (`||=`/`&&=`/`??=`), nested destructuring defaults, tagged templates, class
+getters/setters, computed properties, `**` exponent, and `\p{...}` unicode-property regex. No gaps
+found in current-JS coverage.
+
+**Test 3 — scope-boundary check (expected failures).** JSX, TS type annotations, and TS
+`interface` all correctly **fail to parse** (as they should — acorn is JS-only, not JSX/TSX). This
+confirms the boundary is real, not silently permissive; a future integration would need
+`acorn-jsx`/a TS-aware parser if this tooling is ever pointed at JSX or `.ts` files (moot for this
+repo today — 0 `.ts` files present).
+
+**Test 4 — error recovery.** Deliberately malformed input still throws a clean, catchable
+error with line/col (no crash, no silent corruption) — consistent with the earlier smoke test.
+**Caveat surfaced:** the sibling `acorn-loose` package (meant for *tolerant*/partial-AST parsing
+on broken input, e.g. for editor autocomplete) is **not** directly `src/`-importable like core
+`acorn`/`acorn-walk` — its `acorn-loose/src/index.js` imports the *built* dist
+(`acorn-loose/node_modules/acorn/dist/acorn.mjs`), which requires running this monorepo's `rollup`
+build first. Not evaluated live to stay in the time budget. Only relevant if a future consumer
+needs tolerant parsing of in-progress/broken code; the core parser (strict, throw-on-error) needs
+no build step and was fully exercised above.
+
+**Test 5 — cross-repo generalization check.** Attempted against `kiss-api-guard-plugin`
+(another sibling repo on disk) to see if acorn generalizes beyond `xyz-3-agents-swarm`: that repo
+has **0 JS files** (it's a PHP-only WordPress plugin), so this check was inconclusive rather than
+negative — no evidence against generalization, just no second JS-repo sample available in the
+5-minute window.
+
+**Net effect on verdict:** strengthens "usable as-is for the JS side" from Addendum 1 — real-world
+coverage (28/28 files, 20/20 modern syntax features) with zero surprises, and the one caveat found
+(`acorn-loose` needs a build step) only matters if tolerant/partial parsing is ever required, which
+is not part of GH-156's current stated need.
