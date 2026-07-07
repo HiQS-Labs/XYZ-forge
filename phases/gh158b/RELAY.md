@@ -1,5 +1,5 @@
 # Marathon Phase gh158b
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH158B-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -96,3 +96,13 @@ like `relay-to-issue-skill` resolve to the shipped `PROJECT/3-COMPLETED/...` doc
 `stale-already-landed` instead of falsely reading as a generic block.
 
 Verification: `bash test/hq-marathon-scan.sh` (11/11 passing).
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+I have reviewed the changes in `utils/hq/marathon-scan.sh` and `test/hq-marathon-scan.sh`.
+- The acceptance criteria are fully met.
+- The new script `marathon-scan.sh` parses frontmatter status + active wave lanes and classifies all five verdict states plus Held-not-counted properly.
+- Target repos remain untouched/read-only during scanning.
+- Regression tests in `test/hq-marathon-scan.sh` run cleanly and all 11 pass.
