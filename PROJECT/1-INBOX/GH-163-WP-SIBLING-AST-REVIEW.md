@@ -155,3 +155,55 @@ Purpose: confirm what actually exists before GH-156 commits to building anything
       that doc's owner to incorporate). — No reusable candidate found; this doc's verdict itself
       (see Status table) is the flag for GH-156's owner to incorporate into that doc's Phase 0
       scoring-contract decision.
+
+## Addendum (2026-07-07) — third-party candidate: `acorn`
+
+Follow-on from the "not applicable, build fresh" verdict above: since neither sibling repo has
+reusable JS-side AST infra, evaluated `acorn` (`acornjs/acorn`, cloned locally at
+`~/Documents/GH Repos/acorn`) as an external candidate for the JS side of a future lightweight
+parser, license and smoke-tested.
+
+**License:** MIT, confirmed at both the monorepo root (`package.json:"license"`) and per-package
+(`acorn/LICENSE`, `acorn-walk/LICENSE`, `acorn-loose/LICENSE`) — copyright "various contributors,
+see AUTHORS," no separate NOTICE/attribution-display requirement, only the standard MIT
+keep-the-license-text-in-source clause. **Zero runtime dependencies** (no `"dependencies"` key in
+any package.json — devDependencies only, for its own build/lint/test tooling).
+
+**Footprint:** core parser `acorn/src/*.js` is ~6.3K LOC; `acorn-walk` (AST-visitor helper) is
+~401 LOC. Plain ESM source, `engines.node >= 0.4.0` (broad compat floor). No build step required to
+use the source directly as a library — no CLI/subprocess needed.
+
+**Smoke test performed** (script: parse real files from this repo, walk the AST, extract
+declarations and call sites):
+
+| File | Result | Parse time | Functions/classes found | Call sites found |
+|---|---|---|---|---|
+| `src/analyze.js` (638 lines, 30KB) | OK | 15.38ms | 13 (`toMs`, `humanDuration`, `buildClaimWindows`, `computeParallelism`, `computeCollisions`, `computeBalance`, `computeVerdict`, `findParkedClaims`, ...) | 215 call sites, 10+ distinct callees (`require`, `parse`, `isFinite`, `round`, `floor`, `has`, `set`, `get`, `push`, `slice`, ...) |
+| `utils/py/_marathon_plan_node.js` (779 lines, 41KB) | OK | 11.02ms | 25 (`readFileSafe`, `existsAt`, `fileExistedAtBaseRef`, `frontmatter`, `extractContract`, `evalProbe`, `branches`, `branchMatchesSlug`, ...) | 421 call sites, 10+ distinct callees (`require`, `readFileSync`, `resolve`, `existsSync`, `startsWith`, `slice`, `split`, `trim`, `map`, `filter`, ...) |
+
+Error-path check: a deliberately malformed snippet (`"function broken( {"`) throws a catchable
+error with usable line/column info (`1:18`) rather than crashing silently — needed for a
+lint/analyzer-style consumer.
+
+**Limitations found:**
+- JS/JSX only — no native TypeScript AST support (would need `acorn-typescript` or a different
+  tool). Not a blocker for this repo specifically: `find . -iname "*.ts"` returns **zero** TS files
+  in `xyz-3-agents-swarm` today. Would matter if this tooling is later pointed at a TS codebase.
+  Note: [GH-156](../2-WORKING/GH-156-SWARMABILITY-PRELIGHT.md)'s `codebase-memory-mcp` graph
+  signals likely already cover cross-repo/multi-language cases more broadly than a single embedded
+  JS parser would — this candidate is scoped to "fast, in-process JS symbol/call-site extraction,"
+  not a general replacement for that graph.
+- No PHP support (expected, separate ecosystem) — PHP side is still `nikic/php-parser`, per the
+  original Phase 0 finding above.
+- Only produces raw AST + a visitor helper (`acorn-walk`) — no built-in symbol table, scope
+  resolution, or call-graph assembly. Extracting declarations/call-sites (as done in the smoke
+  test above) is straightforward with `acorn-walk`'s `simple()` visitor, but assembling that into
+  GH-156's proposed schema (`swarmability_score`, `candidate_lanes`, `shared_surfaces`, `hotspots`,
+  `reasons`) is still work this repo would have to build — acorn only supplies the parse step.
+
+**Verdict: usable as-is for the JS side.** Passes the license bar (MIT, no runtime attribution
+obligation), passes the lightweight bar (~6.7K LOC total, zero deps), and empirically parses real
+`xyz-3-agents-swarm` source in single-digit milliseconds with a working error path. This narrows
+the "build fresh JS parsing infra" line item from the original verdict to "wire up `acorn` +
+`acorn-walk`," rather than building or evaluating a heavier option (`@babel/parser`,
+`tree-sitter`) from scratch.
