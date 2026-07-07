@@ -18,6 +18,9 @@ XYZ.heartbeat.json
 utils/telemetry/preflight-log/
 # swarm-preflight packet output — ephemeral per-run artifact (sleuth-app already gitignores this).
 relay-system/preflight/
+# Hourly HQ marathon scan (utils/hq/hourly-global-scan.sh) — a live, machine-local rolling snapshot
+# overwritten every run; committing it each hour would be pure churn with no historical value.
+PROJECT/2-WORKING/GLOBAL-HQ-MARATHON.md
 # Aider aux files: a MANUAL (non-shim) aider run drops .aider.chat.history.md / .aider.input.history /
 # .aider.llm.history into the tree. The aider-turn.sh shim already redirects these via AIDER_AUX_DIR;
 # this guards ad-hoc runs so they can't re-leak as untracked noise.

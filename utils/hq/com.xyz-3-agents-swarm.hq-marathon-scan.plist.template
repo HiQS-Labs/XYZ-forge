@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Template for the hourly HQ marathon-scan launchd agent. Not installed directly — machine-specific
+  absolute paths are substituted in by utils/hq/install-hourly-scan.sh (never hardcoded here, so this
+  template stays portable across clones/machines per this repo's own no-hardcoded-path convention).
+  Placeholders: __REPO_ROOT__ (this checkout's absolute path), __HOME__ (the installing user's $HOME).
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.xyz-3-agents-swarm.hq-marathon-scan</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__REPO_ROOT__/utils/hq/hourly-global-scan.sh</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__REPO_ROOT__</string>
+  <key>StartInterval</key>
+  <integer>3600</integer>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>__HOME__/Library/Logs/hq-marathon-scan.log</string>
+  <key>StandardErrorPath</key>
+  <string>__HOME__/Library/Logs/hq-marathon-scan.log</string>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>__HOME__/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key>
+    <string>__HOME__</string>
+  </dict>
+</dict>
+</plist>
