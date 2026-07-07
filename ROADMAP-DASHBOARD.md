@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 43 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
+Summary: 44 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-165 · Codex builder turns edit the relay file's handoff marker but don't reliably execute tick release — token stays open, escalates no-progress | — | [#165](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/165) |
 | GH-164 · Idea → queue → plan docs & GH issue → queue → marathon: quick automated intake pipeline | — | [#164](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/164) |
 | GH-163 · Review wp-code-check / WP-DB-Toolkit for existing fast AST tooling reusable for swarmability | — | [#163](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/163) |
 | GH-162 · Add a "code debugging mantra" harness file/mode that builds the mantra into the harness itself | — | [#162](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/162) |
