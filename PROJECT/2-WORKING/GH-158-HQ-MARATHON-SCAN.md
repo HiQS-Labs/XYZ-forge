@@ -2,8 +2,9 @@
 gh_issue: 158
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/158
 title: "HQ marathon scan: automate cross-repo marathon aggregation + preflight"
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING) — promoted 2026-07-06, ready for marathon
 created: 2026-07-06
+updated: 2026-07-06
 doc_type: feature
 complexity: 3
 risk: 2
@@ -104,9 +105,14 @@ does not modify them. Independent leaf-util zone — no kernel/relay-drive touch
   "target": { "repo": ".", "ref": "main" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "path_absent", "path": "utils/hq/marathon-scan.sh" }
+    { "type": "path_absent", "path": "utils/hq/marathon-scan.sh" },
+    { "type": "path_absent", "path": "test/hq-marathon-scan.sh" }
   ],
   "artifacts": [
+    "utils/hq/marathon-scan.sh",
+    "test/hq-marathon-scan.sh"
+  ],
+  "artifacts_new": [
     "utils/hq/marathon-scan.sh",
     "test/hq-marathon-scan.sh"
   ],
@@ -121,6 +127,5 @@ does not modify them. Independent leaf-util zone — no kernel/relay-drive touch
 
 ## Promotion note
 
-Captured here in `1-INBOX` per this repo's issue-first convention. Queued in `ROADMAP.md`'s
-Queue / parked intake; promote to `PROJECT/2-WORKING/` (`hq.sh promote --gh-issue 158`)
-when ready to build.
+Captured in `1-INBOX` per this repo's issue-first convention, then promoted to
+`PROJECT/2-WORKING/` on 2026-07-06 — ready for a marathon lane.
