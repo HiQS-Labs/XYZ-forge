@@ -219,6 +219,18 @@
     return h;
   }
 
+  // ---- search + type filter predicate: dims (never hides/re-layouts) a node
+  // that doesn't match the current text query or whose type has been toggled
+  // off in the legend. Pure so it's independently testable; renderDiagram's
+  // nodeMatches() below just supplies the closure's live query/excludedTypes.
+  function matchesQuery(n, query, excludedTypes) {
+    if (excludedTypes[n.type || 'default']) return false;
+    if (!query) return true;
+    var haystack = [n.label, n.id, n.type, n.tech, n.description]
+      .filter(Boolean).join(' ').toLowerCase();
+    return haystack.indexOf(query) !== -1;
+  }
+
   // ---- hub & ring: a radial layout for event-driven architectures (a central
   // broker/gateway talking to independent services) where the layered
   // left→right pipeline reading doesn't fit. Every non-hub node sits on a
@@ -556,16 +568,13 @@
 
     // ---- search + type filter: dims (never hides/re-layouts) nodes and
     // edges that don't match the current text query or whose type has been
-    // toggled off in the legend. A node matches when BOTH conditions hold;
-    // an edge is dimmed if either endpoint is dimmed.
+    // toggled off in the legend. An edge is dimmed if either endpoint is
+    // dimmed. Matching itself is matchesQuery() above (pure, testable); this
+    // just binds it to the live closure state.
     var excludedTypes = {};
     var query = '';
     function nodeMatches(n) {
-      if (excludedTypes[n.type || 'default']) return false;
-      if (!query) return true;
-      var haystack = [n.label, n.id, n.type, n.tech, n.description]
-        .filter(Boolean).join(' ').toLowerCase();
-      return haystack.indexOf(query) !== -1;
+      return matchesQuery(n, query, excludedTypes);
     }
     function applyFilter() {
       var matched = {};
@@ -626,13 +635,20 @@
     drawEdges();
     fitView();
   };
+
+  // Node-only export for test/swe-diagram.sh (pure-logic fixtures, no
+  // browser). `module` is undefined when this file is inlined into a
+  // <script> tag, so this is a no-op there — zero behavior change shipped.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { hubRingLayout: hubRingLayout, matchesQuery: matchesQuery, layout: layout };
+  }
 })();
 
 </script>
 <script>
 renderDiagram({
   "title": "XYZ \u2014 Multi-Agent Coordination System",
-  "generated": "2026-07-04",
+  "generated": "2026-07-08",
   "sources": [
     "ARCHITECTURE.md (relay stack map, verified against relay-drive.sh / relay-turn-lib.sh / *-turn.sh / poll.sh / bin/tick)",
     "ROUTER.md (canonical entry points, subsystem routing hints)",
@@ -667,6 +683,10 @@ renderDiagram({
     {
       "id": "governance",
       "label": "Governance (dev-time gates)"
+    },
+    {
+      "id": "trust",
+      "label": "Audit & Trust (runtime reconciliation)"
     }
   ],
   "nodes": [
@@ -845,6 +865,22 @@ renderDiagram({
       "group": "governance",
       "tech": "ROADMAP.md / CHANGELOG.md / PROJECT/**",
       "description": "PDDA-governed doc system: ROUTER/AGENTS entry points, ROADMAP pointer ledger, CHANGELOG record, and PROJECT/** execution docs (1-INBOX -> 2-WORKING -> 3-COMPLETED)."
+    },
+    {
+      "id": "consult",
+      "label": "consult.sh",
+      "type": "job",
+      "group": "trust",
+      "tech": "one-shot cross-model panel",
+      "description": "Parallel, read-only consult: fans the same question to Codex/agy/Aider in an isolated throwaway worktree and reconciles the answers into one. Mechanically stamps SINGLE-MODEL \u2014 NOT RECONCILED into the transcript when the panel degrades to one survivor (GH-178 A2)."
+    },
+    {
+      "id": "trust-audit",
+      "label": "Isolation-breach audit",
+      "type": "service",
+      "group": "trust",
+      "tech": "post-hoc transcript scan (GH-178 B1)",
+      "description": "Scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found, catching a grounding escape from the isolated worktree. Detects one leak symptom, not full containment \u2014 a known false-positive gap is tracked in GH-183."
     }
   ],
   "edges": [
@@ -1020,6 +1056,30 @@ renderDiagram({
       "source": "pdda",
       "target": "project-docs",
       "label": "doc-hygiene gates",
+      "kind": "sync"
+    },
+    {
+      "source": "consult",
+      "target": "agy-cli",
+      "label": "fans out (isolated worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "consult",
+      "target": "trust-audit",
+      "label": "checks agy transcript",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "trust-audit",
+      "label": "checks agy transcript",
+      "kind": "sync"
+    },
+    {
+      "source": "trust-audit",
+      "target": "relay-lib",
+      "label": "shares containment core",
       "kind": "sync"
     }
   ]

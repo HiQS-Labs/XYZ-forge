@@ -1,6 +1,6 @@
 {
   "title": "XYZ — Multi-Agent Coordination System",
-  "generated": "2026-07-04",
+  "generated": "2026-07-08",
   "sources": [
     "ARCHITECTURE.md (relay stack map, verified against relay-drive.sh / relay-turn-lib.sh / *-turn.sh / poll.sh / bin/tick)",
     "ROUTER.md (canonical entry points, subsystem routing hints)",
@@ -14,7 +14,8 @@
     { "id": "agents", "label": "Agent CLIs (external subprocesses)" },
     { "id": "external", "label": "External services" },
     { "id": "state", "label": "Shared on-disk state" },
-    { "id": "governance", "label": "Governance (dev-time gates)" }
+    { "id": "governance", "label": "Governance (dev-time gates)" },
+    { "id": "trust", "label": "Audit & Trust (runtime reconciliation)" }
   ],
   "nodes": [
     {
@@ -192,6 +193,22 @@
       "group": "governance",
       "tech": "ROADMAP.md / CHANGELOG.md / PROJECT/**",
       "description": "PDDA-governed doc system: ROUTER/AGENTS entry points, ROADMAP pointer ledger, CHANGELOG record, and PROJECT/** execution docs (1-INBOX -> 2-WORKING -> 3-COMPLETED)."
+    },
+    {
+      "id": "consult",
+      "label": "consult.sh",
+      "type": "job",
+      "group": "trust",
+      "tech": "one-shot cross-model panel",
+      "description": "Parallel, read-only consult: fans the same question to Codex/agy/Aider in an isolated throwaway worktree and reconciles the answers into one. Mechanically stamps SINGLE-MODEL — NOT RECONCILED into the transcript when the panel degrades to one survivor (GH-178 A2)."
+    },
+    {
+      "id": "trust-audit",
+      "label": "Isolation-breach audit",
+      "type": "service",
+      "group": "trust",
+      "tech": "post-hoc transcript scan (GH-178 B1)",
+      "description": "Scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found, catching a grounding escape from the isolated worktree. Detects one leak symptom, not full containment — a known false-positive gap is tracked in GH-183."
     }
   ],
   "edges": [
@@ -223,6 +240,10 @@
     { "source": "deep-research", "target": "agy-cli", "label": "spawns agy -p (grounded)", "kind": "sync" },
     { "source": "relay-drive", "target": "telemetry", "label": "appends completion", "kind": "data" },
     { "source": "validate", "target": "tick", "label": "runs kernel + coordination suite", "kind": "sync" },
-    { "source": "pdda", "target": "project-docs", "label": "doc-hygiene gates", "kind": "sync" }
+    { "source": "pdda", "target": "project-docs", "label": "doc-hygiene gates", "kind": "sync" },
+    { "source": "consult", "target": "agy-cli", "label": "fans out (isolated worktree)", "kind": "sync" },
+    { "source": "consult", "target": "trust-audit", "label": "checks agy transcript", "kind": "sync" },
+    { "source": "agy-turn", "target": "trust-audit", "label": "checks agy transcript", "kind": "sync" },
+    { "source": "trust-audit", "target": "relay-lib", "label": "shares containment core", "kind": "sync" }
   ]
 }
