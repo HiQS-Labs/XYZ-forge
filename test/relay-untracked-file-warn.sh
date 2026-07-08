@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# test/relay-untracked-file-warn.sh — GH-32 #1: under RELAY_WORKTREE_ISOLATION=1 the turn-taker runs
-# in a worktree at ROOT@HEAD, so a relay file that isn't committed at HEAD is INVISIBLE to it. The
-# driver must WARN (with the remedy) — but never block, and stay silent when the file IS at HEAD or
-# isolation is off. ($A is a git clone with an empty seed commit; relay files start uncommitted.)
+# test/relay-untracked-file-warn.sh — GH-32 #1 / GH-178 B2: under RELAY_WORKTREE_ISOLATION=1 the
+# turn-taker runs in an isolated worktree, but its own seeding step (rtl_worktree_begin) copies an
+# uncommitted relay file's CURRENT content in regardless (relay-turn-lib.sh:247) — so for a relay
+# file in the SAME repo as the turn-taker's root, it is usually still visible: the driver emits an
+# informational NOTE, not an alarming "will find nothing" WARNING. That claim only holds for a
+# relay file in a DIFFERENT repo (archive-routed), where seeding provably can't reach it — see
+# test/relay-file-seeding-visibility.sh for the mechanical proof of both halves of this claim.
+# The driver must never block either way, and stay silent when the file IS at HEAD or isolation is
+# off. ($A is a git clone with an empty seed commit; relay files start uncommitted.)
 source "$(dirname "$0")/_setup.sh" relay-untracked-file-warn
 
 export TICK_BIN="$TICK"
@@ -19,14 +24,33 @@ seed_token() {  # <task> <relayfile>
   tick_a release "$1" --agent claude-a --to reviewer >/dev/null 2>&1
 }
 
-# --- Case A: isolation on (default) + UNCOMMITTED relay file → warn fires with the remedy. ---
+# --- Case A: isolation on (default) + UNCOMMITTED relay file, SAME repo as the turn-taker's
+# effective root → informational NOTE fires (seeding covers it), never the alarming "will find
+# nothing" claim. --target-root "$A" makes $A the effective root (matching where the relay file
+# lives) — without it, ROOT_DIR defaults to relay-drive.sh's OWN location (this real harness
+# checkout), which would make even an in-$A file look cross-repo and defeat this case's purpose. ---
 printf 'STATUS: In progress\n# body\n' >"$A/relayA.md"
 seed_token RELAY-A relayA.md
-outA="$(bash "$DRIVE" --relay-file "$A/relayA.md" --relay-task RELAY-A --agent-cmd "$NOOP_STUB" --round-cap 1 2>&1)"
+outA="$(bash "$DRIVE" --relay-file "$A/relayA.md" --relay-task RELAY-A --agent-cmd "$NOOP_STUB" --round-cap 1 --target-root "$A" 2>&1)"
 printf '%s' "$outA" | grep -q "not committed at HEAD" \
-  && pass "uncommitted relay file under isolation warns" || fail "expected untracked warn (out: $outA)"
+  && pass "uncommitted relay file under isolation notes it" || fail "expected untracked note (out: $outA)"
+printf '%s' "$outA" | grep -q "NOTE —" \
+  && pass "same-repo case is an informational NOTE, not a WARNING" || fail "expected NOTE tone (out: $outA)"
+printf '%s' "$outA" | grep -q "will find nothing" \
+  && fail "same-repo case should NOT claim the reviewer will find nothing — seeding covers it (out: $outA)" \
+  || pass "same-repo case does not make the false 'will find nothing' claim"
 printf '%s' "$outA" | grep -q "RELAY_WORKTREE_ISOLATION=0" \
-  && pass "warn names the remedy" || fail "warn missing remedy (out: $outA)"
+  && pass "note still mentions the isolation-off option" || fail "note missing isolation-off mention (out: $outA)"
+
+# --- Case A2: isolation on + UNCOMMITTED relay file, DIFFERENT repo than ROOT (archive-routed
+# shape) → the strong WARNING still fires, since seeding provably can't reach it there. ---
+printf 'STATUS: In progress\n# body in B\n' >"$B/relayA2.md"
+seed_token RELAY-A2 relayA2.md
+outA2="$(bash "$DRIVE" --relay-file "$B/relayA2.md" --relay-task RELAY-A2 --agent-cmd "$NOOP_STUB" --round-cap 1 2>&1)"
+printf '%s' "$outA2" | grep -q "WARNING — relay file is not committed at HEAD" \
+  && pass "cross-repo uncommitted relay file still gets the strong WARNING" || fail "expected strong WARNING for cross-repo case (out: $outA2)"
+printf '%s' "$outA2" | grep -q "will find nothing" \
+  && pass "cross-repo WARNING keeps the 'will find nothing' claim (still accurate there)" || fail "cross-repo WARNING lost its accurate claim (out: $outA2)"
 
 # --- Case B: isolation on + COMMITTED relay file → no warn (visible at HEAD). ---
 printf 'STATUS: In progress\n# body\n' >"$A/relayB.md"

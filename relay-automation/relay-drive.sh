@@ -218,11 +218,18 @@ fi
 # shim use keeps the leaf default OFF — only the orchestration layer defaults it ON.)
 : "${RELAY_WORKTREE_ISOLATION:=1}"; export RELAY_WORKTREE_ISOLATION
 
-# GH-32 #1: under worktree isolation the turn-taker runs in a throwaway worktree at ROOT@HEAD, so a
-# relay file that isn't committed at HEAD is INVISIBLE to it (untracked-not-ignored — relay-system/ is
-# tracked here except two specific files). The reviewer then "finds nothing" and silently does no work.
-# Warn loudly with the exact remedy; never block (a non-isolated run is free to use an uncommitted file,
-# and a relay file outside any git repo is fine too). Mirrors the cross-repo warning style in the shims.
+# GH-32 #1 / GH-178 B2: under worktree isolation the turn-taker runs in a throwaway worktree — but
+# it is NOT a bare HEAD checkout: relay-turn-lib.sh's rtl_worktree_begin() unconditionally seeds the
+# relay file's CURRENT on-disk content into that worktree (it's always the first entry in RTL_ALLOW,
+# regardless of HEAD-tracked status — relay-turn-lib.sh:247). So an uncommitted relay file is usually
+# still visible to the reviewer; the original "will find nothing" claim was a false-positive
+# generator for that common case (confirmed live 2026-07-07 night: a driven turn completed normally
+# on an uncommitted relay file). The ONE case seeding does NOT cover: the relay file lives in a
+# DIFFERENT git repo than the turn-taker's effective root (e.g. an XYZ_ARCHIVE_ROOT-redirected
+# transcript) — rtl_init normalizes an out-of-root path to an absolute string the seed step's
+# relative existence check won't match (GH-30 Phase 3), so it genuinely can be invisible there.
+# Never block either way (a non-isolated run is free to use an uncommitted file, and a relay file
+# outside any git repo is fine too).
 warn_if_relay_file_untracked() {
   [[ "${RELAY_WORKTREE_ISOLATION:-1}" != 0 ]] || return 0
   local dir prefix rel
@@ -233,10 +240,26 @@ warn_if_relay_file_untracked() {
   prefix="$(git -C "$dir" rev-parse --show-prefix 2>/dev/null)" || return 0  # not in a git repo → skip
   rel="${prefix}$(basename "$RELAY_FILE")"
   git -C "$dir" cat-file -e "HEAD:$rel" 2>/dev/null && return 0           # present at HEAD → visible
-  printf 'relay-drive: WARNING — relay file is not committed at HEAD: %s\n' "$rel" >&2
-  printf '  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, so this untracked\n' >&2
-  printf '  file is INVISIBLE to the reviewer (it will find nothing and do no work). Remedy: commit\n' >&2
-  printf '  the relay file first, or re-run with RELAY_WORKTREE_ISOLATION=0.\n' >&2
+
+  # Same-repo check: does the relay file's own repo match the effective root the turn-taker's
+  # rtl_init will resolve RTL_ROOT to? (RELAY_TARGET_ROOT wins when set, else this script's own root.)
+  local relay_toplevel effective_toplevel
+  relay_toplevel="$(git -C "$dir" rev-parse --show-toplevel 2>/dev/null)"
+  effective_toplevel="$(git -C "${RELAY_TARGET_ROOT:-$ROOT_DIR}" rev-parse --show-toplevel 2>/dev/null)"
+
+  if [[ -n "$relay_toplevel" && "$relay_toplevel" == "$effective_toplevel" ]]; then
+    printf 'relay-drive: NOTE — relay file is not committed at HEAD: %s\n' "$rel" >&2
+    printf '  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, but its own\n' >&2
+    printf '  worktree-seeding step copies this file'"'"'s current content in regardless — this is\n' >&2
+    printf '  usually fine. Commit it for a clean paper trail, or re-run with\n' >&2
+    printf '  RELAY_WORKTREE_ISOLATION=0 if you want to rule out isolation entirely; neither is required.\n' >&2
+  else
+    printf 'relay-drive: WARNING — relay file is not committed at HEAD: %s\n' "$rel" >&2
+    printf '  It lives in a DIFFERENT repo than the turn-taker'"'"'s root (archive-routed?), so the\n' >&2
+    printf '  usual worktree-seeding fallback does NOT cover it — it may be genuinely INVISIBLE to\n' >&2
+    printf '  the reviewer (it will find nothing and do no work). Remedy: commit the relay file\n' >&2
+    printf '  first, or re-run with RELAY_WORKTREE_ISOLATION=0.\n' >&2
+  fi
 }
 warn_if_relay_file_untracked
 
