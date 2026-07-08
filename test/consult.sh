@@ -211,11 +211,13 @@ grep -q "ANSWER: this looks correct." "$ncfile" 2>/dev/null && pass "stamping pr
 sidecar4="$(dirname "$ncfile")/t.codex.NO-CITATION.txt"
 [ -s "$sidecar4" ] && pass "per-advisor NO-CITATION sidecar file written" || fail "no sidecar marker at $sidecar4"
 
-# --- (13) GH-178 A4 non-regression: an advisor answer that DOES cite (quote or file:line) is NOT stamped
+# --- (13) GH-178 A4 non-regression: an advisor answer where EVERY claim is cited near itself (quote
+# or file:line) is NOT stamped. Each claim carries its OWN nearby citation (not just one citation
+# somewhere in the transcript) — see test (14) below for why that distinction matters post-follow-up.
 CITE_STUB="$WORK/cite-stub"
 cat >"$CITE_STUB" <<'EOF'
 #!/usr/bin/env bash
-printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\n[Pass] verified\nRECOMMENDATION: ship\n'
+printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\n[Pass] verified — see relay-automation/consult.sh:266\nRECOMMENDATION: ship\n'
 EOF
 chmod +x "$CITE_STUB"
 rm -rf "$OUT"
@@ -228,6 +230,26 @@ grep -q "NO FIRSTHAND VERIFICATION CITED" "$cfile4" 2>/dev/null && fail "cited t
   || pass "cited transcript not stamped"
 [ -f "$(dirname "$cfile4")/t.codex.NO-CITATION.txt" ] && fail "sidecar wrongly written for a cited answer" \
   || pass "no sidecar written for a cited answer"
+
+# --- (14) code-review follow-up on PR #184 (items 1 & 3): a SECOND, LATER claim with no citation
+# nearby it now gets flagged even though the transcript cites something earlier. The original A4
+# check only asked "is there a citation ANYWHERE in the whole transcript" — one early citation would
+# have excused this later uncited [Pass] claim. It now correctly does not.
+PARTIAL_CITE_STUB="$WORK/partial-cite-stub"
+cat >"$PARTIAL_CITE_STUB" <<'EOF'
+#!/usr/bin/env bash
+printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\nLater: [Pass] this other part also looks fine\nRECOMMENDATION: ship\n'
+EOF
+chmod +x "$PARTIAL_CITE_STUB"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" CODEX_BIN="$PARTIAL_CITE_STUB" CODEX_FLAGS=" " \
+  bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
+printf '%s' "$out" | grep -q "NO FIRSTHAND VERIFICATION CITED for: codex" \
+  && pass "a later uncited claim is flagged despite an earlier unrelated citation (per-claim, not whole-transcript)" \
+  || fail "later uncited claim NOT flagged despite an earlier citation excusing it: $out"
+pfile4="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+grep -q "this other part also looks fine" "$pfile4" 2>/dev/null && pass "stamping preserved the real answer beneath it" \
+  || fail "stamping corrupted the transcript content: $pfile4"
 
 echo "  consult: $PASS passed, $FAIL failed"
 exit 0

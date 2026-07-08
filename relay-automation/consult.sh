@@ -304,18 +304,22 @@ done
 
 # GH-178 A4 (deliberately narrow slice — NOT the full firsthand-vs-asserted provenance taxonomy; see
 # PROJECT/2-WORKING/GH-178-EPISTEMIC-RECONCILIATION-HARDENING.md for what's future-scoped). Mechanically
-# stamp any ANSWERED advisor whose own transcript carries ZERO explicit file:line or quoted-content
-# citations anywhere — same stdout+prepended-transcript+sidecar mechanism as A2's SINGLE-MODEL stamp.
-# Does NOT check whether a present citation is ACCURATE (no citation-verification engine); it only
-# catches an answer with no citation attempt at all. Scoped to not fire when the advisor DID cite
-# something anywhere in its answer.
+# stamp any ANSWERED advisor flagged by rtl_has_uncited_claim() (relay-turn-lib.sh, sourced above) —
+# shared with B3's per-line downgrade so both use one definition of "claim"/"citation" — with the same
+# stdout+prepended-transcript+sidecar mechanism as A2's SINGLE-MODEL stamp. Flags a transcript with
+# ZERO citations anywhere (the original A4 spec), OR one with SOME citation but at least one
+# [Pass]/verified/confirmed/etc-style claim with no citation nearby it (code-review follow-up on PR
+# #184: the original "any citation anywhere in the whole transcript" check let one incidental early
+# citation excuse several later uncited claims — see rtl_has_uncited_claim's doc comment). Does NOT
+# check whether a present citation is ACCURATE (no citation-verification engine); it only catches a
+# claim with no citation attempt near it.
 CITELESS_MODELS=(); i=0
 while ((i < ${#PIDS[@]})); do
   if [[ "${POK[$i]}" == "1" ]]; then
     model="${PMODELS[$i]}"; out="${POUTS[$i]}"
-    if ! grep -qE '"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+' "$out" 2>/dev/null; then
+    if rtl_has_uncited_claim "$out"; then
       CITELESS_MODELS+=("$model")
-      nocite="**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional ($model's answer carries no quoted span or file:line citation anywhere, despite the consult PREAMBLE asking advisors to cite evidence.)"
+      nocite="**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional ($model's answer carries an unsupported [Pass]/verified/confirmed-style claim with no quoted span or file:line citation nearby, despite the consult PREAMBLE asking advisors to cite evidence.)"
       case "$out" in
         *.json) : ;;  # don't corrupt structured output — the sidecar marker below still covers it
         *) { printf '%s\n\n' "$nocite"; cat "$out"; } > "$out.stamped" && mv "$out.stamped" "$out" ;;
