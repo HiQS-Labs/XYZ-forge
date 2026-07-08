@@ -2,6 +2,8 @@
 gh_issue: 169
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/169
 title: "Acorn integration (first pass): vendor acorn+acorn-walk as a lightweight JS symbol/call-site extractor for GH-156"
+goal: Vendor acorn
+roadmap_exempt: true
 status: Active (2-WORKING) — completed in lane-169
 created: 2026-07-07
 updated: 2026-07-07

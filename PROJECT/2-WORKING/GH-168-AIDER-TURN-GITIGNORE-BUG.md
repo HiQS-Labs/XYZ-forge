@@ -2,6 +2,8 @@
 gh_issue: 168
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/168
 title: "aider-turn.sh: --no-gitignore doesn't enable reading gitignored files — missing --add-gitignore-files silently skips relay threads in gitignored dirs"
+goal: Fix aider gitignore issue
+roadmap_exempt: true
 status: Queued (1-INBOX) — queued for today's marathon
 created: 2026-07-07
 updated: 2026-07-07
