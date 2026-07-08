@@ -106,6 +106,7 @@ TESTS=(
   "transcript-audit.sh"
   "security-scan.sh"
   "checkjs.sh"
+  "acorn-extract.sh"             # GH-169
   "registry-lock-concurrency.sh"
   "marathon-monitor.sh"          # GH-88 (cross-repo marathon monitor)
   "signal-triage.sh"             # GH-63 (signal triage stage)

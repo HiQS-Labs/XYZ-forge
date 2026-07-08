@@ -37,7 +37,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Bug filed 2026-07-07 (issue #168), found live during a real aider relay turn in a `.xyz`-vendored install (pdda repo) — the target relay file (in gitignored `relay-system/`) was silently unreadable until `AIDER_FLAGS="--add-gitignore-files"` was set manually for that run. | Queued into today's marathon build cluster (Marathon Plan E) as a small, single-file fix lane. |
+| Queued into today's marathon build cluster (Marathon Plan E) as a small, single-file fix lane. | **Done.** Implemented fix in `aider-turn.sh`, added regression test, and verified with `validate.sh`. |
 
 ## The bug
 
@@ -65,18 +65,18 @@ threads, without every caller needing to discover and set `AIDER_FLAGS` themselv
 
 ### Checklist
 
-- [ ] Add `--add-gitignore-files` to the default `aider_args` in `aider-turn.sh:170`.
-- [ ] Add/extend a test that stages a gitignored target file and confirms aider can read it with
+- [x] Add `--add-gitignore-files` to the default `aider_args` in `aider-turn.sh:170`.
+- [x] Add/extend a test that stages a gitignored target file and confirms aider can read it with
       the default flags (no `AIDER_FLAGS` override needed).
-- [ ] Confirm no behavior change for repos that don't gitignore their relay threads (flag is inert
+- [x] Confirm no behavior change for repos that don't gitignore their relay threads (flag is inert
       when nothing is gitignored).
 
 ### QA checklist — Phase 0
 
-- [ ] The fix is the minimal one-line flag addition, not a broader aider-flag refactor.
-- [ ] The regression test reproduces the original failure mode (gitignored target file silently
+- [x] The fix is the minimal one-line flag addition, not a broader aider-flag refactor.
+- [x] The regression test reproduces the original failure mode (gitignored target file silently
       unreadable) before the fix, and passes after.
-- [ ] `test/*.sh` covering `aider-turn.sh` stays green.
+- [x] `test/*.sh` covering `aider-turn.sh` stays green.
 
 
 ## Swarm Preflight Contract

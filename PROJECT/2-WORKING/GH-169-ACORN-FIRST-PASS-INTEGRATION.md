@@ -2,7 +2,7 @@
 gh_issue: 169
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/169
 title: "Acorn integration (first pass): vendor acorn+acorn-walk as a lightweight JS symbol/call-site extractor for GH-156"
-status: Queued (1-INBOX) — queued for today's marathon
+status: Active (2-WORKING) — completed in lane-169
 created: 2026-07-07
 updated: 2026-07-07
 owner: noel
@@ -46,7 +46,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Filed 2026-07-07 off the back of GH-163's license/smoke-test verdict (issue #169). Not yet built. | Queued into today's marathon build cluster (Marathon Plan E) as an independent, low-risk build lane. |
+| Built acorn-extract utility, vendored acorn/acorn-walk, and added tests in lane-169. | Merge lane-169 and unblock GH-156 Phase 1 scoring logic. |
 
 ## Idea
 
@@ -67,23 +67,23 @@ characterized (GH-163's Addendum 2).
 
 ### Checklist
 
-- [ ] Add `acorn` + `acorn-walk` as a real dependency (package.json entry, not just a filesystem
+- [x] Add `acorn` + `acorn-walk` as a real dependency (package.json entry, not just a filesystem
       reference to the local clone).
-- [ ] Build a small utility module: given a JS file path, parse it (`ecmaVersion: "latest"`,
+- [x] Build a small utility module: given a JS file path, parse it (`ecmaVersion: "latest"`,
       `sourceType: "module"`, falling back to `"script"` on failure — mirroring GH-163's test
       sweep logic) and return `{ declarations: [...], callSites: [...] }`.
-- [ ] Handle the malformed-input case explicitly: catch the parse error and return/report it with
+- [x] Handle the malformed-input case explicitly: catch the parse error and return/report it with
       line/col rather than letting it propagate as an uncaught exception.
-- [ ] Write a test that exercises the utility against at least one real file in this repo and
+- [x] Write a test that exercises the utility against at least one real file in this repo and
       against a deliberately malformed snippet.
 
 ### QA checklist — Phase 0
 
-- [ ] The utility is purely additive — no existing code path calls it yet (GH-156 wires it in
+- [x] The utility is purely additive — no existing code path calls it yet (GH-156 wires it in
       later, once its own scoring contract is settled).
-- [ ] The test covers both the happy path (real file → declarations + call sites) and the error
+- [x] The test covers both the happy path (real file → declarations + call sites) and the error
       path (malformed input → clean, catchable error).
-- [ ] No changes to scheduling, containment, or the relay kernel.
+- [x] No changes to scheduling, containment, or the relay kernel.
 
 
 ## Swarm Preflight Contract
