@@ -38,6 +38,11 @@ fi
 #   AIDER_BIN       — aider binary (default: aider); tests inject a stub
 #   AIDER_MODEL     — OpenRouter model id (default: openrouter/anthropic/claude-3.5-sonnet). Set it to
 #                     any OpenRouter model, e.g. openrouter/openai/gpt-4o, openrouter/deepseek/deepseek-chat.
+#                     Resolving a colloquial name (e.g. "GLM 5.2") to its canonical slug? Don't probe
+#                     `aider --list-models` or curl the live catalog — run
+#                     `relay-automation/resolve-model-alias.sh "<name>"` first (local alias table,
+#                     GH-120); see the `/open-router` skill or README.md's "OpenRouter model-alias
+#                     lookup" section.
 #   AIDER_FLAGS     — optional extra flags appended to the aider invocation (advanced/override)
 #   AIDER_TURN_ROOT — git root to guard (default: this repo); tests point at a fixture
 #   AIDER_LOG       — where to write the aider transcript (default: a $TMPDIR file)
