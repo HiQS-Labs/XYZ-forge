@@ -5,7 +5,7 @@ import tempfile
 import subprocess
 import shlex
 import time
-from rtl import RelayTurnLib
+from rtl import RelayTurnLib, claim_paths_for_turn, claim_task_or_exit
 
 def die(msg):
     print(f"aider-turn: {msg}", file=sys.stderr)
@@ -48,18 +48,11 @@ def main():
         
     prompt += "\n\nNOTE (Aider harness): do NOT run any tick commands — the harness has already claimed the token and will release/close it for you after your edit. Spend this turn ONLY editing the file(s) added to the chat: append your block to the relay file and set its STATUS, and edit the artifact(s) if this is a build turn."
 
-    rel_relay = os.path.relpath(f, root)
+    claim_paths = claim_paths_for_turn(root, f, allow_paths)
+    rel_relay = claim_paths[0]
     file_args = ["--file", rel_relay]
-    claim_paths = [rel_relay]
-    
-    if allow_paths:
-        aps = [ap.strip() for ap in allow_paths.split(',')]
-        for ap in aps:
-            if ap:
-                file_args.extend(["--file", ap])
-                claim_paths.append(ap)
-                
-    claim_paths_str = ",".join(claim_paths)
+    for path in claim_paths[1:]:
+        file_args.extend(["--file", path])
     
     read_args = []
     if not allow_paths:
@@ -77,26 +70,7 @@ def main():
             except Exception:
                 pass
 
-    tick_bin = os.environ.get("TICK_BIN") or os.path.join(tick_repo_root, "bin", "tick")
-    if not (os.path.isfile(tick_bin) and os.access(tick_bin, os.X_OK)):
-        tick_bin = os.path.join(xyz_root, "bin", "tick")
-    if os.path.isfile(tick_bin) and os.access(tick_bin, os.X_OK):
-        tick_env = dict(os.environ)
-        tick_env["TICK_REPO_ROOT"] = tick_repo_root
-        subprocess.run([tick_bin, "claim", t, "--agent", me, "--paths", claim_paths_str], env=tick_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
-        info_res = subprocess.run([tick_bin, "info", t], env=tick_env, capture_output=True, text=True)
-        claimer = "none"
-        for line in info_res.stdout.splitlines():
-            if line.startswith("claimer:"):
-                claimer = line.split(":", 1)[1].strip()
-                break
-                
-        if claimer != me:
-            print(f"aider-turn: could not establish token ownership of {t} (claimer={claimer}, expected {me}) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info {t}`", file=sys.stderr)
-            sys.exit(5)
-            
-        subprocess.run([tick_bin, "ping", t, "--agent", me], env=tick_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    tick_repo_root, _tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "aider-turn")
 
     aider_log = os.environ.get("AIDER_LOG", os.path.join(tempfile.gettempdir(), f"aider-turn-{os.getpid()}.log"))
     aider_aux_dir = os.environ.get("AIDER_AUX_DIR", os.path.join(tempfile.gettempdir(), f"aider-aux-{os.getpid()}"))

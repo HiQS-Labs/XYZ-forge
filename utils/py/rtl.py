@@ -4,6 +4,77 @@ import subprocess
 import tempfile
 import sys
 
+def split_allow_paths(allow_paths):
+    paths = []
+    for path in (allow_paths or "").split(","):
+        path = path.strip()
+        if path:
+            paths.append(path)
+    return paths
+
+def claim_paths_for_turn(root, relay_file, allow_paths):
+    paths = [os.path.relpath(relay_file, root)]
+    paths.extend(split_allow_paths(allow_paths))
+    return paths
+
+def resolve_tick_repo_root(root):
+    return os.environ.get("TICK_REPO_ROOT", root)
+
+def resolve_tick_bin(tick_repo_root, xyz_root):
+    candidates = []
+    tick_bin_env = os.environ.get("TICK_BIN")
+    if tick_bin_env:
+        candidates.append(tick_bin_env)
+    candidates.append(os.path.join(tick_repo_root, "bin", "tick"))
+    candidates.append(os.path.join(xyz_root, "bin", "tick"))
+
+    for candidate in candidates:
+        if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+            return candidate
+    return None
+
+def make_tick_env(tick_repo_root):
+    env = dict(os.environ)
+    env["TICK_REPO_ROOT"] = tick_repo_root
+    return env
+
+def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, tool_name):
+    tick_repo_root = resolve_tick_repo_root(root)
+    tick_bin = resolve_tick_bin(tick_repo_root, xyz_root)
+    if not tick_bin:
+        return tick_repo_root, None
+
+    tick_env = make_tick_env(tick_repo_root)
+    claim_paths = ",".join(claim_paths_for_turn(root, relay_file, allow_paths))
+    subprocess.run(
+        [tick_bin, "claim", task, "--agent", agent, "--paths", claim_paths],
+        env=tick_env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    info_res = subprocess.run([tick_bin, "info", task], env=tick_env, capture_output=True, text=True)
+    claimer = "none"
+    for line in info_res.stdout.splitlines():
+        if line.startswith("claimer:"):
+            claimer = line.split(":", 1)[1].strip()
+            break
+
+    if claimer != agent:
+        print(
+            f"{tool_name}: could not establish token ownership of {task} (claimer={claimer}, expected {agent}) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info {task}`",
+            file=sys.stderr,
+        )
+        sys.exit(5)
+
+    subprocess.run(
+        [tick_bin, "ping", task, "--agent", agent],
+        env=tick_env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return tick_repo_root, tick_bin
+
 class RelayTurnLib:
     def __init__(self, root, xyz_root, relay_file, allow_paths):
         self.root = root

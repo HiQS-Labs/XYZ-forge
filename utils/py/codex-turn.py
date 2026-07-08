@@ -4,7 +4,7 @@ import sys
 import tempfile
 import subprocess
 import shlex
-from rtl import RelayTurnLib
+from rtl import RelayTurnLib, claim_task_or_exit
 
 def die(msg):
     print(f"codex-turn: {msg}", file=sys.stderr)
@@ -14,17 +14,6 @@ def default_codex_flags():
     # GH-106: mirror the Bash default so a headless Codex turn never hangs on an
     # interactive approval prompt while still staying inside workspace-write.
     return os.environ.get("CODEX_FLAGS", "-s workspace-write -c approval_policy=never").split()
-
-def claim_paths_for_turn(root, relay_file, allow_paths):
-    claim_paths = os.path.relpath(relay_file, root) if os.path.isabs(relay_file) else relay_file
-    if claim_paths.startswith(f"..{os.sep}") or claim_paths == "..":
-        claim_paths = relay_file
-
-    if allow_paths:
-        for path in (ap.strip() for ap in allow_paths.split(",")):
-            if path:
-                claim_paths += f",{path}"
-    return claim_paths
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -58,40 +47,7 @@ def main():
     # GH-165: mirror the Bash shim — establish ownership of the specific handed-off
     # token before launching Codex, so rtl.enforce's GH-67 post-commit handoff has
     # real authority to release/done instead of warning on a non-owner token.
-    claim_paths = claim_paths_for_turn(root, f, allow_paths)
-    tick_bin = os.environ.get("TICK_BIN") or os.path.join(tick_repo_root, "bin", "tick")
-    if not (os.path.isfile(tick_bin) and os.access(tick_bin, os.X_OK)):
-        tick_bin = os.path.join(xyz_root, "bin", "tick")
-    if os.path.isfile(tick_bin) and os.access(tick_bin, os.X_OK):
-        tick_env = dict(os.environ)
-        tick_env["TICK_REPO_ROOT"] = tick_repo_root
-        subprocess.run(
-            [tick_bin, "claim", t, "--agent", me, "--paths", claim_paths],
-            env=tick_env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-
-        info_res = subprocess.run([tick_bin, "info", t], env=tick_env, capture_output=True, text=True)
-        claimer = "none"
-        for line in info_res.stdout.splitlines():
-            if line.startswith("claimer:"):
-                claimer = line.split(":", 1)[1].strip()
-                break
-
-        if claimer != me:
-            print(
-                f"codex-turn: could not establish token ownership of {t} (claimer={claimer}, expected {me}) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info {t}`",
-                file=sys.stderr,
-            )
-            sys.exit(5)
-
-        subprocess.run(
-            [tick_bin, "ping", t, "--agent", me],
-            env=tick_env,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+    tick_repo_root, _tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "codex-turn")
 
     cflags = default_codex_flags()
     codex_extra_flags = []

@@ -5,6 +5,7 @@ import subprocess
 import json
 import time
 import re
+from rtl import resolve_tick_bin, resolve_tick_repo_root
 
 def die(msg):
     print(f"poll: {msg}", file=sys.stderr)
@@ -144,17 +145,17 @@ def main():
     if not agent: die("--agent is required")
     if not mode: die("one of --mode relay or --mode xyz is required")
     
-    tick_bin = os.environ.get("TICK_BIN", "tick")
+    xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    tick_repo_root = resolve_tick_repo_root(xyz_root)
+    tick_bin = resolve_tick_bin(tick_repo_root, xyz_root) or os.environ.get("TICK_BIN", "tick")
     git_root = os.environ.get("POLL_GIT_ROOT", os.environ.get("GIT_ROOT", "."))
     deadline = int(deadline_str) if deadline_str else 0
-    
 
     poll_delay_idle = int(os.environ.get("POLL_DELAY_IDLE", 300))
     poll_delay_dirty = int(os.environ.get("POLL_DELAY_DIRTY", 30))
     poll_delay_wait_commit = int(os.environ.get("POLL_DELAY_WAIT_COMMIT", 90))
     poll_delay_nudge = int(os.environ.get("POLL_DELAY_NUDGE", 120))
-    
-    xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
     if not runner_cmd:
         runner_cmd = os.environ.get("RUNNER_CMD", run_cmd_env)
         if not runner_cmd:

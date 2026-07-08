@@ -428,5 +428,51 @@ find "$V/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>
   && pass "GH-171: vendored .xyz does not grow a stray .tick event log" \
   || fail "GH-171: vendored .xyz/.tick should stay absent"
 
+# ── (18) GH-172: vendored full chain stays on the consumer repo tick log in XYZ_PYTHON=1 mode ──
+VP="$WORK/vendor-consumer-python"
+mkdir -p "$VP"
+git -C "$VP" init -q
+git -C "$VP" config user.email t@example.com
+git -C "$VP" config user.name test
+printf '.tick/\n.xyz/.tick/\n' > "$VP/.gitignore"
+mkdir -p "$VP/src"
+printf 'module.exports = 1\n' > "$VP/src/feature.js"
+printf '# brief\n\nUpdate src/feature.js and append the relay.\n' > "$VP/brief.md"
+git -C "$VP" add . >/dev/null 2>&1
+git -C "$VP" commit -q -m "consumer init" >/dev/null 2>&1
+mkdir -p "$VP/.xyz"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/relay-automation" "$VP/.xyz/"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/bin" "$VP/.xyz/"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/src" "$VP/.xyz/"
+cp -R "$(cd "$(dirname "$0")/.." && pwd)/utils" "$VP/.xyz/"
+(
+  cd "$VP"
+  PATH="$VSTUBS:$PATH" CODEX_BIN="$VCODEX" AGY_BIN="$VAGY" XYZ_PYTHON=1 \
+    ./.xyz/relay-automation/marathon-drive.sh \
+      --phase-brief brief.md \
+      --builder codex \
+      --reviewer agy \
+      --artifact src/feature.js \
+      --pre-advance-cmd "true" \
+      --round-cap 2
+) >/dev/null 2>&1
+rc=$?
+[ "$rc" -eq 4 ] && pass "GH-172: vendored XYZ_PYTHON=1 full chain advances twice and exits on cap, not no-progress" \
+  || fail "GH-172: vendored XYZ_PYTHON=1 full chain should exit 4 after two advancing turns, got $rc"
+TICK_REPO_ROOT="$VP" "$VP/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^handoff-to:[[:space:]]+codex$' \
+  && pass "GH-172: XYZ_PYTHON=1 final handoff stays in the consumer repo tick log" \
+  || fail "GH-172: consumer repo tick log missing final codex handoff in XYZ_PYTHON=1 mode"
+find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
+  | xargs -0 grep -l '"type":"task.claimed".*"agent":"codex"' >/dev/null 2>&1 \
+  && pass "GH-172: XYZ_PYTHON=1 codex claim event lands in the consumer repo .tick" \
+  || fail "GH-172: consumer repo .tick missing codex claim event in XYZ_PYTHON=1 mode"
+find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
+  | xargs -0 grep -l '"type":"task.claimed".*"agent":"agy"' >/dev/null 2>&1 \
+  && pass "GH-172: XYZ_PYTHON=1 reviewer claim event lands in the consumer repo .tick" \
+  || fail "GH-172: consumer repo .tick missing reviewer claim event in XYZ_PYTHON=1 mode"
+[ ! -d "$VP/.xyz/.tick/events" ] \
+  && pass "GH-172: vendored XYZ_PYTHON=1 run does not grow a stray .xyz .tick event log" \
+  || fail "GH-172: vendored XYZ_PYTHON=1 run should not create .xyz/.tick"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
