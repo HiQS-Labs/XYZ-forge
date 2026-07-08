@@ -243,7 +243,13 @@ grep -qx "READ:$ARTIFACT" "$ARGS_DUMP" 2>/dev/null \
   && pass "GH-119: the reviewed artifact itself is passed as --read" \
   || fail "GH-119: artifact path not passed as --read"
 
-# --- (13) GH-168: gitignore flag — must pass --add-gitignore-files so aider can read gitignored relay files
+# --- (13) GH-168: gitignore relay file still reaches aider — via --no-gitignore + explicit --file, not
+# via --add-gitignore-files. That flag was aider's original 2026 fix for GH-168, but has since been
+# removed upstream (confirmed gone from `aider --help` / aider/args.py as of aider-chat 0.82.3) and now
+# hard-fails argparse before aider starts, breaking every turn. Empirically re-verified against real
+# aider 0.82.3 (2026-07-08): --no-gitignore + an explicit --file <gitignored-path> still adds the file to
+# the chat (aider prints a "Skipping ... that matches gitignore spec" warning but proceeds anyway) — so
+# the actual GH-168 contract is upheld by --file construction, not by that now-nonexistent flag.
 mkdir -p "$A/ignored-dir"
 printf 'STATUS: Open\n# relay body\n' >"$A/ignored-dir/relay.md"
 printf 'ignored-dir/\n' >>"$A/.gitignore"
@@ -253,8 +259,14 @@ ARGS_DUMP="$WORK/gh168-args.$$"
 run_shim RELAY-TURN-gh168 aider good RELAY_FILE="$A/ignored-dir/relay.md" ARGS_DUMP="$ARGS_DUMP"; rc=$?
 [ "$rc" -eq 0 ] && pass "GH-168: turn exits 0" || fail "GH-168 turn rc=$rc"
 grep -q -- "--add-gitignore-files" "${ARGS_DUMP}.all" 2>/dev/null \
-  && pass "GH-168: --add-gitignore-files passed to aider" \
-  || fail "GH-168: --add-gitignore-files missing"
+  && fail "GH-168: --add-gitignore-files still passed — this flag no longer exists in current aider and will hard-fail argparse" \
+  || pass "GH-168: obsolete --add-gitignore-files flag NOT passed"
+grep -q -- "--no-gitignore" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-168: --no-gitignore still passed" \
+  || fail "GH-168: --no-gitignore missing"
+grep -qx "FILE:ignored-dir/relay.md" "$ARGS_DUMP" 2>/dev/null \
+  && pass "GH-168: gitignored relay file still passed as --file" \
+  || fail "GH-168: ignored-dir/relay.md not passed as --file (dump: $(cat "$ARGS_DUMP" 2>/dev/null))"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

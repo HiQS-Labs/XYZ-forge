@@ -171,8 +171,16 @@ AIDER_AUX_DIR="${AIDER_AUX_DIR:-${TMPDIR:-/tmp}/aider-aux-$$}"; mkdir -p "$AIDER
 
 # Build the aider invocation. --no-auto-commits is LOAD-BEARING (see WHY #2). AIDER_FLAGS is an escape
 # hatch for version-specific flag differences.
+#
+# GH-168 follow-up (2026-07-08): `--add-gitignore-files` was removed from aider's CLI upstream (confirmed
+# gone from `aider --help` / aider/args.py as of aider-chat 0.82.3, the current PyPI release) and passing
+# it now hard-fails argparse before aider even starts ("unrecognized arguments"), breaking every aider
+# turn. Empirically re-verified GH-168's original concern still holds without it: `--no-gitignore` plus
+# an explicit `--file <gitignored-path>` still adds the file to the chat on 0.82.3 (aider prints a
+# "Skipping ... that matches gitignore spec" warning but proceeds anyway) — so dropping the flag does not
+# reopen GH-168, it just removes an argument aider no longer recognizes.
 turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
-aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits --no-gitignore --add-gitignore-files
+aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits --no-gitignore
             --no-check-update --no-analytics --no-show-model-warnings --no-stream --map-tokens 0
             --chat-history-file "$AIDER_AUX_DIR/chat.history.md"
             --input-history-file "$AIDER_AUX_DIR/input.history"
