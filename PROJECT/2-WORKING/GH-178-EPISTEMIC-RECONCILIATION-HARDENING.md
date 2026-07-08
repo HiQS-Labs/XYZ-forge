@@ -76,7 +76,7 @@ All evidence below carried forward verbatim from #173's Validation table (see th
 - [ ] Remaining items (B1, A1, A4) each need their own regression test as they land
 - [x] `utils/pdda/pdda.sh run` clean (checked 2026-07-08, ahead of each commit)
 - [x] `./validate.sh` green for touched surfaces (2026-07-08, both B2 and A2 passes) — the only failure, `worktree-isolation.sh`, is confirmed pre-existing on clean `main`, unrelated to this work
-- [x] Link fix commit(s) back to #178 and #173 — B2 is `3784fe8`; A2 commit pending on this same branch
+- [x] Link fix commit(s) back to #178 and #173 — B2 is `3784fe8`; A2 is `d85da37`; both on `fix/gh-178-reconciliation-hardening`, in sync with origin, no PR opened yet
 
 ## Non-goals
 - B3 (reviewer citation) — stays in #173, needs more investigation before it's clearly in scope here.
