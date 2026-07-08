@@ -4,8 +4,11 @@
 # Runs the read-only cross-repo marathon scan and writes ONE fixed-name report — always overwritten
 # in place, never date-stamped, so there is exactly one copy at any time (unlike
 # utils/hq/marathon-scan.sh's own default HQ-MARATHON-<date>.md naming, which this wrapper always
-# overrides via --out). The destination defaults to the operator's Obsidian vault dashboard
-# ("XYZ - HQ Global Marathon.md") and can be redirected with $HQ_GLOBAL_SCAN_OUT.
+# overrides via --out). Defaults to an in-repo path (portable, no machine-specific hardcoding — see
+# utils/hq/install-hourly-scan.sh's own "never hardcoded" convention for the plist it generates);
+# $HQ_GLOBAL_SCAN_OUT overrides it. The launchd install sets that var via `install-hourly-scan.sh
+# install --out PATH` (e.g. an operator's own Obsidian vault dashboard) so any machine-specific
+# destination lives in the generated, gitignored plist — never in this checked-in script.
 #
 # Invoked hourly by the launchd agent installed via utils/hq/install-hourly-scan.sh — see that script
 # for the plist. Can also be run by hand for an on-demand refresh.
@@ -17,7 +20,7 @@ set -uo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
-OUT="${HQ_GLOBAL_SCAN_OUT:-/Users/noelsaw/Documents/Noel Saw/XYZ - HQ Global Marathon.md}"
+OUT="${HQ_GLOBAL_SCAN_OUT:-$ROOT/PROJECT/2-WORKING/GLOBAL-HQ-MARATHON.md}"
 LOCK="${TMPDIR:-/tmp}/hq-hourly-global-scan.lock"
 
 if ! mkdir "$LOCK" 2>/dev/null; then

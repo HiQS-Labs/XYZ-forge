@@ -4,7 +4,10 @@
   Template for the hourly HQ marathon-scan launchd agent. Not installed directly — machine-specific
   absolute paths are substituted in by utils/hq/install-hourly-scan.sh (never hardcoded here, so this
   template stays portable across clones/machines per this repo's own no-hardcoded-path convention).
-  Placeholders: __REPO_ROOT__ (this checkout's absolute path), __HOME__ (the installing user's $HOME).
+  Placeholders: __REPO_ROOT__ (this checkout's absolute path), __HOME__ (the installing user's $HOME),
+  __GLOBAL_SCAN_OUT__ (the scan's output destination — defaults to the in-repo report path unless
+  install-hourly-scan.sh's "install" command is given an out path naming somewhere else, e.g. an
+  operator's Obsidian vault).
 -->
 <plist version="1.0">
 <dict>
@@ -31,6 +34,8 @@
     <string>__HOME__/.local/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>HOME</key>
     <string>__HOME__</string>
+    <key>HQ_GLOBAL_SCAN_OUT</key>
+    <string>__GLOBAL_SCAN_OUT__</string>
   </dict>
 </dict>
 </plist>
