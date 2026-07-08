@@ -231,6 +231,15 @@ if [[ -n "$wt" ]]; then
     printf 'agy-turn: agy made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)\n' >&2
     exit 6
   fi
+  # GH-178 B1: Verify agy grounding stayed contained to $WT.
+  if [[ "$bounded_rc" -eq 0 && -s "$AGY_LOG" ]]; then
+    # Filter out [trace] lines (which legitimately contain RTL_ROOT) before checking.
+    if grep -v '^\[trace\] ' "$AGY_LOG" 2>/dev/null | grep -qF "$ROOT" 2>/dev/null; then
+      printf 'agy-turn: agy transcript cited the real repo root (%s) instead of the isolated worktree. This is an isolation breach. Failing the turn.\n' "$ROOT" >&2
+      printf '\n[FAIL] agy isolation breach: transcript cited the real repo root instead of the worktree.\n' >> "$AGY_LOG"
+      exit 5
+    fi
+  fi
 fi
 
 if [[ "$bounded_rc" -eq 7 ]]; then

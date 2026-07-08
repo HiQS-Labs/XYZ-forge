@@ -202,6 +202,15 @@ run_agy() {
   local out="$1" secs="${CONSULT_TIMEOUT:-300}"
   agy_auth_preflight "$out" || return $?
   _guarded "$out" "$AGY_BIN" --dangerously-skip-permissions --print-timeout "${secs}s" -p "$FULL_PROMPT"
+  local rc=$?
+  if [[ "$rc" -eq 0 && -s "$out" ]]; then
+    # GH-178 B1: Detect if agy escaped the isolation worktree ($WT) and read from the real repo root.
+    if grep -qF "$ROOT" "$out" 2>/dev/null; then
+      printf '\nconsult: [FAIL] agy transcript cited the real repo root (%s) instead of the isolation worktree. This is a known agy isolation breach (grounding escaped $WT). Failing the turn to prevent a silent breach.\n' "$ROOT" >> "$out"
+      return 5
+    fi
+  fi
+  return "$rc"
 }
 run_gemini() {
   local out="$1"

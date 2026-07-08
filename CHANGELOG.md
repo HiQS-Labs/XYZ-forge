@@ -6,6 +6,10 @@ All notable changes to this repo. Newest first. Dates are PDT.
 
 ### Added
 - **HQ Rollup**: Added `utils/hq/rollup.sh`, an automated cross-repo dashboard generator that parses `ROADMAP.md` active/parked items across registered repositories and synthesizes them into Obsidian via `agy` ([#27](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/27) ad-hoc detour).
+- **`/open-router` skill**: `resolve-model-alias.sh` (GH-120's local OpenRouter alias table) already solved fast colloquial-name → canonical-slug resolution, but nothing pointed an agent at it — a live session was observed manually probing `aider --list-models` then curling the live catalog for "GLM 5.2" instead, which the alias table already had (`z-ai/glm-5.2`). Closed the discoverability gap: a doc pointer in `aider-turn.sh`'s `AIDER_MODEL` comment, a pointer in `AGENTS.md`, and a new `skills/open-router/SKILL.md` that checks the alias table first, falls back to the live catalog only on a miss, and writes the resolved slug back so the next lookup is instant. Ad-hoc detour, no code behavior changed.
+
+### Found
+- **GH-178 B1's isolation-breach detector false-positives on legitimate agy turns**: reviewing PR #182 (which lands B1's agy-isolation-breach fix alongside the `/open-router` work above), reproduced a false "isolation breach" (exit 5) on a fully in-bounds agy turn — the check flags any transcript containing the real `$ROOT` path, but the harness's own prompt mandates a `TICK_REPO_ROOT="$ROOT"` tick command, so an agy response that narrates having run it (ordinary LLM behavior) trips the same detector. Filed as [#183](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/183); shipped as-is per operator call rather than blocking the merge.
 
 ## 2026-07-08
 
