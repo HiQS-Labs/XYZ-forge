@@ -112,3 +112,10 @@ Execute as parallel lanes in
 - Implementing any fix here (capture only; execution begins on promotion).
 - Re-auditing Swarm / Marathon / HQ / PDDA / `tick` export — explicitly out of the trial's scope.
 - Owning/vendoring the external `ra-to-xyz-transfer.md` catalog in this repo.
+
+
+## Swarm Preflight Contract
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_absent","path":"README.md","pattern":"THIS_WILL_NEVER_MATCH"}],"artifacts":["README.md"],"remediation":{"source":"self","criteria":"Fix per plan"},"lanes":{"orchestrator_only":[]}}
+```

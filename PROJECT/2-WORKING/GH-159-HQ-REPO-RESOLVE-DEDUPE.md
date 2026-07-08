@@ -87,3 +87,10 @@ same directory listed twice.
 - [ ] The regression test reproduces the original failure mode (same path counted twice → false
       ambiguity) before the fix, and passes after.
 - [ ] `test/hq.sh`, `test/hq-hardening.sh`, and `test/hq-marathon-scan.sh` all stay green.
+
+
+## Swarm Preflight Contract
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_absent","path":"README.md","pattern":"THIS_WILL_NEVER_MATCH"}],"artifacts":["utils/hq/hq-lib.sh","test/hq.sh","test/hq-hardening.sh","test/hq-marathon-scan.sh"],"remediation":{"source":"self","criteria":"Fix per plan"},"lanes":{"orchestrator_only":[]}}
+```

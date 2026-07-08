@@ -9,7 +9,7 @@ doc_type: project
 source: hand-curated — GH-163's acorn verdict (build follow-through) + a live aider-turn.sh bug found via a `.xyz`-vendored relay run in the pdda repo + a hq_repo_resolve dedup gap found live via GH-158
 generated_by: hand-authored (3 lanes, same-day intake, not ledger-ranked)
 lanes: [159, 168, 169, 175]
-execution: parallel Sonnet subagents, one per lane — independent write-sets, no builder/reviewer relay needed for any
+execution: Antigravity agent and sub-agents (Gemini)
 roadmap_exempt: true
 goal: >
   Four independent build lanes for today: a one-line aider-turn.sh gitignore fix (#168) found live
@@ -82,7 +82,7 @@ No kernel track — none of these lanes touch containment, tick, or the relay ke
 
 ## Execution contract
 
-- **Path:** each lane fires as a worktree-isolated Sonnet subagent, scoped via `ALLOW_PATHS` to its
+- **Path:** each lane fires as a worktree-isolated Antigravity subagent (Gemini), scoped via `ALLOW_PATHS` to its
   own write-set above.
 - **Per lane:** complete the doc's Phase 0 checklist and QA checklist in place, land the change with
   a passing regression test, and leave a one-line status update in the doc's own Status table.

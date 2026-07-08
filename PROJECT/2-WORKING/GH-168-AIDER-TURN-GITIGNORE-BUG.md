@@ -77,3 +77,10 @@ threads, without every caller needing to discover and set `AIDER_FLAGS` themselv
 - [ ] The regression test reproduces the original failure mode (gitignored target file silently
       unreadable) before the fix, and passes after.
 - [ ] `test/*.sh` covering `aider-turn.sh` stays green.
+
+
+## Swarm Preflight Contract
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_absent","path":"README.md","pattern":"THIS_WILL_NEVER_MATCH"}],"artifacts":["relay-automation/aider-turn.sh","test/aider-turn.sh"],"remediation":{"source":"self","criteria":"Fix per plan"},"lanes":{"orchestrator_only":[]}}
+```

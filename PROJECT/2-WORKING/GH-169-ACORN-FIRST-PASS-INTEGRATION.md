@@ -84,3 +84,10 @@ characterized (GH-163's Addendum 2).
 - [ ] The test covers both the happy path (real file → declarations + call sites) and the error
       path (malformed input → clean, catchable error).
 - [ ] No changes to scheduling, containment, or the relay kernel.
+
+
+## Swarm Preflight Contract
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_absent","path":"README.md","pattern":"THIS_WILL_NEVER_MATCH"}],"artifacts":["README.md"],"remediation":{"source":"self","criteria":"Fix per plan"},"lanes":{"orchestrator_only":[]}}
+```
