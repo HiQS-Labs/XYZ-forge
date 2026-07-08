@@ -263,40 +263,65 @@ run_aider() {
   _aider_answer_ok "$out"
 }
 
+# --- advisor registry (GH-178 A1) ------------------------------------------------------------------
+# name -> run-function, as parallel arrays (bash 3.2 / macOS has no `declare -A`; see
+# resolve-model-alias.sh for the same convention). Adding a 5th advisor is a DATA addition here — one
+# entry in each array plus its own run_<vendor>() — not a new case arm in the fan-out loop below. See
+# "Adding a new consult advisor" in relay-automation/README.md for the full recipe.
+ADV_NAMES=(codex agy gemini aider)
+ADV_RUNFNS=(run_codex run_agy run_gemini run_aider)
+
 # --- fan out in parallel (indexed arrays — macOS bash 3.2 has no `declare -A`) --------------------
 PIDS=(); PMODELS=(); POUTS=()
 IFS=',' read -ra _models <<<"$MODELS"
 for m in "${_models[@]}"; do
   m="${m// /}"; [[ -n "$m" ]] || continue
-  case "$m" in
-    codex)
-      f="$RUN_DIR/${LABEL}.codex.md"
-      run_codex "$f" & PIDS+=("$!"); PMODELS+=("codex"); POUTS+=("$f") ;;
-    agy)
-      f="$RUN_DIR/${LABEL}.agy.md"
-      run_agy "$f" & PIDS+=("$!"); PMODELS+=("agy"); POUTS+=("$f") ;;
-    gemini)
-      ext="md"; [[ "${CONSULT_GEMINI_JSON:-0}" == "1" ]] && ext="json"
-      f="$RUN_DIR/${LABEL}.gemini.$ext"
-      run_gemini "$f" & PIDS+=("$!"); PMODELS+=("gemini"); POUTS+=("$f") ;;
-    aider)
-      f="$RUN_DIR/${LABEL}.aider.md"
-      run_aider "$f" & PIDS+=("$!"); PMODELS+=("aider"); POUTS+=("$f") ;;
-    *) warn "unknown model '$m' — skipping" ;;
-  esac
+  fn=""; i=0
+  while ((i < ${#ADV_NAMES[@]})); do
+    [[ "${ADV_NAMES[$i]}" == "$m" ]] && { fn="${ADV_RUNFNS[$i]}"; break; }
+    i=$((i + 1))
+  done
+  if [[ -z "$fn" ]]; then warn "unknown model '$m' — skipping"; continue; fi
+  ext="md"; [[ "$m" == "gemini" && "${CONSULT_GEMINI_JSON:-0}" == "1" ]] && ext="json"
+  f="$RUN_DIR/${LABEL}.${m}.${ext}"
+  "$fn" "$f" & PIDS+=("$!"); PMODELS+=("$m"); POUTS+=("$f")
 done
 ((${#PIDS[@]} > 0)) || die "no valid models to consult (got: $MODELS)"
 
 # --- collect results -----------------------------------------------------------------------------
 answered=0; failed=0; summary=""; i=0
-survivor_model=""; survivor_out=""
+survivor_model=""; survivor_out=""; POK=()
 while ((i < ${#PIDS[@]})); do
   pid="${PIDS[$i]}"; model="${PMODELS[$i]}"; out="${POUTS[$i]}"
   if wait "$pid"; then
     answered=$((answered + 1)); summary+=$'\n'"  [ok]   $model -> $out"
-    survivor_model="$model"; survivor_out="$out"
+    survivor_model="$model"; survivor_out="$out"; POK+=(1)
   else
-    failed=$((failed + 1));   summary+=$'\n'"  [FAIL] $model -> $out (see transcript for error)"
+    failed=$((failed + 1));   summary+=$'\n'"  [FAIL] $model -> $out (see transcript for error)"; POK+=(0)
+  fi
+  i=$((i + 1))
+done
+
+# GH-178 A4 (deliberately narrow slice — NOT the full firsthand-vs-asserted provenance taxonomy; see
+# PROJECT/2-WORKING/GH-178-EPISTEMIC-RECONCILIATION-HARDENING.md for what's future-scoped). Mechanically
+# stamp any ANSWERED advisor whose own transcript carries ZERO explicit file:line or quoted-content
+# citations anywhere — same stdout+prepended-transcript+sidecar mechanism as A2's SINGLE-MODEL stamp.
+# Does NOT check whether a present citation is ACCURATE (no citation-verification engine); it only
+# catches an answer with no citation attempt at all. Scoped to not fire when the advisor DID cite
+# something anywhere in its answer.
+CITELESS_MODELS=(); i=0
+while ((i < ${#PIDS[@]})); do
+  if [[ "${POK[$i]}" == "1" ]]; then
+    model="${PMODELS[$i]}"; out="${POUTS[$i]}"
+    if ! grep -qE '"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+' "$out" 2>/dev/null; then
+      CITELESS_MODELS+=("$model")
+      nocite="**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional ($model's answer carries no quoted span or file:line citation anywhere, despite the consult PREAMBLE asking advisors to cite evidence.)"
+      case "$out" in
+        *.json) : ;;  # don't corrupt structured output — the sidecar marker below still covers it
+        *) { printf '%s\n\n' "$nocite"; cat "$out"; } > "$out.stamped" && mv "$out.stamped" "$out" ;;
+      esac
+      printf '%s\n' "$nocite" > "$RUN_DIR/${LABEL}.${model}.NO-CITATION.txt"
+    fi
   fi
   i=$((i + 1))
 done
@@ -332,5 +357,6 @@ fi
 
 printf 'consult: %d answered, %d failed -> %s%s\n' "$answered" "$failed" "$RUN_DIR" "$summary"
 ((DEGRADED)) && warn "SINGLE-MODEL — NOT RECONCILED (stamped into $survivor_out and $RUN_DIR/DEGRADED-SINGLE-MODEL.txt)"
+((${#CITELESS_MODELS[@]} > 0)) && warn "NO FIRSTHAND VERIFICATION CITED for: ${CITELESS_MODELS[*]} (stamped into transcript(s) + sidecar(s) in $RUN_DIR)"
 ((answered > 0)) || { warn "all advisors failed"; exit 5; }
 exit 0

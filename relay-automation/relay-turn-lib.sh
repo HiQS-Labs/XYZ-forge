@@ -251,9 +251,14 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # rtl_enforce. This is the boundary an over-eager agy reviewer crossed on 2026-06-20 (it edited
   # validate.sh because the artifact sat on ALLOW_PATHS). Producer turns keep the full allowlist —
   # they legitimately build.
+  # GH-173 B3: remember reviewer-turn-ness for rtl_enforce (called AFTER the turn, by which point the
+  # agent has already flipped NEXT to the other role — rtl_is_reviewer_turn "$f" would read false then).
   if rtl_is_reviewer_turn "$f"; then
+    RTL_WAS_REVIEWER_TURN=1
     [[ -n "$csv" ]] && printf 'relay-turn: REVIEWER turn — scoping allowlist to the relay file only (ignoring ALLOW_PATHS=%s)\n' "$csv" >&2
     csv=""
+  else
+    RTL_WAS_REVIEWER_TURN=0
   fi
   local _extra p; IFS=',' read -ra _extra <<<"$csv"
   for p in "${_extra[@]:-}"; do [[ -n "$p" ]] && RTL_ALLOW+=("$p"); done
@@ -645,6 +650,42 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   RTL_VIOLATION=1
 }
 
+# GH-173 B3: mechanical uncited-"verified" check. new-relay.sh's own Reviewer template ("▶ TAKE YOUR
+# TURN" block) now ASKS for a citation on any [Pass]/"verified" finding, but a prompt instruction is
+# model compliance, not a guarantee — Jedi Wright's beta report hit exactly that gap (a "verified"
+# claim with no quote). This does NOT verify a citation is ACCURATE (out of scope, no real
+# citation-verification engine); it only catches the ABSENCE of one, mechanically, and downgrades the
+# claim in place so the caveat is structural rather than trusting the model followed the instruction.
+# A "citation" is a quoted span ("..."/`...`) or a file:line reference (name:NNN) within the next
+# RTL_CITATION_WINDOW (default 3) lines, INCLUDING the claim's own line (inline citations count).
+rtl_check_uncited_findings() {  # <relay_file_path> — rewrites the file in place
+  local f="$1" win="${RTL_CITATION_WINDOW:-3}" tmp
+  [[ -n "$f" && -f "$f" ]] || return 0
+  tmp="${f}.rtlcite.$$"
+  awk -v win="$win" '
+    { line[NR] = $0 }
+    END {
+      for (i = 1; i <= NR; i++) {
+        # already downgraded (prior pass) -> never re-flag. Required for idempotency: a prose "verified"
+        # claim is appended-to, not replaced, so the trigger word "verified" is still on the line.
+        if (line[i] ~ /\[Unverified — no citation\]/) { print line[i]; continue }
+        claim = (line[i] ~ /\[Pass\]/) || (line[i] ~ /(^|[^A-Za-z])[Vv]erified([^A-Za-z]|$)/) || \
+                (line[i] ~ /(^|[^A-Za-z])[Cc]onfirmed([^A-Za-z]|$)/)
+        if (!claim) { print line[i]; continue }
+        cited = 0
+        for (j = i; j <= NR && j <= i + win; j++) {
+          if (line[j] ~ /"[^"]+"/ || line[j] ~ /`[^`]+`/ || line[j] ~ /[A-Za-z0-9_.\/-]+:[0-9]+/) { cited = 1; break }
+        }
+        if (cited) { print line[i]; continue }
+        out = line[i]
+        if (out ~ /\[Pass\]/) { gsub(/\[Pass\]/, "[Unverified — no citation]", out) }
+        else { out = out "  [Unverified — no citation]" }
+        print out
+      }
+    }
+  ' "$f" > "$tmp" && mv "$tmp" "$f"
+}
+
 rtl_enforce() {  # <task> <agent> <log> <tool>
   local task="$1" agent="$2" log="$3"; RTL_TOOL="$4"
   # (2) commit-bypass guard: the agent must NOT git. If HEAD moved, its edits are hidden from
@@ -704,6 +745,13 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   done < <(git -C "$RTL_ROOT" status --porcelain -z)
   rtl_trace "rtl_enforce: RTL_VIOLATION=$RTL_VIOLATION"
   ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; rtl_log_always "rtl_enforce: VIOLATION off-lane edits reverted; failing the turn"; exit 6; }
+  # GH-173 B3: downgrade any uncited [Pass]/verified Reviewer finding BEFORE staging, so the fix lands
+  # in the SAME commit as the turn instead of needing a second one. Reviewer-only (Producer findings
+  # aren't graded by this template); RTL_WAS_REVIEWER_TURN was captured in rtl_init, before NEXT flipped.
+  if [[ "${RTL_WAS_REVIEWER_TURN:-0}" == "1" && -n "${RELAY_FILE:-}" ]]; then
+    rtl_check_uncited_findings "$RELAY_FILE"
+    rtl_trace "rtl_enforce: checked $RELAY_FILE for uncited [Pass]/verified findings"
+  fi
   # (3) stage ONLY the allowlist; commit file-scoped; NO push.
   # Stage each allowlisted path INDEPENDENTLY (not one batched `git add -- a b c`): a single pathspec
   # that matches nothing — e.g. an allowlist entry the turn was permitted to create but didn't — makes
