@@ -67,12 +67,27 @@ hq_xyz_lookup(){
   local repo slug install _f tick commit coord
   repo="$(hq_lc "$(hq_bare "$1")")"
   slug="$(hq_lc "${2:-}")"
-  local matches=()
+  local matches=() seen_coords=()
   while IFS=$'\t' read -r install _f tick commit coord; do
     case "$install" in ''|'#'*) continue;; esac
     [ -n "$coord" ] || continue
     [ -d "$coord" ] || continue                          # stale row -> not a usable install (Blocker 2)
     [ "$(hq_lc "$(hq_bare "$coord")")" = "$repo" ] || continue
+    
+    local i seen=-1
+    for i in "${!seen_coords[@]}"; do
+      if [ "${seen_coords[$i]}" = "$coord" ]; then
+        seen=$i
+        break
+      fi
+    done
+    if [ "$seen" -ge 0 ]; then
+      # If we see a duplicate coord but the new install is the vendored .xyz, prefer it
+      case "$install" in */.xyz) matches[$seen]="$install"$'\t'"$coord"$'\t'"$tick"$'\t'"$commit";; esac
+      continue
+    fi
+    seen_coords+=("$coord")
+
     matches+=("$install"$'\t'"$coord"$'\t'"$tick"$'\t'"$commit")
   done < "$HQ_XYZ_REGISTRY"
 
