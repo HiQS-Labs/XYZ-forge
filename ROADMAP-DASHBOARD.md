@@ -6,12 +6,13 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 52 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 18 · 🔮 0 · 🔲 0
+Summary: 53 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 18 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-173 · Jedi Wright beta feedback: agy worktree grounding + reconciliation-layer hardening | — | [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/1-INBOX/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) |
-| GH-175 · #173 feedback Phase-1 low-fruit slice: bring-up + README supply-chain docs + Codex preflight attestation | — | [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) · [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/1-INBOX/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [Plan E](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md) · [#175](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/175) |
+| GH-173 · Jedi Wright beta feedback: agy worktree grounding + reconciliation-layer hardening | — | [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/2-WORKING/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) |
+| GH-175 · #173 feedback Phase-1 low-fruit slice: bring-up + README supply-chain docs + Codex preflight attestation | — | [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) · [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/2-WORKING/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [Plan E](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md) · [#175](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/175) |
+| GH-178 · #173 feedback split: epistemic/reconciliation-layer hardening (agy grounding, stale warning, advisor pluggability, degraded-panel stamp, verdict provenance) | — | [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) · [GH-178-EPISTEMIC-RECONCILIATION-HARDENING.md](PROJECT/2-WORKING/GH-178-EPISTEMIC-RECONCILIATION-HARDENING.md) · [#178](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/178) |
 | GH-172 · vendored harness root-semantics audit before Python-default cutover | — | [GH-172-VENDORED-ROOT-AUDIT.md](PROJECT/1-INBOX/GH-172-VENDORED-ROOT-AUDIT.md) · [#172](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/172) |
 | Marathon Plan F · validate.sh's pre-existing failing tests + a live parity gap (GH-170, GH-174) | — | [MARATHON-PLAN-2026-07-07-F-VALIDATE-FIXES.md](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-F-VALIDATE-FIXES.md) |
 | GH-174 · agy-turn.py never got GH-171's claim-before-launch guard (XYZ_PYTHON=1 agy turns still exposed) | — | [GH-174-AGY-PY-CLAIM-GUARD.md](PROJECT/1-INBOX/GH-174-AGY-PY-CLAIM-GUARD.md) · [#174](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/174) |
