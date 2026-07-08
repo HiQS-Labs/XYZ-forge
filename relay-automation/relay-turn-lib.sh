@@ -385,6 +385,10 @@ rtl_run_bounded() {  # <timeout_secs> <cmd...>
 }
 
 # --- Worktree isolation (ROADMAP Part A Phase 3.6 — the airtight async/side-effect close) ----------
+# Before touching anything below: read WORKTREE-SAFETY.md (repo root) — it documents the
+# git-worktree footguns and the safe recovery path for a corrupted RTL_ROOT/.git (GH-177). This is
+# the one place in the harness that runs `git worktree add`/cleanup at runtime; every turn shim
+# (aider/agy/codex/claude-turn.sh) and consult.sh reach worktree isolation through this file.
 # OPT-IN: callers gate on RELAY_WORKTREE_ISOLATION=1. Default OFF → behaviour is unchanged.
 # Run the agent turn in a THROWAWAY git worktree of RTL_ROOT@HEAD, so any async/background write
 # lands in a tree we delete — RTL_ROOT is never the agent's target. This closes the gap left by the

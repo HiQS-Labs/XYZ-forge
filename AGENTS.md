@@ -1,5 +1,7 @@
 # AGENTS.md
 
+Read `WORKTREE-SAFETY.md` for important Git Worktree Dangerous actions to avoid.
+
 Read `ROUTER.md` first for startup order and canonical files.
 
 Read `GUIDING-PRINCIPLES.md` for the product north stars.
