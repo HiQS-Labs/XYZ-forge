@@ -2,7 +2,7 @@
 gh_issue: 178
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/178
 title: "Epistemic/reconciliation-layer hardening: agy worktree grounding, stale HEAD-visibility warning, advisor pluggability, degraded-panel stamp, verdict provenance"
-status: Active (2-WORKING) — B2 + A2 shipped, B1 root-caused, A1 inventoried (2026-07-08)
+status: Active (2-WORKING) — B2 + A2 merged to main (PR #181), B1 root-caused, A1 inventoried (2026-07-08)
 created: 2026-07-08
 updated: 2026-07-08
 owner: noel
@@ -39,7 +39,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Branch `fix/gh-178-reconciliation-hardening` cut from `main`, pushed to origin, still in sync with `origin` (no PR opened yet). **B2 shipped** (`3784fe8`) and **A2 shipped** (`d85da37`) — see prior rows below; both carry regression tests, `./validate.sh` green except the confirmed-pre-existing `worktree-isolation.sh` failure. **B1 root-caused 2026-07-08** (doc-only, no code changed yet): a decisive live repro (gitignored marker file, so it never entered the throwaway worktree) proved agy does not confine grounding to its assigned CWD — it self-searches the filesystem and lands on the real repo root regardless. Reframes B1 from "sometimes zero visibility" to "grounding isn't scoped to the isolation boundary at all," with two candidate Phase 3 directions now written up (detect-and-warn vs. actual process-level containment). **A1 inventoried 2026-07-08** (doc-only): the safety core (`relay-turn-lib.sh`) is already vendor-agnostic across all 4 turn shims; the real gap is `consult.sh`'s `--models` being a fixed `case` instead of data, plus no written "add vendor N+1" recipe — narrower than the original "hardwired" framing. | A4 still needs its scope decision before implementation. B1/A1 Phase 3 fixes are now well-scoped and ready to pick up. |
+| **PR #181 merged to `main`** (`3da16b2`, 2026-07-08) — branch `fix/gh-178-reconciliation-hardening` is now on `main`; CI green. **B2 shipped** (`3784fe8`) and **A2 shipped** (`d85da37`) — see prior rows below; both carry regression tests, `./validate.sh` green except the confirmed-pre-existing `worktree-isolation.sh` failure. **B1 root-caused 2026-07-08** (doc-only, no code changed yet): a decisive live repro (gitignored marker file, so it never entered the throwaway worktree) proved agy does not confine grounding to its assigned CWD — it self-searches the filesystem and lands on the real repo root regardless. Reframes B1 from "sometimes zero visibility" to "grounding isn't scoped to the isolation boundary at all," with two candidate Phase 3 directions now written up (detect-and-warn vs. actual process-level containment). **A1 inventoried 2026-07-08** (doc-only): the safety core (`relay-turn-lib.sh`) is already vendor-agnostic across all 4 turn shims; the real gap is `consult.sh`'s `--models` being a fixed `case` instead of data, plus no written "add vendor N+1" recipe — narrower than the original "hardwired" framing. | A4 still needs its scope decision before implementation. B1/A1 Phase 3 fixes are now well-scoped and ready to pick up. |
 
 ## Parent & provenance
 - **Parent:** [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) — Jedi Wright beta feedback, full trip report at [GH-173-JEDI-WRIGHT-FEEDBACK.md](GH-173-JEDI-WRIGHT-FEEDBACK.md)
@@ -76,7 +76,7 @@ All evidence below carried forward verbatim from #173's Validation table (see th
 - [ ] Remaining items (B1, A1, A4) each need their own regression test as they land
 - [x] `utils/pdda/pdda.sh run` clean (checked 2026-07-08, ahead of each commit)
 - [x] `./validate.sh` green for touched surfaces (2026-07-08, both B2 and A2 passes) — the only failure, `worktree-isolation.sh`, is confirmed pre-existing on clean `main`, unrelated to this work
-- [x] Link fix commit(s) back to #178 and #173 — B2 is `3784fe8`; A2 is `d85da37`; both on `fix/gh-178-reconciliation-hardening`, in sync with origin, no PR opened yet
+- [x] Link fix commit(s) back to #178 and #173 — B2 is `3784fe8`; A2 is `d85da37`; both merged to `main` via PR #181 (`3da16b2`), 2026-07-08. #173's status-update comment also links back here.
 
 ## Non-goals
 - B3 (reviewer citation) — stays in #173, needs more investigation before it's clearly in scope here.

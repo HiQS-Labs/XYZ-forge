@@ -2,9 +2,9 @@
 gh_issue: 173
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173
 title: "Jedi Wright beta feedback: agy worktree grounding, non-re-checked HEAD warning, uncited reviewer, degraded-panel stamping"
-status: Working (2-WORKING) — Phase 1 completed
+status: Working (2-WORKING) — Phase 1 + partial Phase 3 shipped to main via #175/#178
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-08
 owner: noel
 doc_type: feedback
 complexity: 4
@@ -38,15 +38,15 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| Promoted to `2-WORKING`; triaged into 4 bugs + 4 architecture gaps + 2 doc notes, light-validated, then re-validated 2026-07-07 night with live evidence from a same-day dogfood-mining pass. Split into three tracks: **#175** (B4/D2/A3, docs+attestation, building now via Antigravity), **#178** (B1/B2/A1/A2/A4, the epistemic/reconciliation-layer hardening cluster, queued), and this doc (B3, D1 — still parked, need more work before they split further). | Wait on #175 to land; #178 to start its Phase 2 (B1 repro, A1 inventory). B3 needs the Phase-2 reviewer-template read this doc's own checklist still lists. D1 needs no fix, just regression-protection. |
+| **2026-07-08:** both split tracks landed on `main`. **#175** (B4/D2/A3) merged via PR #179 (`39729a0`). **#178** shipped its first slice — B2/A2 — via PR #181 (`3da16b2`); B1 was root-caused (agy doesn't confine grounding to its assigned isolation worktree — proven live, not yet fixed) and A1 was inventoried (safety core already vendor-agnostic; gap is narrower than "hardwired" implied) — both doc-only so far, fixes still pending in #178. Issue #173 had auto-closed when #179 merged (its "Closes" keyword fired on the parent, not just #175); reopened same day since B1/B3/A1/A4 are still open — see the issue's pinned status-update comment for the full per-item breakdown. | **#178**: B1 fix (two candidate directions written up), A1 registry, A4 scope decision. **This doc**: B3 (reviewer turn template read) still needs its Phase 2 pass; D1 needs no fix, regression-protect only. |
 
 | Phase | Description | Status |
 |---|---|---|
 | 0 | Triage & scope | ✅ Done |
-| 1 | Low-fruit fixes (#175) | ✅ Done |
-| 2 | Deeper exploration / reproduction | Not started |
-| 3 | Behavior & architecture fixes | Not started |
-| 4 | Verify | Not started |
+| 1 | Low-fruit fixes (#175) | ✅ Done — merged to `main` (PR #179) |
+| 2 | Deeper exploration / reproduction | Partial — B1/A1 done (via #178); B3 not started |
+| 3 | Behavior & architecture fixes | Partial — B2/A2 shipped to `main` (via #178, PR #181); B1/A1/A4 fixes pending; B3/D1 not started |
+| 4 | Verify | Partial — B2/A2 carry regression tests; remaining items pending |
 
 ## Source report
 - **Report / tracking issue:** [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) (native origin issue)
