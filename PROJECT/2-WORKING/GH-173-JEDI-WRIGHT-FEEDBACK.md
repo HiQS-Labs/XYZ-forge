@@ -2,7 +2,7 @@
 gh_issue: 173
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173
 title: "Jedi Wright beta feedback: agy worktree grounding, non-re-checked HEAD warning, uncited reviewer, degraded-panel stamping"
-status: parked
+status: Working (2-WORKING) — Phase 1 completed
 created: 2026-07-07
 updated: 2026-07-07
 owner: noel
@@ -17,17 +17,11 @@ related:
   - relay-automation/agy-turn.sh
   - relay-automation/codex-turn.sh
 non_goals:
-  - Not implementing the fixes in this doc — this is a triaged 1-INBOX capture; execution starts on promotion to 2-WORKING
   - Not re-auditing Swarm / Marathon / HQ / tick export — the reporter explicitly kept those out of the trial's scope
   - Not vendoring or authoring the external ra-to-xyz-transfer.md epistemic catalog here (external artifact; referenced, not owned by this repo)
 ---
 
 # GH-173 — Jedi Wright beta feedback (Consult + Relay fast-path trial, 7/6–7/7)
-
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue: 173` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake). Several items likely split into their own `GH-*` issues
-> at promotion (bugs vs architecture vs docs); `ratings_provisional: true` until that split is rated.
 
 ## Source report
 - **Report / tracking issue:** [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) (native origin issue)
