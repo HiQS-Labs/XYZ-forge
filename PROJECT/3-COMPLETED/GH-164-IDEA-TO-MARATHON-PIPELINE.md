@@ -202,6 +202,16 @@ implemented, and what stays deferred.
 
 ## `/idea` skill sketch (design only — item 5, deferred; see Phase 1 build)
 
+> **Update 2026-07-07 — the `/idea` front-end now lives in PDDA, not here.** The skill described
+> below was built from this sketch in the [pdda](https://github.com/Hypercart-Dev-Tools/pdda) repo
+> (`.claude/skills/idea/SKILL.md`), as a sibling to that repo's `/triage` intake skill. It was made
+> **self-sufficient** (direct PDDA-compliant write: `PROJECT/1-INBOX/` capture + ROADMAP park +
+> `pdda.sh frontmatter` validate) rather than depending on `hq park --create`, because PDDA's vendored
+> `hq` does not carry the `HQ_PARK_*` synthesis interface. **No `/idea` skill was ever built in this
+> repo** — only this sketch. What *did* ship here is the `hq park` `HQ_PARK_*` synthesis backend (see
+> "## Phase 1 build" below), which is a general `hq` feature and stays. Treat the sketch below as
+> historical design context; the maintained skill is in PDDA.
+
 **Role:** front-line intake / first responder. Takes a raw idea from the operator, asks a short
 fixed question set, synthesizes the judgment-heavy prose that `hq park`'s template structurally
 can't produce (Why, Key Concepts, ratings, non_goals), then hands off to `hq park --create`.

@@ -82,14 +82,31 @@ hq_xyz_lookup(){
   local chosen=""
   if [ "$n" = 1 ]; then
     chosen="${matches[0]}"
-  elif [ -n "$slug" ] && printf '%s' "$slug" | grep -q '/'; then
-    # basename collision + an owner-carrying hint: keep only candidates whose real git slug matches
-    local m mslug hits=()
+  else
+    # Same-repo collapse (GH-132 follow-on): multiple registry rows can point at ONE repo — e.g. a
+    # repo carrying both a legacy `xyz-tick` install and the current vendored `.xyz`. They share the
+    # same coord (repo path), so there is no real path to guess between; collapse to it, preferring
+    # the vendored `.xyz` install's drift stamps. Only a collision across DIFFERENT repos is a true
+    # ambiguity that still needs the owner-slug tiebreak below.
+    local m mc first_coord="" all_same=1 dotxyz=""
     for m in "${matches[@]}"; do
-      mslug="$(hq_lc "$(hq_target_slug "$(printf '%s' "$m" | cut -f2)")")"
-      [ -n "$mslug" ] && [ "$mslug" = "$slug" ] && hits+=("$m")
+      mc="$(printf '%s' "$m" | cut -f2)"
+      [ -n "$first_coord" ] || first_coord="$mc"
+      [ "$mc" = "$first_coord" ] || all_same=0
+      case "$(printf '%s' "$m" | cut -f1)" in */.xyz) dotxyz="$m";; esac
     done
-    [ "${#hits[@]}" = 1 ] && chosen="${hits[0]}"
+    if [ "$all_same" = 1 ]; then
+      chosen="${dotxyz:-${matches[0]}}"
+    elif [ -n "$slug" ] && printf '%s' "$slug" | grep -q '/'; then
+      # basename collision across different repos + an owner-carrying hint: keep only candidates
+      # whose real git slug matches
+      local mslug hits=()
+      for m in "${matches[@]}"; do
+        mslug="$(hq_lc "$(hq_target_slug "$(printf '%s' "$m" | cut -f2)")")"
+        [ -n "$mslug" ] && [ "$mslug" = "$slug" ] && hits+=("$m")
+      done
+      [ "${#hits[@]}" = 1 ] && chosen="${hits[0]}"
+    fi
   fi
 
   if [ -n "$chosen" ]; then

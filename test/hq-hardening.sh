@@ -144,5 +144,35 @@ OUT="$(e4 'only-app')"; rc=$?
   && pass "control: a literal name still resolves via find (rc=0)" \
   || fail "literal resolve rc=$rc -> $(printf '%s\n' "$OUT" | grep REPO_PATH)"
 
+# ============================================================================================
+# GH-132 follow-on — same-repo collapse: two registry rows pointing at the SAME coord (e.g. a
+# legacy xyz-tick install alongside the current vendored .xyz) must resolve cleanly, not ambiguous.
+# ============================================================================================
+G5="$TMP/g5"; mkdir -p "$G5/empty"
+newrepo "$G5/dup-app" "git@github.com:Me/dup-app.git"
+REG5="$G5/xyz.tsv"
+{ printf '%s\t2026-07-04T00:00:00Z\t0.1.0\told1\t%s\n' "$G5/dup-app/xyz-tick" "$G5/dup-app"   # legacy install
+  xyzrow "$G5/dup-app"                                                                          # current .xyz
+} > "$REG5"
+r5(){ env HQ_XYZ_REGISTRY="$REG5" HQ_REBALANCE_DB="$G5/none.db" HQ_PDDA_REGISTRY_DIR="$G5/nopdda" \
+        HQ_SEARCH_ROOTS="$G5/empty" bash "$HQ" resolve "$1"; }
+
+OUT="$(r5 'dup-app')"; rc=$?
+{ [ "$rc" = 0 ] && ! printf '%s\n' "$OUT" | grep -q 'RESOLVED_VIA=ambiguous' \
+    && printf '%s\n' "$OUT" | grep -q "REPO_PATH=$G5/dup-app"; } \
+  && pass "same-repo duplicate registry rows collapse, not ambiguous (rc=0)" \
+  || fail "dup-app rc=$rc -> $(printf '%s\n' "$OUT" | grep -E 'RESOLVED_VIA|REPO_PATH')"
+
+{ [ "$rc" = 0 ] && printf '%s\n' "$OUT" | grep -q "XYZ_INSTALL=$G5/dup-app/.xyz\$"; } \
+  && pass "same-repo collapse prefers the vendored .xyz install over the legacy one" \
+  || fail "dup-app XYZ_INSTALL -> $(printf '%s\n' "$OUT" | grep XYZ_INSTALL)"
+
+# Control: two DIFFERENT repos sharing a basename must still be ambiguous (the collapse must not
+# weaken Blocker 1's cross-repo disambiguation — re-asserted here alongside its own fixture).
+OUT="$(r1 'api')"; rc=$?
+{ [ "$rc" = 2 ] && printf '%s\n' "$OUT" | grep -q 'RESOLVED_VIA=ambiguous'; } \
+  && pass "control: cross-repo basename collision still ambiguous after the same-repo collapse fix" \
+  || fail "control cross-repo rc=$rc -> $OUT"
+
 echo "== hq-hardening: $PASS passed, $FAIL failed =="
 [ "$FAIL" = 0 ]
