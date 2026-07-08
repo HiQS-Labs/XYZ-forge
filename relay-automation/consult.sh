@@ -184,7 +184,19 @@ run_codex() {
   # never per-token API credits (CODEX_ALLOW_API_KEY=1 to opt back in). See codex-turn.sh.
   local cenv=(env); [[ "${CODEX_ALLOW_API_KEY:-0}" == "1" ]] || cenv+=(-u OPENAI_API_KEY)
   # ${_f[@]+...} guards an EMPTY flags array under `set -u` on bash 3.2 (macOS default).
-  _guarded "$out" "${cenv[@]}" "$CODEX_BIN" exec ${_f[@]+"${_f[@]}"} "$FULL_PROMPT"
+  _guarded "$out" "${cenv[@]}" "$CODEX_BIN" exec ${_f[@]+"${_f[@]}"} "$FULL_PROMPT" || return $?
+
+  local tmp="${out}.tmp"
+  local model="unknown" provider="unknown" sandbox="unknown"
+  if [[ -f "$out" ]]; then
+    model="$(grep -m1 '^model:' "$out" | sed 's/^model:[[:space:]]*//' || true)"
+    provider="$(grep -m1 '^provider:' "$out" | sed 's/^provider:[[:space:]]*//' || true)"
+    sandbox="$(grep -m1 '^sandbox:' "$out" | sed 's/^sandbox:[[:space:]]*//' || true)"
+    {
+      printf '> **ATTESTATION**\n> Model: %s\n> Provider: %s\n> Sandbox: %s\n\n' "${model:-unknown}" "${provider:-unknown}" "${sandbox:-unknown}"
+      cat "$out"
+    } > "$tmp" && mv "$tmp" "$out"
+  fi
 }
 run_agy() {
   local out="$1" secs="${CONSULT_TIMEOUT:-300}"

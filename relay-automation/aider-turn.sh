@@ -167,7 +167,7 @@ AIDER_AUX_DIR="${AIDER_AUX_DIR:-${TMPDIR:-/tmp}/aider-aux-$$}"; mkdir -p "$AIDER
 # Build the aider invocation. --no-auto-commits is LOAD-BEARING (see WHY #2). AIDER_FLAGS is an escape
 # hatch for version-specific flag differences.
 turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
-aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits --no-gitignore
+aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits --no-gitignore --add-gitignore-files
             --no-check-update --no-analytics --no-show-model-warnings --no-stream --map-tokens 0
             --chat-history-file "$AIDER_AUX_DIR/chat.history.md"
             --input-history-file "$AIDER_AUX_DIR/input.history"

@@ -2,7 +2,7 @@
 gh_issue: 173
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173
 title: "Jedi Wright beta feedback: agy worktree grounding, non-re-checked HEAD warning, uncited reviewer, degraded-panel stamping"
-status: in progress
+status: Working (2-WORKING) — Phase 1 completed
 created: 2026-07-07
 updated: 2026-07-07
 owner: noel
@@ -39,6 +39,14 @@ non_goals:
 | What was just completed | What's next |
 |---|---|
 | Promoted to `2-WORKING`; triaged into 4 bugs + 4 architecture gaps + 2 doc notes, light-validated, then re-validated 2026-07-07 night with live evidence from a same-day dogfood-mining pass. Split into three tracks: **#175** (B4/D2/A3, docs+attestation, building now via Antigravity), **#178** (B1/B2/A1/A2/A4, the epistemic/reconciliation-layer hardening cluster, queued), and this doc (B3, D1 — still parked, need more work before they split further). | Wait on #175 to land; #178 to start its Phase 2 (B1 repro, A1 inventory). B3 needs the Phase-2 reviewer-template read this doc's own checklist still lists. D1 needs no fix, just regression-protection. |
+
+| Phase | Description | Status |
+|---|---|---|
+| 0 | Triage & scope | ✅ Done |
+| 1 | Low-fruit fixes (#175) | ✅ Done |
+| 2 | Deeper exploration / reproduction | Not started |
+| 3 | Behavior & architecture fixes | Not started |
+| 4 | Verify | Not started |
 
 ## Source report
 - **Report / tracking issue:** [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) (native origin issue)
@@ -81,15 +89,13 @@ for today's marathon. The design-heavy items stay parked here. `ratings_provisio
 remaining phases are split/rated.
 
 ### Phase 1 — Low-fruit fixes (no reporter dependency)  → split to #175, Marathon E-BUILD
-**In progress (2026-07-07 evening)** — Marathon Plan E is firing now (an Antigravity agent building
-in an isolated worktree); do not start parallel work on B4/D2/A3 below until that lane reports back.
 Contained, additive, unambiguous — the obvious items that need **no back-and-forth with the reporter**.
 Execute as parallel lanes in
 [MARATHON-PLAN-2026-07-07-E-BUILD.md](../2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md); tracked by
 **[#175](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/175)**.
-- [ ] **B4** headless bring-up doc notes — macOS Documents-folder prompt + `agy -p` vs "interactive TTY" misdiagnosis *(docs only)*
-- [ ] **D2** README supply-chain notes — symlinked skills + `git pull`; `agy` background self-update vs pin-to-audited-commit *(docs only)*
-- [ ] **A3** Codex preflight attestation — parse the exec preamble (model/provider/sandbox) into the panel record *(additive; closes the unattested-panel gap)*
+- [x] **B4** headless bring-up doc notes — macOS Documents-folder prompt + `agy -p` vs "interactive TTY" misdiagnosis *(docs only)*
+- [x] **D2** README supply-chain notes — symlinked skills + `git pull`; `agy` background self-update vs pin-to-audited-commit *(docs only)*
+- [x] **A3** Codex preflight attestation — parse the exec preamble (model/provider/sandbox) into the panel record *(additive; closes the unattested-panel gap)*
 
 ### Phase 2 — Deeper exploration / reproduction  (spike, needs the reporter's runs or live repro)
 **B1, A1 → split to [#178](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/178)** 2026-07-08, along with B2/A2/A4 (see that issue's own Phase 2/3). Tracked there now, not here.

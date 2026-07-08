@@ -1,0 +1,20 @@
+{
+  "name": "lane-169",
+  "version": "1.0.0",
+  "description": "> **⏳ Beta-testing period:** the onboarding guide below leads this README for the duration of the > beta. Once the beta wraps, this section moves out and the normal README resumes at > [What XYZ is](#what-xyz-is). Discussion: [issue #123](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/123).",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "acorn": "^8.17.0",
+    "acorn-walk": "^8.3.5"
+  }
+}
