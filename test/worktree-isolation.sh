@@ -55,11 +55,11 @@ chmod +x "$STUB"
 seed_token(){ local task="$1" allow_paths="${2:-artifact.txt}"; tick_a log task.created "$task" --agent claude --paths "$allow_paths" >/dev/null; tick_a claim "$task" --agent claude --paths "$allow_paths" >/dev/null 2>&1; tick_a release "$task" --agent claude --to claude >/dev/null 2>&1; }
 
 run_shim(){ # <task> <stub-mode> <isolation 0|1> [allow-paths]
-  local allow_paths="${4:-artifact.txt}"
-  ( cd "$A" && RELAY_AGENT=claude RELAY_FILE="$A/relay.md" RELAY_TASK="$1" \
-      CLAUDE_AGENT=claude CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude.$1.json" \
-      ALLOW_PATHS="$allow_paths" CLAUDE_BLOCK_CMDS="" STUB_MODE="$2" RELAY_WORKTREE_ISOLATION="$3" \
-      bash "$SHIM" >/dev/null 2>&1 )
+  local task="$1" stub="$2" iso="$3" allow_paths="${4:-artifact.txt}"
+  ( cd "$A" && RELAY_AGENT=claude RELAY_FILE="$A/relay.md" RELAY_TASK="$task" \
+      CLAUDE_AGENT=claude CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude.$task.json" \
+      ALLOW_PATHS="$allow_paths" CLAUDE_BLOCK_CMDS="" STUB_MODE="$stub" RELAY_WORKTREE_ISOLATION="$iso" \
+      bash -x "$SHIM" >/dev/null 2>&1 )
 }
 
 # --- (1) isolation ON, good turn: async off-lane write is CONTAINED, allowlist committed ----------
@@ -111,6 +111,7 @@ run_shim RELAY-TURN-noiso good 0; rc=$?
 [ "$rc" -eq 0 ] && pass "non-isolated good turn exits 0 (unchanged path)" || fail "non-isolated rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "non-isolated turn committed normally" || fail "expected a commit"
 # clean up the async file the non-isolated turn legitimately produced in ROOT (known gap, not tested here)
+sleep 1.5
 rm -f "$A/offlane-async.txt"
 
 # --- (6) isolation ON + a concurrent ROOT commit DURING the turn: PRESERVE it, don't reset+fail ----
@@ -136,7 +137,7 @@ seed_token RELAY-TURN-peer
 ( cd "$A" && RELAY_AGENT=claude RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-peer \
     CLAUDE_AGENT=claude CLAUDE_BIN="$STUB2" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG="$WORK/claude.peer.json" \
     ALLOW_PATHS="artifact.txt" CLAUDE_BLOCK_CMDS="" RELAY_WORKTREE_ISOLATION=1 \
-    bash "$SHIM" >/dev/null 2>&1 ); rc=$?
+    bash -x "$SHIM" ); rc=$?
 [ "$rc" -ne 6 ] && pass "isolated turn + concurrent ROOT commit: NOT reset+exit-6 (GH-13/#14 preserve)" || fail "regressed: worktree turn reset on a moved ROOT HEAD (rc=$rc)"
 # Capture-then-match (NOT `git log | grep -q`: grep -q closes the pipe on match → git SIGPIPE →
 # pipefail reports failure even on a hit — the documented poll.sh commit_gate_ok pitfall).
