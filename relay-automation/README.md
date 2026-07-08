@@ -224,14 +224,7 @@ proving Codex can write the relay file. `codex-turn.sh` defaults to
 fix that before running the shim; override the binary with
 `CODEX_BIN=/path/to/codex` if needed.
 
-The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's
-backend is blocked by a sandbox it can exit `0` with empty output, which the
-shim correctly treats as a failed turn. If `agy` is not on `PATH` or is not
-authenticated through the Antigravity desktop app, fix that before driving the
-lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity
-installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system
-PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it
-works before adding it to your PATH or passing `AGY_BIN` to every drive command.
+The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it works before adding it to your PATH or passing `AGY_BIN` to every drive command.
 
 If you are running under a sandboxed AI shell, run both workers outside that
 sandbox. Codex often fails there because it cannot reach the OS keychain or

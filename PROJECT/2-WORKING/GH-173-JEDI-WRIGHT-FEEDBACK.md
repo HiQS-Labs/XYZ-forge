@@ -35,6 +35,16 @@ non_goals:
 - **Scale:** ~6.7 KB single-issue write-up, 0 comments — a full beta trip report, triaged below (not transcribed whole)
 - **Scope of the trial:** validated the **fast path only** — Consult + Relay end-to-end on real work + kernel test suite. Swarm, Marathon, HQ, PDDA, and `tick` export were untested and out of scope.
 
+## Status
+
+| Phase | Description | Status |
+|---|---|---|
+| 0 | Triage & scope | ✅ Done |
+| 1 | Low-fruit fixes (#175) | ✅ Done |
+| 2 | Deeper exploration / reproduction | Not started |
+| 3 | Behavior & architecture fixes | Not started |
+| 4 | Verify | Not started |
+
 ## Problem summary
 A newcomer took the harness from zero to a shipped, reviewed skill on the fast path — Consult produced a
 genuine multi-model second opinion, and a one-round Relay built + reviewed a real "router" skill (10/10 on
@@ -74,9 +84,9 @@ Contained, additive, unambiguous — the obvious items that need **no back-and-f
 Execute as parallel lanes in
 [MARATHON-PLAN-2026-07-07-E-BUILD.md](../2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md); tracked by
 **[#175](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/175)**.
-- [ ] **B4** headless bring-up doc notes — macOS Documents-folder prompt + `agy -p` vs "interactive TTY" misdiagnosis *(docs only)*
-- [ ] **D2** README supply-chain notes — symlinked skills + `git pull`; `agy` background self-update vs pin-to-audited-commit *(docs only)*
-- [ ] **A3** Codex preflight attestation — parse the exec preamble (model/provider/sandbox) into the panel record *(additive; closes the unattested-panel gap)*
+- [x] **B4** headless bring-up doc notes — macOS Documents-folder prompt + `agy -p` vs "interactive TTY" misdiagnosis *(docs only)*
+- [x] **D2** README supply-chain notes — symlinked skills + `git pull`; `agy` background self-update vs pin-to-audited-commit *(docs only)*
+- [x] **A3** Codex preflight attestation — parse the exec preamble (model/provider/sandbox) into the panel record *(additive; closes the unattested-panel gap)*
 
 ### Phase 2 — Deeper exploration / reproduction  (spike, needs the reporter's runs or live repro)
 > Discovery phase: its findings must be written **back into this doc** (fill/repromote the Validation

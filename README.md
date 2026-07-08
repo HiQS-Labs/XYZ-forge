@@ -50,8 +50,7 @@ Everything below is designed to be reversible, but please help it along:
   `git checkout -b xyz-beta-test`. If anything goes sideways, recovery is just
   `git checkout main` and deleting the branch.
 - **What each step actually touches** (so you know how to undo it):
-  - *Skill install* — copies skill files into `~/.claude/skills/` (user-level). Undo: delete those
-    skill folders. Your repos are untouched.
+  - *Skill install* — symlinks skill folders into `~/.claude/skills/` (user-level). A `git pull` in your XYZ clone will silently update your installed skills. Undo: delete those symlinks. Your repos are untouched.
   - *Relay runs* — write a dated thread file under `relay-system/<date>/` plus the artifact being
     reviewed, on your branch. Undo: discard the branch.
   - *Consult runs* — advisory only; agents work in isolated copies. Nothing to undo.
@@ -60,6 +59,7 @@ Everything below is designed to be reversible, but please help it along:
 - **Prerequisites:** both the **Codex CLI** and **agy CLI** installed and pre-authenticated (XYZ
   shells out to them; a relay or consult will fail mid-run if either isn't logged in). See
   [Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy).
+- **Supply-chain note (agy):** The `agy` CLI performs background self-updates. This interacts oddly with the pin-to-audited-commit discipline used for most headless tools, as your underlying agent model may update mid-project.
 - **Agent users: run un-sandboxed.** If you're driving this from Claude Code (or another sandboxed
   agent harness), relay and consult runs need real keychain access and outbound network egress to
   reach Codex/agy — a sandboxed shell will fail with "Operation not permitted" or a blocked-host
