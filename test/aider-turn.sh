@@ -31,6 +31,10 @@ STUB="$WORK/aider"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
+# GH-119 test hook: when the test sets ARGS_DUMP, record exactly what the shim constructed —
+if [ -n "${ARGS_DUMP:-}" ]; then
+  echo "$@" > "${ARGS_DUMP}.all"
+fi
 files=(); reads=(); chf=".aider.chat.history.md"; while (($#)); do
   case "$1" in
     --file)              files+=("$2"); shift 2 ;;
@@ -40,13 +44,12 @@ files=(); reads=(); chf=".aider.chat.history.md"; while (($#)); do
     *)                   shift ;;
   esac
 done
-# GH-119 test hook: when the test sets ARGS_DUMP, record exactly what the shim constructed —
 # --file (writable) vs --read (structurally read-only) — so the test can assert on the split
 # without inventing a new inspection mechanism (mirrors how this stub already models Aider itself).
 if [ -n "${ARGS_DUMP:-}" ]; then
   : >"$ARGS_DUMP"
-  for f in "${files[@]}"; do printf 'FILE:%s\n' "$f" >>"$ARGS_DUMP"; done
-  for r in "${reads[@]}"; do printf 'READ:%s\n' "$r" >>"$ARGS_DUMP"; done
+  [ ${#files[@]} -gt 0 ] && for f in "${files[@]}"; do printf 'FILE:%s\n' "$f" >>"$ARGS_DUMP"; done
+  [ ${#reads[@]} -gt 0 ] && for r in "${reads[@]}"; do printf 'READ:%s\n' "$r" >>"$ARGS_DUMP"; done
 fi
 [ "${STUB_MODE:-good}" = empty ] && exit 0           # blocked backend: exit 0, no output, no edit
 printf 'aider-stub: edited for %s\n' "${RELAY_AGENT:-?}"   # stdout -> non-empty transcript
@@ -239,6 +242,19 @@ fi
 grep -qx "READ:$ARTIFACT" "$ARGS_DUMP" 2>/dev/null \
   && pass "GH-119: the reviewed artifact itself is passed as --read" \
   || fail "GH-119: artifact path not passed as --read"
+
+# --- (13) GH-168: gitignore flag — must pass --add-gitignore-files so aider can read gitignored relay files
+mkdir -p "$A/ignored-dir"
+printf 'STATUS: Open\n# relay body\n' >"$A/ignored-dir/relay.md"
+printf 'ignored-dir/\n' >>"$A/.gitignore"
+git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" add -f ignored-dir/relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "ignore ignored-dir" >/dev/null 2>&1
+seed_token RELAY-TURN-gh168
+ARGS_DUMP="$WORK/gh168-args.$$"
+run_shim RELAY-TURN-gh168 aider good RELAY_FILE="$A/ignored-dir/relay.md" ARGS_DUMP="$ARGS_DUMP"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-168: turn exits 0" || fail "GH-168 turn rc=$rc"
+grep -q -- "--add-gitignore-files" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-168: --add-gitignore-files passed to aider" \
+  || fail "GH-168: --add-gitignore-files missing"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
