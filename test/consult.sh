@@ -43,6 +43,9 @@ cfile="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
 gfile="$(ls "$OUT"/t-*/t.gemini.md 2>/dev/null | head -1)"
 { [ -s "$cfile" ] && grep -q "ANSWER from codex" "$cfile"; } && pass "codex transcript captured" || fail "no codex transcript"
 { [ -s "$gfile" ] && grep -q "ANSWER from gemini" "$gfile"; } && pass "gemini transcript captured" || fail "no gemini transcript"
+# GH-178 A2 non-regression: a FULL panel (both requested advisors answered) must never be stamped.
+printf '%s' "$out" | grep -q "SINGLE-MODEL" && fail "full 2/2 panel wrongly stamped degraded: $out" \
+  || pass "full panel is not stamped"
 
 # --- (2) SAFETY: advisor writes cannot leak; operator WIP preserved -----------------------------
 rm -rf "$OUT"
@@ -67,6 +70,18 @@ out="$(CODEX_RC=0 GEMINI_RC=1 STUB_WRITE=0 run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "one-model failure still exits 0 (graceful degrade)" || fail "degrade exit=$rc"
 printf '%s' "$out" | grep -q "1 answered, 1 failed" && pass "degrade reported honestly (1 answered, 1 failed)" \
   || fail "degrade not reported: $out"
+# GH-178 A2: a 2-requested/1-survived degrade must be MECHANICALLY stamped — in stdout, in the
+# surviving transcript itself, and in a format-agnostic sidecar — not just left as a stdout line an
+# operator could miss.
+printf '%s' "$out" | grep -q "SINGLE-MODEL — NOT RECONCILED" && pass "degrade stamped on stdout" \
+  || fail "stdout missing SINGLE-MODEL stamp: $out"
+cfile3="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+grep -q "SINGLE-MODEL — NOT RECONCILED" "$cfile3" 2>/dev/null && pass "degrade stamped INTO the surviving transcript" \
+  || fail "surviving transcript missing stamp: $cfile3"
+grep -q "ANSWER from codex" "$cfile3" 2>/dev/null && pass "stamped transcript still has the real answer beneath the stamp" \
+  || fail "stamping corrupted the transcript content: $cfile3"
+sidecar3="$(dirname "$cfile3")/DEGRADED-SINGLE-MODEL.txt"
+[ -s "$sidecar3" ] && pass "format-agnostic sidecar marker written" || fail "no sidecar marker at $sidecar3"
 
 # --- (4) all advisors fail -> exit 5 -----------------------------------------------------------
 rm -rf "$OUT"
@@ -111,6 +126,12 @@ out="$(CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" OPENROUTER_API_KEY="$FAKE_ORK" 
 afile="$(ls "$OUT"/t-*/t.aider.md 2>/dev/null | head -1)"
 { [ -s "$afile" ] && grep -q "ANSWER from aider" "$afile"; } && pass "aider transcript captured" || fail "no aider transcript"
 printf '%s' "$out" | grep -q "1 answered, 0 failed" && pass "aider counted as an answered advisor" || fail "aider not counted answered: $out"
+# GH-178 A2 non-regression: a DELIBERATE single-model request (--models aider alone) is not a
+# degrade — it must never get the SINGLE-MODEL stamp.
+printf '%s' "$out" | grep -q "SINGLE-MODEL" && fail "intentional single-model request wrongly stamped: $out" \
+  || pass "intentional single-model request is not stamped"
+grep -q "SINGLE-MODEL" "$afile" 2>/dev/null && fail "intentional single-model transcript wrongly stamped" \
+  || pass "intentional single-model transcript not stamped"
 
 # --- (8) AIDER no OPENROUTER_API_KEY -> that advisor fails fast (all-fail exit 5, with the remedy) --
 rm -rf "$OUT"

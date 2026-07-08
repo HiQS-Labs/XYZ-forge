@@ -268,15 +268,37 @@ done
 
 # --- collect results -----------------------------------------------------------------------------
 answered=0; failed=0; summary=""; i=0
+survivor_model=""; survivor_out=""
 while ((i < ${#PIDS[@]})); do
   pid="${PIDS[$i]}"; model="${PMODELS[$i]}"; out="${POUTS[$i]}"
   if wait "$pid"; then
     answered=$((answered + 1)); summary+=$'\n'"  [ok]   $model -> $out"
+    survivor_model="$model"; survivor_out="$out"
   else
     failed=$((failed + 1));   summary+=$'\n'"  [FAIL] $model -> $out (see transcript for error)"
   fi
   i=$((i + 1))
 done
+
+# GH-178 A2: a panel that started with MORE THAN ONE requested advisor but ended with exactly one
+# survivor is not a reconciled cross-model result — no second read happened, so treating its verdict
+# as reconciled is exactly the failure mode this consult exists to avoid. Stamp it MECHANICALLY —
+# into the surviving transcript itself, plus a format-agnostic sidecar marker — so the caveat travels
+# with the data (a future read of relay-system/<date>/... days later still sees it) instead of living
+# only in this run's stdout, which an operator can simply not have watched. Deliberately does NOT
+# fire when only one model was ever requested (--models codex alone): that is an intentional
+# single-model query, not a degrade, and existing single-model callers must stay unstamped.
+DEGRADED=0
+if ((${#PIDS[@]} > 1 && answered == 1)); then
+  DEGRADED=1
+  stamp="**SINGLE-MODEL — NOT RECONCILED** (only $survivor_model answered; $failed of ${#PIDS[@]} requested advisor(s) failed — this is one model's read, not a cross-model consult. Do not treat any claim below as cross-verified.)"
+  case "$survivor_out" in
+    *.json) : ;;  # don't corrupt structured output — the sidecar marker below still covers it
+    *) { printf '%s\n\n' "$stamp"; cat "$survivor_out"; } > "$survivor_out.stamped" \
+         && mv "$survivor_out.stamped" "$survivor_out" ;;
+  esac
+  printf '%s\n' "$stamp" > "$RUN_DIR/DEGRADED-SINGLE-MODEL.txt"
+fi
 
 # --- best-effort cost capture (gemini json mode only; never fails the consult) --------------------
 if [[ "${CONSULT_GEMINI_JSON:-0}" == "1" ]]; then
@@ -288,5 +310,6 @@ if [[ "${CONSULT_GEMINI_JSON:-0}" == "1" ]]; then
 fi
 
 printf 'consult: %d answered, %d failed -> %s%s\n' "$answered" "$failed" "$RUN_DIR" "$summary"
+((DEGRADED)) && warn "SINGLE-MODEL — NOT RECONCILED (stamped into $survivor_out and $RUN_DIR/DEGRADED-SINGLE-MODEL.txt)"
 ((answered > 0)) || { warn "all advisors failed"; exit 5; }
 exit 0
