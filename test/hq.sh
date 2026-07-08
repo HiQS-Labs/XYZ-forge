@@ -38,6 +38,8 @@ FSONLY="$TMP/repos/fsonly-app"; mkdir -p "$FSONLY/.git"
 XYZ_REG="$TMP/xyz-registry.tsv"
 { printf '# install_dir\tlast\ttick\tcommit\tcoordinated_repo\n'
   printf '%s/.xyz\t2026-07-04T00:00:00Z\t0.2.0\tcafe999\t%s\n' "$ACME" "$ACME"
+  # GH-159 regression: same path twice (e.g. from a legacy install + a current vendored install)
+  printf '%s/xyz-tick\t2026-07-04T00:00:00Z\t0.1.0\tabcdef\t%s\n' "$ACME" "$ACME"
 } > "$XYZ_REG"
 
 # --- fixture: rebalance project_registry (sqlite; optional) ---
