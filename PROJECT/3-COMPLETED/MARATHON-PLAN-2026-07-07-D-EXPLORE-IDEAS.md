@@ -1,6 +1,6 @@
 ---
 title: Marathon Plan D (2026-07-07) — explore-and-plan cluster (GH-161..164)
-status: Ready to fire (2-WORKING) — skeleton docs authored, not yet fired
+status: completed (3-COMPLETED)
 created: 2026-07-07
 updated: 2026-07-07
 owner: noel
