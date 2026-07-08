@@ -65,7 +65,7 @@ STUB_EOF
 chmod +x "$AGY_FAST_STUB"
 
 # Helper: seed a token handed to the target agent
-seed_token() { tick_a log task.created "$1" --agent claude-a >/dev/null; tick_a claim "$1" --agent claude-a --paths "z/**" >/dev/null; tick_a release "$1" --agent claude-a --to codex >/dev/null; }
+seed_token() { tick_a log task.created "$1" --agent claude-a >/dev/null; tick_a claim "$1" --agent claude-a --paths "z/**" >/dev/null; tick_a release "$1" --agent claude-a --to "$2" >/dev/null; }
 
 # ============================================================================
 # Codex shim timeout tests
@@ -73,7 +73,7 @@ seed_token() { tick_a log task.created "$1" --agent claude-a >/dev/null; tick_a 
 CODEX_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/codex-turn.sh"
 
 # --- (1) SLOW codex: cap fires -> exit 7 (not hung, not 0) ------------------
-seed_token RELAY-TURN-codex-slow
+seed_token RELAY-TURN-codex-slow codex
 t_start="$(date +%s)"
 RELAY_AGENT=codex RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-codex-slow \
   CODEX_AGENT=codex CODEX_BIN="$SLOW_STUB" CODEX_TURN_ROOT="$A" CODEX_LOG=/dev/null \
@@ -85,7 +85,7 @@ elapsed=$(( t_end - t_start ))
 [ "$elapsed" -lt 5 ] && pass "codex: turn killed fast (${elapsed}s < stub's 5s sleep)" || fail "codex: cap did not fire fast enough (${elapsed}s)"
 
 # --- (2) FAST codex: completes before cap -> exit 0 (no false-positive kill) -
-seed_token RELAY-TURN-codex-fast
+seed_token RELAY-TURN-codex-fast codex
 RELAY_AGENT=codex RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-codex-fast \
   CODEX_AGENT=codex CODEX_BIN="$FAST_STUB" CODEX_TURN_ROOT="$A" CODEX_LOG=/dev/null \
   RELAY_TURN_TIMEOUT_S=1 \
@@ -99,7 +99,7 @@ RELAY_AGENT=codex RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-codex-fast \
 AGY_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
 
 # --- (3) SLOW agy: cap fires -> exit 7 --------------------------------------
-seed_token RELAY-TURN-agy-slow
+seed_token RELAY-TURN-agy-slow agy
 t_start="$(date +%s)"
 RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-agy-slow \
   AGY_AGENT=agy AGY_BIN="$AGY_SLOW_STUB" AGY_TURN_ROOT="$A" AGY_LOG=/dev/null \
@@ -112,7 +112,7 @@ elapsed=$(( t_end - t_start ))
 
 # --- (4) FAST agy: completes before cap -> exit 0 ----------------------------
 # Re-seed token (slow run claimed then timed out; fast-stub token needs its own slot)
-seed_token RELAY-TURN-agy-fast
+seed_token RELAY-TURN-agy-fast agy
 RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-agy-fast \
   AGY_AGENT=agy AGY_BIN="$AGY_FAST_STUB" AGY_TURN_ROOT="$A" AGY_LOG="$WORK/agy-fast.log" \
   RELAY_TURN_TIMEOUT_S=1 \
@@ -125,7 +125,7 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-agy-fast \
 CLAUDE_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/claude-turn.sh"
 
 # --- (5) SLOW claude: cap fires -> exit 7 ------------------------------------
-seed_token RELAY-TURN-claude-slow
+seed_token RELAY-TURN-claude-slow claude-a
 t_start="$(date +%s)"
 RELAY_AGENT=claude-a RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-claude-slow \
   CLAUDE_AGENT=claude-a CLAUDE_BIN="$SLOW_STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
@@ -138,7 +138,7 @@ elapsed=$(( t_end - t_start ))
 [ "$elapsed" -lt 5 ] && pass "claude: turn killed fast (${elapsed}s < stub's 5s sleep)" || fail "claude: cap did not fire fast enough (${elapsed}s)"
 
 # --- (6) FAST claude: completes before cap -> exit 0 -------------------------
-seed_token RELAY-TURN-claude-fast
+seed_token RELAY-TURN-claude-fast claude-a
 RELAY_AGENT=claude-a RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-claude-fast \
   CLAUDE_AGENT=claude-a CLAUDE_BIN="$FAST_STUB" CLAUDE_TURN_ROOT="$A" CLAUDE_LOG=/dev/null \
   CLAUDE_BLOCK_CMDS="" \

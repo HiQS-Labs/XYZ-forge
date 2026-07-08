@@ -4,7 +4,7 @@ import sys
 import tempfile
 import subprocess
 import shlex
-from rtl import RelayTurnLib
+from rtl import RelayTurnLib, claim_task_or_exit
 
 def die(msg):
     print(f"agy-turn: {msg}", file=sys.stderr)
@@ -142,6 +142,7 @@ def main():
     drift_brief = rtl.drift_brief(me, tick_repo_root)
     if drift_brief:
         prompt = drift_brief + "\n" + prompt
+    tick_repo_root, _tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "agy-turn")
 
     agy_log = os.environ.get("AGY_LOG", os.path.join(tempfile.gettempdir(), f"agy-turn-{os.getpid()}.log"))
     

@@ -221,5 +221,40 @@ seed_token RELAY-TURN-explicit
   [ "$rc" -eq 0 ] && pass "GH-58: resolves explicit CLAUDE_BIN -> exit 0" || fail "expected exit 0, got $rc"
 ) || exit 1
 
+# --- (13) GH-172: vendored/root-split Claude uses the harness tick binary for cost capture -----
+printf 'STATUS: Open\n# vendored relay body\n' >"$B/relay-vendored.md"
+git -C "$B" add relay-vendored.md >/dev/null 2>&1; git -C "$B" commit -q -m "seed vendored relay" >/dev/null 2>&1
+tick_a log task.created RELAY-TURN-vendored --agent dispatcher >/dev/null
+tick_a claim RELAY-TURN-vendored --agent dispatcher --paths "relay-vendored.md" >/dev/null
+tick_a release RELAY-TURN-vendored --agent dispatcher --to claude-builder >/dev/null
+before_b="$(git -C "$B" rev-parse HEAD)"
+(
+  env -u TICK_BIN RELAY_AGENT=claude-builder RELAY_FILE="$B/relay-vendored.md" RELAY_TASK=RELAY-TURN-vendored \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$B" CLAUDE_LOG="$WORK/claude-vendored.json" \
+    STUB_MODE=jsonstats TICK_REPO_ROOT="$A" bash "$SHIM" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 0 ] && pass "GH-172: vendored/root-split Claude turn succeeds without TICK_BIN" || fail "vendored/root-split Claude turn should succeed, got $rc"
+) || exit 1
+[ "$(git -C "$B" rev-parse HEAD)" != "$before_b" ] && pass "GH-172: vendored/root-split Claude turn still commits the target repo" || fail "vendored/root-split Claude turn should commit in the target repo"
+find "$A/.tick/events" -maxdepth 1 -type f -name '*RELAY-TURN-vendored*' -print0 2>/dev/null \
+  | xargs -0 grep -l '"type":"cost.tokens".*"task":"RELAY-TURN-vendored".*"tool":"claude"' >/dev/null 2>&1 \
+  && pass "GH-172: vendored/root-split Claude cost event lands in the coordination repo .tick" \
+  || fail "GH-172: coordination repo .tick missing Claude cost event for vendored/root-split run"
+
+# --- (14) GH-172: Python Claude port refuses an unowned token before any edit ------------------
+printf 'STATUS: Open\n# python vendored relay body\n' >"$B/relay-py.md"
+git -C "$B" add relay-py.md >/dev/null 2>&1; git -C "$B" commit -q -m "seed python vendored relay" >/dev/null 2>&1
+tick_a log task.created RELAY-TURN-py-unowned --agent dispatcher >/dev/null
+tick_a claim RELAY-TURN-py-unowned --agent intruder --paths "relay-py.md" >/dev/null
+before_b="$(git -C "$B" rev-parse HEAD)"
+before_relay_b="$(cksum "$B/relay-py.md")"
+(
+  env -u TICK_BIN RELAY_AGENT=claude-builder RELAY_FILE="$B/relay-py.md" RELAY_TASK=RELAY-TURN-py-unowned \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$B" CLAUDE_LOG="$WORK/claude-py-unowned.json" \
+    STUB_MODE=good TICK_REPO_ROOT="$A" XYZ_PYTHON=1 bash "$SHIM" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 5 ] && pass "GH-172: XYZ_PYTHON=1 Claude turn refuses an unowned token (exit 5)" || fail "python Claude unowned-token guard should exit 5, got $rc"
+) || exit 1
+[ "$(git -C "$B" rev-parse HEAD)" = "$before_b" ] && pass "GH-172: python Claude guard blocks commits before mutation" || fail "python Claude guard must not commit"
+[ "$(cksum "$B/relay-py.md")" = "$before_relay_b" ] && pass "GH-172: python Claude guard leaves the relay file untouched" || fail "python Claude guard should not edit the relay file"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

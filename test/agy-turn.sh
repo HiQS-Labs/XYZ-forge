@@ -188,6 +188,19 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-wt AGY_AGENT=agy 
 grep -q "agy-stub" "$A/relay.md" && pass "wt-iso: agy's relay block PRESERVED (GH-22)" || fail "GH-22: agy's relay output LOST (stale worktree copy-back overwrote ROOT)"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "wt-iso: turn committed (output not silently dropped)" || fail "GH-22: no commit — output discarded"
 
+# --- (12) GH-172 / GH-174: Python port refuses an unowned relay token before any edit ----------
+tick_a log task.created RELAY-TURN-py-unowned --agent dispatcher >/dev/null
+tick_a claim RELAY-TURN-py-unowned --agent intruder --paths "z/**" >/dev/null
+before="$(git -C "$A" rev-parse HEAD)"
+before_relay="$(cksum "$A/relay.md")"
+pylog="$WORK/agy-py-unowned.$$.log"; : >"$pylog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-py-unowned AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$pylog" STUB_MODE=good XYZ_PYTHON=1 \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 5 ] && pass "GH-172/GH-174: XYZ_PYTHON=1 agy turn refuses an unowned token (exit 5)" || fail "python agy unowned-token guard should exit 5, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "GH-172/GH-174: python agy guard blocks commits before mutation" || fail "python agy guard must not commit"
+[ "$(cksum "$A/relay.md")" = "$before_relay" ] && pass "GH-172/GH-174: python agy guard leaves relay file untouched" || fail "python agy guard should not edit the relay file"
+
 # --- (9) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
 git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "drop .tick gitignore" >/dev/null 2>&1

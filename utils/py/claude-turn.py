@@ -6,7 +6,7 @@ import subprocess
 import shlex
 import json
 import shutil
-from rtl import RelayTurnLib
+from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -50,6 +50,7 @@ def main():
     rtl = RelayTurnLib(root, xyz_root, f, allow_paths)
     
     prompt = rtl.turn_prompt(me, t, peer)
+    tick_repo_root, tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "claude-turn")
     
     claude_log = os.environ.get("CLAUDE_LOG", os.path.join(tempfile.gettempdir(), f"claude-turn-{os.getpid()}.json"))
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
@@ -141,15 +142,15 @@ def main():
             tokens_out = usage.get("output_tokens", 0)
             
             if tokens_in > 0 or tokens_out > 0:
-                tick_bin = os.environ.get("TICK_BIN", os.path.join(root, "bin", "tick"))
-                tick_env = dict(os.environ)
-                tick_env["TICK_REPO_ROOT"] = tick_repo_root
-                tick_res = subprocess.run(
-                    [tick_bin, "cost", t, "--agent", me, "--tokens-in", str(tokens_in), "--tokens-out", str(tokens_out), "--tool", "claude"],
-                    env=tick_env, capture_output=True
-                )
-                if tick_res.returncode != 0:
-                    print(f"claude-turn: tokens not captured for {t}", file=sys.stderr)
+                cost_tick_bin = tick_bin or resolve_tick_bin(tick_repo_root, xyz_root)
+                if cost_tick_bin:
+                    tick_res = subprocess.run(
+                        [cost_tick_bin, "cost", t, "--agent", me, "--tokens-in", str(tokens_in), "--tokens-out", str(tokens_out), "--tool", "claude"],
+                        env=make_tick_env(tick_repo_root),
+                        capture_output=True,
+                    )
+                    if tick_res.returncode != 0:
+                        print(f"claude-turn: tokens not captured for {t}", file=sys.stderr)
             else:
                 print(f"claude-turn: tokens not captured for {t} (zero or no stats in transcript)", file=sys.stderr)
         except Exception:

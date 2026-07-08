@@ -29,6 +29,7 @@ claim_by(){ tick_a log task.created "$1" --agent dispatcher >/dev/null; tick_a c
 
 # decide <args...> : poll relay dry-run as agent alice, echo the DECISION token
 decide(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice "$@" --dry-run 2>/dev/null | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p'; }
+decide_py(){ env -u TICK_BIN POLL_GIT_ROOT="$A" XYZ_PYTHON=1 bash "$POLL" --mode relay --agent alice "$@" --dry-run 2>/dev/null | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p'; }
 
 # --- (i) dry-run decision sequence ---------------------------------------
 handoff_to RT-mine alice
@@ -60,6 +61,10 @@ claim_by RT-parked bobp
 handoff_to RT-xmodel codex
 xm="$(decide --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-xmodel --analysis-file "$NONE" --claude-agents alice)"
 [ "$xm" = "nudge-cross-model" ] && pass "RELAY-TURN handed to non-Claude -> nudge-cross-model" || fail "expected nudge, got: $xm"
+
+handoff_to RT-py-vendored alice
+[ "$(decide_py --relay-file "$A/relay.md" --artifact "$A/art.md" --relay-task RT-py-vendored --analysis-file "$NONE")" = "run-runner" ] \
+  && pass "GH-172: XYZ_PYTHON=1 poll resolves the harness tick binary without TICK_BIN" || fail "python poll should still see my-turn without TICK_BIN"
 
 # regression (live dogfood 2026-06-15): open+handoff-to-other with EMPTY --claude-agents
 # must NOT crash on set -u (bash 3.2 empty-array expansion in is_claude_agent).

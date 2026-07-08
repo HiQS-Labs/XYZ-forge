@@ -110,6 +110,34 @@ CLAUDE_BIN="$resolved_claude"
 
 rtl_init "$ROOT" "$f" "${ALLOW_PATHS:-}"
 prompt="$(rtl_turn_prompt "$me" "$f" "$t" "${ALLOW_PATHS:-}" "${RELAY_PEER:-}")"
+# GH-68 warn-only: prepend any UNREAD cross-agent dependency-drift heads-up to the turn brief, so a
+# builder learns a peer changed a shared surface (kernel/projection/schema) since its last turn. No
+# unread drift → empty → prompt unchanged. Never blocks. (decisions/2026-07-01-cross-agent-dep-conflict.md)
+drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
+[[ -n "$drift_brief" ]] && prompt="${drift_brief}"$'\n'"${prompt}"
+
+# GH-172: Claude is a driven builder shim too, so it needs the same pre-launch ownership proof as the
+# Codex/Aider/agy shims. Otherwise a "successful" builder edit can still commit while the handed-off
+# token remains open under the old owner, and rtl_enforce has no authority to release/done it.
+claim_paths="${f#"$ROOT"/}"
+if [[ -n "${ALLOW_PATHS:-}" ]]; then
+  IFS=',' read -ra _claim_allow <<<"${ALLOW_PATHS}"
+  for _ap in "${_claim_allow[@]}"; do
+    _ap="${_ap#"${_ap%%[![:space:]]*}"}"
+    _ap="${_ap%"${_ap##*[![:space:]]}"}"
+    [[ -n "$_ap" ]] && claim_paths="$claim_paths,$_ap"
+  done
+fi
+_tickroot="${TICK_REPO_ROOT:-$ROOT}"; _tickbin="$(rtl_tick_bin "$_tickroot")"
+if [[ -x "$_tickbin" ]]; then
+  TICK_REPO_ROOT="$_tickroot" "$_tickbin" claim "$t" --agent "$me" --paths "$claim_paths" >/dev/null 2>&1 || true
+  _claimer="$(TICK_REPO_ROOT="$_tickroot" "$_tickbin" info "$t" 2>/dev/null | sed -n 's/^claimer:[[:space:]]*//p' | head -n1)"
+  if [[ "$_claimer" != "$me" ]]; then
+    printf 'claude-turn: could not establish token ownership of %s (claimer=%s, expected %s) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info %s`\n' "$t" "${_claimer:-none}" "$me" "$t" >&2
+    exit 5
+  fi
+  TICK_REPO_ROOT="$_tickroot" "$_tickbin" ping "$t" --agent "$me" >/dev/null 2>&1 || true
+fi
 
 # Transcript: $TMPDIR file, NOT the repo tree (the in-tree log guard deletes it).
 # JSON format required: the cost block (usage.input_tokens / total_cost_usd / duration_ms)
@@ -216,9 +244,13 @@ if [[ -s "$CLAUDE_LOG" ]]; then
   tokens_in="$(python3 -c "import json,sys; d=json.load(open('$CLAUDE_LOG')); print(d.get('usage',{}).get('input_tokens',0)+d.get('usage',{}).get('cache_read_input_tokens',0))" 2>/dev/null || echo 0)"
   tokens_out="$(python3 -c "import json,sys; d=json.load(open('$CLAUDE_LOG')); print(d.get('usage',{}).get('output_tokens',0))" 2>/dev/null || echo 0)"
   if [[ "$tokens_in" -gt 0 || "$tokens_out" -gt 0 ]]; then
-    "${TICK_BIN:-$ROOT/bin/tick}" cost "$t" --agent "$me" \
-      --tokens-in "$tokens_in" --tokens-out "$tokens_out" --tool claude \
-      || printf 'claude-turn: tokens not captured for %s\n' "$t" >&2
+    _cost_tickroot="${TICK_REPO_ROOT:-$ROOT}"
+    _cost_tickbin="$(rtl_tick_bin "$_cost_tickroot")"
+    if [[ -x "$_cost_tickbin" ]]; then
+      TICK_REPO_ROOT="$_cost_tickroot" "$_cost_tickbin" cost "$t" --agent "$me" \
+        --tokens-in "$tokens_in" --tokens-out "$tokens_out" --tool claude \
+        || printf 'claude-turn: tokens not captured for %s\n' "$t" >&2
+    fi
   else
     printf 'claude-turn: tokens not captured for %s (zero or no stats in transcript)\n' "$t" >&2
   fi
