@@ -48,12 +48,21 @@ Everything below is designed to be reversible, but please help it along:
 - **Create a fresh branch (or git worktree) in *both* repos you touch** — one in your clone of
   XYZ, and one in each target project where you'll run relays or install PDDA. E.g.
   `git checkout -b xyz-beta-test`. If anything goes sideways, recovery is just
-  `git checkout main` and deleting the branch.
+  `git checkout main` and deleting the branch. If you use `git worktree` directly, read
+  [WORKTREE-SAFETY.md](WORKTREE-SAFETY.md) first — a couple of its operations (force-removing a
+  worktree directory, moving/relinking one) leave stale git metadata if done by hand instead of
+  through `git worktree remove`/`repair`.
 - **What each step actually touches** (so you know how to undo it):
   - *Skill install* — symlinks skill folders into `~/.claude/skills/` (user-level). A `git pull` in your XYZ clone will silently update your installed skills. Undo: delete those symlinks. Your repos are untouched.
   - *Relay runs* — write a dated thread file under `relay-system/<date>/` plus the artifact being
     reviewed, on your branch. Undo: discard the branch.
-  - *Consult runs* — advisory only; agents work in isolated copies. Nothing to undo.
+  - *Consult runs* — advisory only; agents work in isolated copies. Nothing to undo. **Known
+    limitation:** the `agy` CLI has been observed grounding its answers against the real repo
+    instead of confining itself to its isolated copy, undermining the "isolated" guarantee for that
+    one advisor specifically. A detect-and-fail check now catches this case and hard-fails the turn
+    rather than silently returning a contaminated answer, though it isn't a complete fix yet — see
+    [#178](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/178) and
+    [#183](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/183).
   - *PDDA install* — adds scripts and an opinionated `PROJECT/` docs structure to the target repo.
     Undo: it's all ordinary tracked files on your branch, so discarding the branch fully reverts it.
 - **Prerequisites:** both the **Codex CLI** and **agy CLI** installed and pre-authenticated (XYZ
