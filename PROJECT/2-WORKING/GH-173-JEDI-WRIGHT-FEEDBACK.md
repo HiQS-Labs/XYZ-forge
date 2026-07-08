@@ -122,7 +122,7 @@ the five root-caused/evidenced items now have their own tracking issue and doc. 
 - [ ] Remaining items (D1) still need their own regression-protection pass
 - [ ] `utils/pdda/pdda.sh run` (or the narrower relevant check) is clean
 - [ ] `./validate.sh` green for touched surfaces
-- [x] Link fix commit(s) back to #173 — B3 landed 2026-07-08 alongside #178's A1/A4 in one PR (see that PR for the commit SHA)
+- [x] Link fix commit(s) back to #173 — B3 landed 2026-07-08 as `17c1dc4` via [PR #184](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/184), alongside #178's A1/A4
 
 ## What worked well (keep — regression-protect)
 - Worktree isolation + lane containment held throughout; byte-diff showed zero out-of-scope changes.
