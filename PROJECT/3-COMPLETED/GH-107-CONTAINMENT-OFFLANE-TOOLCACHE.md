@@ -2,9 +2,9 @@
 gh_issue: 107
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/107
 title: "Containment reverts a complete, passing turn when the builder writes an off-lane tool-cache dir (.codebase-memory/) [sibling of #54]"
-status: captured 2026-07-04, rated — kernel zone, Opus-serial track (not a parallel Sonnet lane)
+status: SHIPPED 2026-07-04 (`524d345`, on `main`) — kernel zone, built on the Opus-serial track as specified
 created: 2026-07-04
-updated: 2026-07-04
+updated: 2026-07-08
 owner: noel
 doc_type: bugfix
 goal: >
@@ -30,7 +30,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-04 from a real vendored-install marathon dogfood field report (2 of 3; sibling of #54's fs-touching-test containment gap). Rated. **Kernel zone (`relay-turn-lib.sh`) — this is the containment core; per this repo's own model-assignment convention, kernel-correctness changes route to Opus-serial, not a parallel Sonnet lane.** | Build: an opt-in `CONTAINMENT_IGNORE`-style exemption in `rtl_worktree_end`'s off-lane detection loop. |
+| **SHIPPED 2026-07-04 (`524d345`, on `main`).** Built on the kernel/Opus-serial track as specified — not a parallel Sonnet lane. `rtl_is_containment_ignored()` added to `relay-automation/relay-turn-lib.sh:345-364` and called in `rtl_worktree_end`'s off-lane loop before the `RTL_WT_OFFLANE=1` fallthrough. Built-in list (`.codebase-memory`, `.aider*`, `node_modules/.cache`), root-anchored, extended by the comma-separated `CONTAINMENT_IGNORE` env var (empty by default → default behavior byte-for-byte unchanged). Kernel-required [decisions record](../../decisions/2026-07-04-containment-ignore-toolcache.md) written alongside. Coverage: `test/worktree-isolation.sh` cases 7–9 (built-in exempted, `CONTAINMENT_IGNORE` glob exempted, and a control asserting a non-built-in path *without* the env still exits 6) — **31/31 green**, re-verified 2026-07-08. Python-layer inheritance asserted via `rtl.py` in `test/test_python_layer.py:118` (GH-112/#134 parity lane). | Nothing — item complete; issue #107 verified **CLOSED** (2026-07-08). The four-day ROADMAP staleness that hid this item's shipped state is filed as [#189](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/189). |
 
 ## Problem (grounded in the current code)
 
@@ -84,17 +84,30 @@ model and is explicitly deferred, not built here).
 
 ## Definition of done
 
-- [ ] `rtl_is_containment_ignored()` added to `relay-turn-lib.sh`, checked in `rtl_worktree_end`'s
-      off-lane loop before the final off-lane fallthrough.
-- [ ] Default behavior (no `CONTAINMENT_IGNORE` set, no built-in match) is byte-for-byte unchanged —
-      an untracked non-cache-dir path still trips off-lane exactly as today.
-- [ ] A path matching the built-in default list (e.g. `.codebase-memory/`) no longer trips off-lane;
+- [x] `rtl_is_containment_ignored()` added to `relay-turn-lib.sh`, checked in `rtl_worktree_end`'s
+      off-lane loop before the final off-lane fallthrough. → `relay-turn-lib.sh:345-364`
+- [x] Default behavior (no `CONTAINMENT_IGNORE` set, no built-in match) is byte-for-byte unchanged —
+      an untracked non-cache-dir path still trips off-lane exactly as today. → asserted by the
+      control case, `test/worktree-isolation.sh:163-169` (still exits 6, makes no commit)
+- [x] A path matching the built-in default list (e.g. `.codebase-memory/`) no longer trips off-lane;
       the rest of the turn's allowlisted changes still copy back and commit normally.
-- [ ] `CONTAINMENT_IGNORE` env var extends the built-in list without needing a code change.
-- [ ] New `test/relay-turn-lib.sh`-adjacent coverage (or extend an existing containment test file)
+- [x] `CONTAINMENT_IGNORE` env var extends the built-in list without needing a code change.
+      → `test/worktree-isolation.sh:155-160`
+- [x] New `test/relay-turn-lib.sh`-adjacent coverage (or extend an existing containment test file)
       for: built-in-ignored path exempted, `CONTAINMENT_IGNORE`-supplied path exempted, an
-      unrelated untracked path still trips off-lane as before.
-- [ ] `bash validate.sh` green.
+      unrelated untracked path still trips off-lane as before. → `test/worktree-isolation.sh`
+      cases 7–9, plus an assertion that the ignored cache dir is discarded with the worktree and
+      never copied back to `RTL_ROOT`.
+- [x] `bash validate.sh` green. — green at ship time (Plan C integration, 2026-07-04, exit 0). A
+      2026-07-08 re-run exits 1, but **only** on two environmental gaps unrelated to this change and
+      already documented in CHANGELOG: `acorn-extract.sh` (npm `acorn` module absent) and
+      `python:test_python_layer.py` (`pytest` absent). This item's covering gate,
+      `test/worktree-isolation.sh`, is 31/31.
+
+**Kernel-track extra (required by this doc's own blast-radius section):**
+
+- [x] `decisions/` record written alongside the code change →
+      [2026-07-04-containment-ignore-toolcache.md](../../decisions/2026-07-04-containment-ignore-toolcache.md)
 
 ## Reversibility & blast radius
 
