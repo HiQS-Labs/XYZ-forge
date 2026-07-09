@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan E (2026-07-07) — acorn-integration + aider-turn.sh + hq-resolve bugfix cluster
-status: 4 of 5 lanes shipped (PR #179, merged 2026-07-08) + #168's own follow-up (#186) — only #186 still fireable
+status: All 5 lanes complete — #159/#168/#169/#175 merged (PR #179); #186 built + Approved on local branch `marathon/gh-186-aider-vendor-version-drift-2026-07-09`, not yet pushed/PR'd
 created: 2026-07-07
-updated: 2026-07-08
+updated: 2026-07-09
 owner: noel
 branch: main
 doc_type: project
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **All four original lanes (#159, #168, #169, #175) fired and shipped together as PR #179 "Marathon Plan E Build", merged to `main` 2026-07-08 (`39729a0`)** — confirmed in the working tree: `src/acorn-extract.js` present (#169), `hq_xyz_lookup`'s `seen_coords` dedup present (#159), `relay-automation/consult.sh` attestation parsing present (#175's A3), and #168's original `--add-gitignore-files` fix landed (then separately revisited — see below). Note: issues #159/#169/#175 are still **open** on GitHub despite the merge — not yet closed out. Reviewing #168's merged fix surfaced a live version-drift risk 2026-07-08 (aider upstream had since dropped the flag PR #179 added), fixed ad-hoc via `775380c` on an unrelated branch, and filed as **#186** — the only lane in this doc still open/fireable. | **Close out #159/#169/#175 on GitHub** (code already shipped) — operator call, not automatic. **Fire #186** — the version-drift follow-up, not yet built. |
+| **All five lanes now complete.** #159/#168/#169/#175 shipped together as PR #179, merged to `main` 2026-07-08 (`39729a0`); #159/#169/#175 closed on GitHub 2026-07-08. **#186 built and Approved 2026-07-09** via a live codex-builder/agy-reviewer marathon relay (`MARATHON-GH186-TURN`, 2 rounds): runtime `--add-gitignore-files` detection added, `test/aider-turn.sh` extended to 44 cases (all passing), plus a real secondary bug agy found (`ALLOW_PATHS` env leakage breaking Case 12) fixed in round 2. `bash validate.sh` green except 2 confirmed pre-existing/unrelated failures. Both review rounds hit a detector false positive — a second instance of GH-183's pattern, filed as [#187](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/187) — requiring manual commit recovery (verified against raw transcripts each time, not just trusted). | **Operator call:** push `marathon/gh-186-aider-vendor-version-drift-2026-07-09` and open a PR (or merge directly). |
 
 ## Why this cluster, why now
 
@@ -84,15 +84,12 @@ tick — zone `shim`, not `kernel`.
 | #168 | aider-turn.sh missing `--add-gitignore-files` | ✅ **Shipped** (PR #179), then the flag was found obsolete and dropped again via a separate later commit (`775380c`) — see #186 | `relay-automation/aider-turn.sh` (+test) | 1/1/1 |
 | #169 | Acorn first-pass integration | ✅ **Shipped** (PR #179) — `src/acorn-extract.js` + `acorn`/`acorn-walk` deps confirmed live | new dependency entry + new utility module + test | 2/1/2 |
 | #175 | #173 feedback Phase-1 low-fruit | ✅ **Shipped** (PR #179) — B4/D2/A3 confirmed live in `README.md` + `relay-automation/consult.sh` | `README.md` + bring-up docs + `relay-automation/consult.sh` (+test) | 2/1/2 |
-| #186 | aider-turn.sh vendored-install version drift on the gitignore flag (follow-up to #168) | **Not yet built.** Version-aware flag detection/guard + extended regression test | `relay-automation/aider-turn.sh` (+test) | 2/2/2 |
+| #186 | aider-turn.sh vendored-install version drift on the gitignore flag (follow-up to #168) | ✅ **Built + Approved 2026-07-09** (branch `marathon/gh-186-aider-vendor-version-drift-2026-07-09`, local, not yet merged) — runtime flag detection + `test/aider-turn.sh` extended to 44/44 passing, plus a real secondary bug fix (env leakage in `test/_setup.sh`) | `relay-automation/aider-turn.sh`, `test/aider-turn.sh`, `test/_setup.sh` | 2/2/2 |
 
 ## Recommended waves
 
-**This marathon is effectively closed except for one lane: #186.** #159/#168/#169/#175 shipped
-together in PR #179 and need no further firing — only a GitHub close-out (operator call).
-
-**Wave 1 — solo:** #186 (no concurrent lane touches `aider-turn.sh` now that #168 has landed). No
-kernel track — #186 doesn't touch containment, tick, or the relay kernel core.
+**This marathon is complete — all 5 lanes done.** #159/#168/#169/#175 shipped in PR #179; #186 is
+built and Approved on its own local branch, awaiting an operator push/PR/merge decision.
 
 ## Execution contract
 
@@ -120,20 +117,16 @@ kernel track — #186 doesn't touch containment, tick, or the relay kernel core.
 
 </details>
 
-## How to fire
+## How this was fired (for the record)
 
-```
-utils/swarm-preflight.sh --gh-issue 186   # or --project-doc PROJECT/2-WORKING/GH-186-*.md
-   → ready packet (candidate/freshness/fix-still-required + lane assignment)
-relay-automation/marathon-drive.sh --phase-brief <brief.md> --reviewer <codex|agy> \
-  --artifact relay-automation/aider-turn.sh,test/aider-turn.sh --relay-task MARATHON-GH186-TURN
-   → build→gate→review, contained
-```
+`utils/swarm-preflight.sh --gh-issue 186` → ready packet → `relay-automation/marathon-drive.sh`
+(codex builder, agy reviewer) for round 1, then a direct `relay-drive.sh` + `marathon-agent.sh`
+continuation for round 2 (marathon-drive.sh's own re-render step would have clobbered the
+already-committed round 1). Both review rounds' automated commits were killed by the [#187](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/187)
+false positive; both were manually recovered after verifying the raw transcripts showed no actual
+containment violation.
 
-GH-186's doc carries a `Swarm Preflight Contract` JSON block and was promoted to `PROJECT/2-WORKING/`
-(`swarm-preflight.sh` requires the capture doc under `2-WORKING/`, per `GUIDING-PRINCIPLES.md` §11).
-
-#159/#168/#169/#175 are already shipped (PR #179) — no preflight/fire needed for them.
+All 5 lanes are now done — nothing left to fire in this marathon.
 
 ---
 

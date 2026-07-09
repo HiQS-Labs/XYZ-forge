@@ -2,9 +2,9 @@
 gh_issue: 186
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/186
 title: "aider-turn.sh: --add-gitignore-files removal (775380c) unverified against vendored installs on older aider — risk of silently reopening GH-168"
-status: Active (2-WORKING) — promoted for firing via Marathon Plan E's follow-up lane
+status: Built + Approved (marathon/gh-186-aider-vendor-version-drift-2026-07-09, local, not yet merged) — validate.sh green
 created: 2026-07-08
-updated: 2026-07-08
+updated: 2026-07-09
 owner: noel
 doc_type: bug
 complexity: 2
@@ -48,7 +48,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Filed 2026-07-08 while reviewing `775380c`; queued into Marathon Plan E as a follow-up lane to GH-168 (same file). Not yet built. | Fire the lane: add runtime detection of `--add-gitignore-files` support (or a documented minimum-version guard) to `aider-turn.sh`, and extend the GH-168 regression test to cover both an old-aider and current-aider flag-support scenario. |
+| **Built and Approved 2026-07-09** via a codex-builder/agy-reviewer marathon relay (`MARATHON-GH186-TURN`, 2 rounds). Codex added runtime detection of `--add-gitignore-files` support (probes `aider --help`), extended `test/aider-turn.sh` case 13 to cover both old-aider and current-aider scenarios; agy's round 1 review found a real, separate pre-existing bug (`ALLOW_PATHS` env leakage breaking Case 12) which codex fixed in round 2 by expanding `test/_setup.sh`'s scrubber; agy Approved round 2 ("all 44 test cases passed, including the previously failing Case 12"). Both review rounds hit the same detector false positive (filed as [#187](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/187), a second instance of GH-183's pattern) and required manual commit recovery — verified against the raw transcripts before recovering, not just trusted. `bash test/aider-turn.sh` 44/0; `bash validate.sh` green except 2 confirmed pre-existing/unrelated failures (`acorn-extract.sh` — missing `node_modules`, this clone never ran `npm install`; `test_python_layer.py` — missing `pytest`). Sits on local branch `marathon/gh-186-aider-vendor-version-drift-2026-07-09`, not yet pushed/PR'd. | Operator call: push the branch and open a PR (or merge directly). |
 
 ## The bug
 
@@ -71,18 +71,18 @@ aider-version assumption.
 
 ### Checklist
 
-- [ ] Add runtime detection (or an explicit version guard) for `--add-gitignore-files` support in
+- [x] Add runtime detection (or an explicit version guard) for `--add-gitignore-files` support in
       `aider-turn.sh`.
-- [ ] Extend the GH-168 regression test (`test/aider-turn.sh` case 13) to assert correct behavior
+- [x] Extend the GH-168 regression test (`test/aider-turn.sh` case 13) to assert correct behavior
       under both an old-aider (flag required) and current-aider (flag absent) scenario.
-- [ ] Confirm `bash test/aider-turn.sh` stays green with no behavior change for the common case.
+- [x] Confirm `bash test/aider-turn.sh` stays green with no behavior change for the common case.
 
 ### QA checklist — Phase 0
 
-- [ ] The fix makes the flag decision version-aware, not a re-hardcode in either direction.
-- [ ] The regression test would have caught both GH-168 (flag missing, needed) and this issue
+- [x] The fix makes the flag decision version-aware, not a re-hardcode in either direction.
+- [x] The regression test would have caught both GH-168 (flag missing, needed) and this issue
       (flag present, no longer valid) had it existed before either fix.
-- [ ] No regression in `test/aider-turn.sh`'s existing cases.
+- [x] No regression in `test/aider-turn.sh`'s existing cases.
 
 ## Swarm Preflight Contract
 
