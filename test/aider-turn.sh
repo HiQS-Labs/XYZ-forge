@@ -31,6 +31,16 @@ STUB="$WORK/aider"
 cat >"$STUB" <<'STUB_EOF'
 #!/usr/bin/env bash
 set -u
+for arg in "$@"; do
+  if [ "$arg" = "--help" ]; then
+    if [ "${STUB_HAS_ADD_GITIGNORE_FILES:-0}" = 1 ]; then
+      printf '  --add-gitignore-files  Add gitignored files to the chat\n'
+    else
+      printf 'aider help without the legacy gitignore flag\n'
+    fi
+    exit 0
+  fi
+done
 # GH-119 test hook: when the test sets ARGS_DUMP, record exactly what the shim constructed —
 if [ -n "${ARGS_DUMP:-}" ]; then
   echo "$@" > "${ARGS_DUMP}.all"
@@ -243,30 +253,41 @@ grep -qx "READ:$ARTIFACT" "$ARGS_DUMP" 2>/dev/null \
   && pass "GH-119: the reviewed artifact itself is passed as --read" \
   || fail "GH-119: artifact path not passed as --read"
 
-# --- (13) GH-168: gitignore relay file still reaches aider — via --no-gitignore + explicit --file, not
-# via --add-gitignore-files. That flag was aider's original 2026 fix for GH-168, but has since been
-# removed upstream (confirmed gone from `aider --help` / aider/args.py as of aider-chat 0.82.3) and now
-# hard-fails argparse before aider starts, breaking every turn. Empirically re-verified against real
-# aider 0.82.3 (2026-07-08): --no-gitignore + an explicit --file <gitignored-path> still adds the file to
-# the chat (aider prints a "Skipping ... that matches gitignore spec" warning but proceeds anyway) — so
-# the actual GH-168 contract is upheld by --file construction, not by that now-nonexistent flag.
+# --- (13) GH-168 + GH-186: gitignore relay file still reaches aider across version drift. Old aider
+# builds may still advertise/require --add-gitignore-files, while current builds removed it and now
+# hard-fail if the flag is passed. The shim must decide from runtime CLI support, not hardcode either.
 mkdir -p "$A/ignored-dir"
 printf 'STATUS: Open\n# relay body\n' >"$A/ignored-dir/relay.md"
 printf 'ignored-dir/\n' >>"$A/.gitignore"
 git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" add -f ignored-dir/relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "ignore ignored-dir" >/dev/null 2>&1
 seed_token RELAY-TURN-gh168
 ARGS_DUMP="$WORK/gh168-args.$$"
-run_shim RELAY-TURN-gh168 aider good RELAY_FILE="$A/ignored-dir/relay.md" ARGS_DUMP="$ARGS_DUMP"; rc=$?
-[ "$rc" -eq 0 ] && pass "GH-168: turn exits 0" || fail "GH-168 turn rc=$rc"
-grep -q -- "--add-gitignore-files" "${ARGS_DUMP}.all" 2>/dev/null \
-  && fail "GH-168: --add-gitignore-files still passed — this flag no longer exists in current aider and will hard-fail argparse" \
-  || pass "GH-168: obsolete --add-gitignore-files flag NOT passed"
+run_shim RELAY-TURN-gh168 aider good RELAY_FILE="$A/ignored-dir/relay.md" ARGS_DUMP="$ARGS_DUMP" STUB_HAS_ADD_GITIGNORE_FILES=1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-168/GH-186: old aider turn exits 0" || fail "GH-168 old-aider turn rc=$rc"
 grep -q -- "--no-gitignore" "${ARGS_DUMP}.all" 2>/dev/null \
-  && pass "GH-168: --no-gitignore still passed" \
-  || fail "GH-168: --no-gitignore missing"
+  && pass "GH-168/GH-186: old aider still gets --no-gitignore" \
+  || fail "GH-168 old-aider: --no-gitignore missing"
+grep -q -- "--add-gitignore-files" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-168/GH-186: old aider gets --add-gitignore-files when supported" \
+  || fail "GH-168 old-aider: legacy --add-gitignore-files flag missing"
 grep -qx "FILE:ignored-dir/relay.md" "$ARGS_DUMP" 2>/dev/null \
-  && pass "GH-168: gitignored relay file still passed as --file" \
-  || fail "GH-168: ignored-dir/relay.md not passed as --file (dump: $(cat "$ARGS_DUMP" 2>/dev/null))"
+  && pass "GH-168/GH-186: old aider still sees the gitignored relay file as --file" \
+  || fail "GH-168 old-aider: ignored-dir/relay.md not passed as --file (dump: $(cat "$ARGS_DUMP" 2>/dev/null))"
+
+tick_a release RELAY-TURN-gh168 --agent aider --to boss >/dev/null 2>&1 || true
+seed_token RELAY-TURN-gh186
+ARGS_DUMP="$WORK/gh186-args.$$"
+run_shim RELAY-TURN-gh186 aider good RELAY_FILE="$A/ignored-dir/relay.md" ARGS_DUMP="$ARGS_DUMP" STUB_HAS_ADD_GITIGNORE_FILES=0; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-168/GH-186: current aider turn exits 0" || fail "GH-186 current-aider turn rc=$rc"
+grep -q -- "--add-gitignore-files" "${ARGS_DUMP}.all" 2>/dev/null \
+  && fail "GH-186: current aider must NOT receive removed --add-gitignore-files flag" \
+  || pass "GH-186: current aider omits the removed --add-gitignore-files flag"
+grep -q -- "--no-gitignore" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-186: current aider still gets --no-gitignore" \
+  || fail "GH-186 current-aider: --no-gitignore missing"
+grep -qx "FILE:ignored-dir/relay.md" "$ARGS_DUMP" 2>/dev/null \
+  && pass "GH-186: current aider still sees the gitignored relay file as --file" \
+  || fail "GH-186 current-aider: ignored-dir/relay.md not passed as --file (dump: $(cat "$ARGS_DUMP" 2>/dev/null))"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

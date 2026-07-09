@@ -78,3 +78,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GitHub-Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH186-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GitHub-Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh186/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+Files touched: `relay-automation/aider-turn.sh`, `test/aider-turn.sh`, `phases/gh186/RELAY.md`
+
+Implemented runtime detection for `--add-gitignore-files` in `relay-automation/aider-turn.sh` by probing `"$AIDER_BIN" --help` and only appending the legacy flag when the installed aider advertises it. `--no-gitignore` remains unconditional, so current aider builds avoid the removed flag while older vendored installs can still receive it.
+
+Extended `test/aider-turn.sh` case 13 so the stub now answers `--help` and simulates both surfaces: old aider with `--add-gitignore-files` support and current aider without it. The regression now asserts the gitignored relay file is still passed as `--file` in both cases, and that the legacy flag is present only for the old-aider path.
+
+Verification: `bash -n relay-automation/aider-turn.sh test/aider-turn.sh test/_setup.sh`

@@ -169,18 +169,28 @@ AIDER_LOG="${AIDER_LOG:-${TMPDIR:-/tmp}/aider-turn-$$.log}"
 # edits. (`--map-tokens 0` already suppresses the `.aider.tags.cache.*` repo-map; `--no-analytics` the rest.)
 AIDER_AUX_DIR="${AIDER_AUX_DIR:-${TMPDIR:-/tmp}/aider-aux-$$}"; mkdir -p "$AIDER_AUX_DIR" 2>/dev/null || true
 
+# GH-186: vendored installs can run older aider builds where --add-gitignore-files still exists and
+# is needed for gitignored relay files, while current aider releases removed it and now hard-fail on
+# the flag. Probe the installed binary's actual CLI surface instead of hardcoding either behavior.
+aider_supports_add_gitignore_files() {
+  local _help
+  _help="$("$AIDER_BIN" --help 2>/dev/null)" || return 1
+  grep -q -- '--add-gitignore-files' <<<"$_help"
+}
+
 # Build the aider invocation. --no-auto-commits is LOAD-BEARING (see WHY #2). AIDER_FLAGS is an escape
 # hatch for version-specific flag differences.
 #
-# GH-168 follow-up (2026-07-08): `--add-gitignore-files` was removed from aider's CLI upstream (confirmed
-# gone from `aider --help` / aider/args.py as of aider-chat 0.82.3, the current PyPI release) and passing
-# it now hard-fails argparse before aider even starts ("unrecognized arguments"), breaking every aider
-# turn. Empirically re-verified GH-168's original concern still holds without it: `--no-gitignore` plus
-# an explicit `--file <gitignored-path>` still adds the file to the chat on 0.82.3 (aider prints a
-# "Skipping ... that matches gitignore spec" warning but proceeds anyway) — so dropping the flag does not
-# reopen GH-168, it just removes an argument aider no longer recognizes.
+# GH-168 + GH-186: old aider builds may still need --add-gitignore-files for gitignored relay files,
+# while current aider releases removed the flag entirely. Always pass --no-gitignore; add the legacy
+# flag only when the installed aider advertises it in --help.
 turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
-aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits --no-gitignore
+gitignore_args=(--no-gitignore)
+if aider_supports_add_gitignore_files; then
+  gitignore_args+=(--add-gitignore-files)
+fi
+aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits
+            "${gitignore_args[@]}"
             --no-check-update --no-analytics --no-show-model-warnings --no-stream --map-tokens 0
             --chat-history-file "$AIDER_AUX_DIR/chat.history.md"
             --input-history-file "$AIDER_AUX_DIR/input.history"
