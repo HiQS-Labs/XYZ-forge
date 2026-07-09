@@ -94,6 +94,19 @@ CONSULT_ROOT="$WORK/plain" CODEX_BIN="$STUB" GEMINI_BIN="$STUB" \
   bash "$CONSULT" --prompt "x" --out "$WORK/pout" --label t --models codex >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 3 ] && pass "non-git root refused (exit 3)" || fail "non-git root exit=$rc (expected 3)"
 
+# --- (5b) GH-178 A1: advisor dispatch is a data table (ADV_NAMES/ADV_RUNFNS), not a case statement.
+# An unknown model name is skipped with a warning, not treated as a fatal error, and does not stop a
+# VALID model in the same --models list from still running.
+rm -rf "$OUT"
+out5b="$(CONSULT_ROOT="$A" CODEX_BIN="$STUB" bash "$CONSULT" --prompt "x" --out "$OUT" --label t --models "codex,nosuchvendor" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "unknown model alongside a valid one still exits 0" || fail "unknown-model run exit=$rc (expected 0)"
+printf '%s' "$out5b" | grep -q "unknown model 'nosuchvendor' — skipping" \
+  && pass "unknown model name warned and skipped (not treated as a case fallthrough)" \
+  || fail "missing unknown-model warning: $out5b"
+[ -f "$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)" ] \
+  && pass "the valid model in the list still ran despite the unknown sibling" \
+  || fail "valid model did not run alongside an unknown one"
+
 # --- (6) per-advisor timeout: a hung advisor is killed and counted as failed -------------------
 # Slow stub sleeps past a 1s cap; single-model run must end (not hang) and exit 5 (its only advisor died).
 SLOW="$WORK/slow-stub"
@@ -174,6 +187,69 @@ out="$(env -u OPENROUTER_API_KEY CONSULT_ROOT="$A" AIDER_BIN="$AIDER_STUB" \
   bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models aider 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "LM Studio base URL answers with no OPENROUTER_API_KEY (exit 0)" || fail "lmstudio seam exit=$rc ($out)"
 printf '%s' "$out" | grep -q "1 answered, 0 failed" && pass "LM Studio-backed aider counted answered" || fail "lmstudio not counted: $out"
+
+# --- (12) GH-178 A4 (scoped slice): an advisor answer with ZERO file:line/quote citations anywhere ----
+# gets mechanically stamped NO FIRSTHAND VERIFICATION CITED — stdout, prepended-into-transcript, and a
+# per-advisor sidecar file. This is presence/absence only, not accuracy verification.
+NOCITE_STUB="$WORK/nocite-stub"
+cat >"$NOCITE_STUB" <<'EOF'
+#!/usr/bin/env bash
+printf 'ANSWER: this looks correct.\n[Pass] no issues found\nRECOMMENDATION: ship\n'
+EOF
+chmod +x "$NOCITE_STUB"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" CODEX_BIN="$NOCITE_STUB" CODEX_FLAGS=" " \
+  bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "uncited-answer run still exits 0 (mechanical stamp only, not a failure)" || fail "uncited-answer exit=$rc"
+printf '%s' "$out" | grep -q "NO FIRSTHAND VERIFICATION CITED for: codex" && pass "uncited answer warned on stdout" \
+  || fail "stdout missing NO FIRSTHAND VERIFICATION CITED warning: $out"
+ncfile="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+grep -q "NO FIRSTHAND VERIFICATION CITED" "$ncfile" 2>/dev/null && pass "uncited answer stamped INTO the transcript" \
+  || fail "transcript missing NO FIRSTHAND VERIFICATION CITED stamp: $ncfile"
+grep -q "ANSWER: this looks correct." "$ncfile" 2>/dev/null && pass "stamping preserved the real answer beneath it" \
+  || fail "stamping corrupted the transcript content: $ncfile"
+sidecar4="$(dirname "$ncfile")/t.codex.NO-CITATION.txt"
+[ -s "$sidecar4" ] && pass "per-advisor NO-CITATION sidecar file written" || fail "no sidecar marker at $sidecar4"
+
+# --- (13) GH-178 A4 non-regression: an advisor answer where EVERY claim is cited near itself (quote
+# or file:line) is NOT stamped. Each claim carries its OWN nearby citation (not just one citation
+# somewhere in the transcript) — see test (14) below for why that distinction matters post-follow-up.
+CITE_STUB="$WORK/cite-stub"
+cat >"$CITE_STUB" <<'EOF'
+#!/usr/bin/env bash
+printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\n[Pass] verified — see relay-automation/consult.sh:266\nRECOMMENDATION: ship\n'
+EOF
+chmod +x "$CITE_STUB"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" CODEX_BIN="$CITE_STUB" CODEX_FLAGS=" " \
+  bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
+printf '%s' "$out" | grep -q "NO FIRSTHAND VERIFICATION CITED" && fail "cited answer wrongly stamped: $out" \
+  || pass "cited answer (quote + file:line) is not stamped"
+cfile4="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+grep -q "NO FIRSTHAND VERIFICATION CITED" "$cfile4" 2>/dev/null && fail "cited transcript wrongly stamped" \
+  || pass "cited transcript not stamped"
+[ -f "$(dirname "$cfile4")/t.codex.NO-CITATION.txt" ] && fail "sidecar wrongly written for a cited answer" \
+  || pass "no sidecar written for a cited answer"
+
+# --- (14) code-review follow-up on PR #184 (items 1 & 3): a SECOND, LATER claim with no citation
+# nearby it now gets flagged even though the transcript cites something earlier. The original A4
+# check only asked "is there a citation ANYWHERE in the whole transcript" — one early citation would
+# have excused this later uncited [Pass] claim. It now correctly does not.
+PARTIAL_CITE_STUB="$WORK/partial-cite-stub"
+cat >"$PARTIAL_CITE_STUB" <<'EOF'
+#!/usr/bin/env bash
+printf 'ANSWER: confirmed by "return true always" at relay-automation/consult.sh:266.\nLater: [Pass] this other part also looks fine\nRECOMMENDATION: ship\n'
+EOF
+chmod +x "$PARTIAL_CITE_STUB"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" CODEX_BIN="$PARTIAL_CITE_STUB" CODEX_FLAGS=" " \
+  bash "$CONSULT" --prompt "review please" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
+printf '%s' "$out" | grep -q "NO FIRSTHAND VERIFICATION CITED for: codex" \
+  && pass "a later uncited claim is flagged despite an earlier unrelated citation (per-claim, not whole-transcript)" \
+  || fail "later uncited claim NOT flagged despite an earlier citation excusing it: $out"
+pfile4="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+grep -q "this other part also looks fine" "$pfile4" 2>/dev/null && pass "stamping preserved the real answer beneath it" \
+  || fail "stamping corrupted the transcript content: $pfile4"
 
 echo "  consult: $PASS passed, $FAIL failed"
 exit 0

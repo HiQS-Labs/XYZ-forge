@@ -251,9 +251,14 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # rtl_enforce. This is the boundary an over-eager agy reviewer crossed on 2026-06-20 (it edited
   # validate.sh because the artifact sat on ALLOW_PATHS). Producer turns keep the full allowlist —
   # they legitimately build.
+  # GH-173 B3: remember reviewer-turn-ness for rtl_enforce (called AFTER the turn, by which point the
+  # agent has already flipped NEXT to the other role — rtl_is_reviewer_turn "$f" would read false then).
   if rtl_is_reviewer_turn "$f"; then
+    RTL_WAS_REVIEWER_TURN=1
     [[ -n "$csv" ]] && printf 'relay-turn: REVIEWER turn — scoping allowlist to the relay file only (ignoring ALLOW_PATHS=%s)\n' "$csv" >&2
     csv=""
+  else
+    RTL_WAS_REVIEWER_TURN=0
   fi
   local _extra p; IFS=',' read -ra _extra <<<"$csv"
   for p in "${_extra[@]:-}"; do [[ -n "$p" ]] && RTL_ALLOW+=("$p"); done
@@ -645,6 +650,99 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   RTL_VIOLATION=1
 }
 
+# GH-173 B3 / GH-178 A4 follow-up (code review on PR #184): the claim-trigger and citation regexes
+# are shared by both call sites below — rtl_check_uncited_findings's per-line downgrade, and
+# rtl_has_uncited_claim's read-only predicate (used by consult.sh's A4 stamp) — so the two stay in
+# lockstep on one definition of "claim"/"citation" instead of drifting apart.
+#   RTL_CLAIM_WORD_RE — free-form phrasing a model might use INSTEAD of the [Pass] tag to assert
+#                        correctness. Widened 2026-07-08 from a 3-word list ([Pass]/verified/
+#                        confirmed) — that list let an assertion like "looks good, no issues, ship
+#                        it" bypass the backstop entirely (none of the 3 tokens present), undermining
+#                        the "mechanical, not prompt-compliance-dependent" premise for any vocabulary
+#                        outside that short list. The [Pass] TAG itself is deliberately NOT folded
+#                        into this variable — see the warning below.
+#   RTL_CITATION_RE    — a quoted span ("..."/`...`) or a file:line reference (name:NNN).
+# WARNING — do not add `\[Pass\]` (or any other backslash-escaped literal) to either of these
+# strings. Both are passed to awk via `-v` and matched as a DYNAMIC regex (`line ~ var`); macOS's
+# default /usr/bin/awk ("one true awk") string-unescapes a -v value before compiling it as a regex,
+# which silently turns the literal string \[Pass\] into the bracket EXPRESSION [Pass] — i.e. "any
+# single P, a, or s character" — matching almost every line instead of the literal tag. Caught in
+# review of this very follow-up (the widened-vocabulary tests below false-matched an unrelated
+# [Blocker] line and a bare "RECOMMENDATION: ship" line). Reproduce with:
+#   printf 'xyz\n' | awk -v re='\[Pass\]' '$0 ~ re {print "false match: " $0}'   # prints on macOS awk
+# The [Pass] tag check MUST stay an inline `/\[Pass\]/` literal in each awk SCRIPT below (not a -v
+# value) — inline /regex/ delimiters are compiled directly, bypassing the -v string-unescape step.
+RTL_CLAIM_WORD_RE='(^|[^A-Za-z])([Vv]erified|[Cc]onfirmed|LGTM|[Ll]ooks [Gg]ood|[Cc]hecks [Oo]ut|[Aa]ll [Gg]ood|[Ww]orks [Aa]s [Ee]xpected|[Nn]o issues( found)?)([^A-Za-z]|$)'
+RTL_CITATION_RE='"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+'
+
+# GH-173 B3: mechanical uncited-"verified" check. new-relay.sh's own Reviewer template ("▶ TAKE YOUR
+# TURN" block) now ASKS for a citation on any [Pass]/"verified" finding, but a prompt instruction is
+# model compliance, not a guarantee — Jedi Wright's beta report hit exactly that gap (a "verified"
+# claim with no quote). This does NOT verify a citation is ACCURATE (out of scope, no real
+# citation-verification engine); it only catches the ABSENCE of one, mechanically, and downgrades the
+# claim in place so the caveat is structural rather than trusting the model followed the instruction.
+# A "citation" is a quoted span ("..."/`...`) or a file:line reference (name:NNN) within the next
+# RTL_CITATION_WINDOW (default 3) lines, INCLUDING the claim's own line (inline citations count).
+rtl_check_uncited_findings() {  # <relay_file_path> — rewrites the file in place
+  local f="$1" win="${RTL_CITATION_WINDOW:-3}" tmp
+  [[ -n "$f" && -f "$f" ]] || return 0
+  tmp="${f}.rtlcite.$$"
+  awk -v win="$win" -v word_re="$RTL_CLAIM_WORD_RE" -v cite_re="$RTL_CITATION_RE" '
+    { line[NR] = $0 }
+    END {
+      for (i = 1; i <= NR; i++) {
+        # already downgraded (prior pass) -> never re-flag. Required for idempotency: a prose "verified"
+        # claim is appended-to, not replaced, so the trigger word "verified" is still on the line.
+        if (line[i] ~ /\[Unverified — no citation\]/) { print line[i]; continue }
+        claim = (line[i] ~ /\[Pass\]/) || (line[i] ~ word_re)
+        if (!claim) { print line[i]; continue }
+        cited = 0
+        for (j = i; j <= NR && j <= i + win; j++) {
+          if (line[j] ~ cite_re) { cited = 1; break }
+        }
+        if (cited) { print line[i]; continue }
+        out = line[i]
+        if (out ~ /\[Pass\]/) { gsub(/\[Pass\]/, "[Unverified — no citation]", out) }
+        else { out = out "  [Unverified — no citation]" }
+        print out
+      }
+    }
+  ' "$f" > "$tmp" && mv "$tmp" "$f"
+}
+
+# GH-178 A4 follow-up (code review on PR #184): read-only predicate reused by consult.sh's advisor
+# citeless-stamp so B3 and A4 share one definition of "claim"/"citation" rather than two independent
+# implementations drifting apart. Flags <file> as having an uncited claim if EITHER (a) the file has
+# ZERO citations anywhere (the original A4 spec — "carries zero explicit citations anywhere"), OR
+# (b) at least one claim-bearing line's own RTL_CITATION_WINDOW has no citation nearby, even though
+# the file cites something elsewhere. (b) is the fix for the gap the code review flagged: the
+# original consult.sh check only asked "is there a citation ANYWHERE in the whole transcript" — one
+# incidental citation early in a long answer let several later uncited [Pass]/verified claims slip
+# through unflagged. Mirrors grep -q's convention: exit 0 (true) = flag it, exit 1 = adequately cited.
+# Missing/unreadable file fails safe (flagged), matching the old grep-based check's behavior on a
+# missing $out.
+rtl_has_uncited_claim() {  # <file>
+  local f="$1" win="${RTL_CITATION_WINDOW:-3}"
+  [[ -n "$f" && -f "$f" ]] || return 0
+  awk -v win="$win" -v word_re="$RTL_CLAIM_WORD_RE" -v cite_re="$RTL_CITATION_RE" '
+    { line[NR] = $0; if ($0 ~ cite_re) any_cite = 1 }
+    END {
+      flag = !any_cite
+      for (i = 1; i <= NR && !flag; i++) {
+        if (line[i] ~ /\[Unverified — no citation\]/) continue
+        claim = (line[i] ~ /\[Pass\]/) || (line[i] ~ word_re)
+        if (!claim) continue
+        cited = 0
+        for (j = i; j <= NR && j <= i + win; j++) {
+          if (line[j] ~ cite_re) { cited = 1; break }
+        }
+        if (!cited) flag = 1
+      }
+      exit (flag ? 0 : 1)
+    }
+  ' "$f"
+}
+
 rtl_enforce() {  # <task> <agent> <log> <tool>
   local task="$1" agent="$2" log="$3"; RTL_TOOL="$4"
   # (2) commit-bypass guard: the agent must NOT git. If HEAD moved, its edits are hidden from
@@ -704,6 +802,13 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   done < <(git -C "$RTL_ROOT" status --porcelain -z)
   rtl_trace "rtl_enforce: RTL_VIOLATION=$RTL_VIOLATION"
   ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; rtl_log_always "rtl_enforce: VIOLATION off-lane edits reverted; failing the turn"; exit 6; }
+  # GH-173 B3: downgrade any uncited [Pass]/verified Reviewer finding BEFORE staging, so the fix lands
+  # in the SAME commit as the turn instead of needing a second one. Reviewer-only (Producer findings
+  # aren't graded by this template); RTL_WAS_REVIEWER_TURN was captured in rtl_init, before NEXT flipped.
+  if [[ "${RTL_WAS_REVIEWER_TURN:-0}" == "1" && -n "${RELAY_FILE:-}" ]]; then
+    rtl_check_uncited_findings "$RELAY_FILE"
+    rtl_trace "rtl_enforce: checked $RELAY_FILE for uncited [Pass]/verified findings"
+  fi
   # (3) stage ONLY the allowlist; commit file-scoped; NO push.
   # Stage each allowlisted path INDEPENDENTLY (not one batched `git add -- a b c`): a single pathspec
   # that matches nothing — e.g. an allowlist entry the turn was permitted to create but didn't — makes
