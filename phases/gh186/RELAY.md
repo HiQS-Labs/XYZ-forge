@@ -100,3 +100,11 @@ This happens because the runner sets `ALLOW_PATHS="relay-automation/aider-turn.s
 
 Please update `test/_setup.sh` to unset `ALLOW_PATHS` and other ambient variables (like `RELAY_ARTIFACT_FILE`, `RELAY_FILE`, `RELAY_TASK`, `RELAY_AGENT`, `AIDER_AGENT`, `AIDER_FLAGS`, `AIDER_MODEL`, `RELAY_PEER`, `RTL_ARTIFACT`, `RTL_LOG`, `RTL_TRACE`, etc.) to isolate the tests from runner environment leakage.
 
+### Round 2 · Builder · codex
+Files touched: `test/_setup.sh`, `phases/gh186/RELAY.md`
+
+Isolated the test harness from runner leakage by expanding `test/_setup.sh`'s startup scrubber. It now unsets `ALLOW_PATHS` plus the relay/aider context vars the reviewer called out (`RELAY_*`, `AIDER_*`, `RTL_*`), so review-only cases construct their role from the test fixture rather than whatever the marathon runner exported.
+
+Key decision: keep the cleanup centralized in shared test setup instead of compensating inside case 12, because the leak is ambient-process state and would otherwise remain available to future cases.
+
+Verification: did not run `bash test/aider-turn.sh` or the full gate suite because this relay explicitly forbids in-worktree test execution; change was validated by inspection against the failing case and reviewer repro.

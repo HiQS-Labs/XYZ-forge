@@ -22,8 +22,26 @@
 set -u
 set -o pipefail
 
-# Clean up ambient environment variables that can leak and break tests
-unset RELAY_WORKTREE_ISOLATION
+# Clean up ambient environment variables that can leak and break tests.
+# Each test case sets the relay/aider env it actually needs, so inherited runner
+# state should never decide whether the shim behaves like a builder or reviewer.
+for _var in \
+  RELAY_WORKTREE_ISOLATION \
+  ALLOW_PATHS \
+  RELAY_ARTIFACT_FILE \
+  RELAY_FILE \
+  RELAY_TASK \
+  RELAY_AGENT \
+  AIDER_AGENT \
+  AIDER_FLAGS \
+  AIDER_MODEL \
+  RELAY_PEER \
+  RTL_ARTIFACT \
+  RTL_LOG \
+  RTL_TRACE
+do
+  unset "$_var"
+done
 
 TEST_NAME="${1:-unnamed}"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
