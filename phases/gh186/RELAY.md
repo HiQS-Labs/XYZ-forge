@@ -87,3 +87,16 @@ Implemented runtime detection for `--add-gitignore-files` in `relay-automation/a
 Extended `test/aider-turn.sh` case 13 so the stub now answers `--help` and simulates both surfaces: old aider with `--add-gitignore-files` support and current aider without it. The regression now asserts the gitignored relay file is still passed as `--file` in both cases, and that the legacy flag is present only for the old-aider path.
 
 Verification: `bash -n relay-automation/aider-turn.sh test/aider-turn.sh test/_setup.sh`
+
+### Round 1 · Reviewer · agy
+**Verdict:** Changes requested
+
+Reviewed the changes in `relay-automation/aider-turn.sh` and `test/aider-turn.sh`. The version-aware runtime detection for `--add-gitignore-files` is solid.
+
+However, running `bash test/aider-turn.sh` in the runner environment failed at Case 12:
+`FAIL: GH-119: src/target.txt not passed as --read (dump: FILE:relay.md FILE:relay-automation/aider-turn.sh FILE:test/aider-turn.sh FILE:test/_setup.sh)`
+
+This happens because the runner sets `ALLOW_PATHS="relay-automation/aider-turn.sh,test/aider-turn.sh,test/_setup.sh"` in the environment, which leaks into the test shim execution. Since the shim detects `ALLOW_PATHS` is not empty, it thinks it is a builder turn rather than a review-only turn (which expects `ALLOW_PATHS` to be empty/unset).
+
+Please update `test/_setup.sh` to unset `ALLOW_PATHS` and other ambient variables (like `RELAY_ARTIFACT_FILE`, `RELAY_FILE`, `RELAY_TASK`, `RELAY_AGENT`, `AIDER_AGENT`, `AIDER_FLAGS`, `AIDER_MODEL`, `RELAY_PEER`, `RTL_ARTIFACT`, `RTL_LOG`, `RTL_TRACE`, etc.) to isolate the tests from runner environment leakage.
+
