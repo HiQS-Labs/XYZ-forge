@@ -32,14 +32,20 @@ from pathlib import Path
 import requests
 import yaml
 
-CLASSIFY_PROMPT = """You are triaging the output of a test run for an Aider -> OpenRouter -> \
-GLM 5.2 coding pipeline. Given the command, exit code, and truncated stdout/stderr below, \
+CLASSIFY_PROMPT = """You are triaging the output of a test run for the {pipeline_name} \
+coding pipeline. Given the command, exit code, and truncated stdout/stderr below, \
 classify the result. Respond with ONLY a JSON object, no prose, no markdown fences:
 
 {{"status": "pass" or "fail",
   "severity": "critical" | "high" | "medium" | "low" | "none",
   "category": short slug e.g. "crash" | "auth_failure" | "bad_diff" | "timeout" | "no_edit" | "ok",
   "likely_cause": one short sentence}}
+
+Only call something "fail"/"crash" if there is concrete evidence: a non-zero exit code, a \
+Python traceback, an explicit error/auth-failure message, or a malformed/no-op diff. A \
+non-zero exit code is REQUIRED for "critical" or "crash". A cosmetic warning line (e.g. \
+"Unknown context window size and costs, using sane defaults") with exit code 0 and a \
+successful "Applied edit" line is NOT a failure on its own.
 
 COMMAND: {command}
 EXIT_CODE: {exit_code}
@@ -108,7 +114,28 @@ def build_variations(grid: dict) -> list[dict]:
     return combos
 
 
-def run_aider(repo: str, model: str, variation: dict, message: str, timeout: int):
+def initial_commit(repo: str) -> str:
+    return subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True, check=True,
+    ).stdout.strip()
+
+
+def reset_repo(repo: str, sha: str, keep: list[str]) -> None:
+    """Each variation reruns the same nominal task; without a reset, later
+    variations edit whatever state earlier ones left behind (e.g. a docstring
+    already applied), turning the task into a no-op and making results
+    incomparable across the grid. `keep` excludes run_variations.py's own
+    untracked log/control files, which otherwise live in this same repo dir
+    and would be wiped by `git clean` before their contents are read back."""
+    subprocess.run(["git", "reset", "--hard", sha], cwd=repo, capture_output=True, check=True)
+    clean_cmd = ["git", "clean", "-fdx"]
+    for path in keep:
+        clean_cmd += ["-e", path]
+    subprocess.run(clean_cmd, cwd=repo, capture_output=True, check=True)
+
+
+def run_aider(repo: str, model: str, variation: dict, message: str, timeout: int,
+              openai_api_base: str | None = None, openai_api_key: str | None = None):
     cmd = [
         "aider",
         "--model", model,
@@ -120,6 +147,11 @@ def run_aider(repo: str, model: str, variation: dict, message: str, timeout: int
     ]
     if not variation["auto_commits"]:
         cmd.append("--no-auto-commits")
+    # GH-147 contract: same AIDER_OPENAI_API_BASE/AIDER_OPENAI_API_KEY seam used by
+    # relay-automation/consult.sh and utils/py/consult.py, so an OpenAI-compatible
+    # endpoint (e.g. LM Studio) can stand in for the OpenRouter target.
+    if openai_api_base:
+        cmd += ["--openai-api-base", openai_api_base, "--openai-api-key", openai_api_key or "dummy"]
 
     start = time.time()
     # Run in its own process group so a timeout can kill any children aider
@@ -202,7 +234,13 @@ def main():
     ap.add_argument("--dry-run-issue", action="store_true",
                      help="build the rollup issue body but don't actually call gh "
                           "(passed through to compile_issue.py as --dry-run)")
+    ap.add_argument("--pipeline-name", default="Aider -> OpenRouter -> GLM 5.2",
+                     help="description of the pipeline under test, used in the classifier "
+                          "prompt (default matches the stock OpenRouter target)")
     args = ap.parse_args()
+
+    aider_openai_api_base = os.environ.get("AIDER_OPENAI_API_BASE")
+    aider_openai_api_key = os.environ.get("AIDER_OPENAI_API_KEY", "dummy")
 
     grid = yaml.safe_load(Path(args.variations).read_text())
     combos = build_variations(grid)
@@ -215,6 +253,8 @@ def main():
     # so a fresh invocation doesn't die on iteration 0.
     control_path.write_text(json.dumps({"action": "continue"}))
     deadline = time.time() + args.minutes * 60
+
+    base_sha = initial_commit(args.repo)
 
     print(f"[run_variations] {len(combos)} variations queued, "
           f"deadline in {args.minutes} min, logging to {log_path}")
@@ -229,7 +269,9 @@ def main():
             print(f"[run_variations] abort received: {control.get('reason', '')}")
             break
 
-        result = run_aider(args.repo, grid["model"], variation, grid["message"], timeout)
+        reset_repo(args.repo, base_sha, keep=[log_path.name, control_path.name])
+        result = run_aider(args.repo, grid["model"], variation, grid["message"], timeout,
+                            openai_api_base=aider_openai_api_base, openai_api_key=aider_openai_api_key)
 
         if result["timed_out"]:
             classification = {
@@ -240,6 +282,7 @@ def main():
             }
         else:
             prompt = CLASSIFY_PROMPT.format(
+                pipeline_name=args.pipeline_name,
                 command=result["command"],
                 exit_code=result["exit_code"],
                 stdout=result["stdout"][-1500:],
