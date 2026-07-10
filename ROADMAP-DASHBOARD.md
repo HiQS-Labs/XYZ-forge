@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 56 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 31 · 🔮 0 · 🔲 0
+Summary: 57 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 31 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-191 · ATE: generalize harness runner beyond Aider (pluggable command/flags/classifier) | — | [GH-191-ATE-GENERALIZE-HARNESS.md](PROJECT/1-INBOX/GH-191-ATE-GENERALIZE-HARNESS.md) · [#191](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/191) |
 | GH-173 · Jedi Wright beta feedback: agy worktree grounding + reconciliation-layer hardening | — | [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/2-WORKING/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) |
 | GH-175 · #173 feedback Phase-1 low-fruit slice: bring-up + README supply-chain docs + Codex preflight attestation | ✅ | [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) · [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/2-WORKING/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [Plan E](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md) · [#175](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/175) |
 | GH-178 · #173 feedback split: epistemic/reconciliation-layer hardening (agy grounding, stale warning, advisor pluggability, degraded-panel stamp, verdict provenance) | — | [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) · [GH-178-EPISTEMIC-RECONCILIATION-HARDENING.md](PROJECT/2-WORKING/GH-178-EPISTEMIC-RECONCILIATION-HARDENING.md) · [#178](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/178) |
@@ -69,10 +70,11 @@ Summary: 56 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 31 · �
 
 ## In progress
 
-Summary: 14 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 10 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 15 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-192 · HQ: bridge marathon-scan.sh's preflight-ready output into the Obsidian daily rollup | ✅ | [GH-192-HQ-MARATHON-OBSIDIAN-ROLLUP.md](PROJECT/2-WORKING/GH-192-HQ-MARATHON-OBSIDIAN-ROLLUP.md) · [#192](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/192) |
 | GH-156 · Prelight swarmability scoring using codebase-memory-mcp graph signals | 🟡 | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/2-WORKING/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
 | GH-148 · Python-layer swarm_preflight: inferred-path check lacked GH-137 sanitizer | ✅ | [relay-system/2026-07-05/gh112-134-parity-codex-review.md](relay-system/2026-07-05/gh112-134-parity-codex-review.md) · [#148](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/148) |
 | GH-146 · swe-diagram: add hub & ring (radial) layout option | ✅ | [DIAGRAM-HUB.html](PROJECT/3-COMPLETED/DIAGRAM-HUB.html) · [#146](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/146) |
