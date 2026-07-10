@@ -40,6 +40,10 @@ fi
 if [ "${STUB_MODE:-good}" = empty ]; then exit 0; fi   # silent sandbox failure: exit 0, no output
 export TICK_REPO_ROOT="$A"
 printf 'agy-stub: model response for %s\n' "$RELAY_AGENT"   # stdout -> non-empty transcript
+# GH-183/187 regression shapes: print lines containing $A (=ROOT) to stdout (-> AGY_LOG)
+[ "${STUB_MODE:-good}" = ticknarration ] && printf 'I ran: TICK_REPO_ROOT="%s" tick claim %s --agent %s --paths "z/**"\n' "$A" "$RELAY_TASK" "$RELAY_AGENT"
+[ "${STUB_MODE:-good}" = markdowncite ] && printf 'Edited [relay.md](file://%s/relay.md)\n' "$A"
+[ "${STUB_MODE:-good}" = breach ] && printf 'I found the issue at %s/secret.txt\n' "$A"
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
 "$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
 printf '\n### Round 1 · Reviewer · %s (agy-stub)\n**Verdict:** Changes requested\n' "$RELAY_AGENT" >>"$RELAY_FILE"
@@ -187,6 +191,39 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-wt AGY_AGENT=agy 
 [ "$rc" -eq 0 ] && pass "wt-iso: absolute-ROOT write turn exits 0" || fail "wt-iso good turn rc=$rc"
 grep -q "agy-stub" "$A/relay.md" && pass "wt-iso: agy's relay block PRESERVED (GH-22)" || fail "GH-22: agy's relay output LOST (stale worktree copy-back overwrote ROOT)"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "wt-iso: turn committed (output not silently dropped)" || fail "GH-22: no commit — output discarded"
+
+# --- (13) GH-183: tick-command narration in transcript must NOT false-positive isolation check ---
+seed_token RELAY-TURN-ticknarr
+printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for tick-narration test" >/dev/null 2>&1
+ticklog="$WORK/agy-ticknarr.$$.log"; : >"$ticklog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-ticknarr AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$ticklog" STUB_MODE=ticknarration RELAY_WORKTREE_ISOLATION=1 \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-183: tick-command narration -> turn succeeds (not a breach)" || fail "tick-narration should exit 0, got $rc"
+grep -q "agy-stub" "$A/relay.md" && pass "GH-183: tick-narration turn committed relay block" || fail "tick-narration: relay output lost"
+
+# --- (14) GH-187: markdown file:// citation in transcript must NOT false-positive isolation check ---
+seed_token RELAY-TURN-markdowncite
+printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for markdown-cite test" >/dev/null 2>&1
+mdlog="$WORK/agy-markdowncite.$$.log"; : >"$mdlog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-markdowncite AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$mdlog" STUB_MODE=markdowncite RELAY_WORKTREE_ISOLATION=1 \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-187: markdown file:// citation -> turn succeeds (not a breach)" || fail "markdown-cite should exit 0, got $rc"
+grep -q "agy-stub" "$A/relay.md" && pass "GH-187: markdown-cite turn committed relay block" || fail "markdown-cite: relay output lost"
+
+# --- (15) genuine breach: plain $ROOT citation still fails (exit 5) ---
+seed_token RELAY-TURN-breach
+printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for breach test" >/dev/null 2>&1
+breachlog="$WORK/agy-breach.$$.log"; : >"$breachlog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-breach AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$breachlog" STUB_MODE=breach RELAY_WORKTREE_ISOLATION=1 \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 5 ] && pass "genuine breach: plain \$ROOT citation -> fails (exit 5)" || fail "genuine breach should exit 5, got $rc"
+git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean uncommitted breach-stub block before the next case
 
 # --- (12) GH-172 / GH-174: Python port refuses an unowned relay token before any edit ----------
 tick_a log task.created RELAY-TURN-py-unowned --agent dispatcher >/dev/null

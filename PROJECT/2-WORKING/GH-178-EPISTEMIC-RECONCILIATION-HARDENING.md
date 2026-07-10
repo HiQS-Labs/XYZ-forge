@@ -2,9 +2,9 @@
 gh_issue: 178
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/178
 title: "Epistemic/reconciliation-layer hardening: agy worktree grounding, stale HEAD-visibility warning, advisor pluggability, degraded-panel stamp, verdict provenance"
-status: Active (2-WORKING) — B1, B2, A2, A1, and a scoped A4 slice shipped (2026-07-08)
+status: Active (2-WORKING) — B1, B2, A2, A1, and a scoped A4 slice shipped (2026-07-08); B1's #183/#187 caveats fixed via PR #193 (2026-07-10)
 created: 2026-07-08
-updated: 2026-07-08
+updated: 2026-07-10
 owner: noel
 doc_type: bug-fix-and-hardening
 complexity: 4
@@ -39,7 +39,7 @@ non_goals:
 
 | What was just completed | What's next |
 |---|---|
-| **PR #181 merged to `main`** (`3da16b2`, 2026-07-08) — branch `fix/gh-178-reconciliation-hardening` is now on `main`; CI green. **B2 shipped** (`3784fe8`) and **A2 shipped** (`d85da37`) — see prior rows below; both carry regression tests, `./validate.sh` green except the confirmed-pre-existing `worktree-isolation.sh` failure. **B1 shipped 2026-07-08**: Implemented detect-and-warn (verifiably scoped) boundary logic. agy's output transcript is post-hoc scanned for the real repo root path; any citation constitutes an isolation breach, failing the turn loudly instead of silently reporting a contaminated answer. Evaluated strict macOS sandbox-exec containment but it causes severe CLI hangs during repository resolution, making detection the only robust path. **A1 shipped 2026-07-08**: `consult.sh`'s `case "$m" in codex\|agy\|gemini\|aider)` dispatch is now a data table (`ADV_NAMES`/`ADV_RUNFNS` parallel arrays); adding a 5th advisor is a data addition, not a new case arm. "Add vendor N+1" recipe written into `relay-automation/README.md`. **A4 (scoped slice) shipped 2026-07-08**: reused A2's exact stdout+prepended-transcript+sidecar mechanism to mechanically stamp `NO FIRSTHAND VERIFICATION CITED — treat conclusions as conditional` on any answered advisor whose transcript carries zero explicit file:line/quoted-content citations anywhere — deliberately NOT the full firsthand-vs-asserted provenance taxonomy A4 originally asked for (see the A4 row and Non-goals below; that larger design stays future-scoped). | All five #178 items now have a shipped fix; A4's fuller taxonomy is intentionally NOT this pass's scope (see Non-goals) — a future issue can pick it up if still wanted. |
+| **B1's #183/#187 false-positive caveats fixed 2026-07-10** via [PR #193](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/193) — dogfooded through a real marathon relay (Aider/GLM-5.2 builder, agy reviewer); see "Lessons learned" below for two operational gaps found while driving it. **PR #181 merged to `main`** (`3da16b2`, 2026-07-08) — branch `fix/gh-178-reconciliation-hardening` is now on `main`; CI green. **B2 shipped** (`3784fe8`) and **A2 shipped** (`d85da37`) — see prior rows below; both carry regression tests, `./validate.sh` green except the confirmed-pre-existing `worktree-isolation.sh` failure. **B1 shipped 2026-07-08**: Implemented detect-and-warn (verifiably scoped) boundary logic. agy's output transcript is post-hoc scanned for the real repo root path; any citation constitutes an isolation breach, failing the turn loudly instead of silently reporting a contaminated answer. Evaluated strict macOS sandbox-exec containment but it causes severe CLI hangs during repository resolution, making detection the only robust path. **A1 shipped 2026-07-08**: `consult.sh`'s `case "$m" in codex\|agy\|gemini\|aider)` dispatch is now a data table (`ADV_NAMES`/`ADV_RUNFNS` parallel arrays); adding a 5th advisor is a data addition, not a new case arm. "Add vendor N+1" recipe written into `relay-automation/README.md`. **A4 (scoped slice) shipped 2026-07-08**: reused A2's exact stdout+prepended-transcript+sidecar mechanism to mechanically stamp `NO FIRSTHAND VERIFICATION CITED — treat conclusions as conditional` on any answered advisor whose transcript carries zero explicit file:line/quoted-content citations anywhere — deliberately NOT the full firsthand-vs-asserted provenance taxonomy A4 originally asked for (see the A4 row and Non-goals below; that larger design stays future-scoped). | All five #178 items now have a shipped fix; A4's fuller taxonomy is intentionally NOT this pass's scope (see Non-goals) — a future issue can pick it up if still wanted. |
 
 ## Parent & provenance
 - **Parent:** [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) — Jedi Wright beta feedback, full trip report at [GH-173-JEDI-WRIGHT-FEEDBACK.md](GH-173-JEDI-WRIGHT-FEEDBACK.md)
@@ -79,6 +79,42 @@ All evidence below carried forward verbatim from #173's Validation table (see th
 - [x] `utils/pdda/pdda.sh run` clean (checked 2026-07-08, ahead of each commit)
 - [x] `./validate.sh` green for touched surfaces (2026-07-08) — targeted runs: `test/consult.sh` (41/41), `test/relay-uncited-findings.sh` (8/8, new), plus regression sweeps of `test/agy-turn.sh`, `test/codex-turn.sh`, `test/claude-turn.sh`, `test/aider-turn.sh`, `test/shim-worktree.sh`, `test/relay-turn-trace.sh`, `test/new-relay.sh`, `test/relay-target-root.sh`, `test/relay-case-insensitive.sh`, `test/test-agy-isolation.sh` (all green). The full `validate.sh` was not re-run at first (109 tests; targeted subset is the documented default for a bounded patch) — `test/relay-file-seeding-visibility.sh`'s pre-existing `git worktree add` sandbox failure (confirmed present before this change too) is the only known non-green test in the touched-file set, unrelated to this work. **Update (same day, code-review follow-up):** ran the full `./validate.sh` (item 4 of that follow-up) — `test/consult.sh` grew to 43/43 (A4's +2 assertions), `test/relay-uncited-findings.sh` grew to 16/16. Caught and fixed a real gap the targeted-subset approach missed: `skills/relay-automation/relay-pkg.tar.gz` had drifted stale since the original PR (never rebuilt after touching `new-relay.sh`/`relay-turn-lib.sh`/`README.md`), failing `relay-pkg-freshness.sh` — rebuilt via `make-pkg.sh`, now green. Remaining 2 reds (`acorn-extract.sh` missing the `acorn` npm module, `python:test_python_layer.py` missing `pytest`) are pre-existing environment gaps, confirmed present on the PR's original head commit via `git stash` — unrelated to this work.
 - [x] Link fix commit(s) back to #178 and #173 — B2 is `3784fe8`; A2 is `d85da37`; both merged to `main` via PR #181 (`3da16b2`), 2026-07-08. **B3/A1/A4** land together as `17c1dc4` via [PR #184](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/184), linked back to both #173 and #178.
+
+## Lessons learned — GH-183/GH-187 dogfood fix (2026-07-10)
+
+GH-183 and GH-187 (both false-positive shapes on B1's transcript scan — see Scope table above)
+were fixed via a real dogfood run: Aider driving OpenRouter's GLM-5.2 as builder, agy as
+independent reviewer, `marathon-drive.sh --builder aider --reviewer agy` (worktree-isolated, no
+push). Approved on round 2; shipped as [PR #193](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/193).
+Two operational gaps surfaced while driving that run, neither in the fix itself:
+
+1. **A killed foreground driver call can leave an orphaned background process undetected.**
+   Driving `marathon-drive.sh` from an agent session risks the calling tool's own foreground
+   timeout killing the *supervising* shell — but if that shell was launched by hand-rolling
+   backgrounding (`nohup ... & disown`) instead of the calling tool's native background-execution
+   primitive, the backgrounded job can survive the kill and keep running **undetected**, racing a
+   subsequent re-fire against the same repo/worktree state. Observed symptom here: a stray
+   `git worktree` left behind and a `tick` claim stuck in `claimed` status (the shim never got to
+   hand it off). Recovery: `git worktree remove --force <path>` + `tick reap <agent> --by <caller>
+   --task <task>` — `reap` is the sanctioned path (logs an auditable `task.released` event with
+   `note: "reaped by <caller>: agent presumed crashed"`), not a hand-written `tick release`.
+   Prevention: never hand-roll backgrounding for anything that drives this harness — always use the
+   calling tool/shell's own background-execution mechanism so a timeout can't silently orphan a
+   live driver.
+2. **Any edit to `relay-automation/*.sh` needs `skills/relay-automation/make-pkg.sh` re-run before
+   `validate.sh` is truly green.** `relay-pkg-freshness.sh` catches a stale vendored
+   `relay-pkg.tar.gz`, but this is now a **second, independent recurrence on this same doc** — the
+   original B1/A4 pass hit the identical gap on 2026-07-08 (see the Phase 4 verify note above:
+   "Caught and fixed a real gap the targeted-subset approach missed... rebuilt via `make-pkg.sh`").
+   Two hits on one doc in two days suggests this is a standing trap, not a one-off — worth a rule
+   at the skill layer (added to `skills/relay-xyz/SKILL.md`'s pre-run checklist), not just a test
+   assertion discovered after the fact.
+
+Both gaps are about *driving* the harness, not about GH-178's substance (B1/B2/A1/A2/A4) — recorded
+here because this is the doc that owns the isolation-detector work where they surfaced, and because
+the pattern (killed-driver races, stale package) is exactly the kind of operational bug this issue's
+epistemic-hardening spirit cares about: don't let a silent gap between "looks done" and "verified
+done" stand.
 
 ## Non-goals
 - B3 (reviewer citation) — **shipped 2026-07-08 in #173** (this issue's non-goal only meant "not owned here"; see [GH-173-JEDI-WRIGHT-FEEDBACK.md](GH-173-JEDI-WRIGHT-FEEDBACK.md) for the fix).
