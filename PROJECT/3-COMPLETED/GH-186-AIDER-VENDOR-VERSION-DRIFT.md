@@ -2,9 +2,9 @@
 gh_issue: 186
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/186
 title: "aider-turn.sh: --add-gitignore-files removal (775380c) unverified against vendored installs on older aider — risk of silently reopening GH-168"
-status: Built + Approved (marathon/gh-186-aider-vendor-version-drift-2026-07-09, local, not yet merged) — validate.sh green
+status: Shipped — merged to `main` via PR #188 (2026-07-09); #186 closed. validate.sh green
 created: 2026-07-08
-updated: 2026-07-09
+updated: 2026-07-10
 owner: noel
 doc_type: bug
 complexity: 2
@@ -16,7 +16,7 @@ non_goals:
   - Not a broader aider-flag audit — scoped to this one flag's version sensitivity
 related:
   - relay-automation/aider-turn.sh
-  - PROJECT/2-WORKING/GH-168-AIDER-TURN-GITIGNORE-BUG.md
+  - PROJECT/3-COMPLETED/GH-168-AIDER-TURN-GITIGNORE-BUG.md
   - PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md
 goal: >
   Make relay-automation/aider-turn.sh's gitignored-relay-file handling resilient to aider CLI

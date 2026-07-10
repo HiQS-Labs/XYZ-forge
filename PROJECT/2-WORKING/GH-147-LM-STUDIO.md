@@ -24,6 +24,7 @@ related:
   - relay-automation/marathon-drive.sh
   - relay-automation/relay-drive.sh
   - utils/py/swarm_preflight.py
+  - PROJECT/2-WORKING/MARATHON-PLAN-2026-07-10-LM-STUDIO-AIDER.md
 goal: >
   Add an opt-in LM Studio-backed local-LLM lane by reusing the existing Aider/OpenAI-compatible seam
   first, then wiring that lane through consult, relay, and swarm planning without changing any
@@ -46,7 +47,7 @@ OpenRouter defaults unless LM Studio is explicitly selected.
 
 | What was just completed | What's next |
 |---|---|
-| **Phase 1 — consult + Aider truthfulness** ✅ completed 2026-07-06. The Aider consult path (both `relay-automation/consult.sh` and `utils/py/consult.py`) now (a) accepts an OpenAI-compatible base URL via `AIDER_OPENAI_API_BASE` + `AIDER_OPENAI_API_KEY` (dummy default) without requiring `OPENROUTER_API_KEY`, and (b) **fails closed**: an exit-0 Aider run whose transcript shows an auth/config error or has no visible content is now counted `[FAIL]`, not a false `[ok]`. 5 new tests in `test/consult.sh` (auth false-green, empty answer, LM Studio seam) — 23/23 green on both shell and Python ports. Phase 0 spike (Aider-bridge-first seam) remains the basis. | **Phase 2 — reuse the Aider relay seam**: thread the same LM Studio base-URL/model/dummy-key contract through the existing Aider turn shim (`utils/py/aider-turn.py`), proving review-only and single-file edit turns under containment before any planner routing. |
+| **Phase 1 — consult + Aider truthfulness** ✅ completed 2026-07-06. The Aider consult path (both `relay-automation/consult.sh` and `utils/py/consult.py`) now (a) accepts an OpenAI-compatible base URL via `AIDER_OPENAI_API_BASE` + `AIDER_OPENAI_API_KEY` (dummy default) without requiring `OPENROUTER_API_KEY`, and (b) **fails closed**: an exit-0 Aider run whose transcript shows an auth/config error or has no visible content is now counted `[FAIL]`, not a false `[ok]`. 5 new tests in `test/consult.sh` (auth false-green, empty answer, LM Studio seam) — 23/23 green on both shell and Python ports. Phase 0 spike (Aider-bridge-first seam) remains the basis. **The Aider↔LM Studio seam was additionally proven end-to-end 2026-07-10** in the ATE variation-fuzzer (PR #195), which de-risks Phase 2's contract. | **Phase 2 — reuse the Aider relay seam**: thread the same LM Studio base-URL/model/dummy-key contract through the existing Aider turn shim (`utils/py/aider-turn.py` + `relay-automation/aider-turn.sh`), proving review-only and single-file edit turns under containment before any planner routing. Grouped as the open lane in [MARATHON-PLAN-2026-07-10-LM-STUDIO-AIDER.md](MARATHON-PLAN-2026-07-10-LM-STUDIO-AIDER.md) (that file is the dispatch surface; this doc stays the canonical phase detail). |
 
 ## Table of contents
 
