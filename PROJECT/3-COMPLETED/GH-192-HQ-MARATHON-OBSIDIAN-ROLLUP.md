@@ -3,7 +3,7 @@ gh_issue: 192
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/192
 title: "HQ: bridge marathon-scan.sh's preflight-ready output into the Obsidian daily rollup"
 goal: Fold marathon-scan.sh's cross-repo preflight readiness into rollup.sh's Obsidian daily note
-status: Built + consult-reviewed 2026-07-10 (PR #196 open against main, not yet merged)
+status: Shipped — merged to `main` via PR #196 (2026-07-10); #192 closed
 created: 2026-07-09
 updated: 2026-07-10
 owner: noel
