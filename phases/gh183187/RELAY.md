@@ -87,6 +87,9 @@ approach there.
 - GH-187: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/187
 - GH-178 (parent doc): PROJECT/2-WORKING/GH-178-EPISTEMIC-RECONCILIATION-HARDENING.md
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read /Users/noelsaw/Documents/GitHub Repos/xyz-3-agents-swarm/relay-automation/DEBUG-MANTRA.md and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
 ---
 
 ▶ TAKE YOUR TURN (aider — BUILDER role)
