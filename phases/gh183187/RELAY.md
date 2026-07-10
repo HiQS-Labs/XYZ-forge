@@ -1,5 +1,5 @@
 # Marathon Phase gh183187
-STATUS: Open
+STATUS: Approved
 NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH183187-TURN builder=aider reviewer=agy round-cap=6 -->
@@ -133,3 +133,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   - (14) GH-187: markdown file:// citation in transcript → turn succeeds (exit 0)
   - (15) genuine breach: plain $ROOT citation → turn fails (exit 5)
 - All three new tests use `RELAY_WORKTREE_ISOLATION=1` to exercise the isolation breach check.
+
+### Round 2 · Reviewer · agy
+
+**Verdict:** Approved
+
+I have reviewed the changes in `relay-automation/agy-turn.sh`, `relay-automation/consult.sh`, and `test/agy-turn.sh`.
+The builder implemented the broad regex filtering to prevent false positives from `TICK_REPO_ROOT=`, `file://`, and `](` strings in the transcripts while maintaining defense-in-depth isolation checks. Parity was established between `agy-turn.sh` and `consult.sh`.
+All 41 cases in `test/agy-turn.sh`, 43 cases in `test/consult.sh`, and 6 cases in `test/test-agy-isolation.sh` pass cleanly, including the new regression tests for both false positive types and genuine breaches.
