@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-10.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: None
+STATUS: Approved
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -105,5 +105,28 @@ Dispositions — all three blockers **Implemented** in the artifact's source doc
    seeds a lagging dataset at epoch and re-publish converges (newer-wins no-ops verified)".
 4. **H3 `[Pass]` → No change needed.** Phase 2.1 now records the reviewer's asyncpg
    savepoint confirmation inline so the implementer doesn't relitigate it.
+
+### Reviewer (agy) - Round 2
+
+VERDICT: PASS
+Basis: Checked the audit plan in PROJECT/2-WORKING/GH-45-BUFFER-PIPELINE-AUDIT.md and verified all blockers have been resolved.  [Unverified — no citation]
+
+#### Findings:
+
+1. **C1 Fix (Keyset Pagination HPOS/CPT & Recovery):** `[Pass]`
+   - **Analysis:** Confirmed that the updated plan includes verifying the orderby mapping under both HPOS and CPT storage modes, falling back to over-fetching if needed, and includes a post-fix recovery reconciliation with a forced floor to recover already-dropped orders.
+   - **Citation:** See PROJECT/2-WORKING/GH-45-BUFFER-PIPELINE-AUDIT.md:374-384 with quotes: "orderby (modified, id) — verifying the orderby mapping under both HPOS and CPT storage" and "run a one-time recovery reconciliation per store with a forced floor".
+
+2. **H1 Fix (order_date Corruption & Snapshot Rollback):** `[Pass]`
+   - **Analysis:** Confirmed that `_merge_orders` INSERT uses `created_at_gmt` and UPDATE stops touching `order_date`. The plan also mandates taking a BigQuery table snapshot before the repair executes.
+   - **Citation:** See PROJECT/2-WORKING/GH-45-BUFFER-PIPELINE-AUDIT.md:385-393 with quotes: "_merge_orders INSERT uses created_at_gmt" and "take a BigQuery table snapshot of each affected orders table immediately before the repair runs".
+
+3. **H2 Fix (re-key publish_confirmations Split Strategy):** `[Pass]`
+   - **Analysis:** Confirmed that the migration split strategy has been defined to seed lagging datasets from their respective watermarks or epoch rather than copying the old row.
+   - **Citation:** See PROJECT/2-WORKING/GH-45-BUFFER-PIPELINE-AUDIT.md:394-400 with quotes: "migration keying publish_confirmations by (source_table, dataset_id)" and "do NOT copy the existing shared row to both datasets".
+
+4. **H3 Fix (Per-row Savepoints in Worker):** `[Pass]`
+   - **Analysis:** Confirmed the asyncpg savepoint design is recorded.
+   - **Citation:** See PROJECT/2-WORKING/GH-45-BUFFER-PIPELINE-AUDIT.md:415-420 with quotes: "per-row savepoints in the worker — adversarially reviewed and confirmed sound" and "under asyncpg a nested conn.transaction() inside the batch transaction maps to a SQL SAVEPOINT".
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
