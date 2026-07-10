@@ -1,6 +1,6 @@
 # Marathon Phase gh183187
 STATUS: Open
-NEXT: aider
+NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH183187-TURN builder=aider reviewer=agy round-cap=6 -->
 
@@ -113,3 +113,23 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GitHub Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH183187-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GitHub Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh183187/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 2 · Builder · aider
+
+**Files touched:** relay-automation/agy-turn.sh, relay-automation/consult.sh, test/agy-turn.sh
+
+**Key decisions:**
+- Chose approach 2 (broaden filtering) over approach 1 (remove transcript scan) to keep
+  defense-in-depth while eliminating both false-positive shapes. The filesystem-based
+  `RTL_WT_OFFLANE` check only catches off-lane file writes, not agy reading from the real repo
+  root, so removing the transcript scan entirely would weaken real breach detection.
+- Extended the existing `grep -v` filtering in `agy-turn.sh` to also strip:
+  - `TICK_REPO_ROOT=` lines (GH-183 tick-command narration)
+  - `file://` URIs (GH-187 markdown file citations)
+  - `](` markdown link targets (GH-187 markdown link citations)
+- Added the SAME filtering to `consult.sh` (which previously had NO filtering at all) for parity.
+- Added three regression test cases to `test/agy-turn.sh`:
+  - (13) GH-183: tick-command narration in transcript → turn succeeds (exit 0)
+  - (14) GH-187: markdown file:// citation in transcript → turn succeeds (exit 0)
+  - (15) genuine breach: plain $ROOT citation → turn fails (exit 5)
+- All three new tests use `RELAY_WORKTREE_ISOLATION=1` to exercise the isolation breach check.

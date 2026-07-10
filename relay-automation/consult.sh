@@ -205,7 +205,9 @@ run_agy() {
   local rc=$?
   if [[ "$rc" -eq 0 && -s "$out" ]]; then
     # GH-178 B1: Detect if agy escaped the isolation worktree ($WT) and read from the real repo root.
-    if grep -qF "$ROOT" "$out" 2>/dev/null; then
+    # GH-183/187: filter out false-positive shapes (tick-command narration, markdown file:// citations)
+    # before the $ROOT substring scan — same filtering as agy-turn.sh.
+    if grep -v -e '^\[trace\] ' -e 'TICK_REPO_ROOT=' -e 'file://' -e '](' "$out" 2>/dev/null | grep -qF "$ROOT" 2>/dev/null; then
       printf '\nconsult: [FAIL] agy transcript cited the real repo root (%s) instead of the isolation worktree. This is a known agy isolation breach (grounding escaped $WT). Failing the turn to prevent a silent breach.\n' "$ROOT" >> "$out"
       return 5
     fi
