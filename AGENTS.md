@@ -80,6 +80,14 @@ local change.
   stop. Re-firing a parked lane or going off-wave to deep-dive one item requires an explicit operator
   override (`--force`) or a replan note — never a quiet slide off the plan.
 - **Do not create new git branches** automatically. Only create a new branch if explicitly requested by the user.
+- **Anti-pattern: renaming a branch with an open PR via GitHub's branch-rename API
+  (`POST /repos/{owner}/{repo}/branches/{branch}/rename`, or `gh api ... branches/<old>/rename`).**
+  It does **not** rename in place — it deletes the old ref and recreates a new one, which GitHub
+  treats as `head_ref_deleted` and **auto-closes the open PR** pointed at that branch (found
+  2026-07-10 renaming a branch backing PR #193; recovered by opening a new PR from the renamed
+  branch and pointer-commenting the closed one). If a branch needs a new name and has an open PR:
+  either rename it *before* opening the PR, or accept that renaming after will require re-opening a
+  fresh PR — don't assume the PR follows the rename.
 - **Aider Configuration (AIDER.md / GH-77)**: When using Aider as a headless runner against OpenRouter, do not hardcode the API key or attempt to use a secrets manager. The `OPENROUTER_API_KEY` is securely stored at `/Users/noelsaw/secrets/openrouter/openrouter.txt` and is exported dynamically by `~/.zshrc`.
 - **Aider edit-format compat for OpenRouter models (GH-118)**: many OpenRouter-proxied models
   (confirmed: GLM-5.2, Nemotron Ultra 3) default to Aider's `whole` edit format and fail to emit
