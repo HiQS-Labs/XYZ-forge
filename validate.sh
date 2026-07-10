@@ -39,6 +39,7 @@ TESTS=(
   "agy-turn.sh"
   "relay-turn-trace.sh"          # GH-161 (rtl_trace/rtl_log_always/rtl_default_log instrumentation)
   "aider-turn.sh"
+  "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58

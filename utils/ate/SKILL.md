@@ -153,9 +153,16 @@ per_variation_timeout_seconds: 180
 - Gemma 4's training cutoff is Jan 2025 — if Aider's CLI flags have changed since,
   Gemma may generate stale flag names. `run_variations.py` only ever calls flags
   from `variations.yaml` (never lets Gemma invent flags), which sidesteps this.
-- Run everything against a disposable scratch repo. `run_variations.py` does not
-  do any cleanup/reset of the target repo between variations by default — later
-  variations run against whatever state earlier ones left behind.
+- **Run everything against a disposable scratch repo.** `run_variations.py` does a
+  destructive `git reset --hard` + `git clean -fdx` before *every* variation (so each
+  variation starts from the same pristine state and results are comparable across the
+  grid). This permanently deletes uncommitted and ignored files in `--repo`. Two guards
+  refuse the obvious footguns before anything runs (GH-195): it hard-refuses `--repo`
+  pointed at the harness clone itself, and refuses a `--repo` that has a git remote (i.e.
+  looks like a real checkout) unless you pass `--allow-destructive-reset`. A fresh
+  `git init` scratch repo has no remote, so the Quick start above needs no extra flag —
+  and a `git init` with no commits yet no longer crashes (the script auto-creates a base
+  commit to rewind to).
 - The grid is cycled, not walked once — `run_variations.py` loops back to the
   start after the last combination and only stops on the time budget, an abort,
   or an iteration safety cap of `len(combos) * 20` (a backstop against a runaway
