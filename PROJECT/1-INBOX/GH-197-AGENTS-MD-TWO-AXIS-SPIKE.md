@@ -45,7 +45,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 0 complete (2026-07-10): all 8 current AGENTS.md Operating Principles tagged disclosure/steering/both, split counted, verdict recorded. **The predicted disclosure-heavy skew did not hold** — see findings below. | No further work needed on this doc. If anyone later scopes the "agents-md-builder" project from `AGENT-MD-PYDANTIC.md` Phase 1, point it at this doc's verdict first: the two-axis split for *this* repo already exists as a **file-level** split (`ROUTER.md` = disclosure, `AGENTS.md` = steering), not a per-rule gap to fix inside one file. |
+| Phase 0 complete (2026-07-10), reviewed by Codex ([relay](../../relay-system/2026-07-10/gh-197-spike-review.md), Changes requested r1, both findings implemented): all 8 current AGENTS.md Operating Principles tagged disclosure/steering/both, split counted. **The predicted disclosure-heavy skew does not hold for AGENTS.md's own principles** — narrowed from an earlier overreach; see corrected findings below. | If anyone later scopes the "agents-md-builder" project from `AGENT-MD-PYDANTIC.md` Phase 1, point it at this doc's narrowed verdict: AGENTS.md's 8 principles are not disclosure-heavy, and `ROUTER.md` leans disclosure (not purely) — but whether the repo *as a whole* still has a steering gap is **not settled** by this spike (it only read AGENTS.md + ROUTER.md, not PDDA.md/skills/system instructions exhaustively). |
 
 ## Idea
 
@@ -95,24 +95,34 @@ Purpose: confirm or refute the predicted disclosure-heavy skew before scoping an
 
 - [x] Explain the mismatch rather than just reporting it.
 
-  **Finding:** the skew is explained by AGENTS.md's own scope declaration, already on the page
-  (`AGENTS.md:11-16`): *"This file is the behavioral playbook... decision quality, reversibility,
-  blast radius, planning shape, and proof. Do not restate routing... those live in ROUTER.md."* This
-  repo already **splits the two axes across two files by design**, not by accident:
-  - [`ROUTER.md`](../../ROUTER.md) is near-purely **disclosure**: a numbered startup sequence (what
-    to read, in what order, `ROUTER.md:19-25`) plus a 13-entry "Routing hints" table
-    (`ROUTER.md:66-80`) that routes a task to the one canonical doc that owns it — functionally the
-    same shape as the article's deferred-capability-loading pattern (route to the right doc/tool
-    only when the task matches), just implemented as a doc index instead of a runtime tool-search.
-  - `AGENTS.md`'s Operating Principles are near-purely **steering**: reversibility gates, blast-radius
-    checks, verified-vs-plausible, bet-recording — every one of them fires *while or after* acting,
-    not before the agent decides what to read.
+  **Finding (corrected 2026-07-10 after Codex review — [relay](../../relay-system/2026-07-10/gh-197-spike-review.md) r1, `[Should]` #3 and #5):** the first version of this finding claimed a
+  strict file-level split ("ROUTER.md is near-purely disclosure," "AGENTS.md's principles are
+  near-purely steering," "every one of them fires while or after acting, not before"). Codex checked
+  that against the actual text and it doesn't hold:
+  - `ROUTER.md` is **not** purely disclosure — its Startup sequence includes steering-shaped verify
+    gates: "Before reporting success on code or runtime work, run `./validate.sh`" (`ROUTER.md:24`)
+    and the doc-hygiene equivalent (`ROUTER.md:25`), and its Canonical rules include "Do not report a
+    win you did not verify with the relevant script or test" (`ROUTER.md:35`).
+  - `AGENTS.md`'s principles are **not** purely "while or after acting" either — #2 says "before you
+    commit to a path" (`AGENTS.md:25`), #3 requires "explicit confirmation before proceeding"
+    (`AGENTS.md:30-34`), and #4 is literally "before changing shared surfaces" (`AGENTS.md:36`). And
+    `AGENTS.md` itself opens with disclosure-shaped routing pointers before any numbered principle —
+    "Read `ROUTER.md` first...", "Read `GUIDING-PRINCIPLES.md`...", "Read `PROJECT/PDDA.md` when..."
+    (`AGENTS.md:3-9`).
 
-  So the "gap the frame predicts" is real but at the **wrong grain**: there is no missing-steering
-  gap inside AGENTS.md (it's already steering-dense), and there is no missing-disclosure gap either
-  once ROUTER.md is counted — the repo already runs the pydantic two-axis split, just as a two-file
-  architecture rather than a per-rule tag. The gap that *would* be worth finding is a steering rule
-  missing repo-wide, not an AGENTS.md-specific one — see next.
+  **Corrected finding:** `ROUTER.md` **leans** disclosure and `AGENTS.md` **leans** steering — each
+  carries some of the other axis, so this is not a clean per-file split. The part that *is* still
+  solid: within AGENTS.md's own 8 numbered Operating Principles specifically, none of them function
+  as *routing/load-timing* disclosure (ROUTER.md's specific mechanism — telling the agent what doc to
+  read next); the disclosure-tagged ones (#7, #8, and the disclosure half of #2/#5) are about
+  persistence-to-a-future-reader and ceremony-suppression, a different flavor of disclosure than
+  ROUTER.md's routing table. So the provable claim narrows to: **AGENTS.md's 8 principles are not
+  disclosure-heavy** (the verdict from the count above still holds), and **ROUTER.md independently
+  carries real routing/disclosure content that AGENTS.md explicitly delegates to it** — not that the
+  repo's two-axis coverage is complete, and not that no steering gap remains anywhere in the repo.
+  This spike only read `AGENTS.md` and `ROUTER.md`; it did not audit `PROJECT/PDDA.md`, skill
+  `SKILL.md` files, or system-level instructions for gaps, so "no further work needed" was an
+  overreach and has been removed from the Status cell above.
 
 - [x] Write down any steering rule you wish existed but don't have, per the source doc's seed-backlog
       ask (line 32).

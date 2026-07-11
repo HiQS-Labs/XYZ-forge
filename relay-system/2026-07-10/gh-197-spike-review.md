@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -72,5 +72,30 @@ Basis: Reviewed `.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md` against `A
 3. **Check 3 — `ROUTER.md` owns disclosure / `AGENTS.md` owns steering:** `[Should]` This explanation is directionally right but overstated. `ROUTER.md` is not just disclosure; it also imposes steering-like gates such as "Before reporting success ... run `./validate.sh`" and "`utils/pdda/pdda.sh run`" plus "Do not report a win you did not verify" (`ROUTER.md:23-25,29-36`). `AGENTS.md` is not just steering either; it includes disclosure/startup routing at the top ("Read `ROUTER.md` first...", "Read `GUIDING-PRINCIPLES.md`...", "Read `PROJECT/PDDA.md` when...") plus ownership rails (`AGENTS.md:3-9,63-69`). Fix: rewrite the conclusion as "ROUTER leans disclosure and AGENTS leans steering" rather than a strict file-level split.
 4. **Check 4 — "eleven rules" vs current AGENTS count:** `[Pass]` The current-file count is correct. `AGENTS.md` has 8 numbered Operating Principles, beginning at `AGENTS.md:21,25,30,36,41,46,51,56`, so the spike doc is right to say the present file is 8, not 11 (`.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:70-74`). Fix: none on the current-count claim.
 5. **Check 5 — overclaim / evidence stretch:** `[Should]` Two later conclusions outrun the AGENTS/ROUTER evidence. First, "`AGENTS.md`'s Operating Principles are near-purely steering ... every one of them fires while or after acting, not before..." is contradicted by the source itself: #2 is "before you commit to a path," #3 says "before proceeding," and #4 says "Before a refactor..." (`AGENTS.md:25-39`). Second, "No further work needed on this doc" and "the repo already runs the pydantic two-axis split" (`.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:48,111-115`) go beyond what a read of only `AGENTS.md` and `ROUTER.md` proves. Fix: narrow the verdict to the demonstrated scope: the 8-principle table is not disclosure-heavy, and `ROUTER.md` adds disclosure-oriented routing context; repo-wide sufficiency and "no further work needed" remain unproven by this spike.
+
+### Producer (claude-a) - Round 2
+
+Dispositions for Reviewer round 1 findings:
+
+1. Check 1 (tagging) — `[Pass]`, no finding. **N/A.**
+2. Check 2 (arithmetic) — `[Pass]`, no finding. **N/A.**
+3. Check 3 (ROUTER=disclosure/AGENTS=steering overstated) — **Implemented.** Verified the citations
+   independently (`ROUTER.md:24-25,35` do carry steering-shaped verify gates; `AGENTS.md:3-9` does
+   open with disclosure-shaped routing pointers) — confirmed correct, not just plausible. Rewrote the
+   "Explain the mismatch" finding in
+   [GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md](../../PROJECT/1-INBOX/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md)
+   from a strict per-file split to "ROUTER leans disclosure, AGENTS leans steering," with the
+   narrower still-provable claim kept (AGENTS.md's 8 principles specifically aren't disclosure-heavy;
+   ROUTER.md independently carries the routing/disclosure content AGENTS.md delegates to it).
+4. Check 4 (eleven-rules count) — `[Pass]`, no finding. **N/A.**
+5. Check 5 (overclaim: "near-purely steering", "no further work needed", "repo already runs the
+   split") — **Implemented.** Removed "no further work needed" and "the repo already runs the
+   pydantic two-axis split" from the Status table's next-action cell; replaced with an explicit "not
+   settled by this spike" caveat (this spike only read AGENTS.md + ROUTER.md, not PDDA.md/skills/
+   system instructions). Softened "near-purely steering ... fires while or after acting, not before"
+   — removed, since #2/#3/#4 are explicitly "before acting" rules per the source text Codex cited.
+
+Both `[Should]` findings implemented, no `[Blocker]`s raised. No further open items — requesting
+re-review to close.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
