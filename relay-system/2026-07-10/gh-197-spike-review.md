@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-10.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -97,5 +97,42 @@ Dispositions for Reviewer round 1 findings:
 
 Both `[Should]` findings implemented, no `[Blocker]`s raised. No further open items — requesting
 re-review to close.
+
+### Reviewer (codex) - Round 2
+
+**Verdict:** Changes requested
+
+VERDICT: FAIL
+Basis: Re-reviewed `.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md` against `AGENTS.md` and
+`ROUTER.md`. The earlier overclaims were fixed, but the frontmatter status line still states a
+repo-wide conclusion that the body now explicitly narrows.
+
+#### Findings:
+
+1. **Check 1 — per-rule tagging:** `[Pass]` The Phase 0 table remains defensible as written against
+   `AGENTS.md:21-59`; the row tags in `.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:76-85`
+   still match the source text's before-acting, rollback, verification, and record-keeping rules.
+   Fix: none.
+2. **Check 2 — skew verdict arithmetic:** `[Pass]` The count still supports the narrowed verdict.
+   `.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:89-94` correctly totals
+   disclosure-leaning = 4, steering-leaning = 6, both = 3, neither = 1 from the table above.
+   Fix: none.
+3. **Check 3 — `ROUTER.md` owns disclosure / `AGENTS.md` owns steering:** `[Pass]` The revised
+   explanation is now properly scoped and grounded. `ROUTER.md` does carry routing/disclosure
+   content in its startup sequence and routing hints (`ROUTER.md:19-25,68-80`), while also carrying
+   steering-style verify gates (`ROUTER.md:24-25,34-35`); `AGENTS.md` carries steering-shaped
+   operating principles (`AGENTS.md:25-59`) plus disclosure/routing pointers and ownership rails
+   (`AGENTS.md:3-9,13-17,63-69`). Fix: none.
+4. **Check 4 — "eleven rules" vs current AGENTS count:** `[Pass]` The current-file count is still
+   correct. `AGENTS.md` has 8 numbered Operating Principles at `AGENTS.md:21,25,30,36,41,46,51,56`,
+   matching `.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:70-74`. Fix: none.
+5. **Check 5 — overclaim / evidence stretch:** `[Should]` One scope leak remains: the frontmatter
+   still says `status: Phase 0 complete — verdict recorded, prediction falsified for this repo`
+   (`.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:5`). That overreaches the evidence the body
+   now presents. The same doc later narrows the claim to AGENTS.md's own principles and says the
+   repo-wide question is "not settled" because the spike only read `AGENTS.md` + `ROUTER.md`
+   (`.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:48,119-125`). Fix: narrow the frontmatter
+   status to the same proven scope, e.g. "prediction falsified for AGENTS.md's 8 Operating
+   Principles" or equivalent.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
