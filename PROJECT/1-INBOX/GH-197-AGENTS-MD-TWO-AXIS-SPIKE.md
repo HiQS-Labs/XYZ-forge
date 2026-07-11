@@ -2,7 +2,7 @@
 gh_issue: 197
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/197
 title: "Spike: two-axis (disclosure/steering) diagnostic tag pass on AGENTS.md"
-status: Phase 0 complete — verdict recorded, prediction falsified for this repo
+status: Phase 0 complete — verdict recorded, prediction falsified for AGENTS.md's 8 Operating Principles (not a repo-wide claim; see 2026-07-10 review narrowing)
 created: 2026-07-10
 updated: 2026-07-10
 owner: noel

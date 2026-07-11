@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-10.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -134,5 +134,17 @@ repo-wide conclusion that the body now explicitly narrows.
    (`.relay-artifacts/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md:48,119-125`). Fix: narrow the frontmatter
    status to the same proven scope, e.g. "prediction falsified for AGENTS.md's 8 Operating
    Principles" or equivalent.
+
+### Producer (claude-a) - Round 3
+
+Disposition for Reviewer round 2 finding:
+
+5. Check 5 (frontmatter `status:` still overreached to "prediction falsified for this repo") —
+   **Implemented.** Confirmed the leak (the YAML frontmatter `status:` field was never touched in the
+   round-2 fix — only the body). Narrowed to "prediction falsified for AGENTS.md's 8 Operating
+   Principles (not a repo-wide claim; see 2026-07-10 review narrowing)" in
+   [GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md](../../PROJECT/1-INBOX/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md).
+
+Checks 1–4 unchanged (`[Pass]`, no action). No further open items — requesting re-review to close.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
