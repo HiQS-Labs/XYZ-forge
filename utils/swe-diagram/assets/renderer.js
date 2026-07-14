@@ -1,8 +1,8 @@
 /*
  * swe-diagram renderer — vanilla xyflow-style system diagram.
  * No dependencies. Reads a diagram spec object and renders:
- *   - layered left→right auto-layout (longest-path ranking), or an optional
- *     radial hub & ring layout (spec.layout === "hub-ring")
+ *   - layered left→right or top→bottom auto-layout (longest-path ranking),
+ *     or an optional radial hub & ring layout (spec.layout === "hub-ring")
  *   - draggable HTML nodes with type-colored headers
  *   - SVG edges with arrowheads + optional labels
  *   - pan (drag canvas), zoom (wheel / buttons), fit-to-view
@@ -11,7 +11,7 @@
  * Spec shape (see SKILL.md for the authoring contract):
  * {
  *   title: string,
- *   layout?: "layered" | "hub-ring",              // default "layered"
+ *   layout?: "layered" | "top-down" | "hub-ring", // default "layered"
  *   hub?: string,                                  // hub-ring only: node id to center; default = highest-degree node
  *   nodes: [{ id, label, type?, group?, description?, tech? }],
  *   edges: [{ source, target, label?, kind? }],   // kind: "sync"|"async"|"data"
@@ -115,6 +115,33 @@
         y += h + ROW_GAP;
       });
       // center column vertically against tallest column later via fitView
+    });
+    return positions;
+  }
+
+  // Reuse layered's cycle handling, longest-path ranks, group adjacency, and
+  // deterministic ordering, then rotate the rank axis. Recomputing row gaps
+  // (rather than naively swapping x/y) matters because node width is fixed
+  // while node height varies when `tech` is present.
+  function topDownLayout(spec) {
+    var horizontal = layout(spec);
+    var rows = {};
+    (spec.nodes || []).forEach(function (n) {
+      var p = horizontal[n.id];
+      (rows[p.x] = rows[p.x] || []).push(n.id);
+    });
+
+    var positions = {};
+    var y = 0;
+    Object.keys(rows).map(Number).sort(function (a, b) { return a - b; }).forEach(function (rankX) {
+      var ids = rows[rankX].sort(function (a, b) { return horizontal[a].y - horizontal[b].y; });
+      var rowH = 0;
+      ids.forEach(function (id, i) {
+        var p = horizontal[id];
+        positions[id] = { x: i * (NODE_W + ROW_GAP), y: y, w: p.w, h: p.h };
+        rowH = Math.max(rowH, p.h);
+      });
+      y += rowH + COL_GAP;
     });
     return positions;
   }
@@ -235,7 +262,8 @@
     viewport.insertBefore(groupLayer, viewport.firstChild); // paint behind edges + nodes
 
     var isHubRing = spec.layout === 'hub-ring';
-    var pos = isHubRing ? hubRingLayout(spec) : layout(spec);
+    var isTopDown = spec.layout === 'top-down';
+    var pos = isHubRing ? hubRingLayout(spec) : (isTopDown ? topDownLayout(spec) : layout(spec));
     var nodeEls = {};
 
     var groupLabels = {};   // honor spec.groups: render the human label, not the raw id
@@ -263,43 +291,65 @@
 
     // layout() estimated node heights before the DOM existed; a wrapped label or
     // tech line makes the real node taller. Correct pos[].h from the measured
-    // height everywhere (edge anchors use it), then — layered layout only —
-    // re-stack each column so nodes don't overlap. Hub-ring positions are
-    // already final radial coordinates; nothing depends on column stacking.
-    var byCol = {};
+    // height everywhere (edge anchors use it), then re-stack each layered
+    // rank so nodes don't overlap. Hub-ring positions are already final
+    // radial coordinates; nothing depends on rank stacking.
+    var byRank = {};
     (spec.nodes || []).forEach(function (n) {
       var p = pos[n.id];
       p.h = nodeEls[n.id].offsetHeight || p.h;
-      if (!isHubRing) (byCol[p.x] = byCol[p.x] || []).push(n.id);
+      if (!isHubRing) {
+        var rankCoord = isTopDown ? p.y : p.x;
+        (byRank[rankCoord] = byRank[rankCoord] || []).push(n.id);
+      }
     });
     if (!isHubRing) {
-      Object.keys(byCol).forEach(function (x) {
-        var ids = byCol[x].sort(function (a, b) { return pos[a].y - pos[b].y; });
-        var y = 0;
-        ids.forEach(function (id) {
-          pos[id].y = y;
-          nodeEls[id].style.top = y + 'px';
-          y += pos[id].h + ROW_GAP;
+      if (isTopDown) {
+        var rowY = 0;
+        Object.keys(byRank).map(Number).sort(function (a, b) { return a - b; }).forEach(function (oldY) {
+          var rowH = 0;
+          byRank[oldY].forEach(function (id) {
+            pos[id].y = rowY;
+            nodeEls[id].style.top = rowY + 'px';
+            rowH = Math.max(rowH, pos[id].h);
+          });
+          rowY += rowH + COL_GAP;
         });
-      });
+      } else {
+        Object.keys(byRank).forEach(function (x) {
+          var ids = byRank[x].sort(function (a, b) { return pos[a].y - pos[b].y; });
+          var y = 0;
+          ids.forEach(function (id) {
+            pos[id].y = y;
+            nodeEls[id].style.top = y + 'px';
+            y += pos[id].h + ROW_GAP;
+          });
+        });
+      }
     }
 
-    // ---- group bounding boxes (swimlanes): layered layout only — its boxes
-    // are computed from column position, which hub-ring's radial coordinates
-    // don't have. Drawn once per-node heights are final (after the byCol
-    // re-stack correction above). A group's members are not guaranteed to
-    // land in adjacent layout columns (e.g. an async worker two ranks
+    // ---- group bounding boxes (swimlanes): hierarchical layouts only — the
+    // boxes follow rank columns or rows, which hub-ring's radial coordinates
+    // don't have. Drawn once per-node heights are final (after rank restacking
+    // above). A group's members are not guaranteed to land in adjacent ranks
+    // (e.g. an async worker two ranks
     // downstream of its sibling) — a single box spanning the group's full
     // min/max would then swallow unrelated nodes sitting between the runs,
-    // so draw one box per contiguous run of columns instead.
+    // so draw one box per contiguous rank run instead.
     if (!isHubRing) {
-      var colStride = NODE_W + COL_GAP;
+      var rankAxis = isTopDown ? 'y' : 'x';
+      var rankCoords = [];
+      (spec.nodes || []).forEach(function (n) {
+        var coord = pos[n.id] && pos[n.id][rankAxis];
+        if (coord != null && rankCoords.indexOf(coord) === -1) rankCoords.push(coord);
+      });
+      rankCoords.sort(function (a, b) { return a - b; });
       (spec.groups || []).forEach(function (g) {
         if (!g || g.id == null) return;
         var colsOfGroup = {};
         (spec.nodes || []).forEach(function (n) {
           if (n.group !== g.id || !pos[n.id]) return;
-          var col = Math.round(pos[n.id].x / colStride);
+          var col = rankCoords.indexOf(pos[n.id][rankAxis]);
           (colsOfGroup[col] = colsOfGroup[col] || []).push(n.id);
         });
         var cols = Object.keys(colsOfGroup).map(Number).sort(function (a, b) { return a - b; });
@@ -359,6 +409,19 @@
                mx: (x1 + x2) / 2, my: (y1 + y2) / 2 - 6 };
     }
 
+    function verticalEdgePath(a, b) {
+      var x1 = a.x + a.w / 2, y1 = a.y + a.h;
+      var x2 = b.x + b.w / 2, y2 = b.y;
+      if (b.y < a.y + a.h) { // backward edge: route from top side
+        y1 = a.y; y2 = b.y + b.h;
+      }
+      var dy = Math.max(40, Math.abs(y2 - y1) / 2);
+      var c1 = y1 < y2 ? y1 + dy : y1 - dy;
+      var c2 = y1 < y2 ? y2 - dy : y2 + dy;
+      return { d: 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + c1 + ' ' + x2 + ',' + c2 + ' ' + x2 + ',' + y2,
+               mx: (x1 + x2) / 2 + 6, my: (y1 + y2) / 2 };
+    }
+
     // hub-ring has no consistent left→right flow direction to route "around"
     // (edges fan out from the center in every direction), so it uses a
     // straight line clipped to each node's rectangle boundary instead of
@@ -384,7 +447,8 @@
 
     function drawEdges() {
       edgeEls.forEach(function (ee) {
-        var p = (isHubRing ? radialEdgePath : edgePath)(pos[ee.e.source], pos[ee.e.target]);
+        var pathFn = isHubRing ? radialEdgePath : (isTopDown ? verticalEdgePath : edgePath);
+        var p = pathFn(pos[ee.e.source], pos[ee.e.target]);
         ee.path.setAttribute('d', p.d);
         if (ee.label) { ee.label.setAttribute('x', p.mx); ee.label.setAttribute('y', p.my); }
       });
@@ -546,6 +610,11 @@
   // browser). `module` is undefined when this file is inlined into a
   // <script> tag, so this is a no-op there — zero behavior change shipped.
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { hubRingLayout: hubRingLayout, matchesQuery: matchesQuery, layout: layout };
+    module.exports = {
+      hubRingLayout: hubRingLayout,
+      matchesQuery: matchesQuery,
+      layout: layout,
+      topDownLayout: topDownLayout
+    };
   }
 })();

@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 57 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 31 · 🔮 0 · 🔲 0
+Summary: 58 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 32 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-197 · Spike: two-axis (disclosure/steering) diagnostic tag pass on AGENTS.md | ✅ | [relay](PROJECT/1-INBOX/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md) · [GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md](PROJECT/1-INBOX/GH-197-AGENTS-MD-TWO-AXIS-SPIKE.md) · [#197](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/197) |
 | GH-191 · ATE: generalize harness runner beyond Aider (pluggable command/flags/classifier) | — | [GH-191-ATE-GENERALIZE-HARNESS.md](PROJECT/1-INBOX/GH-191-ATE-GENERALIZE-HARNESS.md) · [#191](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/191) |
 | GH-173 · Jedi Wright beta feedback: agy worktree grounding + reconciliation-layer hardening | — | [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/2-WORKING/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) |
 | GH-175 · #173 feedback Phase-1 low-fruit slice: bring-up + README supply-chain docs + Codex preflight attestation | ✅ | [#173](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/173) · [GH-173-JEDI-WRIGHT-FEEDBACK.md](PROJECT/2-WORKING/GH-173-JEDI-WRIGHT-FEEDBACK.md) · [Plan E](PROJECT/2-WORKING/MARATHON-PLAN-2026-07-07-E-BUILD.md) · [#175](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/175) |
@@ -91,10 +92,11 @@ Summary: 14 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 10 · �
 
 ## Completed
 
-Summary: 16 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 16 · 🔮 0 · 🔲 0
+Summary: 17 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 17 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-200 · swe-diagram: add top-down layered layout | ✅ | [GH-200-SWE-DIAGRAM-TOP-DOWN.md](PROJECT/3-COMPLETED/GH-200-SWE-DIAGRAM-TOP-DOWN.md) · [#200](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/200) · [PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md](PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md) |
 | GH-78 · optional hourly doc-preflight (contract-enforcing auto-edits + telemetry) | ✅ | [GH-78-DOC-PREFLIGHT-AUTOMATION.md](PROJECT/1-INBOX/GH-78-DOC-PREFLIGHT-AUTOMATION.md) · [#81](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/81) · [#78](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/78) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | ✅ | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#91](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/91) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
 | GH-58 · marathon --builder claude fails headless (exec: claude: not found) | ✅ | [GH-58-CLAUDE-TURN-PATH-DISCOVERY.md](PROJECT/1-INBOX/GH-58-CLAUDE-TURN-PATH-DISCOVERY.md) · [#58](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/58) |

@@ -78,11 +78,15 @@ Schema (`ARCHITECTURE/system-diagram.json`):
   `queue`, `external`, `job`, `storage` — anything else falls back to gray.
 - `kind` (drives edge style): `sync` (solid), `async` (dashed), `data`
   (dotted). Default `sync`.
-- Layout is automatic; do not put coordinates in the JSON. Two layouts:
+- Layout is automatic; do not put coordinates in the JSON. Three layouts:
   - **`"layout": "layered"` (default, omit the field for this)** — left→right
     from edge direction. Point `source → target` in the direction of the
     call/flow — layout quality depends on it. Use for synchronous
     request/response pipelines and strict call chains (`UI → API → DB`).
+  - **`"layout": "top-down"`** — top→bottom from edge direction, using the
+    same deterministic longest-path ranks as `layered`. Use for deployment
+    stacks, CI/CD stages, request lifecycles, or diagrams that must fit a
+    narrower page. Point `source → target` in the direction of the call/flow.
   - **`"layout": "hub-ring"`** — radial: one hub node at the center, every
     other node placed on a ring around it (overflow beyond ~8 nodes spills to
     a wider concentric ring). Use for event-driven architectures where a
@@ -90,10 +94,10 @@ Schema (`ARCHITECTURE/system-diagram.json`):
     otherwise-independent services, not a linear pipeline. Optionally set
     `"hub": "<node id>"` to force which node is the center; omit it and the
     renderer picks the highest-degree (most-connected) node.
-  - `groups` swimlanes are a **`layered`-layout-only** feature (the boxes are
-    computed from column position, which `hub-ring`'s radial coordinates
-    don't have) — they render as background bounding boxes containing their
-    child nodes, labeled top-left with the group's `label`, and are silently
+  - `groups` swimlanes are supported by **`layered` and `top-down`** (their
+    boxes follow contiguous rank columns or rows). They render as background
+    bounding boxes containing their child nodes, labeled top-left with the
+    group's `label`, and are silently
     skipped under `hub-ring`. A node opts into a group via its own `group`
     field, matched against a `groups[].id`; groups with no member nodes are
     skipped.
