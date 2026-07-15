@@ -4,9 +4,9 @@ source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/iss
 title: "Acorn integration (first pass): vendor acorn+acorn-walk as a lightweight JS symbol/call-site extractor for GH-156"
 goal: Vendor acorn
 roadmap_exempt: true
-status: Active (2-WORKING) — completed in lane-169
+status: Shipped 2026-07-08 (PR #179, `39729a0`); #169 closed
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-10
 owner: noel
 doc_type: feature
 complexity: 2

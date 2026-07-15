@@ -30,6 +30,22 @@ the loop still degrades to the existing manual nudge. For the current headless p
 | `consult.sh` | Parallel read-only consult: asks the same question to **Codex, agy, and (opt-in) Aider↔OpenRouter** (`--models codex,agy,aider`), captures each transcript, and leaves synthesis to the caller. Advisory-only; also the engine behind `relay-drive.sh --consult-verify`. |
 | `xyz-vendor.sh` / `xyz-sync.sh` | Vendoring pair for `.xyz/` copies materialized into another repo. `xyz-vendor.sh <target-repo>` mirrors this harness into `<target-repo>/.xyz/` and stamps a row in the local `registry.tsv` (`install_dir`, `last_install_utc`, `tick_version`, `source_commit`, `coordinated_repo`) at that moment. `xyz-sync.sh list \| update \| delete \| check` manages those registered rows: `list` shows them, `update <dir>\|--all` re-vendors, `delete <dir>\|--all [--yes]` removes a copy and prunes its row. **`check <dir>\|--all`** (GH-96) is report-only drift detection: it recomputes the CURRENT `tick_version`/`source_commit` this harness ships and compares against each row's recorded pair — a mismatch in **either** field counts as drift. Exact match on both → a silent `ok` line; drift → a warning naming the drifted field(s) and both recorded/current values. Never a hard error, never an auto-pull — updates land only via an explicit `update`/`xyz-vendor.sh` re-run (pinned + manual by design). This is the harness-side "is this install stale?" signal a downstream consumer (e.g. rebalance-OS) can poll instead of guessing. |
 
+## Adding a new consult advisor (GH-178 A1)
+
+`consult.sh`'s `--models` dispatch is a data table (`ADV_NAMES`/`ADV_RUNFNS`, parallel arrays —
+bash 3.2/macOS has no `declare -A`), so adding a 5th advisor is a data addition, not a new case arm:
+add its name to `ADV_NAMES`, write a `run_<vendor>() { local out="$1"; ...; }` alongside the existing
+`run_codex`/`run_agy`/`run_gemini`/`run_aider`, and add its function name to `ADV_RUNFNS` at the same
+index. What a new `run_<vendor>()` must do itself (genuinely vendor-specific): the CLI invocation
+syntax/flags, any auth pre-flight probe (see `agy_auth_preflight`), and transcript-format quirks (e.g.
+`run_codex`'s attestation-header prepend). What it gets for free by calling `_guarded "$out" ...`
+(shared via this file, not `relay-turn-lib.sh` — that lib backs the separate `*-turn.sh` relay shims):
+the wall-clock timeout watchdog and output capture into `$out`. If the new advisor is also wired as a
+relay turn-taker (a `<vendor>-turn.sh` alongside `codex-turn.sh`/`agy-turn.sh`/`aider-turn.sh`), it
+should source `relay-turn-lib.sh` for the containment contract (`rtl_init`/`rtl_before`/
+`rtl_run_bounded`/`rtl_enforce`) exactly like the existing shims — that boundary is already
+model-agnostic; do not reimplement it.
+
 ## XYZ completion telemetry
 
 `XYZ.json` is the harness repo root's gitignored, newest-first completion log. It is always written in

@@ -228,6 +228,17 @@ and `agy -p` **fails silently — exit 0, empty output** (the shim catches this 
 un-sandboxed). Run these Bash calls with `dangerouslyDisableSandbox: true`. (Memory:
 `codex-cli-needs-sandbox-disabled`, `agy-antigravity-cli`.)
 
+**Important — never hand-roll backgrounding for a driven run (GH-183/187 dogfood, 2026-07-10).** A
+multi-round `marathon-drive.sh`/`relay-drive.sh` run can easily exceed the calling tool's own
+foreground timeout. Always use that tool's **native** background-execution mechanism (e.g. Claude
+Code's `run_in_background`), never a manual `nohup ... & disown` — a disown can itself fail (exit
+1) while the backgrounded job survives anyway, undetected, and races a subsequent re-fire against
+the same repo/worktree state (observed: a stray `git worktree` plus a `tick` token stuck in
+`claimed`, never handed off). If a driver call *does* get killed mid-turn: `git worktree remove
+--force <path>` (see `git worktree list` for stragglers) then `tick reap <agent> --by <caller>
+--task <task>` to clear the stuck claim — `reap` is the sanctioned recovery (logs an auditable
+`task.released` event), not a hand-written `tick release`.
+
 #### Inspecting token state, and a one-shot review
 
 - **Inspect whose-turn mid-drive:** `"$TICK" info <task>` prints the token's `status` / `claimer` /
@@ -395,6 +406,13 @@ bash "$HARNESS/validate.sh"            # the tick/automation suite
 bash "$HARNESS/test/codex-turn.sh"     # before a Codex run
 bash "$HARNESS/test/agy-turn.sh"       # before an agy run
 ```
+
+**If your turn's `--artifact`/`ALLOW_PATHS` includes anything under `relay-automation/`, re-run
+`bash "$HARNESS/skills/relay-automation/make-pkg.sh"` after the turn lands, before trusting a green
+`validate.sh`.** `relay-pkg-freshness.sh` catches a stale vendored `relay-pkg.tar.gz`, but it reads
+as one more red line in a 100+-test suite rather than a real, fix-needed gap — this has bitten two
+separate passes on `relay-automation/agy-turn.sh`/`consult.sh` (GH-178's original B1/A4 pass on
+2026-07-08, and the GH-183/187 fix on 2026-07-10). Don't wait to discover it after the fact.
 
 Run the shim test matching the worker you'll drive (both are first-class). Run these un-sandboxed —
 `mktemp`/network under the Bash sandbox can fail them for reasons unrelated to the code.

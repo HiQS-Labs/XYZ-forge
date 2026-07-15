@@ -78,7 +78,9 @@ ROUND: 1 / $ROUND_CAP
 3. **Do your role's work** on the artifact named in Setup:
    - **Reviewer:** review vs the Definition of Done → graded findings
      (\`[Blocker]\`/\`[Should]\`/\`[Nit]\`/\`[Pass]\`), each with a concrete fix → set a **Verdict**
-     (Approved | Changes requested | Blocked). Do **not** edit the artifact; only append findings here.
+     (Approved | Changes requested | Blocked). Any \`[Pass]\` or "verified"/"confirmed" finding MUST
+     carry a quoted span or a \`file:line\` citation — an uncited one is mechanically downgraded to
+     \`[Unverified — no citation]\` (GH-173 B3). Do **not** edit the artifact; only append findings here.
    - **Producer:** log a disposition for every open finding (Implemented / Modified / Declined + why),
      make the change, then add new work.
 4. **Append ONE block** at the very bottom, directly **above** the marker line. Never edit earlier turns.

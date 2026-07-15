@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# swe-diagram test (GH-146 follow-up): pure-Node fixtures for the two algorithmic pieces added this
-# session — hubRingLayout()'s ring-balancing math and the search/filter matchesQuery() predicate.
+# swe-diagram test: pure-Node fixtures for layout and filter logic without a browser.
 # No browser: renderer.js's DOM-touching code (window.renderDiagram = function...) is never invoked,
 # only the two pure functions it exports for Node via the `typeof module !== 'undefined'` guard at the
 # bottom of the file (a no-op when inlined into a <script> tag — zero behavior change shipped).
@@ -20,10 +19,10 @@ trap 'rm -rf "$WORK"' EXIT
 cat > "$WORK/fixtures.js" <<'JSEOF'
 // window must exist as an object before require() parses renderer.js's top-level
 // `window.renderDiagram = function (...) {...}` assignment; the function body (the only place that
-// touches `document`) never runs since these fixtures only call hubRingLayout()/matchesQuery().
+// touches `document`) never runs since these fixtures only call exported pure functions.
 global.window = {};
 var r = require(process.argv[2]);
-var hubRingLayout = r.hubRingLayout, matchesQuery = r.matchesQuery;
+var hubRingLayout = r.hubRingLayout, matchesQuery = r.matchesQuery, topDownLayout = r.topDownLayout;
 
 var results = [];
 function check(label, ok, detail) { results.push([label, !!ok, detail || '']); }
@@ -32,6 +31,25 @@ function dist(hubCenter, p) {
   var cx = p.x + p.w / 2, cy = p.y + p.h / 2;
   return Math.sqrt(Math.pow(cx - hubCenter.x, 2) + Math.pow(cy - hubCenter.y, 2));
 }
+
+// --- topDownLayout: ranks flow downward and peers spread horizontally ---
+(function () {
+  var spec = {
+    nodes: [{ id: 'ui' }, { id: 'api' }, { id: 'db' }, { id: 'queue', tech: 'NATS' }],
+    edges: [
+      { source: 'ui', target: 'api' },
+      { source: 'api', target: 'db' },
+      { source: 'api', target: 'queue' }
+    ]
+  };
+  var pos = topDownLayout(spec);
+  check('top-down ranks follow source -> target direction',
+    pos.ui.y < pos.api.y && pos.api.y < pos.db.y && pos.api.y < pos.queue.y,
+    'ys=' + JSON.stringify({ ui: pos.ui.y, api: pos.api.y, db: pos.db.y, queue: pos.queue.y }));
+  check('top-down peers share a row and do not overlap horizontally',
+    pos.db.y === pos.queue.y && Math.abs(pos.db.x - pos.queue.x) >= pos.db.w,
+    'db=' + JSON.stringify(pos.db) + ', queue=' + JSON.stringify(pos.queue));
+})();
 
 // --- hubRingLayout: base cases ---
 check('empty spec -> no positions', Object.keys(hubRingLayout({ nodes: [], edges: [] })).length === 0);

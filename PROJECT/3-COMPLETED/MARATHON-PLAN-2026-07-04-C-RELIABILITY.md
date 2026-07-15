@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan C (2026-07-04) — dogfood-reliability cluster (Plan B follow-through)
-status: Ready to fire (2-WORKING) — docs authored + rated, not yet fired
+status: SHIPPED (3-COMPLETED) — all 6 lanes built, merged to `main`, capture docs swept
 created: 2026-07-04
-updated: 2026-07-04
+updated: 2026-07-08
 owner: noel
 branch: main
 doc_type: project
@@ -32,7 +32,7 @@ execution: mixed — parallel Sonnet subagents for 5 independent/shim/swarm-pref
 
 | What was just completed | What's next |
 |---|---|
-| **FIRED + BUILT 2026-07-04** on branch `marathon/plan-c-2026-07-04` (worktree; 5 parallel Sonnet lanes + Fable-direct serial kernel track, per the memory'd execution pattern — not headless marathon-drive). All 6 items landed, one commit per lane: #106 (`742c230`, 31/31), #116 (`53c8dce`, 17/17), #124 (`6daaff5`, 45/45 + self-skipping live test), **#107 kernel** (`524d345`, 31/31 + [decisions/2026-07-04-containment-ignore-toolcache.md](../../decisions/2026-07-04-containment-ignore-toolcache.md)), #117 (`b4e73df`, 55/55), #108+#126+#127 (`691848c`, 85/85). Integration commit `d5a1681` stubbed CLAUDE_BIN/AGY_BIN in `driver-lock.sh`/`xyz-harness-hooks.sh` (GH-117's probe correctly rejects their unresolvable default builder) + baselined 3 T35/T36 fixture literals in `path-integrity.sh`. Full `validate.sh` **exit 0**; the one intermittent red (`relay-dep-drift.sh` case 4) reproduced on untouched `main` → pre-existing flake, filed **#133**. | PR review + merge; post-merge sweep moves the 6 capture docs to `3-COMPLETED`, flips ROADMAP/CHANGELOG, closes the issues, and relocates this plan to `3-COMPLETED`. |
+| **FIRED + BUILT 2026-07-04** on branch `marathon/plan-c-2026-07-04` (worktree; 5 parallel Sonnet lanes + Fable-direct serial kernel track, per the memory'd execution pattern — not headless marathon-drive). All 6 items landed, one commit per lane: #106 (`742c230`, 31/31), #116 (`53c8dce`, 17/17), #124 (`6daaff5`, 45/45 + self-skipping live test), **#107 kernel** (`524d345`, 31/31 + [decisions/2026-07-04-containment-ignore-toolcache.md](../../decisions/2026-07-04-containment-ignore-toolcache.md)), #117 (`b4e73df`, 55/55), #108+#126+#127 (`691848c`, 85/85). Integration commit `d5a1681` stubbed CLAUDE_BIN/AGY_BIN in `driver-lock.sh`/`xyz-harness-hooks.sh` (GH-117's probe correctly rejects their unresolvable default builder) + baselined 3 T35/T36 fixture literals in `path-integrity.sh`. Full `validate.sh` **exit 0**; the one intermittent red (`relay-dep-drift.sh` case 4) reproduced on untouched `main` → pre-existing flake, filed **#133** (since ✅ SHIPPED `f28330c` — SIGPIPE root cause). **Merged: all 7 commits confirmed ancestors of `main` (re-verified 2026-07-08). The 6 capture docs and this plan were swept to `3-COMPLETED`.** | **Nothing — plan complete.** The post-merge sweep moved the docs but never flipped the ROADMAP/dashboard status prose, which kept advertising Wave 1 + the #107 kernel track as "Ready to fire" for four days after they shipped; corrected 2026-07-08, and the PDDA scan-scope gap that let it persist silently (`pdda.sh run` passed clean throughout) is filed as **[#189](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/189)**. All eight issues (#106/#107/#108/#116/#117/#124/#126/#127) verified **CLOSED**. |
 
 ## Why this cluster, why now
 
@@ -84,8 +84,12 @@ whether anything else is running concurrently.
 
 ## Recommended waves
 
-**Wave 1 — parallel (5 lanes ‖):** #106 ‖ #108 ‖ #116 ‖ #117 ‖ #124
-**Kernel track — separate, Opus-direct, serial (not a wave, runs on its own schedule):** #107
+> ✅ **Both fired and shipped 2026-07-04. This section is the historical plan, not open work.**
+
+**Wave 1 — parallel (5 lanes ‖):** #106 ‖ #108 ‖ #116 ‖ #117 ‖ #124 — ✅ shipped
+(`742c230`, `691848c`, `53c8dce`, `b4e73df`, `6daaff5`)
+**Kernel track — separate, Opus-direct, serial (not a wave, runs on its own schedule):** #107 —
+✅ shipped (`524d345`, 31/31, + [decisions record](../../decisions/2026-07-04-containment-ignore-toolcache.md))
 
 This mirrors Plan A/B's own established split: independent/shim work fires as parallel
 worktree-isolated Sonnet subagents with Opus integrating centrally; kernel-correctness work

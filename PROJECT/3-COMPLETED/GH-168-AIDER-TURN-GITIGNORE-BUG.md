@@ -4,9 +4,9 @@ source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/iss
 title: "aider-turn.sh: --no-gitignore doesn't enable reading gitignored files — missing --add-gitignore-files silently skips relay threads in gitignored dirs"
 goal: Fix aider gitignore issue
 roadmap_exempt: true
-status: Queued (1-INBOX) — queued for today's marathon
+status: Shipped 2026-07-08 (`775380c`); #168 closed. Later extended by GH-186 (version-aware flag detection, merged via PR #188)
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-10
 owner: noel
 doc_type: bug
 complexity: 1
@@ -39,7 +39,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Queued into today's marathon build cluster (Marathon Plan E) as a small, single-file fix lane. | **Done.** Implemented fix in `aider-turn.sh`, added regression test, and verified with `validate.sh`. |
+| Queued into today's marathon build cluster (Marathon Plan E) as a small, single-file fix lane. | **Done, then partially reverted.** Implemented fix (`--add-gitignore-files` added), then found 2026-07-08 that the flag has since been removed from aider's CLI upstream — dropped again via `775380c` after empirical re-verification the underlying gitignore-read behavior still holds without it, on the aider version installed locally. That fix's version-sensitivity (unverified against vendored installs on older aider) is tracked as a follow-up: [GH-186](../1-INBOX/GH-186-AIDER-VENDOR-VERSION-DRIFT.md), queued into Marathon Plan E as its fifth lane. |
 
 ## The bug
 

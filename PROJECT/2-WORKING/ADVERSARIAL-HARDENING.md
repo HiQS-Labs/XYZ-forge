@@ -7,12 +7,12 @@ title: Adversarial hardening — commercial-viability track (Part B)
 slug: adversarial-hardening
 status: Active
 created: 2026-06-15
-updated: 2026-06-21
+updated: 2026-07-10
 owner: Noel (operator) · Claude (producer)
 branch: main
 related:
   - decisions/2026-06-18-epoch-fencing.md       # Phase 1 canonical decision record
-  - 4X4.md                                       # strategic backlog (Part B gaps)
+  - PROJECT/4-MISC/4X4.md                        # strategic backlog (Part B gaps); moved from repo root by GH-71
   - PROJECT/3-COMPLETED/MARATHON-HARNESS.md      # the Part A harness this hardens
   - PROJECT/1-INBOX/LOOPS.md
 non_goals:
@@ -228,7 +228,10 @@ The final mile to commercial viability: the system is auditable and deployable w
 > **Threat:** logs today are human-readable, not structured for ingestion — a buyer cannot ship them
 > to a SIEM. This is the final mile to commercial viability.
 > **Prove:** every coordination event emits a parseable, timestamped record with agent id + epoch.
-> **Status:** ❌ not started (logs today are human-readable, not structured for ingestion).
+> **Status:** ❌ not started (logs today are human-readable, not structured for ingestion). *(Adjacent
+> but distinct: GH-161 "harness observability" shipped 2026-07-06, PR #167 — decision-point tracing
+> into the existing turn transcript — but that is human-readable transcript instrumentation, not the
+> structured per-event SIEM surface R4 requires. R4 remains unbuilt.)*
 
 ### Checklist
 
@@ -248,7 +251,7 @@ The final mile to commercial viability: the system is auditable and deployable w
 
 ## Notes
 
-Part B gaps map to the strategic backlog in `4X4.md`; any mechanism that changes the event schema
+Part B gaps map to the strategic backlog in [`PROJECT/4-MISC/4X4.md`](../4-MISC/4X4.md); any mechanism that changes the event schema
 (e.g. R1 epoch fencing) gets a decision record under `decisions/` before it lands. Part B was merged
 2026-06-15 from the flat gap-analysis + the phased/QA structure (the earlier standalone gap-analysis
 roadmap is superseded), then folded into `ROADMAP.md` and now extracted here as the canonical Part B

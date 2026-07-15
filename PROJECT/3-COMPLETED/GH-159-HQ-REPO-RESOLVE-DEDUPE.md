@@ -4,9 +4,9 @@ source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/iss
 title: "hq-lib.sh: hq_repo_resolve reports ambiguous when the same path appears twice as a candidate"
 goal: Deduplicate hq_repo_resolve output
 roadmap_exempt: true
-status: Queued (1-INBOX) — queued for today's marathon (Marathon Plan E)
+status: Shipped (PR #179, `39729a0`) — #159 closed 2026-07-08
 created: 2026-07-06
-updated: 2026-07-07
+updated: 2026-07-08
 owner: noel
 doc_type: bug
 complexity: 2
