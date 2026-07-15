@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 61 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 35 · 🔮 0 · 🔲 0
+Summary: 62 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 36 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-211 · Consult and Relay — compact TLDR + sorted-category output | ✅ | [GH-211-CONSULT-RELAY-TLDR-SUMMARIES.md](PROJECT/1-INBOX/GH-211-CONSULT-RELAY-TLDR-SUMMARIES.md) · [#211](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/211) |
 | GH-207 · Marathon retry/resume brittle against pre-existing lane state (cross-marathon lane-id collision + no-progress HALT on a done lane) | ✅ | [GH-207-MARATHON-RETRY-RESUME-BRITTLE.md](PROJECT/2-WORKING/GH-207-MARATHON-RETRY-RESUME-BRITTLE.md) · [#207](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/207) |
 | GH-206 · Marathon: vendored .xyz/ conflates harness-home with repo-root — won't run without MARATHON_ROOT + bin overrides | ✅ | [GH-206-VENDORED-MARATHON-ROOT-SPLIT.md](PROJECT/2-WORKING/GH-206-VENDORED-MARATHON-ROOT-SPLIT.md) · [#206](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/206) |
 | GH-205 · Marathon: 300s per-turn cap (RELAY_TURN_TIMEOUT_S) too short for real code+test builds → false HALT | ✅ | [GH-205-TURN-TIMEOUT-FALSE-HALT.md](PROJECT/2-WORKING/GH-205-TURN-TIMEOUT-FALSE-HALT.md) · [#205](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/205) |

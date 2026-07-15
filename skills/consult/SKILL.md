@@ -98,11 +98,22 @@ answer still comes back (**graceful degrade**, and the degrade is stated, never 
    always pass `CONSULT_ROOT="$ROOT"`) with the prompt + a `--label`. Both models run at once. Don't
    invoke a bare `consult.sh`; it only resolves at the repo root.
 3. **Read both transcripts** in `relay-system/<today>/<label>-<HHMMSS>/<label>.codex.md` and `…agy.*`.
-4. **Reconcile — this is the load-bearing step.** Produce a synthesis with three parts, in this order:
-   - **Disagree** (first — it's the whole point): every point the two models differ on, with your
-     adjudication and *why*.
+4. **Reconcile — this is the load-bearing step.** Produce a synthesis with four parts, in this order:
+   - **TLDR** (new — one to two sentences, before anything else): the reconciled call and how confident
+     it is, so the operator can stop reading right there if that's all they need. e.g. *"Both models
+     agree the migration is safe — go ahead. Codex flagged one edge case worth a follow-up (see below)."*
+   - **Disagree** (it's the whole point of asking two models): every point the two differ on, with your
+     adjudication and *why*. Never in the TLDR — the TLDR previews the call, it doesn't bury the split.
    - **Agree:** what both independently converged on (higher confidence because it's cross-model).
-   - **Reconciled call:** your single recommendation, naming any open risk.
+   - **Sorted categories** (new — closes the synthesis, replaces a bare prose recommendation): bucket
+     every point either advisor raised — agreements and adjudicated disagreements alike — into exactly
+     one:
+     - **Blocking** — a real risk either advisor surfaced; must address before proceeding.
+     - **Worth doing, optional** — a real improvement; the operator's call.
+     - **Skip / out of scope** — noted and dismissed, named so it doesn't resurface.
+     Drop empty buckets. For a short, clean consult (both advisors agree, one or two minor notes),
+     skip the buckets and give the recommendation as plain prose instead — don't force structure on a
+     synthesis with nothing to sort.
 5. **Hand the synthesis back** to the operator. If it reveals the work needs iteration, offer to
    start a `relay`.
 
