@@ -2,7 +2,7 @@
 gh_issue: 205
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/205
 title: "Marathon: 300s per-turn wall-clock cap (RELAY_TURN_TIMEOUT_S) too short for real code+test builds → false HALT"
-status: captured 2026-07-15, queued for marathon (bundle with GH-206/GH-207)
+status: in progress 2026-07-15, promoted to 2-WORKING, queued for marathon (bundle with GH-206/GH-207)
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel
@@ -25,6 +25,12 @@ goal: >
   exceeded the 300s default cap — raise/parameterize the cap per lane and treat
   "killed but artifact present + gate green" as complete-pending-review, not failure.
 ---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Captured 2026-07-15, contract written, parked in ROADMAP, promoted to 2-WORKING for the GH-205/206/207 marathon bundle. | Preflight the bundle (`utils/swarm-preflight.sh --gh-issue 205 --gh-issue 206 --gh-issue 207`), then fire lane `gh205-turn-timeout` of `marathon-plans/2026-07-15-gh205-207/MARATHON.yaml`. |
 
 ## Problem (confirmed in code, not assumed)
 

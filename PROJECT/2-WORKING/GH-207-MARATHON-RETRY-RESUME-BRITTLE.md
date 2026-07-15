@@ -2,7 +2,7 @@
 gh_issue: 207
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/207
 title: "Marathon retry/resume is brittle against pre-existing lane state: cross-marathon lane-id collision + no-progress HALT on an already-complete lane"
-status: captured 2026-07-15, queued for marathon (bundle with GH-205/GH-206)
+status: in progress 2026-07-15, promoted to 2-WORKING, queued for marathon (bundle with GH-205/GH-206)
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel
@@ -26,6 +26,12 @@ goal: >
   "artifact already present + gate green + reviewer approves" as lane-satisfied instead of
   no-progress escalation, so depends_on chains can advance past already-done lanes.
 ---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Captured 2026-07-15, contract written, parked in ROADMAP, promoted to 2-WORKING for the GH-205/206/207 marathon bundle. | Preflight the bundle (`utils/swarm-preflight.sh --gh-issue 205 --gh-issue 206 --gh-issue 207`), then fire lane `gh207-retry-resume` (last lane) of `marathon-plans/2026-07-15-gh205-207/MARATHON.yaml`. |
 
 ## Problem (confirmed in code + observed live)
 

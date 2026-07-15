@@ -2,7 +2,7 @@
 gh_issue: 206
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/206
 title: "Marathon: vendored .xyz/ install conflates harness-home with repo-root — won't run without MARATHON_ROOT + bin overrides"
-status: captured 2026-07-15, queued for marathon (bundle with GH-205/GH-207)
+status: in progress 2026-07-15, promoted to 2-WORKING, queued for marathon (bundle with GH-205/GH-207)
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel
@@ -25,6 +25,12 @@ goal: >
   the script's own location) and MARATHON_ROOT (target repo: briefs, TICK_REPO_ROOT, commits, from
   git rev-parse), so a vendored .xyz/ install runs from the repo root with zero env overrides.
 ---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Captured 2026-07-15, contract written, parked in ROADMAP, promoted to 2-WORKING for the GH-205/206/207 marathon bundle. | Preflight the bundle (`utils/swarm-preflight.sh --gh-issue 205 --gh-issue 206 --gh-issue 207`), then fire lane `gh206-root-split` (first lane) of `marathon-plans/2026-07-15-gh205-207/MARATHON.yaml`. |
 
 ## Problem (confirmed in code, not assumed)
 
