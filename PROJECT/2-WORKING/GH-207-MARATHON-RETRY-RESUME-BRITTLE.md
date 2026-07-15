@@ -2,7 +2,7 @@
 gh_issue: 207
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/207
 title: "Marathon retry/resume is brittle against pre-existing lane state: cross-marathon lane-id collision + no-progress HALT on an already-complete lane"
-status: in progress 2026-07-15, promoted to 2-WORKING, queued for marathon (bundle with GH-205/GH-206)
+status: built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green) — PR pending
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-15, contract written, parked in ROADMAP, promoted to 2-WORKING for the GH-205/206/207 marathon bundle. | Preflight the bundle (`utils/swarm-preflight.sh --gh-issue 205 --gh-issue 206 --gh-issue 207`), then fire lane `gh207-retry-resume` (last lane) of `marathon-plans/2026-07-15-gh205-207/MARATHON.yaml`. |
+| Lane `gh207-retry-resume` BUILT 2026-07-15 on the marathon branch: `MARATHON_LANE_NS` namespacing (bare-id fallback kept), idempotent re-render commit, gated `no-progress` recovery (artifact present + green gate + builder-stalled → one reviewer round, complete on approval), `LANE_ATTEMPT_COUNTED` leak cleared. agy r1 first tripped the #183 isolation-breach false-positive (clean on retry), then caught a real same-second `save_transcript` `set -e` crash; codex fixed, agy r2 Approved; gate 162 assertions green. | Merge via the marathon branch PR. The run itself hit #207 mode 1 live before the fix: a stray `phases/p1` render from another invocation landed mid-marathon (see [#209](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/209)). |
 
 ## Problem (confirmed in code + observed live)
 

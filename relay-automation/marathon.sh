@@ -23,27 +23,37 @@ set -euo pipefail
 # purely a marathon.sh-side task-name override, no change to marathon-drive.sh itself.
 #
 # The MARATHON.yaml phase fields drive each marathon-drive call: id→--phase-id, reviewer→--reviewer,
-# brief→--phase-brief (required to run), artifact→--artifact, max_review_rounds→--round-cap.
+# brief→--phase-brief (required to run), artifact→--artifact, turn_timeout_s→RELAY_TURN_TIMEOUT_S,
+# max_review_rounds→--round-cap.
 #
 # Environment overrides (for tests):
-#   MARATHON_ROOT       — repo root (default: parent of this script's dir)
-#   MARATHON_DRIVE      — marathon-drive.sh path (default: this script's dir/marathon-drive.sh)
-#   MARATHON_YAML_BIN   — bin/marathon-yaml path (default: <repo-root>/bin/marathon-yaml)
-#   TICK_BIN            — tick binary (default: <repo-root>/bin/tick)
+#   MARATHON_HOME       — harness home (default: parent of this script's dir)
+#   MARATHON_ROOT       — target repo root (default: `git -C "$PWD" rev-parse --show-toplevel`,
+#                         falling back to MARATHON_HOME outside a git repo)
+#   MARATHON_DRIVE      — marathon-drive.sh path (default: <harness-home>/relay-automation/marathon-drive.sh)
+#   MARATHON_YAML_BIN   — bin/marathon-yaml path (default: <harness-home>/bin/marathon-yaml)
+#   TICK_BIN            — tick binary (default: <harness-home>/bin/tick)
 # Real runs also inherit the turn-taker env (CLAUDE_BIN, *_TURN_ROOT, …), passed straight through.
 #
 # Exit: 0 all phases approved · N the failing phase's marathon-drive exit code · 2 usage/parse error.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT="${MARATHON_ROOT:-"$(cd "$HERE/.." && pwd)"}"
-TICK_BIN="${TICK_BIN:-"$ROOT/bin/tick"}"
-DRIVE_BIN="${MARATHON_DRIVE:-"$HERE/marathon-drive.sh"}"
-YAML_BIN="${MARATHON_YAML_BIN:-"$ROOT/bin/marathon-yaml"}"
+MARATHON_HOME="${MARATHON_HOME:-"$(cd "$HERE/.." && pwd)"}"
+if [[ -n "${MARATHON_ROOT:-}" ]]; then
+  ROOT="$MARATHON_ROOT"
+elif ROOT="$(git -C "${PWD:-.}" rev-parse --show-toplevel 2>/dev/null)"; then
+  :
+else
+  ROOT="$MARATHON_HOME"
+fi
+TICK_BIN="${TICK_BIN:-"$MARATHON_HOME/bin/tick"}"
+DRIVE_BIN="${MARATHON_DRIVE:-"$MARATHON_HOME/relay-automation/marathon-drive.sh"}"
+YAML_BIN="${MARATHON_YAML_BIN:-"$MARATHON_HOME/bin/marathon-yaml"}"
 
 die() { printf 'marathon: %s\n' "$*" >&2; exit 2; }
 log() { printf 'marathon: %s\n' "$*"; }
 
-XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$ROOT/utils/telemetry/append-xyz-completion.sh"}"
+XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$MARATHON_HOME/utils/telemetry/append-xyz-completion.sh"}"
 
 # GH-75: the ONE whole-run completion record for a marathon.sh-orchestrated run. Each per-phase
 # marathon-drive runs with XYZ_HARNESS_CONTEXT=marathon-phase (its own hook silent), so this is the
@@ -78,23 +88,27 @@ export TICK_REPO_ROOT="$ROOT"
 # Parse + validate + resolve order. A malformed/cyclic plan halts the whole run here (exit 2).
 PLAN_TSV="$("$YAML_BIN" "$PLAN")" || die "plan parse failed (see above)"
 [[ -n "$PLAN_TSV" ]] || die "plan has no phases"
+PLAN_NAME="$(sed -n 's/^name:[[:space:]]*//p' "$PLAN" | head -n1 | sed 's/[[:space:]]*$//')"
 phase_count="$(printf '%s\n' "$PLAN_TSV" | grep -c .)"
 log "plan: $PLAN — $phase_count phase(s) in execution order"
 
 idx=0
 # Read TSV with a NON-whitespace field separator (US / \037): `IFS=$'\t' read` coalesces consecutive
 # tabs (tab is whitespace-class), which would collapse empty columns and shift every field. Translate
-# tabs → \037 so empty fields (no rounds / no depends_on / no artifact) are preserved positionally.
-while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact name; do
+# tabs → \037 so empty fields (no rounds / no depends_on / no artifact / no turn_timeout_s) are
+# preserved positionally.
+while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact turn_timeout_s name; do
   [[ -n "$id" ]] || continue
   idx=$((idx + 1))
   rounds="${rounds:-2}"
   cap=$((2 * rounds + 1))
+  lane_ns=""
+  [[ -n "$PLAN_NAME" ]] && lane_ns="${PLAN_NAME}--${id}"
   [[ -n "$brief" ]] || die "phase $id: no 'brief:' in the plan — a phase needs a task to run"
   case "$brief" in /*) brief_path="$brief" ;; *) brief_path="$ROOT/$brief" ;; esac
   [[ -f "$brief_path" ]] || die "phase $id: brief file not found: $brief_path"
 
-  log "── phase $idx/$phase_count: $id (reviewer=$reviewer, round-cap=$cap${artifact:+, artifact=$artifact}) ──"
+  log "── phase $idx/$phase_count: $id (reviewer=$reviewer, round-cap=$cap${artifact:+, artifact=$artifact}${turn_timeout_s:+, turn-timeout=${turn_timeout_s}s}) ──"
 
   drive_args=( --phase-id "$id" --reviewer "$reviewer" --builder "$BUILDER"
                --phase-brief "$brief_path" --round-cap "$cap" --phases-dir "$PHASES_DIR" )
@@ -121,8 +135,14 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact name; do
   # GH-75: mark each per-phase marathon-drive call so its (and its nested relay-drive's) XYZ.json hook
   # stays silent — this orchestrator emits a SINGLE harness:"marathon" whole-run record below, never
   # one per phase.
-  MARATHON_ROOT="$ROOT" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
-    bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?
+  if [[ -n "$turn_timeout_s" ]]; then
+    MARATHON_ROOT="$ROOT" MARATHON_LANE_NS="$lane_ns" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
+      RELAY_TURN_TIMEOUT_S="$turn_timeout_s" \
+      bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?
+  else
+    MARATHON_ROOT="$ROOT" MARATHON_LANE_NS="$lane_ns" TICK_BIN="$TICK_BIN" XYZ_HARNESS_CONTEXT=marathon-phase \
+      bash "$DRIVE_BIN" "${drive_args[@]}" || phase_exit=$?
+  fi
   if [[ "$phase_exit" -ne 0 ]]; then
     log "HALT: phase $id failed (marathon-drive exit $phase_exit) — chain stops; later phases NOT started"
     case "$phase_exit" in
@@ -130,6 +150,7 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact name; do
       4) _halt_reason="relay cap/close-mismatch" ;;
       5) _halt_reason="pre-advance gate failed" ;;
       6) _halt_reason="containment violation" ;;
+      7) _halt_reason="turn timeout / hang" ;;
       *) _halt_reason="marathon-drive exit $phase_exit" ;;
     esac
     xyz_marathon_run_emit red "halted at phase $idx of $phase_count ($id) — $_halt_reason"

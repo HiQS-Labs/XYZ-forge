@@ -23,8 +23,8 @@ bash -n "$MARATHON_DRIVE"  && pass "marathon-drive.sh parses"  || fail "marathon
 
 grep -qE 'lane_attempt_gate .*"\$RELAY_TASK" "\$FORCE"' "$RELAY_DRIVE" \
   && pass "relay-drive.sh calls lane_attempt_gate (keyed on RELAY_TASK)" || fail "relay-drive gate call missing"
-grep -qE 'lane_attempt_gate .*"\$PHASE_ID" "\$FORCE"' "$MARATHON_DRIVE" \
-  && pass "marathon-drive.sh calls lane_attempt_gate (keyed on PHASE_ID)" || fail "marathon-drive gate call missing"
+grep -qE 'lane_attempt_gate .*"\$(PHASE_ID|LANE_STATE_KEY)" "\$FORCE"' "$MARATHON_DRIVE" \
+  && pass "marathon-drive.sh calls lane_attempt_gate (keyed on PHASE_ID/LANE_STATE_KEY)" || fail "marathon-drive gate call missing"
 grep -q 'TICK_REPO_ROOT:-' "$RELAY_DRIVE" \
   && pass "relay-drive.sh keys attempts off TICK_REPO_ROOT (hermetic in tests)" || fail "relay-drive not TICK_REPO_ROOT-anchored"
 grep -q 'LANE_ATTEMPT_COUNTED=1' "$MARATHON_DRIVE" \
@@ -44,7 +44,7 @@ else
   fail "GH-45 helpers diverge between the two drivers"
 fi
 # reset-on-success is wired at each driver's Approved terminal + marathon forwards --force
-grep -q 'lane_attempt_reset .*"\$PHASE_ID"' "$MARATHON_DRIVE" && pass "marathon-drive resets the counter on phase Approved" || fail "marathon reset-on-success missing"
+grep -qE 'lane_attempt_reset .*"\$(PHASE_ID|LANE_STATE_KEY)"' "$MARATHON_DRIVE" && pass "marathon-drive resets the counter on phase Approved" || fail "marathon reset-on-success missing"
 grep -q 'lane_attempt_reset .*"\$RELAY_TASK"' "$RELAY_DRIVE" && pass "relay-drive resets the counter on Approved close" || fail "relay reset-on-success missing"
 grep -q 'drive_args+=( --force )' "$ROOT/relay-automation/marathon.sh" && pass "marathon.sh forwards --force to each phase" || fail "marathon.sh --force forwarding missing"
 

@@ -53,7 +53,7 @@ fi
 #                                    the lane fast with "run `agy login`" instead of letting `agy -p`
 #                                    open an interactive auth prompt that deadlocks the headless turn
 #
-#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 900). A hung or
 #                          runaway agy CLI is killed after this many seconds; the turn exits 7.
 #
 # TWO agy-specific gotchas this shim guards (memory: agy-antigravity-cli):
@@ -191,7 +191,7 @@ fi
 
 # Build the agy invocation. --print-timeout is pinned to the wall-clock cap so agy returns on its own
 # just before the rtl watchdog would kill it; --model and AGY_FLAGS are optional pass-throughs.
-turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-900}"
 agy_args=(--dangerously-skip-permissions --print-timeout "${turn_timeout}s")
 [[ -n "${AGY_MODEL:-}" ]] && agy_args+=(--model "$AGY_MODEL")
 read -ra _aflags <<<"${AGY_FLAGS:-}"

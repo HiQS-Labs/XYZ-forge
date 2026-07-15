@@ -36,6 +36,7 @@ printf '\n### Round 1 · Reviewer · %s (codex-stub)\n**Verdict:** Changes reque
 if [ "${STUB_MODE:-good}" != notick ]; then
   "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to claude-a >/dev/null 2>&1
 fi
+[ "${STUB_MODE:-good}" = slowafterrelease ] && sleep "${STUB_SLEEP_S:-2}"
 [ "${STUB_MODE:-good}" = bad ] && printf 'off-lane\n' >>"$A/offlane.md"
 # commitbypass: Codex ignores "no git" and COMMITS an off-lane change (hides it from git status)
 if [ "${STUB_MODE:-good}" = commitbypass ]; then
@@ -148,9 +149,20 @@ grep -q -- "-s workspace-write" "$WORK/codex-args" && pass "default CODEX_FLAGS 
 # GH-106: default must also disable the interactive approval gate, else a headless run hangs on an
 # approval prompt until RELAY_TURN_TIMEOUT_S kills it (exit 7).
 grep -q -- "-c approval_policy=never" "$WORK/codex-args" && pass "GH-106: default CODEX_FLAGS includes '-c approval_policy=never' (no headless approval hang)" || fail "GH-106: default should disable interactive approval prompts"
+grep -q 'RELAY_TURN_TIMEOUT_S:-900' "$SHIM" && pass "default RELAY_TURN_TIMEOUT_S is 900s" || fail "expected 900s default turn timeout"
 seed_token RELAY-TURN-flags2
 CODEX_FLAGS="--dangerously-bypass-approvals-and-sandbox" run_shim RELAY-TURN-flags2 codex good >/dev/null 2>&1
 grep -q -- "--dangerously-bypass-approvals-and-sandbox" "$WORK/codex-args" && pass "CODEX_FLAGS override is honored" || fail "CODEX_FLAGS override not passed"
+
+# --- (7a) timeout after a successful handoff still exits 7 (GH-205 fixture) ---
+seed_token RELAY-TURN-timeout
+before="$(git -C "$A" rev-parse HEAD)"
+RELAY_TURN_TIMEOUT_S=1 run_shim RELAY-TURN-timeout codex slowafterrelease RELAY_PEER=claude-a; rc=$?
+[ "$rc" -eq 7 ] && pass "turn killed at RELAY_TURN_TIMEOUT_S exits 7" || fail "timeout fixture should exit 7, got $rc"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "timeout fixture can still commit before the shim reports exit 7" || fail "timeout fixture should still commit the relay change"
+[ "$(tok_field RELAY-TURN-timeout status)" = "open" ] && [ "$(tok_field RELAY-TURN-timeout handoff-to)" = "claude-a" ] \
+  && pass "timeout fixture still handed the token to the peer before exit 7" \
+  || fail "timeout fixture should leave token open for claude-a: status=$(tok_field RELAY-TURN-timeout status) handoff=$(tok_field RELAY-TURN-timeout handoff-to)"
 
 # --- (7b) GH-36: worktree isolation grants codex a writable root for the shared .tick lock ---
 # Under isolation, codex's CWD is a throwaway worktree but .tick/ lives at TICK_REPO_ROOT (outside

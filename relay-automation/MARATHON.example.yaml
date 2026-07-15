@@ -9,6 +9,7 @@
 #   reviewer           codex* or agy* — the model that reviews this phase                 (required)
 #   brief              path (repo-relative) to the phase's task markdown                  (required)
 #   artifact           comma-separated repo-relative file(s) the builder may create/edit  (optional)
+#   turn_timeout_s     per-turn wall-clock cap exported as RELAY_TURN_TIMEOUT_S            (optional)
 #   max_review_rounds  round-cap = 2*N+1 (default 2 → cap 5)                              (optional)
 #   depends_on         run this phase only after the named phase is approved              (optional)
 #   name               human label for logs                                              (optional)
@@ -20,6 +21,7 @@ phases:
     reviewer: codex
     brief: phases-briefs/p1-schema.md
     artifact: src/schema.js
+    turn_timeout_s: 900
     max_review_rounds: 2
 
   - id: p2
@@ -27,5 +29,6 @@ phases:
     reviewer: agy
     brief: phases-briefs/p2-lease.md
     artifact: src/lease.js
+    turn_timeout_s: 1200
     depends_on: p1
     max_review_rounds: 3

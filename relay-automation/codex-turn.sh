@@ -43,7 +43,7 @@ fi
 #   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
 #                     async/side-effect containment; off-lane in the worktree → exit 6). Default OFF.
 #
-#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 900). A hung or
 #                          runaway codex CLI is killed after this many seconds; the turn exits 7.
 #
 # Exit: 0 acted/deferred · 5 codex failed / token ownership missing · 6 off-allowlist edit
@@ -128,7 +128,7 @@ codex_extra_flags=()
 # is auditable. (Codex token-stats parsing is a follow-up — its usage format isn't probed yet, so
 # cost.tokens for Codex turns stays a Phase-1 partial.)
 rtl_before
-turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-900}"
 bounded_rc=0
 
 # Worktree isolation (opt-in; ROADMAP Part A Phase 3.6 — same wiring as claude-turn.sh / agy-turn.sh).

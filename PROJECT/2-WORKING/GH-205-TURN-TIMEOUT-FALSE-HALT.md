@@ -2,7 +2,7 @@
 gh_issue: 205
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/205
 title: "Marathon: 300s per-turn wall-clock cap (RELAY_TURN_TIMEOUT_S) too short for real code+test builds → false HALT"
-status: in progress 2026-07-15, promoted to 2-WORKING, queued for marathon (bundle with GH-206/GH-207)
+status: built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green) — PR pending
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel
@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-15, contract written, parked in ROADMAP, promoted to 2-WORKING for the GH-205/206/207 marathon bundle. | Preflight the bundle (`utils/swarm-preflight.sh --gh-issue 205 --gh-issue 206 --gh-issue 207`), then fire lane `gh205-turn-timeout` of `marathon-plans/2026-07-15-gh205-207/MARATHON.yaml`. |
+| Lane `gh205-turn-timeout` BUILT 2026-07-15 on the marathon branch — and the lane itself live-reproduced this bug (codex blew even the 900s cap mid-lane, work committed `37fd333`, chain HALTed unreviewed; recovered by manually driving the lost agy review). agy r1 caught a real `relay_exit` reset bug in the recovery path, codex fixed, agy r2 Approved; gate 144/144. Landed: 900s shim defaults, per-lane `turn_timeout_s:` plumbed through `bin/marathon-yaml`+`marathon.sh`, exit-7-with-artifact+green-gate → reviewer round (`recover_timeout_exit`), README/example docs. | Merge via the marathon branch PR. Note for review: the first escalation written by the new recovery code mislabeled its reason (`turn-timeout-or-hang` vs "pre-advance gate failed" message) — verify the classification matrix in the PR. |
 
 ## Problem (confirmed in code, not assumed)
 

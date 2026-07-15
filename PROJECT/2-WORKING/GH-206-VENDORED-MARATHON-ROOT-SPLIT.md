@@ -2,7 +2,7 @@
 gh_issue: 206
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/206
 title: "Marathon: vendored .xyz/ install conflates harness-home with repo-root — won't run without MARATHON_ROOT + bin overrides"
-status: in progress 2026-07-15, promoted to 2-WORKING, queued for marathon (bundle with GH-205/GH-207)
+status: built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green) — PR pending; follow-up #209 open
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel
@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-15, contract written, parked in ROADMAP, promoted to 2-WORKING for the GH-205/206/207 marathon bundle. | Preflight the bundle (`utils/swarm-preflight.sh --gh-issue 205 --gh-issue 206 --gh-issue 207`), then fire lane `gh206-root-split` (first lane) of `marathon-plans/2026-07-15-gh205-207/MARATHON.yaml`. |
+| Lane `gh206-root-split` BUILT 2026-07-15 on `marathon/gh-205-turn-timeout-false-halt-2026-07-15` (codex build `4d60689`, agy Approved `a07ef5e`, gate green): `MARATHON_HOME`/`MARATHON_ROOT` split landed in `marathon.sh` + README + vendored-layout test. | Merge via the marathon branch PR. Follow-up [#209](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/209): the new PWD-based `MARATHON_ROOT` fallback leaked a fixture render/commit + tick token into the real repo mid-run — needs a foreign-CWD guard + regression test. |
 
 ## Problem (confirmed in code, not assumed)
 

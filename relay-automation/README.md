@@ -113,6 +113,22 @@ Heartbeat cadence:
 | [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md) | The Option-A cross-model headless turn-taker plan (Codex / agy shims). |
 | [MARATHON.example.yaml](MARATHON.example.yaml) | Example multi-build marathon manifest for `marathon.sh`. |
 
+## `marathon.sh` roots
+
+`marathon.sh` resolves two different roots on purpose:
+
+- `MARATHON_HOME`: the harness install that owns `bin/tick`, `bin/marathon-yaml`, and telemetry helpers. Default: the script's own parent dir (`relay-automation/..`).
+- `MARATHON_ROOT`: the target repo that owns the plan's `brief:` files, `phases/`, `.tick/`, and commit target. Default: `git -C "$PWD" rev-parse --show-toplevel`; outside a git repo it falls back to `MARATHON_HOME`.
+
+That split preserves dev-checkout behavior (`MARATHON_HOME == MARATHON_ROOT`) and makes vendored installs work with no bin overrides:
+
+```bash
+cd /path/to/target-repo
+./.xyz/relay-automation/marathon.sh --plan marathon-plans/my-wave/MARATHON.yaml
+```
+
+Override them independently only when you genuinely need a non-default harness or repo root. The lower-level binary overrides (`TICK_BIN`, `MARATHON_YAML_BIN`, `XYZ_APPEND_BIN`) still win if set.
+
 ## `marathon-plan.sh` zone config
 
 `utils/marathon-plan.sh` can now load a repo-specific zone model instead of hardcoding xyz's own
@@ -234,13 +250,14 @@ want both workers available on that machine.
 
 The Codex autonomy check matters: a bare `codex exec "say ok"` can succeed without
 proving Codex can write the relay file. `codex-turn.sh` defaults to
-`-s workspace-write`; if your device config still blocks writes, set
+`-s workspace-write`, `-c approval_policy=never`, and a 900-second
+`RELAY_TURN_TIMEOUT_S`; if your device config still blocks writes, set
 `CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` or add
 `-c approval_policy=never`. If `codex` is not on `PATH` or is not authenticated,
 fix that before running the shim; override the binary with
 `CODEX_BIN=/path/to/codex` if needed.
 
-The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it works before adding it to your PATH or passing `AGY_BIN` to every drive command.
+The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. The agy shim uses the same 900-second default `RELAY_TURN_TIMEOUT_S`, and passes that value through to `--print-timeout`. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it works before adding it to your PATH or passing `AGY_BIN` to every drive command.
 
 If you are running under a sandboxed AI shell, run both workers outside that
 sandbox. Codex often fails there because it cannot reach the OS keychain or
@@ -341,11 +358,21 @@ Expect agy to claim and ping the token, append its block to the relay file,
 release or `done` the token, revert any off-allowlist edits, commit only the
 allowlisted paths, and skip push. The transcript lands in `"${TMPDIR:-/tmp}/agy-turn-$$.log"`.
 
+`RELAY_TURN_TIMEOUT_S` is the per-turn wall-clock ceiling for `codex-turn.sh` and `agy-turn.sh`.
+Default: `900`. Override per run, for example:
+
+```bash
+RELAY_TURN_TIMEOUT_S=1200 relay-automation/relay-drive.sh ...
+```
+
+For multi-phase plans, prefer the per-lane `turn_timeout_s:` field in `MARATHON.yaml`; `marathon.sh`
+exports it into that phase's drive env as `RELAY_TURN_TIMEOUT_S`.
+
 Exit codes:
 
 - `relay-drive.sh`: `0` closed Approved or Closed, `3` no progress, `4` round cap or closed-not-approved, `5` (with `--review-once`) reviewer completed a single non-approval review ("changes requested" — not a stall), `2` usage.
-- `codex-turn.sh`: `0` acted or deferred, `5` Codex failed, `6` off-allowlist edit reverted or Codex committed mid-turn, `7` timeout-killed, `2` usage.
-- `agy-turn.sh`: `0` acted or deferred, `5` agy failed or produced empty output, `6` off-allowlist edit reverted or agy committed mid-turn, `7` timeout-killed, `2` usage.
+- `codex-turn.sh`: `0` acted or deferred, `5` Codex failed, `6` off-allowlist edit reverted or Codex committed mid-turn, `7` timeout-killed (`RELAY_TURN_TIMEOUT_S`, default `900`), `2` usage.
+- `agy-turn.sh`: `0` acted or deferred, `5` agy failed or produced empty output, `6` off-allowlist edit reverted or agy committed mid-turn, `7` timeout-killed (`RELAY_TURN_TIMEOUT_S`, default `900`), `2` usage.
 - `bin/tick`: exits `8` when structural quality validation fail occurs (`bin/validate-relay-block` exits non-zero when `--relay-file` flag is provided to `release` or `done`).
 
 ### 5. Review a file in another repo

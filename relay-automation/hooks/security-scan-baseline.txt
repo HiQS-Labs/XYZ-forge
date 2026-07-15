@@ -67,3 +67,4 @@ test/security-scan.sh	eval-unsanitized	TSV_EXPECT="$(printf 'mixed.sh\teval-unsa
 test/deep-research.sh	credential-literal	API_KEY="test-key"
 test/hq-locator.sh	eval-unsanitized	( eval "$EVOUT"; [ "$HQ_SH" = "$HARN/utils/hq/hq.sh" ] && [ "$HQ_ROOT" = "$HARN" ] ) \
 test/hq-locator.sh	eval-unsanitized	RUN="$( eval "$EVOUT"; bash "$HQ_SH" )"
+relay-automation/marathon-drive.sh	eval-unsanitized	    eval "$PRE_ADVANCE_CMD"

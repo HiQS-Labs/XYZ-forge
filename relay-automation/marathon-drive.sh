@@ -41,7 +41,8 @@ fi
 #
 # Exit: 0 phase approved + gate passed · 3 relay no-progress · 4 relay cap/mismatch ·
 #        5 pre-advance gate failed · 6 containment violation (turn-taker reverted an off-lane edit) ·
-#        8 lane parked (GH-45 attempt cap — no token seeded; re-fire with --force) · 2 usage.
+#        7 turn timeout / hang · 8 lane parked (GH-45 attempt cap — no token seeded; re-fire with
+#        --force) · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # _xyz_harness: the directory containing relay-automation/ (and bin/, src/, utils/).
@@ -199,6 +200,48 @@ xyz_marathon_emit() {  # <health> <description>
   "$XYZ_APPEND_BIN" "$harness" "$sid" "$health" "$title" "$desc" >/dev/null 2>&1 || true
 }
 
+file_status() { sed -n 's/^STATUS:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
+terminal_status() { case "$1" in Approved|Closed) return 0 ;; *) return 1 ;; esac; }
+token_state() {
+  local info status claimer handoff actor
+  info="$("$TICK_BIN" info "$RELAY_TASK" 2>/dev/null || true)"
+  status="$(printf '%s\n' "$info"  | sed -n 's/^status:[[:space:]]*//p'     | head -1)"
+  claimer="$(printf '%s\n' "$info" | sed -n 's/^claimer:[[:space:]]*//p'    | head -1)"
+  handoff="$(printf '%s\n' "$info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -1)"
+  case "$status" in
+    claimed) actor="$claimer" ;;
+    open)    actor="$handoff" ;;
+    *)       actor="" ;;
+  esac
+  printf '%s\t%s\n' "$status" "$actor"
+}
+
+run_pre_advance_gate() {
+  (
+    if [[ -n "$TARGET_ROOT" ]]; then
+      cd "$TARGET_ROOT"
+    fi
+    eval "$PRE_ADVANCE_CMD"
+  )
+}
+
+artifacts_exist_for_timeout() {
+  local root path
+  [[ -n "$ARTIFACT_PATHS" ]] || return 1
+  root="${TARGET_ROOT:-$ROOT}"
+  IFS=',' read -ra _artifact_paths <<<"$ARTIFACT_PATHS"
+  for path in "${_artifact_paths[@]}"; do
+    path="${path#"${path%%[![:space:]]*}"}"
+    path="${path%"${path##*[![:space:]]}"}"
+    [[ -n "$path" ]] || continue
+    case "$path" in
+      /*) [[ -e "$path" ]] || return 1 ;;
+      *)  [[ -e "$root/$path" ]] || return 1 ;;
+    esac
+  done
+  return 0
+}
+
 usage() {
   cat <<'EOF'
 Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [options]
@@ -271,6 +314,7 @@ PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
 PRE_ADVANCE_CMD="${PRE_ADVANCE_CMD:-"bash $ROOT/validate.sh"}"
 # Default the tick token name off the phase id (p1 → MARATHON-P1-TURN), keeping the Phase-3 default.
 RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '[:upper:]')-TURN"}"
+LANE_STATE_KEY="${MARATHON_LANE_NS:-$PHASE_ID}"
 
 # Map builder/reviewer to _AGENT env vars for marathon-agent.sh routing. Both actors are routed to
 # their shim by name prefix (claude/codex/agy/gemini), so the harness supports cross-model BUILDERS
@@ -337,14 +381,14 @@ else
   unset ALLOW_PATHS
 fi
 
-PHASE_DIR="$PHASES_DIR/$PHASE_ID"
+PHASE_DIR="$PHASES_DIR/$LANE_STATE_KEY"
 RELAY_FILE="$PHASE_DIR/RELAY.md"
 REL_RELAY="${RELAY_FILE#"$ROOT"/}"   # repo-root-relative path the agent edits / declares in claim --paths
 
 # GH-162: peek at prior attempts BEFORE rendering (read-only; lane_attempt_gate in Step 3 still owns
 # the append/park write) so a re-fired phase's relay file can carry the debug-mantra note. Empty
 # DEBUG_MANTRA_TEXT on a first fire (prior=0) — the render below is then byte-identical to before.
-DEBUG_MANTRA_PRIOR="$(debug_mantra_prior_attempts "${TICK_REPO_ROOT:-$ROOT}" "$PHASE_ID")"
+DEBUG_MANTRA_PRIOR="$(debug_mantra_prior_attempts "${TICK_REPO_ROOT:-$ROOT}" "$LANE_STATE_KEY")"
 DEBUG_MANTRA_TEXT="$(debug_mantra_note "$DEBUG_MANTRA_PRIOR" "$PHASE_DIR" "$HERE/DEBUG-MANTRA.md")"
 
 # ── Step 0: clean-workspace check (Phase 3.6) ──────────────────────────────
@@ -435,12 +479,20 @@ fi
 # ── Step 2: commit the relay file (rtl_before needs a clean HEAD) ───────────
 
 git -C "$ROOT" add -- "$RELAY_FILE"
-git -C "$ROOT" commit -q -m "marathon: render phase ${PHASE_ID} relay (${RELAY_TASK})"
-log "relay file committed: $RELAY_FILE"
+if git -C "$ROOT" diff --cached --quiet -- "$RELAY_FILE"; then
+  log "relay file unchanged: $RELAY_FILE"
+else
+  git -C "$ROOT" commit -q -m "marathon: render phase ${PHASE_ID} relay (${RELAY_TASK})"
+  log "relay file committed: $RELAY_FILE"
+fi
 
 # ── Step 3: seed tick token with handoff → builder ──────────────────────────
 
 export TICK_REPO_ROOT="$ROOT"
+# The outer marathon-drive invocation owns the lane attempt count. A leaked caller env var would skip
+# counting entirely, so clear it here before the outer gate; the nested relay-drive below still gets
+# an explicit one-shot LANE_ATTEMPT_COUNTED=1 in its child env to avoid double-counting.
+unset LANE_ATTEMPT_COUNTED
 
 reconcile_relay_task() {
   local info status handoff claimer
@@ -476,9 +528,10 @@ reconcile_relay_task() {
 }
 
 # GH-45: per-lane attempt cap — refuse to start this phase once it has hit LANE_MAX_ATTEMPTS
-# (keyed on PHASE_ID, stable across re-fires), seeding no token; --force overrides. Counted here, so
-# the nested relay-drive below (LANE_ATTEMPT_COUNTED=1) does not double-count this same lane.
-lane_attempt_gate "${TICK_REPO_ROOT:-$ROOT}" "$PHASE_ID" "$FORCE" || exit $?
+# (keyed on the marathon-scoped lane-state key when present, else bare PHASE_ID), seeding no token;
+# --force overrides. Counted here, so the nested relay-drive below (LANE_ATTEMPT_COUNTED=1) does not
+# double-count this same lane.
+lane_attempt_gate "${TICK_REPO_ROOT:-$ROOT}" "$LANE_STATE_KEY" "$FORCE" || exit $?
 
 reconcile_relay_task
 
@@ -500,21 +553,96 @@ log "phase start: running relay-drive --round-cap $ROUND_CAP"
 relay_exit=0
 target_root_args=()
 [[ -n "$TARGET_ROOT" ]] && target_root_args=(--target-root "$TARGET_ROOT")
+run_relay_drive() {
+  local relay_exit=0
+  RELAY_FILE="$RELAY_FILE" \
+  LANE_ATTEMPT_COUNTED=1 \
+  XYZ_HARNESS_CONTEXT=marathon-phase \
+    "$RELAY_DRIVE_BIN" \
+      --relay-file "$RELAY_FILE" \
+      --relay-task "$RELAY_TASK" \
+      --agent-cmd  "$AGENT_CMD" \
+      --round-cap  "$ROUND_CAP" \
+      ${target_root_args[@]+"${target_root_args[@]}"} \
+    || relay_exit=$?
+  return "$relay_exit"
+}
+
+run_relay_review_once() {
+  local relay_exit=0
+  RELAY_FILE="$RELAY_FILE" \
+  LANE_ATTEMPT_COUNTED=1 \
+  XYZ_HARNESS_CONTEXT=marathon-phase \
+    "$RELAY_DRIVE_BIN" \
+      --relay-file "$RELAY_FILE" \
+      --relay-task "$RELAY_TASK" \
+      --agent-cmd  "$AGENT_CMD" \
+      --review-once \
+      ${target_root_args[@]+"${target_root_args[@]}"} \
+    || relay_exit=$?
+  return "$relay_exit"
+}
+
+TIMEOUT_ESCALATION_REASON="turn-timeout-or-hang"
+TIMEOUT_EMIT_TEXT="halted at phase ${PHASE_ID} — turn timeout / hang"
+recover_timeout_exit() {
+  local gate_exit=0 relay_exit=0 s tstatus actor
+  if ! artifacts_exist_for_timeout; then
+    TIMEOUT_ESCALATION_REASON="timeout-no-artifact"
+    TIMEOUT_EMIT_TEXT="halted at phase ${PHASE_ID} — timed-out builder produced no declared artifact"
+    log "relay timed out (exit 7) before any declared artifact landed — treating it as a real hang"
+    return 7
+  fi
+
+  log "relay timed out (exit 7) after declared artifact(s) appeared — probing the pre-advance gate: $PRE_ADVANCE_CMD"
+  run_pre_advance_gate || gate_exit=$?
+  if [[ "$gate_exit" -ne 0 ]]; then
+    TIMEOUT_ESCALATION_REASON="timeout-gate-failed"
+    TIMEOUT_EMIT_TEXT="halted at phase ${PHASE_ID} — timed-out builder artifact failed the pre-advance gate"
+    log "timeout probe: pre-advance gate FAILED (exit $gate_exit) — treating it as a real halt"
+    return 5
+  fi
+
+  s="$(file_status)"
+  IFS=$'\t' read -r tstatus actor < <(token_state)
+  if terminal_status "$s" && [[ -z "$actor" ]]; then
+    log "timeout probe: relay already reached terminal agreement (STATUS: $s, token done) — continuing"
+    return 0
+  fi
+  if [[ -z "$actor" ]]; then
+    TIMEOUT_ESCALATION_REASON="timeout-no-live-actor"
+    TIMEOUT_EMIT_TEXT="halted at phase ${PHASE_ID} — timed-out builder left no live reviewer handoff"
+    log "timeout probe: artifact + gate were green, but $RELAY_TASK has no live actor (STATUS: $s) — cannot continue"
+    return 7
+  fi
+  if [[ "$actor" == "$BUILDER" ]]; then
+    TIMEOUT_ESCALATION_REASON="timeout-builder-still-owned-turn"
+    TIMEOUT_EMIT_TEXT="halted at phase ${PHASE_ID} — timed-out builder never handed the relay to review"
+    log "timeout probe: builder still owns $RELAY_TASK (STATUS: $s) — treating this as a real hang"
+    return 7
+  fi
+
+  log "timeout probe: artifact + gate were green and $RELAY_TASK moved to $actor — resuming relay-drive from the post-timeout state"
+  run_relay_drive || relay_exit=$?
+  if [[ "$relay_exit" -eq 7 ]]; then
+    TIMEOUT_ESCALATION_REASON="timeout-during-review-recovery"
+    TIMEOUT_EMIT_TEXT="halted at phase ${PHASE_ID} — relay timed out again during review recovery"
+  fi
+  return "$relay_exit"
+}
 # GH-75: the nested relay loop reaches its own terminal exit once PER PHASE. Force its XYZ.json hook
 # silent (XYZ_HARNESS_CONTEXT=marathon-phase) so a per-phase relay completion never emits its own
 # record — this marathon-drive run (or marathon.sh above it) owns the single whole-run record. This is
 # scoped to the relay-drive child only; marathon-drive's OWN context (swarm|unset) is left intact for
 # its hook below.
-RELAY_FILE="$RELAY_FILE" \
-LANE_ATTEMPT_COUNTED=1 \
-XYZ_HARNESS_CONTEXT=marathon-phase \
-  "$RELAY_DRIVE_BIN" \
-    --relay-file "$RELAY_FILE" \
-    --relay-task "$RELAY_TASK" \
-    --agent-cmd  "$AGENT_CMD" \
-    --round-cap  "$ROUND_CAP" \
-    ${target_root_args[@]+"${target_root_args[@]}"} \
-  || relay_exit=$?
+run_relay_drive || relay_exit=$?
+if [[ "$relay_exit" -eq 7 ]]; then
+  if recover_timeout_exit; then
+    relay_exit=0
+  else
+    relay_exit=$?
+  fi
+fi
 
 # ── Step 6: act on relay-drive exit code ───────────────────────────────────
 
@@ -545,33 +673,92 @@ save_transcript() {
   local dest="$date_dir/marathon-${PHASE_ID}-${ts}.md"
   cp "$RELAY_FILE" "$dest"
   git -C "$ROOT" add -- "$dest"
-  git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} transcript saved (${RELAY_TASK})"
-  log "transcript saved: $dest"
+  if git -C "$ROOT" diff --cached --quiet -- "$dest"; then
+    log "transcript unchanged: $dest"
+  else
+    git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} transcript saved (${RELAY_TASK})"
+    log "transcript saved: $dest"
+  fi
+}
+
+complete_phase_success() {
+  local success_mode="${1:-approved}" gate_exit=0 success_text=""
+  log "relay approved — running pre-advance gate: $PRE_ADVANCE_CMD"
+  run_pre_advance_gate || gate_exit=$?
+  if [[ "$gate_exit" -ne 0 ]]; then
+    log "pre-advance gate FAILED (exit $gate_exit) — escalating"
+    escalate "pre-advance-failed" 0
+    xyz_marathon_heartbeat_clear
+    xyz_marathon_emit red "halted at phase ${PHASE_ID} — pre-advance gate failed"
+    exit 5
+  fi
+  if [[ "$success_mode" == "already-satisfied" ]]; then
+    success_text="phase ${PHASE_ID} complete — lane_already_satisfied, reviewer approved, gate passed"
+  else
+    success_text="phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
+  fi
+  "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
+  lane_attempt_reset "${TICK_REPO_ROOT:-$ROOT}" "$LANE_STATE_KEY"
+  save_transcript
+  xyz_marathon_heartbeat_clear
+  log "$success_text"
+  xyz_marathon_emit green "$success_text"
+  exit 0
+}
+
+recover_already_satisfied_lane() {
+  local gate_exit=0 review_exit=0 s tstatus actor
+  [[ -n "$ARTIFACT_PATHS" ]] || return 3
+  artifacts_exist_for_timeout || return 3
+
+  log "relay stalled (exit 3) with declared artifact(s) already present — probing the pre-advance gate: $PRE_ADVANCE_CMD"
+  run_pre_advance_gate || gate_exit=$?
+  if [[ "$gate_exit" -ne 0 ]]; then
+    log "already-satisfied probe: pre-advance gate FAILED (exit $gate_exit) — treating it as real no-progress"
+    return 3
+  fi
+
+  s="$(file_status)"
+  IFS=$'\t' read -r tstatus actor < <(token_state)
+  if terminal_status "$s" && [[ -z "$actor" ]]; then
+    log "already-satisfied probe: relay already reached terminal agreement (STATUS: $s, token done)"
+    return 0
+  fi
+  case "$tstatus:$actor" in
+    claimed:"$BUILDER")
+      "$TICK_BIN" release "$RELAY_TASK" --agent "$BUILDER" --to "$REVIEWER" > /dev/null
+      ;;
+    open:"$BUILDER")
+      "$TICK_BIN" claim "$RELAY_TASK" --agent "$BUILDER" --paths "$CLAIM_PATHS" > /dev/null
+      "$TICK_BIN" release "$RELAY_TASK" --agent "$BUILDER" --to "$REVIEWER" > /dev/null
+      ;;
+    *)
+      log "already-satisfied probe: artifact + gate are green, but current actor is ${actor:-none} (token ${tstatus:-missing}) — cannot auto-route to review"
+      return 3
+      ;;
+  esac
+
+  log "already-satisfied probe: routed the stalled builder turn to reviewer $REVIEWER for one approval pass"
+  run_relay_review_once || review_exit=$?
+  case "$review_exit" in
+    0) return 0 ;;
+    5)
+      log "already-satisfied probe: reviewer declined approval — lane remains unsatisfied"
+      return 3
+      ;;
+    *) return "$review_exit" ;;
+  esac
 }
 
 case "$relay_exit" in
   0)
-    # relay closed Approved. Run the pre-advance gate before emitting phase.approved.
-    log "relay approved — running pre-advance gate: $PRE_ADVANCE_CMD"
-    gate_exit=0
-    # Gate belongs to the target repo when --target-root is set (e.g. a foreign repo's `npm test`).
-    ( [[ -n "$TARGET_ROOT" ]] && cd "$TARGET_ROOT"; eval "$PRE_ADVANCE_CMD" ) || gate_exit=$?
-    if [[ "$gate_exit" -ne 0 ]]; then
-      log "pre-advance gate FAILED (exit $gate_exit) — escalating"
-      escalate "pre-advance-failed" "$relay_exit"
-      xyz_marathon_heartbeat_clear
-      xyz_marathon_emit red "halted at phase ${PHASE_ID} — pre-advance gate failed"
-      exit 5
-    fi
-    "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
-    lane_attempt_reset "${TICK_REPO_ROOT:-$ROOT}" "$PHASE_ID"   # GH-45: success clears the attempt counter
-    save_transcript
-    xyz_marathon_heartbeat_clear
-    log "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
-    xyz_marathon_emit green "phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
-    exit 0
+    complete_phase_success
     ;;
   3)
+    if recover_already_satisfied_lane; then
+      complete_phase_success already-satisfied
+    fi
+    relay_exit=$?
     log "relay escalated: no-progress (relay-drive exit 3)"
     escalate "no-progress" 3
     xyz_marathon_heartbeat_clear
@@ -585,6 +772,13 @@ case "$relay_exit" in
     xyz_marathon_emit red "halted at phase ${PHASE_ID} — relay cap/close-mismatch"
     exit 4
     ;;
+  5)
+    log "relay escalated: pre-advance gate failed"
+    escalate "${TIMEOUT_ESCALATION_REASON:-pre-advance-failed}" 5
+    xyz_marathon_heartbeat_clear
+    xyz_marathon_emit red "${TIMEOUT_EMIT_TEXT:-halted at phase ${PHASE_ID} — pre-advance gate failed}"
+    exit 5
+    ;;
   6)
     # A turn-taker shim hit an off-lane edit, reverted it, and failed the turn (exit 6) — the
     # containment boundary fired. This is a DEFINED escalation, not an "unexpected" crash: the
@@ -595,6 +789,13 @@ case "$relay_exit" in
     xyz_marathon_heartbeat_clear
     xyz_marathon_emit red "halted at phase ${PHASE_ID} — containment violation (off-lane edit reverted)"
     exit 6
+    ;;
+  7)
+    log "relay escalated: timeout / hang (relay-drive exit 7)"
+    escalate "$TIMEOUT_ESCALATION_REASON" 7
+    xyz_marathon_heartbeat_clear
+    xyz_marathon_emit red "$TIMEOUT_EMIT_TEXT"
+    exit 7
     ;;
   *)
     die "relay-drive exited with unexpected code $relay_exit"

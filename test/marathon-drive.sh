@@ -298,6 +298,126 @@ grep -q "UNSET" "$WORK/allow-paths-seen" 2>/dev/null \
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (12d) GH-207: marathon lane namespaces isolate phase paths + attempts ----
+NS_OUT_A="$(MARATHON_LANE_NS="plan-a--p1" RELAY_DRIVE_EXIT=4 run_driver 2>&1)"; rc=$?
+[ "$rc" -eq 4 ] && pass "GH-207: plan-a namespaced lane exits with the stubbed relay cap" \
+  || fail "GH-207: namespaced plan-a lane exit=$rc (expected 4): $NS_OUT_A"
+[ -f "$A/phases/plan-a--p1/RELAY.md" ] \
+  && pass "GH-207: phase render lives under the namespaced lane path for plan-a" \
+  || fail "GH-207: missing namespaced relay path for plan-a"
+[ -f "$A/.tick/attempts/plan-a--p1" ] \
+  && pass "GH-207: plan-a attempt state is keyed by the namespaced lane id" \
+  || fail "GH-207: missing namespaced attempt file for plan-a"
+NS_OUT_B="$(MARATHON_LANE_NS="plan-b--p1" RELAY_DRIVE_EXIT=4 run_driver 2>&1)"; rc=$?
+[ "$rc" -eq 4 ] && pass "GH-207: plan-b namespaced lane also runs independently" \
+  || fail "GH-207: namespaced plan-b lane exit=$rc (expected 4): $NS_OUT_B"
+[ -f "$A/phases/plan-b--p1/RELAY.md" ] \
+  && pass "GH-207: phase render lives under the namespaced lane path for plan-b" \
+  || fail "GH-207: missing namespaced relay path for plan-b"
+[ -f "$A/.tick/attempts/plan-b--p1" ] \
+  && pass "GH-207: plan-b attempt state is separate from plan-a despite the shared bare lane id" \
+  || fail "GH-207: missing namespaced attempt file for plan-b"
+[ ! -e "$A/.tick/attempts/p1" ] \
+  && pass "GH-207: namespaced runs do not fall back to a bare p1 attempt file" \
+  || fail "GH-207: unexpected bare p1 attempt file created for namespaced runs"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (12e) GH-207: byte-identical relay re-render skips the commit and continues ─
+RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd "bash $GATE_CMD" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-207: first namespaced render succeeds" || fail "GH-207: first namespaced render exit=$rc"
+RERENDER_OUT="$(RELAY_DRIVE_EXIT=0 MARATHON_LANE_NS="rerender--p1" run_driver --pre-advance-cmd "bash $GATE_CMD" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-207: identical re-render does not HALT" || fail "GH-207: identical re-render exit=$rc (expected 0): $RERENDER_OUT"
+printf '%s\n' "$RERENDER_OUT" | grep -q "relay file unchanged" \
+  && pass "GH-207: identical re-render is explicitly treated as unchanged" \
+  || fail "GH-207: expected unchanged-relay log on identical re-render"
+printf '%s\n' "$RERENDER_OUT" | grep -q "nothing to commit" \
+  && fail "GH-207: identical re-render still hit a nothing-to-commit failure: $RERENDER_OUT" \
+  || pass "GH-207: identical re-render avoids the old nothing-to-commit halt"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (12f) GH-207: gate-green prebuilt lane routes to review and records lane_already_satisfied ─
+RD_SAT="$WORK/relay-drive-satisfied.sh"
+cat > "$RD_SAT" <<'STUB'
+#!/usr/bin/env bash
+set -eu
+relay=""; task=""; review_once=0
+while (($#)); do
+  case "$1" in
+    --relay-file) relay="$2"; shift 2 ;;
+    --relay-task) task="$2"; shift 2 ;;
+    --review-once) review_once=1; shift ;;
+    *) shift ;;
+  esac
+done
+count=0
+[ -f "$WORK/rd-satisfied-count" ] && count="$(cat "$WORK/rd-satisfied-count")"
+count=$((count + 1))
+printf '%s\n' "$count" > "$WORK/rd-satisfied-count"
+if [ "$review_once" -eq 0 ]; then
+  exit 3
+fi
+sed -i '' 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"
+printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
+TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "phases/satisfied-plan--p1/RELAY.md" >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
+exit 0
+STUB
+chmod +x "$RD_SAT"
+mkdir -p "$A/src"
+printf 'artifact already built\n' > "$A/src/satisfied.js"
+rm -f "$WORK/rd-satisfied-count"
+SAT_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_SAT" MARATHON_LANE_NS="satisfied-plan--p1" \
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --artifact src/satisfied.js \
+    --pre-advance-cmd "test -f '$A/src/satisfied.js'" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-207: prebuilt gate-green lane reaches satisfied instead of no-progress" \
+  || fail "GH-207: prebuilt satisfied lane exit=$rc (expected 0): $SAT_OUT"
+[ "$(cat "$WORK/rd-satisfied-count" 2>/dev/null)" = "2" ] \
+  && pass "GH-207: already-satisfied recovery re-enters relay-drive once for reviewer approval" \
+  || fail "GH-207: expected builder stall + one reviewer recovery call"
+grep -q '^STATUS: Approved' "$A/phases/satisfied-plan--p1/RELAY.md" \
+  && pass "GH-207: reviewer approval lands in the namespaced relay file" \
+  || fail "GH-207: satisfied-lane relay was not approved"
+printf '%s\n' "$SAT_OUT" | grep -q "lane_already_satisfied" \
+  && pass "GH-207: satisfied path is explicitly marked lane_already_satisfied" \
+  || fail "GH-207: missing lane_already_satisfied marker in satisfied-path output"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+rm -f "$A/src/satisfied.js"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (12g) GH-207: red gate on a stalled prebuilt lane still escalates no-progress ─
+RD_STALLED="$WORK/relay-drive-stalled.sh"
+cat > "$RD_STALLED" <<'STUB'
+#!/usr/bin/env bash
+set -eu
+count=0
+[ -f "$WORK/rd-stalled-count" ] && count="$(cat "$WORK/rd-stalled-count")"
+count=$((count + 1))
+printf '%s\n' "$count" > "$WORK/rd-stalled-count"
+exit 3
+STUB
+chmod +x "$RD_STALLED"
+mkdir -p "$A/src"
+printf 'artifact already built\n' > "$A/src/stalled.js"
+rm -f "$WORK/rd-stalled-count"
+STALL_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_STALLED" MARATHON_LANE_NS="stalled-plan--p1" \
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --artifact src/stalled.js \
+    --pre-advance-cmd "test -f '$A/src/missing.js'" 2>&1)"; rc=$?
+[ "$rc" -eq 3 ] && pass "GH-207: red gate stalled lane still exits no-progress" \
+  || fail "GH-207: stalled red-gate lane exit=$rc (expected 3): $STALL_OUT"
+[ "$(cat "$WORK/rd-stalled-count" 2>/dev/null)" = "1" ] \
+  && pass "GH-207: red gate does not route a stalled lane into reviewer recovery" \
+  || fail "GH-207: red gate should stop before reviewer recovery"
+grep -q 'reason: no-progress' "$A/phases/stalled-plan--p1/ESCALATION.md" \
+  && pass "GH-207: stalled red-gate lane still records the ordinary no-progress escalation" \
+  || fail "GH-207: stalled red-gate lane escalation reason drifted"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+rm -f "$A/src/stalled.js"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 # ── (13) --require-clean: hard-stop on a dirty workspace (Phase 3.6) ───────
 # A clean tree starts fine; a stray untracked file + --require-clean is a hard stop (exit 2),
 # so unattended runs don't proceed with distracting context in the tree.
@@ -401,6 +521,7 @@ EOF
 chmod +x "$VAGY"
 (
   cd "$V"
+  unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
   PATH="$VSTUBS:$PATH" CODEX_BIN="$VCODEX" AGY_BIN="$VAGY" \
     ./.xyz/relay-automation/marathon-drive.sh \
       --phase-brief brief.md \
@@ -447,6 +568,7 @@ cp -R "$(cd "$(dirname "$0")/.." && pwd)/src" "$VP/.xyz/"
 cp -R "$(cd "$(dirname "$0")/.." && pwd)/utils" "$VP/.xyz/"
 (
   cd "$VP"
+  unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
   PATH="$VSTUBS:$PATH" CODEX_BIN="$VCODEX" AGY_BIN="$VAGY" XYZ_PYTHON=1 \
     ./.xyz/relay-automation/marathon-drive.sh \
       --phase-brief brief.md \

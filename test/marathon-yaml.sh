@@ -20,6 +20,7 @@ phases:
     reviewer: agy                  # agy for architecture
     depends_on: p1
     max_review_rounds: 3
+    turn_timeout_s: 1200
   - id: p3
     name: claim-cap wiring
     reviewer: codex
@@ -30,12 +31,15 @@ out="$(run "$WORK/m1.yaml")"; rc=$?
 [ "$rc" -eq 0 ] && pass "linear chain parses (exit 0)" || fail "parse failed: $(cat "$WORK/err")"
 [ "$(printf '%s\n' "$out" | cut -f1 | paste -sd, -)" = "p1,p2,p3" ] \
   && pass "execution order resolves to p1,p2,p3" || fail "order wrong: [$out]"
-p2row="$(printf '%s\n' "$out" | awk -F'\t' '$1=="p2"{print $2"|"$3"|"$4}')"
-[ "$p2row" = "agy|3|p1" ] \
-  && pass "p2 fields parsed (reviewer|rounds|depends_on, inline comment stripped)" || fail "p2 fields wrong: [$p2row]"
+p2row="$(printf '%s\n' "$out" | awk -F'\t' '$1=="p2"{print $2"|"$3"|"$4"|"$7}')"
+[ "$p2row" = "agy|3|p1|1200" ] \
+  && pass "p2 fields parsed (reviewer|rounds|depends_on|turn_timeout_s, inline comment stripped)" || fail "p2 fields wrong: [$p2row]"
 p1ba="$(printf '%s\n' "$out" | awk -F'\t' '$1=="p1"{print $5"|"$6}')"
 [ "$p1ba" = "briefs/p1.md|src/schema.js" ] \
   && pass "p1 brief + artifact columns parsed" || fail "p1 brief/artifact wrong: [$p1ba]"
+p1timeout="$(printf '%s\n' "$out" | awk -F'\t' '$1=="p1"{print $7}')"
+[ -z "$p1timeout" ] \
+  && pass "turn_timeout_s defaults empty when omitted" || fail "p1 turn_timeout_s should default empty, got [$p1timeout]"
 
 # --- (2) depends_on reorders authored-out-of-order phases ------------------
 cat > "$WORK/m2.yaml" <<'YAML'
