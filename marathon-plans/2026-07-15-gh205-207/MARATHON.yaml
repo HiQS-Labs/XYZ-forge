@@ -1,0 +1,31 @@
+# Marathon: fix the three 2026-07-15 sleuth-app marathon-harness bug reports (#205 #206 #207).
+# Run with:  relay-automation/marathon.sh --plan marathon-plans/2026-07-15-gh205-207/MARATHON.yaml
+# Lanes are serialized via depends_on because all three touch marathon.sh / marathon-drive.sh.
+# Lane ids are globally unique (gh<issue>-*) on purpose — see #207 mode 1 (bare p1/p2 ids collide
+# with other marathons' lane state in the shared .tick/attempts/ namespace).
+# Preflight packet: see relay-system/preflight/2026-07-15/ (swarm-preflight bundle 205+206+207).
+
+name: gh205-207-marathon-harness-fixes
+phases:
+  - id: gh206-root-split
+    name: "GH-206: split MARATHON_HOME (harness) from MARATHON_ROOT (target repo)"
+    reviewer: codex
+    brief: marathon-plans/2026-07-15-gh205-207/brief-gh206-root-split.md
+    artifact: relay-automation/marathon.sh,relay-automation/marathon-drive.sh,test/marathon.sh,test/marathon-drive.sh,relay-automation/README.md
+    max_review_rounds: 3
+
+  - id: gh205-turn-timeout
+    name: "GH-205: realistic turn-timeout default + per-lane turn_timeout_s + exit-7-with-green-gate → review"
+    reviewer: agy
+    brief: marathon-plans/2026-07-15-gh205-207/brief-gh205-turn-timeout.md
+    artifact: relay-automation/codex-turn.sh,relay-automation/agy-turn.sh,relay-automation/marathon.sh,relay-automation/marathon-drive.sh,bin/marathon-yaml,relay-automation/README.md,relay-automation/MARATHON.example.yaml,test/marathon.sh,test/codex-turn.sh,test/marathon-yaml.sh
+    depends_on: gh206-root-split
+    max_review_rounds: 3
+
+  - id: gh207-retry-resume
+    name: "GH-207: marathon-namespaced lane state, idempotent re-render, already-satisfied lane advance"
+    reviewer: codex
+    brief: marathon-plans/2026-07-15-gh205-207/brief-gh207-retry-resume.md
+    artifact: relay-automation/marathon-drive.sh,relay-automation/marathon.sh,relay-automation/relay-drive.sh,test/marathon-drive.sh,test/marathon.sh
+    depends_on: gh205-turn-timeout
+    max_review_rounds: 3
