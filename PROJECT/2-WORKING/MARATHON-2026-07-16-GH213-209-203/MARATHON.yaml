@@ -1,0 +1,34 @@
+# MARATHON.yaml — 2026-07-16: GH-213 (case-collision preflight guard), GH-209 (marathon-root leak
+# audit, narrowed scope), GH-203 (stale index.lock preflight warning, narrowed scope).
+#
+# All three touch disjoint files (skills/relay-xyz/find-harness.sh+test; test/marathon.sh;
+# utils/swarm-preflight.sh+test), so no depends_on is needed — order here is just declaration order.
+# Builder defaults to codex (GH-212); every phase's reviewer is agy (codex can't review itself).
+#
+# See the three capture docs this plan bundles:
+#   PROJECT/2-WORKING/GH-213-CASE-COLLISION-LANDMINE.md
+#   PROJECT/2-WORKING/GH-209-MARATHON-ROOT-LEAK-AUDIT.md
+#   PROJECT/2-WORKING/GH-203-STALE-INDEX-LOCK-PREFLIGHT.md
+
+name: gh213-209-203
+phases:
+  - id: gh213
+    name: find-harness.sh case-collision preflight guard
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH213-209-203/brief-gh213-case-collision.md
+    artifact: skills/relay-xyz/find-harness.sh,test/find-harness.sh
+    max_review_rounds: 2
+
+  - id: gh209
+    name: marathon-root leak static audit
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH213-209-203/brief-gh209-root-audit.md
+    artifact: test/marathon.sh,test/marathon-drive.sh,test/marathon-root-audit.sh
+    max_review_rounds: 2
+
+  - id: gh203
+    name: stale index.lock preflight warning
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH213-209-203/brief-gh203-stale-lock.md
+    artifact: utils/swarm-preflight.sh,test/swarm-preflight.sh,relay-automation/README.md
+    max_review_rounds: 2
