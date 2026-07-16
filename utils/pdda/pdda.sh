@@ -546,6 +546,103 @@ check_issue_doc_sync() {
 }
 
 # ------------------------------------------------------------------------------------------------
+# I. releases (warn-only nudge; never blocks, even in full)
+# ------------------------------------------------------------------------------------------------
+# Validates RELEASES.md, the single forward-looking release-planning ledger (see PROJECT/PDDA.md
+# "RELEASES.md — release ledger"). Deliberately light: this replaced a heavier per-tag-doc lifecycle
+# (status Draft/RC/Published, linked marathons, linked issues, a GitHub release-tag cache) that
+# proved like too much data to keep current for an initial release. Grows only as real need shows up.
+#   (1) error — a "Release:" block has an empty version
+#   (2) warn  — Target Date is set but not a valid YYYY-MM-DD date
+#   (3) warn  — Target Date has passed and Status isn't "Shipped" (overdue/unshipped)
+check_releases() {
+  pdda_reset_counts
+  local CHECK_NAME="pdda-check-releases" rc=0
+  local RELEASES_FILE_EFF="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
+  local release status target_date codename description gh_url line_no target_epoch today_epoch
+  local status_lc
+
+  if [ ! -f "$RELEASES_FILE_EFF" ]; then
+    pdda_record_finding info "$CHECK_NAME" "$RELEASES_FILE_EFF" 0 \
+      "RELEASES.md not found — nothing to check" "skip"
+    pdda_emit_summary "$CHECK_NAME" 0
+    return "$(pdda_gated_exit 0)"
+  fi
+
+  while IFS=$'\037' read -r release status target_date codename description gh_url line_no; do
+    if [ -z "$(pdda_trim "$release")" ]; then
+      pdda_record_finding error "$CHECK_NAME" "$RELEASES_FILE_EFF" "$line_no" \
+        "a 'Release:' block near line $line_no has no version" "fix-release-value"
+      rc=1
+      continue
+    fi
+
+    [ -n "$target_date" ] || continue
+
+    if ! pdda_is_real_date "$target_date"; then
+      pdda_record_finding warn "$CHECK_NAME" "$RELEASES_FILE_EFF" "$line_no" \
+        "release '$release' Target Date '$target_date' is not a valid YYYY-MM-DD date" \
+        "fix-target-date"
+      continue
+    fi
+
+    # Status: Shipped is the sole "already shipped" signal (GH_URL only means a Release object
+    # exists — draft or published — not that the release is out; see PROJECT/PDDA.md "RELEASES.md
+    # — release ledger"). A populated GH_URL alone no longer skips this check.
+    status_lc="$(printf '%s' "$(pdda_trim "$status")" | tr '[:upper:]' '[:lower:]')"
+    [ "$status_lc" != "shipped" ] || continue
+
+    target_epoch="$(_pdda_cl_epoch "$target_date")"
+    today_epoch="$(_pdda_cl_epoch "$(pdda_today)")"
+    if [ -n "$target_epoch" ] && [ -n "$today_epoch" ] && [ "$target_epoch" -lt "$today_epoch" ]; then
+      pdda_record_finding warn "$CHECK_NAME" "$RELEASES_FILE_EFF" "$line_no" \
+        "release '$release' Target Date '$target_date' has passed and Status isn't Shipped — overdue" \
+        "overdue-release"
+    fi
+  done < <(pdda_releases_list "$RELEASES_FILE_EFF")
+
+  pdda_emit_summary "$CHECK_NAME" "$rc"
+  # Warn-only in spirit — never blocks, even in full mode. The one error above is a malformed-doc
+  # guard, surfaced loudly, but deliberately never gates the exit code.
+  return "$(pdda_gated_exit 0)"
+}
+
+# ------------------------------------------------------------------------------------------------
+# releases-current (read-only roll-up; not part of the deterministic-check suite — no findings, no gate)
+# ------------------------------------------------------------------------------------------------
+# A rough, non-authoritative answer to "what release is in progress right now" — for a human, or for
+# another repo's tooling to shell out to rather than re-implementing RELEASES.md parsing itself.
+# Lists every release whose Status is empty or not "Shipped" (Status is free-text and unvalidated,
+# so this is a best-effort filter, not a gate).
+cmd_releases_current() {
+  local RELEASES_FILE_EFF="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
+  local release status target_date codename description gh_url line_no status_lc any=0
+
+  if [ ! -f "$RELEASES_FILE_EFF" ]; then
+    printf '%s not found — nothing to report\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
+    return 0
+  fi
+
+  printf 'PDDA releases-current — in-progress entries in %s\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
+  while IFS=$'\037' read -r release status target_date codename description gh_url line_no; do
+    [ -n "$(pdda_trim "$release")" ] || continue
+    status_lc="$(printf '%s' "$(pdda_trim "$status")" | tr '[:upper:]' '[:lower:]')"
+    [ "$status_lc" != "shipped" ] || continue
+
+    any=1
+    printf '\n• %s' "$release"
+    [ -n "$codename" ] && printf ' (%s)' "$codename"
+    printf ' — %s\n' "${status:-no Status set}"
+    [ -n "$target_date" ] && printf '    Target Date: %s\n' "$target_date"
+    [ -n "$description" ] && printf '    %s\n' "$description"
+    [ -n "$gh_url" ] && printf '    %s\n' "$gh_url"
+  done < <(pdda_releases_list "$RELEASES_FILE_EFF")
+
+  [ "$any" -eq 1 ] || printf '\n(no in-progress releases — every entry is Status: Shipped)\n'
+  return 0
+}
+
+# ------------------------------------------------------------------------------------------------
 # run — the aggregate deterministic suite, then the LLM readiness review (in order)
 # ------------------------------------------------------------------------------------------------
 # Decoration -> stdout in text mode, stderr in json mode, so PDDA_FORMAT=json leaves stdout a clean
@@ -562,6 +659,7 @@ pdda-check-roadmap-coverage:check_roadmap_coverage
 pdda-check-changelog:check_changelog
 pdda-stale-working-docs:check_stale
 pdda-check-issue-doc-sync:check_issue_doc_sync
+pdda-check-releases:check_releases
 "
 
 cmd_run() {
@@ -639,6 +737,8 @@ Commands:
   changelog          end-of-iteration changelog nudge (warn-only)
   stale              flag stale working docs (flag-only; never moves)
   issue-doc-sync     flag 2-WORKING/GH-*.md docs drifted from their GitHub issue state (warn-only)
+  releases           validate RELEASES.md, the release-planning ledger (warn-only nudge)
+  releases-current   read-only roll-up: RELEASES.md entries whose Status isn't "Shipped"
   gh-refresh         refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
   doc-ready          LLM readiness review (delegates to pdda-doc-ready.sh; opt-in via PDDA_LLM_BIN)
   catchup            LLM repo triage and ROUTER.md recommendations (delegates to pdda-catchup.sh)
@@ -661,6 +761,8 @@ case "$cmd" in
   changelog)        check_changelog; exit "$?" ;;
   stale)            check_stale; exit "$?" ;;
   issue-doc-sync)   check_issue_doc_sync; exit "$?" ;;
+  releases)         check_releases; exit "$?" ;;
+  releases-current) cmd_releases_current; exit "$?" ;;
   gh-refresh)       exec "$HERE/pdda-gh-refresh.sh" "$@" ;;
   doc-ready)        exec "$HERE/pdda-doc-ready.sh" "$@" ;;
   catchup)          exec "$HERE/pdda-catchup.sh" "$@" ;;

@@ -14,6 +14,7 @@ PDDA_ACTIVITY_LOG="${PDDA_ACTIVITY_LOG:-$PDDA_REPO_ROOT/PROJECT/PDDA-ACTIVITY.js
 # pdda-gh-refresh.sh; read by `pdda.sh issue-doc-sync` when gh is absent/offline. Gitignored runtime
 # state, regenerated on demand — sits beside .pdda-mode at the repo root by default.
 PDDA_GH_STATE_CACHE="${PDDA_GH_STATE_CACHE:-$PDDA_REPO_ROOT/.pdda-gh-state.tsv}"
+PDDA_RELEASES_FILE="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
 PDDA_STALE_DAYS="${PDDA_STALE_DAYS:-4}"
 PDDA_DRY_RUN="${PDDA_DRY_RUN:-0}"
 # Output format for findings on stdout: "text" (human, default) or "json" (one JSON object per line,
@@ -307,4 +308,34 @@ _pdda_gh_state_table() {
     gh issue list --state all --limit 1000 --json number,state \
       --jq '.[] | [.number, .state] | @tsv' 2>/dev/null
   fi
+}
+
+# List releases as rows of
+#   <release><US><status><US><target_date><US><codename><US><description><US><gh_url><US><line>
+# (US = ASCII unit separator 0x1F, not tab — bash's `read` collapses empty fields around literal
+# tabs since tab counts as "IFS whitespace" regardless of IFS's contents, which would silently
+# misalign every block with a blank Description/GH_URL, i.e. the common case here). One row per
+# block, in file order. Prints nothing (silently) if the file doesn't exist.
+#
+# `Status:` is free-text (Draft/Working/Shipped/... — whatever an operator writes) and unvalidated
+# by design: it's a rough, non-authoritative signal for "what's in progress," not a gated lifecycle
+# field. See PROJECT/PDDA.md "RELEASES.md — release ledger".
+pdda_releases_list() {
+  local file="$1"
+  [ -f "$file" ] || return 0
+  awk '
+    function flush() {
+      if (has_release) {
+        printf "%s\037%s\037%s\037%s\037%s\037%s\037%d\n", release, status, target_date, codename, description, gh_url, release_line
+      }
+      release=""; status=""; target_date=""; codename=""; description=""; gh_url=""; release_line=0; has_release=0
+    }
+    /^Release:/      { flush(); v=$0; sub(/^Release:[[:space:]]*/, "", v); release=v; has_release=1; release_line=NR; next }
+    /^Status:/       { v=$0; sub(/^Status:[[:space:]]*/, "", v); status=v; next }
+    /^Target Date:/  { v=$0; sub(/^Target Date:[[:space:]]*/, "", v); target_date=v; next }
+    /^Codename:/     { v=$0; sub(/^Codename:[[:space:]]*/, "", v); codename=v; next }
+    /^Description:/  { v=$0; sub(/^Description:[[:space:]]*/, "", v); description=v; next }
+    /^GH_URL:/       { v=$0; sub(/^GH_URL:[[:space:]]*/, "", v); gh_url=v; next }
+    END { flush() }
+  ' "$file"
 }

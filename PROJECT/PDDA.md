@@ -263,7 +263,7 @@ Implementation note:
   `utils/pdda/pdda-lib.sh`
 - every deterministic check is a subcommand: `pdda.sh frontmatter`, `pdda.sh status-table`,
   `pdda.sh hardcoded-paths`, `pdda.sh roadmap`, `pdda.sh roadmap-coverage`, `pdda.sh changelog`,
-  `pdda.sh stale`, `pdda.sh issue-doc-sync`
+  `pdda.sh stale`, `pdda.sh issue-doc-sync`, `pdda.sh releases`
 - the aggregate runner is `pdda.sh run` (it runs the deterministic checks in order, then the LLM
   review)
 - each finding still carries a stable `check` id (e.g. `pdda-check-frontmatter`) in stdout and the
@@ -411,6 +411,71 @@ Why warn-only + flag-only:
   one ignorable warn line and a missed flag just leaves today's manual reconciliation — both cheap, so
   warn-only never-blocks is the right calibration (same stance as `pdda.sh stale` and `pdda.sh changelog`)
 
+#### I. `pdda.sh releases`
+
+Purpose:
+- validate `RELEASES.md`, the single forward-looking release-planning ledger — deliberately light.
+  This replaced an earlier per-tag-doc lifecycle (status enum, linked marathons/issues, a GitHub
+  release-tag cache) that was too much data to keep current for an initial release. Fields/checks
+  grow only as a real need shows up — see "RELEASES.md — release ledger" below.
+
+Scope: every `Release:` block in `RELEASES.md`.
+
+Minimum behavior:
+- parse `RELEASES.md` into `Release:`-delimited blocks
+- `error` if a block's `Release:` value is empty (a malformed-doc guard, not a readiness gate)
+- `warn` if `Target Date` is set but isn't a valid `YYYY-MM-DD` date
+- `warn` if `Target Date` has passed and `Status` doesn't read exactly `Shipped` (case-insensitive)
+  — `Status: Shipped` is the sole "already shipped" signal, a populated `GH_URL` alone does not
+  silence this (it only means a Release object exists, not that it shipped)
+- never blocks, even in `full` mode
+
+gh-degrade: none. The check is purely file-driven (no GitHub calls).
+
+#### RELEASES.md — release ledger
+
+`RELEASES.md` is a first-class root file, like `ROADMAP.md`/`CHANGELOG.md` — a single
+forward-looking planning ledger for major releases, not a lifecycle bucket of per-tag docs.
+Marathon plans and other forward planning cross-reference it for target release names/dates. It is
+not a history of what shipped — that's `CHANGELOG.md`; lessons learned belong there at ship time,
+not duplicated here.
+
+Format — one flat `Label: value` block per release, blank line between blocks:
+
+```text
+Release: 1.0.0
+Status: Draft
+Target Date: 2026-07-31
+Codename: n/a
+Description:
+GH_URL:
+```
+
+Fields:
+- `Release:` (required) — the version being planned
+- `Status:` (optional) — free-text, unvalidated by design. `Status: Shipped` is the sole "already
+  shipped" signal — both `pdda.sh releases`'s overdue nudge and `pdda.sh releases-current`'s "in
+  progress" filter key off it exclusively.
+- `Target Date:` (optional) — `YYYY-MM-DD`; `pdda.sh releases` warns once this passes and `Status`
+  isn't `Shipped`
+- `Codename:` (optional) — `n/a` is fine
+- `Description:` (optional) — one line for now
+- `GH_URL:` (optional) — populated once a GitHub Release object exists, including a draft (see the
+  `/release` skill). This means "a Release object exists," not "shipped" — flip `Status: Shipped`
+  yourself (or let `/release` do it on an actual publish) when it's really out.
+
+Two skills operate on this file: `/release-plan` **authors** entries (interviews the operator,
+proposes a canonical version by cross-referencing `CHANGELOG.md`, previews, appends on
+confirmation — this skill is globally available on this machine via `~/.claude/skills/release-plan`,
+no per-repo copy needed) and `/release` **publishes** an existing entry to GitHub once its `Status`
+is ready to ship.
+
+#### `pdda.sh releases-current`
+
+Read-only roll-up (not part of `PDDA_DETERMINISTIC_CHECKS` — emits no findings, never gates): lists
+every `RELEASES.md` entry whose `Status` is empty or not exactly `Shipped`. A rough,
+non-authoritative answer to "what's currently in progress."
+
 #### Check severity contract — blocking vs warn-only
 
 Each check's severity capability is fixed in code, not a matter of judgment per run. This table is the
@@ -428,6 +493,7 @@ structurally warn-only regardless of mode — the Phase 2 audit item from
 | `pdda.sh changelog` | no — `warn` only, by design | never |
 | `pdda.sh stale` | no — `warn` only, flag-only (never auto-moves a file) | never |
 | `pdda.sh issue-doc-sync` | no — `warn` only, flag-only (never auto-moves a file) | never |
+| `pdda.sh releases` | yes (empty `Release:` value) — a malformed-doc guard only | never — the check never gates its exit code, even for the `error` finding |
 | `pdda-doc-ready.sh` (LLM layer) | no — any model `error` is clamped to `warn` in code | never |
 
 None of the always-`warn` checks (`changelog`, `stale`, `issue-doc-sync`, the LLM layer) were demoted
