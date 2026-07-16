@@ -100,3 +100,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Added a new fail-open `--check` advisory that inspects the caller repo (from `git rev-parse --show-toplevel`, not `$HARNESS`) and warns only when `core.ignorecase=true` and `git ls-files` reveals the first case-variant path prefix collision. The detector is `awk`-based and bash 3.2-safe; it covers both directory-prefix collisions like `relay-system/...` vs `RELAY-SYSTEM/...` and full-path case variants without changing the script's exit code.
 - Extended `test/find-harness.sh` with three GH-213 cases seeded via `git hash-object -w` + `git update-index --add --cacheinfo`: collision + `ignorecase=true` warns and stays exit 0, ordinary repo stays quiet, collision + `ignorecase=false` stays quiet.
 - Verified with `bash test/find-harness.sh` -> 16 pass, 0 fail.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Changes requested
+
+- Identified that `_caller` is only defined if `[ "$VENDORED" = 0 ]` (line 217 of `skills/relay-xyz/find-harness.sh`), which means that case-collision checks are skipped entirely in vendored repositories (where `VENDORED=1`).
+- Verified this behavior by simulating a vendored repository with a case-collision, resulting in no warning.
+- Requested changes:
+  1. Define `_caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"` unconditionally at the top of the `--check` case in `skills/relay-xyz/find-harness.sh`, and reuse it.
+  2. Add a test case in `test/find-harness.sh` verifying that case-collision detection still runs and warns appropriately in a vendored repository (with a local `.xyz/` directory).
+
