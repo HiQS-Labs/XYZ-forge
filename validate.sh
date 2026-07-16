@@ -86,6 +86,7 @@ TESTS=(
   "xyz-vendor.sh"
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
   "relay-concurrent-commit.sh"
+  "relay-commit-pathspec.sh"     # GH-198 (rtl_enforce commit is file-scoped, no pathspec regression)
   "relay-case-insensitive.sh"
   "relay-xyz-skill-guard.sh"
   "find-harness.sh"

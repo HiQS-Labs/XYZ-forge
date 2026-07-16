@@ -823,11 +823,31 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
   for _ap in "${RTL_ALLOW[@]}"; do
     git -C "$RTL_ROOT" add -A -- "$_ap" 2>/dev/null || true
   done
-  if git -C "$RTL_ROOT" diff --cached --quiet; then
+  # GH-198: commit file-scoped — a bare `git commit` (no pathspec) commits the ENTIRE staged index,
+  # not just what the loop above just staged. If RTL_ROOT already had unrelated content staged when
+  # the turn started (e.g. an operator's own in-progress `git add`), it silently rides along into the
+  # relay's commit under a message that only names the relay file. Scope the commit to the allowlist,
+  # skipping archive-absolute entries (GH-30 Phase 3) the same way rtl_worktree_begin's seeding loop
+  # does above — an absolute path is the archive relay file in a DIFFERENT repo, not a valid pathspec
+  # under RTL_ROOT.
+  #
+  # GH-29-class guard: `git commit -- <paths>` is NOT per-path independent like the `git add -A --`
+  # loop above — ONE pathspec that matches nothing (e.g. a declared artifact the turn never touched)
+  # makes the WHOLE commit abort, dropping every file, not just the unmatched one. So cross-check
+  # against what's ACTUALLY staged and only pass entries that are; this also correctly handles "only
+  # pre-existing unrelated content is staged, the turn itself changed nothing" as a no-op instead of
+  # either an empty-pathspec commit-everything (the original bug) or an aborted commit.
+  local _staged _commit_paths=()
+  _staged="$(git -C "$RTL_ROOT" diff --cached --name-only)"
+  for _ap in "${RTL_ALLOW[@]}"; do
+    [[ "$_ap" == /* ]] && continue
+    grep -qxF "$_ap" <<<"$_staged" && _commit_paths+=("$_ap")
+  done
+  if [[ "${#_commit_paths[@]}" -eq 0 ]]; then
     printf '%s-turn: %s turn produced no tracked changes (token-only move?)\n' "$RTL_TOOL" "$agent"
     rtl_log_always "rtl_enforce: COMMIT none (no tracked changes) agent=$agent"
   else
-    git -C "$RTL_ROOT" commit -q -m "relay(${task}): ${agent} turn (${RTL_TOOL} headless; no push)"
+    git -C "$RTL_ROOT" commit -q -m "relay(${task}): ${agent} turn (${RTL_TOOL} headless; no push)" -- "${_commit_paths[@]}"
     printf '%s-turn: committed %s turn (file-scoped, no push)\n' "$RTL_TOOL" "$agent"
     rtl_log_always "rtl_enforce: COMMIT $(git -C "$RTL_ROOT" rev-parse --short HEAD 2>/dev/null || echo unknown) agent=$agent"
   fi
