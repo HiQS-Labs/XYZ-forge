@@ -38,6 +38,29 @@ _read_source_commit() {
   done < "${1}/VERSION"
   return 1
 }
+_find_case_collision_pair() {
+  [ -n "${1:-}" ] || return 0
+  [ "$(git -C "$1" config --get core.ignorecase 2>/dev/null || true)" = "true" ] || return 0
+  git -C "$1" ls-files 2>/dev/null | awk '
+    {
+      count = split($0, parts, "/")
+      exact = ""
+      lower = ""
+      for (i = 1; i <= count; i++) {
+        exact = exact (i > 1 ? "/" : "") parts[i]
+        lower = lower (i > 1 ? "/" : "") tolower(parts[i])
+        if ((lower in seen_exact) && seen_exact[lower] != exact) {
+          print seen_path[lower] "\t" $0
+          exit 0
+        }
+        if (!(lower in seen_exact)) {
+          seen_exact[lower] = exact
+          seen_path[lower] = $0
+        }
+      }
+    }
+  '
+}
 
 # --- resolve this script's real directory (symlink-safe) ---
 _src="${BASH_SOURCE[0]}"
@@ -202,6 +225,15 @@ case "${1:-}" in
           [ -d "$_lk" ] && { echo "  !   a driver lock is currently HELD ($_lk) — a relay started here will BLOCK until it frees"; break; }
         done
       fi
+    fi
+    _collision="$(_find_case_collision_pair "${_caller:-}" || true)"
+    if [ -n "$_collision" ]; then
+      _path_a="${_collision%%$'\t'*}"
+      _path_b="${_collision#*$'\t'}"
+      echo "  !   case-collision: tracked paths '$_path_a' and '$_path_b' differ only by case in this repo"
+      echo "      and only one casing can exist as a real directory tree on this filesystem. A headless"
+      echo "      relay turn can misread git status here and revert a legitimate edit (exit 6). Remedy:"
+      echo "      git mv one variant to match the other's casing, commit, then re-run --check."
     fi
     true   # --check is advisory: always exit 0 (fail-open), never block a relay on a warning
     ;;

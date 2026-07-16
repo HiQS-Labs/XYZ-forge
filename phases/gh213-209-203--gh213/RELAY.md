@@ -93,3 +93,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH213-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh213-209-203--gh213/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Touched `skills/relay-xyz/find-harness.sh`, `test/find-harness.sh`, and this relay file only.
+- Added a new fail-open `--check` advisory that inspects the caller repo (from `git rev-parse --show-toplevel`, not `$HARNESS`) and warns only when `core.ignorecase=true` and `git ls-files` reveals the first case-variant path prefix collision. The detector is `awk`-based and bash 3.2-safe; it covers both directory-prefix collisions like `relay-system/...` vs `RELAY-SYSTEM/...` and full-path case variants without changing the script's exit code.
+- Extended `test/find-harness.sh` with three GH-213 cases seeded via `git hash-object -w` + `git update-index --add --cacheinfo`: collision + `ignorecase=true` warns and stays exit 0, ordinary repo stays quiet, collision + `ignorecase=false` stays quiet.
+- Verified with `bash test/find-harness.sh` -> 16 pass, 0 fail.

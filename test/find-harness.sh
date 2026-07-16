@@ -11,6 +11,17 @@ REPO="$(cd "$HERE/.." && pwd)"
 FH="$REPO/skills/relay-xyz/find-harness.sh"
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+mkrepo() { _repo="$(mktemp -d "${TMPDIR:-/tmp}/fh-case.XXXXXX")"; git -C "$_repo" init -q; printf '%s\n' "$_repo"; }
+seed_index_path() {
+  _repo="$1"; _path="$2"
+  _blob="$(printf 'fixture\n' | git -C "$_repo" hash-object -w --stdin)"
+  git -C "$_repo" update-index --add --cacheinfo 100644,"$_blob","$_path"
+}
+seed_case_collision() {
+  _repo="$1"
+  seed_index_path "$_repo" "relay-system/x.md"
+  seed_index_path "$_repo" "RELAY-SYSTEM/y.md"
+}
 
 echo "find-harness (GH-70 Phase 2):"
 [ -x "$FH" ] || { echo "  FAIL: locator not executable at $FH"; exit 1; }
@@ -38,6 +49,35 @@ ok "vendored .xyz: --check exits 0"                 "[ '$rc3' -eq 0 ]"
 ok "vendored .xyz: no concurrency warning"          "! printf '%s' \"\$out3\" | grep -qi concurrency"
 ok "vendored .xyz: resolves to the local .xyz"      "printf '%s' \"\$out3\" | grep -q '.xyz'"
 rm -rf "$FV"
+
+# --- Case 4: ignorecase=true + colliding index entries -> warn, name both paths, still exit 0 ---
+FC="$(mkrepo)"
+git -C "$FC" config core.ignorecase true
+seed_case_collision "$FC"
+out4="$( cd "$FC" && bash "$FH" --check 2>&1 )"; rc4=$?
+ok "case-collision: --check still exits 0 (fail-open)" "[ '$rc4' -eq 0 ]"
+ok "case-collision: emits the advisory warning"         "printf '%s' \"\$out4\" | grep -q 'case-collision:'"
+ok "case-collision: names both colliding paths"         "printf '%s' \"\$out4\" | grep -q 'relay-system/x.md' && printf '%s' \"\$out4\" | grep -q 'RELAY-SYSTEM/y.md'"
+ok "case-collision: explains the exit-6 risk + git mv remedy" "printf '%s' \"\$out4\" | grep -q 'exit 6' && printf '%s' \"\$out4\" | grep -q 'git mv'"
+rm -rf "$FC"
+
+# --- Case 5: ordinary repo (no collision) -> no case-collision warning, still exit 0 ---
+FN="$(mkrepo)"
+git -C "$FN" config core.ignorecase true
+seed_index_path "$FN" "docs/readme.md"
+out5="$( cd "$FN" && bash "$FH" --check 2>&1 )"; rc5=$?
+ok "no-collision: --check exits 0"                     "[ '$rc5' -eq 0 ]"
+ok "no-collision: case-collision warning absent"       "! printf '%s' \"\$out5\" | grep -q 'case-collision:'"
+rm -rf "$FN"
+
+# --- Case 6: ignorecase=false + colliding index entries -> no warning, still exit 0 ---
+FS="$(mkrepo)"
+git -C "$FS" config core.ignorecase false
+seed_case_collision "$FS"
+out6="$( cd "$FS" && bash "$FH" --check 2>&1 )"; rc6=$?
+ok "ignorecase=false collision: --check exits 0"       "[ '$rc6' -eq 0 ]"
+ok "ignorecase=false collision: warning absent"        "! printf '%s' \"\$out6\" | grep -q 'case-collision:'"
+rm -rf "$FS"
 
 echo "  find-harness: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
