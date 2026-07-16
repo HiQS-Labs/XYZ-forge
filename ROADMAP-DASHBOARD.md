@@ -6,11 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 63 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 36 · 🔮 0 · 🔲 0
+Summary: 63 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 37 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-212 · Make marathon builder-default (no billed CLI) and plan-location (PROJECT/2-WORKING) explicit, enforced defaults | — | [GH-212-MARATHON-BUILDER-PLAN-DEFAULTS.md](PROJECT/2-WORKING/GH-212-MARATHON-BUILDER-PLAN-DEFAULTS.md) · [#212](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/212) |
+| GH-212 · Make marathon builder-default (no billed CLI) and plan-location (PROJECT/2-WORKING) explicit, enforced defaults | ✅ | [GH-212-MARATHON-BUILDER-PLAN-DEFAULTS.md](PROJECT/2-WORKING/GH-212-MARATHON-BUILDER-PLAN-DEFAULTS.md) · [#212](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/212) |
 | GH-211 · Consult and Relay — compact TLDR + sorted-category output | ✅ | [GH-211-CONSULT-RELAY-TLDR-SUMMARIES.md](PROJECT/1-INBOX/GH-211-CONSULT-RELAY-TLDR-SUMMARIES.md) · [#211](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/211) |
 | GH-207 · Marathon retry/resume brittle against pre-existing lane state (cross-marathon lane-id collision + no-progress HALT on a done lane) | ✅ | [GH-207-MARATHON-RETRY-RESUME-BRITTLE.md](PROJECT/2-WORKING/GH-207-MARATHON-RETRY-RESUME-BRITTLE.md) · [#207](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/207) |
 | GH-206 · Marathon: vendored .xyz/ conflates harness-home with repo-root — won't run without MARATHON_ROOT + bin overrides | ✅ | [GH-206-VENDORED-MARATHON-ROOT-SPLIT.md](PROJECT/2-WORKING/GH-206-VENDORED-MARATHON-ROOT-SPLIT.md) · [#206](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/206) |

@@ -363,7 +363,7 @@ they share the same env shape:
 | binary | `CODEX_BIN` | `AGY_BIN` | override the CLI path |
 | autonomy | `CODEX_FLAGS` (default `-s workspace-write`) | `AGY_MODEL` / `AGY_FLAGS` | the codex sandbox/approval flags or the agy model |
 | transcript | `CODEX_LOG` | `AGY_LOG` | where the CLI transcript lands (default a `$TMPDIR` file) |
-| turn ceiling | `RELAY_TURN_TIMEOUT_S` | `RELAY_TURN_TIMEOUT_S` | per-turn wall-clock cap (default 300s; hung CLI → exit 7) |
+| turn ceiling | `RELAY_TURN_TIMEOUT_S` | `RELAY_TURN_TIMEOUT_S` | per-turn wall-clock cap (default 900s; hung CLI → exit 7) |
 
 If a fresh device's `codex` still blocks writes, escalate autonomy:
 `CODEX_FLAGS='--dangerously-bypass-approvals-and-sandbox'` (or `-c approval_policy=never`).

@@ -56,7 +56,7 @@ fi
 #   reviewers (codex-turn, gemini-turn)   → "Bash,Read"              (read-only; no write surface)
 # rtl_enforce is the real guard either way; the allowlist is a second, tighter layer.
 #
-#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 300). A hung or
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 600). A hung or
 #                          runaway claude CLI is killed after this many seconds; the turn exits 7.
 #                          The existing --max-budget-usd / --max-turns API-spend ceilings are
 #                          complementary and remain unchanged — wall-clock is the NEW dimension.
@@ -183,7 +183,7 @@ if [[ -n "$block_cmds" ]]; then
 fi
 
 rtl_before
-turn_timeout="${RELAY_TURN_TIMEOUT_S:-300}"
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-600}"
 bounded_rc=0
 
 # Worktree isolation (opt-in; ROADMAP Part A Phase 3.6 — the airtight async/side-effect close).
