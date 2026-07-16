@@ -1,5 +1,5 @@
 # Marathon Phase gh213
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH213-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -116,3 +116,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Touched `skills/relay-xyz/find-harness.sh`, `test/find-harness.sh`, and this relay file only.
 - Fixed the vendored-repo hole by resolving `_caller` once at the top of `--check` and reusing it for both the existing concurrency advisory and the GH-213 case-collision advisory, so the collision scan now runs against the caller repo whether resolution is centralized or vendored.
 - Extended `test/find-harness.sh` with a shared vendored-harness fixture helper and a new regression case proving that a vendored repo with `core.ignorecase=true` plus colliding index entries still warns and still exits 0.
+
+### Round 2 · Reviewer · agy
+
+**Verdict:** Approved
+
+- Verified that `_caller` is now resolved at the top of the `--check` block and reused correctly.
+- Confirmed that the case-collision check correctly runs on vendored repositories as well.
+- Verified that all 20 tests (including the new vendored collision test) pass successfully on `bash test/find-harness.sh`.
+
