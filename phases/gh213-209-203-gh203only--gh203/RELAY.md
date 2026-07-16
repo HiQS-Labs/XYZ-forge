@@ -89,3 +89,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH203-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh213-209-203-gh203only--gh203/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Implemented the GH-203 advisory stale-lock check in `utils/swarm-preflight.sh`, keeping it fail-open: if `$TARGET_ROOT/.git/index.lock` exists and `lsof` shows no live holder on that exact path, preflight now emits a warning in both the text report and `run-candidate.json` freshness payload, but it does not change `candidate_state`, `VERDICT`, or exit code. I chose exact-path `lsof` rather than a process-name heuristic to avoid false-positives against a real git operation in flight; if `lsof` is unavailable, the check stays silent rather than guessing.
+
+Touched `test/swarm-preflight.sh` to add GH-203 coverage for stale-lock text warning, stale-lock JSON warning/path, clean-repo absence, and unchanged ready verdict/exit semantics. Added a short troubleshooting note to `relay-automation/README.md` documenting the safe manual clear path: verify with `pgrep -fl git`, then `rm .git/index.lock`.
+
+Verification: `bash test/swarm-preflight.sh` -> `94 passed, 0 failed`.

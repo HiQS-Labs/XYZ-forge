@@ -455,6 +455,9 @@ process.stdout.write(JSON.stringify({
     ahead: Number(e.SP_AHEAD || 0),
     behind: Number(e.SP_BEHIND || 0),
     dirty: e.SP_DIRTY === "1",
+    stale_index_lock: e.SP_STALE_INDEX_LOCK === "1",
+    stale_index_lock_path: e.SP_STALE_INDEX_LOCK_PATH || null,
+    stale_index_lock_warning: e.SP_STALE_INDEX_LOCK_WARNING || null,
     evaluated_ref: e.SP_REF || null,
     evaluated_ref_commit: e.SP_REF_COMMIT || null,
     checkout_matches_ref: e.SP_CHECKOUT_MATCHES_REF === "1",
@@ -575,6 +578,19 @@ if [[ -n "$UPSTREAM" ]]; then
 fi
 DIRTY=0
 [[ -n "$(git -C "$TARGET_ROOT" status --porcelain 2>/dev/null)" ]] && DIRTY=1
+STALE_INDEX_LOCK=0
+STALE_INDEX_LOCK_PATH=""
+STALE_INDEX_LOCK_WARNING=""
+# Advisory only: use lsof on the exact lock path so a live git command holding the lock does NOT
+# read as "stale". If lsof is unavailable, stay silent rather than guess from process names.
+INDEX_LOCK_PATH="$TARGET_ROOT/.git/index.lock"
+if [[ -e "$INDEX_LOCK_PATH" ]] && command -v lsof >/dev/null 2>&1; then
+  if ! lsof -t -- "$INDEX_LOCK_PATH" >/dev/null 2>&1; then
+    STALE_INDEX_LOCK=1
+    STALE_INDEX_LOCK_PATH="$INDEX_LOCK_PATH"
+    STALE_INDEX_LOCK_WARNING="stale git index lock detected at $INDEX_LOCK_PATH - verify no live git process (pgrep -fl git), then rm .git/index.lock"
+  fi
+fi
 FRESH_BLOCKED=0
 [[ "$FETCH_OK" -eq 0 ]] && FRESH_BLOCKED=1   # offline / fetch failed is a visible blocked state, not silent
 
@@ -749,6 +765,8 @@ SP_CONTRACT="$TMP/contract.json" SP_PROBES="$TMP/probes.json" SP_LANES="$TMP/lan
   SP_SKIP_BRANCH_PROMPT="$SKIP_BRANCH_PROMPT" \
   SP_ROOT="$TARGET_ROOT" SP_NOW="$NOW" SP_STATE="$CAND_STATE" \
   SP_FETCH="$FETCH_OK" SP_UP="$UPSTREAM" SP_AHEAD="$AHEAD" SP_BEHIND="$BEHIND" SP_DIRTY="$DIRTY" \
+  SP_STALE_INDEX_LOCK="$STALE_INDEX_LOCK" SP_STALE_INDEX_LOCK_PATH="$STALE_INDEX_LOCK_PATH" \
+  SP_STALE_INDEX_LOCK_WARNING="$STALE_INDEX_LOCK_WARNING" \
   SP_REF="$REF" SP_REF_COMMIT="$REF_COMMIT" SP_HEAD_BEHIND_REF="$HEAD_BEHIND_REF" \
   SP_CHECKOUT_MATCHES_REF="$CHECKOUT_MATCHES_REF" \
   SP_READY="$READY" SP_NEXT="$READY_NEXT" \
@@ -795,6 +813,7 @@ else
   emit "  target-root : $TARGET_ROOT ($BRANCH @ ${COMMIT:0:9})"
   emit "  branch      : suggested=$SUGGESTED_BRANCH branch_ready=$([[ "$BRANCH_READY" -eq 1 ]] && echo true || echo false) skip_branch_prompt=$([[ "$SKIP_BRANCH_PROMPT" -eq 1 ]] && echo true || echo false)"
   emit "  freshness   : fetch_ok=$FETCH_OK upstream=${UPSTREAM:-none} ahead=$AHEAD behind=$BEHIND dirty=$DIRTY"
+  [[ "$STALE_INDEX_LOCK" -eq 1 ]] && emit "  warning     : $STALE_INDEX_LOCK_WARNING"
   emit "  ref-probed  : $REF @ ${REF_COMMIT:0:9} ($REF_NOTE)"
   emit "  candidate   : $CAND_STATE"
   emit "  readiness   : ready=$READY${READY_NEXT:+ — next: $READY_NEXT}"

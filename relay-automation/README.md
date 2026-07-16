@@ -286,6 +286,17 @@ bash test/agy-turn.sh     # before agy runs
 If `validate.sh` cannot make tempdirs, that is usually a sandbox blocking
 `mktemp`; rerun it in a normal shell.
 
+#### Stale `.git/index.lock` preflight warning
+
+`utils/swarm-preflight.sh` now emits an advisory warning when
+`$TARGET_ROOT/.git/index.lock` exists and `lsof` shows no live holder on that
+exact path. That stays fail-open on purpose: a stale lock is operator-visible,
+but it does not change preflight readiness by itself.
+
+If you see the warning, verify no live git process is still active with
+`pgrep -fl git`, then remove the orphaned lock from the target repo root with
+`rm .git/index.lock`.
+
 ### 4. Drive one headless turn in this repo
 
 The supervisor (`relay-drive.sh`) drives the turn; the selected shim

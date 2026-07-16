@@ -875,6 +875,64 @@ node -e '
   && pass "T36 GH-127: bare '>' redirect classified fs-touching; '2>&1'/'->'/'>=' usage is not" \
   || fail "T36 fs_touching_tests wrong: $(cat "$R/packet/lane-plan.json")"
 
+# ── T37/T38/T39 (GH-203): a stale, unheld .git/index.lock is advisory only — warn in both text and
+# JSON, but never change an otherwise-ready verdict; a clean repo stays silent.
+R="$(make_repo stalelock '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+R_CANON="$(cd "$R" && pwd -P)"
+: >"$R/.git/index.lock"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-stalelock.md" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T37a GH-203: stale index.lock warning stays fail-open (exit 0)" || fail "T37a expected exit 0, got $rc — $out"
+grep -q "verdict     : ready" <<<"$out" && pass "T37b GH-203: stale index.lock does not change the ready verdict" || fail "T37b verdict changed: $out"
+grep -q "stale git index lock detected at $R_CANON/.git/index.lock" <<<"$out" \
+  && pass "T37c GH-203: text report warns on a stale, unheld index.lock" \
+  || fail "T37c missing stale-lock warning: $out"
+sj="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-stalelock.md" --format json 2>/dev/null)"
+node -e '
+  const j = JSON.parse(require("fs").readFileSync(0, "utf8"));
+  process.exit(
+    j.freshness &&
+    j.freshness.stale_index_lock === true &&
+    j.freshness.stale_index_lock_path === process.argv[1] &&
+    typeof j.freshness.stale_index_lock_warning === "string" &&
+    j.freshness.stale_index_lock_warning.includes("pgrep -fl git") &&
+    j.freshness.stale_index_lock_warning.includes("rm .git/index.lock") &&
+    j.freshness.candidate_state === "ready" ? 0 : 1
+  );
+' "$R_CANON/.git/index.lock" <<<"$sj" \
+  && pass "T38 GH-203: JSON report carries the stale-lock warning/path without changing candidate_state" \
+  || fail "T38 JSON stale-lock warning/path missing or wrong: $sj"
+
+R="$(make_repo nolock '{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "true",
+  "fix_probes": [ { "type": "path_absent", "path": "NEW_FILE.txt" } ],
+  "artifacts": [ "src/a.js" ],
+  "remediation": { "criteria": "x" }
+}' '## Phase 1')"
+out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-nolock.md" 2>&1)"; rc=$?
+[[ $rc -eq 0 ]] && pass "T39a GH-203: clean repo with no index.lock stays ready" || fail "T39a expected exit 0, got $rc — $out"
+! grep -q "stale git index lock detected" <<<"$out" \
+  && pass "T39b GH-203: clean text report omits the stale-lock warning" \
+  || fail "T39b unexpected stale-lock warning in clean repo: $out"
+sj="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-nolock.md" --format json 2>/dev/null)"
+node -e '
+  const j = JSON.parse(require("fs").readFileSync(0, "utf8"));
+  process.exit(
+    j.freshness &&
+    j.freshness.stale_index_lock === false &&
+    j.freshness.stale_index_lock_path === null &&
+    j.freshness.stale_index_lock_warning === null ? 0 : 1
+  );
+' <<<"$sj" \
+  && pass "T39c GH-203: clean JSON report omits the stale-lock warning fields" \
+  || fail "T39c clean JSON should not carry stale-lock warning fields: $sj"
+
 echo ""
 echo "  swarm-preflight: $PASS passed, $FAIL failed"
 [[ $FAIL -eq 0 ]] || exit 1
