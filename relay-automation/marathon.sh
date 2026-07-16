@@ -12,8 +12,18 @@ set -euo pipefail
 # the boundary events already land in .tick/events/ (phase.start/approved/escalated, marathon.complete).
 #
 # Usage:
-#   relay-automation/marathon.sh --plan MARATHON.yaml [--builder claude] [--phases-dir DIR]
+#   relay-automation/marathon.sh --plan MARATHON.yaml [--builder codex] [--phases-dir DIR]
 #                                [--pre-advance-cmd CMD] [--dry-run] [--retry PHASE-ID]
+#
+# GH-212: default builder is `codex` — no per-call API charge (bills via the Codex/ChatGPT
+# subscription; agy is the other cost-blind option). `--builder claude` spawns a headless Claude
+# Code CLI subprocess instead: a SEPARATE, PER-CALL API-BILLED turn-taker, distinct from an
+# interactive session. Use it only as an explicit, cost-acknowledged choice.
+#
+# GH-212: a plan's `--plan` YAML (+ its phase briefs) must resolve under PROJECT/2-WORKING/ in the
+# target repo — not a standalone top-level folder (e.g. marathon-plans/<slug>/) an agent might
+# pattern-match from a prior repo. Exempt: paths under this harness's own home (MARATHON_HOME —
+# covers shipped examples like MARATHON.example.yaml). Override: MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1.
 #
 # GH-116: --retry <phase-id> recovers a phase whose relay task was left open/never-claimed
 # (permanently spent, per this repo's claim-then-abandon constraint) WITHOUT manually renaming the
@@ -33,6 +43,7 @@ set -euo pipefail
 #   MARATHON_DRIVE      — marathon-drive.sh path (default: <harness-home>/relay-automation/marathon-drive.sh)
 #   MARATHON_YAML_BIN   — bin/marathon-yaml path (default: <harness-home>/bin/marathon-yaml)
 #   TICK_BIN            — tick binary (default: <harness-home>/bin/tick)
+#   MARATHON_ALLOW_PLAN_OUTSIDE_WORKING — 1 permits a --plan outside PROJECT/2-WORKING/ (GH-212)
 # Real runs also inherit the turn-taker env (CLAUDE_BIN, *_TURN_ROOT, …), passed straight through.
 #
 # Exit: 0 all phases approved · N the failing phase's marathon-drive exit code · 2 usage/parse error.
@@ -66,7 +77,27 @@ xyz_marathon_run_emit() {  # <health> <description>
   "$XYZ_APPEND_BIN" marathon "$plan" "$1" "$plan" "$2" >/dev/null 2>&1 || true
 }
 
-PLAN=""; BUILDER="claude"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0; RETRY_PHASE=""
+usage() {
+  cat <<'EOF'
+Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-advance-cmd C]
+                    [--dry-run] [--force] [--retry PHASE-ID]
+
+  --plan PATH            MARATHON.yaml to run (required). Must resolve under PROJECT/2-WORKING/ in
+                          the target repo (GH-212) — exempt: paths under this harness's own home
+                          (shipped examples), or MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1.
+  --builder AGENT         Builder agent id (default: codex — no per-call API charge; bills via the
+                          Codex/ChatGPT subscription). --builder claude spawns a headless Claude
+                          Code CLI subprocess instead: a SEPARATE, PER-CALL API-BILLED turn-taker —
+                          an explicit, cost-acknowledged choice, not the default.
+  --phases-dir DIR        Where to create phases/<id>/ (default: <repo-root>/phases).
+  --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh, per phase).
+  --dry-run               Render each phase's relay file and print the tick seed; exit without running.
+  --force                 GH-45: bypass the per-lane attempt cap for this run.
+  --retry PHASE-ID        GH-116: retry one phase with a fresh relay-task suffix.
+EOF
+}
+
+PLAN=""; BUILDER="codex"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0; RETRY_PHASE=""
 while (($# > 0)); do
   case "$1" in
     --plan)            PLAN="${2:-}"; shift 2 ;;
@@ -76,12 +107,44 @@ while (($# > 0)); do
     --dry-run)         DRY_RUN=1; shift ;;
     --force)           FORCE=1; shift ;;   # GH-45: forward to each phase so a parked lane can be re-fired
     --retry)           RETRY_PHASE="${2:-}"; shift 2 ;;   # GH-116: retry one phase with a fresh relay-task suffix
-    --help)            printf 'Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-advance-cmd C] [--dry-run] [--force] [--retry PHASE-ID]\n'; exit 0 ;;
+    --help)            usage; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
   esac
 done
 [[ -n "$PLAN" ]] || { die "--plan MARATHON.yaml required"; }
 [[ -f "$PLAN" ]] || die "plan not found: $PLAN"
+
+# GH-212: plan-location guard. A marathon's plan artifacts (this YAML + its phase briefs) belong
+# under PROJECT/2-WORKING/<capture-doc>/, not a standalone top-level folder (e.g. marathon-plans/)
+# an agent might pattern-match from a prior repo. Exempt: paths under this harness's own home
+# (MARATHON_HOME) — shipped reference examples (e.g. MARATHON.example.yaml), not an agent-authored
+# plan for a target repo. Override for a legitimate non-default location:
+# MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1.
+_plan_abs="$(cd "$(dirname "$PLAN")" && pwd -P)/$(basename "$PLAN")"
+# Canonicalize with `pwd -P` unconditionally (relative AND already-absolute input): ROOT can come
+# from `git rev-parse --show-toplevel` (symlink-resolved) or a raw MARATHON_ROOT env override
+# (whatever form the caller passed), so either side of this comparison can be a logical (non -P)
+# path — canonicalize both or a macOS /var -> /private/var checkout falsely flags every plan.
+# symlinks (e.g. macOS /var -> /private/var), so a logical (non -P) comparison here would falsely
+# flag every plan as "outside" on such a checkout (same pitfall swarm-preflight.sh works around).
+_root_canon="$(cd "$ROOT" 2>/dev/null && pwd -P || printf '%s' "$ROOT")"
+_home_canon="$(cd "$MARATHON_HOME" 2>/dev/null && pwd -P || printf '%s' "$MARATHON_HOME")"
+_plan_rel_root="${_plan_abs#"$_root_canon"/}"
+case "$_plan_rel_root" in
+  PROJECT/2-WORKING/*) ;;   # in the expected home — proceed
+  *)
+    case "$_plan_abs" in
+      "$_home_canon"/*) ;;   # harness-owned reference material — exempt
+      *)
+        if [[ "${MARATHON_ALLOW_PLAN_OUTSIDE_WORKING:-0}" != "1" ]]; then
+          die "plan '$PLAN' resolves outside PROJECT/2-WORKING/ (got: $_plan_rel_root). Marathon plans (MARATHON.yaml + phase briefs) belong under PROJECT/2-WORKING/<capture-doc>/, not a standalone folder — see GUIDING-PRINCIPLES.md Conventions. Override: MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1."
+        fi
+        log "MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 — proceeding with a plan outside PROJECT/2-WORKING/ ($_plan_rel_root)"
+        ;;
+    esac
+    ;;
+esac
+
 PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
 export TICK_REPO_ROOT="$ROOT"
 

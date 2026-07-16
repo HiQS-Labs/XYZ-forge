@@ -7,7 +7,7 @@ REPO="$(cd "$(dirname "$0")/.." && pwd)"
 MSH="$REPO/relay-automation/marathon.sh"
 YBIN="$REPO/bin/marathon-yaml"
 
-mkdir -p "$A/briefs"
+mkdir -p "$A/briefs" "$A/PROJECT/2-WORKING"
 for p in p1 p2 p3 a b; do printf 'brief for %s\n' "$p" > "$A/briefs/$p.md"; done
 
 # Stub marathon-drive: record "id|cap|reviewer|artifact|relay-task|turn-timeout|lane-ns" per phase;
@@ -38,7 +38,7 @@ run_marathon() {  # <plan> <extra-args…>
     bash "$MSH" --plan "$plan" "$@"
 }
 
-cat > "$A/m.yaml" <<'YAML'
+cat > "$A/PROJECT/2-WORKING/m.yaml" <<'YAML'
 name: chain
 phases:
   - id: p1
@@ -60,7 +60,7 @@ YAML
 
 # --- (1) full chain: order + round-cap math + marathon.complete ------------
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
-run_marathon "$A/m.yaml" >/dev/null 2>&1; rc=$?
+run_marathon "$A/PROJECT/2-WORKING/m.yaml" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "full chain exits 0" || fail "chain exit=$rc"
 [ "$(cut -d'|' -f1 "$WORK/phases-ran" | paste -sd, -)" = "p1,p2,p3" ] \
   && pass "phases run in execution order p1,p2,p3" || fail "order: [$(cat "$WORK/phases-ran")]"
@@ -74,7 +74,7 @@ ls "$A/.tick/events/" 2>/dev/null | grep -q "marathon.complete" \
 
 # --- (2) halt on failure: p2 fails -> p3 NOT started, exit 4, no complete --
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
-STUB_FAIL_PHASE=p2 run_marathon "$A/m.yaml" >/dev/null 2>&1; rc=$?
+STUB_FAIL_PHASE=p2 run_marathon "$A/PROJECT/2-WORKING/m.yaml" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 4 ] && pass "halt propagates the failing phase's exit (4)" || fail "halt exit=$rc (expected 4)"
 [ "$(cut -d'|' -f1 "$WORK/phases-ran" | paste -sd, -)" = "p1,p2" ] \
   && pass "chain halts after p2 — p3 NOT started" || fail "ran: [$(cat "$WORK/phases-ran")]"
@@ -82,7 +82,7 @@ ls "$A/.tick/events/" 2>/dev/null | grep -q "marathon.complete" \
   && fail "marathon.complete must NOT be emitted on halt" || pass "no marathon.complete on halt"
 
 # --- (3) depends_on reorders authored-out-of-order phases -----------------
-cat > "$A/r.yaml" <<'YAML'
+cat > "$A/PROJECT/2-WORKING/r.yaml" <<'YAML'
 name: reorder
 phases:
   - id: b
@@ -94,26 +94,26 @@ phases:
     brief: briefs/a.md
 YAML
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
-run_marathon "$A/r.yaml" >/dev/null 2>&1
+run_marathon "$A/PROJECT/2-WORKING/r.yaml" >/dev/null 2>&1
 [ "$(cut -d'|' -f1 "$WORK/phases-ran" | paste -sd, -)" = "a,b" ] \
   && pass "orchestrator runs in depends_on order (a before b)" || fail "ran: [$(cat "$WORK/phases-ran")]"
 
 # --- (4) a phase with no brief -> hard error (exit 2) ---------------------
-printf 'name: nb\nphases:\n  - id: p1\n    reviewer: codex\n' > "$A/nobrief.yaml"
+printf 'name: nb\nphases:\n  - id: p1\n    reviewer: codex\n' > "$A/PROJECT/2-WORKING/nobrief.yaml"
 rm -f "$WORK/phases-ran"
-run_marathon "$A/nobrief.yaml" >/dev/null 2>&1; rc=$?
+run_marathon "$A/PROJECT/2-WORKING/nobrief.yaml" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "phase without a brief -> error (exit 2)" || fail "no-brief exit=$rc (expected 2)"
 
 # --- (5) malformed plan -> halt before running ANY phase -----------------
-printf 'name: bad\nphases:\n  - id: p1\n    reviewer: claude\n    brief: briefs/p1.md\n' > "$A/bad.yaml"
+printf 'name: bad\nphases:\n  - id: p1\n    reviewer: claude\n    brief: briefs/p1.md\n' > "$A/PROJECT/2-WORKING/bad.yaml"
 rm -f "$WORK/phases-ran"
-run_marathon "$A/bad.yaml" >/dev/null 2>&1; rc=$?
+run_marathon "$A/PROJECT/2-WORKING/bad.yaml" >/dev/null 2>&1; rc=$?
 { [ "$rc" -eq 2 ] && [ ! -f "$WORK/phases-ran" ]; } \
   && pass "malformed plan halts before any phase runs (exit 2)" || fail "bad plan: rc=$rc, ran=[$(cat "$WORK/phases-ran" 2>/dev/null)]"
 
 # --- (6) GH-116: --retry overrides only the named phase's relay task -------
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
-run_marathon "$A/m.yaml" --retry p2 >/dev/null 2>&1; rc=$?
+run_marathon "$A/PROJECT/2-WORKING/m.yaml" --retry p2 >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "--retry run still exits 0 (full chain)" || fail "--retry chain exit=$rc"
 grep -q "^p2|7|gemini|src/p2.js|MARATHON-P2-TURN-2|1200|chain--p2$" "$WORK/phases-ran" \
   && pass "--retry p2: relay-task overridden to MARATHON-P2-TURN-2 (first unused suffix), lane namespace preserved" \
@@ -128,14 +128,14 @@ grep -q "^p3|5|codex||||chain--p3$" "$WORK/phases-ran" \
 # --- (7) GH-116: --retry bumps past an already-used suffix ------------------
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
 TICK_REPO_ROOT="$A" "$TICK" log task.created "MARATHON-P2-TURN-2" --agent test >/dev/null 2>&1
-run_marathon "$A/m.yaml" --retry p2 >/dev/null 2>&1
+run_marathon "$A/PROJECT/2-WORKING/m.yaml" --retry p2 >/dev/null 2>&1
 grep -q "^p2|7|gemini|src/p2.js|MARATHON-P2-TURN-3|1200|chain--p2$" "$WORK/phases-ran" \
   && pass "--retry p2: MARATHON-P2-TURN-2 already used -> bumps to -3 (checked via tick info, not hardcoded), lane namespace preserved" \
   || fail "--retry bump: [$(grep p2 "$WORK/phases-ran")]"
 
 # --- (8) GH-116: a plan run without --retry is byte-for-byte unchanged -----
 rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
-run_marathon "$A/m.yaml" >/dev/null 2>&1
+run_marathon "$A/PROJECT/2-WORKING/m.yaml" >/dev/null 2>&1
 diff -q "$WORK/phases-ran.no-retry-baseline" "$WORK/phases-ran" >/dev/null 2>&1 \
   && pass "no --retry: phases-ran byte-for-byte unchanged" \
   || fail "no-retry drift: [$(diff "$WORK/phases-ran.no-retry-baseline" "$WORK/phases-ran")]"
@@ -228,9 +228,9 @@ git -C "$V" config user.email t@example.com
 git -C "$V" config user.name test
 printf '.tick/\n.xyz/.tick/\n' > "$V/.gitignore"
 printf 'brief for vendored p1\n' > "$V/briefs-p1.tmp"
-mkdir -p "$V/briefs"
+mkdir -p "$V/briefs" "$V/PROJECT/2-WORKING"
 mv "$V/briefs-p1.tmp" "$V/briefs/p1.md"
-cat > "$V/vendored.yaml" <<'YAML'
+cat > "$V/PROJECT/2-WORKING/vendored.yaml" <<'YAML'
 name: vendored
 phases:
   - id: p1
@@ -261,7 +261,7 @@ rm -f "$WORK/vendored-drive-ran"; rm -rf "$V/.tick"
 (
   cd "$V"
   unset MARATHON_HOME MARATHON_ROOT MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
-  ./.xyz/relay-automation/marathon.sh --plan vendored.yaml
+  ./.xyz/relay-automation/marathon.sh --plan PROJECT/2-WORKING/vendored.yaml
 ) >/dev/null 2>&1
 rc=$?
 [ "$rc" -eq 0 ] && pass "GH-206: vendored marathon.sh runs with zero env overrides" \
@@ -278,6 +278,38 @@ vendored_tick_home="$(cd "$(dirname "$vendored_tick")/.." && pwd -P)"
 ls "$V/.tick/events/" 2>/dev/null | grep -q "marathon.complete" \
   && pass "GH-206: vendored run emits marathon.complete in the consumer repo tick log" \
   || fail "GH-206: vendored run missing consumer repo marathon.complete"
+
+# --- (12) GH-212: a plan outside PROJECT/2-WORKING/ is refused by default -------
+rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
+printf 'name: outside\nphases:\n  - id: p1\n    reviewer: codex\n    brief: briefs/p1.md\n' > "$A/outside.yaml"
+OUTSIDE_OUT="$(run_marathon "$A/outside.yaml" 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && pass "GH-212: plan outside PROJECT/2-WORKING/ is refused by default (exit 2)" \
+  || fail "GH-212: expected exit 2 for an outside-PROJECT/2-WORKING plan, got $rc: $OUTSIDE_OUT"
+printf '%s\n' "$OUTSIDE_OUT" | grep -q "resolves outside PROJECT/2-WORKING" \
+  && pass "GH-212: refusal names the plan-location convention" \
+  || fail "GH-212: expected a plan-location error message, got: $OUTSIDE_OUT"
+[ ! -f "$WORK/phases-ran" ] && pass "GH-212: refused plan runs zero phases" \
+  || fail "GH-212: refused plan should not run any phase: [$(cat "$WORK/phases-ran")]"
+
+# --- (13) GH-212: MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 overrides the refusal ---
+rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
+OVERRIDE_OUT="$(MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 run_marathon "$A/outside.yaml" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-212: MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 permits a plan outside PROJECT/2-WORKING/" \
+  || fail "GH-212: override run exit=$rc: $OVERRIDE_OUT"
+[ "$(cut -d'|' -f1 "$WORK/phases-ran" | paste -sd, -)" = "p1" ] \
+  && pass "GH-212: override run actually executes the phase" \
+  || fail "GH-212: override run: [$(cat "$WORK/phases-ran" 2>/dev/null)]"
+
+# --- (14) GH-212: a plan under the harness's own home is exempt, no override needed --
+rm -f "$WORK/phases-ran"; rm -rf "$A/.tick"
+mkdir -p "$WORK/fake-home"
+printf 'name: homeplan\nphases:\n  - id: p1\n    reviewer: codex\n    brief: briefs/p1.md\n' > "$WORK/fake-home/homeplan.yaml"
+HOME_OUT="$(MARATHON_HOME="$WORK/fake-home" run_marathon "$WORK/fake-home/homeplan.yaml" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-212: a plan under MARATHON_HOME (harness-owned reference material) is exempt" \
+  || fail "GH-212: harness-home-exempt plan exit=$rc: $HOME_OUT"
+[ "$(cut -d'|' -f1 "$WORK/phases-ran" | paste -sd, -)" = "p1" ] \
+  && pass "GH-212: harness-home-exempt plan actually executes the phase" \
+  || fail "GH-212: harness-home plan: [$(cat "$WORK/phases-ran" 2>/dev/null)]"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

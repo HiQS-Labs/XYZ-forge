@@ -149,12 +149,12 @@ case "$(field "$XH" 0 description)" in *"halted at phase"*) pass "halt descripti
 
 # ── (M5) marathon.sh N-phase → exactly ONE harness:marathon record ─────────
 XMS="$WORK/msh.json"; reset_a
-mkdir -p "$A/briefs"; printf 'b1\n' > "$A/briefs/p1.md"; printf 'b2\n' > "$A/briefs/p2.md"
-cat > "$A/gh75plan.yaml" <<'YAML'
+mkdir -p "$A/briefs" "$A/PROJECT/2-WORKING"; printf 'b1\n' > "$A/briefs/p1.md"; printf 'b2\n' > "$A/briefs/p2.md"
+cat > "$A/PROJECT/2-WORKING/gh75plan.yaml" <<'YAML'
 name: gh75plan
 phases:
   - id: p1
-    reviewer: codex
+    reviewer: agy
     brief: briefs/p1.md
   - id: p2
     reviewer: agy
@@ -163,9 +163,9 @@ phases:
 YAML
 MARATHON_ROOT="$A" MARATHON_DRIVE="$MARATHON_DRIVE" MARATHON_RELAY_DRIVE="$STUB_RD" \
   MARATHON_AGENT_CMD="$NOOP" MARATHON_YAML_BIN="$YBIN" TICK_BIN="$TICK" TICK_REPO_ROOT="$A" \
-  CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" \
+  CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" CODEX_BIN="$NOOP" \
   XYZ_APPEND_BIN="$XYZ_APPEND_BIN" XYZ_JSON_PATH="$XMS" STUB_RD_EXIT=0 \
-  bash "$MARATHON_SH" --plan "$A/gh75plan.yaml" --pre-advance-cmd "true" >/dev/null 2>&1; rc=$?
+  bash "$MARATHON_SH" --plan "$A/PROJECT/2-WORKING/gh75plan.yaml" --pre-advance-cmd "true" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "marathon.sh 2-phase run exits 0" || fail "marathon.sh exit=$rc"
 [ "$(count "$XMS")" = "1" ] && pass "marathon.sh 2-phase → exactly ONE record (not per-phase)" || fail "marathon.sh count=$(count "$XMS") (expected 1)"
 [ "$(field "$XMS" 0 harness)" = "marathon" ] && pass "marathon.sh record harness=marathon" || fail "harness=$(field "$XMS" 0 harness)"
@@ -177,12 +177,12 @@ reset_a
 # GH-75 review Blocker: an orchestrated halt used to emit nothing (each phase silenced; the success
 # tail skipped). It must record a red whole-run record — not be silently absent.
 XMH="$WORK/msh-halt.json"; reset_a
-mkdir -p "$A/briefs"; printf 'b1\n' > "$A/briefs/p1.md"; printf 'b2\n' > "$A/briefs/p2.md"
-cat > "$A/gh75halt.yaml" <<'YAML'
+mkdir -p "$A/briefs" "$A/PROJECT/2-WORKING"; printf 'b1\n' > "$A/briefs/p1.md"; printf 'b2\n' > "$A/briefs/p2.md"
+cat > "$A/PROJECT/2-WORKING/gh75halt.yaml" <<'YAML'
 name: gh75halt
 phases:
   - id: p1
-    reviewer: codex
+    reviewer: agy
     brief: briefs/p1.md
   - id: p2
     reviewer: agy
@@ -191,9 +191,9 @@ phases:
 YAML
 MARATHON_ROOT="$A" MARATHON_DRIVE="$MARATHON_DRIVE" MARATHON_RELAY_DRIVE="$STUB_RD" \
   MARATHON_AGENT_CMD="$NOOP" MARATHON_YAML_BIN="$YBIN" TICK_BIN="$TICK" TICK_REPO_ROOT="$A" \
-  CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" \
+  CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" CODEX_BIN="$NOOP" \
   XYZ_APPEND_BIN="$XYZ_APPEND_BIN" XYZ_JSON_PATH="$XMH" STUB_RD_EXIT=4 \
-  bash "$MARATHON_SH" --plan "$A/gh75halt.yaml" --pre-advance-cmd "true" >/dev/null 2>&1; rc=$?
+  bash "$MARATHON_SH" --plan "$A/PROJECT/2-WORKING/gh75halt.yaml" --pre-advance-cmd "true" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 4 ] && pass "marathon.sh halt propagates the phase exit (4)" || fail "marathon.sh halt exit=$rc"
 [ "$(count "$XMH")" = "1" ] && pass "marathon.sh halt → exactly ONE record (not silently absent)" || fail "marathon.sh halt count=$(count "$XMH") (expected 1)"
 [ "$(field "$XMH" 0 health)" = "red" ] && pass "marathon.sh halt health=red" || fail "halt health=$(field "$XMH" 0 health)"

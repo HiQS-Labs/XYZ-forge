@@ -37,8 +37,15 @@ chmod +x "$STUB_CLAUDE_BIN"
 STUB_AGY_BIN="$WORK/stub-agy"
 printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_AGY_BIN"
 chmod +x "$STUB_AGY_BIN"
+STUB_CODEX_BIN="$WORK/stub-codex"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_CODEX_BIN"
+chmod +x "$STUB_CODEX_BIN"
 MISSING_BIN="$WORK/does-not-exist-bin"   # deliberately never created
 
+# GH-212: this suite's default builder identity is pinned to `claude` here (not marathon-drive's
+# own new `codex` default) so every existing case below — written against a literal "claude" agent
+# identity in tick claims/relay text — keeps testing exactly what it always tested. The dedicated
+# GH-212 case further down verifies the real (unpinned) default separately.
 run_driver() {  # <extra-args…>
   MARATHON_ROOT="$A" \
   MARATHON_RELAY_DRIVE="$STUB_RD" \
@@ -50,6 +57,7 @@ run_driver() {  # <extra-args…>
     --phase-brief "$BRIEF" \
     --reviewer agy \
     --pre-advance-cmd "true" \
+    --builder claude \
     "$@"
 }
 
@@ -595,6 +603,22 @@ find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2
 [ ! -d "$VP/.xyz/.tick/events" ] \
   && pass "GH-172: vendored XYZ_PYTHON=1 run does not grow a stray .xyz .tick event log" \
   || fail "GH-172: vendored XYZ_PYTHON=1 run should not create .xyz/.tick"
+
+# ── (19) GH-212: unset --builder now resolves to the new default, codex ───────
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+DEFAULT_BUILDER_OUT="$(RELAY_DRIVE_EXIT=0 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" \
+  MARATHON_AGENT_CMD="$WORK/noop-agent" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  CODEX_BIN="$STUB_CODEX_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy \
+    --pre-advance-cmd "true" 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-212: default builder (no --builder flag) runs with no claude binary present" \
+  || fail "GH-212: default-builder run exit=$rc: $DEFAULT_BUILDER_OUT"
+grep -q "TAKE YOUR TURN.*codex.*BUILDER" "$A/phases/p1/RELAY.md" 2>/dev/null \
+  && pass "GH-212: default builder identity rendered in the relay file is codex" \
+  || fail "GH-212: expected codex as the default BUILDER in the relay file"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

@@ -52,7 +52,7 @@ def _probe_agent_bin(agent_id, role_label):
 def main():
     parser = argparse.ArgumentParser(description="marathon-drive", add_help=False)
     parser.add_argument("--phase-brief", dest="phase_brief_file")
-    parser.add_argument("--builder", dest="builder", default="claude")
+    parser.add_argument("--builder", dest="builder", default="codex")  # GH-212: no per-call API charge
     parser.add_argument("--reviewer", dest="reviewer")
     parser.add_argument("--round-cap", dest="round_cap", type=int, default=5)
     parser.add_argument("--pre-advance-cmd", dest="pre_advance_cmd")

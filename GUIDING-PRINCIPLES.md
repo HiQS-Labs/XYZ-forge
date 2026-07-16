@@ -68,6 +68,25 @@ Every currently `-e`-exempt script carries a one-line `# strict-mode: -e exempt 
 its `set -` line so the exemption is self-documenting. New scripts default to `set -euo pipefail`
 unless they fit the analysis-tool profile above, in which case they add the exemption header.
 
+### Marathon builder default & plan location (GH-212)
+
+Two vendored-harness defaults, made explicit so an agent given only the vendored bundle picks the
+right behavior without pattern-matching a downstream repo's prior drift:
+
+- **Builder default is `codex`, not a billed CLI.** `marathon.sh`/`marathon-drive.sh` (and the
+  `XYZ_PYTHON=1` port) default `--builder` to `codex` — build turns bill via the Codex/ChatGPT
+  subscription, not the Anthropic API (agy is the other cost-blind option). `--builder claude`
+  spawns a headless Claude Code CLI subprocess instead: a separate, per-call API-billed turn-taker.
+  Use it only as an explicit, cost-acknowledged choice — never assume it's free because an
+  interactive session is already running. `swarm-preflight.sh`'s suggested invocation and
+  `marathon.sh`'s own default now agree; don't let them drift apart again.
+- **A marathon's plan lives under `PROJECT/2-WORKING/`.** The `MARATHON.yaml` + its phase briefs
+  belong under `PROJECT/2-WORKING/<capture-doc>/` — never a standalone top-level folder (e.g.
+  `marathon-plans/<slug>/`). `marathon.sh --plan` enforces this: it refuses (exit 2) a plan that
+  resolves outside `PROJECT/2-WORKING/`, exempting only paths under the harness's own home
+  (`MARATHON_HOME` — shipped reference examples like `MARATHON.example.yaml`) or an explicit
+  `MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1` override for a genuinely non-default location.
+
 ---
 
 ## Appendix: AI Doc Review Heuristics

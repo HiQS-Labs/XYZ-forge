@@ -4,6 +4,17 @@
 # phase that fails its review/gate (that phase's ESCALATION.md is left behind), and emits a
 # marathon.complete event only when every phase is approved.
 #
+# Builder default (GH-212): marathon.sh/marathon-drive.sh default `--builder` to `codex` — build
+# turns bill via the Codex/ChatGPT subscription, not the Anthropic API (agy is the other cost-blind
+# option). `--builder claude` is available but spawns a headless Claude Code CLI subprocess — a
+# SEPARATE, PER-CALL API-BILLED turn-taker — as an explicit, cost-acknowledged opt-in only.
+#
+# Plan location (GH-212): once this is a REAL plan for a tracked issue (not this shipped example),
+# the MARATHON.yaml + its phase briefs belong under PROJECT/2-WORKING/<capture-doc>/ in the target
+# repo — never a standalone top-level folder like marathon-plans/<slug>/. `marathon.sh --plan`
+# refuses a plan outside PROJECT/2-WORKING/ unless MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 is set.
+# (This example is exempt: it lives under the harness's own relay-automation/ home, not a target repo.)
+#
 # Per-phase fields:
 #   id                 phase id → phases/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
 #   reviewer           codex* or agy* — the model that reviews this phase                 (required)

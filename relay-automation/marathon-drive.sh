@@ -21,7 +21,9 @@ fi
 #   relay-automation/marathon-drive.sh \
 #     --phase-brief <FILE>       phase brief (markdown; baked into the relay template)
 #     --reviewer    <AGENT_ID>   reviewer agent (codex* or gemini*)
-#     [--builder    <AGENT_ID>]  builder agent (default: claude)
+#     [--builder    <AGENT_ID>]  builder agent (default: codex — GH-212: no per-call API charge;
+#                                --builder claude spawns a billed headless Claude Code CLI
+#                                subprocess instead — an explicit, cost-acknowledged opt-in)
 #     [--round-cap  <N>]         relay-drive round cap (default: 5 = 2*2+1)
 #     [--pre-advance-cmd <CMD>]  gate before phase.approved (default: bash validate.sh)
 #     [--phases-dir <DIR>]       where to create phases/<id>/ (default: <repo-root>/phases)
@@ -248,7 +250,11 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
 
   --phase-brief FILE      Phase brief markdown baked into the relay template (required).
   --reviewer AGENT        Reviewer agent id; must start with 'codex', 'gemini', or 'agy' (required).
-  --builder AGENT         Builder agent id (default: claude).
+  --builder AGENT         Builder agent id (default: codex — GH-212: no per-call API charge; bills
+                          via the Codex/ChatGPT subscription, agy is the other cost-blind option).
+                          --builder claude spawns a headless Claude Code CLI subprocess instead: a
+                          SEPARATE, PER-CALL API-BILLED turn-taker — use it only as an explicit,
+                          cost-acknowledged choice, not the default.
   --round-cap N           relay-drive turn cap (default: 5).
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh).
   --phases-dir DIR        Where to create phases/<id>/ (default: <repo-root>/phases).
@@ -266,7 +272,7 @@ EOF
 }
 
 PHASE_BRIEF_FILE=""
-BUILDER="claude"
+BUILDER="codex"
 REVIEWER=""
 ROUND_CAP=5
 PRE_ADVANCE_CMD=""   # resolved to default after ROOT is set
