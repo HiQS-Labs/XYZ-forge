@@ -2,7 +2,7 @@
 gh_issue: 213
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/213
 title: "committed case-variant relay-system/ path is a latent exit-6 landmine on macOS"
-status: preflighted 2026-07-16, queued for today's marathon
+status: built 2026-07-16 (codex + agy, 4 turns, Approved) — verified independently after a pre-advance gate false-negative, see Status
 created: 2026-07-16
 updated: 2026-07-16
 owner: noel
@@ -36,7 +36,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Capture written, scope confirmed with operator (defensive detection guard, not a narrow copy of GH-17's fix). | Marathon phase build + agy review. |
+| Built via the marathon (phase `gh213`, codex builder + agy reviewer, 4 turns, relay `STATUS: Approved`, tick token `done`). All 20 `test/find-harness.sh` cases pass including the 5 new case-collision assertions. **The marathon's own pre-advance gate false-negatived on an unrelated, pre-existing test in the SAME shared gate command (`test/marathon.sh`'s GH-205 resume sub-case) — not a defect in this phase's code.** Root cause: the shared `--pre-advance-cmd` nested `bash test/marathon.sh` (which itself invokes the real `marathon.sh`/`marathon-drive.sh`, acquiring the same `.git/relay-driver.lock` and touching the same `.tick/` state) INSIDE the already-running outer `marathon-drive.sh` process — confirmed by re-running `bash test/marathon.sh` standalone immediately after (33/33 green, including the exact sub-case that "failed" nested). This is itself a live, concrete instance of the class of bug GH-209 is about (env/lock-state bleeding between a live marathon process and a nested invocation of the same scripts) — noted back into GH-209's own capture doc. Recovery: verified independently rather than re-running the (already-good) build; the two remaining phases continue via `MARATHON-REMAINING.yaml` with a gate that doesn't nest `test/marathon.sh`. | Continue with `gh209`/`gh203` via `MARATHON-REMAINING.yaml`. |
 
 ## Problem
 
@@ -59,24 +59,24 @@ instance in this repo.
 
 ## Acceptance criteria
 
-- [ ] `skills/relay-xyz/find-harness.sh --check` detects, in the CALLER's own repo (where `--check`
+- [x] `skills/relay-xyz/find-harness.sh --check` detects, in the CALLER's own repo (where `--check`
       is run from, not necessarily `$HARNESS`), any two git-tracked paths whose lowercased forms are
       identical but whose exact forms differ.
-- [ ] The check only fires when the caller's repo has `core.ignorecase=true` (the condition under
+- [x] The check only fires when the caller's repo has `core.ignorecase=true` (the condition under
       which the collision is actually dangerous — a case-sensitive checkout, e.g. Linux CI, can hold
       both paths safely).
-- [ ] On a detected collision, `--check` prints a clear warning naming BOTH colliding paths and a
+- [x] On a detected collision, `--check` prints a clear warning naming BOTH colliding paths and a
       `git mv` remediation, in the same "`!` "-prefixed advisory style as the file's other checks
       (e.g. the GH-70 concurrency warning already there).
-- [ ] `--check` stays fail-open: the new check never changes `find-harness.sh`'s exit code (always 0
+- [x] `--check` stays fail-open: the new check never changes `find-harness.sh`'s exit code (always 0
       on `--check`, per its existing documented contract).
-- [ ] `test/find-harness.sh` gains regression cases: (a) a fixture repo with `core.ignorecase=true`
+- [x] `test/find-harness.sh` gains regression cases: (a) a fixture repo with `core.ignorecase=true`
       and two case-colliding tracked paths (seed via `git update-index --add --cacheinfo` — this
       works regardless of the test machine's own filesystem case-sensitivity, no real collision on
       disk needed) triggers the warning; (b) an ordinary repo with no such collision does NOT
       trigger it; (c) a repo with `core.ignorecase=false` and the same colliding paths does NOT
       trigger it (matches point 2 above).
-- [ ] `bash test/find-harness.sh` and full `validate.sh` green.
+- [x] `bash test/find-harness.sh` and full `validate.sh` green.
 
 ## Swarm Preflight Contract
 ```json

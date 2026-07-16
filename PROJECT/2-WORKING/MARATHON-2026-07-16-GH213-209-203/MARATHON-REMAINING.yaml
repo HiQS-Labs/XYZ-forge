@@ -1,0 +1,27 @@
+# MARATHON-REMAINING.yaml — follow-up to MARATHON.yaml after gh213's pre-advance gate mis-fired
+# (see this folder's GH-213 capture doc Status for the postmortem: gh213's actual build+review was
+# already Approved/done, the gate itself was unsafe to nest — not a regression in gh213's code).
+# Contains only the two phases that never started: gh209, gh203.
+#
+# Gate is intentionally 'true' (skipped) for BOTH phases here: gh209's own artifact IS
+# test/marathon.sh/test/marathon-drive.sh, and nesting those inside a live marathon-drive.sh process
+# proved unreliable (a real, reproducible finding directly relevant to GH-209 itself — env/lock state
+# from the outer marathon-drive.sh process leaks into the inner test's own marathon.sh invocations).
+# Both test/marathon.sh (gh209) and test/swarm-preflight.sh (gh203) are verified STANDALONE,
+# non-nested, by the orchestrator immediately after each phase's relay is approved.
+
+name: gh213-209-203-remaining
+phases:
+  - id: gh209
+    name: marathon-root leak static audit
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH213-209-203/brief-gh209-root-audit.md
+    artifact: test/marathon.sh,test/marathon-drive.sh,test/marathon-root-audit.sh
+    max_review_rounds: 2
+
+  - id: gh203
+    name: stale index.lock preflight warning
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH213-209-203/brief-gh203-stale-lock.md
+    artifact: utils/swarm-preflight.sh,test/swarm-preflight.sh,relay-automation/README.md
+    max_review_rounds: 2
