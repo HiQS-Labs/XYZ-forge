@@ -2,7 +2,7 @@
 gh_issue: 203
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/203
 title: "Swarm/tick sessions leave a stale git index.lock on unclean exit, blocking later git ops"
-status: preflighted 2026-07-16, queued for today's marathon (scope narrowed — see Decision)
+status: built 2026-07-16 (codex + agy, 2 turns, Approved cleanly)
 created: 2026-07-16
 updated: 2026-07-16
 owner: noel
@@ -36,7 +36,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Capture written; scope narrowed to the preflight-check + doc option (of the issue's 4-item menu) as the only one that doesn't touch tick/git-write internals. | Marathon phase build + agy review. |
+| Built via the marathon (phase `gh203`, codex builder + agy reviewer, 2 turns, clean Approve — no false positives, unlike gh213/gh209). `utils/swarm-preflight.sh` detects a stale lock via `lsof -t -- <lock-path>` (advisory-only; stays silent if `lsof` is unavailable rather than guessing from process names), threads `stale_index_lock`/`stale_index_lock_path`/`stale_index_lock_warning` through both the JSON and text reports, and never touches `VERDICT`/`CAND_STATE`. `test/swarm-preflight.sh` gained 7 new cases (T37a–c, T38, T39a–c: warn/JSON/clean-repo coverage) — 94/94 green. Doc note added to `relay-automation/README.md`. Full `validate.sh` green except the pre-existing tracked #208; rebuilt `relay-pkg.tar.gz` (README.md is part of the vendored bundle). | Done. All 3 lanes (gh213, gh209, gh203) complete. |
 
 ## Problem
 
@@ -56,25 +56,25 @@ options remain open for a future, more careful pass.
 
 ## Acceptance criteria
 
-- [ ] `swarm-preflight.sh` gains a check (alongside its existing Phase 3 freshness checks) that
+- [x] `swarm-preflight.sh` gains a check (alongside its existing Phase 3 freshness checks) that
       detects a stale `.git/index.lock` in `$TARGET_ROOT`: the lock file exists AND no live process
       currently holds it (best-effort: e.g. no running `git` process has it open — exact detection
       mechanism is the builder's call, but it must not produce a false positive against a git
       operation that is genuinely in flight).
-- [ ] On detection, the check surfaces a clear, visible warning in both the text and JSON report
+- [x] On detection, the check surfaces a clear, visible warning in both the text and JSON report
       formats (matching the existing report's structure — e.g. alongside `freshness`), naming the
       lock path and the safe manual remediation (`rm .git/index.lock`, after confirming no live git
       process via `pgrep -fl git`). It does NOT delete the lock itself.
-- [ ] This check does not change swarm-preflight's exit code / verdict on its own (fail-open,
+- [x] This check does not change swarm-preflight's exit code / verdict on its own (fail-open,
       advisory) — a stale lock is a warning, not a hard BLOCKED state, since the lock may be
       perfectly legitimate (a real in-progress git operation, briefly).
-- [ ] A short troubleshooting note is added documenting the safe manual clear (where an operator would
+- [x] A short troubleshooting note is added documenting the safe manual clear (where an operator would
       look after seeing the warning — e.g. `relay-automation/README.md` or this repo's existing
       troubleshooting section).
-- [ ] `test/swarm-preflight.sh` gains regression cases: (a) a fixture repo with a stale, unheld
+- [x] `test/swarm-preflight.sh` gains regression cases: (a) a fixture repo with a stale, unheld
       `.git/index.lock` present triggers the warning; (b) an ordinary clean repo does not; (c) the
       check never turns a would-be-ready packet into a BLOCKED one on its own.
-- [ ] `bash test/swarm-preflight.sh` and full `validate.sh` green.
+- [x] `bash test/swarm-preflight.sh` and full `validate.sh` green.
 
 ## Swarm Preflight Contract
 ```json

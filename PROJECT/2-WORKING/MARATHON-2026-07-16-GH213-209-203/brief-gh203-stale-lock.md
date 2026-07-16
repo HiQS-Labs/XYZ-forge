@@ -1,3 +1,21 @@
+---
+title: "Phase brief: GH-203 stale index.lock preflight warning (marathon builder input, not a capture doc)"
+status: consumed 2026-07-16 (phase built and Approved — see PROJECT/2-WORKING/GH-203-STALE-INDEX-LOCK-PREFLIGHT.md)
+created: 2026-07-16
+updated: 2026-07-16
+owner: noel
+goal: >
+  Phase-brief input consumed by relay-automation/marathon-drive.sh for the gh203 phase — not itself
+  an active-doc capture; the canonical capture doc is GH-203-STALE-INDEX-LOCK-PREFLIGHT.md one level up.
+roadmap_exempt: true
+---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase built and Approved 2026-07-16 (see the canonical capture doc's own Status table). | None — this brief's job (feeding the marathon builder turn) is done. |
+
 ## Phase: GH-203 — stale `.git/index.lock` preflight warning in swarm-preflight.sh
 
 Full context: [GH-203-STALE-INDEX-LOCK-PREFLIGHT.md](../GH-203-STALE-INDEX-LOCK-PREFLIGHT.md).
