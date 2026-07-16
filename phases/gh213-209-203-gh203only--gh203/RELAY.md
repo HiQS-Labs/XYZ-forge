@@ -1,0 +1,91 @@
+# Marathon Phase gh203
+STATUS: Open
+NEXT: codex
+
+<!-- marathon-drive: task=MARATHON-GH203-TURN builder=codex reviewer=agy round-cap=5 -->
+
+## Phase Brief
+
+## Phase: GH-203 — stale `.git/index.lock` preflight warning in swarm-preflight.sh
+
+Full context: [GH-203-STALE-INDEX-LOCK-PREFLIGHT.md](../GH-203-STALE-INDEX-LOCK-PREFLIGHT.md).
+GitHub issue: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/203
+
+### Important scope boundary — read this first
+
+The GitHub issue offers four fix options. Build ONLY the non-destructive, non-tick-internals one:
+
+- ~~Reap on scope teardown (tick's release/done/reap/circuitBreak paths auto-clearing the lock)~~ —
+  **OUT OF SCOPE.** Touches tick coordination internals.
+- ~~Wrap git writes (a trap in agent git-write helpers)~~ — **OUT OF SCOPE.** Touches turn-taker shims.
+- ~~Auto-clear with `--force`~~ — **OUT OF SCOPE.** Do not auto-remove the lock file under any flag;
+  this phase is warn-only.
+- **IN SCOPE:** a preflight check in `utils/swarm-preflight.sh` that warns (non-fatal) when a stale
+  lock is present, plus a short doc note on the safe manual clear.
+
+### What to build
+
+Add a check near `utils/swarm-preflight.sh`'s existing Phase 3 freshness checks (around
+`utils/swarm-preflight.sh:568-579` — the `DIRTY`/`FRESH_BLOCKED` computation; add yours in that same
+neighborhood, following the same style: a plain bash boolean flag computed from a `git`/filesystem
+probe against `$TARGET_ROOT`).
+
+**Detection:** `$TARGET_ROOT/.git/index.lock` exists AND no live process currently holds it. Your
+call on the exact "is it held" mechanism (e.g. `lsof` if available, or a `pgrep -f git` heuristic —
+document whichever you pick and why), but it must not false-positive against a git operation that is
+genuinely in flight at the moment `swarm-preflight.sh` runs.
+
+**On detection:** surface a clear, visible warning in BOTH the text report and the JSON output
+(`--format json` — follow the existing pattern of how `freshness`/other fields are threaded into
+`run-candidate.json` via the `normalize.mjs` node helper and the `SP_*` env-var handoff convention
+already used throughout this file). Name the lock path and the safe manual remediation: verify no
+live git process (`pgrep -fl git`), then `rm .git/index.lock`.
+
+**Must NOT do:**
+- Must not change swarm-preflight's exit code or `VERDICT`/`CAND_STATE` on its own — this is
+  fail-open/advisory (a stale lock might be a real in-progress operation caught mid-flight; it's a
+  warning, not a BLOCKED state).
+- Must not delete or touch the lock file itself.
+- Must not touch `bin/tick`, `src/project.js`, or any file under `relay-automation/*-turn.sh`.
+
+**Doc note:** add a short troubleshooting entry (in `relay-automation/README.md`'s troubleshooting
+section, if one exists, or the nearest natural home you find — your call) documenting the safe manual
+clear, so an operator who sees the new warning has somewhere to go beyond the one-line message.
+
+### Tests to add (`test/swarm-preflight.sh` — extend the existing 87-case file)
+
+1. A fixture repo with a stale, unheld `.git/index.lock` present — assert the new warning appears
+   (both text and JSON report formats).
+2. An ordinary clean repo (no lock file) — assert the warning is absent.
+3. Confirm the check never turns an otherwise-ready candidate into `BLOCKED`/a different `VERDICT` —
+   i.e. the exit code and verdict are unaffected by the stale lock's presence.
+
+### Acceptance / done means
+
+- `bash test/swarm-preflight.sh` green (existing 87 + your new cases).
+- Full `validate.sh` green (or unchanged from before your change — the pre-existing `#208`
+  environment red is expected and not yours to fix).
+
+---
+
+▶ TAKE YOUR TURN (codex — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+1. Implement the brief by creating/editing the artifact file(s): utils/swarm-preflight.sh,test/swarm-preflight.sh,relay-automation/README.md
+2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH203-TURN --agent codex --paths "phases/gh213-209-203-gh203only--gh203/RELAY.md,utils/swarm-preflight.sh,test/swarm-preflight.sh,relay-automation/README.md"
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH203-TURN --agent codex
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH203-TURN --agent codex --to agy
+4. Edit ONLY these paths: phases/gh213-209-203-gh203only--gh203/RELAY.md and utils/swarm-preflight.sh,test/swarm-preflight.sh,relay-automation/README.md. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+
+---
+
+▶ TAKE YOUR TURN (agy — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/swarm-preflight.sh,test/swarm-preflight.sh,relay-automation/README.md.
+1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested` then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH203-TURN --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH203-TURN --agent agy
+4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
+   Edit ONLY phases/gh213-209-203-gh203only--gh203/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
