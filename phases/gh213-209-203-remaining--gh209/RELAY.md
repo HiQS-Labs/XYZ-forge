@@ -1,5 +1,5 @@
 # Marathon Phase gh209
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH209-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -91,3 +91,11 @@ Verification:
 - `bash test/marathon-root-audit.sh`
 - `bash test/marathon.sh`
 - `bash test/marathon-drive.sh`
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+The implementation in `test/marathon-root-audit.sh` successfully audits that all invocations of the real `marathon.sh` and `marathon-drive.sh` in the test suite have either `MARATHON_ROOT` set or execute within an isolated fixture directory (which ensures the real repo root is never contaminated).
+The pre-existing tests inside `test/marathon.sh` and `test/marathon-drive.sh` pass successfully, and unsetting `MARATHON_LANE_NS` at the top of these scripts prevents the namespace leakage.
+The code is clean, robust, and correctly scoped. Approved!

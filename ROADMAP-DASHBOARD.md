@@ -6,10 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 63 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 37 · 🔮 0 · 🔲 0
+Summary: 65 items | Tally: 🟢 4 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 38 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-198 Bug 1 · rtl_enforce's file-scoped commit had no pathspec (pre-existing staged content could ride into a relay commit) | ✅ | [#198](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/198) |
+| GH-213/209/203 · today's 3-lane marathon (case-collision preflight guard, marathon-root leak audit, stale-lock preflight check) | — | [GH-213-CASE-COLLISION-LANDMINE.md](PROJECT/2-WORKING/GH-213-CASE-COLLISION-LANDMINE.md) · [GH-209-MARATHON-ROOT-LEAK-AUDIT.md](PROJECT/2-WORKING/GH-209-MARATHON-ROOT-LEAK-AUDIT.md) · [GH-203-STALE-INDEX-LOCK-PREFLIGHT.md](PROJECT/2-WORKING/GH-203-STALE-INDEX-LOCK-PREFLIGHT.md) · [#213](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/213) · [#209](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/209) · [#203](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/203) |
 | GH-212 · Make marathon builder-default (no billed CLI) and plan-location (PROJECT/2-WORKING) explicit, enforced defaults | ✅ | [GH-212-MARATHON-BUILDER-PLAN-DEFAULTS.md](PROJECT/2-WORKING/GH-212-MARATHON-BUILDER-PLAN-DEFAULTS.md) · [#212](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/212) |
 | GH-211 · Consult and Relay — compact TLDR + sorted-category output | ✅ | [GH-211-CONSULT-RELAY-TLDR-SUMMARIES.md](PROJECT/1-INBOX/GH-211-CONSULT-RELAY-TLDR-SUMMARIES.md) · [#211](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/211) |
 | GH-207 · Marathon retry/resume brittle against pre-existing lane state (cross-marathon lane-id collision + no-progress HALT on a done lane) | ✅ | [GH-207-MARATHON-RETRY-RESUME-BRITTLE.md](PROJECT/2-WORKING/GH-207-MARATHON-RETRY-RESUME-BRITTLE.md) · [#207](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/207) |
