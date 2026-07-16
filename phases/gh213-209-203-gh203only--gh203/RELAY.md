@@ -1,5 +1,5 @@
 # Marathon Phase gh203
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH203-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -97,3 +97,16 @@ Implemented the GH-203 advisory stale-lock check in `utils/swarm-preflight.sh`, 
 Touched `test/swarm-preflight.sh` to add GH-203 coverage for stale-lock text warning, stale-lock JSON warning/path, clean-repo absence, and unchanged ready verdict/exit semantics. Added a short troubleshooting note to `relay-automation/README.md` documenting the safe manual clear path: verify with `pgrep -fl git`, then `rm .git/index.lock`.
 
 Verification: `bash test/swarm-preflight.sh` -> `94 passed, 0 failed`.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+I have reviewed the changes implemented by `codex`.
+
+- Checked `utils/swarm-preflight.sh` and confirmed the stale git lock detection (`.git/index.lock` present but no active process holding it via `lsof`) is implemented correctly as an advisory, fail-open warning.
+- Checked `test/swarm-preflight.sh` and confirmed the new test cases cover unheld lock warnings, clean repo status, and that candidate state/verdict/exit codes remain unchanged (still exit 0 and ready).
+- Checked `relay-automation/README.md` and verified the troubleshooting documentation for manual remediation.
+- Ran the preflight tests using `bash test/swarm-preflight.sh` and they passed cleanly.
+
+Everything looks correct and meets the acceptance criteria.
