@@ -3,6 +3,7 @@
 # calls relay-drive, runs pre-advance gate, saves transcript, emits phase events.
 # Uses MARATHON_RELAY_DRIVE + MARATHON_AGENT_CMD + stub pre-advance-cmd to avoid real CLI.
 source "$(dirname "$0")/_setup.sh" marathon-drive
+unset MARATHON_LANE_NS
 export TICK_BIN="$TICK"
 DRIVER="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/marathon-drive.sh"
 tick_a init >/dev/null

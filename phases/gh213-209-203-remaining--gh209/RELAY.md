@@ -80,3 +80,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH209-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh213-209-203-remaining--gh209/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Implemented the static audit as a standalone test in `test/marathon-root-audit.sh`. It scans `test/marathon.sh` and `test/marathon-drive.sh` for direct invocations of the real `marathon.sh` / `marathon-drive.sh`, resolves local aliases like `MSH` / `DRIVER`, and fails with `file:line` if an invocation lacks either an explicit `MARATHON_ROOT=` or a fixture-local `cd "$A"` / `$B` / `$V`-style cwd signal in the enclosing helper/subshell or continued command prelude.
+
+Touched `test/marathon.sh` and `test/marathon-drive.sh` only to `unset MARATHON_LANE_NS` at startup. The ambient lane namespace from this relay turn was leaking into those suites and redirecting rendered relay paths under `phases/gh213-209-203-remaining--gh209/`, which broke pre-existing path assertions unrelated to GH-209. Explicit GH-207 namespaced cases still set `MARATHON_LANE_NS` per invocation and remain covered.
+
+Verification:
+- `bash test/marathon-root-audit.sh`
+- `bash test/marathon.sh`
+- `bash test/marathon-drive.sh`

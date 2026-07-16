@@ -3,6 +3,7 @@
 # order via marathon-drive (STUBBED), HALTS on the first failure (later phases NOT started), and
 # emits marathon.complete only when every phase is approved. (Phase 4 / M5)
 source "$(dirname "$0")/_setup.sh" marathon
+unset MARATHON_LANE_NS
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 MSH="$REPO/relay-automation/marathon.sh"
 YBIN="$REPO/bin/marathon-yaml"
