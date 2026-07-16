@@ -12,6 +12,12 @@ FH="$REPO/skills/relay-xyz/find-harness.sh"
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 mkrepo() { _repo="$(mktemp -d "${TMPDIR:-/tmp}/fh-case.XXXXXX")"; git -C "$_repo" init -q; printf '%s\n' "$_repo"; }
+seed_vendored_harness() {
+  _repo="$1"
+  mkdir -p "$_repo/.xyz/relay-automation" "$_repo/.xyz/bin"
+  printf '#!/usr/bin/env bash\n:\n' > "$_repo/.xyz/relay-automation/relay-drive.sh"; chmod +x "$_repo/.xyz/relay-automation/relay-drive.sh"
+  printf '#!/usr/bin/env bash\n:\n' > "$_repo/.xyz/bin/tick"; chmod +x "$_repo/.xyz/bin/tick"
+}
 seed_index_path() {
   _repo="$1"; _path="$2"
   _blob="$(printf 'fixture\n' | git -C "$_repo" hash-object -w --stdin)"
@@ -41,9 +47,7 @@ rm -rf "$FR"
 
 # --- Case 3: foreign repo WITH a local .xyz/ harness → resolves to it, NO concurrency warning ---
 FV="$(mktemp -d "${TMPDIR:-/tmp}/fh-vendored.XXXXXX")"; git -C "$FV" init -q
-mkdir -p "$FV/.xyz/relay-automation" "$FV/.xyz/bin"
-printf '#!/usr/bin/env bash\n:\n' > "$FV/.xyz/relay-automation/relay-drive.sh"; chmod +x "$FV/.xyz/relay-automation/relay-drive.sh"
-printf '#!/usr/bin/env bash\n:\n' > "$FV/.xyz/bin/tick"; chmod +x "$FV/.xyz/bin/tick"
+seed_vendored_harness "$FV"
 out3="$( cd "$FV" && bash "$FH" --check 2>&1 )"; rc3=$?
 ok "vendored .xyz: --check exits 0"                 "[ '$rc3' -eq 0 ]"
 ok "vendored .xyz: no concurrency warning"          "! printf '%s' \"\$out3\" | grep -qi concurrency"
@@ -61,22 +65,34 @@ ok "case-collision: names both colliding paths"         "printf '%s' \"\$out4\" 
 ok "case-collision: explains the exit-6 risk + git mv remedy" "printf '%s' \"\$out4\" | grep -q 'exit 6' && printf '%s' \"\$out4\" | grep -q 'git mv'"
 rm -rf "$FC"
 
-# --- Case 5: ordinary repo (no collision) -> no case-collision warning, still exit 0 ---
+# --- Case 5: vendored repo + collision -> still warn from the caller repo, exit 0 ---
+FVC="$(mkrepo)"
+git -C "$FVC" config core.ignorecase true
+seed_vendored_harness "$FVC"
+seed_case_collision "$FVC"
+out5="$( cd "$FVC" && bash "$FH" --check 2>&1 )"; rc5=$?
+ok "vendored collision: --check exits 0"                 "[ '$rc5' -eq 0 ]"
+ok "vendored collision: emits the case-collision warning" "printf '%s' \"\$out5\" | grep -q 'case-collision:'"
+ok "vendored collision: names both colliding paths"       "printf '%s' \"\$out5\" | grep -q 'relay-system/x.md' && printf '%s' \"\$out5\" | grep -q 'RELAY-SYSTEM/y.md'"
+ok "vendored collision: stays scoped to caller repo"      "printf '%s' \"\$out5\" | grep -q 'relay harness readiness:'"
+rm -rf "$FVC"
+
+# --- Case 6: ordinary repo (no collision) -> no case-collision warning, still exit 0 ---
 FN="$(mkrepo)"
 git -C "$FN" config core.ignorecase true
 seed_index_path "$FN" "docs/readme.md"
-out5="$( cd "$FN" && bash "$FH" --check 2>&1 )"; rc5=$?
-ok "no-collision: --check exits 0"                     "[ '$rc5' -eq 0 ]"
-ok "no-collision: case-collision warning absent"       "! printf '%s' \"\$out5\" | grep -q 'case-collision:'"
+out6="$( cd "$FN" && bash "$FH" --check 2>&1 )"; rc6=$?
+ok "no-collision: --check exits 0"                     "[ '$rc6' -eq 0 ]"
+ok "no-collision: case-collision warning absent"       "! printf '%s' \"\$out6\" | grep -q 'case-collision:'"
 rm -rf "$FN"
 
-# --- Case 6: ignorecase=false + colliding index entries -> no warning, still exit 0 ---
+# --- Case 7: ignorecase=false + colliding index entries -> no warning, still exit 0 ---
 FS="$(mkrepo)"
 git -C "$FS" config core.ignorecase false
 seed_case_collision "$FS"
-out6="$( cd "$FS" && bash "$FH" --check 2>&1 )"; rc6=$?
-ok "ignorecase=false collision: --check exits 0"       "[ '$rc6' -eq 0 ]"
-ok "ignorecase=false collision: warning absent"        "! printf '%s' \"\$out6\" | grep -q 'case-collision:'"
+out7="$( cd "$FS" && bash "$FH" --check 2>&1 )"; rc7=$?
+ok "ignorecase=false collision: --check exits 0"       "[ '$rc7' -eq 0 ]"
+ok "ignorecase=false collision: warning absent"        "! printf '%s' \"\$out7\" | grep -q 'case-collision:'"
 rm -rf "$FS"
 
 echo "  find-harness: $pass pass, $fail fail"

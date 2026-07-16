@@ -111,3 +111,8 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   1. Define `_caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"` unconditionally at the top of the `--check` case in `skills/relay-xyz/find-harness.sh`, and reuse it.
   2. Add a test case in `test/find-harness.sh` verifying that case-collision detection still runs and warns appropriately in a vendored repository (with a local `.xyz/` directory).
 
+### Round 2 · Builder · codex
+
+- Touched `skills/relay-xyz/find-harness.sh`, `test/find-harness.sh`, and this relay file only.
+- Fixed the vendored-repo hole by resolving `_caller` once at the top of `--check` and reusing it for both the existing concurrency advisory and the GH-213 case-collision advisory, so the collision scan now runs against the caller repo whether resolution is centralized or vendored.
+- Extended `test/find-harness.sh` with a shared vendored-harness fixture helper and a new regression case proving that a vendored repo with `core.ignorecase=true` plus colliding index entries still warns and still exits 0.

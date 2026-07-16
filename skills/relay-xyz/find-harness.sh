@@ -185,6 +185,7 @@ case "${1:-}" in
     ;;
   --check)
     mark() { if [ -n "${1:-}" ]; then echo "  ok  $2  ($1)"; else echo "  --  $2  (not found)"; fi; }
+    _caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"
     echo "relay harness readiness:"
     echo "  ok  harness  ($HARNESS)"
     if [ "$VENDORED" = 1 ]; then
@@ -215,7 +216,6 @@ case "${1:-}" in
     # through it — so it cannot run a relay concurrently with another repo pointed at the same harness.
     # Advise vendoring for per-repo lock isolation. Fail-open: this only prints; --check still exits 0.
     if [ "$VENDORED" = 0 ]; then
-      _caller="$(git rev-parse --show-toplevel 2>/dev/null || true)"
       if [ -n "$_caller" ] && [ "$(_canon_dir "$_caller")" != "$HARNESS" ]; then
         echo "  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and"
         echo "      share ONE global driver lock (can't run concurrently with another repo's relay). For"
