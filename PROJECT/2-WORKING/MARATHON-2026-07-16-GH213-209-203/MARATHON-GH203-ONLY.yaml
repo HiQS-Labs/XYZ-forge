@@ -1,0 +1,13 @@
+# MARATHON-GH203-ONLY.yaml — the last remaining phase after gh213 and gh209 both completed
+# (see this folder's other capture docs' Status sections for the postmortems on each).
+# Gate is 'true' (skipped) for the same reason as MARATHON-REMAINING.yaml: verified standalone by
+# the orchestrator after the relay is approved, not nested inside the live marathon-drive.sh process.
+
+name: gh213-209-203-gh203only
+phases:
+  - id: gh203
+    name: stale index.lock preflight warning
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH213-209-203/brief-gh203-stale-lock.md
+    artifact: utils/swarm-preflight.sh,test/swarm-preflight.sh,relay-automation/README.md
+    max_review_rounds: 2
