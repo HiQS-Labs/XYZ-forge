@@ -1,5 +1,5 @@
 # Marathon Phase gh208-worktree-isolation-race
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH208-WORKTREE-ISOLATION-RACE-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -91,3 +91,9 @@ Root cause found: the flaky `rc=6` was not a `rtl_worktree_end`/moved-HEAD regre
 Decision: left `relay-automation/relay-turn-lib.sh` unchanged and hardened the test instead. Case (5) now waits for the deliberate async writer window to pass before removing `offlane-async.txt`, so case (6) starts from a clean ROOT and measures the GH-13/#14 preserve path rather than inherited noise from the previous case.
 
 Verification: ran `bash test/worktree-isolation.sh` 5 times in a row; all 5 passed (`31 pass, 0 fail` each run).
+
+### Round 1 · Reviewer · agy
+
+The test modification resolves the race condition cleanly without affecting kernel files. By having the test wait 2 seconds for the intentional background write to complete before cleanup, it prevents case (6) from failing due to case (5)'s residual side-effect. Verified locally by running `test/worktree-isolation.sh` 5 times in a row, all of which passed successfully.
+
+**Verdict:** Approved
