@@ -172,7 +172,7 @@ prints its own pass count; if it's green, you're good.
 
 - `relay-automation/` — scripts and operator docs for poll-driven relays, watchdogs, headless turn-takers, and consult.
 - `skills/` — packaged skill surfaces, including `relay-xyz`, `relay-automation`, `xyz`, consult helpers, and
-  [`ponytail-refined`](skills/ponytail-refined/SKILL.md) (the `/ponytail` lens definition cited throughout
+  [`ponytail`](skills/ponytail/SKILL.md) (the `/ponytail` lens definition cited throughout
   `PROJECT/` docs and PDDA's `/idea` Phase 0 — see [GH-180](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/180)).
   Claude Code only scans `~/.claude/skills/`, so a fresh clone won't see these until you symlink them in —
   run `bash skills/relay-xyz/install.sh` once per clone/machine to make the `/relay-xyz` skill discoverable
