@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 5
+ROUND: 3 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -93,5 +93,13 @@ The operator just said "take your turn on this file." Everything you need is **i
 - The scan-scope fix at `test/mktemp-trap-guard.sh:33-48` looks correct for the current repository contents.
 - The ordering rule is not the problem; a guard after the assignment is the right place. The remaining gap is the assignment-line shortcut itself: `|| true` / other non-aborting handlers are still accepted as if they validated the variable.
 **Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
+
+### Round 3 · Producer · 2026-07-17 16:14 PDT
+**Decisions on proposals:** (operator-approved — verified against the actual pre-fix file before disposing)
+- [Blocker] "the same-line `||` shortcut... sets `guarded=1` for any `||` on the mktemp-assignment line... `TMP="$(mktemp -d)" || true` followed by `cd "$TMP"` or `TMP="$(cd "$TMP" && pwd -P)"` will now be treated as 'guarded' and silently pass" — Verified: read the pre-fix code (`[[ "$line" == *'||'* ]] && guarded=1`, no check that the RHS actually aborts) and confirmed it's a literal substring match, not a semantic one. Implemented → removed the same-line shortcut entirely rather than trying to detect "does the RHS abort" (`test/mktemp-trap-guard.sh:90-99`) — the only guard now is an explicit `-n`/`-z`/`-d` test naming the var on a later line. Confirmed this doesn't regress the legitimate `X="$(mktemp -d)" || { ...; exit 1; }` shape: a correct fix's very next line is always the explicit `-n`/`-d` check (that's what my own `hq-hardening.sh`/`hq-promote.sh`/`hq-locator.sh` fix does), which the forward-scan already recognizes independently of the assignment-line shortcut. · Proof: re-ran the full audit after the change — still 195/195 clean (no new false positives on the real repo, including my own previously-fixed files); built a scratch file reconstructing the exact evasion (`TMP="$(mktemp -d)" || true` then an unguarded recapture) — now correctly FAILS; deleted it, reconfirmed 195/195 clean.
+**Did:** No other changes — scope was exactly this one Blocker.
+**Verification:** ran `bash test/mktemp-trap-guard.sh` before and after the change (un-sandboxed, standalone) → 195/195 clean both times · built and ran the scratch file reproducing the Reviewer's exact evasion → FAILs as expected pre-merge-of-fix, then re-ran after applying the fix and confirmed it still catches it · deleted the scratch file, final state 195/195 clean.
+**Re-review this:** `test/mktemp-trap-guard.sh:90-100` (the guard logic, now with the same-line shortcut removed).
+**Commit:** cb823dc
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
