@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -146,5 +146,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** ran `bash test/mktemp-trap-guard.sh` after each change (un-sandboxed, standalone; `time`d it once — 3.7s, still fast) → clean 196/196 · built and ran 2 scratch files reproducing both of this round's exact `&&`/`||` evasions verbatim → both FAIL as expected · deleted the scratch files, final state 196/196 clean.
 **Re-review this:** `test/mktemp-trap-guard.sh:32-49` (extensionless-script discovery) and `:129-152` (same-segment scan start + unclosed-paren fix). **This is round 5 of 5 — the relay's round cap.** I believe the audit now correctly closes every evasion raised across all 4 rounds (inline, split-line, decoy/loose guards, bare-cd, same-line `;`/`&&`/`||` chains, declaration prefixes, extensionless scripts) and would ask for a definitive verdict this round; per the ground rules, if this doesn't reach Approved, the relay escalates to the operator rather than continuing past the cap.
 **Commit:** 47c8da0
+
+### Round 5 · Reviewer · codex · 2026-07-17 16:22 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — operator instruction for this reviewer turn forbade running artifact/test files, so this review is live-file inspection only.
+**Findings & proposals:**
+- [Blocker] `test/mktemp-trap-guard.sh:152-155` still accepts any later line that merely mentions `\$VAR` and contains a single-bracket `-n` / `-z` / `-d` test as a conclusive guard. That is weaker than the DoD's "non-empty and a real directory first" requirement and leaves easy evasions such as `TMP="$(mktemp -d)"; [ -n "$TMP" ] || true; TMP="$(cd "$TMP" && pwd -P)"` or `[ -d "$TMP" ] || echo miss`, both of which would set `guarded=1` and suppress the real finding even though mktemp failure still flows into the dangerous recapture / bare-`cd` path. Proposed fix: make guard recognition fail-closed — require both non-empty and directory validation for the same var (same line or tracked across lines), and only treat it as guarded when failure of either check aborts or skips the dangerous path.
+- [Pass] `test/hq-hardening.sh:20-23`, `test/hq-promote.sh:23-26`, and `test/hq-locator.sh:23-26` still contain the mktemp hardening exactly as claimed; the original repo-wipe path remains closed textually in those three tests.
+- [Pass] `test/mktemp-trap-guard.sh:40-60` and `test/mktemp-trap-guard.sh:137-177` do contain the previously claimed scope-expansion, declaration-prefix, same-segment-chain, and extensionless-script fixes. I re-read the artifact itself and those earlier `Implemented` claims are present in the live file.
+**Answers:**
+- The extensionless-script discovery at `test/mktemp-trap-guard.sh:40-60` is present and closes the prior `bin/validate-relay-block` omission on the current tree.
+- The same-segment scan start / unclosed-paren fix at `test/mktemp-trap-guard.sh:148-177` is present, but the guard recognizer at `:152-155` still over-approves incomplete or non-fail-closed checks, so I cannot honestly mark the audit Approved.
+- Because this is round 5 of 5 and the relay still has a live blocker, the header is set to `STATUS: Escalated` per the ground rules.
+**Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
