@@ -21,9 +21,19 @@ related:
   - relay-automation/relay-turn-lib.sh
   - test/agy-turn.sh
   - PROJECT/3-COMPLETED/GH-140-CONTAINMENT-ATOMIC-COPYBACK.md
+goal: >
+  Determine whether rtl_enforce's off-lane revert can be made safe for a concurrent peer session's
+  mid-turn edit without weakening its documented GH-22 self-escape backstop, and if not, hand off
+  the two viable non-detection mitigations for an operator decision.
 ---
 
 # GH-141 — concurrent peer-session edit reverted as off-lane
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **Investigated 2026-07-17 by `/10days` Wave 2 — no fix shipped, and that's the correct outcome** (see Definition of done below): no code-only signal in this codebase can distinguish a peer session's concurrent edit from the agent's own off-lane self-escape (both produce byte-identical porcelain diffs), and a naive fix would silently disable `rtl_enforce`'s documented backstop against the already-exploited GH-22 self-escape vector. | Still open, still not marathon-ready. Two non-detection follow-ups recorded for an operator decision: a recoverable backup-before-revert, and documenting the don't-hand-edit-a-live-clone constraint. |
 
 ## Bug
 

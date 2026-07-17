@@ -2,7 +2,7 @@
 gh_issue: 155
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/155
 title: "GH-142 follow-up: agy hardening S2/S5/S8 + controlled S10 repro (keep-gated remainder)"
-status: Active (2-WORKING) — captured 2026-07-17 by /10days (11-14 day sweep); split from #142's Phase-3 close 2026-07-06, no regression test landed since
+status: Shipped 2026-07-17 by /10days (5f37954) — S2/S5/S8 regression tests landed; S10 stays open (could not re-trigger on demand per #142)
 created: 2026-07-06
 updated: 2026-07-17
 owner: noel
@@ -32,14 +32,20 @@ roadmap_exempt: false
 
 # GH-155 · agy hardening remainder — S2/S5/S8 regression tests
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **SHIPPED 2026-07-17 by `/10days`** (`5f37954`) — 3 new regression cases in `test/agy-turn.sh` (S2 role/model adherence, S5 distraction, S8 cost-blindness), 54/54 own tests (41 pre-existing + 13 new), full `validate.sh` 113/114 (only pre-existing unrelated `acorn-extract.sh` red). | S10 (off-prompt-nonempty repro) stays open per #142's own note that it "could not re-trigger on demand." |
+
 Captured by the `/10days` 11-14 day sweep (2026-07-17). Split from
 [GH-142-AGY-RELIABILITY-TESTING.md](GH-142-AGY-RELIABILITY-TESTING.md) at its Phase-3 close: #142
 fixed the one confirmed live failure (S9/F8, `dcc1505`) and deferred the remaining characterization-
 matrix gaps here as "separate later slices" — the reason agy stays keep-gated rather than graduated
 to fully-unattended producer turns.
 
-**Why still open:** confirmed via grep that `test/agy-turn.sh` has zero references to S2/S5/S8/S10
-today — none of the four deferred cases have landed. No commit or merged PR references #155.
+**Why filed:** confirmed via grep that `test/agy-turn.sh` had zero references to S2/S5/S8/S10 before
+this fix — none of the four deferred cases had landed.
 
 ## Swarm Preflight Contract
 

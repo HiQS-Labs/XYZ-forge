@@ -6,10 +6,14 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 77 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 52 · 🔮 0 · 🔲 0
+Summary: 81 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 53 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-226 · Full provenance follow-up should coordinate with the already-reworked consult/relay summary surface | — | [GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md](PROJECT/1-INBOX/GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md) · [#226](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/226) |
+| GH-225 · 10days/marathon guardrail: isolation:"worktree" lanes can branch from a stale historical commit, not the marathon branch | — | [GH-225-ISOLATION-WORKTREE-STALE-BASE-GUARDRAIL.md](PROJECT/2-WORKING/GH-225-ISOLATION-WORKTREE-STALE-BASE-GUARDRAIL.md) · [#225](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/225) |
+| GH-224 · PDDA drift backlog: 45 stale 3-COMPLETED status words + 15 ROADMAP/issue-state mismatches | ✅ | [GH-224-PDDA-DRIFT-BACKLOG-RECONCILE.md](PROJECT/2-WORKING/GH-224-PDDA-DRIFT-BACKLOG-RECONCILE.md) · [#224](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/224) |
+| GH-223 · utils/py/consult.py missing GH-178 A4 citation-stamp parity | — | [GH-223-CONSULT-PY-CITATION-STAMP-PARITY.md](PROJECT/2-WORKING/GH-223-CONSULT-PY-CITATION-STAMP-PARITY.md) · [#223](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/223) |
 | GH-222 · Marathon end-of-session hygiene: no cost summary in marathon-drive.sh, no worktree cleanup in /10days | ✅ | [GH-222-MARATHON-SESSION-HYGIENE.md](PROJECT/2-WORKING/GH-222-MARATHON-SESSION-HYGIENE.md) · [#222](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/222) |
 | GH-189 · PDDA: sweeping a doc to 3-COMPLETED silences the only issue-state check watching it | ✅ | [GH-189-PDDA-COMPLETED-STATE-BLINDSPOT.md](PROJECT/2-WORKING/GH-189-PDDA-COMPLETED-STATE-BLINDSPOT.md) · [#189](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/189) |
 | GH-198 Bug 1 · rtl_enforce's file-scoped commit had no pathspec (pre-existing staged content could ride into a relay commit) | ✅ | [#198](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/198) |

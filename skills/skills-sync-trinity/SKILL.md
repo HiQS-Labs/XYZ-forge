@@ -1,5 +1,5 @@
 ---
-name: skill-sync-trinity
+name: skills-sync-trinity
 description: >-
   Build or update a repo-local Codex skill by keeping three artifacts aligned:
   the canonical PDDA working doc, the skill's `SKILL.md`, and deterministic
@@ -7,7 +7,7 @@ description: >-
   drifted so the plan, instructions, and scripts no longer match.
 ---
 
-# skill-sync-trinity
+# skills-sync-trinity
 
 Use this skill when a repo-local skill needs to be scaffolded or repaired as one coherent bundle.
 The "trinity" is:
@@ -15,6 +15,9 @@ The "trinity" is:
 1. `PROJECT/2-WORKING/<DOC>.md` - the canonical PDDA working doc
 2. `skills/<skill-name>/SKILL.md` - the runtime instructions
 3. `skills/<skill-name>/scripts/*.py` - deterministic helpers
+
+Only emit installed-skill inventories when the user explicitly asks for them. The optional frontier
+environment export writes snapshots into repo-local `temp/`; do not generate those files on your own.
 
 ## When to use it
 
@@ -41,6 +44,9 @@ The "trinity" is:
 4. Validate before claiming the scaffold is done.
    Run `scripts/validate_trinity.py` and `python3 -m py_compile` on the helper scripts. If the working
    doc changed, also run the relevant PDDA checks.
+5. Export frontier-environment inventories only on demand.
+   When the user explicitly asks for installed skill files across the frontier environments, run the
+   bundled inventory exporter instead of improvising shell commands or browsing the desktop.
 
 ## Bundled scripts
 
@@ -51,11 +57,14 @@ The "trinity" is:
   plus starter Python helpers for a target repo-local skill.
 - `scripts/validate_trinity.py`
   Checks that the working doc, pointer file, `SKILL.md`, and Python helpers are present and structurally aligned.
+- `scripts/export_skills_sync_trinity.py`
+  Writes the current Claude/Codex/Antigravity installed-skill file inventory into repo-local `temp/` when
+  the user explicitly asks for that snapshot.
 
 ## Suggested commands
 
 ```bash
-python3 skills/skill-sync-trinity/scripts/render_working_doc.py \
+python3 skills/skills-sync-trinity/scripts/render_working_doc.py \
   --skill-dir skills/my-skill \
   --output PROJECT/2-WORKING/MY-SKILL.md \
   --title "My Skill" \
@@ -64,7 +73,7 @@ python3 skills/skill-sync-trinity/scripts/render_working_doc.py \
 ```
 
 ```bash
-python3 skills/skill-sync-trinity/scripts/sync_trinity.py \
+python3 skills/skills-sync-trinity/scripts/sync_trinity.py \
   --skill-dir skills/my-skill \
   --working-doc PROJECT/2-WORKING/MY-SKILL.md \
   --title "My Skill" \
@@ -73,9 +82,14 @@ python3 skills/skill-sync-trinity/scripts/sync_trinity.py \
 ```
 
 ```bash
-python3 skills/skill-sync-trinity/scripts/validate_trinity.py \
+python3 skills/skills-sync-trinity/scripts/validate_trinity.py \
   --skill-dir skills/my-skill \
   --working-doc PROJECT/2-WORKING/MY-SKILL.md
+```
+
+```bash
+python3 skills/skills-sync-trinity/scripts/export_skills_sync_trinity.py \
+  --output-dir temp/skills-sync-trinity
 ```
 
 ## Output contract
@@ -87,3 +101,10 @@ python3 skills/skill-sync-trinity/scripts/validate_trinity.py \
 
 If any of those four surfaces disagree, fix the canonical working doc first, then reconcile the
 skill and scripts to match it.
+
+For frontier-environment inventory output, the output contract is:
+
+- one timestamped bundle under repo-local `temp/skills-sync-trinity/`
+- one `inventory.json` structured snapshot
+- one `README.md` human summary
+- one `<environment>-files.txt` listing per frontier environment

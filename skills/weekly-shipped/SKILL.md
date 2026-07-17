@@ -37,6 +37,8 @@ it, not like a release-note generator dumped a template.
    Prefer reliability, safety, usability, cost, clarity, and time-saved over internal cleanup.
 4. Write from the outside in.
    Start with what changed for a normal user, then explain why it matters.
+5. Write the finished report to `PROJECT/3-COMPLETED/WEEKLY-YYYY-MM-DD.md`.
+   The date in the filename is the date the report is generated, not the start of the shipped window.
 
 ## Sourcing
 
@@ -49,6 +51,23 @@ git log main --since="<start>" --until="<end>" --stat --format='%h %ad %s' --dat
 
 Use `--first-parent` when the question is about what actually landed on `main`. Drop to fuller history
 only when you need extra detail to understand a merged theme.
+
+Two gotchas that silently produce a truncated or stale window:
+
+- **`--since`/`--until` can prune too early.** If the first-parent chain isn't perfectly
+  date-monotonic (a merge pulling in an older branch), `git log --since=X` can stop walking before
+  reaching commits that are actually in range, with no error or warning. If the returned list looks
+  suspiciously short, cross-check with a plain `git log <ref> --first-parent -20 --format='%h|%ad|%s'
+  --date=short` (no since/until) and pick the boundary commit by eye, then use a `<boundary>..<ref>`
+  range instead of date flags.
+- **A local `main` can be behind `origin/main`.** Check `git rev-list --count main..origin/main`
+  (or `git log main..origin/main --oneline`) before trusting local history. If it's behind, fetch or
+  read `origin/main` directly rather than reporting stale content as this week's ship list — don't
+  push/reset local `main` to "fix" it.
+
+If the repo maintains a human-authored `CHANGELOG.md` (or similar) with one entry per shipped change,
+check it before falling back to raw commits — it's usually already clustered and written in plain
+language, which is closer to the report's final shape than a commit log is.
 
 ## How to choose the top items
 
@@ -95,11 +114,19 @@ Instead, write more directly:
 
 Unless the user asks otherwise:
 
+- Write the report to `PROJECT/3-COMPLETED/WEEKLY-YYYY-MM-DD.md`
+- Use the current local date for `YYYY-MM-DD`
+- Make the file Markdown
+- Start with a short title that names the shipped window
 - Use a numbered list
 - One improvement per item
 - Lead with the shipped improvement itself
 - Keep each item short
 - Frame it in everyday-user terms, not implementation trivia
+
+Example output path on July 17, 2026:
+
+`PROJECT/3-COMPLETED/WEEKLY-2026-07-17.md`
 
 Good pattern:
 
@@ -119,9 +146,9 @@ Bad pattern:
 - No hype
 - No canned "why you should care" wording unless it genuinely fits that one item
 
-## Final check before answering
+## Final check before writing
 
-Before sending the report, scan for repetition:
+Before writing the file and returning its path, scan for repetition:
 
 - repeated openers
 - repeated "this means" constructions

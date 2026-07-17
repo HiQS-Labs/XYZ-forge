@@ -2,7 +2,7 @@
 gh_issue: 152
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/152
 title: "Cost observability: auto-surface tick analyze cost at end of driven runs"
-status: Active (2-WORKING) — captured 2026-07-17 by /10days (11-14 day sweep); Phase 6 of PROJECT/1-INBOX/COST-OBSERVABILITY-PLAN.md, not started (no driver calls tick analyze today)
+status: Shipped 2026-07-17 by /10days (89d823a) — relay-drive.sh auto-surfaces tick analyze cost at end-of-run behind RELAY_COST_SUMMARY
 created: 2026-07-06
 updated: 2026-07-17
 owner: noel
@@ -30,17 +30,23 @@ roadmap_exempt: false
 
 # GH-152 · Cost observability Phase 6 — auto-surface cost at end of driven runs
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **SHIPPED 2026-07-17 by `/10days`** (`89d823a`) — `relay-drive.sh` now emits the `tick analyze --format human` cost block at end-of-run (floor/coverage markers preserved verbatim, no recomputation) behind a `RELAY_COST_SUMMARY` env toggle, wired through the existing lock's `EXIT` trap without altering the driven run's real exit code. `test/relay-review-once.sh` 5/5. | `marathon-drive.sh`'s own top-level summary shipped separately as part of GH-222. |
+
 Captured by the `/10days` 11-14 day sweep (2026-07-17). Full phase detail, checklist, and QA gate
 live in [COST-OBSERVABILITY-PLAN.md](../1-INBOX/COST-OBSERVABILITY-PLAN.md) Phase 6 — this doc is
 the GH-numbered pointer `swarm-preflight.sh --gh-issue 152` needs; do not duplicate the checklist
 here, read it there.
 
-**Why still open:** confirmed via a repo-wide grep that neither `relay-drive.sh` nor
+**Why filed:** confirmed via a repo-wide grep that neither `relay-drive.sh` nor
 `marathon-drive.sh` calls `tick analyze` at completion — the only existing `tick analyze` callers
 are `poll.sh` (parked-claim liveness) and `watchdog.sh` (same), neither of which is an end-of-run
-cost summary. No commit or PR references #152. Distinct from #151 (discovery spike, gates this) and
-#153 (Codex parser, downstream of #151) — this phase is purely "render an existing report," so it
-does not need to wait on #151's findings.
+cost summary. Distinct from #151 (discovery spike, gates this) and #153 (Codex parser, downstream of
+#151) — this phase is purely "render an existing report," so it does not need to wait on #151's
+findings.
 
 ## Swarm Preflight Contract
 

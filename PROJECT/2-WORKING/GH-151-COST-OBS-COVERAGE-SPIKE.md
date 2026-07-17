@@ -2,7 +2,7 @@
 gh_issue: 151
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/151
 title: "Cost observability: reconcile SSOT + fix orphaned Gemini relay-lane token capture"
-status: Active (2-WORKING) — captured 2026-07-17 by /10days (11-14 day sweep); Phase 4 discovery spike from PROJECT/1-INBOX/COST-OBSERVABILITY-PLAN.md, still unstarted (findings section empty)
+status: Shipped 2026-07-17 by /10days (7c77e4f) — Phase 4 discovery spike complete, findings written back; gates Phase 5-7 (#152, #153)
 created: 2026-07-06
 updated: 2026-07-17
 owner: noel
@@ -31,17 +31,21 @@ roadmap_exempt: false
 
 # GH-151 · Cost observability Phase 4 — coverage-truth spike
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **SHIPPED 2026-07-17 by `/10days`** (`7c77e4f`) — findings: Codex `exec --json` emits a real usage object (feasible for #153, gated on wiring `--json` into `codex-turn.sh`); agy confirmed structurally cost-blind (no usage surface anywhere probed); Gemini relay-lane has zero live turn-shim callers, recommended for retire, not reconnect; claude-turn.sh metering confirmed wired by code read. | Gates Phase 5-7 (#152, #153). |
+
 Captured by the `/10days` 11-14 day sweep (2026-07-17). Full phase detail, checklist, and QA gate
 live in [COST-OBSERVABILITY-PLAN.md](../1-INBOX/COST-OBSERVABILITY-PLAN.md) Phase 4 — this doc is
 the GH-numbered pointer `swarm-preflight.sh --gh-issue 151` needs; do not duplicate the checklist
 here, read it there.
 
-**Why still open:** a 2026-07-06 post-ship coverage audit found the capture lane drifted from the
+**Why filed:** a 2026-07-06 post-ship coverage audit found the capture lane drifted from the
 original Phase 1-3 plan — `gemini-turn.sh` was retired for cost-blind `agy-turn.sh`, orphaning
 `parseGeminiStats`; `claude-turn.sh` gained new metering nothing else knew about. Three follow-on
-issues were filed (#151/#152/#153); this is the first, gating, discovery-only slice. No commit or
-PR has touched this since filing — the plan doc's own "Findings written back" section is still the
-placeholder text.
+issues were filed (#151/#152/#153); this is the first, gating, discovery-only slice.
 
 ## Swarm Preflight Contract
 
