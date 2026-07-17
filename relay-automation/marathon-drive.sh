@@ -131,11 +131,21 @@ debug_mantra_note() {  # <prior-count> <phase-dir> <debug-mantra-file>
 
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # GH-49b: the lock lives in .git/ (never committed) for a normal clone; a vendored .xyz/ copy has no
-  # .git/, so fall back to a hidden lock beside the scripts (the .xyz/ dir is itself gitignored in the
-  # foreign repo, so it stays uncommitted just the same). Same lock NAME as relay-drive so a marathon
-  # and a relay driver still mutually exclude in one clone. Unchanged when .git/ exists.
+  # .git/. In a linked worktree, .git is a file pointing at the shared gitdir, so resolve the real
+  # common dir and place the lock there; otherwise --require-clean sees the driver's own bookkeeping as
+  # untracked dirt inside the worktree. A vendored .xyz/ copy still falls back to a hidden lock beside
+  # the scripts (the .xyz/ dir is itself gitignored in the foreign repo, so it stays uncommitted just
+  # the same). Same lock NAME as relay-drive so a marathon and a relay driver still mutually exclude in
+  # one clone.
   if [[ -d "$ROOT/.git" ]]; then
     _lock="$ROOT/.git/relay-driver.lock"; _lock_label=".git/relay-driver.lock"
+  elif [[ -f "$ROOT/.git" ]]; then
+    _git_common_dir="$(git -C "$ROOT" rev-parse --git-common-dir 2>/dev/null || true)"
+    if [[ -n "$_git_common_dir" ]]; then
+      _lock="$_git_common_dir/relay-driver.lock"; _lock_label=".git/relay-driver.lock"
+    else
+      _lock="$ROOT/.relay-driver.lock";           _lock_label=".relay-driver.lock"
+    fi
   else
     _lock="$ROOT/.relay-driver.lock";     _lock_label=".relay-driver.lock"
   fi

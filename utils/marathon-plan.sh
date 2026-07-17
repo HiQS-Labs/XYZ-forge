@@ -7,7 +7,21 @@ if [[ "${XYZ_PYTHON:-0}" == "1" ]]; then
   _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
   export XYZ_ROOT="$_xyz_root"
   export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
-  exec python3 "$_xyz_root/utils/py/marathon_plan.py" "$@"
+  _py_args=()
+  while (($# > 0)); do
+    case "$1" in
+      --zones-config)
+        [[ $# -ge 2 ]] || { printf 'marathon-plan: missing argument for --zones-config\n' >&2; exit 2; }
+        export QUEUE_PLAN_ZONES_FILE="$2"
+        shift 2
+        ;;
+      *)
+        _py_args+=("$1")
+        shift
+        ;;
+    esac
+  done
+  exec python3 "$_xyz_root/utils/py/marathon_plan.py" "${_py_args[@]}"
 fi
 
 # utils/marathon-plan.sh — deterministic "pre-pre-flight" queue planner.

@@ -1,7 +1,12 @@
 ---
 title: Marathon Plan F (2026-07-07) — validate.sh's 9 pre-existing failing tests + parity gaps
-status: Lanes 1-9 STALE as of 2026-07-17 (all 9 tests currently pass — see Status); Lanes 10-13 are
-  fireable. Recommend closing #170 pending operator confirmation.
+status: Closed 2026-07-17. Lanes 12-13 SHIPPED (GH208-154-149-198 marathon, both Approved,
+  #208/#154 now closed). Lanes 1-9 STALE as of 2026-07-17 (all 9 tests currently pass); recommend
+  closing #170 pending operator confirmation — not actioned here. Lanes 10-11 (#174, #215) remain
+  genuinely open but are no longer tracked via this doc — they're already carried in the live
+  auto-generated `MARATHON-PLAN-2026-07-17.md` queue. Retired to 3-COMPLETED 2026-07-17 as part of
+  a 2-WORKING marathon-file consolidation; this doc's history is preserved, its remaining
+  actionable work is not lost.
 created: 2026-07-07
 updated: 2026-07-17
 owner: noel
@@ -85,8 +90,8 @@ different source area — see the collision map below.
 | `test/marathon-plan.sh` (+ `utils/marathon-plan.sh`) | ⏸ STALE — do not fire | Lane 9 |
 | `test/marathon-drive.sh` (test-only; source already fixed) | ✅ fireable, only one lane touches this | Lane 10 |
 | `utils/py/consult.py` (+ its test) | ✅ fireable, only one lane touches this | Lane 11 |
-| `relay-automation/relay-turn-lib.sh` (+ `test/worktree-isolation.sh`) | ✅ fireable, only one lane touches this | Lane 12 |
-| `utils/marathon-plan.sh` / `utils/py/_marathon_plan_node.js` (+ `test/marathon-plan.sh`) | ✅ fireable, only one lane touches this | Lane 13 |
+| `relay-automation/relay-turn-lib.sh` (+ `test/worktree-isolation.sh`) | ✅ SHIPPED 2026-07-17 | Lane 12 |
+| `utils/marathon-plan.sh` / `utils/py/_marathon_plan_node.js` (+ `test/marathon-plan.sh`) | ✅ SHIPPED 2026-07-17 | Lane 13 |
 | independent | ✅ parallel (Lanes 10-13 only) | — |
 
 Lanes 1-9 are STALE as of 2026-07-17 (see Status) — do not fire without re-triaging against #170
@@ -113,8 +118,8 @@ re-checking this.
 | 9 | `test/marathon-plan.sh` | 4 assertions, 1 shared root cause in "B:" scenario | deterministic | 2/2/2 | ⏸ STALE 2026-07-17 |
 | 10 | `test/marathon-drive.sh` (test-only) | GH-171 vendored-consumer fixture never got an `XYZ_PYTHON=1` agy-leg case; source fix already landed (GH-172) | deterministic (test-coverage gap) | 1/1/1 | ✅ ready |
 | 11 | `utils/py/consult.py` (+ test) | Python consult port missing the Bash degraded-panel `SINGLE-MODEL — NOT RECONCILED` stamping | deterministic (parity gap) | 2/1/2 | ✅ ready |
-| 12 | `test/worktree-isolation.sh` | Flaky moved-ROOT-HEAD preserve-case race (GH-13/#14 guard), 8/9 local runs failed | flaky | 2/2/2 | ✅ ready |
-| 13 | `test/marathon-plan.sh` (+ `utils/py/_marathon_plan_node.js`) | JS port missing GH-48 zone model (`QP_ZONES_CONFIG`), hardcodes stale `KERNEL_PATHS` | deterministic (parity gap) | 2/2/3 | ✅ ready |
+| 12 | `test/worktree-isolation.sh` | Flaky moved-ROOT-HEAD preserve-case race (GH-13/#14 guard), 8/9 local runs failed — root cause was a test-fixture timing bug, not a source race | flaky | 2/2/2 | ✅ SHIPPED 2026-07-17 |
+| 13 | `test/marathon-plan.sh` (+ `utils/py/_marathon_plan_node.js`) | JS port missing GH-48 zone model (`QP_ZONES_CONFIG`), hardcodes stale `KERNEL_PATHS` | deterministic (parity gap) | 2/2/3 | ✅ SHIPPED 2026-07-17 |
 
 Full diagnostic detail (exact failure output, fix direction per lane) lives in
 [GH-170's doc](GH-170-VALIDATE-FAILING-TESTS.md#findings-2026-07-07-triage) for Lanes 1-9,

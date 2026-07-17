@@ -2,12 +2,11 @@
 gh_issue: 198
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/198
 title: "relay-drive.sh headless turn: file-scoped commit ignores pathspec (sweeps pre-existing staged changes); uncommitted-artifact review fails opaquely"
-status: Triaged 2026-07-16 during a recent-issues sweep. Bug 1 (file-scoped commit ignoring
-  pathspec) is ALREADY FIXED — commit bee1abf landed it in relay-turn-lib.sh, with its own
-  regression test (test/relay-commit-pathspec.sh, 9/9). This doc re-scopes the issue to the
-  remaining Bug 2 only (a UX gap, not a data-loss bug).
+status: Fixed and verified 2026-07-17 — Bug 2 via the GH208-154-149-198 marathon (merged to
+  `development`); Bug 1 already fixed separately (commit bee1abf). Issue #198 closed. See the
+  Status table below for detail.
 created: 2026-07-11
-updated: 2026-07-16
+updated: 2026-07-17
 owner: noel
 doc_type: bug
 complexity: 1
@@ -35,7 +34,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Confirmed live 2026-07-16: Bug 1 (file-scoped commit sweeping the whole index) is fixed — `relay-turn-lib.sh` now builds the commit from `_commit_paths`, cross-checked against `git diff --cached --name-only`, with its own regression test. Bug 2 remains: `relay-drive.sh` only validates the presence of a path passed via the `--artifact-file` CLI flag (line 270, dies if `$ARTIFACT_FILE` isn't a file) — there is no equivalent check for an artifact path referenced inside a relay thread's own `Setup` section (a different, more common path: a human or a prior turn writes "review `<path>`" directly into the thread body). | Add a preflight check that scans the relay file's Setup section for a referenced artifact path and fails fast (clear message) if it's missing from the worktree, before dispatching the turn. |
+| **Fixed and verified 2026-07-17** via the GH208-154-149-198 marathon (codex builder, agy reviewer, Approved). `relay-automation/relay-drive.sh` gained `preflight_setup_artifact_paths()`, called before each turn dispatch: it scans the relay file's `Setup` section for an "Artifact under review:" line, extracts candidate paths (backtick/bold-wrapped tokens), filters out URLs/`.relay-artifacts/`-seeded paths/"embedded below" markers, and `die`s with a message containing `artifact path not found in worktree: <path>` if a real candidate doesn't resolve. New cases in `test/relay-artifact-file.sh`: "missing Setup artifact path reports the clear GH-198 message" and "missing Setup artifact path blocks agent dispatch". Full `bash test/relay-artifact-file.sh` green: 13/13 (up from 11). | Closed out — nothing further for this lane. |
 
 ## Findings
 
@@ -50,20 +49,17 @@ time.
 
 ### Checklist
 
-- [ ] Add a preflight check in `relay-automation/relay-drive.sh` that, before dispatching a turn,
-      resolves any artifact path referenced in the relay file's `Setup` section against the
-      worktree and fails fast with a message containing the literal string
-      `artifact path not found in worktree` if it's missing
-- [ ] Extend `test/relay-artifact-file.sh` with a case exercising this new preflight path (a
-      Setup-referenced path that doesn't exist → fails fast with the clear message, not an opaque
-      mid-turn failure)
-- [ ] Full `bash test/relay-artifact-file.sh` still green
+- [x] Added `preflight_setup_artifact_paths()` in `relay-automation/relay-drive.sh`, called before
+      dispatching a turn — resolves any artifact path referenced in the relay file's `Setup`
+      section against the worktree, fails fast with `artifact path not found in worktree: <path>`
+- [x] Extended `test/relay-artifact-file.sh` with 2 cases exercising this new preflight path
+- [x] Full `bash test/relay-artifact-file.sh` green: 13/13
 
 ### QA checklist — Phase 0
 
-- [ ] Fix scoped to the new preflight check only — does not touch the existing `--artifact-file`
+- [x] Fix scoped to the new preflight check only — does not touch the existing `--artifact-file`
       check (line 270) or Bug 1's already-fixed commit-scoping logic
-- [ ] New test case is additive to `test/relay-artifact-file.sh`, not a rewrite
+- [x] New test cases are additive to `test/relay-artifact-file.sh`, not a rewrite
 
 ## Swarm Preflight Contract
 ```json

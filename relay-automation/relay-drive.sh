@@ -104,6 +104,31 @@ xyz_relay_emit() {  # <health>
   "$XYZ_APPEND_BIN" relay "$slug" "$health" "$title" "$desc" >/dev/null 2>&1 || true
 }
 
+# GH-152 (COST-OBSERVABILITY-PLAN.md Phase 6): auto-surface the `tick analyze` cost block at
+# end-of-run so the operator stops needing a manual `tick analyze` pull to see what a driven run
+# cost. Reuses `tick analyze`'s OWN human-format rendering VERBATIM (src/analyze.js renderHuman) —
+# this driver recomputes NO cost number itself, so the floor `≥`/`coverage X/Y` markers on partial
+# token coverage are exactly whatever the analyzer already emits (DRY, per the plan's QA gate).
+# Default-on and strictly additive: only fires once RELAY_DRIVE_STARTED is set (i.e. a turn was
+# actually about to be driven this invocation — never on --help/usage/lock-contention/lane-parked/
+# --dry-run exits), and a failed/forced `tick analyze` is swallowed best-effort — it can never change
+# the driven run's own exit code (wired via the EXIT trap below, which restores the original code).
+# Opt out with RELAY_COST_SUMMARY=0.
+: "${RELAY_COST_SUMMARY:=1}"
+RELAY_DRIVE_STARTED=0
+xyz_relay_cost_summary() {
+  [[ "$RELAY_DRIVE_STARTED" == "1" ]] || return 0
+  [[ "$RELAY_COST_SUMMARY" != "0" ]] || return 0
+  local report block
+  report="$("$TICK_BIN" analyze --format human 2>/dev/null)" || {
+    printf 'relay-drive: tick analyze failed — end-of-run cost summary unavailable (RELAY_COST_SUMMARY=0 to silence)\n' >&2
+    return 0
+  }
+  block="$(printf '%s\n' "$report" | sed -n '/^--- cost ---$/,$p')"
+  [[ -n "$block" ]] || return 0
+  printf '\nrelay-drive: end-of-run cost summary (tick analyze) —\n%s\n' "$block" >&2
+}
+
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # The driver lock lives in .git/ (never committed) for a normal harness clone. A GH-49 vendored
   # .xyz/ copy has no .git/, so mkdir'ing a lock there would fail — fall back to a hidden lock beside
@@ -128,7 +153,21 @@ if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
     mkdir "$_lock" 2>/dev/null || { printf 'relay-drive: could not acquire relay-driver.lock after reclaiming a stale one.\n' >&2; exit 1; }
   fi
   printf '%s\n' "$$" > "$_lock/pid"
-  trap 'rm -rf "$_lock" 2>/dev/null || true' EXIT
+  # GH-152: the cost summary is wired into the SAME exit trap as the lock cleanup (the one place
+  # every exit path already funnels through) rather than duplicated at each of the ~10 individual
+  # `exit N` call sites in the round loop below — lower risk to this containment-sensitive script.
+  # `_code` is captured FIRST and the trap re-exits with it explicitly: `xyz_relay_cost_summary`
+  # (or the lock rm) failing/erroring under `set -e` inside a trap would otherwise silently
+  # overwrite the script's real exit status with the trap's own (verified: a `false` after the
+  # captured status inside a bash EXIT trap changes $? unless the trap re-asserts it) — so a
+  # forced/failed analyze call can NEVER flip the driven run's reported result.
+  _relay_drive_on_exit() {
+    local _code=$?
+    xyz_relay_cost_summary
+    rm -rf "$_lock" 2>/dev/null || true
+    exit "$_code"
+  }
+  trap _relay_drive_on_exit EXIT
   export RELAY_DRIVER_LOCKED=1
 fi
 
@@ -263,6 +302,49 @@ warn_if_relay_file_untracked() {
 }
 warn_if_relay_file_untracked
 
+relay_setup_section_lines() {
+  awk '
+    /^##[[:space:]]+Setup[[:space:]]*$/ { in_setup=1; next }
+    in_setup && /^##[[:space:]]+/ { exit }
+    in_setup { print }
+  ' "$RELAY_FILE"
+}
+
+relay_extract_markdown_paths() {  # <line>
+  printf '%s\n' "$1" \
+    | grep -oE '`[^`]+`|\*\*[^*]+\*\*' \
+    | sed -e 's/^`//' -e 's/`$//' -e 's/^\*\*//' -e 's/\*\*$//'
+}
+
+relay_is_worktree_artifact_path() {  # <candidate>
+  local candidate="$1"
+  [[ -n "$candidate" ]] || return 1
+  [[ "$candidate" != http://* && "$candidate" != https://* ]] || return 1
+  [[ "$candidate" != ".relay-artifacts/"* ]] || return 1
+  [[ "$candidate" != *"embedded below"* ]] || return 1
+  [[ "$candidate" != *" "* && "$candidate" != *$'\t'* ]] || return 1
+  [[ "$candidate" != *"{"* && "$candidate" != *"}"* && "$candidate" != *","* ]] || return 1
+  [[ "$candidate" == /* || "$candidate" == */* || "$candidate" == .* || "$candidate" == *.* ]]
+}
+
+preflight_setup_artifact_paths() {
+  local worktree_root setup_line candidate resolved
+  worktree_root="${RELAY_TARGET_ROOT:-$(git -C "$(dirname "$RELAY_FILE")" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$ROOT_DIR")}"
+  worktree_root="$(cd "$worktree_root" 2>/dev/null && pwd || printf '%s' "$worktree_root")"
+  while IFS= read -r setup_line; do
+    [[ "$setup_line" == *"Artifact under review:"* ]] || continue
+    [[ "$setup_line" == *"embedded below"* ]] && continue
+    while IFS= read -r candidate; do
+      relay_is_worktree_artifact_path "$candidate" || continue
+      case "$candidate" in
+        /*) resolved="$candidate" ;;
+        *)  resolved="$worktree_root/$candidate" ;;
+      esac
+      [[ -e "$resolved" ]] || die "artifact path not found in worktree: $candidate"
+    done < <(relay_extract_markdown_paths "$setup_line")
+  done < <(relay_setup_section_lines)
+}
+
 # GH-31 / #15: a read-only artifact under review. Absolutize it (the shim runs with a different CWD)
 # and export it so relay-turn-lib seeds it into the isolated worktree. It only works under isolation —
 # warn loudly if isolation is off, so the reviewer isn't left silently unable to see it.
@@ -337,10 +419,13 @@ while ((round < ROUND_CAP)); do
     exit 4
   fi
 
+  preflight_setup_artifact_paths
+
   if ((DRY_RUN)); then
     printf 'relay-drive: WOULD drive turn for agent: %s (token %s, STATUS: %s)\n' "$actor" "$tstatus" "$s"; exit 0
   fi
 
+  RELAY_DRIVE_STARTED=1   # GH-152: past this point a turn is really being driven — arm the cost summary
   xyz_relay_heartbeat_write
   prev="$tstatus:$actor"
   RELAY_FILE="$RELAY_FILE" RELAY_TASK="$RELAY_TASK" RELAY_AGENT="$actor"

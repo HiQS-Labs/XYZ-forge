@@ -1,0 +1,25 @@
+# MARATHON.yaml — 2026-07-17: GH-218 cross-repo live marathon status query.
+#
+# 2 sequential phases (Phase 2 embeds Phase 1's output, so depends_on is real here, unlike the
+# fully-parallel GH208-154-149-198 plan). Builder defaults to codex (GH-212); reviewer is agy.
+# Explicitly NO server/daemon/MCP work in either phase — see the parent capture doc's Non-goals.
+#
+# Parent capture doc:
+#   PROJECT/2-WORKING/GH-218-CROSS-REPO-LIVE-MARATHON-STATUS.md
+
+name: gh218-live-marathon-status
+phases:
+  - id: gh218-marathon-live-script
+    name: New utils/hq/marathon-live.sh (repo discovery + tick STATE.md + liveness cross-check)
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-17-GH218-LIVE-STATUS/brief-gh218-marathon-live-script.md
+    artifact: utils/hq/marathon-live.sh,test/hq-marathon-live.sh,utils/hq/hq-lib.sh,utils/hq/marathon-scan.sh
+    max_review_rounds: 3
+
+  - id: gh218-rollup-hook
+    name: rollup.sh hook to embed the live-status report in the Obsidian daily rollup
+    reviewer: agy
+    depends_on: gh218-marathon-live-script
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-17-GH218-LIVE-STATUS/brief-gh218-rollup-hook.md
+    artifact: utils/hq/rollup.sh,test/hq-rollup.sh
+    max_review_rounds: 2

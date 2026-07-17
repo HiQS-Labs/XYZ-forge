@@ -1,6 +1,6 @@
 ---
 name: hq
-description: HQ — the multi-repo command center. Turn a single utterance ("For project Acme, do X") into governance-aware action across every repo on this device. Resolves a project name (fuzzily) to a real repo via the registry ladder (Rebalance project_registry → XYZ install registry → Git Pulse PDDA registry → filesystem), reports its governance state as a project card, lands the request on that repo's own PDDA rails (issue → 1-INBOX capture → ROADMAP parking), and prepares dispatch (queue a lane / gated fire). Trigger when the user says "/hq", "HQ status of <project>", "which repo is <project>", "for project X do Y", "resolve <project>", "park/queue/fire this for <project>", or asks for a cross-repo project card / capability tier. Read paths are safe; write paths (park/queue) PREVIEW by default and act only with --create; fire never drives the harness itself. Tracks GH-128.
+description: HQ — the multi-repo command center. Turn a single utterance ("For project Acme, do X") into governance-aware action across every repo on this device. Resolves a project name (fuzzily) to a real repo via the registry ladder (Rebalance project_registry → XYZ install registry → Git Pulse PDDA registry → filesystem), reports its governance state as a project card, lands the request on that repo's own PDDA rails (issue → 1-INBOX capture → ROADMAP parking), and prepares dispatch (queue a lane / gated fire). Trigger when the user says "/hq", "HQ status of <project>", "which repo is <project>", "for project X do Y", "resolve <project>", "park/queue/fire this for <project>", "what marathons are running now" / "read all marathons in realtime", or asks for a cross-repo project card / capability tier. Read paths are safe; write paths (park/queue) PREVIEW by default and act only with --create; fire never drives the harness itself. Tracks GH-128.
 ---
 
 # /hq — multi-repo command center
@@ -93,6 +93,38 @@ The skill drives `utils/hq/hq.sh` (or `$HQ_SH` from a foreign repo — see Preco
 
 Override any source for tests / non-default installs via `HQ_PDDA_REGISTRY_DIR`, `HQ_XYZ_REGISTRY`,
 `HQ_REBALANCE_DB`, `HQ_SEARCH_ROOTS` (see `utils/hq/hq-lib.sh`).
+
+## Live marathon status (what's running right now, deterministically)
+
+"What marathons are running now" is a **different question** than `hq.sh status`/`registries` (which
+report governance/capability state) or `utils/hq/marathon-scan.sh` (which reports **doc-level**
+status — what a `MARATHON-PLAN-*.md`'s frontmatter claims — not live process state). Don't conflate
+them: a repo can show "ready to fire" in a scan while a marathon is actively mid-turn in a sibling
+worktree the doc scan never looks at.
+
+**Once [GH-218](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/218)'s
+`utils/hq/marathon-live.sh` exists** (check `ls utils/hq/marathon-live.sh` first), run it — it does
+the four checks below across every `hq_known_repos` repo in one shot and emits repo + marathon/lane +
+task + claimant + live-or-idle. **Until then, or to spot-check one repo by hand**, walk these in
+order — all deterministic, local file/process reads, no server or daemon involved:
+
+1. **Which repos exist at all** — `hq.sh registries` (or `hq_known_repos` directly), which already
+   aggregates the XYZ install registry (`~/.config/xyz/registry.tsv`), Rebalance's project registry,
+   and Git Pulse's PDDA registry. This is the full list of repos to check, not just the current one.
+2. **What's claimed right now, per repo** — run `tick project` inside that repo (native `bin/tick`,
+   or `$XYZ_PATH/bin/tick` for a vendored install — `$XYZ_PATH` comes from `hq_repo_resolve`) to
+   regenerate `.tick/STATE.md`, then read its `## Claimed` section: `- <task-id> by <claimant>
+   paths: [...]`. The task id already names the marathon/lane (e.g.
+   `MARATHON-GH208-WORKTREE-ISOLATION-RACE-TURN`).
+3. **Is it actually driving this instant, or just claimed-and-idle** — check for that repo's driver
+   lock: `.git/relay-driver.lock` (native) or the vendored equivalent (see `marathon-drive.sh`'s own
+   lock-path resolution, GH-149, for exactly how a linked-worktree/vendored install differs). Present
+   = a `marathon-drive.sh`/`relay-drive.sh` process holds it right now.
+4. **Corroborate with worktrees** — `git worktree list` (or `-C <repo>`) for a `marathon/*`-branch
+   worktree with a commit or dirty status in roughly the last 30 minutes; a secondary signal, not
+   ground truth on its own.
+5. **Any live agent CLI process** — `ps aux | grep -E "marathon-drive|relay-drive.sh"` machine-wide,
+   as a final cross-check (catches a driver running against a repo you didn't think to check).
 
 ## Capability tiers
 

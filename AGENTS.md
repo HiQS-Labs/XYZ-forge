@@ -67,6 +67,16 @@ local change.
   governance.
 - `validate.sh` is the code/runtime gate. `utils/pdda/pdda.sh run` and its targeted
   `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
+- **Builder/orchestrator role split (GH-221)** — **Claude Code (terminal and VS Code agents) is the
+  orchestrator and reviewer, never a default builder.** It plans, dispatches marathon/relay lanes, and
+  reviews/verifies their output; it does not drive itself headlessly as a build lane. **Agy CLI and
+  Codex CLI are the builders** — the two cost-blind (subscription-billed) headless build lanes
+  `marathon.sh`/`marathon-drive.sh` default to (GH-212). **Claude CLI (billed via the Anthropic API) is
+  NOT a builder by default** — `--builder claude` stays fully supported, but only as an explicit,
+  cost-acknowledged choice the *user* makes locally (their own `--builder claude` flag or a local
+  settings override), never something a session reaches for on its own reasoning that it's "just
+  another supported builder option." If a task calls for a headless build lane and neither agy nor
+  codex is available, stop and ask — don't default to spawning a headless Claude CLI turn.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),
@@ -80,7 +90,7 @@ local change.
   stop. Re-firing a parked lane or going off-wave to deep-dive one item requires an explicit operator
   override (`--force`) or a replan note — never a quiet slide off the plan.
 - **Do not create new git branches** automatically. Only create a new branch if explicitly requested by the user.
-- **`development` is the standing WIP branch (cut fresh from `main` 2026-07-17, [GH-216](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/216)).** The prior `development` had drifted 295 commits behind `main` with no open PRs — retired to `development-archived-2026-07-04` rather than deleted outright. Default ongoing/in-progress work to `development` (branch off it, PR back into it) instead of long-lived one-off feature branches or committing WIP straight to `main`; periodically merge `development` → `main` once it's in a shippable state. Marathon/relay-fired lanes still cut their own short-lived `marathon/gh-<n>-*` branches per their own convention (see GH-212) — this rule is about *manual/exploratory* WIP, not marathon lane branches. Watch for `development` drifting stale again the same way the old one did; re-cut from `main` if it does.
+- **`development` is the standing WIP branch — ALL work targets it, including marathon/relay-fired lanes (cut fresh from `main` 2026-07-17, [GH-216](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/216); policy widened 2026-07-17 to cover marathon lanes too, first applied to [PR #217](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/217)).** The prior `development` had drifted 295 commits behind `main` with no open PRs — retired to `development-archived-2026-07-04` rather than deleted outright. Both manual/exploratory work AND marathon-fired lanes (`marathon/gh-<n>-*` branches, GH-212 convention) now branch off `development` and PR back into it — `--plan`/`marathon.sh` still cuts its own short-lived per-lane branch, just off `development` instead of `main`. Periodically merge `development` → `main` once it's in a shippable state; don't let `main` sit behind `development` indefinitely. Watch for `development` drifting stale again the same way the old one did; re-cut from `main` if it does.
 - **Anti-pattern: renaming a branch with an open PR via GitHub's branch-rename API
   (`POST /repos/{owner}/{repo}/branches/{branch}/rename`, or `gh api ... branches/<old>/rename`).**
   It does **not** rename in place — it deletes the old ref and recreates a new one, which GitHub

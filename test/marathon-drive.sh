@@ -434,6 +434,37 @@ RELAY_DRIVE_EXIT=0 run_driver --require-clean >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "--require-clean passes on a clean workspace" || fail "--require-clean exit=$rc on clean tree (expected 0)"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+WT="$WORK/require-clean-linked-wt"
+git -C "$A" worktree add --detach "$WT" HEAD >/dev/null 2>&1
+[ -f "$WT/.git" ] && pass "--require-clean fixture uses a linked worktree (.git file)" \
+  || fail "expected linked worktree fixture with a .git file at $WT/.git"
+WT_OUT="$(
+  cd "$WT" && \
+  MARATHON_ROOT="$WT" \
+  MARATHON_RELAY_DRIVE="$STUB_RD" \
+  MARATHON_AGENT_CMD="$WORK/noop-agent" \
+  TICK_REPO_ROOT="$WT" TICK_BIN="$TICK" \
+  CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  RELAY_DRIVE_EXIT=0 \
+  bash "$DRIVER" \
+    --phases-dir "$WT/phases" \
+    --phase-brief "$BRIEF" \
+    --reviewer agy \
+    --pre-advance-cmd "true" \
+    --builder claude \
+    --require-clean 2>&1
+)"; rc=$?
+[ "$rc" -eq 0 ] && pass "--require-clean passes inside a linked worktree (no self-trip on the driver lock)" \
+  || fail "--require-clean should stay clean in a linked worktree (exit=$rc): $WT_OUT"
+printf '%s\n' "$WT_OUT" | grep -q '\.relay-driver\.lock' \
+  && fail "linked worktree run still reported the driver's own lock as dirt: $WT_OUT" \
+  || pass "linked worktree run does not report the driver's own lock as dirt"
+[ -f "$WT/phases/p1/RELAY.md" ] && pass "linked worktree + --require-clean still seeds the phase" \
+  || fail "linked worktree run should seed the phase on a clean tree"
+git -C "$A" worktree remove --force "$WT" >/dev/null 2>&1 || rm -rf "$WT"
+git -C "$A" worktree prune >/dev/null 2>&1 || true
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 printf 'stray distracting brief\n' > "$A/STRAY.md"   # an untracked file outside the marathon's paths
 RELAY_DRIVE_EXIT=0 run_driver --require-clean >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 2 ] && pass "--require-clean hard-stops (exit 2) on a dirty workspace" || fail "--require-clean exit=$rc on dirty tree (expected 2)"

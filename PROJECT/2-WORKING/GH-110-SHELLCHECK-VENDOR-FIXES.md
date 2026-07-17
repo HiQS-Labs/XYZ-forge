@@ -2,9 +2,9 @@
 gh_issue: 110
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/110
 title: "Fable 5 Max audit: shellcheck + vendor integrity + strict-mode hardening"
-status: Active (2-WORKING) — P1 + P2a shipped (`073857a`); P3b (strict-mode policy) shipped 2026-07-06; P2b partial (oracle-guard skip-guard landed; broader test sweep + run-tests.sh + foreign-install ≥77/85 verification remain); P3a RE-SCOPED → deferred (shell↔py JS port drift, needs its own issue)
+status: Active (2-WORKING) — P1 + P2a shipped (`073857a`); P3b (strict-mode policy) shipped 2026-07-06; P2b partial (oracle-guard skip-guard landed; roadmap-dashboard skip-guard + run-tests.sh remain — re-scoped as this doc's fireable contract 2026-07-17); P3a RE-SCOPED → tracked as #154 (excluded from the 2026-07-17 /10days sweep — claimed by a concurrently-running marathon)
 created: 2026-07-03
-updated: 2026-07-03
+updated: 2026-07-17
 owner: noel
 doc_type: bug-fix-and-hardening
 complexity: 3
@@ -209,13 +209,19 @@ Some exemptions are deliberate (hooks shouldn't hard-fail) but none are document
 
 ## Swarm Preflight Contract
 
-> Scoped to **Phase 2a** (the confirmed-stale `relay-pkg.tar.gz`) as the next fireable slice.
-> Re-verified stale 2026-07-06: packaged `relay-turn-lib.sh` 50204 B vs live 51853 B; packaged
-> `relay-drive.sh` 25600 B vs live 26099 B. Approach fixed to **Option B** (keep the committed
-> binary + add a freshness gate — Fable's recommendation, lowest blast radius). `make-pkg.sh`
-> already regenerates the tarball; this lane rebuilds it and adds the drift guard so it can't
-> silently rot again. Phase 2b (vendored-copy test skips) and Phase 3 (code quality) stay open.
+> **Re-scoped 2026-07-17 by `/10days`** (11-14 day sweep): Phase 2a already shipped (`073857a`,
+> confirmed live — `test/relay-pkg-freshness.sh` exists and passes) and Phase 3a was split to its
+> own issue (#154, itself excluded from this sweep as claimed by a concurrently-running marathon).
+> The old contract above was scoped to 2a and is now stale/satisfied — it would never fire again.
+> Re-scoped to the two genuinely-unshipped **Phase 2b** items: a `skip()` guard for
+> `test/roadmap-dashboard.sh` (mirroring the pattern already landed in `test/oracle-guard.sh` and
+> `test/ci-workflow.sh` — `skip(){ echo "  SKIP: $*"; SKIP=$((SKIP+1)); }`, confirmed absent from
+> `test/roadmap-dashboard.sh` today) and a new top-level `run-tests.sh` entry point (confirmed
+> absent anywhere in the repo today).
 
 ```json
-{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"path_absent","path":"test/relay-pkg-freshness.sh"}],"artifacts":["skills/relay-automation/relay-pkg.tar.gz","test/relay-pkg-freshness.sh","validate.sh"],"artifacts_new":["test/relay-pkg-freshness.sh"],"remediation":{"source":"self#phase-2a","criteria":"relay-pkg.tar.gz rebuilt from live sources via skills/relay-automation/make-pkg.sh so every packaged member byte-matches its live source (esp. relay-turn-lib.sh + relay-drive.sh); new hermetic test/relay-pkg-freshness.sh extracts the committed tarball and cmps each packaged file against its live counterpart, failing on any drift, wired into validate.sh; validate.sh green (greenfield-test lane: gate is validate.sh since the new test does not exist at HEAD)."},"lanes":{"orchestrator_only":[]}}
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_absent","path":"test/roadmap-dashboard.sh","pattern":"skip\\(\\)"},{"type":"path_absent","path":"run-tests.sh"}],"artifacts":["test/roadmap-dashboard.sh","run-tests.sh"],"artifacts_new":["run-tests.sh"],"remediation":{"source":"issue#110","criteria":"test/roadmap-dashboard.sh skip()s its ROADMAP-DASHBOARD.md-dependent case when that file is absent, matching the skip() pattern already landed in test/oracle-guard.sh and test/ci-workflow.sh; a new top-level run-tests.sh entry point runs the full suite for a vendored install (no root-file assumptions); a fresh vendor install passes >=77/85 with only expected skips; validate.sh stays green."},"lanes":{"agy_safe":["test/roadmap-dashboard.sh","run-tests.sh"],"orchestrator_only":[]}}
 ```
+
+*Contract auto-drafted by /10days from the issue text and the doc's own P2b checklist —
+artifacts/lanes not yet operator-verified.*
