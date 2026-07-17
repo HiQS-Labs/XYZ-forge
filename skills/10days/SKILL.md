@@ -280,6 +280,13 @@ Then:
    - After all of a wave's lane agents return, merge each lane's worktree commit(s)
      back onto the marathon branch **one at a time** (fast-forward or cherry-pick, not
      concurrently) so the branch ref never has two writers racing it.
+   - Once a lane's commit(s) are merged, remove its worktree: `git worktree remove
+     <path>` (fall back to `git worktree remove --force <path>` if it still reports
+     uncommitted/stray state). Do this for every lane in the wave, right alongside the
+     gate check below — left as-is, a run with several parallel lanes accumulates
+     orphaned worktree directories under the repo's git metadata across sessions. A
+     removal failure does not stop the run: record the lane, path, and error for the
+     Step 8 report and continue.
    - After a wave's merges land, run its gate (the contract's `gate`, default
      `bash validate.sh`) **before starting the next wave.** A red gate stops the run —
      do not advance to the next wave, do not force-merge, report it in Step 8 and leave
@@ -298,6 +305,10 @@ One final summary, always — even (especially) on a partial or stopped run:
 - Every **Step 6.5 serialization** — which lane pairs were pulled out of a concurrent
   wave and why, so a wave that ran slower than expected isn't a mystery.
 - Every gate result per wave (green/red) and, if red, exactly where the run stopped.
+- Every **worktree-cleanup failure** — lane, worktree path, and the `git worktree
+  remove` error — if any lane's worktree failed to remove after its merge. Never
+  silently ignore a leftover worktree; if none failed, say so explicitly (all
+  worktrees removed cleanly).
 - Branch name, and whether it's ready for a PR or still mid-marathon.
 
 Never mask a stopped run as a finished one — an honest partial report is the point of
