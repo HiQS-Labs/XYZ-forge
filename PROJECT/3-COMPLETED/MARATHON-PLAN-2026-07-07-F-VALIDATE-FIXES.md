@@ -1,8 +1,12 @@
 ---
 title: Marathon Plan F (2026-07-07) — validate.sh's 9 pre-existing failing tests + parity gaps
-status: Lanes 12-13 SHIPPED 2026-07-17 (GH208-154-149-198 marathon, both Approved). Lanes 1-9
-  STALE as of 2026-07-17 (all 9 tests currently pass — see Status); recommend closing #170 pending
-  operator confirmation. Lanes 10-11 still queued, not yet fired.
+status: Closed 2026-07-17. Lanes 12-13 SHIPPED (GH208-154-149-198 marathon, both Approved,
+  #208/#154 now closed). Lanes 1-9 STALE as of 2026-07-17 (all 9 tests currently pass); recommend
+  closing #170 pending operator confirmation — not actioned here. Lanes 10-11 (#174, #215) remain
+  genuinely open but are no longer tracked via this doc — they're already carried in the live
+  auto-generated `MARATHON-PLAN-2026-07-17.md` queue. Retired to 3-COMPLETED 2026-07-17 as part of
+  a 2-WORKING marathon-file consolidation; this doc's history is preserved, its remaining
+  actionable work is not lost.
 created: 2026-07-07
 updated: 2026-07-17
 owner: noel

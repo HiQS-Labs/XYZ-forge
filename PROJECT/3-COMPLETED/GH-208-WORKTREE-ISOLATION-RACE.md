@@ -2,11 +2,11 @@
 gh_issue: 208
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/208
 title: "worktree-isolation.sh: moved-ROOT-HEAD preserve case (GH-13/#14 guard) fails on this machine — env-dependent, blocks validate.sh-as-gate"
-status: Triaged 2026-07-16 during a recent-issues sweep — reproduces as a genuine timing race (not a
-  permanent environment break). 8/9 local repeated runs of `test/worktree-isolation.sh` failed the
-  same assertion (case 6, rc=6); 1/9 passed. All other 30 assertions in the file pass every time.
+status: Fixed and verified 2026-07-17 via the GH208-154-149-198 marathon (merged to `development`);
+  issue #208 closed. Root cause was a test-fixture timing bug in test/worktree-isolation.sh, not a
+  relay-turn-lib.sh race. See the Status table below for detail.
 created: 2026-07-15
-updated: 2026-07-16
+updated: 2026-07-17
 owner: noel
 doc_type: bug
 complexity: 2

@@ -2,10 +2,10 @@
 gh_issue: 149
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/149
 title: "marathon-drive --require-clean self-trips on its own .relay-driver.lock/ inside a linked worktree"
-status: Triaged 2026-07-16 during a recent-issues sweep — still present in current code, confirmed
-  by direct read; no fix has landed since the issue was filed (2026-07-06).
+status: Fixed and verified 2026-07-17 via the GH208-154-149-198 marathon (merged to `development`);
+  issue #149 closed. See the Status table below for detail.
 created: 2026-07-06
-updated: 2026-07-16
+updated: 2026-07-17
 owner: noel
 doc_type: bug
 complexity: 2

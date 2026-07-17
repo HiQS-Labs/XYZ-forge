@@ -2,12 +2,11 @@
 gh_issue: 198
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/198
 title: "relay-drive.sh headless turn: file-scoped commit ignores pathspec (sweeps pre-existing staged changes); uncommitted-artifact review fails opaquely"
-status: Triaged 2026-07-16 during a recent-issues sweep. Bug 1 (file-scoped commit ignoring
-  pathspec) is ALREADY FIXED — commit bee1abf landed it in relay-turn-lib.sh, with its own
-  regression test (test/relay-commit-pathspec.sh, 9/9). This doc re-scopes the issue to the
-  remaining Bug 2 only (a UX gap, not a data-loss bug).
+status: Fixed and verified 2026-07-17 — Bug 2 via the GH208-154-149-198 marathon (merged to
+  `development`); Bug 1 already fixed separately (commit bee1abf). Issue #198 closed. See the
+  Status table below for detail.
 created: 2026-07-11
-updated: 2026-07-16
+updated: 2026-07-17
 owner: noel
 doc_type: bug
 complexity: 1

@@ -1,7 +1,8 @@
 ---
 title: Marathon Plan G (2026-07-17) — marathon/relay driver hardening (GH-149, GH-198)
-status: Both lanes SHIPPED 2026-07-17 via the GH208-154-149-198 marathon (codex builder, agy
-  reviewer, both Approved)
+status: Shipped 2026-07-17 — both lanes (GH-149, GH-198) landed via the GH208-154-149-198 marathon
+  (codex builder, agy reviewer, both Approved), merged to `development`. Retired to 3-COMPLETED
+  2026-07-17 as part of a 2-WORKING marathon-file consolidation.
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel

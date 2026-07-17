@@ -1,8 +1,10 @@
 ---
 title: Marathon Plan E (2026-07-07) — acorn-integration + aider-turn.sh + hq-resolve bugfix cluster
-status: All 5 lanes complete — #159/#168/#169/#175 merged (PR #179); #186 built + Approved on local branch `marathon/gh-186-aider-vendor-version-drift-2026-07-09`, not yet pushed/PR'd
+status: Shipped — all 5 lanes complete. #159/#168/#169/#175 merged (PR #179); #186 confirmed
+  closed+merged (bb9552b/e53a1cf/9e2ce73). Retired to 3-COMPLETED 2026-07-17 as part of a 2-WORKING
+  marathon-file consolidation.
 created: 2026-07-07
-updated: 2026-07-09
+updated: 2026-07-17
 owner: noel
 branch: main
 doc_type: project

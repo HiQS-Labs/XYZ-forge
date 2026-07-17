@@ -2,10 +2,10 @@
 gh_issue: 154
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/154
 title: "port-drift: marathon-plan shell heredoc vs utils/py/_marathon_plan_node.js diverged (py missing GH-48 zone model)"
-status: Triaged 2026-07-16 during a recent-issues sweep — parity gap confirmed still present;
-  no commits have touched either file since the issue was filed (2026-07-06).
+status: Fixed and verified 2026-07-17 via the GH208-154-149-198 marathon (merged to `development`);
+  issue #154 closed. See the Status table below for detail.
 created: 2026-07-06
-updated: 2026-07-16
+updated: 2026-07-17
 owner: noel
 doc_type: bug
 complexity: 2
