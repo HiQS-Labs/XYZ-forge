@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 5
 
@@ -59,5 +59,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Open questions:**
 - Should the audit also cover `.mjs`/`.py` equivalents of this pattern (e.g. Python `tempfile.mkdtemp()` misuse), or is this scoped correctly to bash-only per the doc's stated non-goal?
 **Commit:** e7fd117 (3-file fix + new test + validate.sh wiring), 47e054a (doc move to 3-COMPLETED, not part of the code under review)
+
+### Round 1 · Reviewer · codex · 2026-07-17 15:59 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — operator instruction for this reviewer turn forbade running artifact/test files, so this review is live-file inspection only.
+**Findings & proposals:**
+- [Blocker] `test/mktemp-trap-guard.sh:34` and `test/mktemp-trap-guard.sh:41` undercut the stated DoD: the audit does **not** cover "anywhere in the repo"; it only walks `test/`, `utils/`, `relay-automation/`, `skills/`, and `bin/`, so a reintroduced footgun in root-level shell files like `validate.sh`, `install.sh`, `run-tests.sh`, or under `tools/` would pass clean. Proposed fix: drive the scan from repo root (or add explicit root-level `.sh` + `tools/`) and keep the current transcript/vendor exclusions as negative filters instead of positive-directory allowlisting.
+- [Blocker] `test/mktemp-trap-guard.sh:72`, `test/mktemp-trap-guard.sh:90`, and `test/mktemp-trap-guard.sh:95` leave an evasion path: Tier 2 only catches the one-line re-capture form `VAR="$(cd "$VAR" && pwd ...)"`, and it treats **any** later line mentioning `$VAR` plus `||` as "guarded". An equivalent bug can slip through as split steps such as `cd "$TMP"` on one line and `TMP="$(pwd -P)"` on the next, or by inserting an unrelated `echo "$TMP" || true` before the re-capture. Proposed fix: replace the current heuristic with a small state machine that tracks explicit validation of the same var (`-n` and `-d` / equivalent `test` or `[[ ... ]]` forms) and flags both inline and multi-line `cd "$VAR"` -> `pwd` re-capture before that validation.
+- [Pass] `test/hq-hardening.sh:20`, `test/hq-hardening.sh:21`, `test/hq-hardening.sh:22`, `test/hq-promote.sh:23`, `test/hq-promote.sh:24`, `test/hq-promote.sh:25`, `test/hq-locator.sh:23`, `test/hq-locator.sh:24`, and `test/hq-locator.sh:25` do close the original repo-wipe path textually: `mktemp -d` must now succeed and yield a non-empty real directory before the destructive `EXIT` trap is armed, and canonicalization happens only afterward.
+**Answers:**
+- The 3-file fix itself looks sufficient for the original failure mode. I do not see a remaining path where a failed `mktemp -d` can silently turn into repo-root `rm -rf` in those three tests, because the trap is no longer armed until after the success + `-n` + `-d` checks.
+- The audit has blind spots; the two blockers above are the material ones.
+- I did not independently re-run `bash test/mktemp-trap-guard.sh` because the operator explicitly forbade running artifact/test files this turn. Textually, the script still appears designed to avoid the known comment-only and bare-`mktemp` false positives, but that is not a behavioral re-verification.
+**Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
