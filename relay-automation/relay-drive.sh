@@ -263,6 +263,49 @@ warn_if_relay_file_untracked() {
 }
 warn_if_relay_file_untracked
 
+relay_setup_section_lines() {
+  awk '
+    /^##[[:space:]]+Setup[[:space:]]*$/ { in_setup=1; next }
+    in_setup && /^##[[:space:]]+/ { exit }
+    in_setup { print }
+  ' "$RELAY_FILE"
+}
+
+relay_extract_markdown_paths() {  # <line>
+  printf '%s\n' "$1" \
+    | grep -oE '`[^`]+`|\*\*[^*]+\*\*' \
+    | sed -e 's/^`//' -e 's/`$//' -e 's/^\*\*//' -e 's/\*\*$//'
+}
+
+relay_is_worktree_artifact_path() {  # <candidate>
+  local candidate="$1"
+  [[ -n "$candidate" ]] || return 1
+  [[ "$candidate" != http://* && "$candidate" != https://* ]] || return 1
+  [[ "$candidate" != ".relay-artifacts/"* ]] || return 1
+  [[ "$candidate" != *"embedded below"* ]] || return 1
+  [[ "$candidate" != *" "* && "$candidate" != *$'\t'* ]] || return 1
+  [[ "$candidate" != *"{"* && "$candidate" != *"}"* && "$candidate" != *","* ]] || return 1
+  [[ "$candidate" == /* || "$candidate" == */* || "$candidate" == .* || "$candidate" == *.* ]]
+}
+
+preflight_setup_artifact_paths() {
+  local worktree_root setup_line candidate resolved
+  worktree_root="${RELAY_TARGET_ROOT:-$(git -C "$(dirname "$RELAY_FILE")" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$ROOT_DIR")}"
+  worktree_root="$(cd "$worktree_root" 2>/dev/null && pwd || printf '%s' "$worktree_root")"
+  while IFS= read -r setup_line; do
+    [[ "$setup_line" == *"Artifact under review:"* ]] || continue
+    [[ "$setup_line" == *"embedded below"* ]] && continue
+    while IFS= read -r candidate; do
+      relay_is_worktree_artifact_path "$candidate" || continue
+      case "$candidate" in
+        /*) resolved="$candidate" ;;
+        *)  resolved="$worktree_root/$candidate" ;;
+      esac
+      [[ -e "$resolved" ]] || die "artifact path not found in worktree: $candidate"
+    done < <(relay_extract_markdown_paths "$setup_line")
+  done < <(relay_setup_section_lines)
+}
+
 # GH-31 / #15: a read-only artifact under review. Absolutize it (the shim runs with a different CWD)
 # and export it so relay-turn-lib seeds it into the isolated worktree. It only works under isolation —
 # warn loudly if isolation is off, so the reviewer isn't left silently unable to see it.
@@ -336,6 +379,8 @@ while ((round < ROUND_CAP)); do
     [[ "$tstatus" == "done" ]] && printf "  → '%s' is spent from a prior relay; seed + drive with a fresh --relay-task (e.g. RELAY-%s)\n" "$RELAY_TASK" "$(basename "$RELAY_FILE" .md)" >&2
     exit 4
   fi
+
+  preflight_setup_artifact_paths
 
   if ((DRY_RUN)); then
     printf 'relay-drive: WOULD drive turn for agent: %s (token %s, STATUS: %s)\n' "$actor" "$tstatus" "$s"; exit 0

@@ -6,6 +6,7 @@
 source "$(dirname "$0")/_setup.sh" relay-artifact-file
 export TICK_BIN="$TICK"
 SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/claude-turn.sh"
+DRIVER="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/relay-drive.sh"
 tick_a init >/dev/null
 
 # Committed baseline. NEXT: Reviewer ⇒ rtl_init scopes the allowlist to the relay file only (the real
@@ -38,7 +39,12 @@ exit 0
 STUB_EOF
 chmod +x "$STUB"
 
-seed_token(){ tick_a log task.created "$1" --agent claude --paths "relay.md" >/dev/null; tick_a claim "$1" --agent claude --paths "relay.md" >/dev/null 2>&1; tick_a release "$1" --agent claude --to claude >/dev/null 2>&1; }
+seed_token(){ # <task> [paths]
+  local task="$1" paths="${2:-relay.md}"
+  tick_a log task.created "$task" --agent claude --paths "$paths" >/dev/null
+  tick_a claim "$task" --agent claude --paths "$paths" >/dev/null 2>&1
+  tick_a release "$task" --agent claude --to claude >/dev/null 2>&1
+}
 
 run_shim(){ # <task> <stub-mode> <artifact 0|1>
   local art=""; [ "$3" = 1 ] && art="$ARTIFACT"
@@ -72,6 +78,43 @@ seed_token RELAY-ART-none
 run_shim RELAY-ART-none read 0; rc=$?
 [ "$rc" -eq 0 ] && pass "no-artifact turn exits 0 (unchanged path)" || fail "expected 0, got $rc"
 [ ! -e "$A/.relay-artifacts" ] && pass "no .relay-artifacts created when unset" || fail "unexpected .relay-artifacts"
+
+# --- (4) GH-198: a missing Setup-referenced repo path fails fast before dispatch -------------------
+MISSING_RELAY="$A/missing-setup-relay.md"
+cat >"$MISSING_RELAY" <<'EOF'
+STATUS: Open
+NEXT: Reviewer
+# relay body
+
+## Setup
+- Artifact under review: `missing/artifact.txt`
+- Reviewer: claude   ·   Producer: producer
+- Started: 2026-07-17
+
+## Log
+EOF
+BLOCKED_AGENT="$WORK/blocked-agent.sh"
+cat >"$BLOCKED_AGENT" <<'EOF'
+#!/usr/bin/env bash
+printf 'agent-ran\n' > "$WORK/blocked-agent-ran"
+exit 0
+EOF
+chmod +x "$BLOCKED_AGENT"
+rm -f "$WORK/blocked-agent-ran"
+seed_token RELAY-ART-setup-missing "missing-setup-relay.md"
+out="$(
+  cd "$A" && \
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  bash "$DRIVER" --target-root "$A" --relay-file "$MISSING_RELAY" \
+    --relay-task RELAY-ART-setup-missing --agent-cmd "$BLOCKED_AGENT" 2>&1
+)"; rc=$?
+[ "$rc" -eq 2 ] && pass "missing Setup artifact path fails fast at dispatch time" || fail "expected exit 2, got $rc — $out"
+printf '%s' "$out" | grep -q "artifact path not found in worktree" \
+  && pass "missing Setup artifact path reports the clear GH-198 message" \
+  || fail "missing Setup artifact message: $out"
+[ ! -f "$WORK/blocked-agent-ran" ] \
+  && pass "missing Setup artifact path blocks agent dispatch" \
+  || fail "agent should not run when Setup artifact preflight fails"
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

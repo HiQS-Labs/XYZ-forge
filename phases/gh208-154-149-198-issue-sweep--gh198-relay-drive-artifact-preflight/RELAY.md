@@ -87,3 +87,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH198-RELAY-DRIVE-ARTIFACT-PREFLIGHT-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh208-154-149-198-issue-sweep--gh198-relay-drive-artifact-preflight/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Touched `relay-automation/relay-drive.sh` and `test/relay-artifact-file.sh`.
+- Added a dispatch-time Setup preflight in `relay-drive.sh` that scans the relay's `## Setup` section for repo/worktree-style markdown paths on `Artifact under review:` lines, skips embedded and `.relay-artifacts/...` cases, resolves candidates against the effective worktree root, and fails fast with `artifact path not found in worktree: ...` before the agent command runs.
+- Left the existing `--artifact-file` preflight untouched.
+- Extended `test/relay-artifact-file.sh` with a GH-198 regression that seeds a relay whose Setup points at `missing/artifact.txt`, asserts exit `2`, asserts the clear message, and asserts the agent never dispatches.
+- Verification: `bash test/relay-artifact-file.sh` -> `13 pass, 0 fail`.
+- Note: the phase brief also asks for a one-line status update in `GH-198-RELAY-DRIVE-ARTIFACT-PREFLIGHT.md`, but this relay turn explicitly restricted edits to `RELAY.md`, `relay-automation/relay-drive.sh`, and `test/relay-artifact-file.sh`, so I did not touch the capture doc.
