@@ -29,17 +29,22 @@ pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 echo "== test: mktemp-trap-guard (GH-177) =="
 
-# Real code directories only — excludes relay-system/ (transcripts), AUDIT/ (transcripts), and
-# anything gitignored (node_modules, .tick, etc.) by construction (find only walks what's listed).
-SCAN_DIRS=(test utils relay-automation skills bin)
+# Real code directories, PLUS root-level .sh files themselves (validate.sh, install.sh,
+# run-tests.sh) — excludes relay-system/ (transcripts), AUDIT/ (transcripts), and anything
+# gitignored (node_modules, .tick, etc.) by construction (find only walks what's listed).
+# GH-177 review (Codex, round 1): the original version scanned only a fixed subdirectory
+# allowlist and silently missed root-level scripts and tools/ — fixed by adding both.
+SCAN_DIRS=(test utils relay-automation skills bin tools)
 FILES=()
 while IFS= read -r _f; do
   [ -n "$_f" ] && FILES+=("$_f")
 done < <(
-  for d in "${SCAN_DIRS[@]}"; do
-    [ -d "$REPO/$d" ] || continue
-    find "$REPO/$d" -type f -name '*.sh' -not -path '*/node_modules/*'
-  done | sort -u
+  { for d in "${SCAN_DIRS[@]}"; do
+      [ -d "$REPO/$d" ] || continue
+      find "$REPO/$d" -type f -name '*.sh' -not -path '*/node_modules/*'
+    done
+    find "$REPO" -maxdepth 1 -type f -name '*.sh'
+  } | sort -u
 )
 
 is_comment_line() {  # trimmed line's first non-space char is '#'
@@ -69,33 +74,53 @@ audit_file() {
       fail "$rel:$((idx + 1)) unsafe 'cd \$(mktemp ...)' idiom — cd \"\" silently succeeds and stays at cwd if mktemp fails, instead of erroring: ${line#"${line%%[![:space:]]*}"}"
     fi
 
-    # --- Tier 2: a var assigned from mktemp, later RE-CAPTURED via `X="$(cd "$VAR" && pwd ...)"` ---
-    # A bare `cd "$VAR"` inside an unrelated subshell/command-substitution (used only to scope a side
-    # effect, e.g. `( cd "$FR" && bash something )`) is NOT the danger: it can't leak a wrong cwd out,
-    # and its captured output (a program's stdout/logs) can never be mistaken for a path later. The
-    # danger is specifically an outer assignment that captures `cd "$VAR" && pwd` — `pwd` is what turns
-    # a swallowed mktemp failure into a persisted, valid-looking PATH string (the split-line twin of
-    # Tier 1's inline `cd "$(mktemp ...)" && pwd`) — chaining to any other command (e.g. running a
-    # program and capturing its output) can't produce that same failure mode.
+    # --- Tier 2: a var assigned from mktemp, later `cd`'d into without a real guard first ------------
+    # A `cd "$VAR"` inside an unrelated subshell/command-substitution opened EARLIER ON THE SAME LINE
+    # (e.g. `( cd "$FR" && bash something )`, `out="$( cd "$FR" && bash "$FH" )"`) is NOT the danger:
+    # it can't leak a wrong cwd out past that subshell. Two shapes ARE the danger, and both are checked
+    # below, only once a real validation guard (an explicit `-n`/`-z`/`-d` test naming $VAR, or an
+    # exit-status check chained directly onto the mktemp assignment itself) has NOT already appeared:
+    #   (a) RE-CAPTURE: an outer assignment that captures `cd "$VAR" && pwd` — `pwd` is what turns a
+    #       swallowed mktemp failure into a persisted, valid-looking PATH string (the split-line twin
+    #       of Tier 1's inline `cd "$(mktemp ...)" && pwd`).
+    #   (b) BARE cd: `cd "$VAR"` NOT opened inside a subshell/command-substitution on that same line —
+    #       this changes the CALLING SCRIPT's own cwd for everything after it, unconditionally, the
+    #       moment $VAR is empty and `cd ""` silently no-ops-in-place — dangerous regardless of what
+    #       (if anything) reads the cwd back out afterward. (GH-177 review, Codex round 1, Blocker 2:
+    #       the original version only caught the same-line re-capture form and missed this.)
+    # GH-177 review (Codex round 1, Blocker 2): the guard check itself used to accept ANY `||` anywhere
+    # on a line merely mentioning $VAR as proof of validation (e.g. a decoy `echo "$VAR" || true` would
+    # have silently suppressed real findings after it). Tightened: a later line only counts as a guard
+    # if it has an explicit `-n`/`-z`/`-d` test naming $VAR; a same-line `||` counts ONLY when chained
+    # directly onto the mktemp assignment itself (the legitimate `X="$(mktemp -d)" || exit 1` form).
     if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=.*mktemp ]]; then
       local var="${BASH_REMATCH[1]}"
       local guarded=0
+      [[ "$line" == *'||'* ]] && guarded=1   # same-line exit-status check on the assignment itself
 
       local j
-      for ((j = idx + 1; j < n; j++)); do
+      for ((j = idx + 1; j < n && guarded == 0; j++)); do
         is_comment_line "${lines[$j]}" && continue
         local L="${lines[$j]}"
 
-        if [[ "$L" == *"\$$var"* || "$L" == *"\${$var}"* ]]; then
-          if [[ "$L" =~ \[[[:space:]]+-[nzd][[:space:]] ]] || [[ "$L" == *'||'* ]]; then
-            guarded=1
-          fi
+        if [[ "$L" == *"\$$var"* || "$L" == *"\${$var}"* ]] \
+           && [[ "$L" =~ \[[[:space:]]+-[nzd][[:space:]] ]]; then
+          guarded=1
+          break
         fi
 
         local recapture_re="=.*\\\$\\(.*cd[[:space:]]+\"?\\\$\\{?${var}\\}?\"?.*&&[[:space:]]*pwd"
-        if [ "$guarded" -eq 0 ] && [[ "$L" =~ $recapture_re ]]; then
+        if [[ "$L" =~ $recapture_re ]]; then
           fail "$rel:$((idx + 1)) \$$var assigned from mktemp, then RE-CAPTURED via '\$(cd \"\$$var\" && ...)' at line $((j + 1)) with no non-empty/is-directory guard in between — same shape as the historical repo-wipe (GH-177), just split across lines"
           break
+        fi
+
+        if [[ "$L" =~ cd[[:space:]]+\"?\$\{?$var\}?\"? ]]; then
+          local before_cd="${L%%cd*}"
+          if [[ "$before_cd" != *'('* ]]; then
+            fail "$rel:$((idx + 1)) \$$var assigned from mktemp, then BARE 'cd \"\$$var\"' at line $((j + 1)) (not scoped inside a subshell) with no non-empty/is-directory guard first — changes the script's own cwd unconditionally if mktemp failed, same failure class as GH-177"
+            break
+          fi
         fi
       done
     fi
