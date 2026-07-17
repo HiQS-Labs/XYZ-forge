@@ -50,6 +50,23 @@ git log main --since="<start>" --until="<end>" --stat --format='%h %ad %s' --dat
 Use `--first-parent` when the question is about what actually landed on `main`. Drop to fuller history
 only when you need extra detail to understand a merged theme.
 
+Two gotchas that silently produce a truncated or stale window:
+
+- **`--since`/`--until` can prune too early.** If the first-parent chain isn't perfectly
+  date-monotonic (a merge pulling in an older branch), `git log --since=X` can stop walking before
+  reaching commits that are actually in range, with no error or warning. If the returned list looks
+  suspiciously short, cross-check with a plain `git log <ref> --first-parent -20 --format='%h|%ad|%s'
+  --date=short` (no since/until) and pick the boundary commit by eye, then use a `<boundary>..<ref>`
+  range instead of date flags.
+- **A local `main` can be behind `origin/main`.** Check `git rev-list --count main..origin/main`
+  (or `git log main..origin/main --oneline`) before trusting local history. If it's behind, fetch or
+  read `origin/main` directly rather than reporting stale content as this week's ship list — don't
+  push/reset local `main` to "fix" it.
+
+If the repo maintains a human-authored `CHANGELOG.md` (or similar) with one entry per shipped change,
+check it before falling back to raw commits — it's usually already clustered and written in plain
+language, which is closer to the report's final shape than a commit log is.
+
 ## How to choose the top items
 
 Prefer items that changed one of these:
