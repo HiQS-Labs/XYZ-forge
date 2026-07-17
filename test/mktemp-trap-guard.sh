@@ -34,6 +34,16 @@ echo "== test: mktemp-trap-guard (GH-177) =="
 # gitignored (node_modules, .tick, etc.) by construction (find only walks what's listed).
 # GH-177 review (Codex, round 1): the original version scanned only a fixed subdirectory
 # allowlist and silently missed root-level scripts and tools/ — fixed by adding both.
+# GH-177 review (Codex round 4, Blocker 2): a `*.sh`-suffix glob misses extensionless bash
+# entrypoints like `bin/validate-relay-block` (real `#!/usr/bin/env bash`, no `.sh` suffix) — a
+# reintroduced footgun there would never be scanned. `is_bash_script` below catches those too.
+is_bash_script() {  # <path> — true if executable and its shebang names bash
+  local p="$1"
+  [ -x "$p" ] || return 1
+  IFS= read -r _shebang < "$p" 2>/dev/null
+  [[ "$_shebang" == '#!'*bash* ]]
+}
+
 SCAN_DIRS=(test utils relay-automation skills bin tools)
 FILES=()
 while IFS= read -r _f; do
@@ -41,6 +51,9 @@ while IFS= read -r _f; do
 done < <(
   { for d in "${SCAN_DIRS[@]}"; do
       [ -d "$REPO/$d" ] || continue
+      find "$REPO/$d" -type f -not -path '*/node_modules/*' -not -name '*.sh' -print | while IFS= read -r _cand; do
+        is_bash_script "$_cand" && printf '%s\n' "$_cand"
+      done
       find "$REPO/$d" -type f -name '*.sh' -not -path '*/node_modules/*'
     done
     find "$REPO" -maxdepth 1 -type f -name '*.sh'
@@ -126,8 +139,14 @@ audit_file() {
       local var="${BASH_REMATCH[2]}"
       local guarded=0
 
+      # GH-177 review (Codex round 4, Blocker 1): `;`-splitting alone missed same-SEGMENT `&&`/`||`
+      # chains (`TMP="$(mktemp -d)" && cd "$TMP"`, `... || TMP="$(cd "$TMP" && pwd)"`) — the chained
+      # continuation lives in the SAME segment as the assignment, never split further. Fixed by
+      # starting this scan at the assignment's OWN segment (j = idx, not idx + 1): `seg[idx]` already
+      # contains any `&&`/`||`-chained tail as plain text, so the existing recapture/bare-cd checks
+      # below catch it without needing a 4th delimiter to split on.
       local j
-      for ((j = idx + 1; j < n && guarded == 0; j++)); do
+      for ((j = idx; j < n && guarded == 0; j++)); do
         local L="${seg[$j]}"
 
         if [[ "$L" == *"\$$var"* || "$L" == *"\${$var}"* ]] \
@@ -143,8 +162,14 @@ audit_file() {
         fi
 
         if [[ "$L" =~ cd[[:space:]]+\"?\$\{?$var\}?\"? ]]; then
+          # GH-177 review (Codex round 4): a naive "does the text before 'cd' contain ANY '('" check
+          # is fooled by the mktemp call's OWN parens on the same segment (`TMP="$(mktemp -d)" && cd
+          # "$TMP"` has a `(` before "cd" from "$(mktemp", but it's already CLOSED — not wrapping the
+          # cd at all). Count UNCLOSED parens instead: only a net-positive count means "cd" is still
+          # nested inside an open subshell/command-substitution at that point in the segment.
           local before_cd="${L%%cd*}"
-          if [[ "$before_cd" != *'('* ]]; then
+          local opens="${before_cd//[^(]/}" closes="${before_cd//[^)]/}"
+          if (( ${#opens} <= ${#closes} )); then
             fail "$rel:${seg_ln[$idx]} \$$var assigned from mktemp, then BARE 'cd \"\$$var\"' at ${rel}:${seg_ln[$j]} (not scoped inside a subshell) with no non-empty/is-directory guard first — changes the script's own cwd unconditionally if mktemp failed, same failure class as GH-177"
             break
           fi
@@ -168,6 +193,6 @@ if [ "$FAIL" -gt 0 ]; then
   exit 1
 fi
 
-pass "audited ${#FILES[@]} .sh files under ${SCAN_DIRS[*]} — no unguarded mktemp-into-destructive-rm-rf pattern found"
+pass "audited ${#FILES[@]} shell scripts under ${SCAN_DIRS[*]} (*.sh + extensionless bash-shebang executables) — no unguarded mktemp-into-destructive-rm-rf pattern found"
 echo "  mktemp-trap-guard: $PASS passed, $FAIL failed"
 exit 0
