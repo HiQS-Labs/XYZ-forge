@@ -2,9 +2,9 @@
 gh_issue: 172
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/172
 title: Vendored harness root-semantics audit before Python-default cutover
-status: Active audit in fresh origin/main worktree — Phase 0 root/claim parity fixes landed and verified
+status: Phase 0 root/claim parity fixes landed and verified; Phase 1-4 marathon plan authored 2026-07-16, not yet fired
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-16
 owner: noel
 doc_type: bugfix
 complexity: 4
@@ -49,7 +49,68 @@ event log.
 
 | What was just completed | What's next |
 |---|---|
-| Recreated the missing GH-172 doc that `ROADMAP.md` already linked, then landed the first audit slice from a clean `origin/main` worktree: shared Python tick resolution/claim helpers, claim-before-launch in `utils/py/agy-turn.py` and Bash/Python `claude-turn`, vendored/root-split Claude cost capture, Python `poll.py` harness-tick fallback, and vendored regressions for both Bash and `XYZ_PYTHON=1`. Verified by `test/agy-turn.sh` 36/0, `test/claude-turn.sh` 34/0, `test/poll-driver.sh` 38/0, `test/marathon-drive.sh` 65/0, `test/relay-turn-timeout.sh` 9/0, `test/relay-pkg-freshness.sh` 3/0, plus `python3 -m py_compile` clean. | Finish the remaining audit/reporting pass: write the root contract into the durable consumer-facing docs if the current issue doc is not enough, then enumerate any remaining Bash/Python parity gaps and make the stable-Bash / Python-default cutover recommendation. |
+| Recreated the missing GH-172 doc that `ROADMAP.md` already linked, then landed the first audit slice from a clean `origin/main` worktree: shared Python tick resolution/claim helpers, claim-before-launch in `utils/py/agy-turn.py` and Bash/Python `claude-turn`, vendored/root-split Claude cost capture, Python `poll.py` harness-tick fallback, and vendored regressions for both Bash and `XYZ_PYTHON=1`. Verified by `test/agy-turn.sh` 36/0, `test/claude-turn.sh` 34/0, `test/poll-driver.sh` 38/0, `test/marathon-drive.sh` 65/0, `test/relay-turn-timeout.sh` 9/0, `test/relay-pkg-freshness.sh` 3/0, plus `python3 -m py_compile` clean. Moved this doc from `1-INBOX` to `2-WORKING` and authored a 4-phase marathon plan (Phases 1-4 below) covering the remainder of the issue's Bash/Python/test/cutover checklists. | Fire the marathon (`PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/MARATHON.yaml`) once `swarm-preflight.sh --gh-issue 172` reports ready. |
+
+## Phases (marathon 2026-07-16)
+
+Agy-turn.py/claude-turn (Bash+Python)/poll.py/codex-turn are already audited and fixed in Phase 0
+above — excluded from the phases below.
+
+- **Phase 1 — `gh172-bash-audit`**: audit remaining Bash entry points (`marathon-drive.sh`,
+  `relay-drive.sh`, `marathon-agent.sh`, `relay-turn-lib.sh`, `aider-turn.sh`, `consult.sh`,
+  `relay-loop.sh`, `watchdog.sh`, `runner.sh`, `swarm-preflight.sh`) against the root contract; fix
+  any real gap found. Findings written to `GH-172-BASH-AUDIT-FINDINGS.md` in the marathon folder.
+- **Phase 2 — `gh172-python-audit`** (depends on Phase 1): audit remaining Python paths
+  (`marathon_drive.py`, `relay_drive.py`, `rtl.py`, `aider-turn.py`, `consult.py`) for parity with the
+  hardened Bash behavior. Findings written to `GH-172-PYTHON-AUDIT-FINDINGS.md` in the marathon folder.
+- **Phase 3 — `gh172-vendored-e2e`** (depends on Phase 2): extend vendored `.xyz` E2E regression
+  coverage for the real `marathon-drive → relay-drive → shim` chain, both builder and reviewer legs,
+  in both Bash and `XYZ_PYTHON=1` modes.
+- **Phase 4 — `gh172-cutover-doc`** (depends on Phase 3): write the final root contract into durable
+  docs, list any remaining parity gap, and state explicitly whether it's safe to cut a stable Bash
+  branch and/or switch `main` to Python-default mode. Output: `GH-172-CUTOVER-RECOMMENDATION.md`.
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "path_absent", "path": "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-BASH-AUDIT-FINDINGS.md" },
+    { "type": "path_absent", "path": "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-PYTHON-AUDIT-FINDINGS.md" },
+    { "type": "path_absent", "path": "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-CUTOVER-RECOMMENDATION.md" }
+  ],
+  "artifacts": [
+    "relay-automation/marathon-drive.sh",
+    "relay-automation/relay-drive.sh",
+    "relay-automation/marathon-agent.sh",
+    "relay-automation/relay-turn-lib.sh",
+    "relay-automation/aider-turn.sh",
+    "relay-automation/consult.sh",
+    "relay-automation/relay-loop.sh",
+    "relay-automation/watchdog.sh",
+    "relay-automation/runner.sh",
+    "utils/swarm-preflight.sh",
+    "utils/py/marathon_drive.py",
+    "utils/py/relay_drive.py",
+    "utils/py/rtl.py",
+    "utils/py/aider-turn.py",
+    "utils/py/consult.py",
+    "test/marathon-drive.sh",
+    "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-BASH-AUDIT-FINDINGS.md",
+    "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-PYTHON-AUDIT-FINDINGS.md",
+    "PROJECT/2-WORKING/GH-172-VENDORED-ROOT-AUDIT.md",
+    "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-CUTOVER-RECOMMENDATION.md"
+  ],
+  "artifacts_new": [
+    "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-BASH-AUDIT-FINDINGS.md",
+    "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-PYTHON-AUDIT-FINDINGS.md",
+    "PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-CUTOVER-RECOMMENDATION.md"
+  ],
+  "remediation": { "source": "self#phases", "criteria": "Phases 1-4 in this doc's 'Phases (marathon 2026-07-16)' section" },
+  "lanes": { "agy_safe": [], "orchestrator_only": [ "relay-automation/relay-turn-lib.sh", "relay-automation/marathon-drive.sh", "utils/py/rtl.py", "utils/py/marathon_drive.py" ] }
+}
+```
 
 ## Root contract
 

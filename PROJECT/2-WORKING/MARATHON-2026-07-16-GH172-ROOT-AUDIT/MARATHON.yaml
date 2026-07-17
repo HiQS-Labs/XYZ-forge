@@ -1,0 +1,48 @@
+# MARATHON.yaml — 2026-07-16: GH-172 vendored harness root-semantics audit, remaining phases.
+#
+# Phase 0 (shared tick resolution, agy-turn.py claim guard, Bash/Python claude-turn ownership +
+# root-split cost capture, Python poll.py fallback) already landed and is verified — see the parent
+# capture doc's own Status table. This plan covers what's left: the rest of the Bash checklist, the
+# rest of the Python checklist, vendored E2E coverage, and the cutover-output write-up.
+#
+# Linear depends_on chain (not disjoint like the GH-213/209/203 plan): each phase's audit can surface
+# a fix that the next phase's parity check or the final cutover recommendation needs to account for.
+# Builder defaults to codex (GH-212); every phase's reviewer is agy (codex can't review itself).
+# relay-turn-lib.sh / marathon-drive.sh / rtl.py / marathon_drive.py are orchestrator_only lanes (see
+# the parent doc's Swarm Preflight Contract) — kernel-sensitive, not agy-safe to edit unsupervised.
+#
+# See the parent capture doc this plan bundles:
+#   PROJECT/2-WORKING/GH-172-VENDORED-ROOT-AUDIT.md
+
+name: gh172-root-audit
+phases:
+  - id: gh172-bash-audit
+    name: Bash entry-point root-contract audit (remaining checklist)
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/brief-gh172-bash-audit.md
+    artifact: relay-automation/marathon-drive.sh,relay-automation/relay-drive.sh,relay-automation/marathon-agent.sh,relay-automation/relay-turn-lib.sh,relay-automation/aider-turn.sh,relay-automation/consult.sh,relay-automation/relay-loop.sh,relay-automation/watchdog.sh,relay-automation/runner.sh,utils/swarm-preflight.sh,PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-BASH-AUDIT-FINDINGS.md
+    max_review_rounds: 2
+
+  - id: gh172-python-audit
+    name: Python entry-point parity audit (remaining checklist)
+    reviewer: agy
+    depends_on: gh172-bash-audit
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/brief-gh172-python-audit.md
+    artifact: utils/py/marathon_drive.py,utils/py/relay_drive.py,utils/py/rtl.py,utils/py/aider-turn.py,utils/py/consult.py,PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-PYTHON-AUDIT-FINDINGS.md
+    max_review_rounds: 2
+
+  - id: gh172-vendored-e2e
+    name: Vendored .xyz E2E regression coverage (Bash + XYZ_PYTHON=1)
+    reviewer: agy
+    depends_on: gh172-python-audit
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/brief-gh172-vendored-e2e.md
+    artifact: test/marathon-drive.sh
+    max_review_rounds: 2
+
+  - id: gh172-cutover-doc
+    name: Root contract write-up + Bash/Python-default cutover recommendation
+    reviewer: agy
+    depends_on: gh172-vendored-e2e
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/brief-gh172-cutover-doc.md
+    artifact: PROJECT/2-WORKING/GH-172-VENDORED-ROOT-AUDIT.md,PROJECT/2-WORKING/MARATHON-2026-07-16-GH172-ROOT-AUDIT/GH-172-CUTOVER-RECOMMENDATION.md
+    max_review_rounds: 2
