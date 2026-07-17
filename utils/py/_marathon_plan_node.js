@@ -16,14 +16,8 @@ const SP_CMD = E.QP_SP_CMD || "utils/swarm-preflight.sh";
 const MD_CMD = E.QP_MD_CMD || "relay-automation/marathon-drive.sh";
 const MP_CMD = E.QP_MP_CMD || "utils/marathon-plan.sh";
 const BASE_FILES_FILE = E.QP_BASE_FILES_FILE || "";
-
-// ── kernel write-set: the serialization bottleneck (QUEUE-2026-06-27 "the one safety rule") ──
-const KERNEL_PATHS = [
-  "relay-automation/relay-turn-lib.sh",
-  "bin/tick",
-  "relay-automation/relay-drive.sh",
-];
-const SHIM_RE = /relay-automation\/[a-z0-9-]+-turn\.sh$|relay-automation\/consult\.sh$/i;
+const UTILS_DIR = E.QP_UTILS_DIR || path.resolve(__dirname, "..");
+const EXPLICIT_ZONES_CONFIG = E.QP_ZONES_CONFIG || "";
 
 // Ledger sections we sequence from vs. only reference.
 const SECTIONS = ["Queue / parked intake", "In progress", "Completed", "Deferred · vision"];
@@ -32,6 +26,104 @@ const KNOWN_EMOJI = ["🟢", "🟡", "⏸️", "⛔", "✅", "🔮", "🔲", "�
 // ── tiny readers ─────────────────────────────────────────────────────────────
 function readFileSafe(p) { try { return fs.readFileSync(p, "utf8"); } catch { return null; } }
 function existsAt(rel, base) { try { return fs.existsSync(path.resolve(base || ROOT, rel)); } catch { return false; } }
+function readJsonOrThrow(absPath, label) {
+  let raw;
+  try { raw = fs.readFileSync(absPath, "utf8"); }
+  catch (e) { throw new Error(`${label}: cannot read ${absPath}: ${e.message}`); }
+  try { return JSON.parse(raw); }
+  catch (e) { throw new Error(`${label}: invalid JSON in ${absPath}: ${e.message}`); }
+}
+function compileZoneConfig(raw, sourcePath) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`zones config must be an object (${sourcePath})`);
+  }
+  if (!Array.isArray(raw.zones)) {
+    throw new Error(`zones config missing zones[] (${sourcePath})`);
+  }
+  if (!raw.defaultZone || typeof raw.defaultZone !== "object" || Array.isArray(raw.defaultZone) || typeof raw.defaultZone.name !== "string" || raw.defaultZone.name.trim() === "") {
+    throw new Error(`zones config missing defaultZone.name (${sourcePath})`);
+  }
+  const names = new Set();
+  const zones = raw.zones.map((zone, idx) => {
+    if (!zone || typeof zone !== "object" || Array.isArray(zone)) {
+      throw new Error(`zones[${idx}] must be an object (${sourcePath})`);
+    }
+    if (typeof zone.name !== "string" || zone.name.trim() === "") {
+      throw new Error(`zones[${idx}] missing name (${sourcePath})`);
+    }
+    if (names.has(zone.name)) {
+      throw new Error(`duplicate zone name '${zone.name}' (${sourcePath})`);
+    }
+    names.add(zone.name);
+    let pathRegex = null;
+    let inferKeywordRegex = null;
+    if (zone.pathRegex != null) {
+      try { pathRegex = new RegExp(zone.pathRegex, zone.pathRegexCaseInsensitive ? "i" : ""); }
+      catch (e) { throw new Error(`zones[${idx}] invalid pathRegex '${zone.pathRegex}' (${sourcePath}): ${e.message}`); }
+    }
+    if (zone.inferKeywordRegex != null) {
+      try { inferKeywordRegex = new RegExp(zone.inferKeywordRegex); }
+      catch (e) { throw new Error(`zones[${idx}] invalid inferKeywordRegex '${zone.inferKeywordRegex}' (${sourcePath}): ${e.message}`); }
+    }
+    return {
+      name: zone.name,
+      pathPrefixes: Array.isArray(zone.pathPrefixes) ? zone.pathPrefixes.slice() : [],
+      pathRegex,
+      inferKeywordRegex,
+      maxPerWave: Number.isInteger(zone.maxPerWave) ? zone.maxPerWave : null,
+      penalty: Number.isFinite(Number(zone.penalty)) ? Number(zone.penalty) : 0,
+      conservativeWhenInferred: zone.conservativeWhenInferred === true,
+      escalateOrchestratorOnly: zone.escalateOrchestratorOnly === true,
+    };
+  });
+  if (names.has(raw.defaultZone.name)) {
+    throw new Error(`defaultZone.name '${raw.defaultZone.name}' duplicates a named zone (${sourcePath})`);
+  }
+  return {
+    sourcePath,
+    zones,
+    defaultZone: {
+      name: raw.defaultZone.name,
+      penalty: Number.isFinite(Number(raw.defaultZone.penalty)) ? Number(raw.defaultZone.penalty) : 0,
+      maxPerWave: Number.isInteger(raw.defaultZone.maxPerWave) ? raw.defaultZone.maxPerWave : null,
+      conservativeWhenInferred: raw.defaultZone.conservativeWhenInferred === true,
+      escalateOrchestratorOnly: raw.defaultZone.escalateOrchestratorOnly === true,
+      pathPrefixes: [],
+      pathRegex: null,
+      inferKeywordRegex: null,
+    },
+  };
+}
+function resolveZoneConfig() {
+  const explicit = EXPLICIT_ZONES_CONFIG ? path.resolve(process.cwd(), EXPLICIT_ZONES_CONFIG) : "";
+  if (explicit) return compileZoneConfig(readJsonOrThrow(explicit, "--zones-config"), explicit);
+  if (process.env.QUEUE_PLAN_ZONES_FILE) {
+    const envPath = path.resolve(process.cwd(), process.env.QUEUE_PLAN_ZONES_FILE);
+    return compileZoneConfig(readJsonOrThrow(envPath, "QUEUE_PLAN_ZONES_FILE"), envPath);
+  }
+  const rootLocal = path.join(ROOT, ".marathon-plan-zones.json");
+  if (fs.existsSync(rootLocal)) return compileZoneConfig(readJsonOrThrow(rootLocal, rootLocal), rootLocal);
+  const builtin = path.join(UTILS_DIR, "marathon-plan-zones.default.json");
+  return compileZoneConfig(readJsonOrThrow(builtin, "built-in zones config"), builtin);
+}
+function zoneByName(cfg, name) {
+  return cfg.zones.find((z) => z.name === name) || (cfg.defaultZone.name === name ? cfg.defaultZone : null);
+}
+function zoneRank(cfg, name) {
+  const idx = cfg.zones.findIndex((z) => z.name === name);
+  return idx >= 0 ? idx : cfg.zones.length;
+}
+function zoneMatchesPath(zone, artifactPath) {
+  if (zone.pathPrefixes.some((prefix) => artifactPath === prefix || artifactPath.startsWith(prefix))) return true;
+  if (zone.pathRegex && zone.pathRegex.test(artifactPath)) return true;
+  return false;
+}
+let ZONES;
+try { ZONES = resolveZoneConfig(); }
+catch (e) {
+  process.stderr.write(`marathon-plan: ${e.message}\n`);
+  process.exit(3);
+}
 
 // Check if file existed at a given ref (to identify net-new artifacts).
 // Hermetic test seam: if BASE_FILES_FILE is set, read it as a list of existing base paths.
@@ -225,24 +317,23 @@ function zoneOf(contract, item) {
   if (contract && Array.isArray(contract.artifacts)) {
     const arts = contract.artifacts;
     const orchOnly = (contract.lanes && contract.lanes.orchestrator_only) || [];
-    // Zone is derived from the WRITE-SET (artifacts) only. orchestrator_only is a guardrail — paths the
-    // lane must NOT touch — so it never adds to the write-set; it only reclassifies an artifact that
-    // falls UNDER an orchestrator_only prefix as kernel-owned. (Unioning it in wrongly serialized any
-    // shim whose contract merely names relay-turn-lib.sh as off-limits.)
-    const touchesKernel = arts.some(
-      (a) => KERNEL_PATHS.some((k) => a === k || a.startsWith(k)) ||
-             orchOnly.some((o) => a === o || a.startsWith(o))
-    );
-    if (touchesKernel) return { zone: "kernel", inferred: false, writeset: arts };
-    if (arts.some((a) => SHIM_RE.test(a))) return { zone: "shim", inferred: false, writeset: arts };
-    return { zone: "independent", inferred: false, writeset: arts };
+    for (const zone of ZONES.zones) {
+      if (!zone.escalateOrchestratorOnly) continue;
+      const touchesOrchOnly = arts.some((a) => orchOnly.some((o) => a === o || a.startsWith(o)));
+      if (touchesOrchOnly) return { zone: zone.name, inferred: false, writeset: arts, zoneRule: zone };
+    }
+    for (const zone of ZONES.zones) {
+      if (arts.some((a) => zoneMatchesPath(zone, a))) return { zone: zone.name, inferred: false, writeset: arts, zoneRule: zone };
+    }
+    return { zone: ZONES.defaultZone.name, inferred: false, writeset: arts, zoneRule: ZONES.defaultZone };
   }
   const hay = (item.title + " " + item.raw).toLowerCase();
-  if (/relay-turn-lib|containment kernel|bin\/tick|relay-drive|commit semantics|epoch fenc/.test(hay))
-    return { zone: "kernel", inferred: true, writeset: [] };
-  if (/-turn\.sh|consult\.sh|\bshim\b/.test(hay))
-    return { zone: "shim", inferred: true, writeset: [] };
-  return { zone: "independent", inferred: true, writeset: [] };
+  for (const zone of ZONES.zones) {
+    if (zone.inferKeywordRegex && zone.inferKeywordRegex.test(hay)) {
+      return { zone: zone.name, inferred: true, writeset: [], zoneRule: zone };
+    }
+  }
+  return { zone: ZONES.defaultZone.name, inferred: true, writeset: [], zoneRule: ZONES.defaultZone };
 }
 function depsOf(item) {
   const deps = new Set();
@@ -337,7 +428,7 @@ for (const item of ledger) {
   const rec = {
     title: item.title, section: item.section, emoji: item.status, raw: item.raw,
     gh, docRel, docExists, slug, ratings, rated, ratingsExempt, contract,
-    zone: z.zone, zoneInferred: z.inferred, writeset: z.writeset,
+    zone: z.zone, zoneInferred: z.inferred, writeset: z.writeset, zoneRule: z.zoneRule,
     deps: depsOf(item), goGated: isGoGated(item), suggestedBranch,
     flags: [], signals: [], state: null, score: null, wave: null, ghState: null,
   };
@@ -513,13 +604,13 @@ while (depChanged) {
 const W = { eff: 2, cx: 1, risk: 2, dep: 3, zone: 1 };
 const RISK_SIGN = POLICY === "derisk-first" ? -1 : 1;
 const RISK_W = POLICY === "derisk-first" ? 4 : W.risk;
-const ZONE_PEN = { independent: 0, shim: 1, kernel: 2 };
 function scoreOf(r) {
   // Held-but-scored (gated) items get the GO penalty so they sort after active work but keep a
   // sensible relative order. Only items with full ratings are scored; others are held out.
   if (!r.rated) return null;
   let s = W.eff * r.ratings.effort + W.cx * r.ratings.complexity + RISK_SIGN * RISK_W * r.ratings.risk;
-  s += W.dep * r.deps.length + W.zone * ZONE_PEN[r.zone];
+  const zonePenalty = r.zoneRule && Number.isFinite(r.zoneRule.penalty) ? r.zoneRule.penalty : 0;
+  s += W.dep * r.deps.length + W.zone * zonePenalty;
   if (r.state === "gated") s += 100;
   return s;
 }
@@ -529,8 +620,8 @@ for (const r of deduped) r.score = scoreOf(r);
 const active = deduped.filter((r) => r.state === "ready").sort((a, b) => {
   if (a.score !== b.score) return a.score - b.score;
   if (a.deps.length !== b.deps.length) return a.deps.length - b.deps.length;
-  const zr = { independent: 0, shim: 1, kernel: 2 };
-  if (zr[a.zone] !== zr[b.zone]) return zr[a.zone] - zr[b.zone];
+  const za = zoneRank(ZONES, a.zone), zb = zoneRank(ZONES, b.zone);
+  if (za !== zb) return za - zb;
   if ((a.gh || 1e9) !== (b.gh || 1e9)) return (a.gh || 1e9) - (b.gh || 1e9);
   return a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0;
 });
@@ -542,7 +633,7 @@ let guard = 0;
 while (pending.length && guard++ < 100) {
   const wave = [];
   const waveWriteset = new Set();
-  let kernelTaken = false;
+  const waveZoneCounts = new Map();
   const deferred = [];
   for (const r of pending) {
     // dependency: a dep is satisfied only if it is genuinely resolved (done/landed/closed/out-of-scope)
@@ -554,13 +645,13 @@ while (pending.length && guard++ < 100) {
       return !placedIssue.has(d);
     });
     const collides = r.writeset.some((p) => waveWriteset.has(p));
-    const kernelClash = r.zone === "kernel" && kernelTaken;
-    // zone-inferred shim items (no proven write-set) conservatively can't share a wave with another shim.
-    const inferredShimClash = r.zone === "shim" && r.zoneInferred && wave.some((w) => w.zone === "shim");
-    if (depUnmet || collides || kernelClash || inferredShimClash) { deferred.push(r); continue; }
+    const cap = r.zoneRule && Number.isInteger(r.zoneRule.maxPerWave) ? r.zoneRule.maxPerWave : null;
+    const zoneCapClash = cap != null && (waveZoneCounts.get(r.zone) || 0) >= cap;
+    const inferredZoneClash = !!(r.zoneRule && r.zoneRule.conservativeWhenInferred && r.zoneInferred && wave.some((w) => w.zone === r.zone));
+    if (depUnmet || collides || zoneCapClash || inferredZoneClash) { deferred.push(r); continue; }
     wave.push(r);
     r.writeset.forEach((p) => waveWriteset.add(p));
-    if (r.zone === "kernel") kernelTaken = true;
+    waveZoneCounts.set(r.zone, (waveZoneCounts.get(r.zone) || 0) + 1);
   }
   if (wave.length === 0) { // unbreakable dep cycle / all deferred — flush remainder to its own wave
     waves.push(deferred); deferred.forEach((r) => { if (r.gh != null) placedIssue.set(r.gh, waves.length - 1); });
@@ -637,6 +728,9 @@ function cell(v) { return String(v == null ? "—" : v); }
 // Ratings are integers 1 (low) .. 5 (highest); render the number, or — when unrated.
 const ratingNum = (n) => (n >= 1 && n <= 5 ? String(n) : "—");
 function renderQueueDoc() {
+  const zoneRows = [...ZONES.zones, ZONES.defaultZone];
+  const cappedZones = zoneRows.filter((z) => Number.isInteger(z.maxPerWave));
+  const capSummary = cappedZones.length ? cappedZones.map((z) => `${z.name}≤${z.maxPerWave}/wave`).join(", ") : "none";
   const o = [];
   o.push("---");
   o.push("title: Marathon Plan — ranked, freshness-validated, collision-aware queue");
@@ -672,18 +766,22 @@ function renderQueueDoc() {
   o.push("");
   o.push("## The one safety rule");
   o.push("");
-  o.push("Two lanes are safe to run concurrently **iff their write-sets are disjoint**. The kernel");
-  o.push("(`relay-automation/relay-turn-lib.sh`, `bin/tick`, `relay-automation/relay-drive.sh`) is the");
-  o.push("serialization bottleneck: **at most one kernel lane per wave**, even in separate worktrees.");
+  o.push("Two lanes are safe to run concurrently **iff their write-sets are disjoint** and their zone");
+  o.push(`caps are respected. Current caps: ${capSummary}.`);
   o.push("");
   o.push("## Collision map");
   o.push("");
   o.push("| Zone | Parallel-safe? | Active items here |");
   o.push("|---|---|---|");
-  for (const zone of ["kernel", "shim", "independent"]) {
-    const items = active.filter((r) => r.zone === zone).map((r) => r.gh ? `#${r.gh}` : r.slug);
-    const safe = zone === "kernel" ? "❌ serialize — one at a time" : "✅ one lane per file";
-    o.push(`| ${zone} | ${safe} | ${items.length ? items.join(", ") : "—"} |`);
+  for (const zone of zoneRows) {
+    const items = active.filter((r) => r.zone === zone.name).map((r) => r.gh ? `#${r.gh}` : r.slug);
+    let safe = "✅ one lane per file";
+    if (Number.isInteger(zone.maxPerWave)) {
+      safe = zone.maxPerWave === 1 ? "❌ serialize — one at a time" : `❌ cap ${zone.maxPerWave} per wave`;
+    } else if (zone.conservativeWhenInferred) {
+      safe = "✅ one lane per file (serialize when inferred)";
+    }
+    o.push(`| ${zone.name} | ${safe} | ${items.length ? items.join(", ") : "—"} |`);
   }
   o.push("");
   o.push("## Per-item scoring");
@@ -766,7 +864,7 @@ function renderQueueDoc() {
   o.push("```");
   o.push("");
   o.push("- **Lane scoping:** give each lane an `ALLOW_PATHS` matching only its zone above.");
-  o.push("- **Never** run two kernel lanes at once, even in separate worktrees.");
+  o.push("- If the lane's allowlist includes filesystem-touching `test/*.sh`, treat those tests as read-only specs in-turn; the outer harness gate verifies them after the turn, outside the isolated worktree.");
   o.push("");
   o.push("---");
   o.push("");

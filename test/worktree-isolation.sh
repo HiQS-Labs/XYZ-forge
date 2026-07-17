@@ -110,7 +110,9 @@ before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-noiso good 0; rc=$?
 [ "$rc" -eq 0 ] && pass "non-isolated good turn exits 0 (unchanged path)" || fail "non-isolated rc=$rc"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "non-isolated turn committed normally" || fail "expected a commit"
-# clean up the async file the non-isolated turn legitimately produced in ROOT (known gap, not tested here)
+# Let the deliberate t+1s async write land before cleanup; otherwise it can race into case (6) and
+# look like a worktree-isolation regression even though the moved-HEAD path is fine.
+sleep 2
 rm -f "$A/offlane-async.txt"
 
 # --- (6) isolation ON + a concurrent ROOT commit DURING the turn: PRESERVE it, don't reset+fail ----

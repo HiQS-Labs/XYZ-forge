@@ -50,6 +50,14 @@ run_qp() {
     bash "$QP" "$@"
 }
 
+# run_qp_py <root> [args...]
+run_qp_py() {
+  local root="$1"; shift
+  QUEUE_PLAN_ROOT="$root" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
+    QUEUE_PLAN_GH_STATE_FILE="$root/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$root/.branches" \
+    XYZ_PYTHON=1 bash "$QP" "$@"
+}
+
 # wave_of <queue-doc> <issue-number> → wave number containing #N (empty if not waved)
 wave_of() {
   grep -E '^\*\*Wave ' "$1" | grep -E "#$2([^0-9]|\$)" | sed -E 's/^\*\*Wave ([0-9]+).*/\1/' | head -1
@@ -592,6 +600,63 @@ if ! grep -q "unrated.*GH-111" <<<"$out" && [[ "$(wave_of "$doc" 111)" == "1" ]]
 else
   fail "S: docOf chose the distractor PROJECT doc (out=$(grep -E 'unrated.*GH-111|needs-contract.*GH-111' <<<\"$out\" | head -1) wave=$(wave_of \"$doc\" 111))"
 fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario T — GH-154: XYZ_PYTHON=1 matches the shell path for an explicit zones config
+# ─────────────────────────────────────────────────────────────────────────────
+T="$WORK/T"; mkdir -p "$T"; echo '{}' >"$T/.gh-state.json"; : >"$T/.branches"
+mk_doc "$T" GH-1200-helpera.md 2 2 2 "$(contract_for MISS_TA scripts/apple_reminders_helper_app.swift)"
+mk_doc "$T" GH-1201-helperb.md 2 2 2 "$(contract_for MISS_TB scripts/apple_reminders_helper_app.swift/entitlements.plist)"
+mk_doc "$T" GH-1202-turn.md    2 2 2 "$(contract_for MISS_TT relay-automation/agy-turn.sh)"
+mk_doc "$T" GH-1203-orch.md    2 2 2 '{"target":{"repo":".","ref":"main"},"gate":"true","fix_probes":[{"type":"path_absent","path":"MISS_TO"}],"artifacts":["src/worker.js"],"lanes":{"orchestrator_only":["src/"]}}'
+cat >"$T/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-1200 · helper a** 🆕 — → [d](PROJECT/2-WORKING/GH-1200-helpera.md) · [#1200](https://github.com/o/r/issues/1200)
+- **GH-1201 · helper b** 🆕 — → [d](PROJECT/2-WORKING/GH-1201-helperb.md) · [#1201](https://github.com/o/r/issues/1201)
+- **GH-1202 · turn shim** 🆕 — → [d](PROJECT/2-WORKING/GH-1202-turn.md) · [#1202](https://github.com/o/r/issues/1202)
+- **GH-1203 · orch escalation** 🆕 — → [d](PROJECT/2-WORKING/GH-1203-orch.md) · [#1203](https://github.com/o/r/issues/1203)
+EOF
+cat >"$T/foreign-zones.json" <<'EOF'
+{
+  "zones": [
+    {
+      "name": "review-gate",
+      "pathPrefixes": ["bin/review"],
+      "maxPerWave": 1,
+      "penalty": 2,
+      "escalateOrchestratorOnly": true
+    },
+    {
+      "name": "signed-helper",
+      "pathPrefixes": ["scripts/apple_reminders_helper_app.swift"],
+      "maxPerWave": 1,
+      "penalty": 2
+    },
+    {
+      "name": "turn-shim",
+      "pathRegex": "RELAY-AUTOMATION/AGY-TURN\\.SH$",
+      "pathRegexCaseInsensitive": true,
+      "inferKeywordRegex": "agy-turn\\.sh",
+      "conservativeWhenInferred": true,
+      "penalty": 1
+    }
+  ],
+  "defaultZone": { "name": "independent", "penalty": 0 }
+}
+EOF
+shell_out="$(run_qp "$T" --dry-run --zones-config "$T/foreign-zones.json" 2>/dev/null)"; rc_shell=$?
+py_out="$(run_qp_py "$T" --dry-run --zones-config "$T/foreign-zones.json" 2>/dev/null)"; rc_py=$?
+[[ $rc_shell -eq 0 && $rc_py -eq 0 && "$shell_out" == "$py_out" ]] \
+  && pass "T: explicit zones dry-run output matches between shell and XYZ_PYTHON=1 [GH-154]" \
+  || fail "T: explicit zones dry-run mismatch (shell=$rc_shell py=$rc_py)"
+run_qp "$T" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+cp "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" "$T/shell.md"
+run_qp_py "$T" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+cmp -s "$T/shell.md" "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" \
+  && pass "T: rendered MARATHON-PLAN doc matches between shell and XYZ_PYTHON=1 [GH-154]" \
+  || fail "T: rendered MARATHON-PLAN doc drifted between shell and XYZ_PYTHON=1"
 
 echo
 echo "  marathon-plan: $PASS passed, $FAIL failed"

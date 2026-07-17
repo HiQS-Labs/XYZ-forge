@@ -35,7 +35,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Confirmed live 2026-07-16: `utils/marathon-plan.sh` has 8 references to the GH-48 zone model (`QP_ZONES_CONFIG`, `compileZoneConfig`); `utils/py/_marathon_plan_node.js` has 0 — it still hardcodes a `KERNEL_PATHS` const (line 21, used line 233), pre-GH-48 logic. No parity test exists in `test/marathon-plan.sh` (0 matches for `XYZ_PYTHON`/`parity`). | Port the zone-model logic into `_marathon_plan_node.js`, then add a parity assertion so `XYZ_PYTHON=1 bash test/marathon-plan.sh` (or a dedicated case) exercises zone-scoped scenarios identically to the shell path. |
+| **Fixed and verified 2026-07-17** via the GH208-154-149-198 marathon (codex builder, agy reviewer, Approved). Ported `compileZoneConfig`/`QP_ZONES_CONFIG`/`QUEUE_PLAN_ZONES_FILE` into `utils/py/_marathon_plan_node.js` (confirmed present, matching the shell path). Also had to teach `utils/marathon-plan.sh`'s `XYZ_PYTHON=1` dispatcher to translate a `--zones-config PATH` CLI flag into the `QUEUE_PLAN_ZONES_FILE` env var before exec'ing `utils/py/marathon_plan.py` (a Python subprocess wrapper around the same `_marathon_plan_node.js`), so the flag survives the shell→Python→Node handoff. Two new parity assertions in `test/marathon-plan.sh`: "explicit zones dry-run output matches between shell and XYZ_PYTHON=1" and "rendered MARATHON-PLAN doc matches between shell and XYZ_PYTHON=1". Full `bash test/marathon-plan.sh`: 60/60 (up from 58). | Closed out — nothing further for this lane. GH-110 P3a (heredoc extraction) is now unblocked. |
 
 ## Findings
 
@@ -49,13 +49,13 @@ would get materially different (wrong) marathon-plan output than the shell path.
 
 ### Checklist
 
-- [ ] Port `compileZoneConfig` and `QP_ZONES_CONFIG`/`EXPLICIT_ZONES_CONFIG` handling from
-      `utils/marathon-plan.sh` into `utils/py/_marathon_plan_node.js`, replacing the hardcoded
-      `KERNEL_PATHS` list where the shell path would have used the zone model
-- [ ] Add a parity test case (in `test/marathon-plan.sh` or a new `test/marathon-plan-parity.sh`)
-      that runs an explicit-zones scenario through both the shell and `XYZ_PYTHON=1` paths and
-      asserts matching output
-- [ ] Full `bash test/marathon-plan.sh` still green, no regression to existing 58 assertions
+- [x] Ported `compileZoneConfig` and `QP_ZONES_CONFIG`/`EXPLICIT_ZONES_CONFIG` handling from
+      `utils/marathon-plan.sh` into `utils/py/_marathon_plan_node.js` (also wired
+      `--zones-config` → `QUEUE_PLAN_ZONES_FILE` through `utils/marathon-plan.sh`'s
+      `XYZ_PYTHON=1` dispatcher so the flag reaches the Node script via the Python wrapper)
+- [x] Added 2 parity test cases in `test/marathon-plan.sh` (explicit-zones dry-run output,
+      rendered MARATHON-PLAN doc) asserting shell and `XYZ_PYTHON=1` paths match
+- [x] Full `bash test/marathon-plan.sh` green: 60/60 (58 existing + 2 new)
 
 ### QA checklist — Phase 0
 
