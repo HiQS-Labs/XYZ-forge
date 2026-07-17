@@ -16,6 +16,9 @@ The "trinity" is:
 2. `skills/<skill-name>/SKILL.md` - the runtime instructions
 3. `skills/<skill-name>/scripts/*.py` - deterministic helpers
 
+Only emit installed-skill inventories when the user explicitly asks for them. The optional frontier
+environment export writes snapshots into repo-local `temp/`; do not generate those files on your own.
+
 ## When to use it
 
 - A skill folder has only an empty `PROJECT.md` or a partial scaffold.
@@ -41,6 +44,9 @@ The "trinity" is:
 4. Validate before claiming the scaffold is done.
    Run `scripts/validate_trinity.py` and `python3 -m py_compile` on the helper scripts. If the working
    doc changed, also run the relevant PDDA checks.
+5. Export frontier-environment inventories only on demand.
+   When the user explicitly asks for installed skill files across the frontier environments, run the
+   bundled inventory exporter instead of improvising shell commands or browsing the desktop.
 
 ## Bundled scripts
 
@@ -51,6 +57,9 @@ The "trinity" is:
   plus starter Python helpers for a target repo-local skill.
 - `scripts/validate_trinity.py`
   Checks that the working doc, pointer file, `SKILL.md`, and Python helpers are present and structurally aligned.
+- `scripts/export_frontier_skill_inventory.py`
+  Writes the current Claude/Codex/Antigravity installed-skill file inventory into repo-local `temp/` when
+  the user explicitly asks for that snapshot.
 
 ## Suggested commands
 
@@ -78,6 +87,11 @@ python3 skills/skill-sync-trinity/scripts/validate_trinity.py \
   --working-doc PROJECT/2-WORKING/MY-SKILL.md
 ```
 
+```bash
+python3 skills/skill-sync-trinity/scripts/export_frontier_skill_inventory.py \
+  --output-dir temp/frontier-skill-inventory
+```
+
 ## Output contract
 
 - One canonical working doc in `PROJECT/2-WORKING/`
@@ -87,3 +101,10 @@ python3 skills/skill-sync-trinity/scripts/validate_trinity.py \
 
 If any of those four surfaces disagree, fix the canonical working doc first, then reconcile the
 skill and scripts to match it.
+
+For frontier-environment inventory output, the output contract is:
+
+- one timestamped bundle under repo-local `temp/frontier-skill-inventory/`
+- one `inventory.json` structured snapshot
+- one `README.md` human summary
+- one `<environment>-files.txt` listing per frontier environment
