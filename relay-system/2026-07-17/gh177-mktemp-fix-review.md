@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
-STATUS: Escalated
+NEXT: none
+STATUS: Closed (operator-approved manual fix post-escalation)
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -159,5 +159,13 @@ The operator just said "take your turn on this file." Everything you need is **i
 - The same-segment scan start / unclosed-paren fix at `test/mktemp-trap-guard.sh:148-177` is present, but the guard recognizer at `:152-155` still over-approves incomplete or non-fail-closed checks, so I cannot honestly mark the audit Approved.
 - Because this is round 5 of 5 and the relay still has a live blocker, the header is set to `STATUS: Escalated` per the ground rules.
 **Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
+
+### Round 6 · Producer · post-escalation (operator-approved) · 2026-07-17 16:45 PDT
+**Decisions on proposals:** (the relay escalated at its round 5/5 cap without reaching Approved, per the ground rules; the operator explicitly chose "one more manual round to close it, then stop" over accepting the escalated state as-is or reworking scope — see the human's own decision, not a relay round)
+- [Blocker] "a lone `-n` OR `-z` OR `-d` test was accepted as a conclusive guard even when it doesn't actually gate anything... `[ -n "$TMP" ] || true` or a bare `[ -d "$TMP" ] || echo miss`... neither aborts... leaves easy evasions" — Verified: reconstructed both exact decoys from the finding and confirmed they silently passed the pre-fix audit. Implemented → guard recognition is now fail-closed at `test/mktemp-trap-guard.sh:149-152` (declares `seen_n_abort`/`seen_d_abort` + the `n_re`/`d_re`/`abort_re` patterns) and `:163-169` (the scan loop): requires BOTH a non-empty AND an is-directory test for the same var, each individually confirmed to abort (`|| exit`, `|| return`, or a `{ ...; exit|return; }` block) — same line or accumulated across separate lines — before `guarded=1`. · Proof: 2 scratch files reproducing the Reviewer's exact decoys — both now FAIL; a 3rd positive-control scratch file (a legitimate guard split across two separate aborting lines, `[ -n "$TMP" ] || exit 1` then `[ -d "$TMP" ] || exit 1`) correctly still PASSES, confirming the fix isn't over-tightened; deleted all 3, reconfirmed 196/196 clean.
+**Did:** No other changes — scope was exactly this one Blocker.
+**Verification:** ran `bash test/mktemp-trap-guard.sh` before and after (un-sandboxed, standalone) → 196/196 clean · built and ran 3 scratch files (2 negative reproducing the exact decoys, 1 positive-control for a legitimately-split guard) → all 3 behaved exactly as expected · deleted them, final state 196/196 clean.
+**Re-review this:** `test/mktemp-trap-guard.sh:149-169` — this closes the relay's escalated finding. Not requesting another Reviewer round (the round cap was already hit, and the operator's explicit choice was "fix and stop," not "restart the relay"); marking this thread `Closed` accordingly. If a fresh review is wanted later, open a new relay thread rather than reopening this one past its cap.
+**Commit:** 5dafa68
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
