@@ -81,3 +81,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH208-WORKTREE-ISOLATION-RACE-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh208-154-149-198-issue-sweep--gh208-worktree-isolation-race/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Files touched: `test/worktree-isolation.sh`
+
+Root cause found: the flaky `rc=6` was not a `rtl_worktree_end`/moved-HEAD regression. Case (5) intentionally launches a background `sleep 1; > offlane-async.txt` in ROOT on the non-isolated path, and the test tried to `rm -f` that file immediately. When the remove ran before the background write landed, the delayed `offlane-async.txt` appeared during case (6), `rtl_enforce` correctly treated it as a fresh off-allowlist ROOT edit, and the moved-HEAD assertion failed for the wrong reason.
+
+Decision: left `relay-automation/relay-turn-lib.sh` unchanged and hardened the test instead. Case (5) now waits for the deliberate async writer window to pass before removing `offlane-async.txt`, so case (6) starts from a clean ROOT and measures the GH-13/#14 preserve path rather than inherited noise from the previous case.
+
+Verification: ran `bash test/worktree-isolation.sh` 5 times in a row; all 5 passed (`31 pass, 0 fail` each run).
