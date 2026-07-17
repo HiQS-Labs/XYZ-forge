@@ -2,8 +2,8 @@
 gh_issue: 189
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/189
 title: "PDDA: sweeping a doc to 3-COMPLETED silences the only issue-state check watching it — shipped items can sit in ROADMAP as 'ready to fire' indefinitely"
-status: captured 2026-07-08, rated; promoted to 2-WORKING 2026-07-17 (surfaced by a /10days
-  3-week bug sweep — no fix had landed), Swarm Preflight Contract added
+status: Fixed and verified 2026-07-17 via a marathon lane, merged to `development`. Surfaced 48
+  stale 3-COMPLETED docs + 15 real ROADMAP/issue-state mismatches as new findings (not fixed here).
 created: 2026-07-08
 updated: 2026-07-17
 owner: noel
@@ -32,7 +32,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-08 while reconciling Marathon Plan C. The operator asked to extract Plan C's `#107` kernel track and build it standalone; verifying it was actually unbuilt revealed the opposite — all six lanes plus the kernel track had shipped 2026-07-04, yet `ROADMAP.md` still advertised them as unfired and `pdda.sh run` passed clean throughout. Root-caused to a scan-scope gap, not a logic bug. Re-surfaced 2026-07-17 by a `/10days` 3-week bug sweep: confirmed both `check_roadmap_issue_state` and a completed-docs scan in `check_issue_doc_sync` are still absent from `utils/pdda/pdda.sh`/`pdda-lib.sh`, and no commit references #189 — promoted to `2-WORKING`, Swarm Preflight Contract added, `swarm-preflight.sh --gh-issue 189 --dry-run` confirmed **ready** (exit 0). | Build: the two checks below. |
+| **Fixed and verified 2026-07-17** via a marathon lane (worktree-isolated Sonnet subagent). Added `check_roadmap_issue_state()` (new, registered as `pdda-check-roadmap-issue-state`, reuses the existing `_pdda_issue_state_table` resolver) and a new direction (c) in `check_issue_doc_sync()` scanning `3-COMPLETED` via a new `pdda_list_completed_docs()` helper (mirrors `pdda_list_working_docs()`). Both warn-only, both degrade to INFO offline. 7 new assertions in `test/pdda-roadmap-coverage.sh` (all 10 pass). Independently re-verified on the marathon branch: `bash validate.sh` 113/114 (only pre-existing tracked `acorn-extract.sh`/`worktree-isolation.sh` environmental reds); ran the new checks against this repo's own real docs — genuinely found 48 stale `3-COMPLETED` status words and 15 real ROADMAP/issue-state mismatches (not false positives; spot-checked #211: ledger says ✅ SHIPPED, issue is actually still OPEN — filed as a follow-up). | Closed out — nothing further for this lane. Follow-up: reconcile the 48+15 newly-surfaced drift findings (separate cleanup pass, not part of this lane). |
 
 ## Problem (grounded in the current code)
 

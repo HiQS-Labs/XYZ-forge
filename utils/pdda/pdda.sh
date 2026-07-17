@@ -541,6 +541,105 @@ check_issue_doc_sync() {
     fi
   done < <(pdda_list_working_docs)
 
+  # Direction (c) — GH-189: the (a) remediation above (`git mv` into 3-COMPLETED) removes a doc from
+  # pdda_list_working_docs()'s scan set forever, so this is the only place left that ever looks at a
+  # completed doc again. Precise inverse of direction (b), scoped to 3-COMPLETED instead of 2-WORKING:
+  # a doc landing there implies "done", so a still-non-terminal status lead word is the drift.
+  while IFS= read -r file; do
+    num="$(_pdda_doc_issue_number "$file")"
+    [ -n "$num" ] || continue            # not an issue-tracked doc — nothing to reconcile
+
+    status_val="$(pdda_trim "$(pdda_frontmatter_value "$file" status)")"
+    leadword="$(_pdda_status_leadword "$status_val")"
+    if [ -n "$leadword" ] && ! _pdda_is_terminal_word "$leadword"; then
+      pdda_record_finding warn "$CHECK_NAME" "$file" 1 \
+        "doc is in 3-COMPLETED (issue #$num) but frontmatter status still reads '$leadword' (non-terminal) — reconcile the status or move the doc back to 2-WORKING" \
+        "reconcile-status"
+    fi
+  done < <(pdda_list_completed_docs)
+
+  pdda_emit_summary "$CHECK_NAME" "$rc"
+  return "$(pdda_gated_exit "$rc")"
+}
+
+# ------------------------------------------------------------------------------------------------
+# H2. roadmap-issue-state (warn-only, flag-only; gh-degrades like issue-doc-sync, never blocks)
+# ------------------------------------------------------------------------------------------------
+# GH-189 (part 2): check_issue_doc_sync reconciles PROJECT/** capture docs against their linked
+# issue's real state; nothing reconciled a ROADMAP.md ledger ENTRY's own status marker/emoji against
+# that same real state. Reuses _pdda_issue_state_table (the same gh-then-cache resolver defined above)
+# so this never becomes a second issue-state fetcher — one source of truth, two consumers.
+#
+# Signal is intentionally conservative: only lines carrying an unambiguous terminal marker (✅ or the
+# word "shipped") or an unambiguous non-terminal marker (🆕, the word "captured", or "ready to fire")
+# are classified; a line with both or neither markers is left alone (no reliable signal => no finding).
+_pdda_roadmap_ledger_lines() {
+  local roadmap="$1"
+  awk '
+    /^[[:space:]]*```/ {
+      if (in_fence) { in_fence=0; fexempt=0 }
+      else {
+        info=$0; sub(/^[[:space:]]*`+/,"",info); gsub(/[[:space:]]/,"",info); info=tolower(info)
+        in_fence=1
+        fexempt=(info=="console"||info=="text"||info=="transcript")?1:0
+      }
+      next
+    }
+    in_fence && fexempt { next }
+    /^[[:space:]]*>/ { next }             # blockquote = allowed carve-out note, same as check_roadmap
+    /\[#[0-9]+\]\(https:\/\/[^)]*\/issues\/[0-9]+\)/ { print NR "\t" $0 }
+  ' "$roadmap"
+}
+
+check_roadmap_issue_state() {
+  pdda_reset_counts
+  local CHECK_NAME="pdda-check-roadmap-issue-state" rc=0
+  local PDDA_ROADMAP="${PDDA_ROADMAP:-$PDDA_REPO_ROOT/ROADMAP.md}"
+  local table line_no line num state is_terminal is_nonterminal
+
+  if [ ! -f "$PDDA_ROADMAP" ]; then
+    pdda_record_finding info "$CHECK_NAME" "$PDDA_ROADMAP" 0 "ROADMAP.md not found; nothing to check" "skip"
+    pdda_emit_summary "$CHECK_NAME" 0
+    return "$(pdda_gated_exit 0)"
+  fi
+
+  table="$(_pdda_issue_state_table)"
+
+  while IFS=$'\t' read -r line_no line; do
+    [ -n "$line_no" ] || continue
+
+    is_terminal=0
+    is_nonterminal=0
+    case "$line" in *"✅"*) is_terminal=1 ;; esac
+    printf '%s' "$line" | grep -qiE '\bshipped\b' && is_terminal=1
+    case "$line" in *"🆕"*) is_nonterminal=1 ;; esac
+    printf '%s' "$line" | grep -qiE '\bcaptured\b|ready to fire' && is_nonterminal=1
+
+    # Ambiguous (both fired, or neither) => no reliable signal on this line; skip it entirely.
+    [ "$is_terminal" -eq "$is_nonterminal" ] && continue
+
+    while IFS= read -r num; do
+      [ -n "$num" ] || continue
+      state="$(printf '%s\n' "$table" | awk -F'\t' -v n="$num" '$1 == n { print toupper($2); exit }')"
+      if [ -z "$state" ]; then
+        pdda_record_finding info "$CHECK_NAME" "$PDDA_ROADMAP" "$line_no" \
+          "issue #$num state unavailable (gh absent/offline and no cached state) — sync not evaluated" "skip"
+        continue
+      fi
+
+      if [ "$is_terminal" -eq 1 ] && [ "$state" = "OPEN" ]; then
+        pdda_record_finding warn "$CHECK_NAME" "$PDDA_ROADMAP" "$line_no" \
+          "ledger entry reads shipped/done (✅/SHIPPED) but issue #$num is still OPEN — reconcile the ledger entry or close the issue" \
+          "reconcile-roadmap-status"
+      fi
+      if [ "$is_nonterminal" -eq 1 ] && [ "$state" = "CLOSED" ]; then
+        pdda_record_finding warn "$CHECK_NAME" "$PDDA_ROADMAP" "$line_no" \
+          "issue #$num is CLOSED but the ledger entry's status marker is still non-terminal (e.g. 🆕/captured/ready to fire) — update the ledger entry" \
+          "reconcile-roadmap-status"
+      fi
+    done < <(printf '%s\n' "$line" | grep -oE '\[#[0-9]+\]\(https://[^)]*/issues/[0-9]+\)' | grep -oE '^\[#[0-9]+\]' | sed -E 's/[^0-9]//g')
+  done < <(_pdda_roadmap_ledger_lines "$PDDA_ROADMAP")
+
   pdda_emit_summary "$CHECK_NAME" "$rc"
   return "$(pdda_gated_exit "$rc")"
 }
@@ -659,6 +758,7 @@ pdda-check-roadmap-coverage:check_roadmap_coverage
 pdda-check-changelog:check_changelog
 pdda-stale-working-docs:check_stale
 pdda-check-issue-doc-sync:check_issue_doc_sync
+pdda-check-roadmap-issue-state:check_roadmap_issue_state
 pdda-check-releases:check_releases
 "
 
@@ -736,7 +836,8 @@ Commands:
   roadmap-coverage   nothing active goes MISSING from ROADMAP.md
   changelog          end-of-iteration changelog nudge (warn-only)
   stale              flag stale working docs (flag-only; never moves)
-  issue-doc-sync     flag 2-WORKING/GH-*.md docs drifted from their GitHub issue state (warn-only)
+  issue-doc-sync     flag 2-WORKING/GH-*.md and 3-COMPLETED/GH-*.md docs drifted from their GitHub issue state (warn-only)
+  roadmap-issue-state flag ROADMAP.md ledger entries whose status marker drifted from the linked issue's real state (warn-only)
   releases           validate RELEASES.md, the release-planning ledger (warn-only nudge)
   releases-current   read-only roll-up: RELEASES.md entries whose Status isn't "Shipped"
   gh-refresh         refresh the cached GitHub issue-state file issue-doc-sync reads offline (needs gh)
@@ -761,6 +862,7 @@ case "$cmd" in
   changelog)        check_changelog; exit "$?" ;;
   stale)            check_stale; exit "$?" ;;
   issue-doc-sync)   check_issue_doc_sync; exit "$?" ;;
+  roadmap-issue-state) check_roadmap_issue_state; exit "$?" ;;
   releases)         check_releases; exit "$?" ;;
   releases-current) cmd_releases_current; exit "$?" ;;
   gh-refresh)       exec "$HERE/pdda-gh-refresh.sh" "$@" ;;

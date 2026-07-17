@@ -2,8 +2,7 @@
 gh_issue: 174
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/174
 title: "GH-171 follow-up: utils/py/agy-turn.py never got a claim-before-launch guard (XYZ_PYTHON=1 agy turns still exposed)"
-status: Re-scoped 2026-07-17 (2-WORKING) — the guard itself already landed via GH-172 Phase 0
-  (commit 7e9e683); only the dedicated regression test remains, queued as Marathon Plan F Lane 10
+status: Fixed and verified 2026-07-17 via a marathon lane, merged to `development`.
 created: 2026-07-07
 updated: 2026-07-17
 owner: noel
@@ -49,7 +48,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Gap found and filed 2026-07-07 during GH-171 fix review; queued into Marathon Plan F as Lane 10. **2026-07-17:** the code fix itself landed as a side effect of GH-172's Phase 0 root-semantics audit (commit `7e9e683`) — confirmed live: `utils/py/agy-turn.py`'s `main()` now calls `claim_task_or_exit(...)` before launching agy. `XYZ_PYTHON=1 bash test/agy-turn.sh` passes except one pre-existing, unrelated failure (`genuine breach should exit 5, got 0` — reproduces identically on pre-GH-172 commit `fafa890`). Not closing #174: the dedicated regression test (checklist item 2 below) is still missing. Re-scoped to test-only, cx/risk/eff downgraded 2/1/2 → 1/1/1. | Fire the (now much smaller) lane: extend the GH-171 vendored-consumer fixture in `test/marathon-drive.sh` to run the full chain under `XYZ_PYTHON=1` and confirm the agy (reviewer) leg's claim event lands in the consumer repo's `.tick`, mirroring the existing codex-leg assertion. Do not re-touch `utils/py/agy-turn.py` — no further source change needed. |
+| **Fixed and verified 2026-07-17** via a marathon lane (worktree-isolated Sonnet subagent, `marathon/gh174-215-222-189-2026-07-17`). Added case `(18a) GH-174: agy-turn.py claim-before-launch guard regression (XYZ_PYTHON=1)` to `test/marathon-drive.sh`, asserting a `task.claimed` event with `agent":"agy"` lands in the consumer repo's `.tick/events` under `XYZ_PYTHON=1`, mirroring the GH-171 Bash-mode assertion. No source change (confirmed already-correct per the 2026-07-17 note below). Independently re-verified on the marathon branch after merge: `bash test/marathon-drive.sh` 106/106, zero regressions. | Closed out — nothing further for this lane. |
 
 ## The bug
 
