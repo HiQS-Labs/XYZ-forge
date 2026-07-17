@@ -80,6 +80,7 @@ local change.
   stop. Re-firing a parked lane or going off-wave to deep-dive one item requires an explicit operator
   override (`--force`) or a replan note — never a quiet slide off the plan.
 - **Do not create new git branches** automatically. Only create a new branch if explicitly requested by the user.
+- **`development` is the standing WIP branch (cut fresh from `main` 2026-07-17, [GH-216](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/216)).** The prior `development` had drifted 295 commits behind `main` with no open PRs — retired to `development-archived-2026-07-04` rather than deleted outright. Default ongoing/in-progress work to `development` (branch off it, PR back into it) instead of long-lived one-off feature branches or committing WIP straight to `main`; periodically merge `development` → `main` once it's in a shippable state. Marathon/relay-fired lanes still cut their own short-lived `marathon/gh-<n>-*` branches per their own convention (see GH-212) — this rule is about *manual/exploratory* WIP, not marathon lane branches. Watch for `development` drifting stale again the same way the old one did; re-cut from `main` if it does.
 - **Anti-pattern: renaming a branch with an open PR via GitHub's branch-rename API
   (`POST /repos/{owner}/{repo}/branches/{branch}/rename`, or `gh api ... branches/<old>/rename`).**
   It does **not** rename in place — it deletes the old ref and recreates a new one, which GitHub
