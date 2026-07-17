@@ -635,6 +635,19 @@ find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2
   && pass "GH-172: vendored XYZ_PYTHON=1 run does not grow a stray .xyz .tick event log" \
   || fail "GH-172: vendored XYZ_PYTHON=1 run should not create .xyz/.tick"
 
+# ── (18a) GH-174: agy-turn.py claim-before-launch guard regression (XYZ_PYTHON=1) ───────────────
+# GH-171 gave relay-automation/agy-turn.sh (Bash) a claim-before-launch ownership guard: claim the
+# handed-off task, verify claimer == agy, exit 5 on mismatch. utils/py/agy-turn.py (opt-in via
+# XYZ_PYTHON=1) got the identical guard as a side effect of the GH-172 Phase 0 root-semantics audit
+# (commit 7e9e683, main() now calls claim_task_or_exit(...) before launching agy) but never got a
+# dedicated regression test proving it. Reuse the $VP fixture run above (XYZ_PYTHON=1 full chain,
+# already completed) and assert the reviewer (agy) leg's claim event specifically lands in the
+# consumer repo's .tick — mirroring the GH-171 Bash-mode reviewer-claim assertion.
+find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
+  | xargs -0 grep -l '"type":"task.claimed".*"agent":"agy"' >/dev/null 2>&1 \
+  && pass "GH-174: agy claim event lands in the consumer repo .tick under XYZ_PYTHON=1" \
+  || fail "GH-174: consumer repo .tick missing agy claim event under XYZ_PYTHON=1 (claim-before-launch guard regression)"
+
 # ── (18b) GH-172: approval-path vendored Bash run keeps release + done in the consumer repo tick ──
 VCODEX_APPROVE="$VSTUBS/codex-approve"
 cat > "$VCODEX_APPROVE" <<'EOF'
