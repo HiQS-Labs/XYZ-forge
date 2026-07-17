@@ -2,9 +2,7 @@
 gh_issue: 222
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/222
 title: "Marathon end-of-session hygiene gaps: no cost summary in marathon-drive.sh, no worktree cleanup in /10days"
-status: "Promoted to 2-WORKING 2026-07-17 — both gaps re-confirmed live in current code (no
-  tick analyze/cost-summary call anywhere in marathon-drive.sh; zero worktree remove/prune
-  mentions in skills/10days/SKILL.md). Swarm Preflight Contract added, ready to fire."
+status: "Fixed and verified 2026-07-17 via a marathon lane, merged to development."
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -31,7 +29,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-17 via a chat audit; promoted to `2-WORKING` same day after re-confirming both gaps live in code (`relay-automation/marathon-drive.sh` has no `tick analyze` call anywhere; `skills/10days/SKILL.md` has zero `worktree remove`/`worktree prune` mentions). Swarm Preflight Contract added below. | Fire both lanes (independent write-sets, safe to run concurrently): Lane 1 adds the cost summary to `marathon-drive.sh`; Lane 2 adds worktree cleanup to `/10days` Step 7. |
+| **Fixed and verified 2026-07-17** via a marathon lane (worktree-isolated Sonnet subagent). Added `xyz_marathon_cost_summary()` to `relay-automation/marathon-drive.sh`, mirroring `relay-drive.sh`'s GH-152 `xyz_relay_cost_summary()` verbatim, gated on a `MARATHON_DRIVE_STARTED` flag so `--help`/`--dry-run`/lock-contention exits never trigger it, wired into the EXIT trap so a failed `tick analyze` can't flip the real exit code; nested `relay-drive.sh` calls get `RELAY_COST_SUMMARY=0` to avoid a double-print. `skills/10days/SKILL.md` Step 7 now runs `git worktree remove` (fallback `--force`) per lane after merge; Step 8 gained a cleanup-failure report line. Independently re-verified on the marathon branch: `bash validate.sh` 113/114 (only the pre-existing, tracked `acorn-extract.sh` environmental red). | Closed out — nothing further for this lane. |
 
 ## Problem (confirmed in code/docs, not assumed)
 
