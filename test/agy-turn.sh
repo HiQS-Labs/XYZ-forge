@@ -46,9 +46,29 @@ printf 'agy-stub: model response for %s\n' "$RELAY_AGENT"   # stdout -> non-empt
 [ "${STUB_MODE:-good}" = breach ] && printf 'I found the issue at %s/secret.txt\n' "$A"
 "$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "z/**" >/dev/null 2>&1
 "$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
-printf '\n### Round 1 · Reviewer · %s (agy-stub)\n**Verdict:** Changes requested\n' "$RELAY_AGENT" >>"$RELAY_FILE"
+# S2 role/model adherence (GH-155/F4): rolegood/roledrift read the relay file's assigned role off its
+# NEXT: header (same field rtl_is_reviewer_turn reads) instead of hardcoding "Reviewer" like every other
+# mode here. rolegood writes the ASSIGNED role's block and flips NEXT to the other role (compliant);
+# roledrift writes the WRONG role's block and leaves NEXT unflipped (the observed F4 failure shape).
+if [ "${STUB_MODE:-good}" = rolegood ] || [ "${STUB_MODE:-good}" = roledrift ]; then
+  assigned="$(sed -n 's/^NEXT:[[:space:]]*//p' "$RELAY_FILE" | head -1)"
+  [ -n "$assigned" ] || assigned="Producer"
+  other="Reviewer"; [ "$assigned" = "Reviewer" ] && other="Producer"
+  if [ "${STUB_MODE}" = rolegood ]; then
+    printf '\n### Round 1 · %s · %s (agy-stub)\n**Verdict:** Changes requested\n' "$assigned" "$RELAY_AGENT" >>"$RELAY_FILE"
+    sed -i.bak -E "s/^(NEXT:[[:space:]]*).*/\\1${other}/" "$RELAY_FILE" 2>/dev/null && rm -f "$RELAY_FILE.bak"
+  else
+    printf '\n### Round 1 · %s · %s (agy-stub)\n**Verdict:** Changes requested\n' "$other" "$RELAY_AGENT" >>"$RELAY_FILE"
+  fi
+else
+  printf '\n### Round 1 · Reviewer · %s (agy-stub)\n**Verdict:** Changes requested\n' "$RELAY_AGENT" >>"$RELAY_FILE"
+fi
 "$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to claude-a >/dev/null 2>&1
 [ "${STUB_MODE:-good}" = bad ] && printf 'off-lane\n' >>"$A/offlane.md"
+# S5 distraction (GH-155/F3): models the 2026-06-17 dogfood shape — an agy turn distracted by stray
+# tree files makes an off-lane edit. agy-turn.sh has no PATH-shadow of its own (unlike claude-turn.sh's
+# CLAUDE_BLOCK_CMDS), so the off-lane edit is what the shared allowlist guard (rtl_enforce) must catch.
+[ "${STUB_MODE:-good}" = distract ] && printf 'off-lane\n' >>"$A/distracted-offlane.md"
 if [ "${STUB_MODE:-good}" = commitbypass ]; then
   printf 'sneaky\n' >>"$A/sneaky.md"
   git -C "$A" add sneaky.md >/dev/null 2>&1
@@ -237,6 +257,80 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-py-unowned AGY_AG
 [ "$rc" -eq 5 ] && pass "GH-172/GH-174: XYZ_PYTHON=1 agy turn refuses an unowned token (exit 5)" || fail "python agy unowned-token guard should exit 5, got $rc"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "GH-172/GH-174: python agy guard blocks commits before mutation" || fail "python agy guard must not commit"
 [ "$(cksum "$A/relay.md")" = "$before_relay" ] && pass "GH-172/GH-174: python agy guard leaves relay file untouched" || fail "python agy guard should not edit the relay file"
+
+# --- (S2) AGY-SPECIFIC: role/model adherence — the acting model must write ITS ASSIGNED role's block
+# and flip NEXT to the other role. F4 (sibling run feedback #4a; GH-142 Phase-1 S2): agy took a
+# NEXT:-assigned Producer turn but wrote a Reviewer block and never flipped NEXT, rotating the
+# model<->role binding with nothing catching it (rtl_enforce only guards the allowlist/commit boundary,
+# not block-content correctness — an honor-system gap). This closes the missing regression coverage for
+# the compliant round-trip (assigned role written + NEXT flipped) and locks in today's honest behavior
+# for the drift shape (mismatched role + stale NEXT is NOT caught — still a live gap, not fixed here).
+printf 'NEXT: Producer\nSTATUS: Open\n# relay body\n' >"$A/relay-role.md"
+git -C "$A" add relay-role.md >/dev/null 2>&1; git -C "$A" commit -q -m "seed role-adherence fixture" >/dev/null 2>&1
+seed_token RELAY-TURN-role-good
+rolelog="$WORK/agy-role-good.$$.log"; : >"$rolelog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay-role.md" RELAY_TASK=RELAY-TURN-role-good AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$rolelog" STUB_MODE=rolegood \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "S2: assigned-role-compliant agy turn exits 0" || fail "S2: compliant role turn rc=$rc"
+grep -q '### Round 1 · Producer · agy' "$A/relay-role.md" && pass "S2: agy wrote its ASSIGNED role's block (Producer)" || fail "S2: agy should have written a Producer block"
+grep -E '^NEXT:[[:space:]]*Reviewer' "$A/relay-role.md" >/dev/null && pass "S2: agy flipped NEXT to the other role (Reviewer)" || fail "S2: NEXT should be flipped to Reviewer"
+
+printf 'NEXT: Producer\nSTATUS: Open\n# relay body\n' >"$A/relay-role.md"
+git -C "$A" add relay-role.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed role-adherence fixture (drift)" >/dev/null 2>&1
+seed_token RELAY-TURN-role-drift
+driftlog="$WORK/agy-role-drift.$$.log"; : >"$driftlog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay-role.md" RELAY_TASK=RELAY-TURN-role-drift AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$driftlog" STUB_MODE=roledrift \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "S2: role-drift turn still exits 0 today (honor-system gap, not enforced)" || fail "S2: role-drift turn unexpectedly failed, rc=$rc"
+grep -q '### Round 1 · Reviewer · agy' "$A/relay-role.md" && pass "S2: KNOWN GAP reproduced — agy wrote the WRONG role's block (Reviewer, was assigned Producer)" || fail "S2: drift repro should show the mismatched Reviewer block"
+grep -E '^NEXT:[[:space:]]*Producer' "$A/relay-role.md" >/dev/null && pass "S2: KNOWN GAP reproduced — NEXT was NOT flipped (still Producer) and nothing caught it" || fail "S2: drift repro should show NEXT left unflipped"
+
+# --- (S5) AGY-SPECIFIC: distraction — stray tree files (unclean workspace) must not let a distracted
+# agy escape containment. F3 (2026-06-17 dogfood; GH-142 Phase-1 S5): the agy builder, distracted by
+# stray briefs already in the tree, ran `consult` (real external calls) + edited an off-lane file.
+# agy-turn.sh has no CLAUDE_BLOCK_CMDS-style PATH-shadow of its own (that external-model-spawn block is
+# claude-turn.sh/builder-only) and the clean-workspace precondition itself lives one layer up, in
+# marathon-drive.sh's Step 0, outside this shim — so the containment agy-turn.sh DOES own is the shared
+# allowlist guard (rtl_enforce). Confirm it still catches a distraction-driven off-lane edit even with
+# stray "brief" files already sitting in the tree, and that those pre-existing stray files are left
+# untouched (not swept as if they were the agent's own edit — the MBP16 [1] ambient-WIP behavior).
+printf '# stray audit brief\nDo something else entirely.\n' >"$A/AUDIT-STRAY.md"
+printf 'unrelated note\n' >"$A/NOTES-STRAY.md"
+seed_token RELAY-TURN-distract
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-distract agy distract; rc=$?
+[ "$rc" -eq 6 ] && pass "S5: distracted-by-stray-files off-lane edit -> shim fails (exit 6)" || fail "S5: distraction off-lane edit should exit 6, got $rc"
+[ ! -f "$A/distracted-offlane.md" ] && pass "S5: distraction-driven off-lane edit reverted" || fail "S5: distraction off-lane file should be gone"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "S5: no commit on a distraction-driven violation" || fail "S5: distraction turn must not commit"
+[ -f "$A/AUDIT-STRAY.md" ] && [ -f "$A/NOTES-STRAY.md" ] \
+  && pass "S5: pre-existing stray brief files left untouched (not reverted as if agent-owned)" \
+  || fail "S5: stray brief files should survive the turn untouched"
+rm -f "$A/AUDIT-STRAY.md" "$A/NOTES-STRAY.md"
+
+# --- (S8) AGY-SPECIFIC: cost-blindness — no misleading exact-0 cost.tokens event ever lands for an agy
+# turn; the harness's shared cost-signal path explicitly flags agy token spend as a FLOOR (uncounted),
+# never "exact". F5 (GH-142 Phase-1 S8): agy print mode emits no JSON/usage block (see this shim's
+# header note (b)) — agy-turn.sh has NO cost.tokens capture at all. Confirm that holds (no fabricated 0
+# in the coordination log) and confirm relay-automation/loop-cost.sh's documented agy contract (a cost
+# floor; budget agy in --currency seconds instead) still reports floor/0, not exact/0 (src/cost.js's own
+# convention: return null/"not captured" rather than a fake zero — loop-cost.sh mirrors that honesty).
+seed_token RELAY-TURN-cost
+run_shim RELAY-TURN-cost agy good; rc=$?
+[ "$rc" -eq 0 ] && pass "S8: normal agy turn exits 0 (baseline for cost-blindness check)" || fail "S8: cost-blindness baseline turn rc=$rc"
+if grep -rl '"type":"cost.tokens".*"task":"RELAY-TURN-cost"' "$A/.tick/events" >/dev/null 2>&1; then
+  fail "S8: agy turn should NOT emit a cost.tokens event (agy has no token capture -- a captured 0 would be misleading)"
+else
+  pass "S8: agy turn emits no cost.tokens event (no misleading exact-0 lands in the coordination log)"
+fi
+LOOP_COST="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/loop-cost.sh"
+lc_err="$WORK/loop-cost-agy.$$.err"; : >"$lc_err"
+lc_out="$(bash "$LOOP_COST" --agent agy --currency tokens --tokens 9999 2>"$lc_err")"
+lc_honesty="$(tail -1 "$lc_err")"; rm -f "$lc_err"
+[ "$lc_out" = "0" ] && [ "$lc_honesty" = "floor" ] \
+  && pass "S8: loop-cost.sh flags agy token spend as a FLOOR (cost-blind), never a misleading exact 0" \
+  || fail "S8: loop-cost.sh should report agy as floor 0, got out=$lc_out honesty=$lc_honesty"
 
 # --- (9) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
