@@ -67,6 +67,16 @@ local change.
   governance.
 - `validate.sh` is the code/runtime gate. `utils/pdda/pdda.sh run` and its targeted
   `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
+- **Builder/orchestrator role split (GH-221)** — **Claude Code (terminal and VS Code agents) is the
+  orchestrator and reviewer, never a default builder.** It plans, dispatches marathon/relay lanes, and
+  reviews/verifies their output; it does not drive itself headlessly as a build lane. **Agy CLI and
+  Codex CLI are the builders** — the two cost-blind (subscription-billed) headless build lanes
+  `marathon.sh`/`marathon-drive.sh` default to (GH-212). **Claude CLI (billed via the Anthropic API) is
+  NOT a builder by default** — `--builder claude` stays fully supported, but only as an explicit,
+  cost-acknowledged choice the *user* makes locally (their own `--builder claude` flag or a local
+  settings override), never something a session reaches for on its own reasoning that it's "just
+  another supported builder option." If a task calls for a headless build lane and neither agy nor
+  codex is available, stop and ask — don't default to spawning a headless Claude CLI turn.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),

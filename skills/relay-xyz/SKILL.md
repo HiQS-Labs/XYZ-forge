@@ -147,6 +147,16 @@ on the machine running it, never into the target repo itself.
 
 ## The two automated paths
 
+**Role split (GH-221): Claude Code is the orchestrator/reviewer here, not a default builder.** The
+Claude Code session driving `relay-drive.sh`/`marathon-drive.sh` plans, dispatches, and reviews/verifies
+turns — it does not spawn itself as the headless build lane. **Agy CLI and Codex CLI are the builders**:
+the two cost-blind (subscription-billed, not per-call API) headless turn-takers `--agent-cmd` /
+`--builder` default to. **Claude CLI (billed via the Anthropic API) is not a builder by default** —
+`--builder claude` / a `claude-turn.sh` shim stay fully supported, but only as an explicit,
+cost-acknowledged choice the *user* makes locally, never something a session reaches for on its own
+reasoning that it's "just another supported turn-taker." If a task needs a headless build lane and
+neither agy nor codex is on PATH, stop and ask — don't default to spawning a headless Claude CLI turn.
+
 | Path | One session? | Models | Driver |
 |---|---|---|---|
 | **A. Headless single-session** | yes — Claude drives both roles | Codex / agy as co-equal headless workers | `relay-drive.sh` + a turn-taker shim |
