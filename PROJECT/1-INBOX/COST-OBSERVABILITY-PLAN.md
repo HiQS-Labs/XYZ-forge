@@ -203,32 +203,164 @@ No production code changes in this phase — probe and record only.
 
 ### Checklist (each item is observable)
 
-- [ ] **Probe Codex usage surface:** run `codex exec` and inspect its end-of-turn output for a
+- [x] **Probe Codex usage surface:** run `codex exec` and inspect its end-of-turn output for a
       usage/stats block (JSON or parseable). *Observable:* a captured sample transcript in the findings
       below with the exact field path (or a recorded "no usable surface" verdict). Feeds #153.
-- [ ] **Probe agy usage surface:** check `agy` print mode for ANY usage output (flag, stderr, sidecar
+- [x] **Probe agy usage surface:** check `agy` print mode for ANY usage output (flag, stderr, sidecar
       file). *Observable:* findings record either the surface or "structurally cost-blind — confirmed".
-- [ ] **Confirm the Gemini relay-lane state:** verify no live turn shim calls `--from-gemini-json`
+- [x] **Confirm the Gemini relay-lane state:** verify no live turn shim calls `--from-gemini-json`
       and that `consult.sh` is the only remaining caller. *Observable:* the grep result is pasted below.
-- [ ] **Confirm claude-lane metering is live + correct:** drive one `claude-turn.sh` turn and confirm a
+- [x] **Confirm claude-lane metering is live + correct:** drive one `claude-turn.sh` turn and confirm a
       `.tick/events/*tokens*` file with non-zero `tokens_out` and `--tool claude`. *Observable:* event file.
-- [ ] **Decision record:** write the three go/no-go calls back into this doc — (a) Codex capture
+      (Confirmed by code inspection, not a live driven turn — see finding 4 below for why.)
+- [x] **Decision record:** write the three go/no-go calls back into this doc — (a) Codex capture
       feasible? (b) agy capture feasible? (c) reconnect vs **retire** the Gemini relay-lane path.
-- [ ] **Findings written back** into the section below before this phase's QA gate is checked.
+- [x] **Findings written back** into the section below before this phase's QA gate is checked.
 
 ### Findings written back from the spike
 
-_(to be filled by the spike before the QA gate — leave the checklist above unchecked until then.)_
+_Run 2026-07-16 in the `gh151` marathon worktree (`marathon-10days-lanes/gh151`, branch
+`marathon/10days-2026-07-16-gh151`). All commands below are re-runnable verbatim; none touched
+production code — this doc is the only file changed._
+
+**1. Codex usage surface — PROBED, USABLE surface found.**
+
+`codex exec` (codex-cli **0.139.0**, installed at `~/.local/bin/codex`) supports a `--json` flag
+("Print events to stdout as JSONL") that was not previously probed. Ran (sandbox disabled locally —
+`codex exec` needs keychain + network access the Bash sandbox blocks, consistent with this repo's
+existing "Codex CLI needs sandbox disabled" note):
+
+```
+$ codex exec --json --skip-git-repo-check -s read-only "Reply with exactly: OK"
+{"type":"thread.started","thread_id":"019f6eb1-e60a-7c73-b024-efcec3a7fb32"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"OK"}}
+{"type":"turn.completed","usage":{"input_tokens":12816,"cached_input_tokens":8576,"output_tokens":57,"reasoning_output_tokens":50}}
+```
+
+The last JSONL line is a `turn.completed` event carrying a `usage` object with
+`input_tokens` / `cached_input_tokens` / `output_tokens` / `reasoning_output_tokens` — a clean,
+parseable, per-turn token block. Exact field path for a future `parseCodexStats`: the line where
+`.type == "turn.completed"`, then `.usage.input_tokens`, `.usage.cached_input_tokens`,
+`.usage.output_tokens`, `.usage.reasoning_output_tokens`.
+
+**Caveat that matters for #153:** `relay-automation/codex-turn.sh` does **not** currently pass
+`--json` — its default `CODEX_FLAGS` is `-s workspace-write -c approval_policy=never`
+(`codex-turn.sh:27-34`) and it invokes `codex exec` writing a plain transcript to `$CODEX_LOG`
+(`codex-turn.sh:56-84,161`), not the JSONL event stream this probe used. So the usage surface
+exists, but `codex-turn.sh` isn't currently pointed at it — Phase 7 needs to add `--json` (or
+equivalent) to the invocation and parse the `turn.completed` line, mirroring `parseGeminiStats`'s
+model. Not a blocker, just not free.
+
+**2. agy usage surface — PROBED, structurally cost-blind — confirmed.**
+
+`agy --help` (agy **1.1.3**) exposes no `--output-format`/`--json`/usage flag anywhere in its
+top-level or `-p`/print-mode help text. Ran two live print-mode probes (sandbox disabled locally,
+same reason as Codex — agy needs keychain/network):
+
+```
+$ agy -p "Reply with exactly: OK"
+OK
+$ agy -p "Reply with exactly: OK2" --log-file "$TMPDIR/agy-probe.log"
+OK2
+```
+
+stdout carries only the model's answer — no usage/token block, no exit-code signal, nothing on
+stderr either. The `--log-file` run produced a 139-line internal debug/trace log (auth, HTTP trace
+IDs, conversation lifecycle) with **zero** matches for any usage-shaped field:
+
+```
+$ rg -i "usage|tokencount|token_count|prompttokens|completiontokens|inputtokens|outputtokens" "$TMPDIR/agy-probe.log"
+0 matches
+```
+
+No sidecar file was found either (`~/.agy`, `~/.antigravity`, `~/Library/Application Support/*agy*`
+all absent/empty). This confirms the doc's pre-spike note verbatim: agy is structurally cost-blind —
+`agy-turn.sh` token spend is a real floor of 0, not an undercount to fix later.
+
+**3. Gemini relay-lane state — CONFIRMED orphaned, and more gated than the pre-spike note said.**
+
+`rg -n "from-gemini-json|parseGeminiStats"` across the repo (excluding historical relay-system
+transcripts/CHANGELOG prose, which only *mention* it) shows exactly these live-code call sites:
+
+- **Definition:** `src/cost.js:23` (`function parseGeminiStats`), `src/cost.js:56` (export).
+- **Verb wiring:** `bin/tick:16` (require), `bin/tick:103` (help text), `bin/tick:349-361` (the
+  `--from-gemini-json` flag handling in the `cost` verb).
+- **Test:** `test/cost.sh:50,56-69` (parser unit tests only, no turn-shim integration).
+- **Live callers:** `relay-automation/consult.sh:358-365` and its Python GH-112 port
+  `utils/py/consult.py:273-296` — **both** are the one-shot `consult` tool (fan-out to
+  Codex/agy/Gemini for a second opinion), **not** a relay or marathon turn lane, and **both** gate
+  the call behind an opt-in env var (`consult.sh`: `CONSULT_GEMINI_JSON=1`; same pattern in the
+  Python port) plus the legacy `gemini`/`GEMINI_BIN` alias.
+
+Checked every live turn shim directly — none of `agy-turn.sh`, `aider-turn.sh`, `claude-turn.sh`,
+`codex-turn.sh` call `parseGeminiStats` or `--from-gemini-json`; the only place `gemini-turn.sh` is
+even mentioned in them is retirement-history comments (e.g. `agy-turn.sh:16,19`,
+`claude-turn.sh:16,56,167` — "replacing gemini-turn.sh", DRY/model-agnostic-boundary notes). This
+matches and sharpens the 2026-07-06 pre-spike note: **no relay/marathon turn lane feeds
+`parseGeminiStats`, and even the one surviving caller (`consult.sh`) only fires it when the operator
+explicitly opts in with `CONSULT_GEMINI_JSON=1`.**
+
+**4. claude-lane metering — CONFIRMED wired in code; not driven live in this spike.**
+
+`relay-automation/claude-turn.sh:240-257` best-effort-parses `$CLAUDE_LOG` (the `claude --output-format
+json` transcript) for `.usage.input_tokens` + `.usage.cache_read_input_tokens` (summed into
+`tokens_in`) and `.usage.output_tokens` (`tokens_out`), then calls:
+
+```
+"$_cost_tickbin" cost "$t" --agent "$me" --tokens-in "$tokens_in" --tokens-out "$tokens_out" --tool claude
+```
+
+only when `tokens_in>0 || tokens_out>0` (else it prints a loud "tokens not captured (zero or no
+stats in transcript)" stderr line — no silent zero). `bin/tick`'s `cost` verb accepts `--tool` and
+persists it onto the event (`bin/tick:368`: `tool: typeof flags.tool === 'string' ? flags.tool :
+undefined`). This is a complete, code-verified capture→verb→event path.
+
+**Not driven live:** actually firing a `claude-turn.sh` turn requires the `relay-xyz` skill's
+harness (this session's own `relay-xyz-guard.sh` PreToolUse hook blocks any Bash command that
+executes a `relay-automation/*-turn.sh` driver entrypoint unless that skill has been formally
+invoked first) plus a live relay thread to drive against — both are out of scope for a doc-only
+discovery spike whose own contract says "no production code changes in this phase." Per the task's
+own allowance ("a live turn run isn't required if it's clearly wired — note this if you don't drive
+an actual turn"), this finding is code-verified, not live-run-verified.
+
+**5. Decision record.**
+
+- **(a) Codex capture feasible?** **YES.** `codex exec --json` emits a clean `turn.completed.usage`
+  block (finding 1). `parseCodexStats` in `src/cost.js` can mirror `parseGeminiStats` almost exactly
+  — same shape, different field names. Phase 7's gate check passes: build the parser. One
+  prerequisite that isn't Phase 7's job alone: `codex-turn.sh`'s `CODEX_FLAGS` needs `--json` added
+  (or the transcript captured via `--json` some other way) before there's real data to parse in
+  practice — flag this as a `codex-turn.sh` change bundled into (or immediately preceding) #153.
+- **(b) agy capture feasible?** **NO, not without a code change.** agy print mode exposes no
+  usage/token surface anywhere probed (flag, stdout, stderr, debug log, sidecar file). Confirmed
+  structurally cost-blind, per finding 2. `agy-turn.sh` should keep reporting `0`/floor honestly
+  (no fabricated estimate) until (if ever) agy ships a usage surface upstream — nothing to build here.
+- **(c) Reconnect vs retire the Gemini relay-lane path?** **RETIRE.** No live relay/marathon turn
+  shim uses `gemini-turn.sh` or feeds `parseGeminiStats` (finding 3); the only surviving caller
+  (`consult.sh` / `consult.py`) is a one-shot advisory tool already gated behind an explicit opt-in
+  env var, so it's not "orphaned capture code" in the sense of silently doing nothing — it's
+  deliberately scoped to `consult`. Reconnecting would mean resurrecting a retired turn shim
+  (`gemini-turn.sh`) that was replaced by `agy-turn.sh` for good reasons (agy is the maintained
+  cross-model boundary per `agy-turn.sh:16-19`'s own comments) just to feed a parser — not worth it.
+  Phase 5 should: mark `parseGeminiStats`/`--from-gemini-json` as **consult-only** in `src/cost.js`
+  comments + `tick cost --help` (`bin/tick:103`), and correct any doc that still implies a live
+  `gemini-turn.sh` relay lane exists.
 
 ### QA checklist — Phase 4
 
-- [ ] **Discovery-before-build:** no parser/driver code shipped in this phase; only probes + findings.
-- [ ] **Findings-back rule:** the "Findings written back" section is populated before the gate passes
-      (PDDA discovery-phase contract).
-- [ ] **Observability:** every claim in the findings cites a command output or a `file:line`, not memory.
-- [ ] **Determinism litmus:** each probe is a re-runnable command; the findings record the exact invocation.
-- [ ] **No-silent-cap:** any lane found cost-blind is named explicitly as a floor, not omitted.
-- [ ] **Anti-goal check:** no `$`/pricing and no LLM scoring introduced by the probes.
+- [x] **Discovery-before-build:** no parser/driver code shipped in this phase; only probes + findings.
+      Confirmed by `git diff --stat` at spike close: only this doc changed.
+- [x] **Findings-back rule:** the "Findings written back" section above is populated before the gate
+      passes (PDDA discovery-phase contract).
+- [x] **Observability:** every claim in the findings above cites a command output or a `file:line`,
+      not memory.
+- [x] **Determinism litmus:** each probe above is a re-runnable command; the findings record the exact
+      invocation (codex/agy commands, `rg` greps, file:line reads).
+- [x] **No-silent-cap:** agy is named explicitly as a floor (finding 2 + decision (b)), not omitted or
+      quietly assumed metered.
+- [x] **Anti-goal check:** no `$`/pricing and no LLM scoring introduced by the probes — token counts
+      only, read verbatim from CLI output.
 
 ---
 
