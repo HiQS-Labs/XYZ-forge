@@ -129,6 +129,40 @@ debug_mantra_note() {  # <prior-count> <phase-dir> <debug-mantra-file>
   fi
 }
 
+# GH-222 (COST-OBSERVABILITY-PLAN.md Phase 6 follow-on): auto-surface the `tick analyze` cost block
+# at end-of-run so a marathon-drive.sh phase (standalone or as one phase of a marathon.sh chain)
+# stops needing a manual `tick analyze` pull to see what it cost. Mirrors relay-drive.sh's own
+# xyz_relay_cost_summary() (GH-152) VERBATIM — same TICK_BIN analyze --format human call, same
+# `--- cost ---` block extraction, no new cost computation here (DRY). relay-drive.sh's nested
+# per-phase call is told RELAY_COST_SUMMARY=0 below (run_relay_drive/run_relay_review_once) so a
+# single phase never shows the block twice (once from the nested relay-drive, once from here) — this
+# script becomes the one place a driven phase's cost is surfaced, picking up the responsibility
+# relay-drive.sh's own silenced-when-nested precedent (XYZ_HARNESS_CONTEXT) defers to the outer
+# harness. A bare/swarm-fired single-phase run IS the whole run, so this fires exactly once at its
+# own exit. Driven via marathon.sh, each phase's marathon-drive subprocess still prints its OWN
+# cumulative total at ITS exit (marathon.sh is untouched by this fix and holds no cross-phase state
+# to gate a single final print on) — since `tick analyze` is monotonically cumulative, the LAST
+# phase's print is the whole chain's true final total; earlier phases' prints are an additive
+# running-total view, not stale/duplicate data. Opt out entirely with MARATHON_COST_SUMMARY=0.
+# Default-on and strictly additive: only fires once MARATHON_DRIVE_STARTED is set (i.e. this phase
+# got past --help/usage/lock-contention/lane-parked/--dry-run and is really being driven), and a
+# failed/forced `tick analyze` is swallowed best-effort — it can never change the driven run's own
+# exit code (wired via the EXIT trap below, same one the lock cleanup uses).
+: "${MARATHON_COST_SUMMARY:=1}"
+MARATHON_DRIVE_STARTED=0
+xyz_marathon_cost_summary() {
+  [[ "$MARATHON_DRIVE_STARTED" == "1" ]] || return 0
+  [[ "$MARATHON_COST_SUMMARY" != "0" ]] || return 0
+  local report block
+  report="$("$TICK_BIN" analyze --format human 2>/dev/null)" || {
+    printf 'marathon-drive: tick analyze failed — end-of-run cost summary unavailable (MARATHON_COST_SUMMARY=0 to silence)\n' >&2
+    return 0
+  }
+  block="$(printf '%s\n' "$report" | sed -n '/^--- cost ---$/,$p')"
+  [[ -n "$block" ]] || return 0
+  printf '\nmarathon-drive: end-of-run cost summary (tick analyze) —\n%s\n' "$block" >&2
+}
+
 if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # GH-49b: the lock lives in .git/ (never committed) for a normal clone; a vendored .xyz/ copy has no
   # .git/. In a linked worktree, .git is a file pointing at the shared gitdir, so resolve the real
@@ -165,7 +199,19 @@ if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
     # single-operator clone — add an atomic PID-CAS only if true multi-operator concurrency appears.
   fi
   printf '%s\n' "$$" > "$_lock/pid"
-  trap 'rm -rf "$_lock" 2>/dev/null || true' EXIT
+  # GH-222: the cost summary is wired into the SAME exit trap as the lock cleanup (the one place
+  # every exit path already funnels through), mirroring relay-drive.sh's GH-152 wiring exactly.
+  # `_code` is captured FIRST and the trap re-exits with it explicitly: `xyz_marathon_cost_summary`
+  # (or the lock rm) failing/erroring under `set -e` inside a trap would otherwise silently overwrite
+  # the script's real exit status with the trap's own — so a forced/failed analyze call can NEVER
+  # flip the driven run's reported result.
+  _marathon_drive_on_exit() {
+    local _code=$?
+    xyz_marathon_cost_summary
+    rm -rf "$_lock" 2>/dev/null || true
+    exit "$_code"
+  }
+  trap _marathon_drive_on_exit EXIT
   export RELAY_DRIVER_LOCKED=1
 fi
 
@@ -561,6 +607,7 @@ log "tick token seeded: $RELAY_TASK → $BUILDER"
 "$TICK_BIN" log marathon.phase.start "$RELAY_TASK" --agent marathon > /dev/null
 xyz_marathon_heartbeat_write
 log "phase start: running relay-drive --round-cap $ROUND_CAP"
+MARATHON_DRIVE_STARTED=1   # GH-222: past this point a phase is really being driven — arm the cost summary
 
 # ── Step 5: run relay-drive (the loop — unmodified) ────────────────────────
 
@@ -574,6 +621,7 @@ run_relay_drive() {
   RELAY_FILE="$RELAY_FILE" \
   LANE_ATTEMPT_COUNTED=1 \
   XYZ_HARNESS_CONTEXT=marathon-phase \
+  RELAY_COST_SUMMARY=0 \
     "$RELAY_DRIVE_BIN" \
       --relay-file "$RELAY_FILE" \
       --relay-task "$RELAY_TASK" \
@@ -589,6 +637,7 @@ run_relay_review_once() {
   RELAY_FILE="$RELAY_FILE" \
   LANE_ATTEMPT_COUNTED=1 \
   XYZ_HARNESS_CONTEXT=marathon-phase \
+  RELAY_COST_SUMMARY=0 \
     "$RELAY_DRIVE_BIN" \
       --relay-file "$RELAY_FILE" \
       --relay-task "$RELAY_TASK" \

@@ -251,5 +251,37 @@ pfile4="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
 grep -q "this other part also looks fine" "$pfile4" 2>/dev/null && pass "stamping preserved the real answer beneath it" \
   || fail "stamping corrupted the transcript content: $pfile4"
 
+
+# --- (15) GH-215: XYZ_PYTHON=1 parity — the Python port must stamp SINGLE-MODEL — NOT RECONCILED
+# the same way Bash does. GH-172's prior audit found the tick-root/cost-routing fix landed in
+# utils/py/consult.py but the degraded-panel stamp (GH-178 A2) was never ported, so a Python-mode
+# consult run under a single-advisor-answered condition silently reported as if reconciled. This
+# forces XYZ_PYTHON=1 explicitly (independent of how the rest of this file is invoked) so the
+# regression is caught even under a plain `bash test/consult.sh` run.
+rm -rf "$OUT"
+out="$(XYZ_PYTHON=1 CODEX_RC=0 GEMINI_RC=1 STUB_WRITE=0 run 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "XYZ_PYTHON=1 one-model failure still exits 0 (graceful degrade)" \
+  || fail "XYZ_PYTHON=1 degrade exit=$rc"
+printf '%s' "$out" | grep -q "SINGLE-MODEL — NOT RECONCILED" && pass "XYZ_PYTHON=1 degrade stamped on stdout" \
+  || fail "XYZ_PYTHON=1 stdout missing SINGLE-MODEL stamp: $out"
+cfile15="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+grep -q "SINGLE-MODEL — NOT RECONCILED" "$cfile15" 2>/dev/null \
+  && pass "XYZ_PYTHON=1 degrade stamped INTO the surviving transcript" \
+  || fail "XYZ_PYTHON=1 surviving transcript missing stamp: $cfile15"
+grep -q "ANSWER from codex" "$cfile15" 2>/dev/null \
+  && pass "XYZ_PYTHON=1 stamped transcript still has the real answer beneath the stamp" \
+  || fail "XYZ_PYTHON=1 stamping corrupted the transcript content: $cfile15"
+sidecar15="$(dirname "$cfile15")/DEGRADED-SINGLE-MODEL.txt"
+[ -s "$sidecar15" ] && pass "XYZ_PYTHON=1 format-agnostic sidecar marker written" \
+  || fail "XYZ_PYTHON=1 no sidecar marker at $sidecar15"
+
+# --- (16) GH-215 non-regression: XYZ_PYTHON=1 must NOT stamp a full 2/2 panel as degraded ----------
+rm -rf "$OUT"
+out="$(XYZ_PYTHON=1 STUB_WRITE=0 run 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "XYZ_PYTHON=1 happy path exits 0" || fail "XYZ_PYTHON=1 happy path exit=$rc ($out)"
+printf '%s' "$out" | grep -q "SINGLE-MODEL" \
+  && fail "XYZ_PYTHON=1 full 2/2 panel wrongly stamped degraded: $out" \
+  || pass "XYZ_PYTHON=1 full panel is not stamped"
+
 echo "  consult: $PASS passed, $FAIL failed"
 exit 0

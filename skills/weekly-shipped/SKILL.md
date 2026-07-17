@@ -37,6 +37,8 @@ it, not like a release-note generator dumped a template.
    Prefer reliability, safety, usability, cost, clarity, and time-saved over internal cleanup.
 4. Write from the outside in.
    Start with what changed for a normal user, then explain why it matters.
+5. Write the finished report to `PROJECT/3-COMPLETED/WEEKLY-YYYY-MM-DD.md`.
+   The date in the filename is the date the report is generated, not the start of the shipped window.
 
 ## Sourcing
 
@@ -112,11 +114,19 @@ Instead, write more directly:
 
 Unless the user asks otherwise:
 
+- Write the report to `PROJECT/3-COMPLETED/WEEKLY-YYYY-MM-DD.md`
+- Use the current local date for `YYYY-MM-DD`
+- Make the file Markdown
+- Start with a short title that names the shipped window
 - Use a numbered list
 - One improvement per item
 - Lead with the shipped improvement itself
 - Keep each item short
 - Frame it in everyday-user terms, not implementation trivia
+
+Example output path on July 17, 2026:
+
+`PROJECT/3-COMPLETED/WEEKLY-2026-07-17.md`
 
 Good pattern:
 
@@ -136,9 +146,9 @@ Bad pattern:
 - No hype
 - No canned "why you should care" wording unless it genuinely fits that one item
 
-## Final check before answering
+## Final check before writing
 
-Before sending the report, scan for repetition:
+Before writing the file and returning its path, scan for repetition:
 
 - repeated openers
 - repeated "this means" constructions

@@ -2,7 +2,8 @@
 gh_issue: 215
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/215
 title: "GH-172 follow-up: utils/py/consult.py missing Bash degraded-panel SINGLE-MODEL stamping (keeps XYZ_PYTHON=1 bash test/consult.sh red)"
-status: Captured 2026-07-17, Swarm Preflight Contract added — queued for Marathon Plan F, Lane 11
+status: Fixed and verified 2026-07-17 via a marathon lane, merged to `development`. Unmasked a
+  separate pre-existing gap, filed as #223 (not fixed here).
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -36,7 +37,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Filed 2026-07-17 as a direct GH-172 cutover-recommendation follow-up; capture doc authored with a Swarm Preflight Contract, queued into Marathon Plan F as Lane 11. Not yet built. | Fire the lane: port the Bash degraded-panel stamping logic into `utils/py/consult.py`, add regression coverage, confirm `XYZ_PYTHON=1 bash test/consult.sh` green. |
+| **Fixed and verified 2026-07-17** via a marathon lane (worktree-isolated Sonnet subagent). Ported the `SINGLE-MODEL — NOT RECONCILED` stamping from `relay-automation/consult.sh:338-356` into `utils/py/consult.py` verbatim (condition, stamp text, sidecar file), plus a matching stdout warn. 2 new `test/consult.sh` cases (single-survivor stamps; full panel doesn't). Independently re-verified: gate `bash test/consult.sh` 50/50 green. **Found in the process (not fixed here, out of this lane's scope):** `XYZ_PYTHON=1 bash test/consult.sh` is still red — GH-215's own bug was previously masking a separate, pre-existing gap (GH-178 A4, the "no firsthand citation" stamp was never ported to `consult.py` either) by failing first. Filed as #223. | Closed out for this lane's own scope. Follow-up: file + fix the GH-178 A4 Python-port gap separately. |
 
 ## The gap
 

@@ -239,19 +239,23 @@ def main():
         answered = 0
         failed = 0
         summary = ""
-        
+        survivor_model = ""
+        survivor_out = ""
+
         for proc, m, out, start_time, cmd in procs:
             if proc is None:
                 failed += 1
                 summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                 continue
-                
+
             try:
                 rem = max(0, timeout_s - (time.time() - start_time))
                 proc.wait(timeout=rem)
                 if proc.returncode == 0 and (m != "aider" or aider_answer_ok(out)):
                     answered += 1
                     summary += f"\n  [ok]   {m} -> {out}"
+                    survivor_model = m
+                    survivor_out = out
                 elif proc.returncode == 0:
                     # exit 0 but the aider transcript proved an auth/config failure or empty answer
                     failed += 1
@@ -268,7 +272,34 @@ def main():
                 summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                 with open(out, "a") as f:
                     f.write(f"\nconsult: advisor failed or exceeded the {timeout_s}s cap\n")
-                    
+
+        # GH-178 A2 / GH-215 (Python port): a panel that started with MORE THAN ONE requested advisor
+        # but ended with exactly one survivor is not a reconciled cross-model result — no second read
+        # happened, so treating its verdict as reconciled is exactly the failure mode this consult
+        # exists to avoid. Stamp it MECHANICALLY — into the surviving transcript itself, plus a
+        # format-agnostic sidecar marker — so the caveat travels with the data instead of living only
+        # in this run's stdout. Deliberately does NOT fire when only one model was ever requested: that
+        # is an intentional single-model query, not a degrade. Mirrors relay-automation/consult.sh
+        # (see the "GH-178 A2" comment there) — do not redesign, just port.
+        degraded = False
+        if len(procs) > 1 and answered == 1:
+            degraded = True
+            stamp = (
+                f"**SINGLE-MODEL — NOT RECONCILED** (only {survivor_model} answered; {failed} of "
+                f"{len(procs)} requested advisor(s) failed — this is one model's read, not a "
+                f"cross-model consult. Do not treat any claim below as cross-verified.)"
+            )
+            if not survivor_out.endswith(".json"):
+                try:
+                    with open(survivor_out, "r", errors="replace") as f:
+                        existing = f.read()
+                    with open(survivor_out, "w") as f:
+                        f.write(stamp + "\n\n" + existing)
+                except OSError:
+                    pass
+            with open(os.path.join(run_dir, "DEGRADED-SINGLE-MODEL.txt"), "w") as f:
+                f.write(stamp + "\n")
+
         if os.environ.get("CONSULT_GEMINI_JSON", "0") == "1":
             gj = os.path.join(run_dir, f"{label}.gemini.json")
             if os.path.exists(gj) and os.path.getsize(gj) > 0:
@@ -302,6 +333,8 @@ def main():
             shutil.rmtree(wt, ignore_errors=True)
         
     print(f"consult: {answered} answered, {failed} failed -> {run_dir}{summary}")
+    if degraded:
+        warn(f"SINGLE-MODEL — NOT RECONCILED (stamped into {survivor_out} and {os.path.join(run_dir, 'DEGRADED-SINGLE-MODEL.txt')})")
     if answered == 0:
         warn("all advisors failed")
         sys.exit(5)
