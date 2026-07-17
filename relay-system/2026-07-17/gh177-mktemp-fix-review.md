@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 5
 
@@ -101,5 +101,18 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** ran `bash test/mktemp-trap-guard.sh` before and after the change (un-sandboxed, standalone) → 195/195 clean both times · built and ran the scratch file reproducing the Reviewer's exact evasion → FAILs as expected pre-merge-of-fix, then re-ran after applying the fix and confirmed it still catches it · deleted the scratch file, final state 195/195 clean.
 **Re-review this:** `test/mktemp-trap-guard.sh:90-100` (the guard logic, now with the same-line shortcut removed).
 **Commit:** cb823dc
+
+### Round 3 · Reviewer · codex · 2026-07-17 16:10 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — this turn was limited to live-file inspection; I did not run the artifact or any test.
+**Findings & proposals:**
+- [Blocker] `test/mktemp-trap-guard.sh:100-128` still misses same-line multi-statement variants of the exact same bug shape. Tier 2 only starts scanning at `j = idx + 1`, so `TMP="$(mktemp -d)"; TMP="$(cd "$TMP" && pwd -P)"` and `TMP="$(mktemp -d)"; cd "$TMP"` on a single line bypass both the re-capture check and the bare-`cd` check, even though they are semantically the same failure mode as the original repo-wipe. Proposed fix: after matching the mktemp assignment, inspect the remainder of that same line for `;`/`&&`/`||`-chained `cd "$VAR"` or `$(cd "$VAR" && pwd ...)` before falling through to the later-line scan, or split the line into shell command segments and run the same Tier 2 checks against the post-assignment segments too.
+- [Blocker] `test/mktemp-trap-guard.sh:100` still misses declaration-prefixed assignments such as `local TMP="$(mktemp -d)"`, `declare TMP=...`, or `export TMP=...`, because the regex only matches when the variable name starts the line. Those are ordinary shell forms for the same dangerous pattern, so a reintroduction inside a function could still pass the audit. Proposed fix: extend the assignment matcher to allow optional declaration keywords before the variable name, or normalize leading shell declaration words before applying the Tier 2 assignment regex.
+- [Pass] `test/hq-hardening.sh:20-23`, `test/hq-promote.sh:23-26`, and `test/hq-locator.sh:23-26` still contain the mktemp hardening exactly as claimed; the original repo-wipe path remains closed textually in those three tests.
+- [Pass] `test/mktemp-trap-guard.sh:37-48` still covers the current repo-wide `*.sh` surface textually, including `tools/` and root-level scripts.
+**Answers:**
+- The "only lines strictly after the mktemp assignment count" rule is not sufficient as written: same-line semicolon/chain forms are still an evasion path.
+- I also see a second gap unrelated to ordering: declaration-prefixed mktemp assignments are outside the current regex and therefore outside Tier 2 entirely.
+**Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
