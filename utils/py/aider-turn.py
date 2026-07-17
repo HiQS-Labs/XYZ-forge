@@ -15,7 +15,15 @@ def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = os.environ.get("AIDER_TURN_ROOT", xyz_root)
     aider_bin = os.environ.get("AIDER_BIN", "aider")
-    aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-3.5-sonnet")
+    # GH-147 Phase 2 (LM_STUDIO lane): mirrors relay-automation/aider-turn.sh — AIDER_OPENAI_API_BASE
+    # set selects the LM Studio / OpenAI-compatible seam (default model openai/agents-a1); unset keeps
+    # the OpenRouter default, byte-identical to the pre-GH-147 behavior. Same env-var contract Phase 1
+    # proved in utils/py/consult.py — reused verbatim, not redefined.
+    aider_openai_api_base = os.environ.get("AIDER_OPENAI_API_BASE", "")
+    if aider_openai_api_base:
+        aider_model = os.environ.get("AIDER_MODEL", "openai/agents-a1")
+    else:
+        aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-3.5-sonnet")
 
     me = os.environ.get("RELAY_AGENT", "")
     f = os.environ.get("RELAY_FILE", "")
@@ -30,8 +38,16 @@ def main():
         print(f"aider-turn: actor {me} is not the aider agent ({aider_agent}) — deferring (window-driven)", file=sys.stderr)
         sys.exit(0)
 
-    if not os.environ.get("OPENROUTER_API_KEY"):
-        print("aider-turn: OPENROUTER_API_KEY is not set — Aider cannot reach OpenRouter. Export it (your OpenRouter key) then retry.", file=sys.stderr)
+    # Auth pre-flight. Two seams share this shim (GH-147 Phase 2): OpenRouter is pure API-key (a missing
+    # key would make aider prompt interactively and deadlock the headless turn, so fail fast with the
+    # remedy); the LM Studio / OpenAI-compatible seam authenticates via AIDER_OPENAI_API_BASE +
+    # AIDER_OPENAI_API_KEY (dummy default) instead and needs no OPENROUTER_API_KEY at all.
+    aider_auth_args = []
+    if aider_openai_api_base:
+        aider_auth_args = ["--openai-api-base", aider_openai_api_base,
+                            "--openai-api-key", os.environ.get("AIDER_OPENAI_API_KEY", "dummy")]
+    elif not os.environ.get("OPENROUTER_API_KEY"):
+        print("aider-turn: OPENROUTER_API_KEY is not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.", file=sys.stderr)
         sys.exit(5)
 
     allow_paths = os.environ.get("ALLOW_PATHS", "")
@@ -79,7 +95,9 @@ def main():
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
     
     aider_args = [
-        "--model", aider_model, "--yes-always", "--no-auto-commits", "--no-gitignore",
+        "--model", aider_model, "--yes-always", "--no-auto-commits"
+    ] + aider_auth_args + [
+        "--no-gitignore",
         "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0",
         "--chat-history-file", os.path.join(aider_aux_dir, "chat.history.md"),
         "--input-history-file", os.path.join(aider_aux_dir, "input.history"),

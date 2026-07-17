@@ -289,5 +289,59 @@ grep -qx "FILE:ignored-dir/relay.md" "$ARGS_DUMP" 2>/dev/null \
   && pass "GH-186: current aider still sees the gitignored relay file as --file" \
   || fail "GH-186 current-aider: ignored-dir/relay.md not passed as --file (dump: $(cat "$ARGS_DUMP" 2>/dev/null))"
 
+# --- (14) GH-147 Phase 2 (LM_STUDIO lane): AIDER_OPENAI_API_BASE selects the LM Studio / OpenAI-
+# compatible seam — the shim must NOT require OPENROUTER_API_KEY on this seam, must pass
+# --openai-api-base/--openai-api-key (dummy default) through to aider, and must default the model to
+# openai/agents-a1 (mirrors consult.sh's run_aider(), same GH-147 env-var contract).
+seed_token RELAY-TURN-lmstudio
+before="$(git -C "$A" rev-parse HEAD)"
+ARGS_DUMP="$WORK/lmstudio-args.$$"
+log="$WORK/aider-lmstudio.$$.log"; : >"$log"
+env -u OPENROUTER_API_KEY RELAY_AGENT=aider RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-lmstudio \
+  AIDER_AGENT=aider RELAY_PEER=claude-a AIDER_BIN="$STUB" AIDER_TURN_ROOT="$A" AIDER_LOG="$log" \
+  STUB_MODE=good TICK_REPO_ROOT="$A" AIDER_OPENAI_API_BASE="http://127.0.0.1:1234/v1" \
+  ARGS_DUMP="$ARGS_DUMP" \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-147: LM Studio seam (no OPENROUTER_API_KEY) -> turn still succeeds" || fail "LM Studio seam should not require OPENROUTER_API_KEY (rc=$rc)"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "GH-147: LM Studio seam turn committed" || fail "LM Studio seam turn should have committed"
+grep -q -- "--openai-api-base http://127.0.0.1:1234/v1" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-147: LM Studio base URL passed to aider" || fail "GH-147: --openai-api-base missing/wrong (dump: $(cat "${ARGS_DUMP}.all" 2>/dev/null))"
+grep -q -- "--openai-api-key dummy" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-147: LM Studio dummy key default passed to aider" || fail "GH-147: --openai-api-key dummy missing"
+grep -q -- "--model openai/agents-a1" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-147: LM Studio default model (openai/agents-a1) selected" || fail "GH-147: default model wrong"
+tick_a release RELAY-TURN-lmstudio --agent aider --to boss >/dev/null 2>&1 || true  # free aider's slot (see case 4)
+
+# --- (15) GH-147: explicit AIDER_OPENAI_API_KEY + AIDER_MODEL override the LM Studio defaults --------
+seed_token RELAY-TURN-lmstudio-key
+ARGS_DUMP="$WORK/lmstudio-key-args.$$"
+log="$WORK/aider-lmstudio-key.$$.log"; : >"$log"
+env -u OPENROUTER_API_KEY RELAY_AGENT=aider RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-lmstudio-key \
+  AIDER_AGENT=aider RELAY_PEER=claude-a AIDER_BIN="$STUB" AIDER_TURN_ROOT="$A" AIDER_LOG="$log" \
+  STUB_MODE=good TICK_REPO_ROOT="$A" AIDER_OPENAI_API_BASE="http://127.0.0.1:1234/v1" \
+  AIDER_OPENAI_API_KEY="sk-local-test" AIDER_MODEL="openai/custom-model" \
+  ARGS_DUMP="$ARGS_DUMP" \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-147: LM Studio seam with explicit key/model -> turn succeeds" || fail "LM Studio explicit key/model turn rc=$rc"
+grep -q -- "--openai-api-key sk-local-test" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-147: explicit AIDER_OPENAI_API_KEY overrides the dummy default" || fail "GH-147: explicit key not passed through"
+grep -q -- "--model openai/custom-model" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-147: explicit AIDER_MODEL overrides the LM Studio default" || fail "GH-147: explicit model not passed through"
+tick_a release RELAY-TURN-lmstudio-key --agent aider --to boss >/dev/null 2>&1 || true  # free aider's slot (see case 4)
+
+# --- (16) GH-147 regression guard: default (OpenRouter) path stays byte-identical when
+# AIDER_OPENAI_API_BASE is unset — no --openai-api-base/--openai-api-key flags leak into the
+# invocation, and the OpenRouter default model is still selected (case 8 already proves the
+# missing-OPENROUTER_API_KEY failure path; this proves the positive default path emits no LM Studio flags).
+seed_token RELAY-TURN-default
+ARGS_DUMP="$WORK/default-args.$$"
+run_shim RELAY-TURN-default aider good ARGS_DUMP="$ARGS_DUMP"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-147: default OpenRouter path (no AIDER_OPENAI_API_BASE) still exits 0" || fail "default path rc=$rc"
+grep -q -- "--openai-api-base" "${ARGS_DUMP}.all" 2>/dev/null \
+  && fail "GH-147: default path must NOT emit --openai-api-base" \
+  || pass "GH-147: default path emits no --openai-api-base (byte-identical)"
+grep -q -- "--model openrouter/anthropic/claude-3.5-sonnet" "${ARGS_DUMP}.all" 2>/dev/null \
+  && pass "GH-147: default path still uses the OpenRouter default model" || fail "GH-147: default model regressed"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

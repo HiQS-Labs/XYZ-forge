@@ -11,10 +11,18 @@ SOURCE="$ROOT/ROADMAP.md"
 
 PASS=0
 FAIL=0
+SKIP=0
 pass() { echo "  PASS: $*"; PASS=$((PASS + 1)); }
 fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL + 1)); }
+skip() { echo "  SKIP: $*"; SKIP=$((SKIP + 1)); }
 
 echo "== test: roadmap-dashboard =="
+
+# GH-110 P2b: ROADMAP-DASHBOARD.md is a repo-root artifact that does not travel with a vendored
+# install (VENDOR_DIRS mirrors relay-automation/bin/src/utils/test/skills only). In a vendored copy
+# there is nothing here to render/check, so skip the whole ROADMAP-DASHBOARD.md-dependent case
+# rather than dangle-fail — mirrors the guard already landed in test/oracle-guard.sh.
+if [ -e "$ARTIFACT" ]; then
 
 out="$(bash "$RENDERER" 2>&1)"; rc=$?
 if [[ $rc -eq 0 ]]; then
@@ -108,6 +116,10 @@ else
   fail "section counts drifted — $counts_out"
 fi
 
+else
+  skip "ROADMAP-DASHBOARD.md-dependent checks need \$ROOT/ROADMAP-DASHBOARD.md (absent in a vendored copy)"
+fi
+
 echo ""
-echo "  roadmap-dashboard: $PASS passed, $FAIL failed"
+echo "  roadmap-dashboard: $PASS passed, $FAIL failed, $SKIP skipped"
 [[ $FAIL -eq 0 ]] || exit 1
