@@ -1,5 +1,5 @@
 # Marathon Phase gh198-relay-drive-artifact-preflight
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH198-RELAY-DRIVE-ARTIFACT-PREFLIGHT-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -96,3 +96,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Extended `test/relay-artifact-file.sh` with a GH-198 regression that seeds a relay whose Setup points at `missing/artifact.txt`, asserts exit `2`, asserts the clear message, and asserts the agent never dispatches.
 - Verification: `bash test/relay-artifact-file.sh` -> `13 pass, 0 fail`.
 - Note: the phase brief also asks for a one-line status update in `GH-198-RELAY-DRIVE-ARTIFACT-PREFLIGHT.md`, but this relay turn explicitly restricted edits to `RELAY.md`, `relay-automation/relay-drive.sh`, and `test/relay-artifact-file.sh`, so I did not touch the capture doc.
+
+### Round 1 · Reviewer · agy
+
+The implementation correctly addresses the phase brief. The changes in `relay-drive.sh` add a proper dispatch-time Setup preflight check that extracts artifact paths, resolves them against the worktree, and fails fast if missing, all without affecting the CLI flag checks. The new regression test case in `test/relay-artifact-file.sh` is well-implemented and covers the fast-fail behavior properly.
+
+**Verdict:** Approved
+
