@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 4 / 5
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -137,5 +137,14 @@ The operator just said "take your turn on this file." Everything you need is **i
 - The declaration-prefix regex at `test/mktemp-trap-guard.sh:124-126` is present and looks correct textually.
 - These are not speculative edge cases: both blockers are direct mismatches between the current DoD claim and the live file's actual scan surface.
 **Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
+
+### Round 5 · Producer · 2026-07-17 16:33 PDT
+**Decisions on proposals:** (operator-approved — both verified against the actual pre-fix file before disposing)
+- [Blocker] "`;`-splitting only... `TMP="$(mktemp -d)" && cd "$TMP"` and `TMP="$(mktemp -d)" || TMP="$(cd "$TMP" && pwd -P)"` remain a single segment... never inspected" — Verified: confirmed round 3's split only handled `;`, so both `&&`/`||` examples stayed as one unsplit segment. Implemented → rather than adding `&&`/`||` as split delimiters (which would have broken the recapture check's own reliance on seeing `cd "$VAR" && pwd` together in one segment), extended the forward-scan to start at the assignment's own segment (`j = idx`, not `idx + 1`) at `test/mktemp-trap-guard.sh:129-135` — the segment's full text (including any same-segment `&&`/`||` tail) is already there for the existing recapture/bare-cd checks to see. Also fixed a related latent bug this surfaced: the bare-cd "is this scoped" check was a naive "does the text before 'cd' contain ANY '('" — fooled by the mktemp call's own already-closed parens on the same segment. Replaced with an unclosed-paren COUNT (`:145-152`). · Proof: 2 scratch files reconstructing both exact `&&`/`||` examples from the finding — both now FAIL; deleted them, reconfirmed clean.
+- [Blocker] "`bin/validate-relay-block:1` is `#!/usr/bin/env bash`, but it will never be audited" — Verified: confirmed the file's shebang and executable bit, and that the pre-fix `find ... -name '*.sh'` glob structurally excludes it. Implemented → added `is_bash_script()` (`test/mktemp-trap-guard.sh:32-38`) that checks executable-bit + shebang, and file discovery now also walks each `SCAN_DIRS` entry for non-`.sh` files passing that check (`:47-49`). · Proof: file count went 195 → 196 (exactly `bin/validate-relay-block`, the only extensionless bash script currently in the tree — `bin/marathon-yaml` has a node shebang, correctly excluded).
+**Did:** No other changes — scope was exactly these 2 Blockers. Also fixed the summary message's now-inaccurate "N .sh files" wording (`:196`) since the file set includes extensionless scripts too.
+**Verification:** ran `bash test/mktemp-trap-guard.sh` after each change (un-sandboxed, standalone; `time`d it once — 3.7s, still fast) → clean 196/196 · built and ran 2 scratch files reproducing both of this round's exact `&&`/`||` evasions verbatim → both FAIL as expected · deleted the scratch files, final state 196/196 clean.
+**Re-review this:** `test/mktemp-trap-guard.sh:32-49` (extensionless-script discovery) and `:129-152` (same-segment scan start + unclosed-paren fix). **This is round 5 of 5 — the relay's round cap.** I believe the audit now correctly closes every evasion raised across all 4 rounds (inline, split-line, decoy/loose guards, bare-cd, same-line `;`/`&&`/`||` chains, declaration prefixes, extensionless scripts) and would ask for a definitive verdict this round; per the ground rules, if this doesn't reach Approved, the relay escalates to the operator rather than continuing past the cap.
+**Commit:** 47c8da0
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
