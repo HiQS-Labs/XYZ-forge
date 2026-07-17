@@ -1,0 +1,41 @@
+# MARATHON.yaml — 2026-07-17: recent-issues sweep, 4 independent lanes.
+#
+# All 4 phases are fully parallel-safe (no depends_on): each targets a disjoint file set, confirmed
+# during triage (see each phase's brief + the parent capture docs' Collision maps in Marathon Plan F
+# and Marathon Plan G). Builder defaults to codex (GH-212); every phase's reviewer is agy.
+#
+# Parent capture docs this plan bundles:
+#   PROJECT/2-WORKING/GH-208-WORKTREE-ISOLATION-RACE.md      (Plan F Lane 12)
+#   PROJECT/2-WORKING/GH-154-MARATHON-PLAN-PORT-PARITY.md    (Plan F Lane 13)
+#   PROJECT/2-WORKING/GH-149-REQUIRE-CLEAN-SELFTRIP.md       (Plan G Lane 1)
+#   PROJECT/2-WORKING/GH-198-RELAY-DRIVE-ARTIFACT-PREFLIGHT.md (Plan G Lane 2)
+
+name: gh208-154-149-198-issue-sweep
+phases:
+  - id: gh208-worktree-isolation-race
+    name: Fix flaky moved-ROOT-HEAD preserve-case race (GH-13/#14 guard)
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-17-GH208-154-149-198/brief-gh208-worktree-isolation.md
+    artifact: relay-automation/relay-turn-lib.sh,test/worktree-isolation.sh
+    max_review_rounds: 2
+
+  - id: gh154-marathon-plan-parity
+    name: Port GH-48 zone model into the Python-layer marathon-plan port
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-17-GH208-154-149-198/brief-gh154-marathon-plan-parity.md
+    artifact: utils/marathon-plan.sh,utils/py/_marathon_plan_node.js,test/marathon-plan.sh
+    max_review_rounds: 2
+
+  - id: gh149-require-clean-selftrip
+    name: Fix marathon-drive.sh --require-clean self-trip on its own lock
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-17-GH208-154-149-198/brief-gh149-require-clean.md
+    artifact: relay-automation/marathon-drive.sh,test/marathon-drive.sh
+    max_review_rounds: 2
+
+  - id: gh198-relay-drive-artifact-preflight
+    name: Add fail-fast preflight check for a missing Setup-referenced artifact
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-17-GH208-154-149-198/brief-gh198-relay-drive-preflight.md
+    artifact: relay-automation/relay-drive.sh,test/relay-artifact-file.sh
+    max_review_rounds: 2

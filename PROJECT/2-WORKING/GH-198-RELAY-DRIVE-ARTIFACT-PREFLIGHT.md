@@ -35,7 +35,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Confirmed live 2026-07-16: Bug 1 (file-scoped commit sweeping the whole index) is fixed — `relay-turn-lib.sh` now builds the commit from `_commit_paths`, cross-checked against `git diff --cached --name-only`, with its own regression test. Bug 2 remains: `relay-drive.sh` only validates the presence of a path passed via the `--artifact-file` CLI flag (line 270, `[[ -f "$ARTIFACT_FILE" ]] || die ...`) — there is no equivalent check for an artifact path referenced inside a relay thread's own `Setup` section (a different, more common path: a human or a prior turn writes "review `<path>`" directly into the thread body). | Add a preflight check that scans the relay file's Setup section for a referenced artifact path and fails fast (clear message) if it's missing from the worktree, before dispatching the turn. |
+| Confirmed live 2026-07-16: Bug 1 (file-scoped commit sweeping the whole index) is fixed — `relay-turn-lib.sh` now builds the commit from `_commit_paths`, cross-checked against `git diff --cached --name-only`, with its own regression test. Bug 2 remains: `relay-drive.sh` only validates the presence of a path passed via the `--artifact-file` CLI flag (line 270, dies if `$ARTIFACT_FILE` isn't a file) — there is no equivalent check for an artifact path referenced inside a relay thread's own `Setup` section (a different, more common path: a human or a prior turn writes "review `<path>`" directly into the thread body). | Add a preflight check that scans the relay file's Setup section for a referenced artifact path and fails fast (clear message) if it's missing from the worktree, before dispatching the turn. |
 
 ## Findings
 

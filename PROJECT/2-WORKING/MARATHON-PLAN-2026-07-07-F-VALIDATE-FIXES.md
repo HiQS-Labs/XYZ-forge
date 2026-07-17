@@ -1,7 +1,7 @@
 ---
-title: Marathon Plan F (2026-07-07) — validate.sh's 9 pre-existing failing tests
-status: Lanes 1-9 STALE as of 2026-07-17 (all 9 tests currently pass — see Status); only Lanes
-  10-11 are fireable. Recommend closing #170 pending operator confirmation.
+title: Marathon Plan F (2026-07-07) — validate.sh's 9 pre-existing failing tests + parity gaps
+status: Lanes 1-9 STALE as of 2026-07-17 (all 9 tests currently pass — see Status); Lanes 10-13 are
+  fireable. Recommend closing #170 pending operator confirmation.
 created: 2026-07-07
 updated: 2026-07-17
 owner: noel
@@ -11,8 +11,8 @@ source: triaged 2026-07-07 during GH-158/161/162/164 housekeeping pass, when val
   pre-existing 9 failures were confirmed (again) to be unrelated to that day's merges
 generated_by: hand-authored (9 lanes under one umbrella issue, same-day triage, not ledger-ranked;
   Lane 10 added same day after live-reviewing GH-171's fix; Lane 11 added 2026-07-17 as a GH-172
-  follow-up)
-lanes: [174, 215]
+  follow-up; Lanes 12-13 added 2026-07-17 during a recent-issues sweep)
+lanes: [174, 215, 208, 154]
 execution: parallel Sonnet subagents, one per lane — independent write-sets, no builder/reviewer
   relay needed for any single lane
 roadmap_exempt: true
@@ -29,20 +29,25 @@ goal: >
   recommendation named one residual Bash/Python parity gap (utils/py/consult.py's missing
   degraded-panel stamping) as the sole blocker to a Python-default main cutover. **2026-07-17: Lanes
   1-9 (#170) found STALE** while building this doc's Swarm Preflight Contract — all 9 tests now
-  pass, root cause of the flip unconfirmed; not fireable pending operator review of #170.
+  pass, root cause of the flip unconfirmed; not fireable pending operator review of #170. **Lanes
+  12-13 added 2026-07-17** during a recent-issues sweep (last 10 days): Lane 12 (#208) is the exact
+  `worktree-isolation.sh` gate this doc's own Status table already names as the one gate still red
+  repo-wide after Lanes 1-9 flipped stale; Lane 13 (#154) is another Bash/Python-port parity gap
+  (marathon-plan.sh's GH-48 zone model missing from the JS port), same class as Lane 11.
 ---
 
-# Marathon Plan F — 2026-07-07 · validate.sh's 9 pre-existing failing tests
+# Marathon Plan F — 2026-07-07 · validate.sh's 9 pre-existing failing tests + parity gaps
 
 > Sibling of [Plan D](MARATHON-PLAN-2026-07-07-D-EXPLORE-IDEAS.md) and
-> [Plan E](MARATHON-PLAN-2026-07-07-E-BUILD.md), but a different shape: all 11 lanes here fix
-> **pre-existing test failures / coverage gaps**, not new features — the deliverable per lane is a
-> passing `test/<file>.sh` plus (for the two flaky lanes) proof across repeated runs, not just one.
-> Lanes 1-9 came from same-day triage of `validate.sh`'s red gates; Lane 10 was added same day after
-> live-reviewing a real production fix (GH-171) surfaced a Bash/Python parity gap, then re-scoped
-> 2026-07-17 once its code fix landed via GH-172; Lane 11 was added 2026-07-17 as a direct GH-172
-> cutover-recommendation follow-up. **2026-07-17: Lanes 1-9 found STALE — see Status below. Only
-> Lanes 10-11 are currently fireable.**
+> [Plan E](MARATHON-PLAN-2026-07-07-E-BUILD.md), but a different shape: all 13 lanes here fix
+> **pre-existing test failures / coverage / parity gaps**, not new features — the deliverable per
+> lane is a passing `test/<file>.sh` plus (for the two flaky lanes) proof across repeated runs, not
+> just one. Lanes 1-9 came from same-day triage of `validate.sh`'s red gates; Lane 10 was added same
+> day after live-reviewing a real production fix (GH-171) surfaced a Bash/Python parity gap, then
+> re-scoped 2026-07-17 once its code fix landed via GH-172; Lane 11 was added 2026-07-17 as a direct
+> GH-172 cutover-recommendation follow-up; Lanes 12-13 were added 2026-07-17 during a recent-issues
+> (last 10 days) sweep. **2026-07-17: Lanes 1-9 found STALE — see Status below. Lanes 10-13 are
+> currently fireable.**
 
 ## Status
 
@@ -80,13 +85,18 @@ different source area — see the collision map below.
 | `test/marathon-plan.sh` (+ `utils/marathon-plan.sh`) | ⏸ STALE — do not fire | Lane 9 |
 | `test/marathon-drive.sh` (test-only; source already fixed) | ✅ fireable, only one lane touches this | Lane 10 |
 | `utils/py/consult.py` (+ its test) | ✅ fireable, only one lane touches this | Lane 11 |
-| independent | ✅ parallel (Lanes 10-11 only) | — |
+| `relay-automation/relay-turn-lib.sh` (+ `test/worktree-isolation.sh`) | ✅ fireable, only one lane touches this | Lane 12 |
+| `utils/marathon-plan.sh` / `utils/py/_marathon_plan_node.js` (+ `test/marathon-plan.sh`) | ✅ fireable, only one lane touches this | Lane 13 |
+| independent | ✅ parallel (Lanes 10-13 only) | — |
 
 Lanes 1-9 are STALE as of 2026-07-17 (see Status) — do not fire without re-triaging against #170
 first. Lane 10 is test-only (`test/marathon-drive.sh`) since its source fix already landed via
 GH-172. **Lane 11 is the one file worth flagging**: `utils/py/consult.py` is a turn-taker/advisor
 shim (zone `shim`, not `kernel`), but it should still run alone relative to any *other*
-consult.py-touching work if one ever gets added to this plan later.
+consult.py-touching work if one ever gets added to this plan later. **Lane 13 shares its test file
+family with Lane 9** (`test/marathon-plan.sh`) — Lane 9 is STALE/not-firing this round, so no
+concurrent-write risk today, but do not fire Lane 9 and Lane 13 together in a future round without
+re-checking this.
 
 ## Per-lane summary
 
@@ -103,18 +113,22 @@ consult.py-touching work if one ever gets added to this plan later.
 | 9 | `test/marathon-plan.sh` | 4 assertions, 1 shared root cause in "B:" scenario | deterministic | 2/2/2 | ⏸ STALE 2026-07-17 |
 | 10 | `test/marathon-drive.sh` (test-only) | GH-171 vendored-consumer fixture never got an `XYZ_PYTHON=1` agy-leg case; source fix already landed (GH-172) | deterministic (test-coverage gap) | 1/1/1 | ✅ ready |
 | 11 | `utils/py/consult.py` (+ test) | Python consult port missing the Bash degraded-panel `SINGLE-MODEL — NOT RECONCILED` stamping | deterministic (parity gap) | 2/1/2 | ✅ ready |
+| 12 | `test/worktree-isolation.sh` | Flaky moved-ROOT-HEAD preserve-case race (GH-13/#14 guard), 8/9 local runs failed | flaky | 2/2/2 | ✅ ready |
+| 13 | `test/marathon-plan.sh` (+ `utils/py/_marathon_plan_node.js`) | JS port missing GH-48 zone model (`QP_ZONES_CONFIG`), hardcodes stale `KERNEL_PATHS` | deterministic (parity gap) | 2/2/3 | ✅ ready |
 
 Full diagnostic detail (exact failure output, fix direction per lane) lives in
 [GH-170's doc](GH-170-VALIDATE-FAILING-TESTS.md#findings-2026-07-07-triage) for Lanes 1-9,
 [GH-174's doc](GH-174-AGY-PY-CLAIM-GUARD.md) for Lane 10 (re-scoped 2026-07-17 — read the Status
-table there first, the original checklist's item 1 is already done), and
+table there first, the original checklist's item 1 is already done),
 [#215](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/215) /
-[GH-172-CUTOVER-RECOMMENDATION.md](../3-COMPLETED/GH-172-CUTOVER-RECOMMENDATION.md) for Lane 11 — each lane should
-read its own section before starting.
+[GH-172-CUTOVER-RECOMMENDATION.md](../3-COMPLETED/GH-172-CUTOVER-RECOMMENDATION.md) for Lane 11,
+[GH-208's doc](GH-208-WORKTREE-ISOLATION-RACE.md) for Lane 12, and
+[GH-154's doc](GH-154-MARATHON-PLAN-PORT-PARITY.md) for Lane 13 — each lane should read its own
+section before starting.
 
 ## Recommended waves
 
-**Wave 1 — parallel (2 fireable lanes ‖):** Lane 10 ‖ Lane 11
+**Wave 1 — parallel (4 fireable lanes ‖):** Lane 10 ‖ Lane 11 ‖ Lane 12 ‖ Lane 13
 
 Lanes 1-9 are STALE (see Status) and excluded from firing until #170 is re-triaged or closed. No
 kernel track. No lane blocks another.
@@ -143,23 +157,31 @@ kernel track. No lane blocks another.
   `relay-automation/consult.sh`'s existing degraded-panel `SINGLE-MODEL — NOT RECONCILED` stamping
   logic into `utils/py/consult.py`. Do not re-touch the tick-root/cost-routing fix GH-172 already
   landed in this same file.
+- **Lane 12 is flaky, not deterministic** — verify with 5+ repeated runs of
+  `test/worktree-isolation.sh`, not a single green pass (see GH-208's doc for the exact instrumented
+  fix direction).
+- **Lane 13 is a straight port**, not new design — mirror `compileZoneConfig`/`QP_ZONES_CONFIG` from
+  `utils/marathon-plan.sh` into `utils/py/_marathon_plan_node.js`; add a parity assertion so the two
+  can't silently diverge again.
 
 ## How to fire
 
-Only Lanes 10-11 are ready. **Do not run `--gh-issue 170`** for a real fire — it returns
+Lanes 10-13 are ready. **Do not run `--gh-issue 170`** for a real fire — it returns
 STALE/exit 4 by design (fix not required); reusing it anyway would waste a build turn against
-already-passing tests. Confirmed via `--dry-run` on 2026-07-17 for all three:
+already-passing tests. Confirmed via `--dry-run` on 2026-07-17 for all five:
 
 ```
 utils/swarm-preflight.sh --gh-issue 174 --dry-run   # ready (exit 0)
 utils/swarm-preflight.sh --gh-issue 215 --dry-run   # ready (exit 0)
+utils/swarm-preflight.sh --gh-issue 208 --dry-run   # ready (exit 0)
+utils/swarm-preflight.sh --gh-issue 154 --dry-run   # ready (exit 0)
    → ready packet (candidate/freshness/fix-still-required + lane assignment)
 relay-automation/marathon-drive.sh ...   # build→gate→review, contained, one invocation per lane
 ```
 
-After Lanes 10-11 land: re-run full `validate.sh` and confirm only the pre-existing `#208`
-(`worktree-isolation.sh`) gate remains red (same discipline as every other marathon in this repo).
-Resolve #170 (close or re-triage) separately — it is not part of this fire.
+After Lanes 10-13 land: re-run full `validate.sh` and confirm it is fully green (Lane 12 is what
+clears the last pre-existing `#208` red gate). Resolve #170 (close or re-triage) separately — it is
+not part of this fire.
 
 ---
 
