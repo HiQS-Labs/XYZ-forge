@@ -73,7 +73,32 @@ instead of commits.
 
 ## Definition of done
 
-Not yet scoped — no fix direction has been chosen or rated. Whichever direction is picked needs:
+**Investigated 2026-07-17 by `/10days` Wave 2 — no fix shipped, and that's the correct outcome.**
+The "re-snapshot right before the revert" candidate above doesn't actually close the gap:
+`rtl_enforce` already reads a live, fresh `git status` immediately before invoking `rtl_check`; the
+real gap is the whole turn-execution window between `rtl_before` and `rtl_enforce`, which can't be
+narrowed away without re-running the turn. More fundamentally, **no code-only signal in this
+codebase can distinguish "a peer session's concurrent edit" from "the agent's own off-lane
+self-escape"** — both produce byte-identical porcelain diffs. `rtl_worktree_end`'s own GH-22 comment
+and `rtl_turn_prompt`'s residual-gap note explicitly document that a real observed agent (agy) *can*
+construct an absolute path back into `RTL_ROOT` and write there directly even while worktree-isolated
+— `rtl_enforce`'s off-lane revert (the exact mechanism this bug is about) is the documented backstop
+for that self-escape. Any fix of the shape "don't revert a newly-dirty non-allowlisted path" would
+silently disable protection against that already-exploited vector — a real containment regression,
+not a false-positive fix. Building a genuine attribution signal (PID/process, not a file-content
+heuristic) is the "redesign of the containment model" this doc's own non_goals rule out.
+
+**Recommended next steps (not implemented — for an operator decision, not an automated one):**
+1. **Recoverability-only mitigation (low risk, additive):** before `rtl_check()` discards an
+   off-lane path, back up its pre-revert content to a recoverable side-location, mirroring the
+   existing `refs/relay-orphan/<sha>` pattern already used for the moved-HEAD case. This doesn't
+   change any revert/preserve decision — it just makes a wrongly-caught peer edit recoverable
+   instead of "not recoverable in general" as today.
+2. **Documentation, not detection:** state the constraint explicitly in `ROUTER.md` / the
+   `relay-xyz` `SKILL.md` — don't hand-edit a clone while a driven relay/marathon turn is in flight
+   there. The only approach that prevents the race rather than trying to detect it post-hoc.
+
+Whichever direction is picked needs:
 - A concrete before/after test in `test/agy-turn.sh` (or a new file) that reproduces this exact race
   deterministically (inject a peer-session-style edit mid-turn, not just pre-turn) and shows it
   survives.
@@ -82,10 +107,14 @@ Not yet scoped — no fix direction has been chosen or rated. Whichever directio
 
 ## Swarm Preflight Contract
 
-> Fix direction not yet chosen (see Candidate fix directions). Leading candidate encoded below:
-> re-snapshot `git status --porcelain` immediately before the final off-lane scan and diff against
-> a live re-check. Preflight may report this NOT marathon-ready until the direction is ratified —
-> that is the honest state.
+> **Still not marathon-ready as of 2026-07-17** — investigated, not fixed (see above). No safe
+> code-only fix direction exists yet; the two recommended next steps are an operator decision, not
+> an automated one. Leave this contract as a placeholder until one is ratified; do not fire this
+> issue again without a chosen direction.
+
+```json
+{"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_absent","path":"relay-automation/relay-turn-lib.sh","pattern":"RTL_ORPHAN_BACKUP"}],"artifacts":["relay-automation/relay-turn-lib.sh","test/agy-turn.sh"],"remediation":{"source":"self#recoverability-mitigation","criteria":"NOT YET RATIFIED — placeholder pointing at recommended next step 1 (recoverability-only backup before rtl_check's revert) only. An operator must choose between the two recommended next steps above before this contract is treated as fireable."},"lanes":{"orchestrator_only":["relay-automation/relay-turn-lib.sh"]}}
+```
 
 ```json
 {"target":{"repo":".","ref":"main"},"gate":"bash validate.sh","fix_probes":[{"type":"grep_present","path":"relay-automation/relay-turn-lib.sh","pattern":"RTL_BEFORE"}],"artifacts":["relay-automation/relay-turn-lib.sh","test/agy-turn.sh"],"remediation":{"source":"self#definition-of-done","criteria":"A deterministic before/after test (in test/agy-turn.sh or a new file) injects a peer-session-style edit MID-turn and shows it survives rtl_enforce; case (8) pre-existing-WIP protection still passes; bash validate.sh green."},"lanes":{"orchestrator_only":["relay-automation/relay-turn-lib.sh"]}}
