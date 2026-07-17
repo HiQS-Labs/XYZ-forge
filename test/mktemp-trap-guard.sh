@@ -90,13 +90,16 @@ audit_file() {
     #       the original version only caught the same-line re-capture form and missed this.)
     # GH-177 review (Codex round 1, Blocker 2): the guard check itself used to accept ANY `||` anywhere
     # on a line merely mentioning $VAR as proof of validation (e.g. a decoy `echo "$VAR" || true` would
-    # have silently suppressed real findings after it). Tightened: a later line only counts as a guard
-    # if it has an explicit `-n`/`-z`/`-d` test naming $VAR; a same-line `||` counts ONLY when chained
-    # directly onto the mktemp assignment itself (the legitimate `X="$(mktemp -d)" || exit 1` form).
+    # have silently suppressed real findings after it) — round 1's "fix" narrowed that to a same-line
+    # `||` on the assignment itself, but that's STILL too loose: `TMP="$(mktemp -d)" || true` doesn't
+    # abort anything and leaves $TMP just as unvalidated (Codex round 2, Blocker). Removed the same-line
+    # shortcut entirely: the ONLY thing that counts as a guard now is an explicit `-n`/`-z`/`-d` test
+    # naming $VAR on some later line — a real `X="$(mktemp -d)" || { ...; exit 1; }` still passes fine
+    # because the very next validation line (`[ -n "$X" ] && [ -d "$X" ] || ...`) always follows it in
+    # a correct fix; there's no legitimate guard shape this drops.
     if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=.*mktemp ]]; then
       local var="${BASH_REMATCH[1]}"
       local guarded=0
-      [[ "$line" == *'||'* ]] && guarded=1   # same-line exit-status check on the assignment itself
 
       local j
       for ((j = idx + 1; j < n && guarded == 0; j++)); do
