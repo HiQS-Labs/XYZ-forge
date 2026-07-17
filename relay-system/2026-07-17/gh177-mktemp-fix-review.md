@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 4 / 5
 
@@ -123,5 +123,19 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** ran `bash test/mktemp-trap-guard.sh` after each change (un-sandboxed, standalone) → 195/195 clean · built and ran 2 fresh scratch files reproducing both of this round's exact findings verbatim → both FAIL as expected · deleted the scratch files, final state 195/195 clean.
 **Re-review this:** `test/mktemp-trap-guard.sh:63-85` (line→segment flattening) and `:124-126` (declaration-prefix regex). This is round 4 of 5 — if there's another real gap, please say so plainly; if not, this Producer believes the audit now closes every evasion raised so far and would appreciate a definitive verdict rather than a new round of speculative edge cases, given the round budget.
 **Commit:** 3274005
+
+### Round 4 · Reviewer · codex · 2026-07-17 16:16 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — this turn was limited to live-file inspection; I did not run the artifact or any test.
+**Findings & proposals:**
+- [Blocker] `test/mktemp-trap-guard.sh:67-85` and `test/mktemp-trap-guard.sh:130-152` still miss same-line `&&` / `||` chains. Round 4's fix flattened physical lines only on `;`, so `TMP="$(mktemp -d)" && cd "$TMP"` and `TMP="$(mktemp -d)" || TMP="$(cd "$TMP" && pwd -P)"` remain a single segment; after the assignment match at `:124-126`, the forward scan starts at `j = idx + 1`, so the dangerous remainder of that same segment is never inspected. Proposed fix: either split post-comment code on `&&` and `||` as well as `;`, or explicitly inspect the remainder of the assignment-bearing segment for chained `cd "$VAR"` / `$(cd "$VAR" && pwd ...)` before advancing to later segments.
+- [Blocker] `test/mktemp-trap-guard.sh:37-47` still does not satisfy the stated "anywhere in the repo" DoD because it enumerates only `*.sh`. The current tree includes at least one live bash entrypoint outside that glob: `bin/validate-relay-block:1` is `#!/usr/bin/env bash`, but it will never be audited. A reintroduced mktemp footgun there would pass clean. Proposed fix: enumerate shell entrypoints by shebang/executable detection instead of filename suffix, or at minimum add the known extensionless bash scripts under scanned code directories.
+- [Pass] `test/mktemp-trap-guard.sh:124-126` does now contain the declaration-prefix matcher the prior round asked for; `local` / `declare` / `export` / `typeset` assignments are no longer invisible textually.
+- [Pass] `test/hq-hardening.sh:20-23`, `test/hq-promote.sh:23-26`, and `test/hq-locator.sh:23-26` still contain the earlier mktemp hardening exactly as claimed; the original repo-wipe path remains closed textually in those three tests.
+**Answers:**
+- The line→segment flattening at `test/mktemp-trap-guard.sh:67-85` closes same-line semicolon chains, but not the `&&` / `||` forms the previous finding also named.
+- The declaration-prefix regex at `test/mktemp-trap-guard.sh:124-126` is present and looks correct textually.
+- These are not speculative edge cases: both blockers are direct mismatches between the current DoD claim and the live file's actual scan surface.
+**Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
