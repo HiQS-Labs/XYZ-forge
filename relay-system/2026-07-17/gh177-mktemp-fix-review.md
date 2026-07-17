@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -72,5 +72,14 @@ The operator just said "take your turn on this file." Everything you need is **i
 - The audit has blind spots; the two blockers above are the material ones.
 - I did not independently re-run `bash test/mktemp-trap-guard.sh` because the operator explicitly forbade running artifact/test files this turn. Textually, the script still appears designed to avoid the known comment-only and bare-`mktemp` false positives, but that is not a behavioral re-verification.
 **Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
+
+### Round 2 · Producer · 2026-07-17 16:10 PDT
+**Decisions on proposals:** (operator-approved — both verified against the actual pre-fix file before disposing)
+- [Blocker] "the audit does not cover 'anywhere in the repo'; it only walks test/, utils/, relay-automation/, skills/, and bin/... a reintroduced footgun in root-level shell files like validate.sh, install.sh, run-tests.sh, or under tools/ would pass clean" — Verified: confirmed all 4 files exist and were unscanned (`validate.sh`, `install.sh`, `run-tests.sh` at repo root, `tools/sentinel-route.sh`). Implemented → added `tools` to `SCAN_DIRS` (`test/mktemp-trap-guard.sh:37`) and a `find "$REPO" -maxdepth 1 -type f -name '*.sh'` root-level scan (`test/mktemp-trap-guard.sh:46`) merged into the same file list. · Proof: file count went from 191 → 195 (exactly the 4 previously-missing files), 0 failures.
+- [Blocker] "Tier 2 only catches the one-line re-capture form... it treats ANY later line mentioning $VAR plus || as 'guarded'. An equivalent bug can slip through as split steps such as cd "$TMP" on one line and TMP="$(pwd -P)" on the next, or by inserting an unrelated echo "$TMP" || true before the re-capture" — Verified both evasions reproduce against the pre-fix test file (built 2 scratch files matching exactly what Codex described, both silently passed). Implemented → tightened the guard to require an explicit `-n`/`-z`/`-d` test naming the var (removed the loose "any `||` on a line mentioning $var" branch entirely), kept same-line exit-status `||` as valid only when chained directly onto the mktemp assignment itself, and added a new BARE-cd check (`test/mktemp-trap-guard.sh:118-124`, fail fires at `:121`) that flags `cd "$VAR"` whenever it isn't opened inside a subshell/command-substitution on that same line (checked via "does the text before the `cd` token contain an unclosed `(`") and no guard preceded it — this fires regardless of whether a later line ever recaptures the result, closing the split-statement evasion directly. · Proof: re-ran both scratch files reconstructing the exact evasions from the Reviewer's description — both now FAIL as expected; deleted the scratch files and reconfirmed 195/195 clean on the real repo.
+**Did:** No other changes — scope was exactly the 2 Blockers. The 3-file fix (`hq-hardening.sh`/`hq-promote.sh`/`hq-locator.sh`) that closed the original repo-wipe is unchanged from Round 1 and was marked `[Pass]` by the Reviewer already.
+**Verification:** ran `bash test/mktemp-trap-guard.sh` after each change (un-sandboxed, standalone — never the full `validate.sh`) → clean 195/195, 0 failures · built and ran 2 fresh disposable scratch files reproducing the Reviewer's exact 2 evasion examples verbatim (a decoy `echo "$TMP" || true` before a re-capture; a bare `cd "$TMP"` split from a separate `TMP="$(pwd -P)"` line) → both correctly FAIL post-fix · deleted the scratch files, re-ran → clean again.
+**Re-review this:** `test/mktemp-trap-guard.sh:33-48` (scan-scope fix) and `:77-126` (guard-tightening + new bare-cd tier). Also: is the "no guard preceded it" ordering check (only lines strictly after the mktemp assignment count) sufficient, or is there a case where a guard needs to appear on the assignment line itself in a form I'm not yet recognizing?
+**Commit:** 0641e2b
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
