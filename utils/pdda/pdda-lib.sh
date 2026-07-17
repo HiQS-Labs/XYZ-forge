@@ -186,6 +186,20 @@ pdda_list_working_docs() {
   find "$PDDA_WORKING_DIR" -type f -name '*.md' ! -name 'blank.md' | LC_ALL=C sort
 }
 
+# Mirrors pdda_list_working_docs() exactly, just pointed at PDDA_COMPLETED_DIR (PROJECT/3-COMPLETED)
+# instead of PDDA_WORKING_DIR. Added for GH-189: check_issue_doc_sync() needs to scan docs that were
+# already swept to 3-COMPLETED, since a doc leaves PDDA_WORKING_DIR's scan set the moment the sync
+# check's own recommended `git mv` remediation is followed.
+pdda_list_completed_docs() {
+  if [ -n "${PDDA_ONLY_FILE:-}" ]; then
+    case "$PDDA_ONLY_FILE" in
+      "$PDDA_COMPLETED_DIR"/*.md) [ -f "$PDDA_ONLY_FILE" ] && printf '%s\n' "$PDDA_ONLY_FILE" ;;
+    esac
+    return
+  fi
+  find "$PDDA_COMPLETED_DIR" -type f -name '*.md' ! -name 'blank.md' | LC_ALL=C sort
+}
+
 pdda_list_inbox_issue_docs() {
   if [ -n "${PDDA_ONLY_FILE:-}" ]; then
     case "$PDDA_ONLY_FILE" in
