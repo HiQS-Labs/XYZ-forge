@@ -2,11 +2,15 @@
 gh_issue: 141
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/141
 title: "Containment: rtl_enforce's pre-turn dirty snapshot can't see a concurrent peer session's edit that lands mid-turn, reverting it as off-lane"
-status: Not yet scoped/started — PDDA 1-INBOX intake
+status: Active (2-WORKING) — promoted 2026-07-17 by /10days (11-14 day sweep); confirmed still unfixed via fix-probe polarity check (RTL_BEFORE porcelain-snapshot mechanism unchanged), distinct from the separately-shipped GH-13/GH-140 concurrent-commit hardening
 created: 2026-07-05
-updated: 2026-07-05
+updated: 2026-07-17
 owner: noel
 doc_type: bugfix
+complexity: 2
+risk: 2
+effort: 2
+ratings_provisional: true
 non_goals:
   - Not a fix for GH-140 (non-atomic worktree copyback corrupting a live-executing script) -- a
     different mechanism, already shipped separately.
