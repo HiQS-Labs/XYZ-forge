@@ -1,6 +1,7 @@
 ---
 title: Marathon Plan G (2026-07-17) — marathon/relay driver hardening (GH-149, GH-198)
-status: Both lanes fireable, contracts verified ready via --dry-run
+status: Both lanes SHIPPED 2026-07-17 via the GH208-154-149-198 marathon (codex builder, agy
+  reviewer, both Approved)
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -31,7 +32,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Both lanes triaged 2026-07-17 during a recent-issues (last 10 days) sweep and confirmed still reproducible against current code. Capture docs authored with Swarm Preflight Contracts; both verified ready via `swarm-preflight.sh --dry-run`. | Fire both lanes (fully parallel, no shared write-set). |
+| **Both lanes SHIPPED 2026-07-17** via a combined 4-phase marathon (`MARATHON-2026-07-17-GH208-154-149-198/`, codex builder, agy reviewer). Lane 1 (#149): `marathon-drive.sh` resolves the driver lock via `git rev-parse --git-common-dir` in a linked worktree; new regression case in `test/marathon-drive.sh`, 105/105 green. Lane 2 (#198 Bug 2): `relay-drive.sh` gained a Setup-artifact preflight check; `test/relay-artifact-file.sh` 13/13 green. Full `bash validate.sh`: 113/114 (only the separately-fixed `relay-pkg-freshness.sh` staleness). | Both lanes done — merge the marathon branch. |
 
 ## Collision map
 

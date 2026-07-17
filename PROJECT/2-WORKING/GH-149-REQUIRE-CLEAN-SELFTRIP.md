@@ -32,7 +32,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Confirmed live 2026-07-16 by direct code read of `relay-automation/marathon-drive.sh`: lines 137-140 place the lock at `$ROOT/.relay-driver.lock` (inside the worktree) whenever `$ROOT/.git` is a file rather than a directory — exactly the linked-worktree case. Lines 405-411's `git status --porcelain` clean-check excludes only `^phases/` and `^\.tick/` via awk, not the lock path/dir, so `--require-clean` hard-stops (line 411) on the driver's own lock. No commits since 2026-07-06 touch this (`git log --since` for relay-automation/marathon-drive.sh shows only unrelated GH-212/205/206/207/162 work). | Resolve the lock via `git rev-parse --git-common-dir "$ROOT"` when `$ROOT/.git` is a file, so the lock always lands in the real `.git/` dir outside the worktree's porcelain view (cleaner than widening the awk exclusion, which would need to track the exact lock filename forever). |
+| **Fixed and verified 2026-07-17** via the GH208-154-149-198 marathon (codex builder, agy reviewer, Approved). `relay-automation/marathon-drive.sh` now resolves the driver lock via `git rev-parse --git-common-dir "$ROOT"` when `$ROOT/.git` is a file (linked worktree), placing it in the real `.git/` dir instead of `$ROOT/.relay-driver.lock` — outside the worktree's own `git status --porcelain` view. Falls back to the original hidden-lock-beside-scripts behavior for a vendored `.xyz/` copy where `git-common-dir` can't resolve. New regression case added to `test/marathon-drive.sh` (+31 lines). Full `bash test/marathon-drive.sh` green: 105/105. | Closed out — nothing further for this lane. |
 
 ## Findings
 
@@ -47,17 +47,18 @@ for that workaround.
 
 ### Checklist
 
-- [ ] In `relay-automation/marathon-drive.sh`, resolve the driver lock path via
-      `git rev-parse --git-common-dir "$ROOT"` when `$ROOT/.git` is a file (linked worktree), so the
-      lock lands outside the worktree's own `git status --porcelain` view
-- [ ] Add/extend a regression test (in `test/marathon-drive.sh`) that runs `marathon-drive.sh
-      --require-clean` from inside a linked worktree and asserts it does NOT self-trip on its own lock
-- [ ] Full `bash test/marathon-drive.sh` still green
+- [x] Resolved the driver lock path via `git rev-parse --git-common-dir "$ROOT"` when `$ROOT/.git`
+      is a file (linked worktree), so the lock lands outside the worktree's own
+      `git status --porcelain` view (falls back to the original hidden-lock behavior when
+      `git-common-dir` can't resolve, e.g. a vendored `.xyz/` copy)
+- [x] Added a regression case to `test/marathon-drive.sh` proving `--require-clean` no longer
+      self-trips on its own lock from inside a linked worktree
+- [x] Full `bash test/marathon-drive.sh` green: 105/105
 
 ### QA checklist — Phase 0
 
-- [ ] Fix scoped to the lock-path resolution only — no unrelated marathon-drive.sh changes
-- [ ] Regression test added to `test/marathon-drive.sh` is additive (new test case), not a rewrite of
+- [x] Fix scoped to the lock-path resolution only — no unrelated marathon-drive.sh changes
+- [x] Regression test added to `test/marathon-drive.sh` is additive (new test case), not a rewrite of
       existing cases
 
 ## Swarm Preflight Contract
