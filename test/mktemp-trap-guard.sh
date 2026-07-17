@@ -64,14 +64,34 @@ audit_file() {
   local line
   while IFS= read -r line || [ -n "$line" ]; do lines+=("$line"); done < "$file"
 
-  local idx n="${#lines[@]}"
-  for ((idx = 0; idx < n; idx++)); do
+  # GH-177 review (Codex round 3, Blocker 1): scanning whole physical lines missed a same-line
+  # multi-statement chain — `TMP="$(mktemp -d)"; cd "$TMP"` (or `; TMP="$(cd "$TMP" && pwd)"`) all on
+  # ONE line is the identical failure shape, just never split across lines at all. Flatten each
+  # non-comment physical line into `;`-separated segments and scan those instead, so a same-line chain
+  # is checked exactly like the same statements on separate lines would be. Naive split — doesn't
+  # respect quoting/heredocs — an accepted limitation of this heuristic audit, same tradeoff already
+  # made by its other checks (comment-skip, no real parser). A comment line contributes NO segments
+  # (splitting `# TMP=...; stuff` would wrongly treat "stuff" as live code).
+  local -a seg=() seg_ln=()
+  local rest s
+  for ((idx = 0; idx < ${#lines[@]}; idx++)); do
     line="${lines[$idx]}"
     is_comment_line "$line" && continue
+    rest="$line"
+    while [[ "$rest" == *';'* ]]; do
+      s="${rest%%;*}"; rest="${rest#*;}"
+      seg+=("$s"); seg_ln+=("$((idx + 1))")
+    done
+    seg+=("$rest"); seg_ln+=("$((idx + 1))")
+  done
+
+  local n="${#seg[@]}"
+  for ((idx = 0; idx < n; idx++)); do
+    line="${seg[$idx]}"
 
     # --- Tier 1: the exact historical footgun shape, unsafe regardless of context ---
     if [[ "$line" =~ cd[[:space:]]+\"?\$\(.*mktemp ]]; then
-      fail "$rel:$((idx + 1)) unsafe 'cd \$(mktemp ...)' idiom — cd \"\" silently succeeds and stays at cwd if mktemp fails, instead of erroring: ${line#"${line%%[![:space:]]*}"}"
+      fail "$rel:${seg_ln[$idx]} unsafe 'cd \$(mktemp ...)' idiom — cd \"\" silently succeeds and stays at cwd if mktemp fails, instead of erroring: ${line#"${line%%[![:space:]]*}"}"
     fi
 
     # --- Tier 2: a var assigned from mktemp, later `cd`'d into without a real guard first ------------
@@ -97,14 +117,18 @@ audit_file() {
     # naming $VAR on some later line — a real `X="$(mktemp -d)" || { ...; exit 1; }` still passes fine
     # because the very next validation line (`[ -n "$X" ] && [ -d "$X" ] || ...`) always follows it in
     # a correct fix; there's no legitimate guard shape this drops.
-    if [[ "$line" =~ ^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)=.*mktemp ]]; then
-      local var="${BASH_REMATCH[1]}"
+    # GH-177 review (Codex round 3, Blocker 2): the entry regex required the var name to start the
+    # segment, so a declaration-prefixed assignment (`local TMP="$(mktemp -d)"`, `declare TMP=...`,
+    # `export TMP=...`) was invisible to Tier 2 entirely. Optional keyword+space prefix now allowed;
+    # the var name is always capture group 2 (group 1 is the optional keyword clause, empty if absent).
+    local decl_re='^[[:space:]]*(local[[:space:]]+|declare[[:space:]]+|export[[:space:]]+|typeset[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)=.*mktemp'
+    if [[ "$line" =~ $decl_re ]]; then
+      local var="${BASH_REMATCH[2]}"
       local guarded=0
 
       local j
       for ((j = idx + 1; j < n && guarded == 0; j++)); do
-        is_comment_line "${lines[$j]}" && continue
-        local L="${lines[$j]}"
+        local L="${seg[$j]}"
 
         if [[ "$L" == *"\$$var"* || "$L" == *"\${$var}"* ]] \
            && [[ "$L" =~ \[[[:space:]]+-[nzd][[:space:]] ]]; then
@@ -114,14 +138,14 @@ audit_file() {
 
         local recapture_re="=.*\\\$\\(.*cd[[:space:]]+\"?\\\$\\{?${var}\\}?\"?.*&&[[:space:]]*pwd"
         if [[ "$L" =~ $recapture_re ]]; then
-          fail "$rel:$((idx + 1)) \$$var assigned from mktemp, then RE-CAPTURED via '\$(cd \"\$$var\" && ...)' at line $((j + 1)) with no non-empty/is-directory guard in between — same shape as the historical repo-wipe (GH-177), just split across lines"
+          fail "$rel:${seg_ln[$idx]} \$$var assigned from mktemp, then RE-CAPTURED via '\$(cd \"\$$var\" && ...)' at ${rel}:${seg_ln[$j]} with no non-empty/is-directory guard in between — same shape as the historical repo-wipe (GH-177), just split across lines/statements"
           break
         fi
 
         if [[ "$L" =~ cd[[:space:]]+\"?\$\{?$var\}?\"? ]]; then
           local before_cd="${L%%cd*}"
           if [[ "$before_cd" != *'('* ]]; then
-            fail "$rel:$((idx + 1)) \$$var assigned from mktemp, then BARE 'cd \"\$$var\"' at line $((j + 1)) (not scoped inside a subshell) with no non-empty/is-directory guard first — changes the script's own cwd unconditionally if mktemp failed, same failure class as GH-177"
+            fail "$rel:${seg_ln[$idx]} \$$var assigned from mktemp, then BARE 'cd \"\$$var\"' at ${rel}:${seg_ln[$j]} (not scoped inside a subshell) with no non-empty/is-directory guard first — changes the script's own cwd unconditionally if mktemp failed, same failure class as GH-177"
             break
           fi
         fi
