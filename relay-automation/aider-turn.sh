@@ -33,11 +33,20 @@ fi
 #   AIDER_AGENT     — the agent id this shim drives; NO-OPS unless RELAY_AGENT==AIDER_AGENT
 #   ALLOW_PATHS     — comma-separated extra git paths the turn may change (the artifact(s))
 #   RELAY_PEER      — the other agent's id, so rtl_enforce hands off "--to <peer>" when non-terminal
-#   OPENROUTER_API_KEY — REQUIRED. Aider reads it natively; this shim pre-flights it so a missing key
-#                        fails fast (exit 5) instead of Aider hanging on an interactive prompt.
-#   AIDER_BIN       — aider binary (default: aider); tests inject a stub
-#   AIDER_MODEL     — OpenRouter model id (default: openrouter/anthropic/claude-3.5-sonnet). Set it to
-#                     any OpenRouter model, e.g. openrouter/openai/gpt-4o, openrouter/deepseek/deepseek-chat.
+#   OPENROUTER_API_KEY — REQUIRED for the default OpenRouter seam. Aider reads it natively; this shim
+#                        pre-flights it so a missing key fails fast (exit 5) instead of Aider hanging on
+#                        an interactive prompt. NOT required when AIDER_OPENAI_API_BASE is set (below).
+#   AIDER_OPENAI_API_BASE — GH-147 Phase 2 (LM_STUDIO lane): set this to select the LM Studio / any
+#                     OpenAI-compatible seam instead of OpenRouter (e.g. http://127.0.0.1:1234/v1). Same
+#                     env-var contract Phase 1 proved in relay-automation/consult.sh / utils/py/consult.py
+#                     — reused verbatim, not redefined. Threads --openai-api-base/--openai-api-key into
+#                     the aider invocation and skips the OPENROUTER_API_KEY pre-flight entirely. Unset
+#                     (the default) keeps this shim byte-identical to the pre-GH-147 OpenRouter-only path.
+#   AIDER_OPENAI_API_KEY — client key for AIDER_OPENAI_API_BASE (default: dummy — local servers usually
+#                     ignore it, but Aider's client still requires a non-empty value; spike 0.2).
+#   AIDER_MODEL     — model id. Default: openrouter/anthropic/claude-3.5-sonnet (OpenRouter), or
+#                     openai/agents-a1 when AIDER_OPENAI_API_BASE is set (LM Studio). Set it to any
+#                     OpenRouter model, e.g. openrouter/openai/gpt-4o, openrouter/deepseek/deepseek-chat.
 #                     Resolving a colloquial name (e.g. "GLM 5.2") to its canonical slug? Don't probe
 #                     `aider --list-models` or curl the live catalog — run
 #                     `relay-automation/resolve-model-alias.sh "<name>"` first (local alias table,
@@ -73,7 +82,14 @@ source "$HERE/relay-turn-lib.sh"
 
 ROOT="${AIDER_TURN_ROOT:-"$(cd "$HERE/.." && pwd)"}"
 AIDER_BIN="${AIDER_BIN:-aider}"
-AIDER_MODEL="${AIDER_MODEL:-openrouter/anthropic/claude-3.5-sonnet}"
+# GH-147 Phase 2 (LM_STUDIO lane): two seams share this shim, same contract Phase 1 proved in
+# consult.sh. AIDER_OPENAI_API_BASE set -> LM Studio / OpenAI-compatible seam (default model
+# openai/agents-a1); unset -> the OpenRouter default, byte-identical to the pre-GH-147 behavior.
+if [[ -n "${AIDER_OPENAI_API_BASE:-}" ]]; then
+  AIDER_MODEL="${AIDER_MODEL:-openai/agents-a1}"
+else
+  AIDER_MODEL="${AIDER_MODEL:-openrouter/anthropic/claude-3.5-sonnet}"
+fi
 die() { printf 'aider-turn: %s\n' "$*" >&2; exit 2; }
 
 me="${RELAY_AGENT:-}"; f="${RELAY_FILE:-}"; t="${RELAY_TASK:-RELAY-TURN}"
@@ -88,10 +104,16 @@ if [[ "$me" != "$aider_agent" ]]; then
   exit 0
 fi
 
-# Auth pre-flight: OpenRouter is pure API-key. A missing key would make aider prompt interactively and
-# deadlock the headless turn, so fail fast with the remedy (mirrors agy's `agy login` pre-flight).
-if [[ -z "${OPENROUTER_API_KEY:-}" ]]; then
-  printf 'aider-turn: OPENROUTER_API_KEY is not set — Aider cannot reach OpenRouter. Export it (your OpenRouter key) then retry.\n' >&2
+# Auth pre-flight. Two seams share this shim (GH-147 Phase 2): OpenRouter is pure API-key (a missing
+# key would make aider prompt interactively and deadlock the headless turn, so fail fast with the
+# remedy — mirrors agy's `agy login` pre-flight); the LM Studio / OpenAI-compatible seam authenticates
+# via AIDER_OPENAI_API_BASE + AIDER_OPENAI_API_KEY (dummy default) instead and needs no
+# OPENROUTER_API_KEY at all — mirrors run_aider() in relay-automation/consult.sh verbatim.
+aider_auth_args=()
+if [[ -n "${AIDER_OPENAI_API_BASE:-}" ]]; then
+  aider_auth_args=(--openai-api-base "$AIDER_OPENAI_API_BASE" --openai-api-key "${AIDER_OPENAI_API_KEY:-dummy}")
+elif [[ -z "${OPENROUTER_API_KEY:-}" ]]; then
+  printf 'aider-turn: OPENROUTER_API_KEY is not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.\n' >&2
   exit 5
 fi
 
@@ -190,6 +212,7 @@ if aider_supports_add_gitignore_files; then
   gitignore_args+=(--add-gitignore-files)
 fi
 aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits
+            ${aider_auth_args[@]+"${aider_auth_args[@]}"}
             "${gitignore_args[@]}"
             --no-check-update --no-analytics --no-show-model-warnings --no-stream --map-tokens 0
             --chat-history-file "$AIDER_AUX_DIR/chat.history.md"
