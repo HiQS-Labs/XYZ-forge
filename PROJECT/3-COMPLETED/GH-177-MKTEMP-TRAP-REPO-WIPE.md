@@ -2,7 +2,7 @@
 gh_issue: 177
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/177
 title: "CRITICAL: test/hq-hardening.sh (+2 siblings) rm -rf'd the entire repo when mktemp -d failed under sandbox"
-status: "reopened 2026-07-17 — recurrence, original fix never landed"
+status: "shipped 2026-07-17 (e7fd117) — 3 files guarded, regression test added and verified"
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
