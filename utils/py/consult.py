@@ -8,7 +8,7 @@ import shlex
 import time
 from datetime import datetime
 import shutil
-from rtl import RelayTurnLib
+from rtl import RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root
 
 # Aider can exit 0 while printing an auth/config error transcript, or return only reasoning tokens with
 # empty visible content (GH-147 spike 0.1/0.4). Either is a failed advisor, not a real answer — trusting
@@ -79,6 +79,8 @@ def agy_auth_preflight(agy_bin, log_file):
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     root = os.environ.get("CONSULT_ROOT", xyz_root)
+    consult_tick_root = resolve_tick_repo_root(root)
+    consult_tick_bin = resolve_tick_bin(consult_tick_root, xyz_root)
     
     rtl = RelayTurnLib(root, xyz_root, "", "")  # Dummy init for transcript root
     
@@ -270,11 +272,28 @@ def main():
         if os.environ.get("CONSULT_GEMINI_JSON", "0") == "1":
             gj = os.path.join(run_dir, f"{label}.gemini.json")
             if os.path.exists(gj) and os.path.getsize(gj) > 0:
-                tick_bin = os.environ.get("TICK_BIN", os.path.join(root, "bin", "tick"))
-                try:
-                    subprocess.run([tick_bin, "cost", f"CONSULT-{label}", "--agent", "gemini", "--from-gemini-json", gj, "--tool", "gemini"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
-                except:
-                    warn("gemini tokens not captured (no parseable stats)")
+                if consult_tick_bin:
+                    tick_env = dict(os.environ)
+                    tick_env["TICK_REPO_ROOT"] = consult_tick_root
+                    try:
+                        subprocess.run(
+                            [
+                                consult_tick_bin,
+                                "cost",
+                                f"CONSULT-{label}",
+                                "--agent",
+                                "gemini",
+                                "--from-gemini-json",
+                                gj,
+                                "--tool",
+                                "gemini",
+                            ],
+                            env=tick_env,
+                            stderr=subprocess.DEVNULL,
+                            stdout=subprocess.DEVNULL,
+                        )
+                    except Exception:
+                        warn("gemini tokens not captured (no parseable stats)")
                 
     finally:
         subprocess.run(["git", "-C", root, "worktree", "remove", "--force", wt], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)

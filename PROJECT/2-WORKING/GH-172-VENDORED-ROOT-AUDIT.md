@@ -4,7 +4,7 @@ source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/iss
 title: Vendored harness root-semantics audit before Python-default cutover
 status: Phase 0 root/claim parity fixes landed and verified; Phase 1-4 marathon plan authored 2026-07-16, not yet fired
 created: 2026-07-07
-updated: 2026-07-16
+updated: 2026-07-17
 owner: noel
 doc_type: bugfix
 complexity: 4
@@ -122,6 +122,29 @@ In a vendored consumer repo, three roots are distinct and must stay distinct:
 
 The audit rule is simple: **never re-derive one of these from another when the orchestrator already
 handed the right one in.** In particular, the tick binary path and the tick repo root are separate.
+
+## Root contract (final)
+
+This is the durable GH-172 contract for vendored relay and marathon runs:
+
+1. **Harness install root** is the only place that owns harness-shipped executables and helpers such
+   as `.xyz/bin/tick`, `.xyz/relay-automation/*`, and `.xyz/utils/py/*`.
+2. **Coordination root** is the only place that owns `.tick/`, and every token, ping, cost, and
+   handoff event must resolve through `TICK_REPO_ROOT` to that shared event log.
+3. **Target/work root** is the editable repo surface, including any worktree-isolated checkout that a
+   driven turn mutates.
+
+Operational rules:
+
+- Resolve the tick binary independently from the coordination root. A correct `TICK_REPO_ROOT` does
+  not imply `bin/tick` lives there, and a correct harness tick path does not imply `.tick/` lives
+  beside it.
+- When the orchestrator already passed `TICK_BIN`, `TICK_REPO_ROOT`, or the target/work root, do not
+  silently substitute a derived value from another root.
+- Worktree isolation may swap the editable checkout under the target/work root, but it does not move
+  the shared coordination log out of `TICK_REPO_ROOT`.
+- A vendored consumer repo is correct only when all relay/marathon token and cost events land in the
+  consumer repo's pinned `.tick`, never in a stray `.xyz/.tick` or a consulted target repo.
 
 ## Findings written back from the audit
 

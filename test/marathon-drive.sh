@@ -484,27 +484,40 @@ BOTH_OUT="$(CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" run_driver --d
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+setup_vendored_consumer_fixture() {  # <root>
+  local root="$1"
+  mkdir -p "$root"
+  git -C "$root" init -q
+  git -C "$root" config user.email t@example.com
+  git -C "$root" config user.name test
+  printf '.tick/\n.xyz/.tick/\n' > "$root/.gitignore"
+  mkdir -p "$root/src"
+  printf 'module.exports = 1\n' > "$root/src/feature.js"
+  printf '# brief\n\nUpdate src/feature.js and append the relay.\n' > "$root/brief.md"
+  git -C "$root" add . >/dev/null 2>&1
+  git -C "$root" commit -q -m "consumer init" >/dev/null 2>&1
+  mkdir -p "$root/.xyz"
+  cp -R "$(cd "$(dirname "$0")/.." && pwd)/relay-automation" "$root/.xyz/"
+  cp -R "$(cd "$(dirname "$0")/.." && pwd)/bin" "$root/.xyz/"
+  cp -R "$(cd "$(dirname "$0")/.." && pwd)/src" "$root/.xyz/"
+  cp -R "$(cd "$(dirname "$0")/.." && pwd)/utils" "$root/.xyz/"
+}
+
+assert_vendored_tick_event() {  # <root> <grep-pattern> <pass-msg> <fail-msg>
+  local root="$1" pattern="$2" pass_msg="$3" fail_msg="$4"
+  find "$root/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>/dev/null \
+    | xargs -0 grep -l "$pattern" >/dev/null 2>&1 \
+    && pass "$pass_msg" \
+    || fail "$fail_msg"
+}
+
 # ── (17) GH-171: vendored full chain keeps claims in the consumer repo's .tick ─
 # Reproduces the live downstream shape: a consumer repo vendors this harness under .xyz/, then runs
 # marathon-drive -> relay-drive -> marathon-agent -> codex-turn/agy-turn with worktree isolation ON
 # and no --target-root. The regression is a shim clobbering the inherited TICK_REPO_ROOT, silently
 # creating .xyz/.tick and claiming there while relay-drive watches the consumer repo's real .tick.
 V="$WORK/vendor-consumer"
-mkdir -p "$V"
-git -C "$V" init -q
-git -C "$V" config user.email t@example.com
-git -C "$V" config user.name test
-printf '.tick/\n.xyz/.tick/\n' > "$V/.gitignore"
-mkdir -p "$V/src"
-printf 'module.exports = 1\n' > "$V/src/feature.js"
-printf '# brief\n\nUpdate src/feature.js and append the relay.\n' > "$V/brief.md"
-git -C "$V" add . >/dev/null 2>&1
-git -C "$V" commit -q -m "consumer init" >/dev/null 2>&1
-mkdir -p "$V/.xyz"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/relay-automation" "$V/.xyz/"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/bin" "$V/.xyz/"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/src" "$V/.xyz/"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/utils" "$V/.xyz/"
+setup_vendored_consumer_fixture "$V"
 VSTUBS="$WORK/vendor-stubs"
 mkdir -p "$VSTUBS"
 VCODEX="$VSTUBS/codex"
@@ -560,21 +573,7 @@ find "$V/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2>
 
 # ── (18) GH-172: vendored full chain stays on the consumer repo tick log in XYZ_PYTHON=1 mode ──
 VP="$WORK/vendor-consumer-python"
-mkdir -p "$VP"
-git -C "$VP" init -q
-git -C "$VP" config user.email t@example.com
-git -C "$VP" config user.name test
-printf '.tick/\n.xyz/.tick/\n' > "$VP/.gitignore"
-mkdir -p "$VP/src"
-printf 'module.exports = 1\n' > "$VP/src/feature.js"
-printf '# brief\n\nUpdate src/feature.js and append the relay.\n' > "$VP/brief.md"
-git -C "$VP" add . >/dev/null 2>&1
-git -C "$VP" commit -q -m "consumer init" >/dev/null 2>&1
-mkdir -p "$VP/.xyz"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/relay-automation" "$VP/.xyz/"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/bin" "$VP/.xyz/"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/src" "$VP/.xyz/"
-cp -R "$(cd "$(dirname "$0")/.." && pwd)/utils" "$VP/.xyz/"
+setup_vendored_consumer_fixture "$VP"
 (
   cd "$VP"
   unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
@@ -604,6 +603,108 @@ find "$VP/.tick/events" -maxdepth 1 -type f -name '*MARATHON-P1-TURN*' -print0 2
 [ ! -d "$VP/.xyz/.tick/events" ] \
   && pass "GH-172: vendored XYZ_PYTHON=1 run does not grow a stray .xyz .tick event log" \
   || fail "GH-172: vendored XYZ_PYTHON=1 run should not create .xyz/.tick"
+
+# ── (18b) GH-172: approval-path vendored Bash run keeps release + done in the consumer repo tick ──
+VCODEX_APPROVE="$VSTUBS/codex-approve"
+cat > "$VCODEX_APPROVE" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '\n### Round 1 · Builder · %s (stub)\nImplemented: test builder update\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+printf 'module.exports = 2\n' > "$PWD/src/feature.js"
+exit 0
+EOF
+chmod +x "$VCODEX_APPROVE"
+VAGY_APPROVE="$VSTUBS/agy-approve"
+cat > "$VAGY_APPROVE" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  whoami) printf 'agy-stub\n'; exit 0 ;;
+esac
+printf 'agy review stub\n'
+sed -i '' 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$PWD/phases/p1/RELAY.md"
+printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Approved\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+exit 0
+EOF
+chmod +x "$VAGY_APPROVE"
+VA="$WORK/vendor-consumer-approved"
+setup_vendored_consumer_fixture "$VA"
+(
+  cd "$VA"
+  unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
+  PATH="$VSTUBS:$PATH" CODEX_BIN="$VCODEX_APPROVE" AGY_BIN="$VAGY_APPROVE" \
+    ./.xyz/relay-automation/marathon-drive.sh \
+      --phase-brief brief.md \
+      --builder codex \
+      --reviewer agy \
+      --artifact src/feature.js \
+      --pre-advance-cmd "test -f src/feature.js" \
+      --round-cap 2
+) >/dev/null 2>&1
+rc=$?
+[ "$rc" -eq 0 ] && pass "GH-172: vendored Bash approval path exits 0 after reviewer approval" \
+  || fail "GH-172: vendored Bash approval path should exit 0, got $rc"
+TICK_REPO_ROOT="$VA" "$VA/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^status:[[:space:]]+done$' \
+  && pass "GH-172: vendored Bash approval path closes the consumer repo token" \
+  || fail "GH-172: vendored Bash approval path should end with a done token"
+assert_vendored_tick_event "$VA" '"type":"task.created"' \
+  "GH-172: vendored Bash approval path creates the task in the consumer repo .tick" \
+  "GH-172: vendored Bash approval path missing task.created in the consumer repo .tick"
+assert_vendored_tick_event "$VA" '"type":"task.claimed".*"agent":"codex"' \
+  "GH-172: vendored Bash approval path claims builder in the consumer repo .tick" \
+  "GH-172: vendored Bash approval path missing codex claim event"
+assert_vendored_tick_event "$VA" '"type":"task.released".*"agent":"codex".*"to_agent":"agy"' \
+  "GH-172: vendored Bash approval path releases builder to reviewer in the consumer repo .tick" \
+  "GH-172: vendored Bash approval path missing codex->agy release event"
+assert_vendored_tick_event "$VA" '"type":"task.claimed".*"agent":"agy"' \
+  "GH-172: vendored Bash approval path claims reviewer in the consumer repo .tick" \
+  "GH-172: vendored Bash approval path missing reviewer claim event"
+assert_vendored_tick_event "$VA" '"type":"task.done".*"agent":"agy"' \
+  "GH-172: vendored Bash approval path records reviewer done in the consumer repo .tick" \
+  "GH-172: vendored Bash approval path missing reviewer done event"
+[ ! -d "$VA/.xyz/.tick/events" ] \
+  && pass "GH-172: vendored Bash approval path does not grow a stray .xyz .tick event log" \
+  || fail "GH-172: vendored Bash approval path should not create .xyz/.tick"
+
+# ── (18c) GH-172: approval-path vendored XYZ_PYTHON=1 run keeps release + done in the consumer repo tick ──
+VAP="$WORK/vendor-consumer-approved-python"
+setup_vendored_consumer_fixture "$VAP"
+(
+  cd "$VAP"
+  unset MARATHON_ROOT MARATHON_HOME MARATHON_DRIVE MARATHON_YAML_BIN TICK_BIN XYZ_APPEND_BIN
+  PATH="$VSTUBS:$PATH" CODEX_BIN="$VCODEX_APPROVE" AGY_BIN="$VAGY_APPROVE" XYZ_PYTHON=1 \
+    ./.xyz/relay-automation/marathon-drive.sh \
+      --phase-brief brief.md \
+      --builder codex \
+      --reviewer agy \
+      --artifact src/feature.js \
+      --pre-advance-cmd "test -f src/feature.js" \
+      --round-cap 2
+) >/dev/null 2>&1
+rc=$?
+[ "$rc" -eq 0 ] && pass "GH-172: vendored XYZ_PYTHON=1 approval path exits 0 after reviewer approval" \
+  || fail "GH-172: vendored XYZ_PYTHON=1 approval path should exit 0, got $rc"
+TICK_REPO_ROOT="$VAP" "$VAP/.xyz/bin/tick" info MARATHON-P1-TURN | grep -qE '^status:[[:space:]]+done$' \
+  && pass "GH-172: vendored XYZ_PYTHON=1 approval path closes the consumer repo token" \
+  || fail "GH-172: vendored XYZ_PYTHON=1 approval path should end with a done token"
+assert_vendored_tick_event "$VAP" '"type":"task.created"' \
+  "GH-172: vendored XYZ_PYTHON=1 approval path creates the task in the consumer repo .tick" \
+  "GH-172: vendored XYZ_PYTHON=1 approval path missing task.created in the consumer repo .tick"
+assert_vendored_tick_event "$VAP" '"type":"task.claimed".*"agent":"codex"' \
+  "GH-172: vendored XYZ_PYTHON=1 approval path claims builder in the consumer repo .tick" \
+  "GH-172: vendored XYZ_PYTHON=1 approval path missing codex claim event"
+assert_vendored_tick_event "$VAP" '"type":"task.released".*"agent":"codex".*"to_agent":"agy"' \
+  "GH-172: vendored XYZ_PYTHON=1 approval path releases builder to reviewer in the consumer repo .tick" \
+  "GH-172: vendored XYZ_PYTHON=1 approval path missing codex->agy release event"
+assert_vendored_tick_event "$VAP" '"type":"task.claimed".*"agent":"agy"' \
+  "GH-172: vendored XYZ_PYTHON=1 approval path claims reviewer in the consumer repo .tick" \
+  "GH-172: vendored XYZ_PYTHON=1 approval path missing reviewer claim event"
+assert_vendored_tick_event "$VAP" '"type":"task.done".*"agent":"agy"' \
+  "GH-172: vendored XYZ_PYTHON=1 approval path records reviewer done in the consumer repo .tick" \
+  "GH-172: vendored XYZ_PYTHON=1 approval path missing reviewer done event"
+[ ! -d "$VAP/.xyz/.tick/events" ] \
+  && pass "GH-172: vendored XYZ_PYTHON=1 approval path does not grow a stray .xyz .tick event log" \
+  || fail "GH-172: vendored XYZ_PYTHON=1 approval path should not create .xyz/.tick"
 
 # ── (19) GH-212: unset --builder now resolves to the new default, codex ───────
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"

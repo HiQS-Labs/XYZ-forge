@@ -127,13 +127,15 @@ def main():
         os.environ["RELAY_WORKTREE_ISOLATION"] = "1"
 
     def warn_if_relay_file_untracked():
-        if get_env("RELAY_WORKTREE_ISOLATION", "1") == "0": return
+        if get_env("RELAY_WORKTREE_ISOLATION", "1") == "0":
+            return
         rdir = os.path.dirname(os.path.abspath(relay_file))
-        if not os.path.isdir(rdir): return
-        
+        if not os.path.isdir(rdir):
+            return
+
         try:
             prefix = subprocess.check_output(["git", "-C", rdir, "rev-parse", "--show-prefix"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
-        except:
+        except Exception:
             return
         rel = prefix + os.path.basename(relay_file)
         try:
@@ -141,10 +143,27 @@ def main():
             return
         except subprocess.CalledProcessError:
             pass
-        eprint(f"relay-drive: WARNING — relay file is not committed at HEAD: {rel}")
-        eprint("  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, so this untracked")
-        eprint("  file is INVISIBLE to the reviewer (it will find nothing and do no work). Remedy: commit")
-        eprint("  the relay file first, or re-run with RELAY_WORKTREE_ISOLATION=0.")
+
+        try:
+            relay_toplevel = subprocess.check_output(["git", "-C", rdir, "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
+            effective_root = get_env("RELAY_TARGET_ROOT", root_dir)
+            effective_toplevel = subprocess.check_output(["git", "-C", effective_root, "rev-parse", "--show-toplevel"], stderr=subprocess.DEVNULL).decode('utf-8').strip()
+        except Exception:
+            relay_toplevel = ""
+            effective_toplevel = ""
+
+        if relay_toplevel and relay_toplevel == effective_toplevel:
+            eprint(f"relay-drive: NOTE — relay file is not committed at HEAD: {rel}")
+            eprint("  RELAY_WORKTREE_ISOLATION=1 runs the turn-taker in a worktree at HEAD, but its own")
+            eprint("  worktree-seeding step copies this file's current content in regardless — this is")
+            eprint("  usually fine. Commit it for a clean paper trail, or re-run with")
+            eprint("  RELAY_WORKTREE_ISOLATION=0 if you want to rule out isolation entirely; neither is required.")
+        else:
+            eprint(f"relay-drive: WARNING — relay file is not committed at HEAD: {rel}")
+            eprint("  It lives in a DIFFERENT repo than the turn-taker's root (archive-routed?), so the")
+            eprint("  usual worktree-seeding fallback does NOT cover it — it may be genuinely INVISIBLE to")
+            eprint("  the reviewer (it will find nothing and do no work). Remedy: commit the relay file")
+            eprint("  first, or re-run with RELAY_WORKTREE_ISOLATION=0.")
 
     warn_if_relay_file_untracked()
 

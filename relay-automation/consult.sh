@@ -54,7 +54,8 @@ fi
 #   CONSULT_ROOT               git root to consult against (default: this repo)
 #   CONSULT_TIMEOUT            per-advisor wall-clock cap in seconds (default: 300). A hung CLI is
 #                              killed and reported as failed, so the other model still degrades gracefully.
-#   TICK_BIN                   tick binary for cost capture (default: <root>/bin/tick)
+#   TICK_BIN                   tick binary for cost capture (default: resolved independently from
+#                              CONSULT_ROOT via TICK_REPO_ROOT, else harness-local bin/tick)
 #
 # Boundary note: advisors run in a throwaway git worktree, so they cannot touch the operator's REPO.
 # That is repo-isolation, NOT an OS sandbox — only Codex additionally gets `-s read-only`; a model
@@ -69,6 +70,8 @@ ROOT="${CONSULT_ROOT:-"$(cd "$HERE/.." && pwd)"}"
 # to $XYZ_ARCHIVE_ROOT when that is set, else byte-for-byte "$ROOT/relay-system". consult.sh lives
 # beside relay-turn-lib.sh, so source it by the script's own dir (NOT $ROOT, which may be a foreign repo).
 source "$HERE/relay-turn-lib.sh"
+CONSULT_TICK_ROOT="${TICK_REPO_ROOT:-$ROOT}"
+CONSULT_TICK_BIN="$(rtl_tick_bin "$CONSULT_TICK_ROOT")"
 CODEX_BIN="${CODEX_BIN:-codex}"
 AGY_BIN="${AGY_BIN:-${GEMINI_BIN:-agy}}"
 GEMINI_BIN="${GEMINI_BIN:-$AGY_BIN}"
@@ -356,7 +359,7 @@ fi
 if [[ "${CONSULT_GEMINI_JSON:-0}" == "1" ]]; then
   gj="$RUN_DIR/${LABEL}.gemini.json"
   if [[ -s "$gj" ]]; then
-    "${TICK_BIN:-$ROOT/bin/tick}" cost "CONSULT-$LABEL" --agent gemini --from-gemini-json "$gj" --tool gemini \
+    "$CONSULT_TICK_BIN" cost "CONSULT-$LABEL" --agent gemini --from-gemini-json "$gj" --tool gemini \
       2>/dev/null || warn "gemini tokens not captured (no parseable stats)"
   fi
 fi
