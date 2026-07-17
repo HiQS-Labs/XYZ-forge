@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 5
 
@@ -81,5 +81,17 @@ The operator just said "take your turn on this file." Everything you need is **i
 **Verification:** ran `bash test/mktemp-trap-guard.sh` after each change (un-sandboxed, standalone — never the full `validate.sh`) → clean 195/195, 0 failures · built and ran 2 fresh disposable scratch files reproducing the Reviewer's exact 2 evasion examples verbatim (a decoy `echo "$TMP" || true` before a re-capture; a bare `cd "$TMP"` split from a separate `TMP="$(pwd -P)"` line) → both correctly FAIL post-fix · deleted the scratch files, re-ran → clean again.
 **Re-review this:** `test/mktemp-trap-guard.sh:33-48` (scan-scope fix) and `:77-126` (guard-tightening + new bare-cd tier). Also: is the "no guard preceded it" ordering check (only lines strictly after the mktemp assignment count) sufficient, or is there a case where a guard needs to appear on the assignment line itself in a form I'm not yet recognizing?
 **Commit:** 0641e2b
+
+### Round 2 · Reviewer · codex · 2026-07-17 16:06 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — this turn was limited to live-file inspection; I did not run the artifact or any test.
+**Findings & proposals:**
+- [Blocker] `test/mktemp-trap-guard.sh:98-99` still leaves the same-line evasion path open. The comment at `:94-95` says a same-line `||` only counts for a legitimate failure guard, but the implementation sets `guarded=1` for any `||` on the mktemp-assignment line. That means `TMP="$(mktemp -d)" || true` followed by `cd "$TMP"` or `TMP="$(cd "$TMP" && pwd -P)"` will now be treated as "guarded" and silently pass, even though mktemp failure still flows into the dangerous path. Proposed fix: only treat same-line `||` as a guard when the right-hand side aborts the path (`exit`, `return`, or a brace/group that does so), or simpler, remove the same-line-`||` shortcut entirely and rely on the explicit post-assignment validation checks.
+- [Pass] `test/mktemp-trap-guard.sh:37-46` does now cover the current repo-wide shell-script surface textually: every current `*.sh` file I enumerated is either root-level or under one of the scanned directories, so the Round 1 scan-scope blocker is closed on the present tree.
+- [Pass] `test/hq-hardening.sh:20-23`, `test/hq-promote.sh:20-23`, and `test/hq-locator.sh:22-25` still contain the earlier mktemp hardening exactly as claimed; the original repo-wipe path remains closed textually in those three tests.
+**Answers:**
+- The scan-scope fix at `test/mktemp-trap-guard.sh:33-48` looks correct for the current repository contents.
+- The ordering rule is not the problem; a guard after the assignment is the right place. The remaining gap is the assignment-line shortcut itself: `|| true` / other non-aborting handlers are still accepted as if they validated the variable.
+**Commit:** none (operator instructed no git; harness should make the file-scoped handoff commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
