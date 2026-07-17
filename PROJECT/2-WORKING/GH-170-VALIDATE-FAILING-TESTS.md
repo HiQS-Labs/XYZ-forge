@@ -2,9 +2,11 @@
 gh_issue: 170
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/170
 title: "validate.sh: 9 pre-existing failing tests (analyze/cost/watchdog-relay/deep-research/relay-token-collision/new-relay/find-harness/transcript-audit/marathon-plan)"
-status: Queued (1-INBOX) — queued for today's marathon (Marathon Plan F)
+status: STALE as of 2026-07-17 — all 9 tests currently pass (swarm-preflight verdict: STALE, exit 4;
+  independently re-verified, flaky Lanes 1/5 re-run 5x clean). Root cause of the flip unconfirmed.
+  Not fireable; recommend closing #170 pending operator confirmation.
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-17
 owner: noel
 doc_type: bug
 complexity: 3
@@ -55,7 +57,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Triaged all 9 failures 2026-07-07 to concrete failure signatures (see Findings below); none root-caused or fixed yet. Doc authored and queued into [Marathon Plan F](../2-WORKING/MARATHON-PLAN-2026-07-07-F-VALIDATE-FIXES.md) as 9 independent lanes. | Fire the marathon: each lane root-causes and fixes its one test file, in isolation (own `ALLOW_PATHS`), then confirms `validate.sh` gains that gate back without regressing any other. |
+| Triaged all 9 failures 2026-07-07 to concrete failure signatures (see Findings below); none root-caused or fixed yet. Doc authored and queued into [Marathon Plan F](MARATHON-PLAN-2026-07-07-F-VALIDATE-FIXES.md) as 9 independent lanes. **2026-07-17:** while building this doc's Swarm Preflight Contract, `swarm-preflight.sh --gh-issue 170` returned **STALE (exit 4)** — at least one of the 9 command probes reports the underlying test now passing. Independently re-ran all 9 test files directly: **all 9 currently PASS**, including 5 repeated runs each of the two confirmed-flaky lanes (1 `analyze.sh`, 5 `relay-token-collision.sh`) with zero failures. Root cause of the flip is **not confirmed** — no code change in this repo explains it (unlike GH-174, where a specific commit is the fix); most plausible explanations are an unrelated upstream fix, environment drift since 2026-07-07 (Lane 7's own triage already flagged device-state sensitivity), or the flaky lanes' underlying race no longer reproducing on this device/state. | **Not fireable as-is.** Recommend closing #170 as stale — flagged to the operator, not closed unilaterally, since the "why" is unconfirmed and re-opening with fresh triage is the right move if it flips red again. Marathon Plan F's Lanes 1-9 are marked non-fireable pending that decision; Lanes 10-11 remain active. |
 
 ## Findings (2026-07-07 triage)
 
@@ -146,3 +148,41 @@ in a way that also broke this adjacent flagging logic.
 - [ ] Full `validate.sh` re-run after all lanes land: 104/104 (or documents any gate still red with
       a reason)
 - [ ] No lane's fix regresses a currently-passing gate
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "command", "cmd": "bash test/analyze.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/cost.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/watchdog-relay.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/deep-research.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/relay-token-collision.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/new-relay.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/find-harness.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/transcript-audit.sh", "expect_nonzero": true },
+    { "type": "command", "cmd": "bash test/marathon-plan.sh", "expect_nonzero": true }
+  ],
+  "artifacts": [
+    "test/analyze.sh", "src/analyze.js",
+    "test/cost.sh",
+    "test/watchdog-relay.sh", "relay-automation/watchdog.sh",
+    "test/deep-research.sh", "relay-automation/deep-research.mjs",
+    "test/relay-token-collision.sh", "relay-automation/relay-drive.sh",
+    "test/new-relay.sh", "relay-automation/new-relay.sh",
+    "test/find-harness.sh", "skills/relay-xyz/find-harness.sh",
+    "test/transcript-audit.sh", "utils/transcript-audit.sh",
+    "test/marathon-plan.sh", "utils/marathon-plan.sh"
+  ],
+  "remediation": { "source": "self#phases", "criteria": "Phase 0 checklist in this doc (9 independent lanes, one per Findings section above)" },
+  "lanes": { "agy_safe": [], "orchestrator_only": [] }
+}
+```
+
+Note: each `command` probe's `cmd` is the exact test file for that lane — the contract does not
+pin a source file per probe since triage identified the symptom, not always the exact fix location
+(each lane's first job is finishing that root-cause, per the Execution contract above). `cost.sh`'s
+artifact list is intentionally test-file-only for the same reason; its root cause (the `agents[]`
+builder) is not yet located.

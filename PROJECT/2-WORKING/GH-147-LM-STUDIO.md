@@ -286,6 +286,22 @@ inventing a second containment path.
 - [ ] Bad LM Studio config fails before the harness reports a successful turn.
 - [ ] Existing Aider/OpenRouter turns still behave the same when LM Studio is not selected.
 
+## Swarm Preflight Contract (Phase 2 only)
+
+Scoped to Phase 2 — reusing the Aider relay seam for LM Studio turns. Phases 0-1 above are already
+done; Phases 3-4 are not yet in scope for this contract.
+
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash test/aider-turn.sh",
+  "fix_probes": [ { "type": "grep_absent", "path": "relay-automation/aider-turn.sh", "pattern": "LM_STUDIO" } ],
+  "artifacts": [ "relay-automation/aider-turn.sh", "utils/py/aider-turn.py", "test/aider-turn.sh" ],
+  "remediation": { "source": "self#phases", "criteria": "Phase 2 checklist in this doc" },
+  "lanes": { "agy_safe": [ "relay-automation/aider-turn.sh", "utils/py/aider-turn.py", "test/aider-turn.sh" ], "orchestrator_only": [] }
+}
+```
+
 ## Phase 3 — Teach swarm-preflight and marathon routing about the lane
 
 Purpose: make the lane plannable without making it the default or pretending it is interchangeable

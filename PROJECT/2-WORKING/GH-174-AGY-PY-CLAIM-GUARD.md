@@ -2,14 +2,15 @@
 gh_issue: 174
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/174
 title: "GH-171 follow-up: utils/py/agy-turn.py never got a claim-before-launch guard (XYZ_PYTHON=1 agy turns still exposed)"
-status: Queued (1-INBOX) — queued for today's marathon (Marathon Plan F, Lane 10)
+status: Re-scoped 2026-07-17 (2-WORKING) — the guard itself already landed via GH-172 Phase 0
+  (commit 7e9e683); only the dedicated regression test remains, queued as Marathon Plan F Lane 10
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-17
 owner: noel
 doc_type: bug
-complexity: 2
+complexity: 1
 risk: 1
-effort: 2
+effort: 1
 phases: 1
 ratings_provisional: true
 non_goals:
@@ -48,7 +49,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Gap found and filed 2026-07-07 during GH-171 fix review; queued into Marathon Plan F as Lane 10. Not yet built. | Fire the lane: port `relay-automation/agy-turn.sh`'s new claim-before-launch block into `utils/py/agy-turn.py`, mirroring `utils/py/codex-turn.py`'s existing claim/verify/exit-5 pattern; add a regression test proving it under `XYZ_PYTHON=1`. |
+| Gap found and filed 2026-07-07 during GH-171 fix review; queued into Marathon Plan F as Lane 10. **2026-07-17:** the code fix itself landed as a side effect of GH-172's Phase 0 root-semantics audit (commit `7e9e683`) — confirmed live: `utils/py/agy-turn.py`'s `main()` now calls `claim_task_or_exit(...)` before launching agy. `XYZ_PYTHON=1 bash test/agy-turn.sh` passes except one pre-existing, unrelated failure (`genuine breach should exit 5, got 0` — reproduces identically on pre-GH-172 commit `fafa890`). Not closing #174: the dedicated regression test (checklist item 2 below) is still missing. Re-scoped to test-only, cx/risk/eff downgraded 2/1/2 → 1/1/1. | Fire the (now much smaller) lane: extend the GH-171 vendored-consumer fixture in `test/marathon-drive.sh` to run the full chain under `XYZ_PYTHON=1` and confirm the agy (reviewer) leg's claim event lands in the consumer repo's `.tick`, mirroring the existing codex-leg assertion. Do not re-touch `utils/py/agy-turn.py` — no further source change needed. |
 
 ## The bug
 
@@ -71,18 +72,32 @@ its `claim_paths_for_turn`-adjacent logic and the claim/info/exit-5/ping sequenc
 
 ### Checklist
 
-- [ ] Add the claim-before-launch block to `utils/py/agy-turn.py`'s `main()`, using the same
-      `TICK_BIN`/pinned-root/harness-local resolution order as `utils/py/codex-turn.py`.
+- [x] Add the claim-before-launch block to `utils/py/agy-turn.py`'s `main()`, using the same
+      `TICK_BIN`/pinned-root/harness-local resolution order as `utils/py/codex-turn.py`. → landed via
+      GH-172 Phase 0, commit `7e9e683` (`claim_task_or_exit(...)` call confirmed live in `main()`).
 - [ ] Extend the GH-171 vendored-consumer fixture in `test/marathon-drive.sh` (or add a dedicated
       python-mode variant) to run the full chain with `XYZ_PYTHON=1` and confirm the reviewer's
       claim event lands in the consumer repo's `.tick`, mirroring the existing Bash-mode GH-171
-      assertions.
-- [ ] Confirm `XYZ_PYTHON=1 bash test/agy-turn.sh` and the extended `test/marathon-drive.sh` case
-      both green.
+      assertions. **← remaining work for this lane.**
+- [x] Confirm `XYZ_PYTHON=1 bash test/agy-turn.sh` green. → green except the pre-existing, unrelated
+      `genuine breach should exit 5, got 0` failure (reproduces identically on pre-GH-172 `fafa890`).
 
 ### QA checklist — Phase 0
 
-- [ ] The fix is a direct port of the already-verified Bash pattern, not a redesign.
+- [ ] The new regression test passes and specifically proves the agy-leg claim event lands under
+      `XYZ_PYTHON=1` — not just that the suite is green overall.
 - [ ] No regression in existing Bash-mode or Python-mode `codex-turn`/`agy-turn`/`marathon-drive`
       suites.
-- [ ] `python3 -m py_compile utils/py/agy-turn.py` clean.
+- [x] `python3 -m py_compile utils/py/agy-turn.py` clean (verified as part of GH-172 Phase 0).
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "main" },
+  "gate": "bash test/marathon-drive.sh",
+  "fix_probes": [ { "type": "grep_absent", "path": "test/marathon-drive.sh", "pattern": "GH-174: agy claim event lands" } ],
+  "artifacts": [ "test/marathon-drive.sh" ],
+  "remediation": { "source": "self#phases", "criteria": "Phase 0 checklist item 2 in this doc (the regression test)" },
+  "lanes": { "agy_safe": [ "test/marathon-drive.sh" ], "orchestrator_only": [] }
+}
+```
