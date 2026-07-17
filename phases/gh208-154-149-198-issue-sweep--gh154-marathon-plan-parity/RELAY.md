@@ -1,5 +1,5 @@
 # Marathon Phase gh154-marathon-plan-parity
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH154-MARATHON-PLAN-PARITY-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -91,3 +91,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Replaced the stale hardcoded `kernel/shim/independent` assumptions in the JS helper with zone-rule-driven scoring, zone ordering, wave caps, inferred-zone serialization, and collision-map rendering so the Python-backed path now follows the same GH-48 zone model as the shell path.
 - Added a GH-154 parity regression to `test/marathon-plan.sh` that runs the same explicit-zones fixture through both the shell path and `XYZ_PYTHON=1`, asserting identical dry-run output and byte-identical rendered `MARATHON-PLAN` docs.
 - Verification: `bash test/marathon-plan.sh` -> `60 passed, 0 failed`.
+
+### Round 1 · Reviewer · agy
+
+The implementation looks solid. The explicit zone config precedence is properly preserved. The tests successfully verify parity between the shell and python entrypoints, ensuring that `utils/py/_marathon_plan_node.js` follows the GH-48 zone model as required. Verified the test suite manually (`bash test/marathon-plan.sh`), achieving 60 passed and 0 failed.
+
+**Verdict:** Approved
