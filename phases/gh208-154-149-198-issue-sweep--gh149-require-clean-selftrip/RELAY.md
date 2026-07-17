@@ -1,5 +1,5 @@
 # Marathon Phase gh149-require-clean-selftrip
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH149-REQUIRE-CLEAN-SELFTRIP-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -86,3 +86,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Updated `relay-automation/marathon-drive.sh` so the driver lock stays at `$ROOT/.git/relay-driver.lock` for normal clones, resolves through `git -C "$ROOT" rev-parse --git-common-dir` when `$ROOT/.git` is a file (linked worktree), and keeps the existing `.relay-driver.lock` fallback for vendored/non-git roots.
 - Added an additive linked-worktree regression to `test/marathon-drive.sh` that creates a real `git worktree`, runs `marathon-drive.sh --require-clean` from inside it, and asserts the run stays clean, does not report `.relay-driver.lock` as dirt, and still seeds the phase.
 - Verification: `bash test/marathon-drive.sh` -> `105 pass, 0 fail`.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+The changes successfully resolve the issue. The lock path correctly resolves through the git common dir for linked worktrees, preventing `--require-clean` from self-tripping, and the new regression tests pass cleanly.
