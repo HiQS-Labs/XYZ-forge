@@ -2,8 +2,11 @@
 gh_issue: 222
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/222
 title: "Marathon end-of-session hygiene gaps: no cost summary in marathon-drive.sh, no worktree cleanup in /10days"
-status: "Proposed (1-INBOX — not yet active)"
+status: "Promoted to 2-WORKING 2026-07-17 — both gaps re-confirmed live in current code (no
+  tick analyze/cost-summary call anywhere in marathon-drive.sh; zero worktree remove/prune
+  mentions in skills/10days/SKILL.md). Swarm Preflight Contract added, ready to fire."
 created: 2026-07-17
+updated: 2026-07-17
 owner: noel
 doc_type: bugfix
 complexity: 2
@@ -23,6 +26,12 @@ goal: >
   unlike relay-drive.sh) and give the /10days skill an explicit worktree-cleanup step so parallel-lane
   runs don't leave orphaned worktrees behind.
 ---
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Captured 2026-07-17 via a chat audit; promoted to `2-WORKING` same day after re-confirming both gaps live in code (`relay-automation/marathon-drive.sh` has no `tick analyze` call anywhere; `skills/10days/SKILL.md` has zero `worktree remove`/`worktree prune` mentions). Swarm Preflight Contract added below. | Fire both lanes (independent write-sets, safe to run concurrently): Lane 1 adds the cost summary to `marathon-drive.sh`; Lane 2 adds worktree cleanup to `/10days` Step 7. |
 
 ## Problem (confirmed in code/docs, not assumed)
 
@@ -66,3 +75,24 @@ accumulates orphaned worktree directories under the repo's git metadata across s
   its final exit, matching relay-drive.sh's existing render, without changing any existing exit code.
 - `skills/10days/SKILL.md` Step 7 explicitly removes each lane's worktree after its commits are
   merged, and Step 8's report format includes a cleanup-failure line if any removal fails.
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "relay-automation/marathon-drive.sh", "pattern": "tick analyze" },
+    { "type": "grep_absent", "path": "skills/10days/SKILL.md", "pattern": "worktree remove" }
+  ],
+  "artifacts": [
+    "relay-automation/marathon-drive.sh",
+    "skills/10days/SKILL.md"
+  ],
+  "remediation": {
+    "source": "issue#222",
+    "criteria": "(1) marathon-drive.sh prints a tick analyze --format human cost block at its final exit (standalone or via marathon.sh), reusing relay-drive.sh's existing xyz_relay_cost_summary render verbatim, wired into the same EXIT-trap lock cleanup so a failed/forced tick analyze call can never change the driver's real exit code; silenced-when-nested precedent (XYZ_HARNESS_CONTEXT) is not violated — this is the outer harness picking up the responsibility relay-drive.sh explicitly defers to it. (2) skills/10days/SKILL.md Step 7 explicitly runs git worktree remove for each lane's worktree after its commits are merged onto the marathon branch, and Step 8's report format gains a cleanup-failure line if any removal fails. (3) bash validate.sh green, no worse than pre-existing environmental reds."
+  },
+  "lanes": { "agy_safe": [ "relay-automation/marathon-drive.sh", "skills/10days/SKILL.md" ], "orchestrator_only": [] }
+}
+```
