@@ -82,3 +82,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH154-MARATHON-PLAN-PARITY-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh208-154-149-198-issue-sweep--gh154-marathon-plan-parity/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Touched `utils/marathon-plan.sh`, `utils/py/_marathon_plan_node.js`, and `test/marathon-plan.sh`.
+- Carried `--zones-config` through the `XYZ_PYTHON=1` shim by stripping the CLI flag in the Bash wrapper and exporting `QUEUE_PLAN_ZONES_FILE` before invoking the Python entrypoint. This keeps the explicit-config precedence intact without editing `utils/py/marathon_plan.py`, which was outside the allowlist.
+- Ported the shell planner's explicit zone-config resolver into `utils/py/_marathon_plan_node.js`: JSON validation, `--zones-config` / `QUEUE_PLAN_ZONES_FILE` / root-local / built-in precedence, foreign zone names, `pathRegex`, `inferKeywordRegex`, `maxPerWave`, `penalty`, `conservativeWhenInferred`, and `escalateOrchestratorOnly`.
+- Replaced the stale hardcoded `kernel/shim/independent` assumptions in the JS helper with zone-rule-driven scoring, zone ordering, wave caps, inferred-zone serialization, and collision-map rendering so the Python-backed path now follows the same GH-48 zone model as the shell path.
+- Added a GH-154 parity regression to `test/marathon-plan.sh` that runs the same explicit-zones fixture through both the shell path and `XYZ_PYTHON=1`, asserting identical dry-run output and byte-identical rendered `MARATHON-PLAN` docs.
+- Verification: `bash test/marathon-plan.sh` -> `60 passed, 0 failed`.
