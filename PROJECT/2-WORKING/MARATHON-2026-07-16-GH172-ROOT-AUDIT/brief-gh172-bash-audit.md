@@ -19,7 +19,7 @@ roadmap_exempt: true
 
 ## Phase: gh172-bash-audit — audit remaining Bash entry points against the root contract
 
-Full context: [GH-172-VENDORED-ROOT-AUDIT.md](../GH-172-VENDORED-ROOT-AUDIT.md).
+Full context: [GH-172-VENDORED-ROOT-AUDIT.md](../../3-COMPLETED/GH-172-VENDORED-ROOT-AUDIT.md).
 GitHub issue: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/172
 
 ### Root contract (read this first)

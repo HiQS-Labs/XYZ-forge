@@ -23,7 +23,7 @@ roadmap_exempt: true
 
 This recommendation is intentionally limited to the recorded artifacts for GH-172:
 
-- [GH-172-VENDORED-ROOT-AUDIT.md](../GH-172-VENDORED-ROOT-AUDIT.md) for the Phase 0 root-contract
+- [GH-172-VENDORED-ROOT-AUDIT.md](GH-172-VENDORED-ROOT-AUDIT.md) for the Phase 0 root-contract
   findings and fixes already landed before the marathon phases.
 - [GH-172-BASH-AUDIT-FINDINGS.md](GH-172-BASH-AUDIT-FINDINGS.md) for the scoped Bash audit results.
 - [GH-172-PYTHON-AUDIT-FINDINGS.md](GH-172-PYTHON-AUDIT-FINDINGS.md) for the scoped Python audit
