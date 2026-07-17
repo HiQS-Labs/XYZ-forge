@@ -138,6 +138,18 @@ audit_file() {
     if [[ "$line" =~ $decl_re ]]; then
       local var="${BASH_REMATCH[2]}"
       local guarded=0
+      # GH-177 review (Codex round 5, final Blocker): a lone `-n` OR `-z` OR `-d` test was accepted as
+      # a conclusive guard even when it doesn't actually gate anything — `[ -n "$TMP" ] || true` or a
+      # bare `[ -d "$TMP" ] || echo miss` both mention the var with a real test, but neither ABORTS on
+      # failure, so mktemp failure still flows straight through to the dangerous path. Fail-closed now:
+      # require BOTH a non-empty (`-n`) test AND an is-directory (`-d`) test for this var, each provably
+      # gating (chained to `|| exit`, `|| return`, or a `{ ...; exit|return; }` block) — same line or
+      # accumulated across separate lines. A decoy that mentions the var without actually aborting sets
+      # neither flag, so it can never silently satisfy the guard.
+      local seen_n_abort=0 seen_d_abort=0
+      local n_re="-n[[:space:]]+\"?\\\$\\{?${var}\\}?\"?"
+      local d_re="-d[[:space:]]+\"?\\\$\\{?${var}\\}?\"?"
+      local abort_re='\|\|[[:space:]]*(exit|return|\{[^}]*(exit|return))'
 
       # GH-177 review (Codex round 4, Blocker 1): `;`-splitting alone missed same-SEGMENT `&&`/`||`
       # chains (`TMP="$(mktemp -d)" && cd "$TMP"`, `... || TMP="$(cd "$TMP" && pwd)"`) — the chained
@@ -149,8 +161,11 @@ audit_file() {
       for ((j = idx; j < n && guarded == 0; j++)); do
         local L="${seg[$j]}"
 
-        if [[ "$L" == *"\$$var"* || "$L" == *"\${$var}"* ]] \
-           && [[ "$L" =~ \[[[:space:]]+-[nzd][[:space:]] ]]; then
+        if [[ ("$L" == *"\$$var"* || "$L" == *"\${$var}"*) && "$L" =~ $abort_re ]]; then
+          [[ "$L" =~ $n_re ]] && seen_n_abort=1
+          [[ "$L" =~ $d_re ]] && seen_d_abort=1
+        fi
+        if [ "$seen_n_abort" -eq 1 ] && [ "$seen_d_abort" -eq 1 ]; then
           guarded=1
           break
         fi
