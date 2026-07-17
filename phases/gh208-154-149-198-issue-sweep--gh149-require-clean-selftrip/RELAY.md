@@ -80,3 +80,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH149-REQUIRE-CLEAN-SELFTRIP-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh208-154-149-198-issue-sweep--gh149-require-clean-selftrip/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Updated `relay-automation/marathon-drive.sh` so the driver lock stays at `$ROOT/.git/relay-driver.lock` for normal clones, resolves through `git -C "$ROOT" rev-parse --git-common-dir` when `$ROOT/.git` is a file (linked worktree), and keeps the existing `.relay-driver.lock` fallback for vendored/non-git roots.
+- Added an additive linked-worktree regression to `test/marathon-drive.sh` that creates a real `git worktree`, runs `marathon-drive.sh --require-clean` from inside it, and asserts the run stays clean, does not report `.relay-driver.lock` as dirt, and still seeds the phase.
+- Verification: `bash test/marathon-drive.sh` -> `105 pass, 0 fail`.
