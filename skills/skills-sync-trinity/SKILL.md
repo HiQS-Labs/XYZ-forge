@@ -1,5 +1,5 @@
 ---
-name: skill-sync-trinity
+name: skills-sync-trinity
 description: >-
   Build or update a repo-local Codex skill by keeping three artifacts aligned:
   the canonical PDDA working doc, the skill's `SKILL.md`, and deterministic
@@ -7,7 +7,7 @@ description: >-
   drifted so the plan, instructions, and scripts no longer match.
 ---
 
-# skill-sync-trinity
+# skills-sync-trinity
 
 Use this skill when a repo-local skill needs to be scaffolded or repaired as one coherent bundle.
 The "trinity" is:
@@ -57,14 +57,14 @@ environment export writes snapshots into repo-local `temp/`; do not generate tho
   plus starter Python helpers for a target repo-local skill.
 - `scripts/validate_trinity.py`
   Checks that the working doc, pointer file, `SKILL.md`, and Python helpers are present and structurally aligned.
-- `scripts/export_frontier_skill_inventory.py`
+- `scripts/export_skills_sync_trinity.py`
   Writes the current Claude/Codex/Antigravity installed-skill file inventory into repo-local `temp/` when
   the user explicitly asks for that snapshot.
 
 ## Suggested commands
 
 ```bash
-python3 skills/skill-sync-trinity/scripts/render_working_doc.py \
+python3 skills/skills-sync-trinity/scripts/render_working_doc.py \
   --skill-dir skills/my-skill \
   --output PROJECT/2-WORKING/MY-SKILL.md \
   --title "My Skill" \
@@ -73,7 +73,7 @@ python3 skills/skill-sync-trinity/scripts/render_working_doc.py \
 ```
 
 ```bash
-python3 skills/skill-sync-trinity/scripts/sync_trinity.py \
+python3 skills/skills-sync-trinity/scripts/sync_trinity.py \
   --skill-dir skills/my-skill \
   --working-doc PROJECT/2-WORKING/MY-SKILL.md \
   --title "My Skill" \
@@ -82,14 +82,14 @@ python3 skills/skill-sync-trinity/scripts/sync_trinity.py \
 ```
 
 ```bash
-python3 skills/skill-sync-trinity/scripts/validate_trinity.py \
+python3 skills/skills-sync-trinity/scripts/validate_trinity.py \
   --skill-dir skills/my-skill \
   --working-doc PROJECT/2-WORKING/MY-SKILL.md
 ```
 
 ```bash
-python3 skills/skill-sync-trinity/scripts/export_frontier_skill_inventory.py \
-  --output-dir temp/frontier-skill-inventory
+python3 skills/skills-sync-trinity/scripts/export_skills_sync_trinity.py \
+  --output-dir temp/skills-sync-trinity
 ```
 
 ## Output contract
@@ -104,7 +104,7 @@ skill and scripts to match it.
 
 For frontier-environment inventory output, the output contract is:
 
-- one timestamped bundle under repo-local `temp/frontier-skill-inventory/`
+- one timestamped bundle under repo-local `temp/skills-sync-trinity/`
 - one `inventory.json` structured snapshot
 - one `README.md` human summary
 - one `<environment>-files.txt` listing per frontier environment

@@ -23,7 +23,7 @@ def infer_repo_root() -> Path:
 
 
 def default_output_dir() -> Path:
-    return infer_repo_root() / "temp" / "frontier-skill-inventory"
+    return infer_repo_root() / "temp" / "skills-sync-trinity"
 
 
 def timestamp_label() -> str:
@@ -171,7 +171,7 @@ def collect_environment(name: str, root: Path) -> dict[str, object]:
 
 def render_readme(report: dict[str, object]) -> str:
     lines = [
-        "# Frontier skill inventory",
+        "# Skills sync trinity inventory",
         "",
         f"Generated at: `{report['generated_at']}`",
         f"Bundle path: `{report['bundle_dir']}`",
