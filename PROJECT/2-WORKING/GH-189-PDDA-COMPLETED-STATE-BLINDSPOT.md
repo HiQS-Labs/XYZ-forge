@@ -2,9 +2,10 @@
 gh_issue: 189
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/189
 title: "PDDA: sweeping a doc to 3-COMPLETED silences the only issue-state check watching it — shipped items can sit in ROADMAP as 'ready to fire' indefinitely"
-status: captured 2026-07-08, rated
+status: captured 2026-07-08, rated; promoted to 2-WORKING 2026-07-17 (surfaced by a /10days
+  3-week bug sweep — no fix had landed), Swarm Preflight Contract added
 created: 2026-07-08
-updated: 2026-07-08
+updated: 2026-07-17
 owner: noel
 doc_type: bugfix
 goal: >
@@ -31,7 +32,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-08 while reconciling Marathon Plan C. The operator asked to extract Plan C's `#107` kernel track and build it standalone; verifying it was actually unbuilt revealed the opposite — all six lanes plus the kernel track had shipped 2026-07-04, yet `ROADMAP.md` still advertised them as unfired and `pdda.sh run` passed clean throughout. Root-caused to a scan-scope gap, not a logic bug. | Build: the two checks below. |
+| Captured 2026-07-08 while reconciling Marathon Plan C. The operator asked to extract Plan C's `#107` kernel track and build it standalone; verifying it was actually unbuilt revealed the opposite — all six lanes plus the kernel track had shipped 2026-07-04, yet `ROADMAP.md` still advertised them as unfired and `pdda.sh run` passed clean throughout. Root-caused to a scan-scope gap, not a logic bug. Re-surfaced 2026-07-17 by a `/10days` 3-week bug sweep: confirmed both `check_roadmap_issue_state` and a completed-docs scan in `check_issue_doc_sync` are still absent from `utils/pdda/pdda.sh`/`pdda-lib.sh`, and no commit references #189 — promoted to `2-WORKING`, Swarm Preflight Contract added, `swarm-preflight.sh --gh-issue 189 --dry-run` confirmed **ready** (exit 0). | Build: the two checks below. |
 
 ## Problem (grounded in the current code)
 
@@ -122,3 +123,24 @@ kernel track standalone. The verification step (confirm the item is genuinely un
 building it) found the work already shipped and merged, and traced the four-day-stale ledger to this
 scan-scope gap rather than to operator error. The accompanying reconciliation was **doc-only** —
 nothing was rebuilt.
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "utils/pdda/pdda.sh", "pattern": "check_roadmap_issue_state" },
+    { "type": "grep_absent", "path": "utils/pdda/pdda-lib.sh", "pattern": "pdda_list_completed_docs" }
+  ],
+  "artifacts": [
+    "utils/pdda/pdda.sh",
+    "utils/pdda/pdda-lib.sh"
+  ],
+  "remediation": {
+    "source": "issue#189",
+    "criteria": "(1) new check_roadmap_issue_state() added + registered in PDDA_DETERMINISTIC_CHECKS: warns when a ROADMAP.md ledger #<n> entry's status marker is non-terminal but the issue is CLOSED, or terminal (SHIPPED) while the issue is OPEN. (2) check_issue_doc_sync() extended via a new pdda_list_completed_docs() helper (mirroring pdda_list_working_docs) to also warn when a doc in 3-COMPLETED still carries a non-terminal frontmatter status. (3) both warn-only, both degrade to the existing 'state unavailable ... sync not evaluated' INFO path when gh is offline/no cached state. (4) a regression fixture reproduces the GH-107 shape (3-COMPLETED doc with status: captured, issue CLOSED, ROADMAP entry still non-terminal) and is flagged by both checks; the inverse shape (status: shipped, issue OPEN) still flags via the existing direction (b). (5) bash validate.sh green, no worse than the pre-existing #208/acorn/pytest environmental reds."
+  },
+  "lanes": { "agy_safe": [ "utils/pdda/pdda.sh", "utils/pdda/pdda-lib.sh" ], "orchestrator_only": [] }
+}
+```
