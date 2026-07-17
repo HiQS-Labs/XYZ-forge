@@ -15,7 +15,15 @@ fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 echo "== test: hq-promote (GH-138) =="
 
 command -v git >/dev/null 2>&1 || { echo "  SKIP: git absent"; echo "== hq-promote: 0 passed, 0 failed =="; exit 0; }
-TMP="$(cd "$(mktemp -d)" && pwd -P)"; trap 'rm -rf "$TMP"' EXIT
+# GH-177: mktemp -d can fail silently under a sandboxed shell (empty stdout, non-zero rc). The old
+# `cd "$(mktemp -d)" && pwd -P` idiom let `cd ""` succeed and silently stay at the CWD (the repo
+# root), so the EXIT trap below then rm -rf'd the entire repository — twice (2026-07-07, 2026-07-17).
+# Verify mktemp actually succeeded and returned a real directory BEFORE it's wired into a destructive
+# trap; canonicalize (macOS /tmp -> /private/tmp) only as a separate step afterward.
+TMP="$(mktemp -d)" || { echo "FAIL: mktemp -d failed" >&2; exit 1; }
+[ -n "$TMP" ] && [ -d "$TMP" ] || { echo "FAIL: mktemp -d returned an invalid path" >&2; exit 1; }
+trap 'rm -rf "$TMP"' EXIT
+TMP="$(cd "$TMP" && pwd -P)"
 
 ROOTS="$TMP/roots"; REPO="$ROOTS/myproj"
 mkdir -p "$REPO/PROJECT/1-INBOX" "$REPO/PROJECT/2-WORKING"

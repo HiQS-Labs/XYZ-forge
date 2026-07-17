@@ -15,7 +15,15 @@ echo "== test: hq-locator (GH-128 find-hq.sh) =="
 
 # Canonicalize: macOS mktemp yields /var/folders/… but the locator returns pwd -P
 # (/private/var/folders/…), so compare against the same canonical form.
-TMP="$(cd "$(mktemp -d)" && pwd -P)"; trap 'rm -rf "$TMP"' EXIT
+# GH-177: mktemp -d can fail silently under a sandboxed shell (empty stdout, non-zero rc). The old
+# `cd "$(mktemp -d)" && pwd -P` idiom let `cd ""` succeed and silently stay at the CWD (the repo
+# root), so the EXIT trap below then rm -rf'd the entire repository — twice (2026-07-07, 2026-07-17).
+# Verify mktemp actually succeeded and returned a real directory BEFORE it's wired into a destructive
+# trap; canonicalize only as a separate step afterward.
+TMP="$(mktemp -d)" || { echo "FAIL: mktemp -d failed" >&2; exit 1; }
+[ -n "$TMP" ] && [ -d "$TMP" ] || { echo "FAIL: mktemp -d returned an invalid path" >&2; exit 1; }
+trap 'rm -rf "$TMP"' EXIT
+TMP="$(cd "$TMP" && pwd -P)"
 
 # --- fake harness: utils/hq/hq.sh stub + the real find-hq.sh copied into skills/hq ---
 HARN="$TMP/harness"
