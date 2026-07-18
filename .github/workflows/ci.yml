@@ -63,3 +63,14 @@ jobs:
         run: |
           set -euo pipefail
           utils/pdda/pdda.sh run
+
+      # GH-230: prove the README Quickstart's npm-dependency path works from a fresh
+      # clone, so a missing-install-step regression fails here instead of on a
+      # newcomer's machine. Scoped to the acorn-extract test (the one that requires
+      # node_modules) because the full ./validate.sh suite has ~12 Ubuntu-environment
+      # failures unrelated to this gap — tracked in GH-232.
+      - name: Install npm dependencies and run acorn-extract test
+        run: |
+          set -euo pipefail
+          npm ci
+          bash test/acorn-extract.sh
