@@ -124,6 +124,7 @@ FULL_PROMPT="$PREAMBLE
 
 === CONSULT QUESTION ===
 $PROMPT_TEXT"
+printf '%s' "$PROMPT_TEXT" > "$RUN_DIR/${LABEL}.PROMPT.txt"
 
 # --- build the throwaway worktree = operator's CURRENT visible state, isolated --------------------
 # tracked WIP (staged+unstaged) WITHOUT touching the real tree; falls back to HEAD when clean.
@@ -318,11 +319,14 @@ done
 # citation excuse several later uncited claims — see rtl_has_uncited_claim's doc comment). Does NOT
 # check whether a present citation is ACCURATE (no citation-verification engine); it only catches a
 # claim with no citation attempt near it.
-CITELESS_MODELS=(); i=0
+PROMPT_SNAPSHOT="$RUN_DIR/${LABEL}.PROMPT.txt"
+CITELESS_MODELS=(); PROVENANCE_WARNINGS=(); i=0
 while ((i < ${#PIDS[@]})); do
   if [[ "${POK[$i]}" == "1" ]]; then
     model="${PMODELS[$i]}"; out="${POUTS[$i]}"
+    uncited=0
     if rtl_has_uncited_claim "$out"; then
+      uncited=1
       CITELESS_MODELS+=("$model")
       nocite="**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional ($model's answer carries an unsupported [Pass]/verified/confirmed-style claim with no quoted span or file:line citation nearby, despite the consult PREAMBLE asking advisors to cite evidence.)"
       case "$out" in
@@ -330,6 +334,29 @@ while ((i < ${#PIDS[@]})); do
         *) { printf '%s\n\n' "$nocite"; cat "$out"; } > "$out.stamped" && mv "$out.stamped" "$out" ;;
       esac
       printf '%s\n' "$nocite" > "$RUN_DIR/${LABEL}.${model}.NO-CITATION.txt"
+    fi
+    if [[ -f "$PROMPT_SNAPSHOT" ]]; then
+      provenance="$RUN_DIR/${LABEL}.${model}.PROVENANCE.txt"
+      firsthand_count=0; echoed_count=0; echoed_tokens=()
+      while IFS= read -r line || [[ -n "$line" ]]; do
+        case "$line" in
+          FIRSTHAND\ *) firsthand_count=$((firsthand_count + 1)) ;;
+          ECHOED\ *)
+            echoed_count=$((echoed_count + 1))
+            echoed_tokens+=("${line#ECHOED }")
+            ;;
+        esac
+      done < <(rtl_classify_cited_claims "$out" "$PROMPT_SNAPSHOT")
+      {
+        printf 'FIRSTHAND_COUNT=%d\n' "$firsthand_count"
+        printf 'ECHOED_COUNT=%d\n' "$echoed_count"
+        for token in "${echoed_tokens[@]+"${echoed_tokens[@]}"}"; do
+          printf 'ECHOED %s\n' "$token"
+        done
+      } > "$provenance"
+      if ((uncited == 0 && echoed_count > 0)); then
+        PROVENANCE_WARNINGS+=("$model:$echoed_count")
+      fi
     fi
   fi
   i=$((i + 1))
@@ -367,5 +394,8 @@ fi
 printf 'consult: %d answered, %d failed -> %s%s\n' "$answered" "$failed" "$RUN_DIR" "$summary"
 ((DEGRADED)) && warn "SINGLE-MODEL — NOT RECONCILED (stamped into $survivor_out and $RUN_DIR/DEGRADED-SINGLE-MODEL.txt)"
 ((${#CITELESS_MODELS[@]} > 0)) && warn "NO FIRSTHAND VERIFICATION CITED for: ${CITELESS_MODELS[*]} (stamped into transcript(s) + sidecar(s) in $RUN_DIR)"
+for pw in "${PROVENANCE_WARNINGS[@]+"${PROVENANCE_WARNINGS[@]}"}"; do
+  warn "prompt-trace classifier: ${pw%%:*} echoed ${pw#*:} cited claim(s) from ${LABEL}.PROMPT.txt (see $RUN_DIR/${LABEL}.${pw%%:*}.PROVENANCE.txt)"
+done
 ((answered > 0)) || { warn "all advisors failed"; exit 5; }
 exit 0

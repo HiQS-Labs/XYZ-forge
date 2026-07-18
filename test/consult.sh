@@ -251,8 +251,63 @@ pfile4="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
 grep -q "this other part also looks fine" "$pfile4" 2>/dev/null && pass "stamping preserved the real answer beneath it" \
   || fail "stamping corrupted the transcript content: $pfile4"
 
+# --- (15) GH-235 A4 v0 echoed-citation provenance: a cited claim whose citation already appears in
+# the operator prompt is classified ECHOED, written to PROVENANCE.txt, and warned once on stdout.
+ECHOED_STUB="$WORK/echoed-stub"
+cat >"$ECHOED_STUB" <<'EOF'
+#!/usr/bin/env bash
+printf 'ANSWER: verified — see relay-automation/consult.sh:266.\n[Pass] confirmed by relay-automation/consult.sh:266\nRECOMMENDATION: ship\n'
+EOF
+chmod +x "$ECHOED_STUB"
+rm -rf "$OUT"
+echo_prompt='Review relay-automation/consult.sh:266 and tell me if it checks out.'
+out="$(CONSULT_ROOT="$A" CODEX_BIN="$ECHOED_STUB" CODEX_FLAGS=" " \
+  bash "$CONSULT" --prompt "$echo_prompt" --out "$OUT" --label t --models codex 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "echoed-citation run exits 0" || fail "echoed-citation exit=$rc ($out)"
+printf '%s' "$out" | grep -q "prompt-trace classifier: codex echoed 2 cited claim(s)" \
+  && pass "echoed-citation stdout warns once with the echoed count" \
+  || fail "missing echoed-citation warning: $out"
+efile="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+epsnap="$(dirname "$efile")/t.PROMPT.txt"
+grep -qxF "$echo_prompt" "$epsnap" 2>/dev/null && pass "prompt snapshot persisted PROMPT_TEXT only" \
+  || fail "prompt snapshot missing or mutated: $epsnap"
+grep -q "INDEPENDENT advisor" "$epsnap" 2>/dev/null && fail "prompt snapshot wrongly includes PREAMBLE" \
+  || pass "prompt snapshot excludes PREAMBLE"
+eprov="$(dirname "$efile")/t.codex.PROVENANCE.txt"
+grep -q '^FIRSTHAND_COUNT=0$' "$eprov" 2>/dev/null && pass "echoed provenance counted zero firsthand claims" \
+  || fail "echoed provenance missing FIRSTHAND_COUNT=0: $eprov"
+grep -q '^ECHOED_COUNT=2$' "$eprov" 2>/dev/null && pass "echoed provenance counted echoed claims" \
+  || fail "echoed provenance missing ECHOED_COUNT=2: $eprov"
+grep -q '^ECHOED relay-automation/consult.sh:266$' "$eprov" 2>/dev/null \
+  && pass "echoed provenance records the matched token" \
+  || fail "echoed provenance missing matched token: $eprov"
 
-# --- (15) GH-215: XYZ_PYTHON=1 parity — the Python port must stamp SINGLE-MODEL — NOT RECONCILED
+# --- (16) GH-235 A4 v0 firsthand-citation provenance: a cited claim whose citation is NOT in the
+# prompt is classified FIRSTHAND, sidecar-only, with no echoed warn line.
+FIRSTHAND_STUB="$WORK/firsthand-stub"
+cat >"$FIRSTHAND_STUB" <<'EOF'
+#!/usr/bin/env bash
+printf 'ANSWER: verified — see relay-automation/consult.sh:266.\n[Pass] confirmed by relay-automation/consult.sh:266\nRECOMMENDATION: ship\n'
+EOF
+chmod +x "$FIRSTHAND_STUB"
+rm -rf "$OUT"
+out="$(CONSULT_ROOT="$A" CODEX_BIN="$FIRSTHAND_STUB" CODEX_FLAGS=" " \
+  bash "$CONSULT" --prompt "Review relay-automation/consult.sh carefully." --out "$OUT" --label t --models codex 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "firsthand-citation run exits 0" || fail "firsthand-citation exit=$rc ($out)"
+printf '%s' "$out" | grep -q "prompt-trace classifier:" \
+  && fail "firsthand-citation run wrongly warned echoed provenance: $out" \
+  || pass "firsthand-citation run emits no echoed warning"
+ffile="$(ls "$OUT"/t-*/t.codex.md 2>/dev/null | head -1)"
+fprov="$(dirname "$ffile")/t.codex.PROVENANCE.txt"
+grep -q '^FIRSTHAND_COUNT=2$' "$fprov" 2>/dev/null && pass "firsthand provenance counted firsthand claims" \
+  || fail "firsthand provenance missing FIRSTHAND_COUNT=2: $fprov"
+grep -q '^ECHOED_COUNT=0$' "$fprov" 2>/dev/null && pass "firsthand provenance counted zero echoed claims" \
+  || fail "firsthand provenance missing ECHOED_COUNT=0: $fprov"
+grep -q '^ECHOED ' "$fprov" 2>/dev/null && fail "firsthand provenance wrongly recorded echoed tokens" \
+  || pass "firsthand provenance records no echoed tokens"
+
+
+# --- (17) GH-215: XYZ_PYTHON=1 parity — the Python port must stamp SINGLE-MODEL — NOT RECONCILED
 # the same way Bash does. GH-172's prior audit found the tick-root/cost-routing fix landed in
 # utils/py/consult.py but the degraded-panel stamp (GH-178 A2) was never ported, so a Python-mode
 # consult run under a single-advisor-answered condition silently reported as if reconciled. This
@@ -275,7 +330,7 @@ sidecar15="$(dirname "$cfile15")/DEGRADED-SINGLE-MODEL.txt"
 [ -s "$sidecar15" ] && pass "XYZ_PYTHON=1 format-agnostic sidecar marker written" \
   || fail "XYZ_PYTHON=1 no sidecar marker at $sidecar15"
 
-# --- (16) GH-215 non-regression: XYZ_PYTHON=1 must NOT stamp a full 2/2 panel as degraded ----------
+# --- (18) GH-215 non-regression: XYZ_PYTHON=1 must NOT stamp a full 2/2 panel as degraded ----------
 rm -rf "$OUT"
 out="$(XYZ_PYTHON=1 STUB_WRITE=0 run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "XYZ_PYTHON=1 happy path exits 0" || fail "XYZ_PYTHON=1 happy path exit=$rc ($out)"

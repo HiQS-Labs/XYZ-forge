@@ -743,6 +743,54 @@ rtl_has_uncited_claim() {  # <file>
   ' "$f"
 }
 
+# GH-235 A4 v0: prompt-trace classifier for ALREADY-CITED claims only. Shares the same claim/citation
+# detector as rtl_has_uncited_claim() above; the only extra question is whether the nearby citation
+# string was discovered firsthand in the transcript or merely echoed from the operator prompt text
+# persisted by consult.sh. Known limitation: exact/whitespace-normalized substring matching can still
+# false-FIRSTHAND when the advisor reformats a prompt citation (e.g. prompt says "consult.sh lines
+# 117-126", answer cites consult.sh:117). v0 accepts that; do not fuzzy-match it here.
+rtl_classify_cited_claims() {  # <transcript_file> <prompt_file>
+  local transcript="$1" prompt="$2" win="${RTL_CITATION_WINDOW:-3}"
+  [[ -n "$transcript" && -f "$transcript" && -n "$prompt" && -f "$prompt" ]] || return 0
+  awk -v win="$win" -v word_re="$RTL_CLAIM_WORD_RE" -v cite_re="$RTL_CITATION_RE" '
+    function norm(s,    t) {
+      t = s
+      gsub(/[[:space:]]+/, " ", t)
+      sub(/^ /, "", t)
+      sub(/ $/, "", t)
+      return t
+    }
+    FNR == NR { prompt = prompt $0 "\n"; next }
+    { line[NR] = $0 }
+    END {
+      prompt_norm = norm(prompt)
+      for (i = 1; i <= NR; i++) {
+        if (line[i] ~ /\[Unverified — no citation\]/) continue
+        claim = (line[i] ~ /\[Pass\]/) || (line[i] ~ word_re)
+        if (!claim) continue
+        first_token = ""
+        echoed_token = ""
+        for (j = i; j <= NR && j <= i + win; j++) {
+          rest = line[j]
+          while (match(rest, cite_re)) {
+            token = substr(rest, RSTART, RLENGTH)
+            if (first_token == "") first_token = token
+            if (index(prompt_norm, norm(token)) > 0) {
+              echoed_token = token
+              break
+            }
+            rest = substr(rest, RSTART + RLENGTH)
+          }
+          if (echoed_token != "") break
+        }
+        if (first_token == "") continue
+        if (echoed_token != "") print "ECHOED " echoed_token
+        else print "FIRSTHAND " first_token
+      }
+    }
+  ' "$prompt" "$transcript"
+}
+
 rtl_enforce() {  # <task> <agent> <log> <tool>
   local task="$1" agent="$2" log="$3"; RTL_TOOL="$4"
   # (2) commit-bypass guard: the agent must NOT git. If HEAD moved, its edits are hidden from
