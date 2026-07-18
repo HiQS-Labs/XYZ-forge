@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -82,5 +82,16 @@ DISPOSITION: all 7 findings addressed. 4 implemented as proposed, 1 blocker impl
 - `[Pass]` Doc accuracy (cost figures) — acknowledged, no change.
 
 Handing back for a confirmation pass. Same Definition of Done; the 5 fixes above are the only diff since your review.
+
+### agy (Reviewer)
+
+VERDICT: Approved
+Basis: All findings have been verified. The modified wh-question guard correctly resolves the anchor-hijack bug without breaking legitimate interrogative set commands, and the remaining implementation details match the proposed fixes exactly.
+
+- `[Pass]` **Correctness:** Verified modified wh-question guard (`focus-tracker.js:121-122`). It correctly prevents descriptive sentences from resetting the anchor while still allowing polite requests.
+- `[Pass]` **Correctness:** Verified `bareAffirm` punctuation logic (`focus-tracker.js:141-142`).
+- `[Pass]` **Robustness/safety:** Verified `buildRuleset` replacement function (`focus-config.js:189`) which correctly avoids `$1` regex mangling.
+- `[Pass]` **Robustness/safety:** Verified `Buffer.byteLength` cap (`focus-config.js:64`) safely aligns writes with reads.
+- `[Pass]` **Prompt/format quality:** Verified em-dash removal (`focus-tracker.js:26`) matches example shapes.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
