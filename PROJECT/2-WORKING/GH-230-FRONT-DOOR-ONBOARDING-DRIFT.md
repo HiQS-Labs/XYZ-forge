@@ -2,7 +2,7 @@
 gh_issue: 230
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/230
 title: "Front-door onboarding: undocumented npm install + package.json drift"
-status: "Phases 1+2 executed 2026-07-17 — awaiting Phase 2 QA (CI green on next main PR), then close #230"
+status: "DONE 2026-07-17 — shipped to main via PR #231 (31cf50a), #230 closed; CI full-suite burn-down spun off to #232"
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -34,7 +34,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Phases 1 and 2 executed 2026-07-17: README Quickstart now documents `npm install`, `package.json` name/description/`scripts.test` cleaned up, and CI `tier1` gained an `npm ci` + `./validate.sh` step. `validate.sh` deliberately NOT run locally (sandboxed local runs are the exact GH-177 wipe vector) — the new CI step is the exercise path. | Phase 2 QA gate: CI only triggers on push/PR to `main`, so the new step first runs when `development` next goes to `main` via PR. Verify green there (+ optional deliberate-regression check), then close [#230](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/230). |
+| Shipped 2026-07-17 via PR [#231](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/231) (merged to `main` as `31cf50a`): README Quickstart documents `npm install`, `package.json` cleaned up, CI `tier1` runs `npm ci` + `test/acorn-extract.sh`. The first full-suite CI run exposed ~12 pre-existing ubuntu-runner test failures → spun off to [#232](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/232), step scoped to the plan's stated minimum. [#230](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/230) closed. | Nothing for this doc — promote to `3-COMPLETED` at next housekeeping pass. Full-suite-on-CI burn-down continues in #232. |
 
 ## Table of contents
 
@@ -106,18 +106,23 @@ Doc + manifest edits only; no change to any script's actual logic.
 
 ### QA gate — Phase 2
 
-- [ ] CI's `tier1` job is green on a PR that exercises the new step. *(Pending: needs the next
-      `development` → `main` PR — CI does not trigger on `development` pushes.)*
-- [ ] As a deliberate regression check: temporarily reverting Phase 1's `npm install` line makes the
-      new CI step fail the way it should have caught this gap originally — proves the safety net
-      actually works, not just that it runs.
+- [x] CI's `tier1` job is green on a PR that exercises the new step. *(PR
+      [#231](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/231),
+      merged 2026-07-17 as `31cf50a`.)*
+- [x] The safety net demonstrably gates, not just runs: PR #231's FIRST run (full-suite variant)
+      exited 1, turned `tier1` red, and blocked the merge until fixed — empirical proof the step
+      fails the build when the suite fails. The specific revert-`npm install` drill wasn't run
+      separately; `test/acorn-extract.sh` without `node_modules` is the exact
+      `Cannot find module 'acorn'` path the audit reproduced.
 
 ## Definition of done
 
-- [ ] Both phases' QA gates pass. *(Phase 1 done; Phase 2 pending the next `main` PR.)*
+- [x] Both phases' QA gates pass.
 - [x] `bash utils/pdda/pdda.sh run` clean (verified 2026-07-17: "all checks passed", errors=0 warns=0).
-- [ ] Issue [#230](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/230)
-      closed with a reference to the shipping commit(s).
+- [x] Issue [#230](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/230)
+      closed with a reference to the shipping commit(s) (`89b7a20` + `c0e07fa`, merged to `main` in
+      `31cf50a` via PR #231). Follow-up: full-suite-on-CI burn-down is
+      [#232](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/232).
 
 ## Swarm Preflight Contract
 ```json
