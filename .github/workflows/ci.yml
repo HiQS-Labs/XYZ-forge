@@ -63,3 +63,11 @@ jobs:
         run: |
           set -euo pipefail
           utils/pdda/pdda.sh run
+
+      # GH-230: run the suite the README Quickstart promises a fresh clone, so a
+      # missing-install-step regression fails here instead of on a newcomer's machine.
+      - name: Install npm dependencies and run validate suite
+        run: |
+          set -euo pipefail
+          npm ci
+          ./validate.sh

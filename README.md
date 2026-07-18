@@ -132,8 +132,12 @@ is the main active surface.
 Requires **Node 18+** and **git** (the `tick` kernel runs on Node). No accounts or API keys.
 
 ```bash
+npm install
 ./validate.sh
 ```
+
+(`npm install` pulls the two parser dependencies the test suite needs — skip it and the
+suite stops at `Cannot find module 'acorn'`.)
 
 That runs the full kernel + coordination test suite green in about a minute, with **no accounts
 or API keys required** — the fastest proof the coordination kernel actually works. The suite
