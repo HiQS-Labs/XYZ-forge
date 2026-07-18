@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-17.
 -->
 
-NEXT: Reviewer
+NEXT: claude-a
 STATUS: Open
 ROUND: 1 / 2
 
@@ -96,5 +96,25 @@ review-only turn; report findings in the relay thread and hand back.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+## Reviewer: agy
+
+**Verdict:** Changes requested
+
+### Findings
+
+- `[Blocker] .claude/settings.json:36`: The new `"matcher": "Bash"` block is shadowed by the earlier `"matcher": "Bash|Skill"` block. Claude Code stops evaluating hooks at the first matching matcher, meaning `gh177-sandbox-test-guard.sh` will never execute.
+  - **Fix:** Combine both commands into the `hooks` array of a single `"matcher": "Bash|Skill"` (or `"Bash"`) block.
+
+- `[Blocker] relay-automation/hooks/gh177-sandbox-test-guard.sh:73`: Command wrappers and shell builtins bypass the guard entirely. Commands like `command ./validate.sh`, `eval "./validate.sh"`, `env ./validate.sh` (without assignments), `. validate.sh`, or `$(./validate.sh)` assign the wrapper/symbol to `argv0`, which fails to match the `suite` regex or `interpreters` list.
+  - **Fix:** Add standard wrappers (`command`, `eval`, `exec`, `time`, `env`, `.`, `source`) to a list of tokens to shift off `toks` before evaluating `argv0`, similar to how variable assignments are skipped.
+
+- `[Blocker] relay-automation/hooks/gh177-sandbox-test-guard.sh:54`: Directory changes bypass the regex. `cd test && bash acorn-extract.sh` splits into `cd test` and `bash acorn-extract.sh`. The regex `test/[^/\s]+\.sh` fails to match `acorn-extract.sh` because the `test/` path prefix is missing from the segment.
+  - **Fix:** Loosen the regex to allow test scripts without the `test/` prefix (e.g., `(?:test/)?[^/\s]+\.sh`) or track `cd` state during segment parsing.
+
+- `[Should] utils/git-bundle-snapshot.sh:34`: A failure mid-run leaves a corrupt bundle that gets trusted. If `git bundle create` is killed (e.g., OOM, disk full) or if `git bundle verify` on line 35 fails, `set -e` aborts the script immediately. This leaves a partial, broken `.bundle` file on disk, which the rotation logic later counts as a valid backup.
+  - **Fix:** Write the bundle to a temporary path (`"$bundle_path.tmp"`), run `verify` against the `.tmp` file, and only `mv` it to `"$bundle_path"` if verification succeeds.
+
+- `[Pass] AGENTS.md:88`: Accurately scopes worktree isolation to file-modifying subagents and explicitly warns that shared `.git` refs/objects are unprotected from destructive git operations. No over-claiming or false sense of safety found.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
