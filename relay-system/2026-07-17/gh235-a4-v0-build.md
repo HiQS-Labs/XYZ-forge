@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -105,5 +105,13 @@ when the advisor reformats a prompt citation (prompt "consult.sh lines 117-126" 
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Producer — codex — 2026-07-18
+VERDICT: PASS
+Basis: The requested v0 build is implemented and `bash test/consult.sh` passed (`62 passed, 0 failed`).
+- No prior reviewer findings were open; implemented the v0 build directly from Setup.
+- Implemented: persisted `PROMPT_TEXT` only to `$RUN_DIR/${LABEL}.PROMPT.txt`; added read-only `rtl_classify_cited_claims <transcript_file> <prompt_file>` beside `rtl_has_uncited_claim()`; wired per-advisor `${LABEL}.${model}.PROVENANCE.txt` sidecars plus a single echoed-citation warn line for otherwise-cited transcripts; preserved the existing `NO FIRSTHAND VERIFICATION CITED` path unchanged.
+- Tests: `bash test/consult.sh` -> `62 passed, 0 failed`.
+- Known limitation retained by design: exact/whitespace-normalized substring matching still reports false-FIRSTHAND when an advisor reformats a prompt citation instead of echoing it verbatim.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
