@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-17.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -113,5 +113,14 @@ Basis: The requested v0 build is implemented and `bash test/consult.sh` passed (
 - Implemented: persisted `PROMPT_TEXT` only to `$RUN_DIR/${LABEL}.PROMPT.txt`; added read-only `rtl_classify_cited_claims <transcript_file> <prompt_file>` beside `rtl_has_uncited_claim()`; wired per-advisor `${LABEL}.${model}.PROVENANCE.txt` sidecars plus a single echoed-citation warn line for otherwise-cited transcripts; preserved the existing `NO FIRSTHAND VERIFICATION CITED` path unchanged.
 - Tests: `bash test/consult.sh` -> `62 passed, 0 failed`.
 - Known limitation retained by design: exact/whitespace-normalized substring matching still reports false-FIRSTHAND when an advisor reformats a prompt citation instead of echoing it verbatim.
+
+### Reviewer — agy — 2026-07-17
+VERDICT: Approved
+Basis: The v0 implementation is correct, exact to the prompt, and passes all tests.
+- `[Pass]` Persist prompt without preamble: `printf '%s' "$PROMPT_TEXT" > "$RUN_DIR/${LABEL}.PROMPT.txt"` correctly implemented at `relay-automation/consult.sh:127`.
+- `[Pass]` Classifier predicate: `rtl_classify_cited_claims` at `relay-automation/relay-turn-lib.sh:752` correctly implements the `awk` logic, reusing existing regexes and avoiding macOS awk `-v` bugs with `/\[Pass\]/`.
+- `[Pass]` Wire into consult post-collection: Sidecars are written at `relay-automation/consult.sh:350-356`, and the single warning is accumulated and emitted at `relay-automation/consult.sh:397-399`.
+- `[Pass]` No regression on existing stamp: The `rtl_has_uncited_claim` invocation and stamping remains untouched at `relay-automation/consult.sh:328-336`.
+- `[Pass]` Tests: Test cases 15 and 16 at `test/consult.sh:254` verify the firsthand vs echoed classification properly.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
