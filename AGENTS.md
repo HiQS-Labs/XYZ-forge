@@ -83,6 +83,20 @@ local change.
   install, and the resolution ladder are in [README.md → HQ — multi-repo command center](README.md#hq--multi-repo-command-center); agent-facing invocation flow + guardrails live in [skills/hq/SKILL.md](skills/hq/SKILL.md). Write paths preview by default; `fire` never drives the harness.
 - Changes to `.tick/events/`, `src/project.js`, relay containment, or event/verb shape are usually
   broader than they look. Treat them as at least Costly until proven otherwise.
+- **Contain tree-touching subagents with `isolation: "worktree"` (GH-177/GH-233).** A Claude Code
+  session spawning Agent/Workflow subagents that will *modify files* in this repo should pass
+  `isolation: "worktree"` so a runaway destructive command shreds a disposable checkout, not the main
+  tree (this repo has been wiped twice — see
+  `PROJECT/3-COMPLETED/GH-177-MKTEMP-TRAP-REPO-WIPE.md`). Know what it does NOT protect: worktrees
+  share `.git` objects/refs, so destructive *git* operations (`update-ref`, `branch -D`, resets,
+  force-push) still hit the real repo — a worktree-isolated agent once reset ROOT HEAD via
+  `rtl_enforce`'s commit-bypass guard. Harness-driven codex/agy lanes are covered by
+  `rtl_worktree_begin` instead and don't need the flag. Known frictions: `--require-clean` self-trips
+  on the driver's own lock dir inside a linked worktree, and untracked artifacts are invisible to a
+  worktree checkout — commit review inputs first. Read-only subagents (Explore, audits) don't need
+  isolation. Related guards: never execute `validate.sh`/`test/*.sh` under a sandboxed Bash call
+  (enforced by `relay-automation/hooks/gh177-sandbox-test-guard.sh` — CI is the exercise path), and
+  `test/mktemp-trap-guard.sh` statically outlaws the wipe idiom repo-wide.
 - **Commit to the QUEUE; re-anchor, don't rabbit-hole (GH-45).** A wave's committed lane list *is* the
   active commitment — after each lane attempt, re-read it before acting further. A driven lane that
   fails **parks** after `LANE_MAX_ATTEMPTS` (default 2): the driver (`marathon-drive.sh` /
