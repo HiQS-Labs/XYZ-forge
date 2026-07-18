@@ -23,10 +23,19 @@
 #   - Non-executing references stay allowed: `bash -n`, `shellcheck`, `cat`,
 #     `grep`, mentions inside strings — only an argv-position script execution
 #     trips it, per shell segment (split on && || ; | and newlines).
+#   - Passthru wrappers are seen through (GH-233 agy review): `command`, `eval`,
+#     `env [VAR=x] ...`, `exec`, `time`, `nohup`, `nice` are stripped so the real
+#     argv0 beneath is classified; `.`/`source` count as executing interpreters.
+#   - `cd`-into-test is tracked across segments: after `cd test`, a bare `*.sh`
+#     in execution position (`cd test && bash hq-hardening.sh`) also blocks.
 #   - Unsandboxed calls (dangerouslyDisableSandbox: true) are ALLOWED — mktemp
 #     works there; local unsandboxed runs are the operator's normal workflow.
 #   - Everything else → exit 0. Fail-open: any parse error allows the call
 #     (same convention as relay-xyz-guard.sh).
+#   - Known residuals (accepted — accidental-self-inflict threat model, not an
+#     adversary): execution nested inside `$(...)`/backticks, and `xargs`/`find
+#     -exec` dispatch, are not parsed. The static `test/mktemp-trap-guard.sh` and
+#     CI-as-exercise-path are the backstops for those.
 set -u
 
 payload="$(cat 2>/dev/null || true)"
@@ -52,28 +61,66 @@ if not cmd:
 # A suite script in executable argv position: ./validate.sh, validate.sh,
 # test/foo.sh, ./test/foo.sh, or an absolute path ending in /validate.sh.
 suite = re.compile(r"^(?:\./)?(?:validate\.sh|test/[^/\s]+\.sh)$|/validate\.sh$")
-interpreters = {"bash", "sh", "zsh", "dash"}
+# When a prior `cd` in the same command line has landed us in the test/ dir, a
+# BARE *.sh basename (no test/ prefix) is also a suite execution — `cd test &&
+# bash hq-hardening.sh`. Kept separate from `suite` so it only applies in-dir.
+bare_sh = re.compile(r"^(?:\./)?[^/\s]+\.sh$")
+interpreters = {"bash", "sh", "zsh", "dash", ".", "source"}
+# Wrappers that pass their argument through to another command: strip them so
+# the real argv0 underneath is what we classify (`command`/`eval`/`env ./validate.sh`).
+passthru = {"command", "exec", "time", "nohup", "nice", "eval", "stdbuf", "ionice"}
 
-def executes_suite(segment):
+def strip_wrappers(toks):
+    changed = True
+    while changed and toks:
+        changed = False
+        while toks and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", toks[0]):
+            toks.pop(0); changed = True  # env assignments
+        if toks and toks[0] == "env":
+            toks.pop(0); changed = True   # env [-flags] [VAR=val ...] cmd ...
+            while toks and (toks[0].startswith("-") or re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", toks[0])):
+                toks.pop(0)
+        if toks and toks[0] in passthru:
+            toks.pop(0); changed = True
+    return toks
+
+def cd_target(segment):
+    # Return the directory a `cd <dir>` segment moves to, else None.
     try:
         toks = shlex.split(segment)
     except ValueError:
         toks = segment.split()
-    while toks and re.match(r"^[A-Za-z_][A-Za-z0-9_]*=", toks[0]):
-        toks.pop(0)  # skip leading env assignments
+    toks = [t.lstrip("(") for t in toks if t not in ("(", ")")]
+    if len(toks) >= 2 and toks[0] == "cd":
+        return toks[1]
+    return None
+
+def executes_suite(segment, in_test):
+    try:
+        toks = shlex.split(segment)
+    except ValueError:
+        toks = segment.split()
+    toks = [t.lstrip("(") for t in toks]  # tolerate subshell `(cd …`
+    toks = strip_wrappers([t for t in toks if t])
     if not toks:
         return False
     argv0 = toks[0]
+    pat = suite if not in_test else re.compile(suite.pattern + r"|" + bare_sh.pattern)
     if argv0 in interpreters:
-        flags = [t for t in toks[1:] if t.startswith("-")]
-        if "-n" in flags:
+        if "-n" in [t for t in toks[1:] if t.startswith("-")]:
             return False  # syntax check only, nothing executes
         rest = [t for t in toks[1:] if not t.startswith("-")]
-        return bool(rest) and bool(suite.match(rest[0]))
-    return bool(suite.match(argv0))
+        return bool(rest) and bool(pat.match(rest[0]))
+    return bool(pat.match(argv0))
 
+in_test = False
 for seg in re.split(r"&&|\|\||;|\||\n", cmd):
-    if executes_suite(seg.strip()):
+    seg = seg.strip()
+    tgt = cd_target(seg)
+    if tgt is not None:
+        # crude but sufficient: are we now inside a dir literally named "test"?
+        in_test = bool(re.search(r"(^|/)test/?$", tgt))
+    if executes_suite(seg, in_test):
         sys.stderr.write(
             "GH-177 guard: refusing to run the test suite under a SANDBOXED Bash call.\n"
             "Sandbox-broken mktemp fed the destructive EXIT trap that wiped this repo twice\n"

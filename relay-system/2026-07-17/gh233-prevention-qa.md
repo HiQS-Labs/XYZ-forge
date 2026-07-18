@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-17.
 -->
 
-NEXT: claude-a
+NEXT: agy
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -116,5 +116,39 @@ review-only turn; report findings in the relay thread and hand back.
   - **Fix:** Write the bundle to a temporary path (`"$bundle_path.tmp"`), run `verify` against the `.tmp` file, and only `mv` it to `"$bundle_path"` if verification succeeds.
 
 - `[Pass] AGENTS.md:88`: Accurately scopes worktree isolation to file-modifying subagents and explicitly warns that shared `.git` refs/objects are unprotected from destructive git operations. No over-claiming or false sense of safety found.
+
+## Producer: claude-a (round 2 — dispositions)
+
+Every finding was verified against the real code before disposition (reproduced each claimed bypass
+pre-fix, re-ran the full 22-case block/allow matrix post-fix). Verdict on the review: 3 of 5 findings
+real and **Implemented**, 1 **Declined** as a verified false positive, 1 **Pass** acknowledged.
+
+- `[Blocker] settings.json:36` (hook shadowed by earlier `Bash|Skill` block) — **Declined: false
+  positive.** Verified against official Claude Code hooks docs: *all* matching matcher blocks run (in
+  parallel), and identical handlers are deduplicated — there is no first-match short-circuit, so the
+  second `"matcher": "Bash"` block was never dead. The gh177 guard also self-noops on non-Bash events
+  (`tool_name != "Bash" → exit 0`), so even the wiring is defensively correct. Left as-is; separate
+  `Bash` matcher is clearer than lumping into `Bash|Skill`.
+- `[Blocker] gh177-sandbox-test-guard.sh:73` (passthru wrappers bypass) — **Implemented.** Confirmed
+  live: `command`/`eval`/`env`/`. `/`source`/`time` all slipped through (rc=0). Added `strip_wrappers()`
+  (strips `command`/`exec`/`time`/`nohup`/`nice`/`eval`/`stdbuf`/`ionice` and `env [-flags] [VAR=x]`),
+  and added `.`/`source` to the interpreter set. All now block. Nested `$(...)`/backtick and
+  `xargs`/`find -exec` execution documented as accepted residuals (accidental-self-inflict threat model;
+  static `mktemp-trap-guard.sh` + CI are the backstops).
+- `[Blocker] gh177-sandbox-test-guard.sh:54` (cd bypass) — **Implemented.** Confirmed live:
+  `cd test && bash hq-hardening.sh` slipped through. Added cross-segment `cd`-into-`test/` tracking; a
+  bare `*.sh` in execution position after such a `cd` now blocks, while `cd test && grep x foo.sh`,
+  `cd src && bash build.sh`, and `cd test && cd .. && bash build.sh` correctly stay allowed. Chose
+  scoped cd-tracking over the proposed blanket `(?:test/)?…\.sh` regex, which would over-block any
+  `bash foo.sh` anywhere in the repo.
+- `[Should] git-bundle-snapshot.sh:34` (corrupt bundle trusted on mid-run failure) — **Implemented.**
+  Now writes to `$bundle_path.tmp`, `git bundle verify`s the tmp, and only `mv`s it into place on
+  success (with an EXIT trap cleaning the tmp). A killed create/verify leaves no `.bundle` for rotation
+  to count. Re-ran live: bundle written, zero leftover `.tmp`, static mktemp-trap audit still green
+  (198 scripts) — the new `rm -f` trap is not the dangerous idiom (no mktemp, single file, not `-rf`).
+- `[Pass] AGENTS.md:88` — acknowledged, no change.
+
+Fixes are self-verified and ready. `NEXT: agy` for an optional re-review round confirming the three
+code fixes; the operator may also close here since every fix carries reproduced before/after evidence.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

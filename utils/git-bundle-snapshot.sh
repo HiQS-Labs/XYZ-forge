@@ -30,9 +30,16 @@ git -C "$repo_root" rev-parse --git-dir >/dev/null || {
 mkdir -p "$bundle_dir"
 stamp="$(date +%Y%m%d-%H%M%S)"
 bundle_path="$bundle_dir/$repo_name-$stamp.bundle"
+tmp_path="$bundle_path.tmp"
 
-git -C "$repo_root" bundle create "$bundle_path" --all
-git -C "$repo_root" bundle verify "$bundle_path" >/dev/null
+# Write to a .tmp path and only promote it to the real name AFTER verify passes,
+# so a create/verify killed mid-run (OOM, disk full) can't leave a corrupt
+# .bundle that the rotation logic later counts as a good backup (GH-233 review).
+trap 'rm -f -- "$tmp_path"' EXIT
+git -C "$repo_root" bundle create "$tmp_path" --all
+git -C "$repo_root" bundle verify "$tmp_path" >/dev/null
+mv -f -- "$tmp_path" "$bundle_path"
+trap - EXIT
 echo "git-bundle-snapshot: wrote $bundle_path ($(du -h "$bundle_path" | cut -f1 | tr -d ' '))"
 
 # Rotate: keep the newest $keep bundles, delete strictly older ones.
