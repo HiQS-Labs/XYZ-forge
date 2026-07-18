@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -68,5 +68,19 @@ Basis: Questions can hijack the anchor, punctuation breaks no-anchor prompt, and
 - `[Nit]` **Prompt/format quality:** In `focus-tracker.js:26`, the reminder prompt includes an em-dash immediately after the colon: `**Status of ${anchor}:** — one honest line`. This contradicts the example in `SKILL.md:94` and `focus-ruleset.md:14`, and might cause the model to output `**Status of X:** — In progress`. **Fix:** Remove the em-dash after the colon in `focus-tracker.js`.
 - `[Pass]` **Sibling consistency:** The symlink-hardened flag read/write logic in `focus-config.js:69` and `focus-config.js:121` perfectly matches the `caveman` pattern used in `rabbit-hole`, ensuring safe execution.
 - `[Pass]` **Doc accuracy:** The cost estimation bounds in `HOOKS.md:106` (1,970 chars for SessionStart, 750 chars for reminder) accurately reflect the built payload sizes of `focus-ruleset.md` and `focus-tracker.js`.
+
+### claude-a (Producer) — r1
+
+DISPOSITION: all 7 findings addressed. 4 implemented as proposed, 1 blocker implemented with a modified (more surgical) fix, 2 `[Pass]` acknowledged. All changes verified with targeted regression tests.
+
+- `[Blocker]` Correctness (questions hijack anchor) — **Modified.** Agy's proposed `if (!isQuestion)` guard would have broken an *advertised & tested* phrasing: "can we stay focused on X?" starts with "can", so `isQuestion` is true, and the anchor would never set. Instead I closed the actual hijack vector two ways: (1) dropped the `(?:ing)?` from the `stay`/`stay on track` SET_PATTERNS (`focus-tracker.js:38-39`) — the gerund "staying" only appears in descriptive/interrogative sentences, never an imperative; and (2) added a **wh-question guard** (`focus-tracker.js:117-121`): `why|what|when|where|who|whose|how|which` prefixes skip the set, while polite requests (`can/could/let's/please …`) still set. Verified: "why are we staying focused on the old PR?" now **preserves** the existing anchor; "can we stay focused on fixing login?" / "please stay focused on the migration" still set correctly.
+- `[Should]` Correctness (bareAffirm punctuation) — **Implemented.** Both bareAffirm alternatives now end `[.!?\s]*$` instead of `\s*$` (`focus-tracker.js:136-137`). Verified: "stay focused." (trailing period) now fires the no-anchor prompt.
+- `[Should]` Robustness (`buildRuleset` `$&`/`$1` mangling) — **Implemented.** `buildRuleset` now replaces with a function `() => fill` rather than a literal string (`focus-config.js:184-188`). Verified: anchor "fix the $100 bug and $& handler" injects **verbatim** into the ruleset.
+- `[Nit]` Robustness (byte vs char cap) — **Implemented.** `sanitizeAnchor` now trims whole chars until `Buffer.byteLength(out) <= MAX_FLAG_BYTES` (`focus-config.js:57-62`), so a multi-byte-dense anchor can't be written-then-rejected-on-read. Verified: a 300× multibyte anchor writes 510 bytes and reads back non-empty (was silently dropped before).
+- `[Nit]` Prompt/format (em-dash after colon) — **Implemented.** Removed the `— ` after the colon in the reminder (`focus-tracker.js:22`) so it matches `SKILL.md` and `focus-ruleset.md`. Verified: reminder no longer contains `:** —`.
+- `[Pass]` Sibling consistency — acknowledged, no change.
+- `[Pass]` Doc accuracy (cost figures) — acknowledged, no change.
+
+Handing back for a confirmation pass. Same Definition of Done; the 5 fixes above are the only diff since your review.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
