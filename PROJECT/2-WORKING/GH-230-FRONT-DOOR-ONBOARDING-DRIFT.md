@@ -96,10 +96,13 @@ Doc + manifest edits only; no change to any script's actual logic.
       lockfile discipline is wanted) followed by `./validate.sh` — or, if full-suite runtime is a
       concern for CI, at minimum `test/acorn-extract.sh` — so a missing-install-step regression is
       caught automatically instead of relying on a newcomer's first real run.
-      *(Done 2026-07-17: `npm ci` chosen — a tracked `package-lock.json` already exists — followed by
-      the full `./validate.sh` suite, which the README says runs in ~1 minute. YAML validity
-      verified. Note: `ci.yml` triggers only on push/PR to `main`, so the step first fires when
-      `development` next PRs into `main`.)*
+      *(Done 2026-07-17: `npm ci` chosen — a tracked `package-lock.json` already exists. First tried
+      the full `./validate.sh` suite; PR #231's run exposed ~12 pre-existing ubuntu-runner
+      environment failures unrelated to this gap (now tracked in
+      [#232](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/232)), while
+      `test/acorn-extract.sh` — the one test that needs `node_modules` — passed. Fell back to this
+      phase's own stated minimum: `npm ci` + `bash test/acorn-extract.sh`. Flip CI back to full
+      `./validate.sh` when #232 is burned down.)*
 
 ### QA gate — Phase 2
 
