@@ -83,12 +83,18 @@ fi
 XYZ_BRANCH="$(git -C "$XYZ" branch --show-current 2>/dev/null || true)"
 XYZ_DIRTY=0
 [ -n "$(git -C "$XYZ" status --porcelain 2>/dev/null || true)" ] && XYZ_DIRTY=1
-XYZ_SLUG="$(git -C "$XYZ" remote get-url origin 2>/dev/null | sed -E 's#(git@github.com:|https://github.com/)##; s#\.git$##' || true)"
+# Normalize every URL form git accepts for GitHub — scp-style, https, ssh://, git:// — down to
+# owner/repo. A missed prefix yields a malformed --repo argument for `gh`.
+XYZ_SLUG="$(git -C "$XYZ" remote get-url origin 2>/dev/null \
+  | sed -E 's#^(ssh://)?git@github\.com[:/]##; s#^(https?|git|ssh)://(www\.)?github\.com/##; s#\.git$##; s#/$##' || true)"
 GH_PATH="$(command -v gh 2>/dev/null || true)"
 # Where the bug was observed — the repo the caller is standing in, which is the single
 # most useful field in the report and the one an operator always forgets to include.
 CALLER_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 [ -n "$CALLER_ROOT" ] || CALLER_ROOT="${PWD:-$(pwd)}"
+# Pre-sanitized bare name for the PUBLIC issue body. The absolute path routinely contains a home
+# dir and a client's name; only this form belongs in anything outward-facing.
+CALLER_NAME="$(basename "$CALLER_ROOT")"
 
 case "${1:-}" in
   ""|--root)
@@ -100,7 +106,8 @@ case "${1:-}" in
     printf 'export XYZ_BRANCH=%q\n'    "$XYZ_BRANCH"
     printf 'export XYZ_DIRTY=%s\n'     "$XYZ_DIRTY"
     printf 'export XYZ_SLUG=%q\n'      "$XYZ_SLUG"
-    printf 'export XYZ_CALLER=%q\n'    "$CALLER_ROOT"
+    printf 'export XYZ_CALLER=%q\n'      "$CALLER_ROOT"
+    printf 'export XYZ_CALLER_NAME=%q\n' "$CALLER_NAME"
     printf 'export XYZ_HAS_GH=%s\n'    "$([ -n "$GH_PATH" ] && echo 1 || echo 0)"
     ;;
   --check)
@@ -108,6 +115,7 @@ case "${1:-}" in
     echo "  ok  intake repo   ($XYZ)  [via $RESOLVED_VIA]"
     echo "  ok  inbox         ($XYZ/PROJECT/1-INBOX)"
     echo "  ok  reporting from ($CALLER_ROOT)"
+    echo "  ok  report as     ($CALLER_NAME)   <- use THIS in the public issue, not the path above"
     [ "$(_canon_dir "$CALLER_ROOT")" = "$XYZ" ] && echo "  !   you are standing IN the intake repo — this is a local report, not cross-repo"
     if [ -n "$GH_PATH" ]; then
       echo "  ok  gh CLI        ($GH_PATH)  → issue filing available"

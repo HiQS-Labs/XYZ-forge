@@ -35,13 +35,22 @@ you are standing in.
    done
    [ -x "$L" ] || { echo "file-xyz-bug: locator not found — set XYZ_REPO to your xyz-3-agents-swarm clone"; exit 1; }
 
-   eval "$("$L" --env)"   # exports XYZ_REPO, XYZ_INBOX, XYZ_BRANCH, XYZ_DIRTY, XYZ_SLUG, XYZ_CALLER, XYZ_HAS_GH
-   "$L" --check           # intake path + gh availability + branch/dirty warnings
+   eval "$("$L" --env)" || exit 1   # XYZ_REPO, XYZ_INBOX, XYZ_BRANCH, XYZ_DIRTY, XYZ_SLUG,
+                                    # XYZ_CALLER, XYZ_CALLER_NAME, XYZ_HAS_GH
+   "$L" --check                     # intake path + gh availability + branch/dirty warnings
    ```
 
    If it can't resolve, **stop and ask** for the clone path — do not guess, and do not fall back
    to writing the report into the current repo (that buries it exactly where nobody triages).
    Read `--check`'s warnings before Step 4: they decide whether committing is safe.
+
+   > **These exports do not survive to your next Bash call.** Each tool invocation is a fresh
+   > shell — only the working directory persists, not environment. `$XYZ_SLUG` in a later call
+   > expands to empty, and `gh issue create --repo ""` fails (or worse, guesses). So in **every**
+   > later command that needs these values, either re-resolve in the *same* invocation —
+   > `eval "$(<locator> --env)" || exit 1 && gh issue create --repo "$XYZ_SLUG" …` — or paste the
+   > literal absolute values you read out of `--check`. Never write a bare `$XYZ_*` reference
+   > into a command that did not itself just set it.
 
 1. **Harvest first, ask second.** Most of a good bug report is already in *this* session's
    transcript. Reconstruct from what you have before asking the operator anything:
@@ -51,8 +60,8 @@ you are standing in.
    | What broke | the failing tool call / the operator's one-liner |
    | Exact command | the actual invocation, verbatim, including env prefixes |
    | Observed | the real error text + exit code |
-   | Where | `$XYZ_CALLER` (the repo you're standing in) — from the locator |
-   | Harness version | `git -C "$XYZ_REPO" rev-parse --short HEAD`; plus `.xyz/VERSION` in the caller repo if vendored |
+   | Where | `XYZ_CALLER_NAME` (bare repo name — the locator pre-sanitizes it; never the full path) |
+   | Harness version | `git -C <intake repo> rev-parse --short HEAD`; plus `.xyz/VERSION` in the caller repo if vendored |
 
    Then ask **only what you could not harvest**, capped at three questions (prefer `AskUserQuestion`):
    1. **Expected behavior** — what should have happened. Nearly always needs the operator; the
@@ -76,11 +85,14 @@ you are standing in.
    checkpoint — nothing is filed or written before the operator confirms once.
 
 4. **On confirm, execute in order** (issue-first SOP; a harness bug is above the trivial-fix bar):
-   - `gh issue create --repo "$XYZ_SLUG"` → capture the returned number `<n>`. **Run `gh`
+   - `gh issue create --repo <owner/repo>` → capture the returned number `<n>`. Re-resolve the slug
+     in the same invocation or paste it literally (see Step 0's shell-state note). **Run `gh`
      un-sandboxed** (`dangerouslyDisableSandbox: true`): the Bash sandbox blocks the keyring and
      produces a false "auth broken". If the operator named an existing issue, reuse that number,
      skip creation, and check for an existing `GH-<n>-*.md` to **update** rather than writing a second doc.
-   - Write `$XYZ_INBOX/GH-<n>-<SHORT-SLUG>.md` (SCREAMING-KEBAB, ~2–4 words, no zero-padding).
+   - Write `<intake repo>/PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md` (SCREAMING-KEBAB, ~2–4 words, no
+     zero-padding). `<SHORT-SLUG>` is a *title* slug (e.g. `RELAY-DRIVE-EXIT6`) — do not confuse it
+     with the locator's `XYZ_SLUG`, which is the `owner/repo` origin slug and contains a `/`.
    - Park the ROADMAP pointer (Step 5).
    - **Do not commit and do not push.** See Guardrails — this is the rule most likely to bite.
 
@@ -90,10 +102,10 @@ you are standing in.
    ```md
    - **GH-<n> — <short title>** (<YYYY-MM-DD>) - <one-line symptom>. Bug filed via /file-xyz-bug
      from `<caller repo name>`. Issue [#<n>](<issue-url>). ->
-     [PROJECT/1-INBOX/GH-<n>-<SLUG>.md](PROJECT/1-INBOX/GH-<n>-<SLUG>.md)
+     [PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md](PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md)
    ```
 
-6. **Report + verify.** Run `bash "$XYZ_REPO/utils/pdda/pdda.sh" roadmap-coverage` to confirm the
+6. **Report + verify.** Run `bash <intake repo>/utils/pdda/pdda.sh roadmap-coverage` to confirm the
    capture is parked. Note `pdda.sh frontmatter` scans `2-WORKING` only — it does **not** validate a
    1-INBOX capture, so don't claim it did. Then report back in three lines: the issue URL, the doc
    path, and **the fact that the capture is uncommitted in the intake repo** (with the branch it is
@@ -191,7 +203,7 @@ Body:
   commit from a foreign session can land off-branch or orphan a peer agent's work. `--check` warns
   you; report the uncommitted path and let the operator commit deliberately. (This is a real
   incident class in this repo, not a hypothetical.) If they explicitly ask you to commit, re-check
-  `git -C "$XYZ_REPO" branch --show-current` first and say which branch you are committing to.
+  `git -C <intake repo> branch --show-current` first and say which branch you are committing to.
 - **Redact before filing.** The issue body is public. Secrets and client-identifying paths harvested
   from a foreign repo get `<redacted>` — see Step 2.
 - **One preview, one confirmation.** Issue + doc + ROADMAP line rendered together; nothing outward-
@@ -204,4 +216,4 @@ Body:
   external — name it (`bloomz-prod-08-15`), don't paste the operator's full home-directory path.
 - **`gh` runs un-sandboxed.** A sandboxed `gh` gives a false auth failure; retry un-sandboxed before
   concluding auth is broken. If `gh` is genuinely unavailable, still write the doc — use a
-  `GH-UNFILED-<SLUG>.md` name, set `gh_issue: TODO`, and tell the operator the issue still needs filing.
+  `GH-UNFILED-<SHORT-SLUG>.md` name, set `gh_issue: TODO`, and tell the operator the issue still needs filing.
