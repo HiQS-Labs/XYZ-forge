@@ -2,7 +2,7 @@
 gh_issue: 235
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/235
 title: "Consult A4 provenance v0: prompt-trace classifier for cited claims (FIRSTHAND vs ECHOED)"
-status: "1-INBOX — issue filed, decision made (v0) via cross-model consult; implementation via relay in progress."
+status: "IMPLEMENTED 2026-07-17 — v0 built by a Codex↔agy relay (bfbd357), agy Approved, verified test/consult.sh 62/62 + validate.sh 115/115. Awaiting merge to main + issue close."
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -34,7 +34,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| 2026-07-17: cross-model Codex+agy consult (`relay-system/2026-07-17/a4-scope-181325/`) converged independently on **v0** (2-category) over the 4-category taxonomy, both citing Principle 7 + the reuse tie-breaker. Issue #235 filed. This capture doc created. | Implement v0 via a build relay (Codex builds, agy reviews): persist `PROMPT_TEXT`, add the FIRSTHAND/ECHOED classifier + `PROVENANCE.txt` sidecar, add `test/consult.sh` assertions, `./validate.sh` green. |
+| 2026-07-17: consult picked **v0**; issue #235 filed; v0 **built by a Codex↔agy relay** (`relay-system/2026-07-17/gh235-a4-v0-build.md`). Codex implemented `rtl_classify_cited_claims()` + prompt persistence + `PROVENANCE.txt` sidecar + warn line + 20 tests (commit `bfbd357`); agy reviewed → **Approved** (5 cited `[Pass]`, `6158eed`). Verified: `test/consult.sh` 62/62, `validate.sh` 115/115. relay-pkg regenerated. | Merge `development` → `main` (CI `tier1` gate), then close #235. Optionally move this doc `1-INBOX` → `3-COMPLETED` on close. Deferred follow-ons (INFERENCE/UNSUPPORTED split, reconciliation backstop, false-consensus, consult.py parity) stay future-scoped, coordinated with #226. |
 
 ## Decision basis
 
