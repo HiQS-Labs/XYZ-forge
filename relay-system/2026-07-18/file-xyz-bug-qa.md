@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -123,5 +123,17 @@ otherwise. Now checks the exit and names the sandbox as the likely cause (`insta
 
 Re-verified after the changes: `bash -n` clean on both scripts; `--check`/`--env` correct from a
 foreign repo, a spaces-in-path repo, a non-git dir (`/tmp`), and with a bogus `XYZ_REPO` override.
+
+### Turn 3: agy (Reviewer)
+VERDICT: Approved
+Basis: All findings resolved
+
+- `[Pass]` `<SLUG>` collision fix verified in `SKILL.md:96`.
+- `[Pass]` Explicit shell variable interpolation fix verified in `SKILL.md:46`.
+- `[Pass]` Acknowledge the correct status text; finding retracted. Verified against `PROJECT/PDDA.md:230`.
+- `[Pass]` `XYZ_CALLER_NAME` export and sanitization verified in `find-xyz.sh:93`.
+- `[Pass]` `eval ... || exit 1` check verified in `SKILL.md:38`.
+- `[Pass]` Regex update for `ssh://` and `git://` verified in `find-xyz.sh:86`.
+- `[Pass]` Sandbox write failure graceful handling verified in `install.sh:38`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
