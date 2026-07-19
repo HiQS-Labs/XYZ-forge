@@ -2,7 +2,7 @@
 gh_issue: 141
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/141
 title: "Containment: rtl_enforce's pre-turn dirty snapshot can't see a concurrent peer session's edit that lands mid-turn, reverting it as off-lane"
-status: Active (2-WORKING) — promoted 2026-07-17 by /10days (11-14 day sweep); confirmed still unfixed via fix-probe polarity check (RTL_BEFORE porcelain-snapshot mechanism unchanged), distinct from the separately-shipped GH-13/GH-140 concurrent-commit hardening
+status: "Shipped 2026-07-18 — operator ratified recommended next step 1 (recoverability-only backup) + step 2 (documentation); RTL_ORPHAN_BACKUP landed in relay-turn-lib.sh with test/rtl-orphan-backup.sh (8/8)"
 created: 2026-07-05
 updated: 2026-07-17
 owner: noel
@@ -33,7 +33,29 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Investigated 2026-07-17 by `/10days` Wave 2 — no fix shipped, and that's the correct outcome** (see Definition of done below): no code-only signal in this codebase can distinguish a peer session's concurrent edit from the agent's own off-lane self-escape (both produce byte-identical porcelain diffs), and a naive fix would silently disable `rtl_enforce`'s documented backstop against the already-exploited GH-22 self-escape vector. | Still open, still not marathon-ready. Two non-detection follow-ups recorded for an operator decision: a recoverable backup-before-revert, and documenting the don't-hand-edit-a-live-clone constraint. |
+| **Shipped 2026-07-18.** The operator ratified BOTH recommended next steps after a second live occurrence the same day (a concurrent `file-xyz-bug` relay deleted an untracked capture doc and reverted a ROADMAP edit mid-session). Step 1: `rtl_orphan_backup()` in `relay-turn-lib.sh` copies an off-lane path's pre-revert content to `.tick/orphan-backups/<utc>-<pid>/<path>` before `rtl_check` discards it. Step 2: the constraint is now documented in `skills/relay-xyz/SKILL.md`'s safety-boundary section. New suite `test/rtl-orphan-backup.sh` (8/8), registered in `validate.sh`. | Close #141. The revert *decision* is deliberately unchanged — this is recoverability, not detection; see the note below on why the DoD's "shows it survives" wording could not be met as written. |
+
+## What shipped, and how it differs from this doc's original DoD
+
+The Definition of done below asks for a test showing a mid-turn peer edit **survives**. That is
+still not achievable, for the reason the investigation records: no code-only signal distinguishes a
+peer edit from the agent's own self-escape, and preserving newly-dirty non-allowlisted paths would
+disable the GH-22 backstop. So the ratified fix changes **recoverability, not the outcome**:
+
+- `rtl_check()` still reverts the path. `test/rtl-orphan-backup.sh` S1/S2 assert exactly that, so a
+  future change that "fixes" the race by preserving the edit fails this suite loudly.
+- S4/S5 assert the pre-revert bytes are recoverable from the backup dir.
+- S7 asserts allowlisted paths are not spuriously copied.
+- S8 asserts `RTL_BEFORE`'s pre-existing-ambient-WIP protection (case (8)) still records the
+  pre-turn dirty set.
+
+Backups land under `.tick/`, which `rtl_check` exempts intrinsically, so a backup can never itself
+be flagged off-lane. `.tick/` is gitignored and per-device — this is local recoverability, not a
+cross-machine guarantee.
+
+**Not verified:** the full `bash validate.sh` was not run for this change (operator declined the
+run). Targeted evidence only: `test/rtl-orphan-backup.sh` 8/8 and `test/swarm-preflight.sh` 96/96.
+Baseline is known non-green (#170 / #232), so full-suite parity is unconfirmed.
 
 ## Bug
 

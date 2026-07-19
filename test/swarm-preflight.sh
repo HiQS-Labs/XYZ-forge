@@ -157,6 +157,8 @@ printf -- '---\ntitle: x\n---\n# x\nno contract here\n' >"$R/PROJECT/2-WORKING/G
 git -C "$R" init -q && git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null && git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null
 out="$(run "$R" --project-doc "PROJECT/2-WORKING/GH-900-nocontract.md" 2>&1)"; rc=$?
 [[ $rc -eq 3 ]] && pass "T6 missing contract → exit 3" || fail "T6 expected exit 3, got $rc — $out"
+grep -q "minimal valid contract" <<<"$out" && pass "T6 names the literal phrase minimal valid contract" || fail "T6 missing minimal valid contract phrase: $out"
+grep -q "PROJECT/2-WORKING/GH-900-nocontract.md" <<<"$out" && pass "T6 names the file it belongs in" || fail "T6 missing file name in message: $out"
 
 # ── T7: ambiguous bundle (gate mismatch across two issues) → exit 7 ──────────
 R="$WORK/bundle"; mkdir -p "$R/PROJECT/2-WORKING"
