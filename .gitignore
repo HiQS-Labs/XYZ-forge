@@ -37,3 +37,21 @@ __pycache__/
 
 # Aider Studio (auto-added)
 REPO_MAP.md
+
+# ask-self RAG — kept PER-USER / PER-DEVICE, not committed to the shared repo.
+# The whole integration layer is local: teammates opt in by installing ask-self
+# themselves (see ask-self's ASK_SELF_INTEGRATION.md) rather than inheriting it here.
+/ask_self/
+/scripts/ask-self-ingest.sh
+/scripts/ask-self-query.sh
+/.claude/commands/reingest.md
+/.claude/commands/ask_self.md
+# Local working index lives under temp/rag/ (already ignored via /temp/); these lines
+# also catch the per-DB sidecars anywhere they land.
+temp/rag/
+temp/ask-self-rag.env
+*__embed_cache.sqlite
+*__events.jsonl
+# ask-self generated architecture doc (falls back to ASK_SELF.md; our ARCHITECTURE.md is hand-owned).
+ASK_SELF.md
+ARCHITECTURE-BAK.md
