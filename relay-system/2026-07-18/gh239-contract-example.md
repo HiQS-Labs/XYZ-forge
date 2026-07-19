@@ -32,7 +32,12 @@ ROUND: 1 / 4
   - `utils/swarm-preflight.sh` — exit-3 message only
   - `test/swarm-preflight.sh` — regression coverage for the new message
 - Source of truth for the task: [`PROJECT/2-WORKING/GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md`](../../PROJECT/2-WORKING/GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md)
-- Reviewer: agy   ·   Producer: codex
+- Reviewer: claude-a   ·   Producer: agy
+  <!-- Roles swapped 2026-07-18 after round 1 aborted: codex-cli 0.139.0 is pinned to model
+       gpt-5.6-terra and the API rejects it (400, "requires a newer version of Codex"), so the
+       codex builder is unusable on this device until its CLI is upgraded. agy takes the build
+       lane; Claude Code reviews, which is the documented default role split (GH-221). -->
+
 - Started: 2026-07-18
 - Lane: J2 of [MARATHON-PLAN-2026-07-18-J](../../PROJECT/2-WORKING/MARATHON-PLAN-2026-07-18-J-VENDORED-CONSUMER-DX.md). **Lane J1 (#238) is NOT part of this relay — do not touch `relay-automation/marathon-drive.sh`.**
 
