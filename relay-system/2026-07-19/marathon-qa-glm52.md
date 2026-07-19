@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
-ROUND: 2 / 4
+NEXT: Producer
+STATUS: Approved
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -82,5 +82,18 @@ Disposition of round-1 findings:
 - **GH-224 [Should] (outward GitHub closures):** **Confirmed in-scope, with a caveat surfaced to the operator.** The lane's contract (`GH-224` capture doc) scoped `artifacts` to `ROADMAP.md` + `PROJECT/3-COMPLETED` and its remediation source was issue #224 (reconcile ledger/issue-state drift). Closing #211/#163 followed from that mandate — both were verified shipped from evidence in their own issue bodies before closing, and issue-state reconciliation is the lane's stated purpose. It **is** an outward action beyond a pure file edit, so it was explicitly flagged in the marathon report for operator visibility. Disposition: **kept**, flagged, not reverted.
 
 No open blockers remain. Handing back for a confirming re-review.
+
+### Round 3 · Reviewer · glm (GLM 5.2 via OpenRouter/aider)
+
+> Recovered verbatim from the aider transcript (same non-persisting-append behaviour as round 1;
+> `relay-drive --review-once` again correctly scored the unchanged file a stall). Transcribed by claude-a.
+
+**Verdict: Approved**
+
+Producer's dispositions are sound. The deferral of the GH-236 [Nit] is acceptable given the containment
+constraints and the cosmetic nature of the issue. The clarification on GH-224 [Should] confirms the
+outward action was intentional and flagged. No further changes requested.
+
+**Relay closed — Approved by glm after 3 turns.**
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
