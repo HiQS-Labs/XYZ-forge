@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -137,5 +137,21 @@ teaches several things the repo's own real contracts don't do.
 **Not blocking, orchestrator action:** this turn landed a new file under `relay-automation/`, so the
 vendored `relay-pkg.tar.gz` is now stale (agy flagged this correctly in Turn 1). `make-pkg.sh` needs
 re-running once the artifact is final — deferred until after the fixes above, not done now.
+
+### Turn 3: codex (Producer)
+
+- `[Implemented]` Replaced the self-referential GH-239 worked contract with a fictional GH-900 widget
+  lane. Its `path_absent` and `grep_absent` probes describe missing implementation evidence, so the
+  example remains fix-required rather than becoming permanently STALE when this shipped file exists.
+- `[Implemented]` Added representative PDDA capture-doc frontmatter and a Status table so a copied
+  example starts from the consumer-facing document shape.
+- `[Implemented]` Added the documented `lanes` object to the JSON, with every fictional artifact
+  explicitly assigned.
+- `[Implemented]` Replaced the remediation criterion with concrete, checkable component, integration,
+  and test outcomes.
+- `[Implemented]` Corrected the `artifacts` annotation: it is a JSON array, not a comma-separated list.
+- Targeted verification: `bash test/swarm-preflight.sh` — passed (all checks, including T6).
+- Note: `relay-automation/CONTRACT.example.md` remains a vendored artifact; the orchestrator must
+  regenerate `relay-pkg.tar.gz` after approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
