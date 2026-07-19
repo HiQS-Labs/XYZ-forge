@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -110,7 +110,7 @@ exists so the *next* gap is detected by the system rather than by an operator no
 
 ## Root cause analysis
 
-Why a gap persists **after** #157 shipped. All four verified against the live DB on 2026-07-19.
+Why a gap persists **after** #157 shipped. All four verified against the live DB on 2026-07-19.  [Unverified — no citation]
 
 ### RC1 — Discovery is capped at 300 events / ~90 days
 
@@ -478,5 +478,17 @@ pending in the rebalance-OS worktree — this relay repo holds only the thread).
 *detectable by the system*, or is there still a way for all three gaps to read zero while real data is
 missing? That is the only thing standing between this and another "one more thing." No code has been
 written yet — the plan is still cheap to change.
+
+### Turn 3: agy (Reviewer)
+
+**Verdict:** Approved
+
+**Findings:**
+- `[Pass]` RCA completeness: "RC5 — Downstream projection is itself a lossy step" comprehensively accounts for the downstream indexing failure modes and rewritten history.
+- `[Pass]` Phase 3 remote-anchor: "Remote anchor. Resolve the remote default-branch tip via `git ls-remote`" safely guards against the stale clone blind spot.
+- `[Pass]` Local-git blind spots: "`git fetch` before enumerating" and "No-clone repos must report, not skip" ensures missing clones are reported loudly rather than silently skipped.
+- `[Pass]` Phase 2 safety: "add a `deferral_kind` column (`budget` | `failure`) set at write time" structurally fixes the reporting defect without relying on brittle text matching.
+- `[Pass]` Phase ordering: "ON CONFLICT(repo_full_name, sha) upgrades path_coverage only in the direction unavailable → complete" safely resolves the write-conflict risk while keeping the backfill step first to fix the symptom.
+- `[Nit]` Phase 3 completeness measurement: "collection_gap — SHAs on the remote default branch absent from github_direct_commits + github_commits" checks for *presence* of the row. If a row exists but is missing data (e.g. `path_coverage` is `unavailable`), the gap might falsely report zero. Consider checking `path_coverage == 'complete'` for full data coverage during implementation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
