@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-18.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -90,5 +90,54 @@ stalled, exit 3) — so a missing gate target degrades those too, not just the h
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Turn 1: codex (Producer) — RECOVERED, not self-reported
+
+codex's turn was **killed by the turn timeout at 36m20s** (`relay-drive.sh:164`, `Terminated: 15`,
+driver exit 144) while it was running `bash test/marathon-drive.sh` to verify its own work. It never
+reached the handoff, so it never wrote a turn block and the shim never made its file-scoped commit.
+
+The work itself was complete and intact in the abandoned isolation worktree
+(`rtl-wt.OCUjFc`). The orchestrator extracted `git diff` from that worktree, confirmed it touched
+**exactly** the three allowlisted artifacts and nothing else, removed the stray worktree
+(`git worktree remove --force`), reaped the stuck `codex` claim, and applied the patch to the lane
+branch. 84 insertions across the three files. No turn-block prose below is codex's — it did not
+write any; the findings are the reviewer's reading of the code.
+
+### Turn 2: claude-a (Reviewer)
+
+**Verdict: Approved.** All four substantive DoD items met, verified by execution rather than by
+reading the producer's claims (there were none to read).
+
+- `[Pass]` **DoD 1 — fail-fast before turn 1.** `preflight_pre_advance_gate()` at
+  `marathon-drive.sh:385-425`, invoked unconditionally at `:426`, after the default is resolved at
+  `:376`. `die`s with `pre-advance gate not runnable: '<cmd>' (<reason>). Pass --pre-advance-cmd
+  '<runnable command>' to override it.` — the required phrase plus the remedy.
+- `[Pass]` **DoD 2 — recovery paths covered.** Handled via the single startup check: an unrunnable
+  gate terminates the process before any phase begins, so `:662` (exit-7 timeout probe) and `:779`
+  (exit-3 stall probe) are unreachable in that state. codex could not state its choice in a turn
+  block (killed first), so this rationale is the reviewer's reconstruction from the code, not the
+  producer's claim.
+- `[Pass]` **DoD 3 — example documents the gate.** `MARATHON.example.yaml` gains a six-line block
+  naming the default, the `--pre-advance-cmd` override with a worked `npm test` example, and the
+  explicit note that a missing default fails fast "rather than being skipped".
+- `[Pass]` **DoD 4 — asserts before turn 1, not merely non-zero.** Test case (13a) checks exit 2 AND
+  the phrase AND the remedy AND **three independent negatives**: no `phases/p1/RELAY.md` rendered, no
+  `relay-drive-args` (the stub records invocation), and no `MARATHON-P1-TURN` tick event. That is
+  stronger evidence than the brief required.
+- `[Pass]` **Gate green.** `bash test/marathon-drive.sh` → `112 pass, 0 fail`.
+- `[Pass]` **Non-goals respected.** The gate is never silently skipped, and the default is not
+  mode-dependent — one default plus a loud early failure, as the capture doc specified.
+- `[Pass]` **Design point the brief did NOT ask for, and should have.** The probe is deliberately
+  **non-executing**: `marathon-drive.sh:377-379` reasons that gates like `test -f build/output`
+  only become true *after* the builder runs, so executing them at preflight would convert valid
+  gates into false preflight failures. It checks syntax (`bash -n`), interpreter presence, and
+  script-file existence instead. It also resolves relative paths against `${TARGET_ROOT:-$ROOT}`,
+  so the cross-repo `--target-root` case is correct.
+- `[Nit]` No turn block from the producer means no self-reported disposition trail for this lane.
+  Recorded here instead; not worth a re-fire.
+
+**Orchestrator follow-up:** `relay-automation/` changed, so `relay-pkg.tar.gz` is stale again —
+regenerating after this commit.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

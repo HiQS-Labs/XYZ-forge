@@ -374,6 +374,57 @@ fi
 
 PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
 PRE_ADVANCE_CMD="${PRE_ADVANCE_CMD:-"bash $ROOT/validate.sh"}"
+
+# GH-238: a vendored consumer normally has no root-level validate.sh.  Do not spend a builder and
+# reviewer turn only to discover that the default gate cannot start after approval.  This is a
+# deliberately non-executing probe: gates such as `test -f build/output` may only become true after
+# the builder runs, so executing them here would turn valid gates into false preflight failures.
+pre_advance_not_runnable() {  # <reason>
+  die "pre-advance gate not runnable: '$PRE_ADVANCE_CMD' ($1). Pass --pre-advance-cmd '<runnable command>' to override it."
+}
+preflight_pre_advance_gate() {
+  local command_name gate_shell script_arg gate_path gate_root
+  gate_root="${TARGET_ROOT:-$ROOT}"
+
+  bash -n -c "$PRE_ADVANCE_CMD" >/dev/null 2>&1 \
+    || pre_advance_not_runnable "shell syntax is invalid"
+
+  # The default (and the normal custom-script form) is `bash <script>`.  Check both the interpreter
+  # and its script target; merely checking `bash` would miss the absent validate.sh that caused GH-238.
+  if [[ "$PRE_ADVANCE_CMD" =~ ^[[:space:]]*(bash|/[^[:space:]]*/bash)[[:space:]]+([^[:space:]]+) ]]; then
+    gate_shell="${BASH_REMATCH[1]}"
+    script_arg="${BASH_REMATCH[2]}"
+    command -v "$gate_shell" >/dev/null 2>&1 \
+      || pre_advance_not_runnable "interpreter '$gate_shell' is not on PATH"
+    case "$script_arg" in
+      \"*\") script_arg="${script_arg#\"}"; script_arg="${script_arg%\"}" ;;
+      \'*\') script_arg="${script_arg#\'}"; script_arg="${script_arg%\'}" ;;
+    esac
+    # `bash -c ...` and other interpreter options do not name a script file to preflight.
+    [[ "$script_arg" == -* ]] && return 0
+    gate_path="$script_arg"
+    [[ "$gate_path" == /* ]] || gate_path="$gate_root/$gate_path"
+    [[ -f "$gate_path" ]] \
+      || pre_advance_not_runnable "script file does not exist: $gate_path"
+    return 0
+  fi
+
+  # For command-style gates (for example `true`, `npm test`, or `test -f build/output`), checking
+  # the leading command catches misspellings while preserving the gate's existing post-build meaning.
+  read -r command_name _ <<< "$PRE_ADVANCE_CMD"
+  [[ -n "$command_name" ]] || pre_advance_not_runnable "command is empty"
+  if [[ "$command_name" == */* ]]; then
+    gate_path="$command_name"
+    [[ "$gate_path" == /* ]] || gate_path="$gate_root/$gate_path"
+    [[ -x "$gate_path" ]] \
+      || pre_advance_not_runnable "executable does not exist or is not executable: $gate_path"
+  else
+    command -v "$command_name" >/dev/null 2>&1 \
+      || pre_advance_not_runnable "command '$command_name' is not on PATH"
+  fi
+}
+preflight_pre_advance_gate
+
 # Default the tick token name off the phase id (p1 → MARATHON-P1-TURN), keeping the Phase-3 default.
 RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '[:upper:]')-TURN"}"
 LANE_STATE_KEY="${MARATHON_LANE_NS:-$PHASE_ID}"

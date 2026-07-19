@@ -15,6 +15,13 @@
 # refuses a plan outside PROJECT/2-WORKING/ unless MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 is set.
 # (This example is exempt: it lives under the harness's own relay-automation/ home, not a target repo.)
 #
+# Pre-advance gate (GH-238): each phase defaults to `bash <repo-root>/validate.sh` before it is
+# marked approved. marathon-drive checks that command can start before turn 1. A consuming repo
+# without a root-level validate.sh must supply its own gate when launching, for example:
+#   relay-automation/marathon.sh --plan PROJECT/2-WORKING/<capture>/MARATHON.yaml \
+#     --pre-advance-cmd "npm test"
+# The override must remain a real safety gate; a missing default fails fast rather than being skipped.
+#
 # Per-phase fields:
 #   id                 phase id → phases/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
 #   reviewer           codex* or agy* — the model that reviews this phase                 (required)
