@@ -113,7 +113,18 @@ Return:
 1. Classification table with issue, doc, live state, contract state, and reason.
 2. Ranked candidates with ratings and exact preflight verdict.
 3. Collision map and recommended waves.
-4. Decisions needed: archive, close, promote, contract, or unblock.
+4. Decisions needed — one **default recommendation per item**, not a flat symmetric list of
+   options the operator has to weigh unaided. For each item that needs a call, emit:
+
+   ```
+   RECOMMEND: <the single default action — archive | close | promote | contract | unblock | hold>
+   BECAUSE:   <the evidence behind it — live state, preflight verdict, rating, collision risk>
+   UNLESS:    <the specific condition under which the operator should override the default>
+   ```
+
+   The operator starts from the recommendation and only overrides when the `UNLESS` clause
+   holds — never from a blank menu. Reserve a bare options list only for genuinely balanced
+   calls where no default is defensible, and say so explicitly.
 
 Keep the default report inline. If the operator requests a persisted report, write a dated
 `PROJECT/1-INBOX/MARATHON-TRIAGE-YYYY-MM-DD.md` with `doc_type: report`, source/provenance, and
