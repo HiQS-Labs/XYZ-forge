@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan — ranked, freshness-validated, collision-aware queue
-status: Active (2-WORKING)
+status: Archived (4-MISC) — superseded generated snapshot; status word corrected 2026-07-18 (GH-224 drift sweep)
 created: 2026-07-07
-updated: 2026-07-07
+updated: 2026-07-18
 owner: noel
 branch: main
 doc_type: project
