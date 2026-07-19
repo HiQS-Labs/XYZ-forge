@@ -423,7 +423,18 @@ preflight_pre_advance_gate() {
       || pre_advance_not_runnable "command '$command_name' is not on PATH"
   fi
 }
-preflight_pre_advance_gate
+# GH-238: a --dry-run renders the relay file and prints the tick seed, then exits — it never
+# dispatches a builder or reviewer turn, so there is no wasted-turn cost to protect against and
+# halting would be pure downside. It also breaks fixtures that drive unrelated paths in repos with
+# no gate script (test/driver-lock.sh regressed exactly this way when the check halted every run).
+# Still surface the problem, so --dry-run stays a useful plan sanity-check: the subshell contains
+# pre_advance_not_runnable's die(), turning the halt into a warning on this path only.
+if ((DRY_RUN)); then
+  ( preflight_pre_advance_gate ) \
+    || printf 'marathon-drive: (dry-run continues; a live run would halt here)\n' >&2
+else
+  preflight_pre_advance_gate
+fi
 
 # Default the tick token name off the phase id (p1 → MARATHON-P1-TURN), keeping the Phase-3 default.
 RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '[:upper:]')-TURN"}"
