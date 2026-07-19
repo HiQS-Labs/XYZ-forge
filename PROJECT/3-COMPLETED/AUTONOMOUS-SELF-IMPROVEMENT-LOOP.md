@@ -1,7 +1,7 @@
 ---
 title: Autonomous self-improvement loop (the LOOPS.md endgame) — Part C
 slug: autonomous-self-improvement-loop
-status: Active
+status: Closed (issue #50 closed) — Active
 created: 2026-06-16
 updated: 2026-06-29
 owner: Noel (operator) · Claude (producer)

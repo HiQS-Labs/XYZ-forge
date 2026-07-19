@@ -1,6 +1,6 @@
 ---
 title: GH-68 · Cross-agent dependency conflict detection
-status: Captured
+status: Closed (issue #68 closed)
 created: 2026-07-01
 owner: noelsaw
 priority: 4

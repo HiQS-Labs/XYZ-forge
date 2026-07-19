@@ -2,7 +2,7 @@
 gh_issue: 213
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/213
 title: "committed case-variant relay-system/ path is a latent exit-6 landmine on macOS"
-status: built 2026-07-16 (codex + agy, 4 turns, Approved) — verified independently after a pre-advance gate false-negative, see Status
+status: Closed — built 2026-07-16 (codex + agy, 4 turns, Approved) — verified independently after a pre-advance gate false-negative, see Status
 created: 2026-07-16
 updated: 2026-07-16
 owner: noel

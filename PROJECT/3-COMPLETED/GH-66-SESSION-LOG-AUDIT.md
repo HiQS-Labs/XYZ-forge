@@ -2,7 +2,7 @@
 gh_issue: 66
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/66
 title: Self-healing harness — session/transcript-log audit for stale-instruction drift
-status: Proposed (1-INBOX — not yet active)
+status: Closed — Proposed (1-INBOX — not yet active)
 created: 2026-06-30
 updated: 2026-06-30
 owner: noel

@@ -2,7 +2,7 @@
 gh_issue: 206
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/206
 title: "Marathon: vendored .xyz/ install conflates harness-home with repo-root — won't run without MARATHON_ROOT + bin overrides"
-status: built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green) — PR pending; follow-up #209 open
+status: Closed — built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green); follow-up #209 closed
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel

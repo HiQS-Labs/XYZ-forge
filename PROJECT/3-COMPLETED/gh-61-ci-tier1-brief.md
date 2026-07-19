@@ -1,7 +1,7 @@
 ---
 ratings_exempt: true
 title: Builder brief — GH-61 Tier 1 CI GitHub Actions (single-phase Marathon)
-status: Active
+status: Closed (issue #61 closed)
 created: 2026-07-02
 updated: 2026-07-02
 owner: Noel (operator) · Codex (builder) · agy (reviewer)

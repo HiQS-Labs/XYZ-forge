@@ -2,7 +2,7 @@
 gh_issue: 132
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/132
 title: "HQ resolution/dispatch hardening — 4 findings from the GH-128 Codex review"
-status: Active — all 4 fixes built + regression-tested on a worktree branch → PR
+status: Closed — all 4 fixes built + regression-tested on a worktree branch → PR
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel

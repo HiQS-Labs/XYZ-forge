@@ -1,6 +1,6 @@
 ---
 title: "GH-70 · relay-xyz: per-repo harness for concurrent automated relays"
-status: queued
+status: Closed — queued
 priority: 3
 risk: 2
 created: 2026-07-01

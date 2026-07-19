@@ -2,7 +2,7 @@
 gh_issue: 106
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/106
 title: "codex-turn: default CODEX_FLAGS hangs on approvals in headless runs → silent 300s timeout + wasted lane attempt"
-status: captured 2026-07-04, rated, ready to build
+status: Closed — captured 2026-07-04, rated, ready to build
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel

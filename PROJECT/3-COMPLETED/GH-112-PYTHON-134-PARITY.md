@@ -2,7 +2,7 @@
 gh_issue: 112
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/112
 title: "GH-112 follow-up: close the #134 drift in the opt-in Python layer (utils/py) so it stays a faithful mirror of Bash"
-status: captured 2026-07-05, rated — independent (utils/py) lane, marathon-ready
+status: Closed — captured 2026-07-05, rated — independent (utils/py) lane, marathon-ready
 created: 2026-07-05
 updated: 2026-07-05
 owner: noel

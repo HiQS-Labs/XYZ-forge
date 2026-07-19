@@ -1,7 +1,7 @@
 ---
 ratings_exempt: true
 title: Cross-repo external-artifact review flow (--artifact-file / scaffolder)
-status: Active (2-WORKING)
+status: Closed (issue #31 closed)
 created: 2026-06-27
 updated: 2026-06-27
 owner: noel

@@ -2,7 +2,7 @@
 gh_issue: 45
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45
 title: QUEUE 'must-complete' commitment contract + anti-rabbit-hole / WIP-discipline safeguard
-status: Proposed (1-INBOX — not yet active)
+status: Closed — Proposed (1-INBOX — not yet active)
 created: 2026-06-28
 doc_type: feedback
 complexity: 3

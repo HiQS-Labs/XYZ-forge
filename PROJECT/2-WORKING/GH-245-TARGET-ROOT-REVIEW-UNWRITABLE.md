@@ -1,7 +1,8 @@
 ---
 title: --target-root review turn cannot report, and relay-drive misclassifies the outcome in both directions
-status: Proposed (1-INBOX — not yet active)
+status: "captured 2026-07-19 (auto-drafted by /10days)"
 created: 2026-07-18
+updated: 2026-07-19
 owner: noelsaw1
 gh_issue: 245
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/245
@@ -26,13 +27,15 @@ goal: >
   Second, --review-once classifies on evidence of a turn (relay-file diff, NEXT/STATUS
   change) rather than token movement alone, so neither an empty turn nor a complete
   review can be scored as its opposite.
+roadmap_exempt: false
 ---
 
 # GH-245 — `--target-root` review turn cannot report; outcome misclassified both ways
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+| What was just completed | What's next |
+|---|---|
+| Auto-captured 2026-07-19 by the /10days sweep; promoted from PROJECT/1-INBOX to 2-WORKING with an auto-drafted Swarm Preflight Contract, preserving the original 1-INBOX capture content in full. Verified still open & reproducible: `relay-automation/relay-drive.sh` still contains the token-state classification message `"non-approval handback, not a stall"` (~line 519) inside the `--review-once` branch. **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
 
 ## Symptom
 
@@ -156,3 +159,20 @@ review can be discarded as a stall. Defect 1 costs a turn; defect 2 is what make
 - [ ] Regression tests cover both failure paths before the fix lands: an empty turn must not
       score 5, and a relay-file-only turn (token left claimed) must not score 3
 - [ ] The fix composes with the existing harness rather than adding a parallel classification path
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_present", "path": "relay-automation/relay-drive.sh", "pattern": "non-approval handback, not a stall" }
+  ],
+  "artifacts": [ "relay-automation/relay-drive.sh", "relay-automation/relay-turn-lib.sh" ],
+  "remediation": {
+    "source": "issue#245",
+    "criteria": "A --target-root review turn either successfully appends findings to the relay file or the driver refuses at startup with a clear error instead of discarding a completed turn; and --review-once classifies on relay-file/NEXT evidence rather than token state alone, so neither an empty turn scores as a successful review nor a complete review scores as a stall. bash validate.sh green, no worse than pre-existing environmental reds."
+  },
+  "lanes": { "agy_safe": [ "relay-automation/relay-drive.sh", "relay-automation/relay-turn-lib.sh" ], "orchestrator_only": [] }
+}
+```

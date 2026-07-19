@@ -2,7 +2,7 @@
 gh_issue: 84
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/84
 title: test/runner-loop.sh non-hermetic — runner.sh dirty-guard checks the real repo
-status: Queued
+status: Closed — Queued
 created: 2026-07-02
 updated: 2026-07-02
 owner: noel
