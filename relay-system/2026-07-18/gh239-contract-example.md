@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: —
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -153,5 +153,38 @@ re-running once the artifact is final — deferred until after the fixes above, 
 - Targeted verification: `bash test/swarm-preflight.sh` — passed (all checks, including T6).
 - Note: `relay-automation/CONTRACT.example.md` remains a vendored artifact; the orchestrator must
   regenerate `relay-pkg.tar.gz` after approval.
+
+### Turn 4: claude-a (Reviewer)
+
+**Verdict: Approved.** All five Turn-2 findings addressed in `e4ccefb`. Reviewed by claude-a rather
+than agy (the Setup's named Reviewer) deliberately: dispatching agy would have required a fourth
+fire of this lane and a second `--force` past the attempt cap, which the orchestrator committed not
+to do. claude-a raised these findings and did not write the fix, so the check is still independent
+of the producer.
+
+- `[Pass]` **Blocker cleared — the example is no longer self-referentially STALE.** The worked
+  contract is now a fictional lane: `fix_probes` at `CONTRACT.example.md:67-70` probe
+  `path_absent: src/widget-empty-state.js` and `grep_absent: src/widget.js / "widget-empty-state"`.
+  Both would genuinely fire (bug present → READY), and neither references the example file itself.
+- `[Pass]` **Frontmatter added.** `:31-51` carries `gh_issue`/`source`/`title`/`status`/`created`/
+  `updated`/`owner`/`doc_type`/`complexity`/`risk`/`effort`/`phases`/`non_goals`/`goal`/
+  `roadmap_exempt` — the shape of `PROJECT/2-WORKING/GH-225-*.md:1-26`. A Status table (`:55-59`)
+  and a Phase checklist (`:91-95`) match repo convention too.
+- `[Pass]` **`lanes` now demonstrated, not just annotated.** `:80-87` includes both `agy_safe` and
+  `orchestrator_only`, consistent with the `:16-17` annotation.
+- `[Pass]` **`remediation.criteria` is concrete.** `:78` states three checkable outcomes rather than
+  the previous "as per requirements".
+- `[Pass]` **Nit fixed.** `:12` now reads "A JSON array of files", matching the array at `:71-75`.
+- `[Pass]` **No regression in DoD 2.** Polarity block `:19-29` survives the rewrite intact, and the
+  `path_absent`/`path_present` glosses are now sharper ("required file is missing (it should exist
+  after the fix)").
+- `[Pass]` **Gate green.** `bash test/swarm-preflight.sh` → `96 passed, 0 failed`, including the two
+  T6 assertions added in Turn 1.
+- `[Pass]` **Containment held across all three fires.** `relay-automation/marathon-drive.sh` (lane
+  J1) was never touched: `git diff --name-only 4b32bd3..HEAD` lists only the three declared
+  artifacts plus this relay file.
+
+**Orchestrator follow-up:** `relay-automation/` gained a file, so `relay-pkg.tar.gz` is stale —
+`skills/relay-automation/make-pkg.sh` to be re-run now that the artifact is final.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
