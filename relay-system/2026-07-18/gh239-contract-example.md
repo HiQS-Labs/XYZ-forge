@@ -32,11 +32,14 @@ ROUND: 2 / 4
   - `utils/swarm-preflight.sh` — exit-3 message only
   - `test/swarm-preflight.sh` — regression coverage for the new message
 - Source of truth for the task: [`PROJECT/2-WORKING/GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md`](../../PROJECT/2-WORKING/GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md)
-- Reviewer: claude-a   ·   Producer: agy
-  <!-- Roles swapped 2026-07-18 after round 1 aborted: codex-cli 0.139.0 is pinned to model
-       gpt-5.6-terra and the API rejects it (400, "requires a newer version of Codex"), so the
-       codex builder is unusable on this device until its CLI is upgraded. agy takes the build
-       lane; Claude Code reviews, which is the documented default role split (GH-221). -->
+- Reviewer: agy   ·   Producer: codex
+  <!-- Role history. R1: intended codex/agy, but codex-cli 0.139.0 was pinned to gpt-5.6-terra and
+       the API rejected it (400, "requires a newer version of Codex") — aborted in 9s. R1 rebuilt
+       with agy producing, claude-a reviewing (the GH-221 default split). R2 onward: operator
+       upgraded codex-cli to 0.144.6 and it now answers on that model (smoke-tested), so the plan's
+       original codex-produces / agy-reviews split is restored. Deliberate: the open Blocker is a
+       JUDGMENT error by agy (it shipped an example contradicting its own warning), so a different
+       model should implement the fix rather than the one that made it. -->
 
 - Started: 2026-07-18
 - Lane: J2 of [MARATHON-PLAN-2026-07-18-J](../../PROJECT/2-WORKING/MARATHON-PLAN-2026-07-18-J-VENDORED-CONSUMER-DX.md). **Lane J1 (#238) is NOT part of this relay — do not touch `relay-automation/marathon-drive.sh`.**
