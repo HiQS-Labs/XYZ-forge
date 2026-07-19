@@ -1,0 +1,4 @@
+interface:
+  display_name: "Marathon Triage"
+  short_description: "Rank and preflight safe marathon candidates"
+  default_prompt: "Use $marathon-triage to build a verified, collision-safe marathon candidate plan."
