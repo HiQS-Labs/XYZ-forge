@@ -1,6 +1,6 @@
 ---
 title: Marathon Plan B (2026-07-03) — reliability + cross-repo, PARALLEL dogfood
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED) — waves 1-3 fired 2026-07-04; final parked lane #94 subsequently closed (COMPLETED); status word corrected 2026-07-19 (marathon-cleanup)
 created: 2026-07-03
 updated: 2026-07-04
 owner: noel

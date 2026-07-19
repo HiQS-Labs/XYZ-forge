@@ -1,6 +1,6 @@
 ---
 title: Marathon Plan A (2026-07-03) — concurrency-safety core, SERIAL / Opus-direct
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED) — all 5 lanes (#41/#3/#4/#5/#30) shipped 2026-07-03; status word corrected 2026-07-19 (marathon-cleanup)
 created: 2026-07-03
 updated: 2026-07-03
 owner: noel
