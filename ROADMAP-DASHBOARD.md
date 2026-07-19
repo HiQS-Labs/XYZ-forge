@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 88 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 54 · 🔮 0 · 🔲 0
+Summary: 89 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 54 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-245 · --target-root review turn cannot report, and relay-drive misclassifies the outcome both ways | — | [#236](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/236) · [GH-245-TARGET-ROOT-REVIEW-UNWRITABLE.md](PROJECT/1-INBOX/GH-245-TARGET-ROOT-REVIEW-UNWRITABLE.md) · [#245](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/245) |
 | GH-241 · MARATHON.example.yaml understates sequencing and depends_on's scalar-only shape | — | [GH-241-MARATHON-EXAMPLE-SEQUENCING.md](PROJECT/1-INBOX/GH-241-MARATHON-EXAMPLE-SEQUENCING.md) · [#241](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/241) |
 | GH-238 · marathon-drive: pre-advance gate defaults to bash validate.sh — halts AFTER approval in any consuming repo without it | — | [GH-238-MARATHON-PREADVANCE-GATE-DEFAULT.md](PROJECT/2-WORKING/GH-238-MARATHON-PREADVANCE-GATE-DEFAULT.md) · [#238](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/238) |
 | GH-239 · swarm-preflight: no contract example ships — consumers hit exit 3 with nothing to copy, so the gate gets bypassed | — | [GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md](PROJECT/2-WORKING/GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md) · [#239](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/239) |
@@ -101,10 +102,11 @@ Summary: 88 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 54 · �
 
 ## In progress
 
-Summary: 16 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 17 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 12 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-240 · PDDA-compatible marathon triage and cleanup skills | ✅ | [GH-240-MARATHON-SKILLS.md](PROJECT/3-COMPLETED/GH-240-MARATHON-SKILLS.md) · [#240](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/240) |
 | GH-201 · swe-diagram: add Git history lane visualization | — | [GH-201-SWE-DIAGRAM-GIT-LANES.md](PROJECT/2-WORKING/GH-201-SWE-DIAGRAM-GIT-LANES.md) · [#201](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201) |
 | GH-221 · Explicitly document Claude CLI is NOT a default builder — Claude Code is orchestrator/reviewer only | ✅ | [GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md](PROJECT/3-COMPLETED/GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md) · [#221](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/221) |
 | GH-156 · Prelight swarmability scoring using codebase-memory-mcp graph signals | 🟡 | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/4-MISC/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
