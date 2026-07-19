@@ -1,9 +1,9 @@
 ---
 name: swe-diagram
-description: Draw an interactive system architecture diagram for a repo — first from its EXISTING rendered knowledge (graphify output, codebase-memory graph, ask_self RAG docs, architecture docs), grepping the raw code only as a last resort. Produces two artifacts, a diagram JSON spec and a self-contained interactive HTML file with an xyflow-style layout (pan/zoom, draggable nodes, typed edges), rendered by a bundled dependency-free JS renderer. Trigger when the user says "draw the system diagram", "diagram this repo/architecture", "swe-diagram", "visualize the architecture", "make an xyflow diagram", or wants an architecture map as HTML/JSON. Not for data charts or dashboards (that is dataviz) and not for flowcharts of a single algorithm.
+description: Draw an interactive system architecture or Git-history diagram for a repo. Architecture maps start from existing rendered knowledge (graphify, codebase-memory, RAG, architecture docs) before raw code. Git-history maps render commits, branch cuts, and merges as stacked lanes from local refs. Produces a JSON spec and self-contained dependency-free HTML with pan/zoom, draggable nodes, typed edges, search, and filtering. Trigger for "draw the system diagram", "diagram this repo/architecture", "visualize the architecture", "Git commit graph", "visualize branches/merges", "git lanes", "swe-diagram", or xyflow-style repo maps. Not for data charts/dashboards or a single-algorithm flowchart.
 ---
 
-# swe-diagram — System Diagram from Existing Architecture Knowledge
+# swe-diagram — Interactive Architecture and Git-History Maps
 
 Produce two deliverables for the target repo:
 
@@ -13,6 +13,23 @@ Produce two deliverables for the target repo:
 
 Ask the user for a different output path only if `ARCHITECTURE/` is inappropriate
 for the repo; otherwise just create it.
+
+For a **Git-history request**, produce `ARCHITECTURE/git-history-diagram.json`
+and `.html` instead, skip Steps 1–2's architecture discovery, and run:
+
+```bash
+node "<this-skill-dir>/scripts/git-history-to-json.js" \
+  --repo "<target-repo>" --limit 20 \
+  --output ARCHITECTURE/git-history-diagram.json
+bash "<this-skill-dir>/assets/build-diagram.sh" \
+  ARCHITECTURE/git-history-diagram.json
+```
+
+The generator uses local Git only. Its total limit spans every reachable local
+and remote-tracking ref, orders `main`, `development`, then active feature/fix
+lanes, and retains empty long-lived lanes when their refs exist. It cannot
+recover deleted branch names or squash/rebase provenance; say so rather than
+inventing lanes. GitHub PR enrichment is a separate, networked follow-up.
 
 ## Step 1 — Gather architecture knowledge (in this order, STOP when sufficient)
 
@@ -75,10 +92,11 @@ Schema (`ARCHITECTURE/system-diagram.json`):
 ```
 
 - `type` (drives node color + legend): `service`, `ui`, `api`, `database`,
-  `queue`, `external`, `job`, `storage` — anything else falls back to gray.
+  `queue`, `external`, `job`, `storage`, `commit`, `merge` — anything else
+  falls back to gray.
 - `kind` (drives edge style): `sync` (solid), `async` (dashed), `data`
-  (dotted). Default `sync`.
-- Layout is automatic; do not put coordinates in the JSON. Three layouts:
+  (dotted), `branch` (short dash), `merge` (purple long dash). Default `sync`.
+- Layout is automatic; do not put coordinates in the JSON. Four layouts:
   - **`"layout": "layered"` (default, omit the field for this)** — left→right
     from edge direction. Point `source → target` in the direction of the
     call/flow — layout quality depends on it. Use for synchronous
@@ -94,13 +112,18 @@ Schema (`ARCHITECTURE/system-diagram.json`):
     otherwise-independent services, not a linear pipeline. Optionally set
     `"hub": "<node id>"` to force which node is the center; omit it and the
     renderer picks the highest-degree (most-connected) node.
+  - **`"layout": "git-lanes"`** — fixed horizontal branch lanes stacked as
+    `lanes[].order`, with commits advancing left→right by each node's numeric
+    `order`. Nodes set `lane`; edges point parent→child. Use the bundled
+    generator rather than hand-authoring Git ancestry. First-parent edges are
+    solid within a lane, branch cuts are dashed teal, and merge-parent edges
+    are dashed purple.
   - `groups` swimlanes are supported by **`layered` and `top-down`** (their
     boxes follow contiguous rank columns or rows). They render as background
     bounding boxes containing their child nodes, labeled top-left with the
-    group's `label`, and are silently
-    skipped under `hub-ring`. A node opts into a group via its own `group`
-    field, matched against a `groups[].id`; groups with no member nodes are
-    skipped.
+    group's `label`, and are silently skipped under `hub-ring` and
+    `git-lanes`. A node opts into a group via its own `group` field, matched
+    against a `groups[].id`; groups with no member nodes are skipped.
 
 ## Step 3 — Build the HTML
 
