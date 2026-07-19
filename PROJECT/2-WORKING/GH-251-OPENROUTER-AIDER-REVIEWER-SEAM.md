@@ -2,7 +2,7 @@
 gh_issue: 251
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/251
 title: "OpenRouter/aider reviewer seam: aider produces reviews but doesn't persist the relay-file append (builder-only in practice)"
-status: "Proposed (1-INBOX — not yet active)"
+status: "Active (2-WORKING) — promoted 2026-07-19, queued in MARATHON-PLAN-2026-07-19-L"
 created: 2026-07-19
 updated: 2026-07-19
 owner: noel
