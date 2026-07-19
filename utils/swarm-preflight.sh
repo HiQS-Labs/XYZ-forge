@@ -525,6 +525,21 @@ for doc in "${SOURCE_DOCS[@]}"; do
   one="$(SP_DOC="$doc" node "$TMP/extract-contract.mjs")"; rc=$?
   if [[ $rc -ne 0 ]]; then
     emit "CONTRACT ERROR ($doc): see message above. The planner fails loud rather than guessing from prose."
+    if [[ $rc -eq 3 ]]; then
+      emit ""
+      emit "  To fix, add a minimal valid contract in $doc"
+      emit "  (copy relay-automation/CONTRACT.example.md for a detailed example):"
+      emit ""
+      emit '  ## Swarm Preflight Contract'
+      emit '  ```json'
+      emit '  {'
+      emit '    "target":      { "repo": ".", "ref": "main" },'
+      emit '    "gate":        "bash validate.sh",'
+      emit '    "fix_probes":  [ { "type": "path_absent", "path": "new-file.txt" } ],'
+      emit '    "artifacts":   [ "new-file.txt" ]'
+      emit '  }'
+      emit '  ```'
+    fi
     exit "$rc"
   fi
   printf '%s\n' "$one" >>"$TMP/contracts.jsonl"

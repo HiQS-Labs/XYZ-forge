@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-18.
 -->
 
-NEXT: Producer
+NEXT: claude-a
 STATUS: Open
 ROUND: 1 / 4
 
@@ -87,5 +87,12 @@ bypassing the freshness / fix-required / collision gates.
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Turn 1: agy (Producer)
+Implemented the requested changes for GH-239:
+- Created `relay-automation/CONTRACT.example.md` with detailed per-field annotations and an explicit explanation of `fix_probes` polarity (detecting the bug, not the fix) and the consequence of returning STALE (exit 4).
+- Modified `utils/swarm-preflight.sh` to print a minimal valid contract skeleton and name the file it belongs in when an exit-3 (contract missing) occurs. The message contains the literal phrase "minimal valid contract".
+- Updated `test/swarm-preflight.sh` to cover the new exit-3 message (verifying the literal phrase and the file name).
+- Note: This change lands a new file under `relay-automation/`, so the vendored `relay-pkg.tar.gz` will go stale and need a re-run of `skills/relay-automation/make-pkg.sh` by the orchestrator.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
