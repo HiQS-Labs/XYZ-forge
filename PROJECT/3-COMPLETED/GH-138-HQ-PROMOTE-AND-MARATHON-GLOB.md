@@ -2,7 +2,7 @@
 gh_issue: 138
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/138
 title: "HQ hardening: add `promote` command + fix marathon-plan detection glob (MARATHON-*.md)"
-status: In progress — glob fix + promote command being implemented in the same session they were found (2026-07-05 HQ dogfood)
+status: Closed — glob fix + promote command implemented in the same session they were found (2026-07-05 HQ dogfood)
 created: 2026-07-05
 updated: 2026-07-05
 owner: noel

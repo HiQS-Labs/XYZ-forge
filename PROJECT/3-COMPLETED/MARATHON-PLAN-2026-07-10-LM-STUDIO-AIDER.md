@@ -1,6 +1,6 @@
 ---
 title: Marathon Plan (2026-07-10) — LM Studio × Aider integration (ATE fuzzer + production relay lane)
-status: Both scoped lanes now shipped — Lane 1 (#195 ATE LM Studio driver) merged to `main` via
+status: Shipped — Both scoped lanes now shipped — Lane 1 (#195 ATE LM Studio driver) merged to `main` via
   PR #195 (2026-07-10); Lane 2 (GH-147 Phase 2, production Aider relay shim) shipped 2026-07-17 via
   the `/10days` sweep (commit `8af755c`, `test/aider-turn.sh` 55/55). Issue #147 stays OPEN — Phases
   3-5 remain, tracked in GH-147-LM-STUDIO.md, not this doc. Retired to 3-COMPLETED 2026-07-17 as

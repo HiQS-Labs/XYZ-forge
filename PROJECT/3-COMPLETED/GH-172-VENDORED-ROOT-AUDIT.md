@@ -2,7 +2,7 @@
 gh_issue: 172
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/172
 title: Vendored harness root-semantics audit before Python-default cutover
-status: Phase 0 root/claim parity fixes landed and verified; Phase 1-4 marathon plan authored 2026-07-16, not yet fired
+status: Closed — Phase 0 root/claim parity fixes landed and verified; Phase 1-4 marathon plan authored 2026-07-16, not yet fired
 created: 2026-07-07
 updated: 2026-07-17
 owner: noel

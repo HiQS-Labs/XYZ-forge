@@ -1,7 +1,7 @@
 ---
 ratings_exempt: true
 title: relay protocol — independent post-generation quality gate
-status: Active — promoted to 2-WORKING 2026-06-25; execute Phase 1
+status: Closed — promoted to 2-WORKING 2026-06-25; execute Phase 1
 created: 2026-06-25
 updated: 2026-06-25
 owner: noelsaw1

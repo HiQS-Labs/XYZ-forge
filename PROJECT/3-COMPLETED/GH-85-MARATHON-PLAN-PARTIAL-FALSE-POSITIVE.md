@@ -2,7 +2,7 @@
 gh_issue: 85
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/85
 title: marathon-plan undocumented-partial-completion false-positives on edit-existing-file lanes
-status: Ready (rated + contracted — marathon lane)
+status: Closed — Ready (rated + contracted — marathon lane)
 created: 2026-07-02
 updated: 2026-07-02
 owner: noel

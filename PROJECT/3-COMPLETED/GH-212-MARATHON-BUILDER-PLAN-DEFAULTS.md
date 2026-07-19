@@ -2,7 +2,7 @@
 gh_issue: 212
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/212
 title: "Make marathon builder-default (no billed CLI) and plan-location (PROJECT/2-WORKING) explicit, enforced defaults in the vendored harness"
-status: built 2026-07-15 — validate.sh green (only pre-existing #208 red)
+status: Closed — built 2026-07-15 — validate.sh green (only pre-existing #208 red)
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel

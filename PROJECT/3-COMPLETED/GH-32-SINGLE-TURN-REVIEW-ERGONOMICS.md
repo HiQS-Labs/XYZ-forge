@@ -1,7 +1,7 @@
 ---
 ratings_exempt: true
 title: Single-turn review ergonomics (untracked-relay warn + completed-non-approval exit code)
-status: Active (2-WORKING)
+status: Closed (issue #32 closed)
 created: 2026-06-27
 updated: 2026-06-27
 owner: noel

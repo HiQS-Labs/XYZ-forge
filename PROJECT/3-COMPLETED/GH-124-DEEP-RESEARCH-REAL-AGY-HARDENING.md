@@ -2,7 +2,7 @@
 gh_issue: 124
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/124
 title: "deep-research.mjs shipped un-run against real agy — add a real-agy smoke test + runaway-grounding guard"
-status: captured 2026-07-04, rated, ready to build
+status: Closed — captured 2026-07-04, rated, ready to build
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel

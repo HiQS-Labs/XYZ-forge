@@ -1,7 +1,7 @@
 ---
 ratings_exempt: true
 title: Builder brief — GH-27 ROADMAP dashboard renderer (single-phase Marathon)
-status: Active
+status: Closed (issue #27 closed)
 created: 2026-06-26
 updated: 2026-06-26
 owner: Noel (operator) · Codex (builder)

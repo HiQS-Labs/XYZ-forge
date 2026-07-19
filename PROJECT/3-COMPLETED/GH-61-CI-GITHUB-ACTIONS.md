@@ -2,7 +2,7 @@
 gh_issue: 61
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/61
 title: CI GitHub Actions — Tier 1 lint/doc-hygiene gate + Tier 2 validate.sh regression gate
-status: Proposed (1-INBOX — not yet active)
+status: Closed — Proposed (1-INBOX — not yet active)
 created: 2026-06-30
 doc_type: feature
 complexity: 2

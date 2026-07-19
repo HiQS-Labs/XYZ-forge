@@ -2,7 +2,7 @@
 gh_issue: 207
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/207
 title: "Marathon retry/resume is brittle against pre-existing lane state: cross-marathon lane-id collision + no-progress HALT on an already-complete lane"
-status: built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green) — PR pending
+status: Closed — built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green)
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel

@@ -2,7 +2,7 @@
 gh_issue: 88
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/88
 title: Cross-repo marathon monitor v1.0 — read-only fzf TUI over existing primitives
-status: Queued
+status: Closed — Queued
 created: 2026-07-02
 updated: 2026-07-02
 owner: noel

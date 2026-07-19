@@ -2,7 +2,7 @@
 gh_issue: 58
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/58
 title: marathon --builder claude fails headless (exec claude not found) — add CLAUDE_BIN discovery + fail-fast
-status: Queued (rated + contracted — marathon-ready)
+status: Closed — Queued (rated + contracted — marathon-ready)
 created: 2026-07-02
 updated: 2026-07-02
 owner: noel

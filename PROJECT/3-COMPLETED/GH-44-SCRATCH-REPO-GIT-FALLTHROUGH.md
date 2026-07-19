@@ -2,7 +2,7 @@
 gh_issue: 44
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/44
 title: RCA — sandboxed inline run of relay-turn-lib.sh polluted the main repo (.git fall-through)
-status: Queued (rated + contracted — marathon-ready)
+status: Closed — Queued (rated + contracted — marathon-ready)
 created: 2026-06-28
 updated: 2026-07-02
 doc_type: bugfix

@@ -2,7 +2,7 @@
 gh_issue: 150
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/150
 title: "marathon-plan: docOf() picks wrong doc (first PROJECT link, not the GH-<n> pointer) → false 'unrated'"
-status: Active (2-WORKING) — scoped + contracted 2026-07-06
+status: Closed — scoped + contracted 2026-07-06
 created: 2026-07-06
 updated: 2026-07-06
 owner: noel

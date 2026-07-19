@@ -2,7 +2,7 @@
 gh_issue: 203
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/203
 title: "Swarm/tick sessions leave a stale git index.lock on unclean exit, blocking later git ops"
-status: built 2026-07-16 (codex + agy, 2 turns, Approved cleanly)
+status: Closed — built 2026-07-16 (codex + agy, 2 turns, Approved cleanly)
 created: 2026-07-16
 updated: 2026-07-16
 owner: noel
