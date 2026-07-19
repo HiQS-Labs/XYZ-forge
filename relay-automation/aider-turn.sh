@@ -80,7 +80,11 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=relay-turn-lib.sh
 source "$HERE/relay-turn-lib.sh"
 
-ROOT="${AIDER_TURN_ROOT:-"$(cd "$HERE/.." && pwd)"}"
+# Default ROOT to the CWD's git toplevel (the repo the operator is actually driving) so a
+# NON-VENDORED run — this shim invoked from outside the target repo, e.g. straight from the swarm
+# checkout — roots worktree isolation + artifact copyback at the TARGET, not this shim's own repo
+# ($HERE/..). Explicit AIDER_TURN_ROOT still wins (fixtures); fall back to $HERE/.. off a git repo.
+ROOT="${AIDER_TURN_ROOT:-"$(git rev-parse --show-toplevel 2>/dev/null || (cd "$HERE/.." && pwd))"}"
 AIDER_BIN="${AIDER_BIN:-aider}"
 # GH-147 Phase 2 (LM_STUDIO lane): two seams share this shim, same contract Phase 1 proved in
 # consult.sh. AIDER_OPENAI_API_BASE set -> LM Studio / OpenAI-compatible seam (default model

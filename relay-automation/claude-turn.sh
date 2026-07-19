@@ -67,7 +67,11 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=relay-turn-lib.sh
 source "$HERE/relay-turn-lib.sh"
 
-ROOT="${CLAUDE_TURN_ROOT:-"$(cd "$HERE/.." && pwd)"}"
+# Default ROOT to the CWD's git toplevel (the repo the operator is actually driving) so a
+# NON-VENDORED run — this shim invoked from outside the target repo, e.g. straight from the swarm
+# checkout — roots worktree isolation + artifact copyback at the TARGET, not this shim's own repo
+# ($HERE/..). Explicit CLAUDE_TURN_ROOT still wins (fixtures); fall back to $HERE/.. off a git repo.
+ROOT="${CLAUDE_TURN_ROOT:-"$(git rev-parse --show-toplevel 2>/dev/null || (cd "$HERE/.." && pwd))"}"
 CLAUDE_BIN="${CLAUDE_BIN:-}"
 die() { printf 'claude-turn: %s\n' "$*" >&2; exit 2; }
 
