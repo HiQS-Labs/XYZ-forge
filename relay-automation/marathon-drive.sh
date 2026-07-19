@@ -33,6 +33,10 @@ fi
 #                                beyond the relay file (passed to the shims as ALLOW_PATHS). Omit for
 #                                a relay-only phase (conversation → approval, no source edit).
 #     [--require-clean]          hard-stop if the workspace has pre-existing changes (unattended runs)
+#     [--requires-test <PATH>]   GH-249 requires_test contract field (opt-in): repo-relative test file
+#                                that must be added/modified since this phase started, or the gate
+#                                fails (exit 5) even if --pre-advance-cmd passed. Omit for phases with
+#                                no test surface (docs-only, config-only) — default behavior unchanged.
 #     [--dry-run]                render relay file and print tick seed cmd, then exit
 #
 # Environment overrides (for tests):
@@ -42,7 +46,9 @@ fi
 #   TICK_BIN              — tick binary (default: <repo-root>/bin/tick)
 #
 # Exit: 0 phase approved + gate passed · 3 relay no-progress · 4 relay cap/mismatch ·
-#        5 pre-advance gate failed · 6 containment violation (turn-taker reverted an off-lane edit) ·
+#        5 pre-advance gate failed (also covers a failed --requires-test check — see ESCALATION.md
+#        reason: pre-advance-failed vs. requires-test-missing) ·
+#        6 containment violation (turn-taker reverted an off-lane edit) ·
 #        7 turn timeout / hang · 8 lane parked (GH-45 attempt cap — no token seeded; re-fire with
 #        --force) · 2 usage.
 
@@ -300,6 +306,30 @@ artifacts_exist_for_timeout() {
   return 0
 }
 
+# GH-249: the requires_test contract field. A brief's acceptance criteria calling for a new/updated
+# test used to be advisory prose — --pre-advance-cmd only proves "existing tests still pass," not that
+# this phase added the coverage its brief demanded. When --requires-test PATH is set, this check must
+# ALSO pass before the phase can reach Approved: PATH must exist, be non-empty, and have changed since
+# PRE_PHASE_HEAD (committed diff) or be newly untracked (a turn-taker edit not yet committed at gate
+# time). Opt-in and additive — REQUIRES_TEST stays empty unless a caller sets --requires-test, so a
+# run with no such flag is byte-for-byte the same gate behavior as before this feature existed.
+requires_test_delta() {  # <path> — true if <path> was added/modified since PRE_PHASE_HEAD
+  local path="$1" root="${TARGET_ROOT:-$ROOT}" abs
+  case "$path" in
+    /*) abs="$path" ;;
+    *)  abs="$root/$path" ;;
+  esac
+  [[ -s "$abs" ]] || return 1   # must exist and be non-empty — an empty/missing test proves nothing
+  if [[ -n "$PRE_PHASE_HEAD" ]] \
+    && git -C "$root" diff --name-only "$PRE_PHASE_HEAD" -- "$path" 2>/dev/null | grep -q .; then
+    return 0
+  fi
+  # A newly created file may still be untracked at gate time (harness commits happen inside the relay
+  # loop, but nothing guarantees a same-cycle commit for every edit) — count that as a delta too.
+  git -C "$root" status --porcelain -- "$path" 2>/dev/null | grep -qE '^(\?\?|A )' && return 0
+  return 1
+}
+
 usage() {
   cat <<'EOF'
 Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [options]
@@ -322,6 +352,10 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
                           stay in this repo; forwarded to relay-drive.sh, and the pre-advance gate runs
                           with cwd = DIR. Omit for a same-repo phase.
   --require-clean         Hard-stop (exit 2) if the workspace has pre-existing changes before seeding.
+  --requires-test PATH    GH-249 requires_test contract field (opt-in): repo-relative test file that
+                          must be added/modified by this phase, or the pre-advance gate fails (exit 5)
+                          even when --pre-advance-cmd passed. Omit for phases with no test surface
+                          (e.g. docs-only) — default gate behavior is unchanged without this flag.
   --force                 GH-45: bypass the per-lane attempt cap for this fire (re-fire a parked lane).
   --dry-run               Render the relay file and print the tick seed; exit without running.
 EOF
@@ -337,6 +371,7 @@ PHASE_ID="p1"        # which phase this invocation drives (phases/<id>/); the or
 RELAY_TASK=""        # resolved to MARATHON-<PHASE_ID>-TURN after parsing, unless given
 ARTIFACT_PATHS=""    # comma-separated repo-relative file(s) the builder may create/edit (beyond RELAY.md)
 REQUIRE_CLEAN=0      # --require-clean: hard-stop if the workspace has pre-existing changes
+REQUIRES_TEST=""     # --requires-test PATH: GH-249 requires_test contract field (opt-in; empty = off)
 FORCE=0              # --force: bypass the GH-45 per-lane attempt cap for this one fire
 DRY_RUN=0
 TARGET_ROOT=""       # --target-root: foreign repo the BUILD lands in (GH-11). Relay thread stays in ROOT;
@@ -355,6 +390,7 @@ while (($# > 0)); do
     --artifact)        ARTIFACT_PATHS="${2:-}"; shift 2 ;;
     --target-root)     TARGET_ROOT="${2:-}"; shift 2 ;;
     --require-clean)   REQUIRE_CLEAN=1; shift ;;
+    --requires-test)   REQUIRES_TEST="${2:-}"; shift 2 ;;
     --force)           FORCE=1; shift ;;
     --dry-run)         DRY_RUN=1; shift ;;
     --help)            usage; exit 0 ;;
@@ -439,6 +475,11 @@ fi
 # Default the tick token name off the phase id (p1 → MARATHON-P1-TURN), keeping the Phase-3 default.
 RELAY_TASK="${RELAY_TASK:-"MARATHON-$(printf '%s' "$PHASE_ID" | tr '[:lower:]' '[:upper:]')-TURN"}"
 LANE_STATE_KEY="${MARATHON_LANE_NS:-$PHASE_ID}"
+
+# GH-249: snapshot HEAD (in the repo the artifact actually lands in — TARGET_ROOT when set, else ROOT)
+# before this phase's first commit, so requires_test_delta (below) has a true "before this phase"
+# baseline to diff against. Captured unconditionally — cheap, and unused unless --requires-test is set.
+PRE_PHASE_HEAD="$(git -C "${TARGET_ROOT:-$ROOT}" rev-parse HEAD 2>/dev/null || true)"
 
 # Map builder/reviewer to _AGENT env vars for marathon-agent.sh routing. Both actors are routed to
 # their shim by name prefix (claude/codex/agy/gemini), so the harness supports cross-model BUILDERS
@@ -817,6 +858,13 @@ complete_phase_success() {
     escalate "pre-advance-failed" 0
     xyz_marathon_heartbeat_clear
     xyz_marathon_emit red "halted at phase ${PHASE_ID} — pre-advance gate failed"
+    exit 5
+  fi
+  if [[ -n "$REQUIRES_TEST" ]] && ! requires_test_delta "$REQUIRES_TEST"; then
+    log "requires-test FAILED — no new/updated test detected at: $REQUIRES_TEST"
+    escalate "requires-test-missing" 0
+    xyz_marathon_heartbeat_clear
+    xyz_marathon_emit red "halted at phase ${PHASE_ID} — required test not added/updated: $REQUIRES_TEST"
     exit 5
   fi
   if [[ "$success_mode" == "already-satisfied" ]]; then
