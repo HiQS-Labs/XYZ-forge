@@ -10,7 +10,7 @@ Summary: 98 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 57 · �
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-251 · OpenRouter/aider reviewer seam doesn't persist its review (builder-only in practice) | — | [GH-251-OPENROUTER-AIDER-REVIEWER-SEAM.md](PROJECT/1-INBOX/GH-251-OPENROUTER-AIDER-REVIEWER-SEAM.md) · [#251](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/251) |
+| GH-251 · OpenRouter/aider reviewer seam doesn't persist its review (builder-only in practice) | — | [GH-251-OPENROUTER-AIDER-REVIEWER-SEAM.md](PROJECT/2-WORKING/GH-251-OPENROUTER-AIDER-REVIEWER-SEAM.md) · [#251](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/251) |
 | GH-199 · swe-diagram: add a font picker to the generated diagram HTML (default + Indie Flower) | — | [GH-199-SWE-DIAGRAM-FONT-PICKER.md](PROJECT/2-WORKING/GH-199-SWE-DIAGRAM-FONT-PICKER.md) · [#199](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/199) |
 | GH-232 · validate.sh: ~12 tests fail on ubuntu-latest CI runner (environment incompatibilities, first exposed by GH-230's CI step) | — | [GH-232-VALIDATE-UBUNTU-CI-FAILURES.md](PROJECT/2-WORKING/GH-232-VALIDATE-UBUNTU-CI-FAILURES.md) · [#232](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/232) |
 | GH-234 · find-harness.sh --env exports TICK_REPO_ROOT one directory too deep (found during GH-177 wipe investigation, never filed) | — | [GH-234-FIND-HARNESS-TICK-ROOT-TOO-DEEP.md](PROJECT/2-WORKING/GH-234-FIND-HARNESS-TICK-ROOT-TOO-DEEP.md) · [#234](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/234) |
