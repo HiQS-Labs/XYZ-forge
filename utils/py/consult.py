@@ -18,6 +18,48 @@ _AIDER_FAIL_RE = re.compile(
     r"|Unable to list models|No API key was provided|NotFoundError|Traceback \(most recent call last\)"
 )
 
+# GH-178 A4 / GH-223 (Python port): same claim/citation definition as relay-turn-lib.sh's shared
+# RTL_CLAIM_WORD_RE / RTL_CITATION_RE (used by both B3's per-line downgrade and consult.sh's A4
+# stamp) — kept in lockstep with the Bash source, not redesigned. A "citation" is a quoted span
+# ("..."/`...`) or a file:line reference (name:NNN); a "claim" is the [Pass] tag or one of a short
+# list of assertion phrases (verified/confirmed/LGTM/looks good/etc).
+_RTL_CLAIM_WORD_RE = re.compile(
+    r"(^|[^A-Za-z])([Vv]erified|[Cc]onfirmed|LGTM|[Ll]ooks [Gg]ood|[Cc]hecks [Oo]ut|[Aa]ll [Gg]ood"
+    r"|[Ww]orks [Aa]s [Ee]xpected|[Nn]o issues( found)?)([^A-Za-z]|$)"
+)
+_RTL_CITATION_RE = re.compile(r'"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+')
+_RTL_PASS_TAG_RE = re.compile(r"\[Pass\]")
+_RTL_UNVERIFIED_RE = re.compile(r"\[Unverified — no citation\]")
+
+def rtl_has_uncited_claim(path, window=3):
+    """Python port of relay-turn-lib.sh's rtl_has_uncited_claim() (GH-178 A4 / GH-223): flags <path>
+    if it carries zero citations anywhere, OR at least one claim-bearing line has no citation within
+    `window` lines of itself (including its own line) — even though the file cites something
+    elsewhere. Does NOT verify a citation is accurate, only that one was attempted nearby. Missing or
+    unreadable file fails safe (flagged), matching the Bash version.
+    """
+    try:
+        with open(path, "r", errors="replace") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return True
+    if not lines:
+        return True
+    any_cite = any(_RTL_CITATION_RE.search(l) for l in lines)
+    if not any_cite:
+        return True
+    for i, line in enumerate(lines):
+        if _RTL_UNVERIFIED_RE.search(line):
+            continue
+        claim = bool(_RTL_PASS_TAG_RE.search(line)) or bool(_RTL_CLAIM_WORD_RE.search(line))
+        if not claim:
+            continue
+        window_end = min(len(lines), i + window + 1)
+        cited = any(_RTL_CITATION_RE.search(lines[j]) for j in range(i, window_end))
+        if not cited:
+            return True
+    return False
+
 def die(msg):
     print(f"consult: {msg}", file=sys.stderr)
     sys.exit(2)
@@ -241,11 +283,13 @@ def main():
         summary = ""
         survivor_model = ""
         survivor_out = ""
+        results = []  # (model, out_path, ok) — used by the GH-223 citation-stamp pass below
 
         for proc, m, out, start_time, cmd in procs:
             if proc is None:
                 failed += 1
                 summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
+                results.append((m, out, False))
                 continue
 
             try:
@@ -256,15 +300,18 @@ def main():
                     summary += f"\n  [ok]   {m} -> {out}"
                     survivor_model = m
                     survivor_out = out
+                    results.append((m, out, True))
                 elif proc.returncode == 0:
                     # exit 0 but the aider transcript proved an auth/config failure or empty answer
                     failed += 1
                     summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
+                    results.append((m, out, False))
                 else:
                     failed += 1
                     summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                     with open(out, "a") as f:
                         f.write(f"\nconsult: advisor failed with exit {proc.returncode}\n")
+                    results.append((m, out, False))
             except subprocess.TimeoutExpired:
                 proc.kill()
                 proc.wait()
@@ -272,6 +319,35 @@ def main():
                 summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
                 with open(out, "a") as f:
                     f.write(f"\nconsult: advisor failed or exceeded the {timeout_s}s cap\n")
+                results.append((m, out, False))
+
+        # GH-178 A4 / GH-223 (Python port): mechanically stamp any ANSWERED advisor whose transcript
+        # trips rtl_has_uncited_claim() (defined above) — shared claim/citation definition with B3's
+        # per-line downgrade — with the same stdout+prepended-transcript+sidecar mechanism as the A2
+        # SINGLE-MODEL stamp below. Does NOT verify a citation is ACCURATE, only that a claim has one
+        # attempted nearby. Mirrors relay-automation/consult.sh:310-336 — do not redesign, just port.
+        citeless_models = []
+        for m, out, ok in results:
+            if not ok:
+                continue
+            if rtl_has_uncited_claim(out):
+                citeless_models.append(m)
+                nocite = (
+                    f"**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional "
+                    f"({m}'s answer carries an unsupported [Pass]/verified/confirmed-style claim "
+                    f"with no quoted span or file:line citation nearby, despite the consult "
+                    f"PREAMBLE asking advisors to cite evidence.)"
+                )
+                if not out.endswith(".json"):
+                    try:
+                        with open(out, "r", errors="replace") as f:
+                            existing = f.read()
+                        with open(out, "w") as f:
+                            f.write(nocite + "\n\n" + existing)
+                    except OSError:
+                        pass
+                with open(os.path.join(run_dir, f"{label}.{m}.NO-CITATION.txt"), "w") as f:
+                    f.write(nocite + "\n")
 
         # GH-178 A2 / GH-215 (Python port): a panel that started with MORE THAN ONE requested advisor
         # but ended with exactly one survivor is not a reconciled cross-model result — no second read
@@ -335,6 +411,8 @@ def main():
     print(f"consult: {answered} answered, {failed} failed -> {run_dir}{summary}")
     if degraded:
         warn(f"SINGLE-MODEL — NOT RECONCILED (stamped into {survivor_out} and {os.path.join(run_dir, 'DEGRADED-SINGLE-MODEL.txt')})")
+    if citeless_models:
+        warn(f"NO FIRSTHAND VERIFICATION CITED for: {' '.join(citeless_models)} (stamped into transcript(s) + sidecar(s) in {run_dir})")
     if answered == 0:
         warn("all advisors failed")
         sys.exit(5)
