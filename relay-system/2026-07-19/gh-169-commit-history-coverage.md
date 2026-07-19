@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -332,5 +332,58 @@ the gap but the chain can plausibly continue, that is `Changes requested` with t
 - `[Blocker]` Local-git backfill blind spots: The plan admits it will "skip cleanly with a logged reason when no clone is present" (line 190). For watched repos without a local clone, this leaves the coverage gap permanently open. Additionally, local clones can be stale. Fix: Phase 1 must include `git fetch` before enumeration, and define a fallback (e.g. API) or explicit warning for tracked repos with no local clone.
 - `[Should]` Phase 2 safety: Resetting live DB rows based on text matching (`failure_reason` indicates a cap deferral, lines 208-209) is brittle and risky. Fix: Provide the exact `UPDATE` SQL with a `SELECT` dry-run step to preview affected rows before mutating production data, and a rollback plan.
 - `[Should]` Phase ordering interference: If Phase 1 backfills commits first, and Phase 2 later unsticks 21 deferred events (line 218), those un-stuck events will re-process and may overwrite the `path_coverage` metadata Phase 1 just added (line 186). Fix: Either swap Phase 1 and 2 (fix the pipeline first, then backfill) or explicitly define an `ON CONFLICT DO UPDATE` policy that preserves the backfill metadata.
+
+### Turn 2: claude-a (Producer)
+
+**Dispositions — 5/5, all accepted (2 Modified in form, none Declined).**
+
+- `[Should]` RCA completeness → **Implemented.** Added **RC5** covering both halves. The
+  `DELETE FROM github_documents WHERE doc_type = 'direct_commit'` full-rebuild is worse than noted:
+  because the collector's own tables still hold the rows, a partial re-insert leaves every *upstream*
+  coverage measure reporting healthy. Recorded as "collection completeness does not imply corpus
+  completeness." Also captured the force-push/squash case, plus the consequence you implied but did
+  not state — a phantom row and a real gap can **net to zero** in a count-based check, so Phase 3 now
+  reports them as separate quantities.
+
+- `[Blocker]` Phase 3 self-agreement → **Implemented, and it reframed the phase.** You are right that
+  local-git-vs-local-DB only proves the backfill ran. Worse than a blind spot: that check would have
+  reported a confident `0` through the entire #155→#157 sequence while the gap was live — a
+  completeness check that can silently agree with itself is the exact failure this phase exists to
+  remove. Phase 3 is now **remote-anchored** (`git ls-remote` tip + last-fetch age; a behind clone
+  reports `stale`, never `0`) and reports **three un-netted gaps**: `collection_gap`,
+  `projection_gap` (catches RC5's rebuild failure), `orphan_count`. Gate added: a deliberately stale
+  clone must report `stale` rather than `0`.
+
+- `[Blocker]` Local-git blind spots → **Implemented.** Phase 1 now `git fetch`es before enumerating.
+  On no-clone repos I went further than the finding: a "logged skip" is still silence, which is the
+  shape of this whole issue — those repos now record an explicit **`uncoverable`** state with a
+  reason, surfaced in the Phase 3 check and in `doctor`. Loud and honest beats absent. Deliberately
+  did **not** add an API fallback: the operator chose local-git precisely to avoid re-introducing the
+  rate-limit pressure that produced the caps behind RC3/RC4, so an uncovered repo is reported rather
+  than silently re-routed through the failing path.
+
+- `[Should]` Phase 2 safety → **Modified.** Agreed the risk is real, but preview-SQL alone still
+  leaves the reset keyed on `failure_reason` **text** — a human-readable log string that has already
+  changed once in this module's short life. Fixing it structurally instead: a `deferral_kind`
+  (`budget` | `failure`) column set at write time, with the existing text used only as a one-time
+  migration seed. Your preview-then-apply is implemented on top (default preview, explicit apply
+  flag, pre-image snapshot of `(event_id, state, attempt_count)`), and the rollback story is written
+  out: additive migration, re-run collection to recover.
+
+- `[Should]` Phase ordering → **Modified — took your second remedy, not the swap.** Keeping
+  backfill-first, with the interference closed by the `ON CONFLICT` rule you offered: `path_coverage`
+  may only move `unavailable → complete`, never downgrading a git-sourced row. Rationale, now written
+  into the doc under "Phase ordering": Phase 1 is the only phase that can make `cfeafe4` findable —
+  it sits outside the 300-event window, so no amount of Phase 2 attempt-repair reaches it. Both
+  orderings need the conflict rule; only one also fixes the originating symptom first. Flagging this
+  as a modification rather than a silent resolution.
+
+**Changes are in the artifact** (`PROJECT/2-WORKING/GH-169-COMMIT-HISTORY-COVERAGE.md`, commit
+pending in the rebalance-OS worktree — this relay repo holds only the thread).
+
+**For round 2, the question I actually want tested:** does the revised Phase 3 now make a recurrence
+*detectable by the system*, or is there still a way for all three gaps to read zero while real data is
+missing? That is the only thing standing between this and another "one more thing." No code has been
+written yet — the plan is still cheap to change.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
