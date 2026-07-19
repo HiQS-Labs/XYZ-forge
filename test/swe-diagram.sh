@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # swe-diagram test: pure-Node fixtures for layout and filter logic without a browser.
 # No browser: renderer.js's DOM-touching code (window.renderDiagram = function...) is never invoked,
-# only the two pure functions it exports for Node via the `typeof module !== 'undefined'` guard at the
+# only the pure functions it exports for Node via the `typeof module !== 'undefined'` guard at the
 # bottom of the file (a no-op when inlined into a <script> tag — zero behavior change shipped).
 set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 RENDERER="$HERE/../utils/swe-diagram/assets/renderer.js"
+GENERATOR="$HERE/../utils/swe-diagram/scripts/git-history-to-json.js"
 PASS=0; FAIL=0
 pass(){ echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 echo "== test: swe-diagram =="
 
 [ -f "$RENDERER" ] || { echo "  FAIL: renderer.js not found at $RENDERER" >&2; exit 1; }
+[ -f "$GENERATOR" ] || { echo "  FAIL: Git history generator not found at $GENERATOR" >&2; exit 1; }
 
 WORK="$(mktemp -d -t "swe-diagram.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
@@ -22,7 +24,8 @@ cat > "$WORK/fixtures.js" <<'JSEOF'
 // touches `document`) never runs since these fixtures only call exported pure functions.
 global.window = {};
 var r = require(process.argv[2]);
-var hubRingLayout = r.hubRingLayout, matchesQuery = r.matchesQuery, topDownLayout = r.topDownLayout;
+var hubRingLayout = r.hubRingLayout, matchesQuery = r.matchesQuery,
+    topDownLayout = r.topDownLayout, gitLaneLayout = r.gitLaneLayout;
 
 var results = [];
 function check(label, ok, detail) { results.push([label, !!ok, detail || '']); }
@@ -31,6 +34,29 @@ function dist(hubCenter, p) {
   var cx = p.x + p.w / 2, cy = p.y + p.h / 2;
   return Math.sqrt(Math.pow(cx - hubCenter.x, 2) + Math.pow(cy - hubCenter.y, 2));
 }
+
+// --- gitLaneLayout: explicit lane rows + global chronological columns ---
+(function () {
+  var spec = {
+    lanes: [
+      { id: 'main', order: 0 },
+      { id: 'development', order: 1 },
+      { id: 'feature/x', order: 2 }
+    ],
+    nodes: [
+      { id: 'a', lane: 'main', order: 0 },
+      { id: 'b', lane: 'feature/x', order: 1 },
+      { id: 'c', lane: 'main', order: 2 }
+    ]
+  };
+  var pos = gitLaneLayout(spec);
+  check('git lanes keep commits on fixed branch rows',
+    pos.a.y === pos.c.y && pos.b.y > pos.a.y,
+    'positions=' + JSON.stringify(pos));
+  check('git lanes advance commit order left-to-right',
+    pos.a.x < pos.b.x && pos.b.x < pos.c.x,
+    'xs=' + JSON.stringify({ a: pos.a.x, b: pos.b.x, c: pos.c.x }));
+})();
 
 // --- topDownLayout: ranks flow downward and peers spread horizontally ---
 (function () {
@@ -144,6 +170,12 @@ var typelessNode = { id: 'mystery', label: 'Mystery Node' };
 check('node with no type falls into the "default" bucket for exclusion',
   matchesQuery(typelessNode, '', { default: true }) === false);
 
+var commitNode = { id: 'abc123', label: 'Fix login', type: 'commit', lane: 'fix/login',
+                   author: 'Ada', refs: ['origin/fix/login'] };
+check('query matches Git lane', matchesQuery(commitNode, 'fix/login', {}) === true);
+check('query matches Git author', matchesQuery(commitNode, 'ada', {}) === true);
+check('query matches Git refs', matchesQuery(commitNode, 'origin/fix', {}) === true);
+
 results.forEach(function (r) {
   console.log('RESULT\t' + r[0] + '\t' + (r[1] ? 'ok' : 'fail') + '\t' + r[2]);
 });
@@ -165,6 +197,55 @@ else
       fail "$label ($detail)"
     fi
   done < "$WORK/out.tsv"
+fi
+
+# --- git-history-to-json: real temporary repository with two cuts + two merges ---
+GIT_REPO="$WORK/git-repo"
+mkdir -p "$GIT_REPO"
+git -C "$GIT_REPO" init -q -b main
+git -C "$GIT_REPO" config user.name "Diagram Test"
+git -C "$GIT_REPO" config user.email "diagram@example.test"
+printf 'base\n' > "$GIT_REPO/history.txt"
+git -C "$GIT_REPO" add history.txt
+git -C "$GIT_REPO" commit -q -m "base"
+git -C "$GIT_REPO" switch -q -c development
+printf 'development\n' >> "$GIT_REPO/history.txt"
+git -C "$GIT_REPO" commit -qam "development commit"
+git -C "$GIT_REPO" switch -q -c feature/x
+printf 'feature one\n' >> "$GIT_REPO/history.txt"
+git -C "$GIT_REPO" commit -qam "feature one"
+printf 'feature two\n' >> "$GIT_REPO/history.txt"
+git -C "$GIT_REPO" commit -qam "feature two"
+git -C "$GIT_REPO" switch -q development
+git -C "$GIT_REPO" merge -q --no-ff feature/x -m "merge feature"
+git -C "$GIT_REPO" switch -q main
+git -C "$GIT_REPO" merge -q --no-ff development -m "merge development"
+
+GIT_JSON="$WORK/git-history.json"
+if node "$GENERATOR" --repo "$GIT_REPO" --limit 6 --output "$GIT_JSON" >/dev/null; then
+  pass "Git history generator runs on a branched+merged repository"
+else
+  fail "Git history generator runs on a branched+merged repository"
+fi
+if node -e 'var s=require(process.argv[1]); process.exit(s.layout === "git-lanes" && s.nodes.length === 6 ? 0 : 1)' "$GIT_JSON"; then
+  pass "Git history generator honors the total commit limit"
+else
+  fail "Git history generator honors the total commit limit"
+fi
+if node -e 'var s=require(process.argv[1]), x=Object.fromEntries(s.lanes.map(function(l){return [l.id,l.order]})); process.exit(x.main===0 && x.development===1 && x["feature/x"]===2 ? 0 : 1)' "$GIT_JSON"; then
+  pass "Git history lanes order main, development, then feature branch"
+else
+  fail "Git history lanes order main, development, then feature branch"
+fi
+if node -e 'var s=require(process.argv[1]), k=s.edges.map(function(e){return e.kind}); process.exit(k.includes("branch") && k.includes("merge") ? 0 : 1)' "$GIT_JSON"; then
+  pass "Git history generator distinguishes branch cuts and merges"
+else
+  fail "Git history generator distinguishes branch cuts and merges"
+fi
+if node -e 'var s=require(process.argv[1]), ids=new Set(s.nodes.map(function(n){return n.id})); process.exit(s.edges.every(function(e){return ids.has(e.source)&&ids.has(e.target)}) ? 0 : 1)' "$GIT_JSON"; then
+  pass "Git history generator emits no dangling edge endpoints"
+else
+  fail "Git history generator emits no dangling edge endpoints"
 fi
 
 echo "  swe-diagram: $PASS pass, $FAIL fail"

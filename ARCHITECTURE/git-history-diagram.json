@@ -1,0 +1,356 @@
+{
+  "title": "XYZ — Recent Git History (20 commits)",
+  "generated": "2026-07-14",
+  "layout": "git-lanes",
+  "sources": [
+    "git rev-list <local+remote branch refs> --topo-order --date-order --max-count=20",
+    "git for-each-ref refs/heads refs/remotes",
+    "git show --format commit metadata and parents"
+  ],
+  "history_note": "Lanes are inferred from current local and remote-tracking refs. Deleted branch names and squash/rebase provenance cannot be reconstructed from Git ancestry alone.",
+  "lanes": [
+    {
+      "id": "main",
+      "label": "main",
+      "order": 0,
+      "tip": "16b116fd2459d28a74763705468ab453e61d2e92",
+      "current": true
+    },
+    {
+      "id": "development",
+      "label": "development",
+      "order": 1,
+      "tip": "bf6950c1f68b81bbe45475c3224b22059533f54e"
+    },
+    {
+      "id": "gh-199-swe-diagram-font-picker",
+      "label": "gh-199-swe-diagram-font-picker",
+      "order": 2,
+      "tip": "322ecbe3c84d9d51b0872d543a7302c1458d9f49"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "4fefc6643122127e0f3155897c9a5fcbb55551b1",
+      "label": "docs(ROADMAP): archive 57 completed entries + cross-ref ADVERSARIAL-HARDENING; GH-192 → 3-COMPLETED",
+      "type": "commit",
+      "lane": "main",
+      "order": 0,
+      "tech": "4fefc66 · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "docs(ROADMAP): archive 57 completed entries + cross-ref ADVERSARIAL-HARDENING; GH-192 → 3-COMPLETED\n4fefc6643122127e0f3155897c9a5fcbb55551b1\nnoelsaw1 · 2026-07-10T10:56:43-07:00"
+    },
+    {
+      "id": "864551994f598e3d414a7a89e99c6598427331de",
+      "label": "relay(gh45-remediation-critical-review): Producer r2",
+      "type": "commit",
+      "lane": "main",
+      "order": 1,
+      "tech": "8645519 · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(gh45-remediation-critical-review): Producer r2\n864551994f598e3d414a7a89e99c6598427331de\nnoelsaw1 · 2026-07-10T13:25:29-07:00"
+    },
+    {
+      "id": "db84ab29c2434173c8c300950694ce440451883d",
+      "label": "relay(RELAY-gh45-remediation-critical-review-r2): agy turn (agy headless; no push)",
+      "type": "commit",
+      "lane": "main",
+      "order": 2,
+      "tech": "db84ab2 · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-gh45-remediation-critical-review-r2): agy turn (agy headless; no push)\ndb84ab29c2434173c8c300950694ce440451883d\nnoelsaw1 · 2026-07-10T13:27:10-07:00"
+    },
+    {
+      "id": "abbf5c02a7d9bb10bb006f5658b36ebd3346eb8f",
+      "label": "relay(gh48-phase3-relay-review): scaffold review thread for cross-repo Codex redo",
+      "type": "commit",
+      "lane": "main",
+      "order": 3,
+      "tech": "abbf5c0 · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(gh48-phase3-relay-review): scaffold review thread for cross-repo Codex redo\nabbf5c02a7d9bb10bb006f5658b36ebd3346eb8f\nnoelsaw1 · 2026-07-10T18:28:10-07:00"
+    },
+    {
+      "id": "76560af2b800b63664df7ebe8e4e5323574462f3",
+      "label": "GH-197: two-axis (disclosure/steering) diagnostic spike on AGENTS.md",
+      "type": "commit",
+      "lane": "main",
+      "order": 4,
+      "tech": "76560af · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "GH-197: two-axis (disclosure/steering) diagnostic spike on AGENTS.md\n76560af2b800b63664df7ebe8e4e5323574462f3\nnoelsaw1 · 2026-07-10T23:40:01-07:00"
+    },
+    {
+      "id": "6dd3037ee601d59346b492be35c8cd79fdac8d25",
+      "label": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)",
+      "type": "commit",
+      "lane": "main",
+      "order": 5,
+      "tech": "6dd3037 · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)\n6dd3037ee601d59346b492be35c8cd79fdac8d25\nnoelsaw1 · 2026-07-10T23:43:25-07:00"
+    },
+    {
+      "id": "fd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f",
+      "label": "relay(gh-197-spike-review): claude-a r2 — implement Codex's r1 findings",
+      "type": "commit",
+      "lane": "main",
+      "order": 6,
+      "tech": "fd6e27c · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(gh-197-spike-review): claude-a r2 — implement Codex's r1 findings\nfd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f\nnoelsaw1 · 2026-07-10T23:45:11-07:00"
+    },
+    {
+      "id": "6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0",
+      "label": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)",
+      "type": "commit",
+      "lane": "main",
+      "order": 7,
+      "tech": "6921aeb · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)\n6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0\nnoelsaw1 · 2026-07-10T23:47:13-07:00"
+    },
+    {
+      "id": "e2e54f6733b91c7ed2dd4c675e47f61b154f3a4d",
+      "label": "relay(gh-197-spike-review): claude-a r3 — narrow frontmatter status line",
+      "type": "commit",
+      "lane": "main",
+      "order": 8,
+      "tech": "e2e54f6 · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(gh-197-spike-review): claude-a r3 — narrow frontmatter status line\ne2e54f6733b91c7ed2dd4c675e47f61b154f3a4d\nnoelsaw1 · 2026-07-10T23:47:47-07:00"
+    },
+    {
+      "id": "4aad5841de2faff7578744cd1c4040e05b638c63",
+      "label": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)",
+      "type": "commit",
+      "lane": "main",
+      "order": 9,
+      "tech": "4aad584 · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)\n4aad5841de2faff7578744cd1c4040e05b638c63\nnoelsaw1 · 2026-07-10T23:49:59-07:00"
+    },
+    {
+      "id": "16f846e3da56181608a6b3ce65fed774156e6f22",
+      "label": "GH-197: sync ROADMAP/CHANGELOG/doc status with Codex relay review outcome",
+      "type": "commit",
+      "lane": "main",
+      "order": 10,
+      "tech": "16f846e · 2026-07-10",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "GH-197: sync ROADMAP/CHANGELOG/doc status with Codex relay review outcome\n16f846e3da56181608a6b3ce65fed774156e6f22\nnoelsaw1 · 2026-07-10T23:51:11-07:00"
+    },
+    {
+      "id": "21d611ec823e9af9ff705f172b2a6baab92b6ed0",
+      "label": "relay(feynman-accuracy): scaffold agy accuracy review of giant-brains feynman skill",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 11,
+      "tech": "21d611e · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(feynman-accuracy): scaffold agy accuracy review of giant-brains feynman skill\n21d611ec823e9af9ff705f172b2a6baab92b6ed0\nnoelsaw1 · 2026-07-11T07:39:19-07:00"
+    },
+    {
+      "id": "7efc4def776693acf4df2d4a8e1422d18f510694",
+      "label": "relay(feynman-accuracy): point Setup at seeded read-only artifact path",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 12,
+      "tech": "7efc4de · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(feynman-accuracy): point Setup at seeded read-only artifact path\n7efc4def776693acf4df2d4a8e1422d18f510694\nnoelsaw1 · 2026-07-11T07:40:12-07:00"
+    },
+    {
+      "id": "726d66b141c90542f6cbaca86fb388f8d01de3b8",
+      "label": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 13,
+      "tech": "726d66b · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)\n726d66b141c90542f6cbaca86fb388f8d01de3b8\nnoelsaw1 · 2026-07-11T07:41:36-07:00"
+    },
+    {
+      "id": "e9a8564decea2864ceb5caccd834a8ebb494c26d",
+      "label": "relay(feynman-accuracy): producer r1 — 5 implemented, 1 declined, 2 new blockers",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 14,
+      "tech": "e9a8564 · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(feynman-accuracy): producer r1 — 5 implemented, 1 declined, 2 new blockers\ne9a8564decea2864ceb5caccd834a8ebb494c26d\nnoelsaw1 · 2026-07-11T07:47:12-07:00"
+    },
+    {
+      "id": "801ced34815676c7f90307e1afe2b8a7c9f87278",
+      "label": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 15,
+      "tech": "801ced3 · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)\n801ced34815676c7f90307e1afe2b8a7c9f87278\nnoelsaw1 · 2026-07-11T07:48:36-07:00"
+    },
+    {
+      "id": "36b6124b6da6fb9c91c2184fc54900a5e002f2b6",
+      "label": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 16,
+      "tech": "36b6124 · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)\n36b6124b6da6fb9c91c2184fc54900a5e002f2b6\nnoelsaw1 · 2026-07-11T11:45:03-07:00"
+    },
+    {
+      "id": "3568c3b78f8cb1da8d556ca64ce78b45a874a36b",
+      "label": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 17,
+      "tech": "3568c3b · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)\n3568c3b78f8cb1da8d556ca64ce78b45a874a36b\nnoelsaw1 · 2026-07-11T11:50:16-07:00"
+    },
+    {
+      "id": "322ecbe3c84d9d51b0872d543a7302c1458d9f49",
+      "label": "GH-199: swe-diagram font picker (default sans / Indie Flower), agy-reviewed",
+      "type": "commit",
+      "lane": "gh-199-swe-diagram-font-picker",
+      "order": 18,
+      "tech": "322ecbe · 2026-07-11",
+      "author": "noelsaw1",
+      "refs": [
+        "gh-199-swe-diagram-font-picker"
+      ],
+      "description": "GH-199: swe-diagram font picker (default sans / Indie Flower), agy-reviewed\n322ecbe3c84d9d51b0872d543a7302c1458d9f49\nnoelsaw1 · 2026-07-11T18:11:24-07:00\ngh-199-swe-diagram-font-picker"
+    },
+    {
+      "id": "16b116fd2459d28a74763705468ab453e61d2e92",
+      "label": "feat: add top-down diagram layout",
+      "type": "commit",
+      "lane": "main",
+      "order": 19,
+      "tech": "16b116f · 2026-07-14",
+      "author": "Noel Saw",
+      "refs": [
+        "main"
+      ],
+      "description": "feat: add top-down diagram layout\n16b116fd2459d28a74763705468ab453e61d2e92\nNoel Saw · 2026-07-14T07:48:06-07:00\nmain"
+    }
+  ],
+  "edges": [
+    {
+      "source": "4fefc6643122127e0f3155897c9a5fcbb55551b1",
+      "target": "864551994f598e3d414a7a89e99c6598427331de",
+      "kind": "sync"
+    },
+    {
+      "source": "864551994f598e3d414a7a89e99c6598427331de",
+      "target": "db84ab29c2434173c8c300950694ce440451883d",
+      "kind": "sync"
+    },
+    {
+      "source": "db84ab29c2434173c8c300950694ce440451883d",
+      "target": "abbf5c02a7d9bb10bb006f5658b36ebd3346eb8f",
+      "kind": "sync"
+    },
+    {
+      "source": "abbf5c02a7d9bb10bb006f5658b36ebd3346eb8f",
+      "target": "76560af2b800b63664df7ebe8e4e5323574462f3",
+      "kind": "sync"
+    },
+    {
+      "source": "76560af2b800b63664df7ebe8e4e5323574462f3",
+      "target": "6dd3037ee601d59346b492be35c8cd79fdac8d25",
+      "kind": "sync"
+    },
+    {
+      "source": "6dd3037ee601d59346b492be35c8cd79fdac8d25",
+      "target": "fd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f",
+      "kind": "sync"
+    },
+    {
+      "source": "fd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f",
+      "target": "6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0",
+      "kind": "sync"
+    },
+    {
+      "source": "6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0",
+      "target": "e2e54f6733b91c7ed2dd4c675e47f61b154f3a4d",
+      "kind": "sync"
+    },
+    {
+      "source": "e2e54f6733b91c7ed2dd4c675e47f61b154f3a4d",
+      "target": "4aad5841de2faff7578744cd1c4040e05b638c63",
+      "kind": "sync"
+    },
+    {
+      "source": "4aad5841de2faff7578744cd1c4040e05b638c63",
+      "target": "16f846e3da56181608a6b3ce65fed774156e6f22",
+      "kind": "sync"
+    },
+    {
+      "source": "16f846e3da56181608a6b3ce65fed774156e6f22",
+      "target": "21d611ec823e9af9ff705f172b2a6baab92b6ed0",
+      "kind": "branch",
+      "label": "branch"
+    },
+    {
+      "source": "21d611ec823e9af9ff705f172b2a6baab92b6ed0",
+      "target": "7efc4def776693acf4df2d4a8e1422d18f510694",
+      "kind": "sync"
+    },
+    {
+      "source": "7efc4def776693acf4df2d4a8e1422d18f510694",
+      "target": "726d66b141c90542f6cbaca86fb388f8d01de3b8",
+      "kind": "sync"
+    },
+    {
+      "source": "726d66b141c90542f6cbaca86fb388f8d01de3b8",
+      "target": "e9a8564decea2864ceb5caccd834a8ebb494c26d",
+      "kind": "sync"
+    },
+    {
+      "source": "e9a8564decea2864ceb5caccd834a8ebb494c26d",
+      "target": "801ced34815676c7f90307e1afe2b8a7c9f87278",
+      "kind": "sync"
+    },
+    {
+      "source": "801ced34815676c7f90307e1afe2b8a7c9f87278",
+      "target": "36b6124b6da6fb9c91c2184fc54900a5e002f2b6",
+      "kind": "sync"
+    },
+    {
+      "source": "36b6124b6da6fb9c91c2184fc54900a5e002f2b6",
+      "target": "3568c3b78f8cb1da8d556ca64ce78b45a874a36b",
+      "kind": "sync"
+    },
+    {
+      "source": "3568c3b78f8cb1da8d556ca64ce78b45a874a36b",
+      "target": "322ecbe3c84d9d51b0872d543a7302c1458d9f49",
+      "kind": "sync"
+    },
+    {
+      "source": "16f846e3da56181608a6b3ce65fed774156e6f22",
+      "target": "16b116fd2459d28a74763705468ab453e61d2e92",
+      "kind": "sync"
+    }
+  ]
+}

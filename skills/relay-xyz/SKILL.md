@@ -398,6 +398,16 @@ commits mid-turn, the shim resets and re-commits file-scoped), and **no push** (
 only — `git push` yourself when ready). `.tick/` is gitignored and per-device, so this is single-clone
 coordination, not cross-machine.
 
+**Never hand-edit a clone while a driven turn is in flight there (GH-141).** `rtl_before()` snapshots
+the dirty set once, at turn start. A second session's edit landing *during* the turn window produces a
+porcelain entry with no match in that snapshot — **byte-identical to the agent's own off-lane
+self-escape** — so `rtl_check()` reverts it in the real tree. This is not a bug that can be fixed by
+detection: preserving newly-dirty non-allowlisted paths would disable the documented GH-22
+self-escape backstop. Observed live twice (2026-07-05, 2026-07-18); the second incident silently
+deleted an untracked doc and reverted a tracked one mid-session. Since 2026-07-18 the pre-revert
+content is copied to `.tick/orphan-backups/<utc>-<pid>/<path>` first, so a wrongly-caught edit is
+**recoverable** — but the revert still happens. Wait for the turn, or work in a separate worktree.
+
 **Worktree isolation is ON by default for driven runs.** `relay-drive.sh` exports
 `RELAY_WORKTREE_ISOLATION=1`, so each turn-taker runs in a throwaway `git worktree` of `ROOT@HEAD` —
 an off-task model's stray *creations/renames* (not just tracked edits) can't reach the real tree,

@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan 2026-07-01 — daily queue review
-status: Active (2-WORKING)
+status: Complete (3-COMPLETED) — superseded snapshot; status word corrected 2026-07-18 (GH-224 drift sweep)
 created: 2026-07-01
-updated: 2026-07-01
+updated: 2026-07-18
 owner: noel
 branch: main
 doc_type: project

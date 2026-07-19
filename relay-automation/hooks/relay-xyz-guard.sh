@@ -31,11 +31,27 @@ set -u
 
 input="$(cat)"
 
-# Extract (session_id, tool_name, field) with python3 — robust JSON, no jq dependency.
+# Extract (session_id, tool_name, field) as one tab-delimited line.
 # field = the Skill name for Skill events, else the Bash command. Tabs/newlines stripped
-# from field so the tab-delimited read below stays single-line; session_id is read first
+# from field so the tab-delimited read below stays single-line; session_id is first
 # and tool second so the variable-length field can safely land last.
-parsed="$(RELAY_GUARD_EVENT="$input" python3 <<'PY' 2>/dev/null
+#
+# Fast path is jq — a small, fast binary, so no per-tool-call interpreter cold start.
+# python3 stays as a fallback for the rare host without jq, keeping parsing robust
+# everywhere. Either extractor prints nothing on malformed input, so the guard fails
+# open below (empty parse → exit 0).
+if command -v jq >/dev/null 2>&1; then
+  parsed="$(printf '%s' "$input" | jq -r '
+    [ (.session_id // "nosession"),
+      (.tool_name  // ""),
+      ( (if (.tool_name // "") == "Skill"
+           then (.tool_input.skill // .tool_input.name // "")
+           else (.tool_input.command // "")
+         end) | tostring | gsub("[\t\n\r]"; " ") )
+    ] | join("\t")
+  ' 2>/dev/null)"
+else
+  parsed="$(RELAY_GUARD_EVENT="$input" python3 <<'PY' 2>/dev/null
 import os, json
 try:
     d = json.loads(os.environ.get("RELAY_GUARD_EVENT", ""))
@@ -52,6 +68,7 @@ field = str(field).replace("\t", " ").replace("\n", " ").replace("\r", " ")
 print("%s\t%s\t%s" % (sess, tool, field))
 PY
 )"
+fi
 
 # Parse error or empty → fail open.
 [ -n "$parsed" ] || exit 0

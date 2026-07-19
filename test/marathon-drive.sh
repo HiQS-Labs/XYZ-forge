@@ -476,6 +476,32 @@ rm -f "$A/STRAY.md"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (13a) GH-238: missing default gate stops before turn 1 ─────────────────
+# The fixture root deliberately has no validate.sh. Omit --pre-advance-cmd to exercise the real
+# default and prove it halts before rendering/seeding or invoking the relay-drive turn dispatcher.
+rm -f "$WORK/relay-drive-args"
+GATE_PREFLIGHT_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" \
+  MARATHON_AGENT_CMD="$WORK/noop-agent" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --builder claude 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] && pass "GH-238: missing default gate exits before dispatch" \
+  || fail "GH-238: missing default gate exit=$rc (expected 2): $GATE_PREFLIGHT_OUT"
+printf '%s\n' "$GATE_PREFLIGHT_OUT" | grep -q "pre-advance gate not runnable" \
+  && pass "GH-238: missing default gate names the fail-fast condition" \
+  || fail "GH-238: missing required fail-fast phrase: $GATE_PREFLIGHT_OUT"
+printf '%s\n' "$GATE_PREFLIGHT_OUT" | grep -Fq -- "--pre-advance-cmd" \
+  && pass "GH-238: missing default gate names the override remedy" \
+  || fail "GH-238: missing override remedy: $GATE_PREFLIGHT_OUT"
+[ ! -f "$A/phases/p1/RELAY.md" ] && pass "GH-238: missing default gate never renders turn 1 relay" \
+  || fail "GH-238: relay was rendered before the missing gate was rejected"
+[ ! -e "$WORK/relay-drive-args" ] && pass "GH-238: missing default gate never dispatches relay-drive turn 1" \
+  || fail "GH-238: relay-drive was invoked before the missing gate was rejected"
+[ -z "$(ls "$A/.tick/events/" 2>/dev/null | grep 'MARATHON-P1-TURN')" ] \
+  && pass "GH-238: missing default gate never seeds a tick task" \
+  || fail "GH-238: tick task was seeded before the missing gate was rejected"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 # ── (14) GH-117: missing builder binary fails clean BEFORE any tick mutation ──
 # A builder binary not on PATH must die() here — not deep inside the turn-taker dispatch after
 # task.created/claim/release already ran (that used to leave a permanently spent relay task).

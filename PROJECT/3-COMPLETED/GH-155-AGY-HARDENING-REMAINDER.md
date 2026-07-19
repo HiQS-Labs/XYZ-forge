@@ -2,7 +2,7 @@
 gh_issue: 155
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/155
 title: "GH-142 follow-up: agy hardening S2/S5/S8 + controlled S10 repro (keep-gated remainder)"
-status: Shipped 2026-07-17 by /10days (5f37954) — S2/S5/S8 regression tests landed; S10 stays open (could not re-trigger on demand per #142)
+status: "Shipped 2026-07-17 by /10days (5f37954) — S2/S5/S8 regression tests landed; S10 split out to #242 on 2026-07-18 (could not re-trigger on demand per #142), so nothing live remains in this doc"
 created: 2026-07-06
 updated: 2026-07-17
 owner: noel
@@ -36,7 +36,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| **SHIPPED 2026-07-17 by `/10days`** (`5f37954`) — 3 new regression cases in `test/agy-turn.sh` (S2 role/model adherence, S5 distraction, S8 cost-blindness), 54/54 own tests (41 pre-existing + 13 new), full `validate.sh` 113/114 (only pre-existing unrelated `acorn-extract.sh` red). | S10 (off-prompt-nonempty repro) stays open per #142's own note that it "could not re-trigger on demand." |
+| **SHIPPED 2026-07-17 by `/10days`** (`5f37954`) — 3 new regression cases in `test/agy-turn.sh` (S2 role/model adherence, S5 distraction, S8 cost-blindness), 54/54 own tests (41 pre-existing + 13 new), full `validate.sh` 113/114 (only pre-existing unrelated `acorn-extract.sh` red). | **Nothing live remains here.** S10 (off-prompt-nonempty repro) was split out to [#242](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/242) on 2026-07-18 — it needs a controlled repro before any assertion can be added, per #142's "could not re-trigger on demand". This doc was swept to `3-COMPLETED` on 2026-07-18; the split keeps S10 from being orphaned inside a closed issue's completed doc. |
 
 Captured by the `/10days` 11-14 day sweep (2026-07-17). Split from
 [GH-142-AGY-RELIABILITY-TESTING.md](GH-142-AGY-RELIABILITY-TESTING.md) at its Phase-3 close: #142
