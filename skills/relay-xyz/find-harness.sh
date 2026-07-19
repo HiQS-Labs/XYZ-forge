@@ -110,6 +110,12 @@ if [ -z "$HARNESS" ]; then
   exit 1
 fi
 
+# TICK_REPO_ROOT is the repo root that bin/tick and tick-consuming shims expect.
+# When a vendored .xyz/ copy is in play, $HARNESS is $CALLER_ROOT/.xyz — one
+# directory too deep — so use the already-resolved caller root instead.
+TICK_REPO_ROOT="$HARNESS"
+[ "$VENDORED" = 1 ] && TICK_REPO_ROOT="$CALLER_ROOT"
+
 # Vendored copies are opt-in fallbacks: warn on reachable drift, never block.
 if [ "$VENDORED" = 1 ]; then
   for _o in "${XYZ_HARNESS:-}" "${XYZ_REPO_ROOT:-}"; do
@@ -175,7 +181,7 @@ case "${1:-}" in
     ;;
   --env)
     printf 'export HARNESS=%q\n'         "$HARNESS"
-    printf 'export TICK_REPO_ROOT=%q\n'  "$HARNESS"
+    printf 'export TICK_REPO_ROOT=%q\n'  "$TICK_REPO_ROOT"
     [ -n "$TICK" ]       && printf 'export TICK=%q\n'       "$TICK"
     [ -n "$CODEX_PATH" ] && printf 'export CODEX_BIN=%q\n'  "$CODEX_PATH"
     [ -n "$AGY_PATH" ]   && printf 'export AGY_BIN=%q\n'    "$AGY_PATH"
