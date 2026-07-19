@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-18.
 -->
 
-NEXT: claude-a
+NEXT: Producer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -94,5 +94,45 @@ Implemented the requested changes for GH-239:
 - Modified `utils/swarm-preflight.sh` to print a minimal valid contract skeleton and name the file it belongs in when an exit-3 (contract missing) occurs. The message contains the literal phrase "minimal valid contract".
 - Updated `test/swarm-preflight.sh` to cover the new exit-3 message (verifying the literal phrase and the file name).
 - Note: This change lands a new file under `relay-automation/`, so the vendored `relay-pkg.tar.gz` will go stale and need a re-run of `skills/relay-automation/make-pkg.sh` by the orchestrator.
+
+### Turn 2: claude-a (Reviewer)
+
+**Verdict: Changes requested.** DoD 2 and 3 are met well; DoD 1 is not — the shipped example
+teaches several things the repo's own real contracts don't do.
+
+- `[Pass]` **DoD 2 — polarity is explicit and correct.** `CONTRACT.example.md:16-26` states
+  "POLARITY: Probes detect the **bug**, NOT the fix", enumerates all five probe types with correct
+  senses (`grep_present` = "bug evidence … still in the file", `grep_absent` = "fix marker has not
+  yet landed"), and names the consequence: "will cause preflight to return **STALE (exit 4)**, which
+  reads as 'already done' — a false completion signal". This was the highest-risk requirement and it
+  landed cleanly.
+- `[Pass]` **DoD 3 — exit-3 message.** `utils/swarm-preflight.sh:527-541` emits the literal phrase,
+  names `$doc`, points at `relay-automation/CONTRACT.example.md`, and prints a real skeleton with
+  `target`/`gate`/`fix_probes`/`artifacts`. Verified new: `git show 4b32bd3:utils/swarm-preflight.sh
+  | grep -c "minimal valid contract"` → `0`.
+- `[Pass]` **DoD 4 — test coverage.** `test/swarm-preflight.sh:160-161` asserts both the phrase and
+  the doc name in T6's output.
+- `[Blocker]` **The example's own contract is permanently STALE.** Its sole probe is
+  `{"type": "path_absent", "path": "relay-automation/CONTRACT.example.md"}` — a file that now exists,
+  by construction. Run this example and preflight returns exit 4 "already landed": precisely the
+  false-completion failure the annotation above it warns against. A teaching artifact must not
+  demonstrate the trap it documents. **Fix:** make the worked example a *fictional* lane (e.g. a
+  `GH-900` bug in `src/widget.js`) whose probes are internally consistent and would actually fire.
+- `[Should]` **No frontmatter — a consumer copying this produces a non-PDDA doc.** Every real capture
+  doc here opens with `gh_issue`/`status`/`doc_type`/`complexity`/`risk`/`effort`/`non_goals`/`goal`
+  (see `PROJECT/2-WORKING/GH-225-ISOLATION-WORKTREE-STALE-BASE-GUARDRAIL.md:1-26`). The example has
+  none, so it under-teaches the format it exists to teach. **Fix:** add representative frontmatter.
+- `[Should]` **`lanes` is annotated but absent from the worked JSON.** `CONTRACT.example.md:14`
+  documents it; the block at `:34-50` omits it. Document-then-omit is the weakest teaching pattern.
+  **Fix:** include `"lanes": { "agy_safe": [...], "orchestrator_only": [...] }` in the example.
+- `[Should]` **`remediation.criteria` is vacuous.** "Implement the example contract file as per
+  requirements." carries no verifiable acceptance signal; real ones state what must be true (compare
+  GH-225's). A copied vacuous criteria field propagates. **Fix:** write a concrete, checkable string.
+- `[Nit]` **`artifacts` annotation is factually wrong.** `:11` says "Comma-separated list", but the
+  JSON at `:43-45` is a JSON array — and an array is what the parser wants. Fix the prose.
+
+**Not blocking, orchestrator action:** this turn landed a new file under `relay-automation/`, so the
+vendored `relay-pkg.tar.gz` is now stale (agy flagged this correctly in Turn 1). `make-pkg.sh` needs
+re-running once the artifact is final — deferred until after the fixes above, not done now.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
