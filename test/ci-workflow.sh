@@ -51,11 +51,14 @@ else
   fail "workflow must trigger on push and pull_request"
 fi
 
-main_count="$(grep -Ec '\[main\]' "$WORKFLOW")"
-if [ "${main_count:-0}" -ge 2 ]; then
-  pass "workflow scopes both triggers to main"
+# Both long-lived integration branches must be gated. `development` is the WIP
+# branch every PR targets (GH-216); it was omitted here originally, so PRs into
+# it ran no CI at all. Assert each trigger's branch list names both.
+branch_list_count="$(grep -Ec '^[[:space:]]*branches:[[:space:]]*\[[^]]*\bmain\b[^]]*\bdevelopment\b[^]]*\]' "$WORKFLOW")"
+if [ "${branch_list_count:-0}" -ge 2 ]; then
+  pass "workflow scopes both triggers to main and development"
 else
-  fail "workflow must scope push and pull_request to main"
+  fail "workflow must scope push and pull_request to main and development"
 fi
 
 require_marker "shellcheck" "workflow references shellcheck"
