@@ -277,9 +277,18 @@ Then:
      `marathon-drive.sh`'s worktree isolation, so concurrent lanes cannot write over
      each other on a shared tree. Respect the wave's zone caps (kernel ≤ 1 per wave).
    - Each lane agent writes only inside its contract's `artifacts` allowlist.
-   - After all of a wave's lane agents return, merge each lane's worktree commit(s)
-     back onto the marathon branch **one at a time** (fast-forward or cherry-pick, not
-     concurrently) so the branch ref never has two writers racing it.
+   - After all of a wave's lane agents return, before merging any lane's worktree
+     commit(s), verify that lane's worktree base against the marathon branch's start
+     commit: `git merge-base --is-ancestor <marathon-branch-start-sha> <lane-worktree-HEAD>`.
+     **Confirmed live 2026-07-17 (GH-225): `isolation:"worktree"` lanes can silently
+     branch from a stale historical commit instead of the marathon branch** — do not
+     assume the ancestry check will pass. If it passes, fast-forward/merge as normal. If
+     it fails, the worktree is based on a stale/unrelated point — **cherry-pick the
+     lane's specific new commit(s) onto the marathon branch instead; never `git merge`
+     the isolation branch wholesale** in that case, or it silently reintroduces every
+     already-superseded file state between the stale base and the marathon branch tip.
+     Merge/cherry-pick each lane **one at a time** (not concurrently) so the branch ref
+     never has two writers racing it.
    - Once a lane's commit(s) are merged, remove its worktree: `git worktree remove
      <path>` (fall back to `git worktree remove --force <path>` if it still reports
      uncommitted/stray state). Do this for every lane in the wave, right alongside the
