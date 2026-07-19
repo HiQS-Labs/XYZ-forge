@@ -632,6 +632,30 @@ rtl_was_dirty_before() {  # <porcelain-entry> — true if this exact status+path
   return 1
 }
 
+# GH-141 — recoverability-only mitigation for the concurrent peer-edit race.
+#
+# rtl_check CANNOT distinguish "a peer session's concurrent mid-turn edit" from "the agent's own
+# off-lane self-escape": both produce byte-identical porcelain diffs, and rtl_before's snapshot is
+# taken once at turn start, so anything that turns dirty DURING the turn window looks identical.
+# Any fix of the shape "don't revert a newly-dirty non-allowlisted path" would silently disable
+# rtl_enforce's documented backstop against the already-observed GH-22 self-escape vector.
+#
+# So the revert DECISION IS DELIBERATELY UNCHANGED. This only copies the pre-revert content aside
+# first, turning "not recoverable in general" (GH-141's live 2026-07-05 incident, and a second
+# occurrence on 2026-07-18) into a recoverable one. Mirrors the refs/relay-orphan/<sha> pattern
+# rtl_enforce already uses for the moved-HEAD case. Backups land under .tick/, which rtl_check
+# exempts intrinsically, so a backup can never itself be flagged as off-lane.
+rtl_orphan_backup() {  # <path> — copy pre-revert content aside; must never block the revert
+  local p="$1" dest
+  [[ -n "$p" && -e "$RTL_ROOT/$p" ]] || return 0
+  : "${RTL_ORPHAN_BACKUP:="$RTL_ROOT/.tick/orphan-backups/$(date -u +%Y%m%dT%H%M%SZ)-$$"}"
+  dest="$RTL_ORPHAN_BACKUP/$p"
+  mkdir -p "$(dirname "$dest")" 2>/dev/null || return 0
+  cp -R "$RTL_ROOT/$p" "$dest" 2>/dev/null || return 0
+  printf '%s-turn: pre-revert copy of %s saved under %s\n' "$RTL_TOOL" "$p" "$RTL_ORPHAN_BACKUP" >&2
+  rtl_log_always "rtl_check: orphan-backup path=$p dest=$RTL_ORPHAN_BACKUP"
+}
+
 rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLATION
   local p="$1"
   [[ -n "$p" ]] || return 0
@@ -646,6 +670,7 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   fi
   printf '%s-turn: OFF-ALLOWLIST change: %s — reverting\n' "$RTL_TOOL" "$p" >&2
   rtl_log_always "rtl_check: OFF-ALLOWLIST path=$p tool=$RTL_TOOL — reverting"
+  rtl_orphan_backup "$p"   # GH-141: recoverable copy BEFORE the destructive revert below
   git -C "$RTL_ROOT" checkout -- "$p" 2>/dev/null || rm -rf "$RTL_ROOT/${p%/}"
   RTL_VIOLATION=1
 }
