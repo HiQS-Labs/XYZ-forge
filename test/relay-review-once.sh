@@ -76,5 +76,40 @@ chmod +x "$ES_STUB"
 outD="$(bash "$DRIVE" --relay-file "$A/relayES.md" --relay-task RELAY-ES --agent-cmd "$ES_STUB" --review-once 2>&1)"; rcD=$?
 [ "$rcD" -eq 4 ] && pass "by-design Escalated still exits 4 under --review-once" || fail "expected 4, got $rcD (out: $outD)"
 
+# --- Case E (GH-245 defect 2, "Run B"): reviewer APPENDS findings but LEAVES THE TOKEN CLAIMED and
+#     does not change STATUS. The old oracle read token state alone, so a real review with the token
+#     left claimed was mis-scored as a stall (exit 3). It must now exit 5 on relay-file content evidence. ---
+seed RELAY-KT relayKT.md
+KT_STUB="$WORK/kt-stub.sh"
+cat >"$KT_STUB" <<EOF
+#!/usr/bin/env bash
+set -u
+export TICK_REPO_ROOT="$A"
+"$TICK_PATH" claim RELAY-KT --agent reviewer >/dev/null 2>&1
+printf '\n### Reviewer · Round 1\nVERDICT: FAIL\nBasis: six findings.\nChanges requested.\n' >> "$A/relayKT.md"
+# deliberately DO NOT release the token and DO NOT change STATUS (reproduces GH-245 Run B)
+exit 0
+EOF
+chmod +x "$KT_STUB"
+outE="$(bash "$DRIVE" --relay-file "$A/relayKT.md" --relay-task RELAY-KT --agent-cmd "$KT_STUB" --review-once 2>&1)"; rcE=$?
+[ "$rcE" -eq 5 ] && pass "GH-245: relay-file append with token left claimed exits 5, not stall 3" || fail "expected 5, got $rcE (out: $outE)"
+
+# --- Case F (GH-245 defect 2, "Run A"): reviewer moves the token only (claim+release) and writes
+#     NOTHING. The old oracle read token movement as success, so an empty turn was mis-scored exit 5.
+#     It must now exit 3 — no relay-file, NEXT, or STATUS evidence of a real review. ---
+seed RELAY-TO relayTO.md
+TO_STUB="$WORK/to-stub.sh"
+cat >"$TO_STUB" <<EOF
+#!/usr/bin/env bash
+set -u
+export TICK_REPO_ROOT="$A"
+"$TICK_PATH" claim   RELAY-TO --agent reviewer >/dev/null 2>&1
+"$TICK_PATH" release RELAY-TO --agent reviewer --to producer >/dev/null 2>&1
+exit 0
+EOF
+chmod +x "$TO_STUB"
+outF="$(bash "$DRIVE" --relay-file "$A/relayTO.md" --relay-task RELAY-TO --agent-cmd "$TO_STUB" --review-once 2>&1)"; rcF=$?
+[ "$rcF" -eq 3 ] && pass "GH-245: token-only move with no relay-file change exits 3, not success 5" || fail "expected 3, got $rcF (out: $outF)"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
