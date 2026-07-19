@@ -4,6 +4,16 @@
 # phase that fails its review/gate (that phase's ESCALATION.md is left behind), and emits a
 # marathon.complete event only when every phase is approved.
 #
+# SEQUENCING (GH-241): phases run STRICTLY ONE AT A TIME — there is no concurrent execution, and
+# `depends_on` does not create the ordering, it only constrains it. A phase WITHOUT `depends_on`
+# is not "unordered" or "parallel-safe"; it simply runs in plan order whenever its turn comes.
+# Analysing your phases for a disjoint write-set is still worthwhile (it is how you know which
+# phases genuinely need `depends_on`), but a disjoint write-set does NOT buy you parallelism here.
+#
+# ALWAYS `--dry-run` a new plan before firing it. It parses the plan, validates every field, and
+# prints the real execution order ("N phase(s) would run in order") at zero cost — which is the
+# cheapest way to catch both a mis-shaped field and a wrong mental model of the ordering.
+#
 # Builder default (GH-212): marathon.sh/marathon-drive.sh default `--builder` to `codex` — build
 # turns bill via the Codex/ChatGPT subscription, not the Anthropic API (agy is the other cost-blind
 # option). `--builder claude` is available but spawns a headless Claude Code CLI subprocess — a
@@ -29,7 +39,11 @@
 #   artifact           comma-separated repo-relative file(s) the builder may create/edit  (optional)
 #   turn_timeout_s     per-turn wall-clock cap exported as RELAY_TURN_TIMEOUT_S            (optional)
 #   max_review_rounds  round-cap = 2*N+1 (default 2 → cap 5)                              (optional)
-#   depends_on         run this phase only after the named phase is approved              (optional)
+#   depends_on         run this phase only after the named phase is approved              (optional,
+#                      SCALAR ONLY — one phase id, unquoted: `depends_on: p3`. NOT a list:
+#                      `depends_on: [p3]` parses as the literal string "[p3]" and aborts the
+#                      plan with "depends_on unknown phase '[p3]'". A phase can have at most
+#                      one dependency; chain them (p3 → p4 → p5) to express a longer order.)
 #   name               human label for logs                                              (optional)
 
 name: example-refactor

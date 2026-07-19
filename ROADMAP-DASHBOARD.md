@@ -6,10 +6,17 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 81 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 53 · 🔮 0 · 🔲 0
+Summary: 88 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 54 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-241 · MARATHON.example.yaml understates sequencing and depends_on's scalar-only shape | — | [GH-241-MARATHON-EXAMPLE-SEQUENCING.md](PROJECT/1-INBOX/GH-241-MARATHON-EXAMPLE-SEQUENCING.md) · [#241](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/241) |
+| GH-238 · marathon-drive: pre-advance gate defaults to bash validate.sh — halts AFTER approval in any consuming repo without it | — | [GH-238-MARATHON-PREADVANCE-GATE-DEFAULT.md](PROJECT/2-WORKING/GH-238-MARATHON-PREADVANCE-GATE-DEFAULT.md) · [#238](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/238) |
+| GH-239 · swarm-preflight: no contract example ships — consumers hit exit 3 with nothing to copy, so the gate gets bypassed | — | [GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md](PROJECT/2-WORKING/GH-239-PREFLIGHT-CONTRACT-EXAMPLE.md) · [#239](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/239) |
+| PDDA sweep 2026-07-18 · 4 shipped docs swept to 3-COMPLETED, 6 stale marathon status words corrected | — | [GH-224-PDDA-DRIFT-BACKLOG-RECONCILE.md](PROJECT/2-WORKING/GH-224-PDDA-DRIFT-BACKLOG-RECONCILE.md) · [#224](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/224) |
+| GH-235 · Consult A4 provenance v0: prompt-trace classifier for cited claims (FIRSTHAND vs ECHOED) | — | [GH-235-CONSULT-A4-PROVENANCE-V0.md](PROJECT/1-INBOX/GH-235-CONSULT-A4-PROVENANCE-V0.md) · [#235](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/235) |
+| GH-230 · Front-door onboarding drift: undocumented npm install + package.json drift | — | [GH-230-FRONT-DOOR-ONBOARDING-DRIFT.md](PROJECT/2-WORKING/GH-230-FRONT-DOOR-ONBOARDING-DRIFT.md) · [#230](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/230) |
+| GH-177 · mktemp-into-destructive-EXIT-trap recurrence — test/hq-hardening.sh (+2 siblings) rm -rf'd the entire repo a 2nd time | ✅ | [GH-177-MKTEMP-TRAP-REPO-WIPE.md](PROJECT/3-COMPLETED/GH-177-MKTEMP-TRAP-REPO-WIPE.md) · [#177](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/177) |
 | GH-226 · Full provenance follow-up should coordinate with the already-reworked consult/relay summary surface | — | [GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md](PROJECT/1-INBOX/GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md) · [#226](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/226) |
 | GH-225 · 10days/marathon guardrail: isolation:"worktree" lanes can branch from a stale historical commit, not the marathon branch | — | [GH-225-ISOLATION-WORKTREE-STALE-BASE-GUARDRAIL.md](PROJECT/2-WORKING/GH-225-ISOLATION-WORKTREE-STALE-BASE-GUARDRAIL.md) · [#225](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/225) |
 | GH-224 · PDDA drift backlog: 45 stale 3-COMPLETED status words + 15 ROADMAP/issue-state mismatches | ✅ | [GH-224-PDDA-DRIFT-BACKLOG-RECONCILE.md](PROJECT/2-WORKING/GH-224-PDDA-DRIFT-BACKLOG-RECONCILE.md) · [#224](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/224) |
@@ -94,10 +101,11 @@ Summary: 81 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 53 · �
 
 ## In progress
 
-Summary: 15 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 16 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 11 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-201 · swe-diagram: add Git history lane visualization | — | [GH-201-SWE-DIAGRAM-GIT-LANES.md](PROJECT/2-WORKING/GH-201-SWE-DIAGRAM-GIT-LANES.md) · [#201](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201) |
 | GH-221 · Explicitly document Claude CLI is NOT a default builder — Claude Code is orchestrator/reviewer only | ✅ | [GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md](PROJECT/3-COMPLETED/GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md) · [#221](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/221) |
 | GH-156 · Prelight swarmability scoring using codebase-memory-mcp graph signals | 🟡 | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/4-MISC/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
 | GH-148 · Python-layer swarm_preflight: inferred-path check lacked GH-137 sanitizer | ✅ | [relay-system/2026-07-05/gh112-134-parity-codex-review.md](relay-system/2026-07-05/gh112-134-parity-codex-review.md) · [#148](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/148) |

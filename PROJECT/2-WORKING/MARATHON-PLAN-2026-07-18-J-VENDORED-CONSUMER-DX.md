@@ -25,6 +25,12 @@ goal: >
 > are defaults/onboarding assuming the consumer looks like this repo. Grouped because they share a
 > root cause and a reviewer can hold both in one head.
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **Triaged 2026-07-18.** Both field reports from the vendored `.xyz/` consumer verified against source and captured as GH-238 (pre-advance gate defaults to a `validate.sh` consumers lack, failing only after a paid build+review cycle) and GH-239 (swarm-preflight ships no contract example, so the gate gets routed around). Capture docs + this plan promoted to `2-WORKING`; disjoint write-sets confirmed for two parallel lanes. | Fire the two lanes (codex/agy relay per lane): GH-238 fail-fast at plan load + document the gate in `MARATHON.example.yaml`; GH-239 ship `relay-automation/CONTRACT.example.md` + print the skeleton on exit 3. Then move this plan to `3-COMPLETED`. |
+
 ## Triage
 
 ### GH-238 — pre-advance gate defaults to `bash validate.sh`, halts *after* approval
