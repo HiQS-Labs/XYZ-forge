@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -84,6 +84,15 @@ Basis: textual only (doc against repo state)
 - *Truth table empty-string row correct?* Yes, empty string will evaluate to `""` with `${XYZ_PYTHON-1}`, which falls back to Bash, exactly as intended.
 - *Are out-of-scope scripts actually ported?* No, none of them have `.py` equivalents in `utils/py/`, making the list accurate.
 - *Does `_marathon_plan_node.js` need calling out?* Yes, see the blocker finding above.
+**Commit:** pending (harness will commit)
+
+### Round 2 · Producer · claude-a · 2026-07-20 16:32 PDT
+**Decisions on proposals:** (both Blockers independently verified against the repo before disposing)
+- `[Blocker]` Node.js dependency — **Implemented.** Verified real: `utils/py/marathon_plan.py:105-107` runs `subprocess.check_call(["node","--version"])` and `die("node is required ... but not found in PATH")` before delegating to `_marathon_plan_node.js`. Added `# (a2) node present` to Preconditions §2 (UPGRADE.md:108-112) AND an "Interpreter matrix" table (UPGRADE.md:138+) stating only marathon-plan needs Node, so a Node-less box can still flip the other 10 and leave `utils/marathon-plan.sh` on its Bash default (per-file flip). Also added a §10 checklist line.
+- `[Blocker]` Vendored-consumer runnability contradiction — **Implemented.** Verified real: two live `.xyz/` copies (`rebalance-OS/.xyz`, `pdda/.xyz`) have **no `validate.sh`** but DO ship `test/_setup.sh` + `utils/py/`. Root cause of the contradiction: §9 conflated a full harness clone with a vendored leaf. Rewrote §9 (UPGRADE.md:356+) to split **Type A (full clone — runs Phases 1–8)** vs **Type B (vendored leaf — skips Phases 1 & 3, inherits parity, verifies via the consuming repo's own smoke path + `xyz-sync check`)**. A leaf never runs the two-mode sweep and never hand-edits `.xyz/` shims — it receives the flip only by `xyz-sync update` from an already-flipped root. Added a §10 "determine target TYPE first" line.
+**Did:** Both fixes are doc-only additions; no claim in the original doc was weakened, only made correct. The 4 `[Pass]` findings (shim count, `:-`/`-` semantics, xyz-sync subcommands, TEST_SOFT_FAIL) I also independently re-verified before this relay — 11 exec-python sites exactly, `${V-0}` empties to `""`→Bash, out-of-scope list has zero `.py` twins.
+**Verification:** N/A — non-executable artifact. Fix landing reconciled by re-grep against UPGRADE.md: Blocker-1 text at lines 108-112/138, Blocker-2 text at lines 356/359/377. Both present.
+**Re-review this:** (1) Is the Type-A/Type-B split in §9 now internally consistent — does the leaf path (skip Phases 1 & 3, inherit-and-verify) fully resolve the "no validate.sh" contradiction, or is there still a leaf step that assumes suite infrastructure the leaf lacks? (2) Does the Interpreter matrix + the per-file "partial flip" escape hatch correctly handle the Node dependency, or does any other twin have a hidden non-python runtime dep I missed (e.g. does any of the other 10 shell out to node/jq/awk in a way that would brick it)?
 **Commit:** pending (harness will commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->

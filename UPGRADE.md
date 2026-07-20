@@ -105,6 +105,12 @@ Run every check. All must pass on the target repo before Phase 1.
 # (a) python3 present and >= 3.8 — the shims exec `python3` with no fallback and no presence guard.
 python3 --version            # must succeed; if this errors, the flip bricks every entry point
 
+# (a2) node present — NOT optional. utils/py/marathon_plan.py runs `node --version` and hard-exits
+#      ("node is required ... but not found in PATH", marathon_plan.py:105-107) before delegating the
+#      real work to utils/py/_marathon_plan_node.js. So the marathon-plan entry point is Python+Node,
+#      not pure Python: a box with python3 but no node passes (a) and still bricks marathon-plan.
+node --version               # must succeed, or exclude marathon-plan from the flip (keep its default 0)
+
 # (b) clean, CURRENT branch — a clean status is NOT proof the branch is up to date.
 git fetch -q origin "$(git branch --show-current)"
 git rev-list --left-right --count "origin/$(git branch --show-current)...HEAD"   # want: 0<TAB>0 (or ahead-only if you know why)
@@ -128,6 +134,17 @@ the flip — they are not caused by it — but they must be *known and named*, n
 
 `python3` version floor: the twins use f-strings and `subprocess.run(..., timeout=)`; 3.8+ is safe.
 If a target box is older, stop — the flip would brick every entry point with no fallback.
+
+**Interpreter matrix** (what each entry point actually needs after the flip):
+
+| Entry point | Needs |
+|---|---|
+| the 10 relay/turn/consult/preflight twins | `python3` only |
+| `utils/marathon-plan.sh` | `python3` **and** `node` (the twin shells out to `_marathon_plan_node.js`) |
+
+If a target has `python3` but no `node`, you may still flip the other 10 and leave
+`utils/marathon-plan.sh` on its Bash default (`${XYZ_PYTHON-0}` at that one site) — the flip is
+per-file, so a partial flip is legitimate. Say so in the flip commit if you do it.
 
 ---
 
@@ -332,32 +349,56 @@ small so you never have to exercise fleet rollback under pressure.
 
 ## 9. Portability — running this on a repo that is NOT this one
 
-This runbook is written to be repo-agnostic for any repo that ships the harness (root clone or
-vendored `.xyz/`). When executing elsewhere:
+This runbook is repo-agnostic, but **there are two kinds of target and they do NOT run the same
+phases.** Decide which one you are on before doing anything — conflating them is the single easiest way
+to get stuck.
+
+**Type A — a full harness clone** (this repo, cloned elsewhere): ships `validate.sh`, `test/`, `PROJECT/`,
+the whole suite. It **owns** parity — it runs Phases 1–8 as written.
+
+**Type B — a vendored `.xyz/` leaf** (a consumer repo that ran `xyz-vendor.sh`): ships
+`relay-automation/`, `utils/py/`, `test/_setup.sh`, and the shims, but **no `validate.sh` aggregator and
+no `PROJECT/`** (confirmed on real copies). A leaf **does not derive or close parity gaps** — Phase 1
+and Phase 3's whole "close the gaps" effort are **not run on a leaf**. It inherits an
+already-parity-clean harness from the root it was vendored from. Trying to run the §2(c) two-mode sweep
+on a leaf fails because there is no `validate.sh` to run — that is expected, not a blocker: it is the
+signal that you are on a Type-B target and Phase 1 is upstream's job, already done.
+
+When executing elsewhere:
 
 1. **Locate the harness root** the device-agnostic way — do not hardcode a path. Use the harness's own
    locator (`find-harness.sh`) or, for a vendored install, the `.xyz/` directory at the consumer root.
-   Every command in this doc is relative to that root.
-2. **Re-run §2 preconditions on the target** — `python3` presence and version, a clean/current branch,
-   and a same-commit two-mode baseline are all repo-local facts, not inherited from here.
-3. **The target's parity gap list may differ** from §3's table. §3's numbers are this repo's snapshot;
-   regenerate them on the target with the `TEST_SOFT_FAIL=1` two-mode sweep. The *method* ports; the
+   Every command in this doc is relative to that root. `find-harness.sh` also tells you which type you
+   are on (it resolves a `.xyz/` when present).
+2. **Type A only — re-run §2 preconditions incl. the two-mode baseline.** `python3`/`node` presence, a
+   clean/current branch, and a same-commit sweep are repo-local facts, not inherited from here. §3's
+   gap *numbers* are this repo's snapshot; regenerate them on a Type-A target — the *method* ports, the
    *findings* do not.
-4. **A vendored copy has no `PROJECT/` or `validate.sh` of its own** in the same shape — it is a
-   subtree, not a full clone. For a vendored target, the "proof" is the consuming repo's own smoke
-   path plus `xyz-sync.sh check`, not a nested `validate.sh`.
-5. **Phase 5 is only relevant from the repo that owns the registry** (the one whose `xyz-sync.sh list`
-   knows the fleet). A leaf consumer upgrades itself via its own env var and re-vendor; it does not
-   drive the fleet.
+3. **Type B (vendored leaf) — skip Phases 1 & 3 entirely.** Do NOT try to run `validate.sh`; it isn't
+   there. The leaf's parity is whatever its source root shipped, so the correct sequence for a leaf is:
+   (a) confirm `python3` (+ `node` if it uses marathon-plan) on the box; (b) `xyz-sync.sh check <dir>`
+   from the **owning** repo to confirm the leaf is at the expected, already-flipped `source_commit`;
+   (c) prove via the **consuming repo's own** smoke/test path plus a real relay/marathon run with the
+   var unset, and again with `XYZ_PYTHON=0`. That is the leaf's Phase-1-equivalent — inherit-and-verify,
+   not derive.
+4. **The flip itself reaches a leaf only by re-vendor, never by editing `.xyz/`.** You do not hand-edit
+   a vendored copy's shims (`xyz-sync.sh` would report it as drift and a future `update` would clobber
+   it). A leaf becomes Python-default by `xyz-sync.sh update <dir>` from a root that is already flipped
+   (Phase 5), full stop.
+5. **Phase 5 is only driven from the repo that owns the registry** (the one whose `xyz-sync.sh list`
+   knows the fleet). A leaf consumer receives its flip via re-vendor and opts out at runtime with its
+   own `XYZ_PYTHON=0`; it never drives the fleet.
 
 ---
 
 ## 10. End-to-end checklist (copy into the tracking issue)
 
 ```
+[ ] §9  determined target TYPE first (A = full clone runs Phases 1-8 · B = vendored leaf skips 1 & 3)
 [ ] §2  python3 >= 3.8 on target
+[ ] §2  node present (or marathon-plan excluded from the flip)
 [ ] §2  branch clean AND current (fetched, 0 behind)
-[ ] §2  two-mode same-commit baseline captured; Python-attributable gaps enumerated
+[ ] §2  two-mode same-commit baseline captured; Python-attributable gaps enumerated   (Type A only)
 [ ] §3  all Python-attributable gaps closed (marathon-drive split to its own issue)
 [ ] §3  re-run soft-fail sweep after EACH fix (unmasking)
 [ ] §4  (2a) :- → - at all 11 sites; one-distinct-line invariant holds
