@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 5
 
@@ -67,5 +67,17 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 - Is the fail-safe direction claim airtight, or is there an input that routes to Python unexpectedly?
 - Is the marathon-plan.sh shim genuinely NON-identical to the other 10 (extra flag-translation), and if so does §4's invariant check need to account for it?
 **Commit:** none (comments only)
+
+### Round 1 · Reviewer · codex · 2026-07-20 16:41 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — reconciled against `UPGRADE.md` and the live shim, Python-twin, vendor, sync, and locator sources.
+**Findings & proposals:**
+- [Blocker] `UPGRADE.md:105-106` calls `python3 --version` but only says it “must succeed”; Python 3.7 passes that command despite the stated >=3.8 hard gate (`UPGRADE.md:135-136`). Add an executable version predicate (for example `python3 -c 'import sys; raise SystemExit(sys.version_info < (3, 8))'`) and retain the readable version output. Otherwise the documented gate can approve an interpreter that the runbook says must block the flip.
+- [Blocker] `UPGRADE.md:114-116` fetches `origin <branch>` and then compares `origin/<branch>...HEAD`. An explicitly fetched branch is recorded in `FETCH_HEAD`; it need not refresh the remote-tracking ref the comparison reads. Replace it with a fetch that refreshes the tracking refs (e.g. `git fetch -q origin` / `--prune` as appropriate) before `rev-list`, or compare the freshly fetched `FETCH_HEAD` deliberately. The present “CURRENT branch” proof can accept a stale `origin/<branch>`.
+- [Blocker] Type-B discovery is not runnable as written: `UPGRADE.md:369-372` names `find-harness.sh`, but the shipped locator is `skills/relay-xyz/find-harness.sh` (`skills/relay-xyz/find-harness.sh:8-16`) and no root-level locator exists. Add a concrete Type-A/Type-B-safe command, then `cd` to its output; for example select `.xyz/skills/relay-xyz/find-harness.sh` in a leaf and `skills/relay-xyz/find-harness.sh` in a clone. Do not direct this flow through `--env` until GH-234 is fixed: its current `TICK_REPO_ROOT` export is known to be one directory too deep for a vendored harness.
+- [Should] Qualify the “10 ... twins | `python3` only” matrix at `UPGRADE.md:138-143` as “only additional language runtime” (or enumerate operational dependencies). It is otherwise false literally: `utils/py/marathon_drive.py:139,434-444` invokes `date`, `git`, and `/bin/bash`; `utils/py/relay_drive.py:361` invokes the Bash `consult.sh`; `utils/py/aider-turn.py:80-81` invokes `sed`. I found no second Node/JS twin dependency; `marathon_plan.py:105-142` is the sole Node requirement.
+- [Nit] `UPGRADE.md:232-239`'s condition-line invariant is sound — the extra `--zones-config` translation in `utils/marathon-plan.sh:11-20` does not enter the filtered condition-line check — but reword “byte-identical except the twin filename” to explicitly exempt that shim, so the stated invariant matches the actual design.
+- [Pass] The 11-entry-point list matches every live `${XYZ_PYTHON:-0}` shim, the post-hardening `:-` versus `-` truth table is correct, and `xyz-sync` supports `list`/`update`/`check`/`delete`; its `check` is report-only and compares both `tick_version` and `source_commit` (`relay-automation/xyz-sync.sh:296-335`).
+**Commit:** harness-managed
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
