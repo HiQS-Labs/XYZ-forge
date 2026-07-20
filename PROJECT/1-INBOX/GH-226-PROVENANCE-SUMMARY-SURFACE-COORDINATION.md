@@ -4,7 +4,7 @@ source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/iss
 title: "Full provenance follow-up should coordinate with the already-reworked consult/relay summary surface"
 status: Proposed (1-INBOX — not yet active)
 created: 2026-07-17
-updated: 2026-07-17
+updated: 2026-07-20
 owner: noel
 doc_type: enhancement
 complexity: 2
@@ -78,6 +78,66 @@ without fighting the already-shipped TLDR/category structure.
 - [ ] Either:
   - [ ] promote this issue into active execution with a bounded contract, or
   - [ ] split it into narrower follow-up issue(s) with clear per-surface ownership.
+
+## Inventory of touched surfaces
+
+Built 2026-07-20 from `git log`/`git show` of the shipped GH-211 and GH-178 commits (not from
+memory). Checkboxes track which surfaces the coordinated provenance pass must account for.
+
+### A. GH-211 — operator-facing summary surfaces (format only, `91f2fda`)
+
+- [x] `skills/consult/SKILL.md` — **the consult operator-summary contract.** Step 4 "Reconcile"
+  reshaped from 3 parts → 4: added **TLDR** (front, the operator's exit ramp), **Disagree**
+  (adjudication body), and **Sorted categories** at the close (`Blocking` / `Worth doing, optional`
+  / `Skip · out of scope`), replacing the bare prose recommendation. This is the surface Jedi's
+  Q1 placement decision lands on: provenance goes in **Disagree/adjudication + inline**, never the TLDR.
+- [x] `ROADMAP.md`, `ROADMAP-DASHBOARD.md` — ledger pointer only, not a report surface (intake noise).
+- [ ] **Relay's operator-facing report shape was NOT touched by GH-211** — it lives in the external
+  `giant-brains-claude-skills` repo. ⚠️ **Asymmetry finding:** today only *consult's* summary has been
+  reshaped; relay's operator report has not. The "already-reworked summary surface" in the issue title
+  is consult-only. This is why Jedi defers giant-brains — aligning relay's report is a separate, later step.
+
+### B. GH-178 — provenance surfaces, narrow slice (`17c1dc4`, `a7f5b04`, `d85da37`, `54972e9`, `52a94ef`)
+
+Bash implementation (`relay-automation/`):
+- [x] `relay-automation/consult.sh` — three distinct provenance mechanics:
+  - **A4 stamp:** `NO FIRSTHAND VERIFICATION CITED — treat conclusions as conditional` per uncited advisor.
+  - **A2 stamp:** `SINGLE-MODEL — NOT RECONCILED` / `DEGRADED-SINGLE-MODEL.txt` when only one advisor answered.
+  - **Prompt-trace classifier → `*.PROVENANCE.txt` sidecar:** computes `FIRSTHAND_COUNT` vs
+    prompt-echoed claims and emits `PROVENANCE_WARNINGS`. 🔑 **Key finding:** this is *exactly* Jedi's
+    Q3 firsthand-read-vs-operator-asserted distinction — and it is **already computed today**, but only
+    written to a sidecar file and surfaced as a `warn()`. It is **never rendered into the operator
+    report.** The next pass is largely "surface an existing signal into the adjudication body," not
+    "build a new classifier."
+- [x] `relay-automation/relay-turn-lib.sh` — the relay-side citation mechanic: `rtl_has_uncited_claim()`
+  (read-only predicate, shared with consult's A4) + `rtl_check_uncited_findings()` (per-line downgrade
+  that rewrites the relay file in place). This is the relay "reviewer citation discipline" surface —
+  Jedi's Q2 second contract.
+- [x] `relay-automation/new-relay.sh` — reviewer template wording (asks reviewer to cite evidence).
+- [x] `relay-automation/README.md` — documents the citation/provenance behavior.
+
+Python cutover (must stay in parity — ⚠️ **any provenance change touches two implementations, not one**):
+- [x] `utils/py/consult.py` — port of A4 citation stamp, A2 degraded stamp, and `rtl_has_uncited_claim`.
+- [x] `utils/py/agy-turn.py` — GH-178 B1 advisor-grounding / isolation-boundary check (fail-open).
+
+Tests pinning current behavior:
+- [x] `test/consult.sh`, `test/relay-uncited-findings.sh`.
+
+### C. Cross-cutting facts the Decision must carry
+
+1. **Two contracts, confirmed by the code, not just Jedi's opinion.** consult's provenance mechanic keys
+   on *advisor grounding* (firsthand read vs. prompt-echoed); relay's keys on *reviewer citation
+   discipline* (`rtl_check_uncited_findings`). Different code, different failure mode → Jedi's Q2 "different
+   contracts" is already reflected in the implementation.
+2. **Dual bash+Python surface.** Provenance lives in both `relay-automation/*.sh` and `utils/py/*.py`;
+   they are kept at parity deliberately (GH-223/GH-255). Scope the pass as ~2× the file count.
+3. **The Q3 target signal already exists** (see A4 sidecar above) — the next pass is a *surfacing +
+   placement* job (move `FIRSTHAND_COUNT`/echoed classification into the Disagree/adjudication body and
+   inline annotations), plus flagging prompt-only conclusions as `conditional`. Lower build risk than
+   the issue's "full taxonomy" framing implies.
+4. **Placement decision (Jedi, confirmed 2026-07-20):** provenance renders in the **adjudication body +
+   inline finding annotations**, NOT the TLDR. In `consult/SKILL.md` terms that is the **Disagree**
+   block and per-item notes inside **Sorted categories** — not the new TLDR line.
 
 ## Swarm Preflight Contract
 ```json
