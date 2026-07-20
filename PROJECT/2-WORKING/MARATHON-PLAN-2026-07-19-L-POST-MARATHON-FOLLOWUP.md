@@ -1,6 +1,6 @@
 ---
 title: "Marathon Plan L — post-marathon follow-up queue (2026-07-19)"
-status: Active (2-WORKING) — 3 lanes, all contracts preflight exit 0; not yet fired
+status: Fired (2-WORKING) — 3 lanes shipped on branch marathon/plan-l-followup-2026-07-19 (single wave, gate green vs baseline); pending PR into development
 created: 2026-07-19
 updated: 2026-07-20
 owner: noel
@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Seeded with **GH-251** (lane 1), then filled from a 2026-07-19 `/10days` recon (27 open in window). **Contract-authoring pass 2026-07-20 corrected two first-pass picks:** #248's core fix already landed (I misread the `$HERE/..` *fallback* in the fixed code) and #170 preflights **STALE (exit 4)** — both dropped. Genuine, contract-ready lanes: **#251**, **#241** (contract authored + promoted to 2-WORKING), **#218**. All three **preflight exit 0 (ready)** and have **disjoint write-sets** → one wave. | Fire the 3 lanes (worktree-isolated; independent zone, no serialization) via `swarm-preflight → marathon`, or hand to `/10days`. **Not yet fired.** |
+| **Fired 2026-07-20 on branch `marathon/plan-l-followup-2026-07-19`** — all 3 lanes shipped, single wave, serial Opus-direct (only 3 small lanes; Agent worktree-isolation branches from `main` not the marathon branch per GH-225, so serial avoids a cherry-pick reconciliation for no concurrency gain). **GH-241** `500dd87` (flow-sequence guard + regression), **GH-251** `cf7a123` (review-mode + transcript salvage + 2 cases), **GH-218** `d919e92` (marathon-live.sh + rollup embed + 2 tests). Gate `bash validate.sh` **green vs baseline**: the 5 reds (`marathon-drive`/`relay-pkg-freshness`/`acorn-extract`/`relay-self-sufficiency`/`python`) reproduce identically on `development` (pre-existing/environmental); all 4 new/touched tests pass. | Open a PR into `development`. On merge, `Closes #241/#251/#218` fires; move the three GH docs to `3-COMPLETED`. |
 
 ## The one safety rule
 

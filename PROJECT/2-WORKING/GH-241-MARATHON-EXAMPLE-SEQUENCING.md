@@ -1,6 +1,6 @@
 ---
 title: MARATHON.example.yaml understates sequencing and depends_on's scalar-only shape
-status: "Active (2-WORKING) — promoted 2026-07-20; docs fixes (1)(2)(4) shipped, scoped to remaining fix (3): bin/marathon-yaml list-form guard + regression test. Queued in MARATHON-PLAN-2026-07-19-L."
+status: "Shipped on branch (2-WORKING) — fix (3) landed 500dd87 on marathon/plan-l-followup-2026-07-19 (flow-sequence guard + test/marathon-yaml.sh case); docs (1)(2)(4) shipped 2026-07-18. Pending PR into development, then 3-COMPLETED."
 created: 2026-07-18
 updated: 2026-07-20
 owner: noelsaw1
@@ -35,7 +35,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Docs fixes (1)(2)(4) shipped 2026-07-18 (sequential-execution + halt-on-fail header, `depends_on` marked scalar-single, `--dry-run` recommended). Promoted 1-INBOX → 2-WORKING 2026-07-20 and scoped to the **remaining fix (3)**; queued as a lane in [MARATHON-PLAN-2026-07-19-L](MARATHON-PLAN-2026-07-19-L-POST-MARATHON-FOLLOWUP.md). Contract authored below (auto-drafted, flagged). | Add the `bin/marathon-yaml` guard that rejects the `depends_on` flow-sequence (`[...]`) form with a shape-specific error instead of the generic "unknown phase '[p1]'" (`bin/marathon-yaml:102-105`), plus a `test/marathon-yaml.sh` regression case. Then `swarm-preflight` → fire. |
+| **Fix (3) shipped `500dd87`** on `marathon/plan-l-followup-2026-07-19` (Plan L lane): `bin/marathon-yaml` now rejects the `depends_on` flow-sequence form (`[p1]`) with a shape-specific "flow sequence" error naming the field's shape, guarded before the phase-id lookup at `bin/marathon-yaml:102-105`; `test/marathon-yaml.sh` gains a regression case (list form → shape error; scalar still parses). 14/14 marathon-yaml tests pass. Docs fixes (1)(2)(4) shipped 2026-07-18. | Open a PR into `development`. On merge (`Closes #241`), move this doc to `3-COMPLETED`. |
 
 ## Symptom
 
