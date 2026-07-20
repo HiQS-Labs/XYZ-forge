@@ -102,8 +102,11 @@ every entry point is a short-lived process.
 Run every check. All must pass on the target repo before Phase 1.
 
 ```bash
-# (a) python3 present and >= 3.8 — the shims exec `python3` with no fallback and no presence guard.
-python3 --version            # must succeed; if this errors, the flip bricks every entry point
+# (a) python3 present AND >= 3.8 — the shims exec `python3` with no fallback and no presence guard.
+#     `--version` alone is NOT a gate: it exits 0 on 3.7 too. Enforce the floor with a predicate.
+python3 --version                                             # readable output
+python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' \
+  || { echo "python3 >= 3.8 required — do not flip"; }        # hard gate; must exit 0
 
 # (a2) node present — NOT optional. utils/py/marathon_plan.py runs `node --version` and hard-exits
 #      ("node is required ... but not found in PATH", marathon_plan.py:105-107) before delegating the
@@ -112,7 +115,11 @@ python3 --version            # must succeed; if this errors, the flip bricks eve
 node --version               # must succeed, or exclude marathon-plan from the flip (keep its default 0)
 
 # (b) clean, CURRENT branch — a clean status is NOT proof the branch is up to date.
-git fetch -q origin "$(git branch --show-current)"
+#     Use bare `git fetch origin` (NOT `git fetch origin <branch>`): the bare form refreshes ALL
+#     remote-tracking refs via the configured refspec, so the origin/<branch> the compare reads is
+#     guaranteed fresh. An explicit-branch fetch can, depending on refspec config, update only
+#     FETCH_HEAD and leave origin/<branch> stale — silently defeating this very check.
+git fetch -q origin
 git rev-list --left-right --count "origin/$(git branch --show-current)...HEAD"   # want: 0<TAB>0 (or ahead-only if you know why)
 git status --porcelain       # want: empty
 
@@ -135,11 +142,16 @@ the flip — they are not caused by it — but they must be *known and named*, n
 `python3` version floor: the twins use f-strings and `subprocess.run(..., timeout=)`; 3.8+ is safe.
 If a target box is older, stop — the flip would brick every entry point with no fallback.
 
-**Interpreter matrix** (what each entry point actually needs after the flip):
+**Interpreter matrix** (which *additional language runtime* each entry point needs — beyond the POSIX
+baseline). NB: "python3 only" below means no second *language* runtime; every twin still shells out to
+ordinary system tools — `git`, `/bin/bash`, `date`, `sed` (e.g. `marathon_drive.py:139,424,444`,
+`relay_drive.py:106` + the Bash `consult.sh` it calls, `aider-turn.py:80`). Those (coreutils + git +
+bash) are assumed present on any box that already ran the Bash harness, so they are not a new gate —
+but the twins are **not** pure-Python, and a truly minimal container must carry them.
 
-| Entry point | Needs |
+| Entry point | Extra language runtime |
 |---|---|
-| the 10 relay/turn/consult/preflight twins | `python3` only |
+| the 10 relay/turn/consult/preflight twins | none beyond `python3` (POSIX tools + git + bash still required) |
 | `utils/marathon-plan.sh` | `python3` **and** `node` (the twin shells out to `_marathon_plan_node.js`) |
 
 If a target has `python3` but no `node`, you may still flip the other 10 and leave
@@ -229,11 +241,14 @@ fi
 This makes the fail-safe direction hold even on a box with no Python — the single scariest flip
 failure mode (every entry point bricked) becomes a graceful degrade with a warning.
 
-**Consistency note:** these 11 shims are meant to be byte-identical except the twin filename. After
-editing, verify they still are (Phase-agnostic invariant):
+**Consistency note:** the 11 shims share one identical *condition line*, but they are **not** wholly
+byte-identical — `utils/marathon-plan.sh` carries an extra `--zones-config → QUEUE_PLAN_ZONES_FILE`
+translation block (GH-154, `marathon-plan.sh:11-20`) that the other 10 lack. So the invariant is
+scoped to the **condition line only**, which the filter below isolates (the zones-config lines don't
+match `grep '\[\['`):
 
 ```bash
-# every shim's condition line should be identical
+# every shim's CONDITION line should be identical (body may differ — marathon-plan.sh has extra flag xlat)
 grep -h 'XYZ_PYTHON' relay-automation/*.sh utils/marathon-plan.sh utils/swarm-preflight.sh \
   | grep '\[\[' | sort -u    # want: exactly ONE distinct line
 ```
@@ -366,10 +381,17 @@ signal that you are on a Type-B target and Phase 1 is upstream's job, already do
 
 When executing elsewhere:
 
-1. **Locate the harness root** the device-agnostic way — do not hardcode a path. Use the harness's own
-   locator (`find-harness.sh`) or, for a vendored install, the `.xyz/` directory at the consumer root.
-   Every command in this doc is relative to that root. `find-harness.sh` also tells you which type you
-   are on (it resolves a `.xyz/` when present).
+1. **Locate the harness root** the device-agnostic way — do not hardcode a path. The locator is **not**
+   at the repo root; it ships under the relay-xyz skill. Use the path that exists for your type:
+   ```bash
+   # Type A (full clone):   skills/relay-xyz/find-harness.sh
+   # Type B (vendored leaf): .xyz/skills/relay-xyz/find-harness.sh   (at the consumer repo root)
+   L="skills/relay-xyz/find-harness.sh"; [ -x "$L" ] || L=".xyz/skills/relay-xyz/find-harness.sh"
+   "$L" --check     # prints the resolved harness root + which type; every command in this doc is relative to it
+   ```
+   **Caveat (GH-234, still open):** do **not** drive a vendored (Type-B) flow through `"$L" --env` yet —
+   its `TICK_REPO_ROOT` export is known to resolve one directory too deep for a `.xyz/` install. Use
+   `--check` to locate + confirm, and `cd` to the printed root manually, until GH-234 lands.
 2. **Type A only — re-run §2 preconditions incl. the two-mode baseline.** `python3`/`node` presence, a
    clean/current branch, and a same-commit sweep are repo-local facts, not inherited from here. §3's
    gap *numbers* are this repo's snapshot; regenerate them on a Type-A target — the *method* ports, the

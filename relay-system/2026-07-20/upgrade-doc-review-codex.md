@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 5
+ROUND: 2 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -79,5 +79,17 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 - [Nit] `UPGRADE.md:232-239`'s condition-line invariant is sound — the extra `--zones-config` translation in `utils/marathon-plan.sh:11-20` does not enter the filtered condition-line check — but reword “byte-identical except the twin filename” to explicitly exempt that shim, so the stated invariant matches the actual design.
 - [Pass] The 11-entry-point list matches every live `${XYZ_PYTHON:-0}` shim, the post-hardening `:-` versus `-` truth table is correct, and `xyz-sync` supports `list`/`update`/`check`/`delete`; its `check` is report-only and compares both `tick_version` and `source_commit` (`relay-automation/xyz-sync.sh:296-335`).
 **Commit:** harness-managed
+
+### Round 2 · Producer · claude-a · 2026-07-20 16:48 PDT
+**Decisions on proposals:** (each verified against the repo before disposing)
+- `[Blocker]` python3 version gate not enforced — **Implemented.** Verified: `python3 --version` exits 0 on any version, so the ">=3.8 hard gate" was unenforced prose. Replaced §2(a) with an executable predicate `python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3,8) else 1)'` that actually fails <3.8, keeping the readable `--version` line too (UPGRADE.md:106-109).
+- `[Blocker]` `git fetch origin <branch>` may leave `origin/<branch>` stale — **Modified.** Verified the remote's refspec is `+refs/heads/*:refs/remotes/origin/*`, so on a standard remote the explicit-branch fetch *does* update the tracking ref (the finding overstates severity as a hard blocker for this repo). BUT the concern is real for non-standard refspecs, and bare `git fetch origin` is unconditionally correct at zero cost — so I adopted the safer bare form and documented exactly why (UPGRADE.md:114-120). Downgraded severity, implemented the fix.
+- `[Blocker]` Type-B locator not runnable as written — **Implemented.** Verified: no root-level `find-harness.sh`; the shipped locator is `skills/relay-xyz/find-harness.sh` (Type-A) / `.xyz/skills/relay-xyz/find-harness.sh` (Type-B). §9 point 1 now gives both concrete paths + a `--check` invocation, AND adds the GH-234 caveat you flagged (don't use `--env` on a vendored install — its `TICK_REPO_ROOT` is one dir too deep) (UPGRADE.md:384-393).
+- `[Should]` interpreter matrix "python3 only" literally false — **Implemented.** Verified the external calls you cited (`marathon_drive.py:139,424,444` → date/bash/rtl; `relay_drive.py:106` + consult.sh; `aider-turn.py:80` → sed). Reworded the matrix to "additional *language* runtime" and added an explicit note that every twin still needs POSIX tools + git + bash — not pure-Python (UPGRADE.md:145-152).
+- `[Nit]` byte-identical prose — **Implemented.** Reworded §4 to state the shims share one identical *condition line* but are NOT wholly byte-identical (marathon-plan.sh's GH-154 zones-config block), and scoped the invariant explicitly to the condition line (UPGRADE.md:244-251).
+**Did:** All 5 findings actioned (3 Impl + 1 Modified + 1 Impl). Independently confirmed your `[Pass]` items and your "no second Node/JS twin" conclusion — matches my own check (the `"node"` in `swarm_preflight.py:652` is a gate-command allowlist string, not a subprocess call).
+**Verification:** N/A — non-executable artifact. Fix landing reconciled by re-grep: B1@108, B2@118, B3@387-389, Should-4@145, Nit-5@247. All present.
+**Re-review this:** (1) Is the §2(a) version predicate correct and does it fail-closed as intended? (2) Is the §9 Type-B locator sequence now actually runnable on a `.xyz/` leaf, GH-234 caveat included, or does anything still assume the missing root locator? (3) Does the reworded interpreter-matrix note now accurately bound the runtime deps without over- or under-claiming?
+**Commit:** pending (harness will commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
