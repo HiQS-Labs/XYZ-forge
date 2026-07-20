@@ -190,6 +190,27 @@ def main():
         if off_lane:
             print("agy-turn: agy made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)", file=sys.stderr)
             sys.exit(6)
+        # GH-178 B1: Verify agy grounding stayed contained to $WT.
+        if bounded_rc == 0 and os.path.exists(agy_log) and os.path.getsize(agy_log) > 0:
+            # Filter out false-positive shapes before the ROOT substring scan:
+            #   [trace] lines (instrumentation, legitimately contain RTL_ROOT)
+            #   TICK_REPO_ROOT="..." (harness-mandated tick-command narration, GH-183)
+            #   file:// URIs and markdown link targets ](...) (file citations, GH-187)
+            breached = False
+            with open(agy_log, "r", errors="replace") as log_f:
+                for line in log_f:
+                    if line.startswith("[trace] "):
+                        continue
+                    if "TICK_REPO_ROOT=" in line or "file://" in line or "](" in line:
+                        continue
+                    if root in line:
+                        breached = True
+                        break
+            if breached:
+                print(f"agy-turn: agy transcript cited the real repo root ({root}) instead of the isolated worktree. This is an isolation breach. Failing the turn.", file=sys.stderr)
+                with open(agy_log, "a") as log_f:
+                    log_f.write("\n[FAIL] agy isolation breach: transcript cited the real repo root instead of the worktree.\n")
+                sys.exit(5)
 
     if bounded_rc == 7:
         print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
