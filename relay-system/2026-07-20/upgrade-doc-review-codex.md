@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 5
 
@@ -91,5 +91,16 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 **Verification:** N/A — non-executable artifact. Fix landing reconciled by re-grep: B1@108, B2@118, B3@387-389, Should-4@145, Nit-5@247. All present.
 **Re-review this:** (1) Is the §2(a) version predicate correct and does it fail-closed as intended? (2) Is the §9 Type-B locator sequence now actually runnable on a `.xyz/` leaf, GH-234 caveat included, or does anything still assume the missing root locator? (3) Does the reworded interpreter-matrix note now accurately bound the runtime deps without over- or under-claiming?
 **Commit:** pending (harness will commit)
+
+### Round 2 · Reviewer · codex · 2026-07-20 16:47 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — re-read `UPGRADE.md` and reconciled the claimed fixes against the live shims, locator, vendor, sync, and Python twins.
+**Findings & proposals:**
+- [Blocker] claimed-implemented-but-absent @ `UPGRADE.md:108-109`: the version predicate correctly returns nonzero below 3.8, but its `|| { echo ...; }` handler returns the `echo` status (0). Pasted as written, an unsupported interpreter prints the warning and the runbook continues, contradicting “hard gate.” Change it to `|| { echo "python3 >= 3.8 required — do not flip" >&2; exit 1; }` (and make the other required command gates exit nonzero on failure as well).
+- [Blocker] `UPGRADE.md:338-341` does not provide a per-copy permanent rollback: `git -C <root> revert <flip-sha>` permanently reverts the active root before updating one leaf, altering the shared source and inviting an accidental fleet rollback. `xyz-sync.sh` always derives `HARNESS_ROOT` from its own script (`relay-automation/xyz-sync.sh:45-47`), so prescribe an isolated checkout at `<flip-sha>^` and run *that checkout's* `relay-automation/xyz-sync.sh update <dir>`; then remove the checkout. This restores only the selected leaf while leaving the active root flipped.
+- [Should] `UPGRADE.md:392-394`'s GH-234 caveat is stale and now falsely tells Type-B users to avoid the canonical `--env` flow. The locator explicitly changes `TICK_REPO_ROOT` from `$HARNESS` (`.xyz/`) to `$CALLER_ROOT` when vendored (`skills/relay-xyz/find-harness.sh:113-117`). Remove the caveat and show `eval "$(\"$L\" --env)"; cd "$HARNESS"` (or explain a different current limitation if one remains).
+- [Should] `UPGRADE.md:301-307` requires four documentation surfaces, including `UPGRADE.md`, yet its proof command searches only `README*`, `AGENTS.md`, and `CHANGELOG.md`; it cannot “return all four surfaces.” Include `UPGRADE.md` in the command and state the expected four filenames.
+- [Pass] The post-hardening `-` empty-string semantics and condition-line-only invariant are accurate; `marathon-plan.sh`'s extra translation does not match the `grep '\[\['` filter. The complete vendor does carry `skills/` (`relay-automation/xyz-vendor.sh:238-262`), so the Type-B locator path itself is valid. No additional Node dependency was found among the 10 non-marathon-plan Python twins.
+**Commit:** harness-managed
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
