@@ -34,7 +34,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Opened [#226](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/226) from Jedi Wright's Slack follow-up and parked this local capture so he can edit the issue directly. A standalone marathon surface exists at `PROJECT/2-WORKING/MARATHON-PLAN-2026-07-17-I-PROVENANCE-SUMMARY-COORDINATION.md`. | Let Jedi confirm or refine scope on the issue, then run the standalone planning marathon to inventory the touched surfaces and decide whether the next pass stays one issue or splits by repo/surface. |
+| Jedi answered all four questions on the issue thread (2026-07-20). Inventoried every GH-211/GH-178 surface from the shipped commits (**§ Inventory of touched surfaces**) and locked the reporting contract + file ownership (**§ Decision**): one issue, two lanes (consult / relay), `giant-brains` deferred. Work branched to `gh-226/provenance-coordination`. | Post the follow-up comment to Jedi confirming locked scope + linking the draft execution plan. On his sign-off, promote this doc 1-INBOX → 2-WORKING with the bounded contract and fire the two-lane pass. |
 
 ## Problem summary
 
@@ -72,12 +72,15 @@ without fighting the already-shipped TLDR/category structure.
 
 ## Definition of done
 
-- [ ] Inventory the operator-facing summary surfaces touched by GH-211 and the provenance surfaces touched by GH-178.
-- [ ] Decide the reporting contract for fuller provenance so the operator-facing layer is edited once, not twice.
-- [ ] Record explicit file ownership and repo boundaries for the next implementation pass.
-- [ ] Either:
-  - [ ] promote this issue into active execution with a bounded contract, or
-  - [ ] split it into narrower follow-up issue(s) with clear per-surface ownership.
+- [x] Inventory the operator-facing summary surfaces touched by GH-211 and the provenance surfaces touched by GH-178. → **§ Inventory of touched surfaces**
+- [x] Decide the reporting contract for fuller provenance so the operator-facing layer is edited once, not twice. → **§ Decision**
+- [x] Record explicit file ownership and repo boundaries for the next implementation pass. → **§ Decision → File ownership**
+- [x] Either:
+  - [x] promote this issue into active execution with a bounded contract (**one issue, two lanes**), or
+  - [ ] ~~split it into narrower follow-up issue(s)~~ — rejected; see **§ Decision → One issue vs. split**.
+
+> Scope decisions below reflect Jedi Wright's issue-thread answers (2026-07-20). Pending his sign-off
+> on the draft execution plan before promotion out of 1-INBOX.
 
 ## Inventory of touched surfaces
 
@@ -138,6 +141,72 @@ Tests pinning current behavior:
 4. **Placement decision (Jedi, confirmed 2026-07-20):** provenance renders in the **adjudication body +
    inline finding annotations**, NOT the TLDR. In `consult/SKILL.md` terms that is the **Disagree**
    block and per-item notes inside **Sorted categories** — not the new TLDR line.
+
+## Decision
+
+Locks the four questions this issue owns, using Jedi's thread answers (2026-07-20) as the spec and
+the inventory above as the reality check. This is the reporting contract the next pass implements.
+
+### Q3 — primary provenance key (settled)
+
+**Firsthand-read vs. operator-asserted is the primary key. Cited-vs-uncited is a secondary UI
+affordance, not the pivot.** A conclusion is stamped by *where it rests*:
+
+| Stamp | Meaning | Operator treatment |
+|---|---|---|
+| `firsthand` | advisor/reviewer read it in-worktree (has a quoted span or `file:line`) | trust as verified |
+| `operator-asserted` | rests only on a claim handed to it in the prompt | **flag `conditional`** |
+| `uncited` | a `[Pass]`/verified-style claim with no citation nearby | surface as a caveat (existing A4 stamp) |
+
+Rationale (Jedi): a reviewer can cite a claim it never verified, and a prompt-embedded fact
+masquerades as a firsthand read unless tracked at the source. **This distinction is already computed**
+— consult.sh's `*.PROVENANCE.txt` sidecar emits `FIRSTHAND_COUNT` and a prompt-echoed classifier
+(`PROVENANCE_WARNINGS`). The next pass surfaces that existing signal; it does not build a new one.
+
+### Q1 — placement (settled)
+
+**Provenance renders in the adjudication body + inline finding annotations. Never the TLDR.** The TLDR
+is the operator's exit ramp; a `conditional` flag buried there gets skimmed past. In `consult/SKILL.md`
+terms (per GH-211's 4-part shape): provenance lives in the **Disagree** block and as per-item notes
+inside **Sorted categories** — the TLDR line stays a clean call + confidence only.
+
+### Q2 — consult vs. relay contracts (settled)
+
+**Shared surface, separate contracts.** The inventory confirms this is already true in code, not just
+preference:
+
+- **consult** keys on *advisor grounding* — did the advisor read the repo or answer from priors?
+  (mechanic: `*.PROVENANCE.txt` firsthand classifier + A4 stamp in `consult.sh` / `consult.py`).
+- **relay** keys on *reviewer citation discipline* — did the reviewer quote evidence for a "verified"
+  finding or assert it? (mechanic: `rtl_check_uncited_findings` / `rtl_has_uncited_claim` in
+  `relay-turn-lib.sh`).
+
+They may share a rendering convention; they must **not** share a single stamp definition, or one
+silently stands in for the other.
+
+### Q4 — one issue vs. split (decided: **one issue, two lanes**)
+
+Kept as a single coordinated issue rather than split by repo. Executed as two non-overlapping lanes:
+
+- **Lane C (consult):** `skills/consult/SKILL.md` + `relay-automation/consult.sh` + `utils/py/consult.py`.
+- **Lane R (relay):** `relay-automation/relay-turn-lib.sh` (+ `new-relay.sh`, `README.md`).
+
+`giant-brains-claude-skills` is **explicitly out of scope** for this pass (Jedi): its relay operator
+report was never reworked by GH-211 (see asymmetry finding), so there is nothing to coordinate against
+yet. Align it in a later follow-up once these mechanics settle. Opening that repo boundary now widens
+blast radius without changing any core design decision here.
+
+### File ownership (next implementation pass)
+
+| Lane | Owns (writes) | Parity requirement |
+|---|---|---|
+| C — consult | `skills/consult/SKILL.md`, `relay-automation/consult.sh`, `utils/py/consult.py`, `test/consult.sh` | bash `consult.sh` ↔ Python `consult.py` must stay at parity (GH-223/GH-255) — any stamp change lands in both. |
+| R — relay | `relay-automation/relay-turn-lib.sh`, `relay-automation/new-relay.sh`, `relay-automation/README.md`, `test/relay-uncited-findings.sh` | `rtl_has_uncited_claim` is shared by both call sites — keep the predicate single-sourced. |
+| — deferred | `giant-brains-claude-skills` (external) | later follow-up issue; not this pass. |
+
+Lanes C and R touch disjoint files → safe to run concurrently. The only shared dependency is the
+`rtl_has_uncited_claim` predicate (already single-sourced in `relay-turn-lib.sh` and consumed by
+consult), so a contract change to it is a **Lane R deliverable Lane C consumes**, not a collision.
 
 ## Swarm Preflight Contract
 ```json
