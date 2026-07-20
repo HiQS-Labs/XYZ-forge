@@ -47,6 +47,7 @@ TESTS=(
   "shim-worktree.sh"
   "marathon-yaml.sh"
   "marathon-drive.sh"
+  "hq-marathon-live.sh"          # GH-218 (cross-repo live marathon status)
   "debug-mantra.sh"              # GH-162 (debug-mantra auto-trigger note on a phase's prior attempt)
   "lane-attempt-cap.sh"
   "driver-lock.sh"
