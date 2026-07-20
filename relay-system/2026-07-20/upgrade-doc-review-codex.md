@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 5
+ROUND: 3 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -102,5 +102,16 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 - [Should] `UPGRADE.md:301-307` requires four documentation surfaces, including `UPGRADE.md`, yet its proof command searches only `README*`, `AGENTS.md`, and `CHANGELOG.md`; it cannot “return all four surfaces.” Include `UPGRADE.md` in the command and state the expected four filenames.
 - [Pass] The post-hardening `-` empty-string semantics and condition-line-only invariant are accurate; `marathon-plan.sh`'s extra translation does not match the `grep '\[\['` filter. The complete vendor does carry `skills/` (`relay-automation/xyz-vendor.sh:238-262`), so the Type-B locator path itself is valid. No additional Node dependency was found among the 10 non-marathon-plan Python twins.
 **Commit:** harness-managed
+
+### Round 3 · Producer · claude-a · 2026-07-20 16:58 PDT
+**Decisions on proposals:** (each verified against the repo/shell before disposing)
+- `[Blocker]` version gate swallowed by `|| { echo; }` — **Implemented.** You were right and I verified it: `python3 -c 'sys.exit(1)' || { echo x; }` exits **0**, so my r2 fix printed the warning and continued. Rewrote §2 as a saved `preconditions.sh` with an accumulator (`fail=0; note(){ …; fail=1; }`) that reports every failed gate and `exit "$fail"`s nonzero — proven: a forced-fail predicate now prints `BLOCK:` and exits 1. Framed as a script to run (not paste), because `exit` in an interactive paste would kill the shell — which is also why I did NOT just add bare `exit 1`. Applied the same real-gate treatment to the branch-behind and dirty-tree checks.
+- `[Blocker]` per-copy permanent rollback mutates the shared root — **Implemented.** Verified `xyz-sync.sh:45-47` derives its harness source from its own script path, confirming your hazard: `git -C <root> revert` to roll back one leaf alters the live root. Replaced it (§7 + Appendix A) with an isolated `git worktree add /tmp/xyz-preflip <flip-sha>^` → run THAT checkout's `xyz-sync.sh update <dir>` → `git worktree remove`. Live root stays flipped.
+- `[Should]` GH-234 caveat stale — **Modified.** Verified both halves: `find-harness.sh:113-117` DOES set `TICK_REPO_ROOT="$CALLER_ROOT"` when vendored (your reading is correct), BUT `gh issue view 234` shows it **still OPEN**. So I didn't fully remove the caveat (that would over-trust an open issue) nor keep the blanket "avoid `--env`" (which you correctly called false). Reworked §9 to use the canonical `eval "$("$L" --env)"; cd "$HARNESS"` flow, note the locator already corrects the vendored root, and reduce the caveat to a one-line **sanity-check** (`echo "$TICK_REPO_ROOT"` must not end in `/.xyz`; re-vendor if it does — covers a leaf not yet re-vendored since the fix).
+- `[Should]` Phase-4 proof omits UPGRADE.md — **Implemented.** Added `UPGRADE.md` to the grep and named all four expected files (§6).
+**Did:** All 4 findings actioned (2 Impl + 1 Impl + 1 Modified + 1 Impl). §2 script passes `bash -n` and the accumulator exit path is behaviorally proven (exit 1 on forced fail).
+**Verification:** `bash -n` on the extracted §2 script → OK; accumulator forced-fail → prints `BLOCK` + exits 1. Fix landing reconciled by re-grep: B1@(accumulator+`exit "$fail"`), B2@362, Should-3@423, Should-4@323. All present.
+**Re-review this:** (1) Is the §2 `preconditions.sh` now a correct hard gate — accumulator + nonzero exit, no swallow, no interactive-shell footgun? (2) Is the isolated-worktree per-copy rollback (§7) actually safe and runnable — does it leave the live root untouched? (3) Is the GH-234 sanity-check framing now accurate given the issue is open but the code corrects the vendored root?
+**Commit:** pending (harness will commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->

@@ -101,32 +101,48 @@ every entry point is a short-lived process.
 
 Run every check. All must pass on the target repo before Phase 1.
 
+Save this as `preconditions.sh` and **run it** (`bash preconditions.sh`) — do not paste it line-by-line
+into an interactive shell, because the gates call `exit` on failure and would close your terminal. It
+accumulates and reports every failed gate, then exits nonzero if any failed (so CI or an agent can
+branch on it):
+
 ```bash
+#!/usr/bin/env bash
+# Preconditions for the XYZ_PYTHON default flip. Exit 0 = all gates pass.
+fail=0; note() { echo "  BLOCK: $*" >&2; fail=1; }
+
 # (a) python3 present AND >= 3.8 — the shims exec `python3` with no fallback and no presence guard.
 #     `--version` alone is NOT a gate: it exits 0 on 3.7 too. Enforce the floor with a predicate.
-python3 --version                                             # readable output
-python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' \
-  || { echo "python3 >= 3.8 required — do not flip"; }        # hard gate; must exit 0
+python3 --version || note "python3 not found — the flip bricks every entry point"
+python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 8) else 1)' \
+  || note "python3 >= 3.8 required — do not flip"
 
 # (a2) node present — NOT optional. utils/py/marathon_plan.py runs `node --version` and hard-exits
-#      ("node is required ... but not found in PATH", marathon_plan.py:105-107) before delegating the
-#      real work to utils/py/_marathon_plan_node.js. So the marathon-plan entry point is Python+Node,
-#      not pure Python: a box with python3 but no node passes (a) and still bricks marathon-plan.
-node --version               # must succeed, or exclude marathon-plan from the flip (keep its default 0)
+#      ("node is required ... but not found in PATH", marathon_plan.py:105-107) before delegating to
+#      utils/py/_marathon_plan_node.js. marathon-plan is Python+Node; a box with python3 but no node
+#      passes (a) and still bricks marathon-plan. (Non-fatal here: you MAY exclude marathon-plan from
+#      the flip and keep its Bash default — so this is a warning, not a hard block.)
+node --version || echo "  WARN: node missing — exclude marathon-plan from the flip (keep its default 0)" >&2
 
 # (b) clean, CURRENT branch — a clean status is NOT proof the branch is up to date.
 #     Use bare `git fetch origin` (NOT `git fetch origin <branch>`): the bare form refreshes ALL
 #     remote-tracking refs via the configured refspec, so the origin/<branch> the compare reads is
 #     guaranteed fresh. An explicit-branch fetch can, depending on refspec config, update only
 #     FETCH_HEAD and leave origin/<branch> stale — silently defeating this very check.
-git fetch -q origin
-git rev-list --left-right --count "origin/$(git branch --show-current)...HEAD"   # want: 0<TAB>0 (or ahead-only if you know why)
-git status --porcelain       # want: empty
+git fetch -q origin || note "git fetch failed"
+_ab="$(git rev-list --left-right --count "origin/$(git branch --show-current)...HEAD")"  # want: 0<TAB>0
+echo "  ahead/behind (behind<TAB>ahead): $_ab"
+[ "$(printf '%s' "$_ab" | cut -f1)" = 0 ] || note "branch is BEHIND origin — pull before flipping"
+[ -z "$(git status --porcelain)" ] || note "working tree dirty — commit/stash before flipping"
 
 # (c) the port's own baseline is green in BOTH modes before you touch defaults.
 #     Bash baseline first, then Python — same commit, soft-fail so you see every gap at once.
+#     (Informational: attribution is a human/agent judgement — see the Gate note below. Not auto-scored.)
 TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh            ; echo "bash exit=$?"
 TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 XYZ_PYTHON=1 bash validate.sh; echo "py   exit=$?"
+
+[ "$fail" = 0 ] && echo "PRECONDITIONS: all hard gates pass" || echo "PRECONDITIONS: FAILED — do not flip"
+exit "$fail"
 ```
 
 **Gate:** the diff between those two runs must contain **zero Python-attributable failures** — a test
@@ -304,7 +320,8 @@ An un-discoverable rollback lever is a broken rollback lever. Land these in the 
 - **CHANGELOG**: the flip entry, naming the flip SHA and both rollback levers verbatim.
 - This `UPGRADE.md`: mark the flip done, record the date and SHA.
 
-**Proof:** `grep -rl 'XYZ_PYTHON=0' README* AGENTS.md CHANGELOG.md` returns all four surfaces.
+**Proof:** `grep -rl 'XYZ_PYTHON=0' README* AGENTS.md CHANGELOG.md UPGRADE.md` returns all four named
+surfaces (README, AGENTS.md, CHANGELOG.md, UPGRADE.md).
 **Rollback:** docs-only; revert with the flip if the flip is reverted.
 
 ---
@@ -337,8 +354,16 @@ relay-automation/xyz-sync.sh update --all
 
 **Per-copy rollback** (the fleet has no single revert):
 - Runtime, any single consumer, instant: `XYZ_PYTHON=0` in that repo's environment.
-- Permanent, one consumer: re-vendor it from a root that is on the pre-flip commit
-  (`git -C <root> revert <flip-sha>` then `xyz-sync.sh update <dir>`), OR pin that copy and skip it.
+- Permanent, one consumer: **do NOT `git -C <root> revert` the live root to do this.** `xyz-sync.sh`
+  always derives its harness source from its own script location (`xyz-sync.sh:45-47`), so reverting the
+  active root to roll back one leaf mutates the shared source and invites an accidental fleet rollback.
+  Instead, re-vendor that one leaf from an **isolated checkout** of the pre-flip tree:
+  ```bash
+  git worktree add /tmp/xyz-preflip <flip-sha>^          # isolated pre-flip harness, root untouched
+  /tmp/xyz-preflip/relay-automation/xyz-sync.sh update <dir>   # re-vendors ONLY <dir> from the old tree
+  git worktree remove /tmp/xyz-preflip
+  ```
+  — or simply pin that copy and skip it. The live root stays flipped throughout.
 
 **Proof:** `xyz-sync.sh check --all` shows every copy at the expected `source_commit`; each upgraded
 consumer's own test/smoke path is green with the var unset.
@@ -387,11 +412,16 @@ When executing elsewhere:
    # Type A (full clone):   skills/relay-xyz/find-harness.sh
    # Type B (vendored leaf): .xyz/skills/relay-xyz/find-harness.sh   (at the consumer repo root)
    L="skills/relay-xyz/find-harness.sh"; [ -x "$L" ] || L=".xyz/skills/relay-xyz/find-harness.sh"
-   "$L" --check     # prints the resolved harness root + which type; every command in this doc is relative to it
+   "$L" --check                 # prints the resolved harness root + which type
+   eval "$("$L" --env)"; cd "$HARNESS"   # canonical: exports HARNESS + TICK_REPO_ROOT, cds into the harness
    ```
-   **Caveat (GH-234, still open):** do **not** drive a vendored (Type-B) flow through `"$L" --env` yet —
-   its `TICK_REPO_ROOT` export is known to resolve one directory too deep for a `.xyz/` install. Use
-   `--check` to locate + confirm, and `cd` to the printed root manually, until GH-234 lands.
+   The current locator already corrects the vendored case — it sets `TICK_REPO_ROOT="$CALLER_ROOT"`
+   (not `$HARNESS/.xyz`, "one directory too deep") when it detects a `.xyz/` install
+   (`find-harness.sh:113-117`). **Residual (GH-234, still open):** the issue tracks a
+   `TICK_REPO_ROOT`-too-deep case that the current code appears to fix but the issue is not yet closed,
+   AND a leaf that has **not** been re-vendored since that fix may still ship the older locator. So on a
+   Type-B leaf, after `--env`, sanity-check `echo "$TICK_REPO_ROOT"` points at the **consumer repo root**,
+   not its `.xyz/` — if it ends in `/.xyz`, re-vendor the leaf (or `cd` to the caller root by hand).
 2. **Type A only — re-run §2 preconditions incl. the two-mode baseline.** `python3`/`node` presence, a
    clean/current branch, and a same-commit sweep are repo-local facts, not inherited from here. §3's
    gap *numbers* are this repo's snapshot; regenerate them on a Type-A target — the *method* ports, the
@@ -444,7 +474,7 @@ When executing elsewhere:
 | A whole session / CI job | `export XYZ_PYTHON=0` at the top |
 | Root repo, permanent | `git revert <flip-sha>` (the isolated Phase-3 commit) |
 | One vendored consumer, now | `XYZ_PYTHON=0` in that repo's env |
-| One vendored consumer, permanent | re-vendor from a reverted root, or pin/skip it |
+| One vendored consumer, permanent | re-vendor from an isolated `git worktree add <path> <flip-sha>^` checkout (NOT by reverting the live root — see §7), or pin/skip it |
 | Whole fleet | there is no single lever — `XYZ_PYTHON=0` env-wide stops the bleeding; permanent is O(N) re-vendors |
 
 ## Appendix B — Why the Bash body must never be deleted
