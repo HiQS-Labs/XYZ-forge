@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 5
 
@@ -67,5 +67,23 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 - Is anything in the "out of scope / stays Bash" list actually ported (making the list wrong)?
 - Does the marathon-plan Python path's Node dependency (`_marathon_plan_node.js`) need calling out as a precondition alongside `python3`?
 **Commit:** none (comments only)
+
+### Round 1 · Reviewer · agy · 2026-07-20 16:25 PDT
+VERDICT: FAIL
+Basis: textual only (doc against repo state)
+**Findings & proposals:**
+- `[Pass]` Shim mechanics: Confirmed exactly 11 entry points contain the `${XYZ_PYTHON:-0}` shim. The out-of-scope list (`relay-turn-lib.sh`, `marathon.sh`, etc.) is genuinely unported.
+- `[Pass]` `:-` vs `-` semantics: The bash behavior claim and truth table are entirely correct (`:-` acts on empty and unset, `-` only acts on unset).
+- `[Pass]` `xyz-sync.sh`: The `list`, `update`, `check`, and `delete` subcommands are all present and function as documented.
+- `[Pass]` Test harness: `TEST_SOFT_FAIL=1` is implemented correctly in `test/_setup.sh` and the two-mode baseline subtraction method is sound.
+- `[Blocker]` Node.js dependency: The python port of `marathon-plan.sh` (`utils/py/marathon_plan.py`) shells out to `node utils/py/_marathon_plan_node.js` and explicitly errors if `node` is missing from `PATH`.
+  - **Proposal:** Add `node --version` to the Preconditions (§2) alongside `python3`.
+- `[Blocker]` Vendored consumer runnability: §9 tells the operator to regenerate the parity gaps "on the target with the `TEST_SOFT_FAIL=1` two-mode sweep". However, point 4 immediately notes that a vendored copy "has no `PROJECT/` or `validate.sh` of its own". Without `validate.sh`, the two-mode sweep cannot be run as described.
+  - **Proposal:** Clarify how a vendored consumer resolves Phase 1. If leaf consumers are not expected to resolve parity gaps themselves, state that Phase 1 is skipped for vendored consumers. Otherwise, provide the correct commands for testing a vendored harness.
+**Answers:**
+- *Truth table empty-string row correct?* Yes, empty string will evaluate to `""` with `${XYZ_PYTHON-1}`, which falls back to Bash, exactly as intended.
+- *Are out-of-scope scripts actually ported?* No, none of them have `.py` equivalents in `utils/py/`, making the list accurate.
+- *Does `_marathon_plan_node.js` need calling out?* Yes, see the blocker finding above.
+**Commit:** pending (harness will commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
