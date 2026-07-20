@@ -50,7 +50,11 @@ export TICK
 
 WORK="$(mktemp -d -t "tick-${TEST_NAME}.XXXXXX")"
 export WORK
-trap 'rm -rf "$WORK"' EXIT
+# Most tests end with a bare `exit 0`, which is correct under fail-fast (a failed
+# assertion exits 1 before reaching it). Under TEST_SOFT_FAIL=1 that would report
+# a failing file as green, so the trap re-asserts a non-zero code when any
+# assertion failed. With TEST_SOFT_FAIL unset this preserves the code verbatim.
+trap '_rc=$?; rm -rf "$WORK"; if [ "${TEST_SOFT_FAIL:-0}" = "1" ] && [ "${FAIL:-0}" -gt 0 ]; then exit 1; fi; exit "$_rc"' EXIT
 
 REMOTE="$WORK/remote.git"
 A="$WORK/agent-a"
@@ -95,7 +99,11 @@ export TICK_REPO_ROOT="$A"
 PASS=0
 FAIL=0
 pass() { echo "  PASS: $*"; PASS=$((PASS+1)); }
-fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); exit 1; }
+# TEST_SOFT_FAIL=1 keeps going after a failed assertion so one run enumerates every
+# gap instead of stopping at the first. Default (unset/0) is fail-fast, unchanged.
+# Soft-fail output is a lead list, not a verdict: later assertions may cascade off
+# the state a failed one left behind. The file-level pass/fail stays authoritative.
+fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); [ "${TEST_SOFT_FAIL:-0}" = "1" ] || exit 1; }
 
 echo "== test: $TEST_NAME =="
 echo "  workdir: $WORK"
