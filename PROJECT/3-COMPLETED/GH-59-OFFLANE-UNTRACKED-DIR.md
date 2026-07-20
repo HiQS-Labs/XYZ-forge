@@ -2,7 +2,7 @@
 gh_issue: 59
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/59
 title: relay-turn-lib — allowlisted artifact in an untracked dir trips spurious off-lane (exit 6)
-status: Proposed (1-INBOX — not yet active)
+status: Closed — Proposed (1-INBOX — not yet active)
 created: 2026-07-02
 doc_type: bug
 complexity: 3

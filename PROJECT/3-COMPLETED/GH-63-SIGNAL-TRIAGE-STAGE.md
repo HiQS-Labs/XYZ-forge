@@ -2,7 +2,7 @@
 gh_issue: 63
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/63
 title: Self-healing harness — triage stage for inbound signals before GH-*.md capture
-status: Ready (rubric CONFIRMED + contracted — fully-ready lane)
+status: Closed — Ready (rubric CONFIRMED + contracted — fully-ready lane)
 created: 2026-06-30
 updated: 2026-07-02
 owner: noel

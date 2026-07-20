@@ -2,7 +2,7 @@
 gh_issue: 56
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/56
 title: marathon-drive — reconcile/fresh-id a leaked tick token before re-seed
-status: Proposed (1-INBOX — not yet active)
+status: Closed — Proposed (1-INBOX — not yet active)
 created: 2026-07-02
 doc_type: bug
 complexity: 2

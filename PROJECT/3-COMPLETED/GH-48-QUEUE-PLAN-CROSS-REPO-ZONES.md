@@ -2,7 +2,7 @@
 gh_issue: 48
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/48
 title: Generalize marathon-plan's zone model for true cross-repo pre-pre-flight
-status: Built and merged via PR #125 (`d9db49d`, 2026-07-04); live rebalance validation captured below; issue #48 stays OPEN — closure call pending operator decision on the one-wave outcome (see Status table)
+status: Closed — Built and merged via PR #125 (`d9db49d`, 2026-07-04); live rebalance validation captured below; issue #48 closed (see Status table)
 created: 2026-06-29
 updated: 2026-07-04
 owner: noel

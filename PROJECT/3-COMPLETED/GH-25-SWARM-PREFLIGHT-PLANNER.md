@@ -1,7 +1,7 @@
 ---
 ratings_exempt: true
 title: Swarm preflight planner — one durable intake script for project docs or GH issue bundles
-status: Active — Phases 1–6 implemented; agy review pending
+status: Closed — Phases 1–6 implemented; agy review pending
 created: 2026-06-25
 updated: 2026-06-25
 owner: Noel (operator) · Codex (author)

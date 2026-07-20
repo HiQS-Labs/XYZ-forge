@@ -2,7 +2,7 @@
 gh_issue: 205
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/205
 title: "Marathon: 300s per-turn wall-clock cap (RELAY_TURN_TIMEOUT_S) too short for real code+test builds → false HALT"
-status: built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green) — PR pending
+status: Closed — built 2026-07-15 on marathon branch (agy-reviewed, Approved, gate green)
 created: 2026-07-15
 updated: 2026-07-15
 owner: noel

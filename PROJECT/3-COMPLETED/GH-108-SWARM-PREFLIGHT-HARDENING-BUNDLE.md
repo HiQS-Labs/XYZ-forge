@@ -3,7 +3,7 @@ gh_issue: 108
 gh_issues_bundled: [108, 126, 127]
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/108
 title: "swarm-preflight hardening bundle: gate-scoping caveat (#108) + covering-test match tightening (#126) + fs-touching regex gap (#127)"
-status: captured 2026-07-04, rated, ready to build
+status: Closed — captured 2026-07-04, rated, ready to build
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel

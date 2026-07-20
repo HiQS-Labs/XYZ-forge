@@ -1,10 +1,22 @@
 #!/usr/bin/env python3
 """
-Gemma-driven Aider variation tester.
+Gemma-driven variation tester (Aider by default; pluggable per GH-191).
 
-Runs a grid of Aider CLI variations against a target pipeline (Aider -> OpenRouter
+Runs a grid of CLI variations against a target pipeline (Aider -> OpenRouter
 -> GLM 5.2 by default), asks a local Gemma model (served by LM Studio) to classify
 each result, and appends one JSON record per variation to error_log.jsonl.
+
+GH-191: the harness command is pluggable. By default (no `command_template` in
+variations.yaml) this runs the reference Aider config exactly as before. To point
+it at a different CLI, declare in variations.yaml:
+  command_template: ["some-cli", "--flag", "{some_key}", "--message", "{message}"]
+  variation_keys: [some_key]
+  some_key: [a, b, c]
+`command_template` tokens are substituted via str.format against the variation
+dict plus {model}/{message} (argv-list substitution, never a shell string, so
+values can't inject shell metacharacters). `variation_keys` names which
+grid entries form the itertools.product grid; omit both to keep today's Aider
+grid (edit_formats/map_tokens/auto_commits).
 
 Polls control.json before every iteration so a supervising frontier model (Claude)
 can abort the run mid-flight.
@@ -106,6 +118,20 @@ def ask_gemma(base_url: str, model: str, prompt: str, timeout: int = 60) -> dict
 
 
 def build_variations(grid: dict) -> list[dict]:
+    """Build the cartesian-product grid of variations to test.
+
+    GH-191: if variations.yaml declares `variation_keys` (a list of its own
+    grid key names), the product is built generically over those — the keys
+    land in each combo dict verbatim, so a non-Aider harness can express any
+    flag surface. Without `variation_keys`, falls back to the original Aider
+    reference grid (edit_formats/map_tokens/auto_commits) unchanged, so every
+    existing variations.yaml keeps working exactly as before.
+    """
+    variation_keys = grid.get("variation_keys")
+    if variation_keys:
+        values = [grid[k] for k in variation_keys]
+        return [dict(zip(variation_keys, combo)) for combo in itertools.product(*values)]
+
     keys = ["edit_formats", "map_tokens", "auto_commits"]
     values = [grid[k] for k in keys]
     combos = []
@@ -240,8 +266,11 @@ def detect_edit(repo: str, base_sha: str, keep: list[str]) -> bool:
     return False
 
 
-def run_aider(repo: str, model: str, variation: dict, message: str, timeout: int,
-              openai_api_base: str | None = None, openai_api_key: str | None = None):
+def build_aider_cmd(model: str, variation: dict, message: str,
+                     openai_api_base: str | None = None, openai_api_key: str | None = None) -> list[str]:
+    """Default/reference argv builder — Aider's own CLI surface, unchanged
+    from before GH-191. Used whenever variations.yaml doesn't declare a
+    `command_template`, so the stock config keeps working exactly as before."""
     cmd = [
         "aider",
         "--model", model,
@@ -258,10 +287,27 @@ def run_aider(repo: str, model: str, variation: dict, message: str, timeout: int
     # endpoint (e.g. LM Studio) can stand in for the OpenRouter target.
     if openai_api_base:
         cmd += ["--openai-api-base", openai_api_base, "--openai-api-key", openai_api_key or "dummy"]
+    return cmd
 
+
+def build_templated_cmd(template: list, variation: dict, model: str, message: str) -> list[str]:
+    """GH-191: build argv for a pluggable, non-Aider harness from
+    variations.yaml's `command_template` — a list of argv tokens, each
+    substituted via str.format against the variation dict plus {model}/
+    {message}. This is list-based (never a shell string), so a variation
+    value can't inject shell metacharacters."""
+    context = {"model": model, "message": message, **variation}
+    return [str(tok).format(**context) for tok in template]
+
+
+def run_harness(cmd: list[str], repo: str, timeout: int) -> dict:
+    """Execute one variation's argv and capture the result. Harness-agnostic
+    (GH-191): works the same whether `cmd` came from build_aider_cmd (the
+    default) or build_templated_cmd (a pluggable harness) — this is just the
+    process/timeout/output-capture plumbing that used to live in run_aider()."""
     start = time.time()
-    # Run in its own process group so a timeout can kill any children aider
-    # spawns, not just the direct aider process.
+    # Run in its own process group so a timeout can kill any children the
+    # harness spawns, not just the direct process.
     proc = subprocess.Popen(
         cmd, cwd=repo, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, errors="replace", start_new_session=True,
@@ -320,7 +366,7 @@ def file_issue(log_path: Path, gh_repo: str, test_name: str, dry_run: bool) -> N
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--repo", required=True, help="scratch git repo to run aider in")
+    ap.add_argument("--repo", required=True, help="scratch git repo to run the harness in")
     ap.add_argument("--variations", required=True, help="path to variations.yaml")
     ap.add_argument("--log", default="error_log.jsonl")
     ap.add_argument("--control", default="control.json")
@@ -391,9 +437,17 @@ def main():
             break
 
         reset_repo(args.repo, base_sha, keep=keep_files)
-        result = run_aider(args.repo, grid["model"], variation, grid["message"], timeout,
-                            openai_api_base=aider_openai_api_base, openai_api_key=aider_openai_api_key)
-        # Deterministic signal: did aider actually change the tree? Captured
+        # GH-191: variations.yaml's optional `command_template` swaps in a
+        # pluggable, non-Aider harness; without it, keep building today's
+        # exact Aider argv (build_aider_cmd) so existing configs are unaffected.
+        command_template = grid.get("command_template")
+        if command_template:
+            cmd = build_templated_cmd(command_template, variation, grid["model"], grid["message"])
+        else:
+            cmd = build_aider_cmd(grid["model"], variation, grid["message"],
+                                   openai_api_base=aider_openai_api_base, openai_api_key=aider_openai_api_key)
+        result = run_harness(cmd, args.repo, timeout)
+        # Deterministic signal: did the harness actually change the tree? Captured
         # before the next iteration's reset wipes it (GH-195 review).
         result["edited"] = detect_edit(args.repo, base_sha, keep_files)
 
@@ -402,7 +456,7 @@ def main():
                 "status": "fail",
                 "severity": "high",
                 "category": "timeout",
-                "likely_cause": f"Aider did not finish within {timeout}s",
+                "likely_cause": f"the harness did not finish within {timeout}s",
             }
         else:
             prompt = CLASSIFY_PROMPT.format(

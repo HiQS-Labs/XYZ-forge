@@ -2,7 +2,7 @@
 gh_issue: 133
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/133
 title: "flaky: relay-dep-drift.sh case 4 'turn still committed' fails ~1-in-3, reproducible on untouched main"
-status: Proposed (1-INBOX — not yet active)
+status: Closed — Proposed (1-INBOX — not yet active)
 created: 2026-07-05
 updated: 2026-07-05
 owner: noel

@@ -242,6 +242,20 @@ if [[ ! -f "$RELAY_FILE" && -n "${TARGET_ROOT:-}" && "$RELAY_FILE" != /* && -f "
 fi
 [[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
 
+# GH-245 defect 1: a review turn (ALLOW_PATHS="") can only write the relay file. Under --target-root
+# the turn's isolation worktree is based on the TARGET repo, so if the relay file resolves OUTSIDE that
+# target root the reviewer physically cannot append its findings (codex rejects the out-of-project
+# write) — the whole turn is completed and then discarded at full cost. Refuse fast at startup instead
+# of spending the turn. The documented fix is to vendor the harness into the target repo so the relay
+# file, harness and source share one writable root, then drop --target-root.
+if ((REVIEW_ONCE)) && [[ -n "${TARGET_ROOT:-}" ]]; then
+  _gh245_tr="$(cd "$TARGET_ROOT" 2>/dev/null && pwd -P)"
+  _gh245_rf="$(cd "$(dirname "$RELAY_FILE")" 2>/dev/null && pwd -P)/$(basename "$RELAY_FILE")"
+  if [[ -n "$_gh245_tr" && "$_gh245_rf" != "$_gh245_tr"/* ]]; then
+    die "--target-root review turn cannot report: relay file '$RELAY_FILE' resolves outside the target root '$TARGET_ROOT', so a review turn (ALLOW_PATHS=\"\") has no writable path for its findings and the turn would be discarded after full cost. Vendor the harness into the target repo (relay-automation/xyz-vendor.sh '$TARGET_ROOT') and drop --target-root, or move the relay thread under the target root."
+  fi
+fi
+
 # GH-45: per-lane attempt cap. A real build/review LOOP counts; a single --review-once turn and a
 # dry-run do not (they can't rabbit-hole). Keyed on the relay task, stable across re-fires.
 if ((DRY_RUN == 0)) && ((REVIEW_ONCE == 0)); then
@@ -360,6 +374,12 @@ if [[ -n "$ARTIFACT_FILE" ]]; then
 fi
 
 file_status() { sed -n 's/^STATUS:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
+# GH-245 defect 2: evidence a turn actually DID something, independent of token movement — the NEXT:
+# handoff pointer and a content signature of the relay file. A review that appends findings changes
+# the file content (and usually flips NEXT:) even when the reviewer leaves the token claimed; an empty
+# token-only move changes neither. Used by the --review-once oracle so it classifies on work, not token.
+next_pointer() { sed -n 's/^NEXT:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
+relay_content_sig() { git hash-object "$RELAY_FILE" 2>/dev/null || cksum "$RELAY_FILE" 2>/dev/null | awk '{print $1}' || echo "?"; }
 terminal_status() { case "$1" in Approved|Closed) return 0 ;; *) return 1 ;; esac; }
 # Escalated is TERMINAL BY DESIGN: the reviewer handed back to a human (e.g. at the round cap),
 # typically WITHOUT releasing the token. The explicit status IS the intent signal — a true stall
@@ -387,6 +407,8 @@ round=0
 while ((round < ROUND_CAP)); do
   s="$(file_status)"
   IFS=$'\t' read -r tstatus actor < <(token_state)
+  rfsig="$(relay_content_sig)"   # GH-245: relay-file content signature BEFORE the turn (work evidence)
+  nextp="$(next_pointer)"        # GH-245: NEXT: handoff pointer BEFORE the turn
 
   # Terminal CLOSE requires AGREEMENT: file STATUS terminal AND the RELAY-TURN
   # token no longer live (done/gone). file-terminal-but-token-live is a leaked
@@ -497,6 +519,8 @@ while ((round < ROUND_CAP)); do
   # No-progress guard (skipped once terminal — the close check at loop top handles that).
   IFS=$'\t' read -r ntstatus nactor < <(token_state)
   ns="$(file_status)"
+  nrfsig="$(relay_content_sig)"   # GH-245: relay-file content signature AFTER the turn
+  nnextp="$(next_pointer)"        # GH-245: NEXT: handoff pointer AFTER the turn
   # A by-design Escalated handback this turn is terminal, NOT a stall — even if the reviewer left the
   # token live. Catch it before the no-progress guard so it doesn't read as exit 3 (GH-18 #5).
   if escalated_status "$ns"; then
@@ -516,12 +540,17 @@ while ((round < ROUND_CAP)); do
       xyz_relay_emit green
       exit 0
     fi
-    if [[ "$ntstatus:$nactor" != "$prev" || "$ns" != "$s" ]]; then
-      printf 'relay-drive: review-once — reviewer completed a turn (STATUS: %s, token %s:%s); non-approval handback, not a stall\n' "$ns" "$ntstatus" "$nactor"
+    # GH-245 defect 2: classify on EVIDENCE OF A TURN — the relay file's content changed (findings
+    # appended), the NEXT: pointer flipped, or the STATUS word changed — NOT on token movement alone.
+    # A token-only move with an unchanged relay file is an empty turn (Run A: was mis-scored 5); a
+    # relay-file append with the token left claimed is a real review (Run B: was mis-scored 3). Token
+    # state is deliberately dropped from the oracle here — it is exactly the misleading signal.
+    if [[ "$nrfsig" != "$rfsig" || "$nnextp" != "$nextp" || "$ns" != "$s" ]]; then
+      printf 'relay-drive: review-once — reviewer completed a turn (STATUS: %s, token %s:%s; relay-file/NEXT changed); non-approval handback, not a stall\n' "$ns" "$ntstatus" "$nactor"
       xyz_relay_emit orange
       exit 5
     fi
-    printf 'relay-drive: review-once — reviewer took no action (STATUS unchanged: %s, token still %s) — genuine stall\n' "$ns" "$prev" >&2
+    printf 'relay-drive: review-once — reviewer took no action (relay file unchanged, NEXT unchanged, STATUS still %s, token %s:%s) — genuine stall\n' "$ns" "$ntstatus" "$nactor" >&2
     xyz_relay_emit red
     exit 3
   fi

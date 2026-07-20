@@ -2,7 +2,7 @@
 gh_issue: 137
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/137
 title: "swarm-preflight: covering-test inference can inject test/.. (repo root) + generated files into ALLOW_PATHS"
-status: captured 2026-07-05, rated — independent (swarm-preflight) lane, marathon-ready
+status: Closed — captured 2026-07-05, rated — independent (swarm-preflight) lane, marathon-ready
 created: 2026-07-05
 updated: 2026-07-05
 owner: noel

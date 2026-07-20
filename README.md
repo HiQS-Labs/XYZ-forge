@@ -181,10 +181,21 @@ prints its own pass count; if it's green, you're good.
   Claude Code only scans `~/.claude/skills/`, so a fresh clone won't see these until you symlink them in —
   run `bash skills/relay-xyz/install.sh` once per clone/machine to make the `/relay-xyz` skill discoverable
   (see [skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md#first-time-setup-on-a-new-clone-or-machine-make-the-skill-discoverable)).
+- `skills/marathon-triage/`, `skills/marathon-cleanup/`, `skills/10days/` — the marathon operator
+  skills: triage PDDA intake + active work into a ranked, preflight-checked, collision-safe queue
+  ([`marathon-triage`](skills/marathon-triage/SKILL.md)); archive only lanes with verified completion
+  evidence after a run ([`marathon-cleanup`](skills/marathon-cleanup/SKILL.md)); and — the one deliberate,
+  operator-authorized auto-fire exception to the "ask before firing" rule — sweep recent GitHub issues into
+  a marathon and execute it unattended ([`10days`](skills/10days/SKILL.md)). See [GH-240](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/240).
+- `skills/file-xyz-bug/` — file a harness bug from **any other repo** into this repo's `PROJECT/1-INBOX/`
+  (GH issue + capture doc + ROADMAP park), without touching the repo you're standing in.
 - `relay-system/` — relay transcripts, reviews, and dogfood runs.
 - `PROJECT/2-WORKING/` — active project docs and working plans.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
 - `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/3-COMPLETED/GH-25-SWARM-PREFLIGHT-PLANNER.md).
+- `utils/marathon-plan.sh` — the marathon planner/ranker: scores the whole ROADMAP ledger into waves of disjoint, collision-safe write-sets, and with `--deep` delegates to `swarm-preflight.sh --dry-run` per item for an authoritative freshness verdict. Writes `PROJECT/2-WORKING/MARATHON-PLAN-<date>.md` — the "marathon file" the operator skills act on.
+- `utils/swe-diagram/` — dependency-free architecture/Git-history diagram generator; `layout: "git-lanes"` renders stacked branch lanes with commits left-to-right, driven by a local ref-reading generator that emits an auditable JSON spec plus self-contained HTML. See [GH-201](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201).
+- `utils/git-bundle-snapshot.sh` + `relay-automation/hooks/gh177-sandbox-test-guard.sh` — the wipe-prevention layer: rotated `git bundle --all` backups on a daily cron, plus a PreToolUse hook that blocks running the test suite under a *sandboxed* Claude Code Bash call (the ignition for the GH-177 repo wipes). See [GH-233](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/233).
 - `install.sh` — materializes the `tick` runtime (`bin/tick` + `src/*.js`) into an external repo and records the install in a per-user, machine-local registry (`~/.config/xyz/registry.tsv`). See "Install into another repo" below.
 - `utils/hq/` — **HQ**, the multi-repo command center (`hq.sh` + `hq-lib.sh`); driven by the user-level `/hq` skill in `skills/hq/`. See [HQ — multi-repo command center](#hq--multi-repo-command-center) below.
 

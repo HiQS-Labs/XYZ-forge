@@ -244,13 +244,16 @@ XYZ_JSON_PATH="$XRO1" bash "$RELAY_DRIVE" --relay-file "$A/ro1.md" --relay-task 
 [ "$rc" -eq 0 ] && pass "review-once approval exits 0" || fail "review-once approve exit=$rc"
 [ "$(count "$XRO1")" = "1" ] && [ "$(field "$XRO1" 0 health)" = "green" ] && pass "review-once approval → relay/green record" || fail "ro1 count=$(count "$XRO1") health=$(field "$XRO1" 0 health)"
 
-# (RO2) reviewer hands back (changes requested) → exit 5, relay/orange
+# (RO2) reviewer hands back (changes requested) → exit 5, relay/orange.
+# GH-245: a genuine changes-requested handback appends its findings to the relay file — that content
+# evidence is what marks a real review (a bare token move with no findings is Run A, now a stall).
 HANDBACK="$WORK/ro-handback.sh"
 cat > "$HANDBACK" <<EOF
 #!/usr/bin/env bash
 set -u
 export TICK_REPO_ROOT="$A"
 "$TICK" take "\$RELAY_TASK" --agent "\$RELAY_AGENT" >/dev/null 2>&1 || true
+printf '\n### Reviewer · Round 1\nVERDICT: FAIL\nBasis: changes requested.\n' >> "\$RELAY_FILE"
 "$TICK" release "\$RELAY_TASK" --agent "\$RELAY_AGENT" --to builder >/dev/null 2>&1 || true
 exit 0
 EOF

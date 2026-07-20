@@ -1,7 +1,8 @@
 ---
 title: MARATHON.example.yaml understates sequencing and depends_on's scalar-only shape
-status: Docs fix shipped 2026-07-18 — fixes (1)(2)(4) landed on development; fix (3) (marathon-yaml list-form guard) deferred, not done
+status: "Active (2-WORKING) — promoted 2026-07-20; docs fixes (1)(2)(4) shipped, scoped to remaining fix (3): bin/marathon-yaml list-form guard + regression test. Queued in MARATHON-PLAN-2026-07-19-L."
 created: 2026-07-18
+updated: 2026-07-20
 owner: noelsaw1
 gh_issue: 241
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/241
@@ -31,9 +32,10 @@ goal: >
 
 # GH-241 — MARATHON.example.yaml understates sequencing and depends_on's scalar-only shape
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+| What was just completed | What's next |
+|---|---|
+| Docs fixes (1)(2)(4) shipped 2026-07-18 (sequential-execution + halt-on-fail header, `depends_on` marked scalar-single, `--dry-run` recommended). Promoted 1-INBOX → 2-WORKING 2026-07-20 and scoped to the **remaining fix (3)**; queued as a lane in [MARATHON-PLAN-2026-07-19-L](MARATHON-PLAN-2026-07-19-L-POST-MARATHON-FOLLOWUP.md). Contract authored below (auto-drafted, flagged). | Add the `bin/marathon-yaml` guard that rejects the `depends_on` flow-sequence (`[...]`) form with a shape-specific error instead of the generic "unknown phase '[p1]'" (`bin/marathon-yaml:102-105`), plus a `test/marathon-yaml.sh` regression case. Then `swarm-preflight` → fire. |
 
 ## Symptom
 
@@ -166,3 +168,25 @@ anyway — but the misleading error is now documented at the exact place the mis
       would need a `marathon-yaml` case asserting the list form fails with the shape-specific message
 - [x] The fix composes with the existing harness rather than adding a parallel path — both edits land
       in the existing header and field table; no new doc, no new file
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "bin/marathon-yaml", "pattern": "flow sequence" }
+  ],
+  "artifacts": [ "bin/marathon-yaml", "test/marathon-yaml.sh" ],
+  "remediation": {
+    "source": "issue#241",
+    "criteria": "bin/marathon-yaml rejects a depends_on YAML flow-sequence ('[...]') form with a message naming the field's shape (scalar / single phase id), instead of the generic 'depends_on unknown phase' lookup at ~L102-105; a test/marathon-yaml.sh case asserts the list form fails with the shape-specific message and that a scalar depends_on still parses; bash validate.sh no worse than baseline."
+  },
+  "lanes": { "agy_safe": [ "bin/marathon-yaml", "test/marathon-yaml.sh" ], "orchestrator_only": [] }
+}
+```
+
+> **Contract auto-drafted 2026-07-20 (flagged for operator verification).** The `fix_probes` pattern
+> `flow sequence` is a best-effort bug-present marker (currently absent in `bin/marathon-yaml`, so the
+> lane reads ready); reconcile it with the actual error string the fix introduces before relying on the
+> stale/exit-4 verdict.

@@ -2,9 +2,9 @@
 gh_issue: 191
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/191
 title: "ATE: generalize harness runner beyond Aider (pluggable command/flags/classifier)"
-status: captured 2026-07-09, rated — not urgent, deferred backlog
+status: "captured 2026-07-09, promoted 2026-07-19 (contract auto-drafted by /10days)"
 created: 2026-07-09
-updated: 2026-07-09
+updated: 2026-07-19
 owner: noel
 doc_type: enhancement
 complexity: 3
@@ -25,7 +25,15 @@ goal: >
   Generalize utils/ate's variation-test runner so it can fuzz-test other AI coding harnesses, not
   just Aider — right now the skill is described generically but the implementation is hardcoded to
   one specific pipeline.
+roadmap_exempt: false
 ---
+
+# GH-191 · ATE: generalize harness runner beyond Aider
+
+## Status
+| What was just completed | What's next |
+|---|---|
+| Captured 2026-07-09 (deferred backlog, not urgent at the time). Promoted to 2-WORKING 2026-07-19 by the /10days sweep with an auto-drafted Swarm Preflight Contract. Verified still open & reproducible: `utils/ate/scripts/run_variations.py` still hardcodes `run_aider()` with the literal `"aider"` binary and Aider-specific flags/prompt (confirmed via grep 2026-07-19). **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
 
 ## Problem (confirmed in code, not assumed)
 
@@ -45,7 +53,7 @@ editing code. Confirmed in `utils/ate/scripts/run_variations.py`:
   coding pipeline" — the prompt itself, not just the command it runs, is pipeline-specific.
 - `utils/ate/install.sh` checks for the `aider` CLI on `PATH` as a hard dependency.
 
-## Ask / Definition of done
+## Fix direction
 
 - [ ] `run_aider()` replaced with a generic `run_harness(cmd_template, variation, timeout)` that
       builds argv from a `variations.yaml`-declared command template instead of hardcoded flags.
@@ -59,6 +67,16 @@ editing code. Confirmed in `utils/ate/scripts/run_variations.py`:
       Aider config still works as the default/reference example (no regression for the current use
       case).
 
+## Definition of done
+- [ ] `run_aider()` generalized to a `run_harness(cmd_template, variation, timeout)` driven by a
+      `variations.yaml`-declared command template (safe argv-list substitution).
+- [ ] `build_variations()` grid keys are declared by `variations.yaml`, not hardcoded to Aider's three.
+- [ ] `CLASSIFY_PROMPT` takes a parameterized pipeline name/description.
+- [ ] `install.sh`'s `aider` PATH check dropped or made conditional on the configured harness.
+- [ ] `variations.example.yaml` and `SKILL.md` updated; existing Aider config still works as the
+      default/reference example with no regression.
+- [ ] `bash validate.sh` no worse than baseline.
+
 ## Reversibility & blast radius
 
 Low. Contained entirely to `utils/ate/` (a dev-tooling skill, not the relay/harness kernel);
@@ -69,4 +87,22 @@ existing Aider behavior is the reference config being preserved, not replaced. E
 Surfaced 2026-07-09 while hardening the ATE skill (chained Aider -> capture -> document -> GitHub
 issue cycle, `ATE - [test-name] yyyy-mm-dd` title format) when asked directly whether other
 harnesses could be tested with it. Not urgent — captured for the backlog, not queued into an active
-marathon plan.
+marathon plan. Re-surfaced and promoted 2026-07-19 by the /10days sweep; still valid and
+reproducible, now with a preflight contract.
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_present", "path": "utils/ate/scripts/run_variations.py", "pattern": "run_aider" }
+  ],
+  "artifacts": [ "utils/ate/scripts/run_variations.py" ],
+  "remediation": {
+    "source": "issue#191",
+    "criteria": "utils/ate/scripts/run_variations.py's run_aider() is replaced by a generic run_harness(cmd_template, variation, timeout) driven by a variations.yaml-declared command template (safe argv substitution), the variation grid keys and CLASSIFY_PROMPT become configurable rather than Aider-hardcoded, and the existing Aider config still works as the default/reference example with no regression."
+  },
+  "lanes": { "agy_safe": [ "utils/ate/scripts/run_variations.py" ], "orchestrator_only": [] }
+}
+```

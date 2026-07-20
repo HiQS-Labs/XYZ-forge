@@ -2,7 +2,7 @@
 gh_issue: 116
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/116
 title: "fix(tick): misleading 'break' error on open tasks + marathon retry flag — Bug B remainder (Bug A already landed)"
-status: Bug A shipped (bb9138b); this doc scopes the Bug B remainder — a --retry flag on marathon.sh
+status: Closed — Bug A shipped (bb9138b); this doc scopes the Bug B remainder — a --retry flag on marathon.sh
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel

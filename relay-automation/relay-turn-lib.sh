@@ -429,8 +429,25 @@ rtl_worktree_begin() {
   # Create the worktree, seed the CURRENT working-tree allowlist into it (the HEAD checkout may be
   # stale, e.g. an uncommitted relay file), and echo the worktree path. Returns non-zero on failure
   # so the caller can fall back to an in-ROOT run. Sets RTL_WT.
-  local wt a
-  wt="$(mktemp -d "${TMPDIR:-/tmp}/rtl-wt.XXXXXX")" || return 1
+  local wt a wt_root _root_abs _tmp_abs _gcd
+  # GH-236: in /tmp-rooted environments $TMPDIR can resolve INSIDE the working root, which drops the
+  # throwaway isolation worktree inside the very tree the turn operates on and breaks codex turns —
+  # a failure that then surfaces mislabeled as a turn timeout. Default to $TMPDIR so behaviour is
+  # unchanged everywhere else; ONLY when $TMPDIR lands inside RTL_ROOT, relocate the worktree root
+  # under the repo's own git metadata dir (never part of the working tree, never under $TMPDIR) —
+  # git worktree add accepts a checkout there and git status ignores it.
+  wt_root="${TMPDIR:-/tmp}"
+  _root_abs="$(cd "$RTL_ROOT" 2>/dev/null && pwd -P)"
+  _tmp_abs="$(cd "$wt_root" 2>/dev/null && pwd -P)"
+  if [[ -n "$_root_abs" && -n "$_tmp_abs" && ( "$_tmp_abs" == "$_root_abs" || "$_tmp_abs" == "$_root_abs"/* ) ]]; then
+    _gcd="$(git -C "$RTL_ROOT" rev-parse --git-common-dir 2>/dev/null)"
+    [[ -n "$_gcd" && "$_gcd" != /* ]] && _gcd="$RTL_ROOT/$_gcd"
+    if [[ -n "$_gcd" ]] && mkdir -p "$_gcd/rtl-worktrees" 2>/dev/null; then
+      wt_root="$_gcd/rtl-worktrees"
+      rtl_trace "rtl_worktree_begin: RELOCATED worktree root off \$TMPDIR (inside RTL_ROOT) -> $wt_root (GH-236)"
+    fi
+  fi
+  wt="$(mktemp -d "${wt_root}/rtl-wt.XXXXXX")" || return 1
   rm -rf "$wt"                         # git worktree add wants a non-existent path
   if ! git -C "$RTL_ROOT" worktree add --detach "$wt" HEAD >/dev/null 2>&1; then
     rm -rf "$wt" 2>/dev/null; return 1

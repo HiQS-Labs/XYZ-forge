@@ -2,7 +2,7 @@
 gh_issue: 209
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/209
 title: "GH-206 fix follow-up: PWD-based MARATHON_ROOT fallback let a fixture marathon render/commit + claimed tick token leak into the real repo mid-marathon"
-status: built 2026-07-16 (codex + agy, Approved) — new test/marathon-root-audit.sh (13/13), fixed a real MARATHON_LANE_NS leak (see Status)
+status: Closed — built 2026-07-16 (codex + agy, Approved) — new test/marathon-root-audit.sh (13/13), fixed a real MARATHON_LANE_NS leak (see Status)
 created: 2026-07-16
 updated: 2026-07-16
 owner: noel

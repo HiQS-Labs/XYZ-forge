@@ -2,7 +2,7 @@
 gh_issue: 83
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/83
 title: README onboarding UX — single operator path, plain-language intro, de-brittle stale test count
-status: In progress
+status: Closed (issue #83 closed)
 created: 2026-07-02
 updated: 2026-07-02
 owner: noel

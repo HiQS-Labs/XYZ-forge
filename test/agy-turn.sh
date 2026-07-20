@@ -38,6 +38,14 @@ if [ -n "${STUB_ARGS_LOG:-}" ]; then
   printf '%s\n' "$@" >"$STUB_ARGS_LOG"
 fi
 if [ "${STUB_MODE:-good}" = empty ]; then exit 0; fi   # silent sandbox failure: exit 0, no output
+# S10 (GH-242): off-prompt-nonempty controlled trigger. GH-142's characterization matrix observed agy
+# answer ABOUT the `--print-timeout` flag instead of the actual prompt on 2 early calls — exit 0,
+# nonempty output, zero real work. Deterministically reproduce that shape: print an off-topic line and
+# perform NO tool calls at all (no tick claim/ping, no relay edit, no release) before exiting 0.
+if [ "${STUB_MODE:-good}" = offprompt ]; then
+  printf 'The --print-timeout flag controls how long agy waits before giving up before returning.\n'
+  exit 0
+fi
 export TICK_REPO_ROOT="$A"
 printf 'agy-stub: model response for %s\n' "$RELAY_AGENT"   # stdout -> non-empty transcript
 # GH-183/187 regression shapes: print lines containing $A (=ROOT) to stdout (-> AGY_LOG)
@@ -331,6 +339,38 @@ lc_honesty="$(tail -1 "$lc_err")"; rm -f "$lc_err"
 [ "$lc_out" = "0" ] && [ "$lc_honesty" = "floor" ] \
   && pass "S8: loop-cost.sh flags agy token spend as a FLOOR (cost-blind), never a misleading exact 0" \
   || fail "S8: loop-cost.sh should report agy as floor 0, got out=$lc_out honesty=$lc_honesty"
+
+# --- (S10) AGY-SPECIFIC: off-prompt-nonempty — GH-242 controlled repro for GH-142's deferred S10 gap.
+# agy print mode can exit 0 with NONEMPTY output that is entirely off-topic (GH-142's observed shape:
+# two early calls answered ABOUT the `--print-timeout` flag instead of the actual prompt) while doing
+# ZERO real turn work (no tick claim/ping by the stub, no relay edit, no release). The real shim's only
+# output guard (agy-turn.sh's `! -s "$AGY_LOG"` byte-emptiness check, i.e. F1) cannot see this: the
+# transcript IS nonempty, so it sails through undetected. This is a deterministic, on-demand trigger
+# (unlike the original "could not re-trigger on demand" #142 observation) — the offprompt stub mode
+# always emits the same off-topic line and always skips every tool call. Documents TODAY'S honest,
+# uncaught behavior (no content-relevance guard exists in agy-turn.sh to assert against without landing
+# a real fix there, which is out of this test file's allowlist) — same "KNOWN GAP reproduced" pattern
+# as the S2 role-drift case above.
+seed_token RELAY-TURN-offprompt
+before="$(git -C "$A" rev-parse HEAD)"
+before_relay="$(cksum "$A/relay.md")"
+offlog="$WORK/agy-offprompt.$$.log"; : >"$offlog"
+RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-offprompt AGY_AGENT=agy \
+  AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$offlog" STUB_MODE=offprompt \
+  bash "$SHIM" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "S10: KNOWN GAP reproduced — off-prompt-nonempty turn still exits 0 (F1's empty-output guard can't see it)" || fail "S10: offprompt stub turn rc=$rc"
+{ [ -s "$offlog" ] && grep -q -- "--print-timeout" "$offlog"; } \
+  && pass "S10: transcript is nonempty but entirely off-topic (defeats the byte-emptiness guard)" || fail "S10: offprompt transcript should be nonempty and off-topic"
+[ "$(cksum "$A/relay.md")" = "$before_relay" ] && pass "S10: KNOWN GAP reproduced — off-prompt turn performed ZERO real work (relay file untouched, uncaught)" || fail "S10: relay.md should be untouched by an off-prompt turn"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "S10: no commit on an off-prompt no-op turn" || fail "S10: off-prompt turn should not commit"
+# Test hygiene: the offprompt stub deliberately performs NO tick calls (that's the repro), so
+# rtl_enforce's token-handoff step falls into its "not terminal, no RELAY_PEER" warn-stuck branch and
+# leaves RELAY-TURN-offprompt claimed by agy forever — itself a live instance of the same off-prompt
+# "no cleanup" hazard this case documents. Force-release it here (test-suite bookkeeping, not part of
+# the assertions above) so it doesn't permanently occupy one of agy's MAX_ACTIVE_CLAIMS_PER_AGENT (2)
+# slots and starve a later case's claim (same latent leak already exists in the pre-existing "empty"
+# stub-mode case above; this just avoids stacking a second one).
+tick_a done RELAY-TURN-offprompt --agent agy >/dev/null 2>&1
 
 # --- (9) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
