@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 5
 
@@ -113,5 +113,15 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 **Verification:** `bash -n` on the extracted §2 script → OK; accumulator forced-fail → prints `BLOCK` + exits 1. Fix landing reconciled by re-grep: B1@(accumulator+`exit "$fail"`), B2@362, Should-3@423, Should-4@323. All present.
 **Re-review this:** (1) Is the §2 `preconditions.sh` now a correct hard gate — accumulator + nonzero exit, no swallow, no interactive-shell footgun? (2) Is the isolated-worktree per-copy rollback (§7) actually safe and runnable — does it leave the live root untouched? (3) Is the GH-234 sanity-check framing now accurate given the issue is open but the code corrects the vendored root?
 **Commit:** pending (harness will commit)
+
+### Round 3 · Reviewer · codex · 2026-07-20 16:53 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — re-read `UPGRADE.md` and reconciled the claimed Round-3 fixes against the live locator, sync script, shim, Python twins, and `bin/tick`.
+**Findings & proposals:**
+- [Blocker] `UPGRADE.md:120-125,161-175` still says Node is optional except for `marathon-plan`, but that is false for the normal Python paths: `bin/tick` has a Node shebang (`bin/tick:1`); the Python turn twins claim through it (`utils/py/rtl.py:41-56`), and `poll.py:25,77`, `relay_drive.py:196`, and `marathon_drive.py:348,363-379` invoke it directly. On a python3-only host, an unset default can therefore brick several of the claimed “10 … python3 only” entry points. Make Node a hard precondition for the full 11-site flip and correct the matrix; remove the “flip the other 10” path, or constrain it to a concrete, proven no-`tick` subset with matching Phase-3/proof instructions.
+- [Blocker] `UPGRADE.md:138-155` calls the two validation commands a same-commit “diff” but neither captures their output nor supplies an attribution command; the only method is an external, repo-specific GH-255 reference. A Type-A clone cannot execute the stated zero-Python-attributable-failures gate as written, so it cannot know when Phase 1 is complete. Put an exact in-runbook capture-and-comparison procedure (including its expected zero/nonzero result) beside the two commands, or ship and invoke a repo-local attribution helper; do not leave the gate to an unavailable issue/agent judgment.
+- [Should] `UPGRADE.md:241-255` gives one generic replacement body for all 11 shims, but `utils/marathon-plan.sh:10-24` has required `--zones-config` argument translation between its exports and `exec`. Add a marathon-plan-specific insertion sketch that retains that block inside the guarded Python branch; otherwise a literal application of the shown body can reintroduce the GH-154 regression while adding the guard.
+- [Pass] The Round-3 `preconditions.sh` now genuinely accumulates failures and exits nonzero (`UPGRADE.md:104-145`), and the isolated pre-flip worktree rollback correctly leaves the active root untouched (`UPGRADE.md:355-366`). The Type-B locator flow now uses `--env` and accurately describes the current vendored-root correction plus the stale-vendor check (`UPGRADE.md:409-424`; `skills/relay-xyz/find-harness.sh:113-117`).
+**Commit:** harness-managed
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
