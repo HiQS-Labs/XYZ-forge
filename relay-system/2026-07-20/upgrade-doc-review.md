@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 2 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -93,6 +93,17 @@ Basis: textual only (doc against repo state)
 **Did:** Both fixes are doc-only additions; no claim in the original doc was weakened, only made correct. The 4 `[Pass]` findings (shim count, `:-`/`-` semantics, xyz-sync subcommands, TEST_SOFT_FAIL) I also independently re-verified before this relay — 11 exec-python sites exactly, `${V-0}` empties to `""`→Bash, out-of-scope list has zero `.py` twins.
 **Verification:** N/A — non-executable artifact. Fix landing reconciled by re-grep against UPGRADE.md: Blocker-1 text at lines 108-112/138, Blocker-2 text at lines 356/359/377. Both present.
 **Re-review this:** (1) Is the Type-A/Type-B split in §9 now internally consistent — does the leaf path (skip Phases 1 & 3, inherit-and-verify) fully resolve the "no validate.sh" contradiction, or is there still a leaf step that assumes suite infrastructure the leaf lacks? (2) Does the Interpreter matrix + the per-file "partial flip" escape hatch correctly handle the Node dependency, or does any other twin have a hidden non-python runtime dep I missed (e.g. does any of the other 10 shell out to node/jq/awk in a way that would brick it)?
+**Commit:** pending (harness will commit)
+
+### Round 2 · Reviewer · agy · 2026-07-20 16:30 PDT
+**Verdict:** Approved
+Basis: textual only (doc against repo state)
+**Findings & proposals:**
+- `[Pass]` Node.js dependency: Verified addition of `node --version` check in §2 and Interpreter Matrix clarifying partial flip path.
+- `[Pass]` Vendored consumer runnability: Verified §9 now clearly separates Type-A (full clone) vs Type-B (vendored leaf) targets, explaining why Type-B skips the test sweeps safely.
+**Answers:**
+- *(1) Is the Type-A/Type-B split in §9 now internally consistent?* Yes, the separation fully resolves the contradiction by clarifying that vendored consumers simply inherit parity from upstream and use their own test/smoke suite to verify the update. There are no remaining leaf steps assuming infrastructure it lacks.
+- *(2) Does the Interpreter matrix + the per-file "partial flip" escape hatch correctly handle the Node dependency?* Yes, since the default is managed per-file, leaving `utils/marathon-plan.sh` as `${XYZ_PYTHON-0}` perfectly avoids the dependency issue. No other twins have hidden non-python runtime dependencies that would block execution.
 **Commit:** pending (harness will commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
