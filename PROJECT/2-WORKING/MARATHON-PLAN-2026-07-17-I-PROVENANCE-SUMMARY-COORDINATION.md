@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan I (2026-07-17) — provenance follow-up vs. summary-surface coordination (GH-226)
-status: Active — standalone planning marathon captured; waiting on Jedi feedback and/or operator GO
+status: Planning complete (2026-07-20) — both phases landed; decision recorded in GH-226 doc; implementation handed to Plan M
 created: 2026-07-17
-updated: 2026-07-17
+updated: 2026-07-20
 owner: noel
 branch: development
 doc_type: project
@@ -27,7 +27,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Opened [#226](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/226), parked the local intake doc, and keyed this standalone marathon plan to that issue so Jedi can edit the GH issue directly if he wants. | Wait for Jedi clarification or operator GO, then fire the single planning lane to inventory GH-211/GH-178 surfaces and decide whether the next execution stays one issue or splits by repo/surface. |
+| **Both planning phases landed (2026-07-20).** Phase 1 inventory + Phase 2 decision are recorded in GH-226's doc (§ Inventory / § Decision): outcome is **one issue, two lanes** (consult / relay), `giant-brains` deferred. This planning marathon is now closed. | Implementation is handed to **Plan M** (`MARATHON-PLAN-2026-07-20-M-GH226-PROVENANCE-IMPL.md`) — draft, held for Jedi's sign-off before firing. |
 
 ## Why this gets its own marathon
 
@@ -44,8 +44,8 @@ That makes the next move a coordination marathon, not a blind code lane.
 
 | Phase | Deliverable | Primary artifact(s) | cx/risk/eff | Fireable? |
 |---|---|---|---|---|
-| 1 | Inventory every operator-facing summary surface touched by GH-211 and every provenance surface touched by GH-178 | `PROJECT/1-INBOX/GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md` | 1/1/1 | ✅ ready |
-| 2 | Decide whether the next implementation stays one coordinated issue or splits by repo/surface, then sync this plan to that decision | `PROJECT/1-INBOX/GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md`, this plan | 2/2/1 | ⏸ after Phase 1 |
+| 1 | Inventory every operator-facing summary surface touched by GH-211 and every provenance surface touched by GH-178 | `PROJECT/1-INBOX/GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md` | 1/1/1 | ✅ **done 2026-07-20** |
+| 2 | Decide whether the next implementation stays one coordinated issue or splits by repo/surface, then sync this plan to that decision | `PROJECT/1-INBOX/GH-226-PROVENANCE-SUMMARY-SURFACE-COORDINATION.md`, this plan | 2/2/1 | ✅ **done 2026-07-20 — one issue, two lanes** |
 
 ## Collision map
 

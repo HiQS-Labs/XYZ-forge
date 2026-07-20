@@ -208,6 +208,14 @@ Lanes C and R touch disjoint files → safe to run concurrently. The only shared
 `rtl_has_uncited_claim` predicate (already single-sourced in `relay-turn-lib.sh` and consumed by
 consult), so a contract change to it is a **Lane R deliverable Lane C consumes**, not a collision.
 
+### Draft execution plan
+
+The fireable two-lane plan lives in
+[`PROJECT/2-WORKING/MARATHON-PLAN-2026-07-20-M-GH226-PROVENANCE-IMPL.md`](../2-WORKING/MARATHON-PLAN-2026-07-20-M-GH226-PROVENANCE-IMPL.md)
+(Plan M): Wave 1 single-sources the firsthand/operator-asserted contract in the shared predicate,
+Wave 2 renders it into the consult and relay surfaces in parallel. **Held for Jedi's sign-off** — not
+promoted to active execution, not fired.
+
 ## Swarm Preflight Contract
 ```json
 {
