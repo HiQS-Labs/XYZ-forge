@@ -117,12 +117,14 @@ python3 --version || note "python3 not found — the flip bricks every entry poi
 python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 8) else 1)' \
   || note "python3 >= 3.8 required — do not flip"
 
-# (a2) node present — NOT optional. utils/py/marathon_plan.py runs `node --version` and hard-exits
-#      ("node is required ... but not found in PATH", marathon_plan.py:105-107) before delegating to
-#      utils/py/_marathon_plan_node.js. marathon-plan is Python+Node; a box with python3 but no node
-#      passes (a) and still bricks marathon-plan. (Non-fatal here: you MAY exclude marathon-plan from
-#      the flip and keep its Bash default — so this is a warning, not a hard block.)
-node --version || echo "  WARN: node missing — exclude marathon-plan from the flip (keep its default 0)" >&2
+# (a2) node present — a HARD gate, and NOT specific to the flip. `bin/tick` is a Node program
+#      (`bin/tick:1` → `#!/usr/bin/env node`), and BOTH the Bash drivers (`relay-drive.sh:42`) and the
+#      Python twins (`poll.py:25`, `relay_drive.py`, `marathon_drive.py`, via `rtl.py`) shell out to it.
+#      So Node is already required to run this harness AT ALL, in either mode — the flip adds no new Node
+#      dependency. If node is missing the harness is already broken today; there is NO "flip without node"
+#      subset, because every tick-using entry point needs it. (marathon-plan additionally calls node
+#      directly for _marathon_plan_node.js, but that's on top of the baseline, not a separate case.)
+node --version || note "node not found — the harness needs it in BOTH modes (bin/tick is a Node program)"
 
 # (b) clean, CURRENT branch — a clean status is NOT proof the branch is up to date.
 #     Use bare `git fetch origin` (NOT `git fetch origin <branch>`): the bare form refreshes ALL
@@ -135,44 +137,56 @@ echo "  ahead/behind (behind<TAB>ahead): $_ab"
 [ "$(printf '%s' "$_ab" | cut -f1)" = 0 ] || note "branch is BEHIND origin — pull before flipping"
 [ -z "$(git status --porcelain)" ] || note "working tree dirty — commit/stash before flipping"
 
-# (c) the port's own baseline is green in BOTH modes before you touch defaults.
-#     Bash baseline first, then Python — same commit, soft-fail so you see every gap at once.
-#     (Informational: attribution is a human/agent judgement — see the Gate note below. Not auto-scored.)
-TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh            ; echo "bash exit=$?"
-TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 XYZ_PYTHON=1 bash validate.sh; echo "py   exit=$?"
+# (c) the port's baseline must have ZERO Python-attributable failures before you touch defaults.
+#     Capture BOTH modes at the same commit, then subtract — a raw count is not the gate; attribution is.
+TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh            > /tmp/xyz-bash.log 2>&1
+TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 XYZ_PYTHON=1 bash validate.sh > /tmp/xyz-py.log 2>&1
+# validate.sh prints a trailing "failed:" block of "  - <test>" lines. Extract each mode's set:
+_fails() { awk '/^failed:$/{f=1;next} f&&/^  - /{sub(/^  - /,"");print}' "$1" | sort -u; }
+_fails /tmp/xyz-bash.log > /tmp/xyz-bash.fails
+_fails /tmp/xyz-py.log   > /tmp/xyz-py.fails
+# Python-attributable = fails under Python but NOT under Bash (same commit). This set MUST be empty.
+py_attrib="$(comm -13 /tmp/xyz-bash.fails /tmp/xyz-py.fails)"
+echo "--- pre-existing (fail in BOTH modes — not the flip's fault, but name them): ---"
+comm -12 /tmp/xyz-bash.fails /tmp/xyz-py.fails | sed 's/^/    /'
+echo "--- PYTHON-ATTRIBUTABLE (fail only under XYZ_PYTHON=1 — these block the flip): ---"
+if [ -n "$py_attrib" ]; then printf '    %s\n' $py_attrib; note "Python-attributable failures present — NOT ready to flip"
+else echo "    (none)"; fi
 
 [ "$fail" = 0 ] && echo "PRECONDITIONS: all hard gates pass" || echo "PRECONDITIONS: FAILED — do not flip"
 exit "$fail"
 ```
 
-**Gate:** the diff between those two runs must contain **zero Python-attributable failures** — a test
-that fails under `XYZ_PYTHON=1` but passes in the same-commit Bash baseline. Pre-existing failures
-that fail in *both* modes (e.g. a stale `relay-pkg.tar.gz`, an environment-specific test) do not block
-the flip — they are not caused by it — but they must be *known and named*, not discovered later.
-
-> Use `utils/py`-mode attribution, not a raw count: subtract the Bash baseline. See GH-255 for the
-> method and the reference attribution script. If you cannot produce a clean same-commit baseline,
-> **you are not ready to flip** — that is the whole lesson of the GH-172 → GH-215 → GH-223 → #235
-> "one gap unmasks the next" sequence.
+**Gate (now self-contained above):** the `PYTHON-ATTRIBUTABLE` set must be **empty**. That set is the
+literal subtraction `comm -13 bash.fails py.fails` — tests that fail under `XYZ_PYTHON=1` but pass in
+the same-commit Bash baseline. The `pre-existing` set (fails in *both* modes — a stale
+`relay-pkg.tar.gz`, an environment-specific test) does **not** block the flip, but the script prints it
+so it is *named*, not discovered later. If either `validate.sh` cannot run to completion, you have no
+baseline and are not ready — that is the whole lesson of the GH-172 → GH-215 → GH-223 → #235
+"one gap unmasks the next" sequence (background on the method: GH-255).
 
 `python3` version floor: the twins use f-strings and `subprocess.run(..., timeout=)`; 3.8+ is safe.
 If a target box is older, stop — the flip would brick every entry point with no fallback.
 
-**Interpreter matrix** (which *additional language runtime* each entry point needs — beyond the POSIX
-baseline). NB: "python3 only" below means no second *language* runtime; every twin still shells out to
-ordinary system tools — `git`, `/bin/bash`, `date`, `sed` (e.g. `marathon_drive.py:139,424,444`,
-`relay_drive.py:106` + the Bash `consult.sh` it calls, `aider-turn.py:80`). Those (coreutils + git +
-bash) are assumed present on any box that already ran the Bash harness, so they are not a new gate —
-but the twins are **not** pure-Python, and a truly minimal container must carry them.
+**Interpreter matrix** — what the runtime actually requires. The key fact: **Node is a baseline
+requirement of this harness in *both* modes**, not something the flip introduces. `bin/tick` is a Node
+program (`bin/tick:1`), and every driver shells to it — the *Bash* ones (`relay-drive.sh:42`) and the
+Python twins alike (`poll.py:25`, `relay_drive.py`, `marathon_drive.py` via `rtl.py`). A box that can
+run the Bash harness at all already has Node. The twins are also **not** pure-Python beyond that: they
+call ordinary system tools — `git`, `/bin/bash`, `date`, `sed` (`marathon_drive.py:139,424,444`,
+`relay_drive.py:106` + the Bash `consult.sh` it calls, `aider-turn.py:80`).
 
-| Entry point | Extra language runtime |
-|---|---|
-| the 10 relay/turn/consult/preflight twins | none beyond `python3` (POSIX tools + git + bash still required) |
-| `utils/marathon-plan.sh` | `python3` **and** `node` (the twin shells out to `_marathon_plan_node.js`) |
+| Runtime | Required by | Introduced by the flip? |
+|---|---|---|
+| `python3` (>=3.8) | all 11 Python twins | **Yes** — this is the new hard gate |
+| `node` | `bin/tick` (⇒ every tick-using entry point, Bash *and* Python) + marathon-plan's `_marathon_plan_node.js` | No — already required today |
+| git, bash, coreutils (`date`/`sed`) | every twin, via subprocess | No — POSIX baseline |
 
-If a target has `python3` but no `node`, you may still flip the other 10 and leave
-`utils/marathon-plan.sh` on its Bash default (`${XYZ_PYTHON-0}` at that one site) — the flip is
-per-file, so a partial flip is legitimate. Say so in the flip commit if you do it.
+**There is no "flip without Node" subset.** Because the tick-using entry points need `bin/tick` (Node)
+regardless of mode, you cannot flip "the 10 non-marathon-plan twins" on a Node-less box — they'd be
+just as broken as marathon-plan. If `node` is missing, fix that first (the Bash harness is already
+broken without it); do not treat it as a per-file flip decision. Per-file flipping remains legitimate
+for *other* reasons (e.g. staging the rollout), just not as a way to dodge the Node requirement.
 
 ---
 
@@ -256,6 +270,30 @@ fi
 
 This makes the fail-safe direction hold even on a box with no Python — the single scariest flip
 failure mode (every entry point bricked) becomes a graceful degrade with a warning.
+
+**⚠ marathon-plan.sh is the one exception — do NOT paste the generic body over it.** Its shim carries a
+required `--zones-config → QUEUE_PLAN_ZONES_FILE` argument-translation block between the `if` and the
+`exec` (GH-154, `marathon-plan.sh:11-20`). A literal application of the block above would delete that
+translation and reintroduce the GH-154 regression. For that one site, keep the translation loop and
+only wrap the `exec` with the presence-guard, e.g.:
+
+```bash
+if [[ "${XYZ_PYTHON-0}" == "1" ]]; then
+  if ! command -v python3 >/dev/null 2>&1; then
+    echo "xyz: XYZ_PYTHON=1 but python3 not found — falling back to Bash" >&2
+  else
+    _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    export XYZ_ROOT="$_xyz_root"; export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
+    _py_args=()
+    while [[ $# -gt 0 ]]; do case "$1" in            # <-- KEEP this GH-154 translation block
+      --zones-config) [[ $# -ge 2 ]] || { echo "marathon-plan: missing arg for --zones-config" >&2; exit 2; }
+                      export QUEUE_PLAN_ZONES_FILE="$2"; shift 2 ;;
+      *) _py_args+=("$1"); shift ;;
+    esac; done
+    exec python3 "$_xyz_root/utils/py/marathon_plan.py" "${_py_args[@]}"
+  fi
+fi
+```
 
 **Consistency note:** the 11 shims share one identical *condition line*, but they are **not** wholly
 byte-identical — `utils/marathon-plan.sh` carries an extra `--zones-config → QUEUE_PLAN_ZONES_FILE`

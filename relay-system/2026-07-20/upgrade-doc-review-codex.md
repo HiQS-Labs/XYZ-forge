@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 5
+ROUND: 4 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -123,5 +123,15 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 - [Should] `UPGRADE.md:241-255` gives one generic replacement body for all 11 shims, but `utils/marathon-plan.sh:10-24` has required `--zones-config` argument translation between its exports and `exec`. Add a marathon-plan-specific insertion sketch that retains that block inside the guarded Python branch; otherwise a literal application of the shown body can reintroduce the GH-154 regression while adding the guard.
 - [Pass] The Round-3 `preconditions.sh` now genuinely accumulates failures and exits nonzero (`UPGRADE.md:104-145`), and the isolated pre-flip worktree rollback correctly leaves the active root untouched (`UPGRADE.md:355-366`). The Type-B locator flow now uses `--env` and accurately describes the current vendored-root correction plus the stale-vendor check (`UPGRADE.md:409-424`; `skills/relay-xyz/find-harness.sh:113-117`).
 **Commit:** harness-managed
+
+### Round 4 · Producer · claude-a · 2026-07-20 17:10 PDT
+**Decisions on proposals:** (each verified against the repo before disposing)
+- `[Blocker]` "Node optional except marathon-plan" is false — **Implemented, and it simplified the story.** Verified: `bin/tick:1` is `#!/usr/bin/env node`; the Python twins call it (`poll.py:25` → `[tick_bin,"analyze",…]`) AND — the key part — the **Bash** drivers call it too (`relay-drive.sh:42` `TICK_BIN=".../bin/tick"`). So Node was already required by the whole harness in BOTH modes; the flip adds no new Node dep. Rewrote §2(a2) to a hard `note` gate framed as baseline-not-flip, and replaced the interpreter matrix with a "required-by / introduced-by-the-flip?" table. **Removed the "flip the other 10 without node" escape hatch entirely** — it was incoherent (those 10 need tick→node). Only `python3` is a flip-introduced requirement.
+- `[Blocker]` §2(c) parity gate not self-contained — **Implemented.** Replaced the "see GH-255" pointer with an in-runbook procedure: capture both modes to logs, extract each `failed:` set via awk, and compute the Python-attributable set as `comm -13 bash.fails py.fails`, which the script asserts must be empty (and prints the pre-existing both-modes set so it's named). A Type-A clone can now execute the Phase-1-complete gate with no external dependency. Behaviorally proven: same awk+comm logic produced correct attribution twice this session.
+- `[Should]` generic §4 shim body would drop marathon-plan's `--zones-config` — **Implemented.** Added a "⚠ marathon-plan.sh is the one exception" callout with a site-specific presence-guard sketch that KEEPS the GH-154 translation loop inside the guarded branch. Tested the loop in isolation: `--zones-config /f --other x` → `QUEUE_PLAN_ZONES_FILE=/f`, remaining args preserved. No GH-154 regression.
+**Did:** All 3 findings actioned (2 Impl + 1 Impl). Re-extracted the §2 script (with the new attribution block) → `bash -n` OK; marathon-plan loop tested. Your 3 `[Pass]` items from r3 (accumulator exit, isolated-worktree rollback, GH-234 framing) are unchanged.
+**Verification:** `bash -n` on the extracted §2 preconditions.sh → OK; marathon-plan zones-config loop → parses correctly; attribution `comm -13` logic → proven this session. Fix landing reconciled by re-grep: all 4 markers present (Node baseline, no-subset, PYTHON-ATTRIBUTABLE, marathon-plan exception).
+**Re-review this:** (1) Is the Node story now correct and complete — baseline via bin/tick in both modes, no "flip subset" dodge, python3 the only new gate? (2) Is the §2(c) in-runbook attribution (`comm -13`) a correct, self-contained Phase-1 gate? (3) Does the marathon-plan §4 exception fully prevent the GH-154 regression on a literal application?
+**Commit:** pending (harness will commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
