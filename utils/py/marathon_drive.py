@@ -312,15 +312,6 @@ def main():
         else:
             if not shutil.which(command_name):
                 _pre_advance_not_runnable(f"command '{command_name}' is not on PATH")
-    if args.dry_run:
-        # dry-run never dispatches a turn, so surface the problem but keep going (matches Bash).
-        try:
-            _preflight_pre_advance_gate()
-        except SystemExit as _e:
-            if _e.code not in (0, None):
-                eprint("marathon-drive: (dry-run continues; a live run would halt here)")
-    else:
-        _preflight_pre_advance_gate()
 
     os.environ["MARATHON_BUILDER"] = args.builder
     os.environ["MARATHON_REVIEWER"] = args.reviewer
@@ -347,6 +338,19 @@ def main():
 
     _probe_agent_bin(args.builder, "builder")
     _probe_agent_bin(args.reviewer, "reviewer")
+
+    # GH-238 preflight runs AFTER the binary probes (missing builder/reviewer binary fails first, via
+    # shutil.which with no subprocess) but BEFORE any render/tick/dispatch — so a non-runnable default
+    # gate still halts with exit 2 before spending a turn.
+    if args.dry_run:
+        # dry-run never dispatches a turn, so surface the problem but keep going (matches Bash).
+        try:
+            _preflight_pre_advance_gate()
+        except SystemExit as _e:
+            if _e.code not in (0, None):
+                eprint("marathon-drive: (dry-run continues; a live run would halt here)")
+    else:
+        _preflight_pre_advance_gate()
 
     if args.artifact_paths:
         os.environ["ALLOW_PATHS"] = args.artifact_paths
