@@ -151,6 +151,41 @@ def main():
             try: os.remove(attempts_file)
             except: pass
 
+    def debug_mantra_prior_attempts(root_dir, raw):
+        # GH-162: READ-ONLY peek at the .tick/attempts/<lane> file GH-45 maintains — how many prior
+        # fires on this lane did not reach Approved. Never writes.
+        f = os.path.join(root_dir, ".tick", "attempts", _lane_key(raw))
+        if os.path.isfile(f):
+            try:
+                with open(f) as fh:
+                    return sum(1 for _ in fh)
+            except Exception:
+                return 0
+        return 0
+
+    def debug_mantra_note(prior, phase_dir_, mantra_file):
+        # GH-162: the note injected into the relay when a prior attempt exists; empty on a first fire
+        # (prior=0) so a normal first-fire relay file stays byte-identical to before this feature.
+        if not prior or prior < 1:
+            return ""
+        reason = ""
+        esc = os.path.join(phase_dir_, "ESCALATION.md")
+        if os.path.isfile(esc):
+            try:
+                with open(esc) as fh:
+                    for line in fh:
+                        if line.startswith("reason:"):
+                            reason = line.split(":", 1)[1].strip()
+                            break
+            except Exception:
+                pass
+        out = (f"\n## Debug mantra (auto-triggered — {prior} prior attempt(s) on this phase did not reach Approved)\n\n"
+               f"Before trying again, read {mantra_file} and follow its four-step discipline: reproduce reliably, "
+               f"know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.\n")
+        if reason:
+            out += f"Last recorded reason ({phase_dir_}/ESCALATION.md): `{reason}`. Read it before re-guessing.\n"
+        return out
+
     if get_env("RELAY_DRIVER_LOCKED", "0") != "1":
         # GH-49b/GH-207: the lock lives in .git/ (never committed) for a normal clone. In a linked
         # worktree .git is a FILE pointing at the shared gitdir, so resolve the real common dir and put
@@ -349,6 +384,11 @@ def main():
     with open(args.phase_brief_file, "r") as f:
         brief_text = f.read()
 
+    # GH-162: peek at prior attempts BEFORE rendering so a re-fired phase carries the debug-mantra note.
+    debug_mantra_prior = debug_mantra_prior_attempts(get_env("TICK_REPO_ROOT", root), lane_state_key)
+    debug_mantra_text = debug_mantra_note(
+        debug_mantra_prior, phase_dir, os.path.join(xyz_harness, "relay-automation", "DEBUG-MANTRA.md"))
+
     tick_cli = tick_bin if tick_bin.startswith("/") else os.path.join(root, tick_bin)
 
     if args.artifact_paths:
@@ -373,7 +413,7 @@ NEXT: {args.builder}
 ## Phase Brief
 
 {brief_text}
-
+{debug_mantra_text}
 ---
 
 ▶ TAKE YOUR TURN ({args.builder} — BUILDER role)
@@ -609,6 +649,49 @@ relay-file: {rel_relay}
             return 3
         return review_exit
 
+    timeout_reason = ["turn-timeout-or-hang"]
+    timeout_emit = [f"halted at phase {args.phase_id} — turn timeout / hang"]
+
+    def recover_timeout_exit():
+        # GH-205: a relay timeout (exit 7) whose declared artifact already landed AND is gate-green AND
+        # left a live reviewer handoff is resumed with one more relay-drive pass instead of a false hang.
+        if not artifacts_exist():
+            timeout_reason[0] = "timeout-no-artifact"
+            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder produced no declared artifact"
+            log("relay timed out (exit 7) before any declared artifact landed — treating it as a real hang")
+            return 7
+        log(f"relay timed out (exit 7) after declared artifact(s) appeared — probing the pre-advance gate: {pre_advance_cmd}")
+        if run_pre_advance_gate() != 0:
+            timeout_reason[0] = "timeout-gate-failed"
+            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder artifact failed the pre-advance gate"
+            log("timeout probe: pre-advance gate FAILED — treating it as a real halt")
+            return 5
+        s = file_status()
+        tstatus, actor = token_state()
+        if terminal_status(s) and not actor:
+            log(f"timeout probe: relay already reached terminal agreement (STATUS: {s}, token done) — continuing")
+            return 0
+        if not actor:
+            timeout_reason[0] = "timeout-no-live-actor"
+            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder left no live reviewer handoff"
+            log(f"timeout probe: artifact + gate were green, but {relay_task} has no live actor (STATUS: {s}) — cannot continue")
+            return 7
+        if actor == args.builder:
+            timeout_reason[0] = "timeout-builder-still-owned-turn"
+            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder never handed the relay to review"
+            log(f"timeout probe: builder still owns {relay_task} (STATUS: {s}) — treating this as a real hang")
+            return 7
+        log(f"timeout probe: artifact + gate were green and {relay_task} moved to {actor} — resuming relay-drive from the post-timeout state")
+        r = _run_relay_drive()
+        if r == 7:
+            timeout_reason[0] = "timeout-during-review-recovery"
+            timeout_emit[0] = f"halted at phase {args.phase_id} — relay timed out again during review recovery"
+        return r
+
+    if relay_exit == 7:
+        _r = recover_timeout_exit()
+        relay_exit = 0 if _r == 0 else _r
+
     if relay_exit == 0:
         complete_phase_success()
     elif relay_exit == 3:
@@ -625,8 +708,8 @@ relay-file: {rel_relay}
         sys.exit(4)
     elif relay_exit == 5:
         log("relay escalated: pre-advance gate failed")
-        escalate("pre-advance-failed", 5)
-        xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
+        escalate(timeout_reason[0] if timeout_reason[0] != "turn-timeout-or-hang" else "pre-advance-failed", 5)
+        xyz_marathon_emit("red", timeout_emit[0] if timeout_reason[0] != "turn-timeout-or-hang" else f"halted at phase {args.phase_id} — pre-advance gate failed")
         sys.exit(5)
     elif relay_exit == 6:
         log("relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)")
@@ -635,8 +718,8 @@ relay-file: {rel_relay}
         sys.exit(6)
     elif relay_exit == 7:
         log("relay escalated: timeout / hang (relay-drive exit 7)")
-        escalate("turn-timeout-or-hang", 7)
-        xyz_marathon_emit("red", f"halted at phase {args.phase_id} — turn timeout / hang")
+        escalate(timeout_reason[0], 7)
+        xyz_marathon_emit("red", timeout_emit[0])
         sys.exit(7)
     else:
         die(f"relay-drive exited with unexpected code {relay_exit}")
