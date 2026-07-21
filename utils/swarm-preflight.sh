@@ -310,6 +310,7 @@ const walk = (dir) => {
   const out = [];
   let ents = [];
   try { ents = readdirSync(dir, { withFileTypes: true }); } catch { return out; }
+  ents.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));  // deterministic descent (readdir order differs macOS vs Linux — GH-264)
   for (const ent of ents) {
     const abs = path.join(dir, ent.name);
     if (ent.isDirectory()) out.push(...walk(abs));

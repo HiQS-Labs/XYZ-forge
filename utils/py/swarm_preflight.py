@@ -349,8 +349,9 @@ def expand_effective_artifacts(root, contract):
         add(None, rel_path)
 
     if os.path.isdir(test_root):
-        for dirpath, _, filenames in os.walk(test_root):
-            for filename in filenames:
+        for dirpath, dirnames, filenames in os.walk(test_root):
+            dirnames.sort()  # deterministic descent (readdir order differs macOS vs Linux — GH-264)
+            for filename in sorted(filenames):
                 abs_path = os.path.join(dirpath, filename)
                 rel_path = normalize_path(os.path.relpath(abs_path, root))
                 rel_path = sanitize_inferred_path(root, test_root, rel_path)
