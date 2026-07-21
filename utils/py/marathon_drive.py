@@ -62,6 +62,7 @@ def main():
     parser.add_argument("--artifact", dest="artifact_paths")
     parser.add_argument("--target-root", dest="target_root")
     parser.add_argument("--require-clean", dest="require_clean", action="store_true")
+    parser.add_argument("--requires-test", dest="requires_test")  # GH-249: nominated test must change
     parser.add_argument("--force", dest="force", action="store_true")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--help", action="store_true")
@@ -358,6 +359,17 @@ def main():
         if "ALLOW_PATHS" in os.environ:
             del os.environ["ALLOW_PATHS"]
 
+    # GH-249: snapshot HEAD in the repo the artifact lands in (TARGET_ROOT when set, else ROOT) BEFORE
+    # this phase's first commit, so requires_test_delta has a true "before this phase" baseline. Captured
+    # unconditionally (cheap); unused unless --requires-test is set.
+    pre_phase_head = ""
+    try:
+        pre_phase_head = subprocess.check_output(
+            ["git", "-C", (args.target_root or root), "rev-parse", "HEAD"],
+            stderr=subprocess.DEVNULL).decode("utf-8").strip()
+    except Exception:
+        pre_phase_head = ""
+
     phase_dir = os.path.join(phases_dir, lane_state_key)
     relay_file = os.path.join(phase_dir, "RELAY.md")
     
@@ -602,6 +614,26 @@ relay-file: {rel_relay}
         actor = claimer if status == "claimed" else (handoff if status == "open" else "")
         return (status, actor)
 
+    def requires_test_delta(path):
+        # GH-249: True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
+        # or is newly untracked/added. Mirrors Bash requires_test_delta — an empty/missing/unchanged test
+        # proves nothing.
+        rroot = args.target_root or root
+        abs_p = path if os.path.isabs(path) else os.path.join(rroot, path)
+        if not (os.path.isfile(abs_p) and os.path.getsize(abs_p) > 0):
+            return False
+        if pre_phase_head:
+            out = subprocess.run(["git", "-C", rroot, "diff", "--name-only", pre_phase_head, "--", path],
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
+            if out.strip():
+                return True
+        st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", path],
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
+        for line in st.splitlines():
+            if line.startswith("??") or line.startswith("A "):
+                return True
+        return False
+
     def complete_phase_success(success_mode="approved"):
         log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
         gate_exit = run_pre_advance_gate()
@@ -609,6 +641,11 @@ relay-file: {rel_relay}
             log(f"pre-advance gate FAILED (exit {gate_exit}) — escalating")
             escalate("pre-advance-failed", 0)
             xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
+            sys.exit(5)
+        if args.requires_test and not requires_test_delta(args.requires_test):
+            log(f"requires-test FAILED — no new/updated test detected at: {args.requires_test}")
+            escalate("requires-test-missing", 0)
+            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — required test not added/updated: {args.requires_test}")
             sys.exit(5)
         if success_mode == "already-satisfied":
             success_text = f"phase {args.phase_id} complete — lane_already_satisfied, reviewer approved, gate passed"
