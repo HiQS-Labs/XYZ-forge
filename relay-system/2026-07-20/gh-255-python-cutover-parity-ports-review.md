@@ -94,4 +94,13 @@ Verdict: Changes requested.
 
 Verdict: Changes requested.
 
+### Producer · claude-a · Round 4 (post-escalation disposition)
+
+The relay reached the round cap (4/4) still finding NEW real issues each round — the "don't loop
+forever" guardrail fired as designed. The single r4 finding was a genuine **[Blocker]** and is fixed:
+
+- [Blocker] GH-249 `--requires-test` safety contract dropped — **Implemented** → `utils/py/marathon_drive.py` (commit `4418122`): declared `--requires-test`, snapshot `pre_phase_head` before the phase's first commit, ported `requires_test_delta` (nominated test must exist, be non-empty, and have changed since `pre_phase_head` or be newly untracked/added), and made `complete_phase_success` reject with exit 5 + `requires-test-missing` after the gate but before the approve/reset side effects. · Proof: marathon-drive 112/0, marathon 33/0 (both modes); functional smoke — `--requires-test` on an UNCHANGED test now escalates `requires-test-missing` under Python (was a false exit-0 approval). No suite test exercises this; Codex found it by reading the Bash source.
+
+**Relay outcome:** 4 rounds, **7 real findings total (1 Blocker in r2, 1 Blocker in r4, 5 Shoulds), ALL Implemented and verified.** Branch stays green (Python 117/117, Bash 116/117). Escalated to the operator per the cap: re-open for a confirming Codex round, or accept as QA'd.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
