@@ -2,7 +2,7 @@
 gh_issue: 255
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/255
 title: "UPGRADE: flip the XYZ_PYTHON default from Bash to Python, reversibly and fleet-wide"
-status: "Proposed (root doc — not yet active)"
+status: "Root repo: Phases 1–4 DONE (flip af7bb4d, 2026-07-20, GH-264); Phase 5 fleet propagation pending"
 created: 2026-07-20
 updated: 2026-07-20
 owner: noel
@@ -198,6 +198,20 @@ so it is *named*, not discovered later. If either `validate.sh` cannot run to co
 baseline and are not ready — that is the whole lesson of the GH-172 → GH-215 → GH-223 → #235
 "one gap unmasks the next" sequence (background on the method: GH-255).
 
+> **⚠️ Measure this gate on the CI runner (Linux), not just your laptop (GH-264 dogfood).** "Zero
+> Python-attributable failures" on macOS is **necessary but NOT sufficient** — it silently stands in
+> for "green everywhere" and it is not the same claim. The Python twins and the Bash bodies can diverge
+> on behaviour that only differs *by platform*: filesystem enumeration order (`os.walk` / `readdirSync`
+> return **sorted on macOS, arbitrary on Linux**), GNU-vs-BSD `sed`/`grep`/`sort`, and locale. GH-264
+> flipped with a green **macOS** gate and `tier1` CI (ubuntu) immediately went red on a real
+> Python-attributable `swarm-preflight` bug (unsorted fs-touching-test enumeration) that the macOS run
+> could never see, because macOS readdir happened to match the test's hard-coded alphabetical order.
+> So the gate is not met until the **same** `comm -13` subtraction is **empty on the CI/Linux runner in
+> the new default mode** — either run this precondition script on a Linux box, or (cheaper) push the
+> port to a branch and let `tier1` run `validate.sh` Python-default on ubuntu *before* you treat Phase 3
+> as unblocked. A blast-radius pass names *which* environments and consumers the gate must cover (here:
+> Linux **and** the bundled `relay-pkg.tar.gz`); this CI requirement is how you actually *close* each one.
+
 `python3` version floor: the twins use f-strings and `subprocess.run(..., timeout=)`; 3.8+ is safe.
 If a target box is older, stop — the flip would brick every entry point with no fallback.
 
@@ -364,18 +378,35 @@ untouched either way.
 
 ## 5. Phase 3 — The flip (one isolated commit)
 
+> **✅ DONE on this root repo — flip commit `af7bb4d` (2026-07-20, GH-264 / branch
+> `gh264-python-default-flip`).** §2(c) re-confirmed at HEAD before flipping (Python 117/117, zero
+> Python-attributable failures); post-flip proof held (unset default → Python 117/117; `XYZ_PYTHON=0`
+> → Bash 116/117). Rollback: `git revert af7bb4d`, or `export XYZ_PYTHON=0`. Remaining below (Phase 5
+> fleet propagation) is still pending and stays a live runbook for the vendored `.xyz/` copies.
+
 **Entry gate:** §2(c) clean (Phase 1 done) AND Phase 2 hardening landed.
 
-Change the default at all 11 sites, and **nothing else in the same commit**:
+Change the default at all 11 sites:
 
 ```bash
 # after Phase 2 the line is:  ${XYZ_PYTHON-0}
 # the flip makes it:          ${XYZ_PYTHON-1}
 ```
 
-The commit must touch only those 11 default characters. A surgical, single-purpose flip commit is what
-makes `git revert <flip-sha>` a guaranteed-safe rollback with zero collateral. Do not fold anything
-else in.
+**Then regenerate the packaged relay bundle in the SAME commit** (learned on the GH-264 dogfood — the
+runbook originally said "touch only those 11 characters" and it was wrong):
+
+```bash
+bash skills/relay-automation/make-pkg.sh   # re-bundles relay-pkg.tar.gz
+```
+
+`skills/relay-automation/relay-pkg.tar.gz` vendors byte-for-byte copies of **5 of the flipped shims**
+(`poll.sh`, `relay-loop.sh`, `relay-drive.sh`, `codex-turn.sh`, `agy-turn.sh`), and `relay-pkg-freshness.sh`
+compares them against the live sources. Flip the shims without regenerating the bundle and that test
+goes red. Bundle the regen **in the flip commit**, not a follow-up: a shim-only revert would otherwise
+leave the tarball matching the flipped shims (drift again). So the atomic-revert unit is "11 default
+characters **+ the regenerated tarball**." Nothing *else* is folded in — the tarball is a derived
+artifact of the exact same change, which is what keeps `git revert <flip-sha>` guaranteed-safe.
 
 **Proof:**
 ```bash
@@ -385,7 +416,8 @@ unset XYZ_PYTHON; TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.s
 XYZ_PYTHON=0     TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh; echo "opt-out exit=$?"
 ```
 Both must match their pre-flip counterparts (default-unset == old Python run; `XYZ_PYTHON=0` == old
-Bash run).
+Bash run). In particular `relay-pkg-freshness.sh` must be green — a red there means you skipped the
+`make-pkg.sh` step above.
 
 **Rollback:** `git revert <flip-sha>` (permanent), or `export XYZ_PYTHON=0` (this shell / CI job,
 instant). Document BOTH in the commit message body so the rollback is discoverable from `git log`.
@@ -549,12 +581,13 @@ When executing elsewhere:
 [ ] §2  branch clean AND current (bare `git fetch origin`, 0 behind)
 [ ] §2  two-mode same-commit baseline captured; BOTH runs reached their Summary footer
 [ ] §2  PYTHON-ATTRIBUTABLE set (comm -13) is empty; pre-existing both-modes fails named
+[ ] §2  ⚠️ that empty set is confirmed ON THE CI/LINUX RUNNER in Python-default mode, not just macOS (GH-264: readdir order + GNU-vs-BSD tool differences — a green laptop is necessary but NOT sufficient)
 [ ] §3  all Python-attributable gaps closed (marathon-drive split to its own issue)
 [ ] §3  re-run soft-fail sweep after EACH fix (unmasking)
 [ ] §4  (2a) :- → - at all 11 sites; condition-line-only invariant holds (marathon-plan body differs)
 [ ] §4  (2b) version-enforcing guard (>=3.8, not mere presence) at all 11 sites; marathon-plan keeps its zones-config block
 [ ] §4  empty-string run (XYZ_PYTHON=) proven to route to Bash and pass
-[ ] §5  flip commit: only the 11 default chars, nothing else
+[ ] §5  flip commit: the 11 default chars + regenerated relay-pkg.tar.gz (make-pkg.sh) — nothing else
 [ ] §5  proof: unset==old-python-run, XYZ_PYTHON=0==old-bash-run
 [ ] §6  README + AGENTS.md + CHANGELOG + UPGRADE.md all carry the rollback levers
 [ ] §8  root soak: ≥1 marathon/relay cycle + a few days, abort criteria understood

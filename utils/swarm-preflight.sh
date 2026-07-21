@@ -3,7 +3,7 @@
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
 # utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash
 # implementation below — Bash stays the supported default until the port is promoted.
-if [[ "${XYZ_PYTHON-0}" == "1" ]]; then
+if [[ "${XYZ_PYTHON-1}" == "1" ]]; then
   # UPGRADE.md §4 Phase-2 hardening (GH-255): (2a) `-` not `:-` so an explicit empty XYZ_PYTHON reads
   # as not-1 → Bash (load-bearing once the default flips to 1); (2b) require python3 >=3.8 and fall
   # back to Bash with a warning if it's missing/too-old, so a bad interpreter degrades, not bricks.
@@ -310,6 +310,7 @@ const walk = (dir) => {
   const out = [];
   let ents = [];
   try { ents = readdirSync(dir, { withFileTypes: true }); } catch { return out; }
+  ents.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));  // deterministic descent (readdir order differs macOS vs Linux — GH-264)
   for (const ent of ents) {
     const abs = path.join(dir, ent.name);
     if (ent.isDirectory()) out.push(...walk(abs));

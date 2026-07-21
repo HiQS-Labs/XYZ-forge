@@ -8,6 +8,12 @@ Read `GUIDING-PRINCIPLES.md` for the product north stars.
 
 Read `PROJECT/PDDA.md` when the task touches project docs, `ROADMAP.md`, or `CHANGELOG.md`.
 
+## Runtime default
+
+Entry-point shims run their **Python** implementation by default (`XYZ_PYTHON` unset → Python). To
+force the legacy Bash path for a single run, prefix it with `XYZ_PYTHON=0`; for a whole session,
+`export XYZ_PYTHON=0`. The Bash body stays inline in every shim, so the opt-out is always available.
+
 ## What this file owns
 
 This file is the behavioral playbook for work in this repo: decision quality, reversibility, blast
