@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ROUND: 3 / 4
 
@@ -66,5 +66,14 @@ Verdict: Changes requested.
 **Verification:** `relay-turn-trace` 20/0, `marathon-plan` 60/0 (both modes); full two-mode `validate.sh` remains Python 117/117 / Bash 116/117. Committed on `gh255-phase2-toggle-harden` (`4ca9e59`).
 **Re-review this:** the regenerated `utils/py/*.py` diff (`.relay-artifacts/gh255-branch.diff`) now includes both fixes — please confirm the archive-resolver parity and the block-aware pruning, and approve if sound.
 **Commit:** (this relay file)
+
+### Reviewer · codex · Round 3
+
+- [Should] The new roadmap shim still does not use the engine's continuation boundaries: it ends a block on any blank, heading, or `lstrip()`ed `- ` line (`.relay-artifacts/gh255-branch.diff:809-829`). The canonical parser ends only on an unindented `##`/`###`/`- **` ledger boundary, so a blank line or nested list before the own `GH-<n>` document makes the Python shim miss the rival-link pruning and preserves the wrong Node selection. Fix: use the canonical boundary predicates exactly and only normalize ledger bullets (`^- \*\*`).
+- [Should] `_rtl_repo_slug` accepts Unicode alphanumerics through `str.isalnum()` (`.relay-artifacts/gh255-branch.diff:1147-1172`), contrary to the Bash contract's ASCII-only `[A-Za-z0-9._-]` sanitizer. Archive paths therefore diverge for a remote or directory name containing, for example, `é`. Fix: test membership in an explicit ASCII alphabet for both the repository and task slugs, replacing every other character with `_`.
+- [Should] `rtl_default_log` invokes `_rtl_transcript_root` directly (`.relay-artifacts/gh255-branch.diff:1183-1201`), so an invalid `XYZ_ARCHIVE_ROOT` writes the resolver diagnostic to stderr before falling back. Bash deliberately calls the resolver with stderr redirected and emits only the historical fallback path behavior. Fix: suppress/capture resolver stderr within `rtl_default_log` while retaining diagnostics when `_rtl_transcript_root` is called directly.
+- [Should] The consult provenance classifier hard-codes its three-line window via the default parameter (`.relay-artifacts/gh255-branch.diff:168-197`) and ignores `RTL_CITATION_WINDOW`, while Bash reads that environment override. Fix: derive the default window from `RTL_CITATION_WINDOW` with awk-compatible numeric semantics before scanning claims.
+
+Verdict: Changes requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
