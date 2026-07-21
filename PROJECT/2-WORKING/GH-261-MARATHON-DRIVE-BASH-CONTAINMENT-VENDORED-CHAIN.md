@@ -42,8 +42,9 @@ violation) where 4 or 0 is expected, in the vendored `.xyz/` + worktree-isolatio
 scenario. Per the issue's diagnosis comment, this is two compounding factors in
 `relay-automation/relay-turn-lib.sh` (the permanent Bash containment boundary):
 
-1. **Symlink-form strip mismatch.** `RTL_ROOT` resolves to the physical form (`/private/var/...`)
-   while the relay file / artifact paths are built in the logical form (`/var/...`). The
+1. **Symlink-form strip mismatch.** `RTL_ROOT` resolves to the physical (realpath) form of the
+   temp-dir mount, while the relay file / artifact paths are built in the logical (symlinked)
+   form of the same path — macOS's symlinked system temp-dir mount is the classic trigger. The
    repo-root-relative strip (`relay-turn-lib.sh:266`, `${a#"$RTL_ROOT"/}`) then leaves the relay
    file absolute, so it fails its own off-lane match and the turn is reverted (exit 6). Neither
    GH-51 (`--target-root`) nor GH-160 (subdir `RTL_ROOT`) covers this no-`--target-root`,

@@ -2,6 +2,7 @@
 title: rtl_worktree_end doesn't exempt relay-system/ (its own transcript dir) — false containment violation discards a fully in-scope turn
 status: "promoted to 2-WORKING 2026-07-21 via /10days sweep with an auto-drafted contract"
 created: 2026-07-21
+updated: 2026-07-21
 owner: noelsaw1
 gh_issue: 266
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/266
