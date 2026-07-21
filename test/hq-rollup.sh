@@ -90,8 +90,11 @@ run_rollup() {
   HQ_SEARCH_ROOTS="$WORK/repos" \
   HQ_MARATHON_SCAN_TODAY="2026-07-09" \
   HQ_MARATHON_SCAN_NOW="2026-07-09T12:00:00Z" \
+  HQ_MARATHON_LIVE_TODAY="2026-07-09" \
+  HQ_MARATHON_LIVE_NOW="2026-07-09T12:00:00Z" \
   AGY_BIN="${TEST_AGY_BIN:-$AGY_STUB}" \
   MARATHON_SCAN_BIN="${TEST_MARATHON_SCAN_BIN:-$ROOT/utils/hq/marathon-scan.sh}" \
+  MARATHON_LIVE_BIN="${TEST_MARATHON_LIVE_BIN:-$ROOT/utils/hq/marathon-live.sh}" \
   bash "$ROLLUP"
 }
 
@@ -125,6 +128,16 @@ grep -q '| #101 | .*| ✅ ready (exit 0) |' "$OUT" \
 grep -q "^generated_by:" "$OUT" \
   && fail "case A: marathon-scan's own frontmatter leaked into the rollup" \
   || pass "case A: marathon-scan's frontmatter stripped"
+
+# GH-218 Phase 2: the live cross-repo status is embedded as its own demoted section too.
+grep -q "^## Live Marathons (cross-repo, right now)$" "$OUT" \
+  && pass "case A: GH-218 live-marathon section heading present" || fail "case A: live-marathon section heading missing"
+grep -q "^### HQ Marathon — Live cross-repo status" "$OUT" \
+  && pass "case A: embedded live report's H1 demoted to H3 (nests under its H2)" \
+  || fail "case A: live report heading not demoted: $(grep '^#* HQ Marathon — Live' "$OUT")"
+grep -q '| repo-a | .* | ⚪ idle | ' "$OUT" \
+  && pass "case A: real marathon-live classification embedded verbatim (repo-a idle)" \
+  || fail "case A: marathon-live classification missing: $(grep 'repo-a' "$OUT" | grep -i idle)"
 
 echo "-- Case B: empty ROADMAP.md, agy must NOT be invoked --"
 rm -f "$AGY_MARKER_FILE" "$OUT"
@@ -179,6 +192,33 @@ grep -q "_No parked or active items found in any ROADMAP.md._" "$OUT" \
 grep -q '| #101 | .*| ✅ ready (exit 0) |' "$OUT" \
   && pass "case D: marathon section reaches Obsidian even without agy installed" \
   || fail "case D: marathon section missing"
+
+echo "-- Case E: marathon-live.sh itself fails (non-zero exit) -> visible banner, not a silent drop --"
+FAILING_LIVE_STUB="$WORK/marathon-live-fail-stub"
+cat >"$FAILING_LIVE_STUB" <<'EOF'
+#!/usr/bin/env bash
+echo "simulated marathon-live crash: kaboom" >&2
+exit 4
+EOF
+chmod +x "$FAILING_LIVE_STUB"
+
+rm -f "$AGY_MARKER_FILE" "$OUT"
+cat >"$REPO/ROADMAP.md" <<'EOF'
+# Roadmap
+## Ledger
+### Queue / parked intake
+- **Test item** some description
+EOF
+TEST_MARATHON_LIVE_BIN="$FAILING_LIVE_STUB" run_rollup >"$WORK/case-e.log" 2>&1
+rc=$?
+[[ $rc -eq 0 ]] && pass "case E: rollup still exits 0 despite marathon-live.sh failing" \
+  || fail "case E: rollup rc=$rc ($(cat "$WORK/case-e.log"))"
+grep -q "_marathon live-status failed (exit 4): .*simulated marathon-live crash: kaboom" "$OUT" \
+  && pass "case E: visible live-status failure banner present, not a silent drop" \
+  || fail "case E: live failure banner missing/wrong: $(grep 'marathon live-status failed' "$OUT")"
+grep -q '| #101 | .*| ✅ ready (exit 0) |' "$OUT" \
+  && pass "case E: marathon-scan section still intact when only live-status failed" \
+  || fail "case E: marathon-scan section lost on live-status failure"
 
 echo "== hq-rollup: $PASS passed, $FAIL failed =="
 [ "$FAIL" -eq 0 ]

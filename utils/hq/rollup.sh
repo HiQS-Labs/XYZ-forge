@@ -10,6 +10,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 AGY_BIN="${AGY_BIN:-agy}"                                    # test seam — same convention as relay-automation/consult.sh
 MARATHON_SCAN_BIN="${MARATHON_SCAN_BIN:-$HERE/marathon-scan.sh}"   # test seam for the failure path
+MARATHON_LIVE_BIN="${MARATHON_LIVE_BIN:-$HERE/marathon-live.sh}"   # GH-218 test seam (cross-repo live status)
 
 # node is required unconditionally: both the ROADMAP-scan loop below and marathon-scan.sh itself
 # need it regardless of ROADMAP content. agy is NOT checked here — it's only needed when the
@@ -116,32 +117,52 @@ fi
 # GH-192: fold in GH-158's cross-repo marathon-preflight aggregator. Appended verbatim, never
 # passed through agy — the ready/blocked/stale/ambiguous verdicts are the one deterministic,
 # structured signal in this pipeline, and an LLM synthesis pass risks paraphrasing one wrong.
-echo "HQ Rollup: running marathon-scan.sh for preflight readiness..."
-MARATHON_TMP="$(mktemp "${TMPDIR:-/tmp}/hq-rollup-marathon.XXXXXX")"
-trap 'rm -f "$MARATHON_TMP"' EXIT
-marathon_rc=0
-marathon_log="$(bash "$MARATHON_SCAN_BIN" --out "$MARATHON_TMP" 2>&1)" || marathon_rc=$?
-
-if [ "$marathon_rc" -eq 0 ] && [ -s "$MARATHON_TMP" ]; then
-  # Strip the report's own leading YAML frontmatter (redundant once embedded under a heading here),
-  # and demote every heading by 2 levels (# -> ###, ## -> ####) so the report's own H1 title nests
-  # properly under this section's H2 instead of sitting at the same level as its own subheadings.
-  marathon_section="$(awk '
+# Strip a report's own leading YAML frontmatter (redundant once embedded under a heading here), and
+# demote every heading by 2 levels (# -> ###, ## -> ####) so the report's own H1 title nests properly
+# under this section's H2. Shared by the marathon-scan (GH-192) and marathon-live (GH-218) embeds.
+demote_embed() {
+  awk '
     NR==1 && $0=="---" { infm=1; next }
     infm && $0=="---" { infm=0; next }
     infm { next }
     /^```/ { infence = !infence; print; next }
     !infence && match($0, /^#+ /) { print "##" $0; next }
     { print }
-  ' "$MARATHON_TMP")"
+  ' "$1"
+}
+
+echo "HQ Rollup: running marathon-scan.sh for preflight readiness..."
+MARATHON_TMP="$(mktemp "${TMPDIR:-/tmp}/hq-rollup-marathon.XXXXXX")"
+MARATHON_LIVE_TMP="$(mktemp "${TMPDIR:-/tmp}/hq-rollup-marathon-live.XXXXXX")"
+trap 'rm -f "$MARATHON_TMP" "$MARATHON_LIVE_TMP"' EXIT
+marathon_rc=0
+marathon_log="$(bash "$MARATHON_SCAN_BIN" --out "$MARATHON_TMP" 2>&1)" || marathon_rc=$?
+
+if [ "$marathon_rc" -eq 0 ] && [ -s "$MARATHON_TMP" ]; then
+  marathon_section="$(demote_embed "$MARATHON_TMP")"
 else
   marathon_section="_marathon scan failed (exit ${marathon_rc}): ${marathon_log}_"
+fi
+
+# GH-218: fold in the cross-repo LIVE marathon status the same way — a second call into the existing
+# embed mechanism, not a new Obsidian-writing path. Same verbatim rationale: the live/claimed/idle
+# verdicts are deterministic and must not be paraphrased by the synthesis pass.
+echo "HQ Rollup: running marathon-live.sh for live cross-repo status..."
+marathon_live_rc=0
+marathon_live_log="$(bash "$MARATHON_LIVE_BIN" --out "$MARATHON_LIVE_TMP" 2>&1)" || marathon_live_rc=$?
+
+if [ "$marathon_live_rc" -eq 0 ] && [ -s "$MARATHON_LIVE_TMP" ]; then
+  marathon_live_section="$(demote_embed "$MARATHON_LIVE_TMP")"
+else
+  marathon_live_section="_marathon live-status failed (exit ${marathon_live_rc}): ${marathon_live_log}_"
 fi
 
 {
   printf '%s\n' "$roadmap_section"
   printf '\n---\n\n## Marathon Readiness (cross-repo preflight)\n\n'
   printf '%s\n' "$marathon_section"
+  printf '\n---\n\n## Live Marathons (cross-repo, right now)\n\n'
+  printf '%s\n' "$marathon_live_section"
 } > "$OUT_FILE"
 
 echo "HQ Rollup: ✓ wrote $OUT_FILE"

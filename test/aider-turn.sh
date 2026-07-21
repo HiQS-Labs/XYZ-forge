@@ -62,6 +62,19 @@ if [ -n "${ARGS_DUMP:-}" ]; then
   [ ${#reads[@]} -gt 0 ] && for r in "${reads[@]}"; do printf 'READ:%s\n' "$r" >>"$ARGS_DUMP"; done
 fi
 [ "${STUB_MODE:-good}" = empty ] && exit 0           # blocked backend: exit 0, no output, no edit
+# GH-251: models the reviewer-seam failure — a graded review lands in the TRANSCRIPT (stdout) but the
+# relay file is never edited. reviewphantom carries a Verdict anchor (must be salvaged); reviewnoop is
+# non-review chatter with no anchor and no edit (must NOT be salvaged).
+if [ "${STUB_MODE:-good}" = reviewphantom ]; then
+  printf 'aider-stub: I added these files to the chat.\n'
+  printf 'Findings:\n- src/target.txt:1 — example finding\n'
+  printf 'Verdict: Changes requested\n'
+  exit 0
+fi
+if [ "${STUB_MODE:-good}" = reviewnoop ]; then
+  printf 'aider-stub: I added these files to the chat. What would you like to change?\n'
+  exit 0
+fi
 printf 'aider-stub: edited for %s\n' "${RELAY_AGENT:-?}"   # stdout -> non-empty transcript
 # Mimic real Aider: it ALWAYS writes a chat-history file, defaulting to .aider.chat.history.md in CWD.
 # The shim MUST redirect it out of the repo (--chat-history-file); if it doesn't, the file lands as an
@@ -342,6 +355,32 @@ grep -q -- "--openai-api-base" "${ARGS_DUMP}.all" 2>/dev/null \
   || pass "GH-147: default path emits no --openai-api-base (byte-identical)"
 grep -q -- "--model openrouter/anthropic/claude-3.5-sonnet" "${ARGS_DUMP}.all" 2>/dev/null \
   && pass "GH-147: default path still uses the OpenRouter default model" || fail "GH-147: default model regressed"
+
+# --- (17) GH-251: review-only turn where Aider produces a graded review in the TRANSCRIPT but never
+# lands it in the relay file -> the shim salvages the review from the transcript and appends it
+# (attributed), so a completed review is not discarded as a stall (the reviewer-seam defect this closes).
+printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for GH-251 salvage" >/dev/null 2>&1
+seed_token RELAY-TURN-gh251
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-gh251 aider reviewphantom RELAY_ARTIFACT_FILE="$ARTIFACT"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-251: review-only phantom-review turn exits 0" || fail "GH-251 salvage turn rc=$rc"
+grep -q "salvaged from" "$A/relay.md" && pass "GH-251: transcript review salvaged into the relay file (attributed)" || fail "GH-251: review not salvaged into relay.md"
+grep -q "Verdict: Changes requested" "$A/relay.md" && pass "GH-251: salvaged block carries the graded verdict" || fail "GH-251: verdict text not salvaged"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "GH-251: salvaged review committed (turn lands, not a stall)" || fail "GH-251: salvage produced no commit"
+tick_a release RELAY-TURN-gh251 --agent aider --to boss >/dev/null 2>&1 || true
+
+# --- (18) GH-251 negative: a review-only turn that produced NO gradeable review (no Verdict anchor)
+# and no relay edit must NOT be salvaged — a non-review turn is still a genuine stall (composes with the
+# GH-245 evidence-based --review-once classifier; no false rescue of an empty/non-review turn).
+printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for GH-251 negative" >/dev/null 2>&1
+seed_token RELAY-TURN-gh251neg
+before="$(git -C "$A" rev-parse HEAD)"
+run_shim RELAY-TURN-gh251neg aider reviewnoop RELAY_ARTIFACT_FILE="$ARTIFACT"; rc=$?
+grep -q "salvaged from" "$A/relay.md" && fail "GH-251: a non-review turn must NOT be salvaged (no Verdict anchor)" || pass "GH-251: non-review turn not salvaged (no false rescue)"
+[ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "GH-251: non-review turn leaves the relay file unchanged (still a stall)" || fail "GH-251: negative turn unexpectedly committed"
+tick_a release RELAY-TURN-gh251neg --agent aider --to boss >/dev/null 2>&1 || true
 
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

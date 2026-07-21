@@ -94,5 +94,20 @@ run "$WORK/m7.yaml" >/dev/null; rc=$?
 run "$WORK/m1.yaml" --format json | grep -q '"name": "trinity-sync-refactor"' \
   && pass "--format json emits the marathon name" || fail "json format broken"
 
+# --- (9) depends_on flow-sequence form -> shape-specific error (GH-241) ----
+# The bracketed YAML sequence form (depends_on: [p1]) is not supported by this hand-rolled
+# reader; it must fail naming the field's shape, NOT as a generic "unknown phase '[p1]'" lookup.
+printf 'name: x\nphases:\n  - id: p1\n    reviewer: codex\n  - id: p2\n    reviewer: codex\n    depends_on: [p1]\n' > "$WORK/m9.yaml"
+run "$WORK/m9.yaml" >/dev/null; rc=$?
+{ [ "$rc" -ne 0 ] && grep -q "flow sequence" "$WORK/err" && ! grep -q "unknown phase" "$WORK/err"; } \
+  && pass "depends_on list form -> shape-specific 'flow sequence' error (not unknown-phase)" \
+  || fail "should reject depends_on: [p1] naming the shape (rc=$rc, err=$(cat "$WORK/err"))"
+# and the scalar form of the same plan still parses cleanly
+printf 'name: x\nphases:\n  - id: p1\n    reviewer: codex\n  - id: p2\n    reviewer: codex\n    depends_on: p1\n' > "$WORK/m9b.yaml"
+run "$WORK/m9b.yaml" >/dev/null; rc=$?
+[ "$rc" -eq 0 ] \
+  && pass "scalar depends_on still parses after the flow-sequence guard" \
+  || fail "scalar depends_on regressed: $(cat "$WORK/err")"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
