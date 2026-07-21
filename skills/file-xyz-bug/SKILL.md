@@ -62,6 +62,7 @@ you are standing in.
    | Observed | the real error text + exit code |
    | Where | `XYZ_CALLER_NAME` (bare repo name — the locator pre-sanitizes it; never the full path) |
    | Harness version | `git -C <intake repo> rev-parse --short HEAD`; plus `.xyz/VERSION` in the caller repo if vendored |
+   | **Runtime** | which twin ran — **Python** (default, `XYZ_PYTHON` unset/`=1`) or **Bash** (`XYZ_PYTHON=0`). A `.py` traceback ⇒ Python; an inline `line NNN:` shell error ⇒ Bash; **the two behaving differently at the same commit ⇒ parity**. Drives the `runtime:*` label in Step 4. |
 
    Then ask **only what you could not harvest**, capped at three questions (prefer `AskUserQuestion`):
    1. **Expected behavior** — what should have happened. Nearly always needs the operator; the
@@ -90,6 +91,12 @@ you are standing in.
      un-sandboxed** (`dangerouslyDisableSandbox: true`): the Bash sandbox blocks the keyring and
      produces a false "auth broken". If the operator named an existing issue, reuse that number,
      skip creation, and check for an existing `GH-<n>-*.md` to **update** rather than writing a second doc.
+     - **Tag the runtime.** Pass `--label "runtime:<python|bash|parity>"` matching the Runtime you
+       harvested in Step 1, so triage can tell a Python-twin bug from a legacy-Bash-path bug at a
+       glance (the harness runs Python by default since the flip; a bug seen only under `XYZ_PYTHON=0`
+       is `runtime:bash`, a twin divergence is `runtime:parity`). These three labels already exist in
+       the intake repo — don't recreate them. If you genuinely can't tell which twin ran, omit the
+       label rather than guess; a wrong runtime tag misroutes triage.
    - Write `<intake repo>/PROJECT/1-INBOX/GH-<n>-<SHORT-SLUG>.md` (SCREAMING-KEBAB, ~2–4 words, no
      zero-padding). `<SHORT-SLUG>` is a *title* slug (e.g. `RELAY-DRIVE-EXIT6`) — do not confuse it
      with the locator's `XYZ_SLUG`, which is the `owner/repo` origin slug and contains a `/`.
@@ -158,6 +165,7 @@ Body:
 - **Observed from:** `<caller repo name>` (<vendored `.xyz/` | centralized harness>)
 - **Harness commit:** `<short sha>`
 - **Worker/CLI:** <codex | agy | claude | tick | n/a>, version if known
+- **Runtime:** <Python (default) | Bash (`XYZ_PYTHON=0`) | parity (both / diverges)> — matches the `runtime:*` issue label
 - **Sandbox:** <on | off> at the time of failure
 
 ## Reproduction
