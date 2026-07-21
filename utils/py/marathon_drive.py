@@ -152,9 +152,30 @@ def main():
             except: pass
 
     if get_env("RELAY_DRIVER_LOCKED", "0") != "1":
-        if os.path.isdir(os.path.join(root, ".git")):
+        # GH-49b/GH-207: the lock lives in .git/ (never committed) for a normal clone. In a linked
+        # worktree .git is a FILE pointing at the shared gitdir, so resolve the real common dir and put
+        # the lock there — otherwise --require-clean sees the driver's own lock as untracked dirt inside
+        # the worktree. A vendored .xyz/ copy (no .git) falls back to a hidden lock beside the scripts.
+        git_path = os.path.join(root, ".git")
+        if os.path.isdir(git_path):
             lock_dir = os.path.join(root, ".git", "relay-driver.lock")
             lock_label = ".git/relay-driver.lock"
+        elif os.path.isfile(git_path):
+            common = ""
+            try:
+                common = subprocess.check_output(
+                    ["git", "-C", root, "rev-parse", "--git-common-dir"],
+                    stderr=subprocess.DEVNULL).decode('utf-8').strip()
+            except Exception:
+                common = ""
+            if common:
+                if not os.path.isabs(common):
+                    common = os.path.join(root, common)
+                lock_dir = os.path.join(common, "relay-driver.lock")
+                lock_label = ".git/relay-driver.lock"
+            else:
+                lock_dir = os.path.join(root, ".relay-driver.lock")
+                lock_label = ".relay-driver.lock"
         else:
             lock_dir = os.path.join(root, ".relay-driver.lock")
             lock_label = ".relay-driver.lock"
@@ -216,6 +237,55 @@ def main():
     phases_dir = args.phases_dir or os.path.join(root, "phases")
     pre_advance_cmd = args.pre_advance_cmd or f"bash {root}/validate.sh"
     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
+    # GH-207: a marathon lane namespaces its phase paths + attempt state so two lanes sharing a bare
+    # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.
+    lane_state_key = get_env("MARATHON_LANE_NS") or args.phase_id
+
+    # GH-238: a vendored consumer normally has no root-level validate.sh. Do NOT spend a builder and
+    # reviewer turn only to discover the default gate can't start after approval. A deliberately
+    # non-executing probe (gates like `test -f build/output` only become true after the builder runs):
+    # prove the gate is *runnable*, not that it currently passes. Runs before any render/tick/dispatch.
+    _gate_root = args.target_root or root
+    def _pre_advance_not_runnable(reason):
+        die(f"pre-advance gate not runnable: '{pre_advance_cmd}' ({reason}). "
+            f"Pass --pre-advance-cmd '<runnable command>' to override it.")
+    def _preflight_pre_advance_gate():
+        if subprocess.run(["bash", "-n", "-c", pre_advance_cmd],
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+            _pre_advance_not_runnable("shell syntax is invalid")
+        m = re.match(r'^\s*(bash|/\S*/bash)\s+(\S+)', pre_advance_cmd)
+        if m:
+            gate_shell, script_arg = m.group(1), m.group(2)
+            if not shutil.which(gate_shell):
+                _pre_advance_not_runnable(f"interpreter '{gate_shell}' is not on PATH")
+            if len(script_arg) >= 2 and script_arg[0] in "\"'" and script_arg[-1] == script_arg[0]:
+                script_arg = script_arg[1:-1]
+            if script_arg.startswith("-"):
+                return
+            gate_path = script_arg if os.path.isabs(script_arg) else os.path.join(_gate_root, script_arg)
+            if not os.path.isfile(gate_path):
+                _pre_advance_not_runnable(f"script file does not exist: {gate_path}")
+            return
+        parts = pre_advance_cmd.split()
+        command_name = parts[0] if parts else ""
+        if not command_name:
+            _pre_advance_not_runnable("command is empty")
+        if "/" in command_name:
+            gate_path = command_name if os.path.isabs(command_name) else os.path.join(_gate_root, command_name)
+            if not (os.path.isfile(gate_path) and os.access(gate_path, os.X_OK)):
+                _pre_advance_not_runnable(f"executable does not exist or is not executable: {gate_path}")
+        else:
+            if not shutil.which(command_name):
+                _pre_advance_not_runnable(f"command '{command_name}' is not on PATH")
+    if args.dry_run:
+        # dry-run never dispatches a turn, so surface the problem but keep going (matches Bash).
+        try:
+            _preflight_pre_advance_gate()
+        except SystemExit as _e:
+            if _e.code not in (0, None):
+                eprint("marathon-drive: (dry-run continues; a live run would halt here)")
+    else:
+        _preflight_pre_advance_gate()
 
     os.environ["MARATHON_BUILDER"] = args.builder
     os.environ["MARATHON_REVIEWER"] = args.reviewer
@@ -249,7 +319,7 @@ def main():
         if "ALLOW_PATHS" in os.environ:
             del os.environ["ALLOW_PATHS"]
 
-    phase_dir = os.path.join(phases_dir, args.phase_id)
+    phase_dir = os.path.join(phases_dir, lane_state_key)
     relay_file = os.path.join(phase_dir, "RELAY.md")
     
     # repo-root-relative path
@@ -338,8 +408,13 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         sys.exit(0)
 
     subprocess.run(["git", "-C", root, "add", "--", relay_file], check=True)
-    subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: render phase {args.phase_id} relay ({relay_task})"], check=True)
-    log(f"relay file committed: {relay_file}")
+    # GH-207: only commit when the render actually changed — a byte-identical re-render must not HALT on
+    # a "nothing to commit" git error; treat it as unchanged and continue.
+    if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", relay_file]).returncode == 0:
+        log(f"relay file unchanged: {relay_file}")
+    else:
+        subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: render phase {args.phase_id} relay ({relay_task})"], check=True)
+        log(f"relay file committed: {relay_file}")
 
     os.environ["TICK_REPO_ROOT"] = root
 
@@ -366,7 +441,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
             else:
                 die(f"relay task {relay_task} is open but reserved for unexpected agent '{handoff}'")
 
-    lane_attempt_gate(get_env("TICK_REPO_ROOT", root), args.phase_id, args.force)
+    lane_attempt_gate(get_env("TICK_REPO_ROOT", root), lane_state_key, args.force)
     def _run_tick_loud(cmd_args):
         res = subprocess.run(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if res.returncode != 0:
@@ -382,25 +457,23 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     _run_tick_loud([tick_bin, "log", "marathon.phase.start", relay_task, "--agent", "marathon"])
     log(f"phase start: running relay-drive --round-cap {args.round_cap}")
 
-    cmd = [
-        relay_drive_bin,
-        "--relay-file", relay_file,
-        "--relay-task", relay_task,
-        "--agent-cmd", agent_cmd,
-        "--round-cap", str(args.round_cap)
-    ]
-    if args.target_root:
-        cmd.extend(["--target-root", args.target_root])
-        
-    env = os.environ.copy()
-    env["RELAY_FILE"] = relay_file
-    env["LANE_ATTEMPT_COUNTED"] = "1"
-    env["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
-    
-    relay_exit = 0
-    res = subprocess.run(cmd, env=env)
-    if res.returncode != 0:
-        relay_exit = res.returncode
+    def _run_relay_drive(review_once=False):
+        cmd2 = [relay_drive_bin, "--relay-file", relay_file, "--relay-task", relay_task,
+                "--agent-cmd", agent_cmd]
+        if review_once:
+            cmd2.append("--review-once")   # GH-207: one approval pass, no round-cap
+        else:
+            cmd2.extend(["--round-cap", str(args.round_cap)])
+        if args.target_root:
+            cmd2.extend(["--target-root", args.target_root])
+        env2 = os.environ.copy()
+        env2["RELAY_FILE"] = relay_file
+        env2["LANE_ATTEMPT_COUNTED"] = "1"
+        env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
+        env2["RELAY_COST_SUMMARY"] = "0"
+        return subprocess.run(cmd2, env=env2).returncode
+
+    relay_exit = _run_relay_drive()
 
     def escalate(reason, rexit):
         esc_file = os.path.join(phase_dir, "ESCALATION.md")
@@ -414,7 +487,9 @@ reason: {reason}
 relay-file: {rel_relay}
 """)
         subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
-        subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
+        # GH-207: an identical escalation record must not HALT on nothing-to-commit.
+        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
+            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
         subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         log(f"escalation written: {esc_file} (reason: {reason})")
 
@@ -432,32 +507,113 @@ relay-file: {rel_relay}
         dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
         shutil.copy2(relay_file, dest)
         subprocess.run(["git", "-C", root, "add", "--", dest], check=True)
-        subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} transcript saved ({relay_task})"], check=True)
-        log(f"transcript saved: {dest}")
+        # GH-207: an identical transcript (same-second re-render) must not HALT on nothing-to-commit.
+        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", dest]).returncode == 0:
+            log(f"transcript unchanged: {dest}")
+        else:
+            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} transcript saved ({relay_task})"], check=True)
+            log(f"transcript saved: {dest}")
         return True
 
-    if relay_exit == 0:
-        log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
-        gate_exit = 0
+    def run_pre_advance_gate():
         cwd = args.target_root if args.target_root else None
+        return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
+
+    def artifacts_exist():
+        if not args.artifact_paths:
+            return False
+        aroot = args.target_root or root
+        for p in args.artifact_paths.split(","):
+            p = p.strip()
+            if not p:
+                continue
+            ap = p if os.path.isabs(p) else os.path.join(aroot, p)
+            if not os.path.exists(ap):
+                return False
+        return True
+
+    def file_status():
         try:
-            subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd, check=True)
-        except subprocess.CalledProcessError as e:
-            gate_exit = e.returncode
-        
+            with open(relay_file) as f:
+                for line in f:
+                    if line.startswith("STATUS:"):
+                        return line.split(":", 1)[1].strip()
+        except Exception:
+            pass
+        return ""
+
+    def terminal_status(s):
+        return s in ("Approved", "Closed")
+
+    def token_state():
+        try:
+            info = subprocess.check_output([tick_bin, "info", relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
+        except Exception:
+            return ("", "")
+        status = claimer = handoff = ""
+        for line in info:
+            if line.startswith("status:"): status = line.split(":", 1)[1].strip()
+            elif line.startswith("claimer:"): claimer = line.split(":", 1)[1].strip()
+            elif line.startswith("handoff-to:"): handoff = line.split(":", 1)[1].strip()
+        actor = claimer if status == "claimed" else (handoff if status == "open" else "")
+        return (status, actor)
+
+    def complete_phase_success(success_mode="approved"):
+        log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
+        gate_exit = run_pre_advance_gate()
         if gate_exit != 0:
             log(f"pre-advance gate FAILED (exit {gate_exit}) — escalating")
-            escalate("pre-advance-failed", relay_exit)
+            escalate("pre-advance-failed", 0)
             xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
             sys.exit(5)
-            
+        if success_mode == "already-satisfied":
+            success_text = f"phase {args.phase_id} complete — lane_already_satisfied, reviewer approved, gate passed"
+        else:
+            success_text = f"phase {args.phase_id} complete — STATUS: Approved, gate passed"
         subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), args.phase_id)
+        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         save_transcript()
-        log(f"phase {args.phase_id} complete — STATUS: Approved, gate passed")
-        xyz_marathon_emit("green", f"phase {args.phase_id} complete — STATUS: Approved, gate passed")
+        log(success_text)
+        xyz_marathon_emit("green", success_text)
         sys.exit(0)
+
+    def recover_already_satisfied_lane():
+        # GH-207: a stalled builder (exit 3) whose declared artifact is already built AND gate-green gets
+        # ONE routed reviewer pass instead of a false no-progress escalation. Returns 0 to route to
+        # complete_phase_success(already-satisfied); 3 to fall through to the ordinary no-progress halt.
+        if not args.artifact_paths or not artifacts_exist():
+            return 3
+        log(f"relay stalled (exit 3) with declared artifact(s) already present — probing the pre-advance gate: {pre_advance_cmd}")
+        if run_pre_advance_gate() != 0:
+            log("already-satisfied probe: pre-advance gate FAILED — treating it as real no-progress")
+            return 3
+        s = file_status()
+        tstatus, actor = token_state()
+        if terminal_status(s) and not actor:
+            log(f"already-satisfied probe: relay already reached terminal agreement (STATUS: {s}, token done)")
+            return 0
+        if tstatus == "claimed" and actor == args.builder:
+            subprocess.run([tick_bin, "release", relay_task, "--agent", args.builder, "--to", args.reviewer], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        elif tstatus == "open" and actor == args.builder:
+            subprocess.run([tick_bin, "claim", relay_task, "--agent", args.builder, "--paths", claim_paths], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run([tick_bin, "release", relay_task, "--agent", args.builder, "--to", args.reviewer], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        else:
+            log(f"already-satisfied probe: artifact + gate are green, but current actor is {actor or 'none'} (token {tstatus or 'missing'}) — cannot auto-route to review")
+            return 3
+        log(f"already-satisfied probe: routed the stalled builder turn to reviewer {args.reviewer} for one approval pass")
+        review_exit = _run_relay_drive(review_once=True)
+        if review_exit == 0:
+            return 0
+        if review_exit == 5:
+            log("already-satisfied probe: reviewer declined approval — lane remains unsatisfied")
+            return 3
+        return review_exit
+
+    if relay_exit == 0:
+        complete_phase_success()
     elif relay_exit == 3:
+        if recover_already_satisfied_lane() == 0:
+            complete_phase_success("already-satisfied")
         log("relay escalated: no-progress (relay-drive exit 3)")
         escalate("no-progress", 3)
         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay no-progress")
@@ -467,11 +623,21 @@ relay-file: {rel_relay}
         escalate("cap-or-close-mismatch", 4)
         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay cap/close-mismatch")
         sys.exit(4)
+    elif relay_exit == 5:
+        log("relay escalated: pre-advance gate failed")
+        escalate("pre-advance-failed", 5)
+        xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
+        sys.exit(5)
     elif relay_exit == 6:
         log("relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)")
         escalate("containment-violation (off-lane edit reverted by a turn-taker)", 6)
         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — containment violation (off-lane edit reverted)")
         sys.exit(6)
+    elif relay_exit == 7:
+        log("relay escalated: timeout / hang (relay-drive exit 7)")
+        escalate("turn-timeout-or-hang", 7)
+        xyz_marathon_emit("red", f"halted at phase {args.phase_id} — turn timeout / hang")
+        sys.exit(7)
     else:
         die(f"relay-drive exited with unexpected code {relay_exit}")
 
