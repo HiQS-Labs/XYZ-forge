@@ -1,0 +1,1311 @@
+diff --git a/utils/py/aider-turn.py b/utils/py/aider-turn.py
+index 020a75c..0969a0b 100644
+--- a/utils/py/aider-turn.py
++++ b/utils/py/aider-turn.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python3
+ import os
++import re
+ import sys
+ import tempfile
+ import subprocess
+@@ -11,6 +12,34 @@ def die(msg):
+     print(f"aider-turn: {msg}", file=sys.stderr)
+     sys.exit(2)
+ 
++def aider_supports_add_gitignore_files(aider_bin):
++    # GH-186: probe the installed binary's actual CLI surface — old aider builds still advertise
++    # --add-gitignore-files (needed for gitignored relay files), current releases removed it.
++    try:
++        r = subprocess.run([aider_bin, "--help"], capture_output=True, text=True)
++    except Exception:
++        return False
++    if r.returncode != 0:
++        return False
++    return "--add-gitignore-files" in r.stdout
++
++def relay_sig(root, path):
++    # GH-251: content signature of the relay file (git hash-object at ROOT, cksum fallback).
++    try:
++        r = subprocess.run(["git", "-C", root, "hash-object", "--", path], capture_output=True, text=True)
++        if r.returncode == 0 and r.stdout.strip():
++            return r.stdout.strip()
++    except Exception:
++        pass
++    try:
++        with open(path, "rb") as fh:
++            r = subprocess.run(["cksum"], stdin=fh, capture_output=True, text=True)
++        if r.returncode == 0 and r.stdout.strip():
++            return r.stdout.strip()
++    except Exception:
++        pass
++    return "none"
++
+ def main():
+     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+     root = os.environ.get("AIDER_TURN_ROOT", xyz_root)
+@@ -94,10 +123,13 @@ def main():
+     
+     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
+     
++    gitignore_args = ["--no-gitignore"]
++    if aider_supports_add_gitignore_files(aider_bin):
++        gitignore_args.append("--add-gitignore-files")
++
+     aider_args = [
+         "--model", aider_model, "--yes-always", "--no-auto-commits"
+-    ] + aider_auth_args + [
+-        "--no-gitignore",
++    ] + aider_auth_args + gitignore_args + [
+         "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0",
+         "--chat-history-file", os.path.join(aider_aux_dir, "chat.history.md"),
+         "--input-history-file", os.path.join(aider_aux_dir, "input.history"),
+@@ -108,8 +140,12 @@ def main():
+     if xflags:
+         aider_args.extend(shlex.split(xflags))
+         
++    # GH-251: signature the relay file BEFORE the turn so a review-only turn that produced a graded
++    # review in the transcript but landed NO relay-file append can be detected and salvaged after.
++    relay_presig = relay_sig(root, f)
++
+     rtl.before()
+-    
++
+     wt = ""
+     run_cwd = root
+     
+@@ -152,8 +188,31 @@ def main():
+         print("aider-turn: aider exited 0 but produced NO output — likely a blocked/misconfigured backend. Failing the turn.", file=sys.stderr)
+         sys.exit(5)
+         
++    # GH-251 transcript-salvage backstop. On a REVIEW-ONLY turn (ALLOW_PATHS empty), if the relay file
++    # is byte-unchanged after the turn but the transcript carries a graded review (a `Verdict:` anchor),
++    # recover it: append the turn transcript to the relay file (attributed) so the review LANDS instead
++    # of being discarded as a stall. Runs BEFORE rtl.enforce so the append is the file-scoped commit.
++    if not allow_paths and bounded_rc == 0 and os.path.getsize(aider_log) > 0:
++        relay_postsig = relay_sig(root, f)
++        has_verdict = False
++        try:
++            with open(aider_log, "r", errors="replace") as lf:
++                log_text = lf.read()
++            has_verdict = bool(re.search(r"verdict[ \t]*:", log_text, re.IGNORECASE))
++        except Exception:
++            log_text = ""
++        if relay_postsig == relay_presig and has_verdict:
++            with open(f, "a") as rf:
++                rf.write(f"\n\n---\n\n### Review salvaged from {aider_model} transcript (aider-turn.sh · GH-251)\n\n")
++                rf.write("_Aider completed a review turn but did not land it as a relay-file append; the harness\n")
++                rf.write("recovered the graded review from the turn transcript verbatim below (attributed, not edited)._\n\n")
++                rf.write("```text\n")
++                rf.write(log_text)
++                rf.write("\n```\n")
++            print("aider-turn: review turn landed no relay-file delta but the transcript carried a graded review — salvaged it into the relay file (attributed; GH-251)", file=sys.stderr)
++
+     rc = rtl.enforce(t, me, aider_log, "aider")
+-    
++
+     if bounded_rc == 7:
+         sys.exit(7)
+ 
+diff --git a/utils/py/codex-turn.py b/utils/py/codex-turn.py
+index f9b6f7b..bc5f36e 100644
+--- a/utils/py/codex-turn.py
++++ b/utils/py/codex-turn.py
+@@ -4,7 +4,7 @@ import sys
+ import tempfile
+ import subprocess
+ import shlex
+-from rtl import RelayTurnLib, claim_task_or_exit
++from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log
+ 
+ def die(msg):
+     print(f"codex-turn: {msg}", file=sys.stderr)
+@@ -36,6 +36,12 @@ def main():
+     allow_paths = os.environ.get("ALLOW_PATHS", "")
+     peer = os.environ.get("RELAY_PEER", "")
+     
++    # GH-161: default the transcript to a PERSISTENT path under relay-system/logs/<date>/ (mirrors
++    # Bash codex-turn.sh) and export RTL_LOG BEFORE the first rtl call — so the Bash rtl_init/enforce
++    # traces (fine-grained under RTL_TRACE=1, unconditional log_always) land in this transcript.
++    codex_log = os.environ.get("CODEX_LOG") or rtl_default_log(root, "codex-turn", t)
++    os.environ["RTL_LOG"] = codex_log
++
+     rtl = RelayTurnLib(root, xyz_root, f, allow_paths)
+     
+     prompt = rtl.turn_prompt(me, t, peer)
+@@ -52,8 +58,6 @@ def main():
+     cflags = default_codex_flags()
+     codex_extra_flags = []
+     
+-    codex_log = os.environ.get("CODEX_LOG", os.path.join(tempfile.gettempdir(), f"codex-turn-{os.getpid()}.log"))
+-    
+     rtl.before()
+     
+     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
+@@ -80,7 +84,9 @@ def main():
+     
+     bounded_rc = 0
+     try:
+-        with open(codex_log, "w") as log_f:
++        # GH-161: append (not truncate) — rtl_init already wrote its decision-trace line into codex_log
++        # via the exported RTL_LOG; a truncating open here would silently wipe it (mirrors codex-turn.sh:170).
++        with open(codex_log, "a") as log_f:
+             subprocess.run(cmd, env=codex_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
+     except subprocess.TimeoutExpired:
+         bounded_rc = 7
+diff --git a/utils/py/consult.py b/utils/py/consult.py
+index 00a1432..d284b13 100644
+--- a/utils/py/consult.py
++++ b/utils/py/consult.py
+@@ -60,6 +60,56 @@ def rtl_has_uncited_claim(path, window=3):
+             return True
+     return False
+ 
++def _rtl_norm(s):
++    # Mirror the awk norm(): collapse runs of whitespace to a single space, strip leading/trailing.
++    return re.sub(r"[ \t\r\n\f\v]+", " ", s).strip()
++
++def rtl_classify_cited_claims(transcript_path, prompt_path, window=3):
++    """Python port of relay-turn-lib.sh's rtl_classify_cited_claims() (GH-235 A4 v0): for each
++    ALREADY-CITED claim line in <transcript_path>, decide whether the nearby citation string was
++    discovered firsthand in the transcript or merely echoed from the operator prompt text persisted
++    in <prompt_path>. Yields ("ECHOED", token) or ("FIRSTHAND", token) per claim, matching the awk
++    line-order. Missing/unreadable inputs yield nothing (mirrors the Bash early return). Known v0
++    limitation (shared with Bash): exact/whitespace-normalized substring matching only — no fuzzy
++    reformat matching."""
++    if not (transcript_path and os.path.isfile(transcript_path) and prompt_path and os.path.isfile(prompt_path)):
++        return
++    try:
++        with open(prompt_path, "r", errors="replace") as f:
++            prompt_lines = f.read().splitlines()
++        with open(transcript_path, "r", errors="replace") as f:
++            lines = f.read().splitlines()
++    except OSError:
++        return
++    # awk builds prompt as each line + "\n" then norms it (newlines collapse to spaces).
++    prompt_norm = _rtl_norm("".join(pl + "\n" for pl in prompt_lines))
++    n = len(lines)
++    for i, line in enumerate(lines):
++        if _RTL_UNVERIFIED_RE.search(line):
++            continue
++        claim = bool(_RTL_PASS_TAG_RE.search(line)) or bool(_RTL_CLAIM_WORD_RE.search(line))
++        if not claim:
++            continue
++        first_token = None
++        echoed_token = None
++        window_end = min(n, i + window + 1)
++        for j in range(i, window_end):
++            for mo in _RTL_CITATION_RE.finditer(lines[j]):
++                token = mo.group(0)
++                if first_token is None:
++                    first_token = token
++                if _rtl_norm(token) in prompt_norm:
++                    echoed_token = token
++                    break
++            if echoed_token is not None:
++                break
++        if first_token is None:
++            continue
++        if echoed_token is not None:
++            yield ("ECHOED", echoed_token)
++        else:
++            yield ("FIRSTHAND", first_token)
++
+ def die(msg):
+     print(f"consult: {msg}", file=sys.stderr)
+     sys.exit(2)
+@@ -191,7 +241,13 @@ def main():
+     
+     preamble = "You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: (1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text; do not rely on writing files (you are running in a throwaway copy)."
+     full_prompt = f"{preamble}\n\n=== CONSULT QUESTION ===\n{prompt_text}"
+-    
++    # GH-235 A4 v0: persist ONLY the operator's PROMPT_TEXT (never the PREAMBLE) so the prompt-trace
++    # classifier below can tell an echoed citation from a firsthand one. Written with no trailing
++    # newline to mirror the Bash `printf '%s'`.
++    prompt_snapshot = os.path.join(run_dir, f"{label}.PROMPT.txt")
++    with open(prompt_snapshot, "w") as f:
++        f.write(prompt_text)
++
+     base_res = subprocess.run(["git", "-C", root, "stash", "create"], capture_output=True, text=True)
+     base = base_res.stdout.strip()
+     if not base:
+@@ -327,10 +383,12 @@ def main():
+         # SINGLE-MODEL stamp below. Does NOT verify a citation is ACCURATE, only that a claim has one
+         # attempted nearby. Mirrors relay-automation/consult.sh:310-336 — do not redesign, just port.
+         citeless_models = []
++        provenance_warnings = []  # (model, echoed_count) — GH-235 A4 v0 prompt-trace warnings
+         for m, out, ok in results:
+             if not ok:
+                 continue
+-            if rtl_has_uncited_claim(out):
++            uncited = rtl_has_uncited_claim(out)
++            if uncited:
+                 citeless_models.append(m)
+                 nocite = (
+                     f"**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional "
+@@ -349,6 +407,29 @@ def main():
+                 with open(os.path.join(run_dir, f"{label}.{m}.NO-CITATION.txt"), "w") as f:
+                     f.write(nocite + "\n")
+ 
++            # GH-235 A4 v0 (Python port of relay-automation/consult.sh:346-368): when the prompt
++            # snapshot exists, classify each already-cited claim as FIRSTHAND or ECHOED (its citation
++            # already appears in the operator prompt) and write a per-advisor PROVENANCE.txt sidecar.
++            # An echoed citation on an otherwise-cited advisor (uncited == 0) raises a stdout warning.
++            if os.path.isfile(prompt_snapshot):
++                firsthand_count = 0
++                echoed_count = 0
++                echoed_tokens = []
++                for kind, token in rtl_classify_cited_claims(out, prompt_snapshot):
++                    if kind == "FIRSTHAND":
++                        firsthand_count += 1
++                    elif kind == "ECHOED":
++                        echoed_count += 1
++                        echoed_tokens.append(token)
++                provenance = os.path.join(run_dir, f"{label}.{m}.PROVENANCE.txt")
++                with open(provenance, "w") as f:
++                    f.write(f"FIRSTHAND_COUNT={firsthand_count}\n")
++                    f.write(f"ECHOED_COUNT={echoed_count}\n")
++                    for token in echoed_tokens:
++                        f.write(f"ECHOED {token}\n")
++                if not uncited and echoed_count > 0:
++                    provenance_warnings.append((m, echoed_count))
++
+         # GH-178 A2 / GH-215 (Python port): a panel that started with MORE THAN ONE requested advisor
+         # but ended with exactly one survivor is not a reconciled cross-model result — no second read
+         # happened, so treating its verdict as reconciled is exactly the failure mode this consult
+@@ -413,6 +494,8 @@ def main():
+         warn(f"SINGLE-MODEL — NOT RECONCILED (stamped into {survivor_out} and {os.path.join(run_dir, 'DEGRADED-SINGLE-MODEL.txt')})")
+     if citeless_models:
+         warn(f"NO FIRSTHAND VERIFICATION CITED for: {' '.join(citeless_models)} (stamped into transcript(s) + sidecar(s) in {run_dir})")
++    for pw_model, pw_count in provenance_warnings:
++        warn(f"prompt-trace classifier: {pw_model} echoed {pw_count} cited claim(s) from {label}.PROMPT.txt (see {os.path.join(run_dir, f'{label}.{pw_model}.PROVENANCE.txt')})")
+     if answered == 0:
+         warn("all advisors failed")
+         sys.exit(5)
+diff --git a/utils/py/marathon_drive.py b/utils/py/marathon_drive.py
+index 6464ba2..4741a88 100644
+--- a/utils/py/marathon_drive.py
++++ b/utils/py/marathon_drive.py
+@@ -151,10 +151,66 @@ def main():
+             try: os.remove(attempts_file)
+             except: pass
+ 
++    def debug_mantra_prior_attempts(root_dir, raw):
++        # GH-162: READ-ONLY peek at the .tick/attempts/<lane> file GH-45 maintains — how many prior
++        # fires on this lane did not reach Approved. Never writes.
++        f = os.path.join(root_dir, ".tick", "attempts", _lane_key(raw))
++        if os.path.isfile(f):
++            try:
++                with open(f) as fh:
++                    return sum(1 for _ in fh)
++            except Exception:
++                return 0
++        return 0
++
++    def debug_mantra_note(prior, phase_dir_, mantra_file):
++        # GH-162: the note injected into the relay when a prior attempt exists; empty on a first fire
++        # (prior=0) so a normal first-fire relay file stays byte-identical to before this feature.
++        if not prior or prior < 1:
++            return ""
++        reason = ""
++        esc = os.path.join(phase_dir_, "ESCALATION.md")
++        if os.path.isfile(esc):
++            try:
++                with open(esc) as fh:
++                    for line in fh:
++                        if line.startswith("reason:"):
++                            reason = line.split(":", 1)[1].strip()
++                            break
++            except Exception:
++                pass
++        out = (f"\n## Debug mantra (auto-triggered — {prior} prior attempt(s) on this phase did not reach Approved)\n\n"
++               f"Before trying again, read {mantra_file} and follow its four-step discipline: reproduce reliably, "
++               f"know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.\n")
++        if reason:
++            out += f"Last recorded reason ({phase_dir_}/ESCALATION.md): `{reason}`. Read it before re-guessing.\n"
++        return out
++
+     if get_env("RELAY_DRIVER_LOCKED", "0") != "1":
+-        if os.path.isdir(os.path.join(root, ".git")):
++        # GH-49b/GH-207: the lock lives in .git/ (never committed) for a normal clone. In a linked
++        # worktree .git is a FILE pointing at the shared gitdir, so resolve the real common dir and put
++        # the lock there — otherwise --require-clean sees the driver's own lock as untracked dirt inside
++        # the worktree. A vendored .xyz/ copy (no .git) falls back to a hidden lock beside the scripts.
++        git_path = os.path.join(root, ".git")
++        if os.path.isdir(git_path):
+             lock_dir = os.path.join(root, ".git", "relay-driver.lock")
+             lock_label = ".git/relay-driver.lock"
++        elif os.path.isfile(git_path):
++            common = ""
++            try:
++                common = subprocess.check_output(
++                    ["git", "-C", root, "rev-parse", "--git-common-dir"],
++                    stderr=subprocess.DEVNULL).decode('utf-8').strip()
++            except Exception:
++                common = ""
++            if common:
++                if not os.path.isabs(common):
++                    common = os.path.join(root, common)
++                lock_dir = os.path.join(common, "relay-driver.lock")
++                lock_label = ".git/relay-driver.lock"
++            else:
++                lock_dir = os.path.join(root, ".relay-driver.lock")
++                lock_label = ".relay-driver.lock"
+         else:
+             lock_dir = os.path.join(root, ".relay-driver.lock")
+             lock_label = ".relay-driver.lock"
+@@ -216,6 +272,46 @@ def main():
+     phases_dir = args.phases_dir or os.path.join(root, "phases")
+     pre_advance_cmd = args.pre_advance_cmd or f"bash {root}/validate.sh"
+     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
++    # GH-207: a marathon lane namespaces its phase paths + attempt state so two lanes sharing a bare
++    # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.
++    lane_state_key = get_env("MARATHON_LANE_NS") or args.phase_id
++
++    # GH-238: a vendored consumer normally has no root-level validate.sh. Do NOT spend a builder and
++    # reviewer turn only to discover the default gate can't start after approval. A deliberately
++    # non-executing probe (gates like `test -f build/output` only become true after the builder runs):
++    # prove the gate is *runnable*, not that it currently passes. Runs before any render/tick/dispatch.
++    _gate_root = args.target_root or root
++    def _pre_advance_not_runnable(reason):
++        die(f"pre-advance gate not runnable: '{pre_advance_cmd}' ({reason}). "
++            f"Pass --pre-advance-cmd '<runnable command>' to override it.")
++    def _preflight_pre_advance_gate():
++        if subprocess.run(["bash", "-n", "-c", pre_advance_cmd],
++                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
++            _pre_advance_not_runnable("shell syntax is invalid")
++        m = re.match(r'^\s*(bash|/\S*/bash)\s+(\S+)', pre_advance_cmd)
++        if m:
++            gate_shell, script_arg = m.group(1), m.group(2)
++            if not shutil.which(gate_shell):
++                _pre_advance_not_runnable(f"interpreter '{gate_shell}' is not on PATH")
++            if len(script_arg) >= 2 and script_arg[0] in "\"'" and script_arg[-1] == script_arg[0]:
++                script_arg = script_arg[1:-1]
++            if script_arg.startswith("-"):
++                return
++            gate_path = script_arg if os.path.isabs(script_arg) else os.path.join(_gate_root, script_arg)
++            if not os.path.isfile(gate_path):
++                _pre_advance_not_runnable(f"script file does not exist: {gate_path}")
++            return
++        parts = pre_advance_cmd.split()
++        command_name = parts[0] if parts else ""
++        if not command_name:
++            _pre_advance_not_runnable("command is empty")
++        if "/" in command_name:
++            gate_path = command_name if os.path.isabs(command_name) else os.path.join(_gate_root, command_name)
++            if not (os.path.isfile(gate_path) and os.access(gate_path, os.X_OK)):
++                _pre_advance_not_runnable(f"executable does not exist or is not executable: {gate_path}")
++        else:
++            if not shutil.which(command_name):
++                _pre_advance_not_runnable(f"command '{command_name}' is not on PATH")
+ 
+     os.environ["MARATHON_BUILDER"] = args.builder
+     os.environ["MARATHON_REVIEWER"] = args.reviewer
+@@ -243,13 +339,26 @@ def main():
+     _probe_agent_bin(args.builder, "builder")
+     _probe_agent_bin(args.reviewer, "reviewer")
+ 
++    # GH-238 preflight runs AFTER the binary probes (missing builder/reviewer binary fails first, via
++    # shutil.which with no subprocess) but BEFORE any render/tick/dispatch — so a non-runnable default
++    # gate still halts with exit 2 before spending a turn.
++    if args.dry_run:
++        # dry-run never dispatches a turn, so surface the problem but keep going (matches Bash).
++        try:
++            _preflight_pre_advance_gate()
++        except SystemExit as _e:
++            if _e.code not in (0, None):
++                eprint("marathon-drive: (dry-run continues; a live run would halt here)")
++    else:
++        _preflight_pre_advance_gate()
++
+     if args.artifact_paths:
+         os.environ["ALLOW_PATHS"] = args.artifact_paths
+     else:
+         if "ALLOW_PATHS" in os.environ:
+             del os.environ["ALLOW_PATHS"]
+ 
+-    phase_dir = os.path.join(phases_dir, args.phase_id)
++    phase_dir = os.path.join(phases_dir, lane_state_key)
+     relay_file = os.path.join(phase_dir, "RELAY.md")
+     
+     # repo-root-relative path
+@@ -279,6 +388,11 @@ def main():
+     with open(args.phase_brief_file, "r") as f:
+         brief_text = f.read()
+ 
++    # GH-162: peek at prior attempts BEFORE rendering so a re-fired phase carries the debug-mantra note.
++    debug_mantra_prior = debug_mantra_prior_attempts(get_env("TICK_REPO_ROOT", root), lane_state_key)
++    debug_mantra_text = debug_mantra_note(
++        debug_mantra_prior, phase_dir, os.path.join(xyz_harness, "relay-automation", "DEBUG-MANTRA.md"))
++
+     tick_cli = tick_bin if tick_bin.startswith("/") else os.path.join(root, tick_bin)
+ 
+     if args.artifact_paths:
+@@ -303,7 +417,7 @@ NEXT: {args.builder}
+ ## Phase Brief
+ 
+ {brief_text}
+-
++{debug_mantra_text}
+ ---
+ 
+ ▶ TAKE YOUR TURN ({args.builder} — BUILDER role)
+@@ -338,8 +452,13 @@ You are the REVIEWER for this phase. {reviewer_read_line}
+         sys.exit(0)
+ 
+     subprocess.run(["git", "-C", root, "add", "--", relay_file], check=True)
+-    subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: render phase {args.phase_id} relay ({relay_task})"], check=True)
+-    log(f"relay file committed: {relay_file}")
++    # GH-207: only commit when the render actually changed — a byte-identical re-render must not HALT on
++    # a "nothing to commit" git error; treat it as unchanged and continue.
++    if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", relay_file]).returncode == 0:
++        log(f"relay file unchanged: {relay_file}")
++    else:
++        subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: render phase {args.phase_id} relay ({relay_task})"], check=True)
++        log(f"relay file committed: {relay_file}")
+ 
+     os.environ["TICK_REPO_ROOT"] = root
+ 
+@@ -366,7 +485,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
+             else:
+                 die(f"relay task {relay_task} is open but reserved for unexpected agent '{handoff}'")
+ 
+-    lane_attempt_gate(get_env("TICK_REPO_ROOT", root), args.phase_id, args.force)
++    lane_attempt_gate(get_env("TICK_REPO_ROOT", root), lane_state_key, args.force)
+     def _run_tick_loud(cmd_args):
+         res = subprocess.run(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+         if res.returncode != 0:
+@@ -382,25 +501,23 @@ You are the REVIEWER for this phase. {reviewer_read_line}
+     _run_tick_loud([tick_bin, "log", "marathon.phase.start", relay_task, "--agent", "marathon"])
+     log(f"phase start: running relay-drive --round-cap {args.round_cap}")
+ 
+-    cmd = [
+-        relay_drive_bin,
+-        "--relay-file", relay_file,
+-        "--relay-task", relay_task,
+-        "--agent-cmd", agent_cmd,
+-        "--round-cap", str(args.round_cap)
+-    ]
+-    if args.target_root:
+-        cmd.extend(["--target-root", args.target_root])
+-        
+-    env = os.environ.copy()
+-    env["RELAY_FILE"] = relay_file
+-    env["LANE_ATTEMPT_COUNTED"] = "1"
+-    env["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
+-    
+-    relay_exit = 0
+-    res = subprocess.run(cmd, env=env)
+-    if res.returncode != 0:
+-        relay_exit = res.returncode
++    def _run_relay_drive(review_once=False):
++        cmd2 = [relay_drive_bin, "--relay-file", relay_file, "--relay-task", relay_task,
++                "--agent-cmd", agent_cmd]
++        if review_once:
++            cmd2.append("--review-once")   # GH-207: one approval pass, no round-cap
++        else:
++            cmd2.extend(["--round-cap", str(args.round_cap)])
++        if args.target_root:
++            cmd2.extend(["--target-root", args.target_root])
++        env2 = os.environ.copy()
++        env2["RELAY_FILE"] = relay_file
++        env2["LANE_ATTEMPT_COUNTED"] = "1"
++        env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
++        env2["RELAY_COST_SUMMARY"] = "0"
++        return subprocess.run(cmd2, env=env2).returncode
++
++    relay_exit = _run_relay_drive()
+ 
+     def escalate(reason, rexit):
+         esc_file = os.path.join(phase_dir, "ESCALATION.md")
+@@ -414,7 +531,9 @@ reason: {reason}
+ relay-file: {rel_relay}
+ """)
+         subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
+-        subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
++        # GH-207: an identical escalation record must not HALT on nothing-to-commit.
++        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
++            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
+         subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+         log(f"escalation written: {esc_file} (reason: {reason})")
+ 
+@@ -432,32 +551,156 @@ relay-file: {rel_relay}
+         dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
+         shutil.copy2(relay_file, dest)
+         subprocess.run(["git", "-C", root, "add", "--", dest], check=True)
+-        subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} transcript saved ({relay_task})"], check=True)
+-        log(f"transcript saved: {dest}")
++        # GH-207: an identical transcript (same-second re-render) must not HALT on nothing-to-commit.
++        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", dest]).returncode == 0:
++            log(f"transcript unchanged: {dest}")
++        else:
++            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} transcript saved ({relay_task})"], check=True)
++            log(f"transcript saved: {dest}")
+         return True
+ 
+-    if relay_exit == 0:
+-        log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
+-        gate_exit = 0
++    def run_pre_advance_gate():
+         cwd = args.target_root if args.target_root else None
++        return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
++
++    def artifacts_exist():
++        if not args.artifact_paths:
++            return False
++        aroot = args.target_root or root
++        for p in args.artifact_paths.split(","):
++            p = p.strip()
++            if not p:
++                continue
++            ap = p if os.path.isabs(p) else os.path.join(aroot, p)
++            if not os.path.exists(ap):
++                return False
++        return True
++
++    def file_status():
+         try:
+-            subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd, check=True)
+-        except subprocess.CalledProcessError as e:
+-            gate_exit = e.returncode
+-        
++            with open(relay_file) as f:
++                for line in f:
++                    if line.startswith("STATUS:"):
++                        return line.split(":", 1)[1].strip()
++        except Exception:
++            pass
++        return ""
++
++    def terminal_status(s):
++        return s in ("Approved", "Closed")
++
++    def token_state():
++        try:
++            info = subprocess.check_output([tick_bin, "info", relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
++        except Exception:
++            return ("", "")
++        status = claimer = handoff = ""
++        for line in info:
++            if line.startswith("status:"): status = line.split(":", 1)[1].strip()
++            elif line.startswith("claimer:"): claimer = line.split(":", 1)[1].strip()
++            elif line.startswith("handoff-to:"): handoff = line.split(":", 1)[1].strip()
++        actor = claimer if status == "claimed" else (handoff if status == "open" else "")
++        return (status, actor)
++
++    def complete_phase_success(success_mode="approved"):
++        log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
++        gate_exit = run_pre_advance_gate()
+         if gate_exit != 0:
+             log(f"pre-advance gate FAILED (exit {gate_exit}) — escalating")
+-            escalate("pre-advance-failed", relay_exit)
++            escalate("pre-advance-failed", 0)
+             xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
+             sys.exit(5)
+-            
++        if success_mode == "already-satisfied":
++            success_text = f"phase {args.phase_id} complete — lane_already_satisfied, reviewer approved, gate passed"
++        else:
++            success_text = f"phase {args.phase_id} complete — STATUS: Approved, gate passed"
+         subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), args.phase_id)
++        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
+         save_transcript()
+-        log(f"phase {args.phase_id} complete — STATUS: Approved, gate passed")
+-        xyz_marathon_emit("green", f"phase {args.phase_id} complete — STATUS: Approved, gate passed")
++        log(success_text)
++        xyz_marathon_emit("green", success_text)
+         sys.exit(0)
++
++    def recover_already_satisfied_lane():
++        # GH-207: a stalled builder (exit 3) whose declared artifact is already built AND gate-green gets
++        # ONE routed reviewer pass instead of a false no-progress escalation. Returns 0 to route to
++        # complete_phase_success(already-satisfied); 3 to fall through to the ordinary no-progress halt.
++        if not args.artifact_paths or not artifacts_exist():
++            return 3
++        log(f"relay stalled (exit 3) with declared artifact(s) already present — probing the pre-advance gate: {pre_advance_cmd}")
++        if run_pre_advance_gate() != 0:
++            log("already-satisfied probe: pre-advance gate FAILED — treating it as real no-progress")
++            return 3
++        s = file_status()
++        tstatus, actor = token_state()
++        if terminal_status(s) and not actor:
++            log(f"already-satisfied probe: relay already reached terminal agreement (STATUS: {s}, token done)")
++            return 0
++        if tstatus == "claimed" and actor == args.builder:
++            subprocess.run([tick_bin, "release", relay_task, "--agent", args.builder, "--to", args.reviewer], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++        elif tstatus == "open" and actor == args.builder:
++            subprocess.run([tick_bin, "claim", relay_task, "--agent", args.builder, "--paths", claim_paths], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++            subprocess.run([tick_bin, "release", relay_task, "--agent", args.builder, "--to", args.reviewer], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++        else:
++            log(f"already-satisfied probe: artifact + gate are green, but current actor is {actor or 'none'} (token {tstatus or 'missing'}) — cannot auto-route to review")
++            return 3
++        log(f"already-satisfied probe: routed the stalled builder turn to reviewer {args.reviewer} for one approval pass")
++        review_exit = _run_relay_drive(review_once=True)
++        if review_exit == 0:
++            return 0
++        if review_exit == 5:
++            log("already-satisfied probe: reviewer declined approval — lane remains unsatisfied")
++            return 3
++        return review_exit
++
++    timeout_reason = ["turn-timeout-or-hang"]
++    timeout_emit = [f"halted at phase {args.phase_id} — turn timeout / hang"]
++
++    def recover_timeout_exit():
++        # GH-205: a relay timeout (exit 7) whose declared artifact already landed AND is gate-green AND
++        # left a live reviewer handoff is resumed with one more relay-drive pass instead of a false hang.
++        if not artifacts_exist():
++            timeout_reason[0] = "timeout-no-artifact"
++            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder produced no declared artifact"
++            log("relay timed out (exit 7) before any declared artifact landed — treating it as a real hang")
++            return 7
++        log(f"relay timed out (exit 7) after declared artifact(s) appeared — probing the pre-advance gate: {pre_advance_cmd}")
++        if run_pre_advance_gate() != 0:
++            timeout_reason[0] = "timeout-gate-failed"
++            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder artifact failed the pre-advance gate"
++            log("timeout probe: pre-advance gate FAILED — treating it as a real halt")
++            return 5
++        s = file_status()
++        tstatus, actor = token_state()
++        if terminal_status(s) and not actor:
++            log(f"timeout probe: relay already reached terminal agreement (STATUS: {s}, token done) — continuing")
++            return 0
++        if not actor:
++            timeout_reason[0] = "timeout-no-live-actor"
++            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder left no live reviewer handoff"
++            log(f"timeout probe: artifact + gate were green, but {relay_task} has no live actor (STATUS: {s}) — cannot continue")
++            return 7
++        if actor == args.builder:
++            timeout_reason[0] = "timeout-builder-still-owned-turn"
++            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder never handed the relay to review"
++            log(f"timeout probe: builder still owns {relay_task} (STATUS: {s}) — treating this as a real hang")
++            return 7
++        log(f"timeout probe: artifact + gate were green and {relay_task} moved to {actor} — resuming relay-drive from the post-timeout state")
++        r = _run_relay_drive()
++        if r == 7:
++            timeout_reason[0] = "timeout-during-review-recovery"
++            timeout_emit[0] = f"halted at phase {args.phase_id} — relay timed out again during review recovery"
++        return r
++
++    if relay_exit == 7:
++        _r = recover_timeout_exit()
++        relay_exit = 0 if _r == 0 else _r
++
++    if relay_exit == 0:
++        complete_phase_success()
+     elif relay_exit == 3:
++        if recover_already_satisfied_lane() == 0:
++            complete_phase_success("already-satisfied")
+         log("relay escalated: no-progress (relay-drive exit 3)")
+         escalate("no-progress", 3)
+         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay no-progress")
+@@ -467,11 +710,21 @@ relay-file: {rel_relay}
+         escalate("cap-or-close-mismatch", 4)
+         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay cap/close-mismatch")
+         sys.exit(4)
++    elif relay_exit == 5:
++        log("relay escalated: pre-advance gate failed")
++        escalate(timeout_reason[0] if timeout_reason[0] != "turn-timeout-or-hang" else "pre-advance-failed", 5)
++        xyz_marathon_emit("red", timeout_emit[0] if timeout_reason[0] != "turn-timeout-or-hang" else f"halted at phase {args.phase_id} — pre-advance gate failed")
++        sys.exit(5)
+     elif relay_exit == 6:
+         log("relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)")
+         escalate("containment-violation (off-lane edit reverted by a turn-taker)", 6)
+         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — containment violation (off-lane edit reverted)")
+         sys.exit(6)
++    elif relay_exit == 7:
++        log("relay escalated: timeout / hang (relay-drive exit 7)")
++        escalate(timeout_reason[0], 7)
++        xyz_marathon_emit("red", timeout_emit[0])
++        sys.exit(7)
+     else:
+         die(f"relay-drive exited with unexpected code {relay_exit}")
+ 
+diff --git a/utils/py/marathon_plan.py b/utils/py/marathon_plan.py
+index 73ad20d..518e384 100755
+--- a/utils/py/marathon_plan.py
++++ b/utils/py/marathon_plan.py
+@@ -1,11 +1,194 @@
+ #!/usr/bin/env python3
+ import os
+ import sys
++import re
+ import subprocess
+ import tempfile
+ import shutil
+ import datetime
+ 
++# ── Parity shims for behavior missing from the vendored node engine ──────────
++# The Python entry point delegates rendering to utils/py/_marathon_plan_node.js, a
++# copy of the canonical bash JS engine (utils/marathon-plan.sh) that has drifted on
++# two points. These helpers restore parity without touching the node file:
++#   S  — docOf must prefer the lane's own GH-<n> pointer over an earlier PROJECT doc
++#        link (bash utils/marathon-plan.sh docOf). The node copy still uses the older
++#        "first 2-WORKING/GH- else first 2-WORKING else first md link" order, which
++#        mis-picks a distractor doc. We normalize the ROADMAP so the node engine
++#        resolves the SAME doc bash would — a no-op unless the two pickers diverge.
++#   N  — a PR-REVIEW-QUEUE-<today>.md overlay must surface as a "## Review lanes"
++#        section (bash GH-86). The node copy omits it; we append it post-render.
++
++_LINK_RE = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
++
++def _strip_md(v):
++    v = re.sub(r'`([^`]+)`', r'\1', v)
++    v = re.sub(r'\*\*([^*]+)\*\*', r'\1', v)
++    v = re.sub(r'\*([^*]+)\*', r'\1', v)
++    v = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1', v)
++    return v.strip()
++
++def _is_md_doc(target):
++    return bool(re.search(r'\.md($|#)', target)) and ('PROJECT/' in target) and ('relay-system/' not in target)
++
++def _node_pick(cands):
++    for t in cands:
++        if re.search(r'2-WORKING/GH-\d+-', t, re.I):
++            return t
++    for t in cands:
++        if '2-WORKING/' in t:
++            return t
++    return cands[0] if cands else None
++
++def _bash_pick(cands, issue):
++    if issue is not None:
++        own = re.compile(r'(^|/)GH-%d-[^/]+\.md($|#)' % issue, re.I)
++        for t in cands:
++            if '2-WORKING/' in t and own.search(t):
++                return t
++        for t in cands:
++            if own.search(t):
++                return t
++    for t in cands:
++        if '2-WORKING/' in t:
++            return t
++    return cands[0] if cands else None
++
++def _issue_of(title, links):
++    m = re.search(r'\bGH-(\d+)\b', title)
++    if m:
++        return int(m.group(1))
++    for _text, target in links:
++        m2 = re.search(r'github\.com/[^\s)]+/issues/(\d+)', target)
++        if m2:
++            return int(m2.group(1))
++    return None
++
++def _normalize_roadmap(text):
++    # For each ledger bullet, if the node engine's docOf would pick a different md
++    # doc than the bash docOf, prune the rival md-doc links (down-convert them to
++    # plain text) so the node engine resolves the bash-correct doc. Bullet prose /
++    # links never appear in the rendered output, so this is invisible except via the
++    # resolved doc — exactly the intended correction. No-op when pickers agree.
++    out_lines = []
++    for line in text.split('\n'):
++        if not line.lstrip().startswith('- '):
++            out_lines.append(line)
++            continue
++        links = _LINK_RE.findall(line)
++        if not links:
++            out_lines.append(line)
++            continue
++        tm = re.match(r'\s*- \*\*(.+?)\*\*', line)
++        title = tm.group(1) if tm else ''
++        cands = [target.split('#')[0] for (_t, target) in links if _is_md_doc(target)]
++        if len(cands) < 2:
++            out_lines.append(line)
++            continue
++        issue = _issue_of(title, links)
++        np = _node_pick(cands)
++        bp = _bash_pick(cands, issue)
++        if np == bp:
++            out_lines.append(line)
++            continue
++        def _repl(m):
++            target = m.group(2)
++            base = target.split('#')[0]
++            if _is_md_doc(target) and base != bp:
++                return m.group(1)
++            return m.group(0)
++        out_lines.append(_LINK_RE.sub(_repl, line))
++    return '\n'.join(out_lines)
++
++def _cell(v):
++    return str(v) if v is not None else "—"
++
++def _parse_lanes_table(raw):
++    lines = re.split(r'\r?\n', raw)
++    h = -1
++    for idx, l in enumerate(lines):
++        if re.match(r'^##\s+Lanes\s*$', l.strip()):
++            h = idx
++            break
++    if h < 0:
++        return []
++    def split_row(l):
++        s = l.strip()
++        if s.startswith('|'):
++            s = s[1:]
++        if s.endswith('|'):
++            s = s[:-1]
++        return [_strip_md(c.strip()) for c in s.split('|')]
++    i = h + 1
++    while i < len(lines) and not re.match(r'^\s*\|', lines[i]) and not re.match(r'^#{1,6}\s+', lines[i]):
++        i += 1
++    if i >= len(lines) or not re.match(r'^\s*\|', lines[i]):
++        return []
++    header = split_row(lines[i])
++    i += 1
++    if i < len(lines) and re.match(r'^\s*\|?\s*-{2,}', lines[i]):
++        i += 1
++    def col(name):
++        for idx, c in enumerate(header):
++            if c.lower() == name.lower():
++                return idx
++        return -1
++    lane_idx, pr_idx, rev_idx = col('Lane'), col('PR'), col('Reviewer')
++    def at(cells, idx):
++        return cells[idx] if 0 <= idx < len(cells) else ''
++    rows = []
++    while i < len(lines) and re.match(r'^\s*\|', lines[i]):
++        cells = split_row(lines[i])
++        rows.append({
++            'lane': at(cells, lane_idx) if lane_idx >= 0 else (cells[0] if cells else ''),
++            'pr': at(cells, pr_idx) if pr_idx >= 0 else '',
++            'reviewer': at(cells, rev_idx) if rev_idx >= 0 else '',
++        })
++        i += 1
++    return rows
++
++def _review_lanes_block(review_rel, review_raw):
++    lanes = _parse_lanes_table(review_raw)
++    o = []
++    o.append("## Review lanes (manual overlay — run via relay-xyz)")
++    o.append("")
++    o.append(f"A separate manual overlay — [{review_rel}]({review_rel}) — is not derived from")
++    o.append("ROADMAP.md and does not appear in the waves above (a review lane evaluates an existing PR")
++    o.append("diff; it doesn't remediate a ledger item). Fire each via `relay-xyz`, per the overlay doc.")
++    o.append("")
++    if lanes:
++        o.append("| Lane | PR | Reviewer |")
++        o.append("|---|---|---|")
++        for l in lanes:
++            o.append(f"| {_cell(l['lane'])} | {_cell(l['pr'])} | {_cell(l['reviewer'])} |")
++    else:
++        o.append(f"_{review_rel} exists but its `## Lanes` table could not be parsed._")
++    o.append("")
++    return o
++
++def _inject_review_lanes(render_out, queue_dir, today):
++    review_rel = f"PR-REVIEW-QUEUE-{today}.md"
++    review_path = os.path.join(queue_dir, review_rel)
++    try:
++        with open(review_path, "r", encoding="utf-8") as f:
++            review_raw = f.read()
++    except OSError:
++        return
++    try:
++        with open(render_out, "r", encoding="utf-8") as f:
++            content = f.read()
++    except OSError:
++        return
++    lines = content.split('\n')
++    try:
++        anchor = lines.index("## How to fire a lane")
++    except ValueError:
++        return
++    block = _review_lanes_block(review_rel, review_raw)
++    lines[anchor:anchor] = block
++    with open(render_out, "w", encoding="utf-8") as f:
++        f.write('\n'.join(lines))
++
+ def die(msg):
+     sys.stderr.write(f"marathon-plan: {msg}\n")
+     sys.exit(2)
+@@ -114,10 +297,24 @@ if __name__ == "__main__":
+     if not (deep and os.path.isfile(swarm_preflight) and os.access(swarm_preflight, os.X_OK)):
+         swarm_preflight = ""
+ 
++    # Parity shim (S): normalize the ROADMAP so the vendored node engine's older docOf
++    # resolves the same doc bash's docOf would. No-op unless a bullet's two pickers diverge.
++    roadmap_for_node = roadmap
++    try:
++        with open(roadmap, "r", encoding="utf-8") as f:
++            _rm_text = f.read()
++        _rm_norm = _normalize_roadmap(_rm_text)
++        if _rm_norm != _rm_text:
++            roadmap_for_node = os.path.join(tmp_dir, "ROADMAP.normalized.md")
++            with open(roadmap_for_node, "w", encoding="utf-8") as f:
++                f.write(_rm_norm)
++    except OSError:
++        roadmap_for_node = roadmap
++
+     env = os.environ.copy()
+     env.update({
+         "QP_ROOT": root,
+-        "QP_ROADMAP": roadmap,
++        "QP_ROADMAP": roadmap_for_node,
+         "QP_QUEUE_DIR": queue_dir,
+         "QP_TODAY": today,
+         "QP_NOW": now,
+@@ -148,6 +345,10 @@ if __name__ == "__main__":
+         shutil.rmtree(tmp_dir, ignore_errors=True)
+         sys.exit(rc)
+ 
++    # Parity shim (N/GH-86): surface a PR-REVIEW-QUEUE-<today>.md overlay as a
++    # "## Review lanes" section in the rendered doc — the node engine omits it.
++    _inject_review_lanes(render_out, queue_dir, today)
++
+     if run_mode == "check":
+         if not os.path.isfile(queue_doc):
+             emit(f"check: missing artifact: {os.path.relpath(queue_doc, root) if queue_doc.startswith(root) else queue_doc}")
+diff --git a/utils/py/relay_drive.py b/utils/py/relay_drive.py
+index 635b579..ad4f198 100644
+--- a/utils/py/relay_drive.py
++++ b/utils/py/relay_drive.py
+@@ -185,6 +185,26 @@ def main():
+         except: pass
+         return ""
+ 
++    def next_pointer():
++        try:
++            with open(relay_file, 'r') as f:
++                for line in f:
++                    if line.startswith("NEXT:"):
++                        return line.split(":", 1)[1].strip()
++        except: pass
++        return ""
++
++    def relay_content_sig():
++        try:
++            return subprocess.check_output(["git", "hash-object", relay_file], stderr=subprocess.DEVNULL).decode('utf-8').strip()
++        except Exception:
++            pass
++        try:
++            out = subprocess.check_output(["cksum", relay_file], stderr=subprocess.DEVNULL).decode('utf-8').split()
++            return out[0] if out else "?"
++        except Exception:
++            return "?"
++
+     def terminal_status(s):
+         return s in ["Approved", "Closed"]
+ 
+@@ -207,6 +227,75 @@ def main():
+         else: actor = ""
+         return status, actor
+ 
++    def relay_setup_section_lines():
++        # Lines under a "## Setup" header, up to the next "## " section header.
++        lines = []
++        in_setup = False
++        try:
++            with open(relay_file, 'r') as f:
++                for raw in f:
++                    line = raw.rstrip("\n")
++                    if re.match(r'^##[ \t]+Setup[ \t]*$', line):
++                        in_setup = True
++                        continue
++                    if in_setup and re.match(r'^##[ \t]+', line):
++                        break
++                    if in_setup:
++                        lines.append(line)
++        except: pass
++        return lines
++
++    def relay_extract_markdown_paths(line):
++        out = []
++        for m in re.findall(r'`[^`]+`|\*\*[^*]+\*\*', line):
++            s = m
++            if s.startswith("`") and s.endswith("`"):
++                s = s[1:-1]
++            elif s.startswith("**") and s.endswith("**"):
++                s = s[2:-2]
++            out.append(s)
++        return out
++
++    def relay_is_worktree_artifact_path(candidate):
++        if not candidate: return False
++        if candidate.startswith("http://") or candidate.startswith("https://"): return False
++        if candidate.startswith(".relay-artifacts/"): return False
++        if "embedded below" in candidate: return False
++        if " " in candidate or "\t" in candidate: return False
++        if "{" in candidate or "}" in candidate or "," in candidate: return False
++        return (candidate.startswith("/") or "/" in candidate
++                or candidate.startswith(".") or "." in candidate)
++
++    def preflight_setup_artifact_paths():
++        worktree_root = get_env("RELAY_TARGET_ROOT")
++        if not worktree_root:
++            try:
++                worktree_root = subprocess.check_output(
++                    ["git", "-C", os.path.dirname(relay_file), "rev-parse", "--show-toplevel"],
++                    stderr=subprocess.DEVNULL).decode('utf-8').strip()
++            except Exception:
++                worktree_root = root_dir
++            if not worktree_root:
++                worktree_root = root_dir
++        try:
++            worktree_root = os.path.realpath(worktree_root) if os.path.isdir(worktree_root) else worktree_root
++        except Exception:
++            pass
++        for setup_line in relay_setup_section_lines():
++            if "Artifact under review:" not in setup_line:
++                continue
++            if "embedded below" in setup_line:
++                continue
++            for candidate in relay_extract_markdown_paths(setup_line):
++                if not relay_is_worktree_artifact_path(candidate):
++                    continue
++                if candidate.startswith("/"):
++                    resolved = candidate
++                else:
++                    resolved = os.path.join(worktree_root, candidate)
++                if not os.path.exists(resolved):
++                    die(f"artifact path not found in worktree: {candidate}")
++
+     def xyz_relay_emit(health):
+         if get_env("XYZ_HARNESS_CONTEXT", "relay") != "relay": return
+         if not os.access(xyz_append_bin, os.X_OK): return
+@@ -297,12 +386,16 @@ def main():
+             if tstatus == "done":
+                 eprint(f"  → '{args.relay_task}' is spent from a prior relay; seed + drive with a fresh --relay-task (e.g. RELAY-{os.path.splitext(os.path.basename(relay_file))[0]})")
+             sys.exit(4)
+-            
++
++        preflight_setup_artifact_paths()
++
+         if args.dry_run:
+             print(f"relay-drive: WOULD drive turn for agent: {actor} (token {tstatus}, STATUS: {s})")
+             sys.exit(0)
+-            
++
+         prev = f"{tstatus}:{actor}"
++        rfsig = relay_content_sig()   # GH-245: relay-file content signature BEFORE the turn
++        nextp = next_pointer()        # GH-245: NEXT: handoff pointer BEFORE the turn
+         os.environ["RELAY_FILE"] = relay_file
+         os.environ["RELAY_TASK"] = args.relay_task
+         os.environ["RELAY_AGENT"] = actor
+@@ -413,7 +506,9 @@ def main():
+ 
+         ntstatus, nactor = token_state()
+         ns = file_status()
+-        
++        nrfsig = relay_content_sig()   # GH-245: relay-file content signature AFTER the turn
++        nnextp = next_pointer()        # GH-245: NEXT: handoff pointer AFTER the turn
++
+         if escalated_status(ns):
+             eprint(f"relay-drive: relay escalated to human by design (STATUS: {ns}, token {ntstatus}:{nactor}) after {round_idx} turn(s)")
+             xyz_relay_emit("orange")
+@@ -424,11 +519,14 @@ def main():
+                 print(f"relay-drive: review-once — reviewer approved/closed (STATUS: {ns}) after 1 turn")
+                 xyz_relay_emit("green")
+                 sys.exit(0)
+-            if f"{ntstatus}:{nactor}" != prev or ns != s:
+-                print(f"relay-drive: review-once — reviewer completed a turn (STATUS: {ns}, token {ntstatus}:{nactor}); non-approval handback, not a stall")
++            # GH-245 defect 2: classify on EVIDENCE OF A TURN — the relay file's content changed
++            # (findings appended), the NEXT: pointer flipped, or the STATUS word changed — NOT on token
++            # movement alone. Token state is deliberately dropped from the oracle here.
++            if nrfsig != rfsig or nnextp != nextp or ns != s:
++                print(f"relay-drive: review-once — reviewer completed a turn (STATUS: {ns}, token {ntstatus}:{nactor}; relay-file/NEXT changed); non-approval handback, not a stall")
+                 xyz_relay_emit("orange")
+                 sys.exit(5)
+-            eprint(f"relay-drive: review-once — reviewer took no action (STATUS unchanged: {ns}, token still {prev}) — genuine stall")
++            eprint(f"relay-drive: review-once — reviewer took no action (relay file unchanged, NEXT unchanged, STATUS still {ns}, token {ntstatus}:{nactor}) — genuine stall")
+             xyz_relay_emit("red")
+             sys.exit(3)
+             
+diff --git a/utils/py/rtl.py b/utils/py/rtl.py
+index 17c6f25..788ea2b 100644
+--- a/utils/py/rtl.py
++++ b/utils/py/rtl.py
+@@ -75,6 +75,35 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
+     )
+     return tick_repo_root, tick_bin
+ 
++def _rtl_transcript_root(target_root):
++    # Mirror Bash rtl_transcript_root: <root>/relay-system, or $XYZ_ARCHIVE_ROOT (absolutized) when set.
++    target_root = (target_root or "").rstrip("/")
++    ar = os.environ.get("XYZ_ARCHIVE_ROOT", "")
++    if not ar:
++        return f"{target_root}/relay-system"
++    if not os.path.isabs(ar):
++        ar = os.path.join(target_root, ar)
++    return ar
++
++def rtl_default_log(root, tool, task):
++    # GH-161: persistent turn-transcript path under <transcript-root>/logs/<date>/, falling back to
++    # $TMPDIR when the transcript root can't be resolved/created. Mirrors Bash rtl_default_log.
++    fallback = os.path.join(tempfile.gettempdir(), f"{tool}-{os.getpid()}.log")
++    base = _rtl_transcript_root(root)
++    if not base:
++        return fallback
++    tslug = "".join(c if (c.isalnum() or c in "._-") else "_" for c in (task or ""))
++    try:
++        day = subprocess.check_output(["date", "+%Y-%m-%d"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
++    except Exception:
++        day = "unknown-date"
++    path = os.path.join(base, "logs", day, f"{tool}-{tslug}-{os.getpid()}.log")
++    try:
++        os.makedirs(os.path.dirname(path), exist_ok=True)
++        return path
++    except Exception:
++        return fallback
++
+ class RelayTurnLib:
+     def __init__(self, root, xyz_root, relay_file, allow_paths):
+         self.root = root
+diff --git a/utils/py/swarm_preflight.py b/utils/py/swarm_preflight.py
+index 845017e..5eb1c38 100644
+--- a/utils/py/swarm_preflight.py
++++ b/utils/py/swarm_preflight.py
+@@ -85,7 +85,19 @@ def extract_contract(doc_path):
+     if not isinstance(obj.get('artifacts'), list) or len(obj['artifacts']) == 0:
+         eprint(f"contract in {doc_path} needs at least one artifacts path")
+         sys.exit(3)
+-        
++
++    # GH-89: artifacts_new is an OPTIONAL subset marker — every path in it must also
++    # appear in artifacts[] (it is not a separate path list). A typo'd or stray entry
++    # is a contract error (exit 3), same severity as a missing required field.
++    if obj.get('artifacts_new') is not None:
++        if not isinstance(obj['artifacts_new'], list):
++            eprint(f"contract in {doc_path}: artifacts_new must be an array of strings")
++            sys.exit(3)
++        for a in obj['artifacts_new']:
++            if a not in obj['artifacts']:
++                eprint(f"contract in {doc_path}: artifacts_new entry not present in artifacts[]: {a}")
++                sys.exit(3)
++
+     return obj
+ 
+ def merge_contracts(contracts):
+@@ -175,31 +187,39 @@ def eval_probes(root, c):
+     ambig = 1 if stale and counts["unfixed"] > 0 else 0
+     return probes_res, stale, blocked, ambig
+ 
+-def lane_plan(c):
+-    arts = c.get("artifacts", []) + c.get("artifacts_new", [])
++def lane_plan(c, effective=None):
++    effective = effective or {}
++    if isinstance(effective.get("artifacts"), list):
++        arts = effective["artifacts"]
++    else:
++        arts = c.get("artifacts", [])
+     orch_only = (c.get("lanes", {}) or {}).get("orchestrator_only")
+     if not orch_only: orch_only = ["bin/", ".tick/", "relay-automation/relay-turn-lib.sh"]
+     agy_safe = (c.get("lanes", {}) or {}).get("agy_safe", [])
+-    
++
+     def is_orch(p):
+         for o in orch_only:
+             if p == o or p.startswith(o): return True
+         return False
+-        
++
+     orchestrator, codex, agy = [], [], []
+     for a in arts:
+         if is_orch(a): orchestrator.append(a)
+         elif a in agy_safe: agy.append(a)
+         else: codex.append(a)
+-        
++
+     def top_dir(p): return p.split("/")[0]
+     coupled = len(arts) > 1 and len(set(top_dir(a) for a in arts)) == 1
+     buildable = codex + agy
+-    
++
+     return {
+         "orchestrator_owned": orchestrator,
+         "codex_lane": codex,
+         "agy_lane": agy,
++        "effective_artifacts": arts,
++        "inferred_test_artifacts": effective.get("inferred_tests", []),
++        "inferred_test_helpers": effective.get("inferred_helpers", []),
++        "fs_touching_tests": effective.get("fs_touching_tests", []),
+         "agy_review_default": True,
+         "coupling_warning": "all artifacts share one top-level dir; treat as coupled" if coupled else None,
+         "parallelizable": not coupled and len(buildable) >= 2,
+@@ -234,6 +254,9 @@ def normalize(e):
+             "ahead": int(e.get("SP_AHEAD", 0) or 0),
+             "behind": int(e.get("SP_BEHIND", 0) or 0),
+             "dirty": e.get("SP_DIRTY") == "1",
++            "stale_index_lock": e.get("SP_STALE_INDEX_LOCK") == "1",
++            "stale_index_lock_path": e.get("SP_STALE_INDEX_LOCK_PATH") or None,
++            "stale_index_lock_warning": e.get("SP_STALE_INDEX_LOCK_WARNING") or None,
+             "evaluated_ref": e.get("SP_REF") or None,
+             "evaluated_ref_commit": e.get("SP_REF_COMMIT") or None,
+             "checkout_matches_ref": e.get("SP_CHECKOUT_MATCHES_REF") == "1",
+@@ -456,6 +479,20 @@ def main():
+             contracts.append(c)
+         except SystemExit as e:
+             emit(f"CONTRACT ERROR ({doc}): see message above. The planner fails loud rather than guessing from prose.")
++            if e.code == 3:
++                emit("")
++                emit(f"  To fix, add a minimal valid contract in {doc}")
++                emit("  (copy relay-automation/CONTRACT.example.md for a detailed example):")
++                emit("")
++                emit("  ## Swarm Preflight Contract")
++                emit("  ```json")
++                emit("  {")
++                emit('    "target":      { "repo": ".", "ref": "main" },')
++                emit('    "gate":        "bash validate.sh",')
++                emit('    "fix_probes":  [ { "type": "path_absent", "path": "new-file.txt" } ],')
++                emit('    "artifacts":   [ "new-file.txt" ]')
++                emit("  }")
++                emit("  ```")
+             sys.exit(e.code)
+             
+     try:
+@@ -508,7 +545,21 @@ def main():
+         if subprocess.check_output(["git", "-C", target_root, "status", "--porcelain"], stderr=subprocess.DEVNULL).decode('utf-8').strip():
+             dirty = 1
+     except: pass
+-        
++
++    # GH-203: an advisory-only stale .git/index.lock. Use lsof on the exact lock path so a
++    # live git command holding the lock does NOT read as "stale". If lsof is unavailable, stay
++    # silent rather than guess. Never changes the ready verdict.
++    stale_index_lock = 0
++    stale_index_lock_path = ""
++    stale_index_lock_warning = ""
++    index_lock_path = os.path.join(target_root, ".git", "index.lock")
++    if os.path.exists(index_lock_path) and shutil.which("lsof"):
++        rc_lsof = subprocess.call(["lsof", "-t", "--", index_lock_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++        if rc_lsof != 0:
++            stale_index_lock = 1
++            stale_index_lock_path = index_lock_path
++            stale_index_lock_warning = f"stale git index lock detected at {index_lock_path} - verify no live git process (pgrep -fl git), then rm .git/index.lock"
++
+     for a in merged.get("artifacts_new", []):
+         has_probe = any(p and p.get("type") == "path_absent" and p.get("path") == a for p in merged.get("fix_probes", []))
+         if not has_probe:
+@@ -657,10 +708,7 @@ def main():
+     has_agy = "present" if shutil.which("agy") else "missing"
+     gh39_lane_note = f"codex={has_codex} agy={has_agy}"
+     
+-    lane_contract = dict(merged)
+-    lane_contract["artifacts"] = list(all_artifacts)
+-    lane_contract["artifacts_new"] = []
+-    lane_plan_res = lane_plan(lane_contract)
++    lane_plan_res = lane_plan(merged, effective_artifacts)
+     
+     e = {
+         "SP_CONTRACT": merged,
+@@ -683,6 +731,9 @@ def main():
+         "SP_AHEAD": str(ahead),
+         "SP_BEHIND": str(behind),
+         "SP_DIRTY": "1" if dirty else "0",
++        "SP_STALE_INDEX_LOCK": "1" if stale_index_lock else "0",
++        "SP_STALE_INDEX_LOCK_PATH": stale_index_lock_path,
++        "SP_STALE_INDEX_LOCK_WARNING": stale_index_lock_warning,
+         "SP_REF": ref,
+         "SP_REF_COMMIT": ref_commit,
+         "SP_HEAD_BEHIND_REF": str(head_behind_ref),
+@@ -722,6 +773,8 @@ def main():
+         emit(f"  target-root : {target_root} ({branch} @ {commit[:9]})")
+         emit(f"  branch      : suggested={suggested_branch} branch_ready={'true' if branch_ready else 'false'} skip_branch_prompt={'true' if skip_branch_prompt else 'false'}")
+         emit(f"  freshness   : fetch_ok={fetch_ok} upstream={upstream or 'none'} ahead={ahead} behind={behind} dirty={dirty}")
++        if stale_index_lock == 1:
++            emit(f"  warning     : {stale_index_lock_warning}")
+         emit(f"  ref-probed  : {ref} @ {ref_commit[:9]} ({ref_note})")
+         emit(f"  candidate   : {cand_state}")
+         emit(f"  readiness   : ready={ready}{f' — next: {ready_next}' if ready_next else ''}")
