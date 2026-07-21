@@ -8,6 +8,15 @@ import json
 import shutil
 import datetime
 
+def compute_default_root(this_file):
+    # GH-267: this_file lives one directory deeper than its Bash sibling (utils/py/ vs
+    # utils/), so it needs two ".." to reach the same anchor (repo root, or vendored .xyz/).
+    here = os.path.dirname(os.path.abspath(this_file))
+    here_parent = os.path.abspath(os.path.join(here, "..", ".."))
+    if os.path.basename(here_parent) == ".xyz":
+        return os.path.abspath(os.path.join(here_parent, "..")), ".xyz/relay-automation/marathon-drive.sh"
+    return here_parent, "relay-automation/marathon-drive.sh"
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -421,16 +430,12 @@ def main():
     if not args.project_doc and not args.gh_issues:
         die("one input mode required: --project-doc DOC or --gh-issue N")
 
-    here = os.path.dirname(os.path.abspath(__file__))
-    here_parent = os.path.abspath(os.path.join(here, ".."))
-    
-    if os.path.basename(here_parent) == ".xyz":
-        default_root = os.path.abspath(os.path.join(here_parent, ".."))
-        drive_cmd = ".xyz/relay-automation/marathon-drive.sh"
-    else:
-        default_root = here_parent
-        drive_cmd = "relay-automation/marathon-drive.sh"
-        
+    default_root, drive_cmd = compute_default_root(__file__)
+    # here_parent below is one level up from this file's dir (utils/, or .xyz/utils/ when
+    # vendored) — the anchor the relay-turn-lib.sh lookup further down needs; distinct from
+    # (one level shallower than) compute_default_root's own two-levels-up anchor.
+    here_parent = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
     root = get_env("SWARM_PREFLIGHT_ROOT", default_root)
     
     now = get_env("SWARM_PREFLIGHT_NOW", datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))

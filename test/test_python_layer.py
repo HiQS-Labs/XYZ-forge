@@ -110,6 +110,24 @@ def test_swarm_preflight_gh108_bundle_helpers():
     assert not swarm_preflight.is_fs_touching("echo hi 2>&1")
     assert not swarm_preflight.is_fs_touching("status -> note")
 
+def test_swarm_preflight_default_root_gh267():
+    # GH-267: swarm_preflight.py lives one directory deeper (utils/py/) than its Bash
+    # sibling (utils/), so its default-root computation needs an extra ".." to land on
+    # the same anchor. This must hold WITHOUT SWARM_PREFLIGHT_ROOT set — the existing
+    # test/swarm-preflight.sh suite always sets that override, so it never exercised
+    # this path and the one-directory-too-shallow bug went uncaught.
+    import swarm_preflight
+
+    non_vendored = "/some/repo/utils/py/swarm_preflight.py"
+    root, drive_cmd = swarm_preflight.compute_default_root(non_vendored)
+    assert root == "/some/repo"
+    assert drive_cmd == "relay-automation/marathon-drive.sh"
+
+    vendored = "/some/target/.xyz/utils/py/swarm_preflight.py"
+    root, drive_cmd = swarm_preflight.compute_default_root(vendored)
+    assert root == "/some/target"
+    assert drive_cmd == ".xyz/relay-automation/marathon-drive.sh"
+
 def test_rtl_bridge_honors_containment_ignore_in_python_mode():
     import rtl
 
