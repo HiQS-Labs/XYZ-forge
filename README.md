@@ -68,6 +68,12 @@ Everything below is designed to be reversible, but please help it along:
 - **Prerequisites:** both the **Codex CLI** and **agy CLI** installed and pre-authenticated (XYZ
   shells out to them; a relay or consult will fail mid-run if either isn't logged in). See
   [Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy).
+- **Runtime — Python by default.** The harness entry points run their **Python** implementation by
+  default. Every shim keeps its original Bash body inline as the escape hatch, so you can force the
+  legacy Bash path at any granularity: one command with `XYZ_PYTHON=0 <command>`, a whole session or
+  CI job with `export XYZ_PYTHON=0`, or permanently with `git revert <flip-sha>` (the flip is one
+  isolated commit). Python 3.8+ is required; if `python3` is missing or too old a shim prints a warning
+  and falls back to Bash on its own.
 - **Supply-chain note (agy):** The `agy` CLI performs background self-updates. This interacts oddly with the pin-to-audited-commit discipline used for most headless tools, as your underlying agent model may update mid-project.
 - **Agent users: run un-sandboxed.** If you're driving this from Claude Code (or another sandboxed
   agent harness), relay and consult runs need real keychain access and outbound network egress to

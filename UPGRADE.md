@@ -2,7 +2,7 @@
 gh_issue: 255
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/255
 title: "UPGRADE: flip the XYZ_PYTHON default from Bash to Python, reversibly and fleet-wide"
-status: "Proposed (root doc — not yet active)"
+status: "Root repo: Phases 1–4 DONE (flip af7bb4d, 2026-07-20, GH-264); Phase 5 fleet propagation pending"
 created: 2026-07-20
 updated: 2026-07-20
 owner: noel
@@ -364,18 +364,35 @@ untouched either way.
 
 ## 5. Phase 3 — The flip (one isolated commit)
 
+> **✅ DONE on this root repo — flip commit `af7bb4d` (2026-07-20, GH-264 / branch
+> `gh264-python-default-flip`).** §2(c) re-confirmed at HEAD before flipping (Python 117/117, zero
+> Python-attributable failures); post-flip proof held (unset default → Python 117/117; `XYZ_PYTHON=0`
+> → Bash 116/117). Rollback: `git revert af7bb4d`, or `export XYZ_PYTHON=0`. Remaining below (Phase 5
+> fleet propagation) is still pending and stays a live runbook for the vendored `.xyz/` copies.
+
 **Entry gate:** §2(c) clean (Phase 1 done) AND Phase 2 hardening landed.
 
-Change the default at all 11 sites, and **nothing else in the same commit**:
+Change the default at all 11 sites:
 
 ```bash
 # after Phase 2 the line is:  ${XYZ_PYTHON-0}
 # the flip makes it:          ${XYZ_PYTHON-1}
 ```
 
-The commit must touch only those 11 default characters. A surgical, single-purpose flip commit is what
-makes `git revert <flip-sha>` a guaranteed-safe rollback with zero collateral. Do not fold anything
-else in.
+**Then regenerate the packaged relay bundle in the SAME commit** (learned on the GH-264 dogfood — the
+runbook originally said "touch only those 11 characters" and it was wrong):
+
+```bash
+bash skills/relay-automation/make-pkg.sh   # re-bundles relay-pkg.tar.gz
+```
+
+`skills/relay-automation/relay-pkg.tar.gz` vendors byte-for-byte copies of **5 of the flipped shims**
+(`poll.sh`, `relay-loop.sh`, `relay-drive.sh`, `codex-turn.sh`, `agy-turn.sh`), and `relay-pkg-freshness.sh`
+compares them against the live sources. Flip the shims without regenerating the bundle and that test
+goes red. Bundle the regen **in the flip commit**, not a follow-up: a shim-only revert would otherwise
+leave the tarball matching the flipped shims (drift again). So the atomic-revert unit is "11 default
+characters **+ the regenerated tarball**." Nothing *else* is folded in — the tarball is a derived
+artifact of the exact same change, which is what keeps `git revert <flip-sha>` guaranteed-safe.
 
 **Proof:**
 ```bash
@@ -385,7 +402,8 @@ unset XYZ_PYTHON; TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.s
 XYZ_PYTHON=0     TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh; echo "opt-out exit=$?"
 ```
 Both must match their pre-flip counterparts (default-unset == old Python run; `XYZ_PYTHON=0` == old
-Bash run).
+Bash run). In particular `relay-pkg-freshness.sh` must be green — a red there means you skipped the
+`make-pkg.sh` step above.
 
 **Rollback:** `git revert <flip-sha>` (permanent), or `export XYZ_PYTHON=0` (this shell / CI job,
 instant). Document BOTH in the commit message body so the rollback is discoverable from `git log`.
