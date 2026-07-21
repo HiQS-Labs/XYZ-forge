@@ -3,12 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>XYZ — Recent Git History (20 commits)</title>
+<title>xyz-3-agents-swarm — Git Lanes + Fire Queue</title>
 <style>
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2330; --muted: #6b7280;
     --line: #9aa4b2; --edge-label-bg: #f6f7f9; --border: #d8dee6;
     --group-bg: rgba(15, 23, 42, .035);
+    /* Diagram-surface typeface, swapped live by the font picker script near
+       the end of <body>. No @font-face / network fetch here on purpose: the
+       skill's contract is a self-contained file (offline, file:// safe), so
+       "Indie Flower" only resolves if the reader's system already has it
+       installed; otherwise the stack degrades to common handwriting faces
+       and finally the universal `cursive` generic family. Zero requests
+       either way. */
+    --swe-font: -apple-system, "Segoe UI", Roboto, sans-serif;
+    --swe-font-scale: 1;
+    /* Chrome (buttons, search, legend, the picker itself) stays on the
+       system sans regardless of --swe-font: the picker must remain legible
+       in the font it is offering to switch away from. */
+    --swe-ui-font: -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -20,7 +33,8 @@
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body { background: var(--bg); color: var(--ink);
-         font: 14px/1.4 -apple-system, "Segoe UI", Roboto, sans-serif; }
+         font-family: var(--swe-font); line-height: 1.4;
+         font-size: calc(14px * var(--swe-font-scale)); }
 
   .swe-canvas { position: relative; width: 100vw; height: 100vh;
                 overflow: hidden; cursor: grab; }
@@ -32,7 +46,8 @@
   .swe-group-box { position: absolute; background: var(--group-bg);
                     border: 1px dashed var(--border); border-radius: 12px;
                     pointer-events: none; }
-  .swe-group-label { position: absolute; top: 6px; left: 12px; font-size: 10px;
+  .swe-group-label { position: absolute; top: 6px; left: 12px;
+                      font-size: calc(10px * var(--swe-font-scale));
                       font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
                       color: var(--muted); pointer-events: none; }
   .swe-lane-box { position: absolute; background: var(--group-bg);
@@ -48,11 +63,13 @@
               border-top: 3px solid var(--node-color, #6b7280);
               box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: move;
               user-select: none; transition: opacity .15s; }
-  .swe-node-head { font-size: 9px; letter-spacing: .08em; font-weight: 700;
+  .swe-node-head { font-size: calc(9px * var(--swe-font-scale));
+                   letter-spacing: .08em; font-weight: 700;
                    color: var(--node-color, #6b7280); padding: 6px 10px 0; }
   .swe-node-body { padding: 2px 10px 8px; }
   .swe-node-label { font-weight: 600; }
-  .swe-node-tech { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .swe-node-tech { font-size: calc(11px * var(--swe-font-scale));
+                    color: var(--muted); margin-top: 2px; }
   .swe-node-commit .swe-node-label { white-space: nowrap; overflow: hidden;
                                      text-overflow: ellipsis; }
   .swe-node.swe-dimmed { opacity: .22; }
@@ -64,24 +81,27 @@
   .swe-arrow-branch { fill: #00a5a5; }
   .swe-edge-merge { stroke: #9a5cff; stroke-width: 2; }
   .swe-arrow-merge { fill: #9a5cff; }
-  .swe-edge-label { font-size: 11px; fill: var(--muted); text-anchor: middle;
+  .swe-edge-label { font-family: var(--swe-font);
+                    font-size: calc(11px * var(--swe-font-scale));
+                    fill: var(--muted); text-anchor: middle;
                     paint-order: stroke; stroke: var(--edge-label-bg);
                     stroke-width: 4px; }
   .swe-edge.swe-dimmed, .swe-edge-label.swe-dimmed { opacity: .12; }
 
-  .swe-title { position: absolute; top: 14px; left: 18px; font-size: 16px;
+  .swe-title { position: absolute; top: 14px; left: 18px;
+               font-size: calc(16px * var(--swe-font-scale));
                font-weight: 700; pointer-events: none; }
   .swe-controls { position: absolute; bottom: 16px; left: 16px;
                   display: flex; flex-direction: column; gap: 4px; }
   .swe-btn { width: 30px; height: 30px; border: 1px solid var(--border);
              border-radius: 6px; background: var(--panel); color: var(--ink);
-             font-size: 15px; cursor: pointer; }
+             font-family: var(--swe-ui-font); font-size: 15px; cursor: pointer; }
   .swe-btn:hover { border-color: var(--line); }
   .swe-legend { position: absolute; bottom: 16px; right: 16px;
                 background: var(--panel); border: 1px solid var(--border);
                 border-radius: 8px; padding: 8px 12px; display: flex;
-                flex-wrap: wrap; gap: 10px; font-size: 11px;
-                color: var(--muted); max-width: 40vw; }
+                flex-wrap: wrap; gap: 10px; font-family: var(--swe-ui-font);
+                font-size: 11px; color: var(--muted); max-width: 40vw; }
   .swe-legend-item { display: inline-flex; align-items: center; gap: 5px;
                      cursor: pointer; user-select: none; }
   .swe-legend-item.swe-dimmed { opacity: .35; }
@@ -90,16 +110,29 @@
 
   .swe-search { position: absolute; top: 14px; right: 16px;
                 display: flex; align-items: center; gap: 6px; }
-  .swe-search-input { width: 180px; padding: 6px 10px; font-size: 12px;
+  .swe-search-input { width: 180px; padding: 6px 10px;
+                       font-family: var(--swe-ui-font); font-size: 12px;
                        border: 1px solid var(--border); border-radius: 6px;
                        background: var(--panel); color: var(--ink); }
   .swe-search-input::placeholder { color: var(--muted); }
   .swe-search-clear { border: 1px solid var(--border); border-radius: 6px;
                        background: var(--panel); color: var(--muted);
-                       width: 24px; height: 24px; cursor: pointer; font-size: 13px;
+                       width: 24px; height: 24px; cursor: pointer;
+                       font-family: var(--swe-ui-font); font-size: 13px;
                        line-height: 1; display: none; }
   .swe-search-clear:hover { border-color: var(--line); color: var(--ink); }
   .swe-search.swe-search-active .swe-search-clear { display: block; }
+
+  /* Font picker: injected by the script at the end of <body>, next to the
+     search box (top-right cluster). Lives outside #diagram so it survives
+     the re-render a font swap triggers (see script below), fixed-positioned
+     so it tracks the viewport the same way .swe-search visually does. */
+  .swe-font-select { position: fixed; top: 14px; right: 16px; z-index: 5;
+                      padding: 6px 8px; font-family: var(--swe-ui-font);
+                      font-size: 12px; border: 1px solid var(--border);
+                      border-radius: 6px; background: var(--panel);
+                      color: var(--ink); cursor: pointer; }
+  .swe-font-select:hover { border-color: var(--line); }
 </style>
 </head>
 <body>
@@ -811,362 +844,603 @@
 
 </script>
 <script>
-renderDiagram({
-  "title": "XYZ \u2014 Recent Git History (20 commits)",
-  "generated": "2026-07-14",
+(function () {
+  var spec = {
+  "title": "xyz-3-agents-swarm \u2014 Git Lanes + Fire Queue",
+  "generated": "2026-07-20",
   "layout": "git-lanes",
   "sources": [
-    "git rev-list \u003clocal+remote branch refs> --topo-order --date-order --max-count=20",
+    "git rev-list \u003clocal+remote branch refs> --topo-order --date-order --max-count=25",
     "git for-each-ref refs/heads refs/remotes",
-    "git show --format commit metadata and parents"
+    "git show --format commit metadata and parents",
+    "PROJECT/2-WORKING/MARATHON-PLAN-*.md status: frontmatter (fire-queue readiness)"
   ],
-  "history_note": "Lanes are inferred from current local and remote-tracking refs. Deleted branch names and squash/rebase provenance cannot be reconstructed from Git ancestry alone.",
+  "history_note": "Lanes are inferred from current local and remote-tracking refs. Deleted branch names and squash/rebase provenance cannot be reconstructed from Git ancestry alone. Fire-queue nodes are staged marathon plans (not yet branches); readiness reflects each plan's status: frontmatter as of 2026-07-20.",
   "lanes": [
     {
       "id": "main",
       "label": "main",
       "order": 0,
-      "tip": "16b116fd2459d28a74763705468ab453e61d2e92",
-      "current": true
+      "tip": "31cf50af95fb713718ee5cc95bd25189efc89bfb"
     },
     {
       "id": "development",
       "label": "development",
       "order": 1,
-      "tip": "bf6950c1f68b81bbe45475c3224b22059533f54e"
+      "tip": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "current": true
     },
     {
-      "id": "gh-199-swe-diagram-font-picker",
-      "label": "gh-199-swe-diagram-font-picker",
+      "id": "gh-226/provenance-coordination",
+      "label": "gh-226/provenance-coordination",
       "order": 2,
-      "tip": "322ecbe3c84d9d51b0872d543a7302c1458d9f49"
+      "tip": "7bf0becd18925a26bff3b2e349f331e2c9f64c6b"
+    },
+    {
+      "id": "marathon/10days-2026-07-19",
+      "label": "marathon/10days-2026-07-19",
+      "order": 3,
+      "tip": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9"
+    },
+    {
+      "id": "marathon/plan-l-followup-2026-07-19",
+      "label": "marathon/plan-l-followup-2026-07-19",
+      "order": 4,
+      "tip": "b0b068f70ecc178b4147698e512ee6b78ebe8931"
+    },
+    {
+      "id": "fire-queue",
+      "label": "\ud83d\udd25 Fire queue",
+      "order": 5
     }
   ],
   "nodes": [
     {
-      "id": "4fefc6643122127e0f3155897c9a5fcbb55551b1",
-      "label": "docs(ROADMAP): archive 57 completed entries + cross-ref ADVERSARIAL-HARDENING; GH-192 \u2192 3-COMPLETED",
+      "id": "9bf1b566cdb81877c44bd4a1dfbb2abf6aa12573",
+      "label": "feat(GH-250): emit a default RECOMMEND/BECAUSE/UNLESS per item in marathon-triage report",
       "type": "commit",
-      "lane": "main",
+      "lane": "marathon/10days-2026-07-19",
       "order": 0,
-      "tech": "4fefc66 \u00b7 2026-07-10",
-      "author": "noelsaw1",
+      "tech": "9bf1b56 \u00b7 2026-07-19",
+      "author": "Noel Saw",
       "refs": [],
-      "description": "docs(ROADMAP): archive 57 completed entries + cross-ref ADVERSARIAL-HARDENING; GH-192 \u2192 3-COMPLETED\n4fefc6643122127e0f3155897c9a5fcbb55551b1\nnoelsaw1 \u00b7 2026-07-10T10:56:43-07:00"
+      "description": "feat(GH-250): emit a default RECOMMEND/BECAUSE/UNLESS per item in marathon-triage report\n9bf1b566cdb81877c44bd4a1dfbb2abf6aa12573\nNoel Saw \u00b7 2026-07-19T14:31:19-07:00"
     },
     {
-      "id": "864551994f598e3d414a7a89e99c6598427331de",
-      "label": "relay(gh45-remediation-critical-review): Producer r2",
+      "id": "1d15f0cc33d4d35e8ee15a0c9483418c29de7b72",
+      "label": "relay(RELAY-gh-169-commit-history-coverage): agy turn (agy headless; no push)",
       "type": "commit",
-      "lane": "main",
+      "lane": "development",
       "order": 1,
-      "tech": "8645519 \u00b7 2026-07-10",
+      "tech": "1d15f0c \u00b7 2026-07-19",
       "author": "noelsaw1",
       "refs": [],
-      "description": "relay(gh45-remediation-critical-review): Producer r2\n864551994f598e3d414a7a89e99c6598427331de\nnoelsaw1 \u00b7 2026-07-10T13:25:29-07:00"
+      "description": "relay(RELAY-gh-169-commit-history-coverage): agy turn (agy headless; no push)\n1d15f0cc33d4d35e8ee15a0c9483418c29de7b72\nnoelsaw1 \u00b7 2026-07-19T14:31:39-07:00"
     },
     {
-      "id": "db84ab29c2434173c8c300950694ce440451883d",
-      "label": "relay(RELAY-gh45-remediation-critical-review-r2): agy turn (agy headless; no push)",
+      "id": "37836657999f0dcd5b17ac5a7ec3ba604c07ba6d",
+      "label": "fix(GH-245): refuse unwritable --target-root review + classify review-once on evidence",
       "type": "commit",
-      "lane": "main",
+      "lane": "marathon/10days-2026-07-19",
       "order": 2,
-      "tech": "db84ab2 \u00b7 2026-07-10",
-      "author": "noelsaw1",
+      "tech": "3783665 \u00b7 2026-07-19",
+      "author": "Noel Saw",
       "refs": [],
-      "description": "relay(RELAY-gh45-remediation-critical-review-r2): agy turn (agy headless; no push)\ndb84ab29c2434173c8c300950694ce440451883d\nnoelsaw1 \u00b7 2026-07-10T13:27:10-07:00"
+      "description": "fix(GH-245): refuse unwritable --target-root review + classify review-once on evidence\n37836657999f0dcd5b17ac5a7ec3ba604c07ba6d\nNoel Saw \u00b7 2026-07-19T14:37:07-07:00"
     },
     {
-      "id": "abbf5c02a7d9bb10bb006f5658b36ebd3346eb8f",
-      "label": "relay(gh48-phase3-relay-review): scaffold review thread for cross-repo Codex redo",
+      "id": "fcb88599db4f766fb3de477f484f764df1ff853f",
+      "label": "docs(10days): regenerate ROADMAP dashboard + log the 2026-07-19 marathon (13 lanes, 2 waves)",
       "type": "commit",
-      "lane": "main",
+      "lane": "marathon/10days-2026-07-19",
       "order": 3,
-      "tech": "abbf5c0 \u00b7 2026-07-10",
-      "author": "noelsaw1",
+      "tech": "fcb8859 \u00b7 2026-07-19",
+      "author": "Noel Saw",
       "refs": [],
-      "description": "relay(gh48-phase3-relay-review): scaffold review thread for cross-repo Codex redo\nabbf5c02a7d9bb10bb006f5658b36ebd3346eb8f\nnoelsaw1 \u00b7 2026-07-10T18:28:10-07:00"
+      "description": "docs(10days): regenerate ROADMAP dashboard + log the 2026-07-19 marathon (13 lanes, 2 waves)\nfcb88599db4f766fb3de477f484f764df1ff853f\nNoel Saw \u00b7 2026-07-19T14:53:00-07:00"
     },
     {
-      "id": "76560af2b800b63664df7ebe8e4e5323574462f3",
-      "label": "GH-197: two-axis (disclosure/steering) diagnostic spike on AGENTS.md",
+      "id": "510addec9fe9448fb089dfa95cc23bd65b3ba708",
+      "label": "relay(RELAY-marathon-qa-glm52): glm turn (aider headless; no push)",
       "type": "commit",
-      "lane": "main",
+      "lane": "marathon/10days-2026-07-19",
       "order": 4,
-      "tech": "76560af \u00b7 2026-07-10",
-      "author": "noelsaw1",
+      "tech": "510adde \u00b7 2026-07-19",
+      "author": "Noel Saw",
       "refs": [],
-      "description": "GH-197: two-axis (disclosure/steering) diagnostic spike on AGENTS.md\n76560af2b800b63664df7ebe8e4e5323574462f3\nnoelsaw1 \u00b7 2026-07-10T23:40:01-07:00"
+      "description": "relay(RELAY-marathon-qa-glm52): glm turn (aider headless; no push)\n510addec9fe9448fb089dfa95cc23bd65b3ba708\nNoel Saw \u00b7 2026-07-19T15:47:41-07:00"
     },
     {
-      "id": "6dd3037ee601d59346b492be35c8cd79fdac8d25",
-      "label": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)",
+      "id": "138970add12e8bae207d1e845551f5da346ecaa0",
+      "label": "relay(marathon-qa-glm52): land glm r1 review (recovered) + claude-a r2 dispositions",
       "type": "commit",
-      "lane": "main",
+      "lane": "marathon/10days-2026-07-19",
       "order": 5,
-      "tech": "6dd3037 \u00b7 2026-07-10",
-      "author": "noelsaw1",
+      "tech": "138970a \u00b7 2026-07-19",
+      "author": "Noel Saw",
       "refs": [],
-      "description": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)\n6dd3037ee601d59346b492be35c8cd79fdac8d25\nnoelsaw1 \u00b7 2026-07-10T23:43:25-07:00"
+      "description": "relay(marathon-qa-glm52): land glm r1 review (recovered) + claude-a r2 dispositions\n138970add12e8bae207d1e845551f5da346ecaa0\nNoel Saw \u00b7 2026-07-19T15:52:41-07:00"
     },
     {
-      "id": "fd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f",
-      "label": "relay(gh-197-spike-review): claude-a r2 \u2014 implement Codex's r1 findings",
+      "id": "f84bf4565c521cab1b62916fd5c402ca83ce92de",
+      "label": "relay(marathon-qa-glm52): land glm r3 confirm (Approved) \u2014 relay closed",
       "type": "commit",
-      "lane": "main",
+      "lane": "marathon/10days-2026-07-19",
       "order": 6,
-      "tech": "fd6e27c \u00b7 2026-07-10",
-      "author": "noelsaw1",
+      "tech": "f84bf45 \u00b7 2026-07-19",
+      "author": "Noel Saw",
       "refs": [],
-      "description": "relay(gh-197-spike-review): claude-a r2 \u2014 implement Codex's r1 findings\nfd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f\nnoelsaw1 \u00b7 2026-07-10T23:45:11-07:00"
+      "description": "relay(marathon-qa-glm52): land glm r3 confirm (Approved) \u2014 relay closed\nf84bf4565c521cab1b62916fd5c402ca83ce92de\nNoel Saw \u00b7 2026-07-19T15:55:33-07:00"
     },
     {
-      "id": "6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0",
-      "label": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)",
+      "id": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9",
+      "label": "triage(GH-251): file OpenRouter/aider reviewer-seam bug + intake doc + ROADMAP pointer",
       "type": "commit",
-      "lane": "main",
+      "lane": "marathon/10days-2026-07-19",
       "order": 7,
-      "tech": "6921aeb \u00b7 2026-07-10",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)\n6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0\nnoelsaw1 \u00b7 2026-07-10T23:47:13-07:00"
-    },
-    {
-      "id": "e2e54f6733b91c7ed2dd4c675e47f61b154f3a4d",
-      "label": "relay(gh-197-spike-review): claude-a r3 \u2014 narrow frontmatter status line",
-      "type": "commit",
-      "lane": "main",
-      "order": 8,
-      "tech": "e2e54f6 \u00b7 2026-07-10",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(gh-197-spike-review): claude-a r3 \u2014 narrow frontmatter status line\ne2e54f6733b91c7ed2dd4c675e47f61b154f3a4d\nnoelsaw1 \u00b7 2026-07-10T23:47:47-07:00"
-    },
-    {
-      "id": "4aad5841de2faff7578744cd1c4040e05b638c63",
-      "label": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)",
-      "type": "commit",
-      "lane": "main",
-      "order": 9,
-      "tech": "4aad584 \u00b7 2026-07-10",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(RELAY-gh-197-spike-review): codex turn (codex headless; no push)\n4aad5841de2faff7578744cd1c4040e05b638c63\nnoelsaw1 \u00b7 2026-07-10T23:49:59-07:00"
-    },
-    {
-      "id": "16f846e3da56181608a6b3ce65fed774156e6f22",
-      "label": "GH-197: sync ROADMAP/CHANGELOG/doc status with Codex relay review outcome",
-      "type": "commit",
-      "lane": "main",
-      "order": 10,
-      "tech": "16f846e \u00b7 2026-07-10",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "GH-197: sync ROADMAP/CHANGELOG/doc status with Codex relay review outcome\n16f846e3da56181608a6b3ce65fed774156e6f22\nnoelsaw1 \u00b7 2026-07-10T23:51:11-07:00"
-    },
-    {
-      "id": "21d611ec823e9af9ff705f172b2a6baab92b6ed0",
-      "label": "relay(feynman-accuracy): scaffold agy accuracy review of giant-brains feynman skill",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 11,
-      "tech": "21d611e \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(feynman-accuracy): scaffold agy accuracy review of giant-brains feynman skill\n21d611ec823e9af9ff705f172b2a6baab92b6ed0\nnoelsaw1 \u00b7 2026-07-11T07:39:19-07:00"
-    },
-    {
-      "id": "7efc4def776693acf4df2d4a8e1422d18f510694",
-      "label": "relay(feynman-accuracy): point Setup at seeded read-only artifact path",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 12,
-      "tech": "7efc4de \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(feynman-accuracy): point Setup at seeded read-only artifact path\n7efc4def776693acf4df2d4a8e1422d18f510694\nnoelsaw1 \u00b7 2026-07-11T07:40:12-07:00"
-    },
-    {
-      "id": "726d66b141c90542f6cbaca86fb388f8d01de3b8",
-      "label": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 13,
-      "tech": "726d66b \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)\n726d66b141c90542f6cbaca86fb388f8d01de3b8\nnoelsaw1 \u00b7 2026-07-11T07:41:36-07:00"
-    },
-    {
-      "id": "e9a8564decea2864ceb5caccd834a8ebb494c26d",
-      "label": "relay(feynman-accuracy): producer r1 \u2014 5 implemented, 1 declined, 2 new blockers",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 14,
-      "tech": "e9a8564 \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(feynman-accuracy): producer r1 \u2014 5 implemented, 1 declined, 2 new blockers\ne9a8564decea2864ceb5caccd834a8ebb494c26d\nnoelsaw1 \u00b7 2026-07-11T07:47:12-07:00"
-    },
-    {
-      "id": "801ced34815676c7f90307e1afe2b8a7c9f87278",
-      "label": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 15,
-      "tech": "801ced3 \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(RELAY-feynman-accuracy): agy transcript (agy headless; archive; no push)\n801ced34815676c7f90307e1afe2b8a7c9f87278\nnoelsaw1 \u00b7 2026-07-11T07:48:36-07:00"
-    },
-    {
-      "id": "36b6124b6da6fb9c91c2184fc54900a5e002f2b6",
-      "label": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 16,
-      "tech": "36b6124 \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)\n36b6124b6da6fb9c91c2184fc54900a5e002f2b6\nnoelsaw1 \u00b7 2026-07-11T11:45:03-07:00"
-    },
-    {
-      "id": "3568c3b78f8cb1da8d556ca64ce78b45a874a36b",
-      "label": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 17,
-      "tech": "3568c3b \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [],
-      "description": "relay(RELAY-gh-199-swe-diagram-font-picker-accuracy-review): agy turn (agy headless; no push)\n3568c3b78f8cb1da8d556ca64ce78b45a874a36b\nnoelsaw1 \u00b7 2026-07-11T11:50:16-07:00"
-    },
-    {
-      "id": "322ecbe3c84d9d51b0872d543a7302c1458d9f49",
-      "label": "GH-199: swe-diagram font picker (default sans / Indie Flower), agy-reviewed",
-      "type": "commit",
-      "lane": "gh-199-swe-diagram-font-picker",
-      "order": 18,
-      "tech": "322ecbe \u00b7 2026-07-11",
-      "author": "noelsaw1",
-      "refs": [
-        "gh-199-swe-diagram-font-picker"
-      ],
-      "description": "GH-199: swe-diagram font picker (default sans / Indie Flower), agy-reviewed\n322ecbe3c84d9d51b0872d543a7302c1458d9f49\nnoelsaw1 \u00b7 2026-07-11T18:11:24-07:00\ngh-199-swe-diagram-font-picker"
-    },
-    {
-      "id": "16b116fd2459d28a74763705468ab453e61d2e92",
-      "label": "feat: add top-down diagram layout",
-      "type": "commit",
-      "lane": "main",
-      "order": 19,
-      "tech": "16b116f \u00b7 2026-07-14",
+      "tech": "4e1e6c8 \u00b7 2026-07-19",
       "author": "Noel Saw",
       "refs": [
-        "main"
+        "marathon/10days-2026-07-19"
       ],
-      "description": "feat: add top-down diagram layout\n16b116fd2459d28a74763705468ab453e61d2e92\nNoel Saw \u00b7 2026-07-14T07:48:06-07:00\nmain"
+      "description": "triage(GH-251): file OpenRouter/aider reviewer-seam bug + intake doc + ROADMAP pointer\n4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9\nNoel Saw \u00b7 2026-07-19T16:05:45-07:00\nmarathon/10days-2026-07-19"
+    },
+    {
+      "id": "92d542bf4b4253dca20c17ea9fdab140cd7a3b38",
+      "label": "Merge pull request #252 from Claude-AI-Tools-Ventura-County/marathon/10days-2026-07-19",
+      "type": "merge",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 8,
+      "tech": "92d542b \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "Merge pull request #252 from Claude-AI-Tools-Ventura-County/marathon/10days-2026-07-19\n92d542bf4b4253dca20c17ea9fdab140cd7a3b38\nNoel Saw \u00b7 2026-07-19T16:37:43-07:00"
+    },
+    {
+      "id": "674d715270451baa7231624c276ebf98fd77876b",
+      "label": "cleanup(marathon): retire fired/superseded plans + correct stale status words",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 9,
+      "tech": "674d715 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "cleanup(marathon): retire fired/superseded plans + correct stale status words\n674d715270451baa7231624c276ebf98fd77876b\nNoel Saw \u00b7 2026-07-19T16:41:47-07:00"
+    },
+    {
+      "id": "d9ff213cbbb41742796c7367b8edb9931f48dd97",
+      "label": "chore(pdda): end-of-iteration CHANGELOG entry + dashboard regen (post-marathon cleanup)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 10,
+      "tech": "d9ff213 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "chore(pdda): end-of-iteration CHANGELOG entry + dashboard regen (post-marathon cleanup)\nd9ff213cbbb41742796c7367b8edb9931f48dd97\nNoel Saw \u00b7 2026-07-19T16:45:44-07:00"
+    },
+    {
+      "id": "0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8",
+      "label": "marathon(L): seed post-marathon follow-up plan with GH-251 as lane 1",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 11,
+      "tech": "0cc10a0 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L): seed post-marathon follow-up plan with GH-251 as lane 1\n0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8\nNoel Saw \u00b7 2026-07-19T16:50:05-07:00"
+    },
+    {
+      "id": "0dce78687150752ec39bad51412b68a1185e947e",
+      "label": "marathon(L)+fix: land 07-17/07-19 status corrections that git mv dropped; finish GH-251 lane-1",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 12,
+      "tech": "0dce786 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L)+fix: land 07-17/07-19 status corrections that git mv dropped; finish GH-251 lane-1\n0dce78687150752ec39bad51412b68a1185e947e\nNoel Saw \u00b7 2026-07-19T16:51:31-07:00"
+    },
+    {
+      "id": "ca2819de75271387aad06782c3e33a889ef46a6e",
+      "label": "marathon(L): add 3 most-critical /10days recon survivors as lanes 2-4 (#248/#170/#241)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 13,
+      "tech": "ca2819d \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L): add 3 most-critical /10days recon survivors as lanes 2-4 (#248/#170/#241)\nca2819de75271387aad06782c3e33a889ef46a6e\nNoel Saw \u00b7 2026-07-19T16:56:44-07:00"
+    },
+    {
+      "id": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "label": "marathon(L): contract pass \u2014 3 lanes ready (#251/#241/#218), drop #248/#170 (verified done)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 14,
+      "tech": "0a546e7 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L): contract pass \u2014 3 lanes ready (#251/#241/#218), drop #248/#170 (verified done)\n0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a\nNoel Saw \u00b7 2026-07-19T20:53:35-07:00"
+    },
+    {
+      "id": "500dd87a653f44ff3bf6a3a630959c5560b4d363",
+      "label": "fix(marathon-yaml): reject depends_on flow-sequence form with shape-specific error (GH-241)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 15,
+      "tech": "500dd87 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "fix(marathon-yaml): reject depends_on flow-sequence form with shape-specific error (GH-241)\n500dd87a653f44ff3bf6a3a630959c5560b4d363\nNoel Saw \u00b7 2026-07-19T21:09:35-07:00"
+    },
+    {
+      "id": "cf7a123ae0bcfc29f525d2af167521765e136b95",
+      "label": "fix(aider-turn): review mode + transcript salvage so review turns land, not stall (GH-251)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 16,
+      "tech": "cf7a123 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "fix(aider-turn): review mode + transcript salvage so review turns land, not stall (GH-251)\ncf7a123ae0bcfc29f525d2af167521765e136b95\nNoel Saw \u00b7 2026-07-19T21:14:23-07:00"
+    },
+    {
+      "id": "d919e92d5ce78dbcf7f544d61881340f44a11da4",
+      "label": "feat(hq): cross-repo live marathon status query + rollup embed (GH-218)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 17,
+      "tech": "d919e92 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "feat(hq): cross-repo live marathon status query + rollup embed (GH-218)\nd919e92d5ce78dbcf7f544d61881340f44a11da4\nNoel Saw \u00b7 2026-07-19T21:20:38-07:00"
+    },
+    {
+      "id": "88483457ca49e95fb51e9bfad3a4175d1085be93",
+      "label": "docs(marathon): record Plan L fire \u2014 GH-241/251/218 shipped on branch, CHANGELOG + doc statuses",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 18,
+      "tech": "8848345 \u00b7 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "docs(marathon): record Plan L fire \u2014 GH-241/251/218 shipped on branch, CHANGELOG + doc statuses\n88483457ca49e95fb51e9bfad3a4175d1085be93\nNoel Saw \u00b7 2026-07-19T21:31:44-07:00"
+    },
+    {
+      "id": "65c420da43965495a7497f432dfbd452f0c0986c",
+      "label": "test(GH-255): add opt-in TEST_SOFT_FAIL to enumerate all parity gaps in one pass",
+      "type": "commit",
+      "lane": "development",
+      "order": 19,
+      "tech": "65c420d \u00b7 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "test(GH-255): add opt-in TEST_SOFT_FAIL to enumerate all parity gaps in one pass\n65c420da43965495a7497f432dfbd452f0c0986c\nnoelsaw1 \u00b7 2026-07-20T11:14:30-07:00"
+    },
+    {
+      "id": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "label": "Merge remote-tracking branch 'origin/development' into development",
+      "type": "merge",
+      "lane": "development",
+      "order": 20,
+      "tech": "607dd7c \u00b7 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "Merge remote-tracking branch 'origin/development' into development\n607dd7c34a85869915ee60885f7b0ce1044c5ec6\nnoelsaw1 \u00b7 2026-07-20T11:15:21-07:00"
+    },
+    {
+      "id": "ec7c4761044c478b144fd961a4bd7a59364c8b19",
+      "label": "docs(GH-255): record corrected Python-cutover parity ledger in CHANGELOG",
+      "type": "commit",
+      "lane": "development",
+      "order": 21,
+      "tech": "ec7c476 \u00b7 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "docs(GH-255): record corrected Python-cutover parity ledger in CHANGELOG\nec7c4761044c478b144fd961a4bd7a59364c8b19\nnoelsaw1 \u00b7 2026-07-20T11:29:43-07:00"
+    },
+    {
+      "id": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "label": "fix(GH-255): port GH-178 B1 grounding check into agy-turn.py (fail-open)",
+      "type": "commit",
+      "lane": "development",
+      "order": 22,
+      "tech": "52a94ef \u00b7 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [
+        "development"
+      ],
+      "description": "fix(GH-255): port GH-178 B1 grounding check into agy-turn.py (fail-open)\n52a94efa001707ac231dc775c8b331b4b4dfbb38\nnoelsaw1 \u00b7 2026-07-20T11:40:13-07:00\ndevelopment"
+    },
+    {
+      "id": "b0b068f70ecc178b4147698e512ee6b78ebe8931",
+      "label": "Merge remote-tracking branch 'origin/development' into marathon/plan-l-followup-2026-07-19",
+      "type": "merge",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 23,
+      "tech": "b0b068f \u00b7 2026-07-20",
+      "author": "Noel Saw",
+      "refs": [
+        "marathon/plan-l-followup-2026-07-19"
+      ],
+      "description": "Merge remote-tracking branch 'origin/development' into marathon/plan-l-followup-2026-07-19\nb0b068f70ecc178b4147698e512ee6b78ebe8931\nNoel Saw \u00b7 2026-07-20T11:46:16-07:00\nmarathon/plan-l-followup-2026-07-19"
+    },
+    {
+      "id": "7bf0becd18925a26bff3b2e349f331e2c9f64c6b",
+      "label": "docs(GH-226): inventory GH-211/GH-178 touched surfaces (DoD #1)",
+      "type": "commit",
+      "lane": "gh-226/provenance-coordination",
+      "order": 24,
+      "tech": "7bf0bec \u00b7 2026-07-20",
+      "author": "Noel Saw",
+      "refs": [
+        "gh-226/provenance-coordination"
+      ],
+      "description": "docs(GH-226): inventory GH-211/GH-178 touched surfaces (DoD #1)\n7bf0becd18925a26bff3b2e349f331e2c9f64c6b\nNoel Saw \u00b7 2026-07-20T13:22:51-07:00\ngh-226/provenance-coordination"
+    },
+    {
+      "id": "mplan-L",
+      "label": "Plan L \u2014 post-marathon follow-up (3 lanes)",
+      "type": "job",
+      "lane": "fire-queue",
+      "order": 26,
+      "tech": "GH-251/241/218 \u00b7 READY TO FIRE",
+      "description": "READY TO FIRE \u2014 GH-251/241/218\n3 lanes, all contracts preflight exit 0; not yet fired\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-19-L-POST-MARATHON-FOLLOWUP.md"
+    },
+    {
+      "id": "mplan-H",
+      "label": "Plan H \u2014 cross-repo live marathon status (GH-218)",
+      "type": "job",
+      "lane": "fire-queue",
+      "order": 27,
+      "tech": "GH-218 \u00b7 READY TO FIRE",
+      "description": "READY TO FIRE \u2014 GH-218\nBoth phases fireable, contract verified ready via --dry-run\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-17-H-LIVE-MARATHON-STATUS.md"
+    },
+    {
+      "id": "mplan-K",
+      "label": "Plan K \u2014 ddb6c40 shim-root regression",
+      "type": "queue",
+      "lane": "fire-queue",
+      "order": 28,
+      "tech": "GH-255 \u00b7 GATED",
+      "description": "GATED \u2014 GH-255\nTriaged, NOT fired \u2014 live regression on development, operator gate required\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-19-K-POST-DDB6C40-REGRESSION.md"
+    },
+    {
+      "id": "mplan-I",
+      "label": "Plan I \u2014 provenance vs summary coordination",
+      "type": "queue",
+      "lane": "fire-queue",
+      "order": 29,
+      "tech": "GH-226 \u00b7 GATED",
+      "description": "GATED \u2014 GH-226\nActive \u2014 waiting on Jedi feedback and/or operator GO\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-17-I-PROVENANCE-SUMMARY-COORDINATION.md"
+    },
+    {
+      "id": "mplan-J",
+      "label": "Plan J \u2014 vendored-consumer DX gaps",
+      "type": "external",
+      "lane": "fire-queue",
+      "order": 30,
+      "tech": "GH-238/239 \u00b7 WORK OWED",
+      "description": "WORK OWED \u2014 GH-238/239\nTriaged, not yet fired \u2014 capture docs + preflight contracts still owed\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-18-J-VENDORED-CONSUMER-DX.md"
     }
   ],
   "edges": [
     {
-      "source": "4fefc6643122127e0f3155897c9a5fcbb55551b1",
-      "target": "864551994f598e3d414a7a89e99c6598427331de",
+      "source": "9bf1b566cdb81877c44bd4a1dfbb2abf6aa12573",
+      "target": "37836657999f0dcd5b17ac5a7ec3ba604c07ba6d",
       "kind": "sync"
     },
     {
-      "source": "864551994f598e3d414a7a89e99c6598427331de",
-      "target": "db84ab29c2434173c8c300950694ce440451883d",
+      "source": "37836657999f0dcd5b17ac5a7ec3ba604c07ba6d",
+      "target": "fcb88599db4f766fb3de477f484f764df1ff853f",
       "kind": "sync"
     },
     {
-      "source": "db84ab29c2434173c8c300950694ce440451883d",
-      "target": "abbf5c02a7d9bb10bb006f5658b36ebd3346eb8f",
+      "source": "fcb88599db4f766fb3de477f484f764df1ff853f",
+      "target": "510addec9fe9448fb089dfa95cc23bd65b3ba708",
       "kind": "sync"
     },
     {
-      "source": "abbf5c02a7d9bb10bb006f5658b36ebd3346eb8f",
-      "target": "76560af2b800b63664df7ebe8e4e5323574462f3",
+      "source": "510addec9fe9448fb089dfa95cc23bd65b3ba708",
+      "target": "138970add12e8bae207d1e845551f5da346ecaa0",
       "kind": "sync"
     },
     {
-      "source": "76560af2b800b63664df7ebe8e4e5323574462f3",
-      "target": "6dd3037ee601d59346b492be35c8cd79fdac8d25",
+      "source": "138970add12e8bae207d1e845551f5da346ecaa0",
+      "target": "f84bf4565c521cab1b62916fd5c402ca83ce92de",
       "kind": "sync"
     },
     {
-      "source": "6dd3037ee601d59346b492be35c8cd79fdac8d25",
-      "target": "fd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f",
+      "source": "f84bf4565c521cab1b62916fd5c402ca83ce92de",
+      "target": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9",
       "kind": "sync"
     },
     {
-      "source": "fd6e27c4ad68c978c0f11e2c3f5db3b5e5da588f",
-      "target": "6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0",
+      "source": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9",
+      "target": "92d542bf4b4253dca20c17ea9fdab140cd7a3b38",
+      "kind": "merge",
+      "label": "merge"
+    },
+    {
+      "source": "92d542bf4b4253dca20c17ea9fdab140cd7a3b38",
+      "target": "674d715270451baa7231624c276ebf98fd77876b",
       "kind": "sync"
     },
     {
-      "source": "6921aeba80e9baabfde71c5b4dd1ec08dab9f8d0",
-      "target": "e2e54f6733b91c7ed2dd4c675e47f61b154f3a4d",
+      "source": "674d715270451baa7231624c276ebf98fd77876b",
+      "target": "d9ff213cbbb41742796c7367b8edb9931f48dd97",
       "kind": "sync"
     },
     {
-      "source": "e2e54f6733b91c7ed2dd4c675e47f61b154f3a4d",
-      "target": "4aad5841de2faff7578744cd1c4040e05b638c63",
+      "source": "d9ff213cbbb41742796c7367b8edb9931f48dd97",
+      "target": "0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8",
       "kind": "sync"
     },
     {
-      "source": "4aad5841de2faff7578744cd1c4040e05b638c63",
-      "target": "16f846e3da56181608a6b3ce65fed774156e6f22",
+      "source": "0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8",
+      "target": "0dce78687150752ec39bad51412b68a1185e947e",
       "kind": "sync"
     },
     {
-      "source": "16f846e3da56181608a6b3ce65fed774156e6f22",
-      "target": "21d611ec823e9af9ff705f172b2a6baab92b6ed0",
+      "source": "0dce78687150752ec39bad51412b68a1185e947e",
+      "target": "ca2819de75271387aad06782c3e33a889ef46a6e",
+      "kind": "sync"
+    },
+    {
+      "source": "ca2819de75271387aad06782c3e33a889ef46a6e",
+      "target": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "kind": "sync"
+    },
+    {
+      "source": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "target": "500dd87a653f44ff3bf6a3a630959c5560b4d363",
+      "kind": "sync"
+    },
+    {
+      "source": "500dd87a653f44ff3bf6a3a630959c5560b4d363",
+      "target": "cf7a123ae0bcfc29f525d2af167521765e136b95",
+      "kind": "sync"
+    },
+    {
+      "source": "cf7a123ae0bcfc29f525d2af167521765e136b95",
+      "target": "d919e92d5ce78dbcf7f544d61881340f44a11da4",
+      "kind": "sync"
+    },
+    {
+      "source": "d919e92d5ce78dbcf7f544d61881340f44a11da4",
+      "target": "88483457ca49e95fb51e9bfad3a4175d1085be93",
+      "kind": "sync"
+    },
+    {
+      "source": "1d15f0cc33d4d35e8ee15a0c9483418c29de7b72",
+      "target": "65c420da43965495a7497f432dfbd452f0c0986c",
+      "kind": "sync"
+    },
+    {
+      "source": "65c420da43965495a7497f432dfbd452f0c0986c",
+      "target": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "kind": "sync"
+    },
+    {
+      "source": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "target": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "kind": "merge",
+      "label": "merge"
+    },
+    {
+      "source": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "target": "ec7c4761044c478b144fd961a4bd7a59364c8b19",
+      "kind": "sync"
+    },
+    {
+      "source": "ec7c4761044c478b144fd961a4bd7a59364c8b19",
+      "target": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "kind": "sync"
+    },
+    {
+      "source": "88483457ca49e95fb51e9bfad3a4175d1085be93",
+      "target": "b0b068f70ecc178b4147698e512ee6b78ebe8931",
+      "kind": "sync"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "b0b068f70ecc178b4147698e512ee6b78ebe8931",
+      "kind": "merge",
+      "label": "merge"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "7bf0becd18925a26bff3b2e349f331e2c9f64c6b",
       "kind": "branch",
       "label": "branch"
     },
     {
-      "source": "21d611ec823e9af9ff705f172b2a6baab92b6ed0",
-      "target": "7efc4def776693acf4df2d4a8e1422d18f510694",
-      "kind": "sync"
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-L",
+      "kind": "branch",
+      "label": "ready \u25b8"
     },
     {
-      "source": "7efc4def776693acf4df2d4a8e1422d18f510694",
-      "target": "726d66b141c90542f6cbaca86fb388f8d01de3b8",
-      "kind": "sync"
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-H",
+      "kind": "branch",
+      "label": "ready \u25b8"
     },
     {
-      "source": "726d66b141c90542f6cbaca86fb388f8d01de3b8",
-      "target": "e9a8564decea2864ceb5caccd834a8ebb494c26d",
-      "kind": "sync"
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-K",
+      "kind": "branch"
     },
     {
-      "source": "e9a8564decea2864ceb5caccd834a8ebb494c26d",
-      "target": "801ced34815676c7f90307e1afe2b8a7c9f87278",
-      "kind": "sync"
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-I",
+      "kind": "branch"
     },
     {
-      "source": "801ced34815676c7f90307e1afe2b8a7c9f87278",
-      "target": "36b6124b6da6fb9c91c2184fc54900a5e002f2b6",
-      "kind": "sync"
-    },
-    {
-      "source": "36b6124b6da6fb9c91c2184fc54900a5e002f2b6",
-      "target": "3568c3b78f8cb1da8d556ca64ce78b45a874a36b",
-      "kind": "sync"
-    },
-    {
-      "source": "3568c3b78f8cb1da8d556ca64ce78b45a874a36b",
-      "target": "322ecbe3c84d9d51b0872d543a7302c1458d9f49",
-      "kind": "sync"
-    },
-    {
-      "source": "16f846e3da56181608a6b3ce65fed774156e6f22",
-      "target": "16b116fd2459d28a74763705468ab453e61d2e92",
-      "kind": "sync"
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-J",
+      "kind": "branch"
     }
   ]
-});
+};
+
+  // Font stacks: no @font-face, no network fetch — "Indie Flower" resolves
+  // only against a locally installed copy, then degrades through common
+  // handwriting faces to the universal `cursive` generic family, so this
+  // never blocks or silently fails when the diagram is opened offline.
+  var FONTS = {
+    'default': {
+      label: 'Default',
+      family: '-apple-system, "Segoe UI", Roboto, sans-serif',
+      scale: 1
+    },
+    'indie-flower': {
+      label: 'Indie Flower (handwriting)',
+      family: '"Indie Flower", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive',
+      // A handwriting face reads smaller than the system sans at the same
+      // px size, so bump it slightly for legibility.
+      scale: 1.15
+    }
+  };
+
+  function applyFont(key) {
+    var f = FONTS[key] || FONTS['default'];
+    document.documentElement.style.setProperty('--swe-font', f.family);
+    document.documentElement.style.setProperty('--swe-font-scale', f.scale);
+  }
+
+  function positionPicker() {
+    var search = document.querySelector('#diagram .swe-search');
+    picker.style.right = search ? (16 + search.offsetWidth + 8) + 'px' : '16px';
+  }
+
+  var picker = document.createElement('select');
+  picker.className = 'swe-font-select';
+  picker.title = 'Diagram typeface';
+  Object.keys(FONTS).forEach(function (key) {
+    var opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = FONTS[key].label;
+    picker.appendChild(opt);
+  });
+  picker.addEventListener('change', function () {
+    applyFont(picker.value);
+    // Indie Flower's metrics differ from the system sans (wider glyphs,
+    // taller ascenders), so node labels wrap differently and edge anchors
+    // computed from the old heights would drift. Re-rendering from the same
+    // spec re-measures every node height and redraws edges/groups against
+    // the new font, the same way the initial render does.
+    renderDiagram(spec);
+    positionPicker();
+  });
+  // Appended to <body>, not #diagram: renderDiagram() clears #diagram's
+  // contents on every call, and the picker must survive its own re-render.
+  document.body.appendChild(picker);
+
+  renderDiagram(spec);
+  positionPicker();
+  window.addEventListener('resize', positionPicker);
+})();
 </script>
 </body>
 </html>
