@@ -31,13 +31,24 @@ _RTL_CITATION_RE = re.compile(r'"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+')
 _RTL_PASS_TAG_RE = re.compile(r"\[Pass\]")
 _RTL_UNVERIFIED_RE = re.compile(r"\[Unverified — no citation\]")
 
-def rtl_has_uncited_claim(path, window=3):
+def _citation_window():
+    # Mirror Bash `win="${RTL_CITATION_WINDOW:-3}"` with awk-compatible numeric coercion: unset/empty
+    # → 3; otherwise the leading integer ("5"→5, "3x"→3), a non-numeric value → 0.
+    raw = os.environ.get("RTL_CITATION_WINDOW")
+    if not raw:
+        return 3
+    m = re.match(r'\s*([+-]?\d+)', raw)
+    return int(m.group(1)) if m else 0
+
+def rtl_has_uncited_claim(path, window=None):
     """Python port of relay-turn-lib.sh's rtl_has_uncited_claim() (GH-178 A4 / GH-223): flags <path>
     if it carries zero citations anywhere, OR at least one claim-bearing line has no citation within
     `window` lines of itself (including its own line) — even though the file cites something
     elsewhere. Does NOT verify a citation is accurate, only that one was attempted nearby. Missing or
     unreadable file fails safe (flagged), matching the Bash version.
     """
+    if window is None:
+        window = _citation_window()
     try:
         with open(path, "r", errors="replace") as f:
             lines = f.read().splitlines()
@@ -59,6 +70,58 @@ def rtl_has_uncited_claim(path, window=3):
         if not cited:
             return True
     return False
+
+def _rtl_norm(s):
+    # Mirror the awk norm(): collapse runs of whitespace to a single space, strip leading/trailing.
+    return re.sub(r"[ \t\r\n\f\v]+", " ", s).strip()
+
+def rtl_classify_cited_claims(transcript_path, prompt_path, window=None):
+    """Python port of relay-turn-lib.sh's rtl_classify_cited_claims() (GH-235 A4 v0): for each
+    ALREADY-CITED claim line in <transcript_path>, decide whether the nearby citation string was
+    discovered firsthand in the transcript or merely echoed from the operator prompt text persisted
+    in <prompt_path>. Yields ("ECHOED", token) or ("FIRSTHAND", token) per claim, matching the awk
+    line-order. Missing/unreadable inputs yield nothing (mirrors the Bash early return). Known v0
+    limitation (shared with Bash): exact/whitespace-normalized substring matching only — no fuzzy
+    reformat matching."""
+    if window is None:
+        window = _citation_window()
+    if not (transcript_path and os.path.isfile(transcript_path) and prompt_path and os.path.isfile(prompt_path)):
+        return
+    try:
+        with open(prompt_path, "r", errors="replace") as f:
+            prompt_lines = f.read().splitlines()
+        with open(transcript_path, "r", errors="replace") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return
+    # awk builds prompt as each line + "\n" then norms it (newlines collapse to spaces).
+    prompt_norm = _rtl_norm("".join(pl + "\n" for pl in prompt_lines))
+    n = len(lines)
+    for i, line in enumerate(lines):
+        if _RTL_UNVERIFIED_RE.search(line):
+            continue
+        claim = bool(_RTL_PASS_TAG_RE.search(line)) or bool(_RTL_CLAIM_WORD_RE.search(line))
+        if not claim:
+            continue
+        first_token = None
+        echoed_token = None
+        window_end = min(n, i + window + 1)
+        for j in range(i, window_end):
+            for mo in _RTL_CITATION_RE.finditer(lines[j]):
+                token = mo.group(0)
+                if first_token is None:
+                    first_token = token
+                if _rtl_norm(token) in prompt_norm:
+                    echoed_token = token
+                    break
+            if echoed_token is not None:
+                break
+        if first_token is None:
+            continue
+        if echoed_token is not None:
+            yield ("ECHOED", echoed_token)
+        else:
+            yield ("FIRSTHAND", first_token)
 
 def die(msg):
     print(f"consult: {msg}", file=sys.stderr)
@@ -191,7 +254,13 @@ def main():
     
     preamble = "You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: (1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text; do not rely on writing files (you are running in a throwaway copy)."
     full_prompt = f"{preamble}\n\n=== CONSULT QUESTION ===\n{prompt_text}"
-    
+    # GH-235 A4 v0: persist ONLY the operator's PROMPT_TEXT (never the PREAMBLE) so the prompt-trace
+    # classifier below can tell an echoed citation from a firsthand one. Written with no trailing
+    # newline to mirror the Bash `printf '%s'`.
+    prompt_snapshot = os.path.join(run_dir, f"{label}.PROMPT.txt")
+    with open(prompt_snapshot, "w") as f:
+        f.write(prompt_text)
+
     base_res = subprocess.run(["git", "-C", root, "stash", "create"], capture_output=True, text=True)
     base = base_res.stdout.strip()
     if not base:
@@ -327,10 +396,12 @@ def main():
         # SINGLE-MODEL stamp below. Does NOT verify a citation is ACCURATE, only that a claim has one
         # attempted nearby. Mirrors relay-automation/consult.sh:310-336 — do not redesign, just port.
         citeless_models = []
+        provenance_warnings = []  # (model, echoed_count) — GH-235 A4 v0 prompt-trace warnings
         for m, out, ok in results:
             if not ok:
                 continue
-            if rtl_has_uncited_claim(out):
+            uncited = rtl_has_uncited_claim(out)
+            if uncited:
                 citeless_models.append(m)
                 nocite = (
                     f"**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional "
@@ -348,6 +419,29 @@ def main():
                         pass
                 with open(os.path.join(run_dir, f"{label}.{m}.NO-CITATION.txt"), "w") as f:
                     f.write(nocite + "\n")
+
+            # GH-235 A4 v0 (Python port of relay-automation/consult.sh:346-368): when the prompt
+            # snapshot exists, classify each already-cited claim as FIRSTHAND or ECHOED (its citation
+            # already appears in the operator prompt) and write a per-advisor PROVENANCE.txt sidecar.
+            # An echoed citation on an otherwise-cited advisor (uncited == 0) raises a stdout warning.
+            if os.path.isfile(prompt_snapshot):
+                firsthand_count = 0
+                echoed_count = 0
+                echoed_tokens = []
+                for kind, token in rtl_classify_cited_claims(out, prompt_snapshot):
+                    if kind == "FIRSTHAND":
+                        firsthand_count += 1
+                    elif kind == "ECHOED":
+                        echoed_count += 1
+                        echoed_tokens.append(token)
+                provenance = os.path.join(run_dir, f"{label}.{m}.PROVENANCE.txt")
+                with open(provenance, "w") as f:
+                    f.write(f"FIRSTHAND_COUNT={firsthand_count}\n")
+                    f.write(f"ECHOED_COUNT={echoed_count}\n")
+                    for token in echoed_tokens:
+                        f.write(f"ECHOED {token}\n")
+                if not uncited and echoed_count > 0:
+                    provenance_warnings.append((m, echoed_count))
 
         # GH-178 A2 / GH-215 (Python port): a panel that started with MORE THAN ONE requested advisor
         # but ended with exactly one survivor is not a reconciled cross-model result — no second read
@@ -413,6 +507,8 @@ def main():
         warn(f"SINGLE-MODEL — NOT RECONCILED (stamped into {survivor_out} and {os.path.join(run_dir, 'DEGRADED-SINGLE-MODEL.txt')})")
     if citeless_models:
         warn(f"NO FIRSTHAND VERIFICATION CITED for: {' '.join(citeless_models)} (stamped into transcript(s) + sidecar(s) in {run_dir})")
+    for pw_model, pw_count in provenance_warnings:
+        warn(f"prompt-trace classifier: {pw_model} echoed {pw_count} cited claim(s) from {label}.PROMPT.txt (see {os.path.join(run_dir, f'{label}.{pw_model}.PROVENANCE.txt')})")
     if answered == 0:
         warn("all advisors failed")
         sys.exit(5)

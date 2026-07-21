@@ -3,25 +3,34 @@
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
 # utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash
 # implementation below — Bash stays the supported default until the port is promoted.
-if [[ "${XYZ_PYTHON:-0}" == "1" ]]; then
-  _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-  export XYZ_ROOT="$_xyz_root"
-  export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
-  _py_args=()
-  while (($# > 0)); do
-    case "$1" in
-      --zones-config)
-        [[ $# -ge 2 ]] || { printf 'marathon-plan: missing argument for --zones-config\n' >&2; exit 2; }
-        export QUEUE_PLAN_ZONES_FILE="$2"
-        shift 2
-        ;;
-      *)
-        _py_args+=("$1")
-        shift
-        ;;
-    esac
-  done
-  exec python3 "$_xyz_root/utils/py/marathon_plan.py" "${_py_args[@]}"
+if [[ "${XYZ_PYTHON-0}" == "1" ]]; then
+  # UPGRADE.md §4 Phase-2 hardening (GH-255): (2a) `-` not `:-` so an explicit empty XYZ_PYTHON reads
+  # as not-1 → Bash (load-bearing once the default flips to 1); (2b) require python3 >=3.8 and fall
+  # back to Bash if missing/too-old. This site KEEPS its GH-154 --zones-config translation inside the
+  # guarded branch — do NOT collapse it to the generic shim (that would drop the zones-config block).
+  if command -v python3 >/dev/null 2>&1 \
+     && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,8) else 1)' 2>/dev/null; then
+    _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    export XYZ_ROOT="$_xyz_root"
+    export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
+    _py_args=()
+    while (($# > 0)); do
+      case "$1" in
+        --zones-config)
+          [[ $# -ge 2 ]] || { printf 'marathon-plan: missing argument for --zones-config\n' >&2; exit 2; }
+          export QUEUE_PLAN_ZONES_FILE="$2"
+          shift 2
+          ;;
+        *)
+          _py_args+=("$1")
+          shift
+          ;;
+      esac
+    done
+    exec python3 "$_xyz_root/utils/py/marathon_plan.py" "${_py_args[@]}"
+  else
+    echo "xyz: XYZ_PYTHON=1 but python3 missing or < 3.8 — falling back to Bash" >&2
+  fi
 fi
 
 # utils/marathon-plan.sh — deterministic "pre-pre-flight" queue planner.

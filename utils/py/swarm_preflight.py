@@ -85,7 +85,19 @@ def extract_contract(doc_path):
     if not isinstance(obj.get('artifacts'), list) or len(obj['artifacts']) == 0:
         eprint(f"contract in {doc_path} needs at least one artifacts path")
         sys.exit(3)
-        
+
+    # GH-89: artifacts_new is an OPTIONAL subset marker — every path in it must also
+    # appear in artifacts[] (it is not a separate path list). A typo'd or stray entry
+    # is a contract error (exit 3), same severity as a missing required field.
+    if obj.get('artifacts_new') is not None:
+        if not isinstance(obj['artifacts_new'], list):
+            eprint(f"contract in {doc_path}: artifacts_new must be an array of strings")
+            sys.exit(3)
+        for a in obj['artifacts_new']:
+            if a not in obj['artifacts']:
+                eprint(f"contract in {doc_path}: artifacts_new entry not present in artifacts[]: {a}")
+                sys.exit(3)
+
     return obj
 
 def merge_contracts(contracts):
@@ -175,31 +187,39 @@ def eval_probes(root, c):
     ambig = 1 if stale and counts["unfixed"] > 0 else 0
     return probes_res, stale, blocked, ambig
 
-def lane_plan(c):
-    arts = c.get("artifacts", []) + c.get("artifacts_new", [])
+def lane_plan(c, effective=None):
+    effective = effective or {}
+    if isinstance(effective.get("artifacts"), list):
+        arts = effective["artifacts"]
+    else:
+        arts = c.get("artifacts", [])
     orch_only = (c.get("lanes", {}) or {}).get("orchestrator_only")
     if not orch_only: orch_only = ["bin/", ".tick/", "relay-automation/relay-turn-lib.sh"]
     agy_safe = (c.get("lanes", {}) or {}).get("agy_safe", [])
-    
+
     def is_orch(p):
         for o in orch_only:
             if p == o or p.startswith(o): return True
         return False
-        
+
     orchestrator, codex, agy = [], [], []
     for a in arts:
         if is_orch(a): orchestrator.append(a)
         elif a in agy_safe: agy.append(a)
         else: codex.append(a)
-        
+
     def top_dir(p): return p.split("/")[0]
     coupled = len(arts) > 1 and len(set(top_dir(a) for a in arts)) == 1
     buildable = codex + agy
-    
+
     return {
         "orchestrator_owned": orchestrator,
         "codex_lane": codex,
         "agy_lane": agy,
+        "effective_artifacts": arts,
+        "inferred_test_artifacts": effective.get("inferred_tests", []),
+        "inferred_test_helpers": effective.get("inferred_helpers", []),
+        "fs_touching_tests": effective.get("fs_touching_tests", []),
         "agy_review_default": True,
         "coupling_warning": "all artifacts share one top-level dir; treat as coupled" if coupled else None,
         "parallelizable": not coupled and len(buildable) >= 2,
@@ -234,6 +254,9 @@ def normalize(e):
             "ahead": int(e.get("SP_AHEAD", 0) or 0),
             "behind": int(e.get("SP_BEHIND", 0) or 0),
             "dirty": e.get("SP_DIRTY") == "1",
+            "stale_index_lock": e.get("SP_STALE_INDEX_LOCK") == "1",
+            "stale_index_lock_path": e.get("SP_STALE_INDEX_LOCK_PATH") or None,
+            "stale_index_lock_warning": e.get("SP_STALE_INDEX_LOCK_WARNING") or None,
             "evaluated_ref": e.get("SP_REF") or None,
             "evaluated_ref_commit": e.get("SP_REF_COMMIT") or None,
             "checkout_matches_ref": e.get("SP_CHECKOUT_MATCHES_REF") == "1",
@@ -456,6 +479,20 @@ def main():
             contracts.append(c)
         except SystemExit as e:
             emit(f"CONTRACT ERROR ({doc}): see message above. The planner fails loud rather than guessing from prose.")
+            if e.code == 3:
+                emit("")
+                emit(f"  To fix, add a minimal valid contract in {doc}")
+                emit("  (copy relay-automation/CONTRACT.example.md for a detailed example):")
+                emit("")
+                emit("  ## Swarm Preflight Contract")
+                emit("  ```json")
+                emit("  {")
+                emit('    "target":      { "repo": ".", "ref": "main" },')
+                emit('    "gate":        "bash validate.sh",')
+                emit('    "fix_probes":  [ { "type": "path_absent", "path": "new-file.txt" } ],')
+                emit('    "artifacts":   [ "new-file.txt" ]')
+                emit("  }")
+                emit("  ```")
             sys.exit(e.code)
             
     try:
@@ -508,7 +545,21 @@ def main():
         if subprocess.check_output(["git", "-C", target_root, "status", "--porcelain"], stderr=subprocess.DEVNULL).decode('utf-8').strip():
             dirty = 1
     except: pass
-        
+
+    # GH-203: an advisory-only stale .git/index.lock. Use lsof on the exact lock path so a
+    # live git command holding the lock does NOT read as "stale". If lsof is unavailable, stay
+    # silent rather than guess. Never changes the ready verdict.
+    stale_index_lock = 0
+    stale_index_lock_path = ""
+    stale_index_lock_warning = ""
+    index_lock_path = os.path.join(target_root, ".git", "index.lock")
+    if os.path.exists(index_lock_path) and shutil.which("lsof"):
+        rc_lsof = subprocess.call(["lsof", "-t", "--", index_lock_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if rc_lsof != 0:
+            stale_index_lock = 1
+            stale_index_lock_path = index_lock_path
+            stale_index_lock_warning = f"stale git index lock detected at {index_lock_path} - verify no live git process (pgrep -fl git), then rm .git/index.lock"
+
     for a in merged.get("artifacts_new", []):
         has_probe = any(p and p.get("type") == "path_absent" and p.get("path") == a for p in merged.get("fix_probes", []))
         if not has_probe:
@@ -657,10 +708,7 @@ def main():
     has_agy = "present" if shutil.which("agy") else "missing"
     gh39_lane_note = f"codex={has_codex} agy={has_agy}"
     
-    lane_contract = dict(merged)
-    lane_contract["artifacts"] = list(all_artifacts)
-    lane_contract["artifacts_new"] = []
-    lane_plan_res = lane_plan(lane_contract)
+    lane_plan_res = lane_plan(merged, effective_artifacts)
     
     e = {
         "SP_CONTRACT": merged,
@@ -683,6 +731,9 @@ def main():
         "SP_AHEAD": str(ahead),
         "SP_BEHIND": str(behind),
         "SP_DIRTY": "1" if dirty else "0",
+        "SP_STALE_INDEX_LOCK": "1" if stale_index_lock else "0",
+        "SP_STALE_INDEX_LOCK_PATH": stale_index_lock_path,
+        "SP_STALE_INDEX_LOCK_WARNING": stale_index_lock_warning,
         "SP_REF": ref,
         "SP_REF_COMMIT": ref_commit,
         "SP_HEAD_BEHIND_REF": str(head_behind_ref),
@@ -722,6 +773,8 @@ def main():
         emit(f"  target-root : {target_root} ({branch} @ {commit[:9]})")
         emit(f"  branch      : suggested={suggested_branch} branch_ready={'true' if branch_ready else 'false'} skip_branch_prompt={'true' if skip_branch_prompt else 'false'}")
         emit(f"  freshness   : fetch_ok={fetch_ok} upstream={upstream or 'none'} ahead={ahead} behind={behind} dirty={dirty}")
+        if stale_index_lock == 1:
+            emit(f"  warning     : {stale_index_lock_warning}")
         emit(f"  ref-probed  : {ref} @ {ref_commit[:9]} ({ref_note})")
         emit(f"  candidate   : {cand_state}")
         emit(f"  readiness   : ready={ready}{f' — next: {ready_next}' if ready_next else ''}")

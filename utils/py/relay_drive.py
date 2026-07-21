@@ -185,6 +185,26 @@ def main():
         except: pass
         return ""
 
+    def next_pointer():
+        try:
+            with open(relay_file, 'r') as f:
+                for line in f:
+                    if line.startswith("NEXT:"):
+                        return line.split(":", 1)[1].strip()
+        except: pass
+        return ""
+
+    def relay_content_sig():
+        try:
+            return subprocess.check_output(["git", "hash-object", relay_file], stderr=subprocess.DEVNULL).decode('utf-8').strip()
+        except Exception:
+            pass
+        try:
+            out = subprocess.check_output(["cksum", relay_file], stderr=subprocess.DEVNULL).decode('utf-8').split()
+            return out[0] if out else "?"
+        except Exception:
+            return "?"
+
     def terminal_status(s):
         return s in ["Approved", "Closed"]
 
@@ -206,6 +226,75 @@ def main():
         elif status == "open": actor = handoff
         else: actor = ""
         return status, actor
+
+    def relay_setup_section_lines():
+        # Lines under a "## Setup" header, up to the next "## " section header.
+        lines = []
+        in_setup = False
+        try:
+            with open(relay_file, 'r') as f:
+                for raw in f:
+                    line = raw.rstrip("\n")
+                    if re.match(r'^##[ \t]+Setup[ \t]*$', line):
+                        in_setup = True
+                        continue
+                    if in_setup and re.match(r'^##[ \t]+', line):
+                        break
+                    if in_setup:
+                        lines.append(line)
+        except: pass
+        return lines
+
+    def relay_extract_markdown_paths(line):
+        out = []
+        for m in re.findall(r'`[^`]+`|\*\*[^*]+\*\*', line):
+            s = m
+            if s.startswith("`") and s.endswith("`"):
+                s = s[1:-1]
+            elif s.startswith("**") and s.endswith("**"):
+                s = s[2:-2]
+            out.append(s)
+        return out
+
+    def relay_is_worktree_artifact_path(candidate):
+        if not candidate: return False
+        if candidate.startswith("http://") or candidate.startswith("https://"): return False
+        if candidate.startswith(".relay-artifacts/"): return False
+        if "embedded below" in candidate: return False
+        if " " in candidate or "\t" in candidate: return False
+        if "{" in candidate or "}" in candidate or "," in candidate: return False
+        return (candidate.startswith("/") or "/" in candidate
+                or candidate.startswith(".") or "." in candidate)
+
+    def preflight_setup_artifact_paths():
+        worktree_root = get_env("RELAY_TARGET_ROOT")
+        if not worktree_root:
+            try:
+                worktree_root = subprocess.check_output(
+                    ["git", "-C", os.path.dirname(relay_file), "rev-parse", "--show-toplevel"],
+                    stderr=subprocess.DEVNULL).decode('utf-8').strip()
+            except Exception:
+                worktree_root = root_dir
+            if not worktree_root:
+                worktree_root = root_dir
+        try:
+            worktree_root = os.path.realpath(worktree_root) if os.path.isdir(worktree_root) else worktree_root
+        except Exception:
+            pass
+        for setup_line in relay_setup_section_lines():
+            if "Artifact under review:" not in setup_line:
+                continue
+            if "embedded below" in setup_line:
+                continue
+            for candidate in relay_extract_markdown_paths(setup_line):
+                if not relay_is_worktree_artifact_path(candidate):
+                    continue
+                if candidate.startswith("/"):
+                    resolved = candidate
+                else:
+                    resolved = os.path.join(worktree_root, candidate)
+                if not os.path.exists(resolved):
+                    die(f"artifact path not found in worktree: {candidate}")
 
     def xyz_relay_emit(health):
         if get_env("XYZ_HARNESS_CONTEXT", "relay") != "relay": return
@@ -297,12 +386,16 @@ def main():
             if tstatus == "done":
                 eprint(f"  → '{args.relay_task}' is spent from a prior relay; seed + drive with a fresh --relay-task (e.g. RELAY-{os.path.splitext(os.path.basename(relay_file))[0]})")
             sys.exit(4)
-            
+
+        preflight_setup_artifact_paths()
+
         if args.dry_run:
             print(f"relay-drive: WOULD drive turn for agent: {actor} (token {tstatus}, STATUS: {s})")
             sys.exit(0)
-            
+
         prev = f"{tstatus}:{actor}"
+        rfsig = relay_content_sig()   # GH-245: relay-file content signature BEFORE the turn
+        nextp = next_pointer()        # GH-245: NEXT: handoff pointer BEFORE the turn
         os.environ["RELAY_FILE"] = relay_file
         os.environ["RELAY_TASK"] = args.relay_task
         os.environ["RELAY_AGENT"] = actor
@@ -413,7 +506,9 @@ def main():
 
         ntstatus, nactor = token_state()
         ns = file_status()
-        
+        nrfsig = relay_content_sig()   # GH-245: relay-file content signature AFTER the turn
+        nnextp = next_pointer()        # GH-245: NEXT: handoff pointer AFTER the turn
+
         if escalated_status(ns):
             eprint(f"relay-drive: relay escalated to human by design (STATUS: {ns}, token {ntstatus}:{nactor}) after {round_idx} turn(s)")
             xyz_relay_emit("orange")
@@ -424,11 +519,14 @@ def main():
                 print(f"relay-drive: review-once — reviewer approved/closed (STATUS: {ns}) after 1 turn")
                 xyz_relay_emit("green")
                 sys.exit(0)
-            if f"{ntstatus}:{nactor}" != prev or ns != s:
-                print(f"relay-drive: review-once — reviewer completed a turn (STATUS: {ns}, token {ntstatus}:{nactor}); non-approval handback, not a stall")
+            # GH-245 defect 2: classify on EVIDENCE OF A TURN — the relay file's content changed
+            # (findings appended), the NEXT: pointer flipped, or the STATUS word changed — NOT on token
+            # movement alone. Token state is deliberately dropped from the oracle here.
+            if nrfsig != rfsig or nnextp != nextp or ns != s:
+                print(f"relay-drive: review-once — reviewer completed a turn (STATUS: {ns}, token {ntstatus}:{nactor}; relay-file/NEXT changed); non-approval handback, not a stall")
                 xyz_relay_emit("orange")
                 sys.exit(5)
-            eprint(f"relay-drive: review-once — reviewer took no action (STATUS unchanged: {ns}, token still {prev}) — genuine stall")
+            eprint(f"relay-drive: review-once — reviewer took no action (relay file unchanged, NEXT unchanged, STATUS still {ns}, token {ntstatus}:{nactor}) — genuine stall")
             xyz_relay_emit("red")
             sys.exit(3)
             

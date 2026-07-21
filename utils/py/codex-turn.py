@@ -4,7 +4,7 @@ import sys
 import tempfile
 import subprocess
 import shlex
-from rtl import RelayTurnLib, claim_task_or_exit
+from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log
 
 def die(msg):
     print(f"codex-turn: {msg}", file=sys.stderr)
@@ -36,6 +36,12 @@ def main():
     allow_paths = os.environ.get("ALLOW_PATHS", "")
     peer = os.environ.get("RELAY_PEER", "")
     
+    # GH-161: default the transcript to a PERSISTENT path under relay-system/logs/<date>/ (mirrors
+    # Bash codex-turn.sh) and export RTL_LOG BEFORE the first rtl call — so the Bash rtl_init/enforce
+    # traces (fine-grained under RTL_TRACE=1, unconditional log_always) land in this transcript.
+    codex_log = os.environ.get("CODEX_LOG") or rtl_default_log(root, "codex-turn", t)
+    os.environ["RTL_LOG"] = codex_log
+
     rtl = RelayTurnLib(root, xyz_root, f, allow_paths)
     
     prompt = rtl.turn_prompt(me, t, peer)
@@ -51,8 +57,6 @@ def main():
 
     cflags = default_codex_flags()
     codex_extra_flags = []
-    
-    codex_log = os.environ.get("CODEX_LOG", os.path.join(tempfile.gettempdir(), f"codex-turn-{os.getpid()}.log"))
     
     rtl.before()
     
@@ -80,7 +84,9 @@ def main():
     
     bounded_rc = 0
     try:
-        with open(codex_log, "w") as log_f:
+        # GH-161: append (not truncate) — rtl_init already wrote its decision-trace line into codex_log
+        # via the exported RTL_LOG; a truncating open here would silently wipe it (mirrors codex-turn.sh:170).
+        with open(codex_log, "a") as log_f:
             subprocess.run(cmd, env=codex_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
     except subprocess.TimeoutExpired:
         bounded_rc = 7
