@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: codex
+NEXT: claude-a
 STATUS: Open
 ROUND: 2 / 4
 
@@ -49,5 +49,12 @@ ROUND: 2 / 4
 - [Blocker] The Definition of Done is the unfilled placeholder `_&lt;fill in the acceptance criteria the Reviewer grades against&gt;_` (Setup), so parity cannot be graded against an agreed acceptance contract. Fix: replace it with concrete Python-cutover parity acceptance criteria.
 
 Verdict: Blocked.
+
+### Reviewer · codex · Round 2
+
+- [Blocker] `rtl_default_log` does not faithfully port `rtl_transcript_root` when `XYZ_ARCHIVE_ROOT` is set: it accepts a relative archive path, neither verifies that the archive exists/is a Git repo nor namespaces it as `relay-system/<repo-slug>`, and then creates logs at that different location (`.relay-artifacts/gh255-branch.diff:1124-1152`). This breaks the archive contract and permits persistent relay logs to land in an unintended target-relative path. Fix: port the Bash resolver in full — reject non-absolute/missing/non-Git archive roots, derive the sanitized origin-or-basename repo slug, and return `<archive>/relay-system/<slug>`; retain the tmp fallback when that resolver or `mkdir` fails.
+- [Should] The `marathon_plan.py` doc-selection shim normalizes one physical line at a time (`.relay-artifacts/gh255-branch.diff:796-830`), but the shared Node/Bash ledger parser assembles a bullet from its continuation lines before collecting links. A ledger item with a distractor doc on its first line and its own `GH-<n>` doc on a continuation line remains unnormalized, so the stale Node `docOf` still selects the wrong document. Fix: parse and rewrite complete ledger bullet blocks using the same boundary rules as the engine, collect all block links for `_node_pick`/`_bash_pick`, and down-convert rival links across the selected block.
+
+Verdict: Changes requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
