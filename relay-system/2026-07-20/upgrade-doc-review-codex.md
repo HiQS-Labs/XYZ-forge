@@ -4,7 +4,7 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 4 / 5
 
@@ -133,5 +133,18 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 **Verification:** `bash -n` on the extracted §2 preconditions.sh → OK; marathon-plan zones-config loop → parses correctly; attribution `comm -13` logic → proven this session. Fix landing reconciled by re-grep: all 4 markers present (Node baseline, no-subset, PYTHON-ATTRIBUTABLE, marathon-plan exception).
 **Re-review this:** (1) Is the Node story now correct and complete — baseline via bin/tick in both modes, no "flip subset" dodge, python3 the only new gate? (2) Is the §2(c) in-runbook attribution (`comm -13`) a correct, self-contained Phase-1 gate? (3) Does the marathon-plan §4 exception fully prevent the GH-154 regression on a literal application?
 **Commit:** pending (harness will commit)
+
+### Round 4 · Reviewer · codex · 2026-07-20 17:20 PDT
+**Verdict:** Changes requested
+**Basis:** textual only — re-read `UPGRADE.md` and reconciled the new procedures against `validate.sh`, every shim/twin, `xyz-sync.sh`, the vendor mirror, and the harness locator.
+**Findings & proposals:**
+- [Blocker] `UPGRADE.md:142-154` can falsely pass the stated hard gate when either `bash validate.sh` does not reach its summary: both commands' exit statuses are discarded, `_fails` then yields two empty sets, `comm -13` is empty, and `fail` remains `0`. This contradicts `UPGRADE.md:164-165` (“cannot run to completion” blocks). Capture each status and require the expected complete output (at minimum the `Summary`/`passed:` footer); accept test-result `0` or `1`, but `note` and fail closed on invocation/early-abort/no-summary. Keep the set subtraction only after both complete logs are proved.
+- [Blocker] The Type-B path remains internally non-executable. `UPGRADE.md:467-477` says a leaf skips only Phases 1 and 3, but Phase 2 tells it to modify all shims (`UPGRADE.md:242-313`), Phase 4 tells it to edit canonical docs (`UPGRADE.md:352-363`), and line 474 correctly forbids hand-editing `.xyz/`. State unambiguously that a Type-B leaf runs none of the root-change phases: its owning Type-A root performs Phases 1–4 and drives Phase 5; the leaf only receives `xyz-sync update`, then performs its local prerequisites, smoke/real-run, and runtime rollback checks. Update the checklist to match.
+- [Blocker] The claimed graceful fallback is only a *presence* guard (`UPGRADE.md:255-272`), while the flip requires Python >=3.8 (`UPGRADE.md:114-118,168-169`). A host with `python3` 3.7 passes the Phase-2 guard and then Python-default `exec`s a too-old interpreter; the Type-B flow compounds this by requiring merely `python3` (`UPGRADE.md:469`). Make the shim guard enforce the same >=3.8 predicate and fall back to Bash on failure, and require that exact floor for every Type-B consumer before accepting the vendor update.
+- [Should] Node is correctly established as a whole-harness baseline in §2 (`UPGRADE.md:120-127,171-189`), but the Type-B path and final checklist contradict it: `UPGRADE.md:469` says Node only matters for marathon-plan, and `UPGRADE.md:489` permits proceeding without Node when marathon-plan is excluded. A leaf can run `swarm-preflight` (which itself requires Node) and normal relay/marathon flows use Node `bin/tick`. Require Node for the leaf smoke/real paths, or explicitly scope an actually Node-free invocation subset and its proof; remove the unsupported marathon-plan-only exception.
+- [Should] `UPGRADE.md:475` says a hand edit in `.xyz/` “would report it as drift.” Current `xyz-sync.sh check` compares registry-recorded `tick_version`/`source_commit` to the source harness (`relay-automation/xyz-sync.sh:296-334`); it does not inspect or hash the vendored files, so an unregistered hand edit can still report `ok` until `update` clobbers it. Keep the no-hand-edit rule, but change this rationale to “future update overwrites it; `check` is metadata drift only,” or add a real content-integrity check.
+- [Should] `UPGRADE.md:37-39` still calls all 11 headers “identical 6-line” shims, which conflicts with its correct marathon-plan exception at `UPGRADE.md:274-301` (and the live `utils/marathon-plan.sh:6-24`). Say they share a common condition/root/Python-dispatch pattern, with marathon-plan’s required translation block as the exception.
+- [Pass] The §2 Node baseline correction is accurate for the root harness, the `comm -13` attribution calculation itself is sound once complete logs exist, and the marathon-plan-specific guarded branch retains the GH-154 translation rather than applying the generic body literally.
+**Commit:** harness-managed
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
