@@ -1,6 +1,6 @@
 ---
 title: codex-turn.sh isolation=0 path lacks the GH-36 --add-dir .tick fix → EPERM on token claim in vendored installs
-status: Proposed (1-INBOX — not yet active)
+status: "promoted to 2-WORKING 2026-07-21 via /10days sweep with an auto-drafted contract"
 created: 2026-07-20
 owner: noelsaw1
 gh_issue: 263
@@ -29,9 +29,10 @@ goal: >
 
 # GH-263 — codex-turn.sh isolation=0 path lacks the GH-36 --add-dir .tick fix
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+| What was just completed | What's next |
+|---|---|
+| Promoted from `1-INBOX` to `2-WORKING` 2026-07-21 by the `/10days` sweep; verified still open & reproducible — `relay-automation/codex-turn.sh:157` still sets `codex_extra_flags=(--add-dir "$TICK_REPO_ROOT/.tick")` only inside the `RELAY_WORKTREE_ISOLATION=1` branch (~line 151-163); the `isolation=0` default path (falls through with `codex_extra_flags=()` from line 137) sets nothing. **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
 
 ## Symptom
 In a vendored `.xyz/` install, driving a Codex turn with `RELAY_WORKTREE_ISOLATION=0` fails before
@@ -96,3 +97,20 @@ opt-out), and reviewing uncommitted work is a legitimate reason to opt out of is
 - [ ] A regression test covers the isolation=0 claim path before the fix lands
 - [ ] The fix composes with the existing GH-36 flag path rather than adding a parallel one
 - [ ] Verify the default isolation=1 path is unchanged (byte-for-byte)
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "relay-automation/codex-turn.sh", "pattern": "GH-263" }
+  ],
+  "artifacts": [ "relay-automation/codex-turn.sh", "test/codex-turn.sh" ],
+  "remediation": {
+    "source": "issue#263",
+    "criteria": "A Codex turn driven with RELAY_WORKTREE_ISOLATION=0 in a vendored .xyz/ install (CWD=$HARNESS) can claim $TICK_REPO_ROOT/.tick without EPERM and without disabling Codex's sandbox entirely; the isolation=1 path is unchanged (byte-for-byte); a regression test covers the isolation=0 claim path. bash validate.sh green."
+  },
+  "lanes": { "agy_safe": [ "relay-automation/codex-turn.sh", "test/codex-turn.sh" ], "orchestrator_only": [] }
+}
+```

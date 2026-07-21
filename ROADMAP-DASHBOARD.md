@@ -6,11 +6,13 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 100 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 57 · 🔮 0 · 🔲 0
+Summary: 102 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 57 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-263 · codex-turn.sh isolation=0 path can't reach the parent-root .tick lock in vendored installs | — | [GH-263-CODEX-ISOLATION0-TICK-EPERM.md](PROJECT/1-INBOX/GH-263-CODEX-ISOLATION0-TICK-EPERM.md) · [#263](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/263) |
+| GH-261 · marathon-drive: reconcile the Bash/Python disjoint-failure union (last Phase-1 gate for the XYZ_PYTHON flip) | — | [GH-261-MARATHON-DRIVE-BASH-CONTAINMENT-VENDORED-CHAIN.md](PROJECT/2-WORKING/GH-261-MARATHON-DRIVE-BASH-CONTAINMENT-VENDORED-CHAIN.md) · [#261](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/261) |
+| GH-266 · rtl_worktree_end doesn't exempt relay-system/ (its own transcript dir) — false containment violation discards a fully in-scope turn | — | [GH-266-WORKTREE-RELAYSYSTEM-CONTAINMENT.md](PROJECT/2-WORKING/GH-266-WORKTREE-RELAYSYSTEM-CONTAINMENT.md) · [#266](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/266) |
+| GH-263 · codex-turn.sh isolation=0 path can't reach the parent-root .tick lock in vendored installs | — | [GH-263-CODEX-ISOLATION0-TICK-EPERM.md](PROJECT/2-WORKING/GH-263-CODEX-ISOLATION0-TICK-EPERM.md) · [#263](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/263) |
 | GH-258 · vendor-stack skill — one-step XYZ harness + PDDA governance install into a target repo | — | [GH-258-VENDOR-STACK-SKILL.md](PROJECT/1-INBOX/GH-258-VENDOR-STACK-SKILL.md) · [#258](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/258) |
 | GH-251 · OpenRouter/aider reviewer seam doesn't persist its review (builder-only in practice) | — | [GH-251-OPENROUTER-AIDER-REVIEWER-SEAM.md](PROJECT/2-WORKING/GH-251-OPENROUTER-AIDER-REVIEWER-SEAM.md) · [#251](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/251) |
 | GH-199 · swe-diagram: add a font picker to the generated diagram HTML (default + Indie Flower) | — | [GH-199-SWE-DIAGRAM-FONT-PICKER.md](PROJECT/2-WORKING/GH-199-SWE-DIAGRAM-FONT-PICKER.md) · [#199](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/199) |

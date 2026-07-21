@@ -1,6 +1,6 @@
 ---
 title: rtl_worktree_end doesn't exempt relay-system/ (its own transcript dir) — false containment violation discards a fully in-scope turn
-status: Proposed (1-INBOX — not yet active)
+status: "promoted to 2-WORKING 2026-07-21 via /10days sweep with an auto-drafted contract"
 created: 2026-07-21
 owner: noelsaw1
 gh_issue: 266
@@ -32,9 +32,10 @@ goal: >
 
 # GH-266 — rtl_worktree_end doesn't exempt relay-system/
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+| What was just completed | What's next |
+|---|---|
+| Promoted from `1-INBOX` to `2-WORKING` 2026-07-21 by the `/10days` sweep; verified still open & reproducible — `relay-turn-lib.sh`'s off-lane loop (~495-537) exempts `.tick/*` (line 520) but has no case arm for `relay-system/` or `$RTL_LOG_REL`, while its non-worktree sibling `rtl_check()` (line 683) does exempt `$RTL_LOG_REL` directly. **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
 
 ## Symptom
 A fully in-scope Codex build turn (every edit within the phase's artifact allowlist) is discarded
@@ -112,3 +113,20 @@ effect) resolves it — but this shouldn't be required on every invocation.
 - [ ] Confirm a single fix in `relay-turn-lib.sh` resolves it under both entry points (bash
       `codex-turn.sh` direct, and Python `utils/py/codex-turn.py` via `rtl.py`'s shell-out) —
       no separate Python-side patch should be needed given the shared-core delegation
+
+## Swarm Preflight Contract
+```json
+{
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [
+    { "type": "grep_absent", "path": "relay-automation/relay-turn-lib.sh", "pattern": "GH-266" }
+  ],
+  "artifacts": [ "relay-automation/relay-turn-lib.sh", "test/relay-turn-handoff.sh" ],
+  "remediation": {
+    "source": "issue#266",
+    "criteria": "rtl_worktree_end's off-lane loop intrinsically exempts relay-system/ (or rtl_transcript_root(ROOT)'s resolved path) the same way it already exempts .tick/, without requiring CONTAINMENT_IGNORE=relay-system. rtl_check() and rtl_worktree_end() stay in symmetry. CONTAINMENT_IGNORE=relay-system still works as a manual override. A regression test covers a worktree-isolated turn that writes only its own transcript log. bash validate.sh green."
+  },
+  "lanes": { "agy_safe": [ "relay-automation/relay-turn-lib.sh", "test/relay-turn-handoff.sh" ], "orchestrator_only": [] }
+}
+```
