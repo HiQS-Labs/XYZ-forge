@@ -131,6 +131,17 @@ drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
 # turn on the file edit(s) instead of emitting tick commands it can't run.
 prompt="${prompt}"$'\n\n'"NOTE (Aider harness): do NOT run any tick commands — the harness has already claimed the token and will release/close it for you after your edit. Spend this turn ONLY editing the file(s) added to the chat: append your block to the relay file and set its STATUS, and edit the artifact(s) if this is a build turn."
 
+# GH-251 review mode: on a REVIEW-ONLY turn (ALLOW_PATHS empty) Aider is being used as a REVIEWER, not
+# an editor. Aider defaults to an editor posture and drifts into "what changes would you like?" instead
+# of reporting — so the review never lands as a relay-file append and relay-drive --review-once then
+# CORRECTLY scores the unchanged file a stall (GH-245), discarding a completed review. Make the review
+# posture explicit: the relay file is the ONLY writable target (the artifact is --read), so the model
+# must spend the turn appending a graded review THERE. If it still doesn't, the transcript-salvage
+# backstop after the run (also GH-251) recovers the review from the turn transcript.
+if [[ -z "${ALLOW_PATHS:-}" ]]; then
+  prompt="${prompt}"$'\n\n'"REVIEW MODE (Aider harness, GH-251): this is a REVIEW turn — do NOT propose or make code edits. Read the artifact under review, then APPEND your graded review to the relay file added to the chat: a findings list with file:line citations, then a final line 'Verdict: Approved' or 'Verdict: Changes requested'. The relay file is the ONLY file you may edit this turn."
+fi
+
 # --file targets: the relay file + each ALLOW_PATHS artifact, as ROOT-RELATIVE paths so they resolve
 # against the turn's CWD (ROOT normally; the throwaway worktree under isolation). Passing relative paths
 # is what makes worktree isolation work — Aider edits the worktree copy, which rtl_worktree_end then
@@ -226,6 +237,12 @@ aider_args=(--model "$AIDER_MODEL" --yes-always --no-auto-commits
 read -ra _xflags <<<"${AIDER_FLAGS:-}"
 [[ "${#_xflags[@]}" -gt 0 ]] && aider_args+=("${_xflags[@]}")
 
+# GH-251: content signature of the relay file BEFORE the turn, so a review-only turn that produced a
+# graded review in the transcript but landed NO relay-file append can be detected (unchanged file) and
+# the review salvaged from the transcript after the run. Captured at ROOT so it reflects the copy-back
+# state under worktree isolation too.
+_relay_presig="$(git -C "$ROOT" hash-object -- "$f" 2>/dev/null || cksum <"$f" 2>/dev/null || echo none)"
+
 rtl_before
 bounded_rc=0
 
@@ -270,6 +287,31 @@ if [[ "$bounded_rc" -eq 0 && ! -s "$AIDER_LOG" ]]; then
   printf 'aider-turn: aider exited 0 but produced NO output — likely a blocked/misconfigured backend. Failing the turn.\n' >&2
   exit 5
 fi
+# GH-251 transcript-salvage backstop. On a REVIEW-ONLY turn (ALLOW_PATHS empty), if the relay file is
+# byte-unchanged after the turn but the transcript carries a graded review (a `Verdict:` anchor), Aider
+# produced a real review that it failed to land as a relay-file append. Recover it: append the turn
+# transcript to the relay file (attributed, verbatim, fenced) so the completed review LANDS instead of
+# being discarded as a stall. Runs BEFORE rtl_enforce so the salvaged append is the file-scoped commit.
+#
+# Composition with the GH-245 evidence-based --review-once classifier is preserved: an EMPTY turn is
+# already failed above (empty-output guard, exit 5); a turn that produced output but NO gradeable review
+# leaves no `Verdict:` anchor here, so it is NOT salvaged, the relay file stays unchanged, and the drive
+# still scores it a genuine stall. Only a turn that truly produced a graded review is rescued.
+if [[ -z "${ALLOW_PATHS:-}" && "$bounded_rc" -eq 0 && -s "$AIDER_LOG" ]]; then
+  _relay_postsig="$(git -C "$ROOT" hash-object -- "$f" 2>/dev/null || cksum <"$f" 2>/dev/null || echo none)"
+  if [[ "$_relay_postsig" == "$_relay_presig" ]] && grep -qiE 'verdict[[:space:]]*:' "$AIDER_LOG" 2>/dev/null; then
+    {
+      printf '\n\n---\n\n### Review salvaged from %s transcript (aider-turn.sh · GH-251)\n\n' "$AIDER_MODEL"
+      printf '_Aider completed a review turn but did not land it as a relay-file append; the harness\n'
+      printf 'recovered the graded review from the turn transcript verbatim below (attributed, not edited)._\n\n'
+      printf '```text\n'
+      cat "$AIDER_LOG"
+      printf '\n```\n'
+    } >>"$f"
+    printf 'aider-turn: review turn landed no relay-file delta but the transcript carried a graded review — salvaged it into the relay file (attributed; GH-251)\n' >&2
+  fi
+fi
+
 # Always enforce containment even after a timeout-kill; rtl_enforce may exit 6 (precedence over 7) and
 # performs the authoritative token release/done (GH-67) now that this agent is the token's claimer.
 rtl_enforce "$t" "$me" "$AIDER_LOG" "aider"

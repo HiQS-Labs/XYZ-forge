@@ -2,7 +2,7 @@
 gh_issue: 251
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/251
 title: "OpenRouter/aider reviewer seam: aider produces reviews but doesn't persist the relay-file append (builder-only in practice)"
-status: "Active (2-WORKING) — promoted 2026-07-19, queued in MARATHON-PLAN-2026-07-19-L"
+status: "Shipped on branch (2-WORKING) — review-mode + transcript-salvage landed cf7a123 on marathon/plan-l-followup-2026-07-19 (Plan L lane). Pending PR into development, then 3-COMPLETED. Live-model verification (DoD bullet 1) remains an operator step."
 created: 2026-07-19
 updated: 2026-07-19
 owner: noel
@@ -25,7 +25,7 @@ roadmap_exempt: false
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Filed 2026-07-19 from a live operator-requested multi-turn `/relay-xyz` GLM 5.2 QA of the 2026-07-19 marathon (`relay-system/2026-07-19/marathon-qa-glm52.md`). Reproduced on two independent GLM review turns; review content intact in the aider transcript, never landed in the relay file. | Operator review + rating confirmation, then Phase 0 diagnose (reproduce in-repo, pick fix direction), then fire. |
+| **Fixed on branch `cf7a123`** (Plan L lane): both fix directions 1+2 landed in `relay-automation/aider-turn.sh` — **review mode** (explicit reviewer posture on `ALLOW_PATHS=""` turns) + **transcript-salvage backstop** (a review-only turn that lands no relay-file delta but whose transcript carries a `Verdict:` anchor is appended, attributed, so the review lands instead of stalling). Composes with GH-245: empty/non-review turns leave no anchor → not salvaged → still a genuine stall. `test/aider-turn.sh` +2 cases (phantom-review salvaged; non-review not salvaged), 61/61 pass. | Open a PR into `development`. **Honest gap:** DoD bullet 1's "verified with a REAL OpenRouter model, not a stub" is NOT done — it needs a live OpenRouter call that can't run headless in the Bash sandbox; that live verification remains an operator step before closing #251. On merge, move to `3-COMPLETED`. |
 
 ## Problem
 

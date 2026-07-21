@@ -99,6 +99,15 @@ function resolveOrder(plan) {
     byId.set(p.id, p);
   }
   for (const p of phases) {
+    // depends_on is scalar-and-single (a single phase id). The YAML flow-sequence form
+    // (depends_on: [p1]) is NOT supported by this hand-rolled reader — it survives as the
+    // literal string "[p1]" and would otherwise fail below as a bewildering unknown-phase
+    // lookup. Reject it with a message naming the field's shape instead (GH-241).
+    if (p.depends_on && /^\[.*\]$/.test(p.depends_on)) {
+      throw new Error(
+        `phase ${p.id}: depends_on must be a single phase id (a scalar), not a YAML flow sequence '${p.depends_on}' — ` +
+        `this reader does not support list dependencies; name one phase id, unquoted (e.g. 'depends_on: p1')`);
+    }
     if (p.depends_on && !byId.has(p.depends_on)) {
       throw new Error(`phase ${p.id}: depends_on unknown phase '${p.depends_on}'`);
     }

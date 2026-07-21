@@ -1,7 +1,7 @@
 ---
 title: Cross-repo live marathon status query (repo + lane + in-flight task), no per-repo MCP servers
-status: Captured 2026-07-17 via /idea, promoted straight to 2-WORKING (operator request) — ready
-  for a 2-phase marathon.
+status: Shipped on branch (2-WORKING) — Phase 1 (marathon-live.sh) + Phase 2 (rollup embed) landed
+  d919e92 on marathon/plan-l-followup-2026-07-19 (Plan L lane). Pending PR into development, then 3-COMPLETED.
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -47,7 +47,7 @@ roadmap_exempt: false
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-07-17 via `/idea`, filed as [#218](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/218), promoted directly to `2-WORKING` per operator request. Confirmed live during scoping: `hq_known_repos()`/`registry.tsv` already enumerate every XYZ-vendored repo (9 rows); `tick project` already regenerates a live `Open/Claimed/Done` state file per repo from its own event log, with task IDs that already encode the marathon/lane name; `rollup.sh` already has a working embed-verbatim mechanism for a sibling script's report. `swarm-preflight.sh --gh-issue 218 --dry-run` ready (exit 0). Documented the manual deterministic lookup path in `skills/hq/SKILL.md` (a new "Live marathon status" section) ahead of `marathon-live.sh` existing. | Build Phase 1 (`marathon-live.sh`), then Phase 2 (the `rollup.sh` hook) — once built, update the SKILL.md section to point at the script instead of the manual walk. |
+| **Both phases shipped `d919e92`** on `marathon/plan-l-followup-2026-07-19` (Plan L lane). **Phase 1** — `utils/hq/marathon-live.sh`: read-only cross-repo live status composing `hq_known_repos`/`hq_repo_resolve` + each repo's own `tick project` STATE.md `## Claimed` parse + driver-lock/`marathon/*`-worktree liveness cross-check; emits repo\|lane\|task\|claimant\|live\|last-activity, no new per-repo MCP server. **Phase 2** — `utils/hq/rollup.sh` embeds it as `## Live Marathons (cross-repo, right now)` via a shared `demote_embed` helper. Tests: new `test/hq-marathon-live.sh` (live/claimed-not-driving/idle matrix, read-only asserted, registered in `validate.sh`, 7/7); `test/hq-rollup.sh` +2 cases (embedded live section + live-failure banner, 27/27). | Open a PR into `development`. **Follow-up (not blocking):** update the `skills/hq/SKILL.md` "Live marathon status" section to point at `marathon-live.sh` instead of the manual walk. On merge (`Closes #218`), move to `3-COMPLETED`. |
 
 ## Key concepts
 
