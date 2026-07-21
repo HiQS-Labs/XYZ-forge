@@ -270,6 +270,33 @@ def main():
         sid = get_env("XYZ_SESSION_ID", args.phase_id)
         subprocess.run([xyz_append_bin, harness, sid, health, title, desc], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+    # GH-75/GH-249 lifecycle heartbeat: write operational liveness before driving the relay and clear
+    # it on any terminal path (registered via atexit right after the write, so every success/failure
+    # branch clears it). Best-effort — never changes marathon-drive's exit code. Mirrors Bash
+    # xyz_marathon_heartbeat_write/clear (relay-automation/marathon-drive.sh).
+    xyz_heartbeat_bin = get_env("XYZ_HEARTBEAT_BIN", os.path.join(xyz_harness, "utils", "telemetry", "write-xyz-heartbeat.sh"))
+
+    def _heartbeat(clear):
+        if not os.access(xyz_heartbeat_bin, os.X_OK):
+            return
+        ctx = get_env("XYZ_HARNESS_CONTEXT", "")
+        harness = "swarm" if ctx == "swarm" else "marathon"
+        sid = get_env("XYZ_SESSION_ID", args.phase_id)
+        env = os.environ.copy()
+        if clear:
+            env["XYZ_HEARTBEAT_CLEAR"] = "1"
+        try:
+            subprocess.run([xyz_heartbeat_bin, harness, sid], env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
+    def xyz_marathon_heartbeat_write():
+        _heartbeat(clear=False)
+
+    def xyz_marathon_heartbeat_clear():
+        _heartbeat(clear=True)
+
     phases_dir = args.phases_dir or os.path.join(root, "phases")
     pre_advance_cmd = args.pre_advance_cmd or f"bash {root}/validate.sh"
     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
@@ -529,6 +556,11 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         env2["RELAY_COST_SUMMARY"] = "0"
         return subprocess.run(cmd2, env=env2).returncode
 
+    # GH-75: write liveness before the drive; clear it on ANY terminal path via atexit (registered only
+    # here, so early exits before a live phase never register a spurious clear).
+    xyz_marathon_heartbeat_write()
+    import atexit as _atexit
+    _atexit.register(xyz_marathon_heartbeat_clear)
     relay_exit = _run_relay_drive()
 
     def escalate(reason, rexit):
