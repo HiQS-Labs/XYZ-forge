@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Escalated
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -102,5 +102,11 @@ forever" guardrail fired as designed. The single r4 finding was a genuine **[Blo
 - [Blocker] GH-249 `--requires-test` safety contract dropped — **Implemented** → `utils/py/marathon_drive.py` (commit `4418122`): declared `--requires-test`, snapshot `pre_phase_head` before the phase's first commit, ported `requires_test_delta` (nominated test must exist, be non-empty, and have changed since `pre_phase_head` or be newly untracked/added), and made `complete_phase_success` reject with exit 5 + `requires-test-missing` after the gate but before the approve/reset side effects. · Proof: marathon-drive 112/0, marathon 33/0 (both modes); functional smoke — `--requires-test` on an UNCHANGED test now escalates `requires-test-missing` under Python (was a false exit-0 approval). No suite test exercises this; Codex found it by reading the Bash source.
 
 **Relay outcome:** 4 rounds, **7 real findings total (1 Blocker in r2, 1 Blocker in r4, 5 Shoulds), ALL Implemented and verified.** Branch stays green (Python 117/117, Bash 116/117). Escalated to the operator per the cap: re-open for a confirming Codex round, or accept as QA'd.
+
+### Reviewer · codex · Round 5
+
+- [Should] `marathon_drive.py` still omits the Bash lifecycle-heartbeat contract: Bash writes the heartbeat immediately before driving the relay and clears it on every terminal success/failure path (`relay-automation/marathon-drive.sh:719`, `relay-automation/marathon-drive.sh:867-886`, `relay-automation/marathon-drive.sh:947-979`), while the Python port starts the relay directly and all of its terminal branches only emit completion telemetry (`utils/py/marathon_drive.py:528-533`, `utils/py/marathon_drive.py:663-789`). Under `XYZ_PYTHON=1`, the heartbeat is never created for a live phase and an existing one is never cleared, producing false/stale operational liveness. Fix: port `xyz_marathon_heartbeat_write`/`xyz_marathon_heartbeat_clear` (including the context/session routing and best-effort behavior), call write before the relay drive, and call clear in each terminal branch before completion telemetry.
+
+Verdict: Changes requested. Round cap reached; escalated for operator replan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
