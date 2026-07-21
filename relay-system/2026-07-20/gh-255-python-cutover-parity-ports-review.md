@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -42,5 +42,12 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · codex · Round 1
+
+- [Blocker] The declared artifact `.relay-artifacts/gh255-branch.diff` is absent in this isolated worktree (`sed` reports “No such file or directory”), so there is no implementation diff to assess. Fix: seed the declared read-only diff into `.relay-artifacts/gh255-branch.diff` before the next review.
+- [Blocker] The Definition of Done is the unfilled placeholder `_&lt;fill in the acceptance criteria the Reviewer grades against&gt;_` (Setup), so parity cannot be graded against an agreed acceptance contract. Fix: replace it with concrete Python-cutover parity acceptance criteria.
+
+Verdict: Blocked.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
