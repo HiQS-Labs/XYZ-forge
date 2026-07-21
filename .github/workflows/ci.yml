@@ -92,12 +92,15 @@ jobs:
 
       # GH-232: PR #231 ran the full ./validate.sh suite on ubuntu-latest for the first time and
       # confirmed ~12 tests fail there for environment reasons, not real regressions (see issue #232
-      # for the per-test detail): a BSD-only `sed -i ''` invocation in marathon.sh that breaks under
-      # GNU sed, marathon-drive.sh flakiness that debug-mantra.sh/driver-lock.sh inherit, a possible
-      # real package-freshness finding tracked separately, and several ubuntu path/tooling-assumption
-      # failures. None of those tests are ours to edit in this lane, so they're named and skipped
-      # explicitly below (instead of the whole suite being left unrun) so CI reflects a true signal
-      # for everything else. test_python_layer.py is excluded the same way, unrun here.
+      # for the per-test detail). marathon.sh/marathon-drive.sh (and its dependents debug-mantra.sh/
+      # driver-lock.sh) used a BSD-only `sed -i ''` invocation that mis-parses under GNU sed — fixed
+      # (portable `sed -i.bak ... ; rm -f *.bak` form, matching the pattern already used elsewhere in
+      # this suite, e.g. test/poll-relay.sh) and re-enabled below. The remaining tests are still
+      # unexplained on ubuntu even after the "Prepare git environment" step above (added in 767035e
+      # specifically to fix this class of failure) — none of those tests are ours to edit in this
+      # lane without real CI signal to diagnose against, so they stay named and skipped explicitly
+      # (instead of the whole suite being left unrun) so CI reflects a true signal for everything
+      # else. test_python_layer.py is excluded the same way, unrun here.
       - name: Run validate.sh suite (minus confirmed ubuntu-only environmental failures)
         env:
           RELAY_SELF_SUFFICIENCY_SKIP: "1"
@@ -105,17 +108,13 @@ jobs:
           set -euo pipefail
           SKIP_TESTS=(
             "acorn-extract.sh"                    # already run above (needs npm ci first)
-            "marathon-drive.sh"                   # GH-232: ubuntu-environment failure
-            "debug-mantra.sh"                     # GH-232: drives marathon-drive.sh
-            "driver-lock.sh"                       # GH-232: drives marathon-drive.sh
-            "marathon.sh"                           # GH-232: BSD `sed -i ''` syntax breaks on GNU sed
             "relay-pkg-freshness.sh"               # GH-232: possible real drift finding, tracked separately
-            "path-integrity.sh"                    # GH-232: ubuntu-environment failure
-            "archive-writers.sh"                   # GH-232: ubuntu-environment failure
-            "relay-file-seeding-visibility.sh"     # GH-232: ubuntu-environment failure
-            "xyz-vendor.sh"                         # GH-232: ubuntu-environment failure
-            "xyz-harness-hooks.sh"                 # GH-232: ubuntu-environment failure
-            "hq.sh"                                 # GH-232: ubuntu-environment failure
+            "path-integrity.sh"                    # GH-232: ubuntu-environment failure, unexplained
+            "archive-writers.sh"                   # GH-232: ubuntu-environment failure, unexplained
+            "relay-file-seeding-visibility.sh"     # GH-232: ubuntu-environment failure, unexplained
+            "xyz-vendor.sh"                         # GH-232: ubuntu-environment failure, unexplained
+            "xyz-harness-hooks.sh"                 # GH-232: ubuntu-environment failure, unexplained
+            "hq.sh"                                 # GH-232: ubuntu-environment failure, unexplained
             "registry-lock-concurrency.sh"          # GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
           )
           ALL_TESTS=()

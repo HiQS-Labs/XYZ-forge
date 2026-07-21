@@ -367,7 +367,7 @@ printf '%s\n' "$count" > "$WORK/rd-satisfied-count"
 if [ "$review_once" -eq 0 ]; then
   exit 3
 fi
-sed -i '' 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"
+sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
 printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
 TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "phases/satisfied-plan--p1/RELAY.md" >/dev/null 2>&1 || true
 TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
@@ -692,7 +692,7 @@ case "${1:-}" in
   whoami) printf 'agy-stub\n'; exit 0 ;;
 esac
 printf 'agy review stub\n'
-sed -i '' 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$PWD/phases/p1/RELAY.md"
+sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$PWD/phases/p1/RELAY.md"; rm -f "$PWD/phases/p1/RELAY.md.bak"
 printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Approved\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
 exit 0
 EOF
