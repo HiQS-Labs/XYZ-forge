@@ -11,7 +11,7 @@ complexity: 3
 risk: 2
 effort: 3
 phases: 1
-ratings_provisional: true
+ratings_provisional: false
 goal: >
   Fix the ~12 tests that fail on ubuntu-latest in the full ./validate.sh suite, then re-enable
   the full suite in .github/workflows/ci.yml instead of the current acorn-extract-only scope.
@@ -23,7 +23,7 @@ roadmap_exempt: false
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Fixed 2026-07-21 by re-diagnosing directly against a real `ubuntu:latest` Docker container (not guessed at from macOS behavior). Two real, previously-mischaracterized bugs found: (1) a BSD-only `sed -i ''` in marathon.sh/marathon-drive.sh mis-parsing under GNU sed; (2) driver-lock.sh/xyz-harness-hooks.sh stubbed CLAUDE_BIN/AGY_BIN but not CODEX_BIN (the actual default builder), passing locally only because a real `codex` binary happened to be on the developer's PATH. Once fixed, path-integrity.sh/archive-writers.sh/relay-file-seeding-visibility.sh/xyz-vendor.sh/hq.sh/relay-pkg-freshness.sh all turned out to have no ubuntu-specific bug at all — they were skipped based on an assumption that was never re-verified after the git-identity fix (767035e) landed. Only `registry-lock-concurrency.sh` (a documented real flake, GH-72) stays skipped. `.github/workflows/ci.yml` now runs the full suite minus that one flake. Real CI verification in progress on PR #271. `bash validate.sh` green locally (117/117). | Confirm PR #271's real ubuntu-latest CI run is green, then merge. |
+| **Fixed and confirmed green on real CI 2026-07-21** (PR #271, run 29865944751). Re-diagnosed entirely against a real `ubuntu:latest` Docker container instead of guessing from macOS. Real bugs found and fixed: (1) BSD-only `sed -i ''` in marathon.sh/marathon-drive.sh mis-parsing under GNU sed; (2) 7 direct `bash "$DRIVER"`/`bash "$MD"` invocations across driver-lock.sh/xyz-harness-hooks.sh/marathon-drive.sh/debug-mantra.sh stubbed CLAUDE_BIN/AGY_BIN but never CODEX_BIN (the actual default builder), passing locally only because a real `codex` binary happened to be on the developer's PATH; (3) `hq_sanitize`'s `tr -cd '[:alnum:]/_.- '` silently corrupted to an empty-string filter under GNU tr (invalid range warning), breaking every rebalance-registry lookup; (4) `xyz-vendor.sh`'s staleness fixture used `git rev-list --max-parents=0 HEAD` to synthesize an "older" commit, which resolves to HEAD itself under GitHub's default shallow clone — fixed via `fetch-depth: 0`. path-integrity.sh/archive-writers.sh/relay-file-seeding-visibility.sh/xyz-vendor.sh all had no bug at all — skipped on a stale assumption never re-verified after 767035e landed. Only `registry-lock-concurrency.sh` (documented GH-72 flake) stays skipped. `bash validate.sh` 117/117 local. | Merge (part of the /10days marathon branch). |
 
 ## Problem
 The full `./validate.sh` suite has ~12 test failures that are specific to the `ubuntu-latest` CI runner (environment incompatibilities, not real regressions), first exposed when GH-230 added a CI step that actually exercises the npm-dependent path. As a workaround, `.github/workflows/ci.yml` deliberately scopes CI down to only `test/acorn-extract.sh` — the full suite is not run on CI at all, so CI has a large uncovered surface.
