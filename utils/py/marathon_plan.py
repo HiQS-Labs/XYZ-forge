@@ -1,10 +1,193 @@
 #!/usr/bin/env python3
 import os
 import sys
+import re
 import subprocess
 import tempfile
 import shutil
 import datetime
+
+# ── Parity shims for behavior missing from the vendored node engine ──────────
+# The Python entry point delegates rendering to utils/py/_marathon_plan_node.js, a
+# copy of the canonical bash JS engine (utils/marathon-plan.sh) that has drifted on
+# two points. These helpers restore parity without touching the node file:
+#   S  — docOf must prefer the lane's own GH-<n> pointer over an earlier PROJECT doc
+#        link (bash utils/marathon-plan.sh docOf). The node copy still uses the older
+#        "first 2-WORKING/GH- else first 2-WORKING else first md link" order, which
+#        mis-picks a distractor doc. We normalize the ROADMAP so the node engine
+#        resolves the SAME doc bash would — a no-op unless the two pickers diverge.
+#   N  — a PR-REVIEW-QUEUE-<today>.md overlay must surface as a "## Review lanes"
+#        section (bash GH-86). The node copy omits it; we append it post-render.
+
+_LINK_RE = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
+
+def _strip_md(v):
+    v = re.sub(r'`([^`]+)`', r'\1', v)
+    v = re.sub(r'\*\*([^*]+)\*\*', r'\1', v)
+    v = re.sub(r'\*([^*]+)\*', r'\1', v)
+    v = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'\1', v)
+    return v.strip()
+
+def _is_md_doc(target):
+    return bool(re.search(r'\.md($|#)', target)) and ('PROJECT/' in target) and ('relay-system/' not in target)
+
+def _node_pick(cands):
+    for t in cands:
+        if re.search(r'2-WORKING/GH-\d+-', t, re.I):
+            return t
+    for t in cands:
+        if '2-WORKING/' in t:
+            return t
+    return cands[0] if cands else None
+
+def _bash_pick(cands, issue):
+    if issue is not None:
+        own = re.compile(r'(^|/)GH-%d-[^/]+\.md($|#)' % issue, re.I)
+        for t in cands:
+            if '2-WORKING/' in t and own.search(t):
+                return t
+        for t in cands:
+            if own.search(t):
+                return t
+    for t in cands:
+        if '2-WORKING/' in t:
+            return t
+    return cands[0] if cands else None
+
+def _issue_of(title, links):
+    m = re.search(r'\bGH-(\d+)\b', title)
+    if m:
+        return int(m.group(1))
+    for _text, target in links:
+        m2 = re.search(r'github\.com/[^\s)]+/issues/(\d+)', target)
+        if m2:
+            return int(m2.group(1))
+    return None
+
+def _normalize_roadmap(text):
+    # For each ledger bullet, if the node engine's docOf would pick a different md
+    # doc than the bash docOf, prune the rival md-doc links (down-convert them to
+    # plain text) so the node engine resolves the bash-correct doc. Bullet prose /
+    # links never appear in the rendered output, so this is invisible except via the
+    # resolved doc — exactly the intended correction. No-op when pickers agree.
+    out_lines = []
+    for line in text.split('\n'):
+        if not line.lstrip().startswith('- '):
+            out_lines.append(line)
+            continue
+        links = _LINK_RE.findall(line)
+        if not links:
+            out_lines.append(line)
+            continue
+        tm = re.match(r'\s*- \*\*(.+?)\*\*', line)
+        title = tm.group(1) if tm else ''
+        cands = [target.split('#')[0] for (_t, target) in links if _is_md_doc(target)]
+        if len(cands) < 2:
+            out_lines.append(line)
+            continue
+        issue = _issue_of(title, links)
+        np = _node_pick(cands)
+        bp = _bash_pick(cands, issue)
+        if np == bp:
+            out_lines.append(line)
+            continue
+        def _repl(m):
+            target = m.group(2)
+            base = target.split('#')[0]
+            if _is_md_doc(target) and base != bp:
+                return m.group(1)
+            return m.group(0)
+        out_lines.append(_LINK_RE.sub(_repl, line))
+    return '\n'.join(out_lines)
+
+def _cell(v):
+    return str(v) if v is not None else "—"
+
+def _parse_lanes_table(raw):
+    lines = re.split(r'\r?\n', raw)
+    h = -1
+    for idx, l in enumerate(lines):
+        if re.match(r'^##\s+Lanes\s*$', l.strip()):
+            h = idx
+            break
+    if h < 0:
+        return []
+    def split_row(l):
+        s = l.strip()
+        if s.startswith('|'):
+            s = s[1:]
+        if s.endswith('|'):
+            s = s[:-1]
+        return [_strip_md(c.strip()) for c in s.split('|')]
+    i = h + 1
+    while i < len(lines) and not re.match(r'^\s*\|', lines[i]) and not re.match(r'^#{1,6}\s+', lines[i]):
+        i += 1
+    if i >= len(lines) or not re.match(r'^\s*\|', lines[i]):
+        return []
+    header = split_row(lines[i])
+    i += 1
+    if i < len(lines) and re.match(r'^\s*\|?\s*-{2,}', lines[i]):
+        i += 1
+    def col(name):
+        for idx, c in enumerate(header):
+            if c.lower() == name.lower():
+                return idx
+        return -1
+    lane_idx, pr_idx, rev_idx = col('Lane'), col('PR'), col('Reviewer')
+    def at(cells, idx):
+        return cells[idx] if 0 <= idx < len(cells) else ''
+    rows = []
+    while i < len(lines) and re.match(r'^\s*\|', lines[i]):
+        cells = split_row(lines[i])
+        rows.append({
+            'lane': at(cells, lane_idx) if lane_idx >= 0 else (cells[0] if cells else ''),
+            'pr': at(cells, pr_idx) if pr_idx >= 0 else '',
+            'reviewer': at(cells, rev_idx) if rev_idx >= 0 else '',
+        })
+        i += 1
+    return rows
+
+def _review_lanes_block(review_rel, review_raw):
+    lanes = _parse_lanes_table(review_raw)
+    o = []
+    o.append("## Review lanes (manual overlay — run via relay-xyz)")
+    o.append("")
+    o.append(f"A separate manual overlay — [{review_rel}]({review_rel}) — is not derived from")
+    o.append("ROADMAP.md and does not appear in the waves above (a review lane evaluates an existing PR")
+    o.append("diff; it doesn't remediate a ledger item). Fire each via `relay-xyz`, per the overlay doc.")
+    o.append("")
+    if lanes:
+        o.append("| Lane | PR | Reviewer |")
+        o.append("|---|---|---|")
+        for l in lanes:
+            o.append(f"| {_cell(l['lane'])} | {_cell(l['pr'])} | {_cell(l['reviewer'])} |")
+    else:
+        o.append(f"_{review_rel} exists but its `## Lanes` table could not be parsed._")
+    o.append("")
+    return o
+
+def _inject_review_lanes(render_out, queue_dir, today):
+    review_rel = f"PR-REVIEW-QUEUE-{today}.md"
+    review_path = os.path.join(queue_dir, review_rel)
+    try:
+        with open(review_path, "r", encoding="utf-8") as f:
+            review_raw = f.read()
+    except OSError:
+        return
+    try:
+        with open(render_out, "r", encoding="utf-8") as f:
+            content = f.read()
+    except OSError:
+        return
+    lines = content.split('\n')
+    try:
+        anchor = lines.index("## How to fire a lane")
+    except ValueError:
+        return
+    block = _review_lanes_block(review_rel, review_raw)
+    lines[anchor:anchor] = block
+    with open(render_out, "w", encoding="utf-8") as f:
+        f.write('\n'.join(lines))
 
 def die(msg):
     sys.stderr.write(f"marathon-plan: {msg}\n")
@@ -114,10 +297,24 @@ if __name__ == "__main__":
     if not (deep and os.path.isfile(swarm_preflight) and os.access(swarm_preflight, os.X_OK)):
         swarm_preflight = ""
 
+    # Parity shim (S): normalize the ROADMAP so the vendored node engine's older docOf
+    # resolves the same doc bash's docOf would. No-op unless a bullet's two pickers diverge.
+    roadmap_for_node = roadmap
+    try:
+        with open(roadmap, "r", encoding="utf-8") as f:
+            _rm_text = f.read()
+        _rm_norm = _normalize_roadmap(_rm_text)
+        if _rm_norm != _rm_text:
+            roadmap_for_node = os.path.join(tmp_dir, "ROADMAP.normalized.md")
+            with open(roadmap_for_node, "w", encoding="utf-8") as f:
+                f.write(_rm_norm)
+    except OSError:
+        roadmap_for_node = roadmap
+
     env = os.environ.copy()
     env.update({
         "QP_ROOT": root,
-        "QP_ROADMAP": roadmap,
+        "QP_ROADMAP": roadmap_for_node,
         "QP_QUEUE_DIR": queue_dir,
         "QP_TODAY": today,
         "QP_NOW": now,
@@ -147,6 +344,10 @@ if __name__ == "__main__":
     if rc in (2, 3):
         shutil.rmtree(tmp_dir, ignore_errors=True)
         sys.exit(rc)
+
+    # Parity shim (N/GH-86): surface a PR-REVIEW-QUEUE-<today>.md overlay as a
+    # "## Review lanes" section in the rendered doc — the node engine omits it.
+    _inject_review_lanes(render_out, queue_dir, today)
 
     if run_mode == "check":
         if not os.path.isfile(queue_doc):

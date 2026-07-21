@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import os
+import re
 import sys
 import tempfile
 import subprocess
@@ -10,6 +11,34 @@ from rtl import RelayTurnLib, claim_paths_for_turn, claim_task_or_exit
 def die(msg):
     print(f"aider-turn: {msg}", file=sys.stderr)
     sys.exit(2)
+
+def aider_supports_add_gitignore_files(aider_bin):
+    # GH-186: probe the installed binary's actual CLI surface — old aider builds still advertise
+    # --add-gitignore-files (needed for gitignored relay files), current releases removed it.
+    try:
+        r = subprocess.run([aider_bin, "--help"], capture_output=True, text=True)
+    except Exception:
+        return False
+    if r.returncode != 0:
+        return False
+    return "--add-gitignore-files" in r.stdout
+
+def relay_sig(root, path):
+    # GH-251: content signature of the relay file (git hash-object at ROOT, cksum fallback).
+    try:
+        r = subprocess.run(["git", "-C", root, "hash-object", "--", path], capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    except Exception:
+        pass
+    try:
+        with open(path, "rb") as fh:
+            r = subprocess.run(["cksum"], stdin=fh, capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            return r.stdout.strip()
+    except Exception:
+        pass
+    return "none"
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -94,10 +123,13 @@ def main():
     
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
     
+    gitignore_args = ["--no-gitignore"]
+    if aider_supports_add_gitignore_files(aider_bin):
+        gitignore_args.append("--add-gitignore-files")
+
     aider_args = [
         "--model", aider_model, "--yes-always", "--no-auto-commits"
-    ] + aider_auth_args + [
-        "--no-gitignore",
+    ] + aider_auth_args + gitignore_args + [
         "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0",
         "--chat-history-file", os.path.join(aider_aux_dir, "chat.history.md"),
         "--input-history-file", os.path.join(aider_aux_dir, "input.history"),
@@ -108,8 +140,12 @@ def main():
     if xflags:
         aider_args.extend(shlex.split(xflags))
         
+    # GH-251: signature the relay file BEFORE the turn so a review-only turn that produced a graded
+    # review in the transcript but landed NO relay-file append can be detected and salvaged after.
+    relay_presig = relay_sig(root, f)
+
     rtl.before()
-    
+
     wt = ""
     run_cwd = root
     
@@ -152,8 +188,31 @@ def main():
         print("aider-turn: aider exited 0 but produced NO output — likely a blocked/misconfigured backend. Failing the turn.", file=sys.stderr)
         sys.exit(5)
         
+    # GH-251 transcript-salvage backstop. On a REVIEW-ONLY turn (ALLOW_PATHS empty), if the relay file
+    # is byte-unchanged after the turn but the transcript carries a graded review (a `Verdict:` anchor),
+    # recover it: append the turn transcript to the relay file (attributed) so the review LANDS instead
+    # of being discarded as a stall. Runs BEFORE rtl.enforce so the append is the file-scoped commit.
+    if not allow_paths and bounded_rc == 0 and os.path.getsize(aider_log) > 0:
+        relay_postsig = relay_sig(root, f)
+        has_verdict = False
+        try:
+            with open(aider_log, "r", errors="replace") as lf:
+                log_text = lf.read()
+            has_verdict = bool(re.search(r"verdict[ \t]*:", log_text, re.IGNORECASE))
+        except Exception:
+            log_text = ""
+        if relay_postsig == relay_presig and has_verdict:
+            with open(f, "a") as rf:
+                rf.write(f"\n\n---\n\n### Review salvaged from {aider_model} transcript (aider-turn.sh · GH-251)\n\n")
+                rf.write("_Aider completed a review turn but did not land it as a relay-file append; the harness\n")
+                rf.write("recovered the graded review from the turn transcript verbatim below (attributed, not edited)._\n\n")
+                rf.write("```text\n")
+                rf.write(log_text)
+                rf.write("\n```\n")
+            print("aider-turn: review turn landed no relay-file delta but the transcript carried a graded review — salvaged it into the relay file (attributed; GH-251)", file=sys.stderr)
+
     rc = rtl.enforce(t, me, aider_log, "aider")
-    
+
     if bounded_rc == 7:
         sys.exit(7)
 
