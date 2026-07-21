@@ -34,8 +34,11 @@ get back to Bash in one move when it misbehaves.
 
 ## 0. What this changes, in one paragraph
 
-Eleven Bash entry points each carry an identical 6-line header shim that `exec`s a Python twin when
-`XYZ_PYTHON=1`, and otherwise falls through to the canonical Bash body **inlined in the same file**.
+Eleven Bash entry points each carry a header shim — a shared condition/root-resolve/`exec`-Python
+pattern — that runs a Python twin when `XYZ_PYTHON=1`, and otherwise falls through to the canonical
+Bash body **inlined in the same file**. Ten are the same ~6-line shim; `utils/marathon-plan.sh` carries
+one extra required `--zones-config` translation block (GH-154), so "identical" holds for the *condition
+line*, not the whole shim (see §4).
 Today the shim reads `${XYZ_PYTHON:-0}` — default Bash. This upgrade changes that default to Python.
 Because the Bash body is never renamed or deleted, "revert" is either an env var (`XYZ_PYTHON=0`, per
 run) or a one-commit `git revert` (permanent). Nothing about the port's *code* changes here; only the
@@ -141,7 +144,16 @@ echo "  ahead/behind (behind<TAB>ahead): $_ab"
 #     Capture BOTH modes at the same commit, then subtract — a raw count is not the gate; attribution is.
 TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 bash validate.sh            > /tmp/xyz-bash.log 2>&1
 TEST_SOFT_FAIL=1 RELAY_SELF_SUFFICIENCY_SKIP=1 XYZ_PYTHON=1 bash validate.sh > /tmp/xyz-py.log 2>&1
-# validate.sh prints a trailing "failed:" block of "  - <test>" lines. Extract each mode's set:
+# CRUCIAL: a run that aborts before its Summary produces an EMPTY failed-set — which would look like
+# "no Python-attributable failures" and false-pass this gate. So require each run reached its footer
+# (validate.sh always prints a "Summary" / "passed:" line when it completes) BEFORE trusting the diff.
+for _m in bash py; do
+  grep -qE '^(Summary|passed:)' "/tmp/xyz-$_m.log" \
+    || note "validate.sh ($_m mode) did not run to completion — no baseline, do NOT flip (see /tmp/xyz-$_m.log)"
+done
+# validate.sh prints a trailing "failed:" block of "  - <test>" lines. Extract each completed mode's set.
+# (An exit code of 0 or 1 from validate.sh is fine — 1 just means some test failed; the footer check
+#  above, not the exit code, is what proves the run actually finished.)
 _fails() { awk '/^failed:$/{f=1;next} f&&/^  - /{sub(/^  - /,"");print}' "$1" | sort -u; }
 _fails /tmp/xyz-bash.log > /tmp/xyz-bash.fails
 _fails /tmp/xyz-py.log   > /tmp/xyz-py.fails
@@ -255,21 +267,27 @@ provably safe to land now. It is a prerequisite for the flip, not part of it.
 **(2b) Add a `python3`-presence guard** so a missing interpreter fails loudly to Bash instead of
 `exec`-ing into a "command not found". Insert inside the shim, before the `exec`:
 
+The guard must enforce the **same `>=3.8` floor** the port requires — a mere `command -v python3`
+presence check would let a 3.7 host pass and then `exec` a too-old interpreter (the exact brick the
+guard is meant to prevent). Test the version, not just presence, and fall back to Bash on either
+failure:
+
 ```bash
 if [[ "${XYZ_PYTHON-0}" == "1" ]]; then
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "xyz: XYZ_PYTHON=1 but python3 not found — falling back to Bash" >&2
-  else
+  if command -v python3 >/dev/null 2>&1 \
+     && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,8) else 1)' 2>/dev/null; then
     _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     export XYZ_ROOT="$_xyz_root"
     export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
     exec python3 "$_xyz_root/utils/py/<twin>.py" "$@"
+  else
+    echo "xyz: XYZ_PYTHON=1 but python3 missing or < 3.8 — falling back to Bash" >&2
   fi
 fi
 ```
 
-This makes the fail-safe direction hold even on a box with no Python — the single scariest flip
-failure mode (every entry point bricked) becomes a graceful degrade with a warning.
+This makes the fail-safe direction hold on a box with no Python **or too-old Python** — the single
+scariest flip failure mode (every entry point bricked) becomes a graceful degrade with a warning.
 
 **⚠ marathon-plan.sh is the one exception — do NOT paste the generic body over it.** Its shim carries a
 required `--zones-config → QUEUE_PLAN_ZONES_FILE` argument-translation block between the `if` and the
@@ -279,9 +297,8 @@ only wrap the `exec` with the presence-guard, e.g.:
 
 ```bash
 if [[ "${XYZ_PYTHON-0}" == "1" ]]; then
-  if ! command -v python3 >/dev/null 2>&1; then
-    echo "xyz: XYZ_PYTHON=1 but python3 not found — falling back to Bash" >&2
-  else
+  if command -v python3 >/dev/null 2>&1 \
+     && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,8) else 1)' 2>/dev/null; then
     _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
     export XYZ_ROOT="$_xyz_root"; export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
     _py_args=()
@@ -291,6 +308,8 @@ if [[ "${XYZ_PYTHON-0}" == "1" ]]; then
       *) _py_args+=("$1"); shift ;;
     esac; done
     exec python3 "$_xyz_root/utils/py/marathon_plan.py" "${_py_args[@]}"
+  else
+    echo "xyz: XYZ_PYTHON=1 but python3 missing or < 3.8 — falling back to Bash" >&2
   fi
 fi
 ```
@@ -464,17 +483,25 @@ When executing elsewhere:
    clean/current branch, and a same-commit sweep are repo-local facts, not inherited from here. §3's
    gap *numbers* are this repo's snapshot; regenerate them on a Type-A target — the *method* ports, the
    *findings* do not.
-3. **Type B (vendored leaf) — skip Phases 1 & 3 entirely.** Do NOT try to run `validate.sh`; it isn't
-   there. The leaf's parity is whatever its source root shipped, so the correct sequence for a leaf is:
-   (a) confirm `python3` (+ `node` if it uses marathon-plan) on the box; (b) `xyz-sync.sh check <dir>`
-   from the **owning** repo to confirm the leaf is at the expected, already-flipped `source_commit`;
+3. **Type B (vendored leaf) — runs NONE of the root-change phases (1, 2, 3, AND 4).** A leaf does not
+   close parity (1), does not edit shims (2), does not flip defaults (3), and does not edit canonical
+   docs (4) — all of those happen once, upstream, in its **owning Type-A root**, which also drives
+   Phase 5. Do NOT run `validate.sh` on a leaf; it isn't there. The leaf's entire job is
+   **receive-and-verify**:
+   (a) **prerequisites on the leaf's box, same floor as the root:** `python3 >= 3.8` (run the §2(a)
+   predicate) **and** `node` — Node is required, not marathon-plan-specific: `bin/tick` is Node and the
+   leaf's normal relay/marathon flows plus `swarm-preflight` all use it;
+   (b) `xyz-sync.sh check <dir>` from the **owning** repo to confirm the leaf is at the expected,
+   already-flipped `source_commit` (note: `check` compares recorded `tick_version`/`source_commit` only —
+   it is **metadata drift, not a content check**);
    (c) prove via the **consuming repo's own** smoke/test path plus a real relay/marathon run with the
-   var unset, and again with `XYZ_PYTHON=0`. That is the leaf's Phase-1-equivalent — inherit-and-verify,
-   not derive.
-4. **The flip itself reaches a leaf only by re-vendor, never by editing `.xyz/`.** You do not hand-edit
-   a vendored copy's shims (`xyz-sync.sh` would report it as drift and a future `update` would clobber
-   it). A leaf becomes Python-default by `xyz-sync.sh update <dir>` from a root that is already flipped
-   (Phase 5), full stop.
+   var unset, and again with `XYZ_PYTHON=0`. That is the leaf's verification — inherit-and-verify, never
+   derive.
+4. **The flip reaches a leaf only by re-vendor, never by editing `.xyz/`.** Do not hand-edit a vendored
+   copy's shims — **not because `check` would catch it (it won't: `check` is metadata-only and an
+   unregistered hand edit still reports `ok`), but because the next `xyz-sync.sh update` silently
+   overwrites it.** A leaf becomes Python-default only by `xyz-sync.sh update <dir>` from an
+   already-flipped root (Phase 5), full stop.
 5. **Phase 5 is only driven from the repo that owns the registry** (the one whose `xyz-sync.sh list`
    knows the fleet). A leaf consumer receives its flip via re-vendor and opts out at runtime with its
    own `XYZ_PYTHON=0`; it never drives the fleet.
@@ -483,23 +510,33 @@ When executing elsewhere:
 
 ## 10. End-to-end checklist (copy into the tracking issue)
 
+**Type A (full clone) — runs everything:**
 ```
-[ ] §9  determined target TYPE first (A = full clone runs Phases 1-8 · B = vendored leaf skips 1 & 3)
-[ ] §2  python3 >= 3.8 on target
-[ ] §2  node present (or marathon-plan excluded from the flip)
-[ ] §2  branch clean AND current (fetched, 0 behind)
-[ ] §2  two-mode same-commit baseline captured; Python-attributable gaps enumerated   (Type A only)
+[ ] §9  confirmed this IS a Type-A full clone (has validate.sh / test/ / PROJECT/)
+[ ] §2  python3 >= 3.8 on target (predicate, not just --version)
+[ ] §2  node present (HARD gate — bin/tick is Node; required in both modes, not marathon-plan-only)
+[ ] §2  branch clean AND current (bare `git fetch origin`, 0 behind)
+[ ] §2  two-mode same-commit baseline captured; BOTH runs reached their Summary footer
+[ ] §2  PYTHON-ATTRIBUTABLE set (comm -13) is empty; pre-existing both-modes fails named
 [ ] §3  all Python-attributable gaps closed (marathon-drive split to its own issue)
 [ ] §3  re-run soft-fail sweep after EACH fix (unmasking)
-[ ] §4  (2a) :- → - at all 11 sites; one-distinct-line invariant holds
-[ ] §4  (2b) python3-presence guard added at all 11 sites
+[ ] §4  (2a) :- → - at all 11 sites; condition-line-only invariant holds (marathon-plan body differs)
+[ ] §4  (2b) version-enforcing guard (>=3.8, not mere presence) at all 11 sites; marathon-plan keeps its zones-config block
 [ ] §4  empty-string run (XYZ_PYTHON=) proven to route to Bash and pass
 [ ] §5  flip commit: only the 11 default chars, nothing else
 [ ] §5  proof: unset==old-python-run, XYZ_PYTHON=0==old-bash-run
-[ ] §6  README + AGENTS.md + CHANGELOG + this doc carry the rollback levers
+[ ] §6  README + AGENTS.md + CHANGELOG + UPGRADE.md all carry the rollback levers
 [ ] §8  root soak: ≥1 marathon/relay cycle + a few days, abort criteria understood
 [ ] §7  fleet: list → check --all → pilot ONE → prove → update --all
-[ ] §7  every upgraded copy proven with var unset AND XYZ_PYTHON=0
+```
+
+**Type B (vendored leaf) — runs NONE of Phases 1–4; receive-and-verify only:**
+```
+[ ] §9  confirmed this IS a Type-B leaf (.xyz/ install, no validate.sh of its own)
+[ ] §9  python3 >= 3.8 AND node present on the leaf's box (same floor as the root)
+[ ] §7  received the flip via `xyz-sync.sh update <dir>` from an already-flipped root (NOT hand-edited)
+[ ] §9  xyz-sync check <dir> shows the expected source_commit (metadata drift only — not content)
+[ ] §9  consuming repo's own smoke/real run green with var UNSET, and again with XYZ_PYTHON=0
 ```
 
 ---

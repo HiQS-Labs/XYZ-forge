@@ -4,9 +4,9 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 4 / 5
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
 The operator just said "take your turn on this file." Everything you need is **in this file** — don't wait for pasted instructions.
@@ -146,5 +146,18 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 - [Should] `UPGRADE.md:37-39` still calls all 11 headers “identical 6-line” shims, which conflicts with its correct marathon-plan exception at `UPGRADE.md:274-301` (and the live `utils/marathon-plan.sh:6-24`). Say they share a common condition/root/Python-dispatch pattern, with marathon-plan’s required translation block as the exception.
 - [Pass] The §2 Node baseline correction is accurate for the root harness, the `comm -13` attribution calculation itself is sound once complete logs exist, and the marathon-plan-specific guarded branch retains the GH-154 translation rather than applying the generic body literally.
 **Commit:** harness-managed
+
+### Round 5 · Producer · claude-a · 2026-07-20 17:24 PDT
+**Decisions on proposals:** (all 6 verified against repo/shell before disposing; this round's theme was propagating my r4 corrections consistently across §0/§9/§10)
+- `[Blocker]` §2(c) gate false-passes if validate.sh aborts early — **Implemented + behaviorally proven.** You're right: empty logs → empty sets → empty `comm -13` → `fail=0`. Added a footer check (`grep -qE '^(Summary|passed:)'` per mode) that `note`s + fails closed if either run didn't reach its summary, BEFORE the subtraction. Proven: garbage logs now set `fail=1`. Clarified exit 0/1 from validate.sh is fine — the footer, not the exit code, proves completion.
+- `[Blocker]` Type-B internally non-executable (skips only 1&3 but Phase 2/4 are also root-change) — **Implemented.** Rewrote §9 point 3: a leaf runs **NONE of Phases 1–4**; the owning Type-A root does 1–4 and drives 5; the leaf only receives `xyz-sync update` then does local prereqs/smoke/rollback. Updated the §10 checklist to two separate lists (Type A runs everything; Type B receive-and-verify only).
+- `[Blocker]` presence guard vs >=3.8 — **Implemented.** Both Phase-2 shim guards (generic + marathon-plan) now test the same `sys.version_info >= (3,8)` predicate, not just `command -v python3`, and fall back to Bash on either miss. Proven: predicate exits 1 on 3.7, 0 on 3.8+. Type-B prereqs now require the same floor.
+- `[Should]` Node contradiction in Type-B/checklist — **Implemented.** §9 and §10 now require Node on the leaf (bin/tick is Node; swarm-preflight + relay/marathon use it) and I removed the "marathon-plan-only / proceed without node" language everywhere.
+- `[Should]` xyz-sync check rationale wrong — **Implemented.** Verified `xyz-sync.sh:296-299`: check compares recorded `tick_version`/`source_commit` only, "never mutates... never exits non-zero for drift." Corrected §9 to: don't hand-edit `.xyz/` because the next `update` overwrites it — NOT because `check` catches it (it's metadata-only; a hand edit still reports `ok`).
+- `[Should]` §0 "identical 6-line" contradicts marathon-plan exception — **Implemented.** §0 now says the shims share a common condition/root/dispatch pattern; 10 are the ~6-line form, marathon-plan carries the extra GH-154 block, so "identical" holds for the condition line only.
+**Did:** All 6 actioned. The recurring failure mode you're catching — a fix landing in one section but not propagated — I specifically swept this round: Node, marathon-plan-exception, and Type-B-model now agree across §0, §2, §4, §9, §10.
+**Verification:** `bash -n` on extracted §2 script → OK; footer-guard false-pass → now fails closed (proven); both shim guards enforce >=3.8 (2/2). Reconciled all 6 by re-grep.
+**Re-review this:** (1) Does the §2(c) footer guard fully close the early-abort false-pass? (2) Are Node, the marathon-plan exception, and the Type-B "runs none of 1–4" model now internally consistent across ALL sections (§0/§2/§4/§9/§10)? (3) Any remaining place where a Type-B leaf is told to do a root-only action?
+**Commit:** pending (harness will commit)
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->
