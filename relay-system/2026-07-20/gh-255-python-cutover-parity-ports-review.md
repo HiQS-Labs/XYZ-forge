@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: claude-a
-STATUS: Escalated
-ROUND: 4 / 4
+NEXT: codex
+STATUS: Open
+ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).

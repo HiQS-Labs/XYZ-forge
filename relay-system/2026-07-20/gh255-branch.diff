@@ -311,10 +311,18 @@ index 00a1432..2aba688 100644
          warn("all advisors failed")
          sys.exit(5)
 diff --git a/utils/py/marathon_drive.py b/utils/py/marathon_drive.py
-index 6464ba2..4741a88 100644
+index 6464ba2..3c98c82 100644
 --- a/utils/py/marathon_drive.py
 +++ b/utils/py/marathon_drive.py
-@@ -151,10 +151,66 @@ def main():
+@@ -62,6 +62,7 @@ def main():
+     parser.add_argument("--artifact", dest="artifact_paths")
+     parser.add_argument("--target-root", dest="target_root")
+     parser.add_argument("--require-clean", dest="require_clean", action="store_true")
++    parser.add_argument("--requires-test", dest="requires_test")  # GH-249: nominated test must change
+     parser.add_argument("--force", dest="force", action="store_true")
+     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
+     parser.add_argument("--help", action="store_true")
+@@ -151,10 +152,66 @@ def main():
              try: os.remove(attempts_file)
              except: pass
  
@@ -382,7 +390,7 @@ index 6464ba2..4741a88 100644
          else:
              lock_dir = os.path.join(root, ".relay-driver.lock")
              lock_label = ".relay-driver.lock"
-@@ -216,6 +272,46 @@ def main():
+@@ -216,6 +273,46 @@ def main():
      phases_dir = args.phases_dir or os.path.join(root, "phases")
      pre_advance_cmd = args.pre_advance_cmd or f"bash {root}/validate.sh"
      relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
@@ -429,7 +437,7 @@ index 6464ba2..4741a88 100644
  
      os.environ["MARATHON_BUILDER"] = args.builder
      os.environ["MARATHON_REVIEWER"] = args.reviewer
-@@ -243,13 +339,26 @@ def main():
+@@ -243,13 +340,37 @@ def main():
      _probe_agent_bin(args.builder, "builder")
      _probe_agent_bin(args.reviewer, "reviewer")
  
@@ -453,11 +461,22 @@ index 6464ba2..4741a88 100644
              del os.environ["ALLOW_PATHS"]
  
 -    phase_dir = os.path.join(phases_dir, args.phase_id)
++    # GH-249: snapshot HEAD in the repo the artifact lands in (TARGET_ROOT when set, else ROOT) BEFORE
++    # this phase's first commit, so requires_test_delta has a true "before this phase" baseline. Captured
++    # unconditionally (cheap); unused unless --requires-test is set.
++    pre_phase_head = ""
++    try:
++        pre_phase_head = subprocess.check_output(
++            ["git", "-C", (args.target_root or root), "rev-parse", "HEAD"],
++            stderr=subprocess.DEVNULL).decode("utf-8").strip()
++    except Exception:
++        pre_phase_head = ""
++
 +    phase_dir = os.path.join(phases_dir, lane_state_key)
      relay_file = os.path.join(phase_dir, "RELAY.md")
      
      # repo-root-relative path
-@@ -279,6 +388,11 @@ def main():
+@@ -279,6 +400,11 @@ def main():
      with open(args.phase_brief_file, "r") as f:
          brief_text = f.read()
  
@@ -469,7 +488,7 @@ index 6464ba2..4741a88 100644
      tick_cli = tick_bin if tick_bin.startswith("/") else os.path.join(root, tick_bin)
  
      if args.artifact_paths:
-@@ -303,7 +417,7 @@ NEXT: {args.builder}
+@@ -303,7 +429,7 @@ NEXT: {args.builder}
  ## Phase Brief
  
  {brief_text}
@@ -478,7 +497,7 @@ index 6464ba2..4741a88 100644
  ---
  
  ▶ TAKE YOUR TURN ({args.builder} — BUILDER role)
-@@ -338,8 +452,13 @@ You are the REVIEWER for this phase. {reviewer_read_line}
+@@ -338,8 +464,13 @@ You are the REVIEWER for this phase. {reviewer_read_line}
          sys.exit(0)
  
      subprocess.run(["git", "-C", root, "add", "--", relay_file], check=True)
@@ -494,7 +513,7 @@ index 6464ba2..4741a88 100644
  
      os.environ["TICK_REPO_ROOT"] = root
  
-@@ -366,7 +485,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
+@@ -366,7 +497,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
              else:
                  die(f"relay task {relay_task} is open but reserved for unexpected agent '{handoff}'")
  
@@ -503,7 +522,7 @@ index 6464ba2..4741a88 100644
      def _run_tick_loud(cmd_args):
          res = subprocess.run(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
          if res.returncode != 0:
-@@ -382,25 +501,23 @@ You are the REVIEWER for this phase. {reviewer_read_line}
+@@ -382,25 +513,23 @@ You are the REVIEWER for this phase. {reviewer_read_line}
      _run_tick_loud([tick_bin, "log", "marathon.phase.start", relay_task, "--agent", "marathon"])
      log(f"phase start: running relay-drive --round-cap {args.round_cap}")
  
@@ -546,7 +565,7 @@ index 6464ba2..4741a88 100644
  
      def escalate(reason, rexit):
          esc_file = os.path.join(phase_dir, "ESCALATION.md")
-@@ -414,7 +531,9 @@ reason: {reason}
+@@ -414,7 +543,9 @@ reason: {reason}
  relay-file: {rel_relay}
  """)
          subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
@@ -557,7 +576,7 @@ index 6464ba2..4741a88 100644
          subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
          log(f"escalation written: {esc_file} (reason: {reason})")
  
-@@ -432,32 +551,156 @@ relay-file: {rel_relay}
+@@ -432,32 +563,181 @@ relay-file: {rel_relay}
          dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
          shutil.copy2(relay_file, dest)
          subprocess.run(["git", "-C", root, "add", "--", dest], check=True)
@@ -621,6 +640,26 @@ index 6464ba2..4741a88 100644
 +        actor = claimer if status == "claimed" else (handoff if status == "open" else "")
 +        return (status, actor)
 +
++    def requires_test_delta(path):
++        # GH-249: True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
++        # or is newly untracked/added. Mirrors Bash requires_test_delta — an empty/missing/unchanged test
++        # proves nothing.
++        rroot = args.target_root or root
++        abs_p = path if os.path.isabs(path) else os.path.join(rroot, path)
++        if not (os.path.isfile(abs_p) and os.path.getsize(abs_p) > 0):
++            return False
++        if pre_phase_head:
++            out = subprocess.run(["git", "-C", rroot, "diff", "--name-only", pre_phase_head, "--", path],
++                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
++            if out.strip():
++                return True
++        st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", path],
++                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
++        for line in st.splitlines():
++            if line.startswith("??") or line.startswith("A "):
++                return True
++        return False
++
 +    def complete_phase_success(success_mode="approved"):
 +        log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
 +        gate_exit = run_pre_advance_gate()
@@ -631,6 +670,11 @@ index 6464ba2..4741a88 100644
              xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
              sys.exit(5)
 -            
++        if args.requires_test and not requires_test_delta(args.requires_test):
++            log(f"requires-test FAILED — no new/updated test detected at: {args.requires_test}")
++            escalate("requires-test-missing", 0)
++            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — required test not added/updated: {args.requires_test}")
++            sys.exit(5)
 +        if success_mode == "already-satisfied":
 +            success_text = f"phase {args.phase_id} complete — lane_already_satisfied, reviewer approved, gate passed"
 +        else:
@@ -728,7 +772,7 @@ index 6464ba2..4741a88 100644
          log("relay escalated: no-progress (relay-drive exit 3)")
          escalate("no-progress", 3)
          xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay no-progress")
-@@ -467,11 +710,21 @@ relay-file: {rel_relay}
+@@ -467,11 +747,21 @@ relay-file: {rel_relay}
          escalate("cap-or-close-mismatch", 4)
          xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay cap/close-mismatch")
          sys.exit(4)
