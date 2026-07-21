@@ -154,10 +154,36 @@ index f9b6f7b..bc5f36e 100644
      except subprocess.TimeoutExpired:
          bounded_rc = 7
 diff --git a/utils/py/consult.py b/utils/py/consult.py
-index 00a1432..d284b13 100644
+index 00a1432..2aba688 100644
 --- a/utils/py/consult.py
 +++ b/utils/py/consult.py
-@@ -60,6 +60,56 @@ def rtl_has_uncited_claim(path, window=3):
+@@ -31,13 +31,24 @@ _RTL_CITATION_RE = re.compile(r'"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+')
+ _RTL_PASS_TAG_RE = re.compile(r"\[Pass\]")
+ _RTL_UNVERIFIED_RE = re.compile(r"\[Unverified — no citation\]")
+ 
+-def rtl_has_uncited_claim(path, window=3):
++def _citation_window():
++    # Mirror Bash `win="${RTL_CITATION_WINDOW:-3}"` with awk-compatible numeric coercion: unset/empty
++    # → 3; otherwise the leading integer ("5"→5, "3x"→3), a non-numeric value → 0.
++    raw = os.environ.get("RTL_CITATION_WINDOW")
++    if not raw:
++        return 3
++    m = re.match(r'\s*([+-]?\d+)', raw)
++    return int(m.group(1)) if m else 0
++
++def rtl_has_uncited_claim(path, window=None):
+     """Python port of relay-turn-lib.sh's rtl_has_uncited_claim() (GH-178 A4 / GH-223): flags <path>
+     if it carries zero citations anywhere, OR at least one claim-bearing line has no citation within
+     `window` lines of itself (including its own line) — even though the file cites something
+     elsewhere. Does NOT verify a citation is accurate, only that one was attempted nearby. Missing or
+     unreadable file fails safe (flagged), matching the Bash version.
+     """
++    if window is None:
++        window = _citation_window()
+     try:
+         with open(path, "r", errors="replace") as f:
+             lines = f.read().splitlines()
+@@ -60,6 +71,58 @@ def rtl_has_uncited_claim(path, window=3):
              return True
      return False
  
@@ -165,7 +191,7 @@ index 00a1432..d284b13 100644
 +    # Mirror the awk norm(): collapse runs of whitespace to a single space, strip leading/trailing.
 +    return re.sub(r"[ \t\r\n\f\v]+", " ", s).strip()
 +
-+def rtl_classify_cited_claims(transcript_path, prompt_path, window=3):
++def rtl_classify_cited_claims(transcript_path, prompt_path, window=None):
 +    """Python port of relay-turn-lib.sh's rtl_classify_cited_claims() (GH-235 A4 v0): for each
 +    ALREADY-CITED claim line in <transcript_path>, decide whether the nearby citation string was
 +    discovered firsthand in the transcript or merely echoed from the operator prompt text persisted
@@ -173,6 +199,8 @@ index 00a1432..d284b13 100644
 +    line-order. Missing/unreadable inputs yield nothing (mirrors the Bash early return). Known v0
 +    limitation (shared with Bash): exact/whitespace-normalized substring matching only — no fuzzy
 +    reformat matching."""
++    if window is None:
++        window = _citation_window()
 +    if not (transcript_path and os.path.isfile(transcript_path) and prompt_path and os.path.isfile(prompt_path)):
 +        return
 +    try:
@@ -214,7 +242,7 @@ index 00a1432..d284b13 100644
  def die(msg):
      print(f"consult: {msg}", file=sys.stderr)
      sys.exit(2)
-@@ -191,7 +241,13 @@ def main():
+@@ -191,7 +254,13 @@ def main():
      
      preamble = "You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: (1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text; do not rely on writing files (you are running in a throwaway copy)."
      full_prompt = f"{preamble}\n\n=== CONSULT QUESTION ===\n{prompt_text}"
@@ -229,7 +257,7 @@ index 00a1432..d284b13 100644
      base_res = subprocess.run(["git", "-C", root, "stash", "create"], capture_output=True, text=True)
      base = base_res.stdout.strip()
      if not base:
-@@ -327,10 +383,12 @@ def main():
+@@ -327,10 +396,12 @@ def main():
          # SINGLE-MODEL stamp below. Does NOT verify a citation is ACCURATE, only that a claim has one
          # attempted nearby. Mirrors relay-automation/consult.sh:310-336 — do not redesign, just port.
          citeless_models = []
@@ -243,7 +271,7 @@ index 00a1432..d284b13 100644
                  citeless_models.append(m)
                  nocite = (
                      f"**NO FIRSTHAND VERIFICATION CITED** — treat conclusions as conditional "
-@@ -349,6 +407,29 @@ def main():
+@@ -349,6 +420,29 @@ def main():
                  with open(os.path.join(run_dir, f"{label}.{m}.NO-CITATION.txt"), "w") as f:
                      f.write(nocite + "\n")
  
@@ -273,7 +301,7 @@ index 00a1432..d284b13 100644
          # GH-178 A2 / GH-215 (Python port): a panel that started with MORE THAN ONE requested advisor
          # but ended with exactly one survivor is not a reconciled cross-model result — no second read
          # happened, so treating its verdict as reconciled is exactly the failure mode this consult
-@@ -413,6 +494,8 @@ def main():
+@@ -413,6 +507,8 @@ def main():
          warn(f"SINGLE-MODEL — NOT RECONCILED (stamped into {survivor_out} and {os.path.join(run_dir, 'DEGRADED-SINGLE-MODEL.txt')})")
      if citeless_models:
          warn(f"NO FIRSTHAND VERIFICATION CITED for: {' '.join(citeless_models)} (stamped into transcript(s) + sidecar(s) in {run_dir})")
@@ -723,10 +751,10 @@ index 6464ba2..4741a88 100644
          die(f"relay-drive exited with unexpected code {relay_exit}")
  
 diff --git a/utils/py/marathon_plan.py b/utils/py/marathon_plan.py
-index 73ad20d..6ad7ab3 100755
+index 73ad20d..1fe29f8 100755
 --- a/utils/py/marathon_plan.py
 +++ b/utils/py/marathon_plan.py
-@@ -1,11 +1,217 @@
+@@ -1,11 +1,220 @@
  #!/usr/bin/env python3
  import os
  import sys
@@ -806,18 +834,21 @@ index 73ad20d..6ad7ab3 100755
 +    lines = text.split('\n')
 +    n = len(lines)
 +
-+    def _is_bullet_start(l):
-+        return l.lstrip().startswith('- ')
++    def _is_ledger_bullet(l):
++        # canonical ledger item: an UNINDENTED bold bullet `- **Title** …`
++        return re.match(r'^- \*\*', l) is not None
 +
 +    def _ends_block(l):
-+        s = l.strip()
-+        return s == '' or s.startswith('#') or _is_bullet_start(l)
++        # a block ends ONLY at the next unindented ledger boundary — a `##`/`###` heading or the next
++        # `- **` bullet. Blank lines, nested lists, and wrapped continuation lines stay IN the block
++        # (mirrors how the engine assembles a bullet before collecting its links; GH-255 Codex r3).
++        return re.match(r'^(#{2,3}\s|- \*\*)', l) is not None
 +
 +    out_lines = []
 +    i = 0
 +    while i < n:
 +        line = lines[i]
-+        if not _is_bullet_start(line):
++        if not _is_ledger_bullet(line):
 +            out_lines.append(line)
 +            i += 1
 +            continue
@@ -944,7 +975,7 @@ index 73ad20d..6ad7ab3 100755
  def die(msg):
      sys.stderr.write(f"marathon-plan: {msg}\n")
      sys.exit(2)
-@@ -114,10 +320,24 @@ if __name__ == "__main__":
+@@ -114,10 +323,24 @@ if __name__ == "__main__":
      if not (deep and os.path.isfile(swarm_preflight) and os.access(swarm_preflight, os.X_OK)):
          swarm_preflight = ""
  
@@ -970,7 +1001,7 @@ index 73ad20d..6ad7ab3 100755
          "QP_QUEUE_DIR": queue_dir,
          "QP_TODAY": today,
          "QP_NOW": now,
-@@ -148,6 +368,10 @@ if __name__ == "__main__":
+@@ -148,6 +371,10 @@ if __name__ == "__main__":
          shutil.rmtree(tmp_dir, ignore_errors=True)
          sys.exit(rc)
  
@@ -1137,13 +1168,20 @@ index 635b579..ad4f198 100644
              sys.exit(3)
              
 diff --git a/utils/py/rtl.py b/utils/py/rtl.py
-index 17c6f25..a10334a 100644
+index 17c6f25..0815491 100644
 --- a/utils/py/rtl.py
 +++ b/utils/py/rtl.py
-@@ -75,6 +75,73 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
+@@ -75,6 +75,84 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
      )
      return tick_repo_root, tick_bin
  
++# ASCII-only slug alphabet — mirrors the Bash `tr -c 'A-Za-z0-9._-' '_'` sanitizer exactly. Python's
++# str.isalnum() would also pass Unicode letters/digits (e.g. `é`), diverging from the Bash contract.
++_SLUG_SAFE = frozenset("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789._-")
++
++def _ascii_slug(s):
++    return "".join(c if c in _SLUG_SAFE else "_" for c in s)
++
 +def _rtl_repo_slug(target_root):
 +    # Mirror Bash rtl_repo_slug: origin remote basename, else target dir basename, sanitized to a SAFE
 +    # single path segment ([A-Za-z0-9._-]; never empty, never "."/"..", never leading "-").
@@ -1164,31 +1202,35 @@ index 17c6f25..a10334a 100644
 +        slug = url.rsplit("/", 1)[-1].rsplit(":", 1)[-1]   # strip path AND scp-style host: prefix
 +    if not slug:
 +        slug = os.path.basename(target_root) or ""
-+    slug = "".join(c if (c.isalnum() or c in "._-") else "_" for c in (slug or "repo"))
++    slug = _ascii_slug(slug or "repo")
 +    while slug.startswith("-"):
 +        slug = slug[1:]
 +    if slug in ("", ".", ".."):
 +        slug = "repo"
 +    return slug
 +
-+def _rtl_transcript_root(target_root):
++def _rtl_transcript_root(target_root, quiet=False):
 +    # Mirror Bash rtl_transcript_root: <root>/relay-system on the common path; when XYZ_ARCHIVE_ROOT is
 +    # set, validate it (ABSOLUTE, exists, is a git repo — Model A) and namespace as
 +    # <archive>/relay-system/<repo-slug>. Returns None on an invalid archive so the caller (rtl_default_log)
-+    # falls back to $TMPDIR, exactly as the Bash `... || fallback` does.
++    # falls back to $TMPDIR, exactly as the Bash `... || fallback` does. quiet=True mirrors Bash callers
++    # that redirect the resolver's stderr (rtl_default_log) — direct callers keep the diagnostics.
++    def _warn(msg):
++        if not quiet:
++            print(msg, file=sys.stderr)
 +    target_root = (target_root or "").rstrip("/")
 +    ar = os.environ.get("XYZ_ARCHIVE_ROOT", "")
 +    if not ar:
 +        return f"{target_root}/relay-system"
 +    if not os.path.isabs(ar):
-+        print(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT must be an ABSOLUTE path, got: {ar}", file=sys.stderr)
++        _warn(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT must be an ABSOLUTE path, got: {ar}")
 +        return None
 +    if not os.path.isdir(ar):
-+        print(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT does not exist (or is not a directory): {ar}", file=sys.stderr)
++        _warn(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT does not exist (or is not a directory): {ar}")
 +        return None
 +    if subprocess.run(["git", "-C", ar, "rev-parse", "--git-dir"],
 +                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
-+        print(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT is not a git repo (Model A requires a committed archive): {ar}", file=sys.stderr)
++        _warn(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT is not a git repo (Model A requires a committed archive): {ar}")
 +        return None
 +    return f"{ar}/relay-system/{_rtl_repo_slug(target_root)}"
 +
@@ -1196,10 +1238,10 @@ index 17c6f25..a10334a 100644
 +    # GH-161: persistent turn-transcript path under <transcript-root>/logs/<date>/, falling back to
 +    # $TMPDIR when the transcript root can't be resolved/created. Mirrors Bash rtl_default_log.
 +    fallback = os.path.join(tempfile.gettempdir(), f"{tool}-{os.getpid()}.log")
-+    base = _rtl_transcript_root(root)
++    base = _rtl_transcript_root(root, quiet=True)   # Bash redirects the resolver's stderr here
 +    if not base:
 +        return fallback
-+    tslug = "".join(c if (c.isalnum() or c in "._-") else "_" for c in (task or ""))
++    tslug = _ascii_slug(task or "")
 +    try:
 +        day = subprocess.check_output(["date", "+%Y-%m-%d"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
 +    except Exception:

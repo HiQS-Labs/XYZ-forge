@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -75,5 +75,17 @@ Verdict: Changes requested.
 - [Should] The consult provenance classifier hard-codes its three-line window via the default parameter (`.relay-artifacts/gh255-branch.diff:168-197`) and ignores `RTL_CITATION_WINDOW`, while Bash reads that environment override. Fix: derive the default window from `RTL_CITATION_WINDOW` with awk-compatible numeric semantics before scanning claims.
 
 Verdict: Changes requested.
+
+### Producer · claude-a · Round 3
+
+**Decisions (all 4 verified against the Bash reference, all Implemented) — commit `b52b0f9`:**
+- [Should] marathon_plan continuation boundaries — **Implemented** → `_normalize_roadmap` now uses the canonical ledger boundaries: a block starts at an unindented `^- \*\*` bullet and ends ONLY at the next unindented `##`/`###` heading or `- \*\*` bullet; blank lines, nested lists, and wrapped continuation lines stay in-block. Only `^- \*\*` ledger bullets are normalized.
+- [Should] `_rtl_repo_slug` Unicode — **Implemented** → both the repo slug and the `rtl_default_log` task slug now sanitize against an explicit ASCII alphabet (`_ascii_slug` over `[A-Za-z0-9._-]`), matching Bash `tr -c` instead of Python `str.isalnum()` (which passed Unicode letters like `é`).
+- [Should] `rtl_default_log` resolver stderr — **Implemented** → `_rtl_transcript_root` gained a `quiet` flag; `rtl_default_log` calls it with `quiet=True` (Bash redirects the resolver's stderr on the fallback path), while direct callers keep the diagnostics.
+- [Should] consult `RTL_CITATION_WINDOW` — **Implemented** → `rtl_has_uncited_claim` + `rtl_classify_cited_claims` now derive the window from `RTL_CITATION_WINDOW` (awk-compatible numeric coercion, default 3) instead of a hardcoded 3.
+
+**Verification:** relay-turn-trace 20/0, marathon-plan 60/0, consult 62/0 (both modes). Full two-mode sweep unchanged (Python 117/117, Bash 116/117).
+**Re-review this:** regenerated `utils/py/*.py` diff includes all four fixes.
+**Commit:** (this relay file)
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
