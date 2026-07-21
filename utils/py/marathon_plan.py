@@ -77,18 +77,21 @@ def _normalize_roadmap(text):
     lines = text.split('\n')
     n = len(lines)
 
-    def _is_bullet_start(l):
-        return l.lstrip().startswith('- ')
+    def _is_ledger_bullet(l):
+        # canonical ledger item: an UNINDENTED bold bullet `- **Title** …`
+        return re.match(r'^- \*\*', l) is not None
 
     def _ends_block(l):
-        s = l.strip()
-        return s == '' or s.startswith('#') or _is_bullet_start(l)
+        # a block ends ONLY at the next unindented ledger boundary — a `##`/`###` heading or the next
+        # `- **` bullet. Blank lines, nested lists, and wrapped continuation lines stay IN the block
+        # (mirrors how the engine assembles a bullet before collecting its links; GH-255 Codex r3).
+        return re.match(r'^(#{2,3}\s|- \*\*)', l) is not None
 
     out_lines = []
     i = 0
     while i < n:
         line = lines[i]
-        if not _is_bullet_start(line):
+        if not _is_ledger_bullet(line):
             out_lines.append(line)
             i += 1
             continue

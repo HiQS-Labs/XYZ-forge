@@ -31,13 +31,24 @@ _RTL_CITATION_RE = re.compile(r'"[^"]+"|`[^`]+`|[A-Za-z0-9_./-]+:[0-9]+')
 _RTL_PASS_TAG_RE = re.compile(r"\[Pass\]")
 _RTL_UNVERIFIED_RE = re.compile(r"\[Unverified — no citation\]")
 
-def rtl_has_uncited_claim(path, window=3):
+def _citation_window():
+    # Mirror Bash `win="${RTL_CITATION_WINDOW:-3}"` with awk-compatible numeric coercion: unset/empty
+    # → 3; otherwise the leading integer ("5"→5, "3x"→3), a non-numeric value → 0.
+    raw = os.environ.get("RTL_CITATION_WINDOW")
+    if not raw:
+        return 3
+    m = re.match(r'\s*([+-]?\d+)', raw)
+    return int(m.group(1)) if m else 0
+
+def rtl_has_uncited_claim(path, window=None):
     """Python port of relay-turn-lib.sh's rtl_has_uncited_claim() (GH-178 A4 / GH-223): flags <path>
     if it carries zero citations anywhere, OR at least one claim-bearing line has no citation within
     `window` lines of itself (including its own line) — even though the file cites something
     elsewhere. Does NOT verify a citation is accurate, only that one was attempted nearby. Missing or
     unreadable file fails safe (flagged), matching the Bash version.
     """
+    if window is None:
+        window = _citation_window()
     try:
         with open(path, "r", errors="replace") as f:
             lines = f.read().splitlines()
@@ -64,7 +75,7 @@ def _rtl_norm(s):
     # Mirror the awk norm(): collapse runs of whitespace to a single space, strip leading/trailing.
     return re.sub(r"[ \t\r\n\f\v]+", " ", s).strip()
 
-def rtl_classify_cited_claims(transcript_path, prompt_path, window=3):
+def rtl_classify_cited_claims(transcript_path, prompt_path, window=None):
     """Python port of relay-turn-lib.sh's rtl_classify_cited_claims() (GH-235 A4 v0): for each
     ALREADY-CITED claim line in <transcript_path>, decide whether the nearby citation string was
     discovered firsthand in the transcript or merely echoed from the operator prompt text persisted
@@ -72,6 +83,8 @@ def rtl_classify_cited_claims(transcript_path, prompt_path, window=3):
     line-order. Missing/unreadable inputs yield nothing (mirrors the Bash early return). Known v0
     limitation (shared with Bash): exact/whitespace-normalized substring matching only — no fuzzy
     reformat matching."""
+    if window is None:
+        window = _citation_window()
     if not (transcript_path and os.path.isfile(transcript_path) and prompt_path and os.path.isfile(prompt_path)):
         return
     try:
