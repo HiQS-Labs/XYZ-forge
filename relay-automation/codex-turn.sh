@@ -160,6 +160,15 @@ if [[ "${RELAY_WORKTREE_ISOLATION:-0}" == "1" ]]; then
     printf 'codex-turn: worktree isolation requested but `git worktree add` failed — failing turn\n' >&2
     exit 5
   fi
+else
+  # GH-263: the isolation=0 (default/opt-out) path used to add nothing here, on the assumption
+  # that Codex's CWD already equals ROOT so $TICK_REPO_ROOT/.tick sits inside its workspace-write
+  # sandbox for free. That assumption breaks in a vendored `.xyz/` install driven from `cd
+  # $HARNESS` (relay-xyz's documented CWD): Codex's CWD is `.xyz`, so the parent-root .tick is
+  # OUTSIDE its sandbox and the `tick claim` lock write EPERMs before the turn even starts. Reuse
+  # the same GH-36 flag here so Codex's sandbox can always reach the shared token lock, whether or
+  # not its CWD happens to already contain it (harmless no-op when CWD already covers .tick).
+  codex_extra_flags=(--add-dir "$TICK_REPO_ROOT/.tick")
 fi
 
 # Billing guard: strip OPENAI_API_KEY from the codex subprocess env so a Codex turn ALWAYS bills

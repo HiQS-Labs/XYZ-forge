@@ -167,16 +167,23 @@ RELAY_TURN_TIMEOUT_S=1 run_shim RELAY-TURN-timeout codex slowafterrelease RELAY_
 # --- (7b) GH-36: worktree isolation grants codex a writable root for the shared .tick lock ---
 # Under isolation, codex's CWD is a throwaway worktree but .tick/ lives at TICK_REPO_ROOT (outside
 # its workspace-write sandbox) -> tick claim EPERM -> deadlock. The fix passes --add-dir <root>/.tick.
+# XYZ_PYTHON=0 pins this to the Bash implementation under test (GH-263's fix lives there) —
+# XYZ_PYTHON now defaults to 1 (GH-264), which would otherwise silently exercise the Python port.
 seed_token RELAY-TURN-gh36iso
-RELAY_WORKTREE_ISOLATION=1 run_shim RELAY-TURN-gh36iso codex good >/dev/null 2>&1
+RELAY_WORKTREE_ISOLATION=1 XYZ_PYTHON=0 run_shim RELAY-TURN-gh36iso codex good >/dev/null 2>&1
 grep -q -- "--add-dir" "$WORK/codex-args" && grep -q -- ".tick" "$WORK/codex-args" \
   && pass "GH-36: worktree isolation passes --add-dir <root>/.tick to codex (shared token lock writable)" \
   || fail "GH-36: --add-dir .tick missing under worktree isolation"
-seed_token RELAY-TURN-gh36noiso
-run_shim RELAY-TURN-gh36noiso codex good >/dev/null 2>&1
-grep -q -- "--add-dir" "$WORK/codex-args" \
-  && fail "GH-36: --add-dir must NOT appear when isolation is off (default unchanged)" \
-  || pass "GH-36: no --add-dir when isolation off (default behavior unchanged)"
+
+# --- (7c) GH-263: isolation=0 (default) ALSO gets --add-dir <root>/.tick, so a vendored .xyz/
+# install driven with CWD=$HARNESS (!= ROOT) can still reach the shared token lock without EPERM.
+# Before the GH-263 fix, this path passed no --add-dir at all (assumed CWD == ROOT already).
+# XYZ_PYTHON=0 pins this to the Bash implementation (see note above (7b)).
+seed_token RELAY-TURN-gh263noiso
+XYZ_PYTHON=0 run_shim RELAY-TURN-gh263noiso codex good >/dev/null 2>&1
+grep -q -- "--add-dir" "$WORK/codex-args" && grep -q -- ".tick" "$WORK/codex-args" \
+  && pass "GH-263: isolation=0 (default) also passes --add-dir <root>/.tick to codex" \
+  || fail "GH-263: --add-dir .tick missing when isolation is off (EPERM regression)"
 
 # --- (9) rename-hijack: a staged rename (off-lane) is enforced, not skipped as pre-existing (Gemini review) ---
 printf 'tracked off-lane\n' > "$A/rtarget.txt"; git -C "$A" add rtarget.txt >/dev/null 2>&1; git -C "$A" commit -q -m "seed rename target" >/dev/null 2>&1
