@@ -262,8 +262,32 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   fi
   local _extra p; IFS=',' read -ra _extra <<<"$csv"
   for p in "${_extra[@]:-}"; do [[ -n "$p" ]] && RTL_ALLOW+=("$p"); done
+  # GH-261: RTL_ROOT and an absolute RTL_ALLOW entry (the relay file, typically) can each
+  # independently arrive in EITHER symlink form — e.g. RTL_ROOT via `git rev-parse --show-toplevel`
+  # (physical, /private/var/... on macOS) while the caller built the relay-file path from its own
+  # $PWD (logical, /var/...), or vice versa depending on which code path ran. Whichever direction
+  # the mismatch goes, the prefix strip below is a silent no-op: the entry survives absolute, fails
+  # its own off-lane match in rtl_worktree_end, and the whole turn is wrongly reverted as a
+  # containment violation (exit 6). Canonicalize BOTH sides to their physical form before stripping
+  # so either direction resolves; a genuinely foreign path (a real XYZ_ARCHIVE_ROOT redirect, GH-30
+  # Phase 3, below) still won't share RTL_ROOT's prefix even in physical form, so this is a no-op
+  # for that case — it stays absolute as intended.
+  local _rtl_root_phys
+  _rtl_root_phys="$(cd "$RTL_ROOT" 2>/dev/null && pwd -P)" || _rtl_root_phys="$RTL_ROOT"
   local _n=() a                       # normalize to repo-root-relative (git status emits relative)
-  for a in "${RTL_ALLOW[@]}"; do _n+=("${a#"$RTL_ROOT"/}"); done
+  for a in "${RTL_ALLOW[@]}"; do
+    if [[ "$a" == /* && -e "$a" ]]; then
+      local _a_dir
+      _a_dir="$(cd "$(dirname "$a")" 2>/dev/null && pwd -P)"
+      [[ -n "$_a_dir" ]] && a="$_a_dir/$(basename "$a")"
+    fi
+    if [[ "$a" == "$_rtl_root_phys"/* ]]; then
+      a="${a#"$_rtl_root_phys"/}"
+    else
+      a="${a#"$RTL_ROOT"/}"
+    fi
+    _n+=("$a")
+  done
   RTL_ALLOW=("${_n[@]}")
   # GH-30 Phase 3 (Model A): the relay file may live in a SEPARATE git repo (the ARCHIVE) when
   # XYZ_ARCHIVE_ROOT redirected the transcript out of RTL_ROOT. Detect that here so rtl_enforce
@@ -693,6 +717,14 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   case "$p" in .tick/*|.tick) return 0 ;; esac
   # the shim's own transcript log, if it lands in the tree, is not an agent edit — drop it, don't flag
   if [[ -n "$RTL_LOG_REL" && "$p" == "$RTL_LOG_REL" ]]; then rm -f "$RTL_ROOT/$p"; return 0; fi
+  # GH-261: the exact-match exemption above only fires for the ONE transcript file itself; when the
+  # harness's own transcript-log directory is entirely new/untracked, git collapses it to one line
+  # (e.g. "relay-system/"), which never equals $RTL_LOG_REL's deeper file path. Mirrors
+  # rtl_worktree_end's GH-266 fix, applied here to the non-worktree containment path too.
+  if [[ -z "${XYZ_ARCHIVE_ROOT:-}" ]]; then
+    local _rtl_log_top; _rtl_log_top="$(basename "$(rtl_transcript_root "$RTL_ROOT")")"
+    case "$p" in "$_rtl_log_top"|"$_rtl_log_top"/|"$_rtl_log_top"/*) return 0 ;; esac
+  fi
   if rtl_in_allow "$p"; then
     rtl_trace "rtl_check: ALLOW path=$p"
     return 0
