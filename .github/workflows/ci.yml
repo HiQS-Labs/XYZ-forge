@@ -69,9 +69,7 @@ jobs:
 
       # GH-230: prove the README Quickstart's npm-dependency path works from a fresh
       # clone, so a missing-install-step regression fails here instead of on a
-      # newcomer's machine. Scoped to the acorn-extract test (the one that requires
-      # node_modules) because the full ./validate.sh suite has ~12 Ubuntu-environment
-      # failures unrelated to this gap — tracked in GH-232.
+      # newcomer's machine.
       - name: Install npm dependencies and run acorn-extract test
         run: |
           set -euo pipefail
@@ -91,31 +89,25 @@ jobs:
           git config --global user.name "CI Runner"
 
       # GH-232: PR #231 ran the full ./validate.sh suite on ubuntu-latest for the first time and
-      # confirmed ~12 tests fail there for environment reasons, not real regressions (see issue #232
-      # for the per-test detail). marathon.sh/marathon-drive.sh (and its dependents debug-mantra.sh/
-      # driver-lock.sh) used a BSD-only `sed -i ''` invocation that mis-parses under GNU sed — fixed
-      # (portable `sed -i.bak ... ; rm -f *.bak` form, matching the pattern already used elsewhere in
-      # this suite, e.g. test/poll-relay.sh) and re-enabled below. The remaining tests are still
-      # unexplained on ubuntu even after the "Prepare git environment" step above (added in 767035e
-      # specifically to fix this class of failure) — none of those tests are ours to edit in this
-      # lane without real CI signal to diagnose against, so they stay named and skipped explicitly
-      # (instead of the whole suite being left unrun) so CI reflects a true signal for everything
-      # else. test_python_layer.py is excluded the same way, unrun here.
-      - name: Run validate.sh suite (minus confirmed ubuntu-only environmental failures)
+      # found ~12 failures, assumed to be Ubuntu-environment-only and scoped out of CI. Re-diagnosed
+      # directly against a real ubuntu:latest container (not guessed at from macOS): almost all were
+      # masked by two things, now both fixed — (1) marathon.sh/marathon-drive.sh (and dependents
+      # debug-mantra.sh/driver-lock.sh) used a BSD-only `sed -i ''` invocation that mis-parses under
+      # GNU sed; (2) driver-lock.sh/xyz-harness-hooks.sh stubbed CLAUDE_BIN/AGY_BIN but not
+      # CODEX_BIN — the actual default builder — so they only "passed" locally because a real `codex`
+      # binary happened to be on the developer's own PATH, masking the gap; ubuntu CI has no such
+      # binary. path-integrity.sh/archive-writers.sh/relay-file-seeding-visibility.sh/xyz-vendor.sh/
+      # hq.sh/relay-pkg-freshness.sh all passed cleanly once re-tested for real — no ubuntu-specific
+      # bug in any of them. Only registry-lock-concurrency.sh (GH-72, a documented 16-concurrent-writer
+      # lock-contention flake under CI load, unrelated to this issue) stays skipped.
+      - name: Run validate.sh suite (minus a documented flaky test)
         env:
           RELAY_SELF_SUFFICIENCY_SKIP: "1"
         run: |
           set -euo pipefail
           SKIP_TESTS=(
             "acorn-extract.sh"                    # already run above (needs npm ci first)
-            "relay-pkg-freshness.sh"               # GH-232: possible real drift finding, tracked separately
-            "path-integrity.sh"                    # GH-232: ubuntu-environment failure, unexplained
-            "archive-writers.sh"                   # GH-232: ubuntu-environment failure, unexplained
-            "relay-file-seeding-visibility.sh"     # GH-232: ubuntu-environment failure, unexplained
-            "xyz-vendor.sh"                         # GH-232: ubuntu-environment failure, unexplained
-            "xyz-harness-hooks.sh"                 # GH-232: ubuntu-environment failure, unexplained
-            "hq.sh"                                 # GH-232: ubuntu-environment failure, unexplained
-            "registry-lock-concurrency.sh"          # GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
+            "registry-lock-concurrency.sh"          # GH-72/GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
           )
           ALL_TESTS=()
           while IFS= read -r line; do
