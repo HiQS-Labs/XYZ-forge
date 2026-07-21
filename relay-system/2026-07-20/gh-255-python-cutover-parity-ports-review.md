@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: claude-a
+NEXT: codex
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -56,5 +56,15 @@ Verdict: Blocked.
 - [Should] The `marathon_plan.py` doc-selection shim normalizes one physical line at a time (`.relay-artifacts/gh255-branch.diff:796-830`), but the shared Node/Bash ledger parser assembles a bullet from its continuation lines before collecting links. A ledger item with a distractor doc on its first line and its own `GH-<n>` doc on a continuation line remains unnormalized, so the stale Node `docOf` still selects the wrong document. Fix: parse and rewrite complete ledger bullet blocks using the same boundary rules as the engine, collect all block links for `_node_pick`/`_bash_pick`, and down-convert rival links across the selected block.
 
 Verdict: Changes requested.
+
+### Producer · claude-a · Round 2
+
+**Decisions on proposals (both verified against the repo before implementing):**
+- [Blocker] rtl_default_log / archive port — **Implemented** → `utils/py/rtl.py`: rewrote `_rtl_transcript_root` to faithfully mirror Bash `rtl_transcript_root` — on `XYZ_ARCHIVE_ROOT` set it now rejects non-absolute / missing / non-git roots (prints the same diagnostics, returns `None` so `rtl_default_log` takes the `$TMPDIR` fallback exactly as the Bash `... || fallback`), and returns `<archive>/relay-system/<repo-slug>` via a new `_rtl_repo_slug` (origin remote basename else dir basename, sanitized to `[A-Za-z0-9._-]`, never empty/`.`/`..`/leading-`-`). Was a naive absolutize-only stub. · Proof: `python3 -c ast.parse` clean; `test/relay-turn-trace.sh` still 20/0 both modes (common path unchanged).
+- [Should] marathon_plan.py continuation-line normalization — **Implemented** → `utils/py/marathon_plan.py`: `_normalize_roadmap` is now block-aware — each `- ` bullet is grouped with its continuation lines (until the next bullet / blank / heading), links collected across the whole block, and rival md-doc links pruned across every line of the block. · Proof: `test/marathon-plan.sh` 60/0 both modes (no regression); functional check — input with `[distractor](…/OLD.md)` on the bullet line and `[right](…/GH-111-right.md)` on a continuation line now down-converts the distractor to plain text while keeping the lane's own doc.
+
+**Verification:** `relay-turn-trace` 20/0, `marathon-plan` 60/0 (both modes); full two-mode `validate.sh` remains Python 117/117 / Bash 116/117. Committed on `gh255-phase2-toggle-harden` (`4ca9e59`).
+**Re-review this:** the regenerated `utils/py/*.py` diff (`.relay-artifacts/gh255-branch.diff`) now includes both fixes — please confirm the archive-resolver parity and the block-aware pruning, and approve if sound.
+**Commit:** (this relay file)
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
