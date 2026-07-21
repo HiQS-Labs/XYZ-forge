@@ -75,15 +75,53 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
     )
     return tick_repo_root, tick_bin
 
+def _rtl_repo_slug(target_root):
+    # Mirror Bash rtl_repo_slug: origin remote basename, else target dir basename, sanitized to a SAFE
+    # single path segment ([A-Za-z0-9._-]; never empty, never "."/"..", never leading "-").
+    url = ""
+    try:
+        url = subprocess.check_output(["git", "-C", target_root, "remote", "get-url", "origin"],
+                                      stderr=subprocess.DEVNULL).decode("utf-8").strip()
+    except Exception:
+        url = ""
+    while url.endswith("/"):
+        url = url[:-1]
+    if url.endswith(".git"):
+        url = url[:-4]
+    while url.endswith("/"):
+        url = url[:-1]
+    slug = ""
+    if url:
+        slug = url.rsplit("/", 1)[-1].rsplit(":", 1)[-1]   # strip path AND scp-style host: prefix
+    if not slug:
+        slug = os.path.basename(target_root) or ""
+    slug = "".join(c if (c.isalnum() or c in "._-") else "_" for c in (slug or "repo"))
+    while slug.startswith("-"):
+        slug = slug[1:]
+    if slug in ("", ".", ".."):
+        slug = "repo"
+    return slug
+
 def _rtl_transcript_root(target_root):
-    # Mirror Bash rtl_transcript_root: <root>/relay-system, or $XYZ_ARCHIVE_ROOT (absolutized) when set.
+    # Mirror Bash rtl_transcript_root: <root>/relay-system on the common path; when XYZ_ARCHIVE_ROOT is
+    # set, validate it (ABSOLUTE, exists, is a git repo — Model A) and namespace as
+    # <archive>/relay-system/<repo-slug>. Returns None on an invalid archive so the caller (rtl_default_log)
+    # falls back to $TMPDIR, exactly as the Bash `... || fallback` does.
     target_root = (target_root or "").rstrip("/")
     ar = os.environ.get("XYZ_ARCHIVE_ROOT", "")
     if not ar:
         return f"{target_root}/relay-system"
     if not os.path.isabs(ar):
-        ar = os.path.join(target_root, ar)
-    return ar
+        print(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT must be an ABSOLUTE path, got: {ar}", file=sys.stderr)
+        return None
+    if not os.path.isdir(ar):
+        print(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT does not exist (or is not a directory): {ar}", file=sys.stderr)
+        return None
+    if subprocess.run(["git", "-C", ar, "rev-parse", "--git-dir"],
+                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
+        print(f"rtl_transcript_root: XYZ_ARCHIVE_ROOT is not a git repo (Model A requires a committed archive): {ar}", file=sys.stderr)
+        return None
+    return f"{ar}/relay-system/{_rtl_repo_slug(target_root)}"
 
 def rtl_default_log(root, tool, task):
     # GH-161: persistent turn-transcript path under <transcript-root>/logs/<date>/, falling back to

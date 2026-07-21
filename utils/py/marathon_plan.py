@@ -65,39 +65,62 @@ def _issue_of(title, links):
     return None
 
 def _normalize_roadmap(text):
-    # For each ledger bullet, if the node engine's docOf would pick a different md
-    # doc than the bash docOf, prune the rival md-doc links (down-convert them to
-    # plain text) so the node engine resolves the bash-correct doc. Bullet prose /
-    # links never appear in the rendered output, so this is invisible except via the
-    # resolved doc — exactly the intended correction. No-op when pickers agree.
+    # For each ledger bullet, if the node engine's docOf would pick a different md doc than the bash
+    # docOf, prune the rival md-doc links (down-convert them to plain text) so the node engine resolves
+    # the bash-correct doc. Bullet prose/links never appear in the rendered output, so this is invisible
+    # except via the resolved doc. No-op when pickers agree.
+    #
+    # A ledger bullet can span CONTINUATION lines (a distractor doc on the first line, the item's own
+    # GH-<n> doc on a wrapped line — GH-255 Codex review r2). So group each bullet WITH its continuation
+    # lines into a block, collect the links across the whole block, and prune rival links across every
+    # line of the block — mirroring how the engine assembles a bullet before collecting its links.
+    lines = text.split('\n')
+    n = len(lines)
+
+    def _is_bullet_start(l):
+        return l.lstrip().startswith('- ')
+
+    def _ends_block(l):
+        s = l.strip()
+        return s == '' or s.startswith('#') or _is_bullet_start(l)
+
     out_lines = []
-    for line in text.split('\n'):
-        if not line.lstrip().startswith('- '):
+    i = 0
+    while i < n:
+        line = lines[i]
+        if not _is_bullet_start(line):
             out_lines.append(line)
+            i += 1
             continue
-        links = _LINK_RE.findall(line)
-        if not links:
-            out_lines.append(line)
+        block = [line]
+        j = i + 1
+        while j < n and not _ends_block(lines[j]):
+            block.append(lines[j])
+            j += 1
+        i = j
+        block_text = '\n'.join(block)
+        links = _LINK_RE.findall(block_text)
+        cands = [target.split('#')[0] for (_t, target) in links if _is_md_doc(target)]
+        if len(cands) < 2:
+            out_lines.extend(block)
             continue
         tm = re.match(r'\s*- \*\*(.+?)\*\*', line)
         title = tm.group(1) if tm else ''
-        cands = [target.split('#')[0] for (_t, target) in links if _is_md_doc(target)]
-        if len(cands) < 2:
-            out_lines.append(line)
-            continue
         issue = _issue_of(title, links)
         np = _node_pick(cands)
         bp = _bash_pick(cands, issue)
         if np == bp:
-            out_lines.append(line)
+            out_lines.extend(block)
             continue
+
         def _repl(m):
             target = m.group(2)
             base = target.split('#')[0]
             if _is_md_doc(target) and base != bp:
                 return m.group(1)
             return m.group(0)
-        out_lines.append(_LINK_RE.sub(_repl, line))
+
+        out_lines.extend(_LINK_RE.sub(_repl, bl) for bl in block)
     return '\n'.join(out_lines)
 
 def _cell(v):
