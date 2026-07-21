@@ -258,7 +258,7 @@ MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$SPACED_A
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-    --reviewer agy --pre-advance-cmd "true" >/dev/null 2>&1 || true
+    --reviewer agy --pre-advance-cmd "true" --builder claude >/dev/null 2>&1 || true
 [ -f "$WORK/spaced-agent-ran" ] \
   && pass "agent-cmd path with spaces survives relay-drive dispatch" \
   || fail "spaced agent-cmd path broke relay-drive dispatch — bare path must be invoked directly"
@@ -287,7 +287,7 @@ MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGEN
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-    --reviewer agy --artifact "$ART" --pre-advance-cmd "true" >/dev/null 2>&1 || true
+    --reviewer agy --artifact "$ART" --pre-advance-cmd "true" --builder claude >/dev/null 2>&1 || true
 grep -q "$ART" "$WORK/allow-paths-seen" 2>/dev/null \
   && pass "ALLOW_PATHS exported to the turn-taker env" \
   || fail "ALLOW_PATHS not propagated to agent-cmd (builder would have no write surface)"
@@ -300,7 +300,7 @@ MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$EVAL_RD" MARATHON_AGENT_CMD="$ENV_AGEN
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-    --reviewer agy --pre-advance-cmd "true" >/dev/null 2>&1 || true
+    --reviewer agy --pre-advance-cmd "true" --builder claude >/dev/null 2>&1 || true
 grep -q "UNSET" "$WORK/allow-paths-seen" 2>/dev/null \
   && pass "relay-only phase clears inherited ALLOW_PATHS (no extra write surface)" \
   || fail "relay-only phase should unset inherited ALLOW_PATHS"
@@ -380,7 +380,7 @@ rm -f "$WORK/rd-satisfied-count"
 SAT_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_SAT" MARATHON_LANE_NS="satisfied-plan--p1" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --artifact src/satisfied.js \
-    --pre-advance-cmd "test -f '$A/src/satisfied.js'" 2>&1)"; rc=$?
+    --pre-advance-cmd "test -f '$A/src/satisfied.js'" --builder claude 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "GH-207: prebuilt gate-green lane reaches satisfied instead of no-progress" \
   || fail "GH-207: prebuilt satisfied lane exit=$rc (expected 0): $SAT_OUT"
 [ "$(cat "$WORK/rd-satisfied-count" 2>/dev/null)" = "2" ] \
@@ -414,7 +414,7 @@ rm -f "$WORK/rd-stalled-count"
 STALL_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_STALLED" MARATHON_LANE_NS="stalled-plan--p1" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --artifact src/stalled.js \
-    --pre-advance-cmd "test -f '$A/src/missing.js'" 2>&1)"; rc=$?
+    --pre-advance-cmd "test -f '$A/src/missing.js'" --builder claude 2>&1)"; rc=$?
 [ "$rc" -eq 3 ] && pass "GH-207: red gate stalled lane still exits no-progress" \
   || fail "GH-207: stalled red-gate lane exit=$rc (expected 3): $STALL_OUT"
 [ "$(cat "$WORK/rd-stalled-count" 2>/dev/null)" = "1" ] \

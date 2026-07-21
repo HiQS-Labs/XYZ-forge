@@ -18,6 +18,12 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
+        with:
+          # GH-232: several tests (e.g. xyz-vendor.sh's staleness check) use `git rev-list
+          # --max-parents=0 HEAD` to synthesize an "older" ancestor commit for a fixture. The
+          # default shallow clone (depth 1) makes the boundary commit look parentless, so it
+          # resolves to the SAME commit as HEAD — silently defeating the fixture, not a real bug.
+          fetch-depth: 0
 
       - name: Install shellcheck
         run: |
