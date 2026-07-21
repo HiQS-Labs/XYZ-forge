@@ -3,7 +3,7 @@
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
 # utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash
 # implementation below — Bash stays the supported default until the port is promoted.
-if [[ "${XYZ_PYTHON-0}" == "1" ]]; then
+if [[ "${XYZ_PYTHON-1}" == "1" ]]; then
   # UPGRADE.md §4 Phase-2 hardening (GH-255): (2a) `-` not `:-` so an explicit empty XYZ_PYTHON reads
   # as not-1 → Bash (load-bearing once the default flips to 1); (2b) require python3 >=3.8 and fall
   # back to Bash if missing/too-old. This site KEEPS its GH-154 --zones-config translation inside the
