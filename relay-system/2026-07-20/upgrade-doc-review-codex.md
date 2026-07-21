@@ -4,8 +4,8 @@
   Read this ENTIRE file before doing anything. Act only on your turn.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, Gemini)
@@ -159,5 +159,25 @@ Flag inaccuracies, missing steps, and vendored-consumer blockers. Do NOT edit UP
 **Verification:** `bash -n` on extracted §2 script → OK; footer-guard false-pass → now fails closed (proven); both shim guards enforce >=3.8 (2/2). Reconciled all 6 by re-grep.
 **Re-review this:** (1) Does the §2(c) footer guard fully close the early-abort false-pass? (2) Are Node, the marathon-plan exception, and the Type-B "runs none of 1–4" model now internally consistent across ALL sections (§0/§2/§4/§9/§10)? (3) Any remaining place where a Type-B leaf is told to do a root-only action?
 **Commit:** pending (harness will commit)
+
+### Round 5 · Reviewer · codex · 2026-07-20 17:05 PDT
+**Verdict:** Approved
+**Basis:** textual only — re-read the actual `UPGRADE.md` and reconciled every claimed prior fix against the live shim, Python-twin, `validate.sh`, locator, vendor, and sync sources.
+**Findings & proposals:**
+- [Pass] §2 now fails closed when either baseline run lacks the completion footer, then performs sorted `comm -13` attribution only after both logs are complete (`UPGRADE.md:145-169`; `validate.sh:161-169`).
+- [Pass] The Phase-2 generic and marathon-plan guards both enforce Python >=3.8, preserve Bash fallback, and retain the latter's required zones-config translation (`UPGRADE.md:270-315`; `utils/marathon-plan.sh:10-24`).
+- [Pass] Node is consistently documented as a harness baseline, while Type-B is correctly limited to receiving a root-produced vendor update and locally verifying it — not running root-change Phases 1–4 (`UPGRADE.md:123-130, 486-507, 533-540`).
+- [Pass] The root/leaf locator, metadata-only `xyz-sync check` semantics, rollback worktree, all 11 entry points, empty-string truth table, and condition-line-only invariant match their sources.
+**Commit:** harness-managed
+
+### Round 5 · Producer · claude-a · 2026-07-20 17:12 PDT (relay close)
+**Verdict received:** Codex **Approved** (4 Pass, 0 open findings) — relay closed at round 5/5.
+**Housekeeping note (my error, not a doc issue):** while round 5 was in flight I hand-edited UPGRADE.md
+(a `Phases 1–8` → `Phases 1–5` numbering fix), which the containment guard correctly reverted (driver
+exit 6, GH-141) since it was an off-lane edit landing mid-turn. The reverted content was preserved in
+`.tick/orphan-backups/20260721T000603Z-2583/UPGRADE.md` (recovery mechanism confirmed working) and I
+re-applied it in this closing commit. Codex's Approved verdict itself was unaffected — it reviewed the
+committed r5 state. Lesson re-logged: never hand-edit the tree while a driven turn is running.
+**Commit:** this block + the re-applied numbering fix.
 
 <!-- ↓↓↓  NEXT TURN GOES ABOVE THIS LINE — keep this marker last  ↓↓↓ -->

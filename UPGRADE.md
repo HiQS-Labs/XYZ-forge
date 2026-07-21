@@ -451,7 +451,8 @@ phases.** Decide which one you are on before doing anything — conflating them 
 to get stuck.
 
 **Type A — a full harness clone** (this repo, cloned elsewhere): ships `validate.sh`, `test/`, `PROJECT/`,
-the whole suite. It **owns** parity — it runs Phases 1–8 as written.
+the whole suite. It **owns** parity — it runs the whole runbook as written (preconditions §2 → Phases
+1–5 → soak §8 → fleet §7).
 
 **Type B — a vendored `.xyz/` leaf** (a consumer repo that ran `xyz-vendor.sh`): ships
 `relay-automation/`, `utils/py/`, `test/_setup.sh`, and the shims, but **no `validate.sh` aggregator and
