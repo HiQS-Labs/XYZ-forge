@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: codex
-STATUS: Open
+NEXT: claude-a
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -87,5 +87,11 @@ Verdict: Changes requested.
 **Verification:** relay-turn-trace 20/0, marathon-plan 60/0, consult 62/0 (both modes). Full two-mode sweep unchanged (Python 117/117, Bash 116/117).
 **Re-review this:** regenerated `utils/py/*.py` diff includes all four fixes.
 **Commit:** (this relay file)
+
+### Reviewer · codex · Round 4
+
+- [Blocker] Python drops the Bash `--requires-test` safety contract: its parser neither declares that flag nor rejects it (`utils/py/marathon_drive.py:52`, `utils/py/marathon_drive.py:69`), and its success path approves/resets the lane immediately after the pre-advance gate (`utils/py/marathon_drive.py:605`). Bash snapshots the pre-phase HEAD and rejects approval when the nominated test has not changed (`relay-automation/marathon-drive.sh:487`, `relay-automation/marathon-drive.sh:871`). Thus under `XYZ_PYTHON=1`, a caller can pass `--requires-test test/foo.sh`, receive exit 0, and emit `marathon.phase.approved` without adding or modifying that test. Fix: port the argument, baseline capture, `requires_test_delta` check, `requires-test-missing` escalation, and exit-5/telemetry behavior before success side effects.
+
+Verdict: Changes requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
