@@ -62,7 +62,7 @@ you are standing in.
    | Observed | the real error text + exit code |
    | Where | `XYZ_CALLER_NAME` (bare repo name — the locator pre-sanitizes it; never the full path) |
    | Harness version | `git -C <intake repo> rev-parse --short HEAD`; plus `.xyz/VERSION` in the caller repo if vendored |
-   | **Runtime** | which twin ran — **Python** (default, `XYZ_PYTHON` unset/`=1`) or **Bash** (`XYZ_PYTHON=0`). A `.py` traceback ⇒ Python; an inline `line NNN:` shell error ⇒ Bash; **the two behaving differently at the same commit ⇒ parity**. Drives the `runtime:*` label in Step 4. |
+   | **Runtime** | which twin actually **ran**, not the language of the buggy function — **Python** (default, `XYZ_PYTHON` unset/`=1`) or **Bash** (`XYZ_PYTHON=0`). A `.py` traceback ⇒ Python; an inline `line NNN:` shell error ⇒ Bash. If unsure which ran, check whether `XYZ_PYTHON=0` was set — unset means Python. `parity` is only when the two twins *diverge* at the same commit; a shared bug the Python entry point reaches by **delegating to** the bash core (e.g. `rtl.py` shelling out to `relay-turn-lib.sh`) is still `runtime:python` by the entry point that ran, **not** parity. Drives the `runtime:*` label in Step 4. |
 
    Then ask **only what you could not harvest**, capped at three questions (prefer `AskUserQuestion`):
    1. **Expected behavior** — what should have happened. Nearly always needs the operator; the
