@@ -147,6 +147,13 @@ duplicate of another open issue; the issue isn't reproducible/actionable (vague 
 no repro steps, no clear acceptance criteria); or it's not a work item at all
 (question, discussion, meta/process issue). `INCLUDE` only when none of those hold.
 
+> **Runtime-aware reproducibility (`runtime:*`-labeled issues only).** If an issue carries a
+> `runtime:bash` label, reproduce it under `XYZ_PYTHON=0` before ruling it not-reproducible or
+> already-fixed: since the default flipped, a plain repro runs the Python twin, so a Bash-path bug
+> won't surface and would be falsely `EXCLUDE`d as "already done." `runtime:python`/`runtime:parity`
+> reproduce under the default path. These labels exist only in `xyz-3-agents-swarm`, so this is a
+> silent no-op for any other repo the sweep runs against.
+
 ### 4. Ensure every INCLUDE has a contract-carrying capture doc in `2-WORKING`
 
 For each `INCLUDE` verdict:
@@ -170,6 +177,10 @@ For each `INCLUDE` verdict:
     "lanes":       { "agy_safe": [], "orchestrator_only": [ /* kernel/.tick paths, if any */ ] }
   }
   ```
+
+  For a `runtime:bash`-labeled issue, set the gate to `"XYZ_PYTHON=0 bash validate.sh"` so the
+  lane verifies against the Bash path the bug actually lives on, not the Python default (again, a
+  no-op outside `xyz-3-agents-swarm`, where the label is absent).
 
   Mark it explicitly in the doc body: *"Contract auto-drafted by /10days from the issue
   text — artifacts/lanes not yet operator-verified."* This is the one place this skill
