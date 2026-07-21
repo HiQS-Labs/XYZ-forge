@@ -503,6 +503,13 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
   RTL_WT_OFFLANE=0
   [[ -n "$wt" && -d "$wt" ]] || return 0
   rtl_trace "rtl_worktree_end: WT=$wt"
+  # GH-266: the harness's own transcript-log directory, when NOT redirected via XYZ_ARCHIVE_ROOT (the
+  # default), lives inside RTL_ROOT itself and is genuinely new/untracked in a fresh isolated worktree
+  # — exempt it the same way .tick/ is exempted below, mirroring rtl_check()'s $RTL_LOG_REL exemption
+  # (line ~683). When XYZ_ARCHIVE_ROOT IS set, rtl_transcript_root resolves outside RTL_ROOT entirely,
+  # so nothing here would ever appear in this worktree's own git status — no exemption needed then.
+  local _rtl_log_top=""
+  [[ -z "${XYZ_ARCHIVE_ROOT:-}" ]] && _rtl_log_top="$(basename "$(rtl_transcript_root "$RTL_ROOT")")"
   # GH-13/#14: rtl_worktree_begin runs in a `wt="$(...)"` subshell, so the RTL_WT_USED=1 it sets there
   # is LOST before rtl_enforce runs — which left the "a moved ROOT HEAD is a concurrent PEER commit;
   # preserve it, don't reset" branch in rtl_enforce as DEAD CODE for the command-substitution shims
@@ -518,6 +525,11 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     xy="${entry:0:2}"; path="${entry:3}"
     case "$xy" in R*|C*) IFS= read -r -d '' _ || true ;; esac   # rename/copy: consume 2nd NUL field
     case "$path" in .tick/*|.tick) continue ;; esac
+    # GH-266: git collapses an all-untracked dir to one line (same reasoning as .relay-artifacts
+    # below) — match both the bare transcript-log directory name and any path under it.
+    if [[ -n "$_rtl_log_top" ]]; then
+      case "$path" in "$_rtl_log_top"|"$_rtl_log_top"/|"$_rtl_log_top"/*) continue ;; esac
+    fi
     # GH-31 / #15: the read-only artifact seed. Exempt ONLY while unchanged from the seed; a reviewer
     # edit changes the .relay-artifacts dir signature → strict-fail as off-lane (read-only enforced,
     # not silently discarded). git collapses an all-untracked dir to ".relay-artifacts/", so match both.

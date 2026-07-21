@@ -171,5 +171,48 @@ run_shim RELAY-TURN-customcache-off customcache 1; rc=$?
 [ "$rc" -eq 6 ] && pass "GH-107 control: non-built-in cache dir WITHOUT the env still exits 6" || fail "expected exit 6 without CONTAINMENT_IGNORE, got $rc"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "GH-107 control: default-off turn made NO commit" || fail "default-off turn should not commit"
 
+# --- (10) GH-266: the harness's own transcript-log dir doesn't false-positive as off-lane ---------
+# rtl_worktree_end's off-lane loop had no exemption for relay-system/ (the harness's own transcript
+# dir), unlike .tick/ (explicitly exempted) and unlike rtl_check()'s $RTL_LOG_REL exemption — a turn
+# whose ONLY untracked content in the worktree is its own transcript log used to be wrongly discarded
+# as a containment violation. Exercised directly against rtl_worktree_begin/rtl_worktree_end (not
+# through a turn shim) since the transcript write happens in the shim's own driving code, not the
+# stubbed agent process.
+LIB_WI="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/relay-turn-lib.sh"
+(
+  cd "$A"
+  export RELAY_FILE="relay.md"
+  # shellcheck disable=SC1090
+  source "$LIB_WI"
+  rtl_init "$A" "relay.md" "artifact.txt"
+  if wt="$(rtl_worktree_begin)"; then
+    mkdir -p "$wt/relay-system/logs/2026-07-21"
+    printf 'transcript\n' > "$wt/relay-system/logs/2026-07-21/codex-turn-test.log"
+    rtl_worktree_end "$wt"
+    [ "$RTL_WT_OFFLANE" -eq 0 ] && echo OK || echo OFFLANE
+  else
+    echo "BEGIN_FAILED"
+  fi
+) > "$WORK/gh266.out" 2>/dev/null
+[ "$(cat "$WORK/gh266.out")" = "OK" ] && pass "GH-266: worktree-isolated turn writing only its own transcript log is NOT off-lane" || fail "GH-266: transcript-only turn flagged off-lane (got: $(cat "$WORK/gh266.out"))"
+
+# --- (11) GH-266 control: CONTAINMENT_IGNORE=relay-system still works as a manual override ---------
+(
+  cd "$A"
+  export RELAY_FILE="relay.md" CONTAINMENT_IGNORE="relay-system"
+  # shellcheck disable=SC1090
+  source "$LIB_WI"
+  rtl_init "$A" "relay.md" "artifact.txt"
+  if wt="$(rtl_worktree_begin)"; then
+    mkdir -p "$wt/relay-system/logs/2026-07-21"
+    printf 'transcript\n' > "$wt/relay-system/logs/2026-07-21/codex-turn-test.log"
+    rtl_worktree_end "$wt"
+    [ "$RTL_WT_OFFLANE" -eq 0 ] && echo OK || echo OFFLANE
+  else
+    echo "BEGIN_FAILED"
+  fi
+) > "$WORK/gh266-override.out" 2>/dev/null
+[ "$(cat "$WORK/gh266-override.out")" = "OK" ] && pass "GH-266: CONTAINMENT_IGNORE=relay-system still works as a manual override" || fail "GH-266: CONTAINMENT_IGNORE override broken (got: $(cat "$WORK/gh266-override.out"))"
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
