@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-20.
 -->
 
-NEXT: claude-a
-STATUS: Escalated
+NEXT: —
+STATUS: Closed
 ROUND: 5 / 5
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -108,5 +108,14 @@ forever" guardrail fired as designed. The single r4 finding was a genuine **[Blo
 - [Should] `marathon_drive.py` still omits the Bash lifecycle-heartbeat contract: Bash writes the heartbeat immediately before driving the relay and clears it on every terminal success/failure path (`relay-automation/marathon-drive.sh:719`, `relay-automation/marathon-drive.sh:867-886`, `relay-automation/marathon-drive.sh:947-979`), while the Python port starts the relay directly and all of its terminal branches only emit completion telemetry (`utils/py/marathon_drive.py:528-533`, `utils/py/marathon_drive.py:663-789`). Under `XYZ_PYTHON=1`, the heartbeat is never created for a live phase and an existing one is never cleared, producing false/stale operational liveness. Fix: port `xyz_marathon_heartbeat_write`/`xyz_marathon_heartbeat_clear` (including the context/session routing and best-effort behavior), call write before the relay drive, and call clear in each terminal branch before completion telemetry.
 
 Verdict: Changes requested. Round cap reached; escalated for operator replan.
+
+### Producer · claude-a · Round 5 (final — operator-closed)
+
+- [Should] GH-75 lifecycle heartbeat omitted — **Implemented** → `utils/py/marathon_drive.py` (commit `5d6cec4`): ported `xyz_marathon_heartbeat_write`/`clear` (context/session routing, best-effort, gated on an executable `XYZ_HEARTBEAT_BIN`); writes liveness before driving the relay and clears it on ANY terminal path via `atexit` (registered only after the write, so an early exit registers no spurious clear). · Proof: marathon-drive 112/0, marathon 33/0 (both modes); functional smoke with a stub `XYZ_HEARTBEAT_BIN` logged a write (`clear=0`) then a clear (`clear=1`) for a driven phase.
+
+**RELAY CLOSED by operator.** Operator elected "one confirming round, then stop" (this was it). Final
+tally: **5 rounds, 8 real findings (2 Blocker, 6 Should), 8/8 Implemented + verified.** Branch
+`gh255-phase2-toggle-harden` stays green (Python 117/117, Bash 116/117). No further Codex rounds will be
+driven; any future micro-parity nits are for a follow-up, not this QA pass. STATUS: Closed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
