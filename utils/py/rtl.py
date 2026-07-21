@@ -75,6 +75,35 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
     )
     return tick_repo_root, tick_bin
 
+def _rtl_transcript_root(target_root):
+    # Mirror Bash rtl_transcript_root: <root>/relay-system, or $XYZ_ARCHIVE_ROOT (absolutized) when set.
+    target_root = (target_root or "").rstrip("/")
+    ar = os.environ.get("XYZ_ARCHIVE_ROOT", "")
+    if not ar:
+        return f"{target_root}/relay-system"
+    if not os.path.isabs(ar):
+        ar = os.path.join(target_root, ar)
+    return ar
+
+def rtl_default_log(root, tool, task):
+    # GH-161: persistent turn-transcript path under <transcript-root>/logs/<date>/, falling back to
+    # $TMPDIR when the transcript root can't be resolved/created. Mirrors Bash rtl_default_log.
+    fallback = os.path.join(tempfile.gettempdir(), f"{tool}-{os.getpid()}.log")
+    base = _rtl_transcript_root(root)
+    if not base:
+        return fallback
+    tslug = "".join(c if (c.isalnum() or c in "._-") else "_" for c in (task or ""))
+    try:
+        day = subprocess.check_output(["date", "+%Y-%m-%d"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+    except Exception:
+        day = "unknown-date"
+    path = os.path.join(base, "logs", day, f"{tool}-{tslug}-{os.getpid()}.log")
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        return path
+    except Exception:
+        return fallback
+
 class RelayTurnLib:
     def __init__(self, root, xyz_root, relay_file, allow_paths):
         self.root = root
