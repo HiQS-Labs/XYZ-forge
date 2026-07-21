@@ -61,6 +61,27 @@ relay-automation/marathon-drive.sh
 
 ---
 
+## 0.5 First, is this the right target? (STOP gate — read before any phase)
+
+Three checks before you execute a single phase. Skipping them is the #1 way to walk the whole runbook
+against a target that can't be upgraded (learned the hard way on the first real dogfood — GH-260).
+
+1. **Is the harness even present here?** If this repo vendors the harness into a gitignored `.xyz/`
+   and that folder is missing, there is nothing to upgrade yet — a gitignored copy installed on another
+   device does not travel through git. Materialize it first (bring the `.xyz/` over, or re-vendor with
+   `xyz-vendor.sh`), then continue.
+
+2. **Full clone, or a vendored copy?** A **full harness clone** (has `validate.sh` + `test/` +
+   `PROJECT/`) owns the flip and runs this entire runbook. A **vendored `.xyz/` copy** does not — see #3.
+
+3. **Vendored copy + a root that isn't flipped yet → STOP.** A vendored copy becomes Python-default
+   ONLY by re-vendoring from a root that is *already* flipped (§7). If the root hasn't finished
+   Phases 1–3, there is no standalone way to flip the copy — go flip the root first. And because a
+   vendored copy exercises almost none of this runbook (Phases 1–4 are root-only), **to dogfood the
+   flip mechanics pick a full clone as your test target, not a copy.**
+
+---
+
 ## 1. Reversibility model (read before executing anything)
 
 There are three independent revert levers, fastest first. Know all three before you flip.
@@ -247,6 +268,13 @@ break Bash mode.
 ---
 
 ## 4. Phase 2 — Harden the toggle (do this even if you never flip)
+
+**Status (this repo):** ✅ **executed on branch `gh255-phase2-toggle-harden` (GH-255), pending merge.**
+All 11 shims carry `${XYZ_PYTHON-0}` + the version-enforcing guard; the condition-line invariant holds
+(one distinct line); the two-mode `validate.sh` sweep confirmed the Python-attributable set did NOT
+grow (still the same 9 open gaps), so the hardening is behavior-preserving. The relay skill package
+(`relay-pkg.tar.gz`) was regenerated so the bundled shims match. Phase 3 (the flip) stays blocked until
+Phase 1 (#255 + #261) is clean.
 
 **Entry gate:** none — these two changes are safe under the *current* Bash default and should land
 regardless of flip timing.
@@ -494,7 +522,9 @@ When executing elsewhere:
    leaf's normal relay/marathon flows plus `swarm-preflight` all use it;
    (b) `xyz-sync.sh check <dir>` from the **owning** repo to confirm the leaf is at the expected,
    already-flipped `source_commit` (note: `check` compares recorded `tick_version`/`source_commit` only —
-   it is **metadata drift, not a content check**);
+   it is **metadata drift, not a content check**; a stale copy can even show failures that do not exist
+   at the current root — GH-260 — so re-vendor a copy to current before judging its parity, never trust a
+   metadata `ok` as "content-current");
    (c) prove via the **consuming repo's own** smoke/test path plus a real relay/marathon run with the
    var unset, and again with `XYZ_PYTHON=0`. That is the leaf's verification — inherit-and-verify, never
    derive.
