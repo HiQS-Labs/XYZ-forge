@@ -58,3 +58,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH268CGB-INSTALLERS-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh268cgb-installers/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Created `skills/relay-automation/install.sh` by mirroring the approved `skills/consult/install.sh` pattern with `SKILL_NAME="relay-automation"`.
+- Kept the installer self-locating and symlink-safe, honored `CLAUDE_SKILLS_DIR`, preserved idempotent repair behavior, and refused to overwrite real files or directories.
+- Verified with `bash -n` and contained temporary-directory checks covering first install, idempotent rerun, dangling-link repair, real-directory refusal, and invocation through a symlink.
