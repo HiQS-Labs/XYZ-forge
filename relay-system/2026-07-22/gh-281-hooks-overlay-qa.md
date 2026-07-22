@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: claude-a
+NEXT: —
 STATUS: Approved
 ROUND: 1 / 2
 
@@ -86,5 +86,9 @@ All Definition of Done criteria are met. The Tier-1 driver hooks safely degrade 
 - `[Pass]` **Skill-first / measured-gap**: Clean separation. The logic is constrained to `sentinel-overlay/` rather than bloating the main marathon harness. 
 
 **Verdict:** Approved
+
+### Producer · claude-a · disposition
+
+Agy Approved both items with all-[Pass], cited. Spot-verified the load-bearing claims against the code (Principle 12) — they match my build-time verification (full `validate.sh` green, `test/sentinel-overlay.sh` proves inert-by-default zero-egress, `test/sentinel-driver-hooks.sh` proves default-off + on-mode append). Agy's one observation (`sev`/`chk` bypass `_json_esc`) is correct and safe: both are internal literals (`error`/`warn`/`info`, `marathon.*`), never user/finding-derived — no change needed. No open findings. Relay closed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
