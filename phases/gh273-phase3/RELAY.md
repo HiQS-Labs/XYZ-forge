@@ -74,3 +74,22 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH273-PHASE3-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh273-phase3/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Implemented the Phase 3 closeout extraction using the canonical GH-273 project contract because
+the generated phase brief's acceptance-criteria section was empty.
+
+- Files touched: `relay-automation/marathon-closeout.sh`, `test/marathon-closeout.sh`, and this relay.
+- The closeout script stages all changes with `git add -A`, commits, pushes the current feature
+  branch, creates a PR with operator-supplied title/notes, requires green checks and GitHub's
+  `MERGEABLE` state, merges, switches to `development`, and pulls it with `--ff-only`.
+- `--dry-run` requires an explicit `--head` and prints the complete command sequence without
+  invoking either `git` or `gh`. Live runs auto-detect the head branch and refuse to close out the
+  base branch. Exit codes are explicit: 2 usage/precondition, 3 command failure, 4 checks or
+  mergeability refusal.
+- The regression test PATH-shadows both `git` and `gh` inside a disposable scratch directory; it
+  makes no real Git/GitHub call. It covers inert dry-run output, the green happy path, inclusion of
+  pre-existing manual edits via `git add -A`, red checks, conflicting mergeability, and exit codes.
+- Verification: `bash test/marathon-closeout.sh` → 18 passed, 0 failed (including `bash -n` for
+  both scoped scripts). Per the phase scope, the full project gate was not run; the harness owns it.
