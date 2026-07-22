@@ -7,6 +7,7 @@ created: 2026-07-22
 updated: 2026-07-22
 owner: noel
 doc_type: project
+reversibility: "Easy — every phase's fixes are additive doc/script/gate changes with normal git history (README reordering, installer scripts, a gate-wiring script, a manual re-test); nothing here is a one-way door and all of it reverts with git revert."
 complexity: 4
 risk: 3
 effort: 5
@@ -48,8 +49,8 @@ goal: >
 
 ## Phase 1 — Unblock a new tester (blocking)
 
-**Intent:** a first-run Quickstart should end green, and no onboarding step should depend on the
-assistant improvising a fix. These are the report's 2 "Blocking for a new tester" items.
+**Goal:** a first-run Quickstart ends green on a genuinely clean clone, and every named onboarding
+skill has a working installer — the report's 2 "Blocking for a new tester" items, closed.
 
 ### Checklist
 - [ ] **Quickstart (`validate.sh`) passes on a clean machine.** The report's "prove it works, ~1
@@ -65,17 +66,20 @@ assistant improvising a fix. These are the report's 2 "Blocking for a new tester
       if the assistant improvises the symlink. *Fix:* add `install.sh` to each (or one top-level
       installer covering all `skills/*`) so no onboarding step depends on assistant improvisation.
 
-### Definition of done
-- [ ] `bash validate.sh` clean-clone run (fresh `git clone` + fresh `$TMPDIR`, no inherited state) is green, or the Quickstart's scope is reduced to what's actually zero-setup and that's documented.
-- [ ] `skills/consult/install.sh` exists at minimum (explicitly named in the report); ideally all 9 gap skills get one.
-- [ ] `bash validate.sh` no worse than baseline.
+### Phase 1 — QA checklist
+- [ ] Every todo above produced its checkable output (no orphan tasks): clean-clone `validate.sh` result, and `skills/consult/install.sh` present.
+- [ ] Tests written **and run** — `bash validate.sh` executed against a genuinely clean clone (fresh `git clone`, fresh `$TMPDIR`, no inherited `xyz`/`hq` state), output attached/quoted here, not asserted.
+- [ ] Diagnosable: if the 7 failures don't fully resolve, each remaining one names its own repro command and log location — no "some tests are flaky" hand-wave.
+- [ ] Blast: undo-class Easy (revert the installer/doc commits); shield = none needed (additive only); tripwire = none needed (no one-way step in this phase).
+- [ ] Status table and `updated:` date refreshed before this phase is marked done.
 
 ---
 
 ## Phase 2 — Onboarding polish before broader beta
 
-**Intent:** the report's 4 "fix before broader beta" items — all README/doc reordering and one
-sandbox-detection message. Lower risk than Phase 1, but blocks nothing; sequence after Phase 1.
+**Goal:** the README and `relay-automation/README.md` lead with what-it-is/Quickstart/prerequisites
+in the right order, and the Quickstart's sandbox-hang failure mode is caught and messaged instead of
+silently burning ~5 minutes — the report's 4 "fix before broader beta" items, closed.
 
 ### Checklist
 - [ ] **README leads with logistics, not "what it is / try it."** `README:~115` ("what XYZ is") and
@@ -96,21 +100,24 @@ sandbox-detection message. Lower risk than Phase 1, but blocks nothing; sequence
       sandbox condition and message it, or document the un-sandboxed requirement at the Quickstart
       step itself, not only deeper in the docs.
 
-### Definition of done
-- [ ] README: name/what-it-is/Quickstart above the beta-logistics and mode-taxonomy sections.
-- [ ] README: CLI prerequisites stated at or above the fast path.
-- [ ] `relay-automation/README.md`: prerequisite section renamed, install links added.
-- [ ] Quickstart: sandbox-hang condition is detected and messaged, or explicitly documented at the Quickstart step.
+### Phase 2 — QA checklist
+- [ ] Every todo above produced its checkable output: README reorder, prereq reorder, `relay-automation/README.md` rename, sandbox-hang message — each a diffable doc/script change, no orphans.
+- [ ] Tests written **and run** — no test coverage applies here (doc-only + one message string); note that explicitly rather than leaving it silently unchecked.
+- [ ] Diagnosable: the sandbox-hang message names the actual condition (`mktemp` under Bash sandbox) and the fix (`dangerouslyDisableSandbox`/`/sandbox` off), not a generic "something went wrong."
+- [ ] Blast: undo-class Easy (doc/text changes only); shield = none needed; tripwire = none needed.
+- [ ] Status table and `updated:` date refreshed before this phase is marked done.
 
 ---
 
 ## Phase 3 — Review-loop scope gap (follow-up)
 
-**Intent:** the report's 2 "fix in a follow-up" items. The more consequential one — the review loop
-only checks the diff, not the file it lands in — is the one with real teeth: an independent audit of
-the same branch found 20 issues (1 critical, 4 high) in code the relay's own Producer/Reviewer loop
-approved in 2 rounds, entirely because those issues lived in the pre-existing file the diff touched,
-not the diff itself.
+**Goal:** every relay turn boundary states the handoff cue, and the per-phase gate can run a
+target-repo-native lint/security check against the file a diff lands in — not just the diff hunk —
+the report's 2 "fix in a follow-up" items. The more consequential one — the review loop only checks
+the diff, not the file it lands in — is the one with real teeth: an independent audit of the same
+branch found 20 issues (1 critical, 4 high) in code the relay's own Producer/Reviewer loop approved
+in 2 rounds, entirely because those issues lived in the pre-existing file the diff touched, not the
+diff itself.
 
 ### Checklist
 - [ ] **Relay handoff cue reinforcement.** All-Claude relay mode requires manually copy-pasting a
@@ -126,19 +133,23 @@ not the diff itself.
       mechanically catch several of these; and consider prompting the reviewer to sweep the touched
       file, not just the diff, as a cheaper first step before full linter wiring.
 
-### Definition of done
-- [ ] Every relay turn boundary (not just the first) states the explicit handoff cue.
-- [ ] The per-phase gate seam (`--pre-advance-cmd` or equivalent) can run a target-repo-native check (lint/security-ruleset), documented with at least one worked example (PHP/PHPCS is the report's concrete case).
-- [ ] Reviewer prompt updated to explicitly ask it to consider the file the diff lands in, not only the diff hunk.
+### Phase 3 — QA checklist
+- [ ] Every todo above produced its checkable output: handoff-cue reinforcement in the relay template, and the gate seam's target-repo-check capability, each with a worked example (PHP/PHPCS).
+- [ ] Tests written **and run** — at least one relay driven end-to-end with `--pre-advance-cmd` pointed at a real lint/security command, with the pass/fail output attached.
+- [ ] Diagnosable: a reviewer that skips the file-sweep step is visibly distinguishable in the transcript from one that ran it (e.g. an explicit "swept file: yes/no" line), not silently assumed.
+- [ ] Blast: undo-class Easy (gate wiring is opt-in per lane via `--pre-advance-cmd`, doesn't change default behavior for lanes that don't set it); shield = the check stays advisory/gate-only, never auto-edits; tripwire = none needed (reversible, additive).
+- [ ] Status table and `updated:` date refreshed before this phase is marked done.
 
 ---
 
 ## Phase 4 — Cross-model re-test (now unblocked)
 
-**Intent:** the report's 1 "untested — needs re-test" item — the headline cross-model claim never
-ran because the Codex/agy CLIs weren't installed/authenticated, and the tester correctly flagged that
-"the failing tests cluster around this lane's driver scripts... until #232 is closed" made setup
-friction likely. #232 closed 2026-07-22 via PR #271 — this phase is now actionable, not blocked.
+**Goal:** a real cross-vendor relay (Codex or agy as Reviewer, not Claude-reviewing-Claude) round-trips
+with a genuine verdict, and the result is written back into this doc — the report's 1
+"untested — needs re-test" item. The headline cross-model claim never ran in the original test because
+the Codex/agy CLIs weren't installed/authenticated, and the tester correctly flagged that "the failing
+tests cluster around this lane's driver scripts... until #232 is closed" made setup friction likely.
+#232 closed 2026-07-22 via PR #271 — this phase is now actionable, not blocked.
 
 ### Checklist
 - [ ] Install and authenticate the Codex and Antigravity (`agy`) CLIs per #123's own Initial Steps.
@@ -148,10 +159,12 @@ friction likely. #232 closed 2026-07-22 via PR #271 — this phase is now action
       re-test gate, its findings must be written back before the phase can be called done, per this
       repo's own PDDA discovery-phase convention.
 
-### Definition of done
-- [ ] Codex + agy both authenticate and run a real turn (not just `--version`).
-- [ ] A cross-vendor relay round-trips (Producer → cross-vendor Reviewer → back) with a real verdict.
-- [ ] Findings (works / doesn't / new friction) written back into this doc's Status table.
+### Phase 4 — QA checklist
+- [ ] Every todo above produced its checkable output: authenticated CLIs, a completed cross-vendor relay round-trip, and findings written back — no orphan tasks.
+- [ ] Tests written **and run** — the actual `/relay-xyz` + `/consult` transcripts are the execution artifact; a claimed "it worked" with no transcript reference doesn't close this phase.
+- [ ] Diagnosable: any new friction found is written back here with the exact failing command/exit code, not summarized as "some issues."
+- [ ] Blast: undo-class Easy (a re-test produces no lasting repo change beyond this doc's own findings entry); shield = none needed; tripwire = none needed.
+- [ ] Status table and `updated:` date refreshed before this phase is marked done.
 
 ---
 
