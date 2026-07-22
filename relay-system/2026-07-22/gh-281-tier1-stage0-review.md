@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 2
 
@@ -75,5 +75,44 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · codex · Round 1
+
+- [Blocker] The registered CI path does not enforce zero-network on the bundled scripts: the guard's
+  honest default is the two capture scripts (`relay-automation/hooks/sentinel-network-guard.sh:11-20`),
+  but its test invokes only explicit temporary fixture directories
+  (`test/sentinel-network-guard.sh:27-44`), while `validate.sh:117-118` registers the test rather than
+  the guard itself. A future `curl` in either real capture script therefore leaves this CI test green.
+  Fix: add a no-argument guard invocation over the real defaults, and add table-driven bad fixtures for
+  every promised primitive, following the individual-pattern precedent at `test/security-scan.sh:145-169`.
+- [Blocker] `finding-new.sh` does not emit the required PDDA shape and can emit invalid JSON: its record
+  omits `file`, `line`, and `probe`, inserts `scope` and `repo` without escaping, and escapes only quote
+  and backslash in the message (`relay-automation/finding-new.sh:18-20`). A quoted scope or a tab in the
+  allowed one-line message breaks JSONL; the current test covers only a quoted message and asserts a
+  subset of fields (`test/sentinel-tier1.sh:55-70`). Fix: JSON-escape every dynamic string (including
+  control characters), emit all ten contract keys, and assert the exact key set plus adversarial scope,
+  message, and path values.
+- [Should] The harvester's required escape and boundary behavior is not regression-tested. Its fixture
+  contains only plain ASCII values and covers adjacent `### Side Finding` plus one `##` boundary
+  (`test/sentinel-tier1.sh:19-53`), so quote/backslash/tab handling and `#`/`---` termination can regress
+  while the gate stays green. Fix: add decoded-value assertions for quote, backslash, and tab inputs and
+  separate fixtures for `#`, `###`, `---`, and CRLF/control-character input.
+- [Pass] The current bundled capture bodies are local-only: harvest uses local file checks, `date`,
+  `awk`, and append redirection (`relay-automation/harvest-findings.sh:18-40`); manual filing uses local
+  `git`/`pwd`, `date`, `printf`, and append redirection (`relay-automation/finding-new.sh:14-21`). The
+  narrow default guard scope is therefore defensible and avoids legitimate network-enabled relay
+  drivers. No change.
+- [Pass] The harvester's source flushes before a new Side Finding, on heading/thematic boundaries, and
+  at EOF, while swallowing write/parser failure before an explicit zero exit
+  (`relay-automation/harvest-findings.sh:25-41`). No change beyond the regression coverage above.
+- [Pass] The tests are deterministic and non-vacuous within their current cases: they create real
+  fixtures, parse every emitted line as JSON, and assert counts and decoded fields
+  (`test/sentinel-tier1.sh:19-70`; `test/sentinel-network-guard.sh:17-44`). Keep this shape while adding
+  the missing cases above.
+- [Pass] The guard is a small fail-loud grep scanner with file/directory traversal and scan-error
+  accounting (`relay-automation/hooks/sentinel-network-guard.sh:24-57`), matching the relevant
+  `security-scan.sh` precedent without adding a generic platform or network/LLM surface. No change.
+
+**Verdict: Changes requested**
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
