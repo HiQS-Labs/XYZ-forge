@@ -1,6 +1,6 @@
 # Marathon Phase gh268r2a-installers
-STATUS: Open
-NEXT: aider-qwen
+STATUS: Ready for review
+NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH268R2A-INSTALLERS-TURN builder=aider-qwen reviewer=codex round-cap=4 -->
 
@@ -61,3 +61,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH268R2A-INSTALLERS-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh268r2a-installers/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · aider-qwen
+- Created `skills/consult/install.sh` and `skills/open-router/install.sh` as full, non-empty installer scripts.
+- Each script starts with `#!/usr/bin/env bash` and `set -euo pipefail`.
+- Each script is self-locating via `$BASH_SOURCE`, with symlink-safe resolution of its own directory and no hardcoded machine path.
+- Each script symlinks its skill directory into `~/.claude/skills/<skill-name>` via `$HOME/.claude/skills` by default, while allowing `CLAUDE_SKILLS_DIR` override.
+- Behavior is idempotent: no-op if the correct symlink already exists, replace a stale/dangling/wrong symlink, and refuse politely if the destination exists as a non-symlink.
+- Only the skill name differs between the two installer scripts.
+- Updated this relay file status to ready for review and handed the next turn to `codex`.
