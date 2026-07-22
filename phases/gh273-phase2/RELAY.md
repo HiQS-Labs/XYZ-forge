@@ -64,6 +64,17 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
    - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH273-PHASE2-TURN --agent codex --to agy
 4. Edit ONLY these paths: phases/gh273-phase2/RELAY.md and .claude/loose-ends-sequence.md. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 
+### Round 1 · Builder · codex
+
+- Created `.claude/loose-ends-sequence.md` with the required project-local `### *` matcher and
+  direct bullets for the PDDA sweep, conditional ROADMAP dashboard regeneration, and
+  VERIFIED-COMPLETE-only project-document archival.
+- Key decision: used `../` for repository-relative utility and project paths because the
+  `loose-ends` contract resolves relative paths from the manifest's `.claude/` directory.
+- File-specific verification passed: the manifest has one matcher plus exactly three bullets, both
+  resolved utility scripts are executable, and both resolved project lifecycle directories exist.
+  Per the scope lock, the full project gate was not run.
+
 ---
 
 ▶ TAKE YOUR TURN (agy — REVIEWER role)
