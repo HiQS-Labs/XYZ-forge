@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -88,3 +88,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Kept parsing and JSON emission in Python's standard library so prompt text is decoded safely and
   hook output remains valid one-line JSON. No test or gate was run in-turn, per this phase's
   containment instruction; the harness owns verification after handoff.
+
+### Round 1 · Reviewer · agy
+
+The implementation looks solid. The `skill-nudge.sh` script correctly handles fail-open conditions and parses JSON safely via the Python standard library. The regular expressions accurately target the specified marathon lifecycle intent without false positives. `.claude/settings.json` is properly updated to invoke the hook on `UserPromptSubmit`. `test/xyz-harness-hooks.sh` effectively covers the positive, negative, and fail-open test cases.
+
+**Verdict:** Approved
