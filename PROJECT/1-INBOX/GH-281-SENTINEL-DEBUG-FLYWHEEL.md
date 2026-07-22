@@ -50,14 +50,25 @@ must be resolved *in the doc* before promotion, the rest are concrete hardening.
    issue→PR loop. **Adjudicated (relay Blocker, accepted):** "private/unbundled" is *not* a stated
    DO-NOT-BUILD exception, and an in-doc "do not reopen this" note conflicts with the list's canonical
    reconsideration process (a *measured incumbent gap* + a coordinated DO-NOT-BUILD **and** synthesis
-   amendment — DO-NOT-BUILD.md:54-59). Resolution: Tier 2 is **operator-owned experimentation that
-   lives outside this repo's public delivery scope** (a gitignored dir or a separate private repo) —
-   DO-NOT-BUILD governs what *this repo builds and ships*, so it does not reach a private overlay that
-   is never packaged. The moment Tier 2 is proposed *for this repo* (bundled, a product surface, or a
-   shipped `sentinel-*` script), it re-enters scope and must go through the canonical reconsideration
-   process — recording the measured gap and amending DO-NOT-BUILD + the synthesis together — not a
-   unilateral capture note. So the constraint is not "never reopen"; it is "reopening requires the
-   documented amendment path."
+   amendment — DO-NOT-BUILD.md:54-59). But the resolution is **not** "exile Tier 2 to a divorced
+   private repo" — that forfeits the whole point. This repo is a *restaurant that builds restaurants*:
+   the **public harness is the restaurant it ships**, and the **Tier-2 loop is HQ's own working
+   kitchen**, improving *this* repo live with the very tooling it sells. Kill the dogfooding and the
+   loop stops proving the product. The governing invariant is therefore **shared substrate, split
+   egress**:
+   - Tier 2 **reuses the shipped harness, PDDA rails, and marathon/relay** (the kitchen equipment on
+     the menu) and runs against *this* repo — it is not a parallel platform.
+   - Only the **network / LLM / GitHub egress** is the unbundled overlay (the back-office), living in
+     a root-level gitignored dir (see #7), **never packaged into what ships**.
+
+   DO-NOT-BUILD governs what this repo *builds and ships*; a default-off, unbundled egress overlay
+   that never enters the package is out of its reach **without ceasing to dogfood this repo**. The one
+   line it must not cross: becoming a **bundled or product-facing surface** (a shipped `sentinel-*`
+   script — a menu item). If that is ever proposed, it re-enters scope through the canonical amendment
+   path — record the measured gap, amend DO-NOT-BUILD + the synthesis together — not a unilateral
+   capture note. So the constraint is not "never reopen"; it is "reopening requires the documented
+   amendment path," and the gates in #2/#3 are the **wall between kitchen and dining room, not an
+   eviction**.
 
 2. **Bounded-repair / human-gate seam (gate).** CONSTITUTION: self-repair "may choose only from a
    bounded, pre-approved menu — never an open-ended rewrite," and destructive actions need an
@@ -115,10 +126,21 @@ must be resolved *in the doc* before promotion, the rest are concrete hardening.
    `finding-new.sh` — the guard must cover wherever those land, and must explicitly carve out the
    one legitimate network step (`pdda.sh gh-refresh`) so the guard doesn't false-positive on it.
 
-7. **Namespace `debug.log` (concrete, cheap).** A root-level `debug.log` is generic enough to
-   collide with a consumer repo's own debug output in a vendored `.xyz/` install. Prefer a
-   namespaced default (`XYZ.debug.log` / `.xyz-debug.log`) mirroring the existing `XYZ.json`
-   telemetry convention. Keeps the opt-in artifact unambiguous.
+7. **Artifact + overlay location, and the `.gitignore` checklist item (concrete).** Two local paths,
+   both following this repo's existing gitignored-per-device-state convention (`.tick/`, `XYZ.json`,
+   `relay-system/logs/`, `utils/telemetry/preflight-log/`, and the already-gitignored `/temp/`):
+   - **Capture artifact (`debug.log`)** lives at repo **root**, gitignored. A bare `debug.log` is
+     generic enough to collide with a consumer repo's own debug output in a vendored `.xyz/` install —
+     prefer a namespaced default (`XYZ.debug.log`) mirroring the `XYZ.json` telemetry name. It is
+     **not** `$TMPDIR` scratch: the shims already send *ephemeral per-turn* transcripts to
+     `${TMPDIR:-/tmp}/…-$$`, but `debug.log` must **persist across turns** for Tier 2 to read it, so it
+     belongs in the gitignored-root pattern, exactly like `XYZ.json` — not in `$TMPDIR` or `/temp/`.
+   - **Tier-2 overlay** is a **root-level gitignored dir** (e.g. `sentinel-overlay/`) — the in-repo
+     shape that preserves dogfooding (#1), same precedent as `.tick/`. Not a divorced private repo.
+   - **The `.gitignore` entry is a Stage-0 build-order checklist item** (issue §1.6 / §1.3 / build
+     order step 1; acceptance check §1.7 #1 verifies default-off creates no file). It must track the
+     **final** chosen filename — namespace the ignore rule to match if the artifact is renamed, don't
+     leave it as `debug.log`.
 
 8. **Where Tier 1 is already strong (keep).** Default-off byte-identical behavior (acceptance #1),
    six runnable acceptance checks incl. the network grep and JSONL round-trip, Side Findings as
