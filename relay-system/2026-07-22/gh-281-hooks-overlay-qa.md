@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 1 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -57,7 +57,7 @@ ROUND: 1 / 2
      behavior unchanged? The lane-park hook rewrote the `lane_attempt_gate` call site — same exit
      semantics on every rc? Mirror block that `test/lane-attempt-cap.sh` diffs still untouched?
   4. **Portability.** macOS bash 3.2 (no `mapfile`, `${arr[@]}`-under-`set -u` traps). Any bash-4-ism?
-  5. **Deterministic-before-LLM & verified-success-only.** Are the tests genuine (real fixtures, real
+  5. **Deterministic-before-LLM & verified-success-only.** Are the tests genuine (real fixtures, real  [Unverified — no citation]
      assertions), or do they pass vacuously? Does probe-lint enforce the correct GH-239 polarity?
   6. **Skill-first / measured-gap / DO-NOT-BUILD.** Reinvention where a shipped helper exists? Scope
      creep toward a generic platform beyond the measured gap?
@@ -73,5 +73,18 @@ ROUND: 1 / 2
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer (agy) — Round 1
+
+All Definition of Done criteria are met. The Tier-1 driver hooks safely degrade to no-op when inactive and correctly normalize JSON strings. The Tier-2 overlay preserves the strict inert-by-default safety invariant.
+
+- `[Pass]` **Inert-by-default / call-home-off**: `sentinel-overlay/lib/config.sh:16` serves as the single active gate. All egress routes strictly through the wrappers, verified by static regex in `test/sentinel-overlay.sh:17`. Wrappers safely return 1 (e.g. `sentinel-overlay/lib/gh.sh:11`), and un-gated scripts like `pr-emit.sh:22` safely exit when the wrapper fails.
+- `[Pass]` **Escaping consistency**: `relay-automation/marathon-drive.sh:288` correctly scrubs controls (`tr '\000-\037\177' ' '`) and escapes backslash/quotes sequentially. Interpolated fields (`sev`, `chk`) bypass `_json_esc` but are hardcoded safe strings (e.g. `error`, `marathon.escalation`).
+- `[Pass]` **Default-off byte-identity**: With `XYZ_DEBUG_LOG` unset, the logger short-circuits (`marathon-drive.sh:293`). The `lane_attempt_gate` RC capture matches previous exit semantics exactly (`marathon-drive.sh:885`), and the mirror block is untouched.
+- `[Pass]` **Portability**: Safe Bash 3.2 array usage. `sentinel-overlay/sentinel-nightly.sh:27` guards the loop with `${#eligible[@]} -eq 0`, and `marathon-drive.sh:359` guards `read -ra` with a `-n` check, avoiding `set -u` unbound traps on empty arrays.
+- `[Pass]` **Deterministic-before-LLM**: Real test fixtures. `test/sentinel-overlay.sh:30` employs fail-loud path stubs to prove the inert state. `sentinel-overlay/lib/probe-lint.sh:23` accurately maps `rc != 0` to "detects" for command probes (GH-239 polarity).
+- `[Pass]` **Skill-first / measured-gap**: Clean separation. The logic is constrained to `sentinel-overlay/` rather than bloating the main marathon harness. 
+
+**Verdict:** Approved
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
