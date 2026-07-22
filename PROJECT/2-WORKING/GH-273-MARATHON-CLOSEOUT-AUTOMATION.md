@@ -194,25 +194,31 @@ session can start at "review the PR" instead of "do the ceremony."
 
 ## Swarm Preflight Contract
 
-Scoped to Phase 1 only (two new `.claude/commands/*.md` prompt files; no scripts or harness code
-touched — building the commands is just authoring prompts, not executing their ceremony). Phase 0
-SHIPPED 2026-07-21 (see Status table + CHANGELOG). Phases 2-4 each need their own contract redraft
+Scoped to Phase 2 only (one new manifest file; no scripts or harness code touched). Phases 0-1
+SHIPPED 2026-07-21 (see Status table + CHANGELOG). Phases 3-4 each need their own contract redraft
 once the phase before them ships — same pattern as `GH-268`.
+
+**Sharpened by reading `~/.claude/skills/loose-ends/SKILL.md` directly** (not just inferring): the
+manifest mechanism already exists and is exact, not something Phase 2 invents. `loose-ends` checks
+`./.claude/loose-ends-sequence.md` (project-local) with precedence over `~/.claude/loose-ends-sequence.md`
+(global) — local wins outright, the global file is not consulted if local exists. Format: Markdown
+headings as repo matchers (`### *` for the project-local file, since it's already scoped to one
+repo by its path), plain `- cmd` bullets beneath, relative paths resolved against the manifest's own
+directory (not CWD). Phase 2 is therefore just **authoring that file for this repo** — no new code.
 
 ```json
 {
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "path_absent", "path": ".claude/commands/pre-marathon.md" },
-    { "type": "path_absent", "path": ".claude/commands/post-marathon.md" }
+    { "type": "path_absent", "path": ".claude/loose-ends-sequence.md" }
   ],
-  "artifacts": [ ".claude/commands/pre-marathon.md", ".claude/commands/post-marathon.md" ],
-  "artifacts_new": [ ".claude/commands/pre-marathon.md", ".claude/commands/post-marathon.md" ],
+  "artifacts": [ ".claude/loose-ends-sequence.md" ],
+  "artifacts_new": [ ".claude/loose-ends-sequence.md" ],
   "remediation": {
     "source": "issue#273",
-    "criteria": "Phase 1 only: .claude/commands/pre-marathon.md invokes the marathon-triage skill for reconciliation/ranking/waves rather than reimplementing it, additionally sweeps PROJECT/2-WORKING and phases/*/ for stale phase dirs and orphaned ESCALATION.md files, dry-runs each ready plan, and requires explicit operator confirmation before firing (never bypasses marathon-triage's no-fire boundary). .claude/commands/post-marathon.md sequences: commit+push all changed files including manual edits -> open a PR with notes -> merge if green -> pull and switch back to development -> close every GH issue resolved by the run -> move completed docs to PROJECT/3-COMPLETED -> run a full PDDA sweep (utils/pdda/pdda.sh run) -> end by invoking /loose-ends. Both files are plain markdown prompt bodies (no new scripts); this doc's Phase 1 section is the source of truth for their exact step sequence."
+    "criteria": ".claude/loose-ends-sequence.md exists, uses a '### *' heading per the loose-ends skill's project-local matcher rule, and lists this repo's actual closeout commands as '- cmd' bullets: utils/pdda/pdda.sh run (PDDA sweep), utils/roadmap-dashboard.sh (regenerate the generated ROADMAP-DASHBOARD.md artifact whenever ROADMAP.md changed -- a real gap hit live during this same GH-273 fire, see CHANGELOG), and a reminder that PROJECT/2-WORKING docs move to PROJECT/3-COMPLETED only once VERIFIED-COMPLETE per marathon-cleanup's classification, never on a bare status-word change. No code changes; content must follow the loose-ends SKILL.md's documented format exactly (heading + bullets, no prose the parser would misread as a command)."
   },
-  "lanes": { "agy_safe": [ ".claude/commands/pre-marathon.md", ".claude/commands/post-marathon.md" ], "orchestrator_only": [] }
+  "lanes": { "agy_safe": [ ".claude/loose-ends-sequence.md" ], "orchestrator_only": [] }
 }
 ```
