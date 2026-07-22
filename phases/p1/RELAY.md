@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -187,3 +187,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Verification performed within the containment rail: `bash -n` passed for all five new scripts,
   executable bits are set, and the guard's default scan exited 0. Per the phase brief, neither
   `test/*.sh` nor `validate.sh` was executed in this isolated worktree; the harness owns that gate.
+
+### Round 1 · Reviewer · agy
+
+The implementation precisely matches the phase brief. The two reference scripts were included verbatim. `sentinel-network-guard.sh` is well implemented, avoiding external network patterns and excluding `sentinel-overlay` paths. The test fixtures are hermetic and cover the acceptance criteria thoroughly. Both `.gitignore` and `validate.sh` were updated as required.
+
+**Verdict:** Approved
