@@ -409,7 +409,166 @@ def main():
         rel_relay = relay_file[len(root)+1:]
     else:
         rel_relay = relay_file
-        
+
+    # Bound early (moved ahead of Step 3's own copy below) so the GH-274 satisfied-lane check
+    # just below — and the escalate/complete_phase_success defs it may call — read/write tick
+    # state against the right repo even when a caller invoked us without pre-exporting it.
+    os.environ["TICK_REPO_ROOT"] = root
+
+    # escalate/save_transcript/run_pre_advance_gate/file_status/terminal_status/token_state/
+    # requires_test_delta/complete_phase_success are defined here (ahead of the render below)
+    # instead of beside their original later call sites, so the GH-274 satisfied-lane
+    # short-circuit just below — which must run BEFORE the render — can call
+    # complete_phase_success directly rather than duplicating its gate/requires-test/telemetry
+    # logic.
+    def escalate(reason, rexit):
+        esc_file = os.path.join(phase_dir, "ESCALATION.md")
+        with open(esc_file, 'w') as f:
+            f.write(f"""# ESCALATION — Marathon Phase {args.phase_id}
+
+phase: {args.phase_id}
+task: {relay_task}
+relay-drive-exit: {rexit}
+reason: {reason}
+relay-file: {rel_relay}
+""")
+        subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
+        # GH-207: an identical escalation record must not HALT on nothing-to-commit.
+        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
+            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
+        subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        log(f"escalation written: {esc_file} (reason: {reason})")
+
+    def save_transcript():
+        try:
+            # We must use relay-turn-lib.sh to resolve rtl_transcript_root
+            ts_base = subprocess.check_output(f"source \"{os.path.join(xyz_harness, 'relay-automation', 'relay-turn-lib.sh')}\" && rtl_transcript_root \"{root}\"", shell=True, executable="/bin/bash").decode('utf-8').strip()
+        except subprocess.CalledProcessError:
+            return False
+
+        import datetime
+        now = datetime.datetime.utcnow()
+        date_dir = os.path.join(ts_base, now.strftime("%Y-%m-%d"))
+        os.makedirs(date_dir, exist_ok=True)
+        dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
+        shutil.copy2(relay_file, dest)
+        subprocess.run(["git", "-C", root, "add", "--", dest], check=True)
+        # GH-207: an identical transcript (same-second re-render) must not HALT on nothing-to-commit.
+        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", dest]).returncode == 0:
+            log(f"transcript unchanged: {dest}")
+        else:
+            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} transcript saved ({relay_task})"], check=True)
+            log(f"transcript saved: {dest}")
+        return True
+
+    def run_pre_advance_gate():
+        cwd = args.target_root if args.target_root else None
+        return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
+
+    def run_post_approve_cmd():
+        cwd = args.target_root if args.target_root else None
+        return subprocess.run(args.post_approve_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
+
+    def file_status():
+        try:
+            with open(relay_file) as f:
+                for line in f:
+                    if line.startswith("STATUS:"):
+                        return line.split(":", 1)[1].strip()
+        except Exception:
+            pass
+        return ""
+
+    def terminal_status(s):
+        return s in ("Approved", "Closed")
+
+    def token_state():
+        try:
+            info = subprocess.check_output([tick_bin, "info", relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
+        except Exception:
+            return ("", "")
+        status = claimer = handoff = ""
+        for line in info:
+            if line.startswith("status:"): status = line.split(":", 1)[1].strip()
+            elif line.startswith("claimer:"): claimer = line.split(":", 1)[1].strip()
+            elif line.startswith("handoff-to:"): handoff = line.split(":", 1)[1].strip()
+        actor = claimer if status == "claimed" else (handoff if status == "open" else "")
+        return (status, actor)
+
+    def requires_test_delta(path):
+        # GH-249: True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
+        # or is newly untracked/added. Mirrors Bash requires_test_delta — an empty/missing/unchanged test
+        # proves nothing.
+        rroot = args.target_root or root
+        abs_p = path if os.path.isabs(path) else os.path.join(rroot, path)
+        if not (os.path.isfile(abs_p) and os.path.getsize(abs_p) > 0):
+            return False
+        if pre_phase_head:
+            out = subprocess.run(["git", "-C", rroot, "diff", "--name-only", pre_phase_head, "--", path],
+                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
+            if out.strip():
+                return True
+        st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", path],
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
+        for line in st.splitlines():
+            if line.startswith("??") or line.startswith("A "):
+                return True
+        return False
+
+    def complete_phase_success(success_mode="approved"):
+        log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
+        gate_exit = run_pre_advance_gate()
+        if gate_exit != 0:
+            log(f"pre-advance gate FAILED (exit {gate_exit}) — escalating")
+            escalate("pre-advance-failed", 0)
+            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
+            sys.exit(5)
+        if args.requires_test and not requires_test_delta(args.requires_test):
+            log(f"requires-test FAILED — no new/updated test detected at: {args.requires_test}")
+            escalate("requires-test-missing", 0)
+            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — required test not added/updated: {args.requires_test}")
+            sys.exit(5)
+        if success_mode == "already-satisfied":
+            success_text = f"phase {args.phase_id} complete — lane_already_satisfied, reviewer approved, gate passed"
+        else:
+            success_text = f"phase {args.phase_id} complete — STATUS: Approved, gate passed"
+        subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
+        save_transcript()
+        log(success_text)
+        xyz_marathon_emit("green", success_text)
+        if args.post_approve_cmd:
+            log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
+            post_approve_exit = run_post_approve_cmd()
+            if post_approve_exit != 0:
+                log(f"post-approve command FAILED (exit {post_approve_exit}) — phase remains approved; escalating closeout")
+                escalate("post-approve-failed", 0)
+                sys.exit(9)
+        sys.exit(0)
+
+    # GH-274: has this phase's relay ALREADY reached a terminal state (RELAY_FILE's STATUS is
+    # Approved/Closed) with its tick token ALREADY `done`? If so there is nothing left to
+    # (re)build or (re)review — the only reason to re-invoke marathon-drive for it is to retry a
+    # flaky --pre-advance-cmd without touching the phase's own record. A `done` tick token can
+    # never be reopened (reconcile_relay_task's correct, existing behavior), so re-rendering +
+    # re-seeding here would only clobber the accurate terminal RELAY.md before failing anyway.
+    # Checked before the render (below); extends GH-207's already-satisfied detection
+    # (recover_already_satisfied_lane, triggered mid-relay on a no-progress reroute) to this
+    # separate post-terminal-gate-retry trigger. DRY_RUN is exempted: its whole point is to
+    # render + show the tick seed for inspection, and there is nothing to commit or seed here.
+    def satisfied_lane_terminal():
+        if not os.path.isfile(relay_file):
+            return False
+        s = file_status()
+        if not terminal_status(s):
+            return False
+        tstatus, _actor = token_state()
+        return tstatus == "done"
+
+    if not args.dry_run and satisfied_lane_terminal():
+        log(f"phase {args.phase_id} already reached a terminal relay (STATUS: {file_status()}, token done) — skipping render/reseed, re-running only the pre-advance gate")
+        complete_phase_success("already-satisfied")
+
     if not args.dry_run:
         try:
             out = subprocess.check_output(["git", "-C", root, "status", "--porcelain"], stderr=subprocess.DEVNULL).decode('utf-8')
@@ -567,53 +726,9 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     _atexit.register(xyz_marathon_heartbeat_clear)
     relay_exit = _run_relay_drive()
 
-    def escalate(reason, rexit):
-        esc_file = os.path.join(phase_dir, "ESCALATION.md")
-        with open(esc_file, 'w') as f:
-            f.write(f"""# ESCALATION — Marathon Phase {args.phase_id}
-
-phase: {args.phase_id}
-task: {relay_task}
-relay-drive-exit: {rexit}
-reason: {reason}
-relay-file: {rel_relay}
-""")
-        subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
-        # GH-207: an identical escalation record must not HALT on nothing-to-commit.
-        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
-            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
-        subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        log(f"escalation written: {esc_file} (reason: {reason})")
-
-    def save_transcript():
-        try:
-            # We must use relay-turn-lib.sh to resolve rtl_transcript_root
-            ts_base = subprocess.check_output(f"source \"{os.path.join(xyz_harness, 'relay-automation', 'relay-turn-lib.sh')}\" && rtl_transcript_root \"{root}\"", shell=True, executable="/bin/bash").decode('utf-8').strip()
-        except subprocess.CalledProcessError:
-            return False
-        
-        import datetime
-        now = datetime.datetime.utcnow()
-        date_dir = os.path.join(ts_base, now.strftime("%Y-%m-%d"))
-        os.makedirs(date_dir, exist_ok=True)
-        dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
-        shutil.copy2(relay_file, dest)
-        subprocess.run(["git", "-C", root, "add", "--", dest], check=True)
-        # GH-207: an identical transcript (same-second re-render) must not HALT on nothing-to-commit.
-        if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", dest]).returncode == 0:
-            log(f"transcript unchanged: {dest}")
-        else:
-            subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} transcript saved ({relay_task})"], check=True)
-            log(f"transcript saved: {dest}")
-        return True
-
-    def run_pre_advance_gate():
-        cwd = args.target_root if args.target_root else None
-        return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
-
-    def run_post_approve_cmd():
-        cwd = args.target_root if args.target_root else None
-        return subprocess.run(args.post_approve_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
+    # escalate/save_transcript/run_pre_advance_gate/file_status/terminal_status/token_state/
+    # requires_test_delta/complete_phase_success are defined earlier (ahead of the render) —
+    # see the GH-274 comment there — but still called from below as before.
 
     def artifacts_exist():
         if not args.artifact_paths:
@@ -627,83 +742,6 @@ relay-file: {rel_relay}
             if not os.path.exists(ap):
                 return False
         return True
-
-    def file_status():
-        try:
-            with open(relay_file) as f:
-                for line in f:
-                    if line.startswith("STATUS:"):
-                        return line.split(":", 1)[1].strip()
-        except Exception:
-            pass
-        return ""
-
-    def terminal_status(s):
-        return s in ("Approved", "Closed")
-
-    def token_state():
-        try:
-            info = subprocess.check_output([tick_bin, "info", relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
-        except Exception:
-            return ("", "")
-        status = claimer = handoff = ""
-        for line in info:
-            if line.startswith("status:"): status = line.split(":", 1)[1].strip()
-            elif line.startswith("claimer:"): claimer = line.split(":", 1)[1].strip()
-            elif line.startswith("handoff-to:"): handoff = line.split(":", 1)[1].strip()
-        actor = claimer if status == "claimed" else (handoff if status == "open" else "")
-        return (status, actor)
-
-    def requires_test_delta(path):
-        # GH-249: True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
-        # or is newly untracked/added. Mirrors Bash requires_test_delta — an empty/missing/unchanged test
-        # proves nothing.
-        rroot = args.target_root or root
-        abs_p = path if os.path.isabs(path) else os.path.join(rroot, path)
-        if not (os.path.isfile(abs_p) and os.path.getsize(abs_p) > 0):
-            return False
-        if pre_phase_head:
-            out = subprocess.run(["git", "-C", rroot, "diff", "--name-only", pre_phase_head, "--", path],
-                                 stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
-            if out.strip():
-                return True
-        st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", path],
-                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
-        for line in st.splitlines():
-            if line.startswith("??") or line.startswith("A "):
-                return True
-        return False
-
-    def complete_phase_success(success_mode="approved"):
-        log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
-        gate_exit = run_pre_advance_gate()
-        if gate_exit != 0:
-            log(f"pre-advance gate FAILED (exit {gate_exit}) — escalating")
-            escalate("pre-advance-failed", 0)
-            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
-            sys.exit(5)
-        if args.requires_test and not requires_test_delta(args.requires_test):
-            log(f"requires-test FAILED — no new/updated test detected at: {args.requires_test}")
-            escalate("requires-test-missing", 0)
-            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — required test not added/updated: {args.requires_test}")
-            sys.exit(5)
-        if success_mode == "already-satisfied":
-            success_text = f"phase {args.phase_id} complete — lane_already_satisfied, reviewer approved, gate passed"
-        else:
-            success_text = f"phase {args.phase_id} complete — STATUS: Approved, gate passed"
-        subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
-        save_transcript()
-        log(success_text)
-        xyz_marathon_emit("green", success_text)
-        if args.post_approve_cmd:
-            log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
-            post_approve_exit = run_post_approve_cmd()
-            if post_approve_exit != 0:
-                log(f"post-approve command FAILED (exit {post_approve_exit}) — phase remains approved; escalating closeout")
-                escalate("post-approve-failed", 0)
-                sys.exit(9)
-        sys.exit(0)
 
     def recover_already_satisfied_lane():
         # GH-207: a stalled builder (exit 3) whose declared artifact is already built AND gate-green gets

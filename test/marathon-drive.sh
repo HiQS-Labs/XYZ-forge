@@ -492,6 +492,69 @@ rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 rm -f "$A/src/stalled.js"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (12h) GH-274: retrying a phase after a flaky pre-advance gate does not clobber an
+#         already-terminal (Approved + tick done) RELAY.md — only the gate is re-run ─────
+RD_GH274="$WORK/relay-drive-gh274.sh"
+cat > "$RD_GH274" <<'STUB'
+#!/usr/bin/env bash
+set -eu
+relay=""; task=""
+while (($#)); do
+  case "$1" in
+    --relay-file) relay="$2"; shift 2 ;;
+    --relay-task) task="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
+printf '\n### Round 1 · Builder · claude\nDone.\n\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
+TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent claude --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" "$TICK" release "$task" --agent claude --to agy >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
+TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
+exit 0
+STUB
+chmod +x "$RD_GH274"
+GATE_FILE="$WORK/gh274-gate-should-pass"
+rm -f "$GATE_FILE"
+
+# First fire: relay approves (reviewer sets STATUS: Approved + tick done) but the
+# --pre-advance-cmd gate is still red (the flaky-gate half of the real GH-273 incident) —
+# escalates exit 5 without ever reverting the already-Approved relay file.
+FIRST_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_GH274" \
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy \
+    --pre-advance-cmd "test -f '$GATE_FILE'" --builder claude 2>&1)"; rc=$?
+[ "$rc" -eq 5 ] && pass "GH-274: relay approves but a flaky gate still escalates (exit 5)" \
+  || fail "GH-274: expected exit 5 (gate failed) on first fire, got $rc: $FIRST_OUT"
+grep -q '^STATUS: Approved' "$A/phases/p1/RELAY.md" \
+  && pass "GH-274: RELAY.md already shows STATUS: Approved after the gate-failed escalation" \
+  || fail "GH-274: RELAY.md should show STATUS: Approved: $(cat "$A/phases/p1/RELAY.md" 2>/dev/null)"
+tick_a info MARATHON-P1-TURN | grep -qE '^status:[[:space:]]+done$' \
+  && pass "GH-274: tick token is already done after the gate-failed escalation" \
+  || fail "GH-274: tick token should be done: $(tick_a info MARATHON-P1-TURN)"
+BEFORE_RETRY_RELAY="$(cat "$A/phases/p1/RELAY.md")"
+
+# The operator retries — same phase-id, gate now fixed/passing (the flake is gone).
+touch "$GATE_FILE"
+RETRY_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_GH274" \
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy \
+    --pre-advance-cmd "test -f '$GATE_FILE'" --builder claude 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-274: retrying after the gate is fixed exits 0" \
+  || fail "GH-274: retry should exit 0, got $rc: $RETRY_OUT"
+printf '%s\n' "$RETRY_OUT" | grep -q "skipping render/reseed" \
+  && pass "GH-274: retry explicitly takes the satisfied-lane short-circuit" \
+  || fail "GH-274: expected an explicit satisfied-lane short-circuit log: $RETRY_OUT"
+[ "$(cat "$A/phases/p1/RELAY.md")" = "$BEFORE_RETRY_RELAY" ] \
+  && pass "GH-274: RELAY.md is byte-identical after the retry (not clobbered)" \
+  || fail "GH-274: RELAY.md changed on retry: $(cat "$A/phases/p1/RELAY.md")"
+grep -q '^STATUS: Open' "$A/phases/p1/RELAY.md" \
+  && fail "GH-274: RELAY.md was clobbered back to STATUS: Open" \
+  || pass "GH-274: RELAY.md never regresses to STATUS: Open on retry"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 # ── (13) --require-clean: hard-stop on a dirty workspace (Phase 3.6) ───────
 # A clean tree starts fine; a stray untracked file + --require-clean is a hard stop (exit 2),
 # so unattended runs don't proceed with distracting context in the tree.
