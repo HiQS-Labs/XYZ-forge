@@ -2,7 +2,7 @@
 gh_issue: 261
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/261
 title: "marathon-drive: reconcile the Bash/Python disjoint-failure union (last Phase-1 gate for the XYZ_PYTHON flip)"
-status: "fixed 2026-07-21 — both real factors confirmed via direct instrumentation, not guessed"
+status: "✅ SHIPPED — closed 2026-07-22 (PR #271, merge 2a2da17)"
 created: 2026-07-21
 updated: 2026-07-21
 owner: noel

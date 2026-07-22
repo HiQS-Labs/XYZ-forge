@@ -2,7 +2,7 @@
 gh_issue: 232
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/232
 title: "validate.sh: ~12 tests fail on ubuntu-latest CI runner (environment incompatibilities, first exposed by GH-230's CI step)"
-status: "fixed 2026-07-21 — re-diagnosed directly against a real ubuntu container, not guessed at"
+status: "✅ SHIPPED — closed 2026-07-22 (PR #271, merge 2a2da17)"
 created: 2026-07-19
 updated: 2026-07-21
 owner: noel

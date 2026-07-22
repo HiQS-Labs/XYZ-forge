@@ -1,6 +1,6 @@
 ---
 title: codex-turn.sh isolation=0 path lacks the GH-36 --add-dir .tick fix → EPERM on token claim in vendored installs
-status: "promoted to 2-WORKING 2026-07-21 via /10days sweep with an auto-drafted contract"
+status: "✅ SHIPPED — closed 2026-07-22 (PR #271, merge 2a2da17)"
 created: 2026-07-20
 updated: 2026-07-21
 owner: noelsaw1
