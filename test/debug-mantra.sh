@@ -22,6 +22,8 @@ STUB_CLAUDE_BIN="$WORK/stub-claude"; printf '#!/usr/bin/env bash\nexit 0\n' > "$
 STUB_AGY_BIN="$WORK/stub-agy"; printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_AGY_BIN"; chmod +x "$STUB_AGY_BIN"
 
 run_driver() {  # <extra-args…>
+  # GH-232: pin --builder claude (mirrors test/marathon-drive.sh's GH-212 convention) — the actual
+  # default builder is codex, which isn't stubbed here and isn't on PATH on ubuntu CI.
   MARATHON_ROOT="$A" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
   bash "$DRIVER" \
@@ -30,6 +32,7 @@ run_driver() {  # <extra-args…>
     --reviewer agy \
     --pre-advance-cmd "true" \
     --dry-run \
+    --builder claude \
     "$@"
 }
 

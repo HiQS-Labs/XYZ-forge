@@ -2,7 +2,7 @@
 gh_issue: 234
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/234
 title: "find-harness.sh --env exports TICK_REPO_ROOT one directory too deep (found during GH-177 wipe investigation, never filed)"
-status: "captured 2026-07-19 (auto-drafted by /10days)"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 125f184, merged PR #252)."
 created: 2026-07-19
 updated: 2026-07-19
 owner: noel
@@ -24,6 +24,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Auto-captured 2026-07-19 by the /10days sweep; promoted to 2-WORKING with an auto-drafted Swarm Preflight Contract. Verified still open & reproducible: `skills/relay-xyz/find-harness.sh:178` still exports `TICK_REPO_ROOT` set to `$HARNESS` (the vendored `.xyz` path) rather than the repo root, on `development` today. **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
+| **2026-07-21:** shipped via commit `125f184`, merged PR [#252](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/252); issue #234 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Problem
 `find-harness.sh --env` exports `TICK_REPO_ROOT` pointing at the harness directory itself (e.g. `$CALLER_ROOT/.xyz`), which is one directory deeper than the actual repo root that `bin/tick` and tick-consuming shims expect. This was found during the GH-177 wipe investigation but never filed as its own issue at the time.

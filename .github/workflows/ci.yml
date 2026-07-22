@@ -18,6 +18,12 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
+        with:
+          # GH-232: several tests (e.g. xyz-vendor.sh's staleness check) use `git rev-list
+          # --max-parents=0 HEAD` to synthesize an "older" ancestor commit for a fixture. The
+          # default shallow clone (depth 1) makes the boundary commit look parentless, so it
+          # resolves to the SAME commit as HEAD — silently defeating the fixture, not a real bug.
+          fetch-depth: 0
 
       - name: Install shellcheck
         run: |
@@ -69,9 +75,7 @@ jobs:
 
       # GH-230: prove the README Quickstart's npm-dependency path works from a fresh
       # clone, so a missing-install-step regression fails here instead of on a
-      # newcomer's machine. Scoped to the acorn-extract test (the one that requires
-      # node_modules) because the full ./validate.sh suite has ~12 Ubuntu-environment
-      # failures unrelated to this gap — tracked in GH-232.
+      # newcomer's machine.
       - name: Install npm dependencies and run acorn-extract test
         run: |
           set -euo pipefail
@@ -91,32 +95,25 @@ jobs:
           git config --global user.name "CI Runner"
 
       # GH-232: PR #231 ran the full ./validate.sh suite on ubuntu-latest for the first time and
-      # confirmed ~12 tests fail there for environment reasons, not real regressions (see issue #232
-      # for the per-test detail): a BSD-only `sed -i ''` invocation in marathon.sh that breaks under
-      # GNU sed, marathon-drive.sh flakiness that debug-mantra.sh/driver-lock.sh inherit, a possible
-      # real package-freshness finding tracked separately, and several ubuntu path/tooling-assumption
-      # failures. None of those tests are ours to edit in this lane, so they're named and skipped
-      # explicitly below (instead of the whole suite being left unrun) so CI reflects a true signal
-      # for everything else. test_python_layer.py is excluded the same way, unrun here.
-      - name: Run validate.sh suite (minus confirmed ubuntu-only environmental failures)
+      # found ~12 failures, assumed to be Ubuntu-environment-only and scoped out of CI. Re-diagnosed
+      # directly against a real ubuntu:latest container (not guessed at from macOS): almost all were
+      # masked by two things, now both fixed — (1) marathon.sh/marathon-drive.sh (and dependents
+      # debug-mantra.sh/driver-lock.sh) used a BSD-only `sed -i ''` invocation that mis-parses under
+      # GNU sed; (2) driver-lock.sh/xyz-harness-hooks.sh stubbed CLAUDE_BIN/AGY_BIN but not
+      # CODEX_BIN — the actual default builder — so they only "passed" locally because a real `codex`
+      # binary happened to be on the developer's own PATH, masking the gap; ubuntu CI has no such
+      # binary. path-integrity.sh/archive-writers.sh/relay-file-seeding-visibility.sh/xyz-vendor.sh/
+      # hq.sh/relay-pkg-freshness.sh all passed cleanly once re-tested for real — no ubuntu-specific
+      # bug in any of them. Only registry-lock-concurrency.sh (GH-72, a documented 16-concurrent-writer
+      # lock-contention flake under CI load, unrelated to this issue) stays skipped.
+      - name: Run validate.sh suite (minus a documented flaky test)
         env:
           RELAY_SELF_SUFFICIENCY_SKIP: "1"
         run: |
           set -euo pipefail
           SKIP_TESTS=(
             "acorn-extract.sh"                    # already run above (needs npm ci first)
-            "marathon-drive.sh"                   # GH-232: ubuntu-environment failure
-            "debug-mantra.sh"                     # GH-232: drives marathon-drive.sh
-            "driver-lock.sh"                       # GH-232: drives marathon-drive.sh
-            "marathon.sh"                           # GH-232: BSD `sed -i ''` syntax breaks on GNU sed
-            "relay-pkg-freshness.sh"               # GH-232: possible real drift finding, tracked separately
-            "path-integrity.sh"                    # GH-232: ubuntu-environment failure
-            "archive-writers.sh"                   # GH-232: ubuntu-environment failure
-            "relay-file-seeding-visibility.sh"     # GH-232: ubuntu-environment failure
-            "xyz-vendor.sh"                         # GH-232: ubuntu-environment failure
-            "xyz-harness-hooks.sh"                 # GH-232: ubuntu-environment failure
-            "hq.sh"                                 # GH-232: ubuntu-environment failure
-            "registry-lock-concurrency.sh"          # GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
+            "registry-lock-concurrency.sh"          # GH-72/GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
           )
           ALL_TESTS=()
           while IFS= read -r line; do

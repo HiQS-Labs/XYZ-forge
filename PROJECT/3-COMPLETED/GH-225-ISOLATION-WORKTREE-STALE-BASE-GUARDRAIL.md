@@ -2,7 +2,7 @@
 gh_issue: 225
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/225
 title: "10days/marathon guardrail: Agent isolation:\"worktree\" lanes can branch from a stale historical commit, not the marathon branch — silent full-merge risk"
-status: "captured 2026-07-17"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit cf608da, merged PR #227)."
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -32,6 +32,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Captured 2026-07-17, promoted to 2-WORKING with a Swarm Preflight Contract. Found live during the GH-174/215/222/189 marathon fire the same day — all 4 lanes' isolation worktrees branched from stale historical commits, not the marathon branch; caught only because `git log` was checked manually before merging. Not yet fixed. | Queue in the next marathon fire; doc-only, low complexity. |
+| **2026-07-21:** shipped via commit `cf608da`, merged PR [#227](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/227); issue #225 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## The gotcha (observed, not hypothetical)
 

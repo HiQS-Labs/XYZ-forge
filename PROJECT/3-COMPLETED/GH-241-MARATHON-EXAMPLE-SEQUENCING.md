@@ -1,6 +1,6 @@
 ---
 title: MARATHON.example.yaml understates sequencing and depends_on's scalar-only shape
-status: "Shipped on branch (2-WORKING) — fix (3) landed 500dd87 on marathon/plan-l-followup-2026-07-19 (flow-sequence guard + test/marathon-yaml.sh case); docs (1)(2)(4) shipped 2026-07-18. Pending PR into development, then 3-COMPLETED."
+status: "SHIPPED — closed 2026-07-21, merged via PR #256 (commits 353d4c0/500dd87). See GitHub issue comment for evidence."
 created: 2026-07-18
 updated: 2026-07-20
 owner: noelsaw1
@@ -36,6 +36,7 @@ goal: >
 | What was just completed | What's next |
 |---|---|
 | **Fix (3) shipped `500dd87`** on `marathon/plan-l-followup-2026-07-19` (Plan L lane): `bin/marathon-yaml` now rejects the `depends_on` flow-sequence form (`[p1]`) with a shape-specific "flow sequence" error naming the field's shape, guarded before the phase-id lookup at `bin/marathon-yaml:102-105`; `test/marathon-yaml.sh` gains a regression case (list form → shape error; scalar still parses). 14/14 marathon-yaml tests pass. Docs fixes (1)(2)(4) shipped 2026-07-18. | Open a PR into `development`. On merge (`Closes #241`), move this doc to `3-COMPLETED`. |
+| **2026-07-21:** merged via PR [#256](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/256) (commits `353d4c0`/`500dd87`); issue #241 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Symptom
 

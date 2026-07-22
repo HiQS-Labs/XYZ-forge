@@ -2,7 +2,8 @@
 gh_issue: 238
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/238
 title: "marathon-drive: pre-advance gate defaults to `bash validate.sh` — halts AFTER approval in any consuming repo without it"
-status: "captured 2026-07-18"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit d999c36,
+  merged PR #243; Python port commit b180ace)."
 created: 2026-07-18
 updated: 2026-07-18
 owner: noel
@@ -37,6 +38,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Captured 2026-07-18 from an external field report filed against a vendored `.xyz/` consumer (`Hypercart-Dev-Tools/rebalance-OS`). Promoted to `2-WORKING` with a Swarm Preflight Contract. All load-bearing claims verified against source. Not yet fixed. | Fire as lane J1 of [MARATHON-PLAN-2026-07-18-J](MARATHON-PLAN-2026-07-18-J-VENDORED-CONSUMER-DX.md), in parallel with GH-239 (disjoint write-sets). |
+| **2026-07-21:** shipped via commit `d999c36`, merged PR [#243](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/243); Python port shipped commit `b180ace`; issue #238 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## The bug (verified, not hypothetical)
 

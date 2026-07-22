@@ -3,6 +3,11 @@
 # sources. Run after changing any packaged script. (Phase 5 packaging.)
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."   # repo root
+# GH-261: on macOS, bsdtar silently packs AppleDouble ._* sidecar entries for any source file
+# carrying an xattr (e.g. com.apple.provenance) — no corresponding "live source" file exists for
+# those, so relay-pkg-freshness.sh correctly flags them as stale junk when regenerated on Linux CI
+# (or extracted there). COPYFILE_DISABLE=1 is the standard opt-out; harmless on Linux (unused there).
+export COPYFILE_DISABLE=1
 tar czf skills/relay-automation/relay-pkg.tar.gz \
   relay-automation/poll.sh \
   relay-automation/relay-loop.sh \

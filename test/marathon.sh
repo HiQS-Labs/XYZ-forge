@@ -174,7 +174,7 @@ if [ "$count" -eq 1 ]; then
   TICK_REPO_ROOT="$A" "$TICK" release "$task" --agent codex --to agy >/dev/null 2>&1 || true
   exit 7
 fi
-sed -i '' 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"
+sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
 printf '\n### Round 1 · Reviewer · agy\n**Verdict:** Approved\n' >> "$relay"
 TICK_REPO_ROOT="$A" "$TICK" claim "$task" --agent agy --paths "phases/**" >/dev/null 2>&1 || true
 TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true

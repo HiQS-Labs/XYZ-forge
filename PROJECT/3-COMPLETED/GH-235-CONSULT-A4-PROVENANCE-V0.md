@@ -2,7 +2,8 @@
 gh_issue: 235
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/235
 title: "Consult A4 provenance v0: prompt-trace classifier for cited claims (FIRSTHAND vs ECHOED)"
-status: "IMPLEMENTED 2026-07-17 — v0 built by a Codex↔agy relay (bfbd357), agy Approved, verified test/consult.sh 62/62 + validate.sh 115/115. Awaiting merge to main + issue close."
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence. Bash side shipped
+  commits 1e87a1f/e1a7b61; Python port shipped commit 19830e4."
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -35,6 +36,7 @@ goal: >
 | What was just completed | What's next |
 |---|---|
 | 2026-07-17: consult picked **v0**; issue #235 filed; v0 **built by a Codex↔agy relay** (`relay-system/2026-07-17/gh235-a4-v0-build.md`). Codex implemented `rtl_classify_cited_claims()` + prompt persistence + `PROVENANCE.txt` sidecar + warn line + 20 tests (commit `bfbd357`); agy reviewed → **Approved** (5 cited `[Pass]`, `6158eed`). Verified: `test/consult.sh` 62/62, `validate.sh` 115/115. relay-pkg regenerated. | Merge `development` → `main` (CI `tier1` gate), then close #235. Optionally move this doc `1-INBOX` → `3-COMPLETED` on close. Deferred follow-ons (INFERENCE/UNSUPPORTED split, reconciliation backstop, false-consensus, consult.py parity) stay future-scoped, coordinated with #226. |
+| **2026-07-21:** Bash side shipped commits `1e87a1f`/`e1a7b61`; Python port shipped commit `19830e4`; issue #235 closed on GitHub. Deferred follow-ons noted above remain future-scoped. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Decision basis
 

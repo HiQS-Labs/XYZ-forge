@@ -2,7 +2,7 @@
 gh_issue: 236
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/236
 title: "Worktree isolation under $TMPDIR breaks codex turns in /tmp-rooted environments (and escalates as a false timeout)"
-status: "captured 2026-07-19 (auto-drafted by /10days)"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 36d9e62, merged PR #252)."
 created: 2026-07-19
 updated: 2026-07-19
 owner: noel
@@ -25,6 +25,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Auto-captured 2026-07-19 by the /10days sweep; promoted to 2-WORKING with an auto-drafted Swarm Preflight Contract. Verified still open & reproducible: `relay-automation/relay-turn-lib.sh:433` still creates the isolation worktree via `mktemp -d "${TMPDIR:-/tmp}/rtl-wt.XXXXXX"`. **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
+| **2026-07-21:** shipped via commit `36d9e62`, merged PR [#252](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/252); issue #236 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Problem
 `rtl_worktree_begin()` in `relay-automation/relay-turn-lib.sh` (~line 433) creates the isolation

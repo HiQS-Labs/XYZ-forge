@@ -26,7 +26,11 @@
 
 hq_lc(){ printf '%s' "$1" | tr '[:upper:]' '[:lower:]'; }
 hq_bare(){ printf '%s' "${1##*/}"; }                       # strip any owner/ prefix
-hq_sanitize(){ printf '%s' "$1" | tr -cd '[:alnum:]/_.- '; } # defang before SQL interpolation
+# GH-232: '.- ' (dot-dash-space) at the end reads to GNU tr as a RANGE from '.' to ' ' (a "reverse
+# collating sequence" warning) which corrupts the whole SET, silently sanitizing every query down to
+# an empty string on ubuntu-latest CI (works fine on macOS's BSD tr, which doesn't make that mistake).
+# Moving '-' to immediately follow the POSIX class is unambiguous on both.
+hq_sanitize(){ printf '%s' "$1" | tr -cd '[:alnum:]-/_. '; } # defang before SQL interpolation
 # hq_yaml_dq <string> -> escape for a YAML double-quoted scalar (backslash + double-quote). Without
 # this, a title containing " (or \) produces invalid frontmatter — GH-132.
 hq_yaml_dq(){ printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }

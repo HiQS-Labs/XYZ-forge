@@ -2,7 +2,7 @@
 gh_issue: 239
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/239
 title: "swarm-preflight: no contract example ships — consumers hit exit 3 with nothing to copy, so the gate gets bypassed"
-status: "captured 2026-07-18"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (merged PR #243)."
 created: 2026-07-18
 updated: 2026-07-18
 owner: noel
@@ -36,6 +36,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Captured 2026-07-18 from an external field report filed against a vendored `.xyz/` consumer (`Hypercart-Dev-Tools/rebalance-OS`). Promoted to `2-WORKING` with a Swarm Preflight Contract. Claims verified — and the situation is slightly worse than filed (see below). Not yet fixed. | Fire as lane J2 of [MARATHON-PLAN-2026-07-18-J](MARATHON-PLAN-2026-07-18-J-VENDORED-CONSUMER-DX.md), in parallel with GH-238 (disjoint write-sets). |
+| **2026-07-21:** shipped via merged PR [#243](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/243); issue #239 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## The gap (verified)
 

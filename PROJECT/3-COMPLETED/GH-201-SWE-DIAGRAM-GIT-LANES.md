@@ -2,7 +2,7 @@
 gh_issue: 201
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201
 title: "swe-diagram: add Git history lane visualization"
-status: Active
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 6df5bfc, merged PR #244)."
 created: 2026-07-14
 updated: 2026-07-14
 owner: noel
@@ -21,6 +21,7 @@ phases: 1
 | What was just completed | What's next |
 |---|---|
 | Git-lane renderer, local generator, focused/forward tests, skill guidance, and the real 20-commit example completed on 2026-07-14. | Review and publish the uncommitted implementation when the operator is ready. |
+| **2026-07-21:** shipped via commit `6df5bfc`, merged PR [#244](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/244); issue #201 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Scope and acceptance
 

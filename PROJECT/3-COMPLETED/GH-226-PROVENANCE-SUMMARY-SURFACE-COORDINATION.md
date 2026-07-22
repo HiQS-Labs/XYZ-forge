@@ -2,7 +2,10 @@
 gh_issue: 226
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/226
 title: "Full provenance follow-up should coordinate with the already-reworked consult/relay summary surface"
-status: Proposed (1-INBOX — not yet active)
+status: "SHIPPED (coordination/decision scope only) — closed 2026-07-21, merged via PR #257. The
+  two-lane implementation itself (Lane C / Lane R) is a SEPARATE, still-held effort tracked in
+  PROJECT/2-WORKING/MARATHON-PLAN-2026-07-20-M-GH226-PROVENANCE-IMPL.md (Plan M) — not part of this
+  closure. See GitHub issue comment for evidence."
 created: 2026-07-17
 updated: 2026-07-20
 owner: noel
@@ -35,6 +38,7 @@ goal: >
 | What was just completed | What's next |
 |---|---|
 | Jedi answered all four questions on the issue thread (2026-07-20). Inventoried every GH-211/GH-178 surface from the shipped commits (**§ Inventory of touched surfaces**) and locked the reporting contract + file ownership (**§ Decision**): one issue, two lanes (consult / relay), `giant-brains` deferred. Work branched to `gh-226/provenance-coordination`. | Post the follow-up comment to Jedi confirming locked scope + linking the draft execution plan. On his sign-off, promote this doc 1-INBOX → 2-WORKING with the bounded contract and fire the two-lane pass. |
+| **2026-07-21:** the coordination/decision scope of this issue (inventory + locked reporting contract + file ownership, merged PR #257) shipped; issue #226 closed on GitHub on that basis. **The two-lane implementation (Lane C / Lane R) was NOT part of this closure** — it remains a separate, still-held effort tracked in [MARATHON-PLAN-2026-07-20-M-GH226-PROVENANCE-IMPL.md](../2-WORKING/MARATHON-PLAN-2026-07-20-M-GH226-PROVENANCE-IMPL.md) (Plan M), held for Jedi's sign-off per this doc's own § Draft execution plan. | Promoted to `3-COMPLETED` for the coordination scope only. Plan M's two-lane implementation continues to be tracked separately. |
 
 ## Problem summary
 

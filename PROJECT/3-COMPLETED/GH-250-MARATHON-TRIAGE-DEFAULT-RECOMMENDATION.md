@@ -2,7 +2,7 @@
 gh_issue: 250
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/250
 title: "marathon-triage: emit a default recommendation per item, not symmetric options"
-status: "captured 2026-07-19 (auto-drafted by /10days)"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 9bf1b56)."
 created: 2026-07-19
 updated: 2026-07-19
 owner: noel
@@ -25,6 +25,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Auto-captured 2026-07-19 by the /10days sweep; promoted to 2-WORKING with an auto-drafted Swarm Preflight Contract. Verified still open & reproducible: no `RECOMMEND:` framing exists anywhere in `skills/marathon-triage/SKILL.md` today (confirmed via grep 2026-07-19). **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
+| **2026-07-21:** shipped via commit `9bf1b56`; issue #250 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Problem
 `skills/marathon-triage/SKILL.md`'s report step (`### 5. Report`) presents symmetric options per item — e.g. "archive, close, promote, contract, or unblock" — without a default call. The operator has to independently weigh each item from scratch instead of starting from a recommended default and only overriding when warranted.

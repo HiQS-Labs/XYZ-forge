@@ -111,9 +111,11 @@ reset_a() { rm -rf "$A/.tick" "$A/phases" "$A/relay-system"; git -C "$A" reset -
 run_md() {  # <xyz-json> <ctx-or-empty> <relay-exit> <extra-args…>
   # ctx="" is passed as an empty XYZ_HARNESS_CONTEXT, which the hook treats identically to unset
   # (→ harness:marathon) — the bare-run case.
+  # GH-232: CODEX_BIN must be stubbed too — the default builder is codex, not claude, and ubuntu CI
+  # has no real codex binary on PATH (unlike a developer machine, which masks this locally).
   local xj="$1" ctx="$2" rexit="$3"; shift 3
   MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" MARATHON_AGENT_CMD="$NOOP" \
-    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
+    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" CODEX_BIN="$NOOP" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
     XYZ_JSON_PATH="$xj" STUB_RD_EXIT="$rexit" XYZ_HARNESS_CONTEXT="$ctx" \
     bash "$MARATHON_DRIVE" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
       --reviewer agy --pre-advance-cmd "true" "$@"
@@ -205,7 +207,7 @@ reset_a
 XSID="$WORK/md-sid.json"; reset_a
 run_md_sid() {  # <xyz-json> <ctx> <session-id>
   MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" MARATHON_AGENT_CMD="$NOOP" \
-    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
+    TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$NOOP" AGY_BIN="$NOOP" CODEX_BIN="$NOOP" XYZ_APPEND_BIN="$XYZ_APPEND_BIN" \
     XYZ_JSON_PATH="$1" STUB_RD_EXIT=0 XYZ_HARNESS_CONTEXT="$2" XYZ_SESSION_ID="$3" \
     bash "$MARATHON_DRIVE" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
       --reviewer agy --pre-advance-cmd "true"

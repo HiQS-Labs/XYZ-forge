@@ -2,7 +2,7 @@
 gh_issue: 223
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/223
 title: "utils/py/consult.py missing GH-178 A4 'no firsthand citation' stamping (Python parity gap, unmasked by GH-215)"
-status: "captured 2026-07-17"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 54972e9, merged PR #228)."
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -34,6 +34,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Captured 2026-07-17, promoted to 2-WORKING with a Swarm Preflight Contract. Found while fixing GH-215 (`consult.py` SINGLE-MODEL stamping) — that fix unmasked this as the next thing `XYZ_PYTHON=1 bash test/consult.sh` fails on (test 12: `stdout missing NO FIRSTHAND VERIFICATION CITED warning`). Not yet fixed. | Queue in the next marathon fire; direct port, no design work needed. |
+| **2026-07-21:** shipped via commit `54972e9`, merged PR [#228](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/228); issue #223 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## The gap
 
