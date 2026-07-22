@@ -1,8 +1,8 @@
 # Git Worktree Safety Guide for Agents
 
-Author: Noel Saw (@noelsaw1)
-Licensed under: Apache 2.0
-Copyright 2026 Neochrome, Inc.
+Author: Noel Saw (@noelsaw1)  
+Licensed under: Apache 2.0  
+Copyright 2026 Neochrome, Inc.  
 
 > **Purpose:** Prevent destructive footguns when scripting with Git worktrees.  
 > **Scope:** Shell scripts, CI pipelines, and agent workflows that create, manage, or clean up worktrees.
@@ -412,5 +412,5 @@ disposable, which after a partial-corruption incident it specifically is not.
 
 ---
 
-Licensed under: Apache 2.0
-Copyright 2026 Neochrome, Inc.
+Licensed under: Apache 2.0   
+Copyright 2026 Neochrome, Inc.  
