@@ -56,6 +56,7 @@ def main():
     parser.add_argument("--reviewer", dest="reviewer")
     parser.add_argument("--round-cap", dest="round_cap", type=int, default=5)
     parser.add_argument("--pre-advance-cmd", dest="pre_advance_cmd")
+    parser.add_argument("--post-approve-cmd", dest="post_approve_cmd")
     parser.add_argument("--phases-dir", dest="phases_dir")
     parser.add_argument("--phase-id", dest="phase_id", default="p1")
     parser.add_argument("--relay-task", dest="relay_task")
@@ -70,6 +71,9 @@ def main():
     args, unknown = parser.parse_known_args()
     if args.help:
         print("Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [options]")
+        print("  --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh).")
+        print("  --post-approve-cmd CMD  Optional command after phase.approved + green telemetry (default: unset).")
+        print("                           Failure preserves approval, writes reason post-approve-failed, and exits 9.")
         sys.exit(0)
 
     if not args.phase_brief_file:
@@ -607,6 +611,10 @@ relay-file: {rel_relay}
         cwd = args.target_root if args.target_root else None
         return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
 
+    def run_post_approve_cmd():
+        cwd = args.target_root if args.target_root else None
+        return subprocess.run(args.post_approve_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
+
     def artifacts_exist():
         if not args.artifact_paths:
             return False
@@ -688,6 +696,13 @@ relay-file: {rel_relay}
         save_transcript()
         log(success_text)
         xyz_marathon_emit("green", success_text)
+        if args.post_approve_cmd:
+            log(f"phase approved — running post-approve command: {args.post_approve_cmd}")
+            post_approve_exit = run_post_approve_cmd()
+            if post_approve_exit != 0:
+                log(f"post-approve command FAILED (exit {post_approve_exit}) — phase remains approved; escalating closeout")
+                escalate("post-approve-failed", 0)
+                sys.exit(9)
         sys.exit(0)
 
     def recover_already_satisfied_lane():
