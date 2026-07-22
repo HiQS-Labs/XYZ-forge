@@ -40,7 +40,7 @@ and `validate.sh` is a shared gate file.
 
 | What was just completed | What's next |
 |---|---|
-| Carved Tier-1 Stage-0 into its own 2-WORKING doc with a Swarm Preflight Contract; verified preflight-ready. | Operator attests ratings, then fire Agy/Codex on the builder lane; orchestrator reviews, then wires the driver hooks + validate.sh and takes over integration testing. |
+| Built (Codex+Agy marathon), a 3-round Codex relay closed 2 blockers, merged to `development` in #285. Driver hooks (§1.3) applied + integration-tested + Agy-QA-approved. | Tier-1 is fully shipped. The remaining GH-281 work is Tier-2 activation (operator-gated) — see [GH-281-SENTINEL-TIER2-OVERLAY.md](GH-281-SENTINEL-TIER2-OVERLAY.md). |
 
 ## Why this is risk:2, not the parent's risk:4
 

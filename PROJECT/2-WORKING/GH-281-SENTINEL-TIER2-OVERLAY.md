@@ -34,7 +34,7 @@ related:
 
 | What was just completed | What's next |
 |---|---|
-| Operator revised the Tier-2 posture: ship the whole overlay as transparent in-repo reference code, gate activation behind gitignored runtime config, inert by default. | Build the overlay against the inert-by-default invariant; prove call-home-off with a test + static guard. |
+| Full overlay built (§2.1–§2.7) as transparent in-repo code; inert-by-default proven by `test/sentinel-overlay.sh` (zero egress with no runtime.env); Agy-QA-approved. | Operator opts in locally (`cp config/runtime.env.example config/runtime.env`, `SENTINEL_ENABLE=1`) to activate — otherwise it stays inert. Tier-2 §2.4 nightly/cron enablement is the operator's call. |
 
 ## Revised posture (supersedes finding #1's "gitignored dir / outside delivery scope")
 
