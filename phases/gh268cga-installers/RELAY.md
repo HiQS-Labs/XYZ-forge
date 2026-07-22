@@ -1,5 +1,5 @@
 # Marathon Phase gh268cga-installers
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH268CGA-INSTALLERS-TURN builder=codex reviewer=agy round-cap=6 -->
@@ -69,3 +69,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Added complete installers for `ponytail`, `release`, `skills-sync-trinity`, `swe`, `weekly-shipped`, and `xyz`.
 - Mirrored the approved `skills/consult/install.sh` pattern, changing only `SKILL_NAME`: strict mode, symlink-safe self-location, `CLAUDE_SKILLS_DIR` override, idempotent correct-link handling, stale-link replacement, and refusal to overwrite real files or directories.
 - Kept the change within the six installer paths and this relay record. Targeted verification passed for all six: `bash -n`, shebang and default-path checks, exact approved-template equivalence modulo `SKILL_NAME`, first install, idempotent re-run, dangling-link repair, and real-path refusal.
+
+### Round 1 · Reviewer · agy
+
+The implementation perfectly mirrors the reference script `skills/consult/install.sh`, successfully changing only `SKILL_NAME` for each target skill folder. All constraints from the brief are satisfied: standard bash strict mode, safe self-location, correct idempotency handling for symlinks, dangling link correction, and graceful exit when real files block symlinking.
+
+**Verdict:** Approved
