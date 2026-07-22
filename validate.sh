@@ -114,6 +114,8 @@ TESTS=(
   "hq-rollup.sh"                 # GH-192 (marathon-scan.sh bridged verbatim into the Obsidian daily rollup)
   "transcript-audit.sh"
   "security-scan.sh"
+  "sentinel-tier1.sh"           # GH-281 (Tier-1 JSONL finding capture)
+  "sentinel-network-guard.sh"   # GH-281 (bundled scripts stay zero-network)
   "checkjs.sh"
   "acorn-extract.sh"             # GH-169
   "registry-lock-concurrency.sh"

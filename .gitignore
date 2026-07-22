@@ -55,3 +55,6 @@ temp/ask-self-rag.env
 # ask-self generated architecture doc (falls back to ASK_SELF.md; our ARCHITECTURE.md is hand-owned).
 ASK_SELF.md
 ARCHITECTURE-BAK.md
+
+# Sentinel Tier 1 debug capture — local only, never committed.
+debug.log
