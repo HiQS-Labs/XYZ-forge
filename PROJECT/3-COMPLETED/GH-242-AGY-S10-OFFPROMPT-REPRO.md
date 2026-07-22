@@ -2,7 +2,7 @@
 gh_issue: 242
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/242
 title: "agy S10: off-prompt-nonempty repro — deferred from #155, needs a controlled trigger"
-status: "captured 2026-07-19 (auto-drafted by /10days)"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 9c052f4)."
 created: 2026-07-19
 updated: 2026-07-19
 owner: noel
@@ -24,6 +24,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Auto-captured 2026-07-19 by the /10days sweep; promoted to 2-WORKING with an auto-drafted Swarm Preflight Contract. Verified still open & reproducible: `test/agy-turn.sh` has zero matches for `S10` today — no repro or regression case exists yet; only the bookkeeping split commit (8784d08) is on record. **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. **This is a SPIKE/discovery item — it may come back marathon-unready from preflight, and that is expected**: the deliverable is a controlled trigger, which may not be findable in a single bounded turn. |
+| **2026-07-21:** shipped via commit `9c052f4`; issue #242 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Problem
 agy S10 (`off-prompt-nonempty`) has no controlled reproduction. It was split out of #155 as its

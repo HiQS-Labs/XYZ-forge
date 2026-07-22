@@ -2,7 +2,7 @@
 gh_issue: 258
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/258
 title: "vendor-stack skill: one-step XYZ harness + PDDA governance install into a target repo"
-status: Proposed (1-INBOX — not yet active); implementation already shipped, retroactive capture
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit cb01fae, merged PR #259)."
 created: 2026-07-20
 updated: 2026-07-20
 owner: noel
@@ -74,3 +74,7 @@ runs them in sequence.
   which Claude Code does not auto-scan, so it must be symlinked once per machine to be invocable by name.
 - Consider promotion to `3-COMPLETED` once the symlink install is run and the skill is exercised end
   to end against a fresh repo other than the original dogfood target.
+
+## Closure note (2026-07-21)
+
+Shipped via commit `cb01fae`, merged PR [#259](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/259); issue #258 closed on GitHub. Promoted to `3-COMPLETED`. The open follow-ups above (discoverability symlink run, fresh-repo end-to-end exercise) are not independently re-verified by this closure pass — carried forward as-is.

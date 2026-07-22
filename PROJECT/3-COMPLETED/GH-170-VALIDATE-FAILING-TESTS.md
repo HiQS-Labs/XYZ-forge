@@ -2,9 +2,9 @@
 gh_issue: 170
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/170
 title: "validate.sh: 9 pre-existing failing tests (analyze/cost/watchdog-relay/deep-research/relay-token-collision/new-relay/find-harness/transcript-audit/marathon-plan)"
-status: STALE as of 2026-07-17 — all 9 tests currently pass (swarm-preflight verdict: STALE, exit 4;
-  independently re-verified, flaky Lanes 1/5 re-run 5x clean). Root cause of the flip unconfirmed.
-  Not fireable; recommend closing #170 pending operator confirmation.
+status: "SHIPPED — closed 2026-07-21. All 9 originally-failing tests now pass; no fixing commit was
+  identified and the root cause of the flip remains unconfirmed, but the effect (all 9 green) was
+  independently re-verified via live re-run. See GitHub issue comment for evidence."
 created: 2026-07-07
 updated: 2026-07-17
 owner: noel
@@ -58,6 +58,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Triaged all 9 failures 2026-07-07 to concrete failure signatures (see Findings below); none root-caused or fixed yet. Doc authored and queued into [Marathon Plan F](MARATHON-PLAN-2026-07-07-F-VALIDATE-FIXES.md) as 9 independent lanes. **2026-07-17:** while building this doc's Swarm Preflight Contract, `swarm-preflight.sh --gh-issue 170` returned **STALE (exit 4)** — at least one of the 9 command probes reports the underlying test now passing. Independently re-ran all 9 test files directly: **all 9 currently PASS**, including 5 repeated runs each of the two confirmed-flaky lanes (1 `analyze.sh`, 5 `relay-token-collision.sh`) with zero failures. Root cause of the flip is **not confirmed** — no code change in this repo explains it (unlike GH-174, where a specific commit is the fix); most plausible explanations are an unrelated upstream fix, environment drift since 2026-07-07 (Lane 7's own triage already flagged device-state sensitivity), or the flaky lanes' underlying race no longer reproducing on this device/state. | **Not fireable as-is.** Recommend closing #170 as stale — flagged to the operator, not closed unilaterally, since the "why" is unconfirmed and re-opening with fresh triage is the right move if it flips red again. Marathon Plan F's Lanes 1-9 are marked non-fireable pending that decision; Lanes 10-11 remain active. |
+| **2026-07-21:** issue #170 closed on GitHub — confirmed still-green per this doc's own 2026-07-17 re-verification; no further action taken here beyond closing the loop. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Findings (2026-07-07 triage)
 

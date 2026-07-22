@@ -1,7 +1,6 @@
 ---
 title: Cross-repo live marathon status query (repo + lane + in-flight task), no per-repo MCP servers
-status: Shipped on branch (2-WORKING) — Phase 1 (marathon-live.sh) + Phase 2 (rollup embed) landed
-  d919e92 on marathon/plan-l-followup-2026-07-19 (Plan L lane). Pending PR into development, then 3-COMPLETED.
+status: "SHIPPED — closed 2026-07-21, merged via PR #256 (commit d919e92). See GitHub issue comment for evidence."
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -48,6 +47,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | **Both phases shipped `d919e92`** on `marathon/plan-l-followup-2026-07-19` (Plan L lane). **Phase 1** — `utils/hq/marathon-live.sh`: read-only cross-repo live status composing `hq_known_repos`/`hq_repo_resolve` + each repo's own `tick project` STATE.md `## Claimed` parse + driver-lock/`marathon/*`-worktree liveness cross-check; emits repo\|lane\|task\|claimant\|live\|last-activity, no new per-repo MCP server. **Phase 2** — `utils/hq/rollup.sh` embeds it as `## Live Marathons (cross-repo, right now)` via a shared `demote_embed` helper. Tests: new `test/hq-marathon-live.sh` (live/claimed-not-driving/idle matrix, read-only asserted, registered in `validate.sh`, 7/7); `test/hq-rollup.sh` +2 cases (embedded live section + live-failure banner, 27/27). | Open a PR into `development`. **Follow-up (not blocking):** update the `skills/hq/SKILL.md` "Live marathon status" section to point at `marathon-live.sh` instead of the manual walk. On merge (`Closes #218`), move to `3-COMPLETED`. |
+| **2026-07-21:** merged via PR [#256](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/256); issue #218 closed on GitHub. | Promoted to `3-COMPLETED`. The non-blocking `skills/hq/SKILL.md` follow-up noted above remains open, tracked separately. |
 
 ## Key concepts
 

@@ -2,7 +2,7 @@
 gh_issue: 224
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/224
 title: "PDDA drift backlog: 45 stale 3-COMPLETED status words + 15 ROADMAP/issue-state mismatches (surfaced by GH-189's own new checks)"
-status: "captured 2026-07-17"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 19468be)."
 created: 2026-07-17
 updated: 2026-07-17
 owner: noel
@@ -34,6 +34,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Captured 2026-07-17, promoted to 2-WORKING with a Swarm Preflight Contract. Findings reproduced live on `marathon/gh174-215-222-189-2026-07-17` (the branch that added the checks) — not false positives. Not yet fixed. | Queue in the next marathon fire; this is a per-item reconciliation pass, not a bulk edit. |
+| **2026-07-21:** shipped via commit `19468be`; issue #224 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Dependency
 

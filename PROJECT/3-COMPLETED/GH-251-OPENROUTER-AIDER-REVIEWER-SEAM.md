@@ -2,7 +2,9 @@
 gh_issue: 251
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/251
 title: "OpenRouter/aider reviewer seam: aider produces reviews but doesn't persist the relay-file append (builder-only in practice)"
-status: "Shipped on branch (2-WORKING) — review-mode + transcript-salvage landed cf7a123 on marathon/plan-l-followup-2026-07-19 (Plan L lane). Pending PR into development, then 3-COMPLETED. Live-model verification (DoD bullet 1) remains an operator step."
+status: "SHIPPED — closed 2026-07-21, merged via PR #256 (commit cf7a123). See GitHub issue comment
+  for evidence. NOTE: one DoD item (live OpenRouter model verification) still needs a human operator
+  step that cannot run headless — that item is NOT claimed done, only the code-level fix."
 created: 2026-07-19
 updated: 2026-07-19
 owner: noel
@@ -26,6 +28,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | **Fixed on branch `cf7a123`** (Plan L lane): both fix directions 1+2 landed in `relay-automation/aider-turn.sh` — **review mode** (explicit reviewer posture on `ALLOW_PATHS=""` turns) + **transcript-salvage backstop** (a review-only turn that lands no relay-file delta but whose transcript carries a `Verdict:` anchor is appended, attributed, so the review lands instead of stalling). Composes with GH-245: empty/non-review turns leave no anchor → not salvaged → still a genuine stall. `test/aider-turn.sh` +2 cases (phantom-review salvaged; non-review not salvaged), 61/61 pass. | Open a PR into `development`. **Honest gap:** DoD bullet 1's "verified with a REAL OpenRouter model, not a stub" is NOT done — it needs a live OpenRouter call that can't run headless in the Bash sandbox; that live verification remains an operator step before closing #251. On merge, move to `3-COMPLETED`. |
+| **2026-07-21:** merged via PR [#256](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/256) (commit `cf7a123`); issue #251 closed on GitHub on the strength of the code-level fix. **DoD bullet 1's live-OpenRouter-model verification is STILL an outstanding operator step** — it is not claimed done by this closure. | Promoted to `3-COMPLETED`. The live-verification caveat carries forward; no further doc action otherwise. |
 
 ## Problem
 

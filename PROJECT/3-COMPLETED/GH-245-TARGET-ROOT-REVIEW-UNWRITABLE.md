@@ -1,6 +1,6 @@
 ---
 title: --target-root review turn cannot report, and relay-drive misclassifies the outcome in both directions
-status: "captured 2026-07-19 (auto-drafted by /10days)"
+status: "SHIPPED — closed 2026-07-21, see GitHub issue comment for evidence (commit 3783665, merged PR #246)."
 created: 2026-07-18
 updated: 2026-07-19
 owner: noelsaw1
@@ -36,6 +36,7 @@ roadmap_exempt: false
 | What was just completed | What's next |
 |---|---|
 | Auto-captured 2026-07-19 by the /10days sweep; promoted from PROJECT/1-INBOX to 2-WORKING with an auto-drafted Swarm Preflight Contract, preserving the original 1-INBOX capture content in full. Verified still open & reproducible: `relay-automation/relay-drive.sh` still contains the token-state classification message `"non-approval handback, not a stall"` (~line 519) inside the `--review-once` branch. **Contract auto-drafted by /10days from the issue text — artifacts/lanes not yet operator-verified.** | Operator review of the contract, then fire. |
+| **2026-07-21:** shipped via commit `3783665`, merged PR [#246](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/246); issue #245 closed on GitHub. | Promoted to `3-COMPLETED`. Nothing further for this doc. |
 
 ## Symptom
 
