@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -73,5 +73,18 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer · codex
+
+- [Blocker] The unrelated `PROJECT/2-WORKING/GH-272.md` is added directly to the active bucket with no YAML frontmatter, `## Status` table, verification steps, or descriptive issue filename, and the full diff adds no `ROADMAP.md` pointer for that path (`.relay-artifacts/gh268-branch-review-artifact.md:44-60`). Active docs require those structures, and promotion must preserve the issue capture plus ledger pointer (`PROJECT/PDDA.md:51-72`, `PROJECT/PDDA.md:193-202`, `PROJECT/PDDA.md:222-247`, `PROJECT/PDDA.md:367-385`). Fix: remove this unrelated file from the GH-268 branch, or replace it with a correctly named, fully compliant promotion and its exact one-line roadmap pointer.
+- [Should] Commit `f64d8a3` combines the GH-272 bug capture and a release-ledger seed in one pre-marathon-stash commit, so it is neither one-purpose nor part of the GH-268 installer outcome (`.relay-artifacts/gh268-branch-review-artifact.md:16`, `.relay-artifacts/gh268-branch-review-artifact.md:44-79`). This weakens the attested/relevant signal required of each turn (`GUIDING-PRINCIPLES.md:11-18`). Fix: drop the unrelated stash commit from this branch; land any still-needed GH-272 and `RELEASES.md` work separately on their own governance rails.
+- [Should] The checked GH-268 item still says the same nine skills “have no `install.sh`,” immediately before a same-day note saying all nine now have one (`.relay-artifacts/gh268-branch-review-artifact.md:29-40`). PDDA treats docs as resumable runtime state and says disagreement with reality is a docs bug (`GUIDING-PRINCIPLES.md:38-40`). Fix: make the old audit statement explicitly historical (for example, “Originally confirmed before remediation”) while retaining the evidence-bearing Done note.
+- [Pass] The installer effort is locally traceable to the existing GH-268 active doc, and every phase brief points back to that exact Phase 1 item (`.relay-artifacts/gh268-branch-review-artifact.md:21-40`, `.relay-artifacts/gh268-branch-review-artifact.md:94-117`, `.relay-artifacts/gh268-branch-review-artifact.md:177-195`, `.relay-artifacts/gh268-branch-review-artifact.md:255-274`), matching the issue-first execution-surface contract (`PROJECT/PDDA.md:204-220`). The artifact alone cannot independently establish the remote issue's live state; no change is requested for GH-268 traceability.
+- [Pass] The phase records show scoped allowlists, no agent self-commit, no push, and separate builder/reviewer grading (`.relay-artifacts/gh268-branch-review-artifact.md:119-162`, `.relay-artifacts/gh268-branch-review-artifact.md:197-240`, `.relay-artifacts/gh268-branch-review-artifact.md:276-325`), satisfying containment and independent verification (`GUIDING-PRINCIPLES.md:26-28`, `GUIDING-PRINCIPLES.md:44-44`; `AGENTS.md:92-105`). Worktree isolation itself is not independently observable from this artifact, so that narrower fact is not graded; no change requested.
+- [Pass] The “functionally verified” note is backed in the artifact by explicit, independently reviewed records of `bash -n`, first install, idempotent rerun, dangling-link repair, and real-path refusal across the 2+6+1 lanes (`.relay-artifacts/gh268-branch-review-artifact.md:152-162`, `.relay-artifacts/gh268-branch-review-artifact.md:230-240`, `.relay-artifacts/gh268-branch-review-artifact.md:311-325`), meeting the observable-proof rule (`AGENTS.md:52-55`). No change requested.
+- [Pass] All nine installer hunks are mode `100755`, start with the required shebang and strict mode, resolve their source through `$BASH_SOURCE`, honor `CLAUDE_SKILLS_DIR`, preserve a correct link, replace only symlinks, refuse real-path collisions, and create the final link (`.relay-artifacts/gh268-branch-review-artifact.md:572-665`, `.relay-artifacts/gh268-branch-review-artifact.md:666-759`, `.relay-artifacts/gh268-branch-review-artifact.md:760-853`, `.relay-artifacts/gh268-branch-review-artifact.md:854-947`, `.relay-artifacts/gh268-branch-review-artifact.md:948-994`). This is a structural review only; runtime execution was prohibited for this turn. No installer change requested.
+- [Nit] The artifact heading says “14 commits,” but lines 4-18 list 15 hashes (`.relay-artifacts/gh268-branch-review-artifact.md:3-18`). Fix the count when regenerating the review artifact so the adjudication scope is unambiguous.
+
+**Verdict:** Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
