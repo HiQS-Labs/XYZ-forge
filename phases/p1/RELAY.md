@@ -1,54 +1,153 @@
 # Marathon Phase p1
-STATUS: Approved
+STATUS: Open
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=codex reviewer=agy round-cap=5 -->
 
 ## Phase Brief
 
-# Marathon preflight packet — gh-273-marathon-closeout-automation
+# Marathon phase brief — gh-281-sentinel-tier1-stage0 (Sentinel Tier-1 Stage-0)
 
-- Generated: 2026-07-22T02:25:57Z
-- Mode: gh-bundle
-- Sources: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/2-WORKING/GH-273-MARATHON-CLOSEOUT-AUTOMATION.md 
-- Target root: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm (development @ e9fdb0883)
-- Suggested branch: `marathon/gh-273-marathon-closeout-automation-2026-07-22` (branch_ready=false — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8)
-- Verdict: ready
-- Gate: `bash validate.sh`
+- Source: PROJECT/2-WORKING/GH-281-SENTINEL-TIER1-STAGE0.md · issue #281 (Draft v3)
+- Verdict: preflight ready · Gate: `bash validate.sh`
+- Suggested branch: `marathon/gh-281-sentinel-tier1-stage0-2026-07-22`
 
-- Artifacts: relay-automation/hooks/skill-nudge.sh,.claude/settings.json,test/xyz-harness-hooks.sh,test/_setup.sh
-- Suggested turn budget: `RELAY_TURN_TIMEOUT_S=900` (sized to ≈ 320 LOC across 4 artifact(s); a build that also edits tests needs headroom over the 300s default)
-- Auto-included covering tests/helpers: test/_setup.sh
+Build the three standalone, **zero-network** Tier-1 debug-capture scripts, their two covering
+tests, the `.gitignore` line, and register the two tests in `validate.sh`. Reference implementations
+for the two scripts are given **verbatim** below — reproduce them faithfully. The network-guard and
+the two tests you design to the acceptance checks, following the cited precedents.
 
-This packet is the producer's output. The orchestrator launches the run; the planner does not
-(GUIDING-PRINCIPLES.md §8).
+## Scope lock — edit ONLY these 7 paths (plus the relay file)
 
-## Acceptance criteria — the build is DONE when these hold (inlined from the capture doc)
-(no '- [ ]' checklist found in /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/PROJECT/2-WORKING/GH-273-MARATHON-CLOSEOUT-AUTOMATION.md — add an Acceptance criteria list)
-
-## Scope lock — builder, do exactly this and nothing else
-- Edit ONLY: `relay-automation/hooks/skill-nudge.sh,.claude/settings.json,test/xyz-harness-hooks.sh,test/_setup.sh` (plus the relay file). Any other edit is reverted and FAILS the turn.
-- Do NOT run ANY test or gate yourself — not `bash validate.sh`, and NOT `test/xyz-harness-hooks.sh,test/_setup.sh` either. Those tests create temporary git fixtures/files inside your isolated worktree, which containment treats as off-lane edits and can discard your whole turn. Read them as specs instead; the harness runs the real gate after your turn, outside the worktree.
-- Do NOT analyze the roadmap, file issues, or refactor adjacent code. Implement the acceptance criteria above — nothing more.
-
-## Suggested marathon-drive.sh invocation
-
-```bash
-XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-273-marathon-closeout-automation relay-automation/marathon-drive.sh \
-  --phase-brief <packet>/packet.md \
-  --reviewer agy \
-  --builder codex \
-  --artifact relay-automation/hooks/skill-nudge.sh,.claude/settings.json,test/xyz-harness-hooks.sh,test/_setup.sh \
-  --pre-advance-cmd 'bash validate.sh' \
-  --require-clean
+```
+relay-automation/harvest-findings.sh
+relay-automation/finding-new.sh
+relay-automation/hooks/sentinel-network-guard.sh
+test/sentinel-tier1.sh
+test/sentinel-network-guard.sh
+.gitignore
+validate.sh
 ```
 
-## Files in this packet
-- `run-candidate.json` — normalized run candidate (provenance + contract + checks)
-- `freshness.json` — branch state + fix-still-required probes
-- `readiness.json` — remediation readiness verdict
-- `lane-plan.json` — Codex / agy / orchestrator lane assignment
-- `marathon-invocation.txt` — the invocation hint above
+Any edit outside this set is reverted and FAILS the turn. Do **NOT** run `bash validate.sh` or any
+`test/*.sh` yourself — those create temporary git fixtures inside your isolated worktree, which
+containment treats as off-lane edits and can discard your whole turn. The harness runs the real gate
+AFTER your turn, outside the worktree. Do not analyze the roadmap, file issues, or refactor adjacent
+code. Nothing bundled here may make a network call — no `curl`/`wget`/`nc`/`gh`/`/dev/tcp`/`http`.
+
+## Acceptance criteria — DONE when all hold
+
+- [ ] `relay-automation/harvest-findings.sh` exists, `chmod +x`, matches the reference body below.
+- [ ] `relay-automation/finding-new.sh` exists, `chmod +x`, matches the reference body below.
+- [ ] `relay-automation/hooks/sentinel-network-guard.sh` exists, `chmod +x`: greps the bundled path
+      set for `curl`, `wget`, `nc `, `gh `, `/dev/tcp`, `http`; exits nonzero + prints findings to
+      stderr on any hit; exits 0 clean. Shape mirrors `relay-automation/hooks/security-scan.sh`.
+- [ ] `test/sentinel-tier1.sh` exists, `chmod +x`: feeds a relay fixture with 2 `### Side Finding`
+      blocks to `harvest-findings.sh` → asserts 2 `marathon.side-finding` JSONL lines with `scope`
+      and `probe` intact; runs `finding-new.sh` → asserts 1 valid line; asserts every emitted line
+      parses via `python3 -c 'import json,sys;[json.loads(l) for l in sys.stdin]'`. (§1.7 #3, #5)
+- [ ] `test/sentinel-network-guard.sh` exists, `chmod +x`: a BAD fixture (a `curl` line in a bundled
+      path) trips the guard (nonzero); a clean fixture passes (0). Shape mirrors
+      `test/security-scan.sh`. (§1.7 #6)
+- [ ] `.gitignore` gains a `debug.log` entry under a `# Sentinel Tier 1 debug capture` comment.
+- [ ] `validate.sh` `TESTS=(…)` array registers `sentinel-tier1.sh` and `sentinel-network-guard.sh`.
+
+## Reference implementation — `relay-automation/harvest-findings.sh` (verbatim, issue §1.4)
+
+```bash
+#!/usr/bin/env bash
+# harvest-findings.sh — extract `### Side Finding` blocks from a relay file and append them to
+# debug.log as PDDA-output-contract JSONL findings. Read-only on the relay; append-only on
+# debug.log; NO network. Best-effort — a broken harvest must never fail a phase.
+# Usage: harvest-findings.sh --relay FILE [--scope S] [--repo R] [--out debug.log]
+set -u
+RELAY="" SCOPE="harness" REPO="" OUT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --relay) RELAY="${2:-}"; shift 2 ;;
+    --scope) SCOPE="${2:-harness}"; shift 2 ;;
+    --repo)  REPO="${2:-}"; shift 2 ;;
+    --out)   OUT="${2:-}"; shift 2 ;;
+    -h|--help) echo "usage: harvest-findings.sh --relay FILE [--scope S] [--repo R] [--out FILE]"; exit 0 ;;
+    *) echo "harvest-findings.sh: unexpected arg: $1" >&2; exit 2 ;;
+  esac
+done
+[ -n "$RELAY" ] && [ -f "$RELAY" ] || exit 0
+[ -n "$SCOPE" ] || SCOPE="harness"
+OUT="${OUT:-debug.log}"
+TS="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+
+awk -v ts="$TS" -v scope="$SCOPE" -v repo="$REPO" -v relay="$RELAY" '
+  function esc(s){ gsub(/\\/,"\\\\",s); gsub(/"/,"\\\"",s); gsub(/\t/," ",s); return s }
+  function flush(){
+    if (!inblk) return
+    printf("{\"timestamp\":\"%s\",\"severity\":\"warn\",\"check\":\"marathon.side-finding\",\"scope\":\"%s\",\"repo\":\"%s\",\"file\":\"%s\",\"line\":\"\",\"message\":\"%s%s\",\"action\":\"triage\",\"probe\":\"%s\"}\n",
+      ts, esc(scope), esc(repo), esc(p), esc(sy), (sc!=""?"; suspected: " esc(sc):""), esc(pr))
+    inblk=0; p=""; sy=""; sc=""; pr=""
+  }
+  /^###[ \t]+Side Finding/ { flush(); inblk=1; next }
+  inblk && (/^#/ || /^---/) { flush() }
+  inblk {
+    if (match($0,/^-[ \t]*path:[ \t]*/))                 p =substr($0,RLENGTH+1)
+    else if (match($0,/^-[ \t]*symptom:[ \t]*/))         sy=substr($0,RLENGTH+1)
+    else if (match($0,/^-[ \t]*suspected_cause:[ \t]*/)) sc=substr($0,RLENGTH+1)
+    else if (match($0,/^-[ \t]*probe:[ \t]*/))           pr=substr($0,RLENGTH+1)
+  }
+  END { flush() }
+' "$RELAY" >> "$OUT" 2>/dev/null || true
+exit 0
+```
+
+## Reference implementation — `relay-automation/finding-new.sh` (verbatim, issue §1.5)
+
+```bash
+#!/usr/bin/env bash
+# finding-new.sh — manually append one PDDA-output-contract JSONL finding to debug.log. NO network.
+# Usage: finding-new.sh [--scope S] [--severity error|warn|info] "one-line message"
+set -u
+SCOPE="harness" SEV="warn" TEXT=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --scope) SCOPE="${2:-harness}"; shift 2 ;;
+    --severity) SEV="${2:-warn}"; shift 2 ;;
+    -h|--help) echo 'usage: finding-new.sh [--scope S] [--severity error|warn|info] "message"'; exit 0 ;;
+    *) TEXT="$1"; shift ;;
+  esac
+done
+[ -n "$TEXT" ] || { echo 'finding-new.sh: a one-line message is required' >&2; exit 2; }
+case "$SEV" in error|warn|info) ;; *) echo "finding-new.sh: --severity must be error|warn|info" >&2; exit 2 ;; esac
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+OUT="${DEBUG_LOG_FILE:-$ROOT/debug.log}"
+esc(){ local s="$1"; s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; printf '%s' "$s"; }
+printf '{"timestamp":"%s","severity":"%s","check":"manual","scope":"%s","repo":"%s","message":"%s","action":"triage"}\n' \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SEV" "$SCOPE" "$ROOT" "$(esc "$TEXT")" >> "$OUT"
+echo "appended: $OUT"
+```
+
+## `.gitignore` addition (verbatim, issue §1.6)
+
+Append (do not remove existing entries):
+
+```gitignore
+# Sentinel Tier 1 debug capture — local only, never committed.
+debug.log
+```
+
+## Design guidance — `sentinel-network-guard.sh` + tests
+
+- **Guard** (`relay-automation/hooks/sentinel-network-guard.sh`): read the precedent
+  `relay-automation/hooks/security-scan.sh` for the fail-loud-to-stderr / nonzero-on-hit contract.
+  Scan the **bundled** relay-automation paths (exclude any marked non-bundled overlay dir such as
+  `sentinel-overlay/`) for `curl`, `wget`, `nc `, `gh `, `/dev/tcp`, `http`. Exit nonzero listing
+  each hit; exit 0 when clean. Keep it dependency-free (grep + bash).
+- **Tests**: read `test/security-scan.sh` for the bad-fixture/clean-fixture + `mktemp -d` hermetic
+  harness style. Put all fixtures under `${TMPDIR:-/tmp}` — never write into the repo tree. Cover the
+  acceptance bullets above exactly.
+
+## Provenance
+Generated from swarm-preflight packet (readiness=1, greenfield via artifacts_new); scope tightened
+by the orchestrator from the auto-expanded covering-test set to the 7 real write paths. Full contract
+in `run-candidate.json` / `readiness.json` in this dir. Producer's output; the orchestrator launches.
 
 
 ---
@@ -56,41 +155,21 @@ XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=gh-273-marathon-closeout-automation rel
 ▶ TAKE YOUR TURN (codex — BUILDER role)
 
 You are the BUILDER for this phase. Read the phase brief above and implement it.
-1. Implement the brief by creating/editing the artifact file(s): relay-automation/hooks/skill-nudge.sh,.claude/settings.json,test/xyz-harness-hooks.sh,test/_setup.sh
+1. Implement the brief by creating/editing the artifact file(s): relay-automation/harvest-findings.sh,relay-automation/finding-new.sh,relay-automation/hooks/sentinel-network-guard.sh,test/sentinel-tier1.sh,test/sentinel-network-guard.sh,.gitignore,validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
-3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-P1-TURN --agent codex --paths "phases/p1/RELAY.md,relay-automation/hooks/skill-nudge.sh,.claude/settings.json,test/xyz-harness-hooks.sh,test/_setup.sh"
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-P1-TURN --agent codex
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-P1-TURN --agent codex --to agy
-4. Edit ONLY these paths: phases/p1/RELAY.md and relay-automation/hooks/skill-nudge.sh,.claude/settings.json,test/xyz-harness-hooks.sh,test/_setup.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+3. Use this exact tick binary (run it from any directory): /Users/noelsaw/wt/gh-281-sentinel/bin/tick
+   - /Users/noelsaw/wt/gh-281-sentinel/bin/tick claim MARATHON-P1-TURN --agent codex --paths "phases/p1/RELAY.md,relay-automation/harvest-findings.sh,relay-automation/finding-new.sh,relay-automation/hooks/sentinel-network-guard.sh,test/sentinel-tier1.sh,test/sentinel-network-guard.sh,.gitignore,validate.sh"
+   - /Users/noelsaw/wt/gh-281-sentinel/bin/tick ping MARATHON-P1-TURN --agent codex
+   - /Users/noelsaw/wt/gh-281-sentinel/bin/tick release MARATHON-P1-TURN --agent codex --to agy
+4. Edit ONLY these paths: phases/p1/RELAY.md and relay-automation/harvest-findings.sh,relay-automation/finding-new.sh,relay-automation/hooks/sentinel-network-guard.sh,test/sentinel-tier1.sh,test/sentinel-network-guard.sh,.gitignore,validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 
 ---
 
 ▶ TAKE YOUR TURN (agy — REVIEWER role)
 
-You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: relay-automation/hooks/skill-nudge.sh,.claude/settings.json,test/xyz-harness-hooks.sh,test/_setup.sh.
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: relay-automation/harvest-findings.sh,relay-automation/finding-new.sh,relay-automation/hooks/sentinel-network-guard.sh,test/sentinel-tier1.sh,test/sentinel-network-guard.sh,.gitignore,validate.sh.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested` then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-P1-TURN --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-P1-TURN --agent agy
-4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
+2. If changes needed: add `**Verdict:** Changes requested` then: /Users/noelsaw/wt/gh-281-sentinel/bin/tick release MARATHON-P1-TURN --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/wt/gh-281-sentinel/bin/tick done MARATHON-P1-TURN --agent agy
+4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/wt/gh-281-sentinel/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
-
-### Round 1 · Builder · codex
-
-- Added `relay-automation/hooks/skill-nudge.sh`, a fail-open `UserPromptSubmit` hook that parses the
-  event payload, matches only the Phase 0 marathon lifecycle phrase table, injects one line of
-  non-blocking `additionalContext`, and supports `XYZ_NO_SKILL_NUDGE=1`.
-- Added the hook to `.claude/settings.json` without changing the existing `PreToolUse` or
-  `SessionStart` entries.
-- Extended `test/xyz-harness-hooks.sh` with positive phrase-table cases, unrelated-prompt
-  non-matches, malformed-input fail-open coverage, and opt-out coverage. `test/_setup.sh` was
-  inspected as the auto-included helper and did not require changes.
-- Kept parsing and JSON emission in Python's standard library so prompt text is decoded safely and
-  hook output remains valid one-line JSON. No test or gate was run in-turn, per this phase's
-  containment instruction; the harness owns verification after handoff.
-
-### Round 1 · Reviewer · agy
-
-The implementation looks solid. The `skill-nudge.sh` script correctly handles fail-open conditions and parses JSON safely via the Python standard library. The regular expressions accurately target the specified marathon lifecycle intent without false positives. `.claude/settings.json` is properly updated to invoke the hook on `UserPromptSubmit`. `test/xyz-harness-hooks.sh` effectively covers the positive, negative, and fail-open test cases.
-
-**Verdict:** Approved
