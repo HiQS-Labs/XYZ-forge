@@ -29,6 +29,16 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash relay-automation/hooks/skill-nudge.sh"
+          }
+        ]
+      }
     ]
   }
 }

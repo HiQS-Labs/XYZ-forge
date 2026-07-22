@@ -21,11 +21,61 @@ RELAY_DRIVE="$REPO/relay-automation/relay-drive.sh"
 MARATHON_DRIVE="$REPO/relay-automation/marathon-drive.sh"
 MARATHON_SH="$REPO/relay-automation/marathon.sh"
 YBIN="$REPO/bin/marathon-yaml"
+SKILL_NUDGE="$REPO/relay-automation/hooks/skill-nudge.sh"
 
 tick_a init >/dev/null
 
 count()   { python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$1" 2>/dev/null || echo 0; }
 field()   { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[int(sys.argv[2])][sys.argv[3]])" "$1" "$2" "$3" 2>/dev/null; }
+
+# ── UserPromptSubmit skill nudge (GH-273 Phase 0) ───────────────────────────
+run_skill_nudge() {
+  python3 -c 'import json,sys; print(json.dumps({"prompt": sys.argv[1]}))' "$1" | bash "$SKILL_NUDGE"
+}
+nudge_context() {
+  python3 -c 'import json,sys
+event = json.loads(sys.argv[1])
+output = event["hookSpecificOutput"]
+assert output["hookEventName"] == "UserPromptSubmit"
+print(output["additionalContext"])' "$1" 2>/dev/null
+}
+assert_nudge() { # <label> <prompt> <expected-skill>...
+  local label="$1" prompt="$2" output context expected
+  shift 2
+  output="$(run_skill_nudge "$prompt")"
+  context="$(nudge_context "$output")"
+  for expected in "$@"; do
+    case "$context" in
+      *"skills/$expected/SKILL.md"*) ;;
+      *) fail "$label missing $expected nudge: ${context:-<silent>}" ;;
+    esac
+  done
+  pass "$label"
+}
+assert_no_nudge() { # <label> <prompt>
+  local label="$1" output
+  output="$(run_skill_nudge "$2")"
+  [ -z "$output" ] && pass "$label" || fail "$label unexpectedly nudged: $output"
+}
+
+assert_nudge "nudge: add item to marathon" "Add GH-273 to the marathon" marathon-triage
+assert_nudge "nudge: fire marathon" "Please fire the marathon" marathon-triage
+assert_nudge "nudge: preflight sweep" "Run a preflight sweep first" marathon-triage
+assert_nudge "nudge: preflight all" "Preflight all ready work" marathon-triage
+assert_nudge "nudge: dry-run each plan" "Dry-run each plan before firing" marathon-triage
+assert_nudge "nudge: commit/push + close issues" "Commit and push, then close the resolved issues" loose-ends marathon-cleanup
+assert_nudge "nudge: commit/push + archive/PDDA" "Commit and push; move docs to 3-COMPLETED and run a PDDA sweep" loose-ends marathon-cleanup
+
+assert_no_nudge "silent: unrelated roadmap request" "Add GH-273 to the roadmap"
+assert_no_nudge "silent: unrelated fire request" "Fire the unit tests"
+assert_no_nudge "silent: unrelated preflight" "Preflight the airplane"
+assert_no_nudge "silent: commit/push alone" "Commit and push these edits"
+assert_no_nudge "silent: closeout detail without commit/push" "Close the issues and run a PDDA sweep"
+
+malformed_output="$(printf 'not-json' | bash "$SKILL_NUDGE")"
+[ -z "$malformed_output" ] && pass "skill nudge fails open on malformed JSON" || fail "malformed JSON emitted: $malformed_output"
+optout_output="$(python3 -c 'import json; print(json.dumps({"prompt":"fire the marathon"}))' | XYZ_NO_SKILL_NUDGE=1 bash "$SKILL_NUDGE")"
+[ -z "$optout_output" ] && pass "XYZ_NO_SKILL_NUDGE suppresses output" || fail "opt-out emitted: $optout_output"
 
 # ── Relay: seed a token/file and drive relay-drive to a terminal state ───────
 # Noop turn-taker (does nothing) — used where the terminal state is pre-arranged before the loop.
