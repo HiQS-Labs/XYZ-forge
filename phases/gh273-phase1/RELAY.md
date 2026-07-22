@@ -74,3 +74,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH273-PHASE1-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh273-phase1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Created `.claude/commands/pre-marathon.md` as a thin `marathon-triage` wrapper: it preserves the
+  skill's read-only/no-fire boundary, reports stale `PROJECT/2-WORKING` and `phases/*/` artifacts,
+  dry-runs every ready plan, and requires explicit confirmation of the exact execution order before
+  firing.
+- Created `.claude/commands/post-marathon.md` with the contracted closeout order: reviewed complete
+  commit/push, PR notes, green-only merge, return to updated `development`, resolved-issue closure,
+  evidence-gated doc archival, full PDDA sweep, then `/loose-ends`.
+- Key decision: stale cleanup and evidence-sensitive closeout actions are report-first so neither
+  command silently deletes, archives, merges, or closes ambiguous work.
+- Targeted verification: file-presence and contract-marker assertions for both command bodies passed;
+  the full project gate was intentionally left to the harness as required by the phase brief.
