@@ -117,6 +117,7 @@ TESTS=(
   "sentinel-tier1.sh"           # GH-281 (Tier-1 JSONL finding capture)
   "sentinel-network-guard.sh"   # GH-281 (bundled scripts stay zero-network)
   "sentinel-driver-hooks.sh"    # GH-281 (marathon-drive.sh Tier-1 hooks: default-off + on-mode append)
+  "sentinel-overlay.sh"         # GH-281 (Tier-2 overlay: static egress guard + inert-by-default proof)
   "checkjs.sh"
   "acorn-extract.sh"             # GH-169
   "registry-lock-concurrency.sh"
