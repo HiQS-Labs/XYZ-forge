@@ -173,3 +173,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/wt/gh-281-sentinel/bin/tick done MARATHON-P1-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/wt/gh-281-sentinel/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Added executable `harvest-findings.sh` and `finding-new.sh` from the supplied reference bodies.
+- Added executable `sentinel-network-guard.sh`: it fails loud to stderr for network-pattern hits,
+  accepts explicit hermetic fixture paths, defaults to the two bundled capture scripts, and excludes
+  its own pattern-bearing source plus `sentinel-overlay/` subtrees.
+- Added executable Tier-1 JSONL and network-guard tests. The JSONL test checks two harvested side
+  findings (including intact `scope` and `probe`), one manual finding, and parses every emitted line;
+  the guard test checks both a bad and a clean bundle fixture under `${TMPDIR:-/tmp}`.
+- Added the local-only `debug.log` ignore entry and registered both tests in `validate.sh`.
+- Verification performed within the containment rail: `bash -n` passed for all five new scripts,
+  executable bits are set, and the guard's default scan exited 0. Per the phase brief, neither
+  `test/*.sh` nor `validate.sh` was executed in this isolated worktree; the harness owns that gate.
