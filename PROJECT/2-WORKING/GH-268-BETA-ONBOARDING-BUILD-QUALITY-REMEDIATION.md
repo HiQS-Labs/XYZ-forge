@@ -59,12 +59,13 @@ skill has a working installer — the report's 2 "Blocking for a new tester" ite
       one. *Fix:* reproduce the 7 failures on a genuinely clean clone (new tmp dir, no prior
       `xyz`/`hq` state) and either fix the state dependency or scope the Quickstart to only what needs
       no setup.
-- [x] **Every skill ships an `install.sh`.** Confirmed 2026-07-22: `consult/`, `open-router/`,
-      `ponytail/`, `relay-automation/`, `release/`, `skills-sync-trinity/`, `swe/`,
-      `weekly-shipped/`, `xyz/` (9 of 17) have no `install.sh` — onboarding text says "install the
-      `/relay-xyz` and `/consult` skills" but `consult/` has no installer, so the step only completes
-      if the assistant improvises the symlink. *Fix:* add `install.sh` to each (or one top-level
-      installer covering all `skills/*`) so no onboarding step depends on assistant improvisation.
+- [x] **Every skill ships an `install.sh`.** Originally confirmed 2026-07-22 (before remediation):
+      `consult/`, `open-router/`, `ponytail/`, `relay-automation/`, `release/`, `skills-sync-trinity/`,
+      `swe/`, `weekly-shipped/`, `xyz/` (9 of 17) had no `install.sh` — onboarding text says "install
+      the `/relay-xyz` and `/consult` skills" but `consult/` had no installer, so the step only
+      completed if the assistant improvised the symlink. *Fix:* add `install.sh` to each (or one
+      top-level installer covering all `skills/*`) so no onboarding step depends on assistant
+      improvisation.
       **Done 2026-07-22** on `marathon/gh-268-installers-2026-07-22` (not yet merged): all 9 now mirror
       `skills/relay-xyz/install.sh` byte-for-byte except `SKILL_NAME`, mode 755, functionally verified
       (fresh install, idempotent re-run, real-file-collision refusal all exercised manually). Built via
