@@ -69,3 +69,4 @@ test/aider-turn.sh	credential-literal	API_KEY="sk-local-test"
 test/hq-locator.sh	eval-unsanitized	( eval "$EVOUT"; [ "$HQ_SH" = "$HARN/utils/hq/hq.sh" ] && [ "$HQ_ROOT" = "$HARN" ] ) \
 test/hq-locator.sh	eval-unsanitized	RUN="$( eval "$EVOUT"; bash "$HQ_SH" )"
 relay-automation/marathon-drive.sh	eval-unsanitized	    eval "$PRE_ADVANCE_CMD"
+relay-automation/marathon-drive.sh	eval-unsanitized	    eval "$POST_APPROVE_CMD"

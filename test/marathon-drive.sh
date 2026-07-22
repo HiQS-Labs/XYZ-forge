@@ -206,7 +206,7 @@ HOOK
 chmod +x "$POST_APPROVE_FAIL"
 
 for runtime in 0 1; do
-  HELP_OUT="$(XYZ_PYTHON="$runtime" bash "$DRIVER" --help 2>&1)"; rc=$?
+  HELP_OUT="$(MARATHON_ROOT="$A" XYZ_PYTHON="$runtime" bash "$DRIVER" --help 2>&1)"; rc=$?
   [ "$rc" -eq 0 ] && printf '%s\n' "$HELP_OUT" | grep -q -- '--post-approve-cmd' \
     && pass "GH-273: XYZ_PYTHON=$runtime help documents --post-approve-cmd" \
     || fail "GH-273: XYZ_PYTHON=$runtime help omitted --post-approve-cmd: $HELP_OUT"
