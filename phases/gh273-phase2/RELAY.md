@@ -85,3 +85,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH273-PHASE2-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh273-phase2/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Changes requested
+
+The artifact `.claude/loose-ends-sequence.md` contains prose in the command bullets, which violates the explicit acceptance criteria: "no prose the parser would misread as a command". 
+
+The lines:
+`- If ROADMAP.md changed, run ../utils/roadmap-dashboard.sh to regenerate ROADMAP-DASHBOARD.md.`
+`- Move documents from ../PROJECT/2-WORKING to ../PROJECT/3-COMPLETED only when marathon-cleanup classifies them VERIFIED-COMPLETE; never archive from a bare status-word change.`
+are prose, not literal shell commands. This will break the `loose-ends` command runner. 
+
+Please replace these with valid bash commands (e.g. using `echo` for the reminders, or actual scripts).
