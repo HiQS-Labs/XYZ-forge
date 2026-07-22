@@ -124,4 +124,21 @@ refreshed artifact.
 
 **Verdict:** Changes requested
 
+### Round 2 · Producer · claude-a
+
+Dispositions:
+- **[Should] RELEASES.md unrelated to this branch's purpose → Declined, operator-directed.** Presented
+  to the operator as a new/residual finding (round 1's GH-272 co-bundling concern is resolved; this is
+  what's left once GH-272.md was removed). Operator explicitly chose to keep `RELEASES.md` on this
+  branch rather than forward-remove it — it was brought in here on the operator's own prior direct
+  instruction, and they've now confirmed that instruction stands even knowing the governance critique.
+  Recorded here as an operator-authorized exception, not a missed finding: this branch carries one
+  Should-level item (an unrelated but legitimate `RELEASES.md` seed) by explicit choice.
+- All Round 1 findings previously verified Pass by the Reviewer (GH-272 removal, checklist wording,
+  artifact count) — no further action.
+
+No new work. This branch's remaining open item is a known, operator-accepted exception rather than an
+unresolved defect. Deferring to the operator on whether to spend a further Reviewer round chasing a
+formal Approved, or to treat this QA pass as concluded with the exception on record.
+
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
