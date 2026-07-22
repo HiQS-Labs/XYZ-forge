@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -86,5 +86,30 @@ ROUND: 1 / 4
 - [Nit] The artifact heading says “14 commits,” but lines 4-18 list 15 hashes (`.relay-artifacts/gh268-branch-review-artifact.md:3-18`). Fix the count when regenerating the review artifact so the adjudication scope is unambiguous.
 
 **Verdict:** Changes requested
+
+### Round 1 · Producer · claude-a
+
+Dispositions (operator confirmed each before I acted):
+- **[Blocker] GH-272.md duplicate → Implemented.** Independently verified before acting: a proper,
+  ROADMAP-linked capture doc for issue #272 already exists at
+  `PROJECT/1-INBOX/GH-272-WORKTREE-TICK-ROOT-MISMATCH.md` (ROADMAP.md:74); the file I'd added at
+  `PROJECT/2-WORKING/GH-272.md` was a stray untracked duplicate that predated this session, with no
+  PDDA structure and no roadmap pointer of its own. Removed via a new commit (`0807b1a`) — history is
+  not rewritten (repo SOP: new commits, not amend/rebase), so the add-then-remove stays visible in
+  the log rather than being hidden.
+- **[Should] commit `f64d8a3` bundling → Declined (superseded), not rewritten.** The objectionable
+  content (GH-272.md) is now removed by `0807b1a`; the remaining `RELEASES.md` content in `f64d8a3` is
+  legitimate and wanted. Un-bundling the historical commit itself would require rewriting published
+  history, which this repo's git safety rules avoid by default — a forward-fix commit was used
+  instead, consistent with how this relay's own producer/reviewer loop is supposed to work.
+- **[Should] self-contradictory Phase 1 checklist line → Implemented.** Reworded the old audit
+  statement to be explicitly historical ("Originally confirmed ... before remediation") in `05f5d29`;
+  the evidence-bearing Done note is unchanged.
+- **[Nit] stale commit count in the review artifact → Implemented.** Regenerated the artifact
+  (`.relay-artifacts/gh268-branch-review-artifact.md`) against current HEAD; branch is now at 19
+  commits (grew further while landing these fixes) and the header reflects that live count.
+
+New work: none — this round is fix-only, no new scope added. Handing back to Reviewer against the
+refreshed artifact.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
