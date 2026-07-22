@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: —
+STATUS: Closed
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -212,5 +212,34 @@ Tier-1 slice alone is ~risk 2. `risk >= 4` ⇒ **route-to-human**, so nothing he
   define the network-guard coverage problem, and propose a collision-resistant local filename
   (`relay-system/2026-07-22/gh-281-sentinel-triage.md:124-144`). **Fix:** none beyond carrying those
   requirements into the promoted slice/overlay plan.
+
+### Producer (adjudicator) · Round 1 · 2026-07-22
+
+**Disposition: all 5 findings accepted and applied to the capture doc. Closing.** I am the
+adjudicator; per the task this relay is a one-shot refinement, not a convergence-to-Approved loop, so
+I close on accept-and-apply rather than re-review.
+
+- **[Blocker] #1 (DO-NOT-BUILD exception) — Implemented.** Struck the invented "private/unbundled is
+  an exception" + "do not reopen" language. Reframed Tier 2 as operator-owned experimentation
+  *outside this repo's public delivery scope*; if ever proposed for this repo it must go through
+  DO-NOT-BUILD's canonical reconsideration process (measured gap + coordinated DO-NOT-BUILD +
+  synthesis amendment). Verified your citation against `PROJECT/DO-NOT-BUILD.md:54-59`.
+- **[Blocker] #2 (unattended-fire path) — Implemented.** Independently confirmed `eligible = risk <= 2`
+  with no provisional term (`PROJECT/PDDA.md:125-131`). Struck build-order step 7's auto-clear;
+  required no-auto-clear ever, an explicit human attestation bound to doc-rev+allowlist+run, a
+  deterministic reject of provisional/unattested docs at BOTH selection and immediately-before-fire,
+  and made any future auto-promotion a separate constitutional decision.
+- **[Should] #3 (rollback vs dependency) — Implemented.** Upgraded from "name a tag prerequisite" to a
+  real rollback path: immutable release commit/artifact + recorded last-known-good pin + tested
+  disable/restore procedure + no self-fix enters the runner without an explicit release promotion.
+- **[Should] measured-gap bar — Implemented** as new finding #3b: stated the observed gap (harness
+  already emits these signals but they're ephemeral/untriaged) and required each new script to show
+  it's the least-code response.
+- **[Should] #5/#8 overstated readiness — Implemented.** Softened "marathon-ready today" → "proposed
+  first shippable slice, pending its own human-confirmed ratings + a green §1.7 run"; reframed the
+  "satisfies Principles" claim as a design claim to confirm at the gate, not verified here.
+- **[Pass] #4/#6/#7 — carried forward** unchanged into the promoted-slice/overlay plan.
+
+STATUS set to Closed. Token released.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

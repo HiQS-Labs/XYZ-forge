@@ -47,26 +47,53 @@ must be resolved *in the doc* before promotion, the rest are concrete hardening.
 
 1. **DO-NOT-BUILD adjudication (gate — must be explicit).** DO-NOT-BUILD names "a generic
    multi-agent platform … autonomous issue-to-PR loops" as anti-scope. Tier 2 *is* an
-   issue→PR loop. It is **permitted** here because it is (a) private/unbundled operator tooling,
-   not a product surface competing with an incumbent, and (b) built by *reusing* PDDA's lifecycle
-   + selection rule, not a parallel platform. The anti-scope bar is about shipped product surfaces;
-   this stays a local overlay. **Constraint of record: Tier 2 must never be promoted into the
-   public package.** Record this adjudication so a future reviewer does not reopen it.
+   issue→PR loop. **Adjudicated (relay Blocker, accepted):** "private/unbundled" is *not* a stated
+   DO-NOT-BUILD exception, and an in-doc "do not reopen this" note conflicts with the list's canonical
+   reconsideration process (a *measured incumbent gap* + a coordinated DO-NOT-BUILD **and** synthesis
+   amendment — DO-NOT-BUILD.md:54-59). Resolution: Tier 2 is **operator-owned experimentation that
+   lives outside this repo's public delivery scope** (a gitignored dir or a separate private repo) —
+   DO-NOT-BUILD governs what *this repo builds and ships*, so it does not reach a private overlay that
+   is never packaged. The moment Tier 2 is proposed *for this repo* (bundled, a product surface, or a
+   shipped `sentinel-*` script), it re-enters scope and must go through the canonical reconsideration
+   process — recording the measured gap and amending DO-NOT-BUILD + the synthesis together — not a
+   unilateral capture note. So the constraint is not "never reopen"; it is "reopening requires the
+   documented amendment path."
 
 2. **Bounded-repair / human-gate seam (gate).** CONSTITUTION: self-repair "may choose only from a
    bounded, pre-approved menu — never an open-ended rewrite," and destructive actions need an
-   explicit human gate. The nightly batch fires a marathon builder (open-ended edit within an
-   allowlist). The gate that makes this legal is: **Gemma-drafted docs land `ratings_provisional:
-   true` and are never auto-selectable until a human confirms the ratings.** §2.3↔§2.4 must be
-   airtight on this — "select eligible `2-WORKING` docs" (§2.4 step 1) must exclude every
-   provisional doc. Auto-promotion (build-order step 7) stays last, behind proven precision.
+   explicit human gate (CONSTITUTION.md:24-26,33-37). The nightly batch fires a marathon builder
+   (open-ended edit within an allowlist). **Adjudicated (relay Blocker, accepted — this corrects my
+   first draft):** the `ratings_provisional` guard as I first stated it is *not* airtight, two ways.
+   (a) **The canonical PDDA predicate gates only on `risk`** (`eligible = risk <= 2`, PDDA.md:125-131)
+   — it does **not** mention `ratings_provisional`, so a plan that "reuses PDDA's rule verbatim" does
+   *not* inherit the provisional guard; it must be added as a **separate deterministic check**.
+   (b) **Build-order step 7 auto-clears the provisional flag**, which reopens the exact unattended-fire
+   path this finding claims to close. Hardened requirement: (1) **no automatic clearing of
+   `ratings_provisional` — ever;** (2) promotion requires an **explicit human attestation bound to the
+   doc revision, the approved allowlist, and the specific run** (rating-confirmation alone is not the
+   authorization CONSTITUTION requires for an open-ended builder edit); (3) a **deterministic reject of
+   any provisional/unattested doc at BOTH selection time and immediately before fire**; (4) any future
+   auto-promotion is a **separate constitutional/policy decision**, not something earned by "proven
+   precision." Build-order step 7 is struck as written.
 
-3. **Feedback-loop containment needs a real anchor (Costly surface).** A harness self-fix merged
-   tonight changes tomorrow's overlay. The plan's fix — pin the nightly runner to the last *tagged*
-   harness release, not HEAD — depends on a tag cadence the repo doesn't yet run (RELEASES.md is a
-   planning ledger, not a tag stream). Surface "a tagged release to pin to" as a Tier-2
-   **prerequisite**. Per AGENTS.md, anything touching relay containment / harness self-modification
-   is **at least Costly**; it needs a rollback path.
+3. **Feedback-loop containment needs a rollback path, not just a dependency (Costly surface).** A
+   harness self-fix merged tonight changes tomorrow's overlay. The plan's fix — pin the nightly runner
+   to the last *tagged* harness release, not HEAD — depends on a tag cadence the repo doesn't yet run
+   (RELEASES.md is a planning ledger, not a tag stream). **Adjudicated (relay Should, accepted):**
+   naming a tag as a prerequisite is a *dependency*, not the rollback path AGENTS.md's Costly bar
+   requires. A tag alone is not the control. Required: (1) an **immutable release commit/artifact**;
+   (2) a **recorded last-known-good pin**; (3) a **tested operator procedure to disable the nightly job
+   and restore that pin**; (4) **no newly merged self-fix enters the runner until an explicit release
+   promotion** bumps the pin. This is the rollback path; the tag is just its handle.
+
+3b. **Measured-gap bar for new Bash/policy (relay Should, accepted).** DO-NOT-BUILD.md:21,54-59 sets
+   the bar: new Bash/policy complexity is justified only by a *measured gap*, not a nice-to-have. My
+   first draft cited this rail for the *shape* but not for the *new scripts*. State the observed gap
+   explicitly: the harness **already produces** these signals (escalations, lane parks, stale-lock
+   reclaims, side findings) but they are **ephemeral — emitted to a transcript/exit code and lost at
+   turn end, never systematically captured or triaged**; that loss is the measured gap the two Tier-1
+   scripts + the overlay address. Each new script must still show it is the **least-code** response
+   (e.g. why the append helper can't just reuse an existing PDDA writer).
 
 4. **Probe-lint is the load-bearing deterministic gate (Principle 12 + deterministic-before-LLM).**
    The worst Tier-2 failure is an inverted `fix_probe` → STALE exit-4 *false completion* (the named
@@ -75,10 +102,13 @@ must be resolved *in the doc* before promotion, the rest are concrete hardening.
    it is the independent verification separating "capture" from "unattended fixing."
 
 5. **Execution shape — umbrella, not one lane.** This is a 7-step, two-tier program. Per the GH-275
-   precedent, **capture as an umbrella; do not fire as one marathon lane.** Only the **Tier-1
-   Stage-0 patch** is marathon-ready today (opt-in, default-off, additive, one gitignored file,
-   crisp §1.7 acceptance checks — risk 2 on its own). Tier 2 stays an operator-run private overlay,
-   never a public marathon lane.
+   precedent, **capture as an umbrella; do not fire as one marathon lane.** The **Tier-1 Stage-0
+   patch** is the **proposed first shippable slice** (opt-in, default-off, additive, one gitignored
+   file, six §1.7 acceptance checks). **Adjudicated (relay Should, accepted):** it is *proposed*, not
+   verified "marathon-ready today" — its ~risk-2 rating, its acceptance checks, and its principle
+   coverage are **design claims, unrun in this capture**. It becomes ready only after (a) its own
+   human-confirmed ratings on the promoted `2-WORKING` slice and (b) a green run of the §1.7 checks.
+   Tier 2 stays an operator-run private overlay, never a public marathon lane.
 
 6. **CI network-guard: pin the bundled-path set (concrete).** §1.7#6 greps `relay-automation/` for
    `curl`/`wget`/`nc`/`gh `/`/dev/tcp`/`http`. Tier 1 adds `harvest-findings.sh` +
@@ -93,12 +123,29 @@ must be resolved *in the doc* before promotion, the rest are concrete hardening.
 8. **Where Tier 1 is already strong (keep).** Default-off byte-identical behavior (acceptance #1),
    six runnable acceptance checks incl. the network grep and JSONL round-trip, Side Findings as
    record-only (off-lane edits reverted → containment preserved), and reuse of PDDA's
-   output-contract JSONL rather than inventing a schema. These satisfy Principles 3/6/7/8/10 and the
-   four pillars — no change needed.
+   output-contract JSONL rather than inventing a schema. These are **designed to** satisfy Principles
+   3/6/7/8/10 and the four pillars; treat that as a design claim to confirm at the promoted-slice
+   gate, not verified here (relay Should, accepted).
+
+## Relay adjudication (Codex reviewer, Round 1 — 2026-07-22)
+
+A headless `/relay-xyz` review turn (Codex builder, `--review-once`, review-only) stress-tested this
+adjudication against the rails. Verdict: **Changes requested** — 2 Blockers + 3 Shoulds, all cited to
+`file:line`, all **accepted** (none overstated). The full block is in
+[relay-system/2026-07-22/gh-281-sentinel-triage.md](../../relay-system/2026-07-22/gh-281-sentinel-triage.md).
+Two caught real holes in my *first* draft, now fixed above: (1) I asserted a "private/unbundled"
+DO-NOT-BUILD exception that isn't canonical and told reviewers not to reopen it (finding #1); (2) my
+build-order concession auto-cleared the `ratings_provisional` flag, reopening the unattended-fire
+path finding #2 claimed to close — and the canonical PDDA predicate gates only on `risk`, so the
+provisional guard was never inherited "for free" (finding #2). Findings #4/#6/#7 passed as
+appropriately bounded. Verified independently before accepting: PDDA.md:125-131 confirms
+`eligible = risk <= 2` with no provisional term.
 
 ## Recommended next step
 
-Promote **only** the Tier-1 Stage-0 slice to `2-WORKING` with a Swarm Preflight Contract once a
-human clears the provisional ratings; hold Tier 2 as a separate, operator-run private-overlay effort
-gated on findings #1–#4. Ratings above (`4/4/4/7`) are for the whole program and provisional; the
-Tier-1 slice alone is ~risk 2. `risk >= 4` ⇒ **route-to-human**, so nothing here auto-selects.
+Promote **only** the Tier-1 Stage-0 slice to `2-WORKING` with a Swarm Preflight Contract once a human
+records an explicit attestation (per finding #2) — not merely clearing provisional ratings. Hold
+Tier 2 as a separate, operator-run private-overlay effort **outside this repo's delivery scope**
+(finding #1), gated on findings #2/#3/#3b. Ratings (`4/4/4/7`) are for the whole program and
+provisional; `risk >= 4` ⇒ **route-to-human**, so nothing here auto-selects. The Tier-1 slice's own
+lower rating is a design claim to confirm on promotion, not a verified fact of this capture.
