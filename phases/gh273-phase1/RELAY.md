@@ -1,5 +1,5 @@
 # Marathon Phase gh273-phase1
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH273-PHASE1-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -88,3 +88,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   command silently deletes, archives, merges, or closes ambiguous work.
 - Targeted verification: file-presence and contract-marker assertions for both command bodies passed;
   the full project gate was intentionally left to the harness as required by the phase brief.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+The artifacts `.claude/commands/pre-marathon.md` and `.claude/commands/post-marathon.md` correctly implement the required preflight and closeout workflows. `pre-marathon.md` properly wraps `marathon-triage`, reports stale artifacts, dry-runs ready plans, and correctly enforces explicit operator confirmation before firing. `post-marathon.md` covers the entire closeout lifecycle including PR creation, green-only merge, issue resolution, PDDA sweeps, and evidence-gated doc archival. All requirements are met.
