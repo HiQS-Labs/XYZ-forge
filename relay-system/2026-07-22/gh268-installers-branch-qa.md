@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -111,5 +111,17 @@ Dispositions (operator confirmed each before I acted):
 
 New work: none — this round is fix-only, no new scope added. Handing back to Reviewer against the
 refreshed artifact.
+
+### Round 2 · Reviewer · codex
+
+- [Pass] The prior GH-272 blocker is resolved by an auditable forward-removal commit (`0807b1a`), and the refreshed effective diff now moves directly from the GH-268 doc to `RELEASES.md` without adding a `PROJECT/2-WORKING/GH-272.md` hunk (`.relay-artifacts/gh268-branch-review-artifact.md:21-25`, `.relay-artifacts/gh268-branch-review-artifact.md:52-58`). This preserves history while removing the duplicate active doc, consistent with PDDA's one-canonical-execution-surface and active-doc contracts (`PROJECT/PDDA.md:35-49`, `PROJECT/PDDA.md:51-72`). No further GH-272 change requested.
+- [Pass] The GH-268 checklist now describes the nine missing installers as the pre-remediation state, followed by a dated Done note and its verification scope (`.relay-artifacts/gh268-branch-review-artifact.md:39-50`). That restores the project doc as resumable current state (`GUIDING-PRINCIPLES.md:38-40`). No further checklist wording change requested.
+- [Should] The effective branch diff still adds an unrelated placeholder release seed to `RELEASES.md` (`.relay-artifacts/gh268-branch-review-artifact.md:54-71`), while the branch's traced purpose is GH-268 installer remediation (`.relay-artifacts/gh268-branch-review-artifact.md:25-53`, `.relay-artifacts/gh268-branch-review-artifact.md:86-117`). Calling the seed legitimate does not make it relevant to this branch, and the quality bar requires relevant, structured signal (`GUIDING-PRINCIPLES.md:11-18`). Fix: add a forward commit removing only this `RELEASES.md` seed from the GH-268 branch; land the wanted release-ledger change separately on its own rail. Do not rewrite `f64d8a3`.
+- [Pass] The refreshed artifact count is internally correct: its heading says 19 commits and lines 4-22 enumerate 19 hashes (`.relay-artifacts/gh268-branch-review-artifact.md:3-22`). No artifact-count change requested.
+- [Pass] GH-268 traceability, containment, and separated grading remain evidenced by the three scoped phase briefs and their builder/reviewer records (`.relay-artifacts/gh268-branch-review-artifact.md:88-154`, `.relay-artifacts/gh268-branch-review-artifact.md:171-232`, `.relay-artifacts/gh268-branch-review-artifact.md:249-317`), matching issue-first execution state, allowlist containment, and independent verification (`PROJECT/PDDA.md:204-220`; `GUIDING-PRINCIPLES.md:26-28`, `GUIDING-PRINCIPLES.md:44-44`). Worktree isolation itself remains unobservable from this artifact and is not independently confirmed.
+- [Pass] The verification claim remains backed by independently reviewed records of syntax and contained behavior checks (`.relay-artifacts/gh268-branch-review-artifact.md:144-154`, `.relay-artifacts/gh268-branch-review-artifact.md:222-232`, `.relay-artifacts/gh268-branch-review-artifact.md:303-317`), satisfying the observable-proof rule (`AGENTS.md:52-55`). No proof-text change requested.
+- [Pass] All nine installer hunks are executable mode `100755` and retain the required strict mode, `$BASH_SOURCE` resolution, `CLAUDE_SKILLS_DIR` override, idempotent correct-link handling, symlink-only replacement, real-path refusal, and final link creation (`.relay-artifacts/gh268-branch-review-artifact.md:660-753`, `.relay-artifacts/gh268-branch-review-artifact.md:754-847`, `.relay-artifacts/gh268-branch-review-artifact.md:848-941`, `.relay-artifacts/gh268-branch-review-artifact.md:942-1082`). This turn is structural review only; runtime execution was prohibited. No installer change requested.
+
+**Verdict:** Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
