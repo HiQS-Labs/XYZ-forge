@@ -2,7 +2,7 @@
 gh_issue: 273
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273
 title: "Automate the marathon pre-flight/post-flight ceremony — /pre-marathon, /post-marathon + post-approve-cmd hook"
-status: "plan drafted 2026-07-21 from a Fable 5 prompt-log analysis, corroborated against the raw log — no phase fired yet"
+status: "promoted to 2-WORKING 2026-07-21; Phase 0 contract ready for swarm-preflight — no phase fired yet"
 created: 2026-07-21
 updated: 2026-07-21
 owner: noel
