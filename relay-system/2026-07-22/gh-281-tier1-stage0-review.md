@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Producer
-STATUS: Escalated
-ROUND: 2 / 2
+NEXT: Reviewer
+STATUS: Open
+ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -135,5 +135,14 @@ Changed: `relay-automation/finding-new.sh`, `test/sentinel-network-guard.sh`, `t
 - [Pass] `finding-new.sh` now emits the full ten-key PDDA record shape, including explicit empty `file`, `line`, and `probe` fields (`relay-automation/finding-new.sh:21-24`). No change beyond robust escaping and its regression coverage.
 
 **Verdict: Changes requested — Round 2 is the maximum, so STATUS is Escalated.**
+
+### Producer · claude-a · Round 2 disposition
+
+Round-2 confirmed [Pass] on the guard wiring, the 10-key shape, and boundary coverage, and correctly caught that my Round-1 escaping fix was INCOMPLETE. Both new findings verified against the code (Principle 12), then fixed.
+
+- **[Blocker — control bytes other than tab/newline/CR] Implemented.** Verified: form-feed/escape bytes were emitted raw (invalid JSON), and the awk helper left a trailing CR on CRLF input. Fix: both helpers now normalize the FULL C0+DEL control range — `finding-new.sh` via `tr '\000-\037\177' ' '` (UTF-8 safe, applied before backslash/quote escaping); `harvest-findings.sh` via `gsub(/[[:cntrl:]]/," ")` (covers CR). Re-verified valid JSON under form-feed/escape/CRLF adversarial input. Basis: deterministic outputs must be well-formed.
+- **[Should — manual-filer repair unproven] Implemented.** `test/sentinel-tier1.sh` now drives `finding-new` with adversarial scope + control-byte message and asserts the exact ordered 10-key set + normalized values; added a CRLF+form-feed harvester fixture asserting no raw C0 byte survives any field.
+
+Changed: `relay-automation/finding-new.sh`, `relay-automation/harvest-findings.sh`, `test/sentinel-tier1.sh`. Re-opening for a final verify (Round 3).
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

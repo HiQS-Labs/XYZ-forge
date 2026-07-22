@@ -21,7 +21,7 @@ OUT="${OUT:-debug.log}"
 TS="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
 
 awk -v ts="$TS" -v scope="$SCOPE" -v repo="$REPO" -v relay="$RELAY" '
-  function esc(s){ gsub(/\\/,"\\\\",s); gsub(/"/,"\\\"",s); gsub(/\t/," ",s); return s }
+  function esc(s){ gsub(/\\/,"\\\\",s); gsub(/"/,"\\\"",s); gsub(/[[:cntrl:]]/," ",s); return s }
   function flush(){
     if (!inblk) return
     printf("{\"timestamp\":\"%s\",\"severity\":\"warn\",\"check\":\"marathon.side-finding\",\"scope\":\"%s\",\"repo\":\"%s\",\"file\":\"%s\",\"line\":\"\",\"message\":\"%s%s\",\"action\":\"triage\",\"probe\":\"%s\"}\n",
