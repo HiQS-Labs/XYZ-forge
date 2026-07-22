@@ -1,5 +1,5 @@
 # Marathon Phase gh268r2a-installers
-STATUS: Ready for review
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH268R2A-INSTALLERS-TURN builder=aider-qwen reviewer=codex round-cap=4 -->
@@ -70,3 +70,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Behavior is idempotent: no-op if the correct symlink already exists, replace a stale/dangling/wrong symlink, and refuse politely if the destination exists as a non-symlink.
 - Only the skill name differs between the two installer scripts.
 - Updated this relay file status to ready for review and handed the next turn to `codex`.
+
+### Round 1 · Reviewer · codex
+- Reviewed both installers against the phase brief and the read-only `skills/relay-xyz/install.sh` reference.
+- Verified both files are non-empty, have the required shebang and strict mode, pass `bash -n`, reference `~/.claude/skills`, and differ only by skill name.
+- Exercised each installer in isolated temporary destinations: initial install, idempotent rerun, stale/dangling symlink replacement, and refusal to overwrite a non-symlink all passed.
+
+**Verdict:** Approved
