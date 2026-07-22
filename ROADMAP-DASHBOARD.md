@@ -6,12 +6,13 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 106 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
+Summary: 107 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-276 · Weekly risk-control reconciliation — keeping GH-275 on the ball | — | [GH-276-WEEKLY-RISK-RECONCILIATION.md](PROJECT/1-INBOX/GH-276-WEEKLY-RISK-RECONCILIATION.md) · [#276](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/276) |
+| GH-275 · Long-Term Risk Remediation — balanced, evidence-led safety program | — | [GH-275-LONG-TERM-RISK.md](PROJECT/1-INBOX/GH-275-LONG-TERM-RISK.md) · [#275](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/275) |
 | GH-274 · marathon-drive: re-invoking a phase whose tick token is already done clobbers RELAY.md's Approved record instead of detecting a satisfied lane | — | [GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md](PROJECT/2-WORKING/GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md) · [#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274) |
-| GH-273 · Automate the marathon pre-flight/post-flight ceremony — /pre-marathon, /post-marathon + post-approve-cmd hook | — | [#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274) · [GH-273-MARATHON-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-273-MARATHON-CLOSEOUT-AUTOMATION.md) · [#273](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273) |
 | GH-272 · Driven relay turn's tick release resolves wrong TICK_REPO_ROOT in a vendored same-repo lane | — | [GH-272-WORKTREE-TICK-ROOT-MISMATCH.md](PROJECT/1-INBOX/GH-272-WORKTREE-TICK-ROOT-MISMATCH.md) · [#272](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/272) |
 | GH-268 · Beta onboarding & build-quality test report — remediation plan (re: #123) | — | [GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md](PROJECT/2-WORKING/GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md) · [#268](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/268) |
 | GH-261 · marathon-drive: reconcile the Bash/Python disjoint-failure union (last Phase-1 gate for the XYZ_PYTHON flip) | ✅ | [GH-261-MARATHON-DRIVE-BASH-CONTAINMENT-VENDORED-CHAIN.md](PROJECT/3-COMPLETED/GH-261-MARATHON-DRIVE-BASH-CONTAINMENT-VENDORED-CHAIN.md) · [#261](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/261) |
@@ -143,10 +144,11 @@ Summary: 17 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 13 · �
 
 ## Completed
 
-Summary: 17 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 17 · 🔮 0 · 🔲 0
+Summary: 18 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 18 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-273 · Automate the marathon pre-flight/post-flight ceremony | ✅ | [#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274) · [GH-273-MARATHON-CLOSEOUT-AUTOMATION.md](PROJECT/3-COMPLETED/GH-273-MARATHON-CLOSEOUT-AUTOMATION.md) · [#273](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273) |
 | GH-200 · swe-diagram: add top-down layered layout | ✅ | [GH-200-SWE-DIAGRAM-TOP-DOWN.md](PROJECT/3-COMPLETED/GH-200-SWE-DIAGRAM-TOP-DOWN.md) · [#200](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/200) · [PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md](PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md) |
 | GH-78 · optional hourly doc-preflight (contract-enforcing auto-edits + telemetry) | ✅ | [GH-78-DOC-PREFLIGHT-AUTOMATION.md](PROJECT/1-INBOX/GH-78-DOC-PREFLIGHT-AUTOMATION.md) · [#81](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/81) · [#78](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/78) |
 | GH-45 · QUEUE 'must-complete' commitment contract + anti-rabbit-hole safeguard | ✅ | [GH-45-QUEUE-COMMITMENT-CONTRACT.md](PROJECT/1-INBOX/GH-45-QUEUE-COMMITMENT-CONTRACT.md) · [#91](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/91) · [#45](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/45) |
