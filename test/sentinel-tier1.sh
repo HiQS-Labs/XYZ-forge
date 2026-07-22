@@ -70,4 +70,38 @@ assert row["severity"] == "info"
 assert row["message"] == 'one "quoted" finding'
 PY
 
+# --- adversarial escaping + boundary coverage (harvester, Should #3) ----------
+ADV_FIXTURE="$WORK/adv.md"; ADV_LOG="$WORK/adv.jsonl"
+printf '%s\n' \
+  '# Heading before any block' \
+  '### Side Finding' \
+  '- path: src/gamma.js' \
+  '- symptom: has "quotes" and \back' \
+  '- suspected_cause: edge' \
+  $'- probe: tab\there' \
+  '---' \
+  'prose after a thematic break (must not join the block)' \
+  '### Side Finding' \
+  '- path: src/delta.js' \
+  '- symptom: second' \
+  '- suspected_cause: cause2' \
+  '- probe: printf second' \
+  '# trailing heading' > "$ADV_FIXTURE"
+
+"$HARVEST" --relay "$ADV_FIXTURE" --scope "adv" --repo "fx" --out "$ADV_LOG"
+[[ "$(wc -l < "$ADV_LOG" | tr -d ' ')" -eq 2 ]] || {
+  echo "FAIL: adversarial harvest should emit 2 lines (--- and # are flush boundaries)" >&2
+  exit 1
+}
+python3 -c 'import json,sys;[json.loads(l) for l in sys.stdin]' < "$ADV_LOG"
+python3 - "$ADV_LOG" <<'PY'
+import json, sys
+r = [json.loads(line) for line in open(sys.argv[1], encoding="utf-8")]
+assert len(r) == 2, r
+assert r[0]["probe"] == "tab here", repr(r[0]["probe"])   # literal tab escaped to a space
+assert '"quotes"' in r[0]["message"], r[0]["message"]     # quote survives JSON round-trip
+assert "\\back" in r[0]["message"], r[0]["message"]       # backslash survives JSON round-trip
+assert r[1]["probe"] == "printf second", r[1]["probe"]
+PY
+
 echo "PASS: sentinel Tier-1 JSONL capture"

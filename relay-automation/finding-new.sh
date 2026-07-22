@@ -15,7 +15,11 @@ done
 case "$SEV" in error|warn|info) ;; *) echo "finding-new.sh: --severity must be error|warn|info" >&2; exit 2 ;; esac
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 OUT="${DEBUG_LOG_FILE:-$ROOT/debug.log}"
-esc(){ local s="$1"; s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; printf '%s' "$s"; }
-printf '{"timestamp":"%s","severity":"%s","check":"manual","scope":"%s","repo":"%s","message":"%s","action":"triage"}\n' \
-  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SEV" "$SCOPE" "$ROOT" "$(esc "$TEXT")" >> "$OUT"
+# JSON-escape every dynamic string: backslash, quote, and tab/newline/CR → space (a one-line
+# manual finding must never emit a raw control char). Mirrors harvest-findings.sh's awk esc().
+esc(){ local s="$1"; s="${s//\\/\\\\}"; s="${s//\"/\\\"}"; s="${s//$'\t'/ }"; s="${s//$'\n'/ }"; s="${s//$'\r'/ }"; printf '%s' "$s"; }
+# Emit the full PDDA output-contract shape (10 keys), matching harvest-findings.sh so Tier-2 reads
+# uniform lines; file/line/probe are empty for a manual finding.
+printf '{"timestamp":"%s","severity":"%s","check":"manual","scope":"%s","repo":"%s","file":"","line":"","message":"%s","action":"triage","probe":""}\n' \
+  "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$SEV" "$(esc "$SCOPE")" "$(esc "$ROOT")" "$(esc "$TEXT")" >> "$OUT"
 echo "appended: $OUT"

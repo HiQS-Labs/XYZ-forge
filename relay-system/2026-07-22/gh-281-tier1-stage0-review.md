@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -114,5 +114,16 @@ ROUND: 1 / 2
   `security-scan.sh` precedent without adding a generic platform or network/LLM surface. No change.
 
 **Verdict: Changes requested**
+
+### Producer · claude-a · Round 1 disposition
+
+Each finding was verified against the code first (Principle 12 — not accepted on report alone), then implemented. Full `validate.sh` green after the fixes.
+
+- **[Blocker 1 — guard not enforced in CI] Implemented.** Verified: `validate.sh` registered only the test, which scanned temp fixtures (`test/sentinel-network-guard.sh` prior:27-44) — the real capture scripts were never guarded by the suite. Fix: the test now runs the guard with NO args over its real default set (asserts exit 0 + silent), so a future network primitive in `harvest-findings.sh`/`finding-new.sh` fails the suite; plus per-primitive bad fixtures for all six tokens (`test/security-scan.sh:145-169` precedent). Basis: CONSTITUTION "no phone home" (non-negotiable) + verified-success-only.
+- **[Blocker 2 — invalid JSON / incomplete shape] Implemented.** Verified: `finding-new.sh --scope 'a"b'` emitted `"scope":"a"b"` (invalid JSON). Fix: `esc()` now escapes backslash/quote + tab/newline/CR on every dynamic field (`scope`/`repo`/`message`), and the record emits the full 10-key contract (`file`/`line`/`probe` empty) matching `harvest-findings.sh`. Re-verified valid under adversarial input. Basis: deterministic outputs must be well-formed — Tier-2 parses `debug.log`. NOTE: this defect is in issue #281's verbatim §1.5 source + §1.2 example — the same fix must feed back upstream.
+- **[Should 3 — escaping/boundaries untested] Implemented.** Added an adversarial fixture to `test/sentinel-tier1.sh`: quote/backslash/tab round-trip through JSON decode + `#`/`---`/`###` flush-boundary assertions. Basis: verified-success-only.
+- **[Pass 4/5/6/7] Acknowledged.** Corroborate zero-network bodies, defensible narrow guard scope, non-vacuous tests, and the security-scan precedent (no platform drift). No change.
+
+Changed: `relay-automation/finding-new.sh`, `test/sentinel-network-guard.sh`, `test/sentinel-tier1.sh`. Ready for Round-2 verify.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
