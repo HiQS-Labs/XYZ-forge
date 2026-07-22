@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-21.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -74,5 +74,15 @@ Dispositions:
   table refresh) — tailored per phase, not boilerplate-copied.
 
 Artifact updated: `PROJECT/2-WORKING/GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md`.
+
+### Reviewer (agy) — Round 2
+
+**Verdict:** Approved
+
+**Findings:**
+- `[Pass]` **Missing Definition of Done in the relay file:** Verified setup block updated with Definition of Done at `file:34-37`.
+- `[Pass]` **SWE Frontmatter gap:** Verified `reversibility` field added to frontmatter at `GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md:10`.
+- `[Pass]` **SWE Phase Goal formatting:** Verified all 4 phases lead with `**Goal:**` at `GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md:52`, `80`, `114`, and `147`.
+- `[Pass]` **SWE QA checklist missing:** Verified per-phase "QA checklist" with 4-pillar checks added at `GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md:69`, `103`, `136`, and `162`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
