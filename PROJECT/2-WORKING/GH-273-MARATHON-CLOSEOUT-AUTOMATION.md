@@ -194,8 +194,9 @@ session can start at "review the PR" instead of "do the ceremony."
 
 ## Swarm Preflight Contract
 
-Scoped to Phase 0 only (new hook script + an additive edit to the existing `.claude/settings.json`;
-no `.claude/commands/` or harness Python touched). Phases 1-4 each need their own contract redraft
+Scoped to Phase 1 only (two new `.claude/commands/*.md` prompt files; no scripts or harness code
+touched — building the commands is just authoring prompts, not executing their ceremony). Phase 0
+SHIPPED 2026-07-21 (see Status table + CHANGELOG). Phases 2-4 each need their own contract redraft
 once the phase before them ships — same pattern as `GH-268`.
 
 ```json
@@ -203,14 +204,14 @@ once the phase before them ships — same pattern as `GH-268`.
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "path_absent", "path": "relay-automation/hooks/skill-nudge.sh" }
+    { "type": "path_absent", "path": ".claude/commands/post-marathon.md" }
   ],
-  "artifacts": [ "relay-automation/hooks/skill-nudge.sh", ".claude/settings.json", "test/xyz-harness-hooks.sh" ],
-  "artifacts_new": [ "relay-automation/hooks/skill-nudge.sh" ],
+  "artifacts": [ ".claude/commands/pre-marathon.md", ".claude/commands/post-marathon.md" ],
+  "artifacts_new": [ ".claude/commands/pre-marathon.md", ".claude/commands/post-marathon.md" ],
   "remediation": {
     "source": "issue#273",
-    "criteria": "Phase 0 only: relay-automation/hooks/skill-nudge.sh exists, follows the xyz-vendor-reminder.sh fail-open/opt-out-env/exit-0-always contract, matches only the marathon-lifecycle keyword table documented in this doc's Phase 0 section, injects additionalContext (not a blocking prompt) on a match, stays silent on a non-match, is wired into .claude/settings.json's UserPromptSubmit array without touching the existing PreToolUse/SessionStart entries, and test/xyz-harness-hooks.sh gains a passing case for it."
+    "criteria": "Phase 1 only: .claude/commands/pre-marathon.md invokes the marathon-triage skill for reconciliation/ranking/waves rather than reimplementing it, additionally sweeps PROJECT/2-WORKING and phases/*/ for stale phase dirs and orphaned ESCALATION.md files, dry-runs each ready plan, and requires explicit operator confirmation before firing (never bypasses marathon-triage's no-fire boundary). .claude/commands/post-marathon.md sequences: commit+push all changed files including manual edits -> open a PR with notes -> merge if green -> pull and switch back to development -> close every GH issue resolved by the run -> move completed docs to PROJECT/3-COMPLETED -> run a full PDDA sweep (utils/pdda/pdda.sh run) -> end by invoking /loose-ends. Both files are plain markdown prompt bodies (no new scripts); this doc's Phase 1 section is the source of truth for their exact step sequence."
   },
-  "lanes": { "agy_safe": [ "relay-automation/hooks/skill-nudge.sh", "test/xyz-harness-hooks.sh" ], "orchestrator_only": [ ".claude/settings.json" ] }
+  "lanes": { "agy_safe": [ ".claude/commands/pre-marathon.md", ".claude/commands/post-marathon.md" ], "orchestrator_only": [] }
 }
 ```
