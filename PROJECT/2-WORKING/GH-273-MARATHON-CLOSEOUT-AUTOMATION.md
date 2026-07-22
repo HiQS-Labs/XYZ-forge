@@ -204,6 +204,7 @@ once the phase before them ships — same pattern as `GH-268`.
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
+    { "type": "path_absent", "path": ".claude/commands/pre-marathon.md" },
     { "type": "path_absent", "path": ".claude/commands/post-marathon.md" }
   ],
   "artifacts": [ ".claude/commands/pre-marathon.md", ".claude/commands/post-marathon.md" ],
