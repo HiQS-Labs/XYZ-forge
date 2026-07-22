@@ -194,39 +194,47 @@ session can start at "review the PR" instead of "do the ceremony."
 
 ## Swarm Preflight Contract
 
-Scoped to Phase 3 only (one new script + its regression test). Phases 0-2 SHIPPED 2026-07-21 (see
-Status table + CHANGELOG). Phase 4 needs its own contract redraft once Phase 3 ships — same pattern
-as `GH-268`.
+Scoped to Phase 4 only — the last phase. Phases 0-3 SHIPPED 2026-07-21 (see Status table +
+CHANGELOG).
 
-**Safety scope, read carefully — this phase authors a script capable of `git push`/PR-create/merge,
-which is materially different from Phases 0-2's prompt/config files:**
+**Safety scope, read carefully — this phase edits `marathon_drive.py` and `marathon-drive.sh`
+directly, this repo's actual harness driver, not a new standalone file. Kernel-adjacent by this
+repo's own convention (`ROADMAP.md` "Model assignment": kernel-correctness reasoning is an Opus
+track, not default Sonnet — flag this if the builder's plan looks mechanical rather than careful):**
 
-- `marathon-closeout.sh` MUST support `--dry-run` (print the exact sequence of `git`/`gh` commands
-  it would run, execute nothing) and that must be the mode its own test suite exercises for the real
-  sequence logic.
-- Its regression test (`test/marathon-closeout.sh`) MUST NOT make any real network call or touch
-  this repo's real GitHub remote — no real `git push`, no real `gh pr create`, no real merge. Follow
-  this repo's existing PATH-shadow stubbing pattern (seen in `test/claude-turn.sh`: "builder cannot
-  spawn codex/gemini — PATH-shadow blocks them") to stub `git`/`gh` inside a disposable scratch repo
-  under `$WORK`, and assert on the stubbed commands' arguments, not on real repo/GitHub state.
-- The builder turn itself must not invoke `marathon-closeout.sh` for real against this repo either
-  (`ALLOW_PATHS` doesn't include a live push regardless — call this out explicitly in case the
-  builder considers "testing it for real" a shortcut).
+- **Dual-runtime parity is mandatory.** This repo maintains a Bash driver (`relay-automation/marathon-drive.sh`)
+  and a Python twin (`utils/py/marathon_drive.py`) with an explicit same-behavior contract (see
+  `test/marathon-drive.sh`'s `python:test_python_layer.py` counterpart already in `validate.sh`). The
+  new flag must land in **both**, behaving identically.
+- **Default must be unset — zero behavior change for every existing caller who doesn't pass it.**
+  Exact same shape as `--pre-advance-cmd`'s own default resolution (`marathon-drive.sh:420`,
+  `marathon_drive.py:301`), except `--post-approve-cmd` has **no default command** (unlike
+  `--pre-advance-cmd`'s `bash $ROOT/validate.sh` fallback) — omitted means "do nothing," full stop.
+- **Insertion point:** only after the phase is already fully approved and recorded — in
+  `marathon_drive.py`, after `marathon.phase.approved` is logged and `xyz_marathon_emit("green", ...)`
+  fires, immediately before `sys.exit(0)` in `complete_phase_success()` (~`marathon_drive.py:684-687`);
+  the mirrored point in `marathon-drive.sh`. **A `--post-approve-cmd` failure must NOT retroactively
+  un-approve the phase** — `marathon.phase.approved` already fired and is real. Instead, report the
+  post-approve failure distinctly (new outcome, not reusing `pre-advance-failed`) and exit with a
+  code not already in the documented table (`0/2/3/4/5/6/7/8` are taken — use `9`).
+  Write an `ESCALATION.md` for it (reason: `post-approve-failed`) so the operator sees it even though
+  the phase itself succeeded.
+- **No default value for `--post-approve-cmd` means no test regresses by omission** — every existing
+  `test/marathon-drive.sh` case that doesn't pass the flag must be byte-identical in behavior.
 
 ```json
 {
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "path_absent", "path": "relay-automation/marathon-closeout.sh" },
-    { "type": "path_absent", "path": "test/marathon-closeout.sh" }
+    { "type": "grep_absent", "path": "relay-automation/marathon-drive.sh", "pattern": "post-approve-cmd" }
   ],
-  "artifacts": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ],
-  "artifacts_new": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ],
+  "artifacts": [ "relay-automation/marathon-drive.sh", "utils/py/marathon_drive.py", "test/marathon-drive.sh" ],
+  "artifacts_new": [],
   "remediation": {
     "source": "issue#273",
-    "criteria": "relay-automation/marathon-closeout.sh exists and implements the deterministic half of Phase 1's /post-marathon sequence as one script: commit+push all changed files including manual edits -> open a PR with notes -> merge if green (checks pass, mergeable) -> pull and switch back to development. Supports --dry-run (prints the exact command sequence, executes nothing) as a first-class mode. Ships with test/marathon-closeout.sh that stubs git/gh via PATH-shadow in a disposable scratch repo (never touches this repo's real remote or GitHub), covering: dry-run prints the right sequence and mutates nothing; happy path (green checks) proceeds through push/PR/merge/pull/switch; a red/unmergeable check halts before merge without pushing further; manual pre-existing edits are included in the commit, not dropped. bash -n clean. validate.sh no worse than baseline."
+    "criteria": "Both relay-automation/marathon-drive.sh and utils/py/marathon_drive.py gain an optional --post-approve-cmd <CMD> flag, symmetric to the existing --pre-advance-cmd, defaulting to unset (no command run, no behavior change for existing callers). When set, it runs exactly once, only after the phase is fully approved (marathon.phase.approved already logged, green already emitted) -- never before, never gating the approval itself. A --post-approve-cmd failure does not retroactively fail the phase (the already-emitted phase.approved stands) but is reported distinctly: exit 9 (not reusing 5/pre-advance-failed) and an ESCALATION.md with reason post-approve-failed. Both runtimes behave identically. test/marathon-drive.sh gains cases: (a) omitted flag is byte-identical to current behavior across existing happy-path/escalation cases; (b) a passing --post-approve-cmd runs after approval and the phase still exits 0; (c) a failing --post-approve-cmd exits 9 with an ESCALATION.md recording post-approve-failed, while marathon.phase.approved was still logged. validate.sh no worse than baseline, both Bash and Python (XYZ_PYTHON=0 and =1) modes green."
   },
-  "lanes": { "agy_safe": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ], "orchestrator_only": [] }
+  "lanes": { "agy_safe": [ "test/marathon-drive.sh" ], "orchestrator_only": [ "relay-automation/marathon-drive.sh", "utils/py/marathon_drive.py" ] }
 }
 ```
