@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -144,5 +144,14 @@ Round-2 confirmed [Pass] on the guard wiring, the 10-key shape, and boundary cov
 - **[Should — manual-filer repair unproven] Implemented.** `test/sentinel-tier1.sh` now drives `finding-new` with adversarial scope + control-byte message and asserts the exact ordered 10-key set + normalized values; added a CRLF+form-feed harvester fixture asserting no raw C0 byte survives any field.
 
 Changed: `relay-automation/finding-new.sh`, `relay-automation/harvest-findings.sh`, `test/sentinel-tier1.sh`. Re-opening for a final verify (Round 3).
+
+### Reviewer · codex · Round 3
+
+- [Pass] Both capture scripts are local-only and the guard’s deliberately narrow default covers exactly them (`relay-automation/hooks/sentinel-network-guard.sh:9-20`); its test invokes that no-argument default and separately proves every declared primitive trips (`test/sentinel-network-guard.sh:17-37`). No change.
+- [Pass] Each emitter now produces the complete ten-key PDDA JSONL shape while escaping backslash/quote and normalizing all C0/DEL controls before interpolation (`relay-automation/harvest-findings.sh:23-29`; `relay-automation/finding-new.sh:18-25`). The acceptance test JSON-decodes the manual line, asserts its exact ordered key set, and exercises quote/backslash plus form-feed/escape input (`test/sentinel-tier1.sh:55-77`). No change.
+- [Pass] The harvester flushes on a succeeding Side Finding, any heading, thematic break, and EOF without surfacing parser/write failure (`relay-automation/harvest-findings.sh:25-41`); adversarial coverage checks quote/backslash/tab, boundary separation, and CRLF/non-tab control normalization through a real JSON decoder (`test/sentinel-tier1.sh:80-126`). No change.
+- [Pass] The Tier-1 tests are registered in the runtime gate and `debug.log` remains ignored (`validate.sh:117-118`; `.gitignore:59-60`). No change.
+
+**Verdict: Approved**
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
