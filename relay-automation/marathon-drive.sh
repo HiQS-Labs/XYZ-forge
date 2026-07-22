@@ -164,6 +164,10 @@ debug_mantra_note() {  # <prior-count> <phase-dir> <debug-mantra-file>
 # failed/forced `tick analyze` is swallowed best-effort — it can never change the driven run's own
 # exit code (wired via the EXIT trap below, same one the lock cleanup uses).
 : "${MARATHON_COST_SUMMARY:=1}"
+# Sentinel Tier 1 (GH-281): opt-in debug capture. Default OFF — public-repo posture (no phone-home).
+# When 1, harness signals append to a single PDDA-output-contract JSONL file at repo root.
+: "${XYZ_DEBUG_LOG:=0}"
+: "${DEBUG_LOG_FILE:=$ROOT/debug.log}"
 MARATHON_DRIVE_STARTED=0
 xyz_marathon_cost_summary() {
   [[ "$MARATHON_DRIVE_STARTED" == "1" ]] || return 0
@@ -208,6 +212,11 @@ if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
       exit 1
     fi
     printf 'marathon-drive: reclaiming stale relay-driver.lock (holder pid %s not running).\n' "${_holder:-none}" >&2
+    # Sentinel Tier 1 (GH-281): the append helper isn't defined this early — inline a gated write.
+    if [[ "${XYZ_DEBUG_LOG:-0}" == "1" ]]; then
+      { printf '{"timestamp":"%s","severity":"info","check":"marathon.stale-lock","scope":"harness","repo":"%s","message":"stale driver lock reclaimed","action":"none (auto-healed)"}\n' \
+          "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$ROOT" >> "${DEBUG_LOG_FILE:-$ROOT/debug.log}"; } 2>/dev/null || true
+    fi
     rm -rf "$_lock"
     mkdir "$_lock" 2>/dev/null || { printf 'marathon-drive: could not acquire relay-driver.lock after reclaiming a stale one.\n' >&2; exit 1; }
     # ponytail: tiny TOCTOU window (two drivers could both reclaim a stale lock); acceptable for a
@@ -271,6 +280,24 @@ xyz_marathon_emit() {  # <health> <description>
   # into its generated command via XYZ_SESSION_ID); fall back to PHASE_ID otherwise (GH-75 review).
   sid="${XYZ_SESSION_ID:-$PHASE_ID}"
   "$XYZ_APPEND_BIN" "$harness" "$sid" "$health" "$title" "$desc" >/dev/null 2>&1 || true
+}
+
+# Sentinel Tier 1 (GH-281): append ONE PDDA-output-contract JSONL finding to $DEBUG_LOG_FILE.
+# Opt-in (XYZ_DEBUG_LOG=1), default off. Writes only this one local file — no network, no
+# PDDA-ACTIVITY.jsonl, no telemetry. NEVER fails the run.
+_json_esc() {  # normalize all C0/DEL controls (UTF-8 safe), then escape backslash + quote
+  local s="$1"; s="$(printf '%s' "$s" | tr '\000-\037\177' ' ')"; s="${s//\\/\\\\}"; s="${s//\"/\\\"}"
+  printf '%s' "$s"
+}
+xyz_debug_log_append() {  # <severity> <check> <message> [file] [action] [probe]
+  [[ "${XYZ_DEBUG_LOG:-0}" == "1" ]] || return 0
+  local sev="$1" chk="$2" msg="$3" file="${4:-}" action="${5:-}" probe="${6:-}" ts scope
+  ts="$(date -u +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || echo unknown)"
+  scope="${TARGET_ROOT:+target:$TARGET_ROOT}"; scope="${scope:-harness}"
+  printf '{"timestamp":"%s","severity":"%s","check":"%s","scope":"%s","repo":"%s","phase":"%s","task":"%s","file":"%s","line":"","message":"%s","action":"%s","probe":"%s"}\n' \
+    "$ts" "$sev" "$chk" "$(_json_esc "$scope")" "$(_json_esc "${TARGET_ROOT:-$ROOT}")" "$(_json_esc "${PHASE_ID:-}")" "$(_json_esc "${RELAY_TASK:-}")" \
+    "$(_json_esc "$file")" "$(_json_esc "$msg")" "$(_json_esc "$action")" "$(_json_esc "$probe")" \
+    >> "$DEBUG_LOG_FILE" 2>/dev/null || true
 }
 
 file_status() { sed -n 's/^STATUS:[[:space:]]*//p' "$RELAY_FILE" | head -1 | sed 's/[[:space:]]*$//'; }
@@ -601,6 +628,12 @@ export TICK_REPO_ROOT="$ROOT"
 # duplicating its gate/requires-test/telemetry logic.
 escalate() {  # <reason> <relay-exit>
   local reason="$1" rexit="$2"
+  # Sentinel Tier 1 (GH-281): harvest a failed phase's Side Findings before they are lost.
+  if [[ "${XYZ_DEBUG_LOG:-0}" == "1" && -x "$HERE/harvest-findings.sh" ]]; then
+    "$HERE/harvest-findings.sh" --relay "$RELAY_FILE" \
+      --scope "${TARGET_ROOT:+target:$TARGET_ROOT}" --repo "${TARGET_ROOT:-$ROOT}" \
+      --out "${DEBUG_LOG_FILE:-$ROOT/debug.log}" >/dev/null 2>&1 || true
+  fi
   cat > "$PHASE_DIR/ESCALATION.md" << ESC_EOF
 # ESCALATION — Marathon Phase ${PHASE_ID}
 
@@ -614,6 +647,8 @@ ESC_EOF
   git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} escalation (${reason})"
   "$TICK_BIN" log marathon.phase.escalated "$RELAY_TASK" --agent marathon > /dev/null || true
   log "escalation written: $PHASE_DIR/ESCALATION.md (reason: $reason)"
+  xyz_debug_log_append error "marathon.escalation" "$reason (relay-drive-exit=$rexit)" \
+    "$REL_RELAY" "promote to PROJECT/1-INBOX capture doc"
 }
 
 save_transcript() {
@@ -625,6 +660,12 @@ save_transcript() {
   local ts; ts="$(date +%H%M%S)"
   local dest="$date_dir/marathon-${PHASE_ID}-${ts}.md"
   cp "$RELAY_FILE" "$dest"
+  # Sentinel Tier 1 (GH-281): harvest Side Findings from the saved transcript.
+  if [[ "${XYZ_DEBUG_LOG:-0}" == "1" && -x "$HERE/harvest-findings.sh" ]]; then
+    "$HERE/harvest-findings.sh" --relay "$RELAY_FILE" \
+      --scope "${TARGET_ROOT:+target:$TARGET_ROOT}" --repo "${TARGET_ROOT:-$ROOT}" \
+      --out "${DEBUG_LOG_FILE:-$ROOT/debug.log}" >/dev/null 2>&1 || true
+  fi
   git -C "$ROOT" add -- "$dest"
   if git -C "$ROOT" diff --cached --quiet -- "$dest"; then
     log "transcript unchanged: $dest"
@@ -759,6 +800,13 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
    - ${TICK_CLI} ping ${RELAY_TASK} --agent ${BUILDER}
    - ${TICK_CLI} release ${RELAY_TASK} --agent ${BUILDER} --to ${REVIEWER}
 4. ${BUILDER_SCOPE_LINE}
+5. SIDE FINDINGS: if you notice a bug, hazard, or missing test OUTSIDE your allowed paths, do NOT fix or touch it. Append a block to this relay file in exactly this shape:
+   ### Side Finding
+   - path: <repo-relative file>
+   - symptom: <one line: what is wrong>
+   - suspected_cause: <one line>
+   - probe: <a single command that currently DEMONSTRATES the bug (exits nonzero or greps the bad evidence — it must detect the BUG, not the fix)>
+   Off-lane edits are reverted by the harness; a Side Finding block is the only channel that survives.
 
 ---
 
@@ -770,6 +818,7 @@ You are the REVIEWER for this phase. ${REVIEWER_READ_LINE}
 3. If satisfied: add \`**Verdict:** Approved\`, set \`STATUS: Approved\`, then: ${TICK_CLI} done ${RELAY_TASK} --agent ${REVIEWER}
 4. Use this exact tick binary (run it from any directory) for all token operations: ${TICK_CLI}
    ${REVIEWER_SCOPE_LINE}
+5. SIDE FINDINGS: if your review surfaces an out-of-scope bug, record it as a \`### Side Finding\` block (path / symptom / suspected_cause / probe) instead of requesting off-scope changes.
 RELAY_EOF
 
 if ((DRY_RUN)); then
@@ -833,7 +882,12 @@ reconcile_relay_task() {
 # (keyed on the marathon-scoped lane-state key when present, else bare PHASE_ID), seeding no token;
 # --force overrides. Counted here, so the nested relay-drive below (LANE_ATTEMPT_COUNTED=1) does not
 # double-count this same lane.
-lane_attempt_gate "${TICK_REPO_ROOT:-$ROOT}" "$LANE_STATE_KEY" "$FORCE" || exit $?
+_lag_rc=0; lane_attempt_gate "${TICK_REPO_ROOT:-$ROOT}" "$LANE_STATE_KEY" "$FORCE" || _lag_rc=$?
+if [[ "$_lag_rc" -eq 8 ]]; then
+  xyz_debug_log_append warn "marathon.lane-park" "lane $LANE_STATE_KEY parked at attempt cap" \
+    "" "re-anchor to QUEUE lanes or re-fire with --force"
+fi
+[[ "$_lag_rc" -eq 0 ]] || exit "$_lag_rc"
 
 reconcile_relay_task
 
