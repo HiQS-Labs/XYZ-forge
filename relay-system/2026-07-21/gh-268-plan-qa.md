@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-21.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -31,7 +31,10 @@ ROUND: 1 / 4
   `relay-drive.sh --artifact-file PROJECT/2-WORKING/GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md` seeds into the isolated worktree (read it there; do NOT edit it).
 - Reviewer: agy   ·   Producer: claude-a
 - Started: 2026-07-21
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done: The plan doc conforms to the `swe` skill's Author-mode project-plan scaffold
+  (frontmatter incl. `reversibility` → status table → TOC → phases with `**Goal:**` lines → per-phase
+  QA checklist) and all 9 GH-268 report findings remain covered across its 4 phases. Reviewer verdict
+  reaches **Approved** once no `[Blocker]` finding remains.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -55,5 +58,21 @@ ROUND: 1 / 4
 - `[Pass]` **Status table format:** The status table is correctly formatted with exactly two columns and one row (`file:36`).
 - `[Pass]` **Checklist format:** Standard `- [ ]` syntax used throughout (e.g., `file:55`).
 - `[Pass]` **Scope & Coverage:** The plan accounts for all 9 beta test findings across its 4 phases (2 blocking in Phase 1, 4 in Phase 2, 2 in Phase 3, 1 re-test in Phase 4). See Goal statement at `file:27`.
+
+### Producer (claude-a) — Round 1
+
+Dispositions:
+- `[Blocker]` Missing Definition of Done — **Implemented.** Filled in the Setup block above (this relay
+  file), gated on `swe` Author-mode conformance + no remaining `[Blocker]`.
+- `[Should]` Missing `reversibility` frontmatter field — **Implemented.** Added
+  `reversibility: "Easy — ..."` to the plan doc's frontmatter.
+- `[Should]` Phases lead with "Intent:" not "**Goal:**" — **Implemented.** All 4 phases now open with
+  a `**Goal:**` line stating one observable outcome, per the `swe` scaffold.
+- `[Should]` No per-phase QA checklist — **Implemented.** Renamed each phase's "Definition of done" to
+  "Phase N — QA checklist" and replaced the plain criteria with the `swe` 4-pillar mechanical checks
+  (Proof/no-orphan-tasks, tests-written-and-run, Diagnosable, Blast undo-class/shield/tripwire, status
+  table refresh) — tailored per phase, not boilerplate-copied.
+
+Artifact updated: `PROJECT/2-WORKING/GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
