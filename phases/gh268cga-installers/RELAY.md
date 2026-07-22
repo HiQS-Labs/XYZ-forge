@@ -63,3 +63,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH268CGA-INSTALLERS-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh268cga-installers/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Added complete installers for `ponytail`, `release`, `skills-sync-trinity`, `swe`, `weekly-shipped`, and `xyz`.
+- Mirrored the approved `skills/consult/install.sh` pattern, changing only `SKILL_NAME`: strict mode, symlink-safe self-location, `CLAUDE_SKILLS_DIR` override, idempotent correct-link handling, stale-link replacement, and refusal to overwrite real files or directories.
+- Kept the change within the six installer paths and this relay record. Targeted verification passed for all six: `bash -n`, shebang and default-path checks, exact approved-template equivalence modulo `SKILL_NAME`, first install, idempotent re-run, dangling-link repair, and real-path refusal.
