@@ -186,6 +186,71 @@ grep -q "pre-advance-failed" "$A/phases/p1/ESCALATION.md" \
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (6b) GH-273: post-approve hook parity, ordering, and failure semantics ─
+POST_APPROVE_PASS="$WORK/post-approve-pass.sh"
+cat > "$POST_APPROVE_PASS" <<'HOOK'
+#!/usr/bin/env bash
+set -euo pipefail
+ls "$POST_EVENT_DIR"/*marathon.phase.approved* >/dev/null 2>&1
+printf 'ran-after-approval\n' >> "$POST_MARKER"
+HOOK
+chmod +x "$POST_APPROVE_PASS"
+POST_APPROVE_FAIL="$WORK/post-approve-fail.sh"
+cat > "$POST_APPROVE_FAIL" <<'HOOK'
+#!/usr/bin/env bash
+set -euo pipefail
+ls "$POST_EVENT_DIR"/*marathon.phase.approved* >/dev/null 2>&1
+printf 'ran-after-approval\n' >> "$POST_MARKER"
+exit 17
+HOOK
+chmod +x "$POST_APPROVE_FAIL"
+
+for runtime in 0 1; do
+  HELP_OUT="$(MARATHON_ROOT="$A" XYZ_PYTHON="$runtime" bash "$DRIVER" --help 2>&1)"; rc=$?
+  [ "$rc" -eq 0 ] && printf '%s\n' "$HELP_OUT" | grep -q -- '--post-approve-cmd' \
+    && pass "GH-273: XYZ_PYTHON=$runtime help documents --post-approve-cmd" \
+    || fail "GH-273: XYZ_PYTHON=$runtime help omitted --post-approve-cmd: $HELP_OUT"
+
+  POST_MARKER="$WORK/post-approve-omitted-$runtime"
+  rm -f "$POST_MARKER"
+  POST_APPROVE_CMD="POST_EVENT_DIR='$A/.tick/events' POST_MARKER='$POST_MARKER' bash '$POST_APPROVE_PASS'" \
+    XYZ_PYTHON="$runtime" RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 0 ] && [ ! -e "$POST_MARKER" ] \
+    && pass "GH-273: XYZ_PYTHON=$runtime omitted hook preserves the existing happy path" \
+    || fail "GH-273: XYZ_PYTHON=$runtime omitted hook changed default behavior (exit=$rc)"
+  rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+  git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+  POST_MARKER="$WORK/post-approve-pass-$runtime"
+  rm -f "$POST_MARKER"
+  POST_CMD="POST_EVENT_DIR='$A/.tick/events' POST_MARKER='$POST_MARKER' bash '$POST_APPROVE_PASS'"
+  XYZ_PYTHON="$runtime" RELAY_DRIVE_EXIT=0 run_driver --post-approve-cmd "$POST_CMD" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 0 ] && [ "$(grep -c '^ran-after-approval$' "$POST_MARKER" 2>/dev/null || true)" = "1" ] \
+    && pass "GH-273: XYZ_PYTHON=$runtime passing hook runs exactly once after approval" \
+    || fail "GH-273: XYZ_PYTHON=$runtime passing hook exit=$rc or did not run exactly once"
+  rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+  git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+  POST_MARKER="$WORK/post-approve-fail-$runtime"
+  rm -f "$POST_MARKER"
+  POST_CMD="POST_EVENT_DIR='$A/.tick/events' POST_MARKER='$POST_MARKER' bash '$POST_APPROVE_FAIL'"
+  XYZ_PYTHON="$runtime" RELAY_DRIVE_EXIT=0 run_driver --post-approve-cmd "$POST_CMD" >/dev/null 2>&1; rc=$?
+  [ "$rc" -eq 9 ] \
+    && pass "GH-273: XYZ_PYTHON=$runtime failing hook exits 9" \
+    || fail "GH-273: XYZ_PYTHON=$runtime failing hook exit=$rc (expected 9)"
+  [ "$(grep -c '^ran-after-approval$' "$POST_MARKER" 2>/dev/null || true)" = "1" ] \
+    && pass "GH-273: XYZ_PYTHON=$runtime failing hook still runs exactly once after approval" \
+    || fail "GH-273: XYZ_PYTHON=$runtime failing hook did not run exactly once"
+  grep -q '^reason: post-approve-failed$' "$A/phases/p1/ESCALATION.md" 2>/dev/null \
+    && pass "GH-273: XYZ_PYTHON=$runtime failing hook records post-approve-failed" \
+    || fail "GH-273: XYZ_PYTHON=$runtime failing hook escalation reason missing"
+  ls "$A/.tick/events/" 2>/dev/null | grep -q 'marathon.phase.approved' \
+    && pass "GH-273: XYZ_PYTHON=$runtime approval remains logged when closeout fails" \
+    || fail "GH-273: XYZ_PYTHON=$runtime closeout failure retroactively lost approval"
+  rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+  git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+done
+
 # ── (7) relay cap/mismatch (exit 4) → ESCALATION.md, driver exits 4 ──────
 RELAY_DRIVE_EXIT=4 run_driver >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 4 ] && pass "relay cap escalation exits 4" || fail "relay cap exit=$rc (expected 4)"

@@ -34,6 +34,7 @@ fi
 #                                subprocess instead — an explicit, cost-acknowledged opt-in)
 #     [--round-cap  <N>]         relay-drive round cap (default: 5 = 2*2+1)
 #     [--pre-advance-cmd <CMD>]  gate before phase.approved (default: bash validate.sh)
+#     [--post-approve-cmd <CMD>] optional command after phase.approved + green telemetry (default: unset)
 #     [--phases-dir <DIR>]       where to create phases/<id>/ (default: <repo-root>/phases)
 #     [--phase-id <ID>]          which phase to drive: phases/<id>/ (default: p1; the orchestrator sets it)
 #     [--relay-task <ID>]        tick task name (default: MARATHON-<PHASE_ID>-TURN)
@@ -58,7 +59,7 @@ fi
 #        reason: pre-advance-failed vs. requires-test-missing) ·
 #        6 containment violation (turn-taker reverted an off-lane edit) ·
 #        7 turn timeout / hang · 8 lane parked (GH-45 attempt cap — no token seeded; re-fire with
-#        --force) · 2 usage.
+#        --force) · 9 post-approve command failed (phase remains approved) · 2 usage.
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # _xyz_harness: the directory containing relay-automation/ (and bin/, src/, utils/).
@@ -315,6 +316,15 @@ run_pre_advance_gate() {
   )
 }
 
+run_post_approve_cmd() {
+  (
+    if [[ -n "$TARGET_ROOT" ]]; then
+      cd "$TARGET_ROOT"
+    fi
+    eval "$POST_APPROVE_CMD"
+  )
+}
+
 artifacts_exist_for_timeout() {
   local root path
   [[ -n "$ARTIFACT_PATHS" ]] || return 1
@@ -369,6 +379,8 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
                           cost-acknowledged choice, not the default.
   --round-cap N           relay-drive turn cap (default: 5).
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh).
+  --post-approve-cmd CMD  Optional command after phase.approved + green telemetry (default: unset).
+                          Failure preserves approval, writes reason post-approve-failed, and exits 9.
   --phases-dir DIR        Where to create phases/<id>/ (default: <repo-root>/phases).
   --phase-id ID           Which phase to drive: phases/<id>/ (default: p1).
   --relay-task ID         Tick task name (default: MARATHON-<PHASE_ID>-TURN).
@@ -392,6 +404,7 @@ BUILDER="codex"
 REVIEWER=""
 ROUND_CAP=5
 PRE_ADVANCE_CMD=""   # resolved to default after ROOT is set
+POST_APPROVE_CMD=""  # optional command after approval + green telemetry; empty = disabled
 PHASES_DIR=""        # resolved to default after ROOT is set
 PHASE_ID="p1"        # which phase this invocation drives (phases/<id>/); the orchestrator sets it
 RELAY_TASK=""        # resolved to MARATHON-<PHASE_ID>-TURN after parsing, unless given
@@ -410,6 +423,7 @@ while (($# > 0)); do
     --reviewer)        REVIEWER="${2:-}"; shift 2 ;;
     --round-cap)       ROUND_CAP="${2:-}"; shift 2 ;;
     --pre-advance-cmd) PRE_ADVANCE_CMD="${2:-}"; shift 2 ;;
+    --post-approve-cmd) POST_APPROVE_CMD="${2:-}"; shift 2 ;;
     --phases-dir)      PHASES_DIR="${2:-}"; shift 2 ;;
     --phase-id)        PHASE_ID="${2:-}"; shift 2 ;;
     --relay-task)      RELAY_TASK="${2:-}"; shift 2 ;;
@@ -621,7 +635,7 @@ save_transcript() {
 }
 
 complete_phase_success() {
-  local success_mode="${1:-approved}" gate_exit=0 success_text=""
+  local success_mode="${1:-approved}" gate_exit=0 post_approve_exit=0 success_text=""
   log "relay approved — running pre-advance gate: $PRE_ADVANCE_CMD"
   run_pre_advance_gate || gate_exit=$?
   if [[ "$gate_exit" -ne 0 ]]; then
@@ -649,6 +663,15 @@ complete_phase_success() {
   xyz_marathon_heartbeat_clear
   log "$success_text"
   xyz_marathon_emit green "$success_text"
+  if [[ -n "$POST_APPROVE_CMD" ]]; then
+    log "phase approved — running post-approve command: $POST_APPROVE_CMD"
+    run_post_approve_cmd || post_approve_exit=$?
+    if [[ "$post_approve_exit" -ne 0 ]]; then
+      log "post-approve command FAILED (exit $post_approve_exit) — phase remains approved; escalating closeout"
+      escalate "post-approve-failed" 0
+      exit 9
+    fi
+  fi
   exit 0
 }
 
