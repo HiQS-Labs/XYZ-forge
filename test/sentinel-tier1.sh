@@ -20,13 +20,13 @@ cat > "$RELAY_FIXTURE" <<'EOF'
 # Relay fixture
 
 ### Side Finding
-- path: relay-automation/alpha.sh
+- path: src/alpha.js
 - symptom: first symptom
 - suspected_cause: first cause
 - probe: printf alpha
 
 ### Side Finding
-- path: relay-automation/beta.sh
+- path: src/beta.js
 - symptom: second symptom
 - suspected_cause: second cause
 - probe: printf beta

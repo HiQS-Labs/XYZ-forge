@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 107 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
+Summary: 108 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-281 · Sentinel / Debug Flywheel — opt-in debug capture (public) + private triage overlay | — | [GH-281-SENTINEL-DEBUG-FLYWHEEL.md](PROJECT/1-INBOX/GH-281-SENTINEL-DEBUG-FLYWHEEL.md) · [#281](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/281) · [GH-281-SENTINEL-TIER1-STAGE0.md](PROJECT/2-WORKING/GH-281-SENTINEL-TIER1-STAGE0.md) |
 | GH-276 · Weekly risk-control reconciliation — keeping GH-275 on the ball | — | [GH-276-WEEKLY-RISK-RECONCILIATION.md](PROJECT/1-INBOX/GH-276-WEEKLY-RISK-RECONCILIATION.md) · [#276](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/276) |
 | GH-275 · Long-Term Risk Remediation — balanced, evidence-led safety program | — | [GH-275-LONG-TERM-RISK.md](PROJECT/1-INBOX/GH-275-LONG-TERM-RISK.md) · [#275](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/275) |
 | GH-274 · marathon-drive: re-invoking a phase whose tick token is already done clobbers RELAY.md's Approved record instead of detecting a satisfied lane | — | [GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md](PROJECT/2-WORKING/GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md) · [#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274) |
