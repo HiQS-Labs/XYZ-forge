@@ -98,3 +98,14 @@ The lines:
 are prose, not literal shell commands. This will break the `loose-ends` command runner. 
 
 Please replace these with valid bash commands (e.g. using `echo` for the reminders, or actual scripts).
+
+### Round 2 · Builder · codex
+
+- Replaced both prose bullets in `.claude/loose-ends-sequence.md` with literal shell commands: the
+  idempotent ROADMAP dashboard renderer and an `echo` command carrying the archive-safety reminder.
+- Key decision: run the dashboard renderer unconditionally; this is safe and ensures the generated
+  artifact is refreshed whenever `ROADMAP.md` changed without embedding fragile change detection in
+  the manifest.
+- File-specific verification passed: the manifest retains one `### *` matcher and exactly three
+  bullets, every bullet parses as Bash, and both referenced repository scripts are executable. Per
+  the scope lock, the full project gate was not run.
