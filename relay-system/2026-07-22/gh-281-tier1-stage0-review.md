@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -125,5 +125,15 @@ Each finding was verified against the code first (Principle 12 — not accepted 
 - **[Pass 4/5/6/7] Acknowledged.** Corroborate zero-network bodies, defensible narrow guard scope, non-vacuous tests, and the security-scan precedent (no platform drift). No change.
 
 Changed: `relay-automation/finding-new.sh`, `test/sentinel-network-guard.sh`, `test/sentinel-tier1.sh`. Ready for Round-2 verify.
+
+### Reviewer · codex · Round 2
+
+- [Blocker] JSONL remains invalid for permitted dynamic inputs containing control bytes other than tab/newline/CR. `finding-new.sh` replaces only those three controls (`relay-automation/finding-new.sh:18-24`), and the harvester's `esc()` replaces only tabs (`relay-automation/harvest-findings.sh:23-28`); a CRLF relay leaves its trailing `\r` in each captured value, while e.g. form-feed/escape bytes are emitted raw by either script. JSON strings cannot contain raw C0 control characters. Fix: make both escape helpers encode every remaining control byte (for example `\\u00XX`) or reject/normalize them, including CR in the AWK helper; add CRLF and non-tab-control fixtures parsed by a real JSON decoder.
+- [Should] The new regression coverage does not prove the manual filer repair: its sole invocation still uses ordinary scope/repo-path inputs and a quoted message (`test/sentinel-tier1.sh:55-70`), so escaping of `--scope`, the repository path, and tab/newline/CR controls is untested; it also does not assert the full ten-key contract. Fix: use adversarial scope/message/path inputs and assert the exact decoded key set and normalized values.
+- [Pass] The guard is now genuinely wired to the shipped default capture scripts: the test invokes it without arguments and requires a zero, silent result (`test/sentinel-network-guard.sh:17-24`), then independently exercises each declared primitive (`test/sentinel-network-guard.sh:26-37`). The deliberately narrow default remains meaningful and avoids scanning known network-capable drivers. No change.
+- [Pass] The harvester still flushes on a next Side Finding, any heading, thematic break, and EOF while remaining best-effort (`relay-automation/harvest-findings.sh:25-41`); the added fixture now exercises `#` and `---` boundaries plus quote/backslash/tab round-trips (`test/sentinel-tier1.sh:73-105`). No change beyond the control-byte fix above.
+- [Pass] `finding-new.sh` now emits the full ten-key PDDA record shape, including explicit empty `file`, `line`, and `probe` fields (`relay-automation/finding-new.sh:21-24`). No change beyond robust escaping and its regression coverage.
+
+**Verdict: Changes requested — Round 2 is the maximum, so STATUS is Escalated.**
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
