@@ -1,5 +1,5 @@
 # Marathon Phase gh268cgb-installers
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH268CGB-INSTALLERS-TURN builder=codex reviewer=agy round-cap=6 -->
@@ -64,3 +64,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Created `skills/relay-automation/install.sh` by mirroring the approved `skills/consult/install.sh` pattern with `SKILL_NAME="relay-automation"`.
 - Kept the installer self-locating and symlink-safe, honored `CLAUDE_SKILLS_DIR`, preserved idempotent repair behavior, and refused to overwrite real files or directories.
 - Verified with `bash -n` and contained temporary-directory checks covering first install, idempotent rerun, dangling-link repair, real-directory refusal, and invocation through a symlink.
+
+### Round 1 · Reviewer · agy
+
+The implementation in `skills/relay-automation/install.sh` correctly mirrors the specified reference file `skills/consult/install.sh`. It is idempotent, safely self-locating, properly honors `CLAUDE_SKILLS_DIR`, safely skips existing real files/directories, and sets the correct `SKILL_NAME="relay-automation"`.
+
+**Verdict:** Approved
