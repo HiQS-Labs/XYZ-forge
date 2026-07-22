@@ -1,5 +1,9 @@
 # Git Worktree Safety Guide for Agents
 
+Author: Noel Saw (@noelsaw1)
+Licensed under: Apache 2.0
+Copyright 2026 Neochrome, Inc.
+
 > **Purpose:** Prevent destructive footguns when scripting with Git worktrees.  
 > **Scope:** Shell scripts, CI pipelines, and agent workflows that create, manage, or clean up worktrees.
 
@@ -405,3 +409,8 @@ disposable, which after a partial-corruption incident it specifically is not.
 - [git-fsck](https://git-scm.com/docs/git-fsck) — integrity check, first step after any suspected `.git` corruption
 - [git-gc](https://git-scm.com/docs/git-gc) — documents the `--prune=now` concurrency risk cited in §6
 - Related: [Temp Directory Safety Guide](./temp-dir-safety.md) — for the `mktemp` failure mode that can cascade into worktree destruction
+
+---
+
+Licensed under: Apache 2.0
+Copyright 2026 Neochrome, Inc.
