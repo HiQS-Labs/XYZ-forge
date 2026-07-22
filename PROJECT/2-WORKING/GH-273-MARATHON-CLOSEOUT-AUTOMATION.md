@@ -194,31 +194,38 @@ session can start at "review the PR" instead of "do the ceremony."
 
 ## Swarm Preflight Contract
 
-Scoped to Phase 2 only (one new manifest file; no scripts or harness code touched). Phases 0-1
-SHIPPED 2026-07-21 (see Status table + CHANGELOG). Phases 3-4 each need their own contract redraft
-once the phase before them ships — same pattern as `GH-268`.
+Scoped to Phase 3 only (one new script + its regression test). Phases 0-2 SHIPPED 2026-07-21 (see
+Status table + CHANGELOG). Phase 4 needs its own contract redraft once Phase 3 ships — same pattern
+as `GH-268`.
 
-**Sharpened by reading `~/.claude/skills/loose-ends/SKILL.md` directly** (not just inferring): the
-manifest mechanism already exists and is exact, not something Phase 2 invents. `loose-ends` checks
-`./.claude/loose-ends-sequence.md` (project-local) with precedence over `~/.claude/loose-ends-sequence.md`
-(global) — local wins outright, the global file is not consulted if local exists. Format: Markdown
-headings as repo matchers (`### *` for the project-local file, since it's already scoped to one
-repo by its path), plain `- cmd` bullets beneath, relative paths resolved against the manifest's own
-directory (not CWD). Phase 2 is therefore just **authoring that file for this repo** — no new code.
+**Safety scope, read carefully — this phase authors a script capable of `git push`/PR-create/merge,
+which is materially different from Phases 0-2's prompt/config files:**
+
+- `marathon-closeout.sh` MUST support `--dry-run` (print the exact sequence of `git`/`gh` commands
+  it would run, execute nothing) and that must be the mode its own test suite exercises for the real
+  sequence logic.
+- Its regression test (`test/marathon-closeout.sh`) MUST NOT make any real network call or touch
+  this repo's real GitHub remote — no real `git push`, no real `gh pr create`, no real merge. Follow
+  this repo's existing PATH-shadow stubbing pattern (seen in `test/claude-turn.sh`: "builder cannot
+  spawn codex/gemini — PATH-shadow blocks them") to stub `git`/`gh` inside a disposable scratch repo
+  under `$WORK`, and assert on the stubbed commands' arguments, not on real repo/GitHub state.
+- The builder turn itself must not invoke `marathon-closeout.sh` for real against this repo either
+  (`ALLOW_PATHS` doesn't include a live push regardless — call this out explicitly in case the
+  builder considers "testing it for real" a shortcut).
 
 ```json
 {
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "path_absent", "path": ".claude/loose-ends-sequence.md" }
+    { "type": "path_absent", "path": "relay-automation/marathon-closeout.sh" }
   ],
-  "artifacts": [ ".claude/loose-ends-sequence.md" ],
-  "artifacts_new": [ ".claude/loose-ends-sequence.md" ],
+  "artifacts": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ],
+  "artifacts_new": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ],
   "remediation": {
     "source": "issue#273",
-    "criteria": ".claude/loose-ends-sequence.md exists, uses a '### *' heading per the loose-ends skill's project-local matcher rule, and lists this repo's actual closeout commands as '- cmd' bullets: utils/pdda/pdda.sh run (PDDA sweep), utils/roadmap-dashboard.sh (regenerate the generated ROADMAP-DASHBOARD.md artifact whenever ROADMAP.md changed -- a real gap hit live during this same GH-273 fire, see CHANGELOG), and a reminder that PROJECT/2-WORKING docs move to PROJECT/3-COMPLETED only once VERIFIED-COMPLETE per marathon-cleanup's classification, never on a bare status-word change. No code changes; content must follow the loose-ends SKILL.md's documented format exactly (heading + bullets, no prose the parser would misread as a command)."
+    "criteria": "relay-automation/marathon-closeout.sh exists and implements the deterministic half of Phase 1's /post-marathon sequence as one script: commit+push all changed files including manual edits -> open a PR with notes -> merge if green (checks pass, mergeable) -> pull and switch back to development. Supports --dry-run (prints the exact command sequence, executes nothing) as a first-class mode. Ships with test/marathon-closeout.sh that stubs git/gh via PATH-shadow in a disposable scratch repo (never touches this repo's real remote or GitHub), covering: dry-run prints the right sequence and mutates nothing; happy path (green checks) proceeds through push/PR/merge/pull/switch; a red/unmergeable check halts before merge without pushing further; manual pre-existing edits are included in the commit, not dropped. bash -n clean. validate.sh no worse than baseline."
   },
-  "lanes": { "agy_safe": [ ".claude/loose-ends-sequence.md" ], "orchestrator_only": [] }
+  "lanes": { "agy_safe": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ], "orchestrator_only": [] }
 }
 ```
