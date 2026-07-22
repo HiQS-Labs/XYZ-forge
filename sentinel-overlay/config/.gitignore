@@ -1,0 +1,3 @@
+# The runtime activation config is local-only — it is what turns the overlay ON for an operator.
+# Committing it would defeat inert-by-default. The committed runtime.env.example documents the shape.
+runtime.env
