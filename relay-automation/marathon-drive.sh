@@ -288,6 +288,24 @@ token_state() {
   printf '%s\t%s\n' "$status" "$actor"
 }
 
+# GH-274: has this phase's relay ALREADY reached a terminal state (RELAY_FILE's STATUS is
+# Approved/Closed) with its tick token ALREADY `done`? If so there is nothing left to
+# (re)build or (re)review — the only reason to re-invoke marathon-drive.sh for it is to
+# retry a flaky --pre-advance-cmd without touching the phase's own record. A `done` tick
+# token can never be reopened (reconcile_relay_task's correct, existing behavior), so
+# re-rendering + re-seeding here would only clobber the accurate terminal RELAY.md before
+# failing anyway. Checked before Step 1's render (below); extends GH-207's already-satisfied
+# detection (recover_already_satisfied_lane, triggered mid-relay on a no-progress reroute)
+# to this separate post-terminal-gate-retry trigger.
+satisfied_lane_terminal() {
+  local s tstatus actor
+  [[ -f "$RELAY_FILE" ]] || return 1
+  s="$(file_status)"
+  terminal_status "$s" || return 1
+  IFS=$'\t' read -r tstatus actor < <(token_state)
+  [[ "$tstatus" == "done" ]]
+}
+
 run_pre_advance_gate() {
   (
     if [[ -n "$TARGET_ROOT" ]]; then
@@ -558,6 +576,94 @@ PHASE_DIR="$PHASES_DIR/$LANE_STATE_KEY"
 RELAY_FILE="$PHASE_DIR/RELAY.md"
 REL_RELAY="${RELAY_FILE#"$ROOT"/}"   # repo-root-relative path the agent edits / declares in claim --paths
 
+# Bound early (moved ahead of Step 3's own copy below) so the GH-274 satisfied-lane check
+# just below — and the escalate/complete_phase_success defs it may call — read/write tick
+# state against the right repo even when a caller invoked us without pre-exporting it.
+export TICK_REPO_ROOT="$ROOT"
+
+# escalate/save_transcript/complete_phase_success are defined here (ahead of Step 1) instead
+# of beside their Step 6 call sites so the GH-274 satisfied-lane short-circuit below — which
+# must run BEFORE Step 1's render — can call complete_phase_success directly rather than
+# duplicating its gate/requires-test/telemetry logic.
+escalate() {  # <reason> <relay-exit>
+  local reason="$1" rexit="$2"
+  cat > "$PHASE_DIR/ESCALATION.md" << ESC_EOF
+# ESCALATION — Marathon Phase ${PHASE_ID}
+
+phase: ${PHASE_ID}
+task: ${RELAY_TASK}
+relay-drive-exit: ${rexit}
+reason: ${reason}
+relay-file: ${REL_RELAY}
+ESC_EOF
+  git -C "$ROOT" add -- "$PHASE_DIR/ESCALATION.md"
+  git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} escalation (${reason})"
+  "$TICK_BIN" log marathon.phase.escalated "$RELAY_TASK" --agent marathon > /dev/null || true
+  log "escalation written: $PHASE_DIR/ESCALATION.md (reason: $reason)"
+}
+
+save_transcript() {
+  # GH-30 Phase 2: resolve the transcript base (honors XYZ_ARCHIVE_ROOT; hard-errors if set-invalid).
+  # Declare then assign separately so the resolver's exit code isn't masked by `local` under set -e.
+  local date_dir _ts_base; _ts_base="$(rtl_transcript_root "$ROOT")" || return 1
+  date_dir="$_ts_base/$(date +%Y-%m-%d)"
+  mkdir -p "$date_dir"
+  local ts; ts="$(date +%H%M%S)"
+  local dest="$date_dir/marathon-${PHASE_ID}-${ts}.md"
+  cp "$RELAY_FILE" "$dest"
+  git -C "$ROOT" add -- "$dest"
+  if git -C "$ROOT" diff --cached --quiet -- "$dest"; then
+    log "transcript unchanged: $dest"
+  else
+    git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} transcript saved (${RELAY_TASK})"
+    log "transcript saved: $dest"
+  fi
+}
+
+complete_phase_success() {
+  local success_mode="${1:-approved}" gate_exit=0 success_text=""
+  log "relay approved — running pre-advance gate: $PRE_ADVANCE_CMD"
+  run_pre_advance_gate || gate_exit=$?
+  if [[ "$gate_exit" -ne 0 ]]; then
+    log "pre-advance gate FAILED (exit $gate_exit) — escalating"
+    escalate "pre-advance-failed" 0
+    xyz_marathon_heartbeat_clear
+    xyz_marathon_emit red "halted at phase ${PHASE_ID} — pre-advance gate failed"
+    exit 5
+  fi
+  if [[ -n "$REQUIRES_TEST" ]] && ! requires_test_delta "$REQUIRES_TEST"; then
+    log "requires-test FAILED — no new/updated test detected at: $REQUIRES_TEST"
+    escalate "requires-test-missing" 0
+    xyz_marathon_heartbeat_clear
+    xyz_marathon_emit red "halted at phase ${PHASE_ID} — required test not added/updated: $REQUIRES_TEST"
+    exit 5
+  fi
+  if [[ "$success_mode" == "already-satisfied" ]]; then
+    success_text="phase ${PHASE_ID} complete — lane_already_satisfied, reviewer approved, gate passed"
+  else
+    success_text="phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
+  fi
+  "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
+  lane_attempt_reset "${TICK_REPO_ROOT:-$ROOT}" "$LANE_STATE_KEY"
+  save_transcript
+  xyz_marathon_heartbeat_clear
+  log "$success_text"
+  xyz_marathon_emit green "$success_text"
+  exit 0
+}
+
+# ── Step 0.4 (GH-274): satisfied-lane short-circuit ────────────────────────
+# A phase whose relay is already terminal AND whose tick token is already done needs no
+# render/reseed/relay-drive at all — only the pre-advance gate (and requires-test, if set)
+# re-run, exactly like any other already-satisfied completion. DRY_RUN is exempted: its whole
+# point is to render + show the tick seed for inspection, and there is nothing to commit or
+# seed on this path anyway.
+if ((! DRY_RUN)) && satisfied_lane_terminal; then
+  log "phase ${PHASE_ID} already reached a terminal relay (STATUS: $(file_status), token done) — skipping render/reseed, re-running only the pre-advance gate"
+  MARATHON_DRIVE_STARTED=1
+  complete_phase_success already-satisfied
+fi
+
 # GH-162: peek at prior attempts BEFORE rendering (read-only; lane_attempt_gate in Step 3 still owns
 # the append/park write) so a re-fired phase's relay file can carry the debug-mantra note. Empty
 # DEBUG_MANTRA_TEXT on a first fire (prior=0) — the render below is then byte-identical to before.
@@ -821,73 +927,8 @@ if [[ "$relay_exit" -eq 7 ]]; then
 fi
 
 # ── Step 6: act on relay-drive exit code ───────────────────────────────────
-
-escalate() {  # <reason> <relay-exit>
-  local reason="$1" rexit="$2"
-  cat > "$PHASE_DIR/ESCALATION.md" << ESC_EOF
-# ESCALATION — Marathon Phase ${PHASE_ID}
-
-phase: ${PHASE_ID}
-task: ${RELAY_TASK}
-relay-drive-exit: ${rexit}
-reason: ${reason}
-relay-file: ${REL_RELAY}
-ESC_EOF
-  git -C "$ROOT" add -- "$PHASE_DIR/ESCALATION.md"
-  git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} escalation (${reason})"
-  "$TICK_BIN" log marathon.phase.escalated "$RELAY_TASK" --agent marathon > /dev/null || true
-  log "escalation written: $PHASE_DIR/ESCALATION.md (reason: $reason)"
-}
-
-save_transcript() {
-  # GH-30 Phase 2: resolve the transcript base (honors XYZ_ARCHIVE_ROOT; hard-errors if set-invalid).
-  # Declare then assign separately so the resolver's exit code isn't masked by `local` under set -e.
-  local date_dir _ts_base; _ts_base="$(rtl_transcript_root "$ROOT")" || return 1
-  date_dir="$_ts_base/$(date +%Y-%m-%d)"
-  mkdir -p "$date_dir"
-  local ts; ts="$(date +%H%M%S)"
-  local dest="$date_dir/marathon-${PHASE_ID}-${ts}.md"
-  cp "$RELAY_FILE" "$dest"
-  git -C "$ROOT" add -- "$dest"
-  if git -C "$ROOT" diff --cached --quiet -- "$dest"; then
-    log "transcript unchanged: $dest"
-  else
-    git -C "$ROOT" commit -q -m "marathon: phase ${PHASE_ID} transcript saved (${RELAY_TASK})"
-    log "transcript saved: $dest"
-  fi
-}
-
-complete_phase_success() {
-  local success_mode="${1:-approved}" gate_exit=0 success_text=""
-  log "relay approved — running pre-advance gate: $PRE_ADVANCE_CMD"
-  run_pre_advance_gate || gate_exit=$?
-  if [[ "$gate_exit" -ne 0 ]]; then
-    log "pre-advance gate FAILED (exit $gate_exit) — escalating"
-    escalate "pre-advance-failed" 0
-    xyz_marathon_heartbeat_clear
-    xyz_marathon_emit red "halted at phase ${PHASE_ID} — pre-advance gate failed"
-    exit 5
-  fi
-  if [[ -n "$REQUIRES_TEST" ]] && ! requires_test_delta "$REQUIRES_TEST"; then
-    log "requires-test FAILED — no new/updated test detected at: $REQUIRES_TEST"
-    escalate "requires-test-missing" 0
-    xyz_marathon_heartbeat_clear
-    xyz_marathon_emit red "halted at phase ${PHASE_ID} — required test not added/updated: $REQUIRES_TEST"
-    exit 5
-  fi
-  if [[ "$success_mode" == "already-satisfied" ]]; then
-    success_text="phase ${PHASE_ID} complete — lane_already_satisfied, reviewer approved, gate passed"
-  else
-    success_text="phase ${PHASE_ID} complete — STATUS: Approved, gate passed"
-  fi
-  "$TICK_BIN" log marathon.phase.approved "$RELAY_TASK" --agent marathon > /dev/null || true
-  lane_attempt_reset "${TICK_REPO_ROOT:-$ROOT}" "$LANE_STATE_KEY"
-  save_transcript
-  xyz_marathon_heartbeat_clear
-  log "$success_text"
-  xyz_marathon_emit green "$success_text"
-  exit 0
-}
+# escalate/save_transcript/complete_phase_success are defined earlier (ahead of Step 1) —
+# see the GH-274 comment there — but still called from this case statement as before.
 
 recover_already_satisfied_lane() {
   local gate_exit=0 review_exit=0 s tstatus actor

@@ -71,11 +71,23 @@ already-terminal relay," not just the mid-relay reroute case it currently handle
 
 ## Definition of done
 
-- [ ] Re-invoking `marathon-drive.sh` for a phase whose `RELAY.md` is already terminal (Approved)
+- [x] Re-invoking `marathon-drive.sh` for a phase whose `RELAY.md` is already terminal (Approved)
       and whose tick task is `done` skips the render/reseed and re-runs only `--pre-advance-cmd`.
-- [ ] A regression test in `test/marathon-drive.sh` covers this exact sequence: happy-path approval
-      → pre-advance gate fails → re-invoke → gate re-run only, `RELAY.md` untouched.
-- [ ] `bash validate.sh` no worse than baseline.
+      Implemented as `satisfied_lane_terminal()` (Bash + Python twin), checked before the render
+      step; reuses `complete_phase_success("already-satisfied")` (the GH-207 code path) rather than
+      duplicating its gate/requires-test/telemetry logic.
+- [x] A regression test in `test/marathon-drive.sh` covers this exact sequence: happy-path approval
+      → pre-advance gate fails → re-invoke → gate re-run only, `RELAY.md` untouched. Added as case
+      (12h); passes under both the default (Python) and `XYZ_PYTHON=0` (Bash) execution paths.
+- [x] `bash validate.sh` no worse than baseline. `test/marathon-drive.sh` alone: 119 pass / 0 fail
+      in both modes (112 pre-existing + 7 new). Full `validate.sh` run confirmed clean.
+
+**Note found during the fix:** this repo's `marathon-drive.sh` now defaults `XYZ_PYTHON` unset to
+`"1"` (Python) per the GH-264 flip — `${XYZ_PYTHON-1}`, line 7. The comment immediately above it
+("Default (unset/0) runs the canonical Bash implementation") describes the pre-flip behavior and
+was left unupdated when the expansion flipped (GH-255 touched the line below it, not this one); a
+reader editing only the Bash file (as this fix's first pass did) will silently exercise the Python
+port instead unless they set `XYZ_PYTHON=0`. Worth a follow-up doc fix, out of scope here.
 
 ## Swarm Preflight Contract
 
