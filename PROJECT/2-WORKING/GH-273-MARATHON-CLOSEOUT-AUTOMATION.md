@@ -218,7 +218,8 @@ which is materially different from Phases 0-2's prompt/config files:**
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "path_absent", "path": "relay-automation/marathon-closeout.sh" }
+    { "type": "path_absent", "path": "relay-automation/marathon-closeout.sh" },
+    { "type": "path_absent", "path": "test/marathon-closeout.sh" }
   ],
   "artifacts": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ],
   "artifacts_new": [ "relay-automation/marathon-closeout.sh", "test/marathon-closeout.sh" ],
