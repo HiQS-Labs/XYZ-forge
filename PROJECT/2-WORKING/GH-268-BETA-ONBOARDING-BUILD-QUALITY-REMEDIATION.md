@@ -187,9 +187,10 @@ manual re-test with no code artifact at all).
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "grep_present", "path": "skills/consult/install.sh", "pattern": "#!/usr/bin/env bash" }
+    { "type": "path_absent", "path": "skills/consult/install.sh" }
   ],
   "artifacts": [ "skills/consult/install.sh", "validate.sh" ],
+  "artifacts_new": [ "skills/consult/install.sh" ],
   "remediation": {
     "source": "issue#268",
     "criteria": "Phase 1 only: the Quickstart (validate.sh) is green on a genuinely clean clone (or its scope is reduced and documented), and skills/consult/install.sh exists (minimum bar from the report; ideally all 9 gap skills get one)."
