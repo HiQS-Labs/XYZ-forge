@@ -52,6 +52,14 @@ first manually inspecting `RELAY.md`/tick state and reverting the bad re-render.
 unattended caller (relevant once GH-273 Phase 4's `--post-approve-cmd` ships) this would silently
 corrupt the phase's own execution record on every gate-flake retry.
 
+**Workaround confirmed live (2026-07-21, GH-273 Phase 1's fire):** passing a distinct `--phase-id`
+per fire (instead of relying on the default `p1`) avoids the collision entirely — a fresh phase id
+gets its own `phases/<id>/` dir and its own `MARATHON-<ID>-TURN` tick task, so there's nothing to
+clobber. `utils/swarm-preflight.sh`'s suggested command never varies `--phase-id`, so a caller who
+copies it verbatim for two fires against the same target hits this every time; the fix could also
+include `swarm-preflight` suggesting a unique `--phase-id` per packet rather than only fixing
+`marathon-drive`'s render-order.
+
 ## Fix direction
 
 Before Step 2's render in `marathon-drive.sh` (and the Python twin), if `$RELAY_FILE` already
