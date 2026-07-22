@@ -2,7 +2,7 @@
 gh_issue: 273
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273
 title: "Automate the marathon pre-flight/post-flight ceremony — /pre-marathon, /post-marathon + post-approve-cmd hook"
-status: "Phases 0-2 SHIPPED 2026-07-21 (skill-nudge hook, /pre-marathon + /post-marathon, loose-ends-sequence.md); Phases 3-4 not yet contracted"
+status: "Phases 0-3 SHIPPED 2026-07-21 (skill-nudge hook, /pre-marathon + /post-marathon, loose-ends-sequence.md, marathon-closeout.sh); Phase 4 not yet contracted"
 created: 2026-07-21
 updated: 2026-07-21
 owner: noel
@@ -49,7 +49,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Plan drafted 2026-07-21 from a Fable 5 analysis of 583 logged prompts, corroborated against the raw corpus and cross-checked against `marathon-triage`/`marathon-cleanup`/`loose-ends` for real overlap before proposing new surface. Filed [#273](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273). **Phases 0-2 SHIPPED same day**, each via `swarm-preflight → marathon-drive` (Codex builder, agy reviewer, its own `--phase-id`): **0** `relay-automation/hooks/skill-nudge.sh` (`phases/gh273-phase0/`≈`phases/p1/`); **1** `.claude/commands/pre-marathon.md` + `post-marathon.md` (`phases/gh273-phase1/`); **2** `.claude/loose-ends-sequence.md` (`phases/gh273-phase2/`). All three hit the same pre-advance-gate false-failure — `test/xyz-harness-hooks.sh`'s pre-existing "relay green count" flake, unrelated to any of the three builds, confirmed clean each time by an isolated re-run (61/61) and a full `validate.sh` re-run (exit 0) — and were closed out manually rather than risk a done-token retry clobber ([#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274)). Per-phase detail: each `phases/<id>/ESCALATION.md` § Resolution. | Redraft the preflight contract for Phase 3 (`marathon-closeout.sh` extraction) and fire it with its own `--phase-id`. |
+| Plan drafted 2026-07-21 from a Fable 5 analysis of 583 logged prompts, corroborated against the raw corpus and cross-checked against `marathon-triage`/`marathon-cleanup`/`loose-ends` for real overlap. Filed [#273](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273). **Phases 0-3 SHIPPED same day**, each via `swarm-preflight → marathon-drive` (Codex builder, agy reviewer, its own `--phase-id`): **0** skill-nudge hook; **1** `/pre-marathon` + `/post-marathon`; **2** `loose-ends-sequence.md`; **3** `relay-automation/marathon-closeout.sh` + `test/marathon-closeout.sh` (18/18 pass — dry-run inertness, happy path, red-checks halt, unmergeable halt, command-failure/usage exit codes; tests PATH-shadow `git`/`gh` in a disposable scratch repo, no real network/repo state touched). All four hit the same pre-advance-gate false-failure (`test/xyz-harness-hooks.sh`'s pre-existing "relay green count" flake, unrelated to any build; confirmed clean each time) and were closed out manually rather than risk a done-token retry clobber ([#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274)). Per-phase detail: each `phases/<id>/ESCALATION.md` § Resolution. | Redraft the preflight contract for Phase 4 (`--post-approve-cmd` harness flag) and fire it with its own `--phase-id`. |
 
 ## Table of contents
 
