@@ -1,5 +1,5 @@
 # Marathon Phase gh273-phase2
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH273-PHASE2-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -109,3 +109,9 @@ Please replace these with valid bash commands (e.g. using `echo` for the reminde
 - File-specific verification passed: the manifest retains one `### *` matcher and exactly three
   bullets, every bullet parses as Bash, and both referenced repository scripts are executable. Per
   the scope lock, the full project gate was not run.
+
+### Round 2 · Reviewer · agy
+
+**Verdict:** Approved
+
+The builder has replaced the prose with literal shell commands, satisfying the requirement to avoid prose that the parser would misread as a command. The acceptance criteria are now met.
