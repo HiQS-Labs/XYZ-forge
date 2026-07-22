@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-22.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -167,5 +167,50 @@ Tier-1 slice alone is ~risk 2. `risk >= 4` ⇒ **route-to-human**, so nothing he
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1 · 2026-07-22
+
+**Verdict: Changes requested**
+
+- **[Blocker] Finding #1 overreads the anti-scope exception.** Strongest counter-argument: the list
+  applies to PDDA *and adjacent repo-governance/safety layers*, excludes the crowded autonomous-coding
+  category, and permits reconsideration only for a measured incumbent gap with coordinated policy
+  updates (`PROJECT/DO-NOT-BUILD.md:3-10,18,33-41,54-59`). The capture answers the generic-platform
+  concern partly (repo-local, reuse rather than a parallel platform), but “private/unbundled” is not a
+  stated exception; its instruction not to reopen the decision (`relay-system/2026-07-22/gh-281-sentinel-triage.md:101-107`)
+  conflicts with the canonical reconsideration process. **Fix:** either classify Tier 2 as
+  operator-owned experimentation outside this repo's delivery scope, or record the observed gap that
+  incumbents cannot meet and require the DO-NOT-BUILD + synthesis amendments before Tier-2 promotion.
+- **[Blocker] Finding #2 leaves an unattended-fire path.** It promises that provisional docs are
+  never selectable without human confirmation (`relay-system/2026-07-22/gh-281-sentinel-triage.md:109-115`),
+  but the build order later auto-clears that same flag (`relay-system/2026-07-22/gh-281-sentinel-triage.md:91-92`),
+  while PDDA's canonical selection predicate gates only on `risk` (`PROJECT/PDDA.md:125-131`). Rating
+  confirmation also is not necessarily explicit authorization for an open-ended builder run, which
+  CONSTITUTION requires for destructive repair (`PROJECT/CONSTITUTION.md:24-26,33-37`). **Fix:** remove
+  automatic clearing; persist a human attestation bound to the doc revision, approved allowlist, and
+  run; deterministically reject provisional/unattested docs both at selection and immediately before
+  fire. Any future auto-promotion needs a separate constitutional/policy decision, not “proven
+  precision.”
+- **[Should] Finding #3 names a dependency, not a rollback path.** The capture correctly notes that
+  tags have no current cadence and calls the surface Costly, but stops at “it needs a rollback path”
+  (`relay-system/2026-07-22/gh-281-sentinel-triage.md:117-122`). **Fix:** require an immutable release
+  commit/artifact, a recorded last-known-good pin, and a tested operator procedure to disable the
+  nightly job and restore that pin; no newly merged self-fix may enter the runner until an explicit
+  release promotion. A tag alone is not the control.
+- **[Should] A missing rail is the measured-gap bar for new Bash/policy complexity.** Tier 1 proposes
+  two new scripts and Tier 2 proposes an overlay (`relay-system/2026-07-22/gh-281-sentinel-triage.md:80-90`),
+  while the anti-scope list requires a measured gap before either kind of complexity
+  (`PROJECT/DO-NOT-BUILD.md:21,54-59`). **Fix:** add the observed failure/data that existing capture and
+  incumbent tooling cannot address, then show why each new script is the least-code response.
+- **[Should] Findings #5/#8 overstate readiness and verification.** “Marathon-ready today,” slice
+  risk `2`, “six runnable acceptance checks,” and “these satisfy” are asserted although this capture
+  delegates patch-level acceptance detail to the live issue (`relay-system/2026-07-22/gh-281-sentinel-triage.md:73-76,130-150`)
+  and no check result is recorded. **Fix:** call these proposed strengths, not verified readiness;  [Unverified — no citation]
+  give the promoted Tier-1 slice its own human-confirmed ratings and runnable gates, and claim ready  [Unverified — no citation]
+  only after those targeted gates pass.
+- **[Pass] Findings #4, #6, and #7 are appropriately bounded:** they require deterministic probe-lint,
+  define the network-guard coverage problem, and propose a collision-resistant local filename
+  (`relay-system/2026-07-22/gh-281-sentinel-triage.md:124-144`). **Fix:** none beyond carrying those
+  requirements into the promoted slice/overlay plan.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
