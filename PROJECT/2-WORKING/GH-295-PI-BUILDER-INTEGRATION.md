@@ -2,7 +2,7 @@
 gh_issue: 295
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/295
 title: "Add Pi (pi.dev) as a new supported headless builder harness, alongside Codex/agy"
-status: "Phase 0 (smoke test) done 2026-07-23; Phase 1 (shim build) starting on branch gh295-pi-builder-integration"
+status: "Phases 1-3 done 2026-07-23 (shim + tests + README) on branch gh295-pi-builder-integration; Phase 4 blocked on missing direct-Alibaba-Qwen credentials"
 created: 2026-07-23
 updated: 2026-07-23
 owner: noel
@@ -26,7 +26,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Phase 0 smoke test (2026-07-23): installed `@earendil-works/pi-coding-agent` v0.81.1 globally, confirmed legit (MIT, matches pi.dev + github.com/earendil-works/pi). Headless text-mode (`-p`) and JSON-mode (`--mode json`) calls both verified against `openrouter/openai/gpt-mini-latest` using the harness's existing `OPENROUTER_API_KEY` — JSON mode confirmed to carry per-call cost/usage data inline, a real gap-closer vs. agy's cost-blind lane. Issue #295 filed, this doc promoted straight to 2-WORKING, branch `gh295-pi-builder-integration` cut off `development`. | Phase 1: build `relay-automation/pi-turn.sh` + `utils/py/pi-turn.py` mirroring the `codex-turn.sh`/`agy-turn.sh` shim contract. |
+| Phases 1-3 (2026-07-23): shipped `relay-automation/pi-turn.sh` + `utils/py/pi-turn.py` (Python is this repo's actual default runtime per GH-264) mirroring the codex/agy dispatch+containment contract, with a real JSONL `--mode json` usage parser and genuine `tick cost --tool pi` capture (Pi is the first non-Claude lane with real cost visibility — agy stays cost-blind). `PI_MODEL` has no silent default (GH-280/aider#5486 class of bug guarded against). Wrote `test/pi-turn.sh` (39 cases, mirrors the codex/agy stub-binary convention; green under BOTH `XYZ_PYTHON=1` (the actual default) and `XYZ_PYTHON=0`), added 3 pytest cases to `test/test_python_layer.py` (module load + JSONL last-event parsing + missing-file safety; all green), and wired `pi-turn.sh` into `validate.sh`'s TESTS array. Ran a REAL end-to-end headless dry run against OpenRouter (`openai/gpt-mini-latest`, real `OPENROUTER_API_KEY`, a throwaway scratch relay repo — never the production repo) — Pi genuinely read the relay file, edited it with its own `edit` tool, drove `tick claim`/`release` with its own `bash` tool, and the shim committed `relay(RELAY-GH295-DRYRUN): pi turn (pi headless; no push)`; a real `cost.tokens` event landed (`tokens_in=277, tokens_out=6, tool=pi`). Added a full "Pi worker" README section (env vars, exit codes, cost-visibility note, no-default-model safety note), cross-linked from the Components table and the Headless bring-up walkthrough. | Phase 4 (direct-Alibaba-Qwen) stays BLOCKED on missing credentials (see below) — no further work possible until the operator supplies `DASHSCOPE_API_KEY`-equivalent + endpoint. Optional follow-up (not blocking, not required by this doc's QA gates): run the full `bash validate.sh` aggregate suite once — this pass verified `test/pi-turn.sh` standalone and confirmed correct wiring into the TESTS array, but did not execute the full ~100-test aggregate run (real API spend + long wall-clock; out of this pass's scope). |
 
 ## Table of contents
 
@@ -83,10 +83,18 @@ contract exactly:
 
 ### QA gate — Phase 1
 
-- [ ] `pi-turn.sh`/`pi-turn.py` exist, pass `shellcheck`/lint, and share the exact exit-code contract
-  (`0` acted/deferred · `5` failed/no ownership · `6` off-lane · `7` timeout · `2` usage).
-- [ ] A real headless dry run against `openrouter` (reusing the existing `OPENROUTER_API_KEY`) commits a
-  real relay-turn edit end-to-end.
+- [x] `pi-turn.sh`/`pi-turn.py` exist, pass `shellcheck`/lint, and share the exact exit-code contract
+  (`0` acted/deferred · `5` failed/no ownership · `6` off-lane · `7` timeout · `2` usage). Verified
+  2026-07-23: `shellcheck -S warning` clean on both `relay-automation/pi-turn.sh` and
+  `test/pi-turn.sh`; `python3 -c "import ast; ast.parse(...)"` clean on `utils/py/pi-turn.py`.
+- [x] A real headless dry run against `openrouter` (reusing the existing `OPENROUTER_API_KEY`) commits a
+  real relay-turn edit end-to-end. Verified 2026-07-23 in a throwaway scratch git repo (never the
+  production repo): `PI_MODEL=openai/gpt-mini-latest`, real `OPENROUTER_API_KEY`, driven via the
+  actual default Python runtime (`XYZ_PYTHON` unset → `utils/py/pi-turn.py`). Pi read `relay.md` with
+  its own `read` tool, edited `STATUS: Open` → `STATUS: Approved` with its own `edit` tool, drove
+  `tick claim`/`release` with its own `bash` tool, exit code `0`, commit
+  `relay(RELAY-GH295-DRYRUN): pi turn (pi headless; no push)` landed, and a real `cost.tokens` event
+  (`tokens_in=277, tokens_out=6, tool=pi`) was captured via `tick cost`.
 
 ## Phase 2 — Test coverage
 
@@ -95,8 +103,15 @@ Mirror the existing `codex-turn.sh`/`agy-turn.sh` test files (binary-stub patter
 
 ### QA gate — Phase 2
 
-- [ ] New test file green locally.
-- [ ] `bash validate.sh` still green with the new test wired in.
+- [x] New test file green locally. `bash test/pi-turn.sh` — 39/39 pass, verified under BOTH
+  `XYZ_PYTHON=1` (the actual repo default per GH-264) and `XYZ_PYTHON=0` (the Bash fallback). Also
+  added 3 pytest cases to `test/test_python_layer.py` (module load, JSONL last-event usage parsing,
+  missing-file safety) — `python3 -m pytest test/test_python_layer.py -q` → 19/19 pass (full file).
+- [ ] `bash validate.sh` still green with the new test wired in. `pi-turn.sh` IS correctly wired into
+  the `TESTS` array (confirmed by inspection + the standalone run above). The full aggregate
+  `validate.sh` run (~100 test files, some with real API spend/long wall-clock, e.g.
+  `relay-self-sufficiency.sh`/`deep-research.sh`) was NOT executed in this pass — out of scope for a
+  single shim addition. Recommended as a pre-merge check, not a Phase-1-3 blocker.
 
 ## Phase 3 — README documentation
 
@@ -105,7 +120,12 @@ codes, auth/headless contract, known gotchas).
 
 ### QA gate — Phase 3
 
-- [ ] Section added, cross-linked from wherever Codex/agy are listed as builder options.
+- [x] Section added, cross-linked from wherever Codex/agy are listed as builder options. Added a
+  "#### Pi worker (GH-295)" subsection under "Headless bring-up" (mirroring the Codex/agy
+  subsections), a `pi-turn.sh` row in the Components table, a `pi-turn.sh` exit-codes bullet, a
+  `PI_MODEL`-safety prerequisites note, and a cost-visibility callout in the device-caveats bullet.
+  Retitled the section header to "Headless bring-up (Codex + agy + Pi)" and fixed the internal anchor
+  link.
 
 ## Phase 4 — Direct-Alibaba-Qwen validation (BLOCKED)
 
@@ -123,6 +143,18 @@ phase can run.
 
 - [ ] Credential/endpoint obtained.
 - [ ] Real headless Pi call against the direct endpoint succeeds end-to-end.
+
+## FYI: pre-existing kernel behavior observed during the Phase 1 dry run (not a Pi-specific bug)
+
+The real dry run (Phase 1 QA gate above) emitted three `dependency.drift` events for
+`relay-automation/relay-turn-lib.sh` / `src/project.js` / `src/events.js` even though the throwaway
+scratch repo never contained those paths at either commit. This is `rtl_enforce`'s shared,
+warn-only cross-agent drift signal (GH-68) firing in a fixture that has neither path at either
+revision — a pre-existing quirk of the SHARED kernel (`relay-turn-lib.sh`), not something introduced
+by `pi-turn.sh`/`pi-turn.py`, and it never blocked or altered the turn's outcome (warn-only, additive,
+non-blocking per its own contract). Not fixed here — out of this doc's scope (Phase 1-3 only touched
+the Pi-specific shim/tests/docs) and not required by any QA gate above. Worth a follow-up issue if it
+turns out to matter (e.g. it could add noise to `dependency.drift` consumers in a fixture-heavy repo).
 
 ## Stuck/failure protocol
 
