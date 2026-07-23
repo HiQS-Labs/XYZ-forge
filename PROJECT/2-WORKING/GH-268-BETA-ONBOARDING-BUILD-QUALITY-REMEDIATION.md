@@ -182,25 +182,26 @@ tests cluster around this lane's driver scripts... until #232 is closed" made se
 - Any new GH issue per finding — deliberately not done; this doc is the single point of reference,
   per the operator's explicit instruction.
 
-## Swarm Preflight Contract
+## Swarm Preflight Contract (Phase 2 only)
 
-Scoped to Phase 1 only (the two blocking items) — Phases 2-4 need their own contract redraft once
-Phase 1 ships, since their artifacts differ (README/doc files, then the gate-wiring script, then a
-manual re-test with no code artifact at all).
+**Re-scoped 2026-07-23 (/10days sweep).** Phase 1's install.sh item shipped via PR #282 (merged
+2026-07-22) — the contract above is stale. Phase 1's OTHER item (clean-machine `validate.sh` pass) is
+still open but is investigation-shaped, not mechanical — left for a separate pass. This contract
+targets Phase 2 only: the doc-only README/relay-automation-README reorder + sandbox-hang message,
+which is small, mechanical, and low-risk (text/doc changes, no code paths).
 
 ```json
 {
   "target": { "repo": ".", "ref": "development" },
   "gate": "bash validate.sh",
   "fix_probes": [
-    { "type": "path_absent", "path": "skills/consult/install.sh" }
+    { "type": "grep_present", "path": "README.md", "pattern": "## What XYZ is" }
   ],
-  "artifacts": [ "skills/consult/install.sh", "validate.sh" ],
-  "artifacts_new": [ "skills/consult/install.sh" ],
+  "artifacts": [ "README.md", "relay-automation/README.md" ],
   "remediation": {
     "source": "issue#268",
-    "criteria": "Phase 1 only: the Quickstart (validate.sh) is green on a genuinely clean clone (or its scope is reduced and documented), and skills/consult/install.sh exists (minimum bar from the report; ideally all 9 gap skills get one)."
+    "criteria": "Phase 2 only: README.md leads with name + one-line what-it-is + Quickstart before beta logistics/mode taxonomy; CLI prerequisites appear at-or-above the fast-path section that needs them; relay-automation/README.md's prerequisite section is renamed from 'Headless bring-up' to plain install language; the Quickstart's sandbox-hang failure mode (mktemp under Bash sandbox) is messaged/documented at the Quickstart step itself."
   },
-  "lanes": { "agy_safe": [ "skills/consult/install.sh" ], "orchestrator_only": [ "validate.sh" ] }
+  "lanes": { "agy_safe": [ "README.md", "relay-automation/README.md" ], "orchestrator_only": [] }
 }
 ```

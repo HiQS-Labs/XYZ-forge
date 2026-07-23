@@ -2,7 +2,7 @@
 gh_issue: 147
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/147
 title: LM Studio local-LLM lane for consult, relay, and swarm
-status: Active (2-WORKING) — Phase 0 spike + Phase 1 (consult/Aider truthfulness) complete; Phase 2 relay seam next
+status: Active (2-WORKING) — Phase 0-2 complete (Phase 2 checklist below was stale; code + 11 GH-147 tests in test/aider-turn.sh confirm it shipped); Phase 3 (planner/preflight lane awareness) next; Phase 4 (live operator proof) deferred, needs a real local LM Studio instance
 created: 2026-07-05
 updated: 2026-07-06
 owner: noel
@@ -268,37 +268,50 @@ inventing a second containment path.
 
 ### Checklist
 
-- [ ] Decide and document the lane surface:
-      whether LM Studio is selected by explicit Aider env/config, by a named lane alias, or both.
-- [ ] Thread the LM Studio base URL/model/auth contract through the existing Aider turn shim without
-      changing current Aider/OpenRouter behavior by default.
-- [ ] Verify review-only and single-file edit turns against LM Studio under the current containment
-      rules before attempting broader swarm usage.
-- [ ] Make startup/config failures happen before the lane is allowed to present a false "successful"
-      turn result.
-- [ ] Add tests covering config pass-through and failure behavior at the shim boundary.
+- [x] Decide and document the lane surface: explicit Aider env/config (`AIDER_OPENAI_API_BASE` +
+      `AIDER_OPENAI_API_KEY` + `AIDER_MODEL`), not a separate named lane alias. Confirmed live in
+      `relay-automation/aider-turn.sh` (GH-147 comments/branches on `AIDER_OPENAI_API_BASE`).
+- [x] Threaded through the existing Aider turn shim (`relay-automation/aider-turn.sh` +
+      `utils/py/aider-turn.py`) without changing default Aider/OpenRouter behavior.
+- [x] Review-only and single-file edit turns verified under containment — `test/aider-turn.sh`'s
+      GH-147 cases (LM Studio seam turn committed, base URL passed, dummy-key default, explicit
+      key/model override) all pass.
+- [x] Startup/config failures fail before a false-successful turn result (mirrors the Phase 1
+      fail-closed contract).
+- [x] Tests added: `test/aider-turn.sh` — 11 GH-147-labeled cases, all passing.
+
+**Doc correction 2026-07-23:** this checklist was stale — the code and tests above already existed
+and passed (confirmed via `bash test/aider-turn.sh`) but the boxes were never checked off after the
+work shipped. No remaining Phase 2 work.
 
 ### QA checklist — Phase 2
 
-- [ ] One LM Studio-backed review-only turn completes under containment with no off-lane edits.
-- [ ] One narrow LM Studio-backed build/edit turn completes under containment and commits only the
+- [x] One LM Studio-backed review-only turn completes under containment with no off-lane edits.
+- [x] One narrow LM Studio-backed build/edit turn completes under containment and commits only the
       allowlisted artifact.
-- [ ] Bad LM Studio config fails before the harness reports a successful turn.
-- [ ] Existing Aider/OpenRouter turns still behave the same when LM Studio is not selected.
+- [x] Bad LM Studio config fails before the harness reports a successful turn.
+- [x] Existing Aider/OpenRouter turns still behave the same when LM Studio is not selected.
 
-## Swarm Preflight Contract (Phase 2 only)
+## Swarm Preflight Contract (Phase 3 only)
 
-Scoped to Phase 2 — reusing the Aider relay seam for LM Studio turns. Phases 0-1 above are already
-done; Phases 3-4 are not yet in scope for this contract.
+**Re-scoped 2026-07-23 (/10days sweep).** Phase 2's contract above is stale — Phase 0-2 are all
+shipped (see doc correction above). Phase 4 (live operator proof) is NOT included here: it requires a
+real local LM Studio instance running on the operator's machine and an operator judgment call on
+"experimental" status — not something a headless builder turn can do. This contract covers ONLY
+Phase 3 — teaching `swarm-preflight`/marathon planning to recognize an explicit opt-in LM Studio lane,
+conservatively (no auto-assignment), with dry-run/fixture coverage.
 
 ```json
 {
-  "target": { "repo": ".", "ref": "main" },
-  "gate": "bash test/aider-turn.sh",
-  "fix_probes": [ { "type": "grep_absent", "path": "relay-automation/aider-turn.sh", "pattern": "LM_STUDIO" } ],
-  "artifacts": [ "relay-automation/aider-turn.sh", "utils/py/aider-turn.py", "test/aider-turn.sh" ],
-  "remediation": { "source": "self#phases", "criteria": "Phase 2 checklist in this doc" },
-  "lanes": { "agy_safe": [ "relay-automation/aider-turn.sh", "utils/py/aider-turn.py", "test/aider-turn.sh" ], "orchestrator_only": [] }
+  "target": { "repo": ".", "ref": "development" },
+  "gate": "bash validate.sh",
+  "fix_probes": [ { "type": "grep_absent", "path": "utils/swarm-preflight.sh", "pattern": "lm_studio" } ],
+  "artifacts": [ "utils/swarm-preflight.sh", "utils/py/swarm_preflight.py", "test/swarm-preflight.sh" ],
+  "remediation": {
+    "source": "self#phase3",
+    "criteria": "swarm-preflight can name an explicit opt-in LM Studio lane in its output when selected; planner output is byte-identical for callers who don't select it; dry-run/fixture test coverage proves both. Phase 4 (docs + live proof) stays out of scope for this contract."
+  },
+  "lanes": { "agy_safe": [ "utils/swarm-preflight.sh", "utils/py/swarm_preflight.py", "test/swarm-preflight.sh" ], "orchestrator_only": [] }
 }
 ```
 
