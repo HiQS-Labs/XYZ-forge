@@ -153,3 +153,39 @@ addressable with this one flag rather than requiring a different builder entirel
 (`marathon/gh-268-qwen-w1v2/w1v3/w1v4-difffmt-2026-07-23`) — the first two invalidated/cleaned up, the
 last preserved and pushed as evidence. All worktree isolation, tick-token cleanup, and branch hygiene
 followed this repo's own documented conventions throughout.
+
+## Findings (2026-07-23, third session) — Round 8's worktree signal explained, not a separate bug
+
+Round 8 (above) reproduced an empty-file failure under real `git worktree add --detach` conditions
+(15/18 pass, 16.7% fail) but never isolated whether that was Qwen-specific or a general worktree
+artifact — no failure transcript survived to check. Ran a small pilot (14 real trials, ~$1 total
+OpenRouter spend) reproducing Round 8's exact methodology (same script, same scratch-clone base, same
+`--detach` mechanics) against two other models to close that loose thread.
+
+**Correction that changes the framing:** `openrouter/anthropic/claude-sonnet-5` — this harness's own
+`AIDER_MODEL` default — is **not present in Aider's `model-settings.yml`** either. It was never
+actually a clean "known-good" control in round 6; Aider auto-selects `whole` format for it exactly like
+it did for the unlisted `qwen3.8-max-preview`.
+
+| Round | Condition | Result |
+|---|---|---|
+| 9a | `openrouter/anthropic/claude-sonnet-5` (unlisted → auto `whole`), worktree `--detach`, 7 trials | **4/7 pass — 3 FAIL, empty files (a=0,b=0)** |
+| 9b | `openrouter/qwen/qwen-2.5-coder-32b-instruct` (officially listed, `edit_format: diff` preset), worktree `--detach`, 7 trials | **7/7 pass, 0 fail** |
+
+The 3 retained Sonnet failure transcripts show the identical mechanism as the H2 bug already diagnosed
+in the second session: Aider logs `Model: ... with whole edit format`, the model responds with a
+standard unified diff, Aider silently discards it as unparseable, a 0-byte file lands.
+
+**Verdict: the bug is unlisted-model-format-guessing, not worktree/detached-HEAD.** The properly-listed
+Qwen-coder model — which needs no format guessing — ran clean (7/7) under the identical worktree
+conditions that produced Sonnet's 3/7 failures. Round 8's original 16.7% rate is now explained as the
+same H2 mechanism recurring, not a distinct worktree-specific bug.
+
+**Practical implication:** any model string absent from Aider's `model-settings.yml` — including this
+harness's own default (`openrouter/anthropic/claude-sonnet-5`) — is exposed to this failure mode unless
+`AIDER_FLAGS=--edit-format diff` is set explicitly. The fix already recommended for Qwen applies equally
+to the harness's Sonnet default.
+
+**No second upstream Aider issue filed** — this pilot confirms the mechanism already reported at
+[Aider-AI/aider#5486](https://github.com/Aider-AI/aider/issues/5486) rather than surfacing a distinct
+one. Findings posted to the GH-280 issue thread and as a confirming comment on aider#5486.
