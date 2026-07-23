@@ -120,12 +120,31 @@ vendored same-repo `.xyz` lane):
   same root-cause family, but the *isolation=1* side: a worktree-isolated turn completes its review but
   its own `tick release`/`done` call resolves `TICK_REPO_ROOT` to a `.xyz`-suffixed path instead of the
   real root, so the result lands in the wrong namespace instead of failing loudly like this issue's
-  Attempt 1 EPERM did. **Plausible same-fix side-benefit (not verified):** #272's own transcript shows
-  `TICK_REPO_ROOT="<repo>/.xyz"` logged from inside the worktree — exactly the bogus value
-  `codex-turn.py`'s old `root` default (`= xyz_root` with no git-toplevel fallback) would produce when
-  the caller's environment does not independently pin `TICK_REPO_ROOT`. This session's fix
-  (`resolve_turn_root`, see below) may also resolve #272, but that was not reproduced or tested against
-  #272's specific repro — flag for a human to confirm before closing #272 off the back of this fix.
+  Attempt 1 EPERM did.
+
+  **Update (2026-07-23, later same session): traced to a specific, high-confidence mechanism — this
+  session's #296 fix (PR #297) most likely already resolves it, though not yet live-confirmed.**
+  `RelayTurnLib._run_rtl()` (`utils/py/rtl.py`) builds the bash subprocess env for every bridged
+  `relay-turn-lib.sh` call — including `rtl_turn_prompt`, which is what LITERALLY BUILDS the prompt
+  text handed to Codex/agy/claude — via `env["TICK_REPO_ROOT"] = os.environ.get("TICK_REPO_ROOT",
+  self.root)`. Pre-#296-fix, `self.root` was `codex-turn.py`'s buggy `root` (defaulted to `xyz_root`,
+  no git-toplevel fallback) whenever the caller didn't independently export a correct `TICK_REPO_ROOT`.
+  Inside `rtl_turn_prompt`, `tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}"` — the (wrong) env var wins
+  over the already-GH-160-corrected `RTL_ROOT` — and that wrong value gets baked LITERALLY into the
+  turn prompt's pinned `TICK_REPO_ROOT="%s"` instruction. So a Python-runtime turn wouldn't just risk
+  an EPERM (#296's symptom) — it would faithfully hand Codex a WRONG-but-confidently-pinned
+  `TICK_REPO_ROOT` string, and Codex following it exactly explains #272's exact observed symptom
+  (`TICK_REPO_ROOT="<repo>/.xyz"` in Codex's own invocation) without needing to invoke any LLM
+  non-adherence theory. **Caveat:** #272 is labeled `runtime:bash`, and Bash's own `codex-turn.sh` does
+  NOT have this bug (its `ROOT` was always git-toplevel-correct, so its exported `TICK_REPO_ROOT` was
+  always correct too) — but `git merge-base --is-ancestor af7bb4d 70640ca` confirms the GH-264
+  Python-default flip (`af7bb4d`) predates #272's own reported harness commit (`70640ca`), so Python
+  was already the default runtime at the time of that report; the `runtime:bash` label may be a triage
+  mislabel rather than a confirmed Bash repro. **Recommendation:** before firing #272's own existing
+  swarm-preflight contract (`PROJECT/2-WORKING/GH-272-TICK-REPO-ROOT-VENDORED-MISMATCH.md`, which
+  targets `rtl_tick_bin()`/the harness's own GH-67 backstop release at `relay-turn-lib.sh:1025-1049`)
+  — re-verify #272's exact repro against PR #297 first. If it no longer reproduces, that contract is
+  targeting the wrong mechanism and should be closed/redirected rather than fired as scoped.
 
 ## Impact
 Any same-repo vendored-`.xyz` relay reviewing an artifact outside `.xyz/` (the normal case — the
