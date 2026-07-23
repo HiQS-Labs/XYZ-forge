@@ -4,7 +4,7 @@ import sys
 import tempfile
 import subprocess
 import shlex
-from rtl import RelayTurnLib, claim_task_or_exit
+from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log
 
 def die(msg):
     print(f"agy-turn: {msg}", file=sys.stderr)
@@ -144,7 +144,10 @@ def main():
         prompt = drift_brief + "\n" + prompt
     tick_repo_root, _tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "agy-turn")
 
-    agy_log = os.environ.get("AGY_LOG", os.path.join(tempfile.gettempdir(), f"agy-turn-{os.getpid()}.log"))
+    # GH-161 parity fix: codex-turn.py already uses rtl_default_log (persistent, gitignored
+    # relay-system/logs/<day>/... — survives past the turn); this port was missed, the same gap
+    # found and fixed in aider-turn.py/aider-turn.sh.
+    agy_log = os.environ.get("AGY_LOG") or rtl_default_log(root, "agy-turn", t)
     
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
     agy_args = ["--dangerously-skip-permissions", "--print-timeout", f"{turn_timeout}s"]

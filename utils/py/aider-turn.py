@@ -6,7 +6,7 @@ import tempfile
 import subprocess
 import shlex
 import time
-from rtl import RelayTurnLib, claim_paths_for_turn, claim_task_or_exit
+from rtl import RelayTurnLib, claim_paths_for_turn, claim_task_or_exit, rtl_default_log
 
 def die(msg):
     print(f"aider-turn: {msg}", file=sys.stderr)
@@ -117,7 +117,10 @@ def main():
 
     tick_repo_root, _tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "aider-turn")
 
-    aider_log = os.environ.get("AIDER_LOG", os.path.join(tempfile.gettempdir(), f"aider-turn-{os.getpid()}.log"))
+    # GH-161/GH-280 parity fix: codex-turn.py already uses rtl_default_log (persistent, gitignored
+    # relay-system/logs/<day>/... — survives past the turn); this port was missed, matching the same
+    # gap that existed in the Bash aider-turn.sh (fixed separately). agy-turn.py has the identical gap.
+    aider_log = os.environ.get("AIDER_LOG") or rtl_default_log(root, "aider-turn", t)
     aider_aux_dir = os.environ.get("AIDER_AUX_DIR", os.path.join(tempfile.gettempdir(), f"aider-aux-{os.getpid()}"))
     os.makedirs(aider_aux_dir, exist_ok=True)
     
