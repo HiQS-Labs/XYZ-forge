@@ -50,7 +50,7 @@ fi
 # Env config:
 #   CODEX_BIN / AGY_BIN        binaries (default: codex / agy); tests inject stubs
 #   AIDER_BIN / AIDER_MODEL    Aider binary + model for `--models ...,aider`. Default model tracks the
-#                              seam: openrouter/anthropic/claude-3.5-sonnet (OpenRouter) or openai/
+#                              seam: openrouter/anthropic/claude-sonnet-5 (OpenRouter) or openai/
 #                              agents-a1 when AIDER_OPENAI_API_BASE is set. Reads OPENROUTER_API_KEY.
 #   AIDER_OPENAI_API_BASE      OpenAI-compatible base URL (e.g. http://127.0.0.1:1234/v1 for LM Studio).
 #   AIDER_OPENAI_API_KEY       client key for that base URL (default: dummy — local servers ignore it).
@@ -267,7 +267,7 @@ run_aider() {
       printf 'consult: OPENROUTER_API_KEY not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.\n' > "$out"
       return 5
     fi
-    model="${AIDER_MODEL:-openrouter/anthropic/claude-3.5-sonnet}"
+    model="${AIDER_MODEL:-openrouter/anthropic/claude-sonnet-5}"
   fi
   # ADVISORY only: pass NO --file (Aider edits nothing) + --no-auto-commits; it answers to stdout, which
   # is exactly what a consult captures.

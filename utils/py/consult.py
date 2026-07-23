@@ -337,7 +337,7 @@ def main():
                             f.write("consult: OPENROUTER_API_KEY not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.\n")
                         procs.append((None, "aider", f_out, time.time(), None))
                         continue
-                    aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-3.5-sonnet")
+                    aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-sonnet-5")
                 cmd = [aider_bin, "--model", aider_model] + auth_args + ["--message", full_prompt, "--yes-always", "--no-auto-commits", "--no-gitignore", "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0"]
                 proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(os.environ))
                 procs.append((proc, "aider", f_out, time.time(), cmd))
