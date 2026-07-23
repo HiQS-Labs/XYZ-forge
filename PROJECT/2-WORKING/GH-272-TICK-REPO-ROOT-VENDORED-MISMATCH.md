@@ -26,6 +26,11 @@ goal: >
 
 # GH-272 · `tick`'s TICK_REPO_ROOT resolves wrong in a vendored same-repo lane
 
+## Status
+| What was just completed | What's next |
+|---|---|
+| Contract authored 2026-07-23 (/10days sweep): confirmed still reproducible (no fix commits since the bug's own reported commit `70640ca`), root-cause area narrowed to `rtl_tick_bin`/`TICK_REPO_ROOT` resolution in `relay-turn-lib.sh`. Fixed a broken ROADMAP.md link that pointed at a doc that was referenced but never created. `swarm-preflight --gh-issue 272` verdict: ready. | Fire this contract: localize and fix the resolution mismatch, add a regression test reproducing the 2/2 failure. |
+
 Reproduced 2/2 (default timeout, then `RELAY_TURN_TIMEOUT_S=900`): a worktree-isolated turn's own
 `tick release`/`tick done` invocation logs `TICK_REPO_ROOT="<repo>/.xyz"`, but
 `find-harness.sh --env` exports `TICK_REPO_ROOT=<repo>` (no `.xyz` suffix) for the same run. GH-261's
