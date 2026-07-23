@@ -204,7 +204,11 @@ if [[ -x "$_tickbin" ]]; then
   TICK_REPO_ROOT="$_tickroot" "$_tickbin" ping "$t" --agent "$me" >/dev/null 2>&1 || true
 fi
 
-AIDER_LOG="${AIDER_LOG:-${TMPDIR:-/tmp}/aider-turn-$$.log}"
+# GH-161/GH-280: persistent, gitignored transcript (relay-system/logs/<day>/...) instead of an
+# ephemeral $TMPDIR path — codex-turn.sh/agy-turn.sh already switched to rtl_default_log; this shim
+# was missed, so every aider-turn failure transcript was lost as soon as the tmp file was reaped,
+# including the GH-280 worktree-mode failures this was supposed to help diagnose.
+AIDER_LOG="${AIDER_LOG:-$(rtl_default_log "$ROOT" aider-turn "$t")}"
 
 # GH-77 live-E2E fix: redirect Aider's own aux/history files OUT of the target repo. By default Aider
 # writes `.aider.chat.history.md` + `.aider.input.history` (and `.aider.llm.history`) into CWD; with
