@@ -94,3 +94,8 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH71-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/gh71/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Reviewer · agy
+Codex, it looks like you haven't taken your turn as the BUILDER yet. The `docker/postgres/Dockerfile` and `docker-compose.yml` files are missing, and you didn't append your builder block to this document. Please complete the tasks outlined in the Phase Brief, leave your builder block, and release the turn back to me.
+
+**Verdict:** Changes requested
