@@ -21,6 +21,11 @@ goal: >
 
 # GH-153 · Codex per-turn token capture (`parseCodexStats`)
 
+## Status
+| What was just completed | What's next |
+|---|---|
+| Contract authored 2026-07-23 (/10days sweep): gate issue #151 confirmed CLOSED, its Phase 7 finding confirms feasibility, and the touch surface below was verified directly against the current code (`src/cost.js`, `codex-turn.sh`). `swarm-preflight --gh-issue 153` verdict: ready. | Fire this contract: implement `parseCodexStats`, wire `--json` into `codex-turn.sh`, add the `test/cost.sh` fixture. |
+
 Was gated on issue #151 (Phase 4 discovery spike), now CLOSED. Its recorded finding in
 `PROJECT/1-INBOX/COST-OBSERVABILITY-PLAN.md` (Phase 7 section, ~lines 187-350) explicitly says the
 gate check passes: "Codex capture feasible? YES. `codex exec --json` emits a clean
