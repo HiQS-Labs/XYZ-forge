@@ -21,6 +21,11 @@ goal: >
 
 # GH-284 · marathon closeout PR (non-merging, notes-only)
 
+## Status
+| What was just completed | What's next |
+|---|---|
+| Contract authored 2026-07-23 (/10days sweep): confirmed unimplemented, touch surface verified by reading both target scripts in full, corrected an `artifacts_new`/existing-file collision (test/marathon-closeout.sh already exists from GH-273, unrelated content). `swarm-preflight --gh-issue 284` verdict: ready. | Fire this contract: add `--open-only` to marathon-closeout.sh, `--closeout-pr` to marathon.sh, extend the existing test file. |
+
 Well-specified by the issue itself: exact seam, step-by-step plan, acceptance criteria, and explicit
 non-goals (no merge, no force-push, no branch creation). Confirmed unimplemented — no matching
 commits/PRs, no capture doc, no test file existed before this one.
