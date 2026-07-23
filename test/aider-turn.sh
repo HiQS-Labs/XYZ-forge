@@ -353,7 +353,7 @@ run_shim RELAY-TURN-default aider good ARGS_DUMP="$ARGS_DUMP"; rc=$?
 grep -q -- "--openai-api-base" "${ARGS_DUMP}.all" 2>/dev/null \
   && fail "GH-147: default path must NOT emit --openai-api-base" \
   || pass "GH-147: default path emits no --openai-api-base (byte-identical)"
-grep -q -- "--model openrouter/anthropic/claude-3.5-sonnet" "${ARGS_DUMP}.all" 2>/dev/null \
+grep -q -- "--model openrouter/anthropic/claude-sonnet-5" "${ARGS_DUMP}.all" 2>/dev/null \
   && pass "GH-147: default path still uses the OpenRouter default model" || fail "GH-147: default model regressed"
 
 # --- (17) GH-251: review-only turn where Aider produces a graded review in the TRANSCRIPT but never

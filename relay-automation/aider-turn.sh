@@ -52,7 +52,7 @@ fi
 #                     (the default) keeps this shim byte-identical to the pre-GH-147 OpenRouter-only path.
 #   AIDER_OPENAI_API_KEY — client key for AIDER_OPENAI_API_BASE (default: dummy — local servers usually
 #                     ignore it, but Aider's client still requires a non-empty value; spike 0.2).
-#   AIDER_MODEL     — model id. Default: openrouter/anthropic/claude-3.5-sonnet (OpenRouter), or
+#   AIDER_MODEL     — model id. Default: openrouter/anthropic/claude-sonnet-5 (OpenRouter), or
 #                     openai/agents-a1 when AIDER_OPENAI_API_BASE is set (LM Studio). Set it to any
 #                     OpenRouter model, e.g. openrouter/openai/gpt-4o, openrouter/deepseek/deepseek-chat.
 #                     Resolving a colloquial name (e.g. "GLM 5.2") to its canonical slug? Don't probe
@@ -100,7 +100,7 @@ AIDER_BIN="${AIDER_BIN:-aider}"
 if [[ -n "${AIDER_OPENAI_API_BASE:-}" ]]; then
   AIDER_MODEL="${AIDER_MODEL:-openai/agents-a1}"
 else
-  AIDER_MODEL="${AIDER_MODEL:-openrouter/anthropic/claude-3.5-sonnet}"
+  AIDER_MODEL="${AIDER_MODEL:-openrouter/anthropic/claude-sonnet-5}"
 fi
 die() { printf 'aider-turn: %s\n' "$*" >&2; exit 2; }
 

@@ -52,7 +52,7 @@ def main():
     if aider_openai_api_base:
         aider_model = os.environ.get("AIDER_MODEL", "openai/agents-a1")
     else:
-        aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-3.5-sonnet")
+        aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-sonnet-5")
 
     me = os.environ.get("RELAY_AGENT", "")
     f = os.environ.get("RELAY_FILE", "")
