@@ -122,9 +122,22 @@ vendored same-repo `.xyz` lane):
   real root, so the result lands in the wrong namespace instead of failing loudly like this issue's
   Attempt 1 EPERM did.
 
-  **Update (2026-07-23, later same session): traced to a specific, high-confidence mechanism — this
-  session's #296 fix (PR #297) most likely already resolves it, though not yet live-confirmed.**
-  `RelayTurnLib._run_rtl()` (`utils/py/rtl.py`) builds the bash subprocess env for every bridged
+  **Update (2026-07-23, later same session): CONFIRMED via a live A/B repro — PR #297 fixes this.**
+  Built a real vendored install with this repo's own `relay-automation/xyz-vendor.sh` (not a hand-rolled
+  approximation) into a fresh scratch git repo, so `.xyz/` genuinely shares the target's git toplevel —
+  the exact shape both #296 and #272 describe. Drove the vendored `codex-turn.sh` (default `XYZ_PYTHON`
+  dispatch → `codex-turn.py`) with CWD=`.xyz` and NO `TICK_REPO_ROOT` export (matching how
+  `relay-drive.sh` actually invokes the shim — confirmed neither the Bash nor Python driver propagates
+  it), capturing the STUB Codex's full invocation to inspect the prompt's pinned
+  `TICK_REPO_ROOT="..."` string. **Pre-fix** (overlaid `development`'s `utils/py/{rtl,codex-turn,
+  agy-turn,claude-turn}.py` into the same vendored install): the prompt baked in
+  `TICK_REPO_ROOT="<target>/.xyz"` — the exact bogus namespace from #272's report — AND, worse than
+  the doc originally theorized, `tick info <task>` queried against the REAL target root afterward
+  still showed `status: open, handoff-to: codex`, meaning the harness's own GH-67 backstop release
+  ALSO silently landed in the wrong namespace (it bridges through the same corrupted env). **Post-fix**
+  (this branch, unmodified): the same repro bakes in the correct `TICK_REPO_ROOT="<target>"` and the
+  backstop release lands where `tick info` on the real target actually sees it. Root mechanism traced
+  precisely: `RelayTurnLib._run_rtl()` (`utils/py/rtl.py`) builds the bash subprocess env for every bridged
   `relay-turn-lib.sh` call — including `rtl_turn_prompt`, which is what LITERALLY BUILDS the prompt
   text handed to Codex/agy/claude — via `env["TICK_REPO_ROOT"] = os.environ.get("TICK_REPO_ROOT",
   self.root)`. Pre-#296-fix, `self.root` was `codex-turn.py`'s buggy `root` (defaulted to `xyz_root`,
@@ -140,11 +153,15 @@ vendored same-repo `.xyz` lane):
   always correct too) — but `git merge-base --is-ancestor af7bb4d 70640ca` confirms the GH-264
   Python-default flip (`af7bb4d`) predates #272's own reported harness commit (`70640ca`), so Python
   was already the default runtime at the time of that report; the `runtime:bash` label may be a triage
-  mislabel rather than a confirmed Bash repro. **Recommendation:** before firing #272's own existing
-  swarm-preflight contract (`PROJECT/2-WORKING/GH-272-TICK-REPO-ROOT-VENDORED-MISMATCH.md`, which
-  targets `rtl_tick_bin()`/the harness's own GH-67 backstop release at `relay-turn-lib.sh:1025-1049`)
-  — re-verify #272's exact repro against PR #297 first. If it no longer reproduces, that contract is
-  targeting the wrong mechanism and should be closed/redirected rather than fired as scoped.
+  mislabel rather than a confirmed Bash repro (not fully resolved either way — the live A/B repro
+  above used the Python runtime, matching the commit-ordering evidence, not a literal re-run of the
+  original `sleuth-app` report). **Recommendation:** #272's own existing swarm-preflight contract
+  (`PROJECT/2-WORKING/GH-272-TICK-REPO-ROOT-VENDORED-MISMATCH.md`) targets `rtl_tick_bin()`/the
+  harness's own GH-67 backstop release at `relay-turn-lib.sh:1025-1049` — the WRONG function; the
+  actual defect was in the Python shims' `root` default (now fixed here) and, transitively, in
+  `RelayTurnLib._run_rtl()`'s env-building. That contract should be closed or redirected once #297
+  merges, not fired as scoped — it would spend effort editing the correct-all-along
+  `relay-turn-lib.sh` backstop logic while leaving the real (already-fixed) defect unremarked.
 
 ## Impact
 Any same-repo vendored-`.xyz` relay reviewing an artifact outside `.xyz/` (the normal case — the
