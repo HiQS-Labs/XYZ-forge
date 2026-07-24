@@ -2,9 +2,9 @@
 gh_issue: 295
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/295
 title: "Add Pi (pi.dev) as a new supported headless builder harness, alongside Codex/agy"
-status: "Phases 1-3 done 2026-07-23 (shim + tests + README) on branch gh295-pi-builder-integration; Phase 4 blocked on missing direct-Alibaba-Qwen credentials"
+status: "All 4 phases done 2026-07-24 (shim + tests + README + direct-Alibaba-Qwen validation) on branch gh295-pi-builder-integration — ready for operator review/merge decision"
 created: 2026-07-23
-updated: 2026-07-23
+updated: 2026-07-24
 owner: noel
 branch: gh295-pi-builder-integration
 doc_type: project
@@ -26,7 +26,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Phases 1-3 (2026-07-23): shipped `relay-automation/pi-turn.sh` + `utils/py/pi-turn.py` (Python is this repo's actual default runtime per GH-264) mirroring the codex/agy dispatch+containment contract, with a real JSONL `--mode json` usage parser and genuine `tick cost --tool pi` capture (Pi is the first non-Claude lane with real cost visibility — agy stays cost-blind). `PI_MODEL` has no silent default (GH-280/aider#5486 class of bug guarded against). Wrote `test/pi-turn.sh` (39 cases, mirrors the codex/agy stub-binary convention; green under BOTH `XYZ_PYTHON=1` (the actual default) and `XYZ_PYTHON=0`), added 3 pytest cases to `test/test_python_layer.py` (module load + JSONL last-event parsing + missing-file safety; all green), and wired `pi-turn.sh` into `validate.sh`'s TESTS array. Ran a REAL end-to-end headless dry run against OpenRouter (`openai/gpt-mini-latest`, real `OPENROUTER_API_KEY`, a throwaway scratch relay repo — never the production repo) — Pi genuinely read the relay file, edited it with its own `edit` tool, drove `tick claim`/`release` with its own `bash` tool, and the shim committed `relay(RELAY-GH295-DRYRUN): pi turn (pi headless; no push)`; a real `cost.tokens` event landed (`tokens_in=277, tokens_out=6, tool=pi`). Added a full "Pi worker" README section (env vars, exit codes, cost-visibility note, no-default-model safety note), cross-linked from the Components table and the Headless bring-up walkthrough. | Phase 4 (direct-Alibaba-Qwen) stays BLOCKED on missing credentials (see below) — no further work possible until the operator supplies `DASHSCOPE_API_KEY`-equivalent + endpoint. Optional follow-up (not blocking, not required by this doc's QA gates): run the full `bash validate.sh` aggregate suite once — this pass verified `test/pi-turn.sh` standalone and confirmed correct wiring into the TESTS array, but did not execute the full ~100-test aggregate run (real API spend + long wall-clock; out of this pass's scope). |
+| Phases 1-3 (2026-07-23): shipped `relay-automation/pi-turn.sh` + `utils/py/pi-turn.py` (Python is this repo's actual default runtime per GH-264) mirroring the codex/agy dispatch+containment contract, with a real JSONL `--mode json` usage parser and genuine `tick cost --tool pi` capture (Pi is the first non-Claude lane with real cost visibility — agy stays cost-blind). `PI_MODEL` has no silent default (GH-280/aider#5486 class of bug guarded against). Wrote `test/pi-turn.sh` (39 cases, mirrors the codex/agy stub-binary convention; green under BOTH `XYZ_PYTHON=1` (the actual default) and `XYZ_PYTHON=0`), added 3 pytest cases to `test/test_python_layer.py` (module load + JSONL last-event parsing + missing-file safety; all green), and wired `pi-turn.sh` into `validate.sh`'s TESTS array. Ran a REAL end-to-end headless dry run against OpenRouter (`openai/gpt-mini-latest`, real `OPENROUTER_API_KEY`, a throwaway scratch relay repo — never the production repo) — Pi genuinely read the relay file, edited it with its own `edit` tool, drove `tick claim`/`release` with its own `bash` tool, and the shim committed `relay(RELAY-GH295-DRYRUN): pi turn (pi headless; no push)`; a real `cost.tokens` event landed (`tokens_in=277, tokens_out=6, tool=pi`). Added a full "Pi worker" README section (env vars, exit codes, cost-visibility note, no-default-model safety note), cross-linked from the Components table and the Headless bring-up walkthrough. | Phase 4 (2026-07-24): operator supplied the direct-Alibaba credential; Pi turned out to have first-class native support for it (`qwen-token-plan` provider, `qwen3.8-max-preview` listed directly) — zero code changes needed. Real end-to-end validation in an isolated scratch repo: `pi-turn.sh` dispatched, claimed the token, drove a real turn, committed cleanly, exit 0, production repo confirmed untouched. All 4 phases now done. | **Ready for operator review/merge decision** — no PR opened yet (deliberately left as an operator call). Optional non-blocking follow-ups: run the full `bash validate.sh` aggregate suite once (real API spend, out of scope so far); investigate why the Bash-implementation path didn't produce a `PI_LOG` transcript in one Phase-4 run (cost-capture observability gap only, not a correctness issue). |
 
 ## Table of contents
 
@@ -127,22 +127,54 @@ codes, auth/headless contract, known gotchas).
   Retitled the section header to "Headless bring-up (Codex + agy + Pi)" and fixed the internal anchor
   link.
 
-## Phase 4 — Direct-Alibaba-Qwen validation (BLOCKED)
+## Phase 4 — Direct-Alibaba-Qwen validation (DONE 2026-07-24)
 
 Validate Pi against the actual production Qwen access path from GH-280/268 —
-`qwen3.8-max-preview` via Aider's direct (non-OpenRouter) Alibaba MaaS OpenAI-compatible endpoint — not
+`qwen3.8-max-preview` via a direct (non-OpenRouter) Alibaba MaaS OpenAI-compatible endpoint — not
 just the OpenRouter smoke test in Phase 0.
 
-**Blocked:** this environment has no `DASHSCOPE_API_KEY`/equivalent or the direct endpoint URL. The
-GH-280 investigation's direct-Alibaba access was set up ad hoc in that session's shell and was never
-persisted or documented in-repo (checked: no `.env`, no README mention, no committed config). Needs the
-operator to supply the endpoint + credential (or point at wherever it's actually stored) before this
-phase can run.
+**Unblocked 2026-07-24:** the operator supplied the credential directly (kept outside the repo, never
+committed — this doc does not record its value or its storage path). It turned out Pi has **first-class
+native support** for this exact provider: `pi --list-models` reveals a `qwen-token-plan` provider once
+`QWEN_TOKEN_PLAN_API_KEY` is set (international/Singapore region — matches the supplied endpoint's
+`ap-southeast-1` region; `QWEN_TOKEN_PLAN_CN_API_KEY` is the separate China-region variant), and its
+catalog lists `qwen3.8-max-preview` directly. **No custom base-URL plumbing was needed** —
+`PI_PROVIDER=qwen-token-plan PI_MODEL=qwen3.8-max-preview` is the entire config surface; the shim's
+existing "trust the provider's own env-var auto-detection for any non-openrouter PI_PROVIDER" design
+(Phase 1) already covers this with zero code changes.
+
+**Real validation performed** (throwaway scratch git repo + isolated `TICK_REPO_ROOT`, never the
+production repo — confirmed clean before/after both runs):
+1. Bare `pi --provider qwen-token-plan --model qwen3.8-max-preview -p "..."` smoke call — clean exit 0.
+2. Full `pi-turn.sh` shim run (Bash implementation, `XYZ_PYTHON=0`) end-to-end: dispatch gate, tick
+   claim, a real headless Pi turn that read the relay file, edited it to a valid completed block
+   (`STATUS: Approved`, `## Log`, `VERDICT: PASS`, `Basis: ...`), released the token, shim committed
+   `relay(RELAY-GH295-QWEN-DIRECT2): pi turn (pi headless; no push)` — **exit 0**, real commit landed,
+   only `relay.md` touched.
+
+**Two findings from this real-world pass (neither blocks Phase 4):**
+- **Reinforces existing guidance, not a new gap:** an earlier run invoked the shim from the production
+  repo's own CWD (before realizing the mistake) rather than the scratch repo's. Pi's `bash`/`read` tools
+  can reach any absolute path the OS user can reach — there's no built-in sandbox (same posture as agy,
+  already stated in `pi-turn.sh`'s header) — so it read a real file from the production repo via an
+  absolute path it referenced. **No mutation occurred anywhere in the production repo** (verified clean
+  before and after), but this is a live confirmation that `RELAY_WORKTREE_ISOLATION=1` (or at minimum,
+  invoking the shim with CWD already at the target repo) is the correct posture for real use — exactly
+  what the shim's header already recommends, not a newly discovered defect requiring a code fix.
+- **Open follow-up, not investigated further:** the Bash-implementation run (`XYZ_PYTHON=0`) did not
+  produce a `PI_LOG` transcript file at the explicitly-set path, so `tick cost` capture did not fire for
+  that run (no `cost.tokens` event) — the Python implementation's own earlier run (Phase 1's dry run,
+  and the interrupted first Phase-4 attempt) DID capture real usage/cost data correctly. Root cause not
+  isolated (redirect/CWD interaction suspected, not confirmed); doesn't affect the shim's core
+  correctness (dispatch, edit, commit, containment all verified working), only the cost-observability
+  extra. Worth a small follow-up if the Bash path sees real production use.
 
 ### QA gate — Phase 4
 
-- [ ] Credential/endpoint obtained.
-- [ ] Real headless Pi call against the direct endpoint succeeds end-to-end.
+- [x] Credential/endpoint obtained (operator-supplied 2026-07-24, kept outside the repo).
+- [x] Real headless Pi call against the direct endpoint succeeds end-to-end. Verified via a full
+  `pi-turn.sh` run in an isolated scratch repo: exit 0, real commit, correct containment, production
+  repo confirmed untouched.
 
 ## FYI: pre-existing kernel behavior observed during the Phase 1 dry run (not a Pi-specific bug)
 
