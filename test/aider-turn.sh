@@ -44,6 +44,7 @@ done
 # GH-119 test hook: when the test sets ARGS_DUMP, record exactly what the shim constructed —
 if [ -n "${ARGS_DUMP:-}" ]; then
   echo "$@" > "${ARGS_DUMP}.all"
+  printf '%s' "${OPENAI_API_KEY:-}" > "${ARGS_DUMP}.openai-key"
 fi
 files=(); reads=(); chf=".aider.chat.history.md"; while (($#)); do
   case "$1" in
@@ -304,7 +305,7 @@ grep -qx "FILE:ignored-dir/relay.md" "$ARGS_DUMP" 2>/dev/null \
 
 # --- (14) GH-147 Phase 2 (LM_STUDIO lane): AIDER_OPENAI_API_BASE selects the LM Studio / OpenAI-
 # compatible seam — the shim must NOT require OPENROUTER_API_KEY on this seam, must pass
-# --openai-api-base/--openai-api-key (dummy default) through to aider, and must default the model to
+# --openai-api-base while supplying its key through the subprocess environment, and must default the model to
 # openai/agents-a1 (mirrors consult.sh's run_aider(), same GH-147 env-var contract).
 seed_token RELAY-TURN-lmstudio
 before="$(git -C "$A" rev-parse HEAD)"
@@ -319,8 +320,10 @@ env -u OPENROUTER_API_KEY RELAY_AGENT=aider RELAY_FILE="$A/relay.md" RELAY_TASK=
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "GH-147: LM Studio seam turn committed" || fail "LM Studio seam turn should have committed"
 grep -q -- "--openai-api-base http://127.0.0.1:1234/v1" "${ARGS_DUMP}.all" 2>/dev/null \
   && pass "GH-147: LM Studio base URL passed to aider" || fail "GH-147: --openai-api-base missing/wrong (dump: $(cat "${ARGS_DUMP}.all" 2>/dev/null))"
-grep -q -- "--openai-api-key dummy" "${ARGS_DUMP}.all" 2>/dev/null \
-  && pass "GH-147: LM Studio dummy key default passed to aider" || fail "GH-147: --openai-api-key dummy missing"
+grep -q -- "--openai-api-key" "${ARGS_DUMP}.all" 2>/dev/null \
+  && fail "GH-279: LM Studio key must not appear in aider argv" || pass "GH-279: LM Studio dummy key is absent from aider argv"
+[ "$(cat "${ARGS_DUMP}.openai-key" 2>/dev/null)" = "dummy" ] \
+  && pass "GH-279: LM Studio dummy key reaches aider via environment" || fail "GH-279: LM Studio dummy key missing from aider environment"
 grep -q -- "--model openai/agents-a1" "${ARGS_DUMP}.all" 2>/dev/null \
   && pass "GH-147: LM Studio default model (openai/agents-a1) selected" || fail "GH-147: default model wrong"
 tick_a release RELAY-TURN-lmstudio --agent aider --to boss >/dev/null 2>&1 || true  # free aider's slot (see case 4)
@@ -337,7 +340,9 @@ env -u OPENROUTER_API_KEY RELAY_AGENT=aider RELAY_FILE="$A/relay.md" RELAY_TASK=
   bash "$SHIM" >/dev/null 2>&1; rc=$?
 [ "$rc" -eq 0 ] && pass "GH-147: LM Studio seam with explicit key/model -> turn succeeds" || fail "LM Studio explicit key/model turn rc=$rc"
 grep -q -- "--openai-api-key sk-local-test" "${ARGS_DUMP}.all" 2>/dev/null \
-  && pass "GH-147: explicit AIDER_OPENAI_API_KEY overrides the dummy default" || fail "GH-147: explicit key not passed through"
+  && fail "GH-279: explicit LM Studio key must not appear in aider argv" || pass "GH-279: explicit LM Studio key is absent from aider argv"
+[ "$(cat "${ARGS_DUMP}.openai-key" 2>/dev/null)" = "sk-local-test" ] \
+  && pass "GH-279: explicit AIDER_OPENAI_API_KEY reaches aider via environment" || fail "GH-279: explicit key missing from aider environment"
 grep -q -- "--model openai/custom-model" "${ARGS_DUMP}.all" 2>/dev/null \
   && pass "GH-147: explicit AIDER_MODEL overrides the LM Studio default" || fail "GH-147: explicit model not passed through"
 tick_a release RELAY-TURN-lmstudio-key --agent aider --to boss >/dev/null 2>&1 || true  # free aider's slot (see case 4)

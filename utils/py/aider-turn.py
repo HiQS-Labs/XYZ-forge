@@ -72,9 +72,11 @@ def main():
     # remedy); the LM Studio / OpenAI-compatible seam authenticates via AIDER_OPENAI_API_BASE +
     # AIDER_OPENAI_API_KEY (dummy default) instead and needs no OPENROUTER_API_KEY at all.
     aider_auth_args = []
+    aider_env = os.environ.copy()
     if aider_openai_api_base:
-        aider_auth_args = ["--openai-api-base", aider_openai_api_base,
-                            "--openai-api-key", os.environ.get("AIDER_OPENAI_API_KEY", "dummy")]
+        # Keep the key out of ps-visible argv. Aider/LiteLLM reads OPENAI_API_KEY from its child env.
+        aider_env["OPENAI_API_KEY"] = os.environ.get("AIDER_OPENAI_API_KEY", "dummy")
+        aider_auth_args = ["--openai-api-base", aider_openai_api_base]
     elif not os.environ.get("OPENROUTER_API_KEY"):
         print("aider-turn: OPENROUTER_API_KEY is not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.", file=sys.stderr)
         sys.exit(5)
@@ -167,7 +169,7 @@ def main():
     bounded_rc = 0
     try:
         with open(aider_log, "w") as log_f:
-            subprocess.run(cmd, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, check=True)
+            subprocess.run(cmd, cwd=run_cwd, env=aider_env, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, check=True)
     except subprocess.TimeoutExpired:
         bounded_rc = 7
     except subprocess.CalledProcessError as e:

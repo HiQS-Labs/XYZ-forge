@@ -2,9 +2,9 @@
 gh_issue: 279
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/279
 title: "aider-qwen marathon trial — consolidated run issues (edit-format mismatch, empty-artifact escape, watchdog blast-radius, failure-tally gap)"
-status: "Promoted to 2-WORKING 2026-07-23 — scoped down to items 4 + 6a (the only remaining in-repo, fixable gaps), contract authored, ready to fire"
+status: "SHIPPED 2026-07-24 — items 4 + 6a fixed and merged (marathon/gh-279-aider-qwen-marathon-trial-findings-2026-07-24); items 1/2/3/5/6b resolved elsewhere or not applicable. Closes out the GH-279/GH-280 marathon."
 created: 2026-07-22
-updated: 2026-07-23
+updated: 2026-07-24
 owner: noel
 doc_type: bugfix
 effort: 2
@@ -45,7 +45,7 @@ question).
 ## Status
 | What was just completed | What's next |
 |---|---|
-| 2026-07-23: promoted to 2-WORKING. Re-grounded all 6 original items against the live repo (a subagent investigation, not the issue's prose) before scoping the contract: items 1/2 already resolved via #280, item 3 tracked separately as #278, items 5 and 6b have no in-repo equivalent to fix (confirmed via direct code search, not assumed) — only items 4 and 6a are real, fixable, in-repo gaps. Authored a Swarm Preflight Contract scoped to exactly those two. | Fire via `swarm-preflight → marathon-drive` (codex builder, agy reviewer). |
+| **2026-07-24: SHIPPED.** Fired via `swarm-preflight → marathon-drive` (Codex builder, agy reviewer) on branch `marathon/gh-279-aider-qwen-marathon-trial-findings-2026-07-24`. Codex's first turn implemented both fixes correctly (verified by direct diff review, not just trusted): `path_has_nonempty_phase_delta()` generalizes `requires_test_delta()`'s non-empty+git-delta pattern to the general artifact-appeared check in both `marathon-drive.sh`/`marathon_drive.py`, preserving `--requires-test`'s existing contract; `aider-turn.sh`/`aider-turn.py` now pass the `AIDER_OPENAI_API_BASE` seam's key via `OPENAI_API_KEY` env instead of `--openai-api-key` argv. The SAME turn also made two off-allowlist edits — a `CHANGELOG.md` entry and a full rewrite of an unrelated, concurrently-open `utils/swe-diagram/NEW.md` scratch file the operator was actively editing — both correctly reverted by containment (exit 6 escalation). A re-fire then collided with `--require-clean` against the operator's own live edits on that same file, so this phase was closed out **manually**: reviewed the already-correct in-scope diff directly, ran `test/aider-turn.sh` (63/63) and `test/marathon-drive.sh` (137/137) standalone, and a full `validate.sh` pass (green except the two long-standing environmental reds — missing `acorn`/`pytest` — and one confirmed-flaky `relay-turn-timeout.sh`, 9/9 clean on a standalone re-run). **Agy's independent review did not run** — its auth had expired in this environment (`agy login` needs an interactive session) — reviewed by the orchestrating session instead; disclosed here rather than silently presented as equivalent to a second-model review. `2-WORKING` doc's own edits (this file, `ROADMAP.md`, `CHANGELOG.md`) were committed separately from the code fix, since the code fix landed on the marathon branch. | Move this doc to `3-COMPLETED` and close issue #279 on GitHub. This closes out the whole GH-279/GH-280 marathon — nothing left queued from that plan. |
 
 ## Original items (full detail in the GitHub issue)
 1. ~~Aider↔Qwen edit-format mismatch → empty artifacts~~ — **RESOLVED via #280** (`AIDER_FLAGS=--edit-format diff`).

@@ -123,7 +123,9 @@ fi
 # OPENROUTER_API_KEY at all — mirrors run_aider() in relay-automation/consult.sh verbatim.
 aider_auth_args=()
 if [[ -n "${AIDER_OPENAI_API_BASE:-}" ]]; then
-  aider_auth_args=(--openai-api-base "$AIDER_OPENAI_API_BASE" --openai-api-key "${AIDER_OPENAI_API_KEY:-dummy}")
+  # Keep credentials out of process argv: Aider/LiteLLM reads OPENAI_API_KEY from its environment.
+  export OPENAI_API_KEY="${AIDER_OPENAI_API_KEY:-dummy}"
+  aider_auth_args=(--openai-api-base "$AIDER_OPENAI_API_BASE")
 elif [[ -z "${OPENROUTER_API_KEY:-}" ]]; then
   printf 'aider-turn: OPENROUTER_API_KEY is not set — Aider cannot reach OpenRouter (or set AIDER_OPENAI_API_BASE for an OpenAI-compatible/LM Studio endpoint). Export it, then retry.\n' >&2
   exit 5
