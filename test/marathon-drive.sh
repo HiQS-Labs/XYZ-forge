@@ -430,6 +430,7 @@ count=0
 count=$((count + 1))
 printf '%s\n' "$count" > "$WORK/rd-satisfied-count"
 if [ "$review_once" -eq 0 ]; then
+  printf 'artifact built during this phase\n' > "$A/src/satisfied.js"
   exit 3
 fi
 sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$relay"; rm -f "$relay.bak"
@@ -440,7 +441,6 @@ exit 0
 STUB
 chmod +x "$RD_SAT"
 mkdir -p "$A/src"
-printf 'artifact already built\n' > "$A/src/satisfied.js"
 rm -f "$WORK/rd-satisfied-count"
 SAT_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_SAT" MARATHON_LANE_NS="satisfied-plan--p1" \
   TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
@@ -492,7 +492,54 @@ rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 rm -f "$A/src/stalled.js"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
-# ── (12h) GH-274: retrying a phase after a flaky pre-advance gate does not clobber an
+# ── (12h) GH-279: empty or unchanged artifacts are not builder progress ───
+# A declared file used to be enough to trigger the already-satisfied recovery. That accepted a
+# zero-byte stub or an old unchanged file as a timed-out builder's new artifact and advanced it to
+# review. Both fixtures keep the gate green so the assertion isolates artifact classification.
+RD_GH279="$WORK/relay-drive-gh279.sh"
+cat > "$RD_GH279" <<'STUB'
+#!/usr/bin/env bash
+set -eu
+count=0
+[ -f "$WORK/rd-gh279-count" ] && count="$(cat "$WORK/rd-gh279-count")"
+printf '%s\n' "$((count + 1))" > "$WORK/rd-gh279-count"
+exit 3
+STUB
+chmod +x "$RD_GH279"
+mkdir -p "$A/src"
+
+: > "$A/src/zero-artifact.js"
+rm -f "$WORK/rd-gh279-count"
+ZERO_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_GH279" MARATHON_LANE_NS="gh279-zero--p1" \
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --artifact src/zero-artifact.js \
+    --pre-advance-cmd "true" --builder claude 2>&1)"; rc=$?
+[ "$rc" -eq 3 ] && pass "GH-279: zero-byte declared artifact remains no-progress" \
+  || fail "GH-279: zero-byte artifact exit=$rc (expected 3): $ZERO_OUT"
+[ "$(cat "$WORK/rd-gh279-count" 2>/dev/null)" = "1" ] \
+  && pass "GH-279: zero-byte artifact does not route a reviewer recovery" \
+  || fail "GH-279: zero-byte artifact was misclassified as appeared"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+rm -f "$A/src/zero-artifact.js"
+
+printf 'old artifact\n' > "$A/src/unchanged-artifact.js"
+git -C "$A" add src/unchanged-artifact.js >/dev/null 2>&1
+git -C "$A" commit -q -m "seed unchanged GH-279 artifact"
+rm -f "$WORK/rd-gh279-count"
+UNCHANGED_OUT="$(MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_GH279" MARATHON_LANE_NS="gh279-unchanged--p1" \
+  TICK_REPO_ROOT="$A" TICK_BIN="$TICK" CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy --artifact src/unchanged-artifact.js \
+    --pre-advance-cmd "true" --builder claude 2>&1)"; rc=$?
+[ "$rc" -eq 3 ] && pass "GH-279: unchanged declared artifact remains no-progress" \
+  || fail "GH-279: unchanged artifact exit=$rc (expected 3): $UNCHANGED_OUT"
+[ "$(cat "$WORK/rd-gh279-count" 2>/dev/null)" = "1" ] \
+  && pass "GH-279: unchanged artifact does not route a reviewer recovery" \
+  || fail "GH-279: unchanged artifact was misclassified as appeared"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+rm -f "$A/src/unchanged-artifact.js"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
+# ── (12i) GH-274: retrying a phase after a flaky pre-advance gate does not clobber an
 #         already-terminal (Approved + tick done) RELAY.md — only the gate is re-run ─────
 RD_GH274="$WORK/relay-drive-gh274.sh"
 cat > "$RD_GH274" <<'STUB'
