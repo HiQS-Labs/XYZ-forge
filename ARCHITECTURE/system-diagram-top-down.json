@@ -1,7 +1,6 @@
 {
-  "title": "XYZ — Multi-Agent Coordination System (Top-Down)",
-  "generated": "2026-07-14",
-  "layout": "top-down",
+  "title": "XYZ \u2014 Multi-Agent Coordination System",
+  "generated": "2026-07-09",
   "sources": [
     "ARCHITECTURE.md (relay stack map, verified against relay-drive.sh / relay-turn-lib.sh / *-turn.sh / poll.sh / bin/tick)",
     "ROUTER.md (canonical entry points, subsystem routing hints)",
@@ -10,67 +9,118 @@
     "utils/ate/SKILL.md + utils/ate/scripts/*.py (ATE: Gemma-driven Aider variation tester, folded in as its own subsystem)",
     "utils/pdda/pdda.sh + pdda-gh-refresh.sh (gh issue list read path for issue-doc-sync)"
   ],
-  "legend_note": "trust is a documentation-only annotation on top of the normal type/group fields — the swe-diagram renderer does not draw it specially. Vocabulary: trusted-primitive/trusted-orchestrator/trusted-dispatch/trusted-containment-core/trusted-supervisor = local, no independent code-execution authority of its own; untrusted-executor = an agent CLI running model-directed code, contained by something else, not by itself; sandboxed-worker = ATE's unattended local loop, no repo-write or network-credential authority of its own; external-credentialed = a real API key or a real GitHub side effect crosses here; shared-state = on-disk coordination surface, not itself a trust boundary; governance-gate = dev-time check, does not run during a live turn; runtime-audit = post-hoc verification, not a preventive control.",
+  "legend_note": "trust is a documentation-only annotation on top of the normal type/group fields \u2014 the swe-diagram renderer does not draw it specially. Vocabulary: trusted-primitive/trusted-orchestrator/trusted-dispatch/trusted-containment-core/trusted-supervisor = local, no independent code-execution authority of its own; untrusted-executor = an agent CLI running model-directed code, contained by something else, not by itself; sandboxed-worker = ATE's unattended local loop, no repo-write or network-credential authority of its own; external-credentialed = a real API key or a real GitHub side effect crosses here; shared-state = on-disk coordination surface, not itself a trust boundary; governance-gate = dev-time check, does not run during a live turn; runtime-audit = post-hoc verification, not a preventive control.",
   "trust_boundaries": [
     {
       "id": "b1-agent-vs-containment",
-      "between": ["claude-cli", "relay-lib"],
+      "between": [
+        "claude-cli",
+        "relay-lib"
+      ],
       "label": "SAFETY BOUNDARY: untrusted agent-driven writes are contained by relay-lib, not by the agent itself",
       "note": "Every agent CLI (claude-cli/codex-cli/agy-cli/aider-cli) runs model-directed code with no independent sandboxing of its own. relay-turn-lib.sh is the actual boundary: path allowlist, worktree isolation at ROOT@HEAD, commit-bypass hard reset (exit 6), and timeout watchdog (exit 7) all live there, not in the model."
     },
     {
       "id": "b2-dispatch-identity-gate",
-      "between": ["relay-drive", "claude-turn"],
+      "between": [
+        "relay-drive",
+        "claude-turn"
+      ],
       "label": "TRUST BOUNDARY: a shim only acts if RELAY_AGENT matches its own configured id",
       "note": "relay-drive.sh exports the current tick actor; every shim (claude-turn/codex-turn/agy-turn/aider-turn) checks RELAY_AGENT before doing anything and no-ops (exit 0) otherwise. This is what keeps four independently-invoked shims from ever racing each other for the same turn."
     },
     {
       "id": "b3-external-credentials",
-      "between": ["aider-cli", "openrouter"],
+      "between": [
+        "aider-cli",
+        "openrouter"
+      ],
       "label": "TRUST BOUNDARY: real API keys / real external side effects cross here",
       "note": "aider-cli reads its OpenRouter key from a local secrets file (never hardcoded). agy-cli's Google grounded search and ATE's gh issue create are the other two points in the whole suite where a real external credential or side effect is exercised."
     },
     {
       "id": "b4-post-hoc-audit-gap",
-      "between": ["trust-audit", "agy-cli"],
+      "between": [
+        "trust-audit",
+        "agy-cli"
+      ],
       "label": "SAFETY BOUNDARY (partial): post-hoc isolation-breach scan, not full containment",
-      "note": "trust-audit scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found — but this detects one leak symptom, not full containment. A known false-positive gap is tracked in GH-183."
+      "note": "trust-audit scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found \u2014 but this detects one leak symptom, not full containment. A known false-positive gap is tracked in GH-183."
     },
     {
       "id": "b5-ate-control-channel",
-      "between": ["checkin", "control-json"],
+      "between": [
+        "checkin",
+        "control-json"
+      ],
       "label": "SAFETY BOUNDARY: only Claude, via checkin.py --abort, writes control.json",
       "note": "run_variations.py resets control.json to {action: continue} at the start of every run (killing stale aborts from a prior run). The unattended worker loop and the local Gemma classifier only ever read it, never write it."
     },
     {
       "id": "b6-ate-scratch-repo-unenforced",
-      "between": ["run-variations", "aider-cli"],
+      "between": [
+        "run-variations",
+        "aider-cli"
+      ],
       "label": "SAFETY BOUNDARY (UNENFORCED): ATE's aider subprocess must stay inside a scratch repo",
-      "note": "Unlike relay's worktree isolation — a real code-level guard — this is only an operational instruction in ATE's SKILL.md quick-start. Nothing in run_variations.py validates that --repo isn't the operator's real working tree. This is the one boundary in the whole suite that exists in docs but not in code."
+      "note": "Unlike relay's worktree isolation \u2014 a real code-level guard \u2014 this is only an operational instruction in ATE's SKILL.md quick-start. Nothing in run_variations.py validates that --repo isn't the operator's real working tree. This is the one boundary in the whole suite that exists in docs but not in code."
     },
     {
       "id": "b7-single-external-side-effect",
-      "between": ["compile-issue", "github-api"],
+      "between": [
+        "compile-issue",
+        "github-api"
+      ],
       "label": "TRUST BOUNDARY: local unattended loop -> exactly one external credentialed action",
-      "note": "Regardless of how many hours ATE runs unattended, exactly one `gh issue create` call happens per run (or zero under --dry-run) — every intermediate result stays local in error_log.jsonl."
+      "note": "Regardless of how many hours ATE runs unattended, exactly one `gh issue create` call happens per run (or zero under --dry-run) \u2014 every intermediate result stays local in error_log.jsonl."
     },
     {
       "id": "b8-governance-is-dev-time-only",
-      "between": ["validate", "relay-drive"],
+      "between": [
+        "validate",
+        "relay-drive"
+      ],
       "label": "boundary: governance gates run outside the live agent-turn path",
-      "note": "validate.sh and pdda.sh check correctness/doc-hygiene at dev time; neither runs during a live relay/marathon/ATE turn, so they can't stop an in-flight unsafe action — they gate before/after, not during."
+      "note": "validate.sh and pdda.sh check correctness/doc-hygiene at dev time; neither runs during a live relay/marathon/ATE turn, so they can't stop an in-flight unsafe action \u2014 they gate before/after, not during."
     }
   ],
   "groups": [
-    { "id": "kernel", "label": "tick kernel (coordination primitive)" },
-    { "id": "orchestration", "label": "relay-automation (orchestration)" },
-    { "id": "shims", "label": "Per-agent turn shims" },
-    { "id": "agents", "label": "Agent CLIs (external subprocesses)" },
-    { "id": "external", "label": "External services" },
-    { "id": "state", "label": "Shared on-disk state" },
-    { "id": "governance", "label": "Governance (dev-time gates)" },
-    { "id": "trust", "label": "Audit & Trust (runtime reconciliation)" },
-    { "id": "ate", "label": "ATE (Gemma-driven Aider variation tester)" }
+    {
+      "id": "kernel",
+      "label": "tick kernel (coordination primitive)"
+    },
+    {
+      "id": "orchestration",
+      "label": "relay-automation (orchestration)"
+    },
+    {
+      "id": "shims",
+      "label": "Per-agent turn shims"
+    },
+    {
+      "id": "agents",
+      "label": "Agent CLIs (external subprocesses)"
+    },
+    {
+      "id": "external",
+      "label": "External services"
+    },
+    {
+      "id": "state",
+      "label": "Shared on-disk state"
+    },
+    {
+      "id": "governance",
+      "label": "Governance (dev-time gates)"
+    },
+    {
+      "id": "trust",
+      "label": "Audit & Trust (runtime reconciliation)"
+    },
+    {
+      "id": "ate",
+      "label": "ATE (Gemma-driven Aider variation tester)"
+    }
   ],
   "nodes": [
     {
@@ -78,7 +128,7 @@
       "label": "tick CLI",
       "type": "api",
       "group": "kernel",
-      "tech": "Node · bin/tick + src/*.js",
+      "tech": "Node \u00b7 bin/tick + src/*.js",
       "trust": "trusted-primitive",
       "description": "The kernel: a local event-log CLI that hands out collision-free, path-scoped work claims (claim/scope/ping/release/done/cost). Answers 'whose turn is it?' via the RELAY-TURN task. No server, no API keys."
     },
@@ -107,7 +157,7 @@
       "group": "orchestration",
       "tech": "containment core (model-agnostic)",
       "trust": "trusted-containment-core",
-      "description": "Shared safety core: path allowlist, worktree isolation at ROOT@HEAD, timeout watchdog (rtl_run_bounded), commit-bypass guard (hard reset + exit 6), and one file-scoped commit — never pushes."
+      "description": "Shared safety core: path allowlist, worktree isolation at ROOT@HEAD, timeout watchdog (rtl_run_bounded), commit-bypass guard (hard reset + exit 6), and one file-scoped commit \u2014 never pushes."
     },
     {
       "id": "poll",
@@ -269,7 +319,7 @@
       "group": "state",
       "tech": "append-only JSON lines, one record per ATE variation",
       "trust": "shared-state",
-      "description": "ATE's single source of truth. Every Aider variation appends here whether it passed or failed — the only artifact compile_issue.py reads to build the rollup."
+      "description": "ATE's single source of truth. Every Aider variation appends here whether it passed or failed \u2014 the only artifact compile_issue.py reads to build the rollup."
     },
     {
       "id": "validate",
@@ -305,7 +355,7 @@
       "group": "trust",
       "tech": "one-shot cross-model panel",
       "trust": "runtime-audit",
-      "description": "Parallel, read-only consult: fans the same question to Codex/agy/Aider in an isolated throwaway worktree and reconciles the answers into one. Mechanically stamps SINGLE-MODEL — NOT RECONCILED into the transcript when the panel degrades to one survivor (GH-178 A2)."
+      "description": "Parallel, read-only consult: fans the same question to Codex/agy/Aider in an isolated throwaway worktree and reconciles the answers into one. Mechanically stamps SINGLE-MODEL \u2014 NOT RECONCILED into the transcript when the panel degrades to one survivor (GH-178 A2)."
     },
     {
       "id": "trust-audit",
@@ -314,7 +364,7 @@
       "group": "trust",
       "tech": "post-hoc transcript scan (GH-178 B1)",
       "trust": "runtime-audit",
-      "description": "Scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found, catching a grounding escape from the isolated worktree. Detects one leak symptom, not full containment — a known false-positive gap is tracked in GH-183."
+      "description": "Scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found, catching a grounding escape from the isolated worktree. Detects one leak symptom, not full containment \u2014 a known false-positive gap is tracked in GH-183."
     },
     {
       "id": "run-variations",
@@ -332,7 +382,7 @@
       "group": "ate",
       "tech": "local model server, http://localhost:1234/v1",
       "trust": "sandboxed-worker",
-      "description": "Classifies each Aider result (pass/fail, severity, category, likely_cause) via ask_gemma(). Has no filesystem or gh credentials of its own — only ever called with the last 1500 chars of stdout/stderr as text."
+      "description": "Classifies each Aider result (pass/fail, severity, category, likely_cause) via ask_gemma(). Has no filesystem or gh credentials of its own \u2014 only ever called with the last 1500 chars of stdout/stderr as text."
     },
     {
       "id": "checkin",
@@ -354,48 +404,264 @@
     }
   ],
   "edges": [
-    { "source": "tick", "target": "eventlog", "label": "appends + projects", "kind": "data" },
-    { "source": "relay-drive", "target": "tick", "label": "reads RELAY-TURN actor", "kind": "sync" },
-    { "source": "relay-drive", "target": "claude-turn", "label": "invokes selected shim", "kind": "sync" },
-    { "source": "relay-drive", "target": "codex-turn", "label": "invokes selected shim", "kind": "sync" },
-    { "source": "relay-drive", "target": "agy-turn", "label": "invokes selected shim", "kind": "sync" },
-    { "source": "relay-drive", "target": "aider-turn", "label": "invokes selected shim", "kind": "sync" },
-    { "source": "claude-turn", "target": "relay-lib", "label": "containment", "kind": "sync" },
-    { "source": "codex-turn", "target": "relay-lib", "label": "containment", "kind": "sync" },
-    { "source": "agy-turn", "target": "relay-lib", "label": "containment", "kind": "sync" },
-    { "source": "aider-turn", "target": "relay-lib", "label": "containment", "kind": "sync" },
-    { "source": "relay-lib", "target": "tick", "label": "moves token (claim/release/done)", "kind": "sync" },
-    { "source": "relay-lib", "target": "relay-thread", "label": "file-scoped commit", "kind": "data" },
-    { "source": "claude-turn", "target": "claude-cli", "label": "runs CLI (worktree)", "kind": "sync" },
-    { "source": "codex-turn", "target": "codex-cli", "label": "runs CLI (worktree)", "kind": "sync" },
-    { "source": "agy-turn", "target": "agy-cli", "label": "runs CLI (worktree)", "kind": "sync" },
-    { "source": "aider-turn", "target": "aider-cli", "label": "runs CLI (--no-auto-commits)", "kind": "sync" },
-    { "source": "claude-cli", "target": "relay-thread", "label": "writes review blocks", "kind": "data" },
-    { "source": "codex-cli", "target": "relay-thread", "label": "writes review blocks", "kind": "data" },
-    { "source": "agy-cli", "target": "relay-thread", "label": "writes review blocks", "kind": "data" },
-    { "source": "aider-cli", "target": "relay-thread", "label": "writes edits", "kind": "data" },
-    { "source": "aider-cli", "target": "openrouter", "label": "model API", "kind": "sync" },
-    { "source": "agy-cli", "target": "google-search", "label": "grounded search", "kind": "sync" },
-    { "source": "poll", "target": "tick", "label": "reads whose-turn", "kind": "sync" },
-    { "source": "poll", "target": "relay-thread", "label": "reads STATUS", "kind": "data" },
-    { "source": "marathon", "target": "relay-drive", "label": "chains build->review phases", "kind": "sync" },
-    { "source": "deep-research", "target": "agy-cli", "label": "spawns agy -p (grounded)", "kind": "sync" },
-    { "source": "relay-drive", "target": "telemetry", "label": "appends completion", "kind": "data" },
-    { "source": "validate", "target": "tick", "label": "runs kernel + coordination suite", "kind": "sync" },
-    { "source": "pdda", "target": "project-docs", "label": "doc-hygiene gates", "kind": "sync" },
-    { "source": "pdda", "target": "github-api", "label": "gh issue list (issue-doc-sync cache)", "kind": "sync" },
-    { "source": "consult", "target": "agy-cli", "label": "fans out (isolated worktree)", "kind": "sync" },
-    { "source": "consult", "target": "trust-audit", "label": "checks agy transcript", "kind": "sync" },
-    { "source": "agy-turn", "target": "trust-audit", "label": "checks agy transcript", "kind": "sync" },
-    { "source": "trust-audit", "target": "relay-lib", "label": "shares containment core", "kind": "sync" },
-    { "source": "run-variations", "target": "control-json", "label": "resets to continue, polls each iteration", "kind": "sync" },
-    { "source": "checkin", "target": "control-json", "label": "writes abort only", "kind": "data" },
-    { "source": "run-variations", "target": "aider-cli", "label": "spawns per variation (scratch repo only)", "kind": "sync" },
-    { "source": "run-variations", "target": "lmstudio-gemma", "label": "ask_gemma classification", "kind": "sync" },
-    { "source": "run-variations", "target": "error-log", "label": "appends one record per variation", "kind": "data" },
-    { "source": "checkin", "target": "error-log", "label": "tails last N lines", "kind": "data" },
-    { "source": "run-variations", "target": "compile-issue", "label": "chains automatically when --gh-repo set", "kind": "sync" },
-    { "source": "compile-issue", "target": "error-log", "label": "reads full log, groups by severity", "kind": "data" },
-    { "source": "compile-issue", "target": "github-api", "label": "gh issue create (skipped under --dry-run)", "kind": "sync" }
-  ]
+    {
+      "source": "tick",
+      "target": "eventlog",
+      "label": "appends + projects",
+      "kind": "data"
+    },
+    {
+      "source": "relay-drive",
+      "target": "tick",
+      "label": "reads RELAY-TURN actor",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "claude-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "codex-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "agy-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "aider-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "tick",
+      "label": "moves token (claim/release/done)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "relay-thread",
+      "label": "file-scoped commit",
+      "kind": "data"
+    },
+    {
+      "source": "claude-turn",
+      "target": "claude-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "codex-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "agy-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "aider-cli",
+      "label": "runs CLI (--no-auto-commits)",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "codex-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "agy-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "relay-thread",
+      "label": "writes edits",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "openrouter",
+      "label": "model API",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-cli",
+      "target": "google-search",
+      "label": "grounded search",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "tick",
+      "label": "reads whose-turn",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "relay-thread",
+      "label": "reads STATUS",
+      "kind": "data"
+    },
+    {
+      "source": "marathon",
+      "target": "relay-drive",
+      "label": "chains build->review phases",
+      "kind": "sync"
+    },
+    {
+      "source": "deep-research",
+      "target": "agy-cli",
+      "label": "spawns agy -p (grounded)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "telemetry",
+      "label": "appends completion",
+      "kind": "data"
+    },
+    {
+      "source": "validate",
+      "target": "tick",
+      "label": "runs kernel + coordination suite",
+      "kind": "sync"
+    },
+    {
+      "source": "pdda",
+      "target": "project-docs",
+      "label": "doc-hygiene gates",
+      "kind": "sync"
+    },
+    {
+      "source": "pdda",
+      "target": "github-api",
+      "label": "gh issue list (issue-doc-sync cache)",
+      "kind": "sync"
+    },
+    {
+      "source": "consult",
+      "target": "agy-cli",
+      "label": "fans out (isolated worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "consult",
+      "target": "trust-audit",
+      "label": "checks agy transcript",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "trust-audit",
+      "label": "checks agy transcript",
+      "kind": "sync"
+    },
+    {
+      "source": "trust-audit",
+      "target": "relay-lib",
+      "label": "shares containment core",
+      "kind": "sync"
+    },
+    {
+      "source": "run-variations",
+      "target": "control-json",
+      "label": "resets to continue, polls each iteration",
+      "kind": "sync"
+    },
+    {
+      "source": "checkin",
+      "target": "control-json",
+      "label": "writes abort only",
+      "kind": "data"
+    },
+    {
+      "source": "run-variations",
+      "target": "aider-cli",
+      "label": "spawns per variation (scratch repo only)",
+      "kind": "sync"
+    },
+    {
+      "source": "run-variations",
+      "target": "lmstudio-gemma",
+      "label": "ask_gemma classification",
+      "kind": "sync"
+    },
+    {
+      "source": "run-variations",
+      "target": "error-log",
+      "label": "appends one record per variation",
+      "kind": "data"
+    },
+    {
+      "source": "checkin",
+      "target": "error-log",
+      "label": "tails last N lines",
+      "kind": "data"
+    },
+    {
+      "source": "run-variations",
+      "target": "compile-issue",
+      "label": "chains automatically when --gh-repo set",
+      "kind": "sync"
+    },
+    {
+      "source": "compile-issue",
+      "target": "error-log",
+      "label": "reads full log, groups by severity",
+      "kind": "data"
+    },
+    {
+      "source": "compile-issue",
+      "target": "github-api",
+      "label": "gh issue create (skipped under --dry-run)",
+      "kind": "sync"
+    }
+  ],
+  "layout": "top-down"
 }
