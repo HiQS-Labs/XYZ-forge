@@ -6,7 +6,7 @@ import subprocess
 import shlex
 import json
 import shutil
-from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin
+from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -14,7 +14,10 @@ def die(msg):
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    root = os.environ.get("CLAUDE_TURN_ROOT", xyz_root)
+    # GH-296 follow-up: mirror codex-turn.py's fix — fall back to the CWD's git toplevel (not
+    # xyz_root) when CLAUDE_TURN_ROOT is unset, so a same-repo vendored .xyz/ install resolves
+    # correctly instead of rooting worktree isolation + claim paths at the harness's own directory.
+    root = resolve_turn_root(os.environ.get("CLAUDE_TURN_ROOT"), xyz_root)
     
     me = os.environ.get("RELAY_AGENT", "")
     f = os.environ.get("RELAY_FILE", "")

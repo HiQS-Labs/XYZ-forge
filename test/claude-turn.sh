@@ -256,5 +256,32 @@ before_relay_b="$(cksum "$B/relay-py.md")"
 [ "$(git -C "$B" rev-parse HEAD)" = "$before_b" ] && pass "GH-172: python Claude guard blocks commits before mutation" || fail "python Claude guard must not commit"
 [ "$(cksum "$B/relay-py.md")" = "$before_relay_b" ] && pass "GH-172: python Claude guard leaves the relay file untouched" || fail "python Claude guard should not edit the relay file"
 
+# --- (15) GH-296 follow-up: with CLAUDE_TURN_ROOT unset, claude-turn.py's own pre-launch `tick
+# claim --paths` call (claim_paths_for_turn, native Python — NOT bridged through relay-turn-lib.sh's
+# already-toplevel-correcting rtl_init/GH-160) computes the claim path via os.path.relpath(relay_file,
+# root). Before this fix `root` fell back to XYZ_ROOT (this repo's own top level, __file__-derived)
+# instead of the CWD's git toplevel, producing an escaping "../../.../relay.md" claim path instead of
+# a clean repo-relative one. Driven with CWD=$A (no CLAUDE_TURN_ROOT override) and forced Python
+# runtime; asserts on `tick info`'s recorded paths (a full end-to-end run isn't discriminating here —
+# relay-turn-lib.sh's own worktree/containment logic already self-corrects a wrong root, GH-160).
+seed_token RELAY-TURN-gh296claude
+(
+  cd "$A" && env RELAY_AGENT=claude-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-gh296claude \
+    CLAUDE_AGENT=claude-builder CLAUDE_BIN="$STUB" CLAUDE_LOG="$WORK/claude-gh296.json" \
+    STUB_MODE=good XYZ_PYTHON=1 bash "$SHIM" >/dev/null 2>&1
+); rc=$?
+[ "$rc" -eq 0 ] && pass "GH-296: Python Claude turn (CLAUDE_TURN_ROOT unset) exits 0" || fail "GH-296: Claude turn should exit 0, got $rc"
+# The shim's own PRE-LAUNCH claim (claim_paths_for_turn's real computed value) is the EARLIEST
+# claude-builder-claimed event for this task — chronologically before the stub's own claim inside
+# the turn — find it by filename (ISO-timestamp-prefixed, sorts correctly) rather than `tick info`'s
+# current/post-release state (which shows "(none)" once the token is released).
+first_claim_file="$(find "$A/.tick/events" -maxdepth 1 -name '*-claude-builder-claimed-RELAY-TURN-gh296claude.jsonl' 2>/dev/null | sort | head -1)"
+claimed_paths="$(cat "$first_claim_file" 2>/dev/null | sed -n 's/.*"paths":\[\([^]]*\)\].*/\1/p')"
+case "$claimed_paths" in
+  *..*) fail "GH-296: claude-turn.py's claim --paths escaped root (got: $claimed_paths) — root did not resolve to the CWD's git toplevel" ;;
+  "") fail "GH-296: no claim event found to assert on — test setup broken" ;;
+  *) pass "GH-296: claude-turn.py's claim --paths stayed repo-relative, no root-escaping '..' (got: $claimed_paths)" ;;
+esac
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

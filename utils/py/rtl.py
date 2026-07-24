@@ -13,12 +13,37 @@ def split_allow_paths(allow_paths):
     return paths
 
 def claim_paths_for_turn(root, relay_file, allow_paths):
-    paths = [os.path.relpath(relay_file, root)]
+    # Resolve both through realpath before computing the relative path. `root` and `relay_file` can
+    # come from different resolution paths — e.g. root via resolve_turn_root's `git rev-parse
+    # --show-toplevel` fallback, which returns the PHYSICAL path, vs. a caller-supplied relay_file
+    # still in macOS's unresolved /var-or-/tmp-symlink form — and a symlink-form mismatch here makes
+    # relpath climb all the way out to an unrelated "../../.."-prefixed path instead of a clean
+    # repo-relative one (the same GH-51 class of bug relay-turn-lib.sh's rtl_init already guards
+    # against on the bridged/bash side; this native Python computation had no equivalent). (GH-296)
+    paths = [os.path.relpath(os.path.realpath(relay_file), os.path.realpath(root))]
     paths.extend(split_allow_paths(allow_paths))
     return paths
 
 def resolve_tick_repo_root(root):
     return os.environ.get("TICK_REPO_ROOT", root)
+
+def resolve_turn_root(explicit_root, xyz_root):
+    # Mirror the Bash shims' ROOT default (codex-turn.sh): an explicit override wins, else the
+    # CWD's git toplevel — so a shim invoked from inside a same-repo vendored .xyz/ (relay-xyz's
+    # documented `cd $HARNESS`) roots at the TRUE target repo, not xyz_root (the harness's own
+    # directory on disk, which can differ from the git toplevel in that layout even though both
+    # paths belong to the same git repo) — else xyz_root as a last resort off a git repo. (GH-296)
+    if explicit_root:
+        return explicit_root
+    try:
+        out = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                              capture_output=True, text=True, check=True)
+        top = out.stdout.strip()
+        if top:
+            return top
+    except Exception:
+        pass
+    return xyz_root
 
 def resolve_tick_bin(tick_repo_root, xyz_root):
     candidates = []
