@@ -185,6 +185,24 @@ grep -q -- "--add-dir" "$WORK/codex-args" && grep -q -- ".tick" "$WORK/codex-arg
   && pass "GH-263: isolation=0 (default) also passes --add-dir <root>/.tick to codex" \
   || fail "GH-263: --add-dir .tick missing when isolation is off (EPERM regression)"
 
+# --- (7d) GH-296: Python-runtime (XYZ_PYTHON default since GH-264) parity for GH-263/GH-36 in a
+# same-repo vendored .xyz/ layout — TICK_REPO_ROOT resolved correctly (e.g. by find-harness.sh --env)
+# but CODEX_TURN_ROOT left unset, so codex-turn.py's own `root` falls back to XYZ_ROOT (the harness's
+# own directory, __file__-derived), NOT the target repo. Before this fix codex-turn.py built its
+# --add-dir value from `root`, not `tick_repo_root` — so the sandbox allowlist pointed at
+# <XYZ_ROOT>/.tick (which may not even exist on disk) instead of the real lock at
+# TICK_REPO_ROOT/.tick, reproducing GH-296's EPERM in both worktree-isolation states.
+for _iso in 1 0; do
+  seed_token "RELAY-TURN-gh296-iso$_iso"
+  env RELAY_AGENT=codex RELAY_FILE="$A/relay.md" RELAY_TASK="RELAY-TURN-gh296-iso$_iso" \
+    CODEX_AGENT=codex CODEX_BIN="$STUB" CODEX_LOG=/dev/null STUB_MODE=good \
+    XYZ_PYTHON=1 RELAY_WORKTREE_ISOLATION="$_iso" TICK_REPO_ROOT="$A" \
+    bash "$SHIM" >/dev/null 2>&1
+  grep -qF -- "--add-dir $A/.tick" "$WORK/codex-args" \
+    && pass "GH-296: Python-runtime isolation=$_iso builds --add-dir off TICK_REPO_ROOT ($A), not XYZ_ROOT" \
+    || fail "GH-296: expected --add-dir $A/.tick under isolation=$_iso, got: $(cat "$WORK/codex-args" 2>/dev/null)"
+done
+
 # --- (9) rename-hijack: a staged rename (off-lane) is enforced, not skipped as pre-existing (Gemini review) ---
 printf 'tracked off-lane\n' > "$A/rtarget.txt"; git -C "$A" add rtarget.txt >/dev/null 2>&1; git -C "$A" commit -q -m "seed rename target" >/dev/null 2>&1
 seed_token RELAY-TURN-rename

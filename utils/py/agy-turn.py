@@ -4,7 +4,7 @@ import sys
 import tempfile
 import subprocess
 import shlex
-from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log
+from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
 
 def die(msg):
     print(f"agy-turn: {msg}", file=sys.stderr)
@@ -103,7 +103,12 @@ def agy_validate_model(agy_bin):
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    root = os.environ.get("AGY_TURN_ROOT", xyz_root)
+    # GH-296 follow-up: mirror codex-turn.py's fix — an explicit AGY_TURN_ROOT still wins (so the
+    # CROSS-REPO warning below can still fire for a genuinely different target), but the unset
+    # default now falls back to the CWD's git toplevel instead of xyz_root, so a same-repo vendored
+    # .xyz/ install (xyz_root inside the repo, sharing its git toplevel) resolves correctly without
+    # needing the warning as a workaround.
+    root = resolve_turn_root(os.environ.get("AGY_TURN_ROOT"), xyz_root)
     agy_bin = os.environ.get("AGY_BIN", "agy")
 
     me = os.environ.get("RELAY_AGENT", "")
