@@ -126,7 +126,7 @@ Summary: 113 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · �
 
 ## In progress
 
-Summary: 17 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 13 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 18 items | Tally: 🟢 0 · 🟡 4 · ⏸️ 0 · ⛔ 0 · ✅ 13 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -134,6 +134,7 @@ Summary: 17 items | Tally: 🟢 0 · 🟡 3 · ⏸️ 0 · ⛔ 0 · ✅ 13 · �
 | GH-201 · swe-diagram: add Git history lane visualization | ✅ | [GH-201-SWE-DIAGRAM-GIT-LANES.md](PROJECT/3-COMPLETED/GH-201-SWE-DIAGRAM-GIT-LANES.md) · [#201](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201) |
 | GH-221 · Explicitly document Claude CLI is NOT a default builder — Claude Code is orchestrator/reviewer only | ✅ | [GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md](PROJECT/3-COMPLETED/GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md) · [#221](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/221) |
 | GH-156 · Prelight swarmability scoring using codebase-memory-mcp graph signals | 🟡 | [GH-156-SWARMABILITY-PRELIGHT.md](PROJECT/4-MISC/GH-156-SWARMABILITY-PRELIGHT.md) · [#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156) |
+| GH-299 · Trust-centered alternative system diagram layout | 🟡 | [GH-299-DIAGRAM-TRUST-LAYOUT.md](PROJECT/2-WORKING/GH-299-DIAGRAM-TRUST-LAYOUT.md) · [#299](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/299) |
 | GH-148 · Python-layer swarm_preflight: inferred-path check lacked GH-137 sanitizer | ✅ | [relay-system/2026-07-05/gh112-134-parity-codex-review.md](relay-system/2026-07-05/gh112-134-parity-codex-review.md) · [#148](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/148) |
 | GH-146 · swe-diagram: add hub & ring (radial) layout option | ✅ | [DIAGRAM-HUB.html](PROJECT/3-COMPLETED/DIAGRAM-HUB.html) · [#146](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/146) |
 | GH-138 · HQ hardening: add promote command + fix marathon-plan detection glob | ✅ | [GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md](PROJECT/3-COMPLETED/GH-138-HQ-PROMOTE-AND-MARATHON-GLOB.md) · [#138](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/138) |

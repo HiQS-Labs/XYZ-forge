@@ -11,9 +11,9 @@
  * Spec shape (see SKILL.md for the authoring contract):
  * {
  *   title: string,
- *   layout?: "layered" | "top-down" | "hub-ring" | "git-lanes", // default "layered"
+ *   layout?: "layered" | "top-down" | "hub-ring" | "trust-clustered" | "git-lanes", // default "layered"
  *   hub?: string,                                  // hub-ring only: node id to center; default = highest-degree node
- *   nodes: [{ id, label, type?, group?, lane?, order?, description?, tech? }],
+ *   nodes: [{ id, label, type?, group?, trust?, lane?, order?, description?, tech? }],
  *   edges: [{ source, target, label?, kind? }],   // kind: "sync"|"async"|"data"|"branch"|"merge"
  *   groups?: [{ id, label }],
  *   lanes?: [{ id, label, order?, current? }]      // git-lanes only
@@ -270,6 +270,85 @@
     return positions;
   }
 
+  // ---- trust-clustered: bands nodes into fixed trust tiers derived from
+  // each node's own `trust` field (already authored for the doc's
+  // legend_note — see system-diagram.json) instead of a computed graph rank
+  // or an author-chosen `group`. This makes the trust/control-plane
+  // structure the layout's primary axis: the containment core reads as a
+  // central spine (never a leaf, per the acceptance criteria this mode was
+  // built for) with the dispatch shims, untrusted executors, shared state,
+  // and off-live-path governance/audit surface as their own bands, each
+  // still using the standard layered left->right bezier (edgePath) so
+  // backward edges (e.g. a shim's "containment" edge back into the spine
+  // column) route the same way `layout()` already handles them.
+  var TRUST_TIERS = [
+    { id: 'spine', label: 'Orchestration Spine',
+      prefixes: ['trusted-primitive', 'trusted-orchestrator', 'trusted-containment-core', 'trusted-supervisor'] },
+    { id: 'shim', label: 'Turn-Shim Cluster', prefixes: ['trusted-dispatch'] },
+    { id: 'periphery', label: 'Untrusted Periphery',
+      prefixes: ['untrusted-executor', 'external-credentialed', 'sandboxed-worker'] },
+    { id: 'state', label: 'Shared State', prefixes: ['shared-state'] },
+    { id: 'governance', label: 'Off-Live-Path Governance & Audit',
+      prefixes: ['governance-gate', 'runtime-audit'] }
+  ];
+  var TRUST_TIER_MAX_ROWS = 6; // wrap a tall tier into side-by-side sub-columns past this
+
+  function trustTierOf(n) {
+    var t = String(n.trust || '');
+    for (var i = 0; i < TRUST_TIERS.length; i++) {
+      var prefixes = TRUST_TIERS[i].prefixes;
+      for (var j = 0; j < prefixes.length; j++) {
+        if (t.indexOf(prefixes[j]) === 0) return i;
+      }
+    }
+    return TRUST_TIERS.length - 1; // untagged nodes land in the last band rather than vanishing
+  }
+
+  function trustClusteredLayout(spec) {
+    var nodes = spec.nodes || [];
+    var positions = {};
+    if (!nodes.length) return positions;
+
+    var byTier = TRUST_TIERS.map(function () { return []; });
+    nodes.forEach(function (n) { byTier[trustTierOf(n)].push(n); });
+
+    // Spine tier only: float the containment core, then its dispatching
+    // orchestrator, to the front so the traced path (dispatcher -> shim ->
+    // ... -> containment core) anchors at the top of the column instead of
+    // landing wherever alphabetical order happens to put it.
+    byTier[0].sort(function (a, b) {
+      function rank(n) {
+        var t = String(n.trust || '');
+        if (t.indexOf('trusted-containment-core') === 0) return 0;
+        if (t.indexOf('trusted-orchestrator') === 0) return 1;
+        return 2;
+      }
+      return rank(a) - rank(b) || String(a.label || a.id).localeCompare(String(b.label || b.id));
+    });
+    for (var i = 1; i < byTier.length; i++) {
+      byTier[i].sort(function (a, b) { return String(a.label || a.id).localeCompare(String(b.label || b.id)); });
+    }
+
+    var x = 0;
+    byTier.forEach(function (tierNodes) {
+      if (!tierNodes.length) return;
+      var subCols = Math.max(1, Math.ceil(tierNodes.length / TRUST_TIER_MAX_ROWS));
+      var perCol = Math.ceil(tierNodes.length / subCols);
+      for (var c = 0; c < subCols; c++) {
+        var colNodes = tierNodes.slice(c * perCol, (c + 1) * perCol);
+        var y = 0;
+        var colX = x;
+        colNodes.forEach(function (n) {
+          var h = nodeHeight(n);
+          positions[n.id] = { x: colX, y: y, w: NODE_W, h: h };
+          y += h + ROW_GAP;
+        });
+        x += NODE_W + (c < subCols - 1 ? ROW_GAP * 2 : COL_GAP);
+      }
+    });
+    return positions;
+  }
+
   // ---- main
   window.renderDiagram = function (spec, mount) {
     mount = mount || document.getElementById('diagram');
@@ -299,13 +378,22 @@
     var isHubRing = spec.layout === 'hub-ring';
     var isTopDown = spec.layout === 'top-down';
     var isGitLanes = spec.layout === 'git-lanes';
+    var isTrustClustered = spec.layout === 'trust-clustered';
     var pos = isHubRing ? hubRingLayout(spec) :
-              (isTopDown ? topDownLayout(spec) : (isGitLanes ? gitLaneLayout(spec) : layout(spec)));
+              (isTopDown ? topDownLayout(spec) :
+              (isGitLanes ? gitLaneLayout(spec) :
+              (isTrustClustered ? trustClusteredLayout(spec) : layout(spec))));
     var nodeEls = {};
     var gitLaneBounds = null;
 
-    var groupLabels = {};   // honor spec.groups: render the human label, not the raw id
-    (spec.groups || []).forEach(function (g) {
+    // trust-clustered ignores spec.groups (author-chosen subsystem groups)
+    // and instead groups by the derived trust tier, so the drawn boxes match
+    // the axis this layout mode exists to make dominant.
+    var groupDefs = isTrustClustered ? TRUST_TIERS : (spec.groups || []);
+    function nodeGroupId(n) { return isTrustClustered ? TRUST_TIERS[trustTierOf(n)].id : n.group; }
+
+    var groupLabels = {};   // render the human label, not the raw id
+    groupDefs.forEach(function (g) {
       if (g && g.id != null) groupLabels[g.id] = g.label || g.id;
     });
 
@@ -313,6 +401,9 @@
       var p = pos[n.id];
       var d = el('div', 'swe-node', nodeLayer);
       if (isGitLanes) d.classList.add('swe-node-commit');
+      if (isTrustClustered && String(n.trust || '').indexOf('trusted-containment-core') === 0) {
+        d.classList.add('swe-node-hub');
+      }
       d.style.left = p.x + 'px';
       d.style.top = p.y + 'px';
       d.style.width = p.w + 'px';
@@ -383,11 +474,11 @@
         if (coord != null && rankCoords.indexOf(coord) === -1) rankCoords.push(coord);
       });
       rankCoords.sort(function (a, b) { return a - b; });
-      (spec.groups || []).forEach(function (g) {
+      groupDefs.forEach(function (g) {
         if (!g || g.id == null) return;
         var colsOfGroup = {};
         (spec.nodes || []).forEach(function (n) {
-          if (n.group !== g.id || !pos[n.id]) return;
+          if (nodeGroupId(n) !== g.id || !pos[n.id]) return;
           var col = rankCoords.indexOf(pos[n.id][rankAxis]);
           (colsOfGroup[col] = colsOfGroup[col] || []).push(n.id);
         });
@@ -522,13 +613,48 @@
                mx: (p1.x + p2.x) / 2, my: (p1.y + p2.y) / 2 - 6 };
     }
 
+    // ---- label placement: nudge an edge label vertically off any node
+    // border or already-placed label it would otherwise sit on top of.
+    // Width is a rough glyph-count estimate (no canvas measurement — this
+    // must stay synchronous and dependency-free), which is deliberately
+    // generous so a false "overlap" (nudge when none existed) is preferred
+    // over a missed one. Runs for every layout, not just trust-clustered:
+    // dense fan-in/fan-out reads badly regardless of which mode placed the
+    // nodes.
+    var LABEL_H = 15;
+    function estimateLabelWidth(text) { return 6 * String(text || '').length + 8; }
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+    function placeLabelRect(mx, my, text, obstacles) {
+      var w = estimateLabelWidth(text);
+      var rect = { x: mx - w / 2, y: my - LABEL_H + 3, w: w, h: LABEL_H };
+      var step = LABEL_H + 3, tries = 0;
+      while (tries < 14 && obstacles.some(function (o) { return rectsOverlap(rect, o); })) {
+        tries++;
+        var offset = Math.ceil(tries / 2) * step * (tries % 2 ? 1 : -1);
+        rect.y = my - LABEL_H + 3 + offset;
+      }
+      return rect;
+    }
+
     function drawEdges() {
+      var labelObstacles = Object.keys(pos).map(function (id) {
+        var p = pos[id];
+        return { x: p.x, y: p.y, w: p.w, h: p.h };
+      });
       edgeEls.forEach(function (ee) {
         var pathFn = isHubRing ? radialEdgePath :
                      (isTopDown ? verticalEdgePath : (isGitLanes ? gitEdgePath : edgePath));
         var p = pathFn(pos[ee.e.source], pos[ee.e.target]);
         ee.path.setAttribute('d', p.d);
-        if (ee.label) { ee.label.setAttribute('x', p.mx); ee.label.setAttribute('y', p.my); }
+        if (ee.label) {
+          var rect = placeLabelRect(p.mx, p.my, ee.e.label, labelObstacles);
+          var labelY = rect.y + LABEL_H - 3;
+          ee.label.setAttribute('x', p.mx);
+          ee.label.setAttribute('y', labelY);
+          labelObstacles.push(rect);
+        }
       });
     }
 
@@ -697,7 +823,10 @@
       matchesQuery: matchesQuery,
       layout: layout,
       topDownLayout: topDownLayout,
-      gitLaneLayout: gitLaneLayout
+      gitLaneLayout: gitLaneLayout,
+      trustClusteredLayout: trustClusteredLayout,
+      trustTierOf: trustTierOf,
+      TRUST_TIERS: TRUST_TIERS
     };
   }
 })();

@@ -96,7 +96,7 @@ Schema (`ARCHITECTURE/system-diagram.json`):
   falls back to gray.
 - `kind` (drives edge style): `sync` (solid), `async` (dashed), `data`
   (dotted), `branch` (short dash), `merge` (purple long dash). Default `sync`.
-- Layout is automatic; do not put coordinates in the JSON. Four layouts:
+- Layout is automatic; do not put coordinates in the JSON. Five layouts:
   - **`"layout": "layered"` (default, omit the field for this)** — left→right
     from edge direction. Point `source → target` in the direction of the
     call/flow — layout quality depends on it. Use for synchronous
@@ -112,6 +112,20 @@ Schema (`ARCHITECTURE/system-diagram.json`):
     otherwise-independent services, not a linear pipeline. Optionally set
     `"hub": "<node id>"` to force which node is the center; omit it and the
     renderer picks the highest-degree (most-connected) node.
+  - **`"layout": "trust-clustered"`** — bands nodes into five fixed
+    trust-tier columns derived from each node's own `trust` field (see the
+    vocabulary below), not from graph rank or an author-chosen `group`:
+    Orchestration Spine, Turn-Shim Cluster, Untrusted Periphery, Shared
+    State, and Off-Live-Path Governance & Audit. Use when trust/control-plane
+    structure — not call direction — is the thing the diagram needs to make
+    dominant, e.g. a containment core that must always read as a hub, never
+    a leaf, regardless of how many things dispatch to it. Every node needs a
+    `trust` value for this mode to place it meaningfully; an untagged node
+    falls into the governance band rather than vanishing. A tier's members
+    wrap into side-by-side sub-columns past 6 nodes so one tier can't dominate
+    the canvas. The node whose `trust` is exactly (or starts with)
+    `trusted-containment-core` is drawn with an emphasized border so it reads
+    as the diagram's hub at a glance.
   - **`"layout": "git-lanes"`** — fixed horizontal branch lanes stacked as
     `lanes[].order`, with commits advancing left→right by each node's numeric
     `order`. Nodes set `lane`; edges point parent→child. Use the bundled
@@ -124,6 +138,9 @@ Schema (`ARCHITECTURE/system-diagram.json`):
     group's `label`, and are silently skipped under `hub-ring` and
     `git-lanes`. A node opts into a group via its own `group` field, matched
     against a `groups[].id`; groups with no member nodes are skipped.
+    **`trust-clustered` draws its own bands instead** — derived from each
+    node's `trust` field rather than `spec.groups`/`node.group` — so
+    `spec.groups` is ignored under this mode.
 
 ## Step 3 — Build the HTML
 

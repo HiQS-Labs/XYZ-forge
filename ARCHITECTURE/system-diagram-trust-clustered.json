@@ -663,6 +663,5 @@
       "kind": "sync"
     }
   ],
-  "layout": "hub-ring",
-  "hub": "relay-lib"
+  "layout": "trust-clustered"
 }
