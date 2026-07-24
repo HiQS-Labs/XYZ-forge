@@ -213,6 +213,14 @@ __RENDERER_JS__
   renderDiagram(spec);
   positionPicker();
   window.addEventListener('resize', positionPicker);
+  // The search box's custom clear button toggles on/off as the user types,
+  // changing .swe-search's rendered width without firing a window resize —
+  // previously only a real resize re-ran positionPicker(), so the picker
+  // stayed put while the (right-anchored) search box grew leftward under
+  // it. #diagram is a persistent node (renderDiagram only replaces its
+  // children), so this listener survives every re-render, including a
+  // font-swap.
+  document.getElementById('diagram').addEventListener('swe-search-resize', positionPicker);
 })();
 </script>
 </body>

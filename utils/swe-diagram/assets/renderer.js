@@ -793,10 +793,19 @@
     var searchClear = el('button', 'swe-search-clear', search);
     searchClear.type = 'button';
     searchClear.textContent = '×';
+    // swe-search-active shows/hides the custom clear button, which changes
+    // .swe-search's rendered width (it's a right-anchored flex row, so the
+    // box grows/shrinks from its LEFT edge). The font-picker script (outside
+    // this file, appended to <body>) positions itself off that width on
+    // load/font-change/resize but has no way to know it just changed here —
+    // dispatching on `mount` (the persistent #diagram node, not wiped by a
+    // font-swap re-render like its children are) lets it listen without this
+    // renderer needing to know the picker exists.
     searchInput.addEventListener('input', function () {
       query = searchInput.value.trim().toLowerCase();
       search.classList.toggle('swe-search-active', query.length > 0);
       applyFilter();
+      mount.dispatchEvent(new CustomEvent('swe-search-resize'));
     });
     searchClear.addEventListener('click', function () {
       searchInput.value = '';
@@ -804,6 +813,7 @@
       search.classList.remove('swe-search-active');
       applyFilter();
       searchInput.focus();
+      mount.dispatchEvent(new CustomEvent('swe-search-resize'));
     });
 
     if (spec.title) {
