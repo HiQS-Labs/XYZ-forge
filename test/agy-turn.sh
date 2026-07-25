@@ -266,6 +266,34 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-py-unowned AGY_AG
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "GH-172/GH-174: python agy guard blocks commits before mutation" || fail "python agy guard must not commit"
 [ "$(cksum "$A/relay.md")" = "$before_relay" ] && pass "GH-172/GH-174: python agy guard leaves relay file untouched" || fail "python agy guard should not edit the relay file"
 
+# --- (13) GH-296 follow-up: with AGY_TURN_ROOT unset, agy-turn.py's own pre-launch `tick claim
+# --paths` call (claim_paths_for_turn, native Python — NOT bridged through relay-turn-lib.sh's
+# already-toplevel-correcting rtl_init/GH-160) computes the claim path via os.path.relpath(relay_file,
+# root). Before this fix `root` fell back to XYZ_ROOT (this repo's own top level, __file__-derived)
+# instead of the CWD's git toplevel, so a relay file living in a DIFFERENT repo produced an
+# escaping "../../.../relay.md" claim path instead of a clean repo-relative one. Driven with CWD=$A
+# (no AGY_TURN_ROOT override) and forced Python runtime; asserts on `tick info`'s recorded paths, the
+# direct observable of this native computation (a full end-to-end run isn't discriminating here,
+# since relay-turn-lib.sh's own worktree/containment logic already self-corrects a wrong root via the
+# unrelated GH-160 fix).
+seed_token RELAY-TURN-gh296agy
+pygh296log="$WORK/agy-gh296.$$.log"; : >"$pygh296log"
+( cd "$A" && env RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-gh296agy AGY_AGENT=agy \
+    AGY_BIN="$STUB" AGY_LOG="$pygh296log" STUB_MODE=good XYZ_PYTHON=1 \
+    bash "$SHIM" ) >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "GH-296: Python agy turn (AGY_TURN_ROOT unset) exits 0" || fail "GH-296: agy turn should exit 0, got $rc"
+# The shim's own PRE-LAUNCH claim (claim_paths_for_turn's real computed value) is the EARLIEST
+# agy-claimed event for this task — chronologically before the stub's own hardcoded "z/**" re-claim
+# (same agent, same task) — find it by filename (ISO-timestamp-prefixed, sorts correctly) rather
+# than `tick info`'s current/post-release state. Excludes seed_token's own claude-a claim event
+# (different agent segment in the filename).
+first_claim_file="$(find "$A/.tick/events" -maxdepth 1 -name '*-agy-claimed-RELAY-TURN-gh296agy.jsonl' 2>/dev/null | sort | head -1)"
+claimed_paths="$(cat "$first_claim_file" 2>/dev/null | sed -n 's/.*"paths":\[\([^]]*\)\].*/\1/p')"
+case "$claimed_paths" in
+  *..*) fail "GH-296: agy-turn.py's claim --paths escaped root (got: $claimed_paths) — root did not resolve to the CWD's git toplevel" ;;
+  *) pass "GH-296: agy-turn.py's claim --paths stayed repo-relative, no root-escaping '..' (got: $claimed_paths)" ;;
+esac
+
 # --- (S2) AGY-SPECIFIC: role/model adherence — the acting model must write ITS ASSIGNED role's block
 # and flip NEXT to the other role. F4 (sibling run feedback #4a; GH-142 Phase-1 S2): agy took a
 # NEXT:-assigned Producer turn but wrote a Reviewer block and never flipped NEXT, rotating the

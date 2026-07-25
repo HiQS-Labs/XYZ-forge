@@ -4,7 +4,7 @@ import sys
 import tempfile
 import subprocess
 import shlex
-from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log
+from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
 
 def die(msg):
     print(f"codex-turn: {msg}", file=sys.stderr)
@@ -17,7 +17,7 @@ def default_codex_flags():
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    root = os.environ.get("CODEX_TURN_ROOT", xyz_root)
+    root = resolve_turn_root(os.environ.get("CODEX_TURN_ROOT"), xyz_root)
     codex_bin = os.environ.get("CODEX_BIN", "codex")
 
     me = os.environ.get("RELAY_AGENT", "")
@@ -56,20 +56,24 @@ def main():
     tick_repo_root, _tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "codex-turn")
 
     cflags = default_codex_flags()
-    codex_extra_flags = []
-    
+    # GH-263/GH-296: unconditionally grant Codex's sandbox the shared .tick lock dir — both under
+    # worktree isolation (workdir=throwaway worktree) and the isolation=0 default (workdir=ROOT,
+    # which in a same-repo vendored .xyz/ install can still differ from tick_repo_root). Mirrors
+    # codex-turn.sh's codex_extra_flags. Built off tick_repo_root (not root), so an explicit
+    # TICK_REPO_ROOT override still lands in the sandbox allowlist.
+    codex_extra_flags = ["--add-dir", f"{tick_repo_root}/.tick"]
+
     rtl.before()
-    
+
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
-    
+
     wt = ""
     run_cwd = root
-    
+
     if os.environ.get("RELAY_WORKTREE_ISOLATION", "0") == "1":
         wt = rtl.worktree_begin()
         if wt:
             run_cwd = wt
-            codex_extra_flags = ["--add-dir", f"{root}/.tick"]
             print(f"codex-turn: worktree isolation ON ({wt})", file=sys.stderr)
             os.environ["TICK_REPO_ROOT"] = tick_repo_root
         else:

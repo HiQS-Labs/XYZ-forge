@@ -25,7 +25,8 @@ cat > "$WORK/fixtures.js" <<'JSEOF'
 global.window = {};
 var r = require(process.argv[2]);
 var hubRingLayout = r.hubRingLayout, matchesQuery = r.matchesQuery,
-    topDownLayout = r.topDownLayout, gitLaneLayout = r.gitLaneLayout;
+    topDownLayout = r.topDownLayout, gitLaneLayout = r.gitLaneLayout,
+    trustClusteredLayout = r.trustClusteredLayout, trustTierOf = r.trustTierOf;
 
 var results = [];
 function check(label, ok, detail) { results.push([label, !!ok, detail || '']); }
@@ -145,6 +146,69 @@ check('empty spec -> no positions', Object.keys(hubRingLayout({ nodes: [], edges
     counts.length === 3 && counts[0] === 5 && counts[1] === 6 && counts[2] === 6,
     'ring sizes=' + JSON.stringify(counts));
 })();
+
+// --- trustTierOf: maps a node's `trust` field to a fixed tier index,
+// independent of graph structure (GH-299) ---
+check('trusted-containment-core -> spine tier (0)',
+  trustTierOf({ trust: 'trusted-containment-core' }) === 0);
+check('trusted-dispatch -> shim tier (1)',
+  trustTierOf({ trust: 'trusted-dispatch' }) === 1);
+check('untrusted-executor -> periphery tier (2)',
+  trustTierOf({ trust: 'untrusted-executor' }) === 2);
+check('shared-state -> state tier (3)',
+  trustTierOf({ trust: 'shared-state' }) === 3);
+check('governance-gate -> governance tier (4)',
+  trustTierOf({ trust: 'governance-gate' }) === 4);
+check('a parenthetical suffix still matches its prefix (e.g. "shared-state (control-channel)")',
+  trustTierOf({ trust: 'shared-state (control-channel)' }) === 3);
+check('a node with no trust field falls into the last (governance) band rather than vanishing',
+  trustTierOf({}) === 4);
+
+// --- trustClusteredLayout: containment core reads as a hub, never a leaf ---
+(function () {
+  var spec = {
+    nodes: [
+      { id: 'core', trust: 'trusted-containment-core' },
+      { id: 'orch', trust: 'trusted-orchestrator' },
+      { id: 'shim1', trust: 'trusted-dispatch' },
+      { id: 'shim2', trust: 'trusted-dispatch' },
+      { id: 'cli1', trust: 'untrusted-executor' },
+      { id: 'thread', trust: 'shared-state' },
+      { id: 'gate', trust: 'governance-gate' }
+    ],
+    edges: [
+      { source: 'orch', target: 'shim1' }, { source: 'orch', target: 'shim2' },
+      { source: 'shim1', target: 'cli1' },
+      { source: 'shim1', target: 'core' }, { source: 'shim2', target: 'core' },
+      { source: 'core', target: 'thread' }
+    ]
+  };
+  var pos = trustClusteredLayout(spec);
+  check('every node gets a position (no dangling nodes)',
+    Object.keys(pos).length === spec.nodes.length);
+  check('containment core sits in a strictly earlier column than the shims that dispatch to it',
+    pos.core.x < pos.shim1.x && pos.core.x < pos.shim2.x);
+  check('shim/periphery/state/governance land in 4 distinct columns after the spine',
+    pos.shim1.x < pos.cli1.x && pos.cli1.x < pos.thread.x && pos.thread.x < pos.gate.x);
+  check('orchestrator and containment core share the spine column (adjacent, not eye-jumping)',
+    pos.core.x === pos.orch.x);
+})();
+
+(function () {
+  // 10 periphery nodes should wrap into side-by-side sub-columns rather than
+  // one very tall column (canvas-efficiency acceptance criterion).
+  var nodes = [{ id: 'core', trust: 'trusted-containment-core' }];
+  for (var i = 0; i < 10; i++) nodes.push({ id: 'p' + i, trust: 'untrusted-executor' });
+  var pos = trustClusteredLayout({ nodes: nodes, edges: [] });
+  var peripheryXs = {};
+  nodes.slice(1).forEach(function (n) { peripheryXs[pos[n.id].x] = true; });
+  check('a 10-node tier wraps into more than one sub-column',
+    Object.keys(peripheryXs).length > 1,
+    'distinct x columns=' + Object.keys(peripheryXs).length);
+})();
+
+check('trustClusteredLayout: empty spec -> no positions',
+  Object.keys(trustClusteredLayout({ nodes: [], edges: [] })).length === 0);
 
 // --- matchesQuery: base cases ---
 var authNode = { id: 'auth-svc', label: 'Auth Service', type: 'service', tech: 'FastAPI',

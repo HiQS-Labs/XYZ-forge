@@ -73,6 +73,8 @@
   .swe-node-commit .swe-node-label { white-space: nowrap; overflow: hidden;
                                      text-overflow: ellipsis; }
   .swe-node.swe-dimmed { opacity: .22; }
+  .swe-node-hub { border-width: 2px; border-top-width: 4px;
+                   box-shadow: 0 0 0 4px rgba(79,124,255,.16), 0 2px 10px rgba(0,0,0,.22); }
 
   .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6;
               transition: opacity .15s; }
@@ -113,7 +115,18 @@
   .swe-search-input { width: 180px; padding: 6px 10px;
                        font-family: var(--swe-ui-font); font-size: 12px;
                        border: 1px solid var(--border); border-radius: 6px;
-                       background: var(--panel); color: var(--ink); }
+                       background: var(--panel); color: var(--ink);
+                       /* Without this, WebKit's native `type="search"` field
+                          chrome (its own cancel button + intrinsic min-width)
+                          overrides the explicit width once text is typed —
+                          the field visibly grows and overflows past
+                          .swe-canvas's `overflow: hidden` edge. The custom
+                          .swe-search-clear button already provides the same
+                          affordance, so the native decoration is pure
+                          downside. */
+                       -webkit-appearance: none; appearance: none; }
+  .swe-search-input::-webkit-search-cancel-button,
+  .swe-search-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
   .swe-search-input::placeholder { color: var(--muted); }
   .swe-search-clear { border: 1px solid var(--border); border-radius: 6px;
                        background: var(--panel); color: var(--muted);
@@ -200,6 +213,14 @@ __RENDERER_JS__
   renderDiagram(spec);
   positionPicker();
   window.addEventListener('resize', positionPicker);
+  // The search box's custom clear button toggles on/off as the user types,
+  // changing .swe-search's rendered width without firing a window resize —
+  // previously only a real resize re-ran positionPicker(), so the picker
+  // stayed put while the (right-anchored) search box grew leftward under
+  // it. #diagram is a persistent node (renderDiagram only replaces its
+  // children), so this listener survives every re-render, including a
+  // font-swap.
+  document.getElementById('diagram').addEventListener('swe-search-resize', positionPicker);
 })();
 </script>
 </body>

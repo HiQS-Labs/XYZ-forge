@@ -495,25 +495,32 @@ relay-file: {rel_relay}
         actor = claimer if status == "claimed" else (handoff if status == "open" else "")
         return (status, actor)
 
-    def requires_test_delta(path):
-        # GH-249: True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
-        # or is newly untracked/added. Mirrors Bash requires_test_delta — an empty/missing/unchanged test
-        # proves nothing.
+    def path_has_nonempty_phase_delta(path):
+        # True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
+        # or is newly untracked/added. Shared by --requires-test and artifact recovery: an empty or
+        # unchanged artifact is no evidence that a builder turn made progress.
         rroot = args.target_root or root
         abs_p = path if os.path.isabs(path) else os.path.join(rroot, path)
         if not (os.path.isfile(abs_p) and os.path.getsize(abs_p) > 0):
             return False
+        git_path = path
+        if os.path.isabs(path) and os.path.commonpath([os.path.abspath(path), os.path.abspath(rroot)]) == os.path.abspath(rroot):
+            git_path = os.path.relpath(path, rroot)
         if pre_phase_head:
-            out = subprocess.run(["git", "-C", rroot, "diff", "--name-only", pre_phase_head, "--", path],
+            out = subprocess.run(["git", "-C", rroot, "diff", "--name-only", pre_phase_head, "--", git_path],
                                  stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
             if out.strip():
                 return True
-        st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", path],
+        st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", git_path],
                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
         for line in st.splitlines():
             if line.startswith("??") or line.startswith("A "):
                 return True
         return False
+
+    def requires_test_delta(path):
+        # GH-249: --requires-test preserves its existing non-empty phase-delta contract.
+        return path_has_nonempty_phase_delta(path)
 
     def complete_phase_success(success_mode="approved"):
         log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
@@ -738,8 +745,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
             p = p.strip()
             if not p:
                 continue
-            ap = p if os.path.isabs(p) else os.path.join(aroot, p)
-            if not os.path.exists(ap):
+            if not path_has_nonempty_phase_delta(p):
                 return False
         return True
 

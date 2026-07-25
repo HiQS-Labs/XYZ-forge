@@ -353,18 +353,14 @@ run_post_approve_cmd() {
 }
 
 artifacts_exist_for_timeout() {
-  local root path
+  local path
   [[ -n "$ARTIFACT_PATHS" ]] || return 1
-  root="${TARGET_ROOT:-$ROOT}"
   IFS=',' read -ra _artifact_paths <<<"$ARTIFACT_PATHS"
   for path in "${_artifact_paths[@]}"; do
     path="${path#"${path%%[![:space:]]*}"}"
     path="${path%"${path##*[![:space:]]}"}"
     [[ -n "$path" ]] || continue
-    case "$path" in
-      /*) [[ -e "$path" ]] || return 1 ;;
-      *)  [[ -e "$root/$path" ]] || return 1 ;;
-    esac
+    path_has_nonempty_phase_delta "$path" || return 1
   done
   return 0
 }
@@ -376,21 +372,27 @@ artifacts_exist_for_timeout() {
 # PRE_PHASE_HEAD (committed diff) or be newly untracked (a turn-taker edit not yet committed at gate
 # time). Opt-in and additive — REQUIRES_TEST stays empty unless a caller sets --requires-test, so a
 # run with no such flag is byte-for-byte the same gate behavior as before this feature existed.
-requires_test_delta() {  # <path> — true if <path> was added/modified since PRE_PHASE_HEAD
-  local path="$1" root="${TARGET_ROOT:-$ROOT}" abs
+path_has_nonempty_phase_delta() {  # <path> — true if non-empty and added/modified since PRE_PHASE_HEAD
+  local path="$1" root="${TARGET_ROOT:-$ROOT}" abs git_path
   case "$path" in
     /*) abs="$path" ;;
     *)  abs="$root/$path" ;;
   esac
-  [[ -s "$abs" ]] || return 1   # must exist and be non-empty — an empty/missing test proves nothing
+  [[ -s "$abs" ]] || return 1   # an empty/missing artifact proves nothing
+  git_path="$path"
+  [[ "$path" == /* && "$path" == "$root/"* ]] && git_path="${path#"$root/"}"
   if [[ -n "$PRE_PHASE_HEAD" ]] \
-    && git -C "$root" diff --name-only "$PRE_PHASE_HEAD" -- "$path" 2>/dev/null | grep -q .; then
+    && git -C "$root" diff --name-only "$PRE_PHASE_HEAD" -- "$git_path" 2>/dev/null | grep -q .; then
     return 0
   fi
   # A newly created file may still be untracked at gate time (harness commits happen inside the relay
   # loop, but nothing guarantees a same-cycle commit for every edit) — count that as a delta too.
-  git -C "$root" status --porcelain -- "$path" 2>/dev/null | grep -qE '^(\?\?|A )' && return 0
+  git -C "$root" status --porcelain -- "$git_path" 2>/dev/null | grep -qE '^(\?\?|A )' && return 0
   return 1
+}
+
+requires_test_delta() {  # <path> — true if <path> was added/modified since PRE_PHASE_HEAD
+  path_has_nonempty_phase_delta "$1"
 }
 
 usage() {
