@@ -55,6 +55,38 @@ def test_codex_turn_default_flags_match_bash_default():
             "approval_policy=never",
         ]
 
+def test_pi_turn_module_load():
+    pi_turn = load_module("pi_turn_py", "utils/py/pi-turn.py")
+    assert pi_turn is not None
+
+def test_pi_turn_parse_usage_keeps_last_event_gh295():
+    # GH-295: Pi's --mode json stream is JSONL (one JSON object per line), not one blob. The parser
+    # must scan every line and keep the LAST message.usage block seen (the turn_end/agent_end event
+    # carries the CUMULATIVE usage for the whole turn, later lines in a real transcript have bigger
+    # numbers than earlier partial-delta events). Uses the real shape captured in the Phase 0 smoke test.
+    pi_turn = load_module("pi_turn_py", "utils/py/pi-turn.py")
+
+    with tempfile.NamedTemporaryFile("w", delete=False, suffix=".jsonl") as f:
+        f.write('{"type":"session","version":3,"id":"stub"}\n')
+        f.write('{"type":"message_start","message":{"role":"assistant","usage":{"input":0,"output":0}}}\n')
+        f.write('not json at all — must be skipped without raising\n')
+        f.write('{"type":"turn_end","message":{"role":"assistant","usage":{"input":1098,"output":18,"cost":{"total":0.0009045}}}}\n')
+        name = f.name
+
+    try:
+        tokens_in, tokens_out = pi_turn.parse_pi_usage(name)
+        assert tokens_in == 1098
+        assert tokens_out == 18
+    finally:
+        os.remove(name)
+
+def test_pi_turn_parse_usage_missing_file_returns_zero():
+    # Best-effort contract: an unreadable/missing transcript must never raise — the turn already
+    # committed by the time cost-capture runs, so a parse failure degrades to (0, 0), not an exception.
+    pi_turn = load_module("pi_turn_py", "utils/py/pi-turn.py")
+    tokens_in, tokens_out = pi_turn.parse_pi_usage("/no/such/path/pi-transcript.jsonl")
+    assert (tokens_in, tokens_out) == (0, 0)
+
 def test_marathon_drive_fails_before_tick_state_when_builder_binary_missing():
     import marathon_drive
 

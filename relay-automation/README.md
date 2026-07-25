@@ -7,11 +7,12 @@ build swarms. Built in phases on top of `tick` (see
 **Execution contract: default live-window flow** — the default operator path is
 still the poll-driven, live-window flow: a Claude window under `/loop`, or a
 human one-line nudge when the turn belongs to a non-Claude window. Headless
-turn-takers now exist for Codex and agy (`codex-turn.sh`, `agy-turn.sh`).
+turn-takers now exist for Codex, agy, and Pi (`codex-turn.sh`, `agy-turn.sh`,
+`pi-turn.sh`).
 `relay-loop.sh --background --cross-model-cmd <shim>` can now auto-fire one of
 those shims on `DECISION: nudge-cross-model`; without that wrapper-only flag,
 the loop still degrades to the existing manual nudge. For the current headless path, see
-[the headless bring-up below](#headless-bring-up-codex--agy), plus
+[the headless bring-up below](#headless-bring-up-codex--agy--pi), plus
 [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md).
 
 ## Components
@@ -25,6 +26,7 @@ the loop still degrades to the existing manual nudge. For the current headless p
 | `relay-turn-lib.sh` | **Shared safety core** (sourced, not run): the model-agnostic containment contract — path-allowlist + commit-bypass guard + no-push. Both headless turn-takers source this so the boundary lives in ONE place. See [decisions/2026-06-15-unattended-agent-containment.md](../decisions/2026-06-15-unattended-agent-containment.md). |
 | `codex-turn.sh` | **Option-A** headless turn-taker for the **Codex** agent (`codex exec`); thin dispatch wrapper over `relay-turn-lib.sh`. |
 | `agy-turn.sh` | **Option-A** headless turn-taker for the **agy** (Antigravity CLI) agent (`agy -p`); thin dispatch wrapper over `relay-turn-lib.sh`. Permanent replacement for `gemini-turn.sh`; live-validated 2026-06-18. |
+| `pi-turn.sh` | **GH-295** headless turn-taker for **Pi** (`pi.dev`, package `@earendil-works/pi-coding-agent`; `pi --provider … --model … --mode json -p`); thin dispatch wrapper over `relay-turn-lib.sh`. Same posture as agy (no built-in sandbox — containment is worktree isolation + `rtl_enforce`), but genuinely better on cost visibility: `--mode json`'s JSONL stream carries real per-call `usage`/`cost` fields, so this is the first non-Claude lane with actual `tick cost --tool pi` capture. `PI_MODEL` has **no default** by design (GH-280/aider#5486 class of bug); the operator must set it explicitly. |
 | `aider-turn.sh` | Headless turn-taker for **Aider ↔ OpenRouter** (`aider --model openrouter/… --message`) — an OpenAI-standard lane discrete from Codex. Same `relay-turn-lib.sh` containment; because Aider is a file-editor (no mid-turn shell), the SHIM performs the tick token ops itself and runs Aider with `--no-auto-commits` (the harness owns the commit). Set `OPENROUTER_API_KEY` + `AIDER_MODEL` (e.g. `openrouter/anthropic/claude-3.5-sonnet`, `openrouter/openai/gpt-4o`, `openrouter/deepseek/deepseek-chat`). Works in **both** a marathon `--builder aider` lane AND a plain `/relay` — it routes through the shared `marathon-agent.sh` dispatcher (`relay-drive.sh`'s `--agent-cmd`), so a driven relay with `RELAY_AGENT=aider` fires it just like Codex/agy. |
 | `deep-research.mjs` | **Provider-agnostic grounded web search** (GH-87/GH-129): one normalized `{answer, citations, query, provider, model, raw}` contract over two backends — **Agy Gemini Search** (default; `agy` CLI in a throwaway tmpdir, side-effect free) and **Perplexity Sonar via OpenRouter** (`--provider openrouter`; same `OPENROUTER_API_KEY` gateway convention as the Aider lane, model `perplexity/sonar` overridable via `DEEP_RESEARCH_OPENROUTER_MODEL`, `--search-context-size` → Perplexity's native `web_search_options.search_context_size`). Fail-closed typed errors (`binary_missing`/`missing_api_key`/`timeout`/`backend_error`/`empty_output`) — never a silent cross-provider fallback. Run sandbox-OFF; prefer `--search-context-size medium` with focused single-intent queries (`high` risks runaway grounding near the 120s `DEEP_RESEARCH_TIMEOUT_MS` cap — see #124). Wall-clock cap is `DEEP_RESEARCH_TIMEOUT_MS`, default `120000` (120s); override upward (e.g. `DEEP_RESEARCH_TIMEOUT_MS=180000`) when a thorough `high`-context, multi-claim query genuinely needs more headroom — the default itself is unchanged. |
 | `consult.sh` | Parallel read-only consult: asks the same question to **Codex, agy, and (opt-in) Aider↔OpenRouter** (`--models codex,agy,aider`), captures each transcript, and leaves synthesis to the caller. Advisory-only; also the engine behind `relay-drive.sh --consult-verify`. |
@@ -223,10 +225,10 @@ running. `relay-drive.sh` remains the deterministic single-window alternative.
 - **Not a durable scheduler / not unattended-without-a-window.** A Claude window must be open and looping for the default poll flow. Current headless turns exist, but durable unattended orchestration is still a separate problem.
 - The portable `/relay` skill stays dependency-free; this tick-driven automation lives here.
 
-## Headless bring-up (Codex + agy)
+## Headless bring-up (Codex + agy + Pi)
 
-This section is the canonical fresh-device bootstrap path for the two shipped
-headless Path-A workers: Codex and agy.
+This section is the canonical fresh-device bootstrap path for the three shipped
+headless Path-A workers: Codex, agy, and Pi.
 
 > **What a single-device test proves.** `.tick/` is gitignored and device-local,
 > so two clones do not share token state over git. A fresh-device run proves
@@ -242,11 +244,12 @@ drive:
 node --version
 codex exec -s workspace-write "create a file ok.txt with the text ok" < /dev/null   # Codex lane
 agy -p "Reply with exactly: PONG" < /dev/null                                        # agy lane; run sandbox-OFF
+pi --provider openrouter --model <your-model-id> --no-session -p "Reply with exactly: PONG" < /dev/null  # Pi lane
 git --version
 ```
 
-Run the worker check for the lane you actually plan to drive; run both if you
-want both workers available on that machine.
+Run the worker check for the lane you actually plan to drive; run all three if
+you want every worker available on that machine.
 
 The Codex autonomy check matters: a bare `codex exec "say ok"` can succeed without
 proving Codex can write the relay file. `codex-turn.sh` defaults to
@@ -259,10 +262,24 @@ fix that before running the shim; override the binary with
 
 The agy check must also run unsandboxed. `agy-turn.sh` uses `agy -p`; when agy's backend is blocked by a sandbox it can exit `0` with empty output, which the shim correctly treats as a failed turn. The agy shim uses the same 900-second default `RELAY_TURN_TIMEOUT_S`, and passes that value through to `--print-timeout`. Note: Claude Code may misdiagnose the `-p` requirement as "requires interactive TTY" if it fails — this is a misdiagnosis; the flag just requires a clean non-sandboxed environment. Additionally, running `agy` headlessly for the first time on macOS may trigger a Documents-folder permission prompt mid-run, so keep an eye out for system dialogue boxes. If `agy` is not on `PATH` or is not authenticated through the Antigravity desktop app, fix that before driving the lane; override the binary with `AGY_BIN=/path/to/agy` if needed. Antigravity installs `agy` at `~/.local/bin/agy` on macOS by default (not on the system PATH); running `AGY_BIN=~/.local/bin/agy bash test/agy-turn.sh` confirms it works before adding it to your PATH or passing `AGY_BIN` to every drive command.
 
-If you are running under a sandboxed AI shell, run both workers outside that
-sandbox. Codex often fails there because it cannot reach the OS keychain or
-`chatgpt.com`; agy can fail "cleanly" with empty output when its backend network
-is blocked.
+The Pi check needs `PI_MODEL` set explicitly — `pi-turn.sh`/`pi-turn.py` **never
+default `PI_MODEL`**. This is a deliberate GH-295 safety choice: GH-280
+(aider#5486) documented the exact failure class a silently-defaulted/unlisted
+model id causes (billed against an unintended model), so this shim fails loud
+(exit `5`) instead of guessing. Set it to any model id your `PI_PROVIDER`
+exposes, e.g. `PI_MODEL=openai/gpt-mini-latest`; run `pi --list-models` to see
+your account's catalog. `PI_PROVIDER` defaults to `openrouter`, reusing this
+harness's existing `OPENROUTER_API_KEY` — no extra credential wiring needed for
+that default seam. `pi`'s built-in tools (`read`/`bash`/`edit`/`write`) run with
+no separate approval flag needed in headless `-p` mode (unlike Codex, there is
+no interactive approval gate to disable). If `pi` is not on `PATH`, fix that
+before running the shim, or override the binary with `PI_BIN=/path/to/pi`.
+
+If you are running under a sandboxed AI shell, run all three workers outside
+that sandbox. Codex often fails there because it cannot reach the OS keychain
+or `chatgpt.com`; agy can fail "cleanly" with empty output when its backend
+network is blocked; Pi's containment posture is the same as agy's (no
+built-in sandbox of its own — see the Pi worker subsection below).
 
 ### 2. Clone or refresh the harness
 
@@ -281,6 +298,7 @@ Run the repo gate, then the shim test for the worker you plan to drive:
 bash validate.sh
 bash test/codex-turn.sh   # before Codex runs
 bash test/agy-turn.sh     # before agy runs
+bash test/pi-turn.sh      # before Pi runs (GH-295)
 ```
 
 If `validate.sh` cannot make tempdirs, that is usually a sandbox blocking
@@ -369,8 +387,47 @@ Expect agy to claim and ping the token, append its block to the relay file,
 release or `done` the token, revert any off-allowlist edits, commit only the
 allowlisted paths, and skip push. The transcript lands in `"${TMPDIR:-/tmp}/agy-turn-$$.log"`.
 
-`RELAY_TURN_TIMEOUT_S` is the per-turn wall-clock ceiling for `codex-turn.sh` and `agy-turn.sh`.
-Default: `900`. Override per run, for example:
+#### Pi worker (GH-295)
+
+```bash
+# Reuse an existing relay thread or scaffold a fresh one with embedded
+# TAKE YOUR TURN instructions.
+RELAY=relay-system/$(date +%F)/<your-slug>.md
+ARTIFACT=relay-automation/pi-turn.sh
+
+# Use a per-relay token id, not the literal RELAY-TURN.
+TASK="RELAY-$(basename "$RELAY" .md)"
+
+./bin/tick log task.created "$TASK" --agent claude-a
+./bin/tick claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+./bin/tick release "$TASK" --agent claude-a --to pi
+
+PI_AGENT=pi ALLOW_PATHS="$ARTIFACT" PI_MODEL=openai/gpt-mini-latest PI_LOG="${TMPDIR:-/tmp}/pi-turn-$$.log" \
+relay-automation/relay-drive.sh \
+  --relay-file "$RELAY" \
+  --relay-task "$TASK" \
+  --agent-cmd relay-automation/pi-turn.sh \
+  --round-cap 4
+```
+
+Expect Pi to claim and ping the token, append its block to the relay file,
+release or `done` the token, revert any off-allowlist edits, commit only the
+allowlisted paths, and skip push. The transcript lands in
+`"${TMPDIR:-/tmp}/pi-turn-$$.log"` as a JSONL stream (`--mode json`: one JSON
+object per line, not a single blob or array); the shim's best-effort cost
+capture scans it for the last `message.usage` block and — unlike the agy
+lane, which is fully cost-blind — emits a real `tick cost --tool pi` event
+when usage stats are present. **`PI_MODEL` has no default** and must be set
+explicitly (see the prerequisites note above); an unset `PI_MODEL` fails the
+turn before Pi is even invoked (exit `5`), never silently.
+
+Containment note: Pi, like agy, has no sandbox of its own — the shim relies
+entirely on `RELAY_WORKTREE_ISOLATION=1` + `rtl_enforce` (the shared
+allowlist/commit-bypass guard), not a Pi-native `--sandbox`-style flag (there
+isn't one to pass).
+
+`RELAY_TURN_TIMEOUT_S` is the per-turn wall-clock ceiling for `codex-turn.sh`, `agy-turn.sh`, and
+`pi-turn.sh`. Default: `900`. Override per run, for example:
 
 ```bash
 RELAY_TURN_TIMEOUT_S=1200 relay-automation/relay-drive.sh ...
@@ -384,6 +441,7 @@ Exit codes:
 - `relay-drive.sh`: `0` closed Approved or Closed, `3` no progress, `4` round cap or closed-not-approved, `5` (with `--review-once`) reviewer completed a single non-approval review ("changes requested" — not a stall), `2` usage.
 - `codex-turn.sh`: `0` acted or deferred, `5` Codex failed, `6` off-allowlist edit reverted or Codex committed mid-turn, `7` timeout-killed (`RELAY_TURN_TIMEOUT_S`, default `900`), `2` usage.
 - `agy-turn.sh`: `0` acted or deferred, `5` agy failed or produced empty output, `6` off-allowlist edit reverted or agy committed mid-turn, `7` timeout-killed (`RELAY_TURN_TIMEOUT_S`, default `900`), `2` usage.
+- `pi-turn.sh` (GH-295): `0` acted or deferred, `5` Pi failed / produced empty output / `PI_MODEL` unset / auth pre-flight failed, `6` off-allowlist edit reverted or Pi committed mid-turn, `7` timeout-killed (`RELAY_TURN_TIMEOUT_S`, default `900`), `2` usage.
 - `bin/tick`: exits `8` when structural quality validation fail occurs (`bin/validate-relay-block` exits non-zero when `--relay-file` flag is provided to `release` or `done`).
 
 ### 5. Review a file in another repo
@@ -470,7 +528,7 @@ export XYZ_ARCHIVE_ROOT=/abs/path/to/transcript-archive   # absolute + exists + 
 
 - No push by design. Shim-taken turns commit locally only.
 - `.tick/` is local. Token state on this device is independent of other machines.
-- Each headless turn is real API spend, so keep `--round-cap` small. Codex and agy differ in cost visibility; the agy lane is currently cost-blind in harness logs.
+- Each headless turn is real API spend, so keep `--round-cap` small. Codex, agy, and Pi differ in cost visibility; the agy lane is currently cost-blind in harness logs, and Codex's token-stats parsing is still a Phase-1 partial. Pi's `--mode json` stream carries real per-call usage/cost fields, so the Pi lane is the first non-Claude lane with genuine `tick cost --tool pi` capture — a real gap-closer versus the other two, not just parity (GH-295).
 - Headless runs should not share an agent id with a live `/loop` on the same relay.
 
 ## OpenRouter model-alias lookup (GH-120)
