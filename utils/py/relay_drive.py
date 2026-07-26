@@ -69,6 +69,15 @@ def main():
     if not os.path.isfile(relay_file):
         die(f"relay file does not exist: {relay_file}")
 
+    # GH-304: absolutize relay_file before it is exported to the turn-taker. As passed it is relative to
+    # the driver's CWD — which, for a same-repo vendored `.xyz/` install driven per the relay-xyz skill's
+    # documented `cd "$HARNESS"`, is `.xyz/`, a subdir of the true repo root the turn-taker's worktree
+    # checks out. A CWD-relative string then resolves wrong from the worktree root and the relay fails
+    # for Codex. An absolute path resolves identically from any CWD (see the Bash driver for the full
+    # rationale). Mirrors the artifact_file absolutization below.
+    if not relay_file.startswith("/"):
+        relay_file = os.path.abspath(relay_file)
+
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
 

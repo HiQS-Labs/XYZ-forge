@@ -82,6 +82,7 @@ TESTS=(
   "relay-escalation-not-stall.sh"
   "relay-untracked-file-warn.sh"
   "relay-file-seeding-visibility.sh"  # GH-178 B2
+  "gh304-vendored-relay-path.sh"      # GH-304 (vendored-.xyz relay path: prompt + seeding + gitignored-file message)
   "relay-review-once.sh"
   "relay-artifact-file.sh"
   "relay-turn-handoff.sh"
