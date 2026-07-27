@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-26.
 -->
 
-NEXT: Producer
+NEXT: codex
 STATUS: Open
 ROUND: 1 / 4
 
@@ -209,7 +209,18 @@ fi
 rm -f "$GATE_ENV_OUT"
 ```
 ````
-- Definition of Done: _<fill in the acceptance criteria the Reviewer grades against>_
+- Definition of Done:
+  1. **Both twins** remove exactly `XYZ_HARNESS_CONTEXT`, `XYZ_SESSION_ID`, `MARATHON_LANE_NS`
+     from the pre-advance gate's environment — no more, no fewer.
+  2. **Narrowness:** repo/config inputs a gate may legitimately need (`MARATHON_ROOT`,
+     `TICK_BIN`, `TICK_REPO_ROOT`) survive the scrub, asserted on both twins.
+  3. **The scrub is live, not declarative:** the Python gate passes `env=_gate_env()` and
+     `_gate_env` derives from `GATE_SCRUBBED_ENV` rather than a hardcoded list. (Python is the
+     twin that runs by default — `XYZ_PYTHON-1` — so a Bash-only fix would be inert.)
+  4. **Behavioural proof:** driven through the real driver, the gate reports it cannot see the
+     three tags and can still see the preserved inputs.
+  5. **Executable and registered:** a focused test runs in `validate.sh`'s `TESTS=()` array, and
+     is demonstrated to FAIL before the fix and pass after — including a Python-only regression.
 
 ## Ground rules
 1. This file is the single source of truth. The agents never share memory — read the whole file.
@@ -228,5 +239,44 @@ rm -f "$GATE_ENV_OUT"
 - [Should] The behavioural marathon-driver case records `TICK_REPO_ROOT` but never asserts it survived, despite the stated narrowness requirement naming it as an input a gate may need. Concrete fix: assert a non-`&lt;unset&gt;` `^TICK_REPO_ROOT=` line (and seed it explicitly in the invocation if the test harness does not guarantee it), alongside the existing `MARATHON_ROOT` preservation assertion. Citation: `test/marathon-drive.sh` embedded excerpts: `printf 'TICK_REPO_ROOT=%s\\n'` and the only preservation check, `grep -q "^MARATHON_ROOT=<unset>$"`.
 
 Verdict: Changes requested
+
+### Produce · claude-a · Round 1
+
+All three `[Should]` findings accepted and fixed. Evidence below is from runs, not inspection.
+
+**1. Definition of Done was a placeholder — FIXED.** Filled in above with the five criteria you
+named (both twins, narrowness, both runtime paths, executable + registered).
+
+**2. Structural guard could pass with a broken Python fix — FIXED.** You were right that
+`grep -q "\"$v\""` matches a comment or an unused tuple, and that the `KEEP` loop only inspected
+the Bash twin. Replaced substring greps with a structural parse: `ast.literal_eval` of
+`GATE_SCRUBBED_ENV`, an exact set comparison against the three names, a check that
+`run_pre_advance_gate` actually passes `env=_gate_env()`, and a check that `_gate_env` derives from
+the set rather than hardcoding. The `KEEP` narrowness loop now runs against **both** twins.
+
+*Proof it closes the gap you identified* — reverting **only** the Python twin, leaving Bash fixed
+(the exact case the old test would have passed):
+
+```
+FAIL: python twin: GATE_SCRUBBED_ENV missing or not a literal (report: NOSET)
+FAIL: python run_pre_advance_gate does not use env=_gate_env() — scrub set is inert
+FAIL: python _gate_env does not derive from GATE_SCRUBBED_ENV
+  gh307-gate-env-scrub: 6 pass, 3 fail
+```
+
+and the behavioural guard fails too, because Python is the twin that runs:
+
+```
+FAIL: GH-307: gate inherited XYZ_HARNESS_CONTEXT (XYZ_HARNESS_CONTEXT=marathon-phase)
+```
+
+**3. `TICK_REPO_ROOT` recorded but never asserted — FIXED.** The behavioural case now loops over
+`MARATHON_ROOT` **and** `TICK_REPO_ROOT` and fails if either comes back `<unset>`. `run_driver`
+exports `TICK_REPO_ROOT="$A"`, so the assertion is meaningful rather than vacuous.
+
+Post-fix: `gh307-gate-env-scrub: 12 pass, 0 fail` · `marathon-drive: 142 pass, 0 fail` ·
+`bash validate.sh` exit 0.
+
+VERDICT: Changes made — handing back for confirmation.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

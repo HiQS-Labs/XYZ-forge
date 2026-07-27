@@ -339,6 +339,16 @@ run_pre_advance_gate() {
     if [[ -n "$TARGET_ROOT" ]]; then
       cd "$TARGET_ROOT"
     fi
+    # GH-307: the gate is a correctness check on the REPO — not part of this run's provenance,
+    # and it must not be able to see who is driving it. These tags otherwise leak into the gate
+    # via this subshell and break tests that legitimately assert on them
+    # (test/xyz-harness-hooks.sh reads XYZ_HARNESS_CONTEXT / XYZ_SESSION_ID; test/debug-mantra.sh
+    # reads MARATHON_LANE_NS), which made `bash validate.sh` — the DOCUMENTED DEFAULT GATE —
+    # impossible to pass inside a marathon. Keep this list identical to GATE_SCRUBBED_ENV in
+    # utils/py/marathon_drive.py; the Python twin is what runs by default (XYZ_PYTHON-1).
+    # Deliberately narrow: run-identity tags only, never repo/config inputs like MARATHON_ROOT,
+    # TICK_BIN or TICK_REPO_ROOT, which a gate may legitimately need.
+    unset XYZ_HARNESS_CONTEXT XYZ_SESSION_ID MARATHON_LANE_NS
     eval "$PRE_ADVANCE_CMD"
   )
 }

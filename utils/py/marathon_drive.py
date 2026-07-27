@@ -461,9 +461,27 @@ relay-file: {rel_relay}
             log(f"transcript saved: {dest}")
         return True
 
+    # GH-307: the gate is a correctness check on the REPO — it is not part of this run's
+    # provenance, and it must not be able to see who is driving it. These tags otherwise leak
+    # into the gate subprocess and break tests that legitimately assert on them
+    # (test/xyz-harness-hooks.sh reads XYZ_HARNESS_CONTEXT / XYZ_SESSION_ID;
+    # test/debug-mantra.sh reads MARATHON_LANE_NS), which made `bash validate.sh` — the
+    # DOCUMENTED DEFAULT GATE — impossible to pass inside a marathon: every phase 1 escalated
+    # with reason `pre-advance-failed` while its own change was correct and approved.
+    # Scrubbing is deliberately narrow: only the run-identity tags, never repo/config inputs
+    # like MARATHON_ROOT, TICK_BIN or TICK_REPO_ROOT, which a gate may legitimately need.
+    GATE_SCRUBBED_ENV = ("XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID", "MARATHON_LANE_NS")
+
+    def _gate_env():
+        env = os.environ.copy()
+        for var in GATE_SCRUBBED_ENV:
+            env.pop(var, None)
+        return env
+
     def run_pre_advance_gate():
         cwd = args.target_root if args.target_root else None
-        return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash", cwd=cwd).returncode
+        return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash",
+                              cwd=cwd, env=_gate_env()).returncode
 
     def run_post_approve_cmd():
         cwd = args.target_root if args.target_root else None
