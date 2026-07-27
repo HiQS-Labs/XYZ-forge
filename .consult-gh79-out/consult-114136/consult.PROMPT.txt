@@ -1,0 +1,80 @@
+# Review: GH-79 v1.3.5 build plan — accuracy + coverage vs Elan's mockups
+
+You are reviewing `PROJECT/2-WORKING/v1.3.5/GH-79-RELEASE-1-3-5X.md` in this repo
+(LTVera-Pandas). Read it first, then grade it. **Report only — do not edit anything.**
+
+It is an umbrella build plan for a 24-screen design drop from Elan (product owner).
+The screens are the build contract: "The HTML files are the UI contract: layout, copy,
+states, and the widget JS is the exact state machine. Do not redesign, implement."
+
+## Source material to review the plan AGAINST
+
+- `PROJECT/2-WORKING/v1.3.5/phase-1/` — 11 screens + `CAMPAIGN-MVP-HANDOFF-7-22-2026.md`
+  (the product contract: MVP definition, 6 build tasks, Nexmail draft contract §4,
+  pre-commit checks §5, Klaviyo commit §6, decision record §7, standing rules §9)
+- `PROJECT/2-WORKING/v1.3.5/phase-2-calendar/` — 7 files; FOUR are written specs with
+  real data models and code skeletons (seasonal engine, brand absorption, email calendar
+  composer, email taxonomy), not mockups
+- `PROJECT/2-WORKING/v1.3.5/phase-3-subscription-winback/` — 2 automation wizards
+- `PROJECT/2-WORKING/v1.3.5/phase-4-config/` — billing, connections
+- `PROJECT/2-WORKING/v1.3.5/phase-5-agency/` — agency + brand dashboards
+- `PROJECT/2-WORKING/v1.3.5/website/` — **OUT OF SCOPE**, ignore entirely
+
+Read the **inline JavaScript** in the HTML. The widget state machines are the spec.
+
+## Axis 1 — ACCURACY (highest priority)
+
+The plan's "Ground truth before we start" section makes falsifiable claims about the
+codebase. Verify or refute EACH against actual source. Cite `file:line`.
+
+1. Zero Nexmail code anywhere in `app/`
+2. "The complete set of Klaviyo write verbs is `PATCH profiles/{id}` x2" — no campaign
+   create, no Lists API, no Segments API, no events
+3. No best-sellers / trending / velocity / `units_30d` query in `app/`
+4. No `campaigns` / `sends` / `decision_records` / `audiences` tables
+5. No review-data source anywhere (judge.me / yotpo / okendo / stamped / loox /
+   `review_avg` / `review_count`)
+6. RLS genuinely enforced: FORCE ROW LEVEL SECURITY, NOBYPASSRLS runtime role,
+   transaction-local GUC re-asserted on `after_begin`
+7. The agency console (phase-5) collides with the single-scalar `app.current_tenant`
+   RLS model
+8. The two live bugs it describes in `app/signals/back_in_stock.py` and
+   `app/etl/shopify/loader.py` — NOTE: both were fixed after the plan was written, so
+   check whether the plan is now STALE on these
+
+**A false claim in EITHER direction is a [Blocker].** An overstated "this already exists"
+is as damaging as an overstated gap. Also flag claims that are technically true but
+worded so as to mislead.
+
+## Axis 2 — COVERAGE
+
+Does the plan actually cover what the screens and specs require?
+
+- Requirements in the screens/specs the plan OMITS entirely
+- Phase checklists too thin to build from
+- Contradictions BETWEEN screens the plan fails to flag as needing resolution
+- Data-model elements the phase-2 specs declare (`window`, `product_window_score`,
+  `brand_profile`, `brand_calendar`, `calendar_slot`, `category_day_library`) that the
+  plan does not account for
+- The canonical 5-status vocabulary (`proposed|approved|drafted|scheduled|sent`) —
+  is it tracked consistently?
+- Standing rules (handoff §9) the plan violates or ignores
+
+## Out of bounds
+
+Do NOT propose a different phase structure — the numbering deliberately mirrors the
+folder names and that is a settled operator decision. Do NOT re-litigate scope the plan
+explicitly marks out of scope. Do NOT rewrite the plan.
+
+## Output format
+
+Graded findings, most severe first. Every `[Pass]` or "verified" MUST carry a
+`file:line` or quoted span — uncited ones will be discarded.
+
+```
+[Blocker|Should|Nit|Pass] <one-line claim>
+  evidence: <file:line or quoted span>
+  fix: <concrete change to the plan>
+```
+
+End with: `VERDICT: Approved | Changes requested` and a 3-sentence summary.
