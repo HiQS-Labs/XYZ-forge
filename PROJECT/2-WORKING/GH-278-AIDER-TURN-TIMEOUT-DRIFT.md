@@ -32,7 +32,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| **2026-07-26: re-confirmed unfixed at `development` @ `8d89616` and promoted with a live contract.** All three values still disagree — `utils/py/aider-turn.py` `int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))`, `relay-automation/aider-turn.sh` `turn_timeout="${RELAY_TURN_TIMEOUT_S:-600}"`, and `skills/relay-xyz/SKILL.md` documenting "default 900s". Python is the default runner (GH-264), so the **effective** cap is the shortest and the only undocumented one. Also confirmed there is no py/sh parity test in `test/` by name — which is why the drift was invisible. | Fire the contract below. Pick ONE value, apply to both twins and the doc, and add the parity assertion so this class cannot recur silently. |
+| **2026-07-27: LANDED via PR #309 (`7d1a341`).** 900s is now asserted across both twins and `skills/relay-xyz/SKILL.md` by a static parity guard, plus a behavioural guard that a timeout-killed turn (exit 7) leaves no 0-byte stubs — untracked ones removed, tracked ones restored from HEAD. `test/gh278-turn-timeout-parity.sh` 11 pass / 0 fail; registered in `validate.sh`. The marathon phase escalated once on a containment violation caused by the fixture, not the product (see the phase ESCALATION.md); fixed, phase not re-driven. | Close #278. Optional follow-up: the behavioural half of the test is a reconstruction (original lost pre-staging) — worth a read-through if it ever misbehaves. |
 
 ## Symptom
 

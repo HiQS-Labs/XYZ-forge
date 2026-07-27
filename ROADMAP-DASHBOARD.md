@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 119 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
+Summary: 118 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -22,7 +22,6 @@ Summary: 119 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · �
 | GH-274 · marathon-drive: re-invoking a phase whose tick token is already done clobbers RELAY.md's Approved record instead of detecting a satisfied lane | — | [GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md](PROJECT/2-WORKING/GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md) · [#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274) |
 | GH-294 · swarm-preflight: isolation flag not carried into the suggested marathon command | — | [GH-294-PREFLIGHT-ISOLATION-FLAG.md](PROJECT/2-WORKING/GH-294-PREFLIGHT-ISOLATION-FLAG.md) · [#294](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/294) |
 | GH-292 · A linked worktree cannot discover the main checkout's vendored .xyz harness | — | [GH-292-WORKTREE-VENDORED-DISCOVERY.md](PROJECT/2-WORKING/GH-292-WORKTREE-VENDORED-DISCOVERY.md) · [#292](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/292) |
-| GH-278 · aider-turn per-turn timeout drifts across twins and docs (py 300s / sh 600s / docs 900s) | — | [GH-278-AIDER-TURN-TIMEOUT-DRIFT.md](PROJECT/2-WORKING/GH-278-AIDER-TURN-TIMEOUT-DRIFT.md) · [#278](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/278) |
 | GH-272 · Driven relay turn's tick release resolves wrong TICK_REPO_ROOT in a vendored same-repo lane | — | [GH-272-TICK-REPO-ROOT-VENDORED-MISMATCH.md](PROJECT/2-WORKING/GH-272-TICK-REPO-ROOT-VENDORED-MISMATCH.md) · [#272](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/272) · [#297](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/297) |
 | GH-284 · marathon: open a non-merging PR with closeout notes after a successful run | — | [GH-284-MARATHON-CLOSEOUT-PR.md](PROJECT/2-WORKING/GH-284-MARATHON-CLOSEOUT-PR.md) · [#284](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/284) |
 | GH-153 · Cost observability: Codex per-turn token capture (parseCodexStats) | — | [GH-153-CODEX-TOKEN-CAPTURE.md](PROJECT/2-WORKING/GH-153-CODEX-TOKEN-CAPTURE.md) · [#153](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/153) |
@@ -158,10 +157,12 @@ Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 0 · ⛔ 0 · ✅ 13 · �
 
 ## Completed
 
-Summary: 19 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 19 · 🔮 0 · 🔲 0
+Summary: 21 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 21 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-307 · Marathon pre-advance gate inherits the run's identity tags, so bash validate.sh can never pass inside a marathon | ✅ | [#307](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/307) |
+| GH-278 · aider-turn per-turn timeout drifts across twins and docs (py 300s / sh 600s / docs 900s) | ✅ | [GH-278-AIDER-TURN-TIMEOUT-DRIFT.md](PROJECT/2-WORKING/GH-278-AIDER-TURN-TIMEOUT-DRIFT.md) · [#278](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/278) |
 | GH-300 · swe-diagram: search input touches/overflows the font-picker when typing — two distinct bugs, same symptom family | ✅ | [GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md](PROJECT/3-COMPLETED/GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md) · [#300](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/300) |
 | GH-273 · Automate the marathon pre-flight/post-flight ceremony | ✅ | [#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274) · [GH-273-MARATHON-CLOSEOUT-AUTOMATION.md](PROJECT/3-COMPLETED/GH-273-MARATHON-CLOSEOUT-AUTOMATION.md) · [#273](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273) |
 | GH-200 · swe-diagram: add top-down layered layout | ✅ | [GH-200-SWE-DIAGRAM-TOP-DOWN.md](PROJECT/3-COMPLETED/GH-200-SWE-DIAGRAM-TOP-DOWN.md) · [#200](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/200) · [PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md](PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md) |
