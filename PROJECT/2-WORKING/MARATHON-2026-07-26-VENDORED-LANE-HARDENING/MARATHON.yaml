@@ -1,0 +1,70 @@
+# MARATHON.yaml — 2026-07-26: vendored-lane + marathon-runner hardening.
+#
+# 4 sequential phases. Phases run STRICTLY ONE AT A TIME (GH-241) — depends_on does not create
+# the ordering, it constrains it. The chain here is deliberate and NOT merely bookkeeping:
+#
+#   gh294 → gh274 → gh292 → gh278
+#
+# The first two phases repair THE RUNNER ITSELF before the remaining lanes use it:
+#   * gh294 makes every preflight-emitted invocation contained by default
+#     (RELAY_WORKTREE_ISOLATION=1). Running it first means any later re-fire of this very
+#     marathon is generated already-contained.
+#   * gh274 stops a re-invoked phase from clobbering an Approved RELAY.md record. Running it
+#     second means a retry of gh292 or gh278 cannot destroy the record of an approved phase —
+#     which is precisely the failure GH-273 Phase 0 hit live.
+# Only then do the two ordinary defect lanes run.
+#
+# Write-sets are disjoint apart from validate.sh (each new test must be REGISTERED in its
+# TESTS=() array — validate.sh does not glob test/). Sequential execution makes that safe.
+#
+# Scope note: #296 and #304, originally grouped with #292 as one "vendored .xyz path" family,
+# are FIXED and CLOSED as of 2026-07-26 (PR #297 merged 07-24; PR #306 merged 07-26). #272 is
+# fixed but deliberately left open pending a Bash-runtime replay of its original repro, and its
+# own capture doc records its contract as SUPERSEDED — "do not fire". None of the three belongs
+# in this plan.
+#
+# Builder defaults to codex (GH-212, subscription-billed). Reviewer is agy throughout so the
+# reviewer is never the model that wrote the change.
+#
+# Parent capture docs (one per phase):
+#   PROJECT/2-WORKING/GH-294-PREFLIGHT-ISOLATION-FLAG.md
+#   PROJECT/2-WORKING/GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md
+#   PROJECT/2-WORKING/GH-292-WORKTREE-VENDORED-DISCOVERY.md
+#   PROJECT/2-WORKING/GH-278-AIDER-TURN-TIMEOUT-DRIFT.md
+
+name: vendored-lane-hardening-2026-07-26
+phases:
+  - id: gh294-preflight-isolation
+    name: "GH-294: preflight emits RELAY_WORKTREE_ISOLATION=1 in its suggested invocation (both twins)"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-26-VENDORED-LANE-HARDENING/brief-gh294-preflight-isolation.md
+    artifact: utils/swarm-preflight.sh,utils/py/swarm_preflight.py,test/swarm-preflight.sh
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: gh274-done-token-clobber
+    name: "GH-274: re-invoking a phase with a done token must not clobber the Approved RELAY.md"
+    reviewer: agy
+    depends_on: gh294-preflight-isolation
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-26-VENDORED-LANE-HARDENING/brief-gh274-done-token-clobber.md
+    artifact: relay-automation/marathon-drive.sh,utils/py/marathon_drive.py,test/marathon-drive.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh292-worktree-discovery
+    name: "GH-292: find-harness.sh resolves a vendored .xyz from a linked git worktree"
+    reviewer: agy
+    depends_on: gh274-done-token-clobber
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-26-VENDORED-LANE-HARDENING/brief-gh292-worktree-discovery.md
+    artifact: skills/relay-xyz/find-harness.sh,test/gh292-worktree-vendored-discovery.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh278-timeout-drift
+    name: "GH-278: reconcile the three per-turn timeout defaults + no-progress on empty artifacts"
+    reviewer: agy
+    depends_on: gh292-worktree-discovery
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-26-VENDORED-LANE-HARDENING/brief-gh278-timeout-drift.md
+    artifact: utils/py/aider-turn.py,relay-automation/aider-turn.sh,skills/relay-xyz/SKILL.md,test/gh278-turn-timeout-parity.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
