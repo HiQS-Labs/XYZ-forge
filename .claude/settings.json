@@ -1,4 +1,10 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(/usr/bin/git status *)",
+      "Bash(/usr/bin/git rev-list *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
