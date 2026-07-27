@@ -98,8 +98,10 @@ since GH-264, a fix that lands only in Bash is a fix that does not run:
 - **#215**, **#223** — `consult.py` missing Bash behaviors (degraded-panel, citation stamping).
 - **#174** — `agy-turn.py` never got the claim-before-launch fix.
 - **#148** — `swarm_preflight.py` lacked the GH-137 path sanitization Bash had.
-- **#278** — **still open**, live on the current branch: `aider-turn` per-turn timeout drift,
-  py 300s / sh 600s / docs 900s. Three sources of truth, none agreeing.
+- **#278** — **still open**: `aider-turn` per-turn timeout drift, py 300s / sh 600s / docs 900s.
+  Three sources of truth, none agreeing. Its in-flight fix (`7d1a341`, landed while this capture was
+  being written) is itself a live instance of the tax: the same 15 lines written twice, into
+  `relay-automation/aider-turn.sh` **and** `utils/py/aider-turn.py`.
 
 Naming one authoritative lane makes this class of bug impossible to reintroduce, and it does so in
 about a day of work with no deletion risk. The dual-lane test matrix (~72 `XYZ_PYTHON=0/1`
@@ -115,11 +117,26 @@ frozen code," not "breaks."
 > Discovery phase: its findings are written **back into this doc** before its QA gate can pass
 > (`PROJECT/PDDA.md` → Discovery & spike phases).
 
+> **Re-scope note — 2026-07-26, recorded at capture time.** Phase 1 originally proposed closing
+> **#278** as the first fix delivered under the new policy, and therefore as proof the policy works.
+> That is no longer available: while this capture was being written, a marathon lane on
+> `marathon/vendored-lane-hardening-2026-07-26` landed `7d1a341` for #278 **the old way** — the same
+> 15 lines applied to both `relay-automation/aider-turn.sh` and `utils/py/aider-turn.py`. The issue
+> is still open, but its fix is now dual-lane, so "close #278" would prove nothing about single-lane
+> maintenance. Phase 1's #278 item is re-scoped accordingly (see below), and Phase 0 must pick a
+> different first fix to serve as the policy's proof.
+
 ### Checklist
 - [ ] Confirm the Tier A/B/C split against the tree at HEAD; correct the 12-pair list if it drifted
 - [ ] Confirm the `marathon-plan` carve-out is still warranted (re-read the parity-shim header)
 - [ ] Grep the fleet + operator dotfiles for any `XYZ_PYTHON=0` pin and note the blast radius
 - [ ] Pick the enforcement mechanism for Phase 1's guard (pre-commit hook vs CI check vs both)
+- [ ] **Re-scope #278 per the note above** — confirm the Python half of `7d1a341` is correct and
+      authoritative, then decide whether the Bash half is reverted or simply frozen in place
+- [ ] **Choose a different first fix** to deliver single-lane as the policy's proof, now that #278
+      cannot serve that role
+- [ ] Check whether any other in-flight lane is mid-way through a dual-lane fix that would collide
+      with the Phase 1 freeze, and sequence around it
 - [ ] Name the concrete write-set per phase (needed before this can be a marathon lane)
 - [ ] Set/correct the triage ratings; clear `ratings_provisional` once real
 
@@ -139,15 +156,20 @@ frozen code," not "breaks."
 - [ ] Add a short **FROZEN** banner to the top of each of the 11 Tier-A Bash twins: Python is
       authoritative, do not edit, pointer to this issue and to the Python file
 - [ ] Add the enforcement guard: fail (or loudly warn) when a commit touches a frozen twin
-- [ ] Close **#278** by making Python authoritative for the `aider-turn` timeout and correcting the
-      docs — the first fix delivered under the new policy, and proof it works
+- [ ] **#278 — re-scoped (see the Phase 0 note).** Its fix landed dual-lane in `7d1a341` before this
+      project starts, so closing it no longer proves the policy. Instead: verify the Python half is
+      authoritative and correct, freeze or revert the Bash half, and reconcile the 900s doc value
+- [ ] Deliver the Phase 0-chosen first fix **single-lane** as the policy's actual proof
 - [ ] Record the policy in `AGENTS.md` + `UPGRADE.md`: fixes land in Python only; the Bash twins are
       historical reference; `marathon-plan` is the documented exception
 - [ ] Leave `marathon-plan` and all Bash-only scripts untouched
 
 ### QA checklist — Phase 1
 - [ ] Editing a frozen twin is actually blocked/flagged — demonstrated with a throwaway commit
-- [ ] #278 is closed, not merely noted
+- [ ] At least one real fix has shipped **single-lane** under the new policy — the proof is a
+      delivered change, not the policy text
+- [ ] #278's Python half is verified authoritative; its Bash half is frozen or reverted, not left
+      as a second maintained copy
 - [ ] The `marathon-plan` exception is written down where a future maintainer will hit it
 - [ ] Nothing was deleted; `git status` shows only banners, docs, the guard, and the #278 fix
 - [ ] Rollback is a one-line banner removal — confirm no step is hard to undo
