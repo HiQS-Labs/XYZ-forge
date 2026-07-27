@@ -1,5 +1,5 @@
 # Marathon Phase gh292-worktree-discovery
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH292-WORKTREE-DISCOVERY-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -86,3 +86,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Kept centralized fallback non-fatal; `--check` now identifies an unusable main-checkout vendor and warns that it is falling back to the centralized lock instead of claiming no vendor exists.
 - Added and registered `test/gh292-worktree-vendored-discovery.sh`, covering main-checkout control behavior, linked-worktree harness/tick selection, and the actionable fallback warning.
 - Verified: `bash test/gh292-worktree-vendored-discovery.sh` — 7 pass, 0 fail.
+
+### Round 1 · Reviewer · agy
+
+**Verdict:** Approved
+
+The implementation correctly resolves the main checkout's vendored `.xyz` directory from a linked worktree by reading the git common directory. The readiness checks properly surface this resolution and correctly warn about the fallback if the vendor is unusable. The `validate.sh` has the new test registered and it executes successfully.
