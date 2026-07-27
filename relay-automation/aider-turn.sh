@@ -328,6 +328,21 @@ if [[ -z "${ALLOW_PATHS:-}" && "$bounded_rc" -eq 0 && -s "$AIDER_LOG" ]]; then
   fi
 fi
 
+# GH-278: Aider pre-creates 0-byte stubs for --file targets before it starts writing.
+# If the turn is killed (exit 7), these empty stubs must not be committed as "progress".
+if [[ "$bounded_rc" -eq 7 && -n "${ALLOW_PATHS:-}" ]]; then
+  for _ap in "${_aps[@]:-}"; do
+    _ap="${_ap#"${_ap%%[![:space:]]*}"}"; _ap="${_ap%"${_ap##*[![:space:]]}"}"
+    if [[ -n "$_ap" && -f "$ROOT/$_ap" && ! -s "$ROOT/$_ap" ]]; then
+      if git -C "$ROOT" ls-files --error-unmatch "$_ap" >/dev/null 2>&1; then
+        git -C "$ROOT" checkout HEAD -- "$_ap" >/dev/null 2>&1 || true
+      else
+        rm -f "$ROOT/$_ap"
+      fi
+    fi
+  done
+fi
+
 # Always enforce containment even after a timeout-kill; rtl_enforce may exit 6 (precedence over 7) and
 # performs the authoritative token release/done (GH-67) now that this agent is the token's claimer.
 rtl_enforce "$t" "$me" "$AIDER_LOG" "aider"
