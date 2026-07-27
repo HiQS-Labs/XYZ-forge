@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-07-27.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -244,5 +244,17 @@ index 0000000..99153e3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+<!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
+
+### Review: Round 1 (agy)
+
+**Verdict:** Approved
+
+**Findings:**
+- `[Pass]` Preserves all requested target-owned state properly using `cp -Rp` to handle both files and directories. Confirmed by: `for _keep in relay-system .tick .relay-driver.lock XYZ.json XYZ.json.lock XYZ.heartbeat.json; do` and `cp -Rp "$VENDOR_DIR/$_keep" "$STAGE_DIR/$_keep"`.
+- `[Pass]` Fails safely if the copy fails, preventing data destruction before the final wipe. Confirmed by: `|| die "failed to preserve target runtime state: $_keep (aborting before the destructive swap)"`.
+- `[Pass]` Regression test properly exercises both paths and confirms no fabricated state is created on fresh vendors. Confirmed by: `assert_state_survived "xyz-sync update"` and `[ -e "$FRESH/.xyz/relay-system" ] && fail "fresh vendor invented a relay-system/ dir"`.
+- `[Pass]` Documentation updates accurately reflect the new behavior. Confirmed by: `A new runtime artifact under .xyz/ must be added to the preserve list`.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
