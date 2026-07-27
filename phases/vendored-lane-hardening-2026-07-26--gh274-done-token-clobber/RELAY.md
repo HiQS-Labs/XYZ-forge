@@ -1,5 +1,5 @@
 # Marathon Phase gh274-done-token-clobber
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH274-DONE-TOKEN-CLOBBER-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -75,3 +75,8 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 Implemented the GH-274 terminal-lane short-circuit in both marathon drivers: when the relay is terminal and its matching tick token is `done`, a retry skips rendering/reseeding and runs only the normal pre-advance completion gate, preserving the approved relay record. The focused regression fixture verifies the first gate failure, then a byte-identical retry once the gate passes. Also aligned Python with Bash by clearing inherited `LANE_ATTEMPT_COUNTED` before its outer attempt gate, so a parent relay cannot suppress the phase driver's accounting.
 
 Verified: `bash test/marathon-drive.sh` passed, including the GH-274, Bash, Python, and vendored paths.
+
+### Round 1 · Reviewer · agy
+**Verdict:** Approved
+
+The implementation correctly adds the `satisfied_lane_terminal()` check in both `marathon-drive.sh` and `marathon_drive.py`. The `satisfied_lane_terminal` accurately verifies if the relay file has an `Approved` or `Closed` status, and if the tick token state is `done`. If these conditions are met, the phase logic explicitly skips rendering and reseeding, and falls back to running just the `pre_advance_gate` via `complete_phase_success("already-satisfied")`. The test cases verify that an approved relay file survives a pre-advance gate retry un-clobbered.
