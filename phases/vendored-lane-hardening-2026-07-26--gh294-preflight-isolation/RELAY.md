@@ -1,5 +1,5 @@
 # Marathon Phase gh294-preflight-isolation
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH294-PREFLIGHT-ISOLATION-TURN builder=codex reviewer=agy round-cap=5 -->
@@ -78,3 +78,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 ### Round 1 · Builder · codex
 
 Added `RELAY_WORKTREE_ISOLATION=1` to the generated marathon invocation in both runtime twins: `utils/swarm-preflight.sh` and `utils/py/swarm_preflight.py`. Extended `test/swarm-preflight.sh` to confirm the flag appears in both packet renderings and that Bash/Python emit byte-identical invocation files. Verified: `bash test/swarm-preflight.sh` — 98 passed, 0 failed.
+
+### Round 1 · Reviewer · agy
+
+Changes look correct. Both Bash and Python templates correctly emit `RELAY_WORKTREE_ISOLATION=1`, and tests have been updated appropriately to guarantee parity. Verified that the preflight test suite passes.
+
+**Verdict:** Approved
