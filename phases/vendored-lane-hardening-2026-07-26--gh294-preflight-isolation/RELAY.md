@@ -74,3 +74,7 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH294-PREFLIGHT-ISOLATION-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/vendored-lane-hardening-2026-07-26--gh294-preflight-isolation/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Added `RELAY_WORKTREE_ISOLATION=1` to the generated marathon invocation in both runtime twins: `utils/swarm-preflight.sh` and `utils/py/swarm_preflight.py`. Extended `test/swarm-preflight.sh` to confirm the flag appears in both packet renderings and that Bash/Python emit byte-identical invocation files. Verified: `bash test/swarm-preflight.sh` — 98 passed, 0 failed.

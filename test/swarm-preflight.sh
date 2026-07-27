@@ -69,9 +69,19 @@ node -e 'JSON.parse(require("fs").readFileSync(process.argv[1]))' "$R/packet/run
   && pass "T1 run-candidate.json is valid JSON" || fail "T1 run-candidate.json invalid JSON"
 # GH-75: the generated invocation self-propagates the swarm harness tag — the operator runs it verbatim
 # and the marathon-drive run records harness:"swarm" (not "marathon") in XYZ.json, no extra step.
-head -1 "$R/packet/marathon-invocation.txt" | grep -q '^XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=[^ ]* relay-automation/marathon-drive.sh' \
-  && pass "T1 marathon-invocation.txt carries XYZ_HARNESS_CONTEXT=swarm + per-run XYZ_SESSION_ID (GH-75)" \
+head -1 "$R/packet/marathon-invocation.txt" | grep -q '^XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=[^ ]* RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh' \
+  && pass "T1 marathon-invocation.txt carries swarm/session/isolation context (GH-75/GH-294)" \
   || fail "T1 invocation missing swarm tag / session id: $(head -1 "$R/packet/marathon-invocation.txt")"
+# GH-294: generated packets must opt every marathon turn into worktree isolation. The packet is
+# copied verbatim by operators, so verify both rendered locations and lock the Bash/Python twins.
+grep -q 'RELAY_WORKTREE_ISOLATION=1' "$R/packet/marathon-invocation.txt" \
+  && grep -q 'RELAY_WORKTREE_ISOLATION=1' "$R/packet/packet.md" \
+  && pass "T1 GH-294 packet invocation enables worktree isolation" \
+  || fail "T1 GH-294 packet invocation missing worktree isolation: $(cat "$R/packet/marathon-invocation.txt")"
+out_bash="$(XYZ_PYTHON=0 run "$R" --project-doc "PROJECT/2-WORKING/GH-900-happy.md" --out "$R/packet-bash" 2>&1)"; rc_bash=$?
+[[ $rc_bash -eq 0 ]] && cmp -s "$R/packet/marathon-invocation.txt" "$R/packet-bash/marathon-invocation.txt" \
+  && pass "T1 GH-294 Bash/Python invocations are byte-identical" \
+  || fail "T1 GH-294 invocation parity failed (bash rc=$rc_bash): $out_bash"
 # GH-39 B6 + #43-1: the packet bakes a scope-locked brief — inlined acceptance criteria, an explicit
 # scope-lock (incl. "don't run the full gate"), and a size-based turn-budget recommendation.
 grep -q "Scope lock" "$R/packet/packet.md" && pass "T1b packet has a scope-lock block" || fail "T1b packet missing scope-lock"
