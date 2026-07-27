@@ -69,3 +69,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH274-DONE-TOKEN-CLOBBER-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/vendored-lane-hardening-2026-07-26--gh274-done-token-clobber/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Implemented the GH-274 terminal-lane short-circuit in both marathon drivers: when the relay is terminal and its matching tick token is `done`, a retry skips rendering/reseeding and runs only the normal pre-advance completion gate, preserving the approved relay record. The focused regression fixture verifies the first gate failure, then a byte-identical retry once the gate passes. Also aligned Python with Bash by clearing inherited `LANE_ATTEMPT_COUNTED` before its outer attempt gate, so a parent relay cannot suppress the phase driver's accounting.
+
+Verified: `bash test/marathon-drive.sh` passed, including the GH-274, Bash, Python, and vendored paths.

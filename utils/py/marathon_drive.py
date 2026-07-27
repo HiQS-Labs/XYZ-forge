@@ -712,6 +712,11 @@ You are the REVIEWER for this phase. {reviewer_read_line}
             else:
                 die(f"relay task {relay_task} is open but reserved for unexpected agent '{handoff}'")
 
+    # The outer marathon-drive invocation owns this lane's attempt count. A parent relay-drive
+    # process may have set this flag to suppress its nested accounting; do not let that inherited
+    # value skip this invocation's own gate. The child relay-drive environment sets it explicitly
+    # below to avoid double-counting, matching the Bash implementation.
+    os.environ.pop("LANE_ATTEMPT_COUNTED", None)
     lane_attempt_gate(get_env("TICK_REPO_ROOT", root), lane_state_key, args.force)
     def _run_tick_loud(cmd_args):
         res = subprocess.run(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
