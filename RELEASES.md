@@ -15,3 +15,13 @@ GH_URL:
 Front-door reviewed:
 Shakedown reviewed:
 License file:
+
+Release: TBD
+Status: Draft
+Target Date: August 1, 2026
+Codename: Quiksilver
+Description: Phase out Bash scripts
+GH_URL: [GH 308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308)
+Front-door reviewed: Not yet
+Shakedown reviewed: Not yet
+License file: Not yet
