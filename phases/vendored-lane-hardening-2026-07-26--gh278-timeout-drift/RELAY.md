@@ -1,6 +1,6 @@
 # Marathon Phase gh278-timeout-drift
 STATUS: Open
-NEXT: codex
+NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH278-TIMEOUT-DRIFT-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -72,3 +72,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH278-TIMEOUT-DRIFT-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/vendored-lane-hardening-2026-07-26--gh278-timeout-drift/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+Set the Aider per-turn default to **900 seconds** in both runtime shims: Python (the default path) and the Bash compatibility path. The Bash inline contract and relay-xyz environment table now make the shared value explicit; a new static parity test guards Python ↔ Bash ↔ skill documentation, and `validate.sh` registers it.
+
+The existing marathon recovery seam already treats zero-byte or unchanged declared artifacts as no-progress (GH-279 coverage in `test/marathon-drive.sh`); this phase's allowlist intentionally does not alter that runner surface.
+
+Verification: `bash -n relay-automation/aider-turn.sh test/gh278-turn-timeout-parity.sh && bash test/gh278-turn-timeout-parity.sh` → 3 pass, 0 fail. The full gate was deliberately not run per the phase instructions.

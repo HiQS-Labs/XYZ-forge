@@ -65,7 +65,7 @@ fi
 #   AIDER_LOG       — where to write the aider transcript (default: a $TMPDIR file)
 #   RELAY_WORKTREE_ISOLATION — 1 = run the turn in a THROWAWAY git worktree of ROOT@HEAD (airtight
 #                     containment; off-lane in the worktree → exit 6). Default OFF.
-#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 600). A hung/runaway aider
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 900). A hung/runaway aider
 #                          is killed after this many seconds; the turn exits 7.
 #
 # Headless contract:
@@ -235,7 +235,9 @@ aider_supports_add_gitignore_files() {
 # GH-168 + GH-186: old aider builds may still need --add-gitignore-files for gitignored relay files,
 # while current aider releases removed the flag entirely. Always pass --no-gitignore; add the legacy
 # flag only when the installed aider advertises it in --help.
-turn_timeout="${RELAY_TURN_TIMEOUT_S:-600}"
+# GH-278: match the Python-default runtime and relay-xyz documentation. 900s leaves room for
+# thinking-heavy builder turns; rtl_run_bounded still kills a genuine hung CLI with exit 7.
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-900}"
 gitignore_args=(--no-gitignore)
 if aider_supports_add_gitignore_files; then
   gitignore_args+=(--add-gitignore-files)
