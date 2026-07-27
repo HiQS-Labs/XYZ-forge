@@ -119,6 +119,13 @@ so each gets its own lock, `.tick/`, and worktrees:
 | `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | shared (serializes) |
 | **`xyz-vendor.sh vendor <repo>`** | full harness (`relay-automation/` + tick + src) into a gitignored `.xyz/` | ✅ per-repo | **own** `.xyz/.relay-driver.lock` |
 
+Updating a vendored copy (`xyz-sync.sh update`, or re-running `xyz-vendor.sh` over an existing
+`.xyz/`) replaces the harness **code** and preserves the per-repo state above — `relay-system/`,
+`.tick/`, `.relay-driver.lock`, and the `XYZ.json*` telemetry ride across the rebuild (GH-312). This
+matters because `.xyz/` is gitignored: state lost there is unrecoverable, with no reflog or stash
+behind it. A new runtime artifact under `.xyz/` must be added to the preserve list in
+`xyz-vendor.sh`'s `materialize_vendor()`, or the next update will delete it.
+
 So: **`xyz-vendor.sh` (not `install.sh`) is the path to concurrent per-repo relays.** Once a repo has
 `.xyz/`, `find-harness.sh` prefers it automatically (env → `.xyz/` → current repo → script-relative), and
 `find-harness.sh --check` **warns** when you're in a foreign repo with no `.xyz/` (using the shared

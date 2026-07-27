@@ -278,6 +278,29 @@ materialize_vendor() {
     printf 'vendored_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   } > "$STAGE_DIR/VERSION"
 
+  # GH-312: carry TARGET-owned runtime state across the swap. $STAGE_DIR is mirrored purely from
+  # $HARNESS_ROOT, and none of these paths are in VENDOR_DIRS, so the `rm -rf` below would delete
+  # whatever the target accumulated -- relay threads, tick event logs, GH-75 telemetry -- unread.
+  # `.xyz/` is gitignored (ensure_gitignore), so nothing under it was ever hashed into a git object:
+  # there is no reflog, stash, or `git fsck --lost-found` recovery. A destroyed relay thread is gone.
+  #
+  # Preservation rather than a warning or a refusal: both of those still depend on an operator
+  # reading output at the right moment, and this script's own docs frame `update` as deliberate
+  # (pinned + manual) but never as destructive. This makes it non-destructive by default.
+  #
+  # The list is state that BELONGS TO THE TARGET, not harness code:
+  #   relay-system/         relay threads (what vendoring is sold on -- per-repo isolation)
+  #   .tick/                tick event logs / claim state
+  #   .relay-driver.lock    live driver lock (a running relay or marathon)
+  #   XYZ.json{,.lock/}     GH-75 completion telemetry + its mkdir advisory lock
+  #   XYZ.heartbeat.json    liveness stamp
+  for _keep in relay-system .tick .relay-driver.lock XYZ.json XYZ.json.lock XYZ.heartbeat.json; do
+    [ -e "$VENDOR_DIR/$_keep" ] || continue
+    rm -rf "$STAGE_DIR/$_keep"
+    cp -Rp "$VENDOR_DIR/$_keep" "$STAGE_DIR/$_keep" \
+      || die "failed to preserve target runtime state: $_keep (aborting before the destructive swap)"
+  done
+
   rm -rf "$VENDOR_DIR"
   mv "$STAGE_DIR" "$VENDOR_DIR"
 }

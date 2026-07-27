@@ -14,6 +14,15 @@ set -euo pipefail
 # This is report-only: a mismatch prints a warning naming the drifted field(s) and both values
 # (recorded vs current) -- it is NEVER a hard error and NEVER auto-pulls. Updates land only via an
 # explicit `xyz-sync update` / `xyz-vendor.sh` re-run (pinned + manual, by design).
+#
+# GH-312 -- what `update` does to the target's RUNTIME STATE: it updates harness CODE only and
+# preserves state the target owns. `xyz-vendor.sh` rebuilds the tree by staging a fresh mirror of
+# the harness and swapping it in over `rm -rf`, so anything the target accumulated that is not
+# harness source would be destroyed unread -- and `.xyz/` is gitignored, so that loss has no git
+# recovery path. materialize_vendor() therefore carries these across the swap:
+#   relay-system/  .tick/  .relay-driver.lock  XYZ.json  XYZ.json.lock/  XYZ.heartbeat.json
+# Adding a new runtime artifact under `.xyz/` means adding it to that preserve list, or `update`
+# will silently delete it. Regression coverage: test/gh312-vendor-preserves-state.sh.
 
 usage() {
   cat <<'USAGE'
