@@ -1,0 +1,7 @@
+FIRSTHAND_COUNT=10
+ECHOED_COUNT=5
+ECHOED `[Pass]`
+ECHOED `after_begin`
+ECHOED `campaigns`
+ECHOED `app.current_tenant`
+ECHOED `app.current_tenant`
