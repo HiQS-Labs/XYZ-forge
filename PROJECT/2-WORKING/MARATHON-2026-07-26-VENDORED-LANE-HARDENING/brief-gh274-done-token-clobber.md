@@ -11,6 +11,12 @@ goal: >
 roadmap_exempt: true
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase fired and landed; relay Approved, pre-advance gate passed. | Done — carried in PR #309. |
+
 # Phase gh274 — a re-invoked phase must not clobber an Approved `RELAY.md`
 
 Issue: #274 · Capture doc: `PROJECT/2-WORKING/GH-274-MARATHON-DRIVE-DONE-TOKEN-RETRY-CLOBBER.md`

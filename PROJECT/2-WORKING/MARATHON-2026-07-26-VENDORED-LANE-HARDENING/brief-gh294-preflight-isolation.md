@@ -11,6 +11,12 @@ goal: >
 roadmap_exempt: true
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase fired and landed; relay Approved, lane satisfied. | Done — carried in PR #309. |
+
 # Phase gh294 — preflight must emit `RELAY_WORKTREE_ISOLATION=1`
 
 Issue: #294 · Capture doc: `PROJECT/2-WORKING/GH-294-PREFLIGHT-ISOLATION-FLAG.md`

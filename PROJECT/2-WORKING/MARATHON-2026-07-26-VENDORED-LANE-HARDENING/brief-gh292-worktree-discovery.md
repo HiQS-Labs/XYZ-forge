@@ -11,6 +11,12 @@ goal: >
 roadmap_exempt: true
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase fired; relay Approved. Gate initially failed on two static guards (GH-177 mktemp shape, GH-64 eval); both fixed in 2aa839c. | Done — carried in PR #309. |
+
 # Phase gh292 — `find-harness.sh` must find a vendored `.xyz/` from a linked worktree
 
 Issue: #292 · Capture doc: `PROJECT/2-WORKING/GH-292-WORKTREE-VENDORED-DISCOVERY.md`

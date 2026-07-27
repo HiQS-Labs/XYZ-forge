@@ -11,6 +11,12 @@ goal: >
 roadmap_exempt: true
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Phase fired; relay Approved by agy, but the turn failed containment (exit 6) — the fixture leaked into the caller cwd. Root-caused and fixed in 7d1a341. | Phase still shows escalated; the underlying defect is fixed but the phase was not re-driven. |
+
 # Phase gh278 — one per-turn timeout, and no credit for empty artifacts
 
 Issue: #278 · Capture doc: `PROJECT/2-WORKING/GH-278-AIDER-TURN-TIMEOUT-DRIFT.md`
