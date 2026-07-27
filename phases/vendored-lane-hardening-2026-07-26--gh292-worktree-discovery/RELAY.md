@@ -79,3 +79,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH292-WORKTREE-DISCOVERY-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/vendored-lane-hardening-2026-07-26--gh292-worktree-discovery/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Builder · codex
+
+- Added one guarded `--git-common-dir` probe after the caller-root `.xyz/` probe, so linked worktrees resolve their main checkout's vendored harness while bare and non-repository callers still fall through unchanged.
+- Kept centralized fallback non-fatal; `--check` now identifies an unusable main-checkout vendor and warns that it is falling back to the centralized lock instead of claiming no vendor exists.
+- Added and registered `test/gh292-worktree-vendored-discovery.sh`, covering main-checkout control behavior, linked-worktree harness/tick selection, and the actionable fallback warning.
+- Verified: `bash test/gh292-worktree-vendored-discovery.sh` — 7 pass, 0 fail.

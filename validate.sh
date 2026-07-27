@@ -96,6 +96,7 @@ TESTS=(
   "relay-case-insensitive.sh"
   "relay-xyz-skill-guard.sh"
   "find-harness.sh"
+  "gh292-worktree-vendored-discovery.sh"  # GH-292 (linked worktree resolves main-checkout .xyz/)
   "pdda-roadmap-coverage.sh"
   "swarm-preflight.sh"
   "ci-workflow.sh"

@@ -18,8 +18,9 @@
 # Resolution order (first hit wins):
 #   1. $XYZ_HARNESS / $XYZ_REPO_ROOT          — explicit override
 #   2. <caller-root>/.xyz                     — vendored local copy in the repo you're standing in
-#   3. the current git repo root              — you're already standing in a harness clone
-#   4. this script's own real location        — …/<repo>/skills/relay-xyz → <repo>
+#   3. <main-checkout>/.xyz                   — vendored copy visible from a linked worktree
+#   4. the current git repo root              — you're already standing in a harness clone
+#   5. this script's own real location        — …/<repo>/skills/relay-xyz → <repo>
 #
 # bash 3.2-safe (macOS default): no `readlink -f`, no associative arrays.
 set -u
@@ -78,6 +79,7 @@ VENDORED_COMMIT=""
 LIVE_HARNESS=""
 LIVE_HARNESS_HEAD=""
 VENDORED_STATUS=""
+MAIN_CHECKOUT_VENDORED=""
 # 1. explicit override
 for _o in "${XYZ_HARNESS:-}" "${XYZ_REPO_ROOT:-}"; do
   if _has_harness "$_o"; then HARNESS="$(cd "$_o" && pwd)"; break; fi
@@ -93,11 +95,27 @@ if [ -z "$HARNESS" ]; then
     VENDORED=1
   fi
 fi
-# 3. current git repo (preserves "operate on the clone I'm standing in")
+# 3. vendored .xyz/ copy in the main checkout, when the caller is a linked
+# worktree. Gitignored vendor files exist only in that main checkout.
+if [ -z "$HARNESS" ] && [ -n "$_g" ] && [ "$(git rev-parse --is-bare-repository 2>/dev/null || true)" != "true" ]; then
+  _common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)"
+  if [ -n "$_common_dir" ] && [ -d "$_common_dir" ]; then
+    _main_root="$(dirname "$_common_dir")"
+    _main_vendored="$_main_root/.xyz"
+    if [ -d "$_main_vendored" ]; then
+      MAIN_CHECKOUT_VENDORED="$(_canon_dir "$_main_vendored" || true)"
+      if _has_vendored_harness "$MAIN_CHECKOUT_VENDORED"; then
+        HARNESS="$MAIN_CHECKOUT_VENDORED"
+        VENDORED=1
+      fi
+    fi
+  fi
+fi
+# 4. current git repo (preserves "operate on the clone I'm standing in")
 if [ -z "$HARNESS" ]; then
   if _has_harness "$_g"; then HARNESS="$_g"; fi
 fi
-# 4. relative to this script (…/<repo>/skills/relay-xyz → <repo>) — fixes the
+# 5. relative to this script (…/<repo>/skills/relay-xyz → <repo>) — fixes the
 #    cross-repo case: the skill is global but the harness ships beside it.
 if [ -z "$HARNESS" ]; then
   _cand="$(cd "$SELF_DIR/../.." >/dev/null 2>&1 && pwd || true)"
@@ -223,7 +241,12 @@ case "${1:-}" in
     # Advise vendoring for per-repo lock isolation. Fail-open: this only prints; --check still exits 0.
     if [ "$VENDORED" = 0 ]; then
       if [ -n "$_caller" ] && [ "$(_canon_dir "$_caller")" != "$HARNESS" ]; then
-        echo "  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and"
+        if [ -n "$MAIN_CHECKOUT_VENDORED" ]; then
+          echo "  !   concurrency: vendored .xyz found in the main checkout at $MAIN_CHECKOUT_VENDORED, but it is not"
+          echo "      a usable harness here; relays fall back to the CENTRALIZED harness and"
+        else
+          echo "  !   concurrency: no local .xyz/ in this repo — relays here use the CENTRALIZED harness and"
+        fi
         echo "      share ONE global driver lock (can't run concurrently with another repo's relay). For"
         echo "      per-repo isolation / concurrent relays, vendor this repo:"
         echo "        relay-automation/xyz-vendor.sh vendor $_caller"
