@@ -126,7 +126,9 @@ def main():
     aider_aux_dir = os.environ.get("AIDER_AUX_DIR", os.path.join(tempfile.gettempdir(), f"aider-aux-{os.getpid()}"))
     os.makedirs(aider_aux_dir, exist_ok=True)
     
-    turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
+    # GH-278: keep the default aligned with the Bash compatibility shim and relay-xyz docs.
+    # 900s gives thinking-heavy builders enough headroom while preserving the bounded exit-7 kill.
+    turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))
     
     gitignore_args = ["--no-gitignore"]
     if aider_supports_add_gitignore_files(aider_bin):
@@ -215,6 +217,21 @@ def main():
                 rf.write(log_text)
                 rf.write("\n```\n")
             print("aider-turn: review turn landed no relay-file delta but the transcript carried a graded review — salvaged it into the relay file (attributed; GH-251)", file=sys.stderr)
+
+    # GH-278: Aider pre-creates 0-byte stubs for --file targets before it starts writing.
+    # If the turn is killed (exit 7), these empty stubs must not be committed as "progress".
+    if bounded_rc == 7 and allow_paths:
+        for ap in claim_paths[1:]:
+            ap_full = os.path.join(root, ap)
+            if os.path.isfile(ap_full) and os.path.getsize(ap_full) == 0:
+                try:
+                    r = subprocess.run(["git", "-C", root, "ls-files", "--error-unmatch", ap], capture_output=True)
+                    if r.returncode == 0:
+                        subprocess.run(["git", "-C", root, "checkout", "HEAD", "--", ap], capture_output=True)
+                    else:
+                        os.remove(ap_full)
+                except Exception:
+                    pass
 
     rc = rtl.enforce(t, me, aider_log, "aider")
 

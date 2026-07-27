@@ -6,10 +6,13 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 113 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
+Summary: 116 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-308 — Stop maintaining the Bash twins | — | [#308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308) · [PROJECT/1-INBOX/GH-308-BASH-TWIN-RETIREMENT.md](PROJECT/1-INBOX/GH-308-BASH-TWIN-RETIREMENT.md) |
+| GH-304 · Vendored .xyz relay lane is broken for Codex but works for agy | — | [#304](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/304) · [PROJECT/1-INBOX/GH-304-VENDORED-XYZ-CODEX-RELAY.md](PROJECT/1-INBOX/GH-304-VENDORED-XYZ-CODEX-RELAY.md) |
+| GH-305 — 4-agent swarm validation test | — | [#305](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/305) · [PROJECT/1-INBOX/GH-305-4AGENT-SWARM-TEST.md](PROJECT/1-INBOX/GH-305-4AGENT-SWARM-TEST.md) |
 | GH-296 · relay-drive.sh EPERM on tick lock in a same-repo vendored .xyz reviewing an artifact outside .xyz/ | — | [GH-296-RELAY-DRIVE-TICK-EPERM.md](PROJECT/1-INBOX/GH-296-RELAY-DRIVE-TICK-EPERM.md) · [#296](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/296) |
 | GH-281 · Sentinel / Debug Flywheel — opt-in debug capture (public) + private triage overlay | — | [GH-281-SENTINEL-DEBUG-FLYWHEEL.md](PROJECT/1-INBOX/GH-281-SENTINEL-DEBUG-FLYWHEEL.md) · [#281](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/281) · [GH-281-SENTINEL-TIER1-STAGE0.md](PROJECT/2-WORKING/GH-281-SENTINEL-TIER1-STAGE0.md) · [GH-281-SENTINEL-TIER2-OVERLAY.md](PROJECT/2-WORKING/GH-281-SENTINEL-TIER2-OVERLAY.md) |
 | GH-280 · Investigate Aider+Qwen3.8-Max reliability vs Aider+Claude-Sonnet-5 control ($5 OpenRouter budget) | — | [GH-280-AIDER-QWEN-VS-SONNET-INVESTIGATION.md](PROJECT/1-INBOX/GH-280-AIDER-QWEN-VS-SONNET-INVESTIGATION.md) · [#280](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/280) |
@@ -126,10 +129,11 @@ Summary: 113 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · �
 
 ## In progress
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 4 · ⏸️ 0 · ⛔ 0 · ✅ 13 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 0 · ⛔ 0 · ✅ 13 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-295 · Add Pi (pi.dev) as a new supported headless builder harness, alongside Codex/agy | 🟡 | [GH-295-PI-BUILDER-INTEGRATION.md](PROJECT/2-WORKING/GH-295-PI-BUILDER-INTEGRATION.md) · [#295](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/295) |
 | GH-240 · PDDA-compatible marathon triage and cleanup skills | ✅ | [GH-240-MARATHON-SKILLS.md](PROJECT/3-COMPLETED/GH-240-MARATHON-SKILLS.md) · [#240](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/240) |
 | GH-201 · swe-diagram: add Git history lane visualization | ✅ | [GH-201-SWE-DIAGRAM-GIT-LANES.md](PROJECT/3-COMPLETED/GH-201-SWE-DIAGRAM-GIT-LANES.md) · [#201](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201) |
 | GH-221 · Explicitly document Claude CLI is NOT a default builder — Claude Code is orchestrator/reviewer only | ✅ | [GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md](PROJECT/3-COMPLETED/GH-221-BUILDER-ORCHESTRATOR-ROLE-SPLIT.md) · [#221](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/221) |
@@ -151,10 +155,11 @@ Summary: 18 items | Tally: 🟢 0 · 🟡 4 · ⏸️ 0 · ⛔ 0 · ✅ 13 · �
 
 ## Completed
 
-Summary: 18 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 18 · 🔮 0 · 🔲 0
+Summary: 19 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 19 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-300 · swe-diagram: search input touches/overflows the font-picker when typing — two distinct bugs, same symptom family | ✅ | [GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md](PROJECT/3-COMPLETED/GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md) · [#300](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/300) |
 | GH-273 · Automate the marathon pre-flight/post-flight ceremony | ✅ | [#274](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/274) · [GH-273-MARATHON-CLOSEOUT-AUTOMATION.md](PROJECT/3-COMPLETED/GH-273-MARATHON-CLOSEOUT-AUTOMATION.md) · [#273](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/273) |
 | GH-200 · swe-diagram: add top-down layered layout | ✅ | [GH-200-SWE-DIAGRAM-TOP-DOWN.md](PROJECT/3-COMPLETED/GH-200-SWE-DIAGRAM-TOP-DOWN.md) · [#200](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/200) · [PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md](PROJECT/4-MISC/ROADMAP-COMPLETED-ARCHIVE.md) |
 | GH-78 · optional hourly doc-preflight (contract-enforcing auto-edits + telemetry) | ✅ | [GH-78-DOC-PREFLIGHT-AUTOMATION.md](PROJECT/1-INBOX/GH-78-DOC-PREFLIGHT-AUTOMATION.md) · [#81](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/81) · [#78](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/78) |

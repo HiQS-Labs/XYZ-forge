@@ -761,7 +761,7 @@ def main():
     if os.path.realpath(target_root) != os.path.realpath(root):
         target_root_line = f"\n  --target-root {target_root} \\"
         
-    invocation = f"""XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID={slug} {drive_cmd} \\
+    invocation = f"""XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID={slug} RELAY_WORKTREE_ISOLATION=1 {drive_cmd} \\
   --phase-brief <packet>/packet.md \\
   --reviewer agy \\
   --builder codex \\

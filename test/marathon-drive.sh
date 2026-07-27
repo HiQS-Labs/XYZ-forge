@@ -172,6 +172,52 @@ ls "$A/.tick/events/" 2>/dev/null | grep -q "marathon.phase.approved" \
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (5b) GH-307: the gate must NOT inherit the run's identity tags ───────
+# The gate is a correctness check on the repo, not part of the run's provenance. When these
+# leaked in, test/xyz-harness-hooks.sh (reads XYZ_HARNESS_CONTEXT / XYZ_SESSION_ID) and
+# test/debug-mantra.sh (reads MARATHON_LANE_NS) failed inside every marathon, so `bash
+# validate.sh` — the documented default gate — always escalated phase 1 with a correct,
+# approved change. Behavioural: the gate itself reports what it can see.
+GATE_ENV_OUT="$WORK/gate-env-seen.txt"
+GATE_ENV_CMD="$WORK/gate-report-env.sh"
+cat > "$GATE_ENV_CMD" <<'GATEEOF'
+#!/usr/bin/env bash
+{
+  printf 'XYZ_HARNESS_CONTEXT=%s\n' "${XYZ_HARNESS_CONTEXT-<unset>}"
+  printf 'XYZ_SESSION_ID=%s\n'      "${XYZ_SESSION_ID-<unset>}"
+  printf 'MARATHON_LANE_NS=%s\n'    "${MARATHON_LANE_NS-<unset>}"
+  printf 'MARATHON_ROOT=%s\n'       "${MARATHON_ROOT-<unset>}"
+  printf 'TICK_REPO_ROOT=%s\n'      "${TICK_REPO_ROOT-<unset>}"
+} > "$GATE_ENV_OUT_PATH"
+exit 0
+GATEEOF
+chmod +x "$GATE_ENV_CMD"
+
+GATE_ENV_OUT_PATH="$GATE_ENV_OUT" \
+XYZ_HARNESS_CONTEXT=marathon-phase XYZ_SESSION_ID=sid-gh307 MARATHON_LANE_NS=lane-gh307 \
+RELAY_DRIVE_EXIT=0 run_driver --pre-advance-cmd "bash $GATE_ENV_CMD" >/dev/null 2>&1 || true
+
+if [ -f "$GATE_ENV_OUT" ]; then
+  for v in XYZ_HARNESS_CONTEXT XYZ_SESSION_ID MARATHON_LANE_NS; do
+    grep -q "^$v=<unset>$" "$GATE_ENV_OUT" \
+      && pass "GH-307: gate cannot see $v" \
+      || fail "GH-307: gate inherited $v ($(grep "^$v=" "$GATE_ENV_OUT"))"
+  done
+  # Narrowness: repo/config inputs a gate may legitimately need must survive the scrub.
+  # (Codex round 1: TICK_REPO_ROOT was recorded but never asserted — now both are checked.
+  # run_driver exports TICK_REPO_ROOT="$A", so a <unset> here means the scrub was too broad.)
+  for keep in MARATHON_ROOT TICK_REPO_ROOT; do
+    grep -q "^$keep=<unset>$" "$GATE_ENV_OUT" \
+      && fail "GH-307: scrub was too broad — $keep was removed" \
+      || pass "GH-307: scrub is narrow — $keep preserved"
+  done
+else
+  fail "GH-307: gate never ran (no env report written)"
+fi
+rm -f "$GATE_ENV_OUT"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 # ── (6) pre-advance gate failure → ESCALATION.md, exit 5 ─────────────────
 GATE_CMD_FAIL="$WORK/gate-fail.sh"
 printf '#!/usr/bin/env bash\nprintf "gate: FAILED\n" >&2; exit 1\n' > "$GATE_CMD_FAIL"
