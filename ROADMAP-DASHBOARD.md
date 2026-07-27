@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 118 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
+Summary: 119 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-312 · xyz-sync update destroys the target's live relay-system/ and .tick/ state | — | [#312](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/312) · [PROJECT/1-INBOX/GH-312-XYZ-SYNC-DESTROYS-STATE.md](PROJECT/1-INBOX/GH-312-XYZ-SYNC-DESTROYS-STATE.md) |
 | GH-308 — Stop maintaining the Bash twins | — | [#308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308) · [PROJECT/1-INBOX/GH-308-BASH-TWIN-RETIREMENT.md](PROJECT/1-INBOX/GH-308-BASH-TWIN-RETIREMENT.md) |
 | GH-304 · Vendored .xyz relay lane is broken for Codex but works for agy | — | [#304](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/304) · [PROJECT/1-INBOX/GH-304-VENDORED-XYZ-CODEX-RELAY.md](PROJECT/1-INBOX/GH-304-VENDORED-XYZ-CODEX-RELAY.md) |
 | GH-305 — 4-agent swarm validation test | — | [#305](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/305) · [PROJECT/1-INBOX/GH-305-4AGENT-SWARM-TEST.md](PROJECT/1-INBOX/GH-305-4AGENT-SWARM-TEST.md) |

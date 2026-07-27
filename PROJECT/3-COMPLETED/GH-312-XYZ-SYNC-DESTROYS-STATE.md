@@ -1,7 +1,8 @@
 ---
 title: xyz-sync update destroys the target's live relay-system/ and .tick/ state
-status: Proposed (1-INBOX — not yet active)
+status: "SHIPPED — fixed 2026-07-27 in 4ec5928; preserve list carries 6 paths (3 more than the report named), regression test fails pre-fix and passes post-fix, agy review Approved."
 created: 2026-07-27
+updated: 2026-07-27
 owner: noel
 gh_issue: 312
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/312
@@ -10,7 +11,7 @@ complexity: 2
 risk: 5
 effort: 2
 phases: 1
-ratings_provisional: true
+ratings_provisional: false
 reported_from: rebalance-OS
 harness_commit: dff45d5
 non_goals:
@@ -28,9 +29,10 @@ goal: >
 
 # GH-312 — xyz-sync update destroys the target's live relay-system/ and .tick/ state
 
-> **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
-> `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
-> (`PROJECT/PDDA.md` → GitHub issue intake).
+## Status
+| What was just completed | What's next |
+|---|---|
+| **Fixed and shipped (`4ec5928`).** `materialize_vendor()` now carries target-owned runtime state across the stage-then-swap instead of `rm -rf`-ing it. **The report's preserve list was incomplete:** auditing what `.xyz/` actually accumulates added the GH-75 telemetry trio (`XYZ.json`, `XYZ.json.lock/`, `XYZ.heartbeat.json`) to the three named paths — same exposure, none in `VENDOR_DIRS`, so the stage never recreated them. Regression test `test/gh312-vendor-preserves-state.sh` **fails pre-fix (6 failures) and passes post-fix (14/14)**, and pins the other half of the contract (VERSION must still restamp to live HEAD) so a fix that "preserved" state by skipping the update cannot pass. Phase 0's open question about `xyz-vendor.sh vendor` over an existing `.xyz/` is **answered: yes, same destructive path**, now covered. Reviewed by agy via a driven relay — Approved, 4 `[Pass]` findings, no defects raised. `validate.sh` green (10 passed / 0 failed / 1 skipped). | **Durable-fix question deliberately left open** (see Phase 0 item 3): whether runtime state should live under a disposable, gitignored `.xyz/` at all. Preservation is the minimal fix and is what shipped; relocation was **not** attempted and is not tracked by this issue — file a fresh issue if it's wanted. Anyone adding a new runtime artifact under `.xyz/` must add it to the preserve list or `update` will silently delete it. |
 
 ## Symptom
 
@@ -142,21 +144,48 @@ moment. Preservation makes `update` non-destructive by default and needs no oper
 
 ### Checklist
 
-- [ ] Reproduce in the intake repo (vendor into a scratch repo, seed a relay, update)
-- [ ] Confirm the preserve list is complete — audit what else `.xyz/` accumulates at runtime
+- [x] Reproduce in the intake repo (vendor into a scratch repo, seed a relay, update)
+- [x] Confirm the preserve list is complete — audit what else `.xyz/` accumulates at runtime
       beyond `relay-system/`, `.tick/`, `.relay-driver.lock`
-- [ ] Decide whether preservation is the end state, or whether runtime state should live outside
+- [x] Decide whether preservation is the end state, or whether runtime state should live outside
       `.xyz/` entirely (that directory is disposable and gitignored by design — arguably the wrong
       home for durable state). Preservation is the minimal fix; relocation is the durable one.
-- [ ] Check whether `xyz-vendor.sh vendor` (first install over an existing `.xyz/`) has the same
+- [x] Check whether `xyz-vendor.sh vendor` (first install over an existing `.xyz/`) has the same
       destructive path
-- [ ] Set/correct triage ratings; clear `ratings_provisional` once real
+- [x] Set/correct triage ratings; clear `ratings_provisional` once real
+
+### Phase 0 findings (written back, per the discovery-phase contract)
+
+**1. Repro confirmed, not assumed.** `test/gh312-vendor-preserves-state.sh` seeds the runtime paths
+into a scratch vendored repo and runs the real `xyz-sync update`. Pre-fix it produced **6 failures**;
+post-fix **14/14 pass**. The mechanism was read directly at `xyz-vendor.sh` (unconditional
+`rm -rf "$VENDOR_DIR"`, no preserve logic anywhere in the file), not inferred from the symptom.
+
+**2. The preserve list in the report was incomplete — three more paths had identical exposure.**
+Auditing the repo `.gitignore` plus what actually sits at the harness root turned up the GH-75
+completion-telemetry family: `XYZ.json` (the locked record array — 1.8 MB and actively written on the
+reporting machine), `XYZ.json.lock/` (its `mkdir` advisory lock), and `XYZ.heartbeat.json`. None are
+in `VENDOR_DIRS`, so the stage never recreated them and the swap deleted them exactly like the three
+named paths. Shipped preserve list is therefore **six** entries, not three. This is the finding that
+would have left the bug half-fixed had the report been implemented literally.
+
+**3. Preservation is what shipped; relocation is deliberately NOT done.** Preservation was chosen
+over warn-or-refuse because both still depend on an operator reading output at the right moment. The
+sharper question — whether durable state belongs under a disposable, gitignored `.xyz/` at all —
+remains genuinely open and is **out of scope for this issue** (it is listed in `non_goals`). It needs
+its own issue; closing #312 does not close that question.
+
+**4. `xyz-vendor.sh vendor` over an existing `.xyz/` has the SAME destructive path** — it is the same
+`materialize_vendor()`. Answered affirmatively and now covered by a dedicated case in the test.
+
+**5. Ratings.** Confirmed as filed (complexity 2 / risk 5 / effort 2); `ratings_provisional` cleared.
+Risk 5 is right: the loss is silent, exits 0, and is unrecoverable by construction.
 
 ### QA checklist — Phase 0
 
-- [ ] The repro is confirmed in the intake repo, not assumed from the report
-- [ ] A regression test seeds `relay-system/` + `.tick/`, runs `update`, and asserts both survive —
-      landed **before** the fix
-- [ ] The fix composes with the existing stage-then-swap rather than adding a parallel copy path
-- [ ] Docs updated: `xyz-sync.sh` header and `relay-xyz/SKILL.md` state what `update` does to
+- [x] The repro is confirmed in the intake repo, not assumed from the report
+- [x] A regression test seeds `relay-system/` + `.tick/`, runs `update`, and asserts both survive —
+      landed **before** the fix (written first, observed failing, then fixed)
+- [x] The fix composes with the existing stage-then-swap rather than adding a parallel copy path
+- [x] Docs updated: `xyz-sync.sh` header and `relay-xyz/SKILL.md` state what `update` does to
       runtime state
