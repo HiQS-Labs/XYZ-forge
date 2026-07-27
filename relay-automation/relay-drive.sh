@@ -250,6 +250,20 @@ if [[ ! -f "$RELAY_FILE" && -n "${TARGET_ROOT:-}" && "$RELAY_FILE" != /* && -f "
 fi
 [[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
 
+# GH-304: absolutize $RELAY_FILE now, before it is exported to the turn-taker. As passed on the command
+# line it is relative to the DRIVER's CWD — which, for a same-repo vendored `.xyz/` install driven per
+# the relay-xyz skill's documented `cd "$HARNESS"`, is `.xyz/`, a SUBDIR of the true repo root the
+# turn-taker's worktree checks out. The turn-taker then embeds that raw CWD-relative string in its
+# prompt ("Read relay-system/…") and resolves it against its worktree root (the true repo root, since
+# `.xyz` has no `.git`), where it does not exist — the relay 100%-fails for Codex (agy absolutizes on
+# its own, masking the bug). An absolute path here resolves identically from any CWD: rtl_init strips
+# the repo-root prefix for the seed + allowlist, and rtl_turn_prompt embeds the correct repo-root-
+# relative path (e.g. `.xyz/relay-system/…`). Mirrors the ARTIFACT_FILE absolutization below.
+case "$RELAY_FILE" in
+  /*) : ;;
+  *)  RELAY_FILE="$(cd "$(dirname "$RELAY_FILE")" && pwd)/$(basename "$RELAY_FILE")" ;;
+esac
+
 # GH-245 defect 1: a review turn (ALLOW_PATHS="") can only write the relay file. Under --target-root
 # the turn's isolation worktree is based on the TARGET repo, so if the relay file resolves OUTSIDE that
 # target root the reviewer physically cannot append its findings (codex rejects the out-of-project

@@ -648,7 +648,23 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # bin/tick + .tick live), i.e. TICK_REPO_ROOT (exported by the shim), falling back to RTL_ROOT.
   local root="${RTL_ROOT:-}" tickroot="${TICK_REPO_ROOT:-${RTL_ROOT:-}}" tickbin f_rel csv_rel="" p _a
   tickbin="$(rtl_tick_bin "$tickroot")"
+  # GH-304: derive the repo-root-relative EDIT path robustly. A plain `${f#"$root/"}` string-strip
+  # silently no-ops when $f and $root arrive in different symlink forms (git's PHYSICAL /private/var
+  # toplevel vs a /var-form path built from $PWD on macOS) — the absolute path then leaks into the
+  # prompt, inviting a write straight into RTL_ROOT past the worktree. Canonicalize both sides to their
+  # physical form before stripping (mirrors rtl_init's RTL_ALLOW normalization), so the seed path
+  # (rtl_worktree_begin) and the prompt path stay in lockstep. Falls back to the raw string strip for a
+  # relative or nonexistent $f — byte-for-byte the prior behaviour for the common same-CWD case.
   f_rel="${f#"${root:+$root/}"}"
+  if [[ "$f" == /* && -e "$f" ]]; then
+    local _f_dir _f_phys _root_phys
+    _f_dir="$(cd "$(dirname "$f")" 2>/dev/null && pwd -P)"
+    _root_phys="$(cd "$root" 2>/dev/null && pwd -P)"
+    if [[ -n "$_f_dir" && -n "$_root_phys" ]]; then
+      _f_phys="$_f_dir/$(basename "$f")"
+      [[ "$_f_phys" == "$_root_phys"/* ]] && f_rel="${_f_phys#"$_root_phys"/}"
+    fi
+  fi
   if [[ -n "$csv" ]]; then
     IFS=',' read -ra _a <<<"$csv"
     for p in "${_a[@]}"; do [[ -n "$p" ]] && csv_rel+="${csv_rel:+,}${p#"${root:+$root/}"}"; done
@@ -978,8 +994,22 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
     grep -qxF "$_ap" <<<"$_staged" && _commit_paths+=("$_ap")
   done
   if [[ "${#_commit_paths[@]}" -eq 0 ]]; then
-    printf '%s-turn: %s turn produced no tracked changes (token-only move?)\n' "$RTL_TOOL" "$agent"
-    rtl_log_always "rtl_enforce: COMMIT none (no tracked changes) agent=$agent"
+    # GH-304 (secondary): an empty commit set is AMBIGUOUS when the relay file is gitignored (this repo
+    # gitignores parts of relay-system/). `git add -A` can't stage a gitignored path, so a turn that DID
+    # append findings to a gitignored relay file lands here with the SAME empty _commit_paths as a
+    # genuine token-only no-op — and both used to print byte-identical "no tracked changes (token-only
+    # move?)" output, costing real diagnosis time (reported from 3 separate repos). Distinguish them: if
+    # the relay file (RTL_ALLOW[0], repo-root-relative) is gitignored, say so plainly and point at the
+    # file, instead of implying nothing happened. Fall back to the original message otherwise.
+    local _relay_rel="${RTL_ALLOW[0]:-}"
+    if [[ -n "$_relay_rel" && "$_relay_rel" != /* ]] \
+       && git -C "$RTL_ROOT" check-ignore -q -- "$_relay_rel" 2>/dev/null; then
+      printf '%s-turn: %s turn made no git commit — relay file %s is gitignored, so any content it appended is NOT git-tracked (this is expected, NOT a stall — read the file to confirm what the turn wrote)\n' "$RTL_TOOL" "$agent" "$_relay_rel"
+      rtl_log_always "rtl_enforce: COMMIT none (relay file gitignored, on-disk change untracked) agent=$agent rel=$_relay_rel"
+    else
+      printf '%s-turn: %s turn produced no tracked changes (token-only move?)\n' "$RTL_TOOL" "$agent"
+      rtl_log_always "rtl_enforce: COMMIT none (no tracked changes) agent=$agent"
+    fi
   else
     git -C "$RTL_ROOT" commit -q -m "relay(${task}): ${agent} turn (${RTL_TOOL} headless; no push)" -- "${_commit_paths[@]}"
     printf '%s-turn: committed %s turn (file-scoped, no push)\n' "$RTL_TOOL" "$agent"
