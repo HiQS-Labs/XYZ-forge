@@ -43,6 +43,7 @@ set -euo pipefail
 #   MARATHON_DRIVE      — marathon-drive.sh path (default: <harness-home>/relay-automation/marathon-drive.sh)
 #   MARATHON_YAML_BIN   — bin/marathon-yaml path (default: <harness-home>/bin/marathon-yaml)
 #   TICK_BIN            — tick binary (default: <harness-home>/bin/tick)
+#   MARATHON_CLOSEOUT_BIN — marathon-closeout.sh path (default: <harness-home>/relay-automation/marathon-closeout.sh)
 #   MARATHON_ALLOW_PLAN_OUTSIDE_WORKING — 1 permits a --plan outside PROJECT/2-WORKING/ (GH-212)
 # Real runs also inherit the turn-taker env (CLAUDE_BIN, *_TURN_ROOT, …), passed straight through.
 #
@@ -60,6 +61,7 @@ fi
 TICK_BIN="${TICK_BIN:-"$MARATHON_HOME/bin/tick"}"
 DRIVE_BIN="${MARATHON_DRIVE:-"$MARATHON_HOME/relay-automation/marathon-drive.sh"}"
 YAML_BIN="${MARATHON_YAML_BIN:-"$MARATHON_HOME/bin/marathon-yaml"}"
+CLOSEOUT_BIN="${MARATHON_CLOSEOUT_BIN:-"$MARATHON_HOME/relay-automation/marathon-closeout.sh"}"
 
 die() { printf 'marathon: %s\n' "$*" >&2; exit 2; }
 log() { printf 'marathon: %s\n' "$*"; }
@@ -80,7 +82,7 @@ xyz_marathon_run_emit() {  # <health> <description>
 usage() {
   cat <<'EOF'
 Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-advance-cmd C]
-                    [--dry-run] [--force] [--retry PHASE-ID]
+                    [--dry-run] [--force] [--retry PHASE-ID] [--closeout-pr]
 
   --plan PATH            MARATHON.yaml to run (required). Must resolve under PROJECT/2-WORKING/ in
                           the target repo (GH-212) — exempt: paths under this harness's own home
@@ -94,10 +96,12 @@ Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-ad
   --dry-run               Render each phase's relay file and print the tick seed; exit without running.
   --force                 GH-45: bypass the per-lane attempt cap for this run.
   --retry PHASE-ID        GH-116: retry one phase with a fresh relay-task suffix.
+  --closeout-pr           Open (but never merge) a PR after a successful marathon. Closeout failure is logged
+                          and does not change the successful marathon exit code.
 EOF
 }
 
-PLAN=""; BUILDER="codex"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0; RETRY_PHASE=""
+PLAN=""; BUILDER="codex"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0; RETRY_PHASE=""; CLOSEOUT_PR=0
 while (($# > 0)); do
   case "$1" in
     --plan)            PLAN="${2:-}"; shift 2 ;;
@@ -107,6 +111,7 @@ while (($# > 0)); do
     --dry-run)         DRY_RUN=1; shift ;;
     --force)           FORCE=1; shift ;;   # GH-45: forward to each phase so a parked lane can be re-fired
     --retry)           RETRY_PHASE="${2:-}"; shift 2 ;;   # GH-116: retry one phase with a fresh relay-task suffix
+    --closeout-pr)     CLOSEOUT_PR=1; shift ;;
     --help)            usage; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
   esac
@@ -224,6 +229,25 @@ done < <(printf '%s\n' "$PLAN_TSV" | tr '\t' '\037')
 if ((DRY_RUN)); then
   log "dry-run complete: $phase_count phase(s) would run in order"
   exit 0
+fi
+
+if ((CLOSEOUT_PR)); then
+  closeout_plan="${PLAN_NAME:-$(basename "${PLAN%.*}")}"
+  closeout_event_dir="$ROOT/.tick/events"
+  closeout_event_count=0
+  closeout_event_types=""
+  if [[ -d "$closeout_event_dir" ]]; then
+    closeout_event_count="$(find "$closeout_event_dir" -type f -name '*.jsonl' -print | wc -l | tr -d '[:space:]')"
+    closeout_event_types="$(find "$closeout_event_dir" -type f -name '*.jsonl' -print | LC_ALL=C sort | while IFS= read -r event_file; do
+      sed -n 's/.*"type":"\([^"]*\)".*/\1/p' "$event_file"
+    done | LC_ALL=C sort -u | paste -sd, -)"
+  fi
+  closeout_notes="Marathon plan: $closeout_plan
+Phases approved: $phase_count/$phase_count
+Tick events: $closeout_event_count${closeout_event_types:+ ($closeout_event_types)}"
+  if ! bash "$CLOSEOUT_BIN" --repo "$ROOT" --open-only --title "Marathon: $closeout_plan" --notes "$closeout_notes"; then
+    log "closeout PR failed after successful marathon; leaving marathon successful"
+  fi
 fi
 "$TICK_BIN" log marathon.complete "MARATHON-RUN" --agent marathon > /dev/null 2>&1 || true
 

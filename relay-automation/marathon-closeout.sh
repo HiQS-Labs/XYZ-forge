@@ -12,6 +12,7 @@
 set -euo pipefail
 
 DRY_RUN=0
+OPEN_ONLY=0
 REPO="."
 BASE_BRANCH="development"
 HEAD_BRANCH=""
@@ -26,6 +27,7 @@ usage: marathon-closeout.sh [options]
 
 Options:
   --dry-run            Print the exact closeout sequence; execute no git/gh command.
+  --open-only          Stop once the pull request is open; do not check, merge, switch, or pull.
   --repo DIR           Repository to close out (default: current directory).
   --head BRANCH        Feature branch (required for --dry-run; auto-detected live).
   --base BRANCH        Merge target and final local branch (default: development).
@@ -46,6 +48,7 @@ die_usage() {
 while (($#)); do
   case "$1" in
     --dry-run) DRY_RUN=1; shift ;;
+    --open-only) OPEN_ONLY=1; shift ;;
     --repo|--head|--base|--remote|--message|--title|--notes)
       (($# >= 2)) || die_usage "$1 requires a value"
       case "$1" in
@@ -86,9 +89,14 @@ if ((DRY_RUN)); then
   [[ "$HEAD_BRANCH" != "$BASE_BRANCH" ]] || die_usage "head branch must differ from base branch"
 
   print_command git add -A
+  print_command git diff --cached --quiet
   print_command git commit -m "$COMMIT_MESSAGE"
   print_command git push -u "$REMOTE" "$HEAD_BRANCH"
+  print_capture EXISTING_PR gh pr list --head "$HEAD_BRANCH" --base "$BASE_BRANCH" --state open --json url --jq '.[0].url'
   print_capture PR_URL gh pr create --base "$BASE_BRANCH" --head "$HEAD_BRANCH" --title "$PR_TITLE" --body "$PR_NOTES"
+  if ((OPEN_ONLY)); then
+    exit 0
+  fi
   print_command gh pr checks '\$PR_URL'
   print_capture MERGEABLE gh pr view '\$PR_URL' --json mergeable --jq .mergeable
   print_command test '\$MERGEABLE' = MERGEABLE
@@ -125,14 +133,31 @@ run_closeout() {
 }
 
 run_closeout "stage all changes" git add -A
-run_closeout "commit" git commit -m "$COMMIT_MESSAGE"
+if git diff --cached --quiet; then
+  printf 'marathon-closeout.sh: no staged changes; skipping commit\n'
+else
+  run_closeout "commit" git commit -m "$COMMIT_MESSAGE"
+fi
 run_closeout "push" git push -u "$REMOTE" "$HEAD_BRANCH"
 
-if ! PR_URL="$(gh pr create --base "$BASE_BRANCH" --head "$HEAD_BRANCH" --title "$PR_TITLE" --body "$PR_NOTES")"; then
-  printf 'marathon-closeout.sh: pull-request creation failed\n' >&2
+if ! PR_URL="$(gh pr list --head "$HEAD_BRANCH" --base "$BASE_BRANCH" --state open --json url --jq '.[0].url')"; then
+  printf 'marathon-closeout.sh: could not query existing pull requests\n' >&2
   exit 3
 fi
-[[ -n "$PR_URL" ]] || { printf 'marathon-closeout.sh: pull-request creation returned no URL\n' >&2; exit 3; }
+if [[ -n "$PR_URL" ]]; then
+  printf 'marathon-closeout.sh: reusing open PR %s\n' "$PR_URL"
+else
+  if ! PR_URL="$(gh pr create --base "$BASE_BRANCH" --head "$HEAD_BRANCH" --title "$PR_TITLE" --body "$PR_NOTES")"; then
+    printf 'marathon-closeout.sh: pull-request creation failed\n' >&2
+    exit 3
+  fi
+  [[ -n "$PR_URL" ]] || { printf 'marathon-closeout.sh: pull-request creation returned no URL\n' >&2; exit 3; }
+fi
+
+if ((OPEN_ONLY)); then
+  printf 'marathon-closeout.sh: open PR ready at %s\n' "$PR_URL"
+  exit 0
+fi
 
 if ! gh pr checks "$PR_URL"; then
   printf 'marathon-closeout.sh: PR checks are not green; refusing to merge\n' >&2

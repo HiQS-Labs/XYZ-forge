@@ -256,14 +256,24 @@ repos can apply them.
 
 ---
 
-## Open decisions (operator)
+## Decisions (operator, 2026-07-27) — SETTLED
 
-1. **Milestone vs. label as the release join key** (Phase 3). Recommendation: milestone. Changes
-   Phase 3 and 4 implementation, so it is worth settling before either is contracted.
-2. **Does Phase 1 fire now, independently?** Recommendation: yes. It is ready today and nothing in
-   Phases 2-5 changes its contract.
-3. **Trunk name** for the `landed on trunk` check — `development` here, but it must be derived, not
-   hardcoded, if this ships to other repos.
+1. **Release join key = GitHub MILESTONE.** Not a label. Phase 3 and 4 are scoped to milestones:
+   `gh issue list --milestone <name>` is the selection query, and GitHub's own open/closed rollup is
+   the progress signal rather than anything recomputed. RELEASES.md gains one `Milestone:` field and
+   keeps its existing `GH_URL` semantics unchanged.
+2. **Phase 1 fires now, standalone.** Fired 2026-07-27 — see the Status table.
+3. **Rollout scope = THIS REPO ONLY for now.** Phase 5's cross-repo work is deferred, not cancelled.
+   The portability checklist stays in this doc as the capture point, but no vendored/foreign repo is
+   a target until this repo has run the loop for real. Practical consequence: Phases 2-4 may assume
+   this repo's rails exist (PDDA, RELEASES.md, `development` trunk) **but must still not hardcode the
+   trunk name**, because that is the single cheapest thing to get right early and the most annoying
+   to retrofit.
+
+### Still open
+
+- **Trunk name derivation** for the `landed on trunk` check. `development` here; derive it (e.g. from
+  the upstream ref) rather than literal, per decision 3.
 
 ## Housekeeping found while scoping
 
