@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# FROZEN (GH-308): Python is authoritative — do not make behavior changes here.
+# Historical Bash fallback only; update utils/py/agy-turn.py instead. See issue #308.
 set -euo pipefail
 
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in

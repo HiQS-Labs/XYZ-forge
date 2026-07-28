@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# FROZEN (GH-308): Python is authoritative — do not make behavior changes here.
+# Historical Bash fallback only; update utils/py/marathon_drive.py instead. See issue #308.
 set -euo pipefail
 
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
@@ -675,7 +677,18 @@ if [[ -n "$TARGET_ROOT" ]]; then
 fi
 
 PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
-PRE_ADVANCE_CMD="${PRE_ADVANCE_CMD:-"bash $ROOT/validate.sh"}"
+# GH-319: this string is later run through `eval`, so an UNQUOTED $ROOT word-splits on any space in
+# the repo path. A clone at ".../GH Repos/xyz-3-agents-swarm" produced `bash /Users/.../Documents/GH`
+# — an unrelated 0-byte file — which exits 0 in 0.0s, so every phase reported "gate passed" while
+# validate.sh was RED. `printf %q` is the eval-safe form. This edit is a DELIBERATE EXCEPTION to the
+# GH-308 freeze on this file (agy review of PR #318, [Blocker]): the freeze routes *behavior* changes
+# to utils/py/marathon_drive.py, but leaving a silently-fake safety gate in the XYZ_PYTHON=0 fallback
+# is worse than the exception. Keep this byte-consistent with the Python twin.
+# Single quotes, not `printf %q`: %q backslash-escapes the space, which is eval-safe but still leaves
+# a space in the token, so the preflight regex below would capture ".../GH\" and die "script file does
+# not exist" — trading a false pass for a hard failure. Single-quoting is also byte-consistent with
+# what Python's shlex.quote() emits for the same path.
+PRE_ADVANCE_CMD="${PRE_ADVANCE_CMD:-"bash '$ROOT/validate.sh'"}"
 
 # GH-238: a vendored consumer normally has no root-level validate.sh.  Do not spend a builder and
 # reviewer turn only to discover that the default gate cannot start after approval.  This is a
@@ -693,7 +706,12 @@ preflight_pre_advance_gate() {
 
   # The default (and the normal custom-script form) is `bash <script>`.  Check both the interpreter
   # and its script target; merely checking `bash` would miss the absent validate.sh that caused GH-238.
-  if [[ "$PRE_ADVANCE_CMD" =~ ^[[:space:]]*(bash|/[^[:space:]]*/bash)[[:space:]]+([^[:space:]]+) ]]; then
+  # GH-319: a quoted script argument MAY CONTAIN SPACES (it must, once the repo path has one), so the
+  # alternation matches a fully quoted token before falling back to a bare run of non-space chars.
+  # The old `([^[:space:]]+)` captured only the leading fragment of a split path — and on the machine
+  # where this was found that fragment was a real 0-byte file, so this check and the gate itself
+  # agreed on the wrong file and both passed.
+  if [[ "$PRE_ADVANCE_CMD" =~ ^[[:space:]]*(bash|/[^[:space:]]*/bash)[[:space:]]+(\'[^\']*\'|\"[^\"]*\"|[^[:space:]]+) ]]; then
     gate_shell="${BASH_REMATCH[1]}"
     script_arg="${BASH_REMATCH[2]}"
     command -v "$gate_shell" >/dev/null 2>&1 \

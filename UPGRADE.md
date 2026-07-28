@@ -55,6 +55,20 @@ relay-automation/consult.sh       utils/swarm-preflight.sh
 relay-automation/marathon-drive.sh
 ```
 
+## 0.1 Authority after the flip (GH-308)
+
+The default flip selected Python at runtime; GH-308 separately freezes the Bash compatibility bodies
+for the eleven **Tier-A** twins. Python is now the only maintenance lane for
+`agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`, `relay-loop`,
+`relay-drive`, `consult`, `marathon-drive`, and `swarm-preflight`. The matching `.sh` files remain
+only as the reversible `XYZ_PYTHON=0` fallback and carry a `FROZEN` banner. Put behavior fixes in the
+corresponding `utils/py/` file; `test/gh308-frozen-twin-guard.sh --check --staged` rejects a staged
+frozen-twin edit, and CI checks committed ranges through `GH308_FROZEN_TWIN_BASE`.
+
+`utils/marathon-plan.sh` is intentionally different: its Bash implementation remains authoritative
+and dual-maintained until the known Python parity gaps are closed. `relay-automation/relay-turn-lib.sh`
+is also not a twin; it is a shared Bash runtime dependency used by Python. Neither file is frozen.
+
 **Out of scope — stays Bash after this upgrade, by design:**
 - `relay-automation/relay-turn-lib.sh` (permanent Bash boundary — `decisions/2026-07-04-python-port-boundary.md`; Python reaches it via `rtl.py`).
 - `marathon.sh`, `runner.sh`, `watchdog.sh`, `xyz-sync.sh`, `xyz-vendor.sh`, `signal-triage.sh`, `roadmap-dashboard.sh`, and ~20 other Bash-only scripts that were never ported. A cutover is **permanently partial**; this doc does not pretend otherwise.

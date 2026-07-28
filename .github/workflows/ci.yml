@@ -73,6 +73,35 @@ jobs:
           set -euo pipefail
           utils/pdda/pdda.sh run
 
+      # GH-308 froze the eleven Tier-A Bash twins and AGENTS.md told readers "CI supplies
+      # GH308_FROZEN_TWIN_BASE to reject a committed twin edit". Nothing did — the agy review of
+      # PR #318 caught the claim as false ([Blocker]). This is that wiring.
+      #
+      # Escape hatch: a safety defect in a frozen fallback can legitimately warrant an edit (GH-319
+      # left a silently-fake pre-advance gate in marathon-drive.sh under XYZ_PYTHON=0). Such a commit
+      # must carry a `Frozen-twin-exception: <reason>` trailer, which makes the exception auditable in
+      # `git log` instead of invisible. No trailer, no edit.
+      - name: Frozen Bash twin guard (GH-308)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if GH308_FROZEN_TWIN_BASE="$BASE_SHA" bash test/gh308-frozen-twin-guard.sh --check --base "$BASE_SHA"; then
+            exit 0
+          fi
+          echo "---"
+          exceptions="$(git log --format='%H %s%n%b' "$BASE_SHA..HEAD" | grep -c '^Frozen-twin-exception:' || true)"
+          if [ "$exceptions" -gt 0 ]; then
+            echo "gh308 guard: $exceptions commit(s) declare Frozen-twin-exception — allowing:"
+            git log --format='%h %s' --grep='^Frozen-twin-exception:' "$BASE_SHA..HEAD"
+            exit 0
+          fi
+          echo "gh308 guard: a frozen Bash twin was edited with no 'Frozen-twin-exception: <reason>'" >&2
+          echo "trailer on any commit in this range. Put the fix in the Python twin, or declare the" >&2
+          echo "exception in the commit message if the Bash fallback genuinely needs it." >&2
+          exit 1
+
       # GH-230: prove the README Quickstart's npm-dependency path works from a fresh
       # clone, so a missing-install-step regression fails here instead of on a
       # newcomer's machine.

@@ -154,7 +154,11 @@ def main():
     # found and fixed in aider-turn.py/aider-turn.sh.
     agy_log = os.environ.get("AGY_LOG") or rtl_default_log(root, "agy-turn", t)
     
-    turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 300))
+        # GH-320: this default MUST match the Bash twin's `${RELAY_TURN_TIMEOUT_S:-N}` and the
+    # ceiling its header documents. It read 300 while the twin said 900, and since Python is the
+    # executing lane every turn was silently capped at a fraction of the documented budget —
+    # observed live as an exit-7 kill on a review turn that had 900s on paper.
+    turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))
     agy_args = ["--dangerously-skip-permissions", "--print-timeout", f"{turn_timeout}s"]
     
     if os.environ.get("AGY_MODEL"):

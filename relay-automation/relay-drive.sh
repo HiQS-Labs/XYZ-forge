@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# FROZEN (GH-308): Python is authoritative — do not make behavior changes here.
+# Historical Bash fallback only; update utils/py/relay_drive.py instead. See issue #308.
 set -euo pipefail
 
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
@@ -264,17 +266,19 @@ case "$RELAY_FILE" in
   *)  RELAY_FILE="$(cd "$(dirname "$RELAY_FILE")" && pwd)/$(basename "$RELAY_FILE")" ;;
 esac
 
-# GH-245 defect 1: a review turn (ALLOW_PATHS="") can only write the relay file. Under --target-root
-# the turn's isolation worktree is based on the TARGET repo, so if the relay file resolves OUTSIDE that
-# target root the reviewer physically cannot append its findings (codex rejects the out-of-project
-# write) — the whole turn is completed and then discarded at full cost. Refuse fast at startup instead
-# of spending the turn. The documented fix is to vendor the harness into the target repo so the relay
-# file, harness and source share one writable root, then drop --target-root.
-if ((REVIEW_ONCE)) && [[ -n "${TARGET_ROOT:-}" ]]; then
+# GH-245 defect 1: a review turn (ALLOW_PATHS="") can only write the relay file. GH-289: the same
+# isolation-root mismatch discards a BUILD turn's Log after full cost. Under --target-root the turn's
+# worktree is based on the TARGET repo, so if the relay file resolves OUTSIDE that target root the turn
+# physically cannot append its findings (codex rejects the out-of-project write). Refuse fast at
+# startup instead of spending the turn. The documented fix is to vendor the harness into the target
+# repo so the relay file, harness and source share one writable root, then drop --target-root.
+if [[ -n "${TARGET_ROOT:-}" ]]; then
   _gh245_tr="$(cd "$TARGET_ROOT" 2>/dev/null && pwd -P)"
   _gh245_rf="$(cd "$(dirname "$RELAY_FILE")" 2>/dev/null && pwd -P)/$(basename "$RELAY_FILE")"
   if [[ -n "$_gh245_tr" && "$_gh245_rf" != "$_gh245_tr"/* ]]; then
-    die "--target-root review turn cannot report: relay file '$RELAY_FILE' resolves outside the target root '$TARGET_ROOT', so a review turn (ALLOW_PATHS=\"\") has no writable path for its findings and the turn would be discarded after full cost. Vendor the harness into the target repo (relay-automation/xyz-vendor.sh '$TARGET_ROOT') and drop --target-root, or move the relay thread under the target root."
+    _gh289_turn_kind="build"
+    if ((REVIEW_ONCE)); then _gh289_turn_kind="review"; fi
+    die "--target-root $_gh289_turn_kind turn cannot report: relay file '$RELAY_FILE' resolves outside the target root '$TARGET_ROOT', so a $_gh289_turn_kind turn (ALLOW_PATHS=\"\") has no writable path for its findings and the turn would be discarded after full cost. Vendor the harness into the target repo (relay-automation/xyz-vendor.sh '$TARGET_ROOT') and drop --target-root, or move the relay thread under the target root."
   fi
 fi
 

@@ -73,6 +73,19 @@ local change.
   governance.
 - `validate.sh` is the code/runtime gate. `utils/pdda/pdda.sh run` and its targeted
   `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
+- **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the eleven Tier-A
+  entry points (`agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`,
+  `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, and `swarm-preflight`). Their `.sh`
+  files are historical `XYZ_PYTHON=0` fallbacks: put behavior fixes in the named Python twin, not
+  the Bash body. Before committing, run `bash test/gh308-frozen-twin-guard.sh --check --staged`; the
+  `Frozen Bash twin guard (GH-308)` step in `.github/workflows/ci.yml` supplies
+  `GH308_FROZEN_TWIN_BASE` on every PR to reject a committed twin edit. **Escape hatch:** a safety
+  defect in a fallback can warrant an edit anyway — GH-319 left a silently-fake pre-advance gate in
+  `marathon-drive.sh` under `XYZ_PYTHON=0`. Such a commit must carry a
+  `Frozen-twin-exception: <reason>` trailer, which CI accepts and which keeps the exception auditable
+  in `git log` rather than invisible. No trailer, no edit. `utils/marathon-plan.sh` is the
+  deliberate exception: Bash remains authoritative and dual-maintained. `relay-turn-lib.sh` is a
+  shared Bash runtime dependency, not a twin.
 - **Builder/orchestrator role split (GH-221)** — **Claude Code (terminal and VS Code agents) is the
   orchestrator and reviewer, never a default builder.** It plans, dispatches marathon/relay lanes, and
   reviews/verifies their output; it does not drive itself headlessly as a build lane. **Agy CLI and

@@ -8,6 +8,9 @@ Usage:
   xyz-vendor.sh -h | --help
 
 Materialize a vendored xyz harness snapshot into <target-repo>/.xyz/.
+
+Safety note: `xyz-sync update` refuses a dirty or non-canonical harness source by default before
+calling this script. For an intentional reviewed override, set XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1.
 USAGE
 }
 

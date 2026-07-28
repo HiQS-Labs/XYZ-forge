@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# FROZEN (GH-308): Python is authoritative — do not make behavior changes here.
+# Historical Bash fallback only; update utils/py/swarm_preflight.py instead. See issue #308.
 
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
 # utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash

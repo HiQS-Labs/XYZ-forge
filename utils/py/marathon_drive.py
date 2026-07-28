@@ -4,6 +4,7 @@ import sys
 import subprocess
 import time
 import re
+import shlex
 import shutil
 
 def eprint(*args, **kwargs):
@@ -302,7 +303,14 @@ def main():
         _heartbeat(clear=True)
 
     phases_dir = args.phases_dir or os.path.join(root, "phases")
-    pre_advance_cmd = args.pre_advance_cmd or f"bash {root}/validate.sh"
+    # GH-319: the default gate is interpolated into a string that run_pre_advance_gate() hands to
+    # `bash -c`, so an UNQUOTED root word-splits on any space in the repo path. Observed live: a
+    # clone at ".../Documents/GH Repos/xyz-3-agents-swarm" produced `bash /Users/.../Documents/GH
+    # Repos/.../validate.sh`, bash executed the unrelated 0-byte file `/Users/.../Documents/GH`, and
+    # the gate returned 0 in 0.0s. Every phase of a 4-lane marathon reported "gate passed" while
+    # validate.sh was in fact RED. shlex.quote is the fix; the preflight below already knew to strip
+    # quotes off the script arg, it was just never given a quoted default to strip.
+    pre_advance_cmd = args.pre_advance_cmd or f"bash {shlex.quote(os.path.join(root, 'validate.sh'))}"
     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
     # GH-207: a marathon lane namespaces its phase paths + attempt state so two lanes sharing a bare
     # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.
@@ -320,20 +328,27 @@ def main():
         if subprocess.run(["bash", "-n", "-c", pre_advance_cmd],
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode != 0:
             _pre_advance_not_runnable("shell syntax is invalid")
-        m = re.match(r'^\s*(bash|/\S*/bash)\s+(\S+)', pre_advance_cmd)
-        if m:
-            gate_shell, script_arg = m.group(1), m.group(2)
+        # GH-319: tokenize the way the shell will. A regex `(\S+)` capture cannot see a quoted path
+        # that contains a space — it grabs the leading fragment, which on this machine happened to be
+        # a real 0-byte file, so the "is the gate runnable?" check passed on the WRONG file. shlex
+        # splits `bash '/a b/validate.sh'` into two tokens, so the same check now inspects the file
+        # the shell would actually execute. Fall back to naive split only if the string is unparsable
+        # (unbalanced quotes) — that case is caught by the `bash -n` syntax check just above anyway.
+        try:
+            tokens = shlex.split(pre_advance_cmd)
+        except ValueError:
+            tokens = pre_advance_cmd.split()
+        if tokens and re.fullmatch(r'bash|/\S*/bash', tokens[0]) and len(tokens) > 1:
+            gate_shell, script_arg = tokens[0], tokens[1]
             if not shutil.which(gate_shell):
                 _pre_advance_not_runnable(f"interpreter '{gate_shell}' is not on PATH")
-            if len(script_arg) >= 2 and script_arg[0] in "\"'" and script_arg[-1] == script_arg[0]:
-                script_arg = script_arg[1:-1]
             if script_arg.startswith("-"):
                 return
             gate_path = script_arg if os.path.isabs(script_arg) else os.path.join(_gate_root, script_arg)
             if not os.path.isfile(gate_path):
                 _pre_advance_not_runnable(f"script file does not exist: {gate_path}")
             return
-        parts = pre_advance_cmd.split()
+        parts = tokens
         command_name = parts[0] if parts else ""
         if not command_name:
             _pre_advance_not_runnable("command is empty")

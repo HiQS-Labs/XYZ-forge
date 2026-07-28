@@ -15,6 +15,12 @@ set -euo pipefail
 # (recorded vs current) -- it is NEVER a hard error and NEVER auto-pulls. Updates land only via an
 # explicit `xyz-sync update` / `xyz-vendor.sh` re-run (pinned + manual, by design).
 #
+# GH-293: source_commit is provenance, not a safety capability version. A safety fix can land
+# without changing src/events.js's schema version, and old registry rows sometimes have
+# source_commit=unknown. Keep a small manifest of behaviorally meaningful, static guard patterns
+# and inspect the installed copy itself. This keeps `check` report-only while making a missing
+# guard distinguishable from ordinary provenance drift.
+#
 # GH-312 -- what `update` does to the target's RUNTIME STATE: it updates harness CODE only and
 # preserves state the target owns. `xyz-vendor.sh` rebuilds the tree by staging a fresh mirror of
 # the harness and swapping it in over `rm -rf`, so anything the target accumulated that is not
@@ -43,6 +49,10 @@ Manage vendored .xyz copies recorded in the local XYZ registry.
 this harness currently ships. Exact match on both -> "ok" line. Mismatch on either field -> a
 "DRIFT" warning naming the drifted field(s) and both recorded/current values. Report-only: never
 a hard error, never an auto-pull.
+
+`update` refuses to fan out from a dirty harness source or a non-canonical branch. The canonical
+branches default to `main,development` and may be set with XYZ_SYNC_CANONICAL_BRANCHES. Set
+XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1 only for an intentional, reviewed override.
 USAGE
 }
 
@@ -67,6 +77,24 @@ SELECTED_INSTALL_DIRS=()
 SELECTED_SOURCE_COMMITS=()
 SELECTED_TICK_VERSIONS=()
 SELECTED_TARGET_REPOS=()
+
+# name|path inside a vendored .xyz/|literal behavior marker. These are deliberately behavior
+# markers rather than source commits: a guard remains observable even when registry provenance is
+# unknown, and the output names the exact safety property a vendored copy lacks.
+SAFETY_GUARD_NAMES=(
+  "relay-target-root-containment"
+)
+SAFETY_GUARD_PATHS=(
+  "relay-automation/relay-drive.sh"
+)
+SAFETY_GUARD_PATTERNS=(
+  # Match the guard's user-facing DIAGNOSTIC, not its shell conditional (agy review of PR #318,
+  # [Should]). The original marker was the `[[ ... ]]` test itself, which any reformat — or the
+  # variable rename GH-289 made two lanes earlier in this same marathon — silently stops matching,
+  # and a silently-unmatched marker reports "SAFETY GUARD MISSING" on a copy that has the guard.
+  # A diagnostic string is load-bearing text an operator reads; it does not get reflowed.
+  'turn cannot report: relay file'
+)
 
 # GH-96: mirrors tick_version() in xyz-vendor.sh byte-for-byte -- both must read SCHEMA_VERSION
 # the same way, or `check` would report false drift against a correctly-vendored install.
@@ -253,6 +281,12 @@ update_rows() {
 
   require_selection "${target}" || return 0
   [ -f "$VENDOR_SCRIPT" ] || die "missing xyz-vendor.sh alongside xyz-sync.sh"
+  # GH-293: source safety is a fleet fan-out guard. A deliberately selected
+  # single target keeps the established GH-312 update behavior, while --all
+  # cannot distribute unmerged or dirty harness code without an explicit opt-in.
+  if [ "$target" = "--all" ]; then
+    require_safe_update_source
+  fi
 
   for ((i = 0; i < ${#SELECTED_TARGET_REPOS[@]}; i++)); do
     if [ ! -d "${SELECTED_TARGET_REPOS[$i]}" ]; then
@@ -261,6 +295,37 @@ update_rows() {
     fi
     "$VENDOR_SCRIPT" "${SELECTED_TARGET_REPOS[$i]}"
   done
+}
+
+is_canonical_update_branch() {
+  local branch allowed
+  branch="$1"
+  allowed="${XYZ_SYNC_CANONICAL_BRANCHES:-main,development}"
+
+  local IFS=','
+  for candidate in $allowed; do
+    [ "$branch" = "$candidate" ] && return 0
+  done
+  return 1
+}
+
+require_safe_update_source() {
+  local branch dirty
+
+  if [ "${XYZ_SYNC_ALLOW_UNSAFE_SOURCE:-0}" = "1" ]; then
+    note "update: allowing unsafe harness source because XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1"
+    return 0
+  fi
+
+  branch="$(git -C "$HARNESS_ROOT" branch --show-current 2>/dev/null || true)"
+  if [ -z "$branch" ] || ! is_canonical_update_branch "$branch"; then
+    die "refusing update: harness source branch '${branch:-detached}' is not canonical (${XYZ_SYNC_CANONICAL_BRANCHES:-main,development}); set XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1 for an intentional override"
+  fi
+
+  dirty="$(git -C "$HARNESS_ROOT" status --porcelain --untracked-files=normal 2>/dev/null || true)"
+  if [ -n "$dirty" ]; then
+    die "refusing update: harness source is dirty; set XYZ_SYNC_ALLOW_UNSAFE_SOURCE=1 for an intentional override"
+  fi
 }
 
 delete_rows() {
@@ -307,7 +372,7 @@ delete_rows() {
 # does. Mismatch on either field is drift; a match is silent/"ok". Never mutates the registry or
 # the install, never exits non-zero for drift -- this is a warning, not a gate.
 check_rows() {
-  local target i cur_ver cur_commit rec_ver rec_commit drifted
+  local target i j cur_ver cur_commit rec_ver rec_commit drifted missing_guards guard_path guard_pattern
 
   target="${1:-}"
 
@@ -332,6 +397,15 @@ check_rows() {
     drifted=""
     [ "$rec_ver" = "$cur_ver" ] || drifted="${drifted}${drifted:+,}tick_version"
     [ "$rec_commit" = "$cur_commit" ] || drifted="${drifted}${drifted:+,}source_commit"
+    missing_guards=""
+
+    for ((j = 0; j < ${#SAFETY_GUARD_NAMES[@]}; j++)); do
+      guard_path="${SELECTED_INSTALL_DIRS[$i]}/${SAFETY_GUARD_PATHS[$j]}"
+      guard_pattern="${SAFETY_GUARD_PATTERNS[$j]}"
+      if [ ! -f "$guard_path" ] || ! grep -Fq -- "$guard_pattern" "$guard_path" 2>/dev/null; then
+        missing_guards="${missing_guards}${missing_guards:+,}${SAFETY_GUARD_NAMES[$j]}"
+      fi
+    done
 
     if [ -z "$drifted" ]; then
       printf 'ok    %s\n' "${SELECTED_INSTALL_DIRS[$i]}"
@@ -339,6 +413,10 @@ check_rows() {
       printf 'DRIFT %s (%s drifted)\n' "${SELECTED_INSTALL_DIRS[$i]}" "$drifted"
       printf '  recorded: tick_version=%s source_commit=%s\n' "$rec_ver" "$rec_commit"
       printf '  current:  tick_version=%s source_commit=%s\n' "$cur_ver" "$cur_commit"
+    fi
+    if [ -n "$missing_guards" ]; then
+      printf 'SAFETY GUARD MISSING %s (%s)\n' "${SELECTED_INSTALL_DIRS[$i]}" "$missing_guards"
+      printf '  inspected installed copy directly; source_commit=%s does not establish guard coverage\n' "$rec_commit"
     fi
   done
 }

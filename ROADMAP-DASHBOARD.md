@@ -6,11 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 123 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 81 · 🔮 0 · 🔲 0
+Summary: 124 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 82 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| MARATHON-2026-07-27 · gate + fleet integrity (GH-311 → GH-289 → GH-293 → GH-308) | — | [PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml](PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml) |
+| GH-319 · the marathon pre-advance gate word-splits a spaced repo path and passes on the wrong file | — | [#315](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/315) · [#319](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/319) · [PROJECT/2-WORKING/GH-319-MARATHON-GATE-PATH-WORD-SPLIT.md](PROJECT/2-WORKING/GH-319-MARATHON-GATE-PATH-WORD-SPLIT.md) |
+| MARATHON-2026-07-27 · gate + fleet integrity (GH-311 → GH-289 → GH-293 → GH-308) | ✅ | [#318](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/318) · [PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml](PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml) |
 | GH-311 · validate.sh can be green while CI tier1 is red | — | [#311](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/311) · [PROJECT/2-WORKING/GH-311-VALIDATE-MISSES-REPO-PDDA-CONTRACT.md](PROJECT/2-WORKING/GH-311-VALIDATE-MISSES-REPO-PDDA-CONTRACT.md) |
 | GH-289 · --target-root BUILD turns silently lose the relay Log | — | [#289](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/289) · [PROJECT/2-WORKING/GH-289-TARGET-ROOT-BUILD-TURN-LOG-LOSS.md](PROJECT/2-WORKING/GH-289-TARGET-ROOT-BUILD-TURN-LOG-LOSS.md) |
 | GH-293 · vendored .xyz copies silently miss safety guards | — | [#293](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/293) · [PROJECT/2-WORKING/GH-293-VENDORED-GUARD-DRIFT.md](PROJECT/2-WORKING/GH-293-VENDORED-GUARD-DRIFT.md) |

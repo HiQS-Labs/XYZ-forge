@@ -41,6 +41,7 @@ TESTS=(
   "relay-turn-trace.sh"          # GH-161 (rtl_trace/rtl_log_always/rtl_default_log instrumentation)
   "aider-turn.sh"
   "gh278-turn-timeout-parity.sh" # GH-278 (Aider Python/Bash/doc timeout default must stay aligned)
+  "gh308-frozen-twin-guard.sh"  # GH-308 (Python-authoritative twins: banner + committed-change guard)
   "ate-run-variations.sh"       # GH-195 (ATE fuzzer git helpers: base-commit/disposable-guard/reset/detect-edit)
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
@@ -51,6 +52,8 @@ TESTS=(
   "marathon-drive.sh"
   "gh284-runlog-heartbeat.sh"   # GH-284 (driver heartbeat + opt-in idempotent run log)
   "gh307-gate-env-scrub.sh"      # GH-307 (pre-advance gate must not inherit run-identity tags)
+  "gh319-gate-path-with-space.sh" # GH-319 (default gate must not word-split a spaced repo path)
+  "gh320-twin-timeout-parity.sh" # GH-320 (Python twin turn-timeout defaults must match Bash + docs)
   "hq-marathon-live.sh"          # GH-218 (cross-repo live marathon status)
   "debug-mantra.sh"              # GH-162 (debug-mantra auto-trigger note on a phase's prior attempt)
   "lane-attempt-cap.sh"
@@ -77,6 +80,7 @@ TESTS=(
   "relay-target-root-paths.sh"
   "relay-target-root-relayfile.sh"
   "relay-target-root-newfile.sh"
+  "gh289-target-root-build-turn.sh"  # GH-289 (foreign relay Log: BUILD refuses before discarding it)
   "archive-root.sh"              # GH-30 Phase 1 (transcript-root resolver: unset/set/missing/non-git)
   "archive-writers.sh"           # GH-30 Phase 2 (writers honor the resolver: consult e2e + structural)
   "archive-commit.sh"            # GH-30 Phase 3 (Model A: transcript → archive repo, code+.tick → target)
@@ -93,6 +97,7 @@ TESTS=(
   "new-relay.sh"
   "xyz-vendor.sh"
   "xyz-sync-check.sh"            # GH-96 (xyz-sync check: tick_version/source_commit drift report)
+  "gh293-vendored-guard-drift.sh" # GH-293 (safety-guard manifest + safe fleet-update source gate)
   "relay-concurrent-commit.sh"
   "relay-commit-pathspec.sh"     # GH-198 (rtl_enforce commit is file-scoped, no pathspec regression)
   "relay-case-insensitive.sh"
@@ -100,6 +105,7 @@ TESTS=(
   "find-harness.sh"
   "gh292-worktree-vendored-discovery.sh"  # GH-292 (linked worktree resolves main-checkout .xyz/)
   "pdda-roadmap-coverage.sh"
+  "pdda-repo-contract.sh"       # GH-311 (real-repository PDDA deterministic contract)
   "swarm-preflight.sh"
   "ci-workflow.sh"
   "xyz-completion.sh"
