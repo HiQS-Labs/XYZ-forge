@@ -118,10 +118,12 @@ commits/PRs, no capture doc, no test file existed before this one.
   existing PATH-shadowed git/gh stub pattern — do not create a second file.
 - `--help` text in both scripts needs updating for the new flag.
 
-### Swarm Preflight Contract
+### Contract as shipped — Phase 1, historical
 
-> This is the ONLY contract block in this doc, deliberately. Phases 2-5 get their own contracts when
-> promoted; a second block here would change what `swarm-preflight --gh-issue 284` resolves.
+> **No longer the live contract.** Retired 2026-07-28 when Phase 1 merged. The heading deliberately
+> no longer matches `/preflight\s+contract/i`, because `swarm-preflight`'s extractor takes the FIRST
+> matching heading in the doc (`utils/swarm-preflight.sh:152`) — leaving this one live would resolve a
+> landed contract and block Phase 2 from ever firing. The live contract now sits under Phase 2.
 
 ```json
 {
@@ -178,6 +180,71 @@ That single boolean is what #303 was missing. Everything else is garnish. Alongs
 - **Never closes an issue.** Reporting only. Closing stays a human judgment — this sweep found three
   issues that *looked* done and correctly stayed open (#299 gated on operator browser review, #272 on
   the operator's own stated Bash-runtime replay, #303 stranded).
+
+### Sub-item: a file-based liveness signal (folded in 2026-07-28)
+
+**The harness offers no file-based liveness signal, so any observer must inspect processes.** That is
+the root defect behind the third specimen in the Phase 6 failure table, and it belongs here because
+this phase already owns the `driver still running` field.
+
+Process inspection fails for a whole class of legitimate observers — a sandboxed poller, a
+cross-session watcher, a remote/CI checker — and it fails in the worst possible direction: `ps`
+returns nothing, so **a live run reads as "finished."** Observed three times in one session while
+shipping Phase 1. The natural next action on "finished" is to clear the driver lock, which would
+corrupt the live run and set up the double-fire race GH-183/187 documents. A fourth trap: grepping
+for `marathon-drive.sh` finds nothing even unsandboxed, because XYZ is Python-default and the
+executing lane is `utils/py/marathon_drive.py`.
+
+**Fix:** the driver writes a heartbeat file (e.g. `.tick/driver-heartbeat.json`) carrying
+`{pid, started_utc, updated_utc, plan, phase_id, relay_task}`, refreshed on a timer and removed on
+clean exit. File reads work under the sandbox where `ps` does not, so *any* observer can answer "is a
+driver alive?" without process inspection — deriving liveness from freshness plus a PID check, never
+from a process-name grep.
+
+This also makes `driver still running` cheap and correct, and gives the lock-staleness question a
+real answer instead of a heuristic: **stale = heartbeat older than the threshold AND the recorded PID
+absent.** Never PID-absent alone, and never freshness alone.
+
+### Swarm Preflight Contract
+
+> **Live contract = Phase 2.** Phase 1's is retired above (heading renamed) because the extractor
+> takes the first `/preflight\s+contract/i` heading in the doc.
+
+```json
+{
+  "target":      { "repo": ".", "ref": "development" },
+  "gate":        "bash validate.sh",
+  "fix_probes":  [
+    { "type": "grep_absent", "path": "relay-automation/marathon-drive.sh", "pattern": "driver-heartbeat|log-github" },
+    { "type": "path_absent", "path": "test/gh284-runlog-heartbeat.sh" }
+  ],
+  "artifacts":   [
+    "relay-automation/marathon-drive.sh",
+    "relay-automation/relay-turn-lib.sh",
+    "test/gh284-runlog-heartbeat.sh",
+    "validate.sh"
+  ],
+  "artifacts_new": [ "test/gh284-runlog-heartbeat.sh" ],
+  "remediation": {
+    "source":   "issue#284",
+    "criteria": "TWO deliverables. (1) FILE-BASED LIVENESS: the driver writes a heartbeat file under .tick/ carrying {pid, started_utc, updated_utc, plan, phase_id, relay_task}, refreshed while running and removed on clean exit, so an observer can determine liveness WITHOUT process inspection (file reads work under a sandbox where ps does not). Staleness is defined as heartbeat-older-than-threshold AND recorded-PID-absent — never either alone. (2) RUN-LOG: a --log-github flag, DEFAULT OFF, that posts a compact record to the lane's OWN existing issue as an IDEMPOTENT marker comment (update in place via an HTML-comment sentinel, never append a second comment on re-fire), and NEVER files a new issue and NEVER closes one. The record carries: landed-on-trunk yes/no via `git merge-base --is-ancestor <lane-head> <trunk>` with the trunk name DERIVED not hardcoded; driver-still-running from the heartbeat; branch name; PR link or an explicit 'NO PR OPENED'; per-phase gate result; plan name. gh missing/unauthenticated degrades to XYZ.json-only, logs a line, and NEVER blocks the run or changes its exit code. New test is REGISTERED in validate.sh's TESTS array."
+  },
+  "lanes":       {
+    "agy_safe":          [ "test/gh284-runlog-heartbeat.sh" ],
+    "orchestrator_only": [ "bin/", ".tick/" ]
+  }
+}
+```
+
+### Phase 2 QA checklist
+
+- [ ] Heartbeat file is readable by a **sandboxed** reader — demonstrated, since that is the entire point
+- [ ] A live driver is never reported as finished; a dead one is never reported as running
+- [ ] Staleness requires BOTH stale-heartbeat AND absent-PID — verified with a live-PID/stale-file case
+- [ ] Re-firing the same lane updates ONE comment, does not append a second
+- [ ] `--log-github` is default OFF; with `gh` unavailable the run's exit code is unchanged
+- [ ] No code path files a new issue or closes one
+- [ ] Trunk name is derived, not the literal `development`
 
 ---
 
