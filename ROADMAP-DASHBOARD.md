@@ -6,12 +6,16 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 119 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 80 · 🔮 0 · 🔲 0
+Summary: 123 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 81 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-312 · xyz-sync update destroys the target's live relay-system/ and .tick/ state | — | [#312](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/312) · [PROJECT/1-INBOX/GH-312-XYZ-SYNC-DESTROYS-STATE.md](PROJECT/1-INBOX/GH-312-XYZ-SYNC-DESTROYS-STATE.md) |
-| GH-308 — Stop maintaining the Bash twins | — | [#308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308) · [PROJECT/1-INBOX/GH-308-BASH-TWIN-RETIREMENT.md](PROJECT/1-INBOX/GH-308-BASH-TWIN-RETIREMENT.md) |
+| MARATHON-2026-07-27 · gate + fleet integrity (GH-311 → GH-289 → GH-293 → GH-308) | — | [PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml](PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml) |
+| GH-311 · validate.sh can be green while CI tier1 is red | — | [#311](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/311) · [PROJECT/2-WORKING/GH-311-VALIDATE-MISSES-REPO-PDDA-CONTRACT.md](PROJECT/2-WORKING/GH-311-VALIDATE-MISSES-REPO-PDDA-CONTRACT.md) |
+| GH-289 · --target-root BUILD turns silently lose the relay Log | — | [#289](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/289) · [PROJECT/2-WORKING/GH-289-TARGET-ROOT-BUILD-TURN-LOG-LOSS.md](PROJECT/2-WORKING/GH-289-TARGET-ROOT-BUILD-TURN-LOG-LOSS.md) |
+| GH-293 · vendored .xyz copies silently miss safety guards | — | [#293](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/293) · [PROJECT/2-WORKING/GH-293-VENDORED-GUARD-DRIFT.md](PROJECT/2-WORKING/GH-293-VENDORED-GUARD-DRIFT.md) |
+| GH-312 · xyz-sync update destroys the target's live relay-system/ and .tick/ state | ✅ | [#312](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/312) · [PROJECT/3-COMPLETED/GH-312-XYZ-SYNC-DESTROYS-STATE.md](PROJECT/3-COMPLETED/GH-312-XYZ-SYNC-DESTROYS-STATE.md) |
+| GH-308 — Stop maintaining the Bash twins | — | [#308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308) · [PROJECT/2-WORKING/GH-308-BASH-TWIN-RETIREMENT.md](PROJECT/2-WORKING/GH-308-BASH-TWIN-RETIREMENT.md) |
 | GH-304 · Vendored .xyz relay lane is broken for Codex but works for agy | — | [#304](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/304) · [PROJECT/1-INBOX/GH-304-VENDORED-XYZ-CODEX-RELAY.md](PROJECT/1-INBOX/GH-304-VENDORED-XYZ-CODEX-RELAY.md) |
 | GH-305 — 4-agent swarm validation test | — | [#305](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/305) · [PROJECT/1-INBOX/GH-305-4AGENT-SWARM-TEST.md](PROJECT/1-INBOX/GH-305-4AGENT-SWARM-TEST.md) |
 | GH-296 · relay-drive.sh EPERM on tick lock in a same-repo vendored .xyz reviewing an artifact outside .xyz/ | — | [GH-296-RELAY-DRIVE-TICK-EPERM.md](PROJECT/1-INBOX/GH-296-RELAY-DRIVE-TICK-EPERM.md) · [#296](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/296) |

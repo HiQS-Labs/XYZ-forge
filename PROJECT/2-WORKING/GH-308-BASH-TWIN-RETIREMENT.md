@@ -1,7 +1,8 @@
 ---
 title: Stop maintaining the Bash twins — make Python the single authoritative lane
-status: Proposed (1-INBOX — not yet active)
+status: "Active (2-WORKING) — promoted 2026-07-27 by the /10days sweep as the unlocking-feature lane. ONLY Phase 1 (freeze, no deletion) is contracted and fireable; Phases 2-3 stay unscheduled."
 created: 2026-07-26
+updated: 2026-07-27
 owner: noel
 gh_issue: 308
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308
@@ -37,6 +38,16 @@ goal: >
 ---
 
 # GH-308 — Stop maintaining the Bash twins
+
+## Status
+| What was just completed | What's next |
+|---|---|
+| Selected by the 2026-07-27 `/10days` sweep as **the highest-leverage unlocking item** — not because it is a feature users see, but because it closes a recurring correctness class: a fix lands in Bash, Python is the executing default, and the fix silently never runs. Documented recurrences: #296, #215, #223, #174, #148 — five times. Verified unstarted: no `FROZEN` banner exists in any `relay-automation/*.sh` (0 matches), and no `bash-final-*` tag exists. | Fire **Phase 1 only** via the contract below. Phase 1 is freeze-not-delete: banners + an enforcement guard + an insurance tag + the policy written into `AGENTS.md`/`UPGRADE.md`. Rollback is removing a banner. **Phases 2 (test-matrix collapse) and 3 (opportunistic deletion) are explicitly NOT contracted here** and remain unscheduled by the issue's own choice. |
+
+> **Scope warning for whoever fires this.** The title reads like a large risky migration; the
+> contracted work is not that. Nothing is deleted, `XYZ_PYTHON`'s default is unchanged, and
+> `marathon-plan` stays a documented Bash-authoritative exception. If a lane starts deleting twins
+> or porting Bash-only scripts, it has left the contract.
 
 > **1-INBOX capture**, not the active-work doc — no `## Status` table yet. On promotion to
 > `PROJECT/2-WORKING/`, add the status table + per-phase QA gates and carry `gh_issue` forward
@@ -173,6 +184,51 @@ frozen code," not "breaks."
 - [ ] The `marathon-plan` exception is written down where a future maintainer will hit it
 - [ ] Nothing was deleted; `git status` shows only banners, docs, the guard, and the #278 fix
 - [ ] Rollback is a one-line banner removal — confirm no step is hard to undo
+
+## Swarm Preflight Contract
+
+> **Phase 1 ONLY.** Phases 2 and 3 are deliberately out of contract and must not be fired from here.
+
+```json
+{
+  "target":      { "repo": ".", "ref": "development" },
+  "gate":        "bash validate.sh",
+  "fix_probes":  [
+    { "type": "grep_absent", "path": "relay-automation/codex-turn.sh", "pattern": "FROZEN" },
+    { "type": "path_absent", "path": "test/gh308-frozen-twin-guard.sh" }
+  ],
+  "artifacts":   [
+    "relay-automation/agy-turn.sh",
+    "relay-automation/aider-turn.sh",
+    "relay-automation/claude-turn.sh",
+    "relay-automation/codex-turn.sh",
+    "relay-automation/pi-turn.sh",
+    "relay-automation/poll.sh",
+    "relay-automation/relay-loop.sh",
+    "relay-automation/relay-drive.sh",
+    "relay-automation/consult.sh",
+    "relay-automation/marathon-drive.sh",
+    "utils/swarm-preflight.sh",
+    "AGENTS.md",
+    "UPGRADE.md",
+    "test/gh308-frozen-twin-guard.sh",
+    "validate.sh"
+  ],
+  "artifacts_new": [ "test/gh308-frozen-twin-guard.sh" ],
+  "remediation": {
+    "source":   "issue#308",
+    "criteria": "Each of the 11 Tier-A Bash twins carries a short FROZEN banner naming Python as authoritative, pointing at the Python file and at issue #308. An enforcement guard fails or loudly warns when a commit touches a frozen twin, and is DEMONSTRATED with a throwaway commit rather than assumed. The policy is recorded in AGENTS.md and UPGRADE.md, including the documented marathon-plan exception. NOTHING is deleted: git status shows only banners, docs, the guard and its test. Rollback is a one-line banner removal. The new test is REGISTERED in validate.sh's TESTS array."
+  },
+  "lanes":       {
+    "agy_safe":          [ "test/gh308-frozen-twin-guard.sh", "AGENTS.md", "UPGRADE.md" ],
+    "orchestrator_only": [ "bin/", ".tick/", "git-tag:bash-final-2026-07-26" ]
+  }
+}
+```
+
+> **Orchestrator-only steps.** Cutting the annotated `bash-final-*` tag and the working branch are
+> operator/orchestrator actions, not lane edits — they are listed under `orchestrator_only` so a
+> lane agent does not attempt them.
 
 ## Phase 2 — Collapse the dual-lane test matrix
 

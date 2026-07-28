@@ -1,0 +1,111 @@
+# MARATHON.yaml — 2026-07-27: gate + fleet integrity.
+#
+# Built by the /10days sweep (window: 10 days, 22 open issues scanned) under an operator
+# narrowing: "up to the 3 most critical bugs, plus the highest-value feature that unlocks
+# building out other features." Selection is 4 lanes, under the 6-issue cap.
+#
+# 4 sequential phases. Phases run STRICTLY ONE AT A TIME (GH-241). The ordering below is
+# load-bearing, not bookkeeping — see the collision map and the sequencing rationale.
+#
+#   gh311 → gh289 → gh293 → gh308
+#
+# ---------------------------------------------------------------------------------------
+# WHY FULLY SEQUENTIAL (Step 6.5 overlap check — every pair was diffed, nothing assumed)
+# ---------------------------------------------------------------------------------------
+# Write-sets:
+#   gh311: validate.sh, test/pdda-repo-contract.sh
+#   gh289: relay-automation/relay-drive.sh, relay-automation/relay-turn-lib.sh, validate.sh
+#   gh293: relay-automation/xyz-sync.sh, relay-automation/xyz-vendor.sh, validate.sh
+#   gh308: 11 Tier-A Bash twins (INCLUDING relay-drive.sh, consult.sh, marathon-drive.sh),
+#          utils/swarm-preflight.sh, AGENTS.md, UPGRADE.md, validate.sh
+#
+# Two hard collisions make concurrency unsafe regardless of what a planner would compute:
+#   1. validate.sh is in ALL FOUR write-sets — every lane must REGISTER its new test in the
+#      TESTS=() array (validate.sh does not glob test/). Same constraint the 2026-07-26
+#      marathon documented. Sequential execution makes it safe.
+#   2. relay-automation/relay-drive.sh is in BOTH gh289 and gh308. gh289 edits the GH-245
+#      guard inside it; gh308 stamps a FROZEN banner on it. Concurrent lanes would race the
+#      same file.
+#
+# So no wave runs two lanes at once. This costs wall-clock, not correctness.
+#
+# ---------------------------------------------------------------------------------------
+# WHY THIS ORDER
+# ---------------------------------------------------------------------------------------
+#   * gh311 FIRST because it repairs THE GATE ITSELF. Today `bash validate.sh` can be fully
+#     green while CI tier1 is red on real PDDA doc errors (7 of them on PR #309), because the
+#     local suite tests the PDDA *checker* against synthetic fixtures and never runs
+#     `pdda.sh run` against the repo's own docs. Every later phase in this marathon advances
+#     on `bash validate.sh`. Running gh311 first means phases 2-4 are gated by a gate that
+#     actually means something. This mirrors the 2026-07-26 marathon's "repair the runner
+#     before the lanes use it" precedent.
+#   * gh289 SECOND — repair the --target-root build-turn path before gh308 freezes the file
+#     it lives in. Reversing these two would mean editing a file gh308 just declared frozen.
+#   * gh293 THIRD — fleet-safety work on the vendor path. Disjoint from gh289/gh308 apart
+#     from validate.sh. Note it touches xyz-vendor.sh, which GH-312 changed on 2026-07-27
+#     (preserve target runtime state across the swap) — that lane must not regress it.
+#   * gh308 LAST — the freeze banners land after every other lane has finished editing the
+#     twins, so no lane is ever asked to modify a file this marathon has already frozen.
+#
+# ---------------------------------------------------------------------------------------
+# SELECTION NOTES (what was considered and deliberately left out)
+# ---------------------------------------------------------------------------------------
+#   * #310 (reviewer cites artifact-relative offsets as file:line) is a REAL bug and was the
+#     4th-ranked. It is excluded because its write-set (relay-turn-lib.sh, new-relay.sh,
+#     relay-drive.sh) collides head-on with gh289 AND gh308, which would force a 5th serial
+#     phase for moderate value. Next in line for the following sweep.
+#   * #272 is EXCLUDED by the operator's own instruction: its capture doc records the
+#     contract as SUPERSEDED, "do not fire", and the close is gated on a Bash-runtime replay.
+#   * #275 / #276 are META/PROCESS. #275's own doc says "do not fire this umbrella issue as
+#     one marathon lane."
+#   * #303's work is real but STRANDED on an unmerged branch (no PR ever opened, ~70 commits
+#     behind). Its remaining work is integration, not a build lane — wrong shape for a
+#     marathon phase.
+#   * #268, #280, #284, #305 are valid open work but are neither top-3 critical bugs nor the
+#     single highest-unlock feature under the operator's narrowing.
+#
+# Builder defaults to codex (GH-212, subscription-billed). Reviewer is agy throughout so the
+# reviewer is never the model that wrote the change.
+#
+# Parent capture docs (one per phase):
+#   PROJECT/2-WORKING/GH-311-VALIDATE-MISSES-REPO-PDDA-CONTRACT.md
+#   PROJECT/2-WORKING/GH-289-TARGET-ROOT-BUILD-TURN-LOG-LOSS.md
+#   PROJECT/2-WORKING/GH-293-VENDORED-GUARD-DRIFT.md
+#   PROJECT/2-WORKING/GH-308-BASH-TWIN-RETIREMENT.md
+
+name: gate-and-fleet-integrity-2026-07-27
+phases:
+  - id: gh311-validate-pdda-contract
+    name: "GH-311: validate.sh must exercise the repo's real PDDA doc contract, not just the checker"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/brief-gh311-validate-pdda-contract.md
+    artifact: validate.sh,test/pdda-repo-contract.sh
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: gh289-target-root-build-turn
+    name: "GH-289: --target-root BUILD turns must not complete-then-discard the relay Log"
+    reviewer: agy
+    depends_on: gh311-validate-pdda-contract
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/brief-gh289-target-root-build-turn.md
+    artifact: relay-automation/relay-drive.sh,relay-automation/relay-turn-lib.sh,test/gh289-target-root-build-turn.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh293-vendored-guard-drift
+    name: "GH-293: surface missing safety guards in vendored copies; refuse unsafe update --all"
+    reviewer: agy
+    depends_on: gh289-target-root-build-turn
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/brief-gh293-vendored-guard-drift.md
+    artifact: relay-automation/xyz-sync.sh,relay-automation/xyz-vendor.sh,test/gh293-vendored-guard-drift.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh308-freeze-bash-twins
+    name: "GH-308 Phase 1 ONLY: declare Python authoritative and FREEZE the 11 Tier-A twins (no deletion)"
+    reviewer: agy
+    depends_on: gh293-vendored-guard-drift
+    brief: PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/brief-gh308-freeze-bash-twins.md
+    artifact: relay-automation/agy-turn.sh,relay-automation/aider-turn.sh,relay-automation/claude-turn.sh,relay-automation/codex-turn.sh,relay-automation/pi-turn.sh,relay-automation/poll.sh,relay-automation/relay-loop.sh,relay-automation/relay-drive.sh,relay-automation/consult.sh,relay-automation/marathon-drive.sh,utils/swarm-preflight.sh,AGENTS.md,UPGRADE.md,test/gh308-frozen-twin-guard.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
