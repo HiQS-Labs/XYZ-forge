@@ -46,6 +46,8 @@ fi
 #                                that must be added/modified since this phase started, or the gate
 #                                fails (exit 5) even if --pre-advance-cmd passed. Omit for phases with
 #                                no test surface (docs-only, config-only) — default behavior unchanged.
+#     [--log-github]             GH-284 opt-in run log: update the lane's existing GitHub issue with
+#                                one marker comment. Default OFF; missing/unauthenticated gh is ignored.
 #     [--dry-run]                render relay file and print tick seed cmd, then exit
 #
 # Environment overrides (for tests):
@@ -231,6 +233,8 @@ if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # flip the driven run's reported result.
   _marathon_drive_on_exit() {
     local _code=$?
+    marathon_run_github_log "$_code"
+    marathon_driver_heartbeat_stop
     xyz_marathon_cost_summary
     rm -rf "$_lock" 2>/dev/null || true
     exit "$_code"
@@ -244,6 +248,177 @@ log()  { printf 'marathon-drive: %s\n' "$*"; }
 
 XYZ_APPEND_BIN="${XYZ_APPEND_BIN:-"$_xyz_harness/utils/telemetry/append-xyz-completion.sh"}"
 XYZ_HEARTBEAT_BIN="${XYZ_HEARTBEAT_BIN:-"$_xyz_harness/utils/telemetry/write-xyz-heartbeat.sh"}"
+
+# GH-284 Phase 2: local driver liveness. Unlike XYZ.heartbeat.json (which represents a harness
+# session), this record names the actual marathon driver PID and its phase. It is safe for a
+# sandboxed observer to read: no process-name inspection is needed. The timer is best-effort; the
+# initial write is enough to establish the record and a live PID always wins over stale freshness.
+MARATHON_DRIVER_HEARTBEAT_PID=""
+MARATHON_DRIVER_HEARTBEAT_STARTED=""
+MARATHON_DRIVER_HEARTBEAT_PLAN=""
+: "${MARATHON_DRIVER_HEARTBEAT_INTERVAL:=30}"
+: "${MARATHON_DRIVER_HEARTBEAT_STALE_AFTER:=120}"
+
+marathon_driver_heartbeat_start() {
+  local interval="$MARATHON_DRIVER_HEARTBEAT_INTERVAL" driver_pid="$$"
+  case "$interval" in ''|*[!0-9]*) interval=30 ;; esac
+  (( interval > 0 )) || interval=30
+  MARATHON_DRIVER_HEARTBEAT_STARTED="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  MARATHON_DRIVER_HEARTBEAT_PLAN="${MARATHON_PLAN_NAME:-$(basename "$PHASE_BRIEF_FILE" .md)}"
+  if ! rtl_driver_heartbeat_write "$ROOT" "$driver_pid" "$MARATHON_DRIVER_HEARTBEAT_STARTED" \
+      "$MARATHON_DRIVER_HEARTBEAT_PLAN" "$PHASE_ID" "$RELAY_TASK"; then
+    log "driver heartbeat unavailable — continuing without liveness record"
+    return 0
+  fi
+  (
+    while kill -0 "$driver_pid" 2>/dev/null; do
+      sleep "$interval"
+      rtl_driver_heartbeat_write "$ROOT" "$driver_pid" "$MARATHON_DRIVER_HEARTBEAT_STARTED" \
+        "$MARATHON_DRIVER_HEARTBEAT_PLAN" "$PHASE_ID" "$RELAY_TASK" >/dev/null 2>&1 || true
+    done
+  ) >/dev/null 2>&1 &
+  MARATHON_DRIVER_HEARTBEAT_PID=$!
+}
+
+marathon_driver_heartbeat_stop() {
+  # MUST always return 0. This runs inside the EXIT trap, whose whole design (see the GH-222 comment
+  # above) is that `_code` is captured first and re-exited explicitly so a trap-internal failure can
+  # never overwrite the script's real status. A `[[ ... ]] && cmd` tail defeats that: when the guard
+  # is false the function returns 1, `set -e` aborts the trap before it reaches `exit "$_code"`, and
+  # the shell reports 1. Concretely that made `--help` exit 1 instead of 0 (caught by the GH-273
+  # help assertion) and would have made `die()` report 1 instead of 2 — on every path where the
+  # heartbeat never started, which is every early exit.
+  if [[ -n "${MARATHON_DRIVER_HEARTBEAT_PID:-}" ]]; then
+    kill "$MARATHON_DRIVER_HEARTBEAT_PID" 2>/dev/null || true
+    wait "$MARATHON_DRIVER_HEARTBEAT_PID" 2>/dev/null || true
+  fi
+  if [[ -n "${MARATHON_DRIVER_HEARTBEAT_STARTED:-}" ]]; then
+    rtl_driver_heartbeat_clear "$ROOT" || true
+  fi
+  return 0
+}
+
+# GH-284 run log. This is deliberately restricted to comments on an already-existing lane issue:
+# no `gh issue create`, no close/reopen command, and no mutation at all unless --log-github was set.
+# Every failing gh probe is swallowed so external reporting can never alter the marathon result.
+marathon_lane_issue_number() {
+  local candidate
+  for candidate in "$LANE_STATE_KEY" "$RELAY_TASK" "$(basename "$PHASE_BRIEF_FILE")"; do
+    if [[ "$candidate" =~ GH-?([0-9]+) ]]; then
+      printf '%s' "${BASH_REMATCH[1]}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+marathon_trunk_ref() {
+  local ref branch
+  ref="$(git -C "$ROOT" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || true)"
+  if [[ -n "$ref" && "$ref" != "origin/HEAD" ]]; then
+    printf '%s' "$ref"
+    return 0
+  fi
+  branch="$(git -C "$ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+  [[ -n "$branch" ]] && printf '%s' "$branch"
+}
+
+marathon_run_github_log() {  # <driver-exit-code>
+  local driver_exit="$1" issue repo marker comments comment_id body branch trunk landed pr_url state plan
+  [[ "${LOG_GITHUB:-0}" == "1" && "${MARATHON_DRIVE_STARTED:-0}" == "1" ]] || return 0
+  if ! command -v gh >/dev/null 2>&1 || ! gh auth status >/dev/null 2>&1; then
+    log "--log-github requested, but gh is unavailable or unauthenticated — local telemetry only"
+    return 0
+  fi
+  issue="$(marathon_lane_issue_number || true)"
+  if [[ -z "$issue" ]]; then
+    log "--log-github requested, but no GH issue number is derivable for lane $LANE_STATE_KEY — local telemetry only"
+    return 0
+  fi
+  # GH-284 P2 (codex QA Blocker 1): every gh call MUST be scoped to $ROOT's repository. A bare
+  # `gh repo view` / `gh pr view` resolves whatever repo the ambient CWD happens to be in, so a
+  # --target-root run, or any invocation from a foreign directory, could post this lane's run log
+  # into the WRONG repository's issue #N. Derive the slug from $ROOT's own remote (no gh call, no
+  # CWD dependency); fall back to a gh lookup explicitly executed inside $ROOT, never the ambient CWD.
+  repo="$(git -C "$ROOT" remote get-url origin 2>/dev/null \
+    | sed -E 's#^git@[^:]+:##; s#^https?://[^/]+/##; s#\.git$##' || true)"
+  # Must look like exactly owner/name. A local-path remote (file:///…/remote.git, common in tests
+  # and in vendored clones) survives the sed with slashes intact and would otherwise be accepted as
+  # a bogus slug, sending every gh call to a repo that does not exist.
+  [[ "$repo" =~ ^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$ ]] \
+    || repo="$( cd "$ROOT" 2>/dev/null && gh repo view --json nameWithOwner --jq .nameWithOwner 2>/dev/null || true )"
+  if [[ -z "$repo" ]]; then
+    log "--log-github requested, but repository lookup failed — local telemetry only"
+    return 0
+  fi
+  branch="$(git -C "$ROOT" symbolic-ref --quiet --short HEAD 2>/dev/null || echo '(detached)')"
+  trunk="$(marathon_trunk_ref || true)"; landed="no"
+  [[ -n "$trunk" ]] && git -C "$ROOT" merge-base --is-ancestor HEAD "$trunk" 2>/dev/null && landed="yes"
+  pr_url="$(gh pr view --repo "$repo" --head "$branch" --json url --jq .url 2>/dev/null || true)"
+  [[ -n "$pr_url" ]] || pr_url="NO PR OPENED"
+  state="$(rtl_driver_heartbeat_status "$ROOT" "$MARATHON_DRIVER_HEARTBEAT_STALE_AFTER" 2>/dev/null || true)"
+  [[ -n "$state" ]] || state="finished"
+  plan="${MARATHON_DRIVER_HEARTBEAT_PLAN:-$(basename "$PHASE_BRIEF_FILE" .md)}"
+  marker="<!-- xyz-marathon-run-log:${issue}:${LANE_STATE_KEY} -->"
+  body="$marker
+### Marathon run log
+- plan: \`$plan\`
+- phase: \`$PHASE_ID\`
+- branch: \`$branch\`
+- trunk (derived): \`$trunk\`
+- landed on trunk: **$landed**
+- PR: $pr_url
+- per-phase gate: **$RUN_GATE_RESULT**
+- driver still running: **$state**
+- driver exit: \`$driver_exit\`
+- recorded: $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  # GH-284 P2 (codex QA Blocker 2): `gh api --paginate` emits ONE JSON ARRAY PER PAGE, concatenated
+  # (`[...][...]`), which is not valid JSON. A plain json.load() therefore throws on any issue with
+  # more than one page of comments, the except-branch yields [], the marker is "not found", and the
+  # run log POSTS A SECOND COMMENT — silently breaking the idempotency this feature is defined by,
+  # and only on long-lived issues (exactly the ones a run log accumulates on). `--slurp` makes gh
+  # emit a single array-of-pages instead; flatten one level to recover the comment objects.
+  comments="$(gh api --paginate --slurp "repos/$repo/issues/$issue/comments?per_page=100" 2>/dev/null || true)"
+  # The parser is read into a VARIABLE and passed with `python3 -c`, not fed on stdin as
+  # `python3 - ... <<'PYEOF'`. That earlier form was a real defect, not a lint nit (shellcheck
+  # SC2259, caught by CI on PR #317): a heredoc and a pipe both claim stdin, so python received the
+  # COMMENTS JSON concatenated in front of its own source and died with a SyntaxError —
+  # `comment_id` was therefore ALWAYS empty and the run log ALWAYS posted a new comment. That is
+  # precisely the idempotency break the --slurp fix above was written to prevent, reintroduced by
+  # the invocation rather than the logic. Keeping the program off stdin leaves stdin free for data.
+  local runlog_marker_py
+  read -r -d '' runlog_marker_py <<'PYEOF' || true
+import json
+import sys
+try:
+    payload = json.load(sys.stdin)
+except Exception:
+    payload = []
+# --slurp gives [[c,...],[c,...]]; a single page (or a non-slurp fallback) gives [c,...].
+comments = []
+if isinstance(payload, list):
+    for entry in payload:
+        if isinstance(entry, list):
+            comments.extend(entry)
+        elif isinstance(entry, dict):
+            comments.append(entry)
+for comment in comments:
+    if sys.argv[1] in str(comment.get("body", "")):
+        print(comment.get("id", ""))
+        break
+PYEOF
+  comment_id="$(printf '%s' "$comments" | python3 -c "$runlog_marker_py" "$marker")"
+  if [[ -n "$comment_id" ]]; then
+    gh api --method PATCH "repos/$repo/issues/comments/$comment_id" -f body="$body" >/dev/null 2>&1 \
+      && log "updated GitHub run-log comment on issue #$issue" \
+      || log "GitHub run-log update failed — local telemetry only"
+  else
+    gh api --method POST "repos/$repo/issues/$issue/comments" -f body="$body" >/dev/null 2>&1 \
+      && log "posted GitHub run-log comment on issue #$issue" \
+      || log "GitHub run-log post failed — local telemetry only"
+  fi
+  return 0
+}
 
 # GH-75: append ONE final-completion record for a run whose WHOLE completion IS this single-phase
 # marathon-drive — i.e. a bare `marathon-drive.sh` run (harness:"marathon") or a swarm-preflight-
@@ -335,6 +510,7 @@ satisfied_lane_terminal() {
 }
 
 run_pre_advance_gate() {
+  local rc=0
   (
     if [[ -n "$TARGET_ROOT" ]]; then
       cd "$TARGET_ROOT"
@@ -350,7 +526,9 @@ run_pre_advance_gate() {
     # TICK_BIN or TICK_REPO_ROOT, which a gate may legitimately need.
     unset XYZ_HARNESS_CONTEXT XYZ_SESSION_ID MARATHON_LANE_NS
     eval "$PRE_ADVANCE_CMD"
-  )
+  ) || rc=$?
+  if [[ "$rc" -eq 0 ]]; then RUN_GATE_RESULT="green"; else RUN_GATE_RESULT="red"; fi
+  return "$rc"
 }
 
 run_post_approve_cmd() {
@@ -434,6 +612,12 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
                           even when --pre-advance-cmd passed. Omit for phases with no test surface
                           (e.g. docs-only) — default gate behavior is unchanged without this flag.
   --force                 GH-45: bypass the per-lane attempt cap for this fire (re-fire a parked lane).
+  --log-github            GH-284 opt-in run log (default OFF). Updates the lane's EXISTING GitHub
+                          issue in place via a marker comment — never creates an issue, never closes
+                          one. Records landed-on-trunk, driver liveness, branch, PR link (or an
+                          explicit NO PR OPENED), and the gate result. If gh is missing or
+                          unauthenticated it degrades to local telemetry and NEVER changes the
+                          marathon's own exit code.
   --dry-run               Render the relay file and print the tick seed; exit without running.
 EOF
 }
@@ -451,6 +635,8 @@ ARTIFACT_PATHS=""    # comma-separated repo-relative file(s) the builder may cre
 REQUIRE_CLEAN=0      # --require-clean: hard-stop if the workspace has pre-existing changes
 REQUIRES_TEST=""     # --requires-test PATH: GH-249 requires_test contract field (opt-in; empty = off)
 FORCE=0              # --force: bypass the GH-45 per-lane attempt cap for this one fire
+LOG_GITHUB=0         # GH-284: external run-log comment; opt-in only
+RUN_GATE_RESULT="not-run"
 DRY_RUN=0
 TARGET_ROOT=""       # --target-root: foreign repo the BUILD lands in (GH-11). Relay thread stays in ROOT;
                      # forwarded to relay-drive.sh (which exports RELAY_TARGET_ROOT for artifact routing).
@@ -471,6 +657,7 @@ while (($# > 0)); do
     --require-clean)   REQUIRE_CLEAN=1; shift ;;
     --requires-test)   REQUIRES_TEST="${2:-}"; shift 2 ;;
     --force)           FORCE=1; shift ;;
+    --log-github)      LOG_GITHUB=1; shift ;;
     --dry-run)         DRY_RUN=1; shift ;;
     --help)            usage; exit 0 ;;
     *)                 die "unknown argument: $1" ;;
@@ -914,6 +1101,7 @@ log "tick token seeded: $RELAY_TASK → $BUILDER"
 xyz_marathon_heartbeat_write
 log "phase start: running relay-drive --round-cap $ROUND_CAP"
 MARATHON_DRIVE_STARTED=1   # GH-222: past this point a phase is really being driven — arm the cost summary
+marathon_driver_heartbeat_start
 
 # ── Step 5: run relay-drive (the loop — unmodified) ────────────────────────
 

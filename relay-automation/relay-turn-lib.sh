@@ -413,6 +413,93 @@ rtl_run_bounded() {  # <timeout_secs> <cmd...>
   return "$rc"
 }
 
+# GH-284: a driver heartbeat is deliberately a small, local JSON file rather than a process-name
+# probe. Sandboxed observers can read this file even when `ps` sees no host processes. The status
+# rule is intentionally asymmetric: a live PID is running even if the write is old; only an old
+# heartbeat *and* an absent PID is stale. This avoids the dangerous false "finished" answer while a
+# live driver is temporarily delayed.
+rtl_driver_heartbeat_path() {  # <repo-root>
+  printf '%s/.tick/driver-heartbeat.json' "$1"
+}
+
+rtl_driver_heartbeat_write() {  # <repo-root> <pid> <started-utc> <plan> <phase-id> <relay-task>
+  local root="$1" pid="$2" started="$3" plan="$4" phase_id="$5" relay_task="$6" path updated
+  path="${RTL_DRIVER_HEARTBEAT_FILE:-$(rtl_driver_heartbeat_path "$root")}"
+  updated="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+  mkdir -p "$(dirname "$path")" 2>/dev/null || return 1
+  python3 - "$path" "$pid" "$started" "$updated" "$plan" "$phase_id" "$relay_task" <<'PYEOF'
+import json
+import os
+import sys
+import tempfile
+
+path, pid, started, updated, plan, phase_id, relay_task = sys.argv[1:]
+record = {
+    "pid": int(pid),
+    "started_utc": started,
+    "updated_utc": updated,
+    "plan": plan,
+    "phase_id": phase_id,
+    "relay_task": relay_task,
+}
+directory = os.path.dirname(path) or "."
+fd, tmp = tempfile.mkstemp(dir=directory, prefix=".driver-heartbeat.", suffix=".tmp")
+try:
+    with os.fdopen(fd, "w") as f:
+        json.dump(record, f, sort_keys=True)
+        f.write("\n")
+    os.replace(tmp, path)
+except Exception:
+    try:
+        os.unlink(tmp)
+    except OSError:
+        pass
+    raise
+PYEOF
+}
+
+rtl_driver_heartbeat_clear() {  # <repo-root>
+  local root="$1" path
+  path="${RTL_DRIVER_HEARTBEAT_FILE:-$(rtl_driver_heartbeat_path "$root")}"
+  rm -f -- "$path" 2>/dev/null || true
+}
+
+rtl_driver_heartbeat_status() {  # <repo-root> [stale-after-seconds] → running|finished|stale
+  local root="$1" stale_after="${2:-120}" path fields pid age
+  path="${RTL_DRIVER_HEARTBEAT_FILE:-$(rtl_driver_heartbeat_path "$root")}"
+  [[ -f "$path" ]] || { printf 'finished'; return 1; }
+  case "$stale_after" in ''|*[!0-9]*) stale_after=120 ;; esac
+  fields="$(python3 - "$path" <<'PYEOF'
+import datetime as dt
+import json
+import sys
+
+try:
+    with open(sys.argv[1]) as f:
+        data = json.load(f)
+    pid = int(data["pid"])
+    updated = dt.datetime.fromisoformat(str(data["updated_utc"]).replace("Z", "+00:00"))
+    age = max(0, int((dt.datetime.now(dt.timezone.utc) - updated).total_seconds()))
+    print(f"{pid}\t{age}")
+except Exception:
+    pass
+PYEOF
+)"
+  [[ "$fields" == *$'\t'* ]] || { printf 'finished'; return 1; }
+  pid="${fields%%$'\t'*}"; age="${fields#*$'\t'}"
+  case "$pid:$age" in *[!0-9:]*|:*) printf 'finished'; return 1 ;; esac
+  if kill -0 "$pid" 2>/dev/null; then
+    printf 'running'
+    return 0
+  fi
+  if [[ "$age" -gt "$stale_after" ]]; then
+    printf 'stale'
+    return 2
+  fi
+  printf 'finished'
+  return 1
+}
+
 # --- Worktree isolation (ROADMAP Part A Phase 3.6 — the airtight async/side-effect close) ----------
 # Before touching anything below: read WORKTREE-SAFETY.md (repo root) — it documents the
 # git-worktree footguns and the safe recovery path for a corrupted RTL_ROOT/.git (GH-177). This is
