@@ -18,7 +18,7 @@ License file:
 
 Release: TBD
 Status: Draft
-Target Date: August 1, 2026
+Target Date: 2026-08-01
 Codename: Quicksilver
 Description: Phase out Bash scripts
 GH_URL: [GH 308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308)

@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(/usr/bin/git status *)",
-      "Bash(/usr/bin/git rev-list *)"
+      "Bash(/usr/bin/git rev-list *)",
+      "Bash(/usr/bin/grep -iE \"closeout|pr-emit|complete\")",
+      "Bash(/usr/bin/grep -rln \"XYZ.json\\\\|xyz-completion\" relay-automation/*.sh utils/*.sh)",
+      "Bash(/usr/bin/git check-ignore *)",
+      "Bash(/usr/bin/grep -m1 \"^status:\" PROJECT/2-WORKING/GH-284-MARATHON-CLOSEOUT-PR.md)",
+      "Bash(/usr/bin/grep -nE '^#{1,3} ' RELEASES.md)",
+      "Bash(/usr/bin/grep -n \"check_releases\" -A30 utils/pdda/pdda.sh)",
+      "Bash(/usr/bin/grep -iE \"REQUIRED|field|Release:|GH_URL|Status|Codename\")",
+      "Bash(/usr/bin/grep -n \"RELEASES.md\" -A12 PROJECT/PDDA.md)"
     ]
   },
   "hooks": {
