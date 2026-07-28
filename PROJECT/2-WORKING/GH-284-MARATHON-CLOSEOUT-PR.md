@@ -2,22 +2,22 @@
 gh_issue: 284
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/284
 title: "marathon: closeout PR, run-log back to the lane issue, and release-driven marathon selection"
-status: "Phase 1 contract authored 2026-07-23 and STILL READY to fire standalone. Phases 2-5 added 2026-07-27 (run-log + RELEASES.md driver + cross-repo lessons rollup) — scoped only, not contracted."
+status: "Phase 1 SHIPPED 2026-07-28 (PR #316, merged 243a310). Phases 2-6 scoped only, not contracted — Phase 6 (feedback loop) added 2026-07-28 with GH-315 as its first specimen."
 created: 2026-07-23
-updated: 2026-07-27
+updated: 2026-07-28
 owner: noel
 doc_type: feature
 complexity: 3
 risk: 2
 effort: 3
-phases: 5
+phases: 6
 ratings_provisional: true
 non_goals:
   - Auto-merging the closeout PR (explicit non-goal in the issue itself — open only, never merge/force-push/branch-create beyond what's already there).
   - Re-adding "linked marathons/issues" or a release-tag cache as FIELDS inside RELEASES.md. That exact design was already tried and deliberately rolled back as "too much data to keep current" (PROJECT/PDDA.md, RELEASES.md check rationale). The many-to-one linkage belongs in GitHub, where it maintains itself.
   - Putting lessons-learned INTO RELEASES.md. Its contract says lessons belong in CHANGELOG.md at ship time. This doc is the second home, for cross-repo portability only.
   - Auto-FILING new GitHub issues per marathon run (see Phase 2 rationale — it would poison the /10days scan input).
-  - Making any of Phases 2-5 a blocker on Phase 1 shipping.
+  - Making any of Phases 2-6 a blocker on Phase 1 shipping.
 goal: >
   Close the loop between a marathon run and its durable record: (down) RELEASES.md defines what a
   release needs, which resolves to an issue set that drives marathon selection; (up) each marathon
@@ -30,14 +30,14 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| **Phase 1 unchanged and still independently fireable** — contract below is untouched and `swarm-preflight --gh-issue 284` still returns ready. **Phases 2-5 scoped 2026-07-27** after the `/10days` sweep produced hard evidence that the marathon↔record gap is a recurring, measurable failure (four cases in one 22-issue window — see Evidence). Phase 3-4 design deliberately keeps the release↔issue linkage OUT of RELEASES.md, because that design was already tried here and rolled back. | **Fire Phase 1 now — do not wait on the rest.** Phases 2-5 need one operator decision first (milestone vs. label as the release join key, see Open decisions) and their own contracts at promotion time. |
+| **Phase 1 SHIPPED 2026-07-28 — merged to `development` via PR #316** (`243a310`). `marathon-closeout.sh` gained `--open-only` (clean-tree safe, duplicate-PR safe); `marathon.sh` gained `--closeout-pr` with closeout failure non-fatal to the marathon's exit code. Built by codex, approved by agy, `test/marathon-closeout.sh` 25/0, `test/marathon.sh` 33/0, `validate.sh` exit 0. **Verified by direct inspection of the deliverable, not the runner's summary line** — which matters, because the first fire of this very lane reported success while building nothing (#315). **Phase 6 scoped 2026-07-28** with #315 as its first specimen. | Phases 2-6 remain scoped-only and need their own contracts at promotion. Recommended order: **Phase 2 next** (run-log) — it is the sensor Phase 6 depends on, and it carries the `landed on trunk` + `driver still running` fields that would have caught all three observation defects found while shipping Phase 1. |
 
 ## Why this doc grew (read before scoping)
 
-#284 was a small, well-specified, ready-to-fire feature (2/2/2). It has been widened into a 5-phase
+#284 was a small, well-specified, ready-to-fire feature (2/2/2). It has been widened into a 6-phase
 program. That is a real scope-creep risk, so the mitigation is structural: **Phase 1 keeps its
 original contract, byte-for-byte, and ships on its own.** Everything added here is downstream of it
-and separately promotable. If Phases 2-5 stall, Phase 1 still delivered.
+and separately promotable. If Phases 2-6 stall, Phase 1 still delivered (it did — merged in PR #316).
 
 The reason to keep them in one doc rather than a sibling issue: they are the same dataflow. A
 closeout PR, a run-log comment, and a release rollup are three surfaces on one loop. Splitting them
@@ -89,7 +89,7 @@ useless institutional one. That asymmetry is the entire argument for a GitHub-si
 
 ---
 
-## Phase 1 — the closeout PR (UNCHANGED, ready to fire)
+## Phase 1 — the closeout PR (SHIPPED 2026-07-28, PR #316)
 
 > Original 2026-07-23 scope. Nothing below this heading was modified on 2026-07-27.
 
@@ -231,6 +231,96 @@ Step 6.5 artifact-overlap diff before trusting any wave's concurrency.
 
 Rollup direction: report `landed on trunk` counts per milestone, so "Quicksilver is 6/9 landed" is
 computed from git ancestry, not from anyone's memory.
+
+---
+
+## Phase 6 — semi-automatic feedback → issue loop
+
+The loop closing on itself: Phase 2's run-log is the **sensor**, a filed issue is the **actuator**.
+Scoped 2026-07-27 with a real specimen already in hand (#315).
+
+### The gap is a filter, not a reporter
+
+Most of the machinery exists: `/file-xyz-bug` is the write end (PDDA capture + issue + ROADMAP
+pointer), Sentinel (#281, shipped, inert-by-default) is the sensor, `XYZ.json` is the raw signal,
+`/10days` is the verify-and-close end. What is missing is the decision of **when a signal deserves an
+issue**. Without that, this becomes issue spam — which would actively damage `/10days`, whose
+`scan-issues.sh` seeds from *open issues updated in the window*.
+
+### Four pieces, in value order
+
+1. **A stable signature.** Hash the failure *shape* — exit code + failing phase + gate name + first
+   stderr line. Not timestamps, not session ids, not PIDs. Everything downstream depends on two
+   occurrences of one bug producing one signature.
+2. **Dedupe before filing.** `gh issue list --search "<signature>" --state all` → comment and bump a
+   count on a hit, never file a second issue. This is the single most important guard.
+3. **A breaker, not a hair trigger.** File only on N consecutive occurrences or a *novel* signature.
+   Reuse GH-303's deterministic `loop-stop.sh` breaker rather than inventing one. One flaky gate must
+   never open an issue.
+4. **Propose, don't file** — this is what makes it *semi*-automatic. Draft the capture locally,
+   notify, let the operator confirm. If autonomous filing is later wanted, label `auto-filed` +
+   `needs-triage` so `/10days` treats it as a distinct bucket rather than ordinary intake.
+
+### Specimen #1 — GH-315 (the bug that motivated this phase)
+
+`marathon-drive` reported `lane_already_satisfied, reviewer approved, gate passed` and exited **0**
+while building nothing, because `--relay-task` defaults to `MARATHON-<PHASE_ID>-TURN` with a constant
+`PHASE_ID=p1`, matching a `done` token from an unrelated run.
+
+What makes it the right specimen: **three independent signals agreed it succeeded** — exit 0,
+"reviewer approved", and a genuinely green `validate.sh` (green *because* the tree was untouched).
+A loop that only watches exit codes would have recorded a success. So Phase 6 must key on the
+**deliverable**, not the runner's self-report:
+
+> An approved lane whose declared `artifacts` show **zero diff** against the phase's base commit is a
+> false success, regardless of exit code, gate colour, or reviewer verdict.
+
+That check is cheap, deterministic, and would have caught #315 on the first fire.
+
+### The failure class this phase actually targets
+
+All three defects this work surfaced share one shape — **a broken observation layer, where the failure
+is invisible and the obvious next action is destructive**:
+
+| # | Defect | Destructive next action it invites |
+|---|---|---|
+| 1 | `lane_already_satisfied` reported as success (#315) | trusting an unbuilt lane; merging nothing |
+| 2 | Sandboxed observer cannot see processes → live run reads as "finished" | firing a second driver against a live one (GH-183/187 race) |
+| 3 | Driver lock read as "stale" while its PID was alive | clearing a live run's lock |
+
+None is unit-testable; all three live at the seam between a runner and its observer. Concrete
+consequences for the design:
+
+- `landed on trunk` needs the sibling **`driver still running`**, derived from the lock PID — never
+  from a process-name grep (which also fails outright, since the executing lane is the Python twin
+  `marathon_drive.py`, not `marathon-drive.sh`).
+- **`lane_already_satisfied` must not share an exit code with `lane built and approved`.**
+- Any tooling offering "clear stale lock" must verify the recorded PID first.
+
+### Constraints
+
+- `gh` fails under the Bash sandbox here — degrade to local-only, never block a run or alter its exit code.
+- **Never auto-close.** This sweep found three issues that looked done and correctly stayed open
+  (#299, #272, #303).
+- Auto-filed issues inherit the current release **milestone** (decision 1), so they surface in the
+  same rollup as planned work rather than as a separate stream.
+
+### Phase 6 checklist
+
+- [ ] Define the signature function and prove two runs of one bug collide to one signature
+- [ ] Zero-diff-deliverable check against the phase base commit (the #315 catch)
+- [ ] Dedupe query against existing open+closed issues before any write
+- [ ] Breaker: N-consecutive or novel-only, reusing `loop-stop.sh`
+- [ ] Propose-then-confirm path; `--auto-file` opt-in with `auto-filed`+`needs-triage` labels
+- [ ] Degradation test: `gh` absent/unauthenticated → local-only, run exit code unchanged
+
+### QA checklist — Phase 6
+
+- [ ] A deliberately re-run identical failure files **one** issue, not two — demonstrated, not assumed
+- [ ] A single transient failure files **nothing**
+- [ ] A false success (approved + green gate + zero artifact diff) **is** reported — replay #315
+- [ ] No auto-close path exists anywhere in the implementation
+- [ ] `/10days`'s candidate set is unpolluted: auto-filed issues are distinguishable by label
 
 ---
 
