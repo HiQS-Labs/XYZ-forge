@@ -428,6 +428,10 @@ Minimum behavior:
 - `warn` if `Target Date` has passed and `Status` doesn't read exactly `Shipped` (case-insensitive)
   — `Status: Shipped` is the sole "already shipped" signal, a populated `GH_URL` alone does not
   silence this (it only means a Release object exists, not that it shipped)
+- `warn` if a block has a `Target Date` and isn't `Shipped` but has no `Milestone:` (GH-284 Phase 3)
+  — without the join key the release cannot resolve to a set of issues, so it cannot drive marathon
+  selection. Scoped to dated blocks so placeholders and the example entry stay quiet; shipped
+  releases are exempt, since backfilling a milestone onto history buys nothing.
 - never blocks, even in `full` mode
 
 gh-degrade: none. The check is purely file-driven (no GitHub calls).
@@ -449,6 +453,7 @@ Target Date: 2026-07-31
 Codename: n/a
 Description:
 GH_URL:
+Milestone:
 ```
 
 Fields:
@@ -463,6 +468,22 @@ Fields:
 - `GH_URL:` (optional) — populated once a GitHub Release object exists, including a draft (see the
   `/release` skill). This means "a Release object exists," not "shipped" — flip `Status: Shipped`
   yourself (or let `/release` do it on an actual publish) when it's really out.
+- `Milestone:` (optional, warned-on when the block is dated and unshipped) — **the release → issue-set
+  join key** (GH-284 Phase 3). Holds a **GitHub milestone title**, not a URL and not a list of issues.
+  `GH_URL:` can name only one thing, which cannot express a release's scope; a hand-maintained issue
+  list here would re-create the heavier ledger this format already replaced. A milestone puts the
+  many-to-one linkage in GitHub, where it maintains itself as issues open and close:
+
+  ```
+  gh issue list --milestone "Quicksilver" --state open --json number,title,labels
+  ```
+
+  That query *is* release-driven marathon selection — no new cache, no new file format — and GitHub's
+  free open/closed rollup is what Phase 4 reads instead of computing. Closing the milestone is a real
+  "release shipped" signal that cross-checks `Status: Shipped`. Membership is naturally exclusive
+  (one issue, one release), which matches the semantics; if an issue must ever belong to several
+  releases at once, a `release:<codename>` label is the alternative — it buys that flexibility and
+  costs the free rollup.
 
 Two skills operate on this file: `/release-plan` **authors** entries (interviews the operator,
 proposes a canonical version by cross-referencing `CHANGELOG.md`, previews, appends on

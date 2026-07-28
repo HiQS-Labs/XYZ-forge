@@ -654,11 +654,12 @@ check_roadmap_issue_state() {
 #   (1) error — a "Release:" block has an empty version
 #   (2) warn  — Target Date is set but not a valid YYYY-MM-DD date
 #   (3) warn  — Target Date has passed and Status isn't "Shipped" (overdue/unshipped)
+#   (4) warn  — a real (dated), unshipped release has no Milestone: join key  [GH-284 Phase 3]
 check_releases() {
   pdda_reset_counts
   local CHECK_NAME="pdda-check-releases" rc=0
   local RELEASES_FILE_EFF="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
-  local release status target_date codename description gh_url line_no target_epoch today_epoch
+  local release status target_date codename description gh_url milestone line_no target_epoch today_epoch
   local status_lc
 
   if [ ! -f "$RELEASES_FILE_EFF" ]; then
@@ -668,12 +669,26 @@ check_releases() {
     return "$(pdda_gated_exit 0)"
   fi
 
-  while IFS=$'\037' read -r release status target_date codename description gh_url line_no; do
+  while IFS=$'\037' read -r release status target_date codename description gh_url milestone line_no; do
     if [ -z "$(pdda_trim "$release")" ]; then
       pdda_record_finding error "$CHECK_NAME" "$RELEASES_FILE_EFF" "$line_no" \
         "a 'Release:' block near line $line_no has no version" "fix-release-value"
       rc=1
       continue
+    fi
+
+    status_lc="$(printf '%s' "$(pdda_trim "$status")" | tr '[:upper:]' '[:lower:]')"
+
+    # GH-284 Phase 3 — the join key. A release cannot drive marathon selection until it resolves to a
+    # SET of issues, and GH_URL holds exactly one link. Scoped to blocks that carry a Target Date so
+    # the shipped example block (and any placeholder) stays quiet: a dated entry is a real planned
+    # release, which is precisely when Phase 4 needs the linkage. Shipped releases are exempt —
+    # backfilling a milestone onto history buys nothing.
+    if [ -n "$(pdda_trim "$target_date")" ] && [ "$status_lc" != "shipped" ] \
+       && [ -z "$(pdda_trim "$milestone")" ]; then
+      pdda_record_finding warn "$CHECK_NAME" "$RELEASES_FILE_EFF" "$line_no" \
+        "release '$release' has a Target Date but no 'Milestone:' — without it the release cannot resolve to a set of issues (gh issue list --milestone ...), so it cannot drive marathon selection" \
+        "add-release-milestone"
     fi
 
     [ -n "$target_date" ] || continue
@@ -687,8 +702,8 @@ check_releases() {
 
     # Status: Shipped is the sole "already shipped" signal (GH_URL only means a Release object
     # exists — draft or published — not that the release is out; see PROJECT/PDDA.md "RELEASES.md
-    # — release ledger"). A populated GH_URL alone no longer skips this check.
-    status_lc="$(printf '%s' "$(pdda_trim "$status")" | tr '[:upper:]' '[:lower:]')"
+    # — release ledger"). A populated GH_URL alone no longer skips this check. (status_lc is computed
+    # once above, where the GH-284 Phase 3 milestone check also needs it.)
     [ "$status_lc" != "shipped" ] || continue
 
     target_epoch="$(_pdda_cl_epoch "$target_date")"
@@ -715,7 +730,7 @@ check_releases() {
 # so this is a best-effort filter, not a gate).
 cmd_releases_current() {
   local RELEASES_FILE_EFF="${PDDA_RELEASES_FILE:-$PDDA_REPO_ROOT/RELEASES.md}"
-  local release status target_date codename description gh_url line_no status_lc any=0
+  local release status target_date codename description gh_url milestone line_no status_lc any=0
 
   if [ ! -f "$RELEASES_FILE_EFF" ]; then
     printf '%s not found — nothing to report\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
@@ -723,7 +738,7 @@ cmd_releases_current() {
   fi
 
   printf 'PDDA releases-current — in-progress entries in %s\n' "$(pdda_relpath "$RELEASES_FILE_EFF")"
-  while IFS=$'\037' read -r release status target_date codename description gh_url line_no; do
+  while IFS=$'\037' read -r release status target_date codename description gh_url milestone line_no; do
     [ -n "$(pdda_trim "$release")" ] || continue
     status_lc="$(printf '%s' "$(pdda_trim "$status")" | tr '[:upper:]' '[:lower:]')"
     [ "$status_lc" != "shipped" ] || continue
@@ -735,6 +750,13 @@ cmd_releases_current() {
     [ -n "$target_date" ] && printf '    Target Date: %s\n' "$target_date"
     [ -n "$description" ] && printf '    %s\n' "$description"
     [ -n "$gh_url" ] && printf '    %s\n' "$gh_url"
+    # GH-284 Phase 3: show the join key, and say so loudly when it is absent — this roll-up is where
+    # someone asks "what is in this release", and without a milestone that question has no answer.
+    if [ -n "$(pdda_trim "$milestone")" ]; then
+      printf '    Milestone: %s\n' "$milestone"
+    else
+      printf '    Milestone: (none — release cannot resolve to an issue set)\n'
+    fi
   done < <(pdda_releases_list "$RELEASES_FILE_EFF")
 
   [ "$any" -eq 1 ] || printf '\n(no in-progress releases — every entry is Status: Shipped)\n'

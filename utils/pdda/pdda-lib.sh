@@ -340,9 +340,9 @@ pdda_releases_list() {
   awk '
     function flush() {
       if (has_release) {
-        printf "%s\037%s\037%s\037%s\037%s\037%s\037%d\n", release, status, target_date, codename, description, gh_url, release_line
+        printf "%s\037%s\037%s\037%s\037%s\037%s\037%s\037%d\n", release, status, target_date, codename, description, gh_url, milestone, release_line
       }
-      release=""; status=""; target_date=""; codename=""; description=""; gh_url=""; release_line=0; has_release=0
+      release=""; status=""; target_date=""; codename=""; description=""; gh_url=""; milestone=""; release_line=0; has_release=0
     }
     /^Release:/      { flush(); v=$0; sub(/^Release:[[:space:]]*/, "", v); release=v; has_release=1; release_line=NR; next }
     /^Status:/       { v=$0; sub(/^Status:[[:space:]]*/, "", v); status=v; next }
@@ -350,6 +350,11 @@ pdda_releases_list() {
     /^Codename:/     { v=$0; sub(/^Codename:[[:space:]]*/, "", v); codename=v; next }
     /^Description:/  { v=$0; sub(/^Description:[[:space:]]*/, "", v); description=v; next }
     /^GH_URL:/       { v=$0; sub(/^GH_URL:[[:space:]]*/, "", v); gh_url=v; next }
+    # GH-284 Phase 3: the release -> issue-set join key. Deliberately a GitHub MILESTONE TITLE, not a
+    # list of issues: membership then maintains itself as issues open and close, and GitHub keeps the
+    # open/closed rollup that Phase 4 reads instead of computing. Re-adding a hand-maintained issue
+    # list here would walk back into the heavier design PROJECT/PDDA.md records as already rejected.
+    /^Milestone:/    { v=$0; sub(/^Milestone:[[:space:]]*/, "", v); milestone=v; next }
     END { flush() }
   ' "$file"
 }

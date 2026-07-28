@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 125 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 82 · 🔮 0 · 🔲 0
+Summary: 125 items | Tally: 🟢 5 · 🟡 4 · ⏸️ 2 · ⛔ 0 · ✅ 82 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -30,7 +30,7 @@ Summary: 125 items | Tally: 🟢 5 · 🟡 3 · ⏸️ 2 · ⛔ 0 · ✅ 82 · �
 | GH-294 · swarm-preflight: isolation flag not carried into the suggested marathon command | — | [GH-294-PREFLIGHT-ISOLATION-FLAG.md](PROJECT/2-WORKING/GH-294-PREFLIGHT-ISOLATION-FLAG.md) · [#294](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/294) |
 | GH-292 · A linked worktree cannot discover the main checkout's vendored .xyz harness | — | [GH-292-WORKTREE-VENDORED-DISCOVERY.md](PROJECT/2-WORKING/GH-292-WORKTREE-VENDORED-DISCOVERY.md) · [#292](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/292) |
 | GH-272 · Driven relay turn's tick release resolves wrong TICK_REPO_ROOT in a vendored same-repo lane | — | [GH-272-TICK-REPO-ROOT-VENDORED-MISMATCH.md](PROJECT/2-WORKING/GH-272-TICK-REPO-ROOT-VENDORED-MISMATCH.md) · [#272](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/272) · [#297](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/297) |
-| GH-284 · marathon: open a non-merging PR with closeout notes after a successful run | — | [GH-284-MARATHON-CLOSEOUT-PR.md](PROJECT/2-WORKING/GH-284-MARATHON-CLOSEOUT-PR.md) · [#284](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/284) |
+| GH-284 · marathon closeout → release-driven selection (6 phases; P1-P3 ✅ SHIPPED 2026-07-28) | 🟡 | [#316](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/316) · [#317](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/317) · [#319](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/319) · [#320](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/320) · [#322](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/322) · [GH-284-MARATHON-CLOSEOUT-PR.md](PROJECT/2-WORKING/GH-284-MARATHON-CLOSEOUT-PR.md) · [#284](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/284) |
 | GH-153 · Cost observability: Codex per-turn token capture (parseCodexStats) | — | [GH-153-CODEX-TOKEN-CAPTURE.md](PROJECT/2-WORKING/GH-153-CODEX-TOKEN-CAPTURE.md) · [#153](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/153) |
 | GH-268 · Beta onboarding & build-quality test report — remediation plan (re: #123) | — | [GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md](PROJECT/2-WORKING/GH-268-BETA-ONBOARDING-BUILD-QUALITY-REMEDIATION.md) · [#268](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/268) |
 | GH-261 · marathon-drive: reconcile the Bash/Python disjoint-failure union (last Phase-1 gate for the XYZ_PYTHON flip) | ✅ | [GH-261-MARATHON-DRIVE-BASH-CONTAINMENT-VENDORED-CHAIN.md](PROJECT/3-COMPLETED/GH-261-MARATHON-DRIVE-BASH-CONTAINMENT-VENDORED-CHAIN.md) · [#261](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/261) |

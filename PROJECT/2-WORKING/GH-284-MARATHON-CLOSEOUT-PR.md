@@ -2,7 +2,7 @@
 gh_issue: 284
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/284
 title: "marathon: closeout PR, run-log back to the lane issue, and release-driven marathon selection"
-status: "Phase 1 SHIPPED 2026-07-28 (PR #316, merged 243a310). Phases 2-6 scoped only, not contracted — Phase 6 (feedback loop) added 2026-07-28 with GH-315 as its first specimen."
+status: "Phases 1-3 SHIPPED. P1 PR #316 (243a310); P2 PR #317 (06100cc); P3 2026-07-28 — RELEASES.md gains Milestone:, GitHub milestone Quicksilver created. Phases 4-6 scoped only, not contracted. P2 and P3 each surfaced harness defects worth more than the phase: #319/#320 from P2's marathon, #322 from P2's merge."
 created: 2026-07-23
 updated: 2026-07-28
 owner: noel
@@ -205,10 +205,12 @@ This also makes `driver still running` cheap and correct, and gives the lock-sta
 real answer instead of a heuristic: **stale = heartbeat older than the threshold AND the recorded PID
 absent.** Never PID-absent alone, and never freshness alone.
 
-### Swarm Preflight Contract
+### Contract as shipped — Phase 2, historical
 
-> **Live contract = Phase 2.** Phase 1's is retired above (heading renamed) because the extractor
-> takes the first `/preflight\s+contract/i` heading in the doc.
+> **No longer the live contract.** Retired 2026-07-28 when Phase 2 merged (PR #317). Same reason
+> Phase 1's heading was renamed: `swarm-preflight`'s extractor takes the FIRST
+> `/preflight\s+contract/i` heading in the doc (`utils/swarm-preflight.sh:152`), so leaving a landed
+> contract matching would resolve it and block any later phase from ever firing.
 
 ```json
 {
@@ -278,6 +280,37 @@ existing blocks, so it needs a migration note.)
 
 Label (`release:quicksilver`) is the alternative if an issue must belong to several releases at once.
 It buys flexibility and costs the free rollup. **See Open decisions — this is yours to call.**
+
+### As shipped — Phase 3, 2026-07-28
+
+Operator chose **milestone-based**. Built directly rather than fired as a marathon lane: the change
+is a one-field format extension plus a check, and the phase's own value is the join key, not a
+demonstration of the runner.
+
+- **`RELEASES.md` gains exactly one field, `Milestone:`** — a GitHub milestone **title**, not a URL
+  and not an issue list. The zero-field alternative (repointing `GH_URL:` at the milestone) was
+  rejected: it silently changes that field's meaning for existing blocks.
+- **`pdda_releases_list`** (`utils/pdda/pdda-lib.sh`) parses it as a 7th `\037`-delimited field.
+- **`pdda.sh releases`** warns when a block has a `Target Date`, isn't `Shipped`, and has no
+  `Milestone:`. Scoped to *dated* blocks so the example/placeholder entry stays quiet; `Shipped`
+  releases are exempt, because backfilling a milestone onto history buys nothing. Still never gates
+  the exit code.
+- **`pdda.sh releases-current`** prints the milestone, and prints
+  `(none — release cannot resolve to an issue set)` when it is absent. A roll-up that silently omits
+  the join key is exactly the kind of quiet gap this program keeps finding.
+- **GitHub milestone `Quicksilver` created** (milestone #1, due 2026-08-01, matching the ledger's
+  `Target Date`), and #308 — the issue `GH_URL:` already named — assigned to it. Broader membership
+  is a scoping call left to the operator; the mechanism is what Phase 3 owed.
+- **`test/gh284-p3-release-milestone.sh`**, registered in `validate.sh`. This is the **first test the
+  `releases` check has ever had**, so it pins the pre-existing behaviors too (empty version → error,
+  bad date → warn, overdue → warn, never gates) alongside the new field, plus a field-ordering case:
+  appending to a `\037` record could silently hand `line_no` to `milestone` and every other assertion
+  would still pass by accident. Observed **10 pass / 5 fail** against pre-Phase-3 code, **15 / 0**
+  after.
+
+**What Phase 4 can now do that it could not before:**
+`gh issue list --milestone "Quicksilver" --state open --json number,title,labels` returns the
+release's open scope with no new cache and no new file format.
 
 ---
 

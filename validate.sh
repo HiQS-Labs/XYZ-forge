@@ -106,6 +106,7 @@ TESTS=(
   "gh292-worktree-vendored-discovery.sh"  # GH-292 (linked worktree resolves main-checkout .xyz/)
   "pdda-roadmap-coverage.sh"
   "pdda-repo-contract.sh"       # GH-311 (real-repository PDDA deterministic contract)
+  "gh284-p3-release-milestone.sh" # GH-284 P3 (RELEASES.md Milestone: join key + the releases check's first test)
   "swarm-preflight.sh"
   "ci-workflow.sh"
   "xyz-completion.sh"
