@@ -1,5 +1,5 @@
 # Marathon Phase p1
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH284-P1-20260728 builder=codex reviewer=agy round-cap=5 -->
@@ -74,3 +74,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH284-P1-20260728 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY phases/p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+
+### Round 1 · Reviewer · agy
+The builder perfectly implemented the acceptance criteria specified in the phase brief:
+- `relay-automation/marathon-closeout.sh` now has the `--open-only` flag, is clean-tree-safe, and gracefully avoids duplicate PRs.
+- `relay-automation/marathon.sh` now accepts `--closeout-pr` and invokes the closeout without changing the marathon's success exit code on failure.
+- `test/marathon-closeout.sh` now has tests asserting all these new paths (clean tree, existing PR reuse, and marathon delegation).
+- `help` documentation updated in both scripts.
+
+**Verdict:** Approved
