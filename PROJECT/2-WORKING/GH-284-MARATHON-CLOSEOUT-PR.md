@@ -248,6 +248,54 @@ absent.** Never PID-absent alone, and never freshness alone.
 - [ ] No code path files a new issue or closes one
 - [ ] Trunk name is derived, not the literal `development`
 
+### Phase 2 completion — the port to the executing lane (2026-07-29, GH-322)
+
+Phase 2 merged in PR #317 but was **not effective**: both deliverables landed in
+`relay-automation/marathon-drive.sh` only, and that file `exec`s `utils/py/marathon_drive.py` at its
+own line 18 — *before* it installs the `EXIT` trap that runs them. With `XYZ_PYTHON` unset (the
+default since GH-264) neither the heartbeat nor the run log ever executed. The marathon ran, exited
+0, reported success, and observed nothing. #324 stopped the silence (`--log-github` began failing
+loudly instead of being discarded); this completes the port.
+
+**Correction to #322's own scope.** The issue scoped the remaining work as "the run-log half only —
+the driver heartbeat *is* already in the Python twin (12 references)." Those 12 matches are
+`xyz_marathon_heartbeat_*`, the **GH-75 `XYZ.heartbeat.json` session record** — a different file and
+a different feature. `grep -c driver_heartbeat utils/py/marathon_drive.py` returned **0**. Both
+halves of Phase 2 were missing from the executing lane, and both are ported.
+
+Worth noting *why* the mistake was easy: two unrelated features in the same file both called
+"heartbeat", distinguishable only by prefix. That naming is what made a grep-based check agree with
+the wrong conclusion.
+
+**As shipped:**
+
+- `utils/py/marathon_drive.py` gains `--log-github` as a real flag, the driver heartbeat
+  (write/refresh-thread/clear, `RTL_DRIVER_HEARTBEAT_FILE` honored), `run_gate_result` tracking, and
+  an `_ON_EXIT` hook list that mirrors the Bash `EXIT` trap — exit code resolved first, hooks run in
+  a `finally`, original code re-exited, so reporting can never change the driven run's result.
+- The heartbeat record is byte-compatible with `rtl_driver_heartbeat_write` (same six fields, same
+  atomic `mkstemp` + `os.replace`), so an observer or the Bash reader gets one answer from either twin.
+- `runlog_find_comment_id` is at **module scope**, not nested. In Bash the equivalent parser could
+  only be reached by shipping it to a `python3` subprocess, and the invocation shape itself
+  (SC2259) silently broke it for a release. In-process removes the failure class, and importable
+  means the test exercises the real function rather than a copy of its logic.
+
+**Coverage:** `test/gh322-runlog-python-lane.sh`, registered in `validate.sh`. **5 pass / 19 fail
+against pre-change code, 26 / 0 after.** It is the counterpart to `test/gh284-runlog-heartbeat.sh`,
+every driver invocation in which is pinned to `XYZ_PYTHON=0` — which is precisely why that suite
+could not see this. The new file `unset XYZ_PYTHON`s deliberately and asserts the default lane
+POSTs exactly one comment, re-runs PATCH rather than duplicate, a failing `gh` write leaves the exit
+code untouched, and `--help` / a usage error post nothing.
+
+**Left open deliberately — `driver still running` is a constant.** On the only path that posts, this
+field can only ever read `running`. The exit hook asks `driver_heartbeat_status()` *before* clearing
+the heartbeat, and the PID it checks is the very process asking, which is by definition alive. The
+Bash twin has the identical ordering (`marathon_run_github_log` at `marathon-drive.sh:238`, then
+`marathon_driver_heartbeat_stop` at `:239`), so this is inherited, not introduced. Ported faithfully
+rather than "fixed" here, because a silent Bash/Python divergence is the exact disease #320 and #322
+are about. The field is not wrong, it is uninformative — it is the *file* that is the useful sensor
+for an outside observer, which is what Phase 2's rationale actually argued for. Tracked separately.
+
 ---
 
 ## Phase 3 — release tagging: the join key

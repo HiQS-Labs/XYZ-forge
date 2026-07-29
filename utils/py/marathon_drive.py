@@ -6,6 +6,49 @@ import time
 import re
 import shlex
 import shutil
+import json
+import tempfile
+import threading
+import datetime as _dt
+
+# GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
+# Python equivalent of marathon-drive.sh's `trap _marathon_drive_on_exit EXIT`. Same contract as
+# that trap: the code is captured FIRST and re-exited explicitly, so nothing a hook does can
+# overwrite the driven run's real status.
+_ON_EXIT = []
+
+
+def runlog_find_comment_id(payload_text, marker):
+    """Return the id of the run-log comment carrying <marker>, or "" if there is none.
+
+    `gh api --paginate --slurp` yields an ARRAY OF PAGES ([[c,...],[c,...]]); a single page, or a
+    non-slurp fallback, yields a flat [c,...]. Accept both — a miss here POSTs a duplicate comment
+    instead of updating in place, which is the one property this feature is defined by.
+
+    Deliberately at module scope, not nested in main(): in the Bash twin the equivalent parser could
+    only be reached by shipping it to a python3 subprocess, and the INVOCATION shape (`python3 -
+    <<EOF` while also piping data in — shellcheck SC2259) silently broke it. The comments JSON was
+    prepended to the program text, python died with a SyntaxError, the id came back empty, and the
+    run log POSTed a duplicate every single time. test/gh284-runlog-heartbeat.sh missed that for a
+    release because it exercised the parser from a FILE, which is not how the driver ran it. Running
+    in-process kills the whole failure class, and keeping it importable means a test can exercise the
+    real function rather than a reimplementation of it.
+    """
+    try:
+        payload = json.loads(payload_text)
+    except Exception:
+        payload = []
+    comments = []
+    if isinstance(payload, list):
+        for entry in payload:
+            if isinstance(entry, list):
+                comments.extend(entry)
+            elif isinstance(entry, dict):
+                comments.append(entry)
+    for comment in comments:
+        if isinstance(comment, dict) and marker in str(comment.get("body", "")):
+            return str(comment.get("id", ""))
+    return ""
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -67,6 +110,7 @@ def main():
     parser.add_argument("--requires-test", dest="requires_test")  # GH-249: nominated test must change
     parser.add_argument("--force", dest="force", action="store_true")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
+    parser.add_argument("--log-github", dest="log_github", action="store_true")  # GH-284 P2 / GH-322
     parser.add_argument("--help", action="store_true")
 
     args, unknown = parser.parse_known_args()
@@ -75,21 +119,20 @@ def main():
         print("  --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh).")
         print("  --post-approve-cmd CMD  Optional command after phase.approved + green telemetry (default: unset).")
         print("                           Failure preserves approval, writes reason post-approve-failed, and exits 9.")
+        print("  --log-github            GH-284 opt-in run log (default OFF). Updates the lane's EXISTING GitHub")
+        print("                          issue in place via a marker comment — never creates an issue, never closes")
+        print("                          one. A missing/unauthenticated gh degrades to local telemetry only.")
         sys.exit(0)
 
     # GH-322: `unknown` was captured and never read, so ANY unrecognised flag was silently
     # discarded. Because Python is the executing lane (GH-264), that made `--log-github` — the
-    # headline feature of GH-284 Phase 2, which exists only in the Bash twin — a no-op: the marathon
+    # headline feature of GH-284 Phase 2, which existed only in the Bash twin — a no-op: the marathon
     # ran, exited 0, reported success, and never posted a run log. All three Bash twins `die
     # "unknown argument: $1"`; this restores that contract byte-for-byte (same prefix, same exit 2).
     # Checked AFTER --help so `--help` still works alongside a bad flag.
+    # (--log-github is now a real flag on this lane too — see marathon_run_github_log below. The
+    # temporary "re-run with XYZ_PYTHON=0" message this branch used to carry is gone with the port.)
     if unknown:
-        # --log-github is the specific case that motivated this: it exists in the Bash twin only, so
-        # name the workaround rather than leaving the operator with a bare "unknown argument".
-        if "--log-github" in unknown:
-            die("--log-github is not implemented in the Python lane (utils/py/marathon_drive.py); "
-                "the run log lives only in the Bash twin. Re-run with XYZ_PYTHON=0, or see issue #322 "
-                "for the port. Refusing rather than silently ignoring the flag.")
         die(f"unknown argument: {unknown[0]}")
 
     if not args.phase_brief_file:
@@ -368,6 +411,233 @@ def main():
     # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.
     lane_state_key = get_env("MARATHON_LANE_NS") or args.phase_id
 
+    # ── GH-284 Phase 2, ported (GH-322) ────────────────────────────────────────────────────────
+    # BOTH halves of Phase 2 — the driver heartbeat AND the --log-github run log — existed only in
+    # relay-automation/marathon-drive.sh. That twin `exec`s this file at its own line 18, long before
+    # it installs the EXIT trap that runs them, so on the default lane (XYZ_PYTHON unset, GH-264)
+    # neither one ever executed. #322 scoped this as "the run-log half only, the heartbeat is already
+    # in the Python twin (12 references)"; those 12 matches are xyz_marathon_heartbeat_* — the GH-75
+    # XYZ.heartbeat.json session record, a different file and a different feature. Before this change
+    # `grep -c driver_heartbeat utils/py/marathon_drive.py` was 0, so the observability Phase 2 was
+    # built to provide was absent from the lane that actually runs. Both halves are ported here.
+    run_gate_result = ["not-run"]
+    drive_started = [False]
+
+    def _cmd_out(cmd, cwd=None):
+        # Best-effort stdout capture: a missing binary, a non-zero exit, or a crash all yield "".
+        # Every probe in the run log is advisory, and none of them may raise into the exit path.
+        try:
+            res = subprocess.run(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        except Exception:
+            return ""
+        if res.returncode != 0:
+            return ""
+        return res.stdout.decode("utf-8", "replace").strip()
+
+    def _utc_now():
+        return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    hb_interval = get_env("MARATHON_DRIVER_HEARTBEAT_INTERVAL", "30")
+    try:
+        hb_interval = int(hb_interval)
+    except (TypeError, ValueError):
+        hb_interval = 30
+    if hb_interval <= 0:
+        hb_interval = 30
+    hb_stale_after = get_env("MARATHON_DRIVER_HEARTBEAT_STALE_AFTER", "120")
+    try:
+        hb_stale_after = int(hb_stale_after)
+    except (TypeError, ValueError):
+        hb_stale_after = 120
+
+    def driver_heartbeat_path():
+        # RTL_DRIVER_HEARTBEAT_FILE is the same override relay-turn-lib.sh honors, so an observer (or
+        # a test) can point both twins at one file and get one answer.
+        return get_env("RTL_DRIVER_HEARTBEAT_FILE") or os.path.join(root, ".tick", "driver-heartbeat.json")
+
+    hb_state = {"started": "", "plan": "", "stop": None, "live": False}
+
+    def driver_heartbeat_write():
+        # Same record and the same atomic mkstemp+os.replace as rtl_driver_heartbeat_write, so a
+        # heartbeat written by either twin is byte-compatible with readers of the other.
+        path = driver_heartbeat_path()
+        record = {
+            "pid": os.getpid(),
+            "started_utc": hb_state["started"],
+            "updated_utc": _utc_now(),
+            "plan": hb_state["plan"],
+            "phase_id": args.phase_id,
+            "relay_task": relay_task,
+        }
+        directory = os.path.dirname(path) or "."
+        try:
+            os.makedirs(directory, exist_ok=True)
+            fd, tmp = tempfile.mkstemp(dir=directory, prefix=".driver-heartbeat.", suffix=".tmp")
+            try:
+                with os.fdopen(fd, "w") as f:
+                    json.dump(record, f, sort_keys=True)
+                    f.write("\n")
+                os.replace(tmp, path)
+            except Exception:
+                try:
+                    os.unlink(tmp)
+                except OSError:
+                    pass
+                raise
+        except Exception:
+            return False
+        return True
+
+    def driver_heartbeat_clear():
+        try:
+            os.remove(driver_heartbeat_path())
+        except OSError:
+            pass
+
+    def driver_heartbeat_status():
+        # running|finished|stale, with rtl_driver_heartbeat_status's deliberately asymmetric rule: a
+        # LIVE pid is running even if the write is old; only an old heartbeat AND an absent pid is
+        # stale. os.kill(pid, 0) mirrors `kill -0` — including EPERM (process exists but is not ours)
+        # counting as "cannot signal", which is what the shell reports too.
+        try:
+            with open(driver_heartbeat_path()) as f:
+                data = json.load(f)
+            pid = int(data["pid"])
+            updated = _dt.datetime.fromisoformat(str(data["updated_utc"]).replace("Z", "+00:00"))
+            age = max(0, int((_dt.datetime.now(_dt.timezone.utc) - updated).total_seconds()))
+        except Exception:
+            return "finished"
+        try:
+            os.kill(pid, 0)
+            return "running"
+        except OSError:
+            pass
+        except Exception:
+            return "finished"
+        return "stale" if age > hb_stale_after else "finished"
+
+    def driver_heartbeat_start():
+        hb_state["started"] = _utc_now()
+        hb_state["plan"] = get_env("MARATHON_PLAN_NAME") or \
+            os.path.splitext(os.path.basename(args.phase_brief_file))[0]
+        if not driver_heartbeat_write():
+            log("driver heartbeat unavailable — continuing without liveness record")
+            return
+        hb_state["live"] = True
+        # A daemon thread is the Python analogue of the Bash `( while kill -0 $$; do sleep; write;
+        # done ) &` subshell: it cannot outlive the driver, and it can never block interpreter exit.
+        stop = threading.Event()
+        hb_state["stop"] = stop
+
+        def _refresh():
+            while not stop.wait(hb_interval):
+                driver_heartbeat_write()
+
+        threading.Thread(target=_refresh, daemon=True).start()
+
+    def driver_heartbeat_stop():
+        if hb_state["stop"] is not None:
+            hb_state["stop"].set()
+        if hb_state["live"]:
+            driver_heartbeat_clear()
+
+    # The run log is deliberately restricted to comments on an ALREADY-EXISTING lane issue: no
+    # `gh issue create`, no close/reopen, and no mutation at all unless --log-github was passed.
+    # Every failing gh probe is swallowed so external reporting can never alter the marathon result.
+    def lane_issue_number():
+        for candidate in (lane_state_key, relay_task, os.path.basename(args.phase_brief_file)):
+            m = re.search(r'GH-?([0-9]+)', str(candidate or ""))
+            if m:
+                return m.group(1)
+        return ""
+
+    def trunk_ref():
+        ref = _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"])
+        if ref and ref != "origin/HEAD":
+            return ref
+        return _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"])
+
+    def marathon_run_github_log(driver_exit):
+        if not (args.log_github and drive_started[0]):
+            return
+        if not shutil.which("gh") or subprocess.run(
+                ["gh", "auth", "status"], stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL).returncode != 0:
+            log("--log-github requested, but gh is unavailable or unauthenticated — local telemetry only")
+            return
+        issue = lane_issue_number()
+        if not issue:
+            log(f"--log-github requested, but no GH issue number is derivable for lane {lane_state_key} — local telemetry only")
+            return
+        # Every gh call MUST be scoped to $root's repository. A bare `gh repo view` / `gh pr view`
+        # resolves whatever repo the ambient CWD happens to be in, so a --target-root run, or any
+        # invocation from a foreign directory, could post THIS lane's run log into the WRONG
+        # repository's issue #N. Derive the slug from root's own remote (no gh call, no CWD
+        # dependency); fall back to a gh lookup explicitly executed inside root.
+        url = _cmd_out(["git", "-C", root, "remote", "get-url", "origin"])
+        repo = re.sub(r'\.git$', '', re.sub(r'^https?://[^/]+/', '', re.sub(r'^git@[^:]+:', '', url)))
+        # A local-path remote (file:///…/remote.git — common in tests and vendored clones) survives
+        # those substitutions with slashes intact and would otherwise be accepted as a bogus slug,
+        # sending every gh call to a repo that does not exist.
+        if not re.fullmatch(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+', repo):
+            repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=root)
+        if not repo:
+            log("--log-github requested, but repository lookup failed — local telemetry only")
+            return
+        branch = _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"]) or "(detached)"
+        trunk = trunk_ref()
+        landed = "no"
+        if trunk and subprocess.run(["git", "-C", root, "merge-base", "--is-ancestor", "HEAD", trunk],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+            landed = "yes"
+        pr_url = _cmd_out(["gh", "pr", "view", "--repo", repo, "--head", branch, "--json", "url", "--jq", ".url"]) \
+            or "NO PR OPENED"
+        state = driver_heartbeat_status() or "finished"
+        plan = hb_state["plan"] or os.path.splitext(os.path.basename(args.phase_brief_file))[0]
+        marker = f"<!-- xyz-marathon-run-log:{issue}:{lane_state_key} -->"
+        body = (f"{marker}\n"
+                f"### Marathon run log\n"
+                f"- plan: `{plan}`\n"
+                f"- phase: `{args.phase_id}`\n"
+                f"- branch: `{branch}`\n"
+                f"- trunk (derived): `{trunk}`\n"
+                f"- landed on trunk: **{landed}**\n"
+                f"- PR: {pr_url}\n"
+                f"- per-phase gate: **{run_gate_result[0]}**\n"
+                f"- driver still running: **{state}**\n"
+                f"- driver exit: `{driver_exit}`\n"
+                f"- recorded: {_utc_now()}")
+        comments = _cmd_out(["gh", "api", "--paginate", "--slurp",
+                             f"repos/{repo}/issues/{issue}/comments?per_page=100"])
+        comment_id = runlog_find_comment_id(comments, marker)
+        if comment_id:
+            ok = subprocess.run(["gh", "api", "--method", "PATCH",
+                                 f"repos/{repo}/issues/comments/{comment_id}", "-f", f"body={body}"],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+            log(f"updated GitHub run-log comment on issue #{issue}" if ok
+                else "GitHub run-log update failed — local telemetry only")
+        else:
+            ok = subprocess.run(["gh", "api", "--method", "POST",
+                                 f"repos/{repo}/issues/{issue}/comments", "-f", f"body={body}"],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+            log(f"posted GitHub run-log comment on issue #{issue}" if ok
+                else "GitHub run-log post failed — local telemetry only")
+
+    def _marathon_drive_on_exit(code):
+        # Same order as the Bash EXIT trap: log first (so the run log can still read a live
+        # heartbeat), then stop the heartbeat. Each half is independently guarded — external
+        # reporting must never be able to change the driven run's exit code.
+        try:
+            marathon_run_github_log(code)
+        except Exception as exc:
+            log(f"GitHub run log raised ({exc.__class__.__name__}) — local telemetry only")
+        try:
+            driver_heartbeat_stop()
+        except Exception:
+            pass
+
+    _ON_EXIT.append(_marathon_drive_on_exit)
+
     # GH-238: a vendored consumer normally has no root-level validate.sh. Do NOT spend a builder and
     # reviewer turn only to discover the default gate can't start after approval. A deliberately
     # non-executing probe (gates like `test -f build/output` only become true after the builder runs):
@@ -547,8 +817,12 @@ relay-file: {rel_relay}
 
     def run_pre_advance_gate():
         cwd = args.target_root if args.target_root else None
-        return subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash",
-                              cwd=cwd, env=_gate_env()).returncode
+        rc = subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash",
+                            cwd=cwd, env=_gate_env()).returncode
+        # GH-284 P2: the run log reports this lane's gate outcome; mirrors RUN_GATE_RESULT in the
+        # Bash twin (green/red, "not-run" until the gate is first invoked).
+        run_gate_result[0] = "green" if rc == 0 else "red"
+        return rc
 
     def run_post_approve_cmd():
         cwd = args.target_root if args.target_root else None
@@ -816,6 +1090,12 @@ You are the REVIEWER for this phase. {reviewer_read_line}
 
     _run_tick_loud([tick_bin, "log", "marathon.phase.start", relay_task, "--agent", "marathon"])
     log(f"phase start: running relay-drive --round-cap {args.round_cap}")
+    # Past this point a phase is really being driven — arm the run log and start the driver
+    # heartbeat. Same placement as MARATHON_DRIVE_STARTED=1 + marathon_driver_heartbeat_start in the
+    # Bash twin, so --help / usage / lock contention / a parked lane / --dry-run never post a run log
+    # or leave a liveness record behind.
+    drive_started[0] = True
+    driver_heartbeat_start()
 
     def _run_relay_drive(review_once=False):
         cmd2 = [relay_drive_bin, "--relay-file", relay_file, "--relay-task", relay_task,
@@ -964,4 +1244,24 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         die(f"relay-drive exited with unexpected code {relay_exit}")
 
 if __name__ == "__main__":
-    main()
+    # GH-284 P2 / GH-322: the Bash twin runs its run log + heartbeat stop from an EXIT trap that
+    # captures `$?` first and re-exits with it explicitly, precisely so a failing reporting step can
+    # never overwrite the driven run's real status. This is the same shape: the code is resolved
+    # first, hooks run in a `finally` (so an exception path still clears the heartbeat), and the
+    # original code is what we exit with. `die()` and every `sys.exit(N)` land in the SystemExit arm.
+    _exit_code = 0
+    try:
+        try:
+            main()
+        except SystemExit as _e:
+            _exit_code = _e.code if isinstance(_e.code, int) else (0 if _e.code is None else 1)
+        except BaseException:
+            _exit_code = 1
+            raise
+    finally:
+        for _hook in _ON_EXIT:
+            try:
+                _hook(_exit_code)
+            except Exception:
+                pass
+    sys.exit(_exit_code)

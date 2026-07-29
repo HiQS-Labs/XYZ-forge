@@ -6,6 +6,11 @@
 # away without a word. That is how GH-284 Phase 2's `--log-github` — implemented in the Bash twin
 # only — became a no-op: the marathon ran, exited 0, reported success, and never posted a run log.
 #
+# `--log-github` itself is no longer an example of that: Phase 2 has since been ported into
+# utils/py/marathon_drive.py (test/gh322-runlog-python-lane.sh), so the lane must now ACCEPT it. The
+# general defect this file guards — an unknown flag vanishing without a word — is unchanged, and the
+# --log-github block at the bottom was inverted to match.
+#
 # Every Bash twin has always had `*) die "unknown argument: $1"`. This pins that the Python lane now
 # does the same thing, with the same message and the same exit code, for all three entry points.
 #
@@ -86,18 +91,24 @@ for entry in "${ENTRYPOINTS[@]}"; do
 done
 
 # ── --log-github specifically: the flag that motivated the issue ─────────────────────────
-# It exists in the Bash twin only. A bare "unknown argument" would be true but useless, so the
-# Python lane names the workaround. Pin that it refuses AND says where the feature lives.
+# This assertion has been INVERTED, deliberately. Until the port landed, --log-github existed in the
+# Bash twin only, so the contract was "refuse loudly and name the workaround (XYZ_PYTHON=0)" — an
+# interim state, not a destination. GH-284 Phase 2 is now implemented in the Python lane too, so the
+# flag must be ACCEPTED there; a lane that still refused it would be the bug now. Behaviour under
+# test here is only "the parser recognises it"; whether it posts is
+# test/gh322-runlog-python-lane.sh's job.
 py_out="$(bash "$ROOT/relay-automation/marathon-drive.sh" --log-github 2>&1)"; py_rc=$?
-[ "$py_rc" -ne 0 ] \
-  && pass "--log-github is refused by the Python lane rather than silently ignored" \
-  || fail "--log-github still accepted-and-ignored by the Python lane (exit 0)"
+printf '%s' "$py_out" | grep -Fq "unknown argument" \
+  && fail "--log-github is still rejected as unknown by the Python lane — the port regressed: $py_out" \
+  || pass "--log-github is a recognised flag on the Python lane (GH-284 P2 ported)"
 printf '%s' "$py_out" | grep -Fq "XYZ_PYTHON=0" \
-  && pass "the refusal names the lane that actually implements it" \
-  || fail "refusal must tell the operator how to get the feature: $py_out"
-printf '%s' "$py_out" | grep -Fq "#322" \
-  && pass "the refusal points at the tracking issue for the port" \
-  || fail "refusal should reference issue #322: $py_out"
+  && fail "the Python lane still advertises the XYZ_PYTHON=0 workaround for a feature it now implements: $py_out" \
+  || pass "no stale 'use the Bash twin' workaround is advertised for --log-github"
+# It must fail for a REAL reason (no --phase-brief), not for the flag — otherwise "accepted" could
+# just mean argument parsing never ran at all.
+[ "$py_rc" -eq 2 ] && printf '%s' "$py_out" | grep -Fq -- "--phase-brief" \
+  && pass "--log-github alone falls through to the ordinary required-argument error" \
+  || fail "expected the usual --phase-brief usage error (exit 2), got exit $py_rc: $py_out"
 
 # ── --help must keep working ─────────────────────────────────────────────────────────────
 # The rejection is deliberately checked AFTER --help, so a bad flag cannot make help unreachable.
