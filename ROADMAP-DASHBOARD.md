@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 125 items | Tally: 🟢 5 · 🟡 4 · ⏸️ 2 · ⛔ 0 · ✅ 82 · 🔮 0 · 🔲 0
+Summary: 126 items | Tally: 🟢 5 · 🟡 4 · ⏸️ 2 · ⛔ 0 · ✅ 82 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-336 · planning context: phase metadata signals before deterministic marathon contracts | — | [GH-336-PLANNING-CONTEXT.md](PROJECT/1-INBOX/GH-336-PLANNING-CONTEXT.md) · [#336](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/336) |
 | GH-320 · the executing Python lane caps turns at a third of the documented budget | — | [#320](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/320) · [PROJECT/2-WORKING/GH-320-TWIN-TURN-TIMEOUT-DRIFT.md](PROJECT/2-WORKING/GH-320-TWIN-TURN-TIMEOUT-DRIFT.md) |
 | GH-319 · the marathon pre-advance gate word-splits a spaced repo path and passes on the wrong file | — | [#315](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/315) · [#319](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/319) · [PROJECT/2-WORKING/GH-319-MARATHON-GATE-PATH-WORD-SPLIT.md](PROJECT/2-WORKING/GH-319-MARATHON-GATE-PATH-WORD-SPLIT.md) |
 | MARATHON-2026-07-27 · gate + fleet integrity (GH-311 → GH-289 → GH-293 → GH-308) | ✅ | [#318](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/pull/318) · [PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml](PROJECT/2-WORKING/MARATHON-2026-07-27-GATE-AND-FLEET-INTEGRITY/MARATHON.yaml) |

@@ -222,6 +222,23 @@ printf '%s' "$BODY" | grep -q 'xyz-marathon-run-log:322:gh-log' \
 printf '%s' "$BODY" | grep -q 'driver exit: `3`' \
   && pass "run-log body records the driver's REAL exit code, not a placeholder" \
   || fail "driver exit not recorded correctly: $BODY"
+
+# GH-333: the exit code is glossed, so a reader does not have to look up what 3 means.
+printf '%s' "$BODY" | grep -q 'driver exit: `3` (no-progress escalation)' \
+  && pass "the exit code carries its plain-language meaning" \
+  || fail "exit code was not glossed: $BODY"
+# ...and the constant field it replaced is gone. `driver still running` could only ever say
+# "running": the exit hook asked before clearing the heartbeat, and the PID it tested belonged to the
+# process doing the asking. A line that reads like a measurement but is a constant is worse than no
+# line, so this asserts its ABSENCE — re-adding it must fail here.
+printf '%s' "$BODY" | grep -q 'driver still running' \
+  && fail "the constant 'driver still running' field is back — it can only ever say 'running': $BODY" \
+  || pass "the always-'running' liveness field is gone from the run log"
+# The heartbeat FILE is the real liveness deliverable and must be untouched by that removal — it is
+# asserted live earlier in this file (mid-phase capture + cross-twin read).
+grep -q 'driver_heartbeat_write' "$PY" \
+  && pass "dropping the field did not remove the heartbeat writer itself" \
+  || fail "the driver heartbeat writer went away with the field"
 printf '%s' "$BODY" | grep -q 'per-phase gate: \*\*not-run\*\*' \
   && pass "run-log body reports the gate as not-run when the phase never reached it" \
   || fail "gate result not reported honestly: $BODY"

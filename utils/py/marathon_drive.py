@@ -18,6 +18,39 @@ import datetime as _dt
 _ON_EXIT = []
 
 
+# GH-333: the run log used to carry a `driver still running` line that could only ever say
+# "running". Dropping it left `driver exit: `3`` as the sole disposition signal — a bare number the
+# reader has to look up. Naming it is the half of that field which was actually worth keeping.
+#
+# Codes 1, 2 and 8 are mapped defensively but cannot appear in a posted run log: lock contention,
+# `die()` and the lane-attempt cap all exit BEFORE the run log arms (drive_started).
+_EXIT_MEANINGS = {
+    0: "approved, gate passed",
+    1: "driver lock contention",
+    2: "usage or configuration error",
+    3: "no-progress escalation",
+    4: "round-cap or close-mismatch escalation",
+    5: "pre-advance gate failed",
+    6: "containment violation — off-lane edit reverted",
+    7: "turn timeout / hang",
+    8: "lane parked at the attempt cap",
+    9: "post-approve command failed, approval preserved",
+}
+
+
+def _exit_meaning(code):
+    """Plain-language gloss for a marathon-drive exit code, for the run log.
+
+    Deliberately total: an unmapped code must still render, and must say plainly that it is
+    unrecognised rather than silently printing an empty parenthetical that reads like a meaning.
+    """
+    try:
+        code = int(code)
+    except (TypeError, ValueError):
+        return "unrecognised exit code"
+    return _EXIT_MEANINGS.get(code, "unrecognised exit code")
+
+
 def runlog_find_comment_id(payload_text, marker):
     """Return the id of the run-log comment carrying <marker>, or "" if there is none.
 
@@ -444,11 +477,10 @@ def main():
         hb_interval = 30
     if hb_interval <= 0:
         hb_interval = 30
-    hb_stale_after = get_env("MARATHON_DRIVER_HEARTBEAT_STALE_AFTER", "120")
-    try:
-        hb_stale_after = int(hb_stale_after)
-    except (TypeError, ValueError):
-        hb_stale_after = 120
+    # MARATHON_DRIVER_HEARTBEAT_STALE_AFTER is deliberately not read here (GH-333). Staleness is a
+    # question only a READER of the heartbeat file asks, and this lane is the writer; the reader
+    # (rtl_driver_heartbeat_status, relay-turn-lib.sh) still honors the variable. The one consumer
+    # this file had was the dropped constant field.
 
     def driver_heartbeat_path():
         # RTL_DRIVER_HEARTBEAT_FILE is the same override relay-turn-lib.sh honors, so an observer (or
@@ -494,27 +526,15 @@ def main():
         except OSError:
             pass
 
-    def driver_heartbeat_status():
-        # running|finished|stale, with rtl_driver_heartbeat_status's deliberately asymmetric rule: a
-        # LIVE pid is running even if the write is old; only an old heartbeat AND an absent pid is
-        # stale. os.kill(pid, 0) mirrors `kill -0` — including EPERM (process exists but is not ours)
-        # counting as "cannot signal", which is what the shell reports too.
-        try:
-            with open(driver_heartbeat_path()) as f:
-                data = json.load(f)
-            pid = int(data["pid"])
-            updated = _dt.datetime.fromisoformat(str(data["updated_utc"]).replace("Z", "+00:00"))
-            age = max(0, int((_dt.datetime.now(_dt.timezone.utc) - updated).total_seconds()))
-        except Exception:
-            return "finished"
-        try:
-            os.kill(pid, 0)
-            return "running"
-        except OSError:
-            pass
-        except Exception:
-            return "finished"
-        return "stale" if age > hb_stale_after else "finished"
+    # GH-333: there is deliberately NO driver_heartbeat_status() here. Its only caller was the run
+    # log's `driver still running` field, which could only ever answer "running" — the exit hook
+    # asked before clearing the heartbeat, and the PID it tested belonged to the process asking. The
+    # field is gone, so the reader would be dead code.
+    #
+    # The heartbeat FILE is the real deliverable and is unchanged: this lane still writes and clears
+    # it, and the reader that observers actually use lives in relay-automation/relay-turn-lib.sh
+    # (`rtl_driver_heartbeat_status`), which is a shared runtime dependency, not a frozen twin.
+    # Writer here, reader there — which is also why dropping this costs nothing.
 
     def driver_heartbeat_start():
         hb_state["started"] = _utc_now()
@@ -592,7 +612,6 @@ def main():
             landed = "yes"
         pr_url = _cmd_out(["gh", "pr", "view", "--repo", repo, "--head", branch, "--json", "url", "--jq", ".url"]) \
             or "NO PR OPENED"
-        state = driver_heartbeat_status() or "finished"
         plan = hb_state["plan"] or os.path.splitext(os.path.basename(args.phase_brief_file))[0]
         marker = f"<!-- xyz-marathon-run-log:{issue}:{lane_state_key} -->"
         body = (f"{marker}\n"
@@ -604,8 +623,7 @@ def main():
                 f"- landed on trunk: **{landed}**\n"
                 f"- PR: {pr_url}\n"
                 f"- per-phase gate: **{run_gate_result[0]}**\n"
-                f"- driver still running: **{state}**\n"
-                f"- driver exit: `{driver_exit}`\n"
+                f"- driver exit: `{driver_exit}` ({_exit_meaning(driver_exit)})\n"
                 f"- recorded: {_utc_now()}")
         comments = _cmd_out(["gh", "api", "--paginate", "--slurp",
                              f"repos/{repo}/issues/{issue}/comments?per_page=100"])
