@@ -231,12 +231,25 @@ def claims(subject, n):
 def mentions(text, n):
     return re.search(rf'GH-0*{n}(?:[^0-9]|$)', text) is not None
 
-rows, counts = [], {"landed": 0, "mentioned": 0, "absent": 0}
+# GH-332: a commit claiming an issue answers "has anyone worked on this?", NOT "is this finished?".
+# Quicksilver reported `1/1 landed` off #308 — an OPEN multi-phase epic — because its only claiming
+# commit was `GH-308: re-scope Phase 0/1 …`, i.e. planning, not delivery. The issue's CLOSED/OPEN
+# state is the human's own signal that it is done, and this script was already fetching it and
+# throwing it away. Landing now needs BOTH: a commit that claims the issue, and a closed issue.
+#
+# Commit TYPE is deliberately NOT filtered (the open question in #332). Requiring fix/feat and
+# rejecting docs/chore would add false negatives for genuinely doc-only issues, and it is the weaker
+# signal of the two — a human closing the issue outranks a commit-message prefix. The type stays
+# visible either way, because the evidence line prints the whole subject.
+rows, counts = [], {"landed": 0, "claimed-but-open": 0, "mentioned": 0, "absent": 0}
 for issue in issues:
     n = issue["number"]
+    closed = str(issue.get("state", "")).upper() == "CLOSED"
     hit = next((f'{h} {s}' for h, s in subjects if claims(s, n)), "")
-    if hit:
+    if hit and closed:
         state = "landed"
+    elif hit:
+        state = "claimed-but-open"
     elif any(mentions(r, n) for r in records):
         state = "mentioned"
     else:
@@ -250,13 +263,20 @@ if as_json:
     print(json.dumps({"milestone": ms, "trunk": trunk, "total": total,
                       "counts": counts, "issues": rows}, indent=2))
 else:
-    label = {"landed": "LANDED   ", "mentioned": "MENTIONED", "absent": "ABSENT   "}
+    label = {"landed": "LANDED   ", "claimed-but-open": "IN FLIGHT",
+             "mentioned": "MENTIONED", "absent": "ABSENT   "}
     for r in rows:
         print(f'  {label[r["landed_state"]]}  #{r["number"]:<5} {r["title"][:68]}')
         if r["evidence"]:
             print(f'                 └─ {r["evidence"][:88]}')
     print()
     print(f'{ms}: {counts["landed"]}/{total} landed on {trunk}')
+    if counts["claimed-but-open"]:
+        # Reported separately and NOT counted as landed. This is #332's whole point: a commit
+        # claiming an open issue is work in progress, and rolling it into "landed" is how a release
+        # that has barely started reports as finished.
+        print(f'  {counts["claimed-but-open"]} claimed by a commit but still OPEN — an epic '
+              f'mid-flight, or nobody closed it')
     if counts["mentioned"]:
         # Named explicitly. This bucket is the whole reason the report is not a binary: a commit
         # touched the issue without claiming it, which no count of "landed" can express.

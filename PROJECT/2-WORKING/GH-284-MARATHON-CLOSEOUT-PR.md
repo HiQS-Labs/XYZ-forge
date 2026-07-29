@@ -451,6 +451,37 @@ printed its own exit code into the operator's message; and the empty-milestone p
 `NoSuchMilestone: 0/0 landed on origin/main` *before* exiting 4 — a report that reads like a fact
 about a milestone that may not exist.
 
+### Phase 4 correction — the rollup over-counted (#332, 2026-07-29)
+
+A fourth defect survived into `development` and was found by reading the tool's own first real
+output: **Quicksilver reported `1/1 landed` for a release that had barely started.** Its single issue
+is #308, an OPEN multi-phase epic, and its only claiming commit was `GH-308: re-scope Phase 0/1 after
+#278 was fixed dual-lane` — planning, not delivery.
+
+The scope matcher was doing its job. It answers *"has any commit claimed this issue?"*, which is a
+different question from *"is this issue finished?"* And the script was already fetching each issue's
+`state` and **throwing it away** — the human's own act of closing an issue is the strongest available
+signal that it is done, and it was sitting unused in the JSON.
+
+Landing now requires **both** a claiming commit **and** a closed issue. A fourth bucket,
+`claimed-but-open` (rendered `IN FLIGHT`), reports the rest separately and is excluded from the
+`N/M landed` headline. Quicksilver now reads `0/1 landed` with one in flight, which is true.
+
+**Commit type is deliberately still not filtered.** #332 raised it as an open question: should
+`docs(GH-N):`/`chore(GH-N):` count as delivery at all? Rejected — it adds false negatives for
+genuinely doc-only issues, and it is the weaker of the two signals, since a human closing the issue
+outranks a commit-message prefix. The type stays visible regardless, because the evidence line prints
+the whole subject.
+
+`test/gh284-p4-release-lanes.sh` **34 pass / 4 fail against the shipped code, 38 / 0 after**, with a
+fixture carrying #308's real subject shape. Two assertions exist only to stop the *tally* from lying:
+the `IN FLIGHT` count must be named in the summary, and the four buckets must sum to the total, so a
+state cannot silently vanish from the denominator.
+
+One bug in the test itself was caught the same way: `state_of()` read the label with
+`awk '{print $1}'`, which the new two-word `IN FLIGHT` would have truncated to `IN` — and the `grep`
+feeding it would not have matched the row at all. Fixed to capture the whole label.
+
 ### Contract as shipped — Phase 4, historical
 
 > **No longer the live contract.** Retired 2026-07-29 when Phase 4 landed, for the same reason

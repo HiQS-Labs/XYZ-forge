@@ -45,6 +45,10 @@ commit "fix(GH-101): port GH-105 Phase 2 into the lane that runs"      # scope 1
 commit "Marathon: gate-and-fleet-integrity (#106)"  "Fixes described in GH-106 body only."
 commit "docs: unrelated change (#107)"                                  # bare #107 = a PR number
 # 108 is referenced nowhere at all.
+# GH-332: claimed by a commit but the issue is still OPEN. Verbatim the shape of the real case —
+# #308's only claiming commit was `GH-308: re-scope Phase 0/1 after #278 was fixed dual-lane`, i.e.
+# planning on a multi-phase epic, which the first cut counted as a full landing (`Quicksilver: 1/1`).
+commit "GH-109: re-scope Phase 0/1 after #278 was fixed dual-lane"
 
 git -C "$T" branch -M main
 TRUNK=main
@@ -79,7 +83,8 @@ cat > "$ALL_JSON" <<'EOF'
  {"number":105,"title":"mentioned inside another issue's scoped commit","state":"OPEN","url":"u/105"},
  {"number":106,"title":"fixed inside a marathon commit, claimed by nobody","state":"OPEN","url":"u/106"},
  {"number":107,"title":"shares a number with a squash-merge PR","state":"OPEN","url":"u/107"},
- {"number":108,"title":"no trunk reference at all","state":"OPEN","url":"u/108"}]
+ {"number":108,"title":"no trunk reference at all","state":"OPEN","url":"u/108"},
+ {"number":109,"title":"claimed by a commit but still OPEN (an epic mid-flight)","state":"OPEN","url":"u/109"}]
 EOF
 cat > "$OPEN_JSON" <<'EOF'
 {"number":104,"title":"only mentioned","createdAt":"2026-07-01T00:00:00Z","updatedAt":"2026-07-02T00:00:00Z","url":"u/104","labels":[]}
@@ -150,7 +155,10 @@ out="$(PATH="$STUB:$PATH" RELEASES_FILE="$REL2" bash "$LANES" rollup --trunk "$T
 
 # ── the landed matcher ──────────────────────────────────────────────────────────────────────────
 ROLL="$(lanes rollup --milestone Quicksilver --trunk "$TRUNK" 2>&1)"
-state_of() { printf '%s\n' "$ROLL" | grep -E "^ +[A-Z]+ +#$1 " | awk '{print $1}'; }
+# Capture the whole label, not the first whitespace-delimited word: GH-332 added the two-word
+# "IN FLIGHT", which an awk '{print $1}' would silently truncate to "IN" — and the grep that fed it
+# would not have matched the line at all.
+state_of() { printf '%s\n' "$ROLL" | sed -n "s/^  \([A-Z][A-Z ]*[A-Z]\) *#$1 .*/\1/p" | head -1; }
 
 [ "$(state_of 101)" = "LANDED" ] \
   && pass "a conventional scope fix(GH-101) counts as landed" \
@@ -183,6 +191,18 @@ state_of() { printf '%s\n' "$ROLL" | grep -E "^ +[A-Z]+ +#$1 " | awk '{print $1}
   && pass "an issue with no trunk reference is ABSENT" \
   || fail "108 should be ABSENT, got '$(state_of 108)'"
 
+# GH-332: the case that made Quicksilver report 1/1 when it had barely started. A commit claiming an
+# issue answers "has anyone worked on this?", not "is this finished?" — the issue's own CLOSED state
+# is the human signal, and the script was already fetching it and discarding it.
+[ "$(state_of 109)" = "IN FLIGHT" ] \
+  && pass "a commit claiming an OPEN issue is IN FLIGHT, not landed (#308's real shape)" \
+  || fail "109 should be IN FLIGHT, got '$(state_of 109)' — an open epic is being counted as landed"
+# The contrast that proves the gate is issue STATE and not something else: 101 is claimed by the same
+# kind of commit and IS counted, because it is closed.
+[ "$(state_of 101)" = "LANDED" ] && [ "$(state_of 109)" != "LANDED" ] \
+  && pass "closed+claimed lands, open+claimed does not — the discriminator is the issue state" \
+  || fail "state gating is not working: 101='$(state_of 101)' 109='$(state_of 109)'"
+
 # Prefix safety: GH-10 must not be satisfied by GH-101/102/103.
 cat > "$WORK/all-prefix.json" <<'EOF'
 [{"number":10,"title":"must not match GH-101 by prefix","state":"OPEN","url":"u/10"}]
@@ -193,9 +213,14 @@ printf '%s' "$out" | grep -qE '^ +ABSENT +#10 ' \
   || fail "prefix bleed: issue 10 matched a GH-10x commit: $out"
 
 # ── the headline and the mentioned bucket ───────────────────────────────────────────────────────
-printf '%s' "$ROLL" | grep -q "Quicksilver: 3/8 landed on $TRUNK" \
+printf '%s' "$ROLL" | grep -q "Quicksilver: 3/9 landed on $TRUNK" \
   && pass "headline reports the correct landed/total against the named trunk" \
-  || fail "expected '3/8 landed on $TRUNK': $ROLL"
+  || fail "expected '3/9 landed on $TRUNK': $ROLL"
+# The in-flight count must be named, not folded into the denominator silently. #332 shipped as a
+# confident "1/1 landed" precisely because nothing distinguished this bucket.
+printf '%s' "$ROLL" | grep -q 'claimed by a commit but still OPEN' \
+  && pass "the IN FLIGHT bucket is surfaced explicitly in the summary" \
+  || fail "in-flight count was not surfaced: $ROLL"
 printf '%s' "$ROLL" | grep -q 'mentioned on trunk but claimed by no commit' \
   && pass "the MENTIONED bucket is surfaced explicitly, not folded into a not-landed tally" \
   || fail "mentioned count was not surfaced: $ROLL"
@@ -210,10 +235,18 @@ printf '%s' "$ROLL" | grep -q '└─ .*fix(GH-101)' \
 J="$(lanes rollup --milestone Quicksilver --trunk "$TRUNK" --json 2>/dev/null)"
 got="$(J="$J" python3 -c 'import json,os
 d=json.loads(os.environ["J"])
-print(d["counts"]["landed"], d["counts"]["mentioned"], d["counts"]["absent"], d["trunk"], d["total"])')"
-[ "$got" = "3 3 2 $TRUNK 8" ] \
+c=d["counts"]
+print(c["landed"], c["claimed-but-open"], c["mentioned"], c["absent"], d["trunk"], d["total"])')"
+[ "$got" = "3 1 3 2 $TRUNK 9" ] \
   && pass "--json carries the same counts, trunk and total as the text report" \
   || fail "--json disagreed with the text report: '$got'"
+# The four buckets must account for every issue — a state that silently vanishes from the tally is
+# how an over-count hides.
+[ "$(J="$J" python3 -c 'import json,os
+d=json.loads(os.environ["J"])
+print(sum(d["counts"].values()) == d["total"])')" = "True" ] \
+  && pass "the buckets sum to the total (no issue is dropped from the tally)" \
+  || fail "counts do not sum to total: $J"
 
 # ── seed ────────────────────────────────────────────────────────────────────────────────────────
 S="$(lanes seed --milestone Quicksilver 2>/dev/null)"
