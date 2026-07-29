@@ -30,6 +30,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
+| **Phase 4 SHIPPED 2026-07-29** — `utils/release-lanes.sh` (`seed` + `rollup`), `test/gh284-p4-release-lanes.sh` 33/0, registered in `validate.sh`. The loop is now closed in both directions: a release resolves to a marathon candidate list, and what landed is computed from git ancestry. Prerequisite met the same day — Phase 2's telemetry finally executes on the default lane (#322, PR #326). | **Phase 5** (lessons rollup / cross-repo portability) and **Phase 6** (semi-automatic feedback → issue loop) remain scoped only. Phase 6 now has its sensor: P2 works and P4 can tell it what landed. |
 | **Phase 1 SHIPPED 2026-07-28 — merged to `development` via PR #316** (`243a310`). `marathon-closeout.sh` gained `--open-only` (clean-tree safe, duplicate-PR safe); `marathon.sh` gained `--closeout-pr` with closeout failure non-fatal to the marathon's exit code. Built by codex, approved by agy, `test/marathon-closeout.sh` 25/0, `test/marathon.sh` 33/0, `validate.sh` exit 0. **Verified by direct inspection of the deliverable, not the runner's summary line** — which matters, because the first fire of this very lane reported success while building nothing (#315). **Phase 6 scoped 2026-07-28** with #315 as its first specimen. | Phases 2-6 remain scoped-only and need their own contracts at promotion. Recommended order: **Phase 2 next** (run-log) — it is the sensor Phase 6 depends on, and it carries the `landed on trunk` + `driver still running` fields that would have caught all three observation defects found while shipping Phase 1. |
 
 ## Why this doc grew (read before scoping)
@@ -379,6 +380,120 @@ Step 6.5 artifact-overlap diff before trusting any wave's concurrency.
 
 Rollup direction: report `landed on trunk` counts per milestone, so "Quicksilver is 6/9 landed" is
 computed from git ancestry, not from anyone's memory.
+
+### What "landed on trunk" can actually be computed from (established 2026-07-29)
+
+The obvious source is GitHub's own PR↔issue linkage. **It does not exist in this repo.**
+`closedByPullRequestsReferences` is empty on every issue probed, open and closed alike (#308, #319,
+#292, #274, #51, #261) — issues here are closed by hand, not through a linked PR. Building the
+rollup on that field would have produced `0/N landed` for every milestone forever, and the output
+would have looked like a fact.
+
+So the ancestry evidence has to come from the commit log on trunk. Three candidate matchers were
+tested against issues of known state before choosing one:
+
+| Matcher | Verdict |
+|---|---|
+| Any `GH-N` or `#N` anywhere in a commit | **Too loose.** `#308` matched the GH-321 commit, which only *mentions* it; `#292`/`#274` matched a docs commit that merely lists them. |
+| `GH-N` anywhere in the **subject** | **Still too loose.** `#308` matched `fix(RELEASES): correct the GH-308 release codename spelling`; `#284` matched `fix(GH-322): … port GH-284 Phase 2 …`. |
+| `GH-N` as the commit's **conventional scope** — `type(GH-N…):` or a leading `GH-N` | **Chosen.** Correctly rejects both false positives above and resolves every real implementing commit (#322, #321, #292, #274, #268, #284, #312). |
+
+A bare `#N` is deliberately **not** accepted as evidence: in a subject it is the squash-merge PR
+number, a different namespace, so `#326` would "land" issue 326 by matching PR 326.
+
+**Three states, not two.** The scope matcher under-reports: #319 and #320 were genuinely fixed, but
+inside a marathon commit (`Marathon: gate-and-fleet-integrity-2026-07-27 (#318)`) whose subject
+claims no issue. Reporting those as a flat "not landed" would be the same lie in the other
+direction. The rollup therefore reports `landed` / `mentioned` / `absent`, where **`mentioned` means
+"there is trunk activity here, but nothing claims to implement it"** — the case that most needs an
+operator's eyes. Under-reporting is the safe direction and it keeps `/10days`'s "never mark done
+without evidence" guardrail intact; a silent binary would not.
+
+### As shipped — Phase 4, 2026-07-29
+
+`utils/release-lanes.sh` (Bash only, no Python twin — a new non-Tier-A script does not need a second
+copy to drift; that is the lesson of #320/#322). Two verbs:
+
+- **`seed`** — resolves a milestone (`--milestone` wins; else `--release NAME` matched against
+  `Release:`/`Codename:`; else the single **in-progress** block carrying one, with `Shipped` history
+  excluded) and emits its open issues as JSON-lines with the same six keys and the same sort as
+  `skills/10days/scan-issues.sh`. A release with a blank `Milestone:` **exits 3 with Phase 3's own
+  wording**, never an empty list — an empty list is indistinguishable from a milestone that simply
+  has no open issues, which is exactly the ambiguity the join key exists to remove.
+- **`rollup`** — classifies every issue in the milestone against the derived trunk as
+  `landed` / `mentioned` / `absent`, prints an `N/M landed on <trunk>` headline, cites the claiming
+  commit on each landed row, and names the `mentioned` bucket separately. `--json` for machines.
+
+`RELEASES.md` is parsed **directly**, not via `pdda.sh releases-current`: that command is a
+human-facing report whose formatting is free to change, and parsing a report to drive automation is
+how you get a silent break the day someone improves the wording.
+
+**Trunk is derived, and that turned out to matter more than expected.** `origin/HEAD` here resolves
+to `origin/main`, so the honest default answer for Quicksilver is **0/1 landed** — while against
+`origin/development`, where work actually lands first, it is **1/1**. Both are true; they answer
+different questions. `--trunk REF` selects, the default stays derived, and the report always prints
+which trunk it measured.
+
+**Exit codes:** 0 ok · 2 usage · 3 milestone unresolvable or `gh` unavailable/unauthenticated · 4
+the milestone is empty. Exit 4 is deliberate: `gh` returns an empty list for an unknown milestone
+just as it does for an empty one, so "nothing found" must not read as a successful selection.
+
+**Coverage:** `test/gh284-p4-release-lanes.sh`, 33 / 0, registered in `validate.sh`. Hermetic — a
+throwaway repo with crafted subjects, a stubbed `gh`, a crafted `RELEASES.md`. Two matcher cases use
+this repo's **real** false-positive subjects verbatim. The suite was **mutation-tested**: loosening
+`claims()` back to a subject-mention makes exactly the discriminating assertions fail (29/4), so the
+green run is not green by construction.
+
+Three defects were found in this implementation before it shipped, all by direct inspection rather
+than by any exit code: the rollup fed its issue JSON to a `python3` heredoc that already owned stdin
+(the same SC2259 collision that broke the P2 run log for a release); `fail()` used `"$*"` and so
+printed its own exit code into the operator's message; and the empty-milestone path rendered
+`NoSuchMilestone: 0/0 landed on origin/main` *before* exiting 4 — a report that reads like a fact
+about a milestone that may not exist.
+
+### Contract as shipped — Phase 4, historical
+
+> **No longer the live contract.** Retired 2026-07-29 when Phase 4 landed, for the same reason
+> Phases 1 and 2 renamed theirs: `swarm-preflight`'s extractor takes the FIRST
+> `/preflight\s+contract/i` heading in the doc (`utils/swarm-preflight.sh:152`), so leaving a landed
+> contract matching would resolve it and block any later phase from ever firing. Kept as the record
+> of what Phase 4 was accepted against.
+
+```json
+{
+  "target":      { "repo": ".", "ref": "development" },
+  "gate":        "bash validate.sh",
+  "fix_probes":  [
+    { "type": "path_absent", "path": "utils/release-lanes.sh" },
+    { "type": "path_absent", "path": "test/gh284-p4-release-lanes.sh" }
+  ],
+  "artifacts":   [
+    "utils/release-lanes.sh",
+    "test/gh284-p4-release-lanes.sh",
+    "validate.sh"
+  ],
+  "artifacts_new": [ "utils/release-lanes.sh", "test/gh284-p4-release-lanes.sh" ],
+  "remediation": {
+    "source":   "issue#284",
+    "criteria": "TWO verbs on ONE script, utils/release-lanes.sh, both keyed on the Phase 3 Milestone: join key. (1) SEED: `seed` resolves a milestone (explicit --milestone, else --release NAME, else the single in-progress RELEASES.md entry that carries one) and emits its OPEN issues as JSON-lines in the SAME shape as skills/10days/scan-issues.sh, so the existing scan -> verify -> contract -> plan -> preflight pipeline consumes it unchanged. A release with no Milestone: is an explicit failure, never an empty list. (2) ROLLUP: `rollup` classifies every issue in the milestone against the DERIVED trunk (origin/HEAD, never a hardcoded branch name) as landed / mentioned / absent, where landed requires a trunk commit whose CONVENTIONAL SCOPE claims the issue (`type(GH-N):` or leading `GH-N`) -- a bare `#N` is the squash-merge PR number and is not evidence -- and prints an `N/M landed` headline. An empty milestone exits NON-ZERO: 'nothing found' must not read as success. gh missing/unauthenticated exits with a named diagnostic and never emits a partial list that could be mistaken for a complete one. New test is REGISTERED in validate.sh's TESTS array."
+  },
+  "lanes":       {
+    "agy_safe":          [ "test/gh284-p4-release-lanes.sh" ],
+    "orchestrator_only": [ "bin/", ".tick/" ]
+  }
+}
+```
+
+### Phase 4 QA checklist
+
+- [ ] A release whose `Milestone:` is blank fails loudly — never an empty seed list
+- [ ] `seed` output is shape-compatible with `skills/10days/scan-issues.sh` (same keys, sorted by number)
+- [ ] A commit that merely *mentions* `GH-N` does not count as landed — demonstrated with the real
+      `fix(RELEASES): … GH-308 …` and `fix(GH-322): … GH-284 …` subjects
+- [ ] A bare `#N` in a subject never lands issue N (PR-number collision)
+- [ ] Trunk is derived, not the literal `development`
+- [ ] An empty milestone exits non-zero
+- [ ] `gh` absent → named diagnostic, non-zero, no partial output
 
 ---
 

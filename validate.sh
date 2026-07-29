@@ -110,6 +110,7 @@ TESTS=(
   "pdda-roadmap-coverage.sh"
   "pdda-repo-contract.sh"       # GH-311 (real-repository PDDA deterministic contract)
   "gh284-p3-release-milestone.sh" # GH-284 P3 (RELEASES.md Milestone: join key + the releases check's first test)
+  "gh284-p4-release-lanes.sh"   # GH-284 P4 (milestone seed + landed-on-trunk rollup: scope-claim matcher)
   "swarm-preflight.sh"
   "ci-workflow.sh"
   "xyz-completion.sh"
