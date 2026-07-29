@@ -37,6 +37,15 @@ def main():
         print("Usage: relay-automation/relay-drive.sh --relay-file PATH --agent-cmd CMD [options]")
         sys.exit(0)
 
+    # GH-322: `unknown` was captured and never read, so ANY unrecognised flag was silently
+    # discarded. Because Python is the executing lane (GH-264), that made `--log-github` — the
+    # headline feature of GH-284 Phase 2, which exists only in the Bash twin — a no-op: the marathon
+    # ran, exited 0, reported success, and never posted a run log. All three Bash twins `die
+    # "unknown argument: $1"`; this restores that contract byte-for-byte (same prefix, same exit 2).
+    # Checked AFTER --help so `--help` still works alongside a bad flag.
+    if unknown:
+        die(f"unknown argument: {unknown[0]}")
+
     if not args.relay_file:
         die("--relay-file is required")
     if not args.agent_cmd and not args.dry_run:

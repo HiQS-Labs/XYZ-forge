@@ -425,6 +425,24 @@ def main():
         print("Usage: utils/swarm-preflight.sh (--project-doc DOC | --gh-issue N [--gh-issue N ...]) [options]")
         sys.exit(0)
 
+    # GH-322: `unknown` was captured and never read, so ANY unrecognised flag was silently
+    # discarded. Because Python is the executing lane (GH-264), that made `--log-github` — the
+    # headline feature of GH-284 Phase 2, which exists only in the Bash twin — a no-op: the marathon
+    # ran, exited 0, reported success, and never posted a run log. All three Bash twins `die
+    # "unknown argument: $1"`; this restores that contract byte-for-byte (same prefix, same exit 2).
+    # Checked AFTER --help so `--help` still works alongside a bad flag.
+    if unknown:
+        # This twin's Bash `*)` case is `usage; die "unknown argument: $1"`, so print usage first.
+        # sys.stdout.flush() is load-bearing: usage goes to stdout and die() to stderr, and without
+        # the flush the two arrive out of order under a `2>&1` capture — the diagnostic would appear
+        # ABOVE the usage it is supposed to follow.
+        # The usage TEXT still differs from the Bash twin's full block (a pre-existing `--help`
+        # divergence, not introduced here); test/gh322-unknown-arg-rejection.sh therefore pins the
+        # `unknown argument:` line across both lanes rather than whole-output equality.
+        print("Usage: utils/swarm-preflight.sh (--project-doc DOC | --gh-issue N [--gh-issue N ...]) [options]")
+        sys.stdout.flush()
+        die(f"unknown argument: {unknown[0]}")
+
     if args.project_doc and args.gh_issues:
         die("--project-doc and --gh-issue are mutually exclusive; pick one input mode")
     if not args.project_doc and not args.gh_issues:

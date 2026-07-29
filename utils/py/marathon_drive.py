@@ -77,6 +77,21 @@ def main():
         print("                           Failure preserves approval, writes reason post-approve-failed, and exits 9.")
         sys.exit(0)
 
+    # GH-322: `unknown` was captured and never read, so ANY unrecognised flag was silently
+    # discarded. Because Python is the executing lane (GH-264), that made `--log-github` — the
+    # headline feature of GH-284 Phase 2, which exists only in the Bash twin — a no-op: the marathon
+    # ran, exited 0, reported success, and never posted a run log. All three Bash twins `die
+    # "unknown argument: $1"`; this restores that contract byte-for-byte (same prefix, same exit 2).
+    # Checked AFTER --help so `--help` still works alongside a bad flag.
+    if unknown:
+        # --log-github is the specific case that motivated this: it exists in the Bash twin only, so
+        # name the workaround rather than leaving the operator with a bare "unknown argument".
+        if "--log-github" in unknown:
+            die("--log-github is not implemented in the Python lane (utils/py/marathon_drive.py); "
+                "the run log lives only in the Bash twin. Re-run with XYZ_PYTHON=0, or see issue #322 "
+                "for the port. Refusing rather than silently ignoring the flag.")
+        die(f"unknown argument: {unknown[0]}")
+
     if not args.phase_brief_file:
         eprint("Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [options]")
         die("--phase-brief FILE required")
