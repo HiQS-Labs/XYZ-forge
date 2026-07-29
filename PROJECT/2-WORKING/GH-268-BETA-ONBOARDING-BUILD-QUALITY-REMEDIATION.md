@@ -2,9 +2,9 @@
 gh_issue: 268
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/268
 title: "Beta onboarding & build-quality test report — remediation plan (re: #123)"
-status: "plan drafted 2026-07-22, pending /relay-xyz QA + preflight — no phase fired yet"
+status: "Phases 3 and 4 SHIPPED 2026-07-28 (items 7, 8, 9). Phases 1-2 (onboarding) still open. The cross-model re-test RAN and returned 6 real findings across two vendors with ZERO overlap — written back below."
 created: 2026-07-22
-updated: 2026-07-22
+updated: 2026-07-28
 owner: noel
 doc_type: project
 reversibility: "Easy — every phase's fixes are additive doc/script/gate changes with normal git history (README reordering, installer scripts, a gate-wiring script, a manual re-test); nothing here is a one-way door and all of it reverts with git revert."
@@ -139,6 +139,32 @@ diff itself.
       mechanically catch several of these; and consider prompting the reviewer to sweep the touched
       file, not just the diff, as a cheaper first step before full linter wiring.
 
+### Phase 3 — as shipped, 2026-07-28
+
+- [x] **Relay handoff cue** — step 7 of the turn template, in **both** paths a repo can meet a relay
+      through (`relay-automation/new-relay.sh` and the marathon template in
+      `utils/py/marathon_drive.py`) and in **both** turn blocks. The report's complaint was that the
+      *Reviewer* turn failed to cue, so a builder-only fix would have missed the reported case.
+- [x] **Target-repo checks wired into the gate** — `relay-automation/target-checks.sh` detects and
+      runs a foreign repo's own checks (`php -l`, phpcs incl. the WordPress ruleset by name when a
+      wpcs dep is present, npm lint/test, pytest, ruff, make test, validate.sh).
+      `utils/py/marathon_drive.py` uses it automatically when `--target-root` is set, no explicit
+      `--pre-advance-cmd` was given, and the target has no `validate.sh` — the case that previously
+      died "pre-advance gate not runnable" (GH-238) and left a cross-repo lane **with no gate at all**.
+- [x] **Reviewer file-sweep prompt** — pre-existing defects in a touched file are declared IN SCOPE,
+      and the reviewer must emit a literal `swept file: yes|no` line. This is the checklist's
+      "diagnosable" requirement: a prompt to look harder is unfalsifiable, a required declaration is
+      not.
+- [x] **Tests run** — `test/gh268-relay-cue-and-target-checks.sh`, 34 pass / 0 fail; observed
+      **1 pass / 18 fail** against pre-change code.
+
+**Honest limit, and it matters:** `php -l` catches parse errors only. PHPCS-WordPress may flag raw
+input, nonce, sanitization and SQL patterns, but **cannot** establish that a shortcode writing order
+records requires a capability check, and cannot prove refund behaviour. **Neither of the report's two
+named defects is mechanically guaranteed by this gate.** The report's "would mechanically catch
+several of these" is true of *several*, not of the critical two. Stated here rather than left to be
+inferred.
+
 ### Phase 3 — QA checklist
 - [ ] Every todo above produced its checkable output: handoff-cue reinforcement in the relay template, and the gate seam's target-repo-check capability, each with a worked example (PHP/PHPCS).
 - [ ] Tests written **and run** — at least one relay driven end-to-end with `--pre-advance-cmd` pointed at a real lint/security command, with the pass/fail output attached.
@@ -164,6 +190,53 @@ tests cluster around this lane's driver scripts... until #232 is closed" made se
 - [ ] Record the result back into this doc (pass/fail, and any new friction found) — this is a
       re-test gate, its findings must be written back before the phase can be called done, per this
       repo's own PDDA discovery-phase convention.
+
+### Phase 4 — RESULT, written back 2026-07-28
+
+**The re-test ran.** Both CLIs live and authenticated. One Consult (Codex) and one cross-vendor
+Relay (agy as Reviewer, Claude as Producer), both against the Phase 3 change itself.
+
+**Verdict on the multi-model claim: SUPPORTED, and more strongly than expected.**
+
+Two vendors reviewed the same 341-line diff. **Their findings did not overlap once.**
+
+| Vendor | Found |
+|---|---|
+| **Codex** (Consult) | `[Blocker]` a `--target-root` that HAS its own `validate.sh` was gated on the **harness's** copy — a foreign repo verified by the wrong repo's tests. `[Blocker]` `vendor/bin/phpcs` — how WordPress plugins actually install PHPCS — was skipped as "not installed", so `php -l` alone passed the gate and the security ruleset never ran. Plus the overclaim above. |
+| **agy** (Relay) | `[Blocker]` the tool-path substitution mangled any command whose tool is not the leading word (`/vendor/bin/phpfind . -name ...`). `[Blocker]` `xargs` without `-r`: **GNU runs the command once on empty input**, so `php -l` reads stdin and **hangs the lane indefinitely** — on ubuntu CI, invisible on macOS. `[Should]` `bash -c` does not inherit `pipefail`, so a failing `find` is masked by a passing `xargs`. |
+
+Five of six were implemented. Two were declined with evidence:
+
+- agy's `[Blocker]` that the consult-mode template tells the Producer to edit a read-only `.diff` is
+  a **false positive**: `grep -n is_consult utils/py/marathon_drive.py` returns nothing, and the
+  cited lines are `--artifact` (marathon-drive's *writable* source paths), not `--artifact-file`
+  (relay-drive's read-only seed). Two similarly-named flags on two different scripts were conflated.
+- agy's re-raise of "a skipped check still yields a green gate" was declined **as stated** — the
+  blanket "exit 1 on any skip" would break the documented lenient mode. The load-bearing case is
+  where nobody *chose* the gate, and there the harness already passes `--strict`.
+
+**Friction found, with exact commands** (the checklist requires this, not a summary):
+
+1. `agy -p exceeded 300s wall-clock cap — killed`, `relay-drive: RELAY_EXIT=7`, on a shim documenting
+   **900s**. Cause: `utils/py/agy-turn.py` — the executing lane since GH-264 — defaulted to 300 while
+   `relay-automation/agy-turn.sh` defaulted to 900. Filed and fixed as
+   [#320](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/320); `codex-turn`
+   (900↔300) and `claude-turn` (600↔300) had the same split. **A tester hitting this would read it as
+   a hung model, retry, and burn another turn at the same wrong cap.**
+2. The Consult emitted `consult: NO FIRSTHAND VERIFICATION CITED for: codex` — the harness's own
+   citation guard firing on an answer that *did* carry `file:line` citations. Not blocking (the
+   findings were real and verifiable), but the guard's heuristic is worth revisiting.
+
+**What this says about the original test.** The tester's inference — that Claude-reviewing-Claude
+"shares blind spots" and was "the likely reason 1 of 9 pre-existing defects surfaced" — is supported.
+The zero-overlap result is the evidence. Note especially that the `xargs` hang is a defect this
+machine's OS **cannot** surface: BSD `xargs` does not run on empty input, GNU does. A second vendor
+found a CI-only failure mode on a developer machine that could never reproduce it.
+
+**Transcripts (the execution artifact this phase requires):**
+- Relay: `relay-system/2026-07-28/gh268-item9-crossvendor-retest.md` (full thread, both turns)
+- Consult: run 2026-07-28, model `gpt-5.6-terra` via `relay-automation/consult.sh --models codex`;
+  findings quoted verbatim in the relay thread's Definition of Done.
 
 ### Phase 4 — QA checklist
 - [ ] Every todo above produced its checkable output: authenticated CLIs, a completed cross-vendor relay round-trip, and findings written back — no orphan tasks.

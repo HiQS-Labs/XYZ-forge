@@ -325,7 +325,44 @@ def main():
     # the gate returned 0 in 0.0s. Every phase of a 4-lane marathon reported "gate passed" while
     # validate.sh was in fact RED. shlex.quote is the fix; the preflight below already knew to strip
     # quotes off the script arg, it was just never given a quoted default to strip.
-    pre_advance_cmd = args.pre_advance_cmd or f"bash {shlex.quote(os.path.join(root, 'validate.sh'))}"
+    # GH-268 item 8: a cross-repo lane had NO GATE. The default gate is this repo's validate.sh, and
+    # a foreign --target-root usually has none, so GH-238's runnability preflight refused the whole
+    # lane ("script file does not exist") — leaving the operator to either pass an explicit
+    # --pre-advance-cmd or run ungated. The beta report is what that costs: a Producer/Reviewer loop
+    # reached "Approved" while an independent audit of the same branch found 20 issues (1 critical,
+    # 4 high) in the file the relay built on. relay-automation/target-checks.sh knows how to ask a
+    # foreign repo for its OWN checks (php -l, phpcs, npm lint/test, pytest, ruff, make test), so a
+    # cross-repo lane gets a real gate by default instead of no gate. An explicit --pre-advance-cmd
+    # always wins.
+    #
+    # Codex cross-vendor consult (GH-268 item 9) found the first draft claimed "a target that HAS its
+    # own validate.sh keeps using it" while the code did the opposite — that case fell to the else
+    # branch and ran the HARNESS's validate.sh against a foreign repo. Both branches below now use
+    # the target's own path when --target-root is set.
+    #
+    # target_root is absolutised first: run_pre_advance_gate() executes with cwd=target_root, so a
+    # RELATIVE --target-root would be resolved twice — once to set cwd, then again from inside it.
+    _target_root = os.path.abspath(args.target_root) if args.target_root else None
+    if args.pre_advance_cmd:
+        pre_advance_cmd = args.pre_advance_cmd
+    elif _target_root and os.path.isfile(os.path.join(_target_root, "validate.sh")):
+        pre_advance_cmd = f"bash {shlex.quote(os.path.join(_target_root, 'validate.sh'))}"
+        log(f"--target-root has its own validate.sh — gating on it: {pre_advance_cmd}")
+    elif _target_root:
+        _tc = os.path.join(os.environ.get("XYZ_ROOT", root), "relay-automation", "target-checks.sh")
+        if not os.path.isfile(_tc):
+            die(f"--target-root has no validate.sh and target-checks.sh is missing at {_tc}. "
+                f"Pass --pre-advance-cmd explicitly rather than running this lane ungated.")
+        # --strict: a DETECTED tool that is missing fails the gate instead of silently reducing
+        # coverage. Codex's consult named the case — phpcs detected, absent, php -l passes, exit 0
+        # "because one check ran" — so the WordPress-security ruleset never runs and the lane still
+        # reads green. Strict only here, where the harness CHOSE this gate: an operator who passes
+        # --pre-advance-cmd by hand keeps the lenient default and can decide for themselves.
+        pre_advance_cmd = f"bash {shlex.quote(_tc)} run --strict --root {shlex.quote(_target_root)}"
+        log(f"--target-root has no validate.sh — gating on the target's own checks: {pre_advance_cmd}")
+        log("  (--strict: a detected-but-missing tool FAILS rather than silently narrowing the gate;\n   exits 3 when it detects nothing, so 'no checks found' fails rather than passes)")
+    else:
+        pre_advance_cmd = f"bash {shlex.quote(os.path.join(root, 'validate.sh'))}"
     relay_task = args.relay_task or f"MARATHON-{args.phase_id.upper()}-TURN"
     # GH-207: a marathon lane namespaces its phase paths + attempt state so two lanes sharing a bare
     # phase id (p1) don't collide. Defaults to the phase id when no lane namespace is set.
@@ -656,7 +693,16 @@ relay-file: {rel_relay}
         claim_paths = f"{rel_relay},{args.artifact_paths}"
         builder_impl_line = f"Implement the brief by creating/editing the artifact file(s): {args.artifact_paths}"
         builder_scope_line = f"Edit ONLY these paths: {rel_relay} and {args.artifact_paths}. Do NOT run git. Do NOT touch any other file — the harness commits for you."
-        reviewer_read_line = f"Read the latest builder block above AND review the artifact file(s) on disk: {args.artifact_paths}."
+        reviewer_read_line = (
+            f"Read the latest builder block above AND review the artifact file(s) on disk: {args.artifact_paths}. "
+            "REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two "
+            "rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of "
+            "them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you "
+            "are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review "
+            "block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a "
+            "reviewer that skipped the sweep is indistinguishable in the transcript from one that did "
+            "it and found nothing, which is exactly how those 20 issues stayed invisible."
+        )
         reviewer_scope_line = f"Edit ONLY {rel_relay} (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git."
     else:
         claim_paths = rel_relay
@@ -687,6 +733,10 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
    - {tick_cli} ping {relay_task} --agent {args.builder}
    - {tick_cli} release {relay_task} --agent {args.builder} --to {args.reviewer}
 4. {builder_scope_line}
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to {args.reviewer} — {args.reviewer}, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first.
 
 ---
 
@@ -698,6 +748,10 @@ You are the REVIEWER for this phase. {reviewer_read_line}
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: {tick_cli} done {relay_task} --agent {args.reviewer}
 4. Use this exact tick binary (run it from any directory) for all token operations: {tick_cli}
    {reviewer_scope_line}
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to {args.builder} —
+   {args.builder}, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
 """
 
     with open(relay_file, 'w') as f:
