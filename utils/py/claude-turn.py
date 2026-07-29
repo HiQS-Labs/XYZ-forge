@@ -53,6 +53,13 @@ def main():
     rtl = RelayTurnLib(root, xyz_root, f, allow_paths)
     
     prompt = rtl.turn_prompt(me, t, peer)
+    # GH-308 port (GH-68): prepend any UNREAD peer dependency-drift notice to the turn brief, mirroring
+    # claude-turn.sh's `rtl_drift_brief`. claude-turn.py was the ONLY Python turn shim missing this —
+    # codex/pi/agy/aider all call it — so on the default lane the Claude builder silently lost the
+    # "a peer changed a shared surface since your last turn" heads-up.
+    drift_brief = rtl.drift_brief(me, tick_repo_root)
+    if drift_brief:
+        prompt = drift_brief + "\n" + prompt
     tick_repo_root, tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "claude-turn")
     
     claude_log = os.environ.get("CLAUDE_LOG", os.path.join(tempfile.gettempdir(), f"claude-turn-{os.getpid()}.json"))

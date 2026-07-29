@@ -6,7 +6,7 @@ import tempfile
 import subprocess
 import shlex
 import time
-from rtl import RelayTurnLib, claim_paths_for_turn, claim_task_or_exit, rtl_default_log
+from rtl import RelayTurnLib, claim_paths_for_turn, claim_task_or_exit, rtl_default_log, resolve_turn_root
 
 def die(msg):
     print(f"aider-turn: {msg}", file=sys.stderr)
@@ -42,7 +42,11 @@ def relay_sig(root, path):
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    root = os.environ.get("AIDER_TURN_ROOT", xyz_root)
+    # GH-308 port (GH-296): fall back to the CWD's git toplevel (not xyz_root) when AIDER_TURN_ROOT is
+    # unset, matching aider-turn.sh and agy-turn.py's resolve_turn_root. Rooting worktree isolation and
+    # artifact copy-back at xyz_root (the shim's own checkout) instead of the operator's target repo was
+    # a silent divergence on the default lane for a non-vendored run.
+    root = resolve_turn_root(os.environ.get("AIDER_TURN_ROOT"), xyz_root)
     aider_bin = os.environ.get("AIDER_BIN", "aider")
     # GH-147 Phase 2 (LM_STUDIO lane): mirrors relay-automation/aider-turn.sh — AIDER_OPENAI_API_BASE
     # set selects the LM Studio / OpenAI-compatible seam (default model openai/agents-a1); unset keeps

@@ -5,7 +5,7 @@ import json
 import os
 import sys
 import subprocess
-from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log
+from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
 
 def die(msg):
     print(f"pi-turn: {msg}", file=sys.stderr)
@@ -41,7 +41,11 @@ def parse_pi_usage(log_path):
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-    root = os.environ.get("PI_TURN_ROOT", xyz_root)
+    # GH-308 port (GH-296): fall back to the CWD's git toplevel (not xyz_root) when PI_TURN_ROOT is
+    # unset, matching pi-turn.sh and codex/claude-turn.py. pi has no native sandbox — its containment
+    # relies entirely on worktree isolation, so mis-rooting the worktree at the harness's own dir
+    # undermined the only containment layer on a non-vendored external run.
+    root = resolve_turn_root(os.environ.get("PI_TURN_ROOT"), xyz_root)
     pi_bin = os.environ.get("PI_BIN", "pi")
     pi_provider = os.environ.get("PI_PROVIDER", "openrouter")
 

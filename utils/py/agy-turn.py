@@ -173,7 +173,12 @@ def main():
     wt = ""
     run_cwd = root
     run_env = dict(os.environ)
-    
+    # GH-308 port: the Bash twin does `: "${TICK_REPO_ROOT:=$ROOT}"; export TICK_REPO_ROOT` at the top,
+    # so the agy child (which runs `tick` mid-turn) ALWAYS inherits TICK_REPO_ROOT=root. Python only set
+    # it inside the worktree-isolation branch, so on the default non-worktree lane a cross-repo run
+    # (AGY_TURN_ROOT != CWD) left agy's mid-turn `tick` resolving against its CWD instead of the target.
+    run_env["TICK_REPO_ROOT"] = tick_repo_root
+
     if os.environ.get("RELAY_WORKTREE_ISOLATION", "0") == "1":
         wt = rtl.worktree_begin()
         if wt:

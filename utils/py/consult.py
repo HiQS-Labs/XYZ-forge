@@ -147,6 +147,51 @@ def aider_answer_ok(out_path):
         return False
     return True
 
+def consult_codex_attestation(out_path):
+    # GH-308 port (consult.sh run_codex): prepend an ATTESTATION provenance header (which
+    # model/provider/sandbox actually answered), parsed from the codex output. This lived only in the
+    # Bash twin, so every codex transcript on the default lane silently lost the provenance stamp.
+    if not os.path.isfile(out_path):
+        return
+    model = provider = sandbox = "unknown"
+    try:
+        with open(out_path, "r", errors="replace") as f:
+            for line in f:
+                if model == "unknown" and line.startswith("model:"):
+                    model = line[len("model:"):].strip() or "unknown"
+                elif provider == "unknown" and line.startswith("provider:"):
+                    provider = line[len("provider:"):].strip() or "unknown"
+                elif sandbox == "unknown" and line.startswith("sandbox:"):
+                    sandbox = line[len("sandbox:"):].strip() or "unknown"
+    except OSError:
+        return
+    header = f"> **ATTESTATION**\n> Model: {model}\n> Provider: {provider}\n> Sandbox: {sandbox}\n\n"
+    try:
+        with open(out_path, "r", errors="replace") as f:
+            body = f.read()
+        with open(out_path, "w") as f:
+            f.write(header + body)
+    except OSError:
+        pass
+
+def consult_agy_isolation_breach(out_path, root):
+    # GH-308 port (GH-178 B1, consult.sh run_agy): True if the agy transcript cited the real repo root
+    # (grounding escaped the isolation worktree), after filtering the GH-183/187 false-positive shapes
+    # (tick-command narration, markdown file:// citations). Missing on the Python lane, so a real agy
+    # grounding-escape was counted as a clean cross-model answer instead of failing the advisor.
+    try:
+        with open(out_path, "r", errors="replace") as f:
+            for line in f:
+                if line.startswith("[trace] "):
+                    continue
+                if "TICK_REPO_ROOT=" in line or "file://" in line or "](" in line:
+                    continue
+                if root in line:
+                    return True
+    except OSError:
+        pass
+    return False
+
 def guarded_with_timeout(cmd, cwd, log_file, timeout_s, env=None):
     try:
         with open(log_file, "w") as f:
@@ -364,7 +409,27 @@ def main():
             try:
                 rem = max(0, timeout_s - (time.time() - start_time))
                 proc.wait(timeout=rem)
-                if proc.returncode == 0 and (m != "aider" or aider_answer_ok(out)):
+
+                # GH-308 port (consult.sh run_codex): stamp the codex transcript with its provenance
+                # ATTESTATION header (whether the run succeeded or not, mirroring the Bash `[[ -f ]]` guard).
+                if m == "codex":
+                    consult_codex_attestation(out)
+
+                # GH-308 port (GH-178 B1, consult.sh run_agy): a successful agy run whose transcript cited
+                # the real repo root escaped its isolation worktree — fail the advisor (Bash `return 5`)
+                # rather than count a silent grounding breach as a clean answer.
+                breached = False
+                if m == "agy" and proc.returncode == 0 and os.path.isfile(out) and os.path.getsize(out) > 0:
+                    if consult_agy_isolation_breach(out, root):
+                        with open(out, "a") as f:
+                            f.write(f"\nconsult: [FAIL] agy transcript cited the real repo root ({root}) instead of the isolation worktree. This is a known agy isolation breach (grounding escaped $WT). Failing the turn to prevent a silent breach.\n")
+                        breached = True
+
+                if breached:
+                    failed += 1
+                    summary += f"\n  [FAIL] {m} -> {out} (see transcript for error)"
+                    results.append((m, out, False))
+                elif proc.returncode == 0 and (m != "aider" or aider_answer_ok(out)):
                     answered += 1
                     summary += f"\n  [ok]   {m} -> {out}"
                     survivor_model = m

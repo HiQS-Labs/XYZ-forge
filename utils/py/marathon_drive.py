@@ -641,16 +641,50 @@ def main():
             log(f"posted GitHub run-log comment on issue #{issue}" if ok
                 else "GitHub run-log post failed — local telemetry only")
 
+    def xyz_marathon_cost_summary():
+        # GH-331 (mirrors marathon-drive.sh GH-222 / relay-drive.sh GH-152): auto-surface the
+        # `tick analyze` cost block at end-of-run. This lived only in the Bash twin, so on the default
+        # Python lane (GH-264) it never ran. Worse than relay-drive: marathon tells its nested
+        # relay-drive child RELAY_COST_SUMMARY=0 (see _run_relay_drive), so with the parent's own
+        # summary also absent a driven phase had ZERO end-of-run cost visibility. Only fires once a
+        # phase was really being driven (drive_started — never on --help/usage/lock-contention/
+        # lane-parked/--dry-run exits), opts out with MARATHON_COST_SUMMARY=0, and swallows a
+        # failed/forced `tick analyze` so it can NEVER change the driven run's own exit code.
+        if not drive_started[0]:
+            return
+        if get_env("MARATHON_COST_SUMMARY", "1") == "0":
+            return
+        try:
+            report = subprocess.check_output([tick_bin, "analyze", "--format", "human"],
+                                             stderr=subprocess.DEVNULL).decode("utf-8")
+        except Exception:
+            log("tick analyze failed — end-of-run cost summary unavailable (MARATHON_COST_SUMMARY=0 to silence)")
+            return
+        block_lines = []
+        capturing = False
+        for ln in report.splitlines():
+            if ln == "--- cost ---":
+                capturing = True
+            if capturing:
+                block_lines.append(ln)
+        if not block_lines:
+            return
+        print("\nmarathon-drive: end-of-run cost summary (tick analyze) —\n" + "\n".join(block_lines))
+
     def _marathon_drive_on_exit(code):
         # Same order as the Bash EXIT trap: log first (so the run log can still read a live
-        # heartbeat), then stop the heartbeat. Each half is independently guarded — external
-        # reporting must never be able to change the driven run's exit code.
+        # heartbeat), then stop the heartbeat, then the cost summary. Each part is independently
+        # guarded — external reporting/telemetry must never be able to change the driven run's exit code.
         try:
             marathon_run_github_log(code)
         except Exception as exc:
             log(f"GitHub run log raised ({exc.__class__.__name__}) — local telemetry only")
         try:
             driver_heartbeat_stop()
+        except Exception:
+            pass
+        try:
+            xyz_marathon_cost_summary()
         except Exception:
             pass
 

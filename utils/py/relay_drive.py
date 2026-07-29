@@ -63,6 +63,39 @@ def main():
     consult_sh = get_env("CONSULT_SH", os.path.join(root_dir, "relay-automation", "consult.sh"))
     xyz_append_bin = get_env("XYZ_APPEND_BIN", os.path.join(root_dir, "utils", "telemetry", "append-xyz-completion.sh"))
 
+    # GH-331 (mirrors relay-drive.sh GH-152): auto-surface the `tick analyze` cost block at end-of-run
+    # so a driven run stops needing a manual `tick analyze` pull to see what it cost. This lived only in
+    # the Bash twin, so on the default Python lane (GH-264) it never ran — zero end-of-run cost
+    # visibility. Only fires once a turn was actually about to be driven (cost_summary_state["started"]
+    # — never on --help/usage/lock-contention/lane-parked/--dry-run exits), opts out with
+    # RELAY_COST_SUMMARY=0, and is best-effort: a failed/forced `tick analyze` is swallowed so it can
+    # NEVER change the driven run's own exit code (wired into the same atexit as the lock cleanup;
+    # atexit does not alter the process exit status).
+    cost_summary_state = {"started": False}
+
+    def xyz_relay_cost_summary():
+        if not cost_summary_state["started"]:
+            return
+        if get_env("RELAY_COST_SUMMARY", "1") == "0":
+            return
+        try:
+            report = subprocess.check_output([tick_bin, "analyze", "--format", "human"],
+                                             stderr=subprocess.DEVNULL).decode("utf-8")
+        except Exception:
+            eprint("relay-drive: tick analyze failed — end-of-run cost summary unavailable (RELAY_COST_SUMMARY=0 to silence)")
+            return
+        # Extract from the '--- cost ---' line to EOF (matches `sed -n '/^--- cost ---$/,$p'`).
+        block_lines = []
+        capturing = False
+        for ln in report.splitlines():
+            if ln == "--- cost ---":
+                capturing = True
+            if capturing:
+                block_lines.append(ln)
+        if not block_lines:
+            return
+        eprint("\nrelay-drive: end-of-run cost summary (tick analyze) —\n" + "\n".join(block_lines))
+
     if args.target_root:
         try:
             subprocess.run(["git", "-C", args.target_root, "rev-parse", "--show-toplevel"], 
@@ -86,6 +119,24 @@ def main():
     # rationale). Mirrors the artifact_file absolutization below.
     if not relay_file.startswith("/"):
         relay_file = os.path.abspath(relay_file)
+
+    # GH-289: a review turn (ALLOW_PATHS="") can only write the relay file; the same isolation-root
+    # mismatch discards a BUILD turn's Log after full cost. Under --target-root the turn's worktree is
+    # based on the TARGET repo, so if the relay file resolves OUTSIDE that target root the turn
+    # physically cannot append its findings (codex rejects the out-of-project write). Refuse fast at
+    # startup instead of spending the turn — this guard lived only in the Bash twin, so on the default
+    # Python lane the build turn ran and discarded its Log after full cost (see relay-drive.sh:275).
+    # Fires for build turns AND --review-once (kind flips the diagnostic), before the lane-attempt gate.
+    if args.target_root:
+        tr = os.path.realpath(args.target_root) if os.path.isdir(args.target_root) else ""
+        rf = os.path.join(os.path.realpath(os.path.dirname(relay_file)), os.path.basename(relay_file))
+        if tr and rf != tr and not rf.startswith(tr + os.sep):
+            turn_kind = "review" if args.review_once else "build"
+            die(f"--target-root {turn_kind} turn cannot report: relay file '{relay_file}' resolves "
+                f"outside the target root '{args.target_root}', so a {turn_kind} turn (ALLOW_PATHS=\"\") "
+                "has no writable path for its findings and the turn would be discarded after full cost. "
+                f"Vendor the harness into the target repo (relay-automation/xyz-vendor.sh '{args.target_root}') "
+                "and drop --target-root, or move the relay thread under the target root.")
 
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
@@ -373,11 +424,16 @@ def main():
             f.write(str(os.getpid()) + "\n")
         
         os.environ["RELAY_DRIVER_LOCKED"] = "1"
-        def cleanup_lock():
+        # GH-331: the cost summary is wired into the SAME atexit as the lock cleanup (the one place
+        # every exit path funnels through), mirroring relay-drive.sh's GH-152 EXIT trap. The summary
+        # runs FIRST, then the lock is removed. Skipped entirely when nested (RELAY_DRIVER_LOCKED=1):
+        # the outer driver owns this exit hook, exactly as the Bash trap is only armed by the lock owner.
+        def _relay_drive_on_exit():
+            xyz_relay_cost_summary()
             try: shutil.rmtree(lock_dir)
             except: pass
         import atexit
-        atexit.register(cleanup_lock)
+        atexit.register(_relay_drive_on_exit)
 
     round_idx = 0
     while round_idx < args.round_cap:
@@ -411,6 +467,7 @@ def main():
             print(f"relay-drive: WOULD drive turn for agent: {actor} (token {tstatus}, STATUS: {s})")
             sys.exit(0)
 
+        cost_summary_state["started"] = True   # GH-331: past here a turn is really being driven — arm the summary
         prev = f"{tstatus}:{actor}"
         rfsig = relay_content_sig()   # GH-245: relay-file content signature BEFORE the turn
         nextp = next_pointer()        # GH-245: NEXT: handoff pointer BEFORE the turn

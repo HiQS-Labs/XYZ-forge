@@ -11,6 +11,49 @@ def die(msg):
     print(f"poll: {msg}", file=sys.stderr)
     sys.exit(2)
 
+def usage():
+    # GH-308 port: --help was Bash-only, so on the default Python lane `poll.sh --help` hit the
+    # unknown-flag path and exited 2 with no usage. Mirror poll.sh's usage() text.
+    print("""Usage: relay-automation/poll.sh --mode <xyz|relay> --agent <id> [options]
+
+Common:
+  --mode xyz|relay        Which runnable adapter to use (required).
+  --agent ID              This poller's agent id (required).
+  --dry-run               Print the DECISION; do not dispatch.
+  --analysis-file PATH    JSON `tick analyze` output (else runs `tick analyze --format json`).
+  --watchdog-authority    This poller may run the watchdog path (designate exactly one).
+  --deadline EPOCH        Self-expire: emit DECISION: stop once now >= EPOCH (unix seconds).
+                          The /loop then CronDeletes itself (see relay skill "Self-closing loops").
+  --emit-delay            Also print a "DELAY: <seconds> (<reason>)" line — a suggested
+                          next-poll delay derived from the DECISION, for /loop dynamic
+                          (self-paced) mode. Additive; the DECISION line is unchanged.
+                          Tune via POLL_DELAY_{NUDGE,WAIT_COMMIT,DIRTY,IDLE}. Clamped so
+                          the next wake never overshoots --deadline.
+  --runner-cmd CMD        Command run for a runnable turn (default: <root>/relay-automation/runner.sh).
+  --watchdog-cmd CMD      Command run for a parked suspect (default: <root>/relay-automation/watchdog.sh).
+  --help
+
+relay mode (whose-turn = the RELAY-TURN tick task; STATUS read from the file):
+  --relay-file PATH       Relay thread file (reads STATUS: for the terminal signal).
+  --relay-task ID         The relay turn-token task (default: RELAY-TURN).
+  --artifact PATH         Artifact under review (clean-tree scope; with the relay file).
+  --claude-agents "a,b"   Agents that are Claude (can self-poll); a turn handed
+                          to a non-Claude agent -> cross-model nudge.
+  --turn-source tick|file Where whose-turn comes from (default: tick).
+                          file = read the relay file's NEXT: field; the tick token is
+                          OPTIONAL (no claim/heartbeat needed). Use when a peer won't
+                          join tick, or to avoid the spent-token / parked-stall failure.
+                          STATUS: (terminal) + artifact-scope-clean still apply.
+  --peer-commit-repo DIR  (file source) Also require a matching commit in DIR before
+  --peer-commit-match RE   run-runner — the "advance on the peer's fix commit" signal.
+                          Until a recent commit subject matches RE, the decision is idle
+                          ("waiting for peer commit"). Both flags required to arm.
+
+xyz mode:
+  --task TASK-ID          The task whose turn this is (my-turn + scope from `tick info`).
+
+Exit codes: 0 = acted/idle, 10 = stop (relay closed), 2 = usage error.""")
+
 def parked_count(tick_bin, analysis_file):
     if analysis_file:
         if not os.path.exists(analysis_file):
@@ -139,16 +182,34 @@ def main():
         elif arg == "--peer-commit-repo" and i+1 < len(args): peer_commit_repo = args[i+1]; i+=2
         elif arg == "--peer-commit-match" and i+1 < len(args): peer_commit_match = args[i+1]; i+=2
         elif arg == "--emit-delay": emit_delay = True; i+=1
-        elif arg.startswith("-"): die(f"Unknown flag: {arg}")
-        else: i+=1
+        elif arg == "--help": usage(); sys.exit(0)
+        # GH-308 port: the Bash twin's `*) die "unknown argument: $1"` rejects ANY unrecognized token
+        # (stray flag OR stray positional). Python silently skipped positionals (`else: i+=1`) and used
+        # a different message for flags, so a typo'd argument was accepted and ignored on the live lane.
+        else: die(f"unknown argument: {arg}")
 
-    if not agent: die("--agent is required")
-    if not mode: die("one of --mode relay or --mode xyz is required")
-    
+    # GH-308 port: mirror poll.sh's validation block (order + messages). --mode must be xyz|relay,
+    # --turn-source must be tick|file, and file source only makes sense in relay mode. Python previously
+    # only checked `not mode`, so an invalid --mode fell through to the xyz branch and any non-"file"
+    # --turn-source was silently treated as tick — guards that only ran on the frozen Bash lane.
+    if mode not in ("xyz", "relay"):
+        usage()
+        sys.stdout.flush()
+        die("--mode xyz|relay is required")
+    if turn_source not in ("tick", "file"):
+        die("--turn-source must be tick|file")
+    if turn_source == "file" and mode != "relay":
+        die("--turn-source file requires --mode relay")
+    if not agent:
+        die("--agent is required")
+
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     tick_repo_root = resolve_tick_repo_root(xyz_root)
     tick_bin = resolve_tick_bin(tick_repo_root, xyz_root) or os.environ.get("TICK_BIN", "tick")
-    git_root = os.environ.get("POLL_GIT_ROOT", os.environ.get("GIT_ROOT", "."))
+    # GH-308 port: the clean-tree scope base defaults to the harness repo root (poll.sh: `GIT_ROOT=
+    # "${POLL_GIT_ROOT:-$ROOT_DIR}"`), NOT the CWD. Python defaulted to "." (and read a Bash-absent
+    # GIT_ROOT env), so with POLL_GIT_ROOT unset the scope-clean check ran against the wrong tree.
+    git_root = os.environ.get("POLL_GIT_ROOT", xyz_root)
     deadline = int(deadline_str) if deadline_str else 0
 
     poll_delay_idle = int(os.environ.get("POLL_DELAY_IDLE", 300))
@@ -160,9 +221,14 @@ def main():
         runner_cmd = os.environ.get("RUNNER_CMD", run_cmd_env)
         if not runner_cmd:
             runner_cmd = os.path.join(xyz_root, "relay-automation", "runner.sh")
+    # GH-308 port: default the watchdog path to <root>/relay-automation/watchdog.sh, mirroring
+    # poll.sh (`WATCHDOG_CMD="${WATCHDOG_CMD:-"$ROOT_DIR/relay-automation/watchdog.sh"}"`). Python left
+    # it "", so `run_cmd("")` was a no-op — a `run-watchdog` decision dispatched nothing and the
+    # parked-suspect escalation path was silently dead on the default lane.
     if not watchdog_cmd:
-        watchdog_cmd = os.environ.get("WATCHDOG_CMD", "")
-        
+        watchdog_cmd = os.path.join(xyz_root, "relay-automation", "watchdog.sh")
+
+
     stop = False
     my_turn = False
     clean = True
@@ -232,7 +298,20 @@ def main():
     else: decision = "idle"; reason = "nothing runnable"
     
     print(f"DECISION: {decision} ({reason})")
-    
+    # Flush BEFORE the stderr warning below. Python block-buffers stdout when it is redirected, while
+    # stderr is unbuffered — so under `2>&1` the warning overtook the DECISION line and the observable
+    # order was the reverse of Bash's, even though the program order already matched. Same fix the
+    # swarm-preflight usage/diagnostic ordering needed (see test/gh322-unknown-arg-rejection.sh).
+    sys.stdout.flush()
+
+    # GH-308 port (GH-92): a nudge-cross-model whose parsed NEXT value is neither a recognized Claude
+    # agent nor a clean bare id (e.g. leftover markdown residue relay_field didn't strip) must fail
+    # LOUD — this exact silent failure stalled a live relay duel ~90 min. Bash-only until now.
+    if cross_model and not re.match(r'^[A-Za-z0-9_-]+$', cross_agent):
+        print(f'poll: WARNING (GH-92) parsed NEXT value "{cross_agent}" is neither a recognized Claude '
+              'agent nor a clean bare non-Claude id -- relay_field may need additional markdown '
+              'stripping for this pointer format', file=sys.stderr)
+
     if emit_delay:
         delay = 0
         dreason = ""

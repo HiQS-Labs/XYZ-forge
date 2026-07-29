@@ -724,9 +724,12 @@ def main():
                         break
                 if not script or not os.path.isfile(os.path.join(target_root, script)):
                     ready, ready_next = 0, f"gate script not found at target.ref: {script or '<none>'}"
-            if g0 != "bash" and g0 != "node" and g0 != "npm" and g0 != "python3":
-                if not shutil.which(g0):
-                    ready, ready_next = 0, f"command '{g0}' not found in PATH"
+            # GH-308 port: any non-bash/sh gate program must resolve on PATH (swarm-preflight.sh:774).
+            # Python exempted node/npm/python3, so a contract whose gate runner (e.g. `npm test`) is NOT
+            # installed was emitted as marathon-ready (exit 0) instead of refused NOT-READY (exit 5) on
+            # the live lane. `elif` mirrors the Bash structure (a bash/sh gate is not also PATH-checked).
+            elif not shutil.which(g0):
+                ready, ready_next = 0, f"command '{g0}' not found in PATH"
                     
     has_codex = "present" if shutil.which("codex") else "missing"
     has_agy = "present" if shutil.which("agy") else "missing"
