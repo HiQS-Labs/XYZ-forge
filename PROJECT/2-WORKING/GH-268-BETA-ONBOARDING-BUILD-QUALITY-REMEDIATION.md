@@ -2,9 +2,9 @@
 gh_issue: 268
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/268
 title: "Beta onboarding & build-quality test report — remediation plan (re: #123)"
-status: "Phases 3 and 4 SHIPPED 2026-07-28 (items 7, 8, 9). Phases 1-2 (onboarding) still open. The cross-model re-test RAN and returned 6 real findings across two vendors with ZERO overlap — written back below."
+status: "All 4 phases shipped. Phases 3-4 (items 7, 8, 9) merged 2026-07-28 via #325 — the cross-model re-test RAN and returned 6 real findings across two vendors with ZERO overlap, written back below. Phases 1-2 (the 6 onboarding findings) done 2026-07-28, landing separately on gh-268-phase2-onboarding-polish."
 created: 2026-07-22
-updated: 2026-07-28
+updated: 2026-07-29
 owner: noel
 doc_type: project
 reversibility: "Easy — every phase's fixes are additive doc/script/gate changes with normal git history (README reordering, installer scripts, a gate-wiring script, a manual re-test); nothing here is a one-way door and all of it reverts with git revert."
@@ -36,7 +36,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Plan drafted 2026-07-22 from a full read of [#268](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/268)'s report (Matthew Taylor, beta tester; compiled 2026-07-20). Cross-checked current repo state: 9 of 17 skills still lack `install.sh` (report said "8 of 13" on 2026-07-20 — the skill count has grown since); #123 is CLOSED; #232 (the cross-model retest's stated blocker) is now CLOSED via PR #271 (merge `2a2da17`), so Phase 4 is unblocked. | QA this plan via `/relay-xyz` with Agy as reviewer, then fire Phase 1 (the two tester-blocking items) through the marathon pipeline. |
+| **Phase 2 shipped 2026-07-28** on `gh-268-phase2-onboarding-polish` — all four onboarding findings (#3–#6) closed as doc changes, plus **two dead anchors the report never saw**: `README.md:70` and `:156` had pointed at a `relay-automation/README.md` heading renamed out from under them by `a595c6f` on 2026-07-23. **Phase 1 is also now fully closed**: its remaining item (clean-machine `validate.sh`) was verified rather than fixed — a fresh clone of `development` @ `aa03af5` runs **133/133, exit 0**, so the report's 7 failures no longer reproduce; only the "~1 minute" claim was wrong (measured ~8 min) and that text is corrected. Phase 1's other item shipped earlier via PR #282. **Phases 3 and 4 landed independently and first**, via #325 on 2026-07-28 — items 7, 8, 9, including the cross-model re-test, whose verdict is written back below. All 9 findings are now addressed. | **Nothing blocking.** Two things to reconcile once this branch merges: (a) the Swarm Preflight Contract at the bottom of this doc targets Phase 2 and is spent — it should not be reused; (b) the two concurrent lanes both rebuilt `skills/relay-automation/relay-pkg.tar.gz`, so it was regenerated after this rebase rather than merged. Then the doc is a candidate for `3-COMPLETED` and #268 for closing, at the operator's call. |
 
 ## Table of contents
 - [Phase 1 — Unblock a new tester (blocking)](#phase-1--unblock-a-new-tester-blocking)
@@ -53,12 +53,20 @@ goal: >
 skill has a working installer — the report's 2 "Blocking for a new tester" items, closed.
 
 ### Checklist
-- [ ] **Quickstart (`validate.sh`) passes on a clean machine.** The report's "prove it works, ~1
+- [x] **Quickstart (`validate.sh`) passes on a clean machine.** The report's "prove it works, ~1
       minute" step took ~10 minutes and ended with 7 failed tests, reproduced on a **fresh macOS
       clone**, not just Ubuntu CI — meaning it depends on state on the author's machine, not a clean
       one. *Fix:* reproduce the 7 failures on a genuinely clean clone (new tmp dir, no prior
       `xyz`/`hq` state) and either fix the state dependency or scope the Quickstart to only what needs
       no setup.
+      **Verified green 2026-07-28** — the failures no longer reproduce and needed no fix here; they
+      were resolved upstream by other work (#232 / PR #271 and the intervening suite changes). Method:
+      fresh `git clone` of `development` at `aa03af5` into a new scratch dir, `npm install &&
+      ./validate.sh`, run **un-sandboxed** with `TICK_REPO_ROOT` and `XYZ_PYTHON` unset → **133/133
+      passed, exit 0**, zero FAIL lines. Ubuntu CI is green on `development` independently.
+      **Residual, fixed in Phase 2 rather than here:** the run took **~8 minutes**, not the "~1 minute"
+      the README promised — the README text was corrected instead of the suite being scoped down,
+      since the suite's breadth is the point and a first-run reader only needs an honest number.
 - [x] **Every skill ships an `install.sh`.** Originally confirmed 2026-07-22 (before remediation):
       `consult/`, `open-router/`, `ponytail/`, `relay-automation/`, `release/`, `skills-sync-trinity/`,
       `swe/`, `weekly-shipped/`, `xyz/` (9 of 17) had no `install.sh` — onboarding text says "install
@@ -73,11 +81,11 @@ skill has a working installer — the report's 2 "Blocking for a new tester" ite
       that trial's reliability issues on the other 7; remaining 7 built by codex+agy, 0 failures).
 
 ### Phase 1 — QA checklist
-- [ ] Every todo above produced its checkable output (no orphan tasks): clean-clone `validate.sh` result, and `skills/consult/install.sh` present.
-- [ ] Tests written **and run** — `bash validate.sh` executed against a genuinely clean clone (fresh `git clone`, fresh `$TMPDIR`, no inherited `xyz`/`hq` state), output attached/quoted here, not asserted.
-- [ ] Diagnosable: if the 7 failures don't fully resolve, each remaining one names its own repro command and log location — no "some tests are flaky" hand-wave.
-- [ ] Blast: undo-class Easy (revert the installer/doc commits); shield = none needed (additive only); tripwire = none needed (no one-way step in this phase).
-- [ ] Status table and `updated:` date refreshed before this phase is marked done.
+- [x] Every todo above produced its checkable output (no orphan tasks): clean-clone `validate.sh` result (133/133, exit 0), and `skills/consult/install.sh` present (17 of 18 skills now ship one; only `skills/ponytail-refined/` does not, and it post-dates the report and is not named in onboarding).
+- [x] Tests written **and run** — `./validate.sh` executed against a genuinely clean clone (fresh `git clone` of `development` @ `aa03af5` into a new scratch dir, `TICK_REPO_ROOT`/`XYZ_PYTHON` unset, un-sandboxed): **133/133 passed, exit 0**, no FAIL lines. Result quoted above, not asserted.
+- [x] Diagnosable: not exercised — zero failures remained, so there was nothing to name a repro for. **Honest limit:** this run was on the author's own macOS device with node/npm/python already installed and a warm npm cache; it proves the *repo* no longer depends on author-machine state, not that a machine with no toolchain at all comes up green.
+- [x] Blast: undo-class Easy (revert the installer/doc commits); shield = none needed (additive only); tripwire = none needed (no one-way step in this phase).
+- [x] Status table and `updated:` date refreshed before this phase is marked done.
 
 ---
 
@@ -87,31 +95,68 @@ skill has a working installer — the report's 2 "Blocking for a new tester" ite
 in the right order, and the Quickstart's sandbox-hang failure mode is caught and messaged instead of
 silently burning ~5 minutes — the report's 4 "fix before broader beta" items, closed.
 
+**Shipped 2026-07-28** on `gh-268-phase2-onboarding-polish` (cut from `development` @ `aa03af5`).
+
 ### Checklist
-- [ ] **README leads with logistics, not "what it is / try it."** `README:~115` ("what XYZ is") and
+- [x] **README leads with logistics, not "what it is / try it."** `README:~115` ("what XYZ is") and
       `README:~130` (Quickstart) currently sit well below beta logistics and the mode taxonomy.
       *Fix:* name + one-line "what it is" + Quickstart at the top (standard per
       https://www.makeareadme.com/).
-- [ ] **CLI prerequisites appear after the fast path that needs them.** The "fast path — just this
+      **Done:** the README now opens with title → one-line what-it-is → `## What XYZ is` →
+      `## Quickstart` → `## Then pick your path`, with the whole beta onboarding guide moved below
+      them. `What XYZ is` went from line 121 to **6**, Quickstart from 136 to **19**. The beta banner
+      was reworded — it claimed the onboarding guide "leads this README", which is no longer true.
+- [x] **CLI prerequisites appear after the fast path that needs them.** The "fast path — just this
       repo" section (`README:~79`) precedes the requirement to install/auth the Codex + agy CLIs
       (`README:~68` and below). *Fix:* state CLI prerequisites inside or above the fast path, matching
       #123's own "Initial Steps" ordering.
-- [ ] **`relay-automation/README.md`'s prerequisite section is titled/worded as specialist jargon
+      **Done:** the prerequisites were the *sixth bullet of a safety-and-reversibility list*; they are
+      now their own `### Prerequisites — install and authenticate these before the fast path` section
+      sitting directly above `### Fast path`, as an install/auth table carrying #123's actual URLs
+      (Codex app; Antigravity **CLI**, not the desktop app) instead of only asserting the CLIs must be
+      present. The Python-runtime, agy-self-update, and run-un-sandboxed notes moved with them.
+- [x] **`relay-automation/README.md`'s prerequisite section is titled/worded as specialist jargon
       ("Headless bring-up") and tells the user how to *test* the CLIs, not how to *install* them.**
       *Fix:* rename to plain language (e.g. "Set up Codex and agy") and include the install links
       #123 already provides.
-- [ ] **The Quickstart hangs silently under the default Claude Code Bash sandbox** (an `mktemp`-under-
+      **Done:** retitled `## Set up Codex, agy, and Pi (headless bring-up)` — plain-language lead, old
+      term kept in parens so existing search habits still land. `### 1. Prerequisites` became
+      `### 1. Install and authenticate the CLIs`, leading with an install + authenticate table
+      (including the macOS `~/.local/bin/agy` off-PATH gotcha) and *then* the pre-existing
+      verification commands. Pi is listed as the optional third lane; no install URL was invented for
+      it, since it ships outside this repo and none exists in-tree.
+- [x] **The Quickstart hangs silently under the default Claude Code Bash sandbox** (an `mktemp`-under-
       sandbox issue, ~5 minutes of zero output until sandboxing is disabled — this repo's own
       recurring gotcha, see `[[git-push-needs-sandbox-disabled]]`-class issues). *Fix:* detect the
       sandbox condition and message it, or document the un-sandboxed requirement at the Quickstart
       step itself, not only deeper in the docs.
+      **Done via documentation, not detection** — a ⚠️ callout sits directly under the Quickstart
+      command block, naming the actual mechanism (`mktemp -d` scratch dirs blocked → minutes of zero
+      output → failure that *reads* as a hang, not as a permissions error) and the fix. Runtime
+      detection was **deliberately not built**: `validate.sh` would have to guess at an arbitrary
+      agent harness's sandbox from inside it, and a wrong guess on a normal terminal run is a worse
+      failure than the doc gap. Reconsider if the doc alone doesn't hold.
+
+### Also fixed in this pass — two dead anchors, not in the report
+- [x] `README.md:70` and `README.md:156` both linked to
+      `relay-automation/README.md#headless-bring-up-codex--agy`, but `a595c6f` (2026-07-23) renamed
+      that heading to add "+ Pi" — so **both of the README's prerequisite pointers had been dead since
+      then**, silently landing readers at the top of the file. That is finding #3's exact blast radius
+      arriving by a different route. Both now point at the new
+      `#set-up-codex-agy-and-pi-headless-bring-up` anchor, as does the third stale copy found in
+      `skills/relay-xyz/SKILL.md:101` and the file-internal link at `relay-automation/README.md:15`.
+      Historical mentions in `CHANGELOG.md` and `PROJECT/3-COMPLETED/GH-83-*` are left alone on
+      purpose — they are records of what was true then.
+- [x] The Quickstart claimed the suite runs "in about a minute"; the measured clean-clone run is
+      **~8 minutes**. Corrected to 5–10 minutes with a note that it is the whole suite, not a smoke
+      test. This is the surviving half of Phase 1's finding.
 
 ### Phase 2 — QA checklist
-- [ ] Every todo above produced its checkable output: README reorder, prereq reorder, `relay-automation/README.md` rename, sandbox-hang message — each a diffable doc/script change, no orphans.
-- [ ] Tests written **and run** — no test coverage applies here (doc-only + one message string); note that explicitly rather than leaving it silently unchecked.
-- [ ] Diagnosable: the sandbox-hang message names the actual condition (`mktemp` under Bash sandbox) and the fix (`dangerouslyDisableSandbox`/`/sandbox` off), not a generic "something went wrong."
-- [ ] Blast: undo-class Easy (doc/text changes only); shield = none needed; tripwire = none needed.
-- [ ] Status table and `updated:` date refreshed before this phase is marked done.
+- [x] Every todo above produced its checkable output: README reorder, prereq reorder, `relay-automation/README.md` rename, sandbox-hang message — each a diffable doc/script change, no orphans.
+- [x] Tests written **and run** — **no automated test coverage applies** (doc-only; no code path changed), stated explicitly rather than left silently unchecked. What *was* run: full `./validate.sh` on the branch, and a repo-wide grep proving zero live references to the old `#headless-bring-up-codex--agy` anchor remain outside historical records.
+- [x] Diagnosable: the sandbox callout names the actual condition (`mktemp -d` scratch dirs blocked under the Bash sandbox) and the fix (`/sandbox` off, or run it in a normal terminal), and explicitly says it *looks like a hang rather than a permissions error* — which is the reason it burns five minutes.
+- [x] Blast: undo-class Easy (doc/text changes only, one `git revert`); shield = none needed; tripwire = none needed.
+- [x] Status table and `updated:` date refreshed before this phase is marked done.
 
 ---
 
@@ -255,7 +300,12 @@ found a CI-only failure mode on a developer machine that could never reproduce i
 - Any new GH issue per finding — deliberately not done; this doc is the single point of reference,
   per the operator's explicit instruction.
 
-## Swarm Preflight Contract (Phase 2 only)
+## Swarm Preflight Contract (Phase 2 only) — **spent 2026-07-28**
+
+> Phase 2 shipped by hand on `gh-268-phase2-onboarding-polish` rather than through the marathon
+> pipeline (it is four doc edits; the packet's readiness value did not justify a lane). The contract
+> is kept below as the record of what was scoped. **Phase 3 needs its own contract** — do not reuse
+> this one, its `artifacts` and `lanes` cover only the two READMEs.
 
 **Re-scoped 2026-07-23 (/10days sweep).** Phase 1's install.sh item shipped via PR #282 (merged
 2026-07-22) — the contract above is stale. Phase 1's OTHER item (clean-machine `validate.sh` pass) is

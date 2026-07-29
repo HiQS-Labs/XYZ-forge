@@ -98,7 +98,7 @@ cd "$HARNESS"
 After this, `$HARNESS` is the harness repo root, `$TICK` is the absolute `bin/tick`, and
 `TICK_REPO_ROOT` points `tick` at that clone's event log. The relay/turn scripts self-resolve their
 own location (`$(dirname "$BASH_SOURCE")/..`), so invoke them with **repo-relative** paths exactly as
-the [headless bring-up section](../../relay-automation/README.md#headless-bring-up-codex--agy) shows.
+the [CLI setup / headless bring-up section](../../relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up) shows.
 The relay always operates on **the
 harness clone** (its `.tick/` log and guarded git root live there), whatever repo you launched from —
 so a clone with only `relay-system/` thread files still drives the real harness next door.

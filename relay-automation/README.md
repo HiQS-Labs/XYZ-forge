@@ -12,7 +12,7 @@ turn-takers now exist for Codex, agy, and Pi (`codex-turn.sh`, `agy-turn.sh`,
 `relay-loop.sh --background --cross-model-cmd <shim>` can now auto-fire one of
 those shims on `DECISION: nudge-cross-model`; without that wrapper-only flag,
 the loop still degrades to the existing manual nudge. For the current headless path, see
-[the headless bring-up below](#headless-bring-up-codex--agy--pi), plus
+[Set up Codex, agy, and Pi below](#set-up-codex-agy-and-pi-headless-bring-up), plus
 [CROSSMODEL-OPTIONA-PLAN.md](CROSSMODEL-OPTIONA-PLAN.md).
 
 ## Components
@@ -225,20 +225,35 @@ running. `relay-drive.sh` remains the deterministic single-window alternative.
 - **Not a durable scheduler / not unattended-without-a-window.** A Claude window must be open and looping for the default poll flow. Current headless turns exist, but durable unattended orchestration is still a separate problem.
 - The portable `/relay` skill stays dependency-free; this tick-driven automation lives here.
 
-## Headless bring-up (Codex + agy + Pi)
+## Set up Codex, agy, and Pi (headless bring-up)
 
 This section is the canonical fresh-device bootstrap path for the three shipped
-headless Path-A workers: Codex, agy, and Pi.
+headless Path-A workers: Codex, agy, and Pi — install them, authenticate them,
+then prove each one can actually drive a turn.
 
 > **What a single-device test proves.** `.tick/` is gitignored and device-local,
 > so two clones do not share token state over git. A fresh-device run proves
 > that the selected headless turn-taker works cleanly in a fresh clone behind
 > the safety shim; it does not prove cross-machine coordination.
 
-### 1. Prerequisites
+### 1. Install and authenticate the CLIs
 
-The shipped scripts assume Node, git, and whichever headless worker you plan to
-drive:
+The shipped scripts assume Node and git are already present, plus whichever
+headless worker you plan to drive. **Install and sign in to the worker CLIs
+first** — every shim shells out to them, so an unauthenticated CLI fails the turn
+mid-run rather than at startup:
+
+| Worker | Install | Authenticate |
+|---|---|---|
+| **Codex** (OpenAI) | <https://openai.com/index/introducing-the-codex-app/> | Sign in with your ChatGPT account — `codex` prompts on first run. Billing follows the ChatGPT subscription, not API credits. |
+| **agy** (Google Antigravity — install the **CLI**, not just the desktop app) | <https://antigravity.google/product/antigravity-cli> | Sign in through the Antigravity desktop app. On macOS the CLI lands at `~/.local/bin/agy`, which is **not** on the default `PATH`. |
+| **Pi** (optional third lane, GH-295) | Ships outside this repo — put `pi` on `PATH`, or point `PI_BIN` at it | Provider credential via `PI_PROVIDER` (defaults to `openrouter`, reusing `OPENROUTER_API_KEY`) |
+
+You can also hand the Antigravity URL to Claude Code and ask it to do the install
+for you. Codex and agy are the two the beta onboarding path assumes; Pi is
+additive.
+
+Once installed, verify Node, git, and the lane you actually plan to drive:
 
 ```bash
 node --version

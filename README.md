@@ -1,8 +1,67 @@
 # XYZ — Multi-Agent Coordination Beta
 
-> **⏳ Beta-testing period:** the onboarding guide below leads this README for the duration of the
-> beta. Once the beta wraps, this section moves out and the normal README resumes at
-> [What XYZ is](#what-xyz-is). Discussion: [issue #123](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/123).
+**XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) — work
+on the same repo at the same time without overwriting each other's work.**
+
+## What XYZ is
+
+It's built in two layers:
+
+- **`tick`** — the kernel: a tiny local event-log CLI that hands out collision-free, path-scoped
+  work claims, so two agents never edit the same thing at once. No server, no API keys, no remote.
+- **`relay-automation/`** — the product on top of `tick`: it runs agents in **turns** (one builds,
+  another reviews) headlessly, so you can hand a task to Codex or agy and let them iterate toward
+  done without babysitting the handoff.
+
+It's a working beta, not a polished product — but the kernel is test-covered and the relay stack
+is the main active surface.
+
+## Quickstart — prove it works (no accounts needed)
+
+Requires **Node 18+** and **git** (the `tick` kernel runs on Node). No accounts or API keys.
+
+```bash
+npm install
+./validate.sh
+```
+
+(`npm install` pulls the two parser dependencies the test suite needs — skip it and the
+suite stops at `Cannot find module 'acorn'`.)
+
+That runs the full kernel + coordination test suite, with **no accounts or API keys required** —
+the fastest proof the coordination kernel actually works. It's the whole suite, not a smoke test,
+so **budget 5–10 minutes** on a first run. The suite prints its own pass count at the end; if it's
+green, you're good.
+
+> **⚠️ Run this un-sandboxed.** Under Claude Code's default Bash sandbox — or any sandboxed agent
+> harness — this command prints **nothing for several minutes** before failing, because the suite's
+> `mktemp -d` scratch directories are blocked. It looks like a hang, not a permissions error, and
+> it is this repo's single most common false alarm. Turn the sandbox off for this command
+> (`/sandbox` in Claude Code, or run it yourself in a normal terminal) before concluding anything
+> is broken.
+
+## Then pick your path
+
+- **New here for the beta test?** → start at [Beta Tester Onboarding](#beta-tester-onboarding) below.
+- **Run a live relay** — hand a real task to Codex/agy and let them build→review it →
+  start at **[relay-automation/README.md](relay-automation/README.md)**. Live turns need each CLI
+  installed and authenticated first: see
+  **[Set up Codex, agy, and Pi](relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up)**.
+  For phase/status context, the project hub is
+  [PROJECT/4-MISC/AUTOMATED-RELAY.md](PROJECT/4-MISC/AUTOMATED-RELAY.md).
+- **Here for the kernel** — how the `tick` coordination primitive works →
+  read [What `tick` is](#what-tick-is), then the source in [bin/tick](bin/tick), [src/](src), [test/](test).
+- **Install `tick` into another repo** → see [Install into another repo](#install-into-another-repo).
+
+> **Editing this repo as an agent?** Read [ROUTER.md](ROUTER.md) for the startup order and canonical
+> entry points. It's the map for *working on* the repo, not for *using* it — a human landing here
+> should start with the Quickstart above.
+
+---
+
+> **⏳ Beta-testing period:** the onboarding guide below runs for the duration of the beta. Once the
+> beta wraps, this section moves out and the README continues straight from
+> [What XYZ is](#what-xyz-is) above. Discussion: [issue #123](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/123).
 
 ## Beta Tester Onboarding
 
@@ -65,9 +124,23 @@ Everything below is designed to be reversible, but please help it along:
     [#183](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/183).
   - *PDDA install* — adds scripts and an opinionated `PROJECT/` docs structure to the target repo.
     Undo: it's all ordinary tracked files on your branch, so discarding the branch fully reverts it.
-- **Prerequisites:** both the **Codex CLI** and **agy CLI** installed and pre-authenticated (XYZ
-  shells out to them; a relay or consult will fail mid-run if either isn't logged in). See
-  [Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy).
+- Clone this XYZ repo locally. Clone PDDA **only** if you're going for the full automation path.
+
+### Prerequisites — install and authenticate these before the fast path
+
+The fast path below shells out to the Codex and agy CLIs. **Install and sign in to both before you
+start** — a relay or consult fails mid-run, not at startup, if either isn't logged in.
+
+| Prerequisite | Install | Notes |
+|---|---|---|
+| **Codex CLI** (OpenAI) | <https://openai.com/index/introducing-the-codex-app/> | Authenticate with your ChatGPT account. |
+| **agy CLI** (Google Antigravity — the **CLI**, not just the desktop app) | <https://antigravity.google/product/antigravity-cli> | Authenticate through the Antigravity desktop app. You can hand this URL to Claude Code and ask it to install for you. |
+| **Node 18+ and git** | your usual package manager | Needed by the `tick` kernel and the Quickstart above. |
+| **Python 3.8+** | usually already present | See the runtime note below. |
+
+Full per-CLI verification steps, environment variables, and troubleshooting live in
+**[Set up Codex, agy, and Pi](relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up)**.
+
 - **Runtime — Python by default.** The harness entry points run their **Python** implementation by
   default. Every shim keeps its original Bash body inline as the escape hatch, so you can force the
   legacy Bash path at any granularity: one command with `XYZ_PYTHON=0 <command>`, a whole session or
@@ -80,7 +153,6 @@ Everything below is designed to be reversible, but please help it along:
   reach Codex/agy — a sandboxed shell will fail with "Operation not permitted" or a blocked-host
   error that looks like a bug but is really the sandbox. Disable the sandbox for these commands
   before concluding something is broken.
-- Clone this XYZ repo locally. Clone PDDA **only** if you're going for the full automation path.
 
 ### Fast path: immediate value, no PDDA
 
@@ -117,52 +189,6 @@ appeal yet, stay on the fast path — Relay and Consult deliver value on day one
 restructuring.
 
 ---
-
-## What XYZ is
-
-XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) —
-work on the **same repo at the same time without overwriting each other's work**. It's built in
-two layers:
-
-- **`tick`** — the kernel: a tiny local event-log CLI that hands out collision-free, path-scoped
-  work claims, so two agents never edit the same thing at once. No server, no API keys, no remote.
-- **`relay-automation/`** — the product on top of `tick`: it runs agents in **turns** (one builds,
-  another reviews) headlessly, so you can hand a task to Codex or agy and let them iterate toward
-  done without babysitting the handoff.
-
-It's a working beta, not a polished product — but the kernel is test-covered and the relay stack
-is the main active surface.
-
-## Quickstart — prove it works (no accounts needed)
-
-Requires **Node 18+** and **git** (the `tick` kernel runs on Node). No accounts or API keys.
-
-```bash
-npm install
-./validate.sh
-```
-
-(`npm install` pulls the two parser dependencies the test suite needs — skip it and the
-suite stops at `Cannot find module 'acorn'`.)
-
-That runs the full kernel + coordination test suite green in about a minute, with **no accounts
-or API keys required** — the fastest proof the coordination kernel actually works. The suite
-prints its own pass count; if it's green, you're good.
-
-## Then pick your path
-
-- **Run a live relay** — hand a real task to Codex/agy and let them build→review it →
-  start at **[relay-automation/README.md](relay-automation/README.md)**. Live turns need each CLI
-  authenticated first: see **[Headless bring-up (Codex + agy)](relay-automation/README.md#headless-bring-up-codex--agy)**.
-  For phase/status context, the project hub is
-  [PROJECT/4-MISC/AUTOMATED-RELAY.md](PROJECT/4-MISC/AUTOMATED-RELAY.md).
-- **Here for the kernel** — how the `tick` coordination primitive works →
-  read [What `tick` is](#what-tick-is), then the source in [bin/tick](bin/tick), [src/](src), [test/](test).
-- **Install `tick` into another repo** → see [Install into another repo](#install-into-another-repo).
-
-> **Editing this repo as an agent?** Read [ROUTER.md](ROUTER.md) for the startup order and canonical
-> entry points. It's the map for *working on* the repo, not for *using* it — a human landing here
-> should start with the Quickstart above.
 
 ## Glossary — the four terms you'll hit first
 
