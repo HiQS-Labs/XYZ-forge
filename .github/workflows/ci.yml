@@ -79,28 +79,22 @@ jobs:
       #
       # Escape hatch: a safety defect in a frozen fallback can legitimately warrant an edit (GH-319
       # left a silently-fake pre-advance gate in marathon-drive.sh under XYZ_PYTHON=0). Such a commit
-      # must carry a `Frozen-twin-exception: <reason>` trailer, which makes the exception auditable in
-      # `git log` instead of invisible. No trailer, no edit.
+      # must carry a trailer naming the twin it covers, which makes the exception auditable in
+      # `git log` instead of invisible:
+      #
+      #   Frozen-twin-exception: relay-automation/marathon-drive.sh — <reason>
+      #
+      # GH-321: the rule used to live here, inline, and was RANGE-scoped — one trailer anywhere in
+      # BASE..HEAD excused every frozen twin touched in the PR, including files nobody declared. It
+      # now lives in the guard script as `--allow-exceptions`, per-file, so it can be tested; inline
+      # YAML shell is unreachable from the suite, which is part of why the looseness shipped at all.
       - name: Frozen Bash twin guard (GH-308)
         if: github.event_name == 'pull_request'
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           set -euo pipefail
-          if GH308_FROZEN_TWIN_BASE="$BASE_SHA" bash test/gh308-frozen-twin-guard.sh --check --base "$BASE_SHA"; then
-            exit 0
-          fi
-          echo "---"
-          exceptions="$(git log --format='%H %s%n%b' "$BASE_SHA..HEAD" | grep -c '^Frozen-twin-exception:' || true)"
-          if [ "$exceptions" -gt 0 ]; then
-            echo "gh308 guard: $exceptions commit(s) declare Frozen-twin-exception — allowing:"
-            git log --format='%h %s' --grep='^Frozen-twin-exception:' "$BASE_SHA..HEAD"
-            exit 0
-          fi
-          echo "gh308 guard: a frozen Bash twin was edited with no 'Frozen-twin-exception: <reason>'" >&2
-          echo "trailer on any commit in this range. Put the fix in the Python twin, or declare the" >&2
-          echo "exception in the commit message if the Bash fallback genuinely needs it." >&2
-          exit 1
+          bash test/gh308-frozen-twin-guard.sh --check --base "$BASE_SHA" --allow-exceptions
 
       # GH-230: prove the README Quickstart's npm-dependency path works from a fresh
       # clone, so a missing-install-step regression fails here instead of on a

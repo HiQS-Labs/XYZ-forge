@@ -78,12 +78,22 @@ local change.
   `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, and `swarm-preflight`). Their `.sh`
   files are historical `XYZ_PYTHON=0` fallbacks: put behavior fixes in the named Python twin, not
   the Bash body. Before committing, run `bash test/gh308-frozen-twin-guard.sh --check --staged`; the
-  `Frozen Bash twin guard (GH-308)` step in `.github/workflows/ci.yml` supplies
-  `GH308_FROZEN_TWIN_BASE` on every PR to reject a committed twin edit. **Escape hatch:** a safety
-  defect in a fallback can warrant an edit anyway — GH-319 left a silently-fake pre-advance gate in
-  `marathon-drive.sh` under `XYZ_PYTHON=0`. Such a commit must carry a
-  `Frozen-twin-exception: <reason>` trailer, which CI accepts and which keeps the exception auditable
-  in `git log` rather than invisible. No trailer, no edit. `utils/marathon-plan.sh` is the
+  `Frozen Bash twin guard (GH-308)` step in `.github/workflows/ci.yml` runs the same guard with
+  `--base <PR base> --allow-exceptions` on every PR to reject a committed twin edit. **Escape
+  hatch:** a safety defect in a fallback can warrant an edit anyway — GH-319 left a silently-fake
+  pre-advance gate in `marathon-drive.sh` under `XYZ_PYTHON=0`. Such a commit must carry a trailer
+  that **names the twin it covers**, with an em-dash before the reason:
+
+  ```
+  Frozen-twin-exception: relay-automation/marathon-drive.sh — silently-fake pre-advance gate (GH-319)
+  ```
+
+  **Per file, not per PR (GH-321).** Every frozen twin changed in the range must be named by some
+  trailer in that range; one exception no longer excuses a different, undeclared edit riding along
+  on the same branch — the common case on a multi-lane marathon PR. A trailer naming a path that is
+  not a frozen twin fails loudly rather than silently covering nothing, and the bare
+  `Frozen-twin-exception: <reason>` form (no path) no longer covers anything. Comma-separate to cover
+  several twins with one reason. No trailer, no edit. `utils/marathon-plan.sh` is the
   deliberate exception: Bash remains authoritative and dual-maintained. `relay-turn-lib.sh` is a
   shared Bash runtime dependency, not a twin.
 - **Builder/orchestrator role split (GH-221)** — **Claude Code (terminal and VS Code agents) is the

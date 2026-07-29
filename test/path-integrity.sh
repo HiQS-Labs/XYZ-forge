@@ -72,7 +72,11 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # GH-108/GH-126/GH-127: test/swarm-preflight.sh's T35/T36 fixtures create test/bare-redirect.sh,
 # test/no-touch.sh, and test/comment-only.sh in a throwaway temp repo to exercise the genuine-ref
 # and bare-`>` fs-touching detectors — fixture literals, not references to files in this tree.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh "
+# GH-321: test/gh308-frozen-twin-guard.sh feeds `relay-automation/codex-turnn.sh` to the frozen-twin
+# guard to prove a TYPO'd path in a `Frozen-twin-exception:` trailer fails loudly instead of silently
+# covering nothing. The token is deliberately a path that does not resolve — that IS the test input —
+# and it can never exist in this tree, so skipping it cannot mask a real path break.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do
