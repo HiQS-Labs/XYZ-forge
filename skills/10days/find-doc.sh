@@ -18,9 +18,15 @@ set -uo pipefail
 
 N=""
 ROOT_ARG=""
+ROOT_SRC=""
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --root) ROOT_ARG="${2:-}"; shift 2 ;;
+    # GH-369: check for the value BEFORE shifting. `shift 2` with one argument left shifts
+    # nothing and returns non-zero — and this script is deliberately `-e`-exempt, so that
+    # failure was silent: $# never decreased, $1 stayed `--root`, and the loop spun forever.
+    --root)
+      [ "$#" -ge 2 ] || { echo "find-doc.sh: --root requires a directory argument" >&2; exit 2; }
+      ROOT_ARG="$2"; ROOT_SRC="--root"; shift 2 ;;
     -h|--help) echo "usage: find-doc.sh [--root DIR] ISSUE_NUMBER" >&2; exit 0 ;;
     -*) echo "find-doc.sh: unknown option: $1" >&2; exit 2 ;;
     *) N="$1"; shift ;;
@@ -44,10 +50,18 @@ command -v jq >/dev/null 2>&1 || { echo "find-doc.sh: jq not found on PATH" >&2;
 # Precedence: --root > $TENDAYS_ROOT > current git toplevel > $PWD. The git toplevel is the right
 # default because every other step of the skill is already cwd-bound (`gh` reads the repo from the
 # cwd's remote), so this makes find-doc.sh agree with them instead of disagreeing silently.
+#
+# GH-369: track WHICH of those four supplied the value, so a bad path names its real source. The
+# original message hardcoded `--root` and interpolated $ROOT_ARG, so a bad $TENDAYS_ROOT blamed a
+# flag the caller never passed and printed an empty path.
 ROOT="$ROOT_ARG"
-[ -n "$ROOT" ] || ROOT="${TENDAYS_ROOT:-}"
-[ -n "$ROOT" ] || ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-ROOT="$(cd "$ROOT" >/dev/null 2>&1 && pwd)" || { echo "find-doc.sh: --root not a directory: $ROOT_ARG" >&2; exit 2; }
+[ -n "$ROOT" ] || { ROOT="${TENDAYS_ROOT:-}"; [ -n "$ROOT" ] && ROOT_SRC='$TENDAYS_ROOT'; }
+[ -n "$ROOT" ] || { ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; ROOT_SRC="git toplevel/\$PWD"; }
+# Keep the pre-resolution value: the assignment below overwrites $ROOT with the (empty) result of
+# the failed substitution before `||` runs, so reporting "$ROOT" here would print nothing.
+ROOT_RAW="$ROOT"
+ROOT="$(cd "$ROOT" >/dev/null 2>&1 && pwd)" || {
+  echo "find-doc.sh: not a directory (from $ROOT_SRC): $ROOT_RAW" >&2; exit 2; }
 
 # NOTE: plain `grep`/`ls` are fine here — this runs as a script subprocess, not a Claude
 # Code Bash-tool call, so the RTK hook that rewrites interactive `grep` invocations never
