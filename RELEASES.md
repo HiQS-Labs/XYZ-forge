@@ -27,7 +27,7 @@ Release: TBD
 Status: Draft
 Target Date: 2026-08-01
 Codename: Quicksilver
-Description: Phase out Bash scripts
+Description: Python-authoritative Tier-A twins
 GH_URL: [GH 308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308)
 Milestone: Quicksilver
 Front-door reviewed: Not yet
