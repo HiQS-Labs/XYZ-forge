@@ -16,9 +16,12 @@ QP="$ROOT/utils/marathon-plan.sh"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/marathon-plan.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
-PASS=0; FAIL=0
+PASS=0; FAIL=0; SKIP=0
 pass() { echo "  PASS: $*"; PASS=$((PASS+1)); }
 fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
+# GH-348: a skip must be LOUD and counted. The bug this file used to carry was a cross-lane assertion
+# that silently compared one lane to itself; a silent skip would recreate it in a new shape.
+skip() { echo "  SKIP: $*" >&2; SKIP=$((SKIP+1)); }
 
 DAY="2026-06-28"
 NOWT="2026-06-28T00:00:00Z"
@@ -50,12 +53,33 @@ run_qp() {
     bash "$QP" "$@"
 }
 
-# run_qp_py <root> [args...]
+# run_qp_py <root> [args...] — explicitly the Python lane.
 run_qp_py() {
   local root="$1"; shift
   QUEUE_PLAN_ROOT="$root" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
     QUEUE_PLAN_GH_STATE_FILE="$root/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$root/.branches" \
     XYZ_PYTHON=1 bash "$QP" "$@"
+}
+
+# run_qp_sh <root> [args...] — explicitly the BASH/node engine.
+#
+# GH-348, and the reason this exists: `run_qp` above sets no XYZ_PYTHON, and utils/marathon-plan.sh:6
+# reads `${XYZ_PYTHON-1}` — defaulting to 1. So run_qp is the PYTHON lane, and Scenario T's
+# "matches between shell and XYZ_PYTHON=1" was comparing Python to Python. Mutating the Bash engine's
+# rendered output left the whole file at 60/0, both T assertions green, for as long as that was true.
+#
+# marathon-plan is the ONE entry point GH-308 deliberately exempted from Python authority — the Bash
+# twin stays dual-maintained — so cross-lane drift here is expected, not theoretical. It has already
+# happened twice: GH-154 (missing GH-48 zone model) and GH-255 (two more gaps, papered over with
+# pre/post-processing shims). Scenario T was added by GH-154 to stop the third instance, and until
+# this helper landed it could not.
+#
+# The other 58 cases keep using run_qp on purpose: unset XYZ_PYTHON is what production runs.
+run_qp_sh() {
+  local root="$1"; shift
+  QUEUE_PLAN_ROOT="$root" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
+    QUEUE_PLAN_GH_STATE_FILE="$root/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$root/.branches" \
+    XYZ_PYTHON=0 bash "$QP" "$@"
 }
 
 # wave_of <queue-doc> <issue-number> → wave number containing #N (empty if not waved)
@@ -646,18 +670,53 @@ cat >"$T/foreign-zones.json" <<'EOF'
   "defaultZone": { "name": "independent", "penalty": 0 }
 }
 EOF
-shell_out="$(run_qp "$T" --dry-run --zones-config "$T/foreign-zones.json" 2>/dev/null)"; rc_shell=$?
-py_out="$(run_qp_py "$T" --dry-run --zones-config "$T/foreign-zones.json" 2>/dev/null)"; rc_py=$?
-[[ $rc_shell -eq 0 && $rc_py -eq 0 && "$shell_out" == "$py_out" ]] \
-  && pass "T: explicit zones dry-run output matches between shell and XYZ_PYTHON=1 [GH-154]" \
-  || fail "T: explicit zones dry-run mismatch (shell=$rc_shell py=$rc_py)"
-run_qp "$T" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
-cp "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" "$T/shell.md"
-run_qp_py "$T" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
-cmp -s "$T/shell.md" "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" \
-  && pass "T: rendered MARATHON-PLAN doc matches between shell and XYZ_PYTHON=1 [GH-154]" \
-  || fail "T: rendered MARATHON-PLAN doc drifted between shell and XYZ_PYTHON=1"
+# GH-348: the LEFT side is now run_qp_sh (XYZ_PYTHON=0), not run_qp. The Bash engine needs `node`
+# (utils/marathon-plan.sh:146 hard-requires it) — if that is absent, SKIP loudly. Falling back to
+# run_qp here would restore the exact tautology this fix removes, and it would look like a pass.
+if ! command -v node >/dev/null 2>&1; then
+  skip "T: cross-lane parity needs node for the XYZ_PYTHON=0 engine — parity UNVERIFIED this run [GH-348]"
+  skip "T: rendered-doc cross-lane parity likewise unverified (no node)"
+else
+  shell_out="$(run_qp_sh "$T" --dry-run --zones-config "$T/foreign-zones.json" 2>/dev/null)"; rc_shell=$?
+  py_out="$(run_qp_py "$T" --dry-run --zones-config "$T/foreign-zones.json" 2>/dev/null)"; rc_py=$?
+  [[ $rc_shell -eq 0 && $rc_py -eq 0 && "$shell_out" == "$py_out" ]] \
+    && pass "T: explicit zones dry-run output matches between the BASH engine and XYZ_PYTHON=1 [GH-154/GH-348]" \
+    || fail "T: explicit zones dry-run mismatch (bash=$rc_shell py=$rc_py)"
+  run_qp_sh "$T" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+  cp "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" "$T/shell.md"
+  run_qp_py "$T" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+  cmp -s "$T/shell.md" "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md" \
+    && pass "T: rendered MARATHON-PLAN doc matches between the BASH engine and XYZ_PYTHON=1 [GH-154/GH-348]" \
+    || fail "T: rendered MARATHON-PLAN doc drifted between the BASH engine and XYZ_PYTHON=1"
+
+  # GH-348 self-check: prove the comparison above is actually cross-lane, in the run itself.
+  # A mutated copy of the Bash engine MUST be detected. Without this, a future refactor could quietly
+  # point both sides at one lane again and every assertion here would keep passing.
+  MUT="$T/mutated-marathon-plan.sh"
+  sed 's/GENERATED by utils\/marathon-plan\.sh/MUTATED-BASH by utils\/marathon-plan.sh/' "$QP" >"$MUT"
+  if cmp -s "$QP" "$MUT"; then
+    # Either the banner literal moved/changed, or the working tree already carries the mutation
+    # (someone is mid-experiment). Both mean this self-check proved nothing — say which, don't guess.
+    fail "T: mutation self-check is inert — the 'GENERATED by' banner literal is not in $QP as expected, or the tree already carries the mutation [GH-348]"
+  else
+    mut_out="$(QUEUE_PLAN_ROOT="$T" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
+      QUEUE_PLAN_GH_STATE_FILE="$T/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$T/.branches" \
+      XYZ_PYTHON=0 bash "$MUT" --dry-run --zones-config "$T/foreign-zones.json" 2>/dev/null)"
+    # The dry-run report does not carry the banner, so compare the RENDERED doc, which does.
+    QUEUE_PLAN_ROOT="$T" QUEUE_PLAN_TODAY="$DAY" QUEUE_PLAN_NOW="$NOWT" \
+      QUEUE_PLAN_GH_STATE_FILE="$T/.gh-state.json" QUEUE_PLAN_BRANCHES_FILE="$T/.branches" \
+      XYZ_PYTHON=0 bash "$MUT" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+    if cmp -s "$T/shell.md" "$T/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"; then
+      fail "T: mutating the Bash engine changed NOTHING — the parity comparison is not cross-lane [GH-348]"
+    else
+      pass "T: mutating the Bash engine IS detected — the parity comparison is genuinely cross-lane [GH-348]"
+    fi
+    # Leave the fixture as the unmutated Bash render, so nothing downstream inherits mutated output.
+    run_qp_sh "$T" --zones-config "$T/foreign-zones.json" >/dev/null 2>&1
+  fi
+fi
 
 echo
-echo "  marathon-plan: $PASS passed, $FAIL failed"
+_skip_note=""; [[ "$SKIP" -gt 0 ]] && _skip_note=", $SKIP skipped"
+echo "  marathon-plan: $PASS passed, $FAIL failed$_skip_note"
 [[ "$FAIL" -eq 0 ]]
