@@ -6,7 +6,7 @@ status: "Proposed (1-INBOX — not yet active)"
 created: 2026-07-29
 revised: 2026-07-30
 doc_type: feedback
-related: GH-334, GH-308, GH-284, GH-340, GH-348
+related: GH-334, GH-308, GH-284, GH-340, GH-348, GH-370
 effort: 3
 complexity: 3
 risk: 2
@@ -42,6 +42,19 @@ goal: >
 > churn threshold of "3 or more" was uncalibrated by an order of magnitude against this repo's measured
 > commit volume. The architecture survived all four rounds unchanged; the defects were in the criteria
 > that were supposed to *prove* the safety claims.
+>
+> **Third revision note (2026-07-30) — round 4 re-tested against the engine that actually ships
+> ([GH-370](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/370)).** Every
+> code citation in rounds 1–4 was verified against `utils/py/_marathon_plan_node.js`, which #340 deleted.
+> All eight findings were re-run against `origin/development@9082328`: **seven hold** and one broke.
+> Corrected here: the builder call-site note pointed at `_inject_review_lanes`, a function #340 folded
+> into the engine (`marathon_plan.py` retains no post-render *mutation* step at all now); the no-`gh`-call
+> fixture specified a *loud-fail* stub, which cannot work because `_resolve_gh` discards the stub's
+> stderr and swallows its exit code — that criterion would have passed without testing anything;
+> `QP_GH_STATE_FILE` was offered as a usable env var when it is internal to the Bash twin; two line
+> citations had drifted past end-of-file; and the `/10days` "no executable" claim was too strong now
+> that the skill ships helper scripts. **The architecture is untouched for the fifth time** — what
+> needed fixing was, once again, the evidence and the test recipe rather than the design.
 
 ## Why now
 
@@ -151,7 +164,8 @@ inference, not fact (the *Attested* pillar).
 
 **Why a sidecar and not a section appended to the plan doc.** The round-4 pass found that
 `marathon_plan.py --check` re-renders the plan with the *default* mode and `cmp`s the result against the
-committed doc ([marathon_plan.py:378-391](../../utils/py/marathon_plan.py#L378)). A plan written under
+committed doc ([marathon_plan.py:187](../../utils/py/marathon_plan.py#L187) — re-confirmed 2026-07-30
+against the post-#340 engine; round 4 cited `:378-391`, which is now past end-of-file). A plan written under
 `auto`/`on` and later checked under default `off` would therefore report **drift that is not real**.
 A sidecar removes that interaction entirely and buys two more things: "the plan doc is byte-identical
 in every mode" becomes true *by construction* rather than by test, and the removal seam sharpens to one
@@ -190,8 +204,12 @@ on.
 `--planning-context=auto` explicitly for its **report** step (it already depends on `gh` for the sweep
 itself, so this adds no new reach) — but only after its fire list is frozen.
 
-**The `/10days` hook is a documentation change, not a code path.** `/10days` is a prose skill, not an
-executable, so there is nothing to "dry-run." Making it surface the sidecar means one instruction in
+**The `/10days` hook is a documentation change, not a code path.** `/10days` drives its sequence from
+prose in `skills/10days/SKILL.md`; there is **no `/10days` entry point that renders a plan**, so there is
+nothing to "dry-run." (The skill directory does ship helper scripts — `find-doc.sh`, `install.sh`,
+`scan-issues.sh` — so the earlier, broader claim that it contains "no executable" was too strong. None of
+them renders or fires anything; the ordering this criterion cares about lives only in the prose.) Making
+it surface the sidecar means one instruction in
 `skills/10days/SKILL.md` placed after its Step 6 (fire list frozen) and before its Step 8 (report). That
 file is therefore part of the removal seam and part of the no-parser grep scope — see both below. This
 replaces a round-3 criterion that assumed a `/10days` binary existed.
@@ -220,9 +238,14 @@ natively, and it still holds — see `_gh_state()` and the `GH_MODE` resolution 
 
 - Every claim in this doc about `gh` calls is scoped to **overlay** calls (`gh issue list --milestone`).
   "`off` makes zero `gh` calls" was false as written and is now stated correctly above.
-- Any test asserting "no `gh` call" must run under the existing hermetic seam (`QP_GH_STATE_FILE` /
-  `QUEUE_PLAN_GH_STATE_FILE`, the same one [test/marathon-plan.sh](../../test/marathon-plan.sh) already
-  uses), or the base planner trips the assertion before the overlay is ever reached.
+- Any test asserting "no `gh` call" must run under the existing hermetic seam —
+  **`QUEUE_PLAN_GH_STATE_FILE`** (a JSON state map) or **`QUEUE_PLAN_GH=off`**, the same seam
+  [test/marathon-plan.sh](../../test/marathon-plan.sh) already uses — or the base planner trips the
+  assertion before the overlay is ever reached. Both verified 2026-07-30 to drive `gh` invocations to
+  **zero**. Do **not** set `QP_GH_STATE_FILE`: despite appearing in earlier drafts of this doc as an
+  alternative spelling, it is an *internal* variable of the Bash twin's embedded Node program, assigned
+  from the real one at [utils/marathon-plan.sh:179](../../utils/marathon-plan.sh#L179). Exporting it is
+  a no-op on both lanes, and a fixture that relies on it runs live against real `gh`.
 
 ### The three signals
 
@@ -290,8 +313,10 @@ prompt only; it must never create or fire a lane automatically.
 Each one names a runnable check (P10, Appendix H4). Fixtures live in `test/gh336-planning-context.sh`
 plus `test/fixtures/gh336/`.
 
-**Every fixture runs under the hermetic `gh` seam** (`QP_GH_STATE_FILE` / `QUEUE_PLAN_GH_STATE_FILE`, as
-[test/marathon-plan.sh](../../test/marathon-plan.sh) already does). This is a precondition, not a detail:
+**Every fixture runs under the hermetic `gh` seam** — `QUEUE_PLAN_GH_STATE_FILE` or
+`QUEUE_PLAN_GH=off`, as [test/marathon-plan.sh](../../test/marathon-plan.sh) already does (never
+`QP_GH_STATE_FILE`, which is internal to the Bash twin — see the correction above). This is a
+precondition, not a detail:
 without it the base planner's own `gh auth status` / `gh issue view` calls fire first and contaminate
 every assertion below.
 
@@ -304,10 +329,21 @@ every assertion below.
 - [ ] **Kill switch is byte-exact, it is the default, and it makes no overlay `gh` call.** Both
       `--planning-context=off` and the no-flag invocation reproduce today's plan doc byte-for-byte
       (golden captured before the change lands) and write **no sidecar file**. The `gh` assertion is
-      scoped to the overlay's own query: a stub that fails loudly **only** on
-      `gh issue list --milestone`, with the base planner's `gh` path neutralized by the hermetic seam
-      above. (The previous wording — "neither issues a single `gh` call" — was false against the real
-      base planner; round-4 finding 1.)
+      scoped to the overlay's own query — `gh issue list --milestone` — with the base planner's `gh`
+      path neutralized by the hermetic seam above. (The previous wording — "neither issues a single
+      `gh` call" — was false against the real base planner; round-4 finding 1.)
+
+      **The stub must record to a file, not fail loudly.** A stub that writes to stderr and exits
+      non-zero is *undetectable* here, so a fixture built that way passes whether or not `gh` runs:
+      `_resolve_gh` invokes the binary with `stderr=subprocess.DEVNULL` and converts any non-zero exit
+      into `GH_MODE = "off"`
+      ([_marathon_plan.py:450-453](../../utils/py/_marathon_plan.py#L450-L453) — `stderr=subprocess.DEVNULL`
+      is on `:451`, and the `except` that converts the failure is at `:452-453`) — the
+      scream is discarded and the failure is indistinguishable from "`gh` not installed." Verified
+      2026-07-30: a stub echoing to stderr and exiting 42 produced **zero** observable output while a
+      file tripwire in the same run recorded `gh auth status`. The fixture must therefore append each
+      invocation to a temp file and assert on that file's contents; the stub's own exit code carries no
+      information.
 - [ ] **`--check` reports no false drift.** A plan generated under `auto`/`on` and then checked under
       the default mode reports **in sync**. This is the criterion the sidecar design exists to make
       trivially passable; it is pinned anyway because the guarantee is the point, not the mechanism.
@@ -317,7 +353,8 @@ every assertion below.
 - [ ] **`/10days` ordering is verified by reading the skill, not by running a binary.** Assert that
       `skills/10days/SKILL.md` places the sidecar instruction after its fire-list-frozen step and
       before its report step, and that no step preceding the fire list references the overlay. (Replaces
-      a criterion that assumed a `/10days` executable existed — there is none; round-4 finding 2.)
+      a criterion that assumed a plan-rendering `/10days` entry point existed — there is none; round-4
+      finding 2.)
 - [ ] **Degrades, never fails.** With `gh` forced to fail *and* separately with a non-`gh` precondition
       failure (no release resolves; several resolve without `--release`): `auto` writes no sidecar
       silently, `on` writes none and prints the specific reason to stderr, both exit 0, and the plan doc
@@ -370,12 +407,27 @@ understated the real surface; "nothing else references it" was wrong twice over.
 4. remove the sidecar instruction from `skills/10days/SKILL.md`;
 5. delete any stale `MARATHON-PLAN-*.context.md` sidecars (generated artifacts, safe to remove).
 
-**Call-site note for the builder.** The hook is real and already proven: `_inject_review_lanes`
-([marathon_plan.py:195](../../utils/py/marathon_plan.py#L195), called post-render before the
-check/write branch) does exactly this kind of post-render mutation today. `planning_context.py` attaches
-at that same point. Unlike `_inject_review_lanes` — which *inserts* before the `## How to fire a lane`
-anchor — the sidecar writer touches the plan doc not at all, so there is no ordering interaction between
-the two.
+**Call-site note for the builder.** The seam is the gap between the render call and the first
+mode-dispatch branch in `utils/py/marathon_plan.py`: `engine.run(cfg, render_out)`
+([marathon_plan.py:170](../../utils/py/marathon_plan.py#L170)) produces the rendered doc, and the three
+mode branches follow — `--check` at
+[marathon_plan.py:181](../../utils/py/marathon_plan.py#L181), `--dry-run` at
+[:197](../../utils/py/marathon_plan.py#L197), and the write path at
+[:201](../../utils/py/marathon_plan.py#L201). `planning_context.py` attaches after `:170` and before
+`:181`. It writes only its own sidecar, so it needs no hook *into* the renderer and there is no ordering
+interaction with anything the engine emits.
+
+> **Do not look for a post-render mutation shim — there is no longer one.** Rounds 1–4 all reviewed the
+> pre-#340 tree, where `marathon_plan.py` wrapped a copied Node renderer and post-processed its output
+> via `_inject_review_lanes`. Round 4 cited that function as proof this hook point existed. **#340
+> deleted it**: the "Review lanes" overlay is now rendered natively inside the engine
+> ([_marathon_plan.py:1297](../../utils/py/_marathon_plan.py#L1297)), and `marathon_plan.py` shrank to a
+> 212-line CLI wrapper with **no post-render mutation shim**. It still does post-render *work* — the
+> check, dry-run, and write branches at
+> [marathon_plan.py:181-205](../../utils/py/marathon_plan.py#L181) — but nothing that rewrites the
+> rendered bytes, which is the property that matters here. The *decision* is unaffected — a sidecar writer
+> never needed an insertion hook, only a point that runs after rendering — but a builder following the
+> old citation would hunt for a function that does not exist.
 
 The stickiness vectors Codex named are closed as follows:
 
@@ -460,7 +512,8 @@ schedules it.
 
 Recorded so they are not lost, and so nobody mistakes them for GH-336 work:
 
-- **`marathon-plan.sh:54` claims `--check` is "a drift guard in `validate.sh`" — `validate.sh` does not
+- **[`marathon-plan.sh:67`](../../utils/marathon-plan.sh#L67) claims `--check` is "a drift guard in
+  `validate.sh`" — `validate.sh` does not
   wire it.** `validate.sh` runs `test/marathon-plan.sh` but never invokes `--check`, so the documented
   guard does not exist. A doc-vs-reality disagreement (P9), pre-existing, and a separate hygiene fix.
   It is why the sidecar's false-drift hazard is *latent* rather than active today.
