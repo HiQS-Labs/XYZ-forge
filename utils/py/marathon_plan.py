@@ -35,7 +35,14 @@ def emit(msg):
     sys.stderr.write(f"{msg}\n")
 
 
-def usage():
+def print_usage():
+    """Print the usage block to stdout and nothing else.
+
+    GH-349: this used to be inseparable from an unconditional `sys.exit(0)`, which made the `die()`
+    after the unknown-argument branch **unreachable** — so `marathon-plan.sh --bogus` exited 0 on the
+    default lane while the Bash twin exited 2. Splitting print from exit is the whole fix: Bash's
+    `usage()` (`utils/marathon-plan.sh:102`) also only prints, and its callers own the exit code.
+    """
     print("""Usage: utils/py/marathon_plan.py [--dry-run | --check] [--policy quick-wins|derisk-first]
                            [--deep] [--require-gh] [--format text|json]
 
@@ -49,7 +56,6 @@ def usage():
   --format F       text (default) | json (findings as one JSON object per line).
 
 Exit: 0 clean · 2 usage · 3 ROADMAP unparseable · 4 drift present · 5 items held · 6 gh required-but-absent.""")
-    sys.exit(0)
 
 
 def main():
@@ -88,9 +94,13 @@ def main():
             else:
                 die("missing argument for --format")
         elif arg in ("--help", "-h"):
-            usage()
+            print_usage()
+            sys.exit(0)
         else:
-            usage()
+            # Mirrors `utils/marathon-plan.sh:139` exactly — `*) usage; die "unknown argument: $1"`:
+            # usage to stdout, the error to stderr, exit 2. An unknown flag on the default lane must
+            # never be reportable as success (GH-349).
+            print_usage()
             die(f"unknown argument: {arg}")
 
     if policy not in ("quick-wins", "derisk-first"):
@@ -150,6 +160,7 @@ def main():
         "zones_config": os.environ.get("QUEUE_PLAN_ZONES_CONFIG", ""),
         "gh_state_file": os.environ.get("QUEUE_PLAN_GH_STATE_FILE", ""),
         "branches_file": os.environ.get("QUEUE_PLAN_BRANCHES_FILE", ""),
+        "branch_env": os.environ.get("QUEUE_PLAN_BRANCH", ""),
         "gh_force": os.environ.get("QUEUE_PLAN_GH", ""),
         "base_files_file": os.environ.get("QUEUE_PLAN_BASE_FILES_FILE", ""),
         "zones_file_env": os.environ.get("QUEUE_PLAN_ZONES_FILE", ""),

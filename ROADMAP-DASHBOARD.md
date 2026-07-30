@@ -139,10 +139,11 @@ Summary: 126 items | Tally: 🟢 5 · 🟡 4 · ⏸️ 2 · ⛔ 0 · ✅ 82 · �
 
 ## In progress
 
-Summary: 22 items | Tally: 🟢 0 · 🟡 7 · ⏸️ 0 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 23 items | Tally: 🟢 0 · 🟡 8 · ⏸️ 0 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-349 + GH-346 · marathon-plan cleanup: an unknown flag exited 0, and branch: was hardcoded | 🟡 | [GH-349-346-MARATHON-PLAN-CLEANUP.md](PROJECT/2-WORKING/GH-349-346-MARATHON-PLAN-CLEANUP.md) · [#349](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/349) · [#346](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/346) |
 | GH-348 · marathon-plan's Bash↔Python parity assertion compared Python to Python | 🟡 | [GH-348-MARATHON-PLAN-PARITY-GATE.md](PROJECT/2-WORKING/GH-348-MARATHON-PLAN-PARITY-GATE.md) · [#348](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/348) |
 | GH-342 · Sentinel Tier-1 debug capture (XYZ_DEBUG_LOG) never ran on the default lane | ✅ | [GH-342-SENTINEL-DEBUG-LOG-PYTHON-LANE.md](PROJECT/2-WORKING/GH-342-SENTINEL-DEBUG-LOG-PYTHON-LANE.md) · [#342](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/342) |
 | GH-340 · marathon-plan: replace the copied Node renderer with a native Python engine | 🟡 | [GH-340-NATIVE-PYTHON-MARATHON-PLAN.md](PROJECT/2-WORKING/GH-340-NATIVE-PYTHON-MARATHON-PLAN.md) · [#340](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/340) |

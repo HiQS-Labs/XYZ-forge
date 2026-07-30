@@ -716,6 +716,96 @@ else
   fi
 fi
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario U — GH-349: an unknown flag must be a USAGE ERROR on the lane that runs
+# ─────────────────────────────────────────────────────────────────────────────
+# marathon_plan.py's usage() used to end in an unconditional sys.exit(0), making the die() on the next
+# line unreachable — so `marathon-plan.sh --bogus` exited 0 on the DEFAULT lane while Bash exited 2.
+# A scripted `--check --typo` printed usage, compared nothing, and reported success.
+U="$WORK/U"; mkdir -p "$U/PROJECT/2-WORKING"; echo '{}' >"$U/.gh-state.json"; : >"$U/.branches"
+printf '# Roadmap\n## Ledger\n### In progress\n' >"$U/ROADMAP.md"
+
+u_out="$(run_qp "$U" --bogus 2>"$WORK/u.err")"; u_rc=$?
+[[ $u_rc -eq 2 ]] \
+  && pass "U: unknown flag exits 2 on the DEFAULT lane (XYZ_PYTHON unset) [GH-349]" \
+  || fail "U: unknown flag exited $u_rc on the default lane (expected 2)"
+grep -q 'unknown argument: --bogus' "$WORK/u.err" \
+  && pass "U: the error names the offending flag, on stderr [GH-349]" \
+  || fail "U: no 'unknown argument' on stderr: $(head -1 "$WORK/u.err")"
+printf '%s\n' "$u_out" | grep -q '^Usage:' \
+  && pass "U: usage still goes to stdout (Bash parity: usage stdout, error stderr)" \
+  || fail "U: usage block missing from stdout"
+# The failure this pins is specifically that a NON-ZERO exit is reachable. --help must stay 0.
+run_qp "$U" --help >/dev/null 2>&1 \
+  && pass "U: --help still exits 0" || fail "U: --help no longer exits 0"
+# Cross-lane: both twins must agree on the code, or a caller's `|| alert` fires on one lane only.
+if command -v node >/dev/null 2>&1; then
+  run_qp_sh "$U" --bogus >/dev/null 2>&1; ub_rc=$?
+  [[ $ub_rc -eq 2 ]] && pass "U: the Bash lane also exits 2 (codes agree across lanes) [GH-349]" \
+    || fail "U: Bash lane exited $ub_rc (expected 2)"
+else
+  skip "U: cross-lane exit-code agreement needs node"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Scenario V — GH-346: `branch:` front-matter is DERIVED, not the literal "main"
+# ─────────────────────────────────────────────────────────────────────────────
+# Every generated plan asserted `branch: main` regardless of the target repo's trunk. Reported against
+# rebalance-OS, whose trunk is `development`. It is the repo's TRUNK, deliberately not the current
+# branch — deriving HEAD would make `--check` report drift just because someone cut a feature branch.
+#
+# #346 claimed "the Python lane contains no branch: string of its own, so fixing :945 covers both".
+# That was true when marathon_plan.py shelled out to the copied JS; GH-340/PR #341 replaced it with a
+# native Python engine that has its own renderer. Both engines are fixed, and asserted here.
+grep -q 'o.push("branch: main")' "$QP" \
+  && fail "V: utils/marathon-plan.sh still hardcodes 'branch: main' [GH-346]" \
+  || pass "V: the Bash engine no longer hardcodes 'branch: main' [GH-346]"
+grep -q 'o.append("branch: main")' "$ROOT/utils/py/_marathon_plan.py" \
+  && fail "V: the native Python engine still hardcodes 'branch: main' [GH-346]" \
+  || pass "V: the native Python engine no longer hardcodes 'branch: main' [GH-346]"
+
+# The fixture root is a plain directory, not a git repo, so nothing resolves → the honest fallback.
+# Needs at least one ledger item: an empty ledger exits 3 ("no ledger items parsed") and renders
+# nothing, so an assertion against a missing file would be measuring the wrong failure.
+V="$WORK/V"; mkdir -p "$V"; echo '{}' >"$V/.gh-state.json"; : >"$V/.branches"
+mk_doc "$V" GH-1300-branchfield.md 2 2 2 "$(contract_for MISS_VB src/branchfield.js)"
+cat >"$V/ROADMAP.md" <<EOF
+# Roadmap
+## Ledger
+### In progress
+- **GH-1300 · branch field** 🆕 — → [d](PROJECT/2-WORKING/GH-1300-branchfield.md) · [#1300](https://github.com/o/r/issues/1300)
+EOF
+run_qp "$V" >/dev/null 2>&1
+vdoc="$V/PROJECT/2-WORKING/MARATHON-PLAN-$DAY.md"
+if [[ -f "$vdoc" ]]; then
+  grep -qx 'branch: unknown' "$vdoc" \
+    && pass "V: a non-git root renders 'branch: unknown', not a false 'main' [GH-346]" \
+    || fail "V: expected 'branch: unknown', got '$(grep -m1 '^branch:' "$vdoc")'"
+else
+  fail "V: no plan rendered at $vdoc"
+fi
+
+# QUEUE_PLAN_BRANCH is the override + hermetic seam. Both lanes must honor it identically.
+rm -f "$vdoc"
+QUEUE_PLAN_BRANCH="release/9.9" run_qp "$V" >/dev/null 2>&1
+grep -qx 'branch: release/9.9' "$vdoc" \
+  && pass "V: QUEUE_PLAN_BRANCH overrides the derived value (Python lane) [GH-346]" \
+  || fail "V: QUEUE_PLAN_BRANCH ignored on the Python lane: '$(grep -m1 '^branch:' "$vdoc")'"
+if command -v node >/dev/null 2>&1; then
+  cp "$vdoc" "$V/py-branch.md"; rm -f "$vdoc"
+  QUEUE_PLAN_BRANCH="release/9.9" run_qp_sh "$V" >/dev/null 2>&1
+  grep -qx 'branch: release/9.9' "$vdoc" \
+    && pass "V: QUEUE_PLAN_BRANCH overrides the derived value (Bash lane) [GH-346]" \
+    || fail "V: QUEUE_PLAN_BRANCH ignored on the Bash lane: '$(grep -m1 '^branch:' "$vdoc")'"
+  # The whole doc, not just the field: a derived value computed differently in the two engines is the
+  # drift class GH-348 exists to catch, and this is the change most likely to introduce it.
+  cmp -s "$V/py-branch.md" "$vdoc" \
+    && pass "V: both engines render byte-identical docs with a derived branch [GH-346/GH-348]" \
+    || fail "V: engines diverge with a derived branch: $(diff "$V/py-branch.md" "$vdoc" | head -4)"
+else
+  skip "V: cross-lane branch-derivation parity needs node"
+fi
+
 echo
 _skip_note=""; [[ "$SKIP" -gt 0 ]] && _skip_note=", $SKIP skipped"
 echo "  marathon-plan: $PASS passed, $FAIL failed$_skip_note"

@@ -165,6 +165,7 @@ QP_SP_CMD="$_SP_CMD" QP_MD_CMD="$_MD_CMD" QP_MP_CMD="$_MP_CMD" \
 QP_RENDER_OUT="$RENDER_OUT" QP_UTILS_DIR="$HERE" QP_ZONES_CONFIG="$ZONES_CONFIG" \
 QP_GH_STATE_FILE="${QUEUE_PLAN_GH_STATE_FILE:-}" QP_BRANCHES_FILE="${QUEUE_PLAN_BRANCHES_FILE:-}" \
 QP_GH_FORCE="${QUEUE_PLAN_GH:-}" QP_BASE_FILES_FILE="${QUEUE_PLAN_BASE_FILES_FILE:-}" \
+QP_BRANCH="${QUEUE_PLAN_BRANCH:-}" \
 node - <<'NODE'
 "use strict";
 const fs = require("fs");
@@ -185,6 +186,33 @@ const MD_CMD = E.QP_MD_CMD || "relay-automation/marathon-drive.sh";
 const MP_CMD = E.QP_MP_CMD || "utils/marathon-plan.sh";
 const BASE_FILES_FILE = E.QP_BASE_FILES_FILE || "";
 const UTILS_DIR = E.QP_UTILS_DIR || process.cwd();
+
+// GH-346: the rendered plan's `branch:` front-matter used to be the string literal "main". It is the
+// repo's TRUNK, not the branch the generator happens to be standing on — deriving the current branch
+// would make `--check` report drift merely because someone switched to a feature branch. Resolution
+// order, mirrored byte-for-byte in utils/py/_marathon_plan.py (the two engines must agree):
+//   1. QUEUE_PLAN_BRANCH  — explicit override; also the hermetic test seam, since the suite's fixture
+//                           roots are plain directories, not git repos
+//   2. origin/HEAD        — the trunk as the remote declares it (same source release-lanes.sh uses)
+//   3. HEAD's branch      — a repo with no origin/HEAD still has an answer worth printing
+//   4. "unknown"          — honest. The old literal "main" was wrong for every repo whose trunk is
+//                           not main, and PDDA does not require this key (pdda.sh:39), so a lie here
+//                           buys nothing.
+function resolveBranch() {
+  if (E.QP_BRANCH) return E.QP_BRANCH;
+  const tryGit = (cmd) => {
+    try {
+      const out = execSync(cmd, { cwd: ROOT, stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+      return out || null;
+    } catch { return null; }
+  };
+  const remote = tryGit("git symbolic-ref --short refs/remotes/origin/HEAD");
+  if (remote) return remote.replace(/^origin\//, "");
+  const head = tryGit("git rev-parse --abbrev-ref HEAD");
+  if (head && head !== "HEAD") return head;
+  return "unknown";
+}
+const BRANCH = resolveBranch();
 const EXPLICIT_ZONES_CONFIG = E.QP_ZONES_CONFIG || "";
 
 // Ledger sections we sequence from vs. only reference.
@@ -942,7 +970,7 @@ function renderQueueDoc() {
   o.push(`created: ${TODAY}`);
   o.push(`updated: ${TODAY}`);
   o.push("owner: noel");
-  o.push("branch: main");
+  o.push(`branch: ${BRANCH}`);   // GH-346: derived trunk, was the literal "main"
   o.push("doc_type: project");
   o.push("source: ../../ROADMAP.md (open ledger entries)");
   o.push(`generated_by: ${MP_CMD}`);

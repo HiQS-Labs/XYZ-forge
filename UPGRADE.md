@@ -160,8 +160,11 @@ python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 8) else 1)
 #      Python twins (`poll.py:25`, `relay_drive.py`, `marathon_drive.py`, via `rtl.py`) shell out to it.
 #      So Node is already required to run this harness AT ALL, in either mode — the flip adds no new Node
 #      dependency. If node is missing the harness is already broken today; there is NO "flip without node"
-#      subset, because every tick-using entry point needs it. (marathon-plan additionally calls node
-#      directly for _marathon_plan_node.js, but that's on top of the baseline, not a separate case.)
+#      subset, because every tick-using entry point needs it. (Until GH-340, marathon-plan ALSO called
+#      node directly, for a copied renderer `_marathon_plan_node.js`. That file is deleted and the
+#      Python lane is now a native stdlib engine, so marathon-plan no longer adds a Node requirement
+#      of its own — `bin/tick` is the only reason Node is needed. The Bash `XYZ_PYTHON=0` fallback in
+#      `utils/marathon-plan.sh` still embeds a node program and still requires node, by design.)
 node --version || note "node not found — the harness needs it in BOTH modes (bin/tick is a Node program)"
 
 # (b) clean, CURRENT branch — a clean status is NOT proof the branch is up to date.
@@ -240,12 +243,14 @@ call ordinary system tools — `git`, `/bin/bash`, `date`, `sed` (`marathon_driv
 | Runtime | Required by | Introduced by the flip? |
 |---|---|---|
 | `python3` (>=3.8) | all 11 Python twins | **Yes** — this is the new hard gate |
-| `node` | `bin/tick` (⇒ every tick-using entry point, Bash *and* Python) + marathon-plan's `_marathon_plan_node.js` | No — already required today |
+| `node` | `bin/tick` (⇒ every tick-using entry point, Bash *and* Python) + `utils/marathon-plan.sh`'s embedded node program on the `XYZ_PYTHON=0` fallback | No — already required today |
 | git, bash, coreutils (`date`/`sed`) | every twin, via subprocess | No — POSIX baseline |
 
 **There is no "flip without Node" subset.** Because the tick-using entry points need `bin/tick` (Node)
-regardless of mode, you cannot flip "the 10 non-marathon-plan twins" on a Node-less box — they'd be
-just as broken as marathon-plan. If `node` is missing, fix that first (the Bash harness is already
+regardless of mode, you cannot flip any subset of the twins on a Node-less box — they'd all be just as
+broken. (Since GH-340, marathon-plan's *Python* lane is the one entry point that no longer needs Node
+for its own work; it still cannot help you here, because nothing else in the harness is Node-free.)
+If `node` is missing, fix that first (the Bash harness is already
 broken without it); do not treat it as a per-file flip decision. Per-file flipping remains legitimate
 for *other* reasons (e.g. staging the rollout), just not as a way to dodge the Node requirement.
 

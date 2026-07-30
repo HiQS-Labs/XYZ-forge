@@ -133,6 +133,7 @@ class Engine:
         self.EXPLICIT_ZONES_CONFIG = cfg.get("zones_config", "")
         self.GH_STATE_FILE = cfg.get("gh_state_file", "")
         self.BRANCHES_FILE = cfg.get("branches_file", "")
+        self.BRANCH_ENV = cfg.get("branch_env", "")  # GH-346: QUEUE_PLAN_BRANCH override / test seam
         self.GH_FORCE = cfg.get("gh_force", "")
         self.ZONES_FILE_ENV = cfg.get("zones_file_env", "")  # QUEUE_PLAN_ZONES_FILE
 
@@ -391,6 +392,33 @@ class Engine:
         except (subprocess.CalledProcessError, OSError):
             self._branch_cache = []
         return self._branch_cache
+
+    def _resolve_branch(self):
+        """GH-346: the rendered plan's `branch:` front-matter — the repo's TRUNK, not the branch the
+        generator happens to be standing on (deriving the current branch would make `--check` report
+        drift merely because someone switched to a feature branch).
+
+        Resolution order is mirrored byte-for-byte from utils/marathon-plan.sh's resolveBranch(); the
+        two engines must agree, and test/marathon-plan.sh Scenario T now actually compares them (#348).
+        """
+        if self.BRANCH_ENV:
+            return self.BRANCH_ENV
+
+        def try_git(args):
+            try:
+                out = subprocess.run(args, cwd=self.ROOT, stdout=subprocess.PIPE,
+                                     stderr=subprocess.DEVNULL, check=True).stdout.decode("utf-8").strip()
+                return out or None
+            except (subprocess.CalledProcessError, OSError):
+                return None
+
+        remote = try_git(["git", "symbolic-ref", "--short", "refs/remotes/origin/HEAD"])
+        if remote:
+            return re.sub(r"^origin/", "", remote)
+        head = try_git(["git", "rev-parse", "--abbrev-ref", "HEAD"])
+        if head and head != "HEAD":
+            return head
+        return "unknown"
 
     def _branch_matches_slug(self, slug):
         if not slug:
@@ -1148,7 +1176,7 @@ class Engine:
         o.append("created: %s" % self.TODAY)
         o.append("updated: %s" % self.TODAY)
         o.append("owner: noel")
-        o.append("branch: main")
+        o.append("branch: %s" % self._resolve_branch())   # GH-346: derived trunk, was the literal "main"
         o.append("doc_type: project")
         o.append("source: ../../ROADMAP.md (open ledger entries)")
         o.append("generated_by: %s" % self.MP_CMD)
