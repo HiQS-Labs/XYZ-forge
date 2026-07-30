@@ -1,8 +1,8 @@
 ---
 title: Stop maintaining the Bash twins — make Python the single authoritative lane
-status: "Active (2-WORKING) — promoted 2026-07-27 by the /10days sweep as the unlocking-feature lane. ONLY Phase 1 (freeze, no deletion) is contracted and fireable; Phases 2-3 stay unscheduled."
+status: "Phase 1 COMPLETE 2026-07-29 — 11/11 twins frozen, guard enforcing in CI + validate.sh, policy in AGENTS.md/UPGRADE.md, insurance tag `bash-final-2026-07-28` cut at 06100cc, and 20 single-lane Python-only fixes shipped as the proof. Issue closed; shipped in release Quicksilver. Phases 2-3 were never contracted and remain unscheduled — they need a fresh issue, not this one reopened."
 created: 2026-07-26
-updated: 2026-07-27
+updated: 2026-07-29
 owner: noel
 gh_issue: 308
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308
@@ -42,7 +42,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Selected by the 2026-07-27 `/10days` sweep as **the highest-leverage unlocking item** — not because it is a feature users see, but because it closes a recurring correctness class: a fix lands in Bash, Python is the executing default, and the fix silently never runs. Documented recurrences: #296, #215, #223, #174, #148 — five times. Verified unstarted: no `FROZEN` banner exists in any `relay-automation/*.sh` (0 matches), and no `bash-final-*` tag exists. | Fire **Phase 1 only** via the contract below. Phase 1 is freeze-not-delete: banners + an enforcement guard + an insurance tag + the policy written into `AGENTS.md`/`UPGRADE.md`. Rollback is removing a banner. **Phases 2 (test-matrix collapse) and 3 (opportunistic deletion) are explicitly NOT contracted here** and remain unscheduled by the issue's own choice. |
+| **Phase 1 shipped.** All 8 checklist items done — the last one, the insurance tag, had never been cut and was found by *verifying* the checklist rather than trusting it (`git tag` returned **0 tags**, local and remote). `bash-final-2026-07-28` now exists, annotated, at `06100cc` — the parent of `07ae1e7`, the commit that landed the banners. Named for its commit's real date, not the `2026-07-26` placeholder the capture used illustratively. Also demonstrated rather than asserted: staging a one-line edit to `codex-turn.sh` is **blocked, exit 1** by `gh308-frozen-twin-guard.sh --check --staged`. The policy's proof is 20 single-lane Python-only fixes, not the policy text — #322, #331, #289, the 16 in #338, and #342, the last known item in the class. | Nothing, on this issue. **Phases 2 (test-matrix collapse) and 3 (opportunistic deletion) were never contracted and stay unscheduled** — they need a new issue, not this one reopened. One live follow-on worth its own decision: GH-340 removed marathon-plan's Node dependency, so the *stated reason* for its carve-out from Python authority ("its port delegates to a vendored node engine with documented gaps") no longer holds. `UPGRADE.md:68` still says the gaps are open. |
 
 > **Scope warning for whoever fires this.** The title reads like a large risky migration; the
 > contracted work is not that. Nothing is deleted, `XYZ_PYTHON`'s default is unchanged, and
@@ -161,29 +161,32 @@ frozen code," not "breaks."
 **This phase is the entire ROI.** Nothing is deleted; the pair-commit tax stops here.
 
 ### Checklist
-- [ ] Cut an annotated tag on `development` at the last fully dual-maintained commit
+- [x] Cut an annotated tag on `development` at the last fully dual-maintained commit — **DONE 2026-07-29,
+      and it was the one item that had genuinely never been done.** `bash-final-2026-07-28` at `06100cc`
       (e.g. `bash-final-2026-07-26`) and push it — cheap insurance, frozen, never merged into
-- [ ] Cut the working branch from `development` (not `main`)
-- [ ] Add a short **FROZEN** banner to the top of each of the 11 Tier-A Bash twins: Python is
+- [x] Cut the working branch from `development` (not `main`)
+- [x] Add a short **FROZEN** banner to the top of each of the 11 Tier-A Bash twins — verified 11/11: Python is
       authoritative, do not edit, pointer to this issue and to the Python file
-- [ ] Add the enforcement guard: fail (or loudly warn) when a commit touches a frozen twin
-- [ ] **#278 — re-scoped (see the Phase 0 note).** Its fix landed dual-lane in `7d1a341` before this
+- [x] Add the enforcement guard — `test/gh308-frozen-twin-guard.sh`, registered in `validate.sh` AND wired into CI
+- [x] **#278 — re-scoped (see the Phase 0 note).** Its fix landed dual-lane in `7d1a341` before this
       project starts, so closing it no longer proves the policy. Instead: verify the Python half is
       authoritative and correct, freeze or revert the Bash half, and reconcile the 900s doc value
-- [ ] Deliver the Phase 0-chosen first fix **single-lane** as the policy's actual proof
-- [ ] Record the policy in `AGENTS.md` + `UPGRADE.md`: fixes land in Python only; the Bash twins are
+- [x] Deliver the Phase 0-chosen first fix **single-lane** — delivered 20 times over (#322, #331, #289, 16 in #338, #342)
+- [x] Record the policy in `AGENTS.md` + `UPGRADE.md`: fixes land in Python only; the Bash twins are
       historical reference; `marathon-plan` is the documented exception
-- [ ] Leave `marathon-plan` and all Bash-only scripts untouched
+- [x] Leave `marathon-plan` and all Bash-only scripts untouched — the guard reports clean on every merged range
 
 ### QA checklist — Phase 1
-- [ ] Editing a frozen twin is actually blocked/flagged — demonstrated with a throwaway commit
-- [ ] At least one real fix has shipped **single-lane** under the new policy — the proof is a
+- [x] Editing a frozen twin is actually blocked — **demonstrated**: staging one line into `codex-turn.sh`
+      yields `FROZEN Bash twin edit blocked`, exit 1 (probe reverted, nothing committed)
+- [x] At least one real fix has shipped **single-lane** under the new policy — the proof is a
       delivered change, not the policy text
-- [ ] #278's Python half is verified authoritative; its Bash half is frozen or reverted, not left
+- [x] #278's Python half is verified authoritative; its Bash half is frozen or reverted, not left
       as a second maintained copy
-- [ ] The `marathon-plan` exception is written down where a future maintainer will hit it
-- [ ] Nothing was deleted; `git status` shows only banners, docs, the guard, and the #278 fix
-- [ ] Rollback is a one-line banner removal — confirm no step is hard to undo
+- [x] The `marathon-plan` exception is written down (`UPGRADE.md:68`) — though see the Status note: GH-340
+      invalidated its stated *reason*, so the text needs a follow-up pass
+- [x] Nothing was deleted; `git status` shows only banners, docs, the guard, and the #278 fix
+- [x] Rollback is a one-line banner removal — confirm no step is hard to undo
 
 ## Swarm Preflight Contract
 

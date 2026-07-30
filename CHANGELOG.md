@@ -2,7 +2,31 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
-## [Unreleased]
+## 2026-07-29
+
+### Released
+- **`0.1.0` — Quicksilver: Python-authoritative Tier-A twins.** The repo's first named release, and
+  the first time `development` has been merged into `main` (which was **425 commits behind**). Scope was
+  deliberately two issues, not a sweep, so the roll-up would mean something: **#308** (freeze the 11 Tier-A
+  Bash twins; Python is the sole maintenance lane) and **#342** (the last known Bash-only behavior, ported).
+  `release-lanes.sh rollup` reports **2/2 landed**.
+  **What the release does NOT do**, stated plainly because the ledger previously promised it: Bash is not
+  phased out. GH-308's own `non_goals` exclude porting the 21 Bash-only scripts and exclude
+  `relay-turn-lib.sh`; the policy is **freeze, not delete**, and the `.sh` bodies remain as the reversible
+  `XYZ_PYTHON=0` fallback. The ledger description was corrected from *"Phase out Bash scripts"* to
+  *"Python-authoritative Tier-A twins"* before shipping, for exactly that reason.
+  **Closing GH-308 found one thing that had never been done:** its Phase 1 insurance tag. `git tag` returned
+  **0 tags**, local and remote — the escape hatch the epic promised did not exist. Cut as annotated
+  `bash-final-2026-07-28` at `06100cc`, the parent of `07ae1e7` (the commit that landed the FROZEN banners),
+  and named for its commit's real date rather than the `2026-07-26` placeholder the capture used
+  illustratively. Found by *verifying* the checklist rather than trusting it — the same discipline that
+  produced every other finding this cycle.
+  Also demonstrated rather than asserted: staging one line into `codex-turn.sh` is **blocked, exit 1**.
+  **Three ship gates ship unmet, marked honestly rather than ticked:** `Front-door reviewed: Not yet`,
+  `Shakedown reviewed: Not yet`, and `License file: Not yet` — there is no `LICENSE` in the repo at all,
+  now tracked as #360. Version `0.1.0`, not `1.0.0`: `package.json`'s `1.0.0` is npm scaffold default from
+  `278098c`, never a considered version, and three unmet gates do not describe a 1.0.
+  → `RELEASES.md` · [#308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308)
 
 ### Added
 - **GH-284 Phase 4: `utils/release-lanes.sh` closes the loop — a release becomes marathon input, and what landed is computed from git ancestry.** Two verbs on one script, both keyed on Phase 3's `Milestone:` join key. **`seed`** resolves a milestone (`--milestone`, else `--release NAME` matched against `Release:`/`Codename:`, else the single *in-progress* block carrying one — `Shipped` history excluded) and emits its open issues as JSON-lines with the same six keys and sort as `skills/10days/scan-issues.sh`, so release-driven selection is that pipeline with a different seed set rather than a new pipeline. A release with a blank `Milestone:` **exits 3**, never an empty list: an empty list is indistinguishable from a milestone with no open issues, which is the exact ambiguity the join key exists to remove. **`rollup`** classifies each issue against the derived trunk and prints `N/M landed`. **The obvious data source did not exist:** GitHub's `closedByPullRequestsReferences` is **empty on every issue probed in this repo** (#308, #319, #292, #274, #51, #261 — open and closed alike), because issues here are closed by hand; building on it would have reported `0/N landed` forever and looked like a fact. So evidence comes from the commit log, and three matchers were tested against issues of known state before one was chosen: *any `GH-N`/`#N` anywhere* is too loose (`#308` matched a commit that merely mentions it); *`GH-N` anywhere in the subject* is still too loose (`#308` matched `fix(RELEASES): correct the GH-308 release codename spelling`, `#284` matched `fix(GH-322): … port GH-284 Phase 2 …`); **`GH-N` as the commit's conventional scope** (`type(GH-N…):` or leading `GH-N`) rejects both and resolves every real implementing commit. A bare `#N` is deliberately **not** evidence — in a subject it is the squash-merge PR number, a different namespace, so it would land issue 326 off PR #326. **Three states, not two:** the matcher under-reports (#319/#320 were really fixed, inside a marathon commit whose subject claims no issue), so the report distinguishes `landed` / `mentioned` / `absent`, where `mentioned` means *"trunk activity exists but nothing claims to implement it"* — a flat binary would report those as a clean "not done" and be believed. **Trunk is derived and it matters:** `origin/HEAD` resolves to `origin/main` here, so Quicksilver is honestly **0/1 landed** on the release trunk and **1/1** on `origin/development` where work lands first; `--trunk REF` selects, and the report always names what it measured. Exit 4 for an empty milestone, because `gh` returns an empty list for an unknown milestone exactly as for an empty one and "nothing found" must not read as a successful selection. `RELEASES.md` is parsed directly rather than through `pdda.sh releases-current` — that is a human-facing report whose wording is free to change, and parsing a report to drive automation is how you get a silent break. Bash only, no Python twin: a new non-Tier-A script does not need a second copy to drift (#320/#322). New `test/gh284-p4-release-lanes.sh` **33/0**, registered in `validate.sh`, hermetic, using this repo's real false-positive subjects verbatim — and **mutation-tested**: loosening the matcher back to a subject-mention fails exactly the discriminating assertions (29/4), so the green run is not green by construction. Three defects were caught in this implementation by inspection rather than by any exit code: the rollup fed its issue JSON to a `python3` heredoc that already owned stdin (the same SC2259 collision that broke the P2 run log for a release), `fail()` used `"$*"` and printed its own exit code into the operator's message, and the empty-milestone path rendered `0/0 landed` *before* exiting 4. → [GH-284-MARATHON-CLOSEOUT-PR.md](PROJECT/2-WORKING/GH-284-MARATHON-CLOSEOUT-PR.md) · [#284](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/284)

@@ -13,18 +13,7 @@ scope. Ask GitHub what is in a release instead of maintaining a list here:
     gh issue list --milestone "Quicksilver" --state open --json number,title,labels
 
 Release: 0.1.0
-Status: Draft
-Target Date:
-Codename: n/a
-Description: EXAMPLE — replace this with your first real release, or delete this block once real entries exist below.
-GH_URL:
-Milestone:
-Front-door reviewed:
-Shakedown reviewed:
-License file:
-
-Release: TBD
-Status: Draft
+Status: Shipped
 Target Date: 2026-08-01
 Codename: Quicksilver
 Description: Python-authoritative Tier-A twins
@@ -32,4 +21,4 @@ GH_URL: [GH 308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-
 Milestone: Quicksilver
 Front-door reviewed: Not yet
 Shakedown reviewed: Not yet
-License file: Not yet
+License file: Not yet — no LICENSE in the repo; see #360
