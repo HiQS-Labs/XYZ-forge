@@ -83,6 +83,116 @@ def runlog_find_comment_id(payload_text, marker):
             return str(comment.get("id", ""))
     return ""
 
+# ── Sentinel Tier 1 (GH-281), ported to the lane that runs (GH-342) ──────────────────────────
+# marathon-drive.sh carried this capture; Python is the default lane since GH-264, so arming
+# XYZ_DEBUG_LOG=1 on a normal run wrote nothing. Contract preserved exactly, including the parts
+# that make it safe to leave in a public repo:
+#   · opt-in, DEFAULT OFF — an unset/0 XYZ_DEBUG_LOG must not create the file at all
+#   · writes ONE local file ($DEBUG_LOG_FILE, default $ROOT/debug.log) — no network, no telemetry
+#   · NEVER fails the run: every write is best-effort and swallows its own errors
+# Module scope, not nested in main(), so the record shape is directly testable (the GH-322
+# runlog_find_comment_id precedent — a helper reachable only through a full driven run is a helper
+# whose format contract is asserted by nothing).
+_JSON_CTRL_RE = re.compile(r'[\x00-\x1f\x7f]')
+
+
+def _json_esc(value):
+    """Bash `_json_esc`: normalize all C0/DEL controls to a space, then escape backslash + quote.
+
+    Mirrors `printf '%s' "$s" | tr '\\000-\\037\\177' ' '` — a byte-for-byte translation, so a
+    multi-byte UTF-8 sequence is untouched (Python operates on code points; `tr` on bytes; the
+    ranges here are all < 0x80, where the two agree).
+    """
+    return _JSON_CTRL_RE.sub(" ", "" if value is None else str(value)) \
+        .replace("\\", "\\\\").replace('"', '\\"')
+
+
+def xyz_debug_log_enabled():
+    """The single gate. Read at call time, not import time, so a test can arm it per-case."""
+    return os.environ.get("XYZ_DEBUG_LOG", "0") == "1"
+
+
+def xyz_debug_log_file(root):
+    """`: "${DEBUG_LOG_FILE:=$ROOT/debug.log}"` — an explicitly EMPTY value falls back too."""
+    return os.environ.get("DEBUG_LOG_FILE") or os.path.join(root, "debug.log")
+
+
+def _xyz_debug_log_write(root, line):
+    """Append one line, swallowing everything. Mirrors `>> "$f" 2>/dev/null || true`."""
+    try:
+        with open(xyz_debug_log_file(root), "a") as fh:
+            fh.write(line)
+    except Exception:
+        pass
+
+
+def xyz_debug_log_append(root, severity, check, message,
+                         file="", action="", probe="",
+                         target_root=None, phase_id=None, relay_task=None):
+    """Append ONE PDDA-output-contract JSONL finding. No-op unless XYZ_DEBUG_LOG=1.
+
+    Field order and the empty `line` field are load-bearing: this file is consumed by the Sentinel
+    tooling as a fixed record shape, and the Bash lane emits exactly this. Built with a format
+    string rather than json.dumps for the same reason — json.dumps would escape correctly but is
+    free to differ on separators, and the two lanes must produce identical bytes.
+    """
+    if not xyz_debug_log_enabled():
+        return
+    scope = f"target:{target_root}" if target_root else "harness"
+    _xyz_debug_log_write(root, (
+        '{"timestamp":"%s","severity":"%s","check":"%s","scope":"%s","repo":"%s","phase":"%s"'
+        ',"task":"%s","file":"%s","line":"","message":"%s","action":"%s","probe":"%s"}\n'
+    ) % (
+        _utc_now_z(),
+        _json_esc(severity), _json_esc(check), _json_esc(scope),
+        _json_esc(target_root or root), _json_esc(phase_id or ""), _json_esc(relay_task or ""),
+        _json_esc(file), _json_esc(message), _json_esc(action), _json_esc(probe),
+    ))
+
+
+def xyz_debug_log_stale_lock(root):
+    """The stale-lock reclaim record.
+
+    Deliberately NOT routed through xyz_debug_log_append: `marathon-drive.sh:220` inlines a SHORTER
+    record here (no phase/task/file/line/probe) because the helper is not defined that early in the
+    Bash file, and it leaves `repo` unescaped. Reproduced as-is — the two lanes must agree, and
+    "improving" the shape on one lane only is how the drift this issue exists to fix gets recreated.
+    The inconsistent shape is worth fixing on BOTH lanes, separately and on purpose.
+    """
+    if not xyz_debug_log_enabled():
+        return
+    _xyz_debug_log_write(root, (
+        '{"timestamp":"%s","severity":"info","check":"marathon.stale-lock","scope":"harness"'
+        ',"repo":"%s","message":"stale driver lock reclaimed","action":"none (auto-healed)"}\n'
+    ) % (_utc_now_z(), root))
+
+
+def xyz_harvest_findings(harvest_bin, relay_file, root, target_root, debug_log):
+    """Spawn harvest-findings.sh to pull a relay's Side Findings into the debug log.
+
+    Gated on XYZ_DEBUG_LOG=1 AND the script being executable, exactly as the two Bash call sites
+    are (`marathon-drive.sh:849`, `:881`). Output discarded, exit code ignored: a harvest failure
+    must not change the driven run's own status.
+    """
+    if not xyz_debug_log_enabled():
+        return
+    if not (harvest_bin and os.access(harvest_bin, os.X_OK)):
+        return
+    try:
+        subprocess.run(
+            [harvest_bin, "--relay", relay_file,
+             "--scope", (f"target:{target_root}" if target_root else ""),
+             "--repo", (target_root or root),
+             "--out", debug_log],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
+
+def _utc_now_z():
+    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -199,6 +309,10 @@ def main():
     tick_bin = get_env("TICK_BIN", os.path.join(xyz_harness, "bin", "tick"))
     relay_drive_bin = get_env("MARATHON_RELAY_DRIVE", os.path.join(xyz_harness, "relay-automation", "relay-drive.sh"))
     agent_cmd = get_env("MARATHON_AGENT_CMD", os.path.join(xyz_harness, "relay-automation", "marathon-agent.sh"))
+    # GH-342: `$HERE/harvest-findings.sh` in the Bash twin — HERE is relay-automation/, which for the
+    # Python lane is a sibling of utils/py's grandparent. Resolved once; both call sites re-check
+    # os.access(X_OK) at spawn time, so a harness missing the script simply harvests nothing.
+    harvest_findings_bin = os.path.join(xyz_harness, "relay-automation", "harvest-findings.sh")
 
     def _lane_key(raw):
         return re.sub(r'[^A-Za-z0-9._-]', '_', raw)
@@ -228,6 +342,16 @@ def main():
         elif count >= max_attempts:
             eprint(f"lane-attempt-cap: lane {key} PARKED after {count} attempt(s) (cap {max_attempts}) — no relay token seeded.")
             eprint(f"  Re-anchor to the committed QUEUE lanes (AGENTS.md) or re-fire with --force. Attempts log: {attempts_file}")
+            # Sentinel Tier 1 (GH-281/GH-342). The Bash lane emits this from the CALLER, on rc==8
+            # (marathon-drive.sh:1103-1106); this gate exits directly, so it emits here instead —
+            # same record, same position relative to the two messages above. `raw`, not `key`: the
+            # Bash message carries $LANE_STATE_KEY as given, not the sanitized form.
+            xyz_debug_log_append(
+                root, "warn", "marathon.lane-park",
+                f"lane {raw} parked at attempt cap",
+                action="re-anchor to QUEUE lanes or re-fire with --force",
+                target_root=args.target_root, phase_id=args.phase_id,
+                relay_task=relay_task)
             sys.exit(8)
 
         # append fire
@@ -335,6 +459,9 @@ def main():
                 sys.exit(1)
             
             eprint(f"marathon-drive: reclaiming stale relay-driver.lock (holder pid {holder or 'none'} not running).")
+            # Sentinel Tier 1 (GH-281/GH-342): record the auto-heal. Emitted BEFORE the reclaim, so
+            # the finding survives even if the rmtree/mkdir below fails and the run exits 1.
+            xyz_debug_log_stale_lock(root)
             try:
                 shutil.rmtree(lock_dir)
                 os.mkdir(lock_dir)
@@ -811,6 +938,11 @@ def main():
     # complete_phase_success directly rather than duplicating its gate/requires-test/telemetry
     # logic.
     def escalate(reason, rexit):
+        # Sentinel Tier 1 (GH-281/GH-342): harvest this failed phase's Side Findings BEFORE the
+        # escalation record is written, matching marathon-drive.sh:848-853 — a phase that escalated
+        # is exactly the one whose findings are about to be lost.
+        xyz_harvest_findings(harvest_findings_bin, relay_file, root, args.target_root,
+                             xyz_debug_log_file(root))
         esc_file = os.path.join(phase_dir, "ESCALATION.md")
         with open(esc_file, 'w') as f:
             f.write(f"""# ESCALATION — Marathon Phase {args.phase_id}
@@ -827,6 +959,12 @@ relay-file: {rel_relay}
             subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
         subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         log(f"escalation written: {esc_file} (reason: {reason})")
+        # marathon-drive.sh:867-868 — last thing escalate() does, carrying the relay-drive exit code.
+        xyz_debug_log_append(
+            root, "error", "marathon.escalation",
+            f"{reason} (relay-drive-exit={rexit})",
+            file=rel_relay, action="promote to PROJECT/1-INBOX capture doc",
+            target_root=args.target_root, phase_id=args.phase_id, relay_task=relay_task)
 
     def save_transcript():
         try:
@@ -841,6 +979,10 @@ relay-file: {rel_relay}
         os.makedirs(date_dir, exist_ok=True)
         dest = os.path.join(date_dir, f"marathon-{args.phase_id}-{now.strftime('%H%M%S')}.md")
         shutil.copy2(relay_file, dest)
+        # Sentinel Tier 1 (GH-281/GH-342): harvest Side Findings from the saved transcript
+        # (marathon-drive.sh:880-885) — after the copy, before the commit, same as Bash.
+        xyz_harvest_findings(harvest_findings_bin, relay_file, root, args.target_root,
+                             xyz_debug_log_file(root))
         subprocess.run(["git", "-C", root, "add", "--", dest], check=True)
         # GH-207: an identical transcript (same-second re-render) must not HALT on nothing-to-commit.
         if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", dest]).returncode == 0:
