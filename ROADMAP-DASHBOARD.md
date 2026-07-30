@@ -139,10 +139,11 @@ Summary: 126 items | Tally: 🟢 5 · 🟡 4 · ⏸️ 2 · ⛔ 0 · ✅ 82 · �
 
 ## In progress
 
-Summary: 19 items | Tally: 🟢 0 · 🟡 5 · ⏸️ 0 · ⛔ 0 · ✅ 13 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 20 items | Tally: 🟢 0 · 🟡 6 · ⏸️ 0 · ⛔ 0 · ✅ 13 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-340 · marathon-plan: replace the copied Node renderer with a native Python engine | 🟡 | [GH-340-NATIVE-PYTHON-MARATHON-PLAN.md](PROJECT/2-WORKING/GH-340-NATIVE-PYTHON-MARATHON-PLAN.md) · [#340](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/340) |
 | GH-295 · Add Pi (pi.dev) as a new supported headless builder harness, alongside Codex/agy | 🟡 | [GH-295-PI-BUILDER-INTEGRATION.md](PROJECT/2-WORKING/GH-295-PI-BUILDER-INTEGRATION.md) · [#295](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/295) |
 | GH-240 · PDDA-compatible marathon triage and cleanup skills | ✅ | [GH-240-MARATHON-SKILLS.md](PROJECT/3-COMPLETED/GH-240-MARATHON-SKILLS.md) · [#240](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/240) |
 | GH-201 · swe-diagram: add Git history lane visualization | ✅ | [GH-201-SWE-DIAGRAM-GIT-LANES.md](PROJECT/3-COMPLETED/GH-201-SWE-DIAGRAM-GIT-LANES.md) · [#201](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201) |
