@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+# FROZEN (GH-308): Python is authoritative — do not make behavior changes here.
+# Historical Bash fallback only; update utils/py/marathon_plan.py instead. See issue #308.
+# (The native engine behind that entry point is utils/py/_marathon_plan.py.)
+#
+# Frozen later than the other 11 — the exception was retired by GH-362.
+#
+# This file was GH-308's ONE documented exception: its Bash body stayed authoritative and
+# dual-maintained because the Python "port" shelled out to a copied, drifted node engine. GH-340
+# removed that reason — the copy is deleted, utils/py/_marathon_plan.py is a native stdlib engine,
+# and the Python lane needs no Node. `test/marathon-plan.sh` Scenario T still compares the two lanes
+# byte-for-byte (GH-348), so accidental drift is caught; the FIRST deliberate Python-only change to
+# the planner will fail it, and that failure is the signal to retire the assertion on purpose rather
+# than to quietly widen it.
 
 # GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
 # utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash

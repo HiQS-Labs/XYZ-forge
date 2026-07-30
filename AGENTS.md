@@ -93,9 +93,21 @@ local change.
   on the same branch — the common case on a multi-lane marathon PR. A trailer naming a path that is
   not a frozen twin fails loudly rather than silently covering nothing, and the bare
   `Frozen-twin-exception: <reason>` form (no path) no longer covers anything. Comma-separate to cover
-  several twins with one reason. No trailer, no edit. `utils/marathon-plan.sh` is the
-  deliberate exception: Bash remains authoritative and dual-maintained. `relay-turn-lib.sh` is a
-  shared Bash runtime dependency, not a twin.
+  several twins with one reason. No trailer, no edit.
+
+  **`utils/marathon-plan.sh` is no longer the exception (GH-362).** It was, while its Python "port"
+  shelled out to a copied node engine with documented gaps; GH-340 deleted that copy and made the
+  Python lane native, so the exception outlived its reason and marathon-plan is now the **12th frozen
+  twin**. `relay-turn-lib.sh` remains a shared Bash runtime dependency rather than a twin, and is the
+  only non-frozen file left in the Tier-A surface.
+
+  **Two edits the guard permits without a trailer, both narrow (GH-362).** A commit that *introduces*
+  a path's `FROZEN` banner establishes the freeze for that path and is not a violation of it — a range
+  reaching back before the freeze (a release merge, a bisect, an old fork base) contains exactly that
+  commit. The exemption covers the establishing edit only; anything touching the path *after* it in
+  the same range still needs a trailer. Relatedly, the pre-GH-321 pathless trailer is tolerated **only**
+  inside such a commit, because it is permanently in git history and cannot be rewritten — a new
+  pathless trailer is still rejected everywhere.
 - **Builder/orchestrator role split (GH-221)** — **Claude Code (terminal and VS Code agents) is the
   orchestrator and reviewer, never a default builder.** It plans, dispatches marathon/relay lanes, and
   reviews/verifies their output; it does not drive itself headlessly as a build lane. **Agy CLI and

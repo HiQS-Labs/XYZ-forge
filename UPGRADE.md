@@ -65,9 +65,18 @@ only as the reversible `XYZ_PYTHON=0` fallback and carry a `FROZEN` banner. Put 
 corresponding `utils/py/` file; `test/gh308-frozen-twin-guard.sh --check --staged` rejects a staged
 frozen-twin edit, and CI checks committed ranges through `GH308_FROZEN_TWIN_BASE`.
 
-`utils/marathon-plan.sh` is intentionally different: its Bash implementation remains authoritative
-and dual-maintained until the known Python parity gaps are closed. `relay-automation/relay-turn-lib.sh`
-is also not a twin; it is a shared Bash runtime dependency used by Python. Neither file is frozen.
+`utils/marathon-plan.sh` **used to be** the one exception — its Bash implementation stayed
+authoritative and dual-maintained "until the known Python parity gaps are closed." GH-340 closed them:
+the copied node renderer `utils/py/_marathon_plan_node.js` is deleted, `utils/py/_marathon_plan.py` is
+a native stdlib engine, and the Python lane needs no Node. **GH-362 therefore retired the exception**
+— marathon-plan is the **12th frozen twin**, and fixes go in `utils/py/marathon_plan.py` (or the
+engine behind it) like every other pair. `test/marathon-plan.sh` Scenario T still compares the two
+lanes byte-for-byte (GH-348), so accidental drift is caught; the first *deliberate* Python-only change
+to the planner will fail it, and that failure is the signal to retire the assertion on purpose rather
+than to quietly widen it.
+
+`relay-automation/relay-turn-lib.sh` is still not a twin: it is a shared Bash runtime dependency used
+by Python, and it is not frozen. **It is now the only non-frozen file in the Tier-A surface.**
 
 **Out of scope — stays Bash after this upgrade, by design:**
 - `relay-automation/relay-turn-lib.sh` (permanent Bash boundary — `decisions/2026-07-04-python-port-boundary.md`; Python reaches it via `rtl.py`).

@@ -22,6 +22,12 @@ TWINS=(
   relay-automation/consult.sh:utils/py/consult.py
   relay-automation/marathon-drive.sh:utils/py/marathon_drive.py
   utils/swarm-preflight.sh:utils/py/swarm_preflight.py
+  # GH-362: marathon-plan was GH-308's ONE documented exception — its Bash body stayed authoritative
+  # and dual-maintained because the "port" delegated to a copied, drifted node engine. GH-340 removed
+  # that reason: `utils/py/_marathon_plan.py` is a native stdlib engine, the copied JS is deleted, and
+  # the Python lane needs no Node. The exception outlived its rationale, so it is retired here and
+  # marathon-plan becomes the 12th frozen twin.
+  utils/marathon-plan.sh:utils/py/marathon_plan.py
 )
 
 mode=test staged=0 base="" allow_exceptions=0
@@ -90,8 +96,68 @@ is_frozen_path() {  # <path>
   return 1
 }
 
+# ── GH-362: the freeze itself is not a violation of the freeze ───────────────────────────────────
+# A range whose base predates the freeze contains the commit that ADDED the FROZEN banners, and that
+# commit necessarily touches every frozen twin. The guard was structurally unable to pass there: it
+# blocked the release PR that first merged `development` into `main` (#361), naming all 11 twins,
+# with nothing wrong in the diff.
+#
+# The predicate is narrow on purpose. A commit that *introduces* a path's FROZEN banner establishes
+# the freeze for that path; edits to that path AFTER that commit are ordinary violations and are
+# still caught. So this exempts the establishing edit, not the file.
+#
+# Not self-limiting, despite appearances: once `main` contains the freeze, later `main..development`
+# ranges are clean — but a bisect run, a long-lived branch, a fork comparing against an old base, or
+# a release branch cut from before the freeze all reach back past it again.
+freeze_commit_for() {  # <base> <path> → stdout: the commit in base..HEAD that introduced FROZEN, or ""
+  local base="$1" path="$2" out
+  # Deliberately NOT `| head -1`: head closing the pipe early makes git's write fail, and under
+  # `set -euo pipefail` that surfaced as `printf: write error: Interrupted system call` on every call.
+  # Take the first line in-shell instead.
+  out="$(git -C "$ROOT" log --format=%H --reverse -S 'FROZEN' "${base}..HEAD" -- "$path" 2>/dev/null || true)"
+  [[ -n "$out" ]] || return 0
+  printf '%s\n' "${out%%$'\n'*}"
+}
+
+# Is every edit to <path> in this range at-or-before the commit that froze it?
+path_edits_are_only_the_freeze() {  # <base> <path>
+  local base="$1" path="$2" fc after
+  fc="$(freeze_commit_for "$base" "$path")"
+  [[ -n "$fc" ]] || return 1                     # the freeze is not in this range; nothing to exempt
+  # Any commit touching the path strictly after the freeze commit is a real post-freeze edit.
+  after="$(git -C "$ROOT" log --format=%H "${fc}..HEAD" -- "$path" 2>/dev/null)"
+  [[ -z "$after" ]]
+}
+
+# The set of commits in the range that establish a freeze for at least one twin. Their commit
+# messages predate the GH-321 per-file trailer format, so their trailers must not hard-fail parsing.
+freeze_establishing_commits() {  # <base> → stdout: one SHA per line
+  local base="$1" pair p fc
+  for pair in "${TWINS[@]}"; do
+    p="${pair%%:*}"
+    fc="$(freeze_commit_for "$base" "$p")"
+    [[ -n "$fc" ]] && printf '%s\n' "$fc"
+  done | sort -u
+}
+
 collect_declared() {  # <base> → stdout: covered paths, one per line. rc 1 if ANY trailer is malformed.
   local base="$1" rc=0 line rest paths_part reason token found
+  local -a skip_commits=()
+  # GH-362(B): a malformed trailer used to hard-fail the WHOLE run, even when it sat in a commit whose
+  # edits need no coverage at all. `07ae1e7` is exactly that case — its trailer is the pre-GH-321 bare
+  # form (`Frozen-twin-exception: <reason>`, no path), which was correct when written, and it is the
+  # freeze-establishing commit whose edits (A) already exempts. Git history cannot be rewritten, so
+  # the format change shipped in GH-321 needs this back-compat or it permanently rejects its own past.
+  #
+  # Scoped deliberately: ONLY freeze-establishing commits are skipped. Every other commit still gets
+  # the full GH-321 treatment, so a new pathless trailer is still rejected — which is what GH-321 was
+  # actually for.
+  # Portable collect: `mapfile` is a bash 4+ builtin and macOS ships bash 3.2, which this repo's
+  # scripts must keep working under.
+  local _sc
+  while IFS= read -r _sc; do
+    [[ -n "$_sc" ]] && skip_commits+=("$_sc")
+  done < <(freeze_establishing_commits "$base")
   while IFS= read -r line; do
     case "$line" in
       Frozen-twin-exception:*) ;;
@@ -130,8 +196,42 @@ collect_declared() {  # <base> → stdout: covered paths, one per line. rc 1 if 
       printf 'gh308 guard: Frozen-twin-exception trailer names no frozen twin:\n  %s\n' "$line" >&2
       rc=1
     fi
-  done < <(git -C "$ROOT" log --format='%B' "${base}..HEAD")
+  done < <(eligible_trailer_lines "$base" "${skip_commits[@]+"${skip_commits[@]}"}")
   return "$rc"
+}
+
+# Emit trailer candidate lines from every commit in base..HEAD EXCEPT the given skip commits, with
+# git-standard indented continuation lines folded onto their trailer.
+#
+# Folding is limited to INDENTED continuations, which is the form `git interpret-trailers` recognises.
+# A trailer wrapped flush-left (as `07ae1e7`'s is) is indistinguishable from the start of the next
+# paragraph, and guessing would let arbitrary prose become part of a coverage claim. Such a trailer is
+# therefore still read as its first line only — correct, and harmless now that (A)/(B) stop that
+# commit from failing the run. Wrap new trailers with indentation, or keep them on one line.
+eligible_trailer_lines() {  # <base> [skip-sha...]
+  local base="$1"; shift
+  local -a skip=("$@")
+  local sha body line pending="" s skipthis
+  while IFS= read -r sha; do
+    [[ -n "$sha" ]] || continue
+    skipthis=0
+    for s in ${skip[@]+"${skip[@]}"}; do [[ "$s" == "$sha" ]] && { skipthis=1; break; }; done
+    (( skipthis )) && continue
+    pending=""
+    while IFS= read -r line; do
+      if [[ -n "$pending" && "$line" =~ ^[[:space:]]+[^[:space:]] ]]; then
+        # indented continuation of the trailer we are holding
+        pending="$pending ${line#"${line%%[![:space:]]*}"}"
+        continue
+      fi
+      [[ -n "$pending" ]] && { printf '%s\n' "$pending"; pending=""; }
+      case "$line" in
+        Frozen-twin-exception:*) pending="$line" ;;
+        *) printf '%s\n' "$line" ;;
+      esac
+    done < <(git -C "$ROOT" log -1 --format='%B' "$sha")
+    [[ -n "$pending" ]] && printf '%s\n' "$pending"
+  done < <(git -C "$ROOT" log --format=%H "${base}..HEAD")
 }
 
 check_exception_coverage() {  # <base> — called only after check_changes has already failed
@@ -143,7 +243,12 @@ check_exception_coverage() {  # <base> — called only after check_changes has a
   declared="$(collect_declared "$base")" || return 1
   while IFS= read -r f; do
     [[ -n "$f" ]] || continue
-    if printf '%s\n' "$declared" | grep -Fxq -- "$f"; then
+    # GH-362(A): the commit that established this path's freeze is not a violation of it. Only exempt
+    # when the freeze is the LAST thing that touched the path in this range — a later edit is real.
+    if path_edits_are_only_the_freeze "$base" "$f"; then
+      printf 'gh308 guard: %s — the only edit in this range IS the commit that froze it (%s)\n' \
+        "$f" "$(freeze_commit_for "$base" "$f" | cut -c1-8)"
+    elif printf '%s\n' "$declared" | grep -Fxq -- "$f"; then
       printf 'gh308 guard: %s — covered by a declared Frozen-twin-exception\n' "$f"
     else
       # Name the file. The whole defect in the range-scoped version was that it never did.
@@ -173,7 +278,9 @@ if [[ "$mode" == check ]]; then
   (( allow_exceptions )) || exit "$rc"
   echo "---"
   if check_exception_coverage "$base"; then
-    echo 'gh308 guard: every frozen-twin edit in this range is covered by a declared exception'
+    # Wording matters: an edit can be permitted for two different reasons and conflating them would
+    # let a reader believe a declaration exists where none does (GH-362).
+    echo 'gh308 guard: every frozen-twin edit in this range is accounted for — declared, or the freeze itself'
     exit 0
   fi
   exit 1
@@ -201,10 +308,15 @@ for pair in "${TWINS[@]}"; do
   fi
 done
 
-if ! grep -Fq 'FROZEN (GH-308)' "$ROOT/utils/marathon-plan.sh"; then
-  ok 'marathon-plan remains the Bash-authoritative exception'
+# GH-362: this assertion is INVERTED from what it pinned before. marathon-plan was GH-308's one
+# Bash-authoritative exception; GH-340 deleted the copied node engine that was its entire rationale,
+# so the exception is retired and the file is the 12th frozen twin. Kept as an explicit assertion
+# rather than deleted, so a future revert of the freeze fails loudly instead of silently restoring an
+# exception whose reason no longer exists.
+if grep -Fq 'FROZEN (GH-308)' "$ROOT/utils/marathon-plan.sh"; then
+  ok 'marathon-plan is frozen — the GH-308 exception is retired (GH-362)'
 else
-  bad 'marathon-plan must not be frozen: Bash is still authoritative'
+  bad 'marathon-plan lost its FROZEN banner: the GH-362 retirement was reverted without a decision'
 fi
 
 if ! grep -Fq 'FROZEN (GH-308)' "$ROOT/relay-automation/relay-turn-lib.sh"; then
@@ -388,6 +500,80 @@ if exc_guard >/dev/null; then
   ok 'a range touching no frozen twin passes under --allow-exceptions'
 else
   bad "a clean range failed under --allow-exceptions: $(exc_guard)"
+fi
+
+# ── GH-362: the freeze itself, and the trailer format that predates the freeze ───────────────────
+# These four reproduce what blocked release PR #361 — the first time `development`..`main` was ever
+# put through CI. The guard named all 11 twins with nothing wrong in the diff, because the range
+# contained `07ae1e7`, the commit that ADDED the banners.
+#
+# The fixture mirrors that shape: a base where a twin has NO banner, then a commit that introduces it.
+exc_unfreeze_commit() {  # <file> — remove the banner and commit; echoes the resulting SHA
+  local f="$1"
+  printf '#!/usr/bin/env bash\n# not yet frozen\n' >"$exc/relay-automation/$f"
+  git -C "$exc" add "relay-automation/$f"
+  git -C "$exc" commit -qm "pre-freeze state for $f"
+  git -C "$exc" rev-parse HEAD
+}
+exc_freeze_commit() {  # <file> <commit-message> — (re)introduce the banner + an edit, in one commit
+  printf '#!/usr/bin/env bash\n# FROZEN (GH-308): Python is authoritative\n# edit landed with the freeze\n' \
+    >"$exc/relay-automation/$1"
+  git -C "$exc" add "relay-automation/$1"
+  git -C "$exc" commit -qm "$2"
+}
+exc_guard_from() {  # <base> — same invocation as exc_guard, against an arbitrary base
+  GH308_GUARD_ROOT="$exc" bash "$exc/test/gh308-frozen-twin-guard.sh" \
+    --check --base "$1" --allow-exceptions 2>&1
+}
+
+# 11. A range whose only edit to a twin IS the commit that froze it must PASS. Pre-fix this was
+#     structurally impossible — the freeze necessarily touches every twin it freezes.
+exc_reset
+pre_freeze="$(exc_unfreeze_commit codex-turn.sh)"
+exc_freeze_commit codex-turn.sh 'freeze the codex twin'
+out="$(exc_guard_from "$pre_freeze")" && rc=0 || rc=$?
+if (( rc == 0 )) && printf '%s' "$out" | grep -Fq 'the only edit in this range IS the commit that froze it'; then
+  ok 'the commit that establishes a freeze is not itself a freeze violation [GH-362]'
+else
+  bad "freeze-establishing commit was blocked (rc=$rc): $out"
+fi
+
+# 12. The exemption is for the establishing EDIT, not the file. An edit landing after the freeze in
+#     the same range is an ordinary violation and must still fail — otherwise case 11 is a hole.
+exc_reset
+pre_freeze="$(exc_unfreeze_commit codex-turn.sh)"
+exc_freeze_commit codex-turn.sh 'freeze the codex twin'
+exc_commit codex-turn.sh 'sneak a real change in after the freeze, declaring nothing'
+out="$(exc_guard_from "$pre_freeze")" && rc=0 || rc=$?
+if (( rc != 0 )) && printf '%s' "$out" | grep -Fq 'relay-automation/codex-turn.sh was edited with NO Frozen-twin-exception'; then
+  ok 'a post-freeze edit in the same range is still blocked [GH-362]'
+else
+  bad "post-freeze edit slipped through the freeze exemption (rc=$rc): $out"
+fi
+
+# 13. The pre-GH-321 pathless trailer lives permanently in `07ae1e7`'s message. It was correct when
+#     written, history cannot be rewritten, and it must not hard-fail the run — but ONLY in a
+#     freeze-establishing commit. Case 5 above still rejects it anywhere else.
+exc_reset
+pre_freeze="$(exc_unfreeze_commit codex-turn.sh)"
+exc_freeze_commit codex-turn.sh "$(printf 'freeze the codex twin\n\nFrozen-twin-exception: a legacy bare reason with no path, as GH-319 wrote it')"
+out="$(exc_guard_from "$pre_freeze")" && rc=0 || rc=$?
+if (( rc == 0 )) && ! printf '%s' "$out" | grep -Fq 'malformed Frozen-twin-exception'; then
+  ok "a legacy path-less trailer in the freeze commit does not fail the run [GH-362]"
+else
+  bad "legacy trailer in the freeze commit still hard-failed (rc=$rc): $out"
+fi
+
+# 14. An indented continuation line is folded onto its trailer, so a wrapped declaration still
+#     covers what it names. (Flush-left wrapping is deliberately NOT folded — indistinguishable from
+#     the next paragraph — so this pins the form that IS supported.)
+exc_reset
+exc_commit codex-turn.sh "$(printf 'wrapped trailer\n\nFrozen-twin-exception: relay-automation/codex-turn.sh —\n  the reason continues on an indented line, which git treats as part of the trailer')"
+out="$(exc_guard)" && rc=0 || rc=$?
+if (( rc == 0 )); then
+  ok 'an indented continuation line is folded onto its trailer [GH-362]'
+else
+  bad "a wrapped (indented) trailer was not folded: $out"
 fi
 
 echo "  gh308-frozen-twin-guard: $pass pass, $fail fail"
