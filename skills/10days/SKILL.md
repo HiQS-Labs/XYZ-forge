@@ -13,7 +13,8 @@ description: >
   canned request: "look through recent GH issues within the last 10 days and check if
   they are still valid, reproducible, not completed already... add each one to a
   marathon file, run preflight, cut a new branch and execute on the marathon."
-  Repo-specific: requires utils/swarm-preflight.sh + utils/marathon-plan.sh +
+  Requires swarm-preflight.sh + marathon-plan.sh resolved from the harness root (bare repo
+  root or a vendored `.xyz/` install — see Procedure Step 0), plus the swept repo's
   PROJECT/** + ROADMAP.md + gh (authenticated) + jq.
 ---
 
@@ -77,7 +78,9 @@ lane dispatch in Step 7. See each fix inline below.
 
 ## Preconditions — install once
 
-Claude Code only scans `~/.claude/skills/`, not this repo's top-level `skills/`:
+Claude Code only scans `~/.claude/skills/`, not this repo's top-level `skills/`. Run this once,
+**from a harness clone** (this is the one step that is genuinely clone-relative — there is no
+`skills/` directory in a repo you are merely sweeping):
 
 ```bash
 bash skills/10days/install.sh   # symlinks this clone's skills/10days into ~/.claude/skills/ (idempotent)
@@ -85,10 +88,49 @@ bash skills/10days/install.sh   # symlinks this clone's skills/10days into ~/.cl
 
 ## Procedure
 
+### 0. Resolve the harness root, and confirm which repo is being swept
+
+`swarm-preflight.sh` and `marathon-plan.sh` may live at the repo root or, in a vendored install,
+under `.xyz/`. Resolve once, using the same precedence as other self-locating skills in this repo
+(env override → vendored `.xyz/` → current repo root):
+
+```bash
+HARNESS="${XYZ_HARNESS:-${XYZ_REPO_ROOT:-}}"
+[ -n "$HARNESS" ] || HARNESS="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+[ -x "$HARNESS/.xyz/utils/swarm-preflight.sh" ] && HARNESS="$HARNESS/.xyz"
+```
+
+Reference every harness script below as `$HARNESS/utils/…` — **not** bare `utils/…` paths, which
+resolve to nothing (or to an unrelated `utils/` directory) in a vendored `.xyz/` install.
+
+The two bundled scripts (Steps 1 and 2) ship beside this `SKILL.md`, so set `SKILL_DIR` to whatever
+directory this file was loaded from — `~/.claude/skills/10days`, a clone's `skills/10days`, or a
+vendored `.xyz/skills/10days` are all valid. Do **not** assume `skills/10days/` relative to the
+swept repo; when sweeping a foreign repo that path does not exist:
+
+```bash
+SKILL_DIR=/absolute/path/to/this/skill/directory   # substitute the real one
+```
+
+**Also confirm the sweep target before spending anything.** Every step below is
+working-directory-bound: `gh` resolves the repo from the cwd's git remote, `find-doc.sh` looks for
+capture docs, and Step 7 cuts a branch. Standing in the wrong repo sweeps the wrong issues *and
+succeeds*, which is the expensive failure. Print it once and check it:
+
+```bash
+gh repo view --json nameWithOwner -q .nameWithOwner   # must be the repo you intend to sweep
+git rev-parse --show-toplevel                         # and its checkout
+```
+
+Run every subsequent step from the swept repo's **root**, not a subdirectory — a contract whose
+`gate` names a repo-relative program (e.g. `.venv/bin/python`) is currently checked against the
+process cwd rather than the target root, so a ready lane reports NOT-READY from a subdirectory
+(GH-343).
+
 ### 1. Pull the candidate window (deterministic — no judgment calls)
 
 ```bash
-bash skills/10days/scan-issues.sh [MAX_DAYS] [MIN_DAYS]   # default: 10 0  (last 10 days)
+bash "$SKILL_DIR/scan-issues.sh" [MAX_DAYS] [MIN_DAYS]   # default: 10 0  (last 10 days)
 ```
 
 `MAX_DAYS` is how far back the window opens; `MIN_DAYS` (default 0 = today) is how
@@ -105,7 +147,7 @@ wrapper — it makes no validity/completion judgment, so it is safe to re-run an
 For every issue number from Step 1:
 
 ```bash
-bash skills/10days/find-doc.sh <N>
+bash "$SKILL_DIR/find-doc.sh" <N>
 ```
 
 - `bucket: "3-COMPLETED"` → strong already-done signal. Exclude immediately; note it on
@@ -194,15 +236,15 @@ For each `INCLUDE` verdict:
   exclude it from this run rather than firing on an untrustworthy guess.
 
 - Append one queued-intake pointer line for `GH-<N>` under ROADMAP.md's ledger (pointer
-  only — no execution detail) so `utils/marathon-plan.sh` picks it up in Step 5.
+  only — no execution detail) so `$HARNESS/utils/marathon-plan.sh` picks it up in Step 5.
 
 ### 5. Build the marathon file
 
 ```bash
-utils/marathon-plan.sh --deep
+"$HARNESS/utils/marathon-plan.sh" --deep
 ```
 
-`--deep` delegates to `utils/swarm-preflight.sh --dry-run` per ready item for an
+`--deep` delegates to `$HARNESS/utils/swarm-preflight.sh --dry-run` per ready item for an
 authoritative freshness verdict while ranking (slower, needs network — that's fine,
 `gh`/network access is already required by this point). Writes
 `PROJECT/2-WORKING/MARATHON-PLAN-<today>.md` — this is "the marathon file" the
@@ -226,7 +268,7 @@ yours.
 
 ```bash
 for N in <surviving issue numbers>; do
-  utils/swarm-preflight.sh --gh-issue "$N"
+  "$HARNESS/utils/swarm-preflight.sh" --gh-issue "$N"
 done
 ```
 

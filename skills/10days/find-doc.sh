@@ -16,14 +16,38 @@
 set -uo pipefail
 # strict-mode: -e exempt — analysis tool; find/grep misses are expected, handled explicitly.
 
-N="${1:-}"
+N=""
+ROOT_ARG=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --root) ROOT_ARG="${2:-}"; shift 2 ;;
+    -h|--help) echo "usage: find-doc.sh [--root DIR] ISSUE_NUMBER" >&2; exit 0 ;;
+    -*) echo "find-doc.sh: unknown option: $1" >&2; exit 2 ;;
+    *) N="$1"; shift ;;
+  esac
+done
 if [[ ! "$N" =~ ^[0-9]+$ ]]; then
-  echo "usage: find-doc.sh ISSUE_NUMBER" >&2
+  echo "usage: find-doc.sh [--root DIR] ISSUE_NUMBER" >&2
   exit 2
 fi
 command -v jq >/dev/null 2>&1 || { echo "find-doc.sh: jq not found on PATH" >&2; exit 2; }
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# GH-344: resolve PROJECT/** from the repo being SWEPT, never from this script's own location.
+#
+# This used to be `dirname "$BASH_SOURCE"/../..`, i.e. the harness repo. The skill is installed
+# from a harness clone, so every lookup answered from the harness's own PROJECT/ tree — and both
+# repos number issues from 1, so a swept repo's issue number matched an unrelated harness document
+# by coincidence. Measured on a real sweep of Hypercart-Dev-Tools/rebalance-OS: 24 of 49 issues got
+# a bucket from the wrong repo, 20 of them "3-COMPLETED", which Step 2 of the skill treats as
+# "strong already-done signal. Exclude immediately." Correct answer for that repo: zero.
+#
+# Precedence: --root > $TENDAYS_ROOT > current git toplevel > $PWD. The git toplevel is the right
+# default because every other step of the skill is already cwd-bound (`gh` reads the repo from the
+# cwd's remote), so this makes find-doc.sh agree with them instead of disagreeing silently.
+ROOT="$ROOT_ARG"
+[ -n "$ROOT" ] || ROOT="${TENDAYS_ROOT:-}"
+[ -n "$ROOT" ] || ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+ROOT="$(cd "$ROOT" >/dev/null 2>&1 && pwd)" || { echo "find-doc.sh: --root not a directory: $ROOT_ARG" >&2; exit 2; }
 
 # NOTE: plain `grep`/`ls` are fine here — this runs as a script subprocess, not a Claude
 # Code Bash-tool call, so the RTK hook that rewrites interactive `grep` invocations never
