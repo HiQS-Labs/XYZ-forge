@@ -68,6 +68,34 @@ Every currently `-e`-exempt script carries a one-line `# strict-mode: -e exempt 
 its `set -` line so the exemption is self-documenting. New scripts default to `set -euo pipefail`
 unless they fit the analysis-tool profile above, in which case they add the exemption header.
 
+### Tool install paths — never inside another app's folder (GH-347)
+
+**This harness's tool binaries never live inside another application's private directory.** Not the
+worker CLIs (`codex`, `agy`, `pi`, `aider`), not `tick`, not anything the harness shells out to.
+
+The failure mode is specific and quiet: a foreign app owns its own directory, so its next update or
+reinstall deletes our dependency with it — on that app's schedule, with no signal we control. Worse, the
+readiness check cannot tell the two apart. `find-harness.sh --check` tests only whether a worker is *on
+PATH*, so "the neighbouring app just wiped our tool" and "never installed" produce the byte-identical
+line. That is the same disease as GH-315/GH-319: a broken observation layer where failure is invisible
+and every available signal agrees.
+
+**The `npm install -g` trap — this is how GH-347 actually happened.** npm derives its global prefix from
+whichever `npm` is on PATH, so a bare `npm install -g <pkg>` inherits a foreign app's runtime silently
+and exits 0. On the machine that filed GH-347, another agent app had symlinked its bundled Node onto PATH
+(`~/.local/bin/npm -> ~/.hermes/node/bin/npm`) with no `~/.npmrc` involved at all, so `pi` installed into
+that app's folder and — because only `node`/`npm` were symlinked out, not `pi` — was invisible to every
+shell while being perfectly functional. **Run `npm config get prefix` before any global install and
+confirm it is a path this repo's tooling owns.** Never assume.
+
+The positive pattern is already on disk in the two lanes that have never had this problem: a tool's own
+app directory with a symlink onto PATH (`~/.local/bin/codex -> ~/.codex/packages/…/bin/codex`), or a real
+binary in a shared user-local `bin`. Either is fine. Someone else's runtime is not.
+
+**Scope note:** where a *working* binary lives stays the operator's call. This is a convention and a
+warning, deliberately **not** a gate — a false positive that blocks a relay is worse than the papercut it
+prevents.
+
 ### Marathon builder default & plan location (GH-212)
 
 Two vendored-harness defaults, made explicit so an agent given only the vendored bundle picks the
