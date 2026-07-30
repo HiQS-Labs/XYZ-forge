@@ -21,4 +21,4 @@ GH_URL: [GH 308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-
 Milestone: Quicksilver
 Front-door reviewed: Not yet
 Shakedown reviewed: Not yet
-License file: Not yet — no LICENSE in the repo; see #360
+License file: Yes — AGPL-3.0-only (`LICENSE`) + dual-license option (`LICENSE-COMMERCIAL.md`), adopted 2026-07-29 post-ship
