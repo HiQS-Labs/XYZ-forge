@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 129 items | Tally: 🟢 5 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 84 · 🔮 0 · 🔲 0
+Summary: 130 items | Tally: 🟢 5 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 85 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-351 · the registered dashboard gate graded its own answer key | ✅ | [GH-351-DASHBOARD-TEST-GRADES-ITS-OWN-ANSWER-KEY.md](PROJECT/2-WORKING/GH-351-DASHBOARD-TEST-GRADES-ITS-OWN-ANSWER-KEY.md) · [#351](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/351) |
 | GH-369 · /10days' capture-doc lookup hung forever on a valueless --root, in a skill built to run unattended | ✅ | [GH-369-FIND-DOC-ARG-PARSE-AND-ROOT-RESOLUTION.md](PROJECT/2-WORKING/GH-369-FIND-DOC-ARG-PARSE-AND-ROOT-RESOLUTION.md) · [#369](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/369) |
 | GH-354 · concurrent swarms: the driver lock blocks 1 of 3 pairs, and the monitors can't see the one it does | 🟡 | [#354](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/354) · [GH-354-CONCURRENT-SWARMS.md](PROJECT/2-WORKING/GH-354-CONCURRENT-SWARMS.md) · [#354](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/354) |
 | GH-347 · pi CLI installed inside another app's folder, invisible to PATH | — | [GH-347-TOOL-INSTALL-PATHS.md](PROJECT/1-INBOX/GH-347-TOOL-INSTALL-PATHS.md) · [#347](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/347) |
