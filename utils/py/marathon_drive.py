@@ -1,5 +1,6 @@
 import argparse
 import os
+import signal
 import sys
 import subprocess
 import time
@@ -1037,10 +1038,153 @@ relay-file: {rel_relay}
             env.pop(var, None)
         return env
 
+    # GH-390 Phase 1 — layered gate guard.
+    #
+    # The gate executes code an LLM wrote seconds earlier, and by the packet's own instruction the
+    # builder must NOT run the gate itself ("it can create files that trip containment and discard
+    # your turn"). The gate is therefore, by construction, the FIRST execution of anything the
+    # builder wrote — yet it ran with no timeout, no resource bounds, and in the marathon's own
+    # process group. Twice on 2026-07-30 (GH-382) a generated test mocked a paging function with a
+    # constant return_value against a `while True:` loop; MagicMock recorded ~1 KB per call until
+    # all 30.75 GB of swap was gone and the host kernel-panicked.
+    #
+    # The framing that matters: the target's suite is the WORKPIECE, not trusted infrastructure.
+    # It must be assumed hostile the way CI assumes a PR is hostile.
+    #
+    # Measured on the crash host (Darwin 24.6, arm64) — not assumed from Linux habit:
+    #   setrlimit(RLIMIT_AS)  / ulimit -v  -> REFUSED, EINVAL, even soft-only
+    #   setrlimit(RLIMIT_DATA)/ ulimit -d  -> REFUSED, same
+    #   setrlimit(RLIMIT_CPU) / ulimit -t  -> works (layer 2 below)
+    #   process-group RSS poll + killpg    -> works (layer 3 below)
+    # On Linux `ulimit -v` alone would have turned both crashes into a MemoryError inside pytest.
+    # On macOS kernel-enforced MEMORY caps do not exist for ordinary processes, so layer 3 is not
+    # a belt-and-braces extra — it is the only thing standing between a runaway test and the host.
+    #
+    # Layer 4 (host free-memory floor) and packet-driven per-phase overrides are Phase 2.
+    GATE_GUARD_KILL_EXIT = 108   # distinct from any real gate's own failure codes
+
+    def _gate_guard_config():
+        """Read the guard's caps fresh on each gate run, so a phase can retune between calls."""
+        def _cap(name, default):
+            raw = os.environ.get(name, "").strip()
+            if not raw:
+                return default
+            try:
+                value = int(raw)
+            except ValueError:
+                log(f"gate-guard: {name}={raw!r} is not an integer — falling back to {default}")
+                return default
+            return value
+        return {
+            # 900s wall matches the turn budget in GH-386; CPU is deliberately lower so a tight
+            # spin trips the kernel-enforced cap before the pollable one. Any cap <= 0 disables
+            # just that layer, which is how a phase with a legitimately long suite opts out of one
+            # bound without dropping the others.
+            "wall_s": _cap("MARATHON_GATE_WALL_S", 900),
+            "cpu_s": _cap("MARATHON_GATE_CPU_S", 600),
+            "rss_mb": _cap("MARATHON_GATE_RSS_MB", 8192),
+            "poll_s": max(1, _cap("MARATHON_GATE_POLL_S", 1)),
+        }
+
+    def _gate_group_rss_mb(pgid):
+        """Summed RSS (MB) of every live process in the gate's process group, or -1 if unreadable.
+
+        The GROUP is load-bearing, not the direct child: pytest spawns workers, so killing only the
+        shell orphans them and they keep allocating with nothing watching. Unreadable reads return
+        -1 and fail OPEN — a guard that cannot measure must not be a guard that kills.
+        """
+        try:
+            out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
+                                 timeout=10).stdout
+        except (OSError, subprocess.SubprocessError):
+            return -1
+        total_kb = 0
+        for line in out.splitlines():
+            parts = line.split()
+            if len(parts) != 2:
+                continue
+            try:
+                if int(parts[0]) == pgid:
+                    total_kb += int(parts[1])
+            except ValueError:
+                continue
+        return total_kb // 1024
+
+    def _gate_kill_group(proc, reason):
+        """TERM the whole gate process group, then KILL whatever ignored it."""
+        log(f"gate-guard: KILLING gate process group (pgid {proc.pid}) — {reason}")
+        for sig in (signal.SIGTERM, signal.SIGKILL):
+            try:
+                os.killpg(proc.pid, sig)
+            except (ProcessLookupError, PermissionError, OSError) as exc:
+                log(f"gate-guard: killpg({proc.pid}, {sig!r}) failed: {exc}")
+            deadline = time.monotonic() + 2.0
+            while time.monotonic() < deadline:
+                if proc.poll() is not None:
+                    return
+                time.sleep(0.1)
+        proc.wait()
+
     def run_pre_advance_gate():
         cwd = args.target_root if args.target_root else None
-        rc = subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash",
-                            cwd=cwd, env=_gate_env()).returncode
+        env = _gate_env()
+
+        # The escape hatch is load-bearing for a same-day ship: a guard that false-positives would
+        # otherwise block every marathon until someone can land a revert. This restores the exact
+        # pre-GH-390 call, including running in the marathon's own process group.
+        if os.environ.get("MARATHON_GATE_GUARD", "1").strip() == "0":
+            log("gate-guard: disabled via MARATHON_GATE_GUARD=0 — running the gate unguarded")
+            rc = subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash",
+                                cwd=cwd, env=env).returncode
+            run_gate_result[0] = "green" if rc == 0 else "red"
+            return rc
+
+        cfg = _gate_guard_config()
+        cmd = pre_advance_cmd
+        if cfg["cpu_s"] > 0:
+            # Layer 2. Unlike the RSS poll below this cannot be raced, and it still fires if this
+            # driver process itself wedges — the one bound that does not depend on the watchdog.
+            cmd = f"ulimit -t {cfg['cpu_s']}; {pre_advance_cmd}"
+
+        # start_new_session=True makes the gate a session and process-group leader (pgid == pid),
+        # which is what lets layer 3 measure and kill the whole tree rather than just the shell.
+        proc = subprocess.Popen(cmd, shell=True, executable="/bin/bash", cwd=cwd, env=env,
+                                start_new_session=True)
+        started = time.monotonic()
+        peak_rss_mb = 0
+        rc = None
+        while rc is None:
+            rc = proc.poll()
+            if rc is not None:
+                break
+            elapsed = int(time.monotonic() - started)
+            rss_mb = _gate_group_rss_mb(proc.pid)
+            peak_rss_mb = max(peak_rss_mb, rss_mb)
+            reason = None
+            if cfg["wall_s"] > 0 and elapsed >= cfg["wall_s"]:
+                reason = f"wall clock {elapsed}s >= cap {cfg['wall_s']}s"
+            elif cfg["rss_mb"] > 0 and rss_mb >= cfg["rss_mb"]:
+                reason = f"gate group RSS {rss_mb}MB >= cap {cfg['rss_mb']}MB"
+            if reason:
+                _gate_kill_group(proc, reason)
+                rc = GATE_GUARD_KILL_EXIT
+                break
+            time.sleep(cfg["poll_s"])
+
+        # A layer-2 kill arrives as bash's 128+SIGXCPU, never through the poll loop above — the
+        # kernel reaps the gate without consulting us. Left unmapped it would escalate as
+        # `pre-advance-failed`, i.e. as the gate having found a defect in the change, which is the
+        # single most misleading thing this guard could report. Only mapped when we set the cap.
+        if cfg["cpu_s"] > 0 and rc == 128 + signal.SIGXCPU:
+            log(f"gate-guard: gate exceeded the {cfg['cpu_s']}s CPU cap (SIGXCPU)")
+            rc = GATE_GUARD_KILL_EXIT
+
+        # Peak RSS is logged on EVERY run, pass or fail, deliberately: it is the only evidence that
+        # can later answer whether the layer-3 poll is being outrun by a fast allocator — which is
+        # the stated precondition for taking on container isolation at all.
+        log(f"gate-guard: gate exit {rc} after {int(time.monotonic() - started)}s — "
+            f"peak group RSS {peak_rss_mb}MB "
+            f"(caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, CPU {cfg['cpu_s']}s)")
         # GH-284 P2: the run log reports this lane's gate outcome; mirrors RUN_GATE_RESULT in the
         # Bash twin (green/red, "not-run" until the gate is first invoked).
         run_gate_result[0] = "green" if rc == 0 else "red"
@@ -1107,9 +1251,17 @@ relay-file: {rel_relay}
         log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
         gate_exit = run_pre_advance_gate()
         if gate_exit != 0:
-            log(f"pre-advance gate FAILED (exit {gate_exit}) — escalating")
-            escalate("pre-advance-failed", 0)
-            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
+            # GH-390 layer 5: a gate the guard killed is a different event from a gate that ran and
+            # found a defect, and triaging the two together is what made the crashes hard to read.
+            # Both halt the phase; only the reason string differs.
+            if gate_exit == GATE_GUARD_KILL_EXIT:
+                log(f"pre-advance gate KILLED by the resource guard (exit {gate_exit}) — escalating")
+                escalate("gate-killed", 0)
+                xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate killed by the resource guard")
+            else:
+                log(f"pre-advance gate FAILED (exit {gate_exit}) — escalating")
+                escalate("pre-advance-failed", 0)
+                xyz_marathon_emit("red", f"halted at phase {args.phase_id} — pre-advance gate failed")
             sys.exit(5)
         if args.requires_test and not requires_test_delta(args.requires_test):
             log(f"requires-test FAILED — no new/updated test detected at: {args.requires_test}")
