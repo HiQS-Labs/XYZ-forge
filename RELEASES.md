@@ -61,9 +61,9 @@ Iterations: 0.1.0-0.1.4
 Status: Shipped
 Target Date: 2026-08-01
 Codename: Quicksilver
-Description: Python-authoritative Tier-A twins
+Description: Python-authoritative Tier-A twins. Licensed AGPL-3.0-only (`LICENSE`) with a commercial option (`LICENSE-COMMERCIAL.md`), adopted 2026-07-29 post-ship; the pre-existing conflicting `LICENSE.md` was removed 2026-07-30 (#372).
 GH_URL: [GH 308](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/308)
 Milestone: Quicksilver
-Front-door reviewed: Not yet
-Shakedown reviewed: Not yet
-License file: Yes — AGPL-3.0-only (`LICENSE`) + dual-license option (`LICENSE-COMMERCIAL.md`), adopted 2026-07-29 post-ship
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes

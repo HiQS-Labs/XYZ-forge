@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -u
-# strict-mode: -e exempt — analysis tool with expected-nonzero probes (git/gh/grep); errors handled explicitly. See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=utils/pdda/pdda-lib.sh
@@ -47,6 +46,8 @@ frontmatter/status-table/hardcoded-path issues (separate deterministic checks ow
 - a medium-large plan or project (NOT a typo / path repoint / <=2-3 line fix) whose frontmatter is
   missing the triage ratings effort, complexity, risk, phases (used by automation to select work);
   do NOT flag genuinely small/trivial docs for this
+- a medium-large plan or project where the `related` frontmatter field is empty or missing (suggest they link past context or docs from PROJECT/3-COMPLETED/)
+- a plan with frontmatter `risk: 4` or `risk: 5` that does not reference a `decisions/` record anywhere in the doc
 - a status table that is present but stale versus the body
 - the next action buried in prose instead of stated explicitly
 - detail duplicated from another canonical doc
@@ -57,6 +58,25 @@ This review is advisory and never blocks a build: use "warn" for a strong readin
 for advisory. Do NOT emit "error" — a non-deterministic review must not gain build-blocking power.
 If the doc is ready, output nothing at all.
 RUBRIC_EOF
+
+# Quad Concepts QUALITY rubric — appended to the working-doc review ONLY when the .pdda-quad / PDDA_QUAD
+# lever is on. The deterministic `pdda.sh quad-concepts` check owns STRUCTURE (present, 1-4 bullets); this
+# warn-only layer judges what a regex can't: are the bullets real, specific pain->fix concepts, and are
+# they still connected to the doc's actual state? It NEVER demands a missing section (that's the
+# deterministic check + per-doc quad_exempt), and never blocks.
+read -r -d '' QUAD_RUBRIC_APPENDIX <<'QUAD_EOF' || true
+
+ADDITIONALLY — "Quad Concepts" mode is enabled for this repo. If (and only if) the doc has a
+"## Quad Concepts" section, review its 1-4 bullets and flag ONLY:
+- a bullet that is vague or generic ("backend", "bug", "refactor", "cleanup", "misc") instead of a
+  specific problem this doc addresses
+- a bullet that is not a real "pain -> fix" pairing — it names a topic but not BOTH the problem and how
+  this doc addresses it
+- Quad Concepts that appear disconnected from the doc's "## Status" or "## Lessons Learned": they
+  describe pains the doc no longer addresses, or omit the main thing the doc is actually about (stale)
+Do NOT flag a MISSING "## Quad Concepts" section — a deterministic check and the per-doc `quad_exempt`
+frontmatter own presence. These are advisory "warn"/"info" only, never "error".
+QUAD_EOF
 
 # ROADMAP.md pointer-only contract (PDDA.md "ROADMAP.md contract"). Honors the deliberate carve-out
 # ("a short exception note is allowed when omitting would hide an operationally critical fact"), which
@@ -119,9 +139,14 @@ $response
 RESPONSE
 }
 
-# 1) active working docs — generic readiness rubric.
+# 1) active working docs — generic readiness rubric (+ the Quad Concepts quality rubric when enabled).
+WORKING_RUBRIC="$RUBRIC"
+if quad_is_enabled; then
+  WORKING_RUBRIC="$RUBRIC
+$QUAD_RUBRIC_APPENDIX"
+fi
 while IFS= read -r file; do
-  review_one "$file" "$RUBRIC"
+  review_one "$file" "$WORKING_RUBRIC"
 done < <(pdda_list_working_docs)
 
 # 2) ROADMAP.md — pointer-only contract (separate rubric; skipped if absent).

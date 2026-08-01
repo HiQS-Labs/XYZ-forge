@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -u
-# strict-mode: -e exempt — analysis tool with expected-nonzero probes (git/gh/grep); errors handled explicitly. See GUIDING-PRINCIPLES.md#strict-mode-policy.
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=utils/pdda/pdda-lib.sh
