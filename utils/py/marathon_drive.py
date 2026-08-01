@@ -986,6 +986,16 @@ relay-file: {rel_relay}
         # GH-207: an identical escalation record must not HALT on nothing-to-commit.
         if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:
             subprocess.run(["git", "-C", root, "commit", "-q", "-m", f"marathon: phase {args.phase_id} escalation ({reason})"], check=True)
+        # Archive the failed phase's relay transcript too — save_transcript otherwise runs only
+        # on success, so an escalated/reverted phase leaves no durable record of its rounds. The
+        # 2026-07-30 rebalance-OS marathon (GH-382's panic run) reverted its p5 phase twice and
+        # the relay state survived nowhere. Non-fatal: losing the archive must not mask the
+        # escalation itself.
+        try:
+            if not save_transcript():
+                log(f"warn: could not archive relay transcript for escalated phase {args.phase_id}")
+        except Exception as exc:  # noqa: BLE001 — archive failure must never mask the escalation
+            log(f"warn: could not archive relay transcript for escalated phase {args.phase_id}: {exc}")
         subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         log(f"escalation written: {esc_file} (reason: {reason})")
         # marathon-drive.sh:867-868 — last thing escalate() does, carrying the relay-drive exit code.

@@ -6,7 +6,7 @@ import subprocess
 import shlex
 import json
 import shutil
-from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root
+from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root, rtl_default_log
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -62,7 +62,13 @@ def main():
         prompt = drift_brief + "\n" + prompt
     tick_repo_root, tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "claude-turn")
     
-    claude_log = os.environ.get("CLAUDE_LOG", os.path.join(tempfile.gettempdir(), f"claude-turn-{os.getpid()}.json"))
+    # GH-161 parity (codex-turn.py and agy-turn.py already resolve through rtl_default_log):
+    # persistent transcript path by default. The 2026-07-30 rebalance-OS marathon (GH-382's
+    # panic run) lost both p5 builder transcripts to this tempdir default — the host reset
+    # mid-phase and the reboot cleared tmp, so the only record of what the builder wrote died
+    # with the machine. Stays pure JSON (the cost block is json.load-parsed below), so no rtl
+    # trace lines are pointed here — unlike the codex/agy logs, which are plain text.
+    claude_log = os.environ.get("CLAUDE_LOG") or rtl_default_log(root, "claude-turn", t)
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
     max_turns = os.environ.get("CLAUDE_MAX_TURNS", "12")
     max_budget = os.environ.get("CLAUDE_MAX_BUDGET", "0.50")
