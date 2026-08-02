@@ -6,6 +6,7 @@ import subprocess
 import shlex
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
                  narration_mentions_root)
+from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
     print(f"agy-turn: {msg}", file=sys.stderr)
@@ -193,6 +194,11 @@ def main():
     cmd = [agy_bin] + agy_args + ["-p", prompt]
     bounded_rc = 0
     
+    # Sample the turn while it runs so an exit-7 timeout can be attributed to a
+    # cause. A reviewer turn hits the same modal-dialog hazard as a builder: it
+    # reads the target's files and can trip a credential prompt just as easily.
+    diag = TurnDiagnostics(worktree=run_cwd)
+    diag.start()
     try:
         with open(agy_log, "w") as log_f:
             subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
@@ -202,7 +208,9 @@ def main():
         bounded_rc = e.returncode
     except Exception as e:
         bounded_rc = 5
-        
+    finally:
+        diag.stop()
+
     if wt:
         off_lane = rtl.worktree_end(wt)
         if off_lane:
@@ -247,7 +255,10 @@ def main():
                 pass
 
     if bounded_rc == 7:
-        print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
+        # Exit code stays 7 for callers; the reason names WHY.
+        _reason, _detail = diag.classify()
+        print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)
+        print(f"agy-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"agy-turn: agy -p failed (exit {bounded_rc})", file=sys.stderr)
         sys.exit(5)
