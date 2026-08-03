@@ -429,7 +429,12 @@ def gate_scoping_caveat(gate_cmd):
 # The rule: acceptance is COPIED, not restated. Any genuine deviation is declared in a reviewable
 # "## Acceptance — deviations from the issue" section that must reconcile the two lists exactly.
 
-ACC_HEADING_RE = re.compile(r'^(#{2,6})\s*(?:suggested\s+)?acceptance(?:\s+criteria)?\s*$', re.IGNORECASE)
+# A trailing colon or a parenthetical qualifier ("## Acceptance:", "## Acceptance Criteria (draft)")
+# is the same heading. Anchoring hard on `$` made those read as "no acceptance section", which is an
+# `unknown` verdict — i.e. a silent bypass of the gate, not a visible failure (agy review, 2026-08-03).
+# Deliberately NOT `.*`: that would swallow prose headings like "## Acceptance is not required here".
+ACC_HEADING_RE = re.compile(
+    r'^(#{2,6})\s*(?:suggested\s+)?acceptance(?:\s+criteria)?\s*:?\s*(?:\([^)]*\))?\s*$', re.IGNORECASE)
 ACC_DEVIATIONS_HEADING_RE = re.compile(r'^(#{2,6})\s*acceptance\s*[-—–]{1,2}\s*deviations\b', re.IGNORECASE)
 ACC_BULLET_RE = re.compile(r'^([ \t]*)[-*]\s*\[[ xX]\]\s*(.*)$')
 ACC_HR_RE = re.compile(r'^\s*([-*_])\s*(\1\s*){2,}$')
@@ -483,8 +488,10 @@ def extract_acceptance_criteria(text):
         elif criteria and line.strip() and not heading:
             if len(line) - len(line.lstrip()) > indents[-1]:
                 criteria[-1] += " " + line.strip()
-            else:
-                break
+            # An UNindented line is prose between criteria, not a continuation. Skip it and keep
+            # scanning: `break`ing here dropped every criterion after an explanatory paragraph, and
+            # made this disagree with collect_inline_checklist about the same document — the packet
+            # would inline three criteria while the fidelity check compared two (agy review).
     return [normalize_criterion(c) for c in criteria if c.strip()]
 
 DEVIATION_RE = re.compile(
@@ -526,7 +533,11 @@ def extract_declared_deviations(text):
         m = DEVIATION_RE.match(raw)
         kind, body = m.group(1).lower(), m.group(2)
         reason = ""
-        rm = re.search(r'(?:—|--|-)\s*reason:\s*(.+)$', body, re.IGNORECASE)
+        # LAST occurrence, not the first: a criterion may legitimately quote "— reason:" in its own
+        # text, and splitting there would silently truncate the criterion being declared (agy review).
+        rm = None
+        for rm in re.finditer(r'(?:—|--|-)\s*reason:\s*(.+)$', body, re.IGNORECASE):
+            pass
         if rm:
             reason = rm.group(1).strip()
             body = body[:rm.start()]
@@ -534,11 +545,17 @@ def extract_declared_deviations(text):
             out["malformed"].append(f"[{kind}] entry has no '— reason: …': {normalize_criterion(raw)[:120]}")
             continue
         if kind == "changed":
-            parts = re.split(r'\s(?:->|→)\s', body, maxsplit=1)
-            if len(parts) != 2:
+            # The ` -> ` separator is genuinely ambiguous when a criterion contains an arrow of its
+            # own ("Map A -> B during import. -> Map A -> B during export."). Neither the first nor
+            # the last arrow is right in general, so don't guess: offer EVERY split as a candidate
+            # and let reconciliation pick the one that matches the actual diff. Data decides.
+            seps = list(re.finditer(r'\s(?:->|→)\s', body))
+            if not seps:
                 out["malformed"].append(f"[changed] entry needs '<issue text> -> <replacement>': {normalize_criterion(raw)[:120]}")
                 continue
-            out["changed"].append((normalize_criterion(parts[0]), normalize_criterion(parts[1]), reason))
+            cands = [(normalize_criterion(body[:m.start()]), normalize_criterion(body[m.end():]))
+                     for m in seps]
+            out["changed"].append((cands, reason))
         else:
             out[kind].append((normalize_criterion(body), reason))
     return out
@@ -682,9 +699,13 @@ def check_acceptance_fidelity(doc_path, issue_number, cwd):
     issue_acc = extract_acceptance_criteria(body)
     doc_acc = extract_acceptance_criteria(doc_text)
 
-    if issue_acc is None or not issue_acc:
+    if issue_acc is None:
         res["detail"] = f"issue #{issue_number} has no '## Acceptance' section — nothing to copy from"
         return res
+    # An acceptance section that exists but lists nothing is NOT the same as no section. Collapsing
+    # the two let a doc invent arbitrary criteria under its own heading and still read `unknown`
+    # (agy review). An empty issue list is a real list: everything the doc adds is an addition, and
+    # additions have to be declared like any other deviation.
     if doc_acc is None:
         res["status"] = "diverged"
         res["dropped"] = list(issue_acc)
@@ -716,12 +737,15 @@ def check_acceptance_fidelity(doc_path, issue_number, cwd):
     unresolved_dropped, unresolved_added = list(dropped), list(added)
     problems = list(dev["malformed"])
 
-    for old, new, _reason in dev["changed"]:
-        if old in unresolved_dropped and new in unresolved_added:
-            unresolved_dropped.remove(old)
-            unresolved_added.remove(new)
+    for cands, _reason in dev["changed"]:
+        for old, new in cands:
+            if old in unresolved_dropped and new in unresolved_added:
+                unresolved_dropped.remove(old)
+                unresolved_added.remove(new)
+                break
         else:
-            problems.append(f"[changed] declares a rewrite that does not match the actual diff: {old[:90]}")
+            problems.append("[changed] declares a rewrite that does not match the actual diff: "
+                            f"{cands[0][0][:90]}")
     for text_, _reason in dev["dropped"]:
         if text_ in unresolved_dropped:
             unresolved_dropped.remove(text_)

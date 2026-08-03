@@ -184,6 +184,9 @@ else
 fi
 
 # ── C5: the 25-item cap announces itself instead of truncating silently ───────────────────────────
+# HONESTY NOTE (agy review): C5 and C5b also pass against the pre-fix code, which capped with
+# `head -25`. They are regression pins for cap behavior, NOT evidence this fix works. C5c is the
+# falsifiable one — the pre-fix cap fired silently, so only the "reported" assertion can fail.
 long_body=""
 for i in $(seq 1 30); do long_body="${long_body}- [ ] criterion number $i.
 "; done

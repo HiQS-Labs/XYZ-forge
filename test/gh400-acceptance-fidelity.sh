@@ -343,6 +343,9 @@ grep -q "acceptance criteria diverge from issue #202" <<<"$out" \
   || fail "C13c a packet was emitted despite unexplained drift"
 
 # ── Case 14: end-to-end — a faithful doc still emits, and the packet says it was verified ─────────
+# HONESTY NOTE (agy review): C14 alone also passes pre-fix, where every doc emitted a packet. It is
+# the cry-wolf control — it fails only if the gate starts over-blocking — not evidence of the fix.
+# C14b is the falsifiable half: the provenance line does not exist in the pre-fix packet.
 R2="$WORK/repo-ok"
 mkdir -p "$R2/PROJECT/2-WORKING" "$R2/src"
 : >"$R2/src/a.js"
@@ -390,6 +393,114 @@ sys.exit(0 if f and f.get('status')=='match' else 1)
 else
   fail "C15 no run-candidate.json to audit"
 fi
+
+# ── Cases 16-19: findings from agy's QA review (2026-08-03), each verified before being fixed ─────
+# All four were live. Three let a doc reach `match` or `unknown` while genuinely diverging, which is
+# the failure mode that matters most here — a gate that silently abstains reads exactly like one that
+# passed.
+
+# C16: an issue whose ## Acceptance section EXISTS but lists nothing is not "no section". Collapsing
+# the two let a capture doc invent arbitrary criteria under its own heading and still read `unknown`.
+cat >"$WORK/issues/303.md" <<'EOF'
+## Acceptance
+
+To be decided in the design review.
+EOF
+cat >"$WORK/invented-doc.md" <<'EOF'
+---
+gh_issue: 303
+---
+## Acceptance
+
+- [ ] Whatever the doc author felt like requiring.
+EOF
+res="$(check "$WORK/invented-doc.md" 303)"
+[ "${res%%|*}" = "diverged" ] && pass "C16 an empty issue acceptance section does not license invented criteria" \
+  || fail "C16 doc invented criteria against an empty issue section and passed: $res"
+
+# C17: prose between criteria must not truncate extraction. Before the fix this returned early, so
+# the fidelity check compared 2 criteria while the packet inlined 3 — the two disagreed silently.
+cat >"$WORK/issues/304.md" <<'EOF'
+## Acceptance
+
+- [ ] one.
+- [ ] two.
+
+A clarifying paragraph that is not a criterion.
+
+- [ ] three.
+EOF
+cat >"$WORK/prose-doc.md" <<'EOF'
+---
+gh_issue: 304
+---
+## Acceptance
+
+- [ ] one.
+- [ ] two.
+- [ ] three.
+EOF
+res="$(check "$WORK/prose-doc.md" 304)"
+[ "${res%%|*}" = "match" ] && pass "C17 prose between criteria does not truncate the list" \
+  || fail "C17 a criterion after an explanatory paragraph was dropped: $res"
+
+# C18: heading variants. `## Acceptance:` previously read as "no section" -> unknown -> bypass.
+cat >"$WORK/issues/305.md" <<'EOF'
+## Acceptance:
+
+- [ ] the only criterion.
+EOF
+cat >"$WORK/variant-doc.md" <<'EOF'
+---
+gh_issue: 305
+---
+## Acceptance Criteria (draft)
+
+- [ ] something else entirely.
+EOF
+res="$(check "$WORK/variant-doc.md" 305)"
+[ "${res%%|*}" = "diverged" ] && pass "C18 heading variants are recognized on both sides, not bypassed" \
+  || fail "C18 a heading variant produced a silent bypass: $res"
+
+# C18b: the relaxation must not swallow a prose heading that merely starts with the word.
+cat >"$WORK/issues/307.md" <<'EOF'
+## Acceptance is not required here
+
+- [ ] not a criteria list.
+EOF
+cat >"$WORK/prose-heading-doc.md" <<'EOF'
+---
+gh_issue: 307
+---
+## Acceptance
+
+- [ ] the doc's own criterion.
+EOF
+res="$(check "$WORK/prose-heading-doc.md" 307)"
+[ "${res%%|*}" = "unknown" ] && pass "C18b a prose heading is still not an acceptance section" \
+  || fail "C18b the heading relaxation is too broad: $res"
+
+# C19: a [changed] declaration whose ISSUE-side text contains its own ' -> ' must still parse.
+cat >"$WORK/issues/306.md" <<'EOF'
+## Acceptance
+
+- [ ] Map A -> B during import.
+EOF
+cat >"$WORK/arrow-doc.md" <<'EOF'
+---
+gh_issue: 306
+---
+## Acceptance
+
+- [ ] Map A -> B during export.
+
+## Acceptance — deviations from the issue
+
+- [changed] Map A -> B during import. -> Map A -> B during export. — reason: import is out of scope for this lane.
+EOF
+res="$(check "$WORK/arrow-doc.md" 306)"
+[ "${res%%|*}" = "match" ] && pass "C19 a [changed] entry survives an arrow inside the criterion text" \
+  || fail "C19 arrow inside criterion text broke the declaration: $res"
 
 echo "  gh400-acceptance-fidelity: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
