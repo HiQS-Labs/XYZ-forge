@@ -273,7 +273,13 @@ class TurnDiagnostics:
         for t, c, _ in self.samples:
             if c > c_peak:
                 t_peak, c_peak = t, c
-        span = t_peak - t0
+        # A process that never accumulates CPU leaves the peak at sample 0, so
+        # the peak window is zero-length. That is the BLOCKED case — the one this
+        # module exists to name — and returning None there would file it as
+        # `unclassified` instead of `idle-no-progress`. Measure a flat trace over
+        # the full observed window so it scores a real 0.0, and reserve the peak
+        # window for traces that actually grew.
+        span = (t_peak - t0) if c_peak > c0 else (self.samples[-1][0] - t0)
         if span <= 0:
             return None
         return max(0.0, (c_peak - c0)) / span

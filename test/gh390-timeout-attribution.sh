@@ -87,6 +87,22 @@ print("OK" if r == REASON_CPU_BOUND else f"BAD {r} :: {detail}")
 [ "$out" = "OK" ] && ok "a runaway that exited before the last sample still reads cpu-bound" \
                   || bad "dead-runaway anchoring: $out"
 
+# --- a perfectly flat CPU trace must classify, not fall through ------------
+# Regression: peak-anchoring left t_peak == t0 when CPU never grew, producing a
+# zero-length window and `unclassified`. That is exactly the blocked-process
+# case this module exists to name — a turn stalled on a modal dialog burns no
+# CPU at all — so a flat trace has to score a real 0.0 over the full window.
+out="$(pyrun '
+from turn_diagnostics import TurnDiagnostics, REASON_IDLE
+d = TurnDiagnostics(worktree=None)
+d.samples = [(0.0, 0.0, 1), (5.0, 0.0, 1), (10.0, 0.0, 1)]   # flat: zero CPU throughout
+ratio = d.cpu_ratio()
+r, _ = d.classify()
+print("OK" if ratio == 0.0 and r == REASON_IDLE else f"BAD ratio={ratio} reason={r}")
+')"
+[ "$out" = "OK" ] && ok "a flat zero-CPU trace scores 0.0 and classifies as idle (not unclassified)" \
+                  || bad "flat-trace anchoring: $out"
+
 # --- idle: a real sleeping child, no file progress -------------------------
 out="$(pyrun '
 import subprocess, time
