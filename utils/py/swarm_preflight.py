@@ -278,7 +278,11 @@ def normalize(e):
             "next_action": e.get("SP_NEXT") or None,
             # GH-400: recorded on every run, including "unknown" — a fidelity claim the packet cannot
             # substantiate must be visibly absent rather than quietly assumed.
-            "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"}
+            "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"},
+            # GH-399: what the packet's checklist actually contains, so a lossy or capped copy is
+            # auditable after the fact rather than only visible to whoever read the packet.
+            "acceptance_inline": e.get("SP_ACC_INLINE") or {"criteria": 0, "scope": "whole-document",
+                                                            "over_cap": 0, "lossless": True}
         },
         "lane_plan": lanes
     }
@@ -556,6 +560,88 @@ def fetch_issue_body(issue_number, cwd):
         return None
     return r.stdout
 
+# ── GH-399: the packet's acceptance block must be a LOSSLESS copy of the capture doc's ────────────
+# The packet is the only statement of the job the builder reads, and the reviewer reads the same
+# packet. Inlining the checklist with a line-oriented match keeps only the line each `- [ ]` starts
+# on, so every hard-wrapped criterion arrives as a half-sentence — measured at 10 of 10 lanes in one
+# marathon. GH-201's "raises a clear error instead / of silently resolving to the canonical DB" lost
+# the clause naming the defect; GH-139 lost the clause defining what "stable" had to survive.
+#
+# Continuations are INDENT-GATED for the same reason as GH-400's extractor: without it, a trailing
+# horizontal rule or a following paragraph gets swallowed into the last criterion.
+
+def collect_inline_checklist(text, cap=25):
+    """Checklist items for the packet, each as its full set of source lines.
+
+    Returns (items, mode, dropped) where items is a list of (normalized_text, [raw_lines]).
+
+    `mode` is 'acceptance-section' when the doc has an `## Acceptance` heading and
+    'whole-document' otherwise. GH-399 asks for extraction bounded to that section; bounding
+    unconditionally would empty the acceptance block of nearly every capture doc in this repo (32 of
+    33 active docs keep their checkboxes under `## Phase N` instead), so the bound applies where the
+    section exists and the packet states which of the two it used. See the capture doc's declared
+    deviation.
+    """
+    if not text:
+        return [], "whole-document", 0
+    lines = text.splitlines()
+
+    start, end, mode = 0, len(lines), "whole-document"
+    for i, line in enumerate(lines):
+        if ACC_DEVIATIONS_HEADING_RE.match(line):
+            continue
+        m = ACC_HEADING_RE.match(line)
+        if m:
+            level = len(m.group(1))
+            start, mode = i + 1, "acceptance-section"
+            end = len(lines)
+            for j in range(start, len(lines)):
+                h = ANY_HEADING_RE.match(lines[j])
+                if (h and len(h.group(1)) <= level) or ACC_HR_RE.match(lines[j]):
+                    end = j
+                    break
+            break
+
+    items, indents = [], []
+    for line in lines[start:end]:
+        bullet = ACC_BULLET_RE.match(line)
+        if bullet:
+            items.append([bullet.group(2).strip(), [line.rstrip()]])
+            indents.append(len(bullet.group(1).expandtabs(4)))
+            continue
+        if not items:
+            continue
+        if not line.strip() or ANY_HEADING_RE.match(line) or ACC_HR_RE.match(line):
+            continue
+        if len(line) - len(line.lstrip()) > indents[-1]:
+            items[-1][0] += " " + line.strip()
+            items[-1][1].append(line.rstrip())
+
+    dropped = max(0, len(items) - cap)
+    kept = [(normalize_criterion(t), raw) for t, raw in items[:cap]]
+    return kept, mode, dropped
+
+def render_inline_checklist(items, dropped, doc_path, cap=25):
+    """The packet's acceptance block. A cap that fires SAYS SO — a silent truncation is the same
+    failure as a silent drop, one item coarser."""
+    block = "\n".join("\n".join(raw) for _text, raw in items)
+    if dropped > 0:
+        block += (f"\n\n> **{dropped} further criterion(a) not shown** — this packet caps the inlined "
+                  f"checklist at {cap} items. Read the remainder in `{doc_path}` before treating this "
+                  "list as complete.")
+    return block
+
+def verify_inlined_acceptance(block_text, expected):
+    """Re-parse the rendered block and report any criterion that did not survive the copy.
+
+    GH-399 asks preflight to fail rather than warn on a lossy inline. The check is deliberately run
+    against the RENDERED text rather than trusting the builder of it, so a future change to the
+    rendering (a cap, a filter, a reflow) is caught by this instead of by a builder months later.
+    """
+    reparsed, _mode, _dropped = collect_inline_checklist(block_text, cap=len(expected) or 1)
+    got = [t for t, _raw in reparsed]
+    return [t for t, _raw in expected if t not in got]
+
 def repo_slug_for(cwd):
     """`owner/name` from the origin remote, or None — used only to build a clickable issue URL."""
     try:
@@ -608,12 +694,24 @@ def check_acceptance_fidelity(doc_path, issue_number, cwd):
 
     dropped = [c for c in issue_acc if c not in doc_acc]
     added = [c for c in doc_acc if c not in issue_acc]
+    dev = extract_declared_deviations(doc_text)
     if not dropped and not added:
+        # A deviations section with nothing to reconcile is not harmless: it tells a reader the
+        # criteria were narrowed when the list above says they were not. Reconciliation therefore
+        # runs whenever the section exists, not only when the lists disagree.
+        stale = len(dev["dropped"]) + len(dev["added"]) + len(dev["changed"]) + len(dev["malformed"])
+        if stale:
+            res["status"] = "diverged"
+            res["declared"] = stale
+            res["problems"] = ([f"declares {stale} deviation(s) while the doc's acceptance block matches "
+                                "the issue exactly — remove them, or make the list say what the lane "
+                                "actually delivers"] + dev["malformed"])
+            res["detail"] = "deviations are declared but the two lists do not differ"
+            return res
         res["status"] = "match"
         res["detail"] = f"{len(issue_acc)}/{len(issue_acc)} criteria copied verbatim from issue #{issue_number}"
         return res
 
-    dev = extract_declared_deviations(doc_text)
     res["declared"] = len(dev["dropped"]) + len(dev["added"]) + len(dev["changed"])
     unresolved_dropped, unresolved_added = list(dropped), list(added)
     problems = list(dev["malformed"])
@@ -986,6 +1084,21 @@ def main():
     # the builder nor the reviewer ever sees the issue.
     acc_issue = source_issues[0] if source_issues else doc_frontmatter_issue(primary_doc)
     acc_fidelity = check_acceptance_fidelity(primary_doc, acc_issue, target_root)
+
+    # GH-399: build the packet's checklist HERE, before the verdict, so a lossy copy blocks the run
+    # instead of being discovered by whoever reads the packet. Rendering still happens below.
+    try:
+        with open(primary_doc, 'r', encoding='utf-8') as f:
+            _acc_doc_text = f.read()
+    except Exception:
+        _acc_doc_text = ""
+    acc_items, acc_mode, acc_dropped = collect_inline_checklist(_acc_doc_text)
+    acc_lost = verify_inlined_acceptance(render_inline_checklist(acc_items, acc_dropped, primary_doc), acc_items)
+    if ready == 1 and acc_lost:
+        ready, ready_next = 0, (
+            f"the packet's acceptance block would not be a lossless copy of {primary_doc} — "
+            f"{len(acc_lost)} criterion(a) did not survive inlining, first: \"{acc_lost[0][:90]}\". "
+            "This is a preflight bug, not a contract error; do not work around it by editing the doc.")
     if ready == 1 and acc_fidelity["status"] == "diverged":
         ready, ready_next = 0, (
             f"acceptance criteria diverge from issue #{acc_fidelity['issue']} — {acc_fidelity['detail']}. "
@@ -1047,7 +1160,9 @@ def main():
         "SP_CHECKOUT_MATCHES_REF": "1" if checkout_matches_ref else "0",
         "SP_READY": "1" if ready else "0",
         "SP_NEXT": ready_next,
-        "SP_ACC_FIDELITY": acc_fidelity
+        "SP_ACC_FIDELITY": acc_fidelity,
+        "SP_ACC_INLINE": {"criteria": len(acc_items), "scope": acc_mode,
+                          "over_cap": acc_dropped, "lossless": not acc_lost}
     }
     
     rc_obj = normalize(e)
@@ -1085,6 +1200,8 @@ def main():
             emit(f"  warning     : {stale_index_lock_warning}")
         emit(f"  ref-probed  : {ref} @ {ref_commit[:9]} ({ref_note})")
         emit(f"  candidate   : {cand_state}")
+        emit(f"  inlined-acc : {len(acc_items)} criterion(a) from the {acc_mode}"
+             f"{f', {acc_dropped} over the 25-item cap (reported in the packet)' if acc_dropped else ''}")
         emit(f"  acceptance  : {acc_fidelity['status']} — {acc_fidelity['detail']}")
         for line in acceptance_fidelity_report(acc_fidelity):
             emit(line)
@@ -1121,16 +1238,17 @@ def main():
     with open(os.path.join(out_dir, "readiness.json"), "w") as f: json.dump(rc_obj["readiness"], f, indent=2)
     with open(os.path.join(out_dir, "marathon-invocation.txt"), "w") as f: f.write(invocation + "\n")
     
-    gh39_acc = ""
-    try:
-        with open(primary_doc, 'r') as f:
-            for line in f:
-                if re.match(r'^[ \t]*- \[[ xX]\]', line):
-                    gh39_acc += line
-            if gh39_acc:
-                gh39_acc = "\n".join(gh39_acc.splitlines()[:25])
-    except: pass
-    if not gh39_acc: gh39_acc = f"(no '- [ ]' checklist found in {primary_doc} — add an Acceptance criteria list)"
+    # GH-399: inline the checklist with its hard-wrapped continuation lines intact. The previous
+    # line-oriented match kept only each bullet's first line, so a wrapped criterion reached the
+    # builder as a half-sentence — and the reviewer graded against the same damaged copy.
+    gh39_acc = render_inline_checklist(acc_items, acc_dropped, primary_doc)
+    if not gh39_acc:
+        gh39_acc = f"(no '- [ ]' checklist found in {primary_doc} — add an Acceptance criteria list)"
+    if acc_mode == "acceptance-section":
+        acc_scope_note = f"its `## Acceptance` section, {len(acc_items)} criterion(a)"
+    else:
+        acc_scope_note = (f"{len(acc_items)} checkbox(es) found across the WHOLE document — the doc has "
+                          "no `## Acceptance` section, so this list may include phase checklists")
 
     # GH-400: state where this checklist came from and whether it was checked against that source.
     # The builder and reviewer never see the issue, so an unverified list must SAY it is unverified
@@ -1183,7 +1301,9 @@ def main():
 This packet is the producer's output. The orchestrator launches the run; the planner does not
 (GUIDING-PRINCIPLES.md §8).
 
-## Acceptance criteria — the build is DONE when these hold (inlined from the capture doc)
+## Acceptance criteria — the build is DONE when these hold
+*Inlined verbatim from `{primary_doc}` ({acc_scope_note}). Continuation lines included; if a
+criterion here reads as a fragment, that is the source text, not a truncation.*
 {acc_provenance_line}
 {gh39_acc}
 

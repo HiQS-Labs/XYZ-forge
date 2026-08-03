@@ -76,7 +76,12 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # guard to prove a TYPO'd path in a `Frozen-twin-exception:` trailer fails loudly instead of silently
 # covering nothing. The token is deliberately a path that does not resolve — that IS the test input —
 # and it can never exist in this tree, so skipping it cannot mask a real path break.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh "
+# GH-400: test/gh400-acceptance-fidelity.sh reproduces rebalance-OS issue #202 and its capture doc
+# VERBATIM as the fixture that pins the measured inversion. Both texts name `test/clio-exporter.sh`,
+# a file in THAT repo. Paraphrasing it to satisfy this check would defeat the fixture's whole point —
+# the test exists to prove a byte-for-byte comparison catches a real drift — and the path can never
+# exist in this tree, so skipping it cannot mask a real path break.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

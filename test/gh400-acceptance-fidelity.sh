@@ -249,6 +249,27 @@ res="$(check "$WORK/bogus-doc.md" 300)"
 [ "${res%%|*}" = "diverged" ] && pass "C8 a deviation naming the wrong criterion is refused" \
   || fail "C8 rubber-stamp deviation accepted: $res"
 
+# ── Case 8b: a deviation declared when the lists actually agree is refused ────────────────────────
+# Found by dogfooding: GH-399's own capture doc declared a [changed] deviation while its acceptance
+# list was still verbatim, and the check passed vacuously because reconciliation only ran when the
+# lists differed. A reader would have believed criterion 4 was narrowed; the list said otherwise.
+cat >"$WORK/stale-dev-doc.md" <<'EOF'
+---
+gh_issue: 300
+---
+## Acceptance
+
+- [ ] The parser rejects a negative timeout instead of coercing it to zero.
+- [ ] A regression test covers the rejection path.
+
+## Acceptance — deviations from the issue
+
+- [changed] A regression test covers the rejection path. -> A regression test covers both paths. — reason: broader.
+EOF
+res="$(check "$WORK/stale-dev-doc.md" 300)"
+[ "${res%%|*}" = "diverged" ] && pass "C8b a deviation declared while the lists agree is refused" \
+  || fail "C8b a misleading deviation passed vacuously: $res"
+
 # ── Case 9: a doc with NO acceptance section cannot dodge an issue that has one ───────────────────
 cat >"$WORK/nosection-doc.md" <<'EOF'
 ---

@@ -85,10 +85,12 @@ so **no undamaged copy of the requirement exists anywhere in the pipeline**. Eve
 - [ ] Preflight compares the capture doc's acceptance block to the issue's and fails on unexplained divergence rather than warning.
 - [ ] A regression test pins the GH-202 case: an issue requiring "never silently dropped" cannot produce a capture doc asking to assert the drop.
 
-## Acceptance — deviations from the issue
+## How criterion 3's "fails rather than warning" is read
 
-None yet. Criterion 3's *"fails … rather than warning"* is carried as written, with one scope reading to
-be confirmed in Phase 0 and recorded here if it changes the criterion:
+No deviation is declared — every criterion is carried verbatim. (This section is deliberately *not*
+titled "Acceptance — deviations from the issue": that heading now has a machine meaning, and a
+section claiming deviations that do not exist is itself a divergence the checker rejects.) The one
+scope reading worth stating:
 
 - **Divergence detected → hard fail (NOT-READY).** Not negotiable; this is the criterion.
 - **Divergence *undeterminable*** (no `gh_issue`, `gh` absent, unauthenticated, offline, or the issue has
