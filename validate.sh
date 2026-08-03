@@ -63,6 +63,7 @@ TESTS=(
   "gh308-turn-shim-parity.sh"    # GH-308 (claude drift brief + turn-shim ROOT resolution + agy TICK_REPO_ROOT propagation)
   "gh342-sentinel-debug-log-python.sh" # GH-342/GH-281 (Sentinel Tier-1 XYZ_DEBUG_LOG capture on the default Python lane)
   "gh369-find-doc-root-resolution.sh"  # GH-369/GH-344 (find-doc.sh resolves PROJECT/** from the SWEPT repo; --root arg-parse guards)
+  "gh400-acceptance-fidelity.sh" # GH-400 (a capture doc's acceptance block must be the issue's, or declare each deviation)
   "hq-marathon-live.sh"          # GH-218 (cross-repo live marathon status)
   "debug-mantra.sh"              # GH-162 (debug-mantra auto-trigger note on a phase's prior attempt)
   "lane-attempt-cap.sh"

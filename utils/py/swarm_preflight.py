@@ -275,7 +275,10 @@ def normalize(e):
         },
         "readiness": {
             "ready": e.get("SP_READY") == "1",
-            "next_action": e.get("SP_NEXT") or None
+            "next_action": e.get("SP_NEXT") or None,
+            # GH-400: recorded on every run, including "unknown" — a fidelity claim the packet cannot
+            # substantiate must be visibly absent rather than quietly assumed.
+            "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"}
         },
         "lane_plan": lanes
     }
@@ -409,6 +412,271 @@ def gate_scoping_caveat(gate_cmd):
             "genuinely scopes, before firing this lane."
         )
     return ""
+
+# ── GH-400: acceptance fidelity ───────────────────────────────────────────────────────────────────
+# A capture doc is authored by a model summarising a GitHub issue, and preflight then inlines that
+# summary into the packet as the definition of done. Summarisation drops and reframes by nature, so
+# the doc silently becomes a contract that no downstream role can compare against anything: builder
+# and reviewer both read the packet, and the issue text is in neither context window. Measured case
+# (rebalance-OS #202): the issue required a malformed row be "never silently dropped", the capture
+# doc required asserting "the actual current behavior (drop the row)", and two independent marathon
+# runs delivered a test named `malformed_source_row_is_dropped`. Every gate was green.
+#
+# The rule: acceptance is COPIED, not restated. Any genuine deviation is declared in a reviewable
+# "## Acceptance — deviations from the issue" section that must reconcile the two lists exactly.
+
+ACC_HEADING_RE = re.compile(r'^(#{2,6})\s*(?:suggested\s+)?acceptance(?:\s+criteria)?\s*$', re.IGNORECASE)
+ACC_DEVIATIONS_HEADING_RE = re.compile(r'^(#{2,6})\s*acceptance\s*[-—–]{1,2}\s*deviations\b', re.IGNORECASE)
+ACC_BULLET_RE = re.compile(r'^([ \t]*)[-*]\s*\[[ xX]\]\s*(.*)$')
+ACC_HR_RE = re.compile(r'^\s*([-*_])\s*(\1\s*){2,}$')
+ANY_HEADING_RE = re.compile(r'^(#{1,6})\s')
+
+def normalize_criterion(text):
+    """Fold hard-wrap and incidental whitespace so a re-wrapped copy still counts as verbatim.
+
+    Capture docs are hard-wrapped at ~80 columns and GitHub issues are not, so a byte-for-byte
+    comparison would flag every faithful copy. Wrapping is a formatting choice; wording is the
+    contract. Nothing else is normalized — punctuation, quoting and emphasis all stay significant.
+    """
+    return re.sub(r'\s+', ' ', (text or "")).strip()
+
+def extract_acceptance_criteria(text):
+    """Criteria under the first Acceptance heading, or None when the document has no such section.
+
+    Continuation-aware: a hard-wrapped criterion continues on an INDENTED follow-on line. The
+    indent requirement is load-bearing — without it, the trailing `---` and the italic footer that
+    close a GitHub issue body get folded into the last criterion and every comparison diverges
+    (observed while dogfooding this check against issue #400 itself).
+
+    Returns None (no section) rather than [] (section present but empty) — the caller treats those
+    two cases differently, and collapsing them would let a doc dodge the gate by emptying its list.
+    """
+    if not text:
+        return None
+    lines = text.splitlines()
+    start = level = None
+    for i, line in enumerate(lines):
+        if ACC_DEVIATIONS_HEADING_RE.match(line):
+            continue
+        m = ACC_HEADING_RE.match(line)
+        if m:
+            start, level = i + 1, len(m.group(1))
+            break
+    if start is None:
+        return None
+
+    criteria, indents = [], []
+    for line in lines[start:]:
+        heading = ANY_HEADING_RE.match(line)
+        if heading and len(heading.group(1)) <= level:
+            break
+        if ACC_HR_RE.match(line):
+            break
+        bullet = ACC_BULLET_RE.match(line)
+        if bullet:
+            criteria.append(bullet.group(2).strip())
+            indents.append(len(bullet.group(1).expandtabs(4)))
+        elif criteria and line.strip() and not heading:
+            if len(line) - len(line.lstrip()) > indents[-1]:
+                criteria[-1] += " " + line.strip()
+            else:
+                break
+    return [normalize_criterion(c) for c in criteria if c.strip()]
+
+DEVIATION_RE = re.compile(
+    r'^[ \t]*[-*]\s*\[(dropped|changed|added)\]\s*(.*)$', re.IGNORECASE)
+
+def extract_declared_deviations(text):
+    """Parse the '## Acceptance — deviations from the issue' section.
+
+    Machine-checkable by construction, so "explained" is a fact rather than a judgement call:
+
+        - [dropped] <verbatim issue criterion> — reason: <why>
+        - [changed] <verbatim issue criterion> -> <replacement> — reason: <why>
+        - [added]   <new criterion> — reason: <why>
+    """
+    out = {"dropped": [], "added": [], "changed": [], "malformed": []}
+    if not text:
+        return out
+    lines = text.splitlines()
+    start = level = None
+    for i, line in enumerate(lines):
+        m = ACC_DEVIATIONS_HEADING_RE.match(line)
+        if m:
+            start, level = i + 1, len(m.group(1))
+            break
+    if start is None:
+        return out
+
+    buf = []
+    for line in lines[start:]:
+        heading = ANY_HEADING_RE.match(line)
+        if heading and len(heading.group(1)) <= level:
+            break
+        if DEVIATION_RE.match(line):
+            buf.append(line.rstrip())
+        elif buf and line.strip() and not heading and not ACC_HR_RE.match(line):
+            buf[-1] += " " + line.strip()
+
+    for raw in buf:
+        m = DEVIATION_RE.match(raw)
+        kind, body = m.group(1).lower(), m.group(2)
+        reason = ""
+        rm = re.search(r'(?:—|--|-)\s*reason:\s*(.+)$', body, re.IGNORECASE)
+        if rm:
+            reason = rm.group(1).strip()
+            body = body[:rm.start()]
+        if not reason:
+            out["malformed"].append(f"[{kind}] entry has no '— reason: …': {normalize_criterion(raw)[:120]}")
+            continue
+        if kind == "changed":
+            parts = re.split(r'\s(?:->|→)\s', body, maxsplit=1)
+            if len(parts) != 2:
+                out["malformed"].append(f"[changed] entry needs '<issue text> -> <replacement>': {normalize_criterion(raw)[:120]}")
+                continue
+            out["changed"].append((normalize_criterion(parts[0]), normalize_criterion(parts[1]), reason))
+        else:
+            out[kind].append((normalize_criterion(body), reason))
+    return out
+
+def fetch_issue_body(issue_number, cwd):
+    """Issue body via `gh`, or None when it cannot be reached.
+
+    Preflight has otherwise been local-transport only, so this is the first body-fetch on the path
+    and it degrades rather than blocking: an unreachable network is not evidence of drift.
+    """
+    if not shutil.which("gh"):
+        return None
+    try:
+        r = subprocess.run(["gh", "issue", "view", str(issue_number), "--json", "body", "-q", ".body"],
+                           cwd=cwd, capture_output=True, text=True, timeout=45)
+    except Exception:
+        return None
+    if r.returncode != 0:
+        return None
+    return r.stdout
+
+def repo_slug_for(cwd):
+    """`owner/name` from the origin remote, or None — used only to build a clickable issue URL."""
+    try:
+        url = subprocess.check_output(["git", "-C", cwd, "remote", "get-url", "origin"],
+                                      stderr=subprocess.DEVNULL).decode('utf-8').strip()
+    except Exception:
+        return None
+    m = re.search(r'(?:github\.com[:/])([^/]+/[^/]+?)(?:\.git)?$', url)
+    return m.group(1) if m else None
+
+def check_acceptance_fidelity(doc_path, issue_number, cwd):
+    """Compare a capture doc's acceptance block against its source issue's.
+
+    status:
+      match    — identical, or every difference is declared and reconciles exactly
+      diverged — the doc's definition of done is not the issue's, and nothing explains the gap
+      unknown  — cannot be determined (no issue, gh missing/unauthenticated/offline, no section)
+    Only `diverged` blocks. `unknown` is reported loudly and never masked as a pass.
+    """
+    res = {"status": "unknown", "detail": "", "issue": issue_number,
+           "dropped": [], "added": [], "declared": 0}
+    if not issue_number:
+        res["detail"] = "capture doc has no gh_issue — nothing to compare against"
+        return res
+    try:
+        with open(doc_path, 'r', encoding='utf-8') as f:
+            doc_text = f.read()
+    except Exception:
+        res["detail"] = f"capture doc unreadable: {doc_path}"
+        return res
+
+    body = fetch_issue_body(issue_number, cwd)
+    if body is None:
+        res["detail"] = (f"could not fetch issue #{issue_number} (gh missing, unauthenticated, or "
+                         "offline) — acceptance fidelity NOT verified")
+        return res
+
+    issue_acc = extract_acceptance_criteria(body)
+    doc_acc = extract_acceptance_criteria(doc_text)
+
+    if issue_acc is None or not issue_acc:
+        res["detail"] = f"issue #{issue_number} has no '## Acceptance' section — nothing to copy from"
+        return res
+    if doc_acc is None:
+        res["status"] = "diverged"
+        res["dropped"] = list(issue_acc)
+        res["detail"] = (f"issue #{issue_number} states {len(issue_acc)} acceptance criteria and the "
+                         "capture doc has no '## Acceptance' section at all")
+        return res
+
+    dropped = [c for c in issue_acc if c not in doc_acc]
+    added = [c for c in doc_acc if c not in issue_acc]
+    if not dropped and not added:
+        res["status"] = "match"
+        res["detail"] = f"{len(issue_acc)}/{len(issue_acc)} criteria copied verbatim from issue #{issue_number}"
+        return res
+
+    dev = extract_declared_deviations(doc_text)
+    res["declared"] = len(dev["dropped"]) + len(dev["added"]) + len(dev["changed"])
+    unresolved_dropped, unresolved_added = list(dropped), list(added)
+    problems = list(dev["malformed"])
+
+    for old, new, _reason in dev["changed"]:
+        if old in unresolved_dropped and new in unresolved_added:
+            unresolved_dropped.remove(old)
+            unresolved_added.remove(new)
+        else:
+            problems.append(f"[changed] declares a rewrite that does not match the actual diff: {old[:90]}")
+    for text_, _reason in dev["dropped"]:
+        if text_ in unresolved_dropped:
+            unresolved_dropped.remove(text_)
+        else:
+            problems.append(f"[dropped] names a criterion the issue does not state (or that the doc still carries): {text_[:90]}")
+    for text_, _reason in dev["added"]:
+        if text_ in unresolved_added:
+            unresolved_added.remove(text_)
+        else:
+            problems.append(f"[added] names a criterion the doc does not carry: {text_[:90]}")
+
+    res["dropped"], res["added"] = unresolved_dropped, unresolved_added
+    if not unresolved_dropped and not unresolved_added and not problems:
+        res["status"] = "match"
+        res["detail"] = (f"{len(issue_acc)} issue criteria reconciled: {res['declared']} deviation(s) "
+                         "declared and accounted for")
+        return res
+
+    res["status"] = "diverged"
+    bits = []
+    if unresolved_dropped:
+        bits.append(f"{len(unresolved_dropped)} issue criterion(a) missing from the doc with no declared deviation")
+    if unresolved_added:
+        bits.append(f"{len(unresolved_added)} doc criterion(a) absent from the issue with no declared deviation")
+    if problems:
+        bits.append(f"{len(problems)} malformed/unmatched deviation entry(ies)")
+    res["detail"] = "; ".join(bits)
+    res["problems"] = problems
+    return res
+
+def acceptance_fidelity_report(res):
+    """Multi-line operator-facing explanation of a divergence."""
+    out = []
+    for c in res.get("dropped", []):
+        out.append(f"    MISSING FROM DOC (issue says): {c}")
+    for c in res.get("added", []):
+        out.append(f"    NOT IN ISSUE  (doc says)     : {c}")
+    for p in res.get("problems", []):
+        out.append(f"    DEVIATION PROBLEM            : {p}")
+    return out
+
+def doc_frontmatter_issue(doc_path):
+    """`gh_issue:` from a capture doc's YAML frontmatter, or None."""
+    try:
+        with open(doc_path, 'r', encoding='utf-8') as f:
+            text = f.read()
+    except Exception:
+        return None
+    m = re.match(r'^---\n(.*?)\n---', text, re.DOTALL)
+    if not m:
+        return None
+    m2 = re.search(r'^gh_issue:\s*"?(\d+)"?\s*$', m.group(1), re.MULTILINE)
+    return m2.group(1) if m2 else None
 
 def main():
     parser = argparse.ArgumentParser(description="swarm-preflight", add_help=False)
@@ -711,6 +979,18 @@ def main():
         
     if ready == 1 and gh39_art_missing:
         ready, ready_next = 0, f"artifact path not found at target.ref: {gh39_art_missing} — fix the contract artifacts[] or push the file"
+
+    # GH-400: the packet's definition of done is the capture doc's checklist, which a model wrote by
+    # summarising the issue. Refuse to emit one whose acceptance criteria have drifted from the
+    # source of truth without a declared reason — nothing downstream can catch it, because neither
+    # the builder nor the reviewer ever sees the issue.
+    acc_issue = source_issues[0] if source_issues else doc_frontmatter_issue(primary_doc)
+    acc_fidelity = check_acceptance_fidelity(primary_doc, acc_issue, target_root)
+    if ready == 1 and acc_fidelity["status"] == "diverged":
+        ready, ready_next = 0, (
+            f"acceptance criteria diverge from issue #{acc_fidelity['issue']} — {acc_fidelity['detail']}. "
+            "Copy the issue's '## Acceptance' block verbatim, or declare each deviation under "
+            "'## Acceptance — deviations from the issue' as `- [dropped|changed|added] <text> — reason: <why>'")
         
     if ready == 1 and gate_cmd:
         gate_parts = gate_cmd.split()
@@ -766,7 +1046,8 @@ def main():
         "SP_HEAD_BEHIND_REF": str(head_behind_ref),
         "SP_CHECKOUT_MATCHES_REF": "1" if checkout_matches_ref else "0",
         "SP_READY": "1" if ready else "0",
-        "SP_NEXT": ready_next
+        "SP_NEXT": ready_next,
+        "SP_ACC_FIDELITY": acc_fidelity
     }
     
     rc_obj = normalize(e)
@@ -804,6 +1085,9 @@ def main():
             emit(f"  warning     : {stale_index_lock_warning}")
         emit(f"  ref-probed  : {ref} @ {ref_commit[:9]} ({ref_note})")
         emit(f"  candidate   : {cand_state}")
+        emit(f"  acceptance  : {acc_fidelity['status']} — {acc_fidelity['detail']}")
+        for line in acceptance_fidelity_report(acc_fidelity):
+            emit(line)
         emit(f"  readiness   : ready={ready}{f' — next: {ready_next}' if ready_next else ''}")
         emit(f"  lane-cli    : {gh39_lane_note} (advisory)")
         emit(f"  verdict     : {verdict} (exit {code})")
@@ -847,6 +1131,19 @@ def main():
                 gh39_acc = "\n".join(gh39_acc.splitlines()[:25])
     except: pass
     if not gh39_acc: gh39_acc = f"(no '- [ ]' checklist found in {primary_doc} — add an Acceptance criteria list)"
+
+    # GH-400: state where this checklist came from and whether it was checked against that source.
+    # The builder and reviewer never see the issue, so an unverified list must SAY it is unverified
+    # instead of arriving under a bare "inlined from the capture doc" heading that reads as provenance.
+    if acc_fidelity["status"] == "match":
+        _slug = repo_slug_for(target_root)
+        _ref = (f"[issue #{acc_fidelity['issue']}](https://github.com/{_slug}/issues/{acc_fidelity['issue']})"
+                if _slug else f"issue #{acc_fidelity['issue']}")
+        acc_provenance_line = f"*Verified against {_ref} — {acc_fidelity['detail']}.*"
+    else:
+        acc_provenance_line = (f"*NOT verified against the source issue — {acc_fidelity['detail']}. "
+                               "Treat this list as a summary, not a contract: if anything here is "
+                               "ambiguous, read the issue before building.*")
     
     gh39_art_loc = 0
     for a in merged.get("artifacts", []):
@@ -887,6 +1184,7 @@ This packet is the producer's output. The orchestrator launches the run; the pla
 (GUIDING-PRINCIPLES.md §8).
 
 ## Acceptance criteria — the build is DONE when these hold (inlined from the capture doc)
+{acc_provenance_line}
 {gh39_acc}
 
 ## Scope lock — builder, do exactly this and nothing else

@@ -198,14 +198,30 @@ no repro steps, no clear acceptance criteria); or it's not a work item at all
 
 ### 4. Ensure every INCLUDE has a contract-carrying capture doc in `2-WORKING`
 
+> **The acceptance criteria are COPIED, never restated (GH-400).** Everything downstream —
+> preflight, the packet, the relay file, the builder, the reviewer — reads this doc; the issue
+> text reaches none of them. So the moment you summarise the acceptance block, your summary *is*
+> the contract and no role left in the pipeline can compare it to anything. Measured case:
+> `rebalance-OS` #202 required a malformed row be *"proven to be either reconciled or surfaced,
+> never silently dropped"*; the capture doc this step wrote asked instead to assert *"the actual
+> current behavior (drop the row)"*; two independent marathon runs then delivered a test named
+> `malformed_source_row_is_dropped`, and every gate reported success. Summarise the *background*
+> as much as you like. **Reproduce the `## Acceptance` block byte-for-byte** (re-wrapping to ~80
+> columns is fine — nothing else is). `swarm-preflight` now re-fetches the issue and refuses to
+> emit a packet on unexplained divergence, so a restatement here does not merely risk a wrong
+> build, it hard-fails the lane at Step 6.
+
 For each `INCLUDE` verdict:
 
 - **Doc already exists** (1-INBOX or 2-WORKING): move it to `2-WORKING` if it isn't
   there yet; add a `## Swarm Preflight Contract` block if `has_contract` was false.
+  **If it has no `## Acceptance` section and the issue does, add one — copied verbatim.**
 - **No doc exists**: author `PROJECT/2-WORKING/GH-<N>-<slug>.md` using this repo's
   standard capture-doc frontmatter (`gh_issue`, `source`, `title`, `status`, `created`,
   `updated`, `owner`, `doc_type`, `complexity`/`risk`/`effort` with
-  `ratings_provisional: true`, `goal`), plus a best-effort contract:
+  `ratings_provisional: true`, `goal`), where **`source` is the full issue URL** so a reader
+  can diff the doc against its origin in one step. Give it an `## Acceptance` section copied
+  verbatim from the issue's, plus a best-effort contract:
 
   ```
   ## Swarm Preflight Contract
@@ -215,7 +231,7 @@ For each `INCLUDE` verdict:
     "gate":        "bash validate.sh",
     "fix_probes":  [ /* inferred from the issue body — grep for the bug it describes */ ],
     "artifacts":   [ /* files the issue names, or the subagent identified as the touch surface */ ],
-    "remediation": { "source": "issue#<N>", "criteria": "<one-line acceptance criteria>" },
+    "remediation": { "source": "issue#<N>", "criteria": "<one-line SUMMARY for ranking — NOT the definition of done; that is the verbatim ## Acceptance block>" },
     "lanes":       { "agy_safe": [], "orchestrator_only": [ /* kernel/.tick paths, if any */ ] }
   }
   ```
@@ -227,6 +243,23 @@ For each `INCLUDE` verdict:
   Mark it explicitly in the doc body: *"Contract auto-drafted by /10days from the issue
   text — artifacts/lanes not yet operator-verified."* This is the one place this skill
   guesses; the report in Step 8 must surface every auto-drafted contract by name.
+
+- **When a criterion genuinely cannot be carried as written** — unreachable in this repo,
+  superseded by later work, or deliberately split across lanes — do **not** quietly rewrite the
+  list. Keep the issue's wording and record the delta in a section preflight can check:
+
+  ```markdown
+  ## Acceptance — deviations from the issue
+
+  - [dropped] <verbatim issue criterion> — reason: <why>
+  - [changed] <verbatim issue criterion> -> <replacement> — reason: <why>
+  - [added]   <new criterion> — reason: <why>
+  ```
+
+  Each entry needs a real `— reason:`, and the entries must reconcile the two lists **exactly**:
+  an entry naming a criterion that is not actually different is rejected, so the section cannot
+  become a rubber stamp. This is the only supported way to diverge; there is no env-var bypass,
+  because a deviation should live in the doc where the next reader finds it.
 
 - **Audit the guess like `marathon-triage` does**: do the declared `artifacts` paths
   actually exist (or, for a new file, does the issue actually call for creating one at
@@ -282,6 +315,17 @@ issue — the fix shipped without this run knowing) · `5` not marathon-ready ·
 blocked/missing-target · `7` ambiguous. Only exit-0 issues carry into Step 6.5. Every
 non-zero drop gets one line in the Step 8 report with its exit code and reason — never
 silently disappear an issue from the count.
+
+**An `exit 5` reading `acceptance criteria diverge from issue #N` is your own Step 4 output being
+rejected (GH-400), not a defect in the issue.** Preflight re-fetched the issue and found the doc's
+`## Acceptance` block says something the issue does not. Fix it by going back to the doc and copying
+the issue's block verbatim — or, if the difference is deliberate, by declaring it under
+`## Acceptance — deviations from the issue` as Step 4 specifies. Do **not** work around it by
+deleting the doc's acceptance section (a doc with none, against an issue that has one, is refused
+too) and do not drop the issue from the run on these grounds. The check reports `unknown` and does
+not block when it simply cannot see the issue (no `gh`, unauthenticated, offline, or an issue with
+no `## Acceptance` section), so a green run offline is not evidence the criteria were verified —
+the packet says which of the two it was.
 
 ### 6.5. Cross-issue artifact-overlap check — before any wave runs concurrently
 

@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 131 items | Tally: 🟢 5 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 85 · 🔮 0 · 🔲 0
+Summary: 132 items | Tally: 🟢 5 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 85 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-400 · /10days capture docs restate a GitHub issue's acceptance criteria instead of copying them — a measured case inverted one, and the marathon delivered the inversion | — | [GH-400-CAPTURE-DOC-ACCEPTANCE-FIDELITY.md](PROJECT/2-WORKING/GH-400-CAPTURE-DOC-ACCEPTANCE-FIDELITY.md) · [#400](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/400) · [#399](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/399) |
 | GH-381 · /Releases rolling release-train planner | — | [GH-381-RELEASES-ROLLING-TRAIN.md](PROJECT/1-INBOX/GH-381-RELEASES-ROLLING-TRAIN.md) · [#381](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/381) |
 | GH-351 · the registered dashboard gate graded its own answer key | ✅ | [GH-351-DASHBOARD-TEST-GRADES-ITS-OWN-ANSWER-KEY.md](PROJECT/2-WORKING/GH-351-DASHBOARD-TEST-GRADES-ITS-OWN-ANSWER-KEY.md) · [#351](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/351) |
 | GH-369 · /10days' capture-doc lookup hung forever on a valueless --root, in a skill built to run unattended | ✅ | [GH-369-FIND-DOC-ARG-PARSE-AND-ROOT-RESOLUTION.md](PROJECT/2-WORKING/GH-369-FIND-DOC-ARG-PARSE-AND-ROOT-RESOLUTION.md) · [#369](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/369) |
