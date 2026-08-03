@@ -27,7 +27,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| Continuations inlined (indent-gated), extraction bounded to `## Acceptance` where one exists, 25-item cap now announced, and a lossless-copy check that sets NOT-READY. Regression test pins capture doc → packet → **relay file**. | agy QA via `/relay-xyz`, then PR into `development`. |
+| Shipped, then QA'd by agy via `relay-xyz`: **2 Blockers, 2 Shoulds, 1 Nit — all accepted, each reproduced before being fixed.** Both Blockers were silent-bypass paths in #400's checker (an empty issue acceptance section, and an extractor that truncated at unindented prose while its sibling did not). Suites 21 → **26/0** and **14/0**. | PR into `development`. |
 
 ## The defect
 
