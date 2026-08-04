@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan J (2026-07-18) — vendored-consumer DX gaps (GH-238, GH-239)
-status: Triaged, not yet fired — capture docs + preflight contracts still owed
+status: "RETIRED 2026-08-03 to 4-MISC — never fired; both lanes shipped by another route. #238 CLOSED (merged PR #243, commits d999c36/54e8bf2); #239 CLOSED (relay-automation/CONTRACT.example.md exists, and swarm_preflight.py prints it plus the minimal skeleton on exit 3). Nothing below is actionable; kept for the triage record only."
 created: 2026-07-18
-updated: 2026-07-18
+updated: 2026-08-03
 owner: noel
 branch: development
 doc_type: project

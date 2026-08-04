@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan — 2026-07-23 · GH-279/GH-280 aider-qwen follow-up
-status: "GH-280 root cause resolved 2026-07-23 (second session) — edit-format mismatch confirmed, AIDER_FLAGS=--edit-format diff is the fix. GH-279 still queued/unfired (OPEN)."
+status: "RETIRED 2026-08-03 to 4-MISC — both lanes concluded. #279 is now CLOSED (the body below still says it is OPEN and queued; that is stale as of 2026-08-03). #294 CLOSED. #280 remains OPEN as bookkeeping only — its root cause was found and recorded (Aider's `whole` edit-format silently discards Qwen's diffs; AIDER_FLAGS=--edit-format diff is the fix) and this doc states no further action is planned. Kept for the findings record only."
 created: 2026-07-23
-updated: 2026-07-22
+updated: 2026-08-03
 owner: noel
 branch: development
 doc_type: project

@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan M (2026-07-20) — GH-226 provenance surfacing, two-lane implementation
-status: DRAFT — held for Jedi Wright sign-off; do not fire until scope confirmed on #226
+status: "RETIRED 2026-08-03 to 4-MISC — never fired, and no longer fireable as written. #226 CLOSED. Lane C's core gate (consult.sh <-> consult.py parity) is now illegal: relay-automation/consult.sh is FROZEN under GH-308, Python authoritative. Wave 1 targets relay-turn-lib.sh (GH-308 Tier C containment logic) in Bash, against the phase-out-Bash policy. #223, its assumed baseline gap, is CLOSED. The GOAL — surface the existing FIRSTHAND_COUNT provenance signal into the operator report instead of a bare warn() — remains valid and is carried forward as a fresh Python-only issue; this doc is kept for its design record only."
 created: 2026-07-20
-updated: 2026-07-20
+updated: 2026-08-03
 owner: noel
 branch: gh-226/provenance-coordination
 doc_type: project

@@ -1,8 +1,8 @@
 ---
 title: Marathon Plan K (2026-07-19) — ddb6c40 shim-root regression + 10-day sweep backlog
-status: Triaged, NOT fired — Wave 1 is a live regression on `development`, operator gate required
+status: "RETIRED 2026-08-03 to 4-MISC — never fired; 16 of 17 lanes are now CLOSED (223 234 241 236 245 218 247 250 224 232 249 225 242 199 248 294). Only #191 remains OPEN, which this doc itself files as deferred backlog. Wave 1's construct survives in utils/py/rtl.py:resolve_turn_root and is carried forward as issue #417 — the GH-171/GH-172 failures cited here are no longer among development's failures, but nothing recorded why. Kept for the triage record only."
 created: 2026-07-19
-updated: 2026-07-19
+updated: 2026-08-03
 owner: noel
 branch: development
 doc_type: project
