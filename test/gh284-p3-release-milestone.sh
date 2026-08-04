@@ -19,6 +19,15 @@ run_releases() {  # <fixture-file>
 run_current() {   # <fixture-file>
   PDDA_RELEASES_FILE="$1" PDDA_ACTIVITY_LOG=/dev/null bash "$PDDA" releases-current 2>&1
 }
+# The Milestone WARNING is this repo's own policy and lives in utils/pdda-local-checks.sh, not in
+# the sync-managed upstream script. The 2026-08-03 PDDA sync (cfd56b0) deleted it from pdda.sh —
+# upstream carries `Milestone:` as "optional, free-text, unvalidated" — and this test went red for
+# ~2 days reading as pre-existing noise. Everything else below still exercises `pdda.sh releases`,
+# which is the point: the upstream behaviours must keep working alongside the local check.
+LOCAL_CHECKS="$ROOT/utils/pdda-local-checks.sh"
+run_milestone() { # <fixture-file>
+  PDDA_RELEASES_FILE="$1" PDDA_ACTIVITY_LOG=/dev/null bash "$LOCAL_CHECKS" release-milestone 2>&1
+}
 
 # ── (1) the new warning fires on a dated, unshipped release with no Milestone ────────────
 F="$WORK/no-milestone.md"
@@ -30,7 +39,7 @@ Codename: Testcodename
 Description: no milestone here
 GH_URL:
 EOF
-out="$(run_releases "$F")"; rc=$?
+out="$(run_milestone "$F")"; rc=$?
 printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
   && pass "dated unshipped release with no Milestone is warned" \
   || fail "expected a missing-Milestone warning, got: $out"
@@ -51,7 +60,7 @@ Description: has a milestone
 GH_URL:
 Milestone: Quicksilver
 EOF
-out="$(run_releases "$F")"
+out="$(run_milestone "$F")"
 printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
   && fail "Milestone was present but the warning still fired: $out" \
   || pass "a populated Milestone silences the warning"
@@ -74,7 +83,7 @@ Codename: Ancient
 Description: already out, never had a milestone
 GH_URL:
 EOF
-out="$(run_releases "$F")"
+out="$(run_milestone "$F")"
 printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
   && fail "undated/shipped blocks must not be warned about: $out" \
   || pass "undated and Shipped blocks are exempt from the Milestone warning"
@@ -141,9 +150,19 @@ out="$(run_current "$F")"
 printf '%s' "$out" | grep -Fq "Milestone: Quicksilver" \
   && pass "releases-current prints the milestone when set" \
   || fail "roll-up did not show the milestone: $out"
-printf '%s' "$out" | grep -Fq "cannot resolve to an issue set" \
-  && pass "releases-current says so explicitly when the milestone is absent" \
-  || fail "roll-up must not silently omit a missing milestone: $out"
+# The roll-up's explicit "(none — release cannot resolve to an issue set)" line was ALSO deleted by
+# the cfd56b0 sync: upstream's `releases-current` now prints the Milestone line only when set, so a
+# missing one is rendered as absence. This assertion was masked until case (1) was fixed — the file
+# fail-fasted before reaching it. The requirement it encodes ("a missing milestone is never silent")
+# is preserved by the local check, which names the offending release; the roll-up no longer does.
+# Restoring the roll-up line belongs upstream, not in a file the next sync overwrites.
+out_ms="$(run_milestone "$F")"
+printf '%s' "$out_ms" | grep -Fq "release '5.0.0' has a Target Date but no 'Milestone:'" \
+  && pass "a milestone-less release is still named explicitly (by the local check, not the roll-up)" \
+  || fail "a missing milestone became silent in BOTH the roll-up and the check: $out_ms"
+printf '%s' "$out_ms" | grep -Fq "release '4.0.0'" \
+  && fail "the release that HAS a milestone was wrongly flagged: $out_ms" \
+  || pass "the release carrying a milestone is not flagged"
 
 # ── (6) the field must not shift the other parsed fields ─────────────────────────────────
 # Milestone was appended to a \037-delimited record. A mis-ordered read would silently hand
@@ -170,7 +189,10 @@ printf '%s' "$out" | grep -Fq "Milestone: MILESTONE-SENTINEL" \
   || fail "field ordering broke: Milestone missing or shifted in $out"
 
 # ── (7) the repo's own ledger satisfies the contract it just documented ──────────────────
-out="$(PDDA_ACTIVITY_LOG=/dev/null bash "$PDDA" releases 2>&1)"
+# Against `pdda.sh releases` this assertion is now UNFALSIFIABLE — upstream emits no Milestone
+# warning at all, so "no warning fired" would be true for any ledger, including a broken one. It runs
+# against the local check, which is the only thing that can still produce the string it greps for.
+out="$(PDDA_ACTIVITY_LOG=/dev/null bash "$LOCAL_CHECKS" release-milestone 2>&1)"
 printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
   && fail "this repo's own RELEASES.md has a dated release with no Milestone: $out" \
   || pass "the repo's RELEASES.md carries a Milestone for every dated, unshipped release"

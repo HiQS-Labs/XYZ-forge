@@ -72,6 +72,10 @@ jobs:
         run: |
           set -euo pipefail
           utils/pdda/pdda.sh run
+          # Checks this repo owns, kept OUTSIDE the sync-managed utils/pdda/ tree because the
+          # 2026-08-03 sync (cfd56b0) deleted three of them from upstream's script without a word.
+          # Warn-only by contract — it reports, it never gates.
+          utils/pdda-local-checks.sh run
 
       # GH-308 froze the eleven Tier-A Bash twins and AGENTS.md told readers "CI supplies
       # GH308_FROZEN_TWIN_BASE to reject a committed twin edit". Nothing did — the agy review of

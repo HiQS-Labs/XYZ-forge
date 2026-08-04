@@ -6,10 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 132 items | Tally: 🟢 5 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 85 · 🔮 0 · 🔲 0
+Summary: 134 items | Tally: 🟢 5 · 🟡 5 · ⏸️ 2 · ⛔ 0 · ✅ 86 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-416 · a dependency sync silently deleted three shipped guardrails, and CI stayed red on development for two days because the failures read as noise | ✅ | [#416](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/416) |
+| GH-399 · the packet's acceptance block kept only each criterion's first line, so every hard-wrapped requirement reached the builder as a half-sentence | — | [GH-399-PACKET-ACCEPTANCE-CONTINUATION.md](PROJECT/2-WORKING/GH-399-PACKET-ACCEPTANCE-CONTINUATION.md) · [#399](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/399) |
 | GH-400 · /10days capture docs restate a GitHub issue's acceptance criteria instead of copying them — a measured case inverted one, and the marathon delivered the inversion | — | [GH-400-CAPTURE-DOC-ACCEPTANCE-FIDELITY.md](PROJECT/2-WORKING/GH-400-CAPTURE-DOC-ACCEPTANCE-FIDELITY.md) · [#400](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/400) · [#399](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/399) |
 | GH-381 · /Releases rolling release-train planner | — | [GH-381-RELEASES-ROLLING-TRAIN.md](PROJECT/1-INBOX/GH-381-RELEASES-ROLLING-TRAIN.md) · [#381](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/381) |
 | GH-351 · the registered dashboard gate graded its own answer key | ✅ | [GH-351-DASHBOARD-TEST-GRADES-ITS-OWN-ANSWER-KEY.md](PROJECT/2-WORKING/GH-351-DASHBOARD-TEST-GRADES-ITS-OWN-ANSWER-KEY.md) · [#351](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/351) |

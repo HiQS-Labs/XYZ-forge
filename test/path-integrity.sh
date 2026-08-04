@@ -48,7 +48,22 @@ skills/relay-automation/SKILL.md \
 skills/relay-xyz/SKILL.md"
 
 shfiles=()
-while IFS= read -r p; do shfiles+=("$p"); done < <(cd "$ROOT" && git ls-files '*.sh')
+# `utils/pdda/**` is SYNC-MANAGED from Hypercart-Dev-Tools/pdda (utils/pdda/PDDA-SOURCE.md): a sync
+# replaces those files wholesale, so their internal path tokens describe UPSTREAM's tree, not ours,
+# and any edit we make to satisfy this check is reverted by the next sync. The 2026-08-03 sync
+# (cfd56b0) added four such tokens and turned this check — and CI on `development` — red for ~2 days:
+#   utils/pdda/pdda.sh:850     an EXEMPTION-LIST data string naming three upstream skill/test files
+#                              under a dot-claude skills dir that this repo does not vendor
+#   utils/pdda/pdda-lib.sh:467 a COMMENT citing an upstream releases-iterations test file
+# None is a reference this repo can resolve or repair. (Those paths are deliberately DESCRIBED rather
+# than quoted here: this file is itself scanned, so spelling them out would trip the very check.) Excluding the tree is narrower than it looks:
+# every path this repo actually authors and can fix is still scanned, and upstream's tree is
+# upstream's CI's job. Scoped to this one directory so a new vendored tree does not inherit the
+# exemption silently.
+while IFS= read -r p; do
+  case "$p" in utils/pdda/*) continue ;; esac
+  shfiles+=("$p")
+done < <(cd "$ROOT" && git ls-files '*.sh')
 
 # A path-like token must (a) start with a known tooling prefix, (b) contain no
 # glob/var/placeholder char (the [A-Za-z0-9._/-] class excludes * ? $ < > { } ` ),
@@ -76,7 +91,12 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # guard to prove a TYPO'd path in a `Frozen-twin-exception:` trailer fails loudly instead of silently
 # covering nothing. The token is deliberately a path that does not resolve — that IS the test input —
 # and it can never exist in this tree, so skipping it cannot mask a real path break.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh "
+# GH-400: test/gh400-acceptance-fidelity.sh reproduces rebalance-OS issue #202 and its capture doc
+# VERBATIM as the fixture that pins the measured inversion. Both texts name `test/clio-exporter.sh`,
+# a file in THAT repo. Paraphrasing it to satisfy this check would defeat the fixture's whole point —
+# the test exists to prove a byte-for-byte comparison catches a real drift — and the path can never
+# exist in this tree, so skipping it cannot mask a real path break.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do
