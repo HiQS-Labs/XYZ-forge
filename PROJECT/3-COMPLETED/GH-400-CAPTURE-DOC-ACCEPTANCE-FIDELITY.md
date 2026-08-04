@@ -2,7 +2,7 @@
 gh_issue: 400
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/400
 title: "GH-400 — /10days capture docs restate a GitHub issue's acceptance criteria instead of copying them; a measured case inverted one and the marathon delivered the inversion"
-status: "Shipped 2026-08-03 — all 3 phases. Skill copies verbatim, preflight hard-fails on unexplained drift (Python twin), test/gh400-acceptance-fidelity.sh 20/0 in validate.sh and observed 1/19 against pre-fix code. Blast radius measured at 0 of 33 active docs before choosing the posture."
+status: "Shipped 2026-08-03 — all 3 phases, plus the criterion-2 follow-on (2026-08-04). Skill copies verbatim; preflight hard-fails on unexplained drift AND on a capture doc that does not cite its issue's URL (Python twin); test/gh400-acceptance-fidelity.sh 26/0 and test/gh400-source-url.sh 13/0 in validate.sh, observed 1/19 and 2/11 against pre-fix code. Blast radius measured before each posture choice: 0 of 33 for the acceptance gate, 1 of 48 for the source-URL gate. All 4 acceptance criteria now met."
 created: 2026-08-03
 updated: 2026-08-03
 owner: noel
@@ -80,10 +80,50 @@ so **no undamaged copy of the requirement exists anywhere in the pipeline**. Eve
 *Copied verbatim from [issue #400](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/400)
 (`## Suggested acceptance criteria`), fetched 2026-08-03. Deviations, if any, are recorded below this block.*
 
-- [ ] A capture doc generated from a GitHub issue reproduces that issue's acceptance criteria verbatim, or records each deviation explicitly with a reason.
-- [ ] Every generated capture doc contains the source issue URL.
-- [ ] Preflight compares the capture doc's acceptance block to the issue's and fails on unexplained divergence rather than warning.
-- [ ] A regression test pins the GH-202 case: an issue requiring "never silently dropped" cannot produce a capture doc asking to assert the drop.
+- [x] A capture doc generated from a GitHub issue reproduces that issue's acceptance criteria verbatim, or records each deviation explicitly with a reason.
+- [x] Every generated capture doc contains the source issue URL.
+- [x] Preflight compares the capture doc's acceptance block to the issue's and fails on unexplained divergence rather than warning.
+- [x] A regression test pins the GH-202 case: an issue requiring "never silently dropped" cannot produce a capture doc asking to assert the drop.
+
+## Criterion 2 follow-on (2026-08-04) — the one criterion this fix left on prose
+
+Criterion 2 shipped in `b026737` as **instruction only**: `skills/10days/SKILL.md` told the model to
+put the issue URL in `source:`, and **no gate ever read the field**. `source: issue#400`, or no
+`source:` at all, passed everything — the fidelity check resolves its issue number from `--gh-issue`
+or the `gh_issue:` frontmatter key and never looks at `source:`.
+
+That is this issue's own defect, reproduced inside its own fix: a model-authored field trusted as
+though it were verified. It is why the criterion was left **unchecked on the issue** rather than
+claimed, and why a green run proved nothing about it.
+
+**What shipped now:** `check_source_url()` in `utils/py/swarm_preflight.py` (Python only — the five
+Bash turn shims and the Bash preflight twin are frozen under GH-308). A doc naming a `gh_issue`, or
+resolved by `--gh-issue N`, must carry a `source:` containing a GitHub issue URL whose number
+matches. `missing` or `mismatch` → NOT-READY, **exit 5, no packet**. `readiness.source_url` is
+recorded on every run. Frontmatter only — a `source:` line inside a fenced example in the prose is
+documentation, not provenance, and case 4 pins that.
+
+The check is **purely local**: it reads frontmatter and never touches the network, so unlike the
+acceptance gate it has no offline-degradation case and no `unknown`-means-skip escape. The only
+pass-through is a doc with no issue to point at (`not-applicable`).
+
+**Blast radius measured before choosing the posture**, as with Phase 0: of 67 capture docs in
+`1-INBOX` + `2-WORKING`, **48 already carry the exact issue URL, 19 name no `gh_issue` at all, and
+exactly 1 would newly block** — `GH-299-DIAGRAM-TRUST-LAYOUT.md`, a real instance of the defect,
+fixed in the same commit. 0 mismatches. A hard fail costs one doc, which is why it could be taken
+literally rather than softened to a warning.
+
+**Negative control (GH-419):** `test/gh400-source-url.sh` is **13/0** post-fix and was observed at
+**2 pass / 11 fail** against pre-fix code, where the missing-URL case emitted `verdict: ready
+(exit 0)` and wrote a packet. The 2 that pass pre-fix are C8/C8b — the anti-noise controls that must
+pass in *both* directions, kept and labelled for the same reason cases 2-4 were.
+
+**Two sibling suites had to have fixtures corrected, not assertions relaxed.** `swarm-preflight.sh`'s
+`mkcap` and `gh400-acceptance-fidelity.sh`'s `mkcapture` both built capture docs with a `gh_issue`
+(or a `GH-N-` filename resolved by `--gh-issue`) and no `source:`. Under the new rule those are
+invalid capture docs, so the fixtures were wrong. Narrowing the gate to frontmatter-only would have
+made both pass untouched — and would have reintroduced exactly the "omit a field to dodge the check"
+bypass agy found in this checker during the #413 QA round. The rule was kept; the fixtures moved.
 
 ## How criterion 3's "fails rather than warning" is read
 

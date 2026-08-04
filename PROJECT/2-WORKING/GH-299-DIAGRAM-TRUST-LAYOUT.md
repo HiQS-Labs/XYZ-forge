@@ -5,6 +5,7 @@ created: 2026-07-23
 updated: 2026-07-23
 owner: unassigned
 gh_issue: 299
+source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/299
 goal: >
   Ship a new, A/B-comparable system diagram layout that makes trust/control-plane structure the
   dominant visual axis, eliminates label-overlap failures, and reduces edge-crossing noise around

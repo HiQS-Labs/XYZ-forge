@@ -172,7 +172,10 @@ grep -q "PROJECT/2-WORKING/GH-900-nocontract.md" <<<"$out" && pass "T6 names the
 
 # ── T7: ambiguous bundle (gate mismatch across two issues) → exit 7 ──────────
 R="$WORK/bundle"; mkdir -p "$R/PROJECT/2-WORKING"
-mkcap() { printf -- '---\ntitle: %s\n---\n# %s\n## Swarm Preflight Contract\n```json\n%s\n```\n' "$1" "$1" "$2" >"$R/PROJECT/2-WORKING/GH-$3-$1.md"; }
+# `source:` carries the bundle issue's URL — a doc resolved by --gh-issue N is N's capture doc and
+# must cite it (GH-400 criterion 2, test/gh400-source-url.sh), exactly as the acceptance-fidelity
+# gate already treats the bundle issue as this doc's source of truth.
+mkcap() { printf -- '---\ntitle: %s\nsource: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/%s\n---\n# %s\n## Swarm Preflight Contract\n```json\n%s\n```\n' "$1" "$3" "$1" "$2" >"$R/PROJECT/2-WORKING/GH-$3-$1.md"; }
 mkcap one '{ "target": { "repo": ".", "ref": "main" }, "gate": "true", "fix_probes": [ { "type": "path_absent", "path": "a" } ], "artifacts": [ "a" ] }' 11
 mkcap two '{ "target": { "repo": ".", "ref": "main" }, "gate": "false", "fix_probes": [ { "type": "path_absent", "path": "b" } ], "artifacts": [ "b" ] }' 12
 git -C "$R" init -q && git -C "$R" -c user.email=t@t -c user.name=t add -A >/dev/null && git -C "$R" -c user.email=t@t -c user.name=t commit -qm init >/dev/null

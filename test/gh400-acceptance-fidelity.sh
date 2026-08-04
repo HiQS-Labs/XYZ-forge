@@ -315,7 +315,9 @@ mkdir -p "$R/PROJECT/2-WORKING" "$R/src"
 : >"$R/src/a.js"
 git -C "$R" init -q -b main 2>/dev/null || { git -C "$R" init -q; git -C "$R" symbolic-ref HEAD refs/heads/main; }
 mkcapture() { # <file> <acceptance-block>
-  { printf -- '---\ngh_issue: 202\ntitle: e2e\n---\n\n## Acceptance\n\n%s\n\n## Swarm Preflight Contract\n```json\n%s\n```\n' \
+  # `source:` is required of any doc naming a gh_issue (GH-400 criterion 2, test/gh400-source-url.sh).
+  # Carried here so these fixtures exercise THIS file's subject and not that gate.
+  { printf -- '---\ngh_issue: 202\ntitle: e2e\nsource: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/202\n---\n\n## Acceptance\n\n%s\n\n## Swarm Preflight Contract\n```json\n%s\n```\n' \
       "$2" '{
   "target": { "repo": ".", "ref": "main" },
   "gate": "true",
@@ -350,7 +352,7 @@ R2="$WORK/repo-ok"
 mkdir -p "$R2/PROJECT/2-WORKING" "$R2/src"
 : >"$R2/src/a.js"
 git -C "$R2" init -q -b main 2>/dev/null || { git -C "$R2" init -q; git -C "$R2" symbolic-ref HEAD refs/heads/main; }
-{ printf -- '---\ngh_issue: 202\ntitle: e2e-ok\n---\n\n## Acceptance\n\n'
+{ printf -- '---\ngh_issue: 202\ntitle: e2e-ok\nsource: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/202\n---\n\n## Acceptance\n\n'
   printf -- '- [ ] A fixture representing at least one malformed source row is added to the CLIO projection test harness.\n'
   printf -- '- [ ] The test asserts the *intended* behaviour explicitly — whether that is quarantine, repair, or a loud\n      failure — rather than just asserting "no crash."\n'
   printf -- '- [ ] The malformed row is proven to be either reconciled or surfaced, never silently dropped from the\n      projection.\n'

@@ -279,6 +279,9 @@ def normalize(e):
             # GH-400: recorded on every run, including "unknown" — a fidelity claim the packet cannot
             # substantiate must be visibly absent rather than quietly assumed.
             "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"},
+            # GH-400 criterion 2: recorded on every run so "the doc cited its issue" is auditable
+            # after the fact rather than assumed from a green verdict.
+            "source_url": e.get("SP_SRC_URL") or {"status": "unknown", "detail": "not evaluated"},
             # GH-399: what the packet's checklist actually contains, so a lossy or capped copy is
             # auditable after the fact rather than only visible to whoever read the packet.
             "acceptance_inline": e.get("SP_ACC_INLINE") or {"criteria": 0, "scope": "whole-document",
@@ -787,18 +790,84 @@ def acceptance_fidelity_report(res):
         out.append(f"    DEVIATION PROBLEM            : {p}")
     return out
 
-def doc_frontmatter_issue(doc_path):
-    """`gh_issue:` from a capture doc's YAML frontmatter, or None."""
+def doc_frontmatter(doc_path):
+    """A capture doc's YAML frontmatter block as text, or None.
+
+    Frontmatter only — never the body. A `source:` line inside a fenced example in the prose is
+    documentation, not provenance, and must not be mistaken for the real field.
+    """
     try:
         with open(doc_path, 'r', encoding='utf-8') as f:
             text = f.read()
     except Exception:
         return None
     m = re.match(r'^---\n(.*?)\n---', text, re.DOTALL)
-    if not m:
+    return m.group(1) if m else None
+
+def doc_frontmatter_issue(doc_path):
+    """`gh_issue:` from a capture doc's YAML frontmatter, or None."""
+    fm = doc_frontmatter(doc_path)
+    if fm is None:
         return None
-    m2 = re.search(r'^gh_issue:\s*"?(\d+)"?\s*$', m.group(1), re.MULTILINE)
+    m2 = re.search(r'^gh_issue:\s*"?(\d+)"?\s*$', fm, re.MULTILINE)
     return m2.group(1) if m2 else None
+
+ISSUE_URL_RE = re.compile(r'https?://github\.com/([^/\s]+/[^/\s]+?)/issues/(\d+)')
+
+def check_source_url(doc_path, issue_number):
+    """GH-400 criterion 2: a capture doc naming a `gh_issue` must carry that issue's URL.
+
+    Until now this was an instruction in `skills/10days/SKILL.md` and nothing more — the field was
+    never read by any gate, so `source: issue#400`, or no `source` at all, passed everything. That
+    is the same "trust the model's output as though it were verified" shape GH-400 exists to close,
+    reproduced inside GH-400's own fix.
+
+    Purely local: it reads frontmatter, never the network, so unlike the acceptance-fidelity check
+    it has no offline-degradation case. The only pass-through is having no `gh_issue` to point at.
+
+    status:
+      ok             — a GitHub issue URL whose number matches `gh_issue`
+      missing        — no `source:`, or one carrying no GitHub issue URL
+      mismatch       — a GitHub issue URL pointing at a DIFFERENT issue than `gh_issue`
+      not-applicable — the doc names no `gh_issue`, so there is nothing to point at
+      unknown        — the doc could not be read
+    Only `ok` and `not-applicable` pass.
+    """
+    res = {"status": "unknown", "detail": "", "issue": issue_number, "url": None, "slug": None}
+    if not issue_number:
+        res["status"] = "not-applicable"
+        res["detail"] = "capture doc names no gh_issue — no source URL is required"
+        return res
+    fm = doc_frontmatter(doc_path)
+    if fm is None:
+        res["detail"] = f"capture doc has no YAML frontmatter to read a source: from: {doc_path}"
+        return res
+
+    m = re.search(r'^source:\s*(.+?)\s*$', fm, re.MULTILINE)
+    if not m:
+        res["status"] = "missing"
+        res["detail"] = (f"frontmatter names gh_issue: {issue_number} but carries no 'source:' field — "
+                         "a reader cannot get from this doc to the issue it claims to implement")
+        return res
+
+    raw = m.group(1).strip().strip('"\'')
+    u = ISSUE_URL_RE.search(raw)
+    if not u:
+        res["status"] = "missing"
+        res["detail"] = (f"source: is not a GitHub issue URL (got \"{raw[:70]}\") — a bare reference "
+                         f"like 'issue#{issue_number}' is not diffable against anything")
+        return res
+
+    res["slug"], res["url"] = u.group(1), u.group(0)
+    if u.group(2) != str(issue_number):
+        res["status"] = "mismatch"
+        res["detail"] = (f"source: points at issue #{u.group(2)} but frontmatter declares "
+                         f"gh_issue: {issue_number} — the doc cites provenance it does not have")
+        return res
+
+    res["status"] = "ok"
+    res["detail"] = f"source: resolves to issue #{issue_number} ({res['url']})"
+    return res
 
 def main():
     parser = argparse.ArgumentParser(description="swarm-preflight", add_help=False)
@@ -1109,6 +1178,11 @@ def main():
     acc_issue = source_issues[0] if source_issues else doc_frontmatter_issue(primary_doc)
     acc_fidelity = check_acceptance_fidelity(primary_doc, acc_issue, target_root)
 
+    # GH-400 criterion 2: the doc must carry the URL of the issue it claims to implement, so the
+    # two can be diffed in one step. Shipped as prose in the skill and enforced nowhere, which left
+    # GH-400's own fix resting on an unverified model output — the exact shape GH-400 is about.
+    src_url = check_source_url(primary_doc, doc_frontmatter_issue(primary_doc) or acc_issue)
+
     # GH-399: build the packet's checklist HERE, before the verdict, so a lossy copy blocks the run
     # instead of being discovered by whoever reads the packet. Rendering still happens below.
     try:
@@ -1128,6 +1202,12 @@ def main():
             f"acceptance criteria diverge from issue #{acc_fidelity['issue']} — {acc_fidelity['detail']}. "
             "Copy the issue's '## Acceptance' block verbatim, or declare each deviation under "
             "'## Acceptance — deviations from the issue' as `- [dropped|changed|added] <text> — reason: <why>'")
+    if ready == 1 and src_url["status"] in ("missing", "mismatch"):
+        ready, ready_next = 0, (
+            f"capture doc source URL {src_url['status']} — {src_url['detail']}. "
+            f"Set `source: https://github.com/<owner>/<repo>/issues/{src_url['issue']}` in the doc's "
+            "frontmatter (GH-400). This is local-only: it never needs the network, so there is no "
+            "offline case in which it is safe to skip.")
         
     if ready == 1 and gate_cmd:
         gate_parts = gate_cmd.split()
@@ -1185,6 +1265,7 @@ def main():
         "SP_READY": "1" if ready else "0",
         "SP_NEXT": ready_next,
         "SP_ACC_FIDELITY": acc_fidelity,
+        "SP_SRC_URL": src_url,
         "SP_ACC_INLINE": {"criteria": len(acc_items), "scope": acc_mode,
                           "over_cap": acc_dropped, "lossless": not acc_lost}
     }
@@ -1226,6 +1307,7 @@ def main():
         emit(f"  candidate   : {cand_state}")
         emit(f"  inlined-acc : {len(acc_items)} criterion(a) from the {acc_mode}"
              f"{f', {acc_dropped} over the 25-item cap (reported in the packet)' if acc_dropped else ''}")
+        emit(f"  source-url  : {src_url['status']} — {src_url['detail']}")
         emit(f"  acceptance  : {acc_fidelity['status']} — {acc_fidelity['detail']}")
         for line in acceptance_fidelity_report(acc_fidelity):
             emit(line)
