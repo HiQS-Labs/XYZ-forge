@@ -180,10 +180,27 @@ ISSUE_DOC_SYNC_OUTPUT="$(
   bash "$CHECK" issue-doc-sync 2>&1
 )"
 
-printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "GH-501-STALE-COMPLETED.md" \
-  && printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "non-terminal" \
-  && pass "issue-doc-sync flags a 3-COMPLETED doc with a non-terminal status when its issue is CLOSED (GH-189)" \
-  || fail "issue-doc-sync did not flag the stale-status 3-COMPLETED doc"
+# GH-189 direction (c) — the 3-COMPLETED scan — was DELETED from the sync-managed upstream script by
+# the 2026-08-03 PDDA sync (cfd56b0): `non-terminal` went from 4 occurrences in pdda.sh to 0, and the
+# behaviour existed nowhere else in the repo. It now lives in utils/pdda-local-checks.sh, outside the
+# sync surface, so the next upstream sync cannot delete it again. Directions (a) and (b) below still
+# run against pdda.sh, which is what makes this a targeted move rather than a fork of the checker.
+COMPLETED_STATUS_OUTPUT="$(
+  PDDA_MODE=full \
+  PDDA_REPO_ROOT="$TMP" \
+  PDDA_WORKING_DIR="$TMP/PROJECT/2-WORKING" \
+  PDDA_COMPLETED_DIR="$TMP/PROJECT/3-COMPLETED" \
+  PDDA_ROADMAP="$TMP/ROADMAP.md" \
+  PDDA_ACTIVITY_LOG="$TMP/activity.jsonl" \
+  PDDA_GH_STATE_CACHE="$GH_CACHE" \
+  PDDA_ISSUE_SYNC_SOURCE=cache \
+  bash "$ROOT/utils/pdda-local-checks.sh" completed-status 2>&1
+)"
+
+printf '%s' "$COMPLETED_STATUS_OUTPUT" | grep -Fq "GH-501-STALE-COMPLETED.md" \
+  && printf '%s' "$COMPLETED_STATUS_OUTPUT" | grep -Fq "non-terminal" \
+  && pass "a 3-COMPLETED doc with a non-terminal status is flagged (GH-189, restored locally)" \
+  || fail "the stale-status 3-COMPLETED doc was not flagged: $COMPLETED_STATUS_OUTPUT"
 
 printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "GH-502-SHIPPED-BUT-OPEN.md" \
   && printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "doc status reads 'shipped'" \
@@ -191,12 +208,26 @@ printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "GH-502-SHIPPED-BUT-OPEN.md" \
   || fail "issue-doc-sync no longer flags the pre-existing direction (b) shipped-but-open case"
 
 printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "issue #503 state unavailable" \
-  && pass "issue-doc-sync degrades to INFO 'state unavailable' for a doc with no cached/live issue state" \
+  && pass "issue-doc-sync reports 'state unavailable' for a doc with no cached/live issue state" \
   || fail "issue-doc-sync did not degrade gracefully for the no-cached-state doc"
 
-! printf '%s\n' "$ISSUE_DOC_SYNC_OUTPUT" | grep -E '^(WARN|ERROR) .*GH-503-NO-STATE\.md' >/dev/null \
-  && pass "issue-doc-sync raises no false warning/error for the no-cached-state doc" \
-  || fail "issue-doc-sync raised a false warning/error for the no-cached-state doc"
+# This assertion used to require INFO severity — "no false WARN for a doc that isn't drifted". The
+# 2026-08-03 PDDA sync (cfd56b0) deliberately raised it to WARN, with the reasoning stated in
+# `utils/pdda/pdda.sh`: *"A check that could not run is NOT a check that passed. Warn, so `run` and
+# the Stop hook say so."* That is the better contract — it is the same principle GH-400 applies to
+# acceptance fidelity, where an unverifiable claim must be visibly absent rather than quietly
+# assumed — so the TEST was stale, not the runtime. Unlike the GH-189 and GH-284 behaviours restored
+# above, nothing was deleted here and there is nothing to restore.
+#
+# What still has to hold: the state must be REPORTED (never silently skipped) and must never
+# escalate to ERROR, because an unreachable issue state is not a defect in the doc.
+printf '%s\n' "$ISSUE_DOC_SYNC_OUTPUT" | grep -E '^(INFO|WARN) .*GH-503-NO-STATE\.md' >/dev/null \
+  && pass "unevaluable issue state is reported for the no-cached-state doc (WARN since cfd56b0, was INFO)" \
+  || fail "the no-cached-state doc was silently skipped: $ISSUE_DOC_SYNC_OUTPUT"
+
+! printf '%s\n' "$ISSUE_DOC_SYNC_OUTPUT" | grep -E '^ERROR .*GH-503-NO-STATE\.md' >/dev/null \
+  && pass "an unreachable issue state never escalates to ERROR" \
+  || fail "unevaluable state was raised to ERROR for the no-cached-state doc"
 
 ROADMAP_ISSUE_STATE_OUTPUT="$(
   PDDA_MODE=full \
@@ -205,7 +236,7 @@ ROADMAP_ISSUE_STATE_OUTPUT="$(
   PDDA_ACTIVITY_LOG="$TMP/activity.jsonl" \
   PDDA_GH_STATE_CACHE="$GH_CACHE" \
   PDDA_ISSUE_SYNC_SOURCE=cache \
-  bash "$CHECK" roadmap-issue-state 2>&1
+  bash "$ROOT/utils/pdda-local-checks.sh" roadmap-issue-state 2>&1
 )"
 
 printf '%s' "$ROADMAP_ISSUE_STATE_OUTPUT" | grep -Fq "issue #501 is CLOSED but the ledger entry's status marker is still non-terminal" \
