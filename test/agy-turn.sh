@@ -242,16 +242,24 @@ RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-markdowncite AGY_
 [ "$rc" -eq 0 ] && pass "GH-187: markdown file:// citation -> turn succeeds (not a breach)" || fail "markdown-cite should exit 0, got $rc"
 grep -q "agy-stub" "$A/relay.md" && pass "GH-187: markdown-cite turn committed relay block" || fail "markdown-cite: relay output lost"
 
-# --- (15) genuine breach: plain $ROOT citation still fails (exit 5) ---
+# --- (15) GH-410: a plain $ROOT citation is ADVISORY, not a breach — the turn survives ------------
+# This case asserted exit 5 until GH-410. Naming a path is not accessing one: the same scan passed a
+# phase with TEN repo-root mentions and failed one with NINE in the same run, and the harness's own
+# retry preamble renders absolute paths into the relay file, so a compliant agent seeds its own
+# transcript. Out-of-worktree WRITES are still enforced by rtl.worktree_end() — see
+# test/gh410-containment-advisory.sh, which pins that direction so this relaxation cannot be
+# mistaken for containment having been deleted.
 seed_token RELAY-TURN-breach
 printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
-git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for breach test" >/dev/null 2>&1
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for citation test" >/dev/null 2>&1
 breachlog="$WORK/agy-breach.$$.log"; : >"$breachlog"
 RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-breach AGY_AGENT=agy \
   AGY_BIN="$STUB" AGY_TURN_ROOT="$A" AGY_LOG="$breachlog" STUB_MODE=breach RELAY_WORKTREE_ISOLATION=1 \
   bash "$SHIM" >/dev/null 2>&1; rc=$?
-[ "$rc" -eq 5 ] && pass "genuine breach: plain \$ROOT citation -> fails (exit 5)" || fail "genuine breach should exit 5, got $rc"
-git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean uncommitted breach-stub block before the next case
+[ "$rc" -eq 0 ] && pass "GH-410: plain \$ROOT citation -> turn survives (exit 0), not exit 5" || fail "GH-410: citation should exit 0, got $rc"
+grep -q "agy-stub" "$A/relay.md" && pass "GH-410: the completed review is NOT discarded" || fail "GH-410: review lost on a mere citation"
+grep -q "ADVISORY" "$breachlog" && pass "GH-410: the advisory is still recorded on the transcript" || fail "GH-410: advisory not recorded — traded a false positive for a blind spot"
+git -C "$A" reset --hard HEAD >/dev/null 2>&1   # clean uncommitted stub block before the next case
 
 # --- (12) GH-172 / GH-174: Python port refuses an unowned relay token before any edit ----------
 tick_a log task.created RELAY-TURN-py-unowned --agent dispatcher >/dev/null

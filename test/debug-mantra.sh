@@ -63,8 +63,20 @@ grep -q "## Debug mantra" "$A/phases/p1/RELAY.md" 2>/dev/null \
   && pass "one prior attempt: debug-mantra note appears" \
   || fail "one prior attempt: debug-mantra note missing"
 grep -q "relay-automation/DEBUG-MANTRA.md" "$A/phases/p1/RELAY.md" 2>/dev/null \
-  && pass "note references the DEBUG-MANTRA.md file by absolute-anchored path" \
+  && pass "note references the DEBUG-MANTRA.md file by name" \
   || fail "note does not reference DEBUG-MANTRA.md"
+# GH-410: the RENDERED note must not carry the repo root. The old form inlined a full absolute path
+# per line, and an intermediate fix merely stopped repeating it while still embedding it once via
+# dirname(dirname(...)) — "given once" is not "not given" (caught in agy's QA round). Asserted on the
+# rendered artifact, not on the source string, because a source grep proves what the code says rather
+# than what it emits — the same substitution GH-410 is about.
+if grep -q "## Debug mantra" "$A/phases/p1/RELAY.md" 2>/dev/null; then
+  if sed -n '/## Debug mantra/,/^$/p' "$A/phases/p1/RELAY.md" | grep -qF "$A"; then
+    fail "GH-410: the rendered debug-mantra note still embeds the repo root ($A)"
+  else
+    pass "GH-410: the rendered note carries no absolute repo root"
+  fi
+fi
 grep -q "1 prior attempt" "$A/phases/p1/RELAY.md" 2>/dev/null \
   && pass "note states the prior-attempt count (1)" \
   || fail "note missing the prior-attempt count"

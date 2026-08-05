@@ -278,3 +278,53 @@ echo -n "${{RTL_WT_OFFLANE:-0}}"
 """
         res = self._run_rtl(cmd)
         return res.stdout.strip() == "1"
+
+
+# GH-410: ADVISORY ONLY — never a verdict.
+#
+# `worktree_end` above is the containment verdict: it diffs the worktree's own git state, so it
+# observes writes that actually happened, and all five turn shims exit 6 on it identically.
+#
+# This function answers a strictly weaker question — does the transcript NAME the real repo root —
+# and the two diverge in both directions. An agent that quietly touched the real tree without naming
+# it is not detected here; an agent that merely cites an absolute path in a finding is. Measured
+# (#410): two phases in one run, same builder and same isolation settings, where the one with TEN
+# repo-root mentions was Approved and the one with NINE failed three consecutive times.
+#
+# It used to fail the turn, which discarded completed reviews. Three exemption patches were spent
+# trying to make it precise (#183 `TICK_REPO_ROOT=`, #187 `file://` and `](`) and a fourth shape was
+# still outstanding: the harness's own retry preamble renders absolute paths into the relay file, so
+# an agent following instructions writes the trigger into its own transcript.
+#
+# Do NOT re-promote this to a verdict without first making reads observable. If that ever happens,
+# the seeding in marathon_drive's retry preamble has to be fixed first.
+def narration_mentions_root(log_path, root):
+    """Count transcript lines naming `root`, ignoring known-benign shapes. (count, first_line).
+
+    Returns (0, None) when the log is missing, empty, or names nothing. The exemptions are kept only
+    to stop the advisory from being pure noise — they are no longer load-bearing, because nothing
+    fails on this result.
+    """
+    if not root or not log_path or not os.path.exists(log_path):
+        return 0, None
+    try:
+        if os.path.getsize(log_path) == 0:
+            return 0, None
+    except OSError:
+        return 0, None
+
+    count, first = 0, None
+    try:
+        with open(log_path, "r", errors="replace") as fh:
+            for line in fh:
+                if line.startswith("[trace] "):
+                    continue
+                if "TICK_REPO_ROOT=" in line or "file://" in line or "](" in line:
+                    continue
+                if root in line:
+                    count += 1
+                    if first is None:
+                        first = line.strip()
+    except OSError:
+        return 0, None
+    return count, first

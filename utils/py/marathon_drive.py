@@ -400,11 +400,39 @@ def main():
                             break
             except Exception:
                 pass
+        # GH-410: name the files once, with their directories stated once, instead of repeating a
+        # full absolute path per line. This preamble renders ONLY on a retry, so the old form handed
+        # every re-attempt extra copies of the repo root — a recovery path that raised the very
+        # hazard it was retrying against, back when the containment scan failed turns on prose.
+        # That scan is advisory now, so this is hygiene rather than a fix, and it keeps the relay
+        # file readable. The tick-binary line elsewhere deliberately keeps its absolute path:
+        # "run it from any directory" is the whole point of that instruction.
+        # Emit paths RELATIVE where they resolve, so the repo root is not written into the relay at
+        # all. An intermediate draft merely stopped repeating the root per line and still embedded it
+        # once via `dirname(dirname(...))` — caught in agy's QA round, because "given once" is not
+        # "not given". GH-162's contract that the note reference `relay-automation/DEBUG-MANTRA.md`
+        # is preserved exactly (test/debug-mantra.sh pins it); an earlier draft dropped that too.
+        #
+        # `relpath` is only used when it stays inside the tree — a cross-repo run (`--target-root`)
+        # would otherwise produce a `../../..` chain that is worse than an absolute path for a reader
+        # and useless to an agent. In that case the absolute path is kept deliberately.
+        def _rel(p, base):
+            try:
+                r = os.path.relpath(p, base)
+            except (ValueError, TypeError):
+                return p
+            return p if r.startswith("..") else r
+
+        harness_root = os.path.dirname(os.path.dirname(mantra_file))
+        mantra_rel = _rel(mantra_file, harness_root)          # relay-automation/DEBUG-MANTRA.md
+        phase_rel = _rel(phase_dir_, root)
         out = (f"\n## Debug mantra (auto-triggered — {prior} prior attempt(s) on this phase did not reach Approved)\n\n"
-               f"Before trying again, read {mantra_file} and follow its four-step discipline: reproduce reliably, "
-               f"know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.\n")
+               f"Before trying again, read `{mantra_rel}` (relative to the harness root) and follow its "
+               f"four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this "
+               f"round as a breadcrumb for the next one.\n")
         if reason:
-            out += f"Last recorded reason ({phase_dir_}/ESCALATION.md): `{reason}`. Read it before re-guessing.\n"
+            out += (f"Last recorded reason (`{os.path.join(phase_rel, 'ESCALATION.md')}`): `{reason}`. "
+                    "Read it before re-guessing.\n")
         return out
 
     if get_env("RELAY_DRIVER_LOCKED", "0") != "1":

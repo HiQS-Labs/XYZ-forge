@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 136 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 87 · 🔮 0 · 🔲 0
+Summary: 137 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 87 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-410 · the worktree containment check greps the reviewer's prose for the repo path, turns on wording, and throws away a completed review | — | [GH-410-CONTAINMENT-PROSE-SCAN.md](PROJECT/2-WORKING/GH-410-CONTAINMENT-PROSE-SCAN.md) · [#410](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/410) |
 | GH-422 · the source-URL gate's blast radius was measured on the harness only, and its remediation was a placeholder | — | [GH-422-SOURCE-URL-REMEDIATION.md](PROJECT/2-WORKING/GH-422-SOURCE-URL-REMEDIATION.md) · [#422](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/422) |
 | GH-419 · trustworthy gates: a check that has never been observed failing is not evidence | — | [GH-419-TRUSTWORTHY-GATES.md](PROJECT/2-WORKING/GH-419-TRUSTWORTHY-GATES.md) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) · [#418](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/418) · [#417](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/417) |
 | GH-416 · a dependency sync silently deleted three working guardrails, and CI stayed red on development for two days because the failures read as noise | 🟡 | [#416](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/416) |

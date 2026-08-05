@@ -4,7 +4,8 @@ import sys
 import tempfile
 import subprocess
 import shlex
-from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
+from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
+                 narration_mentions_root)
 
 def die(msg):
     print(f"agy-turn: {msg}", file=sys.stderr)
@@ -207,27 +208,43 @@ def main():
         if off_lane:
             print("agy-turn: agy made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)", file=sys.stderr)
             sys.exit(6)
-        # GH-178 B1: Verify agy grounding stayed contained to $WT.
-        if bounded_rc == 0 and os.path.exists(agy_log) and os.path.getsize(agy_log) > 0:
-            # Filter out false-positive shapes before the ROOT substring scan:
-            #   [trace] lines (instrumentation, legitimately contain RTL_ROOT)
-            #   TICK_REPO_ROOT="..." (harness-mandated tick-command narration, GH-183)
-            #   file:// URIs and markdown link targets ](...) (file citations, GH-187)
-            breached = False
-            with open(agy_log, "r", errors="replace") as log_f:
-                for line in log_f:
-                    if line.startswith("[trace] "):
-                        continue
-                    if "TICK_REPO_ROOT=" in line or "file://" in line or "](" in line:
-                        continue
-                    if root in line:
-                        breached = True
-                        break
-            if breached:
-                print(f"agy-turn: agy transcript cited the real repo root ({root}) instead of the isolated worktree. This is an isolation breach. Failing the turn.", file=sys.stderr)
+        # GH-178 B1, narrowed by GH-410: this used to exit 5 and throw the turn away.
+        #
+        # The verdict is `worktree_end` above — it diffs the worktree's git state, so it observes
+        # writes that actually happened, and every shim enforces it identically. What follows only
+        # observes whether the transcript NAMED the root, which is a different question: an agent
+        # that quietly touched the real tree without naming it was never caught here, and one that
+        # merely cited a path in a finding was failed for it. Measured in a single run, same builder
+        # and isolation settings: the phase with TEN repo-root mentions was Approved, the one with
+        # NINE failed three times running.
+        #
+        # The cost was asymmetric. A builder losing a turn loses regenerable work; a reviewer losing
+        # one loses a VERDICT — in the reported case a review that had already written
+        # `STATUS: Approved` was discarded and the chain halted. A heuristic that destroys completed
+        # work must fail toward keeping it.
+        #
+        # It is now advisory: recorded on the transcript and stderr so an operator still sees it,
+        # and it never changes the turn's outcome.
+        # Deliberately NOT gated on `bounded_rc == 0` (agy QA, GH-410): the old check ran only on a
+        # successful turn, so an agent that timed out or errored *after* citing the root produced no
+        # signal at all — withholding the note from exactly the runs most likely to need explaining.
+        # The advisory changes no outcome, so there is nothing to gate.
+        mentions, first_line = narration_mentions_root(agy_log, root)
+        if mentions:
+            print(f"agy-turn: ADVISORY — agy's transcript names the real repo root ({root}) on "
+                  f"{mentions} line(s); first: {first_line[:120] if first_line else ''}. This is "
+                  "NOT a containment verdict: naming a path is not accessing one, and the "
+                  "harness's own retry preamble renders absolute paths into the relay file. "
+                  "Out-of-worktree WRITES are enforced separately and did not occur (GH-410).",
+                  file=sys.stderr)
+            try:
                 with open(agy_log, "a") as log_f:
-                    log_f.write("\n[FAIL] agy isolation breach: transcript cited the real repo root instead of the worktree.\n")
-                sys.exit(5)
+                    log_f.write(
+                        f"\n[ADVISORY] transcript names the real repo root on {mentions} line(s). "
+                        "Not a containment failure — out-of-worktree writes are checked against the "
+                        "worktree's git state and none were found (GH-410).\n")
+            except OSError:
+                pass
 
     if bounded_rc == 7:
         print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
