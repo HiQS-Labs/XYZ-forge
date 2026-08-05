@@ -407,19 +407,31 @@ def main():
         # That scan is advisory now, so this is hygiene rather than a fix, and it keeps the relay
         # file readable. The tick-binary line elsewhere deliberately keeps its absolute path:
         # "run it from any directory" is the whole point of that instruction.
-        # Name the file by its HARNESS-RELATIVE path — which contains no repo root — and give the
-        # directory once, instead of inlining a full absolute path per line. GH-162's contract that
-        # the note reference `relay-automation/DEBUG-MANTRA.md` is preserved exactly; what goes away
-        # is the repeated root. See test/debug-mantra.sh, which pins that reference.
-        mantra_rel = os.path.join(os.path.basename(os.path.dirname(mantra_file)),
-                                  os.path.basename(mantra_file))
-        mantra_dir = os.path.dirname(os.path.dirname(mantra_file))
+        # Emit paths RELATIVE where they resolve, so the repo root is not written into the relay at
+        # all. An intermediate draft merely stopped repeating the root per line and still embedded it
+        # once via `dirname(dirname(...))` — caught in agy's QA round, because "given once" is not
+        # "not given". GH-162's contract that the note reference `relay-automation/DEBUG-MANTRA.md`
+        # is preserved exactly (test/debug-mantra.sh pins it); an earlier draft dropped that too.
+        #
+        # `relpath` is only used when it stays inside the tree — a cross-repo run (`--target-root`)
+        # would otherwise produce a `../../..` chain that is worse than an absolute path for a reader
+        # and useless to an agent. In that case the absolute path is kept deliberately.
+        def _rel(p, base):
+            try:
+                r = os.path.relpath(p, base)
+            except (ValueError, TypeError):
+                return p
+            return p if r.startswith("..") else r
+
+        harness_root = os.path.dirname(os.path.dirname(mantra_file))
+        mantra_rel = _rel(mantra_file, harness_root)          # relay-automation/DEBUG-MANTRA.md
+        phase_rel = _rel(phase_dir_, root)
         out = (f"\n## Debug mantra (auto-triggered — {prior} prior attempt(s) on this phase did not reach Approved)\n\n"
-               f"Before trying again, read `{mantra_rel}` (under `{mantra_dir}`) and follow its "
+               f"Before trying again, read `{mantra_rel}` (relative to the harness root) and follow its "
                f"four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this "
                f"round as a breadcrumb for the next one.\n")
         if reason:
-            out += (f"Last recorded reason (`ESCALATION.md` in `{phase_dir_}`): `{reason}`. "
+            out += (f"Last recorded reason (`{os.path.join(phase_rel, 'ESCALATION.md')}`): `{reason}`. "
                     "Read it before re-guessing.\n")
         return out
 

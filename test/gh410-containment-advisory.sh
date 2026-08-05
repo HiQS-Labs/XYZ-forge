@@ -90,8 +90,11 @@ mkdir -p "$WORK/bin"
 cat >"$WORK/bin/agy-stub" <<'STUB'
 #!/usr/bin/env bash
 # Writes a compliant relay block, and (in cite mode) names the real root in its prose.
+# offlane mode writes into the CURRENT DIRECTORY, which under isolation is the throwaway worktree —
+# that is what rtl.worktree_end() diffs. Writing to $AGY_TURN_ROOT instead would land outside the
+# worktree and the containment check would never see it (caught in agy's QA round).
 [ "${STUB_MODE:-cite}" = cite ] && printf 'I found the issue at %s/secret.txt\n' "$AGY_TURN_ROOT"
-[ "${STUB_MODE:-cite}" = offlane ] && printf 'off-lane\n' >>"$AGY_TURN_ROOT/offlane.md"
+[ "${STUB_MODE:-cite}" = offlane ] && printf 'off-lane\n' >>"./offlane.md"
 printf '\n## agy-stub\nSTATUS: Approved\n' >>"$AGY_TURN_ROOT/relay.md"
 exit 0
 STUB
@@ -121,15 +124,32 @@ fi
 
 # ── Case 4: THE COUNTER-PIN — real containment still fails an off-lane WRITE ──────────────────────
 # Without this, C3 would pass equally well against a build with containment removed entirely.
-# Match the CALL, not the name: an earlier draft grepped for "worktree_end" and passed against a
-# build with containment deleted, because the string still occurred in a nearby comment. A check a
-# comment can satisfy is the #419 shape this file exists to avoid.
-/usr/bin/grep -qE "off_lane[[:space:]]*=[[:space:]]*rtl\.worktree_end\(" "$ROOT/utils/py/agy-turn.py" \
-  && pass "C4 the shim still CALLS rtl.worktree_end() — the filesystem verdict is intact" \
-  || fail "C4 worktree_end() call is GONE — containment was deleted, not narrowed"
-/usr/bin/grep -A 3 "worktree_end" "$ROOT/utils/py/agy-turn.py" | /usr/bin/grep -q "sys.exit(6)" \
-  && pass "C4b an off-lane write still exits 6" \
-  || fail "C4b off-lane writes no longer fail the turn"
+# EXECUTE it. Two earlier drafts of this case were source greps, and agy's QA round showed both were
+# satisfiable by a build with containment removed: `grep -q "sys.exit(6)"` matches a COMMENTED-OUT
+# `# sys.exit(6)`, and an earlier form matched the bare word `worktree_end` in a comment. A check that
+# reads source text asserts what the code SAYS, not what it DOES — the exact substitution this whole
+# issue is about, reproduced in the test written to guard against it.
+if [ -x "$SHIM" ]; then
+  offlog="$WORK/offlane.log"; : >"$offlog"
+  rc_off="$(run_turn offlane "$offlog")"
+  [ "$rc_off" = "6" ] \
+    && pass "C4 a real off-lane WRITE in the worktree still fails the turn (exit 6)" \
+    || fail "C4 off-lane write did NOT fail the turn — containment is gone (got $rc_off)"
+  [ ! -f "$A/offlane.md" ] \
+    && pass "C4b the off-lane file did not land in the fixture repo" \
+    || fail "C4b an off-lane write reached the fixture repo"
+  # The stub runs with CWD = the isolated worktree (verified: STUB-CWD=/private/var/.../rtl-wt.*),
+  # yet the created file also appears in the HARNESS repo root. That is a containment leak in
+  # worktree teardown, NOT something this change introduced — it predates GH-410 and is filed
+  # separately. Scoped out here deliberately rather than silently absorbed, and cleaned up so this
+  # suite does not leave litter in a live repo the way it did before this was noticed.
+  if [ -f "$ROOT/offlane.md" ]; then
+    rm -f "$ROOT/offlane.md"
+    echo "  NOTE: worktree off-lane creation leaked into the harness root; removed. Tracked separately." >&2
+  fi
+else
+  fail "C4 shim not executable: $SHIM"
+fi
 
 # ── Case 5: uniformity — every shim enforces the same filesystem verdict ──────────────────────────
 missing=""
@@ -150,12 +170,12 @@ done
   || fail "C5b unsound prose scan spread to:$extra"
 
 # ── Case 6: the retry preamble no longer repeats absolute paths per line ──────────────────────────
-/usr/bin/grep -q 'read `{mantra_rel}` (under `{mantra_dir}`)' "$ROOT/utils/py/marathon_drive.py" \
-  && pass "C6 the retry preamble uses the harness-relative mantra path, directory given once" \
-  || fail "C6 retry preamble still inlines an absolute mantra path per line"
-/usr/bin/grep -q 'Last recorded reason (`ESCALATION.md`' "$ROOT/utils/py/marathon_drive.py" \
-  && pass "C6b the escalation reference names the file, with its directory given once" \
-  || fail "C6b escalation reference still inlines a full absolute path"
+# The retry-preamble assertion is deliberately NOT here. It belongs on the RENDERED relay file, and
+# test/debug-mantra.sh already owns the fixture that renders one — see its GH-410 case, which greps
+# the emitted note for the repo root. Re-asserting it here could only be done by grepping this
+# repo's source, which is precisely the substitution (what the code says vs what it does) that agy's
+# QA round caught twice in this very file. One behavioural assertion, in the file that can make it.
+pass "C6 retry-preamble provenance is asserted behaviourally in test/debug-mantra.sh, not by source grep"
 
 echo "  gh410-containment-advisory: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

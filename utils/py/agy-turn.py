@@ -225,23 +225,26 @@ def main():
         #
         # It is now advisory: recorded on the transcript and stderr so an operator still sees it,
         # and it never changes the turn's outcome.
-        if bounded_rc == 0:
-            mentions, first_line = narration_mentions_root(agy_log, root)
-            if mentions:
-                print(f"agy-turn: ADVISORY — agy's transcript names the real repo root ({root}) on "
-                      f"{mentions} line(s); first: {first_line[:120] if first_line else ''}. This is "
-                      "NOT a containment verdict: naming a path is not accessing one, and the "
-                      "harness's own retry preamble renders absolute paths into the relay file. "
-                      "Out-of-worktree WRITES are enforced separately and did not occur (GH-410).",
-                      file=sys.stderr)
-                try:
-                    with open(agy_log, "a") as log_f:
-                        log_f.write(
-                            f"\n[ADVISORY] transcript names the real repo root on {mentions} line(s). "
-                            "Not a containment failure — out-of-worktree writes are checked against the "
-                            "worktree's git state and none were found (GH-410).\n")
-                except OSError:
-                    pass
+        # Deliberately NOT gated on `bounded_rc == 0` (agy QA, GH-410): the old check ran only on a
+        # successful turn, so an agent that timed out or errored *after* citing the root produced no
+        # signal at all — withholding the note from exactly the runs most likely to need explaining.
+        # The advisory changes no outcome, so there is nothing to gate.
+        mentions, first_line = narration_mentions_root(agy_log, root)
+        if mentions:
+            print(f"agy-turn: ADVISORY — agy's transcript names the real repo root ({root}) on "
+                  f"{mentions} line(s); first: {first_line[:120] if first_line else ''}. This is "
+                  "NOT a containment verdict: naming a path is not accessing one, and the "
+                  "harness's own retry preamble renders absolute paths into the relay file. "
+                  "Out-of-worktree WRITES are enforced separately and did not occur (GH-410).",
+                  file=sys.stderr)
+            try:
+                with open(agy_log, "a") as log_f:
+                    log_f.write(
+                        f"\n[ADVISORY] transcript names the real repo root on {mentions} line(s). "
+                        "Not a containment failure — out-of-worktree writes are checked against the "
+                        "worktree's git state and none were found (GH-410).\n")
+            except OSError:
+                pass
 
     if bounded_rc == 7:
         print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
