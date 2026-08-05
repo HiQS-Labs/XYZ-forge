@@ -7,6 +7,7 @@ created: 2026-08-04
 updated: 2026-08-04
 owner: noel
 doc_type: project
+release: "0.2.0 Litmus"
 complexity: 3
 risk: 2
 effort: 3
