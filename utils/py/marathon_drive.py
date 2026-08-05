@@ -400,11 +400,27 @@ def main():
                             break
             except Exception:
                 pass
+        # GH-410: name the files once, with their directories stated once, instead of repeating a
+        # full absolute path per line. This preamble renders ONLY on a retry, so the old form handed
+        # every re-attempt extra copies of the repo root — a recovery path that raised the very
+        # hazard it was retrying against, back when the containment scan failed turns on prose.
+        # That scan is advisory now, so this is hygiene rather than a fix, and it keeps the relay
+        # file readable. The tick-binary line elsewhere deliberately keeps its absolute path:
+        # "run it from any directory" is the whole point of that instruction.
+        # Name the file by its HARNESS-RELATIVE path — which contains no repo root — and give the
+        # directory once, instead of inlining a full absolute path per line. GH-162's contract that
+        # the note reference `relay-automation/DEBUG-MANTRA.md` is preserved exactly; what goes away
+        # is the repeated root. See test/debug-mantra.sh, which pins that reference.
+        mantra_rel = os.path.join(os.path.basename(os.path.dirname(mantra_file)),
+                                  os.path.basename(mantra_file))
+        mantra_dir = os.path.dirname(os.path.dirname(mantra_file))
         out = (f"\n## Debug mantra (auto-triggered — {prior} prior attempt(s) on this phase did not reach Approved)\n\n"
-               f"Before trying again, read {mantra_file} and follow its four-step discipline: reproduce reliably, "
-               f"know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.\n")
+               f"Before trying again, read `{mantra_rel}` (under `{mantra_dir}`) and follow its "
+               f"four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this "
+               f"round as a breadcrumb for the next one.\n")
         if reason:
-            out += f"Last recorded reason ({phase_dir_}/ESCALATION.md): `{reason}`. Read it before re-guessing.\n"
+            out += (f"Last recorded reason (`ESCALATION.md` in `{phase_dir_}`): `{reason}`. "
+                    "Read it before re-guessing.\n")
         return out
 
     if get_env("RELAY_DRIVER_LOCKED", "0") != "1":
