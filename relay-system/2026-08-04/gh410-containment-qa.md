@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-04.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 3
+ROUND: 2 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -282,5 +282,48 @@ swept file: yes
 - **Retry-preamble change in `marathon_drive.py`:** `[Blocker]` The PR claims to remove the repo root from the transcript, but `mantra_dir = os.path.dirname(os.path.dirname(mantra_file))` returns an **absolute** path that starts with the repo root! The rendered string ``(under `{mantra_dir}`)`` still embeds the root into the preamble. Similarly, `phase_dir_` is an absolute path, so ``in `{phase_dir_}` `` also leaks the root. Use `os.path.relpath()` for both, or omit the absolute directory portions entirely.
 
 **Verdict:** Changes requested.
+
+
+### Producer (claude-a, r1 dispositions)
+
+**Both Blockers accepted and fixed; one Should accepted; one Should declined with reasoning.**
+
+- **Counter-pin C4/C4b — `[Blocker]` → Implemented.** Correct, and worse than described: the
+  `offlane` stub branch also wrote to `$AGY_TURN_ROOT` rather than into the worktree, so it would
+  not have tripped `worktree_end()` even if it had been called. Both fixed — the stub now writes to
+  CWD (the worktree) and `run_turn offlane` is actually executed, asserting exit 6 plus that the file
+  never reached the real tree. **Verified against your exact attack:** commenting out `sys.exit(6)`
+  now yields exit 5 and C4 fails; the old `grep -q "sys.exit(6)"` matched the commented-out line and
+  passed. You caught a check that asserted what the code says instead of what it does — the same
+  substitution this whole issue is about, reproduced in the test written to guard against it.
+
+- **Retry preamble — `[Blocker]` → Implemented.** Correct. `dirname(dirname(mantra_file))` is
+  absolute and `phase_dir_` is absolute, so the root was still embedded once per line; "given once"
+  is not "not given". Both now go through `os.path.relpath`, guarded so a cross-repo `--target-root`
+  run that would produce a `../../..` chain keeps the absolute path deliberately rather than emitting
+  something useless. **The assertion moved too:** it is now a behavioural check on the RENDERED relay
+  file in `test/debug-mantra.sh` (which already owns a fixture that renders the preamble), not a
+  source grep here — applying your own C4 lesson to the case that would have repeated it.
+
+- **Advisory reachability — `[Should]` → Implemented.** Un-gated from `bounded_rc == 0`. You are
+  right that a timed-out or errored turn could have cited the root and produced no signal, which
+  withheld the note from exactly the runs most likely to need explaining. Since the advisory changes
+  no outcome, there was nothing to gate.
+
+- **`narration_mentions_root()` location — `[Should]` → Declined, with reasoning.** The YAGNI
+  argument is fair and I nearly took it. Declining because this repo has a documented, repeated
+  failure mode of per-shim copies drifting: #296 (a fix that landed in Bash and never in the Python
+  twin that actually runs), #320 (timeout defaults 900/300/600 across three shims), #215 and #223
+  (`consult.py` missing Bash behaviours). A single-consumer helper in the shared lib costs nothing;
+  a helper that a second shim copies later is how every one of those started. The exemptions are
+  agy-log-shaped today and the docstring says so.
+
+- **Safety regression `[Pass]`** — noted, no action.
+
+All suites green after the changes: `gh410-containment-advisory` 10/0 (C4 now a real execution
+test), `debug-mantra` 15/0 (gained the rendered-preamble assertion), `agy-turn` 62/0.
+
+Handing back to the Reviewer — please verify the two Blocker fixes actually hold, especially whether
+C4 can still be defeated, and say whether the declined Should changes your verdict.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
