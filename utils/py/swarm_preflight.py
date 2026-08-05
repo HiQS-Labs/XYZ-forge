@@ -1205,8 +1205,13 @@ def main():
     if ready == 1 and src_url["status"] in ("missing", "mismatch"):
         ready, ready_next = 0, (
             f"capture doc source URL {src_url['status']} — {src_url['detail']}. "
-            f"Set `source: https://github.com/<owner>/<repo>/issues/{src_url['issue']}` in the doc's "
-            "frontmatter (GH-400). This is local-only: it never needs the network, so there is no "
+            # GH-422: resolve owner/repo from the TARGET's origin rather than printing a placeholder.
+            # The harness knows this value; making an operator look it up once per doc is how a
+            # one-line fix turns into an afternoon in a repo with a dozen affected capture docs.
+            f"Set `source: https://github.com/{repo_slug_for(target_root) or '<owner>/<repo>'}"
+            f"/issues/{src_url['issue']}` in the doc's frontmatter (GH-400), or run "
+            f"`python3 utils/py/backfill_source_url.py --apply` to fix every affected doc at once. "
+            "This is local-only: it never needs the network, so there is no "
             "offline case in which it is safe to skip.")
         
     if ready == 1 and gate_cmd:
