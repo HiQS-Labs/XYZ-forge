@@ -67,3 +67,27 @@ Milestone: Quicksilver
 Front-door reviewed: No
 Shakedown reviewed: No
 License file: Yes
+
+Release: 0.2.0
+Iterations: 0.2.0-0.2.4
+Status: Draft
+Target Date: 2026-09-05
+Codename: Litmus
+Description: Make the checks capable of failing. Every gate is shown to report red against a real defect, or is downgraded to advisory — a check never observed failing is not evidence (#419). Ordered first because it is the release that makes the next one measurable.
+GH_URL:
+Milestone: Litmus
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes
+
+Release: 0.3.0
+Iterations: 0.3.0-0.3.4
+Status: Draft
+Target Date: 2026-10-10
+Codename: Nightwatch
+Description: An unattended marathon against a real target repo survives, records, and recovers — a run that is interrupted, killed at its cap, or panics the host leaves a durable record and a recovery path instead of a clean tree full of ungated commits. Depends on Litmus.
+GH_URL:
+Milestone: Nightwatch
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes
