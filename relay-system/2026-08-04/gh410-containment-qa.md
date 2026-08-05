@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-04.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -272,5 +272,15 @@ index 0944c9c..b5f4746 100644
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Review (agy, r1)
+swept file: yes
+- **Safety regression:** `[Pass]` (`agy-turn.py:213-214` "diffs the worktree's git state") The reasoning is sound. Write-containment remains enforced by `rtl.worktree_end()`. The prose scan for reads was an unsound heuristic. Demoting it to advisory is safe.
+- **Counter-pin adequacy (C4/C4b):** `[Blocker]` The tests `C4`/`C4b` just grep the source code. A build could comment out `sys.exit(6)` (e.g., `# sys.exit(6)`) and still pass both `C4` and `C4b` while silently deleting containment! You already set up `STUB_MODE=offlane` in `agy-stub` (`test/gh410-containment-advisory.sh:94`) but never execute it. Replace the source-code greps with a real test: run `run_turn offlane "$offlanelog"` and assert it exits 6.
+- **Advisory reachability:** `[Should]` In `agy-turn.py`, the check `if bounded_rc == 0:` skips the advisory if the agent failed the turn for other reasons (like a timeout or bad exit code). A failing agent might still have cited the root. Consider un-gating it from `bounded_rc == 0` so the advisory is printed even on failure.
+- **`narration_mentions_root()` location:** `[Should]` The function was moved to the shared lib `rtl.py`, but its exemptions (`[trace] `, `TICK_REPO_ROOT=`) are highly specific to `agy-turn.py`'s log format. Since only `agy-turn.py` uses it today, it should stay in `utils/py/agy-turn.py`.
+- **Retry-preamble change in `marathon_drive.py`:** `[Blocker]` The PR claims to remove the repo root from the transcript, but `mantra_dir = os.path.dirname(os.path.dirname(mantra_file))` returns an **absolute** path that starts with the repo root! The rendered string ``(under `{mantra_dir}`)`` still embeds the root into the preamble. Similarly, `phase_dir_` is an absolute path, so ``in `{phase_dir_}` `` also leaks the root. Use `os.path.relpath()` for both, or omit the absolute directory portions entirely.
+
+**Verdict:** Changes requested.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
