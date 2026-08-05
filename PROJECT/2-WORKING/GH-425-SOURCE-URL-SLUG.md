@@ -2,7 +2,7 @@
 gh_issue: 425
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/425
 title: "GH-425 — check_source_url compares the issue number but ignores the repo slug"
-status: "Intake (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus. BLOCKED ON A DESIGN CALL: option 1 vs 2 must be chosen before this fires. Not preflight-ready by design."
+status: "Intake (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus. Design call SETTLED 2026-08-05: option 1. Preflight READY, awaiting operator go."
 created: 2026-08-05
 updated: 2026-08-05
 owner: noel
@@ -13,7 +13,7 @@ risk: 2
 effort: 2
 phases: 2
 ratings_provisional: true
-blocked_on: "Operator decision between option 1 (source: always cites the tracking issue) and option 2 (a separate origin:/upstream_issue: field). Option 3 is rejected on its face."
+decided: "2026-08-05 — option 1: `source:` always cites the TRACKING issue (the one in `gh_issue`); cross-repo origins live in `related:`. Options 2 and 3 rejected."
 related:
   - "#419 — the class, in its false-negative half: a check that reports verified provenance without having checked the field that determines it."
   - "#400 / PR #420 — built the gate this fixes."
@@ -37,13 +37,16 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-08-05 as a lane of release 0.2.0 Litmus. Preflight contract authored; acceptance reads `match — 6/6 criteria copied verbatim from issue #425`. | **An operator design call between option 1 and option 2 — not a build.** Nothing fires until that is settled. Then Phase 1 (blast radius across the harness and every vendoring repo) and Phase 2 (the slug check). |
+| Captured 2026-08-05 as a lane of release 0.2.0 Litmus. Preflight contract authored; acceptance reads `match — 6/6 criteria copied verbatim from issue #425`. | **Design call settled 2026-08-05: option 1.** Operator go. Then Phase 1 (blast radius across the harness and every vendoring repo — recursively, per #422's lesson) and Phase 2 (the slug check plus the documented convention). |
 
 Captured 2026-08-05 as a lane of release **0.2.0 Litmus**.
 
-**⚠ This lane is NOT fireable yet.** The issue offers three design options and explicitly says *"this
-needs a call."* Firing it without that decision hands a builder a definition of done it must invent
-— which is the #400 defect, and the reason the doc says so here rather than picking quietly.
+**The design call is settled: option 1**, decided by the operator on 2026-08-05. The lane is
+fireable. `source:` always cites the **tracking** issue — the one named in `gh_issue` — and a
+cross-repo origin is recorded in `related:`. See [The design call, settled](#the-design-call-settled).
+
+The doc was authored blocked rather than picking quietly, because firing it without the decision
+would have handed a builder a definition of done it had to invent — the #400 defect.
 
 ## The defect
 
@@ -94,13 +97,35 @@ express *"tracked here, originated there."*
 
 None. Every criterion is carried verbatim.
 
-Criterion 2 — *"a documented, machine-checkable way to record both facts"* — is the criterion the
-design call below decides the shape of. It is **not** a deviation: the criterion is satisfiable by
-either option, and the issue deliberately left the mechanism open.
+Criterion 2 — *"a documented, machine-checkable way to record both facts"* — deliberately left the
+mechanism open, and the operator's option-1 call fixes it: `related:` plus a documented convention.
+That is a **decision about how to satisfy the criterion, not a change to it**, so there is nothing to
+declare here.
 
-## The design call this lane is blocked on
+## The design call, settled
 
-From the issue, unchanged:
+**Decided 2026-08-05 by the operator: option 1.** `source:` always cites the **tracking** issue —
+the one named in `gh_issue` — and a cross-repo origin is recorded in `related:`. Options 2 and 3 are
+rejected.
+
+**What this makes the builder's job.** The slug check becomes unconditional: `source:` must name
+*this* repo and the `gh_issue` number, full stop. There is no accepted foreign-slug shape to
+special-case, no new frontmatter key to add or lint, and no migration — which is also why criterion 2
+(*"a documented, machine-checkable way to record both facts"*) is satisfied by `related:` plus a
+documented convention in `skills/10days/SKILL.md`, not by a new field.
+
+**The one measured doc this refuses**, and how it is fixed: `LTVera-Pandas`
+`PROJECT/2-WORKING/v1.3.5/GH-94-NEXMAIL-CONTRACT-GAP-ANALYSIS.md` carries `gh_issue: 94` with
+`source:` pointing at `BinoidCBD/nexmail-ltvera-connector` issue #2. Under option 1 its `source:`
+becomes `LTVera-Pandas` #94 and the connector issue moves to `related:`. **Nothing is deleted** —
+criterion 2 requires that satisfying the gate never costs the cross-repo reference, and it does not.
+That doc is in another repo and is **not** this lane's to edit; Phase 1's measurement must report it
+so its maintainer can be told, per the cross-repo limitation already filed.
+
+**Recorded here rather than left to the builder**, so the decision is visible before the lane fires
+instead of discovered in a diff afterwards.
+
+The three options as the issue stated them, kept for the record:
 
 1. **`source:` always cites the tracking issue** — the one in `gh_issue` — and cross-repo origins
    live in `related:`. Simplest, keeps the check deterministic; costs a dedicated field for origin.
@@ -110,13 +135,15 @@ From the issue, unchanged:
    **Rejected on its face** unless the marker is machine-checkable — otherwise it is an escape hatch
    that turns the gate back into a suggestion.
 
-**Recommendation: option 1.** It needs no new field, no new lint, and no migration; `related:`
-already exists and already carries cross-repo context in every capture doc in this tree. Option 2's
-extra expressiveness buys one thing option 1 cannot do — distinguishing "no origin" from "origin is
-this same repo" — and nothing downstream consumes that distinction today.
+**Why 1 over 2:** it needs no new field, no new lint, and no migration; `related:` already exists and
+already carries cross-repo context in every capture doc in this tree. Option 2's extra
+expressiveness buys exactly one thing option 1 cannot do — distinguishing "no origin" from "origin is
+this same repo" — and nothing downstream consumes that distinction.
 
-**The operator makes this call, not the builder.** Recorded here so the choice is visible before the
-lane fires rather than discovered in a diff afterwards.
+**The known cost, stated plainly:** `related:` is free text and nothing lints it, so an origin
+recorded there is documentation rather than data. If something downstream ever needs to *query*
+cross-repo origin, option 2 becomes the right answer and this is revisited on a new issue — not
+worked around by loosening the gate.
 
 ## Phases
 
@@ -137,9 +164,13 @@ lane fires rather than discovered in a diff afterwards.
 
 ## Swarm Preflight Contract
 
-**Authored but deliberately not verified READY** — see Status. Running `swarm-preflight` against
-this doc today would report ready, which would be a gate answering a question the lane has not
-settled. Recorded for when the design call is made.
+Verified READY via `--dry-run` (`acceptance: match — 6/6 criteria copied verbatim from issue #425`).
+
+**Worth recording about this contract:** preflight reported it READY *while the doc still said the
+lane was blocked on an unmade design call.* The gate has no way to express "the humans have not
+decided yet" — it checks contract consistency, freshness and provenance, none of which the missing
+decision touched. That is #412's shape and belongs in the #419 inventory: a READY verdict here meant
+"the paperwork is consistent", not "this is safe to fire", and only the doc said so.
 
 ```json
 {
