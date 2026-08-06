@@ -3,7 +3,7 @@ gh_issue: 396
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/396
 title: "Accuracy Ledger: design constraints to settle before build"
 status: "Proposed (1-INBOX — not yet active)"
-created: 2026-08-06
+created: 2026-08-01
 updated: 2026-08-06
 owner: noel
 doc_type: feedback
