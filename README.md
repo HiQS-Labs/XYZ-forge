@@ -204,6 +204,55 @@ restructuring.
 - **agy** — the Antigravity CLI (Google), one of the agents XYZ coordinates alongside Claude Code
   and Codex.
 
+## FAQ
+
+### Is XYZ a "graph" — does it do graph engineering?
+
+Partly, and the parts it leaves out are deliberate. If you arrive with the standard agent-graph
+vocabulary (a DAG of nodes and edges, parallel stages, routing decisions), the Glossary entry above
+will read as more than it says. The precise answer:
+
+**What matches.** Phases are real nodes — each gets `phases/<id>/RELAY.md`, a tick token, a
+reviewer, a brief, and an artifact allowlist, with an LLM turn as the body. Inside a phase there is
+a genuine LLM-selected edge: the reviewer writes `STATUS:`, and `utils/py/relay_drive.py` treats
+`Approved`/`Closed` as terminal and anything else as another round, bounded by a round cap. Every
+phase boundary runs a verification gate, which must be able to *start* before turn 1 — a missing
+gate fails fast rather than being skipped. And the whole run is an inspectable state machine
+(`.tick/events/`, `RELAY.md`, `ESCALATION.md` with typed reason codes) rather than a model's
+self-report.
+
+**What doesn't.** There is no DAG. `depends_on` is scalar-only — one dependency per phase — so a
+join is inexpressible: "p4 after p2 *and* p3" cannot be written. There is no parallel execution;
+`relay-automation/MARATHON.example.yaml` states that phases run strictly one at a time and that a
+disjoint write-set does not buy you parallelism. `depends_on` **validates** the order you authored
+rather than **deriving** one, which inverts the usual graph model. And a failure halts the chain —
+there is no conditional edge to a remediation node.
+
+So: a sequential chain of agent-driven build→review loops, with hard gates at every boundary. The
+scheduling a graph engine exists to automate is handed to the operator on purpose — see
+`GUIDING-PRINCIPLES.md` §8, and `utils/swarm-preflight.sh`, which is the *producer* of a run packet
+and never its executor.
+
+Parallelism does exist, but as **swarms**: separate agents in separate worktrees or clones on
+disjoint write-sets, coordinated by `tick` locks. That is arranged by the operator, not scheduled
+from a dependency graph.
+
+### Do phases run in parallel? What does `depends_on` actually do?
+
+No, and less than you'd think. Phases run **one at a time**, in the order they appear in the plan.
+A phase *without* `depends_on` is not "unordered" or "parallel-safe" — it simply runs when its turn
+comes. `depends_on` constrains that order; it does not create it.
+
+It also takes exactly one phase id, unquoted (`depends_on: p3`). The list form `depends_on: [p3]`
+parses as the literal string and aborts the plan with an unknown-phase error that points at your
+phase ids rather than at the field's shape. Chain them (`p3 → p4 → p5`) to express a longer order.
+
+Analysing your phases for a disjoint write-set is still worth doing — it is how you learn which
+phases genuinely need `depends_on` — but it will not make them concurrent.
+
+Always `--dry-run` a new plan first. It parses every field and prints the real execution order at
+zero cost, which is the cheapest way to catch both a mis-shaped field and a wrong mental model.
+
 ## Repo map
 
 - `relay-automation/` — scripts and operator docs for poll-driven relays, watchdogs, headless turn-takers, and consult.
