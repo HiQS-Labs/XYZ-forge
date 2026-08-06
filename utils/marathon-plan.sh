@@ -64,7 +64,7 @@ fi
 #
 # Determinism: the score for every item is printed alongside its inputs so any ordering is
 # reproducible by hand. Same ledger + same ratings + same NOW/TODAY ⇒ byte-identical output
-# (so --check works as a drift guard in validate.sh, mirroring roadmap-dashboard.sh --check).
+# (which is what makes the manual --check drift comparison below meaningful).
 #
 # Usage:
 #   utils/marathon-plan.sh                         # report on stdout + write today's marathon-plan doc
