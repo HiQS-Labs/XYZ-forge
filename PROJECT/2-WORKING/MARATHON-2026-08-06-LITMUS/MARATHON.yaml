@@ -1,0 +1,134 @@
+# MARATHON.yaml — 2026-08-06: release 0.2.0 Litmus, first fireable wave.
+#
+# Litmus's theme is "make the checks capable of failing" (#419). These four lanes are the
+# subset of the release's 12 whose defects are all instances of that one class: a gate that
+# returned a confident verdict on a question it never asked.
+#
+# 4 sequential phases. Phases run STRICTLY ONE AT A TIME (GH-241) — `depends_on` constrains
+# the order, it does not create it, and a disjoint write-set buys no parallelism here.
+#
+#   gh419 → gh343 → gh418 → gh425
+#
+# NOT FIRED. Every lane in this plan carries "operator go" in its ROADMAP entry, which is why
+# utils/py/_marathon_plan.py:884 holds all 12 in `gated` and out of the generated waves. This
+# file is authored, preflighted and dry-run only; firing remains a separate operator decision.
+#
+# ---------------------------------------------------------------------------------------
+# WHY FULLY SEQUENTIAL (every pair diffed against its preflight contract, nothing assumed)
+# ---------------------------------------------------------------------------------------
+# Write-sets, taken from each capture doc's `## Swarm Preflight Contract` artifacts list:
+#   gh419: GUIDING-PRINCIPLES.md, utils/py/gate_inventory.py, test/gh419-gate-inventory.sh,
+#          validate.sh
+#   gh343: utils/py/swarm_preflight.py, test/gh343-gate-program-target-root.sh, validate.sh
+#   gh418: utils/py/swarm_preflight.py, test/gh418-issue-state-frozen.sh, validate.sh
+#   gh425: utils/py/swarm_preflight.py, skills/10days/SKILL.md,
+#          test/gh425-source-url-slug.sh, validate.sh
+#
+# Two collisions make concurrency unsafe regardless of what a planner would compute:
+#   1. validate.sh is in ALL FOUR write-sets — every lane must REGISTER its new test in the
+#      TESTS=() array (validate.sh does not glob test/). Same constraint the 2026-07-27
+#      marathon documented. Sequential execution makes it safe.
+#   2. utils/py/swarm_preflight.py is in THREE of the four (gh343, gh418, gh425). They are
+#      kept adjacent and last so that file has exactly one owner at a time and each lane
+#      rebases on the previous one's landed state.
+#
+# ---------------------------------------------------------------------------------------
+# WHY THIS ORDER
+# ---------------------------------------------------------------------------------------
+#   * gh419 FIRST because it builds the instrument. Its Phases 1-2 land the principle in
+#     GUIDING-PRINCIPLES.md and a machine-readable decision-gate inventory that records, per
+#     gate, whether a negative control has been OBSERVED and in which form. Every later lane
+#     in this marathon is required by its own acceptance to record a negative control "per
+#     #419" — so running gh419 first means phases 2-4 have somewhere to record it. Mirrors
+#     gh311 in the 2026-07-27 marathon: repair the gate before the lanes advance on it.
+#     Scope note: gh419's contract covers Phases 1-2 only. Its Phase 3 IS #418, which its
+#     capture doc says "fires on its own issue, not this one" — that is phase 3 below, and
+#     the doc warns the two must never run as concurrent lanes.
+#   * gh343 SECOND — the foundational swarm_preflight.py defect. A target-relative gate
+#     program is resolved against the process cwd instead of target_root, so the identical
+#     contract reads ready from the target repo and NOT-READY (exit 5) from the harness
+#     clone. Fixing path resolution before gh418 adds new refusal paths to the same file
+#     means gh418 is built on a preflight whose verdicts no longer depend on where the
+#     operator was standing.
+#   * gh418 THIRD — the designated first child of #419, closed under its policy with its
+#     negative control recorded in the inventory gh419 just built. Adds the issue-state and
+#     GH-308 FROZEN-banner checks that preflight has never had.
+#   * gh425 LAST — check_source_url computes the repo slug and discards it. It lands after
+#     gh418 because both add refusal paths to the same file, and because its acceptance
+#     requires blast radius measured across the harness AND every vendoring repo, which is
+#     the widest-reaching change in this set.
+#
+# ---------------------------------------------------------------------------------------
+# SELECTION NOTES (what was considered and deliberately left out)
+# ---------------------------------------------------------------------------------------
+#   * #368 (marathon-plan --check drift-guard claim) WAS the planned phase 2 of five and was
+#     DROPPED during authoring: it is already fixed and merged (PR #433, commit 3a6ddfc), the
+#     false claim is gone from the tree, and the issue closed 2026-08-06T15:46:01Z. Its
+#     capture doc still reads "not yet fired". This is #418's own defect demonstrating itself
+#     on this marathon — a lane that preflight would have passed READY to close a
+#     closed issue. Recorded here rather than quietly deleted, because it is evidence for
+#     phase 3's acceptance.
+#   * #426 (worktree isolation leak) — a true blocker per #431, but estimated at "0.5-2d,
+#     cause unknown". Unknown-cause investigation is the wrong shape for a timed build lane.
+#     Also collides with #417 on both utils/py/rtl.py and relay-turn-lib.sh.
+#   * #417 (turn-ROOT resolution) — the tree asserts both that rev-parse --show-toplevel is
+#     the correct default AND that it is the bug caught live, with no test able to
+#     distinguish them. That is a decision, not a build lane. Collides with #426.
+#   * #388 (marathon run-log durability) and #401 (--dry-run mutates the repo) — both are
+#     Nightwatch's theme (survives, records, recovers) rather than Litmus's, and they collide
+#     with each other on utils/py/marathon_drive.py. They belong in one 0.3.0 marathon.
+#   * #416 (a dependency sync deleted three guardrails) — write-set is
+#     PROJECT/PDDA-SYNC-POLICY.md + AGENTS.md. A policy document is better served by a direct
+#     PR than by a build→review lane.
+#   * #358 (CI lock-flake instrumentation) — edits .github/workflows/ci.yml. Changing CI from
+#     inside an unattended marathon is a risk this release does not need to take.
+#   * #375 (agy auth pre-flight) — verification needs a live agy auth failure in a headless
+#     context; not reproducible in-lane.
+#
+# Builder defaults to codex (GH-212, subscription-billed). Reviewer is agy throughout so the
+# reviewer is never the model that wrote the change.
+#
+# Parent capture docs (one per phase):
+#   PROJECT/2-WORKING/GH-419-TRUSTWORTHY-GATES.md
+#   PROJECT/2-WORKING/GH-343-GATE-PROGRAM-TARGET-ROOT.md
+#   PROJECT/2-WORKING/GH-418-PREFLIGHT-ISSUE-STATE-FROZEN.md
+#   PROJECT/2-WORKING/GH-425-SOURCE-URL-SLUG.md
+
+name: litmus-trustworthy-gates-2026-08-06
+phases:
+  - id: gh419-trustworthy-gates
+    name: "GH-419 Phases 1-2: the principle, and a decision-gate inventory that records observed negative controls"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-06-LITMUS/brief-gh419-trustworthy-gates.md
+    artifact: GUIDING-PRINCIPLES.md,utils/py/gate_inventory.py,test/gh419-gate-inventory.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh343-gate-program-target-root
+    name: "GH-343: resolve a target-relative gate program against target_root, not the process cwd"
+    reviewer: agy
+    depends_on: gh419-trustworthy-gates
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-06-LITMUS/brief-gh343-gate-program-target-root.md
+    artifact: utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh418-preflight-issue-state
+    # NOTE: no ' #NNN' in a phase name — bin/marathon-yaml strips from a space-hash onward even
+    # inside a double-quoted scalar, which silently truncated this name (and left the quote open).
+    name: "GH-418: preflight must check issue state and the GH-308 FROZEN banner — the GH-419 first child"
+    reviewer: agy
+    depends_on: gh343-gate-program-target-root
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-06-LITMUS/brief-gh418-preflight-issue-state.md
+    artifact: utils/py/swarm_preflight.py,test/gh418-issue-state-frozen.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh425-source-url-slug
+    name: "GH-425: check_source_url must act on the repo slug it already computes, in both directions"
+    reviewer: agy
+    depends_on: gh418-preflight-issue-state
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-06-LITMUS/brief-gh425-source-url-slug.md
+    artifact: utils/py/swarm_preflight.py,skills/10days/SKILL.md,test/gh425-source-url-slug.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3

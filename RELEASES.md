@@ -73,7 +73,7 @@ Iterations: 0.2.0-0.2.4
 Status: Draft
 Target Date: 2026-09-05
 Codename: Litmus
-Description: Make the checks capable of failing. Every gate is shown to report red against a real defect, or is downgraded to advisory — a check never observed failing is not evidence (#419). Ordered first because it is the release that makes the next one measurable.
+Description: Make the checks capable of failing. Every gate is shown to report red against a real defect, or is downgraded to advisory — a check never observed failing is not evidence (#419). Ordered first because it is the release that makes the next one measurable. It is also what the self-improvement chain (#431) is blocked on: a Reviewer is a gate, so #419 applies to it, and its qualification gate is currently un-runnable (#428) and has only ever been measured once (#429).
 GH_URL:
 Milestone: Litmus
 Front-door reviewed: No
@@ -85,9 +85,21 @@ Iterations: 0.3.0-0.3.4
 Status: Draft
 Target Date: 2026-10-10
 Codename: Nightwatch
-Description: An unattended marathon against a real target repo survives, records, and recovers — a run that is interrupted, killed at its cap, or panics the host leaves a durable record and a recovery path instead of a clean tree full of ungated commits. Depends on Litmus.
+Description: An unattended marathon against a real target repo survives, records, and recovers — a run that is interrupted, killed at its cap, or panics the host leaves a durable record and a recovery path instead of a clean tree full of ungated commits. Depends on Litmus. The same durability work is what makes a reflection corpus trustworthy (#431): a run with no record is invisible to any later pass over it, and the loop's own evidence has never survived a reboot (#430).
 GH_URL:
 Milestone: Nightwatch
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes
+
+Release: 0.4.0
+Iterations: 0.4.0-0.4.4
+Status: Draft
+Target Date: 2026-11-14
+Codename: Plumbline
+Description: Assisted reflection, measured before it is trusted. The reflection pipeline is assembled from the parts that already exist (`proposals-sink.sh` gains its first production caller) and graded against external ground truth — the 49 human-filed findings from the two rebalance-OS marathons (#405/#406) — for recall and precision. Ships a committed benchmark and a recorded go/no-go; "not worth automating yet" is a passing result, per #431's own Phase 2 exit criterion. Operator sign-off stays manual. Depends on Nightwatch.
+GH_URL: [GH 431](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/431)
+Milestone: Plumbline
 Front-door reviewed: No
 Shakedown reviewed: No
 License file: Yes

@@ -6,10 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 147 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 87 · 🔮 0 · 🔲 0
+Summary: 149 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 87 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-435 · XYZ's coordination model is a sequential chain, not a DAG | — | [GH-435-COORDINATION-MODEL.md](PROJECT/1-INBOX/GH-435-COORDINATION-MODEL.md) · [#435](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/435) |
+| GH-396 · Accuracy Ledger — design constraints to settle before build | — | [GH-396-ACCURACY-LEDGER.md](PROJECT/1-INBOX/GH-396-ACCURACY-LEDGER.md) · [#396](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/396) |
 | GH-343 · a target-relative gate program is checked against cwd/PATH instead of target_root, so a ready contract reports NOT-READY | — | [GH-343-GATE-PROGRAM-TARGET-ROOT.md](PROJECT/2-WORKING/GH-343-GATE-PROGRAM-TARGET-ROOT.md) · [#343](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/343) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-358 · the 16-way concurrent-append lock assertion flakes on the shared CI runner | — | [GH-358-LOCK-FLAKE-INSTRUMENTATION.md](PROJECT/2-WORKING/GH-358-LOCK-FLAKE-INSTRUMENTATION.md) · [#358](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/358) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-375 · the agy auth pre-flight passes on exit status alone, so it cannot fail in the headless context it exists for | — | [GH-375-AGY-AUTH-PROBE.md](PROJECT/2-WORKING/GH-375-AGY-AUTH-PROBE.md) · [#375](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
