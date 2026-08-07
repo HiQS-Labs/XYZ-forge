@@ -158,13 +158,19 @@ else
 [$(printf '%s' "$out" | /usr/bin/grep -o 'gate-guard: gate exit [-0-9]*' | tail -1)]"
 fi
 
-# COVERAGE CAVEAT for the two assertions above: a SIGXCPU kill reaches the driver in one of two
-# shapes, and which one is a property of the host's bash, not of the gate. bash 3.2 (macOS) forks
-# the gate and reports 128+SIGXCPU; bash 5.x (every Linux runner) applies its last-command exec
-# optimization, so the gate IS the waited-on process and Popen reports -SIGXCPU. This test only
-# ever observes whichever shape the host produces — which is why it passed locally on macOS while
-# CI stayed red on the -SIGXCPU shape for the whole life of PR #393. A green run HERE is not
-# evidence that the other shape is mapped; CI is the authority for that branch.
+# COVERAGE CAVEAT for the two assertions above. These passed on macOS while failing on every
+# Linux CI run for the life of PR #393, because WHICH SIGNAL the CPU cap delivers is a property of
+# the host kernel:
+#   * A bare `ulimit -t N` sets the soft AND hard RLIMIT_CPU to N.
+#   * Linux's posix_cpu_timers tests the hard limit FIRST, so with soft == hard it sends an
+#     uncatchable SIGKILL and SIGXCPU is never delivered at all.
+#   * macOS's BSD path sends SIGXCPU for those same limits.
+# The driver now sets the soft cap strictly below the hard cap so SIGXCPU is delivered on both,
+# with the hard cap left as a backstop. The exit status it arrives as ALSO varies (128+SIG when
+# bash forks the gate, -SIG when bash 5.x exec's it), so all four combinations are mapped but this
+# test only ever observes the one its host produces. A green run HERE is not evidence that the
+# Linux path is mapped — CI is the authority for that branch. That asymmetry is why the failure
+# message below prints the gate's exit status rather than the escalation reason alone.
 
 # ── (5) a genuinely failing gate is still `pre-advance-failed` ───────────────────────────
 out="$(run_driver --phase-id p5 --pre-advance-cmd '/usr/bin/false' 2>&1)"; rc=$?

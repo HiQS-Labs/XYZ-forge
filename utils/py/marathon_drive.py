@@ -1072,6 +1072,7 @@ relay-file: {rel_relay}
     #
     # Layer 4 (host free-memory floor) and packet-driven per-phase overrides are Phase 2.
     GATE_GUARD_KILL_EXIT = 108   # distinct from any real gate's own failure codes
+    GATE_CPU_HARD_MARGIN_S = 5   # hard RLIMIT_CPU sits this far above the soft cap (see layer 2)
 
     def _gate_guard_config():
         """Read the guard's caps fresh on each gate run, so a phase can retune between calls."""
@@ -1154,7 +1155,15 @@ relay-file: {rel_relay}
         if cfg["cpu_s"] > 0:
             # Layer 2. Unlike the RSS poll below this cannot be raced, and it still fires if this
             # driver process itself wedges — the one bound that does not depend on the watchdog.
-            cmd = f"ulimit -t {cfg['cpu_s']}; {pre_advance_cmd}"
+            #
+            # The soft cap MUST sit below the hard cap. A bare `ulimit -t N` sets both to N, and
+            # Linux's posix_cpu_timers tests the hard limit FIRST — so at N seconds it delivers
+            # SIGKILL and SIGXCPU is never sent at all, making the signal this layer is built to
+            # recognize unreachable. macOS's BSD path delivers SIGXCPU for the same limits, which
+            # is why this only ever failed on CI. Splitting the two restores the intended signal
+            # and leaves the hard cap as a backstop for a gate that ignores SIGXCPU.
+            cmd = (f"ulimit -H -t {cfg['cpu_s'] + GATE_CPU_HARD_MARGIN_S} 2>/dev/null || true; "
+                   f"ulimit -S -t {cfg['cpu_s']}; {pre_advance_cmd}")
 
         # start_new_session=True makes the gate a session and process-group leader (pgid == pid),
         # which is what lets layer 3 measure and kill the whole tree rather than just the shell.
@@ -1196,6 +1205,15 @@ relay-file: {rel_relay}
         # on macOS: same kill, different messenger.
         if cfg["cpu_s"] > 0 and rc in (128 + signal.SIGXCPU, -signal.SIGXCPU):
             log(f"gate-guard: gate exceeded the {cfg['cpu_s']}s CPU cap (SIGXCPU)")
+            rc = GATE_GUARD_KILL_EXIT
+        elif cfg["cpu_s"] > 0 and rc in (128 + signal.SIGKILL, -signal.SIGKILL):
+            # The hard-cap backstop: a gate that ignores or blocks SIGXCPU keeps burning CPU until
+            # RLIMIT_CPU's hard limit, where the kernel sends an uncatchable SIGKILL. Reported
+            # separately from the SIGXCPU path because the two say different things about the gate —
+            # and because an unmapped SIGKILL would otherwise escalate as `pre-advance-failed`,
+            # blaming the change under review for a kill the guard itself arranged.
+            log(f"gate-guard: gate ignored SIGXCPU and hit the "
+                f"{cfg['cpu_s'] + GATE_CPU_HARD_MARGIN_S}s hard CPU cap (SIGKILL)")
             rc = GATE_GUARD_KILL_EXIT
 
         # Peak RSS is logged on EVERY run, pass or fail, deliberately: it is the only evidence that
