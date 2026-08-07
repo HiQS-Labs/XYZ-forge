@@ -146,3 +146,14 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-418 only in `utils/py/swarm_preflight.py`, `test/gh418-issue-state-frozen.sh`, and
+`validate.sh`. The existing `gh issue view` request now retrieves `body,state,closedAt` together;
+`readiness.issue_state` records `OPEN`, `CLOSED`, or advisory `unknown` in emitted candidates, and
+CLOSED state plus its close time is surfaced in both the preflight output and builder packet without
+blocking the lane. Declared artifacts are scanned at `target.ref` for the on-disk GH-308 `FROZEN`
+banner; a match is NOT-READY, names the artifact and twin parsed from its banner, and emits no packet.
+Registered a hermetic 5-assertion regression using the real `relay-automation/consult.sh` measured
+case; it passed with `bash test/gh418-issue-state-frozen.sh` (5 pass, 0 fail).
