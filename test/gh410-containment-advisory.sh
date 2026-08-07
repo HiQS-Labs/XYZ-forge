@@ -82,9 +82,34 @@ SHIM="$ROOT/relay-automation/agy-turn.sh"
 A="$WORK/repo"; mkdir -p "$A"
 git -C "$A" init -q 2>/dev/null; git -C "$A" symbolic-ref HEAD refs/heads/main 2>/dev/null
 printf 'x\n' >"$A/artifact.md"; printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
-printf '.tick/\n*.log\n' >"$A/.gitignore"
+printf '.tick/\n*.log\nbin/\n' >"$A/.gitignore"
 git -C "$A" -c user.email=t@t -c user.name=t add -A >/dev/null 2>&1
 git -C "$A" -c user.email=t@t -c user.name=t commit -qm init >/dev/null 2>&1
+
+# GH-441: keep the token ops inside the fixture. Without TICK_REPO_ROOT (set in run_turn below), the
+# shim resolved tick against the AMBIENT repo and claimed `T-cite`/`T-offlane` as `agy` in the real
+# .tick/ log — and never released them, because the shim under test is expected to fail these turns.
+# The turns still passed, since claiming a not-yet-existing task succeeds, so nothing here ever went
+# red. The damage landed on the NEXT agy turn in that clone: `agy` sat at its claim cap holding two
+# fixtures, so a real reviewer got `claim limit reached (holding T-cite, T-offlane)` and refused. In
+# a marathon that surfaced as `pre-advance-failed` on a gate that had not run — which cost two halted
+# phases on 2026-08-07 before the cause was found. The file already gitignored `.tick/`, so isolation
+# was intended; only the env var was missing.
+#
+# Production shape (mirrors test/codex-turn.sh:9-12): the shim resolves tick as
+# "$TICK_REPO_ROOT/bin/tick", so provide it in the fixture root, gitignored so the symlink cannot
+# trip containment.
+TICK="$ROOT/bin/tick"
+mkdir -p "$A/bin"; ln -sf "$TICK" "$A/bin/tick"
+
+# Seed each scenario's token in the FIXTURE log, handed to agy. Required now that the shim looks
+# there: it refuses to run unless it can establish ownership, so an unseeded token would fail these
+# turns for the wrong reason and mask what cases 3-5 actually pin.
+for _t in cite offlane; do
+  TICK_REPO_ROOT="$A" "$TICK" log task.created "T-$_t" --agent claude-a >/dev/null 2>&1
+  TICK_REPO_ROOT="$A" "$TICK" claim   "T-$_t" --agent claude-a --paths "relay.md" >/dev/null 2>&1
+  TICK_REPO_ROOT="$A" "$TICK" release "T-$_t" --agent claude-a --to agy >/dev/null 2>&1
+done
 
 mkdir -p "$WORK/bin"
 cat >"$WORK/bin/agy-stub" <<'STUB'
@@ -102,6 +127,7 @@ chmod +x "$WORK/bin/agy-stub"
 
 run_turn() { # <stub-mode> <logfile>
   RELAY_AGENT=agy RELAY_FILE="$A/relay.md" RELAY_TASK="T-$1" AGY_AGENT=agy \
+    TICK_REPO_ROOT="$A" \
     AGY_BIN="$WORK/bin/agy-stub" AGY_TURN_ROOT="$A" AGY_LOG="$2" STUB_MODE="$1" \
     ALLOW_PATHS="relay.md" RELAY_WORKTREE_ISOLATION=1 \
     bash "$SHIM" >/dev/null 2>&1; echo $?
