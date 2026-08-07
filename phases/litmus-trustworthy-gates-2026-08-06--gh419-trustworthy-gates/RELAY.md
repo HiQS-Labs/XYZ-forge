@@ -1,5 +1,5 @@
 # Marathon Phase gh419-trustworthy-gates
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH419-TRUSTWORTHY-GATES-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -146,3 +146,15 @@ controlled bad fixtures for the two disqualifying shapes; and `validate.sh` regi
 Evidence is a local `# gate-evidence: {…}` declaration beside a gate, never inferred from its name or a
 green run. The deliberate scope boundary is `validate.sh`'s executable gate list, excluding ordinary
 Python unit assertions. Verified: `bash test/gh419-gate-inventory.sh` passes.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The changes accurately implement the brief requirements.
+1. `GUIDING-PRINCIPLES.md` was correctly updated to explicitly state that a green gate without a witnessed red control is not evidence, and names the required disqualifying shapes #351 and #348.
+2. `utils/py/gate_inventory.py` accurately discovers registered tests in `validate.sh` and implements the correct negative-control evidence schema correctly distinguishing absence of evidence and filtering out disqualifying shapes appropriately.
+3. `test/gh419-gate-inventory.sh` correctly pins the disqualifying shapes and provides controlled bad fixtures.
+4. `validate.sh` registers `gh419-gate-inventory.sh` and it passes regression checks successfully.
+
+**Verdict:** Approved
