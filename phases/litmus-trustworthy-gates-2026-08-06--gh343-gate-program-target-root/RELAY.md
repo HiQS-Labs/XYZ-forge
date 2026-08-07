@@ -137,3 +137,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-343 in `utils/py/swarm_preflight.py`: separator-containing program paths now resolve
+under `target_root`, both program and `bash`/`sh` script gates require an executable regular file, and
+path-gate failures name the target root while bare commands retain the PATH diagnostic. Added and
+registered `test/gh343-gate-program-target-root.sh`. Its durable pre-fix replay executes revision
+`3b37072` and observes the external-cwd false NOT-READY, then verifies the current default shim from
+both target and external cwd values, missing/non-executable fixtures, and the bare-command control.
+
+Verification: `bash test/gh343-gate-program-target-root.sh` — 10 pass, 0 fail. The full gate was not
+run, per this relay's containment instruction.
