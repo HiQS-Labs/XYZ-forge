@@ -2,7 +2,7 @@
 gh_issue: 441
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/441
 title: "GH-441 — validate.sh is the default pre-advance gate but is corrupted by the marathon environment it inherits"
-status: "Proposed (1-INBOX — not yet active). Nothing is fixed: the attempted scrub was reverted. This doc carries the measurement showing the defect is structural."
+status: "Phase 1 SHIPPED 2026-08-07 — the blocker is cleared: `validate.sh` now exits 0 as a pre-advance gate with the flag SET and the lock HELD (acceptance 4 + 5). Phase 2, the env contract that stops this recurring with a DIFFERENT variable (acceptance 1-3), is not started."
 created: 2026-08-07
 updated: 2026-08-07
 owner: noel
@@ -19,16 +19,17 @@ related:
   - "#401 — --dry-run mutates the tracked tree. The other gate/driver boundary defect in this release."
   - "#375 — also observed live on the same marathon run; unrelated mechanism, same 'the check could not fail' shape."
 non_goals:
-  - "Scrubbing more variables. Measured and reverted: no assignment of RELAY_DRIVER_LOCKED is correct, because nested drivers and lock assertions need opposite values."
-  - "Per-suite skip lists hand-maintained by each gate. That was the first instinct here and it is what this issue exists to replace with a contract."
-  - "Changing marathon-drive's re-entrancy guard. RELAY_DRIVER_LOCKED is correct for its own purpose; the problem is the gate running driver tests at all."
+  - "Scrubbing RELAY_DRIVER_LOCKED GLOBALLY in validate.sh. Measured and reverted: no single value is correct for all ~40 driver-spawning suites, because nested drivers need it set and lock assertions need it unset. Phase 1 scrubs it per-suite instead, inside the two suites whose lock root is already isolated."
+  - "Skip lists. Phase 1 is not one: no suite is excluded from the gate, and the two unsets live inside the suites themselves — where the reason is local and documented — not in a list the gate maintains. Replacing a gate-level skip list with a contract is still the Phase 2 goal."
+  - "Changing marathon-drive's re-entrancy guard. RELAY_DRIVER_LOCKED is correct for its own purpose."
+  - "Fixing the --help ordering defect found alongside this (lock block at marathon-drive.sh:189, --help parsed at :664, so --help refuses to print while a driver is active). Real, but it is a driver change needing Bash+Python twin parity per GH-308; filed separately rather than folded into a test-only fix."
 goal: >
   validate.sh is marathon-drive's DEFAULT --pre-advance-cmd, so it routinely runs as a child of a
   live marathon and inherits its environment. RELAY_DRIVER_LOCKED=1 and ALLOW_PATHS each silently
   flip suite verdicts, so the gate reports failures belonging to its parent rather than to the
-  change under review. Scrubbing does not fix it: nested drivers need RELAY_DRIVER_LOCKED set and
-  lock assertions need it unset, so validate.sh cannot pass as a pre-advance gate in EITHER
-  configuration. ~a dozen of its suites spawn drivers against a repo whose driver is mid-run.
+  change under review. Phase 1 (SHIPPED) cleared the blocker per-suite and validate.sh now exits 0
+  in a real gate's environment. Phase 2 is the part that lasts: nothing yet states which variables
+  a gate may inherit, so the next export added to marathon-drive can reintroduce this silently.
 ---
 
 # GH-441 · the gate inherits the state it is supposed to judge
@@ -37,7 +38,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Root-caused during the Litmus marathon after it halted the run four times. A scrub of `RELAY_DRIVER_LOCKED` was landed and then **reverted** — it was measured on a clean tree with no parent lock, the one state where the variable is never set, and traded 8 failing assertions for 6. The surviving deliverable is the evidence matrix below, which shows the defect is not fixable by scrubbing. | The contract. `validate.sh` cannot pass as a pre-advance gate in EITHER configuration, so the decision is structural: exclude driver-spawning suites from the gate by construction, isolate those tests' lock root, or change what `--pre-advance-cmd` defaults to. Not started. |
+| **Phase 1 — the blocker.** `validate.sh` exits **0** as a pre-advance gate with `RELAY_DRIVER_LOCKED=1` AND the driver lock held (full run 2026-08-07, 0 failing assertions). The fix is two `unset RELAY_DRIVER_LOCKED` lines *inside* `gh284-runlog-heartbeat.sh` and `gh331-cost-summary.sh` — the idiom `test/driver-lock.sh:11` already used for this exact reason. Both suites drive against their own throwaway `$A`, so unsetting per-suite cannot collide with a real lock, which is why this succeeds where the reverted global scrub could not. No suite skipped, nothing scrubbed globally. | **Phase 2 — the contract** (acceptance 1-3). Nothing yet states which variables a gate may inherit, `_gate_env()` is still not the enforcement point, and a custom `--pre-advance-cmd` still has nothing to source. Phase 1 fixed the two variables that are biting *today*; it does not stop the next export from doing the same thing. Not started. |
 
 ## The defect
 
@@ -80,17 +81,53 @@ lock-acquisition measures the parent. **Unset**, those assertions become honest 
 driver collides with the held lock instead (`marathon-drive` exits 1). The two requirements are in
 direct opposition.
 
-So the statement of the defect is stronger than "some variables leak": **`validate.sh` cannot pass
-as a marathon's pre-advance gate in either configuration**, because it contains ~a dozen suites that
-spawn nested drivers against a repo whose driver is mid-run.
+So the statement of the defect is stronger than "some variables leak" — but note carefully what it
+rules out. It rules out a **global** assignment: no single value of `RELAY_DRIVER_LOCKED`, applied to
+the whole gate, is correct. It does **not** rule out a per-suite one, which is what Phase 1 did.
+
+## Phase 1 — how the blocker was actually cleared
+
+The reverted attempt scrubbed the variable in `validate.sh`, i.e. for all ~40 driver-spawning suites
+at once, which is why it broke the ones that need it set. But only **two** suites were ever wrong:
+`gh284-runlog-heartbeat` and `gh331-cost-summary`. Both drive against their own throwaway repo (`$A`
+from `test/_setup.sh`), so the lock they would acquire is theirs, not the ambient repo's — meaning
+they can safely clear the flag *for themselves* while every other suite keeps inheriting it.
+
+That is not a new idea. `test/driver-lock.sh:11` already does exactly this, with a comment naming
+this failure mode ("if this test runs UNDER a marathon gate, it would inherit that export and skip
+the very logic it's testing"). Phase 1 applies that existing idiom to the two suites that need it.
+
+Measured after the fix — **every cell clean, in both states, simultaneously**:
+
+| suite | flag SET + lock HELD | standalone |
+|---|---|---|
+| `gh284-runlog-heartbeat` | **20/0** (was 15/5) | 20/0 |
+| `gh331-cost-summary` | **8/0** (was 5/3) | 8/0 |
+| `gh322-runlog-python-lane` | 29/0 | 29/0 |
+| `gh268-relay-cue-and-target-checks` | 34/0 | 34/0 |
+| `driver-lock` | 4/0 | 4/0 |
+| `oracle-guard` | 11/0 | 11/0 |
+
+And end-to-end, which is the assertion that matters and the one the reverted commit never made:
+`RELAY_DRIVER_LOCKED=1` with the driver lock held → **`bash validate.sh` exits 0**, zero failing
+assertions across the full suite.
+
+**A second, independent defect surfaced while doing this** and was deliberately not folded in.
+`marathon-drive`'s lock block runs at `marathon-drive.sh:189` but `--help` is not parsed until
+`:664`, so **`--help` refuses to print whenever any driver is active** — it emits the lock-contention
+notice instead. That was masking one `gh284` assertion (a help-text grep, which has no business
+touching the ambient lock); the assertion was given its own `MARATHON_ROOT` rather than weakened. The
+ordering fix belongs in the driver and needs Bash+Python twin parity (GH-308), so it is filed
+separately instead of being smuggled into a test-only change.
 
 ## What is fixed, and what is not
 
-Fixed: nothing in the harness. The scrub was reverted (see Status). The `ALLOW_PATHS` half needs no
-fix — `validate.sh` already unsets it; the finding there is that a CUSTOM gate omitting that
-prologue is silently wrong, which was observed live.
+Fixed (Phase 1): the two variables biting today, per-suite, with the end-to-end gate run above as
+evidence. The `ALLOW_PATHS` half needed no code fix — `validate.sh` already unsets it; the finding
+there is that a CUSTOM gate omitting that prologue is silently wrong, which was observed live.
 
-Not fixed — and the reason this doc exists:
+Not fixed — and the reason this doc stays open. **Phase 1 fixed two names; it did not make the
+boundary governed.** The next export added to `marathon-drive` can do this again:
 
 1. **No contract.** Nothing states which variables a pre-advance gate may inherit. `marathon-drive`
    exports at least `XYZ_ROOT`, `PYTHONPATH`, `RELAY_DRIVER_LOCKED`, `MARATHON_BUILDER`,
@@ -107,16 +144,20 @@ Not fixed — and the reason this doc exists:
 
 Derived, per the GH-400 contract for an issue authored from a live incident rather than a report.
 
-1. A pre-advance gate's inherited environment is governed by a stated contract, not by each gate
-   remembering to unset names — an allowlist in `_gate_env()`, or an equivalent documented rule.
-2. A custom `--pre-advance-cmd` can obtain the same clean environment without copying
-   `validate.sh`'s prologue.
-3. Adding a new export to `marathon-drive` cannot silently contaminate the gate: something fails
-   loudly when an ungoverned variable crosses the boundary.
-4. `gh284`, `gh331`, `gh322` and `gh268` all pass with a real marathon's flag AND lock state in
-   effect — the matrix above is the baseline, and every cell must read clean.
-5. No suite is skipped in the marathon gate to satisfy any of the above, and no variable is scrubbed
-   in a way that breaks nested drivers (the reverted attempt is the control).
+1. **(Phase 2 — open)** A pre-advance gate's inherited environment is governed by a stated contract,
+   not by each gate remembering to unset names — an allowlist in `_gate_env()`, or an equivalent
+   documented rule.
+2. **(Phase 2 — open)** A custom `--pre-advance-cmd` can obtain the same clean environment without
+   copying `validate.sh`'s prologue.
+3. **(Phase 2 — open)** Adding a new export to `marathon-drive` cannot silently contaminate the gate:
+   something fails loudly when an ungoverned variable crosses the boundary.
+4. **(Phase 1 — MET 2026-08-07)** `gh284`, `gh331`, `gh322` and `gh268` all pass with a real
+   marathon's flag AND lock state in effect — every cell of the matrix reads clean, and
+   `bash validate.sh` itself exits 0 in that state.
+5. **(Phase 1 — MET 2026-08-07)** No suite is skipped in the marathon gate to satisfy any of the
+   above, and no variable is scrubbed in a way that breaks nested drivers (the reverted attempt is
+   the control). Phase 1 scrubs per-suite, inside two suites whose lock root is already isolated;
+   `validate.sh` is unchanged and the other ~40 driver-spawning suites still inherit the flag.
 
 ## Litmus tests
 
@@ -126,10 +167,18 @@ Per GH-419, each must be observed FAILING before it is trusted.
    producing a wrong verdict. Control: the pre-fix tree reports a false gate failure instead.
 2. A custom gate using the shared helper is immune to the same contamination. Control: the same gate
    without the helper reproduces the `oracle-guard` flip (`clean=2 usage, contaminated=0`).
-3. `gh284`/`gh331` pass with flag SET + lock HELD. Control: today, 15/5 and 5/3.
-4. `gh322`/`gh268` pass with flag UNSET + lock HELD. Control: the reverted scrub, 17/3 and 31/3.
-   Criteria 3 and 4 must hold SIMULTANEOUSLY — that is the whole difficulty, and any fix that
-   satisfies only one of them is the reverted attempt again.
+3. **OBSERVED FAILING, then fixed (2026-08-07).** `gh284`/`gh331` pass with flag SET + lock HELD.
+   Control measured immediately before the fix in the same worktree: **15/5 and 5/3**. After: 20/0
+   and 8/0.
+4. **OBSERVED FAILING, then fixed (2026-08-07).** `gh322`/`gh268` must not regress. Control: the
+   reverted global scrub broke them (17/3 and 31/3); under Phase 1 they still inherit the flag and
+   read 29/0 and 34/0.
+   Criteria 3 and 4 hold SIMULTANEOUSLY under Phase 1 — that was the whole difficulty, and it is why
+   a per-suite scrub succeeds where the global one could not. Any future fix that satisfies only one
+   of them is the reverted attempt again.
+5. The gate as a whole, not just its suites: `RELAY_DRIVER_LOCKED=1` + lock held → `bash validate.sh`
+   exits 0. Control: the same command on the pre-Phase-1 tree fails. This is the assertion the
+   reverted commit never made, and making it is what would have caught that commit being wrong.
 
 ## Provenance
 

@@ -13,6 +13,14 @@
 #   (4) the same three properties for marathon-drive with MARATHON_COST_SUMMARY.
 source "$(dirname "$0")/_setup.sh" gh331-cost-summary
 
+# GH-441 — hermetic against an ambient driver, same reason as test/driver-lock.sh:11. Every
+# assertion here drives relay-drive/marathon-drive against this suite's own throwaway repo ($A) and
+# reads the driven run's OWN output. Inheriting RELAY_DRIVER_LOCKED=1 from a live marathon gate makes
+# those nested drivers take the already-locked path and skip the end-of-run cost summary, so the
+# suite measures the parent rather than itself. Measured 2026-08-07: inherited → 5 pass / 3 fail;
+# unset → clean. $A is isolated, so unsetting cannot collide with a real lock.
+unset RELAY_DRIVER_LOCKED
+
 export TICK_BIN="$TICK"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DRIVE="$ROOT/relay-automation/relay-drive.sh"
