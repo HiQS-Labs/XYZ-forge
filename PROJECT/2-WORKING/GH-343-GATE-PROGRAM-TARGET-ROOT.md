@@ -76,13 +76,61 @@ did not touch this case.
 
 ## Acceptance — deviations from the issue
 
-None. Every criterion is carried verbatim.
+**ONE DEVIATION, PROPOSED 2026-08-07 — criterion 3 is unbuildable as written and must be narrowed to
+directly-executed programs. It is NOT yet amended on the issue; this block is the proposal and the
+evidence. Do not build this lane until it is resolved.**
+
+Criterion 3 reads:
+
+> A gate script or program that exists but is **not executable** sets NOT-READY, rather than passing
+> readiness and failing at execution time.
+
+Its premise is false for the `bash`/`sh` branch. `bash foo.sh` executes a mode-644 file perfectly
+well — the interpreter reads the script, it is never `exec`'d — so a non-executable *gate script* does
+**not** fail at execution time and must not be reported NOT-READY.
+
+**Measured, twice, by two independent codex builds** (`ee56842` and the earlier reverted attempt).
+Both implemented the criterion literally, adding `os.access(script_path, os.X_OK)` to the `bash`/`sh`
+branch, and both produced the identical regression in the lane's own gate:
+
+| | pass | fail |
+|---|---|---|
+| `test/swarm-preflight.sh` before | **98** | 0 |
+| after either build | 91 | **7** |
+
+The failures are `T15`, `T33`, `T36`, all `expected exit 0, got 5`. `T15`'s fixture gate is
+`"bash -x src/a.js"` with a mode-644 `src/a.js`; the criterion forces it to NOT-READY.
+
+**Satisfying the criterion by `chmod +x`-ing the fixtures would be worse, not better.** It would ship
+the rule "an interpreter-invoked gate script must carry the executable bit", which makes
+`"gate": "bash validate.sh"` report NOT-READY against any target repo whose `validate.sh` is mode 644
+— while that gate would in fact run correctly. That is a **new false NOT-READY**, which is the precise
+defect class this issue exists to remove and this release exists to make impossible. The lane would
+have shipped the bug it was written to fix.
+
+**Proposed narrowing** — keep the criterion where its premise holds, drop it where it does not:
+
+> A gate program that is **executed directly** (a bare command, or a separator-containing path) and
+> exists but is not executable sets NOT-READY. A gate *script* passed to an interpreter (`bash x.sh`)
+> is **not** required to be executable, because the interpreter reads it; requiring the bit there
+> would itself be a false NOT-READY.
+
+This preserves criteria 1, 2, 4, 5 and 6 unchanged, and keeps the useful half of 3 — the
+directly-executed case, where a missing bit genuinely does fail at execution time.
+
+`brief-gh343-gate-program-target-root.md` carried the same false premise at its `## What to build`
+bullet ("Executability, not existence … fails at execution time") and has been corrected to match, so
+a rebuild is not steered back into the same wall. **This was a plan defect, not a builder defect** —
+codex implemented what it was given, both times.
+
+---
 
 The criteria were **authored onto the issue on 2026-08-05** (it had none) and **revised on 2026-08-06**
 after an adversarial review by codex and agy. Both independently found that the original wording,
 *"the two branches agree,"* was satisfiable by changing the **correct** branch to resolve against the
 working directory — a criterion whose plain reading permitted making the defect worse. It now states
-the direction.
+the direction. Criterion 3's false premise survived that review; the thing that caught it was
+**building the lane and running its gate**, which is the argument the #419 evidence standard makes.
 
 ## Phases
 

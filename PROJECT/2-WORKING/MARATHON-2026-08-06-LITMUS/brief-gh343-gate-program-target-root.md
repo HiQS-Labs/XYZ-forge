@@ -83,8 +83,21 @@ Resolve a separator-containing gate program against `target_root` before falling
 lookup, mirroring what the `bash`/`sh` branch already does. Two smaller points fold in, both carried
 by the acceptance:
 
-- **Executability, not existence.** The `bash`/`sh` branch checks `os.path.isfile`, so a
-  non-executable gate script currently passes readiness and fails at execution time.
+- **Executability, for DIRECTLY-EXECUTED programs only — read this carefully, two builds got it
+  wrong.** An earlier revision of this bullet claimed the `bash`/`sh` branch's `os.path.isfile` check
+  lets "a non-executable gate script pass readiness and fail at execution time". **That is false.**
+  `bash foo.sh` runs a mode-644 file: the interpreter reads the script, it is never `exec`'d. Two
+  independent codex builds implemented the bullet literally, added `os.access(..., os.X_OK)` to the
+  `bash`/`sh` branch, and both regressed this lane's own gate **98/0 → 91/7** (`T15`, `T33`, `T36`,
+  `expected exit 0, got 5`; `T15`'s fixture gate is `bash -x src/a.js` over a mode-644 file).
+  Do **not** `chmod +x` the fixtures to make it pass — that ships the rule "an interpreter-invoked
+  gate must be executable", which reports NOT-READY for `bash validate.sh` in any repo whose
+  `validate.sh` is 644 even though that gate runs fine. **That is a new false NOT-READY, i.e. this
+  lane shipping the exact bug it exists to fix.**
+  So: require the executable bit **only** on a program that is executed directly — a bare command, or
+  the separator-containing path this lane is adding. Leave the interpreter branch checking existence
+  alone. See `## Acceptance — deviations from the issue` in the capture doc; issue #343's criterion 3
+  is being narrowed for this reason.
 - **Name which root was searched.** "not found in PATH" is accurate for a bare command and
   misleading for a path — that wording is what made this undiagnosable in one read.
 
