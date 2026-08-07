@@ -2,7 +2,7 @@
 gh_issue: 441
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/441
 title: "GH-441 — validate.sh is the default pre-advance gate but is corrupted by the marathon environment it inherits"
-status: "Proposed (1-INBOX — not yet active). The two known variables are already fixed; this doc is for the contract that is still missing."
+status: "Proposed (1-INBOX — not yet active). Nothing is fixed: the attempted scrub was reverted. This doc carries the measurement showing the defect is structural."
 created: 2026-08-07
 updated: 2026-08-07
 owner: noel
@@ -19,16 +19,16 @@ related:
   - "#401 — --dry-run mutates the tracked tree. The other gate/driver boundary defect in this release."
   - "#375 — also observed live on the same marathon run; unrelated mechanism, same 'the check could not fail' shape."
 non_goals:
-  - "Re-adding per-suite skips to the marathon gate. Skipping was the wrong instinct and is no longer needed — the contamination is fixed at the source."
-  - "Making the driver tests nested-safe. They were never wrong; the environment they ran in was."
-  - "Changing marathon-drive's re-entrancy guard. RELAY_DRIVER_LOCKED is correct for its purpose — it just must not cross into the gate."
+  - "Scrubbing more variables. Measured and reverted: no assignment of RELAY_DRIVER_LOCKED is correct, because nested drivers and lock assertions need opposite values."
+  - "Per-suite skip lists hand-maintained by each gate. That was the first instinct here and it is what this issue exists to replace with a contract."
+  - "Changing marathon-drive's re-entrancy guard. RELAY_DRIVER_LOCKED is correct for its own purpose; the problem is the gate running driver tests at all."
 goal: >
   validate.sh is marathon-drive's DEFAULT --pre-advance-cmd, so it routinely runs as a child of a
   live marathon and inherits its environment. RELAY_DRIVER_LOCKED=1 and ALLOW_PATHS each silently
   flip suite verdicts, so the gate reports failures belonging to its parent rather than to the
-  change under review. Both are now scrubbed, but the scrub is a denylist maintained on the wrong
-  side of the boundary: nothing states which variables a gate may inherit, so the next variable
-  marathon-drive exports reintroduces the defect silently.
+  change under review. Scrubbing does not fix it: nested drivers need RELAY_DRIVER_LOCKED set and
+  lock assertions need it unset, so validate.sh cannot pass as a pre-advance gate in EITHER
+  configuration. ~a dozen of its suites spawn drivers against a repo whose driver is mid-run.
 ---
 
 # GH-441 · the gate inherits the state it is supposed to judge
@@ -113,9 +113,10 @@ Derived, per the GH-400 contract for an issue authored from a live incident rath
    `validate.sh`'s prologue.
 3. Adding a new export to `marathon-drive` cannot silently contaminate the gate: something fails
    loudly when an ungoverned variable crosses the boundary.
-4. The existing `test/gh419-gate-ambient-env.sh` still passes, and its negative control still fails
-   when a scrub is removed.
-5. No suite is skipped in the marathon gate to satisfy any of the above.
+4. `gh284`, `gh331`, `gh322` and `gh268` all pass with a real marathon's flag AND lock state in
+   effect — the matrix above is the baseline, and every cell must read clean.
+5. No suite is skipped in the marathon gate to satisfy any of the above, and no variable is scrubbed
+   in a way that breaks nested drivers (the reverted attempt is the control).
 
 ## Litmus tests
 
@@ -125,7 +126,10 @@ Per GH-419, each must be observed FAILING before it is trusted.
    producing a wrong verdict. Control: the pre-fix tree reports a false gate failure instead.
 2. A custom gate using the shared helper is immune to the same contamination. Control: the same gate
    without the helper reproduces the `oracle-guard` flip (`clean=2 usage, contaminated=0`).
-3. `gh284`/`gh331` pass with the full marathon environment ambient. Control: pre-fix, 15/5 and 5/3.
+3. `gh284`/`gh331` pass with flag SET + lock HELD. Control: today, 15/5 and 5/3.
+4. `gh322`/`gh268` pass with flag UNSET + lock HELD. Control: the reverted scrub, 17/3 and 31/3.
+   Criteria 3 and 4 must hold SIMULTANEOUSLY — that is the whole difficulty, and any fix that
+   satisfies only one of them is the reverted attempt again.
 
 ## Provenance
 
