@@ -143,12 +143,13 @@ def main():
         print(f"pi-turn: pi exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"pi-turn: pi failed (exit {bounded_rc})", file=sys.stderr)
-        sys.exit(5)
 
     if bounded_rc == 0 and (not os.path.exists(pi_log) or os.path.getsize(pi_log) == 0):
         print("pi-turn: pi exited 0 but produced NO output — likely a blocked/misconfigured backend. Failing the turn.", file=sys.stderr)
         sys.exit(5)
 
+    # GH-432: a failed turn still reaches rtl_enforce, so its work is committed and its token handed
+    # off instead of leaking. See utils/py/claude-turn.py for the full rationale. Exit 5 is unchanged.
     rc = rtl.enforce(t, me, pi_log, "pi")
 
     # Best-effort cost capture (GH-295): genuine improvement over the cost-blind agy lane. Never fails
@@ -177,6 +178,8 @@ def main():
 
     if bounded_rc == 7:
         sys.exit(7)
+    if bounded_rc != 0:
+        sys.exit(5)
 
     sys.exit(rc)
 

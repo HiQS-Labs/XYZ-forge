@@ -261,16 +261,19 @@ def main():
         print(f"agy-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"agy-turn: agy -p failed (exit {bounded_rc})", file=sys.stderr)
-        sys.exit(5)
 
     if bounded_rc == 0 and (not os.path.exists(agy_log) or os.path.getsize(agy_log) == 0):
         print("agy-turn: agy -p exited 0 but produced NO output — likely a blocked backend (run sandbox-OFF). Failing the turn.", file=sys.stderr)
         sys.exit(5)
         
+    # GH-432: a failed turn still reaches rtl_enforce, so its work is committed and its token handed
+    # off instead of leaking. See utils/py/claude-turn.py for the full rationale. Exit 5 is unchanged.
     rc = rtl.enforce(t, me, agy_log, "agy")
-    
+
     if bounded_rc == 7:
         sys.exit(7)
+    if bounded_rc != 0:
+        sys.exit(5)
 
     sys.exit(rc)
 

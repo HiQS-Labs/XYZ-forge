@@ -193,8 +193,7 @@ def main():
         print(f"aider-turn: aider exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"aider-turn: aider failed (exit {bounded_rc}) — see {aider_log}", file=sys.stderr)
-        sys.exit(5)
-        
+
     if bounded_rc == 0 and os.path.getsize(aider_log) == 0:
         print("aider-turn: aider exited 0 but produced NO output — likely a blocked/misconfigured backend. Failing the turn.", file=sys.stderr)
         sys.exit(5)
@@ -224,7 +223,13 @@ def main():
 
     # GH-278: Aider pre-creates 0-byte stubs for --file targets before it starts writing.
     # If the turn is killed (exit 7), these empty stubs must not be committed as "progress".
-    if bounded_rc == 7 and allow_paths:
+    #
+    # GH-432 widened this from `== 7` to any non-zero exit. Before that change a generic aider
+    # failure returned before rtl_enforce, so nothing could commit its stubs and gating on 7 alone
+    # was sufficient. Now that every failed turn reaches enforce, an aider crash mid-write has the
+    # same 0-byte stubs and the same commit path — leaving this at `== 7` would have turned the
+    # GH-432 fix into the exact regression this guard exists to prevent.
+    if bounded_rc != 0 and allow_paths:
         for ap in claim_paths[1:]:
             ap_full = os.path.join(root, ap)
             if os.path.isfile(ap_full) and os.path.getsize(ap_full) == 0:
@@ -237,10 +242,14 @@ def main():
                 except Exception:
                     pass
 
+    # GH-432: a failed turn still reaches rtl_enforce, so its work is committed and its token handed
+    # off instead of leaking. See utils/py/claude-turn.py for the full rationale. Exit 5 is unchanged.
     rc = rtl.enforce(t, me, aider_log, "aider")
 
     if bounded_rc == 7:
         sys.exit(7)
+    if bounded_rc != 0:
+        sys.exit(5)
 
     sys.exit(rc)
 
