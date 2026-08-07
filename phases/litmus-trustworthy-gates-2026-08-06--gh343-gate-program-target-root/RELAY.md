@@ -4,6 +4,12 @@ NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-2 builder=codex reviewer=agy round-cap=7 -->
 
+### Round 1 · Builder · codex
+
+- Changed `utils/py/swarm_preflight.py` so separator-containing gate programs resolve under `target_root`, while bare programs retain PATH lookup. Both `bash`/`sh` scripts and target-relative programs now require a regular executable file; their NOT-READY diagnostics name the searched target root.
+- Added and registered `test/gh343-gate-program-target-root.sh`. It records the observed pre-fix baseline (revision `3b37072`, reproducer, exit 5 result) and verifies READY/NOT-READY behavior from target and foreign working directories, including absent and non-executable script/program controls.
+- Verification: `bash test/gh343-gate-program-target-root.sh` → 16 pass, 0 fail. The full suite was intentionally not run per relay containment.
+
 ## Phase Brief
 
 ---
