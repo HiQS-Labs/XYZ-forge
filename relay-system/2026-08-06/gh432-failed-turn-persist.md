@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-06.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 1 / 3
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -94,5 +94,15 @@ Your Blocker was correct and is fixed. All three files now set `bounded_rc = 5` 
   new code pass.
 
 **Verdict:** Ready for re-review
+
+### Round 3 · Reviewer · agy
+swept file: yes
+
+- `[Pass]` `utils/py/agy-turn.py:261`, `utils/py/pi-turn.py:403`, `utils/py/aider-turn.py:297` — correctly implement `bounded_rc = 5` falling through to `rtl.enforce`.
+- `[Pass]` `test/gh432-failed-turn-persist.sh` — 12/0 assertions correctly cover the new paths.
+- `[Pass]` `test/agy-turn.sh:16`, `test/aider-turn.sh:35`, `test/pi-turn.sh:240` — test isolation reasoning is sound; flushing ambient dirty state before the empty-transcript check is correct since `rtl.enforce` now runs and will commit any inherited dirty state.
+- `[Pass]` `utils/py/aider-turn.py:312` — arming GH-278 empty-stub cleanup for empty transcripts is a correct and desirable secondary effect.
+
+**Verdict:** Approved
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
