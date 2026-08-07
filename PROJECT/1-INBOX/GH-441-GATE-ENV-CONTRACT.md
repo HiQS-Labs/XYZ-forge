@@ -37,7 +37,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Root-caused during the Litmus marathon after it halted the run twice and was misdiagnosed as flakiness both times. `RELAY_DRIVER_LOCKED` added to `validate.sh`'s scrub line, with `test/gh419-gate-ambient-env.sh` (2/0) and a working negative control. Landed on `claude/litmus-0.2.0-preflight`. | The contract itself: decide whether `_gate_env()` should enforce an allowlist instead of `GATE_SCRUBBED_ENV`'s three-name denylist, and give custom `--pre-advance-cmd` scripts a shared clean-environment helper to inherit. Not started. |
+| Root-caused during the Litmus marathon after it halted the run four times. A scrub of `RELAY_DRIVER_LOCKED` was landed and then **reverted** — it was measured on a clean tree with no parent lock, the one state where the variable is never set, and traded 8 failing assertions for 6. The surviving deliverable is the evidence matrix below, which shows the defect is not fixable by scrubbing. | The contract. `validate.sh` cannot pass as a pre-advance gate in EITHER configuration, so the decision is structural: exclude driver-spawning suites from the gate by construction, isolate those tests' lock root, or change what `--pre-advance-cmd` defaults to. Not started. |
 
 ## The defect
 
@@ -64,10 +64,31 @@ before the variable was found. The first remedy attempted was skipping the affec
 gate — narrowing a gate to make a marathon pass, in the release whose entire theme is that a check
 which cannot fail is not evidence.
 
+## The measurement that settles it
+
+`RELAY_DRIVER_LOCKED` is load-bearing in two contradictory directions, so no assignment of it is
+correct:
+
+| state | gh284 | gh331 | gh322 | gh268 |
+|---|---|---|---|---|
+| clean — no flag, no lock | 20/0 | 8/0 | 20/0 | 34/0 |
+| flag SET + lock HELD — **what a real marathon produces** | **15/5** | **5/3** | 20/0 | 34/0 |
+| flag UNSET + lock HELD — the attempted scrub | fails | — | **17/3** | **31/3** |
+
+**Set**, a nested driver correctly skips a lock its parent holds, but every test asserting real
+lock-acquisition measures the parent. **Unset**, those assertions become honest and every nested
+driver collides with the held lock instead (`marathon-drive` exits 1). The two requirements are in
+direct opposition.
+
+So the statement of the defect is stronger than "some variables leak": **`validate.sh` cannot pass
+as a marathon's pre-advance gate in either configuration**, because it contains ~a dozen suites that
+spawn nested drivers against a repo whose driver is mid-run.
+
 ## What is fixed, and what is not
 
-Fixed: `validate.sh` now unsets `RELAY_DRIVER_LOCKED` alongside the six names already scrubbed at
-line 7. The in-marathon gate needs no skips.
+Fixed: nothing in the harness. The scrub was reverted (see Status). The `ALLOW_PATHS` half needs no
+fix — `validate.sh` already unsets it; the finding there is that a CUSTOM gate omitting that
+prologue is silently wrong, which was observed live.
 
 Not fixed — and the reason this doc exists:
 
