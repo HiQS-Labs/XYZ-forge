@@ -9,9 +9,26 @@
 #
 #   gh419 → gh343 → gh418 → gh425
 #
-# NOT FIRED. Every lane in this plan carries "operator go" in its ROADMAP entry, which is why
-# utils/py/_marathon_plan.py:884 holds all 12 in `gated` and out of the generated waves. This
-# file is authored, preflighted and dry-run only; firing remains a separate operator decision.
+# OPERATOR GO GIVEN 2026-08-07. Previously "NOT FIRED — authored, preflighted and dry-run only";
+# every lane carries "operator go" in its ROADMAP entry, which is why utils/py/_marathon_plan.py:884
+# holds all 12 in `gated` and out of the generated waves. That gate is now released for these four.
+#
+# RE-PREFLIGHTED 2026-08-07 against `development` @ beb0a51f8 — a different base than the 08-06
+# authoring, which now carries #436 (Litmus/Accuracy-Ledger docs), #393 (GH-390 gate resource guard
+# + exit-7 timeout attribution) and #437 (GH-432 failed-turn persistence). Re-verified rather than
+# assumed, because three merges landed under this plan between authoring and firing:
+#
+#   lane   verdict            acceptance fidelity        source-url
+#   gh419  ready (exit 0)     match 8/8 verbatim         ok → issue #419
+#   gh343  ready (exit 0)     match 6/6 verbatim         ok → issue #343
+#   gh418  ready (exit 0)     match 6/6 verbatim         ok → issue #418
+#   gh425  ready (exit 0)     match 6/6 verbatim         ok → issue #425
+#
+# All four issues confirmed OPEN at re-preflight. `marathon.sh --dry-run` parses all 4 phases in
+# dependency order. No lane needed adapting: the three merged PRs touch `validate.sh` (which every
+# lane already lists) and `utils/py/*-turn.py` + `marathon_drive.py`, neither of which collides with
+# this plan's write-sets — `swarm_preflight.py`, `gate_inventory.py`, `GUIDING-PRINCIPLES.md`,
+# `skills/10days/SKILL.md`. Probe polarity was re-checked by preflight itself, not re-asserted here.
 #
 # ---------------------------------------------------------------------------------------
 # WHY FULLY SEQUENTIAL (every pair diffed against its preflight contract, nothing assumed)
