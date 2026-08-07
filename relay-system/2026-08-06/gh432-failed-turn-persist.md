@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-06.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -55,5 +55,18 @@ ROUND: 1 / 3
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Round 1 · Reviewer · agy
+swept file: yes
+
+- `[Blocker]` Early `sys.exit(5)` on 0-byte log still skips `rtl.enforce()` for `agy`, `aider`, and `pi`.
+  - `utils/py/agy-turn.py` (`if bounded_rc == 0 and (not os.path.exists...`)
+  - `utils/py/aider-turn.py` (`if bounded_rc == 0 and os.path.getsize...`)
+  - `utils/py/pi-turn.py` (`if bounded_rc == 0 and (not os.path.exists...`)
+  If the backend exits 0 but produces no output, the code prints an error and calls `sys.exit(5)`, completely bypassing the newly modified `rtl.enforce()` at the bottom. This means a 0-byte log failure still suffers from GH-432 (leaking the token and stalling the relay). **Fix:** change `sys.exit(5)` to `bounded_rc = 5` in all three files so execution falls through to `rtl.enforce()`.
+- `[Pass]` Test covers side effects without asserting exit code (`test/gh432-failed-turn-persist.sh:116` for token handoff).
+- `[Pass]` `aider` 0-byte stub prevention condition widened correctly to `"if bounded_rc != 0 and allow_paths:"` to prevent committing stubs on crash.
+
+**Verdict:** Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
