@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 149 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 87 · 🔮 0 · 🔲 0
+Summary: 150 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 87 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-432 · a failed builder turn takes the one exit that skips rtl_enforce | — | [GH-432-TURN-FAILURE-PERSIST.md](PROJECT/2-WORKING/GH-432-TURN-FAILURE-PERSIST.md) · [#432](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/432) · [#409](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409) |
 | GH-435 · XYZ's coordination model is a sequential chain, not a DAG | — | [GH-435-COORDINATION-MODEL.md](PROJECT/1-INBOX/GH-435-COORDINATION-MODEL.md) · [#435](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/435) |
 | GH-396 · Accuracy Ledger — design constraints to settle before build | — | [GH-396-ACCURACY-LEDGER.md](PROJECT/1-INBOX/GH-396-ACCURACY-LEDGER.md) · [#396](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/396) |
 | GH-343 · a target-relative gate program is checked against cwd/PATH instead of target_root, so a ready contract reports NOT-READY | — | [GH-343-GATE-PROGRAM-TARGET-ROOT.md](PROJECT/2-WORKING/GH-343-GATE-PROGRAM-TARGET-ROOT.md) · [#343](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/343) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
