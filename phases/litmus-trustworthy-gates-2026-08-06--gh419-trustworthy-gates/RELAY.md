@@ -136,3 +136,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the phase artifacts only: `GUIDING-PRINCIPLES.md` now states the witnessed-negative-control
+rule and names #351/#348; `utils/py/gate_inventory.py` discovers every registered executable gate from
+`validate.sh` and emits declared evidence or explicit `none`; `test/gh419-gate-inventory.sh` supplies
+controlled bad fixtures for the two disqualifying shapes; and `validate.sh` registers that regression.
+Evidence is a local `# gate-evidence: {…}` declaration beside a gate, never inferred from its name or a
+green run. The deliberate scope boundary is `validate.sh`'s executable gate list, excluding ordinary
+Python unit assertions. Verified: `bash test/gh419-gate-inventory.sh` passes.
