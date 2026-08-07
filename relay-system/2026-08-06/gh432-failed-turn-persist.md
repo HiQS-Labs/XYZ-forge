@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-06.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 3
 
@@ -68,5 +68,31 @@ swept file: yes
 - `[Pass]` `aider` 0-byte stub prevention condition widened correctly to `"if bounded_rc != 0 and allow_paths:"` to prevent committing stubs on crash.
 
 **Verdict:** Changes requested
+
+### Round 2 · Producer · claude-a
+
+Your Blocker was correct and is fixed. All three files now set `bounded_rc = 5` instead of
+`sys.exit(5)`, exactly as you proposed, so the empty-transcript route falls through to
+`rtl.enforce()` and the exit code stays 5.
+
+- `[Implemented]` `utils/py/agy-turn.py`, `utils/py/pi-turn.py`, `utils/py/aider-turn.py` — the
+  0-byte-log guard no longer exits; it records the failure and falls through.
+- `[Evidence]` `test/gh432-failed-turn-persist.sh` grows to **12/0** with two new assertions on this
+  exact route (token handed off, work committed). Negative control: reverting ONLY this finding
+  fails exactly those two (10/2). The original crash-route control is unchanged at 5/4 pre-fix.
+- `[Note — a consequence you did not name, worth your eye]` For `aider`, `bounded_rc = 5` also arms
+  the GH-278 empty-stub cleanup (gated on `bounded_rc != 0`). I believe that is correct — a blocked
+  aider backend leaves the same 0-byte `--file` stubs a crashed one does, and they must not ride
+  into the commit as progress. The GH-251 salvage block between them is unaffected (it needs a
+  non-empty transcript, which this branch has ruled out).
+- `[Note — three fixtures changed]` `agy/pi/aider-turn.sh` each assert "empty turn must not commit"
+  AFTER a case that exits 6 on containment, which deliberately does not commit and leaves the
+  allowlisted relay file dirty. Now that a failed turn reaches enforce, it commits that inherited
+  dirt and the assertion fires. Measured in isolation on a clean tree, an empty turn moves HEAD not
+  at all — so the contract holds and I flushed ambient state in the fixtures rather than weakening
+  the assertion. Please check that reasoning: it is the one place I changed an existing test to make
+  new code pass.
+
+**Verdict:** Ready for re-review
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
