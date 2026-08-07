@@ -151,7 +151,11 @@ fi
 if [ "$(esc_reason p4)" = "gate-killed" ]; then
   pass "a SIGXCPU kill escalates as gate-killed, not as the gate finding a defect"
 else
-  fail "expected reason gate-killed for the CPU cap, got '$(esc_reason p4)'"
+  # The reason alone cannot tell you WHY it was misclassified — the whole question is which exit
+  # status the kill arrived as, and the guard already logs it. Print it, or this failure costs a
+  # CI round-trip to say anything actionable.
+  fail "expected reason gate-killed for the CPU cap, got '$(esc_reason p4)' \
+[$(printf '%s' "$out" | /usr/bin/grep -o 'gate-guard: gate exit [-0-9]*' | tail -1)]"
 fi
 
 # COVERAGE CAVEAT for the two assertions above: a SIGXCPU kill reaches the driver in one of two
