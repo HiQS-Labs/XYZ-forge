@@ -4,7 +4,22 @@
 set -u
 
 # Clean ambient variables that might interfere with tests inside the harness.
+#
+# RELAY_DRIVER_LOCKED belongs here for a reason worth stating: this suite is the DEFAULT
+# --pre-advance-cmd for a marathon, so it routinely runs as a child of a live marathon-drive — which
+# exports RELAY_DRIVER_LOCKED=1 (marathon-drive.sh:245) as its re-entrancy guard so a nested driver
+# does not deadlock on the lock its own parent already holds. Inherited into this suite, that flag
+# tells every driver a test spawns that the lock is already held, and the tests that assert on real
+# lock-acquisition behavior then measure the parent's state instead of their own.
+#
+# Measured 2026-08-07 in the Litmus marathon, where it halted the run twice:
+#   gh284-runlog-heartbeat.sh   20/0 clean → 15/5 with RELAY_DRIVER_LOCKED=1
+#   gh331-cost-summary.sh        8/0 clean →  5/3 with RELAY_DRIVER_LOCKED=1
+# Both pass standalone every time, which is exactly why this was mistaken for flakiness first.
+# oracle-guard.sh fails the same way on an inherited ALLOW_PATHS — already unset below, and the
+# reason any custom gate that skips this line is silently wrong.
 unset ALLOW_PATHS RELAY_FILE RELAY_TASK RELAY_AGENT RELAY_PEER RELAY_WORKTREE_ISOLATION
+unset RELAY_DRIVER_LOCKED
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 TESTS=(
@@ -73,6 +88,7 @@ TESTS=(
   "gh390-gate-guard.sh"          # GH-390/GH-382 (gate resource guard: wall/CPU/RSS caps, gate-killed escalation, off switch)
   "gh390-timeout-attribution.sh" # GH-390 (exit-7 attribution: dialog vs runaway vs slow vs wedged)
   "gh432-failed-turn-persist.sh" # GH-432 (a failed turn still reaches rtl_enforce: commit + token handoff; both routes) — 12/0 post-fix, control 5/4 pre-fix
+  "gh419-gate-ambient-env.sh"    # GH-419 (this suite survives running AS a marathon's pre-advance gate: RELAY_DRIVER_LOCKED/ALLOW_PATHS scrub) — 2/0; control: drop either unset → 1/1
   "hq-marathon-live.sh"          # GH-218 (cross-repo live marathon status)
   "debug-mantra.sh"              # GH-162 (debug-mantra auto-trigger note on a phase's prior attempt)
   "lane-attempt-cap.sh"
