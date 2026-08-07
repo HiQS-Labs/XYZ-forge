@@ -1181,11 +1181,20 @@ relay-file: {rel_relay}
                 break
             time.sleep(cfg["poll_s"])
 
-        # A layer-2 kill arrives as bash's 128+SIGXCPU, never through the poll loop above — the
-        # kernel reaps the gate without consulting us. Left unmapped it would escalate as
-        # `pre-advance-failed`, i.e. as the gate having found a defect in the change, which is the
-        # single most misleading thing this guard could report. Only mapped when we set the cap.
-        if cfg["cpu_s"] > 0 and rc == 128 + signal.SIGXCPU:
+        # A layer-2 kill never comes through the poll loop above — the kernel reaps the gate without
+        # consulting us. Left unmapped it would escalate as `pre-advance-failed`, i.e. as the gate
+        # having found a defect in the change, which is the single most misleading thing this guard
+        # could report. Only mapped when we set the cap.
+        #
+        # It arrives in TWO shapes, and which one depends on the bash build, not on us:
+        #   128+SIGXCPU (152) — bash forked the gate, reaped SIGXCPU, and reported it as an exit
+        #                       status. macOS's bash 3.2 does this.
+        #   -SIGXCPU    (-24) — bash applied its last-command exec optimization, so the gate process
+        #                       IS the process we wait on and Popen reports the signal negated.
+        #                       bash 5.x (every Linux CI runner) does this.
+        # Mapping only the first is why this escalated as `pre-advance-failed` on CI while passing
+        # on macOS: same kill, different messenger.
+        if cfg["cpu_s"] > 0 and rc in (128 + signal.SIGXCPU, -signal.SIGXCPU):
             log(f"gate-guard: gate exceeded the {cfg['cpu_s']}s CPU cap (SIGXCPU)")
             rc = GATE_GUARD_KILL_EXIT
 

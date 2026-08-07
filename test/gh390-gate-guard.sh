@@ -154,6 +154,14 @@ else
   fail "expected reason gate-killed for the CPU cap, got '$(esc_reason p4)'"
 fi
 
+# COVERAGE CAVEAT for the two assertions above: a SIGXCPU kill reaches the driver in one of two
+# shapes, and which one is a property of the host's bash, not of the gate. bash 3.2 (macOS) forks
+# the gate and reports 128+SIGXCPU; bash 5.x (every Linux runner) applies its last-command exec
+# optimization, so the gate IS the waited-on process and Popen reports -SIGXCPU. This test only
+# ever observes whichever shape the host produces — which is why it passed locally on macOS while
+# CI stayed red on the -SIGXCPU shape for the whole life of PR #393. A green run HERE is not
+# evidence that the other shape is mapped; CI is the authority for that branch.
+
 # ── (5) a genuinely failing gate is still `pre-advance-failed` ───────────────────────────
 out="$(run_driver --phase-id p5 --pre-advance-cmd '/usr/bin/false' 2>&1)"; rc=$?
 if [ "$rc" -eq 5 ]; then
