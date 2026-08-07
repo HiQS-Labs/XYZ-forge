@@ -6,7 +6,8 @@ import subprocess
 import shlex
 import json
 import shutil
-from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root
+from rtl import RelayTurnLib, claim_task_or_exit, make_tick_env, resolve_tick_bin, resolve_turn_root, rtl_default_log
+from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
@@ -62,7 +63,13 @@ def main():
         prompt = drift_brief + "\n" + prompt
     tick_repo_root, tick_bin = claim_task_or_exit(root, xyz_root, f, allow_paths, t, me, "claude-turn")
     
-    claude_log = os.environ.get("CLAUDE_LOG", os.path.join(tempfile.gettempdir(), f"claude-turn-{os.getpid()}.json"))
+    # GH-161 parity (codex-turn.py and agy-turn.py already resolve through rtl_default_log):
+    # persistent transcript path by default. The 2026-07-30 rebalance-OS marathon (GH-382's
+    # panic run) lost both p5 builder transcripts to this tempdir default — the host reset
+    # mid-phase and the reboot cleared tmp, so the only record of what the builder wrote died
+    # with the machine. Stays pure JSON (the cost block is json.load-parsed below), so no rtl
+    # trace lines are pointed here — unlike the codex/agy logs, which are plain text.
+    claude_log = os.environ.get("CLAUDE_LOG") or rtl_default_log(root, "claude-turn", t)
     model = os.environ.get("CLAUDE_MODEL", "claude-sonnet-4-6")
     max_turns = os.environ.get("CLAUDE_MAX_TURNS", "12")
     max_budget = os.environ.get("CLAUDE_MAX_BUDGET", "0.50")
@@ -118,6 +125,11 @@ def main():
         "--max-budget-usd", str(max_budget)
     ]
     
+    # Sample the turn while it runs so an exit-7 timeout can be attributed to a
+    # cause. subprocess.run reaps the child before raising TimeoutExpired, so
+    # nothing can be probed after the fact — see turn_diagnostics.
+    diag = TurnDiagnostics(worktree=run_cwd)
+    diag.start()
     try:
         with open(claude_log, "w") as log_f:
             subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
@@ -127,7 +139,9 @@ def main():
         bounded_rc = e.returncode
     except Exception as e:
         bounded_rc = 5
-        
+    finally:
+        diag.stop()
+
     if shadow_dir:
         shutil.rmtree(shadow_dir, ignore_errors=True)
         
@@ -138,7 +152,11 @@ def main():
             sys.exit(6)
 
     if bounded_rc == 7:
-        print(f"claude-turn: claude -p exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
+        # Exit code stays 7 for callers; the reason names WHY, so a blocked OS
+        # dialog is never mistaken for an agent that merely needed more budget.
+        _reason, _detail = diag.classify()
+        print(f"claude-turn: claude -p exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)
+        print(f"claude-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"claude-turn: claude -p failed (exit {bounded_rc})", file=sys.stderr)
         sys.exit(5)

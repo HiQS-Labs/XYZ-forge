@@ -5,6 +5,7 @@ import tempfile
 import subprocess
 import shlex
 from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
+from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
     print(f"codex-turn: {msg}", file=sys.stderr)
@@ -91,6 +92,11 @@ def main():
     cmd = [codex_bin, "exec"] + cflags + codex_extra_flags + [prompt]
     
     bounded_rc = 0
+    # Sample the turn while it runs so an exit-7 timeout can be attributed to a
+    # cause. subprocess.run reaps the child before raising, so nothing can be
+    # probed after the fact — see turn_diagnostics.
+    diag = TurnDiagnostics(worktree=run_cwd)
+    diag.start()
     try:
         # GH-161: append (not truncate) — rtl_init already wrote its decision-trace line into codex_log
         # via the exported RTL_LOG; a truncating open here would silently wipe it (mirrors codex-turn.sh:170).
@@ -102,6 +108,8 @@ def main():
         bounded_rc = e.returncode
     except Exception as e:
         bounded_rc = 5
+    finally:
+        diag.stop()
 
     if wt:
         off_lane = rtl.worktree_end(wt)
@@ -110,7 +118,10 @@ def main():
             sys.exit(6)
 
     if bounded_rc == 7:
-        print(f"codex-turn: codex exec exceeded {turn_timeout}s wall-clock cap — killed", file=sys.stderr)
+        # Exit code stays 7 for callers; the reason names WHY.
+        _reason, _detail = diag.classify()
+        print(f"codex-turn: codex exec exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)
+        print(f"codex-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"codex-turn: codex exec failed (exit {bounded_rc})", file=sys.stderr)
         sys.exit(5)
