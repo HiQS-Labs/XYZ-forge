@@ -140,6 +140,14 @@ run_shim RELAY-TURN-space agy spacefile; rc=$?
 
 # --- (6) AGY-SPECIFIC: silent backend-blocked exit 0 + empty output -> fail (exit 5) ---
 seed_token RELAY-TURN-empty
+# GH-432: flush ambient dirty state before measuring this case. An earlier case in this file exits 6
+# on a containment violation, which deliberately does NOT commit — so it leaves the allowlisted relay
+# file dirty. Since GH-432 a failed turn reaches rtl_enforce, and enforce commits whatever allowlisted
+# content is dirty at that moment (long-standing behavior for every turn, not new). The assertion
+# below wants to know whether the EMPTY turn commits anything of its own; inherited dirt makes it
+# measure the previous case instead. Verified in isolation: on a clean tree the empty turn moves HEAD
+# not at all.
+git -C "$A" add -A >/dev/null 2>&1; git -C "$A" commit -q -m "test fixture: flush ambient dirty state" >/dev/null 2>&1
 before="$(git -C "$A" rev-parse HEAD)"
 run_shim RELAY-TURN-empty agy empty; rc=$?
 [ "$rc" -eq 5 ] && pass "empty-output-on-exit-0 (sandbox-blocked) -> shim fails (exit 5)" || fail "empty output should exit 5, got $rc"

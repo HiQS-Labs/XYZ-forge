@@ -124,12 +124,15 @@ def main():
         print(f"codex-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"codex-turn: codex exec failed (exit {bounded_rc})", file=sys.stderr)
-        sys.exit(5)
-        
+
+    # GH-432: a failed turn still reaches rtl_enforce, so its work is committed and its token handed
+    # off instead of leaking. See utils/py/claude-turn.py for the full rationale. Exit 5 is unchanged.
     rc = rtl.enforce(t, me, codex_log, "codex")
-    
+
     if bounded_rc == 7:
         sys.exit(7)
+    if bounded_rc != 0:
+        sys.exit(5)
 
     sys.exit(rc)
 

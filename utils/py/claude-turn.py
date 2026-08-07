@@ -159,11 +159,27 @@ def main():
         print(f"claude-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"claude-turn: claude -p failed (exit {bounded_rc})", file=sys.stderr)
-        sys.exit(5)
-        
+
+    # GH-432: a failed turn must still reach rtl_enforce. This branch used to `sys.exit(5)` right
+    # here, two lines above the timeout path that deliberately falls THROUGH — so the one case where
+    # persistence matters most was the one case that skipped the file-scoped commit, the allowlist
+    # containment check, the transcript archive, the GH-67 token handoff, and the drift signal, all
+    # at once. The reported symptom is all five at once: relay edit uncommitted, token still claimed
+    # by a dead agent, no path to a terminal state without a manual `tick done`.
+    #
+    # Worktree isolation is what makes the loss precise rather than partial: worktree_end() above has
+    # ALREADY copied the agent's allowlisted edits back into the real tree, so they are sitting there,
+    # correct and uncommitted, when the exit discards the only code path that would commit them.
+    #
+    # Containment is not weakened by running enforce on a failure — enforce is where containment
+    # LIVES (off-lane edits are reverted and exit 6 there, as they already were for a timeout).
     rc = rtl.enforce(t, me, claude_log, "claude")
     if bounded_rc == 7:
         sys.exit(7)
+    if bounded_rc != 0:
+        # Exit code is unchanged from before the fix: callers still see 5 for a failed turn. Only
+        # the side effects that precede it changed.
+        sys.exit(5)
 
     if os.path.exists(claude_log) and os.path.getsize(claude_log) > 0:
         try:
