@@ -36,9 +36,9 @@ goal: >
 
 ## Status
 
-Active. Root cause identified and reproduced by reading the two adjacent branches; fix is a
-control-flow correction in five files, plus a regression test that asserts the side effects rather
-than the exit code.
+| What was just completed | What's next |
+|---|---|
+| Root cause found by reading the two adjacent branches in the shim — a `sys.exit(5)` two lines above a path that deliberately falls through. Fixed in all five Python shims (exit 5 preserved), plus the GH-278 stub-cleanup widening `aider` needed to stay correct. `test/gh432-failed-turn-persist.sh` at 12/0 with a 5/4 pre-fix negative control; all five shim suites green. **The agy review filed one Blocker and it was right** — a second early exit (`exit 0` with an empty transcript) leaked identically, and that route is the more likely field encounter; fixed as proposed and **Approved** on re-review. Three pre-existing fixtures corrected: they asserted "empty turn must not commit" while inheriting a prior case's dirty tree. | PR review and merge into `development`. Then Phase 2 (criterion 4 — make a failed turn legible in the relay record, not only on stdout), which is not in this branch. |
 
 ## The defect
 
