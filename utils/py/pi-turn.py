@@ -146,7 +146,9 @@ def main():
 
     if bounded_rc == 0 and (not os.path.exists(pi_log) or os.path.getsize(pi_log) == 0):
         print("pi-turn: pi exited 0 but produced NO output — likely a blocked/misconfigured backend. Failing the turn.", file=sys.stderr)
-        sys.exit(5)
+        # GH-432 (agy review): set the failure instead of exiting on it, so this route to a failed
+        # turn reaches rtl_enforce like the crash route does. See utils/py/agy-turn.py.
+        bounded_rc = 5
 
     # GH-432: a failed turn still reaches rtl_enforce, so its work is committed and its token handed
     # off instead of leaking. See utils/py/claude-turn.py for the full rationale. Exit 5 is unchanged.

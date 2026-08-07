@@ -196,7 +196,15 @@ def main():
 
     if bounded_rc == 0 and os.path.getsize(aider_log) == 0:
         print("aider-turn: aider exited 0 but produced NO output — likely a blocked/misconfigured backend. Failing the turn.", file=sys.stderr)
-        sys.exit(5)
+        # GH-432 (agy review): set the failure instead of exiting on it, so this route to a failed
+        # turn reaches rtl_enforce like the crash route does. See utils/py/agy-turn.py.
+        #
+        # Deliberate secondary effect here: it also arms the GH-278 empty-stub cleanup below, which
+        # is gated on `bounded_rc != 0`. That is correct — a blocked aider backend leaves the same
+        # 0-byte --file stubs a crashed one does, and they must not ride into the commit as progress.
+        # The GH-251 salvage block between the two is unaffected: it needs a NON-empty transcript,
+        # which this branch has already ruled out.
+        bounded_rc = 5
         
     # GH-251 transcript-salvage backstop. On a REVIEW-ONLY turn (ALLOW_PATHS empty), if the relay file
     # is byte-unchanged after the turn but the transcript carries a graded review (a `Verdict:` anchor),

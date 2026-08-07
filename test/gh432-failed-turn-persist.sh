@@ -130,5 +130,51 @@ else
   pass "off-lane edit not committed (left on disk for inspection; the commit is the gate)"
 fi
 
+# --- (5) the SECOND route to a failed turn: exit 0 with an empty transcript ----------------
+# Found by the agy review of the first fix. `agy`, `pi` and `aider` each carry a third early exit —
+# the "backend exited 0 but produced NO output" guard — which is the harness DECLARING the turn
+# failed and which leaked exactly what the crash path leaked, just by a different route. Fixing only
+# the crash path would have left a blocked backend still stalling the relay, which is the single most
+# likely way this failure is actually met in the field (a sandboxed agy run does exactly this).
+AGY_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
+AGY_STUB="$WORK/agy"
+cat >"$AGY_STUB" <<'AGY_EOF'
+#!/usr/bin/env bash
+set -u
+[ "${1:-}" = whoami ] && { printf 'agy@example.test\n'; exit 0; }
+[ "${1:-}" = models ] && { printf 'Gemini 3.5 Flash\n'; exit 0; }
+# Do the turn's work, then produce NO stdout at all — the shim's transcript is what stays empty.
+# The relay edit is what makes "did enforce run?" observable as a commit rather than only as a
+# token state; a real blocked backend writes nothing anywhere, and the token assertion covers that.
+printf '\n### Round 1 · Builder · %s (agy-stub)\nwork completed, transcript swallowed\n' "$RELAY_AGENT" >>"$RELAY_FILE"
+exit 0
+AGY_EOF
+chmod +x "$AGY_STUB"
+
+tick_a log task.created RELAY-GH432-empty --agent claude-a >/dev/null
+tick_a claim RELAY-GH432-empty --agent claude-a --paths "z/**" >/dev/null
+tick_a release RELAY-GH432-empty --agent claude-a --to agy-builder >/dev/null
+before4="$(git -C "$A" rev-parse HEAD)"
+emptylog="$WORK/agy-empty.log"; : >"$emptylog"
+RELAY_AGENT=agy-builder RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-GH432-empty AGY_AGENT=agy-builder \
+RELAY_PEER=claude-reviewer AGY_BIN="$AGY_STUB" AGY_TURN_ROOT="$A" AGY_LOG="$emptylog" \
+bash "$AGY_SHIM" >/dev/null 2>&1; rc4=$?
+
+[ "$rc4" -eq 5 ] \
+  && pass "an exit-0-but-empty-transcript turn still fails the turn (exit 5)" \
+  || fail "expected exit 5 from the empty-transcript guard, got $rc4"
+info4="$(TICK_REPO_ROOT="$A" "$TICK" info RELAY-GH432-empty 2>/dev/null || true)"
+handoff4="$(printf '%s\n' "$info4" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -n1)"
+if [ "$handoff4" = "claude-reviewer" ]; then
+  pass "the empty-transcript turn handed its token off too (second route closed)"
+else
+  fail "GH-432: empty-transcript turn leaked its token (handoff-to='$handoff4') — the second early exit still skips enforce"
+fi
+if [ "$(git -C "$A" rev-parse HEAD)" != "$before4" ]; then
+  pass "the empty-transcript turn's work reached a commit"
+else
+  fail "GH-432: empty-transcript turn committed nothing — enforce was skipped"
+fi
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

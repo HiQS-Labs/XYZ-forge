@@ -83,6 +83,23 @@ Affected files, all with the identical `sys.exit(5)`-before-`enforce` shape:
 - `utils/py/pi-turn.py:146`
 - `utils/py/aider-turn.py:196`
 
+### The second route (found by the agy review, not by me)
+
+The agy review of the first fix filed one Blocker, and it was right: three shims carry a **third**
+early exit with the same defect — the "backend exited 0 but produced NO output" guard in
+`agy-turn.py`, `pi-turn.py`, and `aider-turn.py`. That branch is the harness DECLARING the turn
+failed, so it leaked exactly what the crash path leaked, just by a different route.
+
+This route matters more than the one that was reported. A sandboxed `agy` run does precisely this —
+exit 0, empty transcript — so the most likely way this defect is met in the field was the route the
+first fix left open. Corrected as agy proposed: `sys.exit(5)` → `bounded_rc = 5`, so the existing
+fall-through handles it and the exit code is still 5.
+
+For `aider` that assignment also arms the GH-278 empty-stub cleanup (gated on `bounded_rc != 0`),
+which is correct — a blocked aider backend leaves the same 0-byte `--file` stubs a crashed one does.
+The GH-251 salvage block between them is unaffected: it requires a non-empty transcript, which this
+branch has already ruled out.
+
 ## Why it matters
 
 A crashed turn is the case where persistence matters MOST, and it is the only case where the
