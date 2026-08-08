@@ -167,3 +167,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   non-executable and `validate.sh` invokes them as `bash "$HERE/test/$t"`. Verified with the matching
   invocation: `bash test/gh418-issue-state-frozen.sh` → 8 pass, 0 fail. The full gate was not run per
   the phase containment rule.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The GH-418 implementation looks great and correctly satisfies the brief.
+However, during my whole-file review, I found a pre-existing defect in `expand_effective_artifacts`. Its inner `read(rel_path)` helper uses `with open(..., "r") as f: return f.read()` but only catches `OSError`. Since it traverses the entire `test/` directory looking for inferred tests, any binary file (e.g. test fixtures, images) will raise a `UnicodeDecodeError` and crash the entire preflight script. 
+
+Please update `read(rel_path)` in `expand_effective_artifacts` to catch `(OSError, UnicodeError)` just like your new `find_frozen_artifacts` helper does, or specify `errors="ignore"` on the open call. 
+
+**Verdict:** Changes requested
+
+handing off to codex — codex, take your turn
