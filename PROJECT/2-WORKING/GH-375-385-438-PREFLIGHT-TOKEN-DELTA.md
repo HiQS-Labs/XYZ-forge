@@ -17,7 +17,7 @@ goal: >
 complexity: 2
 risk: 2
 effort: 2
-phases: 1
+phases: 2
 ratings_provisional: true
 related:
   - "#419 — the class, and this release's theme. A check that cannot fail is not evidence."
@@ -26,9 +26,10 @@ related:
   - "#116 — allocates the --retry suffixed tokens GH-385 is unable to see."
   - "#207 — the already-satisfied recovery path GH-438's delta check feeds."
 non_goals: >
-  Re-evaluating a lane's acceptance criteria after the build (GH-438's second defect), changing the
-  builder's "Do NOT run git" scope rule, and the --round-cap default. Each is a design decision
-  rather than a bug fix; see Deliberately not done.
+  Out of scope for PHASE 1 (what ships in #458): post-build acceptance re-evaluation, which is now
+  specified as GH-438 Phase 2 below and stays on #438 rather than becoming a new issue; widening the
+  builder's "Do NOT run git" scope rule, which Phase 2 deliberately does not solve either; and the
+  --round-cap default, which belongs to no issue here. See "GH-438 Phase 2" and "Deliberately not done".
 ---
 
 # GH-375 / GH-385 / GH-438
@@ -37,7 +38,7 @@ non_goals: >
 
 | What was just completed | What's next |
 |---|---|
-| GH-375 and GH-385 fixed and tested; GH-438's removal-delta half fixed and tested, with its uncovered half stated in the test file itself | Operator decision on GH-438's fix_probe re-evaluation — it needs the driver to know about acceptance criteria, which today it does not at all |
+| GH-375 and GH-385 fixed and tested. GH-438 Phase 1 (removal counts as a phase delta) fixed and tested, with its uncovered half stated in the test file itself | GH-438 **Phase 2** — post-build acceptance re-evaluation, specified below with its six open design decisions. Tracked on #438 as a direct successor, not a new issue. Settle decisions 1-3 before building |
 
 ## Quad Concepts
 
@@ -91,6 +92,78 @@ exit 0, and the tracked file still tracked. The contract carried a perfect detec
 it means teaching `marathon_drive.py` about acceptance criteria, which it contains no reference to
 today, and answering where the contract comes from, what happens when it is absent, and whether a
 still-`unfixed` probe fails the phase or escalates. That is a design decision, not a bug fix.
+
+## GH-438 Phase 2 — post-build acceptance re-evaluation (NOT STARTED)
+
+Direct successor to Phase 1 above, tracked on **#438** rather than a new issue: it is the second of
+the two compounding defects that issue reports, and closing #438 requires it.
+
+**The defect.** `swarm-preflight` REQUIRES every `fix_probe` to read `unfixed` before a run — that is
+the readiness check. After the phase completes, nothing re-reads them. `marathon_drive.py` contains no
+reference to acceptance criteria at all. On the reported lane the contract carried a perfect detector,
+`git ls-files --error-unmatch .mcp.json`, which read `unfixed` before the run and **still read
+`unfixed` after**, while the phase reported `STATUS: Approved, gate passed` and exited 0. The harness
+had the exact signal and never looked at it. Frequency 2/2 on the same lane.
+
+Phase 1 made a *removal* count as progress. It did not make an *unmet acceptance criterion* fail a
+phase, and those are different things: a lane can now register a delta and still not have done what it
+was asked to do.
+
+**Why this is the dangerous half.** A runner that reports success while having changed nothing is the
+worst failure shape available to an autonomous system — worse than halting, because the operator's
+own exit code says everything is fine. It was caught only because acceptance was re-verified by hand.
+
+### Reuse, not reimplementation
+
+`utils/py/swarm_preflight.py` already parses and executes the probe types — `path_absent`,
+`grep_present`, `grep_absent`, `command` (`:151-170`), with contract validation at `:90-91` and the
+`artifacts_new`/`path_absent` pairing rule at `:1122-1124`. Phase 2 should extract and call that
+evaluator, not grow a second one. GH-191's ATE generalization is the adjacent precedent for "do not
+build a second execution engine".
+
+### Open design decisions — settle these BEFORE building
+
+1. **Where does the contract come from at drive time?** Preflight packets are gitignored, so the
+   driver cannot assume one on disk. Candidates: re-derive from the phase brief (`--phase-brief` is
+   already passed and already carries the acceptance block), accept an explicit `--acceptance-contract`
+   path, or read it from the marathon plan entry. Re-deriving from the brief is the only option that
+   needs no new plumbing at the call sites, and the brief is already the contract's source of truth.
+2. **What happens when there is no contract?** Most lanes have no `fix_probes`. The default must be
+   "no probes → unchanged behavior", or this breaks every existing lane on the first run. That means
+   the check is opt-in by the contract's presence, which is also how `--requires-test` behaves today.
+3. **What does a still-`unfixed` probe do?** Options: fail the phase like a gate failure, escalate
+   with an `ESCALATION.md` reason, or report advisory-only. Escalation matches the existing shape
+   (`escalate()` already writes the record and the driver already has a `pre-advance-failed` reason
+   code) and preserves evidence. **Advisory-only would reproduce the bug** — a signal nobody acts on
+   is what #438 is about, so it is not an acceptable landing state even as a first step.
+4. **Where in the sequence?** After relay approval and alongside the pre-advance gate. A probe
+   evaluated before the builder's work is committed would read the wrong tree.
+5. **`--dry-run` and the frozen twin.** Must not execute probes on a dry run (GH-401), and
+   `relay-automation/marathon-drive.sh` is a GH-308 frozen twin, so this is Python-lane only.
+6. **Probe execution is untrusted input.** `command` probes come from a document. They must run
+   through the same fixed-argv discipline the harness already applies rather than a shell string.
+
+### The other half of #438, still unaddressed
+
+The builder is told `Do NOT run git`, so a lane whose entire deliverable is `git rm --cached`,
+`git update-index --chmod`, or `git mv` has no sanctioned way to act. Phase 2 makes that lane *fail
+honestly* instead of passing silently, which is the urgent part — but it does not make it
+*completable*. A follow-on needs either a per-lane opt-in that widens the builder's git scope, or a
+harness-executed post-build index step the builder can request. Worth deciding only after Phase 2,
+because an honest failure is already a large improvement over a false success.
+
+### Acceptance criteria for Phase 2
+
+1. A phase whose contract carries a `fix_probe` still reading `unfixed` after the build does NOT
+   report success — it escalates, with the failing probe named in the record.
+2. A phase whose probes all read `fixed` completes exactly as today.
+3. A phase with no contract and no probes behaves byte-identically to today (the regression risk).
+4. `--dry-run` executes no probes.
+5. The evaluator is the one in `swarm_preflight.py`, called — not a second copy.
+6. **Negative control, mandatory:** a test proving the check FAILS a lane that did nothing, run
+   against the pre-fix tree. The failure mode of this whole phase is a check that always passes,
+   which is the defect it exists to remove. The reported lane itself is the natural fixture:
+   `git ls-files --error-unmatch <tracked file>` over a lane that only edited `.gitignore`.
 
 ## Deliberately not done
 
