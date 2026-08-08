@@ -276,6 +276,12 @@ def normalize(e):
         "readiness": {
             "ready": e.get("SP_READY") == "1",
             "next_action": e.get("SP_NEXT") or None,
+            # GH-418: issue state is advisory, but it must be visible in every candidate so a
+            # closed issue cannot be mistaken for a fully-green, still-current instruction.
+            "issue_state": e.get("SP_ISSUE_STATE") or {
+                "status": "unknown", "closed_at": None, "detail": "not evaluated"
+            },
+            "frozen_artifacts": e.get("SP_FROZEN_ARTIFACTS") or [],
             # GH-400: recorded on every run, including "unknown" — a fidelity claim the packet cannot
             # substantiate must be visibly absent rather than quietly assumed.
             "acceptance_fidelity": e.get("SP_ACC_FIDELITY") or {"status": "unknown", "detail": "not evaluated"},
@@ -359,9 +365,9 @@ def expand_effective_artifacts(root, contract):
 
     def read(rel_path):
         try:
-            with open(os.path.join(root, rel_path), "r") as f:
+            with open(os.path.join(root, rel_path), "r", encoding="utf-8") as f:
                 return f.read()
-        except OSError:
+        except (OSError, UnicodeError):
             return ""
 
     for rel_path in declared:
@@ -563,22 +569,78 @@ def extract_declared_deviations(text):
             out[kind].append((normalize_criterion(body), reason))
     return out
 
-def fetch_issue_body(issue_number, cwd):
-    """Issue body via `gh`, or None when it cannot be reached.
+def fetch_issue_details(issue_number, cwd):
+    """Issue body and state via the one `gh` call, or unknown when it cannot be reached.
 
     Preflight has otherwise been local-transport only, so this is the first body-fetch on the path
-    and it degrades rather than blocking: an unreachable network is not evidence of drift.
+    and it degrades rather than blocking: an unreachable network is not evidence of drift.  Keep a
+    non-JSON body fallback for the older hermetic `gh` stubs used by the fidelity tests.
     """
+    unknown = {"body": None, "status": "unknown", "closed_at": None,
+               "detail": "could not fetch issue state (gh missing, unauthenticated, or offline)"}
+    if not issue_number:
+        unknown["detail"] = "capture doc has no gh_issue — issue state cannot be determined"
+        return unknown
     if not shutil.which("gh"):
-        return None
+        return unknown
     try:
-        r = subprocess.run(["gh", "issue", "view", str(issue_number), "--json", "body", "-q", ".body"],
+        r = subprocess.run(["gh", "issue", "view", str(issue_number), "--json", "body,state,closedAt"],
                            cwd=cwd, capture_output=True, text=True, timeout=45)
     except Exception:
-        return None
+        return unknown
     if r.returncode != 0:
-        return None
-    return r.stdout
+        return unknown
+    try:
+        raw = json.loads(r.stdout)
+    except (TypeError, ValueError):
+        # Backwards-compatible degradation for simple body-only test doubles.  The body is still
+        # useful to GH-400; only the newly requested state remains honestly unknown.
+        unknown["body"] = r.stdout
+        return unknown
+    if not isinstance(raw, dict):
+        return unknown
+    state = str(raw.get("state") or "unknown").upper()
+    if state not in ("OPEN", "CLOSED"):
+        state = "unknown"
+    closed_at = raw.get("closedAt") if state == "CLOSED" else None
+    detail = (f"issue #{issue_number} is CLOSED"
+              + (f" since {closed_at}" if closed_at else " (closed time unavailable)")
+              if state == "CLOSED" else
+              f"issue #{issue_number} is OPEN" if state == "OPEN" else
+              f"issue #{issue_number} state was unavailable")
+    return {"body": raw.get("body"), "status": state, "closed_at": closed_at, "detail": detail}
+
+
+def fetch_issue_body(issue_number, cwd):
+    """Compatibility wrapper for GH-400's body-only checker."""
+    return fetch_issue_details(issue_number, cwd)["body"]
+
+
+FROZEN_BANNER_RE = re.compile(r'^\s*(?:#|//|<!--)\s*FROZEN\s*\(GH-308\):', re.IGNORECASE | re.MULTILINE)
+FROZEN_TWIN_RE = re.compile(r'\bupdate\s+([^\s`]+)\s+instead\b', re.IGNORECASE)
+
+
+def find_frozen_artifacts(root, artifacts):
+    """Return declared artifacts carrying the on-disk GH-308 banner and their Python twins."""
+    frozen = []
+    for rel_path in artifacts:
+        rel_path = str(rel_path or "").strip()
+        if not rel_path:
+            continue
+        try:
+            with open(os.path.join(root, rel_path), "r", encoding="utf-8") as f:
+                # The GH-308 banner is conventionally at the top of a frozen twin, but the
+                # contract is about the banner's presence on disk, not its byte offset.  A scan
+                # cap would let a valid banner added below a long header silently evade the gate.
+                text = f.read()
+        except (OSError, UnicodeError):
+            continue
+        if not FROZEN_BANNER_RE.search(text):
+            continue
+        twin = FROZEN_TWIN_RE.search(text)
+        frozen.append({"path": rel_path,
+                       "authoritative_twin": twin.group(1) if twin else "its authoritative Python twin"})
+    return frozen
 
 # ── GH-399: the packet's acceptance block must be a LOSSLESS copy of the capture doc's ────────────
 # The packet is the only statement of the job the builder reads, and the reviewer reads the same
@@ -672,7 +734,7 @@ def repo_slug_for(cwd):
     m = re.search(r'(?:github\.com[:/])([^/]+/[^/]+?)(?:\.git)?$', url)
     return m.group(1) if m else None
 
-def check_acceptance_fidelity(doc_path, issue_number, cwd):
+def check_acceptance_fidelity(doc_path, issue_number, cwd, issue_details=None):
     """Compare a capture doc's acceptance block against its source issue's.
 
     status:
@@ -693,7 +755,7 @@ def check_acceptance_fidelity(doc_path, issue_number, cwd):
         res["detail"] = f"capture doc unreadable: {doc_path}"
         return res
 
-    body = fetch_issue_body(issue_number, cwd)
+    body = (issue_details or fetch_issue_details(issue_number, cwd)).get("body")
     if body is None:
         res["detail"] = (f"could not fetch issue #{issue_number} (gh missing, unauthenticated, or "
                          "offline) — acceptance fidelity NOT verified")
@@ -814,8 +876,8 @@ def doc_frontmatter_issue(doc_path):
 
 ISSUE_URL_RE = re.compile(r'https?://github\.com/([^/\s]+/[^/\s]+?)/issues/(\d+)')
 
-def check_source_url(doc_path, issue_number):
-    """GH-400 criterion 2: a capture doc naming a `gh_issue` must carry that issue's URL.
+def check_source_url(doc_path, issue_number, tracking_slug=None):
+    """GH-400/GH-425: a capture doc's `source:` must identify its tracking issue.
 
     Until now this was an instruction in `skills/10days/SKILL.md` and nothing more — the field was
     never read by any gate, so `source: issue#400`, or no `source` at all, passed everything. That
@@ -826,9 +888,10 @@ def check_source_url(doc_path, issue_number):
     it has no offline-degradation case. The only pass-through is having no `gh_issue` to point at.
 
     status:
-      ok             — a GitHub issue URL whose number matches `gh_issue`
+      ok             — a GitHub issue URL whose number and repository match the tracking issue
       missing        — no `source:`, or one carrying no GitHub issue URL
       mismatch       — a GitHub issue URL pointing at a DIFFERENT issue than `gh_issue`
+      wrong-repository — the URL names a repository other than the target repository
       not-applicable — the doc names no `gh_issue`, so there is nothing to point at
       unknown        — the doc could not be read
     Only `ok` and `not-applicable` pass.
@@ -859,10 +922,22 @@ def check_source_url(doc_path, issue_number):
         return res
 
     res["slug"], res["url"] = u.group(1), u.group(0)
-    if u.group(2) != str(issue_number):
+    number_matches = u.group(2) == str(issue_number)
+    slug_matches = not tracking_slug or res["slug"].casefold() == tracking_slug.casefold()
+    if not slug_matches:
+        res["status"] = "wrong-repository"
+        number_note = "the same issue number" if number_matches else f"issue #{u.group(2)}"
+        res["detail"] = (
+            f"source: points at repository {res['slug']} ({number_note}), but tracking issue "
+            f"#{issue_number} belongs to {tracking_slug} — `source:` must cite the tracking "
+            "repository; preserve any cross-repo origin under `related:`")
+        return res
+
+    if not number_matches:
         res["status"] = "mismatch"
         res["detail"] = (f"source: points at issue #{u.group(2)} but frontmatter declares "
-                         f"gh_issue: {issue_number} — the doc cites provenance it does not have")
+                         f"gh_issue: {issue_number} — the tracking repository is right, but the "
+                         "tracking issue number is wrong")
         return res
 
     res["status"] = "ok"
@@ -1085,6 +1160,10 @@ def main():
         if not os.path.exists(os.path.join(ref_wt, a)):
             gh39_art_missing = a
             break
+
+    # GH-418: this reads the actual artifact at target.ref, not a hand-maintained inventory.  A
+    # newly frozen twin is therefore refused as soon as its own banner lands.
+    frozen_artifacts = find_frozen_artifacts(ref_wt, merged.get("artifacts", []))
             
     try: subprocess.check_call(["git", "-C", target_root, "worktree", "remove", "--force", ref_wt], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except: shutil.rmtree(ref_wt, ignore_errors=True)
@@ -1171,17 +1250,27 @@ def main():
     if ready == 1 and gh39_art_missing:
         ready, ready_next = 0, f"artifact path not found at target.ref: {gh39_art_missing} — fix the contract artifacts[] or push the file"
 
+    if ready == 1 and frozen_artifacts:
+        frozen = frozen_artifacts[0]
+        ready, ready_next = 0, (
+            f"artifact is FROZEN by GH-308: {frozen['path']} — make behavior changes in "
+            f"{frozen['authoritative_twin']} instead")
+
     # GH-400: the packet's definition of done is the capture doc's checklist, which a model wrote by
     # summarising the issue. Refuse to emit one whose acceptance criteria have drifted from the
     # source of truth without a declared reason — nothing downstream can catch it, because neither
     # the builder nor the reviewer ever sees the issue.
     acc_issue = source_issues[0] if source_issues else doc_frontmatter_issue(primary_doc)
-    acc_fidelity = check_acceptance_fidelity(primary_doc, acc_issue, target_root)
+    # GH-418: issue body, state, and close time come from one request.  A missing/offline `gh`
+    # leaves a conspicuous `unknown` record but never blocks a lane.
+    issue_state = fetch_issue_details(acc_issue, target_root)
+    acc_fidelity = check_acceptance_fidelity(primary_doc, acc_issue, target_root, issue_state)
 
     # GH-400 criterion 2: the doc must carry the URL of the issue it claims to implement, so the
     # two can be diffed in one step. Shipped as prose in the skill and enforced nowhere, which left
     # GH-400's own fix resting on an unverified model output — the exact shape GH-400 is about.
-    src_url = check_source_url(primary_doc, doc_frontmatter_issue(primary_doc) or acc_issue)
+    target_slug = repo_slug_for(target_root)
+    src_url = check_source_url(primary_doc, doc_frontmatter_issue(primary_doc) or acc_issue, target_slug)
 
     # GH-399: build the packet's checklist HERE, before the verdict, so a lossy copy blocks the run
     # instead of being discovered by whoever reads the packet. Rendering still happens below.
@@ -1202,15 +1291,25 @@ def main():
             f"acceptance criteria diverge from issue #{acc_fidelity['issue']} — {acc_fidelity['detail']}. "
             "Copy the issue's '## Acceptance' block verbatim, or declare each deviation under "
             "'## Acceptance — deviations from the issue' as `- [dropped|changed|added] <text> — reason: <why>'")
-    if ready == 1 and src_url["status"] in ("missing", "mismatch"):
+    if ready == 1 and src_url["status"] in ("missing", "mismatch", "wrong-repository"):
+        expected_source = (f"https://github.com/{target_slug}/issues/{src_url['issue']}"
+                           if target_slug else
+                           f"https://github.com/<owner>/<repo>/issues/{src_url['issue']}")
+        if src_url["status"] == "wrong-repository":
+            source_remediation = (
+                f"Set `source: {expected_source}` for the tracking issue, then move the foreign "
+                "issue URL into `related:` so its provenance is retained (GH-425).")
+        elif src_url["status"] == "mismatch":
+            source_remediation = (
+                f"Set `source: {expected_source}` — the repository is correct but the issue number "
+                "must match `gh_issue` (GH-400).")
+        else:
+            source_remediation = (
+                f"Set `source: {expected_source}` in the doc's frontmatter (GH-400), or run "
+                f"`python3 utils/py/backfill_source_url.py --apply` to fix every affected doc at once.")
         ready, ready_next = 0, (
             f"capture doc source URL {src_url['status']} — {src_url['detail']}. "
-            # GH-422: resolve owner/repo from the TARGET's origin rather than printing a placeholder.
-            # The harness knows this value; making an operator look it up once per doc is how a
-            # one-line fix turns into an afternoon in a repo with a dozen affected capture docs.
-            f"Set `source: https://github.com/{repo_slug_for(target_root) or '<owner>/<repo>'}"
-            f"/issues/{src_url['issue']}` in the doc's frontmatter (GH-400), or run "
-            f"`python3 utils/py/backfill_source_url.py --apply` to fix every affected doc at once. "
+            f"{source_remediation} "
             "This is local-only: it never needs the network, so there is no "
             "offline case in which it is safe to skip.")
         
@@ -1224,12 +1323,24 @@ def main():
                     if not t.startswith("-"):
                         script = t
                         break
-                if not script or not os.path.isfile(os.path.join(target_root, script)):
-                    ready, ready_next = 0, f"gate script not found at target.ref: {script or '<none>'}"
+                script_path = os.path.join(target_root, script) if script else ""
+                if not script or not os.path.isfile(script_path):
+                    ready, ready_next = 0, (
+                        f"gate script not found under target_root {target_root}: {script or '<none>'}")
             # GH-308 port: any non-bash/sh gate program must resolve on PATH (swarm-preflight.sh:774).
             # Python exempted node/npm/python3, so a contract whose gate runner (e.g. `npm test`) is NOT
             # installed was emitted as marathon-ready (exit 0) instead of refused NOT-READY (exit 5) on
             # the live lane. `elif` mirrors the Bash structure (a bash/sh gate is not also PATH-checked).
+            elif os.path.sep in g0 or (os.path.altsep and os.path.altsep in g0):
+                # A direct program path is executed with cwd=target_root by marathon-drive.  Checking it
+                # with shutil.which() instead makes a target-relative path depend on the operator's cwd.
+                program_path = os.path.join(target_root, g0)
+                if not os.path.isfile(program_path):
+                    ready, ready_next = 0, (
+                        f"gate program not found under target_root {target_root}: {g0}")
+                elif not os.access(program_path, os.X_OK):
+                    ready, ready_next = 0, (
+                        f"gate program is not executable under target_root {target_root}: {g0}")
             elif not shutil.which(g0):
                 ready, ready_next = 0, f"command '{g0}' not found in PATH"
                     
@@ -1269,6 +1380,8 @@ def main():
         "SP_CHECKOUT_MATCHES_REF": "1" if checkout_matches_ref else "0",
         "SP_READY": "1" if ready else "0",
         "SP_NEXT": ready_next,
+        "SP_ISSUE_STATE": {k: issue_state[k] for k in ("status", "closed_at", "detail")},
+        "SP_FROZEN_ARTIFACTS": frozen_artifacts,
         "SP_ACC_FIDELITY": acc_fidelity,
         "SP_SRC_URL": src_url,
         "SP_ACC_INLINE": {"criteria": len(acc_items), "scope": acc_mode,
@@ -1314,6 +1427,9 @@ def main():
              f"{f', {acc_dropped} over the 25-item cap (reported in the packet)' if acc_dropped else ''}")
         emit(f"  source-url  : {src_url['status']} — {src_url['detail']}")
         emit(f"  acceptance  : {acc_fidelity['status']} — {acc_fidelity['detail']}")
+        emit(f"  issue-state : {issue_state['status']} — {issue_state['detail']}")
+        for frozen in frozen_artifacts:
+            emit(f"  FROZEN      : {frozen['path']} — authoritative twin: {frozen['authoritative_twin']}")
         for line in acceptance_fidelity_report(acc_fidelity):
             emit(line)
         emit(f"  readiness   : ready={ready}{f' — next: {ready_next}' if ready_next else ''}")
@@ -1373,6 +1489,15 @@ def main():
         acc_provenance_line = (f"*NOT verified against the source issue — {acc_fidelity['detail']}. "
                                "Treat this list as a summary, not a contract: if anything here is "
                                "ambiguous, read the issue before building.*")
+
+    if issue_state["status"] == "CLOSED":
+        issue_state_packet_line = (f"- **Source issue state: CLOSED** — {issue_state['detail']}. "
+                                   "This is advisory: confirm the follow-up is still intended before building.")
+    elif issue_state["status"] == "OPEN":
+        issue_state_packet_line = "- Source issue state: OPEN."
+    else:
+        issue_state_packet_line = ("- **Source issue state: unknown** — preflight could not determine it; "
+                                   "this does not block the lane.")
     
     gh39_art_loc = 0
     for a in merged.get("artifacts", []):
@@ -1403,6 +1528,7 @@ def main():
 - Target root: {target_root} ({branch} @ {commit[:9]})
 - Suggested branch: `{suggested_branch}` (branch_ready={br_ready_str}{br_prompt_str})
 - Verdict: {verdict}
+- {issue_state_packet_line[2:]}
 - Gate: `{gate_cmd}`
 {gh108_gate_caveat}
 - Artifacts: {art_csv}

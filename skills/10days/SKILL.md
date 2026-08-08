@@ -219,8 +219,8 @@ For each `INCLUDE` verdict:
 - **No doc exists**: author `PROJECT/2-WORKING/GH-<N>-<slug>.md` using this repo's
   standard capture-doc frontmatter (`gh_issue`, `source`, `title`, `status`, `created`,
   `updated`, `owner`, `doc_type`, `complexity`/`risk`/`effort` with
-  `ratings_provisional: true`, `goal`), where **`source` is the full issue URL** so a reader
-  can diff the doc against its origin in one step. Give it an `## Acceptance` section copied
+  `ratings_provisional: true`, `goal`), where **`source` is the full tracking-issue URL** so a
+  reader can diff the doc against the issue it claims to implement in one step. Give it an `## Acceptance` section copied
   verbatim from the issue's, plus a best-effort contract:
 
   ```
@@ -235,6 +235,22 @@ For each `INCLUDE` verdict:
     "lanes":       { "agy_safe": [], "orchestrator_only": [ /* kernel/.tick paths, if any */ ] }
   }
   ```
+
+  **`source:` is always the tracking issue (GH-425).** It must name this repository and the
+  `gh_issue` number, not merely an issue with the same number in another repository. When an
+  issue originated elsewhere, retain that URL under the established free-text `related:` field
+  instead; do not delete it or put it in `source:`. For example:
+
+  ```yaml
+  gh_issue: 94
+  source: https://github.com/Acme/tracking-repo/issues/94
+  related:
+    - "https://github.com/Upstream/origin-repo/issues/2 — originating issue"
+  ```
+
+  Preflight validates `source:` against the target repository and tracking issue. `related:`
+  remains context rather than a new linted schema: it preserves the cross-repo provenance while
+  keeping the gate's tracking-issue check deterministic.
 
   For a `runtime:bash`-labeled issue, set the gate to `"XYZ_PYTHON=0 bash validate.sh"` so the
   lane verifies against the Bash path the bug actually lives on, not the Python default (again, a

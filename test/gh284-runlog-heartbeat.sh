@@ -2,6 +2,15 @@
 # GH-284 Phase 2: file-based driver liveness and opt-in, non-fatal GitHub run-log.
 source "$(dirname "$0")/_setup.sh" gh284-runlog-heartbeat
 
+# GH-441 — hermetic against an ambient driver, same reason as test/driver-lock.sh:11. This suite
+# drives marathon-drive against its own throwaway repo ($A) and asserts on what THAT driver does.
+# When validate.sh runs as a live marathon's --pre-advance-cmd it inherits RELAY_DRIVER_LOCKED=1
+# (exported by marathon-drive.sh:245 so a nested driver doesn't deadlock on its parent's lock), and
+# the drivers spawned below would then skip the heartbeat/run-log block entirely — the very logic
+# under test — reporting the PARENT's state instead of their own. Measured on 2026-08-07: inherited
+# → 15 pass / 5 fail; unset → clean. $A is isolated, so unsetting cannot collide with a real lock.
+unset RELAY_DRIVER_LOCKED
+
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 LIB="$ROOT/relay-automation/relay-turn-lib.sh"
 DRIVER="$ROOT/relay-automation/marathon-drive.sh"
@@ -96,7 +105,13 @@ printf '%s\n' "$WITH_LOG_OUT" | grep -q 'local telemetry only' \
 [ ! -e "$A/.tick/driver-heartbeat.json" ] \
   && pass "driver exit clears its heartbeat file" \
   || fail "driver exit left a heartbeat file"
-XYZ_PYTHON=0 bash "$DRIVER" --help | grep -q -- '--log-github' \
+# GH-441: MARATHON_ROOT="$A" keeps this hermetic. This assertion reads HELP TEXT, but the driver's
+# lock block (marathon-drive.sh:189) runs long before --help is parsed (:664), so without a root of
+# its own it contends for the ambient repo's lock and prints the lock-contention notice instead of
+# the help — failing here for a reason that has nothing to do with --log-github. That ordering is
+# itself a defect (--help should never need the lock); it is filed separately, not worked around
+# by weakening this assertion.
+MARATHON_ROOT="$A" XYZ_PYTHON=0 bash "$DRIVER" --help | grep -q -- '--log-github' \
   && pass "--log-github is exposed as an explicit opt-in" \
   || fail "--log-github missing from help"
 

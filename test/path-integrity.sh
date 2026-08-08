@@ -96,7 +96,18 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # a file in THAT repo. Paraphrasing it to satisfy this check would defeat the fixture's whole point —
 # the test exists to prove a byte-for-byte comparison catches a real drift — and the path can never
 # exist in this tree, so skipping it cannot mask a real path break.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh "
+# GH-419 (added 2026-08-07, during the Litmus marathon): test/gh419-gate-inventory.sh writes its
+# fixtures to "$FIXTURE/test/<name>.sh" under a mktemp root and then asserts on the inventory KEYS
+# the tool returns, which are repo-relative by construction. The bare "test/safe.sh" strings in the
+# assertions are therefore inventory keys, not references to files in this tree — they can never
+# exist here, so skipping them cannot mask a real path break. Same shape as the six fixture names
+# already listed above.
+#
+# This entry is why the gh419 lane escalated on its first attempt: the fix belongs in THIS file,
+# which is not in that lane's artifact allowlist, so the builder could not have made it — an
+# off-lane edit would have been reverted as a containment violation. Recorded because a lane that
+# cannot pass its own gate is a plan defect, not a builder defect.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

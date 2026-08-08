@@ -128,8 +128,42 @@ path *exists*; `grep_absent` reports `landed` when the pattern *is found*. Verif
 probe should not be built by an agy turn, because a broken probe is precisely what would let that
 turn start and then fail in a form that reads as a turn failure.
 
+## Observed failure — 2026-08-07, Litmus marathon phase 2
+
+The defect stopped being a reasoned claim and became a measured one. It fired live during the
+Litmus marathon and is what halted phase 2 (`gh343`) after codex had already built and committed
+its turn:
+
+```
+$ agy whoami
+CLI error: bubbletea: error opening TTY: bubbletea: could not open TTY: open /dev/tty: device not configured
+$ echo $?
+0
+```
+
+**Exit 0, with the failure printed to output.** That is the issue's central claim reproduced exactly:
+a probe deciding on exit status alone reads this as auth OK. It is also the second half of the claim
+— under `stdin=DEVNULL` automation the TTY error path IS the normal path, not an edge case.
+
+What actually stopped the turn was `AGY_AUTH_TIMEOUT_S` (5s), the incidental safety net:
+
+```
+agy-turn: agy auth pre-flight timed out after 5s; likely expired auth opening an interactive login.
+agy-turn: auth pre-flight: CLI error: bubbletea: error opening TTY: ...
+```
+
+So the run was protected by the timeout, not by the check — and the doc's `## Why it matters`
+inversion (attended runs protected, unattended not) held in the one direction that mattered here:
+the timeout only fires because the hang requires a TTY that automation does not have. Had `agy`
+returned promptly instead of hanging, the probe would have passed and the reviewer turn would have
+started against an unauthenticated CLI.
+
+This satisfies the GH-419 evidence standard for this lane before it is built: the check has now been
+**observed failing**, with the transcript above as the baseline any fix must flip.
+
 ## Method note
 
 The measured `agy whoami` behaviour and the established/not-established split are carried from the
 issue. The probe marker's absence was verified 2026-08-06 against `development` @ `3b37072`. No open
-PR or branch touches this issue — checked before authoring.
+PR or branch touches this issue — checked before authoring. The live reproduction above was added
+2026-08-07 from the Litmus marathon run, not from a re-reading of the issue.
