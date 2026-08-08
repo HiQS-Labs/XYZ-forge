@@ -1,5 +1,5 @@
 # Marathon Phase gh425-source-url-slug
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH425-SOURCE-URL-SLUG-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -167,3 +167,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   recursive GH-422 fleet measurement and its one known `LTVera-Pandas` conflict; this change does
   not rewrite that foreign doc. The local scan found 213 capture-doc `source:` URLs; no `related:`
   values are newly constrained.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The changes accurately implement the requirements defined in GH-425.
+- `utils/py/swarm_preflight.py`: Added correct URL parsing and matching logic for the repository slug and issue number. Emits correct error classifications (`wrong-repository` and `mismatch`) with clear remediation messages pointing to the use of `related:` for foreign origins.
+- `skills/10days/SKILL.md`: Documented the `source:` vs `related:` convention accurately for cross-repo provenance without creating a new linted schema.
+- `test/gh425-source-url-slug.sh`: Focused and deterministic. Validates both false-positive and false-negative behavior accurately by spinning up temporary repos in `$TMPDIR`.
+- `validate.sh`: Test script is correctly hooked into the gate runner.
+
+I executed `test/gh425-source-url-slug.sh` outside the test tree in an isolated `$TMPDIR` and all assertions passed.
+
+**Verdict:** Approved
+relay closed, no further turn needed
