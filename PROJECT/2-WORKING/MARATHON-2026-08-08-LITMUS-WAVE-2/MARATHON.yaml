@@ -3,10 +3,11 @@
 # Wave 1 (MARATHON-2026-08-06-LITMUS) completed all four of its lanes and shipped as PRs #443
 # and #445. This is the wave authored from what survived it.
 #
-# 3 sequential phases. Phases run STRICTLY ONE AT A TIME (GH-241) — `depends_on` constrains the
+# 2 sequential phases (was 3; gh416 shipped in run 1 — see the RUN 1 note above the phase
+# list). Phases run STRICTLY ONE AT A TIME (GH-241) — `depends_on` constrains the
 # order, it does not create it, and a disjoint write-set buys no parallelism here.
 #
-#   gh416 → gh401 → gh390
+#   gh401 → gh390        (gh416 → done, run 1)
 #
 # OPERATOR GO GIVEN 2026-08-08 ("prepare docs, preflight and first dry-run the marathon for
 # remainder of Litmus issues … and then run the marathon").
@@ -71,11 +72,14 @@
 # ---------------------------------------------------------------------------------------
 # WHY THIS ORDER
 # ---------------------------------------------------------------------------------------
-#   * gh416 FIRST because it is the only lane in this marathon whose write-set cannot affect the
-#     marathon running it — two documents, nothing executed. It is also the smallest (cx/risk/eff
-#     1/1/2, one phase, four of five acceptance criteria already shipped in PR #413), so if the
-#     chain is going to fail for an environmental reason it fails on the cheapest lane.
-#   * gh401 SECOND. It edits `utils/py/marathon_drive.py`, but only the `--dry-run` path — which a
+#   * gh416 RAN FIRST in run 1 and is now done (see the RUN 1 note below). The reason it went first
+#     is worth keeping, because it paid off exactly as intended: it was the only lane whose write-set
+#     could not affect the marathon running it — two documents, nothing executed — and the smallest
+#     (cx/risk/eff 1/1/2, one phase, four of five criteria already shipped in PR #413). So when the
+#     chain did fail for an environmental reason, it failed on the cheapest lane, AFTER that lane's
+#     deliverable was already built and approved. Ordering by blast radius is what made the halt
+#     recoverable instead of a total loss.
+#   * gh401 NOW FIRST (was second). It edits `utils/py/marathon_drive.py`, but only the `--dry-run` path — which a
 #     real run never takes. So the blast radius on the phase after it is as close to zero as a
 #     driver change gets. Its brief says this explicitly and tells the builder not to refactor
 #     shared helpers on the live path to tidy the dry-run path.
@@ -143,22 +147,38 @@
 #   PROJECT/2-WORKING/GH-401-DRY-RUN-MUTATES-REPO.md
 #   PROJECT/2-WORKING/GH-390-GATE-GUARD-COVERAGE.md
 
+# ---------------------------------------------------------------------------------------
+# RUN 1 (2026-08-08 22:56 PDT) — HALTED at phase 1. gh416 IS DONE; ITS LANE IS REMOVED BELOW.
+# ---------------------------------------------------------------------------------------
+# gh416 was BUILT AND APPROVED TWICE, by two independent codex builds with agy approving each:
+#   * run 0 (linked worktree, stopped by the operator to move to a clone) → origin f1403bd,
+#     PROJECT/PDDA-SYNC-POLICY.md at 68 lines / 6 sections
+#   * run 1 (this clone)                                                 → origin 2cd8673,
+#     same file at 44 lines / 4 sections
+# The shipped artifact is run 0's, with two additions grafted from run 1 (scope widened to
+# add/modify/delete; a "Coverage" signal for a repo test or repo-owned caller). Both transcripts are
+# preserved on those branches — this is recovered agent work, not a re-authoring.
+#
+# What FAILED in run 1 was the pre-advance GATE, not the lane: `test/gh331-cost-summary.sh` exited 1
+# at 893s of a 900s wall cap because its nested relay-drive was UNSCOPED and reached for the real
+# clone's .git/relay-driver.lock — held by the marathon driver running that very gate:
+#     relay-drive: another driver is active in this repo (pid 35784, lock: .git/relay-driver.lock)
+# That was GH-441's own defect reintroduced by GH-441's own Phase 1 fix, in the one direction a
+# standalone gate run cannot see. Fixed and observed in both directions before this re-fire.
+#
+# Since every phase's gate is `bash validate.sh`, that failure blocked the WHOLE chain, not just
+# phase 1 — which is why run 2 starts from a green gate rather than from `--retry`.
+#
+# gh401 therefore becomes phase 1 of 2 and carries no `depends_on`. Its position is unchanged in
+# substance: it still runs before gh390, which still runs last for the gate-path reason below.
+
 name: litmus-wave-2-2026-08-08
 phases:
-  - id: gh416-pdda-sync-policy
-    name: "GH-416: a stated review policy for the next dependency sync — criterion 5, the only one PR #413 left open"
-    reviewer: agy
-    brief: PROJECT/2-WORKING/MARATHON-2026-08-08-LITMUS-WAVE-2/brief-gh416-pdda-sync-policy.md
-    artifact: PROJECT/PDDA-SYNC-POLICY.md,AGENTS.md
-    turn_timeout_s: 900
-    max_review_rounds: 3
-
   - id: gh401-dry-run-no-mutation
     # NOTE: no ' #NNN' in a phase name — bin/marathon-yaml strips from a space-hash onward even
     # inside a double-quoted scalar, which silently truncated a wave-1 name and left the quote open.
     name: "GH-401: a dry run must not write into a repo it was not pointed at, and the audit must catch the next one"
     reviewer: agy
-    depends_on: gh416-pdda-sync-policy
     brief: PROJECT/2-WORKING/MARATHON-2026-08-08-LITMUS-WAVE-2/brief-gh401-dry-run-no-mutation.md
     artifact: utils/py/marathon_drive.py,test/gh268-relay-cue-and-target-checks.sh,test/marathon-root-audit.sh,test/gh401-dry-run-no-mutation.sh,validate.sh
     turn_timeout_s: 900

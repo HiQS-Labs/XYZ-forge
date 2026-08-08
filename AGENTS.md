@@ -71,6 +71,9 @@ local change.
   containment, skill-first relay work, durable fixes, and verified done.
 - `PROJECT/PDDA.md` owns doc lifecycle, `ROADMAP.md` pointer-ledger rules, and `CHANGELOG.md`
   governance.
+- Before approving a PDDA dependency sync, follow the repo-owned
+  [PDDA sync review policy](PROJECT/PDDA-SYNC-POLICY.md); a green suite after fixups does not by
+  itself establish that deleted local behaviour was safe to remove.
 - `validate.sh` is the code/runtime gate. `utils/pdda/pdda.sh run` and its targeted
   `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
 - **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the eleven Tier-A
