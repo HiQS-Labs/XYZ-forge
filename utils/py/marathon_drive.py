@@ -1040,7 +1040,43 @@ relay-file: {rel_relay}
     # with reason `pre-advance-failed` while its own change was correct and approved.
     # Scrubbing is deliberately narrow: only the run-identity tags, never repo/config inputs
     # like MARATHON_ROOT, TICK_BIN or TICK_REPO_ROOT, which a gate may legitimately need.
-    GATE_SCRUBBED_ENV = ("XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID", "MARATHON_LANE_NS")
+    # GH-441 Phase 2 — the gate's inherited environment is governed by a stated contract, not by a
+    # denylist maintained here and a second, different one in validate.sh's prologue. That split was
+    # the defect: marathon_drive popped 3 names, validate.sh unset 6 MORE, and any custom
+    # --pre-advance-cmd that omitted the prologue was silently wrong (observed live — a hand-written
+    # gate reproduced the oracle-guard flip on ambient ALLOW_PATHS). utils/py/gate_env.py now
+    # classifies EVERY variable the drivers export as scrub-or-pass with a reason, and
+    # test/gh441-gate-env-contract.sh fails loudly if a new export is added without a classification.
+    #
+    # It deliberately does NOT scrub RELAY_DRIVER_LOCKED; see that module's docstring for the measured
+    # reason (scrubbing it globally was landed and reverted — the nested drivers need it SET and the
+    # lock assertions need it UNSET, so the fix is per-suite, which shipped as Phase 1).
+    # GH-441 Phase 2 widened this from three names to every variable the drivers export. The
+    # registry with the REASON for each classification lives in utils/py/gate_env.py; this stays a
+    # plain literal on purpose, for two reasons that both cost a full gate run to learn:
+    #
+    #   * GH-307's guard (test/gh307-gate-env-scrub.sh) statically requires a literal here and
+    #     requires _gate_env to pop from it. That guard exists so the scrub set is auditable by
+    #     reading the driver, which is a property worth keeping — a refactor that hides the list
+    #     behind an import would satisfy nobody's review.
+    #   * marathon_drive.py is loaded via importlib from a bare `<stdin>` by
+    #     test/gh322-runlog-python-lane.sh, so utils/py/ is NOT on sys.path. An `import gate_env`
+    #     here raises ModuleNotFoundError and takes the whole driver down. Measured, not guessed.
+    #
+    # The two copies cannot drift: test/gh441-gate-env-contract.sh asserts this literal is exactly
+    # gate_env.SCRUBBED_NAMES, and fails if either side changes alone.
+    #
+    # RELAY_DRIVER_LOCKED is deliberately ABSENT — scrubbing it globally was landed and reverted on
+    # 2026-08-07 (nested drivers need it SET, lock assertions need it UNSET; no global value is
+    # correct). See gate_env.py's docstring for the measured matrix.
+    GATE_SCRUBBED_ENV = (
+        "AGY_AGENT", "AIDER_AGENT", "ALLOW_PATHS",
+        "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_BUILDER",
+        "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
+        "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
+        "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
+        "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
+    )
 
     def _gate_env():
         env = os.environ.copy()

@@ -64,11 +64,21 @@ py_pops="$(printf '%s\n' "$PY_REPORT" | /usr/bin/sed -n 's/^POPSFROMSET://p')"
 if [[ -z "$py_set" ]]; then
   bad "python twin: GATE_SCRUBBED_ENV missing or not a literal (report: $PY_REPORT)"
 else
-  want="$(printf '%s\n' "${SCRUB[@]}" | /usr/bin/sort | /usr/bin/tr '\n' ',')"
-  got="$(printf '%s\n' "$py_set" | /usr/bin/tr ',' '\n' | /usr/bin/sort | /usr/bin/tr '\n' ',')"
-  [[ "$want" == "$got" ]] \
-    && ok "python twin scrubs EXACTLY the three tags ($py_set)" \
-    || bad "python twin scrub set mismatch — want [${want%,}] got [${got%,}]"
+  # GH-441 Phase 2 widened the Python scrub set from GH-307's three identity tags to every variable
+  # the drivers export, each classified with a reason in utils/py/gate_env.py. This assertion was
+  # EXACT equality, which made it fail on any addition — over-specified: GH-307's property is that
+  # its three tags DO get scrubbed, not that nothing else ever is. A larger set strictly strengthens
+  # GH-307's fix, so the check is now containment, and the KEEP loop below (unchanged) is what still
+  # bounds the set from the other side by naming what must NOT be scrubbed.
+  # The exact contents are pinned separately: test/gh441-gate-env-contract.sh asserts this literal
+  # equals gate_env.py's registry and that every driver export is classified.
+  missing=""
+  for v in "${SCRUB[@]}"; do
+    printf '%s\n' "$py_set" | /usr/bin/tr ',' '\n' | /usr/bin/grep -qx "$v" || missing="$missing $v"
+  done
+  [[ -z "$missing" ]] \
+    && ok "python twin scrubs all three GH-307 identity tags (set now has $(printf '%s\n' "$py_set" | /usr/bin/tr ',' '\n' | /usr/bin/grep -c . ) entries, per GH-441)" \
+    || bad "python twin no longer scrubs GH-307's tag(s):$missing"
   for v in "${KEEP[@]}"; do
     if printf '%s\n' "$py_set" | /usr/bin/tr ',' '\n' | /usr/bin/grep -qx "$v"; then
       bad "python twin wrongly scrubs $v (a gate may need it)"
