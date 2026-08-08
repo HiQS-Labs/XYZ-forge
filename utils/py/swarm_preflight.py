@@ -876,8 +876,8 @@ def doc_frontmatter_issue(doc_path):
 
 ISSUE_URL_RE = re.compile(r'https?://github\.com/([^/\s]+/[^/\s]+?)/issues/(\d+)')
 
-def check_source_url(doc_path, issue_number):
-    """GH-400 criterion 2: a capture doc naming a `gh_issue` must carry that issue's URL.
+def check_source_url(doc_path, issue_number, tracking_slug=None):
+    """GH-400/GH-425: a capture doc's `source:` must identify its tracking issue.
 
     Until now this was an instruction in `skills/10days/SKILL.md` and nothing more — the field was
     never read by any gate, so `source: issue#400`, or no `source` at all, passed everything. That
@@ -888,9 +888,10 @@ def check_source_url(doc_path, issue_number):
     it has no offline-degradation case. The only pass-through is having no `gh_issue` to point at.
 
     status:
-      ok             — a GitHub issue URL whose number matches `gh_issue`
+      ok             — a GitHub issue URL whose number and repository match the tracking issue
       missing        — no `source:`, or one carrying no GitHub issue URL
       mismatch       — a GitHub issue URL pointing at a DIFFERENT issue than `gh_issue`
+      wrong-repository — the URL names a repository other than the target repository
       not-applicable — the doc names no `gh_issue`, so there is nothing to point at
       unknown        — the doc could not be read
     Only `ok` and `not-applicable` pass.
@@ -921,10 +922,22 @@ def check_source_url(doc_path, issue_number):
         return res
 
     res["slug"], res["url"] = u.group(1), u.group(0)
-    if u.group(2) != str(issue_number):
+    number_matches = u.group(2) == str(issue_number)
+    slug_matches = not tracking_slug or res["slug"].casefold() == tracking_slug.casefold()
+    if not slug_matches:
+        res["status"] = "wrong-repository"
+        number_note = "the same issue number" if number_matches else f"issue #{u.group(2)}"
+        res["detail"] = (
+            f"source: points at repository {res['slug']} ({number_note}), but tracking issue "
+            f"#{issue_number} belongs to {tracking_slug} — `source:` must cite the tracking "
+            "repository; preserve any cross-repo origin under `related:`")
+        return res
+
+    if not number_matches:
         res["status"] = "mismatch"
         res["detail"] = (f"source: points at issue #{u.group(2)} but frontmatter declares "
-                         f"gh_issue: {issue_number} — the doc cites provenance it does not have")
+                         f"gh_issue: {issue_number} — the tracking repository is right, but the "
+                         "tracking issue number is wrong")
         return res
 
     res["status"] = "ok"
@@ -1256,7 +1269,8 @@ def main():
     # GH-400 criterion 2: the doc must carry the URL of the issue it claims to implement, so the
     # two can be diffed in one step. Shipped as prose in the skill and enforced nowhere, which left
     # GH-400's own fix resting on an unverified model output — the exact shape GH-400 is about.
-    src_url = check_source_url(primary_doc, doc_frontmatter_issue(primary_doc) or acc_issue)
+    target_slug = repo_slug_for(target_root)
+    src_url = check_source_url(primary_doc, doc_frontmatter_issue(primary_doc) or acc_issue, target_slug)
 
     # GH-399: build the packet's checklist HERE, before the verdict, so a lossy copy blocks the run
     # instead of being discovered by whoever reads the packet. Rendering still happens below.
@@ -1277,15 +1291,25 @@ def main():
             f"acceptance criteria diverge from issue #{acc_fidelity['issue']} — {acc_fidelity['detail']}. "
             "Copy the issue's '## Acceptance' block verbatim, or declare each deviation under "
             "'## Acceptance — deviations from the issue' as `- [dropped|changed|added] <text> — reason: <why>'")
-    if ready == 1 and src_url["status"] in ("missing", "mismatch"):
+    if ready == 1 and src_url["status"] in ("missing", "mismatch", "wrong-repository"):
+        expected_source = (f"https://github.com/{target_slug}/issues/{src_url['issue']}"
+                           if target_slug else
+                           f"https://github.com/<owner>/<repo>/issues/{src_url['issue']}")
+        if src_url["status"] == "wrong-repository":
+            source_remediation = (
+                f"Set `source: {expected_source}` for the tracking issue, then move the foreign "
+                "issue URL into `related:` so its provenance is retained (GH-425).")
+        elif src_url["status"] == "mismatch":
+            source_remediation = (
+                f"Set `source: {expected_source}` — the repository is correct but the issue number "
+                "must match `gh_issue` (GH-400).")
+        else:
+            source_remediation = (
+                f"Set `source: {expected_source}` in the doc's frontmatter (GH-400), or run "
+                f"`python3 utils/py/backfill_source_url.py --apply` to fix every affected doc at once.")
         ready, ready_next = 0, (
             f"capture doc source URL {src_url['status']} — {src_url['detail']}. "
-            # GH-422: resolve owner/repo from the TARGET's origin rather than printing a placeholder.
-            # The harness knows this value; making an operator look it up once per doc is how a
-            # one-line fix turns into an afternoon in a repo with a dozen affected capture docs.
-            f"Set `source: https://github.com/{repo_slug_for(target_root) or '<owner>/<repo>'}"
-            f"/issues/{src_url['issue']}` in the doc's frontmatter (GH-400), or run "
-            f"`python3 utils/py/backfill_source_url.py --apply` to fix every affected doc at once. "
+            f"{source_remediation} "
             "This is local-only: it never needs the network, so there is no "
             "offline case in which it is safe to skip.")
         

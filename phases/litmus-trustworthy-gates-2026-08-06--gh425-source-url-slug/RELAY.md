@@ -149,3 +149,21 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Implemented GH-425 in `utils/py/swarm_preflight.py`: `check_source_url` now compares the parsed
+  slug with the target repository's origin as well as the issue number. It reports
+  `wrong-repository` separately from a same-repository `mismatch`; remediation tells the operator
+  to restore the tracking URL and retain the foreign origin under `related:`.
+- Documented option 1 in `skills/10days/SKILL.md`: `source:` is always the target repo's tracking
+  issue; `related:` is the existing free-text provenance context, deliberately not a new linted
+  schema or foreign-slug escape hatch.
+- Added and registered `test/gh425-source-url-slug.sh`. Focused verification: **6 pass / 0 fail**:
+  foreign-repo/same-number refusal, no packet on refusal, correct remediation, accepted
+  tracking-URL-plus-foreign-`related:` shape, and separate wrong-number diagnostic. Its disposable
+  pre-fix replay removed only the slug branch and observed the historical false READY verdict.
+- Blast-radius context was already settled before implementation: the parent record carries the
+  recursive GH-422 fleet measurement and its one known `LTVera-Pandas` conflict; this change does
+  not rewrite that foreign doc. The local scan found 213 capture-doc `source:` URLs; no `related:`
+  values are newly constrained.
