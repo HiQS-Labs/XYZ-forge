@@ -142,6 +142,12 @@ grep -Fq "target-checks.sh" "$py" \
 
 DRV="$ROOT/relay-automation/marathon-drive.sh"
 BRIEF="$WORK/brief.md"; printf '## brief\nbody\n' > "$BRIEF"
+# GH-401: the two driver invocations below ran unscoped, so the render landed on the HARNESS repo's
+# own tracked phases/p1/RELAY.md — `bash validate.sh` left the tree dirty, and the polluted file was
+# committed at least once (f83b929) carrying that machine's absolute paths. Both are --dry-run and
+# no longer write at all, but they stay MARATHON_ROOT-scoped regardless: a dry run is not the only
+# way a future edit here could reach the driver's write path.
+MROOT="$WORK/mroot"; mkdir -p "$MROOT"
 
 mk_repo() {  # <dir> [validate-body]
   mkdir -p "$1"; git init -q "$1"
@@ -157,7 +163,7 @@ HASV="$WORK/has-validate"
 mk_repo "$HASV" '#!/usr/bin/env bash
 exit 0
 '
-out="$(bash "$DRV" --target-root "$HASV" --phase-brief "$BRIEF" --reviewer agy --builder codex --dry-run 2>&1)"
+out="$(MARATHON_ROOT="$MROOT" bash "$DRV" --target-root "$HASV" --phase-brief "$BRIEF" --reviewer agy --builder codex --dry-run 2>&1)"
 printf '%s' "$out" | grep -Fq "$HASV/validate.sh" \
   && pass "a --target-root with its own validate.sh is gated on the TARGET's copy" \
   || fail "gate did not select the target's validate.sh: $(printf '%s' "$out" | grep -i gate)"
@@ -185,7 +191,7 @@ printf '%s' "$out" | grep -Fq "SKIP phpcs" \
 NOV="$WORK/no-validate"
 mk_repo "$NOV"
 printf '<?php\nfunction gh268_n(){return 1;}\n' > "$NOV/plugin.php"
-out="$(bash "$DRV" --target-root "$NOV" --phase-brief "$BRIEF" --reviewer agy --builder codex --dry-run 2>&1)"
+out="$(MARATHON_ROOT="$MROOT" bash "$DRV" --target-root "$NOV" --phase-brief "$BRIEF" --reviewer agy --builder codex --dry-run 2>&1)"
 printf '%s' "$out" | grep -Fq "target-checks.sh" \
   && pass "a --target-root with no validate.sh falls back to target-checks.sh" \
   || fail "no target-checks fallback for a target lacking validate.sh: $out"

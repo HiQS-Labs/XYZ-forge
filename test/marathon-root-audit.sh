@@ -2,7 +2,23 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-FILES=("$HERE/marathon.sh" "$HERE/marathon-drive.sh")
+
+# GH-401: this audit exists for GH-209 — "every test invocation of the marathon driver is
+# MARATHON_ROOT-scoped" — but its scope was two hardcoded filenames. An unscoped `--dry-run`
+# invocation in test/gh268-relay-cue-and-target-checks.sh therefore wrote phases/p1/RELAY.md into
+# the HARNESS repo on every `bash validate.sh`, and the audit reported PASS the whole time: it was
+# out of reach because of its FILENAME, not because it was safe. A guard whose coverage is a literal
+# list silently stops covering the thing it was written for the moment someone adds a file.
+#
+# Audit every test script instead, and let discover_file_metadata/find_invocation_target decide what
+# is actually an invocation — a file with none is simply skipped. The audit excludes only itself:
+# it necessarily contains the driver path literals it matches on, so it would self-report.
+FILES=()
+for candidate in "$HERE"/*.sh; do
+  [ "$candidate" = "${BASH_SOURCE[0]}" ] && continue
+  [ "$(basename "$candidate")" = "$(basename "${BASH_SOURCE[0]}")" ] && continue
+  FILES+=("$candidate")
+done
 
 safe_vars=()
 alias_names=()
