@@ -2,9 +2,9 @@
 gh_issue: 416
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/416
 title: "GH-416 — a dependency sync silently deleted three shipped guardrails and left CI red for two days"
-status: "Intake (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus. FOUR OF FIVE CRITERIA ALREADY SHIPPED via PR #413 (2026-08-03); only criterion 5 (the sync-review policy) is outstanding. Scoped to that one criterion."
+status: "In flight (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus. FOUR OF FIVE CRITERIA ALREADY SHIPPED via PR #413 (2026-08-03); only criterion 5 (the sync-review policy) is outstanding and this lane is scoped to it. Preflight READY 2026-08-08; operator go given; queued as phase 1 of 3 in MARATHON-2026-08-08-LITMUS-WAVE-2."
 created: 2026-08-05
-updated: 2026-08-05
+updated: 2026-08-08
 owner: noel
 doc_type: project
 release: "0.2.0 Litmus"
