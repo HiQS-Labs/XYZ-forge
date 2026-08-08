@@ -127,5 +127,17 @@ out2="$(PATH="$WORK/bin:$PATH" SWARM_PREFLIGHT_ROOT="$R2" python3 "$PY" --target
 [ ! -e "$R2/packet" ] && pass "C2b FROZEN refusal writes no packet" \
   || fail "C2b FROZEN refusal emitted packet files: $(find "$R2/packet" -type f 2>/dev/null)"
 
+# C3: inferred-test scanning must skip binary files. Before the sibling reader was hardened, this
+# routine fixture shape raised UnicodeDecodeError before preflight could render any verdict.
+R3="$WORK/binary-test"; mkdir -p "$R3/src" "$R3/test"; : >"$R3/src/a.py"
+printf '\377\376\375' >"$R3/test/binary-fixture.bin"
+capture "$R3" 419 "src/a.py"
+init_repo "$R3"
+out3="$(PATH="$WORK/bin:$PATH" SWARM_PREFLIGHT_ROOT="$R3" python3 "$PY" --target-root "$R3" \
+  --project-doc "$R3/PROJECT/2-WORKING/GH-419-case.md" --out "$R3/packet" 2>&1)"; rc3=$?
+[ "$rc3" -eq 0 ] && ! grep -q 'UnicodeDecodeError' <<<"$out3" \
+  && pass "C3 binary inferred test is skipped without crashing preflight" \
+  || fail "C3 expected binary inferred test to be skipped (rc=$rc3): $out3"
+
 echo "  gh418-issue-state-frozen: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

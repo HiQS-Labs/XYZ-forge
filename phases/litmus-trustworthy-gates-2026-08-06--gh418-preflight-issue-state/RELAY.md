@@ -190,3 +190,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 3 · Builder · codex
+
+- Reproduced the reported fail path outside the repository: an undecodable `test/` file raised
+  `UnicodeDecodeError` through `expand_effective_artifacts`.
+- Updated `utils/py/swarm_preflight.py` so its inferred-artifact reader uses UTF-8 and treats
+  `UnicodeError` like the existing unreadable-file case; binary fixtures are skipped instead of
+  aborting preflight.
+- Extended `test/gh418-issue-state-frozen.sh` with C3, an end-to-end binary-file regression.
+  `validate.sh` already registers this targeted test, so no registration change was needed.

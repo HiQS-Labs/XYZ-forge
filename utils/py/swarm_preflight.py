@@ -365,9 +365,9 @@ def expand_effective_artifacts(root, contract):
 
     def read(rel_path):
         try:
-            with open(os.path.join(root, rel_path), "r") as f:
+            with open(os.path.join(root, rel_path), "r", encoding="utf-8") as f:
                 return f.read()
-        except OSError:
+        except (OSError, UnicodeError):
             return ""
 
     for rel_path in declared:
