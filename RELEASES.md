@@ -85,7 +85,7 @@ Iterations: 0.3.0-0.3.4
 Status: Draft
 Target Date: 2026-10-10
 Codename: Nightwatch
-Description: An unattended marathon against a real target repo survives, records, and recovers — a run that is interrupted, killed at its cap, or panics the host leaves a durable record and a recovery path instead of a clean tree full of ungated commits. Depends on Litmus. The same durability work is what makes a reflection corpus trustworthy (#431): a run with no record is invisible to any later pass over it, and the loop's own evidence has never survived a reboot (#430).
+Description: An unattended marathon against a real target repo survives, records, and recovers. Before dispatching work, it proves the target can accept the harness write-set and preserves the local-state contract, so hostile ignore rules or linked worktrees fail clearly rather than silently splitting, leaking, or losing the run. A run interrupted, killed at its cap, or panicking the host leaves a durable record and recovery path instead of a clean tree full of ungated commits. Depends on Litmus. The same durability work is what makes a reflection corpus trustworthy (#431): a run with no record is invisible to any later pass over it, and the loop's own evidence has never survived a reboot (#430).
 GH_URL:
 Milestone: Nightwatch
 Front-door reviewed: No
@@ -97,7 +97,7 @@ Iterations: 0.4.0-0.4.4
 Status: Draft
 Target Date: 2026-11-14
 Codename: Plumbline
-Description: Assisted reflection, measured before it is trusted. The reflection pipeline is assembled from the parts that already exist (`proposals-sink.sh` gains its first production caller) and graded against external ground truth — the 49 human-filed findings from the two rebalance-OS marathons (#405/#406) — for recall and precision. Ships a committed benchmark and a recorded go/no-go; "not worth automating yet" is a passing result, per #431's own Phase 2 exit criterion. Operator sign-off stays manual. Depends on Nightwatch.
+Description: Assisted reflection and a bounded self-improvement loop, measured before either is trusted. The reflection pipeline turns durable Nightwatch records into proposals (`proposals-sink.sh` gains its first production caller) and is graded against external ground truth — the 49 human-filed findings from the two rebalance-OS marathons (#405/#406) — for recall and precision. Ships a committed benchmark and a recorded go/no-go; "not worth automating yet" is a passing result, per #431's own Phase 2 exit criterion. Operator sign-off stays manual. Depends on Nightwatch.
 GH_URL: [GH 431](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/431)
 Milestone: Plumbline
 Front-door reviewed: No
