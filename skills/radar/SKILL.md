@@ -56,21 +56,44 @@ An explicit `rgt:` key on the governing doc always beats prefix inference. Repor
 the RGT denominator (Run+Grow+Transform+Unclassified), the trend vs. the prior window, and a
 one-line verdict. No threshold blocks anything.
 
+**Always print the Unclassified subjects verbatim, then give an adjusted read beside the
+mechanical one.** Some repos use the *component* as the type (`stay-focused: add session-anchor
+skill`), which conventional-commit inference cannot classify — and those commits are often plainly
+Grow. Second calibration run: mechanical inference read 5% Grow where the adjusted read was 19%,
+a ~4x undercount in the one direction that flatters nobody. Report both; label which is which.
+
 ## Step 2 — Lens 2: recurring-defect radar
 
 Build clusters, then rank. Signals in order of precision:
 
-1. **`related:` frontmatter arrays** in `PROJECT/**/GH-*.md` — human-authored sibling links, the
-   highest-precision signal and already sitting in the tree unread. Extract every issue reference
-   from every `related:` block and tally — but **citation count conflates two things**: defect
-   kinship ("same seam", "same family", "opposite direction", "same class") and infrastructure
-   context (a FROZEN-twin contract, a release issue, an SOP cited as background). Only kinship
-   references form clusters; a heavily-cited context issue is not a defect center (first
-   calibration run: #308 drew 11 citations, all FROZEN-twin context, zero kinship).
+**Signal precision is repo-dependent — measure it, don't assume it.** The order below is a
+starting prior, not a ranking. Run every signal, report each one's **yield** (how many clusters it
+produced), and rank targets by the evidence that actually materialized. Validated across two repos
+whose sharpest signals were exact inverses: in `xyz-3-agents-swarm` signal 1 was decisive and
+signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and signal 2 carried the run.
+
+1. **`related:` frontmatter** in `PROJECT/**/GH-*.md` — human-authored sibling links. **Two shapes
+   exist and both must be parsed**: a block array of prose entries citing `#refs`, and a scalar
+   pointing at a sibling *filename* (`related: GH-8-FOO.md`) with no issue number at all — resolve
+   filename form to its issue via the target doc's `gh_issue:` key. **Report the extraction yield
+   explicitly**: "N docs carry `related:`, M references extracted." *M=0 while N>0 is a parser
+   failure, not an absent signal* — say so out loud. (Second calibration run hit exactly this: 2
+   docs carried the key, the array-shaped extractor returned silence, and the skill nearly reported
+   "no kinship signal" when the signal was there in a shape it could not read — the same
+   reads-as-active-while-nothing-runs class this tool exists to find.)
+   Citation count also **conflates two things**: defect kinship ("same seam", "same family",
+   "opposite direction", "same class") and infrastructure context (a FROZEN-twin contract, a
+   release issue, an SOP cited as background). Only kinship forms clusters — first calibration run:
+   #308 drew 11 citations, all context, zero kinship.
 2. **Shared seam** — `fix:` commits in the window grouped by touched file/function. **Group by
-   issue, not by commit**: one commit fixing five shims is one data point per seam, and in a
-   squash-heavy or doc-heavy repo the per-commit heat map goes flat while the `related:` graph
-   stays sharp (calibration: this signal contributed nothing here that signal 1 hadn't already).
+   issue, not by commit**: one commit fixing five shims is one data point per seam.
+   **Then apply the recurrence discriminator, which is the whole point of this signal:**
+   a hot seam counts as *recurring* only if its fixes span **≥2 distinct calendar days** AND
+   **≥2 distinct originating PRs/branches/issues**. Otherwise it is **concentrated authoring** —
+   one hardening pass on one component — and must be excluded from targets and labeled as such.
+   (Second calibration run: 13 of 13 window `fix:` commits landed on one directory, which reads as
+   an overwhelming top target until you check the dates — all 13 on a single day, all from PR #10.
+   That is a skill being written, not a defect recurring.)
 3. **Issue-text similarity** across `gh issue list --state all --json number,title,labels,body`.
 4. **False closes, then reopens** — a capture doc recording a *doc-only / no-code-change*
    resolution for a code defect is the primary form of this signal and greps cheaply. Reopen
@@ -78,6 +101,8 @@ Build clusters, then rank. Signals in order of precision:
    members already found by other signals. Treat doc-only closure as a strong recurrence
    predictor: first confirmed instance is #18, closed doc-only within 2 hours, same seam
    re-fired at day 34 (#314) and day 44 (#440).
+   **This signal is structurally unavailable in a repo with zero closed issues** — check the closed
+   count first and say so rather than reporting a clean sweep. Nothing has had time to recur.
 5. **Cross-repo re-reports** — the `reported_from:` frontmatter key. The same harness bug reported
    from three vendored repos is one target, not three.
 
@@ -101,16 +126,24 @@ days, why it recurs, and what a single durable fix would retire.
 
 ## Step 3 — Lens 3: release recalibration
 
-Skip silently if `RELEASES.md` is absent or has no unshipped blocks. Otherwise, for each unshipped
-block: join its `Milestone:` to its issue set (`gh issue list --milestone "<title>" --state open`),
-compare the planned theme against the observed flow distribution and the top targets, and surface:
+Skip silently if `RELEASES.md` is absent, has no unshipped blocks, or **contains only the
+installer's seed block** — a block whose `Description:` says EXAMPLE / "replace this", or that has
+an empty `Target Date:` and `GH_URL:`, is a placeholder, not a plan. Reporting drift against a seed
+is precisely the "do not treat a sparse file as an incomplete one" failure §GH-381 forbids.
+(Second calibration run: the target repo's only block was the seed; correct output is silence.)
+
+Otherwise, for each unshipped block: join its `Milestone:` to its issue set
+(`gh issue list --milestone "<title>" --state open`), compare the planned theme against the
+observed flow distribution and the top targets, and surface:
 
 - Does the arc's `Description:` still describe where effort actually goes?
 - Is a top radar target unclaimed by any planned band? Mark each reported target **claimed by
   <band>** or **UNCLAIMED** — a claimed target is context, an unclaimed one is the finding.
 - Has the milestone's issue set drifted from its stated theme?
 - The **orphan share**: what fraction of open issues belong to no milestone at all? A large
-  unassigned majority means the bands describe less of the backlog than they appear to.
+  unassigned majority means the bands describe less of the backlog than they appear to. Only
+  meaningful once at least one real band exists — 100% orphan in a repo with no milestones is a
+  young repo, not a planning failure.
 
 Advisory only. Say "the plan says X, the repo is doing Y" and stop.
 
@@ -193,7 +226,9 @@ Then offer — do not assume — to hand the targets to `marathon-triage`.
 | `gh` / auth | Lens 2 signals 3-5, Lens 3 joins, Sink B | Lenses 1-2 (signals 1-2), Sink A; state that the checklist has no live home this run |
 | `PROJECT/**` | Lens 2 signal 1, `rgt:` overrides, Sink A's normal location | Lenses 1-3 from git + `gh`; offer repo-root fallback for Sink A |
 | Conventional commits | Lens 1 inference | Report the Unclassified share as the finding it is |
-| `RELEASES.md` | Lens 3 | Everything else; PLAN line reads "no RELEASES.md" — a valid state, not a gap |
+| `RELEASES.md`, or seed-only | Lens 3 | Everything else; PLAN reads "no release plan" — a valid state, not a gap |
+| Closed issues (zero) | Lens 2 signal 4 entirely | Everything else; say "nothing has had time to recur" rather than implying a clean sweep |
+| History < ~2 windows | The trend line, and most of Lens 2 | Lens 1 for the current window only; state that recurrence is structurally unobservable this young |
 
 Always state which rows applied and what they cost the verdict.
 

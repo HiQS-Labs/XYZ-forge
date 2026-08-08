@@ -53,7 +53,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| Phase 0 kill gate run and passed (see "Phase 0 results" below): Lens 2's top cluster is #419 (13 `related:` citations), which the operator already hand-derived the Litmus release from — the method is validated by its own prior manual run; Lens 1 surfaced a design correction (harness-generated commits must be excluded from the RGT denominator). `skills/radar/SKILL.md` + `install.sh` authored incorporating both findings. | Rest of Phase 1: run the skill end-to-end on this repo, then on a low-structure vendored repo (e.g. `giant-brains-claude-skills`) to prove graceful degradation; verify the no-targets path writes nothing; first real `RADAR-REPORT-*.md` + `radar`-labeled issue behind one confirmation. |
+| **Phase 1 complete and its QA gate passed.** Two calibration runs on structurally opposite repos, whose sharpest signals turned out to be exact inverses; nine fixes total folded back into `skills/radar/SKILL.md`. Run 1 (this repo) wrote both sinks — [RADAR-REPORT-2026-08-07.md](../1-INBOX/RADAR-REPORT-2026-08-07.md) + issue [#444](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/444). Run 2 (`giant-brains-claude-skills`) correctly found no qualifying targets and **wrote nothing**, proving the guardrail that most needed proving. | Phase 2 — reconciliation. Needs a *second* run against issue #444 to exercise carry-forward: unchanged seams keep their IDs, ticked boxes survive, fixed targets get struck through with the commit cited. Also still open: the systematic doc-only-close sweep (open question 5 has one confirmed instance, not a proof). |
 
 ## Why now
 
@@ -340,13 +340,46 @@ gate-repair (Litmus) — which is exactly what the gate required.
       seam heat (per-commit heat went flat while the `related:` graph stayed sharp), and the
       orphan-share line in Lens 3. Bonus: first confirmed instance of the doc-only-close predictor
       (#18, closed doc-only in 2 hours, seam re-fired at day 34 and day 44).
-- [ ] Run it on one vendored repo with far less structure (e.g. `giant-brains-claude-skills`)
-      to prove graceful degradation.
+- [x] Run it on `giant-brains-claude-skills` to prove graceful degradation — 2026-08-07.
+      **The no-targets guardrail fired correctly and nothing was written**, which is the outcome
+      that most needed proving. Five more calibration fixes earned (see "Second calibration run"
+      below), one of which was a genuine parser defect: signal 1 read 2 docs carrying `related:`
+      and extracted 0 references *in silence*, because that repo uses the scalar-filename shape
+      (`related: GH-8-FOO.md`) rather than the block-array-of-`#refs` shape. The radar exhibited
+      the exact defect class it was built to detect — a signal that reads as active while nothing
+      runs. Yield reporting is now mandatory on that signal.
 - [ ] Document the boundary vs. weekly-shipped inside the skill so a session doesn't pick the wrong one.
 
 **QA gate:** two clean runs on structurally different repos; the no-targets path writes nothing at
 all; zero writes outside the two sinks; every finding carries a citation; every checklist item names
 a file and an acceptance condition an unrelated agent could act on cold.
+**Gate status 2026-08-07: PASSED.** Two runs, structurally opposite (see below); the no-targets
+path fired on run 2 and wrote nothing; run 1's two sinks were the only writes across both.
+
+#### Second calibration run — `giant-brains-claude-skills`, 2026-08-07
+
+Same window, trunk `origin/main`, 21 commits (vs 438). The repo turned out **less degraded than
+planned for** — it has PDDA, `PROJECT/**`, and `RELEASES.md` — so the interesting failures were
+not missing inputs but *inputs in unexpected shapes*. The two runs' sharpest signals were exact
+inverses, which is the finding that most changes the design:
+
+| | xyz-3-agents-swarm | giant-brains-claude-skills |
+|---|---|---|
+| Signal 1 (`related:`) | decisive — 13-citation cluster | **0 extracted** from 2 docs (scalar-filename shape) |
+| Signal 2 (seam heat) | flat, contributed nothing | 13/13 fix commits on one seam — but **one day, one PR** |
+| Signal 4 (doc-only) | first confirmed instance | structurally unavailable — **0 closed issues repo-wide** |
+| Lens 3 | Nightwatch drift, orphan 68% | seed-only `RELEASES.md` → correct output is silence |
+| Verdict | 3 targets, both sinks written | **no targets — nothing written** |
+
+Five fixes folded into the skill: (1) signal 1 parses both `related:` shapes and must report
+extraction yield, since `M=0 while N>0` is a parser failure masquerading as an absent signal;
+(2) a **recurrence discriminator** on signal 2 — a hot seam counts only if its fixes span ≥2
+calendar days AND ≥2 originating PRs, else it is concentrated authoring (13 fixes on one component
+in one PR is a skill being written, not a defect recurring); (3) signal precision is repo-dependent,
+so measure per-signal yield instead of assuming the ranking; (4) Lens 3 skips installer-seed blocks;
+(5) print Unclassified subjects verbatim with an adjusted read beside the mechanical one — component-
+as-type prefixes (`stay-focused: add ... skill`) made mechanical inference report 5% Grow where the
+honest read was 19%, a 4x undercount.
 
 ### Phase 2 — Reconciliation across runs + triage handoff
 
