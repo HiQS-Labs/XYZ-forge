@@ -76,11 +76,12 @@ did not touch this case.
 
 ## Acceptance — deviations from the issue
 
-**ONE DEVIATION, PROPOSED 2026-08-07 — criterion 3 is unbuildable as written and must be narrowed to
-directly-executed programs. It is NOT yet amended on the issue; this block is the proposal and the
-evidence. Do not build this lane until it is resolved.**
+**RESOLVED 2026-08-08 — criterion 3 was narrowed ON THE ISSUE, operator-approved, so the block above
+is again a verbatim copy and this is no longer a deviation.** The lane is buildable. What follows is
+the evidence that produced the amendment, retained because the wrong version is the more instructive
+one.
 
-Criterion 3 reads:
+Criterion 3 originally read:
 
 > A gate script or program that exists but is **not executable** sets NOT-READY, rather than passing
 > readiness and failing at execution time.
@@ -108,7 +109,8 @@ the rule "an interpreter-invoked gate script must carry the executable bit", whi
 defect class this issue exists to remove and this release exists to make impossible. The lane would
 have shipped the bug it was written to fix.
 
-**Proposed narrowing** — keep the criterion where its premise holds, drop it where it does not:
+**The narrowing, now live on the issue** — keeps the criterion where its premise holds, drops it
+where it does not:
 
 > A gate program that is **executed directly** (a bare command, or a separator-containing path) and
 > exists but is not executable sets NOT-READY. A gate *script* passed to an interpreter (`bash x.sh`)

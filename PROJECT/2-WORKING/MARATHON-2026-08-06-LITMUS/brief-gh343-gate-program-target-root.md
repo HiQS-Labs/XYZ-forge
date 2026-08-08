@@ -96,8 +96,9 @@ by the acceptance:
   lane shipping the exact bug it exists to fix.**
   So: require the executable bit **only** on a program that is executed directly — a bare command, or
   the separator-containing path this lane is adding. Leave the interpreter branch checking existence
-  alone. See `## Acceptance — deviations from the issue` in the capture doc; issue #343's criterion 3
-  is being narrowed for this reason.
+  alone. **Issue #343's criterion 3 was narrowed to exactly this on 2026-08-08 (operator-approved), so
+  the acceptance block you must satisfy now says "executed directly" — the version that produced the
+  regression is gone.** Build to the amended criterion, not to any cached memory of the old one.
 - **Name which root was searched.** "not found in PATH" is accurate for a bare command and
   misleading for a path — that wording is what made this undiagnosable in one read.
 

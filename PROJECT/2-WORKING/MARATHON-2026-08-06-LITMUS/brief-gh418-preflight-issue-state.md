@@ -93,6 +93,38 @@ the file on disk — *not* a hardcoded list — so a newly frozen twin is covere
 preflight. (`utils/marathon-plan.sh` became the 12th frozen twin via GH-362; a hardcoded list would
 already be stale.)
 
+**Phase 3 — harden the sibling reader (added 2026-08-08, operator-approved scope addition).** This
+came out of agy's Round-1 review of the first build of this lane, and it is a CONFIRMED live crash,
+not a style note.
+
+`expand_effective_artifacts`'s inner `read()` helper (`utils/py/swarm_preflight.py:366-370`) does
+`open(os.path.join(root, rel_path), "r")` and catches **only** `OSError`. It walks the entire `test/`
+directory to infer tests, so a single binary file there raises an uncaught `UnicodeDecodeError` and
+kills preflight outright. Reproduced with one probe file:
+
+```
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 3: invalid start byte
+  swarm_preflight.py:1049  in main -> expand_effective_artifacts
+  swarm_preflight.py:385   raw = read(rel_path)
+  swarm_preflight.py:369   return f.read()
+```
+
+The asymmetry is the whole argument: **your own new `find_frozen_artifacts` (`:631`) already gets
+this right** — `open(..., "r", encoding="utf-8")` with `except (OSError, UnicodeError)`. The
+pre-existing helper beside it does not. Bring `read()` up to the same standard: catch
+`(OSError, UnicodeError)`, or pass `errors="ignore"`. Treat an undecodable file the same way the
+existing code treats an unreadable one — skip it, do not crash.
+
+**Pin it with a test**, in `test/gh418-issue-state-frozen.sh`: a binary fixture under `test/` must
+leave preflight running normally rather than raising. Observe it FAILING first, per #419 — the
+pre-fix tree gives the traceback above, and that traceback is the negative control.
+
+Why this belongs in *this* lane rather than a separate issue: it is one line in a file already in
+this lane's write-set, the fix is the same pattern you just wrote two hundred lines away, and
+preflight is the tool the rest of this release is about. A hard crash on a routine repo state
+outranks a wrong verdict — and `/10days` Step 6 treats any non-zero exit as "drop this issue", so
+this silently removes work from sweeps.
+
 ## Deliberate non-goals — do not exceed them
 
 - **Do not block on undeterminable issue state.** No `gh`, unauthenticated, or offline reports

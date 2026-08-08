@@ -121,47 +121,27 @@ phases:
     turn_timeout_s: 900
     max_review_rounds: 3
 
-  # ── gh343 DEFERRED 2026-08-07 — acceptance criterion 3 is unbuildable; needs an operator call ──
-  #
-  # Criterion 3 ("a gate script or program that exists but is not executable sets NOT-READY, rather
-  # than passing readiness and failing at execution time") has a FALSE premise for the bash/sh
-  # branch: `bash foo.sh` runs a mode-644 file, the interpreter reads it, it is never exec'd.
-  #
-  # TWO independent codex builds implemented it literally and both regressed this lane's own gate
-  # identically: test/swarm-preflight.sh 98/0 -> 91/7 (T15, T33, T36, "expected exit 0, got 5";
-  # T15's fixture gate is `bash -x src/a.js` over a mode-644 file). A plan defect, not a builder
-  # defect — codex built what it was given, twice.
-  #
-  # chmod +x on the fixtures is NOT the fix: it would ship "an interpreter-invoked gate must be
-  # executable", reporting NOT-READY for `bash validate.sh` in any repo whose validate.sh is 644
-  # while that gate runs fine — a NEW false NOT-READY, i.e. the lane shipping the bug it exists to
-  # fix. So the lane cannot be built either way until criterion 3 is narrowed to directly-executed
-  # programs. Proposal + evidence: issue #343 comment 2026-08-07 and the capture doc's
-  # `## Acceptance — deviations from the issue`. Reverted in 6b19a25; codex's GOOD half (resolving a
-  # separator-containing program against target_root, and naming the searched root) is preserved in
-  # ee56842 for reuse.
-  #
-  # Deferring it rather than halting the release: gh418 and gh425 depend on gh343 only for
-  # WRITE-SET ORDERING on utils/py/swarm_preflight.py (one owner at a time), not logically. With
-  # gh343 out, gh418 -> gh425 keeps that property. gh418's depends_on is repointed to gh419
-  # accordingly. Restore this phase, and gh418's original depends_on, once criterion 3 is settled.
-  #
-  # - id: gh343-gate-program-target-root
-  #   name: "GH-343: resolve a target-relative gate program against target_root, not the process cwd"
-  #   reviewer: agy
-  #   depends_on: gh419-trustworthy-gates
-  #   brief: PROJECT/2-WORKING/MARATHON-2026-08-06-LITMUS/brief-gh343-gate-program-target-root.md
-  #   artifact: utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh
-  #   turn_timeout_s: 900
-  #   max_review_rounds: 3
+  # gh343 RESTORED 2026-08-08. Acceptance criterion 3 was narrowed on issue #343
+  # (operator-approved) to apply only to a program that is EXECUTED DIRECTLY; an
+  # interpreter-invoked script (`bash x.sh`) is no longer required to carry +x. The old
+  # wording had a false premise and two independent codex builds regressed
+  # test/swarm-preflight.sh 98/0 -> 91/7 (T15/T33/T36) implementing it faithfully. The brief
+  # now carries that counter-evidence and an explicit "do not chmod +x the fixtures".
+  - id: gh343-gate-program-target-root
+    name: "GH-343: resolve a target-relative gate program against target_root, not the process cwd"
+    reviewer: agy
+    depends_on: gh419-trustworthy-gates
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-06-LITMUS/brief-gh343-gate-program-target-root.md
+    artifact: utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
 
   - id: gh418-preflight-issue-state
     # NOTE: no ' #NNN' in a phase name — bin/marathon-yaml strips from a space-hash onward even
     # inside a double-quoted scalar, which silently truncated this name (and left the quote open).
     name: "GH-418: preflight must check issue state and the GH-308 FROZEN banner — the GH-419 first child"
     reviewer: agy
-    # was: gh343-gate-program-target-root — repointed 2026-08-07 while gh343 is deferred (see above).
-    depends_on: gh419-trustworthy-gates
+    depends_on: gh343-gate-program-target-root
     brief: PROJECT/2-WORKING/MARATHON-2026-08-06-LITMUS/brief-gh418-preflight-issue-state.md
     artifact: utils/py/swarm_preflight.py,test/gh418-issue-state-frozen.sh,validate.sh
     turn_timeout_s: 900
