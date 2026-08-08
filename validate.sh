@@ -3,8 +3,13 @@
 # Exit 0 = all pass; Exit 1 = at least one failed.
 set -u
 
-# Clean ambient variables that might interfere with tests inside the harness.
-unset ALLOW_PATHS RELAY_FILE RELAY_TASK RELAY_AGENT RELAY_PEER RELAY_WORKTREE_ISOLATION
+# GH-441 Phase 2: clean the ambient variables a live marathon exports, via the shared contract rather
+# than a list copied here. This file used to hardcode six names; the driver popped three DIFFERENT
+# ones, and any other --pre-advance-cmd that forgot the prologue was silently wrong. One did, on
+# 2026-08-07, and cost two marathon rounds. utils/py/gate_env.py is now the single registry, and
+# test/gh441-gate-env-contract.sh fails if a new driver export is left unclassified.
+# NOTE: RELAY_DRIVER_LOCKED is deliberately NOT scrubbed — see gate_env.py's docstring.
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/relay-automation/gate-env.sh"
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 TESTS=(
@@ -75,6 +80,7 @@ TESTS=(
   "gh390-gate-guard.sh"          # GH-390/GH-382 (gate resource guard: wall/CPU/RSS caps, gate-killed escalation, off switch)
   "gh390-timeout-attribution.sh" # GH-390 (exit-7 attribution: dialog vs runaway vs slow vs wedged)
   "gh432-failed-turn-persist.sh" # GH-432 (a failed turn still reaches rtl_enforce: commit + token handoff; both routes) — 12/0 post-fix, control 5/4 pre-fix
+  "gh441-gate-env-contract.sh"   # GH-441 P2 (every driver export is classified scrub-or-pass; custom gates get the same clean env) — 13/0; controls: unhelped gate contaminated, orphaned helper fails loud
   "hq-marathon-live.sh"          # GH-218 (cross-repo live marathon status)
   "debug-mantra.sh"              # GH-162 (debug-mantra auto-trigger note on a phase's prior attempt)
   "lane-attempt-cap.sh"
