@@ -460,7 +460,7 @@ marathons moved anything the radar tracks.
 | Target | Claim | Marathon effect |
 |---|---|---|
 | `RADAR-class-guards-cant-fail` | Litmus | GH-441 Phase 2 shipped (`c9a17d7`, PR #445) — **the only radar-relevant work in either PR**. #441 still open; #419/#418/#425/#426/#416/#375 all still open. **Litmus open count 17 → 17.** |
-| `RADAR-ensure-gitignore` | UNCLAIMED | **Zero commits touched `relay-automation/xyz-vendor.sh` on any branch.** #314/#440 open. A worktree exists at `/private/tmp/xyz-314-440-fix-65675` but sits at `f95eefc` with nothing committed — staged, never landed. |
+| `RADAR-ensure-gitignore` | UNCLAIMED | **Zero commits touched `relay-automation/xyz-vendor.sh` on any branch.** #314/#440 open. A scratch worktree for this fix appears in `git worktree list` but sits at `f95eefc` with nothing committed — staged, never landed. |
 | `RADAR-class-foreign-repo-field-gaps` | UNCLAIMED | #438/#439 open, still no milestone. |
 
 Orphan share **67/99 → 68/100** — slightly worse. Third consecutive observation that effort flows
