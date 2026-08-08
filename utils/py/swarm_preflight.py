@@ -1299,12 +1299,24 @@ def main():
                     if not t.startswith("-"):
                         script = t
                         break
-                if not script or not os.path.isfile(os.path.join(target_root, script)):
-                    ready, ready_next = 0, f"gate script not found at target.ref: {script or '<none>'}"
+                script_path = os.path.join(target_root, script) if script else ""
+                if not script or not os.path.isfile(script_path):
+                    ready, ready_next = 0, (
+                        f"gate script not found under target_root {target_root}: {script or '<none>'}")
             # GH-308 port: any non-bash/sh gate program must resolve on PATH (swarm-preflight.sh:774).
             # Python exempted node/npm/python3, so a contract whose gate runner (e.g. `npm test`) is NOT
             # installed was emitted as marathon-ready (exit 0) instead of refused NOT-READY (exit 5) on
             # the live lane. `elif` mirrors the Bash structure (a bash/sh gate is not also PATH-checked).
+            elif os.path.sep in g0 or (os.path.altsep and os.path.altsep in g0):
+                # A direct program path is executed with cwd=target_root by marathon-drive.  Checking it
+                # with shutil.which() instead makes a target-relative path depend on the operator's cwd.
+                program_path = os.path.join(target_root, g0)
+                if not os.path.isfile(program_path):
+                    ready, ready_next = 0, (
+                        f"gate program not found under target_root {target_root}: {g0}")
+                elif not os.access(program_path, os.X_OK):
+                    ready, ready_next = 0, (
+                        f"gate program is not executable under target_root {target_root}: {g0}")
             elif not shutil.which(g0):
                 ready, ready_next = 0, f"command '{g0}' not found in PATH"
                     

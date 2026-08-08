@@ -163,3 +163,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 3 · Builder · codex
+
+- Updated `utils/py/swarm_preflight.py`: interpreter scripts are still checked for target-root
+  existence only, while a directly executed separator-containing program is checked at
+  `target_root` for both existence and executability. Every target-relative failure now names the
+  searched root.
+- Added and registered `test/gh343-gate-program-target-root.sh`. It checks a mode-644 `bash` script
+  and an executable direct program from target and foreign cwd, deletion and non-executable controls,
+  plus an executable pre-GH-343 `shutil.which()` replay that fails from the foreign cwd.
+- Verification: `bash test/gh343-gate-program-target-root.sh` — 12 pass, 0 fail. The full gate was
+  not run per the phase containment rule.
