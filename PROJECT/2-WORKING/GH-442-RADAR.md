@@ -17,6 +17,10 @@ non_goals:
   - Cross-repo / fleet-wide roll-up. Deliberately deferred — the operator wants the review and its
     recommendations to stay granular and per-repo at this stage. No rebalance-OS integration, no
     Focus 5 tile, no shared DB. A later umbrella layer must not be designed for here.
+    (Still deferred, but run 4 supplied the first concrete argument FOR it: the
+    guards-cannot-report-red class was found independently in two repos that share no application
+    code, and "this class recurs fleet-wide" is a fact no single-repo radar can ever observe.
+    Recorded as evidence for a future decision, not as a change of scope.)
   - Any automated enforcement. /radar never blocks a commit, never gates a marathon, never fails CI.
     It is an advisory read an operator asks for. Persisting a report is not enforcement — nothing
     downstream is required to consume it.
@@ -53,7 +57,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| Phase 0 kill gate run and passed (see "Phase 0 results" below): Lens 2's top cluster is #419 (13 `related:` citations), which the operator already hand-derived the Litmus release from — the method is validated by its own prior manual run; Lens 1 surfaced a design correction (harness-generated commits must be excluded from the RGT denominator). `skills/radar/SKILL.md` + `install.sh` authored incorporating both findings. | Rest of Phase 1: run the skill end-to-end on this repo, then on a low-structure vendored repo (e.g. `giant-brains-claude-skills`) to prove graceful degradation; verify the no-targets path writes nothing; first real `RADAR-REPORT-*.md` + `radar`-labeled issue behind one confirmation. |
+| **Phase 2's reconciliation path executed for the first time, and the skill is installed.** Run 3 (2026-08-07) was the first dispatched through the installed skill rather than read by hand, from a clean worktree cut from origin. It reconciled #444 in place across a 63-commit delta: both targets carried forward by ID at `runs: 2`, no duplicate issue opened, run-delta comment posted. Three more fixes folded in (same-day report collision, tally-must-sum guardrail, `rgt:` adoption printed beside Transform). `~/.claude/skills/radar` symlink installed system-wide. | Two gaps remain before v1.0 can be claimed honestly: (a) **strike-through on a retired target has still never run** — nothing has been fixed between any two runs, so that branch is unexercised; (b) the systematic doc-only-close sweep (open question 5 still rests on one instance). Both need elapsed time and a real fix landing, not more runs today. |
 
 ## Why now
 
@@ -340,13 +344,111 @@ gate-repair (Litmus) — which is exactly what the gate required.
       seam heat (per-commit heat went flat while the `related:` graph stayed sharp), and the
       orphan-share line in Lens 3. Bonus: first confirmed instance of the doc-only-close predictor
       (#18, closed doc-only in 2 hours, seam re-fired at day 34 and day 44).
-- [ ] Run it on one vendored repo with far less structure (e.g. `giant-brains-claude-skills`)
-      to prove graceful degradation.
+- [x] Run it on `giant-brains-claude-skills` to prove graceful degradation — 2026-08-07.
+      **The no-targets guardrail fired correctly and nothing was written**, which is the outcome
+      that most needed proving. Five more calibration fixes earned (see "Second calibration run"
+      below), one of which was a genuine parser defect: signal 1 read 2 docs carrying `related:`
+      and extracted 0 references *in silence*, because that repo uses the scalar-filename shape
+      (`related: GH-8-FOO.md`) rather than the block-array-of-`#refs` shape. The radar exhibited
+      the exact defect class it was built to detect — a signal that reads as active while nothing
+      runs. Yield reporting is now mandatory on that signal.
 - [ ] Document the boundary vs. weekly-shipped inside the skill so a session doesn't pick the wrong one.
 
 **QA gate:** two clean runs on structurally different repos; the no-targets path writes nothing at
 all; zero writes outside the two sinks; every finding carries a citation; every checklist item names
 a file and an acceptance condition an unrelated agent could act on cold.
+**Gate status 2026-08-07: PASSED.** Two runs, structurally opposite (see below); the no-targets
+path fired on run 2 and wrote nothing; run 1's two sinks were the only writes across both.
+
+#### Second calibration run — `giant-brains-claude-skills`, 2026-08-07
+
+Same window, trunk `origin/main`, 21 commits (vs 438). The repo turned out **less degraded than
+planned for** — it has PDDA, `PROJECT/**`, and `RELEASES.md` — so the interesting failures were
+not missing inputs but *inputs in unexpected shapes*. The two runs' sharpest signals were exact
+inverses, which is the finding that most changes the design:
+
+| | xyz-3-agents-swarm | giant-brains-claude-skills |
+|---|---|---|
+| Signal 1 (`related:`) | decisive — 13-citation cluster | **0 extracted** from 2 docs (scalar-filename shape) |
+| Signal 2 (seam heat) | flat, contributed nothing | 13/13 fix commits on one seam — but **one day, one PR** |
+| Signal 4 (doc-only) | first confirmed instance | structurally unavailable — **0 closed issues repo-wide** |
+| Lens 3 | Nightwatch drift, orphan 68% | seed-only `RELEASES.md` → correct output is silence |
+| Verdict | 3 targets, both sinks written | **no targets — nothing written** |
+
+Five fixes folded into the skill: (1) signal 1 parses both `related:` shapes and must report
+extraction yield, since `M=0 while N>0` is a parser failure masquerading as an absent signal;
+(2) a **recurrence discriminator** on signal 2 — a hot seam counts only if its fixes span ≥2
+calendar days AND ≥2 originating PRs, else it is concentrated authoring (13 fixes on one component
+in one PR is a skill being written, not a defect recurring); (3) signal precision is repo-dependent,
+so measure per-signal yield instead of assuming the ranking; (4) Lens 3 skips installer-seed blocks;
+(5) print Unclassified subjects verbatim with an adjusted read beside the mechanical one — component-
+as-type prefixes (`stay-focused: add ... skill`) made mechanical inference report 5% Grow where the
+honest read was 19%, a 4x undercount.
+
+#### Run 3 — first reconciliation, first true skill dispatch (2026-08-07)
+
+Run from a clean worktree (`radar/reconcile-run2` off `origin/development` @ `f95eefc`) so neither
+the main checkout's uncommitted work nor a concurrent operator session could contaminate the read.
+Invoked via the installed skill, not by hand — closing the "never actually dispatched" gap.
+
+**Reconciliation worked.** 63 commits of delta (Litmus marathon, PR #443); both targets matched by
+ID and carried forward at `runs: 2`; no second radar issue opened; run-delta comment posted to #444.
+
+**The substantive finding is that 63 commits changed nothing the radar tracks**: flow mix moved ~1
+point (Run 71%→71%, Grow 4%→5%), both targets untouched, orphan share identical at 67. Meanwhile a
+*third* release band (Plumbline 0.4.0) was added — planning extending forward faster than existing
+bands absorb the field reports already in hand. That is the aging signal doing its job.
+
+Three fixes earned: (1) **same-day report collision** — run 1 had already taken
+`RADAR-REPORT-2026-08-07.md`; "never edit a prior report" outranks one-doc-per-date, so an Nth
+same-day run appends `-runN`; (2) **tally-must-sum guardrail** — a `tail` view of a piped commit
+tally returned counts contradicting the `head` view of the same pipeline (shell-wrapper output
+mangling), so the skill now writes subjects to a file via `/usr/bin/git` and asserts the bucket sum
+equals the raw line count before reporting; (3) **`rgt:` adoption printed beside Transform** —
+adoption is 0 docs repo-wide, so "Transform 0%" has always meant *nobody declared anything* rather
+than *no transformative work happened*, and that must not be left to the reader to infer.
+
+**Still unexercised:** the strike-through branch. No target has been fixed between any two runs, so
+the "seam went quiet → strike through citing the fixing commit" path has never executed.
+
+#### Run 4 — `rebalance-OS`, operator-run, first non-tooling repo (2026-08-07)
+
+Run independently by the operator in a parallel session; findings folded back here. 548 commits,
+a product repo (collectors, Swift app, web server) rather than a harness or skills library.
+
+**The convergence is the headline.** Its #2 target is `RADAR-class-guard-cannot-report-red` — the
+same defect class as this repo's #419 `guards-cant-fail`, arrived at independently, in a codebase
+that shares no application code with xyz. Two of three top clusters in a product repo are the same
+*shapes* found in a tooling repo, with entirely domain-specific membership (memory ceilings, SQLite
+locks, orphaned vectors). That is the strongest evidence so far that the taxonomy generalizes
+rather than describing xyz's quirks — and it is also the first real argument for the fleet-level
+roll-up this doc deliberately deferred, since a class recurring in two repos independently is a
+fact neither repo's radar can see on its own.
+
+**Two of this session's recent fixes were independently confirmed by it.** The concentrated-authoring
+discriminator caught GH-257 — 16 fix commits, one day, one issue, the repo's hottest seam by raw
+count and correctly excluded. And the tally-must-sum guardrail turned out to be under-specified:
+the operator's run hit **RTK truncating `git log` to exactly 50 lines for both windows of a
+548-commit repo**, a silent cap that would have produced a confidently wrong distribution. The
+skill now also cross-checks against `git rev-list --count`.
+
+**Five fixes folded in from it**, one of which is a genuine defect in reconciliation:
+
+1. **Signal 6 — operational evidence.** A product repo has proof a class is firing *now*: the
+   operator's top target was confirmed by `refusing to start: memory compressor holds 21.1 GB` in
+   5 of the last 9 nightly logs. Neither tooling repo had this signal at all.
+2. **Symptom-masking guard on strike-through (the defect).** Its target 3's store bloat is a
+   plausible *cause* of target 1's memory pressure — so shipping the reclaim work would silence
+   target 1's symptom while its defect stayed put. Left alone, the next run would have struck
+   through a live target and reset its aging clock. Strike-through now requires a commit that
+   **names the seam**; a symptom that stops without one is annotated
+   `quiet, unexplained — possible symptom masking by <other target>`.
+3. **Missing-colon prefix family** (`fix(GH-169) Phase 2: ...`) dropped four correctly-typed commits;
+   now checked by name and reported as a source-fixable measurement defect.
+4. **Lens 3 fallback** when `Milestone:` is empty or no milestones exist — read claim status from
+   `Description:` prose, and report a 100% orphan share as a *missing binding*, not backlog drift.
+5. **Three-way signal-yield reporting** — parser failure vs. structurally unavailable vs. available
+   and genuinely empty (81 closed issues, zero doc-only closes is a real negative result).
 
 ### Phase 2 — Reconciliation across runs + triage handoff
 
