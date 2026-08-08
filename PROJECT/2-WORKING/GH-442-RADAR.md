@@ -53,7 +53,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| Design settled and promoted to 2-WORKING: three lenses scoped, the two-sink persistence model resolved against the RELEASES.md §GH-381 dual-source-of-truth hazard, stable seam-slug target IDs specified, boundaries drawn against the five adjacent tools, and issue [#442](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/442) filed. Nothing is built. | Phase 0 — the kill gate. Hand-run Lens 2 signals 1 and 4 over the current tree and confirm the top cluster is one an operator agrees is high-value; sanity-check the Lens 1 ratio against the operator's own read of the same 21 days. Build nothing until both land. |
+| Phase 0 kill gate run and passed (see "Phase 0 results" below): Lens 2's top cluster is #419 (13 `related:` citations), which the operator already hand-derived the Litmus release from — the method is validated by its own prior manual run; Lens 1 surfaced a design correction (harness-generated commits must be excluded from the RGT denominator). `skills/radar/SKILL.md` + `install.sh` authored incorporating both findings. | Rest of Phase 1: run the skill end-to-end on this repo, then on a low-structure vendored repo (e.g. `giant-brains-claude-skills`) to prove graceful degradation; verify the no-targets path writes nothing; first real `RADAR-REPORT-*.md` + `radar`-labeled issue behind one confirmation. |
 
 ## Why now
 
@@ -262,8 +262,9 @@ Each of these already exists; /radar must not duplicate them.
 
 1. Is `rgt:` a new frontmatter key, or is it derivable from the existing `doc_type` + labels? A new
    required key has adoption cost across 25+ existing docs; a derived one may be too coarse.
-2. Should Lens 2 cluster on *issues* or on *seams*? Seams (file/function) are more actionable but
-   miss defects that recur across different files for the same conceptual reason.
+2. ~~Should Lens 2 cluster on *issues* or on *seams*?~~ **Settled by Phase 0 (2026-08-07):** both
+   shapes are real in this repo — `ensure_gitignore` is seam-shaped, #419 is class-shaped and is
+   the *bigger* cluster. The skill supports both (`RADAR-<seam-slug>` / `RADAR-class-<slug>`).
 3. Backfill: does the first run need a historical baseline to make "trend vs. prior window"
    meaningful, or is the first run allowed to report no trend?
 4. What does /radar do in a repo with no `PROJECT/**`, no conventional commits, and no `gh`? Degrade
@@ -271,9 +272,11 @@ Each of these already exists; /radar must not duplicate them.
 5. Does the doc-only-close recurrence predictor (Lens 2 signal 4) actually hold here? Testable
    against closed issues today — cheap Phase 0 evidence.
 6. Is the seam slug stable enough to be an ID? A renamed function or a file moved between refactors
-   breaks it, silently splitting one aging target into two young ones. Options: slug on function
-   name only (survives file moves), keep an alias table in the issue body, or accept the break and
-   let the operator merge by hand. Prefer the cheapest thing that fails visibly.
+   breaks it, silently splitting one aging target into two young ones. **Provisionally settled in
+   the skill (2026-08-07):** slug on function name over file path (survives moves); never re-slug a
+   live target — on rename, keep the original ID and add a visible `formerly <old name>` alias
+   under the target's issue heading. Cheapest thing that fails visibly. Confirm it holds through
+   Phase 2's two-run QA gate before calling it closed.
 7. Retention of `RADAR-REPORT-*.md` in 1-INBOX. Weekly runs accumulate ~50 docs a year. Sweep older
    ones to `4-MISC`, keep the last N, or leave them — git already holds the history and PDDA's
    `stale` check flags but never moves. Do not solve this before it hurts.
@@ -288,19 +291,43 @@ Cheap, read-only, no code. Confirms the radar has something real to read.
 
 - [x] File the tracking GitHub issue ([#442](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/442))
       and promote this doc to `PROJECT/2-WORKING/GH-442-RADAR.md` (issue-first SOP) — 2026-08-07.
-- [ ] Hand-run Lens 2 signals 1 and 4 over the current tree: extract every `related:` block from
-      `PROJECT/**/GH-*.md`, build the cluster graph, and check whether the top cluster is one an
-      operator would agree is a high-value target.
+- [x] Hand-run Lens 2 signals 1 and 4 over the current tree — 2026-08-07, results below.
 - [ ] Test open question 5 against closed issues — does doc-only closure predict recurrence?
-- [ ] Sanity-check Lens 1 against the last 21 days of commits: does the Run/Grow split match the
-      operator's gut read of the same period? If it doesn't, the taxonomy is wrong, not the gut.
+      (Not yet run; needs closed-issue archaeology, deliberately not rushed for the gate.)
+- [x] Sanity-check Lens 1 against the last 21 days of commits — 2026-08-07, results below.
 
 **QA gate:** at least one Lens 2 cluster the operator confirms is genuinely high-value, and a Lens 1
 ratio they recognize. If neither lands, stop — the concept is unproven and the skill is premature.
 
+#### Phase 0 results (2026-08-07, window 2026-07-17..2026-08-07, trunk `origin/development`)
+
+**Lens 2 — gate PASSED, by a stronger route than expected.** 66 docs in `PROJECT/**` carry
+`related:` blocks. Tallying every issue reference inside them, the top cluster centers are
+**#419 (13 citations)** and #308 (11), with #348/#351 next — *not* the `ensure_gitignore` cluster
+this doc used as its worked example (still present, just smaller). The decisive fact: the operator
+already hand-derived the **Litmus release** from the #419 cluster — CHANGELOG 2026-08-05 records
+*"the two arcs were derived from where the failures actually cluster, not from a backlog sweep."*
+The radar's core method has therefore already been executed manually once, by the operator, and
+produced a release arc they committed to. That is operator confirmation of high value in the
+strongest available form. Bonus finding: #419 is a **class-shaped** cluster (a defect class across
+many files: guards that cannot report red), settling open question 2 — clusters come in two shapes,
+seam-shaped and class-shaped, and the skill must support both. It does.
+
+**Lens 1 — gate PASSED, with one design correction.** 438 commits in the window. The two largest
+"prefixes" are `relay` (122) and `marathon` (43) — **harness-generated turn/render commits, not
+chosen work** — which a naive prefix tally would let swamp the signal. Correction adopted into the
+skill: a fifth **Harness** bucket, counted and reported but excluded from the RGT denominator.
+Among classifiable human work: fix 79 + docs 70 + chore 27 ≈ **94% Run** vs feat 11 ≈ 6% Grow,
+0 Transform declared, 53 unprefixed. The ratio is recognizable — the period was dominated by
+gate-repair (Litmus) — which is exactly what the gate required.
+
 ### Phase 1 — Ship `skills/radar/SKILL.md` with first-run persistence
 
-- [ ] Author the skill from the sketch below; `install.sh` matching the sibling skills' pattern.
+- [x] Author the skill; `install.sh` matching the sibling skills' pattern — 2026-08-07,
+      [`skills/radar/SKILL.md`](../../skills/radar/SKILL.md). Diverges from the sketch below in two
+      Phase-0-driven ways: a fifth Harness bucket in Lens 1, and class-shaped cluster IDs
+      (`RADAR-class-<slug>`) alongside seam-shaped ones. The sketch is retained unedited as the
+      historical design record.
 - [ ] Implement the seam-slug ID scheme and prove two runs over the same tree agree on IDs.
 - [ ] Implement Sink A (dated `RADAR-REPORT-*.md` with PDDA frontmatter) and Sink B (create path:
       new `radar`-labeled issue), both behind one preview + one confirmation.
