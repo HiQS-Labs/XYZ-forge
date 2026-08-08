@@ -4,7 +4,7 @@ source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/iss
 title: "Prelight: swarmability scoring using codebase-memory-mcp graph signals"
 status: Active (2-WORKING) — planning doc opened; Phase 0 scoring contract next
 created: 2026-07-06
-updated: 2026-07-06
+updated: 2026-08-07
 owner: noel
 doc_type: feature
 complexity: 3
@@ -13,9 +13,17 @@ effort: 3
 phases: 4
 ratings_provisional: false
 non_goals:
-  - Not changing relay containment, tick locking, or the event schema in the first slice
-  - Not auto-firing swarm lanes from a score alone without an operator-visible explanation
+  - Not spinning up Claude Code sub-agents or any agent runtime; this ships a read, never a runner
+  - Not changing the coordination kernel — tick claims, locks, heartbeats, relay containment, or the event schema
+  - Not auto-firing, auto-splitting, or mutating swarm-preflight packets and marathon plans from a score
+  - Not rewriting swarm-preflight's existing deterministic checks, and not pre-wiring a landing seam before Phase 3
+  - Not building AST or parser infrastructure; an unresolvable graph means insufficient-confidence, not a new parser
+  - Not a dashboard, TUI, or web surface — JSON/file output is the whole operator surface for this slice
+  - Not a repo-wide architecture, dead-code, or code-quality report; task-scoped collision risk only
+  - Not a hard dependency on codebase-memory-mcp; XYZ behaves as it does today when the MCP is absent or the repo unindexed
   - Not treating graph-derived parallelism as proof; this is a heuristic planning aid
+  - Not quoting an accuracy number without the Phase 2 fixture set, and not tuning weights on synthetic examples
+  - Not fleet-wide or multi-repo scoring across vendored .xyz copies in this slice
 related:
   - utils/py/swarm_preflight.py
   - utils/marathon-plan.sh
@@ -43,14 +51,71 @@ default-off. If the work later mutates scheduling defaults or containment policy
 
 | What was just completed | What's next |
 |---|---|
-| GH-156 opened and captured 2026-07-06. The earlier feasibility read already established that the graph side is strong enough to support this: `codebase-memory-mcp` exposes clusters, hotspots, package boundaries, call paths, and complexity metrics, but XYZ has no scoring layer that turns those into lane recommendations. | Phase 0 — lock the scoring contract: inputs, gates, output schema, and the narrow prototype seam (`swarm-preflight` advisory layer vs. separate analyzer). |
+| GH-156 opened and captured 2026-07-06. The earlier feasibility read already established that the graph side is strong enough to support this: `codebase-memory-mcp` exposes clusters, hotspots, package boundaries, call paths, and complexity metrics, but XYZ has no scoring layer that turns those into lane recommendations. **2026-08-07:** the issue body gained a full scope fence and a deliverables checklist; both are mirrored below so the execution surface and the remote agree. | Phase 0 — lock the scoring contract: inputs, gates, output schema, and the narrow prototype seam (`swarm-preflight` advisory layer vs. separate analyzer). |
 
 ## Table of contents
 
+- [Non-goals](#non-goals)
+- [Deliverables](#deliverables)
 - [Phase 0 — Define the scoring contract](#phase-0--define-the-scoring-contract)
 - [Phase 1 — Build a task-scoped prototype scorer](#phase-1--build-a-task-scoped-prototype-scorer)
 - [Phase 2 — Validate on known-safe and known-bad lane shapes](#phase-2--validate-on-known-safe-and-known-bad-lane-shapes)
 - [Phase 3 — Decide the landing seam and operator surface](#phase-3--decide-the-landing-seam-and-operator-surface)
+
+## Non-goals
+
+Scope fence for whoever picks this up. These are boundaries, not preferences — the point is that
+this issue ships a *read*, never a *runner*.
+
+**Do not build**
+
+- Not spinning up Claude Code sub-agents, or any agent runtime. The deliverable reviews a plan and
+  emits a verdict; it never launches, schedules, or supervises a lane.
+- Not touching the coordination kernel: no changes to `tick` claims, locks, or heartbeats, no relay
+  containment changes, no event-schema changes.
+- Not auto-firing, auto-splitting, or mutating swarm-preflight packets and marathon plans from a
+  score. Advisory output, default-off, operator decides.
+- Not rewriting or replacing swarm-preflight's existing deterministic checks (write-set collision,
+  `fix_probes`). The score sits beside them. *Where* it eventually lands is the Phase 3 decision —
+  do not pre-wire a seam in Phase 0/1.
+- Not building AST or parser infrastructure. Consume the signals the graph already exposes. GH-163
+  closed the "reuse a sibling repo's AST tooling" path and GH-169 already vendored acorn; when the
+  graph cannot resolve enough structure, the correct output is `insufficient-confidence`, not a new
+  parser.
+- Not a dashboard, TUI, or web surface. JSON/file output is the entire operator surface for this
+  slice.
+
+**Do not widen or over-claim**
+
+- Not a repo-wide architecture, dead-code, or code-quality report. Task-scoped collision risk only —
+  what *this* plan touches.
+- Not a hard dependency on `codebase-memory-mcp`. With the MCP absent, the repo unindexed, or the
+  graph stale, XYZ must behave exactly as it does today.
+- Not treating a graph-derived verdict as proof of safety. It is a heuristic planning aid, and the
+  output wording must not imply otherwise.
+- Not quoting an accuracy or hit-rate number without the Phase 2 fixture set behind it.
+- Not tuning weights against synthetic examples — validation runs against real prior XYZ lanes with
+  known outcomes.
+- Not fleet-wide or multi-repo scoring across vendored `.xyz` copies in this slice.
+
+Anything genuinely worth doing that falls outside these lines gets its own issue rather than being
+absorbed into this one.
+
+## Deliverables
+
+The six artifacts this issue owes, mapped to the phase that produces each. Check an item only when
+the artifact exists and is committed — not when the thinking is done. Full wording lives on
+[#156](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/156); the phase
+checklists below are how each one gets built.
+
+| # | Deliverable | Phase |
+|---|---|---|
+| 1 | **Scoring model spec** — input signals, hard gates versus weighted signals, and the `search_graph` / `trace_path` / `query_graph` call behind each | [Phase 0](#phase-0--define-the-scoring-contract) |
+| 2 | **Frozen output schema** — the JSON contract a planner or operator consumes | [Phase 0](#phase-0--define-the-scoring-contract) |
+| 3 | **Lane-splitting heuristic** — grouping rule, shared-surface and hotspot penalties, and the conditions that force `serial` outright | [Phase 0](#phase-0--define-the-scoring-contract) → [Phase 1](#phase-1--build-a-task-scoped-prototype-scorer) |
+| 4 | **Task-scoped prototype** — one task input in, full schema out, with reasons naming concrete graph signals rather than only a number | [Phase 1](#phase-1--build-a-task-scoped-prototype-scorer) |
+| 5 | **Fixture set and scored comparison** — three real prior lanes scored against known outcomes, misses recorded | [Phase 2](#phase-2--validate-on-known-safe-and-known-bad-lane-shapes) |
+| 6 | **Landing-seam decision** — swarm-preflight versus marathon-plan versus standalone, justified by results and blast radius; "not trustworthy enough to land" is a complete answer | [Phase 3](#phase-3--decide-the-landing-seam-and-operator-surface) |
 
 ## Working scoring shape
 
