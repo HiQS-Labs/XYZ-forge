@@ -1,5 +1,5 @@
 # Marathon Phase gh418-preflight-issue-state
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -200,3 +200,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   aborting preflight.
 - Extended `test/gh418-issue-state-frozen.sh` with C3, an end-to-end binary-file regression.
   `validate.sh` already registers this targeted test, so no registration change was needed.
+
+### Round 3 · Reviewer · agy
+
+swept file: yes
+
+The changes to `utils/py/swarm_preflight.py` correctly handle decoding errors when inferring tests by catching `UnicodeError` and using the `utf-8` encoding. The `test/gh418-issue-state-frozen.sh` appropriately includes a binary test case that confirms the fix. Swept all modified files and verified no other preexisting issues. The fix works locally as intended.
+
+**Verdict:** Approved
