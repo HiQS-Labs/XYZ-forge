@@ -5,7 +5,7 @@ import tempfile
 import subprocess
 import shlex
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
-                 narration_mentions_root)
+                 narration_mentions_root, agy_auth_output_failure)
 from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
@@ -19,8 +19,25 @@ def agy_auth_preflight(agy_bin):
     try:
         with open(out_file, "w") as out_f:
             subprocess.run([agy_bin, "whoami"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
-        if os.path.exists(out_file): os.remove(out_file)
-        return True
+        # GH-375: exit status alone cannot decide this. `agy whoami` EXITS 0 while failing to run at
+        # all when there is no TTY — `CLI error: bubbletea: error opening TTY ...` — and stdin is
+        # DEVNULL here, so that is the NORMAL path under automation, not an edge case. The probe
+        # therefore reported "auth OK" in the one context it exists for. Worse, the captured output,
+        # the only place the failure was visible, was deleted on this branch.
+        #
+        # Matched on agy's own error PREFIXES rather than a bare "error" substring. A bare substring
+        # test fails the opposite way: `whoami` prints account identity, so any org, handle, or
+        # banner containing "error" would block a lane whose auth is fine — and a false failure here
+        # stops the run outright, which is worse than the bug being fixed. Empty output is also a
+        # failure: a probe that establishes nothing must not report success.
+        auth_fail = agy_auth_output_failure(out_file)
+        if not auth_fail:
+            if os.path.exists(out_file): os.remove(out_file)
+            return True
+        print(f"agy-turn: agy auth pre-flight exited 0 but {auth_fail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
+        rc = 7
+        # Fall through to the shared tail below, which echoes the captured output and returns False.
+        # That output is the diagnosis — it is what the old success branch deleted.
     except subprocess.TimeoutExpired:
         print(f"agy-turn: agy auth pre-flight timed out after {secs}s; likely expired auth opening an interactive login. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
         rc = 7

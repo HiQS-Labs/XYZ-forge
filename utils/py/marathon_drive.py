@@ -1280,9 +1280,9 @@ relay-file: {rel_relay}
     def terminal_status(s):
         return s in ("Approved", "Closed")
 
-    def token_state():
+    def token_state(task_name=None):
         try:
-            info = subprocess.check_output([tick_bin, "info", relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
+            info = subprocess.check_output([tick_bin, "info", task_name or relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
         except Exception:
             return ("", "")
         status = claimer = handoff = ""
@@ -1294,12 +1294,19 @@ relay-file: {rel_relay}
         return (status, actor)
 
     def path_has_nonempty_phase_delta(path):
-        # True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
-        # or is newly untracked/added. Shared by --requires-test and artifact recovery: an empty or
-        # unchanged artifact is no evidence that a builder turn made progress.
+        # True iff <path> changed since pre_phase_head (committed diff), was DELETED, or is newly
+        # untracked/added — provided that if it still exists it is non-empty. Shared by
+        # --requires-test and artifact recovery: an empty or unchanged artifact is no evidence that a
+        # builder turn made progress.
+        #
+        # GH-438 (partial): the existence test used to run first and unconditionally, so a lane whose
+        # deliverable is REMOVING a path could never register progress — the artifact is gone, which
+        # is the whole point, and the function read that as "no delta". The emptiness rule is what
+        # actually earns its keep (a newly created empty file is not a deliverable), so it now applies
+        # only when the path still exists, and git is trusted to report a deletion as the change it is.
         rroot = args.target_root or root
         abs_p = path if os.path.isabs(path) else os.path.join(rroot, path)
-        if not (os.path.isfile(abs_p) and os.path.getsize(abs_p) > 0):
+        if os.path.isfile(abs_p) and os.path.getsize(abs_p) == 0:
             return False
         git_path = path
         if os.path.isabs(path) and os.path.commonpath([os.path.abspath(path), os.path.abspath(rroot)]) == os.path.abspath(rroot):
@@ -1312,7 +1319,9 @@ relay-file: {rel_relay}
         st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", git_path],
                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
         for line in st.splitlines():
-            if line.startswith("??") or line.startswith("A "):
+            # GH-438: " D"/"D " alongside the newly-added shapes, so a removal still registers when
+            # there is no pre_phase_head to diff against (the branch above catches the normal case).
+            if line.startswith("??") or line.startswith("A ") or line.startswith(" D") or line.startswith("D "):
                 return True
         return False
 
@@ -1369,13 +1378,40 @@ relay-file: {rel_relay}
     # (recover_already_satisfied_lane, triggered mid-relay on a no-progress reroute) to this
     # separate post-terminal-gate-retry trigger. DRY_RUN is exempted: its whole point is to
     # render + show the tick seed for inspection, and there is nothing to commit or seed here.
+    def completed_relay_task():
+        # GH-385: the token that RECORDED this phase's completion is not necessarily the base token
+        # this run computed. A phase that once failed and was re-run with --retry completes on a
+        # suffixed token (GH-116 allocates -2, -3, ...), while the base name keeps the dead attempt's
+        # state forever. A later run without --retry then reads the base token, sees "not done", and
+        # rebuilds a phase that is demonstrably Approved — a full builder + reviewer cycle, real
+        # money on --builder claude, and observed re-introducing work that had been reverted.
+        #
+        # The relay file already records which task it was rendered for, in the marathon-drive
+        # directive, and that render is redone on every fire including the retry — so the file is an
+        # authoritative statement of the token this phase actually ran on. Prefer walking suffixes:
+        # this answers "which token completed THIS relay" rather than "did any token for this phase
+        # ever reach done", which would wrongly satisfy a lane whose retry belonged to another run.
+        try:
+            with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if not line.lstrip().startswith("<!-- marathon-drive:"):
+                        continue
+                    for field in line.split():
+                        if field.startswith("task="):
+                            recorded = field.split("=", 1)[1].strip()
+                            return recorded or relay_task
+                    break
+        except OSError:
+            pass
+        return relay_task
+
     def satisfied_lane_terminal():
         if not os.path.isfile(relay_file):
             return False
         s = file_status()
         if not terminal_status(s):
             return False
-        tstatus, _actor = token_state()
+        tstatus, _actor = token_state(completed_relay_task())
         return tstatus == "done"
 
     if not args.dry_run and satisfied_lane_terminal():
