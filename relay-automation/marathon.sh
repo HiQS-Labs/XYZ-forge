@@ -92,6 +92,13 @@ Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-ad
                           Code CLI subprocess instead: a SEPARATE, PER-CALL API-BILLED turn-taker —
                           an explicit, cost-acknowledged choice, not the default.
   --phases-dir DIR        Where to create phases/<id>/ (default: <repo-root>/phases).
+  --target-root DIR       Foreign git repo the BUILD lands in; forwarded to marathon-drive.sh (GH-11).
+                          The relay thread, tick token, phases/ and relay-system/ transcripts all stay
+                          in THIS harness repo — only code changes land in DIR. Use this when the target
+                          repo cannot track harness output (e.g. a public repo that gitignores phases/
+                          and relay-system/ on purpose): without it, marathon-drive's `git add` of
+                          RELAY.md / ESCALATION.md / the transcript fails and the phase HALTs.
+                          Plan and brief paths resolve against DIR when set.
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh, per phase).
   --dry-run               Render each phase's relay file and print the tick seed; exit without running.
   --force                 GH-45: bypass the per-lane attempt cap for this run.
@@ -102,11 +109,13 @@ EOF
 }
 
 PLAN=""; BUILDER="codex"; PHASES_DIR=""; PRE_ADVANCE_CMD=""; DRY_RUN=0; FORCE=0; RETRY_PHASE=""; CLOSEOUT_PR=0
+TARGET_ROOT=""   # GH-11 passthrough: foreign repo the BUILD lands in; relay/transcripts stay in ROOT
 while (($# > 0)); do
   case "$1" in
     --plan)            PLAN="${2:-}"; shift 2 ;;
     --builder)         BUILDER="${2:-}"; shift 2 ;;
     --phases-dir)      PHASES_DIR="${2:-}"; shift 2 ;;
+    --target-root)     TARGET_ROOT="${2:-}"; shift 2 ;;
     --pre-advance-cmd) PRE_ADVANCE_CMD="${2:-}"; shift 2 ;;
     --dry-run)         DRY_RUN=1; shift ;;
     --force)           FORCE=1; shift ;;   # GH-45: forward to each phase so a parked lane can be re-fired
@@ -132,7 +141,12 @@ _plan_abs="$(cd "$(dirname "$PLAN")" && pwd -P)/$(basename "$PLAN")"
 # path — canonicalize both or a macOS /var -> /private/var checkout falsely flags every plan.
 # symlinks (e.g. macOS /var -> /private/var), so a logical (non -P) comparison here would falsely
 # flag every plan as "outside" on such a checkout (same pitfall swarm-preflight.sh works around).
-_root_canon="$(cd "$ROOT" 2>/dev/null && pwd -P || printf '%s' "$ROOT")"
+# On a --target-root run the plan lives in the TARGET repo's PROJECT/2-WORKING/, not the harness's,
+# so this guard must measure against that repo — otherwise every cross-repo plan falsely "resolves
+# outside PROJECT/2-WORKING/" and dies. GH-212's intent is unchanged: the plan must sit under
+# PROJECT/2-WORKING/ of whichever repo owns it.
+_plan_base="${TARGET_ROOT:-$ROOT}"
+_root_canon="$(cd "$_plan_base" 2>/dev/null && pwd -P || printf '%s' "$_plan_base")"
 _home_canon="$(cd "$MARATHON_HOME" 2>/dev/null && pwd -P || printf '%s' "$MARATHON_HOME")"
 _plan_rel_root="${_plan_abs#"$_root_canon"/}"
 case "$_plan_rel_root" in
@@ -173,7 +187,11 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact turn_time
   lane_ns=""
   [[ -n "$PLAN_NAME" ]] && lane_ns="${PLAN_NAME}--${id}"
   [[ -n "$brief" ]] || die "phase $id: no 'brief:' in the plan — a phase needs a task to run"
-  case "$brief" in /*) brief_path="$brief" ;; *) brief_path="$ROOT/$brief" ;; esac
+  # Briefs live beside the plan, so they resolve against the repo the plan came from. On a
+  # --target-root run that is the TARGET repo, not this harness — resolving against $ROOT would
+  # look for the target's briefs inside the harness clone and die "brief file not found".
+  brief_base="${TARGET_ROOT:-$ROOT}"
+  case "$brief" in /*) brief_path="$brief" ;; *) brief_path="$brief_base/$brief" ;; esac
   [[ -f "$brief_path" ]] || die "phase $id: brief file not found: $brief_path"
 
   log "── phase $idx/$phase_count: $id (reviewer=$reviewer, round-cap=$cap${artifact:+, artifact=$artifact}${turn_timeout_s:+, turn-timeout=${turn_timeout_s}s}) ──"
@@ -181,6 +199,7 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact turn_time
   drive_args=( --phase-id "$id" --reviewer "$reviewer" --builder "$BUILDER"
                --phase-brief "$brief_path" --round-cap "$cap" --phases-dir "$PHASES_DIR" )
   [[ -n "$artifact" ]] && drive_args+=( --artifact "$artifact" )
+  [[ -n "$TARGET_ROOT" ]] && drive_args+=( --target-root "$TARGET_ROOT" )
   [[ -n "$PRE_ADVANCE_CMD" ]] && drive_args+=( --pre-advance-cmd "$PRE_ADVANCE_CMD" )
   ((FORCE)) && drive_args+=( --force )   # GH-45: bypass the per-lane attempt cap for this run
   # GH-116: only the phase named by --retry gets a task-name override — every other phase still lets
