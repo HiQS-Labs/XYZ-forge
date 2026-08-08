@@ -46,7 +46,7 @@ conventional-commit prefix, into **five** buckets:
 
 | Bucket | Prefixes / rule |
 |---|---|
-| **Harness** | `relay:` `marathon:` `plan:` `capture:` `triage:` `wip:` — machine-generated turn/render commits. Report the count, then **exclude from the RGT denominator**: they are the machinery running, not work chosen. In a harness-driven repo they can outnumber everything else (validated here: 165 of 438 commits in the first hand-run) and silently swamp the signal. |
+| **Harness** | `relay*:` `marathon*:` `plan:` `capture:` `triage:` `wip:` — machine-generated turn/render commits, matched as **prefix families** (`relay-pkg:` is harness; exact-match lists leak — first calibration run caught exactly this). Report the count, then **exclude from the RGT denominator**: they are the machinery running, not work chosen. In a harness-driven repo they can outnumber everything else (validated here: 178 of 438 commits) and silently swamp the signal. |
 | **Run** (KTLO) | `fix:` `chore:` `docs:` `refactor:` `test:` `ci:` `hotfix:` `cleanup:` — or the governing doc says `rgt: run` / `doc_type: bugfix` |
 | **Grow** | `feat:` — or the governing doc says `rgt: grow` |
 | **Transform** | **only** an explicit `rgt: transform` on the governing `PROJECT/**` doc |
@@ -62,13 +62,22 @@ Build clusters, then rank. Signals in order of precision:
 
 1. **`related:` frontmatter arrays** in `PROJECT/**/GH-*.md` — human-authored sibling links, the
    highest-precision signal and already sitting in the tree unread. Extract every issue reference
-   from every `related:` block and tally: the most-cited issues are cluster centers.
-2. **Shared seam** — `fix:` commits in the window grouped by touched file/function
-   (`git log --since=<start> --name-only --pretty='%h %s'`, filter to `fix:`).
+   from every `related:` block and tally — but **citation count conflates two things**: defect
+   kinship ("same seam", "same family", "opposite direction", "same class") and infrastructure
+   context (a FROZEN-twin contract, a release issue, an SOP cited as background). Only kinship
+   references form clusters; a heavily-cited context issue is not a defect center (first
+   calibration run: #308 drew 11 citations, all FROZEN-twin context, zero kinship).
+2. **Shared seam** — `fix:` commits in the window grouped by touched file/function. **Group by
+   issue, not by commit**: one commit fixing five shims is one data point per seam, and in a
+   squash-heavy or doc-heavy repo the per-commit heat map goes flat while the `related:` graph
+   stays sharp (calibration: this signal contributed nothing here that signal 1 hadn't already).
 3. **Issue-text similarity** across `gh issue list --state all --json number,title,labels,body`.
-4. **Reopens and false closes** — reopened issues, or a capture doc recording a *doc-only /
-   no-code-change* resolution for a code defect. Treat doc-only closure as a strong recurrence
-   predictor until the repo's own history says otherwise.
+4. **False closes, then reopens** — a capture doc recording a *doc-only / no-code-change*
+   resolution for a code defect is the primary form of this signal and greps cheaply. Reopen
+   events need per-issue `gh api` timeline calls — expensive; sample them only for cluster
+   members already found by other signals. Treat doc-only closure as a strong recurrence
+   predictor: first confirmed instance is #18, closed doc-only within 2 hours, same seam
+   re-fired at day 34 (#314) and day 44 (#440).
 5. **Cross-repo re-reports** — the `reported_from:` frontmatter key. The same harness bug reported
    from three vendored repos is one target, not three.
 
@@ -97,8 +106,11 @@ block: join its `Milestone:` to its issue set (`gh issue list --milestone "<titl
 compare the planned theme against the observed flow distribution and the top targets, and surface:
 
 - Does the arc's `Description:` still describe where effort actually goes?
-- Is a top radar target unclaimed by any planned band?
+- Is a top radar target unclaimed by any planned band? Mark each reported target **claimed by
+  <band>** or **UNCLAIMED** — a claimed target is context, an unclaimed one is the finding.
 - Has the milestone's issue set drifted from its stated theme?
+- The **orphan share**: what fraction of open issues belong to no milestone at all? A large
+  unassigned majority means the bands describe less of the backlog than they appear to.
 
 Advisory only. Say "the plan says X, the repo is doing Y" and stop.
 

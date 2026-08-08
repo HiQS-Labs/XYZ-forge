@@ -269,8 +269,10 @@ Each of these already exists; /radar must not duplicate them.
    meaningful, or is the first run allowed to report no trend?
 4. What does /radar do in a repo with no `PROJECT/**`, no conventional commits, and no `gh`? Degrade
    to Lens 1-from-commits only, or refuse and say why? (Prefer degrade + state the degradation.)
-5. Does the doc-only-close recurrence predictor (Lens 2 signal 4) actually hold here? Testable
-   against closed issues today — cheap Phase 0 evidence.
+5. Does the doc-only-close recurrence predictor (Lens 2 signal 4) actually hold here? **First
+   confirmed instance (2026-08-07):** #18 was created and closed doc-only within 2 hours on
+   2026-06-24; the same `ensure_gitignore` seam re-fired as #314 (day 34) and #440 (day 44).
+   One instance is evidence, not proof — the systematic closed-issue sweep remains open.
 6. Is the seam slug stable enough to be an ID? A renamed function or a file moved between refactors
    breaks it, silently splitting one aging target into two young ones. **Provisionally settled in
    the skill (2026-08-07):** slug on function name over file path (survives moves); never re-slug a
@@ -331,8 +333,15 @@ gate-repair (Litmus) — which is exactly what the gate required.
 - [ ] Implement the seam-slug ID scheme and prove two runs over the same tree agree on IDs.
 - [ ] Implement Sink A (dated `RADAR-REPORT-*.md` with PDDA frontmatter) and Sink B (create path:
       new `radar`-labeled issue), both behind one preview + one confirmation.
-- [ ] Run it on this repo, then on one vendored repo with far less structure (e.g.
-      `giant-brains-claude-skills`) to prove graceful degradation.
+- [x] Run it on this repo — 2026-08-07, full three-lens pass. Four calibration fixes folded back
+      into the skill: prefix-family matching for the Harness bucket, the kinship-vs-context rule
+      for `related:` citations (#308 drew 11 citations, all FROZEN-twin context, zero kinship —
+      a naive count would have ranked infrastructure as the #2 defect cluster), group-by-issue for
+      seam heat (per-commit heat went flat while the `related:` graph stayed sharp), and the
+      orphan-share line in Lens 3. Bonus: first confirmed instance of the doc-only-close predictor
+      (#18, closed doc-only in 2 hours, seam re-fired at day 34 and day 44).
+- [ ] Run it on one vendored repo with far less structure (e.g. `giant-brains-claude-skills`)
+      to prove graceful degradation.
 - [ ] Document the boundary vs. weekly-shipped inside the skill so a session doesn't pick the wrong one.
 
 **QA gate:** two clean runs on structurally different repos; the no-targets path writes nothing at
