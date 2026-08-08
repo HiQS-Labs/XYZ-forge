@@ -53,7 +53,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| **Phase 1 complete and its QA gate passed.** Two calibration runs on structurally opposite repos, whose sharpest signals turned out to be exact inverses; nine fixes total folded back into `skills/radar/SKILL.md`. Run 1 (this repo) wrote both sinks — [RADAR-REPORT-2026-08-07.md](../1-INBOX/RADAR-REPORT-2026-08-07.md) + issue [#444](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/444). Run 2 (`giant-brains-claude-skills`) correctly found no qualifying targets and **wrote nothing**, proving the guardrail that most needed proving. | Phase 2 — reconciliation. Needs a *second* run against issue #444 to exercise carry-forward: unchanged seams keep their IDs, ticked boxes survive, fixed targets get struck through with the commit cited. Also still open: the systematic doc-only-close sweep (open question 5 has one confirmed instance, not a proof). |
+| **Phase 2's reconciliation path executed for the first time, and the skill is installed.** Run 3 (2026-08-07) was the first dispatched through the installed skill rather than read by hand, from a clean worktree cut from origin. It reconciled #444 in place across a 63-commit delta: both targets carried forward by ID at `runs: 2`, no duplicate issue opened, run-delta comment posted. Three more fixes folded in (same-day report collision, tally-must-sum guardrail, `rgt:` adoption printed beside Transform). `~/.claude/skills/radar` symlink installed system-wide. | Two gaps remain before v1.0 can be claimed honestly: (a) **strike-through on a retired target has still never run** — nothing has been fixed between any two runs, so that branch is unexercised; (b) the systematic doc-only-close sweep (open question 5 still rests on one instance). Both need elapsed time and a real fix landing, not more runs today. |
 
 ## Why now
 
@@ -380,6 +380,32 @@ so measure per-signal yield instead of assuming the ranking; (4) Lens 3 skips in
 (5) print Unclassified subjects verbatim with an adjusted read beside the mechanical one — component-
 as-type prefixes (`stay-focused: add ... skill`) made mechanical inference report 5% Grow where the
 honest read was 19%, a 4x undercount.
+
+#### Run 3 — first reconciliation, first true skill dispatch (2026-08-07)
+
+Run from a clean worktree (`radar/reconcile-run2` off `origin/development` @ `f95eefc`) so neither
+the main checkout's uncommitted work nor a concurrent operator session could contaminate the read.
+Invoked via the installed skill, not by hand — closing the "never actually dispatched" gap.
+
+**Reconciliation worked.** 63 commits of delta (Litmus marathon, PR #443); both targets matched by
+ID and carried forward at `runs: 2`; no second radar issue opened; run-delta comment posted to #444.
+
+**The substantive finding is that 63 commits changed nothing the radar tracks**: flow mix moved ~1
+point (Run 71%→71%, Grow 4%→5%), both targets untouched, orphan share identical at 67. Meanwhile a
+*third* release band (Plumbline 0.4.0) was added — planning extending forward faster than existing
+bands absorb the field reports already in hand. That is the aging signal doing its job.
+
+Three fixes earned: (1) **same-day report collision** — run 1 had already taken
+`RADAR-REPORT-2026-08-07.md`; "never edit a prior report" outranks one-doc-per-date, so an Nth
+same-day run appends `-runN`; (2) **tally-must-sum guardrail** — a `tail` view of a piped commit
+tally returned counts contradicting the `head` view of the same pipeline (shell-wrapper output
+mangling), so the skill now writes subjects to a file via `/usr/bin/git` and asserts the bucket sum
+equals the raw line count before reporting; (3) **`rgt:` adoption printed beside Transform** —
+adoption is 0 docs repo-wide, so "Transform 0%" has always meant *nobody declared anything* rather
+than *no transformative work happened*, and that must not be left to the reader to infer.
+
+**Still unexercised:** the strike-through branch. No target has been fixed between any two runs, so
+the "seam went quiet → strike through citing the fixing commit" path has never executed.
 
 ### Phase 2 — Reconciliation across runs + triage handoff
 

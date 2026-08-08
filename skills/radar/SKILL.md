@@ -41,15 +41,23 @@ current feature branch. Compute the prior window of equal length for the trend c
 
 ## Step 1 — Lens 1: flow distribution
 
-Tally `git log --no-merges --since=<start> --until=<end> --pretty='%s'` on the trunk by
-conventional-commit prefix, into **five** buckets:
+**Compute the tally once, into a file, and prove it sums.** Write subjects with
+`/usr/bin/git log --no-merges --since=<start> --until=<end> --pretty='%s' <trunk> > <tmpfile>`,
+then assert `wc -l <tmpfile>` equals the sum of the bucket counts before reporting anything.
+Two reasons, both observed: shell wrappers/hooks may rewrite or truncate `git` output (a `tail`
+view of a piped tally returned counts that contradicted the `head` view of the same pipeline —
+same keys, different numbers), and a partial read is indistinguishable from a real distribution.
+An unproven tally is exactly the reads-as-authoritative-while-wrong failure this tool exists to
+catch; do not let the radar commit it.
+
+Then bucket by conventional-commit prefix, into **five** buckets:
 
 | Bucket | Prefixes / rule |
 |---|---|
 | **Harness** | `relay*:` `marathon*:` `plan:` `capture:` `triage:` `wip:` — machine-generated turn/render commits, matched as **prefix families** (`relay-pkg:` is harness; exact-match lists leak — first calibration run caught exactly this). Report the count, then **exclude from the RGT denominator**: they are the machinery running, not work chosen. In a harness-driven repo they can outnumber everything else (validated here: 178 of 438 commits) and silently swamp the signal. |
 | **Run** (KTLO) | `fix:` `chore:` `docs:` `refactor:` `test:` `ci:` `hotfix:` `cleanup:` — or the governing doc says `rgt: run` / `doc_type: bugfix` |
 | **Grow** | `feat:` — or the governing doc says `rgt: grow` |
-| **Transform** | **only** an explicit `rgt: transform` on the governing `PROJECT/**` doc |
+| **Transform** | **only** an explicit `rgt: transform` on the governing `PROJECT/**` doc. **Always report `rgt:` adoption alongside the figure** — at zero adopting docs, "Transform 0%" means *nobody has declared anything*, not *no transformative work happened*, and the number cannot become non-zero until the key is adopted. Print it as `0% (rgt: adoption: N docs)` so the distinction is never left to the reader. |
 | **Unclassified** | everything else, including unprefixed. Reported, never silently bucketed — a large share is itself a finding (inconsistent conventional commits). |
 
 An explicit `rgt:` key on the governing doc always beats prefix inference. Report the ratio over
@@ -182,7 +190,10 @@ clock exactly when it matters.
 
 ### Sink A — evidence, immutable
 
-Write `PROJECT/1-INBOX/RADAR-REPORT-YYYY-MM-DD.md`: PDDA frontmatter
+Write `PROJECT/1-INBOX/RADAR-REPORT-YYYY-MM-DD.md` — **if that filename already exists, this is the
+Nth run of the same day: append `-runN` (`RADAR-REPORT-2026-08-07-run2.md`) rather than overwriting.
+A same-day rerun is a distinct immutable snapshot, and "never edit a prior report" outranks the
+one-doc-per-date convention.** PDDA frontmatter
 (`title status created updated owner goal` + `doc_type: report`), the full three-lens analysis
 with citations, and the checklist as it stands at generation time (a historical record, not a
 second live copy). Never edit a prior report; a new run writes a new dated doc. No ROADMAP pointer
