@@ -1,5 +1,5 @@
 # Marathon Phase gh343-gate-program-target-root
-STATUS: Open
+STATUS: Approved
 NEXT: codex
 
 <!-- marathon-drive: task=MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-3 builder=codex reviewer=agy round-cap=7 -->
@@ -175,3 +175,8 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   plus an executable pre-GH-343 `shutil.which()` replay that fails from the foreign cwd.
 - Verification: `bash test/gh343-gate-program-target-root.sh` — 12 pass, 0 fail. The full gate was
   not run per the phase containment rule.
+
+### Round 3 · Reviewer · agy
+swept file: yes, no pre-existing defects found.
+The code cleanly separates interpreter scripts from directly executed programs with path separators. The diagnostic correctly includes the `target_root` searched. Tests pass.
+**Verdict:** Approved
