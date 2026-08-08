@@ -1329,7 +1329,87 @@ relay-file: {rel_relay}
         # GH-249: --requires-test preserves its existing non-empty phase-delta contract.
         return path_has_nonempty_phase_delta(path)
 
+    def acceptance_probes_unmet():
+        # GH-438 Phase 2 — the lane's OWN acceptance detector, re-read after the build.
+        #
+        # swarm-preflight REQUIRES every fix_probe to read `unfixed` before a run; that is the
+        # readiness check. Nothing re-read them afterwards, so a phase could report "Approved, gate
+        # passed" and exit 0 while its own contract still said the fix had not landed. On the reported
+        # lane the detector was `git ls-files --error-unmatch .mcp.json`: `unfixed` before, `unfixed`
+        # after, Approved anyway, file still tracked. The signal existed and nobody looked at it.
+        #
+        # Returns None when there is nothing to judge (no brief, no contract, no probes) — that path
+        # must stay byte-identical to before, because most lanes carry no probes and failing them
+        # closed would break every one of them. Returns a (possibly empty) list of failures otherwise.
+        if not args.phase_brief_file:
+            return None
+        # Read the contract as of pre_phase_head, NOT the working tree. The brief is an input to the
+        # phase, and a builder that edited it could otherwise rewrite the criteria it is judged by —
+        # marking its own homework. Falls back to the on-disk brief when there is no pre-phase commit
+        # to read from (a first fire in a fresh repo), which is the same text either way.
+        brief_rel = args.phase_brief_file
+        if os.path.isabs(brief_rel):
+            try:
+                brief_rel = os.path.relpath(brief_rel, root)
+            except ValueError:
+                brief_rel = None
+        contract_text = None
+        if pre_phase_head and brief_rel and not brief_rel.startswith(".."):
+            shown = subprocess.run(["git", "-C", root, "show", f"{pre_phase_head}:{brief_rel}"],
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            if shown.returncode == 0:
+                contract_text = shown.stdout.decode("utf-8", "replace")
+        if contract_text is None:
+            try:
+                with open(args.phase_brief_file, "r", encoding="utf-8", errors="replace") as f:
+                    contract_text = f.read()
+            except OSError:
+                return None
+        # No contract heading → nothing to judge. Checked here rather than by calling
+        # extract_contract, which sys.exit(3)s on a brief without one and would take the driver with it.
+        if not re.search(r'^#{1,6}\s+.*preflight\s+contract', contract_text, re.IGNORECASE | re.MULTILINE):
+            return None
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            from swarm_preflight import extract_contract, eval_probes
+        except Exception as e:
+            log(f"acceptance re-check SKIPPED — could not load the preflight evaluator ({e})")
+            return None
+        tmp_brief = os.path.join(tempfile.gettempdir(), f"marathon-acceptance-{os.getpid()}.md")
+        try:
+            with open(tmp_brief, "w", encoding="utf-8") as f:
+                f.write(contract_text)
+            try:
+                contract = extract_contract(tmp_brief)
+            except SystemExit:
+                # A malformed contract is the author's problem, not this phase's verdict to make.
+                log("acceptance re-check SKIPPED — the brief's preflight contract did not parse")
+                return None
+            if not contract.get("fix_probes"):
+                return None
+            probes, _stale, _blocked, _ambig = eval_probes(args.target_root or root, contract)
+        finally:
+            try: os.remove(tmp_brief)
+            except OSError: pass
+        # `landed` is the only verdict that means the fix is in. `unfixed` is the pre-run state still
+        # reading true; `blocked` means the probe could not be evaluated, which is not evidence of
+        # success either.
+        return [p for p in probes if p.get("verdict") != "landed"]
+
     def complete_phase_success(success_mode="approved"):
+        # GH-438 Phase 2: judged BEFORE the repo-level gate. The gate knows nothing about this lane's
+        # acceptance — that is exactly why the reported lane passed it while having changed nothing —
+        # so a lane that did not do its own job should say so in its own terms, not as a gate failure.
+        unmet = acceptance_probes_unmet()
+        if unmet:
+            for p in unmet:
+                log(f"acceptance probe still {p.get('verdict')}: type={p.get('type')} path={p.get('path')}")
+            log(f"acceptance re-check FAILED — {len(unmet)} probe(s) report the fix did not land; the lane's own contract disagrees with the reviewer — escalating")
+            escalate("acceptance-probes-unmet", 0)
+            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — acceptance probes still report the fix did not land")
+            sys.exit(5)
+        if unmet is not None:
+            log("acceptance re-check passed — every fix_probe reports the fix landed")
         log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
         gate_exit = run_pre_advance_gate()
         if gate_exit != 0:

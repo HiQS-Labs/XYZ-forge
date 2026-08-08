@@ -2,7 +2,7 @@
 gh_issue: 375
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375
 title: "GH-375 / GH-385 / GH-438 — three checks that could not fail, or read the wrong state"
-status: "Active (2-WORKING). GH-375 and GH-385 are complete and independently tested. GH-438 is PARTIAL — the removal-delta half is fixed and tested; the fix_probe re-evaluation half, which is the one that produces a false Approved, is NOT implemented and #438 stays OPEN. Do not close #438 on this branch."
+status: "Active (2-WORKING). GH-375 and GH-385 complete. GH-438 Phase 1 (removal counts as a delta) and Phase 2 (post-build acceptance re-evaluation) both implemented and tested — Phase 1 in #458, Phase 2 on branch gh438-phase2-acceptance. #438 can close once BOTH land. The builder's 'Do NOT run git' scope rule is still unaddressed and is deliberately out of scope: Phase 2 makes an index lane fail honestly, not become completable."
 created: 2026-08-08
 updated: 2026-08-08
 owner: noel
@@ -38,7 +38,7 @@ non_goals: >
 
 | What was just completed | What's next |
 |---|---|
-| GH-375 and GH-385 fixed and tested. GH-438 Phase 1 (removal counts as a phase delta) fixed and tested, with its uncovered half stated in the test file itself | GH-438 **Phase 2** — post-build acceptance re-evaluation, specified below with its six open design decisions. Tracked on #438 as a direct successor, not a new issue. Settle decisions 1-3 before building |
+| GH-438 **Phase 2 IMPLEMENTED** — the lane's own fix_probes are re-read after the build and a still-unfixed probe escalates as `acceptance-probes-unmet`. All six design decisions settled as specified below | Land both PRs, then close #438. The remaining `Do NOT run git` scope question is out of scope by design and needs its own decision |
 
 ## Quad Concepts
 
@@ -93,7 +93,7 @@ it means teaching `marathon_drive.py` about acceptance criteria, which it contai
 today, and answering where the contract comes from, what happens when it is absent, and whether a
 still-`unfixed` probe fails the phase or escalates. That is a design decision, not a bug fix.
 
-## GH-438 Phase 2 — post-build acceptance re-evaluation (NOT STARTED)
+## GH-438 Phase 2 — post-build acceptance re-evaluation (IMPLEMENTED)
 
 Direct successor to Phase 1 above, tracked on **#438** rather than a new issue: it is the second of
 the two compounding defects that issue reports, and closing #438 requires it.
@@ -121,7 +121,7 @@ own exit code says everything is fine. It was caught only because acceptance was
 evaluator, not grow a second one. GH-191's ATE generalization is the adjacent precedent for "do not
 build a second execution engine".
 
-### Open design decisions — settle these BEFORE building
+### Design decisions — how each was settled
 
 1. **Where does the contract come from at drive time?** Preflight packets are gitignored, so the
    driver cannot assume one on disk. Candidates: re-derive from the phase brief (`--phase-brief` is
@@ -151,6 +151,29 @@ honestly* instead of passing silently, which is the urgent part — but it does 
 *completable*. A follow-on needs either a per-lane opt-in that widens the builder's git scope, or a
 harness-executed post-build index step the builder can request. Worth deciding only after Phase 2,
 because an honest failure is already a large improvement over a false success.
+
+### What shipped, and two things the spec did not anticipate
+
+`acceptance_probes_unmet()` in `marathon_drive.py` runs at the top of `complete_phase_success()` —
+**before** the repo gate, because the gate knows nothing about this lane and a lane that did not do
+its own job should say so in its own terms rather than as a gate failure. It imports
+`extract_contract` and `eval_probes` from `swarm_preflight.py`; nothing is reimplemented. Any probe
+whose verdict is not `landed` escalates as `acceptance-probes-unmet` and exits 5, naming each failing
+probe in the log and the `ESCALATION.md` record. No contract, no probes, or an unparseable contract →
+returns `None` and the path is byte-identical to before, which is what keeps every existing lane
+working.
+
+**Beyond the spec: the contract is read from `pre_phase_head`, not the working tree.** The brief is an
+input to the phase, so a builder that edited it could otherwise soften the criteria it is judged by —
+marking its own homework. Case 5 of the test rewrites the brief mid-phase into a contract that *would*
+pass and asserts the phase still fails.
+
+**A polarity trap worth recording.** `eval_probes` marks a `command` probe `landed` when the command
+exits NON-zero (default, `expect_nonzero` omitted). Probes describe the BUG, not the fix:
+`git ls-files --error-unmatch <path>` exits 0 while the path is still tracked — bug present,
+`unfixed` — and non-zero once untracked. Setting `expect_nonzero: true` inverts it and marks the
+UNFIXED state as landed, which is precisely the false pass this phase exists to prevent. The first
+draft of the test got this backwards and passed for the wrong reason.
 
 ### Acceptance criteria for Phase 2
 
