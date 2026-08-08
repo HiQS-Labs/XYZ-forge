@@ -629,7 +629,10 @@ def find_frozen_artifacts(root, artifacts):
             continue
         try:
             with open(os.path.join(root, rel_path), "r", encoding="utf-8") as f:
-                text = f.read(4096)
+                # The GH-308 banner is conventionally at the top of a frozen twin, but the
+                # contract is about the banner's presence on disk, not its byte offset.  A scan
+                # cap would let a valid banner added below a long header silently evade the gate.
+                text = f.read()
         except (OSError, UnicodeError):
             continue
         if not FROZEN_BANNER_RE.search(text):

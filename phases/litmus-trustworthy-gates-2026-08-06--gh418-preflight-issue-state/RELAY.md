@@ -1,6 +1,6 @@
 # Marathon Phase gh418-preflight-issue-state
 STATUS: Open
-NEXT: codex
+NEXT: agy
 
 <!-- marathon-drive: task=MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN-2 builder=codex reviewer=agy round-cap=7 -->
 
@@ -151,3 +151,19 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Implemented GH-418 in `utils/py/swarm_preflight.py`: the existing issue fetch requests
+  `body,state,closedAt`, every emitted candidate records an advisory issue-state object, CLOSED state
+  is surfaced in output and packet text, and declared artifacts are checked on disk for the GH-308
+  FROZEN banner before any packet is written.
+- Removed the FROZEN scan's 4 KiB cap: the policy is determined by a banner's presence, not its
+  location in the file. The authoritative twin is derived from the banner text rather than a list.
+- Added and registered `test/gh418-issue-state-frozen.sh`; its hermetic `gh` fixture now verifies the
+  exact combined JSON request, CLOSED and unknown advisory records/packets, plus the real
+  `relay-automation/consult.sh` FROZEN refusal.
+- Reproduced the earlier local direct-execution failure (`permission denied`): repository tests are
+  non-executable and `validate.sh` invokes them as `bash "$HERE/test/$t"`. Verified with the matching
+  invocation: `bash test/gh418-issue-state-frozen.sh` → 8 pass, 0 fail. The full gate was not run per
+  the phase containment rule.
