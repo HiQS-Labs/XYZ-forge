@@ -8,9 +8,11 @@
 #   - live claim     : each repo's OWN `tick project` regenerates its `.tick/STATE.md` from its event
 #                      log; the `## Claimed` section names the task id + claimant currently holding work
 #                      (the live signal the doc-status scanner marathon-scan.sh cannot see).
-#   - is-it-really-driving : cross-checked against the driver lock file (`.git/relay-driver.lock` or a
-#                      vendored `.xyz/.relay-driver.lock`) and any `marathon/*`-branch worktree with a
-#                      commit inside the activity window — a claim without either is "claimed, not driving".
+#   - is-it-really-driving : cross-checked against the driver lock file (resolved by the SAME shared
+#                      resolver the driver itself writes through — relay-automation/driver-lock-lib.sh,
+#                      GH-448 — so a linked worktree's lock in the git common dir is found, not missed)
+#                      and any `marathon/*`-branch worktree with a commit inside the activity window —
+#                      a claim without either is "claimed, not driving".
 #
 # Emits one compact Markdown table: repo | marathon/lane | task | claimant | live | last activity.
 # Read-only over every target repo (the only write is the aggregate report itself), matching
@@ -34,6 +36,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 # shellcheck source=utils/hq/hq-lib.sh
 . "$HERE/hq-lib.sh"
+# shellcheck source=relay-automation/driver-lock-lib.sh
+. "$ROOT/relay-automation/driver-lock-lib.sh"
 
 TODAY="${HQ_MARATHON_LIVE_TODAY:-"$(date -u +%Y-%m-%d)"}"
 NOW="${HQ_MARATHON_LIVE_NOW:-"$(date -u +%Y-%m-%dT%H:%M:%SZ)"}"
@@ -88,11 +92,15 @@ lane_of() {
   printf '%s' "$task"
 }
 
-# Is the driver lock present for this repo (native or vendored)? Prints the lock path or nothing.
+# Is the driver lock present for this repo? Prints the lock path or nothing. GH-448: resolved via the
+# shared resolver (relay-automation/driver-lock-lib.sh) — the SAME path the driver itself writes,
+# including the linked-worktree case (.git is a FILE -> the git common dir, not <repo>/.git/…) and the
+# vendored case (no .git -> <repo>/.relay-driver.lock, NOT <repo>/.xyz/.relay-driver.lock — the driver
+# never writes inside .xyz/, so the old .xyz/-scoped check here could never have matched a real lock).
 driver_lock_path() {
-  local repo_path="$1"
-  [[ -e "$repo_path/.git/relay-driver.lock" ]] && { printf '%s' "$repo_path/.git/relay-driver.lock"; return 0; }
-  [[ -e "$repo_path/.xyz/.relay-driver.lock" ]] && { printf '%s' "$repo_path/.xyz/.relay-driver.lock"; return 0; }
+  local repo_path="$1" lock
+  lock="$(driver_lock_path_for_repo "$repo_path")"
+  [[ -e "$lock" ]] && { printf '%s' "$lock"; return 0; }
   return 1
 }
 

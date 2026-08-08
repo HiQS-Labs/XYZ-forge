@@ -32,22 +32,20 @@ done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 HUB_REPO="$(cd "$SELF_DIR/.." && pwd)"
 
+# shellcheck source=relay-automation/driver-lock-lib.sh
+. "$SELF_DIR/driver-lock-lib.sh"
+
 # ---------------------------------------------------------------------------
 # helpers
 # ---------------------------------------------------------------------------
 
 trim_cr() { printf '%s' "${1%$'\r'}"; }
 
-# Resolve the relay-driver lock directory for a given repo root.
-# Clone: <repo>/.git/relay-driver.lock
-# Vendored (.xyz/ with no .git/): <repo>/.relay-driver.lock
+# Resolve the relay-driver lock path for a given repo root — delegates to the shared resolver
+# (GH-448: this used to guess 2 branches inline and missed the linked-worktree case, where .git is a
+# FILE and the driver's real lock lives at the git common dir, not <repo>/.git/relay-driver.lock).
 lock_path_for_repo() {
-  local repo="$1"
-  if [ -d "$repo/.git" ]; then
-    printf '%s/.git/relay-driver.lock' "$repo"
-  else
-    printf '%s/.relay-driver.lock' "$repo"
-  fi
+  driver_lock_path_for_repo "$1"
 }
 
 # Find the newest *marathon*.jsonl file under <repo>/.tick/events/.

@@ -72,6 +72,9 @@ while [ -h "$_src" ]; do
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
 
+# shellcheck source=relay-automation/driver-lock-lib.sh
+. "$SELF_DIR/../../relay-automation/driver-lock-lib.sh"
+
 HARNESS=""
 VENDORED=0
 CALLER_ROOT=""
@@ -250,9 +253,11 @@ case "${1:-}" in
         echo "      share ONE global driver lock (can't run concurrently with another repo's relay). For"
         echo "      per-repo isolation / concurrent relays, vendor this repo:"
         echo "        relay-automation/xyz-vendor.sh vendor $_caller"
-        for _lk in "$HARNESS/.git/relay-driver.lock" "$HARNESS/.relay-driver.lock"; do
-          [ -d "$_lk" ] && { echo "  !   a driver lock is currently HELD ($_lk) — a relay started here will BLOCK until it frees"; break; }
-        done
+        # GH-448: resolve via the shared resolver, not a 2-candidate guess — when $HARNESS itself is a
+        # linked worktree (.git is a FILE), the driver's real lock lives at the git common dir, which
+        # neither hardcoded candidate above matched, so this warning silently never fired.
+        _lk="$(driver_lock_path_for_repo "$HARNESS")"
+        [ -d "$_lk" ] && echo "  !   a driver lock is currently HELD ($_lk) — a relay started here will BLOCK until it frees"
       fi
     fi
     _collision="$(_find_case_collision_pair "${_caller:-}" || true)"

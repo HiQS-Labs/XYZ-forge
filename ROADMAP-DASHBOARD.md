@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 153 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
+Summary: 154 items | Tally: 🟢 6 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-448 · driver-lock consumers guess the path with 2 branches while the drivers use 3, so a linked worktree's LIVE marathon reads as IDLE | 🟢 | [GH-448-DRIVER-LOCK-RESOLVER.md](PROJECT/2-WORKING/GH-448-DRIVER-LOCK-RESOLVER.md) · [#448](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/448) · [#376](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/376) · [#354](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/354) |
 | GH-441 · the pre-advance gate inherits the marathon state it is supposed to judge | ✅ | [GH-441-GATE-ENV-CONTRACT.md](PROJECT/2-WORKING/GH-441-GATE-ENV-CONTRACT.md) · [#441](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/441) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
 | GH-390 remainder · the gate guard's other kill branch has never been observed firing | — | [GH-390-GATE-GUARD-COVERAGE.md](PROJECT/2-WORKING/GH-390-GATE-GUARD-COVERAGE.md) · [#390](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/390) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-409 + GH-408 · a leaked tick claim wedges the next turn, and every layer that could name the cause discards it | — | [GH-408-409-TOKEN-FAILURE-VISIBILITY.md](PROJECT/2-WORKING/GH-408-409-TOKEN-FAILURE-VISIBILITY.md) · [#409](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409) · [#408](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/408) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
