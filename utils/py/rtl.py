@@ -4,6 +4,82 @@ import subprocess
 import tempfile
 import sys
 
+# GH-375 — agy's auth pre-flight cannot decide on exit status alone. `agy whoami` EXITS 0 while
+# failing to run at all when there is no TTY ("CLI error: bubbletea: error opening TTY: ... open
+# /dev/tty: device not configured"), and every marathon or driven relay turn is headless, so that is
+# the NORMAL path under automation rather than an edge case. Both callers (agy-turn.py, consult.py)
+# had the same shape and the same hole, so the verdict lives here once rather than in two copies
+# that can drift.
+#
+# Matched as line PREFIXES, not as a bare "error" substring anywhere in the output. `whoami` prints
+# ACCOUNT IDENTITY on success — a substring test would fail any lane whose handle, org, or banner
+# happens to contain "error", and a false failure stops the run outright, which is a worse outcome
+# than the bug being fixed. The TTY signature is matched separately: it is the exact shape the issue
+# reports and it does not necessarily carry an error prefix.
+AGY_AUTH_ERROR_PREFIXES = ("cli error:", "error:", "panic:", "fatal:")
+AGY_AUTH_TTY_MARKERS = ("could not open tty", "error opening tty")
+
+
+def agy_auth_output_verdict(out_file):
+    """Classify agy's own probe output. Returns (severity, message).
+
+    severity is one of:
+      ""              — nothing suspicious; treat the probe as passed.
+      "unverifiable"  — the probe COULD NOT RUN, so it established nothing either way. Report it
+                        loudly; do NOT fail the lane on it.
+      "failed"        — the probe ran and agy reported an error. Fail the lane.
+
+    THE THIRD STATE IS THE WHOLE POINT, and it was learned the expensive way. GH-375's suggested fix
+    was to treat the TTY error as a failed probe and stop the turn. That was implemented literally and
+    it broke the agy lane outright: test/relay-self-sufficiency.sh went 4/0 to 0/4 with `agy shim
+    exited 5`, on a machine where agy was signed in and working.
+
+    The measurement that settles it, taken on this repo:
+
+      * `agy whoami` cannot run headless at all. It exits 0 while printing
+        `CLI error: bubbletea: error opening TTY: ... /dev/tty: device not configured`.
+      * `agy -p` — the print mode the ACTUAL turn uses — runs headless perfectly well. The live turn
+        in relay-self-sufficiency.sh claims its token, writes the relay file and commits.
+
+    So a TTY error from `whoami` says nothing about whether auth works; it says this probe is the
+    wrong instrument in this environment. Treating it as failure converts an unmeasurable check into
+    a hard block on a lane that demonstrably works — strictly worse than the bug GH-375 reported,
+    which merely let a possibly-unauthed lane proceed. One of two working builders, stopped by its
+    own guard.
+
+    What GH-375 established stands and is preserved: exit status alone cannot decide this, and the
+    captured output must not be deleted. Those were the real defects. The inference "the probe could
+    not run, therefore auth is bad" is the part that does not follow.
+    """
+    try:
+        with open(out_file, "r", encoding="utf-8", errors="replace") as f:
+            output = f.read()
+    except OSError:
+        return ("unverifiable", "the probe produced no readable output")
+    # EMPTY OUTPUT IS NOT TREATED AS FAILURE, deliberately. "A probe that establishes nothing must
+    # not report success" is a tempting rule and it was written here first — then it failed a turn
+    # within minutes: test/gh410-containment-advisory.sh's agy stub prints nothing for `whoami`, so
+    # the pre-flight rejected it, the turn exited 5 before running, and a containment assertion that
+    # had nothing to do with auth went red. That is the false-failure direction this function's whole
+    # matching strategy is built to avoid, and it arrived on first contact.
+    #
+    # The asymmetry is the point: agy exiting 0 with a VISIBLE error is observed and documented
+    # (GH-375). Agy exiting 0 SILENTLY on success is not something this repo can rule out, and
+    # guessing wrong there breaks every turn in the fleet rather than one. Match the evidence that
+    # exists; do not infer failure from the absence of evidence. stderr is folded into this capture,
+    # so a real error has somewhere to appear.
+    for raw in output.splitlines():
+        line = raw.strip()
+        low = line.lower()
+        # TTY FIRST, and it must stay first: agy's TTY banner is itself prefixed `CLI error:`, so the
+        # error-prefix branch below would otherwise claim it and fail a lane that is perfectly fine.
+        if any(m in low for m in AGY_AUTH_TTY_MARKERS):
+            return ("unverifiable", f"agy could not run headless, so auth was not verified: {line}")
+        if any(low.startswith(p) for p in AGY_AUTH_ERROR_PREFIXES):
+            return ("failed", f"agy reported an error: {line}")
+    return ("", "")
+
+
 def split_allow_paths(allow_paths):
     paths = []
     for path in (allow_paths or "").split(","):

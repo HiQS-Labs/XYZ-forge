@@ -166,10 +166,11 @@ Summary: 153 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · �
 
 ## In progress
 
-Summary: 25 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 26 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-375 + GH-385 + GH-438 · three marathon-path checks that could not fail, or read the wrong state | — | [GH-375-385-438-PREFLIGHT-TOKEN-DELTA.md](PROJECT/2-WORKING/GH-375-385-438-PREFLIGHT-TOKEN-DELTA.md) · [#375](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375) · [#385](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/385) · [#438](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/438) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-442 · /radar — a per-repo strategic compass over the last 2-3 weeks | — | [GH-440](PROJECT/1-INBOX/GH-440-VENDOR-TICK-GITIGNORE.md) · [GH-442-RADAR.md](PROJECT/2-WORKING/GH-442-RADAR.md) · [#442](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/442) |
 | GH-362 · the freeze guard could not pass a range containing the freeze itself; marathon-plan's exception retired | 🟡 | [GH-362-GUARD-FIX-AND-EXCEPTION-RETIREMENT.md](PROJECT/3-COMPLETED/GH-362-GUARD-FIX-AND-EXCEPTION-RETIREMENT.md) · [#362](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/362) |
 | GH-349 + GH-346 · marathon-plan cleanup: an unknown flag exited 0, and branch: was hardcoded | 🟡 | [GH-349-346-MARATHON-PLAN-CLEANUP.md](PROJECT/3-COMPLETED/GH-349-346-MARATHON-PLAN-CLEANUP.md) · [#349](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/349) · [#346](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/346) |
