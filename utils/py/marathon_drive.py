@@ -1434,7 +1434,7 @@ relay-file: {rel_relay}
 
     relay_content = f"""# Marathon Phase {args.phase_id}
 STATUS: Open
-NEXT: {args.builder}
+NEXT: {args.builder} (Builder)
 
 <!-- marathon-drive: task={relay_task} builder={args.builder} reviewer={args.reviewer} round-cap={args.round_cap} -->
 
@@ -1457,7 +1457,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to {args.reviewer} — {args.reviewer}, take your turn." A turn that ends without that line
    leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
-   not just the first.
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: {args.reviewer} (Reviewer)`
 
 ---
 
@@ -1465,7 +1465,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. {reviewer_read_line}
 1. Append a review block: `### Round N · Reviewer · {args.reviewer}` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested` then: {tick_cli} release {relay_task} --agent {args.reviewer} --to {args.builder}
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: {args.builder} (Builder)`, then: {tick_cli} release {relay_task} --agent {args.reviewer} --to {args.builder}
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: {tick_cli} done {relay_task} --agent {args.reviewer}
 4. Use this exact tick binary (run it from any directory) for all token operations: {tick_cli}
    {reviewer_scope_line}
@@ -1482,13 +1482,13 @@ You are the REVIEWER for this phase. {reviewer_read_line}
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
 """
 
-    with open(relay_file, 'w') as f:
-        f.write(relay_content)
-
     if args.dry_run:
-        log(f"dry-run: relay file rendered at {relay_file}")
+        log(f"dry-run: relay file would be rendered at {relay_file}")
         print(f"tick seed: log task.created {relay_task} + claim --agent marathon + release --to {args.builder}")
         sys.exit(0)
+
+    with open(relay_file, 'w') as f:
+        f.write(relay_content)
 
     subprocess.run(["git", "-C", root, "add", "--", relay_file], check=True)
     # GH-207: only commit when the render actually changed — a byte-identical re-render must not HALT on
