@@ -1,8 +1,8 @@
 # Marathon Phase gh418-preflight-issue-state
 STATUS: Open
-NEXT: agy
+NEXT: codex
 
-<!-- marathon-drive: task=MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN-2 builder=codex reviewer=agy round-cap=7 -->
+<!-- marathon-drive: task=MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN builder=codex reviewer=agy round-cap=7 -->
 
 ## Phase Brief
 
@@ -101,6 +101,38 @@ the file on disk — *not* a hardcoded list — so a newly frozen twin is covere
 preflight. (`utils/marathon-plan.sh` became the 12th frozen twin via GH-362; a hardcoded list would
 already be stale.)
 
+**Phase 3 — harden the sibling reader (added 2026-08-08, operator-approved scope addition).** This
+came out of agy's Round-1 review of the first build of this lane, and it is a CONFIRMED live crash,
+not a style note.
+
+`expand_effective_artifacts`'s inner `read()` helper (`utils/py/swarm_preflight.py:366-370`) does
+`open(os.path.join(root, rel_path), "r")` and catches **only** `OSError`. It walks the entire `test/`
+directory to infer tests, so a single binary file there raises an uncaught `UnicodeDecodeError` and
+kills preflight outright. Reproduced with one probe file:
+
+```
+UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 3: invalid start byte
+  swarm_preflight.py:1049  in main -> expand_effective_artifacts
+  swarm_preflight.py:385   raw = read(rel_path)
+  swarm_preflight.py:369   return f.read()
+```
+
+The asymmetry is the whole argument: **your own new `find_frozen_artifacts` (`:631`) already gets
+this right** — `open(..., "r", encoding="utf-8")` with `except (OSError, UnicodeError)`. The
+pre-existing helper beside it does not. Bring `read()` up to the same standard: catch
+`(OSError, UnicodeError)`, or pass `errors="ignore"`. Treat an undecodable file the same way the
+existing code treats an unreadable one — skip it, do not crash.
+
+**Pin it with a test**, in `test/gh418-issue-state-frozen.sh`: a binary fixture under `test/` must
+leave preflight running normally rather than raising. Observe it FAILING first, per #419 — the
+pre-fix tree gives the traceback above, and that traceback is the negative control.
+
+Why this belongs in *this* lane rather than a separate issue: it is one line in a file already in
+this lane's write-set, the fix is the same pattern you just wrote two hundred lines away, and
+preflight is the tool the rest of this release is about. A hard crash on a routine repo state
+outranks a wrong verdict — and `/10days` Step 6 treats any non-zero exit as "drop this issue", so
+this silently removes work from sweeps.
+
 ## Deliberate non-goals — do not exceed them
 
 - **Do not block on undeterminable issue state.** No `gh`, unauthenticated, or offline reports
@@ -115,10 +147,10 @@ already be stale.)
 Register `test/gh418-issue-state-frozen.sh` in `validate.sh`'s `TESTS` array.
 
 
-## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+## Debug mantra (auto-triggered — 2 prior attempt(s) on this phase did not reach Approved)
 
 Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
-Last recorded reason (`phases/litmus-trustworthy-gates-2026-08-06--gh418-preflight-issue-state/ESCALATION.md`): `pre-advance-failed`. Read it before re-guessing.
+Last recorded reason (`phases/litmus-trustworthy-gates-2026-08-06--gh418-preflight-issue-state/ESCALATION.md`): `containment-violation (off-lane edit reverted by a turn-taker)`. Read it before re-guessing.
 
 ---
 
@@ -128,9 +160,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): utils/py/swarm_preflight.py,test/gh418-issue-state-frozen.sh,validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick
-   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick claim MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN-2 --agent codex --paths "phases/litmus-trustworthy-gates-2026-08-06--gh418-preflight-issue-state/RELAY.md,utils/py/swarm_preflight.py,test/gh418-issue-state-frozen.sh,validate.sh"
-   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick ping MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN-2 --agent codex
-   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN-2 --agent codex --to agy
+   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick claim MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN --agent codex --paths "phases/litmus-trustworthy-gates-2026-08-06--gh418-preflight-issue-state/RELAY.md,utils/py/swarm_preflight.py,test/gh418-issue-state-frozen.sh,validate.sh"
+   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick ping MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN --agent codex
+   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN --agent codex --to agy
 4. Edit ONLY these paths: phases/litmus-trustworthy-gates-2026-08-06--gh418-preflight-issue-state/RELAY.md and utils/py/swarm_preflight.py,test/gh418-issue-state-frozen.sh,validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -143,40 +175,18 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/swarm_preflight.py,test/gh418-issue-state-frozen.sh,validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested` then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN-2 --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick done MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN-2 --agent agy
+2. If changes needed: add `**Verdict:** Changes requested` then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick done MARATHON-GH418-PREFLIGHT-ISSUE-STATE-TURN --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick
    Edit ONLY phases/litmus-trustworthy-gates-2026-08-06--gh418-preflight-issue-state/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to codex —
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · codex
-
-- Implemented GH-418 in `utils/py/swarm_preflight.py`: the existing issue fetch requests
-  `body,state,closedAt`, every emitted candidate records an advisory issue-state object, CLOSED state
-  is surfaced in output and packet text, and declared artifacts are checked on disk for the GH-308
-  FROZEN banner before any packet is written.
-- Removed the FROZEN scan's 4 KiB cap: the policy is determined by a banner's presence, not its
-  location in the file. The authoritative twin is derived from the banner text rather than a list.
-- Added and registered `test/gh418-issue-state-frozen.sh`; its hermetic `gh` fixture now verifies the
-  exact combined JSON request, CLOSED and unknown advisory records/packets, plus the real
-  `relay-automation/consult.sh` FROZEN refusal.
-- Reproduced the earlier local direct-execution failure (`permission denied`): repository tests are
-  non-executable and `validate.sh` invokes them as `bash "$HERE/test/$t"`. Verified with the matching
-  invocation: `bash test/gh418-issue-state-frozen.sh` → 8 pass, 0 fail. The full gate was not run per
-  the phase containment rule.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-
-The GH-418 implementation looks great and correctly satisfies the brief.
-However, during my whole-file review, I found a pre-existing defect in `expand_effective_artifacts`. Its inner `read(rel_path)` helper uses `with open(..., "r") as f: return f.read()` but only catches `OSError`. Since it traverses the entire `test/` directory looking for inferred tests, any binary file (e.g. test fixtures, images) will raise a `UnicodeDecodeError` and crash the entire preflight script. 
-
-Please update `read(rel_path)` in `expand_effective_artifacts` to catch `(OSError, UnicodeError)` just like your new `find_frozen_artifacts` helper does, or specify `errors="ignore"` on the open call. 
-
-**Verdict:** Changes requested
-
-handing off to codex — codex, take your turn
