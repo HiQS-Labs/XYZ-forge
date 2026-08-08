@@ -266,7 +266,11 @@ printf '0\n' > "$GH_API_RC"
 
 # --- 8. nothing is posted by a run that never drives a phase ------------------------------------
 : > "$GH_CALLS"
-GH_ON_PATH="$GH_STUB_DIR:" PATH="$GH_STUB_DIR:$NODE_ONLY:/usr/bin:/bin" \
+# GH-401: --help never reaches the render, but it stays MARATHON_ROOT-scoped like every other driver
+# invocation — the audit's rule is unconditional on purpose, so no future edit here inherits an
+# unscoped call site by accident.
+MARATHON_ROOT="$WORK/mroot-help" \
+  GH_ON_PATH="$GH_STUB_DIR:" PATH="$GH_STUB_DIR:$NODE_ONLY:/usr/bin:/bin" \
   bash "$DRIVER" --help --log-github >/dev/null 2>&1
 [ ! -s "$GH_CALLS" ] \
   && pass "--help --log-github posts nothing (the run log arms only once a phase is really driven)" \

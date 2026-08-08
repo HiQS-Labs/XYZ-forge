@@ -1399,7 +1399,11 @@ relay-file: {rel_relay}
                     die("--require-clean set and the workspace has pre-existing changes (above)")
         except Exception: pass
 
-    os.makedirs(phase_dir, exist_ok=True)
+    # GH-401: NOTHING below may touch the filesystem until the --dry-run exit has been passed. The
+    # phase dir creation used to live here, above the render, so a dry run materialized phases/<id>/
+    # in whatever repo it resolved to — the harness itself when no MARATHON_ROOT/--phases-dir was
+    # given. Both the reads below (phase brief, prior-attempt peek) work fine against a phase dir that
+    # does not exist yet, so the mkdir moves down next to the write it actually exists for.
     with open(args.phase_brief_file, "r") as f:
         brief_text = f.read()
 
@@ -1434,7 +1438,7 @@ relay-file: {rel_relay}
 
     relay_content = f"""# Marathon Phase {args.phase_id}
 STATUS: Open
-NEXT: {args.builder}
+NEXT: {args.builder} (Builder)
 
 <!-- marathon-drive: task={relay_task} builder={args.builder} reviewer={args.reviewer} round-cap={args.round_cap} -->
 
@@ -1457,7 +1461,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to {args.reviewer} — {args.reviewer}, take your turn." A turn that ends without that line
    leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
-   not just the first.
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: {args.reviewer} (Reviewer)`
 
 ---
 
@@ -1465,7 +1469,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. {reviewer_read_line}
 1. Append a review block: `### Round N · Reviewer · {args.reviewer}` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested` then: {tick_cli} release {relay_task} --agent {args.reviewer} --to {args.builder}
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: {args.builder} (Builder)`, then: {tick_cli} release {relay_task} --agent {args.reviewer} --to {args.builder}
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: {tick_cli} done {relay_task} --agent {args.reviewer}
 4. Use this exact tick binary (run it from any directory) for all token operations: {tick_cli}
    {reviewer_scope_line}
@@ -1482,13 +1486,24 @@ You are the REVIEWER for this phase. {reviewer_read_line}
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
 """
 
-    with open(relay_file, 'w') as f:
-        f.write(relay_content)
-
     if args.dry_run:
-        log(f"dry-run: relay file rendered at {relay_file}")
+        log(f"dry-run: relay file would be rendered at {relay_file}")
+        # GH-401: a dry run must not write, but it must still SHOW its work — otherwise the flag
+        # becomes "do nothing and tell you nothing", and the render (the expensive, interesting part)
+        # is unobservable. Emitting it here is not a test affordance: test/debug-mantra.sh has always
+        # relied on --dry-run to produce a rendered relay it can inspect WITHOUT driving a phase or
+        # touching .tick/attempts/<lane>, which is the state that test hand-seeds. That need is real;
+        # the file write it used to ride on is what was wrong. Fenced so a caller can extract the
+        # render exactly, and so a grep for template text can't be confused with a driver log line.
+        print("--- BEGIN RENDERED RELAY ---")
+        print(relay_content, end="")
+        print("--- END RENDERED RELAY ---")
         print(f"tick seed: log task.created {relay_task} + claim --agent marathon + release --to {args.builder}")
         sys.exit(0)
+
+    os.makedirs(phase_dir, exist_ok=True)
+    with open(relay_file, 'w') as f:
+        f.write(relay_content)
 
     subprocess.run(["git", "-C", root, "add", "--", relay_file], check=True)
     # GH-207: only commit when the render actually changed — a byte-identical re-render must not HALT on

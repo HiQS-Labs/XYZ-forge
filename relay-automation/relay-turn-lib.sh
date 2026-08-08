@@ -59,13 +59,43 @@
 # timeout should still call rtl_enforce, and if rtl_enforce exits 6 the process exits 6 — correct.
 # If rtl_enforce completes without violation the shim then exits 7 to report the timeout.
 
-rtl_is_reviewer_turn() {  # <relay_file> — true if the file's NEXT pointer names the Reviewer role
+rtl_is_reviewer_turn() {  # <relay_file> [agent] — true if THIS turn is the Reviewer's
+  # GH-397: two value domains have always competed in the NEXT: header. A /relay thread writes a ROLE
+  # (Producer|Reviewer); marathon-drive writes an AGENT ID (claude|codex|agy). The role test below can
+  # never match the latter, so on EVERY marathon reviewer turn this returned false and the reviewer
+  # received the BUILDER's "you may edit the artifact" prompt plus the full ALLOW_PATHS allowlist —
+  # the exact scope the 2026-06-20 agy over-reach crossed (see the rtl_init comment below).
+  #
+  # The tempting fix — instruct the acting model to rewrite NEXT: itself — is not safe here.
+  # test/agy-turn.sh (S2) locks in today's honest behavior: an agent that skips the flip is caught by
+  # NOTHING (rtl_enforce guards the allowlist and the commit boundary, not block content). Hanging a
+  # containment boundary on that honor system fails OPEN: one forgotten flip silently hands the
+  # reviewer write authority over the artifact it is reviewing.
+  #
+  # So derive the role instead of trusting an assertion. marathon-drive renders a machine-readable
+  # role directive into the relay file, and relay-drive exports RELAY_AGENT from the TICK TOKEN —
+  # authoritative turn state, not prose. When BOTH are present the answer is computed and no agent can
+  # get it wrong. Everything else — a plain /relay thread, a hand-run turn, a marathon relay rendered
+  # before the directive existed — falls through to the historical NEXT:-header test below, unchanged.
+  local f="$1" agent="${2:-${RELAY_AGENT:-}}" line directive builder reviewer
+  [[ -f "$f" ]] || return 1
+  if [[ -n "$agent" ]]; then
+    directive="$(grep -E '^[[:space:]]*<!--[[:space:]]*marathon-drive:' "$f" 2>/dev/null | head -1)"
+    if [[ -n "$directive" ]]; then
+      builder="$(printf '%s' "$directive"  | sed -n 's/.*[[:space:]]builder=\([^[:space:]>]*\).*/\1/p')"
+      reviewer="$(printf '%s' "$directive" | sed -n 's/.*[[:space:]]reviewer=\([^[:space:]>]*\).*/\1/p')"
+      # Same agent on both sides carries no role signal (a self-review lane) — fall through rather
+      # than guess. Only an unambiguous builder≠reviewer pair is allowed to decide the boundary.
+      if [[ -n "$builder" && -n "$reviewer" && "$builder" != "$reviewer" ]]; then
+        [[ "$agent" == "$reviewer" ]] && return 0
+        [[ "$agent" == "$builder"  ]] && return 1
+      fi
+    fi
+  fi
   # The relay protocol's NEXT pointer (the FIRST `NEXT:` line — the header) names the ROLE that acts
   # next (Producer | Reviewer). A reviewer only appends findings to the relay file; it must never edit
   # the artifact. Match the header line only, so a body/instruction mention of "NEXT: Reviewer" can't
   # false-trigger. Portable (no GNU \b): BSD/macOS grep -E + POSIX classes. Missing/None → not reviewer.
-  local f="$1" line
-  [[ -f "$f" ]] || return 1
   line="$(grep -iE '^[[:space:]]*NEXT:' "$f" 2>/dev/null | head -1)"
   printf '%s' "$line" | grep -iqE 'Reviewer'
 }
@@ -760,7 +790,9 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # not edit the artifact — so the prompt matches the relay-file-only allowlist rtl_init enforces (an
   # agent told it MAY edit X and then reverted is needless friction; tell it the truth up front).
   local role_note=""
-  if rtl_is_reviewer_turn "$f"; then
+  # GH-397: pass the acting agent explicitly — $1 here is the turn's real actor, so the role lookup
+  # never has to fall back to the RELAY_AGENT env or to agent-maintained NEXT: prose.
+  if rtl_is_reviewer_turn "$f" "$agent"; then
     csv_rel=""
     role_note=' You are the REVIEWER this turn: do NOT edit, create, or run any artifact or source file — ONLY append your graded findings to the relay file. Any other edit will be reverted and fail the turn.'
   fi
