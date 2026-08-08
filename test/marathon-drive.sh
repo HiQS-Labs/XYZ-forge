@@ -62,18 +62,27 @@ run_driver() {  # <extra-args…>
     "$@"
 }
 
-# ── (1) dry-run: relay file rendered, no commit, no tick events ───────────
-run_driver --dry-run >/dev/null 2>&1; rc=$?
+# ── (1) dry-run: relay rendered and SHOWN, nothing written, no commit, no tick events ─────────
+# GH-401: this case used to assert `[ -f "$A/phases/p1/RELAY.md" ]` — it pinned the defect as the
+# contract. A dry run that writes is the bug: unscoped, that write landed on the harness's own
+# tracked phases/p1/RELAY.md and left `bash validate.sh` with a dirty tree. The property worth
+# pinning was never "the file appears"; it was "the render happened and you can see it", so the
+# assertion moves to the fenced render on stdout and gains its true complement — nothing on disk.
+out="$(run_driver --dry-run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "dry-run exits 0" || fail "dry-run exit=$rc"
-[ -f "$A/phases/p1/RELAY.md" ] && pass "dry-run renders phases/p1/RELAY.md" || fail "relay file should exist after dry-run"
+printf '%s' "$out" | grep -q '^--- BEGIN RENDERED RELAY ---$' \
+  && pass "dry-run emits the rendered relay on stdout" \
+  || fail "dry-run produced no render: $out"
+printf '%s' "$out" | grep -q 'TAKE YOUR TURN' \
+  && pass "the emitted render is the real relay body, not just a banner" \
+  || fail "render fence present but the body is missing"
+[ ! -e "$A/phases" ] \
+  && pass "dry-run writes nothing to disk (GH-401)" \
+  || fail "dry-run created $A/phases — a dry run must not mutate the tree"
 git -C "$A" diff --cached --quiet && pass "dry-run makes no staged changes" || fail "dry-run should not stage anything"
-# relay file is unstaged in dry-run — no git add yet
 before_head="$(git -C "$A" rev-parse HEAD)"
 run_driver --dry-run >/dev/null 2>&1 || true   # run again to confirm HEAD stability
 [ "$(git -C "$A" rev-parse HEAD)" = "$before_head" ] && pass "dry-run makes no commits" || fail "dry-run should not commit"
-
-# Clean up the dry-run rendered file (it's untracked) before next test.
-rm -rf "$A/phases"
 
 # ── (2) relay file template: builder + reviewer sections present ──────────
 RELAY_DRIVE_EXIT=0 run_driver >/dev/null 2>&1 || true
@@ -757,8 +766,13 @@ git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 BOTH_OUT="$(CLAUDE_BIN="$STUB_CLAUDE_BIN" AGY_BIN="$STUB_AGY_BIN" run_driver --dry-run 2>&1)"; rc=$?
 [ "$rc" -eq 0 ] && pass "GH-117: both binaries present — dry-run still exits 0" \
   || fail "GH-117: both-present dry-run exit=$rc (expected 0): $BOTH_OUT"
-[ -f "$A/phases/p1/RELAY.md" ] && pass "GH-117: both-present — relay file still rendered" \
-  || fail "GH-117: relay file missing when both binaries are present"
+# GH-401: cases (14)/(15) above are REAL runs, so their on-disk absence check still means something.
+# This one is a --dry-run, which no longer writes at all — so an on-disk check here would pass no
+# matter what the probe did. Assert the render itself instead: that is the property this case is
+# about (the probe is a no-op when both binaries exist).
+printf '%s' "$BOTH_OUT" | grep -q '^--- BEGIN RENDERED RELAY ---$' \
+  && pass "GH-117: both-present — relay still rendered" \
+  || fail "GH-117: render missing when both binaries are present: $BOTH_OUT"
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 

@@ -1399,7 +1399,11 @@ relay-file: {rel_relay}
                     die("--require-clean set and the workspace has pre-existing changes (above)")
         except Exception: pass
 
-    os.makedirs(phase_dir, exist_ok=True)
+    # GH-401: NOTHING below may touch the filesystem until the --dry-run exit has been passed. The
+    # phase dir creation used to live here, above the render, so a dry run materialized phases/<id>/
+    # in whatever repo it resolved to — the harness itself when no MARATHON_ROOT/--phases-dir was
+    # given. Both the reads below (phase brief, prior-attempt peek) work fine against a phase dir that
+    # does not exist yet, so the mkdir moves down next to the write it actually exists for.
     with open(args.phase_brief_file, "r") as f:
         brief_text = f.read()
 
@@ -1484,9 +1488,20 @@ You are the REVIEWER for this phase. {reviewer_read_line}
 
     if args.dry_run:
         log(f"dry-run: relay file would be rendered at {relay_file}")
+        # GH-401: a dry run must not write, but it must still SHOW its work — otherwise the flag
+        # becomes "do nothing and tell you nothing", and the render (the expensive, interesting part)
+        # is unobservable. Emitting it here is not a test affordance: test/debug-mantra.sh has always
+        # relied on --dry-run to produce a rendered relay it can inspect WITHOUT driving a phase or
+        # touching .tick/attempts/<lane>, which is the state that test hand-seeds. That need is real;
+        # the file write it used to ride on is what was wrong. Fenced so a caller can extract the
+        # render exactly, and so a grep for template text can't be confused with a driver log line.
+        print("--- BEGIN RENDERED RELAY ---")
+        print(relay_content, end="")
+        print("--- END RENDERED RELAY ---")
         print(f"tick seed: log task.created {relay_task} + claim --agent marathon + release --to {args.builder}")
         sys.exit(0)
 
+    os.makedirs(phase_dir, exist_ok=True)
     with open(relay_file, 'w') as f:
         f.write(relay_content)
 
