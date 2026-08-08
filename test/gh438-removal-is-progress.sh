@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # test/gh438-removal-is-progress.sh — GH-438, PARTIAL.
+# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"reproducer: bash test/gh438-removal-is-progress.sh; pre-fix revision: marathon_drive.py before acf2d3e, where path_has_nonempty_phase_delta tested existence first and unconditionally; pre-fix result: a lane whose deliverable was REMOVING its artifact registered no delta and could never report progress; post-fix result: 6/0 — a deletion counts, while an untouched artifact and a newly-emptied file are still rejected"}
 #
 # SCOPE, STATED UP FRONT. GH-438 reports two compounding defects. This file covers ONE:
 #

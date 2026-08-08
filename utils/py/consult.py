@@ -8,7 +8,7 @@ import shlex
 import time
 from datetime import datetime
 import shutil
-from rtl import RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_failure
+from rtl import RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict
 
 # Aider can exit 0 while printing an auth/config error transcript, or return only reasoning tokens with
 # empty visible content (GH-147 spike 0.1/0.4). Either is a failed advisor, not a real answer — trusting
@@ -209,14 +209,25 @@ def agy_auth_preflight(agy_bin, log_file):
         with open(tmp, "w") as f:
             subprocess.run([agy_bin, "whoami"], stdout=f, stderr=subprocess.STDOUT, timeout=secs, check=True)
         # GH-375: `agy whoami` exits 0 while failing to run at all without a TTY, so exit status
-        # cannot decide this — see agy_auth_output_failure in rtl.py. Same hole as agy-turn.py, so
+        # cannot decide this — see agy_auth_output_verdict in rtl.py. Same hole as agy-turn.py, so
         # the same verdict function; a consult that proceeds on unestablished auth burns the panel.
-        auth_fail = agy_auth_output_failure(tmp)
-        if auth_fail:
+        severity, detail = agy_auth_output_verdict(tmp)
+        if severity == "unverifiable":
+            # Not a failure. `agy whoami` needs a TTY and consult runs headless, so this branch is
+            # the NORMAL path here, not an edge case — failing it closed would disable the agy seat
+            # on every consult. Recorded in the log so a later credential failure is diagnosable.
             with open(log_file, "a") as f:
                 if os.path.exists(tmp):
                     with open(tmp) as tf: f.write(tf.read())
-                f.write(f"\nconsult: agy auth pre-flight exited 0 but {auth_fail}. Run `agy login` in a normal terminal, then retry.\n")
+                f.write(f"\nconsult: WARNING — {detail}. Proceeding; if agy fails on credentials, "
+                        f"run `agy login` in a normal terminal.\n")
+            if os.path.exists(tmp): os.remove(tmp)
+            return True
+        if severity:
+            with open(log_file, "a") as f:
+                if os.path.exists(tmp):
+                    with open(tmp) as tf: f.write(tf.read())
+                f.write(f"\nconsult: agy auth pre-flight exited 0 but {detail}. Run `agy login` in a normal terminal, then retry.\n")
             if os.path.exists(tmp): os.remove(tmp)
             return False
         if os.path.exists(tmp): os.remove(tmp)

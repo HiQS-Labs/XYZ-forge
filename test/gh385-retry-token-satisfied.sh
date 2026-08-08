@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # test/gh385-retry-token-satisfied.sh — GH-385 regression.
+# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"reproducer: bash test/gh385-retry-token-satisfied.sh; pre-fix revisions: (a) marathon_drive.py before acf2d3e, where satisfied_lane_terminal read only the BASE token — case 1 FAILED, an Approved phase completed on a --retry suffix was rebuilt; (b) the first version of that fix, which trusted the builder-written task= directive unconditionally — cases 5,6,7,9 FAILED, a directive naming any unrelated done token satisfied the lane. Post-fix result: 12/0, with case 8 (multi-digit suffix) green in all three revisions as the anti-over-tightening control"}
 #
 # An Approved phase rebuilt from scratch because its completion was recorded on a --retry SUFFIXED
 # token while satisfied_lane_terminal() read only the BASE token:
@@ -55,12 +56,12 @@ mk_token() {  # <task> <done|claimed>
   [ "$2" = "done" ] && { tick_a done "$1" --agent claude >/dev/null 2>&1 || true; }
 }
 
-run_driver() {
+run_driver() {  # [extra marathon-drive args...]
   : > "$RD_CALLS"
   MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
   CLAUDE_BIN="$STUB_CLAUDE" AGY_BIN="$STUB_AGY" \
   python3 "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" \
-    --reviewer agy --builder claude --pre-advance-cmd "true" 2>&1
+    --reviewer agy --builder claude --pre-advance-cmd "true" "$@" 2>&1
 }
 
 reset_state() { rm -rf "$A/phases" "$A/.tick"; tick_a init >/dev/null 2>&1 || true; : > "$RD_CALLS"; }
@@ -110,5 +111,78 @@ out="$(run_driver)"
 printf '%s' "$out" | grep -q "already reached a terminal relay" \
   && pass "a directive-less relay still resolves against the base token" \
   || fail "a pre-directive relay stopped being recognized as satisfied: $out"
+
+# ==================================================================================================
+# THE DIRECTIVE IS THE BUILDER'S TO WRITE. Everything below pins that RELAY.md is a hint, not an
+# authority. Raised in review of #458 before it merged: the first version of this fix accepted any
+# `task=` value, and the builder writes both that line AND `STATUS: Approved` — so the two together
+# are a complete forgery of the terminal state. Point the directive at any unrelated already-done
+# token and the driver skips render/reseed and reports success after the gate, which is a WIDER hole
+# than the one being closed (the pre-GH-385 check read a harness-computed name the builder cannot
+# touch). The resolution must never be able to leave this lane's own token family.
+# ==================================================================================================
+
+# --- (5) FORGERY: Approved + a directive naming an unrelated done token must NOT satisfy -----------
+reset_state
+seed_relay "MARATHON-P0-TURN"    # a different lane's token, or any stale/invented name
+mk_token "$BASE" claimed         # this lane never completed
+mk_token "MARATHON-P0-TURN" done # ...but the named token is legitimately done
+out="$(run_driver)"
+printf '%s' "$out" | grep -q "already reached a terminal relay" \
+  && fail "a builder-written directive naming an unrelated done token satisfied the lane — a builder can now skip its own review: $out" \
+  || pass "an out-of-family directive does NOT satisfy the lane"
+# ...and it must not report the phase COMPLETE either. Not asserted via RD_CALLS: this fixture leaves
+# the base token live-claimed (exactly how a crashed attempt leaves it), so the driver correctly dies
+# at reconcile_relay_task before relay-drive is reached. "Did the builder run" is therefore the wrong
+# observable here; "did the harness announce success having changed nothing" is the one the issue is
+# about, and it is what the pre-fix code did — it exited 0 with the success line.
+printf '%s' "$out" | grep -q "complete — " \
+  && fail "the harness reported the phase COMPLETE off a forged directive: $out" \
+  || pass "the phase is not reported complete — the lane halts honestly instead"
+
+# --- (6) the refusal is VISIBLE ---------------------------------------------------------------------
+# A silent fallback is indistinguishable from a directive that was honored, and this repo has shipped
+# three checks that could not fail (#333, #348, #351). A lane that rebuilds because its directive was
+# refused has to say so, or nobody can tell the guard from a bug.
+printf '%s' "$out" | grep -q "not $BASE or a retry derivative" \
+  && pass "the ignored directive is named in the log" \
+  || fail "the directive was refused silently: $out"
+
+# --- (7) PREFIX-MATCH CONTROL: family membership is not a startswith ---------------------------------
+# `MARATHON-P1-TURN-EVIL` and `MARATHON-P1-TURNX` both begin with the base name. A membership test
+# written as a prefix check accepts them and the forgery in (5) comes straight back through a name
+# chosen to look related.
+reset_state
+seed_relay "${BASE}X"
+mk_token "$BASE" claimed
+mk_token "${BASE}X" done
+out="$(run_driver)"
+printf '%s' "$out" | grep -q "already reached a terminal relay" \
+  && fail "'${BASE}X' was accepted as family — the check is a prefix match, not a suffix rule: $out" \
+  || pass "a name that merely starts with the base token is not a retry derivative"
+
+# --- (8) POSITIVE CONTROL for the suffix rule: multi-digit retries are still family -----------------
+# Without this, a rule of `-\d` (or an over-tight one) would pass every assertion above while
+# quietly re-breaking GH-385 for any lane retried more than nine times.
+reset_state
+seed_relay "${BASE}-11"
+mk_token "$BASE" claimed
+mk_token "${BASE}-11" done
+out="$(run_driver)"
+printf '%s' "$out" | grep -q "already reached a terminal relay" \
+  && pass "a two-digit retry suffix is still recognized as this lane's token" \
+  || fail "the family rule is too tight — GH-385 is back for lanes retried 10+ times: $out"
+
+# --- (9) an explicit --relay-task pins the token; the directive is not consulted --------------------
+# This is the --retry path (GH-116 allocates the first unused suffix and passes it through). A retry
+# must never be satisfied by the attempt it was invoked to retry, or --retry silently becomes a
+# gate-only re-run and the operator's explicit request is discarded.
+reset_state
+seed_relay "${BASE}-2"
+mk_token "${BASE}-2" done        # the previous attempt genuinely completed
+out="$(run_driver --relay-task "${BASE}-3")"
+printf '%s' "$out" | grep -q "already reached a terminal relay" \
+  && fail "--retry was satisfied by the attempt it was retrying — the operator's fresh token was ignored: $out" \
+  || pass "an explicit --relay-task overrides the directive (--retry still forces a real re-run)"
 
 exit 0

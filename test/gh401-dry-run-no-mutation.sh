@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # test/gh401-dry-run-no-mutation.sh — GH-401 regression.
+# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"reproducer: bash test/gh401-dry-run-no-mutation.sh; pre-fix revision: marathon_drive.py before d4999cd, where os.makedirs + the RELAY.md write ran ABOVE the dry-run exit; pre-fix result: --dry-run created phases/p1/ and wrote RELAY.md, leaving the marathon root's git status dirty; post-fix result: 4/0 — status byte-identical, no phases/ directory, and the positive control confirms the render still happens and is reported"}
 #
 # `marathon-drive --dry-run` used to RENDER AND WRITE phases/<id>/RELAY.md before reaching its exit,
 # so a dry run mutated the working tree. Unscoped (no MARATHON_ROOT, no --phases-dir) that landed on

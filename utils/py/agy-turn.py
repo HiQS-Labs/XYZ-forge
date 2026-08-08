@@ -5,7 +5,7 @@ import tempfile
 import subprocess
 import shlex
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
-                 narration_mentions_root, agy_auth_output_failure)
+                 narration_mentions_root, agy_auth_output_verdict)
 from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
@@ -28,13 +28,24 @@ def agy_auth_preflight(agy_bin):
         # Matched on agy's own error PREFIXES rather than a bare "error" substring. A bare substring
         # test fails the opposite way: `whoami` prints account identity, so any org, handle, or
         # banner containing "error" would block a lane whose auth is fine — and a false failure here
-        # stops the run outright, which is worse than the bug being fixed. Empty output is also a
-        # failure: a probe that establishes nothing must not report success.
-        auth_fail = agy_auth_output_failure(out_file)
-        if not auth_fail:
+        # stops the run outright, which is worse than the bug being fixed. Empty output is NOT a
+        # failure; see the comment in rtl.agy_auth_output_verdict for the turn that rule cost.
+        severity, detail = agy_auth_output_verdict(out_file)
+        if not severity:
             if os.path.exists(out_file): os.remove(out_file)
             return True
-        print(f"agy-turn: agy auth pre-flight exited 0 but {auth_fail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
+        if severity == "unverifiable":
+            # The probe could not run, so it proved nothing — in EITHER direction. Say so and let the
+            # turn proceed: `agy whoami` needs a TTY, `agy -p` (what the turn actually uses) does not,
+            # and blocking here stopped a working lane dead the first time it shipped. Measured, not
+            # theorised — test/relay-self-sufficiency.sh drives a live agy turn and went 4/0 to 0/4.
+            print(f"agy-turn: WARNING — {detail}", file=sys.stderr)
+            print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
+                  "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
+                  file=sys.stderr)
+            if os.path.exists(out_file): os.remove(out_file)
+            return True
+        print(f"agy-turn: agy auth pre-flight exited 0 but {detail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
         rc = 7
         # Fall through to the shared tail below, which echoes the captured output and returns False.
         # That output is the diagnosis — it is what the old success branch deleted.

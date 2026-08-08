@@ -1391,6 +1391,29 @@ relay-file: {rel_relay}
         # authoritative statement of the token this phase actually ran on. Prefer walking suffixes:
         # this answers "which token completed THIS relay" rather than "did any token for this phase
         # ever reach done", which would wrongly satisfy a lane whose retry belonged to another run.
+        #
+        # HARDENING (Codex review on #458): RELAY.md is the BUILDER'S artifact — writable by the very
+        # agent whose work is under review — so `task=` is a hint, not an authority. Read
+        # unconstrained it names ANY token, and the builder also writes `STATUS: Approved`, so the two
+        # together are a complete forgery of the terminal state: point the directive at some unrelated
+        # already-`done` token (a previous phase's, say) and satisfied_lane_terminal() accepts it as
+        # proof that THIS phase completed, skips render/reseed, and reports success after the gate.
+        # That is a strictly wider hole than the one being fixed — before this change the token check
+        # was anchored to the harness-computed name, which the builder cannot influence. Two limits
+        # restore that integrity while keeping the fix:
+        #
+        #   1. An explicit --relay-task means the OPERATOR named the token; use it and do not consult
+        #      the file at all. This is what --retry passes, and a retry must never be satisfied by
+        #      the attempt it was invoked to retry.
+        #   2. Otherwise accept the recorded name only if it belongs to THIS lane's token family: the
+        #      derived base itself, or one of GH-116's `-<n>` retry derivatives of it. Anything else
+        #      falls back to the base token — i.e. exactly the pre-GH-385 behavior, which is safe.
+        #
+        # The rejection is logged rather than silently absorbed: a lane that rebuilds because its
+        # directive was refused should say so, or this becomes another check nobody can see working.
+        if args.relay_task:
+            return relay_task
+        recorded = ""
         try:
             with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
                 for line in f:
@@ -1399,10 +1422,15 @@ relay-file: {rel_relay}
                     for field in line.split():
                         if field.startswith("task="):
                             recorded = field.split("=", 1)[1].strip()
-                            return recorded or relay_task
                     break
         except OSError:
             pass
+        if not recorded or recorded == relay_task:
+            return relay_task
+        if re.fullmatch(re.escape(relay_task) + r"-\d+", recorded):
+            return recorded
+        log(f"relay directive names task '{recorded}', which is not {relay_task} or a retry derivative of it "
+            f"— ignoring it and resolving the satisfied check against {relay_task}")
         return relay_task
 
     def satisfied_lane_terminal():
