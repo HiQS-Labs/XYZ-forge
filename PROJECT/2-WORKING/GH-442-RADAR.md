@@ -450,6 +450,36 @@ skill now also cross-checks against `git rev-list --count`.
 5. **Three-way signal-yield reporting** — parser failure vs. structurally unavailable vs. available
    and genuinely empty (81 closed issues, zero doc-only closes is a real negative result).
 
+#### Marathon check — PRs #443 + #445 vs. the radar targets (2026-08-07)
+
+Not a full run (no `runs:` increment, #444 unchanged); a targeted check of whether two merged
+marathons moved anything the radar tracks.
+
+**Result: the claimed target absorbed all the effort, and its issue count did not move.**
+
+| Target | Claim | Marathon effect |
+|---|---|---|
+| `RADAR-class-guards-cant-fail` | Litmus | GH-441 Phase 2 shipped (`c9a17d7`, PR #445) — **the only radar-relevant work in either PR**. #441 still open; #419/#418/#425/#426/#416/#375 all still open. **Litmus open count 17 → 17.** |
+| `RADAR-ensure-gitignore` | UNCLAIMED | **Zero commits touched `relay-automation/xyz-vendor.sh` on any branch.** #314/#440 open. A worktree exists at `/private/tmp/xyz-314-440-fix-65675` but sits at `f95eefc` with nothing committed — staged, never landed. |
+| `RADAR-class-foreign-repo-field-gaps` | UNCLAIMED | #438/#439 open, still no milestone. |
+
+Orphan share **67/99 → 68/100** — slightly worse. Third consecutive observation that effort flows
+to the claimed band while the unclaimed targets age untouched; the pattern is now well past
+anecdote.
+
+**Strike-through remains unexercised**, but this check produced the closest thing yet to a valid
+trigger: `fix(GH-441): Phase 2 — the gate's inherited environment is now a governed contract`
+*names its seam*, which is exactly the evidence the new rule demands. It retires a class *member*,
+not the class, so no strike-through is due — the correct outcome, and a useful negative test of
+the rule's precision.
+
+**One new fix earned — corpus drift.** Commit `416d786` swept 27 stale docs and repointed 51
+roadmap entries, relocating **39 docs** between lifecycle buckets in one commit. Signal 1's
+citation graph is directory-scoped, so a lifecycle sweep moves the radar's own measurement base
+with no defect having changed. The skill now records doc-corpus size per bucket in every report and
+requires that any citation delta be checked against corpus movement first. Same species as symptom
+masking: a change in the instrument reading that did not come from the thing being measured.
+
 ### Phase 2 — Reconciliation across runs + triage handoff
 
 The update-in-place path can only be tested once a prior run exists, so it lands here.

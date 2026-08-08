@@ -136,6 +136,14 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
    runs" — the difference between a backlog item and an active outage. Third calibration run found
    its top target this way; neither tooling repo had the signal at all.
 
+**Guard against corpus drift when comparing runs.** Signal 1's citation graph is scoped to a set of
+directories, so a *lifecycle* action — a PDDA sweep moving docs from `2-WORKING` to `3-COMPLETED`
+or `4-MISC`, a bulk rename, an archive — changes the citation counts with no defect having changed
+at all. Observed: one sweep relocated 39 docs and repointed 51 roadmap entries in a single commit.
+**Record the doc-corpus size per bucket in every report**, and when it moves between runs, say so
+before attributing any citation delta to defect activity. Same species as symptom masking: a change
+in the instrument reading that did not come from the thing being measured.
+
 **Report each signal's yield as one of three states, never collapsed:** *parser failure*
 (`M=0 while N>0` — say so loudly), *structurally unavailable* (no closed issues, no `reported_from:`
 docs, no logs — state it rather than implying a clean sweep), or *available and genuinely empty*
