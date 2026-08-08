@@ -44,9 +44,14 @@ current feature branch. Compute the prior window of equal length for the trend c
 **Compute the tally once, into a file, and prove it sums.** Write subjects with
 `/usr/bin/git log --no-merges --since=<start> --until=<end> --pretty='%s' <trunk> > <tmpfile>`,
 then assert `wc -l <tmpfile>` equals the sum of the bucket counts before reporting anything.
-Two reasons, both observed: shell wrappers/hooks may rewrite or truncate `git` output (a `tail`
-view of a piped tally returned counts that contradicted the `head` view of the same pipeline —
-same keys, different numbers), and a partial read is indistinguishable from a real distribution.
+Two reasons, both observed, and the second one independently in two repos: shell wrappers/hooks may
+rewrite or **silently truncate** `git` output — a `tail` view of a piped tally returned counts
+contradicting the `head` view of the same pipeline, and on another machine-repo the RTK proxy
+capped `git log` at exactly **50 lines for both windows of a 548-commit repo**, which would have
+bucketed 50 commits and reported a confidently wrong distribution with no visible symptom. A
+partial read is indistinguishable from a real distribution; the sum check is the only thing that
+tells them apart. Cross-check the total against `git rev-list --no-merges --count` as well when the
+numbers matter.
 An unproven tally is exactly the reads-as-authoritative-while-wrong failure this tool exists to
 catch; do not let the radar commit it.
 
@@ -64,10 +69,20 @@ An explicit `rgt:` key on the governing doc always beats prefix inference. Repor
 the RGT denominator (Run+Grow+Transform+Unclassified), the trend vs. the prior window, and a
 one-line verdict. No threshold blocks anything.
 
+**Two malformed-prefix families are common enough to check for by name**, because both are
+correctly-typed work that a strict parser silently discards into Unclassified:
+
+- **component-as-type** — `3-Eyes: adopt registry overlay`, `stay-focused: add session-anchor skill`
+- **missing colon after scope** — `fix(GH-169) Phase 2: stop the collector evicting events`, where
+  the type and scope are both right and only the `:` is absent. Third calibration run: this dropped
+  **four** correctly-typed commits from one active workstream.
+
+When either family appears more than once, report it as a **source-fixable measurement defect**, not
+just an inference miss — the convention is what should change, and saying so is more useful than
+silently compensating forever.
+
 **Always print the Unclassified subjects verbatim, then give an adjusted read beside the
-mechanical one.** Some repos use the *component* as the type (`stay-focused: add session-anchor
-skill`), which conventional-commit inference cannot classify — and those commits are often plainly
-Grow. Second calibration run: mechanical inference read 5% Grow where the adjusted read was 19%,
+mechanical one.** Second calibration run: mechanical inference read 5% Grow where the adjusted read was 19%,
 a ~4x undercount in the one direction that flatters nobody. Report both; label which is which.
 
 ## Step 2 — Lens 2: recurring-defect radar
@@ -113,6 +128,19 @@ signal 2 flat; in `giant-brains-claude-skills` signal 1 yielded nothing and sign
    count first and say so rather than reporting a clean sweep. Nothing has had time to recur.
 5. **Cross-repo re-reports** — the `reported_from:` frontmatter key. The same harness bug reported
    from three vendored repos is one target, not three.
+6. **Operational evidence** — runtime logs, health captures, collector outcomes (`temp/logs/*.log`,
+   `*-degraded` captures, sync-outcome records). **A product repo has an evidence source a tooling
+   repo does not: proof a class is firing *right now*.** Grep the recent log tail for the failure
+   string a cluster predicts, and count how many of the last N runs show it. This converts a target
+   from "6 issues over 12 days" into "6 issues, and it refused to start in 5 of the last 9 nightly
+   runs" — the difference between a backlog item and an active outage. Third calibration run found
+   its top target this way; neither tooling repo had the signal at all.
+
+**Report each signal's yield as one of three states, never collapsed:** *parser failure*
+(`M=0 while N>0` — say so loudly), *structurally unavailable* (no closed issues, no `reported_from:`
+docs, no logs — state it rather than implying a clean sweep), or *available and genuinely empty*
+(e.g. 81 closed issues exist and none was a doc-only close — that is a real negative result and
+worth reporting as one).
 
 **Clusters come in two shapes; support both.** *Seam-shaped*: N issues circling one file or
 function (e.g. three issues on one `ensure_gitignore()`). *Class-shaped*: N issues sharing a defect
@@ -141,8 +169,16 @@ is precisely the "do not treat a sparse file as an incomplete one" failure §GH-
 (Second calibration run: the target repo's only block was the seed; correct output is silence.)
 
 Otherwise, for each unshipped block: join its `Milestone:` to its issue set
-(`gh issue list --milestone "<title>" --state open`), compare the planned theme against the
-observed flow distribution and the top targets, and surface:
+(`gh issue list --milestone "<title>" --state open`).
+
+**If `Milestone:` is empty, or the repo has no milestones at all, the join is impossible — fall
+back to reading claim status from the block's `Description:` prose and say that is what you did.**
+Do not report a 100% orphan share as backlog drift in that case: with no milestones to belong to,
+that number measures a **missing binding**, and the actionable finding is "bind `Milestone:` (or
+create the milestones) so the next run can join" — not "the backlog is unplanned."
+
+Then compare the planned theme against the observed flow distribution and the top targets, and
+surface:
 
 - Does the arc's `Description:` still describe where effort actually goes?
 - Is a top radar target unclaimed by any planned band? Mark each reported target **claimed by
@@ -212,6 +248,18 @@ The checklist only, plus a link to the newest report doc. Search first:
   strike through targets whose seam went quiet citing the fixing commit, update each target's
   `first-seen: <date> · runs: <n>` line, then comment with the run delta and the new report link.
   Never open a second radar issue.
+
+  **Never strike through on symptom disappearance alone — require a citable fix.** A target may go
+  quiet because a *different* target's fix masked it, not because its own defect was addressed.
+  Third calibration run found a live instance: a store-bloat class was a plausible cause of the
+  memory pressure tripping a separate unbounded-ceiling class, so shipping the reclaim work would
+  have silenced the ceiling's symptom while its defect — no enforced bound — stayed exactly where
+  it was. A false strike-through is worse than a missed one: it resets the aging clock on a live
+  defect and destroys the one signal reconciliation exists to produce.
+  So: strike through only when a commit or PR **names the seam**. If the symptom stopped but no
+  such commit exists, keep the target open, increment `runs:`, and annotate it
+  **`quiet, unexplained — possible symptom masking by <other target>`**. Where two targets are
+  causally linked, say so under both.
 - **more than one** → stop and ask the operator which is canonical.
 
 Checklist items are grouped under their target heading and each names a file, a function, and an

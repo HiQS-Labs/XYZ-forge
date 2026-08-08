@@ -17,6 +17,10 @@ non_goals:
   - Cross-repo / fleet-wide roll-up. Deliberately deferred — the operator wants the review and its
     recommendations to stay granular and per-repo at this stage. No rebalance-OS integration, no
     Focus 5 tile, no shared DB. A later umbrella layer must not be designed for here.
+    (Still deferred, but run 4 supplied the first concrete argument FOR it: the
+    guards-cannot-report-red class was found independently in two repos that share no application
+    code, and "this class recurs fleet-wide" is a fact no single-repo radar can ever observe.
+    Recorded as evidence for a future decision, not as a change of scope.)
   - Any automated enforcement. /radar never blocks a commit, never gates a marathon, never fails CI.
     It is an advisory read an operator asks for. Persisting a report is not enforcement — nothing
     downstream is required to consume it.
@@ -406,6 +410,45 @@ than *no transformative work happened*, and that must not be left to the reader 
 
 **Still unexercised:** the strike-through branch. No target has been fixed between any two runs, so
 the "seam went quiet → strike through citing the fixing commit" path has never executed.
+
+#### Run 4 — `rebalance-OS`, operator-run, first non-tooling repo (2026-08-07)
+
+Run independently by the operator in a parallel session; findings folded back here. 548 commits,
+a product repo (collectors, Swift app, web server) rather than a harness or skills library.
+
+**The convergence is the headline.** Its #2 target is `RADAR-class-guard-cannot-report-red` — the
+same defect class as this repo's #419 `guards-cant-fail`, arrived at independently, in a codebase
+that shares no application code with xyz. Two of three top clusters in a product repo are the same
+*shapes* found in a tooling repo, with entirely domain-specific membership (memory ceilings, SQLite
+locks, orphaned vectors). That is the strongest evidence so far that the taxonomy generalizes
+rather than describing xyz's quirks — and it is also the first real argument for the fleet-level
+roll-up this doc deliberately deferred, since a class recurring in two repos independently is a
+fact neither repo's radar can see on its own.
+
+**Two of this session's recent fixes were independently confirmed by it.** The concentrated-authoring
+discriminator caught GH-257 — 16 fix commits, one day, one issue, the repo's hottest seam by raw
+count and correctly excluded. And the tally-must-sum guardrail turned out to be under-specified:
+the operator's run hit **RTK truncating `git log` to exactly 50 lines for both windows of a
+548-commit repo**, a silent cap that would have produced a confidently wrong distribution. The
+skill now also cross-checks against `git rev-list --count`.
+
+**Five fixes folded in from it**, one of which is a genuine defect in reconciliation:
+
+1. **Signal 6 — operational evidence.** A product repo has proof a class is firing *now*: the
+   operator's top target was confirmed by `refusing to start: memory compressor holds 21.1 GB` in
+   5 of the last 9 nightly logs. Neither tooling repo had this signal at all.
+2. **Symptom-masking guard on strike-through (the defect).** Its target 3's store bloat is a
+   plausible *cause* of target 1's memory pressure — so shipping the reclaim work would silence
+   target 1's symptom while its defect stayed put. Left alone, the next run would have struck
+   through a live target and reset its aging clock. Strike-through now requires a commit that
+   **names the seam**; a symptom that stops without one is annotated
+   `quiet, unexplained — possible symptom masking by <other target>`.
+3. **Missing-colon prefix family** (`fix(GH-169) Phase 2: ...`) dropped four correctly-typed commits;
+   now checked by name and reported as a source-fixable measurement defect.
+4. **Lens 3 fallback** when `Milestone:` is empty or no milestones exist — read claim status from
+   `Description:` prose, and report a 100% orphan share as a *missing binding*, not backlog drift.
+5. **Three-way signal-yield reporting** — parser failure vs. structurally unavailable vs. available
+   and genuinely empty (81 closed issues, zero doc-only closes is a real negative result).
 
 ### Phase 2 — Reconciliation across runs + triage handoff
 
