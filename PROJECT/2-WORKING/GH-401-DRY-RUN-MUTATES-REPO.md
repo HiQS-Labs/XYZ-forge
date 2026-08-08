@@ -2,9 +2,9 @@
 gh_issue: 401
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/401
 title: "GH-401 — marathon-drive --dry-run writes to the harness's own tracked phases/p1/RELAY.md"
-status: "Intake (2-WORKING) — captured 2026-08-06 for release 0.2.0 Litmus, preflight READY, awaiting operator go."
+status: "In flight (2-WORKING) — captured 2026-08-06 for release 0.2.0 Litmus. Preflight READY (5/5 acceptance verbatim, re-verified 2026-08-08); operator go given; queued as phase 2 of 3 in MARATHON-2026-08-08-LITMUS-WAVE-2. Previously deferred to 0.3.0 Nightwatch on theme; that deferral was reversed because the issue is on the Litmus MILESTONE."
 created: 2026-08-06
-updated: 2026-08-06
+updated: 2026-08-08
 owner: noel
 doc_type: project
 release: "0.2.0 Litmus"

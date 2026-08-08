@@ -44,14 +44,22 @@ if [ -r "$_ge_py" ]; then
   # (The rewrite of this very comment was also a finding: the scanner matches the four-letter
   # builtin anywhere in the file, comments included, so the earlier wording tripped it while the
   # code beneath was already clean.)
+  # Read one name per line. A `for _ge_n in $_ge_names` loop would be a bug in any shell that does
+  # NOT word-split unquoted parameters — zsh does not, so it would pass the whole newline-joined blob
+  # as a single name and fail with `invalid parameter name` (observed 2026-08-07). A heredoc-fed
+  # `while read` behaves identically in bash and zsh, and unlike a pipe it keeps the loop in the
+  # CURRENT shell so the unsets survive.
   _ge_names="$(python3 "$_ge_py" --list-scrubbed 2>/dev/null || true)"
   if [ -n "$_ge_names" ]; then
-    for _ge_n in $_ge_names; do
+    while IFS= read -r _ge_n; do
+      [ -n "$_ge_n" ] || continue
       case "$_ge_n" in
         [A-Z_][A-Z_0-9]*) unset "$_ge_n" ;;
         *) printf 'gate-env.sh: refusing to unset malformed name from the registry: %s\n' "$_ge_n" >&2 ;;
       esac
-    done
+    done <<GATE_ENV_NAMES
+$_ge_names
+GATE_ENV_NAMES
   else
     # Fail LOUDLY rather than leaving the gate contaminated and looking clean. A gate that silently
     # skips its own scrub is the exact shape GH-441 is about: a check reporting a verdict on a

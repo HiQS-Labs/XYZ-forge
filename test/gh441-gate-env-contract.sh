@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"reproducer: bash test/gh441-gate-env-contract.sh (cases C4a/C4b); pre-fix revision: the same custom gate WITHOUT sourcing relay-automation/gate-env.sh, i.e. every gate in the tree before this lane; pre-fix result: the gate inherited ALLOW_PATHS and reported its parent's contamination as the change's own; post-fix result: the identical gate sourcing the helper sees a clean environment. C5a/C5b additionally observe the helper refusing to run (rc=1) when the registry is unreachable, so a silently-skipped scrub cannot read as a pass"}
 # test/gh441-gate-env-contract.sh — GH-441 Phase 2.
 #
 # Phase 1 fixed the two variables that were biting. It did NOT make the boundary governed, so the next
