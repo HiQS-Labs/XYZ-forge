@@ -2,13 +2,7 @@
 STATUS: Open
 NEXT: codex
 
-<!-- marathon-drive: task=MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-2 builder=codex reviewer=agy round-cap=7 -->
-
-### Round 1 · Builder · codex
-
-- Changed `utils/py/swarm_preflight.py` so separator-containing gate programs resolve under `target_root`, while bare programs retain PATH lookup. Both `bash`/`sh` scripts and target-relative programs now require a regular executable file; their NOT-READY diagnostics name the searched target root.
-- Added and registered `test/gh343-gate-program-target-root.sh`. It records the observed pre-fix baseline (revision `3b37072`, reproducer, exit 5 result) and verifies READY/NOT-READY behavior from target and foreign working directories, including absent and non-executable script/program controls.
-- Verification: `bash test/gh343-gate-program-target-root.sh` → 16 pass, 0 fail. The full suite was intentionally not run per relay containment.
+<!-- marathon-drive: task=MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-3 builder=codex reviewer=agy round-cap=7 -->
 
 ## Phase Brief
 
@@ -97,8 +91,22 @@ Resolve a separator-containing gate program against `target_root` before falling
 lookup, mirroring what the `bash`/`sh` branch already does. Two smaller points fold in, both carried
 by the acceptance:
 
-- **Executability, not existence.** The `bash`/`sh` branch checks `os.path.isfile`, so a
-  non-executable gate script currently passes readiness and fails at execution time.
+- **Executability, for DIRECTLY-EXECUTED programs only — read this carefully, two builds got it
+  wrong.** An earlier revision of this bullet claimed the `bash`/`sh` branch's `os.path.isfile` check
+  lets "a non-executable gate script pass readiness and fail at execution time". **That is false.**
+  `bash foo.sh` runs a mode-644 file: the interpreter reads the script, it is never `exec`'d. Two
+  independent codex builds implemented the bullet literally, added `os.access(..., os.X_OK)` to the
+  `bash`/`sh` branch, and both regressed this lane's own gate **98/0 → 91/7** (`T15`, `T33`, `T36`,
+  `expected exit 0, got 5`; `T15`'s fixture gate is `bash -x src/a.js` over a mode-644 file).
+  Do **not** `chmod +x` the fixtures to make it pass — that ships the rule "an interpreter-invoked
+  gate must be executable", which reports NOT-READY for `bash validate.sh` in any repo whose
+  `validate.sh` is 644 even though that gate runs fine. **That is a new false NOT-READY, i.e. this
+  lane shipping the exact bug it exists to fix.**
+  So: require the executable bit **only** on a program that is executed directly — a bare command, or
+  the separator-containing path this lane is adding. Leave the interpreter branch checking existence
+  alone. **Issue #343's criterion 3 was narrowed to exactly this on 2026-08-08 (operator-approved), so
+  the acceptance block you must satisfy now says "executed directly" — the version that produced the
+  regression is gone.** Build to the amended criterion, not to any cached memory of the old one.
 - **Name which root was searched.** "not found in PATH" is accurate for a bare command and
   misleading for a path — that wording is what made this undiagnosable in one read.
 
@@ -112,7 +120,7 @@ Register `test/gh343-gate-program-target-root.sh` in `validate.sh`'s `TESTS` arr
 not glob `test/`.
 
 
-## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+## Debug mantra (auto-triggered — 2 prior attempt(s) on this phase did not reach Approved)
 
 Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
 Last recorded reason (`phases/litmus-trustworthy-gates-2026-08-06--gh343-gate-program-target-root/ESCALATION.md`): `pre-advance-failed`. Read it before re-guessing.
@@ -125,9 +133,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick
-   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick claim MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-2 --agent codex --paths "phases/litmus-trustworthy-gates-2026-08-06--gh343-gate-program-target-root/RELAY.md,utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh"
-   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick ping MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-2 --agent codex
-   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-2 --agent codex --to agy
+   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick claim MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-3 --agent codex --paths "phases/litmus-trustworthy-gates-2026-08-06--gh343-gate-program-target-root/RELAY.md,utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh"
+   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick ping MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-3 --agent codex
+   - /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-3 --agent codex --to agy
 4. Edit ONLY these paths: phases/litmus-trustworthy-gates-2026-08-06--gh343-gate-program-target-root/RELAY.md and utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -140,10 +148,17 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: utils/py/swarm_preflight.py,test/gh343-gate-program-target-root.sh,validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested` then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-2 --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick done MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-2 --agent agy
+2. If changes needed: add `**Verdict:** Changes requested` then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick release MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-3 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick done MARATHON-GH343-GATE-PROGRAM-TARGET-ROOT-TURN-3 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /private/tmp/claude-501/-Users-noelsaw-Documents-GH-Repos-xyz-3-agents-swarm/2569ea28-6a7e-429b-87d2-4a92b81c3694/scratchpad/wt-litmus/bin/tick
    Edit ONLY phases/litmus-trustworthy-gates-2026-08-06--gh343-gate-program-target-root/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to codex —
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
