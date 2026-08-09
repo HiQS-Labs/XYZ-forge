@@ -2,9 +2,9 @@
 gh_issue: 417
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/417
 title: "GH-417 — turn-root resolution: the tree asserts both that rev-parse --show-toplevel is the correct ROOT default and that it is the bug caught live"
-status: "Intake (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus, not yet fired."
+status: "Built 2026-08-08 — test/gh417-turn-root-symlink-prefix.sh 13/0 with the pre-fix control observed; the contradiction is reconciled in relay-turn-lib.sh and utils/py/rtl.py. Awaiting merge."
 created: 2026-08-05
-updated: 2026-08-05
+updated: 2026-08-08
 owner: noel
 doc_type: project
 release: "0.2.0 Litmus"
@@ -167,3 +167,90 @@ issue's non-goals.
 Line references are carried from the issue, which verified them on 2026-08-04. The absence of a
 FROZEN banner on `relay-turn-lib.sh` and the presence of `caught live` were re-verified 2026-08-05
 against `development` @ `2c95a56`.
+
+---
+
+## Resolution (2026-08-08)
+
+### What actually fixed GH-171/GH-172 — the archaeology criterion
+
+**`312a2c3`, 2026-07-21, `fix(GH-261): marathon-drive Bash-side containment fix — two real bugs, not
+the hypothesized one`.** It is not an inference: that commit's own message opens by naming
+`test/marathon-drive.sh`'s GH-171/GH-172 vendored-full-chain cases and the exit-6 symptom, in the
+vendored `.xyz/` + worktree-isolation + macOS symlinked-tmpdir scenario.
+
+Its first fix is the load-bearing one here — `rtl_init` now canonicalizes **both** `RTL_ROOT` and each
+absolute `RTL_ALLOW` entry to physical form before the repo-root-relative strip. The commit notes both
+mismatch directions were confirmed live, the Bash-vendored case and the `XYZ_PYTHON=1` case in reverse.
+
+Marathon Plan K measured the failures on **2026-07-19** and read the un-reconciled comment as the
+explanation. It was **two days early**. That is the whole of the mystery this issue was filed over.
+
+### Which of the issue's three possibilities was right
+
+Possibility **1** — something else genuinely fixed it, and the comment is what remained misleading.
+Not possibility 3: the failure is not latent. It is actively held off by code that runs on every turn,
+and the control below removes that code and watches it come straight back.
+
+### The contradiction, resolved
+
+Both statements were true, of different things:
+
+- `relay-turn-lib.sh`'s GH-160 collapse **must** stay string-based. It runs *before* the GH-261
+  normalization, so changing `RTL_ROOT`'s symlink form there would desynchronize it from an allowlist
+  still holding the caller's form. The "caught live" warning is correct **in that scope**.
+- `utils/py/rtl.py:resolve_turn_root`'s `--show-toplevel` default runs on the *other* side of GH-261,
+  where either form resolves. It is safe.
+
+Both files now say so, and each points at the other. **The "caught live" sentence was deliberately
+kept** rather than deleted: it records a real, still-applicable constraint on the GH-160 collapse.
+Only its scope was ambiguous, so scope is what was added.
+
+> **Preflight-probe deviation.** This doc's `grep_present` probe on `caught live` expects the phrase to
+> be *gone*, and it is not. The probe was authored before the resolution was known and encodes the
+> assumption that the warning was simply wrong. Deleting a true warning to turn a grep green is the
+> wrong trade. The issue's acceptance criterion is the binding text, and it offers exactly this option:
+> *"corrected to state why `--show-toplevel` is safe as `resolve_turn_root`'s default."*
+
+### Criterion 2, read precisely
+
+The criterion asks the test to *"fail if `ROOT` is forced to the physical toplevel form and pass
+otherwise."* Taken against the **current** tree that is unsatisfiable, and for a good reason:
+`--show-toplevel` *is* the physical form, it is the live default, and it passes. GH-261 made both
+forms work.
+
+The criterion is satisfiable — and satisfied — against the **pre-fix** tree, which is where the
+discrimination is visible at all. The full matrix the test observes in one run:
+
+| tree | ROOT form | result |
+|---|---|---|
+| current | physical (`--show-toplevel`, the default) | exit 0 |
+| GH-261 reverted | physical (the default) | **exit 6** |
+| GH-261 reverted | logical (explicit override) | exit 0 |
+
+Rows 2 and 3 are the criterion: same fixture, same stub, same allowlist, differing only in ROOT's
+symlink form. Row 1 is why no change to `resolve_turn_root` is warranted.
+
+### Evidence
+
+`test/gh417-turn-root-symlink-prefix.sh` — **13 pass, 0 fail**, registered in `validate.sh`.
+
+The fixture builds its **own** `link -> phys` symlink rather than trusting `$TMPDIR`'s shape. macOS
+resolves its temp prefix through a symlink for free; Linux CI does not, and a sandbox can rewrite `$TMPDIR` to an
+already-physical path. In either case the discriminating shape would vanish silently and every
+assertion would pass for the wrong reason — so the test asserts the shape exists before concluding
+anything from it.
+
+The Python lane is **proven**, not assumed: a `python3` wrapper early on `PATH` records that it ran and
+`exec`s the real interpreter. The Bash entry point only reaches `exec python3` on the Python branch, so
+the marker file is the lane. The frozen Bash twins are never run as a proxy.
+
+Adjacent suites after the change: `marathon-drive` 144/0 (the GH-171/GH-172 cases themselves),
+`agy-turn` 62/0, `worktree-isolation` 33/0, `relay-target-root` 12/0, `gh410-containment-advisory` 10/0,
+`gh308-turn-shim-parity` 9/0, `security-scan` 35/0, `relay-pkg-freshness` 3/0 (tarball regenerated).
+
+### Scope
+
+Comments only in `relay-automation/relay-turn-lib.sh` and `utils/py/rtl.py`; no behavior change in
+either, so the GH-308 constraint that behavior changes land in Python is not engaged. **The five frozen
+Bash shims were not touched.**

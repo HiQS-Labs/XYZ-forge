@@ -109,6 +109,14 @@ def resolve_turn_root(explicit_root, xyz_root):
     # documented `cd $HARNESS`) roots at the TRUE target repo, not xyz_root (the harness's own
     # directory on disk, which can differ from the git toplevel in that layout even though both
     # paths belong to the same git repo) — else xyz_root as a last resort off a git repo. (GH-296)
+    #
+    # GH-417: --show-toplevel returns the PHYSICAL path, so ROOT can differ in symlink form from a
+    # relay-file path the caller built from its own $PWD. That is survivable, not accidental:
+    # relay-turn-lib.sh's rtl_init canonicalizes both sides before stripping (GH-261, 312a2c3), and
+    # claim_paths_for_turn above does the same natively. Read the "caught live" warning at
+    # relay-turn-lib.sh's GH-160 collapse as scoped to that collapse — it is not an argument against
+    # this default. Pinned by test/gh417-turn-root-symlink-prefix.sh, whose control shows the exit-6
+    # failure returning the moment that canonicalization is removed.
     if explicit_root:
         return explicit_root
     try:
