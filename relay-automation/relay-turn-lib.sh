@@ -259,6 +259,17 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # a .xyz-rooted one (caught live: an early version of this fix did exactly that). `--show-prefix`
   # gives the repo-root-relative form of RTL_ROOT itself; stripping that suffix off RTL_ROOT's own
   # string yields the toplevel in RTL_ROOT's OWN symlink form, matching what the rest of the turn uses.
+  #
+  # GH-417 — scope of the warning above. It is about THIS collapse, which runs BEFORE the GH-261
+  # normalization below and would therefore change RTL_ROOT's symlink form while the allowlist is
+  # still holding the caller's. It is NOT a verdict on `--show-toplevel` generally, and in particular
+  # not on utils/py/rtl.py:resolve_turn_root, which defaults ROOT to exactly that construct on purpose
+  # (GH-296) and is safe doing so: GH-261 (312a2c3) canonicalizes BOTH RTL_ROOT and each absolute
+  # allowlist entry to physical form before stripping, so by then either form resolves. The two
+  # statements read as a contradiction for three weeks and cost Marathon Plan K's Wave 1 a wrong
+  # root-cause; 312a2c3's own message names the test/marathon-drive.sh GH-171/GH-172 failures Plan K
+  # measured two days earlier and could not explain. test/gh417-turn-root-symlink-prefix.sh pins all
+  # of it, including that removing GH-261's canonicalization brings exit 6 straight back.
   local _gh160_prefix
   _gh160_prefix="$(git -C "$RTL_ROOT" rev-parse --show-prefix 2>/dev/null)"
   if [[ -n "$_gh160_prefix" ]]; then

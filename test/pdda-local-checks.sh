@@ -124,11 +124,27 @@ fi
 # Warn-only by contract, so this asserts the checks RUN and REPORT rather than asserting silence —
 # an "exit 0" assertion would pass against a deleted check body, which is the bug being guarded.
 real_out="$(PDDA_ACTIVITY_LOG=/dev/null bash "$LOCAL" run 2>&1)"; real_rc=$?
-printf '%s' "$real_out" | grep -Fq "SUMMARY [pdda-local-check-completed-status]" \
-  && printf '%s' "$real_out" | grep -Fq "SUMMARY [pdda-local-check-roadmap-issue-state]" \
-  && printf '%s' "$real_out" | grep -Fq "SUMMARY [pdda-local-check-release-milestone]" \
+# GH-460: grep the output through a FILE, never `printf "$real_out" | grep -q`. `grep -q` exits the
+# instant it matches, and once this output outgrew the 64KB pipe buffer printf was still writing when
+# the reader vanished — SIGPIPE, EPIPE, and under _setup.sh's `set -o pipefail` that became the
+# pipeline's status, breaking the && chain and failing an assertion whose subject had not changed.
+# That is the whole of the "tier1 flake": five consecutive runs went pass/fail/fail/pass/fail on
+# identical code, because whether printf finished before grep exited was a race against a buffer every
+# new 3-COMPLETED doc pushed it further past. Reading from a file has no reader to lose.
+#
+# The failure message now names WHICH summary is missing. It used to dump the entire run output and
+# name nothing, which is why this was read as the GH-268 frontmatter WARN at the top of the dump —
+# a warn-only advisory that was never the assertion — on two separate occasions.
+real_out_file="$WORK/real-out.txt"
+printf '%s\n' "$real_out" > "$real_out_file"
+missing=""
+for _c in completed-status roadmap-issue-state release-milestone; do
+  grep -Fq "SUMMARY [pdda-local-check-$_c]" "$real_out_file" || missing="$missing pdda-local-check-$_c"
+done
+[ -z "$missing" ] \
   && pass "all three checks execute against the real repository and emit a summary" \
-  || fail "a check did not run against the real repo: $real_out"
+  || fail "check(s) did not run against the real repo:$missing
+$real_out"
 [ "$real_rc" -eq 0 ] \
   && pass "the local checks stay warn-only and never gate the exit code" \
   || fail "local checks gated the exit code (rc=$real_rc) — they are advisory by contract"

@@ -219,7 +219,20 @@ RELAY_AGENT=pi RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-wt PI_AGENT=pi \
 grep -q "pi-stub" "$A/relay.md" && pass "wt-iso: pi's relay block PRESERVED" || fail "pi's relay output LOST under worktree isolation"
 [ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "wt-iso: turn committed (output not silently dropped)" || fail "no commit — output discarded"
 
-# --- (14) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
+# --- (14) dispatcher: a Python-default marathon's --agent-cmd reaches pi-turn.py ------------------
+DISPATCH="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/marathon-agent.sh"
+printf 'STATUS: Open\n# relay body\n' >"$A/relay.md"
+git -C "$A" add relay.md >/dev/null 2>&1; git -C "$A" commit -q -m "reseed relay for Pi dispatch" >/dev/null 2>&1
+seed_token RELAY-TURN-dispatch
+before="$(git -C "$A" rev-parse HEAD)"
+env RELAY_AGENT=pi RELAY_FILE="$A/relay.md" RELAY_TASK=RELAY-TURN-dispatch PI_AGENT=pi RELAY_PEER=claude-a \
+  MARATHON_BUILDER=pi MARATHON_REVIEWER=claude-a PI_BIN="$STUB" PI_TURN_ROOT="$A" \
+  PI_LOG="$WORK/pi-dispatch.$$.log" PI_MODEL="openai/gpt-mini-latest" OPENROUTER_API_KEY="test-key" \
+  STUB_MODE=good TICK_REPO_ROOT="$A" bash "$DISPATCH" >/dev/null 2>&1; rc=$?
+[ "$rc" -eq 0 ] && pass "marathon-agent.sh dispatches RELAY_AGENT=pi -> pi-turn.py (exit 0)" || fail "Pi dispatch exit=$rc"
+[ "$(git -C "$A" rev-parse HEAD)" != "$before" ] && pass "dispatched Pi relay turn committed" || fail "dispatched Pi turn did not commit"
+
+# --- (15) .tick exemption independent of host .gitignore (MBP16 [2]) — LAST: mutates fixture .gitignore ---
 printf '# host repo does NOT gitignore .tick\n' > "$A/.gitignore"
 git -C "$A" add .gitignore >/dev/null 2>&1; git -C "$A" commit -q -m "drop .tick gitignore" >/dev/null 2>&1
 seed_token RELAY-TURN-tickexempt

@@ -236,6 +236,141 @@ def _probe_agent_bin(agent_id, role_label):
         _probe_bin(get_env("AGY_BIN", "agy"), role_label, agent_id)
     elif agent_id.startswith("aider"):
         _probe_bin(get_env("AIDER_BIN", "aider"), role_label, agent_id)
+    elif agent_id.startswith("pi"):
+        _probe_bin(get_env("PI_BIN", "pi"), role_label, agent_id)
+
+# GH-390 coverage seam.  Keep the attribution decision outside main() so its four
+# platform/Bash return-code shapes can be exercised on every host without executing
+# a full marathon or relying on that host's RLIMIT_CPU behaviour.
+GATE_GUARD_KILL_EXIT = 108
+GATE_CPU_HARD_MARGIN_S = 5
+
+
+# GH-457: the gate's caps come from a TIER, because one wall cap cannot serve both jobs.
+#
+# The single 900s cap stopped meaning anything. Measured on one host inside 24 hours, same suite:
+#
+#     2026-08-07              ~704-806s
+#     2026-08-08 evening       878.8s wall / 532.5s CPU   (loaded, 60% CPU)
+#     2026-08-08 marathon r3    957s                      (in-marathon, real gate invocation)
+#     shipped caps              900s wall / 600s CPU
+#
+# The suite did not grow ~250s in a day; that drift is machine contention. So a 900s cap was
+# measuring how busy the laptop was, which is not a property of the change under test — and a fully
+# GREEN validate.sh returned `gate-killed` (108) at the default, a resource kill dressed as a
+# verdict, which is exactly #407's failure mode. Both Litmus wave-2 runs had to pass a run-time
+# override to avoid it, and a guard that always needs an override is a speed bump that only fires
+# when someone forgets.
+#
+# Raising the single default to 1800 was the other option and was rejected: it buys headroom and
+# changes nothing structural, so the next lane that adds a suite spends it and this recurs.
+#
+# Tiers restore the cap's meaning. `fast` is sized so that an overrun is unambiguously a runaway
+# (nothing legitimate in that tier runs for minutes). `full` is sized for the honest long suite with
+# real headroom over the worst observed run. A cap only means "runaway" if legitimate work cannot
+# plausibly reach it.
+#
+# The tier is ONE place to look, by design: no filename patterns, no ordering rules. Per-variable
+# env overrides still win over the tier, so a phase can retune a single cap without leaving its tier.
+GATE_TIERS = {
+    # tier   wall_s  cpu_s   sized from
+    "fast": {"wall_s": 300, "cpu_s": 240},    # a targeted gate; minutes here means runaway
+    "full": {"wall_s": 1800, "cpu_s": 1200},  # ~1.9x the worst observed 957s wall / 532.5s CPU
+}
+GATE_DEFAULT_TIER = "full"
+# RSS is deliberately NOT tiered and NOT changed. Measured on the crash host (Darwin 24.6, arm64):
+# setrlimit(RLIMIT_AS) and setrlimit(RLIMIT_DATA) are both REFUSED, even soft-only, so the
+# process-group RSS poll is the only layer standing between a runaway test and this host. Retuning
+# it alongside the CPU/wall tiers would confound two changes at once.
+GATE_RSS_MB_DEFAULT = 8192
+
+
+def _gate_tier():
+    """Resolve the gate tier, falling back loudly rather than inventing caps for an unknown name."""
+    name = (os.environ.get("MARATHON_GATE_TIER") or "").strip() or GATE_DEFAULT_TIER
+    if name not in GATE_TIERS:
+        log(f"gate-guard: unknown tier {name!r} — falling back to {GATE_DEFAULT_TIER!r} "
+            f"(known: {', '.join(sorted(GATE_TIERS))})")
+        name = GATE_DEFAULT_TIER
+    return name
+
+
+def _gate_guard_config():
+    """Read the guard's caps fresh on each gate run, so a phase can retune between calls."""
+    def _cap(name, default):
+        raw = os.environ.get(name, "").strip()
+        if not raw:
+            return default
+        try:
+            value = int(raw)
+        except ValueError:
+            log(f"gate-guard: {name}={raw!r} is not an integer — falling back to {default}")
+            return default
+        return value
+    tier = _gate_tier()
+    base = GATE_TIERS[tier]
+    return {
+        "tier": tier,
+        "wall_s": _cap("MARATHON_GATE_WALL_S", base["wall_s"]),
+        "cpu_s": _cap("MARATHON_GATE_CPU_S", base["cpu_s"]),
+        "rss_mb": _cap("MARATHON_GATE_RSS_MB", GATE_RSS_MB_DEFAULT),
+        "poll_s": max(1, _cap("MARATHON_GATE_POLL_S", 1)),
+    }
+
+
+def _gate_group_rss_mb(pgid):
+    """Summed RSS (MB) of a gate process group, or -1 when it cannot be read."""
+    try:
+        out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
+                             timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return -1
+    total_kb = 0
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        try:
+            if int(parts[0]) == pgid:
+                total_kb += int(parts[1])
+        except ValueError:
+            continue
+    return total_kb // 1024
+
+
+def _gate_kill_group(proc, reason):
+    """TERM the whole gate process group, then KILL whatever ignored it."""
+    log(f"gate-guard: KILLING gate process group (pgid {proc.pid}) — {reason}")
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(proc.pid, sig)
+        except (ProcessLookupError, PermissionError, OSError) as exc:
+            log(f"gate-guard: killpg({proc.pid}, {sig!r}) failed: {exc}")
+        deadline = time.monotonic() + 2.0
+        while time.monotonic() < deadline:
+            if proc.poll() is not None:
+                return
+            time.sleep(0.1)
+    proc.wait()
+
+
+def gate_guard_cpu_attribution(returncode, cpu_s):
+    """Return (guard_exit_code, diagnostic) for a CPU-limit result.
+
+    This intentionally recognizes only the two signals the guard itself can cause,
+    in both Bash reporting shapes.  Every other gate failure remains a red gate.
+    """
+    if cpu_s <= 0:
+        return returncode, None
+    if returncode in (128 + signal.SIGXCPU, -signal.SIGXCPU):
+        return (GATE_GUARD_KILL_EXIT,
+                f"gate-guard: gate exceeded the {cpu_s}s CPU cap (SIGXCPU)")
+    if returncode in (128 + signal.SIGKILL, -signal.SIGKILL):
+        return (GATE_GUARD_KILL_EXIT,
+                f"gate-guard: gate ignored SIGXCPU and hit the "
+                f"{cpu_s + GATE_CPU_HARD_MARGIN_S}s hard CPU cap (SIGKILL)")
+    return returncode, None
+
 
 def main():
     parser = argparse.ArgumentParser(description="marathon-drive", add_help=False)
@@ -760,6 +895,25 @@ def main():
         if not repo:
             log("--log-github requested, but repository lookup failed — local telemetry only")
             return
+
+        # GH-425: cross-check the phase brief's declared source against the resolved repo/issue, to
+        # avoid commenting on a different repository's issue that happens to share a number. Only a
+        # POSITIVE mismatch aborts the POST — a brief with no frontmatter, no source: field, or an
+        # unparseable URL is unverifiable, not wrong, and must not silently stop logging (the same
+        # trap #375 already hit here: absent evidence is not failure evidence).
+        try:
+            brief_text = open(args.phase_brief_file, 'r', encoding='utf-8').read()
+            fm_match = re.match(r'^---\n(.*?)\n---', brief_text, re.DOTALL)
+            src_match = re.search(r'^source:\s*(.+?)\s*$', fm_match.group(1), re.MULTILINE) if fm_match else None
+            raw_url = src_match.group(1).strip().strip('"\'') if src_match else None
+            url_match = re.search(r'https?://github\.com/([^/\s]+/[^/\s]+?)/issues/(\d+)', raw_url) if raw_url else None
+        except OSError:
+            url_match = None
+        if url_match:
+            expected_slug, expected_issue = url_match.group(1), url_match.group(2)
+            if expected_issue != issue or expected_slug.casefold() != repo.casefold():
+                log(f"--log-github aborted: phase brief intends '{expected_slug}' issue {expected_issue} but driver is in '{repo}' issue {issue}")
+                return
         branch = _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"]) or "(detached)"
         trunk = trunk_ref()
         landed = "no"
@@ -851,6 +1005,35 @@ def main():
     # non-executing probe (gates like `test -f build/output` only become true after the builder runs):
     # prove the gate is *runnable*, not that it currently passes. Runs before any render/tick/dispatch.
     _gate_root = args.target_root or root
+    def _preflight_check_issue_closed():
+        mock_state = os.environ.get("MOCK_GH_ISSUE_STATE")
+        if mock_state:
+            state = mock_state.upper()
+        else:
+            issue = lane_issue_number()
+            if not issue:
+                return
+            if not shutil.which("gh"):
+                return
+            url = _cmd_out(["git", "-C", root, "remote", "get-url", "origin"])
+            repo = re.sub(r'\.git$', '', re.sub(r'^https?://[^/]+/', '', re.sub(r'^git@[^:]+:', '', url)))
+            if not re.fullmatch(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+', repo):
+                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=root)
+            if not repo:
+                return
+            state = _cmd_out(["gh", "issue", "view", issue, "--repo", repo, "--json", "state", "--jq", ".state"])
+        
+        if state and state.upper() == "CLOSED":
+            issue_display = lane_issue_number() or "unknown"
+            xyz_debug_log_append(
+                root, "warn", "marathon.issue-closed",
+                f"lane {lane_state_key} parked — issue {issue_display} is already closed",
+                action="none (lane halted)",
+                target_root=args.target_root, phase_id=args.phase_id,
+                relay_task=relay_task)
+            eprint(f"marathon-drive: lane parked — issue {issue_display} is already closed")
+            sys.exit(4)
+
     def _pre_advance_not_runnable(reason):
         die(f"pre-advance gate not runnable: '{pre_advance_cmd}' ({reason}). "
             f"Pass --pre-advance-cmd '<runnable command>' to override it.")
@@ -896,13 +1079,15 @@ def main():
     os.environ["CODEX_AGENT"] = ""
     os.environ["AGY_AGENT"] = ""
     os.environ["AIDER_AGENT"] = ""
+    os.environ["PI_AGENT"] = ""
 
     def route_agent(agent_id):
         if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
         elif agent_id.startswith("codex"): os.environ["CODEX_AGENT"] = agent_id
         elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = agent_id
         elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider")
+        elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
+        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi")
         
     if args.builder == args.reviewer:
         die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
@@ -922,11 +1107,13 @@ def main():
     if args.dry_run:
         # dry-run never dispatches a turn, so surface the problem but keep going (matches Bash).
         try:
+            _preflight_check_issue_closed()
             _preflight_pre_advance_gate()
         except SystemExit as _e:
             if _e.code not in (0, None):
                 eprint("marathon-drive: (dry-run continues; a live run would halt here)")
     else:
+        _preflight_check_issue_closed()
         _preflight_pre_advance_gate()
 
     if args.artifact_paths:
@@ -967,6 +1154,16 @@ def main():
     # complete_phase_success directly rather than duplicating its gate/requires-test/telemetry
     # logic.
     def escalate(reason, rexit):
+        # GH-407: every escalation records `gate:` — not-run / green / red — because the reason alone
+        # cannot be trusted to say whether the gate executed, and the operator's first move on a
+        # failed phase is decided by that one fact. `pre-advance-failed` sends them to read the diff
+        # and the test output; when the gate never ran there IS no test output and nothing in the
+        # record said so. Observed three times in one 10-lane marathon on 2026-08-02, wrong all three
+        # times. It is recorded on EVERY reason, not only the gate-related ones, so the answer is
+        # present even when the reason taxonomy is incomplete — which the issue itself argued is the
+        # robust half of the fix. run_gate_result is the existing state that already knows this; no
+        # parallel flag is introduced, because a second source of truth would be a third thing to
+        # keep in sync.
         # Sentinel Tier 1 (GH-281/GH-342): harvest this failed phase's Side Findings BEFORE the
         # escalation record is written, matching marathon-drive.sh:848-853 — a phase that escalated
         # is exactly the one whose findings are about to be lost.
@@ -980,6 +1177,7 @@ phase: {args.phase_id}
 task: {relay_task}
 relay-drive-exit: {rexit}
 reason: {reason}
+gate: {run_gate_result[0]}
 relay-file: {rel_relay}
 """)
         subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
@@ -1073,7 +1271,7 @@ relay-file: {rel_relay}
         "AGY_AGENT", "AIDER_AGENT", "ALLOW_PATHS",
         "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_BUILDER",
         "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
-        "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
+        "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
     )
@@ -1107,71 +1305,6 @@ relay-file: {rel_relay}
     # a belt-and-braces extra — it is the only thing standing between a runaway test and the host.
     #
     # Layer 4 (host free-memory floor) and packet-driven per-phase overrides are Phase 2.
-    GATE_GUARD_KILL_EXIT = 108   # distinct from any real gate's own failure codes
-    GATE_CPU_HARD_MARGIN_S = 5   # hard RLIMIT_CPU sits this far above the soft cap (see layer 2)
-
-    def _gate_guard_config():
-        """Read the guard's caps fresh on each gate run, so a phase can retune between calls."""
-        def _cap(name, default):
-            raw = os.environ.get(name, "").strip()
-            if not raw:
-                return default
-            try:
-                value = int(raw)
-            except ValueError:
-                log(f"gate-guard: {name}={raw!r} is not an integer — falling back to {default}")
-                return default
-            return value
-        return {
-            # 900s wall matches the turn budget in GH-386; CPU is deliberately lower so a tight
-            # spin trips the kernel-enforced cap before the pollable one. Any cap <= 0 disables
-            # just that layer, which is how a phase with a legitimately long suite opts out of one
-            # bound without dropping the others.
-            "wall_s": _cap("MARATHON_GATE_WALL_S", 900),
-            "cpu_s": _cap("MARATHON_GATE_CPU_S", 600),
-            "rss_mb": _cap("MARATHON_GATE_RSS_MB", 8192),
-            "poll_s": max(1, _cap("MARATHON_GATE_POLL_S", 1)),
-        }
-
-    def _gate_group_rss_mb(pgid):
-        """Summed RSS (MB) of every live process in the gate's process group, or -1 if unreadable.
-
-        The GROUP is load-bearing, not the direct child: pytest spawns workers, so killing only the
-        shell orphans them and they keep allocating with nothing watching. Unreadable reads return
-        -1 and fail OPEN — a guard that cannot measure must not be a guard that kills.
-        """
-        try:
-            out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
-                                 timeout=10).stdout
-        except (OSError, subprocess.SubprocessError):
-            return -1
-        total_kb = 0
-        for line in out.splitlines():
-            parts = line.split()
-            if len(parts) != 2:
-                continue
-            try:
-                if int(parts[0]) == pgid:
-                    total_kb += int(parts[1])
-            except ValueError:
-                continue
-        return total_kb // 1024
-
-    def _gate_kill_group(proc, reason):
-        """TERM the whole gate process group, then KILL whatever ignored it."""
-        log(f"gate-guard: KILLING gate process group (pgid {proc.pid}) — {reason}")
-        for sig in (signal.SIGTERM, signal.SIGKILL):
-            try:
-                os.killpg(proc.pid, sig)
-            except (ProcessLookupError, PermissionError, OSError) as exc:
-                log(f"gate-guard: killpg({proc.pid}, {sig!r}) failed: {exc}")
-            deadline = time.monotonic() + 2.0
-            while time.monotonic() < deadline:
-                if proc.poll() is not None:
-                    return
-                time.sleep(0.1)
-        proc.wait()
-
     def run_pre_advance_gate():
         cwd = args.target_root if args.target_root else None
         env = _gate_env()
@@ -1239,25 +1372,22 @@ relay-file: {rel_relay}
         #                       bash 5.x (every Linux CI runner) does this.
         # Mapping only the first is why this escalated as `pre-advance-failed` on CI while passing
         # on macOS: same kill, different messenger.
-        if cfg["cpu_s"] > 0 and rc in (128 + signal.SIGXCPU, -signal.SIGXCPU):
-            log(f"gate-guard: gate exceeded the {cfg['cpu_s']}s CPU cap (SIGXCPU)")
-            rc = GATE_GUARD_KILL_EXIT
-        elif cfg["cpu_s"] > 0 and rc in (128 + signal.SIGKILL, -signal.SIGKILL):
-            # The hard-cap backstop: a gate that ignores or blocks SIGXCPU keeps burning CPU until
-            # RLIMIT_CPU's hard limit, where the kernel sends an uncatchable SIGKILL. Reported
-            # separately from the SIGXCPU path because the two say different things about the gate —
-            # and because an unmapped SIGKILL would otherwise escalate as `pre-advance-failed`,
-            # blaming the change under review for a kill the guard itself arranged.
-            log(f"gate-guard: gate ignored SIGXCPU and hit the "
-                f"{cfg['cpu_s'] + GATE_CPU_HARD_MARGIN_S}s hard CPU cap (SIGKILL)")
-            rc = GATE_GUARD_KILL_EXIT
+        # GH-390: the mapping itself now lives in gate_guard_cpu_attribution() at module scope, so
+        # all four platform/Bash shapes can be driven directly by test/gh390-gate-guard.sh on any
+        # host. Before the lift each branch was only reachable on the kernel that produces its
+        # signal, so half the attribution logic was never observed firing on the machine that runs
+        # the suite — the #419 defect, inside the guard #407 depends on.
+        rc, _guard_diag = gate_guard_cpu_attribution(rc, cfg["cpu_s"])
+        if _guard_diag:
+            log(_guard_diag)
 
         # Peak RSS is logged on EVERY run, pass or fail, deliberately: it is the only evidence that
         # can later answer whether the layer-3 poll is being outrun by a fast allocator — which is
         # the stated precondition for taking on container isolation at all.
         log(f"gate-guard: gate exit {rc} after {int(time.monotonic() - started)}s — "
             f"peak group RSS {peak_rss_mb}MB "
-            f"(caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, CPU {cfg['cpu_s']}s)")
+            f"(tier {cfg['tier']}; caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, "
+            f"CPU {cfg['cpu_s']}s)")
         # GH-284 P2: the run log reports this lane's gate outcome; mirrors RUN_GATE_RESULT in the
         # Bash twin (green/red, "not-run" until the gate is first invoked).
         run_gate_result[0] = "green" if rc == 0 else "red"
@@ -1280,9 +1410,9 @@ relay-file: {rel_relay}
     def terminal_status(s):
         return s in ("Approved", "Closed")
 
-    def token_state():
+    def token_state(task_name=None):
         try:
-            info = subprocess.check_output([tick_bin, "info", relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
+            info = subprocess.check_output([tick_bin, "info", task_name or relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
         except Exception:
             return ("", "")
         status = claimer = handoff = ""
@@ -1294,12 +1424,19 @@ relay-file: {rel_relay}
         return (status, actor)
 
     def path_has_nonempty_phase_delta(path):
-        # True iff <path> exists, is non-empty, AND changed since pre_phase_head (committed diff)
-        # or is newly untracked/added. Shared by --requires-test and artifact recovery: an empty or
-        # unchanged artifact is no evidence that a builder turn made progress.
+        # True iff <path> changed since pre_phase_head (committed diff), was DELETED, or is newly
+        # untracked/added — provided that if it still exists it is non-empty. Shared by
+        # --requires-test and artifact recovery: an empty or unchanged artifact is no evidence that a
+        # builder turn made progress.
+        #
+        # GH-438 (partial): the existence test used to run first and unconditionally, so a lane whose
+        # deliverable is REMOVING a path could never register progress — the artifact is gone, which
+        # is the whole point, and the function read that as "no delta". The emptiness rule is what
+        # actually earns its keep (a newly created empty file is not a deliverable), so it now applies
+        # only when the path still exists, and git is trusted to report a deletion as the change it is.
         rroot = args.target_root or root
         abs_p = path if os.path.isabs(path) else os.path.join(rroot, path)
-        if not (os.path.isfile(abs_p) and os.path.getsize(abs_p) > 0):
+        if os.path.isfile(abs_p) and os.path.getsize(abs_p) == 0:
             return False
         git_path = path
         if os.path.isabs(path) and os.path.commonpath([os.path.abspath(path), os.path.abspath(rroot)]) == os.path.abspath(rroot):
@@ -1312,7 +1449,9 @@ relay-file: {rel_relay}
         st = subprocess.run(["git", "-C", rroot, "status", "--porcelain", "--", git_path],
                             stdout=subprocess.PIPE, stderr=subprocess.DEVNULL).stdout.decode("utf-8", "replace")
         for line in st.splitlines():
-            if line.startswith("??") or line.startswith("A "):
+            # GH-438: " D"/"D " alongside the newly-added shapes, so a removal still registers when
+            # there is no pre_phase_head to diff against (the branch above catches the normal case).
+            if line.startswith("??") or line.startswith("A ") or line.startswith(" D") or line.startswith("D "):
                 return True
         return False
 
@@ -1320,7 +1459,87 @@ relay-file: {rel_relay}
         # GH-249: --requires-test preserves its existing non-empty phase-delta contract.
         return path_has_nonempty_phase_delta(path)
 
+    def acceptance_probes_unmet():
+        # GH-438 Phase 2 — the lane's OWN acceptance detector, re-read after the build.
+        #
+        # swarm-preflight REQUIRES every fix_probe to read `unfixed` before a run; that is the
+        # readiness check. Nothing re-read them afterwards, so a phase could report "Approved, gate
+        # passed" and exit 0 while its own contract still said the fix had not landed. On the reported
+        # lane the detector was `git ls-files --error-unmatch .mcp.json`: `unfixed` before, `unfixed`
+        # after, Approved anyway, file still tracked. The signal existed and nobody looked at it.
+        #
+        # Returns None when there is nothing to judge (no brief, no contract, no probes) — that path
+        # must stay byte-identical to before, because most lanes carry no probes and failing them
+        # closed would break every one of them. Returns a (possibly empty) list of failures otherwise.
+        if not args.phase_brief_file:
+            return None
+        # Read the contract as of pre_phase_head, NOT the working tree. The brief is an input to the
+        # phase, and a builder that edited it could otherwise rewrite the criteria it is judged by —
+        # marking its own homework. Falls back to the on-disk brief when there is no pre-phase commit
+        # to read from (a first fire in a fresh repo), which is the same text either way.
+        brief_rel = args.phase_brief_file
+        if os.path.isabs(brief_rel):
+            try:
+                brief_rel = os.path.relpath(brief_rel, root)
+            except ValueError:
+                brief_rel = None
+        contract_text = None
+        if pre_phase_head and brief_rel and not brief_rel.startswith(".."):
+            shown = subprocess.run(["git", "-C", root, "show", f"{pre_phase_head}:{brief_rel}"],
+                                   stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+            if shown.returncode == 0:
+                contract_text = shown.stdout.decode("utf-8", "replace")
+        if contract_text is None:
+            try:
+                with open(args.phase_brief_file, "r", encoding="utf-8", errors="replace") as f:
+                    contract_text = f.read()
+            except OSError:
+                return None
+        # No contract heading → nothing to judge. Checked here rather than by calling
+        # extract_contract, which sys.exit(3)s on a brief without one and would take the driver with it.
+        if not re.search(r'^#{1,6}\s+.*preflight\s+contract', contract_text, re.IGNORECASE | re.MULTILINE):
+            return None
+        try:
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            from swarm_preflight import extract_contract, eval_probes
+        except Exception as e:
+            log(f"acceptance re-check SKIPPED — could not load the preflight evaluator ({e})")
+            return None
+        tmp_brief = os.path.join(tempfile.gettempdir(), f"marathon-acceptance-{os.getpid()}.md")
+        try:
+            with open(tmp_brief, "w", encoding="utf-8") as f:
+                f.write(contract_text)
+            try:
+                contract = extract_contract(tmp_brief)
+            except SystemExit:
+                # A malformed contract is the author's problem, not this phase's verdict to make.
+                log("acceptance re-check SKIPPED — the brief's preflight contract did not parse")
+                return None
+            if not contract.get("fix_probes"):
+                return None
+            probes, _stale, _blocked, _ambig = eval_probes(args.target_root or root, contract)
+        finally:
+            try: os.remove(tmp_brief)
+            except OSError: pass
+        # `landed` is the only verdict that means the fix is in. `unfixed` is the pre-run state still
+        # reading true; `blocked` means the probe could not be evaluated, which is not evidence of
+        # success either.
+        return [p for p in probes if p.get("verdict") != "landed"]
+
     def complete_phase_success(success_mode="approved"):
+        # GH-438 Phase 2: judged BEFORE the repo-level gate. The gate knows nothing about this lane's
+        # acceptance — that is exactly why the reported lane passed it while having changed nothing —
+        # so a lane that did not do its own job should say so in its own terms, not as a gate failure.
+        unmet = acceptance_probes_unmet()
+        if unmet:
+            for p in unmet:
+                log(f"acceptance probe still {p.get('verdict')}: type={p.get('type')} path={p.get('path')}")
+            log(f"acceptance re-check FAILED — {len(unmet)} probe(s) report the fix did not land; the lane's own contract disagrees with the reviewer — escalating")
+            escalate("acceptance-probes-unmet", 0)
+            xyz_marathon_emit("red", f"halted at phase {args.phase_id} — acceptance probes still report the fix did not land")
+            sys.exit(5)
+        if unmet is not None:
+            log("acceptance re-check passed — every fix_probe reports the fix landed")
         log(f"relay approved — running pre-advance gate: {pre_advance_cmd}")
         gate_exit = run_pre_advance_gate()
         if gate_exit != 0:
@@ -1369,13 +1588,68 @@ relay-file: {rel_relay}
     # (recover_already_satisfied_lane, triggered mid-relay on a no-progress reroute) to this
     # separate post-terminal-gate-retry trigger. DRY_RUN is exempted: its whole point is to
     # render + show the tick seed for inspection, and there is nothing to commit or seed here.
+    def completed_relay_task():
+        # GH-385: the token that RECORDED this phase's completion is not necessarily the base token
+        # this run computed. A phase that once failed and was re-run with --retry completes on a
+        # suffixed token (GH-116 allocates -2, -3, ...), while the base name keeps the dead attempt's
+        # state forever. A later run without --retry then reads the base token, sees "not done", and
+        # rebuilds a phase that is demonstrably Approved — a full builder + reviewer cycle, real
+        # money on --builder claude, and observed re-introducing work that had been reverted.
+        #
+        # The relay file already records which task it was rendered for, in the marathon-drive
+        # directive, and that render is redone on every fire including the retry — so the file is an
+        # authoritative statement of the token this phase actually ran on. Prefer walking suffixes:
+        # this answers "which token completed THIS relay" rather than "did any token for this phase
+        # ever reach done", which would wrongly satisfy a lane whose retry belonged to another run.
+        #
+        # HARDENING (Codex review on #458): RELAY.md is the BUILDER'S artifact — writable by the very
+        # agent whose work is under review — so `task=` is a hint, not an authority. Read
+        # unconstrained it names ANY token, and the builder also writes `STATUS: Approved`, so the two
+        # together are a complete forgery of the terminal state: point the directive at some unrelated
+        # already-`done` token (a previous phase's, say) and satisfied_lane_terminal() accepts it as
+        # proof that THIS phase completed, skips render/reseed, and reports success after the gate.
+        # That is a strictly wider hole than the one being fixed — before this change the token check
+        # was anchored to the harness-computed name, which the builder cannot influence. Two limits
+        # restore that integrity while keeping the fix:
+        #
+        #   1. An explicit --relay-task means the OPERATOR named the token; use it and do not consult
+        #      the file at all. This is what --retry passes, and a retry must never be satisfied by
+        #      the attempt it was invoked to retry.
+        #   2. Otherwise accept the recorded name only if it belongs to THIS lane's token family: the
+        #      derived base itself, or one of GH-116's `-<n>` retry derivatives of it. Anything else
+        #      falls back to the base token — i.e. exactly the pre-GH-385 behavior, which is safe.
+        #
+        # The rejection is logged rather than silently absorbed: a lane that rebuilds because its
+        # directive was refused should say so, or this becomes another check nobody can see working.
+        if args.relay_task:
+            return relay_task
+        recorded = ""
+        try:
+            with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if not line.lstrip().startswith("<!-- marathon-drive:"):
+                        continue
+                    for field in line.split():
+                        if field.startswith("task="):
+                            recorded = field.split("=", 1)[1].strip()
+                    break
+        except OSError:
+            pass
+        if not recorded or recorded == relay_task:
+            return relay_task
+        if re.fullmatch(re.escape(relay_task) + r"-\d+", recorded):
+            return recorded
+        log(f"relay directive names task '{recorded}', which is not {relay_task} or a retry derivative of it "
+            f"— ignoring it and resolving the satisfied check against {relay_task}")
+        return relay_task
+
     def satisfied_lane_terminal():
         if not os.path.isfile(relay_file):
             return False
         s = file_status()
         if not terminal_status(s):
             return False
-        tstatus, _actor = token_state()
+        tstatus, _actor = token_state(completed_relay_task())
         return tstatus == "done"
 
     if not args.dry_run and satisfied_lane_terminal():
@@ -1695,9 +1969,34 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay cap/close-mismatch")
         sys.exit(4)
     elif relay_exit == 5:
-        log("relay escalated: pre-advance gate failed")
-        escalate(timeout_reason[0] if timeout_reason[0] != "turn-timeout-or-hang" else "pre-advance-failed", 5)
-        xyz_marathon_emit("red", timeout_emit[0] if timeout_reason[0] != "turn-timeout-or-hang" else f"halted at phase {args.phase_id} — pre-advance gate failed")
+        # GH-407: `pre-advance-failed` asserts a specific thing — the gate RAN and found a defect in
+        # the change. Several unrelated failures also arrive here as relay exit 5 (a builder shim that
+        # failed to start, a builder that exhausted its turn cap, a reviewer turn discarded by a
+        # containment check), and every one of them used to be reported with that label. Observed
+        # three times in a single 10-lane marathon on 2026-08-02 and wrong all three times; in one of
+        # them the relay file even read STATUS: Approved.
+        #
+        # The driver runs the gate itself (run_pre_advance_gate below), so it knows the answer
+        # without inferring it: if run_gate_result is still "not-run" when we get here, the gate
+        # provably did not execute and no gate verdict may be claimed.
+        #
+        # The reason for that case deliberately does NOT name a cause. Distinguishing "builder failed
+        # to start" from "cap exhausted" from "reviewer containment" needs a reason channel out of
+        # relay-drive that does not exist (#408 is the same missing channel seen from the other side),
+        # and a label that guesses would trade one confident wrong answer for another. It says what is
+        # known: the relay failed before the gate.
+        gate_ran = run_gate_result[0] != "not-run"
+        if timeout_reason[0] != "turn-timeout-or-hang":
+            reason, emit = timeout_reason[0], timeout_emit[0]
+        elif gate_ran:
+            reason = "pre-advance-failed"
+            emit = f"halted at phase {args.phase_id} — pre-advance gate failed"
+        else:
+            reason = "relay-failed-before-gate"
+            emit = f"halted at phase {args.phase_id} — relay failed before the gate ran"
+        log(f"relay escalated: {reason} (gate: {run_gate_result[0]})")
+        escalate(reason, 5)
+        xyz_marathon_emit("red", emit)
         sys.exit(5)
     elif relay_exit == 6:
         log("relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)")

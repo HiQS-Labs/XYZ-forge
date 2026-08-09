@@ -70,6 +70,12 @@ def main():
               "to see what your provider/account exposes.", file=sys.stderr)
         sys.exit(5)
 
+    # GH-441: Pre-flight validation to immediately exit 7 on unsupported providers (avoid timeout hang).
+    known_providers = {"openrouter", "openai", "anthropic", "google", "vertex", "ollama", "mistral", "bedrock"}
+    if pi_provider not in known_providers:
+        print(f"pi-turn: unsupported provider '{pi_provider}' — failing the turn (exit 7)", file=sys.stderr)
+        sys.exit(7)
+
     # Auth pre-flight: default provider (openrouter) reuses this harness's OPENROUTER_API_KEY seam.
     if pi_provider == "openrouter" and not os.environ.get("OPENROUTER_API_KEY"):
         print("pi-turn: OPENROUTER_API_KEY is not set — Pi cannot reach OpenRouter (or set PI_PROVIDER "

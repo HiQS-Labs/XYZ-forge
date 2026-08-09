@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # test/gh401-dry-run-no-mutation.sh — GH-401 regression.
+# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"reproducer: bash test/gh401-dry-run-no-mutation.sh; pre-fix revision: marathon_drive.py before d4999cd, where os.makedirs + the RELAY.md write ran ABOVE the dry-run exit; pre-fix result: --dry-run created phases/p1/ and wrote RELAY.md, leaving the marathon root's git status dirty; post-fix result: 4/0 — status byte-identical, no phases/ directory, and the positive control confirms the render still happens and is reported"}
 #
 # `marathon-drive --dry-run` used to RENDER AND WRITE phases/<id>/RELAY.md before reaching its exit,
 # so a dry run mutated the working tree. Unscoped (no MARATHON_ROOT, no --phases-dir) that landed on
@@ -31,9 +32,19 @@ MROOT="$WORK/mroot"; mk_repo "$MROOT"
 TGT="$WORK/target";  mk_repo "$TGT"
 BRIEF="$WORK/brief.md"; printf '## brief\nbody\n' > "$BRIEF"
 
+# GH-117: the driver probes the builder/reviewer binaries BEFORE rendering, and exits 2 when one is
+# missing. The first version of this test named `--builder codex` with nothing stubbed: it passed on
+# a developer Mac with codex installed and exited 2 on the ubuntu CI runner, where it is not on PATH,
+# so the dry-run render under test was never reached. Caught by CI, not locally. Stub both and pin
+# --builder claude, the same convention test/marathon-drive.sh (GH-212/GH-232) and debug-mantra.sh
+# use — a test of the render must not depend on which agents happen to be installed on the host.
+STUB_CLAUDE="$WORK/stub-claude"; printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_CLAUDE"; chmod +x "$STUB_CLAUDE"
+STUB_AGY="$WORK/stub-agy"; printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_AGY"; chmod +x "$STUB_AGY"
+
 before="$(git -C "$MROOT" status --porcelain)"
-out="$(MARATHON_ROOT="$MROOT" bash "$DRV" --target-root "$TGT" --phase-brief "$BRIEF" \
-        --reviewer agy --builder codex --dry-run 2>&1)"; rc=$?
+out="$(MARATHON_ROOT="$MROOT" CLAUDE_BIN="$STUB_CLAUDE" AGY_BIN="$STUB_AGY" \
+        bash "$DRV" --target-root "$TGT" --phase-brief "$BRIEF" \
+        --reviewer agy --builder claude --dry-run 2>&1)"; rc=$?
 after="$(git -C "$MROOT" status --porcelain)"
 
 [ "$rc" -eq 0 ] && pass "--dry-run exits 0" || fail "--dry-run exited $rc: $out"

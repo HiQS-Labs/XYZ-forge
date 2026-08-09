@@ -2,7 +2,7 @@
 gh_issue: 418
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/418
 title: "GH-418 — swarm-preflight can pass a lane whose issue is closed and whose artifacts are frozen"
-status: "Intake (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus, not yet fired. Designated FIRST CHILD of #419."
+status: "Shipped 2026-08-08 in release 0.2.0 Litmus wave 1 — built, agy-approved, full gate green (704s); issue #418 CLOSED after per-criterion verification. Designated first child of #419. Grew a third phase mid-run from its own review: agy found a pre-existing uncaught UnicodeDecodeError that crashed swarm-preflight outright on any binary file under test/, in code it had not been asked to review."
 created: 2026-08-05
 updated: 2026-08-05
 owner: noel

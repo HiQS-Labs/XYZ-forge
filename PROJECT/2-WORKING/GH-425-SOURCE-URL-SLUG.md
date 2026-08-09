@@ -2,7 +2,7 @@
 gh_issue: 425
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/425
 title: "GH-425 — check_source_url compares the issue number but ignores the repo slug"
-status: "Intake (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus. Design call SETTLED 2026-08-05: option 1. Preflight READY, awaiting operator go."
+status: "Reopened 2026-08-08 — the swarm_preflight call site shipped in wave 1 (agy-approved, full gate green, 708s) and #425 was closed on per-criterion verification, but salvage triage from the abandoned agy/gh375-385-438-wip worktree (#458) found a SECOND call site the fix never reached: marathon_drive.py's --log-github handler resolves repo and issue independently and posts with no slug comparison at all. Stays in 2-WORKING until that one is closed too. Design call SETTLED 2026-08-05 as option 1: `source:` always cites the tracking issue, cross-repo origins live in `related:`."
 created: 2026-08-05
 updated: 2026-08-05
 owner: noel

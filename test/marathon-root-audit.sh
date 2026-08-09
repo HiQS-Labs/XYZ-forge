@@ -231,3 +231,29 @@ if [ "$failures" -ne 0 ]; then
 fi
 
 echo "PASS: audited $checked real marathon invocation(s)"
+
+# ── the driver commits phase artifacts, so they must not be gitignored ────────────────────────────
+# marathon_drive.py stages phase output with `git add --` and check=True at three sites
+# (:1129 ESCALATION.md, :1169, :1728 RELAY.md). `git add` on an EXPLICIT path that .gitignore covers
+# exits 1 — "The following paths are ignored ... Use -f if you really want to add them" — so
+# check=True raises CalledProcessError and the phase dies while trying to record itself.
+#
+# Not hypothetical: `/phases/` was added to .gitignore on 2026-08-09 to stop the #401/#461 churn, and
+# it would have crashed the first new same-repo phase. Reverted the same day; this assertion is what
+# makes the revert stick. Verified directly before writing it: in a scratch repo ignoring /phases/,
+# `git add -- phases/newrun/RELAY.md` exits 1.
+#
+# If phase records should stop being committed, that is a driver change (and a #388 durability
+# question), not a .gitignore line — the ignore alone breaks the write without removing the intent.
+audit_root="$(cd "$(dirname "$0")/.." && pwd)"
+ignore_violations=0
+for probe in phases/audit-probe/RELAY.md phases/audit-probe/ESCALATION.md; do
+  if git -C "$audit_root" check-ignore -q "$probe" 2>/dev/null; then
+    echo "FAIL: .gitignore covers $probe, but the driver stages it with \`git add --\` + check=True — a new same-repo phase would exit 1 while recording itself" >&2
+    ignore_violations=$((ignore_violations + 1))
+  fi
+done
+if [ "$ignore_violations" -ne 0 ]; then
+  exit 1
+fi
+echo "PASS: phase artifacts the driver commits are not gitignored (git add -- would exit 1 if they were)"

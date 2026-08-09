@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # test/gh397-reviewer-turn-role.sh — GH-397 regression.
+# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"reproducer: bash test/gh397-reviewer-turn-role.sh; pre-fix revision: relay-turn-lib.sh before d4999cd, where rtl_is_reviewer_turn read only the agent-maintained NEXT: prose; pre-fix result: case 3 FAILED — a builder that never flipped NEXT: left the reviewer running with the builder's write scope; post-fix result: 11/0, role derived from the marathon-drive directive with the NEXT: line kept only as the fallback"}
 #
 # `NEXT:` is the relay's state variable, and two drivers wrote two incompatible VALUE DOMAINS into
 # it. relay-drive writes a ROLE (Producer|Reviewer); marathon-drive writes an AGENT ID
