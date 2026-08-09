@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 155 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
+Summary: 156 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-480 · XYZ Cockpit — read-only VS Code view for Marathons, Releases, Worktrees | — | [GH-480-VSCODE-COCKPIT-EXT.md](PROJECT/1-INBOX/GH-480-VSCODE-COCKPIT-EXT.md) · [#480](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/480) |
 | GH-451 · Marathon: support Pi builders on the Python-default path | — | [GH-451-PI-MARATHON-ROUTING.md](PROJECT/1-INBOX/GH-451-PI-MARATHON-ROUTING.md) · [#451](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/451) |
 | GH-453 · Design an issue-derived fuzzing evidence pipeline | — | [GH-453-ISSUE-DERIVED-FUZZING.md](PROJECT/2-WORKING/GH-453-ISSUE-DERIVED-FUZZING.md) · [#453](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/453) |
 | GH-441 · the pre-advance gate inherits the marathon state it is supposed to judge | ✅ | [GH-441-GATE-ENV-CONTRACT.md](PROJECT/2-WORKING/GH-441-GATE-ENV-CONTRACT.md) · [#441](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/441) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
