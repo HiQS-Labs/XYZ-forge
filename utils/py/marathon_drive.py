@@ -244,6 +244,55 @@ GATE_GUARD_KILL_EXIT = 108
 GATE_CPU_HARD_MARGIN_S = 5
 
 
+# GH-457: the gate's caps come from a TIER, because one wall cap cannot serve both jobs.
+#
+# The single 900s cap stopped meaning anything. Measured on one host inside 24 hours, same suite:
+#
+#     2026-08-07              ~704-806s
+#     2026-08-08 evening       878.8s wall / 532.5s CPU   (loaded, 60% CPU)
+#     2026-08-08 marathon r3    957s                      (in-marathon, real gate invocation)
+#     shipped caps              900s wall / 600s CPU
+#
+# The suite did not grow ~250s in a day; that drift is machine contention. So a 900s cap was
+# measuring how busy the laptop was, which is not a property of the change under test — and a fully
+# GREEN validate.sh returned `gate-killed` (108) at the default, a resource kill dressed as a
+# verdict, which is exactly #407's failure mode. Both Litmus wave-2 runs had to pass a run-time
+# override to avoid it, and a guard that always needs an override is a speed bump that only fires
+# when someone forgets.
+#
+# Raising the single default to 1800 was the other option and was rejected: it buys headroom and
+# changes nothing structural, so the next lane that adds a suite spends it and this recurs.
+#
+# Tiers restore the cap's meaning. `fast` is sized so that an overrun is unambiguously a runaway
+# (nothing legitimate in that tier runs for minutes). `full` is sized for the honest long suite with
+# real headroom over the worst observed run. A cap only means "runaway" if legitimate work cannot
+# plausibly reach it.
+#
+# The tier is ONE place to look, by design: no filename patterns, no ordering rules. Per-variable
+# env overrides still win over the tier, so a phase can retune a single cap without leaving its tier.
+GATE_TIERS = {
+    # tier   wall_s  cpu_s   sized from
+    "fast": {"wall_s": 300, "cpu_s": 240},    # a targeted gate; minutes here means runaway
+    "full": {"wall_s": 1800, "cpu_s": 1200},  # ~1.9x the worst observed 957s wall / 532.5s CPU
+}
+GATE_DEFAULT_TIER = "full"
+# RSS is deliberately NOT tiered and NOT changed. Measured on the crash host (Darwin 24.6, arm64):
+# setrlimit(RLIMIT_AS) and setrlimit(RLIMIT_DATA) are both REFUSED, even soft-only, so the
+# process-group RSS poll is the only layer standing between a runaway test and this host. Retuning
+# it alongside the CPU/wall tiers would confound two changes at once.
+GATE_RSS_MB_DEFAULT = 8192
+
+
+def _gate_tier():
+    """Resolve the gate tier, falling back loudly rather than inventing caps for an unknown name."""
+    name = (os.environ.get("MARATHON_GATE_TIER") or "").strip() or GATE_DEFAULT_TIER
+    if name not in GATE_TIERS:
+        log(f"gate-guard: unknown tier {name!r} — falling back to {GATE_DEFAULT_TIER!r} "
+            f"(known: {', '.join(sorted(GATE_TIERS))})")
+        name = GATE_DEFAULT_TIER
+    return name
+
+
 def _gate_guard_config():
     """Read the guard's caps fresh on each gate run, so a phase can retune between calls."""
     def _cap(name, default):
@@ -256,10 +305,13 @@ def _gate_guard_config():
             log(f"gate-guard: {name}={raw!r} is not an integer — falling back to {default}")
             return default
         return value
+    tier = _gate_tier()
+    base = GATE_TIERS[tier]
     return {
-        "wall_s": _cap("MARATHON_GATE_WALL_S", 900),
-        "cpu_s": _cap("MARATHON_GATE_CPU_S", 600),
-        "rss_mb": _cap("MARATHON_GATE_RSS_MB", 8192),
+        "tier": tier,
+        "wall_s": _cap("MARATHON_GATE_WALL_S", base["wall_s"]),
+        "cpu_s": _cap("MARATHON_GATE_CPU_S", base["cpu_s"]),
+        "rss_mb": _cap("MARATHON_GATE_RSS_MB", GATE_RSS_MB_DEFAULT),
         "poll_s": max(1, _cap("MARATHON_GATE_POLL_S", 1)),
     }
 
@@ -1269,7 +1321,8 @@ relay-file: {rel_relay}
         # the stated precondition for taking on container isolation at all.
         log(f"gate-guard: gate exit {rc} after {int(time.monotonic() - started)}s — "
             f"peak group RSS {peak_rss_mb}MB "
-            f"(caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, CPU {cfg['cpu_s']}s)")
+            f"(tier {cfg['tier']}; caps: RSS {cfg['rss_mb']}MB, wall {cfg['wall_s']}s, "
+            f"CPU {cfg['cpu_s']}s)")
         # GH-284 P2: the run log reports this lane's gate outcome; mirrors RUN_GATE_RESULT in the
         # Bash twin (green/red, "not-run" until the gate is first invoked).
         run_gate_result[0] = "green" if rc == 0 else "red"
