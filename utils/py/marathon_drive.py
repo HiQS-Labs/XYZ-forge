@@ -236,6 +236,8 @@ def _probe_agent_bin(agent_id, role_label):
         _probe_bin(get_env("AGY_BIN", "agy"), role_label, agent_id)
     elif agent_id.startswith("aider"):
         _probe_bin(get_env("AIDER_BIN", "aider"), role_label, agent_id)
+    elif agent_id.startswith("pi"):
+        _probe_bin(get_env("PI_BIN", "pi"), role_label, agent_id)
 
 # GH-390 coverage seam.  Keep the attribution decision outside main() so its four
 # platform/Bash return-code shapes can be exercised on every host without executing
@@ -1029,13 +1031,15 @@ def main():
     os.environ["CODEX_AGENT"] = ""
     os.environ["AGY_AGENT"] = ""
     os.environ["AIDER_AGENT"] = ""
+    os.environ["PI_AGENT"] = ""
 
     def route_agent(agent_id):
         if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
         elif agent_id.startswith("codex"): os.environ["CODEX_AGENT"] = agent_id
         elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = agent_id
         elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider")
+        elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
+        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi")
         
     if args.builder == args.reviewer:
         die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
@@ -1217,7 +1221,7 @@ relay-file: {rel_relay}
         "AGY_AGENT", "AIDER_AGENT", "ALLOW_PATHS",
         "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_BUILDER",
         "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
-        "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
+        "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
     )

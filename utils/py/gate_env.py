@@ -97,6 +97,7 @@ HARNESS_ENV = {
     "CODEX_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "AGY_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "AIDER_AGENT": (SCRUB, "See CLAUDE_AGENT."),
+    "PI_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     # ── PASS: load-bearing for the gate or for the drivers a suite legitimately spawns ─────────────
     "RELAY_DRIVER_LOCKED": (
         PASS,
