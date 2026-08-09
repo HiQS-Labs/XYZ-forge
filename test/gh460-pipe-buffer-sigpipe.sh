@@ -121,7 +121,7 @@ grep -q 'check(s) did not run against the real repo:\$missing' "$SITE" \
 # THAT BOUNDARY — not categorically. A future sourced-library use should be a deliberate review
 # decision, which is why this paragraph exists rather than a bare list.
 #
-# The fix applied to all 37 sites was to drop `q` from grep's flag cluster and redirect its stdout,
+# The fix applied to all 43 sites was to drop `q` from grep's flag cluster and redirect its stdout,
 # NOT a here-string. `<<<` appends a newline that `printf '%s'` does not — measured: 1 byte becomes 2,
 # and `grep -Fq ''` on empty input flips from no-match to match — so it is not semantics-preserving,
 # which matters at the `-Fx` site. Dropping `-q` leaves the input byte-identical and simply lets grep
@@ -131,8 +131,17 @@ grep -q 'check(s) did not run against the real repo:\$missing' "$SITE" \
 GH472_FILES="test/gh308-frozen-twin-guard.sh test/gh438-acceptance-recheck.sh
 test/gh284-p3-release-milestone.sh test/pdda-roadmap-coverage.sh utils/pdda-local-checks.sh
 test/pdda-local-checks.sh"
-gh472_shape() {  # <file> -> prints offending non-comment lines, if any
-  grep -vE '^[[:space:]]*#' "$1" 2>/dev/null | grep -nE 'printf\b[^|]*\|[[:space:]]*grep[[:space:]]+-[A-Za-z]*q'
+# ANY producer piped into `grep -q`, not just printf. The first version matched `printf` only, and
+# codex's QA review found what that missed: two `grep -v … | grep -qF` transcript scans with the
+# identical failure. The producer is irrelevant — what matters is that `grep -q` can stop reading while
+# something upstream is still writing.
+gh472_shape() {  # <file> -> prints offending "line:text", with the file's REAL line numbers
+  # Spellings covered after codex's QA round 2: a short cluster (-q, -Fq, -qiE), SEPARATE options
+  # (-F -q), the long form (--quiet), and an explicit `command grep`. Numbering is done with grep -n on
+  # the file itself and comments are filtered afterwards — the first version stripped comments FIRST,
+  # which renumbered every hit and is why my reported line numbers disagreed with the reviewer's.
+  grep -nE '\|[[:space:]]*(command[[:space:]]+)?grep([[:space:]]+-[A-Za-z]+)*[[:space:]]+(-[A-Za-z]*q[A-Za-z]*|--quiet)([[:space:]]|$)' "$1" 2>/dev/null \
+    | grep -vE '^[0-9]+:[[:space:]]*#'
 }
 named_bad=0
 for rel in $GH472_FILES; do
@@ -177,5 +186,59 @@ EOF
 [ -z "$derived_bad" ] \
   && pass "GH-472: no NEW script both sets pipefail and pipes repo-wide output into \`grep -q\`" \
   || fail "GH-472: a pipefail script piping repo-wide output carries the shape:$derived_bad"
+
+# ── (7) the known exposure this PR cannot fix, pinned so it cannot grow ─────────────────────
+# codex's QA review found the worst instance of this class, and it is NOT a flaky test:
+#
+#   relay-automation/agy-turn.sh:254   and   relay-automation/consult.sh:224
+#     grep -v -e … "$LOG" | grep -qF "$ROOT"
+#
+# Both set `set -euo pipefail` (:4). On a large transcript the downstream `grep -q` matches and exits,
+# the upstream `grep -v` takes SIGPIPE, pipefail makes the pipeline non-zero, the `if` evaluates FALSE —
+# and the branch that reports an isolation breach is skipped. It FAILS OPEN, on a containment check, on
+# input that is model-generated and therefore unbounded. That is strictly worse than a false red.
+#
+# It is not fixed here for one reason: both files carry the GH-308 FROZEN banner, where Python is
+# authoritative and the Bash twins must not be edited. GH-308 does provide a sanctioned escape (a commit
+# carrying a Frozen-twin-exception), but invoking it belongs to a decision about containment, not to a
+# PR about pipe hygiene. Recorded on #472 for the operator.
+#
+# The authoritative lane is clean: rtl.narration_mentions_root reads the transcript line by line in
+# Python with no pipe at all, and per GH-410 the result is advisory there rather than turn-failing. The
+# Bash path runs only when XYZ_PYTHON=0 is set explicitly or python3 is missing/<3.8.
+#
+# So this asserts two things instead of fixing it: the Python path stays pipe-free, and the exposed set
+# stays EMPTY — any instance under relay-automation/ now fails this gate.
+grep -nE '\|[[:space:]]*grep[[:space:]]+-[A-Za-z]*q' "$ROOT_REPO/utils/py/rtl.py" >/dev/null 2>&1 \
+  && fail "the Python transcript scan now pipes into grep -q — the authoritative lane has acquired the Bash lane's fail-open" \
+  || pass "GH-472: no shell-pipe-into-grep -q text in utils/py/rtl.py (a text check, NOT proof that narration_mentions_root stays line-by-line — codex's QA said so and it is right)"
+
+exposed=""
+while IFS= read -r cand; do
+  grep -qE 'set -[a-zA-Z]*o pipefail' "$ROOT_REPO/$cand" 2>/dev/null || continue
+  [ -n "$(gh472_shape "$ROOT_REPO/$cand")" ] && exposed="$exposed $cand"
+done <<EOF
+$(cd "$ROOT_REPO" && git ls-files 'relay-automation/*.sh' 2>/dev/null)
+EOF
+# HISTORY, kept because the reasoning is the reusable part. Five files under relay-automation/ carried
+# this shape; four were GH-308 FROZEN and all four set `set -euo pipefail` at :4, so each was a genuine
+# fail-open:
+#   agy-turn.sh / consult.sh   — `grep -v … | grep -qF "$ROOT"` fails open on an ISOLATION BREACH check,
+#     on model-generated (unbounded) transcript input. The worst of the set.
+#   marathon-drive.sh (x2)     — `git diff --name-only | grep -q .` and
+#     `git status --porcelain | grep -qE '^(\?\?|A )'` fail open on CHANGE detection: "no new test was
+#     added" when one was.
+#   poll.sh                    — `git status --porcelain | grep -q . && return 1 || return 0` returns
+#     "clean" for a DIRTY tree.
+#
+# I first deferred all four as untouchable and asserted the exposed set instead. codex's QA rejected
+# that as "an inventory/debt tripwire, not a mitigation" — a green gate that knowingly permits a
+# fail-open — and pointed out that GH-308 documents `Frozen-twin-exception` for exactly this: a safety
+# defect in a frozen twin. That was the right call, so all four are fixed here under per-file
+# exceptions, and the expected exposure is now ZERO.
+expected=""
+[ "$(printf '%s' "$exposed" | tr ' ' '\n' | sort | tr -d '\n')" = "$(printf '%s' "$expected" | tr ' ' '\n' | sort | tr -d '\n')" ] \
+  && pass "GH-472: the known GH-308-frozen exposure set under relay-automation/ is EMPTY — all four frozen fail-opens are fixed" \
+  || fail "GH-472: the frozen-shim exposure set changed (expected none, got:$exposed) — either one was fixed (update this gate) or a new one appeared"
 
 echo "gh460-pipe-buffer-sigpipe: $PASS pass, $FAIL fail"

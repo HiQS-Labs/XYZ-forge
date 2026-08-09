@@ -198,7 +198,7 @@ commit_gate_ok() {
 scope_clean() {
   local -a scope=("$@")
   ((${#scope[@]})) || return 0
-  git -C "$GIT_ROOT" status --porcelain -- "${scope[@]}" | grep -q . && return 1 || return 0
+  git -C "$GIT_ROOT" status --porcelain -- "${scope[@]}" | grep . >/dev/null && return 1 || return 0
 }
 
 # Read tick task fields into globals T_STATUS/T_CLAIMER/T_HANDOFF/T_PATHS.

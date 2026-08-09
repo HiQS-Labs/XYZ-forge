@@ -572,12 +572,12 @@ path_has_nonempty_phase_delta() {  # <path> — true if non-empty and added/modi
   git_path="$path"
   [[ "$path" == /* && "$path" == "$root/"* ]] && git_path="${path#"$root/"}"
   if [[ -n "$PRE_PHASE_HEAD" ]] \
-    && git -C "$root" diff --name-only "$PRE_PHASE_HEAD" -- "$git_path" 2>/dev/null | grep -q .; then
+    && git -C "$root" diff --name-only "$PRE_PHASE_HEAD" -- "$git_path" 2>/dev/null | grep . >/dev/null; then
     return 0
   fi
   # A newly created file may still be untracked at gate time (harness commits happen inside the relay
   # loop, but nothing guarantees a same-cycle commit for every edit) — count that as a delta too.
-  git -C "$root" status --porcelain -- "$git_path" 2>/dev/null | grep -qE '^(\?\?|A )' && return 0
+  git -C "$root" status --porcelain -- "$git_path" 2>/dev/null | grep -E '^(\?\?|A )' >/dev/null && return 0
   return 1
 }
 
