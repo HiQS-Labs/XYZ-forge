@@ -61,16 +61,28 @@ case "${1:-}" in
 esac
 
 # ── the frozen manifest ────────────────────────────────────────────────────────────────────────────
-# issue | gate hint (exact path, or a `test/ghNNN-` prefix to glob when the gate is not built yet)
+# issue | gate hint | optional INVARIANT (shell predicate run in the tree; must exit 0)
+#
 # The hint is a prefix for unbuilt lanes because the filename is not knowable before the build; #461's
 # gate already exists under #401's name, which is why it carries an exact path instead.
+#
+# WHY THE INVARIANT COLUMN EXISTS — this audit shipped with the exact defect it was built to catch.
+# Registration plus a declaration proves the gate RUNS and CLAIMS a control. It does not prove the
+# issue's acceptance criteria are met. #461 is "GH-401 closed with criteria 4 and 5 unmet"; criterion 5
+# is about the control (which registration+declaration does cover) but criterion 4 is about a TRACKED
+# FILE, which no amount of gate metadata can see. The first run after #458 merged duly reported #461
+# `complete` while `phases/p1/RELAY.md` was still tracked with 9 machine-specific absolute paths — a
+# false completion claim, from the tool whose one hard failure mode is false completion claims.
+# So: where an entry's acceptance includes a checkable state invariant, name it here.
 MANIFEST=(
-  "375|test/gh375-"
-  "390|test/gh390-gate-guard.sh"
-  "407|test/gh407-"
-  "417|test/gh417-"
-  "457|test/gh457-"
-  "461|test/gh401-dry-run-no-mutation.sh"
+  "375|test/gh375-|"
+  "390|test/gh390-gate-guard.sh|"
+  "407|test/gh407-|"
+  "417|test/gh417-|"
+  # GH-401 criterion 4: a tracked copy is retained only if a named consumer is identified AND it holds
+  # no machine-specific absolute paths. No consumer was ever identified, so the invariant is: untracked.
+  "457|test/gh457-|"
+  "461|test/gh401-dry-run-no-mutation.sh|! git ls-files --error-unmatch phases/p1/RELAY.md >/dev/null 2>&1"
 )
 ACCEPTED_FORMS="pre-fix-replay deliberate-mutation controlled-bad-fixture"
 
@@ -78,7 +90,7 @@ ACCEPTED_FORMS="pre-fix-replay deliberate-mutation controlled-bad-fixture"
 # Echoes one line: "<issue> <state> <detail>" where state is complete|incomplete|BROKEN.
 # BROKEN is reserved for a false completion claim, which is the only thing suite mode fails on.
 audit_entry() {
-  local tree="$1" issue="$2" hint="$3" gate="" inv="$4"
+  local tree="$1" issue="$2" hint="$3" gate="" inv="$4" invariant="${5:-}"
   if [ -f "$tree/$hint" ]; then
     gate="$hint"
   else
@@ -120,6 +132,14 @@ else: print('no')
   esac
   [ "$observed" = "yes" ] || { printf '%s incomplete not-observed:%s\n' "$issue" "$gate"; return 0; }
 
+  # (3) the entry's own state invariant, where its acceptance defines one. Gate metadata cannot see
+  # repository state; this is the difference between "the gate runs" and "the issue is fixed".
+  if [ -n "$invariant" ]; then
+    if ! ( cd "$tree" && eval "$invariant" ) >/dev/null 2>&1; then
+      printf '%s incomplete invariant-unmet:%s\n' "$issue" "$gate"; return 0
+    fi
+  fi
+
   printf '%s complete %s(%s)\n' "$issue" "$gate" "$form"
 }
 
@@ -137,10 +157,12 @@ run_audit() {  # <tree> ; sets AUDIT_OUT, returns 0 always
   local tree="$1" inv
   inv="$(cd "$tree" && python3 utils/py/gate_inventory.py 2>/dev/null || echo '[]')"
   AUDIT_OUT=""
-  local entry issue hint line
+  local entry issue hint invariant rest line
   for entry in "${MANIFEST[@]}"; do
-    issue="${entry%%|*}"; hint="${entry##*|}"
-    line="$(audit_entry "$tree" "$issue" "$hint" "$inv")"
+    issue="${entry%%|*}"; rest="${entry#*|}"
+    hint="${rest%%|*}"; invariant="${rest#*|}"
+    [ "$invariant" = "$rest" ] && invariant=""   # no third field
+    line="$(audit_entry "$tree" "$issue" "$hint" "$inv" "$invariant")"
     AUDIT_OUT+="$line"$'\n'
   done
 }
@@ -194,6 +216,27 @@ if [ "$MODE" = "mutate" ]; then
   printf '%s' "$AUDIT_OUT" | /usr/bin/grep -q '^461 incomplete not-registered-in-validate.sh' \
     && pass "an unregistered gate is detected (the #461 defect), not treated as passing" \
     || fail "unregistering gh401 did not surface as not-registered"
+
+  # Mutation C: the invariant column itself. This audit shipped reporting #461 complete while
+  # phases/p1/RELAY.md was still tracked, so the column that fixes that must be proven to bite.
+  FIX2="$WORK/tree2"
+  mkdir -p "$FIX2/test" "$FIX2/utils/py"
+  cp "$ROOT/utils/py/gate_inventory.py" "$FIX2/utils/py/"
+  printf 'TESTS=(\n  "gh401-dry-run-no-mutation.sh"\n)\n' > "$FIX2/validate.sh"
+  printf '#!/usr/bin/env bash\n# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"fixture"}\n' \
+    > "$FIX2/test/gh401-dry-run-no-mutation.sh"
+  inv2="$(cd "$FIX2" && python3 utils/py/gate_inventory.py 2>/dev/null || echo '[]')"
+
+  satisfied="$(audit_entry "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "true")"
+  violated="$(audit_entry  "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "false")"
+
+  printf '%s' "$satisfied" | /usr/bin/grep -q ' complete ' \
+    && pass "invariant control: a satisfied invariant leaves the entry complete" \
+    || fail "a satisfied invariant should not block completion (got: $satisfied)"
+
+  printf '%s' "$violated" | /usr/bin/grep -q 'invariant-unmet' \
+    && pass "invariant control: a violated invariant blocks completion even with gate+declaration valid" \
+    || fail "a violated invariant was NOT detected — this is the false completion claim this audit shipped with (got: $violated)"
 
   echo "litmus-release: negative control OBSERVED in both directions ($PASS pass, $FAIL fail)"
   exit 0
