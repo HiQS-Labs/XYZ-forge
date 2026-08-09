@@ -895,6 +895,25 @@ def main():
         if not repo:
             log("--log-github requested, but repository lookup failed — local telemetry only")
             return
+
+        # GH-425: cross-check the phase brief's declared source against the resolved repo/issue, to
+        # avoid commenting on a different repository's issue that happens to share a number. Only a
+        # POSITIVE mismatch aborts the POST — a brief with no frontmatter, no source: field, or an
+        # unparseable URL is unverifiable, not wrong, and must not silently stop logging (the same
+        # trap #375 already hit here: absent evidence is not failure evidence).
+        try:
+            brief_text = open(args.phase_brief_file, 'r', encoding='utf-8').read()
+            fm_match = re.match(r'^---\n(.*?)\n---', brief_text, re.DOTALL)
+            src_match = re.search(r'^source:\s*(.+?)\s*$', fm_match.group(1), re.MULTILINE) if fm_match else None
+            raw_url = src_match.group(1).strip().strip('"\'') if src_match else None
+            url_match = re.search(r'https?://github\.com/([^/\s]+/[^/\s]+?)/issues/(\d+)', raw_url) if raw_url else None
+        except OSError:
+            url_match = None
+        if url_match:
+            expected_slug, expected_issue = url_match.group(1), url_match.group(2)
+            if expected_issue != issue or expected_slug.casefold() != repo.casefold():
+                log(f"--log-github aborted: phase brief intends '{expected_slug}' issue {expected_issue} but driver is in '{repo}' issue {issue}")
+                return
         branch = _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"]) or "(detached)"
         trunk = trunk_ref()
         landed = "no"
@@ -986,6 +1005,35 @@ def main():
     # non-executing probe (gates like `test -f build/output` only become true after the builder runs):
     # prove the gate is *runnable*, not that it currently passes. Runs before any render/tick/dispatch.
     _gate_root = args.target_root or root
+    def _preflight_check_issue_closed():
+        mock_state = os.environ.get("MOCK_GH_ISSUE_STATE")
+        if mock_state:
+            state = mock_state.upper()
+        else:
+            issue = lane_issue_number()
+            if not issue:
+                return
+            if not shutil.which("gh"):
+                return
+            url = _cmd_out(["git", "-C", root, "remote", "get-url", "origin"])
+            repo = re.sub(r'\.git$', '', re.sub(r'^https?://[^/]+/', '', re.sub(r'^git@[^:]+:', '', url)))
+            if not re.fullmatch(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+', repo):
+                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=root)
+            if not repo:
+                return
+            state = _cmd_out(["gh", "issue", "view", issue, "--repo", repo, "--json", "state", "--jq", ".state"])
+        
+        if state and state.upper() == "CLOSED":
+            issue_display = lane_issue_number() or "unknown"
+            xyz_debug_log_append(
+                root, "warn", "marathon.issue-closed",
+                f"lane {lane_state_key} parked — issue {issue_display} is already closed",
+                action="none (lane halted)",
+                target_root=args.target_root, phase_id=args.phase_id,
+                relay_task=relay_task)
+            eprint(f"marathon-drive: lane parked — issue {issue_display} is already closed")
+            sys.exit(4)
+
     def _pre_advance_not_runnable(reason):
         die(f"pre-advance gate not runnable: '{pre_advance_cmd}' ({reason}). "
             f"Pass --pre-advance-cmd '<runnable command>' to override it.")
@@ -1059,11 +1107,13 @@ def main():
     if args.dry_run:
         # dry-run never dispatches a turn, so surface the problem but keep going (matches Bash).
         try:
+            _preflight_check_issue_closed()
             _preflight_pre_advance_gate()
         except SystemExit as _e:
             if _e.code not in (0, None):
                 eprint("marathon-drive: (dry-run continues; a live run would halt here)")
     else:
+        _preflight_check_issue_closed()
         _preflight_pre_advance_gate()
 
     if args.artifact_paths:
