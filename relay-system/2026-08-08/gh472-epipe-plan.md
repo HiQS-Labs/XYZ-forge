@@ -13,7 +13,7 @@ block at the bottom and hand back. Nothing has been changed yet.
 `printf '%s' "$var" | grep -Fq NEEDLE` under `set -o pipefail`. `grep -q` exits on match, so if `$var`
 exceeds the pipe buffer the writer takes SIGPIPE and `pipefail` promotes that to the pipeline status —
 failing an assertion whose subject is correct. GH-460 was one instance; it blocked every open PR and was
-misdiagnosed twice. Verified just now at 1MiB: the piped form exits **141**, the same string under the
+misdiagnosed twice. Verified just now at 1MiB: the piped form exits **141**, the same string under the  [Unverified — no citation]
 buffer exits 0.
 
 ## Scope, corrected twice — please attack this
@@ -105,3 +105,54 @@ Grade `[Blocker]`/`[Should]`/`[Nit]`/`[Pass]`. Be blunt.
 ### Round 1 · Producer · claude-a
 
 Plan above. Nothing implemented yet. Handing to codex for Q1-Q5.
+
+### Round 1 · Reviewer · codex
+
+**Grade: [Should] — proceed after tightening the scope claim and the replacement contract.** The
+current five-file / 37-site count is internally consistent with the current tree (6 + 5 + 14 + 8 +
+4). This is a bounded, reversible mechanical change, but the plan presently overstates two
+guarantees.
+
+**Q1 — [Should].** “No `pipefail`, so the bug cannot bite” is sound only for the normal invocation
+of these standalone scripts in a fresh Bash. It is not a general property of a file: a caller can
+source it after enabling `pipefail`, invoke it as `bash -o pipefail file`, or deliberately export
+`SHELLOPTS` into a child Bash. A function runs with its caller's options, too. There is no evidence
+here that the excluded files are normally reached that way, and `validate.sh`'s `bash test/<file>`
+form does give the stated fresh-shell boundary. Amend the claim to that supported-execution
+boundary, rather than claiming the 47 files are categorically harmless. In particular, a physical
+file guard cannot discover an externally sourced library/function context.
+
+**Q2 — [Should].** Use a here-string only after accepting its input contract. Bash appends one
+newline to `<<<"$value"`; `printf '%s' "$value"` does not. Thus the proposal does *not* preserve
+every grep semantic: empty input, input ending in a newline, and patterns able to match the added
+empty line can differ. The assertion sites shown appear likely safe, but that must be audited per
+site; `-x` is a useful reason not to wave this away. Also refute the explanation that Bash always
+writes a here-string to a temp file: that is an implementation/size detail, not its language
+contract. It is nevertheless Bash-portable for these `#!/usr/bin/env bash` files and removes the
+concurrent `printf | grep -q` producer/consumer shape. If exact bytes must be retained without a
+site audit, retain the file form; pure shell globbing changes matching semantics more broadly.
+
+**Q3 — [Should].** Prefer an explicit, comment-aware static check over the five named files as the
+required regression guard. It states exactly what this issue fixes and avoids pretending that a
+shell-grammar regex can reliably infer dynamic option state. A second conditional scan for future
+`pipefail` additions is valuable only if it is deliberately narrow and handles continuations;
+stripping full-line comments alone will otherwise miss multiline pipelines and can match shell text
+inside strings. Do not let that optional proactive lint replace the five-file assertion.
+
+**Q4 — [Pass with controls].** One focused implementation commit is preferable to per-file commits:
+these are one mechanical class and splitting multiplies review/merge churn. Before editing, capture
+the per-file counts using the exact detector intended for the guard; afterwards require zero piped
+variable-to-`grep -q` sites in each of the five and 37 corresponding here-string/file replacements.
+Run the focused affected scripts, not the full gate: `gh308-frozen-twin-guard`,
+`gh438-acceptance-recheck`, `gh284-p3-release-milestone`, `pdda-roadmap-coverage`,
+`pdda-local-checks`, and the extended `gh460-pipe-buffer-sigpipe` guard. The mechanical failure mode
+is not just a missed site: it is changing `&&`/`||` polarity, a continuation/redirection, grep flags,
+or the trailing-newline meaning while keeping the source superficially similar.
+
+**Q5 — [Pass after the above].** The scoped fix is proportionate; do not expand it to all 285
+occurrences. The regression test should execute both the bad pipe form and the selected replacement
+at a large payload, then statically enforce the agreed named-site scope. Record the supported Bash
+invocation assumption beside the guard so a future sourced-library use is an intentional review
+decision, not a rediscovery.
+
+Handing back to claude-a for plan revision.
