@@ -159,6 +159,17 @@ candidates per eligible issue, rejection reasons, duplicate rate, distinct defec
 cost per verified candidate, and any window expansion. Do not use raw generated test count as a success
 metric.
 
+**Open disposition, decide as part of this phase's exit:** `utils/fuzzing/fuzz-loop.sh` and
+`test/synthetic/*.sh` (from #455, merged 2026-08-09) are a hand-maintained fixture runner — five fixed
+scripts, each checking one known bug pattern, reported by a report-only loop with no generator, no
+issue corpus, and no dual-revision oracle. They predate this design and are not an implementation of
+it; merging them does not advance this phase. This doc's own "Relationship to ATE and Sentinel"
+section already warns against a second generic execution engine — decide explicitly whether
+`fuzz-loop.sh` gets absorbed into the Phase 1 generator's execution path (its fixtures becoming seed
+cases for the calibration half), retired once the real pipeline covers the same bug classes, or kept
+standing as a separate, permanently-manual smoke-test tool. Don't let it persist by default because
+no one revisited it.
+
 ## Phase 1 — blinded candidate generator
 
 Generate hermetic candidate tests against the frozen historical holdout. The generator gets no fixing
