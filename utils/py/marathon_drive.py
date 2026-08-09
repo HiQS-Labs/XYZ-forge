@@ -1100,6 +1100,16 @@ def main():
     # complete_phase_success directly rather than duplicating its gate/requires-test/telemetry
     # logic.
     def escalate(reason, rexit):
+        # GH-407: every escalation records `gate:` — not-run / green / red — because the reason alone
+        # cannot be trusted to say whether the gate executed, and the operator's first move on a
+        # failed phase is decided by that one fact. `pre-advance-failed` sends them to read the diff
+        # and the test output; when the gate never ran there IS no test output and nothing in the
+        # record said so. Observed three times in one 10-lane marathon on 2026-08-02, wrong all three
+        # times. It is recorded on EVERY reason, not only the gate-related ones, so the answer is
+        # present even when the reason taxonomy is incomplete — which the issue itself argued is the
+        # robust half of the fix. run_gate_result is the existing state that already knows this; no
+        # parallel flag is introduced, because a second source of truth would be a third thing to
+        # keep in sync.
         # Sentinel Tier 1 (GH-281/GH-342): harvest this failed phase's Side Findings BEFORE the
         # escalation record is written, matching marathon-drive.sh:848-853 — a phase that escalated
         # is exactly the one whose findings are about to be lost.
@@ -1113,6 +1123,7 @@ phase: {args.phase_id}
 task: {relay_task}
 relay-drive-exit: {rexit}
 reason: {reason}
+gate: {run_gate_result[0]}
 relay-file: {rel_relay}
 """)
         subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
@@ -1904,9 +1915,34 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         xyz_marathon_emit("red", f"halted at phase {args.phase_id} — relay cap/close-mismatch")
         sys.exit(4)
     elif relay_exit == 5:
-        log("relay escalated: pre-advance gate failed")
-        escalate(timeout_reason[0] if timeout_reason[0] != "turn-timeout-or-hang" else "pre-advance-failed", 5)
-        xyz_marathon_emit("red", timeout_emit[0] if timeout_reason[0] != "turn-timeout-or-hang" else f"halted at phase {args.phase_id} — pre-advance gate failed")
+        # GH-407: `pre-advance-failed` asserts a specific thing — the gate RAN and found a defect in
+        # the change. Several unrelated failures also arrive here as relay exit 5 (a builder shim that
+        # failed to start, a builder that exhausted its turn cap, a reviewer turn discarded by a
+        # containment check), and every one of them used to be reported with that label. Observed
+        # three times in a single 10-lane marathon on 2026-08-02 and wrong all three times; in one of
+        # them the relay file even read STATUS: Approved.
+        #
+        # The driver runs the gate itself (run_pre_advance_gate below), so it knows the answer
+        # without inferring it: if run_gate_result is still "not-run" when we get here, the gate
+        # provably did not execute and no gate verdict may be claimed.
+        #
+        # The reason for that case deliberately does NOT name a cause. Distinguishing "builder failed
+        # to start" from "cap exhausted" from "reviewer containment" needs a reason channel out of
+        # relay-drive that does not exist (#408 is the same missing channel seen from the other side),
+        # and a label that guesses would trade one confident wrong answer for another. It says what is
+        # known: the relay failed before the gate.
+        gate_ran = run_gate_result[0] != "not-run"
+        if timeout_reason[0] != "turn-timeout-or-hang":
+            reason, emit = timeout_reason[0], timeout_emit[0]
+        elif gate_ran:
+            reason = "pre-advance-failed"
+            emit = f"halted at phase {args.phase_id} — pre-advance gate failed"
+        else:
+            reason = "relay-failed-before-gate"
+            emit = f"halted at phase {args.phase_id} — relay failed before the gate ran"
+        log(f"relay escalated: {reason} (gate: {run_gate_result[0]})")
+        escalate(reason, 5)
+        xyz_marathon_emit("red", emit)
         sys.exit(5)
     elif relay_exit == 6:
         log("relay escalated: containment violation — a turn-taker reverted an off-lane edit (exit 6)")
