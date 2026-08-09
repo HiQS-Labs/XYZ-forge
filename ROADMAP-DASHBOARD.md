@@ -6,11 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 154 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
+Summary: 155 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-451 · Marathon: support Pi builders on the Python-default path | — | [GH-451-PI-MARATHON-ROUTING.md](PROJECT/1-INBOX/GH-451-PI-MARATHON-ROUTING.md) · [#451](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/451) |
+| GH-453 · Design an issue-derived fuzzing evidence pipeline | — | [GH-453-ISSUE-DERIVED-FUZZING.md](PROJECT/2-WORKING/GH-453-ISSUE-DERIVED-FUZZING.md) · [#453](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/453) |
 | GH-441 · the pre-advance gate inherits the marathon state it is supposed to judge | ✅ | [GH-441-GATE-ENV-CONTRACT.md](PROJECT/2-WORKING/GH-441-GATE-ENV-CONTRACT.md) · [#441](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/441) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
 | GH-390 remainder · the gate guard's other kill branch has never been observed firing | — | [MARATHON-2026-08-08-LITMUS-WAVE-2](PROJECT/2-WORKING/MARATHON-2026-08-08-LITMUS-WAVE-2/MARATHON.yaml) · [GH-390-GATE-GUARD-COVERAGE.md](PROJECT/2-WORKING/GH-390-GATE-GUARD-COVERAGE.md) · [#390](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/390) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-409 + GH-408 · a leaked tick claim wedges the next turn, and every layer that could name the cause discards it | — | [GH-409-408-TOKEN-FAILURE-VISIBILITY.md](PROJECT/2-WORKING/GH-409-408-TOKEN-FAILURE-VISIBILITY.md) · [#409](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409) · [#408](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/408) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
