@@ -74,7 +74,7 @@ STDERR_TAIL:
 """
 
 
-def ask_gemma(base_url: str, model: str, prompt: str, timeout: int = 60) -> dict:
+def ask_gemma(base_url: str, model: str, prompt: str, timeout: int = 600) -> dict:
     try:
         resp = requests.post(
             f"{base_url}/chat/completions",
@@ -82,7 +82,7 @@ def ask_gemma(base_url: str, model: str, prompt: str, timeout: int = 60) -> dict
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.1,
-                "max_tokens": 300,
+                "max_tokens": 8000,
             },
             timeout=timeout,
         )
