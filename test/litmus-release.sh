@@ -82,7 +82,7 @@ MANIFEST=(
   # GH-401 criterion 4: a tracked copy is retained only if a named consumer is identified AND it holds
   # no machine-specific absolute paths. No consumer was ever identified, so the invariant is: untracked.
   "457|test/gh457-|"
-  "461|test/gh401-dry-run-no-mutation.sh|untracked:phases/p1/RELAY.md,untracked:phases/p1/ESCALATION.md"
+  "461|test/gh401-dry-run-no-mutation.sh|"
 )
 
 # Invariants are a small STRUCTURED vocabulary, deliberately NOT shell strings interpreted at
@@ -93,10 +93,22 @@ MANIFEST=(
 #  which is why this note describes the rule instead of quoting it. Observed here, not guessed.)
 #   untracked:<path>   <path> must not be tracked by git
 #   absent:<path>      <path> must not exist on disk
-# A row may carry SEVERAL invariants, comma-separated; every one must hold. Added after a two-model
-# review of the merged #461 work found the single-invariant form covered phases/p1/RELAY.md while
-# leaving its sibling phases/p1/ESCALATION.md — untracked in the same lane — asserted by nothing, so
-# re-committing it would have kept the gate green. One artifact per issue was the wrong assumption.
+# A row may carry SEVERAL invariants, comma-separated; every one must hold.
+#
+# DO NOT use this to assert `untracked` on an artifact the harness itself versions. That is the
+# mistake #461's row made and it is why the row is now empty. #461 required phases/p1/RELAY.md to stay
+# untracked on the reasoning that no consumer was identified — but the DRIVER is the consumer: it
+# writes each phase thread and escalation and stages them with `git add --` + check=True
+# (marathon_drive.py:1129, :1169, :1728). So the invariant was a tripwire on a legitimate operation:
+# the first same-repo marathon run using phase-id `p1` re-tracks those files and fails the release
+# gate. Trying to satisfy it from the other side by gitignoring /phases/ is worse — `git add` on an
+# explicitly named ignored path exits 1, so the phase dies while recording itself (verified; guarded
+# now by test/marathon-root-audit.sh).
+#
+# A codex+agy consult on 2026-08-09 graded this a [Blocker] independently and reached the same verdict:
+# the gate was wrong, not the driver. The mechanism is kept because it is control-tested and Nightwatch
+# will want it; the rule that prevents recurrence lives here, next to the tool that could recreate it.
+# Invariants belong on repository states the system does NOT itself produce.
 check_invariant() {  # <tree> <spec-csv> -> 0 all satisfied, 1 any violated/unknown
   local tree="$1" spec_csv="$2" spec verb arg
   local IFS=,
