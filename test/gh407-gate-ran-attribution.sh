@@ -112,6 +112,26 @@ gate="$(esc_field red-gate gate)"
   && pass "ESCALATION.md records gate: red, so the record distinguishes a verdict from a non-run" \
   || fail "expected 'gate: red', got '$gate'"
 
+# ── (5) the THIRD value: an escalation that happens AFTER a green gate says so ─────────────
+# Added after a codex review of the merged fix noted the suite pinned `not-run` and `red` but never
+# `green` — so `gate:` could have been hardwired to emit only the two failure words and every other
+# assertion here would still pass. `requires-test-missing` is the reachable green-gate escalation: it
+# is checked after the gate returns 0 (marathon_drive.py:1504), so the gate genuinely ran and passed
+# while the phase still halted. That is precisely the case an operator must be able to tell apart from
+# a gate failure, which is this issue's whole subject.
+printf '#!/usr/bin/env bash\nexit 0\n' > "$ROOT/validate.sh"
+run_driver "$RD_OK" --phase-id green-gate --requires-test "test/definitely-absent-$$.sh" > "$WORK/green-gate.log" 2>&1 && rc=0 || rc=$?
+reason="$(esc_field green-gate reason)"
+gate="$(esc_field green-gate gate)"
+
+[ "$reason" = "requires-test-missing" ] \
+  && pass "a phase halted after a PASSING gate keeps its own reason (requires-test-missing), not a gate verdict" \
+  || fail "expected requires-test-missing after a green gate, got '$reason'"
+
+[ "$gate" = "green" ] \
+  && pass "ESCALATION.md records gate: green — all three values are now observed, so the field cannot be a two-word failure label" \
+  || fail "expected 'gate: green' for an escalation after a passing gate, got '$gate'"
+
 # ── the pre-fix replay (#419): the old single-expression form, inside the fixture ──────────
 # Replayed against a COPY of the driver so the working tree is never mutated. The copy is patched
 # back to the pre-fix behaviour and driven through the same no-gate case, which must produce the old

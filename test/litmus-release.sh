@@ -82,7 +82,7 @@ MANIFEST=(
   # GH-401 criterion 4: a tracked copy is retained only if a named consumer is identified AND it holds
   # no machine-specific absolute paths. No consumer was ever identified, so the invariant is: untracked.
   "457|test/gh457-|"
-  "461|test/gh401-dry-run-no-mutation.sh|untracked:phases/p1/RELAY.md"
+  "461|test/gh401-dry-run-no-mutation.sh|untracked:phases/p1/RELAY.md,untracked:phases/p1/ESCALATION.md"
 )
 
 # Invariants are a small STRUCTURED vocabulary, deliberately NOT shell strings interpreted at
@@ -93,14 +93,23 @@ MANIFEST=(
 #  which is why this note describes the rule instead of quoting it. Observed here, not guessed.)
 #   untracked:<path>   <path> must not be tracked by git
 #   absent:<path>      <path> must not exist on disk
-check_invariant() {  # <tree> <spec> -> 0 satisfied, 1 violated/unknown
-  local tree="$1" spec="$2" verb arg
-  verb="${spec%%:*}"; arg="${spec#*:}"
-  case "$verb" in
-    untracked) ( cd "$tree" && ! git ls-files --error-unmatch "$arg" >/dev/null 2>&1 ) ;;
-    absent)    [ ! -e "$tree/$arg" ] ;;
-    *) printf 'litmus-release: unknown invariant verb in %s\n' "$spec" >&2; return 1 ;;
-  esac
+# A row may carry SEVERAL invariants, comma-separated; every one must hold. Added after a two-model
+# review of the merged #461 work found the single-invariant form covered phases/p1/RELAY.md while
+# leaving its sibling phases/p1/ESCALATION.md — untracked in the same lane — asserted by nothing, so
+# re-committing it would have kept the gate green. One artifact per issue was the wrong assumption.
+check_invariant() {  # <tree> <spec-csv> -> 0 all satisfied, 1 any violated/unknown
+  local tree="$1" spec_csv="$2" spec verb arg
+  local IFS=,
+  for spec in $spec_csv; do
+    [ -n "$spec" ] || continue
+    verb="${spec%%:*}"; arg="${spec#*:}"
+    case "$verb" in
+      untracked) ( cd "$tree" && ! git ls-files --error-unmatch "$arg" >/dev/null 2>&1 ) || return 1 ;;
+      absent)    [ -e "$tree/$arg" ] && return 1 ;;
+      *) printf 'litmus-release: unknown invariant verb in %s\n' "$spec" >&2; return 1 ;;
+    esac
+  done
+  return 0
 }
 ACCEPTED_FORMS="pre-fix-replay deliberate-mutation controlled-bad-fixture"
 
