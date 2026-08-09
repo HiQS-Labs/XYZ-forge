@@ -5,7 +5,7 @@ import tempfile
 import subprocess
 import shlex
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
-                 narration_mentions_root, agy_auth_output_verdict)
+                 narration_mentions_root, agy_auth_output_verdict, agy_auth_timeout_verdict)
 from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
@@ -50,7 +50,20 @@ def agy_auth_preflight(agy_bin):
         # Fall through to the shared tail below, which echoes the captured output and returns False.
         # That output is the diagnosis — it is what the old success branch deleted.
     except subprocess.TimeoutExpired:
-        print(f"agy-turn: agy auth pre-flight timed out after {secs}s; likely expired auth opening an interactive login. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
+        # GH-375 follow-up: a timeout whose captured output ALREADY says agy could not open a TTY is
+        # the same failure as the fast TTY exit, only slower — it says nothing about auth, so it must
+        # not block a lane whose `agy -p` works. A timeout with anything else, including silence, is
+        # still fatal: that is the shape of a real hang on an interactive login prompt, which is what
+        # this branch was written for. See agy_auth_timeout_verdict.
+        t_severity, t_detail = agy_auth_timeout_verdict(out_file)
+        if t_severity == "unverifiable":
+            print(f"agy-turn: WARNING — {t_detail}", file=sys.stderr)
+            print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
+                  "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
+                  file=sys.stderr)
+            if os.path.exists(out_file): os.remove(out_file)
+            return True
+        print(f"agy-turn: agy auth pre-flight timed out after {secs}s; {t_detail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
         rc = 7
     except subprocess.CalledProcessError as e:
         print(f"agy-turn: agy auth pre-flight failed (exit {e.returncode}). Run `agy login` in a normal terminal, then retry.", file=sys.stderr)

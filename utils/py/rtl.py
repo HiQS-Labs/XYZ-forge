@@ -80,6 +80,51 @@ def agy_auth_output_verdict(out_file):
     return ("", "")
 
 
+def agy_auth_timeout_verdict(out_file):
+    """Classify a probe that TIMED OUT. Returns (severity, message) — never "".
+
+    A separate function from agy_auth_output_verdict on purpose. That one reads an output stream from
+    a process that EXITED, where "nothing suspicious" legitimately means pass. A timeout has no exit
+    status to interpret, and silence there is not reassurance — so this function never returns the
+    pass verdict, and reusing the other one here would have converted a hung probe into a green one.
+
+    GH-375 follow-up. The three-state fix covered `whoami` EXITING with a TTY error. It did not cover
+    the probe blowing its timeout, which still went straight to fatal — and that is the branch that
+    actually fired: a /consult on 2026-08-09 lost its agy seat to
+
+        consult: agy auth pre-flight timed out after 5s; likely expired auth opening an interactive
+                 login. Run `agy login` in a normal terminal, then retry.
+
+    on a machine where, measured in the same minute, `agy whoami` printed the TTY error and `agy -p`
+    (what the turn actually uses) answered correctly. A false block, from the guard, on a working lane
+    — the same failure direction GH-375's own fix was written to avoid, one branch over.
+
+    The rule: reclassify ONLY on positive evidence of the TTY cause. If the captured output already
+    says agy could not open a TTY, the timeout carries no more information about auth than the fast
+    failure did — on a platform where `whoami` can never succeed headlessly, a timeout is just a
+    slower spelling of the same thing. Anything else — an interactive login prompt, an unfamiliar
+    error, or NO output at all — stays fatal, which keeps the branch's original purpose intact for a
+    genuine hang on a login prompt.
+
+    Deliberately narrower than "a timeout is unverifiable". That broader rule would also swallow the
+    real hang this branch exists to catch, and silence is exactly the shape a login prompt waiting on
+    stdin produces.
+    """
+    try:
+        with open(out_file, "r", encoding="utf-8", errors="replace") as f:
+            output = f.read()
+    except OSError:
+        output = ""
+    for raw in output.splitlines():
+        line = raw.strip()
+        if any(m in line.lower() for m in AGY_AUTH_TTY_MARKERS):
+            return ("unverifiable",
+                    "agy could not open a TTY and then exceeded the probe timeout, so auth was not "
+                    f"verified (the timeout is the same TTY failure, slower): {line}")
+    return ("failed", "the probe timed out with no TTY diagnostic, which is the shape of a genuine "
+                      "hang on an interactive login prompt")
+
+
 def split_allow_paths(allow_paths):
     paths = []
     for path in (allow_paths or "").split(","):

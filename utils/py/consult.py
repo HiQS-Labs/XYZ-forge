@@ -8,7 +8,8 @@ import shlex
 import time
 from datetime import datetime
 import shutil
-from rtl import RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict
+from rtl import (RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict,
+                 agy_auth_timeout_verdict)
 
 # Aider can exit 0 while printing an auth/config error transcript, or return only reasoning tokens with
 # empty visible content (GH-147 spike 0.1/0.4). Either is a failed advisor, not a real answer — trusting
@@ -233,10 +234,24 @@ def agy_auth_preflight(agy_bin, log_file):
         if os.path.exists(tmp): os.remove(tmp)
         return True
     except subprocess.TimeoutExpired:
+        # GH-375 follow-up: the branch that actually lost the agy seat. A timeout whose captured output
+        # already carries the TTY diagnostic is the same failure as the fast TTY exit, only slower, and
+        # blocking on it disables the agy advisor on every consult run under load — observed 2026-08-09
+        # on a machine where `agy -p` answered correctly in the same minute. Silence or any other
+        # output stays fatal: that is a real hang on an interactive login prompt.
+        t_severity, t_detail = agy_auth_timeout_verdict(tmp)
+        if t_severity == "unverifiable":
+            with open(log_file, "a") as f:
+                if os.path.exists(tmp):
+                    with open(tmp) as tf: f.write(tf.read())
+                f.write(f"\nconsult: WARNING — {t_detail}. Proceeding; if agy fails on credentials, "
+                        f"run `agy login` in a normal terminal.\n")
+            if os.path.exists(tmp): os.remove(tmp)
+            return True
         with open(log_file, "a") as f:
             if os.path.exists(tmp):
                 with open(tmp) as tf: f.write(tf.read())
-            f.write(f"\nconsult: agy auth pre-flight timed out after {secs}s; likely expired auth opening an interactive login. Run `agy login` in a normal terminal, then retry.\n")
+            f.write(f"\nconsult: agy auth pre-flight timed out after {secs}s; {t_detail}. Run `agy login` in a normal terminal, then retry.\n")
     except subprocess.CalledProcessError as e:
         with open(log_file, "a") as f:
             if os.path.exists(tmp):
