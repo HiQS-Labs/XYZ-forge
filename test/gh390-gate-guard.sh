@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"all four CPU signal/Bash exit shapes map to gate-killed; an inverted classifier is observed to misattribute each as a red gate"}
 # GH-390 Phase 1: the pre-advance gate must not be able to take the host down.
 #
 # The gate executes code an LLM wrote seconds earlier, and the packet forbids the builder from
@@ -65,6 +66,24 @@ for _ in range(100):            # hard ceiling: 100 x 10 MB = 1 GB, then exit cl
     time.sleep(0.05)
 HOG_EOF
 
+# GH-382 reproducer baseline (observed by case p7 below): a MagicMock records every invocation,
+# so this exact `while True` shape grows without bound.  Pre-fix (the deliberately inverted
+# classifier in case 0): resource exits are `pre-advance-failed`; post-fix: the guard terminates
+# the process group and records `gate-killed` (exit 108).  The harness's file-scoped commit is the
+# revision carrying this baseline; keeping it beside the reproducer prevents a detached result log.
+MOCK_HOG="$WORK/gh382-magicmock-while-true.py"
+cat > "$MOCK_HOG" << 'MOCK_HOG_EOF'
+from unittest.mock import MagicMock
+
+page = MagicMock()
+calls = 0
+while True:
+    page()
+    calls += 1
+    if calls >= 500_000:
+        raise SystemExit("fixture safety ceiling reached before the guard fired")
+MOCK_HOG_EOF
+
 # Each case passes its OWN --phase-id: a lane whose token is already spent takes the
 # "already terminal, re-run only the gate" path instead of the one under test. Note the ids are
 # passed explicitly rather than from a counter — every call site here is inside "$( … )", which
@@ -86,6 +105,64 @@ run_driver() {  # <extra-args…>
 esc_reason() {  # <phase-id> — the reason recorded in that phase's ESCALATION.md
   sed -n 's/^reason: //p' "$ROOT/phases/$1/ESCALATION.md" 2>/dev/null
 }
+
+# ── (0) the attribution seam: both signals and both Bash return-code shapes ──────────────
+# This is deliberately a direct import rather than a driven phase: a host can only cause one of
+# these kernel outcomes, whereas the seam makes all four observed controls reproducible anywhere.
+out="$(python3 - "$ROOT_REPO/utils/py/marathon_drive.py" <<'PY'
+import importlib.util
+import signal
+import sys
+
+spec = importlib.util.spec_from_file_location("marathon_drive", sys.argv[1])
+driver = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(driver)
+
+cases = {
+    "SIGXCPU forked (128+signal)": 128 + signal.SIGXCPU,
+    "SIGXCPU exec-optimised (-signal)": -signal.SIGXCPU,
+    "SIGKILL forked (128+signal)": 128 + signal.SIGKILL,
+    "SIGKILL exec-optimised (-signal)": -signal.SIGKILL,
+}
+
+def must_classify_as_guard_kill(classifier, label, returncode):
+    actual, message = classifier(returncode, 2)
+    assert actual == driver.GATE_GUARD_KILL_EXIT, (label, actual, message)
+    return message
+
+for label, returncode in cases.items():
+    message = must_classify_as_guard_kill(driver.gate_guard_cpu_attribution, label, returncode)
+    assert message and ("SIGXCPU" in message or "SIGKILL" in message), (label, message)
+
+# Negative control: this is the deliberately inverted pre-fix classifier.  Every case must be
+# observed to fail the same assertion, proving the controls catch a resource kill misreported as
+# `pre-advance-failed` rather than merely documenting the expected production behaviour.
+def inverted_classifier(returncode, cpu_s):
+    if cpu_s > 0 and returncode in cases.values():
+        return returncode, None
+    return driver.GATE_GUARD_KILL_EXIT, "inverted"
+
+for label, returncode in cases.items():
+    try:
+        must_classify_as_guard_kill(inverted_classifier, label, returncode)
+    except AssertionError:
+        pass
+    else:
+        raise AssertionError(("negative control did not fail", label))
+
+# A genuine red gate and a disabled CPU layer must stay red; broadening this classification would
+# recreate GH-407 in the opposite direction.
+for returncode in (1, -signal.SIGTERM):
+    assert driver.gate_guard_cpu_attribution(returncode, 2)[0] == returncode
+assert driver.gate_guard_cpu_attribution(-signal.SIGKILL, 0)[0] == -signal.SIGKILL
+print("four attribution shapes + inverted negative control observed")
+PY
+)"; rc=$?
+if [ "$rc" -eq 0 ]; then
+  pass "all CPU signal/Bash attribution shapes are covered through the module-level seam"
+else
+  fail "attribution seam coverage failed: $out"
+fi
 
 # ── (1) an honest gate is unaffected, and telemetry is recorded ──────────────────────────
 out="$(run_driver --phase-id p1 --pre-advance-cmd '/usr/bin/true' 2>&1)"; rc=$?
@@ -158,21 +235,24 @@ else
 [$(printf '%s' "$out" | /usr/bin/grep -o 'gate-guard: gate exit [-0-9]*' | tail -1)]"
 fi
 
-# COVERAGE CAVEAT for the two assertions above. These passed on macOS while failing on every
-# Linux CI run for the life of PR #393, because WHICH SIGNAL the CPU cap delivers is a property of
-# the host kernel:
-#   * A bare `ulimit -t N` sets the soft AND hard RLIMIT_CPU to N.
-#   * Linux's posix_cpu_timers tests the hard limit FIRST, so with soft == hard it sends an
-#     uncatchable SIGKILL and SIGXCPU is never delivered at all.
-#   * macOS's BSD path sends SIGXCPU for those same limits.
-# The driver now sets the soft cap strictly below the hard cap so SIGXCPU is delivered on both,
-# with the hard cap left as a backstop. The exit status it arrives as ALSO varies (128+SIG when
-# bash forks the gate, -SIG when bash 5.x exec's it), so all four combinations are mapped but this
-# test only ever observes the one its host produces. A green run HERE is not evidence that the
-# Linux path is mapped — CI is the authority for that branch. That asymmetry is why the failure
-# message below prints the gate's exit status rather than the escalation reason alone.
+# ── (5) GH-382's actual runaway: MagicMock in a while-True loop ───────────────────────────
+# The 96 MB cap is intentionally much lower than the general allocator's 256 MB cap: this fixture
+# can append calls very quickly before the one-second watchdog poll, but it still leaves room for a
+# normal Python process.  It is the recorded post-fix baseline described beside MOCK_HOG above.
+start=$SECONDS
+out="$(MARATHON_GATE_RSS_MB=96 run_driver --phase-id p7 --pre-advance-cmd "python3 $MOCK_HOG" 2>&1)"; rc=$?
+elapsed=$((SECONDS - start))
+if [ "$rc" -eq 5 ] && [ "$(esc_reason p7)" = "gate-killed" ]; then
+  pass "GH-382 MagicMock-in-while-True runaway is killed and attributed as gate-killed"
+else
+  fail "GH-382 reproducer was not attributed as gate-killed (rc=$rc, reason=$(esc_reason p7)): $(printf '%s' "$out" | tail -5)"
+fi
+case "$out" in
+  *"KILLING gate process group"*"gate exit 108"*) pass "GH-382 baseline records group kill and distinct guard exit (108, ${elapsed}s)" ;;
+  *) fail "GH-382 baseline missing guard-kill evidence: $(printf '%s' "$out" | tail -8)" ;;
+esac
 
-# ── (5) a genuinely failing gate is still `pre-advance-failed` ───────────────────────────
+# ── (6) a genuinely failing gate is still `pre-advance-failed` ───────────────────────────
 out="$(run_driver --phase-id p5 --pre-advance-cmd '/usr/bin/false' 2>&1)"; rc=$?
 if [ "$rc" -eq 5 ]; then
   pass "a red gate still halts the phase (exit 5)"
@@ -185,7 +265,7 @@ else
   fail "guard relabelled a real gate failure as '$(esc_reason p5)'"
 fi
 
-# ── (6) the escape hatch restores the unguarded path ─────────────────────────────────────
+# ── (7) the escape hatch restores the unguarded path ─────────────────────────────────────
 # The same allocator that case (2) killed must now run to its own 1 GB ceiling and pass,
 # proving the switch removes the guard rather than merely loosening a cap.
 out="$(MARATHON_GATE_GUARD=0 MARATHON_GATE_RSS_MB=256 run_driver --phase-id p6 --pre-advance-cmd "python3 $HOG" 2>&1)"; rc=$?
