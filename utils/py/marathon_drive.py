@@ -237,6 +237,87 @@ def _probe_agent_bin(agent_id, role_label):
     elif agent_id.startswith("aider"):
         _probe_bin(get_env("AIDER_BIN", "aider"), role_label, agent_id)
 
+# GH-390 coverage seam.  Keep the attribution decision outside main() so its four
+# platform/Bash return-code shapes can be exercised on every host without executing
+# a full marathon or relying on that host's RLIMIT_CPU behaviour.
+GATE_GUARD_KILL_EXIT = 108
+GATE_CPU_HARD_MARGIN_S = 5
+
+
+def _gate_guard_config():
+    """Read the guard's caps fresh on each gate run, so a phase can retune between calls."""
+    def _cap(name, default):
+        raw = os.environ.get(name, "").strip()
+        if not raw:
+            return default
+        try:
+            value = int(raw)
+        except ValueError:
+            log(f"gate-guard: {name}={raw!r} is not an integer — falling back to {default}")
+            return default
+        return value
+    return {
+        "wall_s": _cap("MARATHON_GATE_WALL_S", 900),
+        "cpu_s": _cap("MARATHON_GATE_CPU_S", 600),
+        "rss_mb": _cap("MARATHON_GATE_RSS_MB", 8192),
+        "poll_s": max(1, _cap("MARATHON_GATE_POLL_S", 1)),
+    }
+
+
+def _gate_group_rss_mb(pgid):
+    """Summed RSS (MB) of a gate process group, or -1 when it cannot be read."""
+    try:
+        out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
+                             timeout=10).stdout
+    except (OSError, subprocess.SubprocessError):
+        return -1
+    total_kb = 0
+    for line in out.splitlines():
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        try:
+            if int(parts[0]) == pgid:
+                total_kb += int(parts[1])
+        except ValueError:
+            continue
+    return total_kb // 1024
+
+
+def _gate_kill_group(proc, reason):
+    """TERM the whole gate process group, then KILL whatever ignored it."""
+    log(f"gate-guard: KILLING gate process group (pgid {proc.pid}) — {reason}")
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        try:
+            os.killpg(proc.pid, sig)
+        except (ProcessLookupError, PermissionError, OSError) as exc:
+            log(f"gate-guard: killpg({proc.pid}, {sig!r}) failed: {exc}")
+        deadline = time.monotonic() + 2.0
+        while time.monotonic() < deadline:
+            if proc.poll() is not None:
+                return
+            time.sleep(0.1)
+    proc.wait()
+
+
+def gate_guard_cpu_attribution(returncode, cpu_s):
+    """Return (guard_exit_code, diagnostic) for a CPU-limit result.
+
+    This intentionally recognizes only the two signals the guard itself can cause,
+    in both Bash reporting shapes.  Every other gate failure remains a red gate.
+    """
+    if cpu_s <= 0:
+        return returncode, None
+    if returncode in (128 + signal.SIGXCPU, -signal.SIGXCPU):
+        return (GATE_GUARD_KILL_EXIT,
+                f"gate-guard: gate exceeded the {cpu_s}s CPU cap (SIGXCPU)")
+    if returncode in (128 + signal.SIGKILL, -signal.SIGKILL):
+        return (GATE_GUARD_KILL_EXIT,
+                f"gate-guard: gate ignored SIGXCPU and hit the "
+                f"{cpu_s + GATE_CPU_HARD_MARGIN_S}s hard CPU cap (SIGKILL)")
+    return returncode, None
+
+
 def main():
     parser = argparse.ArgumentParser(description="marathon-drive", add_help=False)
     parser.add_argument("--phase-brief", dest="phase_brief_file")
@@ -1107,71 +1188,6 @@ relay-file: {rel_relay}
     # a belt-and-braces extra — it is the only thing standing between a runaway test and the host.
     #
     # Layer 4 (host free-memory floor) and packet-driven per-phase overrides are Phase 2.
-    GATE_GUARD_KILL_EXIT = 108   # distinct from any real gate's own failure codes
-    GATE_CPU_HARD_MARGIN_S = 5   # hard RLIMIT_CPU sits this far above the soft cap (see layer 2)
-
-    def _gate_guard_config():
-        """Read the guard's caps fresh on each gate run, so a phase can retune between calls."""
-        def _cap(name, default):
-            raw = os.environ.get(name, "").strip()
-            if not raw:
-                return default
-            try:
-                value = int(raw)
-            except ValueError:
-                log(f"gate-guard: {name}={raw!r} is not an integer — falling back to {default}")
-                return default
-            return value
-        return {
-            # 900s wall matches the turn budget in GH-386; CPU is deliberately lower so a tight
-            # spin trips the kernel-enforced cap before the pollable one. Any cap <= 0 disables
-            # just that layer, which is how a phase with a legitimately long suite opts out of one
-            # bound without dropping the others.
-            "wall_s": _cap("MARATHON_GATE_WALL_S", 900),
-            "cpu_s": _cap("MARATHON_GATE_CPU_S", 600),
-            "rss_mb": _cap("MARATHON_GATE_RSS_MB", 8192),
-            "poll_s": max(1, _cap("MARATHON_GATE_POLL_S", 1)),
-        }
-
-    def _gate_group_rss_mb(pgid):
-        """Summed RSS (MB) of every live process in the gate's process group, or -1 if unreadable.
-
-        The GROUP is load-bearing, not the direct child: pytest spawns workers, so killing only the
-        shell orphans them and they keep allocating with nothing watching. Unreadable reads return
-        -1 and fail OPEN — a guard that cannot measure must not be a guard that kills.
-        """
-        try:
-            out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True,
-                                 timeout=10).stdout
-        except (OSError, subprocess.SubprocessError):
-            return -1
-        total_kb = 0
-        for line in out.splitlines():
-            parts = line.split()
-            if len(parts) != 2:
-                continue
-            try:
-                if int(parts[0]) == pgid:
-                    total_kb += int(parts[1])
-            except ValueError:
-                continue
-        return total_kb // 1024
-
-    def _gate_kill_group(proc, reason):
-        """TERM the whole gate process group, then KILL whatever ignored it."""
-        log(f"gate-guard: KILLING gate process group (pgid {proc.pid}) — {reason}")
-        for sig in (signal.SIGTERM, signal.SIGKILL):
-            try:
-                os.killpg(proc.pid, sig)
-            except (ProcessLookupError, PermissionError, OSError) as exc:
-                log(f"gate-guard: killpg({proc.pid}, {sig!r}) failed: {exc}")
-            deadline = time.monotonic() + 2.0
-            while time.monotonic() < deadline:
-                if proc.poll() is not None:
-                    return
-                time.sleep(0.1)
-        proc.wait()
-
     def run_pre_advance_gate():
         cwd = args.target_root if args.target_root else None
         env = _gate_env()
@@ -1239,18 +1255,14 @@ relay-file: {rel_relay}
         #                       bash 5.x (every Linux CI runner) does this.
         # Mapping only the first is why this escalated as `pre-advance-failed` on CI while passing
         # on macOS: same kill, different messenger.
-        if cfg["cpu_s"] > 0 and rc in (128 + signal.SIGXCPU, -signal.SIGXCPU):
-            log(f"gate-guard: gate exceeded the {cfg['cpu_s']}s CPU cap (SIGXCPU)")
-            rc = GATE_GUARD_KILL_EXIT
-        elif cfg["cpu_s"] > 0 and rc in (128 + signal.SIGKILL, -signal.SIGKILL):
-            # The hard-cap backstop: a gate that ignores or blocks SIGXCPU keeps burning CPU until
-            # RLIMIT_CPU's hard limit, where the kernel sends an uncatchable SIGKILL. Reported
-            # separately from the SIGXCPU path because the two say different things about the gate —
-            # and because an unmapped SIGKILL would otherwise escalate as `pre-advance-failed`,
-            # blaming the change under review for a kill the guard itself arranged.
-            log(f"gate-guard: gate ignored SIGXCPU and hit the "
-                f"{cfg['cpu_s'] + GATE_CPU_HARD_MARGIN_S}s hard CPU cap (SIGKILL)")
-            rc = GATE_GUARD_KILL_EXIT
+        # GH-390: the mapping itself now lives in gate_guard_cpu_attribution() at module scope, so
+        # all four platform/Bash shapes can be driven directly by test/gh390-gate-guard.sh on any
+        # host. Before the lift each branch was only reachable on the kernel that produces its
+        # signal, so half the attribution logic was never observed firing on the machine that runs
+        # the suite — the #419 defect, inside the guard #407 depends on.
+        rc, _guard_diag = gate_guard_cpu_attribution(rc, cfg["cpu_s"])
+        if _guard_diag:
+            log(_guard_diag)
 
         # Peak RSS is logged on EVERY run, pass or fail, deliberately: it is the only evidence that
         # can later answer whether the layer-3 poll is being outrun by a fast allocator — which is
