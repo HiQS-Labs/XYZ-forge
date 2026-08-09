@@ -82,8 +82,26 @@ MANIFEST=(
   # GH-401 criterion 4: a tracked copy is retained only if a named consumer is identified AND it holds
   # no machine-specific absolute paths. No consumer was ever identified, so the invariant is: untracked.
   "457|test/gh457-|"
-  "461|test/gh401-dry-run-no-mutation.sh|! git ls-files --error-unmatch phases/p1/RELAY.md >/dev/null 2>&1"
+  "461|test/gh401-dry-run-no-mutation.sh|untracked:phases/p1/RELAY.md"
 )
+
+# Invariants are a small STRUCTURED vocabulary, deliberately NOT shell strings interpreted at
+# runtime. Interpreting a variable as shell is what the GH-64 security scanner refuses under its
+# R1 rule (unsanitized dynamic execution), and it refused this file's first version — correctly.
+# Add a verb below rather than reaching for dynamic execution.
+# (The scanner matches on text, not syntax, so it also flags the pattern written inside a comment —
+#  which is why this note describes the rule instead of quoting it. Observed here, not guessed.)
+#   untracked:<path>   <path> must not be tracked by git
+#   absent:<path>      <path> must not exist on disk
+check_invariant() {  # <tree> <spec> -> 0 satisfied, 1 violated/unknown
+  local tree="$1" spec="$2" verb arg
+  verb="${spec%%:*}"; arg="${spec#*:}"
+  case "$verb" in
+    untracked) ( cd "$tree" && ! git ls-files --error-unmatch "$arg" >/dev/null 2>&1 ) ;;
+    absent)    [ ! -e "$tree/$arg" ] ;;
+    *) printf 'litmus-release: unknown invariant verb in %s\n' "$spec" >&2; return 1 ;;
+  esac
+}
 ACCEPTED_FORMS="pre-fix-replay deliberate-mutation controlled-bad-fixture"
 
 # ── audit one manifest entry against a tree ────────────────────────────────────────────────────────
@@ -109,22 +127,33 @@ audit_entry() {
     printf '%s incomplete not-registered-in-validate.sh:%s\n' "$issue" "$gate"; return 0
   fi
 
-  # (2) a parseable declaration naming an accepted form, with observed=true
-  local form observed
-  form="$(printf '%s' "$inv" | python3 -c "
-import json,sys
-d=json.load(sys.stdin); gates=d['gates'] if isinstance(d,dict) and 'gates' in d else d
+  # (2) a parseable declaration naming an accepted form, with observed=true.
+  # The inventory goes to a FILE rather than a pipe: python breaks out of its loop on the first
+  # match, closing the pipe while printf is still writing, which produced three
+  # `printf: write error: Broken pipe` lines per run in CI. Harmless, but noise in a gate's output
+  # is exactly what makes a real signal hard to find later (#460).
+  local form observed inv_file="$WORK/inv.json"
+  printf '%s' "$inv" > "$inv_file"
+  read -r form observed <<EOF
+$(python3 - "$inv_file" "$gate" <<'PY'
+import json, sys
+try:
+    with open(sys.argv[1]) as fh:
+        data = json.load(fh)
+except Exception:
+    print("none no"); raise SystemExit(0)
+gates = data["gates"] if isinstance(data, dict) and "gates" in data else data
 for g in gates:
-    if g.get('gate')=='$gate': print(g.get('negative_control',{}).get('form','none')); break
-else: print('none')
-" 2>/dev/null || echo none)"
-  observed="$(printf '%s' "$inv" | python3 -c "
-import json,sys
-d=json.load(sys.stdin); gates=d['gates'] if isinstance(d,dict) and 'gates' in d else d
-for g in gates:
-    if g.get('gate')=='$gate': print('yes' if g.get('negative_control',{}).get('observed') else 'no'); break
-else: print('no')
-" 2>/dev/null || echo no)"
+    if isinstance(g, dict) and g.get("gate") == sys.argv[2]:
+        nc = g.get("negative_control", {}) or {}
+        print(f"{nc.get('form','none')} {'yes' if nc.get('observed') else 'no'}")
+        break
+else:
+    print("none no")
+PY
+)
+EOF
+  form="${form:-none}"; observed="${observed:-no}"
 
   case " $ACCEPTED_FORMS " in
     *" $form "*) ;;
@@ -135,8 +164,8 @@ else: print('no')
   # (3) the entry's own state invariant, where its acceptance defines one. Gate metadata cannot see
   # repository state; this is the difference between "the gate runs" and "the issue is fixed".
   if [ -n "$invariant" ]; then
-    if ! ( cd "$tree" && eval "$invariant" ) >/dev/null 2>&1; then
-      printf '%s incomplete invariant-unmet:%s\n' "$issue" "$gate"; return 0
+    if ! check_invariant "$tree" "$invariant"; then
+      printf '%s incomplete invariant-unmet(%s):%s\n' "$issue" "$invariant" "$gate"; return 0
     fi
   fi
 
@@ -227,8 +256,10 @@ if [ "$MODE" = "mutate" ]; then
     > "$FIX2/test/gh401-dry-run-no-mutation.sh"
   inv2="$(cd "$FIX2" && python3 utils/py/gate_inventory.py 2>/dev/null || echo '[]')"
 
-  satisfied="$(audit_entry "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "true")"
-  violated="$(audit_entry  "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "false")"
+  # Real verbs, not shell truthiness: `absent:` on a path the fixture does not have (satisfied) and
+  # on one it does (violated). Using `true`/`false` here would test the harness, not the vocabulary.
+  satisfied="$(audit_entry "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "absent:no-such-file.txt")"
+  violated="$(audit_entry  "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "absent:validate.sh")"
 
   printf '%s' "$satisfied" | /usr/bin/grep -q ' complete ' \
     && pass "invariant control: a satisfied invariant leaves the entry complete" \
