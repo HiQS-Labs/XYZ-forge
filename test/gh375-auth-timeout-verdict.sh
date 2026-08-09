@@ -171,4 +171,27 @@ for caller in agy consult; do
     || fail "post-fix $caller still blocks a TTY-diagnosed timeout (got '$post')"
 done
 
+# ── the probe budget must clear the probe's own measured cost, with room for load ───────────
+# The flush race is what a too-tight budget looks like from the inside: the probe is killed before it
+# can write the diagnostic the reclassification above needs, so a TTY failure degrades into a silent
+# one and blocks the lane. Fixing the branch without fixing the margin left that live, and it fired.
+#
+# Asserted against the MEASURED worst probe cost rather than a number that looks tidy — the #457 rule,
+# reused. If `agy whoami` gets slower, or someone trims the default, this fails and says which.
+budget="$(python3 -c 'import rtl; print(rtl.AGY_AUTH_TIMEOUT_DEFAULT_S)')"
+worst="$(python3 -c 'import rtl; print(rtl.WORST_OBSERVED_WHOAMI_S)')"
+ratio="$(python3 -c "print(f'{$budget/$worst:.1f}')")"
+python3 -c "import sys; sys.exit(0 if $budget >= 4*$worst else 1)" \
+  && pass "the auth-probe budget (${budget}s) clears 4x the worst measured probe cost (${worst}s) — ${ratio}x headroom, where 5s gave under 2x and lost the lane twice" \
+  || fail "the auth-probe budget (${budget}s) is under 4x the worst measured cost (${worst}s) — this is the margin whose closure produced the flush race"
+
+# Both callers must read the shared default; a second hardcoded 5 would reintroduce the drift silently.
+for f in utils/py/agy-turn.py utils/py/consult.py; do
+  if grep -q 'AGY_AUTH_TIMEOUT_S", 5)' "$ROOT_REPO/$f"; then
+    fail "$f still hardcodes a 5s probe budget instead of the shared AGY_AUTH_TIMEOUT_DEFAULT_S"
+  else
+    pass "$(basename "$f") reads the shared AGY_AUTH_TIMEOUT_DEFAULT_S, so the two callers cannot drift"
+  fi
+done
+
 echo "gh375-auth-timeout-verdict: $PASS pass, $FAIL fail"

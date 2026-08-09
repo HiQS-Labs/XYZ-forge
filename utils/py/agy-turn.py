@@ -5,7 +5,8 @@ import tempfile
 import subprocess
 import shlex
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
-                 narration_mentions_root, agy_auth_output_verdict, agy_auth_timeout_verdict)
+                 narration_mentions_root, agy_auth_output_verdict, agy_auth_timeout_verdict,
+                 AGY_AUTH_TIMEOUT_DEFAULT_S)
 from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
@@ -13,7 +14,7 @@ def die(msg):
     sys.exit(2)
 
 def agy_auth_preflight(agy_bin):
-    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", 5))
+    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
     out_file = os.path.join(tempfile.gettempdir(), f"agy-auth-{os.getpid()}.log")
     rc = 0
     try:
@@ -90,7 +91,7 @@ def agy_validate_model(agy_bin):
     if not model:
         return True
 
-    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", 5))
+    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
     out_file = os.path.join(tempfile.gettempdir(), f"agy-models-{os.getpid()}.log")
     try:
         with open(out_file, "w") as out_f:

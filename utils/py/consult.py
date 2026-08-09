@@ -9,7 +9,7 @@ import time
 from datetime import datetime
 import shutil
 from rtl import (RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict,
-                 agy_auth_timeout_verdict)
+                 agy_auth_timeout_verdict, AGY_AUTH_TIMEOUT_DEFAULT_S)
 
 # Aider can exit 0 while printing an auth/config error transcript, or return only reasoning tokens with
 # empty visible content (GH-147 spike 0.1/0.4). Either is a failed advisor, not a real answer — trusting
@@ -204,7 +204,7 @@ def guarded_with_timeout(cmd, cwd, log_file, timeout_s, env=None):
         return None
 
 def agy_auth_preflight(agy_bin, log_file):
-    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", 5))
+    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
     tmp = f"{log_file}.auth"
     try:
         with open(tmp, "w") as f:

@@ -16,6 +16,22 @@ import sys
 # happens to contain "error", and a false failure stops the run outright, which is a worse outcome
 # than the bug being fixed. The TTY signature is matched separately: it is the exact shape the issue
 # reports and it does not necessarily carry an error prefix.
+# GH-375 follow-up. AGY_AUTH_TIMEOUT_S defaulted to 5 while `agy whoami` cost 1.3-2.3s idle on the
+# reference machine — under 2x headroom, and concurrent load closed it twice. The second time was AFTER
+# the timeout branch was taught to reclassify a TTY-diagnosed timeout as unverifiable: the probe was
+# killed before it could FLUSH its diagnostic, so the capture was empty, the reclassification had
+# nothing to match on, and the lane was blocked anyway. That flush race was predicted by one reviewer
+# and dismissed by another (and by me) as bounded; it then fired in the next consult and cost the agy
+# seat. Observed, so no longer a judgement call.
+#
+# 20s is chosen against the measurement, not by feel: ~9x the worst idle probe, which leaves room for
+# the load that closed a 2x margin. The cost is bounded and lands only on a genuine interactive-login
+# hang, which now takes 20s to reject instead of 5 — a rare path, and rejecting it late is cheaper than
+# blocking a working lane. Same reasoning as GH-457's tiers: size a cap against what the thing actually
+# costs, not against a number that looks tidy.
+AGY_AUTH_TIMEOUT_DEFAULT_S = 20
+WORST_OBSERVED_WHOAMI_S = 2.3   # 1.3 / 1.9 / 2.3 measured idle, 2026-08-09
+
 AGY_AUTH_ERROR_PREFIXES = ("cli error:", "error:", "panic:", "fatal:")
 AGY_AUTH_TTY_MARKERS = ("could not open tty", "error opening tty")
 
