@@ -59,3 +59,18 @@ ARCHITECTURE-BAK.md
 # Sentinel Tier 1 debug capture — local only, never committed.
 debug.log
 /BTW
+
+# Marathon per-phase run artifacts (GH-461 follow-up). marathon-drive writes phases/<phase-id>/
+# {RELAY.md,ESCALATION.md} into the TARGET ROOT, which for a same-repo run is this repo. They are run
+# output, not source: a dry run alone rewrites them, and the diff is machine-dependent because they
+# embed absolute paths — so they churn for whoever runs the suite and revert for whoever last
+# committed them (#401/#461, observed live three times over 2026-08-05/06).
+#
+# Root-anchored on purpose: a fixture's own phases/ under some subdirectory is a test's business, and
+# every test that reads one does so through its own $ROOT, never this path.
+#
+# NOTE this does NOT untrack the ~72 already-committed records under phases/<run-specific-name>/.
+# Those carry unique per-run directory names, so they do not churn — they are marathon history and
+# stay tracked deliberately. The one exception, phases/p1/, is untracked in the same commit as this
+# rule: `p1` is a GENERIC id that every run and several tests reuse, so each one overwrote the last.
+/phases/
