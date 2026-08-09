@@ -71,11 +71,11 @@ _pdda_doc_issue_number() {
   num="$(pdda_trim "$(pdda_frontmatter_value "$file" gh_issue)")"
   case "$num" in \"*\") num="${num#\"}"; num="${num%\"}" ;; \'*\') num="${num#\'}"; num="${num%\'}" ;; esac
   num="${num#\#}"
-  if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; return; fi
+  if printf '%s' "$num" | grep -E '^[0-9]+$' >/dev/null; then printf '%s' "$num"; return; fi
   base="$(basename "$file")"
   case "$base" in
     GH-[0-9]*) num="${base#GH-}"; num="${num%.md}"; num="${num%%-*}"
-      if printf '%s' "$num" | grep -Eq '^[0-9]+$'; then printf '%s' "$num"; fi ;;
+      if printf '%s' "$num" | grep -E '^[0-9]+$' >/dev/null; then printf '%s' "$num"; fi ;;
   esac
 }
 
@@ -149,9 +149,9 @@ check_roadmap_issue_state() {
     is_terminal=0
     is_nonterminal=0
     case "$line" in *"✅"*) is_terminal=1 ;; esac
-    printf '%s' "$line" | grep -qiE '\bshipped\b' && is_terminal=1
+    printf '%s' "$line" | grep -iE '\bshipped\b' >/dev/null && is_terminal=1
     case "$line" in *"🆕"*) is_nonterminal=1 ;; esac
-    printf '%s' "$line" | grep -qiE '\bcaptured\b|ready to fire' && is_nonterminal=1
+    printf '%s' "$line" | grep -iE '\bcaptured\b|ready to fire' >/dev/null && is_nonterminal=1
 
     # Ambiguous (both fired, or neither) => no reliable signal on this line; skip it entirely.
     [ "$is_terminal" -eq "$is_nonterminal" ] && continue

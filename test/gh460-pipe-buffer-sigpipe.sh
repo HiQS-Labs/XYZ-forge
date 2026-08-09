@@ -83,9 +83,9 @@ for label in big small; do
 done
 
 # ── (4) the production site no longer carries the shape ────────────────────────────────────
-# Narrow on purpose: this asserts about the ONE site with evidence, not about the ~366 files that
-# share the pattern harmlessly (issue #472 tracks that class). A repo-wide lint here would be a large
-# blind sweep with no evidence per site.
+# Narrow on purpose: this asserts about the ONE site with the original evidence. (The "366 files" once
+# quoted here was a measurement error — `grep -lc` prints a line per file SEARCHED, not per match. The
+# real figures are 52 files / 285 occurrences; see section (6) for what #472 actually converted.)
 #
 # COMMENT LINES ARE STRIPPED FIRST, and that was not foresight — the first version of this assertion
 # went red against the fixed file, because it matched the COMMENT documenting the rule ("never
@@ -105,5 +105,77 @@ grep -q 'real_out_file' "$SITE" \
 grep -q 'check(s) did not run against the real repo:\$missing' "$SITE" \
   && pass "the failure message names WHICH summary is missing — the original named nothing and was twice misread as an unrelated WARN" \
   || fail "the failure message no longer names the missing check; a future failure is a bare output dump again"
+
+# ── (6) GH-472: the same shape is gone from every file that sets `pipefail` ─────────────────
+# Two assertions, deliberately: an EXPLICIT named-file list and a DERIVED scan. codex's plan review
+# asked for the named list as the required guard, because a shell-grammar regex cannot reliably infer
+# dynamic option state and a derived list can silently drift to empty. The derived scan is kept as a
+# second, clearly-secondary check, because a file that GAINS `pipefail` later is the silent path back
+# into this bug and no named list can see that coming.
+#
+# SCOPE OF THE CLAIM, stated because it is narrower than it looks. `pipefail` is not a property of a
+# file; a caller can source one after enabling it, invoke `bash -o pipefail <file>`, export SHELLOPTS,
+# or call a function from a pipefail context. What is asserted here is the SUPPORTED invocation:
+# validate.sh runs each test as `bash test/<file>`, a fresh shell, so options are not inherited from
+# the runner. The ~47 other files carrying this shape run with `set -u` only and are harmless UNDER
+# THAT BOUNDARY — not categorically. A future sourced-library use should be a deliberate review
+# decision, which is why this paragraph exists rather than a bare list.
+#
+# The fix applied to all 37 sites was to drop `q` from grep's flag cluster and redirect its stdout,
+# NOT a here-string. `<<<` appends a newline that `printf '%s'` does not — measured: 1 byte becomes 2,
+# and `grep -Fq ''` on empty input flips from no-match to match — so it is not semantics-preserving,
+# which matters at the `-Fx` site. Dropping `-q` leaves the input byte-identical and simply lets grep
+# read to EOF, so there is no reader to lose. A writer-side `{ printf … || true; }` was also tried and
+# does NOT work: printf is a builtin, so SIGPIPE kills the pipeline's left subshell before `|| true`
+# can run (measured: still 141).
+GH472_FILES="test/gh308-frozen-twin-guard.sh test/gh438-acceptance-recheck.sh
+test/gh284-p3-release-milestone.sh test/pdda-roadmap-coverage.sh utils/pdda-local-checks.sh
+test/pdda-local-checks.sh"
+gh472_shape() {  # <file> -> prints offending non-comment lines, if any
+  grep -vE '^[[:space:]]*#' "$1" 2>/dev/null | grep -nE 'printf\b[^|]*\|[[:space:]]*grep[[:space:]]+-[A-Za-z]*q'
+}
+named_bad=0
+for rel in $GH472_FILES; do
+  if [ -n "$(gh472_shape "$ROOT_REPO/$rel")" ]; then
+    fail "GH-472: $rel sets pipefail and still pipes a variable into \`grep -q\` — the SIGPIPE shape is back"
+    named_bad=$((named_bad + 1))
+  fi
+done
+[ "$named_bad" -eq 0 ] \
+  && pass "GH-472: all 6 pipefail-setting files that pipe repo-wide output are free of the piped \`grep -q\` shape (43 sites converted)" \
+  || fail "GH-472: $named_bad of the 6 named files regressed"
+
+# Derived, for files that do not exist yet. TWO conditions, not one — and the first draft of this
+# assertion had only the first, which is how it caught its own author: `pipefail` alone flagged 35 more
+# files and was a far broader claim than the fix behind it.
+#
+# The dangerous property is not `pipefail`; it is `pipefail` AND a payload that GROWS WITH THE
+# REPOSITORY. That is what turned GH-460 from fine to blocking with no code change. The ~35 other
+# pipefail files pipe fixture-sized output — a stub's stdout, one line, one number — which cannot reach
+# the 64KB buffer no matter how large the repo gets. Converting them would be ~200 more edits for no
+# measurable risk, and codex's plan review was explicit: do not expand this to all 285 occurrences.
+#
+# So the derived condition mirrors the at-risk definition exactly: sets pipefail AND invokes a
+# repo-wide tool. A static check cannot measure payload growth, but "runs something that walks the
+# repo" is a good and honest proxy for it.
+#
+# Known limits, accepted rather than papered over: full-line comments are stripped, but this cannot see
+# a multiline pipeline or the shape inside a string literal. The named list above is the gate; this is
+# the early-warning.
+REPO_WIDE='pdda\.sh|pdda-local-checks|gate_inventory|swarm_preflight|git grep|git ls-files'
+derived_bad=""
+while IFS= read -r cand; do
+  case " $GH472_FILES " in *" $cand "*) continue ;; esac
+  # gh460 itself pipes deliberately: case (1) above EXECUTES the pre-fix shape as its control.
+  case "$cand" in */gh460-pipe-buffer-sigpipe.sh) continue ;; esac
+  grep -qE 'set -[a-zA-Z]*o pipefail|set -o pipefail|_setup\.sh' "$ROOT_REPO/$cand" 2>/dev/null || continue
+  grep -qE "$REPO_WIDE" "$ROOT_REPO/$cand" 2>/dev/null || continue
+  [ -n "$(gh472_shape "$ROOT_REPO/$cand")" ] && derived_bad="$derived_bad $cand"
+done <<EOF
+$(cd "$ROOT_REPO" && git ls-files 'test/*.sh' 'utils/*.sh' 'utils/**/*.sh' 'relay-automation/*.sh' 2>/dev/null)
+EOF
+[ -z "$derived_bad" ] \
+  && pass "GH-472: no NEW script both sets pipefail and pipes repo-wide output into \`grep -q\`" \
+  || fail "GH-472: a pipefail script piping repo-wide output carries the shape:$derived_bad"
 
 echo "gh460-pipe-buffer-sigpipe: $PASS pass, $FAIL fail"
