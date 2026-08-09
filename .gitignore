@@ -1,6 +1,9 @@
 .tick/
 node_modules/
 .vscode/
+# GH-480: tools/vscode-cockpit ships its own F5 debug launch config as part of the extension.
+!tools/vscode-cockpit/.vscode/
+!tools/vscode-cockpit/.vscode/*.json
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 .DS_Store
