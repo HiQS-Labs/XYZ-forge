@@ -22,6 +22,34 @@ nothing.
 
 Edit it only when an operator explicitly asks for release *planning*. That is the whole trigger.
 
+## Scope boundary — Litmus (0.2.0) vs Nightwatch (0.3.0)
+
+Added 2026-08-08 after a cross-model consult (codex + agy) found the two descriptions **not
+decidable**: a competent agent could not route a new issue between them from the prose alone, because
+Litmus says checks must "report red" correctly while Nightwatch says hostile states must "fail
+clearly." Both advisors independently flagged this as blocking, and the overlap is worst exactly where
+orchestration failures emit gate-looking verdicts.
+
+> **Litmus owns faulty decision semantics.** A named acceptance, preflight, reviewer, or pre-advance
+> check returns pass, fail, or a *reason* inconsistent with a controlled input's observable outcome —
+> or lacks a recorded negative control.
+>
+> **Nightwatch owns run lifecycle.** Dispatch, target and worktree containment, claims, durable
+> logging, interruption, and resume — **even when lifecycle code emits a misleading message.**
+>
+> **Classify by the violated invariant, not by the wording of the message.** Split an issue that
+> violates both.
+
+That last clause is the load-bearing one. The intuitive rule — "a lying message is Litmus" — gives the
+wrong answer: #426 exits 6 claiming containment worked while a file leaked, but the invariant it
+violates is run containment, so it is Nightwatch, with the assertion of its lie written as a
+Litmus-style test. Conversely #407 reports `pre-advance-failed` when no gate ran, and that *is* a
+Litmus defect, because the violated invariant is the verdict itself.
+
+**A release is not its milestone.** A milestone is a backlog and grows while you work; a release needs
+a frozen manifest and a testable exit criterion, both recorded in the blocks below. "The open issues
+are done" is not an exit criterion, because working on a release generates more of them.
+
 ## What belongs here, on the occasions it is used
 
 **Major and meaningful releases only. Not every release number.**
@@ -73,7 +101,9 @@ Iterations: 0.2.0-0.2.4
 Status: Draft
 Target Date: 2026-09-05
 Codename: Litmus
-Description: Make the checks capable of failing. Every gate is shown to report red against a real defect, or is downgraded to advisory — a check never observed failing is not evidence (#419). Ordered first because it is the release that makes the next one measurable. It is also what the self-improvement chain (#431) is blocked on: a Reviewer is a gate, so #419 applies to it, and its qualification gate is currently un-runnable (#428) and has only ever been measured once (#429).
+Description: Make the checks capable of failing. Every gate in the Litmus manifest is shown to report red against a real defect, or is explicitly downgraded to advisory — a check never observed failing is not evidence (#419). Ordered first because it is the release that makes the next one measurable. It is also what the self-improvement chain (#431) is blocked on: a Reviewer is a gate, so #419 applies to it, and its qualification gate is currently un-runnable (#428) and has only ever been measured once (#429).
+Exit criterion: `bash test/litmus-release.sh --release-gate` exits 0. Red today by design; turning it green is what "done" means. Its own negative control is `--mutate-evidence`, which must detect a stripped declaration and an unregistered gate. NOTE the honest limit, stated in that file: the audit proves registration, declaration shape and the absence of false completion claims. It does NOT prove a control was truly observed, because `gate_inventory.py` reads a declaration authored by the same person who wrote the gate. Recorded execution of each control is deliberately out of scope for this release.
+Manifest: FROZEN 2026-08-08 — #375, #390, #407, #417, #457, #461. Six named decision gates, a fixed denominator rather than a percentage. "Every gate" was unshippable prose: `gate_inventory.py` reports 152 of 158 gates with no declared control, and retrofitting them is explicitly out of scope. Adding an entry is a RE-SCOPE, not a bugfix: a mid-release discovery joins only if it makes the exit command fail or falsifies a named invariant, has a reproducer demonstrating that, and the operator explicitly swaps out an existing entry or accepts a date slip. Discovery is not admission — #457, #460 and #461 were all filed while executing Litmus, which is what an unfrozen boundary looks like.
 GH_URL:
 Milestone: Litmus
 Front-door reviewed: No
@@ -86,6 +116,8 @@ Status: Draft
 Target Date: 2026-10-10
 Codename: Nightwatch
 Description: An unattended marathon against a real target repo survives, records, and recovers. Before dispatching work, it proves the target can accept the harness write-set and preserves the local-state contract, so hostile ignore rules or linked worktrees fail clearly rather than silently splitting, leaking, or losing the run. GH-354 Phase 1 is an early Nightwatch containment prerequisite: restore clone-wide driver exclusion for linked worktrees and prove all driver pairs fail closed. A run interrupted, killed at its cap, or panicking the host leaves a durable record and recovery path instead of a clean tree full of ungated commits. Depends on Litmus. The same durability work is what makes a reflection corpus trustworthy (#431): a run with no record is invisible to any later pass over it, and the loop's own evidence has never survived a reboot (#430).
+Exit criterion: An unattended run survives a hostile target and an interruption, and the evidence is a committed command rather than a closed backlog. Proposed shape (script not yet built): drive a target fixture through a rejected hostile write-set / linked-worktree preflight, an interrupted child, a cap-killed child, and a restarted recovery; each case must leave a durable run record naming phase, state and reason, leak no write outside the allowlist, and offer a documented resume-or-terminal action. The script must itself be observed failing against the pre-fix implementation, per #419.
+Manifest: NOT YET FROZEN. Freeze it before execution starts, not during — Litmus's scope grew by three issues mid-flight because its boundary was only a milestone. Current members moved out of Litmus on 2026-08-08 after a codex+agy consult: #388 (no durable run log; transcripts only on completion), #426 (worktree isolation leaks an off-lane creation), #409 (a failed turn leaks its tick claim), #408 (`_run_tick_loud` discards stderr then exits on it), #358 (a missing concurrency record whose cause — real lock loss vs crashed appender — is unresolved, so no false red is established), plus #354 Phase 1 named above.
 GH_URL:
 Milestone: Nightwatch
 Front-door reviewed: No
