@@ -1,8 +1,8 @@
 # Marathon Phase gh358-lock-flake-instrumentation
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN builder=codex reviewer=agy round-cap=7 -->
+<!-- marathon-drive: task=MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 builder=codex reviewer=agy round-cap=7 -->
 
 ## Phase Brief
 
@@ -129,6 +129,11 @@ That containment protects the run, not you: it does not license a change that br
 normal contract. Keep the CLI signature and exit semantics compatible.
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/nightwatch-wave-1-2026-08-10--gh358-lock-flake-instrumentation/ESCALATION.md`): `pre-advance-failed`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (codex — BUILDER role)
@@ -137,9 +142,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): test/xyz-completion.sh,utils/telemetry/append-xyz-completion.sh,test/gh358-lock-instrumentation.sh,validate.sh
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN --agent codex --paths "marathon-system/nightwatch-wave-1-2026-08-10--gh358-lock-flake-instrumentation/RELAY.md,test/xyz-completion.sh,utils/telemetry/append-xyz-completion.sh,test/gh358-lock-instrumentation.sh,validate.sh"
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN --agent codex
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN --agent codex --to agy
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 --agent codex --paths "marathon-system/nightwatch-wave-1-2026-08-10--gh358-lock-flake-instrumentation/RELAY.md,test/xyz-completion.sh,utils/telemetry/append-xyz-completion.sh,test/gh358-lock-instrumentation.sh,validate.sh"
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 --agent codex
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/nightwatch-wave-1-2026-08-10--gh358-lock-flake-instrumentation/RELAY.md and test/xyz-completion.sh,utils/telemetry/append-xyz-completion.sh,test/gh358-lock-instrumentation.sh,validate.sh. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -152,8 +157,8 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: test/xyz-completion.sh,utils/telemetry/append-xyz-completion.sh,test/gh358-lock-instrumentation.sh,validate.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY marathon-system/nightwatch-wave-1-2026-08-10--gh358-lock-flake-instrumentation/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -167,32 +172,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · codex
-
-- Updated `utils/telemetry/append-xyz-completion.sh` to exit 75 with a named `XYZ_LOCK_WAIT_S`
-  bound when it cannot acquire the lock, rather than attempting an unlocked append.
-- Updated both concurrent-appender harvest loops in `test/xyz-completion.sh` to retain and assert
-  every child exit status. Concurrent mismatch diagnostics now name every missing `sessionId`, its
-  terminal state, and both the test wait and writer lock bounds. Added a test-only clobber switch for
-  the negative control.
-- Added `test/gh358-lock-instrumentation.sh`, which proves a deliberately clobbered successful
-  record reports `lock acquired, record lost`, while a deliberately starved writer reports `lock
-  never acquired`; it asserts the reports do not cross-label each other. Registered it in `validate.sh`.
-- Verified: `bash test/xyz-completion.sh` (44 pass, 0 fail) and `bash test/gh358-lock-instrumentation.sh`
-  (9 pass, 0 fail). The full gate was intentionally not run per the phase containment rule.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-
-The implementation correctly addresses the requirements in the phase brief:
-- The writer (`utils/telemetry/append-xyz-completion.sh`) successfully exits with `75` upon starvation, avoiding an unsafe unlocked write.
-- The `test/xyz-completion.sh` file appropriately captures and verifies the exit codes for both `wait` loops (the concurrent loop and the heartbeat concurrent loop).
-- Mismatches in `test/xyz-completion.sh` properly output the missing `sessionId`, the corresponding terminal state (`lock acquired, record lost`, `lock never acquired`, or `process failed`), and the lock bounds.
-- The bounds reporting is clear and accurate.
-- The negative control script `test/gh358-lock-instrumentation.sh` enforces the visibility and distinctness of the diagnostic outputs exactly as requested.
-- `validate.sh` has the new test registered.
-- No files out of scope (like `ci.yml`) were touched.
-
-**Verdict:** Approved
