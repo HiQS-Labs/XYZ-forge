@@ -2,7 +2,7 @@
 gh_issue: 375
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375
 title: "GH-375 / GH-385 / GH-438 — three checks that could not fail, or read the wrong state"
-status: "Active (2-WORKING). GH-375 and GH-385 complete. GH-438 Phase 1 (removal counts as a delta) and Phase 2 (post-build acceptance re-evaluation) both implemented and tested — Phase 1 in #458, Phase 2 on branch gh438-phase2-acceptance. #438 can close once BOTH land. The builder's 'Do NOT run git' scope rule is still unaddressed and is deliberately out of scope: Phase 2 makes an index lane fail honestly, not become completable."
+status: "3-COMPLETED — all three issues CLOSED. #375 (agy auth probe) and #438 (Phase 1 removal-is-progress in #458, Phase 2 acceptance re-check in #464) closed earlier; #385 closed 2026-08-10 once its SECOND ask — log the token/relay disagreement before rebuilding — shipped in #488 (`2a777b1f`). This doc was held in 2-WORKING deliberately while #385 stayed open, against pdda-check-issue-doc-sync recommending the sweep: the check keys on the single frontmatter gh_issue (375) and could not see that the doc also covered a still-open #385. Sweeping it then would have been a false completion claim. Known gap carried forward, not closed by this: the frozen Bash twin marathon-drive.sh still has the original GH-385 bug, and the shim falls back to it automatically when python3 is missing or <3.8. The builder's 'Do NOT run git' scope rule also remains unaddressed and out of scope."
 created: 2026-08-08
 updated: 2026-08-08
 owner: noel
