@@ -4,3 +4,5 @@ src/**
 tsconfig.json
 **/*.map
 node_modules/**
+.aider/**
+REPO_MAP.md
