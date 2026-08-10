@@ -26,6 +26,14 @@ FH="$ROOT/skills/relay-xyz/find-harness.sh"
 . "$LIB"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh448-driver-lock.XXXXXX")"
+# Resolve to the PHYSICAL path before deriving any fixture path from it. The resolver under test
+# reads `git rev-parse --path-format=absolute --git-common-dir`, and git ALWAYS reports a physical
+# path; on macOS $TMPDIR lives under /var, a symlink to /private/var, so a $TMPDIR-derived expected
+# string ("/var/...") never equals git's answer ("/private/var/...") and 3 of 17 assertions fail.
+# Linux CI has no such symlink, which is why this passed there (17/0) and failed only on macOS —
+# an environment split, not a defect in the resolver: the driver writes the lock through this same
+# resolver, so driver and consumers agree on whatever path it returns.
+WORK="$(cd "$WORK" && pwd -P)"
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0
