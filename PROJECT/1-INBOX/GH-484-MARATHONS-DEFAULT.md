@@ -151,6 +151,51 @@ this issue.
   be unrequested surface for a value that has exactly one real override case.
 - Not a blanket repo-wide rename of every prose mention of "phases". Phase 0 below decides, file by
   file, which of the non-driver references actually need to change.
+- **`MARATHONS/` stays tracked in git — this issue does not gitignore it.** The rename is naming
+  only; whether run artifacts should be committed at all is a separate, larger design question (see
+  below), out of bounds here.
+
+## Should `MARATHONS/` be gitignored? Not by this issue — and not safely today, either way
+
+Raised by the operator directly. Answer: **no blanket gitignore, not as part of GH-484, and not safe
+to do at all without a driver change first** — this is not a naming decision, it is a durability
+one, and belongs with GH-388 (marathon run-log durability), not here.
+
+**Why it is not currently safe, mechanically:** `marathon_drive.py` stages phase output with `git
+add --` + `check=True` at three call sites. `git add` on an explicitly gitignored path exits 1,
+`check=True` turns that into a crash. This is not hypothetical — it is the exact failure that landed
+and got reverted same-day in this repo on 2026-08-09 (see the gitignore-landmine section above), and
+`test/marathon-root-audit.sh` now pins against it. Gitignoring `MARATHONS/` the same way would
+reproduce that crash on the very first same-repo phase, on day one of the new name.
+
+**Pros, if a driver change made it safe:**
+- Phase artifacts (RELAY.md, ESCALATION.md, transcripts) embed absolute, machine-specific paths, so
+  every contributor running a marathon on their own machine currently produces a diff that churns for
+  the next person and reverts for whoever last committed — the exact problem the reverted 2026-08-09
+  attempt was trying to solve.
+- Keeps the repo tree from accumulating an ever-growing set of per-run directories long-term.
+
+**Cons:**
+- Removes the *only* durability mechanism this harness currently has for a marathon run. Nightwatch's
+  own stated goal is "a run interrupted, killed at its cap, or panicking the host leaves a durable
+  record and recovery path" — today, a git commit **is** that record. Gitignoring the directory
+  removes it with nothing replacing it, a regression against the release this issue is explicitly
+  sequenced ahead of.
+- `marathon-ls.sh` / `marathon-detail.sh` read committed history for status. Gitignored, only the
+  local uncommitted copy exists — invisible to anyone who didn't run it themselves, and one `git
+  clean` away from gone.
+- The ~72 already-committed historical records exist specifically because they were judged worth
+  keeping as marathon history (per the 2026-08-09 `.gitignore` commit's own reasoning). A blanket
+  ignore going forward quietly ends that for every future run.
+- Already tried, in this repo, this week. Reverted same-day for exactly these reasons — not a
+  hypothetical risk being raised for the first time here.
+
+**Recommendation:** if reducing this churn is wanted, that is a real, separate, and larger question
+— *should marathon-drive stop committing phase records at all, and if so what replaces them as the
+durability mechanism* (a pruning policy? an external log store, per the old GH-30 "centralized
+transcript archive" idea? something else?) — not "add a `.gitignore` line." That belongs to GH-388,
+which already exists for exactly this territory. GH-484 stays a pure naming change: `MARATHONS/`
+tracked in git on day one, identically to how `phases/` is tracked today.
 
 ## Phases
 
