@@ -2,7 +2,7 @@
 gh_issue: 141
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/141
 title: "Containment: rtl_enforce's pre-turn dirty snapshot can't see a concurrent peer session's edit that lands mid-turn, reverting it as off-lane"
-status: "Shipped 2026-07-18 — operator ratified recommended next step 1 (recoverability-only backup) + step 2 (documentation); RTL_ORPHAN_BACKUP landed in relay-turn-lib.sh with test/rtl-orphan-backup.sh (8/8)"
+status: "3-COMPLETED — shipped 2026-07-18, issue #141 closed 2026-08-10. Operator ratified next-step 1 (recoverability-only backup) + 2 (documentation); RTL_ORPHAN_BACKUP landed in relay-turn-lib.sh, guarded by test/rtl-orphan-backup.sh (8/0, registered in validate.sh). The pre-turn snapshot blind spot itself is NOT closed by this — recoverability was the ratified scope."
 created: 2026-07-05
 updated: 2026-07-17
 owner: noel

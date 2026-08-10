@@ -2,7 +2,7 @@
 gh_issue: 96
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96
 title: "XYZ⇄Rebalance integration — Seam #1: XYZ.json emit contract (schema doc + heartbeat)"
-status: "Shipped (`f1e5223`) — Seam #1 done; issue #96 stays open for Seam #3"
+status: "3-COMPLETED — Seam #1 shipped (`f1e5223`, 2026-07-05). Issue #96 correctly stays OPEN for **Seam #3 only** (consume Rebalance → XYZ lane seeding), which is deliberately gated behind Seam #1 proving the forward signal moves Rebalance's ranking — not yet actionable. Seam #2 shipped separately in `21d9d79`; see GH-96-XYZ-REBALANCE-SYNC-CHECK.md. Both seam docs sit in 3-COMPLETED against an open umbrella issue ON PURPOSE, so pdda-check-issue-doc-sync will keep flagging them until Seam #3 lands — that warning is expected, not drift."
 created: 2026-07-05
 updated: 2026-07-06
 owner: noel

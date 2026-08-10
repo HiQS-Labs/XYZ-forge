@@ -2,7 +2,7 @@
 gh_issue: 96
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/96
 title: "XYZ⇄Rebalance integration (XYZ side, mirrors rebalance#102): xyz-sync check · XYZ.json emit contract · tick-lane consume"
-status: Shipped (`21d9d79`) — Seam #2 done; issue #96 stays open for Seams #1/#3
+status: "3-COMPLETED — Seam #2 shipped (`21d9d79`, 2026-07-04). Issue #96 correctly stays OPEN for **Seam #3 only** (consume Rebalance → XYZ lane seeding, gated behind Seam #1 proving the forward signal moves Rebalance's ranking). CORRECTED 2026-08-10: this line previously read 'stays open for Seams #1/#3' — stale, because Seam #1 (XYZ.json emit contract) shipped 2026-07-05 in `f1e5223`, recorded in the sibling doc GH-96-XYZ-JSON-EMIT-CONTRACT-HEARTBEAT.md. The two docs disagreed with each other until now."
 created: 2026-07-04
 updated: 2026-07-04
 owner: noel

@@ -4,9 +4,9 @@ status: Shipped — Both scoped lanes now shipped — Lane 1 (#195 ATE LM Studio
   PR #195 (2026-07-10); Lane 2 (GH-147 Phase 2, production Aider relay shim) shipped 2026-07-17 via
   the `/10days` sweep (commit `8af755c`, `test/aider-turn.sh` 55/55). Issue #147 stays OPEN — Phases
   3-5 remain, tracked in GH-147-LM-STUDIO.md, not this doc. Retired to 3-COMPLETED 2026-07-17 as
-  part of a 2-WORKING marathon-file consolidation.
+  part of a 2-WORKING marathon-file consolidation. Verified still accurate 2026-08-10: #147 remains open for Phases 3-5, so this doc sitting in 3-COMPLETED against an open issue is intentional and pdda-check-issue-doc-sync will keep flagging it — expected, not drift.
 created: 2026-07-10
-updated: 2026-07-17
+updated: 2026-08-10
 owner: noel
 branch: main
 doc_type: project
