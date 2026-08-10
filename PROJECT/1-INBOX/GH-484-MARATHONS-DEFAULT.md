@@ -14,6 +14,18 @@ goal: >
 
 Issue: [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484)
 
+## Sequencing decision (operator, 2026-08-09)
+
+Ships standalone, **before** Nightwatch (0.3.0) phase 1 begins — not as one of Nightwatch's phases.
+Deliberate ordering, not just "not blocking": Nightwatch's actual work touches the same durability
+surface this issue touches (the phase-output directory's git-add/containment behavior). Doing
+Nightwatch's work first and renaming underneath it afterward would mean re-touching the same
+freshly-changed lines a second time, running the GH-308 frozen-twin exception process twice instead
+of once, and rebasing this rename against Nightwatch's own recent edits instead of the other way
+around. GH-484 gives Nightwatch a correctly-named, already-hardened base to build on, not the
+reverse. No RELEASES.md edit made alongside this — that file's own contract reserves edits for an
+explicit release-planning ask, which this is a scoping decision adjacent to but not itself.
+
 ## Why this shape (ponytail: cheapest path that's actually correct)
 
 The obvious-sounding version of this task is "rename `phases/` to `MARATHONS/` everywhere" — a
