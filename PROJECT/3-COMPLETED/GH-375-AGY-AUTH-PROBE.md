@@ -2,7 +2,7 @@
 gh_issue: 375
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375
 title: "GH-375 — agy auth pre-flight passes on exit status alone, so the probe cannot fail in the headless context it exists for"
-status: "Intake (2-WORKING) — captured 2026-08-06 for release 0.2.0 Litmus, preflight READY, awaiting operator go."
+status: 3-COMPLETED
 created: 2026-08-06
 updated: 2026-08-06
 owner: noel

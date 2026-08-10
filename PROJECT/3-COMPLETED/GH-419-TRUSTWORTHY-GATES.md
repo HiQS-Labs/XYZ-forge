@@ -2,7 +2,7 @@
 gh_issue: 419
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419
 title: "GH-419 — trustworthy gates: a check that has never been observed failing is not evidence"
-status: "Intake (2-WORKING) — captured 2026-08-04, not yet fired. Policy + evidence inventory only; changes no execution behavior. #418 is the designated first child."
+status: 3-COMPLETED
 created: 2026-08-04
 updated: 2026-08-04
 owner: noel

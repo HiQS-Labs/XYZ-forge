@@ -2,7 +2,7 @@
 gh_issue: 416
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/416
 title: "GH-416 — a dependency sync silently deleted three shipped guardrails and left CI red for two days"
-status: "In flight (2-WORKING) — criterion 5's artifact now exists on branch as PROJECT/PDDA-SYNC-POLICY.md plus an AGENTS.md pointer, built and agy-approved TWICE by two independent codex lanes in MARATHON-2026-08-08-LITMUS-WAVE-2 runs 0 and 1 (origin f1403bd and 2cd8673); the branch artifact is run 0's with two additions grafted from run 1. Criteria 1-4 landed earlier via PR #413. Issue #416 remains OPEN and this doc stays in 2-WORKING until the branch lands on development."
+status: 3-COMPLETED
 created: 2026-08-05
 updated: 2026-08-08
 owner: noel
