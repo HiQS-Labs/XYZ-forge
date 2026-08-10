@@ -207,6 +207,27 @@ def die(msg):
 def log(msg):
     print(f"marathon-drive: {msg}")
 
+def _repo_rel_prefix(path, root):
+    """GH-484: `path` as a repo-relative prefix with a trailing slash, for matching the paths
+    `git status --porcelain` emits (which are relative to the repo TOPLEVEL, not to `root` —
+    the two differ for a vendored install whose root is <repo>/.xyz). Returns "" when `path`
+    lies outside the repo, meaning "matches nothing", which is correct: git never lists it.
+
+    realpath, NOT abspath, on both sides: `git rev-parse --show-toplevel` always reports the
+    PHYSICAL path, so a repo reached through a symlinked ancestor (macOS /var and /tmp, plenty of
+    home and network mounts) yields "/private/var/..." from git and "/var/..." from the argument.
+    abspath preserves that split, the prefix test fails, and the exclusion silently stops working —
+    caught by test/gh484-phase-dir-default.sh case (3), which runs out of exactly such a dir."""
+    try:
+        top = subprocess.check_output(["git", "-C", root, "rev-parse", "--show-toplevel"],
+                                      stderr=subprocess.DEVNULL).decode("utf-8").strip()
+    except Exception:
+        top = root
+    rel = os.path.relpath(os.path.realpath(path), os.path.realpath(top or root))
+    if rel == os.curdir or rel.startswith(os.pardir + os.sep) or rel == os.pardir:
+        return ""
+    return rel.rstrip("/") + "/"
+
 def _probe_bin(bin_name, role_label, agent_id):
     if shutil.which(bin_name):
         return
@@ -684,7 +705,10 @@ def main():
     def xyz_marathon_heartbeat_clear():
         _heartbeat(clear=True)
 
-    phases_dir = args.phases_dir or os.path.join(root, "phases")
+    # GH-484: the default is `marathon-system/`, matching `relay-system/`. `--phases-dir` /
+    # PHASES_DIR still override it exactly as before; only the default value changed. Historical
+    # runs stay in `phases/` — the monitors read both, this driver only ever writes the new one.
+    phases_dir = args.phases_dir or os.path.join(root, "marathon-system")
     # GH-319: the default gate is interpolated into a string that run_pre_advance_gate() hands to
     # `bash -c`, so an UNQUOTED root word-splits on any space in the repo path. Observed live: a
     # clone at ".../Documents/GH Repos/xyz-3-agents-swarm" produced `bash /Users/.../Documents/GH
@@ -1659,11 +1683,20 @@ relay-file: {rel_relay}
     if not args.dry_run:
         try:
             out = subprocess.check_output(["git", "-C", root, "status", "--porcelain"], stderr=subprocess.DEVNULL).decode('utf-8')
+            # GH-484: exclude the CONFIGURED phase-output dir, not a hardcoded "phases/". Two
+            # reasons this must be the full repo-relative path and not a basename: a nested
+            # --phases-dir state/marathon-runs would match "marathon-runs/" as a basename but
+            # git porcelain emits "state/marathon-runs/...", and a vendored install's
+            # <repo>/.xyz/marathon-system/ was never matched by the old literal at all — so a
+            # vendored run used to flag its own phase output as stray. Empty prefix (phases dir
+            # outside this repo) means nothing to exclude, which is correct: git would not list it.
+            phases_rel = _repo_rel_prefix(phases_dir, root)
             dirty = []
             for line in out.splitlines():
                 if len(line) >= 4:
                     p = line[3:]
-                    if not p.startswith("phases/") and not p.startswith(".tick/"):
+                    in_phases = bool(phases_rel) and p.startswith(phases_rel)
+                    if not in_phases and not p.startswith(".tick/"):
                         dirty.append(p)
             if dirty:
                 log("WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.")

@@ -107,15 +107,23 @@ resolve_state() {
   _PID="-"
 }
 
-# Find newest phases/*/RELAY.md path for a repo (used in RELAY-FILE column).
+# Find the newest <phase-dir>/*/RELAY.md path for a repo (used in RELAY-FILE column).
+#
+# GH-484: reads BOTH the current default (marathon-system/) and the historical one (phases/), and
+# picks whichever holds the newer file — not a straight swap. Two populations need to stay visible
+# at once: this repo's ~72 committed pre-flip runs (deliberately not migrated), and fleet repos
+# whose vendored .xyz/ has not re-synced yet and so is still writing to phases/. Checking only the
+# new name would make the monitor silently report nothing for either.
 newest_relay_file() {
-  local repo="$1"
-  local phases_dir="$repo/phases"
-  [ -d "$phases_dir" ] || { printf '-'; return 0; }
-  local f
-  # shellcheck disable=SC2012
-  f="$(ls -t "$phases_dir"/*/RELAY.md 2>/dev/null | head -1 || true)"
-  printf '%s' "${f:--}"
+  local repo="$1" d f newest=""
+  for d in "$repo/marathon-system" "$repo/phases"; do
+    [ -d "$d" ] || continue
+    # shellcheck disable=SC2012
+    f="$(ls -t "$d"/*/RELAY.md 2>/dev/null | head -1 || true)"
+    [ -n "$f" ] || continue
+    if [ -z "$newest" ] || [ "$f" -nt "$newest" ]; then newest="$f"; fi
+  done
+  printf '%s' "${newest:--}"
 }
 
 # ---------------------------------------------------------------------------

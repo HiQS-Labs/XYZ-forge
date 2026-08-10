@@ -385,3 +385,61 @@ string, so the grep-based audit has no blind spot of that shape.
 opens. Phase 2 lands at the low end of its estimate: **cx 1, risk 1, eff 1**. The Category 2 work is
 the real content — four of those five tests need judgment, not a string swap, and two of them
 (`gh401`, `marathon-monitor`) fail *silently green* rather than loudly if handled carelessly.
+
+---
+
+## Phase 1 OUTPUT — implementation landed (2026-08-09)
+
+Everything the plan specified for Phase 1, plus the Category 2 tests that directly prove Phase 1's
+own behavior (leaving those to Phase 2 would have meant committing a red suite between phases). The
+Category 4 docs went in alongside them since they are the same edit-and-verify pass.
+
+### Two defects found by building it, neither predicted
+
+1. **The symlink defect — in my own fix, caught by its own test.** The containment fix compares the
+   configured phase dir against the repo toplevel, and `git rev-parse --show-toplevel` **always
+   reports the PHYSICAL path**. A repo reached through a symlinked ancestor (macOS `/var` and
+   `/tmp`, plenty of home and network mounts) gives `/private/var/…` from git and `/var/…` from the
+   flag; the prefix test then fails, the computed prefix goes empty, and the exclusion **silently
+   stops working** — the exact failure mode the fix existed to remove. Both twins had it
+   (`os.path.abspath` → `os.path.realpath`; a `phys()` helper added on the Bash side that resolves
+   the deepest existing ancestor, since the leaf does not exist until Step 1 creates it).
+2. **`test/marathon.sh` lines 184/193/211/220** — see the corrected Category 2 row above.
+
+### The parity test's first version was vacuous, twice
+
+`test/gh484-phase-dir-default.sh` case (3) passed against pre-fix code on its first two drafts. Both
+causes are worth recording because neither is visible from reading the assertion:
+- The driver probes the default gate (`bash validate.sh`) and **dies before Step 0** in a fixture
+  repo that has none, so the clean check never ran. Fixed with `--pre-advance-cmd true` plus a
+  positive control that asserts an unrelated stray file *was* reported — without it, "the phase dir
+  was not called stray" also passes for a driver that exited earlier.
+- `git status --porcelain` **collapses an untracked directory** to a single `?? state/` line, so an
+  untracked fixture never emits a path the prefix comparison can act on. The driver commits its
+  phase artifacts, so the fixture is now tracked-then-modified — the shape a real resumed run
+  produces, and the only one that exercises the fix.
+
+Final state, verified by replaying the whole file against `HEAD`'s drivers: both default assertions
+and both containment assertions go **red pre-fix**; the two override assertions and the two positive
+controls pass in both directions, which is what they are for.
+
+### Verification run
+
+| Test | Result |
+|---|---|
+| `test/gh484-phase-dir-default.sh` (new) | 10/0 · forces `XYZ_PYTHON=0` for the Bash lane |
+| `test/marathon.sh` | 33/0 |
+| `test/marathon-drive.sh` | 144/0 |
+| `test/marathon-monitor.sh` | 17/0 (+4 new GH-484 assertions) |
+| `test/gh401-dry-run-no-mutation.sh` | 4/0 |
+| `test/marathon-root-audit.sh` | pass · 44 invocations audited, both dir names probed |
+
+The monitor's mixed-population assertion was separately falsified against a deliberately naive
+"check `marathon-system/` first, return if found" variant, which it catches and the other three
+fixtures do not.
+
+### Still open for Phase 2
+
+`CHANGELOG.md`, the full `validate.sh` re-run, and the close-out flow. The `marathon-drive.sh` /
+`marathon_drive.py` twin pair went through the GH-308 exception process with a
+`Frozen-twin-exception:` trailer rather than around it.
