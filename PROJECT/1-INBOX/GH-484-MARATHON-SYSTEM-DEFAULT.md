@@ -148,6 +148,11 @@ this issue.
 - No new environment variable, config file, or abstraction layer. `MARATHON_ROOT` (repo root) and
   `--phases-dir`/`PHASES_DIR` (phase-output dir) already fully cover this; adding a third knob would
   be unrequested surface for a value that has exactly one real override case.
+- No re-vendoring sweep of the existing fleet installs. The goal covers **new** installs; the ~9
+  already-vendored `.xyz/` copies on other repos keep the old default until their next normal
+  `xyz-sync`, and the monitors' `phases/` fallback (Phase 1) keeps those repos visible in the
+  meantime. Forcing a same-day fleet re-vendor would turn a 1-line default flip into a multi-repo
+  campaign — exactly the scope creep this plan exists to avoid.
 - Not a blanket repo-wide rename of every prose mention of "phases". Phase 0 below decides, file by
   file, which of the non-driver references actually need to change.
 - **`marathon-system/` stays tracked in git, same as `phases/` is today — not gitignored.** Raised
@@ -177,16 +182,23 @@ Phase 0's job is confirming nothing else in that shape was missed, plus the mech
    `marathon-detail.sh`, `marathon-tui.sh`. Phase 0's job for this category is confirming the set is
    complete, not finding it from scratch.
 
-Output: a short table in this doc (or a linked file) naming every file in categories 2–5 by path, so
-Phase 2 has a checklist instead of a re-grep.
+Category 4's check includes `ARCHITECTURE.md` — settle here whether it names the directory, so
+Phase 2 isn't left holding a conditional.
+
+Output: a short table **appended to this doc** naming every file in categories 2–5 by path, so
+Phase 2 has a checklist instead of a re-grep. Phase 0 lands **zero edits** and is one sitting —
+classification only; anything that looks like it needs design work gets a table row saying so, not
+an on-the-spot fix.
 
 ### Phase 1 — flip the defaults, fix the literals, fix the monitors, prove parity (cx 3, risk 2, eff 3)
 
 **Drivers:**
 - `utils/py/marathon_drive.py`: change the `--phases-dir` default from `os.path.join(root,
-  "phases")` to `os.path.join(root, "marathon-system")`; fix the containment literal (current line,
-  verify fresh: `:1661-1667`) to compare against the resolved `phases_dir`'s repo-relative path, not
-  the string `"phases/"` or a bare basename.
+  "phases")` to `os.path.join(root, "marathon-system")`. Note the default is computed at the
+  resolution site (`phases_dir = args.phases_dir or os.path.join(root, "phases")`, currently
+  `:687`), **not** in the argparse declaration (`:383` carries no default) — edit the former. Also
+  fix the containment literal (current line, verify fresh: `:1666`) to compare against the resolved
+  `phases_dir`'s repo-relative path, not the string `"phases/"` or a bare basename.
 - `relay-automation/marathon-drive.sh`: same two changes — `PHASES_DIR="${PHASES_DIR:-"$ROOT/
   marathon-system"}"`, and the `:959-965` awk pattern matches the full repo-relative `$PHASES_DIR`
   value (metacharacter-safe), not a literal or an unescaped basename.
@@ -204,8 +216,17 @@ Phase 2 has a checklist instead of a re-grep.
   plan's anti-goal is "no migration of historical `phases/<run-id>/` records," a monitor that only
   looks in `marathon-system/` goes blind to every pre-flip run's history. Both must check
   `marathon-system/` first, then fall back to `phases/` for anything not found there — the honest
-  reflection of "new runs go to the new place, old runs are still where they were."
+  reflection of "new runs go to the new place, old runs are still where they were." The same
+  fallback also keeps fleet repos whose vendored harness hasn't re-synced yet (still writing to
+  `phases/`) visible in the monitors — see the no-re-vendoring anti-goal.
 - `marathon-tui.sh` inherits this automatically since it delegates to both scripts above.
+
+**Dirty-check behavior change (intended, record it, don't special-case it):** the fixed awk/Python
+exclusion tracks the *configured* directory, so leftover **uncommitted** legacy `phases/` debris
+(e.g. from a crashed pre-flip run) will start surfacing in the dirty-tree warning and hard-stop a
+`--require-clean` run. That is the correct reading — such debris genuinely is a stray file now —
+so the fix is to note it in the warning's vicinity/CHANGELOG, not to add a legacy-path carve-out.
+(Committed historical `phases/<run-id>/` records are clean in `git status` and unaffected.)
 
 **Landmine fix:**
 - Extend (or add a sibling to) `test/marathon-root-audit.sh`'s gitignore-safety assertion to cover
@@ -217,8 +238,11 @@ Phase 2 has a checklist instead of a re-grep.
   nested path) still overrides correctly in both twins; the containment-literal fixes correctly
   recognize a non-default, nested `--phases-dir` value (the falsifiable case — assert it fails
   against the pre-fix code). **Must explicitly force `XYZ_PYTHON=0` for at least one parity run** —
-  the Bash shim execs Python by default, so an unforced pair of invocations tests Python twice and
-  never exercises the edited Bash line at all.
+  the Bash shim execs Python by default (`"${XYZ_PYTHON-1}" == "1"` at `marathon-drive.sh:9`), so an
+  unforced pair of invocations tests Python twice and never exercises the edited Bash line at all.
+  Beware: the shim's own header comment (`:6-8`, "Default (unset/0) runs the canonical Bash
+  implementation") is **stale** — it predates the GH-264 Python-default flip and contradicts the
+  code one line below it. Don't let it talk you out of forcing `XYZ_PYTHON=0`.
 
 ### Phase 2 — apply the Phase 0 checklist, docs, close (cx 1–2, risk 1, eff 1–2, size depends on Phase 0's count)
 
@@ -230,6 +254,9 @@ Phase 2 has a checklist instead of a re-grep.
 - Re-run the full `validate.sh` suite; confirm no drift beyond what Phase 0 predicted (a surprise
   failure here means Phase 0's classification missed something and should be corrected, not papered
   over).
+- Close out: CHANGELOG.md entry, move this doc to `PROJECT/3-COMPLETED/`, close #484 (standard
+  `pdda-eod` flow). When all 8 acceptance items pass, this issue is **done** — anything discovered
+  along the way that isn't on the acceptance list gets its own issue, not a Phase 3.
 
 ## Acceptance (issue #484's original 6, plus 2 added after consult — corrections noted inline)
 
@@ -253,7 +280,11 @@ Phase 2 has a checklist instead of a re-grep.
    both a new (`marathon-system/`) and a pre-existing historical (`phases/`) run without operator
    intervention.
 8. **(Added)** The gitignore-safety regression test passes against a clean tree (no stray `/phases`
-   or `/marathon-system` line reintroduced) before this ships.
+   or `/marathon-system` line reintroduced) before this ships. Note the tension with the landmine
+   section above: the **currently-live uncommitted `/phases` line** in the working `.gitignore` must
+   be dispositioned by the operator (dropped, or consciously resolved under its own issue) before
+   this criterion can pass — this plan doesn't decide its fate, only that it can't still be sitting
+   in the tree at ship time.
 
 ## Sizing
 
