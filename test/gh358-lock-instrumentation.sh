@@ -35,6 +35,8 @@ if grep -Fq "terminal state=lock never acquired" "$clobber_log"; then
 else
   pass "clobber remains distinct from starvation"
 fi
+echo "  clobber diagnostic (observed failure):"
+grep -F "terminal state=" "$clobber_log" | head -n 1 | sed 's/^/    /'
 
 # Control 2: hold x4's lock while the writer has a one-second bound.  The outer test wait stays at
 # 60 seconds, so the output must attribute the failure to the writer bound rather than the test wait.
@@ -72,6 +74,8 @@ if grep -Fq "terminal state=lock acquired, record lost" "$starve_log"; then
 else
   pass "starvation remains distinct from a lost record"
 fi
+echo "  starvation diagnostic (observed failure):"
+grep -F "terminal state=" "$starve_log" | head -n 1 | sed 's/^/    /'
 
 echo "  gh358-lock-instrumentation: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1

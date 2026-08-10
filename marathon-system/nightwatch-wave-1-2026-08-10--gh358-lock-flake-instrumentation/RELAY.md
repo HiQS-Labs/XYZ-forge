@@ -1,6 +1,6 @@
 # Marathon Phase gh358-lock-flake-instrumentation
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 builder=codex reviewer=agy round-cap=7 -->
 
@@ -172,3 +172,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented and verified the GH-358 instrumentation within the declared write-set. The concurrent
+test retains every appender status, distinguishes successful-but-lost records from lock starvation
+and process failure, and reports both the outer test wait and writer lock bounds. The appender
+continues to surface lock starvation as exit 75. `test/gh358-lock-instrumentation.sh` now prints the
+two deliberately reproduced diagnostics as observed failure evidence, while asserting their distinct
+terminal states and exhausted-bound attribution. `validate.sh` already registers that focused test.
+
+Verification: `bash test/xyz-completion.sh` (44 pass, 0 fail); `bash test/gh358-lock-instrumentation.sh`
+(9 pass, 0 fail); `bash -n test/xyz-completion.sh utils/telemetry/append-xyz-completion.sh
+test/gh358-lock-instrumentation.sh validate.sh`. I did not rerun the prior full pre-advance gate because
+this turn explicitly prohibits the full suite; the two focused tests reproduce and exercise its relevant
+lock paths.
