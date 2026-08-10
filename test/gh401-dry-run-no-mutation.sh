@@ -53,9 +53,9 @@ after="$(git -C "$MROOT" status --porcelain)"
   && pass "--dry-run leaves the marathon root's git status unchanged" \
   || fail "--dry-run dirtied the marathon root (porcelain: $after)"
 
-[ ! -e "$MROOT/phases" ] \
-  && pass "--dry-run creates no phases/ directory" \
-  || fail "--dry-run created $MROOT/phases — the mkdir is back above the dry-run exit"
+[ ! -e "$MROOT/marathon-system" ] && [ ! -e "$MROOT/phases" ] \
+  && pass "--dry-run creates no phase-output directory (neither marathon-system/ nor phases/)" \
+  || fail "--dry-run created a phase-output directory under $MROOT — the mkdir is back above the dry-run exit"
 
 # POSITIVE CONTROL. Without this the two assertions above would also pass for a driver that died
 # long before the render — "nothing was written" would prove nothing about the write being skipped

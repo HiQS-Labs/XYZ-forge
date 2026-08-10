@@ -816,7 +816,7 @@ VCODEX="$VSTUBS/codex"
 cat > "$VCODEX" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-printf '\n### Round 1 · Builder · %s (stub)\nVERDICT: FAIL\nBasis: test builder\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+printf '\n### Round 1 · Builder · %s (stub)\nVERDICT: FAIL\nBasis: test builder\n' "$RELAY_AGENT" >> "$PWD/marathon-system/p1/RELAY.md"
 printf 'module.exports = 2\n' > "$PWD/src/feature.js"
 exit 0
 EOF
@@ -829,7 +829,7 @@ case "${1:-}" in
   whoami) printf 'agy-stub\n'; exit 0 ;;
 esac
 printf 'agy review stub\n'
-printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Changes requested\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Changes requested\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/marathon-system/p1/RELAY.md"
 exit 0
 EOF
 chmod +x "$VAGY"
@@ -914,7 +914,7 @@ VCODEX_APPROVE="$VSTUBS/codex-approve"
 cat > "$VCODEX_APPROVE" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-printf '\n### Round 1 · Builder · %s (stub)\nImplemented: test builder update\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+printf '\n### Round 1 · Builder · %s (stub)\nImplemented: test builder update\n' "$RELAY_AGENT" >> "$PWD/marathon-system/p1/RELAY.md"
 printf 'module.exports = 2\n' > "$PWD/src/feature.js"
 exit 0
 EOF
@@ -927,8 +927,8 @@ case "${1:-}" in
   whoami) printf 'agy-stub\n'; exit 0 ;;
 esac
 printf 'agy review stub\n'
-sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$PWD/phases/p1/RELAY.md"; rm -f "$PWD/phases/p1/RELAY.md.bak"
-printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Approved\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/phases/p1/RELAY.md"
+sed -i.bak 's/^STATUS:[[:space:]]*.*/STATUS: Approved/' "$PWD/marathon-system/p1/RELAY.md"; rm -f "$PWD/marathon-system/p1/RELAY.md.bak"
+printf '\n### Round 2 · Reviewer · %s (stub)\n**Verdict:** Approved\nBasis: test reviewer\n' "$RELAY_AGENT" >> "$PWD/marathon-system/p1/RELAY.md"
 exit 0
 EOF
 chmod +x "$VAGY_APPROVE"
