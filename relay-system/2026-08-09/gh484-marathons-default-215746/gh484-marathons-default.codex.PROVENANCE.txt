@@ -1,0 +1,9 @@
+FIRSTHAND_COUNT=12
+ECHOED_COUNT=7
+ECHOED "phases"
+ECHOED `--phases-dir`
+ECHOED `--phases-dir`
+ECHOED "phases"
+ECHOED `--phases-dir`
+ECHOED `--phases-dir`
+ECHOED `--phases-dir`
