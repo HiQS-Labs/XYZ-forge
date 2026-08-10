@@ -1,0 +1,112 @@
+# MARATHON.yaml — 2026-08-10: release 0.3.0 Nightwatch, wave 1.
+#
+# ONE phase. That is not a shortage of candidates — it is the honest output of the write-set
+# analysis below, and the number is the finding.
+#
+# This run doubles as the first dogfood of the GH-484 revised marathon system: phase output lands in
+# `marathon-system/` (the new default) rather than `phases/`, exercised via the DEFAULT rather than
+# an explicit `--phases-dir`, because a default nobody exercises is not a default.
+#
+# ---------------------------------------------------------------------------------------
+# WHY ONLY ONE LANE — the self-modification constraint, applied to the Nightwatch manifest
+# ---------------------------------------------------------------------------------------
+# Nightwatch's theme is the harness's own run lifecycle, so nearly every manifest member is a change
+# TO THE MACHINERY THE MARATHON RUNS ON. Litmus wave 2 wrote this constraint down; Nightwatch is
+# where it bites hardest. Write-sets below are taken from each capture doc's
+# `## Swarm Preflight Contract` artifacts list, read on 2026-08-10 — not from memory.
+#
+#   #388  run-log durability
+#         artifacts: relay-automation/marathon.sh, utils/py/marathon_drive.py, utils/py/rtl.py, …
+#         EXCLUDED. `marathon.sh` is the outer driver EXECUTING the chain, and bash reads a script by
+#         byte offset as it goes — committing a rewrite mid-run can corrupt the remainder in a way
+#         that presents as anything but its cause. `rtl.py` is the turn kernel on top of that.
+#
+#   #426  worktree isolation leak
+#         artifacts: relay-automation/relay-turn-lib.sh, utils/py/rtl.py, …
+#         EXCLUDED. The turn kernel, sourced fresh by EVERY turn.
+#         Worth stating because it is the tempting one: #426 is a true Nightwatch blocker per #431,
+#         and the obvious workaround — "run it as a single phase, so a wedge costs nothing
+#         downstream" — DOES NOT WORK. A phase is not one turn. The builder turn commits, then the
+#         REVIEWER turn re-sources the kernel from the working tree, plus up to
+#         `max_review_rounds` more. A broken kernel wedges the reviewer inside its own phase.
+#         Single-phase isolation contains a DRIVER change; it does not contain a KERNEL change.
+#
+#   #409 + #408  leaked tick claim / discarded stderr
+#         EXCLUDED, and not preflightable regardless: `GH-409-408-TOKEN-FAILURE-VISIBILITY.md` still
+#         carries no `## Swarm Preflight Contract`, so per GUIDING-PRINCIPLES §11 it cannot be
+#         verdicted. Its deliverables are `rtl.py`, the five turn shims, and `tick claim`'s exit
+#         semantics — the claim/handoff primitive the driver uses between phases.
+#
+#   #354  concurrent swarms (Phase 1 containment)
+#         EXCLUDED. `GH-354-CONCURRENT-SWARMS.md` has no preflight contract either. Not verdictable.
+#
+#   #358  lock-flake instrumentation                                   → THE LANE BELOW
+#
+# So of the six named manifest members, two cannot be preflighted at all, three are excluded on the
+# self-modification constraint, and one is buildable. A marathon cannot close the Nightwatch
+# milestone — same conclusion Litmus reached, for the same structural reason, and it should be
+# recorded now rather than rediscovered at freeze time.
+#
+# ---------------------------------------------------------------------------------------
+# WHY #358 IS IN, WHEN LITMUS WAVE 2 EXCLUDED IT
+# ---------------------------------------------------------------------------------------
+# Litmus wave 2 excluded #358 with: "Edits `.github/workflows/ci.yml`; changing CI from inside an
+# unattended marathon is a risk this release does not need to take."
+#
+# That reason is correct and it applies to **Phase 2, not Phase 1**. The capture doc's own phase
+# table puts `.github/workflows/ci.yml` in Phase 2 (disposition) and Phase 1's artifacts are
+# `test/xyz-completion.sh`, `utils/telemetry/append-xyz-completion.sh`,
+# `test/gh358-lock-instrumentation.sh`. Phase 1 is CI-free.
+#
+# Firing Phase 1 alone is additionally what the doc DEMANDS, not merely what it permits:
+#   "Phase 2 must not be pre-committed in the packet. A builder told which disposition to apply will
+#    produce instrumentation that agrees with the instruction."
+# A two-phase run of this lane would be an acceptance violation, not an efficiency.
+#
+# ---------------------------------------------------------------------------------------
+# THE ONE LIVE-PATH EXPOSURE, AND ITS CONTAINMENT
+# ---------------------------------------------------------------------------------------
+# `utils/telemetry/append-xyz-completion.sh` is in Phase 1's write-set AND is invoked by the driver
+# running this phase — `relay-automation/marathon.sh:69` and `utils/py/marathon_drive.py:656` both
+# resolve it as the GH-75 end-of-run completion writer. A grep of the brief's artifact list against
+# "driver code" would not surface this: the file is telemetry, not driver, and the coupling is an
+# env-var default, not a call site in the driver's own text.
+#
+# Contained by pinning `XYZ_APPEND_BIN` to a PRE-RUN SNAPSHOT of the script, so the running marathon
+# executes the frozen copy no matter what the builder does to the tree. Both the bash and Python
+# drivers already honour `XYZ_APPEND_BIN` as an override, so this needs no code change.
+#
+# The exposure was mild even uncontained — one call, at completion, after all work is committed and
+# gated — but "mild" is a judgement and a snapshot is a fact.
+#
+# OPERATOR GO GIVEN 2026-08-10, after being shown the one-lane finding above and the reason #426
+# cannot be rescued by single-phase isolation. Closeout: `--closeout-pr` (open, never merge).
+#
+# ---------------------------------------------------------------------------------------
+# PREFLIGHT — re-run 2026-08-10 against development @ e25c064ef
+# ---------------------------------------------------------------------------------------
+#   lane   verdict           acceptance fidelity           issue-state   source-url
+#   gh358  ready (exit 0)    match 7/7 verbatim            OPEN          ok → issue #358
+#
+#   freshness: fetch_ok=1 upstream=origin/development ahead=0 behind=0
+#   `dirty=1` is reported and is accounted for: the working tree carries 8 untracked paths, all
+#   under PROJECT/1-INBOX/, phases/ (stale pre-GH-484 run output) and relay-system/. None is in the
+#   lane's write-set and none is harness source.
+#
+# Builder is codex (GH-212, subscription-billed). Reviewer is agy, so the reviewer is never the model
+# that wrote the change.
+#
+# Parent capture doc:
+#   PROJECT/2-WORKING/GH-358-LOCK-FLAKE-INSTRUMENTATION.md
+
+name: nightwatch-wave-1-2026-08-10
+phases:
+  - id: gh358-lock-flake-instrumentation
+    # NOTE: no ' #NNN' in a phase name — bin/marathon-yaml strips from a space-hash onward even
+    # inside a double-quoted scalar, which silently truncated a wave-1 name and left the quote open.
+    name: "GH-358 Phase 1: make the 16-way lock assertion distinguish a flake from a lost update"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-10-NIGHTWATCH/brief-gh358-lock-flake-instrumentation.md
+    artifact: test/xyz-completion.sh,utils/telemetry/append-xyz-completion.sh,test/gh358-lock-instrumentation.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
