@@ -50,8 +50,8 @@ export function getHtml(cspSource: string, nonce: string): string {
     padding: 6px 8px;
     background: var(--vscode-sideBar-background);
   }
-  .card-top { display: flex; align-items: center; gap: 6px; }
-  .card-title { font-weight: 600; overflow-wrap: anywhere; flex: 1; }
+  .card-top { display: flex; align-items: flex-start; gap: 6px; flex-wrap: wrap; }
+  .card-title { font-weight: 600; overflow-wrap: break-word; word-break: normal; flex: 1 1 140px; min-width: 0; }
   .badge {
     font-size: 10px;
     padding: 1px 6px;
@@ -59,6 +59,7 @@ export function getHtml(cspSource: string, nonce: string): string {
     background: var(--vscode-badge-background);
     color: var(--vscode-badge-foreground);
     white-space: nowrap;
+    flex: 0 0 auto;
   }
   .copy-btn {
     border: none;
@@ -69,6 +70,7 @@ export function getHtml(cspSource: string, nonce: string): string {
     padding: 2px 4px;
     border-radius: 3px;
     font-size: 13px;
+    flex: 0 0 auto;
     line-height: 1;
   }
   .copy-btn:hover { opacity: 1; background: var(--vscode-toolbar-hoverBackground); }
