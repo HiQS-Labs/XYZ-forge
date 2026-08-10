@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"--mutate-evidence strips an accepted form and a registration from a fixture copy; the audit went from 6/6 satisfied to 2 structural failures, and the unmutated fixture is re-checked green in the same run"}
+# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"--mutate-evidence strips an accepted form and a registration from a fixture copy; the audit went from 6/6 satisfied to 2 structural failures, and the unmutated fixture is re-checked green in the same run. Mutation D additionally replays the pre-fix SIGPIPE shape on a 120KB inventory and observes it report a REGISTERED gate as not-registered, then asserts the fixed check survives the same input"}
 # Litmus (release 0.2.0) — the executable goalpost for a FROZEN manifest of decision gates.
 #
 # Why this file exists. Until now Litmus's definition of done was its issue list, and an issue list
@@ -144,17 +144,30 @@ audit_entry() {
 
   # (1) registration — the inventory is generated FROM validate.sh's TESTS array, so presence in it
   # is proof the suite runs the gate. Absence is the #461 defect.
-  if ! printf '%s' "$inv" | /usr/bin/grep -Fq "\"$gate\""; then
+  #
+  # The inventory goes to a FILE, never a pipe — the same #460 reason as (2) below, but here the
+  # consequence is a WRONG VERDICT rather than noise. `grep -Fq` exits on its FIRST match and closes
+  # the pipe while `printf` is still writing; under `set -o pipefail` that SIGPIPE becomes the
+  # pipeline's status, so FINDING the gate reported it as missing.
+  #
+  # Observed 2026-08-10, not theorised: a marathon halted with
+  #   FAIL: #375 is CLOSED but its gate is not complete — not-registered-in-validate.sh:...
+  # for a gate registered at validate.sh:91, with six `printf: write error: Broken pipe` lines
+  # immediately above the FAIL. The real inventory is ~60KB at 173 gates — just under the buffer,
+  # which is why this is intermittent rather than reliably red, and why it survived until a run that
+  # happened to lose the race. Mutation D in --mutate-evidence pins both directions.
+  local inv_file="$WORK/inv.json"
+  printf '%s' "$inv" > "$inv_file"
+  if ! /usr/bin/grep -Fq "\"$gate\"" "$inv_file"; then
     printf '%s incomplete not-registered-in-validate.sh:%s\n' "$issue" "$gate"; return 0
   fi
 
   # (2) a parseable declaration naming an accepted form, with observed=true.
-  # The inventory goes to a FILE rather than a pipe: python breaks out of its loop on the first
-  # match, closing the pipe while printf is still writing, which produced three
-  # `printf: write error: Broken pipe` lines per run in CI. Harmless, but noise in a gate's output
-  # is exactly what makes a real signal hard to find later (#460).
-  local form observed inv_file="$WORK/inv.json"
-  printf '%s' "$inv" > "$inv_file"
+  # Reuses $inv_file written above. It was already a file here rather than a pipe: python breaks out
+  # of its loop on the first match, closing the pipe while printf is still writing, which produced
+  # three `printf: write error: Broken pipe` lines per run in CI. Harmless there, but noise in a
+  # gate's output is exactly what makes a real signal hard to find later (#460).
+  local form observed
   read -r form observed <<EOF
 $(python3 - "$inv_file" "$gate" <<'PY'
 import json, sys
@@ -289,6 +302,51 @@ if [ "$MODE" = "mutate" ]; then
   printf '%s' "$violated" | /usr/bin/grep -q 'invariant-unmet' \
     && pass "invariant control: a violated invariant blocks completion even with gate+declaration valid" \
     || fail "a violated invariant was NOT detected — this is the false completion claim this audit shipped with (got: $violated)"
+
+  # Mutation D: the #460 SIGPIPE shape, in the one place it inverts a verdict rather than adding
+  # noise. A gate that IS registered must stay registered when the inventory outgrows the pipe
+  # buffer. This is the defect that halted the 2026-08-10 Nightwatch marathon.
+  #
+  # The target gate is deliberately FIRST in TESTS: `grep -Fq` must match EARLY, while `printf` still
+  # has bytes left to write, or there is no SIGPIPE and the control proves nothing.
+  FIX3="$WORK/tree3"
+  mkdir -p "$FIX3/test" "$FIX3/utils/py"
+  cp "$ROOT/utils/py/gate_inventory.py" "$FIX3/utils/py/"
+  {
+    echo 'TESTS=('
+    echo '  "gh401-dry-run-no-mutation.sh"'
+    for i in $(seq 1 400); do printf '  "filler-%03d.sh"\n' "$i"; done
+    echo ')'
+  } > "$FIX3/validate.sh"
+  printf '#!/usr/bin/env bash\n# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"fixture"}\n' \
+    > "$FIX3/test/gh401-dry-run-no-mutation.sh"
+  for i in $(seq 1 400); do
+    printf '#!/usr/bin/env bash\n' > "$FIX3/test/$(printf 'filler-%03d.sh' "$i")"
+  done
+  inv3="$(cd "$FIX3" && python3 utils/py/gate_inventory.py 2>/dev/null || echo '[]')"
+
+  # Guard the control itself: if the fixture does not actually exceed the pipe buffer, the two
+  # assertions below are vacuous and would pass against the unfixed code.
+  [ "${#inv3}" -gt 65536 ] \
+    && pass "control precondition: the fixture inventory (${#inv3} bytes) exceeds the 64KB pipe buffer" \
+    || fail "fixture inventory is only ${#inv3} bytes — under the buffer, so Mutation D would prove nothing"
+
+  # Pre-fix replay, inline: the OLD pipe shape must be observed reporting the wrong answer, or the
+  # fix below is a change nobody can show mattered (#419).
+  # stderr is suppressed because this replay DELIBERATELY provokes `printf: write error: Broken pipe`
+  # — leaving it visible would reintroduce exactly the output noise #460 exists to remove, and a
+  # reader scanning a green run for real warnings would have to learn to ignore one.
+  old_shape="registered"
+  { printf '%s' "$inv3" | /usr/bin/grep -Fq '"test/gh401-dry-run-no-mutation.sh"'; } 2>/dev/null \
+    || old_shape="not-registered"
+  [ "$old_shape" = "not-registered" ] \
+    && pass "control: the pre-fix pipe shape reports not-registered for a gate that IS registered (the defect, observed)" \
+    || fail "the pre-fix shape did not reproduce the false negative — Mutation D cannot show the fix works"
+
+  big_verdict="$(audit_entry "$FIX3" 461 "test/gh401-dry-run-no-mutation.sh" "$inv3" "")"
+  printf '%s' "$big_verdict" | /usr/bin/grep -q ' complete ' \
+    && pass "a registered gate survives an oversized inventory — SIGPIPE no longer inverts the verdict" \
+    || fail "an oversized inventory still reports a registered gate as missing (got: $big_verdict)"
 
   echo "litmus-release: negative control OBSERVED in both directions ($PASS pass, $FAIL fail)"
   exit 0
