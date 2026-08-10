@@ -26,6 +26,15 @@ FH="$ROOT/skills/relay-xyz/find-harness.sh"
 . "$LIB"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh448-driver-lock.XXXXXX")"
+# GH-177: guard BEFORE the re-capture below and BEFORE the rm -rf trap is armed. A failed mktemp
+# leaves $WORK empty, `cd ""` succeeds (it is a no-op), and `pwd -P` would then hand back the
+# script's own cwd — the repository root — straight into `rm -rf`. That is the historical repo-wipe
+# shape, and test/mktemp-trap-guard.sh caught this exact omission in CI when the re-capture was
+# added without it. Both guards abort before the trap exists, so nothing can be removed.
+# The `&& exit 1` inside the braces is deliberate and must not be "tidied" to `; exit 1`: the guard
+# scans `;`-delimited segments, so a `{ echo ...; exit 1; }` parks the abort in a different segment
+# from the `||` and reads as unguarded. Same shape as test/gh292-worktree-vendored-discovery.sh:16.
+[ -n "$WORK" ] && [ -d "$WORK" ] || { echo "  FAIL: mktemp -d produced no usable dir" >&2 && exit 1; }
 # Resolve to the PHYSICAL path before deriving any fixture path from it. The resolver under test
 # reads `git rev-parse --path-format=absolute --git-common-dir`, and git ALWAYS reports a physical
 # path; on macOS $TMPDIR lives under /var, a symlink to /private/var, so a $TMPDIR-derived expected
@@ -34,6 +43,7 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh448-driver-lock.XXXXXX")"
 # an environment split, not a defect in the resolver: the driver writes the lock through this same
 # resolver, so driver and consumers agree on whatever path it returns.
 WORK="$(cd "$WORK" && pwd -P)"
+[ -n "$WORK" ] && [ -d "$WORK" ] || { echo "  FAIL: could not resolve \$WORK to a physical path" >&2 && exit 1; }
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0
