@@ -1,6 +1,6 @@
 ---
 title: "GH-484 — redefine the canonical marathon-phase directory default from phases/ to marathon-system/"
-status: 1-INBOX
+status: 3-COMPLETED
 created: 2026-08-09
 owner: noel
 doc_type: project

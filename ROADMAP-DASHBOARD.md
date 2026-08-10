@@ -6,11 +6,10 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 160 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
+Summary: 159 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-484 · redefine the canonical marathon-phase directory default from phases/ to marathon-system/ | — | [GH-484-MARATHON-SYSTEM-DEFAULT.md](PROJECT/1-INBOX/GH-484-MARATHON-SYSTEM-DEFAULT.md) · [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484) |
 | GH-480 · XYZ Cockpit — read-only VS Code view for Marathons, Releases, Worktrees | — | [GH-480-VSCODE-COCKPIT-EXT.md](PROJECT/1-INBOX/GH-480-VSCODE-COCKPIT-EXT.md) · [#480](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/480) |
 | GH-451 · Marathon: support Pi builders on the Python-default path | — | [GH-451-PI-MARATHON-ROUTING.md](PROJECT/1-INBOX/GH-451-PI-MARATHON-ROUTING.md) · [#451](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/451) |
 | GH-453 · Design an issue-derived fuzzing evidence pipeline | — | [GH-453-ISSUE-DERIVED-FUZZING.md](PROJECT/2-WORKING/GH-453-ISSUE-DERIVED-FUZZING.md) · [#453](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/453) |
@@ -206,10 +205,11 @@ Summary: 26 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 14 · �
 
 ## Completed
 
-Summary: 21 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 21 · 🔮 0 · 🔲 0
+Summary: 22 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 22 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-484 · redefine the canonical marathon-phase directory default from phases/ to marathon-system/ | ✅ | [GH-484-MARATHON-SYSTEM-DEFAULT.md](PROJECT/3-COMPLETED/GH-484-MARATHON-SYSTEM-DEFAULT.md) · [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484) |
 | GH-307 · Marathon pre-advance gate inherits the run's identity tags, so bash validate.sh can never pass inside a marathon | ✅ | [#307](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/307) |
 | GH-278 · aider-turn per-turn timeout drifts across twins and docs (py 300s / sh 600s / docs 900s) | ✅ | [GH-278-AIDER-TURN-TIMEOUT-DRIFT.md](PROJECT/3-COMPLETED/GH-278-AIDER-TURN-TIMEOUT-DRIFT.md) · [#278](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/278) |
 | GH-300 · swe-diagram: search input touches/overflows the font-picker when typing — two distinct bugs, same symptom family | ✅ | [GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md](PROJECT/3-COMPLETED/GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md) · [#300](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/300) |
