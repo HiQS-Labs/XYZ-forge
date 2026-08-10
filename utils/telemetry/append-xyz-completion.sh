@@ -8,6 +8,8 @@ set -euo pipefail
 # marathon.sh). Each call is a locked, atomic read-modify-write-prepend so two sessions finishing in
 # the same second neither corrupt XYZ.json nor lose a record:
 #   - advisory mkdir lock (GH-72 pattern) serializes the read-modify-write → no lost update.
+#     A writer that cannot acquire the lock within XYZ_LOCK_WAIT_S exits 75; it never falls back to
+#     an unlocked append, because that would turn lock starvation into a possible lost record.
 #   - temp-file + os.replace() → the swap is atomic at the filesystem level; a writer killed mid-write
 #     leaves the prior valid array intact (never a truncated/partial JSON file).
 #
@@ -51,7 +53,8 @@ release_lock() {
 }
 trap release_lock EXIT INT TERM HUP
 
-deadline=$(( $(date +%s) + ${XYZ_LOCK_WAIT_S:-30} ))
+lock_wait_s="${XYZ_LOCK_WAIT_S:-30}"
+deadline=$(( $(date +%s) + lock_wait_s ))
 empty_streak=0
 while :; do
   if mkdir "$lockdir" 2>/dev/null; then
@@ -60,10 +63,11 @@ while :; do
     break
   fi
   if [[ "$(date +%s)" -ge "$deadline" ]]; then
-    # Best-effort: after a real wall-clock wait on a stuck holder, proceed without the lock rather than
-    # drop the record. Atomic replacement still prevents corruption.
-    printf 'append-xyz-completion: lock %s held too long — proceeding without lock\n' "$lockdir" >&2
-    break
+    # An unlocked append can preserve JSON syntax while losing another writer's record.  Keep this
+    # distinct from a writer crash so the concurrent-write test can diagnose lock starvation.
+    printf 'append-xyz-completion: lock never acquired after %ss (XYZ_LOCK_WAIT_S=%s): %s\n' \
+      "$lock_wait_s" "$lock_wait_s" "$lockdir" >&2
+    exit 75
   fi
   holder="$(cat "$lockdir/pid" 2>/dev/null || true)"
   if [[ -z "$holder" ]]; then

@@ -154,6 +154,7 @@ TESTS=(
   "swarm-preflight.sh"
   "ci-workflow.sh"
   "xyz-completion.sh"
+  "gh358-lock-instrumentation.sh" # GH-358 (concurrent append reports lost writes vs lock starvation)
   "xyz-harness-hooks.sh"
   "preflight-docs.sh"
   "roadmap-dashboard.sh"
