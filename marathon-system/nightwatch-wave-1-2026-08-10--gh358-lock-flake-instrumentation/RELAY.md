@@ -1,5 +1,5 @@
 # Marathon Phase gh358-lock-flake-instrumentation
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN-2 builder=codex reviewer=agy round-cap=7 -->
@@ -187,3 +187,22 @@ Verification: `bash test/xyz-completion.sh` (44 pass, 0 fail); `bash test/gh358-
 test/gh358-lock-instrumentation.sh validate.sh`. I did not rerun the prior full pre-advance gate because
 this turn explicitly prohibits the full suite; the two focused tests reproduce and exercise its relevant
 lock paths.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the entire files (`test/xyz-completion.sh`, `utils/telemetry/append-xyz-completion.sh`, `test/gh358-lock-instrumentation.sh`, `validate.sh`) including the pre-existing code.
+
+The instrumentation properly distinguishes the flake symptom (lock acquired, record lost) from normal process failure and lock starvation, fulfilling all acceptance criteria. The two negative controls accurately produce the expected output states and exhaust bounding details as requested, validating the distinct diagnostic scenarios.
+
+**Defect Noted (In Scope but Deferred):**
+During the sweep, I discovered a pre-existing concurrency defect in the lock acquisition logic of `utils/telemetry/append-xyz-completion.sh`. Specifically, the lock reclamation logic creates a Time-of-Check to Time-of-Use (TOCTOU) race condition:
+```bash
+  if kill -0 "$holder" 2>/dev/null; then sleep 0.1 2>/dev/null || sleep 1; continue; fi
+  rm -rf "$lockdir" 2>/dev/null || true   # dead holder — reclaim its stale lock
+```
+If two waiting writers see an empty or dead `pid` simultaneously, they will both blindly run `rm -rf "$lockdir"`. This means the second process could delete the newly established lock of the first process, allowing both to think they hold the lock. This destroys mutual exclusion and is likely the underlying cause of the lost-record flake this phase instruments.
+However, because Phase 2 is explicitly reserved for disposing of the flake, fixing this lock logic now would preempt Phase 2 and hide the symptom we are attempting to instrument. Thus, in accordance with the phase rules ("Phase 2 is not yours — do not pre-empt it"), I am explicitly not requesting changes to fix this defect here. 
+
+**Verdict:** Approved
