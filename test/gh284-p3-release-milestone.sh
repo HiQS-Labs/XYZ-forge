@@ -40,10 +40,10 @@ Description: no milestone here
 GH_URL:
 EOF
 out="$(run_milestone "$F")"; rc=$?
-printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
+printf '%s' "$out" | grep -F "no 'Milestone:'" >/dev/null \
   && pass "dated unshipped release with no Milestone is warned" \
   || fail "expected a missing-Milestone warning, got: $out"
-printf '%s' "$out" | grep -q "^WARN" \
+printf '%s' "$out" | grep "^WARN" >/dev/null \
   && pass "the missing-Milestone finding is a WARN, not an error" \
   || fail "missing-Milestone should be warn severity: $out"
 [ "$rc" -eq 0 ] && pass "the check still never gates the exit code" \
@@ -61,7 +61,7 @@ GH_URL:
 Milestone: Quicksilver
 EOF
 out="$(run_milestone "$F")"
-printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
+printf '%s' "$out" | grep -F "no 'Milestone:'" >/dev/null \
   && fail "Milestone was present but the warning still fired: $out" \
   || pass "a populated Milestone silences the warning"
 
@@ -84,7 +84,7 @@ Description: already out, never had a milestone
 GH_URL:
 EOF
 out="$(run_milestone "$F")"
-printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
+printf '%s' "$out" | grep -F "no 'Milestone:'" >/dev/null \
   && fail "undated/shipped blocks must not be warned about: $out" \
   || pass "undated and Shipped blocks are exempt from the Milestone warning"
 
@@ -116,13 +116,13 @@ GH_URL:
 Milestone: X
 EOF
 out="$(run_releases "$F")"; rc=$?
-printf '%s' "$out" | grep -Fq "has no version" \
+printf '%s' "$out" | grep -F "has no version" >/dev/null \
   && pass "empty Release: version still reported" \
   || fail "empty-version error regressed: $out"
-printf '%s' "$out" | grep -Fq "is not a valid YYYY-MM-DD date" \
+printf '%s' "$out" | grep -F "is not a valid YYYY-MM-DD date" >/dev/null \
   && pass "malformed Target Date still warned" \
   || fail "bad-date warning regressed: $out"
-printf '%s' "$out" | grep -Fq "overdue" \
+printf '%s' "$out" | grep -F "overdue" >/dev/null \
   && pass "overdue unshipped release still warned" \
   || fail "overdue warning regressed: $out"
 [ "$rc" -eq 0 ] && pass "an error finding still does not gate the exit code" \
@@ -147,7 +147,7 @@ Description: has none
 GH_URL:
 EOF
 out="$(run_current "$F")"
-printf '%s' "$out" | grep -Fq "Milestone: Quicksilver" \
+printf '%s' "$out" | grep -F "Milestone: Quicksilver" >/dev/null \
   && pass "releases-current prints the milestone when set" \
   || fail "roll-up did not show the milestone: $out"
 # The roll-up's explicit "(none — release cannot resolve to an issue set)" line was ALSO deleted by
@@ -157,10 +157,10 @@ printf '%s' "$out" | grep -Fq "Milestone: Quicksilver" \
 # is preserved by the local check, which names the offending release; the roll-up no longer does.
 # Restoring the roll-up line belongs upstream, not in a file the next sync overwrites.
 out_ms="$(run_milestone "$F")"
-printf '%s' "$out_ms" | grep -Fq "release '5.0.0' has a Target Date but no 'Milestone:'" \
+printf '%s' "$out_ms" | grep -F "release '5.0.0' has a Target Date but no 'Milestone:'" >/dev/null \
   && pass "a milestone-less release is still named explicitly (by the local check, not the roll-up)" \
   || fail "a missing milestone became silent in BOTH the roll-up and the check: $out_ms"
-printf '%s' "$out_ms" | grep -Fq "release '4.0.0'" \
+printf '%s' "$out_ms" | grep -F "release '4.0.0'" >/dev/null \
   && fail "the release that HAS a milestone was wrongly flagged: $out_ms" \
   || pass "the release carrying a milestone is not flagged"
 
@@ -178,13 +178,13 @@ GH_URL: GHURL-SENTINEL
 Milestone: MILESTONE-SENTINEL
 EOF
 out="$(run_current "$F")"
-printf '%s' "$out" | grep -Fq "DESCRIPTION-SENTINEL" \
+printf '%s' "$out" | grep -F "DESCRIPTION-SENTINEL" >/dev/null \
   && pass "Description still lands in the Description slot" \
   || fail "field ordering broke: Description missing from $out"
-printf '%s' "$out" | grep -Fq "GHURL-SENTINEL" \
+printf '%s' "$out" | grep -F "GHURL-SENTINEL" >/dev/null \
   && pass "GH_URL still lands in the GH_URL slot" \
   || fail "field ordering broke: GH_URL missing from $out"
-printf '%s' "$out" | grep -Fq "Milestone: MILESTONE-SENTINEL" \
+printf '%s' "$out" | grep -F "Milestone: MILESTONE-SENTINEL" >/dev/null \
   && pass "Milestone lands in its own slot, not shifted" \
   || fail "field ordering broke: Milestone missing or shifted in $out"
 
@@ -193,7 +193,7 @@ printf '%s' "$out" | grep -Fq "Milestone: MILESTONE-SENTINEL" \
 # warning at all, so "no warning fired" would be true for any ledger, including a broken one. It runs
 # against the local check, which is the only thing that can still produce the string it greps for.
 out="$(PDDA_ACTIVITY_LOG=/dev/null bash "$LOCAL_CHECKS" release-milestone 2>&1)"
-printf '%s' "$out" | grep -Fq "no 'Milestone:'" \
+printf '%s' "$out" | grep -F "no 'Milestone:'" >/dev/null \
   && fail "this repo's own RELEASES.md has a dated release with no Milestone: $out" \
   || pass "the repo's RELEASES.md carries a Milestone for every dated, unshipped release"
 

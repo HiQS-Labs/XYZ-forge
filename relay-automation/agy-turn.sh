@@ -251,7 +251,7 @@ if [[ -n "$wt" ]]; then
     #   [trace] lines (instrumentation, legitimately contain RTL_ROOT)
     #   TICK_REPO_ROOT="..." (harness-mandated tick-command narration, GH-183)
     #   file:// URIs and markdown link targets ](...) (file citations, GH-187)
-    if grep -v -e '^\[trace\] ' -e 'TICK_REPO_ROOT=' -e 'file://' -e '](' "$AGY_LOG" 2>/dev/null | grep -qF "$ROOT" 2>/dev/null; then
+    if grep -v -e '^\[trace\] ' -e 'TICK_REPO_ROOT=' -e 'file://' -e '](' "$AGY_LOG" 2>/dev/null | grep -F "$ROOT" >/dev/null 2>&1; then
       printf 'agy-turn: agy transcript cited the real repo root (%s) instead of the isolated worktree. This is an isolation breach. Failing the turn.\n' "$ROOT" >&2
       printf '\n[FAIL] agy isolation breach: transcript cited the real repo root instead of the worktree.\n' >> "$AGY_LOG"
       exit 5

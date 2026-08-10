@@ -101,10 +101,10 @@ out="$(run_driver "$BRIEF")"; rc=$?
 [ "$rc" -ne 0 ] \
   && pass "a lane whose acceptance probe still reports unfixed does NOT exit 0 (rc=$rc)" \
   || fail "GH-438 is back: reported success while the fix had not landed: $out"
-printf '%s' "$out" | grep -q "acceptance re-check FAILED" \
+printf '%s' "$out" | grep "acceptance re-check FAILED" >/dev/null \
   && pass "the failure is reported in the lane's own terms, not as a gate failure" \
   || fail "no acceptance re-check diagnostic: $out"
-printf '%s' "$out" | grep -q "acceptance probe still unfixed" \
+printf '%s' "$out" | grep "acceptance probe still unfixed" >/dev/null \
   && pass "the failing probe is named" || fail "the failing probe was not named: $out"
 grep -q 'reason: acceptance-probes-unmet' "$A/phases/p1/ESCALATION.md" 2>/dev/null \
   && pass "ESCALATION.md records acceptance-probes-unmet" \
@@ -121,7 +121,7 @@ out="$(run_driver "$BRIEF")"; rc=$?
 [ "$rc" -eq 0 ] \
   && pass "the same lane completes once the fix really lands (rc=0)" \
   || fail "a lane that DID do its job was blocked — the check now always fails: $out"
-printf '%s' "$out" | grep -q "acceptance re-check passed" \
+printf '%s' "$out" | grep "acceptance re-check passed" >/dev/null \
   && pass "the passing re-check is stated, not silent" || fail "no pass diagnostic: $out"
 git -C "$A" reset -q --hard HEAD >/dev/null 2>&1
 
@@ -132,14 +132,14 @@ mk_stub 'true'
 out="$(run_driver "$BRIEF_NONE")"; rc=$?
 [ "$rc" -eq 0 ] && pass "a brief with no preflight contract is unaffected (rc=0)" \
   || fail "a contract-less lane was blocked by the acceptance re-check: $out"
-printf '%s' "$out" | grep -q "acceptance re-check" \
+printf '%s' "$out" | grep "acceptance re-check" >/dev/null \
   && fail "a contract-less lane emitted acceptance-recheck output — not byte-identical to before" \
   || pass "a contract-less lane emits no acceptance-recheck output at all"
 
 # --- (4) --dry-run runs no probes -----------------------------------------------------------------
 out="$(run_driver "$BRIEF" --dry-run)"; rc=$?
 [ "$rc" -eq 0 ] && pass "--dry-run exits 0" || fail "--dry-run exit=$rc"
-printf '%s' "$out" | grep -q "acceptance re-check" \
+printf '%s' "$out" | grep "acceptance re-check" >/dev/null \
   && fail "--dry-run evaluated acceptance probes (GH-401: a dry run does no work)" \
   || pass "--dry-run evaluates no probes"
 

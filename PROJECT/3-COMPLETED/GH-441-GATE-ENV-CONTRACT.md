@@ -2,7 +2,7 @@
 gh_issue: 441
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/441
 title: "GH-441 — validate.sh is the default pre-advance gate but is corrupted by the marathon environment it inherits"
-status: "Active (2-WORKING). Phases 1 and 2 both implemented and verified — acceptance 1-5 met. Phase 1 = 3ea23fd, Phase 2 = c9a17d7, on branch claude/gh441-phase2-gate-env-contract and NOT YET MERGED. The issue stays open until that PR lands; do not move this doc to 3-COMPLETED or close #441 before then."
+status: 3-COMPLETED
 created: 2026-08-07
 updated: 2026-08-07
 owner: noel

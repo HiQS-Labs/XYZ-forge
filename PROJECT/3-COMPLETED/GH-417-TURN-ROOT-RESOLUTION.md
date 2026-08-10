@@ -2,7 +2,7 @@
 gh_issue: 417
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/417
 title: "GH-417 — turn-root resolution: the tree asserts both that rev-parse --show-toplevel is the correct ROOT default and that it is the bug caught live"
-status: "Built 2026-08-08 — test/gh417-turn-root-symlink-prefix.sh 13/0 with the pre-fix control observed; the contradiction is reconciled in relay-turn-lib.sh and utils/py/rtl.py. Awaiting merge."
+status: 3-COMPLETED
 created: 2026-08-05
 updated: 2026-08-08
 owner: noel

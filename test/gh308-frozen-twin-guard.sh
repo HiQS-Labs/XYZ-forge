@@ -248,7 +248,7 @@ check_exception_coverage() {  # <base> — called only after check_changes has a
     if path_edits_are_only_the_freeze "$base" "$f"; then
       printf 'gh308 guard: %s — the only edit in this range IS the commit that froze it (%s)\n' \
         "$f" "$(freeze_commit_for "$base" "$f" | cut -c1-8)"
-    elif printf '%s\n' "$declared" | grep -Fxq -- "$f"; then
+    elif printf '%s\n' "$declared" | grep -Fx -- "$f" >/dev/null; then
       printf 'gh308 guard: %s — covered by a declared Frozen-twin-exception\n' "$f"
     else
       # Name the file. The whole defect in the range-scoped version was that it never did.
@@ -395,7 +395,7 @@ else
 fi
 # Naming the uncovered file is the point — the old version printed only the DECLARING commit, so the
 # log read like a narrow exception while the undeclared edit stayed invisible.
-if printf '%s' "$out" | grep -Fq 'relay-automation/relay-drive.sh was edited with NO Frozen-twin-exception'; then
+if printf '%s' "$out" | grep -F 'relay-automation/relay-drive.sh was edited with NO Frozen-twin-exception' >/dev/null; then
   ok 'the failure names the uncovered file explicitly'
 else
   bad "failure output did not name the uncovered file: $out"
@@ -437,7 +437,7 @@ fi
 exc_reset
 exc_commit codex-turn.sh "$(printf 'typo\n\nFrozen-twin-exception: relay-automation/codex-turnn.sh — typo in the path')"
 out="$(exc_guard)" && rc=0 || rc=$?
-if (( rc != 0 )) && printf '%s' "$out" | grep -Fq 'not a frozen twin: relay-automation/codex-turnn.sh'; then
+if (( rc != 0 )) && printf '%s' "$out" | grep -F 'not a frozen twin: relay-automation/codex-turnn.sh' >/dev/null; then
   ok 'a trailer naming a non-twin path fails and names the bad token'
 else
   bad "typo'd path was not rejected (rc=$rc): $out"
@@ -532,7 +532,7 @@ exc_reset
 pre_freeze="$(exc_unfreeze_commit codex-turn.sh)"
 exc_freeze_commit codex-turn.sh 'freeze the codex twin'
 out="$(exc_guard_from "$pre_freeze")" && rc=0 || rc=$?
-if (( rc == 0 )) && printf '%s' "$out" | grep -Fq 'the only edit in this range IS the commit that froze it'; then
+if (( rc == 0 )) && printf '%s' "$out" | grep -F 'the only edit in this range IS the commit that froze it' >/dev/null; then
   ok 'the commit that establishes a freeze is not itself a freeze violation [GH-362]'
 else
   bad "freeze-establishing commit was blocked (rc=$rc): $out"
@@ -545,7 +545,7 @@ pre_freeze="$(exc_unfreeze_commit codex-turn.sh)"
 exc_freeze_commit codex-turn.sh 'freeze the codex twin'
 exc_commit codex-turn.sh 'sneak a real change in after the freeze, declaring nothing'
 out="$(exc_guard_from "$pre_freeze")" && rc=0 || rc=$?
-if (( rc != 0 )) && printf '%s' "$out" | grep -Fq 'relay-automation/codex-turn.sh was edited with NO Frozen-twin-exception'; then
+if (( rc != 0 )) && printf '%s' "$out" | grep -F 'relay-automation/codex-turn.sh was edited with NO Frozen-twin-exception' >/dev/null; then
   ok 'a post-freeze edit in the same range is still blocked [GH-362]'
 else
   bad "post-freeze edit slipped through the freeze exemption (rc=$rc): $out"
@@ -558,7 +558,7 @@ exc_reset
 pre_freeze="$(exc_unfreeze_commit codex-turn.sh)"
 exc_freeze_commit codex-turn.sh "$(printf 'freeze the codex twin\n\nFrozen-twin-exception: a legacy bare reason with no path, as GH-319 wrote it')"
 out="$(exc_guard_from "$pre_freeze")" && rc=0 || rc=$?
-if (( rc == 0 )) && ! printf '%s' "$out" | grep -Fq 'malformed Frozen-twin-exception'; then
+if (( rc == 0 )) && ! printf '%s' "$out" | grep -F 'malformed Frozen-twin-exception' >/dev/null; then
   ok "a legacy path-less trailer in the freeze commit does not fail the run [GH-362]"
 else
   bad "legacy trailer in the freeze commit still hard-failed (rc=$rc): $out"
