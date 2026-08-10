@@ -1662,8 +1662,18 @@ relay-file: {rel_relay}
         s = file_status()
         if not terminal_status(s):
             return False
-        tstatus, _actor = token_state(completed_relay_task())
-        return tstatus == "done"
+        task = completed_relay_task()
+        tstatus, _actor = token_state(task)
+        if tstatus != "done":
+            # GH-385 asked for this line by name: "Log the disagreement ... that single line would
+            # have made this diagnosable immediately." A terminal relay whose token is not done is a
+            # contradiction, and the rebuild that follows is otherwise indistinguishable in the log
+            # from an ordinary first fire.
+            log(f"phase {args.phase_id}: relay is terminal (STATUS: {s}) but token '{task}' reads "
+                f"'{tstatus or 'unknown'}', not done — rebuilding; if this phase really did complete, "
+                f"its record is on a token this run cannot see (see GH-385)")
+            return False
+        return True
 
     if not args.dry_run and satisfied_lane_terminal():
         log(f"phase {args.phase_id} already reached a terminal relay (STATUS: {file_status()}, token done) — skipping render/reseed, re-running only the pre-advance gate")

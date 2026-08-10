@@ -185,4 +185,28 @@ printf '%s' "$out" | grep -q "already reached a terminal relay" \
   && fail "--retry was satisfied by the attempt it was retrying — the operator's fresh token was ignored: $out" \
   || pass "an explicit --relay-task overrides the directive (--retry still forces a real re-run)"
 
+# --- (10) GH-385's OTHER ask: the disagreement is logged before the rebuild ------------------------
+# The issue asked for this by name — "Log the disagreement ... that single line would have made this
+# diagnosable immediately" — because the failure mode is invisible: a phase that is demonstrably
+# Approved silently re-runs a full builder + reviewer cycle and the log reads like an ordinary first
+# fire. The fix above stops the common cause, but a terminal relay whose token genuinely is not done
+# is still reachable (a token reaped after a host crash, a record on a token this run cannot see),
+# and in that case the operator gets a rebuild with no explanation unless this line exists.
+#
+# Asserted, not merely written: an unasserted log line is precisely the "check nobody can see
+# working" shape this repo has shipped three times (#333, #348, #351).
+reset_state
+seed_relay "$BASE"            # directive names the BASE token — no retry involved
+mk_token "$BASE" claimed      # terminal relay, but the token is NOT done: the contradiction
+out="$(run_driver)"
+printf '%s' "$out" | grep -q "already reached a terminal relay" \
+  && fail "a not-done token must NOT satisfy the lane: $out" \
+  || pass "a terminal relay with a not-done token still rebuilds (unchanged)"
+printf '%s' "$out" | grep -q "relay is terminal .* but token .* not done — rebuilding" \
+  && pass "GH-385: the token/relay disagreement is logged before the rebuild" \
+  || fail "the rebuild is still silent — GH-385's 'log the disagreement' ask is unmet: $out"
+printf '%s' "$out" | grep -q "GH-385" \
+  && pass "the disagreement line points at GH-385 so the next reader can find the mechanism" \
+  || fail "disagreement line does not cite GH-385: $out"
+
 exit 0
