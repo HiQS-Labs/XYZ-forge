@@ -1,0 +1,6 @@
+model: openai/prism-ml/bonsai-27b
+edit_formats: [diff, whole, udiff]
+map_tokens: [0, 1024, 4096]
+auto_commits: [true, false]
+message: "Add a one-line docstring to the function `foo` in sample.py"
+per_variation_timeout_seconds: 300
