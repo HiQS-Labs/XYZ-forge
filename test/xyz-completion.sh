@@ -17,6 +17,13 @@ ROOT="$(cd "$HERE/.." && pwd)"
 WRITER="$ROOT/utils/telemetry/append-xyz-completion.sh"
 HEARTBEAT="$ROOT/utils/telemetry/write-xyz-heartbeat.sh"
 
+# The concurrent assertion has an outer test wait and a separate writer lock budget.  Keep both
+# visible: a record lost after a successful writer is a lock defect, while an exhausted writer budget
+# is starvation.  The two test-only overrides power GH-358's negative controls.
+CONCURRENT_TEST_WAIT_S="${XYZ_COMPLETION_TEST_WAIT_S:-60}"
+CONCURRENT_WRITER_LOCK_WAIT_S="${XYZ_COMPLETION_WRITER_LOCK_WAIT_S:-30}"
+WRITER_LOCK_WAIT_DEFAULT_S=30
+
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/xyz-completion.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -32,6 +39,54 @@ valid_obj()   { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); sys
 count()       { python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$1" 2>/dev/null; }
 field()       { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[int(sys.argv[2])][sys.argv[3]])" "$1" "$2" "$3" 2>/dev/null; }
 obj_field()   { python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d[sys.argv[2]])" "$1" "$2" 2>/dev/null; }
+has_session_id() {
+  python3 - "$1" "$2" <<'PYEOF'
+import json, sys
+with open(sys.argv[1]) as f:
+    records = json.load(f)
+sys.exit(0 if any(r.get("sessionId") == sys.argv[2] for r in records) else 1)
+PYEOF
+}
+
+wait_for_appender() {
+  local pid="$1" deadline
+  deadline=$(( $(date +%s) + CONCURRENT_TEST_WAIT_S ))
+  while kill -0 "$pid" 2>/dev/null; do
+    if [[ "$(date +%s)" -ge "$deadline" ]]; then
+      kill "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      return 124
+    fi
+    sleep 0.1
+  done
+  wait "$pid" 2>/dev/null
+}
+
+appender_status() {
+  local wanted="$1" entry
+  for entry in $2; do
+    if [[ "${entry%%:*}" == "$wanted" ]]; then
+      printf '%s\n' "${entry#*:}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+concurrent_bounds() {
+  printf 'test wait=%ss; writer XYZ_LOCK_WAIT_S=%ss (default=%ss)\n' \
+    "$CONCURRENT_TEST_WAIT_S" "$CONCURRENT_WRITER_LOCK_WAIT_S" "$WRITER_LOCK_WAIT_DEFAULT_S"
+}
+
+report_missing_session() {
+  local session_id="$1" rc="$2"
+  case "$rc" in
+    0) fail "concurrent mismatch: missing sessionId=$session_id; terminal state=lock acquired, record lost. $(concurrent_bounds)" ;;
+    75) fail "concurrent mismatch: missing sessionId=$session_id; terminal state=lock never acquired; writer XYZ_LOCK_WAIT_S=${CONCURRENT_WRITER_LOCK_WAIT_S}s exhausted. $(concurrent_bounds)" ;;
+    124) fail "concurrent mismatch: missing sessionId=$session_id; terminal state=process failed; test wait=${CONCURRENT_TEST_WAIT_S}s exhausted. $(concurrent_bounds)" ;;
+    *) fail "concurrent mismatch: missing sessionId=$session_id; terminal state=process failed (exit $rc). $(concurrent_bounds)" ;;
+  esac
+}
 
 # ── (1) basic prepend + schema ──────────────────────────────────────────────
 X="$WORK/x1.json"
@@ -69,15 +124,55 @@ XYZ_JSON_PATH="$X3" bash "$WRITER" relay slug-d green "Title D" "d D" >/dev/null
 X4="$WORK/x4.json"
 M=16
 pids=""
+session_ids=""
 for i in $(seq 1 "$M"); do
-  ( XYZ_JSON_PATH="$X4" XYZ_LOCK_WAIT_S=60 bash "$WRITER" relay "conc-$i" green "C$i" "d$i" ) &
-  pids="$pids $!"
+  ( XYZ_JSON_PATH="$X4" XYZ_LOCK_WAIT_S="$CONCURRENT_WRITER_LOCK_WAIT_S" bash "$WRITER" relay "conc-$i" green "C$i" "d$i" ) &
+  pids="$pids conc-$i:$!"
+  session_ids="$session_ids conc-$i"
 done
-for p in $pids; do wait "$p" 2>/dev/null || true; done
+appender_statuses=""
+for entry in $pids; do
+  session_id="${entry%%:*}"
+  pid="${entry#*:}"
+  wait_for_appender "$pid"; rc=$?
+  appender_statuses="$appender_statuses $session_id:$rc"
+  case "$rc" in
+    0) ;;
+    75) fail "appender sessionId=$session_id; terminal state=lock never acquired; writer XYZ_LOCK_WAIT_S=${CONCURRENT_WRITER_LOCK_WAIT_S}s exhausted. $(concurrent_bounds)" ;;
+    124) fail "appender sessionId=$session_id; terminal state=process failed; test wait=${CONCURRENT_TEST_WAIT_S}s exhausted. $(concurrent_bounds)" ;;
+    *) fail "appender sessionId=$session_id; terminal state=process failed (exit $rc). $(concurrent_bounds)" ;;
+  esac
+done
+
+# GH-358 negative control: only the focused instrumentation test sets this test-only switch.  It
+# simulates a successful writer whose record disappeared after the appenders finished.
+if [[ -n "${XYZ_COMPLETION_TEST_CLOBBER_SESSION_ID:-}" ]]; then
+  python3 - "$X4" "$XYZ_COMPLETION_TEST_CLOBBER_SESSION_ID" <<'PYEOF'
+import json, sys
+path, session_id = sys.argv[1:]
+with open(path) as f:
+    records = json.load(f)
+with open(path, "w") as f:
+    json.dump([r for r in records if r.get("sessionId") != session_id], f)
+    f.write("\n")
+PYEOF
+  echo "  TEST CONTROL: clobbered sessionId=$XYZ_COMPLETION_TEST_CLOBBER_SESSION_ID after successful append"
+fi
+
 valid_json "$X4" && pass "valid JSON after $M concurrent appends" || fail "corrupt after concurrent writes: $(cat "$X4")"
-[ "$(count "$X4")" = "$M" ] && pass "all $M concurrent records survive (lock prevents lost update)" || fail "expected $M, got $(count "$X4") — a record was clobbered"
+concurrent_count="$(count "$X4")"
+[ "$concurrent_count" = "$M" ] && pass "all $M concurrent records survive (lock prevents lost update)" || fail "expected $M, got $concurrent_count — a record was clobbered"
 distinct="$(python3 -c "import json;print(len({r['sessionId'] for r in json.load(open('$X4'))}))" 2>/dev/null)"
 [ "$distinct" = "$M" ] && pass "all $M sessionIds distinct (no duplicate/overwrite)" || fail "distinct=$distinct"
+if ! valid_json "$X4" || [ "$concurrent_count" != "$M" ] || [ "$distinct" != "$M" ]; then
+  echo "  concurrent diagnostic: $(concurrent_bounds)"
+  for session_id in $session_ids; do
+    if ! has_session_id "$X4" "$session_id"; then
+      rc="$(appender_status "$session_id" "$appender_statuses")"
+      report_missing_session "$session_id" "$rc"
+    fi
+  done
+fi
 
 # ── (5) no leftover temp file or lock dir after a write ─────────────────────
 [ -z "$(find "$WORK" -name '.xyz.*.tmp' 2>/dev/null)" ] && pass "no leftover temp files" || fail "temp file leaked: $(find "$WORK" -name '.xyz.*.tmp')"
@@ -125,7 +220,10 @@ for i in $(seq 1 "$M2"); do
   ( XYZ_HEARTBEAT_JSON_PATH="$HB2" bash "$HEARTBEAT" relay "hb-$i" ) &
   pids="$pids $!"
 done
-for p in $pids; do wait "$p" 2>/dev/null || true; done
+for p in $pids; do
+  wait "$p" 2>/dev/null; rc=$?
+  [ "$rc" -eq 0 ] || fail "heartbeat appender pid=$p failed (exit $rc)"
+done
 valid_obj "$HB2" && pass "heartbeat stays valid JSON under concurrent overwrites" || fail "concurrent heartbeat corrupt: $(cat "$HB2")"
 case "$(obj_field "$HB2" sessionId)" in hb-*) pass "concurrent heartbeat ends with one complete winning sessionId";; *) fail "unexpected concurrent sessionId=$(obj_field "$HB2" sessionId)";; esac
 [ -z "$(find "$WORK" -name '.xyz-heartbeat.*.tmp' 2>/dev/null)" ] && pass "heartbeat writer leaves no temp files behind" || fail "heartbeat temp file leaked: $(find "$WORK" -name '.xyz-heartbeat.*.tmp')"

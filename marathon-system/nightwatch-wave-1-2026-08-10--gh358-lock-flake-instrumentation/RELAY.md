@@ -1,6 +1,6 @@
 # Marathon Phase gh358-lock-flake-instrumentation
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -167,3 +167,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Updated `utils/telemetry/append-xyz-completion.sh` to exit 75 with a named `XYZ_LOCK_WAIT_S`
+  bound when it cannot acquire the lock, rather than attempting an unlocked append.
+- Updated both concurrent-appender harvest loops in `test/xyz-completion.sh` to retain and assert
+  every child exit status. Concurrent mismatch diagnostics now name every missing `sessionId`, its
+  terminal state, and both the test wait and writer lock bounds. Added a test-only clobber switch for
+  the negative control.
+- Added `test/gh358-lock-instrumentation.sh`, which proves a deliberately clobbered successful
+  record reports `lock acquired, record lost`, while a deliberately starved writer reports `lock
+  never acquired`; it asserts the reports do not cross-label each other. Registered it in `validate.sh`.
+- Verified: `bash test/xyz-completion.sh` (44 pass, 0 fail) and `bash test/gh358-lock-instrumentation.sh`
+  (9 pass, 0 fail). The full gate was intentionally not run per the phase containment rule.
