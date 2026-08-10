@@ -1,5 +1,5 @@
 # Marathon Phase gh358-lock-flake-instrumentation
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH358-LOCK-FLAKE-INSTRUMENTATION-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -181,3 +181,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
   never acquired`; it asserts the reports do not cross-label each other. Registered it in `validate.sh`.
 - Verified: `bash test/xyz-completion.sh` (44 pass, 0 fail) and `bash test/gh358-lock-instrumentation.sh`
   (9 pass, 0 fail). The full gate was intentionally not run per the phase containment rule.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The implementation correctly addresses the requirements in the phase brief:
+- The writer (`utils/telemetry/append-xyz-completion.sh`) successfully exits with `75` upon starvation, avoiding an unsafe unlocked write.
+- The `test/xyz-completion.sh` file appropriately captures and verifies the exit codes for both `wait` loops (the concurrent loop and the heartbeat concurrent loop).
+- Mismatches in `test/xyz-completion.sh` properly output the missing `sessionId`, the corresponding terminal state (`lock acquired, record lost`, `lock never acquired`, or `process failed`), and the lock bounds.
+- The bounds reporting is clear and accurate.
+- The negative control script `test/gh358-lock-instrumentation.sh` enforces the visibility and distinctness of the diagnostic outputs exactly as requested.
+- `validate.sh` has the new test registered.
+- No files out of scope (like `ci.yml`) were touched.
+
+**Verdict:** Approved
