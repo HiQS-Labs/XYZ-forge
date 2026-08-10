@@ -234,7 +234,8 @@ echo "PASS: audited $checked real marathon invocation(s)"
 
 # ── the driver commits phase artifacts, so they must not be gitignored ────────────────────────────
 # marathon_drive.py stages phase output with `git add --` and check=True at three sites
-# (:1129 ESCALATION.md, :1169, :1728 RELAY.md). `git add` on an EXPLICIT path that .gitignore covers
+# (ESCALATION.md, the transcript, RELAY.md — line numbers deliberately not cited; they have drifted
+# twice already and a stale citation reads as precision it does not have). `git add` on an EXPLICIT path that .gitignore covers
 # exits 1 — "The following paths are ignored ... Use -f if you really want to add them" — so
 # check=True raises CalledProcessError and the phase dies while trying to record itself.
 #
@@ -245,9 +246,15 @@ echo "PASS: audited $checked real marathon invocation(s)"
 #
 # If phase records should stop being committed, that is a driver change (and a #388 durability
 # question), not a .gitignore line — the ignore alone breaks the write without removing the intent.
+#
+# GH-484: the default moved to marathon-system/, so the NEW default is now the path that actually
+# matters. phases/ stays probed too — the driver no longer writes there, but a fleet repo whose
+# vendored .xyz/ has not re-synced still does, and this repo's committed pre-flip records live
+# there. An ignore rule on either name is a live crash for someone.
 audit_root="$(cd "$(dirname "$0")/.." && pwd)"
 ignore_violations=0
-for probe in phases/audit-probe/RELAY.md phases/audit-probe/ESCALATION.md; do
+for probe in marathon-system/audit-probe/RELAY.md marathon-system/audit-probe/ESCALATION.md \
+             phases/audit-probe/RELAY.md phases/audit-probe/ESCALATION.md; do
   if git -C "$audit_root" check-ignore -q "$probe" 2>/dev/null; then
     echo "FAIL: .gitignore covers $probe, but the driver stages it with \`git add --\` + check=True — a new same-repo phase would exit 1 while recording itself" >&2
     ignore_violations=$((ignore_violations + 1))

@@ -207,6 +207,27 @@ def die(msg):
 def log(msg):
     print(f"marathon-drive: {msg}")
 
+def _repo_rel_prefix(path, root):
+    """GH-484: `path` as a repo-relative prefix with a trailing slash, for matching the paths
+    `git status --porcelain` emits (which are relative to the repo TOPLEVEL, not to `root` —
+    the two differ for a vendored install whose root is <repo>/.xyz). Returns "" when `path`
+    lies outside the repo, meaning "matches nothing", which is correct: git never lists it.
+
+    realpath, NOT abspath, on both sides: `git rev-parse --show-toplevel` always reports the
+    PHYSICAL path, so a repo reached through a symlinked ancestor (macOS /var and /tmp, plenty of
+    home and network mounts) yields "/private/var/..." from git and "/var/..." from the argument.
+    abspath preserves that split, the prefix test fails, and the exclusion silently stops working —
+    caught by test/gh484-phase-dir-default.sh case (3), which runs out of exactly such a dir."""
+    try:
+        top = subprocess.check_output(["git", "-C", root, "rev-parse", "--show-toplevel"],
+                                      stderr=subprocess.DEVNULL).decode("utf-8").strip()
+    except Exception:
+        top = root
+    rel = os.path.relpath(os.path.realpath(path), os.path.realpath(top or root))
+    if rel == os.curdir or rel.startswith(os.pardir + os.sep) or rel == os.pardir:
+        return ""
+    return rel.rstrip("/") + "/"
+
 def _probe_bin(bin_name, role_label, agent_id):
     if shutil.which(bin_name):
         return
@@ -236,6 +257,8 @@ def _probe_agent_bin(agent_id, role_label):
         _probe_bin(get_env("AGY_BIN", "agy"), role_label, agent_id)
     elif agent_id.startswith("aider"):
         _probe_bin(get_env("AIDER_BIN", "aider"), role_label, agent_id)
+    elif agent_id.startswith("pi"):
+        _probe_bin(get_env("PI_BIN", "pi"), role_label, agent_id)
 
 # GH-390 coverage seam.  Keep the attribution decision outside main() so its four
 # platform/Bash return-code shapes can be exercised on every host without executing
@@ -682,7 +705,10 @@ def main():
     def xyz_marathon_heartbeat_clear():
         _heartbeat(clear=True)
 
-    phases_dir = args.phases_dir or os.path.join(root, "phases")
+    # GH-484: the default is `marathon-system/`, matching `relay-system/`. `--phases-dir` /
+    # PHASES_DIR still override it exactly as before; only the default value changed. Historical
+    # runs stay in `phases/` — the monitors read both, this driver only ever writes the new one.
+    phases_dir = args.phases_dir or os.path.join(root, "marathon-system")
     # GH-319: the default gate is interpolated into a string that run_pre_advance_gate() hands to
     # `bash -c`, so an UNQUOTED root word-splits on any space in the repo path. Observed live: a
     # clone at ".../Documents/GH Repos/xyz-3-agents-swarm" produced `bash /Users/.../Documents/GH
@@ -893,6 +919,25 @@ def main():
         if not repo:
             log("--log-github requested, but repository lookup failed — local telemetry only")
             return
+
+        # GH-425: cross-check the phase brief's declared source against the resolved repo/issue, to
+        # avoid commenting on a different repository's issue that happens to share a number. Only a
+        # POSITIVE mismatch aborts the POST — a brief with no frontmatter, no source: field, or an
+        # unparseable URL is unverifiable, not wrong, and must not silently stop logging (the same
+        # trap #375 already hit here: absent evidence is not failure evidence).
+        try:
+            brief_text = open(args.phase_brief_file, 'r', encoding='utf-8').read()
+            fm_match = re.match(r'^---\n(.*?)\n---', brief_text, re.DOTALL)
+            src_match = re.search(r'^source:\s*(.+?)\s*$', fm_match.group(1), re.MULTILINE) if fm_match else None
+            raw_url = src_match.group(1).strip().strip('"\'') if src_match else None
+            url_match = re.search(r'https?://github\.com/([^/\s]+/[^/\s]+?)/issues/(\d+)', raw_url) if raw_url else None
+        except OSError:
+            url_match = None
+        if url_match:
+            expected_slug, expected_issue = url_match.group(1), url_match.group(2)
+            if expected_issue != issue or expected_slug.casefold() != repo.casefold():
+                log(f"--log-github aborted: phase brief intends '{expected_slug}' issue {expected_issue} but driver is in '{repo}' issue {issue}")
+                return
         branch = _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"]) or "(detached)"
         trunk = trunk_ref()
         landed = "no"
@@ -984,6 +1029,35 @@ def main():
     # non-executing probe (gates like `test -f build/output` only become true after the builder runs):
     # prove the gate is *runnable*, not that it currently passes. Runs before any render/tick/dispatch.
     _gate_root = args.target_root or root
+    def _preflight_check_issue_closed():
+        mock_state = os.environ.get("MOCK_GH_ISSUE_STATE")
+        if mock_state:
+            state = mock_state.upper()
+        else:
+            issue = lane_issue_number()
+            if not issue:
+                return
+            if not shutil.which("gh"):
+                return
+            url = _cmd_out(["git", "-C", root, "remote", "get-url", "origin"])
+            repo = re.sub(r'\.git$', '', re.sub(r'^https?://[^/]+/', '', re.sub(r'^git@[^:]+:', '', url)))
+            if not re.fullmatch(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+', repo):
+                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=root)
+            if not repo:
+                return
+            state = _cmd_out(["gh", "issue", "view", issue, "--repo", repo, "--json", "state", "--jq", ".state"])
+        
+        if state and state.upper() == "CLOSED":
+            issue_display = lane_issue_number() or "unknown"
+            xyz_debug_log_append(
+                root, "warn", "marathon.issue-closed",
+                f"lane {lane_state_key} parked — issue {issue_display} is already closed",
+                action="none (lane halted)",
+                target_root=args.target_root, phase_id=args.phase_id,
+                relay_task=relay_task)
+            eprint(f"marathon-drive: lane parked — issue {issue_display} is already closed")
+            sys.exit(4)
+
     def _pre_advance_not_runnable(reason):
         die(f"pre-advance gate not runnable: '{pre_advance_cmd}' ({reason}). "
             f"Pass --pre-advance-cmd '<runnable command>' to override it.")
@@ -1029,13 +1103,15 @@ def main():
     os.environ["CODEX_AGENT"] = ""
     os.environ["AGY_AGENT"] = ""
     os.environ["AIDER_AGENT"] = ""
+    os.environ["PI_AGENT"] = ""
 
     def route_agent(agent_id):
         if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
         elif agent_id.startswith("codex"): os.environ["CODEX_AGENT"] = agent_id
         elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = agent_id
         elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider")
+        elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
+        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi")
         
     if args.builder == args.reviewer:
         die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
@@ -1055,11 +1131,13 @@ def main():
     if args.dry_run:
         # dry-run never dispatches a turn, so surface the problem but keep going (matches Bash).
         try:
+            _preflight_check_issue_closed()
             _preflight_pre_advance_gate()
         except SystemExit as _e:
             if _e.code not in (0, None):
                 eprint("marathon-drive: (dry-run continues; a live run would halt here)")
     else:
+        _preflight_check_issue_closed()
         _preflight_pre_advance_gate()
 
     if args.artifact_paths:
@@ -1217,7 +1295,7 @@ relay-file: {rel_relay}
         "AGY_AGENT", "AIDER_AGENT", "ALLOW_PATHS",
         "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_BUILDER",
         "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
-        "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
+        "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
     )
@@ -1605,11 +1683,20 @@ relay-file: {rel_relay}
     if not args.dry_run:
         try:
             out = subprocess.check_output(["git", "-C", root, "status", "--porcelain"], stderr=subprocess.DEVNULL).decode('utf-8')
+            # GH-484: exclude the CONFIGURED phase-output dir, not a hardcoded "phases/". Two
+            # reasons this must be the full repo-relative path and not a basename: a nested
+            # --phases-dir state/marathon-runs would match "marathon-runs/" as a basename but
+            # git porcelain emits "state/marathon-runs/...", and a vendored install's
+            # <repo>/.xyz/marathon-system/ was never matched by the old literal at all — so a
+            # vendored run used to flag its own phase output as stray. Empty prefix (phases dir
+            # outside this repo) means nothing to exclude, which is correct: git would not list it.
+            phases_rel = _repo_rel_prefix(phases_dir, root)
             dirty = []
             for line in out.splitlines():
                 if len(line) >= 4:
                     p = line[3:]
-                    if not p.startswith("phases/") and not p.startswith(".tick/"):
+                    in_phases = bool(phases_rel) and p.startswith(phases_rel)
+                    if not in_phases and not p.startswith(".tick/"):
                         dirty.append(p)
             if dirty:
                 log("WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.")

@@ -6,14 +6,20 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 153 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
+Summary: 159 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-480 · XYZ Cockpit — read-only VS Code view for Marathons, Releases, Worktrees | — | [GH-480-VSCODE-COCKPIT-EXT.md](PROJECT/1-INBOX/GH-480-VSCODE-COCKPIT-EXT.md) · [#480](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/480) |
+| GH-451 · Marathon: support Pi builders on the Python-default path | — | [GH-451-PI-MARATHON-ROUTING.md](PROJECT/1-INBOX/GH-451-PI-MARATHON-ROUTING.md) · [#451](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/451) |
+| GH-453 · Design an issue-derived fuzzing evidence pipeline | — | [GH-453-ISSUE-DERIVED-FUZZING.md](PROJECT/2-WORKING/GH-453-ISSUE-DERIVED-FUZZING.md) · [#453](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/453) |
 | GH-441 · the pre-advance gate inherits the marathon state it is supposed to judge | ✅ | [GH-441-GATE-ENV-CONTRACT.md](PROJECT/2-WORKING/GH-441-GATE-ENV-CONTRACT.md) · [#441](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/441) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
 | GH-390 remainder · the gate guard's other kill branch has never been observed firing | — | [MARATHON-2026-08-08-LITMUS-WAVE-2](PROJECT/2-WORKING/MARATHON-2026-08-08-LITMUS-WAVE-2/MARATHON.yaml) · [GH-390-GATE-GUARD-COVERAGE.md](PROJECT/2-WORKING/GH-390-GATE-GUARD-COVERAGE.md) · [#390](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/390) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-409 + GH-408 · a leaked tick claim wedges the next turn, and every layer that could name the cause discards it | — | [GH-409-408-TOKEN-FAILURE-VISIBILITY.md](PROJECT/2-WORKING/GH-409-408-TOKEN-FAILURE-VISIBILITY.md) · [#409](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409) · [#408](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/408) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
 | GH-432 · a failed builder turn takes the one exit that skips rtl_enforce | — | [GH-432-TURN-FAILURE-PERSIST.md](PROJECT/3-COMPLETED/GH-432-TURN-FAILURE-PERSIST.md) · [#432](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/432) · [#409](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409) |
+| GH-314 · a pre-existing phases//relay-system/ ignore rule HALTs a marathon, and --dry-run cannot see it | — | [#117](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/117) · [#440](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/440) · [#314](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/314) · [PROJECT/1-INBOX/GH-314-VENDOR-GITIGNORE-HALT.md](PROJECT/1-INBOX/GH-314-VENDOR-GITIGNORE-HALT.md) |
+| GH-440 · xyz-vendor.sh gitignores .xyz/ but not /.tick/, so tick runtime state lands untracked in the consuming repo | — | [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18) · [#314](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/314) · [#440](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/440) · [PROJECT/1-INBOX/GH-440-VENDOR-TICK-GITIGNORE.md](PROJECT/1-INBOX/GH-440-VENDOR-TICK-GITIGNORE.md) |
+| GH-439 · GH-11's foreign-repo split has no guard for a linked worktree of the SAME repo | — | [#11](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/11) · [#439](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/439) · [PROJECT/1-INBOX/GH-439-SAME-REPO-WORKTREE-SPLIT.md](PROJECT/1-INBOX/GH-439-SAME-REPO-WORKTREE-SPLIT.md) |
 | GH-435 · XYZ's coordination model is a sequential chain, not a DAG | — | [GH-435-COORDINATION-MODEL.md](PROJECT/1-INBOX/GH-435-COORDINATION-MODEL.md) · [#435](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/435) |
 | GH-396 · Accuracy Ledger — design constraints to settle before build | — | [GH-396-ACCURACY-LEDGER.md](PROJECT/1-INBOX/GH-396-ACCURACY-LEDGER.md) · [#396](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/396) |
 | GH-343 · a target-relative gate program is checked against cwd/PATH instead of target_root, so a ready contract reports NOT-READY | ✅ | [GH-343-GATE-PROGRAM-TARGET-ROOT.md](PROJECT/3-COMPLETED/GH-343-GATE-PROGRAM-TARGET-ROOT.md) · [#343](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/343) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
@@ -199,10 +205,11 @@ Summary: 26 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 14 · �
 
 ## Completed
 
-Summary: 21 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 21 · 🔮 0 · 🔲 0
+Summary: 22 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 22 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-484 · redefine the canonical marathon-phase directory default from phases/ to marathon-system/ | ✅ | [GH-484-MARATHON-SYSTEM-DEFAULT.md](PROJECT/3-COMPLETED/GH-484-MARATHON-SYSTEM-DEFAULT.md) · [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484) |
 | GH-307 · Marathon pre-advance gate inherits the run's identity tags, so bash validate.sh can never pass inside a marathon | ✅ | [#307](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/307) |
 | GH-278 · aider-turn per-turn timeout drifts across twins and docs (py 300s / sh 600s / docs 900s) | ✅ | [GH-278-AIDER-TURN-TIMEOUT-DRIFT.md](PROJECT/3-COMPLETED/GH-278-AIDER-TURN-TIMEOUT-DRIFT.md) · [#278](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/278) |
 | GH-300 · swe-diagram: search input touches/overflows the font-picker when typing — two distinct bugs, same symptom family | ✅ | [GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md](PROJECT/3-COMPLETED/GH-300-SWE-DIAGRAM-SEARCH-INPUT-OVERFLOW.md) · [#300](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/300) |

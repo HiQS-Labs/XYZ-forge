@@ -212,7 +212,7 @@ Partly, and the parts it leaves out are deliberate. If you arrive with the stand
 vocabulary (a DAG of nodes and edges, parallel stages, routing decisions), the Glossary entry above
 will read as more than it says. The precise answer:
 
-**What matches.** Phases are real nodes — each gets `phases/<id>/RELAY.md`, a tick token, a
+**What matches.** Phases are real nodes — each gets `marathon-system/<id>/RELAY.md`, a tick token, a
 reviewer, a brief, and an artifact allowlist, with an LLM turn as the body. Inside a phase there is
 a genuine LLM-selected edge: the reviewer writes `STATUS:`, and `utils/py/relay_drive.py` treats
 `Approved`/`Closed` as terminal and anything else as another round, bounded by a round cap. Every

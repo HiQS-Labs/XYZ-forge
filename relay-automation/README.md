@@ -120,7 +120,7 @@ Heartbeat cadence:
 `marathon.sh` resolves two different roots on purpose:
 
 - `MARATHON_HOME`: the harness install that owns `bin/tick`, `bin/marathon-yaml`, and telemetry helpers. Default: the script's own parent dir (`relay-automation/..`).
-- `MARATHON_ROOT`: the target repo that owns the plan's `brief:` files, `phases/`, `.tick/`, and commit target. Default: `git -C "$PWD" rev-parse --show-toplevel`; outside a git repo it falls back to `MARATHON_HOME`.
+- `MARATHON_ROOT`: the target repo that owns the plan's `brief:` files, `marathon-system/`, `.tick/`, and commit target. Default: `git -C "$PWD" rev-parse --show-toplevel`; outside a git repo it falls back to `MARATHON_HOME`.
 
 That split preserves dev-checkout behavior (`MARATHON_HOME == MARATHON_ROOT`) and makes vendored installs work with no bin overrides:
 

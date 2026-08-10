@@ -258,3 +258,15 @@ relay-automation/marathon-drive.sh ...   # build→gate→review, contained
 ---
 
 *Generated from [ROADMAP.md](../../ROADMAP.md) (source of truth). Re-run `utils/marathon-plan.sh` after editing the ledger.*
+
+<!-- HQ-queued lane — appended 2026-08-09; reconcile into a wave + collision map before firing. -->
+- **HQ-queued: Fuzzing Wave 4: Validate Bonsai on 472** (Tier B, queued 2026-08-09 → #472)
+  - [ ] rate effort/complexity/risk, then slot into a wave (respect the plan's collision map, GH-45).
+
+<!-- HQ-queued lane — appended 2026-08-09; reconcile into a wave + collision map before firing. -->
+- **HQ-queued: Fuzzing Wave 4: Validate Bonsai on 467** (Tier B, queued 2026-08-09 → #467)
+  - [ ] rate effort/complexity/risk, then slot into a wave (respect the plan's collision map, GH-45).
+
+<!-- HQ-queued lane — appended 2026-08-09; reconcile into a wave + collision map before firing. -->
+- **HQ-queued: Fuzzing Wave 4: Validate Bonsai on 448** (Tier B, queued 2026-08-09 → #448)
+  - [ ] rate effort/complexity/risk, then slot into a wave (respect the plan's collision map, GH-45).

@@ -33,7 +33,7 @@
 # The override must remain a real safety gate; a missing default fails fast rather than being skipped.
 #
 # Per-phase fields:
-#   id                 phase id → phases/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
+#   id                 phase id → marathon-system/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
 #   reviewer           codex* or agy* — the model that reviews this phase                 (required)
 #   brief              path (repo-relative) to the phase's task markdown                  (required)
 #   artifact           comma-separated repo-relative file(s) the builder may create/edit  (optional)

@@ -23,7 +23,7 @@ fi
 #
 # marathon-drive.sh — Phase 3: single-phase headless relay loop.
 #
-# Renders phases/p1/RELAY.md from the phase brief, seeds the tick token (handoff → builder),
+# Renders marathon-system/p1/RELAY.md from the phase brief, seeds the tick token (handoff → builder),
 # calls relay-drive.sh unmodified, runs the pre-advance gate, emits phase events, and saves
 # the transcript. Does NOT reimplement any loop logic — relay-drive.sh IS the loop.
 #
@@ -37,8 +37,8 @@ fi
 #     [--round-cap  <N>]         relay-drive round cap (default: 5 = 2*2+1)
 #     [--pre-advance-cmd <CMD>]  gate before phase.approved (default: bash validate.sh)
 #     [--post-approve-cmd <CMD>] optional command after phase.approved + green telemetry (default: unset)
-#     [--phases-dir <DIR>]       where to create phases/<id>/ (default: <repo-root>/phases)
-#     [--phase-id <ID>]          which phase to drive: phases/<id>/ (default: p1; the orchestrator sets it)
+#     [--phases-dir <DIR>]       where to create <dir>/<id>/ (default: <repo-root>/marathon-system)
+#     [--phase-id <ID>]          which phase to drive: <phases-dir>/<id>/ (default: p1; the orchestrator sets it)
 #     [--relay-task <ID>]        tick task name (default: MARATHON-<PHASE_ID>-TURN)
 #     [--artifact <PATHS>]       comma-separated repo-relative file(s) the builder may create/edit
 #                                beyond the relay file (passed to the shims as ALLOW_PATHS). Omit for
@@ -68,7 +68,7 @@ fi
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # _xyz_harness: the directory containing relay-automation/ (and bin/, src/, utils/).
 # Vendored install: HERE is <target>/.xyz/relay-automation → _xyz_harness is <target>/.xyz
-# (basename ".xyz"). ROOT = work root = where git ops, phases/, .tick/, validate.sh live.
+# (basename ".xyz"). ROOT = work root = where git ops, marathon-system/, .tick/, validate.sh live.
 _xyz_harness="$(cd "$HERE/.." && pwd)"
 if [ "$(basename "$_xyz_harness")" = ".xyz" ]; then
   ROOT="${MARATHON_ROOT:-"$(cd "$_xyz_harness/.." && pwd)"}"
@@ -600,8 +600,8 @@ Usage: relay-automation/marathon-drive.sh --phase-brief FILE --reviewer AGENT [o
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh).
   --post-approve-cmd CMD  Optional command after phase.approved + green telemetry (default: unset).
                           Failure preserves approval, writes reason post-approve-failed, and exits 9.
-  --phases-dir DIR        Where to create phases/<id>/ (default: <repo-root>/phases).
-  --phase-id ID           Which phase to drive: phases/<id>/ (default: p1).
+  --phases-dir DIR        Where to create <dir>/<id>/ (default: <repo-root>/marathon-system).
+  --phase-id ID           Which phase to drive: <phases-dir>/<id>/ (default: p1).
   --relay-task ID         Tick task name (default: MARATHON-<PHASE_ID>-TURN).
   --artifact PATHS        Comma-separated repo-relative file(s) the builder may create/edit beyond
                           the relay file (ALLOW_PATHS for the turn-takers). Omit for a relay-only phase.
@@ -631,7 +631,7 @@ ROUND_CAP=5
 PRE_ADVANCE_CMD=""   # resolved to default after ROOT is set
 POST_APPROVE_CMD=""  # optional command after approval + green telemetry; empty = disabled
 PHASES_DIR=""        # resolved to default after ROOT is set
-PHASE_ID="p1"        # which phase this invocation drives (phases/<id>/); the orchestrator sets it
+PHASE_ID="p1"        # which phase this invocation drives (<phases-dir>/<id>/); the orchestrator sets it
 RELAY_TASK=""        # resolved to MARATHON-<PHASE_ID>-TURN after parsing, unless given
 ARTIFACT_PATHS=""    # comma-separated repo-relative file(s) the builder may create/edit (beyond RELAY.md)
 REQUIRE_CLEAN=0      # --require-clean: hard-stop if the workspace has pre-existing changes
@@ -676,7 +676,10 @@ if [[ -n "$TARGET_ROOT" ]]; then
     || die "invalid --target-root (not a git repo): $TARGET_ROOT"
 fi
 
-PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
+# GH-484: the default is `marathon-system/`, matching `relay-system/`. `--phases-dir` / PHASES_DIR
+# still override it exactly as before; only the default value changed. Historical runs stay in
+# `phases/` — the monitors read both, this driver only ever writes the new one.
+PHASES_DIR="${PHASES_DIR:-"$ROOT/marathon-system"}"
 # GH-319: this string is later run through `eval`, so an UNQUOTED $ROOT word-splits on any space in
 # the repo path. A clone at ".../GH Repos/xyz-3-agents-swarm" produced `bash /Users/.../Documents/GH`
 # — an unrelated 0-byte file — which exits 0 in 0.0s, so every phase reported "gate passed" while
@@ -954,11 +957,39 @@ DEBUG_MANTRA_TEXT="$(debug_mantra_note "$DEBUG_MANTRA_PRIOR" "$PHASE_DIR" "$HERE
 # ── Step 0: clean-workspace check (Phase 3.6) ──────────────────────────────
 # Stray pre-existing files distract an autonomous builder — a 2026-06-17 dogfood builder was pulled
 # off-task by unrelated AUDIT/*.md briefs left in the tree. Surface them before seeding. Exclude the
-# marathon's own paths (phases/, .tick/). --require-clean turns the warning into a hard stop for
+# marathon's own paths (the configured phase dir, .tick/). --require-clean turns the warning into a hard stop for
 # unattended runs (DRY_RUN skips it — nothing is committed).
 if ((! DRY_RUN)); then
+  # GH-484: exclude the CONFIGURED phase-output dir, not a hardcoded "phases/". The comparison is
+  # the full repo-relative path (porcelain paths are relative to the repo TOPLEVEL, which differs
+  # from $ROOT for a vendored install rooted at <repo>/.xyz) — a basename match would miss a nested
+  # --phases-dir state/marathon-runs, and the old literal never matched .xyz/marathon-system/ at
+  # all, so a vendored run used to flag its own phase output as stray. index()==1 is a LITERAL
+  # prefix test, so a directory name containing regex metacharacters cannot corrupt the match.
+  # PHYSICAL paths on both sides: `git rev-parse --show-toplevel` always reports the physical path,
+  # so a repo reached through a symlinked ancestor (macOS /var and /tmp, many home/network mounts)
+  # gives "/private/var/..." from git and "/var/..." from the flag. Compare those and the prefix
+  # test fails, phases_rel goes empty, and the exclusion silently stops working — the Python twin
+  # had the same defect, caught by test/gh484-phase-dir-default.sh case (3). The leaf may not exist
+  # yet (Step 1 creates it), so resolve the deepest existing ancestor and re-append the rest.
+  phys() {  # <path> → physical path, tolerating not-yet-created trailing components
+    local p="$1" tail=""
+    [[ "$p" == /* ]] || p="$PWD/$p"
+    while [[ ! -d "$p" && "$p" != "/" && -n "$p" ]]; do
+      tail="$(basename "$p")${tail:+/$tail}"; p="$(dirname "$p")"
+    done
+    p="$(cd "$p" 2>/dev/null && pwd -P)" || { printf '%s' "$1"; return 0; }
+    printf '%s' "$p${tail:+/$tail}"
+  }
+  phases_abs="$(phys "$PHASES_DIR")"
+  git_top="$(phys "$(git -C "$ROOT" rev-parse --show-toplevel 2>/dev/null || printf '%s' "$ROOT")")"
+  phases_rel=""
+  [[ "$phases_abs" == "$git_top"/* ]] && phases_rel="${phases_abs#"$git_top"/}/"
   dirty="$(git -C "$ROOT" status --porcelain 2>/dev/null \
-    | awk '{ p=substr($0,4); if (p !~ /^phases\// && p !~ /^\.tick\//) print p }')"
+    | awk -v pref="$phases_rel" '{ p=substr($0,4);
+        if (pref != "" && index(p, pref) == 1) next;
+        if (index(p, ".tick/") == 1) next;
+        print p }')"
   if [[ -n "$dirty" ]]; then
     log "WARNING: workspace is not clean — an autonomous builder can be distracted by stray files."
     while IFS= read -r p; do [[ -n "$p" ]] && log "  • $p"; done <<< "$dirty"
@@ -966,7 +997,7 @@ if ((! DRY_RUN)); then
   fi
 fi
 
-# ── Step 1: render phases/p1/RELAY.md ──────────────────────────────────────
+# ── Step 1: render <phases-dir>/p1/RELAY.md ──────────────────────────────────────
 
 mkdir -p "$PHASE_DIR"
 BRIEF_TEXT="$(cat "$PHASE_BRIEF_FILE")"

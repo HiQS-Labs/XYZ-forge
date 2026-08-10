@@ -38,14 +38,15 @@ trap 'rm -rf "$D"' EXIT
 
 make_clone_repo() {
   # make_clone_repo <path> — create a fake "normal clone" (has .git/)
+  # GH-484: the phase dir is marathon-system/, what a current driver actually writes.
   local repo="$1"
-  mkdir -p "$repo/.git" "$repo/.tick/events" "$repo/phases/p1"
+  mkdir -p "$repo/.git" "$repo/.tick/events" "$repo/marathon-system/p1"
 }
 
 make_vendored_repo() {
   # make_vendored_repo <path> — create a fake "vendored" repo (no .git/)
   local repo="$1"
-  mkdir -p "$repo/.tick/events" "$repo/phases/p1"
+  mkdir -p "$repo/.tick/events" "$repo/marathon-system/p1"
 }
 
 write_marathon_event() {
@@ -107,6 +108,41 @@ make_clone_repo "$REPO_GONE"
 printf '%s\t2026-07-02\tv1\tabc\t%s\n' "$REPO_GONE/.xyz" "$REPO_GONE" >> "$REGISTRY"
 # Delete the path now so marathon-ls.sh sees it as GONE.
 rm -rf "$REPO_GONE"
+
+# ---------------------------------------------------------------------------
+# Fixture 5 (GH-484): NEW-DEFAULT only — a run written by a current driver
+# ---------------------------------------------------------------------------
+REPO_NEW="$D/repo-new-default"
+make_clone_repo "$REPO_NEW"
+write_marathon_event "$REPO_NEW" "marathon.complete" "2026-08-09T12:00:00.000Z"
+printf 'STATUS: Open\n' > "$REPO_NEW/marathon-system/p1/RELAY.md"
+printf '%s\t2026-08-09\tv1\tabc\t%s\n' "$REPO_NEW/.xyz" "$REPO_NEW" >> "$REGISTRY"
+
+# ---------------------------------------------------------------------------
+# Fixture 6 (GH-484): LEGACY only — a pre-flip run, or a fleet repo whose
+# vendored .xyz/ has not re-synced and is therefore still writing to phases/.
+# ---------------------------------------------------------------------------
+REPO_LEGACY="$D/repo-legacy"
+make_clone_repo "$REPO_LEGACY"
+rm -rf "$REPO_LEGACY/marathon-system"
+mkdir -p "$REPO_LEGACY/phases/p1"
+write_marathon_event "$REPO_LEGACY" "marathon.complete" "2026-08-09T12:00:00.000Z"
+printf 'STATUS: Open\n' > "$REPO_LEGACY/phases/p1/RELAY.md"
+printf '%s\t2026-08-09\tv1\tabc\t%s\n' "$REPO_LEGACY/.xyz" "$REPO_LEGACY" >> "$REGISTRY"
+
+# ---------------------------------------------------------------------------
+# Fixture 7 (GH-484): BOTH populations present, and the LEGACY file is NEWER.
+# This is the falsifiable case: a naive "look in marathon-system/, return if
+# found" implementation passes fixtures 5 and 6 and fails only this one.
+# ---------------------------------------------------------------------------
+REPO_MIXED="$D/repo-mixed"
+make_clone_repo "$REPO_MIXED"
+mkdir -p "$REPO_MIXED/phases/p1"
+write_marathon_event "$REPO_MIXED" "marathon.complete" "2026-08-09T12:00:00.000Z"
+printf 'STATUS: Approved\n' > "$REPO_MIXED/marathon-system/p1/RELAY.md"
+sleep 1   # mtime granularity: `test -nt` is second-resolution on some filesystems
+printf 'STATUS: Open\n' > "$REPO_MIXED/phases/p1/RELAY.md"
+printf '%s\t2026-08-09\tv1\tabc\t%s\n' "$REPO_MIXED/.xyz" "$REPO_MIXED" >> "$REGISTRY"
 
 # ---------------------------------------------------------------------------
 # Run marathon-ls.sh with our fake registry
@@ -173,6 +209,36 @@ LIVE_PID="$(printf '%s' "$OUTPUT" | awk -F'\t' -v r="$REPO_LIVE" '$1 == r { prin
 [ -d "$REPO_STALE/.relay-driver.lock" ] \
   && pass "STALE fixture has .relay-driver.lock (vendored path)" \
   || fail "STALE fixture missing .relay-driver.lock"
+
+# ---------------------------------------------------------------------------
+# (c) GH-484: dual-path RELAY-FILE lookup (col 6)
+# ---------------------------------------------------------------------------
+relay_for() {
+  local repo="$1"
+  printf '%s' "$OUTPUT" | awk -F'\t' -v r="$repo" '$1 == r { print $6 }'
+}
+
+[ "$(relay_for "$REPO_NEW")" = "$REPO_NEW/marathon-system/p1/RELAY.md" ] \
+  && pass "GH-484: new default — RELAY-FILE resolves under marathon-system/" \
+  || fail "GH-484: new default: expected $REPO_NEW/marathon-system/p1/RELAY.md, got '$(relay_for "$REPO_NEW")'"
+
+[ "$(relay_for "$REPO_LEGACY")" = "$REPO_LEGACY/phases/p1/RELAY.md" ] \
+  && pass "GH-484: legacy fallback — a pre-flip / not-yet-re-synced repo stays visible" \
+  || fail "GH-484: legacy fallback: expected $REPO_LEGACY/phases/p1/RELAY.md, got '$(relay_for "$REPO_LEGACY")'"
+
+# The falsifiable one: both dirs populated, legacy written LAST. "check new, return
+# if found" would report the marathon-system file here and be wrong.
+[ "$(relay_for "$REPO_MIXED")" = "$REPO_MIXED/phases/p1/RELAY.md" ] \
+  && pass "GH-484: both populations present — the NEWER file wins regardless of which dir it is in" \
+  || fail "GH-484: mixed: expected the newer $REPO_MIXED/phases/p1/RELAY.md, got '$(relay_for "$REPO_MIXED")'"
+
+# marathon-detail.sh reads the same two locations; assert it agrees rather than
+# trusting that the duplicated loop stayed in sync.
+DETAIL="$HERE/../relay-automation/marathon-detail.sh"
+detail_out="$(bash "$DETAIL" "$REPO_LEGACY" 2>/dev/null || true)"
+printf '%s' "$detail_out" | grep -q 'RELAY.md: p1/RELAY.md' \
+  && pass "GH-484: marathon-detail.sh finds the legacy relay file too" \
+  || fail "GH-484: marathon-detail.sh missed the legacy relay file: [$detail_out]"
 
 # ---------------------------------------------------------------------------
 # bash -n syntax check on all 4 scripts
