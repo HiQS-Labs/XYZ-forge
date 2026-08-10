@@ -64,7 +64,7 @@ set -e
 
 [ "$STATUS" -ne 0 ] && pass "coverage check fails when a GH inbox capture is not parked in ROADMAP.md" \
   || fail "coverage check passed even though the GH inbox capture was missing from ROADMAP.md"
-printf '%s' "$OUTPUT" | grep -Fq "captured GH issue doc is not parked in ROADMAP.md" \
+printf '%s' "$OUTPUT" | grep -F "captured GH issue doc is not parked in ROADMAP.md" >/dev/null \
   && pass "missing parked GH inbox capture reports the correct failure" \
   || fail "missing parked GH inbox capture did not report the expected error"
 
@@ -197,17 +197,17 @@ COMPLETED_STATUS_OUTPUT="$(
   bash "$ROOT/utils/pdda-local-checks.sh" completed-status 2>&1
 )"
 
-printf '%s' "$COMPLETED_STATUS_OUTPUT" | grep -Fq "GH-501-STALE-COMPLETED.md" \
-  && printf '%s' "$COMPLETED_STATUS_OUTPUT" | grep -Fq "non-terminal" \
+printf '%s' "$COMPLETED_STATUS_OUTPUT" | grep -F "GH-501-STALE-COMPLETED.md" >/dev/null \
+  && printf '%s' "$COMPLETED_STATUS_OUTPUT" | grep -F "non-terminal" >/dev/null \
   && pass "a 3-COMPLETED doc with a non-terminal status is flagged (GH-189, restored locally)" \
   || fail "the stale-status 3-COMPLETED doc was not flagged: $COMPLETED_STATUS_OUTPUT"
 
-printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "GH-502-SHIPPED-BUT-OPEN.md" \
-  && printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "doc status reads 'shipped'" \
+printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -F "GH-502-SHIPPED-BUT-OPEN.md" >/dev/null \
+  && printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -F "doc status reads 'shipped'" >/dev/null \
   && pass "issue-doc-sync direction (b) still flags a 2-WORKING doc claiming done while its issue is OPEN (no regression)" \
   || fail "issue-doc-sync no longer flags the pre-existing direction (b) shipped-but-open case"
 
-printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -Fq "issue #503 state unavailable" \
+printf '%s' "$ISSUE_DOC_SYNC_OUTPUT" | grep -F "issue #503 state unavailable" >/dev/null \
   && pass "issue-doc-sync reports 'state unavailable' for a doc with no cached/live issue state" \
   || fail "issue-doc-sync did not degrade gracefully for the no-cached-state doc"
 
@@ -239,11 +239,11 @@ ROADMAP_ISSUE_STATE_OUTPUT="$(
   bash "$ROOT/utils/pdda-local-checks.sh" roadmap-issue-state 2>&1
 )"
 
-printf '%s' "$ROADMAP_ISSUE_STATE_OUTPUT" | grep -Fq "issue #501 is CLOSED but the ledger entry's status marker is still non-terminal" \
+printf '%s' "$ROADMAP_ISSUE_STATE_OUTPUT" | grep -F "issue #501 is CLOSED but the ledger entry's status marker is still non-terminal" >/dev/null \
   && pass "roadmap-issue-state flags a ledger entry whose non-terminal marker drifted from a CLOSED issue (GH-189)" \
   || fail "roadmap-issue-state did not flag the stale non-terminal ledger entry"
 
-printf '%s' "$ROADMAP_ISSUE_STATE_OUTPUT" | grep -Fq "issue #503 state unavailable" \
+printf '%s' "$ROADMAP_ISSUE_STATE_OUTPUT" | grep -F "issue #503 state unavailable" >/dev/null \
   && pass "roadmap-issue-state degrades to INFO 'state unavailable' for a ledger entry with no cached/live issue state" \
   || fail "roadmap-issue-state did not degrade gracefully for the no-cached-state ledger entry"
 

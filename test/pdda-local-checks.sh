@@ -53,10 +53,10 @@ Body.
 EOF
 
 out="$(run_local completed-status)"
-printf '%s' "$out" | grep -Fq "GH-601-STALE.md" \
+printf '%s' "$out" | grep -F "GH-601-STALE.md" >/dev/null \
   && pass "completed-status flags a 3-COMPLETED doc still reading a non-terminal status" \
   || fail "the stale completed doc was not flagged: $out"
-printf '%s' "$out" | grep -Fq "GH-602-CLEAN.md" \
+printf '%s' "$out" | grep -F "GH-602-CLEAN.md" >/dev/null \
   && fail "a correctly-reconciled completed doc was wrongly flagged: $out" \
   || pass "completed-status leaves a terminal-status doc alone (no false positive)"
 
@@ -71,10 +71,10 @@ cat >"$TMP/ROADMAP.md" <<'EOF'
 EOF
 
 out="$(run_local roadmap-issue-state)"
-printf '%s' "$out" | grep -Fq "issue #601 is CLOSED but the ledger entry's status marker is still non-terminal" \
+printf '%s' "$out" | grep -F "issue #601 is CLOSED but the ledger entry's status marker is still non-terminal" >/dev/null \
   && pass "roadmap-issue-state flags a non-terminal marker on a CLOSED issue" \
   || fail "the stale ledger marker was not flagged: $out"
-printf '%s' "$out" | grep -Fq "issue #602 is still OPEN" \
+printf '%s' "$out" | grep -F "issue #602 is still OPEN" >/dev/null \
   && pass "roadmap-issue-state flags a shipped marker on a still-OPEN issue (the inverse direction)" \
   || fail "the shipped-but-open ledger entry was not flagged: $out"
 
@@ -97,10 +97,10 @@ Milestone: Something
 EOF
 
 out="$(run_local release-milestone)"
-printf '%s' "$out" | grep -Fq "release '9.0.0' has a Target Date but no 'Milestone:'" \
+printf '%s' "$out" | grep -F "release '9.0.0' has a Target Date but no 'Milestone:'" >/dev/null \
   && pass "release-milestone flags a dated, unshipped release with no join key" \
   || fail "the milestone-less release was not flagged: $out"
-printf '%s' "$out" | grep -Fq "release '9.1.0'" \
+printf '%s' "$out" | grep -F "release '9.1.0'" >/dev/null \
   && fail "a release carrying a Milestone was wrongly flagged: $out" \
   || pass "release-milestone leaves a release with a Milestone alone (no false positive)"
 

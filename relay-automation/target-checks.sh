@@ -82,7 +82,7 @@ has_file()  { [[ -e "$ROOT/$1" ]]; }
 any_ext() {
   find "$ROOT" -maxdepth 4 \
     \( -name vendor -o -name node_modules -o -name .git -o -name .xyz \) -prune -o \
-    -type f -name "$1" -print -quit 2>/dev/null | grep -q .
+    -type f -name "$1" -print -quit 2>/dev/null | grep . >/dev/null
 }
 
 # ── PHP / WordPress — the ecosystem the report was written against ───────────────────────
