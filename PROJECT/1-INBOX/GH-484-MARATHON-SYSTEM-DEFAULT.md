@@ -294,3 +294,94 @@ its own (too-narrow) acceptance criteria while leaving the actual multi-phase en
 Phase 0 stays cheap. Phase 1 now carries the orchestrator flip, the dual-path monitor design, and
 the forced-Bash-path parity requirement, in addition to the original driver/literal work. Phase 2's
 size still depends on Phase 0's enumerated count, not assumed up front.
+
+---
+
+## Phase 0 OUTPUT — enumeration complete (2026-08-09, branch `feat/gh484-marathon-system-default`)
+
+Zero edits landed outside this table, as specified. Method: `/usr/bin/grep` (not `rtk grep` — see the
+known false-negative), repo-wide for `phases`, then narrowed to *directory-shaped* references
+(`phases/`, `/phases`, `phases_dir`, `PHASES_DIR`, `phases-dir`) since the bare word overwhelmingly
+means either the PDDA frontmatter triage integer or the `MARATHON.yaml` `phases:` key — neither of
+which is this directory.
+
+**Funnel:** 685 files match `phases` repo-wide → 543 are in history/transcript trees
+(`PROJECT/3-COMPLETED/`, `.tick/events/`, `relay-system/`, `temp/`, `AUDIT/`, `PROJECT/4-MISC/`,
+`__pycache__/`, `phases/`, `marathon-plans/`) → 142 in the live surface → **17 carry a real
+directory-shaped reference**. Everything else in those 142 is prose about plan phases.
+
+### Category 2 — hardcodes the default, MUST update
+
+| File | Line(s) | What it pins | Why it breaks |
+|---|---|---|---|
+| `test/marathon.sh` | 273 | `"$vendored_phases" == "$vendored_root/phases"` | **The single test that proves this issue's stated goal.** GH-206's vendored-install case asserts `marathon.sh`'s own default with zero env overrides. Fails outright after the flip — correctly. Must become `marathon-system`. |
+| `test/marathon-drive.sh` | 819, 832, 917, 930–931 (stubs) + invocations at 836–847, 872–880 | Vendored-consumer chain (GH-171/GH-172) invoked with **no `--phases-dir`**; its stub agents append to `$PWD/phases/p1/RELAY.md` | **Not predicted by the plan.** Driver would write `marathon-system/p1/RELAY.md` while the stub writes `phases/p1/RELAY.md` → driver sees no progress; the test fails for a misleading reason. This is exactly the "new vendored installation" path the issue's goal names. |
+| `test/gh401-dry-run-no-mutation.sh` | 56 | `[ ! -e "$MROOT/phases" ]`, run unscoped (no `--phases-dir`, confirmed at 45–47) | Goes **vacuously true** after the flip — stops testing anything while still reporting pass. The sibling `before`/`after` porcelain assertion survives, so this one fails silently-green, the worst shape. |
+| `test/marathon-monitor.sh` | 42, 48 | Fixtures `mkdir -p "$repo/phases/p1"` for `marathon-ls.sh` | Dual-path fallback (Phase 1) keeps these **green without ever exercising the new default**. Must gain a `marathon-system/` fixture case — this is what proves acceptance #7, not the existing rows. |
+| `test/marathon-root-audit.sh` | 250 | `for probe in phases/audit-probe/RELAY.md …` | The gitignore-safety probe. Already scoped in the plan's landmine fix; recorded here for completeness. |
+
+### Category 3 — passes an explicit `--phases-dir` fixture, UNAFFECTED (verified, not assumed)
+
+`test/debug-mantra.sh`, `test/gh284-runlog-heartbeat.sh`, `test/gh319-gate-path-with-space.sh`,
+`test/gh322-runlog-python-lane.sh`, `test/gh331-cost-summary.sh`, `test/gh385-retry-token-satisfied.sh`,
+`test/gh390-gate-guard.sh`, `test/gh407-gate-ran-attribution.sh`, `test/gh438-acceptance-recheck.sh`,
+`test/gh438-removal-is-progress.sh`, `test/gh457-gate-tiers.sh`, `test/xyz-harness-hooks.sh`, and
+`test/marathon-drive.sh` cases 1–16 + 19+ (its `run_driver()` helper passes `--phases-dir "$A/phases"`
+at :57, which is why :79's `[ ! -e "$A/phases" ]` stays meaningful — unlike gh401's).
+
+`$A/phases` here is a **fixture path the test chooses**, not the driver's default. These keep passing
+unchanged and keep testing the override path, which is the point.
+
+Also no-change, for a different reason — the string is an arbitrary relay-file path or a tick
+`--paths` value, never the resolved output dir: `test/gh342-sentinel-debug-log-python.sh`,
+`test/gh397-reviewer-turn-role.sh`, `test/sentinel-driver-hooks.sh`, `test/test_python_layer.py:193`,
+`test/gh268-relay-cue-and-target-checks.sh` (comment), `test/litmus-release.sh` (comments, incl. the
+`/phases/`-gitignore rationale at :104 — worth *reading* before Phase 1, not editing).
+
+### Category 4 — documents the default, MUST update
+
+| File | Line(s) | Note |
+|---|---|---|
+| `README.md` | 215 | "each gets `phases/<id>/RELAY.md`" |
+| `relay-automation/README.md` | 123 | `MARATHON_ROOT` description names `phases/` |
+| `relay-automation/MARATHON.example.yaml` | 36 | **Not in the plan's list.** The example plan users copy — `id → phases/<id>/RELAY.md`. |
+| `.claude/commands/pre-marathon.md` | 9 | **Not in the plan's list.** A live operator command that inspects `phases/*/` for stale phase dirs — needs dual-path awareness, same as the monitors. |
+| `relay-automation/marathon-drive.sh` | 26, 40, 41, 71, 603, 604, 634, 957, 969 | `--help` output + header comments. Same file as the Phase 1 default flip; edit together or the help text lies. |
+| `relay-automation/marathon.sh` | 15, 84, 94, 96, 98 | Same — usage text, same file as its Phase 1 flip. |
+
+**Plan candidates confirmed to need NO change** (checked, not skipped silently):
+- `ARCHITECTURE.md` — **zero** matches for `phases` at all. This settles the plan's open conditional; Phase 2 is not left holding it.
+- `relay-automation/CONTRACT.example.md` — no directory-shaped reference.
+- `skills/marathon-triage/SKILL.md:103` and `skills/file-xyz-bug/SKILL.md` — `phases` here is the PDDA frontmatter **triage integer**, not the directory. Same for `PROJECT/PDDA.md`, `utils/pdda/pdda.sh`, `utils/hq/hq*.sh`, `sentinel-overlay/sentinel-nightly.sh`, `skills/skills-sync-trinity/scripts/render_working_doc.py` (an unrelated `dest="phases"` argparse target).
+- `utils/swarm-preflight.sh:44`, `utils/py/swarm_preflight.py`, `test/swarm-preflight.sh`, `test/gh308-swarm-gate-path.sh` — the only match is the JSON literal `"source": "self#phases"`, an unrelated remediation-source token. Confirms the consult's ruling that swarm-preflight is out of scope.
+- `src/marathon-yaml.js`, `bin/marathon-yaml` — parse the YAML `phases:` key; never touch the directory.
+- `AGENTS.md`, `ROUTER.md`, `UPGRADE.md`, `PROJECT/PDDA.md` — no directory-shaped reference.
+
+### Category 5 — live callers with their own independent default: SET CONFIRMED COMPLETE
+
+The consult-supplied set is exactly right and gained no new members:
+
+| File | Line(s) | Shape |
+|---|---|---|
+| `relay-automation/marathon.sh` | 167 (default), 200 (forwards `--phases-dir`) | Own default computation |
+| `relay-automation/marathon-ls.sh` | 113, 117 | `local phases_dir="$repo/phases"`, no override read |
+| `relay-automation/marathon-detail.sh` | 40, 44 | `PHASES_DIR="$REPO/phases"`, no override read |
+| `relay-automation/marathon-tui.sh` | — | **Zero** direct references; inherits via delegation, as the plan assumed. Verified. |
+
+**Non-literal construction: ruled out.** Swept every `.sh`/`.py`/`.js` under `relay-automation/`,
+`utils/`, `bin/`, `src/`, `sentinel-overlay/` for `RELAY.md` path assembly outside the driver — the
+only hits are the two monitors above. Nothing builds the directory name by concatenation or format
+string, so the grep-based audit has no blind spot of that shape.
+
+### Line-number drift since the plan was written
+
+- `relay-automation/marathon-drive.sh` awk containment literal is at **961**, not `959–965`.
+- `utils/py/marathon_drive.py` containment literal at **1666** and default at **687** — both still
+  accurate. Re-verify anyway at build time.
+
+### Phase 2 sizing, now that Phase 0 has counted
+
+**11 files to edit** (5 Category 2 + 6 Category 4), of which 2 are the same files Phase 1 already
+opens. Phase 2 lands at the low end of its estimate: **cx 1, risk 1, eff 1**. The Category 2 work is
+the real content — four of those five tests need judgment, not a string swap, and two of them
+(`gh401`, `marathon-monitor`) fail *silently green* rather than loudly if handled carelessly.
