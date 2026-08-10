@@ -1,15 +1,14 @@
 ---
-title: "GH-484 — redefine the canonical marathon-phase directory default from phases/ to MARATHONS/"
+title: "GH-484 — redefine the canonical marathon-phase directory default from phases/ to marathon-system/"
 status: 1-INBOX
 created: 2026-08-09
 owner: noel
 doc_type: project
 goal: >
   Flip the DEFAULT value of the marathon drivers' per-phase run-output directory from
-  `$ROOT/phases` to `$ROOT/MARATHONS`, for every new install (vendored or not), while the
-  existing `--phases-dir` / `PHASES_DIR` override keeps working exactly as it does today.
-  Naming-consistency issue, not a bug fix — the harness's entire vocabulary says "marathon"
-  except the one directory holding a marathon's actual run state.
+  `$ROOT/phases` to `$ROOT/marathon-system`, matching the naming already used by `relay-system/`,
+  for every new install (vendored or not), while the existing `--phases-dir` / `PHASES_DIR`
+  override keeps working exactly as it does today. Naming-consistency issue, not a bug fix.
 ---
 
 Issue: [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484)
@@ -28,7 +27,7 @@ explicit release-planning ask, which this is a scoping decision adjacent to but 
 
 ## Why this shape (ponytail: cheapest path that's actually correct)
 
-The obvious-sounding version of this task is "rename `phases/` to `MARATHONS/` everywhere" — a
+The obvious-sounding version of this task is "rename `phases/` to `marathon-system/` everywhere" — a
 repo-wide search-and-replace across ~70 files. That is not what's actually needed, and building it
 that way would be doing far more than the ask requires:
 
@@ -151,51 +150,11 @@ this issue.
   be unrequested surface for a value that has exactly one real override case.
 - Not a blanket repo-wide rename of every prose mention of "phases". Phase 0 below decides, file by
   file, which of the non-driver references actually need to change.
-- **`MARATHONS/` stays tracked in git — this issue does not gitignore it.** The rename is naming
-  only; whether run artifacts should be committed at all is a separate, larger design question (see
-  below), out of bounds here.
-
-## Should `MARATHONS/` be gitignored? Not by this issue — and not safely today, either way
-
-Raised by the operator directly. Answer: **no blanket gitignore, not as part of GH-484, and not safe
-to do at all without a driver change first** — this is not a naming decision, it is a durability
-one, and belongs with GH-388 (marathon run-log durability), not here.
-
-**Why it is not currently safe, mechanically:** `marathon_drive.py` stages phase output with `git
-add --` + `check=True` at three call sites. `git add` on an explicitly gitignored path exits 1,
-`check=True` turns that into a crash. This is not hypothetical — it is the exact failure that landed
-and got reverted same-day in this repo on 2026-08-09 (see the gitignore-landmine section above), and
-`test/marathon-root-audit.sh` now pins against it. Gitignoring `MARATHONS/` the same way would
-reproduce that crash on the very first same-repo phase, on day one of the new name.
-
-**Pros, if a driver change made it safe:**
-- Phase artifacts (RELAY.md, ESCALATION.md, transcripts) embed absolute, machine-specific paths, so
-  every contributor running a marathon on their own machine currently produces a diff that churns for
-  the next person and reverts for whoever last committed — the exact problem the reverted 2026-08-09
-  attempt was trying to solve.
-- Keeps the repo tree from accumulating an ever-growing set of per-run directories long-term.
-
-**Cons:**
-- Removes the *only* durability mechanism this harness currently has for a marathon run. Nightwatch's
-  own stated goal is "a run interrupted, killed at its cap, or panicking the host leaves a durable
-  record and recovery path" — today, a git commit **is** that record. Gitignoring the directory
-  removes it with nothing replacing it, a regression against the release this issue is explicitly
-  sequenced ahead of.
-- `marathon-ls.sh` / `marathon-detail.sh` read committed history for status. Gitignored, only the
-  local uncommitted copy exists — invisible to anyone who didn't run it themselves, and one `git
-  clean` away from gone.
-- The ~72 already-committed historical records exist specifically because they were judged worth
-  keeping as marathon history (per the 2026-08-09 `.gitignore` commit's own reasoning). A blanket
-  ignore going forward quietly ends that for every future run.
-- Already tried, in this repo, this week. Reverted same-day for exactly these reasons — not a
-  hypothetical risk being raised for the first time here.
-
-**Recommendation:** if reducing this churn is wanted, that is a real, separate, and larger question
-— *should marathon-drive stop committing phase records at all, and if so what replaces them as the
-durability mechanism* (a pruning policy? an external log store, per the old GH-30 "centralized
-transcript archive" idea? something else?) — not "add a `.gitignore` line." That belongs to GH-388,
-which already exists for exactly this territory. GH-484 stays a pure naming change: `MARATHONS/`
-tracked in git on day one, identically to how `phases/` is tracked today.
+- **`marathon-system/` stays tracked in git, same as `phases/` is today — not gitignored.** Raised
+  and settled by the operator directly: not worth the extra work this would create (a driver
+  behavior change would be required first, or the first same-repo phase crashes recording itself —
+  see the gitignore-landmine section above). If reducing per-run-artifact churn is ever wanted,
+  that's GH-388's territory (run-log durability), a separate question this issue doesn't take on.
 
 ## Phases
 
@@ -225,12 +184,12 @@ Phase 2 has a checklist instead of a re-grep.
 
 **Drivers:**
 - `utils/py/marathon_drive.py`: change the `--phases-dir` default from `os.path.join(root,
-  "phases")` to `os.path.join(root, "MARATHONS")`; fix the containment literal (current line, verify
-  fresh: `:1661-1667`) to compare against the resolved `phases_dir`'s repo-relative path, not the
-  string `"phases/"` or a bare basename.
+  "phases")` to `os.path.join(root, "marathon-system")`; fix the containment literal (current line,
+  verify fresh: `:1661-1667`) to compare against the resolved `phases_dir`'s repo-relative path, not
+  the string `"phases/"` or a bare basename.
 - `relay-automation/marathon-drive.sh`: same two changes — `PHASES_DIR="${PHASES_DIR:-"$ROOT/
-  MARATHONS"}"`, and the `:959-965` awk pattern matches the full repo-relative `$PHASES_DIR` value
-  (metacharacter-safe), not a literal or an unescaped basename.
+  marathon-system"}"`, and the `:959-965` awk pattern matches the full repo-relative `$PHASES_DIR`
+  value (metacharacter-safe), not a literal or an unescaped basename.
 - `marathon-drive.sh`/`marathon_drive.py` is the **one** GH-308 frozen twin pair touched here → goes
   through the documented exception process (`test/gh308-frozen-twin-guard.sh --check --base <rev>
   --allow-exceptions`, with a `Frozen-twin-exception: relay-automation/marathon-drive.sh — <reason>`
@@ -243,9 +202,9 @@ Phase 2 has a checklist instead of a re-grep.
 **Monitors (not frozen twins, hardcode the literal directly, no override support today):**
 - `marathon-ls.sh` and `marathon-detail.sh`: **dual-path lookup, not a straight swap.** Because this
   plan's anti-goal is "no migration of historical `phases/<run-id>/` records," a monitor that only
-  looks in `MARATHONS/` goes blind to every pre-flip run's history. Both must check `MARATHONS/`
-  first, then fall back to `phases/` for anything not found there — the honest reflection of "new
-  runs go to the new place, old runs are still where they were."
+  looks in `marathon-system/` goes blind to every pre-flip run's history. Both must check
+  `marathon-system/` first, then fall back to `phases/` for anything not found there — the honest
+  reflection of "new runs go to the new place, old runs are still where they were."
 - `marathon-tui.sh` inherits this automatically since it delegates to both scripts above.
 
 **Landmine fix:**
@@ -253,8 +212,8 @@ Phase 2 has a checklist instead of a re-grep.
   the new default path. This must land before any real same-repo phase runs against the new default.
 
 **Parity test:**
-- New/extended regression test: a fresh run with no `--phases-dir` writes under `MARATHONS/` via
-  both `marathon.sh` and direct `marathon-drive` invocation; `--phases-dir <custom>` (including a
+- New/extended regression test: a fresh run with no `--phases-dir` writes under `marathon-system/`
+  via both `marathon.sh` and direct `marathon-drive` invocation; `--phases-dir <custom>` (including a
   nested path) still overrides correctly in both twins; the containment-literal fixes correctly
   recognize a non-default, nested `--phases-dir` value (the falsifiable case — assert it fails
   against the pre-fix code). **Must explicitly force `XYZ_PYTHON=0` for at least one parity run** —
@@ -266,17 +225,17 @@ Phase 2 has a checklist instead of a re-grep.
 - Update every file Phase 0 categorized as 2–4. Each edit references its Phase 0 line, not a fresh
   ad-hoc decision.
 - `README.md` / `relay-automation/README.md` / `ARCHITECTURE.md` (if it names the directory) updated
-  to describe `MARATHONS/` as the default, `--phases-dir` as the override, and the dual-path lookup
-  behavior for historical runs.
+  to describe `marathon-system/` as the default, `--phases-dir` as the override, and the dual-path
+  lookup behavior for historical runs.
 - Re-run the full `validate.sh` suite; confirm no drift beyond what Phase 0 predicted (a surprise
   failure here means Phase 0's classification missed something and should be corrected, not papered
   over).
 
 ## Acceptance (issue #484's original 6, plus 2 added after consult — corrections noted inline)
 
-1. A fresh same-repo marathon run (no `--phases-dir` passed) writes to `MARATHONS/`, not the old
-   directory, in both the Python and Bash drivers, **and via `marathon.sh`** (added — the original
-   criterion covered only the drivers, not the orchestrator that actually forwards the flag).
+1. A fresh same-repo marathon run (no `--phases-dir` passed) writes to `marathon-system/`, not the
+   old directory, in both the Python and Bash drivers, **and via `marathon.sh`** (added — the
+   original criterion covered only the drivers, not the orchestrator that actually forwards the flag).
 2. `--phases-dir <custom>` still overrides the default exactly as today, in both twins, **including
    a nested custom path** (added — the naive basename-match design would have silently failed this).
 3. The two hardcoded containment literals track the actual configured directory as a full
@@ -291,10 +250,10 @@ Phase 2 has a checklist instead of a re-grep.
    (`marathon-drive.sh`, correcting the original "both" wording — `marathon.sh` is edited too but is
    not a frozen twin), not bypassed.
 7. **(Added)** `marathon-ls.sh` / `marathon-detail.sh` / `marathon-tui.sh` correctly show status for
-   both a new (`MARATHONS/`) and a pre-existing historical (`phases/`) run without operator
+   both a new (`marathon-system/`) and a pre-existing historical (`phases/`) run without operator
    intervention.
 8. **(Added)** The gitignore-safety regression test passes against a clean tree (no stray `/phases`
-   or `/MARATHONS` line reintroduced) before this ships.
+   or `/marathon-system` line reintroduced) before this ships.
 
 ## Sizing
 

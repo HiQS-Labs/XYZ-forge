@@ -10,7 +10,7 @@ Summary: 160 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · �
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-484 · redefine the canonical marathon-phase directory default from phases/ to MARATHONS/ | — | [GH-484-MARATHONS-DEFAULT.md](PROJECT/1-INBOX/GH-484-MARATHONS-DEFAULT.md) · [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484) |
+| GH-484 · redefine the canonical marathon-phase directory default from phases/ to marathon-system/ | — | [GH-484-MARATHON-SYSTEM-DEFAULT.md](PROJECT/1-INBOX/GH-484-MARATHON-SYSTEM-DEFAULT.md) · [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484) |
 | GH-480 · XYZ Cockpit — read-only VS Code view for Marathons, Releases, Worktrees | — | [GH-480-VSCODE-COCKPIT-EXT.md](PROJECT/1-INBOX/GH-480-VSCODE-COCKPIT-EXT.md) · [#480](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/480) |
 | GH-451 · Marathon: support Pi builders on the Python-default path | — | [GH-451-PI-MARATHON-ROUTING.md](PROJECT/1-INBOX/GH-451-PI-MARATHON-ROUTING.md) · [#451](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/451) |
 | GH-453 · Design an issue-derived fuzzing evidence pipeline | — | [GH-453-ISSUE-DERIVED-FUZZING.md](PROJECT/2-WORKING/GH-453-ISSUE-DERIVED-FUZZING.md) · [#453](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/453) |
