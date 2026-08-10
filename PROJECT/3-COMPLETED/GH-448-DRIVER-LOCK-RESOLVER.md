@@ -2,7 +2,7 @@
 gh_issue: 448
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/448
 title: "Every driver-lock CONSUMER resolves the path with 2 branches while the drivers use 3, so from a linked worktree the monitors report a LIVE marathon as IDLE"
-status: "Active (2-WORKING) — implemented and tested; landing via PR into development"
+status: "3-COMPLETED — shipped in PR #449 (merged `000aa6ce`), issue #448 closed. Sibling #376 remains open and out of scope."
 created: 2026-08-08
 updated: 2026-08-08
 owner: noel
