@@ -205,10 +205,11 @@ Summary: 26 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 14 · �
 
 ## Completed
 
-Summary: 22 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 22 · 🔮 0 · 🔲 0
+Summary: 23 items | Tally: 🟢 1 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 22 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-448 · driver-lock consumers guess the path with 2 branches while the drivers use 3, so a linked worktree's LIVE marathon reads as IDLE | 🟢 | [GH-448-DRIVER-LOCK-RESOLVER.md](PROJECT/2-WORKING/GH-448-DRIVER-LOCK-RESOLVER.md) · [#448](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/448) · [#376](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/376) · [#354](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/354) |
 | GH-484 · redefine the canonical marathon-phase directory default from phases/ to marathon-system/ | ✅ | [GH-484-MARATHON-SYSTEM-DEFAULT.md](PROJECT/3-COMPLETED/GH-484-MARATHON-SYSTEM-DEFAULT.md) · [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484) |
 | GH-307 · Marathon pre-advance gate inherits the run's identity tags, so bash validate.sh can never pass inside a marathon | ✅ | [#307](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/307) |
 | GH-278 · aider-turn per-turn timeout drifts across twins and docs (py 300s / sh 600s / docs 900s) | ✅ | [GH-278-AIDER-TURN-TIMEOUT-DRIFT.md](PROJECT/3-COMPLETED/GH-278-AIDER-TURN-TIMEOUT-DRIFT.md) · [#278](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/278) |

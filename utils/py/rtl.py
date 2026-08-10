@@ -473,3 +473,27 @@ def narration_mentions_root(log_path, root):
     except OSError:
         return 0, None
     return count, first
+
+def driver_lock_path(root):
+    # GH-448: the ONE shared resolver for the relay-driver lock path, matching the DRIVER's own
+    # write-side resolution (marathon_drive.py / marathon-drive.sh, relay_drive.py / relay-drive.sh) —
+    # every read-only consumer (marathon-ls.sh, marathon-live.sh, find-harness.sh) must resolve the
+    # SAME path or it probes a location the driver never writes and reports a live run as idle.
+    #   .git is a directory  -> <root>/.git/relay-driver.lock                (normal clone)
+    #   .git is a file       -> <git-common-dir>/relay-driver.lock           (linked worktree)
+    #   no .git (vendored)   -> <root>/.relay-driver.lock                    (vendored .xyz/ copy)
+    # Returns (lock_path, lock_label) — lock_label is always the SHORT display form used in messages.
+    git_path = os.path.join(root, ".git")
+    if os.path.isdir(git_path):
+        return os.path.join(root, ".git", "relay-driver.lock"), ".git/relay-driver.lock"
+    if os.path.isfile(git_path):
+        common = ""
+        try:
+            common = subprocess.check_output(
+                ["git", "-C", root, "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                stderr=subprocess.DEVNULL).decode("utf-8").strip()
+        except Exception:
+            common = ""
+        if common:
+            return os.path.join(common, "relay-driver.lock"), ".git/relay-driver.lock"
+    return os.path.join(root, ".relay-driver.lock"), ".relay-driver.lock"

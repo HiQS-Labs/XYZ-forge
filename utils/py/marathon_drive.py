@@ -12,6 +12,13 @@ import tempfile
 import threading
 import datetime as _dt
 
+# Import rtl relative to this file (utils/py/), independent of CWD/PYTHONPATH — needed because some
+# callers load this module via importlib.util.spec_from_file_location rather than `python3 <path>`,
+# which does NOT put the script's own directory on sys.path (GH-448 regression, test/gh322-runlog-
+# python-lane.sh caught it). Same pattern as marathon_plan.py's `_marathon_plan` import.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from rtl import driver_lock_path  # noqa: E402
+
 # GH-284 Phase 2 / GH-322: hooks run on EVERY terminal path with the driver's real exit code — the
 # Python equivalent of marathon-drive.sh's `trap _marathon_drive_on_exit EXIT`. Same contract as
 # that trap: the code is captured FIRST and re-exited explicitly, so nothing a hook does can
@@ -597,30 +604,12 @@ def main():
         # worktree .git is a FILE pointing at the shared gitdir, so resolve the real common dir and put
         # the lock there — otherwise --require-clean sees the driver's own lock as untracked dirt inside
         # the worktree. A vendored .xyz/ copy (no .git) falls back to a hidden lock beside the scripts.
-        git_path = os.path.join(root, ".git")
-        if os.path.isdir(git_path):
-            lock_dir = os.path.join(root, ".git", "relay-driver.lock")
-            lock_label = ".git/relay-driver.lock"
-        elif os.path.isfile(git_path):
-            common = ""
-            try:
-                common = subprocess.check_output(
-                    ["git", "-C", root, "rev-parse", "--git-common-dir"],
-                    stderr=subprocess.DEVNULL).decode('utf-8').strip()
-            except Exception:
-                common = ""
-            if common:
-                if not os.path.isabs(common):
-                    common = os.path.join(root, common)
-                lock_dir = os.path.join(common, "relay-driver.lock")
-                lock_label = ".git/relay-driver.lock"
-            else:
-                lock_dir = os.path.join(root, ".relay-driver.lock")
-                lock_label = ".relay-driver.lock"
-        else:
-            lock_dir = os.path.join(root, ".relay-driver.lock")
-            lock_label = ".relay-driver.lock"
-        
+        # GH-448: this resolution is the canonical write-side one — every read-only consumer (marathon-
+        # ls.sh, marathon-live.sh, find-harness.sh) must agree with it, so it lives in rtl.py's shared
+        # driver_lock_path (with a byte-for-byte Bash twin in relay-automation/driver-lock-lib.sh)
+        # rather than being reimplemented here.
+        lock_dir, lock_label = driver_lock_path(root)
+
         try:
             os.mkdir(lock_dir)
         except OSError:
