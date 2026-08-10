@@ -2,7 +2,23 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-FILES=("$HERE/marathon.sh" "$HERE/marathon-drive.sh")
+
+# GH-401: this audit exists for GH-209 — "every test invocation of the marathon driver is
+# MARATHON_ROOT-scoped" — but its scope was two hardcoded filenames. An unscoped `--dry-run`
+# invocation in test/gh268-relay-cue-and-target-checks.sh therefore wrote phases/p1/RELAY.md into
+# the HARNESS repo on every `bash validate.sh`, and the audit reported PASS the whole time: it was
+# out of reach because of its FILENAME, not because it was safe. A guard whose coverage is a literal
+# list silently stops covering the thing it was written for the moment someone adds a file.
+#
+# Audit every test script instead, and let discover_file_metadata/find_invocation_target decide what
+# is actually an invocation — a file with none is simply skipped. The audit excludes only itself:
+# it necessarily contains the driver path literals it matches on, so it would self-report.
+FILES=()
+for candidate in "$HERE"/*.sh; do
+  [ "$candidate" = "${BASH_SOURCE[0]}" ] && continue
+  [ "$(basename "$candidate")" = "$(basename "${BASH_SOURCE[0]}")" ] && continue
+  FILES+=("$candidate")
+done
 
 safe_vars=()
 alias_names=()
@@ -215,3 +231,36 @@ if [ "$failures" -ne 0 ]; then
 fi
 
 echo "PASS: audited $checked real marathon invocation(s)"
+
+# ── the driver commits phase artifacts, so they must not be gitignored ────────────────────────────
+# marathon_drive.py stages phase output with `git add --` and check=True at three sites
+# (ESCALATION.md, the transcript, RELAY.md — line numbers deliberately not cited; they have drifted
+# twice already and a stale citation reads as precision it does not have). `git add` on an EXPLICIT path that .gitignore covers
+# exits 1 — "The following paths are ignored ... Use -f if you really want to add them" — so
+# check=True raises CalledProcessError and the phase dies while trying to record itself.
+#
+# Not hypothetical: `/phases/` was added to .gitignore on 2026-08-09 to stop the #401/#461 churn, and
+# it would have crashed the first new same-repo phase. Reverted the same day; this assertion is what
+# makes the revert stick. Verified directly before writing it: in a scratch repo ignoring /phases/,
+# `git add -- phases/newrun/RELAY.md` exits 1.
+#
+# If phase records should stop being committed, that is a driver change (and a #388 durability
+# question), not a .gitignore line — the ignore alone breaks the write without removing the intent.
+#
+# GH-484: the default moved to marathon-system/, so the NEW default is now the path that actually
+# matters. phases/ stays probed too — the driver no longer writes there, but a fleet repo whose
+# vendored .xyz/ has not re-synced still does, and this repo's committed pre-flip records live
+# there. An ignore rule on either name is a live crash for someone.
+audit_root="$(cd "$(dirname "$0")/.." && pwd)"
+ignore_violations=0
+for probe in marathon-system/audit-probe/RELAY.md marathon-system/audit-probe/ESCALATION.md \
+             phases/audit-probe/RELAY.md phases/audit-probe/ESCALATION.md; do
+  if git -C "$audit_root" check-ignore -q "$probe" 2>/dev/null; then
+    echo "FAIL: .gitignore covers $probe, but the driver stages it with \`git add --\` + check=True — a new same-repo phase would exit 1 while recording itself" >&2
+    ignore_violations=$((ignore_violations + 1))
+  fi
+done
+if [ "$ignore_violations" -ne 0 ]; then
+  exit 1
+fi
+echo "PASS: phase artifacts the driver commits are not gitignored (git add -- would exit 1 if they were)"

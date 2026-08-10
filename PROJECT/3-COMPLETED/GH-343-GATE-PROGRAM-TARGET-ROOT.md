@@ -2,7 +2,7 @@
 gh_issue: 343
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/343
 title: "GH-343 — a target-relative gate program is checked against cwd/PATH instead of target_root, so a ready contract reports NOT-READY"
-status: "Intake (2-WORKING) — captured 2026-08-06 for release 0.2.0 Litmus, preflight READY, awaiting operator go."
+status: "Shipped 2026-08-08 in release 0.2.0 Litmus wave 1 — built, agy-approved, full gate green (715s); issue #343 CLOSED after per-criterion verification. Took three builds, and the first two failed because acceptance criterion 3 had a false premise: an interpreter-invoked gate (`bash foo.sh`) does not need the executable bit. The criterion was narrowed on the issue and the third build was correct first try."
 created: 2026-08-06
 updated: 2026-08-06
 owner: noel

@@ -1,0 +1,60 @@
+{
+  "name": "xyz-cockpit",
+  "displayName": "XYZ Cockpit",
+  "description": "Read-only view of this workspace's Marathons, Releases, and Git Worktrees, with copy-to-clipboard for pasting into a chat session.",
+  "version": "0.1.0",
+  "publisher": "xyz-harness",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "xyzCockpit",
+          "title": "XYZ Cockpit",
+          "icon": "media/cockpit.svg"
+        }
+      ]
+    },
+    "views": {
+      "xyzCockpit": [
+        {
+          "type": "webview",
+          "id": "xyzCockpit.view",
+          "name": "Cockpit"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "xyzCockpit.refresh",
+        "title": "XYZ Cockpit: Refresh",
+        "icon": "$(refresh)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "xyzCockpit.refresh",
+          "when": "view == xyzCockpit.view",
+          "group": "navigation"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.5.0"
+  }
+}

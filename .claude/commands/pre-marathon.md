@@ -6,7 +6,8 @@ fire any marathon until the operator explicitly confirms the exact dry-run-appro
 1. Invoke the `marathon-triage` skill and follow it faithfully for live-issue reconciliation,
    candidate classification, preflight checks, ranking, collision analysis, and wave formation. Do
    not recreate that logic in this command, and preserve the skill's read-only/no-fire boundary.
-2. In addition to the skill's report, inspect `PROJECT/2-WORKING` and `phases/*/` for stale phase
+2. In addition to the skill's report, inspect `PROJECT/2-WORKING`, `marathon-system/*/`, and legacy
+   `phases/*/` (GH-484 moved the default; pre-flip runs stay where they are) for stale phase
    directories and orphaned `ESCALATION.md` files from earlier runs. Correlate each candidate with
    its plan, token state, and durable completion evidence. Report the proposed cleanup separately;
    do not delete or move anything without explicit operator confirmation.

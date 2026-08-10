@@ -91,11 +91,11 @@ Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-ad
                           Codex/ChatGPT subscription). --builder claude spawns a headless Claude
                           Code CLI subprocess instead: a SEPARATE, PER-CALL API-BILLED turn-taker —
                           an explicit, cost-acknowledged choice, not the default.
-  --phases-dir DIR        Where to create phases/<id>/ (default: <repo-root>/phases).
+  --phases-dir DIR        Where to create <dir>/<id>/ (default: <repo-root>/marathon-system).
   --target-root DIR       Foreign git repo the BUILD lands in; forwarded to marathon-drive.sh (GH-11).
-                          The relay thread, tick token, phases/ and relay-system/ transcripts all stay
+                          The relay thread, tick token, marathon-system/ and relay-system/ transcripts all stay
                           in THIS harness repo — only code changes land in DIR. Use this when the target
-                          repo cannot track harness output (e.g. a public repo that gitignores phases/
+                          repo cannot track harness output (e.g. a public repo that gitignores marathon-system/
                           and relay-system/ on purpose): without it, marathon-drive's `git add` of
                           RELAY.md / ESCALATION.md / the transcript fails and the phase HALTs.
                           Plan and brief paths resolve against DIR when set.
@@ -164,7 +164,11 @@ case "$_plan_rel_root" in
     ;;
 esac
 
-PHASES_DIR="${PHASES_DIR:-"$ROOT/phases"}"
+# GH-484: default `marathon-system/`, matching `relay-system/`. This default is computed here
+# INDEPENDENTLY of the driver's own — marathon.sh forwards --phases-dir explicitly on every phase
+# (see the drive_args below), so the driver's default is never consulted on this path. Both must
+# agree or a marathon.sh run and a direct marathon-drive run would write to different places.
+PHASES_DIR="${PHASES_DIR:-"$ROOT/marathon-system"}"
 export TICK_REPO_ROOT="$ROOT"
 
 # Parse + validate + resolve order. A malformed/cyclic plan halts the whole run here (exit 2).

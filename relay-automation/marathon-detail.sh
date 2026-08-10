@@ -2,7 +2,7 @@
 # marathon-detail.sh <repo> — preview for ONE repo path (read-only).
 #
 # Prints:
-#   - STATUS: / NEXT: lines from the newest phases/*/RELAY.md (if any)
+#   - STATUS: / NEXT: lines from the newest marathon-system/*/RELAY.md (falling back to phases/) (if any)
 #   - Last ~10 lines/events from the newest .tick/events/*marathon*.jsonl
 #
 # Writes NO state to any monitored repo.
@@ -36,13 +36,18 @@ fi
 
 printf 'REPO: %s\n' "$REPO"
 
-# Newest phases/*/RELAY.md
-PHASES_DIR="$REPO/phases"
+# Newest <phase-dir>/*/RELAY.md. GH-484: reads BOTH the current default (marathon-system/) and the
+# historical one (phases/) and keeps the newer — see the same fallback in marathon-ls.sh for why
+# both populations have to stay visible (un-migrated pre-flip runs, and not-yet-re-synced fleet
+# repos still writing to phases/).
 RELAY_FILE=""
-if [ -d "$PHASES_DIR" ]; then
+for PHASES_DIR in "$REPO/marathon-system" "$REPO/phases"; do
+  [ -d "$PHASES_DIR" ] || continue
   # shellcheck disable=SC2012
-  RELAY_FILE="$(ls -t "$PHASES_DIR"/*/RELAY.md 2>/dev/null | head -1 || true)"
-fi
+  CANDIDATE="$(ls -t "$PHASES_DIR"/*/RELAY.md 2>/dev/null | head -1 || true)"
+  [ -n "$CANDIDATE" ] || continue
+  if [ -z "$RELAY_FILE" ] || [ "$CANDIDATE" -nt "$RELAY_FILE" ]; then RELAY_FILE="$CANDIDATE"; fi
+done
 
 if [ -n "$RELAY_FILE" ] && [ -f "$RELAY_FILE" ]; then
   section "RELAY.md: $(basename "$(dirname "$RELAY_FILE")")/RELAY.md"
@@ -50,7 +55,7 @@ if [ -n "$RELAY_FILE" ] && [ -f "$RELAY_FILE" ]; then
   grep -E '^(STATUS|NEXT):' "$RELAY_FILE" 2>/dev/null || printf '(no STATUS:/NEXT: lines found)\n'
 else
   section "RELAY.md"
-  printf '(no phases/*/RELAY.md found)\n'
+  printf '(no marathon-system/*/RELAY.md or phases/*/RELAY.md found)\n'
 fi
 
 # ---------------------------------------------------------------------------

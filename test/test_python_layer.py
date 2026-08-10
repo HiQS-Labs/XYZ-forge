@@ -124,6 +124,33 @@ def test_marathon_drive_fails_before_tick_state_when_builder_binary_missing():
             run_mock.assert_not_called()
             check_output_mock.assert_not_called()
 
+def test_marathon_drive_fails_before_tick_state_when_pi_builder_binary_missing():
+    # GH-451: Pi is a Python-default marathon builder. Its binary must be checked in the same
+    # preflight as Codex/Agy/Aider, before a relay file or tick task can be created.
+    import marathon_drive
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        phase_brief = os.path.join(tmpdir, "phase.md")
+        with open(phase_brief, "w") as f:
+            f.write("# brief\n")
+
+        with patch.dict(
+            os.environ,
+            {"MARATHON_ROOT": tmpdir, "PI_BIN": "missing-pi"},
+            clear=False,
+        ), patch("shutil.which", side_effect=lambda name: None if name == "missing-pi" else "/bin/true"), \
+             patch("subprocess.run") as run_mock, \
+             patch("subprocess.check_output") as check_output_mock, \
+             patch.object(sys, "argv", [
+                 "marathon_drive.py", "--phase-brief", phase_brief,
+                 "--builder", "pi", "--reviewer", "agy",
+             ]):
+            with pytest.raises(SystemExit) as excinfo:
+                marathon_drive.main()
+            assert excinfo.value.code == 2
+            run_mock.assert_not_called()
+            check_output_mock.assert_not_called()
+
 def test_swarm_preflight_gh108_bundle_helpers():
     import swarm_preflight
 

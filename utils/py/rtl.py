@@ -4,6 +4,143 @@ import subprocess
 import tempfile
 import sys
 
+# GH-375 — agy's auth pre-flight cannot decide on exit status alone. `agy whoami` EXITS 0 while
+# failing to run at all when there is no TTY ("CLI error: bubbletea: error opening TTY: ... open
+# /dev/tty: device not configured"), and every marathon or driven relay turn is headless, so that is
+# the NORMAL path under automation rather than an edge case. Both callers (agy-turn.py, consult.py)
+# had the same shape and the same hole, so the verdict lives here once rather than in two copies
+# that can drift.
+#
+# Matched as line PREFIXES, not as a bare "error" substring anywhere in the output. `whoami` prints
+# ACCOUNT IDENTITY on success — a substring test would fail any lane whose handle, org, or banner
+# happens to contain "error", and a false failure stops the run outright, which is a worse outcome
+# than the bug being fixed. The TTY signature is matched separately: it is the exact shape the issue
+# reports and it does not necessarily carry an error prefix.
+# GH-375 follow-up. AGY_AUTH_TIMEOUT_S defaulted to 5 while `agy whoami` cost 1.3-2.3s idle on the
+# reference machine — under 2x headroom, and concurrent load closed it twice. The second time was AFTER
+# the timeout branch was taught to reclassify a TTY-diagnosed timeout as unverifiable: the probe was
+# killed before it could FLUSH its diagnostic, so the capture was empty, the reclassification had
+# nothing to match on, and the lane was blocked anyway. That flush race was predicted by one reviewer
+# and dismissed by another (and by me) as bounded; it then fired in the next consult and cost the agy
+# seat. Observed, so no longer a judgement call.
+#
+# 20s is chosen against the measurement, not by feel: ~9x the worst idle probe, which leaves room for
+# the load that closed a 2x margin. The cost is bounded and lands only on a genuine interactive-login
+# hang, which now takes 20s to reject instead of 5 — a rare path, and rejecting it late is cheaper than
+# blocking a working lane. Same reasoning as GH-457's tiers: size a cap against what the thing actually
+# costs, not against a number that looks tidy.
+AGY_AUTH_TIMEOUT_DEFAULT_S = 20
+WORST_OBSERVED_WHOAMI_S = 2.3   # 1.3 / 1.9 / 2.3 measured idle, 2026-08-09
+
+AGY_AUTH_ERROR_PREFIXES = ("cli error:", "error:", "panic:", "fatal:")
+AGY_AUTH_TTY_MARKERS = ("could not open tty", "error opening tty")
+
+
+def agy_auth_output_verdict(out_file):
+    """Classify agy's own probe output. Returns (severity, message).
+
+    severity is one of:
+      ""              — nothing suspicious; treat the probe as passed.
+      "unverifiable"  — the probe COULD NOT RUN, so it established nothing either way. Report it
+                        loudly; do NOT fail the lane on it.
+      "failed"        — the probe ran and agy reported an error. Fail the lane.
+
+    THE THIRD STATE IS THE WHOLE POINT, and it was learned the expensive way. GH-375's suggested fix
+    was to treat the TTY error as a failed probe and stop the turn. That was implemented literally and
+    it broke the agy lane outright: test/relay-self-sufficiency.sh went 4/0 to 0/4 with `agy shim
+    exited 5`, on a machine where agy was signed in and working.
+
+    The measurement that settles it, taken on this repo:
+
+      * `agy whoami` cannot run headless at all. It exits 0 while printing
+        `CLI error: bubbletea: error opening TTY: ... /dev/tty: device not configured`.
+      * `agy -p` — the print mode the ACTUAL turn uses — runs headless perfectly well. The live turn
+        in relay-self-sufficiency.sh claims its token, writes the relay file and commits.
+
+    So a TTY error from `whoami` says nothing about whether auth works; it says this probe is the
+    wrong instrument in this environment. Treating it as failure converts an unmeasurable check into
+    a hard block on a lane that demonstrably works — strictly worse than the bug GH-375 reported,
+    which merely let a possibly-unauthed lane proceed. One of two working builders, stopped by its
+    own guard.
+
+    What GH-375 established stands and is preserved: exit status alone cannot decide this, and the
+    captured output must not be deleted. Those were the real defects. The inference "the probe could
+    not run, therefore auth is bad" is the part that does not follow.
+    """
+    try:
+        with open(out_file, "r", encoding="utf-8", errors="replace") as f:
+            output = f.read()
+    except OSError:
+        return ("unverifiable", "the probe produced no readable output")
+    # EMPTY OUTPUT IS NOT TREATED AS FAILURE, deliberately. "A probe that establishes nothing must
+    # not report success" is a tempting rule and it was written here first — then it failed a turn
+    # within minutes: test/gh410-containment-advisory.sh's agy stub prints nothing for `whoami`, so
+    # the pre-flight rejected it, the turn exited 5 before running, and a containment assertion that
+    # had nothing to do with auth went red. That is the false-failure direction this function's whole
+    # matching strategy is built to avoid, and it arrived on first contact.
+    #
+    # The asymmetry is the point: agy exiting 0 with a VISIBLE error is observed and documented
+    # (GH-375). Agy exiting 0 SILENTLY on success is not something this repo can rule out, and
+    # guessing wrong there breaks every turn in the fleet rather than one. Match the evidence that
+    # exists; do not infer failure from the absence of evidence. stderr is folded into this capture,
+    # so a real error has somewhere to appear.
+    for raw in output.splitlines():
+        line = raw.strip()
+        low = line.lower()
+        # TTY FIRST, and it must stay first: agy's TTY banner is itself prefixed `CLI error:`, so the
+        # error-prefix branch below would otherwise claim it and fail a lane that is perfectly fine.
+        if any(m in low for m in AGY_AUTH_TTY_MARKERS):
+            return ("unverifiable", f"agy could not run headless, so auth was not verified: {line}")
+        if any(low.startswith(p) for p in AGY_AUTH_ERROR_PREFIXES):
+            return ("failed", f"agy reported an error: {line}")
+    return ("", "")
+
+
+def agy_auth_timeout_verdict(out_file):
+    """Classify a probe that TIMED OUT. Returns (severity, message) — never "".
+
+    A separate function from agy_auth_output_verdict on purpose. That one reads an output stream from
+    a process that EXITED, where "nothing suspicious" legitimately means pass. A timeout has no exit
+    status to interpret, and silence there is not reassurance — so this function never returns the
+    pass verdict, and reusing the other one here would have converted a hung probe into a green one.
+
+    GH-375 follow-up. The three-state fix covered `whoami` EXITING with a TTY error. It did not cover
+    the probe blowing its timeout, which still went straight to fatal — and that is the branch that
+    actually fired: a /consult on 2026-08-09 lost its agy seat to
+
+        consult: agy auth pre-flight timed out after 5s; likely expired auth opening an interactive
+                 login. Run `agy login` in a normal terminal, then retry.
+
+    on a machine where, measured in the same minute, `agy whoami` printed the TTY error and `agy -p`
+    (what the turn actually uses) answered correctly. A false block, from the guard, on a working lane
+    — the same failure direction GH-375's own fix was written to avoid, one branch over.
+
+    The rule: reclassify ONLY on positive evidence of the TTY cause. If the captured output already
+    says agy could not open a TTY, the timeout carries no more information about auth than the fast
+    failure did — on a platform where `whoami` can never succeed headlessly, a timeout is just a
+    slower spelling of the same thing. Anything else — an interactive login prompt, an unfamiliar
+    error, or NO output at all — stays fatal, which keeps the branch's original purpose intact for a
+    genuine hang on a login prompt.
+
+    Deliberately narrower than "a timeout is unverifiable". That broader rule would also swallow the
+    real hang this branch exists to catch, and silence is exactly the shape a login prompt waiting on
+    stdin produces.
+    """
+    try:
+        with open(out_file, "r", encoding="utf-8", errors="replace") as f:
+            output = f.read()
+    except OSError:
+        output = ""
+    for raw in output.splitlines():
+        line = raw.strip()
+        if any(m in line.lower() for m in AGY_AUTH_TTY_MARKERS):
+            return ("unverifiable",
+                    "agy could not open a TTY and then exceeded the probe timeout, so auth was not "
+                    f"verified (the timeout is the same TTY failure, slower): {line}")
+    return ("failed", "the probe timed out with no TTY diagnostic, which is the shape of a genuine "
+                      "hang on an interactive login prompt")
+
+
 def split_allow_paths(allow_paths):
     paths = []
     for path in (allow_paths or "").split(","):
@@ -33,6 +170,14 @@ def resolve_turn_root(explicit_root, xyz_root):
     # documented `cd $HARNESS`) roots at the TRUE target repo, not xyz_root (the harness's own
     # directory on disk, which can differ from the git toplevel in that layout even though both
     # paths belong to the same git repo) — else xyz_root as a last resort off a git repo. (GH-296)
+    #
+    # GH-417: --show-toplevel returns the PHYSICAL path, so ROOT can differ in symlink form from a
+    # relay-file path the caller built from its own $PWD. That is survivable, not accidental:
+    # relay-turn-lib.sh's rtl_init canonicalizes both sides before stripping (GH-261, 312a2c3), and
+    # claim_paths_for_turn above does the same natively. Read the "caught live" warning at
+    # relay-turn-lib.sh's GH-160 collapse as scoped to that collapse — it is not an argument against
+    # this default. Pinned by test/gh417-turn-root-symlink-prefix.sh, whose control shows the exit-6
+    # failure returning the moment that canonicalization is removed.
     if explicit_root:
         return explicit_root
     try:

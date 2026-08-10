@@ -11,6 +11,8 @@
 #   (3) the summary is ADDITIVE — it never changes the driven run's exit code (checked on a NON-zero
 #       exit path, and when `tick analyze` itself fails);
 #   (4) the same three properties for marathon-drive with MARATHON_COST_SUMMARY.
+#
+# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"reproducer: hold the clone's .git/relay-driver.lock with a LIVE pid, then run this suite (that is the in-marathon condition; a linked worktree does NOT reproduce it because relay-drive takes a per-worktree lock there, GH-376). pre-fix revision: this file with RELAY_DRIVER_LOCKED unset but the relay-drive invocations unscoped. pre-fix result: FAIL rc=1 'another driver is active in this repo (pid 2436, lock: .git/relay-driver.lock)' — the same failure that halted Litmus wave-2 phase 1 on 2026-08-08 at 893s. post-fix result: 8 pass / 0 fail with the SAME lock still held, and 8 pass / 0 fail with no lock, so the fix is verified in both directions rather than only the one under investigation"}
 source "$(dirname "$0")/_setup.sh" gh331-cost-summary
 
 # GH-441 — hermetic against an ambient driver, same reason as test/driver-lock.sh:11. Every
@@ -18,14 +20,58 @@ source "$(dirname "$0")/_setup.sh" gh331-cost-summary
 # reads the driven run's OWN output. Inheriting RELAY_DRIVER_LOCKED=1 from a live marathon gate makes
 # those nested drivers take the already-locked path and skip the end-of-run cost summary, so the
 # suite measures the parent rather than itself. Measured 2026-08-07: inherited → 5 pass / 3 fail;
-# unset → clean. $A is isolated, so unsetting cannot collide with a real lock.
+# unset → clean.
 unset RELAY_DRIVER_LOCKED
 
 export TICK_BIN="$TICK"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-DRIVE="$ROOT/relay-automation/relay-drive.sh"
-MDRIVE="$ROOT/relay-automation/marathon-drive.sh"
 TICK_PATH="$TICK"
+
+# ...BUT unsetting it is only half the fix, and the missing half halted a live marathon.
+#
+# The first version of this file's comment claimed "$A is isolated, so unsetting cannot collide with
+# a real lock." That was reasoned, not observed, and it is FALSE. $A is where the relay FILE lives;
+# it is not the nested driver's ROOT. relay-drive.sh:48 sets
+#     ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# from its OWN script location, and there is no env override for it (--target-root moves the build,
+# not the lock; MARATHON_ROOT is honoured by marathon-drive only — which is why the sibling
+# test/gh284-runlog-heartbeat.sh, scoped with MARATHON_ROOT="$A", was never affected).
+#
+# So with RELAY_DRIVER_LOCKED unset, the nested relay-drive reached for the REAL clone's
+# .git/relay-driver.lock — held by the marathon driver that was running this very gate — and refused:
+#
+#   FAIL: relay-drive default lane: expected exit 0 + cost summary; got rc=1
+#     relay-drive: another driver is active in this repo (pid 35784, lock: .git/relay-driver.lock).
+#
+# Observed 2026-08-08, Litmus wave-2 phase 1: relay Approved, gate exit 1 after 893s, marathon HALT
+# (exit 5). Green standalone, red inside a marathon — GH-441's own defect, reintroduced by GH-441's
+# own fix, in the one direction the standalone run cannot see.
+#
+# THE FIX: give relay-drive a script path INSIDE $A so its script-relative ROOT_DIR resolves to $A,
+# and the lock it takes is $A's. Symlinking DIRECTORIES (not individual scripts) is what makes this
+# work — the driver resolves its siblings relative to itself, and those resolve through the symlinked
+# directory. Same technique as the gitignored `$A/bin/tick` symlink in
+# test/gh410-containment-advisory.sh, for the same reason.
+#
+# The set below is not guessed: it is every path relay-drive.sh dereferences under $ROOT_DIR
+#     grep -ohE '\$\{?ROOT_DIR\}?/[A-Za-z0-9._/-]+' relay-automation/relay-drive.sh
+# minus the three it creates or owns itself (.git, .relay-driver.lock, relay-system). Getting this
+# wrong fails LOUDLY rather than silently — the first attempt symlinked only relay-automation/ and
+# the nested run died with
+#     can't open file '<A>/utils/py/relay_drive.py': [Errno 2] No such file or directory
+# because relay-drive.sh dispatches to the Python lane under $ROOT_DIR/utils (GH-264 default).
+mkdir -p "$A"
+for _ge_dir in relay-automation utils bin; do
+  ln -sfn "$ROOT/$_ge_dir" "$A/$_ge_dir"
+done
+unset _ge_dir
+DRIVE="$A/relay-automation/relay-drive.sh"
+
+# marathon-drive needs NO such treatment and deliberately keeps the real path: every assertion below
+# passes MARATHON_ROOT="$A" (line ~141), which marathon-drive honours for lock resolution, and
+# --pre-advance-cmd true so no real gate runs. Routing it through $A too would only add a way for a
+# nested marathon to find the REAL validate.sh and re-enter the full gate recursively.
+MDRIVE="$ROOT/relay-automation/marathon-drive.sh"
 
 tick_a init >/dev/null
 

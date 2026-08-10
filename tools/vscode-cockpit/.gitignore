@@ -1,0 +1,7 @@
+node_modules/
+out/
+*.vsix
+
+# Aider Studio (auto-added)
+REPO_MAP.md
+.aider/

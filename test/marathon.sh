@@ -181,7 +181,7 @@ TICK_REPO_ROOT="$A" "$TICK" done "$task" --agent agy >/dev/null 2>&1 || true
 exit 0
 STUB
 chmod +x "$RD_RESUME"
-rm -f "$WORK/rd-resume-count"; rm -rf "$A/.tick" "$A/phases"; rm -f "$A/src/gh205.js"
+rm -f "$WORK/rd-resume-count"; rm -rf "$A/.tick" "$A/phases" "$A/marathon-system"; rm -f "$A/src/gh205.js"
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_RESUME" TICK_BIN="$TICK" CODEX_BIN="$CODEX_OK" AGY_BIN="$AGY_OK" \
   bash "$MD_BIN" --phase-id gh205 --builder codex --reviewer agy --phase-brief "$A/briefs/gh205.md" \
   --artifact src/gh205.js --pre-advance-cmd "test -f '$A/src/gh205.js'" >/dev/null 2>&1
@@ -190,7 +190,7 @@ rc=$?
 [ "$(cat "$WORK/rd-resume-count" 2>/dev/null)" = "2" ] \
   && pass "GH-205: marathon-drive re-entered relay-drive for the reviewer round after exit 7" \
   || fail "GH-205: expected 2 relay-drive calls, saw [$(cat "$WORK/rd-resume-count" 2>/dev/null)]"
-grep -q '^STATUS: Approved' "$A/phases/gh205/RELAY.md" \
+grep -q '^STATUS: Approved' "$A/marathon-system/gh205/RELAY.md" \
   && pass "GH-205: resumed reviewer round approved the relay" || fail "GH-205: relay not approved"
 
 # --- (10) GH-205: exit 7 with no artifact still halts ----------------------
@@ -208,7 +208,7 @@ chmod +x "$RD_HANG"
 printf 'gh205 hang brief\n' > "$A/briefs/gh205-hang.md"
 git -C "$A" add briefs/gh205-hang.md >/dev/null 2>&1
 git -C "$A" commit -q -m "seed gh205 hang brief" >/dev/null 2>&1
-rm -f "$WORK/rd-hang-count"; rm -rf "$A/.tick" "$A/phases"; rm -f "$A/src/gh205-hang.js"
+rm -f "$WORK/rd-hang-count"; rm -rf "$A/.tick" "$A/phases" "$A/marathon-system"; rm -f "$A/src/gh205-hang.js"
 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$RD_HANG" TICK_BIN="$TICK" CODEX_BIN="$CODEX_OK" AGY_BIN="$AGY_OK" \
   bash "$MD_BIN" --phase-id gh205-hang --builder codex --reviewer agy --phase-brief "$A/briefs/gh205-hang.md" \
   --artifact src/gh205-hang.js --pre-advance-cmd "test -f '$A/src/gh205-hang.js'" >/dev/null 2>&1
@@ -217,7 +217,7 @@ rc=$?
 [ "$(cat "$WORK/rd-hang-count" 2>/dev/null)" = "1" ] \
   && pass "GH-205: no-artifact timeout does not re-enter relay-drive" \
   || fail "GH-205: no-artifact timeout should stop after one relay-drive call"
-grep -q 'reason: timeout-no-artifact' "$A/phases/gh205-hang/ESCALATION.md" \
+grep -q 'reason: timeout-no-artifact' "$A/marathon-system/gh205-hang/ESCALATION.md" \
   && pass "GH-205: no-artifact timeout escalation reason recorded" \
   || fail "GH-205: missing timeout-no-artifact escalation reason"
 
@@ -270,7 +270,7 @@ rc=$?
 IFS='|' read -r vendored_brief vendored_phases vendored_root vendored_tick < "$WORK/vendored-drive-ran"
 vendored_tick_home="$(cd "$(dirname "$vendored_tick")/.." && pwd -P)"
 [[ "$vendored_brief" == "$vendored_root/briefs/p1.md" \
-   && "$vendored_phases" == "$vendored_root/phases" \
+   && "$vendored_phases" == "$vendored_root/marathon-system" \
    && "$vendored_root" == "$(git -C "$V" rev-parse --show-toplevel)" \
    && "$vendored_tick_home" == "$vendored_root/.xyz" \
    && "$vendored_tick" != "$vendored_root/bin/tick" ]] \

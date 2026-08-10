@@ -5,7 +5,8 @@ import tempfile
 import subprocess
 import shlex
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
-                 narration_mentions_root)
+                 narration_mentions_root, agy_auth_output_verdict, agy_auth_timeout_verdict,
+                 AGY_AUTH_TIMEOUT_DEFAULT_S)
 from turn_diagnostics import TurnDiagnostics
 
 def die(msg):
@@ -13,16 +14,57 @@ def die(msg):
     sys.exit(2)
 
 def agy_auth_preflight(agy_bin):
-    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", 5))
+    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
     out_file = os.path.join(tempfile.gettempdir(), f"agy-auth-{os.getpid()}.log")
     rc = 0
     try:
         with open(out_file, "w") as out_f:
             subprocess.run([agy_bin, "whoami"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
-        if os.path.exists(out_file): os.remove(out_file)
-        return True
+        # GH-375: exit status alone cannot decide this. `agy whoami` EXITS 0 while failing to run at
+        # all when there is no TTY — `CLI error: bubbletea: error opening TTY ...` — and stdin is
+        # DEVNULL here, so that is the NORMAL path under automation, not an edge case. The probe
+        # therefore reported "auth OK" in the one context it exists for. Worse, the captured output,
+        # the only place the failure was visible, was deleted on this branch.
+        #
+        # Matched on agy's own error PREFIXES rather than a bare "error" substring. A bare substring
+        # test fails the opposite way: `whoami` prints account identity, so any org, handle, or
+        # banner containing "error" would block a lane whose auth is fine — and a false failure here
+        # stops the run outright, which is worse than the bug being fixed. Empty output is NOT a
+        # failure; see the comment in rtl.agy_auth_output_verdict for the turn that rule cost.
+        severity, detail = agy_auth_output_verdict(out_file)
+        if not severity:
+            if os.path.exists(out_file): os.remove(out_file)
+            return True
+        if severity == "unverifiable":
+            # The probe could not run, so it proved nothing — in EITHER direction. Say so and let the
+            # turn proceed: `agy whoami` needs a TTY, `agy -p` (what the turn actually uses) does not,
+            # and blocking here stopped a working lane dead the first time it shipped. Measured, not
+            # theorised — test/relay-self-sufficiency.sh drives a live agy turn and went 4/0 to 0/4.
+            print(f"agy-turn: WARNING — {detail}", file=sys.stderr)
+            print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
+                  "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
+                  file=sys.stderr)
+            if os.path.exists(out_file): os.remove(out_file)
+            return True
+        print(f"agy-turn: agy auth pre-flight exited 0 but {detail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
+        rc = 7
+        # Fall through to the shared tail below, which echoes the captured output and returns False.
+        # That output is the diagnosis — it is what the old success branch deleted.
     except subprocess.TimeoutExpired:
-        print(f"agy-turn: agy auth pre-flight timed out after {secs}s; likely expired auth opening an interactive login. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
+        # GH-375 follow-up: a timeout whose captured output ALREADY says agy could not open a TTY is
+        # the same failure as the fast TTY exit, only slower — it says nothing about auth, so it must
+        # not block a lane whose `agy -p` works. A timeout with anything else, including silence, is
+        # still fatal: that is the shape of a real hang on an interactive login prompt, which is what
+        # this branch was written for. See agy_auth_timeout_verdict.
+        t_severity, t_detail = agy_auth_timeout_verdict(out_file)
+        if t_severity == "unverifiable":
+            print(f"agy-turn: WARNING — {t_detail}", file=sys.stderr)
+            print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
+                  "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
+                  file=sys.stderr)
+            if os.path.exists(out_file): os.remove(out_file)
+            return True
+        print(f"agy-turn: agy auth pre-flight timed out after {secs}s; {t_detail}. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
         rc = 7
     except subprocess.CalledProcessError as e:
         print(f"agy-turn: agy auth pre-flight failed (exit {e.returncode}). Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
@@ -49,7 +91,7 @@ def agy_validate_model(agy_bin):
     if not model:
         return True
 
-    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", 5))
+    secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
     out_file = os.path.join(tempfile.gettempdir(), f"agy-models-{os.getpid()}.log")
     try:
         with open(out_file, "w") as out_f:
