@@ -10,7 +10,13 @@
       "Bash(/usr/bin/grep -nE '^#{1,3} ' RELEASES.md)",
       "Bash(/usr/bin/grep -n \"check_releases\" -A30 utils/pdda/pdda.sh)",
       "Bash(/usr/bin/grep -iE \"REQUIRED|field|Release:|GH_URL|Status|Codename\")",
-      "Bash(/usr/bin/grep -n \"RELEASES.md\" -A12 PROJECT/PDDA.md)"
+      "Bash(/usr/bin/grep -n \"RELEASES.md\" -A12 PROJECT/PDDA.md)",
+      "Bash(/usr/bin/grep -rl \"^## Anti-goals\\\\|^## Non-goals\" PROJECT --include=\"*.md\")",
+      "WebFetch(domain:dev.meta.ai)",
+      "WebFetch(domain:api.meta.ai)",
+      "Bash(/usr/bin/grep -oE https?://[a-zA-Z0-9._/-]+ __TRACKED_VAR__/muse-launcher.sh)",
+      "Bash(rm -f xyz-cockpit-0.1.0.vsix)",
+      "Bash(rtk npx *)"
     ]
   },
   "hooks": {
