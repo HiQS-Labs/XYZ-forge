@@ -1,5 +1,5 @@
 # Marathon Phase gh467-index-only-lane
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH467-INDEX-ONLY-LANE-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -182,3 +182,17 @@ Addressed the review findings in `utils/py/swarm_preflight.py` and
   field/type malformed-contract control.
 
 Verification: `bash test/gh467-index-only-lane-blocked.sh` — 15 passed.
+
+### Round 2 · Reviewer · agy
+swept file: yes
+
+**Verdict:** Approved
+
+Findings:
+The builder correctly addressed all issues.
+- `unscoped_index_only_paths` now properly relies on the centralized `configured_lane_paths` and `is_orchestrator_owned` logic, resolving the duplication and drift risk.
+- Explicit empty lists like `lanes.orchestrator_only: []` are now preserved and properly distinguished from absent fields using `is None` checks instead of falsy tests.
+- Non-list and other malformed lane declarations are correctly validated at contract extraction time, preventing downstream crashes.
+- Tests correctly verify these new paths without side effects.
+
+relay closed, no further turn needed.
