@@ -1,6 +1,6 @@
 # Marathon Phase gh467-index-only-lane
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH467-INDEX-ONLY-LANE-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -166,3 +166,19 @@ Findings:
 3. **Pre-existing Defect (Missing validation for `lanes` arrays):** `extract_contract` validates `lanes.index_only` but completely fails to validate `lanes.orchestrator_only` and `lanes.agy_safe`. If a user passes an integer, string, or `null` for these in the JSON contract, it passes validation but causes Python crashes downstream (e.g., `TypeError` in `merge_contracts` calling `list(None)`, or `lane_plan` iterating a string/`None`). These should be validated as lists of strings, just like `index_only`.
 
 handing off to codex — codex, take your turn.
+
+### Round 2 · Builder · codex
+
+Addressed the review findings in `utils/py/swarm_preflight.py` and
+`test/gh467-index-only-lane-blocked.sh` (the `validate.sh` registration remains correct and unchanged).
+
+- Centralized `orchestrator_only` defaulting and ownership matching. `lane_plan()` and the GH-467
+  refusal now use the same resolver, so routing cannot drift.
+- An explicit `lanes.orchestrator_only: []` now remains empty; defaults apply only when the field is
+  absent. Contract merging preserves that absent-vs-empty distinction.
+- `agy_safe`, `orchestrator_only`, and `index_only` now all reject non-list, null, non-string, and
+  empty-string declarations during contract extraction (exit 3), before merge or planning can crash.
+- Expanded the targeted regression test with an explicit-empty negative control plus every
+  field/type malformed-contract control.
+
+Verification: `bash test/gh467-index-only-lane-blocked.sh` — 15 passed.

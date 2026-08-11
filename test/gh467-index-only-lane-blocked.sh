@@ -19,8 +19,9 @@ make_repo() {
   local name="$1"
   local contract="$2"
   local repo="$WORK/$name"
-  mkdir -p "$repo/PROJECT/2-WORKING" "$repo/src"
+  mkdir -p "$repo/PROJECT/2-WORKING" "$repo/src" "$repo/bin"
   : >"$repo/src/index-only.txt"
+  : >"$repo/bin/index-only.txt"
   printf -- '---\ntitle: %s\n---\n# %s\n## Phase 1\n- [ ] perform the declared delivery\n## Swarm Preflight Contract\n```json\n%s\n```\n' \
     "$name" "$name" "$contract" >"$repo/PROJECT/2-WORKING/GH-467-$name.md"
   git -C "$repo" init -q -b main 2>/dev/null || { git -C "$repo" init -q; git -C "$repo" symbolic-ref HEAD refs/heads/main; }
@@ -42,19 +43,40 @@ UNSCOPED="$(make_repo unscoped '{
   "target": { "repo": ".", "ref": "main" },
   "gate": "true",
   "fix_probes": [ { "type": "path_absent", "path": "NEW.txt" } ],
-  "artifacts": [ "src/index-only.txt" ],
-  "lanes": { "index_only": [ "src/index-only.txt" ], "orchestrator_only": [] },
+  "artifacts": [ "bin/index-only.txt" ],
+  "lanes": { "index_only": [ "bin/index-only.txt" ], "orchestrator_only": [] },
   "remediation": { "criteria": "refuse an undeclared index-only lane" }
 }')"
 out="$(run "$UNSCOPED" --project-doc "PROJECT/2-WORKING/GH-467-unscoped.md" --out "$UNSCOPED/packet" 2>&1)"; rc=$?
 [[ $rc -eq 6 ]] && pass "undeclared index-only lane exits BLOCKED (6)" \
   || fail "undeclared index-only lane expected exit 6, got $rc: $out"
 grep -Fq 'index-only  : BLOCKED' <<<"$out" \
-  && grep -Fq 'src/index-only.txt' <<<"$out" \
+  && grep -Fq 'bin/index-only.txt' <<<"$out" \
   && pass "BLOCKED diagnostic names the unscoped index-only path" \
   || fail "BLOCKED diagnostic lacks index-only reason/path: $out"
 [[ ! -d "$UNSCOPED/packet" ]] && pass "BLOCKED index-only lane writes no packet" \
   || fail "BLOCKED index-only lane wrote a packet"
+
+# An explicit empty list means no path is orchestrator-owned. It must not be silently replaced by
+# the legacy default, which would otherwise classify this bin/ artifact as orchestrator-owned.
+
+for lane_name in agy_safe orchestrator_only index_only; do
+  for invalid_json in null 42 '"not-an-array"'; do
+    label="${lane_name}-${invalid_json//\"/string}"
+    INVALID="$(make_repo "invalid-$label" "{
+  \"target\": { \"repo\": \".\", \"ref\": \"main\" },
+  \"gate\": \"true\",
+  \"fix_probes\": [ { \"type\": \"path_absent\", \"path\": \"NEW.txt\" } ],
+  \"artifacts\": [ \"src/index-only.txt\" ],
+  \"lanes\": { \"$lane_name\": $invalid_json },
+  \"remediation\": { \"criteria\": \"reject malformed lane configuration\" }
+}")"
+    out="$(run "$INVALID" --project-doc "PROJECT/2-WORKING/GH-467-invalid-$label.md" --out "$INVALID/packet" 2>&1)"; rc=$?
+    [[ $rc -eq 3 ]] && grep -Fq "lanes.$lane_name must be an array of non-empty strings" <<<"$out" \
+      && pass "lanes.$lane_name rejects $invalid_json before planning" \
+      || fail "lanes.$lane_name accepted $invalid_json or emitted the wrong error: $out"
+  done
+done
 
 SCOPED="$(make_repo scoped '{
   "target": { "repo": ".", "ref": "main" },
