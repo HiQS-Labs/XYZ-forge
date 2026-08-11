@@ -2,7 +2,7 @@
 gh_issue: 492
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/492
 title: "GH-492 — agy hangs headless with no CPU and no progress, and its only pre-flight warning fires on every turn"
-status: "2-WORKING — PARTIALLY BUILT 2026-08-10. Criteria 1-6 shipped for the agy-turn surface (idle bound + attribution + demoted warning + recorded finding + test with negative control). The consult.py surface, named in deviation 1, is NOT yet covered and remains open."
+status: "2-WORKING — BUILT 2026-08-10/11. Criteria 1-6 shipped across BOTH surfaces: agy-turn.py (idle bound, group kill, demoted warning, recorded finding) and consult.py (per-advisor idle bound scoped to each advisor's own pid and transcript). test/gh492-idle-kill.sh 16/0 with negative controls. Ready to close."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel

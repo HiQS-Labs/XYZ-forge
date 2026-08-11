@@ -2,6 +2,7 @@
 import os
 import re
 import sys
+import signal
 import tempfile
 import subprocess
 import shlex
@@ -10,6 +11,18 @@ from datetime import datetime
 import shutil
 from rtl import (RelayTurnLib, resolve_tick_bin, resolve_tick_repo_root, agy_auth_output_verdict,
                  agy_auth_timeout_verdict, AGY_AUTH_TIMEOUT_DEFAULT_S)
+from turn_diagnostics import TurnDiagnostics
+
+# GH-492: how long an advisor may show no CPU and no transcript growth before it is killed,
+# independent of CONSULT_TIMEOUT. Deliberately well under the 300s default wall cap — a consult that
+# has silently lost one advisor should degrade to the survivors promptly, since the whole point of
+# fanning out is that one model's failure is not the run's failure. CONSULT_IDLE_S=0 disables it.
+CONSULT_IDLE_DEFAULT_S = 90
+#: Poll interval for the per-advisor bound loop.
+CONSULT_POLL_S = 2
+#: Sampling interval for an advisor's diagnostics. Tighter than a turn shim's because the idle
+#: threshold here is shorter, and IDLE_MIN_SAMPLES readings must fit inside it with room to spare.
+CONSULT_SAMPLE_S = 3
 
 # Aider can exit 0 while printing an auth/config error transcript, or return only reasoning tokens with
 # empty visible content (GH-147 spike 0.1/0.4). Either is a failed advisor, not a real answer — trusting
@@ -202,6 +215,78 @@ def guarded_with_timeout(cmd, cwd, log_file, timeout_s, env=None):
         with open(log_file, "a") as f:
             f.write(f"\nconsult: failed to launch process: {e}\n")
         return None
+
+def wait_with_idle_bound(proc, out_path, remaining_s):
+    """Wait for one advisor, bounded by BOTH its wall remainder and an idle threshold.
+
+    Returns True if the advisor was killed for being idle, False if it exited on its own or hit
+    the wall remainder (the caller raises TimeoutExpired for both of those, preserving the
+    existing failure shape exactly).
+
+    GH-492. CONSULT_IDLE_S=0 disables the idle bound and restores pure wall-cap behaviour.
+
+    The advisor's transcript is the progress signal, not the worktree: all advisors share one
+    worktree, so a directory mtime cannot attribute progress to a model. Its own pid is the CPU
+    root for the same reason.
+    """
+    idle_cap = int(os.environ.get("CONSULT_IDLE_S", CONSULT_IDLE_DEFAULT_S))
+    if idle_cap <= 0:
+        proc.wait(timeout=remaining_s)
+        return False
+    diag = TurnDiagnostics(worktree=out_path, root_pid=proc.pid, interval=CONSULT_SAMPLE_S)
+    diag.start()
+    try:
+        deadline = time.monotonic() + remaining_s
+        while True:
+            if proc.poll() is not None:
+                return False
+            if time.monotonic() >= deadline:
+                raise subprocess.TimeoutExpired(getattr(proc, "args", "advisor"), remaining_s)
+            idle = diag.idle_seconds()
+            # None is "not measured yet" and must never mean "kill" — see idle_seconds().
+            if idle is not None and idle >= idle_cap:
+                _reason, detail = diag.classify()
+                try:
+                    with open(out_path, "a") as f:
+                        f.write(f"\nconsult: advisor was IDLE for >={idle_cap}s (no CPU, no transcript "
+                                f"growth) and was killed before the {int(remaining_s)}s wall cap "
+                                f"[{_reason}: {detail}]. This is an EXTERNAL condition consult "
+                                f"detected and contained, not one it prevented.\n")
+                except OSError:
+                    pass
+                _kill_advisor_group(proc)
+                return True
+            time.sleep(CONSULT_POLL_S)
+    finally:
+        diag.stop()
+
+def _kill_advisor_group(proc):
+    """Kill an advisor's whole process group, then reap it.
+
+    Advisors spawn children; signalling only the launcher leaves them running and holding the
+    transcript open. Falls back to killing just the process when the group signal is refused —
+    consult launches advisors without start_new_session, so the group may be the caller's own and
+    must never be signalled.
+    """
+    try:
+        pgid = os.getpgid(proc.pid)
+        if pgid != os.getpgid(0):
+            os.killpg(pgid, signal.SIGTERM)
+        else:
+            proc.terminate()
+    except (ProcessLookupError, PermissionError, OSError):
+        try:
+            proc.terminate()
+        except Exception:  # noqa: BLE001
+            return
+    try:
+        proc.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        try:
+            proc.kill()
+            proc.wait(timeout=2)
+        except Exception:  # noqa: BLE001
+            pass
 
 def agy_auth_preflight(agy_bin, log_file):
     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
@@ -445,7 +530,18 @@ def main():
 
             try:
                 rem = max(0, timeout_s - (time.time() - start_time))
-                proc.wait(timeout=rem)
+                # GH-492: bound each advisor by IDLENESS as well as the wall cap. This is the surface
+                # where the 2026-08-10 auth-preflight failure killed a consult outright, and it had
+                # none of GH-390's machinery. `proc.wait(timeout=)` blocks, so it cannot consult a
+                # sampler — same reason agy-turn.py's blocking call was replaced.
+                #
+                # Per-advisor scoping matters here in a way it does not in a turn shim: every advisor
+                # runs in ONE shared worktree under ONE parent, so the progress signal is the
+                # advisor's OWN transcript file and the CPU signal is its OWN subtree pid. Measuring
+                # the shared worktree would let a fast codex answer mask a hung agy.
+                _idle_killed = wait_with_idle_bound(proc, out, rem)
+                if _idle_killed:
+                    raise subprocess.TimeoutExpired(cmd or m, rem)
 
                 # GH-308 port (consult.sh run_codex): stamp the codex transcript with its provenance
                 # ATTESTATION header (whether the run succeeded or not, mirroring the Bash `[[ -f ]]` guard).

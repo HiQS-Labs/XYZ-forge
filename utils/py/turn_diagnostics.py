@@ -185,7 +185,23 @@ def _newest_mtime(root: str | None) -> float:
     Bounded: stops after MAX_ENTRIES so a large worktree cannot make a probe
     expensive enough to perturb the turn it is measuring.
     """
-    if not root or not os.path.isdir(root):
+    if not root:
+        return 0.0
+    # GH-492: accept a single FILE as the progress signal, not just a directory. A consult runs
+    # every advisor inside ONE shared worktree, so a directory mtime cannot tell which advisor is
+    # working — but each advisor writes its own transcript, and that file growing IS its progress.
+    if os.path.isfile(root):
+        try:
+            st = os.stat(root)
+            # SUM, not max: callers only ever compare this value against its own previous reading,
+            # so it just has to be non-decreasing and to move when EITHER input moves. Size is
+            # included because an appending writer on a coarse mtime clock can add bytes without the
+            # timestamp advancing — that is still progress, and a max() would hide it entirely
+            # behind the numerically larger mtime.
+            return st.st_mtime + float(st.st_size)
+        except OSError:
+            return 0.0
+    if not os.path.isdir(root):
         return 0.0
     MAX_ENTRIES = 4000
     newest, seen = 0.0, 0
@@ -224,10 +240,15 @@ class TurnDiagnostics:
             reason, detail = diag.classify()
     """
 
-    def __init__(self, worktree: str | None = None, interval: float = DEFAULT_INTERVAL_S):
+    def __init__(self, worktree: str | None = None, interval: float = DEFAULT_INTERVAL_S,
+                 root_pid: int | None = None):
         self.worktree = worktree
         self.interval = interval
-        self.root_pid = os.getpid()
+        # GH-492: a turn shim IS the process tree it measures, so its own pid is the right default.
+        # A consult is not: it launches every advisor as a sibling under one parent, so measuring
+        # `os.getpid()` there sums ALL advisors and one busy model masks another's hang. Passing the
+        # advisor's own pid scopes the CPU reading to that advisor's subtree.
+        self.root_pid = root_pid if root_pid is not None else os.getpid()
         self._stop = threading.Event()
         self._thread: threading.Thread | None = None
         # Sticky once CONFIRMED: a dialog that blocked the turn and was then

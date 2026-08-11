@@ -151,6 +151,102 @@ grep -q "_idle is not None and _idle >= idle_cap" "$PY_DIR/agy-turn.py" \
   && pass "agy-turn treats an unmeasured idle reading as not-killable" \
   || fail "agy-turn does not null-check the idle reading — an unmeasured turn could be killed"
 
+# ── (8) CONSULT SCOPING — a busy advisor must not mask an idle one ──────────────────────────────
+#
+# This is the failure a consult would hit that a turn shim never does. A turn shim IS its process
+# tree, so os.getpid() is the right CPU root. A consult launches every advisor as a SIBLING under one
+# parent and runs them all in ONE shared worktree — so measuring the parent sums all advisors, and a
+# fast codex answer would hold the whole tree's CPU above idle while agy hangs. That is exactly the
+# 2026-08-10 shape: one advisor died, the other worked.
+#
+# Asserted both ways: correctly scoped (the advisor's own pid) sees the hang; unscoped (the shared
+# parent) does NOT. Without the second half this case could pass on a build where scoping does
+# nothing at all.
+SCOPE_OUT="$WORK/scope.txt"
+PYTHONPATH="$PY_DIR" python3 - "$WORK" > "$SCOPE_OUT" 2>&1 <<'PYEOF'
+import os, sys, time, subprocess
+from turn_diagnostics import TurnDiagnostics
+
+work = sys.argv[1]
+INTERVAL = 0.2
+
+# advisor A: HUNG — alive, zero CPU, writes nothing (the agy failure shape)
+out_a = os.path.join(work, "advisor-a.md"); open(out_a, "w").write("")
+proc_a = subprocess.Popen(["sleep", "30"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+# advisor B: BUSY — burns real CPU continuously (the codex-still-working shape)
+busy = "x=0\nwhile True:\n    x+=1\n"
+proc_b = subprocess.Popen([sys.executable, "-c", busy], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+# correctly scoped: watch ONLY advisor A's subtree and ONLY A's transcript
+scoped = TurnDiagnostics(worktree=out_a, root_pid=proc_a.pid, interval=INTERVAL)
+# deliberately WRONG scoping: the shared parent, which is what the pre-GH-492 class could only do
+unscoped = TurnDiagnostics(worktree=out_a, interval=INTERVAL)
+scoped.start(); unscoped.start()
+time.sleep(3.0)
+scoped.stop(); unscoped.stop()
+
+for p in (proc_a, proc_b):
+    try:
+        p.kill(); p.wait(timeout=5)
+    except Exception:
+        pass
+
+print(f"SCOPED_IDLE={scoped.idle_seconds()}")
+print(f"UNSCOPED_IDLE={unscoped.idle_seconds()}")
+PYEOF
+
+if grep -q "^SCOPED_IDLE=" "$SCOPE_OUT"; then
+  S_IDLE="$(grep '^SCOPED_IDLE=' "$SCOPE_OUT" | cut -d= -f2)"
+  U_IDLE="$(grep '^UNSCOPED_IDLE=' "$SCOPE_OUT" | cut -d= -f2)"
+  awk -v v="$S_IDLE" 'BEGIN{exit !(v+0 >= 1.0)}' 2>/dev/null \
+    && pass "CONSULT: a hung advisor is seen as idle when scoped to its own pid (idle=${S_IDLE}s)" \
+    || fail "CONSULT: a hung advisor reported idle=${S_IDLE}s even when correctly scoped"
+  awk -v v="$U_IDLE" 'BEGIN{exit !(v+0 < 1.0)}' 2>/dev/null \
+    && pass "CONSULT: the SHARED-parent scope masks that same hang (idle=${U_IDLE}s) — which is why root_pid exists" \
+    || fail "CONSULT: the shared-parent scope reported idle=${U_IDLE}s, so this case proves nothing about scoping"
+else
+  fail "consult scoping harness did not run: $(cat "$SCOPE_OUT")"
+fi
+
+# ── (9) a FILE is a usable progress signal, since advisors share one worktree ────────────────────
+FILE_OUT="$WORK/filesig.txt"
+PYTHONPATH="$PY_DIR" python3 - "$WORK" > "$FILE_OUT" 2>&1 <<'PYEOF'
+import os, sys, time
+sys.path.insert(0, os.environ.get("PY_DIR", ""))
+from turn_diagnostics import _newest_mtime
+
+work = sys.argv[1]
+f = os.path.join(work, "transcript.md")
+open(f, "w").write("a")
+first = _newest_mtime(f)
+time.sleep(0.05)
+with open(f, "a") as fh:
+    fh.write("bbbbbbbbbb")
+second = _newest_mtime(f)
+print(f"FIRST={first}")
+print(f"SECOND={second}")
+print(f"GREW={second > first}")
+print(f"MISSING={_newest_mtime(os.path.join(work, 'nope.md'))}")
+PYEOF
+grep -q "^GREW=True" "$FILE_OUT" \
+  && pass "a growing transcript FILE registers as progress (advisors share a worktree; a file is per-advisor)" \
+  || fail "a growing transcript file did not register as progress: $(cat "$FILE_OUT")"
+grep -q "^MISSING=0.0" "$FILE_OUT" \
+  && pass "a missing transcript reads 0.0 rather than raising — an advisor that never writes is still measurable" \
+  || fail "a missing transcript did not read 0.0: $(cat "$FILE_OUT")"
+
+# ── (10) consult honours CONSULT_IDLE_S=0 as 'disable', and null-checks the reading ──────────────
+grep -q "if idle_cap <= 0:" "$PY_DIR/consult.py" \
+  && pass "consult guards the idle bound (CONSULT_IDLE_S=0 restores pure wall-cap behaviour)" \
+  || fail "consult does not guard the idle bound — CONSULT_IDLE_S=0 would not disable it"
+grep -q "idle is not None and idle >= idle_cap" "$PY_DIR/consult.py" \
+  && pass "consult treats an unmeasured idle reading as not-killable" \
+  || fail "consult does not null-check the idle reading — an unmeasured advisor could be killed"
+grep -q "root_pid=proc.pid" "$PY_DIR/consult.py" \
+  && pass "consult scopes each advisor's diagnostics to that advisor's own pid" \
+  || fail "consult does not pass root_pid — one busy advisor would mask another's hang"
+
 echo "  gh492-idle-kill: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ] || exit 1
 exit 0
