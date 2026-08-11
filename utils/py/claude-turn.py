@@ -13,6 +13,25 @@ def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
     sys.exit(2)
 
+def warn_if_workspace_untrusted(root):
+    """Warn, without changing turn control flow, when Claude lacks workspace trust."""
+    config_path = os.path.expanduser("~/.claude.json")
+    try:
+        with open(config_path, encoding="utf-8") as config_file:
+            config = json.load(config_file)
+        project = config.get("projects", {}).get(root)
+        trusted = isinstance(project, dict) and project.get("hasTrustDialogAccepted") is True
+    except (OSError, json.JSONDecodeError, AttributeError):
+        trusted = False
+
+    if not trusted:
+        print(
+            f"claude-turn: WARNING: workspace {root!r} is not trusted; Claude may ignore project permissions. "
+            "Run Claude Code interactively in this directory and accept the trust dialog, or set "
+            f"projects[{root!r}][\"hasTrustDialogAccepted\"] to true in {config_path}.",
+            file=sys.stderr,
+        )
+
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     # GH-296 follow-up: mirror codex-turn.py's fix — fall back to the CWD's git toplevel (not
@@ -114,6 +133,10 @@ def main():
             print("claude-turn: worktree isolation requested but `git worktree add` failed — failing turn", file=sys.stderr)
             if shadow_dir: shutil.rmtree(shadow_dir, ignore_errors=True)
             sys.exit(5)
+
+    # GH-380: trust is a per-directory Claude Code setting. This is deliberately warn-only:
+    # no config is modified and an untrusted (or unreadable) workspace still runs.
+    warn_if_workspace_untrusted(root)
 
     cmd = [
         resolved_claude, "-p", prompt,
