@@ -1,0 +1,73 @@
+Adversarially review two sets of DRAFT ACCEPTANCE CRITERIA I am about to publish onto two GitHub
+issues in this repo (xyz-3-agents-swarm). They will then be copied VERBATIM into capture docs and
+used to grade an unattended marathon builder, so a bad criterion becomes a bad build.
+
+Read the repo for context: PROJECT/GUIDING-PRINCIPLES.md, AGENTS.md, an existing well-formed capture
+doc such as PROJECT/2-WORKING/GH-358-LOCK-FLAKE-INSTRUMENTATION.md, relay-automation/marathon.sh,
+bin/marathon-yaml, utils/py/marathon_plan.py, utils/marathon-plan.sh, README.md.
+
+I want DISAGREEMENT AND DEFECTS, not praise. For each criterion tell me specifically:
+
+1. FALSE PREMISE — does it assert something about the code that is not true? This repo has already
+   burned two builds on a criterion whose premise was wrong (GH-343: "a non-executable gate script
+   must set NOT-READY" is false for `bash foo.sh`, which reads rather than execs). Check every
+   factual claim against the actual source.
+2. UNVERIFIABLE BY A REVIEWER — can a reviewer confirm it from the artifact alone? Criteria about
+   someone's intent, or the temporal order of their decisions, are not checkable and were removed
+   from GH-358 for exactly that reason.
+3. SATISFIABLE THE WRONG WAY — what is the cheapest change that technically passes while leaving the
+   defect in place?
+4. MISSING — what would a competent reviewer object to that no criterion covers?
+5. SCOPE LEAK — does anything drag in work the issue explicitly defers?
+
+Be concrete and cite file:line where you can. If a criterion is fine, say so in one word and move on.
+
+=== ISSUE #392 (Publish hardware sizing guidance + capability probe) — DRAFT, PART (a) DOCS ONLY ===
+
+---
+
+## Acceptance
+
+*Scope: part (a) — documentation — ONLY. Part (b), the capability probe, is explicitly deferred and
+is not satisfied, partially satisfied, or prototyped by this work. The issue itself calls the two
+"deliberately separable"; this block splits them at that seam.*
+
+- [ ] README's Prerequisites section states a hardware requirement where it states none today, including a named recommended minimum. A reader who stops at Prerequisites must come away with a number.
+- [ ] The published table covers 16 / 24 / 32 / 64 GB and, for each, says which execution path is supported — not merely "more is better". 16 GB must be stated as Path A only.
+- [ ] The per-lane budgeting rule is published alongside the table, not just the minimum: a serial marathon holds ~2.2 GB steady, and a concurrent lane costs ~1.5–2 GB plus whatever the target repo's suite needs. An operator must be able to size a wave width the table does not enumerate.
+- [ ] The figures are attributed to the run that produced them and dated, so a later reader can judge whether they still describe the harness. An unattributed number cannot be re-measured or retired.
+- [ ] The text states that `kernel ≤ 1 per wave` is a **write-conflict** rule and not a memory rule. This is the specific misreading that makes a 7-lane wave look bounded when nothing bounds it, and it is why the guidance is needed at all.
+- [ ] The documentation does not claim or imply that the harness enforces any of this. There is no probe, no clamp, and no refusal today; text implying otherwise would be a false statement about the shipped system and would also make part (b) look done.
+- [ ] A reader on a 16 GB host can determine, from the published text alone, whether a 7-lane parallel wave is supported — without opening this issue, the source, or the plan generator.
+
+=== ISSUE #391 (Nothing generates MARATHON.yaml) — DRAFT ===
+
+---
+
+## Acceptance
+
+*Scope: the emitter only. `bin/marathon-yaml` is the acceptance ORACLE for this lane and must not be
+modified — a lane that changes both the producer and its validator can satisfy itself. The two
+"smaller companions" in the body are split: the generated-document pointer is criterion 8; the
+`/10days` skill note is explicitly out of scope.*
+
+- [ ] One documented command produces a `MARATHON.yaml` from an existing plan document plus a preflight packet directory, with no hand-authoring step between them. Producing a file an operator must then edit does not satisfy this.
+- [ ] The emitted YAML is accepted by the existing `bin/marathon-yaml` validator, unmodified. The validator is the oracle; changing it to accept the emitter's output inverts the test.
+- [ ] Every field the validator requires is populated from a generated artifact, not from a default: phase `id` and execution order from the plan's lane ranking, `brief` from each packet's own path, `artifact` from the packet's declared artifact list.
+- [ ] `reviewer` is supplied by an explicit operator flag. It is the one field the issue identifies as not derivable, and silently defaulting it would put an unreviewed choice into an unattended multi-hour run.
+- [ ] `depends_on` is emitted only where the plan's write-sets actually overlap, and is absent where they are disjoint. Emitting it on every phase is indistinguishable from emitting it correctly while removing all parallelism, so a fixture with disjoint write-sets must produce a YAML with no `depends_on`.
+- [ ] A missing packet is a loud failure that names what is missing. Emitting a YAML with an empty or non-existent `brief` path defers the failure into a run that has already started dispatching work.
+- [ ] The lane ships a test that emits from a fixture plan + packet pair and asserts `bin/marathon-yaml` accepts the result, **plus a negative control observed failing**: a fixture whose packets are absent must be rejected by the emitter, and that rejection must be demonstrated, not merely asserted. A generator whose only test is "it produced a file" is not evidence.
+- [ ] `marathon-plan.sh`'s generated "How to fire a lane" section names the multi-phase route, so an operator reading the generated document end to end learns `marathon.sh` exists rather than inferring it from source.
+
+Extra questions I specifically want answered:
+- For #391: is scoping the emitter to marathon-plan.sh / utils/py/marathon_plan.py and FORBIDDING
+  edits to bin/marathon-yaml actually coherent, or does the emitter genuinely need validator
+  changes? Is `--emit-yaml` on marathon-plan the right home, or is a separate script better?
+- For #391: this repo is phasing out Bash and marathon-plan has a Python twin. Should the lane
+  target utils/py/marathon_plan.py only, and does that leave the Bash twin inconsistent in a way
+  the GH-308 frozen-twin guard would block?
+- For #392: is a docs-only lane a sensible marathon phase at all, or is it better as a direct PR?
+- For BOTH: is the write-set genuinely inert with respect to a RUNNING marathon? I claim nothing a
+  live marathon executes is touched by either lane. Check that claim; I care more about a
+  counterexample than agreement.

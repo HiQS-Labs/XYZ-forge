@@ -1,0 +1,7 @@
+FIRSTHAND_COUNT=6
+ECHOED_COUNT=5
+ECHOED `bin/marathon-yaml`
+ECHOED `bin/marathon-yaml`
+ECHOED `depends_on`
+ECHOED `marathon-plan.sh`
+ECHOED `marathon-plan.sh`
