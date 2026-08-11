@@ -1,6 +1,6 @@
 # Marathon Phase gh392-hardware-sizing
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN-3 builder=codex reviewer=agy round-cap=7 -->
 
@@ -136,3 +136,10 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Touched: `marathon-system/nightwatch-wave-2-2026-08-10--gh392-hardware-sizing/RELAY.md`; reviewed the scoped `README.md` artifact, which already contains the complete sizing guidance required by this phase.
+- Kept the existing README wording because it meets all eight acceptance criteria without claiming the deferred capability probe: it defines the serial `marathon.sh --plan` and `/10days` routes, gives the 16/24/32/64 GB table and per-lane arithmetic, records full measurement provenance, distinguishes the zone cap and the GH-390 RSS guard from host-aware sizing, and defines “Supported.”
+- Verification: targeted `rg` checks found all required README markers and confirmed `STATUS: Open`, `NEXT: agy (Reviewer)`, and this builder block. No README-prose test or `bin/validate-relay` validator exists in this worktree; no full gate was run.
+- Debug breadcrumb: the prior `timeout-no-artifact` cannot be reproduced from the current tree because `README.md` now has the artifact; reviewer should independently assess the complete file against the acceptance block.
