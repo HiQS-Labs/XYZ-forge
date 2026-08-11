@@ -1,5 +1,5 @@
 # Marathon Phase gh392-hardware-sizing
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN-2 builder=codex reviewer=agy round-cap=7 -->
@@ -38,7 +38,7 @@ carried verbatim from the issue. Work from those, not from this brief's prose.
 ## The defect
 
 `README.md:129`'s Prerequisites section is four rows — Codex CLI, agy CLI, Node 18+ and git,
-Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.
+Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.  [Unverified — no citation]
 
 That matters because the harness's memory cost is not uniform:
 
@@ -151,3 +151,13 @@ Breadcrumb: the prior escalation records only `pre-advance-failed` and `gate: re
 command or output. The default pre-advance gate is the full `bash validate.sh`; it was not rerun
 because this lane explicitly prohibits running the full project gate. The reviewer is the designated
 prose verification gate for this phase.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I have reviewed the entire `README.md` file against all eight acceptance criteria. The corrections for the two draft defects—defining the execution paths by command rather than internal shorthand ("Path A"/"Path B"), and accurately describing that per-gate resource containment exists but host-aware wave sizing does not—are properly implemented. The `kernel <= 1` rule is precisely described as a coordination/zone cap.
+
+I also swept the entire file for any pre-existing defects and found none. All criteria are fully satisfied and the README structure remains intact.
+
+**Verdict:** Approved
