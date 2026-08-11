@@ -1027,5 +1027,54 @@ grep -q "TAKE YOUR TURN.*codex.*BUILDER" "$A/phases/p1/RELAY.md" 2>/dev/null \
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (20) GH-414: Pi is routable as a BUILDER, and the Bash fallback is a known divergence ────────
+#
+# GH-295 shipped the Pi builder lane and GH-451/PR #452 wired `pi*` into the Python router — but no
+# case here ever named Pi, so the whole builder half was covered by nothing. #414 criterion 4 is
+# exactly this gap. Both halves below are asserted because one without the other is not a regression
+# test: (20a) alone cannot fail if routing silently regresses to the Bash driver, and (20b) alone
+# would pass on a tree where Pi does not work at all.
+STUB_PI_BIN="$WORK/stub-pi"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_PI_BIN"
+chmod +x "$STUB_PI_BIN"
+
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+PI_OUT="$(RELAY_DRIVE_EXIT=0 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" \
+  MARATHON_AGENT_CMD="$WORK/noop-agent" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  PI_BIN="$STUB_PI_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy \
+    --pre-advance-cmd "true" --builder pi 2>&1)"; rc=$?
+[ "$rc" -eq 0 ] \
+  && pass "GH-414: --builder pi is accepted by the default (Python) router and completes a phase" \
+  || fail "GH-414: --builder pi exit=$rc: $PI_OUT"
+# The identity must reach the rendered relay file, not merely survive argument parsing — a router
+# that accepted `pi` and then dispatched someone else would still exit 0 above.
+grep -q "TAKE YOUR TURN.*pi.*BUILDER" "$A/phases/p1/RELAY.md" 2>/dev/null \
+  && pass "GH-414: the pi builder identity is what actually reaches the relay file" \
+  || fail "GH-414: expected pi as the BUILDER identity in the rendered relay file"
+
+# (20b) CONTROL — the frozen Bash twin does NOT know Pi, and that divergence is deliberate, not a
+# bug to be silently "fixed" here. relay-automation/marathon-drive.sh:779-783 routes
+# claude/codex/agy/aider only; utils/py/marathon_drive.py:1097-1103 adds pi. The Bash half is frozen
+# under GH-308, so it is pinned as a KNOWN state rather than repaired. This case is what makes
+# criterion 5's documentation falsifiable: if someone ever teaches Bash about Pi, this fails loudly
+# and the divergence note must be retired in the same commit.
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+PI_BASH_OUT="$(RELAY_DRIVE_EXIT=0 XYZ_PYTHON=0 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" \
+  MARATHON_AGENT_CMD="$WORK/noop-agent" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  PI_BIN="$STUB_PI_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy \
+    --pre-advance-cmd "true" --builder pi 2>&1)"; rc=$?
+[ "$rc" -ne 0 ] \
+  && pass "GH-414 control: the frozen Bash driver REJECTS --builder pi (divergence is real, not assumed)" \
+  || fail "GH-414 control: XYZ_PYTHON=0 accepted --builder pi — Bash gained Pi support; retire the divergence note"
+printf '%s' "$PI_BASH_OUT" | grep -q "must start with claude/codex/agy/aider" \
+  && pass "GH-414 control: the Bash rejection names the agent set that omits pi" \
+  || fail "GH-414 control: expected the claude/codex/agy/aider rejection message, got: $PI_BASH_OUT"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0

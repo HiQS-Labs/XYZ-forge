@@ -2,7 +2,7 @@
 gh_issue: 414
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/414
 title: "GH-414 — the marathon router's Pi rejection is now largely stale: two of five claims already fixed by GH-451"
-status: "2-WORKING — captured 2026-08-10 for release 0.3.0 Nightwatch. Verified against `development` @ 40a75da. Every claim in the issue re-checked against the tree; two of five no longer hold. Awaiting preflight."
+status: "2-WORKING — BUILT 2026-08-10. Criteria 4 and 5 shipped as a direct PR (Pi regression case + the divergence note); criteria 1-3 were already satisfied by GH-451/PR #452 before this lane opened. Mutation-verified. Ready to close once re-read against the shipped state."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel
@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-08-10 as a lane of release 0.3.0 Nightwatch. Every claim in the issue's own "Evidence" table was re-verified against `development` @ `40a75da` rather than trusted — two of five no longer hold, because GH-451/PR #452 (merged 2026-08-09, six days after #414 was filed) shipped the Python-side routing independently. | Preflight, then fire as a single small phase: pin a Pi-builder regression case in `test/marathon-drive.sh` and record the Bash/Python divergence explicitly. Pending operator go. |
+| **BUILT 2026-08-10 — criteria 4 and 5 shipped as a direct PR, and every other criterion was already satisfied before this lane opened.** `test/marathon-drive.sh` case (20) now pins Pi routing (148 pass / 0 fail, up from 144), and `utils/py/marathon_drive.py`'s `route_agent` carries the Bash/Python divergence note. Verified falsifiable by mutation: deleting the `pi` branch from `route_agent` makes case (20a) fail with exit 2. Frozen-twin guard 32/0 — the frozen Bash half was deliberately left untouched. | Close #414 once the criteria are re-read against the shipped state. The **reviewer** half remains open and is NOT part of this issue — `bin/marathon-yaml:95` and the reviewer check still reject `pi`, so there is still no Pi fallback for a dead agy reviewer. That needs its own issue. |
 
 **Issue:** https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/414
 
@@ -54,7 +54,7 @@ against `development` @ `40a75da` (2026-08-10) finds it **partially stale**:
 | 1 | `utils/py/marathon_drive.py:876` dies with `"...must start with claude/codex/agy/aider"` | **NO — fixed** | The `die(...)` call is now at `utils/py/marathon_drive.py:1103`, and its message reads `"...must start with claude/codex/agy/aider/pi"`. The `route_agent` closure at `:1097-1103` has a `elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id` branch (`:1102`) that returns before the `die`. `git blame` attributes both lines to `66d2945f` (2026-08-09, "feat(GH-451): route Pi builders through Python marathon (#452)"), landed on `development` with no open PR — this is merged, not in flight. |
 | 2 | `relay-automation/marathon-drive.sh:780` dies identically | **YES — still holds** | `relay-automation/marathon-drive.sh:783`: `*) die "agent '$1' not recognized — must start with claude/codex/agy/aider" ;;` — unchanged, no `pi` branch. This file carries the `# FROZEN (GH-308)` banner at `:2-3` and PR #452 did not touch it (confirmed via `git show --stat 66d2945f`). |
 | 3 | `relay-automation/marathon-agent.sh` has no Pi branch | **NO — fixed** | `relay-automation/marathon-agent.sh:36` declares `pi_agent="${PI_AGENT:-}"`, and `:65-68` dispatch `"$pi_agent") ... exec "$HERE/pi-turn.sh" ;;`, matching the shape of the other four branches (`:49-64`). `git blame` attributes `:65-68,70` to the same `66d2945f` commit. |
-| 4 | `test/marathon-drive.sh` has zero references to `pi-turn` / `PI_AGENT` | **YES — still holds** | `/usr/bin/grep -c 'pi-turn\|PI_AGENT\|pi_agent' test/marathon-drive.sh` → `0`. PR #452 added Pi coverage instead to `test/pi-turn.sh` and `test/test_python_layer.py` (`git show --stat 66d2945f`) — neither is the file this issue's own acceptance criterion names. |
+| 4 | `test/marathon-drive.sh` has zero references to `pi-turn` / `PI_AGENT` | **held when captured — CLOSED 2026-08-10 by this lane** | At capture: `/usr/bin/grep -c 'pi-turn\|PI_AGENT\|pi_agent' test/marathon-drive.sh` → `0`. PR #452 had added Pi coverage instead to `test/pi-turn.sh` and `test/test_python_layer.py` (`git show --stat 66d2945f`) — neither is the file this issue's own acceptance criterion names. **Now closed:** case (20) covers Pi routing in that file, and the count is no longer zero. The row is kept rather than deleted because it is the evidence the criterion was real when written. |
 | 5 | `relay-automation/pi-turn.sh` and `utils/py/pi-turn.py` exist | **YES — still holds** | `relay-automation/pi-turn.sh` — 15,534 bytes. `utils/py/pi-turn.py` — 9,008 bytes. Both present, both executable shims from GH-295. |
 
 **Why this happened without anyone lying:** #414 (filed 2026-08-03, updated 2026-08-05) and #451

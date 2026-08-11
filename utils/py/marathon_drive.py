@@ -1095,6 +1095,22 @@ def main():
     os.environ["PI_AGENT"] = ""
 
     def route_agent(agent_id):
+        # GH-414 — BASH/PYTHON DIVERGENCE, deliberate and pinned. This router accepts `pi*`
+        # (GH-295 shipped the shim, GH-451/PR #452 wired it here); the frozen Bash twin at
+        # relay-automation/marathon-drive.sh:779-783 accepts claude/codex/agy/aider ONLY and dies
+        # on `pi`. Same split in the binary probe: _probe_agent_bin below has a `pi` branch, the
+        # Bash twin's does not. Nothing is broken by this — marathon-drive.sh execs this file
+        # whenever XYZ_PYTHON is unset or 1, which is the default, so the Bash path is only
+        # reachable via XYZ_PYTHON=0 or a host with no python3 >= 3.8. On THAT path `--builder pi`
+        # fails at argument routing before any tick mutation.
+        #
+        # The Bash half is frozen under GH-308 and is NOT to be taught about Pi as a drive-by fix;
+        # doing so needs a `Frozen-twin-exception:` trailer and should happen only as part of
+        # retiring the twins. test/marathon-drive.sh case (20b) asserts the Bash rejection, so if
+        # anyone does teach it Pi, that case fails loudly and this note must be retired with it.
+        #
+        # REVIEWER routing is a separate, narrower set and Pi is NOT in it — see the check below
+        # and bin/marathon-yaml:95. A Pi *builder* fallback does not give you a Pi *reviewer*.
         if agent_id.startswith("claude"): os.environ["CLAUDE_AGENT"] = agent_id
         elif agent_id.startswith("codex"): os.environ["CODEX_AGENT"] = agent_id
         elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = agent_id
