@@ -25,6 +25,24 @@
 
 set -uo pipefail
 
+# THIS SUITE DRIVES REAL LOCK ACQUISITION, so it must own RELAY_DRIVER_LOCKED rather than inherit it.
+# When validate.sh runs as a live marathon's --pre-advance-cmd, marathon_drive.py:649 has already
+# exported RELAY_DRIVER_LOCKED=1 so its NESTED relay-drive skips a lock the parent already holds. The
+# gate inherits that on purpose: gate_env.py deliberately does NOT scrub it (tried, landed, REVERTED
+# 2026-08-07 — its docstring carries the measured 4-suite table showing neither value is right for
+# the whole gate). Inherited here, every driver invocation below skips the lock block entirely and
+# each "must refuse" assertion silently inverts.
+#
+# NOT hypothetical: this suite went 12/6 inside the Nightwatch wave-3 gate on 2026-08-11 while
+# passing 18/0 standalone, and halted the marathon at phase 1 for a defect that was in this file and
+# not in the phase's own work. `RELAY_DRIVER_LOCKED=1 bash test/gh376-...sh` reproduces it exactly.
+#
+# The per-suite clear is the shipped remedy for exactly this (GH-441 Phase 1), and this file is the
+# fifth to need it — see test/driver-lock.sh:11, gh284-runlog-heartbeat.sh:12, gh331-cost-summary.sh:24,
+# gh342-sentinel-debug-log-python.sh:27. Section F below then re-asserts the inherited=1 behaviour
+# deliberately, so what cost a marathon phase is covered rather than merely avoided.
+unset RELAY_DRIVER_LOCKED
+
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 
@@ -121,9 +139,15 @@ refused "$sh_out" \
   && pass "THE PIN (bash): relay-drive.sh refuses — the frozen twin agrees with the Python half" \
   || fail "THE PIN FAILED (bash): did not see the held lock; got: $(printf '%s' "$sh_out" | head -1)"
 
-[ "$(printf '%s' "$py_out" | head -1)" = "$(printf '%s' "$sh_out" | head -1)" ] \
-  && pass "twin parity: both lanes emit a byte-identical refusal (same path, same label, same pid)" \
-  || fail "twin parity: py='$(printf '%s' "$py_out" | head -1)' sh='$(printf '%s' "$sh_out" | head -1)'"
+# Equality ALONE is not enough, and the wave-3 gate proved it: when both lanes skipped the lock they
+# emitted the same NON-refusal and this assertion passed green while the two pins beside it failed.
+# Requiring that the matched line is a refusal is what makes parity mean something.
+if refused "$py_out" && refused "$sh_out" \
+   && [ "$(printf '%s' "$py_out" | head -1)" = "$(printf '%s' "$sh_out" | head -1)" ]; then
+  pass "twin parity: both lanes emit a byte-identical REFUSAL (same path, same label, same pid)"
+else
+  fail "twin parity: py='$(printf '%s' "$py_out" | head -1)' sh='$(printf '%s' "$sh_out" | head -1)'"
+fi
 
 [ ! -e "$WORKTREE_LOCAL_LOCK" ] \
   && pass "neither lane left a worktree-local lock behind at \$WT/.relay-driver.lock" \
@@ -256,6 +280,42 @@ grep -q 'git rev-parse' "$REPO/utils/py/relay_drive.py" \
 grep -q 'lock_dir, lock_label = driver_lock_path(root)' "$REPO/utils/py/marathon_drive.py" \
   && pass "non-goal held: marathon_drive.py's own lock resolution is untouched" \
   || fail "marathon_drive.py's lock resolution changed — out of scope for GH-376"
+
+# ═══════════════════════════════════════════════════════════════════════════════════════════════
+# F. THE INHERITED-FLAG CASE — pinned, not merely avoided
+#
+# The `unset` at the top of this file is why sections A-D are honest. But an unset alone would leave
+# the behaviour it works around untested, and that behaviour is exactly what halted a marathon: with
+# RELAY_DRIVER_LOCKED=1 the driver skips lock acquisition ENTIRELY and proceeds, which is correct for
+# a NESTED driver whose parent already holds the lock (marathon_drive.py:649) and catastrophic for an
+# assertion that assumes otherwise. Pin both directions against the SAME held lock.
+# ═══════════════════════════════════════════════════════════════════════════════════════════════
+echo "-- F. the inherited RELAY_DRIVER_LOCKED=1 case (nested driver, by design) --"
+
+hold_lock "$COMMON_LOCK"
+
+nested_py="$(RELAY_DRIVER_LOCKED=1 python3 "$WT/utils/py/relay_drive.py" \
+  --relay-file "$RELAY" --agent-cmd /bin/true --dry-run 2>&1)"
+refused "$nested_py" \
+  && fail "F (python): a NESTED driver must skip the lock its parent holds, but it refused" \
+  || pass "F (python): RELAY_DRIVER_LOCKED=1 skips acquisition — the nested-driver contract holds"
+
+nested_sh="$(RELAY_DRIVER_LOCKED=1 XYZ_PYTHON=0 bash "$WT/relay-automation/relay-drive.sh" \
+  --relay-file "$RELAY" --agent-cmd /bin/true --dry-run 2>&1)"
+refused "$nested_sh" \
+  && fail "F (bash): a NESTED driver must skip the lock its parent holds, but it refused" \
+  || pass "F (bash): RELAY_DRIVER_LOCKED=1 skips acquisition on the frozen twin too"
+
+# And the guard that would have caught the wave-3 failure at its source: with the flag cleared, the
+# SAME invocation against the SAME lock must refuse. If these two ever agree, this file is inherited-
+# flag-poisoned again and every "must refuse" assertion above is vacuous.
+cleared_py="$(env -u RELAY_DRIVER_LOCKED python3 "$WT/utils/py/relay_drive.py" \
+  --relay-file "$RELAY" --agent-cmd /bin/true --dry-run 2>&1)"
+refused "$cleared_py" \
+  && pass "F: clearing the flag flips the SAME invocation back to refusing — sections A-D are honest" \
+  || fail "F: flag cleared and it STILL did not refuse — A-D are vacuous, do not trust this run"
+
+release_lock
 
 # ── syntax ───────────────────────────────────────────────────────────────────────────────────────
 echo "-- syntax check --"
