@@ -245,6 +245,23 @@ Only take this path once the fast path works for you and you want unattended, qu
    GitHub issues for Marathon/Swarm viability so nothing under-specified runs unattended.
 5. When preflight is green, ask Claude Code to **fire the Marathon**.
 
+### Recover after an interrupted Marathon
+
+After a crash, kill, reboot, or other suspected interruption, run the read-only recovery report
+against the affected repo:
+
+```bash
+bash /path/to/xyz/relay-automation/marathon-recover.sh /path/to/target-repo
+```
+
+It reads every `marathon-system/*/RELAY.md` (and the legacy `phases/` location), the local tick
+event log, and commits reachable from the target's current branch tip. A reported **UNGATED COMMIT**
+means a phase remains open or escalated, has no `marathon.phase.approved` event, and already has a
+landed commit: treat it as unverified. Re-run that phase's gate or revert the commit before trusting
+it. The report also shows the driver-lock state. A stale lock self-heals on the next marathon run;
+a lock reported LIVE only means its PID still answers the liveness probe, so check a seemingly-dead
+holder rather than assuming it is stale.
+
 ### Important note on PDDA's structure
 
 PDDA's folder structure is deliberately opinionated. That setup cost is the trade for what

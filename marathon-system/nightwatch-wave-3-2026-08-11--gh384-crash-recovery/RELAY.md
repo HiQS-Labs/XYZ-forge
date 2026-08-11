@@ -1,6 +1,6 @@
 # Marathon Phase gh384-crash-recovery
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH384-CRASH-RECOVERY-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -134,5 +134,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    is wanted; verifying in-tree is what costs you the turn.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to codex —
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
-   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
-   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented `relay-automation/marathon-recover.sh` and documented its recovery procedure in
+`README.md`. The report is read-only: it scans current `marathon-system/` plus legacy `phases/`,
+uses the shared driver-lock resolver, finds each relay task, and labels an `UNGATED COMMIT` only
+when a non-terminal phase lacks `marathon.phase.approved` and has a matching commit reachable from
+the current tip. It does not create state or alter the monitored repository.
+
+Verified with `bash -n` and an isolated temporary two-phase fixture: the Approved phase with an
+approval event reported `APPROVAL: recorded`; the Open phase with a reachable relay commit and no
+event reported `UNGATED COMMIT` and `RECOVERY: UNVERIFIED`; fixture file hashes were unchanged.
