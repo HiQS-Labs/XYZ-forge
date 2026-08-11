@@ -2,7 +2,7 @@
 gh_issue: 387
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/387
 title: "A builder turn killed at its wall-clock cap is committed and gated as if it completed — the gate becomes the first thing to ever execute the partial work"
-status: "2-WORKING — captured 2026-08-10 for release 0.3.0 Nightwatch, batch 2. Verified against source: the commit-then-handoff-then-gate-probe chain the issue describes is real and reproduces today, across relay-turn-lib.sh, claude-turn.sh/.py, relay_drive.py, and marathon_drive.py. Issue has no `## Acceptance` section (confirmed via a fresh `gh issue view 387` fetch, live body byte-matches the local capture) — criteria authored in a separately-titled section below, not inside `## Acceptance`. The fix's write-set plausibly includes the turn kernel (relay-turn-lib.sh / rtl.py) and the marathon driver (marathon_drive.py) — per this repo's self-modification constraint it cannot be a marathon lane and must ship as a direct PR. Awaiting operator decision on scope."
+status: "2-WORKING — BUILT 2026-08-11 as a direct PR. The gate probe is removed from recover_timeout_exit(); the reviewer now inspects a timed-out artifact before any gate executes it. GH-205 and GH-432 both preserved — no regression was required. test/gh387-gate-not-first-executor.sh 9/0, pre-fix replay 7/2. The untracked-partial leak remains open and is sequenced second."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel
@@ -43,7 +43,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Traced the full causal chain from the wall-clock kill to the gate invocation across four files, with the specific driver function (`recover_timeout_exit`, added for GH-205) that turns a killed turn's committed artifact back into a live gate run. Confirmed the issue has no `## Acceptance` section on GitHub (live fetch, 2026-08-10). Confirmed this rides on GH-432's deliberate design (commit-and-handoff on ANY bad exit, not just success) and confirmed GH-390/#457's gate-guard caps ship *after* this issue was filed, tempering the host-panic severity without closing the structural gap. | Operator decision: this cannot preflight as a marathon lane (write-set plausibly includes the turn kernel and the driver — see Reversibility & blast radius) and must ship as a direct, human-reviewed PR. |
+| **BUILT 2026-08-11 (direct PR).** The gate probe is gone from `recover_timeout_exit()` (`utils/py/marathon_drive.py`). A timed-out turn's artifact is now inspected by the **reviewer** before any gate executes it. **Nothing regressed:** all six GH-205 assertions in `test/marathon.sh` pass unchanged (33/0), and GH-432's commit/handoff is untouched. `test/gh387-gate-not-first-executor.sh` 9/0; pre-fix replay restoring the probe fails the pin 7/2. | Close #387. **Sequenced second and still open:** the untracked-partial leak — a LATER invocation can still execute a leftover, because `path_has_nonempty_phase_delta` accepts an untracked file as evidence. That needs a durable `unreviewed-partial` marker (new persistent state) and is independent of this change. |
 
 **Issue:** https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/387
 

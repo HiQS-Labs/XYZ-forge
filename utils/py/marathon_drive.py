@@ -1994,19 +1994,56 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     timeout_emit = [f"halted at phase {args.phase_id} — turn timeout / hang"]
 
     def recover_timeout_exit():
-        # GH-205: a relay timeout (exit 7) whose declared artifact already landed AND is gate-green AND
-        # left a live reviewer handoff is resumed with one more relay-drive pass instead of a false hang.
+        # GH-205: a relay timeout (exit 7) whose declared artifact already landed AND left a live
+        # reviewer handoff is resumed with one more relay-drive pass instead of a false hang.
+        #
+        # GH-387: this used to PROBE THE PRE-ADVANCE GATE here, before any token inspection, and that
+        # probe made the gate the first thing ever to execute work no human or reviewer had seen. A
+        # turn killed at its wall-clock cap is still committed by rtl_enforce — deliberately, that is
+        # GH-432's shipped fix against orphaned tokens and lost work — so the artifact on disk may be
+        # a partial write from an agent that was killed mid-edit.
+        #
+        # The probe is gone, and NOTHING ELSE CHANGES, because the probe decided nothing. Every branch
+        # below is resolved by artifacts_exist(), file_status() and token_state():
+        #
+        #   no artifact                    -> real hang, 7   (checked BEFORE the gate ever was)
+        #   terminal status, no live actor -> continue,  0   (token)
+        #   no live actor                  -> halt,      7   (token)
+        #   actor is still the builder     -> real hang, 7   (token)
+        #   actor moved to the reviewer    -> resume         (token)
+        #
+        # The tick token records the handoff DIRECTLY. The gate was only ever a proxy for the question
+        # "did the builder finish and hand off?", which the token already answers — so GH-205's
+        # hands-free recovery of a false hang is preserved intact, not traded away.
+        #
+        # What IS given up is the `timeout-gate-failed` early exit: a timed-out turn whose artifact was
+        # already red used to halt here, and now resumes to the reviewer, who rejects it. That costs
+        # one reviewer turn on work that was going to fail anyway. It was a fail-fast optimisation, not
+        # a guarantee — and paying it buys "the gate is never the first executor of un-inspected code".
+        #
+        # The reviewer is now the first inspector, which is the correct order: a reviewer READS the
+        # artifact, the gate EXECUTES it.
+        #
+        # STILL OPEN, deliberately not fixed here (see the capture doc): refusing this gate does not
+        # stop a LATER invocation from executing a leftover partial, because path_has_nonempty_phase_delta
+        # accepts an untracked file as evidence of work. Closing that needs a durable
+        # `unreviewed-partial` marker — new persistent state, independent of this change.
+        #
+        # BASH/PYTHON DIVERGENCE, deliberate and pinned. The frozen twin still probes the gate here and
+        # still sets TIMEOUT_ESCALATION_REASON="timeout-gate-failed"
+        # (relay-automation/marathon-drive.sh:1208). It is frozen under GH-308 and is NOT to be taught
+        # this fix as a drive-by change — that needs a `Frozen-twin-exception:` trailer and belongs to
+        # retiring the twins. The Bash path is only reachable via XYZ_PYTHON=0 or a host with no
+        # python3 >= 3.8; marathon-drive.sh:9 execs this file otherwise, which is the default. Same
+        # shape as the GH-414 divergence note in route_agent above, and the same reason: the frozen
+        # halves are the dead halves, and #379/#380 show they actively generate false bug reports.
         if not artifacts_exist():
             timeout_reason[0] = "timeout-no-artifact"
             timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder produced no declared artifact"
             log("relay timed out (exit 7) before any declared artifact landed — treating it as a real hang")
             return 7
-        log(f"relay timed out (exit 7) after declared artifact(s) appeared — probing the pre-advance gate: {pre_advance_cmd}")
-        if run_pre_advance_gate() != 0:
-            timeout_reason[0] = "timeout-gate-failed"
-            timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder artifact failed the pre-advance gate"
-            log("timeout probe: pre-advance gate FAILED — treating it as a real halt")
-            return 5
+        log("relay timed out (exit 7) after declared artifact(s) appeared — reading the relay + token state "
+            "(GH-387: the pre-advance gate is NOT run here; the reviewer inspects the artifact first)")
         s = file_status()
         tstatus, actor = token_state()
         if terminal_status(s) and not actor:
@@ -2015,14 +2052,14 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         if not actor:
             timeout_reason[0] = "timeout-no-live-actor"
             timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder left no live reviewer handoff"
-            log(f"timeout probe: artifact + gate were green, but {relay_task} has no live actor (STATUS: {s}) — cannot continue")
+            log(f"timeout probe: artifact landed, but {relay_task} has no live actor (STATUS: {s}) — cannot continue")
             return 7
         if actor == args.builder:
             timeout_reason[0] = "timeout-builder-still-owned-turn"
             timeout_emit[0] = f"halted at phase {args.phase_id} — timed-out builder never handed the relay to review"
             log(f"timeout probe: builder still owns {relay_task} (STATUS: {s}) — treating this as a real hang")
             return 7
-        log(f"timeout probe: artifact + gate were green and {relay_task} moved to {actor} — resuming relay-drive from the post-timeout state")
+        log(f"timeout probe: artifact landed and {relay_task} moved to {actor} — resuming relay-drive from the post-timeout state")
         r = _run_relay_drive()
         if r == 7:
             timeout_reason[0] = "timeout-during-review-recovery"

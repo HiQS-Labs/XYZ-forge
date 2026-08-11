@@ -84,6 +84,14 @@ TESTS=(
   "gh457-gate-tiers.sh"         # GH-457 (the gate's caps come from a declared TIER; the default tier must exceed the worst observed real gate runtime) — 10/0; control: mutating the registry moves the resolved cap, restoring it moves back
   "gh407-gate-ran-attribution.sh" # GH-407 (pre-advance-failed is reserved for a gate that RAN; every escalation records gate: not-run|green|red) — 7/0; control: pre-fix replay reproduces the mislabel inside the fixture
   "gh390-timeout-attribution.sh" # GH-390 (exit-7 attribution: dialog vs runaway vs slow vs wedged)
+  "gh387-gate-not-first-executor.sh" # GH-387 (a timed-out turn's artifact is reviewed BEFORE any gate
+                                 #   executes it) — 9/0. The gate LOGS every invocation, because the
+                                 #   outcome alone cannot distinguish the fix: with a green gate the
+                                 #   phase completes either way. Pre-fix replay: restoring the probe
+                                 #   makes the gate run TWICE and the pin fails 7/2.
+                                 #   test/marathon.sh's GH-205 cases are the non-regression CONTROL,
+                                 #   not the pin — they pass with OR without the probe, which is
+                                 #   exactly why this file exists.
   "gh492-idle-kill.sh"           # GH-492 (a blocked turn is killed on an IDLE threshold, not only at the
                                  #   wall cap) — 16/0, covering both surfaces: agy-turn.py and consult.py.
                                  #   The NEGATIVE CONTROLS are the point, because a trigger-happy bound is
