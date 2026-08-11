@@ -125,8 +125,13 @@ killed a consult). A fallback *builder* does not help when the *reviewer* is wha
 **A latent contradiction found in the same pass, worth fixing alongside:** the reviewer allowlist at
 `:1111` permits `gemini`, but `route_agent(args.reviewer)` runs first at `:1109` and `gemini` is not
 in its accepted set (`claude/codex/agy/aider/pi`, `:1097-1103`). So `reviewer: gemini` passes the
-YAML regex, then dies at `:1103` — and `:1111`'s `gemini` branch is **unreachable code**. Three
-places disagree about the legal reviewer set, in both directions.
+YAML regex, then dies at `:1103` — and `:1111`'s `gemini` branch is **unreachable code**.
+
+Precisely two sets are in play, not three: `bin/marathon-yaml:95`'s regex and `:1111`'s `startswith`
+chain accept an **identical** set (`codex|gemini|agy`), so those two never disagree with each other.
+The split is between that reviewer set and `route_agent`'s (`claude|codex|agy|aider|pi`), and it runs
+in both directions — `pi`/`claude`/`aider` route but are refused as reviewers, `gemini` is allowed as
+a reviewer but does not route. Only the second direction is dead code.
 
 Recorded here rather than silently widened into this lane's scope: extending the reviewer allowlist
 is a separate decision with its own blast radius (a reviewer that cannot be trusted to review is
