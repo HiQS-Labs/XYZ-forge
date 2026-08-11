@@ -54,6 +54,7 @@ TESTS=(
   "worktree-isolation.sh"
   "shim-worktree.sh"
   "marathon-yaml.sh"
+  "gh391-emit-marathon-yaml.sh" # GH-391 (ranked plan + packets -> runnable MARATHON.yaml; missing-packet control)
   "marathon-drive.sh"
   "gh284-runlog-heartbeat.sh"   # GH-284 (driver heartbeat + opt-in idempotent run log)
   "gh307-gate-env-scrub.sh"      # GH-307 (pre-advance gate must not inherit run-identity tags)
