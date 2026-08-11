@@ -1,5 +1,5 @@
 # Marathon Phase gh391-emit-marathon-yaml
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH391-EMIT-MARATHON-YAML-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -170,3 +170,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Made the join fail loud before writing for missing, malformed, duplicate, and unmatched packets, with the lane or packet path in the error. The output path is rejected if it aliases an input, and no parent directory is created implicitly.
 - Registered the focused test in `validate.sh`. Verification: `bash test/gh391-emit-marathon-yaml.sh` passed **13/13**, including both unchanged oracles (`bin/marathon-yaml` and `marathon.sh --dry-run`), the observed absent-packet negative control, the other three packet refusal classes, explicit reviewer/dependency checks, and byte-identical inputs/output-only writes.
 - Per the phase containment instruction, the full `validate.sh` gate was not run; the harness owns that gate after handoff.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+I have reviewed `utils/py/marathon_yaml_emit.py`, `test/gh391-emit-marathon-yaml.sh`, and `validate.sh`.
+- The emitter script meets all the acceptance criteria. It validates the packets, requires them to correspond to the lanes, correctly extracts the exact fields, handles scalar dependencies, fails loud with clear error messages mentioning the lanes and offending files, and safely outputs the YAML.
+- The negative control tests correctly demonstrate the refusal for absent, malformed, duplicate, and unmatched packets, ensuring no yaml is outputted for invalid states.
+- The `validate.sh` was swept, and no pre-existing defects were found in the file; the test was cleanly appended to the `TESTS` array.
+
+**Verdict:** Approved
