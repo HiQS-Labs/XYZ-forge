@@ -138,6 +138,43 @@ start** — a relay or consult fails mid-run, not at startup, if either isn't lo
 | **Node 18+ and git** | your usual package manager | Needed by the `tick` kernel and the Quickstart above. |
 | **Python 3.8+** | usually already present | See the runtime note below. |
 
+#### Hardware sizing for Marathon
+
+**Recommended minimum: 16 GB RAM for the serial `marathon.sh --plan` route.** That minimum covers
+one builder and its gate running serially, with normal host reserve; it does **not** support the
+`/10days` per-lane parallel dispatch. The two routes are intentionally different: the serial command
+works one lane at a time, while `/10days` may start one agent for each lane in a wave.
+
+“Supported” below means a recommended planning envelope that leaves host reserve and is not expected
+to swap because of XYZ itself. It is not a guarantee that a target repository's test suite will
+finish: that suite's memory use is unbounded and must be supplied by the operator when sizing a wave.
+
+| Host RAM | Supported execution path | Planning guidance |
+|---|---|---|
+| 16 GB | Serial `marathon.sh --plan` only | Do not use `/10days` per-lane parallel dispatch. |
+| 24 GB | Serial route; small `/10days` parallel wave after manual budgeting | Reserve memory for macOS and the target suite before choosing the lane count. |
+| 32 GB | Serial route; `/10days` per-lane parallel dispatch after manual budgeting | A practical baseline for a normal parallel wave, subject to the target suite's memory cost. |
+| 64 GB | Serial route; wider `/10days` per-lane parallel dispatch after manual budgeting | More headroom for lanes and repository tests; it is still not an automatic wave-width limit. |
+
+For a serial marathon, XYZ measured about **2.2 GB steady**. For `/10days`, budget
+**1.5–2 GB per concurrent lane**, then add the target repository's own test suite memory (an
+unbounded, operator-supplied term) and the host reserve. In other words, choose a width that fits:
+`available RAM − host reserve − target-suite memory`, divided by 1.5–2 GB per lane. Do not infer a
+safe width from the table alone for a repository whose tests are memory-heavy.
+
+Measurement provenance: on a **32 GB M1 Max**, 138 samples taken at **10-second intervals** while a
+builder, an agy reviewer, and three pytest gates were active measured a serial marathon at **2.19 GB
+average steady-state**, with a **2.26 GB peak**. Re-measure when the agent mix, gate command, or host
+meaningfully changes.
+
+`kernel ≤ 1 per wave` is a **coordination/zone cap, not a memory cap**. It is configured through
+`maxPerWave` in `utils/marathon-plan-zones.default.json` and applies independently of write-set
+collisions: it constrains which lanes may share a wave, never how much RAM they consume.
+
+XYZ does have per-gate resource containment: the GH-390 gate guard enforces an RSS cap and kills an
+over-budget gate. It does **not** currently inspect host RAM, clamp a wave width, or refuse a wave
+that is too large for the machine. Host-aware wave sizing remains the operator's responsibility.
+
 Full per-CLI verification steps, environment variables, and troubleshooting live in
 **[Set up Codex, agy, and Pi](relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up)**.
 

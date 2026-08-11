@@ -1,6 +1,6 @@
 # Marathon Phase gh392-hardware-sizing
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -131,3 +131,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented the README hardware-sizing guidance. It defines the serial `marathon.sh --plan` and
+`/10days` per-lane parallel routes before comparing them; adds the 16/24/32/64 GB support table and
+the operator budgeting formula; and records the measurement provenance. It also distinguishes the
+`kernel ≤ 1 per wave` coordination/zone cap from memory control, and accurately describes existing
+GH-390 per-gate RSS containment while leaving host-aware sizing, clamps, and refusal explicitly out
+of scope. Files touched: `README.md`, this relay transcript.
