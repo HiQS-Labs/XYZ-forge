@@ -1,6 +1,6 @@
 # Marathon Phase gh380-claude-trust
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH380-CLAUDE-TRUST-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -91,7 +91,7 @@ it will be caught by your own gate, which is the intended behaviour.
 
 `marathon_drive.py:238-260`'s binary probe (GH-117) fail-fasts on a missing claude binary before any
 tick mutation. It is **PATH-only and never trust-aware**, so it neither blocks nor interacts with
-this fix. Verified. Leave it alone.
+this fix. Verified. Leave it alone.  [Unverified — no citation]
 
 
 ---
@@ -143,3 +143,20 @@ Implemented GH-380 in `utils/py/claude-turn.py` and updated this relay handoff.
 - Verification: `bash test/claude-turn.sh` — 36 pass, 0 fail.
 
 **Verdict:** Ready for review.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+I reviewed the whole file and found two critical pre-existing defects, plus one logical flaw in the builder's implemented fix.
+
+**Builder Defect (High):**
+- `warn_if_workspace_untrusted` is called with `root` (line 139). However, if `RELAY_WORKTREE_ISOLATION=1` is active, Claude is executed in `run_cwd` (the worktree). Claude evaluates the trust state of its executing directory, not `root`. This means the warning will inaccurately reflect `root`'s trust state while Claude's permissions degrade based on `run_cwd`'s trust state. The function should be called with `run_cwd` so the operator gets an accurate warning about the directory Claude actually evaluates.
+
+**Pre-existing Defects (Critical):**
+- **Line 175:** `sys.exit(6)` is called directly if off-lane edits are detected in the worktree. As thoroughly explained by the GH-432 comment on line 186, calling `sys.exit` before `rtl.enforce` skips the file-scoped commit, token handoff, and transcript archive — leaving the turn completely wedged. Instead of exiting immediately, it should set `bounded_rc = 6` (or similar) so execution falls through to `rtl.enforce` where containment is correctly handled.
+- **Line 135:** `sys.exit(5)` is called directly if `git worktree add` fails. Because the token was already claimed on line 83, exiting here bypasses `rtl.enforce` and leaves the token claimed by a dead agent. It must fall through to the cleanup/enforce block.
+
+**Verdict:** Changes requested
+
+Handing off to codex — codex, take your turn.
