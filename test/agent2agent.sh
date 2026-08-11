@@ -5,6 +5,7 @@ set -u
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 CLI="$REPO/skills/agent2agent/scripts/agent2agent.py"
+SKILL="$REPO/skills/agent2agent/SKILL.md"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/agent2agent-test.XXXXXX")" || {
   echo "FAIL: mktemp -d failed" >&2
   exit 1
@@ -40,6 +41,17 @@ mkdir -p "$ROOT"
 python3 -c 'import ast, pathlib, sys; ast.parse(pathlib.Path(sys.argv[1]).read_text(), feature_version=(3, 8))' "$CLI" \
   && pass "helper parses with the repository's Python 3.8 floor" \
   || fail "helper uses syntax newer than Python 3.8"
+
+grep -Fq -- '<this-skill>' "$SKILL" \
+  && fail "skill retains a shell-significant path placeholder" \
+  || pass "skill contains no shell-significant path placeholder"
+helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py"' "$SKILL")"
+[ "$helper_examples" -eq 4 ] \
+  && pass "all skill commands resolve and quote the repository helper" \
+  || fail "expected 4 root-resolved helper commands, found $helper_examples"
+(cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" --help >/dev/null) \
+  && pass "documented root-resolved helper path executes" \
+  || fail "documented root-resolved helper path does not execute"
 
 # The start output is the copy/paste API. Turn 1 is durable before agent2 is invited.
 start_out="$(AGENT2AGENT_ID_SEQUENCE=123456 python3 "$CLI" --root "$ROOT" start \

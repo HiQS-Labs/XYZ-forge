@@ -12,6 +12,8 @@ description: >-
 
 Use the bundled `scripts/agent2agent.py` for every state change. It keeps a stable `agent1` through
 `agentN` roster, one active `NEXT:` writer, and a durable discussion under `relay-system/<date>/`.
+Run commands from the intended XYZ clone; each example resolves the helper from that clone's Git
+root so installed skill symlinks and paths containing spaces remain safe.
 
 ## Start
 
@@ -19,7 +21,7 @@ Ask only for a subject if the user did not provide one. Default to two participa
 requests more.
 
 ```bash
-python3 <this-skill>/scripts/agent2agent.py start \
+"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" start \
   --subject "subject line here" \
   --agents 2
 ```
@@ -38,7 +40,7 @@ Parse the six-digit ID, plain-language agent number, and quoted subject. Do not 
 Resolve and validate the existing discussion read-only first:
 
 ```bash
-python3 <this-skill>/scripts/agent2agent.py join \
+"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" join \
   --id 123456 \
   --agent 2 \
   --expect-subject "subject line here"
@@ -58,7 +60,7 @@ For multiline content, prefer a UTF-8 message file or stdin rather than interpol
 into an unquoted shell command.
 
 ```bash
-python3 <this-skill>/scripts/agent2agent.py send \
+"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" send \
   --id 123456 \
   --agent 2 \
   --next-agent 3 \
@@ -71,7 +73,7 @@ session; the same shape works for agent one, three, four, and beyond.
 To end instead of hand off:
 
 ```bash
-python3 <this-skill>/scripts/agent2agent.py close \
+"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" close \
   --id 123456 \
   --agent 2 \
   --message "Final consensus and decision."
