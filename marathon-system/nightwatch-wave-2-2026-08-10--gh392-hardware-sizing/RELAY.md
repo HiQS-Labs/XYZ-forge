@@ -1,6 +1,6 @@
 # Marathon Phase gh392-hardware-sizing
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN-2 builder=codex reviewer=agy round-cap=7 -->
 
@@ -136,3 +136,18 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Reviewed `README.md` against all eight acceptance criteria. The existing `Hardware sizing for
+Marathon` section already supplies the 16 GB serial minimum; command-defined serial and `/10days`
+routes; the 16/24/32/64 GB support table; the per-concurrent-lane arithmetic including the
+operator-supplied target-suite term; full measurement provenance; the independent coordination/zone
+cap; and the accurate distinction between the RSS gate guard and missing host-aware sizing. No
+README edit was needed in this turn, so the artifact remains documentation-only and part (b) remains
+unimplemented.
+
+Breadcrumb: the prior escalation records only `pre-advance-failed` and `gate: red`, not the failed
+command or output. The default pre-advance gate is the full `bash validate.sh`; it was not rerun
+because this lane explicitly prohibits running the full project gate. The reviewer is the designated
+prose verification gate for this phase.
