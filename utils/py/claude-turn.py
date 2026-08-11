@@ -13,6 +13,25 @@ def die(msg):
     print(f"claude-turn: {msg}", file=sys.stderr)
     sys.exit(2)
 
+def warn_if_workspace_untrusted(root):
+    """Warn, without changing turn control flow, when Claude lacks workspace trust."""
+    config_path = os.path.expanduser("~/.claude.json")
+    try:
+        with open(config_path, encoding="utf-8") as config_file:
+            config = json.load(config_file)
+        project = config.get("projects", {}).get(root)
+        trusted = isinstance(project, dict) and project.get("hasTrustDialogAccepted") is True
+    except (OSError, json.JSONDecodeError, AttributeError):
+        trusted = False
+
+    if not trusted:
+        print(
+            f"claude-turn: WARNING: workspace {root!r} is not trusted; Claude may ignore project permissions. "
+            "Run Claude Code interactively in this directory and accept the trust dialog, or set "
+            f"projects[{root!r}][\"hasTrustDialogAccepted\"] to true in {config_path}.",
+            file=sys.stderr,
+        )
+
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
     # GH-296 follow-up: mirror codex-turn.py's fix — fall back to the CWD's git toplevel (not
@@ -112,8 +131,17 @@ def main():
             print(f"claude-turn: worktree isolation ON ({wt})", file=sys.stderr)
         else:
             print("claude-turn: worktree isolation requested but `git worktree add` failed — failing turn", file=sys.stderr)
-            if shadow_dir: shutil.rmtree(shadow_dir, ignore_errors=True)
-            sys.exit(5)
+            # The token was claimed already.  Keep running through cleanup and enforce so the
+            # relay can persist its handoff/containment outcome instead of remaining claimed by
+            # this dead turn.
+            bounded_rc = 5
+
+    # GH-380: trust is a per-directory Claude Code setting. This is deliberately warn-only:
+    # no config is modified and an untrusted (or unreadable) workspace still runs.
+    # Claude evaluates the directory it is launched in; under worktree isolation that is `wt`,
+    # rather than the original target root.
+    if bounded_rc == 0:
+        warn_if_workspace_untrusted(run_cwd)
 
     cmd = [
         resolved_claude, "-p", prompt,
@@ -129,18 +157,19 @@ def main():
     # cause. subprocess.run reaps the child before raising TimeoutExpired, so
     # nothing can be probed after the fact — see turn_diagnostics.
     diag = TurnDiagnostics(worktree=run_cwd)
-    diag.start()
-    try:
-        with open(claude_log, "w") as log_f:
-            subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
-    except subprocess.TimeoutExpired:
-        bounded_rc = 7
-    except subprocess.CalledProcessError as e:
-        bounded_rc = e.returncode
-    except Exception as e:
-        bounded_rc = 5
-    finally:
-        diag.stop()
+    if bounded_rc == 0:
+        diag.start()
+        try:
+            with open(claude_log, "w") as log_f:
+                subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
+        except subprocess.TimeoutExpired:
+            bounded_rc = 7
+        except subprocess.CalledProcessError as e:
+            bounded_rc = e.returncode
+        except Exception:
+            bounded_rc = 5
+        finally:
+            diag.stop()
 
     if shadow_dir:
         shutil.rmtree(shadow_dir, ignore_errors=True)
@@ -149,7 +178,9 @@ def main():
         off_lane = rtl.worktree_end(wt)
         if off_lane:
             print("claude-turn: builder made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)", file=sys.stderr)
-            sys.exit(6)
+            # Containment remains an exit-6 result, but must first reach rtl.enforce so the
+            # already-claimed token cannot be orphaned.
+            bounded_rc = 6
 
     if bounded_rc == 7:
         # Exit code stays 7 for callers; the reason names WHY, so a blocked OS
@@ -174,6 +205,11 @@ def main():
     # Containment is not weakened by running enforce on a failure — enforce is where containment
     # LIVES (off-lane edits are reverted and exit 6 there, as they already were for a timeout).
     rc = rtl.enforce(t, me, claude_log, "claude")
+    # An in-root enforcement violation takes priority over a failed or timed-out subprocess.
+    if rc == 6:
+        sys.exit(6)
+    if bounded_rc == 6:
+        sys.exit(6)
     if bounded_rc == 7:
         sys.exit(7)
     if bounded_rc != 0:
