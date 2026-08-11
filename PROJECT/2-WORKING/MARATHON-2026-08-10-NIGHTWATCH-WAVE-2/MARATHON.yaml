@@ -1,0 +1,122 @@
+# MARATHON.yaml — 2026-08-10: release 0.3.0 Nightwatch, wave 2.
+#
+# Two phases, strictly sequential. Wave 1 (MARATHON-2026-08-10-NIGHTWATCH) shipped GH-358 Phase 1 in
+# PR #489 after a halt and a --retry; its selection notes explain why only one manifest lane was
+# buildable. This wave goes outside the named manifest, deliberately — see below.
+#
+#   gh392 (docs) → gh391 (code)
+#
+# ---------------------------------------------------------------------------------------
+# WHY THESE TWO, AND NOT THE MANIFEST
+# ---------------------------------------------------------------------------------------
+# The five remaining named Nightwatch manifest members are all excluded for the reasons wave 1
+# recorded and re-verified: #388 edits the outer driver, #426 edits the turn kernel, and #409+#408
+# and #354 still carry no `## Swarm Preflight Contract` and so are not verdictable under
+# GUIDING-PRINCIPLES §11. None of that changed today.
+#
+# So this wave takes two Nightwatch-MILESTONE issues that are buildable instead. Both had **no
+# acceptance criteria at all** — criteria were authored onto each issue on 2026-08-10, which is the
+# same path GH-358 took. Authoring criteria and then grading a builder against them is a real hazard
+# this repo has named, so both drafts went through an adversarial codex + agy consult first.
+#
+# ---------------------------------------------------------------------------------------
+# THE REVIEW CHANGED THE WAVE. THAT IS THE POINT OF RUNNING IT.
+# ---------------------------------------------------------------------------------------
+# Both advisors returned the SAME blockers independently, and each was verified against the source
+# before acting on it — none was taken on the advisors' word:
+#
+#   1. #391 criterion 3 asserted `bin/marathon-yaml` requires `brief` and `artifact`. IT DOES NOT —
+#      `bin/marathon-yaml:91-94` throws only on a missing `id` or `reviewer`. A builder graded against
+#      the original would have been told the validator enforces something it does not.
+#      → rewritten as an emitter contract, and `marathon.sh --dry-run` added as a SECOND oracle,
+#        because the validator alone accepts a YAML that cannot run.
+#
+#   2. #391 criterion 5 claimed emitting `depends_on` everywhere would "remove all parallelism".
+#      THERE IS NO PARALLELISM TO REMOVE — phases are strictly serial (README "Do phases run in
+#      parallel?"), a fact WAVE 1'S OWN PLAN STATES and this wave's first draft then contradicted.
+#      → rewritten around the real harm: a fabricated dependency is indistinguishable from a real one
+#        and silently misreports the plan's causal structure.
+#
+#   3. #391's original scope was IMPOSSIBLE, not merely awkward. It said "edit the Python planner,
+#      leave the frozen Bash twin alone" — but `test/marathon-plan.sh` Scenario T (`:677-712`)
+#      enforces CROSS-LANE BYTE PARITY between the two engines, with a mutation control proving the
+#      comparison is genuinely cross-lane. A Python-only edit goes red inside the lane's own
+#      pre-advance gate.
+#      → the lane is now a NEW STANDALONE SCRIPT that touches no planner file at all.
+#
+#   4. #392 criterion 7 would have licensed a FALSE STATEMENT: "no clamp, no refusal" reads as "no
+#      memory protection exists", and the GH-390 gate guard demonstrably kills an over-budget gate on
+#      an RSS cap — observed live in wave 1 (`peak group RSS 1042MB … caps: RSS 8192MB`).
+#      → corrected to the true distinction: per-gate containment exists, host-aware wave sizing does not.
+#
+#   5. #392 used "Path A"/"Path B" as if defined. They are the issue's private vocabulary and appear
+#      nowhere in README, making the criterion unreviewable.
+#      → the routes must now be named by command before any shorthand is used.
+#
+# A claim of mine that the review FALSIFIED, recorded because the correction is load-bearing:
+# I stated both lanes were inert with respect to a running marathon. That is wrong for #391. Every
+# phase's pre-advance gate is `bash validate.sh`; `validate.sh:161` runs `test/marathon-plan.sh`;
+# that test invokes the planner. Planner code IS executed inside a live run — which is exactly why
+# #391 no longer touches the planner. What remains is CONTAINED, not inert: the new emitter's own
+# test runs in the gate, so a defect turns that phase's gate red rather than wedging a turn.
+#
+# ---------------------------------------------------------------------------------------
+# WHY THIS ORDER
+# ---------------------------------------------------------------------------------------
+#   * gh392 FIRST. Its write-set is `README.md` — one file, no executable content, read by nothing in
+#     the chain. It is the lane whose failure costs the least and cannot touch the phase after it.
+#     Same reasoning that put #416 first in Litmus wave 2, and that reasoning paid off there when the
+#     chain halted on the cheapest lane after its deliverable was already approved.
+#   * gh391 LAST. It is the only lane with executable code, and its own test runs in the gate. If it
+#     breaks, the failure lands on its own gate and nothing downstream exists to damage.
+#
+# No `depends_on` between them: their write-sets are disjoint (`README.md` vs a new script + a new
+# test + `validate.sh`). Phases run one at a time regardless — `depends_on` would constrain an order
+# that sequence already fixes, and per finding 2 above, asserting a dependency that does not exist is
+# exactly the misreporting this wave's own lane is being built to prevent. Leaving it out is the
+# honest encoding.
+#
+# `validate.sh` appears in only ONE lane's write-set, so the registration collision that forced
+# sequencing in earlier waves does not arise here.
+#
+# ---------------------------------------------------------------------------------------
+# PREFLIGHT — 2026-08-10 against development, AFTER the criteria rewrite
+# ---------------------------------------------------------------------------------------
+#   lane   verdict           acceptance fidelity          issue-state   source-url
+#   gh392  ready (exit 0)    match 8/8 verbatim           OPEN          ok → issue #392
+#   gh391  ready (exit 0)    match 8/8 verbatim           OPEN          ok → issue #391
+#
+#   Both re-preflighted after the rewrite, not before it. The first preflight (7/7 and 8/8 against
+#   the DRAFT criteria) also passed — which is worth stating plainly: preflight verifies that the
+#   doc's acceptance matches the issue's, and cannot tell whether the criteria are CORRECT. It would
+#   have cheerfully green-lit the false premises. The consult is what caught them.
+#
+# Builder is codex (GH-212, subscription-billed). Reviewer is agy throughout, so the reviewer is
+# never the model that wrote the change.
+#
+# OPERATOR GO GIVEN 2026-08-10 ("do a Nightwatch marathon plan, write needed docs and contracts,
+# preflight, and a dry run … then if dry run is green, then run the marathon").
+#
+# Parent capture docs (one per phase):
+#   PROJECT/2-WORKING/GH-392-HARDWARE-SIZING-GUIDANCE.md
+#   PROJECT/2-WORKING/GH-391-EMIT-MARATHON-YAML.md
+
+name: nightwatch-wave-2-2026-08-10
+phases:
+  - id: gh392-hardware-sizing
+    # NOTE: no ' #NNN' in a phase name — bin/marathon-yaml strips from a space-hash onward even
+    # inside a double-quoted scalar, which silently truncated a wave-1 name and left the quote open.
+    name: "GH-392 part a: publish the hardware sizing guidance the README has never carried"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-10-NIGHTWATCH-WAVE-2/brief-gh392-hardware-sizing.md
+    artifact: README.md
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh391-emit-marathon-yaml
+    name: "GH-391: emit the MARATHON.yaml the multi-phase runner needs and nothing produces"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-10-NIGHTWATCH-WAVE-2/brief-gh391-emit-marathon-yaml.md
+    artifact: utils/py/marathon_yaml_emit.py,test/gh391-emit-marathon-yaml.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
