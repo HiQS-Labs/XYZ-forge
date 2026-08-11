@@ -214,6 +214,30 @@ def die(msg):
 def log(msg):
     print(f"marathon-drive: {msg}")
 
+def run_tick_loud(cmd_args):
+    """Run a tick command, and on failure print what tick said before exiting on it (GH-408).
+
+    The name always promised this. The body did the opposite: it sent stdout AND stderr to DEVNULL
+    and then `sys.exit(res.returncode)`, so the one path guaranteed to end the run was also the one
+    guaranteed to explain nothing. A token-seeding failure halted a marathon with no message and an
+    exit code nothing maps — the caller saw a bare non-zero from a step it could not name.
+
+    Success stays silent, deliberately. These calls run several times per phase (log, claim, release,
+    phase.start); echoing `won:`/`released:` each time would add steady noise to every transcript for
+    no diagnostic gain, and noise is how the useful line gets skipped.
+
+    Lifted from a closure inside main() to module level so a test can call it directly — the previous
+    nesting meant the only way to observe this behaviour was to drive a whole marathon phase.
+    """
+    res = subprocess.run(cmd_args, capture_output=True, text=True)
+    if res.returncode != 0:
+        label = " ".join(str(a) for a in cmd_args[1:3]) or "tick"
+        eprint(f"marathon-drive: tick {label} failed (exit {res.returncode}):")
+        for stream in (res.stdout, res.stderr):
+            for line in (stream or "").splitlines():
+                eprint(f"  {line}")
+        sys.exit(res.returncode)
+
 def _repo_rel_prefix(path, root):
     """GH-484: `path` as a repo-relative prefix with a trailing slash, for matching the paths
     `git status --porcelain` emits (which are relative to the repo TOPLEVEL, not to `root` —
@@ -1898,10 +1922,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     # below to avoid double-counting, matching the Bash implementation.
     os.environ.pop("LANE_ATTEMPT_COUNTED", None)
     lane_attempt_gate(get_env("TICK_REPO_ROOT", root), lane_state_key, args.force)
-    def _run_tick_loud(cmd_args):
-        res = subprocess.run(cmd_args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        if res.returncode != 0:
-            sys.exit(res.returncode)
+    _run_tick_loud = run_tick_loud   # GH-408: module-level now, so it is directly testable
 
     reconcile_relay_task()
 

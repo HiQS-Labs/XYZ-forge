@@ -3,9 +3,9 @@ gh_issue: 409
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409
 also_covers: 408
 title: "GH-409 + GH-408 — a leaked tick claim wedges the next turn, and every layer that could have named the cause discards it"
-status: "Intake (2-WORKING) — captured 2026-08-08 for release 0.2.0 Litmus. NOT a reasoned claim: both issues fired LIVE during the Litmus marathon on 2026-08-07 and together cost ~2h of a session. Combined into one lane because the second is why the first is expensive. Not yet preflighted, not yet fired."
+status: "BUILT 2026-08-11 (Phases 1-3) as a lane of release 0.3.0 Nightwatch, to which both issues moved on 2026-08-08. Built Opus-direct rather than fired as a marathon — the lane carries no preflight contract and is therefore not verdictable under GUIDING-PRINCIPLES §11, which the 2026-08-10 wave-1 plan had already recorded as the reason it was unbuildable that way. Both negative controls are recorded under test/baselines/. Full validate.sh green."
 created: 2026-08-08
-updated: 2026-08-08
+updated: 2026-08-11
 owner: noel
 doc_type: project
 release: "0.2.0 Litmus"
@@ -38,7 +38,35 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-08-08 after both issues fired **live** during the Litmus 0.2.0 marathon and halted it twice. Neither had a capture doc, which is why both had drifted since 2026-08-02. Combined into one lane: #408 is not merely adjacent to #409, it is the reason #409 costs hours instead of minutes. This doc adds a **second instance** of #408's defect that the issue does not name, and a **second producer** of leaked claims that #409 does not name. | Operator go, then the three phases below. Needs a preflight contract before it can be fired. |
+| **All three phases built 2026-08-11.** `tick claim` now exits non-zero on every `lost:` branch; both discard sites surface tick's own message; the cap hit and the wrong-owner failure are separate messages; and a turn that dies before `rtl_enforce` releases its claim at exit. Two suites, `test/gh408-tick-failure-visibility.sh` (22/0) and `test/gh409-claim-leak.sh` (8/0), both observed red pre-fix with the transcripts recorded under `test/baselines/`. Full `validate.sh` green. | Close #408 and #409 against the acceptance block below. Criterion 6 is **deferred to #407** and is the one item not satisfied here — see "Acceptance — outcome". |
+
+## Acceptance — outcome
+
+1. **Met.** `test/gh409-claim-leak.sh` runs two failing turns then a third healthy one, on each of the
+   three paths that never reach `rtl_enforce`. Pre-fix the third turn is refused at the cap.
+2. **Met.** `claim limit reached (holding H-one, H-two)` reaches stderr, naming the held tasks.
+3. **Met.** `bin/tick claim` returns 1 on cap-hit, wrong-owner and terminal-task. A claim the agent
+   already holds is a WIN and still exits 0 — asserted, because that is the case a naive "any
+   non-`won` output is an error" fix breaks, and every shim claims unconditionally.
+4. **Met, both sites.** `rtl.claim_task_or_exit` captures and prints; `run_tick_loud` was lifted out
+   of a closure to module level (so it is testable at all) and prints both streams before exiting.
+5. **Met.** The cap hit is its own message and does not tell the operator to *inspect* `tick info` —
+   it names that command only to say it will look healthy and is the wrong instrument. The
+   wrong-owner branch keeps the original wording, where `tick info` is the right instrument.
+6. **DEFERRED to #407, not satisfied here.** A resource failure can still be reported as
+   `pre-advance-failed` when no gate ran. The criterion itself says "satisfied here or explicitly
+   deferred to it"; this is the explicit deferral. What changed is that the operator is no longer
+   *blind* to the real cause when it happens — the mislabel remains, its cost does not.
+7. **Met.** `test/baselines/GH-408-negative-control.md` (12 red → 0) and
+   `test/baselines/GH-409-negative-control.md` (4 red → 0) carry both runs in full, not an assertion
+   that a control happened.
+
+**The Bash twins were deliberately not touched.** All five `relay-automation/*-turn.sh` shims and
+`marathon-drive.sh` carry the GH-308 `FROZEN` banner — "Python is authoritative — do not make
+behavior changes here" — so the fix lives in `utils/py/` and `bin/tick` only. The doc's Phase 1
+artifact list named `utils/py/rtl.py`, `utils/py/marathon_drive.py` and `src/*.js`, which matches;
+the `tick claim` exit status turned out to live in `bin/tick`'s dispatch rather than `src/claim.js`,
+whose result object already distinguished every case correctly.
 
 ## The defect, in the order an operator actually meets it
 

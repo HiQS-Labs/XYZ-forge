@@ -1,3 +1,4 @@
+import atexit
 import os
 import shlex
 import subprocess
@@ -216,12 +217,21 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
 
     tick_env = make_tick_env(tick_repo_root)
     claim_paths = ",".join(claim_paths_for_turn(root, relay_file, allow_paths))
-    subprocess.run(
+    # GH-408: this claim's output used to go to DEVNULL on BOTH streams. This function is on the path
+    # of every single turn in the fleet, which made it the most expensive instance of the defect — far
+    # more so than the `_run_tick_loud` site the issue actually names. tick prints the answer here
+    # ("lost: claim limit reached (holding T-cite, T-offlane)") and it was thrown away, so the failure
+    # below could only ever describe the SYMPTOM (nobody owns the token) and never the CAUSE.
+    #
+    # Captured rather than inherited, deliberately: a successful claim must stay silent. Printing
+    # tick's `won:` line on every turn would add noise to every transcript in exchange for nothing.
+    claim_res = subprocess.run(
         [tick_bin, "claim", task, "--agent", agent, "--paths", claim_paths],
         env=tick_env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        capture_output=True,
+        text=True,
     )
+    claim_output = ((claim_res.stdout or "") + (claim_res.stderr or "")).strip()
 
     info_res = subprocess.run([tick_bin, "info", task], env=tick_env, capture_output=True, text=True)
     claimer = "none"
@@ -231,10 +241,29 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
             break
 
     if claimer != agent:
-        print(
-            f"{tool_name}: could not establish token ownership of {task} (claimer={claimer}, expected {agent}) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info {task}`",
-            file=sys.stderr,
-        )
+        # Show the tool's own words first — they name the held tasks, which is the single fact the
+        # operator needs and the one no message synthesised here could invent.
+        for line in claim_output.splitlines():
+            print(f"{tool_name}: tick claim: {line}", file=sys.stderr)
+
+        # Two different failures wore one message before GH-409. Splitting them matters because the
+        # remedy differs and, worse, the OLD hint actively argued against the cap-hit cause: it sent
+        # the operator to `tick info <task>`, which on a cap hit reports `status: open, handoff-to:
+        # <you>` — a healthy token. The diagnostic contradicted the defect.
+        if "claim limit reached" in claim_output:
+            print(
+                f"{tool_name}: could not claim {task} because {agent} is at its claim cap, not because "
+                f"the token is unavailable — the token itself is fine, so `tick info {task}` will look "
+                f"healthy and is the wrong instrument here. A turn that fails before releasing leaves "
+                f"its claim behind, and two of those wedge an agent permanently (GH-409). Release or "
+                f"reap the held task(s) named above: `tick reap {agent} --task <held-task>`.",
+                file=sys.stderr,
+            )
+        else:
+            print(
+                f"{tool_name}: could not establish token ownership of {task} (claimer={claimer}, expected {agent}) — refusing to run so the turn cannot commit with the token open under the old owner; inspect `tick info {task}`",
+                file=sys.stderr,
+            )
         sys.exit(5)
 
     subprocess.run(
@@ -243,7 +272,65 @@ def claim_task_or_exit(root, xyz_root, relay_file, allow_paths, task, agent, too
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
+    _arm_claim_release_on_exit(tick_bin, tick_env, task, agent, tool_name)
     return tick_repo_root, tick_bin
+
+def _arm_claim_release_on_exit(tick_bin, tick_env, task, agent, tool_name):
+    """GH-409: give the claim we just took a guaranteed release, on every exit path.
+
+    The claim is taken here, several hundred lines before the turn's own cleanup. `rtl_enforce` is
+    what normally releases or hands it off — but a shim can exit long before reaching it: worktree
+    setup fails (`sys.exit(5)`), containment rejects the turn (`sys.exit(6)`), a derivation call
+    fail-fasts, an exception escapes. On any of those the claim simply stays held.
+
+    That is not a cosmetic leak, because an agent may hold only two (MAX_ACTIVE_CLAIMS_PER_AGENT).
+    TWO such failures wedge that agent permanently, and the wedge is self-inflicted, does not clear
+    itself, and reports itself as a problem with the NEXT token rather than with the earlier turns.
+    GH-432 fixed the neighbouring half — a failed *agent* now reaches enforce — but the paths above
+    never consult the agent's result at all, so they were untouched by it.
+
+    IDEMPOTENT BY CONSTRUCTION, and that is the load-bearing property. It re-reads `tick info` and
+    releases only if the task is STILL claimed by us at exit. After a normal turn the token has
+    already been released to the peer (GH-67 handoff) or marked done, so this sees `status: open` /
+    `done` and does nothing — it cannot clobber a handoff a successful turn just made. Blanket
+    releasing would.
+
+    Deliberately a RELEASE and not a `reap`. Reaping is the watchdog's authority path for someone
+    else's dead claim; this process is the legitimate owner cleaning up after itself, and the
+    distinction is worth keeping in the event log. Equally deliberately, nothing here auto-reaps on a
+    cap error: silently stealing a claim would trade a loud stall for a race against an agent that is
+    genuinely busy (the issue's own non-goal).
+
+    SIGKILL and a host panic are out of reach — atexit cannot run — and stay the watchdog's job.
+    """
+    def _release_if_still_held():
+        try:
+            info = subprocess.run([tick_bin, "info", task], env=tick_env,
+                                  capture_output=True, text=True)
+        except Exception:
+            return
+        status = claimer = ""
+        for line in info.stdout.splitlines():
+            if line.startswith("status:"):
+                status = line.split(":", 1)[1].strip()
+            elif line.startswith("claimer:"):
+                claimer = line.split(":", 1)[1].strip()
+        if status != "claimed" or claimer != agent:
+            return
+        res = subprocess.run([tick_bin, "release", task, "--agent", agent],
+                             env=tick_env, capture_output=True, text=True)
+        if res.returncode == 0:
+            # Say so. A silent cleanup of a leak is how the leak stayed unmeasured: the operator
+            # needs to know this turn ended without handing its token on properly.
+            print(f"{tool_name}: released the claim on {task} that this turn would otherwise have "
+                  f"left held — the turn ended without reaching its own token handoff (GH-409)",
+                  file=sys.stderr)
+        else:
+            detail = ((res.stdout or "") + (res.stderr or "")).strip()
+            print(f"{tool_name}: could not release the claim on {task} at exit ({detail}) — "
+                  f"`tick reap {agent} --task {task}` will clear it", file=sys.stderr)
+
+    atexit.register(_release_if_still_held)
 
 # ASCII-only slug alphabet — mirrors the Bash `tr -c 'A-Za-z0-9._-' '_'` sanitizer exactly. Python's
 # str.isalnum() would also pass Unicode letters/digits (e.g. `é`), diverging from the Bash contract.
