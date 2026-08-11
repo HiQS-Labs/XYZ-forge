@@ -2,7 +2,7 @@
 gh_issue: 383
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/383
 title: "The pre-advance gate has no timeout, so a hanging gate stalls an unattended marathon indefinitely"
-status: "2-WORKING — captured 2026-08-10 for release 0.3.0 Nightwatch, batch 2. VERIFIED STALE: the timeout the issue asks for already shipped in GH-390 (commit 94cafc9) and was hardened in GH-457 (commit 1fcef22). The issue's own code snippet matches the pre-GH-390 shape, not the tree as it stands. Only a documentation gap and one intentional escape hatch remain; see deviations. Awaiting operator decision on whether to close #383 outright or fire the doc-only residual as a lane."
+status: "2-WORKING — RESOLVED 2026-08-10. The code half was already shipped by GH-390/GH-457 before this doc existed; the only real remainder was documentation, and README.md now covers the tiers, all five MARATHON_GATE_* variables, exit 108 / gate-killed, and the MARATHON_GATE_GUARD=0 trade-off. Ready to close."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel
@@ -39,7 +39,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Verified against the tree at `development` (branch confirmed clean vs. HEAD, no diff on `utils/py/marathon_drive.py`) on 2026-08-10: the pre-advance gate is already wrapped in a wall-clock + CPU + RSS guard that kills a hanging gate and reports it distinctly. The issue's quoted code (`subprocess.run(...)`, no `timeout=`) matches the **pre-GH-390** shape, which now only survives as the `MARATHON_GATE_GUARD=0` escape hatch. | Operator call: close #383 as already-shipped, or fire a documentation-only lane (env vars + escape-hatch caveat) as scoped in the authored criteria below. Either way, no code change is warranted. |
+| Verified against the tree at `development` (branch confirmed clean vs. HEAD, no diff on `utils/py/marathon_drive.py`) on 2026-08-10: the pre-advance gate is already wrapped in a wall-clock + CPU + RSS guard that kills a hanging gate and reports it distinctly. The issue's quoted code (`subprocess.run(...)`, no `timeout=`) matches the **pre-GH-390** shape, which now only survives as the `MARATHON_GATE_GUARD=0` escape hatch. | **DONE 2026-08-10 — the documentation lane shipped in the same session.** `README.md` now states that the guard enforces wall/CPU/RSS (it previously named only RSS), publishes the `fast`/`full` tier table, documents all five `MARATHON_GATE_*` variables plus the poll interval, names exit `108` and the `gate-killed`/`pre-advance-failed` split, and carries a blockquote warning that `MARATHON_GATE_GUARD=0` removes **all** protection — pointing back at this issue as the failure it reintroduces. Nothing else is open: **close #383 as already-shipped.** |
 
 **Issue:** https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/383
 

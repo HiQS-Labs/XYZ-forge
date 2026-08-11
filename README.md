@@ -171,9 +171,37 @@ meaningfully changes.
 `maxPerWave` in `utils/marathon-plan-zones.default.json` and applies independently of write-set
 collisions: it constrains which lanes may share a wave, never how much RAM they consume.
 
-XYZ does have per-gate resource containment: the GH-390 gate guard enforces an RSS cap and kills an
-over-budget gate. It does **not** currently inspect host RAM, clamp a wave width, or refuse a wave
-that is too large for the machine. Host-aware wave sizing remains the operator's responsibility.
+XYZ does have per-gate resource containment: the GH-390 gate guard enforces **wall-clock, CPU and
+RSS** caps and kills an over-budget gate. It does **not** currently inspect host RAM, clamp a wave
+width, or refuse a wave that is too large for the machine. Host-aware wave sizing remains the
+operator's responsibility.
+
+The caps come from a **tier**, so there is one place to look rather than a rule per gate:
+
+| Tier | Wall | CPU | Use |
+|---|---|---|---|
+| `full` (default) | 1800s | 1200s | a whole-suite gate; sized ~1.9× the worst observed run |
+| `fast` | 300s | 240s | a targeted gate, where minutes already means runaway |
+
+RSS is not tiered: it defaults to 8192 MB. A gate the guard kills exits **108**, and the phase
+escalates as `gate-killed` — deliberately distinct from `pre-advance-failed`, so a gate that ran out
+of time is never triaged as a gate that found a defect.
+
+| Variable | Effect |
+|---|---|
+| `MARATHON_GATE_TIER` | pick `full` or `fast` |
+| `MARATHON_GATE_WALL_S` | override the tier's wall cap |
+| `MARATHON_GATE_CPU_S` | override the tier's CPU cap |
+| `MARATHON_GATE_RSS_MB` | override the RSS cap (default 8192) |
+| `MARATHON_GATE_POLL_S` | sampling interval (default 1s) |
+| `MARATHON_GATE_GUARD=0` | **disable the guard entirely** |
+
+Per-variable overrides win over the tier, so a phase can retune one cap without leaving its tier.
+
+> **`MARATHON_GATE_GUARD=0` removes ALL timeout and memory protection from the gate**, not just the
+> cap you were trying to get around. An unattended run with the guard off can hang indefinitely on a
+> gate that never returns — which is the failure [#383](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/383)
+> was filed for, and the guard is what closed it. Raise the specific cap instead.
 
 Full per-CLI verification steps, environment variables, and troubleshooting live in
 **[Set up Codex, agy, and Pi](relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up)**.
