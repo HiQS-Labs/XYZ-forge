@@ -1,6 +1,6 @@
 # Marathon Phase gh467-index-only-lane
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH467-INDEX-ONLY-LANE-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -141,5 +141,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    is wanted; verifying in-tree is what costs you the turn.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to codex —
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
-   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
-   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+  approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+  Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+Implemented GH-467's fail-closed preflight contract with `lanes.index_only`: declared index-only
+artifacts now return `BLOCKED` (exit 6) unless covered by `lanes.orchestrator_only`, with a diagnostic
+that names the affected path and the preserved builder git prohibition. Correctly declared
+orchestrator-owned lanes retain their existing ready/assignment behavior. Added and registered
+`test/gh467-index-only-lane-blocked.sh`, which also pins the `Do NOT run git` packet wording in both
+driver implementations.
+
+Verification: `bash test/gh467-index-only-lane-blocked.sh` — 6 passed.

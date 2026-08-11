@@ -107,6 +107,24 @@ def extract_contract(doc_path):
                 eprint(f"contract in {doc_path}: artifacts_new entry not present in artifacts[]: {a}")
                 sys.exit(3)
 
+    # GH-467: an index-only delivery needs the harness/orchestrator to perform the git operation.
+    # Builders are expressly forbidden from running git, so reject a lane that declares such a
+    # delivery without also routing it to the orchestrator.
+    lanes = obj.get("lanes")
+    if lanes is not None:
+        if not isinstance(lanes, dict):
+            eprint(f"contract in {doc_path}: lanes must be an object")
+            sys.exit(3)
+        index_only = lanes.get("index_only")
+        if index_only is not None:
+            if not isinstance(index_only, list) or any(not isinstance(path, str) or not path for path in index_only):
+                eprint(f"contract in {doc_path}: lanes.index_only must be an array of non-empty strings")
+                sys.exit(3)
+            for path in index_only:
+                if path not in obj["artifacts"]:
+                    eprint(f"contract in {doc_path}: lanes.index_only entry not present in artifacts[]: {path}")
+                    sys.exit(3)
+
     return obj
 
 def merge_contracts(contracts):
@@ -120,7 +138,8 @@ def merge_contracts(contracts):
         "remediation": base.get("remediation"),
         "lanes": {
             "agy_safe": list((base.get("lanes", {}) or {}).get("agy_safe", [])),
-            "orchestrator_only": list((base.get("lanes", {}) or {}).get("orchestrator_only", []))
+            "orchestrator_only": list((base.get("lanes", {}) or {}).get("orchestrator_only", [])),
+            "index_only": list((base.get("lanes", {}) or {}).get("index_only", []))
         }
     }
     
@@ -141,6 +160,8 @@ def merge_contracts(contracts):
             if a not in out["lanes"]["agy_safe"]: out["lanes"]["agy_safe"].append(a)
         for a in (c.get("lanes", {}) or {}).get("orchestrator_only", []):
             if a not in out["lanes"]["orchestrator_only"]: out["lanes"]["orchestrator_only"].append(a)
+        for a in (c.get("lanes", {}) or {}).get("index_only", []):
+            if a not in out["lanes"]["index_only"]: out["lanes"]["index_only"].append(a)
             
     return out
 
@@ -235,6 +256,19 @@ def lane_plan(c, effective=None):
         "single_lane_only": coupled or len(buildable) < 2
     }
 
+def unscoped_index_only_paths(c):
+    """Return declared index-only artifacts which no orchestrator route covers."""
+    lanes = c.get("lanes", {}) or {}
+    index_only = lanes.get("index_only", []) or []
+    orchestrator_only = lanes.get("orchestrator_only") or [
+        "bin/", ".tick/", "relay-automation/relay-turn-lib.sh"
+    ]
+
+    def is_orchestrator_owned(path):
+        return any(path == declared or path.startswith(declared) for declared in orchestrator_only)
+
+    return [path for path in index_only if not is_orchestrator_owned(path)]
+
 def normalize(e):
     c = e["SP_CONTRACT"]
     probes = e["SP_PROBES"]
@@ -276,6 +310,7 @@ def normalize(e):
         "readiness": {
             "ready": e.get("SP_READY") == "1",
             "next_action": e.get("SP_NEXT") or None,
+            "unscoped_index_only": e.get("SP_INDEX_ONLY_UNSCOPED", []),
             # GH-418: issue state is advisory, but it must be visible in every candidate so a
             # closed issue cannot be mistaken for a fully-green, still-current instruction.
             "issue_state": e.get("SP_ISSUE_STATE") or {
@@ -1059,6 +1094,8 @@ def main():
         emit("AMBIGUOUS: the issue bundle's contracts disagree (see message above). Split the bundle or align the contracts.")
         sys.exit(e.code)
 
+    index_only_unscoped = unscoped_index_only_paths(merged)
+
     effective_artifacts = expand_effective_artifacts(target_root, merged)
 
     primary_doc = source_docs[0]
@@ -1171,7 +1208,7 @@ def main():
     except: pass
     
     cand_state = "ready"
-    if blocked == 1 or fresh_blocked == 1: cand_state = "blocked"
+    if blocked == 1 or fresh_blocked == 1 or index_only_unscoped: cand_state = "blocked"
     elif ambig == 1: cand_state = "ambiguous"
     elif stale == 1: cand_state = "stale"
     
@@ -1385,7 +1422,8 @@ def main():
         "SP_ACC_FIDELITY": acc_fidelity,
         "SP_SRC_URL": src_url,
         "SP_ACC_INLINE": {"criteria": len(acc_items), "scope": acc_mode,
-                          "over_cap": acc_dropped, "lossless": not acc_lost}
+                          "over_cap": acc_dropped, "lossless": not acc_lost},
+        "SP_INDEX_ONLY_UNSCOPED": index_only_unscoped
     }
     
     rc_obj = normalize(e)
@@ -1430,6 +1468,9 @@ def main():
         emit(f"  issue-state : {issue_state['status']} — {issue_state['detail']}")
         for frozen in frozen_artifacts:
             emit(f"  FROZEN      : {frozen['path']} — authoritative twin: {frozen['authoritative_twin']}")
+        if index_only_unscoped:
+            emit("  index-only  : BLOCKED — builders may not run git, but these index-only artifacts are not covered by lanes.orchestrator_only: " + ", ".join(index_only_unscoped))
+            emit("  remediation : add each path to lanes.orchestrator_only, or remove its lanes.index_only declaration if it is not an index-only delivery.")
         for line in acceptance_fidelity_report(acc_fidelity):
             emit(line)
         emit(f"  readiness   : ready={ready}{f' — next: {ready_next}' if ready_next else ''}")
