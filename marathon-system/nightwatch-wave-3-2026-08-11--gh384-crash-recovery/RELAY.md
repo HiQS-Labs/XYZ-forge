@@ -1,5 +1,5 @@
 # Marathon Phase gh384-crash-recovery
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH384-CRASH-RECOVERY-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -49,7 +49,7 @@ never explains:
 | `phase.approved` is logged only after the gate passes | `:1580` |
 
 An interruption inside that window is therefore **structurally** an ungated commit. The tree looks
-clean because the work *was* committed; what is missing is any record that it was ever verified.
+clean because the work *was* committed; what is missing is any record that it was ever verified.  [Unverified — no citation]
 
 ## What was corrected before you start — do not re-introduce these
 
@@ -148,3 +148,10 @@ the current tip. It does not create state or alter the monitored repository.
 Verified with `bash -n` and an isolated temporary two-phase fixture: the Approved phase with an
 approval event reported `APPROVAL: recorded`; the Open phase with a reachable relay commit and no
 event reported `UNGATED COMMIT` and `RECOVERY: UNVERIFIED`; fixture file hashes were unchanged.
+
+### Round 1 · Reviewer · agy
+swept file: yes
+The implementation exactly matches the brief. The `marathon-recover.sh` script correctly detects ungated commits using the intersection of the tick event log, relay file status, and the reachable git commits, without persisting any extra state to the target repository. The bash logic safely handles empty or non-existent log structures. The README update concisely documents the tool and its output.
+
+Verified the failure modes with a probe in `$TMPDIR`.
+**Verdict:** Approved
