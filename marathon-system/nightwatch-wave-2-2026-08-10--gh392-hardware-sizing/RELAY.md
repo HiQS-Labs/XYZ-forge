@@ -1,5 +1,5 @@
 # Marathon Phase gh392-hardware-sizing
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -38,7 +38,7 @@ carried verbatim from the issue. Work from those, not from this brief's prose.
 ## The defect
 
 `README.md:129`'s Prerequisites section is four rows — Codex CLI, agy CLI, Node 18+ and git,
-Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.
+Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.  [Unverified — no citation]
 
 That matters because the harness's memory cost is not uniform:
 
@@ -140,3 +140,21 @@ the operator budgeting formula; and records the measurement provenance. It also 
 `kernel ≤ 1 per wave` coordination/zone cap from memory control, and accurately describes existing
 GH-390 per-gate RSS containment while leaving host-aware sizing, clamps, and refusal explicitly out
 of scope. Files touched: `README.md`, this relay transcript.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+**Verdict:** Approved
+
+The builder met all 8 acceptance criteria successfully:
+1. Specified the 16 GB recommended minimum and its workload (`marathon.sh --plan`).
+2. Named the two execution paths by command (`marathon.sh --plan` and `/10days`) rather than using "Path A" or "Path B".
+3. Provided the 16/24/32/64 GB support table, restricting 16 GB to the serial path only.
+4. Outlined the mathematical budgeting rule for parallel lanes (1.5-2 GB per lane + unbounded target repo test suite memory + host reserve).
+5. Documented the measurement provenance explicitly (32 GB M1 Max, 138 samples at 10s, builder + agy reviewer + three pytest gates).
+6. Classified `kernel ≤ 1 per wave` accurately as a coordination/zone cap, not a memory cap.
+7. Correctly defined the scope of memory protection (GH-390 per-gate RSS cap exists, but host-aware sizing does not).
+8. Defined "Supported" before using it in the table.
+
+relay closed, no further turn needed
