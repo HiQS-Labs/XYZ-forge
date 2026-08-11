@@ -136,3 +136,16 @@ Milestone: Plumbline
 Front-door reviewed: No
 Shakedown reviewed: No
 License file: Yes
+
+Release: 0.5.0
+Iterations: 0.5.0-0.5.4
+Status: Draft
+Target Date: 2026-12-12
+Codename: Lantern
+Description: When the harness fails, the information needed to act already exists inside it — make it say so. Not "add checks": every case was already detected, and some were then described wrongly (a stack trace, a fabricated path, a success exit code, silence). Scope is one epic, deliberately narrow, and deliberately NOT Nightwatch: that milestone owns run lifecycle "even when lifecycle code emits a misleading message" (see the scope boundary above), and none of Lantern's cases violates a lifecycle invariant — they violate the legibility of a failure whose lifecycle handling was already correct. All four members were found in one afternoon during Nightwatch wave 3, which halted three times at zero paid-turn cost; each halt was avoidable from information the system already held. Depends on nothing; independent of Plumbline.
+Manifest: FROZEN at one issue on creation — #499, which supersedes and closes #494, #495, #496 and #498. Four phases, each shippable alone: relay-drive launch preflight; a gate refusal that states its real reason; a launcher whose exit code survives plus a gate-readiness check; and a change-impact reporter. Freezing at one is the whole point — these were filed as four and unified precisely to stop a single coherent change spreading across four PRs. Adding a member is a RE-SCOPE, not a bugfix, per the Litmus rule above.
+GH_URL: [GH 499](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/499)
+Milestone: not created yet — #499 is unmilestoned by design while Nightwatch is the active goalpost
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes
