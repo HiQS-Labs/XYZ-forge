@@ -219,7 +219,8 @@ correct direction to err in here.
   "target":        { "repo": ".", "ref": "development" },
   "gate":          "bash validate.sh",
   "fix_probes":    [
-    { "type": "grep_absent", "path": "utils/py/swarm_preflight.py", "pattern": "index_only" }
+    { "type": "grep_absent", "path": "utils/py/swarm_preflight.py", "pattern": "index_only" },
+    { "type": "path_absent", "path": "test/gh467-index-only-lane-blocked.sh" }
   ],
   "artifacts":     ["utils/py/swarm_preflight.py", "test/gh467-index-only-lane-blocked.sh", "validate.sh"],
   "artifacts_new": ["test/gh467-index-only-lane-blocked.sh"],
@@ -227,6 +228,15 @@ correct direction to err in here.
   "lanes": { "agy_safe": [], "orchestrator_only": [] }
 }
 ```
+
+**The `path_absent` probe is not decoration.** `swarm-preflight` refuses a contract whose
+`artifacts_new` entry has no matching `path_absent` probe on the same path — verified on 2026-08-11,
+when this contract was rejected outright with `CONTRACT ERROR: artifacts_new entry
+'test/gh467-index-only-lane-blocked.sh' has no matching fix_probes entry of type path_absent on the
+same path`, and the lane could not be preflighted at all. The rule is sound: an `artifacts_new` entry
+declares a file the fix will CREATE, so its absence is precisely the bug-still-present evidence, and
+a contract that names a new file without a probe for it can be satisfied by a builder that never
+creates it.
 
 **Probe polarity** (probes detect the **bug**, not the fix): `grep_absent` reports the fix as still
 required while the marker string the fix introduces — a concrete name for the new index-only

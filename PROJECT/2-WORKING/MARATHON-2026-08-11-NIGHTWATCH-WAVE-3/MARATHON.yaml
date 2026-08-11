@@ -1,0 +1,138 @@
+# MARATHON.yaml — 2026-08-11: release 0.3.0 Nightwatch, wave 3.
+#
+# Three phases, strictly sequential:
+#
+#   gh384 (new script + docs) → gh380 (one Python shim) → gh467 (the preflight tool itself)
+#
+# Waves 1 and 2 shipped GH-358 Phase 1 (PR #489) and GH-392(a) + GH-391 (PR #490). This wave is the
+# first one drawn from the batch-2 doc fan-out, which gave Nightwatch full capture coverage on
+# 2026-08-10/11 — 21 open issues, 21 docs.
+#
+# ---------------------------------------------------------------------------------------
+# HOW THESE THREE WERE CHOSEN, AND WHY THE OTHER EIGHT ARE NOT HERE
+# ---------------------------------------------------------------------------------------
+# The batch-2 fan-out produced 11 capture docs. Only FOUR of those lanes could ever be marathon
+# lanes; the other seven touch the running driver (`marathon.sh` / `marathon_drive.py`) or the turn
+# kernel (`relay-turn-lib.sh` / `rtl.py`) and must ship as direct PRs, because a lane cannot build
+# the code that is gating its own run:
+#
+#   #376  relay-drive is the per-turn subprocess the driver re-execs   → direct PR
+#   #379  driver escalation path                                        → direct PR
+#   #382  driver + relay_drive telemetry                                → direct PR
+#   #387  turn kernel AND driver                                        → direct PR
+#   #402  driver branch enforcement                                     → direct PR
+#   #492  SHIPPED as a direct PR (2317149 + a698f5f), issue closed
+#   #383  no code lane remained — README gap, shipped 7a912e4, closed
+#
+# That is worth stating plainly rather than burying: **a release about hardening the marathon system
+# largely cannot be built BY the marathon system.** Wave 3 is the buildable remainder, and it is
+# three lanes, not eleven.
+#
+# ---------------------------------------------------------------------------------------
+# #386 WAS A CANDIDATE AND IS DELIBERATELY EXCLUDED — VERIFIED, NOT ASSUMED
+# ---------------------------------------------------------------------------------------
+# #386 was the fourth fireable lane on paper. Its capture doc's preflight contract declares SEVEN
+# artifacts, and FIVE of them are frozen twins (checked against `test/gh308-frozen-twin-guard.sh`'s
+# TWINS array on 2026-08-11, not inferred):
+#
+#   relay-automation/claude-turn.sh    FROZEN
+#   utils/marathon-plan.sh             FROZEN
+#   utils/swarm-preflight.sh           FROZEN
+#   utils/py/marathon_plan.py          twin (authoritative half)
+#   utils/py/claude-turn.py            twin (authoritative half)
+#
+# Two independent blockers follow:
+#
+#   1. `utils/marathon-plan.sh` : `utils/py/marathon_plan.py` is twin pair #12, and
+#      `test/marathon-plan.sh` Scenario T (`:677-712`) enforces CROSS-LANE BYTE PARITY between the two
+#      engines. A Python-only edit goes red inside the lane's own pre-advance gate; editing both trips
+#      the frozen-twin guard without a `Frozen-twin-exception:` trailer. **This is precisely the trap
+#      GH-391 hit in wave 2**, and it was only found there because a consult caught it. Shipping #386
+#      with this contract would have walked a builder into the same wall a second time.
+#
+#   2. #386 and #380 BOTH claim `utils/py/claude-turn.py`. Phases are serial so they would not race,
+#      but two lanes owning one file means the second lane's probes cannot distinguish its own work
+#      from the first lane's.
+#
+# #386's contract needs re-scoping onto a non-twin seam before it is fireable. The natural home now
+# exists: `utils/py/marathon_yaml_emit.py` (GH-391's new emitter) is NOT in the TWINS array — verified
+# — so populating `turn_timeout_s` there touches no frozen file and no planner engine. That is a
+# contract rewrite, not a build, and it does not belong inside this wave.
+#
+# ---------------------------------------------------------------------------------------
+# WHY THIS ORDER — cheapest failure first, most consequential last
+# ---------------------------------------------------------------------------------------
+#   * gh384 FIRST. Write-set is a NEW script plus README. Nothing in the chain reads either, and a
+#     new file cannot regress anything that exists. Cheapest possible failure.
+#   * gh380 SECOND. One existing Python shim. `validate.sh` runs `test/claude-turn.sh`, so this file
+#     IS executed inside every phase's gate — contained, not inert. A defect turns its own gate red.
+#   * gh467 LAST, and this is the load-bearing ordering decision: it modifies **swarm-preflight, the
+#     tool that verdicts future waves**. Sequenced last so a defect lands on its own gate with no
+#     phase after it to damage. Preflight for THIS wave already ran and is recorded below, so nothing
+#     in this run depends on the tool being changed.
+#
+# No `depends_on` anywhere: the three write-sets are disjoint and phases run one at a time regardless.
+# Asserting a dependency that does not exist is exactly the misreporting GH-391 was built to prevent —
+# leaving it out is the honest encoding. Only gh467 touches `validate.sh`, so the registration
+# collision that forced sequencing in earlier waves does not arise.
+#
+# ---------------------------------------------------------------------------------------
+# PREFLIGHT — 2026-08-11 against development
+# ---------------------------------------------------------------------------------------
+#   lane   verdict           acceptance                       issue-state   source-url
+#   gh384  ready (exit 0)    authored (issue has none)        OPEN          ok → issue #384
+#   gh380  ready (exit 0)    authored (issue has none)        OPEN          ok → issue #380
+#   gh467  ready (exit 0)    authored (issue declines to pick) OPEN         ok → issue #467
+#
+#   gh467 FAILED its first preflight, and the failure was real:
+#     CONTRACT ERROR: artifacts_new entry 'test/gh467-index-only-lane-blocked.sh' has no matching
+#     fix_probes entry of type path_absent on the same path
+#   A `path_absent` probe was added and it went ready. Recorded because it is the system catching a
+#   defect in a doc I had already reviewed — the contract's BUILDABILITY is a separate property from
+#   the claims' accuracy, and only preflight checks the former.
+#
+#   All three report `acceptance: unknown — issue has no '## Acceptance' section`. That is EXPECTED
+#   and not a warning to wave off: none of these issues shipped criteria, so each doc authors them in
+#   a separately labelled block per GH-400. It does mean preflight cannot verify fidelity for these
+#   lanes — there is nothing upstream to compare against — so the criteria carry the same hazard
+#   wave 2 named: authoring criteria and then grading a builder against them.
+#
+# Builder is codex (GH-212, subscription-billed). Reviewer is agy throughout, so the reviewer is
+# never the model that wrote the change. agy was restored 2026-08-10 via an interactive `agy login`
+# and re-verified on the consult path (1 answered, 0 failed); GH-492's idle bound now contains a
+# repeat of the hang that halted wave 1.
+#
+# NOT YET FIRED — awaiting operator go.
+#
+# Parent capture docs (one per phase):
+#   PROJECT/2-WORKING/GH-384-MARATHON-CRASH-RECOVERY.md
+#   PROJECT/2-WORKING/GH-380-CLAUDE-BUILDER-TRUST-SILENT-DEGRADE.md
+#   PROJECT/2-WORKING/GH-467-INDEX-ONLY-LANE-GIT-BAN.md
+
+name: nightwatch-wave-3-2026-08-11
+phases:
+  - id: gh384-crash-recovery
+    # NOTE: no ' #NNN' in a phase name — bin/marathon-yaml strips from a space-hash onward even
+    # inside a double-quoted scalar, which silently truncated a wave-1 name and left the quote open.
+    name: "GH-384: report the ungated commits a crashed marathon leaves behind"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-11-NIGHTWATCH-WAVE-3/brief-gh384-crash-recovery.md
+    artifact: relay-automation/marathon-recover.sh,README.md
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh380-claude-trust
+    name: "GH-380: surface the trust warning a claude builder currently swallows"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-11-NIGHTWATCH-WAVE-3/brief-gh380-claude-trust.md
+    artifact: utils/py/claude-turn.py
+    turn_timeout_s: 900
+    max_review_rounds: 3
+
+  - id: gh467-index-only-lane
+    name: "GH-467: refuse an index-only lane at preflight instead of dispatching it to fail"
+    reviewer: agy
+    brief: PROJECT/2-WORKING/MARATHON-2026-08-11-NIGHTWATCH-WAVE-3/brief-gh467-index-only-lane.md
+    artifact: utils/py/swarm_preflight.py,test/gh467-index-only-lane-blocked.sh,validate.sh
+    turn_timeout_s: 900
+    max_review_rounds: 3
