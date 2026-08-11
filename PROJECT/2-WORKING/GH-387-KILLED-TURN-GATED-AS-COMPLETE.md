@@ -254,8 +254,41 @@ not to a builder to discover mid-lane. Criterion 6 already reserves a GH-205 non
 it should be **restated as a deliberate, bounded regression** rather than a control, because the two
 cannot both pass.
 
-**Not settled here:** whether to pay that cost. Recorded as an operator decision, in keeping with
-this doc's existing refusal to pick #378's design for the same reason.
+**CORRECTION, same session — the paragraph above overstates the conflict.** GH-205 and GH-387 *are*
+reconcilable, and the difference changes the recommendation from "accept a regression" to "no
+regression is required."
+
+Reading `recover_timeout_exit()` (`:1980-2029`) end to end, the gate probe decides **nothing**. It
+runs second, and every branch after it is resolved by `file_status()` and `token_state()`:
+
+| condition | outcome | decided by |
+|---|---|---|
+| no artifact | real hang, exit 7 | `artifacts_exist()`, *before* the gate |
+| terminal status, no live actor | continue, exit 0 | token |
+| no live actor | halt, exit 7 | token |
+| actor is still the builder | real hang, exit 7 | token |
+| actor moved to the reviewer | resume relay-drive | token |
+
+The tick token records the handoff directly, so the gate is a **proxy** for a question the token
+already answers — "did the builder finish and hand off?" Deleting the probe preserves all five
+outcomes and every one of GH-205's recovery paths.
+
+What is genuinely lost is one thing, and it is not a guarantee: the `timeout-gate-failed` early exit
+(exit 5). Today a timed-out turn whose artifact is already red halts immediately; without the probe
+it resumes to the reviewer, who rejects it. **The cost is one wasted reviewer turn on work that was
+going to fail anyway** — a fail-fast optimisation, not a capability and not a safety property.
+
+**Recommendation: delete the probe.** Trading a token-saving shortcut for "the gate is never the
+first executor of un-inspected code" is a good trade at any plausible rate of near-miss timeouts.
+Criterion 6's GH-205 control stays a *control*: it should pass unchanged, and if it does not, the
+change is wrong.
+
+**Still open, and deliberately sequenced second:** the untracked-artifact leak. Refusing this gate
+does not stop a *later* invocation from executing the leftover partial, because
+`path_has_nonempty_phase_delta` (`:1439-1468`) accepts an untracked file as evidence of work. Closing
+that needs codex's durable `unreviewed-partial` marker, which introduces new persistent state and is
+materially bigger than removing the probe. The two are independent — the small change is worth having
+on its own, and the marker can follow if the residual exposure is judged to matter.
 
 ## Litmus tests
 
