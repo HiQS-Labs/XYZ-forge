@@ -70,6 +70,20 @@ SECURITY_AGENT_PROCS = ("SecurityAgent", "CoreAuthUI")
 #: at least one full interval, which is the thing that actually stalls a turn.
 DIALOG_CONFIRM_SAMPLES = 2
 
+#: CPU-seconds growth between two samples that counts as "the tree did something".
+#: Deliberately not zero: ``ps`` reports CPU at 10ms granularity and a fully idle
+#: tree still jitters in the last digit, so an exact-equality test would score a
+#: blocked turn as progressing every few samples and the idle clock would never
+#: accumulate. 0.05s over a sample interval is far below anything real work
+#: produces and far above the jitter.
+CPU_PROGRESS_EPSILON_S = 0.05
+
+#: Samples required before ``idle_seconds()`` will answer at all. An idle KILL is
+#: irreversible, so it must never rest on one unlucky reading — a turn that is
+#: genuinely working but happened to be between syscalls at sample time looks
+#: identical to a blocked one for exactly one sample.
+IDLE_MIN_SAMPLES = 3
+
 REASON_SECURITY_DIALOG = "timeout-blocked-security-dialog"
 REASON_CPU_BOUND = "timeout-cpu-bound"
 REASON_SLOW_PROGRESS = "timeout-slow-but-progressing"
@@ -225,17 +239,34 @@ class TurnDiagnostics:
         self.samples: list[tuple[float, float, int]] = []   # (wall, cpu_seconds, nproc)
         self.mtime_start = 0.0
         self.mtime_last = 0.0
+        # GH-492: monotonic timestamp of the last sample that showed the tree doing
+        # SOMETHING — CPU growth past the jitter epsilon, or a file newer than the
+        # one we last saw. `idle_seconds()` measures forward from here.
+        self._last_progress_t: float | None = None
 
     def _sample(self) -> None:
         cpu, nproc = _descendant_cpu_seconds(self.root_pid)
-        self.samples.append((time.monotonic(), cpu, nproc))
+        now = time.monotonic()
+        prev_cpu = self.samples[-1][1] if self.samples else None
+        self.samples.append((now, cpu, nproc))
         if _security_dialog_present():
             self._dialog_streak += 1
             if self._dialog_streak >= DIALOG_CONFIRM_SAMPLES:
                 self.security_dialog_seen = True
         else:
             self._dialog_streak = 0
-        self.mtime_last = _newest_mtime(self.worktree)
+        mtime_now = _newest_mtime(self.worktree)
+        # GH-492: "progress" is deliberately the SAME two signals classify() already
+        # reasons about, so an early idle kill can never disagree with the verdict
+        # printed for it. A first sample counts as progress: it establishes the
+        # baseline rather than starting the clock in the past.
+        if (
+            prev_cpu is None
+            or cpu > prev_cpu + CPU_PROGRESS_EPSILON_S
+            or mtime_now > self.mtime_last
+        ):
+            self._last_progress_t = now
+        self.mtime_last = mtime_now
 
     def _loop(self) -> None:
         while not self._stop.is_set():
@@ -283,6 +314,28 @@ class TurnDiagnostics:
         if span <= 0:
             return None
         return max(0.0, (c_peak - c0)) / span
+
+    def idle_seconds(self) -> float | None:
+        """Wall seconds since the tree last showed CPU growth or file progress.
+
+        ``None`` means "not enough evidence to say" — fewer than
+        ``IDLE_MIN_SAMPLES`` readings, or no sample taken yet. Callers MUST treat
+        ``None`` as "do not kill"; it is the not-yet-measured state, not zero.
+
+        GH-492: this exists so a hang can be contained on a short idle threshold
+        instead of only at the full wall cap. The observed incident produced 90
+        consecutive samples reading ``cpu=0.02s/s, worktree-progress=no`` and they
+        were unanimous from the start — the run learned nothing between sample 3
+        and sample 90, it just spent ~900s to reach the same conclusion.
+
+        Note this measures IDLENESS, not the turn's age. A turn that works for ten
+        minutes and then blocks reports a small number here, which is correct: the
+        thing worth killing early is the blockage, and its clock starts when the
+        work stopped.
+        """
+        if len(self.samples) < IDLE_MIN_SAMPLES or self._last_progress_t is None:
+            return None
+        return max(0.0, time.monotonic() - self._last_progress_t)
 
     def classify(self) -> tuple[str, str]:
         """Return (reason, human-readable detail) for a timed-out turn.

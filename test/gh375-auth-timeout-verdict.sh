@@ -85,9 +85,16 @@ cp -R "$ROOT_REPO/utils" "$FIXH/utils"
 python3 - "$FIXH/utils/py/agy-turn.py" "$FIXH/utils/py/consult.py" <<'PY'
 import pathlib, sys
 
+# GH-492 demoted the unverifiable branch's WARNING to a NOTE and started recording the detail for
+# the failure path, so this anchor moved with it. The anchor is what keeps the replay honest — if it
+# stops matching, the control below would patch nothing and still report green — so it is updated in
+# lockstep rather than loosened into a regex. What is being replayed is UNCHANGED: the pre-fix source
+# had no `unverifiable` branch at all and treated every timeout as fatal.
 AGY_NEW = '''        t_severity, t_detail = agy_auth_timeout_verdict(out_file)
         if t_severity == "unverifiable":
-            print(f"agy-turn: WARNING — {t_detail}", file=sys.stderr)
+            _record_auth_unverified(t_detail)
+            print(f"agy-turn: NOTE — agy auth is unverifiable headless (expected, via timeout); proceeding. {_AUTH_PROBE_FINDING}",
+                  file=sys.stderr)
             print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
                   "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
                   file=sys.stderr)

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import os
 import sys
+import time
+import signal
 import tempfile
 import subprocess
 import shlex
@@ -9,9 +11,55 @@ from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn
                  AGY_AUTH_TIMEOUT_DEFAULT_S)
 from turn_diagnostics import TurnDiagnostics
 
+# GH-492: how long the tree may show no CPU growth and no file progress before the turn is
+# killed, independent of RELAY_TURN_TIMEOUT_S. Sized from the observed hang: it was already
+# unanimous by ~30s of samples, and a genuinely working agy turn produces file writes or CPU
+# far more often than every 5 minutes. Set RELAY_TURN_IDLE_S=0 to disable and keep only the
+# wall cap.
+RELAY_TURN_IDLE_DEFAULT_S = 300
+#: Poll interval for the turn's own bound loop. Cheap: it only reads `proc.poll()` and a
+#: float the sampler thread already maintains.
+TURN_POLL_S = 2
+
+# GH-492 criterion 4: RECORD THE FINDING rather than papering over it with a weaker probe.
+# There is no reliable headless pre-flight for agy and there is not expected to be one. GH-375
+# measured why: `agy whoami` exits 0 while printing a TTY error, so its exit status is meaningless
+# here, and treating that error as failure took test/relay-self-sufficiency.sh from 4/0 to 0/4 on a
+# machine where agy was signed in and working. `agy -p` — what the turn actually runs — is headless-
+# clean. A second unreliable probe would be worse than none, so none is shipped.
+_AUTH_PROBE_FINDING = ("No reliable headless auth probe for agy exists (GH-375); `agy -p` is the "
+                       "only honest test and it IS the turn. If this turn fails on credentials, "
+                       "run `agy login` in a real terminal.")
+#: Set when the pre-flight could not establish auth either way. Held so the failure path can
+#: re-raise it as diagnosis, instead of it being shouted on every healthy turn.
+_AUTH_UNVERIFIED_DETAIL = None
+
+def _record_auth_unverified(detail):
+    global _AUTH_UNVERIFIED_DETAIL
+    _AUTH_UNVERIFIED_DETAIL = detail
+
 def die(msg):
     print(f"agy-turn: {msg}", file=sys.stderr)
     sys.exit(2)
+
+def _kill_turn_group(proc):
+    """Kill the turn's whole process group, not just the launcher.
+
+    agy spawns children; signalling only the parent leaves them running and holding
+    the log open, which is how a "killed" turn keeps burning the host. The process is
+    started with start_new_session=True so its pgid is its own pid and this cannot
+    reach the harness. SIGTERM first so the CLI can flush its transcript, then SIGKILL.
+    """
+    for sig, wait_s in ((signal.SIGTERM, 5), (signal.SIGKILL, 2)):
+        try:
+            os.killpg(os.getpgid(proc.pid), sig)
+        except (ProcessLookupError, PermissionError, OSError):
+            return
+        try:
+            proc.wait(timeout=wait_s)
+            return
+        except subprocess.TimeoutExpired:
+            continue
 
 def agy_auth_preflight(agy_bin):
     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
@@ -40,9 +88,14 @@ def agy_auth_preflight(agy_bin):
             # turn proceed: `agy whoami` needs a TTY, `agy -p` (what the turn actually uses) does not,
             # and blocking here stopped a working lane dead the first time it shipped. Measured, not
             # theorised — test/relay-self-sufficiency.sh drives a live agy turn and went 4/0 to 0/4.
-            print(f"agy-turn: WARNING — {detail}", file=sys.stderr)
-            print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
-                  "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
+            # GH-492 criterion 3: this fires on EVERY headless run, because `agy whoami` can never
+            # run headless — so as a WARNING it was noise that carried no information about any
+            # particular turn, and it read identically on three healthy turns and one 900s hang.
+            # Demoted to a single NOTE line here and re-raised in full ONLY on the failure path,
+            # where it is actually diagnostic. The verdict itself is unchanged: still "unverifiable",
+            # still non-blocking. GH-375 established what changing that costs.
+            _record_auth_unverified(detail)
+            print(f"agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. {_AUTH_PROBE_FINDING}",
                   file=sys.stderr)
             if os.path.exists(out_file): os.remove(out_file)
             return True
@@ -58,7 +111,9 @@ def agy_auth_preflight(agy_bin):
         # this branch was written for. See agy_auth_timeout_verdict.
         t_severity, t_detail = agy_auth_timeout_verdict(out_file)
         if t_severity == "unverifiable":
-            print(f"agy-turn: WARNING — {t_detail}", file=sys.stderr)
+            _record_auth_unverified(t_detail)
+            print(f"agy-turn: NOTE — agy auth is unverifiable headless (expected, via timeout); proceeding. {_AUTH_PROBE_FINDING}",
+                  file=sys.stderr)
             print("agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth "
                   "check here. If the turn fails on credentials, run `agy login` in a normal terminal.",
                   file=sys.stderr)
@@ -241,14 +296,47 @@ def main():
     # reads the target's files and can trip a credential prompt just as easily.
     diag = TurnDiagnostics(worktree=run_cwd)
     diag.start()
+    # GH-492: the wall cap alone cannot contain the observed failure. A 900s hang burned its
+    # entire budget at cpu=0.02s/s with worktree-progress=no, and the verdict was unanimous
+    # from the first samples — the run spent 900s to learn what it knew in 30. So the turn is
+    # bounded by BOTH an idle threshold and the wall cap, and `subprocess.run(timeout=)` is
+    # replaced by an explicit poll loop because a blocking call cannot consult the sampler it
+    # is being measured by.
+    #
+    # RELAY_TURN_IDLE_S=0 disables the idle bound and restores pure wall-cap behaviour.
+    # This host has no GNU `timeout`/`gtimeout`, so the bound is implemented in-process
+    # rather than by wrapping the command — see the capture doc.
+    idle_cap = int(os.environ.get("RELAY_TURN_IDLE_S", RELAY_TURN_IDLE_DEFAULT_S))
+    idle_killed = False
+    # Hoisted out of the try: the exit-7 reporting below reads it, and a launch failure
+    # would otherwise raise NameError inside the error path — turning a clean exit 5 into
+    # a crash with no attribution, which is this issue's own complaint.
+    started = time.monotonic()
     try:
         with open(agy_log, "w") as log_f:
-            subprocess.run(cmd, env=run_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
-    except subprocess.TimeoutExpired:
-        bounded_rc = 7
-    except subprocess.CalledProcessError as e:
-        bounded_rc = e.returncode
-    except Exception as e:
+            proc = subprocess.Popen(cmd, env=run_env, cwd=run_cwd, stdout=log_f,
+                                    stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                                    start_new_session=True)
+            while True:
+                rc = proc.poll()
+                if rc is not None:
+                    bounded_rc = rc if rc == 0 else rc
+                    break
+                elapsed = time.monotonic() - started
+                if elapsed >= turn_timeout:
+                    _kill_turn_group(proc)
+                    bounded_rc = 7
+                    break
+                if idle_cap > 0:
+                    _idle = diag.idle_seconds()
+                    # `None` is "not measured yet", never "not idle" — see idle_seconds().
+                    if _idle is not None and _idle >= idle_cap:
+                        _kill_turn_group(proc)
+                        bounded_rc = 7
+                        idle_killed = True
+                        break
+                time.sleep(TURN_POLL_S)
+    except Exception:
         bounded_rc = 5
     finally:
         diag.stop()
@@ -297,12 +385,33 @@ def main():
                 pass
 
     if bounded_rc == 7:
-        # Exit code stays 7 for callers; the reason names WHY.
+        # Exit code stays 7 for callers; the reason names WHY. GH-492: the BOUND that fired is
+        # now stated separately from the CAUSE the sampler attributes, because they answer
+        # different questions — "why did the harness stop it" vs "what was it doing". Three
+        # causes and two bounds stay independently readable, as GH-390 established.
         _reason, _detail = diag.classify()
-        print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)
+        if idle_killed:
+            print(f"agy-turn: agy -p was IDLE for >={idle_cap}s (no CPU, no worktree progress) — "
+                  f"killed early at ~{int(time.monotonic() - started)}s of a {turn_timeout}s wall cap "
+                  f"[{_reason}]", file=sys.stderr)
+            print("agy-turn: this is an EXTERNAL condition the harness detected and contained, not one "
+                  "it prevented — agy stopped making progress and the harness stopped waiting. "
+                  "Nothing here fixes agy; the observed 2026-08-10 hang recovered on its own.",
+                  file=sys.stderr)
+        else:
+            print(f"agy-turn: agy -p exceeded {turn_timeout}s wall-clock cap — killed [{_reason}]", file=sys.stderr)
         print(f"agy-turn: timeout attribution: {_detail}", file=sys.stderr)
     elif bounded_rc != 0:
         print(f"agy-turn: agy -p failed (exit {bounded_rc})", file=sys.stderr)
+
+    if bounded_rc != 0 and _AUTH_UNVERIFIED_DETAIL:
+        # GH-492 criterion 3: the same fact, at the level it has earned. On a healthy turn this was
+        # a NOTE nobody needed; on a FAILED turn it is a live hypothesis, because an expired agy
+        # session is exactly what the pre-flight could not rule out — and on 2026-08-10 that is what
+        # it turned out to be, twice. Only reachable on failure, so it can never be tuned out.
+        print(f"agy-turn: auth was NEVER VERIFIED for this turn, and the turn failed — {_AUTH_UNVERIFIED_DETAIL}",
+              file=sys.stderr)
+        print(f"agy-turn: {_AUTH_PROBE_FINDING}", file=sys.stderr)
 
     if bounded_rc == 0 and (not os.path.exists(agy_log) or os.path.getsize(agy_log) == 0):
         print("agy-turn: agy -p exited 0 but produced NO output — likely a blocked backend (run sandbox-OFF). Failing the turn.", file=sys.stderr)

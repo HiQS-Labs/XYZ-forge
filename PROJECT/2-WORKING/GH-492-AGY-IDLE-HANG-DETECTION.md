@@ -2,7 +2,7 @@
 gh_issue: 492
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/492
 title: "GH-492 — agy hangs headless with no CPU and no progress, and its only pre-flight warning fires on every turn"
-status: "2-WORKING — captured 2026-08-10 for release 0.3.0 Nightwatch. Claims verified against relay-automation/agy-turn.sh, utils/py/agy-turn.py, utils/py/turn_diagnostics.py, utils/py/rtl.py, and utils/py/consult.py. Awaiting preflight; see the self-modification finding below before firing as a marathon lane."
+status: "2-WORKING — PARTIALLY BUILT 2026-08-10. Criteria 1-6 shipped for the agy-turn surface (idle bound + attribution + demoted warning + recorded finding + test with negative control). The consult.py surface, named in deviation 1, is NOT yet covered and remains open."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel
