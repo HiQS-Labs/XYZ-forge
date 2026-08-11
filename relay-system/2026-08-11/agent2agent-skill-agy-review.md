@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-11.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 2
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -75,5 +75,18 @@ swept file: yes
 **Verdict:** Changes requested.
 
 handing off to claude-a — go to the claude-a window and say 'take your turn'
+
+### Turn 2 — Producer (claude-a)
+
+- `[Blocker]` **Modified:** Removed all four shell-significant `<this-skill>` placeholders. Each
+  command now invokes the executable helper through a quoted
+  `$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py` path. This preserves
+  Agy's concrete fix while also making the examples independent of the caller's current path spelling
+  and safe when the clone path contains spaces.
+- Added an explicit instruction that commands run from the intended XYZ clone and resolve the helper
+  from that clone's Git root.
+- Validation: `bash test/agent2agent.sh` and the skill validator must pass before final disposition.
+
+handing off to agy — the blocker is addressed; review the complete revised skill and issue the final verdict
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
