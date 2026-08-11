@@ -93,6 +93,45 @@ else
   skip "PyYAML unavailable; YAML parse check skipped"
 fi
 
+# ── ci-local.sh must not drift from the workflow it mirrors ──────────────────────────────────────
+# `ci-local.sh` reproduces this job step-for-step so the signal survives a metered/blocked Actions
+# account. A mirror with nothing pinning it to its original is the exact failure this repo keeps
+# paying for — frozen Bash twins, and a packaged tarball that staled the moment its source changed.
+# So pin the two things that would silently diverge and change WHICH tests run.
+CI_LOCAL="$ROOT/ci-local.sh"
+
+if [ -f "$CI_LOCAL" ]; then
+  # (1) The TESTS-parsing expression. Both read validate.sh's array; if one is edited to parse
+  # differently, the two run different suites while both still look correct in isolation.
+  wf_parse="$(grep -F "sed -n '/^TESTS=(/,/^)/p' validate.sh" "$WORKFLOW" | tr -d ' ')"
+  cl_parse="$(grep -F "sed -n '/^TESTS=(/,/^)/p' validate.sh" "$CI_LOCAL" | tr -d ' ')"
+  if [ -n "$wf_parse" ] && [ "$wf_parse" = "$cl_parse" ]; then
+    pass "ci-local.sh parses validate.sh's TESTS with the same expression as the workflow"
+  else
+    fail "ci-local.sh and ci.yml disagree on how TESTS is parsed — they will run different suites"
+  fi
+
+  # (2) The skip list. A test skipped in CI but run locally (or the reverse) makes a green run in one
+  # place mean something different from a green run in the other — which is worse than no mirror.
+  for skipped in "acorn-extract.sh" "registry-lock-concurrency.sh"; do
+    if grep -qF "\"$skipped\"" "$WORKFLOW" && grep -qF "\"$skipped\"" "$CI_LOCAL"; then
+      pass "ci-local.sh carries the workflow's documented skip: $skipped"
+    else
+      fail "skip drift on $skipped — present in one of ci.yml/ci-local.sh but not the other"
+    fi
+  done
+
+  # (3) The honesty notice. A green local run is NOT a green ubuntu run (GH-232 found ~12 failures
+  # that existed only on ubuntu). If that caveat is ever edited out, the script starts overclaiming.
+  if grep -q "NOT equivalent to a green ubuntu CI run" "$CI_LOCAL"; then
+    pass "ci-local.sh still states that a local pass is not a CI pass"
+  else
+    fail "ci-local.sh dropped its ubuntu-divergence caveat — it now overclaims what a green run means"
+  fi
+else
+  skip "ci-local.sh not present; mirror-drift checks skipped"
+fi
+
 echo
 echo "Summary"
 echo "  passed: $PASS"
