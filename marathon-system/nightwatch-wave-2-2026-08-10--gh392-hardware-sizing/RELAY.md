@@ -1,8 +1,8 @@
 # Marathon Phase gh392-hardware-sizing
-STATUS: Approved
-NEXT: agy (Reviewer)
+STATUS: Open
+NEXT: codex (Builder)
 
-<!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN-2 builder=codex reviewer=agy round-cap=7 -->
+<!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN-3 builder=codex reviewer=agy round-cap=7 -->
 
 ## Phase Brief
 
@@ -38,7 +38,7 @@ carried verbatim from the issue. Work from those, not from this brief's prose.
 ## The defect
 
 `README.md:129`'s Prerequisites section is four rows — Codex CLI, agy CLI, Node 18+ and git,
-Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.  [Unverified — no citation]
+Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.
 
 That matters because the harness's memory cost is not uniform:
 
@@ -93,10 +93,10 @@ things a reviewer can check by reading the artifact — that is deliberate, and 
 pass matters more on this lane than on a code lane.
 
 
-## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+## Debug mantra (auto-triggered — 2 prior attempt(s) on this phase did not reach Approved)
 
 Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
-Last recorded reason (`marathon-system/nightwatch-wave-2-2026-08-10--gh392-hardware-sizing/ESCALATION.md`): `pre-advance-failed`. Read it before re-guessing.
+Last recorded reason (`marathon-system/nightwatch-wave-2-2026-08-10--gh392-hardware-sizing/ESCALATION.md`): `timeout-no-artifact`. Read it before re-guessing.
 
 ---
 
@@ -106,9 +106,9 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 1. Implement the brief by creating/editing the artifact file(s): README.md
 2. Append a build block to this relay file: `### Round N · Builder · codex` summarizing what you did (files touched, key decisions).
 3. Use this exact tick binary (run it from any directory): /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH392-HARDWARE-SIZING-TURN-2 --agent codex --paths "marathon-system/nightwatch-wave-2-2026-08-10--gh392-hardware-sizing/RELAY.md,README.md"
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH392-HARDWARE-SIZING-TURN-2 --agent codex
-   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH392-HARDWARE-SIZING-TURN-2 --agent codex --to agy
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick claim MARATHON-GH392-HARDWARE-SIZING-TURN-3 --agent codex --paths "marathon-system/nightwatch-wave-2-2026-08-10--gh392-hardware-sizing/RELAY.md,README.md"
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick ping MARATHON-GH392-HARDWARE-SIZING-TURN-3 --agent codex
+   - /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH392-HARDWARE-SIZING-TURN-3 --agent codex --to agy
 4. Edit ONLY these paths: marathon-system/nightwatch-wave-2-2026-08-10--gh392-hardware-sizing/RELAY.md and README.md. Do NOT run git. Do NOT touch any other file — the harness commits for you.
 5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
    "handing off to agy — agy, take your turn." A turn that ends without that line
@@ -121,8 +121,8 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: README.md. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · agy` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH392-HARDWARE-SIZING-TURN-2 --agent agy --to codex
-3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH392-HARDWARE-SIZING-TURN-2 --agent agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Builder)`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick release MARATHON-GH392-HARDWARE-SIZING-TURN-3 --agent agy --to codex
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick done MARATHON-GH392-HARDWARE-SIZING-TURN-3 --agent agy
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/xyz-3-agents-swarm/bin/tick
    Edit ONLY marathon-system/nightwatch-wave-2-2026-08-10--gh392-hardware-sizing/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
 4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
@@ -136,28 +136,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · codex
-
-Reviewed `README.md` against all eight acceptance criteria. The existing `Hardware sizing for
-Marathon` section already supplies the 16 GB serial minimum; command-defined serial and `/10days`
-routes; the 16/24/32/64 GB support table; the per-concurrent-lane arithmetic including the
-operator-supplied target-suite term; full measurement provenance; the independent coordination/zone
-cap; and the accurate distinction between the RSS gate guard and missing host-aware sizing. No
-README edit was needed in this turn, so the artifact remains documentation-only and part (b) remains
-unimplemented.
-
-Breadcrumb: the prior escalation records only `pre-advance-failed` and `gate: red`, not the failed
-command or output. The default pre-advance gate is the full `bash validate.sh`; it was not rerun
-because this lane explicitly prohibits running the full project gate. The reviewer is the designated
-prose verification gate for this phase.
-
-### Round 1 · Reviewer · agy
-
-swept file: yes
-
-I have reviewed the entire `README.md` file against all eight acceptance criteria. The corrections for the two draft defects—defining the execution paths by command rather than internal shorthand ("Path A"/"Path B"), and accurately describing that per-gate resource containment exists but host-aware wave sizing does not—are properly implemented. The `kernel <= 1` rule is precisely described as a coordination/zone cap.
-
-I also swept the entire file for any pre-existing defects and found none. All criteria are fully satisfied and the README structure remains intact.
-
-**Verdict:** Approved
