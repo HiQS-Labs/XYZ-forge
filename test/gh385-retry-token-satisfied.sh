@@ -209,4 +209,38 @@ printf '%s' "$out" | grep -q "GH-385" \
   && pass "the disagreement line points at GH-385 so the next reader can find the mechanism" \
   || fail "disagreement line does not cite GH-385: $out"
 
+# --- (11) GH-491: --retry on an ALREADY-SATISFIED lane says the cheap path existed ------------------
+# Case (9) above establishes that --retry correctly refuses to be satisfied by the attempt it retries.
+# The cost of that correctness is that the cheap path becomes invisible exactly when it applies: the
+# `already reached a terminal relay` line prints only once the operator has already chosen the right
+# invocation, so choosing wrong yields a rebuild and the reasonable conclusion that one was required.
+#
+# Measured, not hypothetical: three codex builds and three agy reviews across two Nightwatch waves on
+# 2026-08-10, both of whose base tokens read `done` afterwards. Every one of those turns was avoidable.
+reset_state
+seed_relay "$BASE"
+mk_token "$BASE" done            # terminal AND done: a plain re-fire would have been gate-only
+out="$(run_driver --relay-task "${BASE}-2")"
+printf '%s' "$out" | grep -q "already reached a terminal relay" \
+  && fail "advisory case regressed into an actual short-circuit — --retry must still rebuild: $out" \
+  || pass "GH-491 advisory does not change --retry's behaviour (it still rebuilds)"
+printf '%s' "$out" | grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" \
+  && pass "GH-491: --retry on a satisfied lane says a plain re-fire would have skipped both turns" \
+  || fail "no advisory — the cheaper path stays invisible at the one moment it applies: $out"
+printf '%s' "$out" | grep -q "GH-491" \
+  && pass "the advisory cites GH-491 so the next reader can find the mechanism" \
+  || fail "advisory does not cite GH-491: $out"
+
+# --- (12) NEGATIVE CONTROL for (11): the advisory must NOT fire when it does not apply --------------
+# Without this, (11) is indistinguishable from a line that prints on every --retry — which would be
+# worse than silence, because an operator would learn to ignore it exactly like #492's TTY warning.
+# Same --retry invocation; the ONLY variable is whether the recorded token actually completed.
+reset_state
+seed_relay "$BASE"
+mk_token "$BASE" claimed         # terminal relay, token NOT done: a plain re-fire would ALSO rebuild
+out="$(run_driver --relay-task "${BASE}-2")"
+printf '%s' "$out" | grep -q "re-firing WITHOUT --retry would have re-run only the pre-advance gate" \
+  && fail "control: the advisory fired on a lane a plain re-fire would ALSO have rebuilt — it is unconditional, so it carries no information: $out" \
+  || pass "control: no advisory when the recorded token is not done (the cheap path genuinely did not apply)"
+
 exit 0

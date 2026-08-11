@@ -102,7 +102,14 @@ Usage: marathon.sh --plan MARATHON.yaml [--builder A] [--phases-dir D] [--pre-ad
   --pre-advance-cmd CMD   Gate before phase.approved (default: bash validate.sh, per phase).
   --dry-run               Render each phase's relay file and print the tick seed; exit without running.
   --force                 GH-45: bypass the per-lane attempt cap for this run.
-  --retry PHASE-ID        GH-116: retry one phase with a fresh relay-task suffix.
+  --retry PHASE-ID        GH-116: retry one phase with a fresh relay-task suffix. This REBUILDS the
+                          phase — a full builder + reviewer cycle — because a retry must never be
+                          satisfied by the attempt it was invoked to retry.
+                          GH-491: if the phase's relay is already terminal (STATUS: Approved) and its
+                          token is done, and only the GATE went red, do NOT use this. Re-fire the plan
+                          plainly instead: the driver detects the satisfied lane and re-runs only the
+                          pre-advance gate, dispatching no turns. Use --retry when the ARTIFACT is what
+                          needs to change.
   --closeout-pr           Open (but never merge) a PR after a successful marathon. Closeout failure is logged
                           and does not change the successful marathon exit code.
 EOF

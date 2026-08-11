@@ -1601,6 +1601,24 @@ relay-file: {rel_relay}
     # (recover_already_satisfied_lane, triggered mid-relay on a no-progress reroute) to this
     # separate post-terminal-gate-retry trigger. DRY_RUN is exempted: its whole point is to
     # render + show the tick seed for inspection, and there is nothing to commit or seed here.
+    def recorded_relay_task():
+        # The `task=` field of the relay file's own marathon-drive directive: which token this phase
+        # was last RENDERED for. Extracted so completed_relay_task() and GH-491's advisory read it
+        # one way. Callers apply their own trust rules — this returns the raw claim, not a verdict.
+        recorded = ""
+        try:
+            with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    if not line.lstrip().startswith("<!-- marathon-drive:"):
+                        continue
+                    for field in line.split():
+                        if field.startswith("task="):
+                            recorded = field.split("=", 1)[1].strip()
+                    break
+        except OSError:
+            pass
+        return recorded
+
     def completed_relay_task():
         # GH-385: the token that RECORDED this phase's completion is not necessarily the base token
         # this run computed. A phase that once failed and was re-run with --retry completes on a
@@ -1636,18 +1654,7 @@ relay-file: {rel_relay}
         # directive was refused should say so, or this becomes another check nobody can see working.
         if args.relay_task:
             return relay_task
-        recorded = ""
-        try:
-            with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
-                for line in f:
-                    if not line.lstrip().startswith("<!-- marathon-drive:"):
-                        continue
-                    for field in line.split():
-                        if field.startswith("task="):
-                            recorded = field.split("=", 1)[1].strip()
-                    break
-        except OSError:
-            pass
+        recorded = recorded_relay_task()
         if not recorded or recorded == relay_task:
             return relay_task
         if re.fullmatch(re.escape(relay_task) + r"-\d+", recorded):
@@ -1678,6 +1685,30 @@ relay-file: {rel_relay}
     if not args.dry_run and satisfied_lane_terminal():
         log(f"phase {args.phase_id} already reached a terminal relay (STATUS: {file_status()}, token done) — skipping render/reseed, re-running only the pre-advance gate")
         complete_phase_success("already-satisfied")
+
+    # GH-491: --retry (which arrives here as an explicit --relay-task) deliberately bypasses the
+    # short-circuit above — completed_relay_task() returns the operator-named token without consulting
+    # the file, because "a retry must never be satisfied by the attempt it was invoked to retry". That
+    # rule is correct and is not changed here.
+    #
+    # The cost is that the CHEAP path becomes invisible exactly when it applies. Its log line prints
+    # only after the operator has already chosen the right invocation, so choosing wrong produces a
+    # rebuild and the reasonable conclusion that a rebuild was required. Observed 2026-08-10: three
+    # codex builds and three agy reviews across two Nightwatch waves, both of whose base tokens read
+    # `done` afterwards — every one of those turns was avoidable by re-firing without --retry.
+    #
+    # Advisory ONLY. --retry still rebuilds, because deliberately rebuilding an approved phase is
+    # legitimate: an artifact that passed review and is nonetheless wrong is precisely when you want
+    # one. This says what the cheaper option WOULD have done; it does not take it.
+    if not args.dry_run and args.relay_task and os.path.isfile(relay_file):
+        _s = file_status()
+        if terminal_status(_s):
+            _recorded = recorded_relay_task()
+            if _recorded and token_state(_recorded)[0] == "done":
+                log(f"phase {args.phase_id}: --retry given, so this run REBUILDS. But the relay is already "
+                    f"terminal (STATUS: {_s}) and its recorded token '{_recorded}' reads done — re-firing "
+                    f"WITHOUT --retry would have re-run only the pre-advance gate and dispatched no "
+                    f"builder or reviewer turn (GH-491)")
 
     if not args.dry_run:
         try:
