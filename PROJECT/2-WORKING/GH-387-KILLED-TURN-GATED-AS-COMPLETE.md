@@ -189,6 +189,74 @@ section below.*
   non-regression control (criterion 6), plus a check that a genuinely clean turn is byte-identical
   before and after.
 
+## Cross-model consult, 2026-08-10 — the tension is three-way, not two-way
+
+Both advisors were asked, independently and in parallel, whether GH-432 and GH-387 can both hold.
+Transcripts: `relay-system/2026-08-10/gh387-tension-211827/`.
+
+**They agree, and it is the load-bearing agreement:** the two guarantees are reconcilable, and the
+offending line is the *early gate probe* inside `recover_timeout_exit()` at
+`utils/py/marathon_drive.py:1989`. Persistence and execution-eligibility are separable states.
+Commit the killed turn and hand off the token exactly as GH-432 requires; run the **reviewer**
+before any gate. Neither advisor would touch `rtl_enforce`, `rtl.py`, or the turn shims — both
+warned independently that editing those is how you accidentally revert GH-432. That narrows the
+write-set to `marathon_drive.py` plus tests, which is materially smaller than this doc's Phase 1
+assumed.
+
+**They agree on a second point that kills the naive fix:** refusing only the *current* gate does not
+close the hole. `path_has_nonempty_phase_delta` (`:1439-1468`) accepts an untracked `??` file as
+evidence of work, so the partial survives on disk and a later invocation — a resume, or the next
+phase's gate — executes it anyway. Both rated this a Blocker.
+
+**Where they split, and the adjudication:**
+
+1. *Is refusing the gate sufficient?* agy flagged the leak as a Blocker and then recommended a fix
+   that does not close it — remove the probe, defer to the reviewer, and nothing more. codex
+   carried its own Blocker through to the remedy: a **durable, repo-wide `unreviewed-partial`
+   marker** that fails every gate closed until a reviewer approves that exact HEAD. **codex is
+   right.** agy's recommendation contradicts agy's own finding 3; an in-memory refusal cannot
+   survive the process exit that a resume implies.
+
+2. *Should #387 be WONTFIX?* agy argued yes — GH-390 now bounds the gate by wall/CPU/RSS, so a
+   runaway is killed cleanly and "the residual risk in an ephemeral container is negligible."
+   **Rejected on a false premise.** These marathons run on the operator's own machine against a
+   real working clone, not an ephemeral container. GH-390 bounds how *much* the gate consumes; it
+   does not bound what the code *does*. A killed agent's un-inspected code that deletes files,
+   rewrites history, or reaches the network is stopped by none of those caps. The severity is
+   genuinely lower post-GH-390 — the host-takedown scenario really is dated — but "cheaper to
+   survive" is not "safe to execute."
+
+3. *Coordinates.* agy's cites were wrong — `:1863` for `recover_timeout_exit` (actually `:1980`)
+   and `:1372` for `path_has_nonempty_phase_delta` (actually `:1439`); both land on unrelated code.
+   codex's `:1988-1993` and `:1439-1468` match the tree exactly. Verified by hand, not taken from
+   either. Worth noting the consult harness flagged **codex** for citing no firsthand verification
+   while codex was the one with accurate line numbers — that flag measures form, not accuracy.
+
+**What agy contributed that codex did not, and that this doc had under-weighted:** the early probe
+is not an accident, it is **GH-205**, and the comment says so at `:1981` — "a relay timeout (exit 7)
+whose declared artifact already landed AND is gate-green AND left a live reviewer handoff is resumed
+with one more relay-drive pass instead of a false hang." So the gate is being used deliberately as
+the *oracle* for whether a timeout was a false alarm.
+
+That makes this a **three-way** tension, which is the real finding of the consult:
+
+| | wants |
+|---|---|
+| **GH-432** (shipped) | a killed turn's work MUST be committed and its token handed off |
+| **GH-205** (shipped) | the gate MAY run early, as the oracle for "was this a real hang?" |
+| **GH-387** (open) | the gate MUST NOT be the first executor of un-inspected work |
+
+GH-432 and GH-387 are reconcilable. **GH-205 and GH-387 are not** — GH-205's mechanism *is*
+GH-387's defect. Fixing #387 necessarily costs GH-205's hands-free recovery of a near-miss timeout;
+the reviewer becomes the oracle instead of the gate, which is slower and spends a review turn on
+work that may be broken. That is a real, quantifiable loss and it belongs to the operator to accept,
+not to a builder to discover mid-lane. Criterion 6 already reserves a GH-205 non-regression control;
+it should be **restated as a deliberate, bounded regression** rather than a control, because the two
+cannot both pass.
+
+**Not settled here:** whether to pay that cost. Recorded as an operator decision, in keeping with
+this doc's existing refusal to pick #378's design for the same reason.
+
 ## Litmus tests
 
 1. Simulate a builder turn that is SIGKILLed mid-edit after creating a new untracked file containing an
