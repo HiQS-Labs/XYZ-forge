@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 159 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
+Summary: 161 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -23,6 +23,8 @@ Summary: 159 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 91 · �
 | GH-435 · XYZ's coordination model is a sequential chain, not a DAG | — | [GH-435-COORDINATION-MODEL.md](PROJECT/1-INBOX/GH-435-COORDINATION-MODEL.md) · [#435](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/435) |
 | GH-396 · Accuracy Ledger — design constraints to settle before build | — | [GH-396-ACCURACY-LEDGER.md](PROJECT/1-INBOX/GH-396-ACCURACY-LEDGER.md) · [#396](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/396) |
 | GH-343 · a target-relative gate program is checked against cwd/PATH instead of target_root, so a ready contract reports NOT-READY | ✅ | [GH-343-GATE-PROGRAM-TARGET-ROOT.md](PROJECT/3-COMPLETED/GH-343-GATE-PROGRAM-TARGET-ROOT.md) · [#343](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/343) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
+| GH-392 · the harness publishes no hardware requirement, so a 16 GB host gets no signal before a 7-lane wave | — | [GH-392-HARDWARE-SIZING-GUIDANCE.md](PROJECT/2-WORKING/GH-392-HARDWARE-SIZING-GUIDANCE.md) · [#392](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/392) · [#390](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/390) · [#382](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/382) |
+| GH-391 · nothing generates MARATHON.yaml, so every multi-phase run starts with an undocumented hand-authoring step | — | [GH-391-EMIT-MARATHON-YAML.md](PROJECT/2-WORKING/GH-391-EMIT-MARATHON-YAML.md) · [#391](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/391) · [#340](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/340) · [#362](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/362) |
 | GH-358 · the 16-way concurrent-append lock assertion flakes on the shared CI runner | — | [GH-358-LOCK-FLAKE-INSTRUMENTATION.md](PROJECT/2-WORKING/GH-358-LOCK-FLAKE-INSTRUMENTATION.md) · [#358](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/358) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-375 · the agy auth pre-flight passes on exit status alone, so it cannot fail in the headless context it exists for | — | [GH-375-AGY-AUTH-PROBE.md](PROJECT/2-WORKING/GH-375-AGY-AUTH-PROBE.md) · [#375](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-388 · marathon.sh persists no run log, and per-phase transcripts are written only on completion | — | [GH-388-MARATHON-RUN-LOG-DURABILITY.md](PROJECT/2-WORKING/GH-388-MARATHON-RUN-LOG-DURABILITY.md) · [#388](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/388) · [#382](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/382) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
