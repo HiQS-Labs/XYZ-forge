@@ -1,6 +1,6 @@
 # Marathon Phase gh467-index-only-lane
 STATUS: Open
-NEXT: agy (Reviewer)
+NEXT: codex (Builder)
 
 <!-- marathon-drive: task=MARATHON-GH467-INDEX-ONLY-LANE-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -154,3 +154,15 @@ orchestrator-owned lanes retain their existing ready/assignment behavior. Added 
 driver implementations.
 
 Verification: `bash test/gh467-index-only-lane-blocked.sh` — 6 passed.
+
+### Round 1 · Reviewer · agy
+swept file: yes
+
+**Verdict:** Changes requested
+
+Findings:
+1. **Defect in New & Pre-existing Code (Duplication & Drift):** `unscoped_index_only_paths` duplicates the fallback list `["bin/", ".tick/", "relay-automation/relay-turn-lib.sh"]` and the `is_orchestrator_owned` matching logic from `lane_plan`. If the defaults ever change, these two functions will silently drift. They should share the `orchestrator_only` resolution and matching logic.
+2. **Pre-existing & New Defect (Falsy checks override explicit empty lists):** Both `lane_plan` and `unscoped_index_only_paths` use falsy checks (`if not orch_only:` and `or [...]`) which incorrectly override an explicit empty list `[]` with the defaults. This makes it impossible for a contract to legitimately declare that *no* files are orchestrator-owned. They should explicitly check `if orch_only is None:` to apply defaults only when the field is missing or `null`.
+3. **Pre-existing Defect (Missing validation for `lanes` arrays):** `extract_contract` validates `lanes.index_only` but completely fails to validate `lanes.orchestrator_only` and `lanes.agy_safe`. If a user passes an integer, string, or `null` for these in the JSON contract, it passes validation but causes Python crashes downstream (e.g., `TypeError` in `merge_contracts` calling `list(None)`, or `lane_plan` iterating a string/`None`). These should be validated as lists of strings, just like `index_only`.
+
+handing off to codex — codex, take your turn.
