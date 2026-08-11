@@ -1,5 +1,5 @@
 # Marathon Phase gh380-claude-trust
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH380-CLAUDE-TRUST-TURN builder=codex reviewer=agy round-cap=7 -->
@@ -171,3 +171,17 @@ Addressed the requested changes in `utils/py/claude-turn.py` and updated the han
 - Verification: `bash test/claude-turn.sh` — 36 pass, 0 fail.
 
 **Verdict:** Ready for review.
+
+### Round 2 · Reviewer · agy
+
+swept file: yes
+
+I reviewed the whole file and verified that the builder correctly addressed all issues from the previous round:
+- `warn_if_workspace_untrusted` is appropriately called with `run_cwd`.
+- The early exits for worktree setup failure and off-lane edits were correctly replaced with `bounded_rc` fall-throughs, ensuring `rtl.enforce` runs.
+- Exit codes (5, 6, 7) are preserved properly at the end of the script.
+No new defects were found.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
