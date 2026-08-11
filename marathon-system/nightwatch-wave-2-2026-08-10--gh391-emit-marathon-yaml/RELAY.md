@@ -1,6 +1,6 @@
 # Marathon Phase gh391-emit-marathon-yaml
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH391-EMIT-MARATHON-YAML-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -161,3 +161,12 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    codex, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · codex
+
+- Touched: `utils/py/marathon_yaml_emit.py`, `test/gh391-emit-marathon-yaml.sh`, `validate.sh`, and this relay record only.
+- Added the standalone documented `--plan` + `--packets` + explicit `--reviewer` + `--output` command. It reads the generated plan's canonical score-ascending `Per-item scoring` table, derives stable `gh<issue>` ids and order there, and joins each lane to exactly one ready packet for its `brief` and exact `Artifacts:` value.
+- Preserved causal fidelity: only a single dependency explicitly recorded in the plan becomes scalar `depends_on`; multiple or out-of-plan dependencies fail before output instead of being guessed.
+- Made the join fail loud before writing for missing, malformed, duplicate, and unmatched packets, with the lane or packet path in the error. The output path is rejected if it aliases an input, and no parent directory is created implicitly.
+- Registered the focused test in `validate.sh`. Verification: `bash test/gh391-emit-marathon-yaml.sh` passed **13/13**, including both unchanged oracles (`bin/marathon-yaml` and `marathon.sh --dry-run`), the observed absent-packet negative control, the other three packet refusal classes, explicit reviewer/dependency checks, and byte-identical inputs/output-only writes.
+- Per the phase containment instruction, the full `validate.sh` gate was not run; the harness owns that gate after handoff.
