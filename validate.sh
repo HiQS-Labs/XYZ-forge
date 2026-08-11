@@ -107,6 +107,17 @@ TESTS=(
   "gh432-failed-turn-persist.sh" # GH-432 (a failed turn still reaches rtl_enforce: commit + token handoff; both routes) — 12/0 post-fix, control 5/4 pre-fix
   "gh441-gate-env-contract.sh"   # GH-441 P2 (every driver export is classified scrub-or-pass; custom gates get the same clean env) — 13/0; controls: unhelped gate contaminated, orphaned helper fails loud
   "gh448-driver-lock-resolver.sh" # GH-448 (shared driver-lock resolver: bash/python parity + linked-worktree LIVE, real worktree fixture; negative control: pre-fix 2-branch logic misses the lock)
+  "gh376-relay-drive-lock-parity.sh" # GH-376 (the DRIVER-side half of #448: relay-drive's own two twins
+                                 #   now resolve the lock through that shared resolver, so a relay driver
+                                 #   and a marathon driver actually exclude from a linked worktree — the
+                                 #   thing marathon-drive.sh:195-196 already claimed in prose) — 18/0.
+                                 #   Observable is "does it REFUSE against a lock held at marathon-drive's
+                                 #   path", run end-to-end through the real scripts against a real
+                                 #   `git worktree add`; the drivers never print the path and the EXIT
+                                 #   trap removes the lock, so no filesystem probe can see it.
+                                 #   Controls: pre-fix resolution replayed on BOTH lanes sails past the
+                                 #   held lock; normal-clone and vendored (no .git) cases unchanged;
+                                 #   source guards pin that the resolver is CALLED, never re-inlined.
   "gh397-reviewer-turn-role.sh"  # GH-397 (reviewer scope derived from the tick token + role directive, not agent-maintained NEXT:) — 11/0; control: pre-fix red on the un-flipped-NEXT case
   "gh401-dry-run-no-mutation.sh" # GH-401 (--dry-run writes nothing; render goes to stdout) — 4/0; control: pre-fix red on directory creation. Static half: marathon-root-audit.sh
   "gh375-agy-auth-preflight.sh"  # GH-375 (agy whoami exits 0 without a TTY, so output decides) — 14/0; controls: 5 legitimate auth outputs containing "error" must NOT be rejected

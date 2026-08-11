@@ -144,10 +144,22 @@ if [[ "${RELAY_DRIVER_LOCKED:-0}" != "1" ]]; then
   # .xyz/ copy has no .git/, so mkdir'ing a lock there would fail — fall back to a hidden lock beside
   # the scripts (the .xyz/ dir is itself gitignored in the foreign repo, so it stays uncommitted just
   # the same). When .git/ exists the path is unchanged, so a normal clone behaves byte-identically.
-  if [[ -d "$ROOT_DIR/.git" ]]; then
-    _lock="$ROOT_DIR/.git/relay-driver.lock"; _lock_label=".git/relay-driver.lock"
+  #
+  # GH-376: the inline 2-branch guess that used to live here had NO case for a linked worktree, where
+  # .git is a FILE pointing at the shared gitdir — so this driver locked inside the worktree while
+  # marathon-drive locked in the git COMMON dir, and the mutual exclusion asserted at
+  # marathon-drive.sh:195-196 silently did not exist. Resolution now goes through GH-448's shared
+  # driver-lock-lib.sh (Python twin: utils/py/rtl.py::driver_lock_path), so the two drivers agree by
+  # construction instead of by coincidence.
+  source "$(dirname "${BASH_SOURCE[0]}")/driver-lock-lib.sh"
+  _lock="$(driver_lock_path_for_repo "$ROOT_DIR")"
+  # The label is the SHORT display form used in the messages below, derived from the resolved path
+  # rather than recomputed: the vendored fallback is the ONLY branch that yields <root>/.relay-driver.lock,
+  # so this reproduces rtl.py's label mapping exactly without re-testing .git a second time.
+  if [[ "$_lock" == "$ROOT_DIR/.relay-driver.lock" ]]; then
+    _lock_label=".relay-driver.lock"
   else
-    _lock="$ROOT_DIR/.relay-driver.lock";     _lock_label=".relay-driver.lock"
+    _lock_label=".git/relay-driver.lock"
   fi
   if ! mkdir "$_lock" 2>/dev/null; then
     # GH-42 self-heal: reclaim the lock only if its holder is dead. A crashed/killed driver used to

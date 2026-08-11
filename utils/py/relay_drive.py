@@ -8,6 +8,13 @@ import shutil
 import pathlib
 from contextlib import contextmanager
 
+# GH-376: resolve the driver lock through the ONE shared resolver rather than reimplementing it.
+# Imported relative to this file (utils/py/), independent of CWD/PYTHONPATH — some callers load this
+# module via importlib.util.spec_from_file_location rather than `python3 <path>`, which does NOT put
+# the script's own directory on sys.path. Same pattern, and the same reason, as marathon_drive.py:19.
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from rtl import driver_lock_path  # noqa: E402
+
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
@@ -383,13 +390,19 @@ def main():
         subprocess.run([xyz_append_bin, "relay", slug, health, title, desc], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     if get_env("RELAY_DRIVER_LOCKED", "0") != "1":
-        if os.path.isdir(os.path.join(root_dir, ".git")):
-            lock_dir = os.path.join(root_dir, ".git", "relay-driver.lock")
-            lock_label = ".git/relay-driver.lock"
-        else:
-            lock_dir = os.path.join(root_dir, ".relay-driver.lock")
-            lock_label = ".relay-driver.lock"
-        
+        # GH-376: this was a 2-branch guess (.git is a dir -> .git/relay-driver.lock, ELSE a hidden
+        # lock beside the scripts) with no case for a linked worktree, where .git is a FILE. That
+        # topology is not exotic — it is the one swarm-preflight's own recommended invocation creates
+        # via RELAY_WORKTREE_ISOLATION=1. The marathon driver already followed .git to the git COMMON
+        # dir, so the two drivers resolved DIFFERENT paths from the same tree and each held what it
+        # believed was the one mutex, invisible to the other. marathon-drive.sh:195-196 asserts in
+        # prose that they mutually exclude; this call is what makes that true.
+        #
+        # driver_lock_path is #448's shared resolver (Bash twin: relay-automation/driver-lock-lib.sh).
+        # Reused, never reimplemented — a fourth inline copy is the bug class, not the fix.
+        lock_dir, lock_label = driver_lock_path(root_dir)
+
+
         try:
             os.mkdir(lock_dir)
         except OSError:

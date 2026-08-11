@@ -2,7 +2,7 @@
 gh_issue: 376
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/376
 title: "GH-376 — relay-drive and marathon-drive take different locks from a linked worktree, so the mutual exclusion they both believe in does not exist"
-status: "2-WORKING — captured 2026-08-10 for release 0.3.0 Nightwatch, batch 2. Issue has NO ## Acceptance section; criteria authored below in a separate section, not inside ## Acceptance. Verified against the tree at 2026-08-10: the divergence is real, and two things the issue does not say surfaced during verification — a shared resolver already exists (shipped by #448) and this fix is self-modifying (cannot be a marathon lane). Awaiting preflight is moot; this must ship as a direct PR."
+status: "BUILT 2026-08-11 — shipped as a direct PR against `development`, as the capture required. Both twins now resolve the lock through GH-448's shared resolver (`utils/py/rtl.py::driver_lock_path` / `relay-automation/driver-lock-lib.sh`) instead of their own 2-branch guess. `test/gh376-relay-drive-lock-parity.sh` 18/0 against a REAL `git worktree add` fixture; negative control replays the pre-fix resolution on BOTH lanes and observes each sail past a held lock. Normal-clone and vendored controls unchanged. The defect was confirmed LIVE while building, not only in fixture: a marathon running in a sibling clone (pid 39588) held the lock in this repo's common `.git/`, and post-fix `test/poll-relay.sh` + `test/relay-escalation-not-stall.sh` correctly refuse from a linked worktree — both pass in a standalone clone with no driver running. That refusal IS the fix; see the operational note appended below. Awaiting operator close."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel
@@ -257,3 +257,67 @@ locking claim in the issue body was independently re-verified against `developme
 tree before this doc was written; none were found stale. Two additional findings not present in the
 issue — the already-shipped `#448` shared resolver, and the self-modification hazard in the write-set
 — were found during that verification and are recorded above.
+
+## Build result — 2026-08-11
+
+**The change is two call sites, not a new resolver.** `utils/py/relay_drive.py` imports
+`driver_lock_path` from `rtl` (the same import `marathon_drive.py:20` already makes, with the same
+`sys.path` note about `spec_from_file_location` callers) and replaces its 2-branch block with one
+call. `relay-automation/relay-drive.sh` sources `driver-lock-lib.sh` and calls
+`driver_lock_path_for_repo "$ROOT_DIR"`. Neither twin resolves a git dir itself any more — pinned by
+a source guard, because a *correct* re-inlined 3-branch copy would pass every behavioural assertion
+while recreating exactly the drift class #448 exists to kill.
+
+The short display label is derived from the resolved path rather than recomputed: the vendored branch
+is the only one that yields `<root>/.relay-driver.lock`, so that reproduces `rtl.py`'s label mapping
+exactly without testing `.git` a second time.
+
+### The observable, and why it is not a path string
+
+The drivers never print their lock path on the happy path, and the EXIT trap removes the lock, so no
+post-hoc filesystem probe can see where it went. The test instead holds a lock at the path
+**marathon-drive** resolves and then runs relay-drive: if relay-drive agrees it must refuse; if it
+resolves anywhere else it sails past. That refusal *is* the mutual exclusion
+`marathon-drive.sh:195-196` asserts in prose — observed end-to-end through the real scripts against a
+real `git worktree add`, not asserted about a string.
+
+`test/gh376-relay-drive-lock-parity.sh` — **18 pass, 0 fail**:
+
+| section | what it establishes |
+|---|---|
+| A (the pin) | from a linked worktree both twins refuse against the marathon-side lock, with a **byte-identical** message |
+| B (negative control, #419) | pre-fix resolution replayed on **both** lanes sails straight past the same held lock |
+| C (control) | a normal clone (`.git` is a directory) still excludes — the worktree case was not bought at its expense |
+| D (control) | a vendored copy with no `.git` still falls back to `.relay-driver.lock` beside the scripts |
+| E (source guards) | the shared resolver is **called**, never re-inlined; `marathon_drive.py`'s own resolution is untouched (a stated non-goal) |
+
+The B replay aborts loudly if the post-fix call site is absent, so it can never go quietly vacuous
+against a future refactor.
+
+### Confirmed live, not only in fixture
+
+While building, a marathon running in a **sibling clone** of this repo (`fuzzing-lmstudio`, pid
+39588) held the lock in this repo's common `.git/`. From the linked worktree the build was happening
+in, post-fix `test/poll-relay.sh` and `test/relay-escalation-not-stall.sh` began refusing with
+`another driver is active in this repo (pid 39588)`. Both pass in a standalone clone with no driver
+running, verified rather than assumed. That is the fix behaving correctly against a genuinely
+concurrent driver — the exact collision the issue describes, occurring by accident during its own fix.
+
+**Operational consequence worth stating plainly:** the suite can no longer be run from a linked
+worktree while any driver holds the main clone's lock. Pre-fix it could, *because* the worktree got
+its own private lock — which was the bug. This is correct behaviour and a real change in how the repo
+is worked in; it is recorded here so it is not rediscovered later as a mystery failure.
+
+### Suites run
+
+`gh376` 18/0 · `gh448-driver-lock-resolver` 17/0 · `driver-lock` 4/0 · `gh358-lock-instrumentation`
+9/0 · `relay-concurrent-commit` 7/0 · `worktree-isolation` 33/0 · `gh292-worktree-vendored-discovery`
+7/0 · `relay-loop` 15/0 · `poll-driver` 38/0 · `relay-turn-handoff` 2/0 · `marathon-drive` 148/0 ·
+`marathon` 33/0 · `poll-relay` 12/0 and `relay-escalation-not-stall` 5/0 (standalone clone, per above).
+
+### Acceptance criteria — status
+
+Met: worktree parity with marathon-drive on both lanes; twin-vs-twin agreement; real `git worktree
+add` fixture with a pre-fix negative control; `marathon-drive`'s own resolution untouched; `rtl.py`
+and `driver-lock-lib.sh` unmodified; `Frozen-twin-exception:` trailer on the `relay-drive.sh` edit;
+shipped as a direct PR; the mode-aware lockout redesign left out of scope.
