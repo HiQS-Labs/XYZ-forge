@@ -49,6 +49,8 @@ green, you're good.
   **[Set up Codex, agy, and Pi](relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up)**.
   For phase/status context, the project hub is
   [PROJECT/4-MISC/AUTOMATED-RELAY.md](PROJECT/4-MISC/AUTOMATED-RELAY.md).
+- **Connect live agent sessions by a short ID** — start a serialized discussion with two or more
+  Claude, Codex, or other skill-aware sessions → see [Agent2Agent](#agent2agent--live-sessions-by-compact-id).
 - **Here for the kernel** — how the `tick` coordination primitive works →
   read [What `tick` is](#what-tick-is), then the source in [bin/tick](bin/tick), [src/](src), [test/](test).
 - **Install `tick` into another repo** → see [Install into another repo](#install-into-another-repo).
@@ -100,6 +102,34 @@ How they fit together: **Consult** answers "what do the other models think?", **
 things at once", and **Marathon** answers "do all of today's queued work while I sleep." Consult
 and Relay need only this XYZ repo. Swarm and Marathon are where PDDA earns its setup cost.
 
+### Agent2Agent — live sessions by compact ID
+
+**Agent2Agent is the general-discussion face of Relay:** it drops Producer/Reviewer vocabulary,
+allows a declared roster of two or more live sessions, and keeps exactly one active writer through
+the relay file's existing `NEXT:` field. It is local and serialized, not a chat server: every
+participant must be able to see the same XYZ clone, and parallel writes/broadcasts are deliberately
+out of scope.
+
+Install the repo-backed skill for both Claude Code and Codex (idempotent):
+
+```bash
+bash skills/agent2agent/install.sh
+```
+
+Then ask the first session to start a discussion, for example: *"Start XYZ agent2agent with four
+agents to discuss: subject line here."* It seeds turn 1 as `agent1`, creates a collision-checked
+six-digit ID under `relay-system/<date>/`, and prints a copy/paste invitation:
+
+```text
+Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
+```
+
+Paste that one line into the target session. The same skill validates the ID and subject, reads the
+durable discussion, and responds only if that participant owns `NEXT:`. Each successful turn prints
+the next compact invitation, which can route to `agent1`, `agent3`, `agent4`, or any other member of
+the original roster. See [the agent2agent skill](skills/agent2agent/SKILL.md) for the deterministic
+`start`/`join`/`send`/`close` contract.
+
 ### Before you start — safety and reversibility
 
 Everything below is designed to be reversible, but please help it along:
@@ -112,7 +142,10 @@ Everything below is designed to be reversible, but please help it along:
   worktree directory, moving/relinking one) leave stale git metadata if done by hand instead of
   through `git worktree remove`/`repair`.
 - **What each step actually touches** (so you know how to undo it):
-  - *Skill install* — symlinks skill folders into `~/.claude/skills/` (user-level). A `git pull` in your XYZ clone will silently update your installed skills. Undo: delete those symlinks. Your repos are untouched.
+  - *Skill install* — symlinks skill folders into the selected agent's user-level skill directory
+    (`~/.claude/skills/` and, where supported, `~/.codex/skills/`). A `git pull` in your XYZ clone
+    updates the installed skill through that symlink. Undo: delete the symlink. Your project repos
+    are untouched.
   - *Relay runs* — write a dated thread file under `relay-system/<date>/` plus the artifact being
     reviewed, on your branch. Undo: discard the branch.
   - *Consult runs* — advisory only; agents work in isolated copies. Nothing to undo. **Known
@@ -222,11 +255,13 @@ Full per-CLI verification steps, environment variables, and troubleshooting live
 ### Fast path: immediate value, no PDDA
 
 1. Create a working branch in your XYZ clone.
-2. In the XYZ repo, ask Claude Code to: *"install the /relay-xyz and /consult skills for me
+2. In the XYZ repo, ask Claude Code to: *"install the /relay-xyz, /consult, and /agent2agent skills for me
    system-wide."*
 3. In any target project (on its own fresh branch), you can now:
    - Run a **Consult** for a cross-model second opinion on a design, doc, or decision.
    - Run a **Relay** to have a Producer/Reviewer pair converge a real artifact.
+   - Start an **Agent2Agent** discussion when two or more live sessions should exchange general
+     reasoning through a compact ID instead of artifact-review roles.
 
 No PDDA compliance is enforced on the target project for either of these. This is the recommended
 starting point for all beta testers.
@@ -321,7 +356,7 @@ zero cost, which is the cheapest way to catch both a mis-shaped field and a wron
 ## Repo map
 
 - `relay-automation/` — scripts and operator docs for poll-driven relays, watchdogs, headless turn-takers, and consult.
-- `skills/` — packaged skill surfaces, including `relay-xyz`, `relay-automation`, `xyz`, consult helpers, and
+- `skills/` — packaged skill surfaces, including `agent2agent`, `relay-xyz`, `relay-automation`, `xyz`, consult helpers, and
   [`ponytail`](skills/ponytail/SKILL.md) (the `/ponytail` lens definition cited throughout
   `PROJECT/` docs and PDDA's `/idea` Phase 0 — see [GH-180](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/180)).
   Claude Code only scans `~/.claude/skills/`, so a fresh clone won't see these until you symlink them in —
@@ -335,6 +370,8 @@ zero cost, which is the cheapest way to catch both a mis-shaped field and a wron
   a marathon and execute it unattended ([`10days`](skills/10days/SKILL.md)). See [GH-240](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/240).
 - `skills/file-xyz-bug/` — file a harness bug from **any other repo** into this repo's `PROJECT/1-INBOX/`
   (GH issue + capture doc + ROADMAP park), without touching the repo you're standing in.
+- `skills/agent2agent/` — compact six-digit rendezvous for serialized discussions among two or more
+  live sessions; reuses dated relay files and supports Claude Code plus Codex skill installation.
 - `relay-system/` — relay transcripts, reviews, and dogfood runs.
 - `PROJECT/2-WORKING/` — active project docs and working plans.
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
