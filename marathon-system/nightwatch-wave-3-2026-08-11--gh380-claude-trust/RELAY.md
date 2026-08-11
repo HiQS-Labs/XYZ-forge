@@ -1,6 +1,6 @@
 # Marathon Phase gh380-claude-trust
 STATUS: Open
-NEXT: codex (Builder)
+NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH380-CLAUDE-TRUST-TURN builder=codex reviewer=agy round-cap=7 -->
 
@@ -160,3 +160,14 @@ I reviewed the whole file and found two critical pre-existing defects, plus one 
 **Verdict:** Changes requested
 
 Handing off to codex — codex, take your turn.
+
+### Round 2 · Builder · codex
+
+Addressed the requested changes in `utils/py/claude-turn.py` and updated the handoff.
+
+- The trust warning now checks `run_cwd`, the directory where `claude -p` actually runs (the isolated worktree when enabled), while remaining warning-only and leaving trust state unchanged.
+- A failed worktree setup and an isolated-worktree off-lane result now clean up and reach `rtl.enforce` before exiting, so a claimed token cannot be orphaned; their exit codes remain 5 and 6 respectively.
+- Preserved containment precedence when `rtl.enforce` itself returns 6, including after a subprocess failure or timeout.
+- Verification: `bash test/claude-turn.sh` — 36 pass, 0 fail.
+
+**Verdict:** Ready for review.
