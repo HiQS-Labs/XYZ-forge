@@ -35,7 +35,9 @@ set -uo pipefail
 #
 # NOT hypothetical: this suite went 12/6 inside the Nightwatch wave-3 gate on 2026-08-11 while
 # passing 18/0 standalone, and halted the marathon at phase 1 for a defect that was in this file and
-# not in the phase's own work. `RELAY_DRIVER_LOCKED=1 bash test/gh376-...sh` reproduces it exactly.
+# not in the phase's own work. Setting RELAY_DRIVER_LOCKED=1 and running this file reproduces it
+# exactly. (Spell that invocation out rather than abbreviating the filename: test/path-integrity.sh
+# reads a path-shaped token in any comment as a real reference and fails the gate on the ellipsis.)
 #
 # The per-suite clear is the shipped remedy for exactly this (GH-441 Phase 1), and this file is the
 # fifth to need it — see test/driver-lock.sh:11, gh284-runlog-heartbeat.sh:12, gh331-cost-summary.sh:24,
