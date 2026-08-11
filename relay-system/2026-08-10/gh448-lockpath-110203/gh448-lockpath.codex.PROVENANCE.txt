@@ -1,8 +1,0 @@
-FIRSTHAND_COUNT=8
-ECHOED_COUNT=6
-ECHOED `test/gh448-driver-lock-resolver.sh`
-ECHOED `relay-automation/driver-lock-lib.sh::driver_lock_path_for_repo`
-ECHOED `/var`
-ECHOED `utils/py/rtl.py::driver_lock_path`
-ECHOED `/var`
-ECHOED `/var`

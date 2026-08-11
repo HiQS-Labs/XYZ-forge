@@ -1,3 +1,0 @@
-FIRSTHAND_COUNT=0
-ECHOED_COUNT=1
-ECHOED `test/gh448-driver-lock-resolver.sh`
