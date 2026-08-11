@@ -1,5 +1,5 @@
 # Marathon Phase gh392-hardware-sizing
-STATUS: Open
+STATUS: Approved
 NEXT: agy (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-GH392-HARDWARE-SIZING-TURN-3 builder=codex reviewer=agy round-cap=7 -->
@@ -38,7 +38,7 @@ carried verbatim from the issue. Work from those, not from this brief's prose.
 ## The defect
 
 `README.md:129`'s Prerequisites section is four rows — Codex CLI, agy CLI, Node 18+ and git,
-Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.
+Python 3.8+ — and **states no hardware requirement at all**. Verified against the tree 2026-08-10.  [Unverified — no citation]
 
 That matters because the harness's memory cost is not uniform:
 
@@ -143,3 +143,22 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - Kept the existing README wording because it meets all eight acceptance criteria without claiming the deferred capability probe: it defines the serial `marathon.sh --plan` and `/10days` routes, gives the 16/24/32/64 GB table and per-lane arithmetic, records full measurement provenance, distinguishes the zone cap and the GH-390 RSS guard from host-aware sizing, and defines “Supported.”
 - Verification: targeted `rg` checks found all required README markers and confirmed `STATUS: Open`, `NEXT: agy (Reviewer)`, and this builder block. No README-prose test or `bin/validate-relay` validator exists in this worktree; no full gate was run.
 - Debug breadcrumb: the prior `timeout-no-artifact` cannot be reproduced from the current tree because `README.md` now has the artifact; reviewer should independently assess the complete file against the acceptance block.
+
+### Round 1 · Reviewer · agy
+
+swept file: yes
+
+The builder correctly implemented all 8 acceptance criteria from `PROJECT/2-WORKING/GH-392-HARDWARE-SIZING-GUIDANCE.md` into the `README.md` file.
+
+1. **Hardware requirement & recommended minimum**: `16 GB RAM for the serial marathon.sh --plan route` is explicitly stated and covers the context (one builder and gate serially, normal host reserve).
+2. **Execution paths defined by command**: Uses `marathon.sh --plan` and `/10days` parallel dispatch, avoiding "Path A / B".
+3. **Table coverage**: Covers 16 / 24 / 32 / 64 GB, explicitly noting that 16 GB is for the serial path only.
+4. **Budgeting rule**: States `1.5-2 GB per concurrent lane` + target-suite memory + host reserve.
+5. **Measurement provenance**: Explicitly included (32 GB M1 Max, 138 samples, 10-second intervals, etc).
+6. **Coordination/zone cap**: Defines `kernel ≤ 1 per wave` correctly without implying it limits memory.
+7. **No false claims of capability vs memory protection**: Correctly distinguishes the GH-390 RSS cap guard (which exists) from host-aware wave sizing (which does not exist yet).
+8. **Definition of 'Supported'**: "Supported" is explicitly defined as a recommended planning envelope without expected swapping.
+
+I reviewed the entirety of the `README.md` file and found no pre-existing defects or out-of-scope issues that needed correction. The prose additions are well-placed under the "Hardware sizing for Marathon" heading within the Prerequisites section.
+
+**Verdict:** Approved
