@@ -1076,5 +1076,25 @@ printf '%s' "$PI_BASH_OUT" | grep -q "must start with claude/codex/agy/aider" \
 rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
 git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
 
+# ── (20c) GH-451: missing Pi builder binary fails clean BEFORE any tick mutation ──
+PI_MISSING_OUT="$(RELAY_DRIVE_EXIT=0 MARATHON_ROOT="$A" MARATHON_RELAY_DRIVE="$STUB_RD" \
+  MARATHON_AGENT_CMD="$WORK/noop-agent" TICK_REPO_ROOT="$A" TICK_BIN="$TICK" \
+  PI_BIN="$MISSING_BIN" AGY_BIN="$STUB_AGY_BIN" \
+  bash "$DRIVER" --phases-dir "$A/phases" --phase-brief "$BRIEF" --reviewer agy \
+    --pre-advance-cmd "true" --builder pi 2>&1)"; rc=$?
+[ "$rc" -eq 2 ] \
+  && pass "GH-451: missing Pi builder binary exits 2" \
+  || fail "GH-451: missing Pi builder exit=$rc (expected 2): $PI_MISSING_OUT"
+printf '%s\n' "$PI_MISSING_OUT" | grep -qi "not found on PATH" \
+  && pass "GH-451: missing Pi builder error names the missing binary" \
+  || fail "GH-451: expected a clear 'not found on PATH' message, got: $PI_MISSING_OUT"
+[ ! -f "$A/phases/p1/RELAY.md" ] && pass "GH-451: missing Pi builder — relay file never rendered" \
+  || fail "GH-451: relay file should not exist when the Pi builder binary is missing"
+[ -z "$(ls "$A/.tick/events/" 2>/dev/null | grep 'MARATHON-P1-TURN')" ] \
+  && pass "GH-451: missing Pi builder — no tick task created (no spent token)" \
+  || fail "GH-451: tick task must not be seeded when the Pi builder binary is missing"
+rm -rf "$A/.tick" "$A/phases" "$A/relay-system"
+git -C "$A" reset -q --hard "$INIT_HEAD" >/dev/null 2>&1 || true
+
 echo "  $TEST_NAME: $PASS pass, $FAIL fail"
 exit 0
