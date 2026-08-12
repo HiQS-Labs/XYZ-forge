@@ -171,11 +171,6 @@ case "$_plan_rel_root" in
     ;;
 esac
 
-# GH-484: default `marathon-system/`, matching `relay-system/`. This default is computed here
-# INDEPENDENTLY of the driver's own — marathon.sh forwards --phases-dir explicitly on every phase
-# (see the drive_args below), so the driver's default is never consulted on this path. Both must
-# agree or a marathon.sh run and a direct marathon-drive run would write to different places.
-PHASES_DIR="${PHASES_DIR:-"$ROOT/marathon-system"}"
 export TICK_REPO_ROOT="$ROOT"
 
 # ── GH-388: the chain run log ────────────────────────────────────────────────────────────────────
@@ -280,7 +275,8 @@ while IFS=$'\037' read -r id reviewer rounds depends_on brief artifact turn_time
   log "── phase $idx/$phase_count: $id (reviewer=$reviewer, round-cap=$cap${artifact:+, artifact=$artifact}${turn_timeout_s:+, turn-timeout=${turn_timeout_s}s}) ──"
 
   drive_args=( --phase-id "$id" --reviewer "$reviewer" --builder "$BUILDER"
-               --phase-brief "$brief_path" --round-cap "$cap" --phases-dir "$PHASES_DIR" )
+               --phase-brief "$brief_path" --round-cap "$cap" )
+  [[ -n "$PHASES_DIR" ]] && drive_args+=( --phases-dir "$PHASES_DIR" )
   [[ -n "$artifact" ]] && drive_args+=( --artifact "$artifact" )
   [[ -n "$TARGET_ROOT" ]] && drive_args+=( --target-root "$TARGET_ROOT" )
   [[ -n "$PRE_ADVANCE_CMD" ]] && drive_args+=( --pre-advance-cmd "$PRE_ADVANCE_CMD" )
