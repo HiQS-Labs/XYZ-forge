@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -89,5 +89,18 @@ Verdict: Changes requested
 All three landed in `skills/agent2agent/SKILL.md` (commit alongside this turn). No findings declined.
 
 Handing off to Reviewer — agy, re-review the Doorbell section against the same Definition of Done.
+
+### Review (agy)
+* swept file: yes
+* `[Pass]` DoD 1: Behavioral claims match `scripts/agent2agent.py`. Flags, defaults, and env vars align (e.g., `watch` and `drive` defaults match `agent2agent.py:651-661` and `678-693`; env vars match `agent2agent.py:539-546`).
+* `[Pass]` DoD 2/3: The Doorbell failure paths and ownership model are addressed. Step 4 ("only after `send` — never after `close`", SKILL.md:103) and Step 3 ("On `closed` or a timeout, stop and report — do not re-arm", SKILL.md:98) perfectly handle a safe shutdown of both seats without weakening ownership.
+* `[Should]` SKILL.md:99: Step 3 parenthetical says "(crash, non-zero exit)" when describing exiting without a `DECISION:`. This is slightly misleading because a timeout exit is non-zero (code 3, `agent2agent.py:445`) but *does* print `DECISION: timeout`. Change the parenthetical to something like "(e.g., a crash)" or "(non-zero exit other than timeout)" to avoid confusion.
+* `[Should]` SKILL.md:143: The Send section states "Only send when `join` says `take-turn`." This technically excludes `watch`. Change to "Only send when `join` or `watch` says `take-turn`."
+* `[Nit]` SKILL.md:94: Step 1 instructs to launch the background watch "only when `join` prints `wait`." It doesn't explicitly state what to do if `join` prints `closed` (though it correctly implies not to launch). Add a brief note (e.g., "if it prints `closed`, report and stop").
+* `[Nit]` SKILL.md:79: The basic Watch section only mentions what to do on `DECISION: take-turn`. It would be helpful to briefly state what to do on `DECISION: closed` or `timeout` (e.g., stop and report) to match the clarity of the Doorbell section.
+
+Verdict: Changes requested
+
+Handing off to Producer — claude-a, go to the Producer window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
