@@ -43,6 +43,7 @@ _EXIT_MEANINGS = {
     7: "turn timeout / hang",
     8: "lane parked at the attempt cap",
     9: "post-approve command failed, approval preserved",
+    127: "relay-drive could not execute — check MARATHON_RELAY_DRIVE",
 }
 
 
@@ -1227,6 +1228,14 @@ def main():
             if not shutil.which(command_name):
                 _pre_advance_not_runnable(f"command '{command_name}' is not on PATH")
 
+    def _preflight_relay_drive():
+        if not relay_drive_bin or not os.path.exists(relay_drive_bin):
+            die(f"relay-drive does not exist: {relay_drive_bin}")
+        if not os.path.isfile(relay_drive_bin):
+            die(f"relay-drive is not a file: {relay_drive_bin}")
+        if not os.access(relay_drive_bin, os.X_OK):
+            die(f"relay-drive is not executable: {relay_drive_bin}")
+
     os.environ["MARATHON_BUILDER"] = args.builder
     os.environ["MARATHON_REVIEWER"] = args.reviewer
     os.environ["CLAUDE_AGENT"] = ""
@@ -1279,12 +1288,14 @@ def main():
         try:
             _preflight_check_issue_closed()
             _preflight_pre_advance_gate()
+            _preflight_relay_drive()
         except SystemExit as _e:
             if _e.code not in (0, None):
                 eprint("marathon-drive: (dry-run continues; a live run would halt here)")
     else:
         _preflight_check_issue_closed()
         _preflight_pre_advance_gate()
+        _preflight_relay_drive()
 
     if args.artifact_paths:
         os.environ["ALLOW_PATHS"] = args.artifact_paths
