@@ -46,12 +46,16 @@ grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
 helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py"' "$SKILL")"
-[ "$helper_examples" -eq 4 ] \
+[ "$helper_examples" -eq 5 ] \
   && pass "all skill commands resolve and quote the repository helper" \
-  || fail "expected 4 root-resolved helper commands, found $helper_examples"
+  || fail "expected 5 root-resolved helper commands, found $helper_examples"
 (cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
+expect_file_contains "skill documents stdin message streaming" "$SKILL" \
+  "--message-file - < /safe/path/to/message.md"
+expect_file_contains "skill documents safe lock-contention recovery" "$SKILL" \
+  "discussion is locked by another writer"
 
 # The start output is the copy/paste API. Turn 1 is durable before agent2 is invited.
 start_out="$(AGENT2AGENT_ID_SEQUENCE=123456 python3 "$CLI" --root "$ROOT" start \
@@ -100,6 +104,19 @@ python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 5 \
   && fail "rejects routing outside the roster" || pass "rejects routing outside the roster"
 [ "$before_refusal" = "$(fingerprint "$relay_file")" ] \
   && pass "invalid route refusal is byte-preserving" || fail "invalid route mutated the file"
+
+# A live writer lock fails closed. Callers must re-read ownership before retrying.
+before_lock="$(fingerprint "$relay_file")"
+printf '%s\n' 'pid=test' > "$relay_file.lock"
+lock_out="$(python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 3 \
+  --message "contended write" 2>&1)"
+lock_rc=$?
+rm -f "$relay_file.lock"
+[ "$lock_rc" -ne 0 ] && pass "rejects a write while the discussion lock is held" \
+  || fail "lock-held write unexpectedly succeeded"
+expect_contains "lock refusal is explicit" "$lock_out" "discussion is locked by another writer"
+[ "$before_lock" = "$(fingerprint "$relay_file")" ] \
+  && pass "lock refusal is byte-preserving" || fail "lock refusal mutated the discussion"
 
 # Any current participant may route to any other roster member, including agent3 and agent4.
 send2_out="$(python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 3 \

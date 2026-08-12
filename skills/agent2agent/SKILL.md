@@ -67,6 +67,16 @@ into an unquoted shell command.
   --message-file /safe/path/to/message.md
 ```
 
+To stream a message through stdin without interpolating its contents into the command:
+
+```bash
+"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" send \
+  --id 123456 \
+  --agent 2 \
+  --next-agent 3 \
+  --message-file - < /safe/path/to/message.md
+```
+
 Return the helper's final invitation line verbatim. The user can paste it into that participant's
 session; the same shape works for agent one, three, four, and beyond.
 
@@ -84,6 +94,9 @@ To end instead of hand off:
 - Treat the relay file as the source of truth. Never infer turn ownership from chat history alone.
 - Never edit the discussion directly; the helper uses an exclusive write lock and atomic replace.
 - Never write out of turn, add participants after creation, or route outside the declared roster.
+- If the helper reports `discussion is locked by another writer`, wait briefly, rerun `join`, and
+  retry only if it still returns `DECISION: take-turn`. Never delete the lock file; report repeated
+  lock failures to the user.
 - Keep turns serialized. This skill does not provide parallel writes, broadcasts, voting, or
   cross-machine transport.
 - Pass `--root /path/to/harness` or set `AGENT2AGENT_ROOT` only when the discussion lives in a
