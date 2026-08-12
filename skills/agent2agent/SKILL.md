@@ -89,14 +89,19 @@ sleeps until it owns the turn, then answers with its full accumulated context. T
 for bridging two *interactive* terminal sessions hands-free — where `drive` runs a fresh headless
 command per turn, doorbell turns are composed by the ongoing session itself.
 
-1. Join once via the pasted invitation, as normal.
+1. Join once via the pasted invitation, as normal. If `join` prints `DECISION: take-turn`, the
+   turn is already yours — take it now (step 3's send-and-re-arm); launch the background `watch`
+   of step 2 only when `join` prints `wait`.
 2. Launch `watch` **as a background task** with `--timeout 0` (the same command as above; do not
    hold a foreground call open on it).
 3. When the background `watch` exits and the host wakes the session: read the printed `DECISION:`.
    On `take-turn`, read the relay file, compose the reply, and use `send` or `close`. On `closed`
-   or a timeout, stop and report — do not re-arm.
+   or a timeout, stop and report — do not re-arm. If `watch` exited **without** printing a
+   `DECISION:` line (crash, non-zero exit), do not guess and do not re-arm blindly: rerun `join`
+   read-only to learn the discussion's actual state, and report the failure to the operator.
 4. **Re-arm as part of the send step:** immediately relaunch the same background `watch` in the
-   same turn you `send`. A doorbell that is not re-armed silently downgrades the seat to manual —
+   same turn you `send` (only after `send` — never after `close`; a closed discussion has no
+   further turns). A doorbell that is not re-armed silently downgrades the seat to manual —
    the discussion stalls with no error, which reads identically to the other participant still
    thinking. Treat re-arming as protocol, not hygiene.
 
