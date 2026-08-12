@@ -8,6 +8,13 @@ on:
     branches: [main, development]
   pull_request:
     branches: [main, development]
+  workflow_dispatch:
+
+concurrency:
+  # Cancel superseded runs within the same event lane. Keep manual integration runs
+  # independent so a branch push cannot cancel an operator-requested full gate.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -25,7 +32,21 @@ jobs:
           # resolves to the SAME commit as HEAD — silently defeating the fixture, not a real bug.
           fetch-depth: 0
 
+      - name: Classify CI route
+        id: route
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --name-only "$BASE_SHA" HEAD | utils/ci-route.sh pull_request | tee -a "$GITHUB_OUTPUT"
+          else
+            utils/ci-route.sh "$EVENT_NAME" </dev/null | tee -a "$GITHUB_OUTPUT"
+          fi
+
       - name: Install shellcheck
+        if: steps.route.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           if command -v shellcheck >/dev/null 2>&1; then
@@ -36,6 +57,7 @@ jobs:
           fi
 
       - name: Shellcheck tracked shell scripts
+        if: steps.route.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           # Start at severity=error so Tier 1 lands green; tighten later once the backlog is burned down.
@@ -45,6 +67,7 @@ jobs:
           done
 
       - name: Bash syntax check tracked shell scripts
+        if: steps.route.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           git ls-files -- '*.sh' | while IFS= read -r file; do
@@ -53,6 +76,7 @@ jobs:
           done
 
       - name: Node syntax check tracked JavaScript
+        if: steps.route.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           git ls-files -- 'src/*.js' 'bin/*.js' | while IFS= read -r file; do
@@ -61,6 +85,7 @@ jobs:
           done
 
       - name: Validate .claude/settings JSON
+        if: steps.route.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           git ls-files -- '.claude/settings*.json' | while IFS= read -r file; do
@@ -69,6 +94,9 @@ jobs:
           done
 
       - name: Run PDDA deterministic gate
+        # PDDA owns documentation state. Run it when that state changes and at every full boundary,
+        # but keep its ~2.5-minute scan out of code-only fast PRs.
+        if: steps.route.outputs.pdda_needed == 'true'
         run: |
           set -euo pipefail
           utils/pdda/pdda.sh run
@@ -104,6 +132,7 @@ jobs:
       # clone, so a missing-install-step regression fails here instead of on a
       # newcomer's machine.
       - name: Install npm dependencies and run acorn-extract test
+        if: steps.route.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           npm ci
@@ -115,11 +144,50 @@ jobs:
       # git has no global identity and may default new repos to a non-"main" branch, so prepare both
       # here rather than touch the tests themselves (out of scope for this lane).
       - name: Prepare git environment for fixture-driven tests
+        if: steps.route.outputs.docs_only != 'true'
         run: |
           set -euo pipefail
           git config --global init.defaultBranch main
           git config --global user.email "ci@runner.invalid"
           git config --global user.name "CI Runner"
+
+      - name: Run Fast Gate tests (Pull Request)
+        # Whole-job budget target: < 3 minutes for a code-only fast PR.
+        if: github.event_name == 'pull_request' && steps.route.outputs.route == 'fast'
+        env:
+          RELAY_SELF_SUFFICIENCY_SKIP: "1"
+          CHANGED_TESTS: ${{ steps.route.outputs.changed_tests }}
+        run: |
+          set -euo pipefail
+          FAST_TESTS=(
+            "worktree-isolation.sh"
+            "shim-worktree.sh"
+            "gh292-worktree-vendored-discovery.sh"
+            "relay-target-root.sh"
+            "relay-target-root-paths.sh"
+            "relay-target-root-relayfile.sh"
+            "relay-target-root-newfile.sh"
+            "gh289-target-root-build-turn.sh"
+            "gh410-containment-advisory.sh"
+            "tick-foreign-cwd.sh"
+            "mktemp-trap-guard.sh"
+          )
+          if [[ -n "$CHANGED_TESTS" ]]; then
+            IFS=',' read -r -a routed_tests <<<"$CHANGED_TESTS"
+            for t in "${routed_tests[@]}"; do
+              already_listed=0
+              for existing in "${FAST_TESTS[@]}"; do
+                [[ "$existing" == "$t" ]] && { already_listed=1; break; }
+              done
+              [[ "$already_listed" -eq 1 ]] || FAST_TESTS+=("$t")
+            done
+          fi
+          FAILED=0
+          for t in "${FAST_TESTS[@]}"; do
+            echo "=== $t ==="
+            bash "test/$t" || FAILED=1
+          done
+          exit "$FAILED"
 
       # GH-232: PR #231 ran the full ./validate.sh suite on ubuntu-latest for the first time and
       # found ~12 failures, assumed to be Ubuntu-environment-only and scoped out of CI. Re-diagnosed
@@ -134,6 +202,7 @@ jobs:
       # bug in any of them. Only registry-lock-concurrency.sh (GH-72, a documented 16-concurrent-writer
       # lock-contention flake under CI load, unrelated to this issue) stays skipped.
       - name: Run validate.sh suite (minus a documented flaky test)
+        if: steps.route.outputs.route == 'full'
         env:
           RELAY_SELF_SUFFICIENCY_SKIP: "1"
         run: |
@@ -141,6 +210,7 @@ jobs:
           SKIP_TESTS=(
             "acorn-extract.sh"                    # already run above (needs npm ci first)
             "registry-lock-concurrency.sh"          # GH-72/GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
+            "pdda-repo-contract.sh"               # already run in PDDA step
           )
           ALL_TESTS=()
           while IFS= read -r line; do

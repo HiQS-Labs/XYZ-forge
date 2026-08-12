@@ -66,11 +66,50 @@ require_marker "bash -n" "workflow references bash -n"
 require_marker "node --check" "workflow references node --check"
 require_marker ".claude/settings" "workflow references .claude/settings JSON validation"
 require_marker "utils/pdda/pdda.sh run" "workflow references utils/pdda/pdda.sh run"
+require_marker "utils/ci-route.sh pull_request" "workflow delegates PR routing to the tested classifier"
+require_marker "steps.route.outputs.pdda_needed == 'true'" "PDDA is path-routed instead of unconditional"
+require_marker "steps.route.outputs.route == 'fast'" "workflow declares the fast PR route"
+require_marker "steps.route.outputs.route == 'full'" "workflow declares the full integration route"
+require_marker 'CHANGED_TESTS: ${{ steps.route.outputs.changed_tests }}' "fast route consumes changed-area tests"
+require_marker 'github.event_name }}-${{ github.event.pull_request.number || github.ref' "concurrency is scoped by event and PR/branch"
+require_marker "cancel-in-progress: true" "superseded runs are cancelled"
+
+if grep -Eq '^[[:space:]]*schedule:[[:space:]]*$' "$WORKFLOW"; then
+  fail "workflow must not add an automatic daily full-suite minute burn"
+else
+  pass "full-suite fallback is manual rather than an automatic daily burn"
+fi
+
+skip_block="$(sed -n '/^[[:space:]]*SKIP_TESTS=(/,/^[[:space:]]*)/p' "$WORKFLOW")"
+skips_pdda_fixture=false
+if grep -Fq 'pdda-local-checks.sh' <<<"$skip_block"; then
+  skips_pdda_fixture=true
+fi
+if grep -Fq 'pdda-roadmap-coverage.sh' <<<"$skip_block"; then
+  skips_pdda_fixture=true
+fi
+if [[ "$skips_pdda_fixture" == true ]]; then
+  fail "full gate must retain PDDA fixture/negative-control tests"
+else
+  pass "full gate retains PDDA fixture/negative-control tests"
+fi
+
+if grep -Fq 'steps.filter.outputs' "$WORKFLOW"; then
+  fail "legacy docs-only filter references must not survive the route classifier"
+else
+  pass "legacy docs-only filter references are gone"
+fi
 
 if grep -Eq 'ci-workflow\.sh' "$VALIDATE"; then
   pass "validate.sh wires ci-workflow.sh"
 else
   fail "validate.sh must wire ci-workflow.sh"
+fi
+
+if grep -Eq 'ci-route\.sh' "$VALIDATE"; then
+  pass "validate.sh wires ci-route.sh"
+else
+  fail "validate.sh must wire ci-route.sh"
 fi
 
 if command -v python3 >/dev/null 2>&1 && python3 - <<'PY' >/dev/null 2>&1
