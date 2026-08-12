@@ -1217,7 +1217,9 @@ def main():
         command_name = parts[0] if parts else ""
         if not command_name:
             _pre_advance_not_runnable("command is empty")
-        if "/" in command_name:
+        if re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', command_name):
+            _pre_advance_not_runnable(f"a gate command may not begin with an environment assignment ('{command_name}'). The gate program is resolved from the first token, and the gate environment is scrubbed (GH-441) — pass configuration in a file beside the gate script, not the environment.")
+        elif "/" in command_name:
             gate_path = command_name if os.path.isabs(command_name) else os.path.join(_gate_root, command_name)
             if not (os.path.isfile(gate_path) and os.access(gate_path, os.X_OK)):
                 _pre_advance_not_runnable(f"executable does not exist or is not executable: {gate_path}")
