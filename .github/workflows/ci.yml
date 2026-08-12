@@ -20,6 +20,78 @@ permissions:
   contents: read
 
 jobs:
+  # GH-509 Phase 4 — THE PROMOTION BOUNDARY. This is the only job whose green means anything about
+  # what we ship, because it is the only one running the platform we ship to.
+  #
+  # WHY IT IS RARE, AND MUST STAY RARE: hosted macOS runners bill at roughly 10x Linux. At the volume
+  # this repo generates (37 pushes to `development` in one 24h sample) macOS-everywhere would cost
+  # thousands a month. The boundary is affordable precisely because it is deliberate: `main` sees
+  # almost no direct pushes, so in practice this fires on `workflow_dispatch` — a run costs well under
+  # a dollar a handful of times a month. Do NOT add `pull_request` here.
+  #
+  # WHY `workflow_dispatch` AND NOT JUST `main`: work lands on `development` and `main` sees almost
+  # nothing, so a main-only boundary would always arrive AFTER the promotion decision instead of
+  # before it. The manual trigger is how a `development` commit gets qualified without being merged
+  # first, and it is the trigger that will actually get used.
+  #
+  # HONEST LIMIT ON "EXACT COMMIT": `workflow_dispatch` targets a REF, not an arbitrary SHA — GitHub
+  # resolves the ref's current HEAD. So this job cannot be pointed at an old commit; it qualifies
+  # whatever that ref points to when dispatched. The resolved SHA is printed into the job summary for
+  # exactly this reason: the promotion rule compares against a recorded SHA, not against "the run I
+  # remember starting".
+  #
+  # NO SKIP LIST, deliberately. It invokes the authoritative validator directly rather than scraping
+  # `TESTS` out of it — the scrape can only see `.sh` entries, which is how the 20-test Python layer
+  # (the AUTHORITATIVE implementation since GH-264) went unexercised in CI for months. A second list
+  # is a second thing to keep honest; there is no second list here.
+  boundary-macos:
+    name: promotion boundary (macOS — the platform we ship to)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: macos-latest
+    # A bound, not an estimate. The suite runs ~13-15 min locally; at 10x billing an unbounded hang is
+    # the expensive failure mode, so cap it rather than discover the cost afterwards.
+    timeout-minutes: 45
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          # Same reason as the canary job: fixtures synthesize an "older" ancestor with
+          # `git rev-list --max-parents=0 HEAD`, which a shallow clone silently defeats.
+          fetch-depth: 0
+
+      - name: Prepare git environment for fixture-driven tests
+        run: |
+          set -euo pipefail
+          git config --global init.defaultBranch main
+          git config --global user.email "ci@runner.invalid"
+          git config --global user.name "CI Runner"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      - name: Run the authoritative validator (no skips)
+        env:
+          # The one documented exclusion, and it is not a coverage skip: this test makes a real
+          # billed API call to a live agent. It self-skips off-PATH anyway; the env var makes the
+          # intent explicit rather than incidental.
+          RELAY_SELF_SUFFICIENCY_SKIP: "1"
+        run: ./validate.sh
+
+      - name: Promotion evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ job.status }}" = "success" ]; then
+            line="MACOS-BOUNDARY: green ${GITHUB_SHA}"
+            note="This commit is promotion-qualified (GH-509 §6). Cite this SHA, not this run."
+          else
+            line="MACOS-BOUNDARY: red ${GITHUB_SHA}"
+            note="NOT promotable. Unlike the ubuntu canary, this ran on the platform we ship to — a failure here is a real defect for real users."
+          fi
+          echo "$line"
+          echo "$note"
+          { echo "### $line"; echo; echo "$note"; } >> "$GITHUB_STEP_SUMMARY"
+
   # GH-509 Phase 2 — this job is a PORTABILITY CANARY, not a gate.
   #
   # XYZ ships to macOS developers. Linux and Windows are on the roadmap and are not here yet, so a

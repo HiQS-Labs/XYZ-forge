@@ -132,6 +132,65 @@ else
   skip "PyYAML unavailable; YAML parse check skipped"
 fi
 
+# ── GH-509 Phase 4: the macOS promotion boundary ─────────────────────────────────────────────────
+# The only job whose green means anything about what we ship, because it is the only one on the
+# platform we ship to. Every assertion below is scoped to that job's own block, not the whole file —
+# a marker anywhere in a 300-line workflow is not evidence about a specific job.
+boundary_block="$(awk '/^  boundary-macos:/{f=1} f{print} f && /^  [a-z]/ && !/^  boundary-macos:/{exit}' "$WORKFLOW")"
+
+if [ -n "$boundary_block" ]; then
+  pass "the workflow declares a macOS promotion-boundary job"
+else
+  fail "GH-509: no boundary-macos job — nothing runs the suite on the platform XYZ ships to"
+fi
+
+if grep -Eq '^[[:space:]]*runs-on:[[:space:]]*macos-latest[[:space:]]*$' <<<"$boundary_block"; then
+  pass "the boundary job runs on macos-latest"
+else
+  fail "GH-509: the boundary job must run on macos-latest — a Linux run cannot qualify a promotion"
+fi
+
+# THE COST GUARD. macOS runners bill ~10x Linux. Letting this job reach pull_request would restore
+# the original spend at ten times the rate, which is the failure this whole issue exists to prevent.
+if grep -q "pull_request" <<<"$boundary_block"; then
+  fail "GH-509: the boundary job references pull_request — macOS bills ~10x and must stay off PRs"
+else
+  pass "the boundary job never runs on pull_request (macOS bills ~10x; the boundary is deliberate)"
+fi
+
+# THE EQUIVALENCE CONTRACT, and the reason this job exists in this shape. The canary job scrapes
+# `TESTS` out of validate.sh with a `.sh`-only expression, which is how the authoritative 20-test
+# Python layer went unexercised in CI for months. The boundary job must invoke the validator itself.
+if grep -q './validate.sh' <<<"$boundary_block"; then
+  pass "the boundary job invokes ./validate.sh directly (no second list to keep honest)"
+else
+  fail "GH-509: the boundary job must invoke ./validate.sh directly, not a copied test list"
+fi
+# Written as one alternation rather than `grep -q A … || grep -q B …`. Both spellings are
+# here-strings, not pipes, but test/gh460-pipe-buffer-sigpipe.sh's GH-472 detector matches the second
+# `|` of a `||` followed by ` grep -q` and cannot tell a logical OR from a pipe — a false positive it
+# reports against this file. Sidestepped here rather than worked around with a guard suppression;
+# the detector's own precision is a separate question from this assertion's correctness.
+if grep -Eq 'TESTS=\(|SKIP_TESTS' <<<"$boundary_block"; then
+  fail "GH-509: the boundary job scrapes or skips tests — 'full' must mean the whole validator"
+else
+  pass "the boundary job carries no skip list (full means full)"
+fi
+
+# An unbounded hang on a 10x runner is the expensive failure mode. Bound it in the file, not in hope.
+if grep -Eq '^[[:space:]]*timeout-minutes:[[:space:]]*[0-9]+' <<<"$boundary_block"; then
+  pass "the boundary job bounds its runtime (an unbounded hang bills at ~10x)"
+else
+  fail "GH-509: the boundary job needs timeout-minutes — an unbounded hang on macOS is the costly case"
+fi
+
+# The promotion rule compares against a RECORDED commit, not against a remembered run.
+if grep -q 'MACOS-BOUNDARY' <<<"$boundary_block" && grep -q 'GITHUB_SHA' <<<"$boundary_block"; then
+  pass "the boundary job records its resolved SHA as promotion evidence"
+else
+  fail "GH-509: the boundary job must print its SHA — a promotion cites a commit, not a run"
+fi
+
 # ── GH-509 Phase 2: the ubuntu job is an advisory portability canary, not a gate ─────────────────
 # XYZ ships to macOS. A ubuntu failure is portability drift, not breakage, and treating it as
 # breakage is what produced five unread hours of red across eight commits on 2026-08-12.
