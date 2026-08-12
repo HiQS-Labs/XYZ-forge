@@ -132,6 +132,46 @@ else
   skip "PyYAML unavailable; YAML parse check skipped"
 fi
 
+# ── GH-509 Phase 2: the ubuntu job is an advisory portability canary, not a gate ─────────────────
+# XYZ ships to macOS. A ubuntu failure is portability drift, not breakage, and treating it as
+# breakage is what produced five unread hours of red across eight commits on 2026-08-12.
+#
+# WHAT THESE CHECKS CAN AND CANNOT DO — stated because this file is where GH-419 gets violated most
+# easily. They assert the workflow DECLARES the contract. They cannot assert GitHub's runtime
+# behaviour: only a witnessed hosted run proves `continue-on-error` actually keeps a run green while
+# leaving the job's own conclusion queryable. That witness is an acceptance criterion in
+# PROJECT/2-WORKING/GH-509-CI-MINUTE-BURN.md, deliberately NOT satisfied by these greps.
+if grep -Eq '^[[:space:]]*continue-on-error:[[:space:]]*true[[:space:]]*$' "$WORKFLOW"; then
+  pass "the ubuntu job declares continue-on-error (advisory, cannot mark a commit broken)"
+else
+  fail "GH-509: the ubuntu job must be advisory — a Linux failure is portability drift, not breakage"
+fi
+
+# The verdict step is the queryable signal. `if: always()` is the load-bearing half: without it the
+# step is skipped in precisely the case it exists to report on, and the canary goes silent exactly
+# when it has something to say.
+if grep -q "Portability canary verdict" "$WORKFLOW"; then
+  pass "the workflow emits a portability canary verdict step"
+else
+  fail "GH-509: no canary verdict step — drift would have no greppable signal"
+fi
+# No pipe here, deliberately. The first draft was `awk … | grep -q ok`, and this file sets
+# `pipefail` — which is exactly the GH-472 SIGPIPE shape, caught by test/gh460-pipe-buffer-sigpipe.sh
+# on the first full run. awk carries its own exit status, so the pipe was never needed.
+if awk '/name: Portability canary verdict/{f=1} f && /if: always\(\)/{found=1; exit} END{exit !found}' "$WORKFLOW"; then
+  pass "the canary verdict runs with if: always() (reports when an earlier step failed)"
+else
+  fail "GH-509: the canary verdict lacks if: always() — it is skipped in the only case it matters"
+fi
+
+# The verdict must not call drift a failure. On a platform we do not ship to, "failed"/"broken" is
+# the wrong word, and the wording is the entire mechanism by which this stops reading as breakage.
+if grep -q "PORTABILITY-CANARY: drift" "$WORKFLOW" && grep -q "NOT breakage" "$WORKFLOW"; then
+  pass "the canary verdict names drift as drift and explicitly denies breakage"
+else
+  fail "GH-509: the canary verdict must state that drift is not breakage, or it reads as a red gate"
+fi
+
 # ── ci-local.sh must not drift from the workflow it mirrors ──────────────────────────────────────
 # `ci-local.sh` reproduces this job step-for-step so the signal survives a metered/blocked Actions
 # account. A mirror with nothing pinning it to its original is the exact failure this repo keeps
