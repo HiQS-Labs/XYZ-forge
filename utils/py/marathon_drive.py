@@ -43,6 +43,7 @@ _EXIT_MEANINGS = {
     7: "turn timeout / hang",
     8: "lane parked at the attempt cap",
     9: "post-approve command failed, approval preserved",
+    127: "relay-drive could not execute — check MARATHON_RELAY_DRIVE",
 }
 
 
@@ -1217,13 +1218,23 @@ def main():
         command_name = parts[0] if parts else ""
         if not command_name:
             _pre_advance_not_runnable("command is empty")
-        if "/" in command_name:
+        if re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', command_name):
+            _pre_advance_not_runnable(f"a gate command may not begin with an environment assignment ('{command_name}'). The gate program is resolved from the first token, and the gate environment is scrubbed (GH-441) — pass configuration in a file beside the gate script, not the environment.")
+        elif "/" in command_name:
             gate_path = command_name if os.path.isabs(command_name) else os.path.join(_gate_root, command_name)
             if not (os.path.isfile(gate_path) and os.access(gate_path, os.X_OK)):
                 _pre_advance_not_runnable(f"executable does not exist or is not executable: {gate_path}")
         else:
             if not shutil.which(command_name):
                 _pre_advance_not_runnable(f"command '{command_name}' is not on PATH")
+
+    def _preflight_relay_drive():
+        if not relay_drive_bin or not os.path.exists(relay_drive_bin):
+            die(f"relay-drive does not exist: {relay_drive_bin}")
+        if not os.path.isfile(relay_drive_bin):
+            die(f"relay-drive is not a file: {relay_drive_bin}")
+        if not os.access(relay_drive_bin, os.X_OK):
+            die(f"relay-drive is not executable: {relay_drive_bin}")
 
     os.environ["MARATHON_BUILDER"] = args.builder
     os.environ["MARATHON_REVIEWER"] = args.reviewer
@@ -1277,12 +1288,14 @@ def main():
         try:
             _preflight_check_issue_closed()
             _preflight_pre_advance_gate()
+            _preflight_relay_drive()
         except SystemExit as _e:
             if _e.code not in (0, None):
                 eprint("marathon-drive: (dry-run continues; a live run would halt here)")
     else:
         _preflight_check_issue_closed()
         _preflight_pre_advance_gate()
+        _preflight_relay_drive()
 
     if args.artifact_paths:
         os.environ["ALLOW_PATHS"] = args.artifact_paths

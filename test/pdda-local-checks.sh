@@ -141,10 +141,13 @@ missing=""
 for _c in completed-status roadmap-issue-state release-milestone; do
   grep -Fq "SUMMARY [pdda-local-check-$_c]" "$real_out_file" || missing="$missing pdda-local-check-$_c"
 done
-[ -z "$missing" ] \
-  && pass "all three checks execute against the real repository and emit a summary" \
-  || fail "check(s) did not run against the real repo:$missing
-$real_out"
+if [ -z "$missing" ]; then
+  pass "all three checks execute against the real repository and emit a summary"
+else
+  bounded_out="$(grep -E 'SUMMARY|ERROR' "$real_out_file" || tail -n 20 "$real_out_file")"
+  fail "check(s) did not run against the real repo:$missing (rc=$real_rc)
+$bounded_out"
+fi
 [ "$real_rc" -eq 0 ] \
   && pass "the local checks stay warn-only and never gate the exit code" \
   || fail "local checks gated the exit code (rc=$real_rc) — they are advisory by contract"
