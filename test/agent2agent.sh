@@ -94,6 +94,14 @@ watch_now_rc=$?
 [ "$watch_now_rc" -eq 0 ] && pass "watch returns when the participant owns NEXT" \
   || fail "watch exits $watch_now_rc: $watch_now"
 expect_contains "watch reports turn ownership" "$watch_now" "DECISION: take-turn"
+# GH-510 doorbell: take-turn must hand the waking session its exact relaunch command,
+# and the printed argv must be self-contained (watch verb, id, agent, --root).
+expect_contains "take-turn watch prints a REARM line" "$watch_now" "REARM: "
+rearm_line="$(printf '%s\n' "$watch_now" | grep '^REARM: ' | head -1)"
+case "$rearm_line" in
+  *" watch --id 123456 --agent 2 "*--root*) pass "REARM argv is self-contained" ;;
+  *) fail "REARM argv incomplete: $rearm_line" ;;
+esac
 [ "$before_watch" = "$(fingerprint "$relay_file")" ] \
   && pass "watch leaves the discussion byte-identical" || fail "watch mutated the discussion"
 python3 "$CLI" --root "$ROOT" join --id 123456 --agent 5 >/dev/null 2>&1 \
@@ -169,6 +177,11 @@ closed_watch_rc=$?
 [ "$closed_watch_rc" -eq 0 ] && pass "watch exits cleanly on a closed discussion" \
   || fail "closed watch exits $closed_watch_rc: $closed_watch"
 expect_contains "closed watch reports terminal state" "$closed_watch" "DECISION: closed"
+# A closed discussion must never invite a re-arm — a REARM line here is the reflex-re-arm bug.
+case "$closed_watch" in
+  *"REARM: "*) fail "closed watch printed a REARM line: $closed_watch" ;;
+  *) pass "closed watch prints no REARM line" ;;
+esac
 [ "$before_closed_watch" = "$(fingerprint "$relay_file")" ] \
   && pass "closed watch remains byte-preserving" || fail "closed watch mutated the discussion"
 before_closed_send="$(fingerprint "$relay_file")"

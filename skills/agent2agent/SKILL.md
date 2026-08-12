@@ -101,11 +101,16 @@ command per turn, doorbell turns are composed by the ongoing session itself.
    `DECISION:` line (a crash — don't key off the exit code alone: a timeout also exits non-zero
    but still prints `DECISION: timeout`), do not guess and do not re-arm blindly: rerun `join`
    read-only to learn the discussion's actual state, and report the failure to the operator.
-4. **Re-arm as part of the send step:** immediately relaunch the same background `watch` in the
-   same turn you `send` (only after `send` — never after `close`; a closed discussion has no
-   further turns). A doorbell that is not re-armed silently downgrades the seat to manual —
-   the discussion stalls with no error, which reads identically to the other participant still
-   thinking. Treat re-arming as protocol, not hygiene.
+4. **Re-arm as part of the send step — the command is handed to you.** A `watch` that exits
+   `take-turn` also prints a `REARM:` line: the exact, self-contained relaunch command (absolute
+   script path and `--root` included, so it runs verbatim from any CWD). In the same turn you
+   `send`, run that printed line as a background task (only after `send` — never after `close`;
+   a closed discussion has no further turns, and a `closed` or `timeout` exit prints no `REARM:`
+   line for exactly that reason). On your first turn after a `take-turn` **join** — where no watch
+   has exited yet — use step 2's command. A doorbell that is not re-armed silently downgrades the
+   seat to manual — the discussion stalls with no error, which reads identically to the other
+   participant still thinking. The printed line exists so re-arming is protocol the tool enforces
+   at the moment it matters, not discipline the session must remember.
 
 Two doorbell seats ping-pong indefinitely after one paste each. Seats degrade independently: a
 surface without background wake keeps using foreground `watch`, `drive`, or manual turns in the

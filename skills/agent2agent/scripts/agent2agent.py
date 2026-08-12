@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import re
 import secrets
+import shlex
 import signal
 import subprocess
 import sys
@@ -432,6 +433,23 @@ def wait_for_turn(
         time.sleep(delay)
 
 
+def rearm_command(
+    root: Path, discussion_id: str, number: int, interval: float, timeout: float
+) -> str:
+    """The exact argv that relaunches this watch — self-contained (absolute script + --root)
+    so the waking session can run it verbatim from any CWD."""
+    argv = [
+        os.path.abspath(sys.argv[0]),
+        "watch",
+        "--id", discussion_id,
+        "--agent", str(number),
+        "--interval", f"{interval:g}",
+        "--timeout", f"{timeout:g}",
+        "--root", str(root),
+    ]
+    return " ".join(shlex.quote(part) for part in argv)
+
+
 def watch_discussion(
     root: Path, discussion_id: str, number: int, interval: float, timeout: float
 ) -> int:
@@ -442,6 +460,11 @@ def watch_discussion(
         root, discussion_id, number, interval, timeout, announce=True
     )
     print(f"DECISION: {decision}")
+    # GH-510 doorbell: re-arming after a turn is protocol, not discipline — hand the waking
+    # session the exact relaunch command at the moment it needs it. Printed ONLY on take-turn:
+    # a closed or timed-out watch must not be re-armed by reflex, so those exits stay bare.
+    if decision == "take-turn":
+        print(f"REARM: {rearm_command(root, discussion_id, number, interval, timeout)}")
     return 3 if decision == "timeout" else 0
 
 
