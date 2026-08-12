@@ -178,6 +178,78 @@ esac
 PHASES_DIR="${PHASES_DIR:-"$ROOT/marathon-system"}"
 export TICK_REPO_ROOT="$ROOT"
 
+# ── GH-388: the chain run log ────────────────────────────────────────────────────────────────────
+# This file persisted NOTHING of its own — no tee, no `exec >`, no log-file variable. What was
+# durable got written per phase, ON COMPLETION, so the phase that DIES is the one phase with no
+# record, and the chain-level narrative existed only on the operator's terminal. Whether any of it
+# survived a crash depended on whether whoever typed the command happened to redirect stdout
+# somewhere durable. In the run that produced this issue they had — to a path the platform clears at
+# boot — and after the panic reboot it was gone.
+#
+# Where the run narrative goes is the HARNESS's decision now, not the invoker's. Same transcript root
+# the per-phase transcripts already use (rtl_transcript_root), so one place holds both.
+#
+# Armed here, deliberately AFTER plan parse/validate and BEFORE the phase loop: a usage error, an
+# unparseable plan or a --plan outside PROJECT/2-WORKING has no run to narrate, and must not leave an
+# empty log implying one happened. --dry-run is excluded for the same reason.
+MARATHON_RUN_LOG=""
+if ((DRY_RUN == 0)); then
+  # Sourced only if present. MARATHON_HOME is overridable (tests point it at a minimal fake home,
+  # and a vendored `.xyz/` install may lag a re-vendor), so an unconditional `source` turns a missing
+  # optional helper into a dead marathon — which is how this first landed, breaking the GH-212
+  # harness-home-exempt case. A missing lib costs the durability CHECK, not the run log.
+  _dl_lib="$MARATHON_HOME/relay-automation/durable-log-lib.sh"
+  if [[ -f "$_dl_lib" ]]; then
+    # shellcheck source=/dev/null
+    source "$_dl_lib"
+  else
+    xyz_non_durable_reason() { :; }
+    xyz_non_durable_conf() { printf '(durable-log-lib.sh not installed)'; }
+    _xyz_realish_path() { printf '%s' "${1:-}"; }
+  fi
+  # Resolved by SOURCING the shared resolver rather than re-deriving `<root>/relay-system` here — a
+  # second copy of that rule is how the run log and the per-phase transcripts would end up in
+  # different places the first time XYZ_ARCHIVE_ROOT's contract changed.
+  # `|| _run_log_base=""` is load-bearing: under `set -e` an assignment whose command substitution
+  # exits non-zero terminates the script, so a fake/partial MARATHON_HOME turned "the resolver is
+  # unavailable" into a bare exit 127 with no message — the shape of failure this whole issue is
+  # about, reproduced by its own fix. Caught by test/marathon.sh's GH-212 harness-home-exempt case.
+  _run_log_base="$(set +e; source "$MARATHON_HOME/relay-automation/relay-turn-lib.sh" >/dev/null 2>&1; rtl_transcript_root "$ROOT" 2>/dev/null)" || _run_log_base=""
+  if [[ -z "$_run_log_base" ]]; then
+    # The resolver was unavailable (partial install / fake home), NOT unresolvable. Those are
+    # different failures and only the second deserves a hard stop: with XYZ_ARCHIVE_ROOT unset the
+    # documented default is <root>/relay-system, and a run that can record itself there should.
+    if [[ -z "${XYZ_ARCHIVE_ROOT:-}" ]]; then
+      _run_log_base="$ROOT/relay-system"
+    else
+      die "XYZ_ARCHIVE_ROOT is set but no durable transcript root could be resolved from it — fix it, or unset it to use <root>/relay-system (GH-388). A marathon that cannot record itself must not start."
+    fi
+  fi
+
+  # Scoped to RELOCATION, matching rtl_default_log: a run log inside the repo being driven shares
+  # that repo's fate; one outside it, in storage a reboot erases, is the silent relocation this
+  # issue is about. Without the scoping every fixture repo under $TMPDIR would refuse to run.
+  _run_log_reason="$(xyz_non_durable_reason "$_run_log_base")"
+  if [[ -n "$_run_log_reason" ]] && [[ "$(_xyz_realish_path "$_run_log_base")" != "$(_xyz_realish_path "$ROOT")"/* ]]; then
+    die "the resolved run-log root $_run_log_base is under $_run_log_reason, which this harness records as non-durable storage ($(xyz_non_durable_conf)), and it is OUTSIDE the repo being driven ($ROOT). A marathon's own record must survive a reboot — that is the whole of GH-388. Point XYZ_ARCHIVE_ROOT at a committed archive, or unset it."
+  fi
+
+  _run_log_dir="$_run_log_base/run-logs/$(date +%Y-%m-%d 2>/dev/null || echo unknown-date)"
+  mkdir -p "$_run_log_dir" || die "could not create the run-log directory $_run_log_dir"
+  _plan_slug="$(basename "${PLAN%.*}" | tr -c 'A-Za-z0-9._-' '_')"
+  MARATHON_RUN_LOG="$_run_log_dir/marathon-${_plan_slug}-$(date +%H%M%S 2>/dev/null || echo unknown)-$$.log"
+  export MARATHON_RUN_LOG
+
+  # `tee -a` via process substitution, so output is captured AS IT IS PRODUCED rather than buffered
+  # to the end — the whole point is that the record survives a run that never reaches its end.
+  # stderr is folded in: an escalation reason arriving on stderr and a phase heading on stdout,
+  # interleaved in one file, is the narrative an operator actually needs to read afterwards.
+  exec > >(tee -a "$MARATHON_RUN_LOG") 2>&1
+  # Printed at chain start, per acceptance: an operator has to know where to look afterwards, and
+  # afterwards is exactly when the terminal is gone.
+  log "run log: $MARATHON_RUN_LOG"
+fi
+
 # Parse + validate + resolve order. A malformed/cyclic plan halts the whole run here (exit 2).
 PLAN_TSV="$("$YAML_BIN" "$PLAN")" || die "plan parse failed (see above)"
 [[ -n "$PLAN_TSV" ]] || die "plan has no phases"

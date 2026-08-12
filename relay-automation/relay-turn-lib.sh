@@ -187,16 +187,49 @@ rtl_log_always() {  # <message...> — see the API note above rtl_init; mirrors 
 # agent edit"), so an UN-ignored path here would be silently deleted at the end of every single turn,
 # defeating the entire point of "persistent." Falls back to today's PID-keyed tmp path (byte-identical
 # to the pre-GH-161 default) on any resolver or mkdir failure — logging must never fail a turn.
+# GH-388: the $TMPDIR fallbacks below are GONE, and this now REFUSES (exit 5) rather than silently
+# relocating a turn transcript into storage a reboot erases. The header above ends "logging must never
+# fail a turn", and that trade is what this issue reversed: refusing costs a turn that has not started,
+# whereas the old behaviour cost the RECORD of a turn that had — discovered only after a host panic,
+# when the evidence was already gone. The resolver's own stderr is no longer swallowed either, because
+# WHY the root failed to resolve is the whole of the fix from the operator's side.
+#
+# Mirrors utils/py/rtl.py::rtl_default_log. Both read the same non-durable registry via
+# durable-log-lib.sh / rtl.py::non_durable_reason — one file, so the lanes cannot drift.
 rtl_default_log() {  # <root> <tool-turn-name> <task> — e.g. rtl_default_log "$ROOT" codex-turn "$t"
-  local root="$1" tool="$2" task="$3" base tslug day path
-  base="$(rtl_transcript_root "$root" 2>/dev/null)" || { printf '%s/%s-%s.log' "${TMPDIR:-/tmp}" "$tool" "$$"; return 0; }
+  local root="$1" tool="$2" task="$3" base tslug day path _dl_lib _reason
+  if ! base="$(rtl_transcript_root "$root")"; then
+    printf 'rtl_default_log: refusing to start a %s turn — no durable transcript root could be resolved (see the XYZ_ARCHIVE_ROOT diagnostic above). Fix XYZ_ARCHIVE_ROOT or unset it to use <root>/relay-system. A turn whose transcript lands in temporary storage is a turn with no record after a reboot (GH-388).\n' "$tool" >&2
+    exit 5
+  fi
   tslug="$(printf '%s' "$task" | tr -c 'A-Za-z0-9._-' '_')"
   day="$(date +%Y-%m-%d 2>/dev/null || echo unknown-date)"
   path="$base/logs/$day/${tool}-${tslug}-$$.log"
+
+  _dl_lib="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/durable-log-lib.sh"
+  if [[ -f "$_dl_lib" ]]; then
+    # shellcheck source=/dev/null
+    source "$_dl_lib"
+    _reason="$(xyz_non_durable_reason "$path")"
+    # Scoped to RELOCATION — see the Python twin's comment. A transcript inside the repo being driven
+    # shares that repo's fate and was not moved anywhere by this harness; one OUTSIDE it, in storage a
+    # reboot erases, is the silent relocation GH-388 exists to stop.
+    if [[ -n "$_reason" ]]; then
+      local _root_real _path_real
+      _root_real="$(_xyz_realish_path "${root%/}")"
+      _path_real="$(_xyz_realish_path "$path")"
+      if [[ "$_path_real" != "$_root_real"/* ]]; then
+        printf 'rtl_default_log: refusing to start a %s turn — the resolved transcript path %s is under %s, which this harness records as non-durable storage (%s), and it is OUTSIDE the repo being driven (%s). That is a silent relocation of the evidence, which is exactly what GH-388 exists to stop. Point XYZ_ARCHIVE_ROOT at a committed archive, or unset it to use <root>/relay-system.\n' "$tool" "$path" "$_reason" "$(xyz_non_durable_conf)" "$root" >&2
+        exit 5
+      fi
+    fi
+  fi
+
   if mkdir -p "$(dirname "$path")" 2>/dev/null; then
     printf '%s' "$path"
   else
-    printf '%s/%s-%s.log' "${TMPDIR:-/tmp}" "$tool" "$$"
+    printf 'rtl_default_log: refusing to start a %s turn — could not create the durable transcript directory %s. Previously this silently relocated the transcript to temporary storage (GH-388).\n' "$tool" "$(dirname "$path")" >&2
+    exit 5
   fi
 }
 

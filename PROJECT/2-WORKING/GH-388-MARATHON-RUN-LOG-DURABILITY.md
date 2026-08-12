@@ -2,9 +2,9 @@
 gh_issue: 388
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/388
 title: "GH-388 — marathon.sh persists no run log, and per-phase transcripts are written only on completion"
-status: "Intake (2-WORKING) — captured 2026-08-06 for release 0.2.0 Litmus, preflight READY, awaiting operator go."
+status: "BUILT 2026-08-11 (both phases) as a lane of release 0.3.0 Nightwatch, to which it moved on 2026-08-08. Built Opus-direct rather than fired: the 2026-08-10 wave-1 plan had already recorded why this lane is not marathon-buildable — it edits marathon.sh, the outer driver bash that is reading itself by byte offset as the chain runs. Negative control recorded in test/baselines/GH-388-negative-control.md (9 red pre-fix). Full validate.sh green."
 created: 2026-08-06
-updated: 2026-08-06
+updated: 2026-08-11
 owner: noel
 doc_type: project
 release: "0.2.0 Litmus"
@@ -34,7 +34,44 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-08-06 as a lane of release 0.2.0 Litmus. Acceptance criteria authored on the issue (it had none) and revised after an adversarial codex+agy review, which found a **false premise** in one criterion and a loophole in another. | Operator go. Then Phase 1 (a chain run log the harness owns, and a partial transcript on failure) and Phase 2 (the durable-root rule and the kill-mid-run regression). |
+| **Both phases built 2026-08-11.** `marathon.sh` owns a durable chain run log under the same transcript root as the per-phase transcripts, announced at chain start; a phase killed mid-run leaves a content-bearing `PHASE-INTERRUPTED.md`; `rtl_default_log` refuses on both lanes instead of silently relocating to volatile storage; and the non-durable locations are stated in one runtime-read file. `test/gh388-run-log-durability.sh` 24/0, observed **9 red** pre-fix. | Close #388 against the acceptance block below. All seven criteria met — see "Acceptance — outcome". |
+
+## Acceptance — outcome
+
+1. **Met.** `marathon.sh` opens `<transcript-root>/run-logs/<date>/marathon-<plan>-<time>-<pid>.log` and `tee`s stdout+stderr into it as produced. Armed after plan validation and before the phase loop, so a usage error or an unparseable plan leaves no log implying a run happened; `--dry-run` is excluded for the same reason, and that exclusion is asserted.
+2. **Met.** `marathon: run log: <path>` is printed at chain start, and the test parses that line rather than guessing the path — if the announcement breaks, the test cannot find the file.
+3. **Met.** `_write_interrupted_phase_record` writes `PHASE-INTERRUPTED.md` carrying the phase id, the relay `STATUS:` read *at interruption*, the recorded round count, the reason and the exit code. Asserted on content, not existence, and against a marker stamped after dispatch — the empty-file and pre-created-file loopholes the issue's own review found.
+4. **Met, both lanes.** `rtl_default_log` in `utils/py/rtl.py` and in `relay-turn-lib.sh` now exit 5 rather than returning a `$TMPDIR` path, and the resolver's stderr is no longer swallowed (`quiet=True` is gone), so the refusal names *why* the root failed to resolve. `test/relay-turn-trace.sh`'s case 3c, which pinned the old fallback, is inverted with the rationale recorded in place.
+5. **Met.** `relay-automation/non-durable-log-roots.conf` is the single registry, read at runtime by `durable-log-lib.sh` (Bash) and `rtl.py::non_durable_reason` (Python). The test asserts the two readers agree on every probe path *and* that an invented entry changes the verdict — without that second assertion the file could be decorative while the real list lived in the readers.
+6. **Met.** Part C kills a running phase; Part D kills a running chain. Both assert on what is left on disk.
+7. **Met.** `test/baselines/GH-388-negative-control.md` carries both runs in full: 9 red pre-fix, 0 after.
+
+## Acceptance — deviations found while building
+
+**The durability rule is scoped to RELOCATION, not to absolute location.** A transcript that resolves
+*inside the repo being driven* is permitted even when that repo sits in `$TMPDIR`; only a path that is
+both non-durable *and* outside the repo is refused. Criterion 5 reads "a default log path resolving
+into one of them fails the run", which taken literally refuses to run the harness inside every fixture
+in this suite — every one of them is a repo under `$TMPDIR`. A guard that cannot be exercised is not a
+guard, and "fails the run" would have meant "fails every run". The defect being fixed is the harness
+*silently moving* evidence out of the repo; a repo the operator put in `/tmp` makes the code, the
+commits and the log volatile together, visibly, by their choice.
+
+**Two defects were found by this lane's own test rather than reasoned about.**
+
+- **The driver's narrative was block-buffered.** Python block-buffers stdout when it is not a TTY, and
+  a marathon is never a TTY — so the buffering is not an edge case, it *is* the unattended path. The
+  first kill-mid-run recovered a log containing the child turn-shim's output and none of
+  `marathon-drive`'s own: the subprocesses wrote straight to the fd and survived, while every
+  `marathon-drive: …` line sat in a buffer that SIGTERM discards. A run log fed by a buffered writer
+  records the run right up to the moment something goes wrong. Fixed with `line_buffering=True`.
+- **SIGTERM never reached the exit hooks.** `marathon_drive.py` already had an `_ON_EXIT` list run from
+  a `finally`, but SIGTERM terminates CPython immediately — no `finally`, no hooks, no record. SIGINT
+  already raised `KeyboardInterrupt` and so already reached them; SIGTERM is what an unattended run
+  actually receives. Converted to `SystemExit(128+signum)`, which is the convention `_exit_meaning`
+  and `marathon.sh`'s halt table already read. **SIGKILL and a host panic remain unreachable** — that
+  is stated in the code rather than papered over, and is why #384's recovery path is a separate lane
+  rather than something this one quietly claims to cover.
 
 ## The defect
 

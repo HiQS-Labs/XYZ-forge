@@ -15,6 +15,8 @@ tar czf skills/relay-automation/relay-pkg.tar.gz \
   relay-automation/watchdog.sh \
   relay-automation/relay-drive.sh \
   relay-automation/relay-turn-lib.sh \
+  relay-automation/durable-log-lib.sh \
+  relay-automation/non-durable-log-roots.conf \
   relay-automation/new-relay.sh \
   relay-automation/codex-turn.sh \
   relay-automation/agy-turn.sh \

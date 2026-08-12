@@ -783,6 +783,13 @@ def main():
     # built to provide was absent from the lane that actually runs. Both halves are ported here.
     run_gate_result = ["not-run"]
     drive_started = [False]
+    # GH-388: set once this phase has reached a DECIDED outcome and written a durable record for it
+    # (escalate() writes ESCALATION.md + archives the transcript; complete_phase_success archives it).
+    # Read only by _write_interrupted_phase_record, whose whole job is the case where neither ran —
+    # a phase killed before the driver decided anything. A second flag rather than inferring from
+    # run_gate_result, because "the gate did not run" and "this phase never reached an outcome" are
+    # different facts and #407 exists because they were once conflated.
+    phase_outcome_recorded = [False]
 
     def _cmd_out(cmd, cwd=None):
         # Best-effort stdout capture: a missing binary, a non-zero exit, or a crash all yield "".
@@ -1035,6 +1042,67 @@ def main():
         except Exception:
             pass
 
+    def _write_interrupted_phase_record(code):
+        """GH-388: the phase that dies is the one phase with no record. Give it one.
+
+        `save_transcript()` runs on success, and `escalate()` calls it too — but both are reached only
+        when the driver decides an outcome. A phase KILLED mid-run (operator ^C, a driver wall cap, a
+        supervisor SIGTERM, the host going down under it) reaches neither, which is precisely the
+        shape of the run that produced this issue: phases 1-4 each have a transcript and phase 5, the
+        one that killed the host, has none. The archive is therefore biased toward success by
+        construction — a systematically incomplete record, not a gap.
+
+        Deliberately CONTENT-BEARING, because an empty or pre-created file satisfies the words and
+        none of the need (the issue's own review caught that loophole). It carries the phase id, the
+        relay state at interruption — read from the relay file NOW, not from a variable set earlier —
+        and the reason, and it is written at interruption time so its mtime is after the phase began.
+
+        Never raises: a failure to record must not change how the run ends.
+        """
+        if not drive_started[0]:
+            return                      # nothing was ever dispatched; an empty record would lie
+        if code == 0 or phase_outcome_recorded[0]:
+            return                      # completed, or escalate() already wrote a durable record
+        try:
+            status_line, round_count = "unknown", 0
+            try:
+                with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
+                    for ln in f:
+                        if ln.startswith("STATUS:"):
+                            status_line = ln.strip()
+                        if ln.lstrip().startswith("### Round"):
+                            round_count += 1
+            except OSError:
+                status_line = "relay file unreadable at interruption"
+
+            reason = _exit_meaning(code) if code else "interrupted"
+            dest = os.path.join(phase_dir, "PHASE-INTERRUPTED.md")
+            os.makedirs(phase_dir, exist_ok=True)
+            with open(dest, "w", encoding="utf-8") as f:
+                f.write(
+                    f"# INTERRUPTED — Marathon Phase {args.phase_id}\n\n"
+                    f"phase: {args.phase_id}\n"
+                    f"task: {relay_task}\n"
+                    f"reason: {reason}\n"
+                    f"exit-code: {code}\n"
+                    f"interrupted-at: {_utc_now_z()}\n"
+                    f"relay-file: {rel_relay}\n"
+                    f"relay-status: {status_line}\n"
+                    f"relay-rounds-recorded: {round_count}\n"
+                    f"\nThis phase did not reach an outcome, so neither save_transcript() nor\n"
+                    f"escalate() ran. The relay file above holds whatever the turns had written when\n"
+                    f"the run stopped; this record exists so the phase is not simply absent (GH-388).\n"
+                )
+            log(f"interrupted-phase record written: {dest} (reason: {reason})")
+            # Best-effort archive of the relay state itself, for the same reason escalate() does it.
+            try:
+                save_transcript()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    _ON_EXIT.append(_write_interrupted_phase_record)
     _ON_EXIT.append(_marathon_drive_on_exit)
 
     # GH-238: a vendored consumer normally has no root-level validate.sh. Do NOT spend a builder and
@@ -1248,6 +1316,7 @@ relay-file: {rel_relay}
         except Exception as exc:  # noqa: BLE001 — archive failure must never mask the escalation
             log(f"warn: could not archive relay transcript for escalated phase {args.phase_id}: {exc}")
         subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(f"escalation written: {esc_file} (reason: {reason})")
         # marathon-drive.sh:867-868 — last thing escalate() does, carrying the relay-drive exit code.
         xyz_debug_log_append(
@@ -1620,6 +1689,7 @@ relay-file: {rel_relay}
         subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         save_transcript()
+        phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(success_text)
         xyz_marathon_emit("green", success_text)
         if args.post_approve_cmd:
@@ -2154,6 +2224,38 @@ if __name__ == "__main__":
     # never overwrite the driven run's real status. This is the same shape: the code is resolved
     # first, hooks run in a `finally` (so an exception path still clears the heartbeat), and the
     # original code is what we exit with. `die()` and every `sys.exit(N)` land in the SystemExit arm.
+    # GH-388: line-buffer the driver's own narrative. Found by this lane's own regression test, which
+    # killed a phase and recovered a log containing the child turn-shim's output and NONE of the
+    # driver's. Python block-buffers stdout when it is not a TTY — and a marathon is never a TTY, so
+    # the buffering is not an edge case, it IS the unattended path. Every `marathon-drive: ...` line
+    # sat in a 8KB buffer that a SIGTERM discards, while the subprocesses wrote straight to the same
+    # fd and survived. A run log fed by a buffered writer records the run right up until the moment
+    # something goes wrong, which is the one moment it exists for.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(line_buffering=True)
+        except Exception:
+            pass    # Python < 3.7 or a stream that cannot be reconfigured — best effort
+
+    # GH-388: without this the `finally` below is unreachable for the case the issue is ABOUT. A
+    # SIGTERM — from an operator, a supervisor, a wall-clock kill, a host shutting down under the run
+    # — terminates CPython immediately: no `finally`, no exit hooks, no record. SIGINT already raised
+    # KeyboardInterrupt and so already reached them; SIGTERM did not, and SIGTERM is what an
+    # unattended run actually receives. Converting it to SystemExit puts both on the same path.
+    #
+    # The exit code stays 128+signal, the shell convention the driver's own `_exit_meaning` and
+    # marathon.sh's halt-reason table already read, so nothing downstream has to learn a new number.
+    # SIGKILL and a host panic remain unreachable by design — no handler runs for those, which is why
+    # the record this enables is a floor and not a guarantee, and why #384's recovery path is a
+    # separate lane rather than something this one quietly claims to cover.
+    def _terminate(signum, _frame):
+        raise SystemExit(128 + signum)
+    for _sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        try:
+            signal.signal(_sig, _terminate)
+        except (ValueError, OSError, AttributeError):
+            pass    # not the main thread, or the platform has no such signal — best effort
+
     _exit_code = 0
     try:
         try:
