@@ -216,6 +216,9 @@ ensure_gitignore() {
   if ! grep -Fqx '.xyz/' "$gitignore" 2>/dev/null; then
     printf '%s\n' '.xyz/' >> "$gitignore"
   fi
+  if ! grep -Fqx '/.tick/' "$gitignore" 2>/dev/null; then
+    printf '%s\n' '/.tick/' >> "$gitignore"
+  fi
 }
 
 register_vendor() {
