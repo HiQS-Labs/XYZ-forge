@@ -5,6 +5,7 @@ import time
 import signal
 import tempfile
 import subprocess
+import shutil
 import shlex
 from rtl import (RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root,
                  narration_mentions_root, agy_auth_output_verdict, agy_auth_timeout_verdict,
@@ -65,9 +66,28 @@ def agy_auth_preflight(agy_bin):
     secs = int(os.environ.get("AGY_AUTH_TIMEOUT_S", AGY_AUTH_TIMEOUT_DEFAULT_S))
     out_file = os.path.join(tempfile.gettempdir(), f"agy-auth-{os.getpid()}.log")
     rc = 0
+    # GH-426: run the probe in a THROWAWAY directory, never in whatever repo happens to be the
+    # caller's CWD.
+    #
+    # This pre-flight is the only place the harness executes the agent binary OUTSIDE the turn's
+    # containment. `subprocess.run` with no `cwd=` inherits the parent's, which for a driven turn is
+    # the harness clone — so anything this invocation writes lands in the harness working tree, is
+    # never seen by `rtl_check` (which inspects RTL_ROOT, a different repo), and is never reverted.
+    #
+    # That is exactly what #426 reported as a worktree-isolation leak. It is not one: measured with a
+    # per-invocation log, the agent binary is called TWICE — `whoami` with CWD=harness, then the real
+    # turn with CWD=the isolation worktree — and the file that reaches the harness comes from the
+    # first. The worktree is correctly based on AGY_TURN_ROOT and containment correctly exits 6. The
+    # reproducing stub simply writes on every invocation, which real `agy whoami` does not.
+    #
+    # Fixed anyway, because "the binary we shell out to happens not to write" is an assumption about
+    # someone else's program, not a property this harness enforces — and it is the assumption that
+    # made a stub indistinguishable from a containment failure for a week.
+    probe_cwd = tempfile.mkdtemp(prefix="agy-auth-probe.")
     try:
         with open(out_file, "w") as out_f:
-            subprocess.run([agy_bin, "whoami"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
+            subprocess.run([agy_bin, "whoami"], timeout=secs, stdout=out_f, stderr=subprocess.STDOUT,
+                           stdin=subprocess.DEVNULL, check=True, cwd=probe_cwd)
         # GH-375: exit status alone cannot decide this. `agy whoami` EXITS 0 while failing to run at
         # all when there is no TTY — `CLI error: bubbletea: error opening TTY ...` — and stdin is
         # DEVNULL here, so that is the NORMAL path under automation, not an edge case. The probe
@@ -127,6 +147,20 @@ def agy_auth_preflight(agy_bin):
     except Exception as e:
         print(f"agy-turn: agy auth pre-flight failed. Run `agy login` in a normal terminal, then retry.", file=sys.stderr)
         rc = 5
+    finally:
+        # GH-426: remove the throwaway probe CWD on EVERY path, including the ones that `return True`
+        # above. Kept non-fatal and reported rather than silent: if the probe wrote something in
+        # there, that is the one signal that the agent binary touches its working directory, which is
+        # the assumption this whole change exists to stop relying on.
+        try:
+            leftovers = os.listdir(probe_cwd)
+            if leftovers:
+                print(f"agy-turn: NOTE — the auth probe wrote {len(leftovers)} path(s) into its "
+                      f"throwaway CWD ({', '.join(sorted(leftovers)[:5])}). Discarded. Before GH-426 "
+                      f"this would have landed in the harness working tree.", file=sys.stderr)
+            shutil.rmtree(probe_cwd, ignore_errors=True)
+        except Exception:
+            pass
 
     try:
         if os.path.exists(out_file):
