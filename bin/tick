@@ -106,6 +106,9 @@ Usage:
 Event types: ${Array.from(EVENT_TYPES).join(', ')}
 
 Exit codes:
+  1 — claim not acquired (GH-408): lost to another owner, task already terminal, or at the
+      per-agent claim cap. A claim you already hold is a WIN and still exits 0.
+  2 — usage error (missing/unknown flags) — deliberately distinct from a lost claim
   6 — containment violation (off-allowlist edit in relay-turn-lib.sh)
   8 — relay block structural validation failed (bin/validate-relay-block returned non-zero)
 `);
@@ -168,9 +171,16 @@ function main(argv) {
         agent: flags.agent,
         paths: parsePathsFlag(flags.paths),
       });
+      // GH-408: every `lost:` branch below exits 1, not 0. It used to print the reason and exit 0,
+      // which made the failure undetectable by exit status — so a caller doing the correct thing
+      // (`if ! tick claim ...; then`) learned nothing, and the only remaining signal was stdout,
+      // which every caller in this repo was sending to DEVNULL. Both belts were cut at once, and on
+      // 2026-08-07 that cost ~2h: an agent at its claim cap produced a turn failure whose message
+      // pointed at a perfectly healthy token. A won claim (including the idempotent re-claim by the
+      // holder, which `claim()` reports as won) still exits 0; usage errors still exit 2.
       if (result.limitReached) {
         process.stdout.write(`lost: claim limit reached (holding ${result.holding.join(', ')}) — finish or release first\n`);
-        return 0;
+        return 1;
       }
       if (result.won) {
         process.stdout.write(`won: ${task} claimed by ${flags.agent}\n`);
@@ -182,10 +192,10 @@ function main(argv) {
         // spent turn-token id (e.g. the literal RELAY-TURN from a prior relay) lands here and the seed
         // silently breaks. Point at the fix (GH-18 #1): a fresh per-relay id.
         process.stdout.write(`  → '${task}' is spent; use a fresh per-relay id (e.g. --relay-task RELAY-<your-slug>)\n`);
-        return 0;
+        return 1;
       }
       process.stdout.write(`lost: ${task} already claimed by ${result.winner || 'unknown'}\n`);
-      return 0;
+      return 1;
     }
 
     case 'take': {

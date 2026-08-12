@@ -8,6 +8,10 @@ import json
 import shutil
 import datetime
 
+DEFAULT_ORCHESTRATOR_ONLY = (
+    "bin/", ".tick/", "relay-automation/relay-turn-lib.sh",
+)
+
 def compute_default_root(this_file):
     # GH-267: this_file lives one directory deeper than its Bash sibling (utils/py/ vs
     # utils/), so it needs two ".." to reach the same anchor (repo root, or vendored .xyz/).
@@ -107,10 +111,47 @@ def extract_contract(doc_path):
                 eprint(f"contract in {doc_path}: artifacts_new entry not present in artifacts[]: {a}")
                 sys.exit(3)
 
+    # GH-467: an index-only delivery needs the harness/orchestrator to perform the git operation.
+    # Builders are expressly forbidden from running git, so reject a lane that declares such a
+    # delivery without also routing it to the orchestrator.
+    lanes = obj.get("lanes")
+    if lanes is not None:
+        if not isinstance(lanes, dict):
+            eprint(f"contract in {doc_path}: lanes must be an object")
+            sys.exit(3)
+        for lane_name in ("agy_safe", "orchestrator_only", "index_only"):
+            if lane_name not in lanes:
+                continue
+            lane_paths = lanes[lane_name]
+            if not isinstance(lane_paths, list) or any(not isinstance(path, str) or not path for path in lane_paths):
+                eprint(f"contract in {doc_path}: lanes.{lane_name} must be an array of non-empty strings")
+                sys.exit(3)
+
+        index_only = lanes.get("index_only")
+        if index_only is not None:
+            for path in index_only:
+                if path not in obj["artifacts"]:
+                    eprint(f"contract in {doc_path}: lanes.index_only entry not present in artifacts[]: {path}")
+                    sys.exit(3)
+
     return obj
 
 def merge_contracts(contracts):
     base = contracts[0]
+    merged_lanes = {}
+    for lane_name in ("agy_safe", "orchestrator_only", "index_only"):
+        declared = []
+        declared_anywhere = False
+        for contract in contracts:
+            lanes = contract.get("lanes")
+            if isinstance(lanes, dict) and lane_name in lanes:
+                declared_anywhere = True
+                for path in lanes[lane_name]:
+                    if path not in declared:
+                        declared.append(path)
+        if declared_anywhere:
+            merged_lanes[lane_name] = declared
+
     out = {
         "target": {"repo": base["target"]["repo"], "ref": base["target"]["ref"]},
         "gate": base["gate"],
@@ -118,10 +159,7 @@ def merge_contracts(contracts):
         "artifacts": list(base.get("artifacts", [])),
         "artifacts_new": list(base.get("artifacts_new", [])),
         "remediation": base.get("remediation"),
-        "lanes": {
-            "agy_safe": list((base.get("lanes", {}) or {}).get("agy_safe", [])),
-            "orchestrator_only": list((base.get("lanes", {}) or {}).get("orchestrator_only", []))
-        }
+        "lanes": merged_lanes
     }
     
     for c in contracts[1:]:
@@ -137,10 +175,6 @@ def merge_contracts(contracts):
             if a not in out["artifacts"]: out["artifacts"].append(a)
         for a in c.get("artifacts_new", []):
             if a not in out["artifacts_new"]: out["artifacts_new"].append(a)
-        for a in (c.get("lanes", {}) or {}).get("agy_safe", []):
-            if a not in out["lanes"]["agy_safe"]: out["lanes"]["agy_safe"].append(a)
-        for a in (c.get("lanes", {}) or {}).get("orchestrator_only", []):
-            if a not in out["lanes"]["orchestrator_only"]: out["lanes"]["orchestrator_only"].append(a)
             
     return out
 
@@ -196,24 +230,30 @@ def eval_probes(root, c):
     ambig = 1 if stale and counts["unfixed"] > 0 else 0
     return probes_res, stale, blocked, ambig
 
+def configured_lane_paths(contract, lane_name, default=()):
+    """Return a declared lane list, applying defaults only when the field is absent."""
+    lanes = contract.get("lanes")
+    if not isinstance(lanes, dict) or lanes.get(lane_name) is None:
+        return list(default)
+    return lanes[lane_name]
+
+
+def is_orchestrator_owned(path, orchestrator_only):
+    return any(path == declared or path.startswith(declared) for declared in orchestrator_only)
+
+
 def lane_plan(c, effective=None):
     effective = effective or {}
     if isinstance(effective.get("artifacts"), list):
         arts = effective["artifacts"]
     else:
         arts = c.get("artifacts", [])
-    orch_only = (c.get("lanes", {}) or {}).get("orchestrator_only")
-    if not orch_only: orch_only = ["bin/", ".tick/", "relay-automation/relay-turn-lib.sh"]
-    agy_safe = (c.get("lanes", {}) or {}).get("agy_safe", [])
-
-    def is_orch(p):
-        for o in orch_only:
-            if p == o or p.startswith(o): return True
-        return False
+    orch_only = configured_lane_paths(c, "orchestrator_only", DEFAULT_ORCHESTRATOR_ONLY)
+    agy_safe = configured_lane_paths(c, "agy_safe")
 
     orchestrator, codex, agy = [], [], []
     for a in arts:
-        if is_orch(a): orchestrator.append(a)
+        if is_orchestrator_owned(a, orch_only): orchestrator.append(a)
         elif a in agy_safe: agy.append(a)
         else: codex.append(a)
 
@@ -234,6 +274,12 @@ def lane_plan(c, effective=None):
         "parallelizable": not coupled and len(buildable) >= 2,
         "single_lane_only": coupled or len(buildable) < 2
     }
+
+def unscoped_index_only_paths(c):
+    """Return declared index-only artifacts which no orchestrator route covers."""
+    index_only = configured_lane_paths(c, "index_only")
+    orchestrator_only = configured_lane_paths(c, "orchestrator_only", DEFAULT_ORCHESTRATOR_ONLY)
+    return [path for path in index_only if not is_orchestrator_owned(path, orchestrator_only)]
 
 def normalize(e):
     c = e["SP_CONTRACT"]
@@ -276,6 +322,7 @@ def normalize(e):
         "readiness": {
             "ready": e.get("SP_READY") == "1",
             "next_action": e.get("SP_NEXT") or None,
+            "unscoped_index_only": e.get("SP_INDEX_ONLY_UNSCOPED", []),
             # GH-418: issue state is advisory, but it must be visible in every candidate so a
             # closed issue cannot be mistaken for a fully-green, still-current instruction.
             "issue_state": e.get("SP_ISSUE_STATE") or {
@@ -1059,6 +1106,8 @@ def main():
         emit("AMBIGUOUS: the issue bundle's contracts disagree (see message above). Split the bundle or align the contracts.")
         sys.exit(e.code)
 
+    index_only_unscoped = unscoped_index_only_paths(merged)
+
     effective_artifacts = expand_effective_artifacts(target_root, merged)
 
     primary_doc = source_docs[0]
@@ -1171,7 +1220,7 @@ def main():
     except: pass
     
     cand_state = "ready"
-    if blocked == 1 or fresh_blocked == 1: cand_state = "blocked"
+    if blocked == 1 or fresh_blocked == 1 or index_only_unscoped: cand_state = "blocked"
     elif ambig == 1: cand_state = "ambiguous"
     elif stale == 1: cand_state = "stale"
     
@@ -1385,7 +1434,8 @@ def main():
         "SP_ACC_FIDELITY": acc_fidelity,
         "SP_SRC_URL": src_url,
         "SP_ACC_INLINE": {"criteria": len(acc_items), "scope": acc_mode,
-                          "over_cap": acc_dropped, "lossless": not acc_lost}
+                          "over_cap": acc_dropped, "lossless": not acc_lost},
+        "SP_INDEX_ONLY_UNSCOPED": index_only_unscoped
     }
     
     rc_obj = normalize(e)
@@ -1430,6 +1480,9 @@ def main():
         emit(f"  issue-state : {issue_state['status']} — {issue_state['detail']}")
         for frozen in frozen_artifacts:
             emit(f"  FROZEN      : {frozen['path']} — authoritative twin: {frozen['authoritative_twin']}")
+        if index_only_unscoped:
+            emit("  index-only  : BLOCKED — builders may not run git, but these index-only artifacts are not covered by lanes.orchestrator_only: " + ", ".join(index_only_unscoped))
+            emit("  remediation : add each path to lanes.orchestrator_only, or remove its lanes.index_only declaration if it is not an index-only delivery.")
         for line in acceptance_fidelity_report(acc_fidelity):
             emit(line)
         emit(f"  readiness   : ready={ready}{f' — next: {ready_next}' if ready_next else ''}")
