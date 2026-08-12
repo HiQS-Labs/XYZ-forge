@@ -195,6 +195,7 @@ TESTS=(
   "gh284-p4-release-lanes.sh"   # GH-284 P4 (milestone seed + landed-on-trunk rollup: scope-claim matcher)
   "swarm-preflight.sh"
   "ci-workflow.sh"
+  "ci-route.sh"                  # GH-509 (docs/fast/full routing + changed-area test selection)
   "xyz-completion.sh"
   "gh358-lock-instrumentation.sh" # GH-358 (concurrent append reports lost writes vs lock starvation)
   "xyz-harness-hooks.sh"
