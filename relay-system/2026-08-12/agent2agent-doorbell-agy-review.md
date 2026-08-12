@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -66,5 +66,13 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Review (agy)
+* swept file: yes
+* `[Should]` SKILL.md:92: Step 1 ("Join once via the pasted invitation, as normal.") is ambiguous if the `join` command returns `DECISION: take-turn`. A cold reader won't know whether to process the turn immediately (as per the "Join" section) or proceed to Step 2 and launch a background `watch`. Clarify whether to process the turn immediately or to always launch the `watch`.
+* `[Should]` SKILL.md:95: Step 3 ("When the background `watch` exits... read the printed `DECISION:`") misses a failure path. If the background `watch` dies (e.g. non-zero exit code) and no `DECISION:` is printed, a cold agent might guess or hang. Explicitly instruct the agent to stop, report the error, and not re-arm.
+* `[Nit]` SKILL.md:98: Step 4 ("Re-arm as part of the send step... in the same turn you `send`") could lead to re-arming after closing the discussion if the agent considers `close` a form of sending. Add a quick clarification (e.g., "(do not re-arm if you use `close`)").
+
+Verdict: Changes requested
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
