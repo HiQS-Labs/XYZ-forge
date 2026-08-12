@@ -183,18 +183,28 @@ before any job runs and cannot read a job output. Only job-level `concurrency` c
 
 ### 5. Local Mac testing becomes first-class
 
-Four changes, in value order:
+**`ci-local.sh` already existed** — a full local mirror of the hosted job with a `--fast` mode — and
+was found mid-implementation rather than planned for. It carried the reframe's error in miniature: it
+mirrored the hosted job's skip list, so it **skipped `registry-lock-concurrency.sh`**, a suite the
+workflow's own comment says *"passes locally"*. Local was discarding real macOS signal to stay faithful
+to a contended Linux runner, and `test/ci-workflow.sh` actively pinned it that way.
+
+**Inverted `2026-08-12`.** `ci-local.sh` now runs a **superset** of the hosted job; the only surviving
+skip is `acorn-extract.sh`, which is duplicate work rather than dropped coverage. The pinning assertion
+was inverted with it — local skipping that suite is now a **failure**, witnessed red. Its closing
+notice was re-pointed too: the useful caveat is no longer "this is not a green ubuntu run" but "this is
+**self-reported** and does not qualify a promotion".
+
+What remains, in value order:
 
 1. **A durable per-commit record of local runs.** This is the unlock. If the Mac is the evidence, "I
    ran it and it was green" cannot live in a chat message — it must be a record keyed to the commit
    hash, refused from a dirty tree, so the promotion check has something to read.
-2. **A fast local mode.** `utils/ci-route.sh` already exists and is tested 15/15, and has never been
-   pointed at a local diff. Same classifier, working-tree changes, seconds.
-3. **An unconfigured-Mac probe as a named mode.** The stripped-`PATH` check that caught all three of
+2. **An unconfigured-Mac probe as a named mode.** The stripped-`PATH` check that caught all three of
    #520's failures in ~90 seconds currently exists only as a throwaway script. It simulates #380's
    new-adopter story and belongs in the tree.
-4. **Tiering:** fast on every push, the probe before anything user-facing, full `validate.sh` at
-   checkpoints.
+3. **Tiering:** `ci-local.sh --fast` on every push, the probe before anything user-facing, full
+   `validate.sh` at checkpoints.
 
 **The honest limit:** a local record is self-reported. Keying it to the commit and refusing a dirty
 tree covers most of it, but it proves *someone ran this*, not *someone ran this honestly*. That gap is
@@ -238,7 +248,7 @@ the repo public. That buys something no amount of routing can.
 | # | Phase | Contents |
 |---|---|---|
 | 1 | PR classifier | **SHIPPED** (PR #511) |
-| 2 | Ubuntu → advisory | non-blocking job; red is portability drift, surfaced in the promotion output (§1, §7) |
+| 2 | Ubuntu → advisory | **SHIPPED** `bc2e1d1d` — `canary-ubuntu`, `continue-on-error: true`, `if: always()` verdict step; contract test 26→30 with both assertions witnessed red |
 | 3 | Route `development` pushes | classifier applied to `before..sha`; **existing concurrency untouched** (§3, §4) |
 | 4 | macOS boundary job | `main` + `workflow_dispatch`, `validate.sh` direct, no skips |
 | 5 | Local evidence | recorded per-commit result, fast mode, unconfigured-Mac probe (§5) |
@@ -265,7 +275,11 @@ Phase 1 (shipped):
 
 Phases 2-5:
 
-- [ ] A Ubuntu failure is reported as advisory and cannot mark a run as breakage.
+- [x] A Ubuntu failure is reported as advisory and cannot mark a run as breakage. *(Declared and
+      asserted at `bc2e1d1d`; the **runtime** half is still open — it needs a witnessed hosted run,
+      since a grep cannot prove GitHub's `continue-on-error` semantics.)*
+- [x] The local runner stops imitating Linux: `ci-local.sh` runs a superset of the hosted job, and the
+      assertion that pinned them together is inverted and witnessed red.
 - [ ] Unresolved portability drift appears in the promotion output — the mechanism that makes the
       advisory canary *read* rather than merely non-blocking.
 - [ ] `development` pushes are routed; an empty/unreadable range fails closed to full.

@@ -190,22 +190,34 @@ if [ -f "$CI_LOCAL" ]; then
     fail "ci-local.sh and ci.yml disagree on how TESTS is parsed — they will run different suites"
   fi
 
-  # (2) The skip list. A test skipped in CI but run locally (or the reverse) makes a green run in one
-  # place mean something different from a green run in the other — which is worse than no mirror.
-  for skipped in "acorn-extract.sh" "registry-lock-concurrency.sh"; do
-    if grep -qF "\"$skipped\"" "$WORKFLOW" && grep -qF "\"$skipped\"" "$CI_LOCAL"; then
-      pass "ci-local.sh carries the workflow's documented skip: $skipped"
-    else
-      fail "skip drift on $skipped — present in one of ci.yml/ci-local.sh but not the other"
-    fi
-  done
-
-  # (3) The honesty notice. A green local run is NOT a green ubuntu run (GH-232 found ~12 failures
-  # that existed only on ubuntu). If that caveat is ever edited out, the script starts overclaiming.
-  if grep -q "NOT equivalent to a green ubuntu CI run" "$CI_LOCAL"; then
-    pass "ci-local.sh still states that a local pass is not a CI pass"
+  # (2) The skip lists must now DIFFER, and this assertion was inverted on 2026-08-12 (GH-509).
+  #
+  # It previously required the two files to skip the SAME tests. Under the macOS reframe that pinned
+  # the wrong invariant: `registry-lock-concurrency.sh` is skipped in CI for a contended-Linux-runner
+  # flake, and the workflow's own comment says it "passes locally". Requiring local to skip it too
+  # discarded real signal about the platform we ship to, in order to imitate one we do not.
+  #
+  # Local must run MORE than hosted ubuntu, not the same.
+  if grep -qF '"acorn-extract.sh"' "$WORKFLOW" && grep -qF '"acorn-extract.sh"' "$CI_LOCAL"; then
+    pass "both skip acorn-extract.sh (it already ran in the npm step — duplicate work, not lost coverage)"
   else
-    fail "ci-local.sh dropped its ubuntu-divergence caveat — it now overclaims what a green run means"
+    fail "acorn-extract.sh skip drift — it is duplicate work in both files and should be skipped in both"
+  fi
+
+  if grep -qF '"registry-lock-concurrency.sh"' "$CI_LOCAL"; then
+    fail "GH-509: ci-local.sh skips registry-lock-concurrency.sh — that suite PASSES on macOS and is skipped in CI only for a contended-Linux flake; local must not imitate a platform we do not ship to"
+  else
+    pass "ci-local.sh runs registry-lock-concurrency.sh (skipped in CI for a Linux-only flake)"
+  fi
+
+  # (3) The honesty notice, also inverted. The old caveat warned that a green local run is not a green
+  # ubuntu run — true, but the less useful direction now: local IS the shipping platform. The limit
+  # worth pinning is that a local run is SELF-REPORTED, which is what the hosted macOS boundary buys
+  # out. If that caveat is edited away, the script starts implying it can qualify a promotion.
+  if grep -q "self-reported" "$CI_LOCAL" && grep -q "hosted macOS run" "$CI_LOCAL"; then
+    pass "ci-local.sh states the real limit: a local pass is self-reported and does not qualify a promotion"
+  else
+    fail "GH-509: ci-local.sh dropped its self-reported caveat — it now implies a local run can qualify a promotion"
   fi
 else
   skip "ci-local.sh not present; mirror-drift checks skipped"

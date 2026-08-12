@@ -7,21 +7,29 @@
 # have failed". A red check that means nothing is worse than no check, because a real break looks
 # identical. This runs the same steps locally so the signal keeps existing.
 #
-# It mirrors .github/workflows/ci.yml's `tier1` job in ORDER and CONTENT, including its two
-# deliberate skips. When that workflow changes, change this — test/ci-workflow.sh is the existing
-# guard over the workflow itself, and drift between the two is a real (currently unpinned) risk.
+# It follows .github/workflows/ci.yml's job in ORDER and CONTENT, but NOT in coverage — see the
+# section below. test/ci-workflow.sh pins the parts that must not drift.
 #
 # ─────────────────────────────────────────────────────────────────────────────────────────────────
-# THIS IS NOT A DROP-IN REPLACEMENT FOR CI, AND THE DIFFERENCES ARE NOT COSMETIC
+# THIS RUNS ON THE PLATFORM WE SHIP TO. THE HOSTED UBUNTU JOB DOES NOT. (GH-509)
 # ─────────────────────────────────────────────────────────────────────────────────────────────────
-# CI runs ubuntu-latest. Your machine is probably macOS. The workflow's own comments record what that
-# has already cost: GH-232 found ~12 suite failures that existed ONLY on ubuntu, from a BSD-only
-# `sed -i ''` that mis-parses under GNU sed, and from tests that stubbed CLAUDE_BIN/AGY_BIN but not
-# CODEX_BIN — so they passed locally purely because a real `codex` binary sat on the developer's PATH.
-# macOS also ships bash 3.2 (2007); ubuntu ships bash 5.x.
+# XYZ is a local developer toolkit for macOS developers. Linux and Windows support are on the roadmap
+# and are not here yet. So the direction of the old caveat here — "a green local run does not mean a
+# green ubuntu run" — was true but pointed at the less useful risk. Reversed and stated properly:
 #
-# So: a green run here means "no defect a laptop can see". It does NOT mean CI would be green.
-# Use it to stop paying for fast feedback, not to stop caring about the platform gap.
+#   * A green run HERE is the best evidence we have about what users experience, because your machine
+#     is the shipping platform with the real toolchain.
+#   * A green run on hosted UBUNTU says little. That job is an advisory portability canary; its red
+#     means "would not work on a platform we do not support yet", not "broken".
+#
+# This script therefore runs MORE than the hosted job, on purpose. It does not skip
+# `registry-lock-concurrency.sh` — the workflow's own comment says that suite "passes locally" and
+# flakes only under contended Linux CI, so skipping it here discarded real macOS signal to imitate a
+# machine no user has.
+#
+# THE HONEST LIMIT IS NOW ELSEWHERE, and it is not about platform. This run is SELF-REPORTED: it
+# proves someone ran the suite, not that they ran it on the code they are shipping. That is what the
+# hosted macOS boundary job buys — a clean machine, and evidence not produced by the claimant.
 # ─────────────────────────────────────────────────────────────────────────────────────────────────
 #
 # Usage:
@@ -141,9 +149,17 @@ npm_and_acorn() {
 # machine already has both, and silently rewriting an operator's global git config is not something
 # a test runner should do. If a fixture test fails on a bare machine, set them yourself.
 validate_suite() {
+  # GH-509: THIS SKIP LIST IS DELIBERATELY SHORTER THAN THE WORKFLOW'S, and that is the point.
+  #
+  # It used to mirror CI's, including `registry-lock-concurrency.sh`. That suite's own skip comment
+  # in the workflow reads "flaky under CI load … PASSES LOCALLY" — it fails on a contended shared
+  # Linux runner, a machine no XYZ user will ever have. Skipping it here threw away real signal about
+  # the platform we actually ship to, in order to stay faithful to a platform we do not.
+  #
+  # Only ONE skip survives, and it is not a platform concession: acorn-extract.sh already ran in the
+  # npm step above, so running it again would be duplicated work rather than dropped coverage.
   local skip_tests=(
-    "acorn-extract.sh"                # already run above (needs npm ci first)
-    "registry-lock-concurrency.sh"    # GH-72/GH-232: flaky under load, 16 concurrent tick writers
+    "acorn-extract.sh"                # already run above (needs npm ci first) — duplicate, not dropped
   )
   local all_tests=() line t s skip rc=0
   while IFS= read -r line; do
@@ -156,7 +172,7 @@ validate_suite() {
   for t in "${all_tests[@]}"; do
     skip=0
     for s in "${skip_tests[@]}"; do [ "$t" = "$s" ] && { skip=1; break; }; done
-    [ "$skip" -eq 1 ] && { echo "SKIP (GH-232): $t"; continue; }
+    [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; continue; }
     echo "=== $t ==="
     bash "test/$t" || { rc=1; echo "  ^^ FAILED: $t" >&2; }
   done
@@ -191,10 +207,12 @@ for s in "${PASSED[@]}"; do printf '  \033[32m+\033[0m %s\n' "$s"; done
 if [ "${#FAILED[@]}" -gt 0 ]; then
   for s in "${FAILED[@]}"; do printf '  \033[31m-\033[0m %s\n' "$s"; done
   printf '\n\033[31mci-local: %d step(s) failed\033[0m\n' "${#FAILED[@]}"
-  printf 'Remember: a failure here is real, but a PASS here is not a promise CI would be green —\n'
-  printf 'CI runs ubuntu-latest with GNU sed and bash 5.x. See the header.\n'
+  printf 'This ran on macOS — the platform XYZ ships to — so a failure here is a real defect for\n'
+  printf 'real users. Do not wait for hosted CI to confirm it; the ubuntu job is advisory (GH-509).\n'
   exit 1
 fi
 printf '\n\033[32mci-local: all steps passed\033[0m\n'
-printf 'This means no defect a laptop can see. It is NOT equivalent to a green ubuntu CI run.\n'
+printf 'Green on the shipping platform, with the full suite — including the one hosted ubuntu skips.\n'
+printf 'NOT a promotion qualification: this run is self-reported. Promotion needs a hosted macOS run\n'
+printf 'for this exact commit (GH-509 §6) — a clean machine, and evidence you did not produce.\n'
 exit 0

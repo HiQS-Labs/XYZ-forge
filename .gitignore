@@ -63,3 +63,5 @@ ARCHITECTURE-BAK.md
 debug.log
 /BTW
 
+# Vendored per-repo harness copy (xyz-vendor.sh) — machine-local, never committed.
+.xyz/
