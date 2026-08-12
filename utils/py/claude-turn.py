@@ -113,7 +113,22 @@ def main():
     # ceiling its header documents. It read 300 while the twin said 600, and since Python is the
     # executing lane every turn was silently capped at a fraction of the documented budget —
     # observed live as an exit-7 kill on a review turn that had 900s on paper.
-    turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 600))
+    #
+    # GH-386: raised 600 -> 900, so every builder now shares one wall cap. `claude` was the only
+    # shim below 900 (agy, codex, aider and pi all use it), and nothing anywhere said why — GH-320's
+    # comment above explains why the TWINS must agree, not why this value differs from every other
+    # agent, so the next reader had to guess.
+    #
+    # The guess a reader would most likely make is "600 is a cost control, because a headless
+    # `claude -p` bills per call". That is wrong, and the reason is three lines up: cost is already
+    # bounded by CLAUDE_MAX_BUDGET, passed to the CLI as `--max-budget-usd` (default $0.50). A
+    # shorter wall cap buys no money that flag is not already saving; what it buys is a builder
+    # killed mid-edit, which is the exact failure GH-320 fixed one notch lower and #386 observed
+    # again at this one — a phase whose packet read 900 was killed at 600, partway through writing
+    # a ~1690-LOC artifact pair. GH-492's idle bound (RELAY_TURN_IDLE_S) is the mechanism that ends
+    # a turn EARLY when it is genuinely stuck, and it is builder-agnostic; the wall cap is the
+    # backstop behind it and has no reason to vary by agent.
+    turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))
     bounded_rc = 0
     
     wt = ""

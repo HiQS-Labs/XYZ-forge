@@ -66,7 +66,9 @@ fi
 #   reviewers (codex-turn, gemini-turn)   → "Bash,Read"              (read-only; no write surface)
 # rtl_enforce is the real guard either way; the allowlist is a second, tighter layer.
 #
-#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 600). A hung or
+#   RELAY_TURN_TIMEOUT_S — per-turn wall-clock ceiling in seconds (default: 900, raised from 600 by
+#                          GH-386 so every builder shares one cap; see the Python twin for why the
+#                          old value was not a cost control). A hung or
 #                          runaway claude CLI is killed after this many seconds; the turn exits 7.
 #                          The existing --max-budget-usd / --max-turns API-spend ceilings are
 #                          complementary and remain unchanged — wall-clock is the NEW dimension.
@@ -197,7 +199,9 @@ if [[ -n "$block_cmds" ]]; then
 fi
 
 rtl_before
-turn_timeout="${RELAY_TURN_TIMEOUT_S:-600}"
+# GH-386: 600 -> 900. MUST stay equal to the Python twin's default (GH-320's invariant, pinned by
+# test/gh320-twin-timeout-parity.sh); the rationale for the value lives in utils/py/claude-turn.py.
+turn_timeout="${RELAY_TURN_TIMEOUT_S:-900}"
 bounded_rc=0
 
 # Worktree isolation (opt-in; ROADMAP Part A Phase 3.6 — the airtight async/side-effect close).
