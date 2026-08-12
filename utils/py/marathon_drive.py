@@ -238,6 +238,53 @@ def run_tick_loud(cmd_args):
                 eprint(f"  {line}")
         sys.exit(res.returncode)
 
+def preflight_write_set_trackable(repo_root, paths):
+    """GH-514: BLOCK before dispatch if the repo cannot track a path this run must commit.
+
+    `git check-ignore -v` is the authority rather than a hand-rolled read of `.gitignore`: it
+    consults every source git itself consults (repo .gitignore at any depth, .git/info/exclude, the
+    global core.excludesFile) and reports WHICH rule matched, in `<source>:<line>:<pattern>` form.
+    Re-implementing that matching would produce a check that disagrees with the tool whose behaviour
+    it is trying to predict — and disagreeing quietly is the failure being fixed.
+
+    Exit status contract: 0 = ignored (the bad case here), 1 = not ignored, 128 = error. An error is
+    treated as NOT ignored, deliberately: this guard exists to stop a known halt, and it must not
+    invent a new way for a healthy run to fail. A repo where check-ignore cannot run is one where the
+    old behaviour — find out at `git add` — is no worse than refusing on a guess.
+    """
+    blocked = []
+    for p in paths:
+        try:
+            res = subprocess.run(["git", "-C", repo_root, "check-ignore", "-v", "--no-index", p],
+                                 capture_output=True, text=True)
+        except Exception:
+            continue
+        if res.returncode == 0 and res.stdout.strip():
+            blocked.append((p, res.stdout.strip().splitlines()[0]))
+
+    if not blocked:
+        return
+
+    eprint("marathon-drive: BLOCKED before dispatch — this repo cannot track files this run must commit.")
+    for p, rule in blocked:
+        rel = p[len(repo_root) + 1:] if p.startswith(repo_root + "/") else p
+        eprint(f"  {rel}")
+        eprint(f"    ignored by: {rule}")
+    eprint("")
+    eprint("  Nothing has been dispatched, so no builder turn has been spent. Left unchecked this")
+    eprint("  surfaces as a phase HALT after the turn, and on the escalation path the record")
+    eprint("  explaining the halt is itself one of the files that cannot be committed.")
+    eprint("")
+    eprint("  Remedy, in the order they are usually right:")
+    eprint("    1. Run with --target-root <code-repo>. Harness output (relay, escalation,")
+    eprint("       transcripts) then stays in THIS repo and only code changes land in the target —")
+    eprint("       which is what --target-root is for, per marathon.sh's own usage text.")
+    eprint("    2. Or un-ignore the path above in the rule named beside it, if this repo is meant")
+    eprint("       to track harness output.")
+    eprint("  Not doing it for you: a repo that ignores harness output usually means it, and")
+    eprint("  silently rewriting someone's ignore rules is a worse failure than this one (GH-514).")
+    sys.exit(2)
+
 def _repo_rel_prefix(path, root):
     """GH-484: `path` as a repo-relative prefix with a trailing slash, for matching the paths
     `git status --porcelain` emits (which are relative to the repo TOPLEVEL, not to `root` —
@@ -1947,6 +1994,21 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         print("--- END RENDERED RELAY ---")
         print(f"tick seed: log task.created {relay_task} + claim --agent marathon + release --to {args.builder}")
         sys.exit(0)
+
+    # GH-514: prove the repo can TRACK this run's write-set before anything is dispatched.
+    #
+    # `marathon.sh --help` has always stated this failure — "without --target-root, marathon-drive's
+    # `git add` of RELAY.md / ESCALATION.md / the transcript fails and the phase HALTs" — and nothing
+    # checked it. So a repo that deliberately ignores harness output (a public one, or a vendored
+    # install where ensure_gitignore added `.xyz/` and never un-ignored the output dirs, #314) was
+    # discovered as a halt AFTER a builder turn had been spent. Worse on the escalation path: the
+    # record explaining why the run stopped is itself one of the files that cannot be committed, so
+    # the run loses its own account of the failure.
+    #
+    # Checked against `root`, deliberately, because that is the repo these files are committed to —
+    # under --target-root only CODE changes land elsewhere, and the relay/escalation/transcript stay
+    # here. Checking the target instead would be the plausible-looking wrong answer.
+    preflight_write_set_trackable(root, [relay_file, os.path.join(phase_dir, "ESCALATION.md")])
 
     os.makedirs(phase_dir, exist_ok=True)
     with open(relay_file, 'w') as f:

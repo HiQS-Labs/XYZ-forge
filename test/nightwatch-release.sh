@@ -76,6 +76,12 @@ MANIFEST=(
   "387|test/gh387-gate-not-first-executor.sh|a cap-killed turn's artifact is reviewed before any gate executes it"
   "384|test/gh384-crash-recovery.sh|the crash-recovery report distinguishes a gated phase from an ungated one"
   "358|test/gh358-lock-instrumentation.sh|a lost concurrent-append record names its terminal lock state"
+  # NOT a manifest entry: #514 was FILED while executing this release and is deliberately not
+  # admitted. RELEASES.md's admission rule is explicit — "discovery is not admission" — and adding it
+  # here would be a re-scope of a frozen boundary, which is the exact drift the freeze exists to
+  # stop. It appears in LIFECYCLE below, because the exit criterion always named that case; what was
+  # missing was a suite driving it, not a new manifest member. (Adding it here anyway would fail
+  # manifest_matches_releases_md, which is that check doing its job.)
   "354|test/gh376-relay-drive-lock-parity.sh|Phase 1 only: clone-wide driver exclusion from a linked worktree (delivered by #376)"
 )
 
@@ -87,7 +93,7 @@ LIFECYCLE=(
   "cap-killed child is not first-executed by the gate|test/gh387-gate-not-first-executor.sh"
   "restarted recovery offers a documented action|test/gh384-crash-recovery.sh"
   "no write outside the allowlist|test/gh426-worktree-leak.sh"
-  "hostile target write-set / linked-worktree preflight is REJECTED before dispatch|-"
+  "hostile target write-set is REJECTED with an actionable refusal, not a traceback|test/gh514-write-set-trackable.sh"
 )
 
 registered_in_validate() {  # <test path> — is it in validate.sh's TESTS array?
