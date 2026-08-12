@@ -30,7 +30,17 @@ IFS=',' read -ra ADDR <<< "$ARTIFACTS"
 for p in "${ADDR[@]}"; do
     p=$(echo "$p" | xargs)
     for file in $p; do
-        RESOLVED_ARTIFACTS="$RESOLVED_ARTIFACTS$file,"
+        if [ -e "$file" ]; then
+            RESOLVED_ARTIFACTS="$RESOLVED_ARTIFACTS$file,"
+        else
+            # find all matching files and add them
+            FOUND=$(find . -not -path '*/\.*' -name "$(basename "$file")" 2>/dev/null | sed 's|^\./||' | paste -sd "," -)
+            if [ -n "$FOUND" ]; then
+                RESOLVED_ARTIFACTS="$RESOLVED_ARTIFACTS$FOUND,"
+            else
+                RESOLVED_ARTIFACTS="$RESOLVED_ARTIFACTS$file,"
+            fi
+        fi
     done
 done
 RESOLVED_ARTIFACTS="${RESOLVED_ARTIFACTS%,}"
