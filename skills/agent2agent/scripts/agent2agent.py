@@ -5,12 +5,16 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import fcntl
 import os
 from pathlib import Path
 import re
 import secrets
+import signal
+import subprocess
 import sys
 import tempfile
+import time
 from typing import Iterable, List, Optional, Tuple
 
 
@@ -18,6 +22,9 @@ ID_RE = re.compile(r"^[0-9]{6}$")
 FIELD_RE_TEMPLATE = r"^{key}:[ \t]*(.*?)[ \t]*$"
 DISCUSSION_MARKER = "\n## Discussion\n"
 MAX_ID_ATTEMPTS = 1_000
+DEFAULT_POLL_INTERVAL = 150.0
+DEFAULT_DRIVE_TIMEOUT = 3_600.0
+DEFAULT_MAX_DRIVE_TURNS = 6
 
 
 class Agent2AgentError(RuntimeError):
@@ -310,6 +317,34 @@ class DiscussionLock:
         self.path.unlink(missing_ok=True)
 
 
+class DriveLock:
+    """Hold one process-owned drive lane; flock releases automatically after a crash."""
+
+    def __init__(self, path: Path, member: str):
+        self.path = path.with_name(f".{path.name}.{member}.drive.lock")
+        self.handle = None  # type: Optional[object]
+
+    def __enter__(self) -> None:
+        try:
+            self.handle = self.path.open("a+", encoding="utf-8")
+            fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            if self.handle is not None:
+                self.handle.close()
+                self.handle = None
+            raise Agent2AgentError(f"drive is already active for this participant: {self.path}") from exc
+        self.handle.seek(0)
+        self.handle.truncate()
+        self.handle.write(f"pid={os.getpid()} started={utc_now()}\n")
+        self.handle.flush()
+
+    def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
+        if self.handle is not None:
+            fcntl.flock(self.handle.fileno(), fcntl.LOCK_UN)
+            self.handle.close()
+            self.handle = None
+
+
 def read_discussion(path: Path) -> str:
     if path.is_symlink() or not path.is_file():
         raise Agent2AgentError(f"discussion is not a regular file: {path}")
@@ -346,6 +381,195 @@ def join_discussion(
     else:
         decision = "wait"
     return path, subject, next_member, decision
+
+
+def positive_interval(value: str) -> float:
+    try:
+        interval = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a number of seconds") from exc
+    if interval <= 0:
+        raise argparse.ArgumentTypeError("must be greater than zero")
+    return interval
+
+
+def nonnegative_timeout(value: str) -> float:
+    try:
+        timeout = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a number of seconds") from exc
+    if timeout < 0:
+        raise argparse.ArgumentTypeError("must be zero or greater")
+    return timeout
+
+
+def wait_for_turn(
+    root: Path,
+    discussion_id: str,
+    number: int,
+    interval: float,
+    timeout: float,
+    announce: bool,
+) -> Tuple[Path, str, str, str]:
+    """Poll without writing until this member owns NEXT, closure, or timeout."""
+    started = time.monotonic()
+    previous = None  # type: Optional[Tuple[str, str, str]]
+    while True:
+        path, subject, next_member, decision = join_discussion(root, discussion_id, number, None)
+        content = read_discussion(path)
+        state = (field(content, "TURN"), next_member, field(content, "STATUS"))
+        if announce and state != previous:
+            print(f"STATE: turn={state[0]} next={state[1]} status={state[2]}", flush=True)
+        previous = state
+        if decision in ("take-turn", "closed"):
+            return path, subject, next_member, decision
+        elapsed = time.monotonic() - started
+        if timeout and elapsed >= timeout:
+            return path, subject, next_member, "timeout"
+        delay = interval
+        if timeout:
+            delay = min(delay, max(0.0, timeout - elapsed))
+        time.sleep(delay)
+
+
+def watch_discussion(
+    root: Path, discussion_id: str, number: int, interval: float, timeout: float
+) -> int:
+    path = resolve_discussion(root, discussion_id)
+    print(f"Watching XYZ agent2agent #{discussion_id} as {agent_id(number)}")
+    print(f"Relay file: {path}")
+    _, _, _, decision = wait_for_turn(
+        root, discussion_id, number, interval, timeout, announce=True
+    )
+    print(f"DECISION: {decision}")
+    return 3 if decision == "timeout" else 0
+
+
+def turn_prompt(discussion_id: str, number: int, path: Path, subject: str) -> str:
+    return f"""Join XYZ agent2agent #{discussion_id} as agent number {number_word(number)} to discuss: {quoted_subject(subject)}
+
+It is now your turn. Read the complete discussion at:
+{path}
+
+Respond to the discussion, then use the agent2agent helper's send or close command. Do not edit the
+relay file directly. Route NEXT to exactly one other roster member unless you close the discussion.
+"""
+
+
+def stop_turn_command(process: subprocess.Popen) -> None:
+    """Stop the isolated command group; do not leave agent descendants running."""
+    if process.poll() is not None:
+        return
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+        process.wait(timeout=2)
+    except (ProcessLookupError, subprocess.TimeoutExpired):
+        if process.poll() is None:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
+
+
+def run_turn_command(
+    command: List[str], root: Path, environment: dict, prompt: str, timeout: float
+) -> int:
+    try:
+        process = subprocess.Popen(
+            command,
+            cwd=str(root),
+            env=environment,
+            stdin=subprocess.PIPE,
+            text=True,
+            start_new_session=True,
+        )
+    except OSError as exc:
+        raise Agent2AgentError(f"could not start turn command: {exc}") from exc
+    try:
+        process.communicate(prompt, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        stop_turn_command(process)
+        raise Agent2AgentError(f"turn command timed out after {timeout:.1f} seconds") from exc
+    except KeyboardInterrupt:
+        stop_turn_command(process)
+        raise
+    return process.returncode
+
+
+def drive_discussion(
+    root: Path,
+    discussion_id: str,
+    number: int,
+    interval: float,
+    timeout: float,
+    max_turns: int,
+    turn_command: List[str],
+) -> int:
+    if turn_command and turn_command[0] == "--":
+        turn_command = turn_command[1:]
+    if not turn_command:
+        raise Agent2AgentError("drive requires a turn command after --")
+    path = resolve_discussion(root, discussion_id)
+    content = read_discussion(path)
+    member = validate_member(content, number)
+    completed = 0
+    deadline = time.monotonic() + timeout
+    with DriveLock(path, member):
+        print(f"Driving XYZ agent2agent #{discussion_id} as {member}")
+        print(f"Relay file: {path}")
+        while completed < max_turns:
+            remaining = max(0.0, deadline - time.monotonic())
+            if remaining == 0:
+                print("DECISION: timeout")
+                return 3
+            current_path, subject, _, decision = wait_for_turn(
+                root, discussion_id, number, interval, remaining, announce=True
+            )
+            if decision == "closed":
+                print("DECISION: closed")
+                return 0
+            if decision == "timeout":
+                print("DECISION: timeout")
+                return 3
+            before = read_discussion(current_path)
+            before_turn = int(field(before, "TURN"))
+            environment = os.environ.copy()
+            environment.update(
+                {
+                    "AGENT2AGENT_ID": discussion_id,
+                    "AGENT2AGENT_AGENT": str(number),
+                    "AGENT2AGENT_MEMBER": member,
+                    "AGENT2AGENT_RELAY_FILE": str(current_path),
+                    "AGENT2AGENT_ROOT": str(root),
+                    "AGENT2AGENT_SUBJECT": subject,
+                }
+            )
+            command_timeout = max(0.0, deadline - time.monotonic())
+            if command_timeout == 0:
+                print("DECISION: timeout")
+                return 3
+            returncode = run_turn_command(
+                turn_command,
+                root,
+                environment,
+                turn_prompt(discussion_id, number, current_path, subject),
+                command_timeout,
+            )
+            if returncode != 0:
+                raise Agent2AgentError(f"turn command failed with exit {returncode}")
+            after = read_discussion(current_path)
+            after_turn = int(field(after, "TURN"))
+            if after_turn <= before_turn or (
+                field(after, "STATUS").lower() != "closed" and field(after, "NEXT") == member
+            ):
+                raise Agent2AgentError(
+                    "turn command exited 0 without advancing and handing off the discussion"
+                )
+            completed += 1
+            print(f"DRIVE: completed turn {after_turn} ({completed}/{max_turns})", flush=True)
+        print("DECISION: max-turns")
+    return 0
 
 
 def load_message(args: argparse.Namespace) -> str:
@@ -424,6 +648,18 @@ def build_parser() -> argparse.ArgumentParser:
     join.add_argument("--agent", type=int, required=True, help="plain agent number, such as 2")
     join.add_argument("--expect-subject", help="reject a stale or altered invitation subject")
 
+    watch = commands.add_parser("watch", help="wait read-only until this participant owns NEXT")
+    watch.add_argument("--id", required=True)
+    watch.add_argument("--agent", type=int, required=True)
+    watch.add_argument(
+        "--interval", type=positive_interval, default=DEFAULT_POLL_INTERVAL,
+        help="poll interval in seconds (default: 150)",
+    )
+    watch.add_argument(
+        "--timeout", type=nonnegative_timeout, default=0.0,
+        help="stop after this many seconds; 0 waits indefinitely (default: 0)",
+    )
+
     send = commands.add_parser("send", help="append the caller's turn and route to another participant")
     send.add_argument("--id", required=True)
     send.add_argument("--agent", type=int, required=True)
@@ -438,6 +674,23 @@ def build_parser() -> argparse.ArgumentParser:
     close_message = close.add_mutually_exclusive_group(required=True)
     close_message.add_argument("--message")
     close_message.add_argument("--message-file", help="UTF-8 file, or - for stdin")
+
+    drive = commands.add_parser("drive", help="opt in to bounded polling plus a turn command")
+    drive.add_argument("--id", required=True)
+    drive.add_argument("--agent", type=int, required=True)
+    drive.add_argument(
+        "--interval", type=positive_interval, default=DEFAULT_POLL_INTERVAL,
+        help="poll interval in seconds (default: 150)",
+    )
+    drive.add_argument(
+        "--timeout", type=positive_interval, default=DEFAULT_DRIVE_TIMEOUT,
+        help="total drive timeout in seconds (default: 3600)",
+    )
+    drive.add_argument(
+        "--max-turns", type=int, default=DEFAULT_MAX_DRIVE_TURNS,
+        help="maximum turns this process may dispatch (default: 6)",
+    )
+    drive.add_argument("turn_command", nargs=argparse.REMAINDER, help="command to run on each owned turn")
     return parser
 
 
@@ -462,16 +715,28 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"You are: {agent_id(args.agent)}")
             print(f"NEXT: {next_member}")
             print(f"DECISION: {decision}")
+        elif args.command == "watch":
+            return watch_discussion(root, args.id, args.agent, args.interval, args.timeout)
         elif args.command == "send":
             path, turn, next_member, subject = append_turn(
                 root, args.id, args.agent, load_message(args), args.next_agent, False
             )
             print(f"Recorded turn {turn}: {path}")
             print(invitation(args.id, args.next_agent, subject))
-        else:
+        elif args.command == "close":
             path, turn, _, _ = append_turn(root, args.id, args.agent, load_message(args), None, True)
             print(f"Closed XYZ agent2agent #{args.id} at turn {turn}")
             print(f"Relay file: {path}")
+        else:
+            if args.max_turns < 1:
+                raise Agent2AgentError("--max-turns must be at least one")
+            return drive_discussion(
+                root, args.id, args.agent, args.interval, args.timeout,
+                args.max_turns, args.turn_command,
+            )
+    except KeyboardInterrupt:
+        print("agent2agent: interrupted", file=sys.stderr)
+        return 130
     except Agent2AgentError as exc:
         print(f"agent2agent: {exc}", file=sys.stderr)
         return 2
