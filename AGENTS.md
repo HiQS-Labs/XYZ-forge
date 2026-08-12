@@ -136,6 +136,14 @@ local change.
   settings override), never something a session reaches for on its own reasoning that it's "just
   another supported builder option." If a task calls for a headless build lane and neither agy nor
   codex is available, stop and ask — don't default to spawning a headless Claude CLI turn.
+
+  **As the orchestrator, you are the final outer reviewer of any emitted artifact (e.g., an automated PR).**
+  You must treat an automation's emission as an event requiring inspection, not as an automatic success.
+  Before permitting an automated loop to proceed to its next iteration, you must query and verify the emitted PR:
+  1. **Base Branch Sanity:** The PR targets the active WIP branch (`development`), not `main`.
+  2. **Diff Size Sanity:** The diff size matches the logical scope of the fix (e.g. < 500 lines for targeted bugs).
+  3. **Verification Status:** A test gate ran against the final committed state (either CI or a local `validate.sh` run).
+  **Halt Condition:** If an emitted artifact fails any of these predicates, you must suspend the automation loop immediately.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),
