@@ -65,3 +65,6 @@ debug.log
 
 # Vendored per-repo harness copy (xyz-vendor.sh) — machine-local, never committed.
 .xyz/
+
+# GH-509: per-commit local gate evidence — machine-local, self-reported, never committed.
+.gate-evidence/

@@ -251,7 +251,7 @@ the repo public. That buys something no amount of routing can.
 | 2 | Ubuntu → advisory | **SHIPPED** `bc2e1d1d` — `canary-ubuntu`, `continue-on-error: true`, `if: always()` verdict step; contract test 26→30 with both assertions witnessed red |
 | 3 | Route `development` pushes | **SHIPPED** — classifier applied to `before..sha`, `--no-renames`, fail-closed on an unusable range; existing concurrency untouched |
 | 4 | macOS boundary job | **SHIPPED** — `boundary-macos` on `macos-latest`, `main` + `workflow_dispatch`, `./validate.sh` direct, no skip list, 45-min bound, prints its resolved SHA. Four assertions, four witnessed controls |
-| 5 | Local evidence | recorded per-commit result, fast mode, unconfigured-Mac probe (§5) |
+| 5 | Local evidence | **SHIPPED** — `utils/gate-record.sh` (refuses a dirty tree), `ci-local.sh --probe`, `utils/gate-status.sh`; `test/gh509-gate-evidence.sh` 17/0, registered |
 
 Phases 2-4 are independent. Phase 5 is the highest value and the only one that changes daily practice.
 
@@ -280,7 +280,7 @@ Phases 2-5:
       since a grep cannot prove GitHub's `continue-on-error` semantics.)*
 - [x] The local runner stops imitating Linux: `ci-local.sh` runs a superset of the hosted job, and the
       assertion that pinned them together is inverted and witnessed red.
-- [ ] Unresolved portability drift appears in the promotion output — the mechanism that makes the
+- [x] Unresolved portability drift appears in the promotion output — the mechanism that makes the
       advisory canary *read* rather than merely non-blocking.
 - [x] `development` pushes are routed; an empty/unreadable range fails closed to full. *(Three ways: all-zeros `before` on a new branch, an unreachable `before` after a force-push, and no range concept — all emit an empty path list into the already-tested zero-path branch.)*
 - [x] A renamed regression test selects `full`, proven by a witnessed control that drives a real `git mv`
@@ -290,8 +290,8 @@ Phases 2-5:
       `github.event_name` is in the existing concurrency key. Needs a witnessed control, not an
       assertion.)*
 - [ ] A green hosted **macOS** full run exists for a chosen commit.
-- [ ] A local full run writes a durable record keyed to the commit and refuses a dirty tree.
-- [ ] The operator surface reports distance-based status, including the canary line.
+- [x] A local full run writes a durable record keyed to the commit and refuses a dirty tree. *(Extracted to its own script so the REFUSAL is testable without a 15-minute suite run.)*
+- [x] The operator surface reports distance-based status, including the canary line. *(`utils/gate-status.sh`. Currently reports `NONE` — truthfully, since no hosted macOS run exists yet.)*
 - [ ] ~~A `docs`/`fast` run cannot cancel a running `full`~~ — **struck 2026-08-12 on agy's review.**
       `development` runs on advisory Ubuntu; preserving per-commit evidence for a signal that never
       gates is ceremony. Returns only if `development` runs are ever promoted back to gating.

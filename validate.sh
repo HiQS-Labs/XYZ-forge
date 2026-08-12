@@ -197,6 +197,7 @@ TESTS=(
   "swarm-preflight.sh"
   "ci-workflow.sh"
   "ci-route.sh"                  # GH-509 (docs/fast/full routing + changed-area test selection)
+  "gh509-gate-evidence.sh"       # GH-509 (per-commit local gate record + the operator surface)
   "xyz-completion.sh"
   "gh358-lock-instrumentation.sh" # GH-358 (concurrent append reports lost writes vs lock starvation)
   "xyz-harness-hooks.sh"

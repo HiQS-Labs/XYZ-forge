@@ -36,6 +36,32 @@
 #   ./ci-local.sh              # every step (~15-20 min; the suite dominates)
 #   ./ci-local.sh --fast       # everything EXCEPT the full validate.sh suite (~1 min)
 #   ./ci-local.sh --base REF   # also run the frozen-twin guard against REF (CI does this on PRs only)
+#   ./ci-local.sh --probe      # GH-509: the UNCONFIGURED-MAC probe (see below)
+#
+# ── --probe: what a new adopter's machine actually looks like (GH-509 / GH-520) ──────────────────
+# Runs with `codex`, `agy` and `aider` stripped from PATH, simulating a Mac where XYZ has just been
+# installed and none of the agent CLIs are set up yet. That is a real audience, not a hypothetical:
+# GH-380 describes someone installing Claude Code specifically to run the swarm, with nothing else on
+# the box.
+#
+# It is also the only cheap way to catch a whole defect class. On 2026-08-12 three suites passed here
+# and failed in CI purely because those binaries exist on this machine and not on a runner (#520).
+# This probe reproduced all three in ~90 seconds. It is NOT a Linux check — it is a
+# "does-this-work-before-the-operator-has-installed-everything" check, and it belongs on the same
+# platform we ship to.
+#
+# ── The per-commit record, and what it is NOT (GH-509) ───────────────────────────────────────────
+# A successful full run writes `.gate-evidence/<sha>.txt`. That answers exactly one question — "has
+# anyone run the whole suite against THIS commit?" — so an agent or operator can tell a verified HEAD
+# from an unverified one without re-running 15 minutes of tests on a hunch.
+#
+# It is deliberately NOT promotion evidence. An earlier draft of the GH-509 plan let a local record
+# qualify a commit for promotion; the agy review called that circular and was right — if a
+# self-reported record satisfies the boundary, the boundary is optional and buys nothing. Promotion
+# needs the hosted macOS run. This record is for the day-to-day question, not the release question.
+#
+# Refused from a dirty tree, and that refusal is the whole integrity story: a record keyed to a
+# commit hash while uncommitted edits sit in the tree would name a state that was never tested.
 
 set -uo pipefail
 
@@ -44,14 +70,49 @@ cd "$HERE" || exit 1
 
 FAST=0
 BASE=""
+PROBE=0
 while (($#)); do
   case "$1" in
     --fast) FAST=1; shift ;;
+    --probe) PROBE=1; shift ;;
     --base) BASE="${2:-}"; shift 2 ;;
-    -h|--help) sed -n '1,30p' "$0"; exit 0 ;;
+    -h|--help) sed -n '1,60p' "$0"; exit 0 ;;
     *) echo "ci-local: unknown argument: $1" >&2; exit 2 ;;
   esac
 done
+
+# GH-509/GH-520 — strip the agent CLIs from PATH for the probe. Done by rebuilding PATH without the
+# directories that hold them, rather than by unsetting *_BIN vars: the failure being reproduced is a
+# binary that is not on PATH at all, and a shim that falls back to a PATH lookup would defeat a
+# variable-only approach.
+if [ "$PROBE" -eq 1 ]; then
+  probe_dirs=""
+  for c in codex agy aider; do
+    p="$(command -v "$c" 2>/dev/null || true)"
+    [ -n "$p" ] && probe_dirs="$probe_dirs $(dirname "$p")"
+  done
+  if [ -n "$probe_dirs" ]; then
+    new_path=""
+    while IFS= read -r d; do
+      [ -n "$d" ] || continue
+      skip=0
+      for pd in $probe_dirs; do [ "$d" = "$pd" ] && { skip=1; break; }; done
+      [ "$skip" -eq 1 ] && continue
+      new_path="${new_path:+$new_path:}$d"
+    done < <(printf '%s\n' "${PATH//:/$'\n'}")
+    PATH="$new_path"; export PATH
+  fi
+  # Assert the condition rather than assume it. A probe that silently ran with the binaries still
+  # present would report green and mean nothing — the exact shape of failure this repo keeps paying
+  # for, and the reason GH-520's control aborts on the same check.
+  still=""
+  for c in codex agy aider; do command -v "$c" >/dev/null 2>&1 && still="$still $c"; done
+  if [ -n "$still" ]; then
+    echo "ci-local --probe: ABORT — still on PATH:$still (the probe would be meaningless)" >&2
+    exit 2
+  fi
+  printf '\033[33mmode: --probe (codex/agy/aider stripped from PATH — simulating a fresh Mac)\033[0m\n'
+fi
 
 PASSED=(); FAILED=()
 step() {  # <name> — everything after is the step body, run in a subshell
@@ -215,4 +276,14 @@ printf '\n\033[32mci-local: all steps passed\033[0m\n'
 printf 'Green on the shipping platform, with the full suite — including the one hosted ubuntu skips.\n'
 printf 'NOT a promotion qualification: this run is self-reported. Promotion needs a hosted macOS run\n'
 printf 'for this exact commit (GH-509 §6) — a clean machine, and evidence you did not produce.\n'
+
+# ── GH-509: record that THIS COMMIT was verified here ────────────────────────────────────────────
+# Only a full run earns a record. A --fast or --probe run deliberately does not exercise the suite,
+# so recording one would make a partial run indistinguishable from a complete one — which is the
+# whole failure mode this file keeps warning about in other contexts.
+if [ "$FAST" -eq 0 ] && [ "$PROBE" -eq 0 ]; then
+  printf '\n'
+  # Delegated rather than inlined, so the REFUSAL has a test that does not cost a 15-minute suite run.
+  bash utils/gate-record.sh || true
+fi
 exit 0
