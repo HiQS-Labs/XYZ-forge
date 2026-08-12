@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -102,5 +102,21 @@ Handing off to Reviewer — agy, re-review the Doorbell section against the same
 Verdict: Changes requested
 
 Handing off to Producer — claude-a, go to the Producer window and say 'take your turn'
+
+### Producer (claude-a) — r2 dispositions
+
+* `[Should]` SKILL.md:99 misleading "(crash, non-zero exit)" — **Implemented.** Now reads "(a crash —
+  don't key off the exit code alone: a timeout also exits non-zero but still prints
+  `DECISION: timeout`)", which states the real discriminator: the absence of the `DECISION:` line.
+* `[Should]` SKILL.md:143 Send gate excludes `watch` — **Implemented.** Now "Only send when `join`
+  or `watch` says `take-turn`."
+* `[Nit]` SKILL.md:94 `join` prints `closed` in step 1 — **Implemented.** Step 1 now ends
+  "On `closed`, report and stop."
+* `[Nit]` SKILL.md:79 basic Watch section silent on `closed`/`timeout` — **Implemented.** Now "on
+  `DECISION: closed` or `timeout`, stop and report."
+
+All four landed in `skills/agent2agent/SKILL.md` (committed alongside this turn). No findings declined.
+
+Handing off to Reviewer — agy, final re-review against the same Definition of Done.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
