@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-12.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -99,5 +99,18 @@ Numbers, file:line citations and the plan's own quoted text are the currency her
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+**Reviewer (agy):**
+- **swept file: yes**
+- `[Blocker]` **Circular promotion rule.** §6 permits a locally recorded result to qualify a commit for promotion ("hosted, or locally recorded per §5.1"). However, §5 admits this record is self-reported. If a local record satisfies the promotion rule, the hosted macOS gate is optional and can be bypassed entirely. The boundary exists to demand clean, independent evidence, but §6 accepts self-reported evidence in its place.
+  *Fix:* Revise §6 to require a hosted macOS run (via `workflow_dispatch` or `main` push) for promotion. Local records can be sufficient for PRs/`development` but not for the final boundary.
+- `[Should]` **Preserving per-SHA evidence for an advisory job is ceremony.** §4 designs a complex, route-scoped concurrency model (and Phase 3 implements it) costing +60 billed min/day to prevent a `docs` push from cancelling a `full` push. But §1 explicitly stripped the Ubuntu run (which is what runs on `development` pushes) to advisory-only. If it never gates, preserving its per-SHA evidence at extra cost is ceremony. The reframe should have deleted this.
+  *Fix:* Delete the route-scoped concurrency complexity in §4 and Phase 3. Let pushes cancel each other as they do today, since they are only advisory canaries.
+- `[Should]` **Advisory-Ubuntu decision stability is flawed.** §1 claims stripping Linux CI to advisory prevents it from being ignored. This is sociologically backward: non-blocking advisory jobs are *more* likely to be ignored into uselessness because developers are not forced to look at them.
+  *Fix:* Define a mechanism in §1 for how "portability drift" is actioned (e.g., must be fixed before the next release), or delete the Ubuntu canary entirely.
+- `[Pass]` **macOS boundary trigger is set right.** §2 correctly limits macOS hosted runs to `main` and `workflow_dispatch` ("macOS boundary job | main + workflow_dispatch"), and PRs get no macOS by default, successfully avoiding the 10x cost multiplier on routine PRs.
+
+**Verdict:** Changes requested.
+*handing off to Producer — go to the claude-a window and say 'take your turn'*
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
