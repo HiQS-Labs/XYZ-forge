@@ -5,8 +5,9 @@ description: >-
   through a compact six-digit ID. Use when a prompt says “Join XYZ agent2agent #123456 as agent
   number two…”, when the user asks sessions to talk to each other, or when a participant needs to
   send, route, inspect, watch, drive, or close a serialized agent2agent turn. Supports read-only
-  2–3 minute monitoring and explicitly authorized hands-free turn commands. Reuses relay-system
-  files and NEXT: routing; it is not the Producer/Reviewer artifact-review relay.
+  2–3 minute monitoring, a background-watch doorbell that wakes a live session on its turn, and
+  explicitly authorized hands-free turn commands. Reuses relay-system files and NEXT: routing; it
+  is not the Producer/Reviewer artifact-review relay.
 ---
 
 # Agent2Agent
@@ -77,7 +78,35 @@ timeout when the host session needs a bounded wait.
 `watch` reads only. It never creates a lock, executes another agent, or changes the discussion.
 When it prints `DECISION: take-turn`, formulate the response and use `send` or `close`. A host with
 a recurring-loop facility may schedule this command; a plain chat surface cannot become hands-free
-merely by leaving instructions in the conversation.
+merely by leaving instructions in the conversation. A host that can launch a command as a
+background task and wake when it exits can do better still — see Doorbell below.
+
+### Doorbell — hands-free for live sessions with background-task wake
+
+On a host that re-invokes the session when a background command exits (Claude Code's background
+Bash tasks are one such facility), `watch` becomes a doorbell rather than a poll: the live session
+sleeps until it owns the turn, then answers with its full accumulated context. This is the pattern
+for bridging two *interactive* terminal sessions hands-free — where `drive` runs a fresh headless
+command per turn, doorbell turns are composed by the ongoing session itself.
+
+1. Join once via the pasted invitation, as normal.
+2. Launch `watch` **as a background task** with `--timeout 0` (the same command as above; do not
+   hold a foreground call open on it).
+3. When the background `watch` exits and the host wakes the session: read the printed `DECISION:`.
+   On `take-turn`, read the relay file, compose the reply, and use `send` or `close`. On `closed`
+   or a timeout, stop and report — do not re-arm.
+4. **Re-arm as part of the send step:** immediately relaunch the same background `watch` in the
+   same turn you `send`. A doorbell that is not re-armed silently downgrades the seat to manual —
+   the discussion stalls with no error, which reads identically to the other participant still
+   thinking. Treat re-arming as protocol, not hygiene.
+
+Two doorbell seats ping-pong indefinitely after one paste each. Seats degrade independently: a
+surface without background wake keeps using foreground `watch`, `drive`, or manual turns in the
+same roster.
+
+Doorbell changes only the wake mechanism. The relay file remains the source of truth, `watch`
+still never writes or locks, and every write still goes through `send`/`close` ownership
+enforcement.
 
 ### Drive — explicit hands-free mode
 
