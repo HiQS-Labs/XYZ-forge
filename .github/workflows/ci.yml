@@ -134,12 +134,42 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            git diff --name-only "$BASE_SHA" HEAD | utils/ci-route.sh pull_request | tee -a "$GITHUB_OUTPUT"
+
+          # GH-509 Phase 3 — pushes classify from their pushed range, like PRs classify from a diff.
+          base=""
+          case "$EVENT_NAME" in
+            pull_request) base="$BASE_SHA" ;;
+            push)         base="$BEFORE_SHA" ;;
+          esac
+
+          # FAIL CLOSED, three ways, all reachable in practice:
+          #   * a NEW branch's first push sets `before` to all-zeros — there is no range;
+          #   * a FORCE-PUSH leaves a `before` that is no longer reachable in this clone;
+          #   * an event with no range concept at all (workflow_dispatch handles itself downstream).
+          # Any of these emits an empty path list, and ci-route.sh's zero-path branch routes to full.
+          # Reusing that already-tested path beats inventing a second fail-closed rule that would
+          # need its own proof.
+          usable=1
+          if [ -z "$base" ] || [ -z "${base//0/}" ]; then
+            usable=0
+          elif ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            usable=0
+          fi
+
+          if [ "$usable" -eq 1 ]; then
+            # `--no-renames` is load-bearing, not tidiness. With rename detection ON (git's default)
+            # `--name-only` prints ONLY the destination path for a rename, so a renamed regression
+            # test looks like an ordinary changed file that still exists — and ci-route.sh's
+            # fail-closed branch for a vanished test is never reached. That branch's own comment
+            # says "deleted/renamed"; without this flag it only ever saw deletions.
+            git diff --no-renames --name-only "$base" HEAD \
+              | utils/ci-route.sh "$EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
           else
-            utils/ci-route.sh "$EVENT_NAME" </dev/null | tee -a "$GITHUB_OUTPUT"
+            echo "ci-route: no usable range for $EVENT_NAME (base='${base:-<empty>}') — failing closed to full" >&2
+            : | utils/ci-route.sh "$EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
           fi
 
       - name: Install shellcheck

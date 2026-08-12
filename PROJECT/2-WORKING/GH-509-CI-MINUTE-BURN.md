@@ -249,7 +249,7 @@ the repo public. That buys something no amount of routing can.
 |---|---|---|
 | 1 | PR classifier | **SHIPPED** (PR #511) |
 | 2 | Ubuntu → advisory | **SHIPPED** `bc2e1d1d` — `canary-ubuntu`, `continue-on-error: true`, `if: always()` verdict step; contract test 26→30 with both assertions witnessed red |
-| 3 | Route `development` pushes | classifier applied to `before..sha`; **existing concurrency untouched** (§3, §4) |
+| 3 | Route `development` pushes | **SHIPPED** — classifier applied to `before..sha`, `--no-renames`, fail-closed on an unusable range; existing concurrency untouched |
 | 4 | macOS boundary job | **SHIPPED** — `boundary-macos` on `macos-latest`, `main` + `workflow_dispatch`, `./validate.sh` direct, no skip list, 45-min bound, prints its resolved SHA. Four assertions, four witnessed controls |
 | 5 | Local evidence | recorded per-commit result, fast mode, unconfigured-Mac probe (§5) |
 
@@ -282,9 +282,9 @@ Phases 2-5:
       assertion that pinned them together is inverted and witnessed red.
 - [ ] Unresolved portability drift appears in the promotion output — the mechanism that makes the
       advisory canary *read* rather than merely non-blocking.
-- [ ] `development` pushes are routed; an empty/unreadable range fails closed to full.
-- [ ] A renamed regression test selects `full`, proven by a witnessed control (`git diff --name-only`
-      cannot support this — the classifier needs `--no-renames` or status-aware input).
+- [x] `development` pushes are routed; an empty/unreadable range fails closed to full. *(Three ways: all-zeros `before` on a new branch, an unreachable `before` after a force-push, and no range concept — all emit an empty path list into the already-tested zero-path branch.)*
+- [x] A renamed regression test selects `full`, proven by a witnessed control that drives a real `git mv`
+      through the workflow's own command. `test/baselines/GH-509-phase3-negative-control.md`.
 - [x] The macOS boundary job invokes `validate.sh` directly with no skip list. *(Declared and asserted; `test/baselines/GH-509-phase4-negative-control.md`. This also closes **D1** — the 20-test authoritative Python layer now runs at the boundary, having never run in CI before.)*
 - [ ] A `push` cannot cancel a running `workflow_dispatch` boundary run. *(Believed already true —
       `github.event_name` is in the existing concurrency key. Needs a witnessed control, not an

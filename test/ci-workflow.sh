@@ -66,7 +66,11 @@ require_marker "bash -n" "workflow references bash -n"
 require_marker "node --check" "workflow references node --check"
 require_marker ".claude/settings" "workflow references .claude/settings JSON validation"
 require_marker "utils/pdda/pdda.sh run" "workflow references utils/pdda/pdda.sh run"
-require_marker "utils/ci-route.sh pull_request" "workflow delegates PR routing to the tested classifier"
+# GH-509 Phase 3 changed the literal this pinned. It was `utils/ci-route.sh pull_request`, back when
+# only PRs were classified; the call is now `utils/ci-route.sh "$EVENT_NAME"` because pushes are
+# routed too. The INVARIANT is unchanged and is what this asserts: routing is delegated to the tested
+# classifier rather than reimplemented inline in YAML, where it would have no test at all.
+require_marker 'utils/ci-route.sh "$EVENT_NAME"' "workflow delegates routing to the tested classifier"
 require_marker "steps.route.outputs.pdda_needed == 'true'" "PDDA is path-routed instead of unconditional"
 require_marker "steps.route.outputs.route == 'fast'" "workflow declares the fast PR route"
 require_marker "steps.route.outputs.route == 'full'" "workflow declares the full integration route"
@@ -130,6 +134,31 @@ PY
   fi
 else
   skip "PyYAML unavailable; YAML parse check skipped"
+fi
+
+# ── GH-509 Phase 3: pushes are routed, and renames cannot escape the full gate ───────────────────
+# The classifier is tested in test/ci-route.sh. What can only be asserted HERE is the command the
+# workflow actually hands it, because that is where the rename defect lives.
+if grep -q 'git diff --no-renames --name-only' "$WORKFLOW"; then
+  pass "the workflow collects changed files with --no-renames (a rename's source path stays visible)"
+else
+  fail "GH-509: the workflow must use --no-renames — plain --name-only prints only a rename's DESTINATION, so a renamed regression test reads as an ordinary changed file and never reaches the fail-closed branch"
+fi
+
+# A push must be classified from its own range, not handed to a blanket-full branch.
+if grep -q 'BEFORE_SHA: ${{ github.event.before }}' "$WORKFLOW"; then
+  pass "the workflow supplies the pushed range so a push can be classified"
+else
+  fail "GH-509: no github.event.before — pushes cannot be classified and revert to the 72% blanket-full burn"
+fi
+
+# The three ways a range can be unusable (new branch, force-push, no range concept) must all fail
+# CLOSED. The workflow does this by handing ci-route.sh an empty path list, reusing the zero-path
+# branch that already has its own test rather than inventing a second fail-closed rule.
+if grep -q 'failing closed to full' "$WORKFLOW"; then
+  pass "an unusable push range fails closed to full"
+else
+  fail "GH-509: no fail-closed path for an unusable range — a force-push or new branch would route on a bad diff"
 fi
 
 # ── GH-509 Phase 4: the macOS promotion boundary ─────────────────────────────────────────────────
