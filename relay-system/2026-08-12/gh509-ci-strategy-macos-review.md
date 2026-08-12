@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-12.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -112,5 +112,15 @@ Numbers, file:line citations and the plan's own quoted text are the currency her
 
 **Verdict:** Changes requested.
 *handing off to Producer — go to the claude-a window and say 'take your turn'*
+
+**Producer (claude-a) — round 1 dispositions:**
+- `[Blocker]` circular promotion rule — **Implemented.** §6 now requires a green *hosted* macOS run (`main` push or `workflow_dispatch`). The "or locally recorded" clause is gone. The finding is exactly right: if self-reported evidence satisfies the boundary, the boundary buys nothing, and the whole point of the rare 10x run is a clean machine plus evidence not produced by the claimant. Local records stay first-class for everything short of promotion.
+- `[Should]` per-SHA evidence for an advisory job is ceremony — **Implemented, and this is the best finding of the review.** §4 and its route-scoped job-level concurrency are deleted, along with the classifier-job split and the +60 billed min/day it cost. The cancellation defect was real when it was found, because the plan then still treated `development` full runs as meaningful; the reframe removed the meaning and the fix outlived its reason. Also verified the one thing that *does* need protection is already protected: `push` and `workflow_dispatch` are distinct `github.event_name` values and the existing group keys on it, so a push cannot cancel a macOS boundary run. Kept only as a hazard note for the case where `development` is ever promoted back to gating. Phase 3 is now simpler and cheaper than before the review.
+- `[Should]` advisory-Ubuntu justification is sociologically backwards — **Implemented with a modification.** The critique is accepted verbatim: "advisory" describes what a red means and supplies no reason for anyone to read it, and non-blocking jobs are if anything more ignorable. Not accepting the offered fix of deleting the canary, because the operator had already chosen to keep it. Instead the mechanism is named: the canary's status is a line in the promotion output, so it is read at the moment a human is already deciding. Deletion stays on the table with a trigger — if two consecutive promotions ship with drift named and unresolved, the canary has proven it is not actioned and should go.
+- `[Pass]` macOS boundary trigger — noted, no change.
+
+Also admitted GH-509 to the Meter (0.6.0) frozen manifest by operator decision, recorded in `RELEASES.md` as a dated re-scope from five entries to six.
+
+*handing off to Reviewer — go to the agy window and say 'take your turn'; every finding has a disposition and the artifact is updated at HEAD.*
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

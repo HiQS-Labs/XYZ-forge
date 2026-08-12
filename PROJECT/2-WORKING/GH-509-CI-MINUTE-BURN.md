@@ -113,9 +113,20 @@ It keeps running, at 1×, because Linux support is on the roadmap and this is th
 warning of portability drift we will get. It **never gates, never blocks, and its red is never
 reported as breakage** — its failure means "portability drift", not "broken".
 
-The alternative considered and rejected was deleting Linux CI entirely. A canary that cannot cry wolf
-earns its minutes; one that cried wolf for five unread hours on 2026-08-12 is worse than none. Stripping
-it to advisory is what makes the difference.
+**agy pushed back on the justification, and was right to.** The previous draft claimed that stripping
+the canary to advisory *prevents* it being ignored. That is backwards: a non-blocking job is if
+anything **more** likely to be ignored, because nothing forces anyone to look. "Advisory" describes
+what its red means; it supplies no reason for anyone to read it.
+
+So the mechanism is named instead of assumed: **the canary's status is a line in the promotion output
+(§7), and a promotion with unresolved drift must name it.** That is the only reliable way to get
+something read — attach it to a moment when a human is already looking and already deciding. A
+continuously-emitted advisory nobody is obliged to consult is exactly the five unread hours of
+2026-08-12, repeated more cheaply.
+
+The alternative considered and rejected was deleting Linux CI entirely. That stays on the table: if a
+promotion ever ships with drift named and unresolved twice running, the canary has proven it is not
+being actioned, and it should be deleted rather than kept as decoration.
 
 ### 2. Hosted macOS runs at the promotion boundary only
 
@@ -144,28 +155,31 @@ Same classifier as pull requests, applied to the whole pushed range (`before..sh
 Accepted trade-off, stated plainly: an interaction between two separately fast-safe changes can go
 undetected until a qualifying run. That is what §4 exists to bound.
 
-### 4. Preserve per-SHA evidence when routing pushes
+### 4. Concurrency stays exactly as it is — DELETED, and this is the fourth thing the reframe should have killed
 
-All `development` pushes currently share one concurrency group with `cancel-in-progress: true`. Once
-routed, a 90-second `docs` run would **cancel a running `full`**, and "is this commit proven?" would
-answer *no* for a commit that was never broken. Three of the last fourteen `development` runs are
-already `cancelled`; today it is invisible because a cancelled full is replaced by another full.
+The previous draft spent a section here, and a phase, on route-scoped job-level concurrency: a
+non-cancelling classifier job so that a 90-second `docs` push could not cancel a running `full` on
+`development`. It cost **+60 billed min/day** in per-job rounding, and it was written to protect
+per-commit evidence.
 
-The obvious fix — adding the route to the workflow-level `concurrency` key — **is not implementable**:
-workflow-level concurrency is evaluated before any job runs and cannot read a job output. Job-level
-`concurrency` *can* reference `needs.<job>.outputs.*`. So: a small non-cancelling classifier job, then
-route-scoped job-level groups.
+**agy killed it on review, correctly.** `development` pushes run on **Ubuntu**, and §1 just made Ubuntu
+advisory. Protecting the per-commit evidence of a signal that never gates anything, at extra cost, is
+ceremony by this document's own definition. The cancellation defect was real *when it was found* — the
+plan then still treated `development` full runs as meaningful. The reframe removed the meaning and the
+fix outlived its reason.
 
-- `docs` supersedes only `docs` on the same branch; `fast` only `fast`;
-- `full` supersedes only a newer `full` on the same branch — adjudicated toward cost, since a
-  superseded commit can be re-qualified on demand via `workflow_dispatch`;
-- **`docs` and `fast` must never cancel a running `full`**;
-- `workflow_dispatch` stays in its own lane and is never cancelled by a push.
+The one thing that does need protection is already protected: `workflow_dispatch` and `push` are
+distinct `github.event_name` values and the existing group keys on it, so **a push cannot cancel a
+macOS boundary run today.** Verified against the current `concurrency:` block.
 
-**Cost of this fix, stated because GH-509 warns about exactly it** (*"per-job rounding can increase
-billed usage"*): splitting out the classifier bills two jobs per run instead of one, and a ~10-second
-job still rounds to a minute. At ~60 runs/day that is roughly **+60 billed min/day** against the ~396
-the routing removes. Net strongly positive — but it belongs in the measurement, not absorbed quietly.
+So: keep the existing workflow-level group, let pushes cancel pushes, and **delete the classifier-job
+split along with its +60 min/day.** Routing `development` pushes (§3) gets simpler *and* cheaper than
+the previous draft claimed.
+
+*Kept as a hazard note rather than a design:* if `development` runs are ever promoted back to gating,
+this defect returns, and the workflow-level `concurrency` key cannot fix it — that key is evaluated
+before any job runs and cannot read a job output. Only job-level `concurrency` can reference
+`needs.<job>.outputs.*`.
 
 ### 5. Local Mac testing becomes first-class
 
@@ -189,10 +203,17 @@ person making the claim.
 
 ### 6. The promotion rule
 
-> **No commit is promoted from `development` unless that exact commit has a green macOS full result —
-> hosted, or locally recorded per §5.1.**
+> **No commit is promoted from `development` unless that exact commit has a green *hosted* macOS full
+> result** — `push` to `main` or `workflow_dispatch`.
 
-Ubuntu green proves nothing about what we ship and does not satisfy this.
+Ubuntu green proves nothing about what we ship and does not satisfy this. **Neither does a local
+record** — and the previous draft's "hosted, *or* locally recorded" was circular, caught by agy on
+review: if a self-reported record satisfies the boundary, the boundary is optional and buys exactly
+nothing. The whole reason the rare 10× run exists is that it supplies a clean machine and evidence not
+produced by the person making the claim.
+
+Local records (§5.1) remain first-class for everything short of promotion — day-to-day work, PRs, and
+`development` — which is where they carry their weight.
 
 ### 7. The detector must be readable
 
@@ -202,6 +223,7 @@ because nothing could stop it. So the operator surface reports structured status
 
 ```
 development HEAD <sha>; last green macOS full <sha>, <distance> commits / <age>; status: exact | behind | red | none
+portability canary (ubuntu): green | drift since <sha> (<n> runs)
 ```
 
 `behind` is normal WIP information. `exact` is promotion-qualified. `red` and `none` are explicit *not
@@ -216,17 +238,19 @@ the repo public. That buys something no amount of routing can.
 | # | Phase | Contents |
 |---|---|---|
 | 1 | PR classifier | **SHIPPED** (PR #511) |
-| 2 | Ubuntu → advisory | non-blocking job, red reported as portability drift, not breakage |
-| 3 | Route `development` pushes | classifier job + route-scoped job-level concurrency (§3, §4) |
+| 2 | Ubuntu → advisory | non-blocking job; red is portability drift, surfaced in the promotion output (§1, §7) |
+| 3 | Route `development` pushes | classifier applied to `before..sha`; **existing concurrency untouched** (§3, §4) |
 | 4 | macOS boundary job | `main` + `workflow_dispatch`, `validate.sh` direct, no skips |
 | 5 | Local evidence | recorded per-commit result, fast mode, unconfigured-Mac probe (§5) |
 
 Phases 2-4 are independent. Phase 5 is the highest value and the only one that changes daily practice.
 
-**Scope note.** This work is **operator-directed 2026-08-12** and is deliberately **not** admitted to a
-frozen release manifest — it is repo infrastructure, and the frozen-manifest rule governs release
-scope. If it should count toward Meter (0.6.0), that is a one-line re-scope for the operator to make
-explicitly rather than something this document assumes.
+Phase 3 is **smaller and cheaper than the previous draft**: agy's review deleted the classifier-job
+split and the route-scoped concurrency it existed to enable, taking the +60 billed min/day with it.
+
+**Scope note.** Operator-directed 2026-08-12, and **admitted to Meter (0.6.0)** the same day by explicit
+operator decision — recorded in `RELEASES.md` as a dated re-scope from five entries to six, not as a
+list that quietly grew. It is a real thematic fit: what a run costs, and what it checks before spending.
 
 ## Acceptance
 
@@ -242,14 +266,21 @@ Phase 1 (shipped):
 Phases 2-5:
 
 - [ ] A Ubuntu failure is reported as advisory and cannot mark a run as breakage.
+- [ ] Unresolved portability drift appears in the promotion output — the mechanism that makes the
+      advisory canary *read* rather than merely non-blocking.
 - [ ] `development` pushes are routed; an empty/unreadable range fails closed to full.
-- [ ] A `docs` or `fast` run cannot cancel a running `full`, proven by a witnessed control.
 - [ ] A renamed regression test selects `full`, proven by a witnessed control (`git diff --name-only`
       cannot support this — the classifier needs `--no-renames` or status-aware input).
 - [ ] The macOS boundary job invokes `validate.sh` directly with no skip list.
+- [ ] A `push` cannot cancel a running `workflow_dispatch` boundary run. *(Believed already true —
+      `github.event_name` is in the existing concurrency key. Needs a witnessed control, not an
+      assertion.)*
 - [ ] A green hosted **macOS** full run exists for a chosen commit.
 - [ ] A local full run writes a durable record keyed to the commit and refuses a dirty tree.
-- [ ] The operator surface reports distance-based status.
+- [ ] The operator surface reports distance-based status, including the canary line.
+- [ ] ~~A `docs`/`fast` run cannot cancel a running `full`~~ — **struck 2026-08-12 on agy's review.**
+      `development` runs on advisory Ubuntu; preserving per-commit evidence for a signal that never
+      gates is ceremony. Returns only if `development` runs are ever promoted back to gating.
 - [ ] ~~Verify required-check behaviour~~ — **struck as unsatisfiable**: no branch protection exists on
       this plan. Replaced by the operator surface.
 
@@ -275,3 +306,22 @@ the other's proposals — a nightly full run (Claude's, withdrawn) and a workflo
 The operator's macOS-target reframe then deleted the blocker, the equivalence phase, and the
 anti-local-gate argument that both models had agreed on. Recorded because two models concurring is not
 evidence when they share a false premise.
+
+A third model reviewed the replan — **agy**, via the shipped relay harness
+(`relay-system/2026-08-12/gh509-ci-strategy-macos-review.md`, `--review-once`, verdict *Changes
+requested*). It was asked to find the fourth thing the reframe should have deleted and did:
+
+- **[Blocker]** the promotion rule was **circular** — "hosted, *or* locally recorded" let self-reported
+  evidence satisfy the boundary whose entire purpose is independent evidence. Accepted; §6 now requires
+  a hosted run.
+- **[Should]** the route-scoped concurrency design was **ceremony** — it protected per-commit evidence
+  for `development`, which the same document had just made advisory. Accepted; §4 and the +60 min/day
+  classifier split are deleted, and the plan got cheaper as a result.
+- **[Should]** the advisory-canary justification was **sociologically backwards** — non-blocking jobs
+  are *more* ignorable, not less. Accepted with a modification: rather than delete the canary (the
+  operator had already chosen to keep it), its status is now attached to the promotion output, which is
+  the only moment a human is reliably reading.
+- **[Pass]** the macOS boundary trigger, cited.
+
+Worth noting which model caught what: the two that co-authored the plan both missed the ceremony in
+their own design, and the one that had not seen it built found it first.
