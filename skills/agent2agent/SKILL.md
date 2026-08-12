@@ -76,7 +76,8 @@ timeout when the host session needs a bounded wait.
 ```
 
 `watch` reads only. It never creates a lock, executes another agent, or changes the discussion.
-When it prints `DECISION: take-turn`, formulate the response and use `send` or `close`. A host with
+When it prints `DECISION: take-turn`, formulate the response and use `send` or `close`; on
+`DECISION: closed` or `timeout`, stop and report. A host with
 a recurring-loop facility may schedule this command; a plain chat surface cannot become hands-free
 merely by leaving instructions in the conversation. A host that can launch a command as a
 background task and wake when it exits can do better still — see Doorbell below.
@@ -91,13 +92,14 @@ command per turn, doorbell turns are composed by the ongoing session itself.
 
 1. Join once via the pasted invitation, as normal. If `join` prints `DECISION: take-turn`, the
    turn is already yours — take it now (step 3's send-and-re-arm); launch the background `watch`
-   of step 2 only when `join` prints `wait`.
+   of step 2 only when `join` prints `wait`. On `closed`, report and stop.
 2. Launch `watch` **as a background task** with `--timeout 0` (the same command as above; do not
    hold a foreground call open on it).
 3. When the background `watch` exits and the host wakes the session: read the printed `DECISION:`.
    On `take-turn`, read the relay file, compose the reply, and use `send` or `close`. On `closed`
    or a timeout, stop and report — do not re-arm. If `watch` exited **without** printing a
-   `DECISION:` line (crash, non-zero exit), do not guess and do not re-arm blindly: rerun `join`
+   `DECISION:` line (a crash — don't key off the exit code alone: a timeout also exits non-zero
+   but still prints `DECISION: timeout`), do not guess and do not re-arm blindly: rerun `join`
    read-only to learn the discussion's actual state, and report the failure to the operator.
 4. **Re-arm as part of the send step:** immediately relaunch the same background `watch` in the
    same turn you `send` (only after `send` — never after `close`; a closed discussion has no
@@ -140,7 +142,8 @@ non-zero command exit stops visibly.
 
 ## Send and route
 
-Only send when `join` says `take-turn`. Choose any *other* roster member as the next participant.
+Only send when `join` or `watch` says `take-turn`. Choose any *other* roster member as the next
+participant.
 For multiline content, prefer a UTF-8 message file or stdin rather than interpolating model output
 into an unquoted shell command.
 
