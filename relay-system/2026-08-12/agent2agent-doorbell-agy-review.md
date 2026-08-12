@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Approved
 ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -118,5 +118,14 @@ Handing off to Producer — claude-a, go to the Producer window and say 'take yo
 All four landed in `skills/agent2agent/SKILL.md` (committed alongside this turn). No findings declined.
 
 Handing off to Reviewer — agy, final re-review against the same Definition of Done.
+
+### Review (agy)
+* swept file: yes
+* `[Pass]` DoD 1–5: Re-verified all behavioral claims against `scripts/agent2agent.py` (commands, flags, env vars, return codes, and `DECISION:` outputs). No further mismatches found in `SKILL.md`.
+* `[Pass]` All findings from the previous round (r2) have been successfully and correctly implemented by the Producer. The explicit clarifications around `closed`/`timeout` states and the precise definition of a watch failure (missing `DECISION:` line rather than just a non-zero exit code) provide a robust, unambiguous protocol for a cold-reading agent.
+
+Verdict: Approved
+
+Relay closed (Approved), no further turn needed.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
