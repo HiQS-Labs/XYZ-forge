@@ -155,6 +155,17 @@ sleep 300
 HANG_EOF
 chmod +x "$HANG"
 
+# GH-232, walked into again. `marathon_drive.py` probes the REVIEWER binary (CODEX_BIN, default
+# `codex`) before anything else runs, so with no `codex` on PATH the driver fail-fasts, the phase
+# never reaches dispatch, and part C reports "did not reproduce" — which is true, but about the
+# probe rather than about the interruption under test. This file stubbed the builder and not the
+# reviewer, so it passed on a developer machine (a real `codex` is installed there) and went red on
+# ubuntu CI: the exact failure mode ci.yml already documents.
+REVIEWER_STUB="$WORK/reviewer-stub"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$REVIEWER_STUB"
+chmod +x "$REVIEWER_STUB"
+export CODEX_BIN="$REVIEWER_STUB"
+
 PHASES="$A/marathon-system"
 
 # Launch the driver in its OWN SESSION, and this is not incidental tidiness. The first version
