@@ -488,6 +488,12 @@ def main():
     parser.add_argument("--require-clean", dest="require_clean", action="store_true")
     parser.add_argument("--requires-test", dest="requires_test")  # GH-249: nominated test must change
     parser.add_argument("--force", dest="force", action="store_true")
+    # GH-402: deliberately NOT folded into --force. --force bypasses the per-lane attempt cap, which
+    # is a "you have tried this too often" bound; this is a "you are about to commit to trunk" bound.
+    # One flag for both would mean an operator retrying a flaky lane silently acquires permission to
+    # land on main, which is the kind of coupling that is obvious only after it happens.
+    parser.add_argument("--allow-trunk-commit", dest="allow_trunk_commit", action="store_true",
+                        help="permit committing to the receiving repo's trunk/default branch (GH-402)")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--log-github", dest="log_github", action="store_true")  # GH-284 P2 / GH-322
     parser.add_argument("--help", action="store_true")
@@ -954,11 +960,25 @@ def main():
                 return m.group(1)
         return ""
 
-    def trunk_ref():
-        ref = _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"])
+    def trunk_ref(repo=None):
+        """The repo's trunk: `origin/HEAD` if resolvable, else whatever HEAD points at right now.
+
+        GH-402: takes a repo path. It was hardcoded to `root`, which is correct for the run-log's
+        landed-yes/no probe (its only caller) and wrong for the branch guard below, where the repo
+        that RECEIVES the commit may be `--target-root` — a different repo, with a different trunk.
+        Defaulting to `root` keeps the existing caller byte-identical.
+
+        The fallback matters and is not a rounding error: a repo with no `origin` (a fresh fixture, a
+        local-only clone) has no origin/HEAD, and returning nothing there would silently disable the
+        guard in exactly the setup where a stray commit is least recoverable. Falling back to the
+        CURRENT branch makes the guard read "you are on the branch you started on", which for a repo
+        with no remote is the best available meaning of trunk.
+        """
+        repo = repo or root
+        ref = _cmd_out(["git", "-C", repo, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"])
         if ref and ref != "origin/HEAD":
             return ref
-        return _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"])
+        return _cmd_out(["git", "-C", repo, "symbolic-ref", "--quiet", "--short", "HEAD"])
 
     def marathon_run_github_log(driver_exit):
         if not (args.log_github and drive_started[0]):
@@ -2022,6 +2042,76 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     # under --target-root only CODE changes land elsewhere, and the relay/escalation/transcript stay
     # here. Checking the target instead would be the plausible-looking wrong answer.
     preflight_write_set_trackable(root, [relay_file, os.path.join(phase_dir, "ESCALATION.md")])
+
+    # GH-402: refuse to make the first commit if the RECEIVING repo is sitting on its trunk.
+    #
+    # `marathon/<slug>-<date>` is advisory text in a preflight packet and nothing enforces it, so a
+    # marathon commits to whatever branch the target happens to have checked out. The driver is the
+    # last common point on every commit path — relay turns, escalations, transcripts all funnel
+    # through here — which is why the fix belongs at this one site rather than in each writer.
+    #
+    # Measured against `args.target_root or root`, the existing idiom for "the repo this run writes
+    # to", and against THAT repo's trunk rather than the harness's: under --target-root they are
+    # different repos with different defaults, and checking the harness's would be the plausible
+    # wrong answer that passes every test written against a same-repo fixture.
+    def refuse_trunk_commit():
+        commit_root = args.target_root or root
+        # The carve-out preflight already computes: risk==1 in an independent zone is allowed to
+        # proceed on the current branch without asking (SP_SKIP_BRANCH_PROMPT). Honoured from the
+        # environment rather than by parsing the packet — the driver does not read packets, and
+        # GH-386 is what happens when something pretends it does.
+        if os.environ.get("SP_SKIP_BRANCH_PROMPT") == "1":
+            log("branch guard: skipped — preflight recorded the risk=1/independent-zone carve-out (GH-402)")
+            return
+        if args.allow_trunk_commit or os.environ.get("MARATHON_ALLOW_TRUNK_COMMIT") == "1":
+            log("branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)")
+            return
+
+        current = _cmd_out(["git", "-C", commit_root, "symbolic-ref", "--quiet", "--short", "HEAD"])
+        if not current:
+            return          # detached HEAD: not trunk, and not this guard's business
+
+        # Fires only on a SHARED trunk — one `origin/HEAD` actually resolves to. This is a narrowing
+        # of trunk_ref()'s more permissive fallback, and it is deliberate on both counts.
+        #
+        # The harm this guard exists to prevent is stated in its own message: a marathon's turns
+        # commit continuously, so a run that lands on trunk cannot be un-landed by stopping it, only
+        # by rewriting history SOMEONE ELSE MAY ALREADY HAVE PULLED. In a repo with no remote there
+        # is no someone else — a stray commit is local and `git reset` undoes it completely. Blocking
+        # there would be spending a hard stop on a fully recoverable state.
+        #
+        # It is also what keeps the guard testable at all. Every fixture in this suite is a fresh
+        # `git init` on `main` with no origin; with trunk_ref()'s current-branch fallback, this would
+        # refuse to run in every one of them — a guard that cannot be exercised, which is the same
+        # trap GH-388's durability rule hit and was scoped away from for the same reason.
+        origin_head = _cmd_out(["git", "-C", commit_root, "symbolic-ref", "--quiet", "--short",
+                                "refs/remotes/origin/HEAD"])
+        if not origin_head or origin_head == "origin/HEAD":
+            return
+        trunk_branch = origin_head.split("/", 1)[1] if origin_head.startswith("origin/") else origin_head
+        if current != trunk_branch:
+            return
+
+        suggested = os.environ.get("SP_SUGGESTED_BRANCH", "")
+        eprint(f"marathon-drive: BLOCKED — {commit_root} is checked out on its trunk branch "
+               f"'{current}', and this run is about to commit to it.")
+        eprint("")
+        eprint("  Nothing has been committed yet. A marathon's commits belong on a branch: its turns")
+        eprint("  commit continuously, so a run that lands on trunk cannot be un-landed by stopping")
+        eprint("  it — only by rewriting history someone else may already have pulled.")
+        eprint("")
+        if suggested:
+            eprint(f"    git -C {commit_root} checkout -b {suggested}")
+            eprint("  (the branch preflight already suggested for this lane)")
+        else:
+            eprint(f"    git -C {commit_root} checkout -b marathon/<slug>-<date>")
+        eprint("")
+        eprint("  Or, if committing to trunk really is intended, pass --allow-trunk-commit.")
+        eprint("  Deliberately NOT covered by --force: that bypasses the per-lane attempt cap, and")
+        eprint("  retrying a flaky lane must not silently grant permission to land on trunk (GH-402).")
+        sys.exit(2)
+
+    refuse_trunk_commit()
 
     os.makedirs(phase_dir, exist_ok=True)
     with open(relay_file, 'w') as f:

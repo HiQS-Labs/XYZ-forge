@@ -2,7 +2,7 @@
 gh_issue: 402
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/402
 title: "A marathon commits to whatever branch the target has checked out — the suggested marathon/<slug> branch is advisory text nothing enforces"
-status: "2-WORKING — captured 2026-08-10 for release 0.3.0 Nightwatch. Issue has no `## Acceptance` section; criteria authored in a separately-titled section below, not inside `## Acceptance`. Phase 1 (the driver refusal) cannot be a marathon lane — its write-set is `utils/py/marathon_drive.py`, the running driver — and must ship as a direct PR. Awaiting preflight for phase 2 only."
+status: "BUILT 2026-08-11 (Phase 1) as backlog of release 0.3.0 Nightwatch. The driver refuses before its first commit when the RECEIVING repo is on its shared trunk; --allow-trunk-commit and preflight's risk=1/independent carve-out are the two documented ways past, and --force deliberately is NOT one. Scoped to a trunk origin/HEAD resolves to. test/gh402-branch-enforcement.sh 13/0, control 8 red. Phase 2 (the swarm_preflight ready=0 mirror) remains the issue's own optional item and is not built."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel

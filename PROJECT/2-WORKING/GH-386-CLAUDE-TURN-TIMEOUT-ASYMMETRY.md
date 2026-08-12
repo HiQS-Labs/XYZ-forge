@@ -2,7 +2,7 @@
 gh_issue: 386
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/386
 title: "claude-turn caps at 600s while every other builder defaults to 900s, and the packet's computed RELAY_TURN_TIMEOUT_S is never exported — a phase sized for 900 ran at 600"
-status: "2-WORKING — captured 2026-08-10 for release 0.3.0 Nightwatch. Both halves independently re-verified against source on 2026-08-10; both still reproduce. No acceptance criteria existed on the issue — authored onto this doc in a separate labelled section. Awaiting preflight."
+status: "BUILT 2026-08-11 as backlog of release 0.3.0 Nightwatch. claude raised 600->900 on both lanes (the cap was never a cost control -- CLAUDE_MAX_BUDGET is); the packet budget now names turn_timeout_s, the field marathon.sh actually applies; and the 300/600/900 ladder was rebuilt so it can only ever suggest MORE than the default. test/gh386-turn-budget-honesty.sh 10/0, control 9 red."
 created: 2026-08-10
 updated: 2026-08-10
 owner: noel
