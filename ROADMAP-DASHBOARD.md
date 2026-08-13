@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 177 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
+Summary: 178 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-528 · measure and recalibrate the test suite — spike verdict + experimental parallel gate | — | [GH-528-TEST-SUITE-RECALIBRATION.md](PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md) · [#528](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/528) |
 | GH-510 · Agent2Agent watch/drive operating levels | — | [GH-510-AGENT2AGENT-WATCH-DRIVE.md](PROJECT/2-WORKING/GH-510-AGENT2AGENT-WATCH-DRIVE.md) · [#510](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/510) |
 | GH-509 · tier CI to stop per-push Actions minute burn | — | [GH-509-CI-MINUTE-BURN.md](PROJECT/2-WORKING/GH-509-CI-MINUTE-BURN.md) · [#509](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/509) |
 | GH-497 · agent2agent compact multi-session rendezvous | ✅ | [GH-497-AGENT2AGENT.md](PROJECT/2-WORKING/GH-497-AGENT2AGENT.md) · [#497](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/497) |

@@ -1,0 +1,5 @@
+FIRSTHAND_COUNT=14
+ECHOED_COUNT=3
+ECHOED `validate.sh`
+ECHOED `pre-advance-failed`
+ECHOED `pre-advance-failed`

@@ -42,8 +42,14 @@ This file is the first entry point for an AI agent working in this repo: it tell
 For repo correctness:
 
 ```bash
-./validate.sh
+./validate.sh              # canonical gate — sequential, ~16 min, the only run that qualifies a claim
+./validate.sh --parallel 8 # EXPERIMENTAL (GH-528) — same suites, ~3 min, for a fast self-check
 ```
+
+`--parallel N` is opt-in and is **not** promotion evidence: it pools the suites and serializes the 13
+that hold this clone's driver lock, and its promotion to default is gated on GH-528 Phase 2. Use it to
+find your own breakage cheaply *before* you push — a hosted run costs Actions minutes, a local run
+does not (see `PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md` and #509).
 
 For document hygiene:
 

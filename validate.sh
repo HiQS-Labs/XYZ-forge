@@ -198,6 +198,7 @@ TESTS=(
   "ci-workflow.sh"
   "ci-route.sh"                  # GH-509 (docs/fast/full routing + changed-area test selection)
   "gh509-gate-evidence.sh"       # GH-509 (per-commit local gate record + the operator surface)
+  "gh528-parallel-contention-retry.sh" # GH-528 (--parallel re-runs a pooled failure alone before believing it, and names the contended suite; the driver-lock lane list cannot be validated by reading it)
   "xyz-completion.sh"
   "gh358-lock-instrumentation.sh" # GH-358 (concurrent append reports lost writes vs lock starvation)
   "xyz-harness-hooks.sh"
@@ -242,6 +243,136 @@ TESTS=(
 PASSED=()
 FAILED=()
 
+# ── GH-528: experimental opt-in parallel mode ─────────────────────────────────────────────────────
+# `./validate.sh` (no args) stays the sequential gate it has always been — that path is unchanged.
+# `./validate.sh --parallel N` runs the SAME TESTS array N-wide, with one exception: the suites that
+# execute the REAL relay-automation/relay-drive.sh contend on this clone's .git/relay-driver.lock
+# (GH-42 exclusion working as designed — "--target-root moves the build, not the lock", see
+# test/gh331-cost-summary.sh), so those run sequentially in ONE lane while everything else pools.
+# Spike numbers (GH-528, 2026-08-13, M-series macOS): sequential 950.3s → --parallel 8 = 167.4s,
+# same suites green. EXPERIMENTAL: a fast local self-check, NOT promotion evidence and NOT the CI
+# gate; sequential stays the default until the GH-528 Phase 2 stress bar is met (multi-width
+# repeats, leak/clean-tree checks) — recorded in PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md.
+PARALLEL_JOBS=""
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --parallel)
+      case "${2:-}" in
+        ''|*[!0-9]*) echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2 ;;
+      esac
+      [ "$2" -ge 1 ] || { echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2; }
+      [ $# -eq 2 ] || { echo "usage: ./validate.sh [--parallel N]" >&2; exit 2; }
+      PARALLEL_JOBS="$2"
+      ;;
+    *) echo "usage: ./validate.sh [--parallel N]" >&2; exit 2 ;;
+  esac
+fi
+
+# The suites that execute the real relay-drive.sh (not a stub or fixture copy). Membership was
+# derived in the GH-528 spike: every suite whose $DRIVE/$DRIVER/$RD resolves to the shipped
+# relay-automation/relay-drive.sh. If you add such a suite, add it here too — at 2+ jobs the
+# driver lock turns the omission into a deterministic-looking refusal failure, not a flake.
+#
+# gh322-unknown-arg-rejection.sh was MISSED by that derivation and is the reason the serialized
+# re-run below exists. It never "drives" anything — it passes a bogus flag and asserts both twins
+# exit 2. But relay-drive.sh acquires the lock at line ~142, BEFORE `usage()` and before it parses
+# any argument, so under contention the Bash twin exits 1 (lock refusal) while the Python twin,
+# which parses first, still exits 2. The suite then reports "exit codes diverge — Python 2, Bash 1":
+# a plausible, on-topic, entirely false parity failure. **Invoking a driver at all is what puts a
+# suite in this lane — not invoking it to do work.** That is the trap this list cannot be trusted
+# to catch by inspection, which is why an omission must not be able to fail silently.
+#
+# gh391-emit-marathon-yaml.sh was then found by that safety net rather than by inspection, on the
+# first clean run after it was added: it drives `marathon.sh --dry-run`, which reaches marathon-drive
+# and the same lock. The net named it, and the run still returned the correct verdict — which is the
+# mechanism working as intended, and also the honest reason this list is not trusted on its own.
+DRIVER_LOCK_LANE=" gh289-target-root-build-turn.sh gh322-unknown-arg-rejection.sh gh331-cost-summary.sh gh391-emit-marathon-yaml.sh poll-relay.sh relay-artifact-file.sh relay-escalation-not-stall.sh relay-review-once.sh relay-target-root-newfile.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root.sh relay-token-collision.sh relay-untracked-file-warn.sh relay-xyz-skill-guard.sh "
+
+if [ -n "$PARALLEL_JOBS" ]; then
+  RUN_DIR="$(mktemp -d -t validate-parallel.XXXXXX)"
+  # GH-177: mktemp is verified before use, nothing ever cd's into it, and the EXIT trap only
+  # removes a re-verified non-empty directory path.
+  [ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] || { echo "validate.sh: mktemp -d failed" >&2; exit 1; }
+  trap '[ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] && rm -rf "$RUN_DIR"' EXIT
+  RESULTS="$RUN_DIR/results"
+  : > "$RESULTS"
+  export VALIDATE_HERE="$HERE" VALIDATE_LOG_DIR="$RUN_DIR" VALIDATE_RESULTS="$RESULTS"
+
+  vp_run_one() {  # <suite> — run one suite against its own log; append "rc suite" to the results file
+    local t="$1" log rc
+    log="$VALIDATE_LOG_DIR/$(printf '%s' "$t" | tr '/' '_').log"
+    if bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1; then rc=0; else rc=$?; fi
+    printf '%s %s\n' "$rc" "$t" >> "$VALIDATE_RESULTS"
+    echo "[parallel] $t rc=$rc"
+  }
+  export -f vp_run_one
+
+  # Both lists are derived FROM $TESTS, so the two paths run exactly the same set of suites. The
+  # lane is an intersection, not the literal above: iterating $DRIVER_LOCK_LANE directly would run a
+  # lane suite even when TESTS does not contain it, so `--parallel` could execute suites the
+  # sequential path skips — and the summary would count more results than TOTAL.
+  POOL=()
+  LANE=()
+  for t in "${TESTS[@]}"; do
+    case "$DRIVER_LOCK_LANE" in
+      *" $t "*) LANE+=("$t") ;;
+      *) POOL+=("$t") ;;
+    esac
+  done
+
+  echo "validate.sh --parallel $PARALLEL_JOBS (EXPERIMENTAL, GH-528): ${#POOL[@]} pooled suites + ${#LANE[@]} in the sequential driver-lock lane"
+  (
+    for t in ${LANE[@]+"${LANE[@]}"}; do vp_run_one "$t"; done
+  ) &
+  LANE_PID=$!
+  # `${POOL[@]+...}`: bash 3.2 (what macOS ships) errors on an empty array under `set -u`.
+  [ "${#POOL[@]}" -eq 0 ] || printf '%s\n' ${POOL[@]+"${POOL[@]}"} | xargs -P "$PARALLEL_JOBS" -I{} bash -c 'vp_run_one "$@"' _ {}
+  wait "$LANE_PID"
+
+  # Every failure is RE-RUN SEQUENTIALLY before it is believed, with the pool drained and the lock
+  # lane finished — so the driver lock is free and nothing else is competing for CPU.
+  #
+  # This exists because the lane list above cannot be verified by reading it. A suite that merely
+  # *touches* a driver contends, and its refusal surfaces as whatever assertion happened to be
+  # downstream — for gh322 that was a parity mismatch naming two exit codes, which reads exactly like
+  # a real product bug. Without this pass, an incomplete lane list makes `--parallel` report failures
+  # that sequential does not have, which would destroy the one property the flag is supposed to have:
+  # the same answer as the sequential gate, faster. A suite that fails here and passes alone is not
+  # "flaky" and is not dismissed — it is named as a lane-list gap to fix.
+  CONTENDED=()
+  while IFS=' ' read -r rc t; do
+    if [ "$rc" = "0" ]; then
+      PASSED+=("$t")
+      continue
+    fi
+    log="$RUN_DIR/$(printf '%s' "$t" | tr '/' '_').log"
+    echo
+    echo "==============================="
+    echo "FAILED in parallel: $t (rc=$rc) — re-running it alone to see if that verdict survives"
+    echo "==============================="
+    if bash "$HERE/test/$t" > "$log.serial" 2>&1; then
+      PASSED+=("$t")
+      CONTENDED+=("$t")
+      echo "  ... PASSES when run alone. Counting it as passed (sequential is the source of truth)."
+      echo "  ... This means \$DRIVER_LOCK_LANE is INCOMPLETE — see the warning at the end of this run."
+    else
+      FAILED+=("$t")
+      echo "  ... fails alone too. Real failure; last 40 lines of the SERIAL run:"
+      tail -40 "$log.serial"
+    fi
+  done < "$RESULTS"
+
+  if [ "${#CONTENDED[@]}" -gt 0 ]; then
+    echo
+    echo "==============================================================================="
+    echo "WARNING (GH-528): ${#CONTENDED[@]} suite(s) failed in parallel and passed alone."
+    echo "These are almost certainly contending on the driver lock. Add them to"
+    echo "DRIVER_LOCK_LANE in validate.sh:"
+    for t in "${CONTENDED[@]}"; do echo "    $t"; done
+    echo "Until then --parallel is doing extra serial work and this run took longer than it should."
+    echo "==============================================================================="
+  fi
+else
 for t in "${TESTS[@]}"; do
   echo
   echo "==============================="
@@ -253,6 +384,7 @@ for t in "${TESTS[@]}"; do
     FAILED+=("$t")
   fi
 done
+fi
 
 echo
 echo "==============================="
