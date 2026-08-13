@@ -111,7 +111,14 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # which is not in that lane's artifact allowlist, so the builder could not have made it — an
 # off-lane edit would have been reverted as a containment violation. Recorded because a lane that
 # cannot pass its own gate is a plan defect, not a builder defect.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh "
+# GH-509 (added 2026-08-12): test/ci-route.sh builds a throwaway git repo under $WORK and runs a real
+# `git mv test/old-regression.sh test/new-regression.sh` in it, to prove that a RENAMED regression
+# test still selects the full CI gate. The rename must be real: the defect being pinned is that
+# `git diff --name-only` reports only a rename's DESTINATION, so the source path never reaches
+# ci-route.sh's fail-closed branch, and no amount of hand-written path strings reproduces that —
+# only git does. Both names exist solely inside that temp repo and can never exist in this tree, so
+# skipping them cannot mask a real path break.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

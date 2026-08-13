@@ -5,7 +5,10 @@ set -euo pipefail
 event_name="${1:-}"
 
 case "$event_name" in
-  push|workflow_dispatch|schedule)
+  workflow_dispatch|schedule)
+    # Deliberate, operator-initiated, and rare. These are the only unconditional full routes left:
+    # a manual dispatch is someone asking for the whole gate, and answering it with a routed subset
+    # would be answering a different question than the one asked.
     printf '%s\n' \
       'docs_only=false' \
       'pdda_needed=true' \
@@ -14,7 +17,18 @@ case "$event_name" in
       'route=full'
     exit 0
     ;;
-  pull_request) ;;
+  # GH-509 Phase 3 — `push` used to sit in the branch above, and that was 72% of the bill.
+  #
+  # Measured over 60 runs in ~24h: 37 pushes to `development`, EVERY ONE a full route, ~396 of ~551
+  # billed minutes. Phase 1 routed pull requests and cut their average from ~16 min to 6.1 — it
+  # worked, and it worked on the other 28%. The audit that opened this issue had already found the
+  # same split (61/100 runs were pushes) and then exempted it.
+  #
+  # Pushes now classify from their pushed range exactly as a PR classifies from its diff. The caller
+  # supplies the paths on stdin; a caller that cannot compute a range supplies NOTHING, and the
+  # zero-path branch at the bottom of this file fails closed to full. That is deliberate reuse: the
+  # fail-closed path is already tested, so a force-push or a new branch does not need its own.
+  push|pull_request) ;;
   *)
     printf 'ci-route: unsupported event: %s\n' "${event_name:-<empty>}" >&2
     exit 2

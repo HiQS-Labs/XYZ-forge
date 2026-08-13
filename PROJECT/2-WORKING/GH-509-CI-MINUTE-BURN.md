@@ -183,18 +183,28 @@ before any job runs and cannot read a job output. Only job-level `concurrency` c
 
 ### 5. Local Mac testing becomes first-class
 
-Four changes, in value order:
+**`ci-local.sh` already existed** — a full local mirror of the hosted job with a `--fast` mode — and
+was found mid-implementation rather than planned for. It carried the reframe's error in miniature: it
+mirrored the hosted job's skip list, so it **skipped `registry-lock-concurrency.sh`**, a suite the
+workflow's own comment says *"passes locally"*. Local was discarding real macOS signal to stay faithful
+to a contended Linux runner, and `test/ci-workflow.sh` actively pinned it that way.
+
+**Inverted `2026-08-12`.** `ci-local.sh` now runs a **superset** of the hosted job; the only surviving
+skip is `acorn-extract.sh`, which is duplicate work rather than dropped coverage. The pinning assertion
+was inverted with it — local skipping that suite is now a **failure**, witnessed red. Its closing
+notice was re-pointed too: the useful caveat is no longer "this is not a green ubuntu run" but "this is
+**self-reported** and does not qualify a promotion".
+
+What remains, in value order:
 
 1. **A durable per-commit record of local runs.** This is the unlock. If the Mac is the evidence, "I
    ran it and it was green" cannot live in a chat message — it must be a record keyed to the commit
    hash, refused from a dirty tree, so the promotion check has something to read.
-2. **A fast local mode.** `utils/ci-route.sh` already exists and is tested 15/15, and has never been
-   pointed at a local diff. Same classifier, working-tree changes, seconds.
-3. **An unconfigured-Mac probe as a named mode.** The stripped-`PATH` check that caught all three of
+2. **An unconfigured-Mac probe as a named mode.** The stripped-`PATH` check that caught all three of
    #520's failures in ~90 seconds currently exists only as a throwaway script. It simulates #380's
    new-adopter story and belongs in the tree.
-4. **Tiering:** fast on every push, the probe before anything user-facing, full `validate.sh` at
-   checkpoints.
+3. **Tiering:** `ci-local.sh --fast` on every push, the probe before anything user-facing, full
+   `validate.sh` at checkpoints.
 
 **The honest limit:** a local record is self-reported. Keying it to the commit and refusing a dirty
 tree covers most of it, but it proves *someone ran this*, not *someone ran this honestly*. That gap is
@@ -238,10 +248,10 @@ the repo public. That buys something no amount of routing can.
 | # | Phase | Contents |
 |---|---|---|
 | 1 | PR classifier | **SHIPPED** (PR #511) |
-| 2 | Ubuntu → advisory | non-blocking job; red is portability drift, surfaced in the promotion output (§1, §7) |
-| 3 | Route `development` pushes | classifier applied to `before..sha`; **existing concurrency untouched** (§3, §4) |
-| 4 | macOS boundary job | `main` + `workflow_dispatch`, `validate.sh` direct, no skips |
-| 5 | Local evidence | recorded per-commit result, fast mode, unconfigured-Mac probe (§5) |
+| 2 | Ubuntu → advisory | **SHIPPED** `bc2e1d1d` — `canary-ubuntu`, `continue-on-error: true`, `if: always()` verdict step; contract test 26→30 with both assertions witnessed red |
+| 3 | Route `development` pushes | **SHIPPED** — classifier applied to `before..sha`, `--no-renames`, fail-closed on an unusable range; existing concurrency untouched |
+| 4 | macOS boundary job | **SHIPPED** — `boundary-macos` on `macos-latest`, `main` + `workflow_dispatch`, `./validate.sh` direct, no skip list, 45-min bound, prints its resolved SHA. Four assertions, four witnessed controls |
+| 5 | Local evidence | **SHIPPED** — `utils/gate-record.sh` (refuses a dirty tree), `ci-local.sh --probe`, `utils/gate-status.sh`; `test/gh509-gate-evidence.sh` 17/0, registered |
 
 Phases 2-4 are independent. Phase 5 is the highest value and the only one that changes daily practice.
 
@@ -265,24 +275,53 @@ Phase 1 (shipped):
 
 Phases 2-5:
 
-- [ ] A Ubuntu failure is reported as advisory and cannot mark a run as breakage.
-- [ ] Unresolved portability drift appears in the promotion output — the mechanism that makes the
+- [x] A Ubuntu failure is reported as advisory and cannot mark a run as breakage. *(Declared and
+      asserted at `bc2e1d1d`; the **runtime** half is still open — it needs a witnessed hosted run,
+      since a grep cannot prove GitHub's `continue-on-error` semantics.)*
+- [x] The local runner stops imitating Linux: `ci-local.sh` runs a superset of the hosted job, and the
+      assertion that pinned them together is inverted and witnessed red.
+- [x] Unresolved portability drift appears in the promotion output — the mechanism that makes the
       advisory canary *read* rather than merely non-blocking.
-- [ ] `development` pushes are routed; an empty/unreadable range fails closed to full.
-- [ ] A renamed regression test selects `full`, proven by a witnessed control (`git diff --name-only`
-      cannot support this — the classifier needs `--no-renames` or status-aware input).
-- [ ] The macOS boundary job invokes `validate.sh` directly with no skip list.
+- [x] `development` pushes are routed; an empty/unreadable range fails closed to full. *(Three ways: all-zeros `before` on a new branch, an unreachable `before` after a force-push, and no range concept — all emit an empty path list into the already-tested zero-path branch.)*
+- [x] A renamed regression test selects `full`, proven by a witnessed control that drives a real `git mv`
+      through the workflow's own command. `test/baselines/GH-509-phase3-negative-control.md`.
+- [x] The macOS boundary job invokes `validate.sh` directly with no skip list. *(Declared and asserted; `test/baselines/GH-509-phase4-negative-control.md`. This also closes **D1** — the 20-test authoritative Python layer now runs at the boundary, having never run in CI before.)*
 - [ ] A `push` cannot cancel a running `workflow_dispatch` boundary run. *(Believed already true —
       `github.event_name` is in the existing concurrency key. Needs a witnessed control, not an
       assertion.)*
 - [ ] A green hosted **macOS** full run exists for a chosen commit.
-- [ ] A local full run writes a durable record keyed to the commit and refuses a dirty tree.
-- [ ] The operator surface reports distance-based status, including the canary line.
+- [x] A local full run writes a durable record keyed to the commit and refuses a dirty tree. *(Extracted to its own script so the REFUSAL is testable without a 15-minute suite run.)*
+- [x] The operator surface reports distance-based status, including the canary line. *(`utils/gate-status.sh`. Currently reports `NONE` — truthfully, since no hosted macOS run exists yet.)*
 - [ ] ~~A `docs`/`fast` run cannot cancel a running `full`~~ — **struck 2026-08-12 on agy's review.**
       `development` runs on advisory Ubuntu; preserving per-commit evidence for a signal that never
       gates is ceremony. Returns only if `development` runs are ever promoted back to gating.
 - [ ] ~~Verify required-check behaviour~~ — **struck as unsatisfiable**: no branch protection exists on
       this plan. Replaced by the operator surface.
+
+## Independent review
+
+`relay-system/2026-08-12/gh509-ci-strategy-macos-review.md` — **STATUS: Approved** (agy, round 2,
+`relay-drive.sh --review-once`, exit 0). Three `[Pass]` findings, each quoting the text it verified:
+the circular promotion rule closed, the concurrency ceremony deleted, the advisory-canary
+justification replaced with a mechanism.
+
+**SCOPE OF THAT APPROVAL, stated because "Approved" is exactly the word that gets over-read.** The
+relay's artifact was *this document*. agy reviewed the **plan**; it did not review
+`.github/workflows/ci.yml`, `utils/ci-route.sh`, `utils/gate-record.sh`, `utils/gate-status.sh`, or
+any of the suites. GUIDING-PRINCIPLES #10 ("done means verified") is therefore satisfied *for the
+plan* and **not** for the implementation, which has had no independent review — only my own tests and
+their recorded controls.
+
+Two things a reviewer of the *implementation* should attack first, named here so they are not
+discovered as surprises:
+
+1. **`continue-on-error` is still unproven at runtime.** PR #526 shows the boundary correctly
+   `skipping` on a pull request — real hosted evidence — but nothing yet shows a canary *failure*
+   leaving the workflow conclusion green while the job's own conclusion records failure. Under
+   GUIDING-PRINCIPLES #13 that is a gate without its witnessed control.
+2. **`gate-status.sh` duplicates the boundary job's `if:` condition.** A test pins the two together,
+   but that is a mitigation, not a fix: principle #2 says nothing canonical should live in two places
+   where it can drift. The honest version is that this trades a silent drift for a loud one.
 
 ## Validation
 

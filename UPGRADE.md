@@ -237,6 +237,14 @@ baseline and are not ready — that is the whole lesson of the GH-172 → GH-215
 > port to a branch and let `tier1` run `validate.sh` Python-default on ubuntu *before* you treat Phase 3
 > as unblocked. A blast-radius pass names *which* environments and consumers the gate must cover (here:
 > Linux **and** the bundled `relay-pkg.tar.gz`); this CI requirement is how you actually *close* each one.
+>
+> **Naming note (GH-509, 2026-08-12):** the job called `tier1` above is now `canary-ubuntu`, and it is
+> `continue-on-error: true` — an advisory portability canary whose red means "would not work on a
+> platform we do not support yet", not "broken". That does **not** weaken this passage; it is the one
+> case where the canary is exactly the right instrument. The claim being made here is explicitly a
+> *cross-platform* one, so a Linux red is authoritative for it. Advisory means a Linux failure does not
+> mark a commit broken — it does not mean a Linux failure is ignorable when Linux is what you are
+> claiming.
 
 `python3` version floor: the twins use f-strings and `subprocess.run(..., timeout=)`; 3.8+ is safe.
 If a target box is older, stop — the flip would brick every entry point with no fallback.

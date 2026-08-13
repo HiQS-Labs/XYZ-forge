@@ -20,8 +20,112 @@ permissions:
   contents: read
 
 jobs:
-  tier1:
+  # GH-509 Phase 4 — THE PROMOTION BOUNDARY. This is the only job whose green means anything about
+  # what we ship, because it is the only one running the platform we ship to.
+  #
+  # WHY IT IS RARE, AND MUST STAY RARE: hosted macOS runners bill at roughly 10x Linux. At the volume
+  # this repo generates (37 pushes to `development` in one 24h sample) macOS-everywhere would cost
+  # thousands a month. The boundary is affordable precisely because it is deliberate: `main` sees
+  # almost no direct pushes, so in practice this fires on `workflow_dispatch` — a run costs well under
+  # a dollar a handful of times a month. Do NOT add `pull_request` here.
+  #
+  # WHY `workflow_dispatch` AND NOT JUST `main`: work lands on `development` and `main` sees almost
+  # nothing, so a main-only boundary would always arrive AFTER the promotion decision instead of
+  # before it. The manual trigger is how a `development` commit gets qualified without being merged
+  # first, and it is the trigger that will actually get used.
+  #
+  # HONEST LIMIT ON "EXACT COMMIT": `workflow_dispatch` targets a REF, not an arbitrary SHA — GitHub
+  # resolves the ref's current HEAD. So this job cannot be pointed at an old commit; it qualifies
+  # whatever that ref points to when dispatched. The resolved SHA is printed into the job summary for
+  # exactly this reason: the promotion rule compares against a recorded SHA, not against "the run I
+  # remember starting".
+  #
+  # NO SKIP LIST, deliberately. It invokes the authoritative validator directly rather than scraping
+  # `TESTS` out of it — the scrape can only see `.sh` entries, which is how the 20-test Python layer
+  # (the AUTHORITATIVE implementation since GH-264) went unexercised in CI for months. A second list
+  # is a second thing to keep honest; there is no second list here.
+  boundary-macos:
+    name: promotion boundary (macOS — the platform we ship to)
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: macos-latest
+    # A bound, not an estimate. The suite runs ~13-15 min locally; at 10x billing an unbounded hang is
+    # the expensive failure mode, so cap it rather than discover the cost afterwards.
+    timeout-minutes: 45
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          # Same reason as the canary job: fixtures synthesize an "older" ancestor with
+          # `git rev-list --max-parents=0 HEAD`, which a shallow clone silently defeats.
+          fetch-depth: 0
+
+      - name: Prepare git environment for fixture-driven tests
+        run: |
+          set -euo pipefail
+          git config --global init.defaultBranch main
+          git config --global user.email "ci@runner.invalid"
+          git config --global user.name "CI Runner"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # The hosted runner's Python has no pytest, and validate.sh's python lane needs it — the
+      # first boundary dispatch (run 31661285957) failed exactly here. Ironic and instructive:
+      # GH-509's own headline defect was "the hosted route never ran the 20 python tests"; the
+      # first time they ran on hosted macOS, the environment couldn't run them.
+      - name: Install pytest for the python lane
+        run: python3 -m pip install --quiet --break-system-packages pytest
+
+      - name: Run the authoritative validator (no skips)
+        env:
+          # The one documented exclusion, and it is not a coverage skip: this test makes a real
+          # billed API call to a live agent. It self-skips off-PATH anyway; the env var makes the
+          # intent explicit rather than incidental.
+          RELAY_SELF_SUFFICIENCY_SKIP: "1"
+        run: ./validate.sh
+
+      - name: Promotion evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ job.status }}" = "success" ]; then
+            line="MACOS-BOUNDARY: green ${GITHUB_SHA}"
+            note="This commit is promotion-qualified (GH-509 §6). Cite this SHA, not this run."
+          else
+            line="MACOS-BOUNDARY: red ${GITHUB_SHA}"
+            note="NOT promotable. Unlike the ubuntu canary, this ran on the platform we ship to — a failure here is a real defect for real users."
+          fi
+          echo "$line"
+          echo "$note"
+          { echo "### $line"; echo; echo "$note"; } >> "$GITHUB_STEP_SUMMARY"
+
+  # GH-509 Phase 2 — this job is a PORTABILITY CANARY, not a gate.
+  #
+  # XYZ ships to macOS developers. Linux and Windows are on the roadmap and are not here yet, so a
+  # failure on ubuntu is portability DRIFT, not breakage: it says "this would not work on the platform
+  # we do not support yet." Every one of the three CI failures on 2026-08-12 was of exactly that shape
+  # (agent CLIs absent from the runner), and treating them as breakage is what produced five hours of
+  # unread red across eight commits — which is worse than no signal at all, because it trains everyone
+  # to ignore the one channel that might have said something real.
+  #
+  # `continue-on-error: true` at JOB level lets the workflow run pass while this job's own conclusion
+  # still records `failure`, so drift stays queryable through the jobs API without marking the commit
+  # broken.
+  #
+  # HONEST LIMIT, stated because this file is exactly the kind of place GH-419 gets violated: the
+  # workflow-contract test can assert this key is PRESENT. It cannot assert GitHub's runtime semantics.
+  # The acceptance criterion in PROJECT/2-WORKING/GH-509-CI-MINUTE-BURN.md is therefore a witnessed
+  # hosted run, not a green grep.
+  #
+  # Advisory does NOT mean ignorable, and making it non-blocking supplies no reason for anyone to read
+  # it — that critique came from the agy review and it is correct. The mechanism that makes it read is
+  # elsewhere: the canary's status is a line in the promotion output, consulted at the moment a human
+  # is already deciding something. If two consecutive promotions ship with drift named and unresolved,
+  # this job has proven it is not being actioned and should be deleted rather than kept as decoration.
+  canary-ubuntu:
+    name: portability canary (ubuntu — advisory, never breakage)
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
@@ -37,12 +141,42 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            git diff --name-only "$BASE_SHA" HEAD | utils/ci-route.sh pull_request | tee -a "$GITHUB_OUTPUT"
+
+          # GH-509 Phase 3 — pushes classify from their pushed range, like PRs classify from a diff.
+          base=""
+          case "$EVENT_NAME" in
+            pull_request) base="$BASE_SHA" ;;
+            push)         base="$BEFORE_SHA" ;;
+          esac
+
+          # FAIL CLOSED, three ways, all reachable in practice:
+          #   * a NEW branch's first push sets `before` to all-zeros — there is no range;
+          #   * a FORCE-PUSH leaves a `before` that is no longer reachable in this clone;
+          #   * an event with no range concept at all (workflow_dispatch handles itself downstream).
+          # Any of these emits an empty path list, and ci-route.sh's zero-path branch routes to full.
+          # Reusing that already-tested path beats inventing a second fail-closed rule that would
+          # need its own proof.
+          usable=1
+          if [ -z "$base" ] || [ -z "${base//0/}" ]; then
+            usable=0
+          elif ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            usable=0
+          fi
+
+          if [ "$usable" -eq 1 ]; then
+            # `--no-renames` is load-bearing, not tidiness. With rename detection ON (git's default)
+            # `--name-only` prints ONLY the destination path for a rename, so a renamed regression
+            # test looks like an ordinary changed file that still exists — and ci-route.sh's
+            # fail-closed branch for a vanished test is never reached. That branch's own comment
+            # says "deleted/renamed"; without this flag it only ever saw deletions.
+            git diff --no-renames --name-only "$base" HEAD \
+              | utils/ci-route.sh "$EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
           else
-            utils/ci-route.sh "$EVENT_NAME" </dev/null | tee -a "$GITHUB_OUTPUT"
+            echo "ci-route: no usable range for $EVENT_NAME (base='${base:-<empty>}') — failing closed to full" >&2
+            : | utils/ci-route.sh "$EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
           fi
 
       - name: Install shellcheck
@@ -230,3 +364,26 @@ jobs:
             bash "test/$t" || FAILED=1
           done
           exit "$FAILED"
+
+      # GH-509 Phase 2 — the canary's verdict, written where a human and a script can both find it.
+      #
+      # `if: always()` because the whole point is to report when an EARLIER step failed; without it
+      # this step is skipped in exactly the case it exists for. `job.status` is the aggregate of the
+      # steps above, so this reads the outcome rather than re-deriving it.
+      #
+      # The line is deliberately greppable and deliberately does NOT say "failed" or "error": on this
+      # platform those words are wrong. This job reports on an operating system we do not ship to yet.
+      - name: Portability canary verdict
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ job.status }}" = "success" ]; then
+            verdict="PORTABILITY-CANARY: green"
+            detail="No Linux portability drift detected. This says nothing about macOS, which is what we ship."
+          else
+            verdict="PORTABILITY-CANARY: drift"
+            detail="Linux portability drift on ${GITHUB_SHA}. This is NOT breakage: XYZ ships to macOS and Linux support is not here yet. Do not treat this commit as broken. Carry the drift into the promotion output and resolve it before Linux support ships."
+          fi
+          echo "$verdict"
+          echo "$detail"
+          { echo "### $verdict"; echo; echo "$detail"; } >> "$GITHUB_STEP_SUMMARY"
