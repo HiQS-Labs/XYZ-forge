@@ -75,9 +75,12 @@ fi
 # the tool would have presented a Linux green as a promotion qualification: exactly the false-evidence
 # class this whole issue exists to remove, produced by the tool built to prevent it.
 #
-# `boundary-macos` runs when: workflow_dispatch, OR push to main. Anything else has no boundary job in
-# it at all. This condition is COUPLED to the workflow's `if:` and test/ci-workflow.sh asserts they
-# agree, because a silent divergence here re-creates the same false green.
+# `boundary-macos` runs when: push to main. That is the whole list — `workflow_dispatch` was removed
+# on 2026-08-13 after 75 macOS minutes cost $4.65 against a $10 monthly budget (see the job's own
+# comment in ci.yml). A dispatch run therefore no longer contains a macOS job at all, and accepting
+# one here would report an ubuntu-only run as boundary evidence — the exact false green this filter
+# was written to stop, arriving from the other direction. This condition is COUPLED to the workflow's
+# `if:` and test/gh509-gate-evidence.sh asserts they agree.
 boundary="$(gh run list --workflow=ci.yml --json headSha,conclusion,createdAt,event,headBranch \
   --limit 60 2>/dev/null | python3 -c '
 import json,sys
@@ -87,7 +90,7 @@ for r in runs:
     if r.get("conclusion") != "success":
         continue
     ev, br = r.get("event"), r.get("headBranch")
-    if ev == "workflow_dispatch" or (ev == "push" and br == "main"):
+    if ev == "push" and br == "main":
         print(r["headSha"], r["createdAt"], sep="\t"); break
 ' 2>/dev/null || true)"
 
@@ -129,7 +132,7 @@ fi
 echo
 case "$status" in
   exact) echo "status: EXACT — this commit is promotion-qualified." ;;
-  behind) echo "status: BEHIND — normal for WIP. Dispatch the macOS boundary on this ref to qualify it." ;;
+  behind) echo "status: BEHIND — normal for WIP. The macOS boundary now runs only on push to main (its workflow_dispatch trigger was removed for cost), so qualify locally with ./validate.sh + utils/gate-record.sh, which is self-reported and does not promote." ;;
   none) echo "status: NONE — no boundary evidence exists. Not promotable." ;;
   *) echo "status: unknown" ;;
 esac
