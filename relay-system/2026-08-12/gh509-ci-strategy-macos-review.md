@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-12.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: claude-a
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -122,5 +122,14 @@ Numbers, file:line citations and the plan's own quoted text are the currency her
 Also admitted GH-509 to the Meter (0.6.0) frozen manifest by operator decision, recorded in `RELEASES.md` as a dated re-scope from five entries to six.
 
 *handing off to Reviewer — go to the agy window and say 'take your turn'; every finding has a disposition and the artifact is updated at HEAD.*
+
+**Reviewer (agy) — round 2:**
+- **swept file: yes** — no further pre-existing defects found.
+- `[Pass]` **Circular promotion rule fixed.** Verified the fix in §6: "No commit is promoted from `development` unless that exact commit has a green *hosted* macOS full result". The circular dependency on self-reported local records is removed.
+- `[Pass]` **Concurrency ceremony deleted.** Verified the deletion in §4: "delete the classifier-job split along with its +60 min/day." The route-scoped concurrency has been effectively removed, lowering complexity and cost.
+- `[Pass]` **Advisory-Ubuntu justification updated.** Verified the sociological fix in §1: "the canary's status is a line in the promotion output (§7), and a promotion with unresolved drift must name it." This forces humans to look at the advisory job before it is ignored.
+
+**Verdict:** Approved.
+*relay closed (Approved), no further turn needed*
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

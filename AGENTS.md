@@ -162,8 +162,19 @@ local change.
   on the driver's own lock dir inside a linked worktree, and untracked artifacts are invisible to a
   worktree checkout — commit review inputs first. Read-only subagents (Explore, audits) don't need
   isolation. Related guards: never execute `validate.sh`/`test/*.sh` under a sandboxed Bash call
-  (enforced by `relay-automation/hooks/gh177-sandbox-test-guard.sh` — CI is the exercise path), and
-  `test/mktemp-trap-guard.sh` statically outlaws the wipe idiom repo-wide.
+  (enforced by `relay-automation/hooks/gh177-sandbox-test-guard.sh` — re-run it un-sandboxed; do NOT
+  push it to CI to be exercised, see the CI rail below), and `test/mktemp-trap-guard.sh` statically
+  outlaws the wipe idiom repo-wide.
+- **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
+  for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
+  `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping
+  platform with the real toolchain — and it runs a **superset** of the hosted job, including
+  `registry-lock-concurrency.sh`, which CI skips for a contended-Linux flake. The hosted `canary-ubuntu`
+  job is `continue-on-error: true`: its red means *portability drift*, not breakage, and must not be
+  reported as a broken commit. Two consequences that bite: **never defer a test run to CI** — CI is
+  advisory and tests the wrong OS; and **a green local run is self-reported**, so it does not qualify a
+  promotion. Promotion needs a hosted **macOS** run for that exact commit. When a claim really is about
+  Linux, the canary is the right instrument and its red is authoritative.
 - **Commit to the QUEUE; re-anchor, don't rabbit-hole (GH-45).** A wave's committed lane list *is* the
   active commitment — after each lane attempt, re-read it before acting further. A driven lane that
   fails **parks** after `LANE_MAX_ATTEMPTS` (default 2): the driver (`marathon-drive.sh` /
