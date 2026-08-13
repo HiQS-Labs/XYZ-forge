@@ -68,6 +68,9 @@ QA gates (all observed 2026-08-13 on the A/B commit)
 - [x] `--parallel` with missing/zero/non-numeric/extra args and unknown flags all refuse with usage, exit 2 (five cases observed).
 - [x] Discoverable: `ROUTER.md`'s command rail carries both forms, with the sequential run named as the
       only one that qualifies a claim and `--parallel` labelled experimental and cost-motivated.
+- [x] A pooled failure is re-run alone before it is believed, and a suite that passes alone is counted
+      passed **and** named as a lane-list gap — `test/gh528-parallel-contention-retry.sh` 4/0, with the
+      pre-fix mutation red on 3 of 4. Added after the first reuse produced a false red (see below).
 
 ## Why this landed now: the Actions bill (measured 2026-08-13)
 
@@ -81,9 +84,54 @@ rate, no included-quota discount on a private repo — each `boundary-macos` dis
 and the Linux side is over quota on *volume*, since every push to `development` and every PR into
 `development`/`main` starts a run. Feature-branch pushes with no open PR cost $0.
 
+**Update, same day (PR #532):** the macOS half was closed at the source — `boundary-macos` lost its
+`workflow_dispatch` trigger and now fires on push-to-`main` only, so hosted macOS spend goes to
+roughly zero. That *raises* this issue's relevance rather than lowering it: the pre-merge macOS
+witness is now unserved, and the local gate is what replaces it. A substitute that takes 16 minutes
+gets skipped; one that takes 3 gets used.
+
 That is the practical case for `--parallel N` beyond operator patience: the local gate is the
 substitute for a hosted run, and at 184s instead of 946s it is cheap enough to actually be used that
 way. Recorded on #509, which owns the CI-spend problem; this issue owns only the runner.
+
+## The first reuse found a defect the A/B could not (2026-08-13, same day)
+
+Merging `origin/development` into this branch and re-running `--parallel 8` produced **one failure
+the sequential gate does not have**: `gh322-unknown-arg-rejection.sh`, reporting
+`exit codes diverge — Python 2, Bash 1`.
+
+It was not a flake and not a product bug. `relay-drive.sh` acquires the driver lock at line ~142,
+**before `usage()` and before it parses any argument**. That suite never drives anything — it passes
+a bogus flag and asserts both twins exit 2 — but under contention the Bash twin exits 1 (lock
+refusal) while the Python twin, which parses first, still exits 2. Reproduced deterministically by
+holding the lock with a live pid: identical failure, and green the moment the lock is released.
+
+**So the lane rule was wrong, not just the list.** Membership is not "suites that drive" — it is
+**suites that invoke a driver at all**. The spike derived the original 13 from observed lock
+refusals in the naive parallel run, and a suite whose contention shows up as a *parity assertion*
+rather than a *refusal message* was invisible to that method.
+
+Two things changed, because fixing only the list would leave the same trap armed for the next suite:
+
+1. `gh322-unknown-arg-rejection.sh` joins the lane (13 → 14).
+2. **Any pooled failure is now re-run alone**, with the lane finished and the lock free, before it is
+   believed. Fails alone too → real failure, reported with the serial log. Passes alone → counted
+   **passed** (sequential is the source of truth, and returning sequential's answer is the flag's
+   entire promise) and **named in a warning** identifying it as a lane-list gap to fix. An incomplete
+   list can no longer produce a false red, and can no longer be silent either.
+
+A third defect surfaced while proving this: the lane iterated the literal `DRIVER_LOCK_LANE` string
+instead of intersecting it with `TESTS`, so lane suites ran even when `TESTS` did not contain them —
+`--parallel` executed suites the sequential path skipped, and the summary printed `passed: 16 / 3`.
+Now both lists are derived from `TESTS`.
+
+`test/gh528-parallel-contention-retry.sh` pins all of it (4 assertions, registered in `validate.sh`).
+Its control is a mutation: with the re-run block deleted — the state this branch shipped in its first
+build — 3 of the 4 assertions fail, and the probe is reported as a failed suite exactly as `gh322`
+was. **The honest read of this is that the flag's original A/B was not sufficient evidence**: one
+green parallel run on one commit could not distinguish "correct" from "did not happen to collide
+this time". That is precisely the gap Phase 2 exists to close, and it argues for that bar, not
+against it.
 
 ## Phase 2 — promotion evidence (deliberately not this branch)
 

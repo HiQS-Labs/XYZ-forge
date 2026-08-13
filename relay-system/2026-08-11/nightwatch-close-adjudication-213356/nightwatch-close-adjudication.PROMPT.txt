@@ -1,0 +1,91 @@
+# Adjudicate: close three held Nightwatch issues on NET EFFECTIVENESS, or keep them open?
+
+You are advising the operator of `xyz-3-agents-swarm`. Release **0.3.0 "Nightwatch"** is a Release
+Candidate: `bash test/nightwatch-release.sh --release-gate` exits 0 and reports
+`GOALPOST MET — all 8 manifest entries complete and every lifecycle case executes green`.
+
+The frozen manifest (per `RELEASES.md`, which is the canonical SOT for release scope) is:
+**#408, #409, #426, #388, #387, #384, #358, plus #354 Phase 1.**
+
+Five are now CLOSED (#387, #408, #409, #426, #384) after a per-criterion audit. **Three are held:
+#388, #358, #354.** Adjudicate each.
+
+## The operator's actual question — read this before anything else
+
+The operator is **explicitly de-prioritising letter-of-the-law acceptance-criteria compliance** and
+asking about **net effectiveness**: did the shipped work solve the real problem? He does not want
+issues hanging open on technicalities. He has also said: *"If a solution had to be pivoted to solve
+the problem, then perhaps the acceptance criteria needs to be pivoted too."*
+
+So for each issue, choose exactly one verdict:
+
+- **A — CLOSE AS-IS.** The problem is solved; remaining gaps are immaterial.
+- **B — AMEND CRITERIA, THEN CLOSE.** The implementation pivoted for good reason and the *written*
+  criteria are now the stale artifact. State the exact replacement wording.
+- **C — KEEP OPEN.** Real, material value is unshipped. Name precisely what, and what would close it.
+
+Do not hedge across two verdicts. Pick one per issue and defend it.
+
+## The tension you must resolve
+
+`RELEASES.md`'s 0.2.0 block records a deliberate precedent *against* closing on a green gate:
+
+> **#375 and #390 remain OPEN on purpose:** their gates are registered, green and control-observed,
+> which is what this release's exit criterion measures, but each has acceptance criteria that did not
+> ship... **Closing them silently would have repeated exactly the #401→#461 mistake this release
+> exists to catch.**
+
+Note the word **silently**. Is a *documented, reasoned* deviation materially different from a silent
+one? Or does that reasoning erode the guard the repo built after #401→#461? That is the crux.
+
+## The three issues
+
+### #388 — marathon run-log durability
+`PROJECT/2-WORKING/GH-388-MARATHON-RUN-LOG-DURABILITY.md` marks **all 7 criteria Met**, but carries a
+separate section `## Acceptance — deviations found while building` stating that **criterion 5 did not
+ship as written**. Criterion 5 says a default log path resolving into a non-durable root must **fail
+the run**. Shipped behaviour is narrower: the rule targets **relocation** — a transcript resolving
+*inside the repo being driven* is permitted even when that repo sits under `$TMPDIR`; only a path both
+non-durable *and outside the repo* is refused. The stated rationale: the literal reading refuses to
+run the harness inside every fixture in the suite (all are repos under `$TMPDIR`), so *"a guard that
+cannot be exercised is not a guard, and 'fails the run' would have meant 'fails every run'."*
+Gate: `test/gh388-run-log-durability.sh` 24/0 locally; control 9 red pre-fix → 0.
+
+**Question:** is the narrowed rule the *correct* rule (making criterion 5 simply mis-written), or does
+it leave a real hole — a run whose evidence still lands somewhere a reboot erases, undetected?
+
+### #358 — CI lock flake
+*"CI: xyz-completion's 16-way concurrent-append assertion flakes on the shared runner (a record is
+lost)."* Phase 1 (instrumentation naming the terminal lock state) shipped. `RELEASES.md` records that
+**Phase 2 is a disposition blocked on an observation** — it needs a real CI failure carrying the new
+instrumentation, and the capture doc **forbids pre-committing one**. This assertion still fails on CI
+today (two `conc-1` failures in every `development` run) while passing locally.
+
+**Question:** an issue whose remaining work is *"wait for a real-world observation"* — is that a
+hanging issue that should be closed (with Phase 2 refiled as its own observation-triggered issue), or
+is it legitimately open? Consider that it is currently *actively red in CI*, which is either evidence
+it should stay open, or evidence it is a CI-environment problem misfiled as a product defect.
+
+### #354 — Concurrent Swarms
+Manifest membership is **"Phase 1 only"** — clone-wide driver exclusion for linked worktrees — and
+`RELEASES.md` records that Phase 1 *"was delivered by #376/#448 rather than by this release, recorded
+as such rather than rebuilt."* The issue itself is much broader than Phase 1 (concurrent swarms
+generally). Its own comment thread spawned **#448** for an observability defect found at three
+consumer sites.
+
+**Question:** should a broad parent issue be closed because the one narrow phase a release claimed is
+done? Or is closing it a scope-loss risk — the remaining phases becoming invisible? Is the right move
+to close it and ensure successors (#376, #448) carry the rest, or to keep it as a tracking parent?
+
+## Also give a general rule
+
+Beyond the three, state the **decision rule** this repo should apply going forward when shipped work
+diverges from written acceptance criteria. It must be usable by an agent without the operator present,
+and must not degenerate into either (a) rubber-stamping any divergence as "we pivoted", or (b) the
+current failure mode of issues hanging open indefinitely on technicalities.
+
+## Output format
+
+For each of #388, #358, #354: **verdict letter, one-paragraph justification, and — if B — the exact
+replacement criterion wording.** Then the general rule in under 150 words. Be decisive and concrete;
+vague both-sides answers are worthless here. If you think the operator's premise is wrong, say so.

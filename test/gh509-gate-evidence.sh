@@ -117,17 +117,33 @@ esac
 # UBUNTU CANARY run that never touched macOS — as boundary evidence. The tool built to prevent false
 # promotion evidence was manufacturing it. If the workflow's condition changes and this filter does
 # not, that returns silently.
+#
+# 2026-08-13: the pair MOVED rather than dissolved. `workflow_dispatch` was removed from the boundary
+# job for cost (75 macOS min = $4.65 of a $10 budget), so a dispatch run now contains no macOS job at
+# all — and a filter that still accepted `workflow_dispatch` would report an ubuntu-only run as
+# boundary evidence. Same false green, opposite direction. Both halves are asserted on the SPECIFIC
+# lines that decide, not on whether the string appears anywhere: `workflow_dispatch` is still a
+# legitimate trigger for the ubuntu full route in the same file, and both files discuss it in prose.
 echo "-- case 5: the status filter mirrors the boundary job's own trigger"
 WF="$ROOT_DIR/.github/workflows/ci.yml"
-if /usr/bin/grep -q "workflow_dispatch" "$STATUS" && /usr/bin/grep -q 'br == "main"' "$STATUS"; then
-  pass "the status filter names both boundary triggers (workflow_dispatch, push to main)"
+
+# The filter's decision line, not its commentary.
+status_filter="$(/usr/bin/grep -E '^[[:space:]]*if ev ==' "$STATUS" || true)"
+if /usr/bin/grep -q 'br == "main"' <<<"$status_filter" \
+  && ! /usr/bin/grep -q 'workflow_dispatch' <<<"$status_filter"; then
+  pass "the status filter accepts push-to-main only, and no longer accepts workflow_dispatch"
 else
-  fail "GH-509: gate-status.sh's filter does not mirror boundary-macos's if: — a canary green can be reported as boundary evidence"
+  fail "GH-509: gate-status.sh's filter does not mirror boundary-macos's if: — a dispatch run has no macOS job in it, so accepting one reports an ubuntu-only run as boundary evidence"
 fi
-if /usr/bin/grep -q "refs/heads/main" "$WF" && /usr/bin/grep -q "workflow_dispatch" "$WF"; then
-  pass "the workflow still triggers the boundary on exactly those two"
+
+# The boundary job's own `if:` line, extracted from its block so the workflow-level
+# `on: workflow_dispatch:` (which legitimately drives the ubuntu full route) cannot satisfy it.
+boundary_if="$(awk '/^  boundary-macos:/{f=1} f && /^[[:space:]]*if:/{print; exit}' "$WF")"
+if /usr/bin/grep -q "refs/heads/main" <<<"$boundary_if" \
+  && ! /usr/bin/grep -q "workflow_dispatch" <<<"$boundary_if"; then
+  pass "the boundary job triggers on push-to-main only (its workflow_dispatch trigger was removed for cost)"
 else
-  fail "GH-509: boundary-macos's trigger changed — gate-status.sh's filter must change with it"
+  fail "GH-509: boundary-macos's trigger changed — gate-status.sh's filter must change with it, and re-arming workflow_dispatch re-opens the ~\$1.25-1.50-per-dispatch spend"
 fi
 
 echo

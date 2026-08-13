@@ -2,11 +2,11 @@
 gh_issue: 509
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/509
 title: "GH-509 — tier CI to stop per-push Actions minute burn"
-status: Phase 1 shipped (PR #511) — replanned 2026-08-12 on the macOS-target reframe; Phases 2-5 authorised by the operator
+status: Phases 1-5 shipped. Phase 4 amended 2026-08-13 at operator instruction — the macOS boundary's workflow_dispatch trigger removed after measured billing (75 macOS min = $4.65 of a $10 budget, more than 2,740 Ubuntu min); boundary-macos now fires on push-to-main only, coupled gate-status.sh filter moved with it.
 created: 2026-08-11
-updated: 2026-08-12
+updated: 2026-08-13
 owner: noel
-branch: feat/gh509-optimize-ci
+branch: fix/gh509-macos-dispatch-off
 doc_type: infrastructure
 effort: 3
 complexity: 3
@@ -25,7 +25,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phase 1 (the docs/fast/full classifier for pull requests) shipped in PR #511. Replanned 2026-08-12 after the operator reframed the product: **XYZ is a local developer toolkit for Mac users.** That single fact deleted more of the previous plan than it added. | Phases 2-5 below, operator-directed. |
+| Phases 1-5 shipped. **Phase 4 amended 2026-08-13 at operator instruction:** the macOS boundary's `workflow_dispatch` trigger was removed after measured billing showed 75 macOS minutes cost $4.65 against a $10 monthly budget — more than 2,740 Ubuntu minutes. `boundary-macos` now fires on push-to-`main` only; the coupled `gate-status.sh` filter moved with it, witnessed red in four directions. | Watch the next invoice for macOS minutes at zero. The pre-merge macOS witness is now unserved and that gap is recorded, not closed — decide whether to re-arm dispatch behind a spending policy or accept local-gate evidence. |
 
 ## The reframe that drives everything
 
@@ -105,6 +105,12 @@ for having any honest hosted evidence at all.
 And the boundary is cheap *because* it is rare: at ~12 minutes and 10×, one qualifying run costs well
 under a dollar, a handful of times a month.
 
+> **Superseded 2026-08-13 by measurement, kept for the record.** The real figure is **$0.062/min on
+> macOS 3-core**, so a full boundary run is **≈$1.25–1.50**, not "well under a dollar" — and a private
+> repo draws **no included-minute discount** on macOS at all. Three dispatches in one day consumed
+> roughly half a $10 monthly budget. The estimate above is what justified arming `workflow_dispatch`;
+> the amendment under Phases is what happened when it met the invoice.
+
 ## Decision
 
 ### 1. Ubuntu is an advisory portability canary
@@ -137,12 +143,19 @@ being actioned, and it should be deleted rather than kept as decoration.
 | PR, critical surface | ubuntu (advisory) | `full` |
 | push → `development` | ubuntu (advisory) | **classified from the pushed range**, docs/fast/full |
 | push → `main` | **macOS** | full, no skips |
-| `workflow_dispatch` at a chosen SHA | **macOS** | full, no skips |
+| `workflow_dispatch` | ubuntu (advisory) | full, no skips — **macOS removed 2026-08-13**, see the Phase 4 amendment |
 
 **`workflow_dispatch` is the trigger that will actually get used.** Work lands on `development` and
 `main` sees almost nothing, so a `main`-only macOS gate would always arrive after the promotion
 decision rather than before it. The manual trigger is how a `development` commit gets qualified without
 being merged first.
+
+> **Amended 2026-08-13.** This reasoning was correct and is *why removing the trigger has a real
+> cost*, not a reason it survived: the macOS trigger came off for spend (see the Phase 4 amendment),
+> so the pre-merge qualification path it describes is now **unserved**. The boundary is main-only and
+> therefore arrives after the promotion decision — exactly the failure mode this paragraph warned
+> about, accepted deliberately in exchange for the budget. Re-arming it for one specific commit is a
+> deliberate ~$1.25–1.50 spend, not a default.
 
 PRs get no macOS by default. Local covers them, and per-PR macOS would restore the original spend at
 ten times the rate.
@@ -216,6 +229,13 @@ person making the claim.
 > **No commit is promoted from `development` unless that exact commit has a green *hosted* macOS full
 > result** — `push` to `main` or `workflow_dispatch`.
 
+**Amended 2026-08-13: this rule is now unsatisfiable before a merge.** With the macOS trigger reduced
+to push-to-`main`, the only hosted macOS green a commit can have is one produced *by* its promotion.
+The rule is kept as written rather than quietly weakened to something the current triggers can meet,
+because the honest state is that the promotion gate regressed to a post-hoc check for a budget reason —
+and a rule rewritten to match what we can afford would hide that. To satisfy it as stated, re-arm
+`workflow_dispatch` for that commit deliberately and pay for the run.
+
 Ubuntu green proves nothing about what we ship and does not satisfy this. **Neither does a local
 record** — and the previous draft's "hosted, *or* locally recorded" was circular, caught by agy on
 review: if a self-reported record satisfies the boundary, the boundary is optional and buys exactly
@@ -250,8 +270,49 @@ the repo public. That buys something no amount of routing can.
 | 1 | PR classifier | **SHIPPED** (PR #511) |
 | 2 | Ubuntu → advisory | **SHIPPED** `bc2e1d1d` — `canary-ubuntu`, `continue-on-error: true`, `if: always()` verdict step; contract test 26→30 with both assertions witnessed red |
 | 3 | Route `development` pushes | **SHIPPED** — classifier applied to `before..sha`, `--no-renames`, fail-closed on an unusable range; existing concurrency untouched |
-| 4 | macOS boundary job | **SHIPPED** — `boundary-macos` on `macos-latest`, `main` + `workflow_dispatch`, `./validate.sh` direct, no skip list, 45-min bound, prints its resolved SHA. Four assertions, four witnessed controls |
+| 4 | macOS boundary job | **SHIPPED**, then **AMENDED 2026-08-13** — `boundary-macos` on `macos-latest`, `./validate.sh` direct, no skip list, 45-min bound, prints its resolved SHA. Trigger narrowed from `main` + `workflow_dispatch` to **`main` only**; see "The dispatch trigger did not survive the invoice" below |
 | 5 | Local evidence | **SHIPPED** — `utils/gate-record.sh` (refuses a dirty tree), `ci-local.sh --probe`, `utils/gate-status.sh`; `test/gh509-gate-evidence.sh` 17/0, registered |
+
+### The dispatch trigger did not survive the invoice (amendment, 2026-08-13)
+
+Phase 4 argued the boundary was affordable *because it is deliberate*: `main` sees almost no direct
+pushes, so in practice it fires on `workflow_dispatch`, and "a run costs well under a dollar a handful
+of times a month." Measured against the org's actual August usage
+(`gh api orgs/.../settings/billing/usage` — the per-run billable-timing API reports 0min for this org
+and is unusable), that estimate was wrong in the direction that matters:
+
+| SKU | minutes | net |
+|---|---|---|
+| Ubuntu | 2,740 | $4.44 (after the 2,000 included minutes) |
+| macOS 3-core | **75** | **$4.65** (no included-minute discount at all) |
+
+**Seventy-five macOS minutes cost more than 2,740 Linux minutes** — the runner bills ~10× *and*, on a
+private repo, draws no discount. Each full boundary dispatch is ≈$1.25–1.50; three landed on one
+branch in a single day and consumed roughly half a $10 monthly budget. **The gating was never wrong.
+What was missing was a brake on how often the deliberate trigger gets pulled** — "deliberate" is not a
+rate limit when the same operator can dispatch it repeatedly while iterating on the workflow itself.
+
+**What this costs, stated rather than glossed:** Phase 4's argument for `workflow_dispatch` was
+correct and is now unserved. Work lands on `development`; `main` sees almost nothing; so a main-only
+boundary arrives *after* the promotion decision instead of before it. That gap is open, and the
+substitute is explicitly weaker — the local macOS gate plus `utils/gate-record.sh`, which is
+self-reported and by its own printed text does **not** qualify a promotion. GH-528's `--parallel N`
+makes that substitute a ~3-minute run instead of ~16, which is the only reason it is realistic to lean
+on. To qualify a specific pre-merge commit, re-arm the trigger deliberately, spend the ~$1.25–1.50,
+and disarm it again.
+
+**The coupled filter moved with it.** `utils/gate-status.sh` mirrors the boundary job's `if:` to
+decide which hosted runs contain a macOS job. A dispatch run now contains none, so a filter still
+accepting `workflow_dispatch` would report an ubuntu-only run as boundary evidence — the identical
+false green case 5 was written to stop, arriving from the opposite direction. Both assertions were
+rewritten to read the *specific deciding line* rather than the file (`workflow_dispatch` remains a
+legitimate workflow-level trigger for the ubuntu full route, and both files discuss it in prose, so a
+whole-file grep would pass against a re-armed boundary on the strength of a comment). Witnessed in
+four directions, one failure per mutation: `test/baselines/GH-509-phase5-negative-control.md`.
+
+**Honest limit:** these assert what the workflow *declares*. Proving GitHub no longer schedules a
+macOS job on dispatch would require a hosted dispatch — the exact spend this removes. The observable
+substitute is the invoice.
 
 Phases 2-4 are independent. Phase 5 is the highest value and the only one that changes daily practice.
 
