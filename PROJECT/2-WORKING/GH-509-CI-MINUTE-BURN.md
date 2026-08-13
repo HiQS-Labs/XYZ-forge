@@ -298,6 +298,31 @@ Phases 2-5:
 - [ ] ~~Verify required-check behaviour~~ — **struck as unsatisfiable**: no branch protection exists on
       this plan. Replaced by the operator surface.
 
+## Independent review
+
+`relay-system/2026-08-12/gh509-ci-strategy-macos-review.md` — **STATUS: Approved** (agy, round 2,
+`relay-drive.sh --review-once`, exit 0). Three `[Pass]` findings, each quoting the text it verified:
+the circular promotion rule closed, the concurrency ceremony deleted, the advisory-canary
+justification replaced with a mechanism.
+
+**SCOPE OF THAT APPROVAL, stated because "Approved" is exactly the word that gets over-read.** The
+relay's artifact was *this document*. agy reviewed the **plan**; it did not review
+`.github/workflows/ci.yml`, `utils/ci-route.sh`, `utils/gate-record.sh`, `utils/gate-status.sh`, or
+any of the suites. GUIDING-PRINCIPLES #10 ("done means verified") is therefore satisfied *for the
+plan* and **not** for the implementation, which has had no independent review — only my own tests and
+their recorded controls.
+
+Two things a reviewer of the *implementation* should attack first, named here so they are not
+discovered as surprises:
+
+1. **`continue-on-error` is still unproven at runtime.** PR #526 shows the boundary correctly
+   `skipping` on a pull request — real hosted evidence — but nothing yet shows a canary *failure*
+   leaving the workflow conclusion green while the job's own conclusion records failure. Under
+   GUIDING-PRINCIPLES #13 that is a gate without its witnessed control.
+2. **`gate-status.sh` duplicates the boundary job's `if:` condition.** A test pins the two together,
+   but that is a mitigation, not a fix: principle #2 says nothing canonical should live in two places
+   where it can drift. The honest version is that this trades a silent drift for a loud one.
+
 ## Validation
 
 | Check | Result |
