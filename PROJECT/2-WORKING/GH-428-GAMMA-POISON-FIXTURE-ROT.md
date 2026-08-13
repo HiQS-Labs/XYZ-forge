@@ -17,6 +17,12 @@ goal: >
   src/paths.js refactor produces a visible failing check instead of silent fixture rot.
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Queued by the 2026-08-13 `/10days` sweep; `swarm-preflight --gh-issue 428` returned ready (exit 0) and a packet was written. Rot independently reproduced: `git apply --check` still fails at `src/paths.js:9`. | NOT BUILT. Serialized into wave 2 behind GH-430 because both lanes touch `validate.sh` and `test/`. The wave-1 gate went red on unrelated PDDA doc-contract defects, so this lane was never dispatched. |
+
 ## Why
 
 `git apply --check test/fixtures/gamma-poison/poison.patch` fails on `development`:

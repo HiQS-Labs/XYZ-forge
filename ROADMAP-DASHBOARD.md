@@ -6,10 +6,13 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 178 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
+Summary: 181 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-421 · relay-xyz SKILL.md documents a vendor subcommand that does not exist | — | [GH-421-RELAY-XYZ-VENDOR-DOC.md](PROJECT/2-WORKING/GH-421-RELAY-XYZ-VENDOR-DOC.md) · [#421](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/421) |
+| GH-428 · gamma-poison poison.patch no longer applies, and nothing detects fixture rot | — | [GH-428-GAMMA-POISON-FIXTURE-ROT.md](PROJECT/2-WORKING/GH-428-GAMMA-POISON-FIXTURE-ROT.md) · [#428](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/428) |
+| GH-430 · improve-loop.sh defaults its state dir to /tmp, so provenance evidence evaporates | — | [GH-430-IMPROVE-LOOP-STATE-DIR.md](PROJECT/2-WORKING/GH-430-IMPROVE-LOOP-STATE-DIR.md) · [#430](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/430) |
 | GH-528 · measure and recalibrate the test suite — spike verdict + experimental parallel gate | — | [GH-528-TEST-SUITE-RECALIBRATION.md](PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md) · [#528](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/528) |
 | GH-510 · Agent2Agent watch/drive operating levels | — | [GH-510-AGENT2AGENT-WATCH-DRIVE.md](PROJECT/2-WORKING/GH-510-AGENT2AGENT-WATCH-DRIVE.md) · [#510](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/510) |
 | GH-509 · tier CI to stop per-push Actions minute burn | — | [GH-509-CI-MINUTE-BURN.md](PROJECT/2-WORKING/GH-509-CI-MINUTE-BURN.md) · [#509](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/509) |

@@ -17,6 +17,12 @@ goal: >
   uncommitted provenance claim is treated as no claim.
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Queued by the 2026-08-13 `/10days` sweep and built the same day on `marathon/10days-2026-08-13`. The default is now `$HERE/state/improve-loop.$$` → `relay-automation/state/`, confirmed by `git check-ignore` to match no ignore rule, so it gets real `rtl_enforce` containment unlike `.tick/`. `test/gh430-state-dir-tracked-default.sh` is registered in `validate.sh` and reports **8 pass / 0 fail inside the full gate**; the lane verified it red against the reverted `/tmp` default. `AGENTS.md` carries the "uncommitted provenance is no claim" rule. | Operator review of the chosen branch: the issue offered "refuse without `--state-dir`" as the alternative, and this lane took the in-repo-default branch for backward compatibility. Invert it if that is wrong. |
+
 ## Why
 
 `relay-automation/improve-loop.sh:70` defaults the state directory to a process-scoped temp path:

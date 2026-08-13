@@ -17,6 +17,12 @@ goal: >
   skill docs for the same wrong form.
 ---
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| Queued by the 2026-08-13 `/10days` sweep and built the same day on `marathon/10days-2026-08-13`: `skills/relay-xyz/SKILL.md:158` now documents `xyz-vendor.sh <target-repo> [--no-register]`, and the conclusion prose naming `xyz-vendor.sh` (not `install.sh`) as the per-repo isolation path is unchanged. | One out-of-allowlist match remains and was deliberately NOT edited by the lane: `skills/relay-xyz/find-harness.sh:255` prints the same bogus `vendor` form inside a hint string. It needs its own change so criterion 2 holds repo-wide. |
+
 ## Why
 
 `skills/relay-xyz/SKILL.md` documents vendoring as `xyz-vendor.sh vendor <repo>`. There is no
