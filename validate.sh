@@ -397,11 +397,23 @@ else
   FAILED+=("python:test_python_layer.py")
 fi
 
+# GH-428: non-recursive staleness probe for the gamma-poison fixture (does NOT run
+# verify-fixture.sh — that runs this whole suite, so nesting it would recurse).
+echo
+echo "==============================="
+echo "Running gamma-poison fixture staleness probe"
+echo "==============================="
+if git apply --check "$HERE/test/fixtures/gamma-poison/poison.patch" 2>/dev/null; then
+  PASSED+=("gamma-poison-staleness-probe")
+else
+  FAILED+=("gamma-poison-staleness-probe")
+fi
+
 echo
 echo "==============================="
 echo "Summary"
 echo "==============================="
-TOTAL=$(( ${#TESTS[@]} + 1 ))
+TOTAL=$(( ${#TESTS[@]} + 2 ))
 echo "passed: ${#PASSED[@]} / ${TOTAL}"
 for t in "${PASSED[@]}"; do echo "  + $t"; done
 if [ "${#FAILED[@]}" -gt 0 ]; then
