@@ -98,6 +98,8 @@ def main():
         prompt = drift_brief + "\n" + prompt
         
     prompt += "\n\nNOTE (Aider harness): do NOT run any tick commands — the harness has already claimed the token and will release/close it for you after your edit. Spend this turn ONLY editing the file(s) added to the chat: append your block to the relay file and set its STATUS, and edit the artifact(s) if this is a build turn."
+    if "qwen" in aider_model.lower():
+        prompt += "\n\nCRITICAL CONSTRAINT: Keep your internal reasoning extremely brief (under 50 words). Output your SEARCH/REPLACE blocks immediately."
 
     claim_paths = claim_paths_for_turn(root, f, allow_paths)
     rel_relay = claim_paths[0]

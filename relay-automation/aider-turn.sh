@@ -142,6 +142,9 @@ drift_brief="$(rtl_drift_brief "$me" "${TICK_REPO_ROOT:-$ROOT}")"
 # Aider can't run shell mid-turn, and this shim owns the token ops — tell the model so, so it spends the
 # turn on the file edit(s) instead of emitting tick commands it can't run.
 prompt="${prompt}"$'\n\n'"NOTE (Aider harness): do NOT run any tick commands — the harness has already claimed the token and will release/close it for you after your edit. Spend this turn ONLY editing the file(s) added to the chat: append your block to the relay file and set its STATUS, and edit the artifact(s) if this is a build turn."
+if [[ "${AIDER_MODEL}" == *"qwen"* ]]; then
+  prompt="${prompt}"$'\n\n'"CRITICAL CONSTRAINT: Keep your internal reasoning extremely brief (under 50 words). Output your SEARCH/REPLACE blocks immediately."
+fi
 
 # GH-251 review mode: on a REVIEW-ONLY turn (ALLOW_PATHS empty) Aider is being used as a REVIEWER, not
 # an editor. Aider defaults to an editor posture and drifts into "what changes would you like?" instead
