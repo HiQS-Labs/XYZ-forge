@@ -25,20 +25,31 @@ jobs:
   #
   # WHY IT IS RARE, AND MUST STAY RARE: hosted macOS runners bill at roughly 10x Linux. At the volume
   # this repo generates (37 pushes to `development` in one 24h sample) macOS-everywhere would cost
-  # thousands a month. The boundary is affordable precisely because it is deliberate: `main` sees
-  # almost no direct pushes, so in practice this fires on `workflow_dispatch` — a run costs well under
-  # a dollar a handful of times a month. Do NOT add `pull_request` here.
+  # thousands a month. Do NOT add `pull_request` here.
   #
-  # WHY `workflow_dispatch` AND NOT JUST `main`: work lands on `development` and `main` sees almost
-  # nothing, so a main-only boundary would always arrive AFTER the promotion decision instead of
-  # before it. The manual trigger is how a `development` commit gets qualified without being merged
-  # first, and it is the trigger that will actually get used.
+  # WHY `workflow_dispatch` WAS REMOVED (2026-08-13, measured — this was the original design and it
+  # did not survive contact with the invoice). The theory was that a dispatch costs "well under a
+  # dollar a handful of times a month". The org's actual August usage says otherwise: macOS 3-core
+  # 75 minutes = **$4.65 net**, against Ubuntu's 2,740 minutes = $4.44 net. Seventy-five macOS minutes
+  # cost more than 2,740 Linux minutes, because macOS bills ~10x AND draws no included-minute discount
+  # on a private repo. Three dispatches on one branch in one day consumed roughly half a $10 monthly
+  # budget. The gating was correct; what was missing was any brake on how often the deliberate trigger
+  # gets pulled — and "deliberate" is not a rate limit when the same person can dispatch it while
+  # iterating on the workflow itself.
   #
-  # HONEST LIMIT ON "EXACT COMMIT": `workflow_dispatch` targets a REF, not an arbitrary SHA — GitHub
-  # resolves the ref's current HEAD. So this job cannot be pointed at an old commit; it qualifies
-  # whatever that ref points to when dispatched. The resolved SHA is printed into the job summary for
-  # exactly this reason: the promotion rule compares against a recorded SHA, not against "the run I
-  # remember starting".
+  # WHAT THIS COSTS US, STATED PLAINLY: the original argument for `workflow_dispatch` was real —
+  # work lands on `development` and `main` sees almost nothing, so a main-only boundary arrives AFTER
+  # the promotion decision rather than before it. That gap is now open. The substitute is the LOCAL
+  # gate on the platform we ship to: `./validate.sh` (and, per GH-528, `--parallel N` for a ~3-minute
+  # run) plus `utils/gate-record.sh`, which is self-reported and does NOT qualify a promotion. If a
+  # pre-merge macOS witness is needed for a specific commit, re-enable this trigger deliberately,
+  # spend the ~$1.25-1.50, and turn it back off — rather than leaving it armed by default.
+  #
+  # HONEST LIMIT ON "EXACT COMMIT" (retained; applies to any re-enabled dispatch): `workflow_dispatch`
+  # targets a REF, not an arbitrary SHA — GitHub resolves the ref's current HEAD. So this job cannot
+  # be pointed at an old commit; it qualifies whatever that ref points to when dispatched. The resolved
+  # SHA is printed into the job summary for exactly this reason: the promotion rule compares against a
+  # recorded SHA, not against "the run I remember starting".
   #
   # NO SKIP LIST, deliberately. It invokes the authoritative validator directly rather than scraping
   # `TESTS` out of it — the scrape can only see `.sh` entries, which is how the 20-test Python layer
@@ -46,7 +57,7 @@ jobs:
   # is a second thing to keep honest; there is no second list here.
   boundary-macos:
     name: promotion boundary (macOS — the platform we ship to)
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: macos-latest
     # A bound, not an estimate. The suite runs ~13-15 min locally; at 10x billing an unbounded hang is
     # the expensive failure mode, so cap it rather than discover the cost afterwards.
