@@ -166,17 +166,7 @@ file_args=(--file "$rel_relay")
 claim_paths="$rel_relay"
 if [[ -n "${ALLOW_PATHS:-}" ]]; then
   IFS=',' read -ra _aps <<<"${ALLOW_PATHS}"
-  _added=0
-  for _ap in "${_aps[@]}"; do
-    _ap="${_ap#"${_ap%%[![:space:]]*}"}"; _ap="${_ap%"${_ap##*[![:space:]]}"}"
-    if [[ -n "$_ap" ]]; then
-      claim_paths="$claim_paths,$_ap"
-      if [[ "$_added" -lt 1 ]]; then
-        file_args+=(--file "$_ap")
-        _added=$((_added + 1))
-      fi
-    fi
-  done
+  for _ap in "${_aps[@]}"; do _ap="${_ap#"${_ap%%[![:space:]]*}"}"; _ap="${_ap%"${_ap##*[![:space:]]}"}"; [[ -n "$_ap" ]] && { file_args+=(--file "$_ap"); claim_paths="$claim_paths,$_ap"; }; done
 fi
 
 # GH-119: on a REVIEW-ONLY turn (ALLOW_PATHS empty — the Reviewer must never edit the artifact), give

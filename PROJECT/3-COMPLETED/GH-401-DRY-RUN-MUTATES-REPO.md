@@ -29,9 +29,6 @@ goal: >
 
 # GH-401 · a dry run that mutates the repo
 
-## CRITICAL REVIEWER CONSTRAINTS (WAVE 4)
-When handing off to the builder, give it exactly ONE micro-task and cite ONLY the single most critical file needed for that task. Do not provide broad context.
-
 ## Status
 
 | What was just completed | What's next |

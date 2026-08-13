@@ -104,7 +104,7 @@ def main():
     claim_paths = claim_paths_for_turn(root, f, allow_paths)
     rel_relay = claim_paths[0]
     file_args = ["--file", rel_relay]
-    for path in claim_paths[1:2]:
+    for path in claim_paths[1:]:
         file_args.extend(["--file", path])
     
     read_args = []
