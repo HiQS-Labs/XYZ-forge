@@ -31,6 +31,9 @@ goal: >
 
 # GH-426 · contained, and the file is in the repo anyway
 
+## CRITICAL REVIEWER CONSTRAINTS (WAVE 4)
+When handing off to the builder, give it exactly ONE micro-task and cite ONLY the single most critical file needed for that task. Do not provide broad context.
+
 ## Status
 
 | What was just completed | What's next |
