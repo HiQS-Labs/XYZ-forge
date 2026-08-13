@@ -43,6 +43,7 @@ _EXIT_MEANINGS = {
     7: "turn timeout / hang",
     8: "lane parked at the attempt cap",
     9: "post-approve command failed, approval preserved",
+    127: "relay-drive could not execute — check MARATHON_RELAY_DRIVE",
 }
 
 
@@ -237,6 +238,53 @@ def run_tick_loud(cmd_args):
             for line in (stream or "").splitlines():
                 eprint(f"  {line}")
         sys.exit(res.returncode)
+
+def preflight_write_set_trackable(repo_root, paths):
+    """GH-514: BLOCK before dispatch if the repo cannot track a path this run must commit.
+
+    `git check-ignore -v` is the authority rather than a hand-rolled read of `.gitignore`: it
+    consults every source git itself consults (repo .gitignore at any depth, .git/info/exclude, the
+    global core.excludesFile) and reports WHICH rule matched, in `<source>:<line>:<pattern>` form.
+    Re-implementing that matching would produce a check that disagrees with the tool whose behaviour
+    it is trying to predict — and disagreeing quietly is the failure being fixed.
+
+    Exit status contract: 0 = ignored (the bad case here), 1 = not ignored, 128 = error. An error is
+    treated as NOT ignored, deliberately: this guard exists to stop a known halt, and it must not
+    invent a new way for a healthy run to fail. A repo where check-ignore cannot run is one where the
+    old behaviour — find out at `git add` — is no worse than refusing on a guess.
+    """
+    blocked = []
+    for p in paths:
+        try:
+            res = subprocess.run(["git", "-C", repo_root, "check-ignore", "-v", "--no-index", p],
+                                 capture_output=True, text=True)
+        except Exception:
+            continue
+        if res.returncode == 0 and res.stdout.strip():
+            blocked.append((p, res.stdout.strip().splitlines()[0]))
+
+    if not blocked:
+        return
+
+    eprint("marathon-drive: BLOCKED before dispatch — this repo cannot track files this run must commit.")
+    for p, rule in blocked:
+        rel = p[len(repo_root) + 1:] if p.startswith(repo_root + "/") else p
+        eprint(f"  {rel}")
+        eprint(f"    ignored by: {rule}")
+    eprint("")
+    eprint("  Nothing has been dispatched, so no builder turn has been spent. Left unchecked this")
+    eprint("  surfaces as a phase HALT after the turn, and on the escalation path the record")
+    eprint("  explaining the halt is itself one of the files that cannot be committed.")
+    eprint("")
+    eprint("  Remedy, in the order they are usually right:")
+    eprint("    1. Run with --target-root <code-repo>. Harness output (relay, escalation,")
+    eprint("       transcripts) then stays in THIS repo and only code changes land in the target —")
+    eprint("       which is what --target-root is for, per marathon.sh's own usage text.")
+    eprint("    2. Or un-ignore the path above in the rule named beside it, if this repo is meant")
+    eprint("       to track harness output.")
+    eprint("  Not doing it for you: a repo that ignores harness output usually means it, and")
+    eprint("  silently rewriting someone's ignore rules is a worse failure than this one (GH-514).")
+    sys.exit(2)
 
 def _repo_rel_prefix(path, root):
     """GH-484: `path` as a repo-relative prefix with a trailing slash, for matching the paths
@@ -440,6 +488,12 @@ def main():
     parser.add_argument("--require-clean", dest="require_clean", action="store_true")
     parser.add_argument("--requires-test", dest="requires_test")  # GH-249: nominated test must change
     parser.add_argument("--force", dest="force", action="store_true")
+    # GH-402: deliberately NOT folded into --force. --force bypasses the per-lane attempt cap, which
+    # is a "you have tried this too often" bound; this is a "you are about to commit to trunk" bound.
+    # One flag for both would mean an operator retrying a flaky lane silently acquires permission to
+    # land on main, which is the kind of coupling that is obvious only after it happens.
+    parser.add_argument("--allow-trunk-commit", dest="allow_trunk_commit", action="store_true",
+                        help="permit committing to the receiving repo's trunk/default branch (GH-402)")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
     parser.add_argument("--log-github", dest="log_github", action="store_true")  # GH-284 P2 / GH-322
     parser.add_argument("--help", action="store_true")
@@ -783,6 +837,13 @@ def main():
     # built to provide was absent from the lane that actually runs. Both halves are ported here.
     run_gate_result = ["not-run"]
     drive_started = [False]
+    # GH-388: set once this phase has reached a DECIDED outcome and written a durable record for it
+    # (escalate() writes ESCALATION.md + archives the transcript; complete_phase_success archives it).
+    # Read only by _write_interrupted_phase_record, whose whole job is the case where neither ran —
+    # a phase killed before the driver decided anything. A second flag rather than inferring from
+    # run_gate_result, because "the gate did not run" and "this phase never reached an outcome" are
+    # different facts and #407 exists because they were once conflated.
+    phase_outcome_recorded = [False]
 
     def _cmd_out(cmd, cwd=None):
         # Best-effort stdout capture: a missing binary, a non-zero exit, or a crash all yield "".
@@ -899,11 +960,25 @@ def main():
                 return m.group(1)
         return ""
 
-    def trunk_ref():
-        ref = _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"])
+    def trunk_ref(repo=None):
+        """The repo's trunk: `origin/HEAD` if resolvable, else whatever HEAD points at right now.
+
+        GH-402: takes a repo path. It was hardcoded to `root`, which is correct for the run-log's
+        landed-yes/no probe (its only caller) and wrong for the branch guard below, where the repo
+        that RECEIVES the commit may be `--target-root` — a different repo, with a different trunk.
+        Defaulting to `root` keeps the existing caller byte-identical.
+
+        The fallback matters and is not a rounding error: a repo with no `origin` (a fresh fixture, a
+        local-only clone) has no origin/HEAD, and returning nothing there would silently disable the
+        guard in exactly the setup where a stray commit is least recoverable. Falling back to the
+        CURRENT branch makes the guard read "you are on the branch you started on", which for a repo
+        with no remote is the best available meaning of trunk.
+        """
+        repo = repo or root
+        ref = _cmd_out(["git", "-C", repo, "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"])
         if ref and ref != "origin/HEAD":
             return ref
-        return _cmd_out(["git", "-C", root, "symbolic-ref", "--quiet", "--short", "HEAD"])
+        return _cmd_out(["git", "-C", repo, "symbolic-ref", "--quiet", "--short", "HEAD"])
 
     def marathon_run_github_log(driver_exit):
         if not (args.log_github and drive_started[0]):
@@ -1035,6 +1110,67 @@ def main():
         except Exception:
             pass
 
+    def _write_interrupted_phase_record(code):
+        """GH-388: the phase that dies is the one phase with no record. Give it one.
+
+        `save_transcript()` runs on success, and `escalate()` calls it too — but both are reached only
+        when the driver decides an outcome. A phase KILLED mid-run (operator ^C, a driver wall cap, a
+        supervisor SIGTERM, the host going down under it) reaches neither, which is precisely the
+        shape of the run that produced this issue: phases 1-4 each have a transcript and phase 5, the
+        one that killed the host, has none. The archive is therefore biased toward success by
+        construction — a systematically incomplete record, not a gap.
+
+        Deliberately CONTENT-BEARING, because an empty or pre-created file satisfies the words and
+        none of the need (the issue's own review caught that loophole). It carries the phase id, the
+        relay state at interruption — read from the relay file NOW, not from a variable set earlier —
+        and the reason, and it is written at interruption time so its mtime is after the phase began.
+
+        Never raises: a failure to record must not change how the run ends.
+        """
+        if not drive_started[0]:
+            return                      # nothing was ever dispatched; an empty record would lie
+        if code == 0 or phase_outcome_recorded[0]:
+            return                      # completed, or escalate() already wrote a durable record
+        try:
+            status_line, round_count = "unknown", 0
+            try:
+                with open(relay_file, "r", encoding="utf-8", errors="replace") as f:
+                    for ln in f:
+                        if ln.startswith("STATUS:"):
+                            status_line = ln.strip()
+                        if ln.lstrip().startswith("### Round"):
+                            round_count += 1
+            except OSError:
+                status_line = "relay file unreadable at interruption"
+
+            reason = _exit_meaning(code) if code else "interrupted"
+            dest = os.path.join(phase_dir, "PHASE-INTERRUPTED.md")
+            os.makedirs(phase_dir, exist_ok=True)
+            with open(dest, "w", encoding="utf-8") as f:
+                f.write(
+                    f"# INTERRUPTED — Marathon Phase {args.phase_id}\n\n"
+                    f"phase: {args.phase_id}\n"
+                    f"task: {relay_task}\n"
+                    f"reason: {reason}\n"
+                    f"exit-code: {code}\n"
+                    f"interrupted-at: {_utc_now_z()}\n"
+                    f"relay-file: {rel_relay}\n"
+                    f"relay-status: {status_line}\n"
+                    f"relay-rounds-recorded: {round_count}\n"
+                    f"\nThis phase did not reach an outcome, so neither save_transcript() nor\n"
+                    f"escalate() ran. The relay file above holds whatever the turns had written when\n"
+                    f"the run stopped; this record exists so the phase is not simply absent (GH-388).\n"
+                )
+            log(f"interrupted-phase record written: {dest} (reason: {reason})")
+            # Best-effort archive of the relay state itself, for the same reason escalate() does it.
+            try:
+                save_transcript()
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    _ON_EXIT.append(_write_interrupted_phase_record)
     _ON_EXIT.append(_marathon_drive_on_exit)
 
     # GH-238: a vendored consumer normally has no root-level validate.sh. Do NOT spend a builder and
@@ -1102,13 +1238,23 @@ def main():
         command_name = parts[0] if parts else ""
         if not command_name:
             _pre_advance_not_runnable("command is empty")
-        if "/" in command_name:
+        if re.match(r'^[A-Za-z_][A-Za-z0-9_]*=', command_name):
+            _pre_advance_not_runnable(f"a gate command may not begin with an environment assignment ('{command_name}'). The gate program is resolved from the first token, and the gate environment is scrubbed (GH-441) — pass configuration in a file beside the gate script, not the environment.")
+        elif "/" in command_name:
             gate_path = command_name if os.path.isabs(command_name) else os.path.join(_gate_root, command_name)
             if not (os.path.isfile(gate_path) and os.access(gate_path, os.X_OK)):
                 _pre_advance_not_runnable(f"executable does not exist or is not executable: {gate_path}")
         else:
             if not shutil.which(command_name):
                 _pre_advance_not_runnable(f"command '{command_name}' is not on PATH")
+
+    def _preflight_relay_drive():
+        if not relay_drive_bin or not os.path.exists(relay_drive_bin):
+            die(f"relay-drive does not exist: {relay_drive_bin}")
+        if not os.path.isfile(relay_drive_bin):
+            die(f"relay-drive is not a file: {relay_drive_bin}")
+        if not os.access(relay_drive_bin, os.X_OK):
+            die(f"relay-drive is not executable: {relay_drive_bin}")
 
     os.environ["MARATHON_BUILDER"] = args.builder
     os.environ["MARATHON_REVIEWER"] = args.reviewer
@@ -1162,12 +1308,14 @@ def main():
         try:
             _preflight_check_issue_closed()
             _preflight_pre_advance_gate()
+            _preflight_relay_drive()
         except SystemExit as _e:
             if _e.code not in (0, None):
                 eprint("marathon-drive: (dry-run continues; a live run would halt here)")
     else:
         _preflight_check_issue_closed()
         _preflight_pre_advance_gate()
+        _preflight_relay_drive()
 
     if args.artifact_paths:
         os.environ["ALLOW_PATHS"] = args.artifact_paths
@@ -1248,6 +1396,7 @@ relay-file: {rel_relay}
         except Exception as exc:  # noqa: BLE001 — archive failure must never mask the escalation
             log(f"warn: could not archive relay transcript for escalated phase {args.phase_id}: {exc}")
         subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(f"escalation written: {esc_file} (reason: {reason})")
         # marathon-drive.sh:867-868 — last thing escalate() does, carrying the relay-drive exit code.
         xyz_debug_log_append(
@@ -1620,6 +1769,7 @@ relay-file: {rel_relay}
         subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         save_transcript()
+        phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(success_text)
         xyz_marathon_emit("green", success_text)
         if args.post_approve_cmd:
@@ -1877,6 +2027,91 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         print("--- END RENDERED RELAY ---")
         print(f"tick seed: log task.created {relay_task} + claim --agent marathon + release --to {args.builder}")
         sys.exit(0)
+
+    # GH-514: prove the repo can TRACK this run's write-set before anything is dispatched.
+    #
+    # `marathon.sh --help` has always stated this failure — "without --target-root, marathon-drive's
+    # `git add` of RELAY.md / ESCALATION.md / the transcript fails and the phase HALTs" — and nothing
+    # checked it. So a repo that deliberately ignores harness output (a public one, or a vendored
+    # install where ensure_gitignore added `.xyz/` and never un-ignored the output dirs, #314) was
+    # discovered as a halt AFTER a builder turn had been spent. Worse on the escalation path: the
+    # record explaining why the run stopped is itself one of the files that cannot be committed, so
+    # the run loses its own account of the failure.
+    #
+    # Checked against `root`, deliberately, because that is the repo these files are committed to —
+    # under --target-root only CODE changes land elsewhere, and the relay/escalation/transcript stay
+    # here. Checking the target instead would be the plausible-looking wrong answer.
+    preflight_write_set_trackable(root, [relay_file, os.path.join(phase_dir, "ESCALATION.md")])
+
+    # GH-402: refuse to make the first commit if the RECEIVING repo is sitting on its trunk.
+    #
+    # `marathon/<slug>-<date>` is advisory text in a preflight packet and nothing enforces it, so a
+    # marathon commits to whatever branch the target happens to have checked out. The driver is the
+    # last common point on every commit path — relay turns, escalations, transcripts all funnel
+    # through here — which is why the fix belongs at this one site rather than in each writer.
+    #
+    # Measured against `args.target_root or root`, the existing idiom for "the repo this run writes
+    # to", and against THAT repo's trunk rather than the harness's: under --target-root they are
+    # different repos with different defaults, and checking the harness's would be the plausible
+    # wrong answer that passes every test written against a same-repo fixture.
+    def refuse_trunk_commit():
+        commit_root = args.target_root or root
+        # The carve-out preflight already computes: risk==1 in an independent zone is allowed to
+        # proceed on the current branch without asking (SP_SKIP_BRANCH_PROMPT). Honoured from the
+        # environment rather than by parsing the packet — the driver does not read packets, and
+        # GH-386 is what happens when something pretends it does.
+        if os.environ.get("SP_SKIP_BRANCH_PROMPT") == "1":
+            log("branch guard: skipped — preflight recorded the risk=1/independent-zone carve-out (GH-402)")
+            return
+        if args.allow_trunk_commit or os.environ.get("MARATHON_ALLOW_TRUNK_COMMIT") == "1":
+            log("branch guard: overridden by --allow-trunk-commit / MARATHON_ALLOW_TRUNK_COMMIT (GH-402)")
+            return
+
+        current = _cmd_out(["git", "-C", commit_root, "symbolic-ref", "--quiet", "--short", "HEAD"])
+        if not current:
+            return          # detached HEAD: not trunk, and not this guard's business
+
+        # Fires only on a SHARED trunk — one `origin/HEAD` actually resolves to. This is a narrowing
+        # of trunk_ref()'s more permissive fallback, and it is deliberate on both counts.
+        #
+        # The harm this guard exists to prevent is stated in its own message: a marathon's turns
+        # commit continuously, so a run that lands on trunk cannot be un-landed by stopping it, only
+        # by rewriting history SOMEONE ELSE MAY ALREADY HAVE PULLED. In a repo with no remote there
+        # is no someone else — a stray commit is local and `git reset` undoes it completely. Blocking
+        # there would be spending a hard stop on a fully recoverable state.
+        #
+        # It is also what keeps the guard testable at all. Every fixture in this suite is a fresh
+        # `git init` on `main` with no origin; with trunk_ref()'s current-branch fallback, this would
+        # refuse to run in every one of them — a guard that cannot be exercised, which is the same
+        # trap GH-388's durability rule hit and was scoped away from for the same reason.
+        origin_head = _cmd_out(["git", "-C", commit_root, "symbolic-ref", "--quiet", "--short",
+                                "refs/remotes/origin/HEAD"])
+        if not origin_head or origin_head == "origin/HEAD":
+            return
+        trunk_branch = origin_head.split("/", 1)[1] if origin_head.startswith("origin/") else origin_head
+        if current != trunk_branch:
+            return
+
+        suggested = os.environ.get("SP_SUGGESTED_BRANCH", "")
+        eprint(f"marathon-drive: BLOCKED — {commit_root} is checked out on its trunk branch "
+               f"'{current}', and this run is about to commit to it.")
+        eprint("")
+        eprint("  Nothing has been committed yet. A marathon's commits belong on a branch: its turns")
+        eprint("  commit continuously, so a run that lands on trunk cannot be un-landed by stopping")
+        eprint("  it — only by rewriting history someone else may already have pulled.")
+        eprint("")
+        if suggested:
+            eprint(f"    git -C {commit_root} checkout -b {suggested}")
+            eprint("  (the branch preflight already suggested for this lane)")
+        else:
+            eprint(f"    git -C {commit_root} checkout -b marathon/<slug>-<date>")
+        eprint("")
+        eprint("  Or, if committing to trunk really is intended, pass --allow-trunk-commit.")
+        eprint("  Deliberately NOT covered by --force: that bypasses the per-lane attempt cap, and")
+        eprint("  retrying a flaky lane must not silently grant permission to land on trunk (GH-402).")
+        sys.exit(2)
+
+    refuse_trunk_commit()
 
     os.makedirs(phase_dir, exist_ok=True)
     with open(relay_file, 'w') as f:
@@ -2154,6 +2389,38 @@ if __name__ == "__main__":
     # never overwrite the driven run's real status. This is the same shape: the code is resolved
     # first, hooks run in a `finally` (so an exception path still clears the heartbeat), and the
     # original code is what we exit with. `die()` and every `sys.exit(N)` land in the SystemExit arm.
+    # GH-388: line-buffer the driver's own narrative. Found by this lane's own regression test, which
+    # killed a phase and recovered a log containing the child turn-shim's output and NONE of the
+    # driver's. Python block-buffers stdout when it is not a TTY — and a marathon is never a TTY, so
+    # the buffering is not an edge case, it IS the unattended path. Every `marathon-drive: ...` line
+    # sat in a 8KB buffer that a SIGTERM discards, while the subprocesses wrote straight to the same
+    # fd and survived. A run log fed by a buffered writer records the run right up until the moment
+    # something goes wrong, which is the one moment it exists for.
+    for _stream in (sys.stdout, sys.stderr):
+        try:
+            _stream.reconfigure(line_buffering=True)
+        except Exception:
+            pass    # Python < 3.7 or a stream that cannot be reconfigured — best effort
+
+    # GH-388: without this the `finally` below is unreachable for the case the issue is ABOUT. A
+    # SIGTERM — from an operator, a supervisor, a wall-clock kill, a host shutting down under the run
+    # — terminates CPython immediately: no `finally`, no exit hooks, no record. SIGINT already raised
+    # KeyboardInterrupt and so already reached them; SIGTERM did not, and SIGTERM is what an
+    # unattended run actually receives. Converting it to SystemExit puts both on the same path.
+    #
+    # The exit code stays 128+signal, the shell convention the driver's own `_exit_meaning` and
+    # marathon.sh's halt-reason table already read, so nothing downstream has to learn a new number.
+    # SIGKILL and a host panic remain unreachable by design — no handler runs for those, which is why
+    # the record this enables is a floor and not a guarantee, and why #384's recovery path is a
+    # separate lane rather than something this one quietly claims to cover.
+    def _terminate(signum, _frame):
+        raise SystemExit(128 + signum)
+    for _sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        try:
+            signal.signal(_sig, _terminate)
+        except (ValueError, OSError, AttributeError):
+            pass    # not the main thread, or the platform has no such signal — best effort
+
     _exit_code = 0
     try:
         try:

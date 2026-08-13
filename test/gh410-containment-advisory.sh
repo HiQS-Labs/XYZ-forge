@@ -164,15 +164,21 @@ if [ -x "$SHIM" ]; then
   [ ! -f "$A/offlane.md" ] \
     && pass "C4b the off-lane file did not land in the fixture repo" \
     || fail "C4b an off-lane write reached the fixture repo"
-  # The stub runs with CWD = the isolated worktree (verified: STUB-CWD=/private/var/.../rtl-wt.*),
-  # yet the created file also appears in the HARNESS repo root. That is a containment leak in
-  # worktree teardown, NOT something this change introduced — it predates GH-410 and is filed
-  # separately. Scoped out here deliberately rather than silently absorbed, and cleaned up so this
-  # suite does not leave litter in a live repo the way it did before this was noticed.
-  if [ -f "$ROOT/offlane.md" ]; then
-    rm -f "$ROOT/offlane.md"
-    echo "  NOTE: worktree off-lane creation leaked into the harness root; removed. Tracked separately." >&2
-  fi
+  # GH-426 RESOLVED — this block used to `rm -f "$ROOT/offlane.md"` and print a NOTE, because the
+  # stub's file kept appearing in the harness root and the cause was unknown. It is now known and
+  # fixed, so the cleanup is gone and its ABSENCE is the proof: if the leak ever returns, this suite
+  # starts littering a live repo again instead of quietly tidying up after it.
+  #
+  # The cause was not worktree teardown, which was the standing hypothesis. The agent binary is
+  # invoked TWICE per turn — `agy whoami` (the GH-375 auth pre-flight) and then the turn itself — and
+  # the pre-flight ran with the CALLER's CWD, i.e. the harness repo, outside containment entirely.
+  # The stub below writes on every invocation, so the pre-flight invocation is what reached the
+  # harness; the worktree copy was always discarded correctly. `agy_auth_preflight` now runs in a
+  # throwaway directory. See test/gh426-worktree-leak.sh, which asserts absence in BOTH repos and
+  # pins the probe's CWD.
+  [ -f "$ROOT/offlane.md" ] \
+    && fail "GH-426 regression: the stub's off-lane creation reached the harness root again" \
+    || pass "C4c no off-lane creation reached the harness root (GH-426; no cleanup needed here)"
 else
   fail "C4 shim not executable: $SHIM"
 fi

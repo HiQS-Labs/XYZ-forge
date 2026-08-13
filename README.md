@@ -238,6 +238,8 @@ Per-variable overrides win over the tier, so a phase can retune one cap without 
 > gate that never returns — which is the failure [#383](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/383)
 > was filed for, and the guard is what closed it. Raise the specific cap instead.
 
+**Gate Environment and Execution Contract:** The gate program is resolved from the command's first token. The gate environment is scrubbed (GH-441); configuration reaches a gate through files, not variables. A gate command may not begin with an environment assignment.
+
 Full per-CLI verification steps, environment variables, and troubleshooting live in
 **[Set up Codex, agy, and Pi](relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up)**.
 

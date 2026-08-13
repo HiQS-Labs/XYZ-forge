@@ -391,24 +391,119 @@ def _rtl_transcript_root(target_root, quiet=False):
         return None
     return f"{ar}/relay-system/{_rtl_repo_slug(target_root)}"
 
+def non_durable_conf_path():
+    """The ONE registry of storage this harness will not trust with evidence (GH-388).
+
+    Deliberately a file both lanes read at runtime, not a constant duplicated per language — see the
+    conf's own header. `relay-automation/durable-log-lib.sh` is the Bash reader of this same file.
+    """
+    here = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    return os.path.join(here, "relay-automation", "non-durable-log-roots.conf")
+
+def _realish_path(path):
+    # Canonicalize without requiring the path to exist — the log file is usually about to be created.
+    # os.path.realpath resolves what it can and leaves the rest, which is exactly the behaviour
+    # wanted here: on macOS /tmp is a symlink to /private/tmp, and a logical-form comparison alone
+    # would let the same directory through under its other name.
+    if not os.path.isabs(path):
+        path = os.path.abspath(path)
+    return os.path.realpath(path).rstrip("/") or "/"
+
+def non_durable_reason(path):
+    """The non-durable prefix `path` falls under, or "" if it is durable (GH-388)."""
+    if not path:
+        return ""
+    real = _realish_path(path)
+
+    def _match(prefix):
+        prefix = _realish_path(prefix) if prefix else ""
+        if not prefix:
+            return False
+        return real == prefix or real.startswith(prefix.rstrip("/") + "/")
+
+    # TMPDIR is a value, not a literal the conf file can hold. Checked first so a relocated TMPDIR is
+    # caught even when it points somewhere the static list never anticipated.
+    tmpdir = os.environ.get("TMPDIR", "")
+    if tmpdir and _match(tmpdir):
+        return _realish_path(tmpdir)
+
+    try:
+        with open(non_durable_conf_path(), "r", encoding="utf-8") as f:
+            lines = f.read().splitlines()
+    except OSError:
+        return ""
+    for raw in lines:
+        entry = raw.split("#", 1)[0].strip()
+        if entry and _match(entry):
+            return entry.rstrip("/")
+    return ""
+
+def path_is_durable(path):
+    return not non_durable_reason(path)
+
 def rtl_default_log(root, tool, task):
-    # GH-161: persistent turn-transcript path under <transcript-root>/logs/<date>/, falling back to
-    # $TMPDIR when the transcript root can't be resolved/created. Mirrors Bash rtl_default_log.
-    fallback = os.path.join(tempfile.gettempdir(), f"{tool}-{os.getpid()}.log")
-    base = _rtl_transcript_root(root, quiet=True)   # Bash redirects the resolver's stderr here
+    """Persistent turn-transcript path under <transcript-root>/logs/<date>/ (GH-161).
+
+    GH-388: this used to fall back to $TMPDIR **with the diagnostic suppressed** (`quiet=True`, then
+    `return fallback` on any failure). A misconfigured `XYZ_ARCHIVE_ROOT` therefore relocated every
+    turn transcript into the one directory a reboot erases, and said nothing — so the evidence was
+    already gone by the time anyone had a reason to look for it, and nothing in the run had indicated
+    a choice was being made at all.
+
+    It now resolves a durable root or REFUSES, before the turn launches. Refusing costs a turn that
+    has not started; the old behaviour cost the record of a turn that had. Adding a warning while
+    still writing to volatile storage was considered and rejected in the issue's own review: the logs
+    would still be destroyed, and the message would only mean someone could have known.
+
+    The resolver's diagnostics are no longer swallowed either — `quiet=False` — because the reason
+    the root failed to resolve (not absolute / does not exist / not a git repo) is the entire content
+    of the fix from the operator's side.
+    """
+    base = _rtl_transcript_root(root, quiet=False)
     if not base:
-        return fallback
+        print(f"rtl_default_log: refusing to start a {tool} turn — no durable transcript root could "
+              f"be resolved (see the XYZ_ARCHIVE_ROOT diagnostic above). Fix XYZ_ARCHIVE_ROOT or "
+              f"unset it to use <root>/relay-system. A turn whose transcript lands in temporary "
+              f"storage is a turn with no record after a reboot (GH-388).", file=sys.stderr)
+        sys.exit(5)
+
     tslug = _ascii_slug(task or "")
     try:
         day = subprocess.check_output(["date", "+%Y-%m-%d"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
     except Exception:
         day = "unknown-date"
     path = os.path.join(base, "logs", day, f"{tool}-{tslug}-{os.getpid()}.log")
+
+    # The durability rule is scoped to RELOCATION, and that scoping is deliberate rather than
+    # convenient. The defect was the harness quietly moving a turn's transcript OUT of the repo and
+    # into storage a reboot erases, while reporting nothing. A transcript that lands inside the repo
+    # being driven has not been relocated anywhere: it shares the fate of the work it documents, and
+    # if the operator put that repo in /tmp then the code, the commits and the log are volatile
+    # together — a decision they made, visible to them, not one this harness made silently.
+    #
+    # Applying the check unconditionally was tried first and is wrong in an instructive way: every
+    # fixture repo in this suite lives under $TMPDIR, so it refuses to run the harness at all in the
+    # one environment where the harness is exercised most. A rule that cannot be tested is not a
+    # guard, and "fails the run" would have meant "fails every run".
+    if reason := non_durable_reason(path):
+        inside_root = _realish_path(path).startswith(_realish_path(root).rstrip("/") + "/") if root else False
+        if not inside_root:
+            print(f"rtl_default_log: refusing to start a {tool} turn — the resolved transcript path "
+                  f"{path} is under {reason}, which this harness records as non-durable storage "
+                  f"({non_durable_conf_path()}), and it is OUTSIDE the repo being driven ({root}). "
+                  f"That is a silent relocation of the evidence, which is exactly what GH-388 exists "
+                  f"to stop. Point XYZ_ARCHIVE_ROOT at a committed archive, or unset it to use "
+                  f"<root>/relay-system.", file=sys.stderr)
+            sys.exit(5)
+
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        return path
-    except Exception:
-        return fallback
+    except Exception as exc:
+        print(f"rtl_default_log: refusing to start a {tool} turn — could not create the durable "
+              f"transcript directory {os.path.dirname(path)} ({exc}). Previously this silently "
+              f"relocated the transcript to temporary storage (GH-388).", file=sys.stderr)
+        sys.exit(5)
+    return path
 
 class RelayTurnLib:
     def __init__(self, root, xyz_root, relay_file, allow_paths):

@@ -96,6 +96,22 @@ tick_b() { tick_in "$A" "$@"; }  # local transport: shares TICK_REPO_ROOT with t
 # (Run-4 feedback: TICK_REPO_ROOT was unbound when scaffolding handoff-exclusive.sh.)
 export TICK_REPO_ROOT="$A"
 
+# GH-402: fixtures may drive a marathon on their own `main`, and that is not the defect the branch
+# guard exists to catch.
+#
+# Every fixture here is a CLONE OF A BARE REPO this file creates, so it has a real `origin/HEAD` and
+# sits on `main` — indistinguishable, to the driver, from an operator about to land a marathon on a
+# shared trunk. Eight suites went red on the guard's first full run, and `test/marathon-drive.sh`
+# alone has ~98 driver invocations: threading `--allow-trunk-commit` through every call site would be
+# a permanent tax on every future marathon fixture, and the churn would be far more likely to
+# introduce a mistake than the guard is to catch one here.
+#
+# Declared ONCE, in the one file every fixture already sources, and declared as what it is: a test
+# harness saying branch protection is not the thing under test. The guard itself is still exercised —
+# `test/gh402-branch-enforcement.sh` unsets this for the cases that must refuse, so the protection
+# has a suite that proves it fires rather than a suite that silently never reaches it.
+export MARATHON_ALLOW_TRUNK_COMMIT=1
+
 PASS=0
 FAIL=0
 pass() { echo "  PASS: $*"; PASS=$((PASS+1)); }

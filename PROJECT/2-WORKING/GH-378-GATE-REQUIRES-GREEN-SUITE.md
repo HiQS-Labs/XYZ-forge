@@ -7,7 +7,7 @@ created: 2026-08-10
 updated: 2026-08-10
 owner: noel
 doc_type: project
-release: "0.3.0 Nightwatch"
+release: "0.6.0 Meter"
 complexity: 4
 risk: 4
 effort: 3

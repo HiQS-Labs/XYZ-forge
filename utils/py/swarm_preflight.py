@@ -1564,9 +1564,42 @@ def main():
             except: pass
             
     gh39_art_n = len([a for a in all_artifacts if a.strip()])
-    gh39_timeout = 300
-    if gh39_art_loc > 200 or gh39_art_n >= 3: gh39_timeout = 600
-    if gh39_art_loc > 400 or gh39_art_n >= 4: gh39_timeout = 900
+    # GH-386: this ladder was built around a 300s turn default that no longer exists. Every builder
+    # now defaults to 900 (claude was the last holdout at 600), so the old steps 300 and 600 would
+    # "suggest" a budget BELOW the default — advice that silently shortens a turn while its own
+    # sentence claims to be giving it headroom.
+    #
+    # Rebuilt so the only thing it can suggest is MORE than the default, never less: work that fits
+    # inside 900 gets no override at all, and the packet says so rather than printing a number the
+    # operator might dutifully apply as a downgrade.
+    #
+    # 1800 is honestly a starting point, not a measurement — a doubling of the default for the
+    # largest bucket. The old 300/600/900 steps were never measured either; the difference is that
+    # this one says so instead of implying a sizing model nobody validated.
+    TURN_TIMEOUT_DEFAULT_S = 900
+    gh39_timeout = TURN_TIMEOUT_DEFAULT_S
+    if gh39_art_loc > 400 or gh39_art_n >= 4: gh39_timeout = 1800
+
+    # GH-386: name the field that ACTUALLY applies the number. The old line printed
+    # `RELAY_TURN_TIMEOUT_S=<n>` with nothing reading it — marathon.sh does not parse packets, so the
+    # figure the operator read was not the figure the run used, and a phase sized for 900 was killed
+    # at 600 mid-edit. The per-phase field `turn_timeout_s:` in MARATHON.yaml is the mechanism that
+    # already works: marathon.sh reads it and passes RELAY_TURN_TIMEOUT_S to that phase's driver.
+    # A suggestion the harness ignores is worse than no suggestion, which is the issue's own wording.
+    if gh39_timeout > TURN_TIMEOUT_DEFAULT_S:
+        gh39_budget_line = (
+            f"`turn_timeout_s: {gh39_timeout}` in this phase's MARATHON.yaml entry "
+            f"(≈ {gh39_art_loc} LOC across {gh39_art_n} artifact(s) — over the {TURN_TIMEOUT_DEFAULT_S}s "
+            f"default, so it needs headroom). marathon.sh reads that field and applies it to the "
+            f"phase; the value is a starting point, not a measurement."
+        )
+    else:
+        gh39_budget_line = (
+            f"none needed — ≈ {gh39_art_loc} LOC across {gh39_art_n} artifact(s) fits the "
+            f"{TURN_TIMEOUT_DEFAULT_S}s default. Set `turn_timeout_s:` in this phase's MARATHON.yaml "
+            f"entry only to raise it; marathon.sh reads that field, and nothing reads a bare "
+            f"RELAY_TURN_TIMEOUT_S written into a packet."
+        )
     
     br_ready_str = 'true' if branch_ready else 'false'
     if branch_ready == 0 and skip_branch_prompt == 0: br_prompt_str = " — not cut yet; ask the operator before proceeding, per GUIDING-PRINCIPLES.md §8"
@@ -1585,7 +1618,7 @@ def main():
 - Gate: `{gate_cmd}`
 {gh108_gate_caveat}
 - Artifacts: {art_csv}
-- Suggested turn budget: `RELAY_TURN_TIMEOUT_S={gh39_timeout}` (sized to ≈ {gh39_art_loc} LOC across {gh39_art_n} artifact(s); a build that also edits tests needs headroom over the 300s default)
+- Suggested turn budget: {gh39_budget_line}
 {gh55_auto_line}
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not

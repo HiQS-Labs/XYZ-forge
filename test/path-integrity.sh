@@ -22,7 +22,11 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MKPKG="$ROOT/skills/relay-automation/make-pkg.sh"
 TARBALL="$ROOT/skills/relay-automation/relay-pkg.tar.gz"
 if [ -f "$MKPKG" ] && [ -f "$TARBALL" ]; then
-  pkg_list="$(grep -oE '(relay-automation|test)/[A-Za-z0-9._/-]+\.(sh|md)' "$MKPKG" | sort -u)"
+  # `.conf` joined the extension set with GH-388, which ships relay-automation/non-durable-log-roots.conf
+  # — a data file both language lanes read at runtime. The pattern is the manifest's own definition of
+  # what counts as a packaged path, so an extension missing here reads as DRIFT for a correctly
+  # packaged file: the tarball had it, this list did not, and the check blamed the tarball.
+  pkg_list="$(grep -oE '(relay-automation|test)/[A-Za-z0-9._/-]+\.(sh|md|conf)' "$MKPKG" | sort -u)"
   tar_list="$(tar tzf "$TARBALL" | sort -u)"
   if [ "$pkg_list" = "$tar_list" ]; then
     pass "make-pkg.sh source list matches the committed tarball ($(printf '%s\n' "$tar_list" | grep -c .) files)"

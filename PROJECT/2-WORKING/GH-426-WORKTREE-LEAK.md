@@ -2,9 +2,9 @@
 gh_issue: 426
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/426
 title: "GH-426 — worktree isolation leaks an off-lane creation into the harness repo; the turn correctly exits 6 and the file is still there"
-status: "Intake (2-WORKING) — captured 2026-08-05 for release 0.2.0 Litmus, not yet fired."
+status: "BUILT 2026-08-11 as a lane of release 0.3.0 Nightwatch. The reported cause — worktree teardown — is FALSIFIED by measurement; the real one is the GH-375 auth pre-flight running with the caller's CWD, outside containment. Fixed, regression-tested in BOTH repos, and gh410's leak-cleanup block deleted (its absence is the proof). Controls recorded in test/baselines/GH-426-negative-control.md."
 created: 2026-08-05
-updated: 2026-08-05
+updated: 2026-08-11
 owner: noel
 doc_type: project
 release: "0.2.0 Litmus"
@@ -35,7 +35,59 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Captured 2026-08-05 as a lane of release 0.2.0 Litmus. Preflight contract authored and verified READY via `--dry-run`; acceptance reads `match — 4/4 criteria copied verbatim from issue #426`. | Operator go. Then Phase 1 — a regression test that lands **red**, with the pre-fix result recorded — and only then Phase 2, the teardown fix. Must not run concurrently with #417. |
+| **Built 2026-08-11 — and the suspected area was wrong.** Measured with a per-invocation log of the agent binary: the harness copy comes from the **GH-375 auth pre-flight**, which ran with the caller's CWD (the harness clone) and is the one execution of the agent binary that happens outside the turn's containment. Worktree teardown is exonerated. `agy_auth_preflight` now runs in a throwaway directory; `test/gh426-worktree-leak.sh` 7/0 asserts absence in **both** repos and pins the probe's CWD; gh410's leak-cleanup block is **deleted**. | Close #426 against the acceptance block below — all four criteria met, with criterion 3 satisfied by measurement rather than by change. |
+
+## What the measurement actually showed
+
+The reproduction in this doc is accurate and reproduces exactly as written. The **diagnosis attached
+to it is not**, and the doc's own wording anticipated that: *"Stated as the place to look first, not
+as a diagnosis — a builder that treats this as the answer will produce a fix shaped like the guess
+rather than like the defect."*
+
+A factorial control settled it. Same fixture, one variable at a time:
+
+| case | stub writes off-lane? | isolation | harness leak? |
+|---|---|---|---|
+| A | yes | ON | **yes** |
+| B | **no** | ON | no |
+| C | yes | **OFF** | **yes** |
+
+C is the one that breaks the stated theory: the leak happens with worktree isolation **off**, so it
+cannot be a worktree-teardown defect. Logging every invocation of the agent binary then showed why —
+there are **two** per turn:
+
+```text
+INVOCATION cwd=<harness>            argv=whoami            <-- GH-375 auth pre-flight
+INVOCATION cwd=<isolation worktree> argv=... -p <prompt>   <-- the turn itself
+```
+
+The pre-flight ran with the caller's CWD. The reproducing stub — like `test/gh410-containment-advisory.sh`'s —
+writes on **every** invocation, so the pre-flight invocation is what reached the harness root. The
+turn's own copy was always discarded correctly, `worktree_end` always fired, and the worktree's
+`git-common-dir` always resolved to `AGY_TURN_ROOT`.
+
+**So criterion 3 was already true** and needed no change — only proof, which the test now supplies
+from inside the turn (an earlier draft asserted it after teardown had already removed the worktree,
+and reported "could not resolve", which is not a verdict).
+
+**The fix is still worth making, for a different reason than the one filed.** Real `agy whoami` does
+not write to its CWD — but "the binary we shell out to happens not to write" is a claim about someone
+else's program, not a property this harness enforces. It is also precisely the assumption that made a
+test stub indistinguishable from a containment failure for a week. The probe now runs in a throwaway
+directory and reports, rather than silently discards, anything the binary leaves there.
+
+## Acceptance — outcome
+
+1. **Met.** `test/gh426-worktree-leak.sh` asserts the created file is absent from the target *and*
+   the harness, and that the harness's `git status` is unchanged by the turn.
+2. **Met.** Both repos are named in separate assertions, so a future edit cannot quietly drop the
+   harness half — which is the shape of the miss this criterion exists for.
+3. **Met by measurement.** The worktree's base repo *is* `AGY_TURN_ROOT`; asserted from the turn
+   invocation's own `git-common-dir`, recorded while the worktree still exists.
+4. **Met.** `test/baselines/GH-426-negative-control.md` — 2 red in this suite and 1 red in gh410's
+   C4c against the pre-fix `agy-turn.py`, 0 after.
+
+The first non-goal holds: exit 6 still fires, asserted first in the suite.
 
 Captured 2026-08-05 as a lane of release **0.2.0 Litmus**. Not fired.
 

@@ -76,6 +76,21 @@ local change.
   itself establish that deleted local behaviour was safe to remove.
 - `validate.sh` is the code/runtime gate. `utils/pdda/pdda.sh run` and its targeted
   `utils/pdda/pdda.sh <check>` subcommands are the doc-hygiene gates.
+- **Scratch and temporary files go in `temp/`, never the repo root.** `/temp/` is already gitignored
+  (`.gitignore:13`). Probes, reproduction scripts, one-off analysis, captured command output,
+  half-written notes — anything you would not put in a commit — belongs there or outside the repo
+  entirely. **Do not create `scratch-*.md`, `notes-*.md`, `*.tmp` or similar at the repo root.**
+
+  This is a housekeeping rule with a real failure mode behind it, which is why it is a rail and not a
+  preference. Root-level scratch is *untracked*, so it survives branch switches, rebases and
+  worktree teardown; it accumulates silently across sessions until nobody can say which agent or
+  which lane produced it, or whether it is safe to delete. It also puts unreviewed prose one
+  `git add -A` away from a commit — and `marathon-closeout.sh` has already swept 20 unrelated files
+  into a lane's PR once (2026-08-10), which is exactly this hazard firing.
+
+  A file that turns out to be worth keeping gets *promoted* deliberately — into `PROJECT/1-INBOX/`
+  as a capture doc, into `test/baselines/` as recorded evidence, or into the CHANGELOG — rather than
+  being left at the root in the hope that someone later works out what it was.
 - **Frozen Bash twins (GH-308).** Python in `utils/py/` is authoritative for the eleven Tier-A
   entry points (`agy-turn`, `aider-turn`, `claude-turn`, `codex-turn`, `pi-turn`, `poll`,
   `relay-loop`, `relay-drive`, `consult`, `marathon-drive`, and `swarm-preflight`). Their `.sh`
@@ -121,6 +136,14 @@ local change.
   settings override), never something a session reaches for on its own reasoning that it's "just
   another supported builder option." If a task calls for a headless build lane and neither agy nor
   codex is available, stop and ask — don't default to spawning a headless Claude CLI turn.
+
+  **As the orchestrator, you are the final outer reviewer of any emitted artifact (e.g., an automated PR).**
+  You must treat an automation's emission as an event requiring inspection, not as an automatic success.
+  Before permitting an automated loop to proceed to its next iteration, you must query and verify the emitted PR:
+  1. **Base Branch Sanity:** The PR targets the active WIP branch (`development`), not `main`.
+  2. **Diff Size Sanity:** The diff size matches the logical scope of the fix (e.g. < 500 lines for targeted bugs).
+  3. **Verification Status:** A test gate ran against the final committed state (either CI or a local `validate.sh` run).
+  **Halt Condition:** If an emitted artifact fails any of these predicates, you must suspend the automation loop immediately.
 - **HQ (multi-repo command center)** — for cross-repo tasking (resolve a project → land intake on its
   own PDDA rails → prepare dispatch), drive `utils/hq/hq.sh` via the `/hq` skill rather than hand-editing
   another repo's docs. Full command surface (`status`/`resolve`/`next`/`park`/`promote`/`queue`/`fire`),

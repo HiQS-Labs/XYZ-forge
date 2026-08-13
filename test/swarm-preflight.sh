@@ -87,16 +87,32 @@ out_bash="$(XYZ_PYTHON=0 run "$R" --project-doc "PROJECT/2-WORKING/GH-900-happy.
 grep -q "Scope lock" "$R/packet/packet.md" && pass "T1b packet has a scope-lock block" || fail "T1b packet missing scope-lock"
 grep -q "do not run the full gate\|Do NOT run the full gate" "$R/packet/packet.md" && pass "T1b scope-lock forbids self-running the gate" || fail "T1b scope-lock missing no-gate rule"
 grep -q "build it" "$R/packet/packet.md" && pass "T1b acceptance criteria inlined from the capture doc" || fail "T1b acceptance not inlined"
-grep -q "RELAY_TURN_TIMEOUT_S=" "$R/packet/packet.md" && pass "T1b packet recommends a turn budget" || fail "T1b missing turn-budget recommendation"
+# GH-386: the packet still recommends a budget, but no longer as a bare `RELAY_TURN_TIMEOUT_S=<n>`.
+# Nothing read that — marathon.sh does not parse packets — so the figure an operator read was never
+# the figure the run used. The recommendation now names `turn_timeout_s:`, the per-phase MARATHON.yaml
+# field marathon.sh really does apply.
+grep -q "Suggested turn budget" "$R/packet/packet.md" && pass "T1b packet recommends a turn budget" || fail "T1b missing turn-budget recommendation"
+grep -q "turn_timeout_s" "$R/packet/packet.md" \
+  && pass "T1b the recommendation names the field that applies it (GH-386)" \
+  || fail "T1b turn-budget recommendation does not name turn_timeout_s: $(grep -i 'turn budget' "$R/packet/packet.md")"
 # GH-51 [1]: a SAME-REPO lane (root==target, as T1 is) must NOT emit --target-root — it routes relay-file
 # path normalization through the cross-repo code path, flagging the legitimately edited relay file as
 # off-lane (exit 6) and discarding the build (the GH-37 dogfood's root-cause blocker).
 grep -q -- '--target-root' "$R/packet/marathon-invocation.txt" \
   && fail "T1c same-repo invocation must OMIT --target-root (GH-51 off-lane fix)" \
   || pass "T1c same-repo invocation omits --target-root (GH-51 off-lane fix)"
-# GH-51 [4]: the small happy fixture (2 artifacts, 0 LOC) keeps the 300s default budget.
-grep -q "RELAY_TURN_TIMEOUT_S=300" "$R/packet/packet.md" \
-  && pass "T1d small build keeps the 300s budget" || fail "T1d expected 300s budget for the small fixture: $(grep RELAY_TURN_TIMEOUT_S "$R/packet/packet.md")"
+# GH-51 [4], REWRITTEN BY GH-386: the small happy fixture (2 artifacts, 0 LOC) used to be pinned to a
+# 300s budget. There is no 300s default any more — every builder defaults to 900 — so a suggestion of
+# 300 would be a silent DOWNGRADE in a sentence that promises headroom. Small work now gets no
+# override at all, and the packet says so rather than printing a number an operator might dutifully
+# apply. This case is inverted deliberately, not deleted: it is still the small-fixture case, and it
+# is still the one that catches a ladder whose floor has drifted below the default.
+grep -q "none needed" "$R/packet/packet.md" \
+  && pass "T1d small build needs no budget override (GH-386: the 900s default already covers it)" \
+  || fail "T1d expected no override for the small fixture: $(grep -i 'turn budget' "$R/packet/packet.md")"
+grep -qE 'Suggested turn budget:.*turn_timeout_s: [0-9]+' "$R/packet/packet.md" \
+  && fail "T1d the small fixture was given a numeric override — the ladder floor has drifted below the default" \
+  || pass "T1d no numeric override is emitted for work that fits the default"
 
 # ── T16 (GH-51 [1]+[4]): foreign target emits --target-root; 4-artifact build scales budget to 900s ──
 R16="$(make_repo budgetscale '{
@@ -108,9 +124,13 @@ R16="$(make_repo budgetscale '{
 }' '## Phase 1
 - [ ] build it')"
 out="$(run "$R16" --project-doc "PROJECT/2-WORKING/GH-900-budgetscale.md" --out "$R16/packet" 2>&1)"; rc=$?
-grep -q "RELAY_TURN_TIMEOUT_S=900" "$R16/packet/packet.md" \
-  && pass "T16 GH-51[4]: 4-artifact build scales the budget to 900s" \
-  || fail "T16 expected 900s budget for 4 artifacts: $(grep RELAY_TURN_TIMEOUT_S "$R16/packet/packet.md")"
+# GH-386: the top step moved 900 -> 1800, because 900 is now the DEFAULT rather than the ceiling.
+# The behaviour under test is unchanged in spirit — a 4-artifact build still gets more time than a
+# 2-artifact one — but "more" has to mean more than the default, or the step is a no-op dressed as a
+# scaling rule.
+grep -q "turn_timeout_s: 1800" "$R16/packet/packet.md" \
+  && pass "T16 GH-51[4]/GH-386: 4-artifact build scales the budget above the default (1800s)" \
+  || fail "T16 expected a 1800s override for 4 artifacts: $(grep -i 'turn budget' "$R16/packet/packet.md")"
 # Foreign target (root != target) MUST still emit --target-root (cross-repo build needs it).
 fout="$(SWARM_PREFLIGHT_ROOT="$ROOT" bash "$SP" --target-root "$R16" --project-doc "$R16/PROJECT/2-WORKING/GH-900-budgetscale.md" --out "$R16/packet-foreign" 2>&1)"; frc=$?
 if [[ -f "$R16/packet-foreign/marathon-invocation.txt" ]]; then

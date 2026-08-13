@@ -66,11 +66,32 @@ case "$out" in
   *) fail "rtl_default_log: task name not sanitized: $out" ;;
 esac
 
-# --- (3c) rtl_default_log: falls back to today's exact tmp default on a resolver failure ----------
-# A relative XYZ_ARCHIVE_ROOT makes rtl_transcript_root hard-error (see archive-root.sh) — must fall
-# back, never propagate the failure to the caller.
-out="$(XYZ_ARCHIVE_ROOT="relative/dir" rtl_default_log "$A" codex-turn RELAY-TURN-2 2>/dev/null)"
-[ "$out" = "${TMPDIR:-/tmp}/codex-turn-$$.log" ] && pass "rtl_default_log: falls back to the historical PID-keyed tmp path on resolver failure" || fail "rtl_default_log: expected '${TMPDIR:-/tmp}/codex-turn-$$.log', got '$out'"
+# --- (3c) rtl_default_log: REFUSES on a resolver failure; it no longer falls back to tmp ----------
+#
+# INVERTED DELIBERATELY BY GH-388. This case previously asserted the opposite — that a resolver
+# failure silently produced `${TMPDIR}/codex-turn-$$.log` and "never propagated the failure to the
+# caller". That behaviour was the defect, not a feature: a misconfigured XYZ_ARCHIVE_ROOT relocated
+# every turn transcript into the one directory a reboot erases, and said nothing, so the evidence was
+# already gone by the time anyone had reason to look for it. A marathon on a 32 GB host panicked
+# mid-phase and its only account was written to exactly such a path.
+#
+# The trade was reversed knowingly: refusing costs a turn that has NOT started, whereas the fallback
+# cost the record of a turn that HAD. Adding a warning while still writing to volatile storage was
+# considered in the issue's own review and rejected — the logs would still be destroyed, and the
+# message would only mean someone could have known.
+#
+# A relative XYZ_ARCHIVE_ROOT makes rtl_transcript_root hard-error (see archive-root.sh).
+out="$(XYZ_ARCHIVE_ROOT="relative/dir" rtl_default_log "$A" codex-turn RELAY-TURN-2 2>"$WORK/dl.err")"
+rc=$?
+[ "$rc" -ne 0 ] \
+  && pass "rtl_default_log: refuses (exit $rc) rather than silently relocating to tmp (GH-388)" \
+  || fail "rtl_default_log: returned '$out' on an unresolvable archive root — the tmp fallback is back"
+[ -z "$out" ] \
+  && pass "rtl_default_log: emits no path at all when it cannot resolve a durable one" \
+  || fail "rtl_default_log: emitted a path while refusing: '$out'"
+/usr/bin/grep -q "XYZ_ARCHIVE_ROOT" "$WORK/dl.err" \
+  && pass "rtl_default_log: the refusal names the cause (the resolver's stderr is no longer swallowed)" \
+  || fail "rtl_default_log: refused without explaining why — stderr was: $(cat "$WORK/dl.err")"
 unset XYZ_ARCHIVE_ROOT
 
 # ============================================================================================

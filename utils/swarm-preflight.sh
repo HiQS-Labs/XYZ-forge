@@ -887,13 +887,25 @@ for _b6a in "${_b6arts[@]}"; do
   read -r _b6a <<<"$_b6a"; [[ -z "$_b6a" ]] && continue
   [[ -f "$TARGET_ROOT/$_b6a" ]] && GH39_ART_LOC=$((GH39_ART_LOC + $(wc -l <"$TARGET_ROOT/$_b6a" 2>/dev/null || echo 0)))
 done
-# GH-51 [4]: the old single >400-LOC step left mid-size, multi-file builds (e.g. GH-37: 335 LOC across
-# 4 shims+tests) on the 300s default — below the note's own warning — and the builder was killed
-# mid-turn. Scale by BOTH size and artifact count (each extra file adds build+verify coordination cost).
+# GH-51 [4], HISTORICAL — this describes the ladder GH-386 replaced, kept because the reasoning still
+# explains why artifact COUNT is part of the sizing and not just LOC. Its numbers are stale: back then
+# the turn default was 300s, and the old single >400-LOC step left mid-size multi-file builds (GH-37:
+# 335 LOC across 4 shims+tests) sitting on that 300s default — below the note's own warning — and the
+# builder was killed mid-turn. The default is now 900 everywhere, so the steps that used to sit under
+# it are gone; what survives is the rule that each extra file adds build+verify coordination cost.
 GH39_ART_N="${#_b6arts[@]}"
-GH39_TIMEOUT=300
-{ [[ "$GH39_ART_LOC" -gt 200 ]] || [[ "$GH39_ART_N" -ge 3 ]]; } && GH39_TIMEOUT=600
-{ [[ "$GH39_ART_LOC" -gt 400 ]] || [[ "$GH39_ART_N" -ge 4 ]]; } && GH39_TIMEOUT=900
+# GH-386: rebuilt around the real 900s default — see utils/py/swarm_preflight.py for the rationale.
+# The old 300/600 steps would suggest a budget BELOW the default, i.e. a silent downgrade dressed as
+# headroom. This can now only ever suggest MORE.
+GH39_TURN_TIMEOUT_DEFAULT_S=900
+GH39_TIMEOUT="$GH39_TURN_TIMEOUT_DEFAULT_S"
+{ [[ "$GH39_ART_LOC" -gt 400 ]] || [[ "$GH39_ART_N" -ge 4 ]]; } && GH39_TIMEOUT=1800
+
+if [[ "$GH39_TIMEOUT" -gt "$GH39_TURN_TIMEOUT_DEFAULT_S" ]]; then
+  GH39_BUDGET_LINE="\`turn_timeout_s: ${GH39_TIMEOUT}\` in this phase's MARATHON.yaml entry (≈ ${GH39_ART_LOC} LOC across ${GH39_ART_N} artifact(s) — over the ${GH39_TURN_TIMEOUT_DEFAULT_S}s default, so it needs headroom). marathon.sh reads that field and applies it to the phase; the value is a starting point, not a measurement."
+else
+  GH39_BUDGET_LINE="none needed — ≈ ${GH39_ART_LOC} LOC across ${GH39_ART_N} artifact(s) fits the ${GH39_TURN_TIMEOUT_DEFAULT_S}s default. Set \`turn_timeout_s:\` in this phase's MARATHON.yaml entry only to raise it; marathon.sh reads that field, and nothing reads a bare RELAY_TURN_TIMEOUT_S written into a packet."
+fi
 GH55_AUTO_CSV="$GH55_INFERRED_TESTS_CSV"
 [[ -n "$GH55_INFERRED_HELPERS_CSV" ]] && GH55_AUTO_CSV="${GH55_AUTO_CSV}${GH55_AUTO_CSV:+,}$GH55_INFERRED_HELPERS_CSV"
 GH55_AUTO_LINE=""
@@ -939,7 +951,7 @@ cat >"$OUT_DIR/packet.md" <<EOF
 $GH108_GATE_CAVEAT
 - Artifacts: $ART_CSV
 $GH55_AUTO_LINE
-- Suggested turn budget: \`RELAY_TURN_TIMEOUT_S=$GH39_TIMEOUT\` (sized to ≈ $GH39_ART_LOC LOC across $GH39_ART_N artifact(s); a build that also edits tests needs headroom over the 300s default)
+- Suggested turn budget: $GH39_BUDGET_LINE
 
 This packet is the producer's output. The orchestrator launches the run; the planner does not
 (GUIDING-PRINCIPLES.md §8).
