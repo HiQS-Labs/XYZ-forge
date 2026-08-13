@@ -66,6 +66,24 @@ QA gates (all observed 2026-08-13 on the A/B commit)
 - [x] The 13 lock-lane suites ran in one sequential background lane; zero driver-lock refusals (vs 7 in the spike's naive 8-way run); no lock or worktree leaked.
 - [x] A failing suite fails the parallel run with the suite named + its log tail printed, exit 1 — demonstrated organically by the stale-dashboard failure.
 - [x] `--parallel` with missing/zero/non-numeric/extra args and unknown flags all refuse with usage, exit 2 (five cases observed).
+- [x] Discoverable: `ROUTER.md`'s command rail carries both forms, with the sequential run named as the
+      only one that qualifies a claim and `--parallel` labelled experimental and cost-motivated.
+
+## Why this landed now: the Actions bill (measured 2026-08-13)
+
+Pulled from `gh api orgs/Claude-AI-Tools-Ventura-County/settings/billing/usage` (the per-run billable
+timing API reports 0min for this org and is unusable). August 2026, **net $9.09 of a $10 budget**:
+Ubuntu 2,740 min → $16.44 gross, −$12.00 for the 2,000 included minutes, **$4.44 net**; macOS 3-core
+75 min → **$4.65 net, no discount**. July was 1,586 Linux minutes entirely inside quota, $0.
+
+Two facts this issue inherits from that: 75 macOS minutes cost as much as 2,740 Linux minutes (~10×
+rate, no included-quota discount on a private repo — each `boundary-macos` dispatch ≈ $1.25–1.50),
+and the Linux side is over quota on *volume*, since every push to `development` and every PR into
+`development`/`main` starts a run. Feature-branch pushes with no open PR cost $0.
+
+That is the practical case for `--parallel N` beyond operator patience: the local gate is the
+substitute for a hosted run, and at 184s instead of 946s it is cheap enough to actually be used that
+way. Recorded on #509, which owns the CI-spend problem; this issue owns only the runner.
 
 ## Phase 2 — promotion evidence (deliberately not this branch)
 
