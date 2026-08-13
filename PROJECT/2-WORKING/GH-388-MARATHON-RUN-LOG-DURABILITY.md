@@ -57,6 +57,38 @@ guard, and "fails the run" would have meant "fails every run". The defect being 
 *silently moving* evidence out of the repo; a repo the operator put in `/tmp` makes the code, the
 commits and the log volatile together, visibly, by their choice.
 
+**AMENDED CRITERION 5 (2026-08-11, adjudicated by cross-model consult — codex + agy).** The criterion
+above is superseded. The shipped rule is the correct rule and the original wording is the stale
+artifact; the amended text is what #388 was closed against:
+
+> The locations the harness treats as non-durable are stated in one place it actually reads at
+> runtime, and a default log path that resolves into one of them **and lies outside the repo being
+> driven** fails the run rather than proceeding. A path inside the driven repo is permitted: it shares
+> the durability of the work it documents, and is the operator's visible choice rather than a silent
+> relocation by the harness.
+
+*How this was adjudicated, since a documented deviation is not self-justifying.* The consult split.
+agy called the narrowed rule correct (a co-located log inherits its repo's lifecycle) and voted to
+amend and close. codex graded it a Blocker and voted to keep open, arguing that permitting a run log
+inside a `$TMPDIR` repo lets a reboot erase the checkout and its only evidence together with no
+refusal — and proposing a third path the original build never considered: refuse by default, with an
+explicit opt-in volatile mode for fixtures. That proposal dissolves the "a guard that cannot be
+exercised is not a guard" argument, so the deviation was **not** self-evidently right.
+
+It was decided by measurement rather than by argument. The strict default requires threading an
+opt-in flag through **26 test files** that build a `$TMPDIR` fixture and drive a turn, mirrored across
+two lanes that must not drift (`utils/py/rtl.py` and `relay-automation/relay-turn-lib.sh` — the GH-308
+twin-drift class), and re-vendored into every `.xyz/` install via `skills/relay-automation/make-pkg.sh`.
+Against that: real targets are durable, so the benefit is zero for production runs, and the only case
+protected is an operator who deliberately placed the target repo in volatile storage — where a reboot
+takes the code and the commits too and the log is the smallest loss. The fix would create a standing
+defect class (26 fixtures, each a future chance to omit the flag) to close a hypothetical one.
+
+**Residual, recorded rather than lost:** on the in-repo-volatile path the harness emits *no signal at
+all*. If that ever bites, the cheap remedy is a one-line warning on that branch — not the strict
+default. Deliberately not built now; a warning that fires in 26 fixtures is noise bidding to become
+ignored.
+
 **Two defects were found by this lane's own test rather than reasoned about.**
 
 - **The driver's narrative was block-buffered.** Python block-buffers stdout when it is not a TTY, and
