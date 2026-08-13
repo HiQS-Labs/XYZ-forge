@@ -105,11 +105,49 @@ so a clone with only `relay-system/` thread files still drives the real harness 
 
 ## Concurrent relays across repos (same machine)
 
-`relay-drive.sh`/`marathon-drive.sh` hold **one global driver lock per harness clone**
-(`.git/relay-driver.lock`, or `.relay-driver.lock` in a vendored `.xyz/`). This is intentional — two
-worktrees on the same `ROOT@HEAD` can corrupt git state (GH-42) — but it means **every repo pointed at
-the same harness clone shares that one lock**, so their automated relays *serialize*: a second one
-blocks (`exit 1`) until the first frees.
+`relay-drive.sh`/`marathon-drive.sh` hold **one global driver lock per harness clone**. This is
+intentional — two worktrees on the same `ROOT@HEAD` can corrupt git state (GH-42) — but it means
+**every repo pointed at the same harness clone shares that one lock**, so their automated relays
+*serialize*: a second one blocks (`exit 1`) until the first frees.
+
+### The driver-lock exclusion matrix (GH-354 Phase 3 — canonical)
+
+> This table is the **one canonical statement** of what the driver lock guarantees (PDDA Principle #4).
+> Anything else that describes the lock — driver headers, monitor docs — links here rather than
+> restating it. A second copy is how the wrong sentence in `marathon-drive.sh:194-196` survived.
+
+Both drivers resolve the lock through **one shared resolver** (GH-448) — `utils/py/rtl.py::driver_lock_path`
+and its Bash twin `relay-automation/driver-lock-lib.sh::driver_lock_path_for_repo` — which yields three
+shapes:
+
+| Repo shape | Lock path | Display label |
+|---|---|---|
+| normal clone (`.git` is a directory) | `<root>/.git/relay-driver.lock` | `.git/relay-driver.lock` |
+| **linked worktree** (`.git` is a file) | `<git-common-dir>/relay-driver.lock` — i.e. **the parent clone's** | `.git/relay-driver.lock` |
+| vendored `.xyz/` (no `.git`) | `<root>/.relay-driver.lock` | `.relay-driver.lock` |
+
+The middle row is the load-bearing one: **a linked worktree does not get its own lane.** It resolves
+to the same lock as the clone it was cut from — pinned by `test/gh448-driver-lock-resolver.sh`
+(*"worktree case resolves to the git COMMON dir, not `<worktree>/.git/…`"*, plus a bash/python
+*"parity"* assertion per shape). So all three driver pairs mutually exclude *per clone*:
+
+| Pair | Excludes? | Pinned by |
+|---|---|---|
+| marathon ↔ marathon | **yes** | `test/driver-lock.sh` — *"live lock (alive holder) → driver refuses (exit 1)"*, *"live lock left intact (not stolen)"* |
+| marathon ↔ relay | **yes** | `test/gh376-relay-drive-lock-parity.sh` — *"THE PIN (bash): relay-drive.sh refuses — the frozen twin agrees with the Python half"* |
+| relay ↔ relay | **yes** | `test/gh376-relay-drive-lock-parity.sh` — *"neither lane left a worktree-local lock behind at `$WT/.relay-driver.lock`"*, *"twin parity: both lanes emit a byte-identical REFUSAL"* |
+
+**This became true only in GH-376.** Before it, `relay-drive` used a two-branch guess with no case for
+a linked worktree, so it took a *per-worktree* `.relay-driver.lock` while `marathon-drive` took the
+shared one — the bottom two rows did **not** exclude, and #354's original premise that the lock was
+"the hard blocker (by design)" was false for them. The negative control
+(*"pre-fix 2-branch logic sails past the held lock"*) is what pins that it can't return.
+
+**To actually run two swarms concurrently, use separate full clones** — not linked worktrees, which
+share the lock by the table above, and not a shared harness, which serializes. Per-run hygiene that
+keeps the event stream readable even across clones: distinct `--phase-id` / `--relay-task`, plus
+`MARATHON_LANE_NS` for the lane namespace and an explicit `XYZ_SESSION_ID` (its fallback to `PHASE_ID`
+cannot tell one run from another).
 
 To run relays in **different repos at the same time on one machine**, give each repo its **own harness**
 so each gets its own lock, `.tick/`, and worktrees:
