@@ -6,12 +6,13 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 176 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 96 · 🔮 0 · 🔲 0
+Summary: 177 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-510 · Agent2Agent watch/drive operating levels | — | [GH-510-AGENT2AGENT-WATCH-DRIVE.md](PROJECT/2-WORKING/GH-510-AGENT2AGENT-WATCH-DRIVE.md) · [#510](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/510) |
 | GH-509 · tier CI to stop per-push Actions minute burn | — | [GH-509-CI-MINUTE-BURN.md](PROJECT/2-WORKING/GH-509-CI-MINUTE-BURN.md) · [#509](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/509) |
-| GH-497 · agent2agent compact multi-session rendezvous | — | [GH-497-AGENT2AGENT.md](PROJECT/2-WORKING/GH-497-AGENT2AGENT.md) · [#497](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/497) |
+| GH-497 · agent2agent compact multi-session rendezvous | ✅ | [GH-497-AGENT2AGENT.md](PROJECT/2-WORKING/GH-497-AGENT2AGENT.md) · [#497](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/497) |
 | GH-480 · XYZ Cockpit — read-only VS Code view for Marathons, Releases, Worktrees | — | [GH-480-VSCODE-COCKPIT-EXT.md](PROJECT/1-INBOX/GH-480-VSCODE-COCKPIT-EXT.md) · [#480](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/480) |
 | GH-451 · Marathon: support Pi builders on the Python-default path | — | [GH-451-PI-MARATHON-ROUTING.md](PROJECT/1-INBOX/GH-451-PI-MARATHON-ROUTING.md) · [#451](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/451) |
 | GH-453 · Design an issue-derived fuzzing evidence pipeline | — | [GH-453-ISSUE-DERIVED-FUZZING.md](PROJECT/2-WORKING/GH-453-ISSUE-DERIVED-FUZZING.md) · [#453](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/453) |

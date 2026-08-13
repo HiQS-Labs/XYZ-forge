@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GH-497 — compact-ID, serialized, multi-party agent2agent discussions.
+# GH-497/GH-510 — compact multi-party discussions with explicit watch/drive levels.
 set -u
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -34,7 +34,7 @@ expect_file_contains() {
 }
 fingerprint() { cksum "$1" | awk '{print $1 ":" $2}'; }
 
-echo "agent2agent (GH-497):"
+echo "agent2agent (GH-497/GH-510):"
 ROOT="$WORK/root with spaces"
 mkdir -p "$ROOT"
 
@@ -46,9 +46,9 @@ grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
 helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py"' "$SKILL")"
-[ "$helper_examples" -eq 5 ] \
+[ "$helper_examples" -eq 7 ] \
   && pass "all skill commands resolve and quote the repository helper" \
-  || fail "expected 5 root-resolved helper commands, found $helper_examples"
+  || fail "expected 7 root-resolved helper commands, found $helper_examples"
 (cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
@@ -87,6 +87,23 @@ after_join="$(fingerprint "$relay_file")"
 [ "$join_rc" -eq 0 ] && pass "joins an existing discussion by ID" || fail "join exits $join_rc: $join_out"
 expect_contains "join reports turn ownership" "$join_out" "DECISION: take-turn"
 [ "$before_join" = "$after_join" ] && pass "join leaves the discussion byte-identical" || fail "join mutated the discussion"
+before_watch="$(fingerprint "$relay_file")"
+watch_now="$(python3 "$CLI" --root "$ROOT" watch --id 123456 --agent 2 \
+  --interval 0.05 --timeout 1 2>&1)"
+watch_now_rc=$?
+[ "$watch_now_rc" -eq 0 ] && pass "watch returns when the participant owns NEXT" \
+  || fail "watch exits $watch_now_rc: $watch_now"
+expect_contains "watch reports turn ownership" "$watch_now" "DECISION: take-turn"
+# GH-510 doorbell: take-turn must hand the waking session its exact relaunch command,
+# and the printed argv must be self-contained (watch verb, id, agent, --root).
+expect_contains "take-turn watch prints a REARM line" "$watch_now" "REARM: "
+rearm_line="$(printf '%s\n' "$watch_now" | grep '^REARM: ' | head -1)"
+case "$rearm_line" in
+  *" watch --id 123456 --agent 2 "*--root*) pass "REARM argv is self-contained" ;;
+  *) fail "REARM argv incomplete: $rearm_line" ;;
+esac
+[ "$before_watch" = "$(fingerprint "$relay_file")" ] \
+  && pass "watch leaves the discussion byte-identical" || fail "watch mutated the discussion"
 python3 "$CLI" --root "$ROOT" join --id 123456 --agent 5 >/dev/null 2>&1 \
   && fail "rejects an agent outside the roster" || pass "rejects an agent outside the roster"
 python3 "$CLI" --root "$ROOT" join --id 123456 --agent 2 --expect-subject "wrong subject" >/dev/null 2>&1 \
@@ -119,10 +136,19 @@ expect_contains "lock refusal is explicit" "$lock_out" "discussion is locked by 
   && pass "lock refusal is byte-preserving" || fail "lock refusal mutated the discussion"
 
 # Any current participant may route to any other roster member, including agent3 and agent4.
+watch_later_file="$WORK/watch-later.out"
+python3 "$CLI" --root "$ROOT" watch --id 123456 --agent 3 \
+  --interval 0.05 --timeout 2 >"$watch_later_file" 2>&1 &
+watch_later_pid=$!
+sleep 0.1
 send2_out="$(python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 3 \
   --message "Agent two response." 2>&1)"
 send2_rc=$?
 [ "$send2_rc" -eq 0 ] && pass "agent2 routes turn 2 to agent3" || fail "agent2 send exits $send2_rc: $send2_out"
+wait "$watch_later_pid"
+watch_later_rc=$?
+[ "$watch_later_rc" -eq 0 ] && grep -Fq "DECISION: take-turn" "$watch_later_file" \
+  && pass "watch detects a delayed turn arrival" || fail "delayed watch did not wake for agent3"
 expect_contains "prints an agent3 handoff invitation" "$send2_out" \
   'Join XYZ agent2agent #123456 as agent number three to discuss: "subject line here"'
 join3="$(python3 "$CLI" --root "$ROOT" join --id 123456 --agent 3 2>&1)"
@@ -144,6 +170,20 @@ expect_file_contains "marks terminal status" "$relay_file" "STATUS: Closed"
 expect_file_contains "clears the next writer" "$relay_file" "NEXT: none"
 closed_join="$(python3 "$CLI" --root "$ROOT" join --id 123456 --agent 1 2>&1)"
 expect_contains "join reports terminal state" "$closed_join" "DECISION: closed"
+before_closed_watch="$(fingerprint "$relay_file")"
+closed_watch="$(python3 "$CLI" --root "$ROOT" watch --id 123456 --agent 1 \
+  --interval 0.05 --timeout 1 2>&1)"
+closed_watch_rc=$?
+[ "$closed_watch_rc" -eq 0 ] && pass "watch exits cleanly on a closed discussion" \
+  || fail "closed watch exits $closed_watch_rc: $closed_watch"
+expect_contains "closed watch reports terminal state" "$closed_watch" "DECISION: closed"
+# A closed discussion must never invite a re-arm — a REARM line here is the reflex-re-arm bug.
+case "$closed_watch" in
+  *"REARM: "*) fail "closed watch printed a REARM line: $closed_watch" ;;
+  *) pass "closed watch prints no REARM line" ;;
+esac
+[ "$before_closed_watch" = "$(fingerprint "$relay_file")" ] \
+  && pass "closed watch remains byte-preserving" || fail "closed watch mutated the discussion"
 before_closed_send="$(fingerprint "$relay_file")"
 python3 "$CLI" --root "$ROOT" send --id 123456 --agent 1 --next-agent 2 \
   --message "too late" >/dev/null 2>&1 \
@@ -175,6 +215,114 @@ ambig_out="$(python3 "$CLI" --root "$AMBIG" join --id 445566 --agent 2 2>&1)"
 ambig_rc=$?
 [ "$ambig_rc" -ne 0 ] && pass "ambiguous discussion ID fails" || fail "ambiguous ID unexpectedly joined"
 expect_contains "ambiguous failure is explicit" "$ambig_out" "is ambiguous"
+
+# Watch never dispatches commands. Drive is explicit, bounded, and delegates the guarded write to
+# the turn command, which must advance through the same send/close helper.
+DRIVE_ROOT="$WORK/drive"
+mkdir -p "$DRIVE_ROOT"
+python3 "$CLI" --root "$DRIVE_ROOT" start --id 556677 --subject "hands free" --agents 4 >/dev/null 2>&1
+drive_file="$(find "$DRIVE_ROOT/relay-system" -type f -name '556677-*.md' -print)"
+before_drive_wait="$(fingerprint "$drive_file")"
+drive_wait="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 3 \
+  --interval 0.05 --timeout 0.15 --max-turns 1 -- /usr/bin/true 2>&1)"
+drive_wait_rc=$?
+[ "$drive_wait_rc" -eq 3 ] && pass "drive times out without dispatching out of turn" \
+  || fail "out-of-turn drive exits $drive_wait_rc: $drive_wait"
+[ "$before_drive_wait" = "$(fingerprint "$drive_file")" ] \
+  && pass "out-of-turn drive is byte-preserving" || fail "out-of-turn drive mutated the discussion"
+
+before_drive_failure="$(fingerprint "$drive_file")"
+drive_failure="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 2 \
+  --interval 0.05 --timeout 1 --max-turns 1 -- /usr/bin/false 2>&1)"
+drive_failure_rc=$?
+[ "$drive_failure_rc" -eq 2 ] && pass "drive reports a failing turn command" \
+  || fail "failing command exits $drive_failure_rc: $drive_failure"
+expect_contains "drive failure names the command exit" "$drive_failure" "turn command failed with exit 1"
+[ "$before_drive_failure" = "$(fingerprint "$drive_file")" ] \
+  && pass "failed turn command leaves the discussion byte-identical" || fail "failed command mutated the discussion"
+
+before_drive_timeout="$(fingerprint "$drive_file")"
+drive_timeout="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 2 \
+  --interval 0.05 --timeout 0.15 --max-turns 1 -- /bin/sleep 5 2>&1)"
+drive_timeout_rc=$?
+[ "$drive_timeout_rc" -eq 2 ] && pass "drive bounds a turn command by its total deadline" \
+  || fail "timed-out command exits $drive_timeout_rc: $drive_timeout"
+expect_contains "command timeout is explicit" "$drive_timeout" "turn command timed out after"
+[ "$before_drive_timeout" = "$(fingerprint "$drive_file")" ] \
+  && pass "timed-out command leaves the discussion byte-identical" || fail "timed-out command mutated the discussion"
+
+first_drive_out="$WORK/first-drive.out"
+python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 1 \
+  --interval 0.05 --timeout 2 --max-turns 1 -- /usr/bin/true >"$first_drive_out" 2>&1 &
+first_drive_pid=$!
+sleep 0.1
+contended="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 1 \
+  --interval 0.05 --timeout 1 --max-turns 1 -- /usr/bin/true 2>&1)"
+contended_rc=$?
+kill "$first_drive_pid" 2>/dev/null || true
+wait "$first_drive_pid" 2>/dev/null || true
+[ "$contended_rc" -eq 2 ] && pass "second drive for the same participant is refused" \
+  || fail "contended drive exits $contended_rc: $contended"
+expect_contains "drive contention is explicit" "$contended" "drive is already active for this participant"
+
+TURN_COMMAND="$WORK/agent-turn.sh"
+cat >"$TURN_COMMAND" <<'TURN'
+#!/usr/bin/env bash
+set -eu
+prompt="$(cat)"
+printf '%s\n' "$prompt" >"$AGENT2AGENT_PROMPT_CAPTURE"
+python3 "$AGENT2AGENT_CLI" --root "$AGENT2AGENT_ROOT" send \
+  --id "$AGENT2AGENT_ID" --agent "$AGENT2AGENT_AGENT" --next-agent 3 \
+  --message "Driven response from $AGENT2AGENT_MEMBER."
+TURN
+chmod +x "$TURN_COMMAND"
+PROMPT_CAPTURE="$WORK/drive-prompt.txt"
+drive_success="$(AGENT2AGENT_CLI="$CLI" AGENT2AGENT_PROMPT_CAPTURE="$PROMPT_CAPTURE" \
+  python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 2 \
+  --interval 0.05 --timeout 2 --max-turns 1 -- "$TURN_COMMAND" 2>&1)"
+drive_success_rc=$?
+[ "$drive_success_rc" -eq 0 ] && pass "drive dispatches the owned turn command" \
+  || fail "successful drive exits $drive_success_rc: $drive_success"
+expect_contains "drive stops at its explicit turn bound" "$drive_success" "DECISION: max-turns"
+expect_file_contains "drive supplies the compact invitation prompt" "$PROMPT_CAPTURE" \
+  'Join XYZ agent2agent #556677 as agent number two to discuss: "hands free"'
+expect_file_contains "drive command advances through guarded send" "$drive_file" "NEXT: agent3"
+expect_file_contains "drive preserves 3+ participant routing" "$drive_file" "Driven response from agent2."
+
+before_no_advance="$(fingerprint "$drive_file")"
+no_advance="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 3 \
+  --interval 0.05 --timeout 1 --max-turns 1 -- /usr/bin/true 2>&1)"
+no_advance_rc=$?
+[ "$no_advance_rc" -eq 2 ] && pass "drive rejects a command that does not hand off" \
+  || fail "non-advancing command exits $no_advance_rc: $no_advance"
+expect_contains "non-advance failure is explicit" "$no_advance" "without advancing and handing off"
+[ "$before_no_advance" = "$(fingerprint "$drive_file")" ] \
+  && pass "drive itself never bypasses send enforcement" || fail "drive wrote around send enforcement"
+
+python3 "$CLI" --root "$DRIVE_ROOT" close --id 556677 --agent 3 \
+  --message "Close before another driver can dispatch." >/dev/null 2>&1
+closed_drive="$(python3 "$CLI" --root "$DRIVE_ROOT" drive --id 556677 --agent 1 \
+  --interval 0.05 --timeout 1 --max-turns 1 -- /usr/bin/false 2>&1)"
+closed_drive_rc=$?
+[ "$closed_drive_rc" -eq 0 ] && pass "drive exits cleanly when the discussion is closed" \
+  || fail "closed drive exits $closed_drive_rc: $closed_drive"
+expect_contains "closed drive does not dispatch its failing command" "$closed_drive" "DECISION: closed"
+
+interrupt_out="$(python3 - "$CLI" "$DRIVE_ROOT" <<'PY' 2>&1
+import importlib.util
+import sys
+
+spec = importlib.util.spec_from_file_location("agent2agent_under_test", sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+module.watch_discussion = lambda *args, **kwargs: (_ for _ in ()).throw(KeyboardInterrupt())
+raise SystemExit(module.main(["--root", sys.argv[2], "watch", "--id", "556677", "--agent", "1"]))
+PY
+)"
+interrupt_rc=$?
+[ "$interrupt_rc" -eq 130 ] && pass "interrupt exits with the conventional 130 status" \
+  || fail "interrupt exits $interrupt_rc: $interrupt_out"
+expect_contains "interrupt is reported visibly" "$interrupt_out" "agent2agent: interrupted"
 
 # The installer is cross-agent and never writes to real user skill directories in this test.
 CLAUDE_DIR="$WORK/claude-skills"

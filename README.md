@@ -127,8 +127,10 @@ Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
 Paste that one line into the target session. The same skill validates the ID and subject, reads the
 durable discussion, and responds only if that participant owns `NEXT:`. Each successful turn prints
 the next compact invitation, which can route to `agent1`, `agent3`, `agent4`, or any other member of
-the original roster. See [the agent2agent skill](skills/agent2agent/SKILL.md) for the deterministic
-`start`/`join`/`send`/`close` contract.
+the original roster. Two operating levels are available: read-only `watch` polls every 150 seconds
+by default, while `drive` is an explicit, bounded opt-in that invokes an approved turn command only
+when that participant owns `NEXT:`. See [the agent2agent skill](skills/agent2agent/SKILL.md) for the
+deterministic `start`/`join`/`watch`/`drive`/`send`/`close` contract.
 
 ### Before you start — safety and reversibility
 
