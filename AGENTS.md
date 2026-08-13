@@ -54,6 +54,10 @@ inline (`-> expect ...`). Do not scatter action items across prose.
 Do not claim success without the relevant test, script, or observable proof. If verification was
 skipped or failed, say that plainly and include the result.
 
+An uncommitted `provenance.jsonl` is not proof (GH-430). Any run cited as evidence in an issue, PR,
+ROADMAP entry, or decision record must have its `provenance.jsonl` committed in the same PR — a path
+you merely ran and can no longer show counts as no claim at all.
+
 ### 7. Record only consequential bets
 
 If a change is Costly, One-way door, or assumption-heavy, record the bet in `CHANGELOG.md` per
