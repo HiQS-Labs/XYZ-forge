@@ -155,7 +155,7 @@ so each gets its own lock, `.tick/`, and worktrees:
 | Install path | Ships | Relay capability | Lock |
 |---|---|---|---|
 | `install.sh` (tick-only) | `bin/tick` + `src/*.js` | ❌ falls back to the centralized harness | shared (serializes) |
-| **`xyz-vendor.sh vendor <repo>`** | full harness (`relay-automation/` + tick + src) into a gitignored `.xyz/` | ✅ per-repo | **own** `.xyz/.relay-driver.lock` |
+| **`xyz-vendor.sh <target-repo> [--no-register]`** | full harness (`relay-automation/` + tick + src) into a gitignored `.xyz/` | ✅ per-repo | **own** `.xyz/.relay-driver.lock` |
 
 Updating a vendored copy (`xyz-sync.sh update`, or re-running `xyz-vendor.sh` over an existing
 `.xyz/`) replaces the harness **code** and preserves the per-repo state above — `relay-system/`,
