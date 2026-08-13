@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Queued by the 2026-08-13 `/10days` sweep; `swarm-preflight --gh-issue 428` returned ready (exit 0) and a packet was written. Rot independently reproduced: `git apply --check` still fails at `src/paths.js:9`. | NOT BUILT. Serialized into wave 2 behind GH-430 because both lanes touch `validate.sh` and `test/`. The wave-1 gate went red on unrelated PDDA doc-contract defects, so this lane was never dispatched. |
+| BUILT 2026-08-13 on `marathon/10days-2026-08-13`. `poison.patch` re-derived against current `src/paths.js` — GH-71 added a JSDoc block, shifting the hunk from `@@ -9,7` to `@@ -15,7`, so this was a context regeneration and the poison semantics are byte-identical (`*` still dropped from the negated class). `verify-fixture.sh` ran end-to-end: **FIXTURE OK**, 171/172, exactly one failing check and it is `path-overlap`; the trap left a clean tree and `src/paths.js` is unchanged. A non-recursive `git apply --check` probe is registered in `validate.sh` (it never invokes `verify-fixture.sh`). Full gate green at **194/194** with `gamma-poison-staleness-probe` in the passed list. | Operator review. **Control caveat worth reading:** the probe's falsifying control only fires on a corrupted *context line* — corrupting the hunk header's line numbers alone still applies, because `git apply` matches by context and tolerates line drift. Both the lane and the orchestrator hit this independently. That means the probe catches content drift in `src/paths.js` (the actual GH-71 rot mode was context drift, which it does catch) but is deliberately tolerant of pure line-number movement. GH-429 (qualification measured only once) is unblocked by this and remains open. |
 
 ## Why
 
