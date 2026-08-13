@@ -242,6 +242,85 @@ TESTS=(
 PASSED=()
 FAILED=()
 
+# ── GH-528: experimental opt-in parallel mode ─────────────────────────────────────────────────────
+# `./validate.sh` (no args) stays the sequential gate it has always been — that path is unchanged.
+# `./validate.sh --parallel N` runs the SAME TESTS array N-wide, with one exception: the suites that
+# execute the REAL relay-automation/relay-drive.sh contend on this clone's .git/relay-driver.lock
+# (GH-42 exclusion working as designed — "--target-root moves the build, not the lock", see
+# test/gh331-cost-summary.sh), so those run sequentially in ONE lane while everything else pools.
+# Spike numbers (GH-528, 2026-08-13, M-series macOS): sequential 950.3s → --parallel 8 = 167.4s,
+# same suites green. EXPERIMENTAL: a fast local self-check, NOT promotion evidence and NOT the CI
+# gate; sequential stays the default until the GH-528 Phase 2 stress bar is met (multi-width
+# repeats, leak/clean-tree checks) — recorded in PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md.
+PARALLEL_JOBS=""
+if [ $# -gt 0 ]; then
+  case "$1" in
+    --parallel)
+      case "${2:-}" in
+        ''|*[!0-9]*) echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2 ;;
+      esac
+      [ "$2" -ge 1 ] || { echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2; }
+      [ $# -eq 2 ] || { echo "usage: ./validate.sh [--parallel N]" >&2; exit 2; }
+      PARALLEL_JOBS="$2"
+      ;;
+    *) echo "usage: ./validate.sh [--parallel N]" >&2; exit 2 ;;
+  esac
+fi
+
+# The suites that execute the real relay-drive.sh (not a stub or fixture copy). Membership was
+# derived in the GH-528 spike: every suite whose $DRIVE/$DRIVER/$RD resolves to the shipped
+# relay-automation/relay-drive.sh. If you add such a suite, add it here too — at 2+ jobs the
+# driver lock turns the omission into a deterministic-looking refusal failure, not a flake.
+DRIVER_LOCK_LANE=" gh289-target-root-build-turn.sh gh331-cost-summary.sh poll-relay.sh relay-artifact-file.sh relay-escalation-not-stall.sh relay-review-once.sh relay-target-root-newfile.sh relay-target-root-paths.sh relay-target-root-relayfile.sh relay-target-root.sh relay-token-collision.sh relay-untracked-file-warn.sh relay-xyz-skill-guard.sh "
+
+if [ -n "$PARALLEL_JOBS" ]; then
+  RUN_DIR="$(mktemp -d -t validate-parallel.XXXXXX)"
+  # GH-177: mktemp is verified before use, nothing ever cd's into it, and the EXIT trap only
+  # removes a re-verified non-empty directory path.
+  [ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] || { echo "validate.sh: mktemp -d failed" >&2; exit 1; }
+  trap '[ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] && rm -rf "$RUN_DIR"' EXIT
+  RESULTS="$RUN_DIR/results"
+  : > "$RESULTS"
+  export VALIDATE_HERE="$HERE" VALIDATE_LOG_DIR="$RUN_DIR" VALIDATE_RESULTS="$RESULTS"
+
+  vp_run_one() {  # <suite> — run one suite against its own log; append "rc suite" to the results file
+    local t="$1" log rc
+    log="$VALIDATE_LOG_DIR/$(printf '%s' "$t" | tr '/' '_').log"
+    if bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1; then rc=0; else rc=$?; fi
+    printf '%s %s\n' "$rc" "$t" >> "$VALIDATE_RESULTS"
+    echo "[parallel] $t rc=$rc"
+  }
+  export -f vp_run_one
+
+  POOL=()
+  for t in "${TESTS[@]}"; do
+    case "$DRIVER_LOCK_LANE" in
+      *" $t "*) ;;
+      *) POOL+=("$t") ;;
+    esac
+  done
+
+  echo "validate.sh --parallel $PARALLEL_JOBS (EXPERIMENTAL, GH-528): ${#POOL[@]} pooled suites + sequential driver-lock lane"
+  (
+    for t in $DRIVER_LOCK_LANE; do vp_run_one "$t"; done
+  ) &
+  LANE_PID=$!
+  printf '%s\n' "${POOL[@]}" | xargs -P "$PARALLEL_JOBS" -I{} bash -c 'vp_run_one "$@"' _ {}
+  wait "$LANE_PID"
+
+  while IFS=' ' read -r rc t; do
+    if [ "$rc" = "0" ]; then
+      PASSED+=("$t")
+    else
+      FAILED+=("$t")
+      echo
+      echo "==============================="
+      echo "FAILED: $t (rc=$rc) — last 40 lines of its log"
+      echo "==============================="
+      tail -40 "$RUN_DIR/$(printf '%s' "$t" | tr '/' '_').log"
+    fi
+  done < "$RESULTS"
+else
 for t in "${TESTS[@]}"; do
   echo
   echo "==============================="
@@ -253,6 +332,7 @@ for t in "${TESTS[@]}"; do
     FAILED+=("$t")
   fi
 done
+fi
 
 echo
 echo "==============================="

@@ -1,0 +1,44 @@
+# Independent review request: GH-528 test-suite research spike
+
+You are reviewing a research spike conducted on this repository (the working tree you are in). Please assess it independently and critically. You may inspect any file in the repo (e.g. `validate.sh`, `test/`, `ci-local.sh`) to verify claims.
+
+## The task the spike was answering (from GitHub issue #528)
+
+> Research spike: can the test suite be optimized — for wall-clock, maintenance load, or both — without giving up coverage that real incidents paid for? The answer is not guaranteed either way. "We measured, and the suite should stay as it is" is a passing result.
+>
+> Research questions: (1) Time census: time every suite in a full run; rank. Hypothesis: a handful of sleep-heavy suites own a disproportionate share of wall-clock. (2) Wait-time audit: which slow suites wait on injectable intervals vs inherent waits? (3) Parallelism feasibility: which suites are isolated and could run concurrently; what breaks the rest — is the sharing load-bearing or incidental? (4) Redundancy map: do any suites assert the same property (candidates: GH-375/385/407/419-family)? (5) Coverage-per-risk: which incident does each candidate suite trace to?
+>
+> Constraints: no coverage regression on incident-backed suites without explicit operator decision; any consolidated/interval-injected suite must still be observed red against its original defect (the #419 standard); tiering of *when* suites run is GH-509's lane — coordinate, don't duplicate.
+
+## Method used
+
+- Time census: extracted `validate.sh`'s TESTS array verbatim; ran each `bash test/<suite>` sequentially under `relay-automation/gate-env.sh` with `RELAY_SELF_SUFFICIENCY_SKIP=1`, timing each with sub-second precision. Single machine (M-series macOS), single run.
+- Wait-time audit: static grep of sleep literals across `test/*.sh`, cross-referenced against the census ranking and the env-injectable timeout knobs.
+- Parallelism: audited isolation (per-suite mktemp dirs, lock locations), then two experiments: (a) full suite list under `xargs -P 8`; (b) same, but with 13 identified suites serialized in a single sequential lane.
+- Redundancy: full read of `test/gh375-agy-auth-preflight.sh`, `test/gh375-auth-timeout-verdict.sh`, `test/gh385-retry-token-satisfied.sh`, `test/gh390-gate-guard.sh`, `test/gh390-timeout-attribution.sh`, `test/gh407-gate-ran-attribution.sh`, `test/gh419-gate-inventory.sh`, `test/marathon-drive.sh`.
+
+## Measured data
+
+- Sequential full gate: 950.3s (15.8 min), 186 suites. Median suite 1.4s; 78 suites < 1s; 22 suites ≥ 10s own 582s (61%).
+- Top 10: marathon-drive.sh 91.0s, pdda-repo-contract.sh 74.2s, agy-turn.sh 59.4s, consult.sh 38.7s, shim-worktree.sh 26.6s, marathon-root-audit.sh 23.4s, gh390-gate-guard.sh 22.5s, xyz-harness-hooks.sh 21.5s, codex-turn.sh 21.3s, claude-turn.sh 20.3s.
+- Top-10 slowest suites contain essentially zero executed sleep time; timeout-proving suites already inject tiny intervals (`RELAY_TURN_TIMEOUT_S=1`, `RELAY_TURN_IDLE_S`, `CONSULT_IDLE_S`, `AGY_AUTH_TIMEOUT_S=2`). Residual literal sleep across the gate estimated ~30–60s.
+- Naive 8-way parallel run: 172.9s wall; 7 failures, all "relay-drive: another driver is active in this repo (lock: .git/relay-driver.lock)" refusals, in suites that execute the real `relay-automation/relay-drive.sh` from the harness checkout.
+- 8-way with those 13 real-driver suites serialized in one lane (lane total 42.7s): 167.4s wall; the only failure was `acorn-extract.sh`, which also fails sequentially without `npm ci` (missing `acorn` node module — environmental).
+- Two known census caveats: the python pytest lane wasn't timed (no pytest in the invoking shell; CI pip-installs it), and `acorn-extract.sh` failed environmentally in the sequential census too.
+
+## The recorded verdict under review
+
+1. Keep the suite exactly as it is: no cuts, no merges, no sleep surgery.
+   - Wait-time hypothesis called FALSIFIED: slow suites are slow from real subprocess/git work, not sleeps.
+   - Redundancy called ZERO: every suite in the named family has a distinct observable; the two gh375 suites assert opposite verdicts on the same input; the two gh390 suites test different modules (exit 5 vs exit 7); the one repeated assertion (red gate → `pre-advance-failed` in marathon-drive.sh §6, gh390-gate-guard, gh407) is judged a load-bearing anti-overcorrection control in each location, not a redundancy. Only optional cleanup: ~40 lines of duplicated `run_driver` scaffolding between gh390-gate-guard and gh407.
+2. Add an opt-in parallel mode to the runner (`validate.sh --parallel N`): pool everything except the 13 real-driver suites, which run sequentially in one lane. Keep sequential default until ≥3 consecutive green parallel runs; watch timeout-proving suites under CPU contention as the plausible flake source. Land it coordinated with (not inside) GH-509's route/tiering lane.
+3. Optional, separable hygiene: shared fixture helper for the duplicated scaffolding; `gh390-timeout-attribution.sh` is the one suite not on `_setup.sh` conventions.
+
+## Questions for you
+
+1. Is the methodology adequate to support each conclusion? What would you have measured or done differently, and would it plausibly change any verdict?
+2. Are there risks, failure modes, or alternatives this verdict misses or underweights?
+3. Do you agree or disagree with each of the three recommendation points? Where you disagree, say what you would recommend instead and why.
+4. Anything in the repo itself that contradicts the claims above? Spot-check where useful.
+
+Be direct and critical where warranted; do not defer to the verdict's framing. Advisory only — do not modify files.
