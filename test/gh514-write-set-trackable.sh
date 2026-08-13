@@ -56,6 +56,19 @@ exit 0
 STUB_EOF
 chmod +x "$STUB"
 
+# GH-232, walked into again. `marathon_drive.py` probes the REVIEWER binary (CODEX_BIN, default
+# `codex`) before anything else runs, so with no `codex` on PATH the driver fail-fasts and the
+# discriminating assertion below reads the probe's message instead of the write-set refusal. This
+# file stubbed the builder and not the reviewer, so it passed on a developer machine — where a real
+# `codex` happens to be installed — and went red on ubuntu CI, which is the exact failure mode
+# ci.yml already documents. That matters more here than in most suites: this one asserts on the
+# ABSENCE of a traceback, and a fail-fast that never reaches the render satisfies that for entirely
+# the wrong reason.
+REVIEWER_STUB="$WORK/reviewer-stub"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$REVIEWER_STUB"
+chmod +x "$REVIEWER_STUB"
+export CODEX_BIN="$REVIEWER_STUB"
+
 # Build a target fixture. <label> <extra-gitignore-line>
 mk_target() {
   # Split, not `local a=$1 b=$2 c="$WORK/$a"`: macOS ships bash 3.2, which expands every RHS in a

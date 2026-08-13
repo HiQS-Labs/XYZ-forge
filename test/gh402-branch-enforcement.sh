@@ -39,6 +39,18 @@ exit 0
 STUB_EOF
 chmod +x "$STUB"
 
+# GH-232, walked into again. `marathon_drive.py` probes the REVIEWER binary (CODEX_BIN, default
+# `codex`) before anything else runs, so with no `codex` on PATH the driver fail-fasts and every
+# assertion below reads the probe's message instead of the branch guard's. This file stubbed the
+# builder and not the reviewer, so it passed on a developer machine — where a real `codex` happens
+# to be installed — and went red on ubuntu CI, which is the exact failure mode ci.yml already
+# documents. Stubbed as a NO-OP that is deliberately NOT $STUB: $STUB appends to $DISPATCH_LOG, and
+# reusing it would inflate the dispatch counts the cases below assert on.
+REVIEWER_STUB="$WORK/reviewer-stub"
+printf '#!/usr/bin/env bash\nexit 0\n' >"$REVIEWER_STUB"
+chmod +x "$REVIEWER_STUB"
+export CODEX_BIN="$REVIEWER_STUB"
+
 # <label> — a clone with a real origin whose HEAD is a genuine default branch.
 mk_repo() {
   local label="$1"
