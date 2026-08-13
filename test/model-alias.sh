@@ -25,6 +25,7 @@ check "exact nemotron ultra 3"        "nemotron ultra 3"           "nvidia/nemot
 check "exact nemotron ultra 3 free"   "nemotron ultra 3 free"      "nvidia/nemotron-3-ultra-550b-a55b:free"
 check "exact qwen3 coder"             "qwen3 coder"                "qwen/qwen3-coder"
 check "exact deepseek v4 pro"         "deepseek v4 pro"            "deepseek/deepseek-v4-pro"
+check "exact grok 4.6"                "grok 4.6"                   "x-ai/grok-4.6"
 
 # --- case/punctuation-insensitive normalization ---
 check "case-insensitive GLM 5.2"      "GLM 5.2"                    "z-ai/glm-5.2"
