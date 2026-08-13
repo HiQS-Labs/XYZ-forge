@@ -69,6 +69,13 @@ jobs:
       - name: Install npm dependencies
         run: npm ci
 
+      # The hosted runner's Python has no pytest, and validate.sh's python lane needs it — the
+      # first boundary dispatch (run 31661285957) failed exactly here. Ironic and instructive:
+      # GH-509's own headline defect was "the hosted route never ran the 20 python tests"; the
+      # first time they ran on hosted macOS, the environment couldn't run them.
+      - name: Install pytest for the python lane
+        run: python3 -m pip install --quiet --break-system-packages pytest
+
       - name: Run the authoritative validator (no skips)
         env:
           # The one documented exclusion, and it is not a coverage skip: this test makes a real

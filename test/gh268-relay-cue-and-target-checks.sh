@@ -204,10 +204,16 @@ PART="$WORK/partial"; mkdir -p "$PART"
 printf '<?php\nfunction gh268_p(){return 1;}\n' > "$PART/plugin.php"
 printf '{"require-dev":{"wp-coding-standards/wpcs":"^3.0"}}\n' > "$PART/composer.json"
 out="$(bash "$TC" run --root "$PART" 2>&1)"
+# The guarded property is "a skip is never a clean pass". With php present, some checks run and
+# some skip → PARTIAL GATE. On a clean runner with no php at all, EVERY check skips and the tool
+# correctly says the stronger "NO GATE" (first hosted macOS boundary run, 31661285957). Both
+# labels satisfy the property; requiring only PARTIAL GATE graded the tool's honesty as a failure.
 if printf '%s' "$out" | grep -Fq "SKIP"; then
-  printf '%s' "$out" | grep -Fq "PARTIAL GATE" \
-    && pass "a run with skipped checks is labelled PARTIAL GATE, not a clean pass" \
-    || fail "partial run did not say so: $out"
+  if printf '%s' "$out" | grep -Fq "PARTIAL GATE" || printf '%s' "$out" | grep -Fq "NO GATE"; then
+    pass "a run with skipped checks is labelled PARTIAL GATE or NO GATE, not a clean pass"
+  else
+    fail "partial run did not say so: $out"
+  fi
 fi
 
 # ── item 9 fallout, second vendor: findings the agy cross-vendor relay caught that Codex missed ──
