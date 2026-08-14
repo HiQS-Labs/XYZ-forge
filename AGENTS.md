@@ -70,6 +70,18 @@ local change.
 
 ## Repo-specific rails
 
+- **Never use a git command that overwrites the working tree from a committed state to undo a
+  working-tree experiment.** In this clone other agents hold uncommitted work you cannot see.
+  Three spellings destroyed peer work three times in one session (GH-527) and the common factor
+  is not obvious from any one of them:
+  - `git reset --hard <anything>`
+  - `git checkout -- <path>` (restores **HEAD**, not the state before your edit)
+  - tree-wide `git stash` (and it may time out before its `pop`)
+
+  To undo your own experiment, copy the file first (`cp f f.bak`) and restore from that. The
+  blast radius is **tracked** modifications; untracked files survive. `relay-automation/hooks/gh527-destructive-git-guard.sh`
+  snapshots the doomed tracked files into `.tick/orphan-backups/` before the command runs, so
+  this is recoverable rather than prevented — the snapshot is a net, not permission to swing.
 - `ROUTER.md` owns startup order, canonical files, command rails, and the issue-first SOP.
 - `GUIDING-PRINCIPLES.md` owns the product/runtime priorities: local event-log coordination,
   containment, skill-first relay work, durable fixes, and verified done.
