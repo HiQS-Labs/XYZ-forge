@@ -42,7 +42,10 @@ FR="$(mktemp -d "${TMPDIR:-/tmp}/fh-foreign.XXXXXX")"; git -C "$FR" init -q
 out2="$( cd "$FR" && bash "$FH" --check 2>&1 )"; rc2=$?
 ok "foreign no-.xyz: --check still exits 0 (fail-open)"  "[ '$rc2' -eq 0 ]"
 ok "foreign no-.xyz: emits the concurrency warning"      "printf '%s' \"\$out2\" | grep -qi 'concurrency'"
-ok "foreign no-.xyz: points at xyz-vendor.sh"            "printf '%s' \"\$out2\" | grep -q 'xyz-vendor.sh vendor'"
+# GH-421: the hint must use the REAL contract (target repo is the sole positional). Asserting the
+# old 'xyz-vendor.sh vendor' form is what kept the broken hint alive — the test pinned the defect.
+ok "foreign no-.xyz: points at xyz-vendor.sh"            "printf '%s' \"\$out2\" | grep -q 'xyz-vendor.sh '"
+ok "foreign no-.xyz: hint omits the bogus vendor subcommand" "! printf '%s' \"\$out2\" | grep -q 'xyz-vendor.sh vendor'"
 rm -rf "$FR"
 
 # --- Case 3: foreign repo WITH a local .xyz/ harness → resolves to it, NO concurrency warning ---

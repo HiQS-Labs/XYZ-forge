@@ -252,7 +252,7 @@ case "${1:-}" in
         fi
         echo "      share ONE global driver lock (can't run concurrently with another repo's relay). For"
         echo "      per-repo isolation / concurrent relays, vendor this repo:"
-        echo "        relay-automation/xyz-vendor.sh vendor $_caller"
+        echo "        relay-automation/xyz-vendor.sh $_caller"
         # GH-448: resolve via the shared resolver, not a 2-candidate guess — when $HARNESS itself is a
         # linked worktree (.git is a FILE), the driver's real lock lives at the git common dir, which
         # neither hardcoded candidate above matched, so this warning silently never fired.

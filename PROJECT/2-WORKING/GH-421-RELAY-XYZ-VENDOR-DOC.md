@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Queued by the 2026-08-13 `/10days` sweep and built the same day on `marathon/10days-2026-08-13`: `skills/relay-xyz/SKILL.md:158` now documents `xyz-vendor.sh <target-repo> [--no-register]`, and the conclusion prose naming `xyz-vendor.sh` (not `install.sh`) as the per-repo isolation path is unchanged. | One out-of-allowlist match remains and was deliberately NOT edited by the lane: `skills/relay-xyz/find-harness.sh:255` prints the same bogus `vendor` form inside a hint string. It needs its own change so criterion 2 holds repo-wide. |
+| **Complete 2026-08-14.** The lane shipped `skills/relay-xyz/SKILL.md:158` on `marathon/10days-2026-08-13`, and the residual it deliberately left out of its allowlist — `skills/relay-xyz/find-harness.sh:255`, which printed the same bogus `vendor` form in a hint string — is fixed on `quickwins/parked-2026-08-14`. **`test/find-harness.sh` was pinning the defect:** its assertion literally grepped for `xyz-vendor.sh vendor`, so the broken hint was protected by a passing test. That assertion now checks the real contract and is joined by an explicit negative — `hint omits the bogus vendor subcommand` — witnessed red (20/1) against a reverted source line and green (21/0) restored. | Nothing. Criterion 2 holds across `skills/`, `README.md`, `AGENTS.md` and `ROUTER.md`; the surviving matches are historical records in `PROJECT/1-INBOX`, `PROJECT/3-COMPLETED` and `CHANGELOG.md`, which quote the defect deliberately and are out of scope. |
 
 ## Why
 
