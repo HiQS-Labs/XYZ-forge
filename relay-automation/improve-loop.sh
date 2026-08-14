@@ -67,7 +67,12 @@ if [ "$MAXBUD" != 0 ] && [ "$CURRENCY" = tokens ] && [ "$AGENT" = agy ]; then
   echo "improve-loop.sh: cannot enforce --max-total-budget in tokens for the cost-blind agy lane — use --currency seconds" >&2; exit 2
 fi
 ALLOW="${ALLOW:-$ARTIFACT}"
-STATE_DIR="${STATE_DIR:-${TMPDIR:-/tmp}/improve-loop.$$}"
+# GH-430: the loop's only audit trail (provenance.jsonl) must survive the run. A process-scoped
+# ${TMPDIR:-/tmp} default evaporates the moment the process exits, so proof cited in an issue/PR/
+# ROADMAP entry can never be checked later. Default into a TRACKED in-repo path instead — NOT under
+# .tick/ (gitignored, so rtl_enforce gives it zero containment protection per GH-396) and NOT under
+# any other gitignored directory. An explicit --state-dir still wins (parsed above, ~line 45).
+STATE_DIR="${STATE_DIR:-$HERE/state/improve-loop.$$}"
 mkdir -p "$STATE_DIR"
 SNAP="$STATE_DIR/champion.artifact"
 
