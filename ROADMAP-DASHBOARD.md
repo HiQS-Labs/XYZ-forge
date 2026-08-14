@@ -6,10 +6,18 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 181 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 2 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
+Summary: 189 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-395 · an unreviewed CI push left a duplicate skill dir and a hardcoded tick path | — | [GH-395-UNREVIEWED-CI-PUSH-CLEANUP.md](PROJECT/2-WORKING/GH-395-UNREVIEWED-CI-PUSH-CLEANUP.md) · [#395](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/395) |
+| GH-527 · a destructive git command has no guard, and a doc rail demonstrably will not fix it | — | [#527](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/527) |
+| GH-398 · ~35 KB of auto-loaded instruction reaches every turn, recorded nowhere | — | [#404](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/404) · [#398](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/398) |
+| GH-423 · validate and codify 3+ agent swarm support | — | [#423](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/423) |
+| GH-429 · the GH-40 Reviewer was qualified on a single blind run with no committed transcripts | — | [#429](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/429) |
+| GH-518 · fuzzing loop emits PRs with no --base development and skips CI with no local fallback | ⏸️ | [#518](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/518) |
+| GH-520 · a fixture that does not stub CODEX_BIN tests the reviewer probe, not the code | ⏸️ | [#520](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/520) |
+| GH-499 · 0.5.0 Lantern — the information needed to act already exists inside the harness | — | [#499](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/499) |
 | GH-421 · relay-xyz SKILL.md documents a vendor subcommand that does not exist | — | [GH-421-RELAY-XYZ-VENDOR-DOC.md](PROJECT/2-WORKING/GH-421-RELAY-XYZ-VENDOR-DOC.md) · [#421](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/421) |
 | GH-428 · gamma-poison poison.patch no longer applies, and nothing detects fixture rot | — | [GH-428-GAMMA-POISON-FIXTURE-ROT.md](PROJECT/2-WORKING/GH-428-GAMMA-POISON-FIXTURE-ROT.md) · [#428](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/428) |
 | GH-430 · improve-loop.sh defaults its state dir to /tmp, so provenance evidence evaporates | — | [GH-430-IMPROVE-LOOP-STATE-DIR.md](PROJECT/2-WORKING/GH-430-IMPROVE-LOOP-STATE-DIR.md) · [#430](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/430) |
