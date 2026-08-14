@@ -112,6 +112,39 @@ export TICK_REPO_ROOT="$A"
 # has a suite that proves it fires rather than a suite that silently never reaches it.
 export MARATHON_ALLOW_TRUNK_COMMIT=1
 
+# GH-520: give every fixture a default REVIEWER binary, for the same reason and in the same place
+# as the line above.
+#
+# `marathon_drive.py` probes the reviewer binary before the guards, the preflight and the dispatch
+# (`_probe_agent_bin`), and `--reviewer codex` is the default in essentially every marathon fixture.
+# Stubbing the *builder* is the obvious half — it is the thing the test drives — so the reviewer
+# stays invisible until a machine without `codex` runs the suite. A fixture that misses it never
+# reaches the code it was written to test, and its assertions read the probe's message instead.
+#
+# That is not hypothetical and it is not a flake: it has now happened three times. GH-232 recorded
+# it in a `ci.yml` comment (`driver-lock.sh`/`xyz-harness-hooks.sh` stubbed CLAUDE_BIN/AGY_BIN but
+# not CODEX_BIN), and on 2026-08-11/12 three more suites — gh402, gh514, gh388 — shipped green
+# locally and were red on every ubuntu run for a whole session. The comment did not prevent the
+# recurrence, which is the actual finding: this needs a default, not another warning.
+#
+# Worse than a flake, because a fail-fast can satisfy an ABSENCE assertion for the wrong reason:
+# `gh514` asserts on the absence of a Python traceback, which a run that dies at the probe also
+# produces. Those three happened to fail closed; nothing in the design guarantees the next one will.
+#
+# Declared ONCE, here, as what it is: the harness saying the reviewer binary is not the thing under
+# test. The probe is still exercised — `test/marathon-drive.sh` sets an explicitly MISSING binary
+# for the cases that must refuse, so it has a suite proving it fires rather than one that silently
+# never reaches it. A fixture that needs its own reviewer behaviour still overrides CODEX_BIN
+# inline, exactly as the shim suites already do.
+_CODEX_STUB="$WORK/_default-codex-stub"
+cat > "$_CODEX_STUB" <<'CODEX_STUB_EOF'
+#!/usr/bin/env bash
+# GH-520 default reviewer stub: present on PATH-probe, does nothing, succeeds.
+exit 0
+CODEX_STUB_EOF
+chmod +x "$_CODEX_STUB"
+export CODEX_BIN="${CODEX_BIN:-$_CODEX_STUB}"
+
 PASS=0
 FAIL=0
 pass() { echo "  PASS: $*"; PASS=$((PASS+1)); }

@@ -38,6 +38,15 @@
             "command": "bash relay-automation/hooks/gh177-sandbox-test-guard.sh"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash relay-automation/hooks/gh527-destructive-git-guard.sh"
+          }
+        ]
       }
     ],
     "SessionStart": [
