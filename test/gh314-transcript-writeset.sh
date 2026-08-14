@@ -116,6 +116,31 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Case 3 — a DATE-KEYED ignore rule, which a synthetic probe path would miss
+# ---------------------------------------------------------------------------
+# The first draft probed `<transcript_root>/probe/transcript.md`. An agy review pointed out that a
+# rule keyed on the dated directory — `relay-system/2026-*/`, which is the shape a repo would
+# actually write to exclude transcripts — does not match that synthetic path, so the run would sail
+# through preflight and fail later on the real name. The probe now mimics the real structure
+# (`<root>/<YYYY-MM-DD>/marathon-<phase>-<HHMMSS>.md`). This case is what makes that difference
+# observable rather than asserted.
+echo "-- case 3: the target gitignores relay-system/2026-*/ (a date-keyed rule)"
+DATED="$(mk_target hostile-dated 'relay-system/2026-*/')"
+: >"$DISPATCH_LOG"
+rc="$(run_drive "$DATED" "$WORK/dated.out")"
+
+[ "$rc" -ne 0 ] \
+  && pass "a date-keyed transcript ignore rule is caught (exit $rc)" \
+  || fail "GH-314: a date-keyed rule slipped the preflight — the probe path is not shaped like the real one"
+
+dispatches="$(/usr/bin/grep -c DISPATCHED "$DISPATCH_LOG" 2>/dev/null | head -1)"; dispatches="${dispatches:-0}"
+if [ "$dispatches" -eq 0 ]; then
+  pass "no builder turn was spent on the date-keyed rule either"
+else
+  fail "GH-314: $dispatches builder turn(s) spent before the date-keyed refusal"
+fi
+
+# ---------------------------------------------------------------------------
 # Case 2 — CONTROL: a healthy target must NOT be refused
 # ---------------------------------------------------------------------------
 # Without this, blocking every run would pass case 1 and the guard would be a blanket.

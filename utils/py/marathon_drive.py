@@ -2059,9 +2059,35 @@ You are the REVIEWER for this phase. {reviewer_read_line}
                 os.path.join(xyz_harness, "relay-automation", "relay-turn-lib.sh"), root),
             shell=True, executable="/bin/bash", stderr=subprocess.DEVNULL).decode("utf-8").strip()
         if _ts_base:
-            _write_set.append(os.path.join(_ts_base, "probe", "transcript.md"))
-    except Exception:
-        pass
+            # The probe path must MIMIC THE REAL SHAPE, not merely live under the same root.
+            # `save_transcript()` writes <root>/<YYYY-MM-DD>/marathon-<phase>-<HHMMSS>.md, and an
+            # ignore rule can legitimately key on either the dated directory (`relay-system/2026-*/`)
+            # or the `.md` suffix. A synthetic `probe/transcript.md` would sail past the first of
+            # those and let the run fail later on the real name — the exact late failure this check
+            # exists to prevent. Found by an agy review of the first draft.
+            # `_dt`, not `datetime`: module scope imports it as `import datetime as _dt` (line 13),
+            # and the bare `import datetime` further down is local to save_transcript(). Using the
+            # wrong name here raises NameError, which this block's own `except Exception` would
+            # swallow — silently disabling the whole check while every test still passed.
+            _probe_name = "marathon-%s-000000.md" % args.phase_id
+            _write_set.append(os.path.join(
+                _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+    except Exception as _exc:
+        # Deliberately NOT fail-closed, and this is the one place worth arguing about.
+        #
+        # An agy review called the silent narrowing a blocker: if the root cannot be resolved the
+        # transcript goes unchecked, supposedly risking the same expensive halt. That premise does
+        # not hold here — `save_transcript()` resolves the root the SAME way and returns False on
+        # failure (see its own try/except), so it never reaches its `git add`. A resolution failure
+        # therefore produces no transcript and no halt, and refusing the run would invent a new way
+        # for a healthy one to fail — precisely what preflight_write_set_trackable's docstring
+        # forbids.
+        #
+        # The legitimate half of that review is that it was SILENT. It is not any more: a narrower
+        # guard now says so, so nobody reads a green preflight as covering three paths when it
+        # covered two.
+        log("preflight: transcript root unresolved (%s) — write-set check covers RELAY.md and "
+            "ESCALATION.md only, not the transcript" % _exc.__class__.__name__)
     preflight_write_set_trackable(root, _write_set)
 
     # GH-402: refuse to make the first commit if the RECEIVING repo is sitting on its trunk.

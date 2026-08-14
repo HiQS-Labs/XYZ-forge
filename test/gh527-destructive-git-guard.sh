@@ -79,12 +79,47 @@ ok "CONTROL: clean tree — guard stays silent" "[ -z \"\$OUT\" ]"
 ok "CONTROL: clean tree — no snapshot directory created" \
    "[ -z \"\$(ls -d '$C'/.tick/orphan-backups/*/ 2>/dev/null || true)\" ]"
 
-# --- (4) all three shapes GH-527 names, plus clean -f ------------------------------------------
+# --- (4) every destructive spelling, including the ones an agy review found slipping ----------
+# `git checkout <path>` (no `--`) and `git restore <path>` both slipped the first draft's regex.
+# They are the most likely spellings an agent reaches for to revert a file, and both were verified
+# to destroy a peer edit. Over-matching is cheap here — the guard only ever snapshots — so these
+# are matched broadly on purpose.
 printf 'dirty\n' > "$C/peer.txt"
-for shape in "git reset --hard HEAD" "git checkout -- peer.txt" "git stash" "git clean -fd"; do
+# `git clean` is deliberately NOT in this loop: this fixture has only a TRACKED modification, and
+# clean does not touch tracked files, so the guard correctly finds nothing to snapshot and stays
+# silent. Asserting "snapshot saved" here would demand the wrong behaviour. Section 4b drives clean
+# against the set it actually destroys.
+for shape in "git reset --hard HEAD" "git checkout -- peer.txt" "git checkout peer.txt" \
+             "git restore peer.txt" "git stash"; do
   OUT="$(hook_out "$C" "$shape")"
   ok "fires on: $shape" "printf '%s' \"\$OUT\" | grep -q 'snapshot saved'"
 done
+
+# --- (4b) `git clean` is the INVERSE case, and it needs its own everything --------------------
+# clean deletes UNTRACKED files and leaves tracked modifications alone — the exact opposite of the
+# other four shapes. The first draft matched clean but still snapshotted only tracked files, so it
+# announced cover that did not exist. Worse, the snapshot went into `.tick/`, which `git clean -fdx`
+# then deleted along with everything else: the guard destroyed its own evidence. Both found by
+# testing recovery rather than asserting it.
+K="$(mkrepo)"
+printf 'tracked-edit\n' > "$K/peer.txt"          # tracked modification — clean must NOT save this
+printf 'UNTRACKED-WORK\n' > "$K/untracked.txt"   # untracked — clean DOES destroy this
+OUT="$(hook_out "$K" "git clean -fdx")"
+ok "clean: names the untracked set, not the tracked one" \
+   "printf '%s' \"\$OUT\" | grep -q 'untracked file'"
+CSNAP="$(printf '%s' "$OUT" | sed -n 's/.*snapshot saved -> //p')"
+ok "clean: snapshot is OUTSIDE the repo (git clean -x would delete an in-repo one)" \
+   "case '$CSNAP' in '$K'*) false ;; /*) true ;; *) false ;; esac"
+ok "clean: snapshot holds the untracked file" "[ -f '$CSNAP/untracked.txt' ]"
+ok "clean: snapshot does NOT hold the tracked modification (clean would not touch it)" \
+   "[ ! -f '$CSNAP/peer.txt' ]"
+( cd "$K" && git clean -fdx >/dev/null 2>&1 )
+ok "clean really destroyed the untracked file" "[ ! -f '$K/untracked.txt' ]"
+ok "clean: the snapshot SURVIVED the command that deleted everything else" "[ -d '$CSNAP' ]"
+cp -R "$CSNAP"/. "$K"/ 2>/dev/null || true
+ok "clean: RECOVERY restores the untracked file end-to-end" \
+   "grep -q 'UNTRACKED-WORK' '$K/untracked.txt' 2>/dev/null"
+rm -rf "$CSNAP" "$K"
 
 # --- (5) read-only git and non-Bash tools must NOT trip it ------------------------------------
 for safe in "git status" "git stash list" "git log --oneline" "git diff"; do
