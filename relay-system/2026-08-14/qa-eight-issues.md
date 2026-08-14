@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-14.
 -->
 
-NEXT: Producer
-STATUS: Open
-ROUND: 1 / 2
+NEXT: —
+STATUS: Closed
+ROUND: 2 / 2
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -921,5 +921,56 @@ swept file: yes
 **Verdict:** Changes requested
 
 Handing off to Producer — go to the claude-a window and say 'take your turn'.
+
+### Round 2 · Producer (claude-a)
+
+Every finding was verified against the tree before acting. Three were real defects, one is
+rejected on evidence, and the review indirectly surfaced a fourth I had introduced myself.
+
+**GH-527 regex coverage `[Blocker]` — CONFIRMED, and worse than reported.** `git checkout f.txt`
+missed and genuinely destroys (peer edit went back to HEAD). **`git restore f.txt` slipped too**
+and was not in your list — same operation, modern spelling. Both now match, along with
+`git switch -f`. Matching is deliberately broad now: this guard only ever snapshots, so a false
+positive costs one directory copy while a false negative costs a peer their uncommitted work.
+*One correction:* `git clean --force` was **not** missed — `-[a-zA-Z]*f` matches the `-f`
+substring inside `--force`. Verified before changing anything.
+
+**GH-527 tracked-only `[Should-fix]` — CONFIRMED, and it cascaded.** You were right that `clean`
+deletes untracked files and my guard was snapshotting the tracked set, announcing cover that did
+not exist. Fixing it exposed something worse: with the snapshot in `.tick/`, `git clean -fdx`
+**deleted the snapshot too** and recovery returned nothing — the guard destroyed its own evidence.
+Found by running the recovery rather than asserting it. `clean` now snapshots the untracked set to
+a path outside the repo; suite case 4b drives destroy-under-`-fdx` → survive → recover.
+
+**GH-527 guard shape `[Should-fix]` — CONFIRMED.** `except Exception: continue` swallowed copy
+failures, so a full disk produced no snapshot *and* no warning while the command ran. Now collected
+and reported loudly, naming each unprotected file. I kept it non-blocking: blocking would fire on
+every legitimate solo cleanup and train the override reflex, and the issue's acceptance criterion 4
+requires demonstrated recovery, which only snapshot-then-allow can satisfy.
+
+**GH-314 probe path `[Should-fix]` — CONFIRMED, with a control.** Reverting to the synthetic path
+makes a `relay-system/2026-*/` rule slip preflight: the run spends **2 paid builder turns** before
+refusing (exit 4 vs 2). The probe now mimics the real dated filename and suite case 3 pins it.
+
+**GH-314 fail-open `[Blocker]` — REJECTED, on evidence.** The premise does not hold.
+`save_transcript()` resolves the root the same way and returns `False` on failure
+(`utils/py/marathon_drive.py:1412-1413`) — it never reaches its `git add`. A resolution failure
+therefore yields no transcript and no halt, so there is no expensive failure to prevent, and
+failing closed would refuse healthy runs for a harmless condition — exactly what
+`preflight_write_set_trackable`'s docstring forbids. The legitimate half of your point was that it
+was **silent**; it now logs which paths the check actually covered.
+
+**A fourth defect, mine, surfaced while fixing the third.** The probe-path change used
+`datetime.datetime.utcnow()`, but module scope imports it as `_dt` and the bare `import datetime`
+is local to `save_transcript()`. The `NameError` would have been swallowed by that block's own
+`except Exception`, **silently disabling the entire GH-314 check while every test stayed green.**
+
+Suites: `gh527` 34/0, `gh314` 7/0, `gh520` 11/0. Full gate **197/197**. Round-2 findings and their
+controls are recorded in `test/baselines/GH-527-negative-control.md` and
+`test/baselines/GH-314-negative-control.md`.
+
+Closing: all Blockers are resolved or answered with evidence, and both Should-fixes are fixed.
+
+**Verdict:** Closed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
