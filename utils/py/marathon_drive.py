@@ -2041,7 +2041,28 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     # Checked against `root`, deliberately, because that is the repo these files are committed to —
     # under --target-root only CODE changes land elsewhere, and the relay/escalation/transcript stay
     # here. Checking the target instead would be the plausible-looking wrong answer.
-    preflight_write_set_trackable(root, [relay_file, os.path.join(phase_dir, "ESCALATION.md")])
+    # GH-314: the write set is THREE paths, not two. `save_transcript()` also does a
+    # `git add --` with check=True on a file under the transcript root, so an ignored
+    # `relay-system/` HALTs the chain after the turn is already spent — the same defect this
+    # preflight exists to stop, on the one path it was not checking. That third call site is
+    # exactly the one #314's second reporter found the hard way, an afternoon at a time.
+    #
+    # The root is resolved the same way `save_transcript()` resolves it (rtl_transcript_root via
+    # relay-turn-lib.sh) rather than assuming the literal `relay-system/`, because a vendored or
+    # relocated install can move it and a hardcoded guess would check a path the run never writes.
+    # If it cannot be resolved, the path is simply not added: this guard must not invent a new way
+    # for a healthy run to fail, which is the same fail-open contract the docstring above sets.
+    _write_set = [relay_file, os.path.join(phase_dir, "ESCALATION.md")]
+    try:
+        _ts_base = subprocess.check_output(
+            "source \"%s\" && rtl_transcript_root \"%s\"" % (
+                os.path.join(xyz_harness, "relay-automation", "relay-turn-lib.sh"), root),
+            shell=True, executable="/bin/bash", stderr=subprocess.DEVNULL).decode("utf-8").strip()
+        if _ts_base:
+            _write_set.append(os.path.join(_ts_base, "probe", "transcript.md"))
+    except Exception:
+        pass
+    preflight_write_set_trackable(root, _write_set)
 
     # GH-402: refuse to make the first commit if the RECEIVING repo is sitting on its trunk.
     #
