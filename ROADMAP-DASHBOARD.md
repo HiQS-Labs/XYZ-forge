@@ -6,10 +6,14 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 189 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 97 · 🔮 0 · 🔲 0
+Summary: 193 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 100 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-539 · a gitignored 2-minute skill-sync job resurrects deleted SKILL.md files | — | [GH-539-SKILL-SYNC-RESURRECTION.md](PROJECT/2-WORKING/GH-539-SKILL-SYNC-RESURRECTION.md) · [#539](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/539) |
+| GH-527 · a destructive git command has no guard, and a doc rail demonstrably will not fix it | ✅ | [GH-527-DESTRUCTIVE-GIT-GUARD.md](PROJECT/2-WORKING/GH-527-DESTRUCTIVE-GIT-GUARD.md) · [#527](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/527) |
+| GH-520 · a fixture that does not stub CODEX_BIN tests the reviewer probe, not the code | ✅ | [GH-520-DEFAULT-REVIEWER-STUB.md](PROJECT/2-WORKING/GH-520-DEFAULT-REVIEWER-STUB.md) · [#520](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/520) |
+| GH-314 · the marathon write set is THREE paths, and the transcript was outside the preflight | ✅ | [GH-314-TRANSCRIPT-WRITESET.md](PROJECT/2-WORKING/GH-314-TRANSCRIPT-WRITESET.md) · [#314](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/314) |
 | GH-395 · an unreviewed CI push left a duplicate skill dir and a hardcoded tick path | — | [GH-395-UNREVIEWED-CI-PUSH-CLEANUP.md](PROJECT/2-WORKING/GH-395-UNREVIEWED-CI-PUSH-CLEANUP.md) · [#395](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/395) |
 | GH-527 · a destructive git command has no guard, and a doc rail demonstrably will not fix it | — | [#527](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/527) |
 | GH-398 · ~35 KB of auto-loaded instruction reaches every turn, recorded nowhere | — | [#404](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/404) · [#398](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/398) |
