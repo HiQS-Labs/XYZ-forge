@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Diagnosed and filed 2026-08-14** while landing the GH-395 deletion, which is what exposed it. Root cause identified with a preserved-mtime proof; issue #539 filed, then **rewritten** after the first diagnosis proved wrong. **No fix is built, and none of the candidate fixes lives in this repo.** | **Operator decision, cross-repo.** The smallest close is deleting `giant-brains-claude-skills/04-build/ponytail-refined/` so both sides agree; the durable close is making the sync one-directional or deletion-aware, which is a change to `rebalance-OS/utils/3-eyes`. Neither is an in-repo lane. |
+| **Diagnosed and filed 2026-08-14** while landing the GH-395 deletion, which is what exposed it. Root cause identified with a preserved-mtime proof; issue #539 filed, then **rewritten** after the first diagnosis proved wrong. **Re-filed against the owning repo as [`Hypercart-Dev-Tools/rebalance-OS#269`](https://github.com/Hypercart-Dev-Tools/rebalance-OS/issues/269)** — checked first for a duplicate; the closest by name (rebalance-OS#237) is an auto-filed health alert about the job's exit status, unrelated to deletion propagation. **No fix is built, and none of the candidate fixes lives in this repo.** | Tracked on rebalance-OS#269. #539 stays open here as the **consumer-side record**, because the symptom is observed here and the consequence is local. Close it when #269 lands, or when the `giant-brains-claude-skills/04-build/ponytail-refined/` counterpart is deleted — whichever makes the deletion stick. |
 
 ## Why
 
