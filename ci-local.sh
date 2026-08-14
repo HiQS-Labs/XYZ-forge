@@ -115,6 +115,12 @@ if [ "$PROBE" -eq 1 ]; then
 fi
 
 PASSED=(); FAILED=()
+
+# GH-536: where the suite transcript and per-suite verdicts land, so gate-record.sh can hash the
+# first and embed the second. Per-PID so two concurrent runs on one machine cannot cross-write.
+GATE_SUITE_LOG="${TMPDIR:-/tmp}/ci-local-suite-$$.log"
+GATE_VERDICTS="${TMPDIR:-/tmp}/ci-local-verdicts-$$.txt"
+trap 'rm -f "$GATE_SUITE_LOG" "$GATE_VERDICTS"' EXIT
 step() {  # <name> — everything after is the step body, run in a subshell
   local name="$1"; shift
   printf '\n\033[1m=== %s\033[0m\n' "$name"
@@ -230,12 +236,29 @@ validate_suite() {
   [ "${#all_tests[@]}" -gt 0 ] || { echo "  could not parse TESTS from validate.sh" >&2; return 1; }
   echo "  ${#all_tests[@]} suites declared in validate.sh"
 
+  # GH-536: capture the transcript and a per-suite verdict list so the evidence record can carry an
+  # output hash and individual verdicts instead of a bare `result: green`.
+  #
+  # `tee -a` keeps the operator's live output intact — a 15-minute run that goes silent to build a
+  # log would be a bad trade. `${PIPESTATUS[0]}` is load-bearing: with a pipe, `$?` is tee's status,
+  # so a failing suite would look green. `set -o pipefail` is already on, but reading PIPESTATUS
+  # directly says which element is being tested rather than relying on a shell option set 150 lines
+  # away.
+  : > "$GATE_SUITE_LOG"
+  : > "$GATE_VERDICTS"
   for t in "${all_tests[@]}"; do
     skip=0
     for s in "${skip_tests[@]}"; do [ "$t" = "$s" ] && { skip=1; break; }; done
-    [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; continue; }
-    echo "=== $t ==="
-    bash "test/$t" || { rc=1; echo "  ^^ FAILED: $t" >&2; }
+    [ "$skip" -eq 1 ] && { echo "SKIP (already run above): $t"; printf '%s\tskip\n' "$t" >> "$GATE_VERDICTS"; continue; }
+    echo "=== $t ===" | tee -a "$GATE_SUITE_LOG"
+    bash "test/$t" 2>&1 | tee -a "$GATE_SUITE_LOG"
+    if [ "${PIPESTATUS[0]}" -eq 0 ]; then
+      printf '%s\tpass\n' "$t" >> "$GATE_VERDICTS"
+    else
+      rc=1
+      printf '%s\tFAIL\n' "$t" >> "$GATE_VERDICTS"
+      echo "  ^^ FAILED: $t" >&2
+    fi
   done
   return $rc
 }
@@ -284,6 +307,6 @@ printf 'for this exact commit (GH-509 §6) — a clean machine, and evidence you
 if [ "$FAST" -eq 0 ] && [ "$PROBE" -eq 0 ]; then
   printf '\n'
   # Delegated rather than inlined, so the REFUSAL has a test that does not cost a 15-minute suite run.
-  bash utils/gate-record.sh || true
+  bash utils/gate-record.sh --suite-log "$GATE_SUITE_LOG" --verdicts "$GATE_VERDICTS" || true
 fi
 exit 0

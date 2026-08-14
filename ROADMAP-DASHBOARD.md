@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 193 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 100 · 🔮 0 · 🔲 0
+Summary: 194 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-536 · the gate-evidence record was a bare result: green | ✅ | [GH-536-EVIDENCE-DETAIL.md](PROJECT/2-WORKING/GH-536-EVIDENCE-DETAIL.md) · [#536](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/536) |
 | GH-539 · a gitignored 2-minute skill-sync job resurrects deleted SKILL.md files | — | [rebalance-OS#269](https://github.com/Hypercart-Dev-Tools/rebalance-OS/issues/269) · [GH-539-SKILL-SYNC-RESURRECTION.md](PROJECT/2-WORKING/GH-539-SKILL-SYNC-RESURRECTION.md) · [#539](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/539) |
 | GH-527 · a destructive git command has no guard, and a doc rail demonstrably will not fix it | ✅ | [GH-527-DESTRUCTIVE-GIT-GUARD.md](PROJECT/2-WORKING/GH-527-DESTRUCTIVE-GIT-GUARD.md) · [#527](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/527) |
 | GH-520 · a fixture that does not stub CODEX_BIN tests the reviewer probe, not the code | ✅ | [GH-520-DEFAULT-REVIEWER-STUB.md](PROJECT/2-WORKING/GH-520-DEFAULT-REVIEWER-STUB.md) · [#520](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/520) |
