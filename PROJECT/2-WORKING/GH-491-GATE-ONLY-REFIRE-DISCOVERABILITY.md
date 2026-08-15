@@ -49,7 +49,7 @@ and `--retry` silently takes the expensive one.
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "kind": "grep_present",
+      "type": "grep_present",
       "path": "utils/py/marathon_drive.py",
       "pattern": "retry",
       "why": "--retry currently rebuilds; the bug is that it does not offer the gate-only path"
@@ -57,7 +57,6 @@ and `--retry` silently takes the expensive one.
   ],
   "artifacts": [
     "utils/py/marathon_drive.py",
-    "relay-automation/marathon-drive.sh",
     "test/gh491-gate-only-refire.sh"
   ],
   "remediation": {

@@ -60,7 +60,7 @@ would be dead on arrival because its only possible consumers are the frozen `.sh
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "kind": "grep_absent",
+      "type": "grep_absent",
       "path": "test/gh551-resolver-refuses.sh",
       "pattern": "REFUS",
       "why": "fix marker: a control that observes the resolver REFUSING, not merely succeeding"

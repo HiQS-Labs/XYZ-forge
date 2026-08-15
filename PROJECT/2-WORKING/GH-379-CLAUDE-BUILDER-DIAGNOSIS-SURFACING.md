@@ -118,30 +118,10 @@ comment does not carry, but it is a minor addition to an already-accurate senten
 
 ## Acceptance
 
-Issue #379 has **no `## Acceptance` block** — it is written as an incident report ("TL;DR" /
-"Observed" / "Three separate problems" / "Suggested fixes" / a closing cost-model note), not as a
-checklist. Per the drafting contract, criteria are authored below in a separately labelled section
-rather than fabricated here.
-
-## Acceptance — authored (issue has none)
-
-1. When a `--builder claude` turn fails for a reason other than a wall-clock timeout (exit 7) or a
-   containment violation (exit 6) — i.e. the generic `bounded_rc != 0` path at
-   `utils/py/claude-turn.py:179-182` — the builder's own `is_error`/`subtype`/`terminal_reason` fields
-   from its persisted `claude_log` JSON (`utils/py/claude-turn.py:72`) reach the phase's
-   `ESCALATION.md` as an additive field, alongside the existing `reason:`/`gate:` lines
-   (`utils/py/marathon_drive.py:1187-1195`) — not replacing them, not requiring a new exit code (see
-   the `#390` precedent in `related` above for why widening the reason string, not the exit code, is
-   the established pattern here).
-2. `CLAUDE_MAX_BUDGET` and `CLAUDE_MAX_TURNS` are documented wherever `--builder claude` is described
-   (README.md and/or `relay-automation/MARATHON.example.yaml`), stating the actual current defaults
-   ($0.50 / 12 turns — verified above) and that a floor cost (cache-creation dominated) is paid per
-   turn, so an operator can judge headroom before a run rather than after a budget-exhausted halt.
-3. `relay-automation/claude-turn.sh:46`'s stale header comment ("default: 2.00") is corrected to match
-   its own code default (`0.50`, `:176`) — small, but it is documentation actively contradicting the
-   code it describes, discovered in the course of this lane.
-4. `test/gh407-gate-ran-attribution.sh` remains green after this lane's change — proof the new
-   diagnostic field is additive and does not re-touch #407's reason/gate distinction.
+- [ ] When a `--builder claude` turn fails for a reason other than a wall-clock timeout (exit 7) or a containment violation (exit 6) — i.e. the generic `bounded_rc != 0` path at `utils/py/claude-turn.py:179-182` — the builder's own `is_error`/`subtype`/`terminal_reason` fields from its persisted `claude_log` JSON (`utils/py/claude-turn.py:72`) reach the phase's `ESCALATION.md` as an additive field, alongside the existing `reason:`/`gate:` lines (`utils/py/marathon_drive.py:1187-1195`) — not replacing them, not requiring a new exit code.
+- [ ] `CLAUDE_MAX_BUDGET` and `CLAUDE_MAX_TURNS` are documented wherever `--builder claude` is described (README.md and/or `relay-automation/MARATHON.example.yaml`), stating the actual current defaults ($0.50 / 12 turns) and that a floor cost (cache-creation dominated) is paid per turn, so an operator can judge headroom before a run rather than after a budget-exhausted halt.
+- [ ] `relay-automation/claude-turn.sh:46`'s stale header comment ('default: 2.00') is corrected to match its own code default (`0.50`, `:176`).
+- [ ] `test/gh407-gate-ran-attribution.sh` remains green after this lane's change — proof the new diagnostic field is additive and does not re-touch #407's reason/gate distinction.
 
 ## Acceptance — deviations from the issue
 

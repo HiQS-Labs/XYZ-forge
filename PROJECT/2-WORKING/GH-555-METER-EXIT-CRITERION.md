@@ -54,7 +54,7 @@ defect, applied to the release boundary itself. The red run is recorded evidence
   "gate": "bash validate.sh",
   "fix_probes": [
     {
-      "kind": "grep_absent",
+      "type": "grep_absent",
       "path": "test/meter-release.sh",
       "pattern": "release-gate",
       "why": "fix marker: the gate does not exist yet"
