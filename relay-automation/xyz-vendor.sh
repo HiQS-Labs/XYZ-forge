@@ -208,17 +208,87 @@ write_registry_row() {
   return 0
 }
 
-ensure_gitignore() {
+# reconcile_ignore_state — ONE function owning BOTH directions of one invariant. (GH-314, GH-440)
+#
+# Vendoring is the only step that knows the harness is about to start writing to specific paths in
+# somebody else's repo, so it is the only place that can check whether that repo will accept them.
+# The invariant has two halves and they are NOT two features:
+#
+#   MUST BE IGNORED   `.xyz/` and `/.tick/` are per-device runtime state. Nothing in them is
+#                     meaningful when shared, and an unrelated `git add -A` will commit them.
+#   MUST BE TRACKABLE `phases/` and `relay-system/` are what the harness itself `git add`s. A
+#                     pre-existing ignore rule on either makes the add raise and HALT the chain
+#                     mid-run — including AFTER a phase has already passed its gate (GH-314 Halt B).
+#
+# Treating these as two independent append paths is how this bug survived 51 days: GH-440 was
+# "fixed" by adding a second `printf >> .gitignore` line, which left GH-440's own direction working
+# and GH-314's completely absent. One function, one invariant, both directions.
+#
+# THE ASYMMETRY IS DELIBERATE. The first half we FIX (appending an ignore rule is additive and
+# reversible). The second half we REFUSE, loudly, and do not touch the target's .gitignore.
+# Auto-un-ignoring would publish builder/reviewer transcripts a repo had explicitly decided to
+# withhold — on a public target that is an irreversible disclosure, made silently, by an install
+# script. `git add -f` is the same mistake one layer down. Refusing is recoverable; publishing is
+# not. (Operator decision, recorded on #314.)
+reconcile_ignore_state() {
   local gitignore="$TARGET_REPO/.gitignore"
+  local _p
+
+  # --- direction 2 FIRST: paths that MUST remain trackable ------------------------------------
+  # Checked before any mutation so a refusal leaves the target's .gitignore exactly as it was.
+  # A half-applied install that also refuses is the worst of both outcomes.
+  # `git check-ignore -v` is the authority, not a grep of .gitignore: it honors nested ignore
+  # files, $GIT_DIR/info/exclude, and core.excludesFile, and it reports WHICH rule matched and
+  # where. A grep would miss every one of those and report a clean repo that halts on the first
+  # phase. Non-git targets and old git both fall through to no finding rather than a false alarm.
+  #
+  # BOTH the bare and trailing-slash forms are queried, and that is not belt-and-braces. A
+  # directory-only pattern (`/phases/`) matches ONLY when the queried path also ends in `/` — on a
+  # repo where the directory does not exist yet, git cannot infer it is a directory, so
+  # `check-ignore -- phases` returns "not ignored" against a rule that will absolutely block the
+  # harness the moment it creates that directory. Caught by this suite's own `/phases/` case after
+  # the bare-form-only version passed the first two. A check whose query shape does not cover the
+  # rule shapes that exist reports clean for the ones it never asked about.
+  local _blocked="" _hit
+  if git -C "$TARGET_REPO" rev-parse --git-dir >/dev/null 2>&1; then
+    for _p in phases phases/ relay-system relay-system/; do
+      if _hit="$(git -C "$TARGET_REPO" check-ignore -v -- "$_p" 2>/dev/null)"; then
+        case "$_blocked" in
+          *"$_hit"$'\n'*) ;;                       # same rule already reported via the other form
+          *) _blocked="${_blocked}${_hit}"$'\n' ;;
+        esac
+      fi
+    done
+  fi
+
+  if [ -n "$_blocked" ]; then
+  {
+    printf 'xyz-vendor.sh: this repo IGNORES paths the harness must be able to commit.\n\n'
+    printf '  A marathon writes its relay thread under phases/ and archives transcripts under\n'
+    printf '  relay-system/, then git-adds both. An ignore rule on either makes that add fail and\n'
+    printf '  HALT the chain mid-run — including after a phase has already passed its gate, which\n'
+    printf '  destroys the record of why it stopped.\n\n'
+    printf '  The rules in the way (file:line:pattern <TAB> path):\n'
+    printf '%s' "$_blocked" | sed 's/^/    /'
+    printf '\n  REFUSING to vendor rather than editing your .gitignore for you. Un-ignoring these\n'
+    printf '  would publish builder and reviewer transcripts this repo evidently chose to withhold,\n'
+    printf '  and on a public repo that is not undoable. `git add -f` is the same mistake.\n\n'
+    printf '  Two ways forward, both yours to pick:\n'
+    printf '    1. Remove or narrow the rules above, then re-run this command.\n'
+    printf '    2. Keep them, and do not run marathons in this repo — driven relays need those paths.\n'
+  } >&2
+  exit 6
+  fi
+
+  # --- direction 1: paths that MUST be ignored ------------------------------------------------
   if [ ! -f "$gitignore" ]; then
     : > "$gitignore"
   fi
-  if ! grep -Fqx '.xyz/' "$gitignore" 2>/dev/null; then
-    printf '%s\n' '.xyz/' >> "$gitignore"
-  fi
-  if ! grep -Fqx '/.tick/' "$gitignore" 2>/dev/null; then
-    printf '%s\n' '/.tick/' >> "$gitignore"
-  fi
+  for _p in '.xyz/' '/.tick/'; do
+    if ! grep -Fqx "$_p" "$gitignore" 2>/dev/null; then
+      printf '%s\n' "$_p" >> "$gitignore"
+    fi
+  done
 }
 
 register_vendor() {
@@ -311,8 +381,10 @@ materialize_vendor() {
   mv "$STAGE_DIR" "$VENDOR_DIR"
 }
 
+# Reconcile BEFORE materializing: this is a precondition on the target, not a post-install step.
+# Running it after would leave `.xyz/` on disk, unregistered, in a repo we just refused to vendor.
+reconcile_ignore_state
 materialize_vendor
-ensure_gitignore
 register_vendor
 
 note "vendored harness -> $VENDOR_DIR"

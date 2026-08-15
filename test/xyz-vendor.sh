@@ -60,7 +60,64 @@ done
 vfields=$(grep -cE '^(source_commit|tick_version|vendored_utc)=' "$REPO/.xyz/VERSION" 2>/dev/null)
 [ "$vfields" = 3 ] && pass "VERSION has all 3 fields" || fail "VERSION malformed ($vfields/3 fields)"
 grep -Fqx '.xyz/' "$REPO/.gitignore" && pass ".xyz/ gitignored" || fail ".xyz/ not in .gitignore"
+grep -Fqx '/.tick/' "$REPO/.gitignore" && pass "/.tick/ gitignored (GH-440)" || fail "/.tick/ not in .gitignore"
 [ "$(grep -vc '^#' "$XYZ_REGISTRY")" = 1 ] && pass "registry has 1 vendored row" || fail "registry row count wrong"
+
+# --- GH-314/GH-440: BOTH directions of the one ignore invariant --------------------------------
+# The seam is a single invariant with two halves, and treating them as two independent append paths
+# is how it survived 51 days: GH-440 was "fixed" by adding a second `printf >> .gitignore`, which
+# left GH-314's half — a pre-existing rule BLOCKING a path the harness must commit — entirely absent.
+# Both halves are asserted here, in one place, so neither can ship without the other again.
+mkignore_repo() {  # <ignore-line> -> prints a fresh repo whose .gitignore carries that rule
+  local rule="$1" d
+  d="$(mktemp -d "$WORK/blocked.XXXXXX")"
+  git init -q "$d"
+  printf '%s\n' "$rule" > "$d/.gitignore"
+  ( cd "$d" && pwd -P )
+}
+
+for rule in '/relay-system' 'phases' '/phases/'; do
+  BR="$(mkignore_repo "$rule")"
+  before="$(cat "$BR/.gitignore")"
+  out="$( "$VENDOR" "$BR" 2>&1 )"; rc=$?
+  [ "$rc" = 6 ] \
+    && pass "GH-314: REFUSES to vendor into a repo ignoring '$rule' (exit 6)" \
+    || fail "GH-314: vendored into a repo ignoring '$rule' anyway (exit $rc)"
+  printf '%s' "$out" | grep -q "$rule" \
+    && pass "  and names the rule in the way" \
+    || fail "  but did not name '$rule' in its refusal"
+  # A refusal must leave the target EXACTLY as it was — no half-install, no edited .gitignore.
+  # Refusing while having already mutated the repo is worse than either outcome alone.
+  [ "$before" = "$(cat "$BR/.gitignore")" ] \
+    && pass "  and left the target's .gitignore untouched" \
+    || fail "  but edited the target's .gitignore while refusing"
+  [ ! -d "$BR/.xyz" ] \
+    && pass "  and left no half-installed .xyz/" \
+    || fail "  but left .xyz/ behind after refusing"
+done
+
+# It must NOT auto-un-ignore: doing so would publish builder/reviewer transcripts the repo chose to
+# withhold, irreversibly on a public target. This assertion is what stops a future "helpful" fix.
+BR="$(mkignore_repo '/relay-system')"
+"$VENDOR" "$BR" >/dev/null 2>&1 || true
+! grep -q '^!' "$BR/.gitignore" 2>/dev/null \
+  && pass "GH-314: never writes a negation rule to un-ignore for you" \
+  || fail "GH-314: silently un-ignored a path the target deliberately excluded"
+
+# NEGATIVE CONTROL — the pre-fix behavior, so this suite proves it detects the bug and not merely
+# the fix. An append-only ensure_gitignore sails straight past a blocking rule.
+BR="$(mkignore_repo '/relay-system')"
+( cd "$BR" && printf 'x\n' > f && git add -A >/dev/null 2>&1 && git -c user.email=t@t -c user.name=t commit -qm s >/dev/null 2>&1 )
+git -C "$BR" check-ignore -q relay-system \
+  && pass "  control: the fixture repo really does ignore relay-system" \
+  || fail "  control: fixture is not actually blocking — the refusal assertions prove nothing"
+
+# An unrelated ignore rule must NOT trip the refusal: over-refusing makes vendoring unusable.
+# --no-register so this fixture does not add a row the registry-count assertions below would see.
+OK_REPO="$(mkignore_repo 'node_modules/')"
+"$VENDOR" "$OK_REPO" --no-register >/dev/null 2>&1 \
+  && pass "an unrelated ignore rule does NOT block vendoring" \
+  || fail "over-refused: an unrelated ignore rule blocked the vendor"
 
 # --- idempotent re-run ---
 "$VENDOR" "$REPO" >/dev/null 2>&1
