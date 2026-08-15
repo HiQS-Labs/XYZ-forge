@@ -70,6 +70,52 @@ check_changes() {
   echo 'gh308 guard: no frozen Bash twin changed'
 }
 
+# ── GH-551: no NEW Bash either ────────────────────────────────────────────────────────────────────
+# The freeze above stops behavior landing in the twelve legacy twins, but said nothing about a brand-
+# new .sh appearing beside them — which is how the class regrows. New executables are Python in
+# utils/py/; a NEW .sh added under utils/ or relay-automation/ is blocked unless a trailer names it:
+#
+#   New-bash-exception: relay-automation/some-shim.sh — <reason>
+#
+# Same per-file philosophy as GH-321: every added file must be named, a typo'd trailer covers nothing
+# and the unnamed file still fails by name. test/, git hooks, and existing shims are out of scope —
+# only ADDED (--diff-filter=A) files under the two guarded trees.
+check_new_bash() {
+  local added
+  if (( staged )); then
+    added="$(git -C "$ROOT" diff --cached --name-only --diff-filter=A -- 'utils/*.sh' 'relay-automation/*.sh')"
+  else
+    added="$(git -C "$ROOT" diff --name-only --diff-filter=A "${base}..HEAD" -- 'utils/*.sh' 'relay-automation/*.sh')"
+  fi
+  if [[ -z "$added" ]]; then
+    echo 'gh308 guard: no new Bash under utils/ or relay-automation/'
+    return 0
+  fi
+  local declared=""
+  if (( allow_exceptions )); then
+    # ponytail: path-named-in-trailer is the whole check — no reason-text validation like GH-321's;
+    # add it if the hatch gets abused with bare paths.
+    declared="$(git -C "$ROOT" log --format='%B' "${base}..HEAD" | sed -n 's/^New-bash-exception:[[:space:]]*//p')"
+  fi
+  local f bad=0
+  while IFS= read -r f; do
+    [[ -n "$f" ]] || continue
+    if [[ -n "$declared" ]] && printf '%s\n' "$declared" | grep -F -- "$f" >/dev/null; then
+      printf 'gh308 guard: new Bash %s — covered by a declared New-bash-exception\n' "$f"
+    else
+      printf 'gh308 guard: NEW Bash file blocked: %s — new executables are Python in utils/py/ (GH-551)\n' "$f" >&2
+      bad=1
+    fi
+  done <<EOF
+$added
+EOF
+  if (( bad )); then
+    printf 'gh308 guard: write it in utils/py/, or declare: New-bash-exception: <path> — <reason>\n' >&2
+    return 1
+  fi
+  return 0
+}
+
 # ── GH-321: per-file exception coverage ─────────────────────────────────────────────────────────
 # The escape hatch shipped in PR #318 was RANGE-scoped: one `Frozen-twin-exception:` trailer anywhere
 # in BASE..HEAD excused EVERY frozen-twin edit in the PR, including files nobody reasoned about, in
@@ -273,15 +319,17 @@ if [[ "$mode" == check ]]; then
   fi
   rc=0
   check_changes || rc=$?
-  (( rc == 0 )) && exit 0
   (( rc == 2 )) && exit 2
+  nb=0
+  check_new_bash || nb=1   # GH-551: handles its own trailer coverage under --allow-exceptions
+  (( rc == 0 )) && exit "$nb"
   (( allow_exceptions )) || exit "$rc"
   echo "---"
   if check_exception_coverage "$base"; then
     # Wording matters: an edit can be permitted for two different reasons and conflating them would
     # let a reader believe a declaration exists where none does (GH-362).
     echo 'gh308 guard: every frozen-twin edit in this range is accounted for — declared, or the freeze itself'
-    exit 0
+    exit "$nb"
   fi
   exit 1
 fi
@@ -291,6 +339,7 @@ fi
 if [[ -n "${GH308_FROZEN_TWIN_BASE:-}" ]]; then
   base="$GH308_FROZEN_TWIN_BASE"
   check_changes
+  check_new_bash
 fi
 
 pass=0 fail=0
@@ -574,6 +623,76 @@ if (( rc == 0 )); then
   ok 'an indented continuation line is folded onto its trailer [GH-362]'
 else
   bad "a wrapped (indented) trailer was not folded: $out"
+fi
+
+# ── GH-551: no new Bash under utils/ or relay-automation/ ────────────────────────────────────────
+exc_add_commit() {  # <path> <commit-message> — add a brand-new file
+  mkdir -p "$exc/$(dirname "$1")"
+  printf '#!/usr/bin/env bash\necho new\n' >"$exc/$1"
+  git -C "$exc" add "$1"
+  git -C "$exc" commit -qm "$2"
+}
+
+# 15. A brand-new .sh under a guarded tree is blocked and named.
+exc_reset
+exc_add_commit utils/new-helper.sh 'adds a new bash helper, declaring nothing'
+out="$(exc_guard)" && rc=0 || rc=$?
+if (( rc != 0 )) && printf '%s' "$out" | grep -F 'NEW Bash file blocked: utils/new-helper.sh' >/dev/null; then
+  ok 'a new .sh under utils/ is blocked and named [GH-551]'
+else
+  bad "new .sh under utils/ was not blocked (rc=$rc): $out"
+fi
+
+# 16. A New-bash-exception trailer naming the file lets it pass under --allow-exceptions.
+exc_reset
+exc_add_commit relay-automation/new-shim.sh "$(printf 'adds a declared shim\n\nNew-bash-exception: relay-automation/new-shim.sh — declared reason')"
+if exc_guard >/dev/null; then
+  ok 'a declared New-bash-exception covers the added file [GH-551]'
+else
+  bad "a declared new-bash addition was rejected: $(exc_guard)"
+fi
+
+# 17. The trailer is per-file: it must not excuse a second, unnamed addition riding along.
+exc_reset
+exc_add_commit relay-automation/new-shim.sh "$(printf 'adds a declared shim\n\nNew-bash-exception: relay-automation/new-shim.sh — declared reason')"
+exc_add_commit utils/rider.sh 'second addition, declares nothing'
+out="$(exc_guard)" && rc=0 || rc=$?
+if (( rc != 0 )) && printf '%s' "$out" | grep -F 'NEW Bash file blocked: utils/rider.sh' >/dev/null; then
+  ok 'a declared exception does not excuse an unnamed second addition [GH-551]'
+else
+  bad "an unnamed new .sh rode along on another file's trailer (rc=$rc): $out"
+fi
+
+# 18. Outside the guarded trees (test/, docs, hooks) new Bash is untouched.
+exc_reset
+exc_add_commit test/new-test.sh 'adds a test script, no trailer needed'
+if exc_guard >/dev/null; then
+  ok 'a new .sh outside the guarded trees passes without a trailer [GH-551]'
+else
+  bad "a new test/*.sh was wrongly blocked: $(exc_guard)"
+fi
+
+# 19. Strict mode (no --allow-exceptions) blocks a new .sh even when declared — same shape as case 8.
+exc_reset
+exc_add_commit utils/declared-anyway.sh "$(printf 'declared\n\nNew-bash-exception: utils/declared-anyway.sh — declared reason')"
+if GH308_GUARD_ROOT="$exc" bash "$exc/test/gh308-frozen-twin-guard.sh" --check --base "$EXC_BASE" >/dev/null 2>&1; then
+  bad 'strict mode honored a New-bash-exception trailer it should ignore'
+else
+  ok 'strict mode blocks a new .sh, declared or not [GH-551]'
+fi
+
+# 20. Editing an EXISTING non-twin .sh in a guarded tree is not an "addition" and still passes.
+exc_reset
+exc_add_commit relay-automation/existing-lib.sh 'baseline gains a lib (declared so it lands)
+New-bash-exception: relay-automation/existing-lib.sh — fixture baseline'
+NEW_BASE="$(git -C "$exc" rev-parse HEAD)"
+printf '# edit to an existing non-twin file\n' >>"$exc/relay-automation/existing-lib.sh"
+git -C "$exc" add relay-automation/existing-lib.sh
+git -C "$exc" commit -qm 'edit the existing lib'
+if exc_guard_from "$NEW_BASE" >/dev/null; then
+  ok 'editing an existing non-twin .sh is not treated as an addition [GH-551]'
+else
+  bad "an edit to an existing non-twin .sh was blocked as new: $(exc_guard_from "$NEW_BASE")"
 fi
 
 echo "  gh308-frozen-twin-guard: $pass pass, $fail fail"

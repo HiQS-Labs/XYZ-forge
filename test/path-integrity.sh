@@ -118,7 +118,11 @@ ext_re='(relay-automation|test|skill|skills|bin)/[A-Za-z0-9._/-]+\.(sh|md|tar\.g
 # ci-route.sh's fail-closed branch, and no amount of hand-written path strings reproduces that —
 # only git does. Both names exist solely inside that temp repo and can never exist in this tree, so
 # skipping them cannot mask a real path break.
-fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh "
+# GH-551 (added 2026-08-14): the new-Bash guard's cases 15-20 create throwaway .sh files in the same
+# mktemp fixture repo the GH-321 cases use (`some-shim.sh` is the trailer example in the usage
+# comment). All are fixture literals that must never exist in this tree — that is what the guard
+# blocks — so skipping them cannot mask a real path break.
+fixture_literals=" relay-automation/Codex-turn.sh test/gh-951-genuine-test.sh test/foo.sh test/some-test.sh test/bare-redirect.sh test/no-touch.sh test/comment-only.sh relay-automation/codex-turnn.sh test/clio-exporter.sh test/safe.sh test/self-comparing.sh test/self-regenerating.sh test/new-gate.sh test/old-regression.sh test/new-regression.sh relay-automation/some-shim.sh relay-automation/new-shim.sh relay-automation/existing-lib.sh test/new-test.sh "
 
 bad=0
 for f in "${shfiles[@]}" $docs; do

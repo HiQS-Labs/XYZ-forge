@@ -156,6 +156,11 @@ local change.
   twin**. `relay-turn-lib.sh` remains a shared Bash runtime dependency rather than a twin, and is the
   only non-frozen file left in the Tier-A surface.
 
+  **No new Bash either (GH-551).** New executables are Python in `utils/py/`; the same guard rejects
+  a **new** `.sh` file added under `utils/` or `relay-automation/` unless a
+  `New-bash-exception: <path> — <reason>` trailer names it (per file, like GH-321). `test/`, git
+  hooks, and existing shims are out of scope.
+
   **Two edits the guard permits without a trailer, both narrow (GH-362).** A commit that *introduces*
   a path's `FROZEN` banner establishes the freeze for that path and is not a violation of it — a range
   reaching back before the freeze (a release merge, a bisect, an old fork base) contains exactly that
