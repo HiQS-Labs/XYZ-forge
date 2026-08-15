@@ -240,6 +240,23 @@ local change.
     fixture helper (`require_fixture`: the path must exist AND live under `$WORK` — containment, not
     a null check) is the pattern to copy; `test/gh544-pre-push-gate.sh` has it, 31 other suites do
     not.
+  - **Validate a sandbox path at the USE boundary, not where it was created (GH-567).** An empty
+    variable does not fail — `git -C ""` uses the current directory, `cd ""` is a no-op,
+    `rm -rf "$VAR/"` becomes `/`, `find "$VAR" -delete` becomes `.`. So guard immediately before the
+    first dangerous use **in every function that receives the path**, not once at the `mktemp` that
+    derived it: a variable that was safe at line 10 can be empty at line 50, and a derivation-site
+    check never covers a path passed in from elsewhere. Assert non-empty, a **resolved** descendant
+    of the sandbox root, and the expected type — `require_fixture`'s current `case "$p" in "$WORK"/*)`
+    is lexical and still accepts `$WORK/../../<real repo>`, so harden it before copying it into the
+    other 31. `set -e` is not the containment proof; these suites deliberately run without it.
+  - **A clone whose identity changed under a run cannot attribute that run (GH-567).** If a suite
+    fails only under parallel load, compare `core.bare`, `git remote -v`, the local user identity and
+    `HEAD` against their pre-run values **before** blaming your diff. Unexpected drift invalidates
+    every result from that clone — re-clone, then run candidate and base at the same width. Identity
+    intact means it is your diff or ordinary flakiness: investigate normally. This is a trigger, not a
+    licence to write failures off as harness noise; the 2026-08-15 incident cost several full-suite
+    runs to a single green control run treated as proof, which is one sample from a nondeterministic
+    process.
 - **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
   for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
   `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping
