@@ -3,11 +3,35 @@ name: CI
 # GH-216 cut `development` as the WIP branch that all work targets, but these
 # triggers stayed pinned to `main` — so no PR into `development` ran CI at all.
 # Both branches are gated here; add any future long-lived integration branch too.
+# ── HOSTED CI IS OFF FOR THE PRIVATE PHASE (GH-544, operator decision 2026-08-14) ─────────────────
+#
+# The `push:` and `pull_request:` triggers are REMOVED, not disabled elsewhere, so that this file
+# states its own status. Nothing below runs automatically. The gate now runs locally at the push
+# boundary via `githooks/pre-push`.
+#
+# WHY: measured in #509/#528 — Aug 1-14 cost $21.99 gross / $10.00 billed, exhausting the 2,000
+# included minutes on Aug 11 and hitting the $10 spending limit on Aug 14, which blocked Actions
+# outright. Projection at that cadence was ~$47/mo gross. We do not pay that for an internal tool.
+#
+# THIS IS A BRIDGE WITH A KNOWN END. GitHub Actions is free and unmetered on PUBLIC repositories, so
+# the entire cost basis for this disappears at open-source release. The re-arm trigger is therefore an
+# event, not a date or a budget review.
+#
+# TO RE-ARM WHEN THE REPO GOES PUBLIC:
+#   1. Restore the two triggers below (keep `workflow_dispatch` OFF the macOS job — see its header;
+#      three manual dispatches consumed roughly half a monthly budget on 2026-08-13).
+#   2. Expect a BATCH of accumulated Linux portability drift on the first green-field run. The local
+#      gate is macOS, so the platform we ship to stayed covered — the ubuntu canary did not, and drift
+#      has been accumulating unreported since this date. That backlog is the known, accepted cost of
+#      this decision, not a surprise.
+#   3. Re-arm the GH-509 promotion boundary as the real gate; during the private phase no independent
+#      attestation existed at all, and `gate-record.sh`'s NOT-promotion-evidence line was permanently
+#      undischargeable by design.
+#
+# EVERYTHING BELOW IS DELIBERATELY PRESERVED — jobs, routing, and especially the GH-509 Phase 4 cost
+# analysis in the macOS job's header. That reasoning is what you will want when re-arming; deleting it
+# and rediscovering it on an invoice is the failure this comment exists to prevent.
 on:
-  push:
-    branches: [main, development]
-  pull_request:
-    branches: [main, development]
   workflow_dispatch:
 
 concurrency:
@@ -93,7 +117,13 @@ jobs:
           # billed API call to a live agent. It self-skips off-PATH anyway; the env var makes the
           # intent explicit rather than incidental.
           RELAY_SELF_SUFFICIENCY_SKIP: "1"
-        run: ./validate.sh
+        # `--sequential` is PINNED here and must stay pinned. GH-544 made parallel the default for the
+        # local gate, which is correct there — but this job is the promotion boundary, and the whole
+        # point of it is that its green means something the local run's cannot. Promotion evidence
+        # stays sequential (GH-528 Phase 2 has not been met), so the flag is explicit rather than
+        # inherited: a future change to validate.sh's default must not be able to silently change what
+        # this job attests. test/ci-workflow.sh asserts the flag is present.
+        run: ./validate.sh --sequential
 
       - name: Promotion evidence
         if: always()

@@ -70,6 +70,27 @@ local change.
 
 ## Repo-specific rails
 
+- **The gate runs at the push boundary, and it is the ONLY gate (GH-544).** Hosted CI fires on
+  nothing while this repo is private — `.github/workflows/ci.yml` has no `push`/`pull_request`
+  triggers, because the org hit its Actions spending limit on 2026-08-14 (#509). Local commits are
+  free and ungated on purpose; pushes are gated by `githooks/pre-push`.
+  - Wire a new clone once: `bash githooks/install.sh` (idempotent). It installs a dispatch stub into
+    `.git/hooks/`, which covers **every branch and linked worktree** of that clone, including branches
+    with no `githooks/` directory (GH-549 — the first design wired `core.hooksPath` at the in-tree
+    directory, and git skips a hook path that does not resolve *in total silence*). **The wiring is
+    still per clone and does not travel** — a fresh clone or second machine has NO gate until this
+    runs. Check with `bash githooks/install.sh --check`.
+  - `./validate.sh` is **parallel by default** (~4 min), auto-sized to the host, and announces a
+    sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
+    the evidence record — it stays sequential and does not call `validate.sh`.
+  - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
+    deliberately, not reflexively — nothing downstream will catch what you skip.
+  - **Do not treat a PR's check status as meaningful right now.** With no workflows firing, PRs have
+    zero checks, and a billing-blocked job can report `failure` with no log while `gh run list` shows
+    the run as `success`.
+  - Re-arm when the repo goes public — Actions is free and unmetered there, and `ci.yml` carries the
+    full re-arm instructions in its header.
+
 - **Never use a git command that overwrites the working tree from a committed state to undo a
   working-tree experiment.** In this clone other agents hold uncommitted work you cannot see.
   Three spellings destroyed peer work three times in one session (GH-527) and the common factor

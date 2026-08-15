@@ -150,6 +150,8 @@ TESTS=(
   "improve-loop-dogfood.sh"
   "gh430-state-dir-tracked-default.sh" # GH-430 (STATE_DIR default is a tracked in-repo path, not ${TMPDIR:-/tmp})
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
+  "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
+  "gh544-pre-push-gate.sh"             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 35/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
   "gh314-transcript-writeset.sh"       # GH-314 (the write set is THREE paths: the transcript's git add was outside GH-514's preflight, so an ignored relay-system/ was discovered only after paid turns) — 5/0; control: dropping the transcript path spends 2 builder turns before the same refusal (test/baselines/GH-314-negative-control.md)
   "gh520-default-reviewer-stub.sh"     # GH-520 (test/_setup.sh gives every fixture a default CODEX_BIN, so a suite tests its subject rather than the reviewer probe) — 11/0; control: with gh402's own stub removed AND this default removed, gh402 fails with the probe's message verbatim (test/baselines/GH-520-default-stub-control.md)
   "gh527-destructive-git-guard.sh"     # GH-527 (a tree-overwriting git command snapshots the tracked files it destroys into .tick/orphan-backups/ first) — 26/0; controls: a no-op guard drops 9 assertions, and a blanket that fires on a CLEAN tree drops exactly the control assertion. Clean-tree silence is defended by TWO conditions, so it takes a combined mutation to falsify — recorded in test/baselines/GH-527-negative-control.md
@@ -248,17 +250,39 @@ TESTS=(
 PASSED=()
 FAILED=()
 
-# ── GH-528: experimental opt-in parallel mode ─────────────────────────────────────────────────────
-# `./validate.sh` (no args) stays the sequential gate it has always been — that path is unchanged.
-# `./validate.sh --parallel N` runs the SAME TESTS array N-wide, with one exception: the suites that
-# execute the REAL relay-automation/relay-drive.sh contend on this clone's .git/relay-driver.lock
-# (GH-42 exclusion working as designed — "--target-root moves the build, not the lock", see
-# test/gh331-cost-summary.sh), so those run sequentially in ONE lane while everything else pools.
-# Spike numbers (GH-528, 2026-08-13, M-series macOS): sequential 950.3s → --parallel 8 = 167.4s,
-# same suites green. EXPERIMENTAL: a fast local self-check, NOT promotion evidence and NOT the CI
-# gate; sequential stays the default until the GH-528 Phase 2 stress bar is met (multi-width
-# repeats, leak/clean-tree checks) — recorded in PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md.
+# ── GH-528 / GH-544: parallel is the DEFAULT, with detection and an ANNOUNCED fallback ────────────
+# `./validate.sh` (no args) now runs N-wide, where N is detected from the host. It runs the SAME
+# TESTS array, with one exception: the suites that execute the REAL relay-automation/relay-drive.sh
+# contend on this clone's .git/relay-driver.lock (GH-42 exclusion working as designed —
+# "--target-root moves the build, not the lock", see test/gh331-cost-summary.sh), so those run
+# sequentially in ONE lane while everything else pools.
+#
+# Spike numbers (GH-528, 2026-08-13, M-series macOS): sequential 950.3s → 8-wide 167.4s, byte-identical
+# pass/fail set. Flipped to the default 2026-08-14 by operator decision (GH-544), because the local
+# gate is now the ONLY gate during the private phase and a 16-minute one does not get run — it gets
+# skipped, which is a worse outcome than a 3-minute one.
+#
+# WHAT DID NOT CHANGE, and must not: `ci-local.sh` does NOT call this script. It parses the TESTS
+# array and runs each suite in its own sequential loop, and it is the path that writes the gate
+# record. So "sequential is the only form that qualifies a claim" (GH-528 Phase 2, GH-509) is still
+# true and is still what the record attests. Likewise the macOS promotion boundary in ci.yml pins
+# `--sequential` explicitly, so a re-armed boundary cannot silently promote on parallel evidence.
+#
+# THE FALLBACK IS ANNOUNCED, NEVER SILENT. A gate that quietly downgrades itself teaches you to trust
+# a number that is not the one you are getting, so every run prints which mode it chose and why.
+#
+# Precedence, highest first: --parallel N / --sequential  >  XYZ_VALIDATE_PARALLEL  >  host detection.
 PARALLEL_JOBS=""
+PARALLEL_WHY=""
+FORCE_SEQUENTIAL=0
+_usage() { echo "usage: ./validate.sh [--parallel N | --sequential | --print-mode]" >&2; }
+PRINT_MODE_ONLY=0
+if [ "${1:-}" = "--print-mode" ]; then
+  # Resolve the mode, print it, run nothing. Exists so the decision is observable without paying for
+  # a gate run — both for test/gh544-parallel-default.sh (which must never execute the real suite)
+  # and for a pre-push hook that wants to tell the operator what it is about to do.
+  PRINT_MODE_ONLY=1; shift
+fi
 if [ $# -gt 0 ]; then
   case "$1" in
     --parallel)
@@ -266,11 +290,68 @@ if [ $# -gt 0 ]; then
         ''|*[!0-9]*) echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2 ;;
       esac
       [ "$2" -ge 1 ] || { echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2; }
-      [ $# -eq 2 ] || { echo "usage: ./validate.sh [--parallel N]" >&2; exit 2; }
-      PARALLEL_JOBS="$2"
+      [ $# -eq 2 ] || { _usage; exit 2; }
+      PARALLEL_JOBS="$2"; PARALLEL_WHY="explicit --parallel $2"
       ;;
-    *) echo "usage: ./validate.sh [--parallel N]" >&2; exit 2 ;;
+    --sequential)
+      [ $# -eq 1 ] || { _usage; exit 2; }
+      FORCE_SEQUENTIAL=1; PARALLEL_WHY="explicit --sequential"
+      ;;
+    *) _usage; exit 2 ;;
   esac
+fi
+
+# XYZ_VALIDATE_PARALLEL=0 forces sequential; a positive integer pins the width. Only consulted when
+# no flag was given, so a flag always wins over ambient environment.
+if [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ]; then
+  case "${XYZ_VALIDATE_PARALLEL:-}" in
+    '')        : ;;
+    0)         FORCE_SEQUENTIAL=1; PARALLEL_WHY="XYZ_VALIDATE_PARALLEL=0" ;;
+    *[!0-9]*)  echo "validate.sh: XYZ_VALIDATE_PARALLEL must be an integer >= 0" >&2; exit 2 ;;
+    *)         PARALLEL_JOBS="$XYZ_VALIDATE_PARALLEL"
+               PARALLEL_WHY="XYZ_VALIDATE_PARALLEL=$XYZ_VALIDATE_PARALLEL" ;;
+  esac
+fi
+
+# Host detection. Each branch that declines parallelism states its reason, because "it ran
+# sequentially" and "it ran sequentially BECAUSE this host has two cores" are different facts.
+_detect_cores() {
+  if command -v sysctl >/dev/null 2>&1 && sysctl -n hw.ncpu 2>/dev/null; then return 0; fi
+  if command -v nproc >/dev/null 2>&1 && nproc 2>/dev/null; then return 0; fi
+  if command -v getconf >/dev/null 2>&1 && getconf _NPROCESSORS_ONLN 2>/dev/null; then return 0; fi
+  echo 0
+}
+if [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ]; then
+  _cores="$(_detect_cores 2>/dev/null | head -1)"
+  case "$_cores" in ''|*[!0-9]*) _cores=0 ;; esac
+  if ! printf '' | xargs -P 2 -I{} true >/dev/null 2>&1; then
+    # Not every xargs implements -P. Falling back is correct; failing here would make the gate
+    # unrunnable on a host where the sequential path works perfectly well.
+    FORCE_SEQUENTIAL=1; PARALLEL_WHY="this host's xargs does not support -P"
+  elif [ "$_cores" -lt 4 ]; then
+    # Below 4 cores the pool cannot outrun the serialized driver-lock lane, so parallelism buys
+    # contention risk and no wall-clock. Detected, not assumed.
+    FORCE_SEQUENTIAL=1
+    if [ "$_cores" -eq 0 ]; then PARALLEL_WHY="could not detect a core count on this host"
+    else PARALLEL_WHY="only $_cores core(s) detected (parallel needs >= 4)"; fi
+  else
+    # Leave two cores for the driver-lock lane and the shell itself; cap at 8, the width the GH-528
+    # spike actually measured. A wider run is available explicitly, but is not the unattended default.
+    _w=$((_cores - 2))
+    if [ "$_w" -gt 8 ]; then _w=8; fi
+    PARALLEL_JOBS="$_w"; PARALLEL_WHY="auto-detected $_cores cores"
+  fi
+fi
+if [ "$FORCE_SEQUENTIAL" -eq 1 ]; then PARALLEL_JOBS=""; fi
+if [ -z "$PARALLEL_JOBS" ]; then
+  echo "validate.sh: SEQUENTIAL mode — $PARALLEL_WHY"
+fi
+if [ "$PRINT_MODE_ONLY" -eq 1 ]; then
+  if [ -n "$PARALLEL_JOBS" ]; then
+    echo "validate.sh: PARALLEL mode ${PARALLEL_JOBS}-wide — $PARALLEL_WHY"
+    echo "  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509)."
+  fi
+  exit 0
 fi
 
 # The suites that execute the real relay-drive.sh (not a stub or fixture copy). Membership was
@@ -325,7 +406,9 @@ if [ -n "$PARALLEL_JOBS" ]; then
     esac
   done
 
-  echo "validate.sh --parallel $PARALLEL_JOBS (EXPERIMENTAL, GH-528): ${#POOL[@]} pooled suites + ${#LANE[@]} in the sequential driver-lock lane"
+  echo "validate.sh: PARALLEL mode ${PARALLEL_JOBS}-wide — $PARALLEL_WHY"
+  echo "  ${#POOL[@]} pooled suites + ${#LANE[@]} in the sequential driver-lock lane (GH-528)"
+  echo "  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509)."
   (
     for t in ${LANE[@]+"${LANE[@]}"}; do vp_run_one "$t"; done
   ) &

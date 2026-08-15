@@ -42,14 +42,34 @@ This file is the first entry point for an AI agent working in this repo: it tell
 For repo correctness:
 
 ```bash
-./validate.sh              # canonical gate — sequential, ~16 min, the only run that qualifies a claim
-./validate.sh --parallel 8 # EXPERIMENTAL (GH-528) — same suites, ~3 min, for a fast self-check
+bash githooks/install.sh        # ONCE PER CLONE — wires the pre-push gate (GH-544)
+bash githooks/install.sh --check # is this clone gated? exit 1 if not
+./validate.sh              # the gate — PARALLEL by default (GH-544), ~4 min, auto-sized to the host
+./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
+./validate.sh --sequential # force the sequential run (~16 min)
+bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
 ```
 
-`--parallel N` is opt-in and is **not** promotion evidence: it pools the suites and serializes the 13
-that hold this clone's driver lock, and its promotion to default is gated on GH-528 Phase 2. Use it to
-find your own breakage cheaply *before* you push — a hosted run costs Actions minutes, a local run
-does not (see `PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md` and #509).
+**Hosted CI fires on nothing while this repo is private (GH-544).** The gate runs locally at the push
+boundary instead, so `githooks/install.sh` is part of setting up a clone — the hook lives in
+`.git/hooks/`, which does not travel with a clone, and an uninstalled one pushes unverified. One
+install covers every branch and every linked worktree of that clone (GH-549). Bypass with
+`git push --no-verify` or `XYZ_SKIP_PREPUSH=1`; both announce themselves. Re-arm CI when the repo
+goes public (free there).
+
+**Parallel became the default on 2026-08-14 (GH-544)** because the local gate is the only gate during
+the private phase, and a 16-minute gate does not get run — it gets skipped, which is worse than a
+3-minute one. Width is detected from the host (cores − 2, capped at 8); below 4 cores, or where
+`xargs -P` is unsupported, it **falls back to sequential and says so**. Every run prints the mode it
+chose and the reason, so a fallback is never silent. Override with `--parallel N`, `--sequential`, or
+`XYZ_VALIDATE_PARALLEL` (a flag always beats the env var).
+
+**What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
+`ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it
+stays sequential. The macOS promotion boundary in `ci.yml` pins `--sequential` explicitly for the same
+reason. GH-528 Phase 2 (multi-width stress evidence) is still **owed** — the flip was an operator
+decision taken with that evidence outstanding, mitigated by the announced fallback rather than
+discharged. See `PROJECT/2-WORKING/GH-528-TEST-SUITE-RECALIBRATION.md`, #509 and #544.
 
 For document hygiene:
 

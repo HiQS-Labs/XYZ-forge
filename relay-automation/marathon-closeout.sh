@@ -159,10 +159,78 @@ if ((OPEN_ONLY)); then
   exit 0
 fi
 
-if ! gh pr checks "$PR_URL"; then
-  printf 'marathon-closeout.sh: PR checks are not green; refusing to merge\n' >&2
-  exit 4
+# GH-544: "no checks configured" and "checks failed" are DIFFERENT states, and this used to conflate
+# them. With hosted CI off for the private phase (#544), every PR has zero checks — `gh pr checks`
+# then exits non-zero and the old code took the `exit 4` refusal path, so an automated closeout could
+# never merge anything again.
+#
+# The fix must not be "ignore check failures": that would silently discard a real gate the moment CI
+# returns, which is strictly worse than the bug it replaces. So the two states are separated by
+# reading gh's OUTPUT, not just its exit code — gh says "no checks reported" when none are configured.
+#
+# A closeout with no checks is not unverified: `githooks/pre-push` gated the push that created this
+# branch. It is stated out loud anyway, because "merged with no CI" should never be invisible.
+#
+# THE CAPTURE MUST SIT INSIDE THE `if`. This script runs under `set -euo pipefail` (line 12), and a
+# bare `_checks_out="$(gh pr checks ...)"` whose command fails exits the script IMMEDIATELY — the
+# following `_checks_rc=$?` is never reached and the whole no-checks branch below is dead code. That
+# is exactly what the first version of this fix did, and its test passed anyway because the test
+# eval'd the block without `set -e`. Both are fixed; the test now runs the block under the production
+# shell options.
+#
+# TWO SIGNALS, and MEASUREMENT DECIDED WHICH ONE ACTUALLY CARRIES THIS.
+#
+# A cross-model review recommended preferring `--json bucket` over matching gh's human prose, on the
+# sound general principle that wording is not an API. So it is tried first. But observed against a
+# REAL check-less PR (#545, gh 2.96.0), `--json bucket` does NOT return `[]` — it prints the same
+# prose and exits 1:
+#
+#     $ gh pr checks 545 --json bucket
+#     no checks reported on the 'fix/gh544-parallel-default' branch     [exit 1]
+#
+# So the PROSE match is what actually recognises this state today; the `[]` branch below is
+# forward-looking and currently never fires. Both are kept: if gh starts returning an empty list, the
+# structured signal takes over and the prose match becomes the redundant one. Saying which is load-
+# bearing matters — the previous version of this comment claimed --json was primary, which was a
+# guess, and the guess was wrong.
+#
+# Anything that is neither an empty bucket nor the no-checks prose is a REFUSAL.
+# >>> GH-544 checks-gate BEGIN (extracted verbatim by test/gh544-pre-push-gate.sh — keep the
+# sentinels; a line-range extract broke when this block grew a second `fi`.)
+_checks_out=""
+_checks_rc=0
+if _checks_out="$(gh pr checks "$PR_URL" 2>&1)"; then
+  _checks_rc=0
+else
+  _checks_rc=$?
 fi
+_checks_json=""
+if _checks_json="$(gh pr checks "$PR_URL" --json bucket 2>/dev/null)"; then :; else _checks_json=""; fi
+if [ "$_checks_rc" -ne 0 ]; then
+  case "${_checks_json:-}" in
+    "[]")
+      printf 'marathon-closeout.sh: no CI checks are configured for this PR (empty --json bucket) — proceeding.\n'
+      printf 'marathon-closeout.sh:   Hosted CI is off for the private phase (GH-544); the local\n'
+      printf 'marathon-closeout.sh:   pre-push gate is what verified this branch. Merging WITHOUT CI.\n'
+      _checks_rc=0
+      ;;
+  esac
+fi
+if [ "$_checks_rc" -ne 0 ]; then
+  case "$_checks_out" in
+    *"no checks reported"*|*"No checks reported"*)
+      printf 'marathon-closeout.sh: no CI checks are configured for this PR — proceeding.\n'
+      printf 'marathon-closeout.sh:   Hosted CI is off for the private phase (GH-544); the local\n'
+      printf 'marathon-closeout.sh:   pre-push gate is what verified this branch. Merging WITHOUT CI.\n'
+      ;;
+    *)
+      printf '%s\n' "$_checks_out" >&2
+      printf 'marathon-closeout.sh: PR checks are not green; refusing to merge\n' >&2
+      exit 4
+      ;;
+  esac
+fi
+# <<< GH-544 checks-gate END
 
 if ! MERGEABLE="$(gh pr view "$PR_URL" --json mergeable --jq .mergeable)"; then
   printf 'marathon-closeout.sh: could not read PR mergeability\n' >&2

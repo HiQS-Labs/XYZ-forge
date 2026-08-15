@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# pre-push — run the gate before anything reaches the remote. (GH-544)
+#
+# WHY THIS EXISTS: while this repo is private we do not pay for hosted CI (see #544, #509), so the
+# push boundary is where testing happens. Local commits are free and ungated on purpose; the moment
+# work leaves the machine, it is gated.
+#
+# WHY IT RUNS THE FAST GATE: `validate.sh` is parallel by default (~4 min on a 10-core host) rather
+# than sequential (~16 min). This is the single most important choice in this file. A 16-minute
+# pre-push hook does not produce 16 minutes of testing — it produces `--no-verify` as a reflex, and a
+# gate that is routinely bypassed is worth less than no gate, because it also produces the belief that
+# something was checked. Four minutes is a cost that actually gets paid.
+#
+# WHAT THIS IS NOT: promotion evidence. `ci-local.sh` is the qualifying run — sequential, and it
+# writes the gate record. This hook is a guard against pushing something obviously broken, not an
+# attestation. Nothing here writes a record.
+#
+# INSTALL: bash githooks/install.sh   (idempotent)
+#
+# HOW IT IS REACHED: not directly. `install.sh` puts a dispatch stub in `.git/hooks/pre-push` and that
+# stub execs this file. The indirection is the point (GH-549) — git metadata is branch-independent, so
+# a branch that predates this file still gets gated (the stub falls back to running `validate.sh`),
+# instead of git silently skipping a hook path that does not resolve.
+#
+# BYPASS, both deliberately loud:
+#   git push --no-verify        # native git; cannot be removed, and should not be
+#   XYZ_SKIP_PREPUSH=1 git push # for automation that has already gated
+set -uo pipefail
+
+# FAIL CLOSED. An earlier draft exited 0 here on the theory that "not in a repo" means there is
+# nothing to gate — but a pre-push hook only ever runs inside a repo, so reaching this branch means
+# something is wrong, and "something is wrong" must not resolve to "push anyway". Refusing is
+# recoverable (--no-verify); a silently ungated push is not.
+if ! REPO="$(git rev-parse --show-toplevel 2>/dev/null)" || [ -z "$REPO" ]; then
+  echo "pre-push: cannot resolve the repository root — REFUSING the push rather than skipping the gate." >&2
+  echo "pre-push:   Override with 'git push --no-verify' if you know why this happened." >&2
+  exit 1
+fi
+if [ ! -x "$REPO/validate.sh" ]; then
+  echo "pre-push: $REPO/validate.sh is missing or not executable — REFUSING the push." >&2
+  echo "pre-push:   A gate that cannot run is not a gate that passed." >&2
+  exit 1
+fi
+
+# A delete-only push has nothing to test. `git push --delete branch` and a deleting refspec both
+# arrive here with an all-zero local sha; gating them would block cleanup for no benefit.
+#
+# stdin is "<local ref> <local sha> <remote ref> <remote sha>" per ref. If EVERY line is a delete,
+# skip. If stdin is empty (some callers), fall through and gate — failing open on an empty read would
+# make the hook trivially bypassable by anything that does not feed it.
+_all_deletes=1
+_saw_line=0
+while read -r _lref _lsha _rref _rsha; do
+  [ -n "${_lsha:-}" ] || continue
+  _saw_line=1
+  case "$_lsha" in
+    *[!0]*) _all_deletes=0 ;;   # any non-zero char means it is a real push
+  esac
+done
+if [ "$_saw_line" -eq 1 ] && [ "$_all_deletes" -eq 1 ]; then
+  echo "pre-push: delete-only push — no gate to run."
+  exit 0
+fi
+
+if [ "${XYZ_SKIP_PREPUSH:-0}" != "0" ]; then
+  # Announced, never silent: a skipped gate that says nothing is indistinguishable from a passing one.
+  echo "pre-push: SKIPPED by XYZ_SKIP_PREPUSH — nothing was verified before this push." >&2
+  exit 0
+fi
+
+echo "pre-push: running the gate before this push reaches the remote (GH-544)."
+echo "pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden."
+"$REPO/validate.sh" --print-mode 2>&1 | sed 's/^/pre-push:   /'
+
+_start=$SECONDS
+if "$REPO/validate.sh"; then
+  echo "pre-push: gate GREEN in $((SECONDS - _start))s — pushing."
+  exit 0
+fi
+_rc=$?
+cat >&2 <<EOF
+
+pre-push: GATE RED (exit $_rc) after $((SECONDS - _start))s — push REFUSED.
+
+  The failing suites are named in the output above; a parallel run also re-runs each failure
+  alone before believing it, so a named failure is not a contention artifact.
+
+  This is the only gate: hosted CI is off while the repo is private (#544, #509), so nothing
+  downstream will catch this for you.
+
+  To push anyway (and you may have a good reason — a WIP branch, a known-red baseline):
+    git push --no-verify
+EOF
+exit 1

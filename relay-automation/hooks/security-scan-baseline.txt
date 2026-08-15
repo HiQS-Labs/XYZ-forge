@@ -29,6 +29,9 @@ test/find-harness.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"
 test/gh520-default-reviewer-stub.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 test/gh527-destructive-git-guard.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 test/gh536-evidence-detail.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+test/gh544-parallel-default.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+test/gh544-pre-push-gate.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
+test/gh544-pre-push-gate.sh	eval-unsanitized	         eval "$(extract_block)" 2>&1 )"; _r=$?
 test/marathon-drive.sh	eval-unsanitized	if [[ -x "$acmd" ]]; then "$acmd"; else eval "$acmd"; fi
 test/poll-driver.sh	eval-unsanitized	# puts a space in that path and the old `eval "$RUNNER_CMD"` split it (exec'd "/Users/.../GH").
 test/poll-relay.sh	eval-unsanitized	# `eval "$AGENT_CMD"` split on the space → exec'd the wrong token → the turn-taker never ran. The fix:

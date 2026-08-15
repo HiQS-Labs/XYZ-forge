@@ -140,7 +140,13 @@ gh472_shape() {  # <file> -> prints offending "line:text", with the file's REAL 
   # (-F -q), the long form (--quiet), and an explicit `command grep`. Numbering is done with grep -n on
   # the file itself and comments are filtered afterwards — the first version stripped comments FIRST,
   # which renumbered every hit and is why my reported line numbers disagreed with the reviewer's.
-  grep -nE '\|[[:space:]]*(command[[:space:]]+)?grep([[:space:]]+-[A-Za-z]+)*[[:space:]]+(-[A-Za-z]*q[A-Za-z]*|--quiet)([[:space:]]|$)' "$1" 2>/dev/null \
+  # GH-544: the leading `(^|[^|])` is load-bearing — without it the SECOND `|` of a logical `||`
+  # matched, so `cmd A || grep -q B` was reported as a SIGPIPE shape. It is not a pipeline at all: the
+  # two sides never share a file descriptor and nothing can receive SIGPIPE. Found when an assertion
+  # in test/ci-workflow.sh changed from `&&` to `||` and this suite went red with nothing piped
+  # anywhere. Verified both directions: `a || grep -q x` no longer matches, while `b | grep -q y` and
+  # the no-space `c|grep -Fq z` still do.
+  grep -nE '(^|[^|])\|[[:space:]]*(command[[:space:]]+)?grep([[:space:]]+-[A-Za-z]+)*[[:space:]]+(-[A-Za-z]*q[A-Za-z]*|--quiet)([[:space:]]|$)' "$1" 2>/dev/null \
     | grep -vE '^[0-9]+:[[:space:]]*#'
 }
 named_bad=0
