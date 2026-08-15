@@ -1,6 +1,6 @@
 # Marathon Phase gh491
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=RELAY-GH-491 builder=agy reviewer=codex round-cap=5 -->
 
@@ -95,5 +95,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    is wanted; verifying in-tree is what costs you the turn.
 5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to agy —
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
-   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+swept file: yes
+
+The requirements for GH-491 are **already fully implemented and actively tested** in the current tree:
+1. `--retry` help text exists in `relay-automation/marathon.sh`.
+2. The advisory log is implemented in `utils/py/marathon_drive.py` (lines 1896-1904) under the `--retry` / explicit `--relay-task` path.
+3. The advisory is informational only and does not alter the `--retry` behaviour (the lane still rebuilds, as required).
+4. Tests with both positive and negative controls are already present and registered inside `test/gh385-retry-token-satisfied.sh` (cases 11 and 12).
+5. The original `already-satisfied` path remains fully functional.
+
+I have removed the now-unnecessary `test/gh491-gate-only-refire.sh` placeholder stub to keep the tree clean, as the test coverage was correctly merged into `test/gh385-retry-token-satisfied.sh`. No further changes are needed.
