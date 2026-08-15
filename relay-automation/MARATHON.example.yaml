@@ -18,6 +18,9 @@
 # turns bill via the Codex/ChatGPT subscription, not the Anthropic API (agy is the other cost-blind
 # option). `--builder claude` is available but spawns a headless Claude Code CLI subprocess — a
 # SEPARATE, PER-CALL API-BILLED turn-taker — as an explicit, cost-acknowledged opt-in only.
+# (GH-379: Claude builder runs with CLAUDE_MAX_BUDGET defaulting to $0.50 and CLAUDE_MAX_TURNS defaulting
+# to 12. Note that a prompt cache-creation floor cost is paid per turn; increase CLAUDE_MAX_BUDGET in env
+# if a phase requires extra headroom.)
 #
 # Plan location (GH-212): once this is a REAL plan for a tracked issue (not this shipped example),
 # the MARATHON.yaml + its phase briefs belong under PROJECT/2-WORKING/<capture-doc>/ in the target

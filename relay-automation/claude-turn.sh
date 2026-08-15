@@ -42,8 +42,8 @@ fi
 #                       the budget cap mid-build on 2026-06-18. Pin it so cost is deterministic.
 #   CLAUDE_TURN_ROOT  — git root to guard (default: this repo); tests point at a fixture
 #   CLAUDE_LOG        — where to write the claude transcript JSON (default: $TMPDIR/claude-turn-$$.json)
-#   CLAUDE_MAX_TURNS  — max turns passed to --max-turns (default: 20; size from spike output)
-#   CLAUDE_MAX_BUDGET — max cost passed to --max-budget-usd (default: 2.00; size from spike output)
+#   CLAUDE_MAX_TURNS  — max turns passed to --max-turns (default: 12)
+#   CLAUDE_MAX_BUDGET — max cost passed to --max-budget-usd (default: 0.50)
 #   CLAUDE_BLOCK_CMDS — space-separated commands PATH-shadowed (blocked) for the builder's claude -p
 #                       subprocess only (default: codex gemini consult consult.sh marathon-drive.sh
 #                       relay-drive.sh). Stops an off-task builder from spawning external models /

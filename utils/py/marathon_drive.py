@@ -1370,8 +1370,32 @@ def main():
         # Sentinel Tier 1 (GH-281/GH-342): harvest this failed phase's Side Findings BEFORE the
         # escalation record is written, matching marathon-drive.sh:848-853 — a phase that escalated
         # is exactly the one whose findings are about to be lost.
-        xyz_harvest_findings(harvest_findings_bin, relay_file, root, args.target_root,
-                             xyz_debug_log_file(root))
+        builder_diag = ""
+        try:
+            ts_base = subprocess.check_output(f"source \"{os.path.join(xyz_harness, 'relay-automation', 'relay-turn-lib.sh')}\" && rtl_transcript_root \"{root}\"", shell=True, executable="/bin/bash").decode('utf-8').strip()
+            import glob
+            log_patterns = [
+                os.path.join(ts_base, "logs", "*", f"*{relay_task}*.log"),
+                os.path.join(root, "relay-system", "logs", "*", f"*{relay_task}*.log"),
+            ]
+            matches = []
+            for pat in log_patterns:
+                matches.extend(glob.glob(pat))
+            if matches:
+                latest_log = max(matches, key=os.path.getmtime)
+                with open(latest_log, 'r', encoding='utf-8', errors='replace') as lf:
+                    log_text = lf.read().strip()
+                if log_text.startswith("{") and log_text.endswith("}"):
+                    log_data = json.loads(log_text)
+                    bits = []
+                    for k in ["is_error", "subtype", "terminal_reason", "total_cost_usd"]:
+                        if k in log_data:
+                            bits.append(f"{k}={log_data[k]}")
+                    if bits:
+                        builder_diag = ", ".join(bits)
+        except Exception:
+            pass
+
         esc_file = os.path.join(phase_dir, "ESCALATION.md")
         with open(esc_file, 'w') as f:
             f.write(f"""# ESCALATION — Marathon Phase {args.phase_id}
@@ -1383,6 +1407,8 @@ reason: {reason}
 gate: {run_gate_result[0]}
 relay-file: {rel_relay}
 """)
+            if builder_diag:
+                f.write(f"builder-diagnostic: {builder_diag}\n")
         subprocess.run(["git", "-C", root, "add", "--", esc_file], check=True)
         # GH-207: an identical escalation record must not HALT on nothing-to-commit.
         if subprocess.run(["git", "-C", root, "diff", "--cached", "--quiet", "--", esc_file]).returncode != 0:

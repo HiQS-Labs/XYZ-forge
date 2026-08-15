@@ -330,6 +330,8 @@ restructuring.
   files instead of a human copy-pasting between windows.
 - **Marathon** (`relay-automation/marathon.sh`) — chains several relay build→review phases from a
   `MARATHON.yaml`, in `depends_on` order. The multi-agent coordinator built on the relay loop.
+  Headless builders default to subscription-billed `codex`/`agy`; `--builder claude` is available as
+  an explicit per-call API opt-in (`CLAUDE_MAX_BUDGET` defaults to $0.50 and `CLAUDE_MAX_TURNS` to 12).
 - **agy** — the Antigravity CLI (Google), one of the agents XYZ coordinates alongside Claude Code
   and Codex.
 
