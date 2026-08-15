@@ -201,18 +201,49 @@ Advisory only. Say "the plan says X, the repo is doing Y" and stop.
 
 ## Step 4 — Report in-session
 
-    RADAR — <repo> · <start>..<end>
+Treat the in-session reply as a decision memo, not a data dump. Start with exactly these two
+segments, in this order. Keep the full measurements, commit subjects, target IDs, and citations in
+the persisted evidence report; bring them into chat only when they support the recommended action.
 
-    FLOW      Run <n>% · Grow <n>% · Transform <n>% · Unclassified <n>%
-              (+ <n> harness commits excluded)
-              <trend vs prior window> · <one-line verdict>
+### 1. Overall direction
 
-    TARGETS   1. RADAR-<slug> — <n> issues over <n> days · <what one fix retires>
-              2. ...
+Open with a short, plain-English answer to: **Where is this project heading right now?** Do not use
+Radar labels, acronyms, percentages, or internal tool names before answering it. State whether the
+project should keep course, change course, or stop and address a specific problem. Then end the
+segment with one blunt, concrete line:
 
-    PLAN      <drift between RELEASES.md and observed reality, or "aligned", or "no RELEASES.md">
+    Recommended next step: <imperative action, owner/decision when known, and the result that proves it is done>
 
-    ASK       <the one decision this puts in front of the operator>
+Example: "The team is spending most of its energy keeping the existing system reliable, while two
+repeat problems are still being left behind. That is sensible only if reliability is the current
+priority; otherwise the project is not moving toward new customer value. Recommended next step:
+choose one unowned repeat problem for the next work cycle and give it a named owner."
+
+### 2. What the evidence means
+
+Translate the technical lenses into only the findings that change what the operator should do. For
+each finding, use this shape:
+
+    <Blunt finding in ordinary language>
+    Why it matters: <the real-world effect on customers, delivery speed, reliability, cost, or risk>
+    Recommended next step: <specific imperative action and completion condition>
+
+Write the flow mix, recurring targets, plan comparison, and any degraded or uncertain signal in
+this form. Replace jargon with its consequence: say "most effort went to maintenance" rather than
+"Run was 71%"; say "this bug has returned in three separate reports" rather than a target slug;
+and say "the release plan does not yet cover this work" rather than "the target is unclaimed." Put
+the exact count, target ID, file, commit, or percentage in parentheses only when it lets the
+operator act or verify the claim.
+
+Every item must have a call to action. Do not include an FYI, a raw measurement, or a caveat by
+itself. If the correct conclusion is that no change is needed, say so directly and make the action
+to preserve that state explicit: "Recommended next step: keep the current plan; rerun Radar after
+the next work cycle to confirm the balance holds." If evidence is too incomplete to support a
+decision, do not soften it into an observation: say "Do not make a planning decision from this
+run," then name the missing signal and the rerun needed to obtain it.
+
+Be direct when the evidence calls for a change. Never make the operator infer the recommendation
+from the data, and never end with an open-ended `ASK`.
 
 ## Step 5 — Persist the report (two sinks, one confirmation)
 

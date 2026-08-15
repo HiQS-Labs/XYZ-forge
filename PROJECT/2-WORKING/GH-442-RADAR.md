@@ -2,7 +2,7 @@
 title: /radar — per-repo strategic compass (flow distribution + recurring-defect radar + release recalibration)
 status: Active — Phase 0 (validate the signals before building)
 created: 2026-08-07
-updated: 2026-08-07
+updated: 2026-08-14
 owner: noel
 gh_issue: 442
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/442
@@ -57,7 +57,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| **Phase 2's reconciliation path executed for the first time, and the skill is installed.** Run 3 (2026-08-07) was the first dispatched through the installed skill rather than read by hand, from a clean worktree cut from origin. It reconciled #444 in place across a 63-commit delta: both targets carried forward by ID at `runs: 2`, no duplicate issue opened, run-delta comment posted. Three more fixes folded in (same-day report collision, tally-must-sum guardrail, `rgt:` adoption printed beside Transform). `~/.claude/skills/radar` symlink installed system-wide. | Two gaps remain before v1.0 can be claimed honestly: (a) **strike-through on a retired target has still never run** — nothing has been fixed between any two runs, so that branch is unexercised; (b) the systematic doc-only-close sweep (open question 5 still rests on one instance). Both need elapsed time and a real fix landing, not more runs today. |
+| **Radar's chat-facing synthesis contract now leads with the project's direction in plain English, then explains only action-bearing evidence in real-world terms.** A read-only 21-day forward test passed: it produced a direct directional call and a concrete next step for every finding, without a raw-data inventory. | Use the contract on the next persisted `/radar` run, while the two existing v1 gaps remain: (a) **strike-through on a retired target has still never run** — nothing has been fixed between any two runs; (b) the systematic doc-only-close sweep still rests on one instance. |
 
 ## Why now
 
@@ -359,6 +359,12 @@ all; zero writes outside the two sinks; every finding carries a citation; every 
 a file and an acceptance condition an unrelated agent could act on cold.
 **Gate status 2026-08-07: PASSED.** Two runs, structurally opposite (see below); the no-targets
 path fired on run 2 and wrote nothing; run 1's two sinks were the only writes across both.
+
+**Chat synthesis contract (added 2026-08-14):** the session-facing report opens with a plain-English
+directional verdict and its recommended next step, followed by only findings that carry a
+real-world implication and a concrete action. Technical evidence remains available in the immutable
+report; it is not an excuse to make the operator interpret raw data. A read-only 21-day
+forward-test passed on 2026-08-14; the next persisted run must apply the contract in production.
 
 #### Second calibration run — `giant-brains-claude-skills`, 2026-08-07
 
