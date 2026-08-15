@@ -102,7 +102,12 @@ FORBIDDEN_PATHS=(".tick" "relay-system" "temp" "PARKED" ".relay-driver.lock")
 PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^(GH-555|GH-563|METER)}"
 
 # Strings that betray a private origin if they survive into the artifact.
-PRIVATE_MARKERS=("/Users/" "/Volumes/" "noelsaw" "Local Sites" "Hypercart-Dev-Tools")
+#
+# `Hypercart-Dev-Tools` was on this list and was REMOVED 2026-08-15 by operator decision: it is a
+# GitHub organisation name, already public wherever it appears, and a repository URL is not a
+# private path. Kept as a note rather than a silent deletion, because the difference between "this
+# marker was considered and cleared" and "nobody thought of it" is the whole value of the list.
+PRIVATE_MARKERS=("/Users/" "/Volumes/" "noelsaw" "Local Sites")
 
 # The documented entry path a stranger follows (README.md).
 HAPPY_PATH_CMD="${XYZ_LAUNCH_HAPPY_PATH:-./validate.sh}"
