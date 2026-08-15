@@ -205,7 +205,7 @@ enough to record explicitly:
     { "type": "grep_absent", "path": "utils/py/marathon_drive.py", "pattern": "terminal_reason" },
     { "type": "grep_absent", "path": "README.md", "pattern": "CLAUDE_MAX_BUDGET" }
   ],
-  "artifacts":     ["utils/py/marathon_drive.py", "utils/py/claude-turn.py", "README.md", "relay-automation/MARATHON.example.yaml", "relay-automation/claude-turn.sh"],
+  "artifacts":     ["utils/py/marathon_drive.py", "utils/py/claude-turn.py", "README.md", "relay-automation/MARATHON.example.yaml"],
   "artifacts_new": [],
   "remediation":   { "source": "issue #379, narrowed after verification — #407 already fixed the exit-5 misattribution", "criteria": "surface the builder's own subtype/terminal_reason into ESCALATION.md on a pre-gate builder failure, and document CLAUDE_MAX_BUDGET/CLAUDE_MAX_TURNS — ranking summary only, NOT the definition of done (that is the authored ## Acceptance block above)" },
   "lanes": { "agy_safe": ["README.md", "relay-automation/MARATHON.example.yaml"], "orchestrator_only": ["utils/py/marathon_drive.py", "utils/py/claude-turn.py"] }
