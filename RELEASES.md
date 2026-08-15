@@ -169,3 +169,15 @@ Milestone: Meter
 Front-door reviewed: No
 Shakedown reviewed: No
 License file: Yes
+
+Release: 0.7.0
+Iterations: 0.7.0-0.7.4
+Status: Draft
+Target Date: 2026-10-17
+Codename: Sundown
+Description: Retire the twelve frozen Bash twins. Three steps, in order: (1) sweep for real `XYZ_PYTHON=0` usage — if nothing sets it, the fallback is already dead in practice; (2) re-vendor every fleet `.xyz/` copy onto the Python lane (`xyz-sync.sh list` is the worklist); (3) delete the twins and retire the GH-308 edit-guard, keeping only its no-new-Bash half (GH-551). Not before steps 1-2: the vendored fleet still runs the Bash path, and `XYZ_PYTHON=0` is the documented rollback. Depends on nothing in Meter.
+GH_URL: pending — api.github.com DNS outage 2026-08-14; file on recovery
+Milestone: not created yet
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes
