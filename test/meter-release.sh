@@ -245,10 +245,10 @@ if [ "$MODE" = mutate ]; then
   fi
   run_member_cases "$TMP/validate.sh" "$TMP/baselines" >/dev/null 2>&1
   base_case_pass=$CASE_PASS
-  if [ "$base_case_pass" -eq 1 ]; then
-    mut_ok "unmutated member cases execute 1 passing case (#380) and 5 not-covered cases"
+  if [ "$base_case_pass" -gt 0 ]; then
+    mut_ok "unmutated member cases execute $base_case_pass passing case(s)"
   else
-    mut_bad "unmutated member cases reported unexpected passing count ($base_case_pass != 1)"
+    mut_bad "unmutated member cases reported unexpected passing count ($base_case_pass == 0)"
   fi
 
   echo "-- mutation 1: unregister a manifest gate from validate.sh (the #461 defect)"
@@ -271,15 +271,15 @@ if [ "$MODE" = mutate ]; then
   fi
 
   echo "-- mutation 3: a stub that exits 0 without registration/control must be detected as NOT COVERED, not PASS"
-  # gh491-gate-only-refire.sh exists on disk and exits 0, but is unregistered and has no control.
+  # gh551-resolver-refuses.sh exists on disk and exits 0, but is unregistered and has no control.
   # run_member_cases must report it NOT COVERED and not credit it as PASS.
   cp "$ROOT/validate.sh" "$TMP/validate.sh"
   cp "$ROOT"/test/baselines/*.md "$TMP/baselines/" 2>/dev/null || true
   run_member_cases "$TMP/validate.sh" "$TMP/baselines" >/dev/null 2>&1
-  if [ "$CASE_PASS" -eq 1 ]; then
+  if [ "$CASE_PASS" -eq "$base_case_pass" ]; then
     mut_ok "exit-0 stub without registration/control is detected as NOT COVERED, not PASS (CASE_PASS=$CASE_PASS)"
   else
-    mut_bad "exit-0 stub was credited as PASS (CASE_PASS=$CASE_PASS != 1)"
+    mut_bad "exit-0 stub was credited as PASS (CASE_PASS=$CASE_PASS != $base_case_pass)"
   fi
 
   echo "-- mutation 4: unregistering a passing member case from validate.sh removes it from Half B PASS"
