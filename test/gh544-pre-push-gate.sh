@@ -21,6 +21,7 @@ REPO="$(cd "$HERE/.." && pwd)"
 HOOK="$REPO/githooks/pre-push"
 INSTALL="$REPO/githooks/install.sh"
 CLOSEOUT="$REPO/relay-automation/marathon-closeout.sh"
+ROUTER="$REPO/utils/ci-route.sh"
 
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
@@ -39,8 +40,9 @@ mkrepo() {  # <validate-exit-code> -> prints repo path
   git -C "$r" init -q
   git -C "$r" config user.email t@t
   git -C "$r" config user.name t
-  mkdir -p "$r/githooks"
+  mkdir -p "$r/githooks" "$r/utils/pdda"
   cp "$HOOK" "$r/githooks/pre-push"; chmod +x "$r/githooks/pre-push"
+  cp "$ROUTER" "$r/utils/ci-route.sh"; chmod +x "$r/utils/ci-route.sh"
   cat > "$r/validate.sh" <<STUB
 #!/usr/bin/env bash
 if [ "\${1:-}" = "--print-mode" ]; then echo "validate.sh: PARALLEL mode 4-wide — stub"; exit 0; fi
@@ -48,6 +50,12 @@ echo "stub gate ran"
 exit $rc
 STUB
   chmod +x "$r/validate.sh"
+  cat > "$r/utils/pdda/pdda.sh" <<'STUB'
+#!/usr/bin/env bash
+echo "stub documentation gate ran"
+exit "${PDDA_EXIT:-0}"
+STUB
+  chmod +x "$r/utils/pdda/pdda.sh"
   printf 'x\n' > "$r/a.txt"
   git -C "$r" add -A >/dev/null 2>&1
   git -C "$r" commit -qm seed >/dev/null 2>&1
@@ -78,6 +86,36 @@ out="$(drive "$R_OK" "$NORMAL")"; rc=$?
 ok "a green gate allows the push (exit 0)" "[ $rc -eq 0 ]"
 ok "  and reports the wall-clock it cost" "printf '%s' \"\$out\" | grep -qE 'GREEN in [0-9]+s'"
 ok "  and announced the mode before running" "printf '%s' \"\$out\" | grep -q 'PARALLEL mode'"
+
+# --- (2b) docs-only pushes run PDDA, not the runtime suite ---------------------------------------
+# Use a real commit range. A fake remote SHA must fail closed to full (the normal cases above), while
+# a real ancestor lets the hook hand the changed paths to the shared ci-route classifier.
+R_DOC="$(mkrepo 1)"   # a red validate.sh proves it did NOT run on the docs route
+DOC_BASE="$(git -C "$R_DOC" rev-parse HEAD)"
+printf '# docs-only\n' > "$R_DOC/README.md"
+git -C "$R_DOC" add README.md >/dev/null 2>&1
+git -C "$R_DOC" commit -qm docs-only
+DOC_HEAD="$(git -C "$R_DOC" rev-parse HEAD)"
+DOC_LINE="refs/heads/main $DOC_HEAD refs/heads/main $DOC_BASE"
+out="$(drive "$R_DOC" "$DOC_LINE")"; rc=$?
+ok "a docs-only push is allowed even when validate.sh is red" "[ $rc -eq 0 ]"
+ok "  and runs the deterministic documentation gate" "printf '%s' \"\$out\" | grep -q 'stub documentation gate ran'"
+ok "  and does NOT run validate.sh" "! printf '%s' \"\$out\" | grep -q 'stub gate ran'"
+
+out="$(drive "$R_DOC" "$DOC_LINE" PDDA_EXIT=1)"; rc=$?
+ok "a red documentation gate still refuses the docs-only push" "[ $rc -eq 1 ]"
+ok "  and names the documentation gate failure" "printf '%s' \"\$out\" | grep -q 'documentation gate RED'"
+
+R_CODE="$(mkrepo 0)"
+CODE_BASE="$(git -C "$R_CODE" rev-parse HEAD)"
+printf 'console.log("code")\n' > "$R_CODE/tool.js"
+git -C "$R_CODE" add tool.js >/dev/null 2>&1
+git -C "$R_CODE" commit -qm code-only
+CODE_HEAD="$(git -C "$R_CODE" rev-parse HEAD)"
+CODE_LINE="refs/heads/main $CODE_HEAD refs/heads/main $CODE_BASE"
+out="$(drive "$R_CODE" "$CODE_LINE")"; rc=$?
+ok "a code change remains on the full gate" "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep -q 'stub gate ran'"
+ok "  and does NOT take the documentation route" "! printf '%s' \"\$out\" | grep -q 'stub documentation gate ran'"
 
 # --- (3) bypasses work AND announce themselves -----------------------------------------------------
 # A silent bypass is the failure mode: a skipped gate that says nothing looks exactly like a passing one.

@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **BUILT 2026-08-14, both halves.** Parallel default + host detection + announced fallback (`gh544-parallel-default` 29/0). Pre-push gate, `ci.yml` triggers removed, `marathon-closeout.sh` no-checks fix (`gh544-pre-push-gate` 38/0). Codex QA run and adjudicated — **3 Blockers found, all real, all fixed**; one of them was a bug in this lane's own test methodology. | Operator review and merge. One item is deliberately owed: the bare `gh pr checks` exit code on a genuinely check-less PR is stubbed, not observed — this PR is the natural experiment and the result belongs in the baseline. |
+| **BUILT 2026-08-14, including the docs-only pre-push route.** A verifiable docs-only update runs PDDA's deterministic documentation gate instead of `validate.sh`; an empty, new-branch, force-push, unavailable-base, mixed, code, test, config, or workflow range falls back to the full gate. `gh544-pre-push-gate` is 70/0, including both route directions and a red-document-gate refusal. | Observe the first real docs-only push, then revisit only if the deterministic docs gate is still too slow. One item remains deliberately owed: the bare `gh pr checks` exit code on a genuinely check-less PR is stubbed, not observed — this PR is the natural experiment and the result belongs in the baseline. |
 
 ## QA — Codex consult, adjudicated
 
@@ -165,6 +165,10 @@ Copied verbatim from issue #544.
 3. **A three-minute gate on `marathon-closeout.sh`** changes automated closeout timing. Recommended
    resolution: let it run (closeout is the moment work reaches the remote, and the in-phase gate ran
    against a different tree), but this is a decision to make explicitly rather than by default.
+4. **A docs-only classifier can be wrong in the cheap direction.** The hook therefore reuses
+   `utils/ci-route.sh` rather than carrying its own path list, and routes full whenever the pushed
+   range is not a known remote ancestor. Removing the docs branch is the rollback: it restores the
+   existing full `validate.sh` call without changing any other gate behaviour.
 
 ## Swarm Preflight Contract
 
