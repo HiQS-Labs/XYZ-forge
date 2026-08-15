@@ -162,8 +162,14 @@ def claim_paths_for_turn(root, relay_file, allow_paths):
     paths.extend(split_allow_paths(allow_paths))
     return paths
 
+# GH-551 Resolver Contract:
+# A resolver that cannot determine its answer raises. It never returns a default.
+
 def resolve_tick_repo_root(root):
-    return os.environ.get("TICK_REPO_ROOT", root)
+    trr = os.environ.get("TICK_REPO_ROOT", root)
+    if not trr or not os.path.exists(trr):
+        raise RuntimeError(f"resolve_tick_repo_root: target root does not exist: {trr} (GH-551)")
+    return trr
 
 def resolve_turn_root(explicit_root, xyz_root):
     # Mirror the Bash shims' ROOT default (codex-turn.sh): an explicit override wins, else the
@@ -180,29 +186,35 @@ def resolve_turn_root(explicit_root, xyz_root):
     # this default. Pinned by test/gh417-turn-root-symlink-prefix.sh, whose control shows the exit-6
     # failure returning the moment that canonicalization is removed.
     if explicit_root:
+        if not os.path.exists(explicit_root):
+            raise RuntimeError(f"resolve_turn_root: explicit_root does not exist: {explicit_root} (GH-551)")
         return explicit_root
     try:
         out = subprocess.run(["git", "rev-parse", "--show-toplevel"],
                               capture_output=True, text=True, check=True)
         top = out.stdout.strip()
-        if top:
+        if top and os.path.exists(top):
             return top
     except Exception:
         pass
-    return xyz_root
+    if xyz_root and os.path.exists(xyz_root):
+        return xyz_root
+    raise RuntimeError("resolve_turn_root: cannot resolve turn root from CWD, git toplevel, or xyz_root (GH-551)")
 
 def resolve_tick_bin(tick_repo_root, xyz_root):
     candidates = []
     tick_bin_env = os.environ.get("TICK_BIN")
     if tick_bin_env:
         candidates.append(tick_bin_env)
-    candidates.append(os.path.join(tick_repo_root, "bin", "tick"))
-    candidates.append(os.path.join(xyz_root, "bin", "tick"))
+    if tick_repo_root:
+        candidates.append(os.path.join(tick_repo_root, "bin", "tick"))
+    if xyz_root:
+        candidates.append(os.path.join(xyz_root, "bin", "tick"))
 
     for candidate in candidates:
         if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
             return candidate
-    return None
+    raise RuntimeError(f"resolve_tick_bin: unresolvable tick binary across candidates: {candidates} (GH-551)")
 
 def make_tick_env(tick_repo_root):
     env = dict(os.environ)
