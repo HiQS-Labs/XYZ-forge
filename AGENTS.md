@@ -206,7 +206,40 @@ local change.
   isolation. Related guards: never execute `validate.sh`/`test/*.sh` under a sandboxed Bash call
   (enforced by `relay-automation/hooks/gh177-sandbox-test-guard.sh` — re-run it un-sandboxed; do NOT
   push it to CI to be exercised, see the CI rail below), and `test/mktemp-trap-guard.sh` statically
-  outlaws the wipe idiom repo-wide.
+  outlaws the wipe idiom repo-wide. **The "what it does NOT protect" list above is narrower than
+  reality — see the next rail (GH-564): a worktree isolates the working tree only, and everything
+  under `.git` is shared, which is why running the suite in one contaminated the parent clone twice.**
+- **Run the suite in a SEPARATE FULL CLONE, never in a clone whose state you care about — and a
+  linked worktree is NOT a way around it (GH-564).** `validate.sh` and `test/*.sh` can write to the
+  git config, remotes, and refs of the repository they are invoked from. On 2026-08-15 the primary
+  clone was contaminated **twice in one morning**: `core.bare=true`, `remote.origin.url` repointed at
+  a fixture bare repo, a fixture `[user]` identity appended, and `refs/heads/development` reset onto
+  ~35 fixture commits. It also **defeated the push gate while corrupting it** — pushes failed with
+  `'/var/folders/…/bare.XXXXXX' does not appear to be a git repository` because the suite repointed
+  `origin` mid-hook.
+  - **The worktree precaution was taken and it FAILED.** Both bursts came from `./validate.sh` run in
+    linked worktrees cut off the primary clone, chosen specifically to isolate the risk. **Linked
+    worktrees share `.git/config` with the parent clone**, so an escape landing in a worktree's CWD
+    writes the parent's config. Reproduced deterministically: from a worktree CWD, `r=""; git -C "$r"
+    remote set-url origin "$b"` rewrote the *parent* clone's origin. Same structural fact the
+    driver-lock matrix documents from the other side (GH-42/GH-354/GH-448) — a linked worktree
+    resolves to the parent's `git-common-dir`, which is why it grants no second lane either.
+  - **State the boundary precisely, because the previous rail's version was too narrow.** The rail
+    above says worktree isolation does not protect against destructive *git operations*. That is
+    true and insufficient: a worktree isolates the **working tree only**. Everything reached through
+    `.git` — config, remotes, refs, objects, hooks — is shared with the parent clone, whether it is
+    touched deliberately or by an escaped fixture. Only a **separate full clone** isolates any of it.
+  - **Why it escapes at all:** `git -C ""` is documented to leave the working directory unchanged and
+    `cd ""` is a bash no-op, and these suites run without `set -e` — so one unguarded
+    `r="$(mktemp -d …)"` silently redirects every "fixture" operation onto the caller's clone. It
+    fires under **parallel** load (the failure mode of `mktemp`), which is why a serial re-run of the
+    same suite reproduces nothing and must not be read as an all-clear. GH-177 family.
+  - **Until #564's suite-wide invariant gate lands**, treat any clone you ran the suite in as
+    suspect: check `git config --get core.bare`, `git remote -v`, `git config --local --get user.email`,
+    and `git log --oneline -1` before trusting a push, a fetch, or a green run from it. A guarded
+    fixture helper (`require_fixture`: the path must exist AND live under `$WORK` — containment, not
+    a null check) is the pattern to copy; `test/gh544-pre-push-gate.sh` has it, 31 other suites do
+    not.
 - **The local macOS run is the gate; hosted ubuntu is advisory (GH-509).** XYZ is a developer toolkit
   for **macOS**; Linux and Windows are on the roadmap and not here yet. So `./validate.sh` (or
   `./ci-local.sh`) on your Mac is the highest-fidelity evidence available — it is the shipping
