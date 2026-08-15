@@ -33,10 +33,42 @@ WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh544-prepush.XXXXXX")"
 cleanup(){ [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
 trap cleanup EXIT
 
+# GH-177 family — every fixture path this file hands to git must be PROVEN to be a fixture.
+#
+# Reported 2026-08-15 by a peer session, which found the SHARED clone's origin rewritten to
+# `$TMPDIR/gh544-prepush.XXXXXX/bare.XXXXXX` — so its every push/fetch/ls-remote silently addressed a
+# throwaway bare repo. Its pushes failed loudly; a fetch would have succeeded against the wrong repo.
+#
+# The mechanism is not a missing `-C`. Every call here already passes `-C "$r"`. It is that BOTH
+# escapes are silent no-ops on an EMPTY string, and this file runs without `set -e`:
+#
+#   git -C "" remote set-url origin "$b"   # documented: "if <path> is present but empty ... the
+#                                          # current working directory is left unchanged"
+#   ( cd "" && git push ... )              # cd "" is a bash no-op; the subshell stays in the caller
+#
+# So one unguarded `r="$(mktemp -d ...)"` that returns empty — disk full, TMPDIR reaped mid-run,
+# sandbox refusal — turns every fixture operation below into an operation on the REAL clone the
+# suite was invoked from. `$WORK` was guarded on the line above since day one; the per-repo mktemps
+# were not, which is the whole gap.
+#
+# The guard is deliberately stronger than "non-empty": a path must exist AND live under $WORK. That
+# makes the entire class unreachable rather than just the empty case, because a merely wrong path
+# cannot satisfy it either.
+require_fixture() {  # <path> [label] — die unless it is a real directory inside $WORK
+  local p="${1:-}" what="${2:-fixture}"
+  case "$p" in
+    "")            echo "gh544: REFUSING — $what path is EMPTY; git -C \"\" and cd \"\" would silently target the caller's clone ($PWD)" >&2; exit 2 ;;
+    "$WORK"/*)     ;;
+    *)             echo "gh544: REFUSING — $what path '$p' is outside the fixture root $WORK; this suite must never touch a real repo" >&2; exit 2 ;;
+  esac
+  [ -d "$p" ] || { echo "gh544: REFUSING — $what path '$p' is not a directory" >&2; exit 2; }
+}
+
 # A throwaway repo carrying the real hook and a STUB validate.sh whose verdict we control.
 mkrepo() {  # <validate-exit-code> -> prints repo path
   local rc="$1" r
   r="$(mktemp -d "$WORK/repo.XXXXXX")"
+  require_fixture "$r" "mkrepo repo"
   git -C "$r" init -q
   git -C "$r" config user.email t@t
   git -C "$r" config user.name t
@@ -65,6 +97,7 @@ STUB
 # Drive the hook the way git does: stdin carries "<lref> <lsha> <rref> <rsha>".
 drive() {  # <repo> <stdin-line> [env...]
   local r="$1" line="$2"; shift 2
+  require_fixture "$r" "drive repo"             # `cd ""` would run the hook against the real clone
   ( cd "$r" && printf '%s\n' "$line" | env "$@" bash githooks/pre-push 2>&1 )
 }
 NORMAL="refs/heads/main abc123 refs/heads/main def456"
@@ -200,13 +233,16 @@ ok "--uninstall removes OUR stub (exit 0)" "[ $rc -eq 0 ] && [ ! -f '$R_I/.git/h
 # Only a real push through a real remote exercises that. This is the negative control for GH-549.
 mkremote() {  # <repo> -> adds an 'origin' bare remote it can actually push to
   local r="$1" b
+  require_fixture "$r" "mkremote repo"          # <- the call that rewrote a real clone's origin
   b="$(mktemp -d "$WORK/bare.XXXXXX")"
+  require_fixture "$b" "mkremote bare"
   git init -q --bare "$b"
   git -C "$r" remote add origin "$b" 2>/dev/null || git -C "$r" remote set-url origin "$b"
 }
 # A branch that predates the hook: githooks/ simply does not exist on it.
 strip_githooks() {  # <repo> <branch>
   local r="$1" br="$2"
+  require_fixture "$r" "strip_githooks repo"
   git -C "$r" checkout -q -b "$br"
   git -C "$r" rm -rq githooks
   git -C "$r" commit -qm "branch predating the in-tree hook"
@@ -214,6 +250,7 @@ strip_githooks() {  # <repo> <branch>
 realpush() {  # <repo> [env...] -> pushes the current branch; prints output + trailing RC=
   local r="$1"; shift
   local _o _r
+  require_fixture "$r" "realpush repo"          # `cd ""` would push the CALLER's repo to the bare
   _o="$( cd "$r" && env "$@" git push -q origin HEAD:refs/heads/probe 2>&1 )"; _r=$?
   printf '%s\nRC=%s\n' "$_o" "$_r"
 }
@@ -293,6 +330,7 @@ mkgh() {  # <exit> <human-stdout> <json-stdout> -> dir to prepend to PATH
   # and a stub that returned the same text for each could not tell them apart.
   local rc="$1" msg="$2" json="${3:-}" d
   d="$(mktemp -d "$WORK/bin.XXXXXX")"
+  require_fixture "$d" "mkgh bin dir"
   cat > "$d/gh" <<GHSTUB
 #!/usr/bin/env bash
 case "\$*" in
@@ -357,6 +395,53 @@ GH_OK="$(mkgh 0 'all checks passed')"
 out="$(run_block "$GH_OK")"
 ok "passing checks proceed silently (exit 0)" "printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
 ok "  and do NOT claim CI was absent" "! printf '%s' \"\$out\" | grep 'WITHOUT CI' >/dev/null"
+
+# --- (7) THE FIXTURE-CONTAINMENT PIN — this suite must never reach a real repository -------------
+# Reported live 2026-08-15: the SHARED clone's origin was found rewritten to this suite's throwaway
+# bare repo, so every push/fetch/ls-remote there addressed a fixture. The pushes failed loudly; a
+# fetch would have SUCCEEDED against the wrong repo, which is the shape that does real damage.
+#
+# The two assertions below are the ones that matter, and they are asserted against a REAL git repo
+# standing in for the caller's clone — because proving `require_fixture` exits is not the same as
+# proving the victim was left alone. Pre-fix, the first one rewrites VICTIM's origin and passes.
+# VICTIM lives OUTSIDE $WORK on purpose. Placed inside it, the guard correctly ADMITS it (it is a
+# legitimate fixture path), and the containment assertion below would fail for the wrong reason —
+# which is exactly what the first draft of this block did.
+VICTIM_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/gh544-victim.XXXXXX")"
+[ -n "$VICTIM_ROOT" ] && [ -d "$VICTIM_ROOT" ] || { echo "victim mktemp failed" >&2; exit 1; }
+cleanup_victim(){ [ -n "${VICTIM_ROOT:-}" ] && [ -d "$VICTIM_ROOT" ] && rm -rf "$VICTIM_ROOT"; }
+trap 'cleanup; cleanup_victim' EXIT
+VICTIM="$VICTIM_ROOT/victim"; mkdir -p "$VICTIM"
+git -C "$VICTIM" init -q
+git -C "$VICTIM" remote add origin https://example.invalid/real.git
+VICTIM_BEFORE="$(git -C "$VICTIM" remote get-url origin)"
+
+# An empty repo path is the exact value a failed `mktemp -d` produces, and this file has no `set -e`.
+( cd "$VICTIM" && mkremote "" ) >/dev/null 2>&1; rc=$?
+ok "empty repo path is REFUSED by mkremote (exit 2), not silently applied to \$PWD" "[ $rc -eq 2 ]"
+ok "  and the caller's real clone keeps its origin" \
+   "[ \"\$(git -C '$VICTIM' remote get-url origin)\" = '$VICTIM_BEFORE' ]"
+
+( cd "$VICTIM" && realpush "" ) >/dev/null 2>&1; rc=$?
+ok "empty repo path is REFUSED by realpush (exit 2) — \`cd \"\"\` would push the caller's repo" "[ $rc -eq 2 ]"
+( cd "$VICTIM" && drive "" "$NORMAL" ) >/dev/null 2>&1; rc=$?
+ok "empty repo path is REFUSED by drive (exit 2)" "[ $rc -eq 2 ]"
+
+# Non-empty but OUTSIDE the fixture root: the guard is containment, not just a null check. Without
+# this, a future edit could satisfy every assertion above with `[ -n "$r" ]` and still let a real
+# path through.
+( cd "$VICTIM" && mkremote "$VICTIM" ) >/dev/null 2>&1; rc=$?
+ok "a REAL repo path outside \$WORK is REFUSED (exit 2) — the guard is containment, not a null check" "[ $rc -eq 2 ]"
+ok "  and that real repo's origin is still untouched" \
+   "[ \"\$(git -C '$VICTIM' remote get-url origin)\" = '$VICTIM_BEFORE' ]"
+
+# The positive control: the guard must still ADMIT a legitimate fixture, or it would pass by
+# refusing everything and this whole file would be dead.
+R_G="$(mkrepo 0)"
+( mkremote "$R_G" ) >/dev/null 2>&1; rc=$?
+ok "CONTROL: a legitimate fixture under \$WORK is still admitted (exit 0)" "[ $rc -eq 0 ]"
+ok "  and it really did get its bare origin" \
+   "case \"\$(git -C '$R_G' remote get-url origin)\" in '$WORK'/bare.*) true ;; *) false ;; esac"
 
 echo "  gh544-pre-push-gate: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
