@@ -233,9 +233,20 @@ from swarm_preflight import frozen_manifest_members
 root = os.environ["GH557_REPO_ROOT"]
 members, note = frozen_manifest_members(root)
 # #509 was RETIRED from Meter and #272/#310/#329/#365/#504/#548 are cited only as #551's siblings.
-bad = [n for n in (509, 272, 310, 329, 365, 504, 548) if n in members]
+# UPDATED 2026-08-15: #378/#379/#382/#491/#551 were ALSO retired from Meter's manifest when the
+# release was re-scoped to the public launch, so they join the list that must NOT be admitted from
+# prose. They are cited throughout RELEASES.md's Meter block as transfer history, which is exactly
+# the prose a regex would misread as membership.
+bad = [n for n in (509, 272, 310, 329, 365, 504, 548, 378, 379, 382, 491, 551) if n in members]
 # Sanity in the other direction: the real Meter entries MUST be present, or this asserts nothing.
-missing = [n for n in (378, 379, 380, 382, 491, 551, 555) if n not in members]
+# Meter's frozen manifest is #555 and #563 as of the 2026-08-15 re-scope.
+#
+# COVERAGE NOTE, recorded rather than left implicit: the five entries above now belong to Sundown,
+# and Sundown has no goalpost of its own yet. Membership is read from the goalposts' MANIFEST
+# arrays, so until that release gets its own release script those five sit in NO manifest array and
+# GH-557's block does not cover them. That is a consequence of the re-scope, not a regression in
+# this reader, and it is why Sundown's exit criterion is marked NOT WRITTEN in RELEASES.md.
+missing = [n for n in (555, 563) if n not in members]
 if bad or missing or "read from" not in note:
     print(f"  admitted non-members: {bad}; missing real members: {missing}; note={note}", file=sys.stderr)
     sys.exit(1)
