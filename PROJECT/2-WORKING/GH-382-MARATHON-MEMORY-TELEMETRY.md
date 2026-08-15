@@ -102,17 +102,7 @@ anything shipped:**
 
 ## Acceptance
 
-Issue #382 has **no `## Acceptance` section** — confirmed by re-fetching the issue body on 2026-08-10
-(`gh issue view 382 --json body`). Its sections are: TL;DR, What happened, What the run does and does
-not report, Suggested instrumentation, Optional/a bigger ask (a ceiling), Why the default may be sized
-for a bigger machine, Related. None of these is an acceptance list. Per this batch's drafting
-convention, no criteria are authored inside this section — see the authored section below instead.
-
-## Acceptance — authored (the issue has none)
-
-*Derived from the issue's own "Suggested instrumentation" bullets, scoped to the telemetry the issue
-marks as its core ask. The "ceiling" bullet is deliberately excluded — see non_goals above and the
-issue's own "worth considering separately" framing.*
+*Issue #382 has no `## Acceptance` section — confirmed by re-fetching the issue body on 2026-08-10 (`gh issue view 382 --json body`). Every criterion below was derived from the issue's own "Suggested instrumentation" bullets, scoped to the telemetry the issue marks as its core ask. The "ceiling" bullet is deliberately excluded — see non_goals above and the issue's own "worth considering separately" framing.*
 
 - [ ] Compressor size and swap free are sampled at phase boundaries (before and after each phase) on
       macOS (`vm_stat` / `sysctl`) and Linux (`/proc/meminfo`), and both numbers are recorded — not
