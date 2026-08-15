@@ -346,9 +346,10 @@ will read as more than it says. The precise answer:
 **What matches.** Phases are real nodes — each gets `marathon-system/<id>/RELAY.md`, a tick token, a
 reviewer, a brief, and an artifact allowlist, with an LLM turn as the body. Inside a phase there is
 a genuine LLM-selected edge: the reviewer writes `STATUS:`, and `utils/py/relay_drive.py` treats
-`Approved`/`Closed` as terminal and anything else as another round, bounded by a round cap. Every
-phase boundary runs a verification gate, which must be able to *start* before turn 1 — a missing
-gate fails fast rather than being skipped. And the whole run is an inspectable state machine
+`Approved`/`Closed` as terminal and anything else as another round, bounded by a round cap. Every phase boundary runs a verification gate, which must be able to *start* before turn 1 — a missing
+gate fails fast rather than being skipped. Target repositories with known pre-existing test failures
+can specify `--pre-advance-baseline <rc>` (or `MARATHON_GATE_BASELINE=<rc>`) to permit existing failure exit codes
+while halting if regressions worsen the code. And the whole run is an inspectable state machine
 (`.tick/events/`, `RELAY.md`, `ESCALATION.md` with typed reason codes) rather than a model's
 self-report.
 

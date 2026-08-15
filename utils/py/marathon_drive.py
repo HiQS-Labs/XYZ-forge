@@ -479,6 +479,7 @@ def main():
     parser.add_argument("--reviewer", dest="reviewer")
     parser.add_argument("--round-cap", dest="round_cap", type=int, default=5)
     parser.add_argument("--pre-advance-cmd", dest="pre_advance_cmd")
+    parser.add_argument("--pre-advance-baseline", dest="pre_advance_baseline", help="allow gate failures matching recorded baseline exit code (GH-378)")
     parser.add_argument("--post-approve-cmd", dest="post_approve_cmd")
     parser.add_argument("--phases-dir", dest="phases_dir")
     parser.add_argument("--phase-id", dest="phase_id", default="p1")
@@ -1547,6 +1548,16 @@ relay-file: {rel_relay}
             log("gate-guard: disabled via MARATHON_GATE_GUARD=0 — running the gate unguarded")
             rc = subprocess.run(pre_advance_cmd, shell=True, executable="/bin/bash",
                                 cwd=cwd, env=env).returncode
+            baseline_allow = args.pre_advance_baseline or os.environ.get("MARATHON_GATE_BASELINE")
+            if baseline_allow and rc != 0 and rc != GATE_GUARD_KILL_EXIT:
+                try:
+                    base_rc = int(baseline_allow)
+                    if rc == base_rc or (rc > 0 and rc <= base_rc):
+                        log(f"gate-baseline: gate exit {rc} matches recorded baseline allowance ({base_rc}) — allowing advance (GH-378)")
+                        run_gate_result[0] = "green"
+                        return 0
+                except ValueError:
+                    pass
             run_gate_result[0] = "green" if rc == 0 else "red"
             return rc
 
@@ -1621,6 +1632,16 @@ relay-file: {rel_relay}
             f"CPU {cfg['cpu_s']}s)")
         # GH-284 P2: the run log reports this lane's gate outcome; mirrors RUN_GATE_RESULT in the
         # Bash twin (green/red, "not-run" until the gate is first invoked).
+        baseline_allow = args.pre_advance_baseline or os.environ.get("MARATHON_GATE_BASELINE")
+        if baseline_allow and rc != 0 and rc != GATE_GUARD_KILL_EXIT:
+            try:
+                base_rc = int(baseline_allow)
+                if rc == base_rc or (rc > 0 and rc <= base_rc):
+                    log(f"gate-baseline: gate exit {rc} matches recorded baseline allowance ({base_rc}) — allowing advance (GH-378)")
+                    run_gate_result[0] = "green"
+                    return 0
+            except ValueError:
+                pass
         run_gate_result[0] = "green" if rc == 0 else "red"
         return rc
 

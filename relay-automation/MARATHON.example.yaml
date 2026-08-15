@@ -34,6 +34,9 @@
 #   relay-automation/marathon.sh --plan PROJECT/2-WORKING/<capture>/MARATHON.yaml \
 #     --pre-advance-cmd "npm test"
 # The override must remain a real safety gate; a missing default fails fast rather than being skipped.
+# (GH-378: to run against a target with pre-existing suite failures, pass `--pre-advance-baseline <rc>`
+# or export MARATHON_GATE_BASELINE=<rc>. This permits exit codes <= baseline, but does not distinguish
+# individual test identities — a new regression raising the exit code halts the run.)
 #
 # Per-phase fields:
 #   id                 phase id → marathon-system/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
