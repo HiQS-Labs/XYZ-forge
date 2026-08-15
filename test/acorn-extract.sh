@@ -14,6 +14,19 @@ fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL + 1)); }
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/acorn-extract-test.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
 
+# --- Ensure dependencies are available without dirtying the worktree ---
+ensure_acorn() {
+  if ! node -e "require('acorn'); require('acorn-walk');" 2>/dev/null; then
+    echo "  [info] 'acorn' or 'acorn-walk' not found. Installing to temporary prefix..."
+    local prefix="$WORK/npm-prefix"
+    mkdir -p "$prefix"
+    # Install standard runtime dependencies (acorn and acorn-walk)
+    npm install --prefix "$prefix" acorn acorn-walk --no-save --silent
+    export NODE_PATH="${NODE_PATH:-}:$prefix/node_modules"
+  fi
+}
+ensure_acorn
+
 echo "== test: $TEST_NAME =="
 
 # ---------------------------------------------------------------------------
@@ -21,12 +34,15 @@ echo "== test: $TEST_NAME =="
 # ---------------------------------------------------------------------------
 REAL_FILE="$HERE/../src/identity.js"
 
-node "$EXTRACTOR" "$REAL_FILE" > "$WORK/real.json" || true
+RC=0
+node "$EXTRACTOR" "$REAL_FILE" > "$WORK/real.json" || RC=$?
 
-if grep -q "declarations" "$WORK/real.json" && grep -q "callSites" "$WORK/real.json"; then
+if [[ "$RC" -ne 0 ]]; then
+  fail "real file extraction exited with non-zero ($RC)"
+elif grep -q "declarations" "$WORK/real.json" && grep -q "callSites" "$WORK/real.json"; then
   pass "real file extracted successfully"
 else
-  fail "real file extraction failed or missing fields: $(cat "$WORK/real.json")"
+  fail "real file extraction missing fields: $(cat "$WORK/real.json")"
 fi
 
 # ---------------------------------------------------------------------------
@@ -36,7 +52,7 @@ MALFORMED="$WORK/bad.js"
 echo "function foo( {" > "$MALFORMED"
 
 RC=0
-node "$EXTRACTOR" "$MALFORMED" > "$WORK/bad.json" || RC=$?
+node "$EXTRACTOR" "$MALFORMED" > "$WORK/bad.json" 2>/dev/null || RC=$?
 
 if [[ "$RC" -ne 0 ]]; then
   pass "malformed file exited with non-zero ($RC)"

@@ -8,7 +8,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "./validate.sh"
+    "test": "./validate.sh",
+    "test:acorn-extract": "./test/acorn-extract.sh"
   },
   "keywords": [],
   "author": "",

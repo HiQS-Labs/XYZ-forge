@@ -1263,6 +1263,7 @@ def main():
     os.environ["AGY_AGENT"] = ""
     os.environ["AIDER_AGENT"] = ""
     os.environ["PI_AGENT"] = ""
+    os.environ["SMALLCODE_AGENT"] = ""
 
     def route_agent(agent_id):
         # GH-414 — BASH/PYTHON DIVERGENCE, deliberate and pinned. This router accepts `pi*`
@@ -1286,7 +1287,8 @@ def main():
         elif agent_id.startswith("agy"): os.environ["AGY_AGENT"] = agent_id
         elif agent_id.startswith("aider"): os.environ["AIDER_AGENT"] = agent_id
         elif agent_id.startswith("pi"): os.environ["PI_AGENT"] = agent_id
-        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi")
+        elif agent_id.startswith("smallcode"): os.environ["SMALLCODE_AGENT"] = agent_id
+        else: die(f"agent '{agent_id}' not recognized — must start with claude/codex/agy/aider/pi/smallcode")
         
     if args.builder == args.reviewer:
         die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
@@ -1474,6 +1476,7 @@ relay-file: {rel_relay}
         "CLAUDE_AGENT", "CODEX_AGENT", "MARATHON_BUILDER",
         "MARATHON_LANE_NS", "MARATHON_REVIEWER", "RELAY_AGENT",
         "PI_AGENT", "RELAY_ARTIFACT_FILE", "RELAY_FILE", "RELAY_PEER",
+        "SMALLCODE_AGENT",
         "RELAY_TARGET_ROOT", "RELAY_TASK", "RELAY_WORKTREE_ISOLATION",
         "XYZ_HARNESS_CONTEXT", "XYZ_SESSION_ID",
     )

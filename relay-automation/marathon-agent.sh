@@ -15,6 +15,7 @@ set -euo pipefail
 #   AGY_AGENT         — agent id that routes to agy-turn.sh (Antigravity CLI; permanent cross-model lane)
 #   AIDER_AGENT       — agent id that routes to aider-turn.sh (Aider via OpenRouter; OpenAI-standard lane)
 #   PI_AGENT          — agent id that routes to pi-turn.sh (Pi; explicit PI_MODEL required)
+#   SMALLCODE_AGENT   — agent id that routes to smallcode-turn.sh (SmallCode)
 # Peer threading (set by marathon-drive.sh — prevents "release to literal role-string" failure):
 #   MARATHON_BUILDER  — builder agent id; when RELAY_AGENT matches this, RELAY_PEER = MARATHON_REVIEWER
 #   MARATHON_REVIEWER — reviewer agent id; when RELAY_AGENT is the reviewer, RELAY_PEER = MARATHON_BUILDER
@@ -34,6 +35,7 @@ codex_agent="${CODEX_AGENT:-}"
 agy_agent="${AGY_AGENT:-}"
 aider_agent="${AIDER_AGENT:-}"
 pi_agent="${PI_AGENT:-}"
+smallcode_agent="${SMALLCODE_AGENT:-}"
 
 # RELAY_PEER threading: builder's peer is the reviewer; reviewer's peer is the builder.
 # A live turn that lacks an explicit peer can release to a literal role-string (Gemini 2026-06-15).
@@ -66,7 +68,11 @@ case "$me" in
     [[ -n "$pi_agent" ]] || die "RELAY_AGENT='$me' matched an empty PI_AGENT — set PI_AGENT"
     exec "$HERE/pi-turn.sh"
     ;;
+  "$smallcode_agent")
+    [[ -n "$smallcode_agent" ]] || die "RELAY_AGENT='$me' matched an empty SMALLCODE_AGENT — set SMALLCODE_AGENT"
+    exec "$HERE/smallcode-turn.sh"
+    ;;
   *)
-    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT/AIDER_AGENT/PI_AGENT to map it to a shim"
+    die "unknown agent '$me'; set CLAUDE_AGENT/CODEX_AGENT/AGY_AGENT/AIDER_AGENT/PI_AGENT/SMALLCODE_AGENT to map it to a shim"
     ;;
 esac

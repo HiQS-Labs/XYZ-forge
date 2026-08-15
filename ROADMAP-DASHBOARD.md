@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 196 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 🔮 0 · 🔲 0
+Summary: 197 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -38,6 +38,7 @@ Summary: 196 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 
 | GH-409 + GH-408 · a leaked tick claim wedges the next turn, and every layer that could name the cause discards it | — | [GH-409-408-TOKEN-FAILURE-VISIBILITY.md](PROJECT/2-WORKING/GH-409-408-TOKEN-FAILURE-VISIBILITY.md) · [#409](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409) · [#408](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/408) · [#407](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/407) |
 | GH-432 · a failed builder turn takes the one exit that skips rtl_enforce | — | [GH-432-TURN-FAILURE-PERSIST.md](PROJECT/3-COMPLETED/GH-432-TURN-FAILURE-PERSIST.md) · [#432](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/432) · [#409](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/409) |
 | GH-544 · local-gate-before-push: retire hosted CI for the private phase | — | [GH-544-LOCAL-GATE-BEFORE-PUSH.md](PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md) · [#544](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/544) |
+| GH-522 · SmallCode (local Qwen 2.5 32B via LM Studio) as an autonomous marathon Builder — experiment run, verdict recorded | — | [#548](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/548) · [GH-522-SMALLCODE-FUZZER.md](PROJECT/2-WORKING/GH-522-SMALLCODE-FUZZER.md) · [#522](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/522) · [#523](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/523) |
 | GH-549 · the pre-push gate is silently skipped on any branch without githooks/ | — | [GH-549-PREPUSH-BRANCH-INDEPENDENT.md](PROJECT/2-WORKING/GH-549-PREPUSH-BRANCH-INDEPENDENT.md) · [#549](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/549) · [#544](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/544) |
 | GH-314 · a pre-existing phases//relay-system/ ignore rule HALTs a marathon, and --dry-run cannot see it | — | [#117](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/117) · [#440](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/440) · [#314](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/314) · [PROJECT/1-INBOX/GH-314-VENDOR-GITIGNORE-HALT.md](PROJECT/1-INBOX/GH-314-VENDOR-GITIGNORE-HALT.md) |
 | GH-440 · xyz-vendor.sh gitignores .xyz/ but not /.tick/, so tick runtime state lands untracked in the consuming repo | — | [#18](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/18) · [#314](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/314) · [#440](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/440) · [PROJECT/1-INBOX/GH-440-VENDOR-TICK-GITIGNORE.md](PROJECT/1-INBOX/GH-440-VENDOR-TICK-GITIGNORE.md) |
