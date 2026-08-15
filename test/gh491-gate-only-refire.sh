@@ -51,7 +51,7 @@ run_driver() {  # [extra marathon-drive args...]
 reset_state() { rm -rf "$A/phases" "$A/.tick"; tick_a init >/dev/null 2>&1 || true; : > "$RD_CALLS"; }
 
 # --- (1) Acceptance criterion 1: marathon.sh --help text states when --retry is the wrong choice ---
-help_out="$(bash "$MARATHON_SH" --help 2>&1)"
+help_out="$(MARATHON_ROOT="$A" bash "$MARATHON_SH" --help 2>&1)"
 printf '%s' "$help_out" | grep -q "GH-491: if the phase's relay is already terminal" \
   && pass "marathon.sh --help explains that satisfied phases should re-fire plainly without --retry" \
   || fail "marathon.sh --help missing GH-491 guidance: $help_out"
