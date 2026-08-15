@@ -196,7 +196,7 @@ predates it, so no migration is needed either direction.
   "gate":          "bash validate.sh",
   "fix_probes":    [
     { "type": "grep_absent", "path": "src/analyze.js", "pattern": "swap_free_mb" },
-    { "type": "grep_absent", "path": "utils/py/marathon_drive.py", "pattern": "_phase_memory_sample(" }
+    { "type": "grep_absent", "path": "utils/py/marathon_drive.py", "pattern": "_phase_memory_sample" }
   ],
   "artifacts":     ["utils/py/marathon_drive.py", "src/analyze.js", "src/cost.js", "src/events.js"],
   "artifacts_new": [],
