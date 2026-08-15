@@ -2,7 +2,7 @@
 gh_issue: 509
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/509
 title: "GH-509 — tier CI to stop per-push Actions minute burn"
-status: Phases 1-5 shipped. Phase 4 amended 2026-08-13 at operator instruction — the macOS boundary's workflow_dispatch trigger removed after measured billing (75 macOS min = $4.65 of a $10 budget, more than 2,740 Ubuntu min); boundary-macos now fires on push-to-main only, coupled gate-status.sh filter moved with it.
+status: CLOSED 2026-08-14 — complete. Phases 1-5 shipped; the two unchecked criteria are blocked by a later deliberate decision (GH-544 retired hosted CI for the private phase), not by unfinished work, and the residual macOS-witness gap is owned by GH-544's re-arm trigger.
 created: 2026-08-11
 updated: 2026-08-13
 owner: noel
@@ -25,7 +25,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Phases 1-5 shipped. **Phase 4 amended 2026-08-13 at operator instruction:** the macOS boundary's `workflow_dispatch` trigger was removed after measured billing showed 75 macOS minutes cost $4.65 against a $10 monthly budget — more than 2,740 Ubuntu minutes. `boundary-macos` now fires on push-to-`main` only; the coupled `gate-status.sh` filter moved with it, witnessed red in four directions. | Watch the next invoice for macOS minutes at zero. The pre-merge macOS witness is now unserved and that gap is recorded, not closed — decide whether to re-arm dispatch behind a spending policy or accept local-gate evidence. |
+| **CLOSED 2026-08-14 — complete.** Phases 1-5 shipped. The two unchecked acceptance criteria are blocked by a LATER deliberate decision (GH-544), not by unfinished work: with `ci.yml` reduced to `workflow_dispatch:` only, the push-cannot-cancel criterion is vacuously true and permanently unwitnessable, and the hosted-macOS witness cannot be obtained without spending the very minutes this issue existed to stop. | Nothing. The residual — re-arm the hosted macOS witness when the repo goes public — is owned by GH-544's re-arm trigger, not by this issue. Tracking it in both places counted one gap twice. |
 
 ## The reframe that drives everything
 
@@ -347,10 +347,16 @@ Phases 2-5:
 - [x] A renamed regression test selects `full`, proven by a witnessed control that drives a real `git mv`
       through the workflow's own command. `test/baselines/GH-509-phase3-negative-control.md`.
 - [x] The macOS boundary job invokes `validate.sh` directly with no skip list. *(Declared and asserted; `test/baselines/GH-509-phase4-negative-control.md`. This also closes **D1** — the 20-test authoritative Python layer now runs at the boundary, having never run in CI before.)*
-- [ ] A `push` cannot cancel a running `workflow_dispatch` boundary run. *(Believed already true —
+- [ ] ~~A `push` cannot cancel a running `workflow_dispatch` boundary run~~ — **struck 2026-08-14 as
+      permanently unwitnessable**: GH-544 removed every `push` trigger, so no push can start a run and
+      the interaction under test no longer exists. Vacuously true, and a control cannot be written for
+      it. *(Original note: Believed already true —
       `github.event_name` is in the existing concurrency key. Needs a witnessed control, not an
       assertion.)*
-- [ ] A green hosted **macOS** full run exists for a chosen commit.
+- [ ] ~~A green hosted **macOS** full run exists for a chosen commit~~ — **deferred 2026-08-14 to
+      GH-544's re-arm trigger** (the repo goes public). Not satisfiable while hosted CI is off, and
+      GH-544 already records the lost attestation as accepted debt in its own terms. Not struck as
+      wrong — struck as OWNED ELSEWHERE.
 - [x] A local full run writes a durable record keyed to the commit and refuses a dirty tree. *(Extracted to its own script so the REFUSAL is testable without a 15-minute suite run.)*
 - [x] The operator surface reports distance-based status, including the canary line. *(`utils/gate-status.sh`. Currently reports `NONE` — truthfully, since no hosted macOS run exists yet.)*
 - [ ] ~~A `docs`/`fast` run cannot cancel a running `full`~~ — **struck 2026-08-12 on agy's review.**
