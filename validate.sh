@@ -171,22 +171,17 @@ TESTS=(
   "deep-research.sh"             # GH-87 (provider-agnostic grounded-search adapter)
   "relay-pkg-freshness.sh"
   "skill-extract.sh"
-  # "releases-skill.sh"         # UNREGISTERED 2026-08-15 — re-register together with the file.
-                                # (Path deliberately not spelled out below: naming a file that does not
-                                # exist is exactly what test/path-integrity.sh flags, and this comment
-                                # would then trade one permanent red for another.)
-                                # The registration landed on `development` while the gate file itself
-                                # did not, so every clone that does not happen to hold the author's
-                                # uncommitted copy failed the suite with rc=127 — i.e. the gate was red
-                                # for everyone except the one session that could not see it. This is
-                                # #461's defect in mirror image: there, a gate that exists but is not
-                                # registered is invisible; here, a registration with no gate is a
-                                # permanent red that says nothing about the code.
-                                # NOT deleted, and the test is NOT at fault: it passes 26/0 in the tree
-                                # where its inputs exist. It needs the whole consolidation — the plural
-                                # skill directory, removal of the legacy singular one, and the router /
-                                # PDDA-contract routing updates — which is in flight and uncommitted
-                                # elsewhere. Landing that change re-enables this line in the same commit.
+  "releases-skill.sh"            # consolidated /releases router + Claude-only symlink migration — 26/0.
+                                 # RE-REGISTERED 2026-08-15 in the same commit that lands the gate file,
+                                 # which is the condition its brief unregistration was waiting on. It was
+                                 # disabled for ~2h because the registration reached `development` while
+                                 # the file did not, so every clone that did not happen to hold the
+                                 # author's uncommitted copy failed the suite with rc=127 — red for
+                                 # everyone except the one session that could not see it, and, since
+                                 # GH-544 put the suite on the push boundary, refusing every push.
+                                 # #461 in mirror image: a gate that exists but is unregistered is
+                                 # invisible; a registration with no gate is a permanent red that says
+                                 # nothing about the code. Register the two together or neither.
   "path-integrity.sh"
   "relay-turn-timeout.sh"
   "relay-target-root.sh"

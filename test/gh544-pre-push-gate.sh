@@ -74,18 +74,18 @@ DELETE="refs/heads/gone 0000000000000000000000000000000000000000 refs/heads/gone
 R_RED="$(mkrepo 1)"
 out="$(drive "$R_RED" "$NORMAL")"; rc=$?
 ok "a red gate refuses the push (exit 1)" "[ $rc -eq 1 ]"
-ok "  and says the push was REFUSED" "printf '%s' \"\$out\" | grep -q 'push REFUSED'"
+ok "  and says the push was REFUSED" "printf '%s' \"\$out\" | grep 'push REFUSED' >/dev/null"
 ok "  and names the escape hatch rather than leaving you stuck" \
-   "printf '%s' \"\$out\" | grep -q -- '--no-verify'"
+   "printf '%s' \"\$out\" | grep -- '--no-verify' >/dev/null"
 ok "  and states that nothing downstream will catch it (CI is off)" \
-   "printf '%s' \"\$out\" | grep -q 'only gate'"
+   "printf '%s' \"\$out\" | grep 'only gate' >/dev/null"
 
 # --- (2) a green gate ALLOWS the push --------------------------------------------------------------
 R_OK="$(mkrepo 0)"
 out="$(drive "$R_OK" "$NORMAL")"; rc=$?
 ok "a green gate allows the push (exit 0)" "[ $rc -eq 0 ]"
-ok "  and reports the wall-clock it cost" "printf '%s' \"\$out\" | grep -qE 'GREEN in [0-9]+s'"
-ok "  and announced the mode before running" "printf '%s' \"\$out\" | grep -q 'PARALLEL mode'"
+ok "  and reports the wall-clock it cost" "printf '%s' \"\$out\" | grep -E 'GREEN in [0-9]+s' >/dev/null"
+ok "  and announced the mode before running" "printf '%s' \"\$out\" | grep 'PARALLEL mode' >/dev/null"
 
 # --- (2b) docs-only pushes run PDDA, not the runtime suite ---------------------------------------
 # Use a real commit range. A fake remote SHA must fail closed to full (the normal cases above), while
@@ -99,12 +99,12 @@ DOC_HEAD="$(git -C "$R_DOC" rev-parse HEAD)"
 DOC_LINE="refs/heads/main $DOC_HEAD refs/heads/main $DOC_BASE"
 out="$(drive "$R_DOC" "$DOC_LINE")"; rc=$?
 ok "a docs-only push is allowed even when validate.sh is red" "[ $rc -eq 0 ]"
-ok "  and runs the deterministic documentation gate" "printf '%s' \"\$out\" | grep -q 'stub documentation gate ran'"
-ok "  and does NOT run validate.sh" "! printf '%s' \"\$out\" | grep -q 'stub gate ran'"
+ok "  and runs the deterministic documentation gate" "printf '%s' \"\$out\" | grep 'stub documentation gate ran' >/dev/null"
+ok "  and does NOT run validate.sh" "! printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
 
 out="$(drive "$R_DOC" "$DOC_LINE" PDDA_EXIT=1)"; rc=$?
 ok "a red documentation gate still refuses the docs-only push" "[ $rc -eq 1 ]"
-ok "  and names the documentation gate failure" "printf '%s' \"\$out\" | grep -q 'documentation gate RED'"
+ok "  and names the documentation gate failure" "printf '%s' \"\$out\" | grep 'documentation gate RED' >/dev/null"
 
 R_CODE="$(mkrepo 0)"
 CODE_BASE="$(git -C "$R_CODE" rev-parse HEAD)"
@@ -114,21 +114,21 @@ git -C "$R_CODE" commit -qm code-only
 CODE_HEAD="$(git -C "$R_CODE" rev-parse HEAD)"
 CODE_LINE="refs/heads/main $CODE_HEAD refs/heads/main $CODE_BASE"
 out="$(drive "$R_CODE" "$CODE_LINE")"; rc=$?
-ok "a code change remains on the full gate" "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep -q 'stub gate ran'"
-ok "  and does NOT take the documentation route" "! printf '%s' \"\$out\" | grep -q 'stub documentation gate ran'"
+ok "a code change remains on the full gate" "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
+ok "  and does NOT take the documentation route" "! printf '%s' \"\$out\" | grep 'stub documentation gate ran' >/dev/null"
 
 # --- (3) bypasses work AND announce themselves -----------------------------------------------------
 # A silent bypass is the failure mode: a skipped gate that says nothing looks exactly like a passing one.
 out="$(drive "$R_RED" "$NORMAL" XYZ_SKIP_PREPUSH=1)"; rc=$?
 ok "XYZ_SKIP_PREPUSH=1 lets a RED tree through (exit 0)" "[ $rc -eq 0 ]"
 ok "  and says loudly that nothing was verified" \
-   "printf '%s' \"\$out\" | grep -q 'nothing was verified'"
+   "printf '%s' \"\$out\" | grep 'nothing was verified' >/dev/null"
 
 # --- (4) a delete-only push is not gated -----------------------------------------------------------
 out="$(drive "$R_RED" "$DELETE")"; rc=$?
 ok "a delete-only push skips the gate even when it is red (exit 0)" "[ $rc -eq 0 ]"
-ok "  and says why" "printf '%s' \"\$out\" | grep -q 'delete-only'"
-ok "  and did NOT run the gate" "! printf '%s' \"\$out\" | grep -q 'stub gate ran'"
+ok "  and says why" "printf '%s' \"\$out\" | grep 'delete-only' >/dev/null"
+ok "  and did NOT run the gate" "! printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
 
 # A mixed push (one delete + one real ref) must still gate — otherwise appending a delete is a bypass.
 MIXED="$(printf 'refs/heads/gone 0000000000000000000000000000000000000000 refs/heads/gone def456\nrefs/heads/main abc123 refs/heads/main def456')"
@@ -141,7 +141,7 @@ cp "$INSTALL" "$R_I/githooks/install.sh"
 out="$( cd "$R_I" && bash githooks/install.sh --check 2>&1 )"; rc=$?
 ok "--check reports NOT INSTALLED on a fresh clone (exit 1)" "[ $rc -eq 1 ]"
 ok "  and warns the clone will push WITHOUT the gate" \
-   "printf '%s' \"\$out\" | grep -q 'WITHOUT running the gate'"
+   "printf '%s' \"\$out\" | grep 'WITHOUT running the gate' >/dev/null"
 out="$( cd "$R_I" && bash githooks/install.sh 2>&1 )"; rc=$?
 ok "install succeeds (exit 0)" "[ $rc -eq 0 ]"
 # GH-549: the entrypoint lives in git METADATA, not the working tree — that is the whole fix. An
@@ -161,7 +161,7 @@ ok "install is idempotent (exit 0 on a second run)" "[ $rc -eq 0 ]"
 git -C "$R_I" config core.hooksPath githooks
 out="$( cd "$R_I" && bash githooks/install.sh 2>&1 )"; rc=$?
 ok "install CLEARS a legacy core.hooksPath=githooks (exit 0)" "[ $rc -eq 0 ]"
-ok "  and says why it cleared it (GH-549)" "printf '%s' \"\$out\" | grep -q 'GH-549'"
+ok "  and says why it cleared it (GH-549)" "printf '%s' \"\$out\" | grep 'GH-549' >/dev/null"
 ok "  leaving core.hooksPath unset" \
    "[ -z \"\$(git -C '$R_I' config --get core.hooksPath || true)\" ]"
 # The stub location must NOT be read through `git rev-parse --git-path hooks`: that call OBEYS
@@ -175,10 +175,10 @@ ok "  and did NOT overwrite the in-tree hook it delegates to" \
 git -C "$R_I" config core.hooksPath .other-hooks
 out="$( cd "$R_I" && bash githooks/install.sh --check 2>&1 )"; rc=$?
 ok "--check FAILS when a foreign core.hooksPath overrides the stub (exit 1)" "[ $rc -eq 1 ]"
-ok "  and says the stub will not run" "printf '%s' \"\$out\" | grep -q 'will NOT run'"
+ok "  and says the stub will not run" "printf '%s' \"\$out\" | grep 'will NOT run' >/dev/null"
 out="$( cd "$R_I" && bash githooks/install.sh 2>&1 )"; rc=$?
 ok "install REFUSES to clobber a different core.hooksPath (exit 4)" "[ $rc -eq 4 ]"
-ok "  and names the path it refused to overwrite" "printf '%s' \"\$out\" | grep -q '.other-hooks'"
+ok "  and names the path it refused to overwrite" "printf '%s' \"\$out\" | grep '.other-hooks' >/dev/null"
 git -C "$R_I" config --unset core.hooksPath
 
 # --uninstall removes only OUR stub. A pre-push hook some other tool installed is not ours to delete.
@@ -187,7 +187,7 @@ cp "$R_I/.git/hooks/pre-push" "$WORK/our-stub"
 cp "$WORK/foreign-hook" "$R_I/.git/hooks/pre-push"
 out="$( cd "$R_I" && bash githooks/install.sh --uninstall 2>&1 )"; rc=$?
 ok "--uninstall leaves a foreign pre-push hook alone" "[ -f '$R_I/.git/hooks/pre-push' ]"
-ok "  and says so" "printf '%s' \"\$out\" | grep -q 'not this installer'"
+ok "  and says so" "printf '%s' \"\$out\" | grep 'not this installer' >/dev/null"
 out="$( cd "$R_I" && bash githooks/install.sh 2>&1 )"; rc=$?
 ok "install REFUSES to overwrite a foreign pre-push hook (exit 4)" "[ $rc -eq 4 ]"
 cp "$WORK/our-stub" "$R_I/.git/hooks/pre-push"; chmod +x "$R_I/.git/hooks/pre-push"
@@ -226,17 +226,17 @@ mkremote "$R_P"
 
 out="$(realpush "$R_P")"
 ok "REAL push on a branch WITH githooks/ is refused by the red gate" \
-   "! printf '%s' \"\$out\" | grep -q 'RC=0'"
+   "! printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
 ok "  and it was the IN-TREE hook that ran (not the fallback)" \
-   "! printf '%s' \"\$out\" | grep -q 'falling back'"
+   "! printf '%s' \"\$out\" | grep 'falling back' >/dev/null"
 
 strip_githooks "$R_P" nohooks
 out="$(realpush "$R_P")"
 ok "THE PIN: REAL push on a branch with NO githooks/ still runs the gate" \
-   "printf '%s' \"\$out\" | grep -q 'stub gate ran'"
-ok "  and is REFUSED, not silently allowed" "! printf '%s' \"\$out\" | grep -q 'RC=0'"
+   "printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
+ok "  and is REFUSED, not silently allowed" "! printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
 ok "  and announces that it fell back rather than looking normal" \
-   "printf '%s' \"\$out\" | grep -q 'falling back'"
+   "printf '%s' \"\$out\" | grep 'falling back' >/dev/null"
 
 # The pre-fix wiring, reproduced exactly: core.hooksPath=githooks on a branch without githooks/.
 # It must SAIL THROUGH — that is the bug, and this control is what proves the fix is load-bearing
@@ -244,17 +244,17 @@ ok "  and announces that it fell back rather than looking normal" \
 git -C "$R_P" config core.hooksPath githooks
 out="$(realpush "$R_P")"
 ok "NEGATIVE CONTROL: the pre-fix core.hooksPath wiring pushes UNGATED and silent" \
-   "printf '%s' \"\$out\" | grep -q 'RC=0' && ! printf '%s' \"\$out\" | grep -q 'stub gate ran'"
+   "printf '%s' \"\$out\" | grep 'RC=0' >/dev/null && ! printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
 git -C "$R_P" config --unset core.hooksPath
 
 # The two short-circuits have to hold on the FALLBACK path too, or an old branch would block
 # `git push --delete` and ignore the automation bypass that every driven lane relies on.
 out="$(realpush "$R_P" XYZ_SKIP_PREPUSH=1)"
-ok "XYZ_SKIP_PREPUSH=1 works on the fallback path too" "printf '%s' \"\$out\" | grep -q 'RC=0'"
+ok "XYZ_SKIP_PREPUSH=1 works on the fallback path too" "printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
 ok "  and still announces that nothing was verified" \
-   "printf '%s' \"\$out\" | grep -q 'nothing was verified'"
+   "printf '%s' \"\$out\" | grep 'nothing was verified' >/dev/null"
 out="$( cd "$R_P" && git push -q origin --delete probe 2>&1; printf '\nRC=%s\n' "$?" )"
-ok "a delete-only push is not gated on the fallback path" "printf '%s' \"\$out\" | grep -q 'RC=0'"
+ok "a delete-only push is not gated on the fallback path" "printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
 
 # One install covers every LINKED WORKTREE of the clone — asserted because the header comment claims
 # it. Git looks for hooks under the common dir, which a worktree shares with its parent, so a
@@ -263,15 +263,15 @@ git -C "$R_P" worktree add -q "$WORK/wt-probe" -b wtprobe >/dev/null 2>&1
 ok "a linked worktree resolves to the SAME hooks dir as its parent clone" \
    "[ \"\$(git -C '$WORK/wt-probe' rev-parse --git-common-dir)/hooks\" -ef '$R_P/.git/hooks' ]"
 out="$( cd "$WORK/wt-probe" && git push -q origin HEAD:refs/heads/wtprobe 2>&1; printf '\nRC=%s\n' "$?" )"
-ok "  and a push FROM that worktree is gated too" "printf '%s' \"\$out\" | grep -q 'stub gate ran'"
+ok "  and a push FROM that worktree is gated too" "printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
 git -C "$R_P" worktree remove --force "$WORK/wt-probe" >/dev/null 2>&1
 
 # Neither gate on the branch at all -> REFUSE. "Cannot run" must never resolve to "push anyway".
 git -C "$R_P" rm -q validate.sh; git -C "$R_P" commit -qm "no gate at all" >/dev/null 2>&1
 out="$(realpush "$R_P")"
-ok "a branch with NEITHER gate refuses the push" "! printf '%s' \"\$out\" | grep -q 'RC=0'"
+ok "a branch with NEITHER gate refuses the push" "! printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
 ok "  and says a gate that cannot run is not one that passed" \
-   "printf '%s' \"\$out\" | grep -q 'not one that passed'"
+   "printf '%s' \"\$out\" | grep 'not one that passed' >/dev/null"
 
 # --- (6) ci.yml no longer fires automatically, and keeps its reasoning ------------------------------
 CI="$REPO/.github/workflows/ci.yml"
@@ -327,36 +327,36 @@ run_block() {  # <ghdir> -> runs just the checks block; prints its output plus a
 # (a) --json unavailable, prose says none  -> the fallback signal carries it
 GH_NONE="$(mkgh 1 'no checks reported on the {branch} branch')"
 out="$(run_block "$GH_NONE")"
-ok "zero configured checks does NOT refuse the merge (prose fallback)" "printf '%s' \"\$out\" | grep -q 'RC=0'"
+ok "zero configured checks does NOT refuse the merge (prose fallback)" "printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
 ok "  and says it is merging WITHOUT CI rather than staying silent" \
-   "printf '%s' \"\$out\" | grep -q 'WITHOUT CI'"
-ok "  and names GH-544 so the reason is findable" "printf '%s' \"\$out\" | grep -q 'GH-544'"
+   "printf '%s' \"\$out\" | grep 'WITHOUT CI' >/dev/null"
+ok "  and names GH-544 so the reason is findable" "printf '%s' \"\$out\" | grep 'GH-544' >/dev/null"
 
 # (b) --json returns an empty list -> structured signal carries it, wording-independent
 GH_JSON_EMPTY="$(mkgh 1 'some other wording entirely' '[]')"
 out="$(run_block "$GH_JSON_EMPTY")"
 ok "an empty --json bucket is accepted as no-checks even if the PROSE changes" \
-   "printf '%s' \"\$out\" | grep -q 'RC=0'"
-ok "  and says which signal it used" "printf '%s' \"\$out\" | grep -q 'json bucket'"
+   "printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
+ok "  and says which signal it used" "printf '%s' \"\$out\" | grep 'json bucket' >/dev/null"
 
 # (c) --json returns a NON-empty list while exiting non-zero -> that is a real failure, refuse
 GH_JSON_FAIL="$(mkgh 1 'tier1  fail' '[{"bucket":"fail"}]')"
 out="$(run_block "$GH_JSON_FAIL")"
 ok "a NON-empty --json bucket with a failure still refuses (exit 4)" \
-   "printf '%s' \"\$out\" | grep -q 'RC=4'"
+   "printf '%s' \"\$out\" | grep 'RC=4' >/dev/null"
 
 GH_FAIL="$(mkgh 1 'tier1  fail  2m  https://example/run/1')"
 out="$(run_block "$GH_FAIL")"
 ok "a genuine check FAILURE still refuses the merge (exit 4)" \
-   "printf '%s' \"\$out\" | grep -q 'RC=4'"
-ok "  and says checks are not green" "printf '%s' \"\$out\" | grep -q 'not green'"
+   "printf '%s' \"\$out\" | grep 'RC=4' >/dev/null"
+ok "  and says checks are not green" "printf '%s' \"\$out\" | grep 'not green' >/dev/null"
 ok "  and echoes gh's own output so the failure is visible" \
-   "printf '%s' \"\$out\" | grep -q 'tier1'"
+   "printf '%s' \"\$out\" | grep 'tier1' >/dev/null"
 
 GH_OK="$(mkgh 0 'all checks passed')"
 out="$(run_block "$GH_OK")"
-ok "passing checks proceed silently (exit 0)" "printf '%s' \"\$out\" | grep -q 'RC=0'"
-ok "  and do NOT claim CI was absent" "! printf '%s' \"\$out\" | grep -q 'WITHOUT CI'"
+ok "passing checks proceed silently (exit 0)" "printf '%s' \"\$out\" | grep 'RC=0' >/dev/null"
+ok "  and do NOT claim CI was absent" "! printf '%s' \"\$out\" | grep 'WITHOUT CI' >/dev/null"
 
 echo "  gh544-pre-push-gate: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

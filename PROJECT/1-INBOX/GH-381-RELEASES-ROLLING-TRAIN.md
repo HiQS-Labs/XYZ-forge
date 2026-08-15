@@ -2,9 +2,9 @@
 gh_issue: 381
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/381
 title: "GH-381 — release-horizon planning: a --horizon batch mode on /release-plan, an Iterations band, and the admission rule that keeps RELEASES.md from becoming a pre-CHANGELOG"
-status: "Proposed (1-INBOX — not yet active). Local half SHIPPED: RELEASES.md now states it is optional and carries the admission rule + band convention; 0.1.0 has a band; pdda.sh verified green with the new field. Upstream half is a handoff to Hypercart-Dev-Tools/pdda."
+status: "Partially superseded 2026-08-14. The local optionality, admission-rule, and band work remains shipped; the former split-skill/--horizon direction was replaced by the operator-selected repo-owned /releases router."
 created: 2026-07-30
-updated: 2026-07-30
+updated: 2026-08-14
 owner: noel
 doc_type: plan
 related: GH-284, GH-334, GH-336
@@ -14,7 +14,6 @@ risk: 3
 phases: 3
 supersedes: "#389 — filed in a parallel session ~25 min after this one, covering the contract layer; closed as duplicate and folded in here. Its capture doc was removed so this is the single canonical doc."
 non_goals:
-  - "A new /Releases skill. Operator chose a --horizon batch mode on /release-plan so everything writing RELEASES.md has exactly ONE enforcement point for the admission rule."
   - "Persisted `Iteration 1:`..`Iteration 5:` labels. Operator chose a reserved, un-enumerated band — see the adjudication below."
   - "A blocking pdda.sh check. Warn at most; same reasoning as GH-347's install-path convention."
   - Backfilling shipped patch releases into RELEASES.md. That is the thing being prevented.
@@ -32,7 +31,7 @@ goal: >
 ## Status
 | What was just completed | What's next |
 |---|---|
-| **Local half shipped.** `RELEASES.md` now opens by stating it is optional and must not be topped up, then states the admission rule and band convention; `0.1.0` carries `Iterations: 0.1.0-0.1.4`. Verified `pdda.sh releases` → **rc=0, 0 errors, 0 warns** with the new field before relying on it. | **Upstream half** — the `PROJECT/PDDA.md` contract and `/release-plan --horizon`, both in `Hypercart-Dev-Tools/pdda`. Prompt ready at [PDDA-MAINTAINER-PROMPT.md](../4-MISC/PDDA-MAINTAINER-PROMPT.md). |
+| **Local optionality, admission-rule, and band work shipped. Skill shape superseded by operator decision 2026-08-14:** one repo-owned `/releases` router now owns reading, cleanup, authoring, and publishing. | Preserve this doc as the historical rationale for optionality and bands; execute current release work through `skills/releases/SKILL.md`. |
 
 ## Adjudication — two proposals merged into one
 
@@ -44,12 +43,16 @@ canonical doc, with one ROADMAP pointer.
 Two conflicts existed. The operator resolved both, and in each case the losing option was the one
 that quietly grows the file:
 
-**1 · `--horizon` on `/release-plan`, not a new `/Releases` skill.**
+**1 · SUPERSEDED 2026-08-14 — `--horizon` on `/release-plan`, not a new `/Releases` skill.**
 Everything that writes `RELEASES.md` then has exactly **one** enforcement point for the admission
 rule. `/release-plan` already does interview → propose canonical version → preview → append; horizon
 planning is the same act at a different granularity. A third sibling beside `/release-plan` and
 `/release` gives one rule two enforcement points, which is how it ends up applied on one path and
 not the other. Everything in #381's proposed behavior survives — it just lands as a mode.
+
+The operator later replaced the two-skill premise itself: `/releases` is the single enforcement
+point and routes internally, so consolidation now preserves the original one-writer invariant while
+removing the multiple-skill overhead this adjudication assumed.
 
 **2 · A reserved band, not five persisted `Iteration N:` labels.**
 This answers the "Open decision" the original doc left open, and it is the more consequential call.

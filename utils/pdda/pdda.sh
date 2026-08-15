@@ -847,7 +847,7 @@ PDDA_GOVERNANCE_INDEX_DEFAULT="ROUTER.md"
 #     suffix widened.
 #   - config.sh, which belongs to git-pulse, a separate program. It is not ours and never will be here.
 PDDA_GOV_SHIPPED_DOCS_DEFAULT="utils/pdda/PDDA-INSTALL.md PROJECT/PDDA.md"
-PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS_DEFAULT="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md .claude/skills/pdda/SKILL.md .claude/skills/governance-audit/SKILL.md .claude/skills/release/SKILL.md PROJECT/3-COMPLETED/PDDA-SYNC-TO-OTHER-REPOS.md utils/PDDA-INSTALL.md install.sh templates/ROUTER.target.md test/pdda-doc-health-hooks.sh pdda-sync.sh utils/pdda/pdda-sync.sh utils/pdda/pdda-manifest.sh utils/pdda.sh utils/pdda-lib.sh utils/pdda-doc-ready.sh utils/pdda-catchup.sh config.sh"
+PDDA_GOV_SHIPPED_DOC_REF_EXEMPTIONS_DEFAULT="ROUTER.md AGENTS.md GUIDING-PRINCIPLES.md README.md CLAUDE.md .claude/skills/pdda/SKILL.md .claude/skills/governance-audit/SKILL.md .claude/skills/releases/SKILL.md PROJECT/3-COMPLETED/PDDA-SYNC-TO-OTHER-REPOS.md utils/PDDA-INSTALL.md install.sh templates/ROUTER.target.md test/pdda-doc-health-hooks.sh pdda-sync.sh utils/pdda/pdda-sync.sh utils/pdda/pdda-manifest.sh utils/pdda.sh utils/pdda-lib.sh utils/pdda-doc-ready.sh utils/pdda-catchup.sh config.sh"
 PDDA_GOV_SHIPPED_DOC_ENVVAR_EXEMPTIONS_DEFAULT="PDDA_REGISTRY PDDA_GITPULSE_DIR PDDA_SYNC_MAX_SHRINK"
 
 # Print "<line>\t<text>" for lines outside an exempt fence/blockquote — same carve-out convention as

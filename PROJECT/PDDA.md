@@ -666,6 +666,8 @@ Target Date: 2026-07-31
 Codename: n/a
 Milestone:
 Description:
+Exit criterion:
+Manifest:
 GH_URL:
 Front-door reviewed:
 Shakedown reviewed:
@@ -719,11 +721,22 @@ Fields:
   same reason as `Status:`: checking a title against GitHub would need a `gh` call, and this check is
   deliberately network-free. **Not warned on when absent** — a release with no milestone is a normal
   state, and a nudge here would recreate exactly the fill-it-in pressure this section exists to stop.
-- `Description:` (optional) — one line for now; grows into something richer only if needed
+- `Description:` (optional) — a concise one-to-four-sentence statement of the release theme. It is
+  not a run log, implementation plan, or second changelog; historical outcomes stay in
+  `CHANGELOG.md` and execution detail stays in the canonical `PROJECT/**` document. `/releases`
+  warns when this field exceeds four sentences or becomes multi-paragraph history.
+- `Exit criterion:` (optional) — one runnable command or observable condition that proves the arc
+  reached its goal. Keep the implementation and phased QA plan in `PROJECT/**`; this field is the
+  release-level goalpost only.
+- `Manifest:` (optional) — a concise, fixed release boundary, normally a dated `FROZEN` list of
+  issue IDs. Prefer `Milestone:` when the intent is a live issue-set query. `/releases` triggers an
+  ambition review above seven named issues and when the list mixes themes, grows without a dated
+  re-scope, or lacks an exit criterion; the count is advisory, never an automatic rejection.
 - `GH_URL:` (optional) — populated once *a* GitHub Release object exists, including a draft (see
-  `/release` skill). **This means "a Release object exists," not "shipped"** — a draft's `GH_URL`
-  is real but the release isn't out. Flip `Status: Shipped` yourself (or let `/release` do it on an
-  actual, non-draft publish) when it's really out; `GH_URL` alone no longer implies that.
+  `/releases publish`). **This means "a Release object exists," not "shipped"** — a draft's
+  `GH_URL` is real but the release isn't out. Flip `Status: Shipped` yourself (or let
+  `/releases publish` do it on an actual, non-draft publish) when it's really out; `GH_URL` alone
+  no longer implies that.
 - `Front-door reviewed:` / `Shakedown reviewed:` / `License file:` (optional) — pre-release QA-gate
   checkboxes: has the `/front-door` onboarding audit run, has the `/shakedown` script-path audit
   run, is a `LICENSE` file present. `Yes` or `No`; `pdda.sh releases` warns on any other non-blank
@@ -741,12 +754,18 @@ unlike `Status`, has an unambiguous right answer — so they're validated `Yes`/
 it doesn't know, absence means "not reserved" / "no milestone", and neither produces a finding in a
 ledger that has never used them. A repo can adopt them, or never hear of them, with no migration.
 
-Two skills operate on this file: `/release-plan` **authors** entries (interviews the operator,
-proposes a canonical version by cross-referencing `CHANGELOG.md`, previews, appends on confirmation)
-and `/release` **publishes** an existing entry to GitHub once its `Status` is ready to ship. Both are
-operator-triggered by design and neither should be offered unprompted — a skill that exists to keep a
-file populated is the most efficient possible way to violate the optionality rule at the top of this
-section.
+One repo-owned skill operates on this file: `/releases`. It is a read-first router that synthesizes
+the ledger, checks evidence-backed contradictions against `CHANGELOG.md`, reachable commits, merged
+PRs, and GitHub Releases when available, then enters cleanup, author/update, historical-anchor, or
+publish subroutines only on an explicit operator request. Every mutation and public release is
+previewed and confirmation-gated. Its strategic-drift handoff is `/radar`; its frozen path-to-ship
+handoff is `/finish-line`. It recommends either only when that distinct goal matches and never
+duplicates or auto-invokes their workflows.
+
+Invocation is operator-triggered by design. The initial synthesis may report contradictions in an
+existing ledger, but it must never treat an absent, sparse, or merely old file as unfinished work or
+offer to top it up. A skill that exists to keep this file populated is the most efficient possible
+way to violate the optionality rule at the top of this section.
 
 #### `pdda.sh releases-current`
 
