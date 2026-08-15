@@ -21,6 +21,7 @@ const EVENT_TYPES = new Set([
   // coordination metrics — they describe what a turn COST, not how it coordinated.
   'cost.tokens',
   'cost.human',
+  'cost.memory',
   // Marathon phase-chain signals (Phase 3, marathon-drive.sh). Emitted at phase boundaries by
   // marathon-drive, not by individual turn-takers. Not coordination signals — ignored by tick analyze.
   'marathon.phase.start',
@@ -111,6 +112,7 @@ function safeSegment(s) {
 function appendEvent(repoRoot, {
   type, task, agent, note, paths, to_agent, reason, priority, epoch,
   tokens_in, tokens_out, tokens_total, human_minutes, tool,
+  compressor_mb, swap_free_mb, peak_rss_mb,
   surface, prior_sha, current_sha, diff_lines, turn,
 }) {
   if (!EVENT_TYPES.has(type)) {
@@ -147,6 +149,9 @@ function appendEvent(repoRoot, {
   if (tokens_total !== undefined) event.tokens_total = tokens_total;
   if (human_minutes !== undefined) event.human_minutes = human_minutes;
   if (tool !== undefined) event.tool = tool;
+  if (compressor_mb !== undefined) event.compressor_mb = compressor_mb;
+  if (swap_free_mb !== undefined) event.swap_free_mb = swap_free_mb;
+  if (peak_rss_mb !== undefined) event.peak_rss_mb = peak_rss_mb;
   // Dependency-drift fields (GH-68) — only stamped for dependency.drift events, so every other
   // event type stays byte-identical to before.
   if (surface !== undefined) event.surface = surface;

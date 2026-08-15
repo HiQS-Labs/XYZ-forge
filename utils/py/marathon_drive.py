@@ -230,7 +230,11 @@ def run_tick_loud(cmd_args):
     Lifted from a closure inside main() to module level so a test can call it directly — the previous
     nesting meant the only way to observe this behaviour was to drive a whole marathon phase.
     """
-    res = subprocess.run(cmd_args, capture_output=True, text=True)
+    tr_root = os.environ.get("TICK_REPO_ROOT") or os.environ.get("MARATHON_ROOT")
+    env = os.environ.copy()
+    if tr_root:
+        env["TICK_REPO_ROOT"] = tr_root
+    res = subprocess.run(cmd_args, capture_output=True, text=True, env=env, cwd=tr_root if (tr_root and os.path.isdir(tr_root)) else None)
     if res.returncode != 0:
         label = " ".join(str(a) for a in cmd_args[1:3]) or "tick"
         eprint(f"marathon-drive: tick {label} failed (exit {res.returncode}):")
@@ -470,6 +474,68 @@ def gate_guard_cpu_attribution(returncode, cpu_s):
                 f"gate-guard: gate ignored SIGXCPU and hit the "
                 f"{cpu_s + GATE_CPU_HARD_MARGIN_S}s hard CPU cap (SIGKILL)")
     return returncode, None
+
+
+def _phase_memory_sample(tag="", root=None, tick_bin=None, relay_task=None):
+    """Sample host memory (compressor and free swap) at phase boundary (GH-382)."""
+    compressor_mb = None
+    swap_free_mb = None
+    if sys.platform == "darwin":
+        try:
+            out = subprocess.run(["sysctl", "-n", "vm.swapusage"], capture_output=True, text=True, timeout=5).stdout
+            # format: total = 3072.00M  used = 1024.00M  free = 2048.00M  (encrypted)
+            import re
+            m = re.search(r"free\s*=\s*([0-9.]+)([MGK]?)", out)
+            if m:
+                val = float(m.group(1))
+                unit = m.group(2)
+                if unit == "G": val *= 1024
+                elif unit == "K": val /= 1024
+                swap_free_mb = int(val)
+        except Exception:
+            pass
+        try:
+            out = subprocess.run(["vm_stat"], capture_output=True, text=True, timeout=5).stdout
+            import re
+            m = re.search(r"Pages occupied by compressor:\s*([0-9]+)", out)
+            if m:
+                pages = int(m.group(1))
+                compressor_mb = (pages * 4096) // (1024 * 1024)
+        except Exception:
+            pass
+    elif os.path.exists("/proc/meminfo"):
+        try:
+            with open("/proc/meminfo", "r") as f:
+                for line in f:
+                    if line.startswith("SwapFree:"):
+                        swap_free_mb = int(line.split()[1]) // 1024
+                    elif line.startswith("Zswap:") or line.startswith("Zswapped:"):
+                        compressor_mb = int(line.split()[1]) // 1024
+        except Exception:
+            pass
+
+    bits = []
+    if compressor_mb is not None:
+        bits.append(f"compressor={compressor_mb}MB")
+    if swap_free_mb is not None:
+        bits.append(f"swap_free={swap_free_mb}MB")
+        if swap_free_mb < 1024:
+            log(f"warn: host free swap is critically low ({swap_free_mb}MB < 1024MB)")
+    if bits:
+        log(f"memory-telemetry: phase {tag} boundary — {', '.join(bits)}")
+
+    if tick_bin and relay_task and os.path.isfile(tick_bin) and os.access(tick_bin, os.X_OK):
+        extra = []
+        if compressor_mb is not None:
+            extra.extend(["--compressor-mb", str(compressor_mb)])
+        if swap_free_mb is not None:
+            extra.extend(["--swap-free-mb", str(swap_free_mb)])
+        if extra:
+            try:
+                subprocess.run([tick_bin, "cost", relay_task, "--agent", "marathon"] + extra, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+    return {"compressor_mb": compressor_mb, "swap_free_mb": swap_free_mb}
 
 
 def main():
@@ -1371,6 +1437,8 @@ def main():
         # Sentinel Tier 1 (GH-281/GH-342): harvest this failed phase's Side Findings BEFORE the
         # escalation record is written, matching marathon-drive.sh:848-853 — a phase that escalated
         # is exactly the one whose findings are about to be lost.
+        xyz_harvest_findings(harvest_findings_bin, relay_file, root, args.target_root,
+                             xyz_debug_log_file(root))
         builder_diag = ""
         try:
             ts_base = subprocess.check_output(f"source \"{os.path.join(xyz_harness, 'relay-automation', 'relay-turn-lib.sh')}\" && rtl_transcript_root \"{root}\"", shell=True, executable="/bin/bash").decode('utf-8').strip()
@@ -1425,6 +1493,7 @@ relay-file: {rel_relay}
         except Exception as exc:  # noqa: BLE001 — archive failure must never mask the escalation
             log(f"warn: could not archive relay transcript for escalated phase {args.phase_id}: {exc}")
         subprocess.run([tick_bin, "log", "marathon.phase.escalated", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        _phase_memory_sample(f"{args.phase_id}-escalated", root=root, tick_bin=tick_bin, relay_task=relay_task)
         phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(f"escalation written: {esc_file} (reason: {reason})")
         # marathon-drive.sh:867-868 — last thing escalate() does, carrying the relay-drive exit code.
@@ -1819,6 +1888,7 @@ relay-file: {rel_relay}
         subprocess.run([tick_bin, "log", "marathon.phase.approved", relay_task, "--agent", "marathon"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         lane_attempt_reset(get_env("TICK_REPO_ROOT", root), lane_state_key)
         save_transcript()
+        _phase_memory_sample(f"{args.phase_id}-complete", root=root, tick_bin=tick_bin, relay_task=relay_task)
         phase_outcome_recorded[0] = True   # GH-388: a decided outcome with a durable record
         log(success_text)
         xyz_marathon_emit("green", success_text)
@@ -2264,6 +2334,7 @@ You are the REVIEWER for this phase. {reviewer_read_line}
     log(f"tick token seeded: {relay_task} → {args.builder}")
 
     _run_tick_loud([tick_bin, "log", "marathon.phase.start", relay_task, "--agent", "marathon"])
+    _phase_memory_sample(f"{args.phase_id}-start", root=root, tick_bin=tick_bin, relay_task=relay_task)
     log(f"phase start: running relay-drive --round-cap {args.round_cap}")
     # Past this point a phase is really being driven — arm the run log and start the driver
     # heartbeat. Same placement as MARATHON_DRIVE_STARTED=1 + marathon_driver_heartbeat_start in the
@@ -2286,7 +2357,8 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         env2["LANE_ATTEMPT_COUNTED"] = "1"
         env2["XYZ_HARNESS_CONTEXT"] = "marathon-phase"
         env2["RELAY_COST_SUMMARY"] = "0"
-        return subprocess.run(cmd2, env=env2).returncode
+        env2["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root)
+        return subprocess.run(cmd2, env=env2, cwd=root).returncode
 
     # GH-75: write liveness before the drive; clear it on ANY terminal path via atexit (registered only
     # here, so early exits before a live phase never register a spurious clear).

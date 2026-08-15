@@ -354,7 +354,22 @@ function main(argv) {
         return 0;
       }
 
-      // (b) tokens from a gemini -o json transcript — parse verbatim (Q1: CLI report is source of truth).
+      // (b) memory telemetry — compressor, swap free, and agent peak RSS (GH-382).
+      if (flags['compressor-mb'] !== undefined || flags['swap-free-mb'] !== undefined || flags['peak-rss-mb'] !== undefined) {
+        const cMb = flags['compressor-mb'] !== undefined ? num(flags['compressor-mb']) : undefined;
+        const sMb = flags['swap-free-mb'] !== undefined ? num(flags['swap-free-mb']) : undefined;
+        const rMb = flags['peak-rss-mb'] !== undefined ? num(flags['peak-rss-mb']) : undefined;
+        appendEvent(root, {
+          type: 'cost.memory', task, agent: flags.agent,
+          compressor_mb: cMb,
+          swap_free_mb: sMb,
+          peak_rss_mb: rMb,
+        });
+        process.stdout.write(`cost.memory: ${task} compressor=${cMb !== undefined ? cMb : 'n/a'} swap_free=${sMb !== undefined ? sMb : 'n/a'} peak_rss=${rMb !== undefined ? rMb : 'n/a'} by ${flags.agent}\n`);
+        return 0;
+      }
+
+      // (c) tokens from a gemini -o json transcript — parse verbatim (Q1: CLI report is source of truth).
       let tokensIn, tokensOut, tokensTotal;
       if (typeof flags['from-gemini-json'] === 'string') {
         const jf = path.resolve(root, flags['from-gemini-json']);
@@ -368,7 +383,7 @@ function main(argv) {
         tokensTotal = num(flags['tokens-total']);
       }
       if (!Number.isFinite(tokensIn) || !Number.isFinite(tokensOut)) {
-        process.stderr.write('tick cost: need --tokens-in and --tokens-out (or --from-gemini-json, or --human-minutes)\n');
+        process.stderr.write('tick cost: need --tokens-in and --tokens-out (or --from-gemini-json, or --human-minutes, or --compressor-mb/--swap-free-mb/--peak-rss-mb)\n');
         return 2;
       }
       if (!Number.isFinite(tokensTotal)) tokensTotal = tokensIn + tokensOut;

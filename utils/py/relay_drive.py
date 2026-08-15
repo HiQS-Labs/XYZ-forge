@@ -289,7 +289,9 @@ def main():
 
     def token_state():
         try:
-            out = subprocess.check_output([tick_bin, "info", args.relay_task], stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
+            env = os.environ.copy()
+            env["TICK_REPO_ROOT"] = get_env("TICK_REPO_ROOT", root_dir)
+            out = subprocess.check_output([tick_bin, "info", args.relay_task], env=env, stderr=subprocess.DEVNULL).decode('utf-8').splitlines()
         except:
             out = []
         status, claimer, handoff = "", "", ""
@@ -488,14 +490,37 @@ def main():
         os.environ["RELAY_TASK"] = args.relay_task
         os.environ["RELAY_AGENT"] = actor
         
-        # Execute agent-cmd
+        # Execute agent-cmd with RSS measurement (GH-382)
+        peak_turn_rss_mb = 0
         if os.access(args.agent_cmd, os.X_OK):
-            res = subprocess.run([args.agent_cmd])
+            proc = subprocess.Popen([args.agent_cmd], start_new_session=True)
         else:
-            res = subprocess.run(args.agent_cmd, shell=True)
-            
-        if res.returncode != 0:
-            sys.exit(res.returncode)
+            proc = subprocess.Popen(args.agent_cmd, shell=True, executable="/bin/bash", start_new_session=True)
+        while proc.poll() is None:
+            try:
+                out = subprocess.run(["ps", "-axo", "pgid=,rss="], capture_output=True, text=True, timeout=5).stdout
+                total_kb = 0
+                for line in out.splitlines():
+                    parts = line.split()
+                    if len(parts) == 2 and int(parts[0]) == proc.pid:
+                        total_kb += int(parts[1])
+                rss_mb = total_kb // 1024
+                if rss_mb > peak_turn_rss_mb:
+                    peak_turn_rss_mb = rss_mb
+            except Exception:
+                pass
+            time.sleep(0.1)
+
+        res_code = proc.returncode
+        if peak_turn_rss_mb > 0 and tick_bin:
+            try:
+                env = os.environ.copy()
+                env["TICK_REPO_ROOT"] = tick_repo_root
+                subprocess.run([tick_bin, "cost", args.relay_task, "--agent", actor, "--peak-rss-mb", str(peak_turn_rss_mb)], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                pass
+        if res_code != 0:
+            sys.exit(res_code)
             
         round_idx += 1
         

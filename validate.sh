@@ -129,6 +129,7 @@ TESTS=(
   "gh378-gate-requires-green-suite.sh" # GH-378 (pre-advance gate baseline allowance for non-green suites)
   "gh379-claude-builder-diagnosis.sh" # GH-379 (Claude builder failure diagnostics surface in ESCALATION.md)
   "gh380-claude-trust.sh"        # GH-380 (Claude builder warns when target workspace lacks Claude Code trust)
+  "gh382-marathon-memory-telemetry.sh" # GH-382 (marathon memory telemetry sampled at phase boundaries and end-of-run)
   "gh491-gate-only-refire.sh"    # GH-491 (gate-only re-fire discoverability under --retry)
   "gh551-resolver-refuses.sh"    # GH-551 (resolver refusal contract: raises instead of defaulting)
   "meter-release.sh"             # Meter 0.6.0 frozen-manifest goalpost. Suite mode fails ONLY on a false completion claim (a CLOSED manifest issue whose gate is missing/unregistered/uncontrolled) or a disagreement with RELEASES.md; remaining work is INFO. The goalpost itself is `--release-gate` (red until done, and it EXECUTES member cases). Control: `--mutate-evidence` — NOT run by this suite; run it by hand when touching audit_manifest

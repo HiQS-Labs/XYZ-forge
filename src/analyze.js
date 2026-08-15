@@ -339,6 +339,22 @@ function computeCost(allEvents, windows, doneTaskIds, runWindowMs, runType) {
 
   const humanMinutesTotal = humanEvents.reduce((s, e) => s + (Number(e.human_minutes) || 0), 0);
 
+  const memoryEvents = allEvents.filter(e => e.type === 'cost.memory');
+  let peakCompressorMb = null;
+  let minSwapFreeMb = null;
+  const memoryByAgent = {};
+  for (const e of memoryEvents) {
+    if (Number.isFinite(Number(e.compressor_mb))) {
+      peakCompressorMb = Math.max(peakCompressorMb || 0, Number(e.compressor_mb));
+    }
+    if (Number.isFinite(Number(e.swap_free_mb))) {
+      minSwapFreeMb = minSwapFreeMb === null ? Number(e.swap_free_mb) : Math.min(minSwapFreeMb, Number(e.swap_free_mb));
+    }
+    if (e.agent && Number.isFinite(Number(e.peak_rss_mb))) {
+      memoryByAgent[e.agent] = Math.max(memoryByAgent[e.agent] || 0, Number(e.peak_rss_mb));
+    }
+  }
+
   // Per-task + per-agent wall-clock from CLOSED claim windows (still-open windows have no duration).
   const walltimeByTask = {};
   const walltimeByAgent = {};
@@ -376,6 +392,11 @@ function computeCost(allEvents, windows, doneTaskIds, runWindowMs, runType) {
       by_agent: walltimeByAgent,
     },
     human_minutes_total: humanMinutesTotal,
+    memory: {
+      compressor_peak_mb: peakCompressorMb,
+      swap_free_min_mb: minSwapFreeMb,
+      by_agent: memoryByAgent,
+    },
     per_unit: {
       // Floor when partial — flagged via tokens.partial so renderers prefix a "≥".
       tokens_per_done: perDone ? Math.round(totT / doneCount) : null,
@@ -562,6 +583,16 @@ function renderHuman(report) {
     } else {
       out.push('per done-task: n/a (0 tasks done)');
     }
+    if (c.memory && (c.memory.compressor_peak_mb !== null || c.memory.swap_free_min_mb !== null || Object.keys(c.memory.by_agent).length > 0)) {
+      const memBits = [];
+      if (c.memory.compressor_peak_mb !== null) memBits.push(`compressor peak: ${c.memory.compressor_peak_mb}MB`);
+      if (c.memory.swap_free_min_mb !== null) memBits.push(`swap free min: ${c.memory.swap_free_min_mb}MB`);
+      if (memBits.length) out.push(`memory: ${memBits.join(', ')}`);
+      if (Object.keys(c.memory.by_agent).length > 0) {
+        const agentRss = Object.entries(c.memory.by_agent).map(([a, rss]) => `${a}: ${rss}MB peak RSS`).join(', ');
+        out.push(`  turn peak RSS: ${agentRss}`);
+      }
+    }
     out.push('');
   }
   return out.join('\n');
@@ -624,6 +655,16 @@ function renderMd(report) {
       out.push(`- **Cost per done-task:** ${ge}${c.per_unit.tokens_per_done} tokens, ${humanDuration(c.per_unit.walltime_per_done_ms)} wall-clock`);
     } else {
       out.push('- **Cost per done-task:** n/a (0 tasks done)');
+    }
+    if (c.memory && (c.memory.compressor_peak_mb !== null || c.memory.swap_free_min_mb !== null || Object.keys(c.memory.by_agent).length > 0)) {
+      const memBits = [];
+      if (c.memory.compressor_peak_mb !== null) memBits.push(`compressor peak: ${c.memory.compressor_peak_mb}MB`);
+      if (c.memory.swap_free_min_mb !== null) memBits.push(`swap free min: ${c.memory.swap_free_min_mb}MB`);
+      if (memBits.length) out.push(`- **Memory:** ${memBits.join(', ')}`);
+      if (Object.keys(c.memory.by_agent).length > 0) {
+        const agentRss = Object.entries(c.memory.by_agent).map(([a, rss]) => `${a}: ${rss}MB peak RSS`).join(', ');
+        out.push(`- **Turn peak RSS:** ${agentRss}`);
+      }
     }
     out.push('');
   }
