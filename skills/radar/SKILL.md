@@ -168,6 +168,43 @@ target score ≈ (distinct issues in cluster)
 For each target report: the cluster (issue numbers + docs), the shared seam or class, the span in
 days, why it recurs, and what a single durable fix would retire.
 
+## Step 2b — Open-PR collision check
+
+Run this pass after finding targets and before recommending a new plan. Landed commits tell Radar
+what happened; open pull requests tell it what is already in flight. This is the duplicate-work
+check: a proposed target may be urgent without being available to schedule again.
+
+First enumerate the current landscape:
+
+    gh pr list --state open --limit 100 --json number,title,url,headRefName,baseRefName,isDraft,updatedAt,mergeable,mergeStateStatus,body,labels
+
+For each PR that names a target issue or its documented seam, inspect the changed-file list and
+current status before calling it an overlap:
+
+    gh pr view <number> --json number,title,url,isDraft,headRefName,baseRefName,updatedAt,mergeable,mergeStateStatus,body,files,statusCheckRollup
+
+Match in this order: an exact target issue number in the PR title/body; then a changed file that is
+the target's named seam; then a class target whose documented issue numbers and changed files both
+support the same class. Do not call a vague keyword or a similarly named file a match. Record the
+PR number, URL, base branch, age, draft/mergeability/check status, matching evidence, and the
+target it overlaps.
+
+**An open PR is never a completed fix.** Do not reduce a target's score, strike it through, close
+its checklist, or call its release plan aligned just because a PR exists. Classify an evidence-backed
+overlap as one of these states and act accordingly:
+
+| PR state | What it means | Required recommendation |
+|---|---|---|
+| Ready and verified | The work may retire the target soon, but has not landed. | **Do not schedule a duplicate.** Inspect/merge the PR, then rerun Radar against the merge commit before retiring the target. |
+| Draft, failing, conflicted, or stale | The work is a collision risk, not reliable progress. | **Do not assume this is covered.** Ask the PR owner to update, split, or close it; keep the target open and plan a replacement only after that decision. |
+| PR targets the wrong base branch | It may be valid work, but is not on the path Radar is evaluating. | **Rebase or retarget it before counting it as in flight.** Until then, do not let it block the target's plan. |
+| No confident overlap | No current work claims the target. | **Schedule or assign the target** if the other lenses say it matters. |
+
+Report only PRs that change the operator's next step. In the in-session reply, translate the
+result as "Already being worked on," "Blocked or stale work," or "No work underway" — not a raw
+PR inventory. A plan recommendation must name any matching PR and say whether the operator should
+merge it, unblock it, close it, or deliberately schedule a non-duplicate follow-up.
+
 ## Step 3 — Lens 3: release recalibration
 
 Skip silently if `RELEASES.md` is absent, has no unshipped blocks, or **contains only the
@@ -228,7 +265,7 @@ each finding, use this shape:
     Why it matters: <the real-world effect on customers, delivery speed, reliability, cost, or risk>
     Recommended next step: <specific imperative action and completion condition>
 
-Write the flow mix, recurring targets, plan comparison, and any degraded or uncertain signal in
+Write the flow mix, recurring targets, open-PR landscape, plan comparison, and any degraded or uncertain signal in
 this form. Replace jargon with its consequence: say "most effort went to maintenance" rather than
 "Run was 71%"; say "this bug has returned in three separate reports" rather than a target slug;
 and say "the release plan does not yet cover this work" rather than "the target is unclaimed." Put
@@ -321,7 +358,7 @@ Then offer — do not assume — to hand the targets to `marathon-triage`.
 
 | Missing | Lost | Still runs |
 |---|---|---|
-| `gh` / auth | Lens 2 signals 3-5, Lens 3 joins, Sink B | Lenses 1-2 (signals 1-2), Sink A; state that the checklist has no live home this run |
+| `gh` / auth | Lens 2 signals 3-5, open-PR collision check, Lens 3 joins, Sink B | Lenses 1-2 (signals 1-2), Sink A; state that no in-flight-work check or live checklist was available this run |
 | `PROJECT/**` | Lens 2 signal 1, `rgt:` overrides, Sink A's normal location | Lenses 1-3 from git + `gh`; offer repo-root fallback for Sink A |
 | Conventional commits | Lens 1 inference | Report the Unclassified share as the finding it is |
 | `RELEASES.md`, or seed-only | Lens 3 | Everything else; PLAN reads "no release plan" — a valid state, not a gap |

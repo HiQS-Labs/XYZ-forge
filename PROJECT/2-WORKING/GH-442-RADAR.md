@@ -57,7 +57,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| **Radar's chat-facing synthesis contract now leads with the project's direction in plain English, then explains only action-bearing evidence in real-world terms.** A read-only 21-day forward test passed: it produced a direct directional call and a concrete next step for every finding, without a raw-data inventory. | Use the contract on the next persisted `/radar` run, while the two existing v1 gaps remain: (a) **strike-through on a retired target has still never run** — nothing has been fixed between any two runs; (b) the systematic doc-only-close sweep still rests on one instance. |
+| **Radar now checks open PRs before it recommends new work.** An evidence-backed PR overlap is labelled in-flight, blocked/stale, or absent — never falsely treated as a completed fix — so the report can prevent duplicate plans. | Forward-test the open-PR collision check on the next persisted `/radar` run, while the two existing v1 gaps remain: (a) **strike-through on a retired target has still never run** — nothing has been fixed between any two runs; (b) the systematic doc-only-close sweep still rests on one instance. |
 
 ## Why now
 
@@ -365,6 +365,12 @@ directional verdict and its recommended next step, followed by only findings tha
 real-world implication and a concrete action. Technical evidence remains available in the immutable
 report; it is not an excuse to make the operator interpret raw data. A read-only 21-day
 forward-test passed on 2026-08-14; the next persisted run must apply the contract in production.
+
+**Open-PR collision check (added 2026-08-14):** before Radar recommends a plan, it now compares its
+targets with open PRs by target issue, documented seam, and changed-file evidence. A matching PR is
+in-flight work, not a solved target: a ready PR should be merged and rechecked; a draft, stale, or
+failing one requires an owner decision; a PR on the wrong base does not block the plan. The next
+persisted run must forward-test all four outcomes, especially a non-overlap that remains schedulable.
 
 #### Second calibration run — `giant-brains-claude-skills`, 2026-08-07
 
