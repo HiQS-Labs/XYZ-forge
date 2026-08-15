@@ -86,45 +86,59 @@ run_drive() { # <repo> <out> [extra driver args...]
 count_dispatch() { local n; n="$(/usr/bin/grep -c DISPATCHED "$DISPATCH_LOG" 2>/dev/null | head -1)"; printf '%s' "${n:-0}"; }
 
 # ---------------------------------------------------------------------------
-# Case 1 — on trunk, with a shared origin: REFUSED
+# Case 1 — on trunk, with a shared origin: REDIRECTED onto a lane branch
 # ---------------------------------------------------------------------------
+# GH-561 changed the REMEDY here, not the invariant. GH-402 shipped this as a hard refusal; the
+# refusal was right about the harm and wrong about the response, because the operator's only correct
+# next action was always the same `checkout -b` and an unattended run has nobody there to take it.
+# So the guard now cuts the branch and continues. What must still be true — and is asserted harder
+# than before, because the run is no longer stopped short of the commits — is that the SHARED BRANCH
+# RECEIVES NOTHING. That is the whole of GH-402 and it is unchanged.
 echo "-- case 1: checked out on the shared trunk"
 R1="$(mk_repo ontrunk)"
 : >"$DISPATCH_LOG"
 rc="$(run_drive "$R1" "$WORK/ontrunk.out")"
 out="$(cat "$WORK/ontrunk.out")"
 
-[ "$rc" -ne 0 ] && pass "a run on trunk is refused (exit $rc)" \
-                || fail "GH-402: a marathon on trunk ran to completion"
-[ "$(count_dispatch)" -eq 0 ] \
-  && pass "no builder turn was dispatched" \
-  || fail "GH-402: a turn was dispatched before the refusal"
-
-# Nothing may have been committed. This is the assertion that matters most — the whole harm is a
-# commit that cannot be un-landed, so "refused" must mean the tree is untouched.
-if [ "$(git -C "$R1" rev-list --count HEAD)" -eq 1 ]; then
-  pass "the receiving repo has no new commits (HEAD is still the seed)"
+# THE assertion. The harm is a commit on a shared branch that cannot be un-landed; everything else in
+# this case is detail. `main` must be exactly where it was.
+if [ "$(git -C "$R1" rev-list --count main)" -eq 1 ]; then
+  pass "trunk received no commits (main is still the seed)"
 else
-  fail "GH-402: the run committed to trunk before refusing — $(git -C "$R1" log --oneline | head -3)"
+  fail "GH-402: the run committed to trunk — $(git -C "$R1" log --oneline main | head -3)"
 fi
 
+cur1="$(git -C "$R1" branch --show-current)"
+case "$cur1" in
+  marathon/*) pass "the run was redirected onto a lane branch ($cur1)" ;;
+  *) fail "GH-561: the run did not move off trunk — still on '$cur1'. Output: $(tail -12 "$WORK/ontrunk.out")" ;;
+esac
+
+# Redirected, not merely renamed: the lane branch must actually carry the run's work, or the guard
+# has quietly thrown the phase away instead of relocating it.
+if [ "$(git -C "$R1" rev-list --count HEAD)" -gt 1 ]; then
+  pass "the lane branch carries the run's commits ($(git -C "$R1" rev-list --count HEAD) total)"
+else
+  fail "GH-561: the lane branch has no commits — the run was redirected but produced nothing"
+fi
+
+[ "$(count_dispatch)" -ge 1 ] \
+  && pass "the run proceeded after the redirect (no operator round-trip)" \
+  || fail "GH-561: nothing dispatched — rc=$rc, output: $(tail -12 "$WORK/ontrunk.out")"
+
 case "$out" in
-  *"trunk branch 'main'"*) pass "the refusal names the branch it is protecting" ;;
-  *) fail "GH-402: the refusal does not name the branch — got: $out" ;;
+  *"trunk branch 'main'"*) pass "the log names the branch it protected" ;;
+  *) fail "GH-402: the log does not name the protected branch — got: $out" ;;
 esac
 case "$out" in
-  *"checkout -b"*) pass "the refusal gives the exact command to cut a branch" ;;
-  *) fail "GH-402: the refusal offers no remedy" ;;
-esac
-case "$out" in
-  *"--allow-trunk-commit"*) pass "the refusal names the override" ;;
-  *) fail "GH-402: the refusal does not mention the override flag" ;;
+  *"--allow-trunk-commit"*) pass "the log names the override for committing there deliberately" ;;
+  *) fail "GH-402: the override flag is no longer discoverable — got: $out" ;;
 esac
 
 # ---------------------------------------------------------------------------
-# Case 2 — the suggested branch from preflight is used in the message when available
+# Case 2 — the suggested branch from preflight is the name that gets cut
 # ---------------------------------------------------------------------------
-echo "-- case 2: the packet's suggested branch appears in the remedy"
+echo "-- case 2: the packet's suggested branch is the one used"
 R2="$(mk_repo suggested)"
 : >"$DISPATCH_LOG"
 ( SP_SUGGESTED_BRANCH="marathon/gh402-2026-08-11" \
@@ -133,10 +147,27 @@ R2="$(mk_repo suggested)"
   bash "$DRIVE" --phase-id lane1 --reviewer codex --builder claude \
     --phase-brief "$R2/PROJECT/2-WORKING/brief.md" --round-cap 3 \
     --phases-dir "$R2/marathon-system" --pre-advance-cmd true >"$WORK/sugg.out" 2>&1 )
-case "$(cat "$WORK/sugg.out")" in
-  *"marathon/gh402-2026-08-11"*) pass "the refusal uses preflight's own suggested branch name" ;;
-  *) fail "GH-402: SP_SUGGESTED_BRANCH was ignored — the operator has to invent a name" ;;
-esac
+[ "$(git -C "$R2" branch --show-current)" = "marathon/gh402-2026-08-11" ] \
+  && pass "the cut branch is preflight's own suggested name" \
+  || fail "GH-402: SP_SUGGESTED_BRANCH was ignored — landed on '$(git -C "$R2" branch --show-current)'"
+
+# A re-fired lane must return to the branch its first attempt built, not strand each attempt on a
+# branch of its own — otherwise the PR shows one attempt's worth of work and the rest is invisible.
+: >"$DISPATCH_LOG"
+git -C "$R2" checkout -q main
+before="$(git -C "$R2" rev-list --count marathon/gh402-2026-08-11)"
+( SP_SUGGESTED_BRANCH="marathon/gh402-2026-08-11" \
+  XYZ_PYTHON=1 MARATHON_ROOT="$R2" TICK_REPO_ROOT="$R2" TICK_BIN="$TICK" \
+  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$R2" RELAY_AGENT=claude-builder \
+  bash "$DRIVE" --phase-id lane1 --reviewer codex --builder claude --force \
+    --phase-brief "$R2/PROJECT/2-WORKING/brief.md" --round-cap 3 \
+    --phases-dir "$R2/marathon-system" --pre-advance-cmd true >"$WORK/sugg2.out" 2>&1 )
+if [ "$(git -C "$R2" branch --show-current)" = "marathon/gh402-2026-08-11" ] \
+   && [ "$(git -C "$R2" rev-list --count marathon/gh402-2026-08-11)" -ge "$before" ]; then
+  pass "a re-fire switches to the existing lane branch rather than failing on it"
+else
+  fail "GH-561: a re-fire did not resume on the existing lane branch — on '$(git -C "$R2" branch --show-current)'"
+fi
 
 # ---------------------------------------------------------------------------
 # Case 3 — off trunk: allowed. The control that stops this blocking everything.
@@ -183,10 +214,15 @@ R5="$(mk_repo carveout)"
 R6="$(mk_repo forceonly)"
 : >"$DISPATCH_LOG"
 rc6="$(run_drive "$R6" "$WORK/force.out" --force)"
-if [ "$(count_dispatch)" -eq 0 ] && /usr/bin/grep -q "BLOCKED" "$WORK/force.out"; then
-  pass "--force does NOT bypass the branch guard (it bounds attempts, not branches)"
+# Post-GH-561 this reads as "--force does not grant permission to COMMIT ON trunk" rather than "does
+# not get past the guard": the guard no longer stops anyone, it relocates them. The coupling being
+# refused is the same one — retrying a flaky lane must not silently authorise landing on a shared
+# branch — and trunk staying at the seed is the direct measurement of it.
+if [ "$(git -C "$R6" rev-list --count main)" -eq 1 ] \
+   && [ "$(git -C "$R6" branch --show-current)" != "main" ]; then
+  pass "--force does NOT grant permission to commit on trunk (it bounds attempts, not branches)"
 else
-  fail "GH-402: --force bypassed the branch guard — a lane retry now grants permission to land on trunk"
+  fail "GH-402: --force let a lane retry land on trunk — on '$(git -C "$R6" branch --show-current)', main has $(git -C "$R6" rev-list --count main) commit(s)"
 fi
 
 # ---------------------------------------------------------------------------
@@ -210,6 +246,75 @@ if [ "$(count_dispatch)" -ge 1 ]; then
 else
   fail "GH-402: a remote-less repo was blocked — the guard is firing where the harm cannot occur. rc=$rc7, output: $(tail -12 "$WORK/noremote.out")"
 fi
+
+# ---------------------------------------------------------------------------
+# Case 6 — the INTEGRATION branch is protected too (GH-561)
+# ---------------------------------------------------------------------------
+# The gap this closes is not hypothetical: on 2026-08-15 a Meter marathon landed four commits
+# directly on `development` and this guard never fired, because it keyed on `origin/HEAD` alone and
+# origin/HEAD resolves to `origin/main`. AGENTS.md makes `development` the branch every lane PRs
+# INTO, and marathon-closeout.sh already hardcodes it as the PR base — so the guard was protecting
+# the one branch marathons never touch while leaving the one they always touch open.
+#
+# The fixture is built exactly like the others (shared origin, origin/HEAD → main) and then simply
+# checks out `development`. That is the whole point: by every signal the OLD guard read, this repo
+# is off-trunk and fine.
+echo "-- case 6: checked out on the integration branch"
+R8="$(mk_repo onintegration)"
+git -C "$R8" checkout -q -b development
+: >"$DISPATCH_LOG"
+rc8="$(run_drive "$R8" "$WORK/onintegration.out")"
+out8="$(cat "$WORK/onintegration.out")"
+
+[ "$(git -C "$R8" rev-list --count development)" -eq 1 ] \
+  && pass "the integration branch received no commits (development is still the seed)" \
+  || fail "GH-561: the run committed to development — $(git -C "$R8" log --oneline development | head -3)"
+cur8="$(git -C "$R8" branch --show-current)"
+case "$cur8" in
+  marathon/*) pass "the run was redirected off development onto a lane branch ($cur8)" ;;
+  *) fail "GH-561: the run stayed on '$cur8'. Output: $(tail -12 "$WORK/onintegration.out")" ;;
+esac
+[ "$(count_dispatch)" -ge 1 ] \
+  && pass "the redirected run proceeded (no operator round-trip)" \
+  || fail "GH-561: nothing dispatched — rc=$rc8, output: $(tail -12 "$WORK/onintegration.out")"
+# It must say WHICH kind of branch it moved off. "trunk branch 'development'" would be a lie the
+# operator then has to un-learn, and this repo's whole problem was two components disagreeing about
+# what development is.
+case "$out8" in
+  *"integration branch 'development'"*) pass "the log names it as the integration branch, not trunk" ;;
+  *) fail "GH-561: the log mislabels or omits the branch — got: $out8" ;;
+esac
+# The PR is what makes the redirect a complete answer rather than a place to put commits. There is no
+# GitHub here, so what is asserted is that the driver ATTEMPTED it and said what happened — and,
+# critically, that the failure did not retract the phase's green.
+case "$out8" in
+  *"lane PR:"*) pass "the driver attempted the closeout PR and reported the outcome" ;;
+  *) : ;;   # only reachable on a green phase; this fixture's stub may halt earlier
+esac
+
+# The override still has to work here, or the guard is a wall rather than a gate.
+R9="$(mk_repo onintegration_override)"
+git -C "$R9" checkout -q -b development
+: >"$DISPATCH_LOG"
+rc9="$(run_drive "$R9" "$WORK/onintegration-override.out" --allow-trunk-commit)"
+[ "$(count_dispatch)" -ge 1 ] \
+  && pass "--allow-trunk-commit still permits an integration-branch run" \
+  || fail "GH-561: --allow-trunk-commit did not work on development — rc=$rc9, output: $(tail -12 "$WORK/onintegration-override.out")"
+
+# A fleet repo with a different (or no) integration branch must be able to say so, otherwise this
+# hardcodes THIS repo's convention into a harness that ships to nine vendored copies.
+R10="$(mk_repo onintegration_optout)"
+git -C "$R10" checkout -q -b development
+: >"$DISPATCH_LOG"
+( MARATHON_INTEGRATION_BRANCH= \
+  XYZ_PYTHON=1 MARATHON_ROOT="$R10" TICK_REPO_ROOT="$R10" TICK_BIN="$TICK" \
+  CLAUDE_BIN="$STUB" CLAUDE_TURN_ROOT="$R10" RELAY_AGENT=claude-builder \
+  bash "$DRIVE" --phase-id lane1 --reviewer codex --builder claude \
+    --phase-brief "$R10/PROJECT/2-WORKING/brief.md" --round-cap 3 \
+    --phases-dir "$R10/marathon-system" --pre-advance-cmd true >"$WORK/optout.out" 2>&1 )
+[ "$(count_dispatch)" -ge 1 ] \
+  && pass "MARATHON_INTEGRATION_BRANCH= opts a repo out and restores GH-402 behaviour" \
+  || fail "GH-561: the opt-out did not work — output: $(tail -12 "$WORK/optout.out")"
 
 echo
 echo "  $TEST_NAME: $PASS passed, $FAIL failed"

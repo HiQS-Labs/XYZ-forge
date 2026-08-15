@@ -1847,6 +1847,48 @@ relay-file: {rel_relay}
         # success either.
         return [p for p in probes if p.get("verdict") != "landed"]
 
+    # GH-561: set to (repo, lane_branch, base_branch) when the branch guard redirects this run onto a
+    # lane branch — read by open_lane_pr() on a green phase, which is the only thing that opens the PR.
+    # A list because the guard is a closure and this is the existing idiom in this function.
+    #
+    # DECLARED HERE, not next to the guard that writes it, because complete_phase_success() below is
+    # also called from the GH-274 already-satisfied path at a point where the guard has not run yet —
+    # a NameError there would turn a healthy already-satisfied phase into a crash. On that path the
+    # value is correctly None and open_lane_pr() is a no-op: nothing was cut, so there is no PR to open.
+    lane_branch_cut = [None]
+
+    def open_lane_pr():
+        """Open a PR from this run's auto-cut lane branch back into the branch it was cut from.
+
+        BEST-EFFORT BY CONSTRUCTION, and that is the whole design constraint. The phase is already
+        green and its commits are already durable on the lane branch by the time this runs; a network
+        blip, a logged-out `gh`, or a repo with no GitHub remote must not retroactively turn that into
+        a failed phase. So every failure here is reported and swallowed. The commits are safe on the
+        branch either way — the PR is the convenience, not the record.
+        """
+        if not lane_branch_cut[0]:
+            return                      # ran on a branch already, or an explicit --allow-trunk-commit
+        repo, head, base = lane_branch_cut[0]
+        closeout = os.path.join(xyz_harness, "relay-automation", "marathon-closeout.sh")
+        if not os.path.isfile(closeout):
+            log(f"lane PR: skipped — {closeout} not found")
+            return
+        # --no-commit is the load-bearing flag: closeout's default is `git add -A` + commit, which in
+        # an automated call would sweep every unrelated dirty file in the target into the PR. The
+        # driver has already committed everything this phase produced.
+        cmd = [closeout, "--repo", repo, "--head", head, "--base", base,
+               "--open-only", "--no-commit",
+               "--title", f"Marathon lane {args.phase_id}",
+               "--notes", f"Automated marathon closeout for phase `{args.phase_id}` (GH-561)."]
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        for line in (res.stdout or "").splitlines() + (res.stderr or "").splitlines():
+            if line.strip():
+                log(f"lane PR: {line.strip()}")
+        if res.returncode != 0:
+            log(f"lane PR: closeout exited {res.returncode} — the phase is still GREEN and its commits "
+                f"are on '{head}'. Open the PR by hand: "
+                f"gh pr create --base {base} --head {head}")
+
     def complete_phase_success(success_mode="approved"):
         # GH-438 Phase 2: judged BEFORE the repo-level gate. The gate knows nothing about this lane's
         # acceptance — that is exactly why the reported lane passed it while having changed nothing —
@@ -1899,6 +1941,7 @@ relay-file: {rel_relay}
                 log(f"post-approve command FAILED (exit {post_approve_exit}) — phase remains approved; escalating closeout")
                 escalate("post-approve-failed", 0)
                 sys.exit(9)
+        open_lane_pr()
         sys.exit(0)
 
     # GH-274: has this phase's relay ALREADY reached a terminal state (RELAY_FILE's STATUS is
@@ -2256,27 +2299,81 @@ You are the REVIEWER for this phase. {reviewer_read_line}
         if not origin_head or origin_head == "origin/HEAD":
             return
         trunk_branch = origin_head.split("/", 1)[1] if origin_head.startswith("origin/") else origin_head
-        if current != trunk_branch:
+
+        # GH-561: `origin/HEAD` alone is the WRONG protected set for this repo, and the gap is not
+        # hypothetical — the 2026-08-15 Meter marathon landed four commits straight onto
+        # `development` and the guard never fired, because origin/HEAD resolves to `origin/main`.
+        #
+        # `development` is this repo's INTEGRATION branch (AGENTS.md: "the standing WIP branch — ALL
+        # work targets it, including marathon/relay-fired lanes ... branch off `development` and PR
+        # back into it"), and `marathon-closeout.sh` already hardcodes `BASE_BRANCH="development"` as
+        # the PR base. So the two halves of the same ceremony disagreed: closeout treated development
+        # as something you PR INTO, the guard treated it as an ordinary branch you may commit ON.
+        # The harm the guard's own message names — continuous turn commits that cannot be un-landed
+        # without rewriting history someone else may have pulled — applies to the integration branch
+        # exactly as it does to trunk. It is shared; that is the whole property that matters.
+        #
+        # Env-overridable rather than hardcoded so a fleet repo with a different integration branch
+        # (or none) can say so; empty string disables the second half and restores GH-402 behaviour.
+        integration = os.environ.get("MARATHON_INTEGRATION_BRANCH", "development")
+        protected = {trunk_branch} | ({integration} if integration else set())
+        if current not in protected:
             return
 
+        kind = "trunk branch" if current == trunk_branch else "shared integration branch"
+
+        # GH-561: CUT THE BRANCH rather than stopping. GH-402 shipped this as a hard refusal, and the
+        # refusal was right about the harm but wrong about the remedy: the operator's next action was
+        # always the same `checkout -b`, so a stop that only ever has one correct response is a
+        # speed bump, not a decision point — and an unattended marathon has nobody there to take it.
+        #
+        # The invariant GH-402 defended is UNCHANGED and in fact enforced harder: no marathon commit
+        # lands on a shared branch. It is now enforced by redirecting the commits somewhere safe
+        # instead of by refusing to produce them.
+        #
+        # `--allow-trunk-commit` and the preflight carve-out still mean what they meant — "commit
+        # here on purpose" — and both return above, before this runs.
         suggested = os.environ.get("SP_SUGGESTED_BRANCH", "")
-        eprint(f"marathon-drive: BLOCKED — {commit_root} is checked out on its trunk branch "
-               f"'{current}', and this run is about to commit to it.")
-        eprint("")
-        eprint("  Nothing has been committed yet. A marathon's commits belong on a branch: its turns")
-        eprint("  commit continuously, so a run that lands on trunk cannot be un-landed by stopping")
-        eprint("  it — only by rewriting history someone else may already have pulled.")
-        eprint("")
-        if suggested:
-            eprint(f"    git -C {commit_root} checkout -b {suggested}")
-            eprint("  (the branch preflight already suggested for this lane)")
-        else:
-            eprint(f"    git -C {commit_root} checkout -b marathon/<slug>-<date>")
-        eprint("")
-        eprint("  Or, if committing to trunk really is intended, pass --allow-trunk-commit.")
-        eprint("  Deliberately NOT covered by --force: that bypasses the per-lane attempt cap, and")
-        eprint("  retrying a flaky lane must not silently grant permission to land on trunk (GH-402).")
-        sys.exit(2)
+        lane_branch = suggested or "marathon/{}-{}".format(
+            re.sub(r"[^A-Za-z0-9._-]+", "-", args.phase_id).strip("-") or "lane",
+            _dt.datetime.now().strftime("%Y-%m-%d"))
+
+        # An existing branch is SWITCHED TO, not an error: a re-fired lane on the same day must land
+        # on the branch its earlier attempt already built, or each attempt strands its commits on a
+        # branch of its own and the PR shows one attempt's worth of work.
+        exists = subprocess.run(["git", "-C", commit_root, "rev-parse", "--verify", "--quiet",
+                                 f"refs/heads/{lane_branch}"],
+                                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+        cut = subprocess.run(["git", "-C", commit_root, "checkout", "-q"]
+                             + ([] if exists else ["-b"]) + [lane_branch],
+                             capture_output=True, text=True)
+        if cut.returncode != 0:
+            # Falling back to GH-402's refusal is deliberate. The one thing that must never happen is
+            # continuing on the shared branch because the redirect did not work — a failed auto-cut
+            # is exactly when the original hard stop earns its keep.
+            eprint(f"marathon-drive: BLOCKED — {commit_root} is checked out on its {kind} "
+                   f"'{current}', and this run is about to commit to it.")
+            eprint("")
+            eprint(f"  Tried to cut '{lane_branch}' automatically and could not: "
+                   f"{(cut.stderr or cut.stdout).strip()}")
+            eprint("")
+            eprint("  Nothing has been committed yet. A marathon's commits belong on a branch: its turns")
+            eprint("  commit continuously, so a run that lands on a shared branch cannot be un-landed by")
+            eprint("  stopping it — only by rewriting history someone else may already have pulled.")
+            eprint("")
+            eprint(f"    git -C {commit_root} checkout -b {lane_branch}")
+            eprint("")
+            eprint("  Or, if committing here really is intended, pass --allow-trunk-commit.")
+            eprint("  Deliberately NOT covered by --force: that bypasses the per-lane attempt cap, and")
+            eprint("  retrying a flaky lane must not silently grant permission to land on a shared")
+            eprint("  branch (GH-402).")
+            sys.exit(2)
+
+        lane_branch_cut[0] = (commit_root, lane_branch, current)
+        log(f"branch guard: {commit_root} was on its {kind} '{current}' — "
+            f"{'switched to' if exists else 'cut'} '{lane_branch}' and continuing (GH-561)")
+        log("  this lane's commits land there; a green phase opens a PR back into "
+            f"'{current}' (--allow-trunk-commit to commit on '{current}' instead)")
 
     refuse_trunk_commit()
 
