@@ -781,6 +781,61 @@ def repo_slug_for(cwd):
     m = re.search(r'(?:github\.com[:/])([^/]+/[^/]+?)(?:\.git)?$', url)
     return m.group(1) if m else None
 
+MANIFEST_BLOCK_RE = re.compile(r'^MANIFEST=\(\s*$')
+MANIFEST_ENTRY_RE = re.compile(r'^\s*"(\d+)\|')
+
+def frozen_manifest_members(target_root):
+    """Which issues are members of a frozen release manifest → ({issue:int -> [release names]}, note).
+
+    GH-557. The authoritative, machine-readable statement of a frozen manifest is the `MANIFEST=(...)`
+    array inside each `test/*-release.sh` goalpost, whose documented row format is
+    `"<issue>|<gate test file, or '-'>|<note>"`. That array is ALREADY cross-checked against
+    RELEASES.md by the goalpost itself — `audit_manifest` fails when the two disagree, because "a
+    boundary that disagrees with itself is not frozen" — so reading it here inherits that agreement
+    instead of re-deriving it.
+
+    RELEASES.md's own `Manifest:` line is deliberately NOT parsed. It is prose, and it names many
+    issue numbers that are explicitly NOT members: retired entries (#509), superseded ones (#358
+    Phase 2), and the nine root-cause siblings cited under #551. A regex over that line would read
+    every one of them as a manifest member and BLOCK ordinary lanes that have nothing to do with a
+    release — a false positive is far more damaging here than a false negative, because it stops
+    work that was never in scope.
+
+    This function REPORTS what it could determine and never guesses. `note` is "no release goalposts
+    found" when there is nothing to read, which the caller surfaces rather than silently treating as
+    "not a member" (GH-551: a resolver that cannot determine its answer must say so).
+    """
+    members, files_read = {}, []
+    test_dir = os.path.join(target_root, "test")
+    try:
+        names = sorted(n for n in os.listdir(test_dir) if n.endswith("-release.sh"))
+    except Exception:
+        return {}, "no test/ directory — manifest membership undetermined"
+    for name in names:
+        try:
+            with open(os.path.join(test_dir, name), 'r', encoding='utf-8') as f:
+                lines = f.read().splitlines()
+        except Exception:
+            continue
+        inside = False
+        found_here = False
+        for line in lines:
+            if not inside:
+                if MANIFEST_BLOCK_RE.match(line):
+                    inside = True
+                continue
+            if line.startswith(")"):
+                break
+            m = MANIFEST_ENTRY_RE.match(line)
+            if m:
+                found_here = True
+                members.setdefault(int(m.group(1)), []).append(name)
+        if found_here:
+            files_read.append(name)
+    if not files_read:
+        return members, "no release goalposts found — manifest membership undetermined"
+    return members, f"read from {', '.join(files_read)}"
+
 def check_acceptance_fidelity(doc_path, issue_number, cwd, issue_details=None):
     """Compare a capture doc's acceptance block against its source issue's.
 
@@ -788,22 +843,40 @@ def check_acceptance_fidelity(doc_path, issue_number, cwd, issue_details=None):
       match    — identical, or every difference is declared and reconciles exactly
       diverged — the doc's definition of done is not the issue's, and nothing explains the gap
       unknown  — cannot be determined (no issue, gh missing/unauthenticated/offline, no section)
-    Only `diverged` blocks. `unknown` is reported loudly and never masked as a pass.
+    Only `diverged` blocks by itself. `unknown` is reported loudly and never masked as a pass; on a
+    frozen-manifest member the caller escalates one of its causes to a block (GH-557).
+
+    GH-557: `unknown` had one status and several materially different causes, so "we could not
+    reach GitHub" and "the issue states no criteria at all" read identically in the packet and were
+    equally non-blocking. During the 2026-08-14 DNS outage every Meter packet reported `unknown`;
+    when DNS was restored the same entries still reported `unknown` for the second reason, and
+    nothing in the output could tell the two apart. `cause` is that missing distinction:
+
+      fetch-failed    — transient/environmental. Retryable. NEVER blocks: being unable to reach
+                        GitHub must not become a hard stop on all local work.
+      no-issue-section— structural. The issue itself states no criteria, so the doc's list came from
+                        somewhere else and no retry will ever verify it. Blocks on a manifest member.
+      no-gh-issue     — the doc names no issue to compare against.
+      doc-unreadable  — the capture doc could not be read.
+      None            — `cause` is unset for `match`/`diverged`; it qualifies `unknown` only.
     """
-    res = {"status": "unknown", "detail": "", "issue": issue_number,
+    res = {"status": "unknown", "cause": None, "detail": "", "issue": issue_number,
            "dropped": [], "added": [], "declared": 0}
     if not issue_number:
+        res["cause"] = "no-gh-issue"
         res["detail"] = "capture doc has no gh_issue — nothing to compare against"
         return res
     try:
         with open(doc_path, 'r', encoding='utf-8') as f:
             doc_text = f.read()
     except Exception:
+        res["cause"] = "doc-unreadable"
         res["detail"] = f"capture doc unreadable: {doc_path}"
         return res
 
     body = (issue_details or fetch_issue_details(issue_number, cwd)).get("body")
     if body is None:
+        res["cause"] = "fetch-failed"
         res["detail"] = (f"could not fetch issue #{issue_number} (gh missing, unauthenticated, or "
                          "offline) — acceptance fidelity NOT verified")
         return res
@@ -812,6 +885,7 @@ def check_acceptance_fidelity(doc_path, issue_number, cwd, issue_details=None):
     doc_acc = extract_acceptance_criteria(doc_text)
 
     if issue_acc is None:
+        res["cause"] = "no-issue-section"
         res["detail"] = f"issue #{issue_number} has no '## Acceptance' section — nothing to copy from"
         return res
     # An acceptance section that exists but lists nothing is NOT the same as no section. Collapsing
@@ -1340,6 +1414,31 @@ def main():
             f"acceptance criteria diverge from issue #{acc_fidelity['issue']} — {acc_fidelity['detail']}. "
             "Copy the issue's '## Acceptance' block verbatim, or declare each deviation under "
             "'## Acceptance — deviations from the issue' as `- [dropped|changed|added] <text> — reason: <why>'")
+
+    # GH-557: on a FROZEN MANIFEST MEMBER, a structural `unknown` blocks.
+    #
+    # Everywhere else `unknown` stays advisory and that is deliberate — an exploratory or
+    # externally-reported lane whose issue has no acceptance section is ordinary work, and refusing
+    # it would be a hard stop on the common case. A frozen manifest member is different in kind: it
+    # has already been declared load-bearing, its release has an exit criterion built around it, and
+    # criteria that came from nowhere can turn that goalpost green against work nobody specified.
+    # That is the Half-B defect in test/meter-release.sh (an exit-0 stub credited as PASS), one level
+    # up — a check reporting success when it did not check.
+    #
+    # ONLY the structural cause blocks. `fetch-failed` stays advisory on every path, including a
+    # manifest member: an outage is not a contract violation, and making it one would have halted
+    # every lane in this repo during the 2026-08-14 DNS outage.
+    manifest_members, manifest_note = frozen_manifest_members(target_root)
+    acc_manifest_releases = manifest_members.get(int(acc_fidelity["issue"])) if str(acc_fidelity.get("issue") or "").isdigit() else None
+    if ready == 1 and acc_fidelity["status"] == "unknown" and acc_fidelity.get("cause") == "no-issue-section" \
+            and acc_manifest_releases:
+        ready, ready_next = 0, (
+            f"issue #{acc_fidelity['issue']} is a FROZEN MANIFEST member ({', '.join(acc_manifest_releases)}) "
+            f"and states no '## Acceptance' section, so the {len(acc_items)} criterion(a) in "
+            f"{primary_doc} were never verified against it and cannot be. Author the "
+            "'## Acceptance' section onto the GitHub issue (copy the doc's list there if it is "
+            "right), then re-run. A release goalpost must not be satisfiable by criteria whose "
+            "provenance is unestablished — everywhere OUTSIDE a frozen manifest this stays advisory.")
     if ready == 1 and src_url["status"] in ("missing", "mismatch", "wrong-repository"):
         expected_source = (f"https://github.com/{target_slug}/issues/{src_url['issue']}"
                            if target_slug else
@@ -1476,7 +1575,16 @@ def main():
         emit(f"  inlined-acc : {len(acc_items)} criterion(a) from the {acc_mode}"
              f"{f', {acc_dropped} over the 25-item cap (reported in the packet)' if acc_dropped else ''}")
         emit(f"  source-url  : {src_url['status']} — {src_url['detail']}")
-        emit(f"  acceptance  : {acc_fidelity['status']} — {acc_fidelity['detail']}")
+        # GH-557: the cause qualifies `unknown` — a transient outage and an issue that states no
+        # criteria at all used to print the same word and mean different things.
+        _acc_cause = f" [cause: {acc_fidelity['cause']}]" if acc_fidelity.get("cause") else ""
+        emit(f"  acceptance  : {acc_fidelity['status']}{_acc_cause} — {acc_fidelity['detail']}")
+        if acc_manifest_releases:
+            emit(f"  manifest    : issue #{acc_fidelity['issue']} is a FROZEN MANIFEST member ({', '.join(acc_manifest_releases)})")
+        elif acc_fidelity.get("cause") == "no-issue-section":
+            # Say why this did NOT block, so "not a manifest member" is a visible finding rather
+            # than an absence the reader has to infer (GH-551).
+            emit(f"  manifest    : issue #{acc_fidelity['issue']} is not a frozen manifest member — {manifest_note}; unverified acceptance is advisory here")
         emit(f"  issue-state : {issue_state['status']} — {issue_state['detail']}")
         for frozen in frozen_artifacts:
             emit(f"  FROZEN      : {frozen['path']} — authoritative twin: {frozen['authoritative_twin']}")
@@ -1538,6 +1646,15 @@ def main():
         _ref = (f"[issue #{acc_fidelity['issue']}](https://github.com/{_slug}/issues/{acc_fidelity['issue']})"
                 if _slug else f"issue #{acc_fidelity['issue']}")
         acc_provenance_line = f"*Verified against {_ref} — {acc_fidelity['detail']}.*"
+    elif acc_fidelity.get("cause") == "no-issue-section":
+        # GH-557: the structural case reads very differently from an outage and must say so. The
+        # generic wording below ("read the issue before building") is actively misleading here —
+        # there is nothing in the issue to read, which is the entire problem.
+        acc_provenance_line = (
+            f"*NOT verified, and NOT verifiable as things stand — {acc_fidelity['detail']}. "
+            "This list exists only in the capture doc; reading the issue will not confirm it, "
+            "because the issue states no criteria. Establish the criteria on the issue before "
+            "treating anything below as the definition of done.*")
     else:
         acc_provenance_line = (f"*NOT verified against the source issue — {acc_fidelity['detail']}. "
                                "Treat this list as a summary, not a contract: if anything here is "
