@@ -153,7 +153,7 @@ option (Step 4) is chosen.*
 - [ ] Ships as a direct PR against `development`. Never dispatched as a marathon or relay lane — see
       Reversibility & blast radius for why.
 
-**Out of scope, explicitly:**
+### Out of scope, explicitly:
 - Picking the option (this doc's whole point, per Step 4 of its own authoring brief).
 - `Hypercart-Dev-Tools/rebalance-OS`'s own #170 (worktree-import defect) — a different repo's issue.
 - Raising or lowering any existing test bound, count, or exclusion in this repo's own suite.
