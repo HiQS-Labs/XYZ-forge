@@ -1,0 +1,70 @@
+.tick/
+node_modules/
+.vscode/
+# GH-480: tools/vscode-cockpit ships its own F5 debug launch config as part of the extension.
+!tools/vscode-cockpit/.vscode/
+!tools/vscode-cockpit/.vscode/*.json
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.DS_Store
+**/.DS_Store
+PROJECT/PDDA-ACTIVITY.jsonl
+relay-system/2026-06-21/shakedown-lib.sh
+/temp/
+.pdda-gh-state.tsv
+# GH-75 / GH-96: XYZ.json is the local newest-first completion log; XYZ.heartbeat.json is the mutable
+# in-flight companion marker. Both are machine-specific and kept out of git to avoid churn.
+XYZ.json
+XYZ.json.lock/
+XYZ.heartbeat.json
+# GH-78: hourly doc-preflight telemetry — per-machine, per-run edit/warn logs; gitignored to avoid churn.
+utils/telemetry/preflight-log/
+# swarm-preflight packet output — ephemeral per-run artifact (sleuth-app already gitignores this).
+relay-system/preflight/
+# GH-161: persistent CODEX_LOG/AGY_LOG default (rtl_default_log in relay-turn-lib.sh). MUST stay
+# ignored — rtl_check already deletes any file landing in the tracked tree that matches the shim's
+# own transcript path, so an un-ignored log here would be wiped at the end of every single turn.
+relay-system/logs/
+# Hourly HQ marathon scan (utils/hq/hourly-global-scan.sh) — a live, machine-local rolling snapshot
+# overwritten every run; committing it each hour would be pure churn with no historical value.
+PROJECT/2-WORKING/GLOBAL-HQ-MARATHON.md
+# Aider aux files: a MANUAL (non-shim) aider run drops .aider.chat.history.md / .aider.input.history /
+# .aider.llm.history into the tree. The aider-turn.sh shim already redirects these via AIDER_AUX_DIR;
+# this guards ad-hoc runs so they can't re-leak as untracked noise.
+.aider*
+# GH-112 Python layer: bytecode caches from pytest / XYZ_PYTHON=1 runs.
+__pycache__/
+*.pyc
+# codebase-memory MCP index — a per-device local tool cache (like .tick/); never committed.
+.codebase-memory/
+
+# Aider Studio (auto-added)
+REPO_MAP.md
+
+# ask-self RAG — kept PER-USER / PER-DEVICE, not committed to the shared repo.
+# The whole integration layer is local: teammates opt in by installing ask-self
+# themselves (see ask-self's ASK_SELF_INTEGRATION.md) rather than inheriting it here.
+/ask_self/
+/scripts/ask-self-ingest.sh
+/scripts/ask-self-query.sh
+/.claude/commands/reingest.md
+/.claude/commands/ask_self.md
+# Local working index lives under temp/rag/ (already ignored via /temp/); these lines
+# also catch the per-DB sidecars anywhere they land.
+temp/rag/
+temp/ask-self-rag.env
+*__embed_cache.sqlite
+*__events.jsonl
+# ask-self generated architecture doc (falls back to ASK_SELF.md; our ARCHITECTURE.md is hand-owned).
+ASK_SELF.md
+ARCHITECTURE-BAK.md
+
+# Sentinel Tier 1 debug capture — local only, never committed.
+debug.log
+/BTW
+
+# Vendored per-repo harness copy (xyz-vendor.sh) — machine-local, never committed.
+.xyz/
+
+# GH-509: per-commit local gate evidence — machine-local, self-reported, never committed.
+.gate-evidence/

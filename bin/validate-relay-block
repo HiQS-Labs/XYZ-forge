@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -lt 1 ]; then
+  echo "Usage: bin/validate-relay-block <relay-file>" >&2
+  exit 1
+fi
+
+relay_file="$1"
+
+if [ ! -f "$relay_file" ]; then
+  echo "Error: file not found: $relay_file" >&2
+  exit 1
+fi
+
+# Assertion 2: Header STATUS: is set to a valid completed state
+status_line=$(grep -E '^STATUS:' "$relay_file" | head -n 1 || true)
+if [ -z "$status_line" ]; then
+  echo "STATUS: header is missing" >&2
+  exit 8
+fi
+
+status_value=$(echo "$status_line" | sed -E 's/^STATUS:[[:space:]]*//' | sed -E 's/[[:space:]]+$//')
+if [ -z "$status_value" ]; then
+  echo "STATUS: header is empty" >&2
+  exit 8
+fi
+
+status_lower=$(echo "$status_value" | tr '[:upper:]' '[:lower:]')
+if [ "$status_lower" = "in progress" ]; then
+  echo "STATUS: STATUS cannot be In Progress" >&2
+  exit 8
+fi
+
+# Assertion 1: ## Log section exists and contains at least one log entry
+if ! grep -q '^## Log' "$relay_file"; then
+  echo "Log: ## Log section is missing" >&2
+  exit 8
+fi
+
+# Extract everything after ## Log
+log_after=$(sed -e '1,/^## Log/d' "$relay_file")
+stripped_log=$(echo "$log_after" | tr -d '[:space:]')
+if [ -z "$stripped_log" ]; then
+  echo "Log: ## Log section has no entries" >&2
+  exit 8
+fi
+
+# Assertion 3: VERDICT: line is present and valid
+if ! echo "$log_after" | grep -E -q '^VERDICT: (PASS|FAIL|PARKED)$'; then
+  echo "VERDICT: line is missing or invalid" >&2
+  exit 8
+fi
+
+# Assertion 4: Basis: line is present and non-empty
+if ! echo "$log_after" | grep -E -q '^Basis: .+'; then
+  echo "Basis: line is missing or empty" >&2
+  exit 8
+fi
+
+exit 0

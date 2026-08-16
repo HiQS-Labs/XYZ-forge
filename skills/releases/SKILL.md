@@ -1,0 +1,208 @@
+---
+name: releases
+description: Read, synthesize, diagnose, clean, author, and publish the optional RELEASES.md planning ledger through one routed workflow. Use for /releases; release status or health checks; stale-plan review against merged PRs, commits, and CHANGELOG entries; disciplined release creation or updates; ledger cleanup; historical anchors or backfill; publishing a planned GitHub Release; or deciding whether Radar or Finish Line is the better follow-up. Default invocation is read-only and every write or publication requires a preview and confirmation.
+---
+
+# /releases — one release-planning router
+
+Treat `RELEASES.md` as an optional forward-looking planning ledger, never as a second
+`CHANGELOG.md`. Start every invocation by reading and synthesizing the ledger. Route into a mutating
+subroutine only when the operator explicitly chooses or requests one.
+
+## Routes
+
+```text
+/releases                         read-only synthesis, findings, and relevant route choices
+/releases check [window]          refresh the evidence-backed health assessment
+/releases clean [version|active]  preview a spec-aligned cleanup
+/releases plan [version]          create or explicitly update an upcoming release
+/releases anchor <version...>     add only the named shipped historical anchors
+/releases backfill                show eligible historical anchors as an optional menu
+/releases publish <version>       publish one planned entry to GitHub
+```
+
+Natural-language requests route the same way. Do not make the operator remember the route names.
+
+## Preflight
+
+1. Resolve the repository root. Require `utils/pdda/pdda.sh`; stop if PDDA is absent because there
+   is no fallback release-ledger format.
+2. Read `PROJECT/PDDA.md`'s `RELEASES.md — release ledger` contract, `RELEASES.md`, and
+   `CHANGELOG.md`. A missing, empty, sparse, or apparently old ledger is valid.
+3. Treat GitHub as optional for checks and required for publication. If `gh` is unavailable, run
+   the local assessment and state exactly which PR, milestone, issue, or Release conclusions are
+   unavailable. Never convert missing network evidence into a clean verdict.
+4. Parse a block from one `Release:` line to the next `Release:` line or end of file. Blank lines do
+   not end blocks.
+
+## Default route — read and synthesize
+
+Run this route before every other route unless the same invocation already established fresh state.
+
+1. Run `utils/pdda/pdda.sh releases` and `utils/pdda/pdda.sh releases-current`. Preserve their
+   warn-only semantics.
+2. Select the evidence window: use an operator-supplied window, otherwise 21 days. Resolve the
+   active integration branch from repo policy (`development` in this repo; otherwise the declared
+   WIP branch, then `main`/`master`). State the exact dates and branch.
+3. Read reachable non-merge commits plus merged and closed-unmerged PRs targeting that branch during
+   the window. Use merged PRs as completion evidence. Surface a closed-unmerged PR only when it
+   contradicts a block's claim that work is in flight or materially changes the cleanup decision.
+   A push is transport, not evidence; count the commits that reached the branch. Read exact
+   bracketed versions and dated entries from `CHANGELOG.md`.
+4. When GitHub is available, inspect matching releases, milestones, and manifest issues. Verify PR
+   base branches and merge state before using them as evidence.
+5. Summarize, without dumping the file:
+   - shipped entries;
+   - active and upcoming entries, target dates, iteration bands, and milestones;
+   - strong inconsistencies and advisory drift signals;
+   - description or manifest discipline warnings;
+   - evidence that could not be obtained.
+6. Offer only routes relevant to the findings or the user's stated goal. Make no writes.
+
+## Staleness and drift rules
+
+Call something stale only when evidence contradicts a block, not because the ledger is sparse or
+has not changed recently.
+
+Treat these as strong inconsistencies:
+
+- `CHANGELOG.md` records the exact version as shipped while the block remains unshipped.
+- A GitHub Release exists but `GH_URL:` is empty, points elsewhere, or `Status:` contradicts the
+  actual publish state.
+- `Target Date:` is past while `Status:` is not `Shipped`.
+- A block says work is open, absent, or unbuilt while a merged PR, reachable commit, or canonical
+  project document proves the opposite.
+- Iteration bands overlap or a non-owner release sits inside another block's band.
+
+Treat these as advisory drift signals:
+
+- Recent merged work materially follows a different theme than an active description.
+- A manifest contains replaced, duplicated, unrelated, or silently added scope.
+- A target date no longer fits explicit dependencies or the observed delivery rate.
+
+Do not infer shipment from a closed-but-unmerged PR, an issue closure alone, a branch push, a commit
+on an unmerged branch, or a populated `GH_URL:` that points to a draft.
+
+## Discipline and abuse warnings
+
+Warn, without blocking, when:
+
+- `Description:` exceeds four sentences, becomes multi-paragraph execution history, or duplicates
+  `CHANGELOG.md`. Recommend a one-to-four-sentence theme and move history to `CHANGELOG.md` and
+  implementation detail to the canonical `PROJECT/**` document.
+- `Manifest:` names more than seven issues. The count triggers review, not condemnation.
+- A manifest mixes unrelated themes, lacks a fixed denominator, grows without a dated re-scope,
+  crosses several release dependencies, or has no runnable/observable exit criterion.
+- A block copies an issue inventory that should be represented by the `Milestone:` join key.
+
+Explain which signal fired. Never call a large manifest abusive solely because of its issue count.
+
+## Clean subroutine
+
+1. Default to active/unshipped blocks. Touch a shipped block only when the operator explicitly names
+   it.
+2. Propose the smallest cleanup that restores the documented shape: compact descriptions, preserve
+   theme and dependencies, reduce manifests to a fixed list or milestone pointer, preserve dated
+   re-scope decisions, and move historical narrative to `CHANGELOG.md` or execution detail to its
+   existing project doc. Never create a new doc merely to shorten the ledger.
+3. Record the file hash before preview. Render the exact patch and get one confirmation.
+4. Immediately before writing, re-read `RELEASES.md` and compare its hash. If it changed, discard the
+   patch, synthesize again, and preview a new patch.
+5. Edit only the confirmed blocks. Never reorder unrelated blocks.
+6. Run `utils/pdda/pdda.sh releases` and report every finding.
+
+## Plan or update subroutine
+
+1. Apply the admission rule. A block earns a place only when it represents a named arc worth
+   planning toward. A restatement of shipped changes belongs only in `CHANGELOG.md`. A version inside
+   another block's `Iterations:` band is already accounted for.
+2. If no version was supplied, compare the highest bracketed `CHANGELOG.md` version with the highest
+   ledger version. Propose the next semantic version and explain the patch/minor/major judgment; let
+   the operator override it.
+3. Ask only for unanswered fields:
+   - status;
+   - optional iteration band;
+   - target date or blank/TBD;
+   - optional codename;
+   - optional GitHub milestone title;
+   - a one-to-four-sentence description of the theme;
+   - optional concise manifest;
+   - optional executable or observable exit criterion;
+   - optional QA fields (`Front-door reviewed`, `Shakedown reviewed`, `License file`).
+4. Draft the flat block below, omitting blank optional fields except `GH_URL:` when publication is
+   expected:
+
+```text
+Release: 1.2.0
+Iterations: 1.2.0-1.2.4
+Status: Draft
+Target Date: 2026-12-01
+Codename: Example
+Description: One coherent release theme in no more than four sentences.
+Exit criterion: `command --that-proves-the-release` exits 0.
+Manifest: FROZEN YYYY-MM-DD — #101, #102, #103.
+GH_URL:
+Milestone: Example
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes
+```
+
+5. Preview the complete new or replacement block and get one confirmation. Re-check the file hash
+before writing. Append new blocks after the last block; replace only an explicitly selected existing
+block. Never silently edit neighboring blocks.
+6. Run `utils/pdda/pdda.sh releases` and report findings.
+
+## Anchor and backfill subroutine
+
+Run only when explicitly requested.
+
+- For `anchor`, draft exactly the shipped versions the operator named. Trace each one-line summary
+  to its bracketed `CHANGELOG.md` section and set `Status: Shipped`.
+- For `backfill`, show bracketed `CHANGELOG.md` versions that are not already represented and do not
+  sit inside an existing iteration band. Present them as an optional menu, never as missing work.
+  Draft only the versions the operator selects; drafting none is valid.
+- Never initiate either route because the ledger looks incomplete.
+
+## Publish subroutine
+
+1. Require `gh` authentication and a specific existing release block. Stop if it is already
+   `Shipped`. If `GH_URL:` exists but status is unshipped, inspect the existing Release and ask how
+   to handle the draft or conflicting object.
+2. Run `utils/pdda/pdda.sh releases` and surface its findings.
+3. Build release notes from the block's `Description:` plus concise codename, exit-criterion, and
+   manifest context when useful. Never invent notes. Ask for missing release-facing prose.
+4. Preview together:
+   - the exact `gh release create <version> --title ... --notes ...` action;
+   - the full release body;
+   - the `GH_URL:` and `Status: Shipped` write-back.
+5. Get one explicit confirmation, publish live, and capture the returned URL. If creation fails,
+   report the error verbatim and make no ledger edit.
+6. On success only, re-check the file hash, write the returned URL, set `Status: Shipped`, and run
+   `utils/pdda/pdda.sh releases`.
+7. Remind the operator that shipped history and lessons belong in `CHANGELOG.md`; do not write that
+   entry unless separately asked.
+
+## Complementary routing
+
+Offer at most one goal-matched follow-up; do not append generic reminders.
+
+- Offer `/radar` when the question is whether recent work, recurring defects, and release themes are
+  strategically aligned. State that Radar is broader than this ledger check and owns its own report
+  workflow. Never copy Radar's analysis into this skill or invoke it automatically.
+- Offer `/finish-line` when the operator has selected a release checkpoint and wants a frozen,
+  shortest safe path to ship it. State that Finish Line owns the done-list and parking workflow.
+  Never invoke it automatically.
+- Stay within `/releases` when the task is ledger synthesis, cleanup, authoring, or publication.
+
+## Guardrails
+
+- Default to read-only synthesis.
+- Preview every file mutation and public action; obtain one confirmation per atomic write/publication
+  group.
+- Re-read before writing and refuse stale patches.
+- Never top up the optional ledger, fabricate release notes, or treat absence as failure.
+- Keep `CHANGELOG.md` authoritative for shipped history and `PROJECT/**` authoritative for execution
+  detail.
+- Use repo-relative paths in edited documents.
+- Never create, edit, install, or synchronize a Codex skill from this workflow.

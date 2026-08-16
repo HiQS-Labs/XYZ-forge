@@ -1,0 +1,7 @@
+# PDDA enforcement mode for this repo: observe | light | full
+# Resolution: env PDDA_MODE overrides this file; this file overrides the built-in default (observe).
+#   observe : report only, never moves files, never blocks (safe for a fresh install)
+#   light   : moves stale docs + loud reports, but never blocks the build (transition)
+#   full    : errors block with a non-zero exit (fully on PDDA rails)
+# This repo is the PDDA reference implementation and is on rails, so: full.
+full

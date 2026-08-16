@@ -1,0 +1,4 @@
+# Quad Concepts opt-in lever (orthogonal to .pdda-mode). Set to 'on' to require a
+# '## Quad Concepts' section (1-4 pain->fix bullets) on plan docs. See PROJECT/PDDA.md.
+# Per-doc opt-out: quad_exempt: true. Env override: PDDA_QUAD=1.
+off

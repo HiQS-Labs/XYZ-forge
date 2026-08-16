@@ -1,0 +1,28 @@
+{
+  "zones": [
+    {
+      "name": "kernel",
+      "pathPrefixes": [
+        "relay-automation/relay-turn-lib.sh",
+        "bin/tick",
+        "relay-automation/relay-drive.sh"
+      ],
+      "inferKeywordRegex": "relay-turn-lib|containment kernel|bin/tick|relay-drive|commit semantics|epoch fenc",
+      "maxPerWave": 1,
+      "penalty": 2,
+      "escalateOrchestratorOnly": true
+    },
+    {
+      "name": "shim",
+      "pathRegex": "relay-automation/[a-z0-9-]+-turn\\.sh$|relay-automation/consult\\.sh$",
+      "pathRegexCaseInsensitive": true,
+      "inferKeywordRegex": "-turn\\.sh|consult\\.sh|\\bshim\\b",
+      "conservativeWhenInferred": true,
+      "penalty": 1
+    }
+  ],
+  "defaultZone": {
+    "name": "independent",
+    "penalty": 0
+  }
+}

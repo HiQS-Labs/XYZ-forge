@@ -1,0 +1,184 @@
+#!/usr/bin/env bash
+# test/relay-target-root.sh — test that --target-root routes the worktree, allowlist, and commits to a foreign repo
+source "$(dirname "$0")/_setup.sh" relay-target-root
+
+export TICK_BIN="$TICK"
+DRIVE="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/relay-drive.sh"
+SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/claude-turn.sh"
+
+# Initialize tick in the harness repo (coordination root $A)
+tick_a init >/dev/null
+
+# Prepare the foreign repository ($B)
+# We must have some commits in $B so HEAD can be checked out and git worktree add works.
+# In B: we need relay.md and artifact.txt
+printf 'STATUS: Open\n# relay body\n' >"$B/relay.md"
+printf 'seed\n' >"$B/artifact.txt"
+git -C "$B" add relay.md artifact.txt >/dev/null 2>&1
+git -C "$B" commit -q -m "seed B" >/dev/null 2>&1
+
+# Prepare the harness repository ($A)
+# (Note: $A is the default harness repo root)
+printf 'STATUS: Open\n# relay body in A\n' >"$A/relay.md"
+printf 'seed in A\n' >"$A/artifact.txt"
+git -C "$A" add relay.md artifact.txt >/dev/null 2>&1
+git -C "$A" commit -q -m "seed A" >/dev/null 2>&1
+
+# Stub agent (CLAUDE_BIN) that performs turn changes.
+# Under worktree isolation, its CWD is the throwaway worktree of the target repo.
+# It claims the token, edits the allowlisted files, and releases the token.
+STUB="$WORK/agent-stub.sh"
+cat >"$STUB" <<'STUB_EOF'
+#!/usr/bin/env bash
+set -u
+# Coordination database is in $A
+export TICK_REPO_ROOT="$A"
+
+# Perform tick claims
+"$TICK" claim "$RELAY_TASK" --agent "$RELAY_AGENT" --paths "artifact.txt" >/dev/null 2>&1
+"$TICK" ping  "$RELAY_TASK" --agent "$RELAY_AGENT" >/dev/null 2>&1
+
+# Make changes relative to CWD
+printf 'edited by agent\n' >> artifact.txt
+printf '\n### Round 1 · Agent\n' >> relay.md
+
+# Release token to finish turn
+"$TICK" release "$RELAY_TASK" --agent "$RELAY_AGENT" --to reviewer >/dev/null 2>&1
+
+printf '{"usage":{"input_tokens":1,"output_tokens":1},"total_cost_usd":0}\n'
+exit 0
+STUB_EOF
+chmod +x "$STUB"
+
+# Helper to seed token in harness repo ($A)
+seed_token() { # <task>
+  tick_a log task.created "$1" --agent claude --paths "artifact.txt" >/dev/null
+  tick_a claim "$1" --agent dispatcher --paths "artifact.txt" >/dev/null 2>&1
+  tick_a release "$1" --agent dispatcher --to claude >/dev/null 2>&1
+}
+
+# --- Test case 1: --target-root B is passed (foreign repo) ---
+# Worktree isolation ON.
+seed_token RELAY-TURN-foreign
+
+# We run relay-drive.sh, pointing to $B as the target root.
+# We expect the changes to be made and committed in $B, while $A remains untouched.
+B_BEFORE="$(git -C "$B" rev-parse HEAD)"
+A_BEFORE="$(git -C "$A" rev-parse HEAD)"
+
+# Command to invoke the turn-taker:
+# Note: CLAUDE_TURN_ROOT defaults to $1 in rtl_init, but we pass $A (harness) to the shim.
+# Because RELAY_TARGET_ROOT is exported, it should override RTL_ROOT to $B inside the shim.
+# The shim will run the stub inside the worktree of $B.
+AGENT_CMD="RELAY_AGENT=claude RELAY_FILE=\"\$RELAY_TARGET_ROOT/relay.md\" RELAY_TASK=RELAY-TURN-foreign \
+  CLAUDE_AGENT=claude CLAUDE_BIN=\"$STUB\" CLAUDE_TURN_ROOT=\"$A\" CLAUDE_LOG=\"$WORK/c.log\" \
+  ALLOW_PATHS=\"artifact.txt\" CLAUDE_BLOCK_CMDS=\"\" RELAY_WORKTREE_ISOLATION=1 \
+  bash \"$SHIM\""
+
+bash "$DRIVE" --relay-file "$B/relay.md" --relay-task RELAY-TURN-foreign \
+  --target-root "$B" --agent-cmd "$AGENT_CMD" --round-cap 1 >/dev/null 2>&1
+
+# Assertions:
+# 1. $B must have a new commit.
+[ "$(git -C "$B" rev-parse HEAD)" != "$B_BEFORE" ] && pass "foreign repo target: commit created in foreign repo B" || fail "no commit in foreign repo B"
+
+# 2. $A must NOT have a new commit.
+[ "$(git -C "$A" rev-parse HEAD)" = "$A_BEFORE" ] && pass "foreign repo target: harness repo A untouched" || fail "harness repo A was modified"
+
+# 3. $B/artifact.txt must contain the edit.
+grep -q "edited by agent" "$B/artifact.txt" && pass "foreign repo target: artifact edited in B" || fail "artifact not edited in B"
+
+# 4. $A/artifact.txt must NOT contain the edit.
+! grep -q "edited by agent" "$A/artifact.txt" && pass "foreign repo target: artifact in A untouched" || fail "artifact was edited in A"
+
+# --- Test case 2: Default unchanged (no --target-root) ---
+# Worktree isolation ON.
+seed_token RELAY-TURN-default
+
+B_BEFORE="$(git -C "$B" rev-parse HEAD)"
+A_BEFORE="$(git -C "$A" rev-parse HEAD)"
+
+AGENT_CMD_DEFAULT="RELAY_AGENT=claude RELAY_FILE=\"$A/relay.md\" RELAY_TASK=RELAY-TURN-default \
+  CLAUDE_AGENT=claude CLAUDE_BIN=\"$STUB\" CLAUDE_TURN_ROOT=\"$A\" CLAUDE_LOG=\"$WORK/c-default.log\" \
+  ALLOW_PATHS=\"artifact.txt\" CLAUDE_BLOCK_CMDS=\"\" RELAY_WORKTREE_ISOLATION=1 \
+  bash \"$SHIM\""
+
+bash "$DRIVE" --relay-file "$A/relay.md" --relay-task RELAY-TURN-default \
+  --agent-cmd "$AGENT_CMD_DEFAULT" --round-cap 1 >/dev/null 2>&1
+
+# Assertions:
+# 1. $A must have a new commit.
+[ "$(git -C "$A" rev-parse HEAD)" != "$A_BEFORE" ] && pass "default path: commit created in harness repo A" || fail "no commit in harness repo A"
+
+# 2. $B must NOT have a new commit.
+[ "$(git -C "$B" rev-parse HEAD)" = "$B_BEFORE" ] && pass "default path: foreign repo B untouched" || fail "foreign repo B was modified"
+
+# 3. $A/artifact.txt must contain the edit.
+grep -q "edited by agent" "$A/artifact.txt" && pass "default path: artifact edited in A" || fail "artifact not edited in A"
+
+# --- Test case 3 (GH-51 [1-kernel]): same-repo `--target-root .` must NOT flag the relay file off-lane ---
+# A relative --target-root (`.`, run from the repo root) with an ABSOLUTE relay file used to leave
+# RTL_ROOT relative, so the repo-root-relative strip couldn't remove the prefix → the relay file
+# failed the off-lane match and the whole turn was reverted (exit 6; the GH-37 marathon needed
+# --target-root DROPPED to converge). It must now behave exactly like a same-repo no-target-root turn:
+# the relay-file + artifact edits commit. Worktree isolation ON; relay file passed ABSOLUTE as marathon-drive does.
+seed_token RELAY-TURN-samerepo
+A_BEFORE="$(git -C "$A" rev-parse HEAD)"
+AGENT_CMD_SAME="RELAY_AGENT=claude RELAY_FILE=\"$A/relay.md\" RELAY_TASK=RELAY-TURN-samerepo \
+  CLAUDE_AGENT=claude CLAUDE_BIN=\"$STUB\" CLAUDE_TURN_ROOT=\"$A\" CLAUDE_LOG=\"$WORK/c-same.log\" \
+  ALLOW_PATHS=\"artifact.txt\" CLAUDE_BLOCK_CMDS=\"\" RELAY_WORKTREE_ISOLATION=1 \
+  bash \"$SHIM\""
+# Run from CWD=$A so `--target-root .` resolves to the harness repo (the same-repo case).
+( cd "$A" && bash "$DRIVE" --relay-file "$A/relay.md" --relay-task RELAY-TURN-samerepo \
+  --target-root "." --agent-cmd "$AGENT_CMD_SAME" --round-cap 1 ) >/dev/null 2>&1
+
+# The turn must COMMIT (not be reverted off-lane).
+[ "$(git -C "$A" rev-parse HEAD)" != "$A_BEFORE" ] \
+  && pass "GH-51 [1-kernel]: same-repo --target-root . commits (relay file no longer off-lane)" \
+  || fail "GH-51 [1-kernel]: same-repo --target-root . reverted the turn off-lane (no commit)"
+# And the relay-file edit landed (the exact path that was being flagged off-lane).
+grep -q "Round 1 · Agent" "$A/relay.md" \
+  && pass "GH-51 [1-kernel]: same-repo --target-root . — relay-file edit landed" \
+  || fail "GH-51 [1-kernel]: same-repo --target-root . — relay-file edit lost"
+
+
+# --- Test case 4 (GH-160): a VENDORED .xyz/ install's own default ROOT (a SUBDIR of the repo it's
+# vendored into) must not anchor containment there, even with NO --target-root at all. ---
+# codex-turn.sh/agy-turn.sh/claude-turn.sh each default their TURN_ROOT to their own script's
+# parent directory when the orchestrator doesn't export e.g. CODEX_TURN_ROOT (it never does) — for
+# a vendored `<repo>/.xyz/relay-automation/codex-turn.sh`, that default is `<repo>/.xyz`, NOT
+# `<repo>`. Simulate that here: CLAUDE_TURN_ROOT points at a subdirectory of $A, no --target-root
+# is passed at all (RELAY_TARGET_ROOT unset — the GH-51 block above only fires when it IS set, so
+# this exercises a genuinely different code path). Before the fix: the relay-file's absolute path
+# never strips to repo-relative under the wrong root, failing its off-lane match; and the
+# worktree's `-e "$RTL_ROOT/artifact.txt"` seed check resolves under the wrong root, finds nothing,
+# and deletes the real artifact from the worktree handed to the agent. After the fix: RTL_ROOT
+# collapses to $A (its real toplevel) and the turn commits exactly like the no-target-root case.
+mkdir -p "$A/.xyz/relay-automation"
+seed_token RELAY-TURN-vendored
+A_BEFORE="$(git -C "$A" rev-parse HEAD)"
+ARTIFACT_LINES_BEFORE="$(wc -l <"$A/artifact.txt")"
+AGENT_CMD_VENDORED="RELAY_AGENT=claude RELAY_FILE=\"$A/relay.md\" RELAY_TASK=RELAY-TURN-vendored \
+  CLAUDE_AGENT=claude CLAUDE_BIN=\"$STUB\" CLAUDE_TURN_ROOT=\"$A/.xyz\" CLAUDE_LOG=\"$WORK/c-vendored.log\" \
+  ALLOW_PATHS=\"artifact.txt\" CLAUDE_BLOCK_CMDS=\"\" RELAY_WORKTREE_ISOLATION=1 \
+  bash \"$SHIM\""
+bash "$DRIVE" --relay-file "$A/relay.md" --relay-task RELAY-TURN-vendored \
+  --agent-cmd "$AGENT_CMD_VENDORED" --round-cap 1 >/dev/null 2>&1
+
+# The turn must COMMIT (not be reverted off-lane, and not silently drop the artifact).
+[ "$(git -C "$A" rev-parse HEAD)" != "$A_BEFORE" ] \
+  && pass "GH-160: vendored-subdir TURN_ROOT commits (relay file no longer off-lane)" \
+  || fail "GH-160: vendored-subdir TURN_ROOT reverted the turn off-lane (no commit)"
+# The relay-file edit landed (this round's append, not an earlier round's).
+tail -5 "$A/relay.md" | grep -q "Round 1 · Agent" \
+  && pass "GH-160: vendored-subdir TURN_ROOT — relay-file edit landed" \
+  || fail "GH-160: vendored-subdir TURN_ROOT — relay-file edit lost"
+# The artifact GREW by this round's append (proves the worktree seed step did NOT wrongly delete
+# the pre-existing content and start the file over — a plain content grep would pass even if the
+# file were deleted and recreated with just this round's line, since prior rounds wrote the same text).
+[ "$(wc -l <"$A/artifact.txt")" -gt "$ARTIFACT_LINES_BEFORE" ] \
+  && pass "GH-160: vendored-subdir TURN_ROOT — artifact survived worktree seeding" \
+  || fail "GH-160: vendored-subdir TURN_ROOT — artifact was wrongly deleted from the worktree"
+
+echo "  $TEST_NAME: $PASS pass, $FAIL fail"
+exit 0

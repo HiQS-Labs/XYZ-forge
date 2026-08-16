@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent2Agent"
+  short_description: "Watch or drive local agent discussions"
+  default_prompt: "Use $agent2agent to start, join, watch, or explicitly drive a local multi-agent discussion."

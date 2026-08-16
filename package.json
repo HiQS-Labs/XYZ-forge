@@ -1,0 +1,21 @@
+{
+  "name": "xyz-3-agents-swarm",
+  "version": "1.0.0",
+  "description": "XYZ multi-agent coordination: the tick kernel plus relay automation for running multiple AI coding agents on one repo without collisions.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "./validate.sh",
+    "test:acorn-extract": "./test/acorn-extract.sh"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "acorn": "^8.17.0",
+    "acorn-walk": "^8.3.5"
+  }
+}

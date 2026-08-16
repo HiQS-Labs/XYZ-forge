@@ -1,0 +1,449 @@
+#!/usr/bin/env node
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const { execFileSync } = require('child_process');
+
+const { appendEvent, ensureEventsDir, EVENT_TYPES } = require('../src/events');
+const { project, fold } = require('../src/project');
+const { claim } = require('../src/claim');
+const { scope, release, circuitBreak, done, reap, heartbeat } = require('../src/scope');
+const { next } = require('../src/next');
+const { take } = require('../src/take');
+const { analyze, renderHuman, renderMd } = require('../src/analyze');
+const { gitUserName } = require('../src/identity');
+const { parseGeminiStats } = require('../src/cost');
+
+function repoRoot() {
+  if (process.env.TICK_REPO_ROOT) return { root: path.resolve(process.env.TICK_REPO_ROOT), source: 'env' };
+  try {
+    return { root: execFileSync('git', ['rev-parse', '--show-toplevel'], { encoding: 'utf8' }).trim(), source: 'git' };
+  } catch {
+    return { root: process.cwd(), source: 'cwd' };
+  }
+}
+
+// Coordination-mutation verbs that operate on a task's lock in .tick/events.
+// A bare call from a foreign CWD (no TICK_REPO_ROOT) resolves the wrong root via
+// `git rev-parse` and would silently land in — or auto-create — the wrong repo's
+// log, no-op'ing against the real harness clone. This is the GH-12 foot-gun that
+// stalled a live relay handoff (`claim`/`take` succeed-in-the-wrong-place;
+// `release`/`done` throw a bare "task not found" with no hint it's a wrong-CWD
+// problem). When the root was INFERRED (not pinned via TICK_REPO_ROOT), surface
+// the resolved root and refuse to operate on a repo that was never `tick init`-ed,
+// rather than succeeding-as-noop. Best-effort `cost`/`log` are intentionally left
+// out so a turn's auxiliary cost capture never hard-fails on this.
+const MUTATING_GUARD_VERBS = new Set([
+  'claim', 'take', 'scope', 'release', 'break', 'done', 'ping', 'reap',
+]);
+
+function assertResolvedRoot(verb, root, source) {
+  if (!MUTATING_GUARD_VERBS.has(verb)) return;
+  if (source === 'env') return; // operator pinned the root explicitly — trust it.
+  const how = source === 'git' ? 'git rev-parse' : 'cwd fallback';
+  process.stderr.write(`tick: resolved repo root ${root} via ${how} (set TICK_REPO_ROOT to pin it)\n`);
+  if (!fs.existsSync(path.join(root, '.tick', 'events'))) {
+    throw new Error(
+      `no .tick/events at ${root} (resolved via ${how}). Refusing to create a coordination ` +
+      `log here — this is almost always a wrong-directory mistake that would silently no-op ` +
+      `against the real clone. If this IS the harness repo, run \`tick init\` first; otherwise ` +
+      `set TICK_REPO_ROOT to the harness clone.`
+    );
+  }
+}
+
+function parseArgs(argv) {
+  const positional = [];
+  const flags = {};
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith('--')) {
+      const key = a.slice(2);
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith('--')) {
+        flags[key] = true;
+      } else {
+        flags[key] = next;
+        i++;
+      }
+    } else {
+      positional.push(a);
+    }
+  }
+  return { positional, flags };
+}
+
+function parsePathsFlag(v) {
+  if (!v || v === true) return [];
+  return String(v).split(',').map(s => s.trim()).filter(Boolean);
+}
+
+function usage() {
+  process.stderr.write(`tick — coordination layer CLI
+
+Usage:
+  tick init
+  tick log <type> <task> [--agent <id>] [--note "..."] [--paths a,b] [--priority N] [--epoch N]
+  tick project
+  tick fences                                      (read-only: fenced-event audit log)
+  tick claim <task> --agent <id> --paths <globs>
+  tick take --agent <id>                           (atomic next+claim)
+  tick next --agent <id>                           (read-only, no STATE.md write)
+  tick scope <task> --agent <id> --paths <globs>
+  tick release <task> --agent <id> [--to <agent>] [--relay-file <path>]
+  tick break <task> --agent <id> --reason "..."
+  tick done <task> --agent <id> [--note "..."] [--relay-file <path>]
+  tick drift <surface> --agent <id> [--task <id>] [--prior-sha <sha>] [--current-sha <sha>] [--diff-lines <n>] [--turn <id>]
+  tick ping <task> --agent <id> [--note "..."]      (liveness heartbeat)
+  tick reap <agent> [--by <id>] [--task <task>]
+  tick info <task>
+  tick cost <task> --agent <id> --human-minutes <n>          (log operator attention)
+  tick cost <task> --agent <id> --tokens-in <n> --tokens-out <n> [--tokens-total <n>] [--tool <name>]
+  tick cost <task> --agent <id> --from-gemini-json <file> [--tool gemini]   (parse gemini -o json)
+  tick analyze [--format human|md|json] [--write <file>]
+
+Event types: ${Array.from(EVENT_TYPES).join(', ')}
+
+Exit codes:
+  1 — claim not acquired (GH-408): lost to another owner, task already terminal, or at the
+      per-agent claim cap. A claim you already hold is a WIN and still exits 0.
+  2 — usage error (missing/unknown flags) — deliberately distinct from a lost claim
+  6 — containment violation (off-allowlist edit in relay-turn-lib.sh)
+  8 — relay block structural validation failed (bin/validate-relay-block returned non-zero)
+`);
+}
+
+function main(argv) {
+  const verb = argv[0];
+  const rest = argv.slice(1);
+  const { positional, flags } = parseArgs(rest);
+  const { root, source } = repoRoot();
+  assertResolvedRoot(verb, root, source);
+
+  switch (verb) {
+    case 'init': {
+      ensureEventsDir(root);
+      process.stdout.write(`initialized .tick/events at ${root}\n`);
+      return 0;
+    }
+
+    case 'log': {
+      const [type, task] = positional;
+      if (!type || !task) { usage(); return 2; }
+      const { path: p } = appendEvent(root, {
+        type,
+        task,
+        agent: flags.agent || process.env.TICK_AGENT || 'unknown',
+        note: typeof flags.note === 'string' ? flags.note : undefined,
+        paths: flags.paths ? parsePathsFlag(flags.paths) : undefined,
+        to_agent: typeof flags.to === 'string' ? flags.to : undefined,
+        reason: typeof flags.reason === 'string' ? flags.reason : undefined,
+        priority: flags.priority !== undefined ? Number(flags.priority) : undefined,
+        epoch: flags.epoch !== undefined ? Number(flags.epoch) : undefined,
+      });
+      process.stdout.write(`${path.relative(root, p)}\n`);
+      return 0;
+    }
+
+    case 'project': {
+      const { stateFile, rejections } = project(root);
+      process.stdout.write(`${path.relative(root, stateFile)}\n`);
+      if (rejections.length) {
+        process.stderr.write(`fenced ${rejections.length} stale/non-owner event(s) — see .tick/rejected.jsonl\n`);
+      }
+      return 0;
+    }
+
+    case 'fences': {
+      // Read-only: re-project and print the fenced-event audit log (one JSON
+      // object per line). Shows the epoch fence firing (R1) for operators/SIEM.
+      const { rejections } = project(root);
+      for (const r of rejections) process.stdout.write(`${JSON.stringify(r)}\n`);
+      return 0;
+    }
+
+    case 'claim': {
+      const [task] = positional;
+      if (!task || !flags.agent || !flags.paths) { usage(); return 2; }
+      const result = claim(root, {
+        task,
+        agent: flags.agent,
+        paths: parsePathsFlag(flags.paths),
+      });
+      // GH-408: every `lost:` branch below exits 1, not 0. It used to print the reason and exit 0,
+      // which made the failure undetectable by exit status — so a caller doing the correct thing
+      // (`if ! tick claim ...; then`) learned nothing, and the only remaining signal was stdout,
+      // which every caller in this repo was sending to DEVNULL. Both belts were cut at once, and on
+      // 2026-08-07 that cost ~2h: an agent at its claim cap produced a turn failure whose message
+      // pointed at a perfectly healthy token. A won claim (including the idempotent re-claim by the
+      // holder, which `claim()` reports as won) still exits 0; usage errors still exit 2.
+      if (result.limitReached) {
+        process.stdout.write(`lost: claim limit reached (holding ${result.holding.join(', ')}) — finish or release first\n`);
+        return 1;
+      }
+      if (result.won) {
+        process.stdout.write(`won: ${task} claimed by ${flags.agent}\n`);
+        return 0;
+      }
+      if (result.unavailable) {
+        process.stdout.write(`lost: ${task} is ${result.unavailable} — not claimable\n`);
+        // A tick task id is single-shot: once terminal it can't be reclaimed. A relay that reuses a
+        // spent turn-token id (e.g. the literal RELAY-TURN from a prior relay) lands here and the seed
+        // silently breaks. Point at the fix (GH-18 #1): a fresh per-relay id.
+        process.stdout.write(`  → '${task}' is spent; use a fresh per-relay id (e.g. --relay-task RELAY-<your-slug>)\n`);
+        return 1;
+      }
+      process.stdout.write(`lost: ${task} already claimed by ${result.winner || 'unknown'}\n`);
+      return 1;
+    }
+
+    case 'take': {
+      if (!flags.agent) { usage(); return 2; }
+      const tr = take(root, { agent: flags.agent });
+      if (tr.limitReached) {
+        process.stdout.write(`(claim limit reached — holding ${tr.holding.join(', ')} — finish or release a task first)\n`);
+        return 0;
+      }
+      if (!tr.won) { process.stdout.write('(no available task)\n'); return 0; }
+      const handoffMark = tr.handoff ? ' [handoff]' : '';
+      process.stdout.write(`won: ${tr.task} (priority: ${tr.priority})${handoffMark}\n`);
+      return 0;
+    }
+
+    case 'next': {
+      if (!flags.agent) { usage(); return 2; }
+      const t = next(root, { agent: flags.agent });
+      if (t && t.limitReached) {
+        process.stdout.write(`(claim limit reached — holding ${t.holding.join(', ')} — finish or release a task first)\n`);
+        return 0;
+      }
+      if (!t) { process.stdout.write('(no available task)\n'); return 0; }
+      const handoff = t.handoff_to === flags.agent ? ' [handoff]' : '';
+      process.stdout.write(`${t.id} (priority: ${t.priority})${handoff}\n`);
+      return 0;
+    }
+
+    case 'scope': {
+      const [task] = positional;
+      if (!task || !flags.agent || !flags.paths) { usage(); return 2; }
+      scope(root, { task, agent: flags.agent, paths: parsePathsFlag(flags.paths) });
+      process.stdout.write(`scoped: ${task}\n`);
+      return 0;
+    }
+
+    case 'release': {
+      const [task] = positional;
+      if (!task || !flags.agent) { usage(); return 2; }
+      if (flags['relay-file']) {
+        const validateScript = path.resolve(__dirname, 'validate-relay-block');
+        try {
+          execFileSync(validateScript, [flags['relay-file']], { stdio: 'inherit' });
+        } catch (err) {
+          process.stderr.write(`tick: validation failed for ${flags['relay-file']}\n`);
+          return 8;
+        }
+      }
+      release(root, { task, agent: flags.agent, to_agent: typeof flags.to === 'string' ? flags.to : undefined });
+      process.stdout.write(`released: ${task}\n`);
+      return 0;
+    }
+
+    case 'break': {
+      const [task] = positional;
+      if (!task || !flags.agent) { usage(); return 2; }
+      circuitBreak(root, { task, agent: flags.agent, reason: typeof flags.reason === 'string' ? flags.reason : '' });
+      process.stdout.write(`broken: ${task}\n`);
+      return 0;
+    }
+
+    case 'done': {
+      const [task] = positional;
+      if (!task || !flags.agent) { usage(); return 2; }
+      if (flags['relay-file']) {
+        const validateScript = path.resolve(__dirname, 'validate-relay-block');
+        try {
+          execFileSync(validateScript, [flags['relay-file']], { stdio: 'inherit' });
+        } catch (err) {
+          process.stderr.write(`tick: validation failed for ${flags['relay-file']}\n`);
+          return 8;
+        }
+      }
+      done(root, { task, agent: flags.agent, note: typeof flags.note === 'string' ? flags.note : undefined });
+      process.stdout.write(`done: ${task}\n`);
+      return 0;
+    }
+
+    case 'drift': {
+      // GH-68 warn-only cross-agent dependency-drift signal. Emits a dependency.drift event when a
+      // landed relay turn changed a shared surface, so the next agent's shim can inject a heads-up.
+      // Purely informational — best-effort like `cost`/`log`, deliberately NOT in MUTATING_GUARD_VERBS
+      // so it can never hard-fail a turn (the warn-only invariant, decisions/2026-07-01-cross-agent-dep-conflict.md).
+      const [surface] = positional;
+      if (!surface) { usage(); return 2; }
+      const { path: p } = appendEvent(root, {
+        type: 'dependency.drift',
+        task: typeof flags.task === 'string' ? flags.task : 'post-commit',
+        agent: flags.agent || process.env.TICK_AGENT || 'unknown',
+        surface,
+        prior_sha: typeof flags['prior-sha'] === 'string' ? flags['prior-sha'] : undefined,
+        current_sha: typeof flags['current-sha'] === 'string' ? flags['current-sha'] : undefined,
+        diff_lines: flags['diff-lines'] !== undefined ? Number(flags['diff-lines']) : undefined,
+        turn: typeof flags.turn === 'string' ? flags.turn : undefined,
+      });
+      process.stdout.write(`${path.relative(root, p)}\n`);
+      return 0;
+    }
+
+    case 'ping': {
+      const [task] = positional;
+      if (!task || !flags.agent) { usage(); return 2; }
+      heartbeat(root, { task, agent: flags.agent, note: typeof flags.note === 'string' ? flags.note : undefined });
+      process.stdout.write(`heartbeat: ${task} by ${flags.agent}\n`);
+      return 0;
+    }
+
+    case 'reap': {
+      const [agent] = positional;
+      if (!agent) { usage(); return 2; }
+      const by = typeof flags.by === 'string' ? flags.by : (gitUserName(root) || 'coordinator');
+      const result = reap(root, {
+        agent,
+        by,
+        task: typeof flags.task === 'string' ? flags.task : undefined,
+      });
+      if (!result.reaped.length) {
+        process.stdout.write(`(no active claims held by ${agent})\n`);
+      } else {
+        process.stdout.write(`reaped ${result.reaped.length} claim(s) from ${agent}: ${result.reaped.join(', ')}\n`);
+      }
+      return 0;
+    }
+
+    case 'info': {
+      const [task] = positional;
+      if (!task) { usage(); return 2; }
+      const { tasks: infoTasks } = project(root);
+      const t = infoTasks.get(task);
+      if (!t) { process.stdout.write(`(task ${task} not found)\n`); return 1; }
+      const lines = [
+        `id:       ${t.id}`,
+        `status:   ${t.status}`,
+        `priority: ${t.priority}`,
+      ];
+      const paths = t.status === 'claimed' ? t.claim.paths : t.paths;
+      lines.push(`paths:    ${paths.join(', ') || '(none)'}`);
+      if (t.status === 'claimed') lines.push(`claimer:  ${t.claim.agent}`);
+      if (t.status === 'circuit_broken') lines.push(`broken-by: ${t.break.agent} — ${t.break.reason}`);
+      if (t.handoff_to) lines.push(`handoff-to: ${t.handoff_to}`);
+      process.stdout.write(lines.join('\n') + '\n');
+      return 0;
+    }
+
+    case 'cost': {
+      const [task] = positional;
+      if (!task || !flags.agent) { usage(); return 2; }
+      const num = v => (v === undefined || v === true ? undefined : Number(v));
+
+      // (a) human attention — self-reported operator minutes.
+      if (flags['human-minutes'] !== undefined) {
+        const mins = num(flags['human-minutes']);
+        if (!Number.isFinite(mins)) { process.stderr.write('tick cost: --human-minutes must be a number\n'); return 2; }
+        appendEvent(root, { type: 'cost.human', task, agent: flags.agent, human_minutes: mins });
+        process.stdout.write(`cost.human: ${task} +${mins} min by ${flags.agent}\n`);
+        return 0;
+      }
+
+      // (b) memory telemetry — compressor, swap free, and agent peak RSS (GH-382).
+      if (flags['compressor-mb'] !== undefined || flags['swap-free-mb'] !== undefined || flags['peak-rss-mb'] !== undefined) {
+        const cMb = flags['compressor-mb'] !== undefined ? num(flags['compressor-mb']) : undefined;
+        const sMb = flags['swap-free-mb'] !== undefined ? num(flags['swap-free-mb']) : undefined;
+        const rMb = flags['peak-rss-mb'] !== undefined ? num(flags['peak-rss-mb']) : undefined;
+        appendEvent(root, {
+          type: 'cost.memory', task, agent: flags.agent,
+          compressor_mb: cMb,
+          swap_free_mb: sMb,
+          peak_rss_mb: rMb,
+        });
+        process.stdout.write(`cost.memory: ${task} compressor=${cMb !== undefined ? cMb : 'n/a'} swap_free=${sMb !== undefined ? sMb : 'n/a'} peak_rss=${rMb !== undefined ? rMb : 'n/a'} by ${flags.agent}\n`);
+        return 0;
+      }
+
+      // (c) tokens from a gemini -o json transcript — parse verbatim (Q1: CLI report is source of truth).
+      let tokensIn, tokensOut, tokensTotal;
+      if (typeof flags['from-gemini-json'] === 'string') {
+        const jf = path.resolve(root, flags['from-gemini-json']);
+        if (!fs.existsSync(jf)) { process.stderr.write(`tick cost: no such file: ${flags['from-gemini-json']}\n`); return 2; }
+        const stats = parseGeminiStats(fs.readFileSync(jf, 'utf8'));
+        if (!stats) { process.stderr.write(`tick cost: no parseable token stats in ${flags['from-gemini-json']} — not captured\n`); return 1; }
+        ({ tokens_in: tokensIn, tokens_out: tokensOut, tokens_total: tokensTotal } = stats);
+      } else {
+        tokensIn = num(flags['tokens-in']);
+        tokensOut = num(flags['tokens-out']);
+        tokensTotal = num(flags['tokens-total']);
+      }
+      if (!Number.isFinite(tokensIn) || !Number.isFinite(tokensOut)) {
+        process.stderr.write('tick cost: need --tokens-in and --tokens-out (or --from-gemini-json, or --human-minutes, or --compressor-mb/--swap-free-mb/--peak-rss-mb)\n');
+        return 2;
+      }
+      if (!Number.isFinite(tokensTotal)) tokensTotal = tokensIn + tokensOut;
+      appendEvent(root, {
+        type: 'cost.tokens', task, agent: flags.agent,
+        tokens_in: tokensIn, tokens_out: tokensOut, tokens_total: tokensTotal,
+        tool: typeof flags.tool === 'string' ? flags.tool : undefined,
+      });
+      process.stdout.write(`cost.tokens: ${task} in=${tokensIn} out=${tokensOut} total=${tokensTotal} by ${flags.agent}\n`);
+      return 0;
+    }
+
+    case 'analyze': {
+      const format = (typeof flags.format === 'string' && flags.format) || 'human';
+      const report = analyze(root);
+      let body;
+      if (format === 'json') body = JSON.stringify(report, null, 2);
+      else if (format === 'md') body = renderMd(report);
+      else body = renderHuman(report);
+
+      if (typeof flags.write === 'string') {
+        // Append (or replace existing auto-analyzed section in) the target file.
+        const target = path.resolve(root, flags.write);
+        const md = format === 'md' ? body : renderMd(report);
+        let existing = '';
+        if (fs.existsSync(target)) existing = fs.readFileSync(target, 'utf8');
+        const marker = '## Auto-analyzed (tick analyze)';
+        const idx = existing.indexOf(marker);
+        let next;
+        if (idx >= 0) {
+          // Replace from marker to end of file, since auto-analyzed sits at the bottom.
+          next = existing.slice(0, idx).replace(/\s+$/, '') + '\n\n' + md;
+        } else {
+          next = (existing.replace(/\s+$/, '') + '\n\n' + md).replace(/^\n+/, '');
+        }
+        fs.writeFileSync(target, next.endsWith('\n') ? next : next + '\n');
+        process.stdout.write(`wrote analysis to ${path.relative(root, target)}\n`);
+      } else {
+        process.stdout.write(body + '\n');
+      }
+      return 0;
+    }
+
+    case '-h':
+    case '--help':
+    case 'help':
+    case undefined:
+      usage();
+      return 0;
+
+    default:
+      process.stderr.write(`unknown verb: ${verb}\n`);
+      usage();
+      return 2;
+  }
+}
+
+try {
+  process.exit(main(process.argv.slice(2)) || 0);
+} catch (err) {
+  process.stderr.write(`tick: error: ${err.message}\n`);
+  process.exit(1);
+}

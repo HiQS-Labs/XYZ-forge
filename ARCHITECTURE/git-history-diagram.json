@@ -1,0 +1,538 @@
+{
+  "title": "xyz-3-agents-swarm — Git Lanes + Fire Queue",
+  "generated": "2026-07-20",
+  "layout": "git-lanes",
+  "sources": [
+    "git rev-list <local+remote branch refs> --topo-order --date-order --max-count=25",
+    "git for-each-ref refs/heads refs/remotes",
+    "git show --format commit metadata and parents",
+    "PROJECT/2-WORKING/MARATHON-PLAN-*.md status: frontmatter (fire-queue readiness)"
+  ],
+  "history_note": "Lanes are inferred from current local and remote-tracking refs. Deleted branch names and squash/rebase provenance cannot be reconstructed from Git ancestry alone. Fire-queue nodes are staged marathon plans (not yet branches); readiness reflects each plan's status: frontmatter as of 2026-07-20.",
+  "lanes": [
+    {
+      "id": "main",
+      "label": "main",
+      "order": 0,
+      "tip": "31cf50af95fb713718ee5cc95bd25189efc89bfb"
+    },
+    {
+      "id": "development",
+      "label": "development",
+      "order": 1,
+      "tip": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "current": true
+    },
+    {
+      "id": "gh-226/provenance-coordination",
+      "label": "gh-226/provenance-coordination",
+      "order": 2,
+      "tip": "7bf0becd18925a26bff3b2e349f331e2c9f64c6b"
+    },
+    {
+      "id": "marathon/10days-2026-07-19",
+      "label": "marathon/10days-2026-07-19",
+      "order": 3,
+      "tip": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9"
+    },
+    {
+      "id": "marathon/plan-l-followup-2026-07-19",
+      "label": "marathon/plan-l-followup-2026-07-19",
+      "order": 4,
+      "tip": "b0b068f70ecc178b4147698e512ee6b78ebe8931"
+    },
+    {
+      "id": "fire-queue",
+      "label": "🔥 Fire queue",
+      "order": 5
+    }
+  ],
+  "nodes": [
+    {
+      "id": "9bf1b566cdb81877c44bd4a1dfbb2abf6aa12573",
+      "label": "feat(GH-250): emit a default RECOMMEND/BECAUSE/UNLESS per item in marathon-triage report",
+      "type": "commit",
+      "lane": "marathon/10days-2026-07-19",
+      "order": 0,
+      "tech": "9bf1b56 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "feat(GH-250): emit a default RECOMMEND/BECAUSE/UNLESS per item in marathon-triage report\n9bf1b566cdb81877c44bd4a1dfbb2abf6aa12573\nNoel Saw · 2026-07-19T14:31:19-07:00"
+    },
+    {
+      "id": "1d15f0cc33d4d35e8ee15a0c9483418c29de7b72",
+      "label": "relay(RELAY-gh-169-commit-history-coverage): agy turn (agy headless; no push)",
+      "type": "commit",
+      "lane": "development",
+      "order": 1,
+      "tech": "1d15f0c · 2026-07-19",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "relay(RELAY-gh-169-commit-history-coverage): agy turn (agy headless; no push)\n1d15f0cc33d4d35e8ee15a0c9483418c29de7b72\nnoelsaw1 · 2026-07-19T14:31:39-07:00"
+    },
+    {
+      "id": "37836657999f0dcd5b17ac5a7ec3ba604c07ba6d",
+      "label": "fix(GH-245): refuse unwritable --target-root review + classify review-once on evidence",
+      "type": "commit",
+      "lane": "marathon/10days-2026-07-19",
+      "order": 2,
+      "tech": "3783665 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "fix(GH-245): refuse unwritable --target-root review + classify review-once on evidence\n37836657999f0dcd5b17ac5a7ec3ba604c07ba6d\nNoel Saw · 2026-07-19T14:37:07-07:00"
+    },
+    {
+      "id": "fcb88599db4f766fb3de477f484f764df1ff853f",
+      "label": "docs(10days): regenerate ROADMAP dashboard + log the 2026-07-19 marathon (13 lanes, 2 waves)",
+      "type": "commit",
+      "lane": "marathon/10days-2026-07-19",
+      "order": 3,
+      "tech": "fcb8859 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "docs(10days): regenerate ROADMAP dashboard + log the 2026-07-19 marathon (13 lanes, 2 waves)\nfcb88599db4f766fb3de477f484f764df1ff853f\nNoel Saw · 2026-07-19T14:53:00-07:00"
+    },
+    {
+      "id": "510addec9fe9448fb089dfa95cc23bd65b3ba708",
+      "label": "relay(RELAY-marathon-qa-glm52): glm turn (aider headless; no push)",
+      "type": "commit",
+      "lane": "marathon/10days-2026-07-19",
+      "order": 4,
+      "tech": "510adde · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "relay(RELAY-marathon-qa-glm52): glm turn (aider headless; no push)\n510addec9fe9448fb089dfa95cc23bd65b3ba708\nNoel Saw · 2026-07-19T15:47:41-07:00"
+    },
+    {
+      "id": "138970add12e8bae207d1e845551f5da346ecaa0",
+      "label": "relay(marathon-qa-glm52): land glm r1 review (recovered) + claude-a r2 dispositions",
+      "type": "commit",
+      "lane": "marathon/10days-2026-07-19",
+      "order": 5,
+      "tech": "138970a · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "relay(marathon-qa-glm52): land glm r1 review (recovered) + claude-a r2 dispositions\n138970add12e8bae207d1e845551f5da346ecaa0\nNoel Saw · 2026-07-19T15:52:41-07:00"
+    },
+    {
+      "id": "f84bf4565c521cab1b62916fd5c402ca83ce92de",
+      "label": "relay(marathon-qa-glm52): land glm r3 confirm (Approved) — relay closed",
+      "type": "commit",
+      "lane": "marathon/10days-2026-07-19",
+      "order": 6,
+      "tech": "f84bf45 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "relay(marathon-qa-glm52): land glm r3 confirm (Approved) — relay closed\nf84bf4565c521cab1b62916fd5c402ca83ce92de\nNoel Saw · 2026-07-19T15:55:33-07:00"
+    },
+    {
+      "id": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9",
+      "label": "triage(GH-251): file OpenRouter/aider reviewer-seam bug + intake doc + ROADMAP pointer",
+      "type": "commit",
+      "lane": "marathon/10days-2026-07-19",
+      "order": 7,
+      "tech": "4e1e6c8 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [
+        "marathon/10days-2026-07-19"
+      ],
+      "description": "triage(GH-251): file OpenRouter/aider reviewer-seam bug + intake doc + ROADMAP pointer\n4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9\nNoel Saw · 2026-07-19T16:05:45-07:00\nmarathon/10days-2026-07-19"
+    },
+    {
+      "id": "92d542bf4b4253dca20c17ea9fdab140cd7a3b38",
+      "label": "Merge pull request #252 from Claude-AI-Tools-Ventura-County/marathon/10days-2026-07-19",
+      "type": "merge",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 8,
+      "tech": "92d542b · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "Merge pull request #252 from Claude-AI-Tools-Ventura-County/marathon/10days-2026-07-19\n92d542bf4b4253dca20c17ea9fdab140cd7a3b38\nNoel Saw · 2026-07-19T16:37:43-07:00"
+    },
+    {
+      "id": "674d715270451baa7231624c276ebf98fd77876b",
+      "label": "cleanup(marathon): retire fired/superseded plans + correct stale status words",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 9,
+      "tech": "674d715 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "cleanup(marathon): retire fired/superseded plans + correct stale status words\n674d715270451baa7231624c276ebf98fd77876b\nNoel Saw · 2026-07-19T16:41:47-07:00"
+    },
+    {
+      "id": "d9ff213cbbb41742796c7367b8edb9931f48dd97",
+      "label": "chore(pdda): end-of-iteration CHANGELOG entry + dashboard regen (post-marathon cleanup)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 10,
+      "tech": "d9ff213 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "chore(pdda): end-of-iteration CHANGELOG entry + dashboard regen (post-marathon cleanup)\nd9ff213cbbb41742796c7367b8edb9931f48dd97\nNoel Saw · 2026-07-19T16:45:44-07:00"
+    },
+    {
+      "id": "0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8",
+      "label": "marathon(L): seed post-marathon follow-up plan with GH-251 as lane 1",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 11,
+      "tech": "0cc10a0 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L): seed post-marathon follow-up plan with GH-251 as lane 1\n0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8\nNoel Saw · 2026-07-19T16:50:05-07:00"
+    },
+    {
+      "id": "0dce78687150752ec39bad51412b68a1185e947e",
+      "label": "marathon(L)+fix: land 07-17/07-19 status corrections that git mv dropped; finish GH-251 lane-1",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 12,
+      "tech": "0dce786 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L)+fix: land 07-17/07-19 status corrections that git mv dropped; finish GH-251 lane-1\n0dce78687150752ec39bad51412b68a1185e947e\nNoel Saw · 2026-07-19T16:51:31-07:00"
+    },
+    {
+      "id": "ca2819de75271387aad06782c3e33a889ef46a6e",
+      "label": "marathon(L): add 3 most-critical /10days recon survivors as lanes 2-4 (#248/#170/#241)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 13,
+      "tech": "ca2819d · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L): add 3 most-critical /10days recon survivors as lanes 2-4 (#248/#170/#241)\nca2819de75271387aad06782c3e33a889ef46a6e\nNoel Saw · 2026-07-19T16:56:44-07:00"
+    },
+    {
+      "id": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "label": "marathon(L): contract pass — 3 lanes ready (#251/#241/#218), drop #248/#170 (verified done)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 14,
+      "tech": "0a546e7 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "marathon(L): contract pass — 3 lanes ready (#251/#241/#218), drop #248/#170 (verified done)\n0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a\nNoel Saw · 2026-07-19T20:53:35-07:00"
+    },
+    {
+      "id": "500dd87a653f44ff3bf6a3a630959c5560b4d363",
+      "label": "fix(marathon-yaml): reject depends_on flow-sequence form with shape-specific error (GH-241)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 15,
+      "tech": "500dd87 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "fix(marathon-yaml): reject depends_on flow-sequence form with shape-specific error (GH-241)\n500dd87a653f44ff3bf6a3a630959c5560b4d363\nNoel Saw · 2026-07-19T21:09:35-07:00"
+    },
+    {
+      "id": "cf7a123ae0bcfc29f525d2af167521765e136b95",
+      "label": "fix(aider-turn): review mode + transcript salvage so review turns land, not stall (GH-251)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 16,
+      "tech": "cf7a123 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "fix(aider-turn): review mode + transcript salvage so review turns land, not stall (GH-251)\ncf7a123ae0bcfc29f525d2af167521765e136b95\nNoel Saw · 2026-07-19T21:14:23-07:00"
+    },
+    {
+      "id": "d919e92d5ce78dbcf7f544d61881340f44a11da4",
+      "label": "feat(hq): cross-repo live marathon status query + rollup embed (GH-218)",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 17,
+      "tech": "d919e92 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "feat(hq): cross-repo live marathon status query + rollup embed (GH-218)\nd919e92d5ce78dbcf7f544d61881340f44a11da4\nNoel Saw · 2026-07-19T21:20:38-07:00"
+    },
+    {
+      "id": "88483457ca49e95fb51e9bfad3a4175d1085be93",
+      "label": "docs(marathon): record Plan L fire — GH-241/251/218 shipped on branch, CHANGELOG + doc statuses",
+      "type": "commit",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 18,
+      "tech": "8848345 · 2026-07-19",
+      "author": "Noel Saw",
+      "refs": [],
+      "description": "docs(marathon): record Plan L fire — GH-241/251/218 shipped on branch, CHANGELOG + doc statuses\n88483457ca49e95fb51e9bfad3a4175d1085be93\nNoel Saw · 2026-07-19T21:31:44-07:00"
+    },
+    {
+      "id": "65c420da43965495a7497f432dfbd452f0c0986c",
+      "label": "test(GH-255): add opt-in TEST_SOFT_FAIL to enumerate all parity gaps in one pass",
+      "type": "commit",
+      "lane": "development",
+      "order": 19,
+      "tech": "65c420d · 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "test(GH-255): add opt-in TEST_SOFT_FAIL to enumerate all parity gaps in one pass\n65c420da43965495a7497f432dfbd452f0c0986c\nnoelsaw1 · 2026-07-20T11:14:30-07:00"
+    },
+    {
+      "id": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "label": "Merge remote-tracking branch 'origin/development' into development",
+      "type": "merge",
+      "lane": "development",
+      "order": 20,
+      "tech": "607dd7c · 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "Merge remote-tracking branch 'origin/development' into development\n607dd7c34a85869915ee60885f7b0ce1044c5ec6\nnoelsaw1 · 2026-07-20T11:15:21-07:00"
+    },
+    {
+      "id": "ec7c4761044c478b144fd961a4bd7a59364c8b19",
+      "label": "docs(GH-255): record corrected Python-cutover parity ledger in CHANGELOG",
+      "type": "commit",
+      "lane": "development",
+      "order": 21,
+      "tech": "ec7c476 · 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [],
+      "description": "docs(GH-255): record corrected Python-cutover parity ledger in CHANGELOG\nec7c4761044c478b144fd961a4bd7a59364c8b19\nnoelsaw1 · 2026-07-20T11:29:43-07:00"
+    },
+    {
+      "id": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "label": "fix(GH-255): port GH-178 B1 grounding check into agy-turn.py (fail-open)",
+      "type": "commit",
+      "lane": "development",
+      "order": 22,
+      "tech": "52a94ef · 2026-07-20",
+      "author": "noelsaw1",
+      "refs": [
+        "development"
+      ],
+      "description": "fix(GH-255): port GH-178 B1 grounding check into agy-turn.py (fail-open)\n52a94efa001707ac231dc775c8b331b4b4dfbb38\nnoelsaw1 · 2026-07-20T11:40:13-07:00\ndevelopment"
+    },
+    {
+      "id": "b0b068f70ecc178b4147698e512ee6b78ebe8931",
+      "label": "Merge remote-tracking branch 'origin/development' into marathon/plan-l-followup-2026-07-19",
+      "type": "merge",
+      "lane": "marathon/plan-l-followup-2026-07-19",
+      "order": 23,
+      "tech": "b0b068f · 2026-07-20",
+      "author": "Noel Saw",
+      "refs": [
+        "marathon/plan-l-followup-2026-07-19"
+      ],
+      "description": "Merge remote-tracking branch 'origin/development' into marathon/plan-l-followup-2026-07-19\nb0b068f70ecc178b4147698e512ee6b78ebe8931\nNoel Saw · 2026-07-20T11:46:16-07:00\nmarathon/plan-l-followup-2026-07-19"
+    },
+    {
+      "id": "7bf0becd18925a26bff3b2e349f331e2c9f64c6b",
+      "label": "docs(GH-226): inventory GH-211/GH-178 touched surfaces (DoD #1)",
+      "type": "commit",
+      "lane": "gh-226/provenance-coordination",
+      "order": 24,
+      "tech": "7bf0bec · 2026-07-20",
+      "author": "Noel Saw",
+      "refs": [
+        "gh-226/provenance-coordination"
+      ],
+      "description": "docs(GH-226): inventory GH-211/GH-178 touched surfaces (DoD #1)\n7bf0becd18925a26bff3b2e349f331e2c9f64c6b\nNoel Saw · 2026-07-20T13:22:51-07:00\ngh-226/provenance-coordination"
+    },
+    {
+      "id": "mplan-L",
+      "label": "Plan L — post-marathon follow-up (3 lanes)",
+      "type": "job",
+      "lane": "fire-queue",
+      "order": 26,
+      "tech": "GH-251/241/218 · READY TO FIRE",
+      "description": "READY TO FIRE — GH-251/241/218\n3 lanes, all contracts preflight exit 0; not yet fired\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-19-L-POST-MARATHON-FOLLOWUP.md"
+    },
+    {
+      "id": "mplan-H",
+      "label": "Plan H — cross-repo live marathon status (GH-218)",
+      "type": "job",
+      "lane": "fire-queue",
+      "order": 27,
+      "tech": "GH-218 · READY TO FIRE",
+      "description": "READY TO FIRE — GH-218\nBoth phases fireable, contract verified ready via --dry-run\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-17-H-LIVE-MARATHON-STATUS.md"
+    },
+    {
+      "id": "mplan-K",
+      "label": "Plan K — ddb6c40 shim-root regression",
+      "type": "queue",
+      "lane": "fire-queue",
+      "order": 28,
+      "tech": "GH-255 · GATED",
+      "description": "GATED — GH-255\nTriaged, NOT fired — live regression on development, operator gate required\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-19-K-POST-DDB6C40-REGRESSION.md"
+    },
+    {
+      "id": "mplan-I",
+      "label": "Plan I — provenance vs summary coordination",
+      "type": "queue",
+      "lane": "fire-queue",
+      "order": 29,
+      "tech": "GH-226 · GATED",
+      "description": "GATED — GH-226\nActive — waiting on Jedi feedback and/or operator GO\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-17-I-PROVENANCE-SUMMARY-COORDINATION.md"
+    },
+    {
+      "id": "mplan-J",
+      "label": "Plan J — vendored-consumer DX gaps",
+      "type": "external",
+      "lane": "fire-queue",
+      "order": 30,
+      "tech": "GH-238/239 · WORK OWED",
+      "description": "WORK OWED — GH-238/239\nTriaged, not yet fired — capture docs + preflight contracts still owed\nPROJECT/2-WORKING/MARATHON-PLAN-2026-07-18-J-VENDORED-CONSUMER-DX.md"
+    }
+  ],
+  "edges": [
+    {
+      "source": "9bf1b566cdb81877c44bd4a1dfbb2abf6aa12573",
+      "target": "37836657999f0dcd5b17ac5a7ec3ba604c07ba6d",
+      "kind": "sync"
+    },
+    {
+      "source": "37836657999f0dcd5b17ac5a7ec3ba604c07ba6d",
+      "target": "fcb88599db4f766fb3de477f484f764df1ff853f",
+      "kind": "sync"
+    },
+    {
+      "source": "fcb88599db4f766fb3de477f484f764df1ff853f",
+      "target": "510addec9fe9448fb089dfa95cc23bd65b3ba708",
+      "kind": "sync"
+    },
+    {
+      "source": "510addec9fe9448fb089dfa95cc23bd65b3ba708",
+      "target": "138970add12e8bae207d1e845551f5da346ecaa0",
+      "kind": "sync"
+    },
+    {
+      "source": "138970add12e8bae207d1e845551f5da346ecaa0",
+      "target": "f84bf4565c521cab1b62916fd5c402ca83ce92de",
+      "kind": "sync"
+    },
+    {
+      "source": "f84bf4565c521cab1b62916fd5c402ca83ce92de",
+      "target": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9",
+      "kind": "sync"
+    },
+    {
+      "source": "4e1e6c8c4f8eaaae5c738b543c828a1e9ef63fb9",
+      "target": "92d542bf4b4253dca20c17ea9fdab140cd7a3b38",
+      "kind": "merge",
+      "label": "merge"
+    },
+    {
+      "source": "92d542bf4b4253dca20c17ea9fdab140cd7a3b38",
+      "target": "674d715270451baa7231624c276ebf98fd77876b",
+      "kind": "sync"
+    },
+    {
+      "source": "674d715270451baa7231624c276ebf98fd77876b",
+      "target": "d9ff213cbbb41742796c7367b8edb9931f48dd97",
+      "kind": "sync"
+    },
+    {
+      "source": "d9ff213cbbb41742796c7367b8edb9931f48dd97",
+      "target": "0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8",
+      "kind": "sync"
+    },
+    {
+      "source": "0cc10a0f89264abc9dbc65e5e39c46d66c6a61f8",
+      "target": "0dce78687150752ec39bad51412b68a1185e947e",
+      "kind": "sync"
+    },
+    {
+      "source": "0dce78687150752ec39bad51412b68a1185e947e",
+      "target": "ca2819de75271387aad06782c3e33a889ef46a6e",
+      "kind": "sync"
+    },
+    {
+      "source": "ca2819de75271387aad06782c3e33a889ef46a6e",
+      "target": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "kind": "sync"
+    },
+    {
+      "source": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "target": "500dd87a653f44ff3bf6a3a630959c5560b4d363",
+      "kind": "sync"
+    },
+    {
+      "source": "500dd87a653f44ff3bf6a3a630959c5560b4d363",
+      "target": "cf7a123ae0bcfc29f525d2af167521765e136b95",
+      "kind": "sync"
+    },
+    {
+      "source": "cf7a123ae0bcfc29f525d2af167521765e136b95",
+      "target": "d919e92d5ce78dbcf7f544d61881340f44a11da4",
+      "kind": "sync"
+    },
+    {
+      "source": "d919e92d5ce78dbcf7f544d61881340f44a11da4",
+      "target": "88483457ca49e95fb51e9bfad3a4175d1085be93",
+      "kind": "sync"
+    },
+    {
+      "source": "1d15f0cc33d4d35e8ee15a0c9483418c29de7b72",
+      "target": "65c420da43965495a7497f432dfbd452f0c0986c",
+      "kind": "sync"
+    },
+    {
+      "source": "65c420da43965495a7497f432dfbd452f0c0986c",
+      "target": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "kind": "sync"
+    },
+    {
+      "source": "0a546e7cc09e53155e3da5ee62bbe8aea9f4be3a",
+      "target": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "kind": "merge",
+      "label": "merge"
+    },
+    {
+      "source": "607dd7c34a85869915ee60885f7b0ce1044c5ec6",
+      "target": "ec7c4761044c478b144fd961a4bd7a59364c8b19",
+      "kind": "sync"
+    },
+    {
+      "source": "ec7c4761044c478b144fd961a4bd7a59364c8b19",
+      "target": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "kind": "sync"
+    },
+    {
+      "source": "88483457ca49e95fb51e9bfad3a4175d1085be93",
+      "target": "b0b068f70ecc178b4147698e512ee6b78ebe8931",
+      "kind": "sync"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "b0b068f70ecc178b4147698e512ee6b78ebe8931",
+      "kind": "merge",
+      "label": "merge"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "7bf0becd18925a26bff3b2e349f331e2c9f64c6b",
+      "kind": "branch",
+      "label": "branch"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-L",
+      "kind": "branch",
+      "label": "ready ▸"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-H",
+      "kind": "branch",
+      "label": "ready ▸"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-K",
+      "kind": "branch"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-I",
+      "kind": "branch"
+    },
+    {
+      "source": "52a94efa001707ac231dc775c8b331b4b4dfbb38",
+      "target": "mplan-J",
+      "kind": "branch"
+    }
+  ]
+}

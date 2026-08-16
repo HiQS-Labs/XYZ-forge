@@ -1,0 +1,20 @@
+# OpenRouter model-name lookup table (GH-120).
+#
+# Maps a colloquial/short model name to its canonical OpenRouter `provider/slug[:variant]` id, so
+# relay-automation tooling can resolve a name like "GLM 5.2" or "Nemotron Ultra 3" without a live
+# query against https://openrouter.ai/api/v1/models every time.
+#
+# Format: one entry per line, `alias: canonical-slug`. Resolution is fuzzy (see
+# resolve-model-alias.sh) — the lookup normalizes case/punctuation/hyphens/whitespace on both the
+# input and these keys before matching, and falls back to a token-subset match, so
+# "Nemotron 3 Ultra" or "nemotron-ultra3" still resolve to the "nemotron ultra 3" entry below.
+#
+# To add a new alias: append a line here (`alias: canonical-slug`), then add an assertion for it
+# in test/model-alias.sh. See the "Adding a new model alias" section in README.md.
+
+glm-5.2: z-ai/glm-5.2
+nemotron ultra 3: nvidia/nemotron-3-ultra-550b-a55b
+nemotron ultra 3 free: nvidia/nemotron-3-ultra-550b-a55b:free
+qwen3 coder: qwen/qwen3-coder
+deepseek v4 pro: deepseek/deepseek-v4-pro
+grok 4.6: x-ai/grok-4.6

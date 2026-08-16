@@ -1,0 +1,4 @@
+interface:
+  display_name: "Marathon Cleanup"
+  short_description: "Verify and archive completed marathon work"
+  default_prompt: "Use $marathon-cleanup to audit active marathon files and archive only fully verified completed work."

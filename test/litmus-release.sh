@@ -1,0 +1,396 @@
+#!/usr/bin/env bash
+# gate-evidence: {"form":"deliberate-mutation","observed":true,"result":"--mutate-evidence strips an accepted form and a registration from a fixture copy; the audit went from 6/6 satisfied to 2 structural failures, and the unmutated fixture is re-checked green in the same run. Mutation D additionally replays the pre-fix SIGPIPE shape on a 120KB inventory and observes it report a REGISTERED gate as not-registered, then asserts the fixed check survives the same input"}
+# Litmus (release 0.2.0) — the executable goalpost for a FROZEN manifest of decision gates.
+#
+# Why this file exists. Until now Litmus's definition of done was its issue list, and an issue list
+# is a backlog: it grows while you work on it. #457, #460 and #461 were all filed ON 2026-08-08 while
+# executing Litmus. A release whose scope is "the open issues in its milestone" cannot close, because
+# working on it generates more of it. Both advisors in the 2026-08-08 codex+agy consult independently
+# reached the same remedy: freeze a named manifest and make the exit criterion one committed command.
+#
+# WHAT THIS PROVES, and what it deliberately does not.
+#
+#   PROVES  (1) each manifest gate is REGISTERED in validate.sh's TESTS array, so the suite actually
+#               runs it. This is the #461 defect: test/gh401-dry-run-no-mutation.sh shipped in #456,
+#               sat in the tree unregistered, and was therefore never executed by CI. A gate absent
+#               from TESTS is indistinguishable from a gate that passes.
+#           (2) each carries a PARSEABLE `# gate-evidence:` declaration naming one of the accepted
+#               forms with observed=true, or is explicitly marked advisory in the manifest.
+#           (3) no manifest entry claims completion it cannot support — a CLOSED issue whose gate is
+#               missing, unregistered, or undeclared is a false completion claim and fails HARD.
+#
+#   DOES NOT PROVE that the negative control was truly observed. utils/py/gate_inventory.py reads a
+#           declaration authored by the same person who wrote the gate ("This tool never treats a
+#           filename, a successful invocation, or a prose mention as negative-control evidence" — but
+#           `observed: true` is still a string a human typed). That limit is inherent to metadata and
+#           is stated here rather than papered over, because claiming otherwise would make this audit
+#           the exact self-certifying shape Litmus exists to forbid (#419 principle 13). Closing the
+#           gap needs recorded execution of each control, which is deliberately out of scope for the
+#           release goalpost and is tracked separately.
+#
+# THREE MODES, because the audit has three different jobs:
+#
+#   (default)          Suite mode, registered in validate.sh. GREEN while Litmus is in progress.
+#                      Fails ONLY on a false completion claim (3 above). Remaining work is reported
+#                      as INFO, so an unfinished release does not paint the whole suite red — an
+#                      always-red suite trains people to ignore it, which is #460's failure mode.
+#
+#   --release-gate     THE GOALPOST. Exits non-zero until every manifest entry is complete. This is
+#                      the command RELEASES.md cites. It is red today, on purpose, and turning it
+#                      green is what "Litmus is done" means.
+#
+#   --mutate-evidence  This audit's own negative control, per #419. Copies the tree, strips one
+#                      declaration and one registration, and asserts the audit goes RED. If the audit
+#                      stayed green under a corrupted manifest it would not be evidence of anything.
+#
+# THE FREEZE. Adding an entry below is a re-scope, not a bugfix. Per the consult, a newly discovered
+# defect joins Litmus only if it (a) makes this command fail or falsifies a named invariant, (b) has
+# a reproducer demonstrating that, and (c) the operator explicitly swaps out an existing entry or
+# accepts a target-date slip. Otherwise it belongs to the next release. Discovery is not admission.
+set -euo pipefail
+
+source "$(dirname "$0")/_setup.sh" litmus-release
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+MODE="suite"
+case "${1:-}" in
+  --release-gate)    MODE="release-gate" ;;
+  --mutate-evidence) MODE="mutate" ;;
+  "")                ;;
+  *) echo "usage: $0 [--release-gate|--mutate-evidence]" >&2; exit 2 ;;
+esac
+
+# ── the frozen manifest ────────────────────────────────────────────────────────────────────────────
+# issue | gate hint | optional INVARIANT (shell predicate run in the tree; must exit 0)
+#
+# The hint is a prefix for unbuilt lanes because the filename is not knowable before the build; #461's
+# gate already exists under #401's name, which is why it carries an exact path instead.
+#
+# WHY THE INVARIANT COLUMN EXISTS — this audit shipped with the exact defect it was built to catch.
+# Registration plus a declaration proves the gate RUNS and CLAIMS a control. It does not prove the
+# issue's acceptance criteria are met. #461 is "GH-401 closed with criteria 4 and 5 unmet"; criterion 5
+# is about the control (which registration+declaration does cover) but criterion 4 is about a TRACKED
+# FILE, which no amount of gate metadata can see. The first run after #458 merged duly reported #461
+# `complete` while `phases/p1/RELAY.md` was still tracked with 9 machine-specific absolute paths — a
+# false completion claim, from the tool whose one hard failure mode is false completion claims.
+# So: where an entry's acceptance includes a checkable state invariant, name it here.
+MANIFEST=(
+  "375|test/gh375-|"
+  "390|test/gh390-gate-guard.sh|"
+  "407|test/gh407-|"
+  "417|test/gh417-|"
+  # GH-401 criterion 4: a tracked copy is retained only if a named consumer is identified AND it holds
+  # no machine-specific absolute paths. No consumer was ever identified, so the invariant is: untracked.
+  "457|test/gh457-|"
+  "461|test/gh401-dry-run-no-mutation.sh|"
+)
+
+# Invariants are a small STRUCTURED vocabulary, deliberately NOT shell strings interpreted at
+# runtime. Interpreting a variable as shell is what the GH-64 security scanner refuses under its
+# R1 rule (unsanitized dynamic execution), and it refused this file's first version — correctly.
+# Add a verb below rather than reaching for dynamic execution.
+# (The scanner matches on text, not syntax, so it also flags the pattern written inside a comment —
+#  which is why this note describes the rule instead of quoting it. Observed here, not guessed.)
+#   untracked:<path>   <path> must not be tracked by git
+#   absent:<path>      <path> must not exist on disk
+# A row may carry SEVERAL invariants, comma-separated; every one must hold.
+#
+# DO NOT use this to assert `untracked` on an artifact the harness itself versions. That is the
+# mistake #461's row made and it is why the row is now empty. #461 required phases/p1/RELAY.md to stay
+# untracked on the reasoning that no consumer was identified — but the DRIVER is the consumer: it
+# writes each phase thread and escalation and stages them with `git add --` + check=True
+# (marathon_drive.py:1129, :1169, :1728). So the invariant was a tripwire on a legitimate operation:
+# the first same-repo marathon run using phase-id `p1` re-tracks those files and fails the release
+# gate. Trying to satisfy it from the other side by gitignoring /phases/ is worse — `git add` on an
+# explicitly named ignored path exits 1, so the phase dies while recording itself (verified; guarded
+# now by test/marathon-root-audit.sh).
+#
+# A codex+agy consult on 2026-08-09 graded this a [Blocker] independently and reached the same verdict:
+# the gate was wrong, not the driver. The mechanism is kept because it is control-tested and Nightwatch
+# will want it; the rule that prevents recurrence lives here, next to the tool that could recreate it.
+# Invariants belong on repository states the system does NOT itself produce.
+check_invariant() {  # <tree> <spec-csv> -> 0 all satisfied, 1 any violated/unknown
+  local tree="$1" spec_csv="$2" spec verb arg
+  local IFS=,
+  for spec in $spec_csv; do
+    [ -n "$spec" ] || continue
+    verb="${spec%%:*}"; arg="${spec#*:}"
+    case "$verb" in
+      untracked) ( cd "$tree" && ! git ls-files --error-unmatch "$arg" >/dev/null 2>&1 ) || return 1 ;;
+      absent)    [ -e "$tree/$arg" ] && return 1 ;;
+      *) printf 'litmus-release: unknown invariant verb in %s\n' "$spec" >&2; return 1 ;;
+    esac
+  done
+  return 0
+}
+ACCEPTED_FORMS="pre-fix-replay deliberate-mutation controlled-bad-fixture"
+
+# ── audit one manifest entry against a tree ────────────────────────────────────────────────────────
+# Echoes one line: "<issue> <state> <detail>" where state is complete|incomplete|BROKEN.
+# BROKEN is reserved for a false completion claim, which is the only thing suite mode fails on.
+audit_entry() {
+  local tree="$1" issue="$2" hint="$3" gate="" inv="$4" invariant="${5:-}"
+  if [ -f "$tree/$hint" ]; then
+    gate="$hint"
+  else
+    # glob the prefix; a lane not yet built resolves to nothing
+    local m; m="$(cd "$tree" && ls ${hint}*.sh 2>/dev/null | head -1 || true)"
+    [ -n "$m" ] && gate="$m"
+  fi
+
+  if [ -z "$gate" ]; then
+    printf '%s incomplete no-gate-yet\n' "$issue"; return 0
+  fi
+
+  # (1) registration — the inventory is generated FROM validate.sh's TESTS array, so presence in it
+  # is proof the suite runs the gate. Absence is the #461 defect.
+  #
+  # The inventory goes to a FILE, never a pipe — the same #460 reason as (2) below, but here the
+  # consequence is a WRONG VERDICT rather than noise. `grep -Fq` exits on its FIRST match and closes
+  # the pipe while `printf` is still writing; under `set -o pipefail` that SIGPIPE becomes the
+  # pipeline's status, so FINDING the gate reported it as missing.
+  #
+  # Observed 2026-08-10, not theorised: a marathon halted with
+  #   FAIL: #375 is CLOSED but its gate is not complete — not-registered-in-validate.sh:...
+  # for a gate registered at validate.sh:91, with six `printf: write error: Broken pipe` lines
+  # immediately above the FAIL. The real inventory is ~60KB at 173 gates — just under the buffer,
+  # which is why this is intermittent rather than reliably red, and why it survived until a run that
+  # happened to lose the race. Mutation D in --mutate-evidence pins both directions.
+  local inv_file="$WORK/inv.json"
+  printf '%s' "$inv" > "$inv_file"
+  if ! /usr/bin/grep -Fq "\"$gate\"" "$inv_file"; then
+    printf '%s incomplete not-registered-in-validate.sh:%s\n' "$issue" "$gate"; return 0
+  fi
+
+  # (2) a parseable declaration naming an accepted form, with observed=true.
+  # Reuses $inv_file written above. It was already a file here rather than a pipe: python breaks out
+  # of its loop on the first match, closing the pipe while printf is still writing, which produced
+  # three `printf: write error: Broken pipe` lines per run in CI. Harmless there, but noise in a
+  # gate's output is exactly what makes a real signal hard to find later (#460).
+  local form observed
+  read -r form observed <<EOF
+$(python3 - "$inv_file" "$gate" <<'PY'
+import json, sys
+try:
+    with open(sys.argv[1]) as fh:
+        data = json.load(fh)
+except Exception:
+    print("none no"); raise SystemExit(0)
+gates = data["gates"] if isinstance(data, dict) and "gates" in data else data
+for g in gates:
+    if isinstance(g, dict) and g.get("gate") == sys.argv[2]:
+        nc = g.get("negative_control", {}) or {}
+        print(f"{nc.get('form','none')} {'yes' if nc.get('observed') else 'no'}")
+        break
+else:
+    print("none no")
+PY
+)
+EOF
+  form="${form:-none}"; observed="${observed:-no}"
+
+  case " $ACCEPTED_FORMS " in
+    *" $form "*) ;;
+    *) printf '%s incomplete unaccepted-or-absent-form(%s):%s\n' "$issue" "$form" "$gate"; return 0 ;;
+  esac
+  [ "$observed" = "yes" ] || { printf '%s incomplete not-observed:%s\n' "$issue" "$gate"; return 0; }
+
+  # (3) the entry's own state invariant, where its acceptance defines one. Gate metadata cannot see
+  # repository state; this is the difference between "the gate runs" and "the issue is fixed".
+  if [ -n "$invariant" ]; then
+    if ! check_invariant "$tree" "$invariant"; then
+      printf '%s incomplete invariant-unmet(%s):%s\n' "$issue" "$invariant" "$gate"; return 0
+    fi
+  fi
+
+  printf '%s complete %s(%s)\n' "$issue" "$gate" "$form"
+}
+
+# Issue state is advisory only. `gh` is absent in CI, and #400 established the posture that an
+# unknown issue state never blocks — a gate that fails when the network is down is not measuring the
+# repo. It is still reported, because a manifest entry whose issue is still OPEN is the honest signal
+# that the release is not done.
+issue_state() {
+  local n="$1"
+  command -v gh >/dev/null 2>&1 || { echo unknown; return 0; }
+  gh issue view "$n" --json state -q .state 2>/dev/null || echo unknown
+}
+
+run_audit() {  # <tree> ; sets AUDIT_OUT, returns 0 always
+  local tree="$1" inv
+  inv="$(cd "$tree" && python3 utils/py/gate_inventory.py 2>/dev/null || echo '[]')"
+  AUDIT_OUT=""
+  local entry issue hint invariant rest line
+  for entry in "${MANIFEST[@]}"; do
+    issue="${entry%%|*}"; rest="${entry#*|}"
+    hint="${rest%%|*}"; invariant="${rest#*|}"
+    [ "$invariant" = "$rest" ] && invariant=""   # no third field
+    line="$(audit_entry "$tree" "$issue" "$hint" "$inv" "$invariant")"
+    AUDIT_OUT+="$line"$'\n'
+  done
+}
+
+# ── mode: --mutate-evidence (this audit's own negative control) ─────────────────────────────────────
+if [ "$MODE" = "mutate" ]; then
+  FIX="$WORK/tree"
+  mkdir -p "$FIX"
+  # A fixture where ALL SIX entries are satisfied, so the mutation is the only variable. Built from
+  # stubs rather than the real tree because 4 of 6 lanes are genuinely unbuilt today — mutating a
+  # tree that is already red would prove nothing.
+  mkdir -p "$FIX/test" "$FIX/utils/py"
+  cp "$ROOT/utils/py/gate_inventory.py" "$FIX/utils/py/"
+  {
+    echo 'TESTS=('
+    for stub in gh375-agy-auth-preflight gh390-gate-guard gh407-gate-never-ran \
+                gh417-turn-root-resolution gh457-gate-cap gh401-dry-run-no-mutation; do
+      echo "  \"$stub.sh\""
+    done
+    echo ')'
+  } > "$FIX/validate.sh"
+  for stub in gh375-agy-auth-preflight gh390-gate-guard gh407-gate-never-ran \
+              gh417-turn-root-resolution gh457-gate-cap gh401-dry-run-no-mutation; do
+    printf '#!/usr/bin/env bash\n# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"fixture"}\n' \
+      > "$FIX/test/$stub.sh"
+    chmod +x "$FIX/test/$stub.sh"
+  done
+
+  run_audit "$FIX"
+  before_complete="$(printf '%s' "$AUDIT_OUT" | /usr/bin/grep -c ' complete ' || true)"
+  [ "$before_complete" -eq 6 ] \
+    && pass "control: an unmutated fixture satisfies all 6 manifest entries ($before_complete/6)" \
+    || fail "control: the unmutated fixture should satisfy 6, got $before_complete — the mutation below would prove nothing"
+
+  # Mutation A: strip a declaration (the #419 defect — a gate with no recorded control).
+  printf '#!/usr/bin/env bash\n# no declaration here\n' > "$FIX/test/gh390-gate-guard.sh"
+  # Mutation B: unregister a gate (the #461 defect — present in the tree, never run by the suite).
+  /usr/bin/grep -v 'gh401-dry-run-no-mutation.sh' "$FIX/validate.sh" > "$FIX/validate.sh.new"
+  mv "$FIX/validate.sh.new" "$FIX/validate.sh"
+
+  run_audit "$FIX"
+  after_complete="$(printf '%s' "$AUDIT_OUT" | /usr/bin/grep -c ' complete ' || true)"
+  [ "$after_complete" -eq 4 ] \
+    && pass "mutation flips exactly the two mutated entries (6 -> $after_complete complete)" \
+    || fail "expected 4 complete after two mutations, got $after_complete"
+
+  printf '%s' "$AUDIT_OUT" | /usr/bin/grep -q '^390 incomplete unaccepted-or-absent-form' \
+    && pass "a stripped declaration is detected as an absent form, not silently accepted" \
+    || fail "stripping gh390's declaration did not surface as an absent form"
+
+  printf '%s' "$AUDIT_OUT" | /usr/bin/grep -q '^461 incomplete not-registered-in-validate.sh' \
+    && pass "an unregistered gate is detected (the #461 defect), not treated as passing" \
+    || fail "unregistering gh401 did not surface as not-registered"
+
+  # Mutation C: the invariant column itself. This audit shipped reporting #461 complete while
+  # phases/p1/RELAY.md was still tracked, so the column that fixes that must be proven to bite.
+  FIX2="$WORK/tree2"
+  mkdir -p "$FIX2/test" "$FIX2/utils/py"
+  cp "$ROOT/utils/py/gate_inventory.py" "$FIX2/utils/py/"
+  printf 'TESTS=(\n  "gh401-dry-run-no-mutation.sh"\n)\n' > "$FIX2/validate.sh"
+  printf '#!/usr/bin/env bash\n# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"fixture"}\n' \
+    > "$FIX2/test/gh401-dry-run-no-mutation.sh"
+  inv2="$(cd "$FIX2" && python3 utils/py/gate_inventory.py 2>/dev/null || echo '[]')"
+
+  # Real verbs, not shell truthiness: `absent:` on a path the fixture does not have (satisfied) and
+  # on one it does (violated). Using `true`/`false` here would test the harness, not the vocabulary.
+  satisfied="$(audit_entry "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "absent:no-such-file.txt")"
+  violated="$(audit_entry  "$FIX2" 461 "test/gh401-dry-run-no-mutation.sh" "$inv2" "absent:validate.sh")"
+
+  printf '%s' "$satisfied" | /usr/bin/grep -q ' complete ' \
+    && pass "invariant control: a satisfied invariant leaves the entry complete" \
+    || fail "a satisfied invariant should not block completion (got: $satisfied)"
+
+  printf '%s' "$violated" | /usr/bin/grep -q 'invariant-unmet' \
+    && pass "invariant control: a violated invariant blocks completion even with gate+declaration valid" \
+    || fail "a violated invariant was NOT detected — this is the false completion claim this audit shipped with (got: $violated)"
+
+  # Mutation D: the #460 SIGPIPE shape, in the one place it inverts a verdict rather than adding
+  # noise. A gate that IS registered must stay registered when the inventory outgrows the pipe
+  # buffer. This is the defect that halted the 2026-08-10 Nightwatch marathon.
+  #
+  # The target gate is deliberately FIRST in TESTS: `grep -Fq` must match EARLY, while `printf` still
+  # has bytes left to write, or there is no SIGPIPE and the control proves nothing.
+  FIX3="$WORK/tree3"
+  mkdir -p "$FIX3/test" "$FIX3/utils/py"
+  cp "$ROOT/utils/py/gate_inventory.py" "$FIX3/utils/py/"
+  {
+    echo 'TESTS=('
+    echo '  "gh401-dry-run-no-mutation.sh"'
+    for i in $(seq 1 400); do printf '  "filler-%03d.sh"\n' "$i"; done
+    echo ')'
+  } > "$FIX3/validate.sh"
+  printf '#!/usr/bin/env bash\n# gate-evidence: {"form":"pre-fix-replay","observed":true,"result":"fixture"}\n' \
+    > "$FIX3/test/gh401-dry-run-no-mutation.sh"
+  for i in $(seq 1 400); do
+    printf '#!/usr/bin/env bash\n' > "$FIX3/test/$(printf 'filler-%03d.sh' "$i")"
+  done
+  inv3="$(cd "$FIX3" && python3 utils/py/gate_inventory.py 2>/dev/null || echo '[]')"
+
+  # Guard the control itself: if the fixture does not actually exceed the pipe buffer, the two
+  # assertions below are vacuous and would pass against the unfixed code.
+  [ "${#inv3}" -gt 65536 ] \
+    && pass "control precondition: the fixture inventory (${#inv3} bytes) exceeds the 64KB pipe buffer" \
+    || fail "fixture inventory is only ${#inv3} bytes — under the buffer, so Mutation D would prove nothing"
+
+  # Pre-fix replay, inline: the OLD pipe shape must be observed reporting the wrong answer, or the
+  # fix below is a change nobody can show mattered (#419).
+  # stderr is suppressed because this replay DELIBERATELY provokes `printf: write error: Broken pipe`
+  # — leaving it visible would reintroduce exactly the output noise #460 exists to remove, and a
+  # reader scanning a green run for real warnings would have to learn to ignore one.
+  old_shape="registered"
+  { printf '%s' "$inv3" | /usr/bin/grep -Fq '"test/gh401-dry-run-no-mutation.sh"'; } 2>/dev/null \
+    || old_shape="not-registered"
+  [ "$old_shape" = "not-registered" ] \
+    && pass "control: the pre-fix pipe shape reports not-registered for a gate that IS registered (the defect, observed)" \
+    || fail "the pre-fix shape did not reproduce the false negative — Mutation D cannot show the fix works"
+
+  big_verdict="$(audit_entry "$FIX3" 461 "test/gh401-dry-run-no-mutation.sh" "$inv3" "")"
+  printf '%s' "$big_verdict" | /usr/bin/grep -q ' complete ' \
+    && pass "a registered gate survives an oversized inventory — SIGPIPE no longer inverts the verdict" \
+    || fail "an oversized inventory still reports a registered gate as missing (got: $big_verdict)"
+
+  echo "litmus-release: negative control OBSERVED in both directions ($PASS pass, $FAIL fail)"
+  exit 0
+fi
+
+# ── modes: suite (default) and --release-gate ───────────────────────────────────────────────────────
+run_audit "$ROOT"
+complete=0; incomplete=0; broken=0
+
+while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  issue="${line%% *}"; rest="${line#* }"; state="${rest%% *}"; detail="${rest#* }"
+  st="$(issue_state "$issue")"
+
+  if [ "$state" = "complete" ]; then
+    complete=$((complete+1))
+    echo "  OK   #$issue complete — $detail (issue: $st)"
+  else
+    # A CLOSED issue that is not complete is a FALSE COMPLETION CLAIM: someone closed it while its
+    # gate is missing, unregistered, or undeclared. That is #461 exactly, and it is the one thing
+    # this audit fails on in suite mode — a wrong claim is worse than unfinished work.
+    if [ "$st" = "CLOSED" ]; then
+      broken=$((broken+1))
+      fail "#$issue is CLOSED but its gate is not complete — $detail"
+    else
+      incomplete=$((incomplete+1))
+      echo "  INFO #$issue remaining — $detail (issue: $st)"
+    fi
+  fi
+done <<< "$AUDIT_OUT"
+
+[ "$broken" -eq 0 ] \
+  && pass "no manifest entry claims completion it cannot support (0 false completion claims)" \
+  || true   # fail() already recorded each one
+
+echo "  manifest: $complete/${#MANIFEST[@]} complete, $incomplete remaining, $broken false claim(s)"
+
+if [ "$MODE" = "release-gate" ]; then
+  if [ "$complete" -eq "${#MANIFEST[@]}" ] && [ "$broken" -eq 0 ]; then
+    echo "litmus-release: GOALPOST MET — all ${#MANIFEST[@]} manifest entries complete"
+    exit 0
+  fi
+  echo "litmus-release: GOALPOST NOT MET — $complete/${#MANIFEST[@]} complete, $broken false claim(s)" >&2
+  exit 1
+fi
+
+echo "litmus-release: $PASS pass, $FAIL fail"
