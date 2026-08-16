@@ -153,14 +153,29 @@ ANCESTOR="$(git -C "$ROOT" rev-list --max-parents=0 HEAD | tail -1)"
 printf 'source_commit=%s\ntick_version=x\nvendored_utc=x\n' "$HEAD" > "$REPO/.xyz/VERSION"
 ( cd "$REPO" && "$FH" --root 2>"$WORK/cur.err" >/dev/null )
 [ ! -s "$WORK/cur.err" ] && pass "staleness: current copy is silent" || fail "current copy warned: $(cat "$WORK/cur.err")"
-printf 'source_commit=%s\ntick_version=x\nvendored_utc=x\n' "$ANCESTOR" > "$REPO/.xyz/VERSION"
-( cd "$REPO" && "$FH" --env 2>"$WORK/beh.err" >"$WORK/beh.out" ); rc=$?
-[ "$rc" = 0 ] && pass "staleness: behind copy still exits 0 (never blocks)" || fail "behind copy exited $rc"
-grep -qi 'behind' "$WORK/beh.err" && pass "staleness: behind copy warns on stderr" || fail "no behind-banner on stderr"
-if grep -q '^export HARNESS=' "$WORK/beh.out" && ! grep -qvE '^export ' "$WORK/beh.out"; then
-  pass "staleness: --env stdout stays pure export lines"
+# The BEHIND state needs a commit that is an ancestor of HEAD and is not HEAD itself —
+# find-harness.sh decides it with `merge-base --is-ancestor` (skills/relay-xyz/find-harness.sh:164).
+# In a repository with a SINGLE commit the root commit IS HEAD, so that state is structurally
+# unobservable rather than merely absent, and the assertions below would fail for a reason that says
+# nothing about the code.
+#
+# That is not hypothetical: the public launch artifact has exactly one commit BY DESIGN (#563 —
+# fresh history is what makes sanitization complete by construction), and this suite went red in it.
+# Report the gap rather than failing on it: a suite that goes red on a newcomer's clone, for a
+# condition their repository cannot express, teaches them to stop reading it — which is #460.
+if [ "$(git -C "$ROOT" rev-list --count HEAD 2>/dev/null || echo 0)" -lt 2 ]; then
+  echo "  SKIP: staleness behind-state — repo has a single commit, so an ancestor that is not HEAD"
+  echo "        cannot exist. Structurally unobservable here, not a passing assertion."
 else
-  fail "banner leaked into --env stdout"
+  printf 'source_commit=%s\ntick_version=x\nvendored_utc=x\n' "$ANCESTOR" > "$REPO/.xyz/VERSION"
+  ( cd "$REPO" && "$FH" --env 2>"$WORK/beh.err" >"$WORK/beh.out" ); rc=$?
+  [ "$rc" = 0 ] && pass "staleness: behind copy still exits 0 (never blocks)" || fail "behind copy exited $rc"
+  grep -qi 'behind' "$WORK/beh.err" && pass "staleness: behind copy warns on stderr" || fail "no behind-banner on stderr"
+  if grep -q '^export HARNESS=' "$WORK/beh.out" && ! grep -qvE '^export ' "$WORK/beh.out"; then
+    pass "staleness: --env stdout stays pure export lines"
+  else
+    fail "banner leaked into --env stdout"
+  fi
 fi
 
 # --- xyz-sync list/update/delete ---

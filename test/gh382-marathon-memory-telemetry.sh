@@ -41,6 +41,27 @@ exit 0
 STUB_EOF
 chmod +x "$AGENT_CMD"
 
+# Builder/reviewer BINARIES need only EXIST: `marathon_drive.py` resolves them with
+# `shutil.which(bin_name)` (utils/py/marathon_drive.py:315) and every turn in this suite is served
+# by the stub agent above, so a real codex/agy is never invoked.
+#
+# Stubbing them here removes this suite's dependency on two CLIs that live in the AUTHOR's private
+# PATH (`~/.local/bin`). Without this the suite FAILED — not skipped — for anyone who does not have
+# them installed, which is every newcomer. Found by the public-launch gate (#563): the artifact's
+# own suite went red under a scrubbed environment, and this was the cause.
+#
+# Stubbing is deliberately preferred to skipping. A skip would delete the memory-telemetry
+# assertions on exactly the machines least likely to have been tested; these stubs keep every
+# assertion running everywhere, and they also make the suite deterministic on a machine that DOES
+# have the real CLIs, since the stub shadows them.
+STUB_BIN="$WORK/bin"
+mkdir -p "$STUB_BIN"
+for _b in codex agy aider pi; do
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$STUB_BIN/$_b"
+  chmod +x "$STUB_BIN/$_b"
+done
+export PATH="$STUB_BIN:$PATH"
+
 run_driver() {
   MARATHON_ROOT="$ROOT" \
   TICK_REPO_ROOT="$ROOT" TICK_BIN="$TICK" \
