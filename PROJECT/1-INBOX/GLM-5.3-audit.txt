@@ -1,0 +1,27 @@
+I'll ground this in the actual code rather than just the docs — let me survey the architecture doc and the main code surfaces in parallel.
+
+I dug through both layers — the `tick` kernel (`src/`, ~2,100 LOC of Node) and everything around it (~60k LOC bash, ~14k Python, ~20k markdown). Here's my assessment.
+
+## Architecture: **B+**
+
+**What earns it:** The kernel layering is genuinely excellent — CLI → verbs → fold/projection → event log, with the core (`foldWithMeta`) a pure function of the event set, no circular dependencies, and a real O_EXCL mutex closing the claim TOCTOU window (`src/lock.js:41-66`). The relay layer's biggest risk ("a dozen near-identical turn scripts") turns out to be a false alarm: `relay-turn-lib.sh` is a single-sourced containment core and the six turn shims are thin dispatch wrappers. Even the Python mirror reuses the bash containment via subprocess rather than forking the safety boundary — that's the right call.
+
+**What costs it:** The frozen sh+py dual implementation for 12+ entry points (GH-308) means every behavior lives twice and must be kept in lockstep by parity tests forever. `ingestion/` is dead scaffold that throws "not implemented," and `marathon-system/` is ~1,350 lines of run logs checked into the source tree. The kernel's O(all events) re-fold on every verb with no checkpoint is fine now and won't be at scale.
+
+### Top 3 architecture changes
+1. **Finish the Python migration and delete the frozen bash twins** rather than carrying them as permanent fallbacks. The parity-test tax (`gh278-turn-timeout-parity.sh`), the guard machinery, and the trailer-exception protocol all exist only because both halves must stay alive. Keep bash solely as the containment boundary if needed, drop the rest.
+2. **Delete or quarantine non-source tree content**: the `ingestion/` scaffold, the `marathon-system/` run logs (move to `PROJECT/4-MISC` or out of tree), and the 2,214-line `SKILL.md` manual that has outgrown skill format.
+3. **Add a fold checkpoint or index** so `emitEvent` doesn't re-project all history on every verb — or at least document the event-count ceiling where the current design stops being acceptable.
+
+## Code quality: **B-**
+
+**What earns it:** Unusual discipline for a bash-first repo — `set -euo pipefail` in 30/39 scripts, contractual exit codes, JSDoc on every exported kernel function, measured constants with recorded dates (`rtl.py:27`), and a 215-file test suite with chaos tests (concurrent pollers, mid-turn kills, stale writers) and incident-named regressions. Comments are honest about limitations rather than aspirational.
+
+**What costs it:** Zero dev tooling — no eslint/prettier, no unit-test framework, no devDependencies at all; style is consistent purely by convention, and everything is integration-tested through bash. One real robustness hole: `readAllEvents` (`src/events.js:177-182`) has no error handling, so one truncated `.jsonl` file from a killed writer bricks every verb including read-only ones. Giant files and functions: `marathon_drive.py` at 2,705 lines, a ~200-line `foldWithMeta`, a 325-line `main()` switch in `bin/tick` with verbatim-duplicated validation blocks. Renderer logic duplicated across two formats in `analyze.js`. And the comment-to-code ratio frequently buries logic — 25-line essays before 3 lines of code. The known high-severity test-containment bugs (#1/#2 just filed) are also a quality cost: 31 suites still unaudited for the sandbox escape.
+
+### Top 3 code-quality changes
+1. **Harden the kernel's I/O and input boundaries:** wrap `readAllEvents` in per-file error recovery (quarantine the corrupt file, keep serving) and add a regression test; validate numeric flags (`Number(flags.priority)` currently writes `priority: null` via `NaN`); add format checks on `task`/`agent` strings.
+2. **Add the missing tooling floor:** eslint + prettier, a real unit-test runner (jest/vitest/node:test) for `src/` so the pure fold and lock logic get direct tests instead of being exercised only through bash acceptance tests, and split the two mega-files (`marathon_drive.py`, `foldWithMeta`/`bin/tick` switch) while deduplicating the renderers.
+3. **Land the suite-wide containment gate** (hardened `require_fixture` with resolved-path checks + a post-run clone-identity invariant check) across all 31 unaudited suites — this is the fix for the highest-severity open bugs and, per the AGENTS rails, currently every clone that runs the suite is suspect.
+
+The honest one-line summary: an unusually disciplined, correctness-obsessed codebase whose two structural taxes — dual-language twins and prose weight (a 1,887-line narrative CHANGELOG for a 2,100-line kernel) — plus absent static tooling keep both grades out of A territory despite genuinely strong design instincts.

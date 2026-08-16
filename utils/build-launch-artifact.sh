@@ -113,11 +113,15 @@ REDACT_WITH="~/"
 # the repository's actual state rather than an empty shell (operator decision, 2026-08-15). These are
 # the launch's own working docs: its exit criterion, its checklist, and the two open items #563 names
 # as covered-by-waiver rather than admitted.
+# Format: <bucket>/<filename>. The bucket is preserved rather than everything being forced into
+# 2-WORKING — an inbox item is not active work, and flattening the distinction would misrepresent
+# the method in the one place a newcomer goes looking for how it is used.
 PROJECT_KEEP=(
-  "GH-544-LOCAL-GATE-BEFORE-PUSH.md"
-  "GH-555-METER-EXIT-CRITERION.md"
-  "GH-563-PUBLIC-LAUNCH.md"
-  "GH-564-FIXTURE-CONTAINMENT.md"
+  "2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md"
+  "2-WORKING/GH-555-METER-EXIT-CRITERION.md"
+  "2-WORKING/GH-563-PUBLIC-LAUNCH.md"
+  "2-WORKING/GH-564-FIXTURE-CONTAINMENT.md"
+  "1-INBOX/GLM-5.3-audit.txt"
 )
 # Scaffold files kept at PROJECT/ root — the method itself, which is what makes the retained docs
 # legible as a worked example.
@@ -236,13 +240,15 @@ if [ -d "$DEST_NORM/PROJECT" ]; then
   # Stash the keepers, wipe the buckets, restore the keepers into 2-WORKING.
   STAGE="$DEST_NORM/.project-keep.$$"
   mkdir -p "$STAGE"
-  for name in "${PROJECT_KEEP[@]}"; do
+  for spec in "${PROJECT_KEEP[@]}"; do
+    name="${spec##*/}"
     found="$(find "$DEST_NORM/PROJECT" -type f -name "$name" -print -quit 2>/dev/null)"
     if [ -n "$found" ]; then
-      cp "$found" "$STAGE/$name"
+      mkdir -p "$STAGE/$(dirname "$spec")"
+      cp "$found" "$STAGE/$spec"
       kept=$((kept+1))
     else
-      printf '  NOTE: retained doc not found in source: %s\n' "$name"
+      printf '  NOTE: retained doc not found in source: %s\n' "$spec"
     fi
   done
   for bucket in 1-INBOX 2-WORKING 3-COMPLETED 4-MISC; do
@@ -260,8 +266,11 @@ if [ -d "$DEST_NORM/PROJECT" ]; then
     [ "$keep" -eq 0 ] && { rm -f "$f"; removed=$((removed+1)); }
   done < <(find "$DEST_NORM/PROJECT" -maxdepth 1 -type f 2>/dev/null)
 
-  for name in "${PROJECT_KEEP[@]}"; do
-    [ -f "$STAGE/$name" ] && mv "$STAGE/$name" "$DEST_NORM/PROJECT/2-WORKING/$name"
+  for spec in "${PROJECT_KEEP[@]}"; do
+    if [ -f "$STAGE/$spec" ]; then
+      mkdir -p "$DEST_NORM/PROJECT/$(dirname "$spec")"
+      mv "$STAGE/$spec" "$DEST_NORM/PROJECT/$spec"
+    fi
   done
   rm -rf "$STAGE"
   printf '  PROJECT reduced — %s retained, %s removed\n' "$kept" "$removed"
