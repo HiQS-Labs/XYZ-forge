@@ -82,6 +82,10 @@ DROP_PATHS=(
 DROP_GLOBS=(
   "__pycache__"
   "*.pyc"
+  # The secret-scan record names the artifact commit it covered. If it shipped, writing it would
+  # change the very commit it names — an unresolvable fixed point. It is the project's evidence,
+  # not part of the product, so it stays in the source repository and out of the artifact.
+  "GH-563-secret-scan.md"
 )
 
 # ── Redaction ─────────────────────────────────────────────────────────────────────────────────────
