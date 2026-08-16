@@ -68,7 +68,9 @@ DROP_PATHS=(
   ".tick"             # runtime event log (untracked here, listed for belt-and-braces)
   "AUDIT"             # internal audit workspace
   "phases"            # internal phase logs (operator decision 2026-08-15)
-  "decisions"         # internal ADR workspace (operator decision 2026-08-15)
+  "decisions"         # internal ADR workspace (operator decision 2026-08-15) — see KEEP_FILES:
+                      # one decision doc is a documented INPUT to a shipped test, not internal
+                      # scratch, and is restored after the drop.
   ".consult-gh79-out" # tracked consult transcripts — dot-prefixed, so the top-level sweep for
                       # internal working material missed it entirely. Found by TruffleHog, which
                       # flagged content inside it; the secret was a false positive but the
@@ -77,6 +79,14 @@ DROP_PATHS=(
 # `marathon-system` is deliberately KEPT: the operator's call is that a public reader benefits from
 # seeing how the sausage is made. Checked for PII before keeping — its only private content was
 # machine-generated absolute home paths in RELAY.md files, which the redaction pass below rewrites.
+
+# Individual files rescued from a dropped directory. A path lands here when a SHIPPED test reads it:
+# `gh378-gate-requires-green-suite.sh` asserts on the baseline-strategy decision doc by name, so
+# dropping it wholesale turns a green suite red for every newcomer. Restored after the drop pass
+# rather than by exempting the whole directory, so the exception stays visible and countable.
+KEEP_FILES=(
+  "decisions/2026-08-10-marathon-gate-baseline-strategy.md"
+)
 
 # Build artifacts that are tracked in this repository but must never ship.
 DROP_GLOBS=(
@@ -179,6 +189,17 @@ git -C "$ROOT" archive "$SRC_SHA" | tar -x -C "$DEST_NORM" \
 extracted="$(find "$DEST_NORM" -type f | wc -l | tr -d ' ')"
 printf '  extracted %s tracked file(s) from %s\n' "$extracted" "${SRC_SHA:0:8}"
 
+# ── Stash the rescued files before the drop pass removes their directories ───────────────────────
+RESCUE="$DEST_NORM/.rescue.$$"
+for kf in "${KEEP_FILES[@]}"; do
+  if [ -f "$DEST_NORM/$kf" ]; then
+    mkdir -p "$RESCUE/$(dirname "$kf")"
+    cp "$DEST_NORM/$kf" "$RESCUE/$kf"
+  else
+    printf '  NOTE: rescue file not found in source: %s\n' "$kf"
+  fi
+done
+
 # ── Prune the drop set ────────────────────────────────────────────────────────────────────────────
 for p in "${DROP_PATHS[@]}"; do
   if [ -e "$DEST_NORM/$p" ]; then
@@ -195,6 +216,19 @@ for g in "${DROP_GLOBS[@]}"; do
     printf '  dropped %-14s (%s match(es), tracked build artifact)\n' "$g" "$n"
   fi
 done
+
+if [ -d "$RESCUE" ]; then
+  rescued=0
+  for kf in "${KEEP_FILES[@]}"; do
+    if [ -f "$RESCUE/$kf" ]; then
+      mkdir -p "$DEST_NORM/$(dirname "$kf")"
+      mv "$RESCUE/$kf" "$DEST_NORM/$kf"
+      rescued=$((rescued+1))
+    fi
+  done
+  rm -rf "$RESCUE"
+  printf '  restored %s file(s) a shipped test depends on\n' "$rescued"
+fi
 
 # ── Reduce PROJECT to scaffold + this release's capture docs ─────────────────────────────────────
 if [ -d "$DEST_NORM/PROJECT" ]; then
