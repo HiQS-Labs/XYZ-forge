@@ -76,9 +76,11 @@ DROP_PATHS=(
                       # flagged content inside it; the secret was a false positive but the
                       # DIRECTORY was the real finding. Hidden directories need naming explicitly.
 )
-# `marathon-system` is deliberately KEPT: the operator's call is that a public reader benefits from
-# seeing how the sausage is made. Checked for PII before keeping — its only private content was
-# machine-generated absolute home paths in RELAY.md files, which the redaction pass below rewrites.
+# The checked-in marathon run records moved to `PROJECT/4-MISC/marathon-run-records/` (issue #12),
+# so they now fall under the PROJECT retention pass below and do NOT ship in the artifact. A FUTURE
+# run still writes a fresh top-level `marathon-system/` at runtime; if that ever gets committed, it
+# would ship unless added to DROP_PATHS — the old operator call was that public readers benefit from
+# seeing how the sausage is made (PII-checked; home paths are rewritten by the redaction pass below).
 
 # Individual files rescued from a dropped directory. A path lands here when a SHIPPED test reads it:
 # `gh378-gate-requires-green-suite.sh` asserts on the baseline-strategy decision doc by name, so

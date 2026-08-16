@@ -1,8 +1,12 @@
 # Task ingestion layer (SCAFFOLD)
 
-> **Status: scaffold only.** Captured 2026-05-14 so the idea isn't lost.
+> **Status: design capture only.** Captured 2026-05-14 so the idea isn't lost.
 > **NOT wired into Trinity Run 2** — Run 2 still seeds `.tick/events/` by hand
 > via `tick log task.created`. This layer is a deliberate future step.
+>
+> Issue #12 moved this scaffold from `ingestion/` to `docs/ingestion/` and
+> deleted the unimplemented `ingest.js` stub (every stage threw "not
+> implemented"); restore it from git history if this design is ever built.
 
 ## The idea
 
@@ -35,7 +39,7 @@ instead of someone hand-authoring JSON events with no review surface.
 
 - `PROJECT-SPEC.template.md` — the human-authored format. Copy, fill in, review.
 - `examples/todo-api.project.md` — a filled-in example (the Run 2 app, for illustration only — NOT Run 2's actual seed input).
-- `ingest.js` — STUB converter. Pipeline stages are documented but not implemented.
+- `ingest.js` — DELETED by issue #12 (unimplemented stub; see the status note above). Pipeline stages are documented below.
 
 ## Pipeline stages (design intent)
 
