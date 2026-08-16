@@ -102,7 +102,7 @@ FORBIDDEN_PATHS=(".tick" "relay-system" "temp" "PARKED" ".relay-driver.lock")
 # scaffold: it carries this release's own capture docs, so the tree reflects the repository's actual
 # state and a newcomer sees PDDA applied to real work (operator decision, 2026-08-15). The retained
 # set is the launch's exit criterion, its checklist, and the two open items #563 covers by waiver.
-PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^GH-(544|555|563|564)-}"
+PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^(GH-(544|555|563|564)-|GLM-5\\.3-audit)}"
 
 # Strings that betray a private origin if they survive into the artifact.
 #
