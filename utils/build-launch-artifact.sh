@@ -67,7 +67,26 @@ DROP_PATHS=(
   "PARKED"            # parked-findings ledger, internal
   ".tick"             # runtime event log (untracked here, listed for belt-and-braces)
   "AUDIT"             # internal audit workspace
+  "phases"            # internal phase logs (operator decision 2026-08-15)
+  "decisions"         # internal ADR workspace (operator decision 2026-08-15)
 )
+# `marathon-system` is deliberately KEPT: the operator's call is that a public reader benefits from
+# seeing how the sausage is made. Checked for PII before keeping — its only private content was
+# machine-generated absolute home paths in RELAY.md files, which the redaction pass below rewrites.
+
+# Build artifacts that are tracked in this repository but must never ship.
+DROP_GLOBS=(
+  "__pycache__"
+  "*.pyc"
+)
+
+# ── Redaction ─────────────────────────────────────────────────────────────────────────────────────
+# The author's home directory appears in machine-generated relay threads, test baselines and a few
+# governance docs. Rewriting it to `~/` removes the username while preserving every sentence's
+# meaning — the same substitution already applied to CHANGELOG.md, and the style the docs mostly use
+# already. Done HERE rather than by hand so it is reproducible and cannot be forgotten on a rebuild.
+REDACT_HOME="/Users/noelsaw/"
+REDACT_WITH="~/"
 
 # ── PROJECT retention ─────────────────────────────────────────────────────────────────────────────
 # PROJECT/ ships as the PDDA scaffold plus the capture docs for THIS RELEASE, so the tree reflects
@@ -159,6 +178,14 @@ for p in "${DROP_PATHS[@]}"; do
   fi
 done
 
+for g in "${DROP_GLOBS[@]}"; do
+  n="$(find "$DEST_NORM" -name "$g" 2>/dev/null | wc -l | tr -d ' ')"
+  if [ "$n" != "0" ]; then
+    find "$DEST_NORM" -name "$g" -exec rm -rf {} + 2>/dev/null
+    printf '  dropped %-14s (%s match(es), tracked build artifact)\n' "$g" "$n"
+  fi
+done
+
 # ── Reduce PROJECT to scaffold + this release's capture docs ─────────────────────────────────────
 if [ -d "$DEST_NORM/PROJECT" ]; then
   kept=0 removed=0
@@ -194,6 +221,23 @@ if [ -d "$DEST_NORM/PROJECT" ]; then
   done
   rm -rf "$STAGE"
   printf '  PROJECT reduced — %s retained, %s removed\n' "$kept" "$removed"
+fi
+
+# ── Redact the author's home path from every text file ───────────────────────────────────────────
+redacted=0
+while IFS= read -r f; do
+  if LC_ALL=C grep -qF "$REDACT_HOME" "$f" 2>/dev/null; then
+    LC_ALL=C sed -i '' "s|${REDACT_HOME}|${REDACT_WITH}|g" "$f" 2>/dev/null && redacted=$((redacted+1))
+  fi
+done < <(find "$DEST_NORM" -type f ! -path "*/.git/*" 2>/dev/null)
+printf '  redacted home path in %s file(s)\n' "$redacted"
+
+# Report anything the substitution could not reach, rather than assuming it is clean.
+residual="$(LC_ALL=C grep -rlF "noelsaw" "$DEST_NORM" --exclude-dir=.git 2>/dev/null | wc -l | tr -d ' ')"
+if [ "$residual" != "0" ]; then
+  printf '  NOTE: %s file(s) still contain the username in some other form:\n' "$residual"
+  LC_ALL=C grep -rlF "noelsaw" "$DEST_NORM" --exclude-dir=.git 2>/dev/null \
+    | sed "s|^$DEST_NORM/|    |" | head -20
 fi
 
 # ── Marker, so a rebuild can prove it owns this directory ─────────────────────────────────────────
