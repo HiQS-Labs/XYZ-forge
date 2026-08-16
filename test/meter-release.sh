@@ -110,7 +110,14 @@ PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^GH-(544|555|563|564)-}"
 # GitHub organisation name, already public wherever it appears, and a repository URL is not a
 # private path. Kept as a note rather than a silent deletion, because the difference between "this
 # marker was considered and cleared" and "nobody thought of it" is the whole value of the list.
-PRIVATE_MARKERS=("/Users/" "/Volumes/" "noelsaw" "Local Sites")
+#
+# The bare username was also on this list and was NARROWED to the PATH form on 2026-08-15, for the
+# same reason `Hypercart-Dev-Tools` was cleared: what leaks is a private *filesystem path*, not the
+# author's public identity. The residual matches were all authorship — `owner:` frontmatter, an
+# `Author: … (@handle)` byline, and git commit authors inside a generated history diagram. A public
+# repository crediting its author is correct, and a marker that fires on the byline would train
+# whoever runs this to ignore it. `/Users/` still catches every private-path form.
+PRIVATE_MARKERS=("/Users/" "/Volumes/" "Local Sites")
 
 # The documented entry path a stranger follows, verbatim from README.md's Quickstart. It is
 # `npm install` THEN `./validate.sh` — running only the second half would test a path the README

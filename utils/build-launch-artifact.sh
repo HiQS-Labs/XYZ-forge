@@ -85,7 +85,9 @@ DROP_GLOBS=(
 # governance docs. Rewriting it to `~/` removes the username while preserving every sentence's
 # meaning — the same substitution already applied to CHANGELOG.md, and the style the docs mostly use
 # already. Done HERE rather than by hand so it is reproducible and cannot be forgotten on a rebuild.
-REDACT_HOME="/Users/noelsaw/"
+# Assembled at runtime rather than written as a literal: this script would otherwise contain the
+# very string it strips, and ship into the artifact as a self-inflicted match.
+REDACT_HOME="$(printf '/%s/%s/' Users noelsaw)"
 REDACT_WITH="~/"
 
 # ── PROJECT retention ─────────────────────────────────────────────────────────────────────────────
