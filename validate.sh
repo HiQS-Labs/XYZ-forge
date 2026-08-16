@@ -159,7 +159,8 @@ TESTS=(
   "gh430-state-dir-tracked-default.sh" # GH-430 (STATE_DIR default is a tracked in-repo path, not ${TMPDIR:-/tmp})
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
-  "gh544-pre-push-gate.sh"             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 35/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
+  "gh544-pre-push-gate.sh"
+  "gh1-fixture-guard.sh"        # GH-1 (shared require_fixture resolved-containment + clone-identity invariant gate; covers the GH-567 lexical-check residual)             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 35/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
   "gh314-transcript-writeset.sh"       # GH-314 (the write set is THREE paths: the transcript's git add was outside GH-514's preflight, so an ignored relay-system/ was discovered only after paid turns) — 5/0; control: dropping the transcript path spends 2 builder turns before the same refusal (test/baselines/GH-314-negative-control.md)
   "gh520-default-reviewer-stub.sh"     # GH-520 (test/_setup.sh gives every fixture a default CODEX_BIN, so a suite tests its subject rather than the reviewer probe) — 11/0; control: with gh402's own stub removed AND this default removed, gh402 fails with the probe's message verbatim (test/baselines/GH-520-default-stub-control.md)
   "gh527-destructive-git-guard.sh"     # GH-527 (a tree-overwriting git command snapshots the tracked files it destroys into .tick/orphan-backups/ first) — 26/0; controls: a no-op guard drops 9 assertions, and a blanket that fires on a CLEAN tree drops exactly the control assertion. Clean-tree silence is defended by TWO conditions, so it takes a combined mutation to falsify — recorded in test/baselines/GH-527-negative-control.md
@@ -373,6 +374,19 @@ if [ "$PRINT_MODE_ONLY" -eq 1 ]; then
   exit 0
 fi
 
+# GH-1: suite-wide clone-identity invariant gate. Captured before any suite runs and asserted after
+# the last one — a suite that escapes its fixture sandbox and rewrites this clone's git identity
+# (the GH-564 incident: core.bare / origin / user identity / HEAD) fails the run HERE, detectably,
+# instead of leaving a clone whose every subsequent green run is unattributable (GH-567). Covers
+# the suites that have not yet adopted require_fixture; it detects rather than prevents.
+IDENTITY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/validate-identity.XXXXXX")"
+[ -n "$IDENTITY_SNAPSHOT" ] && [ -f "$IDENTITY_SNAPSHOT" ] || { echo "validate.sh: mktemp for identity snapshot failed" >&2; exit 1; }
+trap 'rm -f "$IDENTITY_SNAPSHOT"' EXIT
+bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" || {
+  echo "validate.sh: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
+  exit 1
+}
+
 # The suites that execute the real relay-drive.sh (not a stub or fixture copy). Membership was
 # derived in the GH-528 spike: every suite whose $DRIVE/$DRIVER/$RD resolves to the shipped
 # relay-automation/relay-drive.sh. If you add such a suite, add it here too — at 2+ jobs the
@@ -398,7 +412,9 @@ if [ -n "$PARALLEL_JOBS" ]; then
   # GH-177: mktemp is verified before use, nothing ever cd's into it, and the EXIT trap only
   # removes a re-verified non-empty directory path.
   [ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] || { echo "validate.sh: mktemp -d failed" >&2; exit 1; }
-  trap '[ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] && rm -rf "$RUN_DIR"' EXIT
+  # Covers both this branch's mktemp and the GH-1 identity snapshot (a bare second trap would
+  # silently replace the first — bash keeps one EXIT trap).
+  trap '[ -n "$RUN_DIR" ] && [ -d "$RUN_DIR" ] && rm -rf "$RUN_DIR"; rm -f "$IDENTITY_SNAPSHOT"' EXIT
   RESULTS="$RUN_DIR/results"
   : > "$RESULTS"
   export VALIDATE_HERE="$HERE" VALIDATE_LOG_DIR="$RUN_DIR" VALIDATE_RESULTS="$RESULTS"
@@ -503,6 +519,19 @@ else
   FAILED+=("python:test_python_layer.py")
 fi
 
+# GH-1: the identity bracket's assert half. Runs AFTER every suite and before the summary, so a
+# sandbox escape anywhere in the run fails the run even when every suite reported green — the
+# corruption incidents were only ever found because pushes started failing in confusing ways.
+echo
+echo "==============================="
+echo "Running clone-identity invariant (GH-1)"
+echo "==============================="
+if bash "$HERE/test/lib/clone-identity.sh" assert "$IDENTITY_SNAPSHOT" "$HERE"; then
+  PASSED+=("clone-identity-invariant")
+else
+  FAILED+=("clone-identity-invariant")
+fi
+
 # GH-428: non-recursive staleness probe for the gamma-poison fixture (does NOT run
 # verify-fixture.sh — that runs this whole suite, so nesting it would recurse).
 echo
@@ -519,7 +548,7 @@ echo
 echo "==============================="
 echo "Summary"
 echo "==============================="
-TOTAL=$(( ${#TESTS[@]} + 2 ))
+TOTAL=$(( ${#TESTS[@]} + 3 ))
 echo "passed: ${#PASSED[@]} / ${TOTAL}"
 for t in "${PASSED[@]}"; do echo "  + $t"; done
 if [ "${#FAILED[@]}" -gt 0 ]; then
