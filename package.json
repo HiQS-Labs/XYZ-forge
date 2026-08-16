@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "./validate.sh",
+    "test:unit": "node --test \"test/unit/*.test.js\"",
     "test:acorn-extract": "./test/acorn-extract.sh"
   },
   "keywords": [],
