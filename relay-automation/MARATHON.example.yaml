@@ -1,0 +1,72 @@
+# MARATHON.example.yaml — a multi-phase plan for marathon.sh (Phase 4 / M5).
+# Run it with:  relay-automation/marathon.sh --plan relay-automation/MARATHON.example.yaml
+# Each phase runs through marathon-drive.sh in depends_on order; the chain HALTS on the first
+# phase that fails its review/gate (that phase's ESCALATION.md is left behind), and emits a
+# marathon.complete event only when every phase is approved.
+#
+# SEQUENCING (GH-241): phases run STRICTLY ONE AT A TIME — there is no concurrent execution, and
+# `depends_on` does not create the ordering, it only constrains it. A phase WITHOUT `depends_on`
+# is not "unordered" or "parallel-safe"; it simply runs in plan order whenever its turn comes.
+# Analysing your phases for a disjoint write-set is still worthwhile (it is how you know which
+# phases genuinely need `depends_on`), but a disjoint write-set does NOT buy you parallelism here.
+#
+# ALWAYS `--dry-run` a new plan before firing it. It parses the plan, validates every field, and
+# prints the real execution order ("N phase(s) would run in order") at zero cost — which is the
+# cheapest way to catch both a mis-shaped field and a wrong mental model of the ordering.
+#
+# Builder default (GH-212): marathon.sh/marathon-drive.sh default `--builder` to `codex` — build
+# turns bill via the Codex/ChatGPT subscription, not the Anthropic API (agy is the other cost-blind
+# option). `--builder claude` is available but spawns a headless Claude Code CLI subprocess — a
+# SEPARATE, PER-CALL API-BILLED turn-taker — as an explicit, cost-acknowledged opt-in only.
+# (GH-379: Claude builder runs with CLAUDE_MAX_BUDGET defaulting to $0.50 and CLAUDE_MAX_TURNS defaulting
+# to 12. Note that a prompt cache-creation floor cost is paid per turn; increase CLAUDE_MAX_BUDGET in env
+# if a phase requires extra headroom.)
+#
+# Plan location (GH-212): once this is a REAL plan for a tracked issue (not this shipped example),
+# the MARATHON.yaml + its phase briefs belong under PROJECT/2-WORKING/<capture-doc>/ in the target
+# repo — never a standalone top-level folder like marathon-plans/<slug>/. `marathon.sh --plan`
+# refuses a plan outside PROJECT/2-WORKING/ unless MARATHON_ALLOW_PLAN_OUTSIDE_WORKING=1 is set.
+# (This example is exempt: it lives under the harness's own relay-automation/ home, not a target repo.)
+#
+# Pre-advance gate (GH-238): each phase defaults to `bash <repo-root>/validate.sh` before it is
+# marked approved. marathon-drive checks that command can start before turn 1. A consuming repo
+# without a root-level validate.sh must supply its own gate when launching, for example:
+#   relay-automation/marathon.sh --plan PROJECT/2-WORKING/<capture>/MARATHON.yaml \
+#     --pre-advance-cmd "npm test"
+# The override must remain a real safety gate; a missing default fails fast rather than being skipped.
+# (GH-378: to run against a target with pre-existing suite failures, pass `--pre-advance-baseline <rc>`
+# or export MARATHON_GATE_BASELINE=<rc>. This permits exit codes <= baseline, but does not distinguish
+# individual test identities — a new regression raising the exit code halts the run.)
+#
+# Per-phase fields:
+#   id                 phase id → marathon-system/<id>/RELAY.md + tick token MARATHON-<ID>-TURN   (required)
+#   reviewer           codex* or agy* — the model that reviews this phase                 (required)
+#   brief              path (repo-relative) to the phase's task markdown                  (required)
+#   artifact           comma-separated repo-relative file(s) the builder may create/edit  (optional)
+#   turn_timeout_s     per-turn wall-clock cap exported as RELAY_TURN_TIMEOUT_S            (optional)
+#   max_review_rounds  round-cap = 2*N+1 (default 2 → cap 5)                              (optional)
+#   depends_on         run this phase only after the named phase is approved              (optional,
+#                      SCALAR ONLY — one phase id, unquoted: `depends_on: p3`. NOT a list:
+#                      `depends_on: [p3]` parses as the literal string "[p3]" and aborts the
+#                      plan with "depends_on unknown phase '[p3]'". A phase can have at most
+#                      one dependency; chain them (p3 → p4 → p5) to express a longer order.)
+#   name               human label for logs                                              (optional)
+
+name: example-refactor
+phases:
+  - id: p1
+    name: Define the event schema
+    reviewer: codex
+    brief: phases-briefs/p1-schema.md
+    artifact: src/schema.js
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: p2
+    name: Single-writer lease on top of the schema
+    reviewer: agy
+    brief: phases-briefs/p2-lease.md
+    artifact: src/lease.js
+    turn_timeout_s: 1200
+    depends_on: p1
+    max_review_rounds: 3

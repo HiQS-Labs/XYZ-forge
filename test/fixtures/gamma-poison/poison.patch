@@ -1,0 +1,13 @@
+diff --git a/src/paths.js b/src/paths.js
+index a3c80307..22ee7f97 100644
+--- a/src/paths.js
++++ b/src/paths.js
+@@ -15,7 +15,7 @@
+  * @returns {string}
+  */
+ function literalPrefix(glob) {
+-  const m = glob.match(/^([^*?[{]*)/);
++  const m = glob.match(/^([^?[{]*)/);
+   return m ? m[1] : '';
+ }
+ 

@@ -1,0 +1,4 @@
+This directory is a generated XYZ public launch artifact.
+Built by utils/build-launch-artifact.sh from source commit b389546f6932a129f526615afb7b9ec08d3bb102.
+Do not edit by hand: rebuild instead. The presence of this file authorises the build
+script to clear this directory on the next run.

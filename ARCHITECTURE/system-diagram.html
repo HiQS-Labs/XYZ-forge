@@ -1,0 +1,1734 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>XYZ — Multi-Agent Coordination System</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --ink: #1c2330; --muted: #6b7280;
+    --line: #9aa4b2; --edge-label-bg: #f6f7f9; --border: #d8dee6;
+    --group-bg: rgba(15, 23, 42, .035);
+    /* Diagram-surface typeface, swapped live by the font picker script near
+       the end of <body>. No @font-face / network fetch here on purpose: the
+       skill's contract is a self-contained file (offline, file:// safe), so
+       "Indie Flower" only resolves if the reader's system already has it
+       installed; otherwise the stack degrades to common handwriting faces
+       and finally the universal `cursive` generic family. Zero requests
+       either way. */
+    --swe-font: -apple-system, "Segoe UI", Roboto, sans-serif;
+    --swe-font-scale: 1;
+    /* Chrome (buttons, search, legend, the picker itself) stays on the
+       system sans regardless of --swe-font: the picker must remain legible
+       in the font it is offering to switch away from. */
+    --swe-ui-font: -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12151b; --panel: #1c212b; --ink: #e6e9ef; --muted: #9aa4b2;
+      --line: #5c6675; --edge-label-bg: #12151b; --border: #333c4a;
+      --group-bg: rgba(255, 255, 255, .035);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink);
+         font-family: var(--swe-font); line-height: 1.4;
+         font-size: calc(14px * var(--swe-font-scale)); }
+
+  .swe-canvas { position: relative; width: 100vw; height: 100vh;
+                overflow: hidden; cursor: grab; }
+  .swe-canvas.swe-grabbing { cursor: grabbing; }
+  .swe-viewport { position: absolute; transform-origin: 0 0; }
+  .swe-edges { position: absolute; overflow: visible; width: 1px; height: 1px; }
+  .swe-nodes { position: absolute; }
+  .swe-groups { position: absolute; }
+  .swe-group-box { position: absolute; background: var(--group-bg);
+                    border: 1px dashed var(--border); border-radius: 12px;
+                    pointer-events: none; }
+  .swe-group-label { position: absolute; top: 6px; left: 12px;
+                      font-size: calc(10px * var(--swe-font-scale));
+                      font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+                      color: var(--muted); pointer-events: none; }
+  .swe-lane-box { position: absolute; background: var(--group-bg);
+                  border: 1px solid var(--border); border-radius: 8px;
+                  pointer-events: none; }
+  .swe-lane-current { border-color: #4f7cff; }
+  .swe-lane-label { position: absolute; left: 12px; top: 32px; width: 150px;
+                    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                    font-size: 11px; font-weight: 700; color: var(--muted); }
+
+  .swe-node { position: absolute; background: var(--panel);
+              border: 1px solid var(--border); border-radius: 8px;
+              border-top: 3px solid var(--node-color, #6b7280);
+              box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: move;
+              user-select: none; transition: opacity .15s; }
+  .swe-node-head { font-size: calc(9px * var(--swe-font-scale));
+                   letter-spacing: .08em; font-weight: 700;
+                   color: var(--node-color, #6b7280); padding: 6px 10px 0; }
+  .swe-node-body { padding: 2px 10px 8px; }
+  .swe-node-label { font-weight: 600; }
+  .swe-node-tech { font-size: calc(11px * var(--swe-font-scale));
+                    color: var(--muted); margin-top: 2px; }
+  .swe-node-commit .swe-node-label { white-space: nowrap; overflow: hidden;
+                                     text-overflow: ellipsis; }
+  .swe-node.swe-dimmed { opacity: .22; }
+  .swe-node-hub { border-width: 2px; border-top-width: 4px;
+                   box-shadow: 0 0 0 4px rgba(79,124,255,.16), 0 2px 10px rgba(0,0,0,.22); }
+
+  .swe-edge { fill: none; stroke: var(--line); stroke-width: 1.6;
+              transition: opacity .15s; }
+  .swe-arrow { fill: var(--line); }
+  .swe-edge-branch { stroke: #00a5a5; }
+  .swe-arrow-branch { fill: #00a5a5; }
+  .swe-edge-merge { stroke: #9a5cff; stroke-width: 2; }
+  .swe-arrow-merge { fill: #9a5cff; }
+  .swe-edge-label { font-family: var(--swe-font);
+                    font-size: calc(11px * var(--swe-font-scale));
+                    fill: var(--muted); text-anchor: middle;
+                    paint-order: stroke; stroke: var(--edge-label-bg);
+                    stroke-width: 4px; }
+  .swe-edge.swe-dimmed, .swe-edge-label.swe-dimmed { opacity: .12; }
+
+  .swe-title { position: absolute; top: 14px; left: 18px;
+               font-size: calc(16px * var(--swe-font-scale));
+               font-weight: 700; pointer-events: none; }
+  .swe-controls { position: absolute; bottom: 16px; left: 16px;
+                  display: flex; flex-direction: column; gap: 4px; }
+  .swe-btn { width: 30px; height: 30px; border: 1px solid var(--border);
+             border-radius: 6px; background: var(--panel); color: var(--ink);
+             font-family: var(--swe-ui-font); font-size: 15px; cursor: pointer; }
+  .swe-btn:hover { border-color: var(--line); }
+  .swe-legend { position: absolute; bottom: 16px; right: 16px;
+                background: var(--panel); border: 1px solid var(--border);
+                border-radius: 8px; padding: 8px 12px; display: flex;
+                flex-wrap: wrap; gap: 10px; font-family: var(--swe-ui-font);
+                font-size: 11px; color: var(--muted); max-width: 40vw; }
+  .swe-legend-item { display: inline-flex; align-items: center; gap: 5px;
+                     cursor: pointer; user-select: none; }
+  .swe-legend-item.swe-dimmed { opacity: .35; }
+  .swe-legend-dot { width: 9px; height: 9px; border-radius: 50%;
+                    display: inline-block; }
+
+  .swe-search { position: absolute; top: 14px; right: 16px;
+                display: flex; align-items: center; gap: 6px; }
+  .swe-search-input { width: 180px; padding: 6px 10px;
+                       font-family: var(--swe-ui-font); font-size: 12px;
+                       border: 1px solid var(--border); border-radius: 6px;
+                       background: var(--panel); color: var(--ink);
+                       /* Without this, WebKit's native `type="search"` field
+                          chrome (its own cancel button + intrinsic min-width)
+                          overrides the explicit width once text is typed —
+                          the field visibly grows and overflows past
+                          .swe-canvas's `overflow: hidden` edge. The custom
+                          .swe-search-clear button already provides the same
+                          affordance, so the native decoration is pure
+                          downside. */
+                       -webkit-appearance: none; appearance: none; }
+  .swe-search-input::-webkit-search-cancel-button,
+  .swe-search-input::-webkit-search-decoration { -webkit-appearance: none; appearance: none; }
+  .swe-search-input::placeholder { color: var(--muted); }
+  .swe-search-clear { border: 1px solid var(--border); border-radius: 6px;
+                       background: var(--panel); color: var(--muted);
+                       width: 24px; height: 24px; cursor: pointer;
+                       font-family: var(--swe-ui-font); font-size: 13px;
+                       line-height: 1; display: none; }
+  .swe-search-clear:hover { border-color: var(--line); color: var(--ink); }
+  .swe-search.swe-search-active .swe-search-clear { display: block; }
+
+  /* Font picker: injected by the script at the end of <body>, next to the
+     search box (top-right cluster). Lives outside #diagram so it survives
+     the re-render a font swap triggers (see script below), fixed-positioned
+     so it tracks the viewport the same way .swe-search visually does. */
+  .swe-font-select { position: fixed; top: 14px; right: 16px; z-index: 5;
+                      padding: 6px 8px; font-family: var(--swe-ui-font);
+                      font-size: 12px; border: 1px solid var(--border);
+                      border-radius: 6px; background: var(--panel);
+                      color: var(--ink); cursor: pointer; }
+  .swe-font-select:hover { border-color: var(--line); }
+</style>
+</head>
+<body>
+<div id="diagram"></div>
+<script>
+/*
+ * swe-diagram renderer — vanilla xyflow-style system diagram.
+ * No dependencies. Reads a diagram spec object and renders:
+ *   - layered left→right or top→bottom auto-layout (longest-path ranking),
+ *     radial hub & ring, or fixed-row Git history lanes
+ *   - draggable HTML nodes with type-colored headers
+ *   - SVG edges with arrowheads + optional labels
+ *   - pan (drag canvas), zoom (wheel / buttons), fit-to-view
+ *   - light/dark via prefers-color-scheme
+ *
+ * Spec shape (see SKILL.md for the authoring contract):
+ * {
+ *   title: string,
+ *   layout?: "layered" | "top-down" | "hub-ring" | "trust-clustered" | "git-lanes", // default "layered"
+ *   hub?: string,                                  // hub-ring only: node id to center; default = highest-degree node
+ *   nodes: [{ id, label, type?, group?, trust?, lane?, order?, description?, tech? }],
+ *   edges: [{ source, target, label?, kind? }],   // kind: "sync"|"async"|"data"|"branch"|"merge"
+ *   groups?: [{ id, label }],
+ *   lanes?: [{ id, label, order?, current? }]      // git-lanes only
+ * }
+ */
+(function () {
+  'use strict';
+
+  var NODE_W = 200;
+  var NODE_MIN_H = 56;
+  var COL_GAP = 120;
+  var ROW_GAP = 36;
+  var GIT_NODE_W = 168;
+  var GIT_COL_GAP = 52;
+  var GIT_LANE_GAP = 112;
+  var GIT_LANE_LABEL_W = 180;
+
+  var TYPE_COLORS = {
+    service:  '#4f7cff',
+    ui:       '#9a5cff',
+    api:      '#00a5a5',
+    database: '#e07b00',
+    queue:    '#c94f7c',
+    external: '#7a8699',
+    job:      '#5c9a3d',
+    storage:  '#b0892b',
+    commit:   '#4f7cff',
+    merge:    '#9a5cff',
+    default:  '#6b7280'
+  };
+
+  var EDGE_DASH = { async: '6,5', data: '2,4', branch: '4,4', merge: '8,5' };
+
+  function el(tag, cls, parent) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function svgEl(tag, parent) {
+    var e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  // ---- layout: longest-path layering, groups kept adjacent within a column
+  function layout(spec) {
+    var nodes = spec.nodes || [];
+    var edges = (spec.edges || []).filter(function (e) { return e.source !== e.target; });
+    var byId = {};
+    nodes.forEach(function (n) { byId[n.id] = n; });
+
+    // Rank by longest path, but drop cycle back-edges first so a bidirectional
+    // pair (A->B, B->A) stays in adjacent columns instead of drifting apart.
+    var adj = {};
+    nodes.forEach(function (n) { adj[n.id] = []; });
+    edges.forEach(function (e) {
+      if (byId[e.source] && byId[e.target]) adj[e.source].push(e.target);
+    });
+    var state = {}, back = {};   // DFS: flag any edge into a node still on the stack
+    function walk(u) {
+      state[u] = 1;
+      adj[u].forEach(function (v) {
+        if (state[v] === 1) (back[u] || (back[u] = {}))[v] = true;
+        else if (!state[v]) walk(v);
+      });
+      state[u] = 2;
+    }
+    nodes.forEach(function (n) { if (!state[n.id]) walk(n.id); });
+    var forward = edges.filter(function (e) {
+      return byId[e.source] && byId[e.target] &&
+             !(back[e.source] && back[e.source][e.target]);
+    });
+
+    var rank = {};
+    nodes.forEach(function (n) { rank[n.id] = 0; });
+    for (var pass = 0; pass < nodes.length; pass++) {   // DAG: converges in <= |V| passes
+      var changed = false;
+      forward.forEach(function (e) {
+        if (rank[e.target] < rank[e.source] + 1) {
+          rank[e.target] = rank[e.source] + 1;
+          changed = true;
+        }
+      });
+      if (!changed) break;
+    }
+
+    var cols = {};
+    nodes.forEach(function (n) {
+      (cols[rank[n.id]] = cols[rank[n.id]] || []).push(n);
+    });
+
+    var positions = {};
+    Object.keys(cols).sort(function (a, b) { return a - b; }).forEach(function (r) {
+      var col = cols[r];
+      col.sort(function (a, b) {
+        var ga = a.group == null ? 1 : 0, gb = b.group == null ? 1 : 0;
+        return ga - gb ||
+               String(a.group || '').localeCompare(String(b.group || '')) ||
+               String(a.label).localeCompare(String(b.label));
+      });
+      var y = 0;
+      col.forEach(function (n) {
+        var h = nodeHeight(n);
+        positions[n.id] = { x: r * (NODE_W + COL_GAP), y: y, w: NODE_W, h: h };
+        y += h + ROW_GAP;
+      });
+      // center column vertically against tallest column later via fitView
+    });
+    return positions;
+  }
+
+  // Reuse layered's cycle handling, longest-path ranks, group adjacency, and
+  // deterministic ordering, then rotate the rank axis. Recomputing row gaps
+  // (rather than naively swapping x/y) matters because node width is fixed
+  // while node height varies when `tech` is present.
+  function topDownLayout(spec) {
+    var horizontal = layout(spec);
+    var rows = {};
+    (spec.nodes || []).forEach(function (n) {
+      var p = horizontal[n.id];
+      (rows[p.x] = rows[p.x] || []).push(n.id);
+    });
+
+    var positions = {};
+    var y = 0;
+    Object.keys(rows).map(Number).sort(function (a, b) { return a - b; }).forEach(function (rankX) {
+      var ids = rows[rankX].sort(function (a, b) { return horizontal[a].y - horizontal[b].y; });
+      var rowH = 0;
+      ids.forEach(function (id, i) {
+        var p = horizontal[id];
+        positions[id] = { x: i * (NODE_W + ROW_GAP), y: y, w: p.w, h: p.h };
+        rowH = Math.max(rowH, p.h);
+      });
+      y += rowH + COL_GAP;
+    });
+    return positions;
+  }
+
+  // Fixed-row Git graph: branch lanes are stacked vertically while a global
+  // chronological order advances left-to-right. The generator supplies
+  // `lane` and `order`; the renderer stays deterministic and does not try to
+  // reconstruct branch provenance from ancestry alone.
+  function gitLaneLayout(spec) {
+    var lanes = (spec.lanes || []).slice().sort(function (a, b) {
+      return (a.order == null ? Infinity : a.order) - (b.order == null ? Infinity : b.order) ||
+             String(a.label || a.id).localeCompare(String(b.label || b.id));
+    });
+    var laneOrder = {};
+    lanes.forEach(function (lane, i) { laneOrder[lane.id] = i; });
+
+    var nextLane = lanes.length;
+    var positions = {};
+    (spec.nodes || []).forEach(function (n, i) {
+      if (laneOrder[n.lane] == null) laneOrder[n.lane] = nextLane++;
+      var order = Number.isFinite(Number(n.order)) ? Number(n.order) : i;
+      positions[n.id] = {
+        x: order * (GIT_NODE_W + GIT_COL_GAP),
+        y: laneOrder[n.lane] * GIT_LANE_GAP,
+        w: GIT_NODE_W,
+        h: nodeHeight(n)
+      };
+    });
+    return positions;
+  }
+
+  function nodeHeight(n) {
+    var h = NODE_MIN_H;
+    if (n.tech) h += 18;
+    return h;
+  }
+
+  // ---- search + type filter predicate: dims (never hides/re-layouts) a node
+  // that doesn't match the current text query or whose type has been toggled
+  // off in the legend. Pure so it's independently testable; renderDiagram's
+  // nodeMatches() below just supplies the closure's live query/excludedTypes.
+  function matchesQuery(n, query, excludedTypes) {
+    if (excludedTypes[n.type || 'default']) return false;
+    if (!query) return true;
+    var haystack = [n.label, n.id, n.type, n.tech, n.description, n.lane, n.author]
+      .concat(n.refs || [])
+      .filter(Boolean).join(' ').toLowerCase();
+    return haystack.indexOf(query) !== -1;
+  }
+
+  // ---- hub & ring: a radial layout for event-driven architectures (a central
+  // broker/gateway talking to independent services) where the layered
+  // left→right pipeline reading doesn't fit. Every non-hub node sits on a
+  // ring around the hub; overflow beyond MAX_PER_RING spills to a wider
+  // concentric ring instead of crowding one circle. Coordinates below are
+  // ring-center-relative (0,0 = the hub's center) and converted to the usual
+  // top-left x/y before returning, so callers never see the difference.
+  // Note: group swimlanes are a layered-layout-only feature (its boxes are
+  // computed from column position) and are skipped entirely for hub-ring.
+  function hubRingLayout(spec) {
+    var nodes = spec.nodes || [];
+    var positions = {};
+    if (!nodes.length) return positions;
+
+    var degree = {};
+    nodes.forEach(function (n) { degree[n.id] = 0; });
+    (spec.edges || []).forEach(function (e) {
+      if (degree[e.source] != null) degree[e.source]++;
+      if (degree[e.target] != null) degree[e.target]++;
+    });
+
+    var hubId = spec.hub;
+    if (hubId == null || degree[hubId] == null) {
+      hubId = nodes.reduce(function (best, n) {
+        return degree[n.id] > degree[best.id] ? n : best;
+      }, nodes[0]).id;
+    }
+    var hubNode = nodes.filter(function (n) { return n.id === hubId; })[0];
+    var hubH = nodeHeight(hubNode);
+    positions[hubId] = { x: -NODE_W / 2, y: -hubH / 2, w: NODE_W, h: hubH };
+
+    var ring = nodes.filter(function (n) { return n.id !== hubId; });
+    if (!ring.length) return positions;
+    ring.sort(function (a, b) {
+      return String(a.group || '').localeCompare(String(b.group || '')) ||
+             String(a.label || a.id).localeCompare(String(b.label || b.id));
+    });
+
+    // Split into `numRings` EVENLY sized chunks rather than greedily filling
+    // ring 0 to MAX_PER_RING before spilling over — a small remainder (e.g.
+    // 2 of 10 nodes) would land at just two opposite angles in ring 1 and
+    // read as stray spokes rather than a second ring.
+    var MAX_PER_RING = 8;
+    var numRings = Math.max(1, Math.ceil(ring.length / MAX_PER_RING));
+    var chunkSize = Math.ceil(ring.length / numRings);
+    var ringIndex = ring.map(function (n, i) { return Math.floor(i / chunkSize); });
+    var ringCounts = {};
+    ringIndex.forEach(function (r) { ringCounts[r] = (ringCounts[r] || 0) + 1; });
+
+    // Radius that keeps adjacent ring nodes from overlapping: enough
+    // circumference for NODE_W-wide nodes plus a gap, scaled to node count.
+    var innerRadius = Math.max(280, (NODE_W + 60) * (ringCounts[0] || 1) / (2 * Math.PI));
+    var ringGap = NODE_W + 140;
+
+    var placed = {};
+    ring.forEach(function (n, i) {
+      var r = ringIndex[i];
+      placed[r] = placed[r] || 0;
+      var angle = (2 * Math.PI * placed[r] / ringCounts[r]) - Math.PI / 2; // start at 12 o'clock
+      placed[r]++;
+      var radius = innerRadius + r * ringGap;
+      var h = nodeHeight(n);
+      positions[n.id] = {
+        x: radius * Math.cos(angle) - NODE_W / 2,
+        y: radius * Math.sin(angle) - h / 2,
+        w: NODE_W, h: h
+      };
+    });
+    return positions;
+  }
+
+  // ---- trust-clustered: bands nodes into fixed trust tiers derived from
+  // each node's own `trust` field (already authored for the doc's
+  // legend_note — see system-diagram.json) instead of a computed graph rank
+  // or an author-chosen `group`. This makes the trust/control-plane
+  // structure the layout's primary axis: the containment core reads as a
+  // central spine (never a leaf, per the acceptance criteria this mode was
+  // built for) with the dispatch shims, untrusted executors, shared state,
+  // and off-live-path governance/audit surface as their own bands, each
+  // still using the standard layered left->right bezier (edgePath) so
+  // backward edges (e.g. a shim's "containment" edge back into the spine
+  // column) route the same way `layout()` already handles them.
+  var TRUST_TIERS = [
+    { id: 'spine', label: 'Orchestration Spine',
+      prefixes: ['trusted-primitive', 'trusted-orchestrator', 'trusted-containment-core', 'trusted-supervisor'] },
+    { id: 'shim', label: 'Turn-Shim Cluster', prefixes: ['trusted-dispatch'] },
+    { id: 'periphery', label: 'Untrusted Periphery',
+      prefixes: ['untrusted-executor', 'external-credentialed', 'sandboxed-worker'] },
+    { id: 'state', label: 'Shared State', prefixes: ['shared-state'] },
+    { id: 'governance', label: 'Off-Live-Path Governance & Audit',
+      prefixes: ['governance-gate', 'runtime-audit'] }
+  ];
+  var TRUST_TIER_MAX_ROWS = 6; // wrap a tall tier into side-by-side sub-columns past this
+
+  function trustTierOf(n) {
+    var t = String(n.trust || '');
+    for (var i = 0; i < TRUST_TIERS.length; i++) {
+      var prefixes = TRUST_TIERS[i].prefixes;
+      for (var j = 0; j < prefixes.length; j++) {
+        if (t.indexOf(prefixes[j]) === 0) return i;
+      }
+    }
+    return TRUST_TIERS.length - 1; // untagged nodes land in the last band rather than vanishing
+  }
+
+  function trustClusteredLayout(spec) {
+    var nodes = spec.nodes || [];
+    var positions = {};
+    if (!nodes.length) return positions;
+
+    var byTier = TRUST_TIERS.map(function () { return []; });
+    nodes.forEach(function (n) { byTier[trustTierOf(n)].push(n); });
+
+    // Spine tier only: float the containment core, then its dispatching
+    // orchestrator, to the front so the traced path (dispatcher -> shim ->
+    // ... -> containment core) anchors at the top of the column instead of
+    // landing wherever alphabetical order happens to put it.
+    byTier[0].sort(function (a, b) {
+      function rank(n) {
+        var t = String(n.trust || '');
+        if (t.indexOf('trusted-containment-core') === 0) return 0;
+        if (t.indexOf('trusted-orchestrator') === 0) return 1;
+        return 2;
+      }
+      return rank(a) - rank(b) || String(a.label || a.id).localeCompare(String(b.label || b.id));
+    });
+    for (var i = 1; i < byTier.length; i++) {
+      byTier[i].sort(function (a, b) { return String(a.label || a.id).localeCompare(String(b.label || b.id)); });
+    }
+
+    var x = 0;
+    byTier.forEach(function (tierNodes) {
+      if (!tierNodes.length) return;
+      var subCols = Math.max(1, Math.ceil(tierNodes.length / TRUST_TIER_MAX_ROWS));
+      var perCol = Math.ceil(tierNodes.length / subCols);
+      for (var c = 0; c < subCols; c++) {
+        var colNodes = tierNodes.slice(c * perCol, (c + 1) * perCol);
+        var y = 0;
+        var colX = x;
+        colNodes.forEach(function (n) {
+          var h = nodeHeight(n);
+          positions[n.id] = { x: colX, y: y, w: NODE_W, h: h };
+          y += h + ROW_GAP;
+        });
+        x += NODE_W + (c < subCols - 1 ? ROW_GAP * 2 : COL_GAP);
+      }
+    });
+    return positions;
+  }
+
+  // ---- main
+  window.renderDiagram = function (spec, mount) {
+    mount = mount || document.getElementById('diagram');
+    mount.innerHTML = '';
+    mount.classList.add('swe-canvas');
+
+    var viewport = el('div', 'swe-viewport', mount);
+    var svg = svgEl('svg', viewport);
+    svg.setAttribute('class', 'swe-edges');
+    var defs = svgEl('defs', svg);
+    ['sync', 'async', 'data', 'branch', 'merge'].forEach(function (kind) {
+      var m = svgEl('marker', defs);
+      m.setAttribute('id', 'arrow-' + kind);
+      m.setAttribute('viewBox', '0 0 10 10');
+      m.setAttribute('refX', '9'); m.setAttribute('refY', '5');
+      m.setAttribute('markerWidth', '7'); m.setAttribute('markerHeight', '7');
+      m.setAttribute('orient', 'auto-start-reverse');
+      var p = svgEl('path', m);
+      p.setAttribute('d', 'M 0 0 L 10 5 L 0 10 z');
+      p.setAttribute('class', 'swe-arrow swe-arrow-' + kind);
+    });
+    var edgeLayer = svgEl('g', svg);
+    var nodeLayer = el('div', 'swe-nodes', viewport);
+    var groupLayer = el('div', 'swe-groups', viewport);
+    viewport.insertBefore(groupLayer, viewport.firstChild); // paint behind edges + nodes
+
+    var isHubRing = spec.layout === 'hub-ring';
+    var isTopDown = spec.layout === 'top-down';
+    var isGitLanes = spec.layout === 'git-lanes';
+    var isTrustClustered = spec.layout === 'trust-clustered';
+    var pos = isHubRing ? hubRingLayout(spec) :
+              (isTopDown ? topDownLayout(spec) :
+              (isGitLanes ? gitLaneLayout(spec) :
+              (isTrustClustered ? trustClusteredLayout(spec) : layout(spec))));
+    var nodeEls = {};
+    var gitLaneBounds = null;
+
+    // trust-clustered ignores spec.groups (author-chosen subsystem groups)
+    // and instead groups by the derived trust tier, so the drawn boxes match
+    // the axis this layout mode exists to make dominant.
+    var groupDefs = isTrustClustered ? TRUST_TIERS : (spec.groups || []);
+    function nodeGroupId(n) { return isTrustClustered ? TRUST_TIERS[trustTierOf(n)].id : n.group; }
+
+    var groupLabels = {};   // render the human label, not the raw id
+    groupDefs.forEach(function (g) {
+      if (g && g.id != null) groupLabels[g.id] = g.label || g.id;
+    });
+
+    (spec.nodes || []).forEach(function (n) {
+      var p = pos[n.id];
+      var d = el('div', 'swe-node', nodeLayer);
+      if (isGitLanes) d.classList.add('swe-node-commit');
+      if (isTrustClustered && String(n.trust || '').indexOf('trusted-containment-core') === 0) {
+        d.classList.add('swe-node-hub');
+      }
+      d.style.left = p.x + 'px';
+      d.style.top = p.y + 'px';
+      d.style.width = p.w + 'px';
+      var color = TYPE_COLORS[n.type] || TYPE_COLORS.default;
+      d.style.setProperty('--node-color', color);
+      var head = el('div', 'swe-node-head', d);
+      head.textContent = n.type ? n.type.toUpperCase() : 'COMPONENT';
+      var body = el('div', 'swe-node-body', d);
+      el('div', 'swe-node-label', body).textContent = n.label || n.id;
+      if (n.tech) el('div', 'swe-node-tech', body).textContent = n.tech;
+      if (n.description) d.title = n.description;
+      nodeEls[n.id] = d;
+      makeDraggable(d, n.id);
+    });
+
+    // layout() estimated node heights before the DOM existed; a wrapped label or
+    // tech line makes the real node taller. Correct pos[].h from the measured
+    // height everywhere (edge anchors use it), then re-stack each layered
+    // rank so nodes don't overlap. Hub-ring positions are already final
+    // radial coordinates; nothing depends on rank stacking.
+    var byRank = {};
+    (spec.nodes || []).forEach(function (n) {
+      var p = pos[n.id];
+      p.h = nodeEls[n.id].offsetHeight || p.h;
+      if (!isHubRing && !isGitLanes) {
+        var rankCoord = isTopDown ? p.y : p.x;
+        (byRank[rankCoord] = byRank[rankCoord] || []).push(n.id);
+      }
+    });
+    if (!isHubRing && !isGitLanes) {
+      if (isTopDown) {
+        var rowY = 0;
+        Object.keys(byRank).map(Number).sort(function (a, b) { return a - b; }).forEach(function (oldY) {
+          var rowH = 0;
+          byRank[oldY].forEach(function (id) {
+            pos[id].y = rowY;
+            nodeEls[id].style.top = rowY + 'px';
+            rowH = Math.max(rowH, pos[id].h);
+          });
+          rowY += rowH + COL_GAP;
+        });
+      } else {
+        Object.keys(byRank).forEach(function (x) {
+          var ids = byRank[x].sort(function (a, b) { return pos[a].y - pos[b].y; });
+          var y = 0;
+          ids.forEach(function (id) {
+            pos[id].y = y;
+            nodeEls[id].style.top = y + 'px';
+            y += pos[id].h + ROW_GAP;
+          });
+        });
+      }
+    }
+
+    // ---- group bounding boxes (swimlanes): hierarchical layouts only — the
+    // boxes follow rank columns or rows, which hub-ring's radial coordinates
+    // don't have. Drawn once per-node heights are final (after rank restacking
+    // above). A group's members are not guaranteed to land in adjacent ranks
+    // (e.g. an async worker two ranks
+    // downstream of its sibling) — a single box spanning the group's full
+    // min/max would then swallow unrelated nodes sitting between the runs,
+    // so draw one box per contiguous rank run instead.
+    if (!isHubRing && !isGitLanes) {
+      var rankAxis = isTopDown ? 'y' : 'x';
+      var rankCoords = [];
+      (spec.nodes || []).forEach(function (n) {
+        var coord = pos[n.id] && pos[n.id][rankAxis];
+        if (coord != null && rankCoords.indexOf(coord) === -1) rankCoords.push(coord);
+      });
+      rankCoords.sort(function (a, b) { return a - b; });
+      groupDefs.forEach(function (g) {
+        if (!g || g.id == null) return;
+        var colsOfGroup = {};
+        (spec.nodes || []).forEach(function (n) {
+          if (nodeGroupId(n) !== g.id || !pos[n.id]) return;
+          var col = rankCoords.indexOf(pos[n.id][rankAxis]);
+          (colsOfGroup[col] = colsOfGroup[col] || []).push(n.id);
+        });
+        var cols = Object.keys(colsOfGroup).map(Number).sort(function (a, b) { return a - b; });
+        if (!cols.length) return; // empty group
+        var runs = [[cols[0]]];
+        for (var i = 1; i < cols.length; i++) {
+          if (cols[i] === cols[i - 1] + 1) runs[runs.length - 1].push(cols[i]);
+          else runs.push([cols[i]]);
+        }
+        runs.forEach(function (run) {
+          var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          run.forEach(function (col) {
+            colsOfGroup[col].forEach(function (id) {
+              var p = pos[id];
+              minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+              maxX = Math.max(maxX, p.x + p.w); maxY = Math.max(maxY, p.y + p.h);
+            });
+          });
+          var pad = 22;
+          var box = el('div', 'swe-group-box', groupLayer);
+          box.style.left = (minX - pad) + 'px';
+          box.style.top = (minY - pad) + 'px';
+          box.style.width = (maxX - minX + pad * 2) + 'px';
+          box.style.height = (maxY - minY + pad * 2) + 'px';
+          el('div', 'swe-group-label', box).textContent = groupLabels[g.id] || g.id;
+        });
+      });
+    }
+
+    // Git lanes use full-width horizontal bands rather than component-group
+    // boxes. Keep stable long-lived lanes visible even when the selected
+    // commit window contains no node on one of them (for example development).
+    if (isGitLanes) {
+      var gitLanes = (spec.lanes || []).slice().sort(function (a, b) {
+        return (a.order == null ? Infinity : a.order) - (b.order == null ? Infinity : b.order) ||
+               String(a.label || a.id).localeCompare(String(b.label || b.id));
+      });
+      var gitMaxX = 0;
+      Object.keys(pos).forEach(function (id) { gitMaxX = Math.max(gitMaxX, pos[id].x + pos[id].w); });
+      gitLanes.forEach(function (lane, laneIndex) {
+        var band = el('div', 'swe-lane-box' + (lane.current ? ' swe-lane-current' : ''), groupLayer);
+        band.style.left = (-GIT_LANE_LABEL_W) + 'px';
+        band.style.top = (laneIndex * GIT_LANE_GAP - 16) + 'px';
+        band.style.width = (gitMaxX + GIT_LANE_LABEL_W + 24) + 'px';
+        band.style.height = '88px';
+        var laneLabel = el('div', 'swe-lane-label', band);
+        laneLabel.textContent = (lane.current ? '● ' : '') + (lane.label || lane.id);
+      });
+      gitLaneBounds = {
+        minX: -GIT_LANE_LABEL_W,
+        minY: -16,
+        maxX: gitMaxX + 24,
+        maxY: Math.max(72, gitLanes.length * GIT_LANE_GAP - 24)
+      };
+    }
+
+    var edgeEls = [];
+    (spec.edges || []).forEach(function (e) {
+      if (!pos[e.source] || !pos[e.target]) return;
+      var kind = EDGE_DASH[e.kind] ? e.kind : 'sync';
+      var path = svgEl('path', edgeLayer);
+      path.setAttribute('class', 'swe-edge swe-edge-' + kind);
+      if (EDGE_DASH[kind]) path.setAttribute('stroke-dasharray', EDGE_DASH[kind]);
+      path.setAttribute('marker-end', 'url(#arrow-' + kind + ')');
+      var label = null;
+      if (e.label) {
+        label = svgEl('text', edgeLayer);
+        label.setAttribute('class', 'swe-edge-label');
+        label.textContent = e.label;
+      }
+      edgeEls.push({ e: e, path: path, label: label });
+    });
+
+    function edgePath(a, b) {
+      var x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      var x2 = b.x, y2 = b.y + b.h / 2;
+      if (b.x < a.x + a.w) { // backward edge: route from left side
+        x1 = a.x; x2 = b.x + b.w;
+      }
+      var dx = Math.max(40, Math.abs(x2 - x1) / 2);
+      var c1 = x1 < x2 ? x1 + dx : x1 - dx;
+      var c2 = x1 < x2 ? x2 - dx : x2 + dx;
+      return { d: 'M' + x1 + ',' + y1 + ' C' + c1 + ',' + y1 + ' ' + c2 + ',' + y2 + ' ' + x2 + ',' + y2,
+               mx: (x1 + x2) / 2, my: (y1 + y2) / 2 - 6 };
+    }
+
+    function verticalEdgePath(a, b) {
+      var x1 = a.x + a.w / 2, y1 = a.y + a.h;
+      var x2 = b.x + b.w / 2, y2 = b.y;
+      if (b.y < a.y + a.h) { // backward edge: route from top side
+        y1 = a.y; y2 = b.y + b.h;
+      }
+      var dy = Math.max(40, Math.abs(y2 - y1) / 2);
+      var c1 = y1 < y2 ? y1 + dy : y1 - dy;
+      var c2 = y1 < y2 ? y2 - dy : y2 + dy;
+      return { d: 'M' + x1 + ',' + y1 + ' C' + x1 + ',' + c1 + ' ' + x2 + ',' + c2 + ' ' + x2 + ',' + y2,
+               mx: (x1 + x2) / 2 + 6, my: (y1 + y2) / 2 };
+    }
+
+    function gitEdgePath(a, b) {
+      var x1 = a.x + a.w, y1 = a.y + a.h / 2;
+      var x2 = b.x, y2 = b.y + b.h / 2;
+      var mid = (x1 + x2) / 2;
+      return {
+        d: 'M' + x1 + ',' + y1 + ' C' + mid + ',' + y1 + ' ' + mid + ',' + y2 + ' ' + x2 + ',' + y2,
+        mx: mid,
+        my: (y1 + y2) / 2 - 6
+      };
+    }
+
+    // hub-ring has no consistent left→right flow direction to route "around"
+    // (edges fan out from the center in every direction), so it uses a
+    // straight line clipped to each node's rectangle boundary instead of
+    // edgePath()'s flow-direction-aware bezier.
+    function rectCenter(p) { return { x: p.x + p.w / 2, y: p.y + p.h / 2 }; }
+    function clipToRectBoundary(fromX, fromY, rect) {
+      var cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+      var dx = fromX - cx, dy = fromY - cy;
+      if (dx === 0 && dy === 0) return { x: cx, y: cy };
+      var scale = Math.min(
+        dx !== 0 ? (rect.w / 2) / Math.abs(dx) : Infinity,
+        dy !== 0 ? (rect.h / 2) / Math.abs(dy) : Infinity
+      );
+      return { x: cx + dx * scale, y: cy + dy * scale };
+    }
+    function radialEdgePath(a, b) {
+      var ca = rectCenter(a), cb = rectCenter(b);
+      var p1 = clipToRectBoundary(cb.x, cb.y, a);
+      var p2 = clipToRectBoundary(ca.x, ca.y, b);
+      return { d: 'M' + p1.x + ',' + p1.y + ' L' + p2.x + ',' + p2.y,
+               mx: (p1.x + p2.x) / 2, my: (p1.y + p2.y) / 2 - 6 };
+    }
+
+    // ---- label placement: nudge an edge label vertically off any node
+    // border or already-placed label it would otherwise sit on top of.
+    // Width is a rough glyph-count estimate (no canvas measurement — this
+    // must stay synchronous and dependency-free), which is deliberately
+    // generous so a false "overlap" (nudge when none existed) is preferred
+    // over a missed one. Runs for every layout, not just trust-clustered:
+    // dense fan-in/fan-out reads badly regardless of which mode placed the
+    // nodes.
+    var LABEL_H = 15;
+    function estimateLabelWidth(text) { return 6 * String(text || '').length + 8; }
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+    function placeLabelRect(mx, my, text, obstacles) {
+      var w = estimateLabelWidth(text);
+      var rect = { x: mx - w / 2, y: my - LABEL_H + 3, w: w, h: LABEL_H };
+      var step = LABEL_H + 3, tries = 0;
+      while (tries < 14 && obstacles.some(function (o) { return rectsOverlap(rect, o); })) {
+        tries++;
+        var offset = Math.ceil(tries / 2) * step * (tries % 2 ? 1 : -1);
+        rect.y = my - LABEL_H + 3 + offset;
+      }
+      return rect;
+    }
+
+    function drawEdges() {
+      var labelObstacles = Object.keys(pos).map(function (id) {
+        var p = pos[id];
+        return { x: p.x, y: p.y, w: p.w, h: p.h };
+      });
+      edgeEls.forEach(function (ee) {
+        var pathFn = isHubRing ? radialEdgePath :
+                     (isTopDown ? verticalEdgePath : (isGitLanes ? gitEdgePath : edgePath));
+        var p = pathFn(pos[ee.e.source], pos[ee.e.target]);
+        ee.path.setAttribute('d', p.d);
+        if (ee.label) {
+          var rect = placeLabelRect(p.mx, p.my, ee.e.label, labelObstacles);
+          var labelY = rect.y + LABEL_H - 3;
+          ee.label.setAttribute('x', p.mx);
+          ee.label.setAttribute('y', labelY);
+          labelObstacles.push(rect);
+        }
+      });
+    }
+
+    // ---- pan & zoom
+    var view = { x: 40, y: 40, k: 1 };
+    function applyView() {
+      viewport.style.transform =
+        'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.k + ')';
+    }
+    mount.addEventListener('wheel', function (ev) {
+      ev.preventDefault();
+      var k = Math.min(2.5, Math.max(0.2, view.k * (ev.deltaY < 0 ? 1.1 : 0.9)));
+      var r = mount.getBoundingClientRect();
+      var mx = ev.clientX - r.left, my = ev.clientY - r.top;
+      view.x = mx - (mx - view.x) * (k / view.k);
+      view.y = my - (my - view.y) * (k / view.k);
+      view.k = k;
+      applyView();
+    }, { passive: false });
+
+    var panning = null;
+    mount.addEventListener('mousedown', function (ev) {
+      if (ev.target.closest('.swe-node')) return;
+      panning = { x: ev.clientX - view.x, y: ev.clientY - view.y };
+      mount.classList.add('swe-grabbing');
+    });
+    window.addEventListener('mousemove', function (ev) {
+      if (!panning) return;
+      view.x = ev.clientX - panning.x;
+      view.y = ev.clientY - panning.y;
+      applyView();
+    });
+    window.addEventListener('mouseup', function () {
+      panning = null;
+      mount.classList.remove('swe-grabbing');
+    });
+
+    function makeDraggable(d, id) {
+      d.addEventListener('mousedown', function (ev) {
+        ev.stopPropagation();
+        var start = { mx: ev.clientX, my: ev.clientY, x: pos[id].x, y: pos[id].y };
+        function move(mv) {
+          pos[id].x = start.x + (mv.clientX - start.mx) / view.k;
+          pos[id].y = start.y + (mv.clientY - start.my) / view.k;
+          d.style.left = pos[id].x + 'px';
+          d.style.top = pos[id].y + 'px';
+          drawEdges();
+        }
+        function up() {
+          window.removeEventListener('mousemove', move);
+          window.removeEventListener('mouseup', up);
+        }
+        window.addEventListener('mousemove', move);
+        window.addEventListener('mouseup', up);
+      });
+    }
+
+    function fitView() {
+      var ids = Object.keys(pos);
+      if (!ids.length) return;
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      ids.forEach(function (id) {
+        var p = pos[id];
+        minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x + p.w); maxY = Math.max(maxY, p.y + p.h);
+      });
+      if (gitLaneBounds) {
+        minX = Math.min(minX, gitLaneBounds.minX); minY = Math.min(minY, gitLaneBounds.minY);
+        maxX = Math.max(maxX, gitLaneBounds.maxX); maxY = Math.max(maxY, gitLaneBounds.maxY);
+      }
+      var r = mount.getBoundingClientRect();
+      var k = Math.min(1.5, Math.max(0.2,
+        Math.min((r.width - 80) / (maxX - minX), (r.height - 80) / (maxY - minY))));
+      view.k = k;
+      view.x = (r.width - (maxX - minX) * k) / 2 - minX * k;
+      view.y = (r.height - (maxY - minY) * k) / 2 - minY * k;
+      applyView();
+    }
+
+    // ---- controls + legend
+    var controls = el('div', 'swe-controls', mount);
+    [['+', function () { view.k = Math.min(2.5, view.k * 1.2); applyView(); }],
+     ['−', function () { view.k = Math.max(0.2, view.k / 1.2); applyView(); }],
+     ['▣', fitView]].forEach(function (c) {
+      var b = el('button', 'swe-btn', controls);
+      b.textContent = c[0];
+      b.addEventListener('click', c[1]);
+    });
+
+    // ---- search + type filter: dims (never hides/re-layouts) nodes and
+    // edges that don't match the current text query or whose type has been
+    // toggled off in the legend. An edge is dimmed if either endpoint is
+    // dimmed. Matching itself is matchesQuery() above (pure, testable); this
+    // just binds it to the live closure state.
+    var excludedTypes = {};
+    var query = '';
+    function nodeMatches(n) {
+      return matchesQuery(n, query, excludedTypes);
+    }
+    function applyFilter() {
+      var matched = {};
+      (spec.nodes || []).forEach(function (n) {
+        var m = nodeMatches(n);
+        matched[n.id] = m;
+        nodeEls[n.id].classList.toggle('swe-dimmed', !m);
+      });
+      edgeEls.forEach(function (ee) {
+        var dim = !matched[ee.e.source] || !matched[ee.e.target];
+        ee.path.classList.toggle('swe-dimmed', dim);
+        if (ee.label) ee.label.classList.toggle('swe-dimmed', dim);
+      });
+    }
+
+    var usedTypes = {};
+    (spec.nodes || []).forEach(function (n) { usedTypes[n.type || 'default'] = true; });
+    var legend = el('div', 'swe-legend', mount);
+    var legendItems = {};
+    Object.keys(usedTypes).sort().forEach(function (t) {
+      var item = el('span', 'swe-legend-item', legend);
+      var dot = el('span', 'swe-legend-dot', item);
+      dot.style.background = TYPE_COLORS[t] || TYPE_COLORS.default;
+      item.appendChild(document.createTextNode(t));
+      item.title = 'Click to toggle ' + t + ' nodes';
+      item.addEventListener('click', function () {
+        excludedTypes[t] = !excludedTypes[t];
+        item.classList.toggle('swe-dimmed', !!excludedTypes[t]);
+        applyFilter();
+      });
+      legendItems[t] = item;
+    });
+
+    var search = el('div', 'swe-search', mount);
+    var searchInput = el('input', 'swe-search-input', search);
+    searchInput.type = 'search';
+    searchInput.placeholder = 'Filter nodes…';
+    var searchClear = el('button', 'swe-search-clear', search);
+    searchClear.type = 'button';
+    searchClear.textContent = '×';
+    // swe-search-active shows/hides the custom clear button, which changes
+    // .swe-search's rendered width (it's a right-anchored flex row, so the
+    // box grows/shrinks from its LEFT edge). The font-picker script (outside
+    // this file, appended to <body>) positions itself off that width on
+    // load/font-change/resize but has no way to know it just changed here —
+    // dispatching on `mount` (the persistent #diagram node, not wiped by a
+    // font-swap re-render like its children are) lets it listen without this
+    // renderer needing to know the picker exists.
+    searchInput.addEventListener('input', function () {
+      query = searchInput.value.trim().toLowerCase();
+      search.classList.toggle('swe-search-active', query.length > 0);
+      applyFilter();
+      mount.dispatchEvent(new CustomEvent('swe-search-resize'));
+    });
+    searchClear.addEventListener('click', function () {
+      searchInput.value = '';
+      query = '';
+      search.classList.remove('swe-search-active');
+      applyFilter();
+      searchInput.focus();
+      mount.dispatchEvent(new CustomEvent('swe-search-resize'));
+    });
+
+    if (spec.title) {
+      el('div', 'swe-title', mount).textContent = spec.title;
+    }
+
+    drawEdges();
+    fitView();
+  };
+
+  // Node-only export for test/swe-diagram.sh (pure-logic fixtures, no
+  // browser). `module` is undefined when this file is inlined into a
+  // <script> tag, so this is a no-op there — zero behavior change shipped.
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+      hubRingLayout: hubRingLayout,
+      matchesQuery: matchesQuery,
+      layout: layout,
+      topDownLayout: topDownLayout,
+      gitLaneLayout: gitLaneLayout,
+      trustClusteredLayout: trustClusteredLayout,
+      trustTierOf: trustTierOf,
+      TRUST_TIERS: TRUST_TIERS
+    };
+  }
+})();
+
+</script>
+<script>
+(function () {
+  var spec = {
+  "title": "XYZ \u2014 Multi-Agent Coordination System",
+  "generated": "2026-07-09",
+  "sources": [
+    "ARCHITECTURE.md (relay stack map, verified against relay-drive.sh / relay-turn-lib.sh / *-turn.sh / poll.sh / bin/tick)",
+    "ROUTER.md (canonical entry points, subsystem routing hints)",
+    "README.md (two-layer model: tick kernel + relay-automation product)",
+    "repo directory structure: bin/, src/, relay-automation/, utils/pdda, utils/telemetry, utils/ate",
+    "utils/ate/SKILL.md + utils/ate/scripts/*.py (ATE: Gemma-driven Aider variation tester, folded in as its own subsystem)",
+    "utils/pdda/pdda.sh + pdda-gh-refresh.sh (gh issue list read path for issue-doc-sync)"
+  ],
+  "legend_note": "trust is a documentation-only annotation on top of the normal type/group fields \u2014 the swe-diagram renderer does not draw it specially. Vocabulary: trusted-primitive/trusted-orchestrator/trusted-dispatch/trusted-containment-core/trusted-supervisor = local, no independent code-execution authority of its own; untrusted-executor = an agent CLI running model-directed code, contained by something else, not by itself; sandboxed-worker = ATE's unattended local loop, no repo-write or network-credential authority of its own; external-credentialed = a real API key or a real GitHub side effect crosses here; shared-state = on-disk coordination surface, not itself a trust boundary; governance-gate = dev-time check, does not run during a live turn; runtime-audit = post-hoc verification, not a preventive control.",
+  "trust_boundaries": [
+    {
+      "id": "b1-agent-vs-containment",
+      "between": [
+        "claude-cli",
+        "relay-lib"
+      ],
+      "label": "SAFETY BOUNDARY: untrusted agent-driven writes are contained by relay-lib, not by the agent itself",
+      "note": "Every agent CLI (claude-cli/codex-cli/agy-cli/aider-cli) runs model-directed code with no independent sandboxing of its own. relay-turn-lib.sh is the actual boundary: path allowlist, worktree isolation at ROOT@HEAD, commit-bypass hard reset (exit 6), and timeout watchdog (exit 7) all live there, not in the model."
+    },
+    {
+      "id": "b2-dispatch-identity-gate",
+      "between": [
+        "relay-drive",
+        "claude-turn"
+      ],
+      "label": "TRUST BOUNDARY: a shim only acts if RELAY_AGENT matches its own configured id",
+      "note": "relay-drive.sh exports the current tick actor; every shim (claude-turn/codex-turn/agy-turn/aider-turn) checks RELAY_AGENT before doing anything and no-ops (exit 0) otherwise. This is what keeps four independently-invoked shims from ever racing each other for the same turn."
+    },
+    {
+      "id": "b3-external-credentials",
+      "between": [
+        "aider-cli",
+        "openrouter"
+      ],
+      "label": "TRUST BOUNDARY: real API keys / real external side effects cross here",
+      "note": "aider-cli reads its OpenRouter key from a local secrets file (never hardcoded). agy-cli's Google grounded search and ATE's gh issue create are the other two points in the whole suite where a real external credential or side effect is exercised."
+    },
+    {
+      "id": "b4-post-hoc-audit-gap",
+      "between": [
+        "trust-audit",
+        "agy-cli"
+      ],
+      "label": "SAFETY BOUNDARY (partial): post-hoc isolation-breach scan, not full containment",
+      "note": "trust-audit scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found \u2014 but this detects one leak symptom, not full containment. A known false-positive gap is tracked in GH-183."
+    },
+    {
+      "id": "b5-ate-control-channel",
+      "between": [
+        "checkin",
+        "control-json"
+      ],
+      "label": "SAFETY BOUNDARY: only Claude, via checkin.py --abort, writes control.json",
+      "note": "run_variations.py resets control.json to {action: continue} at the start of every run (killing stale aborts from a prior run). The unattended worker loop and the local Gemma classifier only ever read it, never write it."
+    },
+    {
+      "id": "b6-ate-scratch-repo-unenforced",
+      "between": [
+        "run-variations",
+        "aider-cli"
+      ],
+      "label": "SAFETY BOUNDARY (UNENFORCED): ATE's aider subprocess must stay inside a scratch repo",
+      "note": "Unlike relay's worktree isolation \u2014 a real code-level guard \u2014 this is only an operational instruction in ATE's SKILL.md quick-start. Nothing in run_variations.py validates that --repo isn't the operator's real working tree. This is the one boundary in the whole suite that exists in docs but not in code."
+    },
+    {
+      "id": "b7-single-external-side-effect",
+      "between": [
+        "compile-issue",
+        "github-api"
+      ],
+      "label": "TRUST BOUNDARY: local unattended loop -> exactly one external credentialed action",
+      "note": "Regardless of how many hours ATE runs unattended, exactly one `gh issue create` call happens per run (or zero under --dry-run) \u2014 every intermediate result stays local in error_log.jsonl."
+    },
+    {
+      "id": "b8-governance-is-dev-time-only",
+      "between": [
+        "validate",
+        "relay-drive"
+      ],
+      "label": "boundary: governance gates run outside the live agent-turn path",
+      "note": "validate.sh and pdda.sh check correctness/doc-hygiene at dev time; neither runs during a live relay/marathon/ATE turn, so they can't stop an in-flight unsafe action \u2014 they gate before/after, not during."
+    }
+  ],
+  "groups": [
+    {
+      "id": "kernel",
+      "label": "tick kernel (coordination primitive)"
+    },
+    {
+      "id": "orchestration",
+      "label": "relay-automation (orchestration)"
+    },
+    {
+      "id": "shims",
+      "label": "Per-agent turn shims"
+    },
+    {
+      "id": "agents",
+      "label": "Agent CLIs (external subprocesses)"
+    },
+    {
+      "id": "external",
+      "label": "External services"
+    },
+    {
+      "id": "state",
+      "label": "Shared on-disk state"
+    },
+    {
+      "id": "governance",
+      "label": "Governance (dev-time gates)"
+    },
+    {
+      "id": "trust",
+      "label": "Audit & Trust (runtime reconciliation)"
+    },
+    {
+      "id": "ate",
+      "label": "ATE (Gemma-driven Aider variation tester)"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "tick",
+      "label": "tick CLI",
+      "type": "api",
+      "group": "kernel",
+      "tech": "Node \u00b7 bin/tick + src/*.js",
+      "trust": "trusted-primitive",
+      "description": "The kernel: a local event-log CLI that hands out collision-free, path-scoped work claims (claim/scope/ping/release/done/cost). Answers 'whose turn is it?' via the RELAY-TURN task. No server, no API keys."
+    },
+    {
+      "id": "eventlog",
+      "label": ".tick/events log",
+      "type": "database",
+      "group": "kernel",
+      "tech": "append-only JSON events + O_EXCL lock",
+      "trust": "shared-state",
+      "description": "Shared append-only event log serialized by an O_EXCL lock (src/lock.js). tick appends events and projects current task state (status/claimer/handoff-to) from them."
+    },
+    {
+      "id": "relay-drive",
+      "label": "relay-drive.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "supervisor loop",
+      "trust": "trusted-orchestrator",
+      "description": "Supervisor: reads tick + thread STATUS, derives the active actor, exports RELAY_AGENT/RELAY_FILE/RELAY_TASK, and invokes exactly one turn shim per round. Enforces round cap, no-progress (exit 3), and close-mismatch (exit 4)."
+    },
+    {
+      "id": "relay-lib",
+      "label": "relay-turn-lib.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "containment core (model-agnostic)",
+      "trust": "trusted-containment-core",
+      "description": "Shared safety core: path allowlist, worktree isolation at ROOT@HEAD, timeout watchdog (rtl_run_bounded), commit-bypass guard (hard reset + exit 6), and one file-scoped commit \u2014 never pushes."
+    },
+    {
+      "id": "poll",
+      "label": "poll.sh",
+      "type": "service",
+      "group": "orchestration",
+      "tech": "decision engine (Path B)",
+      "trust": "trusted-orchestrator",
+      "description": "Hands-free decision engine for two live Claude windows: decides run-runner / watchdog / idle / stop / nudge-cross-model. tick decides whose turn is runnable; thread STATUS decides terminal."
+    },
+    {
+      "id": "marathon",
+      "label": "marathon.sh",
+      "type": "job",
+      "group": "orchestration",
+      "tech": "MARATHON.yaml phase chain",
+      "trust": "trusted-orchestrator",
+      "description": "Chains several relay build->review phases in depends_on order from a MARATHON.yaml. The multi-agent coordinator built on the relay loop (marathon-drive.sh)."
+    },
+    {
+      "id": "deep-research",
+      "label": "deep-research.mjs",
+      "type": "job",
+      "group": "orchestration",
+      "tech": "zero-dep Node adapter (GH-87)",
+      "trust": "trusted-orchestrator",
+      "description": "Provider-agnostic grounded-search adapter. Spawns agy in print mode in a throwaway tmpdir, normalizes to {answer, citations, query, provider, model, raw}. Fail-closed typed errors, no silent fallback."
+    },
+    {
+      "id": "claude-turn",
+      "label": "claude-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "trust": "trusted-dispatch",
+      "description": "Claude Code turn shim: pins the model, sets --allowedTools, shadows blocked commands on PATH, and captures token counts into tick cost. No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "codex-turn",
+      "label": "codex-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "trust": "trusted-dispatch",
+      "description": "Codex turn shim: strips OPENAI_API_KEY unless allowed, runs 'codex exec -s workspace-write'. No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "agy-turn",
+      "label": "agy-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim",
+      "trust": "trusted-dispatch",
+      "description": "agy (Antigravity) turn shim: runs 'agy -p --dangerously-skip-permissions --print-timeout', treats exit-0-with-empty-log as a hard failure (exit 5). No-ops unless RELAY_AGENT matches."
+    },
+    {
+      "id": "aider-turn",
+      "label": "aider-turn.sh",
+      "type": "service",
+      "group": "shims",
+      "tech": "dispatch shim (GH-77)",
+      "trust": "trusted-dispatch",
+      "description": "Aider \u003c-> OpenRouter build lane. Owns tick token ops (Aider can't run shell mid-turn), asserts token ownership, runs Aider --no-auto-commits so the harness commits."
+    },
+    {
+      "id": "claude-cli",
+      "label": "Claude Code CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "claude -p",
+      "trust": "untrusted-executor",
+      "description": "Claude Code headless subprocess run inside the isolated worktree; edits the relay thread and moves the tick token."
+    },
+    {
+      "id": "codex-cli",
+      "label": "Codex CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "codex exec",
+      "trust": "untrusted-executor",
+      "description": "Codex headless subprocess; builds/reviews within the allowlist, moves the tick token via ./bin/tick."
+    },
+    {
+      "id": "agy-cli",
+      "label": "agy CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "Antigravity / Gemini",
+      "trust": "untrusted-executor",
+      "description": "Google Antigravity CLI. Serves both relay turns (build/review) and deep-research grounded search via its built-in Google search tool."
+    },
+    {
+      "id": "aider-cli",
+      "label": "Aider CLI",
+      "type": "external",
+      "group": "agents",
+      "tech": "OpenAI-standard client",
+      "trust": "untrusted-executor",
+      "description": "Aider headless build runner using an OpenAI-compatible client; talks to models through OpenRouter. Two independent call paths: aider-turn.sh's relay lane (--no-auto-commits, harness commits) and ATE's run_variations.py, which spawns it directly per test variation against a scratch repo."
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter",
+      "type": "external",
+      "group": "external",
+      "tech": "model gateway",
+      "trust": "external-credentialed",
+      "description": "OpenAI-compatible model gateway for the Aider lane (e.g. GLM 5.2, Nemotron), used by both the relay's aider-turn and ATE's variation grid. Key read from a local secrets file, never hardcoded."
+    },
+    {
+      "id": "google-search",
+      "label": "Google grounded search",
+      "type": "external",
+      "group": "external",
+      "tech": "Gemini grounding",
+      "trust": "external-credentialed",
+      "description": "Google's grounded web search, reached through the agy CLI's built-in search tool; returns cited answers to deep-research."
+    },
+    {
+      "id": "github-api",
+      "label": "GitHub (gh CLI)",
+      "type": "external",
+      "group": "external",
+      "tech": "gh issue list / gh issue create",
+      "trust": "external-credentialed",
+      "description": "Shared external GitHub surface: pdda-gh-refresh.sh reads issue state (gh issue list) for the issue-doc-sync check; ATE's compile_issue.py writes exactly one rollup issue per run (gh issue create)."
+    },
+    {
+      "id": "relay-thread",
+      "label": "relay thread file",
+      "type": "storage",
+      "group": "state",
+      "tech": "relay-system/\u003cdate>/\u003cslug>.md",
+      "trust": "shared-state",
+      "description": "Human-readable review state: STATUS header (terminal signal) + per-turn review blocks. Holds review content, but NOT turn ownership (that is tick state)."
+    },
+    {
+      "id": "telemetry",
+      "label": "XYZ.json + telemetry",
+      "type": "storage",
+      "group": "state",
+      "tech": "utils/telemetry (gitignored)",
+      "trust": "shared-state",
+      "description": "Per-session completion feed appended by every relay/marathon/swarm session (harness/sessionId/health/title). Local + machine-specific; extractors read the event log."
+    },
+    {
+      "id": "control-json",
+      "label": "control.json",
+      "type": "storage",
+      "group": "state",
+      "tech": "{ action: continue | abort, reason? }",
+      "trust": "shared-state (control-channel)",
+      "description": "ATE's only channel Claude writes to. run_variations.py resets it to continue at the start of every run so a stale abort from a prior run can't kill a fresh one; only checkin.py --abort writes an abort after that."
+    },
+    {
+      "id": "error-log",
+      "label": "error_log.jsonl",
+      "type": "storage",
+      "group": "state",
+      "tech": "append-only JSON lines, one record per ATE variation",
+      "trust": "shared-state",
+      "description": "ATE's single source of truth. Every Aider variation appends here whether it passed or failed \u2014 the only artifact compile_issue.py reads to build the rollup."
+    },
+    {
+      "id": "validate",
+      "label": "validate.sh",
+      "type": "job",
+      "group": "governance",
+      "tech": "test/*.sh suite",
+      "trust": "governance-gate",
+      "description": "Repo correctness gate: runs the full kernel + coordination test suite (Node 18+, no API keys). Must be green before reporting code/runtime success."
+    },
+    {
+      "id": "pdda",
+      "label": "pdda.sh",
+      "type": "job",
+      "group": "governance",
+      "tech": "utils/pdda",
+      "trust": "governance-gate",
+      "description": "Document-hygiene engine (PDDA contract): frontmatter, status-table, roadmap-coverage, changelog, stale, and issue-doc-sync checks over the PROJECT docs. issue-doc-sync reads cached GitHub issue state refreshed by pdda-gh-refresh.sh (gh issue list)."
+    },
+    {
+      "id": "project-docs",
+      "label": "PROJECT docs + ledgers",
+      "type": "storage",
+      "group": "governance",
+      "tech": "ROADMAP.md / CHANGELOG.md / PROJECT/**",
+      "trust": "governance-gate",
+      "description": "PDDA-governed doc system: ROUTER/AGENTS entry points, ROADMAP pointer ledger, CHANGELOG record, and PROJECT/** execution docs (1-INBOX -> 2-WORKING -> 3-COMPLETED)."
+    },
+    {
+      "id": "consult",
+      "label": "consult.sh",
+      "type": "job",
+      "group": "trust",
+      "tech": "one-shot cross-model panel",
+      "trust": "runtime-audit",
+      "description": "Parallel, read-only consult: fans the same question to Codex/agy/Aider in an isolated throwaway worktree and reconciles the answers into one. Mechanically stamps SINGLE-MODEL \u2014 NOT RECONCILED into the transcript when the panel degrades to one survivor (GH-178 A2)."
+    },
+    {
+      "id": "trust-audit",
+      "label": "Isolation-breach audit",
+      "type": "service",
+      "group": "trust",
+      "tech": "post-hoc transcript scan (GH-178 B1)",
+      "trust": "runtime-audit",
+      "description": "Scans agy's transcript for citations of the real repo root and fails the turn (exit 5) if found, catching a grounding escape from the isolated worktree. Detects one leak symptom, not full containment \u2014 a known false-positive gap is tracked in GH-183."
+    },
+    {
+      "id": "run-variations",
+      "label": "run_variations.py",
+      "type": "job",
+      "group": "ate",
+      "tech": "Python, cycles variations.yaml grid unattended for --minutes",
+      "trust": "sandboxed-worker",
+      "description": "Owns ATE's loop: resets control.json to continue at start, checks it before every iteration, spawns aider-cli per variation, sends the result to Gemma for classification, appends one record to error_log.jsonl regardless of outcome, and chains to compile_issue.py at the end if --gh-repo was passed."
+    },
+    {
+      "id": "lmstudio-gemma",
+      "label": "Gemma (LM Studio)",
+      "type": "service",
+      "group": "ate",
+      "tech": "local model server, http://localhost:1234/v1",
+      "trust": "sandboxed-worker",
+      "description": "Classifies each Aider result (pass/fail, severity, category, likely_cause) via ask_gemma(). Has no filesystem or gh credentials of its own \u2014 only ever called with the last 1500 chars of stdout/stderr as text."
+    },
+    {
+      "id": "checkin",
+      "label": "checkin.py",
+      "type": "service",
+      "group": "ate",
+      "tech": "Python, run by Claude every ~5 min",
+      "trust": "trusted-supervisor",
+      "description": "Claude's read side on the ATE run: tails error_log.jsonl and reports drift signals (repeated likely_cause, pass-with-traceback, staleness), and offers --abort \"reason\" as the one write path into control.json. Claude is the only actor with abort authority; it polls periodically rather than running unattended."
+    },
+    {
+      "id": "compile-issue",
+      "label": "compile_issue.py",
+      "type": "job",
+      "group": "ate",
+      "tech": "groups error_log.jsonl by severity signature",
+      "trust": "external-credentialed (rollup)",
+      "description": "Chained automatically by run_variations.py the moment the run stops (time limit, abort, or the 20-pass safety cap), or run standalone for a manual rollup. Builds one severity-ranked checklist and is the only ATE component that calls gh issue create."
+    }
+  ],
+  "edges": [
+    {
+      "source": "tick",
+      "target": "eventlog",
+      "label": "appends + projects",
+      "kind": "data"
+    },
+    {
+      "source": "relay-drive",
+      "target": "tick",
+      "label": "reads RELAY-TURN actor",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "claude-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "codex-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "agy-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "aider-turn",
+      "label": "invokes selected shim",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "relay-lib",
+      "label": "containment",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "tick",
+      "label": "moves token (claim/release/done)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-lib",
+      "target": "relay-thread",
+      "label": "file-scoped commit",
+      "kind": "data"
+    },
+    {
+      "source": "claude-turn",
+      "target": "claude-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "codex-turn",
+      "target": "codex-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "agy-cli",
+      "label": "runs CLI (worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "aider-turn",
+      "target": "aider-cli",
+      "label": "runs CLI (--no-auto-commits)",
+      "kind": "sync"
+    },
+    {
+      "source": "claude-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "codex-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "agy-cli",
+      "target": "relay-thread",
+      "label": "writes review blocks",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "relay-thread",
+      "label": "writes edits",
+      "kind": "data"
+    },
+    {
+      "source": "aider-cli",
+      "target": "openrouter",
+      "label": "model API",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-cli",
+      "target": "google-search",
+      "label": "grounded search",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "tick",
+      "label": "reads whose-turn",
+      "kind": "sync"
+    },
+    {
+      "source": "poll",
+      "target": "relay-thread",
+      "label": "reads STATUS",
+      "kind": "data"
+    },
+    {
+      "source": "marathon",
+      "target": "relay-drive",
+      "label": "chains build->review phases",
+      "kind": "sync"
+    },
+    {
+      "source": "deep-research",
+      "target": "agy-cli",
+      "label": "spawns agy -p (grounded)",
+      "kind": "sync"
+    },
+    {
+      "source": "relay-drive",
+      "target": "telemetry",
+      "label": "appends completion",
+      "kind": "data"
+    },
+    {
+      "source": "validate",
+      "target": "tick",
+      "label": "runs kernel + coordination suite",
+      "kind": "sync"
+    },
+    {
+      "source": "pdda",
+      "target": "project-docs",
+      "label": "doc-hygiene gates",
+      "kind": "sync"
+    },
+    {
+      "source": "pdda",
+      "target": "github-api",
+      "label": "gh issue list (issue-doc-sync cache)",
+      "kind": "sync"
+    },
+    {
+      "source": "consult",
+      "target": "agy-cli",
+      "label": "fans out (isolated worktree)",
+      "kind": "sync"
+    },
+    {
+      "source": "consult",
+      "target": "trust-audit",
+      "label": "checks agy transcript",
+      "kind": "sync"
+    },
+    {
+      "source": "agy-turn",
+      "target": "trust-audit",
+      "label": "checks agy transcript",
+      "kind": "sync"
+    },
+    {
+      "source": "trust-audit",
+      "target": "relay-lib",
+      "label": "shares containment core",
+      "kind": "sync"
+    },
+    {
+      "source": "run-variations",
+      "target": "control-json",
+      "label": "resets to continue, polls each iteration",
+      "kind": "sync"
+    },
+    {
+      "source": "checkin",
+      "target": "control-json",
+      "label": "writes abort only",
+      "kind": "data"
+    },
+    {
+      "source": "run-variations",
+      "target": "aider-cli",
+      "label": "spawns per variation (scratch repo only)",
+      "kind": "sync"
+    },
+    {
+      "source": "run-variations",
+      "target": "lmstudio-gemma",
+      "label": "ask_gemma classification",
+      "kind": "sync"
+    },
+    {
+      "source": "run-variations",
+      "target": "error-log",
+      "label": "appends one record per variation",
+      "kind": "data"
+    },
+    {
+      "source": "checkin",
+      "target": "error-log",
+      "label": "tails last N lines",
+      "kind": "data"
+    },
+    {
+      "source": "run-variations",
+      "target": "compile-issue",
+      "label": "chains automatically when --gh-repo set",
+      "kind": "sync"
+    },
+    {
+      "source": "compile-issue",
+      "target": "error-log",
+      "label": "reads full log, groups by severity",
+      "kind": "data"
+    },
+    {
+      "source": "compile-issue",
+      "target": "github-api",
+      "label": "gh issue create (skipped under --dry-run)",
+      "kind": "sync"
+    }
+  ]
+};
+
+  // Font stacks: no @font-face, no network fetch — "Indie Flower" resolves
+  // only against a locally installed copy, then degrades through common
+  // handwriting faces to the universal `cursive` generic family, so this
+  // never blocks or silently fails when the diagram is opened offline.
+  var FONTS = {
+    'default': {
+      label: 'Default',
+      family: '-apple-system, "Segoe UI", Roboto, sans-serif',
+      scale: 1
+    },
+    'indie-flower': {
+      label: 'Indie Flower (handwriting)',
+      family: '"Indie Flower", "Bradley Hand", "Segoe Print", "Comic Sans MS", cursive',
+      // A handwriting face reads smaller than the system sans at the same
+      // px size, so bump it slightly for legibility.
+      scale: 1.15
+    }
+  };
+
+  function applyFont(key) {
+    var f = FONTS[key] || FONTS['default'];
+    document.documentElement.style.setProperty('--swe-font', f.family);
+    document.documentElement.style.setProperty('--swe-font-scale', f.scale);
+  }
+
+  function positionPicker() {
+    var search = document.querySelector('#diagram .swe-search');
+    picker.style.right = search ? (16 + search.offsetWidth + 8) + 'px' : '16px';
+  }
+
+  var picker = document.createElement('select');
+  picker.className = 'swe-font-select';
+  picker.title = 'Diagram typeface';
+  Object.keys(FONTS).forEach(function (key) {
+    var opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = FONTS[key].label;
+    picker.appendChild(opt);
+  });
+  picker.addEventListener('change', function () {
+    applyFont(picker.value);
+    // Indie Flower's metrics differ from the system sans (wider glyphs,
+    // taller ascenders), so node labels wrap differently and edge anchors
+    // computed from the old heights would drift. Re-rendering from the same
+    // spec re-measures every node height and redraws edges/groups against
+    // the new font, the same way the initial render does.
+    renderDiagram(spec);
+    positionPicker();
+  });
+  // Appended to <body>, not #diagram: renderDiagram() clears #diagram's
+  // contents on every call, and the picker must survive its own re-render.
+  document.body.appendChild(picker);
+
+  renderDiagram(spec);
+  positionPicker();
+  window.addEventListener('resize', positionPicker);
+  // The search box's custom clear button toggles on/off as the user types,
+  // changing .swe-search's rendered width without firing a window resize —
+  // previously only a real resize re-ran positionPicker(), so the picker
+  // stayed put while the (right-anchored) search box grew leftward under
+  // it. #diagram is a persistent node (renderDiagram only replaces its
+  // children), so this listener survives every re-render, including a
+  // font-swap.
+  document.getElementById('diagram').addEventListener('swe-search-resize', positionPicker);
+})();
+</script>
+</body>
+</html>

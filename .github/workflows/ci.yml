@@ -1,0 +1,430 @@
+name: CI
+
+# GH-216 cut `development` as the WIP branch that all work targets, but these
+# triggers stayed pinned to `main` — so no PR into `development` ran CI at all.
+# Both branches are gated here; add any future long-lived integration branch too.
+# ── HOSTED CI IS OFF FOR THE PRIVATE PHASE (GH-544, operator decision 2026-08-14) ─────────────────
+#
+# The `push:` and `pull_request:` triggers are REMOVED, not disabled elsewhere, so that this file
+# states its own status. Nothing below runs automatically. The gate now runs locally at the push
+# boundary via `githooks/pre-push`.
+#
+# WHY: measured in #509/#528 — Aug 1-14 cost $21.99 gross / $10.00 billed, exhausting the 2,000
+# included minutes on Aug 11 and hitting the $10 spending limit on Aug 14, which blocked Actions
+# outright. Projection at that cadence was ~$47/mo gross. We do not pay that for an internal tool.
+#
+# THIS IS A BRIDGE WITH A KNOWN END. GitHub Actions is free and unmetered on PUBLIC repositories, so
+# the entire cost basis for this disappears at open-source release. The re-arm trigger is therefore an
+# event, not a date or a budget review.
+#
+# TO RE-ARM WHEN THE REPO GOES PUBLIC:
+#   1. Restore the two triggers below (keep `workflow_dispatch` OFF the macOS job — see its header;
+#      three manual dispatches consumed roughly half a monthly budget on 2026-08-13).
+#   2. Expect a BATCH of accumulated Linux portability drift on the first green-field run. The local
+#      gate is macOS, so the platform we ship to stayed covered — the ubuntu canary did not, and drift
+#      has been accumulating unreported since this date. That backlog is the known, accepted cost of
+#      this decision, not a surprise.
+#   3. Re-arm the GH-509 promotion boundary as the real gate; during the private phase no independent
+#      attestation existed at all, and `gate-record.sh`'s NOT-promotion-evidence line was permanently
+#      undischargeable by design.
+#
+# EVERYTHING BELOW IS DELIBERATELY PRESERVED — jobs, routing, and especially the GH-509 Phase 4 cost
+# analysis in the macOS job's header. That reasoning is what you will want when re-arming; deleting it
+# and rediscovering it on an invoice is the failure this comment exists to prevent.
+on:
+  workflow_dispatch:
+
+concurrency:
+  # Cancel superseded runs within the same event lane. Keep manual integration runs
+  # independent so a branch push cannot cancel an operator-requested full gate.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # GH-509 Phase 4 — THE PROMOTION BOUNDARY. This is the only job whose green means anything about
+  # what we ship, because it is the only one running the platform we ship to.
+  #
+  # WHY IT IS RARE, AND MUST STAY RARE: hosted macOS runners bill at roughly 10x Linux. At the volume
+  # this repo generates (37 pushes to `development` in one 24h sample) macOS-everywhere would cost
+  # thousands a month. Do NOT add `pull_request` here.
+  #
+  # WHY `workflow_dispatch` WAS REMOVED (2026-08-13, measured — this was the original design and it
+  # did not survive contact with the invoice). The theory was that a dispatch costs "well under a
+  # dollar a handful of times a month". The org's actual August usage says otherwise: macOS 3-core
+  # 75 minutes = **$4.65 net**, against Ubuntu's 2,740 minutes = $4.44 net. Seventy-five macOS minutes
+  # cost more than 2,740 Linux minutes, because macOS bills ~10x AND draws no included-minute discount
+  # on a private repo. Three dispatches on one branch in one day consumed roughly half a $10 monthly
+  # budget. The gating was correct; what was missing was any brake on how often the deliberate trigger
+  # gets pulled — and "deliberate" is not a rate limit when the same person can dispatch it while
+  # iterating on the workflow itself.
+  #
+  # WHAT THIS COSTS US, STATED PLAINLY: the original argument for `workflow_dispatch` was real —
+  # work lands on `development` and `main` sees almost nothing, so a main-only boundary arrives AFTER
+  # the promotion decision rather than before it. That gap is now open. The substitute is the LOCAL
+  # gate on the platform we ship to: `./validate.sh` (and, per GH-528, `--parallel N` for a ~3-minute
+  # run) plus `utils/gate-record.sh`, which is self-reported and does NOT qualify a promotion. If a
+  # pre-merge macOS witness is needed for a specific commit, re-enable this trigger deliberately,
+  # spend the ~$1.25-1.50, and turn it back off — rather than leaving it armed by default.
+  #
+  # HONEST LIMIT ON "EXACT COMMIT" (retained; applies to any re-enabled dispatch): `workflow_dispatch`
+  # targets a REF, not an arbitrary SHA — GitHub resolves the ref's current HEAD. So this job cannot
+  # be pointed at an old commit; it qualifies whatever that ref points to when dispatched. The resolved
+  # SHA is printed into the job summary for exactly this reason: the promotion rule compares against a
+  # recorded SHA, not against "the run I remember starting".
+  #
+  # NO SKIP LIST, deliberately. It invokes the authoritative validator directly rather than scraping
+  # `TESTS` out of it — the scrape can only see `.sh` entries, which is how the 20-test Python layer
+  # (the AUTHORITATIVE implementation since GH-264) went unexercised in CI for months. A second list
+  # is a second thing to keep honest; there is no second list here.
+  boundary-macos:
+    name: promotion boundary (macOS — the platform we ship to)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+    # A bound, not an estimate. The suite runs ~13-15 min locally; at 10x billing an unbounded hang is
+    # the expensive failure mode, so cap it rather than discover the cost afterwards.
+    timeout-minutes: 45
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          # Same reason as the canary job: fixtures synthesize an "older" ancestor with
+          # `git rev-list --max-parents=0 HEAD`, which a shallow clone silently defeats.
+          fetch-depth: 0
+
+      - name: Prepare git environment for fixture-driven tests
+        run: |
+          set -euo pipefail
+          git config --global init.defaultBranch main
+          git config --global user.email "ci@runner.invalid"
+          git config --global user.name "CI Runner"
+
+      - name: Install npm dependencies
+        run: npm ci
+
+      # The hosted runner's Python has no pytest, and validate.sh's python lane needs it — the
+      # first boundary dispatch (run 31661285957) failed exactly here. Ironic and instructive:
+      # GH-509's own headline defect was "the hosted route never ran the 20 python tests"; the
+      # first time they ran on hosted macOS, the environment couldn't run them.
+      - name: Install pytest for the python lane
+        run: python3 -m pip install --quiet --break-system-packages pytest
+
+      - name: Run the authoritative validator (no skips)
+        env:
+          # The one documented exclusion, and it is not a coverage skip: this test makes a real
+          # billed API call to a live agent. It self-skips off-PATH anyway; the env var makes the
+          # intent explicit rather than incidental.
+          RELAY_SELF_SUFFICIENCY_SKIP: "1"
+        # `--sequential` is PINNED here and must stay pinned. GH-544 made parallel the default for the
+        # local gate, which is correct there — but this job is the promotion boundary, and the whole
+        # point of it is that its green means something the local run's cannot. Promotion evidence
+        # stays sequential (GH-528 Phase 2 has not been met), so the flag is explicit rather than
+        # inherited: a future change to validate.sh's default must not be able to silently change what
+        # this job attests. test/ci-workflow.sh asserts the flag is present.
+        run: ./validate.sh --sequential
+
+      - name: Promotion evidence
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ job.status }}" = "success" ]; then
+            line="MACOS-BOUNDARY: green ${GITHUB_SHA}"
+            note="This commit is promotion-qualified (GH-509 §6). Cite this SHA, not this run."
+          else
+            line="MACOS-BOUNDARY: red ${GITHUB_SHA}"
+            note="NOT promotable. Unlike the ubuntu canary, this ran on the platform we ship to — a failure here is a real defect for real users."
+          fi
+          echo "$line"
+          echo "$note"
+          { echo "### $line"; echo; echo "$note"; } >> "$GITHUB_STEP_SUMMARY"
+
+  # GH-509 Phase 2 — this job is a PORTABILITY CANARY, not a gate.
+  #
+  # XYZ ships to macOS developers. Linux and Windows are on the roadmap and are not here yet, so a
+  # failure on ubuntu is portability DRIFT, not breakage: it says "this would not work on the platform
+  # we do not support yet." Every one of the three CI failures on 2026-08-12 was of exactly that shape
+  # (agent CLIs absent from the runner), and treating them as breakage is what produced five hours of
+  # unread red across eight commits — which is worse than no signal at all, because it trains everyone
+  # to ignore the one channel that might have said something real.
+  #
+  # `continue-on-error: true` at JOB level lets the workflow run pass while this job's own conclusion
+  # still records `failure`, so drift stays queryable through the jobs API without marking the commit
+  # broken.
+  #
+  # HONEST LIMIT, stated because this file is exactly the kind of place GH-419 gets violated: the
+  # workflow-contract test can assert this key is PRESENT. It cannot assert GitHub's runtime semantics.
+  # The acceptance criterion in PROJECT/2-WORKING/GH-509-CI-MINUTE-BURN.md is therefore a witnessed
+  # hosted run, not a green grep.
+  #
+  # Advisory does NOT mean ignorable, and making it non-blocking supplies no reason for anyone to read
+  # it — that critique came from the agy review and it is correct. The mechanism that makes it read is
+  # elsewhere: the canary's status is a line in the promotion output, consulted at the moment a human
+  # is already deciding something. If two consecutive promotions ship with drift named and unresolved,
+  # this job has proven it is not being actioned and should be deleted rather than kept as decoration.
+  canary-ubuntu:
+    name: portability canary (ubuntu — advisory, never breakage)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          # GH-232: several tests (e.g. xyz-vendor.sh's staleness check) use `git rev-list
+          # --max-parents=0 HEAD` to synthesize an "older" ancestor commit for a fixture. The
+          # default shallow clone (depth 1) makes the boundary commit look parentless, so it
+          # resolves to the SAME commit as HEAD — silently defeating the fixture, not a real bug.
+          fetch-depth: 0
+
+      - name: Classify CI route
+        id: route
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          # GH-509 Phase 3 — pushes classify from their pushed range, like PRs classify from a diff.
+          base=""
+          case "$EVENT_NAME" in
+            pull_request) base="$BASE_SHA" ;;
+            push)         base="$BEFORE_SHA" ;;
+          esac
+
+          # FAIL CLOSED, three ways, all reachable in practice:
+          #   * a NEW branch's first push sets `before` to all-zeros — there is no range;
+          #   * a FORCE-PUSH leaves a `before` that is no longer reachable in this clone;
+          #   * an event with no range concept at all (workflow_dispatch handles itself downstream).
+          # Any of these emits an empty path list, and ci-route.sh's zero-path branch routes to full.
+          # Reusing that already-tested path beats inventing a second fail-closed rule that would
+          # need its own proof.
+          usable=1
+          if [ -z "$base" ] || [ -z "${base//0/}" ]; then
+            usable=0
+          elif ! git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            usable=0
+          fi
+
+          if [ "$usable" -eq 1 ]; then
+            # `--no-renames` is load-bearing, not tidiness. With rename detection ON (git's default)
+            # `--name-only` prints ONLY the destination path for a rename, so a renamed regression
+            # test looks like an ordinary changed file that still exists — and ci-route.sh's
+            # fail-closed branch for a vanished test is never reached. That branch's own comment
+            # says "deleted/renamed"; without this flag it only ever saw deletions.
+            git diff --no-renames --name-only "$base" HEAD \
+              | utils/ci-route.sh "$EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "ci-route: no usable range for $EVENT_NAME (base='${base:-<empty>}') — failing closed to full" >&2
+            : | utils/ci-route.sh "$EVENT_NAME" | tee -a "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install shellcheck
+        if: steps.route.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          if command -v shellcheck >/dev/null 2>&1; then
+            shellcheck --version
+          else
+            sudo apt-get update
+            sudo apt-get install -y shellcheck
+          fi
+
+      - name: Shellcheck tracked shell scripts
+        if: steps.route.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          # Start at severity=error so Tier 1 lands green; tighten later once the backlog is burned down.
+          git ls-files -- '*.sh' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            shellcheck -S error "$file"
+          done
+
+      - name: Bash syntax check tracked shell scripts
+        if: steps.route.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          git ls-files -- '*.sh' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            bash -n "$file"
+          done
+
+      - name: Node syntax check tracked JavaScript
+        if: steps.route.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          git ls-files -- 'src/*.js' 'bin/*.js' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            node --check "$file"
+          done
+
+      - name: Validate .claude/settings JSON
+        if: steps.route.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          git ls-files -- '.claude/settings*.json' | while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            python3 -m json.tool "$file" >/dev/null
+          done
+
+      - name: Run PDDA deterministic gate
+        # PDDA owns documentation state. Run it when that state changes and at every full boundary,
+        # but keep its ~2.5-minute scan out of code-only fast PRs.
+        if: steps.route.outputs.pdda_needed == 'true'
+        run: |
+          set -euo pipefail
+          utils/pdda/pdda.sh run
+          # Checks this repo owns, kept OUTSIDE the sync-managed utils/pdda/ tree because the
+          # 2026-08-03 sync (cfd56b0) deleted three of them from upstream's script without a word.
+          # Warn-only by contract — it reports, it never gates.
+          utils/pdda-local-checks.sh run
+
+      # GH-308 froze the eleven Tier-A Bash twins and AGENTS.md told readers "CI supplies
+      # GH308_FROZEN_TWIN_BASE to reject a committed twin edit". Nothing did — the agy review of
+      # PR #318 caught the claim as false ([Blocker]). This is that wiring.
+      #
+      # Escape hatch: a safety defect in a frozen fallback can legitimately warrant an edit (GH-319
+      # left a silently-fake pre-advance gate in marathon-drive.sh under XYZ_PYTHON=0). Such a commit
+      # must carry a trailer naming the twin it covers, which makes the exception auditable in
+      # `git log` instead of invisible:
+      #
+      #   Frozen-twin-exception: relay-automation/marathon-drive.sh — <reason>
+      #
+      # GH-321: the rule used to live here, inline, and was RANGE-scoped — one trailer anywhere in
+      # BASE..HEAD excused every frozen twin touched in the PR, including files nobody declared. It
+      # now lives in the guard script as `--allow-exceptions`, per-file, so it can be tested; inline
+      # YAML shell is unreachable from the suite, which is part of why the looseness shipped at all.
+      - name: Frozen Bash twin guard (GH-308)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          bash test/gh308-frozen-twin-guard.sh --check --base "$BASE_SHA" --allow-exceptions
+
+      # GH-230: prove the README Quickstart's npm-dependency path works from a fresh
+      # clone, so a missing-install-step regression fails here instead of on a
+      # newcomer's machine.
+      - name: Install npm dependencies and run acorn-extract test
+        if: steps.route.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          npm ci
+          bash test/acorn-extract.sh
+
+      # GH-232: the acting-agent's user/keychain config and default `git init` branch name are
+      # macOS-dev-machine assumptions baked into several fixture-driven tests (e.g. archive-writers.sh,
+      # xyz-vendor.sh do a bare `git init` and expect the resulting branch to be "main"). ubuntu-latest's
+      # git has no global identity and may default new repos to a non-"main" branch, so prepare both
+      # here rather than touch the tests themselves (out of scope for this lane).
+      - name: Prepare git environment for fixture-driven tests
+        if: steps.route.outputs.docs_only != 'true'
+        run: |
+          set -euo pipefail
+          git config --global init.defaultBranch main
+          git config --global user.email "ci@runner.invalid"
+          git config --global user.name "CI Runner"
+
+      - name: Run Fast Gate tests (Pull Request)
+        # Whole-job budget target: < 3 minutes for a code-only fast PR.
+        if: github.event_name == 'pull_request' && steps.route.outputs.route == 'fast'
+        env:
+          RELAY_SELF_SUFFICIENCY_SKIP: "1"
+          CHANGED_TESTS: ${{ steps.route.outputs.changed_tests }}
+        run: |
+          set -euo pipefail
+          FAST_TESTS=(
+            "worktree-isolation.sh"
+            "shim-worktree.sh"
+            "gh292-worktree-vendored-discovery.sh"
+            "relay-target-root.sh"
+            "relay-target-root-paths.sh"
+            "relay-target-root-relayfile.sh"
+            "relay-target-root-newfile.sh"
+            "gh289-target-root-build-turn.sh"
+            "gh410-containment-advisory.sh"
+            "tick-foreign-cwd.sh"
+            "mktemp-trap-guard.sh"
+          )
+          if [[ -n "$CHANGED_TESTS" ]]; then
+            IFS=',' read -r -a routed_tests <<<"$CHANGED_TESTS"
+            for t in "${routed_tests[@]}"; do
+              already_listed=0
+              for existing in "${FAST_TESTS[@]}"; do
+                [[ "$existing" == "$t" ]] && { already_listed=1; break; }
+              done
+              [[ "$already_listed" -eq 1 ]] || FAST_TESTS+=("$t")
+            done
+          fi
+          FAILED=0
+          for t in "${FAST_TESTS[@]}"; do
+            echo "=== $t ==="
+            bash "test/$t" || FAILED=1
+          done
+          exit "$FAILED"
+
+      # GH-232: PR #231 ran the full ./validate.sh suite on ubuntu-latest for the first time and
+      # found ~12 failures, assumed to be Ubuntu-environment-only and scoped out of CI. Re-diagnosed
+      # directly against a real ubuntu:latest container (not guessed at from macOS): almost all were
+      # masked by two things, now both fixed — (1) marathon.sh/marathon-drive.sh (and dependents
+      # debug-mantra.sh/driver-lock.sh) used a BSD-only `sed -i ''` invocation that mis-parses under
+      # GNU sed; (2) driver-lock.sh/xyz-harness-hooks.sh stubbed CLAUDE_BIN/AGY_BIN but not
+      # CODEX_BIN — the actual default builder — so they only "passed" locally because a real `codex`
+      # binary happened to be on the developer's own PATH, masking the gap; ubuntu CI has no such
+      # binary. path-integrity.sh/archive-writers.sh/relay-file-seeding-visibility.sh/xyz-vendor.sh/
+      # hq.sh/relay-pkg-freshness.sh all passed cleanly once re-tested for real — no ubuntu-specific
+      # bug in any of them. Only registry-lock-concurrency.sh (GH-72, a documented 16-concurrent-writer
+      # lock-contention flake under CI load, unrelated to this issue) stays skipped.
+      - name: Run validate.sh suite (minus a documented flaky test)
+        if: steps.route.outputs.route == 'full'
+        env:
+          RELAY_SELF_SUFFICIENCY_SKIP: "1"
+        run: |
+          set -euo pipefail
+          SKIP_TESTS=(
+            "acorn-extract.sh"                    # already run above (needs npm ci first)
+            "registry-lock-concurrency.sh"          # GH-72/GH-232: flaky under CI load (16 concurrent tick writers → lock contention / lost row); passes locally, flaked 3 runs across PRs #257/#259
+            "pdda-repo-contract.sh"               # already run in PDDA step
+          )
+          ALL_TESTS=()
+          while IFS= read -r line; do
+            [ -n "$line" ] && ALL_TESTS+=("$line")
+          done < <(sed -n '/^TESTS=(/,/^)/p' validate.sh | grep -oE '"[^"]+\.sh"' | tr -d '"')
+          FAILED=0
+          for t in "${ALL_TESTS[@]}"; do
+            skip=0
+            for s in "${SKIP_TESTS[@]}"; do
+              [ "$t" = "$s" ] && { skip=1; break; }
+            done
+            if [ "$skip" -eq 1 ]; then
+              echo "SKIP (GH-232): $t"
+              continue
+            fi
+            echo "=== $t ==="
+            bash "test/$t" || FAILED=1
+          done
+          exit "$FAILED"
+
+      # GH-509 Phase 2 — the canary's verdict, written where a human and a script can both find it.
+      #
+      # `if: always()` because the whole point is to report when an EARLIER step failed; without it
+      # this step is skipped in exactly the case it exists for. `job.status` is the aggregate of the
+      # steps above, so this reads the outcome rather than re-deriving it.
+      #
+      # The line is deliberately greppable and deliberately does NOT say "failed" or "error": on this
+      # platform those words are wrong. This job reports on an operating system we do not ship to yet.
+      - name: Portability canary verdict
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ job.status }}" = "success" ]; then
+            verdict="PORTABILITY-CANARY: green"
+            detail="No Linux portability drift detected. This says nothing about macOS, which is what we ship."
+          else
+            verdict="PORTABILITY-CANARY: drift"
+            detail="Linux portability drift on ${GITHUB_SHA}. This is NOT breakage: XYZ ships to macOS and Linux support is not here yet. Do not treat this commit as broken. Carry the drift into the promotion output and resolve it before Linux support ships."
+          fi
+          echo "$verdict"
+          echo "$detail"
+          { echo "### $verdict"; echo; echo "$detail"; } >> "$GITHUB_STEP_SUMMARY"

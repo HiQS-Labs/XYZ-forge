@@ -1,0 +1,361 @@
+#!/usr/bin/env bash
+# FROZEN (GH-308): Python is authoritative — do not make behavior changes here.
+# Historical Bash fallback only; update utils/py/poll.py instead. See issue #308.
+set -euo pipefail
+
+# GH-112 opt-in Python mode: XYZ_PYTHON=1 reroutes this entry point to the Python port in
+# utils/py/ (same CLI contract + exit codes). Default (unset/0) runs the canonical Bash
+# implementation below — Bash stays the supported default until the port is promoted.
+if [[ "${XYZ_PYTHON-1}" == "1" ]]; then
+  # UPGRADE.md §4 Phase-2 hardening (GH-255): (2a) `-` not `:-` so an explicit empty XYZ_PYTHON reads
+  # as not-1 → Bash (load-bearing once the default flips to 1); (2b) require python3 >=3.8 and fall
+  # back to Bash with a warning if it's missing/too-old, so a bad interpreter degrades, not bricks.
+  if command -v python3 >/dev/null 2>&1 \
+     && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,8) else 1)' 2>/dev/null; then
+    _xyz_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    export XYZ_ROOT="$_xyz_root"
+    export PYTHONPATH="$_xyz_root/utils/py${PYTHONPATH:+:$PYTHONPATH}"
+    exec python3 "$_xyz_root/utils/py/poll.py" "$@"
+  else
+    echo "xyz: XYZ_PYTHON=1 but python3 missing or < 3.8 — falling back to Bash" >&2
+  fi
+fi
+#
+# poll.sh — Phase 4 hands-free poll driver (Option B: baton + poll).
+# One TICK per invocation (drive it under `/loop`, e.g. `/loop 60s ...`).
+# It computes a DECISION from coordination state and either dispatches a command
+# or idles. See PROJECT/4-MISC/PHASE-4-PLAN.md.
+#
+# Two modes (one decision engine, shared tick claimability):
+#   xyz   — runnable state = a build task (--task) claimable/resumable by --agent
+#   relay — runnable state = the RELAY-TURN tick task (claimable/resumable by --agent);
+#           the relay file's STATUS is read only as the terminal (Approved/Closed) signal
+#
+# Two distinct guard->dispatch paths (a parked turn is held by the OTHER window,
+# so it cannot use the my-turn guard — recovery is a separate path):
+#   runner path   : (my-turn) AND (artifact scope clean)        -> run --runner-cmd
+#   watchdog path : (parked suspect) AND (--watchdog-authority)  -> run --watchdog-cmd
+# Exactly ONE designated poller should hold --watchdog-authority (no double-escalate).
+#
+# Decisions: stop | nudge-cross-model | run-runner | run-watchdog | idle
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+TICK_BIN="${TICK_BIN:-"$ROOT_DIR/bin/tick"}"
+# Git root for the artifact-scoped clean-tree check. Defaults to the repo this
+# script lives in; tests override via POLL_GIT_ROOT to point at a fixture repo.
+GIT_ROOT="${POLL_GIT_ROOT:-$ROOT_DIR}"
+
+usage() {
+  cat <<'EOF'
+Usage: relay-automation/poll.sh --mode <xyz|relay> --agent <id> [options]
+
+Common:
+  --mode xyz|relay        Which runnable adapter to use (required).
+  --agent ID              This poller's agent id (required).
+  --dry-run               Print the DECISION; do not dispatch.
+  --analysis-file PATH    JSON `tick analyze` output (else runs `tick analyze --format json`).
+  --watchdog-authority    This poller may run the watchdog path (designate exactly one).
+  --deadline EPOCH        Self-expire: emit DECISION: stop once now >= EPOCH (unix seconds).
+                          The /loop then CronDeletes itself (see relay skill "Self-closing loops").
+  --emit-delay            Also print a "DELAY: <seconds> (<reason>)" line — a suggested
+                          next-poll delay derived from the DECISION, for /loop dynamic
+                          (self-paced) mode. Additive; the DECISION line is unchanged.
+                          Tune via POLL_DELAY_{NUDGE,WAIT_COMMIT,DIRTY,IDLE}. Clamped so
+                          the next wake never overshoots --deadline.
+  --runner-cmd CMD        Command run for a runnable turn (default: <root>/relay-automation/runner.sh).
+  --watchdog-cmd CMD      Command run for a parked suspect (default: <root>/relay-automation/watchdog.sh).
+  --help
+
+relay mode (whose-turn = the RELAY-TURN tick task; STATUS read from the file):
+  --relay-file PATH       Relay thread file (reads STATUS: for the terminal signal).
+  --relay-task ID         The relay turn-token task (default: RELAY-TURN).
+  --artifact PATH         Artifact under review (clean-tree scope; with the relay file).
+  --claude-agents "a,b"   Agents that are Claude (can self-poll); a turn handed
+                          to a non-Claude agent -> cross-model nudge.
+  --turn-source tick|file Where whose-turn comes from (default: tick).
+                          file = read the relay file's NEXT: field; the tick token is
+                          OPTIONAL (no claim/heartbeat needed). Use when a peer won't
+                          join tick, or to avoid the spent-token / parked-stall failure.
+                          STATUS: (terminal) + artifact-scope-clean still apply.
+  --peer-commit-repo DIR  (file source) Also require a matching commit in DIR before
+  --peer-commit-match RE   run-runner — the "advance on the peer's fix commit" signal.
+                          Until a recent commit subject matches RE, the decision is idle
+                          ("waiting for peer commit"). Both flags required to arm.
+
+xyz mode:
+  --task TASK-ID          The task whose turn this is (my-turn + scope from `tick info`).
+
+Exit codes: 0 = acted/idle, 10 = stop (relay closed), 2 = usage error.
+EOF
+}
+
+die() { printf 'poll: %s\n' "$*" >&2; exit 2; }
+require_command() { command -v "$1" >/dev/null 2>&1 || die "missing command: $1"; }
+
+# Dispatch a configured command that may be EITHER a bare executable path —
+# possibly absolute and containing spaces, e.g. a clone under ".../GH Repos/..."
+# — OR a full shell command string (env-prefixed / shell-quoted by the caller).
+# A bare path is run DIRECTLY so a space in it is not word-split; only a command
+# string falls back to eval. Mirrors relay-drive.sh's --agent-cmd handling.
+# (GH-12: the default RUNNER_CMD/WATCHDOG_CMD path holds a space → the old bare
+# `eval "$RUNNER_CMD"` exec'd the wrong token, e.g. `/Users/.../GH: not found`.)
+run_cmd() {
+  if [[ -x "$1" ]]; then "$1"; else eval "$1"; fi
+}
+
+# ---- inputs --------------------------------------------------------------
+MODE=""; AGENT=""; DRY_RUN=0; ANALYSIS_FILE=""; WATCHDOG_AUTHORITY=0
+RUNNER_CMD=""; WATCHDOG_CMD=""
+RELAY_FILE=""; ARTIFACT=""; CLAUDE_AGENTS=""; RELAY_TASK="RELAY-TURN"; DEADLINE=""
+TASK=""
+TURN_SOURCE="tick"; PEER_COMMIT_REPO=""; PEER_COMMIT_MATCH=""
+EMIT_DELAY=0
+# Suggested next-poll delays (seconds) for --emit-delay, by state. Env-overridable.
+# Active waits stay sub-300s (the prompt-cache window) so a live relay stays warm;
+# a genuinely-idle relay backs off to 300s to stop the per-tick wake-decide-nothing churn.
+POLL_DELAY_NUDGE="${POLL_DELAY_NUDGE:-120}"
+POLL_DELAY_WAIT_COMMIT="${POLL_DELAY_WAIT_COMMIT:-90}"
+POLL_DELAY_DIRTY="${POLL_DELAY_DIRTY:-30}"
+POLL_DELAY_IDLE="${POLL_DELAY_IDLE:-300}"
+
+while (($# > 0)); do
+  case "$1" in
+    --mode) MODE="${2:-}"; shift 2 ;;
+    --agent) AGENT="${2:-}"; shift 2 ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --analysis-file) ANALYSIS_FILE="${2:-}"; shift 2 ;;
+    --watchdog-authority) WATCHDOG_AUTHORITY=1; shift ;;
+    --deadline) DEADLINE="${2:-}"; shift 2 ;;
+    --emit-delay) EMIT_DELAY=1; shift ;;
+    --runner-cmd) RUNNER_CMD="${2:-}"; shift 2 ;;
+    --watchdog-cmd) WATCHDOG_CMD="${2:-}"; shift 2 ;;
+    --relay-file) RELAY_FILE="${2:-}"; shift 2 ;;
+    --relay-task) RELAY_TASK="${2:-}"; shift 2 ;;
+    --artifact) ARTIFACT="${2:-}"; shift 2 ;;
+    --claude-agents) CLAUDE_AGENTS="${2:-}"; shift 2 ;;
+    --turn-source) TURN_SOURCE="${2:-}"; shift 2 ;;
+    --peer-commit-repo) PEER_COMMIT_REPO="${2:-}"; shift 2 ;;
+    --peer-commit-match) PEER_COMMIT_MATCH="${2:-}"; shift 2 ;;
+    --task) TASK="${2:-}"; shift 2 ;;
+    --help) usage; exit 0 ;;
+    *) die "unknown argument: $1" ;;
+  esac
+done
+
+[[ "$MODE" == "xyz" || "$MODE" == "relay" ]] || { usage; die "--mode xyz|relay is required"; }
+[[ "$TURN_SOURCE" == "tick" || "$TURN_SOURCE" == "file" ]] || die "--turn-source must be tick|file"
+[[ "$TURN_SOURCE" == "file" && "$MODE" != "relay" ]] && die "--turn-source file requires --mode relay"
+[[ -n "$AGENT" ]] || die "--agent is required"
+RUNNER_CMD="${RUNNER_CMD:-"$ROOT_DIR/relay-automation/runner.sh"}"
+WATCHDOG_CMD="${WATCHDOG_CMD:-"$ROOT_DIR/relay-automation/watchdog.sh"}"
+
+# ---- state readers -------------------------------------------------------
+
+# Parked suspects (structured, never the "none" text). Echoes count.
+parked_count() {
+  local json
+  if [[ -n "$ANALYSIS_FILE" ]]; then
+    [[ -f "$ANALYSIS_FILE" ]] || die "analysis file does not exist: $ANALYSIS_FILE"
+    json="$(cat "$ANALYSIS_FILE")"
+  else
+    require_command node
+    json="$("$TICK_BIN" analyze --format json)"
+  fi
+  printf '%s' "$json" | node -e '
+    let raw=""; process.stdin.on("data",d=>raw+=d);
+    process.stdin.on("end",()=>{ try{const r=JSON.parse(raw);process.stdout.write(String((r.parked_suspects||[]).length));}catch(e){process.stdout.write("0");} });
+  '
+}
+
+# Read a "Key:" line value from the relay file (NEXT / STATUS), tolerating a
+# **bold** or `` `backtick` `` markdown key (real threads write `**STATUS:** Open` /
+# `**NEXT:** claude-b`, whole-line-bold `**NEXT: claude-b**`, or backtick-wrapped
+# `` `NEXT: claude-b` ``).
+# GH-92: the leading strip now also tolerates a leading backtick (not just `*`), and a
+# second sed stage strips trailing markdown (`*`/`` ` ``) left over from a whole-line-wrapped
+# pointer BEFORE the pre-existing trailing-whitespace trim — otherwise a naturally-authored
+# `**NEXT: claude-reb**` parsed to the literal `claude-reb**`, which then failed the
+# --claude-agents membership check downstream and silently deadlocked the poller on
+# `nudge-cross-model` forever.
+relay_field() { sed -n "s/^[\`*]*$1[\`*]*:[\`*]*[[:space:]]*//p" "$RELAY_FILE" | head -n 1 | sed -E 's/[`*]+[[:space:]]*$//; s/[[:space:]]*$//'; }
+
+# whose-turn from the relay NEXT: field = its FIRST token (the agent id), dropping any
+# trailing " — description" the writer added. Empty if no NEXT: line.
+relay_next_agent() { relay_field NEXT | awk '{print $1}'; }
+
+# Commit-signal gate (file source): if both --peer-commit-* are set, require a recent
+# commit subject in that repo to match before the turn is runnable. Unset => always pass.
+commit_gate_ok() {
+  [[ -z "$PEER_COMMIT_REPO" || -z "$PEER_COMMIT_MATCH" ]] && return 0
+  # Capture then match with bash ERE — NOT `git … | grep -q`, which trips `set -o pipefail`
+  # (grep -q closes the pipe on first match → git gets SIGPIPE → pipeline reports failure).
+  local log
+  log="$(git -C "$PEER_COMMIT_REPO" log --oneline -30 2>/dev/null || true)"
+  [[ "$log" =~ $PEER_COMMIT_MATCH ]]
+}
+
+# Artifact-scoped clean check (NOT repo-global). Returns 0 = clean.
+scope_clean() {
+  local -a scope=("$@")
+  ((${#scope[@]})) || return 0
+  git -C "$GIT_ROOT" status --porcelain -- "${scope[@]}" | grep . >/dev/null && return 1 || return 0
+}
+
+# Read tick task fields into globals T_STATUS/T_CLAIMER/T_HANDOFF/T_PATHS.
+read_task() {
+  local info
+  info="$("$TICK_BIN" info "$1" 2>/dev/null || true)"
+  T_STATUS="$(printf '%s\n' "$info"  | sed -n 's/^status:[[:space:]]*//p'     | head -n 1)"
+  T_CLAIMER="$(printf '%s\n' "$info" | sed -n 's/^claimer:[[:space:]]*//p'    | head -n 1)"
+  T_HANDOFF="$(printf '%s\n' "$info" | sed -n 's/^handoff-to:[[:space:]]*//p' | head -n 1)"
+  T_PATHS="$(printf '%s\n' "$info"   | sed -n 's/^paths:[[:space:]]*//p'      | head -n 1)"
+}
+
+# Claimability-for-me from the T_* globals (shared by both modes):
+#   open + (no handoff | handoff==me)  OR  claimed + claimer==me
+tick_my_turn() {
+  [[ "$T_STATUS" == "open"    && ( -z "$T_HANDOFF" || "$T_HANDOFF" == "$AGENT" ) ]] && return 0
+  [[ "$T_STATUS" == "claimed" && "$T_CLAIMER" == "$AGENT" ]] && return 0
+  return 1
+}
+
+is_claude_agent() {
+  local a="$1" x
+  [[ -z "$CLAUDE_AGENTS" ]] && return 1   # empty list: nobody is "known Claude" (avoids set -u empty-array expansion on bash 3.2)
+  IFS=',' read -ra _ca <<<"$CLAUDE_AGENTS"
+  for x in "${_ca[@]}"; do [[ "$x" == "$a" ]] && return 0; done
+  return 1
+}
+
+# ---- compute guard booleans ---------------------------------------------
+STOP=0; MY_TURN=0; CLEAN=1; CROSS_MODEL=0; CROSS_AGENT=""; WAIT_COMMIT=0
+
+# Parked/watchdog is a tick-token concept; skip the `tick analyze` read entirely in the
+# token-optional file source (unless the caller supplied an analysis file).
+PARKED=0
+if [[ "$TURN_SOURCE" == "tick" || -n "$ANALYSIS_FILE" ]]; then
+  [[ "$(parked_count)" -gt 0 ]] && PARKED=1
+fi
+
+if [[ "$MODE" == "relay" ]]; then
+  [[ -n "$RELAY_FILE" ]] || die "relay mode requires --relay-file"
+  [[ -f "$RELAY_FILE" ]] || die "relay file does not exist: $RELAY_FILE"
+  # Terminal signal always comes from the human-readable thread.
+  case "$(relay_field STATUS)" in Approved|Closed) STOP=1 ;; esac
+  if [[ "$TURN_SOURCE" == "file" ]]; then
+    # whose-turn from the relay NEXT: field — the tick token is not consulted.
+    nxt="$(relay_next_agent)"
+    if [[ -n "$nxt" && "$nxt" == "$AGENT" ]]; then
+      if commit_gate_ok; then
+        MY_TURN=1
+        scope=("$RELAY_FILE"); [[ -n "$ARTIFACT" ]] && scope+=("$ARTIFACT")
+        scope_clean "${scope[@]}" && CLEAN=1 || CLEAN=0
+      else
+        WAIT_COMMIT=1   # NEXT: me, but the peer's fix commit hasn't landed yet
+      fi
+    elif [[ -n "$nxt" && "$nxt" != "$AGENT" ]] && ! is_claude_agent "$nxt"; then
+      CROSS_MODEL=1; CROSS_AGENT="$nxt"
+    fi
+  else
+    # whose-turn from the RELAY-TURN tick token (the default).
+    read_task "$RELAY_TASK"
+    if tick_my_turn; then
+      MY_TURN=1
+      scope=("$RELAY_FILE"); [[ -n "$ARTIFACT" ]] && scope+=("$ARTIFACT")
+      scope_clean "${scope[@]}" && CLEAN=1 || CLEAN=0
+    elif [[ "$T_STATUS" == "open" && -n "$T_HANDOFF" && "$T_HANDOFF" != "$AGENT" ]] \
+         && ! is_claude_agent "$T_HANDOFF"; then
+      CROSS_MODEL=1; CROSS_AGENT="$T_HANDOFF"
+    fi
+  fi
+else # xyz
+  [[ -n "$TASK" ]] || die "xyz mode requires --task"
+  read_task "$TASK"
+  if tick_my_turn; then
+    MY_TURN=1
+    if [[ -n "$T_PATHS" ]]; then
+      IFS=',' read -ra _sc <<<"$T_PATHS"
+      scope_clean "${_sc[@]}" && CLEAN=1 || CLEAN=0
+    fi
+  fi
+fi
+
+# Self-expiry: once past the deadline, stop regardless of turn state.
+EXPIRED=0
+if [[ -n "$DEADLINE" ]] && (( $(date +%s) >= DEADLINE )); then EXPIRED=1; fi
+
+# ---- decision engine -----------------------------------------------------
+DECISION=""; REASON=""
+if ((EXPIRED)); then
+  DECISION="stop"; REASON="deadline reached (self-expire)"
+elif ((STOP)); then
+  DECISION="stop"; REASON="relay STATUS is terminal"
+elif ((CROSS_MODEL)); then
+  DECISION="nudge-cross-model"; REASON="turn belongs to non-Claude agent '$CROSS_AGENT'"
+elif ((MY_TURN)) && ((CLEAN)); then
+  DECISION="run-runner"; REASON="my turn and artifact scope clean"
+elif ((MY_TURN)); then
+  DECISION="idle"; REASON="my turn but artifact scope dirty"
+elif ((WAIT_COMMIT)); then
+  DECISION="idle"; REASON="my turn by NEXT but peer fix commit not yet landed"
+elif ((PARKED)) && ((WATCHDOG_AUTHORITY)); then
+  DECISION="run-watchdog"; REASON="parked suspect and I hold watchdog authority"
+elif ((PARKED)); then
+  DECISION="idle"; REASON="parked suspect but no watchdog authority"
+else
+  DECISION="idle"; REASON="nothing runnable"
+fi
+
+printf 'DECISION: %s (%s)\n' "$DECISION" "$REASON"
+
+# GH-92 diagnostic: nudge-cross-model with a parsed value that isn't a recognized Claude
+# agent (per --claude-agents) AND doesn't even look like a clean bare non-Claude id (e.g.
+# leftover markdown residue such as a trailing `**`/`` ` `` the relay_field sed pipeline
+# didn't strip) — log it loudly here so a future unhandled pointer format fails loud
+# instead of silently repeating nudge-cross-model forever (this exact silent failure mode
+# stalled a live relay duel ~90 minutes before it was hand-diagnosed).
+if ((CROSS_MODEL)) && [[ ! "$CROSS_AGENT" =~ ^[A-Za-z0-9_-]+$ ]]; then
+  printf 'poll: WARNING (GH-92) parsed NEXT value "%s" is neither a recognized Claude agent nor a clean bare non-Claude id -- relay_field may need additional markdown stripping for this pointer format\n' \
+    "$CROSS_AGENT" >&2
+fi
+
+# ---- suggested next-poll delay (--emit-delay) ----------------------------
+# Map the DECISION (and the idle sub-state) to a suggested seconds-until-next-poll
+# for /loop dynamic mode. Pure function of the already-computed state; additive.
+if ((EMIT_DELAY)); then
+  case "$DECISION" in
+    run-runner|run-watchdog) DELAY=0;                      DREASON="act now" ;;
+    stop)                    DELAY=0;                      DREASON="loop ends" ;;
+    nudge-cross-model)       DELAY="$POLL_DELAY_NUDGE";    DREASON="awaiting cross-model turn" ;;
+    idle)
+      if   ((WAIT_COMMIT)); then DELAY="$POLL_DELAY_WAIT_COMMIT"; DREASON="awaiting peer commit"
+      elif ((MY_TURN));     then DELAY="$POLL_DELAY_DIRTY";       DREASON="scope dirty, retry soon"
+      else                       DELAY="$POLL_DELAY_IDLE";        DREASON="idle backoff"
+      fi ;;
+    *)                       DELAY="$POLL_DELAY_IDLE";     DREASON="idle backoff" ;;
+  esac
+  # Never schedule a wake past the deadline: clamp to the time remaining so the
+  # next tick lands at the deadline and self-expires (DECISION: stop).
+  if [[ -n "$DEADLINE" ]] && (( DELAY > 0 )); then
+    _remaining=$(( DEADLINE - $(date +%s) ))
+    if (( _remaining > 0 && _remaining < DELAY )); then
+      DELAY="$_remaining"; DREASON="$DREASON (clamped to deadline)"
+    fi
+  fi
+  printf 'DELAY: %s (%s)\n' "$DELAY" "$DREASON"
+fi
+
+# ---- dispatch ------------------------------------------------------------
+if ((DRY_RUN)); then
+  [[ "$DECISION" == "stop" ]] && exit 10 || exit 0
+fi
+
+case "$DECISION" in
+  run-runner)   run_cmd "$RUNNER_CMD" ;;
+  run-watchdog) run_cmd "$WATCHDOG_CMD" ;;
+  nudge-cross-model)
+    printf 'poll: %s turn detected — manual nudge required: "take your turn on %s"\n' \
+      "$CROSS_AGENT" "${RELAY_FILE:-<relay-file>}" >&2 ;;
+  stop) exit 10 ;;
+  idle) : ;;
+esac

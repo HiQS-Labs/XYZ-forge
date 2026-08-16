@@ -1,0 +1,173 @@
+#!/usr/bin/env node
+'use strict';
+
+// marathon-yaml — read + validate MARATHON.yaml, emit phases in execution order (Phase 4 / M5).
+// Zero-dep (Node stdlib). Bash orchestrators consume the TSV; --format json for tooling.
+//
+// Usage:  bin/marathon-yaml <MARATHON.yaml> [--format tsv|json]
+// TSV columns (tab-separated), one phase per line, in resolved depends_on order:
+//   id  reviewer  max_review_rounds  depends_on  brief  artifact  turn_timeout_s  name
+// Exit: 0 ok · 1 parse/validation error · 2 usage.
+
+const fs = require('fs');
+
+const PHASE_FIELDS = new Set([
+  'id', 'name', 'reviewer', 'max_review_rounds', 'depends_on', 'brief', 'artifact', 'turn_timeout_s',
+]);
+
+function stripQuotes(v) {
+  if (v.length >= 2 && ((v[0] === '"' && v.endsWith('"')) || (v[0] === "'" && v.endsWith("'")))) {
+    return v.slice(1, -1);
+  }
+  return v;
+}
+
+function splitKV(s) {
+  const i = s.indexOf(':');
+  if (i < 0) return null;
+  const key = s.slice(0, i).trim();
+  let val = s.slice(i + 1).trim();
+  const c = val.indexOf(' #');
+  if (c >= 0) val = val.slice(0, c).trim();
+  return [key, stripQuotes(val)];
+}
+
+function indentOf(line) {
+  let n = 0;
+  while (n < line.length && line[n] === ' ') n++;
+  return n;
+}
+
+function parseMarathonYaml(text) {
+  const out = { name: '', phases: [] };
+  let inPhases = false;
+  let cur = null;
+  const lines = String(text).split(/\r?\n/);
+  for (let ln = 0; ln < lines.length; ln++) {
+    const raw = lines[ln];
+    const noComment = raw.replace(/^(\s*)#.*$/, '$1');
+    if (noComment.trim() === '') continue;
+    const indent = indentOf(raw);
+    const trimmed = raw.trim();
+
+    if (indent === 0) {
+      if (trimmed === 'phases:') { inPhases = true; cur = null; continue; }
+      const kv = splitKV(trimmed);
+      if (kv && kv[0] === 'name') { out.name = kv[1]; inPhases = false; continue; }
+      throw new Error(`line ${ln + 1}: unexpected top-level line: ${trimmed}`);
+    }
+
+    if (!inPhases) throw new Error(`line ${ln + 1}: indented line outside phases: ${trimmed}`);
+
+    if (trimmed.startsWith('- ')) {
+      cur = {
+        id: '', name: '', reviewer: '', max_review_rounds: '', depends_on: '', brief: '', artifact: '',
+        turn_timeout_s: '',
+      };
+      out.phases.push(cur);
+      const rest = trimmed.slice(2).trim();
+      if (rest) {
+        const kv = splitKV(rest);
+        if (!kv) throw new Error(`line ${ln + 1}: malformed list item: ${trimmed}`);
+        if (!PHASE_FIELDS.has(kv[0])) throw new Error(`line ${ln + 1}: unknown phase field '${kv[0]}'`);
+        cur[kv[0]] = kv[1];
+      }
+      continue;
+    }
+
+    if (!cur) throw new Error(`line ${ln + 1}: phase field before any '- id:' item: ${trimmed}`);
+    const kv = splitKV(trimmed);
+    if (!kv) throw new Error(`line ${ln + 1}: malformed phase field: ${trimmed}`);
+    if (!PHASE_FIELDS.has(kv[0])) throw new Error(`line ${ln + 1}: unknown phase field '${kv[0]}'`);
+    cur[kv[0]] = kv[1];
+  }
+  return out;
+}
+
+function resolveOrder(plan) {
+  const phases = plan.phases || [];
+  if (phases.length === 0) throw new Error('no phases defined');
+  const byId = new Map();
+  for (const p of phases) {
+    if (!p.id) throw new Error('a phase is missing its id');
+    if (byId.has(p.id)) throw new Error(`duplicate phase id: ${p.id}`);
+    if (!p.reviewer) throw new Error(`phase ${p.id}: missing reviewer`);
+    if (!/^(codex|gemini|agy)/.test(p.reviewer)) {
+      throw new Error(`phase ${p.id}: reviewer '${p.reviewer}' must start with codex, gemini, or agy`);
+    }
+    if (p.depends_on === p.id) throw new Error(`phase ${p.id}: depends_on itself`);
+    byId.set(p.id, p);
+  }
+  for (const p of phases) {
+    // depends_on is scalar-and-single (a single phase id). The YAML flow-sequence form
+    // (depends_on: [p1]) is NOT supported by this hand-rolled reader — it survives as the
+    // literal string "[p1]" and would otherwise fail below as a bewildering unknown-phase
+    // lookup. Reject it with a message naming the field's shape instead (GH-241).
+    if (p.depends_on && /^\[.*\]$/.test(p.depends_on)) {
+      throw new Error(
+        `phase ${p.id}: depends_on must be a single phase id (a scalar), not a YAML flow sequence '${p.depends_on}' — ` +
+        `this reader does not support list dependencies; name one phase id, unquoted (e.g. 'depends_on: p1')`);
+    }
+    if (p.depends_on && !byId.has(p.depends_on)) {
+      throw new Error(`phase ${p.id}: depends_on unknown phase '${p.depends_on}'`);
+    }
+  }
+  const order = [];
+  const done = new Set();
+  const remaining = phases.slice();
+  let guard = 0;
+  while (remaining.length) {
+    if (guard++ > phases.length + 1) throw new Error('dependency cycle detected');
+    let progressed = false;
+    for (let i = 0; i < remaining.length; i++) {
+      const p = remaining[i];
+      if (!p.depends_on || done.has(p.depends_on)) {
+        order.push(p);
+        done.add(p.id);
+        remaining.splice(i, 1);
+        progressed = true;
+        break;
+      }
+    }
+    if (!progressed) throw new Error('dependency cycle detected');
+  }
+  return order;
+}
+
+function die(msg, code) { process.stderr.write(`marathon-yaml: ${msg}\n`); process.exit(code == null ? 1 : code); }
+
+const args = process.argv.slice(2);
+let file = '';
+let format = 'tsv';
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--format') { format = args[++i]; }
+  else if (args[i] === '--help' || args[i] === '-h') {
+    process.stdout.write('Usage: bin/marathon-yaml <MARATHON.yaml> [--format tsv|json]\n'); process.exit(0);
+  } else if (!file) { file = args[i]; }
+  else die(`unexpected argument: ${args[i]}`, 2);
+}
+if (!file) die('a MARATHON.yaml path is required', 2);
+if (format !== 'tsv' && format !== 'json') die(`unknown --format: ${format}`, 2);
+
+let text;
+try { text = fs.readFileSync(file, 'utf8'); } catch (e) { die(`cannot read ${file}: ${e.message}`); }
+
+let order;
+let plan;
+try {
+  plan = parseMarathonYaml(text);
+  order = resolveOrder(plan);
+} catch (e) {
+  die(e.message);
+}
+
+if (format === 'json') {
+  process.stdout.write(JSON.stringify({ name: plan.name, phases: order }, null, 2) + '\n');
+} else {
+  for (const p of order) {
+    process.stdout.write([
+      p.id, p.reviewer, p.max_review_rounds || '', p.depends_on || '', p.brief || '',
+      p.artifact || '', p.turn_timeout_s || '', p.name || '',
+    ].join('\t') + '\n');
+  }
+}
