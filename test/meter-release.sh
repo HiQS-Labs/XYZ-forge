@@ -352,7 +352,13 @@ audit_artifact() {  # <artifact root> [<reference root>] — sets ART_OK / ART_B
       # Count the file only if it carries a match that is NOT a documentation placeholder.
       real="$(/usr/bin/grep -ohE "$mre" "$f" 2>/dev/null | /usr/bin/grep -vE "$PLACEHOLDER_RE" | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
       [ "$real" != "0" ] && hits=$((hits+1))
-    done < <(/usr/bin/grep -rlE "$mre" "$art" --exclude-dir=.git --exclude="$self" 2>/dev/null)
+      # TRACKED files only. Scanning the directory swept in `node_modules/` — created by the
+      # `npm install` this gate's own Half B runs — and reported 16 leaks in dependency code that is
+      # gitignored and never published. What ships is what git tracks; anything else is build
+      # output, and failing on it makes the check report a leak that cannot reach a reader.
+    done < <(cd "$art" 2>/dev/null && /usr/bin/git ls-files -z 2>/dev/null \
+               | /usr/bin/xargs -0 /usr/bin/grep -lE "$mre" 2>/dev/null \
+               | /usr/bin/sed "s|^|$art/|" | /usr/bin/grep -v "/$self\$")
     if [ "$hits" != "0" ]; then
       clean=0
       a_bad "private-marker:$mid" "artifact leaks a private $mid in $hits file(s) — pattern-based secret scanning does not catch these"
