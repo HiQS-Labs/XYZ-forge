@@ -263,6 +263,12 @@ if [ "$DO_COMMIT" -eq 1 ]; then
   rm -rf "${DEST_NORM:?}/.git"
   git -C "$DEST_NORM" init -q -b main            || die "git init failed"
   git -C "$DEST_NORM" add -A                     || die "git add failed"
+  # Pin the commit date to the SOURCE commit's, so the same source produces the same artifact SHA.
+  # Without this the timestamp varies per run and the artifact hash changes on every rebuild — which
+  # would make the recorded secret-scan commit stale the moment anyone rebuilt, and make "scan the
+  # exact published commit" unverifiable in practice.
+  SRC_DATE="$(git -C "$ROOT" show -s --format=%cI "$SRC_SHA")"
+  GIT_AUTHOR_DATE="$SRC_DATE" GIT_COMMITTER_DATE="$SRC_DATE" \
   git -C "$DEST_NORM" -c user.email="noreply@users.noreply.github.com" \
                       -c user.name="XYZ" \
                       commit -q -m "XYZ: initial public release
