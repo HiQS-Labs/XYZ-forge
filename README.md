@@ -1,7 +1,7 @@
 # XYZ — Multi-Agent Coordination Beta
 
-**XYZ lets several AI coding agents — Claude Code, Codex, and agy (Google's Antigravity CLI) — work
-on the same repo at the same time without overwriting each other's work.**
+**XYZ lets several AI coding agents — Claude Code, Codex, agy (Google's Antigravity CLI), Aider, and
+Pi — work on the same repo at the same time without overwriting each other's work.**
 
 ## What XYZ is
 
@@ -171,13 +171,29 @@ Everything below is designed to be reversible, but please help it along:
 
 ### Prerequisites — install and authenticate these before the fast path
 
-The fast path below shells out to the Codex and agy CLIs. **Install and sign in to both before you
-start** — a relay or consult fails mid-run, not at startup, if either isn't logged in.
+**None of these are needed to run the test suite.** The Quickstart above proves the kernel works with
+no accounts and no API keys — the builder CLIs run the harness, they do not verify it. Install them
+when you want to hand real work to an agent.
+
+`relay-xyz` and `consult` default to **Codex and agy**, and those two are what the fast path below
+shells out to. **Sign in to whichever you use before you start** — a relay or consult fails mid-run,
+not at startup, if a CLI is installed but not logged in.
+
+**There are four builder lanes, not two.** Aider and Pi are supported peers, not experiments:
+
+| Lane | Status | Evidence |
+|---|---|---|
+| **Codex** | default builder | the fast path below |
+| **agy** | default reviewer | the fast path below |
+| **Aider** (+ OpenRouter for multi-model) | supported | edit-format handling verified live against GLM-5.2 and Nemotron (GH-118/119/120); fuzzing rigor in GH-280 |
+| **Pi** | supported | 91 real trials, 0 failures (GH-303); cost-visible, unlike agy |
 
 | Prerequisite | Install | Notes |
 |---|---|---|
 | **Codex CLI** (OpenAI) | <https://openai.com/index/introducing-the-codex-app/> | Authenticate with your ChatGPT account. |
 | **agy CLI** (Google Antigravity — the **CLI**, not just the desktop app) | <https://antigravity.google/product/antigravity-cli> | Authenticate through the Antigravity desktop app. You can hand this URL to Claude Code and ask it to install for you. |
+| **Aider** (optional) | <https://aider.chat/docs/install.html> | Pair with an OpenRouter key to reach many models through one lane. |
+| **Pi** (optional) | see [relay-automation/README.md](relay-automation/README.md#set-up-codex-agy-and-pi-headless-bring-up) | Reports its own cost per turn. |
 | **Node 18+ and git** | your usual package manager | Needed by the `tick` kernel and the Quickstart above. |
 | **Python 3.8+** | usually already present | See the runtime note below. |
 
