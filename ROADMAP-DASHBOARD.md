@@ -220,7 +220,7 @@ Summary: 27 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 14 · �
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-5 · kernel robustness: readAllEvents corrupt-file quarantine + node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
+| GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
 | GH-375 + GH-385 + GH-438 · three marathon-path checks that could not fail, or read the wrong state | — | [GH-375-385-438-PREFLIGHT-TOKEN-DELTA.md](PROJECT/2-WORKING/GH-375-385-438-PREFLIGHT-TOKEN-DELTA.md) · [#375](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375) · [#385](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/385) · [#438](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/438) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
 | GH-442 · /radar — a per-repo strategic compass over the last 2-3 weeks | — | [GH-440](PROJECT/1-INBOX/GH-440-VENDOR-TICK-GITIGNORE.md) · [GH-442-RADAR.md](PROJECT/2-WORKING/GH-442-RADAR.md) · [#442](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/442) |
 | GH-362 · the freeze guard could not pass a range containing the freeze itself; marathon-plan's exception retired | 🟡 | [GH-362-GUARD-FIX-AND-EXCEPTION-RETIREMENT.md](PROJECT/3-COMPLETED/GH-362-GUARD-FIX-AND-EXCEPTION-RETIREMENT.md) · [#362](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/362) |

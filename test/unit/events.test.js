@@ -45,43 +45,6 @@ test('readAllEvents returns events in chronological (filename) order', () => {
   }
 });
 
-test('GH-5: a corrupt .jsonl file is quarantined and does not break the read', () => {
-  const root = tmpRepo();
-  try {
-    process.env.TICK_TS = '2026-01-01T00:00:01Z';
-    events.appendEvent(root, { type: 'task.created', task: 'T1', agent: 'a1' });
-    process.env.TICK_TS = '2026-01-01T00:00:02Z';
-    events.appendEvent(root, { type: 'task.claimed', task: 'T1', agent: 'a1' });
-
-    // A writer killed mid-write: truncated JSON.
-    const dir = events.eventsDir(root);
-    fs.writeFileSync(path.join(dir, '2026-01-01T00-00-03-a1-comment-T1.jsonl'), '{"type":"task.commen');
-
-    const all = events.readAllEvents(root);
-    assert.equal(all.length, 2, 'healthy events still served');
-    assert.equal(fs.existsSync(path.join(dir, '2026-01-01T00-00-03-a1-comment-T1.jsonl')), false,
-      'corrupt file renamed away');
-    assert.equal(
-      fs.existsSync(path.join(dir, '2026-01-01T00-00-03-a1-comment-T1.jsonl.corrupt')), true,
-      'quarantine copy exists');
-    // A second read is clean: the quarantined file is no longer in the .jsonl set.
-    assert.equal(events.readAllEvents(root).length, 2);
-  } finally {
-    delete process.env.TICK_TS;
-    fs.rmSync(root, { recursive: true, force: true });
-  }
-});
-
-test('an empty .jsonl file is skipped silently', () => {
-  const root = tmpRepo();
-  try {
-    events.appendEvent(root, { type: 'task.created', task: 'T1', agent: 'a1' });
-    fs.writeFileSync(path.join(events.eventsDir(root), '2026-01-01T00-00-02-a1-heartbeat-T1.jsonl'), '');
-    const all = events.readAllEvents(root);
-    assert.equal(all.length, 1);
-  } finally { fs.rmSync(root, { recursive: true, force: true }); }
-});
-
 test('appendEvent rejects unknown event types and missing task/agent', () => {
   const root = tmpRepo();
   try {

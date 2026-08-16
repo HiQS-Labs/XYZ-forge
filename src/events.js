@@ -167,12 +167,6 @@ function appendEvent(repoRoot, {
 /**
  * Reads every event in the log, sorted by filename (which encodes ISO timestamp),
  * so callers see events in chronological arrival order.
- *
- * A malformed or truncated `.jsonl` file (e.g. a writer killed mid-write) must not take
- * down every verb — including read-only ones — so unparseable files are quarantined
- * (renamed to `<name>.corrupt`, keeping them out of future reads and visible on disk)
- * with a stderr warning, and the remaining events are served. An empty file is skipped
- * silently: it carries no event and no diagnosis.
  * @param {string} repoRoot - absolute path to the repo root
  * @returns {Object[]} parsed event objects, each carrying a `_file` provenance field
  */
@@ -180,34 +174,12 @@ function readAllEvents(repoRoot) {
   const dir = eventsDir(repoRoot);
   if (!fs.existsSync(dir)) return [];
   const files = fs.readdirSync(dir).filter(f => f.endsWith('.jsonl')).sort();
-  const events = [];
-  for (const f of files) {
-    const fpath = path.join(dir, f);
-    const raw = fs.readFileSync(fpath, 'utf8').trim();
-    if (raw === '') continue;
-    let ev;
-    try {
-      ev = JSON.parse(raw);
-    } catch (err) {
-      const quarantined = fpath + '.corrupt';
-      try {
-        fs.renameSync(fpath, quarantined);
-      } catch (renameErr) {
-        // Quarantine is best-effort; skip the file either way so one bad file cannot
-        // brick the kernel. If the rename failed the file stays and is re-reported
-        // on every read, which is loud rather than silent.
-        process.stderr.write(
-          `tick: warning: event file ${f} is unparseable (${err.message}) and could not be quarantined (${renameErr.message}) — skipped\n`);
-        continue;
-      }
-      process.stderr.write(
-        `tick: warning: event file ${f} is unparseable (${err.message}) — quarantined to ${path.basename(quarantined)} and skipped\n`);
-      continue;
-    }
+  return files.map(f => {
+    const raw = fs.readFileSync(path.join(dir, f), 'utf8').trim();
+    const ev = JSON.parse(raw);
     ev._file = f;
-    events.push(ev);
-  }
-  return events;
+    return ev;
+  });
 }
 
 module.exports = {
