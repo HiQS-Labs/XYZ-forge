@@ -34,6 +34,7 @@ fixture_guard_init() {  # <sandbox-root> — resolve and pin the root every fixt
 
 _fixture_check() {  # <path> <label> <type-flag> — shared body of require_fixture / require_fixture_file
   local p="${1:-}" what="${2:-fixture}" type_flag="${3:--d}" type_name="directory" resolved
+  [ -n "$FIXTURE_GUARD_RESOLVED" ] || { echo "fixture-guard: REFUSING — fixture_guard_init was not called" >&2; exit 2; }
   [ "$type_flag" = "-f" ] && type_name="file"
   case "$p" in
     "") echo "fixture-guard: REFUSING — $what path is EMPTY; git -C \"\" and cd \"\" would silently target the caller's clone ($PWD)" >&2; exit 2 ;;
@@ -42,7 +43,6 @@ _fixture_check() {  # <path> <label> <type-flag> — shared body of require_fixt
     "$FIXTURE_GUARD_ROOT"/*) ;;
     *) echo "fixture-guard: REFUSING — $what path '$p' is outside the fixture root $FIXTURE_GUARD_ROOT; this suite must never touch a real repo" >&2; exit 2 ;;
   esac
-  [ -n "$FIXTURE_GUARD_RESOLVED" ] || { echo "fixture-guard: REFUSING — fixture_guard_init was not called" >&2; exit 2; }
   # Resolution is os.path.realpath, NOT `cd + pwd -P`: bash's cd fails outright on a path
   # containing `..` under a symlinked TMPDIR (macOS /tmp -> /private/var), and cd cannot
   # resolve a file path at all. python3 is already a suite dependency (validate.sh runs

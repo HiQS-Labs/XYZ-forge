@@ -2,7 +2,7 @@
 title: "GH-1: suite-wide fixture containment + clone-identity invariant gate"
 status: active
 created: 2026-08-15
-updated: 2026-08-15
+updated: 2026-08-16
 owner: orchestrator (Claude Code)
 goal: make every test suite unable to touch the caller's clone — harden require_fixture to resolved-path containment and bracket suite runs with a clone-identity invariant check
 gh_issue: 1
@@ -24,7 +24,7 @@ public repo and execution starts immediately, so no 1-INBOX parking period elaps
 
 | What was just completed | What's next |
 |---|---|
-| Issue filed; capture promoted to 2-WORKING | Implement shared `require_fixture` + identity gate; verify in a disposable full clone; open PR |
+| PR #6 open; orchestrator review fixes applied 2026-08-16 (TESTS-array comments restored to their own lines, `_fixture_check` init check moved above both case blocks + pinned by a new `/etc`-without-init case, mutation control recorded under `test/baselines/GH-1-init-order-negative-control.md`; gh1 17/0, gh544 78/0) | Merge PR #6 — the detect-half of #1. The prevent-half (adoption across the ~31 unaudited suites) is #10; #1 stays open until that lands |
 
 ## Bug
 

@@ -49,6 +49,8 @@ ok "a file is accepted by require_fixture_file" \
    '( . "$GUARD"; fixture_guard_init "$WORK"; require_fixture_file "$WORK/file" "label" )'
 ok "require_fixture refuses everything when fixture_guard_init was not called" \
    '( . "$GUARD"; require_fixture "$WORK/repo" "label" ); [ $? -eq 2 ]'
+ok "require_fixture /etc without init is refused — the init check must not depend on statement order" \
+   '( . "$GUARD"; require_fixture /etc "label" ); [ $? -eq 2 ]'
 ok "a symlink pointing INSIDE \$WORK is accepted (resolved descendant)" \
    'ln -sfn "$WORK/repo" "$WORK/alias"; ( . "$GUARD"; fixture_guard_init "$WORK"; require_fixture "$WORK/alias" "label" )'
 
