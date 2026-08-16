@@ -69,6 +69,10 @@ DROP_PATHS=(
   "AUDIT"             # internal audit workspace
   "phases"            # internal phase logs (operator decision 2026-08-15)
   "decisions"         # internal ADR workspace (operator decision 2026-08-15)
+  ".consult-gh79-out" # tracked consult transcripts — dot-prefixed, so the top-level sweep for
+                      # internal working material missed it entirely. Found by TruffleHog, which
+                      # flagged content inside it; the secret was a false positive but the
+                      # DIRECTORY was the real finding. Hidden directories need naming explicitly.
 )
 # `marathon-system` is deliberately KEPT: the operator's call is that a public reader benefits from
 # seeing how the sausage is made. Checked for PII before keeping — its only private content was

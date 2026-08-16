@@ -117,7 +117,25 @@ PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^GH-(544|555|563|564)-}"
 # `Author: … (@handle)` byline, and git commit authors inside a generated history diagram. A public
 # repository crediting its author is correct, and a marker that fires on the byline would train
 # whoever runs this to ignore it. `/Users/` still catches every private-path form.
-PRIVATE_MARKERS=("/Users/" "/Volumes/" "Local Sites")
+#
+# These are REGEXES, not fixed strings, and the difference is load-bearing. A bare `/Users/` matched
+# eleven files that leak nothing: examples already elided to `/Users/.../Documents`, PDDA's own
+# absolute-path detector (`/\/Users\// { ... }` in an awk program), and that detector's own
+# documentation. Any tool that FINDS a pattern necessarily CONTAINS it. Requiring a real username
+# segment after the prefix — one or more path-safe characters, so `...` and `\` do not qualify —
+# distinguishes an actual home path from a description of one.
+# Format: <stable id>|<regex>. The id is what mutations assert on, so tightening a pattern does not
+# silently break the negative control — which is exactly what happened when these were bare strings.
+PRIVATE_MARKERS=(
+  "home-path|/Users/[A-Za-z0-9_][A-Za-z0-9_.-]*/"
+  "volume-path|/Volumes/[A-Za-z0-9_][A-Za-z0-9_.-]*/"
+  "local-sites|Local Sites"
+)
+
+# Documentation placeholders are not leaks. A containment test that asserts on `/Users/someone/`
+# is describing an attack, not exposing a home directory, and a check that cannot tell the two apart
+# will be switched off by whoever has to read its output.
+PLACEHOLDER_RE="/(Users|Volumes)/(someone|somebody|user|username|youruser|example|test|foo)/"
 
 # The documented entry path a stranger follows, verbatim from README.md's Quickstart. It is
 # `npm install` THEN `./validate.sh` — running only the second half would test a path the README
@@ -325,12 +343,19 @@ audit_artifact() {  # <artifact root> [<reference root>] — sets ART_OK / ART_B
   # published artifact ever carries a real leak inside this specific file, this check will not see
   # it. That is the stated cost of defining the patterns in the same tree that is being searched.
   local self="${BASH_SOURCE[0]##*/}"
-  local m hits clean=1
-  for m in "${PRIVATE_MARKERS[@]}"; do
-    hits="$(/usr/bin/grep -rlF "$m" "$art" --exclude-dir=.git --exclude="$self" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
+  local entry mid mre f real hits clean=1
+  for entry in "${PRIVATE_MARKERS[@]}"; do
+    mid="${entry%%|*}"; mre="${entry#*|}"
+    hits=0
+    while IFS= read -r f; do
+      [ -n "$f" ] || continue
+      # Count the file only if it carries a match that is NOT a documentation placeholder.
+      real="$(/usr/bin/grep -ohE "$mre" "$f" 2>/dev/null | /usr/bin/grep -vE "$PLACEHOLDER_RE" | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
+      [ "$real" != "0" ] && hits=$((hits+1))
+    done < <(/usr/bin/grep -rlE "$mre" "$art" --exclude-dir=.git --exclude="$self" 2>/dev/null)
     if [ "$hits" != "0" ]; then
       clean=0
-      a_bad "private-marker:$m" "artifact leaks the private marker '$m' in $hits file(s) — pattern-based secret scanning does not catch these"
+      a_bad "private-marker:$mid" "artifact leaks a private $mid in $hits file(s) — pattern-based secret scanning does not catch these"
     fi
   done
   [ "$clean" -eq 1 ] && a_ok private-markers "no private paths, usernames, or internal org names survive in the artifact"
@@ -478,9 +503,9 @@ if [ "$MODE" = mutate ]; then
   fi
 
   echo "-- mutation 1: plant a private path in a tracked file"
-  printf 'see /Users/someone/secret-notes.md\n' >> "$FIX/README.md"
+  printf "see /Users/realdev/secret-notes.md\\n" >> "$FIX/README.md"
   audit_artifact "$FIX" "$REF" >/dev/null 2>&1
-  if art_failed "private-marker:/Users/"; then
+  if art_failed "private-marker:home-path"; then
     mut_ok "a planted private path is DETECTED by the private-marker sweep"
   else
     mut_bad "a planted private path was NOT detected [$ART_FAILED_IDS]"
