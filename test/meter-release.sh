@@ -98,8 +98,11 @@ ARTIFACT="${XYZ_LAUNCH_ARTIFACT:-}"
 # Paths that must NOT appear in the published artifact. Runtime state and internal working material.
 FORBIDDEN_PATHS=(".tick" "relay-system" "temp" "PARKED" ".relay-driver.lock")
 
-# Every .md under PROJECT's numbered buckets must match this — the retained worked example only.
-PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^(GH-555|GH-563|METER)}"
+# Every .md under PROJECT's numbered buckets must match this. PROJECT is NOT emptied to a bare
+# scaffold: it carries this release's own capture docs, so the tree reflects the repository's actual
+# state and a newcomer sees PDDA applied to real work (operator decision, 2026-08-15). The retained
+# set is the launch's exit criterion, its checklist, and the two open items #563 covers by waiver.
+PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^GH-(544|555|563|564)-}"
 
 # Strings that betray a private origin if they survive into the artifact.
 #
@@ -109,8 +112,14 @@ PROJECT_KEEP_RE="${XYZ_LAUNCH_PROJECT_KEEP:-^(GH-555|GH-563|METER)}"
 # marker was considered and cleared" and "nobody thought of it" is the whole value of the list.
 PRIVATE_MARKERS=("/Users/" "/Volumes/" "noelsaw" "Local Sites")
 
-# The documented entry path a stranger follows (README.md).
-HAPPY_PATH_CMD="${XYZ_LAUNCH_HAPPY_PATH:-./validate.sh}"
+# The documented entry path a stranger follows, verbatim from README.md's Quickstart. It is
+# `npm install` THEN `./validate.sh` — running only the second half would test a path the README
+# does not document and would fail on a missing module for a reason the newcomer never hits.
+HAPPY_PATH_CMD="${XYZ_LAUNCH_HAPPY_PATH:-npm install && ./validate.sh}"
+
+# README.md is checked for the happy path's own name rather than the full command line, since the
+# README presents the two steps on separate lines.
+HAPPY_PATH_DOC_MARKER="${XYZ_LAUNCH_HAPPY_DOC:-./validate.sh}"
 
 # The recorded secret-scan evidence. Assembled from parts rather than written as one literal path:
 # it does not exist until the scan is actually run, and path-integrity.sh correctly refuses a
@@ -304,9 +313,14 @@ audit_artifact() {  # <artifact root> [<reference root>] — sets ART_OK / ART_B
 
   # A7 — no private origin markers survive into tracked content. One failure PER marker, so that a
   # newly introduced marker is visible even when the artifact already leaks a different one.
+  # This file necessarily CONTAINS every pattern it searches for — the marker list is source code —
+  # so it is excluded from its own sweep. A narrow, named carve-out rather than a silent one: if the
+  # published artifact ever carries a real leak inside this specific file, this check will not see
+  # it. That is the stated cost of defining the patterns in the same tree that is being searched.
+  local self="${BASH_SOURCE[0]##*/}"
   local m hits clean=1
   for m in "${PRIVATE_MARKERS[@]}"; do
-    hits="$(/usr/bin/grep -rlF "$m" "$art" --exclude-dir=.git 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
+    hits="$(/usr/bin/grep -rlF "$m" "$art" --exclude-dir=.git --exclude="$self" 2>/dev/null | /usr/bin/wc -l | /usr/bin/tr -d ' ')"
     if [ "$hits" != "0" ]; then
       clean=0
       a_bad "private-marker:$m" "artifact leaks the private marker '$m' in $hits file(s) — pattern-based secret scanning does not catch these"
@@ -346,19 +360,22 @@ run_stranger_path() {  # <artifact root> — sets STR_PASS / STR_FAIL / STR_MISS
   fi
 
   # B2 — the documented entry point exists and names the happy path
-  if [ -f "$work/clone/README.md" ] && /usr/bin/grep -qF "${HAPPY_PATH_CMD}" "$work/clone/README.md"; then
+  if [ -f "$work/clone/README.md" ] && /usr/bin/grep -qF "${HAPPY_PATH_DOC_MARKER}" "$work/clone/README.md"; then
     STR_PASS=$((STR_PASS+1))
-    ok "stranger case OK — README.md documents the entry path ($HAPPY_PATH_CMD)"
+    ok "stranger case OK — README.md documents the entry path ($HAPPY_PATH_DOC_MARKER)"
   else
     STR_FAIL=$((STR_FAIL+1))
-    bad "stranger case FAILED — README.md does not document '$HAPPY_PATH_CMD' as the entry path"
+    bad "stranger case FAILED — README.md does not document '$HAPPY_PATH_DOC_MARKER' as the entry path"
   fi
 
   # B3 — the happy path completes under a SCRUBBED environment. This is the load-bearing one: it is
   # the difference between "it works on the author's machine" and "it works for a stranger". No
   # tokens, no author HOME, no inherited XYZ_* configuration.
+  # The PATH keeps the standard package-manager prefixes (/opt/homebrew/bin, /usr/local/bin) because
+  # a stranger with node installed has them too — scrubbing is about removing the AUTHOR's private
+  # context (HOME, tokens, XYZ_* config), not about pretending a normal toolchain is absent.
   if /usr/bin/env -i \
-        PATH="/usr/bin:/bin:/usr/sbin:/sbin" \
+        PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
         HOME="$work/home" \
         TMPDIR="$work/tmp" \
         /bin/bash -c "mkdir -p '$work/home' '$work/tmp' && cd '$work/clone' && $HAPPY_PATH_CMD" >"$work/happy.log" 2>&1; then
