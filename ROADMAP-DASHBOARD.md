@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 202 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 🔮 0 · 🔲 0
+Summary: 203 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -40,6 +40,7 @@ Summary: 202 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 
 | GH-544 · local-gate-before-push: retire hosted CI for the private phase | — | [GH-544-LOCAL-GATE-BEFORE-PUSH.md](PROJECT/2-WORKING/GH-544-LOCAL-GATE-BEFORE-PUSH.md) · [#544](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/544) |
 | GH-522 · SmallCode (local Qwen 2.5 32B via LM Studio) as an autonomous marathon Builder — experiment run, verdict recorded | — | [#548](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/548) · [GH-522-SMALLCODE-FUZZER.md](PROJECT/2-WORKING/GH-522-SMALLCODE-FUZZER.md) · [#522](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/522) · [#523](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/523) |
 | GH-555 · Meter 0.6.0 has no exit criterion — build it FIRST, and ship it RED | — | [GH-555-METER-EXIT-CRITERION.md](PROJECT/2-WORKING/GH-555-METER-EXIT-CRITERION.md) · [#555](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/555) |
+| GH-563 · public repository launch — Meter becomes the public RC and the artifact is a sanitized, fresh-history clone | — | [GH-563-PUBLIC-LAUNCH.md](PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md) · [#563](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/563) |
 | GH-564 · a test suite can rewrite the REAL clone's git remote — git -C "" and cd "" are silent no-ops | — | [GH-564-FIXTURE-CONTAINMENT.md](PROJECT/2-WORKING/GH-564-FIXTURE-CONTAINMENT.md) · [#564](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/564) · [#177](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/177) |
 | GH-557 · an unverifiable acceptance section reads as ready — unknown must block on a frozen manifest entry | — | [GH-557-UNKNOWN-BLOCKS-MANIFEST.md](PROJECT/2-WORKING/GH-557-UNKNOWN-BLOCKS-MANIFEST.md) · [#557](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/557) · [#400](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/400) |
 | GH-551 · a resolver that cannot determine its answer returns a plausible default instead of refusing | — | [GH-551-RESOLVER-REFUSES-INSTEAD-OF-DEFAULTING.md](PROJECT/2-WORKING/GH-551-RESOLVER-REFUSES-INSTEAD-OF-DEFAULTING.md) · [#551](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/551) |
