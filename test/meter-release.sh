@@ -380,11 +380,20 @@ run_stranger_path() {  # <artifact root> — sets STR_PASS / STR_FAIL / STR_MISS
     return 1
   fi
 
-  local work
-  work="$(mktemp -d -t xyz-stranger.XXXXXX)" || { STR_FAIL=$((STR_FAIL+1)); bad "could not create a scratch directory for the stranger's clone"; return 1; }
+  # The stranger's clone must NOT live under TMPDIR. `xyz_path_is_durable` classifies any path below
+  # TMPDIR as non-durable BY DESIGN (relay-automation/durable-log-lib.sh:48-55), so cloning into
+  # `mktemp -d` made gh388-run-log-durability fail inside this gate while passing everywhere else.
+  # The test was correct and the harness was wrong: nobody clones a project into /tmp and works
+  # there, so a scratch location that misrepresents where real users put code produces failures that
+  # say nothing about the artifact.
+  local parent work
+  parent="$(cd "$(dirname "$art")" && pwd)" || { STR_FAIL=$((STR_FAIL+1)); bad "could not resolve the artifact's parent directory"; return 1; }
+  work="$parent/.xyz-stranger.$$"
   case "$work" in
-    "") STR_FAIL=$((STR_FAIL+1)); bad "mktemp returned an EMPTY path — refusing (#564)"; return 1 ;;
+    ""|"/"|"$parent") STR_FAIL=$((STR_FAIL+1)); bad "refusing an unsafe scratch path '$work' (#564)"; return 1 ;;
   esac
+  rm -rf "$work"
+  mkdir -p "$work" || { STR_FAIL=$((STR_FAIL+1)); bad "could not create the stranger's scratch directory at $work"; return 1; }
   trap 'rm -rf "$work"' RETURN
 
   # B1 — a credential-free clone succeeds
