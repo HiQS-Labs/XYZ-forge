@@ -54,15 +54,12 @@ trap cleanup EXIT
 # The guard is deliberately stronger than "non-empty": a path must exist AND live under $WORK. That
 # makes the entire class unreachable rather than just the empty case, because a merely wrong path
 # cannot satisfy it either.
-require_fixture() {  # <path> [label] — die unless it is a real directory inside $WORK
-  local p="${1:-}" what="${2:-fixture}"
-  case "$p" in
-    "")            echo "gh544: REFUSING — $what path is EMPTY; git -C \"\" and cd \"\" would silently target the caller's clone ($PWD)" >&2; exit 2 ;;
-    "$WORK"/*)     ;;
-    *)             echo "gh544: REFUSING — $what path '$p' is outside the fixture root $WORK; this suite must never touch a real repo" >&2; exit 2 ;;
-  esac
-  [ -d "$p" ] || { echo "gh544: REFUSING — $what path '$p' is not a directory" >&2; exit 2; }
-}
+#
+# GH-1: the private copy above moved to the shared test/lib/fixture-guard.sh and gained the
+# resolved-containment check (the lexical prefix test alone accepts `$WORK/../../<real repo>` —
+# the GH-567 residual). Same refusal contract: exit 2 with the reason on stderr.
+. "$HERE/lib/fixture-guard.sh"
+fixture_guard_init "$WORK"
 
 # A throwaway repo carrying the real hook and a STUB validate.sh whose verdict we control.
 mkrepo() {  # <validate-exit-code> -> prints repo path
