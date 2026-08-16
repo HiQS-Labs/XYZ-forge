@@ -29,7 +29,7 @@ release safety. See the *Acceptance — deviations from the issue* section of
 ## Commit
 
 ```
-c27951a5959d9c28c9af0b7f4de16adf171b165e
+306a09dea7325bc6634a6f35022dfd0ec610b73f
 ```
 
 ## Result
@@ -38,10 +38,10 @@ Two scans, both clean:
 
 ```
 trufflehog git file://<artifact>
-  chunks: 1056   bytes: 7296121   verified_secrets: 0   unverified_secrets: 0
+  chunks: 1056   bytes: 7296915   verified_secrets: 0   unverified_secrets: 0
 
 trufflehog filesystem <artifact>
-  chunks: 2249   bytes: 16960052  verified_secrets: 0   unverified_secrets: 0
+  chunks: 2249   bytes: 16966225  verified_secrets: 0   unverified_secrets: 0
 ```
 
 The `git` scan covers the committed history; the `filesystem` scan covers the working tree,
