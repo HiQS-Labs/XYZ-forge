@@ -2,6 +2,11 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-08-16
+
+### Changed
+- **Sundown is renumbered 0.7.0 → 0.8.0 by explicit operator decision, to open 0.7.0 for a new post-launch release, Ballast.** Nothing about Sundown changed except its version — same codename, same 2026-10-17 target, same received manifest (#378, #379, #382, #491, #551), same milestone — and its iteration band moves with it (`0.7.0-0.7.4` → `0.8.0-0.8.4`), because a band is part of a release's identity in this file rather than a separate fact. The renumber was necessary and not cosmetic: releases here occupy `0.x.0` with a four-iteration band, so there is no room *between* two adjacent releases, and inserting work after Meter (0.6.0) means moving whatever held 0.7.0. Sundown was the cheaper one to move — its manifest is explicitly **not yet frozen** and its exit criterion is **NOT WRITTEN**, so nothing downstream had committed to the number. The `(0.7.0)` parentheticals inside Meter's re-scope paragraphs in `RELEASES.md` were swept to `(0.8.0)` in the same edit, since they identify *which release received the transfer* and a stale number there points a reader at a version that no longer exists. **This file's 2026-08-15 entry is deliberately NOT swept** — it is the append-only record of what was decided that day, when Sundown was 0.7.0, and rewriting it would make the ledger agree with itself at the cost of no longer recording what happened. Ballast's own block, manifest and exit criterion are authored separately; this entry records only the renumber that made room for it.
+
 ## 2026-08-15
 
 ### Changed
