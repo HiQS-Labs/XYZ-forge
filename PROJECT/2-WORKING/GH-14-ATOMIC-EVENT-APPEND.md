@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Suite/XYZ-forge/issues/14
 title: "GH-14: appendEvent writes non-atomically; concurrent readers can observe torn event files"
 status: active
 created: 2026-08-16
-updated: 2026-08-16
+updated: 2026-08-17
 owner: orchestrator (Claude Code)
 doc_type: bugfix
 complexity: 2
@@ -23,7 +23,27 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Capture promoted to 2-WORKING; contract authored; Ballast 0.7.0 manifest frozen | Preflight, then fire as a marathon lane on operator go |
+| Atomic write (temp+rename) landed 2026-08-17 via PR #21 (outside-of-harness lane, orchestrator-reviewed and merged as `e49bdcd`); `test/gh14-atomic-append.sh` registered in `validate.sh`; negative control recorded at `test/baselines/GH-14-negative-control.md` (5 pass/1 fail pre-fix, 6/0 post-fix) | **Waiver recorded below**: the two `test/unit/events.test.js` cases deferred from PR #7 (quarantine, empty-file skip) were NOT re-authored by PR #21. #5 stays open on this gap. |
+
+## Waiver — deferred PR #7 unit tests not re-authored
+
+- **Failed criterion**: acceptance criterion 4 ("#5's quarantine, if retained, is applied only on
+  top of atomic writes, and its own test distinguishes a genuinely corrupt file from a young
+  one") and the contract note directing the two PR #7-deferred tests (quarantine, empty-file
+  skip) to be re-authored here.
+- **Owner**: orchestrator (Claude Code), pending operator direction.
+- **Reason**: PR #21 shipped only the atomic-write half; `src/events.js` carries zero quarantine
+  logic (confirmed: no matches for "quarantine"). Criterion 4 is conditional on quarantine being
+  *retained* — since it was dropped (per the #5 correction, d99e00d), it is vacuously satisfied.
+  But the two deferred tests were never re-authored against the new atomic-write behavior either,
+  and inventing quarantine/empty-file-skip production logic now, un-reviewed, would be scope
+  creep beyond this PR's adjudication. `readAllEvents` still has no defensive handling for a
+  foreign corrupt/empty file dropped at a final `.jsonl` path (it would throw uncaught on
+  `JSON.parse`) — a real but pre-existing gap, not introduced by this fix.
+- **Follow-up**: tracked under #5, which stays open per the standing rule ("#5 stays open until
+  these tests and #14's atomic write have both landed" — d99e00d). #14's acceptance criteria 1,
+  2, 3, 5 are otherwise landed and verified; criterion 4 is closed vacuously with this waiver on
+  file.
 
 ## Bug
 
@@ -45,16 +65,16 @@ write first, quarantine layered on top only after.
 
 ## Acceptance
 
-- [ ] `appendEvent` writes via a temp name and renames into place; no reader-visible path ever holds a
+- [x] `appendEvent` writes via a temp name and renames into place; no reader-visible path ever holds a
   partial document.
-- [ ] A unit test asserts that no file matching the reader's selection filter is ever observable in a
+- [x] A unit test asserts that no file matching the reader's selection filter is ever observable in a
   partial state — e.g. by asserting the temp name does not match the filter, and that a directory
   listing taken between write and rename yields no selectable partial file.
-- [ ] A regression test covers the concurrent shape directly: interleaved append and `readAllEvents`
+- [x] A regression test covers the concurrent shape directly: interleaved append and `readAllEvents`
   never loses an event and never quarantines one.
-- [ ] `#5`'s quarantine, if retained, is applied only on top of atomic writes, and its own test
+- [x] `#5`'s quarantine, if retained, is applied only on top of atomic writes, and its own test
   distinguishes a genuinely corrupt file from a young one.
-- [ ] The healthy-path event bytes are unchanged.
+- [x] The healthy-path event bytes are unchanged.
 
 ## Swarm Preflight Contract
 

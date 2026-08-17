@@ -2,6 +2,33 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## 2026-08-17
+
+### Fixed
+- **#14 (atomic event append) and #15 (parallel contention retry) — the two lowest-ease Ballast
+  0.7.0 lanes — landed via PR #21 and PR #20, an outside-of-harness "Command Code/Qwen" build
+  lane, adjudicated and merged by the orchestrator after independent verification (not on the PR
+  bodies' self-reported results).** `appendEvent` (`src/events.js`) now writes to a `.tmp` name
+  and `renameSync`s into place — a `.jsonl` file that exists is always complete
+  (`test/gh14-atomic-append.sh`, negative control at `test/baselines/GH-14-negative-control.md`,
+  6/0 post-fix vs 5/1 pre-fix). `validate.sh`'s parallel retry now gives every suite invocation
+  `stdin=/dev/null` (closing the swallowed-stdin hole where the serial re-run inherited
+  `$RESULTS` and drained every verdict recorded after a stdin-reading suite) and adds a
+  completeness catch-up pass for suites whose worker died without writing a result line, plus a
+  tally-integrity guard that refuses a verdict when classified counts don't match the total
+  (`test/gh528-parallel-contention-retry.sh` extended 5/0 → 9/0; negative control recorded at
+  `test/baselines/GH-15-parallel-contention-negative-control.md`). **Merge order**: #21 then #20
+  — both touched `validate.sh`; #20's branch was independently stale against `main` (predated the
+  `TOTAL=+3` line from an earlier commit) and needed a rebase regardless of #21, resolved as one
+  trivial line. **Gaps recorded, not silently absorbed**: neither PR carried ledger updates
+  (this entry, the ROADMAP pointer updates, and the capture-doc Status tables are the orchestrator's
+  post-merge reconciliation); #21 did not re-author the two `test/unit/events.test.js` cases
+  deferred from PR #7 (quarantine, empty-file skip) — recorded as a waiver in
+  `PROJECT/2-WORKING/GH-14-ATOMIC-EVENT-APPEND.md`, and **#5 stays open** on that gap. PR #19
+  (GH-12, tree diet) was parked, not merged — #12 is an explicit Ballast non-goal; a comment on
+  the PR names the rule and asks the operator to clear it explicitly if it should proceed
+  mid-release. → [PROJECT/2-WORKING/GH-14-ATOMIC-EVENT-APPEND.md](PROJECT/2-WORKING/GH-14-ATOMIC-EVENT-APPEND.md) · [PROJECT/2-WORKING/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md](PROJECT/2-WORKING/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md) · [#14](https://github.com/HiQS-Suite/XYZ-forge/issues/14) · [#15](https://github.com/HiQS-Suite/XYZ-forge/issues/15) · [#21](https://github.com/HiQS-Suite/XYZ-forge/pull/21) · [#20](https://github.com/HiQS-Suite/XYZ-forge/pull/20) · [#19](https://github.com/HiQS-Suite/XYZ-forge/pull/19)
+
 ## 2026-08-16
 
 ### Fixed

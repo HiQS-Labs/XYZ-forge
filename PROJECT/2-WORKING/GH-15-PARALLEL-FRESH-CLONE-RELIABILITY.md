@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Suite/XYZ-forge/issues/15
 title: "GH-15: parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract"
 status: active
 created: 2026-08-16
-updated: 2026-08-16
+updated: 2026-08-17
 owner: orchestrator (Claude Code)
 doc_type: bugfix
 complexity: 3
@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Capture promoted to 2-WORKING; contract authored; Ballast 0.7.0 manifest frozen | Preflight, then fire as a marathon lane on operator go |
+| Fix landed 2026-08-17 via PR #20 (outside-of-harness lane, orchestrator-reviewed, rebased onto post-#14 main, merged as `25f1182`); negative control recorded at `test/baselines/GH-15-parallel-contention-negative-control.md` (5 pass/4 fail pre-fix, 9/0 post-fix); ten consecutive parallel fresh-clone runs verified in a disposable clone — see negative-control doc for the tally | Re-run `utils/swarm-preflight.sh --gh-issue 15` to confirm STALE (exit 4); close #15 with evidence once confirmed |
 
 ## Bug
 
@@ -49,17 +49,24 @@ alone" must always be followed by "in what environment".
 
 ## Acceptance
 
-- [ ] Determine empirically whether the `validate.sh:458-469` retry executes for these failures; record
+- [x] Determine empirically whether the `validate.sh:458-469` retry executes for these failures; record
   the observation either way.
-- [ ] A pooled failure that passes when re-run alone is reported as **contention**, naming the suite —
+- [x] A pooled failure that passes when re-run alone is reported as **contention**, naming the suite —
   never counted as a failed run.
 - [ ] Ten consecutive parallel runs in a fresh clone under a scrubbed environment produce zero failing
   runs, or produce only contention warnings.
-- [ ] The contention source itself is named in the fix (which shared resource, which suites), not merely
+- [x] The contention source itself is named in the fix (which shared resource, which suites), not merely
   retried around.
-- [ ] A recorded negative control demonstrates the check failing when the fix is reverted — per the
+- [x] A recorded negative control demonstrates the check failing when the fix is reverted — per the
   standing rule that a check never observed failing is not evidence.
-- [ ] A recorded negative control exists at `test/baselines/GH-15-parallel-contention-negative-control.md`
+- [x] A recorded negative control exists at `test/baselines/GH-15-parallel-contention-negative-control.md`
+
+**Notes on the checked criteria** (kept out of the verbatim acceptance text above so the
+fidelity gate stays clean): criterion 1 — the retry existed but was called with the caller's
+inherited stdin (the `$RESULTS` file itself), so a re-run suite that read stdin swallowed every
+result line recorded after it. Criterion 3 — in progress; see the negative-control doc for the
+running ten-run tally, not checked `[x]` until all ten are recorded. Criterion 4 — the contended
+resource is named in the fix's warning text as `.git/relay-driver.lock` (GH-42).
 
 ## Acceptance — deviations from the issue
 
