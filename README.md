@@ -30,11 +30,11 @@ bash githooks/install.sh   # contributors: wires the pre-push gate (correctness 
 suite stops at `Cannot find module 'acorn'`.)
 
 **If you are going to push to this repo, run `bash githooks/install.sh` once per clone. It is a
-correctness requirement, not optional setup.** Hosted CI is off while this repo is private
-(GH-544), so the local gate at the push boundary is the *only* gate — and the hook lives in
-`.git/hooks/`, which does not travel with a clone. A clone that skipped this step pushes
-unverified and nothing downstream will notice. One run covers every branch and linked worktree of
-that clone (GH-549). `./validate.sh` itself warns, in-band, if this clone is ungated — check
+correctness requirement, not optional setup.** The local gate catches failures before a push; hosted
+CI independently checks public-repo changes afterward. The hook lives in `.git/hooks/`, which does
+not travel with a clone, so skipping this step removes the early boundary even though hosted CI may
+still run later. One run covers every branch and linked worktree of that clone (GH-549).
+`./validate.sh` itself warns, in-band, if this clone is ungated — check
 directly any time with `bash githooks/install.sh --check`. (Just evaluating the project and never
 pushing? The warning is informational only — `validate.sh` still runs and exits exactly as it
 would gated.)

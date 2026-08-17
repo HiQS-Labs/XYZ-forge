@@ -12,7 +12,8 @@ All notable changes to this repo. Newest first. Dates are PDT.
   README's nine links into the private source issue tracker are now legible legacy references instead
   of public-user 404s. Hosted CI is re-armed per XYZ-forge #16: `push` and `pull_request` cover `main`
   and `development`, the macOS promotion boundary remains restricted to a main push, and the Ubuntu
-  PR lane remains advisory. TruffleHog 3.97.0 reports 0 findings on public `main` at `e80e1fcc`; the
+  PR lane remains advisory; the local hook and onboarding copy no longer claim nothing exists
+  downstream. TruffleHog 3.97.0 reports 0 findings on public `main` at `e80e1fcc`; the
   private source-history scan reports four unverified Zendesk-pattern matches in one unpublished
   consult transcript, recorded without exposing raw values and left for source-owner disposition.
   **Bet:** the public repo now has an independent downstream gate and an installed skill whose first

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # pre-push — run the gate before anything reaches the remote. (GH-544)
 #
-# WHY THIS EXISTS: while this repo is private we do not pay for hosted CI (see #544, #509), so the
-# push boundary is where testing happens. Local commits are free and ungated on purpose; the moment
-# work leaves the machine, it is gated.
+# WHY THIS EXISTS: the push boundary gives the author the earliest complete local signal. Hosted CI
+# is re-armed now that XYZ-forge is public (#16), but it is downstream and the Ubuntu PR lane is
+# advisory; local commits remain free and ungated on purpose, while a push is checked before it
+# leaves the machine.
 #
 # WHY IT RUNS THE FAST GATE: `validate.sh` is parallel by default (~4 min on a 10-core host) rather
 # than sequential (~16 min). This is the single most important choice in this file. A 16-minute
@@ -139,8 +140,8 @@ pre-push: $_gate_name RED (exit $_rc) after $((SECONDS - _start))s — push REFU
 
   The failing checks are named in the output above.
 
-  This is the only gate: hosted CI is off while the repo is private (#544, #509), so nothing
-  downstream will catch this for you.
+  Hosted CI may run after the push, but this local boundary is the earliest full signal and the
+  Ubuntu pull-request lane is advisory. Do not use downstream CI as a reason to ignore this red.
 
   To push anyway (and you may have a good reason — a WIP branch, a known-red baseline):
     git push --no-verify

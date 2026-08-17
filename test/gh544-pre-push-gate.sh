@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 #
-# gh544-pre-push-gate.sh — GH-544: the gate moved to the push boundary, hosted CI is off.
+# gh544-pre-push-gate.sh — GH-544 local push boundary + XYZ-forge #16 hosted re-arm.
 #
 # Three things ship together and each can fail independently:
 #   1. githooks/pre-push  — refuses a push when the gate is red, and announces every bypass
@@ -107,8 +107,8 @@ ok "a red gate refuses the push (exit 1)" "[ $rc -eq 1 ]"
 ok "  and says the push was REFUSED" "printf '%s' \"\$out\" | grep 'push REFUSED' >/dev/null"
 ok "  and names the escape hatch rather than leaving you stuck" \
    "printf '%s' \"\$out\" | grep -- '--no-verify' >/dev/null"
-ok "  and states that nothing downstream will catch it (CI is off)" \
-   "printf '%s' \"\$out\" | grep 'only gate' >/dev/null"
+ok "  and does not excuse the red merely because hosted CI exists" \
+   "printf '%s' \"\$out\" | grep 'Do not use downstream CI' >/dev/null"
 
 # --- (2) a green gate ALLOWS the push --------------------------------------------------------------
 R_OK="$(mkrepo 0)"
@@ -307,15 +307,15 @@ ok "a branch with NEITHER gate refuses the push" "! printf '%s' \"\$out\" | grep
 ok "  and says a gate that cannot run is not one that passed" \
    "printf '%s' \"\$out\" | grep 'not one that passed' >/dev/null"
 
-# --- (6) ci.yml no longer fires automatically, and keeps its reasoning ------------------------------
+# --- (6) the public-repo re-arm restores hosted triggers and keeps the private-phase reasoning -----
 CI="$REPO/.github/workflows/ci.yml"
-ok "ci.yml has no push: trigger" "! grep -qE '^  push:' '$CI'"
-ok "ci.yml has no pull_request: trigger" "! grep -qE '^  pull_request:' '$CI'"
+ok "ci.yml has the restored push: trigger" "grep -qE '^  push:' '$CI'"
+ok "ci.yml has the restored pull_request: trigger" "grep -qE '^  pull_request:' '$CI'"
 ok "ci.yml still exists with its jobs intact" "grep -q '^jobs:' '$CI'"
 ok "the GH-509 Phase 4 cost reasoning is PRESERVED for re-arm" \
    "grep -q 'THE PROMOTION BOUNDARY' '$CI'"
-ok "the file states the re-arm trigger (repo goes public)" \
-   "grep -qi 'RE-ARM WHEN THE REPO GOES PUBLIC' '$CI'"
+ok "the file states that the public-repo bridge has ended" \
+   "grep -q 'THE BRIDGE HAS ENDED' '$CI'"
 ok "the macOS job still has NO workflow_dispatch of its own" \
    "! grep -qE '^      workflow_dispatch' '$CI'"
 

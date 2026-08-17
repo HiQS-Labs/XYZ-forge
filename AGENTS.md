@@ -88,7 +88,7 @@ local change.
     sequential fallback with its reason. `bash ci-local.sh` is still the qualifying run that writes
     the evidence record — it stays sequential and does not call `validate.sh`.
   - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
-    deliberately, not reflexively — nothing downstream will catch what you skip.
+    deliberately, not reflexively — they skip the local boundary even when hosted CI later runs.
   - **PR checks are meaningful again only after a hosted run actually appears for the commit.** A
     configured workflow is not evidence; query the run and cite its SHA.
 
