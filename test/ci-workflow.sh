@@ -45,37 +45,22 @@ else
   fail "workflow must declare runs-on: ubuntu-latest"
 fi
 
-# GH-544 INVERTED THESE TWO ASSERTIONS, and the inversion is the point rather than an accommodation.
+# GH-544 inverted these assertions while the source repo was private. XYZ-forge #16 restores them
+# because the documented re-arm trigger has fired: this repository is public.
 #
-# They used to require `push:` and `pull_request:` triggers scoped to main+development (GH-216 added
-# `development` after PRs into it ran no CI at all). While this repo is PRIVATE we do not pay for
-# hosted CI — Aug 1-14 cost $10.00 billed and hit the spending limit, blocking Actions outright
-# (#509, #544) — so those triggers are removed and the gate runs locally at the push boundary via
-# `githooks/pre-push`.
-#
-# Asserting their ABSENCE rather than deleting the assertions is deliberate: an accidental re-arm is a
-# two-line edit and the invoice arrives weeks later. This is the check that makes that edit loud.
-#
-# WHEN THE REPO GOES PUBLIC, RESTORE THE ORIGINAL FORM. Actions is free and unmetered on public repos,
-# so the cost basis disappears and the correct posture inverts back: require both triggers, scoped to
-# main and development. The original assertions are preserved verbatim in this comment so the restore
-# is a copy, not a reconstruction:
-#
-#   if grep -Eq '^[[:space:]]*push:[[:space:]]*$' "$WORKFLOW" && grep -Eq '^[[:space:]]*pull_request:[[:space:]]*$' "$WORKFLOW"; then
-#     pass "workflow triggers on push and pull_request"
-#   else
-#     fail "workflow must trigger on push and pull_request"
-#   fi
-#   branch_list_count="$(grep -Ec '^[[:space:]]*branches:[[:space:]]*\[[^]]*\bmain\b[^]]*\bdevelopment\b[^]]*\]' "$WORKFLOW")"
-#   if [ "${branch_list_count:-0}" -ge 2 ]; then
-#     pass "workflow scopes both triggers to main and development"
-#   else
-#     fail "workflow must scope push and pull_request to main and development"
-#   fi
-if grep -Eq '^[[:space:]]*push:[[:space:]]*$' "$WORKFLOW" || grep -Eq '^[[:space:]]*pull_request:[[:space:]]*$' "$WORKFLOW"; then
-  fail "workflow must NOT auto-trigger while the repo is private (GH-544) — a push/pull_request trigger re-arms Actions billing"
+# The local pre-push gate remains the first boundary. These checks pin the independent hosted route
+# that a fresh public clone cannot silently omit.
+if grep -Eq '^[[:space:]]*push:[[:space:]]*$' "$WORKFLOW" && grep -Eq '^[[:space:]]*pull_request:[[:space:]]*$' "$WORKFLOW"; then
+  pass "workflow triggers on push and pull_request"
 else
-  pass "workflow does not auto-trigger on push or pull_request (GH-544: hosted CI off for the private phase)"
+  fail "workflow must trigger on push and pull_request now that the repository is public"
+fi
+
+branch_list_count="$(grep -Ec '^[[:space:]]*branches:[[:space:]]*\[[^]]*\bmain\b[^]]*\bdevelopment\b[^]]*\]' "$WORKFLOW")"
+if [ "${branch_list_count:-0}" -ge 2 ]; then
+  pass "workflow scopes both triggers to main and development"
+else
+  fail "workflow must scope push and pull_request to main and development"
 fi
 
 if grep -Eq '^[[:space:]]*workflow_dispatch:[[:space:]]*$' "$WORKFLOW"; then

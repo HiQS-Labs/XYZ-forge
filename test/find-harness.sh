@@ -9,6 +9,7 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 FH="$REPO/skills/relay-xyz/find-harness.sh"
+SKILL="$REPO/skills/relay-xyz/SKILL.md"
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 mkrepo() { _repo="$(mktemp -d "${TMPDIR:-/tmp}/fh-case.XXXXXX")"; git -C "$_repo" init -q; printf '%s\n' "$_repo"; }
@@ -31,6 +32,15 @@ seed_case_collision() {
 
 echo "find-harness (GH-70 Phase 2):"
 [ -x "$FH" ] || { echo "  FAIL: locator not executable at $FH"; exit 1; }
+
+# GH-563 shakedown: the skill's mandatory first command used to be
+# `bash skills/relay-xyz/find-harness.sh --check`. It resolved against the caller's CWD and failed
+# in every installed/foreign-CWD scenario. Pin the installed-root discovery before exercising the
+# locator itself, so the documentation cannot reintroduce a path bug while this script stays green.
+ok "skill front door searches the user install root" \
+  "grep -q '\$HOME/.claude/skills/relay-xyz/find-harness.sh' '$SKILL'"
+ok "skill front door does not prescribe the CWD-relative command" \
+  "! grep -q '^bash skills/relay-xyz/find-harness.sh --check$' '$SKILL'"
 
 # --- Case 1: from the harness clone itself → resolves to self, NO concurrency warning, exit 0 ---
 out1="$( cd "$REPO" && bash "$FH" --check 2>&1 )"; rc1=$?

@@ -15,13 +15,22 @@ description: >-
 
 # relay-xyz — automated relays on the shipped harness
 
-**ALWAYS run this first — never claim the harness is missing without running it:**
+**ALWAYS locate and run the bundled locator first — never claim the harness is missing without it.**
+Resolve the installed skill from stable install roots; do not assume the session CWD is this repo:
 
 ```bash
-bash skills/relay-xyz/find-harness.sh --check
+L=""
+for candidate in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/relay-xyz/find-harness.sh}" \
+                 "$HOME/.claude/skills/relay-xyz/find-harness.sh" \
+                 "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/relay-xyz/find-harness.sh" \
+                 "$(git rev-parse --show-toplevel 2>/dev/null)/skills/relay-xyz/find-harness.sh"; do
+  [ -n "$candidate" ] && [ -f "$candidate" ] && { L="$candidate"; break; }
+done
+[ -n "$L" ] || { echo "relay-xyz: locator not found — install the skill or set XYZ_HARNESS" >&2; exit 1; }
+bash "$L" --check
 ```
 
-That one command locates the harness from wherever your CWD is and reports which workers
+That locator resolves the harness from wherever your CWD is and reports which workers
 (codex/agy/tick) are on PATH. See
 [Preconditions](#preconditions--locate-the-harness-bundled-locator-never-hardcode-a-path) below for the
 full env-exporting form (`eval "$(... --env)"` + `cd`) that every recipe in this doc assumes has already

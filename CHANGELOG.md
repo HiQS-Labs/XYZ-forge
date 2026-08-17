@@ -5,6 +5,22 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## 2026-08-17
 
 ### Fixed
+- **GH-563 front-door/shakedown execution repairs the public launch seams that were still private-phase
+  shaped.** The installed `/relay-xyz` skill's mandatory first command resolved against the caller's
+  CWD and failed in all eight shakedown scenarios; it now locates `find-harness.sh` through stable
+  user/project install roots, with a 23/0 focused guard and a durable report under `SHAKEDOWN/`.
+  README's nine links into the private source issue tracker are now legible legacy references instead
+  of public-user 404s. Hosted CI is re-armed per XYZ-forge #16: `push` and `pull_request` cover `main`
+  and `development`, the macOS promotion boundary remains restricted to a main push, and the Ubuntu
+  PR lane remains advisory. TruffleHog 3.97.0 reports 0 findings on public `main` at `e80e1fcc`; the
+  private source-history scan reports four unverified Zendesk-pattern matches in one unpublished
+  consult transcript, recorded without exposing raw values and left for source-owner disposition.
+  **Bet:** the public repo now has an independent downstream gate and an installed skill whose first
+  instruction works outside the authoring clone. **Failure signal:** no Actions run appears for the
+  pushed commit, or the installed-root shakedown regresses. **Rollback:** remove the two workflow
+  triggers and restore the prior skill paragraph; the local pre-push gate remains intact. →
+  [GH-563-PUBLIC-LAUNCH.md](PROJECT/2-WORKING/GH-563-PUBLIC-LAUNCH.md) ·
+  [XYZ-forge #16](https://github.com/HiQS-Suite/XYZ-forge/issues/16)
 - **#14 (atomic event append) and #15 (parallel contention retry) — the two lowest-ease Ballast
   0.7.0 lanes — landed via PR #21 and PR #20, an outside-of-harness "Command Code/Qwen" build
   lane, adjudicated and merged by the orchestrator after independent verification (not on the PR

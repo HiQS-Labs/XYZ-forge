@@ -74,7 +74,7 @@ green, you're good.
 
 > **⏳ Beta-testing period:** the onboarding guide below runs for the duration of the beta. Once the
 > beta wraps, this section moves out and the README continues straight from
-> [What XYZ is](#what-xyz-is) above. Discussion: [issue #123](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/123).
+> [What XYZ is](#what-xyz-is) above. Historical design discussion: legacy source issue #123.
 
 ## Beta Tester Onboarding
 
@@ -166,8 +166,7 @@ Everything below is designed to be reversible, but please help it along:
     instead of confining itself to its isolated copy, undermining the "isolated" guarantee for that
     one advisor specifically. A detect-and-fail check now catches this case and hard-fails the turn
     rather than silently returning a contaminated answer, though it isn't a complete fix yet — see
-    [#178](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/178) and
-    [#183](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/183).
+    legacy source issues #178 and #183.
   - *PDDA install* — adds scripts and an opinionated `PROJECT/` docs structure to the target repo.
     Undo: it's all ordinary tracked files on your branch, so discarding the branch fully reverts it.
 - Clone this XYZ repo locally. Clone PDDA **only** if you're going for the full automation path.
@@ -246,7 +245,7 @@ Per-variable overrides win over the tier, so a phase can retune one cap without 
 
 > **`MARATHON_GATE_GUARD=0` removes ALL timeout and memory protection from the gate**, not just the
 > cap you were trying to get around. An unattended run with the guard off can hang indefinitely on a
-> gate that never returns — which is the failure [#383](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/383)
+> gate that never returns — the failure recorded in legacy source issue #383
 > was filed for, and the guard is what closed it. Raise the specific cap instead.
 
 **Gate Environment and Execution Contract:** The gate program is resolved from the command's first token. The gate environment is scrubbed (GH-441); configuration reaches a gate through files, not variables. A gate command may not begin with an environment assignment.
@@ -393,7 +392,7 @@ zero cost, which is the cheapest way to catch both a mis-shaped field and a wron
 - `relay-automation/` — scripts and operator docs for poll-driven relays, watchdogs, headless turn-takers, and consult.
 - `skills/` — packaged skill surfaces, including `agent2agent`, `relay-xyz`, `relay-automation`, `xyz`, consult helpers, and
   [`ponytail`](skills/ponytail/SKILL.md) (the `/ponytail` lens definition cited throughout
-  `PROJECT/` docs and PDDA's `/idea` Phase 0 — see [GH-180](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/180)).
+  `PROJECT/` docs and PDDA's `/idea` Phase 0 — see legacy source issue #180).
   Claude Code only scans `~/.claude/skills/`, so a fresh clone won't see these until you symlink them in —
   run `bash skills/relay-xyz/install.sh` once per clone/machine to make the `/relay-xyz` skill discoverable
   (see [skills/relay-xyz/SKILL.md](skills/relay-xyz/SKILL.md#first-time-setup-on-a-new-clone-or-machine-make-the-skill-discoverable)).
@@ -402,7 +401,7 @@ zero cost, which is the cheapest way to catch both a mis-shaped field and a wron
   ([`marathon-triage`](skills/marathon-triage/SKILL.md)); archive only lanes with verified completion
   evidence after a run ([`marathon-cleanup`](skills/marathon-cleanup/SKILL.md)); and — the one deliberate,
   operator-authorized auto-fire exception to the "ask before firing" rule — sweep recent GitHub issues into
-  a marathon and execute it unattended ([`10days`](skills/10days/SKILL.md)). See [GH-240](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/240).
+  a marathon and execute it unattended ([`10days`](skills/10days/SKILL.md)). See legacy source issue #240.
 - `skills/file-xyz-bug/` — file a harness bug from **any other repo** into this repo's `PROJECT/1-INBOX/`
   (GH issue + capture doc + ROADMAP park), without touching the repo you're standing in.
 - `skills/agent2agent/` — compact six-digit rendezvous for serialized discussions among two or more
@@ -412,8 +411,8 @@ zero cost, which is the cheapest way to catch both a mis-shaped field and a wron
 - `bin/tick`, `src/`, `test/` — the `tick` coordination kernel and its test suite.
 - `utils/swarm-preflight.sh` — marathon intake planner: turns a project doc or a GH-issue bundle into a marathon-ready run packet (freshness + fix-still-required checks, readiness gate, Codex/agy lane plan). Run `utils/swarm-preflight.sh --help`; see [GH-25-SWARM-PREFLIGHT-PLANNER.md](PROJECT/3-COMPLETED/GH-25-SWARM-PREFLIGHT-PLANNER.md).
 - `utils/marathon-plan.sh` — the marathon planner/ranker: scores the whole ROADMAP ledger into waves of disjoint, collision-safe write-sets, and with `--deep` delegates to `swarm-preflight.sh --dry-run` per item for an authoritative freshness verdict. Writes `PROJECT/2-WORKING/MARATHON-PLAN-<date>.md` — the "marathon file" the operator skills act on.
-- `utils/swe-diagram/` — dependency-free architecture/Git-history diagram generator; `layout: "git-lanes"` renders stacked branch lanes with commits left-to-right, driven by a local ref-reading generator that emits an auditable JSON spec plus self-contained HTML. See [GH-201](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/201).
-- `utils/git-bundle-snapshot.sh` + `relay-automation/hooks/gh177-sandbox-test-guard.sh` — the wipe-prevention layer: rotated `git bundle --all` backups on a daily cron, plus a PreToolUse hook that blocks running the test suite under a *sandboxed* Claude Code Bash call (the ignition for the GH-177 repo wipes). See [GH-233](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/233).
+- `utils/swe-diagram/` — dependency-free architecture/Git-history diagram generator; `layout: "git-lanes"` renders stacked branch lanes with commits left-to-right, driven by a local ref-reading generator that emits an auditable JSON spec plus self-contained HTML. See legacy source issue #201.
+- `utils/git-bundle-snapshot.sh` + `relay-automation/hooks/gh177-sandbox-test-guard.sh` — the wipe-prevention layer: rotated `git bundle --all` backups on a daily cron, plus a PreToolUse hook that blocks running the test suite under a *sandboxed* Claude Code Bash call (the ignition for the GH-177 repo wipes). See legacy source issue #233.
 - `install.sh` — materializes the `tick` runtime (`bin/tick` + `src/*.js`) into an external repo and records the install in a per-user, machine-local registry (`~/.config/xyz/registry.tsv`). See "Install into another repo" below.
 - `utils/hq/` — **HQ**, the multi-repo command center (`hq.sh` + `hq-lib.sh`); driven by the user-level `/hq` skill in `skills/hq/`. See [HQ — multi-repo command center](#hq--multi-repo-command-center) below.
 
@@ -501,7 +500,7 @@ into active work, queue a marathon lane, then hand off. Each step previews first
 `HQ_PDDA_REGISTRY_DIR`, `HQ_XYZ_REGISTRY`, `HQ_REBALANCE_DB`, `HQ_SEARCH_ROOTS` (see `utils/hq/hq-lib.sh`).
 
 Full agent-facing detail — invocation flow, guardrails, and the locator contract — lives in the skill:
-[skills/hq/SKILL.md](skills/hq/SKILL.md). Tracks [GH-128](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/128).
+[skills/hq/SKILL.md](skills/hq/SKILL.md). Historical implementation record: legacy source issue #128.
 
 ---
 

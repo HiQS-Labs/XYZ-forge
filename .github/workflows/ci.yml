@@ -3,35 +3,34 @@ name: CI
 # GH-216 cut `development` as the WIP branch that all work targets, but these
 # triggers stayed pinned to `main` — so no PR into `development` ran CI at all.
 # Both branches are gated here; add any future long-lived integration branch too.
-# ── HOSTED CI IS OFF FOR THE PRIVATE PHASE (GH-544, operator decision 2026-08-14) ─────────────────
+# ── HOSTED CI RE-ARMED FOR THE PUBLIC REPOSITORY (XYZ-forge #16, 2026-08-17) ─────────────────────
 #
-# The `push:` and `pull_request:` triggers are REMOVED, not disabled elsewhere, so that this file
-# states its own status. Nothing below runs automatically. The gate now runs locally at the push
-# boundary via `githooks/pre-push`.
+# GH-544 deliberately removed `push:` and `pull_request:` while the source repository was private.
+# That bridge had one explicit end condition: the repository becomes public. HiQS-Suite/XYZ-forge
+# is public, so automatic triggers are restored here. The local pre-push gate remains useful as the
+# earliest signal; hosted CI restores independent attestation and the Linux portability canary.
 #
 # WHY: measured in #509/#528 — Aug 1-14 cost $21.99 gross / $10.00 billed, exhausting the 2,000
 # included minutes on Aug 11 and hitting the $10 spending limit on Aug 14, which blocked Actions
 # outright. Projection at that cadence was ~$47/mo gross. We do not pay that for an internal tool.
 #
-# THIS IS A BRIDGE WITH A KNOWN END. GitHub Actions is free and unmetered on PUBLIC repositories, so
-# the entire cost basis for this disappears at open-source release. The re-arm trigger is therefore an
-# event, not a date or a budget review.
-#
-# TO RE-ARM WHEN THE REPO GOES PUBLIC:
-#   1. Restore the two triggers below (keep `workflow_dispatch` OFF the macOS job — see its header;
-#      three manual dispatches consumed roughly half a monthly budget on 2026-08-13).
+# THE BRIDGE HAS ENDED. The re-arm keeps the constraints the private-phase analysis established:
+#   1. `push:` and `pull_request:` cover main and development. The macOS job itself remains guarded
+#      to a push on main; pull requests receive only the Ubuntu portability canary.
 #   2. Expect a BATCH of accumulated Linux portability drift on the first green-field run. The local
 #      gate is macOS, so the platform we ship to stayed covered — the ubuntu canary did not, and drift
 #      has been accumulating unreported since this date. That backlog is the known, accepted cost of
 #      this decision, not a surprise.
-#   3. Re-arm the GH-509 promotion boundary as the real gate; during the private phase no independent
-#      attestation existed at all, and `gate-record.sh`'s NOT-promotion-evidence line was permanently
-#      undischargeable by design.
+#   3. The GH-509 macOS boundary is again the promotion witness for an exact main commit.
 #
 # EVERYTHING BELOW IS DELIBERATELY PRESERVED — jobs, routing, and especially the GH-509 Phase 4 cost
 # analysis in the macOS job's header. That reasoning is what you will want when re-arming; deleting it
 # and rediscovering it on an invoice is the failure this comment exists to prevent.
 on:
+  push:
+    branches: [main, development]
+  pull_request:
+    branches: [main, development]
   workflow_dispatch:
 
 concurrency:

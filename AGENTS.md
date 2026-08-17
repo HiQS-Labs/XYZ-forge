@@ -72,10 +72,12 @@ local change.
 
 ## Repo-specific rails
 
-- **The gate runs at the push boundary, and it is the ONLY gate (GH-544).** Hosted CI fires on
-  nothing while this repo is private — `.github/workflows/ci.yml` has no `push`/`pull_request`
-  triggers, because the org hit its Actions spending limit on 2026-08-14 (#509). Local commits are
-  free and ungated on purpose; pushes are gated by `githooks/pre-push`.
+- **The local gate runs at the push boundary; hosted CI independently attests public-repo changes
+  (GH-544, XYZ-forge #16).** The private-phase bridge ended when this repository became public on
+  2026-08-15. `.github/workflows/ci.yml` now covers `push`/`pull_request` on `main` and `development`;
+  the macOS promotion boundary remains restricted to a push on `main`, while the Ubuntu job is an
+  advisory portability canary. Local commits are ungated on purpose; pushes are still gated by
+  `githooks/pre-push` so failures are caught before the remote round trip.
   - Wire a new clone once: `bash githooks/install.sh` (idempotent). It installs a dispatch stub into
     `.git/hooks/`, which covers **every branch and linked worktree** of that clone, including branches
     with no `githooks/` directory (GH-549 — the first design wired `core.hooksPath` at the in-tree
@@ -87,11 +89,8 @@ local change.
     the evidence record — it stays sequential and does not call `validate.sh`.
   - Bypasses are `git push --no-verify` and `XYZ_SKIP_PREPUSH=1`. Both announce themselves. Use them
     deliberately, not reflexively — nothing downstream will catch what you skip.
-  - **Do not treat a PR's check status as meaningful right now.** With no workflows firing, PRs have
-    zero checks, and a billing-blocked job can report `failure` with no log while `gh run list` shows
-    the run as `success`.
-  - Re-arm when the repo goes public — Actions is free and unmetered there, and `ci.yml` carries the
-    full re-arm instructions in its header.
+  - **PR checks are meaningful again only after a hosted run actually appears for the commit.** A
+    configured workflow is not evidence; query the run and cite its SHA.
 
 - **Never use a git command that overwrites the working tree from a committed state to undo a
   working-tree experiment.** In this clone other agents hold uncommitted work you cannot see.
