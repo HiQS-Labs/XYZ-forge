@@ -1,0 +1,1 @@
+Review lines 360-420 of README.md in this repo. Critique the clarity, accuracy, and sharpness of the new 'Glossary & Execution Model' table and the 'Do phases run in parallel?' Q&A section. Identify any ambiguities, missing terms, or opportunities to sharpen the distinction between intra-plan sequential phases, marathon lanes, waves, and worktree/clone swarms.

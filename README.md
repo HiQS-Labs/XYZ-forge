@@ -373,19 +373,45 @@ from a dependency graph.
 
 ### Do phases run in parallel? What does `depends_on` actually do?
 
-No, and less than you'd think. Phases run **one at a time**, in the order they appear in the plan.
+**Inside a single marathon plan: No.** Phases run **strictly one at a time**, in the order they appear in the plan.
 A phase *without* `depends_on` is not "unordered" or "parallel-safe" — it simply runs when its turn
-comes. `depends_on` constrains that order; it does not create it.
+comes. `depends_on` constrains and validates that order; it does not create a concurrent execution graph.
 
 It also takes exactly one phase id, unquoted (`depends_on: p3`). The list form `depends_on: [p3]`
 parses as the literal string and aborts the plan with an unknown-phase error that points at your
 phase ids rather than at the field's shape. Chain them (`p3 → p4 → p5`) to express a longer order.
 
 Analysing your phases for a disjoint write-set is still worth doing — it is how you learn which
-phases genuinely need `depends_on` — but it will not make them concurrent.
+phases genuinely need `depends_on` — but it will not make them concurrent within the same working tree.
+
+**Where concurrency DOES exist is across separate runners (Lanes and Swarms):**
+- **Automated Runner Concurrency (Separate Full Clones):** Because linked worktrees share the parent repository's `.git/relay-driver.lock` (GH-42, GH-564), automated runners (`marathon.sh` / `relay-drive.sh`) running simultaneously must be dispatched in **separate standalone full clones**.
+- **Interactive Multi-Agent Coordination (Shared Workspace):** Multiple live agent sessions operating in the same repository or worktree coordinate their task claims via the shared local `.tick/events/` log.
+- **Triage Fan-Out:** Skills like `/10days` fan out parallel read-only subagents to *triage and inspect* backlog issues simultaneously, while the actual build/review execution for any given lane remains strictly sequential within its runner.
 
 Always `--dry-run` a new plan first. It parses every field and prints the real execution order at
 zero cost, which is the cheapest way to catch both a mis-shaped field and a wrong mental model.
+
+## Glossary & Execution Model
+
+To avoid ambiguity across planning, kernel locks, and multi-agent workflows, terminology in this repository adheres to the following hierarchy:
+
+$$\text{Wave} \longrightarrow \text{Lane} \longrightarrow \text{Execution Plan (\texttt{MARATHON.yaml})} \longrightarrow \text{Phase} \longrightarrow \text{Relay} \longrightarrow \text{Turn}$$
+
+| Term | Scope | Definition | Execution & Concurrency Model |
+|:---|:---:|:---|:---:|
+| **Turn** | Agent | A single bounded headless invocation of an AI builder (e.g. Codex, Qwen) or reviewer (Claude). | Single turn step |
+| **Relay** | Product | An automated, iterative handoff loop between builder and reviewer until a verified gate pass or halt condition. | Sequential turn loop |
+| **Phase (Plan)** | Marathon | A single discrete step/milestone within a `MARATHON.yaml` execution file (e.g. `p1`, `p2`). | **Strictly Sequential** (1-at-a-time per runner) |
+| **Phase (Doc)** | PDDA | A numbered stage of implementation defined in a `PROJECT/2-WORKING/` design specification (Phase 0, Phase 1). | Documentation / roadmap staging |
+| **Lane** | Workflow | An autonomous execution pipeline dedicated to solving a single GitHub issue or task. | Single track |
+| **Execution Plan** | Runner | An authored `MARATHON.yaml` file defining a concrete sequence of phases, gates, and git commit targets. | Serial execution spec |
+| **Wave Plan** | Planner | A generated roadmap document (`MARATHON-PLAN-*.md` via `marathon-plan.sh`) grouping backlog items into collision-safe waves. | Planning overlay (operator-dispatched) |
+| **Wave** | Planner | A batch of independent lanes with disjoint write-sets, satisfied prerequisites, and respected zone caps. | Batch recommendation |
+| **Marathon** | Automation | The multi-phase orchestrator (`marathon.sh`) and phase loop driver (`marathon-drive.sh`) executing a plan on a branch. | Serial orchestrator |
+| **Swarm** | Architecture | Multiple independent agents or runners working concurrently across **separate full clones** (automated) or worktrees (interactive). | **Distributed / Parallel** |
+| **`depends_on`** | Config | An authoring validation assertion in `MARATHON.yaml` verifying prerequisite phase completion before starting the next. | Assertion gate (not parallel DAG) |
+| **`tick` Kernel** | Kernel | The local, serverless database managing collision-free task claims and path-scoped locks under `.tick/events/`. | Append-only event log with `O_EXCL` locks |
 
 ## Repo map
 
