@@ -218,15 +218,11 @@ Summary: 205 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 
 
 ## In progress
 
-Summary: 33 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 16 · 🔮 0 · 🔲 0 · ⚠️ 1
+Summary: 29 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 1 · ⛔ 0 · ✅ 14 · 🔮 0 · 🔲 0 · ⚠️ 1
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files | ✅ | [GH-14-ATOMIC-EVENT-APPEND.md](PROJECT/2-WORKING/GH-14-ATOMIC-EVENT-APPEND.md) · [#14](https://github.com/HiQS-Suite/XYZ-forge/issues/14) |
-| GH-15 · parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract | ✅ | [GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md](PROJECT/2-WORKING/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md) · [#15](https://github.com/HiQS-Suite/XYZ-forge/issues/15) |
-| GH-4 · the pre-push gate does not travel with clones: fresh clones push unverified | — | [GH-4-GATE-TRAVELS-WITH-CLONES.md](PROJECT/2-WORKING/GH-4-GATE-TRAVELS-WITH-CLONES.md) · [#4](https://github.com/HiQS-Suite/XYZ-forge/issues/4) |
-| GH-10 · prevent-half of containment: adopt require_fixture across the ~31 unaudited suites + adoption guard + ci-local identity bracket | — | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
-| GH-3 · improve-loop.sh --state-dir durability — provenance evidence must not evaporate | — | [GH-3-IMPROVE-LOOP-STATE-DIR.md](PROJECT/2-WORKING/GH-3-IMPROVE-LOOP-STATE-DIR.md) · [#3](https://github.com/HiQS-Suite/XYZ-forge/issues/3) |
+| GH-10 · prevent-half of containment: adopt require_fixture across the ~31 (found: 73) unaudited suites + adoption guard + ci-local identity bracket | ⏸️ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
 | GH-1 · suite-wide fixture containment + clone-identity invariant gate | — | [GH-1-SUITE-CONTAINMENT-GATE.md](PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md) · [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
 | GH-375 + GH-385 + GH-438 · three marathon-path checks that could not fail, or read the wrong state | — | [GH-375-385-438-PREFLIGHT-TOKEN-DELTA.md](PROJECT/2-WORKING/GH-375-385-438-PREFLIGHT-TOKEN-DELTA.md) · [#375](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/375) · [#385](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/385) · [#438](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/438) · [#419](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/419) |
@@ -258,10 +254,14 @@ Summary: 33 items | Tally: 🟢 0 · 🟡 9 · ⏸️ 0 · ⛔ 0 · ✅ 16 · �
 
 ## Completed
 
-Summary: 23 items | Tally: 🟢 1 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 22 · 🔮 0 · 🔲 0
+Summary: 27 items | Tally: 🟢 1 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 26 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-4 · the pre-push gate does not travel with clones: fresh clones push unverified | ✅ | [GH-4-GATE-TRAVELS-WITH-CLONES.md](PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md) · [#4](https://github.com/HiQS-Suite/XYZ-forge/issues/4) |
+| GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files | ✅ | [GH-14-ATOMIC-EVENT-APPEND.md](PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md) · [#14](https://github.com/HiQS-Suite/XYZ-forge/issues/14) |
+| GH-15 · parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract | ✅ | [GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md](PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md) · [#15](https://github.com/HiQS-Suite/XYZ-forge/issues/15) |
+| GH-3 · improve-loop.sh --state-dir durability — provenance evidence must not evaporate | ✅ | [GH-3-IMPROVE-LOOP-STATE-DIR.md](PROJECT/3-COMPLETED/GH-3-IMPROVE-LOOP-STATE-DIR.md) · [#3](https://github.com/HiQS-Suite/XYZ-forge/issues/3) |
 | GH-448 · driver-lock consumers guess the path with 2 branches while the drivers use 3, so a linked worktree's LIVE marathon reads as IDLE | 🟢 | [GH-448-DRIVER-LOCK-RESOLVER.md](PROJECT/2-WORKING/GH-448-DRIVER-LOCK-RESOLVER.md) · [#448](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/448) · [#376](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/376) · [#354](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/354) |
 | GH-484 · redefine the canonical marathon-phase directory default from phases/ to marathon-system/ | ✅ | [GH-484-MARATHON-SYSTEM-DEFAULT.md](PROJECT/3-COMPLETED/GH-484-MARATHON-SYSTEM-DEFAULT.md) · [#484](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/484) |
 | GH-307 · Marathon pre-advance gate inherits the run's identity tags, so bash validate.sh can never pass inside a marathon | ✅ | [#307](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/307) |

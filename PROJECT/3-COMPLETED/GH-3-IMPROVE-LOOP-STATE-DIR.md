@@ -22,7 +22,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Capture promoted to 2-WORKING; contract authored; Ballast 0.7.0 manifest frozen | Preflight (expected STALE on the /tmp criterion — see the capture note), operator decision on the manifest slot |
+| Operator-directed closure: the durable default and path-printing were already landed (GH-430, pre-Ballast); the sole remaining gap — a recorded negative control — was closed 2026-08-16 (`test/baselines/GH-3-state-dir-negative-control.md`, 6/2 pre-fix → 8/0 post-fix). Closed as landed, not re-scoped or swapped. | Closed |
 
 ## Capture note — read before firing anything
 
@@ -46,9 +46,9 @@ swap it, or close #3 as already-landed.
 
 ## Acceptance
 
-- [ ] `improve-loop.sh`'s `--state-dir` default is a durable, repo-adjacent location rather than `${TMPDIR:-/tmp}`, so a run's `provenance.jsonl` survives macOS tmp purges (~3 days).
-- [ ] A claim citing a run can name the provenance that substantiates it: the default state directory is tracked-eligible (not gitignored), and the run prints the `provenance.jsonl` path.
-- [ ] A recorded negative control (under `test/baselines/`) demonstrates the durability check failing when the fix is reverted, per the standing rule.
+- [x] `improve-loop.sh`'s `--state-dir` default is a durable, repo-adjacent location rather than `${TMPDIR:-/tmp}`, so a run's `provenance.jsonl` survives macOS tmp purges (~3 days).
+- [x] A claim citing a run can name the provenance that substantiates it: the default state directory is tracked-eligible (not gitignored), and the run prints the `provenance.jsonl` path.
+- [x] A recorded negative control (under `test/baselines/`) demonstrates the durability check failing when the fix is reverted, per the standing rule.
 
 ## Swarm Preflight Contract
 

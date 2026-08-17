@@ -22,19 +22,22 @@ Requires **Node 18+** and **git** (the `tick` kernel runs on Node). No accounts 
 
 ```bash
 npm install
-bash githooks/install.sh   # contributors: wires the pre-push gate (see below)
+bash githooks/install.sh   # contributors: wires the pre-push gate (correctness requirement)
 ./validate.sh
 ```
 
 (`npm install` pulls the two parser dependencies the test suite needs — skip it and the
 suite stops at `Cannot find module 'acorn'`.)
 
-**If you are going to push to this repo, run `bash githooks/install.sh` once per clone.** Hosted CI is
-off while this repo is private (GH-544), so the local gate at the push boundary is the *only* gate —
-and the hook lives in `.git/hooks/`, which does not travel with a clone. A clone that skipped
-this step pushes unverified and nothing downstream will notice. One run covers every branch and
-linked worktree of that clone (GH-549). Check with
-`bash githooks/install.sh --check`. (Just evaluating the project? Skip it — it only affects pushing.)
+**If you are going to push to this repo, run `bash githooks/install.sh` once per clone. It is a
+correctness requirement, not optional setup.** Hosted CI is off while this repo is private
+(GH-544), so the local gate at the push boundary is the *only* gate — and the hook lives in
+`.git/hooks/`, which does not travel with a clone. A clone that skipped this step pushes
+unverified and nothing downstream will notice. One run covers every branch and linked worktree of
+that clone (GH-549). `./validate.sh` itself warns, in-band, if this clone is ungated — check
+directly any time with `bash githooks/install.sh --check`. (Just evaluating the project and never
+pushing? The warning is informational only — `validate.sh` still runs and exits exactly as it
+would gated.)
 
 That runs the full kernel + coordination test suite, with **no accounts or API keys required** —
 the fastest proof the coordination kernel actually works. It's the whole suite, not a smoke test,

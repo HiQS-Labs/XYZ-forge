@@ -4,7 +4,7 @@ source: https://github.com/HiQS-Suite/XYZ-forge/issues/4
 title: "GH-4: the pre-push gate does not travel with clones — fresh clones push unverified"
 status: active
 created: 2026-08-16
-updated: 2026-08-16
+updated: 2026-08-17
 owner: orchestrator (Claude Code)
 doc_type: bugfix
 complexity: 2
@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Capture promoted to 2-WORKING; contract authored; Ballast 0.7.0 manifest frozen | Preflight, then fire as a marathon lane on operator go |
+| Landed 2026-08-17, orchestrator-authored directly (a prior driven-marathon attempt escalated after 5 rounds without landing — see the negative-control doc's design note). `validate.sh` now warns, non-fatally, when the clone is ungated; README documents the install step as a correctness requirement; negative control recorded (both directions verified: fires when ungated, silent when gated). | Closed |
 
 ## Bug
 
@@ -46,15 +46,22 @@ the ungated state stops being invisible.
 
 ## Acceptance
 
-- [ ] Surface the gate status in-band: something that travels with the repo content itself (e.g. a committed marker or a first-run check that warns when the hook wiring is absent) reports an ungated clone, rather than relying on the contributor having read the README.
-- [ ] A fresh clone that has not run the installer produces a visible, in-band warning (or refusal) naming the missing gate and the one-command fix, on the documented first-run path; with the gate installed the push path behaves exactly as today.
-- [ ] Document prominently in the README quickstart that the install step is a correctness requirement, not optional setup.
-- [ ] A recorded negative control (under `test/baselines/`) demonstrates the new check failing when the fix is reverted, per the standing rule that a check never observed failing is not evidence.
-- [ ] A recorded negative control exists at `test/baselines/GH-4-negative-control.md`
+- [x] Surface the gate status in-band: something that travels with the repo content itself (e.g. a committed marker or a first-run check that warns when the hook wiring is absent) reports an ungated clone, rather than relying on the contributor having read the README.
+- [x] A fresh clone that has not run the installer produces a visible, in-band warning (or refusal) naming the missing gate and the one-command fix, on the documented first-run path; with the gate installed the push path behaves exactly as today.
+- [x] Document prominently in the README quickstart that the install step is a correctness requirement, not optional setup.
+- [x] A recorded negative control (under `test/baselines/`) demonstrates the new check failing when the fix is reverted, per the standing rule that a check never observed failing is not evidence.
+- [x] A recorded negative control exists at `test/baselines/GH-4-negative-control.md`
 
 ## Acceptance — deviations from the issue
 
 - [added] A recorded negative control exists at `test/baselines/GH-4-negative-control.md` — reason: pins this contract's staleness probe and the issue's negative-control criterion at the same file, so the acceptance and the probe cannot drift apart.
+
+**Implementation note (not an acceptance-text deviation):** the fix touches `validate.sh`, outside
+the original artifact list (which was scoped to avoid a merge conflict with lane #10's own
+`validate.sh` edits if both were driven concurrently through the harness). #10 was cut from
+Ballast the same day this landed — see `PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md` —
+so that conflict no longer applies. Full design rationale and both-directions verification are in
+`test/baselines/GH-4-negative-control.md`'s design note.
 
 ## Swarm Preflight Contract
 

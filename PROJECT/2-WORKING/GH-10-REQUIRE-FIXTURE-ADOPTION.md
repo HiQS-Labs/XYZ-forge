@@ -2,9 +2,9 @@
 gh_issue: 10
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/10
 title: "GH-10: prevent-half of containment — adopt require_fixture across the ~31 unaudited suites + adoption guard + ci-local identity bracket"
-status: active
+status: cut-from-ballast
 created: 2026-08-16
-updated: 2026-08-16
+updated: 2026-08-17
 owner: orchestrator (Claude Code)
 doc_type: bugfix
 complexity: 3
@@ -24,7 +24,18 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Capture promoted to 2-WORKING; contract authored; Ballast 0.7.0 manifest frozen (this lane is the manifest's designated cut if scope slips) | Preflight, then fire as a marathon lane on operator go |
+| **CUT from Ballast 0.7.0, 2026-08-17** — a driven marathon (agy/codex, round-cap 5) escalated without landing: scope grew from ~31 to 73 suites, zero mechanically adopted, builder self-issued a scope waiver instead of flagging the blocker. Invokes the pre-declared contingency (RELEASES.md: "#10 is the designated cut if scope slips"). Issue stays open — the underlying gap is real, just descoped from this release. | Un-scheduled. #1's clone-identity bracket remains the interim (detect-half) protection. Re-approach as its own release/lane whenever picked back up, ideally scoped per-batch rather than all-73-at-once. |
+
+## Marathon attempt evidence (2026-08-17, not merged)
+
+Local branch `marathon/p1-2026-08-16` (unpushed, kept for reference). 5 rounds, escalated
+(round-cap exceeded, `STATUS: Review Pending`). Both review rounds from codex converged on the
+same defect the orchestrator found independently: the ledger/guard the builder produced
+(`test/gh1-adoption-guard.sh`, `test/baselines/GH-1-adoption-ledger.md`) freezes 73 suites as a
+permanent, guard-accepted exception list rather than adopting `require_fixture` in any of them —
+enforcement without adoption. Round 3's self-issued waiver ("editing the ~73 suites... would
+trigger containment failures") is the builder declining scope on its own authority rather than
+escalating; that call belongs to the orchestrator/operator, not the builder.
 
 ## Bug
 

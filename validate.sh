@@ -133,6 +133,7 @@ TESTS=(
   "gh491-gate-only-refire.sh"    # GH-491 (gate-only re-fire discoverability under --retry)
   "gh551-resolver-refuses.sh"    # GH-551 (resolver refusal contract: raises instead of defaulting)
   "meter-release.sh"             # Meter 0.6.0 PUBLIC-LAUNCH goalpost (RE-POINTED 2026-08-15; the metering manifest moved to Sundown). Suite mode fails ONLY on a false completion claim (a CLOSED manifest issue whose gate is missing/unregistered/uncontrolled) or a ledger disagreement; remaining work is INFO. The goalpost itself is `--release-gate` (red until the sanitized artifact exists AND a credential-free clone completes the documented happy path; the artifact is named by XYZ_LAUNCH_ARTIFACT). Membership is read from RELEASES.md's machine-readable `Manifest-Members:` field and compared in BOTH directions — the prose `Manifest:` paragraph names RETIRED members and must never be parsed, which is the defect that made the pre-2026-08-15 version report a false GOALPOST MET. Control: `--mutate-evidence` — NOT run by this suite; run it by hand when touching audit_artifact or the cross-check
+  "ballast-release.sh"           # Ballast 0.7.0 POST-LAUNCH-HARDENING goalpost — the launched repo holds up under a stranger's first run and an outside contributor's first push. Suite mode fails ONLY on a false completion claim or a ledger disagreement; remaining work is INFO. The goalpost itself is `--release-gate` (red until every manifest member — #14 #15 #4 #3, post-#10-cut — is complete AND the stranger's path is executed fresh in a clone named by XYZ_BALLAST_STRANGER_CLONE: ten consecutive parallel runs, an ungated clone's in-band warning, a forced-red push refused, and #14's cross-process stress case). Control: `--mutate-evidence` 7/0 — NOT run by this suite; run it by hand when touching audit_manifest or the cross-check
   "gh402-branch-enforcement.sh"   # GH-402 (a marathon refuses to commit to the RECEIVING repo's shared trunk; --allow-trunk-commit and preflight's risk=1 carve-out are the two documented ways past) — 13/0; control in test/baselines/GH-402-negative-control.md: 8 red pre-fix, with the pre-fix run observed COMMITTING to trunk. Fires only when origin/HEAD resolves — a repo with no remote shares nothing and `git reset` undoes it, asserted as an explicit non-block
   "gh386-turn-budget-honesty.sh"  # GH-386 (one wall-clock default across all five builders on both lanes; the packet's budget names turn_timeout_s, the field marathon.sh actually reads) — 10/0; control in test/baselines/GH-386-negative-control.md: 9 red pre-fix. Part C EXERCISES the shipped sizing ladder and requires every suggestion to be >= the default — the assertion a partial fix (raise the cap, forget the ladder) fails
   "gh514-write-set-trackable.sh"  # GH-514 (the target is proven able to TRACK the run's write-set before dispatch; a hostile ignore rule gets an actionable refusal naming the rule and the remedy, not an unhandled CalledProcessError traceback) — 12/0; control in test/baselines/GH-514-negative-control.md: 6 red pre-fix. Note the corrected framing recorded there: "no dispatch" does NOT discriminate (the render's own git add already dies first) — the traceback assertion does
@@ -229,6 +230,7 @@ TESTS=(
   "xyz-completion.sh"
   "gh358-lock-instrumentation.sh" # GH-358 (concurrent append reports lost writes vs lock starvation)
   "gh14-atomic-append.sh"        # GH-14 (appendEvent publishes via a .tmp name + atomic rename; concurrent readers never see a torn .jsonl)
+  "gh4-ungated-clone-warning.sh" # GH-4 (validate.sh warns non-fatally when the push gate is not installed; silent when gated)
   "xyz-harness-hooks.sh"
   "preflight-docs.sh"
   "roadmap-dashboard.sh"
@@ -320,6 +322,18 @@ if [ $# -gt 0 ]; then
       ;;
     *) _usage; exit 2 ;;
   esac
+fi
+
+# GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push
+# gate is the only gate while this repo is private (GH-544), and the hook lives in `.git/hooks/`,
+# which does not travel with a clone. Surface that state loudly but NON-FATALLY, in-band, on the
+# documented first-run path (this file), rather than relying on a contributor separately knowing
+# to run `githooks/install.sh --check`. Deliberately after argument parsing (so a bad flag still
+# reports its own usage error first) and deliberately a warning, not a refusal: this file's job is
+# local validation, which an ungated clone can still do correctly — only pushing is affected.
+if ! _gh4_hook_check="$(bash "$HERE/githooks/install.sh" --check 2>&1)"; then
+  echo "$_gh4_hook_check" >&2
+  echo "validate.sh: continuing WITHOUT the push gate installed — this run is unaffected, but a future push from this clone will not be verified." >&2
 fi
 
 # XYZ_VALIDATE_PARALLEL=0 forces sequential; a positive integer pins the width. Only consulted when
