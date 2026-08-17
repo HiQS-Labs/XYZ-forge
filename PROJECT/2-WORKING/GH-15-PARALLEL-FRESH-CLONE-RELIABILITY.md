@@ -49,16 +49,17 @@ alone" must always be followed by "in what environment".
 
 ## Acceptance
 
-- Determine empirically whether the `validate.sh:458-469` retry executes for these failures; record
+- [ ] Determine empirically whether the `validate.sh:458-469` retry executes for these failures; record
   the observation either way.
-- A pooled failure that passes when re-run alone is reported as **contention**, naming the suite —
+- [ ] A pooled failure that passes when re-run alone is reported as **contention**, naming the suite —
   never counted as a failed run.
-- Ten consecutive parallel runs in a fresh clone under a scrubbed environment produce zero failing
+- [ ] Ten consecutive parallel runs in a fresh clone under a scrubbed environment produce zero failing
   runs, or produce only contention warnings.
-- The contention source itself is named in the fix (which shared resource, which suites), not merely
+- [ ] The contention source itself is named in the fix (which shared resource, which suites), not merely
   retried around.
-- A recorded negative control demonstrates the check failing when the fix is reverted — per the
+- [ ] A recorded negative control demonstrates the check failing when the fix is reverted — per the
   standing rule that a check never observed failing is not evidence.
+- [ ] A recorded negative control exists at `test/baselines/GH-15-parallel-contention-negative-control.md`
 
 ## Acceptance — deviations from the issue
 
@@ -70,8 +71,9 @@ alone" must always be followed by "in what environment".
 {
   "target":      { "repo": ".", "ref": "main" },
   "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_absent", "path": "test/baselines/GH-15-parallel-contention-negative-control.md", "pattern": "." } ],
+  "fix_probes":  [ { "type": "path_absent", "path": "test/baselines/GH-15-parallel-contention-negative-control.md" } ],
   "artifacts":   [ "validate.sh", "test/gh528-parallel-contention-retry.sh", "test/baselines/GH-15-parallel-contention-negative-control.md" ],
+  "artifacts_new": ["test/baselines/GH-15-parallel-contention-negative-control.md"],
   "remediation": { "source": "issue#15", "criteria": "ten consecutive parallel fresh-clone runs green; contention named, never counted as failure" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
 }

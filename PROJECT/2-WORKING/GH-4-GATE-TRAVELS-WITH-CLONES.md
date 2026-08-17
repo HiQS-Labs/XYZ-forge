@@ -50,6 +50,7 @@ the ungated state stops being invisible.
 - [ ] A fresh clone that has not run the installer produces a visible, in-band warning (or refusal) naming the missing gate and the one-command fix, on the documented first-run path; with the gate installed the push path behaves exactly as today.
 - [ ] Document prominently in the README quickstart that the install step is a correctness requirement, not optional setup.
 - [ ] A recorded negative control (under `test/baselines/`) demonstrates the new check failing when the fix is reverted, per the standing rule that a check never observed failing is not evidence.
+- [ ] A recorded negative control exists at `test/baselines/GH-4-negative-control.md`
 
 ## Acceptance — deviations from the issue
 
@@ -62,10 +63,11 @@ the ungated state stops being invisible.
   "target":      { "repo": ".", "ref": "main" },
   "gate":        "bash validate.sh",
   "fix_probes":  [
-    { "type": "grep_absent", "path": "test/baselines/GH-4-negative-control.md", "pattern": "." },
+    { "type": "path_absent", "path": "test/baselines/GH-4-negative-control.md" },
     { "type": "grep_absent", "path": "README.md", "pattern": "githooks/install\\.sh[^\\n]*correctness requirement" }
   ],
   "artifacts":   [ "README.md", "githooks/install.sh", "test/baselines/GH-4-negative-control.md" ],
+  "artifacts_new": ["test/baselines/GH-4-negative-control.md"],
   "remediation": { "source": "issue#4", "criteria": "an ungated fresh clone is surfaced in-band; install documented as a correctness requirement" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
 }

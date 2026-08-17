@@ -57,7 +57,7 @@ swap it, or close #3 as already-landed.
   "target":      { "repo": ".", "ref": "main" },
   "gate":        "bash validate.sh",
   "fix_probes":  [ { "type": "grep_present", "path": "relay-automation/improve-loop.sh", "pattern": "STATE_DIR=.*(TMPDIR|/tmp)" } ],
-  "artifacts":   [ "relay-automation/improve-loop.sh", "test/gh430-state-dir-tracked-default.sh", "test/baselines/GH-3-negative-control.md" ],
+  "artifacts":   [ "relay-automation/improve-loop.sh", "test/gh430-state-dir-tracked-default.sh" ],
   "remediation": { "source": "issue#3", "criteria": "provenance.jsonl survives: durable tracked-eligible default, path printed" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
 }

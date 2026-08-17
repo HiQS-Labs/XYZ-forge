@@ -54,9 +54,11 @@ remains live in each of them.
   "gate":        "bash validate.sh",
   "fix_probes":  [
     { "type": "path_absent", "path": "test/gh1-adoption-guard.sh" },
-    { "type": "grep_absent", "path": "ci-local.sh", "pattern": "clone-identity" }
+    { "type": "grep_absent", "path": "ci-local.sh", "pattern": "clone-identity" },
+    { "type": "path_absent", "path": "test/baselines/GH-1-adoption-ledger.md" }
   ],
   "artifacts":   [ "ci-local.sh", "validate.sh", "test/gh1-adoption-guard.sh", "test/baselines/GH-1-adoption-ledger.md" ],
+  "artifacts_new": ["test/gh1-adoption-guard.sh", "test/baselines/GH-1-adoption-ledger.md"],
   "remediation": { "source": "issue#10", "criteria": "adoption ledger at zero; guard fails on removed guard and unguarded new suite; ci-local bracketed" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
 }

@@ -45,16 +45,16 @@ write first, quarantine layered on top only after.
 
 ## Acceptance
 
-- `appendEvent` writes via a temp name and renames into place; no reader-visible path ever holds a
+- [ ] `appendEvent` writes via a temp name and renames into place; no reader-visible path ever holds a
   partial document.
-- A unit test asserts that no file matching the reader's selection filter is ever observable in a
+- [ ] A unit test asserts that no file matching the reader's selection filter is ever observable in a
   partial state — e.g. by asserting the temp name does not match the filter, and that a directory
   listing taken between write and rename yields no selectable partial file.
-- A regression test covers the concurrent shape directly: interleaved append and `readAllEvents`
+- [ ] A regression test covers the concurrent shape directly: interleaved append and `readAllEvents`
   never loses an event and never quarantines one.
-- `#5`'s quarantine, if retained, is applied only on top of atomic writes, and its own test
+- [ ] `#5`'s quarantine, if retained, is applied only on top of atomic writes, and its own test
   distinguishes a genuinely corrupt file from a young one.
-- The healthy-path event bytes are unchanged.
+- [ ] The healthy-path event bytes are unchanged.
 
 ## Swarm Preflight Contract
 
@@ -62,8 +62,10 @@ write first, quarantine layered on top only after.
 {
   "target":      { "repo": ".", "ref": "main" },
   "gate":        "bash validate.sh",
-  "fix_probes":  [ { "type": "grep_present", "path": "src/events.js", "pattern": "writeFileSync\\(fpath, JSON" } ],
+  "fix_probes":  [ { "type": "grep_present", "path": "src/events.js", "pattern": "writeFileSync\\(fpath, JSON" },
+                 { "type": "path_absent", "path": "test/baselines/GH-14-negative-control.md" } ],
   "artifacts":   [ "src/events.js", "test/unit/events.test.js", "test/baselines/GH-14-negative-control.md" ],
+  "artifacts_new": ["test/baselines/GH-14-negative-control.md"],
   "remediation": { "source": "issue#14", "criteria": "a .jsonl that exists is always complete; torn-read class removed at the source" },
   "lanes":       { "agy_safe": [], "orchestrator_only": [] }
 }
