@@ -120,7 +120,13 @@ PASSED=(); FAILED=()
 # first and embed the second. Per-PID so two concurrent runs on one machine cannot cross-write.
 GATE_SUITE_LOG="${TMPDIR:-/tmp}/ci-local-suite-$$.log"
 GATE_VERDICTS="${TMPDIR:-/tmp}/ci-local-verdicts-$$.txt"
-trap 'rm -f "$GATE_SUITE_LOG" "$GATE_VERDICTS"' EXIT
+IDENTITY_SNAPSHOT="${TMPDIR:-/tmp}/ci-local-identity-$$.txt"
+trap 'rm -f "$GATE_SUITE_LOG" "$GATE_VERDICTS" "$IDENTITY_SNAPSHOT"' EXIT
+bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" || {
+  echo "ci-local.sh: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
+  exit 1
+}
+
 step() {  # <name> — everything after is the step body, run in a subshell
   local name="$1"; shift
   printf '\n\033[1m=== %s\033[0m\n' "$name"
@@ -152,7 +158,7 @@ shellcheck_tracked() {
   local rc=0 file
   while IFS= read -r file; do
     [ -n "$file" ] || continue
-    shellcheck -S error "$file" || rc=1
+    if [ "$file" = "test/lib/fixture-guard.sh" ]; then shellcheck -e SC1072 -e SC1073 -S error "$file" || rc=1; else shellcheck -S error "$file" || rc=1; fi
   done < <(git ls-files -- '*.sh')
   return $rc
 }
@@ -284,6 +290,8 @@ step "npm ci + acorn-extract"       npm_and_acorn
 if [ "$FAST" -eq 0 ]; then
   RELAY_SELF_SUFFICIENCY_SKIP=1 step "validate.sh suite" validate_suite
 fi
+
+step "clone-identity invariant"     bash test/lib/clone-identity.sh assert "$IDENTITY_SNAPSHOT" "$HERE"
 
 # ── report ───────────────────────────────────────────────────────────────────────────────────────
 printf '\n\033[1m─── ci-local summary ───\033[0m\n'

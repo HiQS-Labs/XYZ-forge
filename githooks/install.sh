@@ -73,6 +73,7 @@ case "$MODE" in
         echo "  $STUB does not exist." >&2
       fi
       echo "  This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh" >&2
+      echo "  (The pre-push hook is a correctness requirement for this repository.)" >&2
       _ok=1
     fi
     # A leftover core.hooksPath is reported even when the stub is fine: it OVERRIDES the default
