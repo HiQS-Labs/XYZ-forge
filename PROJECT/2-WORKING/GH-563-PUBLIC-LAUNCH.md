@@ -4,7 +4,7 @@ source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/iss
 title: "Public repository launch: release, security, front-door, and shakedown readiness"
 status: 2-WORKING
 created: 2026-08-15
-updated: 2026-08-15
+updated: 2026-08-17
 owner: unassigned
 doc_type: capture
 complexity: 4
@@ -24,7 +24,7 @@ goal: >
 
 | What was just completed | What's next |
 | --- | --- |
-| The exit criterion was re-pointed at this launch and caught reporting a false green (PR #569); `CHANGELOG.md` was redacted of absolute home paths; `utils/build-launch-artifact.sh` builds the artifact reproducibly | Build the artifact, drive Half A green, then hand it to `/front-door` and `/shakedown` |
+| The public artifact is live; its documented stranger path completed 214/214 checks; `/front-door` and `/shakedown` were run; the installed `relay-xyz` locator was fixed; hosted CI triggers were restored | Push the audited commit, record its hosted macOS result and run the final exact-commit secret scan |
 
 ## Why this doc ships
 
@@ -63,14 +63,24 @@ review a real artifact early instead of waiting until the end.
 
 Carried from the issue. The executable form is `bash test/meter-release.sh --release-gate`.
 
-- [ ] An unauthenticated user can clone the published repository, follow its documented entry path,
+- [x] An unauthenticated user can clone the published repository, follow its documented entry path,
       and exercise the supported happy path without private context.
 - [ ] A secret scan of the published artifact is recorded, naming its exact tool version and the
       exact commit it covered.
-- [ ] The public license posture is internally consistent (`LICENSE`, `LICENSE-COMMERCIAL.md`).
+- [x] The public license posture is internally consistent (`LICENSE`, `LICENSE-COMMERCIAL.md`).
 - [ ] Hosted CI is re-armed per #544 with a green run for the exact published commit.
-- [ ] `/front-door` and `/shakedown` are run against the artifact, with blockers resolved or waived
+- [x] `/front-door` and `/shakedown` are run against the artifact, with blockers resolved or waived
       in writing.
+
+Front-door verdict: **Bumpy but working.** A credential-free clone can follow the README through
+installation, hook setup, and the complete local gate. Nine dead links from that canonical entry
+page to the private source tracker were removed. Historical references remain in governance and
+release records, but they are not prerequisites for the stranger path.
+
+Shakedown verdict: the primary installed-skill path exposed a real portability defect: the mandatory
+first command assumed the caller was standing in the harness repository. `relay-xyz` now locates its
+installed helper explicitly, and the focused regression test passes. The dated report is recorded in
+`SHAKEDOWN/2026-08-17/relay-xyz-1118.md`.
 
 ## Acceptance — deviations from the issue
 

@@ -169,8 +169,8 @@ Manifest: FROZEN 2026-08-11 on creation — #378, #379, #380, #382, #491. **RE-S
 Manifest-Members: 555 563
 GH_URL: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/563
 Milestone: Meter
-Front-door reviewed: No
-Shakedown reviewed: No
+Front-door reviewed: Yes
+Shakedown reviewed: Yes
 License file: Yes
 
 Release: 0.7.0
