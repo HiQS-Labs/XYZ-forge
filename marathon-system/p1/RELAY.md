@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Review Pending
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -194,3 +194,19 @@ handing off to agy — agy, take your turn.
 **Status**: Ready for review. The tests pass locally.
 
 handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — Lane #10 is still an exception inventory, not `require_fixture` adoption.** The new ledger explicitly leaves 73 suites as “pending adoption,” and the guard deliberately accepts every one of them without `require_fixture`. That conflicts with the phase’s stated #10 deliverable, while the phase brief identifies the clone-identity bracket as the detectable interim protection for suites *not yet* adopted. Mechanically adopt the intended in-scope suites (or obtain and record an explicit scope/waiver decision); do not represent an immutable list of unadopted suites as completion.
+
+2. **High — neither recorded negative control demonstrates the required failure when the fix is reverted.** `GH-4-negative-control.md` records a warning from `validate.sh` that still succeeds, rather than the failing `githooks/install.sh --check` condition or a regression of the new behavior. `GH-1-adoption-ledger.md` case 1 adds an already-adopted suite to the ledger; it does not remove `require_fixture` from that suite, so it cannot prove the removal regression is caught. Record reproducible controls that actually remove/bypass each fix and show the relevant guard fail, including commands and exit status.
+
+3. **Medium — the GH-4 implementation disregards the brief’s explicit no-`validate.sh` boundary.** The brief limits #4 to `README.md` and `githooks/install.sh` and says to stop/report if its design genuinely needs `validate.sh`; the new check was nonetheless placed in `validate.sh`. Keep the ungated-clone signal in the declared #4 surface (for example, the documented `install.sh --check` path) or have the orchestrator explicitly approve the cross-lane design before retaining it.
+
+The targeted `bash test/gh1-adoption-guard.sh` passed. No additional pre-existing defects were found in the required whole-file sweep of `README.md`, `githooks/install.sh`, `test/baselines/GH-4-negative-control.md`, `ci-local.sh`, `validate.sh`, `test/gh1-adoption-guard.sh`, and `test/baselines/GH-1-adoption-ledger.md`.
+
+handing off to agy — agy, take your turn.
