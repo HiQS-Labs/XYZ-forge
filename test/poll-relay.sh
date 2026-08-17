@@ -22,7 +22,7 @@ set -u
 export TICK_REPO_ROOT="$A"
 me="$RELAY_AGENT"; t="$RELAY_TASK"; f="$RELAY_FILE"; mode="${MODE:-normal}"
 other="$PA"; [ "$me" = "$PA" ] && other="$RA"
-"$TICK" claim "$t" --agent "$me" --paths "z/**" >/dev/null 2>&1   # idempotent if already held
+"$TICK" claim "$t" --agent "$me" --paths "z/$t/**" >/dev/null 2>&1   # idempotent if already held
 "$TICK" ping  "$t" --agent "$me" >/dev/null 2>&1
 printf '\n### Turn · %s (mode=%s)\n' "$me" "$mode" >>"$f"
 if [ "$mode" = noprogress ]; then exit 0; fi
@@ -48,7 +48,7 @@ seed(){ # <task>  → relay file STATUS Open + RELAY-TURN handed to reviewer (ra
   printf 'STATUS: Open\n# relay body\n' >"$2"
   git -C "$A" add "$(basename "$2")" >/dev/null 2>&1; git -C "$A" commit -q -m "seed relay" >/dev/null 2>&1
   tick_a log task.created "$1" --agent dispatcher >/dev/null
-  tick_a claim "$1" --agent dispatcher --paths "z/**" >/dev/null
+  tick_a claim "$1" --agent dispatcher --paths "z/$1/**" >/dev/null
   tick_a release "$1" --agent dispatcher --to ra >/dev/null   # open + handoff_to ra
 }
 status_of(){ sed -n 's/^STATUS:[[:space:]]*//p' "$1" | head -1 | sed 's/[[:space:]]*$//'; }

@@ -115,7 +115,7 @@ function safeSegment(s) {
  * @throws {Error} if `type` is unrecognized, or `task`/`agent` is missing
  */
 function appendEvent(repoRoot, {
-  type, task, agent, note, paths, to_agent, reason, priority, epoch,
+  type, task, agent, note, paths, to_agent, reason, priority, epoch, force,
   tokens_in, tokens_out, tokens_total, human_minutes, tool,
   compressor_mb, swap_free_mb, peak_rss_mb,
   surface, prior_sha, current_sha, diff_lines, turn,
@@ -148,6 +148,9 @@ function appendEvent(repoRoot, {
   // Epoch fencing token (R1). Stamped on task.claimed (the owner's epoch) and on
   // the owner's mutations; absent ⇒ epoch 0, so legacy events stay byte-stable.
   if (epoch !== undefined) event.epoch = epoch;
+  // Emergency override provenance (GH-23). Stamped when a claim or scope expansion
+  // explicitly used --force to bypass path-overlap validation.
+  if (force !== undefined) event.force = force;
   // Cost fields — only stamped when present, so non-cost events stay byte-identical to before.
   if (tokens_in !== undefined) event.tokens_in = tokens_in;
   if (tokens_out !== undefined) event.tokens_out = tokens_out;

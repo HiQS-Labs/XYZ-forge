@@ -52,7 +52,7 @@ seed_relay() {  # <recorded-task> — an Approved relay rendered for <recorded-t
 
 mk_token() {  # <task> <done|claimed>
   tick_a log task.created "$1" --agent marathon >/dev/null 2>&1 || true
-  tick_a claim "$1" --agent claude --paths "phases/p1/RELAY.md" >/dev/null 2>&1 || true
+  tick_a claim "$1" --agent claude --paths "phases/p1/RELAY.md" --force >/dev/null 2>&1 || true
   [ "$2" = "done" ] && { tick_a done "$1" --agent claude >/dev/null 2>&1 || true; }
 }
 
