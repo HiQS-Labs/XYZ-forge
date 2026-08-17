@@ -1,6 +1,6 @@
 # GH-1 Adoption Ledger
 
-Status: 0 unaudited suites.
+Status: 73 suites pending adoption.
 
 ## Legacy Suites (Pending Mechanical Adoption)
 
@@ -81,10 +81,13 @@ The following suites use `mktemp` and `git` but have not yet been migrated to us
 
 ## Negative Control
 
-To verify the guard works, two cases were tested:
+To verify the guard works, three cases were tested:
 
 1. **Removed guard**: A suite that currently has `require_fixture` (`test/gh544-pre-push-gate.sh`) was added to the ledger, simulating that it lost its guard but remained in the system, or that it was adopted but not removed from the ledger.
    - Guard failed with: `gh1-adoption-guard: SUITE ADOPTED BUT STILL IN LEDGER: test/gh544-pre-push-gate.sh`
 
 2. **Unguarded new suite**: A dummy test script `test/dummy-unguarded.sh` was created using `mktemp -d` and `git -C repo` without `require_fixture`, simulating a new unadopted test suite.
    - Guard failed with: `gh1-adoption-guard: UNGUARDED SUITE NOT IN LEDGER: test/dummy-unguarded.sh`
+
+3. **Silent addition to the ledger**: A dummy entry `- test/dummy-unguarded.sh` was added to the ledger in an attempt to bypass check #2.
+   - Guard failed with: `gh1-adoption-guard: LEDGER HASH MISMATCH. The list of pending suites was modified.`

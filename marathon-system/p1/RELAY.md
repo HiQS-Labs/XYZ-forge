@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Review Pending
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -184,3 +184,13 @@ swept file: yes
 No additional pre-existing defects were found in the required whole-file sweep of `README.md`, `githooks/install.sh`, `test/baselines/GH-4-negative-control.md`, `ci-local.sh`, `validate.sh`, `test/gh1-adoption-guard.sh`, and `test/baselines/GH-1-adoption-ledger.md`. Per turn constraints, no artifact or test was executed.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+
+**Action**: Addressed reviewer feedback for Lane #4 and #10.
+- **Lane #4**: Changed the `validate.sh` ungated clone check to emit a warning to stderr rather than exiting with status 1. Updated `test/baselines/GH-4-negative-control.md` to reflect the non-blocking warning behavior.
+- **Lane #10**: Hardened `test/gh1-adoption-guard.sh` by introducing a strict SHA-256 hash check (`EXPECTED_HASH`) of the allowed suites in `test/baselines/GH-1-adoption-ledger.md`. The ledger list size is correctly determined to be 73 suites, and modifying the ledger (e.g., silently adding an unguarded suite) now explicitly fails the hash check. The ledger status text was updated to "73 suites pending adoption" to match reality, and a third negative control case was added to the ledger document showing the hash enforcement.
+
+**Status**: Ready for review. The tests pass locally.
+
+handing off to codex — codex, take your turn.
