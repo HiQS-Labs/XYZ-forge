@@ -57,3 +57,19 @@ Canonical compatibility ledger for AI agent harnesses and supported frontier/loc
 1. **Intake**: Follow the SOP in `PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md`.
 2. **Promotion to Grade A**: Requires $\ge 3$ consecutive verified runs on real repository tasks with clean PRs and green validation gates.
 3. **Failure Logging**: Any grade **B** or **C** entry must document the exact failure mechanism (e.g. edit format, infinite tool loop) in a dedicated tracking issue.
+
+---
+
+## 4. Running Changelog
+
+| Date | Target / Subject | Action | Details / Notes | Issue / PR |
+|:---|:---|:---:|:---|:---:|
+| **2026-08-16** | **Command Code (`cmd`)** | **Graded A** | Promoted `cmd` + `qwen/qwen3.8-max` to Grade A after 3/3 autonomous passes: PR #19 (tree diet refactor), PR #20 (concurrency retry fix), and PR #21 (atomic event append). | [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) |
+| **2026-08-16** | **`qwen/qwen3.7-flash`** | **Graded A** | Fast agentic tier evaluated on SOP advisory review (~23s, clean repository rail discovery). | [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) |
+| **2026-08-16** | **HARNESS-MODELS-REGISTRY** | **Created** | Initial establishment of canonical compatibility ledger, grading rubric (A/B/C/N/A), operational profiles, and historical benchmarks. | [#17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) |
+| **2026-08-14** | **SmallCode + Qwen 2.5 32B** | **Graded C** | Fuzzer experiments revealed infinite tool-call repetition loops on token claiming (`tick claim`); wedged without repeat limits. | [#522](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/522) |
+| **2026-08-12** | **Aider + Qwen 3.8 Preview** | **Graded B** | Identified failure under default `whole` edit format (6/7 failed); resolved only when forcing `AIDER_FLAGS=--edit-format diff` (15/15 passed). | [#280](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/280) |
+| **2026-07-10** | **ATE + Local Gemma (LM Studio)** | **Graded B** | Multi-hour unattended variation test harness established; requires Claude supervisor check-in to prevent drift. | PR #195 |
+| **2026-07-06** | **Aider + GLM 5.2 / Nemotron** | **Graded B** | OpenRouter integration verified; required forced diff format to prevent parse errors. | [#77](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/77), [#118](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/118) |
+| **2026-07-01** | **Claude / Codex / Antigravity** | **Graded A** | Standing Tier-A default harnesses for orchestrator, builder, and review lanes. | GH-212, GH-221 |
+
