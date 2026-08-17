@@ -10,6 +10,7 @@ This file is the first entry point for an AI agent working in this repo: it tell
 - `ROADMAP.md` = pointer ledger of queued, current, completed, attempted, and deferred work
 - `CHANGELOG.md` = the end-of-iteration running log (first-class PDDA artifact; governed by `PROJECT/PDDA.md`)
 - `RELEASES.md` = forward-looking release-planning ledger (first-class PDDA artifact; governed by `PROJECT/PDDA.md`)
+- `HARNESS-MODELS-REGISTRY.md` = evaluated agent harnesses, supported model grades (A/B/C), and CLI flags
 - `PROJECT/**` docs = canonical execution detail for a specific effort
 - `PROJECT/PDDA.md` = document contract and automation rules (incl. the CHANGELOG contract)
 - `PROJECT/CONSTITUTION.md` = the policy of record: PDDA's lane and its non-negotiables (deterministic-before-LLM, verified-success-only, reversibility, local-first)
