@@ -1,12 +1,15 @@
 # GH-4 Negative Control
 
-To verify the first-run check works, the `githooks/install.sh` hook was uninstalled, and `./validate.sh` was run.
+To verify the first-run check works, the hook was uninstalled, and `bash githooks/install.sh --check` was run.
 
 **Output observed:**
 ```
-validate.sh: WARNING — this clone is UNGATED (pre-push hook not installed).
-validate.sh: The install step is a correctness requirement for pushing.
-validate.sh: Fix: bash githooks/install.sh
+$ bash githooks/install.sh --check
+githooks: NOT INSTALLED in this clone.
+  /Users/.../.git/hooks/pre-push does not exist.
+  This clone will push WITHOUT running the gate. Fix: bash githooks/install.sh
+  (The pre-push hook is a correctness requirement for this repository.)
 ```
+**Exit Status**: 1
 
-This demonstrates that a fresh clone that has not run the installer produces a visible warning naming the missing gate and the one-command fix, while still allowing local evaluation without blocking execution.
+This demonstrates that checking an ungated clone surfaces a visible warning and non-zero exit status, explicitly naming the missing gate and the one-command fix. The check was kept exclusively in `githooks/install.sh` to respect the boundary forbidding changes to `validate.sh`.

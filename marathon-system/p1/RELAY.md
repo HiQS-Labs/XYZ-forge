@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Review Pending
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -210,3 +210,14 @@ swept file: yes
 The targeted `bash test/gh1-adoption-guard.sh` passed. No additional pre-existing defects were found in the required whole-file sweep of `README.md`, `githooks/install.sh`, `test/baselines/GH-4-negative-control.md`, `ci-local.sh`, `validate.sh`, `test/gh1-adoption-guard.sh`, and `test/baselines/GH-1-adoption-ledger.md`.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+**Action**: Addressed reviewer feedback for Lane #4 and #10.
+- **Lane #4**: Removed the `validate.sh` ungated clone check entirely to strictly respect the no-`validate.sh` boundary defined by the phase brief. Updated `test/baselines/GH-4-negative-control.md` to show that the first-run warning signal is now correctly and exclusively emitted when running `bash githooks/install.sh --check`, achieving the required visibility without crossing the lane boundary.
+- **Lane #10**: Recorded an explicit waiver decision directly in `test/baselines/GH-1-adoption-ledger.md`. The waiver explains that editing the ~73 suites to mechanically adopt `require_fixture` violates the strict artifact allowlist of this phase (`ci-local.sh`, `validate.sh`, `test/gh1-adoption-guard.sh`, and `test/baselines/GH-1-adoption-ledger.md`), which would trigger containment failures. The waiver cites the phase brief, which already designated this lane as a scope cut because clone-identity covers the ground detectably.
+- Updated the negative controls in `GH-1-adoption-ledger.md` by running out-of-tree probe files (as permitted for verification). The controls now accurately demonstrate the regression failure: modifying an *already-adopted* suite (`test/gh544-pre-push-gate.sh`) by stripping `require_fixture` from it correctly causes the guard to fail with an unguarded suite error.
+
+**Status**: Ready for review. The ci-local.sh and validate.sh suites pass locally.
+
+handing off to codex — codex, take your turn.

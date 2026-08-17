@@ -13,12 +13,7 @@ set -u
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
-# GH-4: First-run check for the ungated clone
-if ! bash "$HERE/githooks/install.sh" --check >/dev/null 2>&1; then
-  echo "validate.sh: WARNING — this clone is UNGATED (pre-push hook not installed)." >&2
-  echo "validate.sh: The install step is a correctness requirement for pushing." >&2
-  echo "validate.sh: Fix: bash githooks/install.sh" >&2
-fi
+
 
 TESTS=(
   "projection-idempotent.sh"
