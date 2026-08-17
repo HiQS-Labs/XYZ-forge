@@ -23,9 +23,9 @@ printf '{"parked_suspects":[]}' >"$NONE"
 printf '{"parked_suspects":[{"task":"T-9","agent":"x","max_gap_ms":900000,"heartbeats":0}]}' >"$PARKED"
 
 # open + handoff_to <agent> (no active claim held → cap-safe); each call uses a fresh seed.
-handoff_to(){ tick_a log task.created "$1" --agent dispatcher >/dev/null; tick_a claim "$1" --agent "seed-$1" --paths "z/**" >/dev/null; tick_a release "$1" --agent "seed-$1" --to "$2" >/dev/null; }
+handoff_to(){ tick_a log task.created "$1" --agent dispatcher >/dev/null; tick_a claim "$1" --agent "seed-$1" --paths "z/$1/**" >/dev/null; tick_a release "$1" --agent "seed-$1" --to "$2" >/dev/null; }
 # claimed by <agent>
-claim_by(){ tick_a log task.created "$1" --agent dispatcher >/dev/null; tick_a claim "$1" --agent "$2" --paths "z/**" >/dev/null; }
+claim_by(){ tick_a log task.created "$1" --agent dispatcher >/dev/null; tick_a claim "$1" --agent "$2" --paths "z/$1/**" >/dev/null; }
 
 # decide <args...> : poll relay dry-run as agent alice, echo the DECISION token
 decide(){ POLL_GIT_ROOT="$A" bash "$POLL" --mode relay --agent alice "$@" --dry-run 2>/dev/null | sed -n 's/^DECISION: \([a-z-]*\).*/\1/p'; }

@@ -87,10 +87,10 @@ Usage:
   tick log <type> <task> [--agent <id>] [--note "..."] [--paths a,b] [--priority N] [--epoch N]
   tick project
   tick fences                                      (read-only: fenced-event audit log)
-  tick claim <task> --agent <id> --paths <globs>
+  tick claim <task> --agent <id> --paths <globs> [--force]
   tick take --agent <id>                           (atomic next+claim)
   tick next --agent <id>                           (read-only, no STATE.md write)
-  tick scope <task> --agent <id> --paths <globs>
+  tick scope <task> --agent <id> --paths <globs> [--force]
   tick release <task> --agent <id> [--to <agent>] [--relay-file <path>]
   tick break <task> --agent <id> --reason "..."
   tick done <task> --agent <id> [--note "..."] [--relay-file <path>]
@@ -106,8 +106,8 @@ Usage:
 Event types: ${Array.from(EVENT_TYPES).join(', ')}
 
 Exit codes:
-  1 — claim not acquired (GH-408): lost to another owner, task already terminal, or at the
-      per-agent claim cap. A claim you already hold is a WIN and still exits 0.
+  1 — claim not acquired (GH-408): lost to another owner, task already terminal, path overlap,
+      or at the per-agent claim cap. A claim you already hold is a WIN and still exits 0.
   2 — usage error (missing/unknown flags) — deliberately distinct from a lost claim
   6 — containment violation (off-allowlist edit in relay-turn-lib.sh)
   8 — relay block structural validation failed (bin/validate-relay-block returned non-zero)
@@ -170,6 +170,7 @@ function main(argv) {
         task,
         agent: flags.agent,
         paths: parsePathsFlag(flags.paths),
+        force: Boolean(flags.force),
       });
       // GH-408: every `lost:` branch below exits 1, not 0. It used to print the reason and exit 0,
       // which made the failure undetectable by exit status — so a caller doing the correct thing
@@ -185,6 +186,10 @@ function main(argv) {
       if (result.won) {
         process.stdout.write(`won: ${task} claimed by ${flags.agent}\n`);
         return 0;
+      }
+      if (result.overlap) {
+        process.stdout.write(`lost: ${task} paths overlap active claim (${result.conflicts.join(', ')}) held by ${result.conflictAgents.join(', ')} — use --force to override\n`);
+        return 1;
       }
       if (result.unavailable) {
         process.stdout.write(`lost: ${task} is ${result.unavailable} — not claimable\n`);
@@ -227,9 +232,14 @@ function main(argv) {
     case 'scope': {
       const [task] = positional;
       if (!task || !flags.agent || !flags.paths) { usage(); return 2; }
-      scope(root, { task, agent: flags.agent, paths: parsePathsFlag(flags.paths) });
-      process.stdout.write(`scoped: ${task}\n`);
-      return 0;
+      try {
+        scope(root, { task, agent: flags.agent, paths: parsePathsFlag(flags.paths), force: Boolean(flags.force) });
+        process.stdout.write(`scoped: ${task}\n`);
+        return 0;
+      } catch (err) {
+        process.stderr.write(`tick scope: ${err.message}\n`);
+        return 1;
+      }
     }
 
     case 'release': {

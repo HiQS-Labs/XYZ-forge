@@ -126,6 +126,7 @@ if [ "$CAP_DONE_EVENTS" = "0" ] && [ "$(status_of TASK-CAP)" = "claimed" ]; then
 else
   fail "expected TASK-CAP to stay claimed with no done event"
 fi
+tick_a done TASK-CAP --agent codex >/dev/null 2>&1 || true
 
 # 4. Regression: with a deliberately-dirtied tracked file in the REAL repo,
 # run_runner still passes (proving the guard no longer reaches the real tree).

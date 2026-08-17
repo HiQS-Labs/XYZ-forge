@@ -1,0 +1,7 @@
+Please review the implementation of GH-23 (kernel path-overlap enforcement) on this branch:
+1. src/claim.js: checks setsOverlap(paths, otherClaimedPaths) under withClaimLock; returns won: false, overlap: true, and unavailable reason unless --force is passed.
+2. src/scope.js: wraps scope in withClaimLock; checks setsOverlap(paths, otherClaimedPaths) and throws an error unless --force is passed.
+3. bin/tick: wires --force flag on claim and scope, formats failure message, and exits 1.
+4. test/gh23-path-overlap-enforcement.sh: 8 regression assertions.
+
+Critique correctness, edge cases (e.g. idempotent re-claim by same owner, epoch fencing, concurrency under claim lock), and test completeness. Output your findings and recommendation.
