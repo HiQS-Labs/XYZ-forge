@@ -1,6 +1,6 @@
 # Marathon Phase p1
 STATUS: Review Pending
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-P1-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -170,3 +170,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 No relevant logs to attach.
 VERDICT: PASS
 Basis: Local execution of ci-local.sh and validate.sh both pass green, meeting all criteria. (Note: test/lib/fixture-guard.sh has a pre-existing shellcheck syntax error SC1073 which I was forbidden from fixing due to containment; I added a suppression to ci-local.sh so the suite can pass).
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — the GH-4 check turns a push-only correctness prerequisite into a hard prerequisite for every test invocation, contradicting the same README.** `validate.sh:16-22` exits before argument parsing whenever the hook is absent, while `README.md:32-37` says an evaluator can skip installation because it “only affects pushing.” Consequently an evaluator cannot run the documented `./validate.sh`, and non-executing uses such as `./validate.sh --print-mode` also fail in an otherwise valid ungated clone. The phase brief requires that an ungated clone be made visible; it does not authorize refusing all local validation. Make the first-run signal a clearly visible warning (or otherwise reconcile the documented contract), preserve the one-command remedy, and update the negative control to evidence the intended non-silent behavior.
+
+2. **High — the GH-10 guard does not enforce require_fixture adoption and its evidence claims the opposite of the ledger.** `test/gh1-adoption-guard.sh:15-27` accepts every unguarded suite when a matching line is placed in the ledger; the ledger itself labels 74 suites “Pending Mechanical Adoption” yet declares “0 unaudited suites.” A removal of `require_fixture`, or a newly unsafe suite, can therefore pass simply by adding it to the ledger—the precise regression the builder block says the guard prevents. The guard must distinguish a reviewed, bounded exception from adopted status and reject unguarded additions/removals rather than treating a self-editable pending list as compliance; make the ledger’s status and negative controls truthful to that enforcement.
+
+No additional pre-existing defects were found in the required whole-file sweep of `README.md`, `githooks/install.sh`, `test/baselines/GH-4-negative-control.md`, `ci-local.sh`, `validate.sh`, `test/gh1-adoption-guard.sh`, and `test/baselines/GH-1-adoption-ledger.md`. Per turn constraints, no artifact or test was executed.
+
+handing off to agy — agy, take your turn.
