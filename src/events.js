@@ -85,6 +85,11 @@ function safeSegment(s) {
  * projection's unit of atomicity). Fields present in the event depend on `type`;
  * unset optional fields are omitted from the written JSON, not written as null,
  * so unrelated event types stay byte-identical across schema additions.
+ *
+ * Publication is atomic (GH-14): the document is written to a `.tmp` name that
+ * {@link readAllEvents}' `.jsonl` filter never matches, then `rename(2)`d onto
+ * the final path, so concurrent readers either do not see the event yet or see
+ * the complete document — never a partial/empty file.
  * @param {string} repoRoot - absolute path to the repo root
  * @param {Object} fields
  * @param {string} fields.type - one of {@link EVENT_TYPES}
@@ -160,7 +165,13 @@ function appendEvent(repoRoot, {
   if (diff_lines !== undefined) event.diff_lines = diff_lines;
   if (turn !== undefined) event.turn = turn;
 
-  fs.writeFileSync(fpath, JSON.stringify(event) + '\n');
+  // Atomic publish (GH-14): write to a name readAllEvents' `.jsonl` filter never
+  // matches, then rename(2) into place — rename is atomic within a filesystem, so
+  // a concurrent reader observes either no file or the complete document, never a
+  // torn one. A crash between the two calls leaves at most an invisible `.tmp`.
+  const tmp = fpath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(event) + '\n');
+  fs.renameSync(tmp, fpath);
   return { path: fpath, event };
 }
 

@@ -228,6 +228,7 @@ TESTS=(
   "gh528-parallel-contention-retry.sh" # GH-528 (--parallel re-runs a pooled failure alone before believing it, and names the contended suite; the driver-lock lane list cannot be validated by reading it)
   "xyz-completion.sh"
   "gh358-lock-instrumentation.sh" # GH-358 (concurrent append reports lost writes vs lock starvation)
+  "gh14-atomic-append.sh"        # GH-14 (appendEvent publishes via a .tmp name + atomic rename; concurrent readers never see a torn .jsonl)
   "xyz-harness-hooks.sh"
   "preflight-docs.sh"
   "roadmap-dashboard.sh"
