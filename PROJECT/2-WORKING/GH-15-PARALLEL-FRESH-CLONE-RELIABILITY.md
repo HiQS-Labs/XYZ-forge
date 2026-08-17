@@ -23,7 +23,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Fix landed 2026-08-17 via PR #20 (outside-of-harness lane, orchestrator-reviewed, rebased onto post-#14 main, merged as `25f1182`); negative control recorded at `test/baselines/GH-15-parallel-contention-negative-control.md` (5 pass/4 fail pre-fix, 9/0 post-fix); ten consecutive parallel fresh-clone runs verified in a disposable clone — see negative-control doc for the tally | Re-run `utils/swarm-preflight.sh --gh-issue 15` to confirm STALE (exit 4); close #15 with evidence once confirmed |
+| Fix landed 2026-08-17 via PR #20 (outside-of-harness lane, orchestrator-reviewed, rebased onto post-#14 main, merged as `25f1182`); negative control recorded at `test/baselines/GH-15-parallel-contention-negative-control.md` (5 pass/4 fail pre-fix, 9/0 post-fix); **ten consecutive parallel fresh-clone runs — 10/10 exit 0, zero failures, zero contention warnings**; `swarm-preflight.sh --gh-issue 15` confirmed STALE (exit 4) | Closed with evidence |
 
 ## Bug
 
@@ -53,7 +53,7 @@ alone" must always be followed by "in what environment".
   the observation either way.
 - [x] A pooled failure that passes when re-run alone is reported as **contention**, naming the suite —
   never counted as a failed run.
-- [ ] Ten consecutive parallel runs in a fresh clone under a scrubbed environment produce zero failing
+- [x] Ten consecutive parallel runs in a fresh clone under a scrubbed environment produce zero failing
   runs, or produce only contention warnings.
 - [x] The contention source itself is named in the fix (which shared resource, which suites), not merely
   retried around.

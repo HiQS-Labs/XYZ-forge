@@ -1,17 +1,18 @@
 ---
-title: "Ballast 0.7.0 — Wave 1 phase brief (#14 atomic event append · #4 gate travels with clones)"
+title: "Ballast 0.7.0 — Wave 1 phase brief (#4 gate travels with clones · #10 require_fixture adoption)"
 status: active
 created: 2026-08-16
-updated: 2026-08-16
+updated: 2026-08-17
 owner: orchestrator (Claude Code)
 doc_type: project
 goal: >
-  Drive Ballast wave 1 — the two disjoint lowest-ease lanes (#14, #4) — as one marathon phase:
-  build (agy), review (codex), adjudicate (orchestrator), merge on operator clearance.
+  Drive Ballast's remaining wave — #4 and #10, now disjoint on validate.sh since #14/#15 landed
+  outside the harness and were merged directly — as one marathon phase: build (agy), review
+  (codex), adjudicate (orchestrator), merge on operator clearance.
 roadmap_exempt: true
 ---
 
-# Ballast 0.7.0 — Wave 1 phase brief (#14 atomic event append · #4 gate travels with clones)
+# Ballast 0.7.0 — Wave 1 phase brief (#4 gate travels with clones · #10 require_fixture adoption)
 
 Subordinate planning artifact for the Ballast release (RELEASES.md 0.7.0 block owns scope; the
 five member lanes each have their own capture doc and ROADMAP pointer — this brief is exempt from
@@ -21,13 +22,21 @@ a ledger line of its own for that reason).
 
 | What was just completed | What's next |
 |---|---|
-| Wave assignment fixed by the orchestrator's overlap check (#15/#10 serialized over validate.sh); dry-run render 2026-08-16 | Operator decides whether to fire; on go, drive this brief with marathon-drive (builder agy, reviewer codex, round-cap 5, require-clean) |
+| **Wave re-derived 2026-08-17**: #14 and #15 landed outside this harness (PR #21, PR #20 from an outside "Command Code/Qwen" lane), orchestrator-reviewed, merged, and post-merge-reconciled (ledger, negative controls, deferred-test waiver). Both dropped from the marathon fire list — preflight for both now reports STALE (exit 4). #4 and #10 are no longer forced into separate waves: nothing else touches `validate.sh` now, so they are disjoint and fit in one wave. Both dry-run READY. | Operator decides whether to fire this single reduced wave; on go, drive with marathon-drive (builder agy, reviewer codex, round-cap 5, require-clean) |
 
-Release: Ballast (0.7.0), frozen manifest #14 #15 #4 #10 #3. This wave: **#14 and #4** — the two
-lowest-ease lanes with fully disjoint artifacts (`src/events.js` + `test/unit/` vs `README.md` +
-`githooks/install.sh`). Lanes #15 and #10 are deliberately NOT in this wave: both edit
-`validate.sh` and are serialized into waves 2 and 3 respectively. Lane #3 is NOT FIRED — its
-preflight verdict is STALE (the defect appears already landed on main; operator decision pending).
+Release: Ballast (0.7.0), frozen manifest #14 #15 #4 #10 #3. **This wave, reduced: #4 and #10.**
+#14 and #10 (GH-14, GH-15) are DONE — dropped, not fired; evidence: `test/baselines/GH-14-negative-control.md`,
+`test/baselines/GH-15-parallel-contention-negative-control.md`, both issues closed with evidence,
+`utils/swarm-preflight.sh --gh-issue {14,15}` both STALE (exit 4). Lane #3 is NOT FIRED — its
+preflight verdict is STALE (the defect appears already landed on main; operator decision pending,
+re-surfaced below).
+
+**Why #4 and #10 can now share a wave**: the original serialization (#15 vs #10, both on
+`validate.sh`) is moot now that #15 is merged. #4's edit targets are `README.md` and
+`githooks/install.sh` — it never touched `validate.sh`. #10's edit targets are `ci-local.sh` and
+`validate.sh`. These two lanes were never in conflict with EACH OTHER; the conflict was always
+#10 vs #15/#14, both now resolved. Confirmed via `swarm-preflight.sh --gh-issue {4,10} --dry-run`
+2026-08-17: both `ready`, no artifact overlap between the two lanes' actual edit targets.
 
 Standing rules for every Ballast lane (from the release brief):
 
@@ -46,22 +55,6 @@ Standing rules for every Ballast lane (from the release brief):
 - A waiver names the failed criterion, the owner, the reason, and the follow-up issue. Silence
   is not a waiver.
 
-## Lane #14 — atomic event append
-
-Issue: https://github.com/HiQS-Suite/XYZ-forge/issues/14 · Capture:
-`PROJECT/2-WORKING/GH-14-ATOMIC-EVENT-APPEND.md` (contract inside, probes bug-polarity).
-
-Fix shape (from the issue): `appendEvent` writes to a temp name the reader cannot select
-(`.tmp` does not match `readAllEvents`'s `.endsWith('.jsonl')` filter), then `renameSync` into
-place — same directory, same filesystem, atomic. After this, a `.jsonl` that exists is always
-complete. `#5`'s quarantine, if retained, layers on top ONLY after atomic writes, with its own
-test distinguishing a genuinely corrupt file from a young one. The two `test/unit/events.test.js`
-cases deferred from PR #7 (corrupt-file quarantine, empty-file skip) are re-authored here against
-atomic writes. Healthy-path event bytes unchanged.
-
-Artifacts: `src/events.js`, `test/unit/events.test.js`,
-`test/baselines/GH-14-negative-control.md` (new). Do not touch `validate.sh` (waves 2-3 own it).
-
 ## Lane #4 — the gate travels with the repo, not just with the clone
 
 Issue: https://github.com/HiQS-Suite/XYZ-forge/issues/4 · Capture:
@@ -74,13 +67,33 @@ setup. The fix is LOCAL: hosted CI re-arm is #16, an explicit non-goal. A push c
 refused with no hook installed (git reads hooks from `.git/hooks`, which does not travel with a
 clone) — the deliverable is that the ungated state stops being invisible; state the limit, don't
 paper over it. If the design genuinely needs `validate.sh` or `ci-local.sh`, STOP and report:
-those paths belong to lanes #15/#10 and would force re-serialization.
+that would collide with #10 and force re-serialization.
 
 Artifacts: `README.md`, `githooks/install.sh`, `test/baselines/GH-4-negative-control.md` (new).
 
+## Lane #10 — prevent-half of containment: require_fixture adoption
+
+Issue: https://github.com/HiQS-Suite/XYZ-forge/issues/10 · Capture:
+`PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md`. The manifest's designated cut if scope
+slips (RELEASES.md); by far the largest member (~31 unaudited suites), with #1's clone-identity
+bracket already covering the same ground *detectably* in the meantime.
+
+Artifacts: `ci-local.sh`, `validate.sh`, `test/gh1-adoption-guard.sh` (new),
+`test/baselines/GH-1-adoption-ledger.md` (new). Now the ONLY lane touching `validate.sh` in this
+wave — no serialization needed against #4.
+
+## Lane #3 — flagged, not fired
+
+`improve-loop.sh --state-dir` default appears already landed on main
+(`relay-automation/improve-loop.sh:75`, pinned by `test/gh430-state-dir-tracked-default.sh`).
+Preflight confirms STALE (exit 4) again as of 2026-08-17. **Operator decision still pending**:
+re-scope #3 to its provenance-policy half, swap it for another candidate, or close it as
+already-landed. Surfaced again here per the standing rule (discovery is not admission; a flagged
+member does not resolve itself).
+
 ## Exit criteria for this wave (per lane)
 
-- #14: issue acceptance verbatim (5 criteria) + negative control recorded.
 - #4: issue acceptance verbatim (4 criteria + 1 declared addition) + negative control recorded.
+- #10: issue acceptance verbatim + negative control recorded (`test/baselines/GH-1-adoption-ledger.md`).
 - Both: `bash validate.sh` green in the disposable clone; capture-doc Status tables updated;
   ROADMAP pointer lines updated to reflect progress (pointer-only).

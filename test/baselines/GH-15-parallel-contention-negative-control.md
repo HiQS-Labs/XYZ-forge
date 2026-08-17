@@ -70,7 +70,16 @@ Ten consecutive `bash validate.sh --parallel 4` runs in a disposable full clone
 | 1 | 0 | clean, no contention warnings, no failures |
 | 2 | 0 | clean |
 | 3 | 0 | clean |
-| 4-10 | (recorded separately as they complete — see orchestrator session log) | |
+| 4 | 0 | clean |
+| 5 | 0 | clean |
+| 6 | 0 | clean |
+| 7 | 0 | clean |
+| 8 | 0 | clean |
+| 9 | 0 | clean |
+| 10 | 0 | clean |
 
-Zero failing runs observed across the runs completed at time of this record. Full ten-run tally
-finalized in the same orchestrator session that authored this control.
+**Ten consecutive runs, exit 0 every time.** Scanned every run's log for `failed:`,
+`WARNING (GH-528)`, and `INTERNAL ERROR` — zero matches in all ten. Zero failing runs, zero
+contention warnings even under repeated `--parallel 4` load. Acceptance criterion 3 satisfied in
+full (stronger than the "zero failing runs, or produce only contention warnings" floor — no
+contention observed at all).
