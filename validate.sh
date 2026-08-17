@@ -423,7 +423,12 @@ if [ -n "$PARALLEL_JOBS" ]; then
   vp_run_one() {  # <suite> — run one suite against its own log; append "rc suite" to the results file
     local t="$1" log rc
     log="$VALIDATE_LOG_DIR/$(printf '%s' "$t" | tr '/' '_').log"
-    if bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1; then rc=0; else rc=$?; fi
+    # GH-15: stdin is /dev/null on EVERY path. The pool's xargs already hands its workers
+    # /dev/null, but this same function also runs the sequential driver-lock LANE, which would
+    # otherwise inherit the caller's stdin (an operator's TTY in interactive use) — and any suite
+    # that reads stdin would behave differently per lane, or hang on a terminal. One stdin regime
+    # for every suite is what makes the pool/lane/serial-re-run verdicts comparable.
+    if bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1 </dev/null; then rc=0; else rc=$?; fi
     printf '%s %s\n' "$rc" "$t" >> "$VALIDATE_RESULTS"
     echo "[parallel] $t rc=$rc"
   }
@@ -462,36 +467,66 @@ if [ -n "$PARALLEL_JOBS" ]; then
   # a real product bug. Without this pass, an incomplete lane list makes `--parallel` report failures
   # that sequential does not have, which would destroy the one property the flag is supposed to have:
   # the same answer as the sequential gate, faster. A suite that fails here and passes alone is not
-  # "flaky" and is not dismissed — it is named as a lane-list gap to fix.
+  # "flaky" and is not dismissed — it is named as contention on a shared resource (a lane-list gap)
+  # to fix, and NEVER counted as a failed run (GH-15).
+  #
+  # GH-15: two ways this pass was observed NOT honoring that contract, both fixed here.
+  # (1) The serial re-run inherited THIS LOOP'S stdin — which is $RESULTS itself. A re-run suite
+  #     that merely read stdin therefore swallowed every result line after it: the failures those
+  #     lines recorded were never re-run, never reported, and the run exited GREEN with a short
+  #     summary ("passed: 3 / 5" with a suite that always fails silently uncounted — reproduced
+  #     deterministically in the GH-15 investigation). The re-run now gets </dev/null, which is
+  #     ALSO the pool's stdin regime (xargs hands its workers /dev/null), so the re-run is the
+  #     same experiment as the pooled attempt instead of a second, different one.
+  # (2) A suite whose worker died without writing a result line was uncounted everywhere: neither
+  #     re-run nor reported. The completeness catch-up below gives a missing line the same
+  #     treatment as a nonzero rc — re-run alone before believing anything.
   CONTENDED=()
-  while IFS=' ' read -r rc t; do
-    if [ "$rc" = "0" ]; then
-      PASSED+=("$t")
-      continue
-    fi
+  vp_rerun_alone() {  # <suite> <why> — classify one suite by its ALONE verdict; never by the pool's
+    local t="$1" why="$2" log
     log="$RUN_DIR/$(printf '%s' "$t" | tr '/' '_').log"
     echo
     echo "==============================="
-    echo "FAILED in parallel: $t (rc=$rc) — re-running it alone to see if that verdict survives"
+    echo "$why: $t — re-running it alone to see if that verdict survives"
     echo "==============================="
-    if bash "$HERE/test/$t" > "$log.serial" 2>&1; then
+    if bash "$HERE/test/$t" > "$log.serial" 2>&1 </dev/null; then
       PASSED+=("$t")
       CONTENDED+=("$t")
       echo "  ... PASSES when run alone. Counting it as passed (sequential is the source of truth)."
-      echo "  ... This means \$DRIVER_LOCK_LANE is INCOMPLETE — see the warning at the end of this run."
+      echo "  ... This means a shared resource is contended — see the warning at the end of this run."
     else
       FAILED+=("$t")
       echo "  ... fails alone too. Real failure; last 40 lines of the SERIAL run:"
       tail -40 "$log.serial"
     fi
+  }
+  while IFS=' ' read -r rc t; do
+    if [ "$rc" = "0" ]; then
+      PASSED+=("$t")
+      continue
+    fi
+    vp_rerun_alone "$t" "FAILED in parallel (rc=$rc)"
   done < "$RESULTS"
+
+  # Completeness catch-up: every suite in TESTS must appear in the results file exactly as often as
+  # it was run (once). A missing line means the worker died before recording its verdict — that is
+  # a pooled failure in every way that matters, so it gets the same serial re-run, never silence.
+  _vp_ran="$RUN_DIR/ran.txt"
+  cut -d' ' -f2- "$RESULTS" | LC_ALL=C sort -u > "$_vp_ran"
+  for t in "${TESTS[@]}"; do
+    grep -Fxq "$t" "$_vp_ran" || vp_rerun_alone "$t" "NO RESULT recorded in parallel"
+  done
 
   if [ "${#CONTENDED[@]}" -gt 0 ]; then
     echo
     echo "==============================================================================="
     echo "WARNING (GH-528): ${#CONTENDED[@]} suite(s) failed in parallel and passed alone."
-    echo "These are almost certainly contending on the driver lock. Add them to"
-    echo "DRIVER_LOCK_LANE in validate.sh:"
+    echo "These are CONTENTION, not product failure: each verdict flipped the moment the"
+    echo "shared resource was free, so the suite is counted as PASSED and named here."
+    echo "The contended resource is almost always THIS CLONE's .git/relay-driver.lock"
+    echo "(GH-42): it is taken by the real relay-drive.sh BEFORE argument parsing, so a"
+    echo "suite merely INVOKING a driver contends — add such suites to DRIVER_LOCK_LANE"
+    echo "in validate.sh so they run in the serialized lane:"
     for t in "${CONTENDED[@]}"; do echo "    $t"; done
     echo "Until then --parallel is doing extra serial work and this run took longer than it should."
     echo "==============================================================================="
@@ -550,6 +585,15 @@ echo "==============================="
 echo "Summary"
 echo "==============================="
 TOTAL=$(( ${#TESTS[@]} + 3 ))
+# GH-15: the verdict must rest on COMPLETE evidence — every suite plus the fixed probes, each
+# classified exactly once. A tally that does not add up is an internal error (a swallowed result
+# line, a suite classified twice); failing loud here is the difference between that defect being a
+# red run and being a green lie.
+if [ $(( ${#PASSED[@]} + ${#FAILED[@]} )) -ne "$TOTAL" ]; then
+  echo "validate.sh: INTERNAL ERROR — classified ${#PASSED[@]} passed + ${#FAILED[@]} failed, expected $TOTAL (GH-15)." >&2
+  echo "validate.sh: refusing a verdict on incomplete evidence; inspect $( [ -n "${RUN_DIR:-}" ] && printf '%s' "$RUN_DIR" || printf 'the run directory' )" >&2
+  exit 1
+fi
 echo "passed: ${#PASSED[@]} / ${TOTAL}"
 for t in "${PASSED[@]}"; do echo "  + $t"; done
 if [ "${#FAILED[@]}" -gt 0 ]; then
