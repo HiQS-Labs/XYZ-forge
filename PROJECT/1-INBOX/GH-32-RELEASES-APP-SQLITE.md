@@ -210,20 +210,42 @@ generator owns RELEASES.md, GH-28's parser-side detection becomes redundant by c
 
 ## Phases
 
+0. **Transition dogfood in THIS repo (lenient enforcement mode)** — build the minimal schema + CLI
+   with an explicit `--enforcement lenient|strict` mode stored in the DB (per-repo setting, default
+   `lenient`). In lenient mode the CLI **warns and writes** where strict mode would refuse — the
+   GH-28 thresholds (description length, exit-criterion length), missing tracking issues on imported
+   legacy blocks, and unparseable version formats all land with named warnings instead of rejections.
+   Structural validity (well-formed URLs or registered temp IDs, legal status enums, non-empty
+   version-or-NULL) is enforced even in lenient mode — lenient tolerates *legacy debt*, not *new
+   corruption*. Import XYZ-forge's current RELEASES.md as-is (its bloated blocks enter with warnings,
+   uncleaned). The generator runs in **side-by-side mode only**: writes `RELEASES.generated.md` next
+   to the real file plus a drift report, and does NOT overwrite `RELEASES.md` yet — the ledger's
+   current consumers see zero change while the round-trip is proven in daily use. Phase 0 exits when:
+   the CLI has been the actual write path for every ledger change in this repo for 2 consecutive
+   weeks, the side-by-side diff is stable/explainable, and the warning backlog has a disposition
+   (cleaned or explicitly grandfathered per block). Only then does Phase 2 flip the real file to
+   generated and this repo to `strict`.
 1. **Schema + CLI + dump discipline** — `releases init/add/update/ship/manifest/list/check/reconcile`,
-   registered consistency test, temp-ID SOP working end-to-end.
-2. **Generator + XYZ-forge migration** — import this repo's current RELEASES.md into the DB,
-   byte-compare generated output, flip the file to generated with the machine-generated header.
-   Existing consumers verified green (pdda releases, ballast-release Half A, /releases skill).
+   registered consistency test, temp-ID SOP working end-to-end. (Built during Phase 0; listed
+   separately because its acceptance is mechanical while Phase 0's is experiential.)
+2. **Generator + XYZ-forge migration** — flip the real RELEASES.md to generated output with the
+   machine-generated header; repo switches to `strict`. Existing consumers verified green
+   (pdda releases, ballast-release Half A, /releases skill).
 3. **Cross-repo UI** — GH-480 cockpit Releases card reads all registered repo DBs.
-4. **Sibling-repo rollout** — migrate the survey's worklist repo-by-repo (each gets its own issue).
+4. **Sibling-repo rollout** — migrate the survey's worklist repo-by-repo (each gets its own issue,
+   each starting in `lenient` mode with its own Phase-0-style transition window).
 
-## Acceptance Criteria (v1 = phases 1-3)
+## Acceptance Criteria (v1 = phases 0-3)
 
+- [ ] **Phase 0:** lenient mode demonstrated — a legacy-bloated block imports with named warnings
+      while a structurally corrupt write (malformed URL, illegal status) is refused even in lenient;
+      side-by-side generator produces `RELEASES.generated.md` + drift report without touching
+      RELEASES.md; 2-week dogfood window completed with the CLI as sole write path; warning backlog
+      dispositioned before the Phase 2 flip.
 - [ ] Schema created via CLI `init`; DB + `releases.sql` dump committed; consistency check registered
       in `validate.sh` and observed failing on a deliberate divergence (negative control).
-- [ ] All writes refused outside the CLI's validation rules, with each refusal naming the violated
-      rule; the GH-28 thresholds enforced at write time.
+- [ ] All writes refused outside the CLI's validation rules **in strict mode**, with each refusal
+      naming the violated rule; the GH-28 thresholds enforced at write time (warn in lenient).
 - [ ] Temp-ID lifecycle demonstrated: create while offline-simulated, `reconcile` swaps to real URL,
       staleness warning observed at the 7-day boundary (mocked clock).
 - [ ] Generator is byte-stable and XYZ-forge's RELEASES.md round-trips: import → generate →
