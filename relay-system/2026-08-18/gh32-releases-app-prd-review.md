@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -181,5 +181,74 @@ substantially revised — re-review the whole document, not a diff.
 Verdict request: re-review the revised PRD.
 
 Handing off to Reviewer — take your turn.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+Pre-existing defects found: yes — this was a whole-PRD and named-consumer sweep, not a diff review.
+
+Verdict: Changes requested
+
+- **[Blocker] Phase 0 still cannot import the current ledger under the proposed schema.** Every current
+  block lacks the new `Tracking Issue:` field, while `tracking_ref_id` is non-null; the documented
+  ledger contract makes all fields except `Release:` optional, but the DB also requires `status` and
+  `description`. Lenient mode refuses structural violations and the only grandfather mechanism records
+  debt rather than providing schema-valid values (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:66-72,
+  123-140,247-254,298-306`; `PROJECT/PDDA.md:657-675`; `PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md:97-100`).
+  **Concrete fix:** define a pre-import mapping/disposition stage that supplies a real tracking URL (or
+  an explicitly migration-scoped placeholder distinct from the GitHub-down fallback) for every block,
+  and define lossless presence/default semantics for every newly required field; alternatively use a
+  nullable grandfather table/column that ordinary writes cannot create and require its elimination
+  before the strict flip.
+
+- **[Blocker] Several stated schema guarantees are still only comments or CLI convention.** Prefix-only
+  checks such as `global_id GLOB 'rel-*'` accept any length and alphabet, despite the claimed 26-character
+  ULID shape; `manifest_state_events` has no enum/transition or update/delete guard; a direct update can
+  set an item to `cut` without any reason event; and `op_receipts(op,target_gid,at)` contains no parent or
+  resulting state digest with which `check` could detect a receipt-less mutation
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:76-83,98-176,241-253`). **Concrete fix:** add exact
+  length/alphabet checks for every typed GID, enforce or explicitly classify event append-only/transition
+  rules as CLI-only, couple item state and its event in one transaction, and record a transaction ID plus
+  canonical before/after state digests (or narrow bypass detection to what can actually be proven).
+
+- **[Blocker] Byte-stable regeneration and zero-change consumer compatibility remain impossible as
+  specified.** `legacy_lines` is release-scoped, so it cannot retain this file's 86-line preamble; mapped
+  fields retain neither source position nor lexical form; and Phase 0 adds a generated header while also
+  requiring byte equality (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:162-169,255-274,320-323`;
+  `RELEASES.md:1-87`). More importantly, `/releases` is not only a reader: its clean/plan/anchor/publish
+  routes directly patch `RELEASES.md`, which conflicts with CLI-only writes and a generated read-only file
+  (`skills/releases/SKILL.md:100-184`). **Concrete fix:** preserve document-level preamble/separators and
+  ordered raw spellings (or qualify the fixture as a defined normalized payload and test that); reconcile
+  the header with that definition; and change the claim to read-consumer compatibility while explicitly
+  migrating every `/releases` mutation route to the new CLI before Phase 2.
+
+- **[Blocker] The Git story still lacks a crash-safe, observable multi-artifact commit.** In a linked
+  worktree `.git` is a file, so the literal `.git/releases-app.lock` path is invalid. Even where the lock
+  resolves, readers take no lock and can observe the DB after COMMIT but before the dump/Markdown renames;
+  a crash in that interval leaves a mismatch whose only documented rebuild direction (dump to DB) can
+  discard the committed operation. The claimed global-ID-only merge also omits a logical-dump encoding for
+  event, receipt, migration, setting, and legacy-line rows that have integer identities/FKs
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:46-55,153-176,195-213`). **Concrete fix:** resolve and
+  validate the git common-dir for the lock; make readers lock/retry against a committed generation marker;
+  stage all outputs with a recovery journal and specify recovery at every rename boundary; define the
+  canonical dump grammar with no unstable integer references; and add crash-at-each-boundary plus
+  concurrent-branch-merge negative controls.
+
+- **[Should] The dogfood exit lost its duration and makes rare operations performative.** “Across the
+  window” names no minimum window, while requiring every operation on real work encourages an artificial
+  `ship` and a temp-ref `reconcile` even if no release ships and GitHub never goes down
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:298-309`). **Concrete fix:** restore an explicit minimum
+  (the proposed two weeks), require a minimum count of accepted real write transactions from at least two
+  sessions plus a witnessed contention case, and exercise rare/destructive operations in disposable
+  fixture DBs rather than manufacturing them in the real ledger.
+
+- **[Pass] Scope discipline is now explicit:** Phase 3 uses two disposable fixture repos, sibling rollout
+  remains Phase 4, and the high-blast-radius driver integration is deferred to v3
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:276-294,312-316`). The identity-not-hash and additive/no-EAV
+  direction also remains sound once the GID checks are made real (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:76-83,215-225`).
+
+Handing off to Producer — go to the Producer window and say “take your turn”; disposition every Round 2
+finding before revising the PRD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
