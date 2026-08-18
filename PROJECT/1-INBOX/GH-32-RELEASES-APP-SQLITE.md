@@ -70,6 +70,16 @@ my repos" has no answer short of opening every file.
    alphanumerics) instead of a URL — exactly one of the two, enforced by CHECK. `releases reconcile`
    fills in the real URL later (the row keeps its identity; nothing downstream changes). A registered
    check warns on temp refs older than 7 days.
+4. **Migration placeholder (import-only, distinct from the GitHub-down fallback — r2 review
+   finding):** legacy blocks predate the tracking-issue SOP and cannot satisfy `NOT NULL` at import.
+   `releases import` — and only import; ordinary writes refuse the shape — may create `MIG-XXXXXX`
+   placeholder refs, each recorded in the grandfather ledger. **The strict flip (Phase 2) requires
+   zero surviving `MIG-` refs**: each is dispositioned to a real issue URL or the block is
+   consciously retired. Same shape rules as TMP but a different prefix, so the two lifecycles
+   (offline-wait vs migration-debt) can never be confused. Import also supplies recorded defaults for
+   newly-required fields a legacy block omits (`status` from the block's `Status:` line, else
+   `draft`; `description` from `Description:`, else a placeholder) — every such default is a
+   grandfather-ledger entry, not a silent fill.
 
 ## Schema (v1)
 
@@ -102,11 +112,13 @@ CREATE TABLE repos (
 );  -- device-local paths deliberately NOT committed (review finding): the UI resolves local
     -- checkout paths from the utils/hq/ registry, which is already per-device.
 
-CREATE TABLE issue_refs (          -- normalized issue reference: real URL XOR temp ID
+CREATE TABLE issue_refs (          -- normalized issue reference: real URL XOR placeholder
   id INTEGER PRIMARY KEY,
-  global_id TEXT NOT NULL UNIQUE CHECK (global_id GLOB 'ref-*'),
+  global_id TEXT NOT NULL UNIQUE,  -- exact-shape checked, see GID note below
   url TEXT UNIQUE CHECK (url IS NULL OR url GLOB 'https://github.com/*/issues/*'),
-  temp_id TEXT UNIQUE CHECK (temp_id IS NULL OR temp_id GLOB 'TMP-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]'),
+  temp_id TEXT UNIQUE CHECK (temp_id IS NULL OR
+    temp_id GLOB 'TMP-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]' OR
+    temp_id GLOB 'MIG-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]'),  -- MIG-: import-only (CLI-enforced)
   created_at TEXT NOT NULL,
   CHECK ((url IS NULL) != (temp_id IS NULL))   -- exactly one
 );
@@ -153,10 +165,27 @@ CREATE TABLE manifest_items (
 CREATE TABLE manifest_state_events (   -- append-only re-scope trail (review finding: the old
   id INTEGER PRIMARY KEY,              -- single overwriteable state_changed cell lost history)
   item_id INTEGER NOT NULL REFERENCES manifest_items(id),
-  from_state TEXT NOT NULL,
-  to_state TEXT NOT NULL,
+  from_state TEXT NOT NULL CHECK (from_state IN ('open','shipped','cut')),
+  to_state   TEXT NOT NULL CHECK (to_state   IN ('open','shipped','cut')),
   at TEXT NOT NULL,
   reason TEXT NOT NULL CHECK (length(trim(reason)) > 0)   -- a cut without a reason is refused
+);
+-- Append-only is enforced by triggers, not convention (r2 review finding):
+CREATE TRIGGER mse_no_update BEFORE UPDATE ON manifest_state_events
+  BEGIN SELECT RAISE(ABORT, 'manifest_state_events is append-only'); END;
+CREATE TRIGGER mse_no_delete BEFORE DELETE ON manifest_state_events
+  BEGIN SELECT RAISE(ABORT, 'manifest_state_events is append-only'); END;
+-- (same trigger pair on op_receipts). Transition LEGALITY and the item-state/event coupling are
+-- CLI-enforced, stated as such: the CLI updates manifest_items.state and appends the event in ONE
+-- transaction; a direct writer that skips the event is caught by the digest chain below, not
+-- prevented.
+
+CREATE TABLE doc_lines (               -- document-level verbatim preservation (r2: the 86-line
+  id INTEGER PRIMARY KEY,              -- preamble is release-less; legacy_lines can't hold it)
+  repo_id INTEGER NOT NULL REFERENCES repos(id),
+  position INTEGER NOT NULL,           -- ordering among document-level segments
+  content TEXT NOT NULL,
+  UNIQUE (repo_id, position)
 );
 
 CREATE TABLE legacy_lines (            -- lossless import: unmapped/continuation lines, verbatim
@@ -168,13 +197,21 @@ CREATE TABLE legacy_lines (            -- lossless import: unmapped/continuation
   UNIQUE (release_id, position)
 );
 
-CREATE TABLE op_receipts (             -- append-only CLI operation log (Phase 0 evidence + bypass
-  id INTEGER PRIMARY KEY,              -- detection: a DB change with no receipt = direct write)
+CREATE TABLE op_receipts (             -- append-only CLI operation log (append-only via the same
+  id INTEGER PRIMARY KEY,              -- trigger pair as manifest_state_events)
   op TEXT NOT NULL,
   target_gid TEXT,
-  at TEXT NOT NULL
-);
+  at TEXT NOT NULL,
+  txn_id TEXT NOT NULL,                -- one per CLI transaction
+  dump_digest_before TEXT NOT NULL,    -- sha256 of the canonical dump before/after this txn:
+  dump_digest_after TEXT NOT NULL      --   `check` recomputes the current dump digest; a digest
+);                                     --   matching no receipt's `after` = receipt-less mutation
 ```
+
+**GID shape note (r2 review finding — prefix-only GLOBs were theater):** every `global_id` CHECK is
+an exact-shape test: the type prefix plus exactly 26 characters of the Crockford base32 alphabet
+(`[0-9A-HJKMNP-TV-Z]`), written out in full in the migration (elided above for readability). Length
+and alphabet are schema-refused, not convention.
 
 Deliberately absent (survey-informed): `Iterations:` bands as schema (aegis proved them harmful;
 imported bands are preserved via `legacy_lines` and re-rendered verbatim, so XYZ-forge keeps its
@@ -198,19 +235,33 @@ A SQLite transaction serializes the DB file only; it says nothing about the dump
 Markdown. With 2-3 live sessions routinely on this clone, the multi-artifact write needs its own
 serialization:
 
-1. **One repo-scoped writer lock** (`.git/releases-app.lock`, same liveness idiom as the existing
-   relay driver lock) held across the whole write: BEGIN → mutate → COMMIT → regenerate dump →
-   regenerate RELEASES.md → atomic `rename(2)` replacements of both → release lock. Readers never
-   take it.
-2. **Optimistic preimage check:** the CLI records the dump's hash at lock acquisition; if the on-disk
-   dump no longer matches when it goes to write, it aborts and tells the operator to re-run (another
-   session won).
-3. **Stale-artifact refusal:** a leftover `-wal`/`-journal` file, or a DB/dump/generated-file trio
-   that disagrees, fails `releases check` loudly; no write proceeds over a dirty state.
-4. **Merge conflict procedure (tested, not aspirational):** conflicts are resolved in the
-   **global-ID-keyed logical dump** (text, mergeable, no integer-PK collisions because PKs are not
-   part of the dump's identity — rows are keyed by `global_id`); then `releases check --rebuild`
-   reconstructs the DB atomically, backing up the displaced DB to `releases.db.bak`.
+1. **One repo-scoped writer lock**, resolved through the **git common-dir** — never a literal
+   `.git/releases-app.lock` path, because in a linked worktree `.git` is a file (r2 review finding).
+   Reuse the repo's existing GH-448 shared lock-path resolver idiom (`driver_lock_path`), which
+   already handles all three repo shapes. Held across the whole write: BEGIN → mutate → COMMIT →
+   stage dump + Markdown to temp names → journal → atomic renames → bump generation → release lock.
+2. **Reader consistency via a generation marker** (r2: readers previously had a torn window between
+   DB COMMIT and the renames): every committed write ends by bumping a `generation` value stored in
+   `settings` AND stamped into the dump and the generated file. A reader (UI, `check`) that sees
+   mismatched generations across the trio retries briefly, then reports "write in progress or
+   crashed" — it never treats a torn trio as truth.
+3. **Crash recovery journal:** staged outputs are written under temp names first, then a one-line
+   journal records the intended renames, then the renames execute, then the journal clears.
+   `releases check` finding a journal completes the renames (all staged files exist) or discards the
+   stage (they don't) — recovery is defined at every boundary, and the DB-committed operation is
+   never discarded by recovery (r2: rebuild-from-dump as sole recovery could lose the committed txn).
+4. **Stale-artifact refusal:** a leftover `-wal`/`-journal`, a live recovery journal, or a
+   generation-mismatched trio fails `releases check` loudly; no new write proceeds over a dirty state.
+5. **Canonical dump grammar** (r2: "global-ID-keyed" was underspecified for rows without GIDs):
+   GID-bearing rows are keyed by `global_id`. Non-GID rows are keyed by parent GID + a stable ordinal
+   (`manifest_state_events`/`legacy_lines`/`doc_lines`: parent GID or repo slug + `position`/event
+   order; `op_receipts`: `txn_id`; `settings`/`schema_migrations`: their natural keys). Integer PKs
+   and FK ids never appear in the dump; rebuild renumbers them deterministically.
+6. **Merge conflict procedure (tested, not aspirational):** conflicts are resolved in the logical
+   dump per the grammar above; then `releases check --rebuild` reconstructs the DB atomically,
+   backing up the displaced DB to `releases.db.bak`.
+7. **Negative controls (acceptance):** crash injected at each rename boundary recovers per (3);
+   a concurrent-branch merge of two divergent dumps rebuilds cleanly with both sides' rows present.
 
 ## Flexibility contract — this may become PDDA's home (operator, 2026-08-18)
 
@@ -260,18 +311,26 @@ to keep `Iterations:`, the QA fields, `Shipped:` prose, or Sundown's continuatio
 requires `Manifest-Members:`. Corrected contract:
 
 - **Explicit lossless mapping** for every label in the current contract: schema-backed fields render
-  from columns; `Manifest-Members:` is **generated** from `manifest_items`; everything unmapped
-  (continuation paragraphs, `Iterations:` bands, ad-hoc fields) imports into `legacy_lines` and
-  re-renders **verbatim, in original order**, until each line is dispositioned.
-- **Byte-for-byte fixture** on THIS repo's current 207-line RELEASES.md: import → generate must
-  reproduce it exactly (that is what `legacy_lines` exists to make possible), pinned as a registered
-  test alongside focused assertions for `pdda.sh releases`, `pdda.sh releases-current`,
-  `ballast-release.sh` Half A, and the `/releases` skill.
+  from columns **preserving each block's original field order and lexical spelling** (import records
+  per-block field order; the generator replays it); `Manifest-Members:` is **generated** from
+  `manifest_items`; the document-level preamble and inter-block separators import into `doc_lines`
+  (r2 — `legacy_lines` is release-scoped and could not hold the 86-line preamble); everything else
+  unmapped (continuation paragraphs, `Iterations:` bands, ad-hoc fields) imports into `legacy_lines`.
+  Both re-render **verbatim, in original order**, until dispositioned.
+- **Byte-for-byte fixture** on THIS repo's current RELEASES.md: import → generate must reproduce the
+  file **exactly, with NO generated header during Phase 0** (r2 — a header plus byte-equality was
+  self-contradictory). The header is added only at the Phase 2 flip, at which point the fixture is
+  re-pinned to the header-bearing form. Registered alongside focused assertions for
+  `pdda.sh releases`, `pdda.sh releases-current`, and `ballast-release.sh` Half A.
+- **The compatibility claim is READ-consumer compatibility only** (r2 — `/releases` is not just a
+  reader: its clean/plan/anchor/publish routes patch RELEASES.md directly, which collides with
+  CLI-only writes). **Phase 2 entry gate:** every `/releases` mutating route is migrated to call
+  this CLI (the skill keeps its preview-and-confirm UX; the write goes through `releases ...`), and
+  the skill doc is updated, BEFORE the file flips to generated. Until then `/releases` mutations are
+  part of the legacy write path Phase 0 tolerates.
 - Bare-number manifests in sibling repos (`#nnn`) import as `legacy_lines` when unresolvable — the
   rebalanceOS case, where the numbers point at a retired tracker, is precisely why they cannot be
   auto-converted to URLs.
-- A generated-file header names the CLI and marks the file machine-generated (Phase 2+; in Phase 0
-  the side-by-side file carries it instead).
 
 ## Cross-repo UI (v1, read-only)
 
@@ -299,11 +358,16 @@ Read-only. Duplicate global IDs across DBs fail the aggregation loudly.
    the current ledger in with every tolerated violation recorded as a grandfathered entry;
    post-import writes follow the mode table above (structural rules strict even in lenient);
    generator runs **side-by-side only** (`RELEASES.generated.md` + drift report; the real file
-   untouched — current consumers see zero change). **Exit gate (review finding — quiet weeks are not
-   evidence):** `op_receipts` shows the CLI was the sole writer across the window AND every CLI
-   operation class (`add`, `update`, `ship`, `manifest add`, `manifest cut`, `gen`, `check`,
-   `reconcile`) was exercised at least once on real work; the side-by-side byte-fixture is green; the
-   grandfather ledger is fully dispositioned. Zero-change days count for nothing.
+   untouched — current consumers see zero change). **Exit gate (r1+r2 review findings — quiet weeks
+   are not evidence, and rare operations must not be manufactured):** a **minimum 2-week window**
+   during which `op_receipts` shows ≥10 accepted real write transactions originating from **≥2
+   distinct sessions**, including **one witnessed lock-contention case** (second writer correctly
+   refused/retried); the everyday operation classes (`add`, `update`, `manifest add`, `gen`,
+   `check`) each exercised on real work; **rare/destructive operations** (`ship` when no release
+   actually ships, `reconcile` when GitHub never went down, `check --rebuild`) exercised in
+   **disposable fixture DBs**, not manufactured in the real ledger; the side-by-side byte-fixture
+   green; the grandfather ledger (including every `MIG-` placeholder) fully dispositioned.
+   Zero-change days count for nothing.
 1. **Schema + CLI + dump discipline** — mechanical acceptance for what Phase 0 builds: registered
    consistency test with negative control, temp-ref lifecycle, writer-lock/preimage behavior under a
    simulated concurrent writer.

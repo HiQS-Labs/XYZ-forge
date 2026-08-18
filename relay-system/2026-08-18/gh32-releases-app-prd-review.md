@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -250,5 +250,47 @@ Verdict: Changes requested
 
 Handing off to Producer — go to the Producer window and say “take your turn”; disposition every Round 2
 finding before revising the PRD.
+
+### Producer · Round 2 dispositions
+
+swept file: yes
+
+All five R2 findings dispositioned; PRD revised again — the affected sections are SOPs (new item 4),
+Schema (issue_refs, triggers, doc_lines, op_receipts digest chain, GID shape note), Git story
+(rewritten, 7 points), Generator contract (rewritten), and the Phase 0 exit gate.
+
+- **[Blocker] import cannot satisfy the schema** — **Implemented.** New `MIG-XXXXXX` import-only
+  placeholder refs (distinct prefix from the GitHub-down `TMP-` fallback; ordinary writes refuse the
+  shape; Phase 2 requires zero surviving MIG refs). Import supplies recorded defaults for
+  newly-required fields legacy blocks omit — every default is a grandfather-ledger entry.
+- **[Blocker] guarantees only comments/convention** — **Implemented.** Exact-shape GID checks
+  (prefix + exactly 26 Crockford base32 chars, schema-refused); append-only enforced by
+  RAISE(ABORT) triggers on manifest_state_events AND op_receipts; from/to state enums CHECKed;
+  transition legality + state/event coupling explicitly classified CLI-enforced (one transaction);
+  op_receipts gained txn_id + before/after canonical-dump digests so `check` proves receipt-less
+  mutation by digest-chain mismatch — detection claims now match what is actually provable.
+- **[Blocker] byte-stability + /releases writes** — **Implemented.** Document-level `doc_lines`
+  table holds the 86-line preamble and separators; import records per-block field order and the
+  generator replays it; NO header during Phase 0 (fixture is exact byte equality), header added and
+  fixture re-pinned at the Phase 2 flip; compatibility claim narrowed to READ-consumer only; a new
+  Phase 2 entry gate migrates every /releases mutating route (clean/plan/anchor/publish) to call
+  this CLI before the file flips.
+- **[Blocker] git story gaps** — **Implemented.** Lock path resolved via the git common-dir using
+  the existing GH-448 resolver idiom (linked-worktree safe); reader consistency via a generation
+  marker stamped into DB+dump+file with retry-then-report semantics; staged temp-name writes with a
+  crash-recovery journal defined at every rename boundary (committed DB txns never discarded by
+  recovery); canonical dump grammar specified for every non-GID table (parent GID + stable ordinal,
+  txn_id, natural keys — integer PKs never in the dump); crash-at-each-boundary and
+  concurrent-branch-merge negative controls added to acceptance.
+- **[Should] exit-gate duration/performativity** — **Implemented.** Explicit 2-week minimum
+  restored; >=10 accepted real write transactions from >=2 distinct sessions; one witnessed
+  lock-contention case; everyday ops exercised on real work while rare/destructive ops (ship,
+  reconcile, --rebuild) run in disposable fixture DBs — nothing manufactured in the real ledger.
+
+Verdict request: re-review. Round 3 of 4 — if findings remain that are genuinely design-level (not
+implementation detail a build phase would settle), grade them; implementation-detail nits can be
+recorded as notes for the build phase rather than blocking the PRD.
+
+Handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
