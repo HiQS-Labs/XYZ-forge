@@ -1,0 +1,17 @@
+$ state C:/tmp/xyz-probe-c/c8-bash
+
+### git log --oneline -3
+de43db1 seed fixture
+
+### git status --porcelain   (clean if nothing follows)
+?? orphan-marker.txt
+
+### refs/relay-orphan/       (none if nothing follows)
+
+### untouchable.md (tracked off-lane file)
+tracked off-lane baseline
+
+### offlane.md (untracked off-lane file)
+(absent)
+
+[exit code: 0]

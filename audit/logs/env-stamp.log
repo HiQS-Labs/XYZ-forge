@@ -1,0 +1,29 @@
+$ bash -c 
+  echo "uname   : $(uname -a)"
+  echo "node    : $(node --version 2>&1)"
+  echo "npm     : $(npm --version 2>&1)"
+  echo "git     : $(git --version 2>&1)"
+  echo "bash    : $BASH_VERSION"
+  echo "cores   : $(nproc 2>/dev/null || echo unknown)"
+  echo "RAM     : $(( $(wmic ComputerSystem get TotalPhysicalMemory 2>/dev/null | tr -dc "0-9") / 1073741824 )) GB" 2>/dev/null
+  echo
+  echo "--- python3 on bare PATH (drives the XYZ_PYTHON default lane) ---"
+  echo "which python3 : $(command -v python3 2>/dev/null || echo none)"
+  echo "python3 -V    : $(python3 --version 2>&1 | head -1)"
+  echo "python  -V    : $(python --version 2>&1 | head -1)"
+
+
+uname   : MINGW64_NT-10.0-22631 DESKTOP-NVQQIAE 3.5.4-395fda67.x86_64 2024-11-25 09:49 UTC x86_64 Msys
+node    : v22.12.0
+npm     : 10.9.0
+git     : git version 2.47.1.windows.1
+bash    : 5.2.37(1)-release
+cores   : 4
+RAM     : 23 GB
+
+--- python3 on bare PATH (drives the XYZ_PYTHON default lane) ---
+which python3 : /c/Users/Askyla/AppData/Local/Microsoft/WindowsApps/python3
+python3 -V    : Python 3.13.14
+python  -V    : Python 3.12.2
+
+[exit code: 0]

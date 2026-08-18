@@ -1,0 +1,37 @@
+$ wmic process where "name=\047bash.exe\047" get CommandLine   (filtered to the gate tree)
+
+Outer gate started 14:11:20Z. Snapshot taken 14:58:29Z — 17 minutes after
+audit/run.log last advanced (suite 120 of the sequential run, gh544-pre-push-gate.sh).
+
+  "C:\Program Files\Git\usr\bin\bash.exe" ./validate.sh --sequential
+  "C:\Program Files\Git\usr\bin\bash.exe" /c/tmp/xyz-pristine/test/gh544-pre-push-gate.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" /c/tmp/xyz-pristine/test/gh544-pre-push-gate.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" githooks/pre-push
+  "C:\Program Files\Git\usr\bin\bash.exe" C:/tmp/xyz-pristine/validate.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" -c "vp_run_one \"$@\"" _ gh544-pre-push-gate.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" /c/tmp/xyz-pristine/test/gh544-pre-push-gate.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" /c/tmp/xyz-pristine/test/gh544-pre-push-gate.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" githooks/pre-push
+  "C:\Program Files\Git\usr\bin\bash.exe" C:/tmp/xyz-pristine/validate.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" -c "vp_run_one \"$@\"" _ marathon-root-audit.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" -c "vp_run_one \"$@\"" _ gh308-frozen-twin-guard.sh
+  "C:\Program Files\Git\usr\bin\bash.exe" -c "vp_run_one \"$@\"" _ model-alias.sh
+
+READ AS A TREE:
+  ./validate.sh --sequential                       <- the gate the operator started
+   `- test/gh544-pre-push-gate.sh                   <- suite 120 of the sequential run
+      `- githooks/pre-push                          <- the real hook, fired by the suite's push
+         `- C:/tmp/xyz-pristine/validate.sh         <- the REAL gate, NOT the test's stub
+            `- vp_run_one gh544-pre-push-gate.sh    <- the SAME suite again, in a PARALLEL pool
+               `- ...and pre-push fires again, and a third validate.sh starts
+
+Two nested validate.sh processes are live simultaneously, each running its own parallel
+pool (marathon-root-audit.sh, gh308-frozen-twin-guard.sh, model-alias.sh visible above).
+Note also: the inner runs are PARALLEL. The operator asked for --sequential; the nested
+invocation does not inherit it and host-detects its own width.
+
+The suite's own header states the intended protection (test/gh544-pre-push-gate.sh:16):
+  "The pre-push hook is driven with a STUB validate.sh in a throwaway repo. Running the
+   real gate from inside the gate would recurse."
+
+That protection did not hold on this host. ROOT CAUSE NOT ESTABLISHED - reported as observed.

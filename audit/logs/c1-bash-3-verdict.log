@@ -1,0 +1,5 @@
+$ run_shim C:/tmp/xyz-probe-c/c1-bash RELAY-TURN /c/tmp/xyz-probe-c/stubs/commit bash
+
+codex-turn: codex committed during its turn (forbidden) — reset to 11066629 (prior HEAD saved to refs/relay-orphan/), failing
+
+[exit code: 6]

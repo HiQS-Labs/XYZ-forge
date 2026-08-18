@@ -1,0 +1,6 @@
+# Keep the reproduction script LF regardless of the cloner's core.autocrlf.
+# A CRLF shebang line makes the script unrunnable on macOS/Linux - which is the very
+# portability defect this audit reports (F-ENV-2 / G1).
+*.sh text eol=lf
+*.log text eol=lf
+*.mmd text eol=lf

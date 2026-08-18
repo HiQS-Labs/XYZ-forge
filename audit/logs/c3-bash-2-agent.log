@@ -1,0 +1,9 @@
+$ cat /c/tmp/xyz-probe-c/stubs/hang
+
+#!/usr/bin/env bash
+set -u
+printf '\n### Round 1 - %s (stub: hangs)\n' "${RELAY_AGENT:-?}" >> "$RELAY_FILE"
+sleep 120
+exit 0
+
+[exit code: 0]

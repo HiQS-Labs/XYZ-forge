@@ -1,0 +1,6 @@
+$ run_shim C:/tmp/xyz-probe-c/c4-bash RELAY-TURN /c/tmp/xyz-probe-c/stubs/noop bash
+
+codex-turn: codex turn produced no tracked changes (token-only move?)
+codex-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token RELAY-TURN left as-is (set RELAY_PEER for auto-handoff)
+
+[exit code: 0]

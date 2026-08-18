@@ -1,0 +1,10 @@
+$ run_shim C:/tmp/xyz-probe-c/c5-bash RELAY-TURN /c/tmp/xyz-probe-c/stubs/offlane bash RELAY_WORKTREE_ISOLATION=1
+
+codex-turn: worktree isolation ON (/tmp/rtl-wt.AjdF5V)
+codex-turn: OFF-ALLOWLIST change: untouchable.md — reverting
+codex-turn: pre-revert copy of untouchable.md saved under C:/tmp/xyz-probe-c/c5-bash/.tick/orphan-backups/20260818T143622Z-23545
+codex-turn: OFF-ALLOWLIST change: offlane.md — reverting
+codex-turn: pre-revert copy of offlane.md saved under C:/tmp/xyz-probe-c/c5-bash/.tick/orphan-backups/20260818T143622Z-23545
+codex-turn: off-lane edits reverted; failing the turn
+
+[exit code: 6]

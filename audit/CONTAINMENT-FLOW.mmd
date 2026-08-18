@@ -1,0 +1,77 @@
+---
+title: XYZ-forge headless turn — containment decision path (traced from source, verified by probe)
+---
+%% Every terminal node carries the exit code the shim actually returns, the source
+%% line it was read from, and the probe ID in audit/repro-containment.sh that
+%% exercised it. Nodes marked VERIFIED were observed on 2026-08-18, MINGW64/Windows 11,
+%% harness @911878c. Nothing in this diagram is asserted from prose alone.
+flowchart TD
+    START([relay-drive invokes the turn shim<br/>codex-turn.sh with RELAY_AGENT / RELAY_FILE / RELAY_TASK])
+
+    START --> LANE{"XYZ_PYTHON<br/>codex-turn.sh:9<br/><b>${XYZ_PYTHON-1}</b> — unset means 1"}
+
+    LANE -->|"unset or =1"| PYGUARD{"python3 on PATH<br/>and >= 3.8?<br/>codex-turn.sh:13-14"}
+    LANE -->|"=0 or empty"| DISPATCH
+
+    PYGUARD -->|no| DEGRADE["warn and fall back to Bash<br/>codex-turn.sh:19"]
+    DEGRADE --> DISPATCH
+    PYGUARD -->|yes| PYPORT["exec utils/py/codex-turn.py<br/>codex-turn.sh:18"]
+
+    PYPORT --> PYTICK{"subprocess.run([tick_bin, ...])<br/>rtl.py:240 — no interpreter,<br/>relies on the POSIX shebang"}
+    PYTICK -->|"POSIX: execve honours<br/>#!/usr/bin/env node"| DISPATCH
+    PYTICK -->|"Windows: CreateProcess<br/>cannot run a shebang script"| XWIN(["<b>unhandled traceback</b><br/>OSError WinError 193<br/><b>exit 1 — not in the documented menu</b><br/>probe D1 · VERIFIED"])
+
+    DISPATCH{"RELAY_AGENT == CODEX_AGENT?<br/>codex-turn.sh:81"}
+    DISPATCH -->|no| DEFER(["defer — another window drives this turn<br/><b>exit 0</b><br/>codex-turn.sh:83"])
+    DISPATCH -->|yes| ANCHOR["anchor coordination at TICK_REPO_ROOT<br/>codex-turn.sh:92 · resolves .tick and bin/tick<br/>independently of the turn's CWD"]
+
+    ANCHOR --> CLAIM{"tick claim, then confirm<br/>claimer == me<br/>codex-turn.sh:124-127"}
+    CLAIM -->|"claimer != me"| X5(["refuse to run — the turn must never<br/>commit with the token open under<br/>the previous owner<br/><b>exit 5</b><br/>codex-turn.sh:129"])
+    CLAIM -->|"ownership proven"| ISO{"RELAY_WORKTREE_ISOLATION<br/>codex-turn.sh:161"}
+
+    ISO -->|"=1"| WTBEGIN["rtl_worktree_begin — throwaway<br/>git worktree of ROOT@HEAD;<br/>.tick stays SHARED<br/>relay-turn-lib.sh:614"]
+    ISO -->|"=0 (default)"| INROOT["run in ROOT<br/>--add-dir .tick so the agent's own<br/>sandbox can reach the token lock"]
+
+    WTBEGIN --> BOUNDED
+    INROOT --> BOUNDED
+
+    BOUNDED{"rtl_run_bounded<br/>RELAY_TURN_TIMEOUT_S, default 900s<br/>sleep-then-kill -9, no coreutils timeout<br/>relay-turn-lib.sh:464-488"}
+    BOUNDED -->|"agent returns in time"| WTEND
+    BOUNDED -->|"rc 137 — killed by the watchdog"| TIMEOUT["bounded_rc=7<br/>held, NOT returned yet"]
+    BOUNDED -.->|"kill is PID-scoped, not process-group;<br/>no setsid on stock macOS<br/>relay-turn-lib.sh:467-469"| ORPHAN(["<b>a forked child outlives the kill</b><br/>and keeps writing into ROOT<br/>after the turn has ended<br/>documented gap · probe C8 · VERIFIED"])
+
+    TIMEOUT --> WTEND
+
+    WTEND{"worktree isolation used?"}
+    WTEND -->|yes| OFFLANEWT{"rtl_worktree_end — anything touched<br/>outside {allowlist, .tick}?<br/>relay-turn-lib.sh:680"}
+    WTEND -->|no| ENFORCE
+
+    OFFLANEWT -->|yes| X6WT(["worktree destroyed, nothing copied back<br/><b>exit 6</b><br/>codex-turn.sh:190-193<br/>probe C5 · VERIFIED"])
+    OFFLANEWT -->|no| COPYBACK["copy ONLY the allowlist back to ROOT"]
+    COPYBACK --> ENFORCE
+
+    ENFORCE{"rtl_enforce — did ROOT's HEAD move<br/>during the turn?<br/>relay-turn-lib.sh:1063"}
+
+    ENFORCE -->|"moved, isolation ON"| PEER(["<b>PRESERVE the commit</b> — under isolation the<br/>agent cannot move ROOT's HEAD, so this is a<br/>concurrent PEER. A blind reset here orphaned a<br/>peer's commit on 2026-06-23.<br/>turn continues · relay-turn-lib.sh:1064-1071<br/>probe C6 · VERIFIED — a reset here would be the bug"])
+    ENFORCE -->|"moved, in-ROOT"| X6C(["save prior HEAD to refs/relay-orphan/,<br/>then <b>git reset --hard</b><br/><b>exit 6</b><br/>relay-turn-lib.sh:1080-1084<br/>probe C1 · VERIFIED"])
+    ENFORCE -->|"HEAD unmoved"| ALLOW
+
+    PEER --> ALLOW
+
+    ALLOW{"any tracked change outside the allowlist?<br/>git status --porcelain -z, NUL-delimited so a<br/>path with spaces cannot slip the match<br/>relay-turn-lib.sh:1098-1115"}
+    ALLOW -->|yes| X6A(["off-lane edits reverted<br/><b>exit 6</b><br/>relay-turn-lib.sh:1117<br/>probes C2, C7 · VERIFIED"])
+    ALLOW -->|no| COMMIT["stage ONLY the allowlist,<br/>commit file-scoped, <b>never push</b>"]
+
+    COMMIT --> TIMEOUTQ{"was bounded_rc 7?"}
+    TIMEOUTQ -->|yes| X7(["<b>exit 7</b> — timeout reported only AFTER<br/>containment has been enforced<br/>codex-turn.sh:204<br/>probe C3 · VERIFIED"])
+    TIMEOUTQ -->|no| OK(["turn committed, file-scoped, no push<br/><b>exit 0</b><br/>probes C0, C4 · VERIFIED"])
+
+    classDef good fill:#0f2f1a,stroke:#3fb950,stroke-width:2px,color:#c9d1d9
+    classDef bad fill:#3a1113,stroke:#f85149,stroke-width:2px,color:#c9d1d9
+    classDef warn fill:#3a2c0c,stroke:#d29922,stroke-width:2px,color:#c9d1d9
+    classDef neutral fill:#161b22,stroke:#30363d,color:#c9d1d9
+
+    class OK,DEFER,PEER good
+    class X6C,X6A,X6WT,X7,X5 warn
+    class XWIN,ORPHAN bad
+    class START,ANCHOR,INROOT,WTBEGIN,COPYBACK,COMMIT,DEGRADE,PYPORT,TIMEOUT neutral

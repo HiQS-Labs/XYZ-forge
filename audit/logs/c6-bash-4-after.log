@@ -1,0 +1,17 @@
+$ state C:/tmp/xyz-probe-c/c6-bash
+
+### git log --oneline -3
+b604384 agent sneaked a commit
+dd8b6e6 seed fixture
+
+### git status --porcelain   (clean if nothing follows)
+
+### refs/relay-orphan/       (none if nothing follows)
+
+### untouchable.md (tracked off-lane file)
+tracked off-lane baseline
+
+### offlane.md (untracked off-lane file)
+(absent)
+
+[exit code: 0]
