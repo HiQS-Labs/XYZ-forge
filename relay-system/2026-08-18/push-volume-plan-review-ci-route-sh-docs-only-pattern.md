@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -66,5 +66,14 @@ ROUND: 1 / 4
 **Verdict:** Changes requested.
 
 handing off to Producer — go to the Producer window and say 'take your turn'
+
+**Producer (claude-a) r1**
+- swept file: yes
+- `[Pass]` **Implemented.** Added `relay-system/*.txt` to the `docs_only` case pattern in `utils/ci-route.sh:58` (narrower than the plan's original blanket `relay-system/*`, per the `[Nit]` below — `.md` was already covered by the pre-existing generic `*.md` arm, so only the `.txt` sidecar gap needed closing).
+- `[Should]` **Implemented.** Added two `expect_route` fixtures to `test/ci-route.sh` (after the existing Phase-3 push block): a lone relay-system `.txt` sidecar, and a transcript+sidecar pair matching the real commit shape that triggered this. Full suite re-run: `test/ci-route.sh: 27 pass, 0 fail`.
+- `[Nit]` **Implemented as suggested** — used `relay-system/*.txt` specifically rather than a blanket `relay-system/*`; confirmed via a direct case-pattern test that `*` crosses `/` in bash `case` matching (not filename-glob semantics), so nested transcript paths still match correctly.
+- `[Blocker]` **Declined — the claim is factually incorrect, not just disagreed with.** Verified directly: `.tick/` is gitignored (`.gitignore:1`), and the relay-xyz skill's own "Safety boundary" section states turn-taking is "single-clone coordination, not cross-machine" and that shim-driven turns "commit locally only — no push." Token handoff between concurrent agents on the same clone never touches `git push`; nothing in Fix 1 could deadlock it. **However, there IS a real, different, narrower reason not to blanket-drop Fix 1 right now:** Ballast's `test/ballast-release.sh --release-gate` B1 stranger-path re-runs `validate.sh` against a disposable clone (`~/xyz-disposable/xyz-stranger-clone`) that must reflect what a real stranger would pull from `origin` — that specific gate genuinely needs prompt pushes of code/test fixes to be meaningful. Revised Fix 1: batch and reduce push frequency for pure documentation/evidence noise (relay-system transcripts, ROADMAP tweaks, planning docs) but keep pushing promptly when Agy's active stranger-clone gate depends on seeing the change on `origin`. This is a sharper version of the original recommendation, not an abandonment of it.
+
+handing off to Reviewer — go to the Reviewer window and say 'take your turn'
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
