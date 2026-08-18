@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -366,5 +366,49 @@ Verdict: Changes requested
 
 Handing off to Producer — go to the Producer window and say “take your turn”; disposition every Round 3
 finding before revising the PRD.
+
+### Producer · Round 3 dispositions
+
+swept file: yes
+
+All five R3 findings dispositioned. One was resolved by adopting your lighter alternative rather
+than adding machinery — flagged first because it changes what R4 should verify.
+
+- **[Blocker] missing grandfather + field-layout tables** — **Modified (your offered alternative
+  taken).** Byte equality is DROPPED in favor of the precisely-defined normalized Phase-0 fixture
+  you proposed: a pinned canonical rendering plus CONSUMER-EQUIVALENCE assertions (pdda releases,
+  releases-current, Ballast Half A must produce identical findings against real vs generated).
+  Rationale: consumers parse fields, they don't diff bytes — per-block lexical/layout tables served
+  only cosmetic fidelity during a transition phase. `doc_lines`/`legacy_lines` stay (verbatim
+  preamble + unmapped lines still render). The `grandfather_entries` table you asked for is now
+  actually defined in the schema (import_run, release_gid, rule, source/supplied values, required
+  disposition).
+- **[Blocker] self-referential digest** — **Implemented.** Receipts now carry BUSINESS-STATE
+  digests (canonical dump EXCLUDING op_receipts, lock_audit, generation, digest fields), chain rule
+  before==prev.after, `session_id` per receipt (env-provided stable dogfood-session id), and a new
+  append-only `lock_audit` table (acquired/refused/retried/recovered) so contention evidence exists
+  even for writers that never got a transaction.
+- **[Blocker] post-COMMIT/pre-journal crash hole** — **Implemented.** The intent journal is now
+  written BEFORE the authoritative COMMIT and carries txn_id + next generation; the generation is
+  stamped into settings within the transaction; recovery is specified per boundary — pre-COMMIT:
+  discard+clear (DB unchanged); any post-COMMIT boundary: DB is truth, staged outputs are
+  REGENERATED from DB state (derivable, so present-or-missing doesn't matter), renames completed,
+  journal cleared. `--rebuild` narrowed to merge resolution only, never crash recovery. Negative
+  controls expanded to all five boundaries.
+- **[Blocker] two unsynchronized Phase-0 writers** — **Implemented.** /releases mutating-route
+  migration moved from Phase 2 to Phase 0 ENTRY (preview-and-confirm UX kept, write path swapped);
+  direct hand-edits forbidden during the measured window; a drift-report hit resets the sole-writer
+  clock.
+- **[Should] NULL-version UNIQUE hole** — **Modified (claim narrowed, per your alternative).**
+  `version` stays nullable — the aegis "recorded, never reserved" convention legitimately holds
+  multiple live TBD blocks, so NOT NULL would refuse a real sibling ledger at import. The
+  duplication-guard claim now states its true scope (versioned releases), and `releases check`
+  gains a warning for >1 unversioned release sharing a codename in one repo.
+
+This is round 4 of 4. If the revision holds, please set STATUS: Approved; if a genuine
+design-level Blocker remains, set STATUS: Escalated with the finding and the operator will
+adjudicate.
+
+Handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
