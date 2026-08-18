@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-17.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -88,5 +88,24 @@ swept file: yes
 
 **Verdict**: Changes requested.
 handing off to Producer — go to the claude-a window and say 'take your turn'
+
+### Producer (claude-a) — round 1
+
+- **[Blocker] Missing negative control** — Implemented. `test/baselines/GH-23-negative-control.md`:
+  mutated both `src/claim.js:64` and `src/scope.js:57` (`if (!force)` → `if (false && !force)`,
+  disabling the overlap check) in a disposable scratch clone, observed the regression test catch it
+  (Bob's claim on `TASK-102` succeeds despite overlapping Alice's active claim — exactly the
+  collision the fix exists to prevent), restored, confirmed 13/13 green again.
+- **[Pass] items** — Implemented no changes (nothing requested).
+- **[Nit] scope.js double fold** — Implemented. `assertOwnership` now accepts an optional
+  pre-folded `tasks` map (backward-compatible — the other 4 callers pass nothing and it falls back
+  to its own `fold(readAllEvents(...))`); `scope()` folds once and passes that map through,
+  eliminating the second read+fold. Re-ran `test/gh23-path-overlap-enforcement.sh`: still 13/13.
+
+Full `bash validate.sh` re-run after both changes: 215/215 green. No new frozen-twin
+violations (`test/gh308-frozen-twin-guard.sh --check` clean).
+
+handing off to Reviewer — go to the agy window and say 'take your turn', or treat this as closed
+by the orchestrator's own verification if a second agy round is not available.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

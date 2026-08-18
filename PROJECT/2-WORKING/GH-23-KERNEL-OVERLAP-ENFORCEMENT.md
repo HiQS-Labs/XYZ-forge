@@ -2,7 +2,7 @@
 title: "GH-23: kernel invariant — enforce path-overlap rejection on direct tick claim and tick scope"
 status: active
 created: 2026-08-17
-updated: 2026-08-17
+updated: 2026-08-18
 owner: orchestrator (Claude Code)
 goal: enforce collision-free path claims at the kernel boundary by rejecting direct tick claim and tick scope when requested paths overlap active claims
 gh_issue: 23
@@ -20,7 +20,7 @@ risk: 2
 
 | What was just completed | What's next |
 |---|---|
-| Issue #23 filed; feature branch `fix/gh-23-kernel-overlap-enforcement` cut; `setsOverlap` path overlap validation implemented under `withClaimLock` in `src/claim.js` and `src/scope.js`; `--force` bypass and event log provenance (`force: true`) added in `src/events.js` and `bin/tick`; 13-assertion regression suite `test/gh23-path-overlap-enforcement.sh` green; full `./validate.sh` suite 215/215 green; dual advisory review relays completed with Codex and Command Code Kimi K3 | Push branch `fix/gh-23-kernel-overlap-enforcement` and open PR |
+| Issue #23 filed; feature branch `fix/gh-23-kernel-overlap-enforcement` cut; `setsOverlap` path overlap validation implemented under `withClaimLock` in `src/claim.js` and `src/scope.js`; `--force` bypass and event log provenance (`force: true`) added in `src/events.js` and `bin/tick`; 13-assertion regression suite `test/gh23-path-overlap-enforcement.sh` green; full `./validate.sh` suite green; dual advisory review relays completed with Codex and Command Code Kimi K3. **2026-08-18: orchestrator-driven Agy code review** (`relay-system/2026-08-17/gh-23-kernel-overlap-enforcement-code-review.md`) found the missing negative control (blocker) and a minor double-fold inefficiency in `scope.js` (nit); both fixed directly — negative control recorded at `test/baselines/GH-23-negative-control.md`, `scope.js` refactored to reuse `assertOwnership`'s folded task map instead of re-reading the event log. PR #24 retargeted from `main` to `development`. | Push, confirm green on `development`, PR ready for merge |
 
 ## Bug
 
