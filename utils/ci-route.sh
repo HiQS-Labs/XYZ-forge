@@ -55,7 +55,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   path_count=$((path_count + 1))
 
   case "$path" in
-    *.md|PROJECT/*|docs/*)
+    *.md|README.txt|CHANGELOG.txt|PROJECT/*|docs/*)
       pdda_needed=true
       ;;
     *)
@@ -79,7 +79,10 @@ while IFS= read -r path || [[ -n "$path" ]]; do
     bin/tick|bin/validate-relay-block|src/*)
       full_required=true
       ;;
-    relay-automation/*|utils/py/*|skills/relay-automation/*|skills/relay-xyz/*|skills/agent2agent/*)
+    relay-automation/*|utils/py/*|skills/relay-automation/*|skills/relay-xyz/*)
+      full_required=true
+      ;;
+    skills/agent2agent/scripts/*|skills/agent2agent/install.sh|skills/agent2agent/agents/*)
       full_required=true
       ;;
     test/*worktree*|test/*containment*|test/tick-*|test/relay-*|test/agent2agent.sh|test/marathon*.sh)

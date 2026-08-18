@@ -62,6 +62,8 @@ set -e
 # 72% of the billed minutes were pushes to `development`, every one on the full route. They now
 # classify from their pushed range exactly as a PR classifies from its diff.
 expect_route "docs-only push uses the docs gate (was blanket full)" push docs true README.md
+expect_route "text documentation uses the docs gate" push docs true docs/guide.txt
+expect_route "Agent2Agent skill instructions use the docs gate" push docs true skills/agent2agent/SKILL.md
 expect_route "ordinary code-only push uses the fast gate" push fast false utils/hq/hq.sh
 expect_route "a push touching the kernel still fails closed to full" push full true src/events.js
 expect_route "a push touching relay containment still fails closed to full" push full true relay-automation/relay-turn-lib.sh

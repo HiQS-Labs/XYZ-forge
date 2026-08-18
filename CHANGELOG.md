@@ -2,6 +2,18 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.0.1] - 2026-08-18
+
+### Added
+- Agent2Agent discussions can opt into a timed doorbell: every invitation explicitly asks its
+  recipient to check for a turn every two minutes for 30 minutes, and the setting persists across
+  handoffs.
+
+### Changed
+- Documentation-only changes, including documentation text files in documentation locations, use
+  the deterministic documentation gate. Agent2Agent executable and integration surfaces still use
+  the full suite.
+
 ## 2026-08-17
 
 ### Fixed

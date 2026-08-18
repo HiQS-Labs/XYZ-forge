@@ -46,9 +46,9 @@ grep -Fq -- '<this-skill>' "$SKILL" \
   && fail "skill retains a shell-significant path placeholder" \
   || pass "skill contains no shell-significant path placeholder"
 helper_examples="$(grep -Fc -- '"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py"' "$SKILL")"
-[ "$helper_examples" -eq 7 ] \
+[ "$helper_examples" -eq 8 ] \
   && pass "all skill commands resolve and quote the repository helper" \
-  || fail "expected 7 root-resolved helper commands, found $helper_examples"
+  || fail "expected 8 root-resolved helper commands, found $helper_examples"
 (cd "$REPO" && "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" --help >/dev/null) \
   && pass "documented root-resolved helper path executes" \
   || fail "documented root-resolved helper path does not execute"
@@ -71,6 +71,15 @@ relay_file="$(find "$ROOT/relay-system" -type f -name '123456-*.md' -print)"
 case "$relay_file" in "$ROOT"/relay-system/????-??-??/123456-agent2agent-*.md) pass "uses dated relay storage" ;; *) fail "unexpected relay path: $relay_file" ;; esac
 expect_file_contains "records stable 4-agent roster" "$relay_file" "AGENTS: agent1 agent2 agent3 agent4"
 expect_file_contains "routes the opening turn to agent2" "$relay_file" "NEXT: agent2"
+expect_file_contains "defaults timed watch to disabled" "$relay_file" "TIMED-WATCH: disabled"
+
+timed_start="$(python3 "$CLI" --root "$ROOT" start --id 654321 --subject "timed watch" --timed-watch 2>&1)"
+[ "$?" -eq 0 ] && pass "starts a timed-watch discussion" || fail "timed start failed: $timed_start"
+expect_contains "timed invitation tells the target to start its watch" "$timed_start" \
+  "Timed two-minute doorbell requested: when waiting, start a background watch that checks every 120 seconds for 1,800 seconds."
+timed_join="$(python3 "$CLI" --root "$ROOT" join --id 654321 --agent 1 2>&1)"
+expect_contains "timed join reports the persisted watch request" "$timed_join" \
+  "TIMED-WATCH: check every 120 seconds for 1,800 seconds while waiting"
 expect_file_contains "seeds turn 1 as agent1" "$relay_file" "### Turn 1 — agent1 —"
 expect_file_contains "seeds the requested subject" "$relay_file" "subject line here"
 

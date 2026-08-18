@@ -1,6 +1,6 @@
 {
   "name": "xyz-3-agents-swarm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "XYZ multi-agent coordination: the tick kernel plus relay automation for running multiple AI coding agents on one repo without collisions.",
   "main": "index.js",
   "directories": {

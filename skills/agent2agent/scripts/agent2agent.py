@@ -117,11 +117,17 @@ def quoted_subject(subject: str) -> str:
     return '"' + subject.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def invitation(discussion_id: str, number: int, subject: str) -> str:
-    return (
+def invitation(discussion_id: str, number: int, subject: str, timed_watch: bool = False) -> str:
+    text = (
         f"Join XYZ agent2agent #{discussion_id} as agent number {number_word(number)} "
         f"to discuss: {quoted_subject(subject)}"
     )
+    if timed_watch:
+        text += (
+            "\n\nTimed two-minute doorbell requested: when waiting, start a background "
+            "watch that checks every 120 seconds for 1,800 seconds."
+        )
+    return text
 
 
 def relay_root(root: Path) -> Path:
@@ -235,7 +241,9 @@ def reserve_id(root: Path, explicit_id: Optional[str]) -> Tuple[str, Path]:
     raise Agent2AgentError("could not allocate an unused six-digit discussion ID")
 
 
-def render_initial(discussion_id: str, subject: str, agents: int, timestamp: str) -> str:
+def render_initial(
+    discussion_id: str, subject: str, agents: int, timestamp: str, timed_watch: bool
+) -> str:
     roster = " ".join(agent_id(number) for number in range(1, agents + 1))
     return f"""# XYZ agent2agent #{discussion_id}
 
@@ -245,6 +253,7 @@ AGENTS: {roster}
 NEXT: agent2
 STATUS: Open
 TURN: 1
+TIMED-WATCH: {"enabled" if timed_watch else "disabled"}
 CREATED: {timestamp}
 UPDATED: {timestamp}
 
@@ -278,7 +287,9 @@ def atomic_write(path: Path, content: str) -> None:
         temp_path.unlink(missing_ok=True)
 
 
-def create_discussion(root: Path, subject: str, agents: int, explicit_id: Optional[str]) -> Tuple[str, Path]:
+def create_discussion(
+    root: Path, subject: str, agents: int, explicit_id: Optional[str], timed_watch: bool
+) -> Tuple[str, Path]:
     if agents < 2:
         raise Agent2AgentError("--agents must be at least 2")
     normalized = normalize_subject(subject)
@@ -290,7 +301,7 @@ def create_discussion(root: Path, subject: str, agents: int, explicit_id: Option
     try:
         descriptor = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
         with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as handle:
-            handle.write(render_initial(discussion_id, normalized, agents, timestamp))
+            handle.write(render_initial(discussion_id, normalized, agents, timestamp, timed_watch))
             handle.flush()
             os.fsync(handle.fileno())
     except FileExistsError as exc:
@@ -382,6 +393,12 @@ def join_discussion(
     else:
         decision = "wait"
     return path, subject, next_member, decision
+
+
+def timed_watch_enabled(content: str) -> bool:
+    """Old discussions predate this optional setting and remain manual by default."""
+    match = re.search(FIELD_RE_TEMPLATE.format(key="TIMED-WATCH"), _header(content), re.MULTILINE)
+    return bool(match and match.group(1) == "enabled")
 
 
 def positive_interval(value: str) -> float:
@@ -664,6 +681,10 @@ def build_parser() -> argparse.ArgumentParser:
     start = commands.add_parser("start", help="create a discussion and seed turn 1 from agent1")
     start.add_argument("--subject", required=True)
     start.add_argument("--agents", type=int, default=2, help="participant count (default: 2)")
+    start.add_argument(
+        "--timed-watch", action="store_true",
+        help="include a 2-minute / 30-minute background-watch request in every invitation",
+    )
     start.add_argument("--id", dest="explicit_id", help=argparse.SUPPRESS)
 
     join = commands.add_parser("join", help="resolve an invitation without modifying the discussion")
@@ -723,11 +744,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         root = normalize_root(args.root)
         if args.command == "start":
-            discussion_id, path = create_discussion(root, args.subject, args.agents, args.explicit_id)
+            discussion_id, path = create_discussion(
+                root, args.subject, args.agents, args.explicit_id, args.timed_watch
+            )
             subject = normalize_subject(args.subject)
             print(f"Created XYZ agent2agent #{discussion_id}")
             print(f"Relay file: {path}")
-            print(invitation(discussion_id, 2, subject))
+            print(invitation(discussion_id, 2, subject, args.timed_watch))
         elif args.command == "join":
             path, subject, next_member, decision = join_discussion(
                 root, args.id, args.agent, args.expect_subject
@@ -737,6 +760,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"Subject: {subject}")
             print(f"You are: {agent_id(args.agent)}")
             print(f"NEXT: {next_member}")
+            if timed_watch_enabled(read_discussion(path)):
+                print("TIMED-WATCH: check every 120 seconds for 1,800 seconds while waiting")
             print(f"DECISION: {decision}")
         elif args.command == "watch":
             return watch_discussion(root, args.id, args.agent, args.interval, args.timeout)
@@ -745,7 +770,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 root, args.id, args.agent, load_message(args), args.next_agent, False
             )
             print(f"Recorded turn {turn}: {path}")
-            print(invitation(args.id, args.next_agent, subject))
+            print(invitation(args.id, args.next_agent, subject, timed_watch_enabled(read_discussion(path))))
         elif args.command == "close":
             path, turn, _, _ = append_turn(root, args.id, args.agent, load_message(args), None, True)
             print(f"Closed XYZ agent2agent #{args.id} at turn {turn}")

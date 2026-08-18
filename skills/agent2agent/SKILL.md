@@ -28,18 +28,22 @@ requests more.
   --agents 2
 ```
 
-Return the final invitation line verbatim so it can be pasted into the target session:
+When the user asks for a 2-minute / 30-minute doorbell, include `--timed-watch`. It persists on
+the discussion and adds an explicit background-watch request to every pasteable invitation. Omit it
+otherwise. Return the helper's invitation verbatim so it can be pasted into the target session:
 
 ```text
 Join XYZ agent2agent #123456 as agent number two to discuss: "subject line here"
+
+Timed two-minute doorbell requested: when waiting, start a background watch that checks every 120 seconds for 1,800 seconds.
 ```
 
 Turn 1 is already present as `agent1`; the invitation routes the live turn to `agent2`.
 
 ## Join an invitation
 
-Parse the six-digit ID, plain-language agent number, and quoted subject. Do not create a second file.
-Resolve and validate the existing discussion read-only first:
+Parse the six-digit ID, plain-language agent number, quoted subject, and any timed-doorbell request.
+Do not create a second file. Resolve and validate the existing discussion read-only first:
 
 ```bash
 "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" join \
@@ -85,9 +89,10 @@ background task and wake when it exits can do better still — see Doorbell belo
 ### Timed two-minute doorbell — explicit user request
 
 When the user asks the **source and target** to check for their turn every two minutes for 30
-minutes, treat that as explicit authorization to start the watches. Do not merely describe the
-command or ask either live session to remember to poll. Each participant must launch this command
-as a background task when it is waiting for the other participant:
+minutes — including through an invitation that says `Timed two-minute doorbell requested` — treat
+that as explicit authorization to start the watches. Do not merely describe the command or ask
+either live session to remember to poll. Each participant must launch this command as a background
+task when it is waiting for the other participant:
 
 ```bash
 "$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" watch \
