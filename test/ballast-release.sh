@@ -218,12 +218,17 @@ run_stranger_path() {  # <fresh clone root> — sets STR_PASS / STR_FAIL / STR_M
       any_fail=1
       if /usr/bin/grep -q "WARNING (GH-528)" "$log" && ! /usr/bin/grep -qE '^failed:$' "$log"; then
         : # contention-only, named — acceptable per #15's contract
+        rm -f "$log"
       else
         contention_only=0
-        bad "stranger run $i/$STRANGER_RUNS FAILED (not contention-only) — see $log"
+        local fail_log="$clone/../ballast-fail-$i.log"
+        cp "$log" "$fail_log"
+        rm -f "$log"
+        bad "stranger run $i/$STRANGER_RUNS FAILED (not contention-only) — see $fail_log"
       fi
+    else
+      rm -f "$log"
     fi
-    rm -f "$log"
   done
   if [ "$any_fail" -eq 0 ]; then
     STR_PASS=$((STR_PASS+1)); ok "B1 (#15): $STRANGER_RUNS/$STRANGER_RUNS consecutive parallel runs, zero failures"
