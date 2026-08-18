@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -410,5 +410,64 @@ design-level Blocker remains, set STATUS: Escalated with the finding and the ope
 adjudicate.
 
 Handing off to Reviewer — take your turn.
+
+### Reviewer · Round 4
+
+swept file: yes
+
+Pre-existing defects found: yes — this was a whole-PRD, predecessor-contract, current-ledger, parser,
+Ballast Half-A, and `/releases` sweep; the blockers below are design-level contradictions at the final
+round rather than build-phase detail.
+
+Verdict: Blocked
+
+- **[Blocker] The contention evidence creates an unlocked writer that can tear the committed trio.**
+  Every lock attempt must insert into `lock_audit`, including a refused attempt, but a refused process
+  does not own the repo-scoped writer lock. That insert can occur while the owner is between DB COMMIT
+  and artifact renames; `lock_audit` is excluded from the business-state digest yet included in the
+  canonical dump, so generations can still match while DB and dump differ
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:210-231,266-286,289-294`). **Concrete fix:** never
+  mutate the committed DB without the repo lock: either carry refused/retried outcomes in process and
+  append them only after that session acquires the lock, or put refusal evidence in an independently
+  atomic sidecar that is outside the DB/dump/generation contract; add a negative control proving a
+  refused attempt cannot change or desynchronize any committed artifact.
+
+- **[Blocker] The merge/rebuild grammar does not serialize the complete v1 schema.** The newly added
+  `grandfather_entries` table is required for import and the strict flip, but it is absent from the
+  exhaustive non-GID dump-key list; therefore a dump rebuild can silently lose the very migration debt
+  whose disposition gates Phase 2 (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:200-208,289-301,
+  393-417`). **Concrete fix:** define a stable natural key and canonical serialization for every
+  `grandfather_entries` row (including document-level rows), include it in merge/rebuild fixtures, and
+  make the divergent-branch negative control assert that both sides' grandfather history survives.
+
+- **[Blocker] The PRD has two mutually exclusive Phase-0 definitions of done.** The generator contract
+  now correctly chooses a pinned normalized rendering plus consumer-equivalence instead of byte
+  equality, but the Phase-0 exit gate still requires a "byte-fixture" and Acceptance still requires
+  byte-for-byte reproduction through `legacy_lines`; Acceptance also still says all "exact dupes" are
+  refused after the duplication section narrowed that guarantee to versioned releases
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:343-369,403-412,424-439`). **Concrete fix:** replace
+  both stale Phase-0 byte claims with the pinned-normalized-rendering and consumer-equivalence gate,
+  and rewrite duplicate acceptance as versioned-duplicate refusal plus the specified unversioned
+  codename warning.
+
+- **[Should] The compatibility proof still omits one named consumer.** The deterministic pair can be
+  pointed at either fixture via `PDDA_RELEASES_FILE`, and Ballast Half A accepts an explicit ledger path
+  (`utils/pdda/pdda.sh:657-676,788-800`; `test/ballast-release.sh:160-187`), but the PRD's equivalence
+  list covers only those three checks while the Definition of Done also names `/releases`; its four
+  mutating routes are promised a Phase-0 CLI migration with no route-level acceptance
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:350-366,393-400`;
+  `skills/releases/SKILL.md:100-184`). **Concrete fix:** add a focused `/releases` fixture proving
+  read synthesis from normalized output and preview/confirmation-preserving CLI delegation for
+  clean/plan/anchor/publish before the measured window starts.
+
+- **[Pass] The central transition and scope choices now hold:** ordinary Phase-0 writes are single-path
+  and structurally strict, the two-week gate requires exercised traffic from two sessions, sibling
+  rollout stays outside v1, and the UI proof uses disposable repo fixtures
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:335-341,371-389,393-422`). **[Pass]** Identity remains
+  immutable rather than content-derived, with additive migrations and no EAV/JSON escape hatch
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:84-93,303-313`).
+
+Handing off to Producer — go to the Producer window and say “take your turn”; the relay is escalated
+at the round cap, so disposition these blockers for operator adjudication rather than opening Round 5.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
