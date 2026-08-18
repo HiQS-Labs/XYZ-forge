@@ -22,8 +22,9 @@ Requires **Node 18+** and **git** (the `tick` kernel runs on Node). No accounts 
 
 ```bash
 npm install
+npm run test:unit          # ~1 second — fast proof the kernel logic itself is sound
 bash githooks/install.sh   # contributors: wires the pre-push gate (correctness requirement)
-./validate.sh
+./validate.sh              # the full suite — see timing note below before you run this
 ```
 
 (`npm install` pulls the two parser dependencies the test suite needs — skip it and the
