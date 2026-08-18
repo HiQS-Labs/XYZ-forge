@@ -1,0 +1,18 @@
+FIRSTHAND_COUNT=16
+ECHOED_COUNT=16
+ECHOED `check_releases()`
+ECHOED `PROJECT/PDDA.md`
+ECHOED `validate.sh`
+ECHOED `Description:`
+ECHOED `validate.sh`
+ECHOED `validate.sh`
+ECHOED `validate.sh`
+ECHOED `validate.sh`
+ECHOED `RELEASES.md`
+ECHOED `Description:`
+ECHOED `validate.sh`
+ECHOED `Description:`
+ECHOED `validate.sh`
+ECHOED `validate.sh`
+ECHOED `Description:`
+ECHOED `validate.sh`

@@ -1,0 +1,36 @@
+# GH-28 — validate and sharpen before promotion to 2-WORKING
+
+Read `PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md` (the capture doc) and GitHub issue #28
+(https://github.com/HiQS-Suite/XYZ-forge/issues/28) in this repo. Also read `check_releases()` in
+`utils/pdda/pdda.sh` and the "RELEASES.md — release ledger" contract section in `PROJECT/PDDA.md`.
+
+Not yet implemented — still in `1-INBOX`, not promoted to `2-WORKING`. Low urgency, low risk
+(doc-governance tooling only; `check_releases()` is confirmed NOT wired into `validate.sh`'s `TESTS[]`,
+so nothing here touches the push gate). This is a post-Ballast 0.7.0 follow-up.
+
+## Question
+
+What are the concrete next steps to validate and sharpen this plan before promotion? Specifically:
+
+1. **The revised bloat-check design** — `Description:` >4 sentences, `Exit criterion:` >4 sentences,
+   `Manifest-Members:` >7 tokens. These were validated by an ad-hoc scan against the live
+   `RELEASES.md` (results in the doc's "Validation scan" section — clean blocks sit at 0-592 chars /
+   0-6 sentences on Exit criterion, bloated ones start at 1544+ chars / 6+ sentences; only 2 of 8
+   blocks even use `Manifest-Members:`, both clean). Is the threshold choice (4 sentences) sound, or
+   is there a better signal? Sentence-counting is a crude heuristic (splits on `.!?`) — will it false-
+   positive on legitimate technical prose (e.g. version numbers, decimal points, abbreviations)?
+2. **The warn-only-first rollout sequencing** — ship the new checks warn-only, clean up the 6 of 8
+   existing bloated blocks (or explicitly grandfather them), THEN flip to blocking in a follow-up
+   commit. Is this the right sequencing, or is there a risk in a two-commit rollout (e.g. the
+   blocking flip never happens, warn-only becomes the permanent state by inertia)?
+3. **The new `Tracking Issue:` field** on the RELEASES.md block spec — a per-release GH issue meant
+   to hold release-level status/run-log notes that currently get stuffed inline. Does this field
+   design hold up, or is there a simpler/existing mechanism already in the repo that should be reused
+   instead (e.g. the `Milestone:` field, or `GH_URL:` once a GitHub Release object exists)?
+4. **Anything missing or wrong that would only surface during implementation** — e.g. parser changes
+   needed in `pdda-lib.sh` to actually extract the new field, backward-compat for blocks that predate
+   the field, interaction with `check_releases()`'s existing warn-only-by-design invariant
+   (`PROJECT/PDDA.md` section J), or test coverage gaps.
+
+Give a direct recommendation for what to change before promoting this to `2-WORKING`, not just a list
+of considerations.
