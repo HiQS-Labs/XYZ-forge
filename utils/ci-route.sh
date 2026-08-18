@@ -55,7 +55,7 @@ while IFS= read -r path || [[ -n "$path" ]]; do
   path_count=$((path_count + 1))
 
   case "$path" in
-    *.md|README.txt|CHANGELOG.txt|PROJECT/*|docs/*)
+    *.md|README.txt|CHANGELOG.txt|PROJECT/*|docs/*|relay-system/*.txt)
       pdda_needed=true
       ;;
     *)

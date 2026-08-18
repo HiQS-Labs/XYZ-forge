@@ -64,6 +64,12 @@ set -e
 expect_route "docs-only push uses the docs gate (was blanket full)" push docs true README.md
 expect_route "text documentation uses the docs gate" push docs true docs/guide.txt
 expect_route "Agent2Agent skill instructions use the docs gate" push docs true skills/agent2agent/SKILL.md
+# GH-28 follow-up: consult.sh always writes .txt sidecars (NO-CITATION.txt, PROVENANCE.txt,
+# DEGRADED-SINGLE-MODEL.txt) alongside each relay-system/ transcript. Before this, a lone sidecar
+# fell through to the catch-all `docs_only=false` branch, forcing a transcript-only push onto the
+# full 6-minute local gate instead of the ~2-minute docs gate — observed directly on 2026-08-18.
+expect_route "a relay-system .txt sidecar alone uses the docs gate" push docs true "relay-system/2026-08-18/run/NO-CITATION.txt"
+expect_route "a relay-system transcript plus its .txt sidecar both use the docs gate" push docs true "relay-system/2026-08-18/run/consult.codex.md" "relay-system/2026-08-18/run/PROVENANCE.txt"
 expect_route "ordinary code-only push uses the fast gate" push fast false utils/hq/hq.sh
 expect_route "a push touching the kernel still fails closed to full" push full true src/events.js
 expect_route "a push touching relay containment still fails closed to full" push full true relay-automation/relay-turn-lib.sh
