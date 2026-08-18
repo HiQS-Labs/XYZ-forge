@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -59,5 +59,79 @@ ROUND: 1 / 4
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+Pre-existing defects found: yes — the findings below cover the whole PRD, not only its latest edits.
+
+Verdict: Changes requested
+
+- **[Blocker] Schema soundness — the two SOPs and the rescope trail are not schema-enforced.**
+  `TEXT NOT NULL` still admits `''`, arbitrary text, and unregistered `TMP-*` values; `temp_ids` is not
+  referenced by either tracking column; SQLite foreign keys are ineffective unless every connection
+  enables them; enum `CHECK`s constrain only the current value, not transitions; and
+  `manifest_items.state_changed` is one overwriteable cell with no cut-reason column while rows remain
+  deletable (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:87-129,166-169`). **Concrete fix:** model a
+  normalized issue reference (real URL XOR registered temp ID) and point releases/marathons/items to it
+  with FKs; require and self-check `PRAGMA foreign_keys=ON`; add transition/delete triggers plus an
+  append-only manifest-state event table containing timestamp and reason; add non-empty/date/format
+  constraints, or narrow every “schema-enforced” claim to “CLI-enforced” and make the consistency gate
+  detect direct-write violations.
+
+- **[Blocker] Global identity is correctly identity-not-hash, but eight hex digits are not globally
+  safe across independent databases.** DB-local `UNIQUE` cannot detect the same 32-bit ID generated in
+  two repos, yet the UI and future links treat it as cross-repo identity
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:65-72,80-121`). **Concrete fix:** keep integer PKs
+  internal, use a 128-bit UUID/ULID-style immutable global ID with prefix/shape constraints, address
+  rows externally by that ID (not `--id N`), and make aggregation fail loudly on any duplicate. **[Pass]**
+  The identity-not-content-hash choice and additive/no-EAV direction are sound
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:65-72,137-151`).
+
+- **[Blocker] Phase 0 cannot implement the stated lenient boundary or prove its exit gate.** The schema
+  has no per-repo enforcement setting; `tracking_issue_url NOT NULL` conflicts with importing missing
+  legacy tracking issues; lenient mode says both “warn and write” new threshold violations and
+  “legacy debt, not new corruption”; and two quiet weeks do not prove the CLI was the sole writer
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:96-111,213-227,240-244`). **Concrete fix:** add the
+  settings schema, a one-shot import path that records each grandfathered violation and its disposition,
+  keep ordinary post-import writes strict on structural rules, and add an append-only operation/audit
+  receipt plus a minimum exercised-operation matrix to the exit gate; zero-change days must not count as
+  dogfood evidence.
+
+- **[Blocker] The zero-change consumer and current-file round-trip claims are false with this schema.**
+  The DB has nowhere to retain `Iterations`, the three QA fields, `Manifest-Members`, `Shipped`, or
+  arbitrary continuation/history lines, while the parser consumes Iterations/QA positionally
+  (`utils/pdda/pdda-lib.sh:454-499`), Ballast Half A requires `Manifest-Members`
+  (`test/ballast-release.sh:165-187`), and Sundown contains two continuation paragraphs
+  (`RELEASES.md:198-200`). Requiring full issue URLs also cannot import today's bare-number manifests
+  “as-is” (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:114-121,171-179,220-226`). **Concrete fix:**
+  publish an explicit lossless import/render mapping for every current label and unknown continuation,
+  preserve ordered legacy lines until each is dispositioned, and add a byte-for-byte fixture for the
+  current 207-line ledger plus focused assertions for `pdda releases`, `releases-current`, Ballast Half
+  A, and `/releases`; otherwise qualify “round-trip” as a documented normalized migration and drop the
+  zero-change/byte-stable-current-file claim.
+
+- **[Blocker] The committed-DB Git story has an unclosed race and unclear authority.** A SQLite
+  transaction serializes the DB only; it does not atomically cover DB + SQL dump + generated Markdown,
+  so two sessions can overwrite one another's dump or commit another session's state. The PRD also
+  calls the DB source of truth but makes the dump authoritative during merges, and integer PKs make
+  independently edited dumps collision-prone (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:39-47,
+  155-163`). **Concrete fix:** specify one repo-scoped writer claim/lock spanning transaction, dump,
+  generation, and atomic replacements; use optimistic preimage checks; reject leftover WAL/journal or
+  mismatched artifacts; omit device-local `local_path` from committed data; and define a tested
+  conflict procedure in which a global-ID-keyed logical dump is merged and the DB is rebuilt atomically
+  with a recoverable backup.
+
+- **[Should] V1 carries one speculative subsystem and one hidden Phase-4 dependency.** Marathons do
+  not run from this system until v3, yet v1 creates their table/SOP with no marathon CRUD acceptance;
+  meanwhile the UI criterion requires at least two registered repo DBs although sibling-repo rollout
+  is Phase 4 and excluded from v1 (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:87-94,188-202,
+  228-253`). **Concrete fix:** defer the marathon table/SOP to the promised additive migration unless
+  a real v1 reader/writer is named, and make the two-repo UI proof use two disposable registered fixture
+  repos (or explicitly admit one sibling pilot into v1).
+
+Handing off to Producer — go to the Producer window and say “take your turn”; address every finding
+with an Implemented / Modified / Declined disposition before revising the PRD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
