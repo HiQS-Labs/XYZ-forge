@@ -21,8 +21,11 @@ function emitEvent(repoRoot, type, payload) {
 // Returns the claimed task `t` so callers can stamp the owner's epoch onto the
 // mutation they emit (the fence in fold rejects any mutation whose epoch is
 // below the current owner's).
-function assertOwnership(repoRoot, task, agent) {
-  const tasks = fold(readAllEvents(repoRoot));
+// `tasks` is optional — a pre-folded task map, so a caller that already needs
+// the full projection (e.g. `scope`'s overlap check) does not read+fold the
+// event log a second time for the same lock-held snapshot.
+function assertOwnership(repoRoot, task, agent, tasks) {
+  tasks = tasks || fold(readAllEvents(repoRoot));
   const t = tasks.get(task);
   if (!t) throw new Error(`task ${task} not found`);
   if (t.status === 'open') throw new Error(`task ${task} is open (never claimed) — nothing to break; use a fresh --relay-task id`);
@@ -48,11 +51,10 @@ function scope(repoRoot, { task, agent, paths, force = false }) {
   if (!paths || !paths.length) throw new Error('scope requires --paths');
 
   return withClaimLock(repoRoot, () => {
-    const t = assertOwnership(repoRoot, task, agent);
+    const tasks = fold(readAllEvents(repoRoot));
+    const t = assertOwnership(repoRoot, task, agent, tasks);
 
     if (!force) {
-      const events = readAllEvents(repoRoot);
-      const tasks = fold(events);
       const conflicts = [];
       const conflictAgents = new Set();
       for (const other of tasks.values()) {
