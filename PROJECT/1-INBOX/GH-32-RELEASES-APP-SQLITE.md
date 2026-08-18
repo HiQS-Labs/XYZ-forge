@@ -62,15 +62,31 @@ my repos" has no answer short of opening every file.
 
 ## Schema (v1)
 
+**Global IDs (operator decision, 2026-08-18): every referenceable row carries a `global_id`** — a
+stable random identifier (`rel-`/`mar-`/`mfi-` prefix + 8 hex chars) assigned at creation and never
+changed. This is **identity, not a content hash**: a hash of the row's contents would mutate on every
+edit and break cross-repo references, which defeats the purpose. The proof case is in this repo's own
+ledger: Sundown was renumbered 0.7.0 → 0.8.0 on 2026-08-16 and every `(0.7.0)` cross-reference in
+Meter's blocks had to be hand-swept. A `global_id` survives version renumbers, codename changes, and
+repo moves — `rel-a3f9c2b1` means the same release from any repo's DB on the device, and later from
+Slack.
+
 ```sql
+CREATE TABLE schema_migrations (
+  version INTEGER PRIMARY KEY,
+  applied_at TEXT NOT NULL
+);
+
 CREATE TABLE repos (
   id INTEGER PRIMARY KEY,
-  slug TEXT NOT NULL UNIQUE,          -- e.g. "HiQS-Suite/XYZ-forge"
+  global_id TEXT NOT NULL UNIQUE,      -- repo-XXXXXXXX
+  slug TEXT NOT NULL UNIQUE,           -- e.g. "HiQS-Suite/XYZ-forge"
   local_path TEXT                      -- device-local; informational for the UI
 );
 
 CREATE TABLE marathons (
   id INTEGER PRIMARY KEY,
+  global_id TEXT NOT NULL UNIQUE,      -- mar-XXXXXXXX
   repo_id INTEGER NOT NULL REFERENCES repos(id),
   tracking_issue_url TEXT NOT NULL,    -- real URL or TMP-XXXXXX
   status TEXT NOT NULL CHECK (status IN ('planned','running','done','escalated','abandoned')),
@@ -79,6 +95,7 @@ CREATE TABLE marathons (
 
 CREATE TABLE releases (
   id INTEGER PRIMARY KEY,
+  global_id TEXT NOT NULL UNIQUE,      -- rel-XXXXXXXX; the cross-repo reference key
   repo_id INTEGER NOT NULL REFERENCES repos(id),
   version TEXT,                        -- nullable: "recorded, never reserved" repos use NULL until ship
   codename TEXT,
@@ -96,6 +113,7 @@ CREATE TABLE releases (
 
 CREATE TABLE manifest_items (
   id INTEGER PRIMARY KEY,
+  global_id TEXT NOT NULL UNIQUE,      -- mfi-XXXXXXXX
   release_id INTEGER NOT NULL REFERENCES releases(id),
   issue_url TEXT NOT NULL,             -- FULL URL; foreign sibling-repo issues are first-class
   state TEXT NOT NULL CHECK (state IN ('open','shipped','cut')),
@@ -115,6 +133,22 @@ Deliberately absent (survey-informed): `Iterations:` bands (aegis proved them ha
 want them keep them in the generated file's header prose, not the schema), free-text status values,
 narrative fields. QA gates (`Front-door reviewed` etc.) deferred to a v2 `release_checks` table if
 demand shows up — YAGNI for v1.
+
+## Flexibility contract — this may become PDDA's home (operator, 2026-08-18)
+
+The schema must not paint the system into a corner, because the long-term direction is for this DB to
+absorb PDDA's document lifecycle over time. The corner-avoidance mechanism is deliberately minimal:
+
+1. **Global IDs on every referenceable row** (above). Anything can reference anything later — a
+   future PDDA capture-doc row pointing at a release, a marathon pointing at a working doc — via a
+   future `links(from_gid, to_gid, kind)` table, without redesigning any existing table.
+2. **Additive-only migrations**, tracked in `schema_migrations`. New tables and nullable columns are
+   always safe; renames/repurposes are forbidden (a new column supersedes an old one, which is
+   retired by a later migration once nothing reads it).
+3. **What flexibility does NOT mean here:** no EAV/attribute tables, no JSON-blob columns, no
+   speculative PDDA tables in v1. Generic-everything schemas are themselves the corner — they trade
+   write-time validation (this project's entire point) for imagined future ease. PDDA tables get
+   added by additive migration when PDDA actually moves in, referencing existing rows by `global_id`.
 
 ## CLI (v1) — `utils/py/releases_app.py`, Python-only per GH-551 rails
 
@@ -156,6 +190,13 @@ tracking-issue links. Read-only — the card never writes.
 - **Slack read-only queries** ("what's shipping next") via aegis-sleuth-slack-bot — v2.
 - **Slack-launched headless marathon sessions** — the long-term goal, explicitly deferred: it is a
   remote-execution trigger and needs its own issue, threat model, and design review before any build.
+- **Marathons running off this system** (operator-flagged direction, 2026-08-18) — v3, own issue.
+  The v1 `marathons` table is the data home from day one, so the path is open: the evolution is
+  `marathon-plan.sh`/`swarm-preflight` reading and writing the DB, `MARATHON.yaml` becoming generated
+  output (the same pattern as RELEASES.md), at which point Slack-launch reduces to "insert a row, the
+  driver picks it up" — the DB is the queue. Deliberately deferred because it touches
+  `relay-automation/` and the driver surfaces, which are `full_required` in CI routing for good
+  reason: it is the biggest-blast-radius phase of the whole arc.
 - **Migration of sibling repos' existing ledgers** — v1 ships in XYZ-forge only; the survey table
   above is the migration worklist, not v1 scope.
 - **Editing UI** — the CLI is the writer; the UI reads.
