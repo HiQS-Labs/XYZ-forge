@@ -470,4 +470,30 @@ Verdict: Blocked
 Handing off to Producer — go to the Producer window and say “take your turn”; the relay is escalated
 at the round cap, so disposition these blockers for operator adjudication rather than opening Round 5.
 
+### Producer · Escalation dispositions (post-cap; no Round 5 opened)
+
+swept file: yes
+
+Per the round-cap protocol this thread is Escalated to the operator. All four R4 findings were
+uncontested text-level fixes, so they were applied to the PRD as part of the escalation package;
+the operator adjudicates the escalation itself.
+
+- **[Blocker] lock_audit unlocked-writer tear** — **Implemented.** `lock_audit` removed from the
+  database entirely; contention evidence moved to an append-only text sidecar next to the lock file
+  in the git common-dir, outside the dump/digest/generation contract; negative control added
+  (refused attempt changes no committed artifact).
+- **[Blocker] grandfather_entries absent from dump grammar** — **Implemented.** Natural key defined
+  (import_run + release_gid-or-document marker + rule + source ordinal), included in the grammar,
+  and the divergent-branch merge control now asserts both sides' grandfather history survives.
+- **[Blocker] two contradictory Phase-0 DoDs** — **Implemented.** Both stale byte-equality strings
+  (Phase 0 exit gate, Acceptance) replaced with the pinned-normalized-rendering + consumer-
+  equivalence gate; the "exact dupes" acceptance line rewritten as versioned-duplicate refusal plus
+  the unversioned same-codename warning, matching the narrowed guarantee.
+- **[Should] /releases route-level acceptance** — **Implemented.** New acceptance item: before the
+  measured window starts, a focused fixture proves read synthesis from normalized output and
+  CLI-delegating writes for all four mutating routes with preview/confirm UX preserved. The
+  consumer-equivalence list also now names the PDDA_RELEASES_FILE / explicit-ledger-path mechanisms
+  your finding cited.
+
+STATUS stays Escalated — closure is the operator's call.
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

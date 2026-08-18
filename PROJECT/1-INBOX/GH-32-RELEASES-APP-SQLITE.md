@@ -223,12 +223,13 @@ CREATE TABLE op_receipts (             -- append-only CLI operation log (append-
                                        --   the current business-state digest and a mismatch with the
                                        --   latest `after` = receipt-less mutation.
 
-CREATE TABLE lock_audit (              -- r3: contention evidence, mechanically inspectable —
-  id INTEGER PRIMARY KEY,              -- a REFUSED writer has no txn, so receipts can't show it
-  session_id TEXT NOT NULL,
-  at TEXT NOT NULL,
-  outcome TEXT NOT NULL CHECK (outcome IN ('acquired','refused','retried','recovered'))
-);  -- same append-only trigger pair
+-- Lock/contention evidence deliberately lives OUTSIDE the database (r4 review finding: a refused
+-- writer inserting into the committed DB would itself be an unlocked write, able to tear the
+-- DB/dump/generation trio it exists to audit). It is an append-only text sidecar next to the lock
+-- file in the git common-dir (`releases-app-lock-audit.log`: session_id, timestamp,
+-- acquired|refused|retried|recovered per line), excluded from the dump, the digests, and the
+-- generation contract entirely. A negative control proves a refused attempt changes no committed
+-- artifact.
 ```
 
 **GID shape note (r2 review finding — prefix-only GLOBs were theater):** every `global_id` CHECK is
@@ -289,9 +290,12 @@ serialization:
 6. **Canonical dump grammar** (r2: "global-ID-keyed" was underspecified for rows without GIDs):
    GID-bearing rows are keyed by `global_id`. Non-GID rows are keyed by parent GID + a stable ordinal
    (`manifest_state_events`/`legacy_lines`/`doc_lines`: parent GID or repo slug + `position`/event
-   order; `op_receipts`: `txn_id`; `lock_audit`: `session_id` + `at`; `settings`/`schema_migrations`:
-   their natural keys). Integer PKs and FK ids never appear in the dump; rebuild renumbers them
-   deterministically.
+   order; `op_receipts`: `txn_id`; `grandfather_entries`: `import_run` + `release_gid`-or-document
+   marker + `rule` + source ordinal — r4: this table gates the strict flip, so a rebuild that loses
+   it would silently discharge migration debt; `settings`/`schema_migrations`: their natural keys).
+   The lock-audit sidecar is not in the dump at all. Integer PKs and FK ids never appear in the
+   dump; rebuild renumbers them deterministically. The divergent-branch merge negative control
+   asserts BOTH sides' grandfather history survives the rebuild.
 7. **Merge conflict procedure (tested, not aspirational):** conflicts are resolved in the logical
    dump per the grammar above; then `releases check --rebuild` reconstructs the DB atomically,
    backing up the displaced DB to `releases.db.bak`.
@@ -407,9 +411,11 @@ Read-only. Duplicate global IDs across DBs fail the aggregation loudly.
    refused/retried); the everyday operation classes (`add`, `update`, `manifest add`, `gen`,
    `check`) each exercised on real work; **rare/destructive operations** (`ship` when no release
    actually ships, `reconcile` when GitHub never went down, `check --rebuild`) exercised in
-   **disposable fixture DBs**, not manufactured in the real ledger; the side-by-side byte-fixture
-   green; the grandfather ledger (including every `MIG-` placeholder) fully dispositioned.
-   Zero-change days count for nothing.
+   **disposable fixture DBs**, not manufactured in the real ledger; the side-by-side
+   **pinned-normalized-rendering fixture and all consumer-equivalence assertions** green (r4 — the
+   former "byte-fixture" wording predated r3's switch away from byte equality); the grandfather
+   ledger (including every `MIG-` placeholder) fully dispositioned. Zero-change days count for
+   nothing.
 1. **Schema + CLI + dump discipline** — mechanical acceptance for what Phase 0 builds: registered
    consistency test with negative control, temp-ref lifecycle, writer-lock/preimage behavior under a
    simulated concurrent writer.
@@ -423,19 +429,31 @@ Read-only. Duplicate global IDs across DBs fail the aggregation loudly.
 
 ## Acceptance Criteria (v1 = phases 0-3)
 
-- [ ] **Phase 0:** import grandfathers legacy violations with recorded dispositions; a structurally
-      corrupt write is refused even in lenient; side-by-side generation reproduces the current
-      ledger byte-for-byte via `legacy_lines`; exit gate met per the receipts + exercised-operation
-      matrix above.
+- [ ] **Phase 0:** import grandfathers legacy violations with recorded dispositions in
+      `grandfather_entries`; a structurally corrupt write is refused even in lenient; side-by-side
+      generation matches the **pinned normalized rendering**, and the **consumer-equivalence
+      assertions** (`pdda.sh releases` and `releases-current` via `PDDA_RELEASES_FILE`,
+      `ballast-release.sh` Half A via its explicit ledger path) produce identical findings against
+      the real and generated files; exit gate met per the receipts + exercised-operation matrix
+      above.
+- [ ] **`/releases` route migration (r4):** before the measured window starts, a focused fixture
+      proves read synthesis works from normalized output AND that all four mutating routes
+      (clean/plan/anchor/publish) delegate their writes to the CLI while preserving their
+      preview-and-confirm UX.
 - [ ] `PRAGMA foreign_keys=ON` asserted per connection; consistency check registered in `validate.sh`
       and observed failing on: a deliberate DB↔dump divergence, a stale `-wal`, a receipt-less direct
-      write, and a duplicate global ID across two fixture DBs (four negative controls).
+      write (business-state digest-chain mismatch), and a duplicate global ID across two fixture DBs
+      (four negative controls).
 - [ ] Strict-mode refusals name the violated rule; GH-28 thresholds refuse in strict / warn in
       lenient; manifest cut without a reason refused in both modes.
 - [ ] Temp-ref lifecycle: offline create → `reconcile` → 7-day staleness warning (mocked clock).
-- [ ] Writer lock + preimage check demonstrated against a simulated concurrent writer; merge
-      procedure tested: conflicting dumps merged by global ID, DB rebuilt atomically with `.bak`.
-- [ ] Duplication guard: exact dupes refused; shared-manifest-issue and cross-repo-codename cases
-      observed warning (not refusing).
+- [ ] Writer lock + preimage check demonstrated against a simulated concurrent writer, with the
+      refusal recorded in the lock-audit sidecar and a negative control proving the refused attempt
+      changed no committed artifact (r4); crash injection at all five boundaries recovers with the
+      committed operation preserved; merge procedure tested: conflicting dumps merged per the
+      grammar, DB rebuilt atomically with `.bak`, both sides' grandfather history surviving (r4).
+- [ ] Duplication guard: **versioned-duplicate refusal** demonstrated, plus the unversioned
+      same-codename warning (r4 — scope matches the narrowed guarantee); shared-manifest-issue and
+      cross-repo-codename cases observed warning (not refusing).
 - [ ] Cockpit card renders releases from 2 fixture repo DBs sorted by target date, read-only, and
       fails loudly on an injected duplicate global ID.
