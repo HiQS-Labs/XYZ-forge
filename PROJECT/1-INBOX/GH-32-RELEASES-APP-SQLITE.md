@@ -8,10 +8,17 @@ doc_type: feedback
 effort: 4
 complexity: 3
 risk: 2
-phases: 4
+phases: 5
 ---
 
 # GH-32: RELEASES App — SQLite-Backed Release Ledger (PRD)
+
+> Revised 2026-08-18 after a Codex (sol, high-reasoning) relay review
+> (`relay-system/2026-08-18/gh32-releases-app-prd-review.md`) — 5 Blockers, 1 Should, all
+> dispositioned in the relay thread. The largest corrections: enforcement claims are now honest about
+> what SQLite can and cannot enforce, global IDs are 128-bit, the round-trip claim is qualified with
+> a lossless legacy-line mechanism, and the committed-DB git story gained a writer lock and a tested
+> conflict procedure.
 
 ## Problem
 
@@ -36,218 +43,293 @@ my repos" has no answer short of opening every file.
 
 ## Decisions (operator, 2026-08-18)
 
-1. **DB is source of truth; RELEASES.md is generated.** A generator renders each repo's RELEASES.md
-   as a read-only view (the ROADMAP-DASHBOARD.md pattern). Existing consumers — `pdda.sh releases`,
-   `test/ballast-release.sh`'s ledger cross-check, the `/releases` skill — keep reading the generated
-   file unchanged. Hand-edits are overwritten on next generation; that overwrite IS the enforcement.
-2. **Per-repo DB, committed to git.** Operator call, accepting the binary-diff tradeoff.
-   **Mitigation (spec'd, required):** a deterministic text dump (`releases.sql`, stable ordering) is
-   committed alongside as the git-diffable/mergeable form. A registered check fails when DB and dump
-   diverge. Merge conflicts are resolved in the dump; the DB is rebuilt from it (`releases check
-   --rebuild`).
-3. **CLI is the only writer.** Validation happens at write time — a malformed manifest URL, a missing
-   tracking issue, an over-length description are refused at the source, not flagged after landing.
+1. **DB is source of truth at runtime; RELEASES.md is generated.** A generator renders each repo's
+   RELEASES.md as a read-only view (the ROADMAP-DASHBOARD.md pattern). Hand-edits are overwritten on
+   next generation; that overwrite IS the enforcement. **Authority split, stated precisely** (review
+   finding): the DB is authoritative for reads and writes at runtime; the committed logical dump
+   (`releases.sql`, global-ID-keyed) is authoritative **at git merge boundaries only**, because git
+   can merge text and cannot merge SQLite pages. On any DB↔dump divergence the consistency check
+   fails and `releases check --rebuild` (dump → DB, atomic, with a `.bak` of the displaced DB) is the
+   one documented recovery.
+2. **Per-repo DB, committed to git.** Operator call. The dump is the diffable/mergeable git form; the
+   conflict procedure is defined and tested (see Git story below).
+3. **CLI is the only writer.** Enforcement claims are split honestly (review finding):
+   **schema-enforced** = what SQLite genuinely refuses (uniqueness, FK integrity with
+   `PRAGMA foreign_keys=ON` self-checked per connection, XOR and non-empty CHECKs, enum membership);
+   **CLI-enforced** = everything else (status *transitions*, GH-28 length thresholds, URL
+   reachability). The consistency check detects direct writes that bypassed the CLI (see audit
+   receipts) — a bypass is caught, not prevented.
 4. **V1 includes the cross-repo read-only UI.** Slack integration deferred (see Non-goals).
 
-## Two new SOPs (enforced by schema, not prose)
+## Two new SOPs
 
-1. **Every Release requires a tracking GH issue** (`tracking_issue_url NOT NULL`). This is GH-28's
-   `Tracking Issue:` field, promoted from optional doc convention to schema constraint. Release-level
-   status notes and run logs live on that issue — the DB holds pointers and enums, never narrative.
-2. **Every Marathon requires a tracking GH issue** (`marathons.tracking_issue_url NOT NULL`).
-3. **GitHub-down fallback:** temp alphanumeric IDs (`TMP-` + 6 uppercase alphanumerics) satisfy the
-   constraint when GitHub is unreachable. Recorded in `temp_ids` with a created-at stamp;
-   `releases reconcile` lists unreconciled temp IDs and swaps in real URLs interactively or via
-   `--map TMP-XXXXXX=<url>`. A registered check warns on temp IDs older than 7 days.
+1. **Every Release requires a tracking GH issue.** GH-28's `Tracking Issue:` field, promoted to a
+   required reference: `releases.tracking_ref_id NOT NULL REFERENCES issue_refs(id)`.
+2. **Every Marathon requires a tracking GH issue** (`marathons.tracking_ref_id NOT NULL`, same shape).
+3. **GitHub-down fallback:** an `issue_refs` row may carry a temp ID (`TMP-` + 6 uppercase
+   alphanumerics) instead of a URL — exactly one of the two, enforced by CHECK. `releases reconcile`
+   fills in the real URL later (the row keeps its identity; nothing downstream changes). A registered
+   check warns on temp refs older than 7 days.
 
 ## Schema (v1)
 
-**Global IDs (operator decision, 2026-08-18): every referenceable row carries a `global_id`** — a
-stable random identifier (`rel-`/`mar-`/`mfi-` prefix + 8 hex chars) assigned at creation and never
-changed. This is **identity, not a content hash**: a hash of the row's contents would mutate on every
-edit and break cross-repo references, which defeats the purpose. The proof case is in this repo's own
-ledger: Sundown was renumbered 0.7.0 → 0.8.0 on 2026-08-16 and every `(0.7.0)` cross-reference in
-Meter's blocks had to be hand-swept. A `global_id` survives version renumbers, codename changes, and
-repo moves — `rel-a3f9c2b1` means the same release from any repo's DB on the device, and later from
-Slack.
+**Global IDs: 128-bit, prefixed, immutable** (review finding — 8 hex chars was birthday-collision
+territory across independent per-repo DBs that no local `UNIQUE` can police). Format:
+`rel-`/`mar-`/`mfi-`/`ref-`/`repo-` + a 26-character ULID. Assigned at creation, never changed —
+**identity, not a content hash** (a content hash would mutate on edit and break cross-repo
+references; the Sundown 0.7.0 → 0.8.0 renumber is the recorded proof case). External addressing —
+CLI (`--gid`), UI, and future links — uses the global ID, never the integer PK, which stays an
+internal join key. The cross-repo aggregator **fails loudly** on any duplicate global ID rather than
+merging silently.
 
 ```sql
+PRAGMA foreign_keys = ON;   -- the CLI asserts this per connection and refuses to run without it
+
 CREATE TABLE schema_migrations (
   version INTEGER PRIMARY KEY,
   applied_at TEXT NOT NULL
 );
 
+CREATE TABLE settings (            -- per-repo DB, so per-repo enforcement mode lives here
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);  -- rows: ('enforcement','lenient'|'strict'), ('repo_slug', ...)
+
 CREATE TABLE repos (
   id INTEGER PRIMARY KEY,
-  global_id TEXT NOT NULL UNIQUE,      -- repo-XXXXXXXX
-  slug TEXT NOT NULL UNIQUE,           -- e.g. "HiQS-Suite/XYZ-forge"
-  local_path TEXT                      -- device-local; informational for the UI
+  global_id TEXT NOT NULL UNIQUE CHECK (global_id GLOB 'repo-*'),
+  slug TEXT NOT NULL UNIQUE CHECK (length(trim(slug)) > 0)
+);  -- device-local paths deliberately NOT committed (review finding): the UI resolves local
+    -- checkout paths from the utils/hq/ registry, which is already per-device.
+
+CREATE TABLE issue_refs (          -- normalized issue reference: real URL XOR temp ID
+  id INTEGER PRIMARY KEY,
+  global_id TEXT NOT NULL UNIQUE CHECK (global_id GLOB 'ref-*'),
+  url TEXT UNIQUE CHECK (url IS NULL OR url GLOB 'https://github.com/*/issues/*'),
+  temp_id TEXT UNIQUE CHECK (temp_id IS NULL OR temp_id GLOB 'TMP-[A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9][A-Z0-9]'),
+  created_at TEXT NOT NULL,
+  CHECK ((url IS NULL) != (temp_id IS NULL))   -- exactly one
 );
 
 CREATE TABLE marathons (
   id INTEGER PRIMARY KEY,
-  global_id TEXT NOT NULL UNIQUE,      -- mar-XXXXXXXX
+  global_id TEXT NOT NULL UNIQUE CHECK (global_id GLOB 'mar-*'),
   repo_id INTEGER NOT NULL REFERENCES repos(id),
-  tracking_issue_url TEXT NOT NULL,    -- real URL or TMP-XXXXXX
+  tracking_ref_id INTEGER NOT NULL REFERENCES issue_refs(id),
   status TEXT NOT NULL CHECK (status IN ('planned','running','done','escalated','abandoned')),
   created_at TEXT NOT NULL
 );
 
 CREATE TABLE releases (
   id INTEGER PRIMARY KEY,
-  global_id TEXT NOT NULL UNIQUE,      -- rel-XXXXXXXX; the cross-repo reference key
+  global_id TEXT NOT NULL UNIQUE CHECK (global_id GLOB 'rel-*'),
   repo_id INTEGER NOT NULL REFERENCES repos(id),
-  version TEXT,                        -- nullable: "recorded, never reserved" repos use NULL until ship
+  version TEXT CHECK (version IS NULL OR length(trim(version)) > 0),
   codename TEXT,
   status TEXT NOT NULL CHECK (status IN ('draft','active','shipped','cut')),
-  target_date TEXT,                    -- ISO date or NULL
-  shipped_date TEXT,
-  description TEXT NOT NULL,           -- CLI enforces <=4 sentences at write time
-  exit_criterion TEXT,                 -- one runnable command/observable; CLI enforces length
-  tracking_issue_url TEXT NOT NULL,    -- SOP 1; real URL or TMP-XXXXXX
+  target_date TEXT CHECK (target_date IS NULL OR target_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+  shipped_date TEXT CHECK (shipped_date IS NULL OR shipped_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'),
+  description TEXT NOT NULL CHECK (length(trim(description)) > 0),
+  exit_criterion TEXT,
+  tracking_ref_id INTEGER NOT NULL REFERENCES issue_refs(id),
   marathon_id INTEGER REFERENCES marathons(id),
-  gh_release_url TEXT,                 -- the GH Release object, once published
+  gh_release_url TEXT,
   milestone TEXT,
+  front_door_reviewed TEXT CHECK (front_door_reviewed IN ('Yes','No') OR front_door_reviewed IS NULL),
+  shakedown_reviewed  TEXT CHECK (shakedown_reviewed  IN ('Yes','No') OR shakedown_reviewed  IS NULL),
+  license_file        TEXT CHECK (license_file        IN ('Yes','No') OR license_file        IS NULL),
   UNIQUE (repo_id, version)
 );
 
 CREATE TABLE manifest_items (
   id INTEGER PRIMARY KEY,
-  global_id TEXT NOT NULL UNIQUE,      -- mfi-XXXXXXXX
+  global_id TEXT NOT NULL UNIQUE CHECK (global_id GLOB 'mfi-*'),
   release_id INTEGER NOT NULL REFERENCES releases(id),
-  issue_url TEXT NOT NULL,             -- FULL URL; foreign sibling-repo issues are first-class
+  issue_ref_id INTEGER NOT NULL REFERENCES issue_refs(id),
   state TEXT NOT NULL CHECK (state IN ('open','shipped','cut')),
-  state_changed TEXT,                  -- dated re-scope trail, replacing narrative in Manifest: prose
-  UNIQUE (release_id, issue_url)
+  UNIQUE (release_id, issue_ref_id)
 );
 
-CREATE TABLE temp_ids (
-  temp_id TEXT PRIMARY KEY,            -- TMP-XXXXXX
-  kind TEXT NOT NULL CHECK (kind IN ('release','marathon','manifest_item')),
-  created_at TEXT NOT NULL,
-  reconciled_url TEXT                  -- NULL until reconciled
+CREATE TABLE manifest_state_events (   -- append-only re-scope trail (review finding: the old
+  id INTEGER PRIMARY KEY,              -- single overwriteable state_changed cell lost history)
+  item_id INTEGER NOT NULL REFERENCES manifest_items(id),
+  from_state TEXT NOT NULL,
+  to_state TEXT NOT NULL,
+  at TEXT NOT NULL,
+  reason TEXT NOT NULL CHECK (length(trim(reason)) > 0)   -- a cut without a reason is refused
+);
+
+CREATE TABLE legacy_lines (            -- lossless import: unmapped/continuation lines, verbatim
+  id INTEGER PRIMARY KEY,
+  release_id INTEGER NOT NULL REFERENCES releases(id),
+  position INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  disposition TEXT,                    -- NULL = pending; else 'kept'|'migrated'|'dropped:<why>'
+  UNIQUE (release_id, position)
+);
+
+CREATE TABLE op_receipts (             -- append-only CLI operation log (Phase 0 evidence + bypass
+  id INTEGER PRIMARY KEY,              -- detection: a DB change with no receipt = direct write)
+  op TEXT NOT NULL,
+  target_gid TEXT,
+  at TEXT NOT NULL
 );
 ```
 
-Deliberately absent (survey-informed): `Iterations:` bands (aegis proved them harmful; repos that
-want them keep them in the generated file's header prose, not the schema), free-text status values,
-narrative fields. QA gates (`Front-door reviewed` etc.) deferred to a v2 `release_checks` table if
-demand shows up — YAGNI for v1.
+Deliberately absent (survey-informed): `Iterations:` bands as schema (aegis proved them harmful;
+imported bands are preserved via `legacy_lines` and re-rendered verbatim, so XYZ-forge keeps its
+bands without the schema blessing them), free-text status values, narrative columns.
+
+## Duplication guard (light touch — operator, 2026-08-18)
+
+- **Structural (refused at write time, both modes):** `UNIQUE(repo_id, version)` and
+  `UNIQUE(release_id, issue_ref_id)` — exact dupes within a repo/release cannot land.
+- **Same manifest issue in >1 non-cut release** → **warn, never refuse.** Legitimate during handoffs
+  (Meter's five entries moving to Sundown is the recorded precedent); flags for a human instead of
+  blocking the transfer.
+- **Same codename across repos** (aggregator + `releases check`) → **warn** — the "Silverlining
+  copy-pasted into two repos" case from the survey.
+- Identical behavior in lenient and strict mode: cross-release/cross-repo duplication is a smell,
+  not always a defect, so it never gets refusal teeth.
+
+## Git story — committed DB without a race (review finding)
+
+A SQLite transaction serializes the DB file only; it says nothing about the dump and the generated
+Markdown. With 2-3 live sessions routinely on this clone, the multi-artifact write needs its own
+serialization:
+
+1. **One repo-scoped writer lock** (`.git/releases-app.lock`, same liveness idiom as the existing
+   relay driver lock) held across the whole write: BEGIN → mutate → COMMIT → regenerate dump →
+   regenerate RELEASES.md → atomic `rename(2)` replacements of both → release lock. Readers never
+   take it.
+2. **Optimistic preimage check:** the CLI records the dump's hash at lock acquisition; if the on-disk
+   dump no longer matches when it goes to write, it aborts and tells the operator to re-run (another
+   session won).
+3. **Stale-artifact refusal:** a leftover `-wal`/`-journal` file, or a DB/dump/generated-file trio
+   that disagrees, fails `releases check` loudly; no write proceeds over a dirty state.
+4. **Merge conflict procedure (tested, not aspirational):** conflicts are resolved in the
+   **global-ID-keyed logical dump** (text, mergeable, no integer-PK collisions because PKs are not
+   part of the dump's identity — rows are keyed by `global_id`); then `releases check --rebuild`
+   reconstructs the DB atomically, backing up the displaced DB to `releases.db.bak`.
 
 ## Flexibility contract — this may become PDDA's home (operator, 2026-08-18)
 
-The schema must not paint the system into a corner, because the long-term direction is for this DB to
-absorb PDDA's document lifecycle over time. The corner-avoidance mechanism is deliberately minimal:
-
-1. **Global IDs on every referenceable row** (above). Anything can reference anything later — a
-   future PDDA capture-doc row pointing at a release, a marathon pointing at a working doc — via a
-   future `links(from_gid, to_gid, kind)` table, without redesigning any existing table.
+1. **Global IDs on every referenceable row.** Anything can reference anything later — a future PDDA
+   capture-doc row pointing at a release, a marathon pointing at a working doc — via a future
+   `links(from_gid, to_gid, kind)` table, without redesigning any existing table.
 2. **Additive-only migrations**, tracked in `schema_migrations`. New tables and nullable columns are
-   always safe; renames/repurposes are forbidden (a new column supersedes an old one, which is
-   retired by a later migration once nothing reads it).
-3. **What flexibility does NOT mean here:** no EAV/attribute tables, no JSON-blob columns, no
-   speculative PDDA tables in v1. Generic-everything schemas are themselves the corner — they trade
-   write-time validation (this project's entire point) for imagined future ease. PDDA tables get
-   added by additive migration when PDDA actually moves in, referencing existing rows by `global_id`.
+   always safe; renames/repurposes are forbidden (a new column supersedes an old one, retired by a
+   later migration once nothing reads it).
+3. **What flexibility does NOT mean:** no EAV/attribute tables, no JSON-blob columns, no speculative
+   PDDA tables in v1. Generic-everything schemas are themselves the corner — they trade write-time
+   validation (this project's entire point) for imagined future ease.
 
 ## CLI (v1) — `utils/py/releases_app.py`, Python-only per GH-551 rails
 
 ```
-releases init                          # create DB + dump in this repo
-releases add|update <version|--id N> --field value ...   # validated writes; refusal names the rule
-releases ship <version> --evidence "<exit-criterion run cite>"
-releases manifest add|cut <version> <issue-url>          # cut records state_changed, never deletes
-releases list [--all-repos] [--status draft|active]
-releases gen                           # regenerate RELEASES.md + releases.sql (byte-stable)
-releases check [--rebuild]             # DB<->dump<->generated-file consistency; --rebuild from dump
-releases reconcile [--map TMP-X=url]   # swap temp IDs for real URLs
+releases init                          # create DB + dump in this repo; settings default lenient
+releases import <RELEASES.md>          # ONE-SHOT legacy import (Phase 0): every violation that
+                                       #   lenient mode tolerates is recorded as a grandfathered
+                                       #   entry (what, which rule, block) requiring later
+                                       #   disposition; unmapped lines land in legacy_lines
+releases add|update --gid <id> ...     # validated writes; refusal/warning names the rule
+releases ship --gid <id> --evidence "<exit-criterion run cite>"
+releases manifest add|cut --gid <id> <issue-url|TMP-XXXXXX> [--reason ...]  # cut REQUIRES a reason
+releases marathon add|list ...         # v1 CRUD (review finding: no writeless tables in v1)
+releases list [--all-repos] [--status ...]
+releases gen [--side-by-side]          # Phase 0: writes RELEASES.generated.md + drift report only
+releases check [--rebuild]             # DB<->dump<->generated consistency; FK pragma; stale WAL;
+                                       #   receipt-vs-change bypass detection; temp-ref staleness;
+                                       #   duplication warnings
+releases reconcile [--map TMP-X=url]   # fill real URLs into temp refs
 ```
 
-Write-time validation (the GH-28 rubric, now refusals instead of warnings): description ≤4 sentences,
-exit criterion ≤~1000 chars, manifest items are well-formed `https://github.com/<org>/<repo>/issues/N`
-URLs or registered temp IDs, status transitions legal (draft→active→shipped; anything→cut only via
-`manifest cut` with a reason).
+Write-time rules, split by mode (review finding — the old "lenient" was self-contradictory):
 
-## Generator contract
+| Rule class | strict | lenient |
+|---|---|---|
+| Structural (URL/temp-ID shape, enums, uniqueness, FK integrity, non-empty, cut-needs-reason) | refuse | **refuse** — lenient tolerates *imported legacy debt*, never *new corruption* |
+| GH-28 thresholds (description ≤4 sentences, exit criterion ≤~1000 chars) on **new/edited** rows | refuse | warn and write |
+| Grandfathered legacy violations (recorded by `import`) | n/a — must be dispositioned before strict flip | tolerated, tracked |
 
-- Byte-stable: same DB → identical file, so `releases check` can diff cheaply and the pre-push docs
-  gate sees no churn.
-- Emits the existing block format XYZ-forge's parsers already read (`Release:`, `Status:`,
-  `Manifest-Members:`, etc.) so `pdda.sh releases`, `ballast-release.sh` Half A, and `/releases`
-  keep working with zero changes in v1.
-- A generated-file header line marks it machine-generated and names the CLI, so agents stop
-  hand-editing (and the overwrite makes hand-edits futile anyway).
+## Generator contract (round-trip claim, qualified — review finding)
+
+The original "zero-change, byte-stable" claim was false against the real file: the schema had nowhere
+to keep `Iterations:`, the QA fields, `Shipped:` prose, or Sundown's continuation paragraphs, and
+`pdda-lib.sh`'s parser consumes several of those positionally while `test/ballast-release.sh` Half A
+requires `Manifest-Members:`. Corrected contract:
+
+- **Explicit lossless mapping** for every label in the current contract: schema-backed fields render
+  from columns; `Manifest-Members:` is **generated** from `manifest_items`; everything unmapped
+  (continuation paragraphs, `Iterations:` bands, ad-hoc fields) imports into `legacy_lines` and
+  re-renders **verbatim, in original order**, until each line is dispositioned.
+- **Byte-for-byte fixture** on THIS repo's current 207-line RELEASES.md: import → generate must
+  reproduce it exactly (that is what `legacy_lines` exists to make possible), pinned as a registered
+  test alongside focused assertions for `pdda.sh releases`, `pdda.sh releases-current`,
+  `ballast-release.sh` Half A, and the `/releases` skill.
+- Bare-number manifests in sibling repos (`#nnn`) import as `legacy_lines` when unresolvable — the
+  rebalanceOS case, where the numbers point at a retired tracker, is precisely why they cannot be
+  auto-converted to URLs.
+- A generated-file header names the CLI and marks the file machine-generated (Phase 2+; in Phase 0
+  the side-by-side file carries it instead).
 
 ## Cross-repo UI (v1, read-only)
 
-Extend the GH-480 VSCode cockpit's Releases card: aggregate every registered repo's committed DB
-(discovery via the `utils/hq/` repo registry, which already knows the device's repos). Shows
-upcoming releases across repos sorted by target date, with status, manifest completion counts, and
-tracking-issue links. Read-only — the card never writes.
+Extend the GH-480 VSCode cockpit's Releases card: aggregate registered repo DBs (repo discovery and
+local paths via the `utils/hq/` registry — paths are per-device and not in the committed DB). Shows
+upcoming releases across repos by target date, status, manifest completion, tracking-issue links.
+Read-only. Duplicate global IDs across DBs fail the aggregation loudly.
 
 ## Non-goals (v1, recorded so they are not silently absorbed)
 
-- **Slack read-only queries** ("what's shipping next") via aegis-sleuth-slack-bot — v2.
-- **Slack-launched headless marathon sessions** — the long-term goal, explicitly deferred: it is a
-  remote-execution trigger and needs its own issue, threat model, and design review before any build.
-- **Marathons running off this system** (operator-flagged direction, 2026-08-18) — v3, own issue.
-  The v1 `marathons` table is the data home from day one, so the path is open: the evolution is
-  `marathon-plan.sh`/`swarm-preflight` reading and writing the DB, `MARATHON.yaml` becoming generated
-  output (the same pattern as RELEASES.md), at which point Slack-launch reduces to "insert a row, the
-  driver picks it up" — the DB is the queue. Deliberately deferred because it touches
-  `relay-automation/` and the driver surfaces, which are `full_required` in CI routing for good
-  reason: it is the biggest-blast-radius phase of the whole arc.
-- **Migration of sibling repos' existing ledgers** — v1 ships in XYZ-forge only; the survey table
-  above is the migration worklist, not v1 scope.
+- **Slack read-only queries** via aegis-sleuth-slack-bot — v2.
+- **Slack-launched headless marathon sessions** — remote-execution trigger; own issue, threat model,
+  and design review before any build.
+- **Marathons running off this system** (operator-flagged direction) — v3, own issue. The v1
+  `marathons` table + CRUD is the data home; the evolution is drivers reading/writing the DB,
+  `MARATHON.yaml` becoming generated output, Slack-launch reducing to "insert a row, driver picks it
+  up." Deferred because it touches `relay-automation/` driver surfaces (`full_required` in CI
+  routing) — the biggest-blast-radius phase of the arc.
+- **Migration of sibling repos' ledgers** — the survey table is the worklist, not v1 scope.
 - **Editing UI** — the CLI is the writer; the UI reads.
-
-## Relationship to GH-28
-
-GH-28's advisory checks are the interim fix on the markdown ledger and land first — its
-`Tracking Issue:` field is this schema's `tracking_issue_url`, and its validated thresholds
-(4-sentence description, ~1000-char exit criterion) become this CLI's write-time refusals. Once the
-generator owns RELEASES.md, GH-28's parser-side detection becomes redundant by construction.
 
 ## Phases
 
-0. **Transition dogfood in THIS repo (lenient enforcement mode)** — build the minimal schema + CLI
-   with an explicit `--enforcement lenient|strict` mode stored in the DB (per-repo setting, default
-   `lenient`). In lenient mode the CLI **warns and writes** where strict mode would refuse — the
-   GH-28 thresholds (description length, exit-criterion length), missing tracking issues on imported
-   legacy blocks, and unparseable version formats all land with named warnings instead of rejections.
-   Structural validity (well-formed URLs or registered temp IDs, legal status enums, non-empty
-   version-or-NULL) is enforced even in lenient mode — lenient tolerates *legacy debt*, not *new
-   corruption*. Import XYZ-forge's current RELEASES.md as-is (its bloated blocks enter with warnings,
-   uncleaned). The generator runs in **side-by-side mode only**: writes `RELEASES.generated.md` next
-   to the real file plus a drift report, and does NOT overwrite `RELEASES.md` yet — the ledger's
-   current consumers see zero change while the round-trip is proven in daily use. Phase 0 exits when:
-   the CLI has been the actual write path for every ledger change in this repo for 2 consecutive
-   weeks, the side-by-side diff is stable/explainable, and the warning backlog has a disposition
-   (cleaned or explicitly grandfathered per block). Only then does Phase 2 flip the real file to
-   generated and this repo to `strict`.
-1. **Schema + CLI + dump discipline** — `releases init/add/update/ship/manifest/list/check/reconcile`,
-   registered consistency test, temp-ID SOP working end-to-end. (Built during Phase 0; listed
-   separately because its acceptance is mechanical while Phase 0's is experiential.)
-2. **Generator + XYZ-forge migration** — flip the real RELEASES.md to generated output with the
-   machine-generated header; repo switches to `strict`. Existing consumers verified green
-   (pdda releases, ballast-release Half A, /releases skill).
-3. **Cross-repo UI** — GH-480 cockpit Releases card reads all registered repo DBs.
-4. **Sibling-repo rollout** — migrate the survey's worklist repo-by-repo (each gets its own issue,
-   each starting in `lenient` mode with its own Phase-0-style transition window).
+0. **Transition dogfood in THIS repo (lenient mode)** — schema + CLI land; `releases import` brings
+   the current ledger in with every tolerated violation recorded as a grandfathered entry;
+   post-import writes follow the mode table above (structural rules strict even in lenient);
+   generator runs **side-by-side only** (`RELEASES.generated.md` + drift report; the real file
+   untouched — current consumers see zero change). **Exit gate (review finding — quiet weeks are not
+   evidence):** `op_receipts` shows the CLI was the sole writer across the window AND every CLI
+   operation class (`add`, `update`, `ship`, `manifest add`, `manifest cut`, `gen`, `check`,
+   `reconcile`) was exercised at least once on real work; the side-by-side byte-fixture is green; the
+   grandfather ledger is fully dispositioned. Zero-change days count for nothing.
+1. **Schema + CLI + dump discipline** — mechanical acceptance for what Phase 0 builds: registered
+   consistency test with negative control, temp-ref lifecycle, writer-lock/preimage behavior under a
+   simulated concurrent writer.
+2. **Flip** — RELEASES.md becomes generated output with the machine-generated header; this repo
+   switches to `strict`. Consumers re-verified green.
+3. **Cross-repo UI** — cockpit card reads ≥2 registered DBs. Since sibling rollout is Phase 4, the
+   two-repo proof uses **two disposable fixture repos** registered in a test copy of the hq registry
+   (review finding — no hidden Phase-4 dependency).
+4. **Sibling-repo rollout** — the survey worklist, repo-by-repo, each with its own issue and its own
+   lenient transition window.
 
 ## Acceptance Criteria (v1 = phases 0-3)
 
-- [ ] **Phase 0:** lenient mode demonstrated — a legacy-bloated block imports with named warnings
-      while a structurally corrupt write (malformed URL, illegal status) is refused even in lenient;
-      side-by-side generator produces `RELEASES.generated.md` + drift report without touching
-      RELEASES.md; 2-week dogfood window completed with the CLI as sole write path; warning backlog
-      dispositioned before the Phase 2 flip.
-- [ ] Schema created via CLI `init`; DB + `releases.sql` dump committed; consistency check registered
-      in `validate.sh` and observed failing on a deliberate divergence (negative control).
-- [ ] All writes refused outside the CLI's validation rules **in strict mode**, with each refusal
-      naming the violated rule; the GH-28 thresholds enforced at write time (warn in lenient).
-- [ ] Temp-ID lifecycle demonstrated: create while offline-simulated, `reconcile` swaps to real URL,
-      staleness warning observed at the 7-day boundary (mocked clock).
-- [ ] Generator is byte-stable and XYZ-forge's RELEASES.md round-trips: import → generate →
-      existing consumers (pdda releases, ballast-release Half A) still green.
-- [ ] Cockpit card renders releases from ≥2 registered repo DBs sorted by target date, read-only.
+- [ ] **Phase 0:** import grandfathers legacy violations with recorded dispositions; a structurally
+      corrupt write is refused even in lenient; side-by-side generation reproduces the current
+      ledger byte-for-byte via `legacy_lines`; exit gate met per the receipts + exercised-operation
+      matrix above.
+- [ ] `PRAGMA foreign_keys=ON` asserted per connection; consistency check registered in `validate.sh`
+      and observed failing on: a deliberate DB↔dump divergence, a stale `-wal`, a receipt-less direct
+      write, and a duplicate global ID across two fixture DBs (four negative controls).
+- [ ] Strict-mode refusals name the violated rule; GH-28 thresholds refuse in strict / warn in
+      lenient; manifest cut without a reason refused in both modes.
+- [ ] Temp-ref lifecycle: offline create → `reconcile` → 7-day staleness warning (mocked clock).
+- [ ] Writer lock + preimage check demonstrated against a simulated concurrent writer; merge
+      procedure tested: conflicting dumps merged by global ID, DB rebuilt atomically with `.bak`.
+- [ ] Duplication guard: exact dupes refused; shared-manifest-issue and cross-repo-codename cases
+      observed warning (not refusing).
+- [ ] Cockpit card renders releases from 2 fixture repo DBs sorted by target date, read-only, and
+      fails loudly on an injected duplicate global ID.

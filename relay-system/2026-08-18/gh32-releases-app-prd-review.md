@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -133,5 +133,53 @@ Verdict: Changes requested
 
 Handing off to Producer — go to the Producer window and say “take your turn”; address every finding
 with an Implemented / Modified / Declined disposition before revising the PRD.
+
+### Producer · Round 1 dispositions
+
+swept file: yes
+
+All six findings dispositioned; the PRD (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md`) is
+substantially revised — re-review the whole document, not a diff.
+
+- **[Blocker] schema enforcement** — **Implemented.** Normalized `issue_refs` table (URL XOR temp-ID
+  via CHECK, both shape-constrained by GLOB), all three consumers now FK it; `temp_ids` table
+  eliminated (folded into `issue_refs`); `PRAGMA foreign_keys=ON` asserted per connection by the CLI;
+  non-empty/date/format CHECKs added; the overwriteable `state_changed` cell replaced by an
+  append-only `manifest_state_events` table where a cut REQUIRES a reason; and every enforcement
+  claim in the doc is now split schema-enforced vs CLI-enforced, with bypass DETECTION (op_receipts
+  vs change diff) explicitly claimed instead of prevention.
+- **[Blocker] global-ID width** — **Implemented.** 128-bit ULID with type prefix; integer PKs
+  internal-only; external addressing via `--gid`; aggregator fails loudly on cross-DB duplicates
+  (also now a named negative control in acceptance).
+- **[Blocker] Phase 0 contradictions** — **Implemented.** `settings` table added (per-repo
+  enforcement mode); one-shot `releases import` records every grandfathered violation with required
+  disposition; the lenient/strict rule table now states structural rules refuse in BOTH modes
+  (lenient tolerates imported legacy debt, never new corruption — the contradiction is gone);
+  `op_receipts` append-only log added; exit gate rewritten: sole-writer proof via receipts + an
+  exercised-operation matrix, zero-change days count for nothing.
+- **[Blocker] round-trip claim false** — **Implemented (claim qualified + mechanism added).**
+  `legacy_lines` table preserves unmapped/continuation lines verbatim in order; QA fields became real
+  columns; `Manifest-Members:` is generated from `manifest_items`; byte-for-byte fixture on the
+  current 207-line ledger is an acceptance criterion with focused assertions for pdda releases,
+  releases-current, Ballast Half A, and /releases; bare-number sibling manifests import as
+  legacy_lines (rebalanceOS's retired-tracker numbers are the reason they can't auto-convert).
+- **[Blocker] git story race** — **Implemented.** Repo-scoped writer lock (`.git/releases-app.lock`,
+  existing driver-lock idiom) spanning txn→dump→generate→atomic renames; optimistic preimage check on
+  the dump hash; stale WAL/journal refusal; conflict procedure = merge the global-ID-keyed logical
+  dump, rebuild DB atomically with .bak; `local_path` removed from committed data (UI resolves paths
+  from the per-device hq registry); DB-vs-dump authority split stated precisely (DB at runtime, dump
+  at merge boundaries).
+- **[Should] speculative marathons table + hidden two-repo dependency** — **Modified.** Marathons
+  table STAYS (the tracking-issue SOP is an explicit operator decision, and deferring the table would
+  orphan `releases.marathon_id`) but gains v1 CRUD (`releases marathon add|list`) and acceptance
+  coverage, addressing the writeless-table objection; the Phase-3 two-repo UI proof now uses two
+  disposable fixture repos, removing the Phase-4 dependency.
+- **New since your review (operator, same day):** a light-touch duplication guard section — exact
+  dupes structurally refused; shared-manifest-issue across non-cut releases and cross-repo codename
+  collisions warn-only in both modes.
+
+Verdict request: re-review the revised PRD.
+
+Handing off to Reviewer — take your turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
