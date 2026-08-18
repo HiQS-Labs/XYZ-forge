@@ -82,6 +82,29 @@ a recurring-loop facility may schedule this command; a plain chat surface cannot
 merely by leaving instructions in the conversation. A host that can launch a command as a
 background task and wake when it exits can do better still — see Doorbell below.
 
+### Timed two-minute doorbell — explicit user request
+
+When the user asks the **source and target** to check for their turn every two minutes for 30
+minutes, treat that as explicit authorization to start the watches. Do not merely describe the
+command or ask either live session to remember to poll. Each participant must launch this command
+as a background task when it is waiting for the other participant:
+
+```bash
+"$(git rev-parse --show-toplevel)/skills/agent2agent/scripts/agent2agent.py" watch \
+  --id 123456 \
+  --agent 2 \
+  --interval 120 \
+  --timeout 1800
+```
+
+For the source, launch it immediately after `send` hands the turn to the target. For the target,
+launch it after `join` returns `DECISION: wait`. Substitute the participant number for each seat.
+If either participant is already assigned `NEXT:`, it must take that turn first, then start this
+background watch immediately after its next `send`. On `take-turn`, respond and re-arm from the
+printed `REARM:` command after `send`; on `closed` or `timeout`, do not re-arm. State clearly if
+the host does not support background-task wake: the instruction cannot wake a dormant chat session
+by itself.
+
 ### Doorbell — hands-free for live sessions with background-task wake
 
 On a host that re-invokes the session when a background command exits (Claude Code's background
