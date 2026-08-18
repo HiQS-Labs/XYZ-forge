@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-18.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -292,5 +292,79 @@ implementation detail a build phase would settle), grade them; implementation-de
 recorded as notes for the build phase rather than blocking the PRD.
 
 Handing off to Reviewer — take your turn.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+Pre-existing defects found: yes — this was another whole-PRD, current-ledger, predecessor-contract,
+and named-consumer sweep; the findings below are design-level gaps that remain after the R2 revision.
+
+Verdict: Changes requested
+
+- **[Blocker] The schema still has no representation for two kinds of state the import and byte-stable
+  generator require.** The PRD requires a grandfather ledger containing every inferred default and its
+  disposition, but no such table exists in the complete v1 schema. It also says import records mapped
+  fields' presence, order, and lexical spelling, yet `doc_lines` stores only release-less segments and
+  `legacy_lines` only unmapped release lines; there is no per-release mapped-field layout/presence table
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:73-82,95-209,313-319`). This is observable in the
+  current input: `Status: Shipped` must normalize to the lowercase enum while retaining its original
+  spelling and position, and optional fields can be absent (`RELEASES.md:87-99`;
+  `PROJECT/PDDA.md:657-679`). **Concrete fix:** add a normalized grandfather-violations table (import
+  run, release GID, rule, source value, supplied value, required disposition) and a per-release ordered
+  field-layout table that records presence plus label/value rendering metadata; then specify how an
+  edited mapped value replaces only its preserved value while absent fields remain absent. Alternatively,
+  drop byte equality in favor of a precisely defined normalized Phase-0 fixture.
+
+- **[Blocker] `dump_digest_after` is self-referential, so the proposed receipt cannot be computed as
+  written.** `op_receipts` stores the SHA-256 of the canonical dump, while the canonical dump explicitly
+  contains `op_receipts`; therefore the after-digest would have to hash a serialization containing that
+  same digest (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:200-208,255-259`). The exit gate also says
+  receipts prove two distinct sessions and a refused/retried contention case, but receipts contain no
+  session identity and a writer refused before a transaction has no receipt
+  (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:200-208,361-369`). **Concrete fix:** define a canonical
+  *business-state* digest that excludes receipts, generation markers, and digest fields; require the
+  latest receipt's after-digest to equal that state and its before-digest to equal the previous receipt's
+  after-digest; add a stable dogfood-session ID; and record lock attempts/outcomes in a separate
+  append-only audit stream so contention evidence is mechanically inspectable.
+
+- **[Blocker] Crash recovery still omits the most dangerous boundary: DB COMMIT before staged files
+  and journal exist.** The ordered write commits the DB, then stages the dump/Markdown, then creates the
+  journal. A crash after COMMIT but before either later step leaves no journal and no staged artifacts;
+  the stated recovery rule can neither complete renames nor discard a stage, while the only general
+  divergence recovery at the top of the PRD rebuilds DB from the stale dump and loses the committed
+  operation (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:46-53,238-252`). The generation bump is also
+  placed after the renames in the ordered sequence even though the staged dump/file must already contain
+  that generation (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:241-247`). **Concrete fix:** make a
+  durable intent/recovery record exist before the authoritative DB commit and include the next generation;
+  after commit, recovery must be able to regenerate missing staged outputs from that DB state. Specify
+  and test pre-commit, post-commit/pre-stage, post-stage/pre-rename, every rename, and post-rename/pre-clear
+  recovery separately.
+
+- **[Blocker] Phase 0 still has two unsynchronized writers.** Import is explicitly one-shot, but the
+  PRD allows `/releases` to keep patching the real Markdown throughout Phase 0 and defers migrating its
+  mutating routes until Phase 2. Any clean/plan/anchor/publish after import changes only `RELEASES.md`,
+  leaving the DB, dump, receipts, and side-by-side output stale; the two-week dogfood can no longer
+  demonstrate either sole-writer behavior or byte equality (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:278-296,
+  325-330,357-370`; `skills/releases/SKILL.md:100-184`). **Concrete fix:** migrate `/releases` mutations
+  to the CLI at the Phase-0 entry while keeping generation side-by-side, forbid legacy Markdown writes
+  during the measured dogfood window, or design an explicit incremental import/dual-write protocol with
+  preimage conflict detection. A tolerated but unobserved second writer is not a transition mechanism.
+
+- **[Should] The claimed exact-duplicate refusal has a NULL hole.** `releases.version` is nullable, and
+  SQLite permits multiple NULLs through `UNIQUE(repo_id, version)`, so the assertion that exact release
+  duplicates cannot land is false (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:135-154,220-223`). The
+  current ledger contract already requires `Release:` (`PROJECT/PDDA.md:657-679`). **Concrete fix:** make
+  `version` non-null and non-empty (with an explicit migration mapping for any `TBD` legacy spelling),
+  or add a normalized unique expression/index and narrow the claim to the identity it actually enforces.
+
+- **[Pass] Scope and future-shape discipline remain sound:** identity is immutable rather than a content
+  hash, migrations are additive without EAV/JSON escape hatches, the UI is read-only, and driver/Slack
+  integration remains deferred behind separate work (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:86-93,
+  266-276,335-353`). The consumer claim is also correctly narrowed to reads, even though the Phase-0
+  mutation timing above still needs correction (`PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md:320-330`).
+
+Handing off to Producer — go to the Producer window and say “take your turn”; disposition every Round 3
+finding before revising the PRD.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
