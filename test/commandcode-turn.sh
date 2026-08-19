@@ -78,6 +78,7 @@ git -C "$A" show --stat HEAD | grep -q "relay.md" && pass "commit touched the re
 [ "$(tok_field RELAY-TURN-good status)" = "open" ] && [ "$(tok_field RELAY-TURN-good handoff-to)" = "claude-a" ] \
   && pass "good turn handed token to peer" || fail "token not handed off: status=$(tok_field RELAY-TURN-good status) handoff=$(tok_field RELAY-TURN-good handoff-to)"
 grep -q -- "--no-session" "$WORK/cmd-args" && pass "default COMMANDCODE_FLAGS reaches cmd" || fail "default flags missing"
+grep -q -- "--yolo" "$WORK/cmd-args" && pass "--yolo flag reaches cmd" || fail "--yolo flag missing"
 grep -q -- "--model" "$WORK/cmd-args" && grep -q -- "meta/muse-spark-1.2-contributor" "$WORK/cmd-args" && pass "default COMMANDCODE_MODEL reaches cmd" || fail "model flag missing"
 grep -q -- "--print" "$WORK/cmd-args" && pass "--print flag reaches cmd" || fail "--print missing"
 

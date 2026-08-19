@@ -24,6 +24,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 V="$REPO/validate.sh"
 ROUTER="$REPO/utils/ci-route.sh"
+# GH-441 / GH-35: scrub ambient runner env vars so test assertions start from a clean baseline
+unset XYZ_VALIDATE_THROTTLE XYZ_VALIDATE_MAX_JOBS XYZ_VALIDATE_PARALLEL 2>/dev/null || true
 
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi }
@@ -233,6 +235,10 @@ ok "  and the static syntax check ran on the changed file" \
 # a push-blocker on every full-gate push (found 2026-08-19 dogfooding the 0.7.1 release cut). The
 # contract is a DELTA: a worker sits exactly 10 below whatever priority validate.sh itself has.
 _stub_nice="$(cat "$R2/test/hq-stub-nice.txt" 2>/dev/null || echo missing)"
+# Merge note (PR #60 vs e9fff12): both lanes hit this failure independently and patched it
+# differently. `-ge 10` makes the assertion pass under ANY stacking — including the +20 the
+# pre-push hook was actually producing — so it removes the failure without removing the bug.
+# The delta form keeps the bug detectable, and e9fff12 fixed the stacking at its source.
 _self_nice="$(ps -o nice= -p $$ | tr -d ' ')"
 _want_nice=$(( _self_nice + 10 ))
 ok "the suite worker ran 10 below its caller (caller nice=${_self_nice}, worker nice=${_stub_nice}, wanted ${_want_nice})" \
