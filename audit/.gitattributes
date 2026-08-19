@@ -1,0 +1,4 @@
+# Keep the probe scripts LF regardless of the cloner's core.autocrlf.
+# A CRLF shebang line makes a script unrunnable on macOS/Linux - which is the very
+# portability defect this tooling exists to probe (F-ENV-2 / G1).
+*.sh text eol=lf
