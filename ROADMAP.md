@@ -371,3 +371,47 @@ Mechanical / pattern-following work → **Sonnet High**; trust-critical kernel-c
 
 *Detail for every entry lives in its linked `PROJECT/**` doc. Part B gaps also map to `PROJECT/4-MISC/4X4.md`; any
 event-schema change gets a decision record under `decisions/` before it lands.*
+
+---
+
+## Entry format
+
+**This section documents the contract the marathon planner already enforces. It does not introduce
+one.** It exists because all three sibling repos (`rebalanceOS`, `sleuth-app`,
+`aegis-sleuth-slack-bot`) carry an `## Entry format` section and this repo — which *owns* the
+planner — did not, so the rule lived only in downstream copies. See
+[#69](https://github.com/HiQS-Suite/XYZ-forge/issues/69).
+
+One flat bullet per item, name in **bold**:
+
+```
+- **Project / track name** — one-line status summary. → [linked doc](PROJECT/...)
+```
+
+The bold name is required, not cosmetic. The planner (`utils/py/_marathon_plan.py`, and its frozen
+Bash twin `utils/marathon-plan.sh`) recognises a ledger entry only when it matches `^- \*\*`, and
+only under one of these four `###` headings, spelled exactly:
+
+| Recognised `###` heading |
+|---|
+| `Queue / parked intake` |
+| `In progress` |
+| `Completed` |
+| `Deferred · vision` |
+
+Source of truth for that list: `utils/py/_marathon_plan.py:31` (`SECTIONS`) and
+`utils/marathon-plan.sh:232`.
+
+**Entries anywhere else are skipped silently** — the planner reports `no ledger items parsed` and
+writes no plan, with nothing naming what it passed over.
+
+### What that currently means here
+
+`### Ad-hoc detours` is **not** in the recognised list, so its 4 entries are invisible to the
+planner. Whether that is intended — a detour arguably should not be marathon-plannable — has never
+been written down either way. It is recorded here as an observation, not changed: renaming the
+heading would silently make those items plannable, which is a decision for the owner and not a
+formatting fix. Tracked on [#69](https://github.com/HiQS-Suite/XYZ-forge/issues/69).
+
+Bullets above `## Ledger` (the Part A/B/C lines under `## Status`) are narrative, sit outside the
+ledger, and are correctly not parsed.
