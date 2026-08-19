@@ -204,6 +204,21 @@ clone.
 
 ---
 
+## Q: What does the rebuild do if the merged dump is mangled?
+
+It refuses, by name, before writing anything. The live DB is never touched. Three rules, each
+matching damage a real text merge produces:
+
+| Rule | Means | Fix |
+|---|---|---|
+| `dump-multi-generation` | two or more `-- generation:` headers — a union across branches with unequal write counts | keep the **highest** header, delete the rest |
+| `dump-duplicate-setting` | a `settings` key appears twice — same cause; only shows when the generation values differ | keep the row that should win (for `generation`, the higher) |
+| `dump-duplicate-gid` | one `global_id` in a table twice — **both branches edited the same record** | a real content conflict; decide which row wins. No union rule can settle this. |
+| `dump-load` | backstop for damage not yet named above | read the message; the live DB is untouched |
+
+`utils/releases-merge-resolve.sh` checks the first of these up front, so the common case is caught
+before a rebuild is even attempted.
+
 ## Q: So what's missing?
 
 Three gaps, all at the git boundary, all filed:
@@ -212,7 +227,7 @@ Three gaps, all at the git boundary, all filed:
 |---|---|---|
 | [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52) — **closed** | Nothing ran `releases check` against the repo's real artifacts — `validate.sh` only exercised the CLI in fixtures | A mis-resolved merge shipped a DB that disagrees with the dump, silently. Now gated by `test/gh32-releases-artifacts.sh` (read-only, never `--rebuild`, runs against a copy so it cannot write to the clone it checks). |
 | [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53) — **closed** | `releases.db` and `RELEASES-PREVIEW.md` are committed derived artifacts that conflict on every concurrent write | Now marked `-diff linguist-generated` and given a one-command resolution (`utils/releases-merge-resolve.sh`). The conflict itself is kept **on purpose** — see above. |
-| [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) | No merge driver for `releases.sql`. A naive `merge=union` duplicates the single-row `settings` table, and `check --rebuild` then dies with an unhandled `IntegrityError` instead of refusing | Ugly failure where a clean refusal belongs; and unequal write counts silently produce two generation headers |
+| [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) — **closed** | A naive `merge=union` duplicates the single-row `settings` table, and `check --rebuild` died with an unhandled `IntegrityError` instead of refusing | `validate_merged_dump()` now names each case before anything is written (see below). No merge driver was added: the resolver plus these refusals cover it, and a driver would have to live in uncommitted `.git/config`. |
 
 **Do #52 first.** It makes a mis-resolved merge *visible*; the other two make merges *easier*. #52 is
 worth having even if the merge tooling is never improved, because it catches the mistake regardless of
