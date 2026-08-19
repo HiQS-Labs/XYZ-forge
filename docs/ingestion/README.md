@@ -1,8 +1,14 @@
-# Task ingestion layer (SCAFFOLD)
+# Task ingestion layer (RETIRED SCAFFOLD — design capture only)
 
-> **Status: scaffold only.** Captured 2026-05-14 so the idea isn't lost.
-> **NOT wired into Trinity Run 2** — Run 2 still seeds `.tick/events/` by hand
-> via `tick log task.created`. This layer is a deliberate future step.
+> **Status: retired scaffold, kept as a design capture.** Written 2026-05-14 so the idea isn't lost.
+> Never wired into anything: the coordination layer still seeds `.tick/events/` by hand via
+> `tick log task.created`.
+>
+> **Moved here from `ingestion/` on 2026-08-19, and the `ingest.js` stub was deleted.** That file
+> was 72 lines of function signatures with empty bodies — `parseSpec`, `llmReview`, `humanGate` all
+> returned nothing — and nothing in the repo referenced it. A stub that cannot run is not a
+> head start on the work; it is a thing that has to be read and dismissed by everyone who finds it.
+> Restore it from git history if this design is ever built: `git log --diff-filter=D -- ingestion/ingest.js`.
 
 ## The idea
 
