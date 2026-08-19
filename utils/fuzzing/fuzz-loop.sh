@@ -1,38 +1,47 @@
 #!/usr/bin/env bash
-# Autonomous Fuzzing Loop
-# Scans for failing synthetic tests and reports them.
+# Autonomous Fuzzing Loop — execute every synthetic shell test and leave a concise, parseable log.
+set -uo pipefail
 
-set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$HERE/../.." && pwd)"
+TEST_DIR="${FUZZ_TEST_DIR:-$ROOT/test/synthetic}"
 
-TEST_DIR="test/synthetic"
-failing_tests=0
+[ -d "$TEST_DIR" ] || {
+  printf 'FUZZ_SUMMARY|status=ERROR|reason=missing-test-dir|test_dir=%s\n' "$TEST_DIR" >&2
+  exit 2
+}
 
-echo "Starting Autonomous Fuzzing Loop (Report Only)..."
+total=0
+passed=0
+failed=0
 
-for test_script in "$TEST_DIR"/*.sh; do
-    if [ ! -f "$test_script" ]; then continue; fi
+printf 'FUZZ_START|test_dir=%s\n' "$TEST_DIR"
 
-    echo "================================================="
-    echo "Running synthetic test: $test_script"
-    set +e
-    out=$(bash "$test_script" 2>&1)
-    status=$?
-    set -e
-    
-    if [ $status -ne 0 ]; then
-        echo "FAIL: $test_script"
-        echo "$out"
-        failing_tests=$((failing_tests + 1))
-    else
-        echo "PASS: $test_script"
-    fi
-done
+# find + sort catches nested synthetic suites too; process substitution keeps the counters in this
+# shell (a pipeline would put the loop in a subshell and lose the totals).
+while IFS= read -r test_script; do
+  [ -n "$test_script" ] || continue
+  total=$((total + 1))
+  started="$(date +%s)"
+  output="$(bash "$test_script" 2>&1)"
+  status=$?
+  finished="$(date +%s)"
+  elapsed=$((finished - started))
 
-echo "================================================="
-if [ $failing_tests -gt 0 ]; then
-    echo "Fuzz loop complete. Found $failing_tests failing tests."
-    exit 1
-else
-    echo "Fuzz loop complete. All tests passed."
-    exit 0
-fi
+  if [ "$status" -eq 0 ]; then
+    passed=$((passed + 1))
+    printf 'FUZZ_RESULT|status=PASS|test=%s|exit_code=0|duration_s=%s\n' \
+      "$test_script" "$elapsed"
+  else
+    failed=$((failed + 1))
+    printf 'FUZZ_RESULT|status=FAIL|test=%s|exit_code=%s|duration_s=%s\n' \
+      "$test_script" "$status" "$elapsed" >&2
+    [ -z "$output" ] || printf '%s\n' "$output" | sed 's/^/  | /' >&2
+  fi
+done < <(find "$TEST_DIR" -type f -name '*.sh' -print | LC_ALL=C sort)
+
+summary_status=PASS
+[ "$failed" -eq 0 ] || summary_status=FAIL
+printf 'FUZZ_SUMMARY|status=%s|total=%s|passed=%s|failed=%s\n' \
+  "$summary_status" "$total" "$passed" "$failed"
+[ "$failed" -eq 0 ]

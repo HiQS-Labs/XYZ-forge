@@ -2,6 +2,17 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.1.5] - 2026-08-19
+
+### Added
+- **GH-57: SQLite RELEASES ledger fuzzing and scenario suite** (`test/gh57-releases-fuzz.sh`, 42/42 pass)
+  covering concurrent branch divergence, multi-generation header handling, duplicate settings and
+  GID content collision refusals, crash injection and journal recovery across all 5 boundaries,
+  git common-dir writer lock contention, malformed and torn dump load protection, and generated
+  Markdown drift reporting.
+- Updated `utils/fuzzing/fuzz-loop.sh` to recursively scan synthetic tests and emit structured
+  `FUZZ_RESULT` and `FUZZ_SUMMARY` records.
+
 ## [1.1.4] - 2026-08-19
 
 ### Added
@@ -55,6 +66,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
   inside a pool worker); `test/gh544-pre-push-gate.sh` extended to 85/0 (tier-2 dispatch,
   registry-gap fallback, red-gate refusal); `test/ci-route.sh` 48/0 with tier pins;
   `test/gh544-parallel-default.sh` 29/0 unchanged.
+
 ## [1.1.2] - 2026-08-18
 
 ### Fixed

@@ -25,6 +25,7 @@ its exact current model release awaits the same evidence required of every other
 
 | Harness | Current policy role | Operating constraint | Policy source |
 |---|---|---|---|
+| **2026-08-19** | Command Code (`meta/muse-spark-1.2-contributor`, `Qwen/Qwen3.8-Max`, `zai-org/GLM-5.2`) & Codex CLI | Builder evaluation for GH-57 | Non-interactive `cmd --print` on complex synthesis stalled across Muse Spark (4.5 min cap), Qwen 3.8-Max, and GLM-5.2 due to stdout buffering / missing interactive turn cycle. Codex CLI fallback succeeded, producing the 42-assertion `test/gh57-releases-fuzz.sh` suite and updating `utils/fuzzing/fuzz-loop.sh` (42/42 pass). Full report on [#57](https://github.com/HiQS-Suite/XYZ-forge/issues/57). |
 | Claude Code | Orchestrator and final reviewer | Do not use as a default headless builder; an API-billed Claude builder is operator-selected only. | GH-221 / [`AGENTS.md`](AGENTS.md) |
 | Codex CLI | Cost-blind default builder and reviewer | Use the subscription-authenticated CLI lane; exact model release must be evaluated separately. | GH-212 / [`AGENTS.md`](AGENTS.md) |
 | Antigravity (`agy`) | Cost-blind cross-model builder/reviewer lane | Run sandbox-off; an empty exit-0 response is a known failure mode and its print mode is cost-blind. | GH-178 / [`AGENTS.md`](AGENTS.md) |

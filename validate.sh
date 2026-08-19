@@ -259,6 +259,9 @@ TESTS=(
                                  #   equal counts dedupe to a deceptively clean union), and the same
                                  #   global_id twice — the one case no union can settle. Carries a
                                  #   POSITIVE control so the refusals cannot go blanket. 19/0
+  "gh57-releases-fuzz.sh"        # GH-57 (generated SQLite RELEASES scenarios: divergent GID merges,
+                                 #   unequal generation headers, dump collisions, all journal crash
+                                 #   boundaries, common-dir lock contention, torn dumps, and Markdown drift)
   "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
                                  #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"
