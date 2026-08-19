@@ -41,11 +41,23 @@ reintroduces the race.
 
 Its control is therefore behavioral rather than a code revert: **six concurrent writers contend over
 a lock file left by a process that no longer exists**, all sending as the seat that actually owns
-`NEXT`. The assertion is that the discussion stays structurally intact — exactly one `TURN:` header,
-one `NEXT:` header, and the `TURN:` field equal to the number of `### Turn` blocks actually recorded.
-Under the rejected steal design two writers could proceed simultaneously and tear that file.
+`NEXT`.
 
-## Two of these tests were vacuous when first written
+**The discriminating assertion is the racers' EXIT CODES, not the file's structure.** The first
+version of this control asserted only structural intactness — one `TURN:` header, one `NEXT:` header,
+the `TURN:` field equal to the recorded block count — and the agy QA review (r2) demonstrated it was
+vacuous by disabling the lock and watching it stay green. `atomic_write` uses `os.replace`, so six
+unserialized racers each read the same state, each construct the same valid next state, and each
+cleanly overwrite the file: the result is a structurally perfect ledger, because `os.replace`
+prevents byte-tearing whether or not anything serialized the writers.
+
+Exit codes separate *serialized* from *merely atomic*. Under `flock`, exactly one racer can hold the
+turn — it commits and routes `NEXT` to the peer, so the remaining five are refused out-of-turn. The
+assertion is therefore **exactly one of six exits 0**. Observed with the lock disabled
+(`fcntl.flock` replaced by `pass`): `2 of 6 racers exited 0 — expected exactly 1`, plus 8 other lock
+assertions red; restored, 108/0.
+
+## Three of these tests were vacuous when first written
 
 Recorded because "the suite is green" was not evidence in either case, and only reverting the guard
 exposed it:
@@ -53,9 +65,16 @@ exposed it:
 - **The sidecar-staleness assertion** first used a 1.2s wait against an `age <= 1` check. `int(1.2)`
   is `1`, so it passed whether or not the marker refreshed — removing the heartbeat left the suite
   fully green. Widened to a 3s wait, where a non-refreshing marker ages ~3s and a refreshing one ~0s.
-- **The concurrency control** first had all six racers send as `agent 1`. They were refused on turn
-  ownership before ever reaching the lock, so it proved nothing while passing. They now send as the
-  seat that owns `NEXT`.
+- **The concurrency control** was vacuous *twice*. First, all six racers sent as `agent 1` and were
+  refused on turn ownership before ever reaching the lock. Fixed to send as the seat owning `NEXT` —
+  and it was *still* vacuous, because it asserted only on file structure, which `os.replace` keeps
+  intact with no lock at all. Now asserted on exit codes (see above). Both rounds of this were found
+  by the reviewer, not by me, and the second only because agy ran the control rather than reasoning
+  about it.
+
+The recurring shape is worth stating plainly, since it accounts for every defect in this change:
+**a test that never fails proves nothing, and the only way to know it can fail is to break the thing
+it guards and watch.** Reasoning about whether a control discriminates was wrong three times here.
 
 A third ordering defect surfaced from the same check: the concurrency test left `NEXT` on whichever
 racer won, so later probes expecting `take-turn` intermittently timed out (2 of 3 runs red, on tests

@@ -265,7 +265,11 @@ def preflight_write_set_trackable(repo_root, paths):
         except Exception:
             continue
         if res.returncode == 0 and res.stdout.strip():
-            blocked.append((p, res.stdout.strip().splitlines()[0]))
+            matched_line = res.stdout.strip().splitlines()[0]
+            fields = matched_line.split("\t", 1)[0].split(":")
+            if len(fields) >= 3 and fields[2].startswith("!"):
+                continue
+            blocked.append((p, matched_line))
 
     if not blocked:
         return

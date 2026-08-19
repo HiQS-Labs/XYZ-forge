@@ -435,10 +435,13 @@ race_before="$(grep -c '^### Turn ' "$G38_FILE")"
 # proving nothing.
 race_owner="$(sed -n 's/^NEXT: agent//p' "$G38_FILE" | head -1)"
 race_peer=$([ "$race_owner" = "1" ] && echo 2 || echo 1)
+RACE_RC="$WORK/race-rcs"; rm -rf "$RACE_RC"; mkdir -p "$RACE_RC"
 for i in 1 2 3 4 5 6; do
-  ( a2a send --agent "$race_owner" --next-agent "$race_peer" --message "racer $i" >/dev/null 2>&1 ) &
+  ( a2a send --agent "$race_owner" --next-agent "$race_peer" --message "racer $i" >/dev/null 2>&1
+    echo $? > "$RACE_RC/$i" ) &
 done
 wait
+RACE_WINNERS="$(cat "$RACE_RC"/* 2>/dev/null | grep -c '^0$')"
 race_after="$(grep -c '^### Turn ' "$G38_FILE")"
 race_hdr="$(grep -c '^TURN: ' "$G38_FILE")"
 race_next="$(grep -c '^NEXT: ' "$G38_FILE")"
@@ -448,7 +451,18 @@ if [ "$race_hdr" -eq 1 ] && [ "$race_next" -eq 1 ] && [ "$race_turn_field" = "$r
 else
   fail "concurrent writers corrupted the discussion: TURN:x$race_hdr NEXT:x$race_next field=$race_turn_field blocks=$race_after"
 fi
-[ "$race_after" -gt "$race_before" ] && pass "at least one racer's turn was actually committed" \
+# THE discriminating assertion (agy QA r2 [Blocker]): structural intactness alone is VACUOUS — it
+# passes with the lock removed entirely. `atomic_write` uses os.replace, so six unserialized racers
+# each read the same state, each build the same valid next state, and each cleanly overwrite the
+# file; the result is a structurally perfect ledger with one turn recorded, and every earlier
+# assertion here passes. agy proved this by disabling the lock and watching the test stay green.
+# Exit codes are what distinguishes serialized from merely atomic: under flock exactly ONE racer
+# can hold the turn, so one exits 0 and the rest are refused out-of-turn. Unserialized, all six
+# validate NEXT against the same pre-write state and all exit 0.
+[ "$RACE_WINNERS" = "1" ] \
+  && pass "exactly ONE of 6 concurrent racers committed (flock serialized them; the rest were refused out-of-turn)" \
+  || fail "$RACE_WINNERS of 6 racers exited 0 — expected exactly 1; the lock did not serialize them"
+[ "$race_after" -gt "$race_before" ] && pass "the winning racer's turn was actually committed" \
   || fail "no racer committed a turn (before=$race_before after=$race_after)"
 
 # ── item 2: REARM names the interpreter, so a mode-stripped copy still re-arms ───────────────────
