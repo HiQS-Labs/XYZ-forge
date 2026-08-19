@@ -4,6 +4,9 @@ gh_issue: 39
 source: "https://github.com/HiQS-Suite/XYZ-forge/issues/39"
 status: active
 created: 2026-08-18
+updated: 2026-08-19
+owner: unassigned
+goal: "Project the RELEASES SQLite ledger into GitHub release cards so release state is visible outside the repo."
 doc_type: bugfix
 ---
 
