@@ -2,6 +2,7 @@
 
 const { appendEvent, readAllEvents } = require('./events');
 const { project, fold, nextEpoch, activeClaimsForAgent, MAX_ACTIVE_CLAIMS_PER_AGENT } = require('./project');
+const { setsOverlap } = require('./paths');
 const { withClaimLock } = require('./lock');
 
 // Local-transport claim (Run 2: git transport removed).
@@ -20,10 +21,11 @@ const { withClaimLock } = require('./lock');
  * @param {string} opts.task - task id
  * @param {string} opts.agent - claiming agent id
  * @param {string[]} opts.paths - glob patterns the agent intends to touch (required, non-empty)
- * @returns {{won: boolean, task: string, winner?: string, unavailable?: string, limitReached?: boolean, holding?: string[]}}
+ * @param {boolean} [opts.force=false] - override path-overlap rejection
+ * @returns {{won: boolean, task: string, winner?: string, unavailable?: string, limitReached?: boolean, holding?: string[], overlap?: boolean, conflicts?: string[], conflictAgents?: string[]}}
  * @throws {Error} if `paths` is missing or empty
  */
-function claim(repoRoot, { task, agent, paths }) {
+function claim(repoRoot, { task, agent, paths, force = false }) {
   if (!paths || !paths.length) {
     throw new Error('claim requires --paths (declare every glob you intend to touch)');
   }
@@ -57,9 +59,34 @@ function claim(repoRoot, { task, agent, paths }) {
       return { won: false, limitReached: true, holding: held, task };
     }
 
+    // Path overlap enforcement: reject if requested paths overlap any active claim on other tasks
+    // unless --force is explicitly provided.
+    if (!force) {
+      const conflicts = [];
+      const conflictAgents = new Set();
+      for (const other of tasks.values()) {
+        if (other.id !== task && other.status === 'claimed' && other.claim && other.claim.paths) {
+          if (setsOverlap(paths, other.claim.paths)) {
+            conflicts.push(other.id);
+            conflictAgents.add(other.claim.agent);
+          }
+        }
+      }
+      if (conflicts.length > 0) {
+        return {
+          won: false,
+          task,
+          overlap: true,
+          conflicts,
+          conflictAgents: Array.from(conflictAgents),
+          unavailable: `paths overlap active claim (${conflicts.join(', ')}) held by ${Array.from(conflictAgents).join(', ')}`
+        };
+      }
+    }
+
     // Monotonic epoch: strictly above any prior claim on this task, so a
     // reclaim after reap fences the displaced owner's stale writes.
-    appendEvent(repoRoot, { type: 'task.claimed', task, agent, paths, epoch: nextEpoch(events, task) });
+    appendEvent(repoRoot, { type: 'task.claimed', task, agent, paths, epoch: nextEpoch(events, task), force: force ? true : undefined });
     project(repoRoot);
     return { won: true, task };
   });

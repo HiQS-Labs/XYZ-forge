@@ -2,6 +2,8 @@
 
 const { appendEvent, readAllEvents } = require('./events');
 const { project, fold } = require('./project');
+const { setsOverlap } = require('./paths');
+const { withClaimLock } = require('./lock');
 
 // Run 2: git transport removed. Every verb is now a pure local event append
 // to the shared .tick/events/ dir, followed by a re-projection of STATE.md.
@@ -19,8 +21,11 @@ function emitEvent(repoRoot, type, payload) {
 // Returns the claimed task `t` so callers can stamp the owner's epoch onto the
 // mutation they emit (the fence in fold rejects any mutation whose epoch is
 // below the current owner's).
-function assertOwnership(repoRoot, task, agent) {
-  const tasks = fold(readAllEvents(repoRoot));
+// `tasks` is optional — a pre-folded task map, so a caller that already needs
+// the full projection (e.g. `scope`'s overlap check) does not read+fold the
+// event log a second time for the same lock-held snapshot.
+function assertOwnership(repoRoot, task, agent, tasks) {
+  tasks = tasks || fold(readAllEvents(repoRoot));
   const t = tasks.get(task);
   if (!t) throw new Error(`task ${task} not found`);
   if (t.status === 'open') throw new Error(`task ${task} is open (never claimed) — nothing to break; use a fresh --relay-task id`);
@@ -31,19 +36,43 @@ function assertOwnership(repoRoot, task, agent) {
 
 /**
  * Replaces the claimed task's declared paths (replacement, not merge).
+ * Serialized under {@link withClaimLock} so scope expansions cannot overlap
+ * another agent's active claim.
  * @param {string} repoRoot - absolute path to the repo root
  * @param {Object} opts
  * @param {string} opts.task - task id (must be claimed by `agent`)
  * @param {string} opts.agent - the claiming agent
  * @param {string[]} opts.paths - new glob patterns (required, non-empty)
+ * @param {boolean} [opts.force=false] - override path-overlap rejection
  * @returns {{ok: true}}
- * @throws {Error} if `paths` is missing/empty, or {@link assertOwnership} fails
+ * @throws {Error} if `paths` is missing/empty, {@link assertOwnership} fails, or paths overlap an active claim
  */
-function scope(repoRoot, { task, agent, paths }) {
+function scope(repoRoot, { task, agent, paths, force = false }) {
   if (!paths || !paths.length) throw new Error('scope requires --paths');
-  const t = assertOwnership(repoRoot, task, agent);
-  emitEvent(repoRoot, 'task.scope_changed', { task, agent, paths, epoch: t.claim.epoch });
-  return { ok: true };
+
+  return withClaimLock(repoRoot, () => {
+    const tasks = fold(readAllEvents(repoRoot));
+    const t = assertOwnership(repoRoot, task, agent, tasks);
+
+    if (!force) {
+      const conflicts = [];
+      const conflictAgents = new Set();
+      for (const other of tasks.values()) {
+        if (other.id !== task && other.status === 'claimed' && other.claim && other.claim.paths) {
+          if (setsOverlap(paths, other.claim.paths)) {
+            conflicts.push(other.id);
+            conflictAgents.add(other.claim.agent);
+          }
+        }
+      }
+      if (conflicts.length > 0) {
+        throw new Error(`scope rejected: paths overlap active claim (${conflicts.join(', ')}) held by ${Array.from(conflictAgents).join(', ')} (use --force to override)`);
+      }
+    }
+
+    emitEvent(repoRoot, 'task.scope_changed', { task, agent, paths, epoch: t.claim.epoch, force: force ? true : undefined });
+    return { ok: true };
+  });
 }
 
 /**
