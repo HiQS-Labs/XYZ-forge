@@ -6,11 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) |
+| GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) |
 | GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) | — | [#62](https://github.com/HiQS-Suite/XYZ-forge/issues/62) · [#63](https://github.com/HiQS-Suite/XYZ-forge/issues/63) · [#64](https://github.com/HiQS-Suite/XYZ-forge/issues/64) · [#65](https://github.com/HiQS-Suite/XYZ-forge/issues/65) · [#61](https://github.com/HiQS-Suite/XYZ-forge/issues/61) |
 | GH-67 · Commandcode builder default widened to --yolo — closer evaluation → possible build | — | [#67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) |
 | GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | [GH-35-TEST-TIER-ROUTING.md](PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md) · [#35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) |
