@@ -457,12 +457,12 @@ def rearm_command(
     so the waking session can run it verbatim from any CWD."""
     argv = [
         os.path.abspath(sys.argv[0]),
+        "--root", str(root),
         "watch",
         "--id", discussion_id,
         "--agent", str(number),
         "--interval", f"{interval:g}",
         "--timeout", f"{timeout:g}",
-        "--root", str(root),
     ]
     return " ".join(shlex.quote(part) for part in argv)
 
