@@ -75,6 +75,8 @@ mkrepo() {  # <validate-exit-code> -> prints repo path
   cat > "$r/validate.sh" <<STUB
 #!/usr/bin/env bash
 if [ "\${1:-}" = "--print-mode" ]; then echo "validate.sh: PARALLEL mode 4-wide — stub"; exit 0; fi
+# GH-35: record the invocation shape so a case can assert WHAT the hook asked validate.sh to run.
+[ -n "\${STUB_ARGS:-}" ] && printf '%s\n' "\$*" >> "\$STUB_ARGS"
 echo "stub gate ran"
 exit $rc
 STUB
@@ -146,6 +148,54 @@ CODE_LINE="refs/heads/main $CODE_HEAD refs/heads/main $CODE_BASE"
 out="$(drive "$R_CODE" "$CODE_LINE")"; rc=$?
 ok "a code change remains on the full gate" "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
 ok "  and does NOT take the documentation route" "! printf '%s' \"\$out\" | grep 'stub documentation gate ran' >/dev/null"
+
+# --- (2c) GH-35: a utility-only push runs the TIER 2 gate; a registry gap fails closed to full --
+# The classifier must say tier=2 AND name runnable suites. With test/hq.sh present BEFORE the
+# range's base (seeding it inside the range would make the push a test change — tier 3), an
+# hq-only push dispatches validate.sh --paths-file (the narrow gate). Without the suite, the
+# SAME path change must fall back to the full gate — a registry entry whose suite is missing
+# must never become a zero-test green.
+R_T2="$(mkrepo 0)"
+T2_BASE="$(git -C "$R_T2" rev-parse HEAD)"   # mkrepo's seed commit — the range base
+mkdir -p "$R_T2/utils/hq"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_T2/utils/hq/hq.sh"
+git -C "$R_T2" add -A >/dev/null 2>&1
+git -C "$R_T2" commit -qm hq-only >/dev/null 2>&1
+T2_HEAD="$(git -C "$R_T2" rev-parse HEAD)"
+T2_LINE="refs/heads/main $T2_HEAD refs/heads/main $T2_BASE"
+
+# No test/hq.sh in the fixture → no runnable suite → the narrow gate must be REFUSED by the hook.
+ARGS_NONE="$WORK/t2-args-none.txt"; : > "$ARGS_NONE"
+out="$(drive "$R_T2" "$T2_LINE" STUB_ARGS="$ARGS_NONE")"; rc=$?
+ok "an hq push with NO runnable suite falls back to the FULL gate" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'full gate' >/dev/null"
+ok "  and validate.sh was NOT asked for a narrow --paths-file run" \
+   "! grep -q -- '--paths-file' '$ARGS_NONE'"
+
+# The suite only needs to EXIST on disk (the classifier's -f check reads the working tree);
+# putting it in the range would make this a test change — tier 3 — which is a different case.
+mkdir -p "$R_T2/test"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_T2/test/hq.sh"
+ARGS_T2="$WORK/t2-args.txt"; : > "$ARGS_T2"
+out="$(drive "$R_T2" "$T2_LINE" STUB_ARGS="$ARGS_T2")"; rc=$?
+ok "an hq push with its suite present runs the tier 2 gate" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2' >/dev/null"
+ok "  and validate.sh received the paths file (the hook's only narrow invocation)" \
+   "grep -q -- '--paths-file' '$ARGS_T2'"
+ok "  and the gate really ran" "printf '%s' \"\$out\" | grep 'stub gate ran' >/dev/null"
+
+R_T2R="$(mkrepo 1)"   # a RED validate.sh proves the tier-2 route still gates
+T2R_BASE="$(git -C "$R_T2R" rev-parse HEAD)"
+mkdir -p "$R_T2R/utils/hq" "$R_T2R/test"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_T2R/utils/hq/hq.sh"
+git -C "$R_T2R" add utils/hq >/dev/null 2>&1
+git -C "$R_T2R" commit -qm hq >/dev/null 2>&1
+T2R_HEAD="$(git -C "$R_T2R" rev-parse HEAD)"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R_T2R/test/hq.sh"   # on disk, outside the range
+out="$(drive "$R_T2R" "refs/heads/main $T2R_HEAD refs/heads/main $T2R_BASE")"; rc=$?
+ok "a RED tier 2 gate still refuses the utility push (exit 1)" "[ $rc -eq 1 ]"
+ok "  and names the tier 2 gate in the refusal" \
+   "printf '%s' \"\$out\" | grep 'tier 2 subsystem gate.*RED' >/dev/null"
 
 # --- (3) bypasses work AND announce themselves -----------------------------------------------------
 # A silent bypass is the failure mode: a skipped gate that says nothing looks exactly like a passing one.

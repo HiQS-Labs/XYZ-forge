@@ -45,11 +45,19 @@ For repo correctness:
 ```bash
 bash githooks/install.sh        # ONCE PER CLONE — wires the pre-push gate (GH-544)
 bash githooks/install.sh --check # is this clone gated? exit 1 if not
-./validate.sh              # the gate — PARALLEL by default (GH-544), ~4 min, auto-sized to the host
+./validate.sh              # the gate — PARALLEL by default (GH-544), auto-sized to the host (GH-35)
 ./validate.sh --print-mode # which mode would this host pick, and why — runs nothing
 ./validate.sh --sequential # force the sequential run (~16 min)
+./validate.sh --tier 2 --subsystem hq   # GH-35: one subsystem's focused suites (pre-push speed, NOT evidence)
+./validate.sh --auto       # GH-35: classify the git diff, run the minimal safe tier (fails closed to 3)
+./validate.sh --throttle   # GH-35: 2 workers under nice — quiet-machine mode (--burst restores full width)
 bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
 ```
+
+**Both gate entry points refuse to run from a linked git worktree (GH-45)** — a worktree shares
+the parent clone's `.git`, and an observed suite escape corrupted the parent (core.bare, origin,
+remote refs, development). Run the gate from a normal clone; `XYZ_ALLOW_WORKTREE_GATE=1` is the
+announced override for disposable runs.
 
 **Hosted CI fires on nothing while this repo is private (GH-544).** The gate runs locally at the push
 boundary instead, so `githooks/install.sh` is part of setting up a clone — the hook lives in
@@ -60,10 +68,22 @@ goes public (free there).
 
 **Parallel became the default on 2026-08-14 (GH-544)** because the local gate is the only gate during
 the private phase, and a 16-minute gate does not get run — it gets skipped, which is worse than a
-3-minute one. Width is detected from the host (cores − 2, capped at 8); below 4 cores, or where
-`xargs -P` is unsupported, it **falls back to sequential and says so**. Every run prints the mode it
-chose and the reason, so a fallback is never silent. Override with `--parallel N`, `--sequential`, or
-`XYZ_VALIDATE_PARALLEL` (a flag always beats the env var).
+3-minute one. **GH-35 (2026-08-18) rebalanced the width to `cores/2` (floor 2, cap 4) and put every
+worker under `nice -n 10`** — the original `cores − 2` (up to 8) saturated developer machines badly
+enough to wedge the editor; `--burst` buys the old full-core width back for unattended runs, and
+`--throttle`/`--quiet-cpu` pins 2 workers. Ambient levers: `XYZ_VALIDATE_THROTTLE=1`,
+`XYZ_VALIDATE_MAX_JOBS=N`, `XYZ_VALIDATE_PARALLEL` (flags > MAX_JOBS > THROTTLE > PARALLEL > host
+detection; malformed values exit 2 naming the variable). Below 4 cores, or where `xargs -P` is
+unsupported, the run **falls back to sequential and says so** — every run prints the mode it chose
+and the reason, so a fallback is never silent.
+
+**GH-35 also added TIERED SELECTION on top, as a separate axis from width.** `utils/ci-route.sh`
+owns one fail-closed subsystem registry (hq, releases, telemetry, ate, swe-diagram, pdda,
+agent2agent); a push the classifier rates `tier=2` runs only those focused suites at the boundary,
+`--tier 1` runs the docs gate, and everything else — unknown paths, test edits, kernel surfaces —
+runs the full suite. `--auto` classifies a local diff the same way. Tiers 1 and 2 are pre-push
+speed and are labelled NOT promotion evidence; only `ci-local.sh`'s sequential full run qualifies
+(GH-509).
 
 **What still qualifies a claim is unchanged.** `./validate.sh` in either mode is a self-check;
 `ci-local.sh` is the run that writes the evidence record, it does **not** call `validate.sh`, and it

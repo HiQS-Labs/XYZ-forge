@@ -68,6 +68,32 @@ set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$HERE" || exit 1
 
+# ── GH-45: REFUSE to run from a linked git worktree ─────────────────────────────────────────────
+# Same guard, same reason, same override as validate.sh's (kept inline in both rather than a new
+# shared .sh — GH-551; both copies are pinned by test/gh35-test-tiers.sh): this script runs the
+# SAME suite validate.sh does, so running it from a worktree exposes the parent clone's shared
+# .git to exactly the fixture-escape damage validate.sh refuses (2026-08-19 incident, GH-564).
+if [ "${XYZ_ALLOW_WORKTREE_GATE:-0}" != "1" ]; then
+  _wt_abs_git="$(git rev-parse --absolute-git-dir 2>/dev/null || true)"
+  _wt_common="$(git rev-parse --git-common-dir 2>/dev/null || true)"
+  _wt_common_abs=""
+  [ -n "$_wt_common" ] && _wt_common_abs="$(cd "$_wt_common" 2>/dev/null && pwd -P || true)"
+  if [ -n "$_wt_abs_git" ] && [ -n "$_wt_common_abs" ] && [ "$_wt_abs_git" != "$_wt_common_abs" ]; then
+    cat >&2 <<'WTREFUSE'
+ci-local: REFUSING — this is a linked git worktree, which shares the parent clone's
+  .git (config, refs, objects). The suite this script runs can reach the PARENT clone,
+  not a fixture: an observed run set core.bare=true, repointed origin at a deleted temp
+  path, deleted every refs/remotes/origin/*, and overwrote development with fixture
+  commits. Run the qualifying gate from a normal clone. Override with
+  XYZ_ALLOW_WORKTREE_GATE=1 only if you accept that blast radius.
+WTREFUSE
+    exit 2
+  fi
+else
+  echo "ci-local: XYZ_ALLOW_WORKTREE_GATE=1 — running from a linked worktree at the operator's explicit request; the parent clone's .git is exposed (GH-45)." >&2
+fi
+unset _wt_abs_git _wt_common _wt_common_abs
+
 FAST=0
 BASE=""
 PROBE=0

@@ -12,6 +12,13 @@
 # gate that is routinely bypassed is worth less than no gate, because it also produces the belief that
 # something was checked. Four minutes is a cost that actually gets paid.
 #
+# GH-35 added a NARROWER route below the fast gate: a push whose changed paths all map to a
+# registered utility subsystem (utils/ci-route.sh's Tier-2 registry) runs only that subsystem's
+# suites (~20-45s) instead of the full pool, under nice. The classifier must explicitly say
+# tier=2 AND name runnable suites — route=fast alone is not enough, because an unmapped code
+# path also routes fast and belongs on the full gate. Every narrower route fails closed to the
+# one above it.
+#
 # WHAT THIS IS NOT: promotion evidence. `ci-local.sh` is the qualifying run — sequential, and it
 # writes the gate record. This hook is a guard against pushing something obviously broken, not an
 # attestation. Nothing here writes a record.
@@ -75,10 +82,11 @@ fi
 
 # A docs-only commit is still checked, but by the deterministic documentation gate instead of the
 # full runtime suite. Reuse the CI classifier rather than growing a second definition of "docs".
-# This route is intentionally narrow: a new branch, force push, unavailable remote base, missing
-# classifier, non-linear history, or anything other than an exact `route=docs` falls back to the
-# full gate. A bad range must cost time, never coverage.
-docs_only_route() {
+# These routes are intentionally narrow: a new branch, force push, unavailable remote base, missing
+# classifier, non-linear history, or anything other than an exact `route=docs` (tier 1) or
+# `route=fast`+`tier=2` (registered utility subsystems) falls back to the full gate. A bad range
+# must cost time, never coverage.
+classify_push() {
   [ -x "$REPO/utils/ci-route.sh" ] || return 1
   [ "${#_real_ref_pairs[@]}" -gt 0 ] || return 1
 
@@ -96,7 +104,7 @@ docs_only_route() {
     IFS='|' read -r local_sha remote_sha <<<"$pair"
     # `--no-renames` is load-bearing: the classifier must see the removed side of a renamed test.
     git diff --no-renames --name-only "$remote_sha" "$local_sha" || return 1
-  done | "$REPO/utils/ci-route.sh" push | awk -F= '$1 == "route" { print $2 }'
+  done | "$REPO/utils/ci-route.sh" push
 }
 
 run_docs_gate() {
@@ -110,9 +118,23 @@ run_docs_gate() {
   [ ! -x "$REPO/utils/pdda-local-checks.sh" ] || "$REPO/utils/pdda-local-checks.sh" run || true
 }
 
-_route="$(docs_only_route 2>/dev/null || true)"
+# Hand the push's changed paths to validate.sh --tier 2 (GH-35). The paths file is the contract
+# between the hook and the runner: validate.sh re-classifies it, refuses anything that is not
+# tier 2, and runs the registry's suites — so the hook never carries a second test list.
+run_tier2_gate() {
+  local paths_file="$1"
+  echo "pre-push: utility-only update — running the tier 2 subsystem gate, not the full suite (GH-35)."
+  "$REPO/validate.sh" --print-mode --tier 2 2>&1 | sed 's/^/pre-push:   /'
+  nice -n 10 "$REPO/validate.sh" --paths-file "$paths_file"
+}
+
+_cls="$(classify_push 2>/dev/null || true)"
+_route="$(printf '%s\n' "$_cls" | sed -n 's/^route=//p')"
+_tier="$(printf '%s\n' "$_cls" | sed -n 's/^tier=//p')"
+_t2tests="$(printf '%s\n' "$_cls" | sed -n 's/^tier2_tests=//p')"
 _gate_name="full validation"
 _start=$SECONDS
+_paths_file=""
 if [ "$_route" = "docs" ]; then
   _gate_name="deterministic documentation gate"
   echo "pre-push: docs-only update — running the documentation gate, not validate.sh."
@@ -122,12 +144,32 @@ if [ "$_route" = "docs" ]; then
   else
     _rc=$?
   fi
+elif [ "$_route" = "fast" ] && [ "$_tier" = "2" ] && [ -n "$_t2tests" ]; then
+  # route=fast alone is NOT enough (an unmapped code path also routes fast): the classifier
+  # must say tier 2 AND name runnable suites, or this arm is skipped and the full gate runs.
+  _paths_file="$(mktemp "${TMPDIR:-/tmp}/prepush-paths.XXXXXX")"
+  if [ -n "$_paths_file" ]; then
+    for pair in "${_real_ref_pairs[@]}"; do
+      IFS='|' read -r _ls _rs <<<"$pair"
+      git diff --no-renames --name-only "$_rs" "$_ls" >> "$_paths_file" 2>/dev/null
+    done
+    _gate_name="tier 2 subsystem gate (GH-35)"
+    if run_tier2_gate "$_paths_file"; then
+      echo "pre-push: tier 2 gate GREEN in $((SECONDS - _start))s — pushing."
+      rm -f "$_paths_file"
+      exit 0
+    else
+      _rc=$?
+    fi
+    rm -f "$_paths_file"
+  fi
+  # An unusable paths file falls through to the full gate below — fail closed, never open.
 else
   echo "pre-push: running the full gate before this push reaches the remote (GH-544)."
   echo "pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden."
   "$REPO/validate.sh" --print-mode 2>&1 | sed 's/^/pre-push:   /'
 
-  if "$REPO/validate.sh"; then
+  if nice -n 10 "$REPO/validate.sh"; then
     echo "pre-push: full gate GREEN in $((SECONDS - _start))s — pushing."
     exit 0
   else

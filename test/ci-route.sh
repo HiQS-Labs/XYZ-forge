@@ -31,7 +31,10 @@ expect_route "relay containment changes require the full pre-merge gate" pull_re
 expect_route "Python-authoritative twin changes require the full pre-merge gate" pull_request full true utils/py/relay_drive.py
 expect_route "worktree safety test changes require the full pre-merge gate" pull_request full true test/worktree-isolation.sh
 expect_route "CI workflow changes require the full pre-merge gate" pull_request full true .github/workflows/ci.yml
-expect_route "PDDA implementation changes run PDDA plus the full gate" pull_request full true utils/pdda/pdda.sh
+# GH-35 moved PDDA tooling off the blanket-full list and into the Tier-2 subsystem registry
+# (issue #35, subsystem 6): the focused PDDA suites run instead of the whole pool. PDDA itself
+# still gates (pdda_needed=true). utils/pdda/** staying tier 3 was the pre-GH-35 posture.
+expect_route "PDDA implementation changes run the PDDA subsystem gate (GH-35)" pull_request fast true utils/pdda/pdda.sh
 shell_suffix=sh
 deleted_test="test/removed-regression.${shell_suffix}"
 expect_route "a deleted regression test fails closed into the full gate" pull_request full true "$deleted_test"
@@ -129,6 +132,62 @@ out="$(cd "$RENAME_REPO" && printf '%s\n' "$edit_paths" | bash "$ROUTER" push)"
 grep -Fqx 'route=full' <<<"$out" \
   && fail "an ordinary test EDIT was forced to full — the rename rule is over-broad" \
   || pass "an ordinary test edit is not forced to full (the rename rule is not a blanket)"
+
+# ── GH-35: the TIER answers are pinned separately from the route ────────────────────────────────
+# route is the CI job shape; tier is the local gate selection. They DELIBERATELY disagree on
+# two pinned cases: an unmapped code path routes fast (CI runs its containment list) but stays
+# tier 3 locally (the push hook runs the full gate), and an ordinary test edit routes fast but
+# is tier 3 — the routing contract's own evidence never weakens its own gate.
+expect_tier() {
+  local label="$1" event="$2" expected_tier="$3"
+  shift 3
+  local out
+  out="$(route "$event" "$@")"
+  if grep -Fqx "tier=$expected_tier" <<<"$out"; then
+    pass "$label"
+  else
+    fail "$label: $out"
+  fi
+}
+
+expect_tier "docs-only changes are tier 1" pull_request 1 README.md PROJECT/x.md decisions/d.md docs/guide.txt .pdda-mode
+expect_tier "text and markdown anywhere are docs (GH-35 widened)" pull_request 1 relay-system/2026-08-18/run/NOTE.txt
+expect_tier "HQ utility changes are tier 2" pull_request 2 utils/hq/hq.sh skills/hq/find-hq.sh
+expect_tier "releases subsystem (incl. the one non-twin utils/py file) is tier 2" pull_request 2 utils/py/releases_app.py utils/release-lanes.sh
+expect_tier "telemetry is tier 2" pull_request 2 utils/telemetry/health-lib.sh
+expect_tier "ATE + fuzzing are tier 2" pull_request 2 utils/ate/install.sh utils/fuzzing/fuzz-loop.sh
+expect_tier "swe-diagram is tier 2" pull_request 2 utils/swe-diagram/assets/renderer.js
+expect_tier "agent2agent skill code is tier 2 (GH-35 subsystem 7)" pull_request 2 skills/agent2agent/scripts/agent2agent.py
+expect_tier "agent2agent SKILL.md stays docs (explanatory markdown)" pull_request 1 skills/agent2agent/SKILL.md
+expect_tier "kernel changes are tier 3" pull_request 3 src/events.js relay-automation/relay-drive.sh
+expect_tier "authoritative Python twins are tier 3" pull_request 3 utils/py/relay_drive.py
+expect_tier "relay-xyz skill surface is tier 3" pull_request 3 skills/relay-xyz/SKILL.md
+expect_tier "an UNMAPPED code path is tier 3 even though route=fast" pull_request 3 tool.js
+expect_tier "an ordinary test EDIT is tier 3 (the contract's own evidence)" pull_request 3 test/hq.sh
+expect_tier "a test-like path outside test/ and outside a subsystem dir is unmapped" pull_request 3 utils/hq_test.sh
+expect_tier "mixed docs + subsystem is tier 2 with PDDA still on" pull_request 2 README.md utils/hq/hq.sh
+expect_tier "mixed subsystem + kernel fails closed to tier 3" pull_request 3 utils/hq/hq.sh src/events.js
+expect_tier "scheduled runs stay tier 3" schedule 3
+
+# The subsystem registry listing that validate.sh --subsystem consumes: every entry must name
+# suites that exist here, or --tier 2 would silently run nothing (the drift half of the guard;
+# the TESTS-registration half lives in test/gh35-test-tiers.sh).
+out="$(bash "$ROUTER" subsystems 2>&1)"
+if grep -Fq $'hq\thq.sh hq-park.sh' <<<"$out"; then
+  pass "subsystems listing names hq and its suites"
+else
+  fail "subsystems listing shape: $out"
+fi
+set +e
+out="$(bash "$ROUTER" subsystems does-not-exist 2>&1)"; rc=$?
+set -e
+[[ "$rc" -eq 2 && "$out" == *"unknown subsystem"* ]] \
+  && pass "an unknown subsystem fails loudly (exit 2)" \
+  || fail "unknown subsystem result: rc=$rc out=$out"
+out="$(bash "$ROUTER" subsystems hq)"
+[[ "$(wc -w <<<"$out")" -eq 12 ]] \
+  && pass "subsystems hq lists its 12 suites" \
+  || fail "subsystems hq listed $(wc -w <<<"$out") suites: $out"
 
 echo "  ci-route: $PASS pass, $FAIL fail"
 exit "$FAIL"

@@ -12,6 +12,46 @@ set -u
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/relay-automation/gate-env.sh"
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+
+# ── GH-45: REFUSE to run from a linked git worktree ─────────────────────────────────────────────
+# A linked worktree shares the parent clone's .git common directory — config, refs, and object
+# store alike. A suite that escapes its fixture (or resolves one to an empty string) therefore
+# reaches the PARENT clone, not a sandbox: the observed 2026-08-19 run set core.bare=true,
+# repointed origin at a deleted temp path, deleted every refs/remotes/origin/*, and overwrote
+# development with fixture commits (GH-564's class, firing for real). The detection is the same
+# --git-common-dir idiom the GH-448 driver-lock resolver uses: in the main checkout the absolute
+# git dir IS the common dir; in a linked worktree it is <common>/worktrees/<name> and differs.
+# Fail closed for every mode — tiers 1 and 2 run fixture-driven suites too. BOTH the invocation
+# CWD (where a suite's `git -C ""` escape lands) and HERE (whose clone the identity bracket
+# asserts) are checked, so invoking the script by absolute path from outside cannot slip past.
+_wt_refuses() {  # <dir>... -> exit 2 if any dir lives in a linked worktree
+  local d a c ca
+  for d in "$@"; do
+    a="$( cd "$d" 2>/dev/null && git rev-parse --absolute-git-dir 2>/dev/null )" || continue
+    c="$( cd "$d" 2>/dev/null && git rev-parse --git-common-dir 2>/dev/null )" || continue
+    [ -n "$a" ] && [ -n "$c" ] || continue
+    ca="$( cd "$d" 2>/dev/null && cd "$c" 2>/dev/null && pwd -P )" || continue
+    [ -n "$ca" ] || continue
+    if [ "$a" != "$ca" ]; then
+      cat >&2 <<WTREFUSE
+validate.sh: REFUSING — '$d' is a linked git worktree, which shares the parent clone's
+  .git (config, refs, objects). Suites that write to 'the repo' reach the PARENT, not a
+  fixture: an observed run set core.bare=true, repointed origin at a deleted temp path,
+  deleted every refs/remotes/origin/*, and overwrote development with fixture commits.
+  Run the gate from a normal clone. Override with XYZ_ALLOW_WORKTREE_GATE=1 only if you
+  accept that blast radius.
+WTREFUSE
+      exit 2
+    fi
+  done
+}
+if [ "${XYZ_ALLOW_WORKTREE_GATE:-0}" != "1" ]; then
+  _wt_refuses "$HERE" "${PWD:-.}"
+else
+  # Announced, never silent — a bypass that says nothing is indistinguishable from no guard.
+  echo "validate.sh: XYZ_ALLOW_WORKTREE_GATE=1 — running from a linked worktree at the operator's explicit request; the parent clone's .git is exposed (GH-45)." >&2
+fi
+
 TESTS=(
   "projection-idempotent.sh"
   "concurrent-claim.sh"
@@ -162,6 +202,7 @@ TESTS=(
   "gh536-evidence-detail.sh"           # GH-536 (the gate-evidence record carries an output hash + per-suite verdicts, so a reader can tell a real run from a stamped one) — 19/0; pins that the NOT-promotion-evidence disclaimer STAYS: a self-computed hash is tamper-evident, not attested
   "gh544-parallel-default.sh"          # GH-544 (parallel is the default; every decline to it is ANNOUNCED with a reason) — 29/0; uses --print-mode so it cannot recurse into the gate it belongs to, and pins the two invariants nothing else pins: ci-local.sh never inherits the default, and ci.yml's macOS boundary passes --sequential explicitly
   "gh544-pre-push-gate.sh"             # GH-544 (the gate moved to the push boundary; hosted CI fires on nothing) — 78/0; drives githooks/pre-push against a STUB validate.sh so it cannot recurse, and stubs `gh` to pin the one state nothing else can produce: a PR with ZERO configured checks must not read as "checks failed"
+  "gh35-test-tiers.sh"                 # GH-35 (tiered test selection + CPU governance) — 56/0; pins the registry contract (every registered suite exists AND is in TESTS), the fail-closed tier boundaries, the balanced cores/2 default + --throttle/--burst/env levers, nice -n 10 on the workers, and the tier-1/tier-2 execution paths against fixture clones whose suites are stubs (real runner, real pool, real summary math)
   "gh1-fixture-guard.sh"               # GH-1 (shared require_fixture resolved-containment + clone-identity invariant gate; covers the GH-567 lexical-check residual)
   "gh314-transcript-writeset.sh"       # GH-314 (the write set is THREE paths: the transcript's git add was outside GH-514's preflight, so an ignored relay-system/ was discovered only after paid turns) — 5/0; control: dropping the transcript path spends 2 builder turns before the same refusal (test/baselines/GH-314-negative-control.md)
   "gh520-default-reviewer-stub.sh"     # GH-520 (test/_setup.sh gives every fixture a default CODEX_BIN, so a suite tests its subject rather than the reviewer probe) — 11/0; control: with gh402's own stub removed AND this default removed, gh402 fails with the probe's message verbatim (test/baselines/GH-520-default-stub-control.md)
@@ -310,8 +351,8 @@ TESTS=(
 PASSED=()
 FAILED=()
 
-# ── GH-528 / GH-544: parallel is the DEFAULT, with detection and an ANNOUNCED fallback ────────────
-# `./validate.sh` (no args) now runs N-wide, where N is detected from the host. It runs the SAME
+# ── GH-528 / GH-544 / GH-35: parallel by default, BALANCED width, and tiered selection ──────────
+# `./validate.sh` (no args) runs N-wide, where N is detected from the host. It runs the SAME
 # TESTS array, with one exception: the suites that execute the REAL relay-automation/relay-drive.sh
 # contend on this clone's .git/relay-driver.lock (GH-42 exclusion working as designed —
 # "--target-root moves the build, not the lock", see test/gh331-cost-summary.sh), so those run
@@ -322,44 +363,97 @@ FAILED=()
 # gate is now the ONLY gate during the private phase and a 16-minute one does not get run — it gets
 # skipped, which is a worse outcome than a 3-minute one.
 #
+# GH-35 (2026-08-18) REBALANCED THE DEFAULT: cores−2 (up to 8 workers) saturated developer
+# machines badly enough to wedge the editor and spin fans for the whole gate. The default is now
+# cores/2 capped at 4 (floor 2) — half the machine, not all but two of it — and every worker runs
+# under `nice -n 10` so interactive use keeps scheduling priority. `--burst` restores the old
+# full-core width for unattended runs; `--throttle` goes further down to 2 workers. Tiers are
+# orthogonal to width and never change WHICH tests run — only how many.
+#
 # WHAT DID NOT CHANGE, and must not: `ci-local.sh` does NOT call this script. It parses the TESTS
 # array and runs each suite in its own sequential loop, and it is the path that writes the gate
 # record. So "sequential is the only form that qualifies a claim" (GH-528 Phase 2, GH-509) is still
 # true and is still what the record attests. Likewise the macOS promotion boundary in ci.yml pins
 # `--sequential` explicitly, so a re-armed boundary cannot silently promote on parallel evidence.
+# Tiers 1 and 2 are pre-push speed, NEVER promotion evidence (GH-35 / GH-509).
 #
 # THE FALLBACK IS ANNOUNCED, NEVER SILENT. A gate that quietly downgrades itself teaches you to trust
 # a number that is not the one you are getting, so every run prints which mode it chose and why.
 #
-# Precedence, highest first: --parallel N / --sequential  >  XYZ_VALIDATE_PARALLEL  >  host detection.
+# Precedence, highest first: flags > XYZ_VALIDATE_MAX_JOBS > XYZ_VALIDATE_THROTTLE >
+# XYZ_VALIDATE_PARALLEL > host detection.
 PARALLEL_JOBS=""
 PARALLEL_WHY=""
 FORCE_SEQUENTIAL=0
-_usage() { echo "usage: ./validate.sh [--parallel N | --sequential | --print-mode]" >&2; }
+TIER=3
+SUBSYSTEM=""
+AUTO_REQUESTED=0
+AUTO_RANGE=""
+PATHS_FILE=""
+THROTTLE=0
+BURST=0
+MODE_FLAGS=0
 PRINT_MODE_ONLY=0
-if [ "${1:-}" = "--print-mode" ]; then
-  # Resolve the mode, print it, run nothing. Exists so the decision is observable without paying for
-  # a gate run — both for test/gh544-parallel-default.sh (which must never execute the real suite)
-  # and for a pre-push hook that wants to tell the operator what it is about to do.
-  PRINT_MODE_ONLY=1; shift
-fi
-if [ $# -gt 0 ]; then
+NICE_CMD="nice -n 10"   # GH-35: workers run as a scheduling HINT below interactive use
+command -v nice >/dev/null 2>&1 || NICE_CMD=""
+_usage() {
+  cat >&2 <<'USAGE'
+usage: ./validate.sh [--parallel N | --sequential | --print-mode]
+       ./validate.sh [--tier 1|2|3] [--subsystem <name>] [--auto [base[.. head]]] [--paths-file <file>]
+       ./validate.sh [--throttle|--quiet-cpu] [--burst]
+
+  concurrency   --parallel N | --max-parallel N   pin the worker count
+                --sequential                      one suite at a time (the qualifying form)
+                --throttle | --quiet-cpu          2 workers under nice — quiet-machine mode (GH-35)
+                --burst                           full-core width, cores-2 capped 8 — unattended speed
+  tiers (GH-35) --tier 1|2|3                      1 = docs gate · 2 = subsystem suites · 3 = full (default)
+                --subsystem <name>                tier 2 for one subsystem (utils/ci-route.sh subsystems)
+                --auto [base[.. head]]            classify the git diff, run the minimal safe tier
+                --paths-file <file>               tier 2 from a path list — what pre-push hands over
+  environment   XYZ_VALIDATE_THROTTLE=1 · XYZ_VALIDATE_MAX_JOBS=N · XYZ_VALIDATE_PARALLEL=N|0
+                (an explicit flag always beats the environment; a width lever beats a throttle lever)
+USAGE
+}
+_err2() { echo "validate.sh: $*" >&2; _usage; exit 2; }
+while [ $# -gt 0 ]; do
   case "$1" in
-    --parallel)
-      case "${2:-}" in
-        ''|*[!0-9]*) echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2 ;;
-      esac
-      [ "$2" -ge 1 ] || { echo "validate.sh: --parallel requires an integer >= 1" >&2; exit 2; }
-      [ $# -eq 2 ] || { _usage; exit 2; }
-      PARALLEL_JOBS="$2"; PARALLEL_WHY="explicit --parallel $2"
-      ;;
+    --print-mode) PRINT_MODE_ONLY=1; shift ;;
+    --parallel|--max-parallel)
+      [ $# -ge 2 ] || _err2 "$1 requires an integer >= 1"
+      case "$2" in ''|*[!0-9]*) _err2 "$1 requires an integer >= 1" ;; esac
+      [ "$2" -ge 1 ] || _err2 "$1 requires an integer >= 1"
+      MODE_FLAGS=$((MODE_FLAGS + 1)); [ "$MODE_FLAGS" -le 1 ] || _err2 "conflicting concurrency flags — pick one of --parallel/--max-parallel/--sequential/--throttle/--burst"
+      PARALLEL_JOBS="$2"; PARALLEL_WHY="explicit $1 $2"
+      shift 2 ;;
     --sequential)
-      [ $# -eq 1 ] || { _usage; exit 2; }
+      MODE_FLAGS=$((MODE_FLAGS + 1)); [ "$MODE_FLAGS" -le 1 ] || _err2 "conflicting concurrency flags — pick one of --parallel/--max-parallel/--sequential/--throttle/--burst"
       FORCE_SEQUENTIAL=1; PARALLEL_WHY="explicit --sequential"
-      ;;
-    *) _usage; exit 2 ;;
+      shift ;;
+    --throttle|--quiet-cpu)
+      MODE_FLAGS=$((MODE_FLAGS + 1)); [ "$MODE_FLAGS" -le 1 ] || _err2 "conflicting concurrency flags — pick one of --parallel/--max-parallel/--sequential/--throttle/--burst"
+      THROTTLE=1; PARALLEL_WHY="explicit $1"
+      shift ;;
+    --burst)
+      MODE_FLAGS=$((MODE_FLAGS + 1)); [ "$MODE_FLAGS" -le 1 ] || _err2 "conflicting concurrency flags — pick one of --parallel/--max-parallel/--sequential/--throttle/--burst"
+      BURST=1; PARALLEL_WHY="explicit --burst"
+      shift ;;
+    --tier)
+      [ $# -ge 2 ] || _err2 "--tier requires 1, 2, or 3"
+      case "$2" in 1|2|3) TIER="$2" ;; *) _err2 "--tier requires 1, 2, or 3" ;; esac
+      shift 2 ;;
+    --subsystem)
+      [ $# -ge 2 ] || _err2 "--subsystem requires a name (utils/ci-route.sh subsystems lists them)"
+      SUBSYSTEM="$2"; shift 2 ;;
+    --auto)
+      AUTO_REQUESTED=1; shift
+      # An optional range follows unless the next token is another flag.
+      if [ $# -gt 0 ]; then case "$1" in -*) ;; *) AUTO_RANGE="$1"; shift ;; esac; fi ;;
+    --paths-file)
+      [ $# -ge 2 ] || _err2 "--paths-file requires a path"
+      PATHS_FILE="$2"; shift 2 ;;
+    *) _err2 "unknown argument: $1" ;;
   esac
-fi
+done
 
 # GH-4: an ungated clone pushes unverified and nothing downstream notices — the local pre-push
 # gate is the only gate while this repo is private (GH-544), and the hook lives in `.git/hooks/`,
@@ -373,15 +467,133 @@ if ! _gh4_hook_check="$(bash "$HERE/githooks/install.sh" --check 2>&1)"; then
   echo "validate.sh: continuing WITHOUT the push gate installed — this run is unaffected, but a future push from this clone will not be verified." >&2
 fi
 
-# XYZ_VALIDATE_PARALLEL=0 forces sequential; a positive integer pins the width. Only consulted when
-# no flag was given, so a flag always wins over ambient environment.
-if [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ]; then
+# ── GH-35: tier resolution — WHICH tests run, never HOW MANY AT ONCE ────────────────────────────
+# Tiers select a test SET from the one registry in utils/ci-route.sh; width/nice select a
+# resource policy. A tier below 3 is a pre-push convenience and is labelled NOT promotion
+# evidence on every path (GH-509: only ci-local.sh's sequential full run writes a record).
+T2_TESTS=""      # space-separated suite list for tier 2
+T2_PDDA=0        # 1 when the classifier says docs were touched too
+T2_PYTEST=0      # 1 when a *.py path is in play (test_python_layer.py covers utils/py)
+T2_PATHS=""      # newline list of changed paths (static checks + pytest hint)
+
+_cls_get() {  # <classifier-output> <key> -> value — first match only
+  printf '%s\n' "$1" | sed -n "s/^$2=//p" | head -1
+}
+
+classify_paths() {  # paths on stdin -> classifier key=value block on stdout; rc 1 if unavailable
+  [ -x "$HERE/utils/ci-route.sh" ] || return 1
+  bash "$HERE/utils/ci-route.sh" push || return 1
+}
+
+apply_classification() {  # <key=value block> — sets TIER/T2_*/TIER_REASON; fail-closed to tier 3
+  local cls="$1" t tests
+  cls="$1"
+  t="$(_cls_get "$cls" tier)"
+  tests="$(_cls_get "$cls" tier2_tests)"
+  case "$t" in
+    1) TIER=1 ;;
+    2) TIER=2; T2_TESTS="${tests//,/ }" ;;
+    *) TIER=3 ;;
+  esac
+  if [ "$(_cls_get "$cls" pdda_needed)" = "true" ]; then T2_PDDA=1; fi
+  TIER_REASON="$(_cls_get "$cls" tier_reason)"
+}
+
+TIER_REQUESTED=0
+[ "$TIER" -ne 3 ] && TIER_REQUESTED="$TIER"
+if [ "$AUTO_REQUESTED" -eq 1 ] || [ -n "$PATHS_FILE" ] || [ -n "$SUBSYSTEM" ]; then
+  # The selector flags are mutually exclusive: each of them fully determines the tier, so
+  # combining two answers the question twice and one of them is being silently ignored.
+  [ "$AUTO_REQUESTED" -eq 1 ] && [ \( -n "$PATHS_FILE" \) -o \( -n "$SUBSYSTEM" \) ] \
+    && _err2 "--auto cannot be combined with --paths-file/--subsystem"
+  [ -n "$PATHS_FILE" ] && [ -n "$SUBSYSTEM" ] \
+    && _err2 "--paths-file cannot be combined with --subsystem"
+fi
+
+if [ "$AUTO_REQUESTED" -eq 1 ]; then
+  _auto_base="" _auto_head=""
+  if [ -n "$AUTO_RANGE" ]; then
+    _auto_base="${AUTO_RANGE%%..*}"
+    _auto_head="${AUTO_RANGE#*..}"
+    [ "$_auto_head" = "$AUTO_RANGE" ] && _auto_head=""
+  else
+    # Default range: everything this clone has over its upstream, INCLUDING uncommitted work
+    # (diff against the working tree, not HEAD). No upstream -> compare against HEAD's parent.
+    _auto_base="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+    [ -n "$_auto_base" ] || _auto_base="HEAD^"
+    _auto_head=""
+  fi
+  _auto_paths() {
+    if [ -n "$_auto_head" ]; then git diff --no-renames --name-only "$_auto_base" "$_auto_head"
+    else git diff --no-renames --name-only "$_auto_base"; fi
+  }
+  if _cls="$(_auto_paths 2>/dev/null | classify_paths)"; then
+    apply_classification "$_cls"
+    T2_PATHS="$(_auto_paths 2>/dev/null)"
+    echo "validate.sh: --auto classified tier $TIER — ${TIER_REASON:-unspecified} (GH-35)"
+    case "$T2_PATHS" in *.py|*.py$'\n'*|*$'\n'*.py|*$'\n'*.py$'\n'*) T2_PYTEST=1 ;; esac
+  else
+    echo "validate.sh: --auto could not classify the diff — failing closed to tier 3 (GH-35)" >&2
+    TIER=3
+  fi
+fi
+
+if [ -n "$PATHS_FILE" ]; then
+  [ -s "$PATHS_FILE" ] || _err2 "--paths-file must name a non-empty file"
+  _cls="$(classify_paths < "$PATHS_FILE")" || _err2 "the classifier could not run — refusing to guess a tier"
+  apply_classification "$_cls"
+  if [ "$TIER" -ne 2 ]; then
+    # A caller hands over a path list precisely because it wants the narrow gate. If those
+    # paths classify as anything but tier 2, saying so and failing is the honest move — a
+    # quiet escalation to a 4-minute full gate from inside a hook looks like a hang.
+    echo "validate.sh: --paths-file classified tier $TIER — ${TIER_REASON:-unspecified}." >&2
+    echo "validate.sh: refusing the narrow gate; run the full ./validate.sh (or push, which will)." >&2
+    exit 2
+  fi
+  T2_PATHS="$(cat "$PATHS_FILE")"
+  case "$T2_PATHS" in *.py|*.py$'\n'*|*$'\n'*.py|*$'\n'*.py$'\n'*) T2_PYTEST=1 ;; esac
+  echo "validate.sh: classified tier 2 — ${TIER_REASON:-unspecified} (GH-35)"
+fi
+
+if [ -n "$SUBSYSTEM" ]; then
+  T2_TESTS="$(bash "$HERE/utils/ci-route.sh" subsystems "$SUBSYSTEM" 2>/dev/null)" \
+    || _err2 "unknown subsystem '$SUBSYSTEM' (utils/ci-route.sh subsystems lists them)"
+  [ -n "$T2_TESTS" ] || _err2 "subsystem '$SUBSYSTEM' resolved to no suites — refusing a zero-test gate"
+  TIER=2
+  case "$SUBSYSTEM" in releases|pdda) T2_PYTEST=1 ;; esac
+  echo "validate.sh: tier 2 — subsystem $SUBSYSTEM (GH-35)"
+fi
+
+# A selector flag decides the tier; an explicit --tier is allowed only as CONFIRMATION
+# (PR #55 review, finding 1: --tier 2 --subsystem hq is the natural spelling and is what
+# ROUTER.md documents). A contradicting --tier is an error, not a silent override.
+if [ "$TIER_REQUESTED" -ne 0 ] && [ "$TIER_REQUESTED" -ne "$TIER" ]; then
+  _err2 "--tier $TIER_REQUESTED contradicts the selector flag's tier $TIER — drop --tier, or pass --tier $TIER"
+fi
+
+# ── GH-35: ambient concurrency levers (consulted only when no flag was given) ───────────────────
+if [ "$MODE_FLAGS" -eq 0 ] && [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ]; then
+  case "${XYZ_VALIDATE_MAX_JOBS:-}" in
+    '') ;;
+    *[!0-9]*|'0') echo "validate.sh: XYZ_VALIDATE_MAX_JOBS must be an integer >= 1" >&2; exit 2 ;;
+    *) PARALLEL_JOBS="$XYZ_VALIDATE_MAX_JOBS"; PARALLEL_WHY="XYZ_VALIDATE_MAX_JOBS=$XYZ_VALIDATE_MAX_JOBS" ;;
+  esac
+fi
+_throttle_env=0
+case "${XYZ_VALIDATE_THROTTLE:-}" in
+  ''|0) ;;
+  1) _throttle_env=1 ;;
+  *) echo "validate.sh: XYZ_VALIDATE_THROTTLE must be 0 or 1" >&2; exit 2 ;;
+esac
+if [ "$MODE_FLAGS" -eq 0 ] && [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ] && [ "$_throttle_env" -eq 1 ]; then
+  THROTTLE=1; PARALLEL_WHY="XYZ_VALIDATE_THROTTLE=1"
+fi
+if [ "$MODE_FLAGS" -eq 0 ] && [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ] && [ "$THROTTLE" -eq 0 ]; then
   case "${XYZ_VALIDATE_PARALLEL:-}" in
-    '')        : ;;
-    0)         FORCE_SEQUENTIAL=1; PARALLEL_WHY="XYZ_VALIDATE_PARALLEL=0" ;;
-    *[!0-9]*)  echo "validate.sh: XYZ_VALIDATE_PARALLEL must be an integer >= 0" >&2; exit 2 ;;
-    *)         PARALLEL_JOBS="$XYZ_VALIDATE_PARALLEL"
-               PARALLEL_WHY="XYZ_VALIDATE_PARALLEL=$XYZ_VALIDATE_PARALLEL" ;;
+    '') ;;
+    0) FORCE_SEQUENTIAL=1; PARALLEL_WHY="XYZ_VALIDATE_PARALLEL=0" ;;
+    *[!0-9]*) echo "validate.sh: XYZ_VALIDATE_PARALLEL must be an integer >= 0" >&2; exit 2 ;;
+    *) PARALLEL_JOBS="$XYZ_VALIDATE_PARALLEL"; PARALLEL_WHY="XYZ_VALIDATE_PARALLEL=$XYZ_VALIDATE_PARALLEL" ;;
   esac
 fi
 
@@ -393,37 +605,153 @@ _detect_cores() {
   if command -v getconf >/dev/null 2>&1 && getconf _NPROCESSORS_ONLN 2>/dev/null; then return 0; fi
   echo 0
 }
-if [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ]; then
-  _cores="$(_detect_cores 2>/dev/null | head -1)"
-  case "$_cores" in ''|*[!0-9]*) _cores=0 ;; esac
-  if ! printf '' | xargs -P 2 -I{} true >/dev/null 2>&1; then
-    # Not every xargs implements -P. Falling back is correct; failing here would make the gate
-    # unrunnable on a host where the sequential path works perfectly well.
-    FORCE_SEQUENTIAL=1; PARALLEL_WHY="this host's xargs does not support -P"
+_cores="$(_detect_cores 2>/dev/null | head -1)"
+case "$_cores" in ''|*[!0-9]*) _cores=0 ;; esac
+
+# Capability first, whatever else was asked: without xargs -P there is no pool at all, and an
+# explicit --parallel that silently degraded to sequential would be exactly the quiet
+# substitution GH-544 exists to prevent.
+if ! printf '' | xargs -P 2 -I{} true >/dev/null 2>&1; then
+  # Not every xargs implements -P. Falling back is correct; failing here would make the gate
+  # unrunnable on a host where the sequential path works perfectly well.
+  FORCE_SEQUENTIAL=1
+  if [ -n "$PARALLEL_WHY" ]; then PARALLEL_WHY="$PARALLEL_WHY — overridden: this host's xargs does not support -P"
+  else PARALLEL_WHY="this host's xargs does not support -P"; fi
+elif [ "$FORCE_SEQUENTIAL" -eq 0 ] && [ -z "$PARALLEL_JOBS" ]; then
+  if [ "$THROTTLE" -eq 1 ]; then
+    # Explicit quiet-machine mode is an explicit width: 2 workers, any host that has a pool.
+    PARALLEL_JOBS=2
+    PARALLEL_WHY="$PARALLEL_WHY — 2 workers under nice (quiet-CPU, GH-35)"
+  elif [ "$BURST" -eq 1 ]; then
+    # The pre-GH-35 aggressive width, now opt-in only: leave two cores for the driver-lock lane
+    # and the shell; cap at 8, the width the GH-528 spike actually measured.
+    _w=$((_cores - 2)); [ "$_w" -gt 8 ] && _w=8; [ "$_w" -lt 1 ] && _w=1
+    PARALLEL_JOBS="$_w"
+    PARALLEL_WHY="$PARALLEL_WHY — full-core width cores-2 capped 8 (GH-35)"
   elif [ "$_cores" -lt 4 ]; then
     # Below 4 cores the pool cannot outrun the serialized driver-lock lane, so parallelism buys
     # contention risk and no wall-clock. Detected, not assumed.
     FORCE_SEQUENTIAL=1
     if [ "$_cores" -eq 0 ]; then PARALLEL_WHY="could not detect a core count on this host"
     else PARALLEL_WHY="only $_cores core(s) detected (parallel needs >= 4)"; fi
+  elif [ "$TIER" -eq 2 ]; then
+    # Tier 2 runs a handful of suites; 2 throttled workers is the whole point of the fast lane.
+    PARALLEL_JOBS=2
+    PARALLEL_WHY="tier 2 default — 2 workers under nice (GH-35)"
   else
-    # Leave two cores for the driver-lock lane and the shell itself; cap at 8, the width the GH-528
-    # spike actually measured. A wider run is available explicitly, but is not the unattended default.
-    _w=$((_cores - 2))
-    if [ "$_w" -gt 8 ]; then _w=8; fi
-    PARALLEL_JOBS="$_w"; PARALLEL_WHY="auto-detected $_cores cores"
+    # GH-35 balanced default: half the machine (floor 2, cap 4) instead of all-but-two of it.
+    # The old cores-2 width pegged 8-core+ hosts at 100% for the whole gate and cost more
+    # operator attention than it saved wall-clock; --burst buys it back when unattended.
+    _w=$((_cores / 2)); [ "$_w" -gt 4 ] && _w=4; [ "$_w" -lt 2 ] && _w=2
+    PARALLEL_JOBS="$_w"
+    PARALLEL_WHY="auto-detected $_cores cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)"
   fi
 fi
 if [ "$FORCE_SEQUENTIAL" -eq 1 ]; then PARALLEL_JOBS=""; fi
 if [ -z "$PARALLEL_JOBS" ]; then
   echo "validate.sh: SEQUENTIAL mode — $PARALLEL_WHY"
 fi
+if [ -n "$NICE_CMD" ]; then
+  export NICE_CMD
+  echo "validate.sh: suite workers run under $NICE_CMD — an interactive-session hint, not a CPU limit (GH-35)"
+fi
 if [ "$PRINT_MODE_ONLY" -eq 1 ]; then
+  # Resolve the mode, print it, run nothing. Exists so the decision is observable without paying
+  # for a gate run — both for test/gh544-parallel-default.sh (which must never execute the real
+  # suite) and for a pre-push hook that wants to tell the operator what it is about to do.
   if [ -n "$PARALLEL_JOBS" ]; then
     echo "validate.sh: PARALLEL mode ${PARALLEL_JOBS}-wide — $PARALLEL_WHY"
     echo "  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509)."
   fi
+  if [ "$TIER" -lt 3 ]; then
+    echo "validate.sh: tier $TIER — subsystem/docs selection is NEVER promotion evidence (GH-35/GH-509)."
+  fi
   exit 0
+fi
+
+# ── GH-35 tier 1: the deterministic docs gate, and nothing else ─────────────────────────────────
+# This is the same pair of checks githooks/pre-push runs for a route=docs push, so
+# `./validate.sh --tier 1` and the hook cannot drift apart: one classifier, one docs gate.
+# Tier 1 runs no fixtures, so the GH-1 identity bracket below does not apply to it.
+if [ "$TIER" -eq 1 ]; then
+  echo
+  echo "==============================="
+  echo "Tier 1 — docs & governance gate (GH-35)"
+  echo "NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509)."
+  echo "==============================="
+  _t1_rc=0
+  if [ -x "$HERE/utils/pdda/pdda.sh" ]; then
+    $NICE_CMD bash "$HERE/utils/pdda/pdda.sh" run || _t1_rc=1
+  else
+    echo "validate.sh: utils/pdda/pdda.sh is missing — a docs gate that cannot run has not passed." >&2
+    _t1_rc=1
+  fi
+  if [ -x "$HERE/utils/pdda-local-checks.sh" ]; then
+    # Repo-owned PDDA additions are warn-only by contract (same stance as pre-push).
+    $NICE_CMD bash "$HERE/utils/pdda-local-checks.sh" run || true
+  fi
+  if [ "$_t1_rc" -eq 0 ]; then
+    echo "tier 1: documentation gate GREEN"
+    exit 0
+  fi
+  echo "tier 1: documentation gate RED" >&2
+  exit 1
+fi
+
+# ── GH-35 tier 2: shrink the run set to the selected subsystem suites ───────────────────────────
+# Tier 2 is the SAME machinery on a smaller list: same pool, same driver-lock lane, same
+# identity bracket, same summary invariant — only the test SET changes (and it comes from the
+# same registry the push hook uses, so the two cannot disagree about what "hq" covers).
+RUN_TESTS=("${TESTS[@]}")
+if [ "$TIER" -eq 2 ]; then
+  echo
+  echo "==============================="
+  echo "Tier 2 — subsystem gate (GH-35): $T2_TESTS"
+  echo "NOT promotion evidence: the qualifying gate is ci-local.sh's sequential full run (GH-509)."
+  echo "==============================="
+  RUN_TESTS=()
+  for t in $T2_TESTS; do
+    [ -f "$HERE/test/$t" ] || { echo "validate.sh: tier-2 suite test/$t is missing — a gate that cannot run has not passed." >&2; exit 1; }
+    RUN_TESTS+=("$t")
+  done
+  [ "${#RUN_TESTS[@]}" -gt 0 ] || { echo "validate.sh: tier 2 resolved to zero suites — refusing a zero-test green." >&2; exit 1; }
+  if [ "$T2_PDDA" -eq 1 ]; then
+    echo
+    echo "==============================="
+    echo "Running tier-2 docs gate (docs paths in the change set)"
+    echo "==============================="
+    if [ -x "$HERE/utils/pdda/pdda.sh" ] && $NICE_CMD bash "$HERE/utils/pdda/pdda.sh" run; then
+      PASSED+=("tier2:pdda")
+    else
+      FAILED+=("tier2:pdda")
+    fi
+  fi
+  if [ -n "$T2_PATHS" ]; then
+    echo
+    echo "==============================="
+    echo "Running tier-2 static syntax checks on changed files"
+    echo "==============================="
+    _t2s_rc=0
+    while IFS= read -r _p; do
+      [ -n "$_p" ] || continue
+      # A deleted file rides a git-diff path list (PR #55 review, finding 2): there is
+      # nothing to syntax-check, and bash -n on a missing path would 127 the whole gate.
+      [ -f "$HERE/$_p" ] || { echo "  (gone — skipping $_p)"; continue; }
+      case "$_p" in
+        *.sh)
+          echo "  bash -n $_p"
+          $NICE_CMD bash -n "$HERE/$_p" || _t2s_rc=1 ;;
+        *.js)
+          command -v node >/dev/null 2>&1 || { echo "  (node unavailable — skipping $_p)"; continue; }
+          echo "  node --check $_p"
+          $NICE_CMD node --check "$HERE/$_p" || _t2s_rc=1 ;;
+        *.py)
+          echo "  python3 ast-parse $_p"
+          $NICE_CMD python3 -c 'import ast,sys; ast.parse(open(sys.argv[1]).read())' "$HERE/$_p" || _t2s_rc=1 ;;
+      esac
+    done <<<"$T2_PATHS"
+    [ "$_t2s_rc" -eq 0 ] && PASSED+=("tier2:static") || FAILED+=("tier2:static")
+  fi
 fi
 
 # GH-1: suite-wide clone-identity invariant gate. Captured before any suite runs and asserted after
@@ -479,19 +807,21 @@ if [ -n "$PARALLEL_JOBS" ]; then
     # otherwise inherit the caller's stdin (an operator's TTY in interactive use) — and any suite
     # that reads stdin would behave differently per lane, or hang on a terminal. One stdin regime
     # for every suite is what makes the pool/lane/serial-re-run verdicts comparable.
-    if bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1 </dev/null; then rc=0; else rc=$?; fi
+    # GH-35: $NICE_CMD (unquoted, a scheduling HINT) keeps workers below interactive priority.
+    if $NICE_CMD bash "$VALIDATE_HERE/test/$t" >"$log" 2>&1 </dev/null; then rc=0; else rc=$?; fi
     printf '%s %s\n' "$rc" "$t" >> "$VALIDATE_RESULTS"
     echo "[parallel] $t rc=$rc"
   }
   export -f vp_run_one
 
-  # Both lists are derived FROM $TESTS, so the two paths run exactly the same set of suites. The
-  # lane is an intersection, not the literal above: iterating $DRIVER_LOCK_LANE directly would run a
-  # lane suite even when TESTS does not contain it, so `--parallel` could execute suites the
-  # sequential path skips — and the summary would count more results than TOTAL.
+  # Both lists are derived FROM the run set (all of TESTS on tier 3, the classified subset on
+  # tier 2), so the two paths run exactly the same set of suites. The lane is an intersection,
+  # not the literal above: iterating $DRIVER_LOCK_LANE directly would run a lane suite even
+  # when the run set does not contain it, so `--parallel` could execute suites the sequential
+  # path skips — and the summary would count more results than TOTAL.
   POOL=()
   LANE=()
-  for t in "${TESTS[@]}"; do
+  for t in "${RUN_TESTS[@]}"; do
     case "$DRIVER_LOCK_LANE" in
       *" $t "*) LANE+=("$t") ;;
       *) POOL+=("$t") ;;
@@ -559,12 +889,13 @@ if [ -n "$PARALLEL_JOBS" ]; then
     vp_rerun_alone "$t" "FAILED in parallel (rc=$rc)"
   done < "$RESULTS"
 
-  # Completeness catch-up: every suite in TESTS must appear in the results file exactly as often as
-  # it was run (once). A missing line means the worker died before recording its verdict — that is
-  # a pooled failure in every way that matters, so it gets the same serial re-run, never silence.
+  # Completeness catch-up: every suite in the run set must appear in the results file exactly as
+  # often as it was run (once). A missing line means the worker died before recording its verdict —
+  # that is a pooled failure in every way that matters, so it gets the same serial re-run, never
+  # silence.
   _vp_ran="$RUN_DIR/ran.txt"
   cut -d' ' -f2- "$RESULTS" | LC_ALL=C sort -u > "$_vp_ran"
-  for t in "${TESTS[@]}"; do
+  for t in "${RUN_TESTS[@]}"; do
     grep -Fxq "$t" "$_vp_ran" || vp_rerun_alone "$t" "NO RESULT recorded in parallel"
   done
 
@@ -583,12 +914,12 @@ if [ -n "$PARALLEL_JOBS" ]; then
     echo "==============================================================================="
   fi
 else
-for t in "${TESTS[@]}"; do
+for t in "${RUN_TESTS[@]}"; do
   echo
   echo "==============================="
   echo "Running $t"
   echo "==============================="
-  if bash "$HERE/test/$t"; then
+  if $NICE_CMD bash "$HERE/test/$t"; then
     PASSED+=("$t")
   else
     FAILED+=("$t")
@@ -596,14 +927,18 @@ for t in "${TESTS[@]}"; do
 done
 fi
 
-echo
-echo "==============================="
-echo "Running python3 -m pytest test/test_python_layer.py"
-echo "==============================="
-if python3 -m pytest "$HERE/test/test_python_layer.py"; then
-  PASSED+=("python:test_python_layer.py")
-else
-  FAILED+=("python:test_python_layer.py")
+# The Python layer follows the change set on tier 2 (a *.py path or a python-bearing subsystem
+# pulls it in); on tier 3 it is unconditional, as it always was.
+if [ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ]; then
+  echo
+  echo "==============================="
+  echo "Running python3 -m pytest test/test_python_layer.py"
+  echo "==============================="
+  if $NICE_CMD python3 -m pytest "$HERE/test/test_python_layer.py"; then
+    PASSED+=("python:test_python_layer.py")
+  else
+    FAILED+=("python:test_python_layer.py")
+  fi
 fi
 
 # GH-1: the identity bracket's assert half. Runs AFTER every suite and before the summary, so a
@@ -621,21 +956,34 @@ fi
 
 # GH-428: non-recursive staleness probe for the gamma-poison fixture (does NOT run
 # verify-fixture.sh — that runs this whole suite, so nesting it would recurse).
-echo
-echo "==============================="
-echo "Running gamma-poison fixture staleness probe"
-echo "==============================="
-if git apply --check "$HERE/test/fixtures/gamma-poison/poison.patch" 2>/dev/null; then
-  PASSED+=("gamma-poison-staleness-probe")
-else
-  FAILED+=("gamma-poison-staleness-probe")
+# Tier 3 only: the probe guards full-suite fixture rot, not a subsystem lane.
+if [ "$TIER" -eq 3 ]; then
+  echo
+  echo "==============================="
+  echo "Running gamma-poison fixture staleness probe"
+  echo "==============================="
+  if git apply --check "$HERE/test/fixtures/gamma-poison/poison.patch" 2>/dev/null; then
+    PASSED+=("gamma-poison-staleness-probe")
+  else
+    FAILED+=("gamma-poison-staleness-probe")
+  fi
 fi
 
 echo
 echo "==============================="
 echo "Summary"
 echo "==============================="
-TOTAL=$(( ${#TESTS[@]} + 3 ))
+# GH-15/GH-35: TOTAL counts what THIS run owed — every suite in the run set plus exactly the
+# fixed probes the tier selected. The pytest/identity/gamma conditions here are the same ones
+# that gated execution above, so the tally cannot drift from what ran.
+TOTAL=$(( ${#RUN_TESTS[@]} + 1 ))                       # suites + the identity bracket (always)
+[ "$TIER" -eq 3 ] || [ "$T2_PYTEST" -eq 1 ] && TOTAL=$((TOTAL + 1))
+if [ "$TIER" -eq 3 ]; then TOTAL=$((TOTAL + 1)); fi     # gamma-poison staleness probe
+[ "$TIER" -eq 2 ] && [ "$T2_PDDA" -eq 1 ] && TOTAL=$((TOTAL + 1))
+[ "$TIER" -eq 2 ] && [ -n "$T2_PATHS" ] && TOTAL=$((TOTAL + 1))
+if [ "$TIER" -eq 2 ]; then
+  echo "tier 2 run — ${#RUN_TESTS[@]} suite(s). NOT promotion evidence (GH-35/GH-509)."
+fi
 # GH-15: the verdict must rest on COMPLETE evidence — every suite plus the fixed probes, each
 # classified exactly once. A tally that does not add up is an internal error (a swallowed result
 # line, a suite classified twice); failing loud here is the difference between that defect being a
