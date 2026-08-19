@@ -252,10 +252,23 @@ def preflight_write_set_trackable(repo_root, paths):
     Re-implementing that matching would produce a check that disagrees with the tool whose behaviour
     it is trying to predict — and disagreeing quietly is the failure being fixed.
 
-    Exit status contract: 0 = ignored (the bad case here), 1 = not ignored, 128 = error. An error is
-    treated as NOT ignored, deliberately: this guard exists to stop a known halt, and it must not
+    Exit status contract: 0 = SOME PATTERN MATCHED, 1 = no pattern matched, 128 = error. An error is
+    treated as not ignored, deliberately: this guard exists to stop a known halt, and it must not
     invent a new way for a healthy run to fail. A repo where check-ignore cannot run is one where the
     old behaviour — find out at `git add` — is no worse than refusing on a guess.
+
+    Exit 0 does NOT mean "ignored", and reading it that way was a real false positive. A NEGATION
+    rule that re-includes a path also matches, so check-ignore exits 0 and prints the `!` rule for a
+    file `git add` accepts without complaint:
+
+        *.log            -> rc=0, `git add` refuses   (genuinely ignored)
+        !logs/keep.log   -> rc=0, `git add` ACCEPTS   (re-included)
+        (no rule)        -> rc=1
+
+    So the matched pattern must be inspected, not just the exit status: git reports the LAST matching
+    rule (last-match-wins), and when that rule is a negation the path is trackable. Otherwise a
+    marathon is blocked before dispatch over an ignore rule that is already correct, and the operator
+    is sent to fix nothing. Covered by case 4 of test/gh514-write-set-trackable.sh.
     """
     blocked = []
     for p in paths:
@@ -265,7 +278,11 @@ def preflight_write_set_trackable(repo_root, paths):
         except Exception:
             continue
         if res.returncode == 0 and res.stdout.strip():
-            blocked.append((p, res.stdout.strip().splitlines()[0]))
+            matched_line = res.stdout.strip().splitlines()[0]
+            fields = matched_line.split("\t", 1)[0].split(":")
+            if len(fields) >= 3 and fields[2].startswith("!"):
+                continue
+            blocked.append((p, matched_line))
 
     if not blocked:
         return

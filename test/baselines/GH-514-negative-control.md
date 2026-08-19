@@ -85,3 +85,36 @@ subprocess.CalledProcessError: Command '['git', '-C', '<tmp>', 'add', '--', '<tm
 
   gh514-write-set-trackable: 12 passed, 0 failed
 ```
+
+## Case 4 — negation false positive (added with the gitignore-negation fix)
+
+`git check-ignore -v` exits **0 whenever any pattern matched**, including a negation that
+re-includes the path. The original guard read exit 0 as "ignored", so a path git will happily track
+blocked the marathon before dispatch and sent the operator to fix a rule that was already correct.
+
+Reproduced directly against `git add`, which is the authority the guard is trying to predict:
+
+| `.gitignore` | `check-ignore -v` | `git add` |
+|---|---|---|
+| `*.log` | rc=0, prints the rule | **refuses** — genuinely ignored |
+| `!logs/keep.log` | rc=0, prints the `!` rule | **accepts** — re-included |
+| (no matching rule) | rc=1, no output | accepts |
+
+Row 2 is the defect: identical exit status to row 1, opposite meaning. Git reports the LAST matching
+rule (last-match-wins), so the fix inspects that pattern and skips when it is a negation.
+
+**Control observed.** With `utils/py/marathon_drive.py` reverted to the pre-fix version and the new
+case 4 in place:
+
+```
+FAIL: GH-514 false positive: a path re-included by a negation rule was blocked; git can track it,
+      so the run was refused over a rule that is already correct
+```
+
+Restored: **14 passed, 0 failed**.
+
+**Case 4 carries its own anti-vacuity half.** "Does not block" would also pass if the guard were
+simply disabled, so a second fixture puts the negation FIRST and re-ignores afterwards
+(`!marathon-system/**` then `marathon-system/**`) — last-match-wins makes that path genuinely
+ignored, and it must still block. Both halves were verified against `git add`'s actual behaviour
+rather than inferred from the exit code, which is the mistake that produced the bug.
