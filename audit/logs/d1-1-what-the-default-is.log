@@ -1,0 +1,31 @@
+$ bash -c 
+    echo '--- codex-turn.sh line 9: the lane switch ---'
+    sed -n '9p' '/c/tmp/xyz-pristine/relay-automation/codex-turn.sh'
+    echo
+    echo 'Bash parameter expansion ${XYZ_PYTHON-1} substitutes 1 when the variable is'
+    echo 'UNSET, so an operator who sets nothing takes the PYTHON lane.'
+    echo
+    echo '--- the guard that decides whether Python is usable ---'
+    sed -n '13,14p' '/c/tmp/xyz-pristine/relay-automation/codex-turn.sh'
+    echo
+    echo -n 'command -v python3 : '; command -v python3 2>/dev/null || echo none
+    echo -n 'python3 --version  : '; python3 --version 2>&1 | head -1
+    echo -n 'guard exit code    : '
+    python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,8) else 1)' 2>/dev/null && echo '0 (guard PASSES - Python lane is taken)' || echo '1 (guard fails - degrades to Bash)'
+  
+
+--- codex-turn.sh line 9: the lane switch ---
+if [[ "${XYZ_PYTHON-1}" == "1" ]]; then
+
+Bash parameter expansion ${XYZ_PYTHON-1} substitutes 1 when the variable is
+UNSET, so an operator who sets nothing takes the PYTHON lane.
+
+--- the guard that decides whether Python is usable ---
+  if command -v python3 >/dev/null 2>&1 \
+     && python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3,8) else 1)' 2>/dev/null; then
+
+command -v python3 : /c/Users/<user>/AppData/Local/Microsoft/WindowsApps/python3
+python3 --version  : Python 3.13.14
+guard exit code    : 0 (guard PASSES - Python lane is taken)
+
+[exit code: 0]

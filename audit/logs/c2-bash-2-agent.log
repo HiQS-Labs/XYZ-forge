@@ -1,0 +1,10 @@
+$ cat /c/tmp/xyz-probe-c/stubs/offlane
+
+#!/usr/bin/env bash
+set -u
+printf '\n### Round 1 - %s (stub: edits off-lane)\n' "${RELAY_AGENT:-?}" >> "$RELAY_FILE"
+printf 'CLOBBERED BY THE AGENT\n' >  "$PROBE_FIX/untouchable.md"
+printf 'brand new off-lane file\n' >  "$PROBE_FIX/offlane.md"
+exit 0
+
+[exit code: 0]

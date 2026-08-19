@@ -1,0 +1,10 @@
+$ run_shim C:/tmp/xyz-probe-c/c7-bash RELAY-TURN /c/tmp/xyz-probe-c/stubs/hangoffl bash
+
+codex-turn: codex exec exceeded 5s wall-clock cap — killed
+codex-turn: OFF-ALLOWLIST change: untouchable.md — reverting
+codex-turn: pre-revert copy of untouchable.md saved under C:/tmp/xyz-probe-c/c7-bash/.tick/orphan-backups/20260818T143720Z-24626
+codex-turn: OFF-ALLOWLIST change: offlane.md — reverting
+codex-turn: pre-revert copy of offlane.md saved under C:/tmp/xyz-probe-c/c7-bash/.tick/orphan-backups/20260818T143720Z-24626
+codex-turn: off-lane edits reverted; failing the turn
+
+[exit code: 6]

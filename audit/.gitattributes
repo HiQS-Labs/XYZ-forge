@@ -1,0 +1,4 @@
+# Keep the evidence logs LF regardless of the cloner's core.autocrlf, so a
+# diff against a regenerated run stays a content diff and not a line-ending one.
+*.log text eol=lf
+*.mmd text eol=lf

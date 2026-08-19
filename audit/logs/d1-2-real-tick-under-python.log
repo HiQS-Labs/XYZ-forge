@@ -1,0 +1,28 @@
+$ bash -c 
+    echo 'utils/py/rtl.py:240 runs the tick binary with subprocess.run([tick_bin, ...]).'
+    echo 'bin/tick is a shebang script (#!/usr/bin/env node) with no Windows-executable form.'
+    echo
+    echo -n 'head -1 bin/tick : '; head -1 '/c/tmp/xyz-pristine/bin/tick'
+    echo
+    python3 -c "
+import subprocess
+try:
+    r = subprocess.run(['C:/tmp/xyz-pristine/bin/tick','info','RELAY-TURN'], capture_output=True, text=True)
+    print('rc =', r.returncode)
+except OSError as e:
+    print('OSError:', e)
+    print()
+    print('POSIX execve honours the shebang; Windows CreateProcess does not.')
+"
+  
+
+utils/py/rtl.py:240 runs the tick binary with subprocess.run([tick_bin, ...]).
+bin/tick is a shebang script (#!/usr/bin/env node) with no Windows-executable form.
+
+head -1 bin/tick : #!/usr/bin/env node
+
+OSError: [WinError 193] %1 is not a valid Win32 application
+
+POSIX execve honours the shebang; Windows CreateProcess does not.
+
+[exit code: 0]

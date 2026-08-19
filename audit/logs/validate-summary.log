@@ -1,0 +1,37 @@
+$ tail -40 audit/run.log   (the sequential gate, as far as it got)
+
+START 2026-08-18T14:11:20Z  ·  killed by the auditor 14:59:15Z  ·  47m48s wall clock
+suites entered: 120 of ~200  ·  never reached a summary line
+
+	Python/
+	python_install_20260818171752_25380.log
+
+nothing added to commit but untracked files present (use "git add" to track)
+fixture-guard: REFUSING — drive repo path is EMPTY; git -C "" and cd "" would silently target the caller's clone (/c/tmp/xyz-pristine)
+  FAIL: a docs-only push is allowed even when validate.sh is red
+  FAIL:   and runs the deterministic documentation gate
+  PASS:   and does NOT run validate.sh
+fixture-guard: REFUSING — drive repo path is EMPTY; git -C "" and cd "" would silently target the caller's clone (/c/tmp/xyz-pristine)
+  FAIL: a red documentation gate still refuses the docs-only push
+  FAIL:   and names the documentation gate failure
+fixture-guard: REFUSING — mkrepo repo path '/tmp/gh544-prepush.F3aRj6/repo.RLIgT0' resolves to 'C:\Users\<user>\AppData\Local\Temp\gh544-prepush.F3aRj6\repo.RLIgT0', OUTSIDE the resolved fixture root /tmp/gh544-prepush.F3aRj6 (traversal or symlink escape — the lexical check alone would have accepted it)
+/c/tmp/xyz-pristine/test/gh544-pre-push-gate.sh: line 141: /tool.js: Permission denied
+Not currently on any branch.
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	Python/
+	python_install_20260818171752_25380.log
+
+nothing added to commit but untracked files present (use "git add" to track)
+fixture-guard: REFUSING — drive repo path is EMPTY; git -C "" and cd "" would silently target the caller's clone (/c/tmp/xyz-pristine)
+  FAIL: a code change remains on the full gate
+  PASS:   and does NOT take the documentation route
+fixture-guard: REFUSING — drive repo path is EMPTY; git -C "" and cd "" would silently target the caller's clone (/c/tmp/xyz-pristine)
+  FAIL: XYZ_SKIP_PREPUSH=1 lets a RED tree through (exit 0)
+  FAIL:   and says loudly that nothing was verified
+fixture-guard: REFUSING — drive repo path is EMPTY; git -C "" and cd "" would silently target the caller's clone (/c/tmp/xyz-pristine)
+  FAIL: a delete-only push skips the gate even when it is red (exit 0)
+  FAIL:   and says why
+  PASS:   and did NOT run the gate
+END 2026-08-18T14:59:02Z rc=0
+END-BY-AUDITOR 2026-08-18T14:59:15Z (killed: recursive, would not terminate)

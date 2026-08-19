@@ -1,0 +1,7 @@
+$ cat /c/tmp/xyz-probe-c/stubs/noop
+
+#!/usr/bin/env bash
+set -u
+exit 0
+
+[exit code: 0]

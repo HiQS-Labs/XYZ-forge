@@ -1,0 +1,8 @@
+$ run_shim C:/tmp/xyz-probe-c/c8-bash RELAY-TURN /c/tmp/xyz-probe-c/stubs/orphan bash
+
+codex-turn: codex exec exceeded 3s wall-clock cap — killed
+codex-turn: codex turn produced no tracked changes (token-only move?)
+codex-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token RELAY-TURN left as-is (set RELAY_PEER for auto-handoff)
+
+[exit code: 7]
+after waiting past the child timer: orphan-marker.txt present = yes

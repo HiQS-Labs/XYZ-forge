@@ -1,0 +1,21 @@
+$ bash -c 
+    echo 'codex-turn.sh:9 reads ${XYZ_PYTHON-1} - Python is the DEFAULT lane.'
+    echo 'It requires a python3 on PATH answering >= 3.8. Where python3 is a Microsoft'
+    echo 'Store stub, the guard silently degrades EVERY shim to Bash, so the documented'
+    echo 'default path is never exercised on that host.'
+    echo
+    echo 'real interpreter found : /c/Users/<user>/AppData/Local/Microsoft/WindowsApps/python3'
+    echo 'version                : '$("/c/Users/<user>/AppData/Local/Microsoft/WindowsApps/python3" --version 2>&1)
+    echo 'shim installed at      : /c/tmp/xyz-probe-c/pyshim/python3'
+  
+
+codex-turn.sh:9 reads ${XYZ_PYTHON-1} - Python is the DEFAULT lane.
+It requires a python3 on PATH answering >= 3.8. Where python3 is a Microsoft
+Store stub, the guard silently degrades EVERY shim to Bash, so the documented
+default path is never exercised on that host.
+
+real interpreter found : /c/Users/<user>/AppData/Local/Microsoft/WindowsApps/python3
+version                : Python 3.13.14
+shim installed at      : /c/tmp/xyz-probe-c/pyshim/python3
+
+[exit code: 0]

@@ -1,0 +1,9 @@
+$ cat /c/tmp/xyz-probe-c/stubs/orphan
+
+#!/usr/bin/env bash
+set -u
+( sleep 8; printf 'ORPHAN CHILD SURVIVED THE KILL\n' > "$PROBE_FIX/orphan-marker.txt" ) &
+sleep 120
+exit 0
+
+[exit code: 0]

@@ -1,0 +1,16 @@
+$ state C:/tmp/xyz-probe-c/d1-default
+
+### git log --oneline -3
+dcc474c seed fixture
+
+### git status --porcelain   (clean if nothing follows)
+
+### refs/relay-orphan/       (none if nothing follows)
+
+### untouchable.md (tracked off-lane file)
+tracked off-lane baseline
+
+### offlane.md (untracked off-lane file)
+(absent)
+
+[exit code: 0]

@@ -1,0 +1,10 @@
+$ cat /c/tmp/xyz-probe-c/stubs/hangoffl
+
+#!/usr/bin/env bash
+set -u
+printf 'CLOBBERED BY THE AGENT\n' >  "$PROBE_FIX/untouchable.md"
+printf 'brand new off-lane file\n' >  "$PROBE_FIX/offlane.md"
+sleep 120
+exit 0
+
+[exit code: 0]

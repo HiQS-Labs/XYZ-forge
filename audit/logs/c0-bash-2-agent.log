@@ -1,0 +1,8 @@
+$ cat /c/tmp/xyz-probe-c/stubs/good
+
+#!/usr/bin/env bash
+set -u
+printf '\n### Round 1 - %s (stub: well-behaved)\n**Verdict:** ok\n' "${RELAY_AGENT:-?}" >> "$RELAY_FILE"
+exit 0
+
+[exit code: 0]

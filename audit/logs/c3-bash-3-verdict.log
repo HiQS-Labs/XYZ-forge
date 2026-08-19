@@ -1,0 +1,12 @@
+$ run_shim C:/tmp/xyz-probe-c/c3-bash RELAY-TURN /c/tmp/xyz-probe-c/stubs/hang bash
+
+codex-turn: codex exec exceeded 5s wall-clock cap — killed
+warning: in the working copy of 'relay.md', LF will be replaced by CRLF the next time Git touches it
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token RELAY-TURN left as-is (set RELAY_PEER for auto-handoff)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+
+[exit code: 7]
+wall clock: 17s (ceiling was 5s)

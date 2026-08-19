@@ -1,0 +1,11 @@
+$ run_shim C:/tmp/xyz-probe-c/c6-bash RELAY-TURN /c/tmp/xyz-probe-c/stubs/commit bash RELAY_WORKTREE_ISOLATION=1
+
+codex-turn: worktree isolation ON (/tmp/rtl-wt.rw0YpS)
+codex-turn: ROOT HEAD moved during a worktree-isolated turn — a concurrent peer committed; preserving it (not resetting), committing this turn on top.
+codex-turn: codex turn produced no tracked changes (token-only move?)
+codex-turn: WARN relay STATUS not terminal and no RELAY_PEER set — token RELAY-TURN left as-is (set RELAY_PEER for auto-handoff)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+
+[exit code: 0]
