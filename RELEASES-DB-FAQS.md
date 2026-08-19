@@ -105,13 +105,17 @@ right tool. **Measured 2026-08-19 against real two-branch merges**, here is what
 
 | Case | Result |
 |---|---|
-| both branches made the **same number** of writes | merges **cleanly** — one generation header, both sides' rows present. The header is identical text on both sides (`-- generation: 2`), so there is nothing to conflict. |
-| branches made **different numbers** of writes | **two** generation headers, silently, with no conflict markers |
-| either case | the single-row `settings` table is **duplicated** |
+| both branches made the **same number** of writes | merges **cleanly**. One generation header, both sides' rows present, and the `settings` table **not** duplicated — 3 rows, the same as a single-side dump. Both sides emit byte-identical `-- generation: 2` and `settings` lines, so there is nothing to conflict and nothing to double. |
+| branches made **different numbers** of writes | **two** generation headers **and** a duplicated `settings` row (4 rows) — silently, with no conflict markers |
 
-That last row is the real defect. `check --rebuild` on such a dump dies with an unhandled
-`sqlite3.IntegrityError: UNIQUE constraint failed: settings.key` — a raw Python traceback rather than
-a clean refusal. It does fail closed (the DB is left untouched), but it fails ugly.
+Unequal write counts are the whole problem, and both symptoms share one cause: the two sides'
+generation values differ, so the lines carrying them are no longer identical. `check --rebuild` on
+such a dump used to die with an unhandled `sqlite3.IntegrityError: UNIQUE constraint failed:
+settings.key` — a raw Python traceback rather than a clean refusal. It failed closed (the DB was left
+untouched), but it failed ugly. `validate_merged_dump()` now names it instead.
+
+The equal-write case being genuinely clean is what makes this dangerous: union *looks* fine right up
+until the day two branches write a different number of times.
 
 So the earlier claim in this file — that the header "conflicts by construction on every concurrent
 write" and that `check` catches it — was **wrong on both counts**, and is corrected here. The header

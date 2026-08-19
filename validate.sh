@@ -202,9 +202,9 @@ TESTS=(
                                  #   before/after to prove it. 10/0; control in
                                  #   test/baselines/GH-52-negative-control.md
   "gh53-releases-merge-resolve.sh" # #53 (derived-artifact attributes + the one-command ledger merge
-                                 #   resolution). Pins that releases.db/RELEASES-PREVIEW.md stay
-                                 #   -diff + linguist-generated and keep NO merge driver — measured:
-                                 #   only a driver defined in .git/config auto-merges them, and
+                                 #   resolution). Pins that releases.db stays -diff +
+                                 #   linguist-generated and keeps NO merge driver — measured:
+                                 #   only a driver defined in .git/config auto-merges it, and
                                  #   auto-merging is the wrong outcome anyway (it lets a merge finish
                                  #   with a DB holding one side's rows). The refusals are the point:
                                  #   a two-header dump (what a naive merge=union leaves) and a dump
