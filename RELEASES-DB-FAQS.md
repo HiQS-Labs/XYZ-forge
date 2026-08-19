@@ -263,6 +263,66 @@ itself moving the files. The one place a human step exists is exactly the place 
 
 ---
 
+## Q: What does a REAL merge actually look like, and what goes wrong?
+
+Answered by measurement on 2026-08-19, not by reading the code. Everything below is pinned in
+[`test/gh57-live-merge-resolve.sh`](test/gh57-live-merge-resolve.sh) (30 assertions), which drives an
+actual `git merge` rather than hand-building a union with `awk`.
+
+**Why this needed its own suite.** `gh53`, `gh54` and `gh57-releases-fuzz` all construct their merged
+dump themselves and hand it to the app. That proves what the app does with a mangled dump. It never
+puts the resolver in front of a real conflicted index. And the repo's own traffic had never produced
+one — as of 2026-08-19, **no PR had touched `releases.sql` concurrently with `development`**, so the
+live path had zero coverage from real merges and zero from tests. A suite was the only way it would
+be exercised before an operator met it.
+
+### What git leaves behind
+
+A concurrent ledger write conflicts **both** artifacts, not just the dump:
+
+```
+$ git diff --name-only --diff-filter=U
+releases.db
+releases.sql
+```
+
+`releases.sql` gets ordinary conflict markers and ends up carrying **both** sides' `-- generation:`
+headers. `releases.db` is binary, so git leaves the *ours* copy in the working tree and marks the path
+unmerged. That two-file shape is what `utils/releases-merge-resolve.sh` branches on.
+
+### Four things that were broken, and now are not
+
+| What | Was | Now |
+|---|---|---|
+| A **failed** resolve | Staged `releases.db` *before* attempting the rebuild, so a run that then failed had already marked half the merge resolved — while its own error text said "nothing was staged over it". `git commit` at that point would have committed the stale *ours* DB against a dump it does not match. | The derived artifact is replaced in the working tree but **resolved in the index only after** the rebuild *and* the verify both pass. A failed run genuinely leaves the merge open. |
+| Keeping the **lower** generation header | Returned `rc=0`, and `releases check` then said **clean**, with the counter silently rewound below a merge parent's. The advice to "keep the HIGHEST" lived only inside another refusal's prose and was enforced nowhere — so the one resolution that loses information was the one nothing complained about. | Refused, naming both parents' generations and the value to set. Enforced during the merge, while `HEAD` and `MERGE_HEAD` are both still reachable. |
+| `releases.db.bak` | Created by every rebuild, described by the resolver as "untracked and safe to delete" — but **not gitignored**. A `git add -A` before `git merge --continue` would commit a stale ~200 KB binary copy of the ledger: the one artifact guaranteed to disagree with the dump. | Gitignored. |
+| `--root ""` | Fell through to `git rev-parse --show-toplevel`, i.e. **whatever repo you happen to be standing in**. This is not hypothetical: it fired while writing the suite above, when a fixture builder aborted and returned an empty string, and it rebuilt **this repo's production ledger** (generation 6 → 12; recovered byte-for-byte from `HEAD`). | Refused. "No `--root`" and "`--root` with an empty value" are different statements and no longer share a code path. |
+
+### The operator path, in full
+
+```bash
+git merge <branch>                      # conflicts releases.sql AND releases.db
+# resolve releases.sql BY HAND: union both sides' rows, keep ONE settings block,
+# and keep the HIGHEST '-- generation:' header
+git add releases.sql
+utils/releases-merge-resolve.sh         # takes either side of the .db, rebuilds, verifies, stages
+git commit                              # the resolver deliberately does not commit for you
+```
+
+The resolver refuses, without touching the live DB, if `releases.sql` is still unmerged, still
+carries conflict markers, has zero or multiple `-- generation:` headers, keeps a header below the
+highest parent, or rebuilds into something `check` will not pass.
+
+### A trap for anyone writing fixtures here
+
+macOS ships **bash 3.2**, where `local a="$1" b="$WORK/$a"` does **not** see `a` — every name in the
+statement is localized before any assignment runs, so `$a` is unset. Under `set -u` that aborts the
+function mid-build and it returns an empty string. One name per `local`. That single quirk is what
+produced the `--root ""` escape above.
+
+---
+
 ## Quick reference
 
 ```bash
@@ -312,4 +372,5 @@ Project cards.
 - [PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md](PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md) — the PRD; wins on any disagreement
 - [skills/releases/SKILL.md](skills/releases/SKILL.md) — the operator workflow
 - [test/gh32-releases-app.sh](test/gh32-releases-app.sh) — the suite; section J is the merge procedure
-- [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52), [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53), [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) — the open gaps above
+- [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52), [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53), [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) — the gaps above, all closed
+- [#57](https://github.com/HiQS-Suite/XYZ-forge/issues/57) — the canonical fuzzing issue; [test/gh57-releases-fuzz.sh](test/gh57-releases-fuzz.sh) (42/0) and [test/gh57-live-merge-resolve.sh](test/gh57-live-merge-resolve.sh) (30/0) are its two suites

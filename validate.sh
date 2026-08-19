@@ -262,6 +262,13 @@ TESTS=(
   "gh57-releases-fuzz.sh"        # GH-57 (generated SQLite RELEASES scenarios: divergent GID merges,
                                  #   unequal generation headers, dump collisions, all journal crash
                                  #   boundaries, common-dir lock contention, torn dumps, and Markdown drift)
+  "gh57-live-merge-resolve.sh"   # GH-57 (the merge contract driven by an ACTUAL `git merge`, not a hand-built
+                                 #   union): the real conflict shape (BOTH artifacts, markers, two headers), the
+                                 #   resolver's refusals against a genuinely unmerged index, the full operator path
+                                 #   through `git merge --continue`, and four edge cases that were REAL defects on
+                                 #   first run — a failed resolve left the merge half-closed, a rewound generation
+                                 #   header was accepted silently, releases.db.bak was committable, and `--root ""`
+                                 #   retargeted the resolver at the current repo. 27/0
   "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
                                  #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"
