@@ -230,9 +230,19 @@ ok "  and the GH-15 summary tallies (no INTERNAL ERROR)" \
    "! printf '%s' \"\$out\" | grep 'INTERNAL ERROR' >/dev/null"
 ok "  and the static syntax check ran on the changed file" \
    "printf '%s' \"\$out\" | grep 'bash -n utils/hq/hq.sh' >/dev/null"
+# `nice -n N` is RELATIVE to the caller, so an absolute "== 10" here is wrong whenever anything
+# already niced the runner — which githooks/pre-push did, stacking to 20 and turning this pin into
+# a push-blocker on every full-gate push (found 2026-08-19 dogfooding the 0.7.1 release cut). The
+# contract is a DELTA: a worker sits exactly 10 below whatever priority validate.sh itself has.
 _stub_nice="$(cat "$R2/test/hq-stub-nice.txt" 2>/dev/null || echo missing)"
-ok "the suite worker ran under nice -n 10 (observed nice=${_stub_nice})" \
-   "[ \"\$_stub_nice\" -ge 10 ]"
+# Merge note (PR #60 vs e9fff12): both lanes hit this failure independently and patched it
+# differently. `-ge 10` makes the assertion pass under ANY stacking — including the +20 the
+# pre-push hook was actually producing — so it removes the failure without removing the bug.
+# The delta form keeps the bug detectable, and e9fff12 fixed the stacking at its source.
+_self_nice="$(ps -o nice= -p $$ | tr -d ' ')"
+_want_nice=$(( _self_nice + 10 ))
+ok "the suite worker ran 10 below its caller (caller nice=${_self_nice}, worker nice=${_stub_nice}, wanted ${_want_nice})" \
+   "[ \"\$_stub_nice\" = \"\$_want_nice\" ]"
 
 out="$( cd "$R2" && HQ_EXIT=1 bash validate.sh --paths-file "$PF" 2>&1 )"; rc=$?
 ok "a RED subsystem suite fails tier 2 (exit 1)" "[ $rc -eq 1 ]"
