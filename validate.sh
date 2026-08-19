@@ -191,6 +191,8 @@ TESTS=(
                                  #   four check-failure negative controls, the five crash boundaries,
                                  #   and the refused-writer-changes-nothing control are the point; the
                                  #   revert-and-replay transcript is test/baselines/GH-32-negative-control.md
+  "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
+                                 #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"
   "relay-turn-timeout.sh"
   "relay-target-root.sh"
