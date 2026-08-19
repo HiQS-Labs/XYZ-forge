@@ -125,7 +125,11 @@ run_tier2_gate() {
   local paths_file="$1"
   echo "pre-push: utility-only update — running the tier 2 subsystem gate, not the full suite (GH-35)."
   "$REPO/validate.sh" --print-mode --tier 2 2>&1 | sed 's/^/pre-push:   /'
-  nice -n 10 "$REPO/validate.sh" --paths-file "$paths_file"
+  # NOT wrapped in `nice` here: `nice -n N` is RELATIVE to the caller, and validate.sh already
+  # runs every suite worker at +10. Nicing the runner too stacked to +20 — over-throttling the
+  # gate whose width/nice policy was measured at +10, and failing gh35-test-tiers.sh's own
+  # worker-nice pin on EVERY push. Resource policy belongs to validate.sh (GH-35's own rule).
+  "$REPO/validate.sh" --paths-file "$paths_file"
 }
 
 _cls="$(classify_push 2>/dev/null || true)"
@@ -169,7 +173,9 @@ else
   echo "pre-push:   bypass with 'git push --no-verify' or XYZ_SKIP_PREPUSH=1 — both are recorded here, not hidden."
   "$REPO/validate.sh" --print-mode 2>&1 | sed 's/^/pre-push:   /'
 
-  if nice -n 10 "$REPO/validate.sh"; then
+  # See the note in run_tier2_gate: no outer `nice` — it is relative and stacks onto the +10
+  # validate.sh already applies to each worker.
+  if "$REPO/validate.sh"; then
     echo "pre-push: full gate GREEN in $((SECONDS - _start))s — pushing."
     exit 0
   else
