@@ -2,6 +2,43 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.0.3] - 2026-08-18
+
+### Added
+- **GH-35 Phases 1+2: tiered local test selection + CPU governance.** `validate.sh` gained
+  `--tier 1|2|3` (1 = the same docs gate the push hook runs; 2 = registered subsystem suites;
+  3 = full suite, default), `--subsystem <name>`, `--auto [range]`, and `--paths-file` — the
+  contract `githooks/pre-push` now uses to send a utility-only push (classifier says `route=fast`
+  AND `tier=2` AND runnable suites) to its focused suites in seconds instead of the full pool.
+  One fail-closed registry in `utils/ci-route.sh` (hq, releases, telemetry, ate, swe-diagram,
+  pdda, agent2agent — per the issue's subsystem matrix) is consumed by the hook, the runner, and
+  (Phase 3, pending) CI; unknown paths, test edits, deleted tests, and kernel surfaces always
+  escalate to the full gate, and a subsystem whose suites are missing on disk escalates rather
+  than running nothing.
+
+### Changed
+- **`validate.sh`'s parallel default is rebalanced from `cores-2` (up to 8 workers) to
+  `cores/2` (floor 2, cap 4), and every suite worker now runs under `nice -n 10` (GH-35).**
+  The old width pegged 8-core+ machines at 100% for the whole gate — fan spin, editor lag,
+  system stutter. New levers: `--throttle`/`--quiet-cpu` (2 workers, quiet-machine mode),
+  `--burst` (restores full-core width for unattended runs), `--max-parallel N`, and ambient
+  `XYZ_VALIDATE_THROTTLE=1` / `XYZ_VALIDATE_MAX_JOBS=N` (precedence: flags > MAX_JOBS >
+  THROTTLE > PARALLEL > host detection; every choice is announced with its reason).
+  Tier 1/2 are pre-push speed only and say so — `ci-local.sh` remains the sequential
+  full-suite qualifying run (GH-509).
+- **`utils/pdda/**` and `skills/agent2agent` code moved from blanket-full to their Tier-2
+  subsystems** (per the issue's matrix): their focused suites run instead of the whole pool at
+  the push boundary. Hosted CI routing is unchanged until Phase 3.
+- Docs-surface classification widened (GH-35 Phase 1): `*.txt` anywhere, `decisions/`,
+  `.pdda-*`, `.xyz-launch-artifact` now classify docs-only; `skills/**/SKILL.md` remains docs
+  while skill code routes through the registry.
+
+### Verified
+- New suite `test/gh35-test-tiers.sh` 56/0 (registry drift guard, fail-closed boundaries,
+  tier-1/tier-2 execution end-to-end on fixture clones, CPU-lever decisions, `nice=10` observed
+  inside a pool worker); `test/gh544-pre-push-gate.sh` extended to 85/0 (tier-2 dispatch,
+  registry-gap fallback, red-gate refusal); `test/ci-route.sh` 48/0 with tier pins;
+  `test/gh544-parallel-default.sh` 29/0 unchanged.
 ## [1.1.0] - 2026-08-18
 
 ### Added
