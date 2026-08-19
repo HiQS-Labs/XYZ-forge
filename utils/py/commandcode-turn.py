@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import tempfile
 import subprocess
 import shlex
 from rtl import RelayTurnLib, claim_task_or_exit, rtl_default_log, resolve_turn_root
@@ -12,7 +11,9 @@ def die(msg):
     sys.exit(2)
 
 def default_commandcode_flags():
-    return os.environ.get("COMMANDCODE_FLAGS", "--no-session --skip-onboarding --no-auto-update --permission-mode auto-accept").split()
+    return shlex.split(os.environ.get(
+        "COMMANDCODE_FLAGS",
+        "--no-session --skip-onboarding --no-auto-update --permission-mode auto-accept"))
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -55,43 +56,50 @@ def main():
 
     turn_timeout = int(os.environ.get("RELAY_TURN_TIMEOUT_S", 900))
 
+    bounded_rc = 0
     wt = ""
     run_cwd = root
+    commandcode_env = dict(os.environ)
+    # Commandcode can run tick from a worktree or a cross-repo target.  Always
+    # give its child the token root, not merely the current working directory.
+    commandcode_env["TICK_REPO_ROOT"] = tick_repo_root
 
     if os.environ.get("RELAY_WORKTREE_ISOLATION", "0") == "1":
         wt = rtl.worktree_begin()
         if wt:
             run_cwd = wt
             print(f"commandcode-turn: worktree isolation ON ({wt})", file=sys.stderr)
-            os.environ["TICK_REPO_ROOT"] = tick_repo_root
         else:
             print("commandcode-turn: worktree isolation requested but `git worktree add` failed — failing turn", file=sys.stderr)
-            sys.exit(5)
-
-    commandcode_env = dict(os.environ)
+            # The token was already claimed.  Fall through to rtl.enforce so
+            # it is released and the failed-turn outcome is durable (GH-432).
+            bounded_rc = 5
 
     cmd = [commandcode_bin] + cflags + ["--model", commandcode_model, "--print", prompt]
 
-    bounded_rc = 0
     diag = TurnDiagnostics(worktree=run_cwd)
-    diag.start()
-    try:
-        with open(commandcode_log, "a") as log_f:
-            subprocess.run(cmd, env=commandcode_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
-    except subprocess.TimeoutExpired:
-        bounded_rc = 7
-    except subprocess.CalledProcessError as e:
-        bounded_rc = e.returncode
-    except Exception:
-        bounded_rc = 5
-    finally:
-        diag.stop()
+    if bounded_rc == 0:
+        diag.start()
+        try:
+            with open(commandcode_log, "a") as log_f:
+                subprocess.run(cmd, env=commandcode_env, cwd=run_cwd, timeout=turn_timeout, stdout=log_f, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL, check=True)
+        except subprocess.TimeoutExpired:
+            bounded_rc = 7
+        except subprocess.CalledProcessError as exc:
+            bounded_rc = exc.returncode
+        except Exception as exc:
+            print(f"commandcode-turn: commandcode launch failed: {exc}", file=sys.stderr)
+            bounded_rc = 5
+        finally:
+            diag.stop()
 
     if wt:
         off_lane = rtl.worktree_end(wt)
         if off_lane:
             print("commandcode-turn: commandcode made off-lane edits in the isolated worktree — discarded; failing the turn (exit 6)", file=sys.stderr)
-            sys.exit(6)
+            # Enforce after containment so the already-claimed token is handed
+            # off and the relay records the failed turn instead of orphaning it.
+            bounded_rc = 6
 
     if bounded_rc == 7:
         _reason, _detail = diag.classify()
@@ -106,6 +114,11 @@ def main():
 
     rc = rtl.enforce(t, me, commandcode_log, "commandcode")
 
+    # In-root enforcement violations take priority over a subprocess result.
+    if rc == 6:
+        sys.exit(6)
+    if bounded_rc == 6:
+        sys.exit(6)
     if bounded_rc == 7:
         sys.exit(7)
     if bounded_rc != 0:

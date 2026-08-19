@@ -40,6 +40,7 @@ if [ "${STUB_MODE:-good}" != notick ]; then
 fi
 [ "${STUB_MODE:-good}" = slowafterrelease ] && sleep "${STUB_SLEEP_S:-2}"
 [ "${STUB_MODE:-good}" = bad ] && printf 'off-lane\n' >>"$A/offlane.md"
+[ "${STUB_MODE:-good}" = badwt ] && printf 'off-lane\n' >>offlane.md
 if [ "${STUB_MODE:-good}" = commitbypass ]; then
   printf 'sneaky\n' >>"$A/sneaky.md"
   git -C "$A" add sneaky.md >/dev/null 2>&1
@@ -114,6 +115,14 @@ run_shim RELAY-TURN-bad commandcode bad; rc=$?
 [ "$rc" -eq 6 ] && pass "off-allowlist edit -> shim fails (exit 6)" || fail "expected exit 6, got $rc"
 [ ! -f "$A/offlane.md" ] && pass "off-lane file was reverted/removed" || fail "off-lane file should be gone"
 [ "$(git -C "$A" rev-parse HEAD)" = "$before" ] && pass "no commit on violating turn" || fail "should not commit on violation"
+
+# --- (6b) isolated off-lane write still reaches enforce and hands off ---------
+seed_token RELAY-TURN-badwt
+RELAY_WORKTREE_ISOLATION=1 run_shim RELAY-TURN-badwt commandcode badwt RELAY_PEER=claude-a; rc=$?
+[ "$rc" -eq 6 ] && pass "isolated off-lane edit exits 6 after containment" || fail "isolated violation should exit 6, got $rc"
+[ "$(tok_field RELAY-TURN-badwt status)" = "open" ] && [ "$(tok_field RELAY-TURN-badwt handoff-to)" = "claude-a" ] \
+  && pass "isolated containment failure still hands token to peer" \
+  || fail "isolated containment stranded token: status=$(tok_field RELAY-TURN-badwt status) handoff=$(tok_field RELAY-TURN-badwt handoff-to)"
 
 # --- (7) default timeout is 900s ------------------------------------------------
 grep -q 'RELAY_TURN_TIMEOUT_S:-900' "$SHIM" 2>/dev/null || grep -q 'RELAY_TURN_TIMEOUT_S", 900' "$(cd "$(dirname "$0")/.." && pwd)/utils/py/commandcode-turn.py" \

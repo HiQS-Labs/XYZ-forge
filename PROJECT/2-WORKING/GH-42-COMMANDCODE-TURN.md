@@ -4,6 +4,9 @@ gh_issue: 42
 source: "https://github.com/HiQS-Suite/XYZ-forge/issues/42"
 status: active
 created: 2026-08-18
+updated: 2026-08-18
+owner: Codex
+goal: "Ship and validate a containment-preserving Commandcode relay turn-taker."
 doc_type: bugfix
 ---
 
@@ -13,7 +16,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Captured the Commandcode integration gap and cut a clean `development` clone. | Have Muse Spark Contributor implement the Python-authoritative adapter and its mocked regression coverage, then QA it independently. |
+| Muse Spark Contributor built the initial adapter; a live third relay review found and Codex corrected token-cleanup and child token-root propagation gaps. | Run the full clean-clone gate, publish the findings to issue #41, and open the PR. |
 
 ## Bet and boundary
 
@@ -45,4 +48,4 @@ adapter, registration, and documentation; existing worker paths remain unchanged
 - Run the focused Commandcode test and existing Codex shim test in this build clone.
 - Run the full `validate.sh` suite in a separate fresh clone only.
 - Have Muse Spark Contributor make the initial implementation, then independently inspect its diff,
-  rerun focused tests, and capture its second-run outcome on issue #41.
+  rerun focused tests, and capture the build plus live third-relay outcome on issue #41.
