@@ -191,6 +191,16 @@ TESTS=(
                                  #   four check-failure negative controls, the five crash boundaries,
                                  #   and the refused-writer-changes-nothing control are the point; the
                                  #   revert-and-replay transcript is test/baselines/GH-32-negative-control.md
+  "gh32-releases-artifacts.sh"   # #52 (the COMMITTED releases.db/releases.sql pair actually agrees —
+                                 #   gh32-releases-app.sh only proves the CLI works in fixtures). The
+                                 #   documented merge procedure has a human step (`check --rebuild`);
+                                 #   skip it and the committed DB disagrees with the dump silently,
+                                 #   and the DB is what every reader trusts at runtime. Read-only and
+                                 #   NEVER --rebuild: a gate that repairs destroys the evidence that a
+                                 #   merge was mis-resolved. Runs against a COPY (plain `check` writes
+                                 #   when an intent journal is live) and hashes the clone's artifacts
+                                 #   before/after to prove it. 10/0; control in
+                                 #   test/baselines/GH-52-negative-control.md
   "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
                                  #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"
