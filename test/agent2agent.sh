@@ -137,12 +137,28 @@ python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 5 \
   && pass "invalid route refusal is byte-preserving" || fail "invalid route mutated the file"
 
 # A live writer lock fails closed. Callers must re-read ownership before retrying.
+# GH-38: the lock is held by flock, so a merely-EXISTING lock file is not a lock — this holds a real
+# one from a background process, which is the only thing that can now refuse a writer.
 before_lock="$(fingerprint "$relay_file")"
-printf '%s\n' 'pid=test' > "$relay_file.lock"
+lock_dir="$(dirname "$relay_file")"; lock_base="$(basename "$relay_file")"
+python3 - "$lock_dir/.$lock_base.lock" <<'PYEOF' &
+import fcntl, sys, time
+fh = open(sys.argv[1], "a+")
+fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+fh.seek(0); fh.truncate(); fh.write("pid=%d held-since=test\n" % __import__("os").getpid()); fh.flush()
+print("HELD", flush=True)
+time.sleep(30)
+PYEOF
+LOCK_HOLDER=$!
+# Wait for the holder to actually own the flock before contending (no fixed sleep).
+for _ in $(seq 1 100); do
+  grep -q "held-since" "$lock_dir/.$lock_base.lock" 2>/dev/null && break
+  sleep 0.1
+done
 lock_out="$(python3 "$CLI" --root "$ROOT" send --id 123456 --agent 2 --next-agent 3 \
   --message "contended write" 2>&1)"
 lock_rc=$?
-rm -f "$relay_file.lock"
+kill "$LOCK_HOLDER" 2>/dev/null; wait "$LOCK_HOLDER" 2>/dev/null
 [ "$lock_rc" -ne 0 ] && pass "rejects a write while the discussion lock is held" \
   || fail "lock-held write unexpectedly succeeded"
 expect_contains "lock refusal is explicit" "$lock_out" "discussion is locked by another writer"
@@ -337,6 +353,214 @@ interrupt_rc=$?
 [ "$interrupt_rc" -eq 130 ] && pass "interrupt exits with the conventional 130 status" \
   || fail "interrupt exits $interrupt_rc: $interrupt_out"
 expect_contains "interrupt is reported visibly" "$interrupt_out" "agent2agent: interrupted"
+
+# ── GH-38: doorbell hardening — re-arm reliability and crash durability ─────────────────────────
+# Each item below has its own negative control: the defect is REPRODUCED (a killed sender, a
+# stripped exec bit, an expiring window) and the guard asserted against that reproduction, not
+# against a happy path that was already green.
+echo "  -- GH-38 doorbell hardening"
+G38="$WORK/gh38 root"
+mkdir -p "$G38"
+a2a_start() { python3 "$CLI" --root "$G38" start "$@"; }
+# Every post-start verb needs --id; fold it in so no call site can forget it.
+a2a() { _v="$1"; shift; python3 "$CLI" --root "$G38" "$_v" --id "$G38_ID" "$@"; }
+# Park NEXT on a named seat regardless of where the previous probe left it. Without this the
+# probes below are order-dependent: the concurrency test hands the turn to whichever seat won,
+# so a later `watch` expecting take-turn intermittently timed out instead (observed flaky, 2/3
+# runs). Each probe declares the turn state it needs rather than inheriting one.
+route_to() {
+  _want="$1"
+  _owner="$(sed -n 's/^NEXT: agent//p' "$G38_FILE" | head -1)"
+  [ "$_owner" = "$_want" ] && return 0
+  a2a send --agent "$_owner" --next-agent "$_want" --message "route turn to agent$_want" >/dev/null 2>&1
+}
+start_out="$(a2a_start --subject "gh38 hardening" --agents 2 2>&1)"
+G38_ID="$(printf '%s\n' "$start_out" | grep -oE '#[0-9]{6}' | head -1 | tr -d '#')"
+G38_FILE="$(find "$G38/relay-system" -name "$G38_ID-agent2agent-*.md" | head -1)"
+[ -n "$G38_ID" ] && [ -f "$G38_FILE" ] && pass "GH-38 fixture discussion created" \
+  || fail "GH-38 fixture: id='$G38_ID' file='$G38_FILE'"
+
+# ── item 1: a crashed sender must not brick the discussion forever ──────────────────────────────
+# The lock is held by flock (agy QA r1 rejected the original pid-liveness/steal design: os.kill sees
+# only the local process table, and steal-then-claim raced — two contenders could both unlink and
+# both create, the second unlink deleting the first's fresh lock). So the reproduction is the real
+# crash state: a lock FILE left behind by a process that no longer exists, with no flock held.
+G38_LOCK="$(dirname "$G38_FILE")/.$(basename "$G38_FILE").lock"
+DEAD_PID=999999
+while kill -0 "$DEAD_PID" 2>/dev/null; do DEAD_PID=$((DEAD_PID - 1)); done
+printf 'pid=%s held-since=2020-01-01T00:00:00+00:00\n' "$DEAD_PID" > "$G38_LOCK"
+steal_out="$(a2a send --agent 2 --next-agent 1 --message "after a crashed sender" 2>&1)"
+steal_rc=$?
+[ "$steal_rc" -eq 0 ] && pass "a send after a crashed sender SUCCEEDS (the OS released the flock)" \
+  || fail "a crashed sender still bricks the discussion: rc=$steal_rc $steal_out"
+# No steal announcement should exist: with flock there is nothing to steal, which is the point.
+case "$steal_out" in
+  *STALE-LOCK*) fail "a steal was announced — the pid-liveness design should be gone" ;;
+  *) pass "no lock is stolen or guessed at (flock made liveness the kernel's problem)" ;;
+esac
+
+# The other half: a genuinely HELD flock refuses, and the refusal names the holder.
+python3 - "$G38_LOCK" <<'PYEOF' &
+import fcntl, os, sys, time
+fh = open(sys.argv[1], "a+")
+fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
+fh.seek(0); fh.truncate(); fh.write("pid=%d held-since=live\n" % os.getpid()); fh.flush()
+time.sleep(30)
+PYEOF
+LIVE_PID=$!
+for _ in $(seq 1 100); do grep -q "held-since=live" "$G38_LOCK" 2>/dev/null && break; sleep 0.1; done
+HELD_PID="$(sed -n 's/^pid=\([0-9]*\).*/\1/p' "$G38_LOCK" | head -1)"
+live_out="$(a2a send --agent 1 --next-agent 2 --message "should refuse" 2>&1)"
+live_rc=$?
+[ "$live_rc" -ne 0 ] && pass "a genuinely held flock refuses the writer" \
+  || fail "a held lock was bypassed: $live_out"
+expect_contains "the refusal names the holding pid" "$live_out" "held by pid $HELD_PID"
+kill "$LIVE_PID" 2>/dev/null; wait "$LIVE_PID" 2>/dev/null
+# After the holder dies the lock needs NO cleanup — that is the whole benefit over the pid design.
+recover_out="$(a2a send --agent 1 --next-agent 2 --message "after the holder died" 2>&1)"
+[ $? -eq 0 ] && pass "the next writer proceeds with no cleanup once the holder exits" \
+  || fail "lock needed manual cleanup: $recover_out"
+# Route the turn to agent2 so the watch probes below exercise take-turn rather than a wait.
+a2a send --agent 1 --next-agent 2 --message "route to agent2 for the watch probes" >/dev/null 2>&1
+
+# The r1 race directly: many contenders start at once against a LEFTOVER lock file from a crashed
+# sender. Under the rejected steal design two could both unlink and both create — the second unlink
+# deleting the first's fresh lock — so both would proceed and tear the write. Under flock the kernel
+# admits exactly one at a time, so the file stays structurally intact and the turn counter agrees
+# with the number of turns actually recorded.
+printf 'pid=%s held-since=2020-01-01T00:00:00+00:00\n' "$DEAD_PID" > "$G38_LOCK"
+race_before="$(grep -c '^### Turn ' "$G38_FILE")"
+# Every racer sends as the seat that ACTUALLY owns NEXT, or they are all refused on turn ownership
+# and the lock is never contended at all — which is how the first draft of this test passed while
+# proving nothing.
+race_owner="$(sed -n 's/^NEXT: agent//p' "$G38_FILE" | head -1)"
+race_peer=$([ "$race_owner" = "1" ] && echo 2 || echo 1)
+RACE_RC="$WORK/race-rcs"; rm -rf "$RACE_RC"; mkdir -p "$RACE_RC"
+for i in 1 2 3 4 5 6; do
+  ( a2a send --agent "$race_owner" --next-agent "$race_peer" --message "racer $i" >/dev/null 2>&1
+    echo $? > "$RACE_RC/$i" ) &
+done
+wait
+RACE_WINNERS="$(cat "$RACE_RC"/* 2>/dev/null | grep -c '^0$')"
+race_after="$(grep -c '^### Turn ' "$G38_FILE")"
+race_hdr="$(grep -c '^TURN: ' "$G38_FILE")"
+race_next="$(grep -c '^NEXT: ' "$G38_FILE")"
+race_turn_field="$(sed -n 's/^TURN: //p' "$G38_FILE" | head -1)"
+if [ "$race_hdr" -eq 1 ] && [ "$race_next" -eq 1 ] && [ "$race_turn_field" = "$race_after" ]; then
+  pass "6 concurrent writers over a crashed sender's lock leave the file structurally intact (TURN=$race_turn_field matches $race_after recorded turns)"
+else
+  fail "concurrent writers corrupted the discussion: TURN:x$race_hdr NEXT:x$race_next field=$race_turn_field blocks=$race_after"
+fi
+# THE discriminating assertion (agy QA r2 [Blocker]): structural intactness alone is VACUOUS — it
+# passes with the lock removed entirely. `atomic_write` uses os.replace, so six unserialized racers
+# each read the same state, each build the same valid next state, and each cleanly overwrite the
+# file; the result is a structurally perfect ledger with one turn recorded, and every earlier
+# assertion here passes. agy proved this by disabling the lock and watching the test stay green.
+# Exit codes are what distinguishes serialized from merely atomic: under flock exactly ONE racer
+# can hold the turn, so one exits 0 and the rest are refused out-of-turn. Unserialized, all six
+# validate NEXT against the same pre-write state and all exit 0.
+[ "$RACE_WINNERS" = "1" ] \
+  && pass "exactly ONE of 6 concurrent racers committed (flock serialized them; the rest were refused out-of-turn)" \
+  || fail "$RACE_WINNERS of 6 racers exited 0 — expected exactly 1; the lock did not serialize them"
+[ "$race_after" -gt "$race_before" ] && pass "the winning racer's turn was actually committed" \
+  || fail "no racer committed a turn (before=$race_before after=$race_after)"
+
+# ── item 2: REARM names the interpreter, so a mode-stripped copy still re-arms ───────────────────
+route_to 2
+rearm_now="$(a2a watch --agent 2 --interval 0.05 --timeout 1 2>&1)"
+rearm_cmd="$(printf '%s\n' "$rearm_now" | grep '^REARM: ' | head -1 | sed 's/^REARM: //')"
+case "$rearm_cmd" in
+  *python*) pass "REARM names the interpreter explicitly (not a bare script path)" ;;
+  *) fail "REARM does not name an interpreter: $rearm_cmd" ;;
+esac
+case "$rearm_cmd" in
+  *"/-c"*) fail "REARM rendered a bogus argv[0] path: $rearm_cmd" ;;
+  *) pass "REARM renders the real script path, not the invoking argv[0]" ;;
+esac
+# The negative control for the exec bit: strip it from a COPY and prove the rendered command still
+# runs. Pre-fix this produced a 127/permission error.
+G38_COPY="$WORK/copy-no-exec-bit.py"
+cp "$CLI" "$G38_COPY"; chmod -x "$G38_COPY"
+copy_rearm="$(python3 "$G38_COPY" --root "$G38" watch --id "$G38_ID" --agent 2 --interval 0.05 --timeout 1 2>&1 \
+  | grep '^REARM: ' | head -1 | sed 's/^REARM: //')"
+copy_out="$(sh -c "$copy_rearm" 2>&1)"; copy_rc=$?
+[ "$copy_rc" -eq 0 ] && expect_contains "a mode-stripped copy still re-arms verbatim" "$copy_out" "DECISION: take-turn" \
+  || fail "mode-stripped copy re-arm exits $copy_rc: $copy_out"
+
+# ── item 4: the rendered interval/timeout must ROUND-TRIP, not merely be present ─────────────────
+route_to 2
+rt="$(a2a watch --agent 2 --interval 7 --timeout 991 2>&1 | grep '^REARM: ' | head -1)"
+expect_contains "REARM round-trips the interval value" "$rt" "--interval 7"
+expect_contains "REARM round-trips the timeout value" "$rt" "--timeout 991"
+rt_cmd="$(printf '%s\n' "$rt" | sed 's/^REARM: //')"
+case "$rt_cmd" in
+  *"--interval 0.05"*|*"--timeout 1"*) fail "REARM leaked values from an earlier watch: $rt_cmd" ;;
+  *) pass "REARM carries THIS watch's values, not a default or a stale one" ;;
+esac
+
+# ── item 3: an expiring window offers a deliberate re-arm instead of dying silently ──────────────
+route_to 1   # the turn must be held ELSEWHERE for agent2's watch to genuinely time out
+to_out="$(a2a watch --agent 2 --interval 0.05 --timeout 0.2 2>&1)"; to_rc=$?
+[ "$to_rc" -eq 3 ] && pass "a timed-out watch still exits 3 (the documented status is unchanged)" \
+  || fail "timeout exit changed: rc=$to_rc"
+expect_contains "a timed-out watch names the wait explicitly" "$to_out" "STILL-WAITING:"
+case "$to_out" in
+  *"REARM: "*) fail "timeout printed REARM — re-arm by reflex is exactly what must not happen" ;;
+  *) pass "timeout does NOT print REARM (the non-reflex contract holds)" ;;
+esac
+to_cmd="$(printf '%s\n' "$to_out" | grep -A1 'STILL-WAITING:' | tail -1 | sed 's/^ *//')"
+to_run="$(sh -c "$to_cmd" 2>&1)"; to_run_rc=$?
+[ "$to_run_rc" -eq 3 ] || [ "$to_run_rc" -eq 0 ] \
+  && pass "the offered still-waiting command is executable verbatim" \
+  || fail "still-waiting command exits $to_run_rc: $to_run"
+
+# ── item 6: doorbell liveness is visible to the other seat, WITHOUT touching the relay file ──────
+route_to 1
+before_sidecar="$(fingerprint "$G38_FILE")"
+a2a watch --agent 1 --interval 0.05 --timeout 0.2 >/dev/null 2>&1
+[ -f "$G38_FILE.watch.agent1" ] && pass "watch records its liveness in a per-agent sidecar" \
+  || fail "no watch sidecar written"
+[ "$before_sidecar" = "$(fingerprint "$G38_FILE")" ] \
+  && pass "the sidecar leaves the relay file byte-identical (the watch contract is intact)" \
+  || fail "the liveness marker mutated the discussion"
+peer_out="$(a2a join --agent 2 2>&1)"
+expect_contains "the other seat sees the peer's doorbell age" "$peer_out" "peer doorbell (agent1): armed"
+
+# agy QA r1 [Blocker]: stamping the sidecar ONCE before the poll loop made any seat waiting longer
+# than 2x its interval read as STALE while it was polling perfectly normally — worst for exactly the
+# long patient waits the doorbell exists to support. The marker must refresh on EVERY poll.
+# Reproduction: a watch that waits well past 2x its interval, then check the marker is fresh.
+route_to 2   # agent1 must NOT own the turn, or its watch returns take-turn instead of waiting
+# The wait must be long enough that a once-only stamp is UNAMBIGUOUSLY stale: with a 3s wait, a
+# non-refreshing marker ages ~3s while a refreshing one ages ~0s. A shorter window made this
+# assertion vacuous (1.2s truncates to 1, passing a `<= 1` check either way) — caught by reverting
+# the heartbeat and seeing the suite stay green.
+a2a watch --agent 1 --interval 0.1 --timeout 3 >/dev/null 2>&1      # waits ~30 intervals
+SIDECAR_AGE="$(python3 -c "import os,sys,time; print(int(time.time()-os.stat(sys.argv[1]).st_mtime))" "$G38_FILE.watch.agent1" 2>/dev/null)"
+[ -n "$SIDECAR_AGE" ] && [ "$SIDECAR_AGE" -le 1 ] 2>/dev/null \
+  && pass "the doorbell marker refreshes on every poll (a long wait is not reported STALE)" \
+  || fail "sidecar went stale during an active wait (age=${SIDECAR_AGE}s) — the r1 false positive"
+
+# ── item 5: atomic_write persists the RENAME, not just the bytes ─────────────────────────────────
+fsync_probe="$(python3 - "$CLI" "$G38_FILE" <<'PYEOF'
+import importlib.util, sys, os
+spec = importlib.util.spec_from_file_location("a2a", sys.argv[1])
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+from pathlib import Path
+calls = []
+real = os.fsync
+os.fsync = lambda fd: (calls.append(fd), real(fd))[1]
+try:
+    m.atomic_write(Path(sys.argv[2]), Path(sys.argv[2]).read_text(encoding="utf-8"))
+finally:
+    os.fsync = real
+print("fsync_calls=%d" % len(calls))
+PYEOF
+)"
+case "$fsync_probe" in
+  fsync_calls=0|fsync_calls=1) fail "atomic_write fsyncs the file but not the directory: $fsync_probe" ;;
+  *) pass "atomic_write fsyncs both the file and its parent directory (the rename survives power loss)" ;;
+esac
 
 # The installer is cross-agent and never writes to real user skill directories in this test.
 CLAUDE_DIR="$WORK/claude-skills"

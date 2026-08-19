@@ -52,12 +52,36 @@ done
   && pass "the Bash and Python readers agree on every probe path" \
   || fail "GH-388: the two lanes disagree about durability —$disagreed"
 
-xyz_path_is_durable "$ROOT_DIR/relay-system/logs/a.log" \
-  && pass "a path inside the repo's own relay-system is durable" \
-  || fail "the repo's own transcript root was classified non-durable"
+# The over-match guard: ordinary durable storage must classify DURABLE, or the registry would be
+# condemning everything and the /tmp assertion below would pass for the wrong reason.
+#
+# GH-37: the probe is a FIXED absolute path, derived from no environment variable at all. A clone's
+# location is not a property of the harness — cloning into $TMPDIR is a legitimate throwaway pattern
+# (an agent validating a PR did exactly that), and the classifier calling that clone ephemeral is the
+# CORRECT answer, not a defect. Asserting on $ROOT_DIR made a green suite depend on where someone
+# happened to clone, turning a right answer into a red gate that blocked unrelated work at the push
+# boundary.
+#
+# $HOME is NOT the fix and was rejected during this change: a container or CI runner with
+# HOME=/tmp/runner reproduces the identical spurious failure, having moved the environment-dependence
+# rather than removed it. Only a literal path outside every registry prefix tests the registry itself.
+# This is the same durable representative the two-reader agreement loop above already probes.
+DURABLE_PROBE=/usr/local/share/keepme
+xyz_path_is_durable "$DURABLE_PROBE/relay-system/logs/a.log" \
+  && pass "a fixed path on durable storage is classified durable (the registry does not over-match)" \
+  || fail "$DURABLE_PROBE was classified non-durable — the registry condemns ordinary storage"
 xyz_path_is_durable /tmp/whatever \
   && fail "/tmp was classified DURABLE — the registry is not being read" \
   || pass "/tmp is classified non-durable"
+
+# This clone's own root is REPORTED, never asserted. Both outcomes are correct classifications, and
+# the ephemeral one is precisely the warning GH-388 exists to surface: evidence written into a
+# throwaway clone does not survive the reboot that makes you want to read it.
+if xyz_path_is_durable "$ROOT_DIR/relay-system/logs/a.log"; then
+  pass "this clone's transcript root is on durable storage"
+else
+  pass "this clone is on EPHEMERAL storage ($(xyz_non_durable_reason "$ROOT_DIR")) — correctly classified; evidence written here will not survive a reboot"
+fi
 
 # The registry is data, not code: adding a line must change the verdict. Without this the conf file
 # could be a decorative artifact while the real list lives in the readers.

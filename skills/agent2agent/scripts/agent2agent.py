@@ -16,7 +16,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from typing import Iterable, List, Optional, Tuple
+from typing import Callable, Iterable, List, Optional, Tuple
 
 
 ID_RE = re.compile(r"^[0-9]{6}$")
@@ -272,6 +272,23 @@ UPDATED: {timestamp}
 """
 
 
+def _fsync_dir(directory: Path) -> None:
+    """Persist a rename itself, not just the bytes it points at (GH-38 item 5). Without this a
+    power loss can lose the newest turn even though its content was fsynced: the file was durable,
+    the directory entry naming it was not. Best-effort — a filesystem that refuses to open a
+    directory for fsync must not fail an otherwise-complete write."""
+    try:
+        fd = os.open(directory, os.O_RDONLY)
+    except OSError:
+        return
+    try:
+        os.fsync(fd)
+    except OSError:
+        pass
+    finally:
+        os.close(fd)
+
+
 def atomic_write(path: Path, content: str) -> None:
     mode = path.stat().st_mode & 0o777
     descriptor, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=path.parent)
@@ -283,6 +300,7 @@ def atomic_write(path: Path, content: str) -> None:
             handle.flush()
             os.fsync(handle.fileno())
         os.replace(temp_path, path)
+        _fsync_dir(path.parent)
     finally:
         temp_path.unlink(missing_ok=True)
 
@@ -311,22 +329,69 @@ def create_discussion(
     return discussion_id, path
 
 
+def _read_lock_holder(path: Path) -> Tuple[Optional[int], str]:
+    """Parse `pid=<n> held-since=<ts>` from a lock file, for DIAGNOSTICS ONLY — the lock itself is
+    held by flock, never inferred from this content. Returns (pid or None, raw text)."""
+    try:
+        raw = path.read_text(encoding="utf-8").strip()
+    except OSError:
+        return None, ""
+    match = re.search(r"\bpid=(\d+)\b", raw)
+    return (int(match.group(1)) if match else None), raw
+
+
 class DiscussionLock:
+    """Exclusive writer lock for one discussion, held by `flock` — the same idiom `DriveLock`
+    already uses in this file.
+
+    GH-38 item 1 asked for a stale lock left by a killed sender to stop bricking a discussion
+    forever. The first implementation read the holder's pid, tested liveness with `os.kill(pid, 0)`,
+    and stole the lock from a dead holder. The agy QA review (relay-system/2026-08-18) rejected that
+    as unsafe and it was right on two counts:
+
+      1. `os.kill` inspects only the LOCAL process table, so a holder on another host sharing the
+         path reads as dead — and pid reuse makes the verdict unreliable even locally.
+      2. Steal-then-claim is not atomic. Two contenders could both see the dead pid, both unlink,
+         and both create: the second unlink removes the FIRST contender's freshly created lock, so
+         both return believing they hold it exclusively. `O_EXCL` cannot detect that, because the
+         damage is done by the unlink, not the create.
+
+    `flock` removes the whole class of problem: the kernel releases the lock when the holding
+    process dies, so a crashed sender's lock is simply not held and the next writer proceeds. No
+    liveness guess, no steal, no unlink race. The lock FILE is deliberately never unlinked —
+    unlinking is what reintroduces the race (a releaser can delete an inode another process is
+    mid-acquire on). The leftover file is inert: it is a mutex, not a claim."""
+
     def __init__(self, path: Path):
-        self.path = path.with_name(path.name + ".lock")
+        # Dotfile, matching DriveLock's convention — the lock sits beside the discussion but never
+        # appears in a listing of it, and `find_discussions` only globs `*.md`.
+        self.path = path.with_name(f".{path.name}.lock")
+        self.handle = None  # type: Optional[object]
 
     def __enter__(self) -> None:
+        self.handle = self.path.open("a+", encoding="utf-8")
         try:
-            descriptor = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        except FileExistsError as exc:
-            raise Agent2AgentError(f"discussion is locked by another writer: {self.path}") from exc
-        try:
-            os.write(descriptor, f"pid={os.getpid()} created={utc_now()}\n".encode())
-        finally:
-            os.close(descriptor)
+            fcntl.flock(self.handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            self.handle.close()
+            self.handle = None
+            pid, raw = _read_lock_holder(self.path)
+            detail = f"held by pid {pid}" if pid is not None else f"holder unrecorded: {raw!r}"
+            raise Agent2AgentError(
+                f"discussion is locked by another writer: {self.path} ({detail}). "
+                f"That process is running — wait for it to finish rather than deleting the lock; "
+                f"a crashed holder's lock is released by the OS and needs no cleanup."
+            ) from exc
+        self.handle.seek(0)
+        self.handle.truncate()
+        self.handle.write(f"pid={os.getpid()} held-since={utc_now()}\n")
+        self.handle.flush()
 
     def __exit__(self, exc_type: object, exc: object, traceback: object) -> None:
-        self.path.unlink(missing_ok=True)
+        if self.handle is not None:
+            fcntl.flock(self.handle.fileno(), fcntl.LOCK_UN)
+            self.handle.close()
+            self.handle = None
 
 
 class DriveLock:
@@ -428,12 +493,22 @@ def wait_for_turn(
     interval: float,
     timeout: float,
     announce: bool,
+    heartbeat: Optional[Callable[[Path], None]] = None,
 ) -> Tuple[Path, str, str, str]:
-    """Poll without writing until this member owns NEXT, closure, or timeout."""
+    """Poll without writing until this member owns NEXT, closure, or timeout.
+
+    `heartbeat` runs once per poll against the resolved relay path. It exists so a doorbell can
+    refresh its liveness marker on EVERY iteration: the agy QA review caught that stamping it once
+    before the loop made any seat waiting longer than 2x its interval read as STALE while it was
+    polling perfectly normally — the false positive would have been worst for exactly the long,
+    patient waits the doorbell exists to support. The heartbeat writes only to a sidecar, so this
+    stays a non-writing poll as far as the discussion is concerned."""
     started = time.monotonic()
     previous = None  # type: Optional[Tuple[str, str, str]]
     while True:
         path, subject, next_member, decision = join_discussion(root, discussion_id, number, None)
+        if heartbeat is not None:
+            heartbeat(path)
         content = read_discussion(path)
         state = (field(content, "TURN"), next_member, field(content, "STATUS"))
         if announce and state != previous:
@@ -454,9 +529,16 @@ def rearm_command(
     root: Path, discussion_id: str, number: int, interval: float, timeout: float
 ) -> str:
     """The exact argv that relaunches this watch — self-contained (absolute script + --root)
-    so the waking session can run it verbatim from any CWD."""
+    so the waking session can run it verbatim from any CWD.
+
+    GH-38 item 2: the interpreter is named EXPLICITLY rather than relying on the shebang plus the
+    executable bit, and the script path comes from __file__ rather than sys.argv[0]. argv[0] is
+    whatever the invoking session happened to use — loading this module via `python3 -c` rendered a
+    bogus `<cwd>/-c` path — and a mode-stripping copy (zip vendoring, some transfer paths) turns a
+    bare script path into a 127/permission error instead of the intended argparse behavior."""
     argv = [
-        os.path.abspath(sys.argv[0]),
+        sys.executable or "python3",
+        os.path.abspath(__file__),
         "--root", str(root),
         "watch",
         "--id", discussion_id,
@@ -467,14 +549,57 @@ def rearm_command(
     return " ".join(shlex.quote(part) for part in argv)
 
 
+def watch_sidecar(path: Path, number: int) -> Path:
+    """Per-agent doorbell-liveness marker (GH-38 item 6). Deliberately a SIDECAR, not a field in
+    the relay file: `watch` must leave the discussion byte-identical (the suite pins this), and
+    lock/liveness evidence does not belong inside the artifact it describes — the same reasoning
+    as GH-32's r4 lock-audit finding."""
+    return path.with_name(f"{path.name}.watch.{agent_id(number)}")
+
+
+def touch_watch_sidecar(path: Path, number: int) -> None:
+    marker = watch_sidecar(path, number)
+    try:
+        marker.write_text(f"pid={os.getpid()} armed={utc_now()}\n", encoding="utf-8")
+    except OSError:
+        pass   # liveness reporting is a nicety; it must never break a watch
+
+
+def peer_doorbell_report(path: Path, number: int, interval: float) -> Optional[str]:
+    """One line describing whether the named seat's doorbell looks armed, or None if it never was.
+    Advisory only: a seat may be participating manually, which is not an error."""
+    marker = watch_sidecar(path, number)
+    try:
+        age = time.time() - marker.stat().st_mtime
+    except OSError:
+        return None
+    stale = age > max(interval, 1.0) * 2
+    suffix = " — STALE, that seat may no longer be listening" if stale else ""
+    return f"peer doorbell ({agent_id(number)}): armed {age:.0f}s ago{suffix}"
+
+
+def report_peer_doorbells(path: Path, content: str, self_number: int) -> None:
+    """Print one advisory line per OTHER roster seat that has ever armed a doorbell. Silence about
+    a seat means it never armed one — which is normal for a manual participant, so this reports and
+    never refuses."""
+    for index, _ in enumerate(parse_roster(content), start=1):
+        if index == self_number:
+            continue
+        line = peer_doorbell_report(path, index, DEFAULT_POLL_INTERVAL)
+        if line:
+            print(line)
+
+
 def watch_discussion(
     root: Path, discussion_id: str, number: int, interval: float, timeout: float
 ) -> int:
     path = resolve_discussion(root, discussion_id)
     print(f"Watching XYZ agent2agent #{discussion_id} as {agent_id(number)}")
     print(f"Relay file: {path}")
+    touch_watch_sidecar(path, number)
     _, _, _, decision = wait_for_turn(
-        root, discussion_id, number, interval, timeout, announce=True
+        root, discussion_id, number, interval, timeout, announce=True,
+        heartbeat=lambda p: touch_watch_sidecar(p, number),
     )
     print(f"DECISION: {decision}")
     # GH-510 doorbell: re-arming after a turn is protocol, not discipline — hand the waking
@@ -482,6 +607,17 @@ def watch_discussion(
     # a closed or timed-out watch must not be re-armed by reflex, so those exits stay bare.
     if decision == "take-turn":
         print(f"REARM: {rearm_command(root, discussion_id, number, interval, timeout)}")
+    elif decision == "timeout":
+        # GH-38 item 3: a window that expires while the peer is still thinking used to kill the
+        # doorbell with exit 3 and NO printed command — a background task exits, the session may
+        # not notice, and the orchestrator's next turn lands in front of a deaf seat. The command
+        # is offered under a distinct verb so it stays a deliberate choice, never a reflex: this
+        # is not REARM, and `closed` still prints nothing at all.
+        print(
+            "STILL-WAITING: the watch window elapsed with the turn still held elsewhere. "
+            "Re-arm deliberately (or report the wait) with:"
+        )
+        print(f"  {rearm_command(root, discussion_id, number, interval, timeout)}")
     return 3 if decision == "timeout" else 0
 
 
@@ -762,6 +898,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             print(f"NEXT: {next_member}")
             if timed_watch_enabled(read_discussion(path)):
                 print("TIMED-WATCH: check every 120 seconds for 1,800 seconds while waiting")
+            report_peer_doorbells(path, read_discussion(path), args.agent)
             print(f"DECISION: {decision}")
         elif args.command == "watch":
             return watch_discussion(root, args.id, args.agent, args.interval, args.timeout)
@@ -770,6 +907,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 root, args.id, args.agent, load_message(args), args.next_agent, False
             )
             print(f"Recorded turn {turn}: {path}")
+            report_peer_doorbells(path, read_discussion(path), args.agent)
             print(invitation(args.id, args.next_agent, subject, timed_watch_enabled(read_discussion(path))))
         elif args.command == "close":
             path, turn, _, _ = append_turn(root, args.id, args.agent, load_message(args), None, True)
