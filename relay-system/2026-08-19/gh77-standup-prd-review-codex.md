@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -180,5 +180,81 @@ Whole-file note: the entire PRD, including pre-existing text, was swept; no addi
 omitted as out of scope.
 
 Handing off to Producer — go to the claude-a window and say “take your turn”.
+
+### Producer — claude-a · round 2
+
+Nine blockers, one should, all **Implemented** — none declined. The first blocker was the correct
+diagnosis of the whole document: r1 named its inputs and jumped straight to ranking, so it never said
+what *becomes* an item. That made the rest inevitable. Rewrote rather than patched; everything from
+**The lenses** to **The test surface** is new.
+
+**Dispositions**
+
+- **[Blocker] The candidate-building procedure is absent** — **Implemented.** New *The lenses*
+  section: an eight-row table giving each lens a bounded read, candidate predicate, stable item key,
+  required evidence field, staleness source, and closing-interface rule, plus the standing rule that
+  a lens which cannot produce all six for a candidate **does not emit it** and degrades loudly
+  instead. Cross-lens dedup is now specified and explicitly runs *before* ranking: same issue/PR
+  number, then same path; the survivor keeps the first key in lens order (stability), carries every
+  contributing evidence field, and takes the highest tier any contributing lens justified.
+- **[Blocker] The ladder is not decidable across those sources** — **Implemented.** "Highest
+  applicable tier wins, evaluated top-down" is stated. Staleness has a per-lens source in the table;
+  an unknown age sorts *after* every known age, never before. Effort is three deterministic bins — S
+  (single command, no argument the agent must invent), M (single-file edit), L (anything else). Final
+  stable tie-break is the item key, lexicographic, so ordering is total and repeat runs are
+  byte-identical.
+- **[Blocker] The declared lenses cannot perform two checks used to justify the product** —
+  **Implemented**, taking your first option rather than narrowing the problem. Lens 5 is a bounded
+  *issue-state* read: `gh issue view <n>` for only the numbers already mentioned in the session or
+  cited by the current ledgers — a per-number state read, never a list or history sweep, which is
+  what keeps it on the session side of the `/radar` line. Its degradation row is explicit. This is
+  the single most consequential finding across both reviews: as written, r1 could not have detected
+  two of the three drifts its own opening table cites.
+- **[Blocker] The ROADMAP catalogue states a stricter, false parser grammar** — **Implemented**, and
+  verified independently before accepting: `_parse_bullet` matches `^- \*\*(.+?)\*\*`
+  (`utils/py/_marathon_plan.py:485`), and `ROADMAP.md:139-145` says the same. The catalogue now
+  states the **grammar** (a flat bullet with a bold name, under one of the four exact headings from
+  `utils/py/_marathon_plan.py:31`, silent-skip on anything else) and this repo's **recommended
+  shape** as two separate things, with an explicit instruction never to present the second as the
+  requirement. The Fable thread graded this ✅ — it had verified that r1's format string matches a
+  real entry, which is true and not the claim under test.
+- **[Blocker] "Exact command" is not exact, and the strategic reader is incomplete** —
+  **Implemented, with one modification.** Rather than expanding the full path at every site, `$R` is
+  defined once as `python3 utils/py/releases_app.py` with the standing rule that every *emitted*
+  command is copy-paste executable and `$R` is expanded in output — you offered this as the
+  alternative and it keeps the catalogue readable. Added `list [--status draft|active|shipped|cut]
+  [--all-repos]` and labelled it the whole-ledger reader the strategic half needs. `update`'s flags
+  are now enumerated finitely (verified against `$R update --help`) instead of an arbitrary
+  `--<field>`.
+- **[Blocker] The item schema contradicts its own Definition of Done** — **Implemented.** One
+  canonical single-line schema — `<tier> · <what> — <evidence> — <close>` — with a field table:
+  evidence required for every tier (`file:line` · `#n` · `rule=name` · quoted span), and `close`
+  defined as an executable command **or** a named `file:`/`PR #n:` action when no single command
+  exists. The schema is stated once and the DoD asserts against it rather than restating it.
+- **[Blocker] PARKED mutation makes idempotence undefined** — **Implemented.** Stable item keys are
+  now assigned by the lens table. Prior parked records are excluded from re-parking but retained for
+  dedupe; only newly parked keys are appended; **if nothing is new, nothing is written** — no file,
+  no touch. The second-run chat line is specified (`"N parked, M suppressed."`) and the byte-no-op is
+  the thing the idempotence test asserts.
+- **[Blocker] The PARKED format is not an existing single format** — **Implemented.** Froze a
+  standup-owned schema, `PARKED/<YYYY-MM-DD>-standup-<HHMM>.md`, with the infix named as the
+  collision rule and the deliberate divergence from finish-line v2. Record fields specified. Chose a
+  new schema over reusing finish-line v2 byte-for-byte because v2's run-level frontmatter models a
+  *close*, and this skill parks continuously within a session.
+- **[Blocker] The line limits cannot be tested as written** — **Implemented.** Integer maxima with a
+  defined unit and a per-segment table: 1 opening + 7 items + 1 overflow + 6 strategic = **17 total,
+  hard**. "Rendered line" is defined; overflow and degradation lines are charged to a segment rather
+  than being free. The DoD now cites those exact integers.
+- **[Should] Define the deterministic fixture runner before promising behavioral tests** —
+  **Implemented.** `skills/standup/collect.sh` is the named seam: the eight lens reads only, stable
+  sorted JSON with no timestamps in the payload, `--fixture <dir>` for canned inputs. Every
+  mechanical assertion runs against it, never against live model output. The test-surface table maps
+  each property to its assertion, and Phase 2 now builds `collect.sh` and its fixtures *before* any
+  prose about behavior.
+
+**Handing off to the Reviewer (codex)** — round 2 is a rewrite, so re-read the whole artifact rather
+than diffing. The highest-value checks: does the lens table actually yield a decidable item for all
+eight lenses; is lens 5 genuinely bounded (session-mentioned and ledger-cited numbers only) or has it
+drifted into a sweep; and can the suppression rule hide a tier-1 finding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 1 / 4
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,5 +141,69 @@ swept file: yes
 **Handing off to the Producer (claude-a)** — disposition each finding, fix the two Blockers (exact strategic cap; a named deterministic test surface for the DoD), and resolve the parking/idempotence and ladder ambiguities in the PRD.
 
 > Transport note (orchestrator, not the reviewer): the headless `claude-turn.sh` lane was unavailable — no `claude` CLI on this machine — so this turn ran as an in-process Fable subagent under read-only instruction rather than under the shim's worktree isolation + path allowlist. Verified after the fact: `git diff --stat 8104c73` was empty, so the reviewer wrote nothing.
+
+### Producer — claude-a · round 2
+
+Rewrote rather than patched. Two blockers where both were "this cannot be tested as written", plus
+Codex's independent finding that the r1 input scope could not detect two of the three drifts the PRD
+opens with, meant the mechanics were never specified — not that they were specified wrongly.
+Everything from **The lenses** to **The test surface** is new or rewritten.
+
+**Dispositions**
+
+- **[Blocker] "~5 lines" is not a cap** — **Implemented.** Both caps are now integers with a defined
+  unit: Part 2 ≤ 6 rendered lines, total ≤ 17. "A rendered line" is defined (newline-delimited as
+  emitted; soft-wrap does not count; headings count, blanks do not), and degradation statements are
+  explicitly charged to the segment they qualify rather than being free. See *Output contract*.
+- **[Blocker] The DoD has no testable surface** — **Implemented**, taking the `/10days` precedent you
+  cited. The skill now ships `skills/standup/collect.sh`: the eight lens reads and nothing else,
+  emitting stable sorted JSON, with `--fixture <dir>` for canned inputs. Every mechanical assertion
+  runs against `collect.sh --fixture`, never against model output. The test-surface table maps each
+  property to how it is asserted, and explicitly carves out judgement (was tier 4 the *right* call)
+  as Phase-4 dogfood rather than pretending it is unit-testable.
+- **[Should] Idempotence contradicts append-only parking** — **Implemented.** The append rule is now
+  "append only item keys absent from every `PARKED/*.md`; **if nothing is new, write nothing** — no
+  file, no touch." That is what makes the second run a byte no-op, and the idempotence assertion now
+  tests exactly that rather than byte-identity over a file that always changes.
+- **[Should] PARKED protocol ambiguous** — **Implemented.** Frozen one standup-owned schema:
+  `PARKED/<YYYY-MM-DD>-standup-<HHMM>.md`, with the `-standup-` infix named as both the collision
+  rule and the deliberate divergence from finish-line's `<reponame>-<HHMM>`. Record fields are
+  specified (item-key, tier, what, evidence, close, first-seen) because the stable-ID rule needs
+  them. Three formats coexisting without a rule was the real defect; this names ours.
+- **[Should] The ladder is not decidable** — **Implemented**, all three sub-points. (a) Staleness now
+  has a per-lens source in the lens table, and an item whose source is unavailable sorts *after*
+  every known-age item — never before, so an unmeasured item cannot jump the queue. (b) "First
+  matching tier wins, evaluated top-down" is stated explicitly, and an item is never listed twice.
+  (c) Evidence is now required for **every** tier, reconciling the ladder with the DoD. Added a third
+  tie-break — item key, lexicographic — so the ordering is total and two runs over identical state
+  are byte-identical.
+- **[Should] The skill can re-litigate itself every run** — **Implemented, pulled into v1.** You were
+  right that this is not a v2 concern for a skill designed to be reached for constantly. Stable item
+  keys made it mechanical: do not re-raise a reported key whose evidence is unchanged, do not
+  re-raise a key already in `PARKED/`, do not re-raise a strategic claim already stated this session.
+  Suppressed counts appear only in the overflow line. The finish-line quote you cited is now the
+  section's stated rationale.
+- **[Should] "ahead/behind trunk" never names the trunk** — **Implemented** by reference, as
+  proposed: resolve the declared integration branch per `skills/releases/SKILL.md:81` (`development`
+  here), with an explicit "do not assume `main`".
+- **[Nit] "Target under 15" is soft in a spec whose thesis is that soft fails** — **Implemented.** It
+  is now a hard cap of 17 (raised from 15 to absorb the overflow and degradation lines that are now
+  charged rather than free), stated as "not a target — a cap".
+- **[Nit] "asking once" undefined** — **Implemented.** "Once per session, not once per run."
+
+**On the interface-catalogue audit.** 17 of 18 verified is the most useful thing either review
+produced, and the one ⚠️ was correct. But the Codex thread independently graded the ROADMAP entry
+format a **Blocker** where this review passed it, and Codex was right: `_parse_bullet` matches only
+`^- \*\*(.+?)\*\*` (`utils/py/_marathon_plan.py:485`), so the parser requires a bold name under one
+of four headings and nothing more — the full `GH-n · title … → links` shape is this repo's
+convention, not the grammar. The ✅ here verified that r1's format string *matches a real entry*,
+which is true and not the claim that mattered. The catalogue now states the minimum grammar and the
+recommended shape as separate things. Flagging the mechanism, not the miss: a citation can be
+accurate and still check the wrong proposition.
+
+**Handing off to the Reviewer (claude-fable)** — round 2 is a substantial rewrite, so re-read the
+whole artifact rather than diffing: verify the lens table produces a decidable item for each of the
+eight lenses, that the caps are now falsifiable, and that the suppression rule cannot itself hide a
+tier-1 finding.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
