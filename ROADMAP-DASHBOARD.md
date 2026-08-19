@@ -6,15 +6,14 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) |
+| GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) | — | [#62](https://github.com/HiQS-Suite/XYZ-forge/issues/62) · [#63](https://github.com/HiQS-Suite/XYZ-forge/issues/63) · [#64](https://github.com/HiQS-Suite/XYZ-forge/issues/64) · [#65](https://github.com/HiQS-Suite/XYZ-forge/issues/65) · [#61](https://github.com/HiQS-Suite/XYZ-forge/issues/61) |
 | GH-67 · Commandcode builder default widened to --yolo — closer evaluation → possible build | — | [#67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) |
-| GH-57 · test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | — | [GH-57-RELEASES-SQLITE-FUZZING.md](PROJECT/2-WORKING/GH-57-RELEASES-SQLITE-FUZZING.md) · [#57](https://github.com/HiQS-Suite/XYZ-forge/issues/57) |
-| GH-45 · validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone | ✅ | [GH-45-WORKTREE-GATE-REFUSAL.md](PROJECT/2-WORKING/GH-45-WORKTREE-GATE-REFUSAL.md) · [#45](https://github.com/HiQS-Suite/XYZ-forge/issues/45) · [#564](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/564) |
 | GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | [GH-35-TEST-TIER-ROUTING.md](PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md) · [#35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) |
-| GH-39 · RELEASES app: one-way GitHub Project release-card projection | — | [GH-39-RELEASES-PROJECT-SYNC.md](PROJECT/2-WORKING/GH-39-RELEASES-PROJECT-SYNC.md) · [#39](https://github.com/HiQS-Suite/XYZ-forge/issues/39) |
 | GH-42 · relay automation: supported Commandcode turn-taker | — | [GH-42-COMMANDCODE-TURN.md](PROJECT/2-WORKING/GH-42-COMMANDCODE-TURN.md) · [#42](https://github.com/HiQS-Suite/XYZ-forge/issues/42) |
 | GH-32 · RELEASES app: SQLite-backed release ledger, CLI-only writes, generated RELEASES.md, cross-repo UI | — | [GH-32-RELEASES-APP-SQLITE.md](PROJECT/1-INBOX/GH-32-RELEASES-APP-SQLITE.md) · [#32](https://github.com/HiQS-Suite/XYZ-forge/issues/32) · [#33](https://github.com/HiQS-Suite/XYZ-forge/issues/33) |
 | GH-28 · RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | [GH-28-RELEASES-LEDGER-DISCIPLINE.md](PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md) · [#28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) |
@@ -33,10 +32,14 @@ Summary: 3 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 4 · 🔮 0 · 🔲 0
+Summary: 8 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 8 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-57 · test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | ✅ | [GH-57-RELEASES-SQLITE-FUZZING.md](PROJECT/2-WORKING/GH-57-RELEASES-SQLITE-FUZZING.md) · [#57](https://github.com/HiQS-Suite/XYZ-forge/issues/57) |
+| GH-45 · validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone | ✅ | [GH-45-WORKTREE-GATE-REFUSAL.md](PROJECT/2-WORKING/GH-45-WORKTREE-GATE-REFUSAL.md) · [#45](https://github.com/HiQS-Suite/XYZ-forge/issues/45) · [#564](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/564) |
+| GH-39 · RELEASES app: one-way GitHub Project release-card projection | ✅ | [GH-39-RELEASES-PROJECT-SYNC.md](PROJECT/2-WORKING/GH-39-RELEASES-PROJECT-SYNC.md) · [#39](https://github.com/HiQS-Suite/XYZ-forge/issues/39) |
+| GH-23 · Kernel invariant: enforce path-overlap rejection on direct tick claim and tick scope | ✅ | [GH-23-KERNEL-OVERLAP-ENFORCEMENT.md](PROJECT/2-WORKING/GH-23-KERNEL-OVERLAP-ENFORCEMENT.md) · [#23](https://github.com/HiQS-Suite/XYZ-forge/issues/23) |
 | GH-4 · the pre-push gate does not travel with clones: fresh clones push unverified | ✅ | [GH-4-GATE-TRAVELS-WITH-CLONES.md](PROJECT/3-COMPLETED/GH-4-GATE-TRAVELS-WITH-CLONES.md) · [#4](https://github.com/HiQS-Suite/XYZ-forge/issues/4) |
 | GH-14 · appendEvent writes non-atomically, so concurrent readers can observe torn event files | ✅ | [GH-14-ATOMIC-EVENT-APPEND.md](PROJECT/3-COMPLETED/GH-14-ATOMIC-EVENT-APPEND.md) · [#14](https://github.com/HiQS-Suite/XYZ-forge/issues/14) |
 | GH-15 · parallel runs are unreliable in a fresh clone; the GH-528 contention retry is not honoring its contract | ✅ | [GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md](PROJECT/3-COMPLETED/GH-15-PARALLEL-FRESH-CLONE-RELIABILITY.md) · [#15](https://github.com/HiQS-Suite/XYZ-forge/issues/15) |

@@ -349,6 +349,38 @@ plan: [#69](https://github.com/HiQS-Suite/XYZ-forge/issues/69).
 
 ---
 
+## Q: The ledger says one thing and GitHub says another. What keeps them honest?
+
+**Right now: nothing automatic.** Both subsystems are internally consistent by construction — the
+generation trio, the receipt chain, and `check --rebuild` guarantee the DB, the dump, and the
+generated Markdown agree with each other. None of that says a word about whether they agree with
+*reality*. Three surfaces drift silently, all of them observed on 2026-08-19:
+
+| Surface | How it drifts | Detected by |
+|---|---|---|
+| A release whose exit criterion is met but never shipped | `ship` is a deliberate human verb (it requires evidence, by design — `rule=ship-needs-evidence`). Nothing notices that the criterion has been met. 0.7.1 sat `active` for a day after its own merge landed. | nothing |
+| Manifest item open/closed state | Stored when the item is added, never refreshed. `reconcile` only maps placeholder IDs → real URLs; it does not re-read GitHub. All three of Bulwark's items showed `[open]` while closed. | nothing |
+| ROADMAP status markers vs. issue state | The shadow faithfully mirrors whatever the file says, including a `🚧 active` marker on an issue GitHub closed a day earlier. Four entries were stale. | nothing |
+
+The shadow is not the problem here — it mirrors the file correctly, which is exactly its contract.
+The gap is that **no reader ever compares either ledger to GitHub**, and no surface makes a
+discrepancy visible without someone deciding to audit by hand.
+
+Two things close it, in order:
+
+1. **[#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) — the dashboard.** A read-only page
+   showing both ledgers side by side makes "shipped release still marked active" and "closed issue
+   still marked active" *visible on sight*. Detection before enforcement.
+2. **A `check` advisory tier.** Warn (never block — same posture as `pdda.sh releases`) when an
+   `active` release is past its target date, when a manifest item's stored state is older than N
+   days, or when `ROADMAP.md`'s hash differs from the last sync. Cheap, and it fires in the gate
+   where someone will read it.
+
+Until one of those exists, the honest habit is: after closing issues or merging a release PR, run
+`releases next`, `releases show --version <v>`, and `releases roadmap sync` and read the output.
+
+---
+
 ## Quick reference
 
 ```bash

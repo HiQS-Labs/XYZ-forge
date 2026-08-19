@@ -7,6 +7,13 @@ GitHub issue, PR, or in-repo pointer as its real home; this is the index.
 > Folder convention (new this session, operator-directed): one dated file per parking event,
 > append-only. An item leaves by being done or explicitly dropped, not by silence.
 
+> **Update — 2026-08-19, later the same day (audit session).** Three items left this file by being
+> done, not by silence: release **0.7.1 Bulwark shipped** (evidence in the receipt chain, generation
+> 9); issues **#61–#65** — filed that afternoon and never triaged anywhere — are now a Queue entry in
+> `ROADMAP.md`; and the ledger's four stale status markers (GH-23/#39/#45/#57, all closed on GitHub)
+> were moved to Completed. New: **[#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75)** (the
+> two-ledger dashboard) is queued at the FRONT of the line by operator call. Nothing below changed.
+
 ## Decisions waiting on the operator
 
 | Item | Where it lives | What's needed |
