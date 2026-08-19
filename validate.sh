@@ -269,6 +269,11 @@ TESTS=(
                                  #   first run — a failed resolve left the merge half-closed, a rewound generation
                                  #   header was accepted silently, releases.db.bak was committable, and `--root ""`
                                  #   retargeted the resolver at the current repo. 27/0
+  "gh69-roadmap-shadow.sh"        # GH-69 (ROADMAP.md shadow: `releases roadmap sync` mirrors the ledger into
+                                 #   roadmap_items, GH-32 Phase-0 pattern) — 24/0; pins that the shadow never
+                                 #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
+                                 #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
+                                 #   a duplicate GH key in the markdown is refused by name
   "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
                                  #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"

@@ -223,12 +223,16 @@ ok "this repo's .gitignore covers releases.db.bak" \
 # recovered from HEAD). "No --root" and "--root with an empty value" are different statements and
 # must not share a code path.
 echo "-- 7: --root '' is a caller bug, not a request for the current repo"
+# Hash-compare, NOT `git status`: a clean-tree assertion also fails whenever the operator simply
+# has uncommitted ledger work (found 2026-08-19 with a live roadmap-sync pending), which is a
+# false alarm about the resolver. What this scenario owns is only that the CALL changed nothing.
+LEDGER_BEFORE="$(shasum -a 256 "$ROOT_DIR/releases.db" "$ROOT_DIR/releases.sql" | awk '{print $1}' | tr '\n' ' ')"
 out="$(bash "$RESOLVER" --root "" 2>&1)"; rc=$?
 ok "resolver refuses an explicitly empty --root (rc=$rc)" "[ $rc -ne 0 ]"
 ok "  and says it will not fall back to the current repository" \
    "has \"\$out\" 'Refusing to fall back'"
-ok "  and this repo's ledger was not touched by that call" \
-   "[ -z \"\$(git -C '$ROOT_DIR' status --porcelain releases.db releases.sql)\" ]"
+ok "  and this repo's ledger is byte-identical after that call" \
+   "[ \"\$(shasum -a 256 \"$ROOT_DIR/releases.db\" \"$ROOT_DIR/releases.sql\" | awk '{print \$1}' | tr '\n' ' ')\" = \"$LEDGER_BEFORE\" ]"
 
 echo
 echo "  gh57-live-merge-resolve: $pass pass, $fail fail"

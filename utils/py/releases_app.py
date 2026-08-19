@@ -577,6 +577,43 @@ CREATE INDEX idx_gf_import ON grandfather_entries(import_run);
 )
 
 
+MIGRATION_002_DDL = """
+CREATE TABLE IF NOT EXISTS roadmap_items (  -- GH-69 shadow: mirrors ROADMAP.md's ledger. During
+  id INTEGER PRIMARY KEY,                   -- the shadow phase ROADMAP.md is the ONLY thing humans
+  global_id TEXT NOT NULL UNIQUE {rmi_gid}, -- edit; `releases roadmap sync` mirrors it here. Rows
+  repo_id INTEGER NOT NULL REFERENCES repos(id),  -- follow the GH-32 grammar (GID-keyed, no
+  gh_number INTEGER,                        -- integer ids as dump values), so merges and rebuilds
+  title TEXT NOT NULL CHECK (length(trim(title)) > 0),  -- need nothing new.
+  section TEXT NOT NULL CHECK (length(trim(section)) > 0),
+  position INTEGER NOT NULL,                -- order within its section at last sync
+  status_marker TEXT,                       -- the entry's leading status emoji, when present
+  complexity INTEGER, risk INTEGER, effort INTEGER,     -- cx/risk/eff when the entry states them
+  doc_path TEXT,                            -- first PROJECT/** link
+  issue_url TEXT,                           -- first this-repo issue/PR URL
+  raw_text TEXT NOT NULL,                   -- the entry block VERBATIM (lossless shadow)
+  first_seen TEXT NOT NULL,
+  updated_at TEXT NOT NULL,                 -- last sync that CHANGED this row (not last sync run)
+  UNIQUE (repo_id, gh_number)
+);
+CREATE INDEX IF NOT EXISTS idx_roadmap_repo ON roadmap_items(repo_id);
+""".format(rmi_gid=_gid_check("global_id", "rmi-"))
+
+
+def _table_exists(conn, name):
+    return conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+                        (name,)).fetchone() is not None
+
+
+def _ensure_roadmap_schema(conn):
+    """Apply migration 002 idempotently. MUST run inside a perform_write mutate when the DB
+    predates it: the new schema_migrations row is business state, and a schema change outside a
+    receipt would trip check's receipt-vs-change bypass detection — correctly."""
+    conn.executescript(MIGRATION_002_DDL)
+    if conn.execute("SELECT 1 FROM schema_migrations WHERE version = 2").fetchone() is None:
+        conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (2, ?)",
+                     (now_iso(),))
+
+
 def apply_migrations(conn):
     try:
         applied = {r["version"] for r in conn.execute("SELECT version FROM schema_migrations")}
@@ -586,6 +623,8 @@ def apply_migrations(conn):
         conn.executescript(MIGRATION_001)
         conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (1, ?)",
                      (now_iso(),))
+    if 2 not in applied:
+        _ensure_roadmap_schema(conn)
 
 
 # ── canonical dump (PRD Git story 6) ────────────────────────────────────────────────────────────
@@ -703,6 +742,18 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                                            ordinal[key]))
             w("INSERT INTO grandfather_entries(import_run, release_gid, rule, source_value, "
               "supplied_value, disposition) VALUES(%s);" % values)
+
+    if _table_exists(conn, "roadmap_items"):
+        _emit(w, "roadmap_items",
+              ["global_id", "repo_gid", "gh_number", "title", "section", "position",
+               "status_marker", "complexity", "risk", "effort", "doc_path", "issue_url",
+               "raw_text", "first_seen", "updated_at"],
+              _rows(conn, """SELECT ri.global_id, r.global_id AS repo_gid, ri.gh_number, ri.title,
+                             ri.section, ri.position, ri.status_marker, ri.complexity, ri.risk,
+                             ri.effort, ri.doc_path, ri.issue_url, ri.raw_text, ri.first_seen,
+                             ri.updated_at
+                             FROM roadmap_items ri JOIN repos r ON r.id = ri.repo_id
+                             ORDER BY ri.id"""))
 
     if include_receipts:
         _emit(w, "op_receipts",
@@ -1896,6 +1947,190 @@ def cmd_project_sync(args):
         conn.close()
 
 
+# ── GH-69: ROADMAP.md shadow (`releases roadmap sync` / `list`) ────────────────────────────────
+# Shadow phase contract, mirroring GH-32 Phase 0 exactly: ROADMAP.md is the ONLY thing humans and
+# agents edit; this code only READS it and mirrors the ledger into roadmap_items. The parser is a
+# twin of the marathon planner's (utils/py/_marathon_plan.py) with one deliberate difference: the
+# planner recognises only its four SECTIONS and skips the rest silently, while the shadow captures
+# EVERY `###` section under `## Ledger` — the shadow's job is to mirror what the file says, not to
+# re-decide what the planner should see.
+
+ROADMAP_NAME = "ROADMAP.md"
+_ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F", "\U0001F7E1",
+                           "\u2699\uFE0F", "\U0001F532", "\u26D4", "\U0001F52E", "\U0001F7E2",
+                           "\U0001F534", "\U0001F41E"]
+
+
+def parse_roadmap_ledger(path):
+    """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
+    from its `- **` line to the next `- **`, `###`, or `##`."""
+    lines = open(path, encoding="utf-8").read().splitlines()
+    entries = []
+    sec = None
+    inledger = False
+    pos = {}
+    i, n = 0, len(lines)
+    while i < n:
+        line = lines[i]
+        if re.match(r"^##\s+Ledger\s*$", line.strip()):
+            inledger = True
+            i += 1
+            continue
+        if inledger and re.match(r"^##\s+", line):
+            break
+        if inledger and line.startswith("### "):
+            sec = line[4:].strip()
+            i += 1
+            continue
+        if inledger and sec and line.startswith("- **"):
+            j = i + 1
+            while j < n and not (lines[j].startswith("- **") or lines[j].startswith("### ")
+                                 or re.match(r"^##\s+", lines[j])):
+                j += 1
+            raw = "\n".join(lines[i:j]).rstrip()
+            m = re.match(r"^- \*\*(.+?)\*\*", raw)
+            title = m.group(1).strip() if m else raw[4:80]
+            gh = re.match(r"^GH-(\d+)\b", title)
+            marker = None
+            for cand in _ROADMAP_STATUS_MARKERS:
+                if cand in raw:
+                    marker = cand
+                    break
+            cre = re.search(r"cx/risk/eff (\d+)/(\d+)/(\d+)", raw)
+            doc = re.search(r"\]\((PROJECT/[^)]+\.md)", raw)
+            issue = re.search(r"https://github\.com/HiQS-Suite/XYZ-forge/(?:issues|pull)/\d+", raw)
+            pos[sec] = pos.get(sec, 0) + 1
+            entries.append({
+                "gh_number": int(gh.group(1)) if gh else None,
+                "title": title, "section": sec, "position": pos[sec],
+                "status_marker": marker,
+                "complexity": int(cre.group(1)) if cre else None,
+                "risk": int(cre.group(2)) if cre else None,
+                "effort": int(cre.group(3)) if cre else None,
+                "doc_path": doc.group(1) if doc else None,
+                "issue_url": issue.group(0) if issue else None,
+                "raw_text": raw,
+            })
+            i = j
+            continue
+        i += 1
+    return entries
+
+
+_ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
+                   "complexity", "risk", "effort", "doc_path", "issue_url", "raw_text")
+
+
+def cmd_roadmap_sync(args):
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        md_path = os.path.join(root, ROADMAP_NAME)
+        if not os.path.exists(md_path):
+            refuse("roadmap-missing", "no %s at %s — nothing to shadow" % (ROADMAP_NAME, root))
+        parsed = parse_roadmap_ledger(md_path)
+        # duplicate GH keys in the markdown would make the mirror ambiguous — name it, do not pick
+        seen = {}
+        for e in parsed:
+            if e["gh_number"] is not None:
+                if e["gh_number"] in seen:
+                    refuse("roadmap-duplicate-gh",
+                           "GH-%d appears twice in %s (%r and %r). The mirror keys entries by GH "
+                           "number; merge or renumber one of them, then re-run."
+                           % (e["gh_number"], ROADMAP_NAME, seen[e["gh_number"]][:60],
+                              e["title"][:60]))
+                seen[e["gh_number"]] = e["title"]
+
+        repo = conn.execute("SELECT id, global_id FROM repos ORDER BY id LIMIT 1").fetchone()
+        if repo is None:
+            refuse("no-repo", "the DB has no repos row; run `releases init` first")
+
+        have = {}
+        if _table_exists(conn, "roadmap_items"):
+            for r in conn.execute("SELECT * FROM roadmap_items WHERE repo_id = ?", (repo["id"],)):
+                key = ("gh", r["gh_number"]) if r["gh_number"] is not None else ("title", r["title"])
+                have[key] = dict(r)
+        schema_missing = not _table_exists(conn, "roadmap_items") or conn.execute(
+            "SELECT 1 FROM schema_migrations WHERE version = 2").fetchone() is None
+
+        adds, updates, keeps = [], [], []
+        matched = set()
+        for e in parsed:
+            key = ("gh", e["gh_number"]) if e["gh_number"] is not None else ("title", e["title"])
+            row = have.get(key)
+            if row is None:
+                adds.append(e)
+                continue
+            matched.add(key)
+            if any(e[f] != row[f] for f in _ROADMAP_FIELDS):
+                updates.append((row, e))
+            else:
+                keeps.append(row)
+        removes = [have[k] for k in have if k not in matched]
+
+        changed = bool(adds or updates or removes or schema_missing)
+        summary = "roadmap sync: %d in %s -> +%d added, ~%d updated, -%d removed, %d unchanged" % (
+            len(parsed), ROADMAP_NAME, len(adds), len(updates), len(removes), len(keeps))
+        if not changed:
+            print(summary + " — already in sync; no write, generation unchanged")
+            return
+        if getattr(args, "dry_run", False):
+            print(summary + " — DRY RUN, nothing written")
+            for e in adds:
+                print("  + [%s] %s" % (e["section"], e["title"][:70]))
+            for row, e in updates:
+                print("  ~ [%s] %s" % (e["section"], e["title"][:70]))
+            for row in removes:
+                print("  - [%s] %s" % (row["section"], row["title"][:70]))
+            return
+
+        def mutate(c):
+            _ensure_roadmap_schema(c)
+            ts = now_iso()
+            for e in adds:
+                c.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title,
+                             section, position, status_marker, complexity, risk, effort,
+                             doc_path, issue_url, raw_text, first_seen, updated_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                          (new_gid("rmi-"), repo["id"], e["gh_number"], e["title"], e["section"],
+                           e["position"], e["status_marker"], e["complexity"], e["risk"],
+                           e["effort"], e["doc_path"], e["issue_url"], e["raw_text"], ts, ts))
+            for row, e in updates:
+                c.execute("""UPDATE roadmap_items SET gh_number=?, title=?, section=?, position=?,
+                             status_marker=?, complexity=?, risk=?, effort=?, doc_path=?,
+                             issue_url=?, raw_text=?, updated_at=? WHERE id=?""",
+                          (e["gh_number"], e["title"], e["section"], e["position"],
+                           e["status_marker"], e["complexity"], e["risk"], e["effort"],
+                           e["doc_path"], e["issue_url"], e["raw_text"], ts, row["id"]))
+            for row in removes:
+                c.execute("DELETE FROM roadmap_items WHERE id = ?", (row["id"],))
+
+        txn = perform_write(root, conn, "roadmap-sync", None, mutate)
+        print(summary + " (txn %s, generation %d)" % (txn[:12], get_generation(conn)))
+    finally:
+        conn.close()
+
+
+def cmd_roadmap_list(args):
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        if not _table_exists(conn, "roadmap_items"):
+            print("(no roadmap shadow yet — run `releases roadmap sync`)")
+            return
+        for r in conn.execute("""SELECT global_id, gh_number, title, section, position,
+                                 status_marker, complexity, risk, effort, updated_at
+                                 FROM roadmap_items ORDER BY section, position"""):
+            gh = ("GH-%d" % r["gh_number"]) if r["gh_number"] is not None else "-"
+            cre = ("%s/%s/%s" % (r["complexity"], r["risk"], r["effort"])
+                   if r["complexity"] is not None else "-")
+            print("%s  %-7s %-22s #%-3d cre=%-6s %s %s" % (
+                r["global_id"], gh, (r["section"] or "")[:22], r["position"], cre,
+                r["status_marker"] or " ", r["title"][:64]))
+    finally:
+        conn.close()
+
+
 def cmd_gen(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -2305,6 +2540,19 @@ def load_dump(conn, tables):
                         supplied_value, disposition) VALUES (?, ?, ?, ?, ?, ?)""",
                      (row["import_run"], rgid, row["rule"], row.get("source_value"),
                       row.get("supplied_value"), row.get("disposition")))
+    def _int_or_none(v):
+        return None if v in (None, "") else int(v)
+    for row in tables.get("roadmap_items", []):
+        conn.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title, section,
+                        position, status_marker, complexity, risk, effort, doc_path, issue_url,
+                        raw_text, first_seen, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                     (row["global_id"], repo_ids[row["repo_gid"]], _int_or_none(row.get("gh_number")),
+                      row["title"], row["section"], int(row["position"]),
+                      row.get("status_marker"), _int_or_none(row.get("complexity")),
+                      _int_or_none(row.get("risk")), _int_or_none(row.get("effort")),
+                      row.get("doc_path"), row.get("issue_url"), row["raw_text"],
+                      row["first_seen"], row["updated_at"]))
     for row in tables.get("op_receipts", []):
         conn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
                         state_digest_before, state_digest_after) VALUES (?, ?, ?, ?, ?, ?, ?)""",
@@ -2342,6 +2590,7 @@ def _rebuild(root, conn):
             tconn.row_factory = sqlite3.Row
             tconn.execute("PRAGMA foreign_keys = ON")
             tconn.executescript(MIGRATION_001)
+            tconn.executescript(MIGRATION_002_DDL)   # schema only; the version row rides the dump
             # the dump itself carries the schema_migrations row (every canonical dump does);
             # load_dump resolves the grammar's GID/natural keys onto fresh physical ids
             parsed = parse_dump(dump_content)
@@ -2521,6 +2770,13 @@ def build_parser():
     sp.add_argument("--map", action="append", metavar="TMP-X=URL",
                     help="placeholder -> real issue URL (repeatable)")
 
+    sp = sub.add_parser("roadmap", help="ROADMAP.md shadow (GH-69): sync/list the ledger mirror")
+    rsub = sp.add_subparsers(dest="roadmap_cmd", required=True)
+    sp_rs = rsub.add_parser("sync", help="mirror ROADMAP.md's ledger into roadmap_items (one-way; "
+                                         "ROADMAP.md stays the source of truth)")
+    sp_rs.add_argument("--dry-run", action="store_true", help="report the diff, write nothing")
+    rsub.add_parser("list", help="print the shadow rows")
+
     sp = sub.add_parser("project", help="GitHub Project release-card projection")
     psub = sp.add_subparsers(dest="project_cmd", required=True)
     sp_sync = psub.add_parser("sync", help="plan or apply DB -> GitHub Project draft cards")
@@ -2543,6 +2799,8 @@ def main(argv=None):
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
         "check": cmd_check, "reconcile": cmd_reconcile,
         "project": lambda a: cmd_project_sync(a) if a.project_cmd == "sync" else None,
+        "roadmap": lambda a: cmd_roadmap_sync(a) if a.roadmap_cmd == "sync"
+        else cmd_roadmap_list(a),
     }
     handlers[args.cmd](args)
 
