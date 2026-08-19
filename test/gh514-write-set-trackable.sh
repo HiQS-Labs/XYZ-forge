@@ -196,6 +196,42 @@ case "$(cat "$WORK/excl.out")" in
   *) fail "GH-514: the refusal did not name .git/info/exclude as the source" ;;
 esac
 
+# ---------------------------------------------------------------------------
+# Case 4 — a NEGATION rule re-includes the path, so the guard must not block it
+# ---------------------------------------------------------------------------
+# `git check-ignore -v` exits 0 whenever ANY pattern matches — including a negation that
+# re-includes the path. The exit status therefore does NOT mean "ignored", which is what this
+# function's docstring originally claimed. Reading it that way blocks a marathon before dispatch
+# over a path git will happily track, and the operator is told to fix a rule that is already
+# correct. Reproduced directly:
+#
+#     .gitignore:  *.log        -> check-ignore rc=0, `git add` REFUSES  (genuinely ignored)
+#                  !logs/keep.log -> check-ignore rc=0, `git add` ACCEPTS  (re-included)
+#                  (no rule)    -> check-ignore rc=1
+#
+# so rc=0 alone cannot distinguish the middle row from the first.
+echo "-- case 4: a negation rule re-includes the path — the guard must NOT block"
+NEG="$(mk_target negated 'marathon-system/**
+!marathon-system/**')"
+: >"$DISPATCH_LOG"
+rc4="$(run_drive "$NEG" "$WORK/neg.out")"
+if /usr/bin/grep -q "BLOCKED before dispatch" "$WORK/neg.out"; then
+  fail "GH-514 false positive: a path re-included by a negation rule was blocked; git can track it, so the run was refused over a rule that is already correct"
+else
+  pass "a path re-included by a negation rule is NOT blocked (check-ignore exit 0 means a pattern matched, not that the path is ignored)"
+fi
+# The guard must still be live in this fixture — a change that simply stopped blocking everything
+# would also pass the assertion above. Prove the genuinely-ignored case still refuses.
+BOTH="$(mk_target negated-and-ignored '!marathon-system/**
+marathon-system/**')"
+: >"$DISPATCH_LOG"
+rc4b="$(run_drive "$BOTH" "$WORK/negboth.out")"
+if /usr/bin/grep -q "BLOCKED before dispatch" "$WORK/negboth.out"; then
+  pass "a later rule that re-ignores the path still blocks (the guard was not simply disabled)"
+else
+  fail "GH-514: a genuinely ignored path was NOT blocked — the negation fix disabled the guard"
+fi
+
 echo
 echo "  $TEST_NAME: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] || exit 1
