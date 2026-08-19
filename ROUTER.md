@@ -118,9 +118,34 @@ utils/pdda/pdda.sh catchup          # LLM repo triage + ROUTER.md recommendation
 utils/pdda/pdda.sh doc-ready        # LLM readiness review — set PDDA_LLM_BIN (codex/claude/agy) for recommendations, else it self-skips
 ```
 
+## The RELEASES DB — two subsystems, one ledger (GH-32 / GH-69)
+
+`releases.db` + `releases.sql` hold TWO mirrored subsystems, both operated through ONE CLI,
+`utils/py/releases_app.py` (alias: the `/releases` skill). Read
+[RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md) before merging either file — the SQLite binary is
+derived; the SQL dump is what git actually merges, and a conflicted merge has a one-command
+resolver (`utils/releases-merge-resolve.sh`).
+
+```bash
+python3 utils/py/releases_app.py check          # trio consistency, receipt chain, crash recovery
+python3 utils/py/releases_app.py next           # the next unshipped release, by target date
+python3 utils/py/releases_app.py add|ship ...   # RELEASE writes — never hand-edit releases.sql
+python3 utils/py/releases_app.py roadmap sync   # GH-69: mirror ROADMAP.md's ledger into roadmap_items
+python3 utils/py/releases_app.py roadmap list   # read the shadow rows
+```
+
+**Subsystem 1 — releases** (GH-32, Phase 0 side-by-side): the release ledger. App-managed writes
+only; `RELEASES.md` is still the human file during the shadow phase.
+**Subsystem 2 — the ROADMAP shadow** (GH-69, same pattern): `ROADMAP.md` stays the ONLY thing
+anyone edits; `roadmap sync` mirrors its ledger into the DB, losslessly, one-way. After editing
+`ROADMAP.md`'s ledger, run the sync — a no-change sync is a free no-op. Pinned by
+`test/gh69-roadmap-shadow.sh`.
+
 ## Routing hints
 
 - If the task is about current priorities or active work, start in `ROADMAP.md`, then follow the linked `PROJECT/**` doc.
+- If the task edits `ROADMAP.md`'s ledger, finish with `python3 utils/py/releases_app.py roadmap sync` (GH-69 shadow — see the RELEASES DB section above).
+- If the task touches `releases.db`, `releases.sql`, or a merge conflict on either, start in [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md); writes go through the CLI, never a hand-edit.
 - If the task is about fresh GitHub intake or duplicate-prevention, start in `ROADMAP.md`'s queue, then follow the linked `PROJECT/1-INBOX/GH-*.md` capture doc.
 - If the task is about document quality, active-doc lifecycle, roadmap sprawl, or automation policy, start in `PROJECT/PDDA.md`.
 - If the task is about the CHANGELOG, provenance, or end-of-iteration logging, the governance is in `PROJECT/PDDA.md` (the "CHANGELOG.md — end-of-iteration record" contract).

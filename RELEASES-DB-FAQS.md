@@ -323,6 +323,32 @@ produced the `--root ""` escape above.
 
 ---
 
+## Q: What ELSE lives in this DB? (the ROADMAP shadow, GH-69)
+
+Since 2026-08-19 the DB holds a **second subsystem**: `roadmap_items`, a one-way mirror of
+`ROADMAP.md`'s ledger. Same Phase-0 pattern as releases:
+
+| | releases (GH-32) | roadmap shadow (GH-69) |
+|---|---|---|
+| Human file | `RELEASES.md` (until the strict flip) | `ROADMAP.md` — **always**; the shadow never writes it |
+| Write path | `releases add/update/ship/manifest` | `releases roadmap sync` (parse + mirror; `--dry-run` previews) |
+| Keys | `rel-`/`mfi-`/… GIDs | `rmi-` GIDs, stable across edits; entries keyed by GH number |
+| Captured | typed release fields | gh_number, title, section, position, status marker, cx/risk/eff, doc link, issue URL — **plus the entry text verbatim** (lossless) |
+| Merge story | this whole document | identical — the rows ride the same dump, the same `check --rebuild`, the same resolver, and `validate_merged_dump`'s per-table GID sweep covers them generically |
+
+Two properties worth knowing before you touch it:
+
+1. **A no-change sync is a true no-op** — no write, no generation bump, no dump churn. Syncing
+   after every ledger edit is therefore free, and is the expected habit.
+2. **The shadow mirrors the FILE, not the planner.** Sections the marathon planner skips
+   (`Ad-hoc detours`) are still captured; its job is what `ROADMAP.md` says, not what
+   `_marathon_plan.py` chooses to read.
+
+All pinned by `test/gh69-roadmap-shadow.sh` (24 assertions). Design history and the staged flip
+plan: [#69](https://github.com/HiQS-Suite/XYZ-forge/issues/69).
+
+---
+
 ## Quick reference
 
 ```bash

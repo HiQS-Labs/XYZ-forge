@@ -20,7 +20,10 @@ goal: >
      NOT allowed: phase checklists, build steps, deep execution notes — put those in the project doc.
      Carve-out: a SHORT exception note is OK only when omitting it would hide an operationally critical fact.
      Coverage rule: every PROJECT/2-WORKING doc must be reflected here by a pointer (or opt out with roadmap_exempt: true).
-     Enforced by `utils/pdda/pdda.sh roadmap` + `utils/pdda/pdda.sh roadmap-coverage` (deterministic) + `utils/pdda/pdda.sh doc-ready` ROADMAP rubric (LLM). -->
+     Enforced by `utils/pdda/pdda.sh roadmap` + `utils/pdda/pdda.sh roadmap-coverage` (deterministic) + `utils/pdda/pdda.sh doc-ready` ROADMAP rubric (LLM).      SHADOW (GH-69): this ledger is mirrored into releases.db's roadmap_items table. After editing
+     the ledger, run `python3 utils/py/releases_app.py roadmap sync` (a no-change sync is a free
+     no-op). This file remains the ONLY source of truth; the sync is one-way and never writes here.
+-->
 
 # Combined Roadmap: Cost-Observed Marathon Loops + Adversarial Hardening
 
@@ -134,6 +137,11 @@ planner. Whether that is intended — a detour arguably should not be marathon-p
 been written down either way. It is recorded here as an observation, not changed: renaming the
 heading would silently make those items plannable, which is a decision for the owner and not a
 formatting fix. Tracked on [#69](https://github.com/HiQS-Suite/XYZ-forge/issues/69).
+
+**After editing the ledger, run `python3 utils/py/releases_app.py roadmap sync`** — the GH-69
+shadow mirrors every entry (all sections, this one included) into `releases.db`'s `roadmap_items`
+table, losslessly and one-way. `--dry-run` previews; `roadmap list` reads it back. Pinned by
+`test/gh69-roadmap-shadow.sh`.
 
 Bullets above `## Ledger` (the Part A/B/C lines under `## Status`) are narrative, sit outside the
 ledger, and are correctly not parsed.
