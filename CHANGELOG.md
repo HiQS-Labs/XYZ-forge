@@ -2,6 +2,13 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.1.1] - 2026-08-18
+
+### Added
+- GH-42 Commandcode relay worker: a Python-authoritative, containment-preserving headless adapter
+  with configurable model/flags, durable transcripts, timeout handling, and mocked regression
+  coverage for normal, failure, empty-output, timeout, and off-lane paths.
+
 ## [1.1.0] - 2026-08-18
 
 ### Added
