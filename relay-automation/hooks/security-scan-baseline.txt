@@ -83,3 +83,4 @@ test/synthetic/synthetic-pi-provider-unsupported.sh	credential-literal	API_KEY="
 test/gh1-fixture-guard.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 test/gh35-test-tiers.sh	eval-unsanitized	ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi }
 test/gh57-live-merge-resolve.sh	eval-unsanitized	ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
+test/gh69-roadmap-shadow.sh	eval-unsanitized	ok()   { if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1" >&2; fail=$((fail+1)); fi }
