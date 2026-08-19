@@ -44,6 +44,10 @@ Environment:
   RELEASES_APP_EXTRA_DBS colon-separated extra DB paths for `list --all-repos` (the Phase-3
                          cross-repo aggregator reads the hq registry; this is its v1 test surface)
 
+Readers (no lock, no write, safe to run anywhere): `list` (one line per release), `show` (one
+full record, by --gid OR --version), `next` (the next unshipped release by target date). Start
+with `next` / `show`; drop to raw SQL only for something these three do not answer.
+
 Exit codes: 0 ok; 1 check failure; 2 usage; 3 rule refusal (rule named on stderr);
 4 writer-lock refusal; 70 injected crash.
 """
@@ -1614,6 +1618,108 @@ def cmd_list(args):
         conn.close()
 
 
+def _resolve_one(conn, gid=None, version=None):
+    """Reader-side lookup by GID or version. Readers accept either so an agent that only knows
+    '0.6.0' does not need a separate lookup round-trip first."""
+    if bool(gid) == bool(version):
+        refuse("selector", "pass exactly one of --gid or --version")
+    if gid:
+        return find_release(conn, gid)
+    row = conn.execute("SELECT * FROM releases WHERE version = ?", (version,)).fetchone()
+    if row is None:
+        refuse("unknown-version", "no release with version %r in this repo" % version)
+    return row
+
+
+SHOW_ELIDE = 240   # imported legacy prose runs to thousands of chars; orientation needs the head
+
+
+def _elide(text, full):
+    """Long values are elided by DEFAULT: this reader exists for fast orientation, and an
+    imported description can run past 3,000 characters. --full prints verbatim. The elision
+    always states the true length so a reader knows what it is not seeing."""
+    text = str(text)
+    if full or len(text) <= SHOW_ELIDE:
+        return text
+    return "%s… (%d chars total; --full to print it all)" % (text[:SHOW_ELIDE], len(text))
+
+
+def cmd_show(args):
+    """Full record for ONE release — the detail reader `list` deliberately does not provide."""
+    root = resolve_root(args.root)
+    full = getattr(args, "full", False)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        rel = _resolve_one(conn, args.gid, args.version)
+        ref = conn.execute("SELECT url, temp_id FROM issue_refs WHERE id = ?",
+                           (rel["tracking_ref_id"],)).fetchone()
+        print("GID:           %s" % rel["global_id"])
+        print("Release:       %s" % (rel["version"] or "(unversioned)"))
+        print("Status:        %s" % rel["status"])
+        for label, key in (("Codename", "codename"), ("Target Date", "target_date"),
+                           ("Shipped", "shipped_date"), ("Milestone", "milestone"),
+                           ("GH_URL", "gh_release_url"), ("Description", "description"),
+                           ("Exit criterion", "exit_criterion"),
+                           ("Front-door reviewed", "front_door_reviewed"),
+                           ("Shakedown reviewed", "shakedown_reviewed"),
+                           ("License file", "license_file")):
+            if rel[key]:
+                print("%-14s %s" % (label + ":", _elide(rel[key], full)))
+        print("%-14s %s" % ("Tracking:", (ref["url"] or ref["temp_id"]) if ref else "-"))
+
+        items = conn.execute("""SELECT t.url, t.temp_id, mi.state FROM manifest_items mi
+                                JOIN issue_refs t ON t.id = mi.issue_ref_id
+                                WHERE mi.release_id = ? ORDER BY mi.id""",
+                             (rel["id"],)).fetchall()
+        print("Manifest:      %d item(s)" % len(items))
+        for it in items:
+            print("  - %s [%s]" % (it["url"] or it["temp_id"], it["state"]))
+
+        legacy = conn.execute("""SELECT content FROM legacy_lines WHERE release_id = ?
+                                 ORDER BY position""", (rel["id"],)).fetchall()
+        if legacy:
+            print("Legacy lines:  %d (imported verbatim, pending disposition)" % len(legacy))
+            for ll in legacy:
+                print("  | %s" % _elide(ll["content"], full))
+
+        pending = conn.execute("""SELECT rule, COUNT(*) AS n FROM grandfather_entries
+                                  WHERE release_gid = ? AND disposition IS NULL
+                                  GROUP BY rule""", (rel["global_id"],)).fetchall()
+        if pending:
+            print("Grandfathered: %s"
+                  % ", ".join("%s x%d" % (g["rule"], g["n"]) for g in pending))
+    finally:
+        conn.close()
+
+
+def cmd_next(args):
+    """The next release to work on: unshipped, earliest target date first. A release with no
+    target date sorts last — undated is not urgent, it is unplanned."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        rows = conn.execute("""SELECT global_id, version, codename, status, target_date
+                               FROM releases WHERE status IN ('draft', 'active')
+                               ORDER BY target_date IS NULL, target_date, version""").fetchall()
+        if not rows:
+            print("no unshipped releases — the ledger has nothing queued")
+            return
+        head = rows[0]
+        print("NEXT: %s %s (%s) target=%s gid=%s"
+              % (head["version"] or "-", head["codename"] or "", head["status"],
+                 head["target_date"] or "unplanned", head["global_id"]))
+        for r in rows[1:]:
+            print("then: %s %s (%s) target=%s"
+                  % (r["version"] or "-", r["codename"] or "", r["status"],
+                     r["target_date"] or "unplanned"))
+        if args.verbose:
+            print()
+            cmd_show(argparse.Namespace(root=args.root, gid=head["global_id"], version=None,
+                                        full=False))
+    finally:
+        conn.close()
+
+
 def cmd_gen(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -2168,6 +2274,16 @@ def build_parser():
                     help="aggregate RELEASES_APP_EXTRA_DBS too; duplicate GIDs fail loudly")
     sp.add_argument("--status", choices=STATUSES)
 
+    sp = sub.add_parser("show", help="full record for one release (by --gid or --version)")
+    sp.add_argument("--gid")
+    sp.add_argument("--version")
+    sp.add_argument("--full", action="store_true",
+                    help="print long values verbatim (default elides them at %d chars)"
+                         % SHOW_ELIDE)
+
+    sp = sub.add_parser("next", help="the next unshipped release, by target date")
+    sp.add_argument("--verbose", action="store_true", help="also print its full record")
+
     sp = sub.add_parser("gen", help="side-by-side generation (Phase 0: NEVER writes RELEASES.md)")
     sp.add_argument("--side-by-side", action="store_true", default=True,
                     help="the only mode in Phase 0 (accepted for CLI-shape compatibility)")
@@ -2194,7 +2310,8 @@ def main(argv=None):
         else cmd_manifest_cut(a),
         "marathon": lambda a: cmd_marathon_add(a) if a.marathon_cmd == "add"
         else cmd_marathon_list(a),
-        "list": cmd_list, "gen": cmd_gen, "check": cmd_check, "reconcile": cmd_reconcile,
+        "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
+        "check": cmd_check, "reconcile": cmd_reconcile,
     }
     handlers[args.cmd](args)
 

@@ -37,6 +37,19 @@ Natural-language requests route the same way. Do not make the operator remember 
 3. Read `PROJECT/PDDA.md`'s `RELEASES.md — release ledger` contract, `RELEASES.md`, and
    `CHANGELOG.md`. A missing, empty, sparse, or apparently old ledger is valid. In an app-managed
    repo, also run `releases check` and surface any findings before proceeding.
+
+   **In an app-managed repo, read the ledger through the CLI's readers, not raw SQL.** All three
+   are read-only, take no lock, and mutate nothing:
+
+   ```text
+   releases next [--verbose]        the next unshipped release, by target date
+   releases show --version 0.6.0    one full record (or --gid; --full disables elision)
+   releases list [--status ...]     one line per release (--all-repos aggregates siblings)
+   ```
+
+   `RELEASES-PREVIEW.md` at the repo root is the same data as a rendered file, regenerated on
+   every write — read it directly when you want the whole ledger at once. It is a **preview, not
+   the source of truth**: never edit it and never cite it as shipped history.
 3. Treat GitHub as optional for checks and required for publication. If `gh` is unavailable, run
    the local assessment and state exactly which PR, milestone, issue, or Release conclusions are
    unavailable. Never convert missing network evidence into a clean verdict.

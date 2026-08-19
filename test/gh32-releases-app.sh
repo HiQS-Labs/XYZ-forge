@@ -365,6 +365,38 @@ rm -f "$R/RELEASES-PREVIEW.md"
 rout update --gid "$(sql "SELECT global_id FROM releases WHERE version='3.0.0'")" --codename Lima
 if grep -q "^Codename: Lima$" "$R/RELEASES-PREVIEW.md" 2>/dev/null; then ok "a deleted preview is recreated by the next write" 0; else ok "preview recreated" 1; fi
 
+# ── M. readers: show / next (fast orientation without raw SQL) ──────────────────────────────────
+echo "-- M: show + next readers"
+R="$(mkrepo m)"
+rout init --slug mike
+rout add --version 2.0.0 --status draft --description "Later target." --target-date 2026-12-01 --codename Later --tracking-issue "https://github.com/A/B/issues/20"
+rout add --version 1.0.0 --status draft --description "Earlier target." --target-date 2026-09-01 --codename Sooner --tracking-issue "https://github.com/A/B/issues/10"
+rout add --version 0.9.0 --status draft --description "No target." --codename Undated --tracking-issue "https://github.com/A/B/issues/9"
+rout add --version 0.5.0 --status draft --description "Ships first." --target-date 2026-08-01 --codename Gone --tracking-issue "https://github.com/A/B/issues/5"
+rout ship --gid "$(sql "SELECT global_id FROM releases WHERE version='0.5.0'")" --evidence "gate exit 0"
+V="$(rlog next)"
+if has "$V" "^NEXT: 1.0.0 Sooner" && has "$V" "then: 2.0.0 Later"; then ok "next picks the earliest-target unshipped release, then lists the rest in order" 0; else ok "next ordering" 1; fi
+if ! has "$V" "0.5.0"; then ok "next excludes shipped releases" 0; else ok "next excludes shipped" 1; fi
+LAST="$(printf '%s' "$V" | tail -1)"
+if has "$LAST" "0.9.0" && has "$LAST" "unplanned"; then ok "an undated release sorts LAST and is labeled unplanned, not urgent" 0; else ok "undated sorts last" 1; fi
+V="$(rlog show --version 1.0.0)"
+if has "$V" "Codename:      Sooner" && has "$V" "Tracking:      https://github.com/A/B/issues/10"; then ok "show resolves by --version (no GID lookup round-trip needed)" 0; else ok "show by version" 1; fi
+G="$(sql "SELECT global_id FROM releases WHERE version='1.0.0'")"
+V2="$(rlog show --gid "$G")"
+ok "show by --gid returns the identical record" "$(is "$V" "$V2"; echo $?)"
+V="$(rlog show)"; if has "$V" "rule=selector"; then ok "show with neither selector is refused (rule=selector)" 0; else ok "show selector refusal" 1; fi
+V="$(rlog show --gid "$G" --version 1.0.0)"; if has "$V" "rule=selector"; then ok "show with BOTH selectors is refused (exactly one)" 0; else ok "show both selectors" 1; fi
+V="$(rlog show --version 7.7.7)"; if has "$V" "rule=unknown-version"; then ok "show on an unknown version is refused by rule, not a silent empty record" 0; else ok "unknown version" 1; fi
+LONG="$(python3 -c "print('word ' * 400, end='')")"
+rout update --gid "$G" --exit-criterion "$LONG"
+SHORT_N="$(rlog show --gid "$G" | wc -c | tr -d ' ')"
+FULL_N="$(rlog show --gid "$G" --full | wc -c | tr -d ' ')"
+if [ "$FULL_N" -gt "$SHORT_N" ] 2>/dev/null && has "$(rlog show --gid "$G")" "chars total; --full to print it all"; then ok "long values are elided by default and state their true length" 0; else ok "elision default" 1; fi
+if has "$(rlog show --gid "$G" --full)" "word word word" && ! has "$(rlog show --gid "$G" --full)" "chars total; --full"; then ok "--full prints the value verbatim with no elision marker" 0; else ok "--full verbatim" 1; fi
+DB_HASH="$(md5 -q "$R/releases.db")"
+rout show --gid "$G" >/dev/null; rout next >/dev/null
+if [ "$(md5 -q "$R/releases.db")" = "$DB_HASH" ] && [ ! -f "$R/.git/releases-app-journal.json" ]; then ok "the readers take no lock and mutate nothing (DB byte-identical, no journal)" 0; else ok "readers are read-only" 1; fi
+
 echo
 echo "== gh32-releases-app: $pass passed, $fail failed =="
 [ "$fail" -eq 0 ]

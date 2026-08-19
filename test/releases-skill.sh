@@ -46,6 +46,10 @@ contains "publish write-back delegates via releases ship" "$SKILL" "releases shi
 contains "anchor route delegates as a command pair" "$SKILL" '`releases add ... ` + `releases ship ...`'
 contains "legacy repos keep the direct-edit path" "$SKILL" "legacy-managed"
 contains "app-managed preflight runs the consistency check" "$SKILL" "releases check"
+contains "preflight names the next reader" "$SKILL" "releases next"
+contains "preflight names the detail reader" "$SKILL" "releases show --version"
+contains "the preview file is named as a read surface" "$SKILL" "RELEASES-PREVIEW.md"
+contains "the preview is marked non-authoritative" "$SKILL" "preview, not"
 # The delegation must preserve the confirm UX, not bypass it:
 contains "command preview replaces the patch preview, confirmation unchanged" "$SKILL" "Preview the exact command set instead of a patch"
 contains "router doc names the plural front door" "$ROOT/ROUTER.md" 'invoke `/releases`'
