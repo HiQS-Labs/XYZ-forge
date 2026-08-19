@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -91,5 +91,55 @@ output, and anything about GH-75 (the dashboard) beyond whether the PRD's refere
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer — claude-fable · round 1
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+**Findings**
+
+- **[Blocker]** The strategic cap "~5 lines" is not a cap — it blocks because a frozen output contract that permits many readings fails DoD-1, and "never exceeds ~5 lines" (PRD:226) cannot be asserted by any test (rubric 4/5) — **Fix:** replace with an exact integer ceiling and define what counts as a line (e.g. "6 rendered lines max, counting the degradation statements") — `PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:91` ("hard cap: ~5 lines") vs `:226`
+- **[Blocker]** The DoD's test bullets have no testable surface — a SKILL.md is LLM instructions, yet the DoD demands "a test that snapshots the tree, runs the skill's procedure against a fixture, and asserts byte-identity" (PRD:224–227), an idempotence test (:228), and "every degradation row above has a test" (:229). Nothing deterministic is specified to run; the sibling that solves this (`/10days`) ships bundled deterministic scripts precisely so "the mechanical parts run byte-identical every time" (`skills/10days/SKILL.md:440-447`). An unfamiliar builder cannot write Phase 3 without asking the operator what these tests execute — **Fix:** specify a bundled deterministic collector script (git status, branch/ahead-behind, `gh pr list`, `releases check` output) as the pinned test surface, and restate the cap/idempotence bullets as fixture-transcript contract checks or Phase-4 dogfood assertions — `PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:224-229`
+- **[Should]** Idempotence contradicts append-only parking — "two consecutive runs with no work between produce the same list" (PRD:228) while every run with overflow writes a new dated park file ("one file per parking event", :141-143), so run 2 duplicates run 1's park file and the byte-identity test can never pass twice — **Fix:** state that a rerun with an unchanged list makes no park write (or re-uses the day's file), and exempt that file in the byte-identity test — `PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:141-143,228`
+- **[Should]** The PARKED protocol is ambiguous: PRD:64 says it "borrows … the PARKED protocol" from `/finish-line`, whose format is `YYYY-MM-DD-<reponame>-HHMM.md` with schema-v2 frontmatter and R-/P-ids (`~/.claude/skills/finish-line/SKILL.md:181-218`), but PRD:142 specifies `PARKED/<YYYY-MM-DD>-<event>.md` — and both formats already coexist (`PARKED/2026-08-16-xyz-forge-2143.md` vs `PARKED/2026-08-19-session-close.md`). No entry schema is given at all — **Fix:** name the `<event>` format as the deliberate divergence from finish-line, and specify the minimum entry fields (item, tier it missed, evidence, pickup pointer)
+- **[Should]** The priority ladder is not fully decidable: (a) the staleness tie-break (PRD:108-109) is undefined for session-derived items that carry no timestamp; (b) an open PR one approval from merge matches tier 4 ("a loop one step from closed", :116) *and* tier 5 ("an open PR going stale", :120) with no explicit first-match rule; (c) the ladder requires evidence only for tiers 1–3 (:124-126) while the DoD requires "tier + evidence + the exact closing command" on **every** item (:223) — two agents produce different top-3s — **Fix:** state "first matching tier wins, evaluated top-down", define staleness measurement per source (PR `updatedAt`, doc `updated:`, session = age 0), and reconcile the evidence rule to one statement
+- **[Should]** The skill can itself re-litigate every run (criterion 7): the strategic half is mandatory every run, the pivot-ID dedupe is explicitly deferred to v2 (PRD:243-244), and there is no decline/mute mechanism — so a pivot the operator heard yesterday and a tier-5 item they chose not to do re-appear on every invocation of a skill designed to be reached for "constantly" (:46). `/finish-line` names exactly this as its core failure mode ("Each re-ask that surfaces one more item teaches the user that the finish line is unreachable", `~/.claude/skills/finish-line/SKILL.md:250-253`) — **Fix:** pull the minimal v1 forward: don't re-raise a pivot or item already stated this session, and honor a parked/declined item as muted until state changes
+- **[Should]** "ahead/behind trunk" (PRD:129) never names the trunk — this repo's declared integration branch is `development`, not `main` (`skills/releases/SKILL.md:81`: "Resolve the active integration branch from repo policy (`development` in this repo…)"), and `/finish-line` resolves `main`/`master` — two agents compute different ahead/behind facts — **Fix:** adopt the releases-skill resolution rule by reference
+- **[Nit]** "Target under 15 lines" (PRD:104) is a soft instruction in a spec whose own thesis is "a soft instruction to be concise has never produced a concise agent; a fixed ceiling has" (:88-89), and degradation statements (:206-215) are never said to count against the budget — **Fix:** make 15 a cap and state the degradation lines count
+- **[Nit]** "asking once" when `PARKED/` is missing (PRD:210) doesn't define the scope of "once" (per run? per session?) — **Fix:** say "once per session"
+- **[Pass]** The claimed gap among siblings is genuine: `/finish-line` is one-branch, checkpoint-driven closing (`finish-line/SKILL.md:34-49`), `/rabbit-hole` fires on one task mid-drip (`rabbit-hole/SKILL.md:10`), `/radar` is a 21-day repo-wide window ("Default **21 days**", `skills/radar/SKILL.md:38`), `/10days` executes ("cut a branch and execute the marathon end-to-end", `skills/10days/SKILL.md:5-10`) — none answers "4 hours in, what did I leave open"
+- **[Pass]** The motivating incident is accurately reported: the 0.7.1/stale-markers/#61–#65 drift table matches `RELEASES-DB-FAQS.md:352-367` row for row, and the #61–#65 disposition matches `PARKED/2026-08-19-session-close.md` (update note)
+- **[Pass]** The dashboard gate claim ("a stale one turns the push red") holds end-to-end: `test/roadmap-dashboard.sh:53` fails on a stale committed dashboard, runs via `validate.sh:335`, which `githooks/pre-push:132` executes on push
+- **[Pass]** Silent-skip parser claim verified: an unknown `###` heading sets `current=None` and its bullets are dropped without warning (`utils/py/_marathon_plan.py:518,521-523`), and the shadow-mirrors-file-not-planner claim matches `RELEASES-DB-FAQS.md:343-345`
+- **[Pass]** Pre-existing defects: none found in the relay thread file (`relay-system/2026-08-19/gh77-standup-prd-review.md`) — header, rubric, and setup references all resolve; stated explicitly per ground rules
+
+**Interface catalogue audit**
+
+| PRD claim | Verified? | Evidence |
+|---|---|---|
+| `next` | ✅ | `releases next --help`: "the next unshipped release, by target date" |
+| `show --version <v>` / `--full` untruncated | ✅ | `show --help`: "--full print long values verbatim (default elides them at 240 chars)" |
+| `check` — generation trio, receipt chain, advisories | ✅ | top-level help: "DB<->dump<->generated consistency; … receipt-vs-change bypass detection; temp-ref staleness" |
+| `ship --gid --evidence` required, `rule=ship-needs-evidence` | ✅ | `ship --help`: "REQUIRED — an empty value is refused with rule=ship-needs-evidence"; `utils/py/releases_app.py:1526` |
+| `update --gid <GID> --<field> <value>` | ✅ | `update --help` lists --version/--status/--target-date/--description/… |
+| `roadmap sync` one-way, no-change free no-op | ✅ | `roadmap --help`: "one-way; ROADMAP.md stays the source of truth"; `RELEASES-DB-FAQS.md:341-342` |
+| `utils/releases-merge-resolve.sh` exists | ✅ | mode 755, 8.8K at repo root path |
+| `rule=release-overdue` / `rule=release-target-passed` / `rule=temp-ref-stale` | ✅ | `utils/py/releases_app.py:2346,2352,2299` |
+| ROADMAP entry format string | ✅ | `ROADMAP.md:102` (the GH-77 entry itself matches the schema exactly) |
+| Planner SECTIONS = Queue / parked intake, In progress, Completed, Deferred · vision | ✅ | `utils/py/_marathon_plan.py:31` |
+| Parser is a regex, failure mode silent skip | ✅ | `utils/py/_marathon_plan.py:518,521-523` |
+| `bash utils/roadmap-dashboard.sh`; stale dashboard turns push red | ✅ | `test/roadmap-dashboard.sh:53` → `validate.sh:335` → `githooks/pre-push:132` |
+| pdda checks `roadmap`, `roadmap-coverage`, `doc-ready` | ✅ | `utils/pdda/pdda.sh help` lists all three verbatim |
+| Coverage rule + `roadmap_exempt: true` | ✅ | `utils/pdda/pdda.sh:340-352` |
+| PDDA lifecycle 1-INBOX → 2-WORKING → 3-COMPLETED | ✅ | all three dirs exist under `PROJECT/` |
+| One-marathon rail; named in Immediate next-up | ✅ | `AGENTS.md:73` §Repo-specific rails rule 1; `ROADMAP.md:50` "### Immediate next-up (ordered)" |
+| `skills/*/install.sh` symlink pattern | ✅ | 19 `skills/*/install.sh` files present (10days, radar, releases, …) |
+| `PARKED/<YYYY-MM-DD>-<event>.md` "existing dated-file format" | ⚠️ partially | convention documented in `PARKED/2026-08-19-session-close.md` header, but a second format (`2026-08-16-xyz-forge-2143.md`, finish-line's) coexists — see [Should] above |
+
+**Handing off to the Producer (claude-a)** — disposition each finding, fix the two Blockers (exact strategic cap; a named deterministic test surface for the DoD), and resolve the parking/idempotence and ladder ambiguities in the PRD.
+
+> Transport note (orchestrator, not the reviewer): the headless `claude-turn.sh` lane was unavailable — no `claude` CLI on this machine — so this turn ran as an in-process Fable subagent under read-only instruction rather than under the shim's worktree isolation + path allowlist. Verified after the fact: `git diff --stat 8104c73` was empty, so the reviewer wrote nothing.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
