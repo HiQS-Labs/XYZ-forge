@@ -184,6 +184,13 @@ TESTS=(
                                  # #461 in mirror image: a gate that exists but is unregistered is
                                  # invisible; a registration with no gate is a permanent red that says
                                  # nothing about the code. Register the two together or neither.
+  "gh32-releases-app.sh"         # GH-32 Phase 0+1 (SQLite RELEASES ledger CLI: schema/GID shape,
+                                 #   writer-lock + journal protocol, canonical dump, receipt chain,
+                                 #   import grandfathering, side-by-side gen) — 81/0; registered in the
+                                 #   same commit as utils/py/releases_app.py per the lesson above. The
+                                 #   four check-failure negative controls, the five crash boundaries,
+                                 #   and the refused-writer-changes-nothing control are the point; the
+                                 #   revert-and-replay transcript is test/baselines/GH-32-negative-control.md
   "path-integrity.sh"
   "relay-turn-timeout.sh"
   "relay-target-root.sh"
