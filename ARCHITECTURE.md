@@ -297,6 +297,11 @@ In relay mode it uses the same split as `relay-drive.sh`:
 - `tick` decides whose turn is runnable
 - the relay file's `STATUS:` decides whether the loop is terminal
 
+## Adjacent Subsystems
+
+The GH-32 RELEASES ledger has its own authority split (SQLite at runtime, a GID-keyed SQL dump at git
+merge boundaries) and its own transform triggers — see [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
+
 ## Non-Claims
 
 This document does not claim:
