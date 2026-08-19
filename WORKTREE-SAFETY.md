@@ -96,9 +96,9 @@ git worktree add "$WORKTREE" feature-branch || { echo "Worktree creation failed"
 WORKTREE="$(cd "$WORKTREE" && pwd -P)"  # canonicalize AFTER validation
 
 cleanup() {
-    # --force here is NOT the §12 anti-pattern: this worktree was just created by THIS script for a
+    # --force here is NOT the §13 anti-pattern: this worktree was just created by THIS script for a
     # throwaway purpose and is being torn down in its own exit trap, not force-removed out from under
-    # someone else's uncommitted work. §12's warning is about scripts reaching for --force to silence
+    # someone else's uncommitted work. §13's warning is about scripts reaching for --force to silence
     # an error on a worktree they don't own/didn't create.
     git worktree remove --force "$WORKTREE" 2>/dev/null || true
     git worktree prune 2>/dev/null || true
@@ -359,7 +359,71 @@ disposable, which after a partial-corruption incident it specifically is not.
 
 ---
 
-## 12. Other footguns worth knowing before scripting worktrees
+## 12. Never run the full test gate from a linked worktree (the 2026-08-19 incident)
+
+**Anti-pattern:** treating a linked worktree as an isolated place to verify a branch.
+
+```bash
+git worktree add ../repo-feature -b feature origin/development
+cd ../repo-feature
+bash validate.sh          # WRONG — this can corrupt the PARENT clone
+```
+
+**Why it's dangerous:** a linked worktree **shares the parent's `.git` common directory** — config,
+refs, and object store alike (§5, §10). A suite that manipulates "the repo" rather than a fixture
+therefore reaches the *real* repository. Observed on 2026-08-19, from one `validate.sh` run in a
+worktree:
+
+- `core.bare` set to **true** on the parent clone, after which `git rev-parse --show-toplevel` fails
+  with `this operation must be run in a work tree` and `git worktree list` reports the main clone as
+  `(bare)`
+- `remote.origin.url` repointed to a fixture's temp bare repo, which was then deleted — leaving
+  `origin` pointing at nothing, and every `gh` command failing with `none of the git remotes
+  configured for this repository point to a known GitHub host`
+- **all** `refs/remotes/origin/*` deleted
+- `development` overwritten with fixture commits (`merge feature`, `feature two`, `fake ra turn`);
+  local `main` overwritten with a fixture commit
+- ~72 fixture files strewn through the worktree (`art.md`, `relay-flip.md`, `GH-42-SAMPLE-THING.md`, …)
+
+No commits were lost — objects survived and the clone was repairable — but recovery required knowing
+exactly what to inspect. This is the failure mode GH-564 describes ("suites that can reach the
+caller's clone through an empty fixture path") arriving in practice.
+
+A second, independent symptom of the same sharing: `test/gh4-ungated-clone-warning.sh` **cannot pass
+from a worktree at all**, because it does `rm .git/hooks/pre-push` and in a worktree `.git` is a
+*file*, not a directory. Same commit, two locations — 6 pass / 0 fail in the main clone, 3 pass /
+3 fail in a worktree. A worktree gate run is not merely risky, it is not measuring what you think.
+
+**Correct approach — run the gate from a normal clone.** A worktree is for editing and committing;
+verification belongs in a full clone:
+
+```bash
+# In the worktree: make the change, commit it.
+git commit -am "..."
+
+# In the MAIN clone (or a fresh throwaway clone): check out that branch and gate it there.
+cd /path/to/main-clone
+git checkout feature
+bash validate.sh
+```
+
+**Detect it in a script** with the same `--git-common-dir` idiom the driver-lock resolver uses
+(GH-448) — in a main clone the two are equal, in a linked worktree they are not:
+
+```bash
+if [ "$(git rev-parse --absolute-git-dir)" != "$(cd "$(git rev-parse --git-common-dir)" && pwd)" ]; then
+    echo "refusing: linked worktree shares the parent clone's .git — run this from a normal clone" >&2
+    exit 2
+fi
+```
+
+Tracked as [GH-45](https://github.com/HiQS-Suite/XYZ-forge/issues/45): `validate.sh` should carry
+that guard and fail closed by default, so this class is unreachable regardless of how many
+individual suites have been audited.
+
+---
+
+## 13. Other footguns worth knowing before scripting worktrees
 
 - **Untracked or modified files block `git worktree remove`.** It refuses if the worktree has any
   uncommitted changes; `--force` is required to proceed — and `--force` silently discards those
@@ -399,6 +463,9 @@ disposable, which after a partial-corruption incident it specifically is not.
    command that can overwrite the working tree (`checkout -f`, `reset --hard`, `clean`)
 7. **Script against `--porcelain` output, never the human-readable table** — `git worktree list`'s
    plain format is not a stable, grep-safe API
+8. **Never run the full test gate from a linked worktree** (§12) — the suite writes to the shared
+   `.git`, so it can set `core.bare`, repoint `origin`, delete remote refs, and overwrite branches in
+   the *parent* clone. Edit and commit in a worktree; verify in a normal clone.
 
 ---
 
