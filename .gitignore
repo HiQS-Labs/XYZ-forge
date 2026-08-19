@@ -72,6 +72,11 @@ debug.log
 # GH-32 Phase 0: side-by-side generator output is regenerable proof, never committed
 RELEASES.generated.md
 RELEASES.generated.md.drift
+# `check --rebuild` displaces the old DB to this path, and utils/releases-merge-resolve.sh tells the
+# operator it is "untracked and safe to delete". It was not actually ignored, so a `git add -A`
+# during a merge resolution would have committed a ~200KB stale binary copy of the ledger — the one
+# artifact guaranteed to disagree with the dump (GH-57 probe, 2026-08-19).
+releases.db.bak
 
 # GH-38: agent2agent lock files are flock mutexes, deliberately never unlinked (unlinking is what
 # reintroduced the steal race). They are per-machine runtime state, never discussion content.
