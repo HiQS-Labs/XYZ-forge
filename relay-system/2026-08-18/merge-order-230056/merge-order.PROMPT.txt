@@ -1,0 +1,53 @@
+# Question: what is the optimal merge sequence for the open PRs in this repo?
+
+You are advising on merge ordering only. Do not edit anything; this is advisory.
+
+## Context
+
+This is `HiQS-Suite/XYZ-forge`. `development` is the integration branch; `main` lags it
+(`main` is currently a strict ancestor of `development`). Every merge into `development` is expected
+to leave the full gate (`bash validate.sh`, currently 215 suites) green. Each PR below was gated
+green **on its own branch**; none has been gated against the others' merged result.
+
+`validate.sh` contains the suite registry — the list of test scripts the gate runs. Several PRs add a
+suite and therefore add a line to it. `skills/relay-automation/relay-pkg.tar.gz` is a **binary**
+artifact regenerated from repo contents; git cannot three-way-merge it.
+
+## The open PRs
+
+| PR | Title | Base | Files | +/− | Notes |
+|---|---|---|---|---|---|
+| **#46** | `docs(GH-45)`: never run the full gate from a linked worktree | development | 1 | +70/−3 | `WORKTREE-SAFETY.md` only. Documents a real incident where running the gate from a linked worktree corrupted the parent clone. |
+| **#44** | `feat(GH-42)`: add Commandcode relay turn-taker | development | 11 | +371/−2 | Touches `validate.sh`, `ROADMAP.md`, `ROADMAP-DASHBOARD.md`, `CHANGELOG.md`, **`relay-pkg.tar.gz`**, new `relay-automation/commandcode-turn.sh` + `utils/py/commandcode-turn.py` + `test/commandcode-turn.sh`. |
+| **#43** | `fix(GH-37,GH-38)`: environment-independent durability gate + flock agent2agent doorbell hardening | development | 7 | +1301/−27 | `skills/agent2agent/scripts/agent2agent.py`, `test/agent2agent.sh`, `test/gh388-run-log-durability.sh`, `.gitignore`, a QA transcript, a negative-control baseline. **Does not touch `validate.sh`, `ROADMAP.md`, or the tarball.** Fixes a test that spuriously fails when the clone lives on ephemeral storage — that spurious failure has already blocked unrelated work at the push boundary and forced a `--no-verify` bypass once. |
+| **#40** | `feat(GH-39)`: sync releases to GitHub Projects | development | 6 | +393/−0 | Touches `validate.sh`, `ROADMAP.md`, `CHANGELOG.md`, `utils/py/releases_app.py`, new `test/gh39-releases-project-sync.sh`. |
+| **#24** | `fix(kernel)`: enforce path-overlap rejection on direct `tick claim` and `tick scope` (GH-23) | development | 19 | +4963/−23 | Touches `validate.sh`, `ROADMAP.md`, **`relay-pkg.tar.gz`**, the kernel itself (`bin/tick`, `src/claim.js`, `src/events.js`, `src/scope.js`), and modifies four **existing** suites (`test/poll-driver.sh`, `test/poll-relay.sh`, `test/runner-loop.sh`, `test/gh385-retry-token-satisfied.sh`) — i.e. it tightens an invariant and other suites had to be updated to obey it. **Currently ~36 commits behind `development`; needs a rebase before merge.** |
+| **(new)** | `fix(GH-514)`: a `.gitignore` negation rule re-includes a path — stop blocking the run over it | development | 2 | small | `utils/py/marathon_drive.py` + `test/gh514-write-set-trackable.sh` (existing suite, so **no `validate.sh` change**). Gated 215/215 from a normal clone. |
+| **#19** | `feat(tree-diet)`: retire ingestion scaffold, relocate marathon logs, split `xyz` SKILL.md (GH-12) | **main** | 21 | +2392/−2221 | Large deletion-heavy restructure. Targets `main`, not `development` — unlike every other open PR. |
+
+**#29** (external Windows/MSYS2 audit, +6299/112 files) is explicitly **excluded**: the operator has
+instructed that it must not be merged yet. Do not propose merging it. You may note ordering
+consequences of it landing later, briefly.
+
+## What I want from you
+
+1. **A concrete ordered list** — first to last — of which PRs to merge into `development`, and why
+   that order and not another.
+2. **Where the conflicts actually are.** Be specific about `validate.sh` (three PRs add suite-registry
+   lines) and `relay-pkg.tar.gz` (two PRs regenerate a binary). Say what the person merging should do
+   about the tarball specifically — is "take one side and regenerate" right, or is there a better move?
+3. **The gate-green trap.** Each PR is green alone. Name the cases where a merged result could be red
+   even though both inputs were green — especially #24, which tightens a kernel invariant *and*
+   edits four pre-existing suites to match. What ordering minimizes the chance of discovering that
+   late?
+4. **#24's rebase.** It is 36 commits behind. Should it rebase early (and re-gate, then sit) or rebase
+   last (right before merge)? Consider that everything merged ahead of it widens the rebase.
+5. **#19's base branch.** It targets `main` while everything else targets `development`. Is retargeting
+   to `development` the right call, or is there a legitimate reason to land it on `main` directly?
+6. **Revertability.** If one of these turns out to be wrong a week later, does your ordering make it
+   easy or hard to back out? Prefer an order where the risky, hard-to-revert change lands where it can
+   be isolated.
+
+Be concrete and disagree with the premise if you think the ordering question is the wrong one. If you
+think two PRs should be merged in either order because it genuinely does not matter, say so rather
+than inventing a reason to prefer one.

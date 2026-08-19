@@ -1,0 +1,6 @@
+FIRSTHAND_COUNT=3
+ECHOED_COUNT=4
+ECHOED `ROADMAP.md`
+ECHOED `validate.sh`
+ECHOED `development`
+ECHOED `development`

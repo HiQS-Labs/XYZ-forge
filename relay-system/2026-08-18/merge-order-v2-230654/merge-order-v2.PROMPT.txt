@@ -1,0 +1,97 @@
+# Question: what is the optimal merge sequence for the open PRs in this repo?
+
+Advisory only — do not edit anything.
+
+**Read this section first; it is measured, not assumed.** A previous run of this consult spent its
+entire time budget re-deriving these facts from the repo and never answered. Do not re-derive them.
+Spend your budget on *judgment*, and challenge any of it you think is wrong — but say why.
+
+## Measured facts (I ran these; `git merge-tree --write-tree` against `origin/development` = 5746369)
+
+Every open PR merges **cleanly into `development` individually**:
+
+| PR | vs development | commits behind |
+|---|---|---|
+| #24 kernel overlap enforcement | CLEAN | **36** |
+| #40 releases → GitHub Projects | CLEAN | 0 |
+| #43 durability gate + agent2agent flock | CLEAN | 0 |
+| #44 Commandcode turn-taker | CLEAN | 0 |
+| #46 worktree-safety doc | CLEAN | 0 |
+| #47 gitignore-negation fix | CLEAN | 0 |
+
+**Full pairwise scan — only #44 conflicts with anything, and it conflicts in either order:**
+
+- `#44 ↔ #40` → conflicts in `CHANGELOG.md` and `ROADMAP.md`
+- `#44 ↔ #24` → conflicts in `skills/relay-automation/relay-pkg.tar.gz` (binary)
+- every other pair, in both orders: **clean**
+
+**`validate.sh` does NOT conflict.** I expected it to (three PRs add suite-registry lines) and I was
+wrong. I simulated the full stack `dev → #43 → #47 → #46 → #40 → #24 → #44` and inspected the
+resulting `validate.sh`: **zero conflict markers**, and all four new suites present exactly once
+(`commandcode-turn`, `gh39-releases-project-sync`, `gh23-path-overlap-enforcement`,
+`gh514-write-set-trackable`). The registry additions land at different offsets and auto-merge.
+
+**The binary tarball conflict is avoidable, and #44 is at fault.** I extracted all three tarballs:
+
+| ref | tarball blob | extracted contents vs development |
+|---|---|---|
+| `origin/development` | c657187 (106421 B) | — |
+| `pr/44` | 5093918 (106440 B) | **byte-identical** — only tar/gzip metadata differs |
+| `pr/24` | eabdb1e (106287 B) | genuinely differs: `test/poll-driver.sh`, `test/poll-relay.sh` |
+
+Cross-checked against the tarball's own manifest: **#44 modifies zero packaged sources** (its new
+`relay-automation/commandcode-turn.sh` was never added to `make-pkg.sh`'s file list), whereas #24
+modifies two packaged sources. So #44's tarball edit carries no information — it is `make-pkg.sh`
+churn (timestamps). `test/relay-pkg-freshness.sh` is registered in the gate at `validate.sh:174` and
+enforces tarball↔source byte-parity, so this is gate-visible either way.
+
+I simulated #44 **with its tarball reverted to development's blob**, then merged #24 onto it:
+**CLEAN — the binary conflict disappears entirely.**
+
+## The PRs
+
+- **#46** — `WORKTREE-SAFETY.md` only (+70/−3). Documents an incident where running the gate from a
+  linked worktree corrupted the parent clone.
+- **#47** — `utils/py/marathon_drive.py` + an existing test suite. A `.gitignore` negation rule was
+  being misread as "path is ignored", blocking marathons over paths git tracks fine. Gated 215/215.
+- **#43** — agent2agent `fcntl.flock` hardening + a durability test that spuriously failed whenever
+  the clone sat on ephemeral storage. That spurious failure has already blocked unrelated work at the
+  push boundary and forced a `--no-verify` bypass once.
+- **#40** — `utils/py/releases_app.py` + new suite. Feature.
+- **#44** — new Commandcode turn-taker: `relay-automation/commandcode-turn.sh`,
+  `utils/py/commandcode-turn.py`, `test/commandcode-turn.sh`, plus the churned tarball.
+- **#24** — tightens a kernel path-overlap invariant (`bin/tick`, `src/claim.js`, `src/events.js`,
+  `src/scope.js`) **and edits four pre-existing suites** (`test/poll-driver.sh`, `test/poll-relay.sh`,
+  `test/runner-loop.sh`, `test/gh385-retry-token-satisfied.sh`) to obey it. +4963/−23. 36 behind.
+- **#19** — targets **`main`**, not `development`, unlike every other open PR. Deletion-heavy
+  restructure (+2392/−2221).
+
+**#29** is excluded by operator instruction — do not propose merging it.
+
+## What I actually want from you
+
+The textual-conflict question is now answered by measurement. What I want is judgment on the parts
+measurement cannot settle:
+
+1. **The ordered list**, and specifically: does the measured "#44 is the only conflicting PR" change
+   where #44 should sit? Should #44 simply drop its tarball hunk (making it conflict-free with #24)
+   and separately fix `make-pkg.sh` to actually package `commandcode-turn.sh` — or is shipping a
+   turn-taker that isn't in the package the real defect here?
+
+2. **Semantic breakage, not textual.** #24 tightens a kernel invariant and had to edit four existing
+   suites. #40, #44 and #47 each add or touch suites that #24 has never seen. A clean textual merge
+   says nothing about whether those suites still pass under the tightened invariant. Where in the
+   order does that risk get discovered cheapest? Is "#24 last, rebased last" right, or does that just
+   move the whole surprise onto the person merging #24?
+
+3. **#24's rebase timing** — 36 behind. Rebase early and re-gate then sit (risking staleness), or
+   rebase immediately before merge (larger rebase, but gated against what actually landed)?
+
+4. **#19's base branch.** Is retargeting to `development` correct, or is there a legitimate reason to
+   land a restructure on `main` directly?
+
+5. **Revertability.** A week from now, one of these is wrong. Which order makes the bad one cheapest
+   to back out?
+
+Disagree with the framing if you think the ordering question is the wrong question. If two PRs are
+genuinely order-independent, say so instead of inventing a tiebreaker.
