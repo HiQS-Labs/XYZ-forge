@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 9 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-67 · Commandcode builder default widened to --yolo — closer evaluation → possible build | — | [#67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) |
 | GH-57 · test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | — | [GH-57-RELEASES-SQLITE-FUZZING.md](PROJECT/2-WORKING/GH-57-RELEASES-SQLITE-FUZZING.md) · [#57](https://github.com/HiQS-Suite/XYZ-forge/issues/57) |
 | GH-45 · validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone | ✅ | [GH-45-WORKTREE-GATE-REFUSAL.md](PROJECT/2-WORKING/GH-45-WORKTREE-GATE-REFUSAL.md) · [#45](https://github.com/HiQS-Suite/XYZ-forge/issues/45) · [#564](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/564) |
 | GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | [GH-35-TEST-TIER-ROUTING.md](PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md) · [#35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) |
