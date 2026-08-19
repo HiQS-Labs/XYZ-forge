@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 1 / 4
 
@@ -91,5 +91,94 @@ output, and anything about GH-75 (the dashboard) beyond whether the PRD's refere
 6. The relay ends on **Approved** (Reviewer only). End each turn by committing just this file; no push.
 
 ## Log
+
+### Reviewer · Round 1
+
+swept file: yes
+
+**Verdict: Changes requested**
+
+- **[Blocker] The inputs are named, but the candidate-building procedure is absent.** The PRD lists
+  conversation, tree, branch, PR, ROADMAP, RELEASES, and PARKED lenses
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:127`), then jumps straight to ranking. It never
+  defines what becomes an item, how the same work found in several lenses is deduplicated, how an
+  open loop is distinguished from context, or how its closure interface is chosen. Fix: add a
+  per-lens table with the bounded read, candidate predicate, stable item key, evidence field,
+  staleness source, and closing-interface rule; then specify cross-lens deduplication before ranking.
+- **[Blocker] The frozen ladder is not decidable across those sources.** “Staleness” and “smallest
+  effort” are the tie-breaks (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:109`), but a dirty
+  file, conversation promise, PR, ledger row, and PARKED entry do not share a defined timestamp or
+  effort scale; items may also match several tiers. Fix: say “highest applicable tier wins,” define
+  a timestamp/fallback for each lens, define coarse deterministic effort bins plus a final stable
+  tie-break (for example item key), and state what happens when age or effort is unknown.
+- **[Blocker] The declared lenses cannot perform two checks used to justify the product.** The
+  motivating audit includes closed issues with stale ROADMAP markers and newly filed issues absent
+  from every index (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:39` and `:40`), while the input
+  scope permits open PRs but no bounded issue-state or issue-coverage read (`:129`). Fix: add a
+  bounded current-state issue lens for issue numbers mentioned in the session and referenced by the
+  current ledgers (not a history/similarity sweep), with loud degradation when that lens is
+  unavailable; otherwise narrow the stated problem so the skill does not promise these detections.
+- **[Blocker] The ROADMAP catalogue states a stricter, false parser grammar.** It says a recognized
+  row requires a GH prefix, marker, bold status, body, doc link, and issue URL
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:178` and `:181`), but the canonical contract
+  requires only a flat bullet with a bold name under one of four headings (`ROADMAP.md:139` and
+  `:145`); the parser extracts that bold prefix (`utils/py/_marathon_plan.py:485`). Fix: catalogue
+  the actual minimum grammar separately from this repo's recommended GH-pointer shape, and preserve
+  the four exact headings from `utils/py/_marathon_plan.py:31`.
+- **[Blocker] “Exact command” is not exact, and the strategic reader is incomplete.** The output
+  example and follow-up use bare `releases roadmap sync`
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:85` and `:188`), while the canonical executable
+  form is `python3 utils/py/releases_app.py roadmap sync` (`ROADMAP.md:171`). The catalogue also omits
+  `list [--status ...]`, the whole-ledger reader needed to compare the release plan rather than only
+  the next release (`skills/releases/SKILL.md:52` and `:54`), and abbreviates `update` as arbitrary
+  `--<field>` although the accepted flags are finite (`utils/py/releases_app.py:2744`). Fix: provide
+  copy-paste-complete invocations (or explicitly define one resolved `$R` prefix), add `list`, and
+  enumerate the supported update flags.
+- **[Blocker] The tactical item schema contradicts its own Definition of Done.** The frozen output
+  contract requires only what/tier/closure (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:80`),
+  the ladder requires evidence only for tiers 1–3 (`:124`), but Definition of Done requires evidence
+  on every item and changes “command, file, PR, or interface” into “exact closing command” (`:223`).
+  Fix: define one canonical one-line item schema, require a cited evidence field for every tier, and
+  consistently define the close field as an executable command or a named file/PR action when no
+  command exists.
+- **[Blocker] PARKED mutation makes idempotence undefined and can create a self-feeding loop.** The
+  skill reads PARKED (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:129`), writes every overflow
+  there (`:141`), and promises consecutive runs return the same list (`:226`), but it defines no
+  item identity, already-parked suppression, or no-op append rule. Fix: assign stable item IDs,
+  exclude prior parked records from re-parking while retaining them for dedupe, append only newly
+  parked IDs, and specify the identical second-run chat line and byte-no-op behavior.
+- **[Blocker] The PARKED format is not actually an existing single format.** The PRD claims it
+  borrows Finish Line's PARKED protocol (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:64`) but
+  specifies `PARKED/<date>-<event>.md` (`:142`); Finish Line specifies
+  `YYYY-MM-DD-<reponame>-HHMM.md` with a `finish-line/parked/v2` run schema
+  (`/Users/noelsaw/.claude/skills/finish-line/SKILL.md:181` and `:191`), while
+  `PARKED/2026-08-19-session-close.md:1` is a different free-form event file. Fix: freeze one
+  standup-owned schema and collision rule, or explicitly reuse Finish Line v2 byte-for-byte; define
+  append behavior and the record fields needed for the stable-ID rule above.
+- **[Blocker] The line limits cannot be tested as written.** “~5 lines” and “target under 15”
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:91` and `:104`) have no falsifiable boundary,
+  and headings, opening text, overflow, and degradation notices can push the total beyond either
+  reading. Fix: replace both with integer maxima and define exactly what counts as a line and where
+  mandatory degradation/overflow lines are charged; update Definition of Done to those exact
+  integers.
+- **[Should] Define the deterministic fixture runner before promising behavioral tests.** The no-write
+  test says it will “run the skill's procedure” (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:224`),
+  but no invocation seam, fake conversation/GitHub/CLI inputs, or output parser exists. Fix: specify
+  a fixture manifest and a deterministic helper or transcript evaluator that can assert ranking,
+  caps, degradation, PARKED bytes, and second-run idempotence without live network/model variance.
+- **[Pass] The sibling boundary is real, not papered over.** Finish Line is branch/checkpoint closure
+  and freezes a done list (`/Users/noelsaw/.claude/skills/finish-line/SKILL.md:15` and `:72`);
+  Rabbit Hole is reactive, one-task consolidation followed by an operator nod
+  (`/Users/noelsaw/.claude/skills/rabbit-hole/SKILL.md:16` and `:21`); Radar owns the 21-day strategic
+  sweep and is read-only analysis (`skills/radar/SKILL.md:3` and `:23`). A session-scoped, bounded,
+  recommendation-only triage remains distinct once the blockers above define its mechanics.
+- **[Pass] The one-marathon constraint is carried accurately.** The PRD refuses a second marathon and
+  treats Immediate next-up as context (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:200`), matching
+  the repo rail that exactly one marathon is in flight and is named there (`AGENTS.md:81`).
+
+Whole-file note: the entire PRD, including pre-existing text, was swept; no additional defects were
+omitted as out of scope.
+
+Handing off to Producer — go to the claude-a window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
