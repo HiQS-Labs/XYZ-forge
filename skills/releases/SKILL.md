@@ -27,8 +27,16 @@ Natural-language requests route the same way. Do not make the operator remember 
 
 1. Resolve the repository root. Require `utils/pdda/pdda.sh`; stop if PDDA is absent because there
    is no fallback release-ledger format.
-2. Read `PROJECT/PDDA.md`'s `RELEASES.md — release ledger` contract, `RELEASES.md`, and
-   `CHANGELOG.md`. A missing, empty, sparse, or apparently old ledger is valid.
+2. **Detect the ledger backend (GH-32).** If `releases.db` exists at the repository root, this repo
+   is **app-managed**: the SQLite database is the source of truth, `RELEASES.md` is on its way to
+   becoming generated output, and **every mutation this skill performs MUST go through the
+   `releases` CLI (`utils/py/releases_app.py`) — never a direct edit of `RELEASES.md`.** A direct
+   edit in an app-managed repo is overwritten by the next generation and desynchronizes the dump;
+   refuse to make one even if asked, and point at the CLI instead. If `releases.db` is absent, this
+   is a **legacy-managed** repo and the direct-edit procedures below apply unchanged.
+3. Read `PROJECT/PDDA.md`'s `RELEASES.md — release ledger` contract, `RELEASES.md`, and
+   `CHANGELOG.md`. A missing, empty, sparse, or apparently old ledger is valid. In an app-managed
+   repo, also run `releases check` and surface any findings before proceeding.
 3. Treat GitHub as optional for checks and required for publication. If `gh` is unavailable, run
    the local assessment and state exactly which PR, milestone, issue, or Release conclusions are
    unavailable. Never convert missing network evidence into a clean verdict.
@@ -105,11 +113,15 @@ Explain which signal fired. Never call a large manifest abusive solely because o
    theme and dependencies, reduce manifests to a fixed list or milestone pointer, preserve dated
    re-scope decisions, and move historical narrative to `CHANGELOG.md` or execution detail to its
    existing project doc. Never create a new doc merely to shorten the ledger.
-3. Record the file hash before preview. Render the exact patch and get one confirmation.
-4. Immediately before writing, re-read `RELEASES.md` and compare its hash. If it changed, discard the
-   patch, synthesize again, and preview a new patch.
-5. Edit only the confirmed blocks. Never reorder unrelated blocks.
-6. Run `utils/pdda/pdda.sh releases` and report every finding.
+3. **App-managed repo:** render the cleanup as the exact `releases update --gid <id> ...` (and
+   `releases manifest ...` / legacy-line disposition) command set, preview those commands, and get
+   one confirmation. On confirmation run them, then `releases gen --side-by-side` and report the
+   drift. The CLI's own preimage/lock handling replaces the hash dance below.
+4. **Legacy-managed repo:** record the file hash before preview. Render the exact patch and get one
+   confirmation. Immediately before writing, re-read `RELEASES.md` and compare its hash. If it
+   changed, discard the patch, synthesize again, and preview a new patch. Edit only the confirmed
+   blocks. Never reorder unrelated blocks.
+5. Run `utils/pdda/pdda.sh releases` and report every finding.
 
 ## Plan or update subroutine
 
@@ -148,9 +160,12 @@ Shakedown reviewed: No
 License file: Yes
 ```
 
-5. Preview the complete new or replacement block and get one confirmation. Re-check the file hash
-before writing. Append new blocks after the last block; replace only an explicitly selected existing
-block. Never silently edit neighboring blocks.
+5. **App-managed repo:** preview the equivalent `releases add ...` (or `releases update --gid ...`)
+command set — including the required tracking issue (a real URL, or a `TMP-` ref if GitHub is down)
+— and get one confirmation, then run it. **Legacy-managed repo:** preview the complete new or
+replacement block and get one confirmation. Re-check the file hash before writing. Append new blocks
+after the last block; replace only an explicitly selected existing block. Never silently edit
+neighboring blocks.
 6. Run `utils/pdda/pdda.sh releases` and report findings.
 
 ## Anchor and backfill subroutine
@@ -158,7 +173,8 @@ block. Never silently edit neighboring blocks.
 Run only when explicitly requested.
 
 - For `anchor`, draft exactly the shipped versions the operator named. Trace each one-line summary
-  to its bracketed `CHANGELOG.md` section and set `Status: Shipped`.
+  to its bracketed `CHANGELOG.md` section and set `Status: Shipped`. In an app-managed repo the
+  draft is a previewed `releases add ... ` + `releases ship ...` command pair, not a file patch.
 - For `backfill`, show bracketed `CHANGELOG.md` versions that are not already represented and do not
   sit inside an existing iteration band. Present them as an optional menu, never as missing work.
   Draft only the versions the operator selects; drafting none is valid.
@@ -178,8 +194,10 @@ Run only when explicitly requested.
    - the `GH_URL:` and `Status: Shipped` write-back.
 5. Get one explicit confirmation, publish live, and capture the returned URL. If creation fails,
    report the error verbatim and make no ledger edit.
-6. On success only, re-check the file hash, write the returned URL, set `Status: Shipped`, and run
-   `utils/pdda/pdda.sh releases`.
+6. On success only: **app-managed repo** — write back via
+   `releases update --gid <id> --gh-release-url <url>` and `releases ship --gid <id> --evidence ...`
+   (never a direct file edit); **legacy-managed repo** — re-check the file hash, write the returned
+   URL, set `Status: Shipped`. Then run `utils/pdda/pdda.sh releases` either way.
 7. Remind the operator that shipped history and lessons belong in `CHANGELOG.md`; do not write that
    entry unless separately asked.
 
@@ -198,6 +216,9 @@ Offer at most one goal-matched follow-up; do not append generic reminders.
 ## Guardrails
 
 - Default to read-only synthesis.
+- In an app-managed repo (`releases.db` present) every mutation goes through the `releases` CLI;
+  never edit `RELEASES.md` directly there. Preview the exact command set instead of a patch — the
+  confirmation UX is unchanged, only the write path moves.
 - Preview every file mutation and public action; obtain one confirmation per atomic write/publication
   group.
 - Re-read before writing and refuse stale patches.

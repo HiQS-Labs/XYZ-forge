@@ -35,6 +35,19 @@ contains "closed-unmerged PRs are still inspected" "$SKILL" "merged and closed-u
 contains "description warning caps at four sentences" "$SKILL" "exceeds four sentences"
 contains "manifest count triggers review rather than rejection" "$SKILL" "more than seven issues"
 contains "Codex mutation is forbidden" "$SKILL" "Never create, edit, install, or synchronize a Codex skill"
+
+# ── GH-32 route migration: app-managed repos delegate every write to the releases CLI ────────────
+contains "backend detection is a preflight step" "$SKILL" "releases.db"
+contains "app-managed mutations name the CLI implementation" "$SKILL" "utils/py/releases_app.py"
+contains "direct edits are refused in app-managed repos" "$SKILL" "never edit \`RELEASES.md\` directly there"
+contains "clean route delegates via releases update" "$SKILL" "releases update --gid"
+contains "plan route delegates via releases add" "$SKILL" "releases add"
+contains "publish write-back delegates via releases ship" "$SKILL" "releases ship --gid"
+contains "anchor route delegates as a command pair" "$SKILL" '`releases add ... ` + `releases ship ...`'
+contains "legacy repos keep the direct-edit path" "$SKILL" "legacy-managed"
+contains "app-managed preflight runs the consistency check" "$SKILL" "releases check"
+# The delegation must preserve the confirm UX, not bypass it:
+contains "command preview replaces the patch preview, confirmation unchanged" "$SKILL" "Preview the exact command set instead of a patch"
 contains "router doc names the plural front door" "$ROOT/ROUTER.md" 'invoke `/releases`'
 contains "PDDA contract names one consolidated skill" "$ROOT/PROJECT/PDDA.md" 'One repo-owned skill operates on this file: `/releases`'
 if grep -Eq '/release-plan|/release([^s[:alnum:]-]|$)' "$ROOT/ROUTER.md" "$ROOT/PROJECT/PDDA.md"; then
