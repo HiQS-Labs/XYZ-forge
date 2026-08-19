@@ -24,7 +24,7 @@ check can still fail.
 
 | Case | Fixture | `releases check` | Rule named |
 |---|---|---|---|
-| the real committed pair | copy of `releases.db` + `releases.sql` + `RELEASES-PREVIEW.md` | **rc=0**, `check: clean` | — |
+| the real committed pair | copy of `releases.db` + `releases.sql` | **rc=0**, `check: clean` | — |
 | dump perturbed by one appended comment line | same, plus `\n-- deliberate divergence…` | **rc=1** | `dump-divergence` |
 
 Full text of the failure the control observes:
@@ -46,7 +46,7 @@ calls `recover_from_journal()`, which writes.
 
 | Assertion | Method |
 |---|---|
-| the clone's artifacts are unchanged after the clean check | SHA-256 of `releases.db`, `releases.sql`, `RELEASES-PREVIEW.md` compared before/after |
+| the clone's artifacts are unchanged after the clean check | SHA-256 of `releases.db` and `releases.sql` compared before/after |
 | the clone's artifacts are unchanged after the negative control | same digest re-compared |
 | no `releases.db.bak` appeared | existence check — a `.bak` would mean something ran `--rebuild` |
 

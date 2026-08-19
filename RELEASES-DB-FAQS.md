@@ -5,11 +5,16 @@ created: 2026-08-19
 updated: 2026-08-19
 owner: noelsaw
 doc_type: architecture
-summary: Answers the recurring questions about the GH-32 SQLite RELEASES ledger — why git can merge it without a SQLite-diffing library, which artifact is authoritative where, what fires each transform (and what does not), and the three known gaps around the git boundary.
+summary: Answers the recurring questions about the GH-32 SQLite RELEASES ledger — why git can merge it without a SQLite-diffing library, which artifact is authoritative where, what fires each transform (and what does not), and how the git-boundary gaps (#52/#53/#54) were closed.
 verified_against:
   - utils/py/releases_app.py
   - test/gh32-releases-app.sh
+  - test/gh32-releases-artifacts.sh
+  - test/gh53-releases-merge-resolve.sh
+  - test/gh54-merged-dump-refusals.sh
+  - utils/releases-merge-resolve.sh
   - releases.sql
+  - .gitattributes
   - validate.sh
   - .git/hooks/
 ---
@@ -116,9 +121,9 @@ as [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54).
 
 ### The derived artifacts conflict on purpose
 
-`releases.db` **and** `RELEASES-PREVIEW.md` both conflict on every concurrent ledger write. That is
+`releases.db` conflicts on every concurrent ledger write. That is
 deliberate, and `.gitattributes` records the measurement behind it: `merge=ours` does nothing (`ours`
-is a merge *strategy*, not a built-in *driver*), and the only thing that auto-merges them is a driver
+is a merge *strategy*, not a built-in *driver*), and the only thing that auto-merges it is a driver
 defined in `.git/config` — which is not committed, so it would be absent on fresh clones (#4).
 
 More to the point, auto-resolving is the **wrong outcome**: it lets the merge complete while the DB
@@ -133,11 +138,12 @@ at the moment the decision has to be made. Resolution is `utils/releases-merge-r
 sees two files and merges them naively.
 
 Verified: the only installed hook is `pre-push`, and it contains zero references to releases. There is
-no `post-merge`, `post-checkout`, or `post-rewrite` hook, and no `.gitattributes`, so no merge driver.
+no `post-merge`, `post-checkout`, or `post-rewrite` hook. `.gitattributes` exists as of 2026-08-19 but
+defines **no merge driver** — it only marks `releases.db` as a derived file, deliberately (see above).
 
 | Transform | Triggered by | Automatic? |
 |---|---|---|
-| DB write + dump + preview + generated view | a CLI write command | yes, same transaction |
+| DB write + dump + generated view | a CLI write command | yes, same transaction |
 | Crash recovery from the intent journal | `releases check` | **no** — human runs it |
 | Merge resolution (dump → DB) | `releases check --rebuild` | **no** — human runs it |
 | Anything at all during `git merge` / `checkout` / `rebase` | — | **nothing fires** |
@@ -152,8 +158,8 @@ no `post-merge`, `post-checkout`, or `post-rewrite` hook, and no `.gitattributes
   journal records what was *about* to happen.
 - **During** — `BEGIN IMMEDIATE` → mutate → stamp the new generation into `settings` → append an
   `op_receipt` carrying the business-state digest before and after → `COMMIT`.
-- **After** — stage the dump, the preview, and the generated view (each carrying that same
-  generation), atomic-rename them into place, clear the journal.
+- **After** — stage the dump and the generated view (each carrying that same generation),
+  atomic-rename them into place, clear the journal.
 
 The **generation number** is the thread tying the artifacts together: stamped into the DB and into
 each file's header, so `check` can distinguish a consistent set from a torn one. Five named crash
@@ -226,7 +232,7 @@ Three gaps, all at the git boundary, all filed:
 | # | Gap | Consequence |
 |---|---|---|
 | [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52) — **closed** | Nothing ran `releases check` against the repo's real artifacts — `validate.sh` only exercised the CLI in fixtures | A mis-resolved merge shipped a DB that disagrees with the dump, silently. Now gated by `test/gh32-releases-artifacts.sh` (read-only, never `--rebuild`, runs against a copy so it cannot write to the clone it checks). |
-| [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53) — **closed** | `releases.db` and `RELEASES-PREVIEW.md` are committed derived artifacts that conflict on every concurrent write | Now marked `-diff linguist-generated` and given a one-command resolution (`utils/releases-merge-resolve.sh`). The conflict itself is kept **on purpose** — see above. |
+| [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53) — **closed** | `releases.db` is a committed derived artifact that conflicts on every concurrent write | Now marked `-diff linguist-generated` and given a one-command resolution (`utils/releases-merge-resolve.sh`). The conflict itself is kept **on purpose** — see above. `RELEASES-PREVIEW.md` was a second such artifact and was **deleted** 2026-08-19 rather than managed. |
 | [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) — **closed** | A naive `merge=union` duplicates the single-row `settings` table, and `check --rebuild` died with an unhandled `IntegrityError` instead of refusing | `validate_merged_dump()` now names each case before anything is written (see below). No merge driver was added: the resolver plus these refusals cover it, and a driver would have to live in uncommitted `.git/config`. |
 
 **Do #52 first.** It makes a mis-resolved merge *visible*; the other two make merges *easier*. #52 is
@@ -245,8 +251,8 @@ stays on the record: if Decision 2 is revisited for other reasons, it also close
 
 ### The hazard worth remembering
 
-Binding the transforms to the *write* rather than to git is the right design — the dump and preview
-stay current with no one remembering a step. But a git operation can swap both `releases.db` and
+Binding the transforms to the *write* rather than to git is the right design — the dump stays
+current with no one remembering a step. But a git operation can swap both `releases.db` and
 `releases.sql` underneath you (merge, checkout, rebase) and **nothing revalidates afterward**. The
 writer lock lives in the git common-dir and guards concurrent CLI writers; it has no opinion about git
 itself moving the files. The one place a human step exists is exactly the place with no safety net.
@@ -273,7 +279,6 @@ A healthy repo prints:
 ```
 OK: generation trio consistent at <N> (DB <-> dump)
 OK: RELEASES.generated.md generation marker matches (<N>)
-OK: RELEASES-PREVIEW.md generation marker matches (<N>)
 OK: receipt chain intact (<n> receipt(s), business-state digest matches)
 check: clean (0 failures, 0 warning(s))
 ```
@@ -285,15 +290,18 @@ check: clean (0 failures, 0 warning(s))
 | `releases.db` | the SQLite DB — runtime truth | yes (PRD Decision 2) |
 | `releases.sql` | canonical GID-keyed logical dump — merge-boundary truth | yes |
 | `RELEASES.md` | the human ledger; **Phase 0 hard boundary — the tool never writes it** | yes |
-| `RELEASES-PREVIEW.md` | disclaimer-headed preview, regenerated in every write transaction | yes |
 | `RELEASES.generated.md` | side-by-side generated view (`gen` only) | no — gitignored |
 | `RELEASES.generated.md.drift` | drift report: generated view vs the real `RELEASES.md` | no — gitignored |
 | `releases.db.bak` | DB displaced by `check --rebuild` | no |
 | `releases-app.lock` | repo-scoped writer lock, in the **git common-dir** (GH-448 idiom) | no |
 | `releases-app-journal.json` | intent journal; exists only mid-write | no |
 
-`RELEASES-PREVIEW.md` is a preview of the DB, never the ledger. Do not edit it, cite it as shipped
-history, or resolve conflicts in it — regenerate it.
+`RELEASES-PREVIEW.md` was **removed 2026-08-19**. It existed to give a human a readable view of the
+DB without SQL; a desktop SQLite viewer and the GitHub Projects cards from `releases project sync`
+(GH-39) both do that better. Deleting it removed a tracked generated file that conflicted on every
+concurrent write, one staged output from every write transaction, one crash-recovery surface, and
+the whole `preview-stale` rule. For a whole-ledger view use `releases list`, a SQLite viewer, or the
+Project cards.
 
 ## Related
 
