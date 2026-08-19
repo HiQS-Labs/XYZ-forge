@@ -24,6 +24,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 V="$REPO/validate.sh"
 ROUTER="$REPO/utils/ci-route.sh"
+# GH-441 / GH-35: scrub ambient runner env vars so test assertions start from a clean baseline
+unset XYZ_VALIDATE_THROTTLE XYZ_VALIDATE_MAX_JOBS XYZ_VALIDATE_PARALLEL 2>/dev/null || true
 
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi }
