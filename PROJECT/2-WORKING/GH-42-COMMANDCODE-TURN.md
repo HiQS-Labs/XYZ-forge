@@ -16,7 +16,7 @@ doc_type: bugfix
 
 | What was just completed | What's next |
 |---|---|
-| Muse Spark Contributor built the initial adapter; a live third relay review found and Codex corrected token-cleanup and child token-root propagation gaps. | Run the full clean-clone gate, publish the findings to issue #41, and open the PR. |
+| Opened PR #44 after the live third Muse relay, focused regressions, and project-record/dashboard repair. | Review and merge PR #44; its clean-clone full gate was 215/216 before the tracked dashboard regeneration, and the repaired dashboard guard is 9/0. |
 
 ## Bet and boundary
 
