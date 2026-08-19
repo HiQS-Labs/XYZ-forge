@@ -125,7 +125,7 @@ ok "the real ledger is byte-identical after gen (hash unchanged; read-only contr
 if has "$(cat "$R/RELEASES.generated.md.drift")" "0 file-only block(s), 0 field-level difference(s)"; then ok "drift report shows zero hand-edits against the freshly imported ledger" 0; else ok "drift zero" 1; fi
 printf '\nRelease: 9.9.9\nStatus: Draft\nDescription: hand edit.\n' >> "$R/RELEASES.md"
 rout gen
-if has "$(cat "$R/RELEASES.generated.md.drift")" "hand-edit"; then ok "a hand-edit to the ledger copy is REPORTED by the drift report (sole-writer clock reset)" 0; else ok "drift hand-edit" 1; fi
+if grep -q "^\[hand-edit\] blocks in RELEASES.md with no DB counterpart: 9\.9\.9" "$R/RELEASES.generated.md.drift"; then ok "a hand-edit to the ledger copy is REPORTED by the drift report (sole-writer clock reset)" 0; else ok "drift hand-edit" 1; fi
 BD_BEFORE="$(python3 - "$R" "$APP" <<'PYEOF2'
 import importlib.util, sys, os
 spec = importlib.util.spec_from_file_location("releases_app", sys.argv[2])
