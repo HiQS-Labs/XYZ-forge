@@ -137,6 +137,40 @@ It is **not** automatic and **not** run on the next write. A live journal makes 
 **refuse** ([lines 796-799](utils/py/releases_app.py#L796-L799)) and tell you to run `check`. That is
 deliberate: the tool will not quietly write on top of an interrupted transaction.
 
+## Q: Should we add a git hook that runs before merging?
+
+**No.** Asked and answered 2026-08-19; the reasoning is recorded here so it doesn't get re-litigated.
+
+1. **A local hook cannot fire on the merge path this repo actually uses.** Merges here happen through
+   `gh pr merge` — server-side on GitHub. No local hook runs at all.
+2. **Hooks don't travel with clones.** `.git/hooks/` is not committed. That exact problem is already
+   tracked as [#4](https://github.com/HiQS-Suite/XYZ-forge/issues/4). A safety check that is silently
+   absent on a fresh clone is worse than no check, because people assume it is running. (Same caveat
+   applies to #54's merge driver, since `.git/config` isn't committed either.)
+3. **The obvious hook doesn't fire where the risk is.** `pre-merge-commit` is skipped exactly when the
+   merge conflicts — the only case that matters here. Per git's documentation, when the merge cannot
+   be carried out automatically that hook is not executed; you resolve and commit, and `pre-commit`
+   runs instead. Full coverage would need `post-merge` *and* `pre-commit`, and the latter fires on
+   every commit.
+4. **`--no-verify` bypasses it**, and this repo has a documented instance of that being used to get
+   past a spuriously red gate.
+
+**Use CI + the gate instead.** `.github/workflows/ci.yml` runs `./validate.sh --sequential` on `push`
+and `pull_request` for `main` and `development`. So [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52)
+— wiring `releases check` into `validate.sh` — buys enforcement on four surfaces from one committed
+change: every PR before merge, every push to `development` after merge, local `pre-push`, and any
+local `validate.sh` run. It travels with the clone and catches divergence regardless of how the merge
+happened.
+
+**Why this is less urgent than it sounds:** the server-side path already fails closed. If two branches
+both wrote to the ledger, GitHub hits the binary conflict on `releases.db` and **refuses to
+auto-merge** rather than producing a divergent state silently. The genuinely risky path is a human
+resolving locally and pushing — which `pre-push` and CI both cover.
+
+An advisory `post-merge` hook that prints "the ledger changed, run `releases check`" is cheap if you
+want a nudge, but it is a convenience, not a safety mechanism, and it still won't exist on a fresh
+clone.
+
 ---
 
 ## Q: So what's missing?
