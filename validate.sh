@@ -91,6 +91,7 @@ TESTS=(
   "model-alias.sh"              # GH-120 (OpenRouter model-alias fuzzy lookup)
   "swe-diagram.sh"              # GH-146 (hub-ring layout ring-balance math + search/filter matching)
   "claude-turn.sh"             # GH-58
+  "commandcode-turn.sh"        # GH-42 (Commandcode headless turn-taker)
   "worktree-isolation.sh"
   "shim-worktree.sh"
   "marathon-yaml.sh"

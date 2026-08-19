@@ -235,6 +235,7 @@ reviewer reports instead of editing — see the env table's `ALLOW_PATHS` row (n
 |---|---|---|---|---|---|
 | Codex | `"$RELAY_HAS_CODEX" = 1` | `codex` | `CODEX_AGENT=codex ALLOW_PATHS="$ARTIFACT" CODEX_LOG="${TMPDIR:-/tmp}/codex-turn-$$.log"` | `relay-automation/codex-turn.sh` | `${TMPDIR:-/tmp}/codex-turn-$$.log` |
 | agy | `"$RELAY_HAS_AGY" = 1` | `agy` | `AGY_AGENT=agy ALLOW_PATHS="$ARTIFACT" AGY_LOG="${TMPDIR:-/tmp}/agy-turn-$$.log"` | `relay-automation/agy-turn.sh` | `${TMPDIR:-/tmp}/agy-turn-$$.log` |
+| Commandcode | `command -v cmd` | `commandcode` | `COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log"` | `relay-automation/commandcode-turn.sh` | `${TMPDIR:-/tmp}/commandcode-turn-$$.log` |
 
 Codex example:
 
@@ -280,6 +281,27 @@ relay-automation/relay-drive.sh \
   --relay-file "$RELAY" \
   --relay-task "$TASK" \
   --agent-cmd  relay-automation/agy-turn.sh \
+  --round-cap  4
+```
+
+Commandcode example:
+
+```bash
+[ -x "$(command -v cmd 2>/dev/null)" ] || { echo "cmd not on PATH — use codex or agy"; exit 1; }
+
+RELAY=relay-system/<date>/<slug>.md
+ARTIFACT=<repo-relative-path-the-turn-reviews>
+TASK="RELAY-$(basename "$RELAY" .md)"
+
+"$TICK" log     task.created "$TASK" --agent claude-a
+"$TICK" claim   "$TASK" --agent claude-a --paths "$ARTIFACT"
+"$TICK" release "$TASK" --agent claude-a --to commandcode
+
+COMMANDCODE_AGENT=commandcode ALLOW_PATHS="$ARTIFACT" COMMANDCODE_LOG="${TMPDIR:-/tmp}/commandcode-turn-$$.log" \
+relay-automation/relay-drive.sh \
+  --relay-file "$RELAY" \
+  --relay-task "$TASK" \
+  --agent-cmd  relay-automation/commandcode-turn.sh \
   --round-cap  4
 ```
 
