@@ -2,7 +2,7 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
-## [1.0.4] - 2026-08-18
+## [1.0.4] - 2026-08-19
 
 ### Added
 - **GH-45: `validate.sh` and `ci-local.sh` refuse to run from a linked git worktree** (exit 2,
@@ -18,7 +18,7 @@ All notable changes to this repo. Newest first. Dates are PDT.
   silently. The per-suite fixture-escape audit remains GH-564; this is the outer fence that
   fails closed for suites nobody has audited yet.
 
-## [1.0.3] - 2026-08-18
+## [1.0.3] - 2026-08-19
 
 ### Added
 - **GH-35 Phases 1+2: tiered local test selection + CPU governance.** `validate.sh` gained
