@@ -291,5 +291,55 @@ ok "  and only after the classifier explicitly said tier=2" \
 ok "validate.sh --tier 2 exits 2 on a non-tier-2 path list (the hook's fail-closed partner)" \
    "[ -x '$R2/validate.sh' ]"
 
+# ── (9) GH-45: the gate REFUSES to run from a linked worktree ────────────────────────────────────
+# The 2026-08-19 incident: a gate run from a linked worktree corrupted the PARENT clone (shared
+# .git) — core.bare=true, origin repointed at a deleted temp path, every refs/remotes/origin/*
+# deleted, development overwritten with fixture commits. The guard must refuse BEFORE anything
+# runs, name those consequences (an operator who doesn't know what breaks will override), honor
+# the explicit override, and stay silent in a normal clone — the last one is the control that
+# proves the guard FIRES rather than merely that the gate still works.
+R7="$(mkfixture)"
+cp "$REPO/ci-local.sh" "$R7/ci-local.sh"; chmod +x "$R7/ci-local.sh"
+git -C "$R7" add -A >/dev/null 2>&1 && git -C "$R7" commit -qm gate >/dev/null 2>&1
+WT45="$WORK/wt45"
+git -C "$R7" worktree add -q "$WT45" -b wt45 >/dev/null 2>&1
+require_fixture "$WT45" "GH-45 fixture worktree"
+
+out="$( cd "$WT45" && bash validate.sh --tier 1 2>&1 )"; rc=$?
+ok "GH-45: a linked worktree is REFUSED before anything runs (exit 2)" "[ $rc -eq 2 ]"
+ok "  and the message names the real consequence (core.bare)" \
+   "printf '%s' \"\$out\" | grep 'core.bare=true' >/dev/null"
+ok "  and names the rest (origin repointed, remote refs deleted, development overwritten)" \
+   "printf '%s' \"\$out\" | grep 'deleted every refs/remotes/origin' >/dev/null && printf '%s' \"\$out\" | grep 'development with fixture commits' >/dev/null"
+ok "  and names the explicit override" \
+   "printf '%s' \"\$out\" | grep 'XYZ_ALLOW_WORKTREE_GATE=1' >/dev/null"
+ok "  and NOTHING ran — no docs gate, no suite banners" \
+   "! printf '%s' \"\$out\" | grep -E 'stub-pdda ran|^Running ' >/dev/null"
+
+out="$( cd "$WT45" && XYZ_ALLOW_WORKTREE_GATE=1 bash validate.sh --tier 1 2>&1 )"; rc=$?
+ok "GH-45: the override runs the gate AND announces itself (exit $rc)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'explicit request' >/dev/null && printf '%s' \"\$out\" | grep 'stub-pdda ran' >/dev/null"
+
+# THE CONTROL: the same fixture's MAIN checkout must still run — this is what distinguishes a
+# guard that fires from a gate that simply never worked.
+out="$( cd "$R7" && bash validate.sh --tier 1 2>&1 )"; rc=$?
+ok "GH-45 CONTROL: the normal checkout of the SAME repo still runs the gate (exit $rc)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'stub-pdda ran' >/dev/null"
+ok "  and says nothing about worktrees (silent pass-through)" \
+   "! printf '%s' \"\$out\" | grep -i 'worktree' >/dev/null"
+
+# ci-local.sh runs the SAME suite, so it carries the same guard (issue requirement 4).
+out="$( cd "$WT45" && bash ci-local.sh --fast 2>&1 )"; rc=$?
+ok "GH-45: ci-local.sh refuses from a linked worktree too (exit 2)" "[ $rc -eq 2 ]"
+ok "  with the same consequence message and override" \
+   "printf '%s' \"\$out\" | grep 'core.bare=true' >/dev/null && printf '%s' \"\$out\" | grep 'XYZ_ALLOW_WORKTREE_GATE=1' >/dev/null"
+# Invoking validate.sh by ABSOLUTE path from OUTSIDE the worktree must not slip past: HERE
+# itself is checked, not just the CWD.
+out="$( cd "$WORK" && bash "$WT45/validate.sh" --tier 1 2>&1 )"; rc=$?
+ok "GH-45: an absolute-path invocation whose HERE is the worktree is still refused (exit 2)" \
+   "[ $rc -eq 2 ] && printf '%s' \"\$out\" | grep 'linked git worktree' >/dev/null"
+
+git -C "$R7" worktree remove --force "$WT45" >/dev/null 2>&1
+
 echo "  gh35-test-tiers: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

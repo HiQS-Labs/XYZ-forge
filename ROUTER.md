@@ -54,6 +54,11 @@ bash githooks/install.sh --check # is this clone gated? exit 1 if not
 bash ci-local.sh           # the QUALIFYING run — sequential + writes the gate record (GH-509/GH-536)
 ```
 
+**Both gate entry points refuse to run from a linked git worktree (GH-45)** — a worktree shares
+the parent clone's `.git`, and an observed suite escape corrupted the parent (core.bare, origin,
+remote refs, development). Run the gate from a normal clone; `XYZ_ALLOW_WORKTREE_GATE=1` is the
+announced override for disposable runs.
+
 **Hosted CI fires on nothing while this repo is private (GH-544).** The gate runs locally at the push
 boundary instead, so `githooks/install.sh` is part of setting up a clone — the hook lives in
 `.git/hooks/`, which does not travel with a clone, and an uninstalled one pushes unverified. One

@@ -12,6 +12,46 @@ set -u
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/relay-automation/gate-env.sh"
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
+
+# ── GH-45: REFUSE to run from a linked git worktree ─────────────────────────────────────────────
+# A linked worktree shares the parent clone's .git common directory — config, refs, and object
+# store alike. A suite that escapes its fixture (or resolves one to an empty string) therefore
+# reaches the PARENT clone, not a sandbox: the observed 2026-08-19 run set core.bare=true,
+# repointed origin at a deleted temp path, deleted every refs/remotes/origin/*, and overwrote
+# development with fixture commits (GH-564's class, firing for real). The detection is the same
+# --git-common-dir idiom the GH-448 driver-lock resolver uses: in the main checkout the absolute
+# git dir IS the common dir; in a linked worktree it is <common>/worktrees/<name> and differs.
+# Fail closed for every mode — tiers 1 and 2 run fixture-driven suites too. BOTH the invocation
+# CWD (where a suite's `git -C ""` escape lands) and HERE (whose clone the identity bracket
+# asserts) are checked, so invoking the script by absolute path from outside cannot slip past.
+_wt_refuses() {  # <dir>... -> exit 2 if any dir lives in a linked worktree
+  local d a c ca
+  for d in "$@"; do
+    a="$( cd "$d" 2>/dev/null && git rev-parse --absolute-git-dir 2>/dev/null )" || continue
+    c="$( cd "$d" 2>/dev/null && git rev-parse --git-common-dir 2>/dev/null )" || continue
+    [ -n "$a" ] && [ -n "$c" ] || continue
+    ca="$( cd "$d" 2>/dev/null && cd "$c" 2>/dev/null && pwd -P )" || continue
+    [ -n "$ca" ] || continue
+    if [ "$a" != "$ca" ]; then
+      cat >&2 <<WTREFUSE
+validate.sh: REFUSING — '$d' is a linked git worktree, which shares the parent clone's
+  .git (config, refs, objects). Suites that write to 'the repo' reach the PARENT, not a
+  fixture: an observed run set core.bare=true, repointed origin at a deleted temp path,
+  deleted every refs/remotes/origin/*, and overwrote development with fixture commits.
+  Run the gate from a normal clone. Override with XYZ_ALLOW_WORKTREE_GATE=1 only if you
+  accept that blast radius.
+WTREFUSE
+      exit 2
+    fi
+  done
+}
+if [ "${XYZ_ALLOW_WORKTREE_GATE:-0}" != "1" ]; then
+  _wt_refuses "$HERE" "${PWD:-.}"
+else
+  # Announced, never silent — a bypass that says nothing is indistinguishable from no guard.
+  echo "validate.sh: XYZ_ALLOW_WORKTREE_GATE=1 — running from a linked worktree at the operator's explicit request; the parent clone's .git is exposed (GH-45)." >&2
+fi
+
 TESTS=(
   "projection-idempotent.sh"
   "concurrent-claim.sh"

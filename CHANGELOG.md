@@ -2,6 +2,22 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.0.4] - 2026-08-18
+
+### Added
+- **GH-45: `validate.sh` and `ci-local.sh` refuse to run from a linked git worktree** (exit 2,
+  before anything executes, in every tier) — a linked worktree shares the parent clone's `.git`
+  (config, refs, objects), and an observed 2026-08-19 gate run corrupted the real parent clone
+  through exactly that channel: `core.bare=true`, origin repointed at a deleted temp path, every
+  `refs/remotes/origin/*` deleted, `development` overwritten with fixture commits. The refusal
+  message names those consequences; `XYZ_ALLOW_WORKTREE_GATE=1` overrides for deliberate
+  disposable runs and announces itself. Detection is the verified
+  `--absolute-git-dir` ≠ resolved `--git-common-dir` comparison (the GH-448 resolver's idiom),
+  checked for both `HERE` and the invocation CWD. Pinned in `test/gh35-test-tiers.sh` §9 (67/0)
+  including the issue's required control: the normal checkout of the same repo still runs,
+  silently. The per-suite fixture-escape audit remains GH-564; this is the outer fence that
+  fails closed for suites nobody has audited yet.
+
 ## [1.0.3] - 2026-08-18
 
 ### Added

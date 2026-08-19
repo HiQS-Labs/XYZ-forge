@@ -440,6 +440,28 @@ individual suites have been audited.
   plain-text table is not a stable API; porcelain output is machine-parseable and won't false-match
   on branch/path substrings the way a `grep` over the table can.
 
+## 13. Running the test gate from a linked worktree corrupts the PARENT clone
+
+**The trap.** `validate.sh` / `ci-local.sh` run ~190 suites, many driving git fixtures. From a
+linked worktree, a suite that escapes its fixture — or resolves a fixture path to an empty
+string — reaches the **parent clone's shared `.git`** (config, refs, objects), because a
+worktree isolates the working tree ONLY. This is not hypothetical: the observed 2026-08-19 run
+([GH-45](https://github.com/HiQS-Suite/XYZ-forge/issues/45)) set `core.bare=true`, repointed
+`remote.origin.url` at a since-deleted temp bare repo, deleted every `refs/remotes/origin/*`,
+and overwrote `development` and `main` with fixture commits. Same root cause as the
+`mktemp`-under-parallel-load family (GH-177/GH-564).
+
+**The guard (GH-45, built 2026-08-18).** Both gate entry points now REFUSE to run from a linked
+worktree — exit 2 before anything executes, every tier — using the one-comparison detection
+`git rev-parse --absolute-git-dir` ≠ resolved `git rev-parse --git-common-dir`, anchored on both
+the script's own root and the invocation CWD. The refusal message names the observed damage;
+`XYZ_ALLOW_WORKTREE_GATE=1` is the announced override for deliberate disposable runs. Pinned —
+including the control that a normal checkout of the same repo still runs — in
+`test/gh35-test-tiers.sh` §9.
+
+**Rule:** run the gate from a normal clone. A worktree is a fine place to *edit*; it is not a
+place to run a suite whose fixtures assume "the repo" is disposable.
+
 ---
 
 ## Golden Rules for Worktree Safety
