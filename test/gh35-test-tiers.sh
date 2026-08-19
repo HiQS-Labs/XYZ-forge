@@ -117,6 +117,16 @@ ok "--subsystem hq selects tier 2 and names the subsystem" \
 rc=0; out="$(bash "$V" --subsystem nope --print-mode 2>&1)" || rc=$?
 ok "an unknown subsystem is refused (exit 2)" "[ $rc -eq 2 ]"
 
+# PR #55 review, finding 1: --tier N alongside a selector is legal as CONFIRMATION (this is
+# the exact spelling ROUTER.md documents) and an error as a contradiction.
+out="$(probe --tier 2 --subsystem hq)"; rc=$?
+ok "--tier 2 --subsystem hq (the ROUTER.md example) works (rc=$rc)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'tier 2 — subsystem hq' >/dev/null"
+rc=0; out="$(bash "$V" --print-mode --tier 1 --subsystem hq 2>&1)" || rc=$?
+ok "a CONTRADICTING --tier 1 --subsystem hq is refused (exit 2)" "[ $rc -eq 2 ]"
+ok "  and the error says which tier the selector chose" \
+   "printf '%s' \"\$out\" | grep 'contradicts the selector' >/dev/null"
+
 # ── (4) the registry drift guard — the releases-skill lesson as a test ───────────────────────────
 # Every registered suite must (a) exist in test/ and (b) be registered in validate.sh's TESTS,
 # or `--tier 2` would "pass" by running nothing. ci-route.sh's own listing check covers (a);
@@ -240,6 +250,17 @@ rc=0; out="$( cd "$R3" && bash validate.sh --paths-file "$PF3" 2>&1)" || rc=$?
 ok "a subsystem with no runnable suites on disk refuses the narrow gate (exit 2)" "[ $rc -eq 2 ]"
 ok "  and the classifier said why: no runnable tests, failing closed" \
    "printf '%s' \"\$out\" | grep 'no runnable tests' >/dev/null"
+
+# PR #55 review, finding 2: a DELETED file rides a git-diff path list — there is nothing to
+# syntax-check, and a 127 on the missing path must not fail the gate.
+R2B="$(mkfixture)"
+cp "$R2/test/hq.sh" "$R2B/test/hq.sh"
+mkdir -p "$R2B/utils/hq"
+printf '#!/usr/bin/env bash\nexit 0\n' > "$R2B/utils/hq/hq.sh"
+PFB="$R2B/pathsb.txt"; printf 'utils/hq/gone.sh\nutils/hq/hq.sh\n' > "$PFB"
+out="$( cd "$R2B" && bash validate.sh --paths-file "$PFB" 2>&1 )"; rc=$?
+ok "a deleted path in the tier-2 list is skipped, not 127'd (exit $rc)" \
+   "[ $rc -eq 0 ] && printf '%s' \"\$out\" | grep 'gone — skipping utils/hq/gone.sh' >/dev/null"
 
 # Static checks are load-bearing: broken syntax in a changed file must fail the tier-2 gate.
 R4="$(mkfixture)"

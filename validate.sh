@@ -499,6 +499,8 @@ apply_classification() {  # <key=value block> — sets TIER/T2_*/TIER_REASON; fa
   TIER_REASON="$(_cls_get "$cls" tier_reason)"
 }
 
+TIER_REQUESTED=0
+[ "$TIER" -ne 3 ] && TIER_REQUESTED="$TIER"
 if [ "$AUTO_REQUESTED" -eq 1 ] || [ -n "$PATHS_FILE" ] || [ -n "$SUBSYSTEM" ]; then
   # The selector flags are mutually exclusive: each of them fully determines the tier, so
   # combining two answers the question twice and one of them is being silently ignored.
@@ -506,8 +508,6 @@ if [ "$AUTO_REQUESTED" -eq 1 ] || [ -n "$PATHS_FILE" ] || [ -n "$SUBSYSTEM" ]; t
     && _err2 "--auto cannot be combined with --paths-file/--subsystem"
   [ -n "$PATHS_FILE" ] && [ -n "$SUBSYSTEM" ] \
     && _err2 "--paths-file cannot be combined with --subsystem"
-  [ "$TIER" -ne 3 ] \
-    && _err2 "a selector flag (--auto/--paths-file/--subsystem) decides the tier itself — drop --tier"
 fi
 
 if [ "$AUTO_REQUESTED" -eq 1 ]; then
@@ -562,6 +562,13 @@ if [ -n "$SUBSYSTEM" ]; then
   TIER=2
   case "$SUBSYSTEM" in releases|pdda) T2_PYTEST=1 ;; esac
   echo "validate.sh: tier 2 — subsystem $SUBSYSTEM (GH-35)"
+fi
+
+# A selector flag decides the tier; an explicit --tier is allowed only as CONFIRMATION
+# (PR #55 review, finding 1: --tier 2 --subsystem hq is the natural spelling and is what
+# ROUTER.md documents). A contradicting --tier is an error, not a silent override.
+if [ "$TIER_REQUESTED" -ne 0 ] && [ "$TIER_REQUESTED" -ne "$TIER" ]; then
+  _err2 "--tier $TIER_REQUESTED contradicts the selector flag's tier $TIER — drop --tier, or pass --tier $TIER"
 fi
 
 # ── GH-35: ambient concurrency levers (consulted only when no flag was given) ───────────────────
@@ -727,6 +734,9 @@ if [ "$TIER" -eq 2 ]; then
     _t2s_rc=0
     while IFS= read -r _p; do
       [ -n "$_p" ] || continue
+      # A deleted file rides a git-diff path list (PR #55 review, finding 2): there is
+      # nothing to syntax-check, and bash -n on a missing path would 127 the whole gate.
+      [ -f "$HERE/$_p" ] || { echo "  (gone — skipping $_p)"; continue; }
       case "$_p" in
         *.sh)
           echo "  bash -n $_p"
