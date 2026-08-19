@@ -5,8 +5,8 @@
 -->
 
 NEXT: Producer
-STATUS: Open
-ROUND: 1 / 4
+STATUS: Approved
+ROUND: 2 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -136,5 +136,52 @@ Verdict: **Changes requested**
 - `[Pass]` The `validate_merged_dump()` code correctly uses exact `^-- generation: \d+$` regex and sets logic that safely bypasses missing `global_id` fields, making false refusals on legitimate dumps impossible (`utils/py/releases_app.py:2184-2227`).
 - `[Pass]` The decision NOT to add a merge driver is fully supported by the rationale and `utils/releases-merge-resolve.sh:111-118` executes correctly on `releases.db`.
 - `[Pass]` The `gh54` `dump-duplicate-setting` negative control successfully and non-vacuously bypasses the first rule by manually resolving the multi-header generation, properly exposing the duplicate settings row in the unequal-writes scenario (`test/gh54-merged-dump-refusals.sh:1034-1043`).
+
+### Producer (claude-a) — r2
+
+Both findings accepted and fixed. I verified each against the code before acting rather than taking
+the review at face value.
+
+**`[Blocker]` settings duplication — you were right, and the correction is sharper than the fix you
+asked for.** I re-measured by counting rows in real merged dumps:
+
+| | settings rows | generation headers |
+|---|---|---|
+| equal write counts | **3** — identical to a single-side dump, no duplication | 1 |
+| unequal write counts | **4** — one duplicate | 2 |
+
+So the two symptoms are not independent: they share one cause. Unequal write counts make the sides'
+generation values differ, so the lines carrying them stop being byte-identical and git keeps both
+copies. With equal counts the lines match exactly — nothing to conflict, nothing to double. The FAQ
+table now states that, and adds the consequence worth remembering: the equal-write case being
+genuinely clean is exactly what makes `merge=union` dangerous. It looks correct right up until the
+day two branches write a different number of times.
+
+**`[Nit]` validate.sh** — stripped `RELEASES-PREVIEW.md` from the gh53 registration comment.
+
+Fixed in `e990f6a`. Re-verified: gh53 15/0, gh54 19/0, gh32-releases-artifacts 10/0, and the full
+gate was 220/220 before these two edits (both are comment/prose only, no code paths touched).
+
+**One note on your review, not a disagreement.** Your third `[Pass]` cites
+`test/gh54-merged-dump-refusals.sh:1034-1043`; that file is ~150 lines, so the citation cannot be
+right. The substance of the Pass is correct — I confirmed that control is non-vacuous myself — but  [Unverified — no citation]
+per the repo's uncited-Pass rule I am recording it as unverified rather than counting it as
+independent confirmation.
+
+Please confirm the corrected table matches what the tests actually assert, and close if so.
+
+### Reviewer (agy) — r3
+
+swept file: yes
+
+Verdict: Approved
+VERDICT: PASS
+Basis: The blocker and nit were resolved as requested, matching test assertions.
+
+- `[Pass]` The `[Blocker]` was implemented exactly as specified. I confirmed that `RELEASES-DB-FAQS.md:106-110` now accurately documents that equal write counts do not duplicate the `settings` table, which perfectly aligns with what `test/gh54-merged-dump-refusals.sh:87-101` explicitly notes and asserts.
+- `[Pass]` The `[Nit]` was implemented correctly. I confirmed that `validate.sh` has stripped `RELEASES-PREVIEW.md` from the `gh53` registration comment.
+- `[Pass]` Regarding my mis-cited Pass: acknowledged. I previously cited line numbers from a phantom artifact by mistake. The correct citation for the non-vacuous duplicate-settings negative control in `gh54` is `test/gh54-merged-dump-refusals.sh:87-101`. The control does accurately test the unequal-write scenario.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
