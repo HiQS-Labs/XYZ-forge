@@ -347,23 +347,25 @@ N="$(sql 'SELECT COUNT(DISTINCT op) FROM op_receipts')"
 N2="$(sql "SELECT COUNT(*) FROM op_receipts WHERE session_id != ''")"
 if [ "$N" -ge 2 ] 2>/dev/null && [ "$N2" -ge 2 ] 2>/dev/null; then ok "the receipt log records >=2 distinct ops with session ids (the exit gate reads these)" 0; else ok "receipts recorded" 1; fi
 
-# ── L. RELEASES-PREVIEW.md: disclaimer-headed, regenerated inside every write txn ───────────────
-echo "-- L: RELEASES-PREVIEW.md auto-generation on every write"
+# ── L. RELEASES-PREVIEW.md is GONE and must stay gone ───────────────────────────────────────────
+# It was removed 2026-08-19: a desktop SQLite viewer and `releases project sync` (GH-39) cover both
+# jobs it had, and it was a tracked generated file that conflicted on every concurrent write. This
+# section is a regression guard, not a feature test — the failure it prevents is someone
+# reintroducing a generated Markdown mirror of the database because the write path "looks
+# incomplete" without one.
+echo "-- L: the preview is not regenerated (removal regression guard)"
 R="$(mkrepo l)"
 rout init --slug lima
-if [ -f "$R/RELEASES-PREVIEW.md" ] && grep -q "PREVIEW ONLY — NOT the source of truth" "$R/RELEASES-PREVIEW.md"; then ok "init creates the preview with the non-SOT disclaimer at the top" 0; else ok "preview at init" 1; fi
-G1="$(head -1 "$R/RELEASES-PREVIEW.md")"
+if [ ! -f "$R/RELEASES-PREVIEW.md" ]; then ok "init does NOT create RELEASES-PREVIEW.md" 0; else ok "no preview at init" 1; fi
 rout add --version 3.0.0 --status draft --description "Preview seed." --tracking-issue "https://github.com/A/B/issues/3"
-G2="$(head -1 "$R/RELEASES-PREVIEW.md")"
-if [ "$G1" != "$G2" ] && grep -q "^Release: 3.0.0$" "$R/RELEASES-PREVIEW.md"; then ok "a CLI write regenerates the preview in the same transaction (marker bumped, new block present)" 0; else ok "preview regenerated on write" 1; fi
-sed -i '' '1s/.*/<!-- releases-app generation: 999 -->/' "$R/RELEASES-PREVIEW.md"
-LRC=0; RA check >/dev/null 2>&1 || LRC=1
-V="$(rlog check)"; if [ "$LRC" = "1" ] && has "$V" "FAIL: rule=preview-stale"; then ok "a stale/hand-edited preview marker fails check (rule=preview-stale)" 0; else ok "preview-stale detected" 1; fi
+if [ ! -f "$R/RELEASES-PREVIEW.md" ]; then ok "a CLI write does NOT create RELEASES-PREVIEW.md" 0; else ok "no preview on write" 1; fi
 rout gen
-V="$(rlog check)"; if has "$V" "check: clean"; then ok "releases gen repairs the stale preview (check green again)" 0; else ok "gen repairs preview" 1; fi
-rm -f "$R/RELEASES-PREVIEW.md"
-rout update --gid "$(sql "SELECT global_id FROM releases WHERE version='3.0.0'")" --codename Lima
-if grep -q "^Codename: Lima$" "$R/RELEASES-PREVIEW.md" 2>/dev/null; then ok "a deleted preview is recreated by the next write" 0; else ok "preview recreated" 1; fi
+if [ ! -f "$R/RELEASES-PREVIEW.md" ]; then ok "releases gen does NOT create RELEASES-PREVIEW.md" 0; else ok "no preview on gen" 1; fi
+V="$(rlog check)"
+if has "$V" "check: clean"; then ok "check is clean with no preview present (the preview-stale rule is gone)" 0; else ok "check clean without preview" 1; fi
+if ! has "$V" "preview"; then ok "check output no longer mentions a preview at all" 0; else ok "no preview in check output" 1; fi
+# and the write path still produces the artifacts that DO matter
+if [ -f "$R/releases.sql" ] && [ -f "$R/releases.db" ]; then ok "the dump and DB are still written (removing the preview did not disturb the staged-write protocol)" 0; else ok "dump+db still written" 1; fi
 
 # ── M. readers: show / next (fast orientation without raw SQL) ──────────────────────────────────
 echo "-- M: show + next readers"

@@ -6,7 +6,7 @@
 # closes, and it exists because the documented merge procedure has a human step: resolve
 # releases.sql as text, then `releases check --rebuild` to regenerate the DB from it. Skip the
 # rebuild and you commit a DB that disagrees with the dump — silently, because the DB is what every
-# reader trusts at runtime (list/show/next/project sync and RELEASES-PREVIEW.md all read the DB).
+# reader trusts at runtime (list, show, next and `project sync` all read the DB, never the dump).
 #
 # TWO RULES THIS SUITE OBEYS, both deliberate:
 #
@@ -37,7 +37,7 @@ command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
 # The artifacts under test. RELEASES.generated.md is deliberately NOT copied: it is gitignored, so
 # it is not part of what a merge can break, and depending on an untracked file would make this
 # suite's verdict differ between clones — the exact defect GH-37 was.
-ARTIFACTS="releases.db releases.sql RELEASES-PREVIEW.md"
+ARTIFACTS="releases.db releases.sql"
 
 digest_live() { # hash the clone's artifacts so we can prove we did not touch them
   local f out=""

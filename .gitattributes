@@ -1,12 +1,11 @@
 # Derived RELEASES artifacts (GH-32 / #53).
 #
-# `releases.db` and `RELEASES-PREVIEW.md` are both GENERATED from `releases.sql` — the canonical
-# GID-keyed dump — by `releases check --rebuild`. Neither is hand-editable and neither carries
-# information the dump does not.
+# `releases.db` is GENERATED from `releases.sql` — the canonical GID-keyed dump — by
+# `releases check --rebuild`. It is not hand-editable and carries no information the dump does not.
+# (RELEASES-PREVIEW.md was a second such artifact; it was removed 2026-08-19.)
 #
-# -diff                  their diffs are noise: one is a SQLite binary, the other a full re-render
-#                        of the whole ledger on every write.
-# linguist-generated     collapses them by default in GitHub PR review, so a one-line ledger change
+# -diff                  its diff is noise — it is a SQLite binary.
+# linguist-generated     collapses it by default in GitHub PR review, so a one-line ledger change
 #                        does not bury the actual diff under a regenerated file.
 #
 # WHAT IS DELIBERATELY *NOT* SET HERE: a merge driver.
@@ -28,11 +27,10 @@
 #      silent divergence #52 exists to catch. The conflict is a feature: it stops you at the moment
 #      the decision has to be made.
 #
-# So these files conflict on purpose. The resolution is one command, not a manual merge:
+# So it conflicts on purpose. The resolution is one command, not a manual merge:
 #
 #     utils/releases-merge-resolve.sh
 #
-# It takes either side of the derived files (they are about to be regenerated anyway), rebuilds from
+# It takes either side of the derived file (it is about to be regenerated anyway), rebuilds from
 # the merged `releases.sql`, and verifies `releases check` comes back clean. See RELEASES-DB-FAQS.md.
 releases.db           -diff linguist-generated=true
-RELEASES-PREVIEW.md   -diff linguist-generated=true

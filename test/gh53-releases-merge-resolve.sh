@@ -3,10 +3,10 @@
 #
 # Two things are pinned here, and the second is the one that earns its keep:
 #
-#   A. .gitattributes marks releases.db and RELEASES-PREVIEW.md as derived (-diff,
-#      linguist-generated) and pointedly does NOT give them a merge driver. The measured reason is
-#      in .gitattributes; the assertion here is that nobody quietly adds one later, because
-#      auto-resolving a derived file lets a merge complete with a DB holding only one side's rows.
+#   A. .gitattributes marks releases.db as derived (-diff, linguist-generated) and pointedly does
+#      NOT give it a merge driver. The measured reason is in .gitattributes; the assertion here is
+#      that nobody quietly adds one later, because auto-resolving a derived file lets a merge
+#      complete with a DB holding only one side's rows.
 #
 #   B. utils/releases-merge-resolve.sh finishes a ledger merge correctly, and REFUSES the cases it
 #      cannot settle rather than producing a plausible-looking wrong answer.
@@ -29,8 +29,11 @@ command -v python3 >/dev/null 2>&1 || { echo "python3 required" >&2; exit 1; }
 
 # ── A. the attribute contract on THIS repo ──────────────────────────────────────────────────────
 attr() { git -C "$ROOT_DIR" check-attr "$1" -- "$2" | sed 's/.*: //'; }
+# RELEASES-PREVIEW.md was a second derived artifact here until 2026-08-19; the list is kept as a
+# variable so re-adding one is a one-word change rather than an edit to the loop.
+DERIVED_FILES="releases.db"
 
-for f in releases.db RELEASES-PREVIEW.md; do
+for f in $DERIVED_FILES; do
   [ "$(attr diff "$f")" = "unset" ] \
     && pass "$f is marked -diff (its diff is generated noise)" \
     || fail "$f is not marked -diff; see .gitattributes"

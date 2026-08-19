@@ -17,6 +17,12 @@ contains() {
   needle="$3"
   if grep -Fq -- "$needle" "$file"; then pass "$label"; else fail "$label"; fi
 }
+absent() {   # the mirror of contains: pins that something stays OUT of a doc
+  label="$1"
+  file="$2"
+  needle="$3"
+  if grep -Fq -- "$needle" "$file"; then fail "$label"; else pass "$label"; fi
+}
 
 echo "== test: releases-skill =="
 
@@ -48,8 +54,10 @@ contains "legacy repos keep the direct-edit path" "$SKILL" "legacy-managed"
 contains "app-managed preflight runs the consistency check" "$SKILL" "releases check"
 contains "preflight names the next reader" "$SKILL" "releases next"
 contains "preflight names the detail reader" "$SKILL" "releases show --version"
-contains "the preview file is named as a read surface" "$SKILL" "RELEASES-PREVIEW.md"
-contains "the preview is marked non-authoritative" "$SKILL" "preview, not"
+# The preview was removed 2026-08-19. Naming it is fine — explaining the removal is useful — but
+# the doc must not still route a reader TO it. Pin the routing, not the string.
+absent "the retired preview is not offered as a whole-ledger read surface" "$SKILL" "read it directly when you want the whole ledger"
+contains "the doc says where the whole-ledger view went instead" "$SKILL" "was removed"
 # The delegation must preserve the confirm UX, not bypass it:
 contains "command preview replaces the patch preview, confirmation unchanged" "$SKILL" "Preview the exact command set instead of a patch"
 contains "router doc names the plural front door" "$ROOT/ROUTER.md" 'invoke `/releases`'

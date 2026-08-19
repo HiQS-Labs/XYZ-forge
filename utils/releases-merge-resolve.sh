@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # releases-merge-resolve.sh — finish a merge that touched the RELEASES ledger (GH-32 / #53).
 #
-# The derived artifacts (releases.db, RELEASES-PREVIEW.md) conflict on every concurrent ledger
+# The derived artifact (releases.db) conflicts on every concurrent ledger
 # write, ON PURPOSE — see .gitattributes for why we did not paper over that with a merge driver.
 # But resolving it correctly is several remembered steps, and the step people skip is the one that
 # matters: regenerating the DB from the merged dump. Skip it and you commit a DB that disagrees with
@@ -44,7 +44,7 @@ APP="$HERE/py/releases_app.py"
 [ -f "$APP" ] || { echo "releases-merge-resolve: $APP not found — this script must ship beside utils/py/releases_app.py" >&2; exit 3; }
 
 DUMP="$ROOT/releases.sql"
-DERIVED="releases.db RELEASES-PREVIEW.md"
+DERIVED="releases.db"
 
 say() { printf 'releases-merge-resolve: %s\n' "$*"; }
 die() { printf 'releases-merge-resolve: %s\n' "$*" >&2; exit 1; }

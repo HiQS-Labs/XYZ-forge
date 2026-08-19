@@ -47,9 +47,9 @@ Natural-language requests route the same way. Do not make the operator remember 
    releases list [--status ...]     one line per release (--all-repos aggregates siblings)
    ```
 
-   `RELEASES-PREVIEW.md` at the repo root is the same data as a rendered file, regenerated on
-   every write — read it directly when you want the whole ledger at once. It is a **preview, not
-   the source of truth**: never edit it and never cite it as shipped history.
+   There is no generated Markdown mirror of the database to read: `RELEASES-PREVIEW.md` was removed
+   2026-08-19. For a whole-ledger view, use `releases list`, open `releases.db` in a SQLite viewer,
+   or read the release cards `releases project sync` (GH-39) pushes to GitHub Projects.
 
    **After any merge that touched the ledger, run `releases check` before anything else.** The
    merge procedure resolves `releases.sql` as text and then requires `releases check --rebuild` to
