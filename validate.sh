@@ -209,6 +209,14 @@ TESTS=(
                                  #   with a DB holding one side's rows). The refusals are the point:
                                  #   a two-header dump (what a naive merge=union leaves) and a dump
                                  #   with conflict markers are both refused, not rebuilt. 18/0
+  "gh54-merged-dump-refusals.sh" # #54 (check --rebuild must REFUSE merge damage by name, not throw).
+                                 #   Every fixture is built by really merging two divergent branches
+                                 #   and mangling the dump the way a union would — a refusal test
+                                 #   whose fixture cannot occur proves nothing. Covers the two-header
+                                 #   dump, the duplicated settings row (needs UNEQUAL write counts;
+                                 #   equal counts dedupe to a deceptively clean union), and the same
+                                 #   global_id twice — the one case no union can settle. Carries a
+                                 #   POSITIVE control so the refusals cannot go blanket. 19/0
   "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
                                  #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"
