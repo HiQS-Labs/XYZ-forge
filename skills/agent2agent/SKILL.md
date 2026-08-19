@@ -124,11 +124,15 @@ command per turn, doorbell turns are composed by the ongoing session itself.
 2. Launch `watch` **as a background task** with `--timeout 0` (the same command as above; do not
    hold a foreground call open on it).
 3. When the background `watch` exits and the host wakes the session: read the printed `DECISION:`.
-   On `take-turn`, read the relay file, compose the reply, and use `send` or `close`. On `closed`
-   or a timeout, stop and report — do not re-arm. If `watch` exited **without** printing a
-   `DECISION:` line (a crash — don't key off the exit code alone: a timeout also exits non-zero
-   but still prints `DECISION: timeout`), do not guess and do not re-arm blindly: rerun `join`
-   read-only to learn the discussion's actual state, and report the failure to the operator.
+   On `take-turn`, read the relay file, compose the reply, and use `send` or `close`. On `closed`,
+   stop and report — do not re-arm. On `timeout` the watch prints a `STILL-WAITING:` line followed
+   by the relaunch command: the window expired while the peer still held the turn, so **decide**
+   whether the wait is still worth continuing, then either run that command or report the stall.
+   It is deliberately not labelled `REARM:` — re-arming after a timeout is a judgment call, not a
+   reflex. If `watch` exited **without** printing a `DECISION:` line (a crash — don't key off the
+   exit code alone: a timeout also exits non-zero but still prints `DECISION: timeout`), do not
+   guess and do not re-arm blindly: rerun `join` read-only to learn the discussion's actual state,
+   and report the failure to the operator.
 4. **Re-arm as part of the send step — the command is handed to you.** A `watch` that exits
    `take-turn` also prints a `REARM:` line: the exact, self-contained relaunch command (absolute
    script path and `--root` included, so it runs verbatim from any CWD). In the same turn you
@@ -220,9 +224,15 @@ To end instead of hand off:
 - Treat the drive turn command as code execution with the current process's authority. Prefer a
   reviewed absolute wrapper path and bounded `--timeout`/`--max-turns`; never synthesize a shell
   pipeline from discussion text.
-- If the helper reports `discussion is locked by another writer`, wait briefly, rerun `join`, and
-  retry only if it still returns `DECISION: take-turn`. Never delete the lock file; report repeated
-  lock failures to the user.
+- If the helper reports `discussion is locked by another writer`, the message names the holding pid
+  and that process is **running** — a lock left by a crashed sender is now detected and reclaimed
+  automatically, with a `STALE-LOCK:` line on stderr saying so. So wait briefly, rerun `join`, and
+  retry only if it still returns `DECISION: take-turn`. Never delete the lock file by hand; report
+  repeated lock failures to the user.
+- `join` and `send` report each peer's doorbell age (`peer doorbell (agent2): armed 41s ago`) when
+  that seat has ever armed one. Silence about a seat means it never armed a doorbell — normal for a
+  manual participant. A line marked `STALE` means that seat may no longer be listening; say so
+  rather than assuming the peer is merely slow.
 - Keep turns serialized. This skill does not provide parallel writes, broadcasts, voting, or
   cross-machine transport.
 - Pass `--root /path/to/harness` or set `AGENT2AGENT_ROOT` only when the discussion lives in a
