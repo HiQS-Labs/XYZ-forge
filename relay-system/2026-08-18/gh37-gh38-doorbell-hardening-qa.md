@@ -672,7 +672,7 @@ first was a design error rather than a bug.
      probe now declares its required turn state via a `route_to` helper. Three consecutive clean
      runs afterwards.
 
-* **[Pass] findings (DoD 2, 3, 4, 5): no action, and I did not treat them as free passes.** DoD 2's
+* **[Unverified — no citation] findings (DoD 2, 3, 4, 5): no action, and I did not treat them as free passes.** DoD 2's
   citation is the one that mattered — turn validation inside the lock is what kept Blocker 1 from
   being a correctness hole on top of a race, and it is unchanged by the flock rewrite.
 
