@@ -88,6 +88,15 @@ LOCK_NAME = "releases-app.lock"
 AUDIT_NAME = "releases-app-lock-audit.log"
 JOURNAL_NAME = "releases-app-journal.json"
 
+# GitHub Projects are a one-way visual projection of this DB.  The immutable Release ID field
+# is deliberately the remote idempotency key: we do not add GitHub-owned IDs to the release
+# schema, and deleting a card merely lets the next sync recreate its projection.
+PROJECT_FIELDS = (
+    "Release ID", "Release status", "Target date", "Shipped date", "Codename",
+    "Tracking issue", "GitHub release", "Front-door reviewed", "Shakedown reviewed",
+    "License file",
+)
+
 STATUSES = ("draft", "active", "shipped", "cut")
 STATUS_RENDER = {"draft": "Draft", "active": "Active", "shipped": "Shipped", "cut": "Cut"}
 MARATHON_STATUSES = ("planned", "running", "done", "escalated", "abandoned")
@@ -173,6 +182,79 @@ def valid_date(s):
 def sentence_count(text):
     parts = [p for p in re.split(r"(?<=[.!?])\s+", (text or "").strip()) if p.strip()]
     return len(parts)
+
+
+def _project_value(item, field_name):
+    """Read a GH CLI item field across CLI versions that vary its display-key casing."""
+    wanted = field_name.casefold()
+    for key, value in item.items():
+        if str(key).casefold() == wanted:
+            return value
+    return None
+
+
+def _gh_json(argv):
+    """Run the configured GH CLI and return its JSON output with an actionable failure."""
+    gh_bin = os.environ.get("RELEASES_GH_BIN", "gh")
+    try:
+        completed = subprocess.run([gh_bin] + argv, check=True, text=True,
+                                   capture_output=True)
+    except FileNotFoundError:
+        refuse("github-project-cli",
+               "cannot find %r; install GitHub CLI or set RELEASES_GH_BIN" % gh_bin)
+    except subprocess.CalledProcessError as exc:
+        detail = (exc.stderr or exc.stdout or "GitHub CLI failed").strip()
+        refuse("github-project-cli", detail)
+    try:
+        return json.loads(completed.stdout)
+    except json.JSONDecodeError:
+        refuse("github-project-cli-json",
+               "GitHub CLI did not return JSON: %s" % completed.stdout.strip())
+
+
+def _gh_run(argv):
+    """Run a mutating GH CLI command and surface its error without masking it."""
+    gh_bin = os.environ.get("RELEASES_GH_BIN", "gh")
+    try:
+        subprocess.run([gh_bin] + argv, check=True, text=True,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        refuse("github-project-cli",
+               "cannot find %r; install GitHub CLI or set RELEASES_GH_BIN" % gh_bin)
+    except subprocess.CalledProcessError as exc:
+        refuse("github-project-cli", (exc.stderr or "GitHub CLI failed").strip())
+
+
+def _project_body(release):
+    """Render the draft-card body; all GitHub state remains a read-only DB projection."""
+    tracking = release["tracking_url"] or release["tracking_temp"] or "—"
+    return """## Release
+
+- **Release ID:** `%s`
+- **Milestone:** %s
+- **Tracking issue:** %s
+- **GitHub release:** %s
+
+## Description
+
+%s
+
+## Exit criterion
+
+%s
+
+---
+
+> Read-only projection from `releases.db`. Edit the release through the Releases CLI; GitHub Project edits do not synchronize back.
+""" % (release["global_id"], release["milestone"] or "—", tracking,
+       release["gh_release_url"] or "—", release["description"],
+       release["exit_criterion"] or "Not recorded")
+
+
+def _project_release_rows(conn):
+    return conn.execute("""SELECT r.*, t.url AS tracking_url, t.temp_id AS tracking_temp
+                           FROM releases r JOIN issue_refs t ON t.id = r.tracking_ref_id
+                           ORDER BY r.target_date IS NULL, r.target_date, r.version""").fetchall()
 
 
 # ── repo root + GH-448 lock-path resolution ─────────────────────────────────────────────────────
@@ -1720,6 +1802,117 @@ def cmd_next(args):
         conn.close()
 
 
+def _project_field_map(payload):
+    fields = {field.get("name"): field for field in payload.get("fields", [])}
+    missing = [name for name in PROJECT_FIELDS if not fields.get(name, {}).get("id")]
+    if missing:
+        refuse("github-project-schema",
+               "project is missing required field(s): %s" % ", ".join(missing))
+    return fields
+
+
+def _project_select_option(field, value):
+    for option in field.get("options", []):
+        if option.get("name") == value:
+            return option.get("id")
+    refuse("github-project-schema",
+           "field %r is missing required option %r" % (field.get("name"), value))
+
+
+def _project_edit_field(project_id, item_id, field, value, kind):
+    base = ["project", "item-edit", "--id", item_id, "--project-id", project_id,
+            "--field-id", field["id"]]
+    if value in (None, ""):
+        _gh_run(base + ["--clear"])
+    elif kind == "text":
+        _gh_run(base + ["--text", str(value)])
+    elif kind == "date":
+        _gh_run(base + ["--date", str(value)])
+    else:
+        _gh_run(base + ["--single-select-option-id", _project_select_option(field, value)])
+
+
+def cmd_project_sync(args):
+    """Project the release ledger to GitHub draft cards; DB writes are intentionally impossible."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        project = _gh_json(["project", "view", str(args.number), "--owner", args.owner,
+                            "--format", "json"])
+        project_id = project.get("id")
+        if not project_id:
+            refuse("github-project", "project view returned no project ID")
+        fields = _project_field_map(_gh_json(
+            ["project", "field-list", str(args.number), "--owner", args.owner,
+             "--limit", "100", "--format", "json"]))
+        items = _gh_json(["project", "item-list", str(args.number), "--owner", args.owner,
+                          "--limit", "1000", "--format", "json"]).get("items", [])
+        by_release_id = {}
+        for item in items:
+            release_id = _project_value(item, "Release ID")
+            if release_id:
+                if release_id in by_release_id:
+                    refuse("github-project-duplicate-card",
+                           "Release ID %s occurs in more than one Project card" % release_id)
+                by_release_id[release_id] = item
+
+        releases = _project_release_rows(conn)
+        if not args.apply:
+            print("DRY RUN: GitHub Project is unchanged; repeat with --apply to write cards.")
+
+        for release in releases:
+            title = "%s — %s" % (release["version"] or "Unversioned",
+                                  release["codename"] or "Untitled")
+            body = _project_body(release)
+            existing = by_release_id.get(release["global_id"])
+            action = "UPDATE" if existing else "CREATE"
+            print("%s %s (%s)" % (action, title, release["global_id"]))
+            if not args.apply:
+                continue
+
+            if existing:
+                item_id = existing.get("id")
+                if not item_id:
+                    refuse("github-project-item", "existing card %s has no item ID"
+                           % release["global_id"])
+                content = existing.get("content") or {}
+                content_id = content.get("id")
+                if content.get("type") != "DraftIssue" or not content_id:
+                    refuse("github-project-item",
+                           "existing card %s is not an editable draft item"
+                           % release["global_id"])
+                _gh_run(["project", "item-edit", "--id", content_id,
+                         "--title", title, "--body", body])
+            else:
+                created = _gh_json(["project", "item-create", str(args.number), "--owner",
+                                    args.owner, "--title", title, "--body", body,
+                                    "--format", "json"])
+                item_id = created.get("id")
+                if not item_id:
+                    refuse("github-project-item", "created card %s has no item ID"
+                           % release["global_id"])
+
+            tracking = release["tracking_url"] or release["tracking_temp"]
+            values = (
+                ("Release ID", release["global_id"], "text"),
+                ("Release status", STATUS_RENDER[release["status"]], "select"),
+                ("Target date", release["target_date"], "date"),
+                ("Shipped date", release["shipped_date"], "date"),
+                ("Codename", release["codename"], "text"),
+                ("Tracking issue", tracking, "text"),
+                ("GitHub release", release["gh_release_url"], "text"),
+                ("Front-door reviewed", release["front_door_reviewed"], "select"),
+                ("Shakedown reviewed", release["shakedown_reviewed"], "select"),
+                ("License file", release["license_file"], "select"),
+            )
+            for name, value, kind in values:
+                _project_edit_field(project_id, item_id, fields[name], value, kind)
+        print("project sync: %d release card(s) %s"
+              % (len(releases), "applied" if args.apply else "planned"))
+    finally:
+        conn.close()
+
+
 def cmd_gen(args):
     root = resolve_root(args.root)
     paths = artifact_paths(root)
@@ -2298,6 +2491,14 @@ def build_parser():
     sp = sub.add_parser("reconcile", help="fill real URLs into temp refs")
     sp.add_argument("--map", action="append", metavar="TMP-X=URL",
                     help="placeholder -> real issue URL (repeatable)")
+
+    sp = sub.add_parser("project", help="GitHub Project release-card projection")
+    psub = sp.add_subparsers(dest="project_cmd", required=True)
+    sp_sync = psub.add_parser("sync", help="plan or apply DB -> GitHub Project draft cards")
+    sp_sync.add_argument("--owner", required=True, help="GitHub organization or user owning the Project")
+    sp_sync.add_argument("--number", required=True, type=int, help="GitHub Project number")
+    sp_sync.add_argument("--apply", action="store_true",
+                         help="perform GitHub writes (default is an auditable dry run)")
     return p
 
 
@@ -2312,6 +2513,7 @@ def main(argv=None):
         else cmd_marathon_list(a),
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
         "check": cmd_check, "reconcile": cmd_reconcile,
+        "project": lambda a: cmd_project_sync(a) if a.project_cmd == "sync" else None,
     }
     handlers[args.cmd](args)
 

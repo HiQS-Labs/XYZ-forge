@@ -2,6 +2,13 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.1.0] - 2026-08-18
+
+### Added
+- GH-39 GitHub Project projection for the RELEASES ledger: explicit dry-run/apply release-card
+  synchronization keyed by immutable Release ID, strict remote-schema validation, and regression
+  coverage for no-write dry runs, idempotent updates, and malformed Project setup.
+
 ## [1.0.2] - 2026-08-18
 
 ### Added
