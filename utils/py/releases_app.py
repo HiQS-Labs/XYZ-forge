@@ -2214,6 +2214,54 @@ def parse_dump(text):
     return tables
 
 
+def validate_merged_dump(text, tables):
+    """Refuse a dump carrying the damage a naive text merge leaves behind (#54).
+
+    A union-style merge of two canonical dumps is ALMOST correct: GID-keyed rows from both sides
+    coexist happily, which is the whole point of the grammar. What it also does — measured
+    2026-08-19 against real two-branch merges — is duplicate the single-row tables, and, when the
+    branches made unequal numbers of writes, keep BOTH `-- generation:` headers with no conflict
+    markers to show for it.
+
+    Loading that hits a UNIQUE constraint deep inside load_dump and surfaces as a raw Python
+    traceback, which tells the operator nothing about what to fix. Each case is named here instead,
+    before anything is written. This runs on the rebuild path only: it is a merge-damage check, not
+    a general dump validator."""
+    headers = [ln.strip() for ln in text.splitlines()
+               if re.match(r"^-- generation: \d+$", ln.strip())]
+    if len(headers) > 1:
+        refuse("dump-multi-generation",
+               "the dump carries %d '-- generation:' headers (%s); a canonical dump has exactly one. "
+               "This is what a plain union merge leaves behind when the two branches made a different "
+               "number of writes. The rebuild reads only the FIRST one, so accepting this would "
+               "silently understate the generation. Keep the HIGHEST header, delete the rest, then "
+               "rebuild." % (len(headers), ", ".join(h.split()[-1] for h in headers)))
+
+    seen_keys = set()
+    for row in tables.get("settings", []):
+        key = row.get("key")
+        if key in seen_keys:
+            refuse("dump-duplicate-setting",
+                   "settings key %r appears more than once. `settings` holds one row per key, so a "
+                   "merge that unioned both sides' lines duplicated it. Keep the row that should win "
+                   "(for 'generation', the higher value), delete the other, then rebuild." % key)
+        seen_keys.add(key)
+
+    for table in sorted(tables):
+        seen_gids = set()
+        for row in tables[table]:
+            gid = row.get("global_id")
+            if gid is None:
+                continue
+            if gid in seen_gids:
+                refuse("dump-duplicate-gid",
+                       "%s carries global_id %s twice. Global IDs are unique by construction, so two "
+                       "rows sharing one means BOTH branches edited the same record — a real content "
+                       "conflict that no union can settle. Decide which row wins, delete the other, "
+                       "then rebuild." % (table, gid))
+            seen_gids.add(gid)
+
+
 def load_dump(conn, tables):
     """Insert parsed dump rows into the (already-migrated, empty) DB, resolving the grammar's
     natural keys to physical ids in dump order."""
@@ -2326,7 +2374,19 @@ def _rebuild(root, conn):
             tconn.executescript(MIGRATION_001)
             # the dump itself carries the schema_migrations row (every canonical dump does);
             # load_dump resolves the grammar's GID/natural keys onto fresh physical ids
-            load_dump(tconn, parse_dump(dump_content))
+            parsed = parse_dump(dump_content)
+            # #54: name the merge damage BEFORE loading. Without this the duplicate rows a union
+            # merge leaves surface as a bare sqlite3.IntegrityError traceback from inside load_dump.
+            validate_merged_dump(dump_content, parsed)
+            try:
+                load_dump(tconn, parsed)
+            except sqlite3.IntegrityError as exc:
+                # backstop for damage validate_merged_dump does not yet name: still a refusal with a
+                # rule and a pointer, never a traceback.
+                refuse("dump-load",
+                       "the dump could not be loaded: %s. This usually means the merged dump "
+                       "contains a row twice, or a reference to a row that is not in it. Fix "
+                       "%s and rebuild; the live DB has not been touched." % (exc, DUMP_NAME))
             tconn.execute("UPDATE settings SET value = ? WHERE key = ?",
                           (str(new_gen), GENERATION_KEY))
             if tconn.execute("SELECT 1 FROM settings WHERE key = ?",
