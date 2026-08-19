@@ -87,12 +87,43 @@ python3 utils/py/releases_app.py check --rebuild   # dump -> DB, atomic, .bak of
 python3 utils/py/releases_app.py check             # must print "check: clean"
 ```
 
-### Do not use `merge=union`
+Or, since 2026-08-19, one command that does all of it and refuses what it cannot settle:
+
+```bash
+utils/releases-merge-resolve.sh
+```
+
+### Do not use `merge=union` — and not for the reason you'd guess
 
 Git ships a built-in `union` merge driver that keeps both sides' lines. It looks like precisely the
-right tool and it is **wrong**: it keeps *both* generation headers, and `check` then fails the
-generation trio. The header needs the special-case handling above. Tracked as
-[#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54).
+right tool. **Measured 2026-08-19 against real two-branch merges**, here is what it actually does:
+
+| Case | Result |
+|---|---|
+| both branches made the **same number** of writes | merges **cleanly** — one generation header, both sides' rows present. The header is identical text on both sides (`-- generation: 2`), so there is nothing to conflict. |
+| branches made **different numbers** of writes | **two** generation headers, silently, with no conflict markers |
+| either case | the single-row `settings` table is **duplicated** |
+
+That last row is the real defect. `check --rebuild` on such a dump dies with an unhandled
+`sqlite3.IntegrityError: UNIQUE constraint failed: settings.key` — a raw Python traceback rather than
+a clean refusal. It does fail closed (the DB is left untouched), but it fails ugly.
+
+So the earlier claim in this file — that the header "conflicts by construction on every concurrent
+write" and that `check` catches it — was **wrong on both counts**, and is corrected here. The header
+often does not conflict at all, and when it duplicates, nothing catches it until the rebuild throws.
+`utils/releases-merge-resolve.sh` now refuses a multi-header dump up front, naming the fix. Tracked
+as [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54).
+
+### The derived artifacts conflict on purpose
+
+`releases.db` **and** `RELEASES-PREVIEW.md` both conflict on every concurrent ledger write. That is
+deliberate, and `.gitattributes` records the measurement behind it: `merge=ours` does nothing (`ours`
+is a merge *strategy*, not a built-in *driver*), and the only thing that auto-merges them is a driver
+defined in `.git/config` — which is not committed, so it would be absent on fresh clones (#4).
+
+More to the point, auto-resolving is the **wrong outcome**: it lets the merge complete while the DB
+still holds only one side's rows, leaving the rebuild easy to forget. The conflict is what stops you
+at the moment the decision has to be made. Resolution is `utils/releases-merge-resolve.sh`.
 
 ---
 
@@ -180,8 +211,8 @@ Three gaps, all at the git boundary, all filed:
 | # | Gap | Consequence |
 |---|---|---|
 | [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52) — **closed** | Nothing ran `releases check` against the repo's real artifacts — `validate.sh` only exercised the CLI in fixtures | A mis-resolved merge shipped a DB that disagrees with the dump, silently. Now gated by `test/gh32-releases-artifacts.sh` (read-only, never `--rebuild`, runs against a copy so it cannot write to the clone it checks). |
-| [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53) | `releases.db` is a committed derived binary with no `.gitattributes` | Every concurrent ledger write produces an unmergeable binary conflict on a file that is fully derivable from the dump beside it |
-| [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) | No merge driver for `releases.sql`; its `-- generation:` header conflicts **by construction** on every concurrent write | Every merge conflicts on that line even when no release rows overlap |
+| [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53) — **closed** | `releases.db` and `RELEASES-PREVIEW.md` are committed derived artifacts that conflict on every concurrent write | Now marked `-diff linguist-generated` and given a one-command resolution (`utils/releases-merge-resolve.sh`). The conflict itself is kept **on purpose** — see above. |
+| [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) | No merge driver for `releases.sql`. A naive `merge=union` duplicates the single-row `settings` table, and `check --rebuild` then dies with an unhandled `IntegrityError` instead of refusing | Ugly failure where a clean refusal belongs; and unequal write counts silently produce two generation headers |
 
 **Do #52 first.** It makes a mis-resolved merge *visible*; the other two make merges *easier*. #52 is
 worth having even if the merge tooling is never improved, because it catches the mistake regardless of
@@ -218,6 +249,8 @@ $R list                  # releases
 $R show --version 0.7.0  # or --gid <ULID>
 $R next                  # next unshipped release by target date
 $R gen                   # side-by-side view; NEVER writes RELEASES.md
+
+utils/releases-merge-resolve.sh   # finish a ledger merge: rebuild, verify, stage (never commits)
 ```
 
 A healthy repo prints:
