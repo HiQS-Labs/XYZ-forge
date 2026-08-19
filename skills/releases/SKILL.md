@@ -50,6 +50,14 @@ Natural-language requests route the same way. Do not make the operator remember 
    `RELEASES-PREVIEW.md` at the repo root is the same data as a rendered file, regenerated on
    every write — read it directly when you want the whole ledger at once. It is a **preview, not
    the source of truth**: never edit it and never cite it as shipped history.
+
+   **After any merge that touched the ledger, run `releases check` before anything else.** The
+   merge procedure resolves `releases.sql` as text and then requires `releases check --rebuild` to
+   regenerate the DB from it; skipping that leaves a DB that disagrees with the dump, and the DB is
+   what every reader above trusts. `test/gh32-releases-artifacts.sh` gates this on every full-suite
+   run, but it catches the mistake after the fact — checking first is cheaper. Never run
+   `--rebuild` to make a red check go away without reading what diverged: it is for merge
+   resolution only, never crash recovery. See [RELEASES-DB-FAQS.md](../../RELEASES-DB-FAQS.md).
 3. Treat GitHub as optional for checks and required for publication. If `gh` is unavailable, run
    the local assessment and state exactly which PR, milestone, issue, or Release conclusions are
    unavailable. Never convert missing network evidence into a clean verdict.

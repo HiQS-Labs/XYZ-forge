@@ -179,7 +179,7 @@ Three gaps, all at the git boundary, all filed:
 
 | # | Gap | Consequence |
 |---|---|---|
-| [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52) | Nothing runs `releases check` against the repo's real artifacts — `validate.sh` only exercises the CLI in fixtures | A mis-resolved merge ships a DB that disagrees with the dump, silently. The DB is what every reader trusts at runtime. |
+| [#52](https://github.com/HiQS-Suite/XYZ-forge/issues/52) — **closed** | Nothing ran `releases check` against the repo's real artifacts — `validate.sh` only exercised the CLI in fixtures | A mis-resolved merge shipped a DB that disagrees with the dump, silently. Now gated by `test/gh32-releases-artifacts.sh` (read-only, never `--rebuild`, runs against a copy so it cannot write to the clone it checks). |
 | [#53](https://github.com/HiQS-Suite/XYZ-forge/issues/53) | `releases.db` is a committed derived binary with no `.gitattributes` | Every concurrent ledger write produces an unmergeable binary conflict on a file that is fully derivable from the dump beside it |
 | [#54](https://github.com/HiQS-Suite/XYZ-forge/issues/54) | No merge driver for `releases.sql`; its `-- generation:` header conflicts **by construction** on every concurrent write | Every merge conflicts on that line even when no release rows overlap |
 
