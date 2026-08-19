@@ -13,7 +13,7 @@ def die(msg):
 def default_commandcode_flags():
     return shlex.split(os.environ.get(
         "COMMANDCODE_FLAGS",
-        "--no-session --skip-onboarding --no-auto-update --permission-mode auto-accept"))
+        "--no-session --skip-onboarding --no-auto-update --yolo"))
 
 def main():
     xyz_root = os.environ.get("XYZ_ROOT", os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
