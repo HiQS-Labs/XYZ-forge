@@ -39,7 +39,8 @@ is a file):
 
 Environment:
   RELEASES_APP_SESSION   stable per-dogfood-session id stamped into op_receipts (r3)
-  RELEASES_APP_NOW       mocked clock (ISO 8601) for the temp-ref staleness tests
+  RELEASES_APP_NOW       mocked clock (ISO 8601) for the temp-ref staleness and target-date
+                         advisories (rule=release-overdue / rule=release-target-passed)
   RELEASES_APP_LOCK_WAIT seconds a busy lock is retried before refusing (default 3)
   RELEASES_APP_CRASH_AT  crash-injection boundary for the recovery negative controls:
                          pre-commit | post-commit | post-stage | mid-rename | post-rename
@@ -2319,6 +2320,39 @@ def cmd_check(args):
                      "issue ref %s sits in %d non-cut releases (handoffs are legitimate)"
                      % (r["global_id"], r["c"]))
                 warnings.append("shared-manifest-issue")
+
+            # target-date advisories (warn-only, never refuse).
+            #
+            # `ship` is deliberately a human verb — it requires evidence, and nothing should be
+            # able to declare a release shipped on its own. The cost of that design is that a
+            # release whose exit criterion is already satisfied can sit `active` indefinitely with
+            # nobody noticing: 0.7.1 Bulwark did exactly that for a day while its own merge and all
+            # three manifest items were already closed. This does not fix the design (it shouldn't)
+            # — it removes the silence. Purely local arithmetic on the stored target date; no
+            # network call, no GitHub read, so `check` stays offline and fast.
+            today = now_dt.date()
+            for r in conn.execute("""SELECT version, codename, status, target_date FROM releases
+                                     WHERE status IN ('active','draft') AND target_date IS NOT NULL
+                                     ORDER BY target_date"""):
+                try:
+                    target = _dt.date.fromisoformat(r["target_date"])
+                except (ValueError, TypeError):
+                    continue  # malformed dates are the schema's problem, not this advisory's
+                if target >= today:
+                    continue
+                overdue = (today - target).days
+                label = "%s %s" % (r["version"] or "(unversioned)", r["codename"] or "")
+                if r["status"] == "active":
+                    warn("release-overdue",
+                         "%s is active and %d day(s) past its target of %s — if the exit criterion "
+                         "is met, `releases ship` it; if not, `releases update` the target"
+                         % (label.strip(), overdue, r["target_date"]))
+                    warnings.append("release-overdue")
+                else:
+                    warn("release-target-passed",
+                         "%s is still a draft and %d day(s) past its target of %s — the plan has "
+                         "drifted from the calendar" % (label.strip(), overdue, r["target_date"]))
+                    warnings.append("release-target-passed")
 
             pending = conn.execute("""SELECT COUNT(*) c FROM grandfather_entries
                                       WHERE disposition IS NULL""").fetchone()["c"]

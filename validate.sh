@@ -274,6 +274,12 @@ TESTS=(
                                  #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
                                  #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
                                  #   a duplicate GH key in the markdown is refused by name
+  "gh32-release-target-advisory.sh" # GH-32 (`check`'s warn-only target-date advisories) — 17/0; `ship` is a human
+                                 #   verb on purpose, so an already-satisfied release can sit `active` unnoticed
+                                 #   (0.7.1 Bulwark did, for a day). Pins that the advisory WARNS and never
+                                 #   refuses, names the release and the day count, distinguishes a stuck active
+                                 #   release from a stale draft, and — the falsifiable half — stays silent for a
+                                 #   release whose target has not passed
   "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
                                  #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"
