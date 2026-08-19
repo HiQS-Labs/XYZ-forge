@@ -68,3 +68,7 @@ debug.log
 
 # GH-509: per-commit local gate evidence — machine-local, self-reported, never committed.
 .gate-evidence/
+
+# GH-32 Phase 0: side-by-side generator output is regenerable proof, never committed
+RELEASES.generated.md
+RELEASES.generated.md.drift
