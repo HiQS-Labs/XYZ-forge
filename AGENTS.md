@@ -72,6 +72,13 @@ local change.
 
 ## Repo-specific rails
 
+- **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`): the GH-32
+  release ledger and the GH-69 ROADMAP shadow (`roadmap sync` mirrors `ROADMAP.md`'s ledger into
+  `roadmap_items`, one-way and lossless). Never hand-edit `releases.sql` or `releases.db`; after
+  editing `ROADMAP.md`'s ledger, run `releases roadmap sync`. Merge conflicts on the dump have a
+  one-command resolver (`utils/releases-merge-resolve.sh`). The whole contract, including what a
+  real merge conflict looks like: [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
+
 - **The local gate runs at the push boundary; hosted CI independently attests public-repo changes
   (GH-544, XYZ-forge #16).** The private-phase bridge ended when this repository became public on
   2026-08-15. `.github/workflows/ci.yml` now covers `push`/`pull_request` on `main` and `development`;

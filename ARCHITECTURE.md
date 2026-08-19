@@ -301,6 +301,8 @@ In relay mode it uses the same split as `relay-drive.sh`:
 
 The GH-32 RELEASES ledger has its own authority split (SQLite at runtime, a GID-keyed SQL dump at git
 merge boundaries) and its own transform triggers — see [RELEASES-DB-FAQS.md](RELEASES-DB-FAQS.md).
+The same DB also carries the GH-69 ROADMAP shadow: `releases roadmap sync` mirrors `ROADMAP.md`'s
+ledger into a `roadmap_items` table (one-way, lossless; the markdown stays the source of truth).
 
 ## Non-Claims
 

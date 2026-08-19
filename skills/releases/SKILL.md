@@ -23,6 +23,13 @@ subroutine only when the operator explicitly chooses or requests one.
 
 Natural-language requests route the same way. Do not make the operator remember the route names.
 
+## The DB's second subsystem — the ROADMAP shadow (GH-69)
+
+`releases.db` also mirrors `ROADMAP.md`'s ledger (`roadmap_items`, one-way, lossless). This skill
+does not own roadmap edits — `ROADMAP.md` stays the human file — but if a task you are part of
+edited that ledger, finish with `releases roadmap sync` (a no-change sync is a free no-op;
+`--dry-run` previews, `roadmap list` reads back). Contract: RELEASES-DB-FAQS.md.
+
 ## Preflight
 
 1. Resolve the repository root. Require `utils/pdda/pdda.sh`; stop if PDDA is absent because there
