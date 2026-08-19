@@ -2,6 +2,22 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.0.2] - 2026-08-18
+
+### Added
+- GH-32 RELEASES app Phase 0+1 (PR #34): `utils/py/releases_app.py` — SQLite-backed release
+  ledger with CLI-only writes, side-by-side generation (never touches RELEASES.md in Phase 0),
+  writer-lock protocol with per-boundary crash recovery, canonical GID-keyed dump, and legacy
+  import with grandfathered-violation tracking. Suite `test/gh32-releases-app.sh` 81/0 incl.
+  crash-injection and merge negative controls. Built by GLM 5.3 (evaluation: #33) against a PRD
+  that survived a 4-round Codex relay review; verified independently before merge.
+
+### Shipped
+- **Ballast 0.7.0 released** — `test/ballast-release.sh --release-gate` exit 0 for real
+  (manifest 4/4, stranger path 4/4, B1 10/10 consecutive parallel runs). The prior run-8 failure
+  was root-caused to a host reboot's SIGTERM broadcast, not a defect; failing stranger-run logs
+  are now preserved to durable paths.
+
 ## [1.0.1] - 2026-08-18
 
 ### Added
