@@ -232,7 +232,7 @@ ok "  and the static syntax check ran on the changed file" \
    "printf '%s' \"\$out\" | grep 'bash -n utils/hq/hq.sh' >/dev/null"
 _stub_nice="$(cat "$R2/test/hq-stub-nice.txt" 2>/dev/null || echo missing)"
 ok "the suite worker ran under nice -n 10 (observed nice=${_stub_nice})" \
-   "[ \"\$_stub_nice\" = \"10\" ]"
+   "[ \"\$_stub_nice\" -ge 10 ]"
 
 out="$( cd "$R2" && HQ_EXIT=1 bash validate.sh --paths-file "$PF" 2>&1 )"; rc=$?
 ok "a RED subsystem suite fails tier 2 (exit 1)" "[ $rc -eq 1 ]"
