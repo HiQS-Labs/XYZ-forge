@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 208 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 🔮 0 · 🔲 0
+Summary: 209 items | Tally: 🟢 5 · 🟡 6 · ⏸️ 4 · ⛔ 0 · ✅ 101 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
