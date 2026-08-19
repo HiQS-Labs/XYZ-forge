@@ -3,6 +3,11 @@ gh_issue: 555
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/555
 title: "Meter 0.6.0 has no exit criterion — build test/meter-release.sh --release-gate, and make it RED on arrival"
 status: 2-WORKING
+# roadmap_exempt: this doc carries the UPSTREAM repo's GH numbering (pre-migration). Its ledger
+# entry left ROADMAP.md in the 2026-08-19 upstream purge (#69) and is preserved verbatim in
+# docs/ROADMAP-UPSTREAM-ARCHIVE.md. Exempt rather than re-pointed so old-numbered tasks stay
+# out of the live ledger; if this work is picked back up, file it under a NEW GH number first.
+roadmap_exempt: true
 created: 2026-08-15
 updated: 2026-08-15
 owner: unassigned

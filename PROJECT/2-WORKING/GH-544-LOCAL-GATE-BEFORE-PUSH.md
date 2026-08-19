@@ -3,6 +3,11 @@ gh_issue: 544
 source: https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/544
 title: "Local-gate-before-push: retire hosted CI for the private phase, enforce the gate at the push boundary"
 status: 2-WORKING
+# roadmap_exempt: this doc carries the UPSTREAM repo's GH numbering (pre-migration). Its ledger
+# entry left ROADMAP.md in the 2026-08-19 upstream purge (#69) and is preserved verbatim in
+# docs/ROADMAP-UPSTREAM-ARCHIVE.md. Exempt rather than re-pointed so old-numbered tasks stay
+# out of the live ledger; if this work is picked back up, file it under a NEW GH number first.
+roadmap_exempt: true
 created: 2026-08-14
 updated: 2026-08-14
 owner: unassigned
