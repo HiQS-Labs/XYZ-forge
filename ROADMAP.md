@@ -10,9 +10,14 @@ synthesizes:
   - PROJECT/4-MISC/COST-OBSERVABILITY-PLAN.md
   - PROJECT/1-INBOX/MARATHON.md
 goal: >
-  Canonical pointer/ledger index for the repo's work — queued intake, projects in progress,
-  completed, attempted, and deferred — linking to the canonical PROJECT/** docs that own the
-  execution detail. This is an index, not a plan body.
+  Keep one long-horizon marathon under load at all times — work long, parallel, and failure-prone
+  enough to tax the whole XYZ system (worktree isolation, path claims, the driver lock, multi-round
+  handoff, escalation, resume). That purpose is a work-selection filter: prefer the marathon-shaped
+  candidate, run only real work (an idle gap is honest; a manufactured marathon is not), and treat
+  the failures a run surfaces as the deliverable. See AGENTS.md -> Repo-specific rails for the four
+  rules. Mechanically, this file is the canonical pointer/ledger index for that work — queued
+  intake, in progress, completed, and deferred — linking to the PROJECT/** docs that own the
+  execution detail. It is an index, not a plan body.
 ---
 
 <!-- PDDA ROADMAP CONTRACT — this file is a POINTER/LEDGER, not a plan body.
@@ -44,10 +49,27 @@ Three tracks, sequenced independently:
 
 ### Immediate next-up (ordered)
 
-1. **[#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) — build the single-page dashboard** over `releases` + `roadmap_items`. Front of the line by operator call: the drift this week (a shipped release left `active`, four stale status markers) was invisible until someone audited by hand. Also the first real consumer of the GH-69 shadow rows, which was #69's stated gate for its later stages.
+> **THE MARATHON — [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) (`require_fixture` adoption across 73 suites).**
+> Exactly one long-horizon marathon is in flight at a time (AGENTS.md → Repo-specific rails); this is it.
+> Selected 2026-08-19 on the marathon-shaped filter: 73 items, one identical mechanical transform each,
+> a per-item pass condition a machine can check, and a proven ability to break the harness — a prior
+> driven run escalated after 5 rounds with **zero suites adopted**. It also retires the containment
+> defect cluster (GH-1/#10/#45/#177, plus the ledger rebuild during GH-57's own test authoring).
+> Everything numbered below rides *alongside* it, not instead of it.
+
+1. **[#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) — build the single-page dashboard** over `releases` + `roadmap_items`. Deliberately **not** the marathon: it is one generator emitting one file and taxes nothing. It is the instrument you watch the marathon through — the drift this week (a shipped release left `active`, four stale status markers) was invisible until someone audited by hand. Also the first real consumer of the GH-69 shadow rows, which was #69's stated gate for its later stages.
 2. **[#67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) — P1: ratify or revert the Commandcode `--yolo` default.** A permission-posture change to a builder default, landed inside a fuzzing PR, undecided.
 3. **[#59](https://github.com/HiQS-Suite/XYZ-forge/issues/59) — find out why hosted CI fires on nothing**, then narrow triggers to push/merge on `development` + `main` and wire the required check behind `main`'s new branch protection.
 4. **[#58](https://github.com/HiQS-Suite/XYZ-forge/issues/58) — GH-35 Phase 3**, folding in the tier-2 hygiene gap (P2) and the two P3 defects from the PR #55 review.
+
+> **Standing radar finding (2026-08-19, 21-day window, 122 commits on `development`):** flow is
+> roughly **Run 72% / Grow 16% / Transform 0%** — no `PROJECT/**` doc declares `rgt: transform`, so
+> by the strict rule no transform work can be *claimed*, not that none happened. The dominant defect
+> cluster is **guards that could not report red**: the dashboard check verified its own output (three
+> stale dashboards reached `development` under a green gate on 2026-07-30 alone), the pre-push hook
+> double-niced and blocked itself, and GH-57's resolver held four defects invisible until a real
+> `git merge` was driven. One durable fix — every guard ships a recorded negative control against the
+> *real* artifact — retires the cluster. That is release **0.2.0 Litmus**'s declared scope.
 
 > **Provenance note (2026-08-19):** this repo succeeds
 > [`xyz-3-agents-swarm`](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm); the migration kept the old GH numbering in
@@ -87,7 +109,7 @@ detour has a home; note that the marathon planner does NOT read this section —
 - **GH-18 · Harness evaluation: Command Code (cmd) and model matrix** 🆕 **queued 2026-08-16** — evaluate Command Code CLI (v1.26.0), PATH resolution, auth, non-interactive `-p` execution, and model review benchmarks with `qwen/qwen3.7-flash` and `qwen/qwen3.8-max`. → [GH-18-COMMANDCODE-EVAL.md](PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md) · [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18)
 ### In progress
 
-- **GH-10 · prevent-half of containment: adopt require_fixture across the ~31 (found: 73) unaudited suites + adoption guard + ci-local identity bracket** ⏸️ **CUT from Ballast 0.7.0, 2026-08-17 — a driven marathon escalated after 5 rounds, scope grew from ~31 to 73 suites with zero adopted; invokes the manifest's pre-declared scope-slip contingency (RELEASES.md). Issue stays open; #1's clone-identity bracket is the interim detect-half protection.** — → [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10)
+- **GH-10 · prevent-half of containment: adopt require_fixture across the ~31 (found: 73) unaudited suites + adoption guard + ci-local identity bracket** 🚧 **THE MARATHON as of 2026-08-19 — exactly one is in flight at a time (AGENTS.md → Repo-specific rails), and this is it.** Previously ⏸️ CUT from Ballast 0.7.0 on 2026-08-17: a driven marathon escalated after 5 rounds, scope grew from ~31 to 73 suites with zero adopted, invoking the manifest's pre-declared scope-slip contingency (RELEASES.md). That escalation is the reason to re-run it, not to avoid it — 73 items with one identical mechanical transform each and a machine-checkable per-item pass condition is the marathon-shaped archetype, and the run's failures are the deliverable. #1's clone-identity bracket remains the interim detect-half protection. — → [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10)
 - **GH-1 · suite-wide fixture containment + clone-identity invariant gate** 🆕 **active 2026-08-15 on `gh-1/suite-containment-gate` (public-repo tracker)** — the GH-564 follow-through: the one guarded suite's `require_fixture` moved to a shared `test/lib/fixture-guard.sh` and gained the **resolved-containment** check the GH-567 residual named (the lexical `"$WORK"/*` prefix test accepts `$WORK/../../<real repo>`; `cd`+`pwd -P` collapses traversal and follows symlinks), plus a file variant and an init-missing refusal. The detect-half: `test/lib/clone-identity.sh` snapshots `core.bare`/remotes/local user identity/`HEAD` before the run and asserts it after, wired into `validate.sh` so the ~31 unaudited suites are covered by one bracket even before they adopt the guard — a sandbox escape now fails the run instead of leaving an unattributable clone. New suite `test/gh1-fixture-guard.sh` pins both halves, including the traversal and symlink-escape cases the old check passed. cx/risk/eff 2/2/2. → [GH-1-SUITE-CONTAINMENT-GATE.md](PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md) · [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)
 - **GH-5 · kernel robustness: node:test unit runner** 🆕 **active 2026-08-15 on `gh-5/events-quarantine-unit-tests` (public-repo tracker)** — 11 direct unit tests on the built-in `node:test` runner (was 13; the 2 quarantine-dependent tests deferred to #14), zero new dependencies, `npm run test:unit`, `npm test` → `validate.sh` unchanged. The quarantine-in-reader approach was rejected on orchestrator review per the correction on #5 (silent event loss on the concurrent path while writes are non-atomic) and re-routed to #14. **#5 stays open until this PR's tests and #14's atomic write have both landed.** cx/risk/eff 1/2/1. → [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5)
 ### Completed

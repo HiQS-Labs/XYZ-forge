@@ -72,6 +72,29 @@ local change.
 
 ## Repo-specific rails
 
+- **This repo's purpose is to keep a long-horizon marathon under load — and that is a work-selection
+  filter, not a slogan.** The harness is only proven by work long enough, parallel enough, and
+  failure-prone enough to tax the whole system: worktree isolation, path claims, the driver lock,
+  multi-round handoff, escalation, and resume. Short, single-shot tasks land fine but prove nothing.
+  Four rules follow, and they are load-bearing:
+
+  1. **Exactly one long-horizon marathon is in flight at a time.** When one lands, choosing the next
+     is a real decision, not a default. It is named in `ROADMAP.md`'s **Immediate next-up** as the
+     marathon, so an agent arriving cold can tell which item is the load and which items are riding
+     alongside it.
+  2. **Prefer the marathon-shaped candidate.** *Marathon-shaped* means: decomposable into many items
+     with an identical transform, a per-item pass condition a machine can check, and a plausible way
+     to break the harness. GH-10 (73 unaudited suites, one mechanical adoption each) is the
+     archetype. Picking a non-marathon-shaped item over a marathon-shaped one of comparable value
+     needs a stated reason — write it in the ledger entry, not in a commit message.
+  3. **Only real work.** Never manufacture a marathon to keep the system busy, and never build a
+     synthetic workload that cannot damage anything — a run with no blast radius does not surface
+     the failures that matter. If nothing genuinely needed is marathon-shaped right now, **the
+     correct state is idle**. Say so plainly and do the smaller work; an idle gap is honest signal,
+     a fabricated marathon is noise that costs real tokens.
+  4. **The point is the failures.** A marathon that completes cleanly and teaches nothing is a
+     weaker result than one that escalates and names a defect. Report what broke; do not smooth it.
+
 - **The RELEASES DB is two subsystems behind one CLI** (`utils/py/releases_app.py`): the GH-32
   release ledger and the GH-69 ROADMAP shadow (`roadmap sync` mirrors `ROADMAP.md`'s ledger into
   `roadmap_items`, one-way and lossless). Never hand-edit `releases.sql` or `releases.db`; after
