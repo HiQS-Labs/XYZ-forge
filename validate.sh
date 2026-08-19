@@ -201,6 +201,14 @@ TESTS=(
                                  #   when an intent journal is live) and hashes the clone's artifacts
                                  #   before/after to prove it. 10/0; control in
                                  #   test/baselines/GH-52-negative-control.md
+  "gh53-releases-merge-resolve.sh" # #53 (derived-artifact attributes + the one-command ledger merge
+                                 #   resolution). Pins that releases.db/RELEASES-PREVIEW.md stay
+                                 #   -diff + linguist-generated and keep NO merge driver — measured:
+                                 #   only a driver defined in .git/config auto-merges them, and
+                                 #   auto-merging is the wrong outcome anyway (it lets a merge finish
+                                 #   with a DB holding one side's rows). The refusals are the point:
+                                 #   a two-header dump (what a naive merge=union leaves) and a dump
+                                 #   with conflict markers are both refused, not rebuilt. 18/0
   "gh39-releases-project-sync.sh" # GH-39 (idempotent, explicit-apply RELEASES.DB -> GitHub Project card projection;
                                  #   mock GH covers dry run, create, repeat update/no duplicate, and schema refusal)
   "path-integrity.sh"
