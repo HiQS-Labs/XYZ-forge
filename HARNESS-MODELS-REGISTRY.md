@@ -95,7 +95,13 @@ All canonical IDs are exact for use with `cmd -p "<prompt>" -m <id> --tools-all 
 | Aider | Python / LiteLLM | API-metered; no reliable stdout usage record in `--message` mode | `aider --message` | Builder-only, with model-specific edit-format constraints. |
 | Pi | Node.js multi-provider agent | JSON mode exposes usage/cost events | `pi -p --mode json` | Builder-only evidence; no silent default model. |
 | SmallCode | Node.js / local LM Studio | Local inference | `smallcode.js -P` | Experiment only; repeat-loop failure. |
-| ATE | Python variation runner | Depends on configured endpoint | `run_variations.py` | Test infrastructure, not an autonomous production lane. |
+| ATE | Python variation runner | Depends on configured endpoint | `run_variations.py` | Test infrastructure, now instrumented with structured telemetry (GH-94). |
+
+### 3.1 Programmatic Tool Calling & Code-Mode Architecture (GH-94)
+
+- **The "26 Tool" Hypothesis:** Based on PwC's research ("The Bitter Lesson of Tool Calling"), when agent systems scale beyond $\approx 25$ distinct tools or require multi-step chained operations, programmatic script-mode execution (generating and running Python scripts via `utils/py/script_runner.py`) provides an architectural alternative to verbose JSON schema context flooding.
+- **Empirical In-Tree Evaluation (GH-101 / GH-102):** In-tree validation of programmatic tool calling vs JSON function calling across live frontier APIs (accuracy, latency, and token cost curves) is tracked under GH-101 and GH-102.
+- **Containment Invariant:** Programmatic execution in `utils/py/script_runner.py` requires process-group isolation (`setsid` + `SIGTERM`/`SIGKILL` cleanup), AST serialization normalization, and OS-level write sandboxing (`sandbox-exec`/`bwrap`) when `--containment-root` is provided (verified by `test/synthetic/gh94-containment-invariants.sh`).
 
 ## 4. Promotion and re-evaluation rules
 
@@ -111,6 +117,7 @@ All canonical IDs are exact for use with `cmd -p "<prompt>" -m <id> --tools-all 
 
 | Date | Target / subject | Action | Evidence-based result |
 |---|---|---|---|
+| **2026-08-20** | Programmatic Tool Calling (GH-94) | Policy & benchmark baseline recorded | Integrated `utils/py/script_runner.py` with PGID timeout containment and macOS seatbelt sandboxing; instrumented `utils/ate/scripts/run_variations.py` with structured telemetry (schema 1.0); completed 438-iteration harness stability campaign under local Gemma triage (retained in `TESTS-RESULTS/2026-08-20+GH-94/`); verified synthetic suites `gh94-script-serialization.sh` and `gh94-containment-invariants.sh` (7/7 PASS). |
 | **2026-08-18** | Command Code + Laguna S 2.1 Free | Added **N/A** | The provider lists this route as free while capacity lasts. One real worktree-isolated review-only relay had no output or worktree progress and was killed at its 300 s cap (`timeout-idle-no-progress`); containment handed the token back. This is insufficient evidence for C but does not qualify any safe relay role. [#48](https://github.com/HiQS-Suite/XYZ-forge/issues/48), [#49](https://github.com/HiQS-Suite/XYZ-forge/issues/49), [PR #44](https://github.com/HiQS-Suite/XYZ-forge/pull/44). |
 | **2026-08-18** | Command Code + Muse Spark 1.2 Contributor | Added **B** | Two bounded build attempts and a real worktree-isolated relay review are recorded. The first build produced no code; the second produced the initial adapter but reached its turn cap. The live review found two real containment gaps, fixed by Codex with focused regressions; the full gate reached 215/216 before a separately repaired generated-dashboard drift. Keep the route B pending PR #44 review/integration and more independent successful runs. [#41](https://github.com/HiQS-Suite/XYZ-forge/issues/41), [#42](https://github.com/HiQS-Suite/XYZ-forge/issues/42), [PR #44](https://github.com/HiQS-Suite/XYZ-forge/pull/44). |
 | **2026-08-16** | Registry audit | Refined | Reconciled the legacy Swarm checkout and both repositories’ issues/PR state. Split policy lanes from grades; Aider is builder-only with explicit-format constraints; Pi is builder-only; SmallCode remains C. |

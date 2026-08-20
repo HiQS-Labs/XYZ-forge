@@ -531,6 +531,8 @@ Full agent-facing detail — invocation flow, guardrails, and the locator contra
 
 ---
 
+For retained testing artifacts, benchmark receipts, and telemetry logs, see [TESTS-RESULTS/README.md](TESTS-RESULTS/README.md).
+
 For observed real-agent behavior and decision history, see
 [REAL-AGENT-OBSERVATIONS.md](PROJECT/4-MISC/REAL-AGENT-OBSERVATIONS.md) and
 [CHANGELOG.md](CHANGELOG.md) — the running end-of-iteration log. (`RECAP.md` is retired in `PROJECT/4-MISC/`.)

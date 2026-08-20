@@ -2,7 +2,7 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
-## [Unreleased]
+## [1.1.6] - 2026-08-20
 
 ### Added
 - **GH-103: in-band releases 0.7.1 and 0.7.2 recorded here, per the RELEASES.md band rule.**
@@ -20,6 +20,21 @@ All notable changes to this repo. Newest first. Dates are PDT.
   projects `releases.db` onto the timeline-ui rail (`data.json` contract + baked static
   `temp/timeline/index.html`), with a band-aware RELEASES.md-vs-DB drift banner and a
   standalone `--check-drift` guard mode. Zero DB writes (SQLite `mode=ro`).
+- **GH-102: Unified telemetry schema (1.0) and universal inspection CLI across fuzzing and ATE.**
+  Standardized shared data contract (`schema_version: "1.0"`); instrumented `utils/fuzzing/fuzz-loop.sh` with
+  argv-safe JSONL emission and sub-second millisecond duration timing; updated `utils/ate/scripts/run_variations.py`
+  to honestly distinguish `tokens_source` (`api_usage` vs `config_provided` vs `unsupported`); upgraded
+  `utils/ate/scripts/checkin.py` into a universal inspector supporting nearest-rank percentiles, `--tail`, `--json`,
+  and side-by-side `--compare` mode; added synthetic test `test/synthetic/gh102-telemetry-schema.sh` (8/8 PASS under
+  `fuzz-loop.sh`); verified by 2-round `/relay-xyz` with CommandCode (GLM-5.2) and published receipts in
+  `TESTS-RESULTS/2026-08-20+GH-102/`.
+- **GH-94: Programmatic tool calling execution runner, ATE structured telemetry, test receipts retention, and SOP.**
+  Implemented `utils/py/script_runner.py` with AST normalization for newline serialization defects, process-group
+  session isolation (`setsid` + PGID cleanup), and macOS seatbelt sandboxing; added synthetic test suites
+  `gh94-script-serialization.sh` and `gh94-containment-invariants.sh` (7/7 PASS under `utils/fuzzing/fuzz-loop.sh`);
+  instrumented `utils/ate/scripts/run_variations.py` with structured telemetry schema 1.0; completed 438-iteration
+  180-min ATE campaign with local Gemma classifier; retained receipts in `TESTS-RESULTS/2026-08-20+GH-94/`; updated
+  `HARNESS-MODELS-REGISTRY.md` with Section 3.1 & the 26-tool hypothesis; added `SOP.md` and `TESTS-RESULTS/README.md`.
 - **GH-91: `.relay-scratch/` — a sanctioned home for builder verification output.** A build
   turn must run commands that produce output, and had nowhere inside the tree to put it: the
   daybreak wave-1 re-fire reverted four green probe JSONs at exit 6 and failed a complete,

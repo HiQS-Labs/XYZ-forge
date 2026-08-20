@@ -6,13 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 1 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
+Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
 | GH-91 · a build turn has nowhere to write verification output — containment kills a complete, green turn | ✅ | [GH-91-RELAY-SCRATCH-DIR.md](PROJECT/2-WORKING/GH-91-RELAY-SCRATCH-DIR.md) · [#91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) |
 | GH-10 · prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | ✅ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
-| GH-10 · prevent-half of containment: adopt require_fixture across the ~31 (found: 73) unaudited suites + adoption guard + ci-local identity bracket | ⏸️ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
 | GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) |
 | GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) | — | [#62](https://github.com/HiQS-Suite/XYZ-forge/issues/62) · [#63](https://github.com/HiQS-Suite/XYZ-forge/issues/63) · [#64](https://github.com/HiQS-Suite/XYZ-forge/issues/64) · [#65](https://github.com/HiQS-Suite/XYZ-forge/issues/65) · [#61](https://github.com/HiQS-Suite/XYZ-forge/issues/61) |
 | GH-67 · Commandcode builder default widened to --yolo — closer evaluation → possible build | — | [#67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) |
@@ -22,6 +21,7 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 1 · ⛔ 0 · ✅ 2 · �
 | GH-28 · RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | [GH-28-RELEASES-LEDGER-DISCIPLINE.md](PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md) · [#28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) |
 | GH-17 · SOP for evaluating new agent harnesses and frontier models | — | [GH-17-SOP-HARNESS-MODEL-EVAL.md](PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md) · [#17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) |
 | GH-18 · Harness evaluation: Command Code (cmd) and model matrix | — | [GH-18-COMMANDCODE-EVAL.md](PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md) · [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) |
+| GH-101 · Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core Relay & Consult Runtimes | — | [GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md](PROJECT/1-INBOX/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md) · [#101](https://github.com/HiQS-Suite/XYZ-forge/issues/101) |
 
 ## In progress
 
@@ -36,10 +36,12 @@ Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮
 
 ## Completed
 
-Summary: 8 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 8 · 🔮 0 · 🔲 0
+Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 10 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-102 · Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | ✅ | [GH-102-UNIFIED-TELEMETRY-TOOLING.md](PROJECT/3-COMPLETED/GH-102-UNIFIED-TELEMETRY-TOOLING.md) · [#102](https://github.com/HiQS-Suite/XYZ-forge/issues/102) |
+| GH-94 · research: programmatic tool calling & code-mode execution for harnesses, telemetry, and containment | ✅ | [GH-94-PROGRAMMATIC-TOOL-CALLING.md](PROJECT/3-COMPLETED/GH-94-PROGRAMMATIC-TOOL-CALLING.md) · [#94](https://github.com/HiQS-Suite/XYZ-forge/issues/94) |
 | GH-57 · test(releases): SQLite ledger fuzzing recipes & multi-scenario resilience suite | ✅ | [GH-57-RELEASES-SQLITE-FUZZING.md](PROJECT/2-WORKING/GH-57-RELEASES-SQLITE-FUZZING.md) · [#57](https://github.com/HiQS-Suite/XYZ-forge/issues/57) |
 | GH-45 · validate.sh must refuse to run from a linked worktree — an observed run corrupted the parent clone | ✅ | [GH-45-WORKTREE-GATE-REFUSAL.md](PROJECT/2-WORKING/GH-45-WORKTREE-GATE-REFUSAL.md) · [#45](https://github.com/HiQS-Suite/XYZ-forge/issues/45) · [#564](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/564) |
 | GH-39 · RELEASES app: one-way GitHub Project release-card projection | ✅ | [GH-39-RELEASES-PROJECT-SYNC.md](PROJECT/2-WORKING/GH-39-RELEASES-PROJECT-SYNC.md) · [#39](https://github.com/HiQS-Suite/XYZ-forge/issues/39) |
