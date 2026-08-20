@@ -298,7 +298,7 @@ def in_md_band(version, md):
     if v is None:
         return False
     for block in md.values():
-        if m := re.match(r"^(\S+)-(\S+)$", block.get("iterations", "")):
+        if m := re.match(r"^\s*(\S+?)\s*-\s*(\S+?)\s*$", block.get("iterations", "")):
             lo, hi = _ver(m.group(1)), _ver(m.group(2))
             if lo and hi and lo <= v <= hi:
                 return True
@@ -416,7 +416,7 @@ def serve(db_path, md_path, template_dir, port):
                 return
             if path != "/data.json":
                 return super().do_GET()
-            cx = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            cx = sqlite3.connect(f"{db_path.as_uri()}?mode=ro", uri=True)
             try:
                 body = json.dumps(build_payload(cx, date.today(), md_path)).encode()
             finally:
@@ -465,7 +465,7 @@ def main(argv=None):
     if args.serve:
         serve(args.db.resolve(), md_path, args.template.resolve().parent, args.serve)
         return
-    cx = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
+    cx = sqlite3.connect(f"{args.db.resolve().as_uri()}?mode=ro", uri=True)
     try:
         payload = build_payload(cx, date.today(), md_path)
     finally:

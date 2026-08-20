@@ -262,8 +262,8 @@ article[hidden]{display:none}
       :'';
     var linksHTML='';
     if(c.links){
-      if(c.links.issue) linksHTML+=' · <a href="'+c.links.issue+'">issue</a>';
-      if(c.links.doc) linksHTML+=' · <a href="'+c.links.doc+'">doc</a>';
+      if(c.links.issue) linksHTML+=' · <a href="'+esc(c.links.issue)+'">issue</a>';
+      if(c.links.doc) linksHTML+=' · <a href="'+esc(c.links.doc)+'">doc</a>';
     }
     var pillsHTML=(c.pills&&c.pills.length)
       ?('<div class="pills">'+c.pills.map(function(p){
@@ -283,7 +283,7 @@ article[hidden]{display:none}
 
   function marathonHTML(m){
     return '<div class="mar" data-state="'+esc(m.state)+'" data-mar="'+esc(String(m.id).replace('GH-',''))+'">'+
-      '<div class="mh"><span class="mtag">marathon</span><span class="iid"><a href="'+m.url+'">'+esc(m.id)+'</a></span>'+
+      '<div class="mh"><span class="mtag">marathon</span><span class="iid"><a href="'+esc(m.url)+'">'+esc(m.id)+'</a></span>'+
         '<span class="mt">'+esc(m.title)+'</span><span class="mmeta">'+esc(m.meta)+'</span></div>'+
       m.cards.map(cardHTML).join('')+
       '</div>';
@@ -299,7 +299,7 @@ article[hidden]{display:none}
       '<div class="nh"><span class="cn">'+esc(rel.name)+'</span><span class="ver">'+esc(rel.version)+'</span>'+
         '<span class="badge '+esc(rel.badge.type)+'">'+esc(rel.badge.label)+'</span></div>'+
       '<div class="meta">'+esc(rel.dateLabel)+' '+esc(rel.date)+extraText+' · '+rel.itemsTotal+' items · '+openHTML+
-        ' · <a href="'+rel.milestoneUrl+'">'+esc(rel.milestoneRef)+'</a></div>'+
+        ' · <a href="'+esc(rel.milestoneUrl)+'">'+esc(rel.milestoneRef)+'</a></div>'+
       (rel.blurb?'<p class="blurb">'+esc(rel.blurb)+'</p>':'')+
       '<p class="exit">'+esc(rel.exit)+'</p>'+
       '</article>';
@@ -358,7 +358,7 @@ article[hidden]{display:none}
         '<div class="h"><span class="mk m-done">✓</span><span class="iid">'+esc(jf.issue)+'</span><span class="t">'+esc(jf.title)+'</span></div>'+
         '<div class="meta">closed '+esc(jf.closedDateDisplay)+' · '+esc(jf.closedAgoDisplay)+
           (jf.mergedInto?' · merged into '+esc(jf.mergedInto):'')+
-          (jf.issueUrl?' · <a href="'+jf.issueUrl+'">issue</a>':'')+'</div>'+
+          (jf.issueUrl?' · <a href="'+esc(jf.issueUrl)+'">issue</a>':'')+'</div>'+
         '</div>')
       :'<div></div>';
     var wnHTML='<div></div>';
@@ -369,12 +369,12 @@ article[hidden]{display:none}
       });
       if(wn.note) wnParts.unshift(esc(wn.note));
       var wnOverride=wn.override?(' <span class="ovr"'+(wn.override.hot?' data-up':'')+'>▸ ovr '+wn.override.value+'</span>'):'';
-      var wnMarathon=wn.marathon?(' · marathon <a href="'+wn.marathon.url+'">'+esc(wn.marathon.id)+'</a> '+esc(wn.marathon.phase)):'';
+      var wnMarathon=wn.marathon?(' · marathon <a href="'+esc(wn.marathon.url)+'">'+esc(wn.marathon.id)+'</a> '+esc(wn.marathon.phase)):'';
       var wnBlocks=wn.blocks?(' · '+(wn.blocks.hot?'<b class="r">'+esc(wn.blocks.text)+'</b>':esc(wn.blocks.text))):'';
       wnHTML='<div><div class="tiny">what\'s next</div>'+
         '<div class="h"><span class="mk">○</span><span class="iid">'+esc(wn.issue)+'</span><span class="t">'+esc(wn.title)+'</span></div>'+
         '<div class="meta">'+wnParts.join(' · ')+wnOverride+wnMarathon+wnBlocks+
-          (wn.issueUrl?' · <a href="'+wn.issueUrl+'">issue</a>':'')+'</div>'+
+          (wn.issueUrl?' · <a href="'+esc(wn.issueUrl)+'">issue</a>':'')+'</div>'+
         '</div>';
     }
     strip.innerHTML=jfHTML+wnHTML;

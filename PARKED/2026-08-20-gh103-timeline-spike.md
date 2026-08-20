@@ -9,6 +9,12 @@ Each carries enough context to pick up cold; real homes are the linked issues/fi
   `releases_app.py` as the verb's body, or keep it standalone with the `data.json` contract as
   the seam. Decide when #75 is picked up; nothing blocks on it.
 
+- **RELEASES-PREVIEW.html staleness guard.** The committed snapshot (operator decision) has no
+  freshness check, unlike ROADMAP-DASHBOARD.md. Flagged [Blocker] by the agy QA relay r1
+  (relay-system/2026-08-20/gh103-branch-qa.md); deferred because the dashboard pattern can't be
+  copied verbatim — the bake embeds `generatedAtDisplay`, so `git diff --exit-code` always fails.
+  Prerequisite: a deterministic bake mode (omit/pin the timestamp), then wire the check.
+
 - **`--check-drift` guard wiring.** `export_timeline.py --check-drift` (exit 1 on
   RELEASES.md-vs-DB drift, band-aware, writes nothing) exists but is wired into no check lane.
   Candidate homes: `utils/pdda/pdda.sh releases` (warn-only lane) or the pre-push tier registry
