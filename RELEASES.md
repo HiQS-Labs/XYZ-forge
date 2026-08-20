@@ -204,3 +204,17 @@ Milestone: Sundown
 Front-door reviewed: No
 Shakedown reviewed: No
 License file: Yes
+
+Release: 0.9.0
+Iterations: 0.9.0-0.9.4
+Status: Draft
+Target Date: 2026-09-19
+Codename: Cargo
+Description: The harness travels with its ledger. The RELEASES DB system (releases_app.py CLI + merge resolver + FAQs) and the GH-103 HTML timeline generator (utils/timeline/) ship inside every vendored `.xyz/` payload as an optional, never-wired-by-default add-on — a "when you're ready" module a target repo enables by running `releases init` itself, matching this file's own OPTIONAL philosophy (GH-381). Sequenced before Meter (0.6.0, 2026-09-26) by explicit operator decision 2026-08-20; version 0.9.0 because every 0.1–0.8 band is reserved — target date, not version number, carries the ordering. Cut through the CLI and mirrored here by hand in the same commit (the GH-32 Phase-0 dual path; no automatic dual writer exists yet).
+Exit criterion: A repo vendored with `xyz-vendor.sh` can, with zero extra downloads, run `releases init`/`add` and `export_timeline.py --preview` from `.xyz/` against its own root, and `xyz-sync.sh update` preserves the target's ledger state (GH-312 preserve list). Nothing runs until the user invokes it. NOT BUILT — the gate is authored before any member is fixed, per the Litmus/Nightwatch ordering.
+Manifest: FROZEN 2026-08-20 on creation — #105 (vendor the RELEASES DB + timeline generator into the .xyz payload). One entry, a fixed denominator. Adding an entry is a RE-SCOPE, not a bugfix, under the standing admission rule: a mid-release discovery joins only if it makes the exit command fail or falsifies a named invariant, has a reproducer demonstrating that, and the operator explicitly swaps out an existing entry or accepts a date slip. Discovery is not admission.
+GH_URL: https://github.com/HiQS-Suite/XYZ-forge/issues/105
+Milestone: Cargo
+Front-door reviewed: No
+Shakedown reviewed: No
+License file: Yes
