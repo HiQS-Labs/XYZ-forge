@@ -327,5 +327,50 @@ has "lens 7's close refreshes the dashboard after syncing" \
     "$(F lens-7 'd["lenses"]["7"]["candidates"][0]["close"]')" "roadmap-dashboard.sh"
 
 echo
+# ── 15. Round-4 review: the two round-3 fixes that MOVED the bug instead of closing it ───────────
+# Both are the same lesson twice: a fix that satisfies the assertion written for it, while the
+# defect walks around the assertion. Section 14 pinned each finding at the exact shape codex
+# described, so both survived a green suite.
+
+# B1-again — the anchor. Section 14's `roadmap_diverged` fixture is a single token, so a form that
+# merely *found the counts somewhere in the text* passed it. This fixture is the counterexample: a
+# well-formed count fragment embedded in a line that is NOT the producer's summary, naming the wrong
+# file. Finding a convenient substring is not validating a summary.
+is "a count-shaped fragment inside a non-summary line degrades to D4" \
+   "$(F lens-7-decoy 'd["lenses"]["7"]["degraded_id"]')" "D4"
+is "  and yields no candidate from the decoy counts" \
+   "$(F lens-7-decoy 'len(d["lenses"]["7"]["candidates"])')" "0"
+
+# B4-again — the C-quoted name. Section 14's "adversarial path" fixture was an ordinary unquoted
+# porcelain pathname, so it never entered this branch at all. git C-quotes any name containing a
+# quote, backslash, newline or non-ASCII byte; `${line:3}` then yields the ESCAPED DISPLAY STRING,
+# and every use of it addresses a file that does not exist — which degraded the lens and cleared
+# EVERY candidate already collected. One oddly-named file could blank the whole working-tree lens.
+is "a C-quoted porcelain name is decoded to the real filename" \
+   "$(F lens-2-cquoted 'd["lenses"][chr(50)]["candidates"][0]["evidence_payload"]')" \
+   "$(printf 'we"ird\tname.md')"
+is "  so the lens stays ok rather than degrading on one odd filename" \
+   "$(F lens-2-cquoted 'd["lenses"]["2"]["status"]')" "ok"
+is "  and it still carries its required mtime" \
+   "$(F lens-2-cquoted 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1730000000"
+
+# Renames had the identical parse bug: `R  old -> new` was one field, so the "path" was the literal
+# string `old -> new`, unstattable, same blast radius. The CURRENT path is what an operator acts on.
+is "a rename record yields the destination path, not 'old -> new'" \
+   "$(F lens-2-rename 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "new/name.md"
+
+# S — --fixture must be hermetic for the branch too. Falling through to a live `git rev-parse` let a
+# lens-3 candidate take its key and no-upstream close from the reviewer's own checkout.
+is "a fixture with no branch.txt degrades lens 3 rather than reading the live branch" \
+   "$(F lens-3-no-branch 'd["lenses"]["3"]["degraded_id"]')" "D5"
+
+# S — the published interface: "2 usage or a contract violation". A bare --fixture used to abort on
+# an unbound variable under `set -u`, which is exit 1 and a bash error, not the documented contract.
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture >/dev/null 2>&1
+is "a bare --fixture is a usage error with the published exit 2" "$?" "2"
+bash "$ROOT_DIR/skills/standup/collect.sh" --nope >/dev/null 2>&1
+is "  as is an unknown argument" "$?" "2"
+
+echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

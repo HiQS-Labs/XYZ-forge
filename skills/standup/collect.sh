@@ -4,8 +4,15 @@ set -uo pipefail
 FIXTURE_DIR=""
 while [[ $# -gt 0 ]]; do
   case $1 in
-    --fixture) FIXTURE_DIR="$2"; shift 2 ;;
-    *) echo "Unknown arg $1" >&2; exit 1 ;;
+    # `$2` under `set -u` is an unbound-variable abort on a bare `--fixture`, which surfaces as a
+    # bash error and exit 1 rather than the interface SKILL.md publishes ("2 usage or a contract
+    # violation"). Validate the operand before consuming it.
+    --fixture)
+      if [[ $# -lt 2 || -z "${2:-}" ]]; then
+        echo "collect.sh: --fixture requires a directory operand" >&2; exit 2
+      fi
+      FIXTURE_DIR="$2"; shift 2 ;;
+    *) echo "collect.sh: unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
@@ -32,10 +39,21 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 3
 fi
 
-if [[ -n "$FIXTURE_DIR" && -f "$FIXTURE_DIR/branch.txt" ]]; then
-  branch=$(cat "$FIXTURE_DIR/branch.txt")
+# Under --fixture every read must come from the fixture. Falling through to the live `git rev-parse`
+# when `branch.txt` is absent let a lens-3 candidate take its key and its no-upstream close text from
+# whatever branch the REVIEWER happened to be standing on — the fixture then asserted something about
+# the machine rather than about the collector. Every other missing bounded input degrades; so does
+# this one. BRANCH_KNOWN carries the verdict to lens 3, the only consumer.
+BRANCH_KNOWN=1
+if [[ -n "$FIXTURE_DIR" ]]; then
+  if [[ -f "$FIXTURE_DIR/branch.txt" ]]; then
+    branch=$(cat "$FIXTURE_DIR/branch.txt")
+  else
+    branch="unknown"; BRANCH_KNOWN=0
+  fi
 else
-  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+  branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || { branch="unknown"; BRANCH_KNOWN=0; }
+  [[ -n "$branch" ]] || { branch="unknown"; BRANCH_KNOWN=0; }
 fi
 
 run_mock() {
@@ -64,6 +82,39 @@ run_mock() {
 # closed and reopened around an escaped literal.
 shq() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
 
+# Decode one `git status --porcelain` stream into `XY<TAB>base64(path)` lines.
+#
+# Slicing `${line:3}` in bash is wrong for two ordinary cases, and both were shipped:
+#   * C-QUOTING — a name containing a quote, backslash, newline or non-ASCII byte arrives wrapped in
+#     double quotes with backslash escapes. The slice yields the ESCAPED DISPLAY STRING, so every
+#     downstream use addresses a file that does not exist: the fixture stat lookup misses, a live
+#     getmtime fails, and the lens degrades D5 — clearing EVERY candidate it had already collected.
+#     One oddly-named file could therefore blank the whole working-tree lens.
+#   * RENAMES — `R  old -> new` is one field to the slice, so the "path" is the literal string
+#     `old -> new`, which cannot be statted either, with the same blast radius.
+# Both contradict the lens-2 predicate ("any modified or untracked non-ignored path") by dropping
+# items the contract requires, and they do it by degrading rather than visibly.
+#
+# Decode in python, which has the C-escape grammar built in, and hand back base64 so a path
+# containing any byte at all survives the trip through the shell. (Filenames cannot contain NUL, so a
+# bash variable can hold the decoded result safely.)
+porcelain_rows() {
+  python3 -c '
+import base64, sys
+for line in sys.stdin.read().split("\n"):
+    if not line.strip():
+        continue
+    xy, rest = line[:2], line[3:]
+    # A rename/copy record names both sides; the CURRENT path is what an operator acts on.
+    if xy and xy[0] in ("R", "C") and " -> " in rest:
+        rest = rest.split(" -> ", 1)[1]
+    if rest.startswith("\"") and rest.endswith("\"") and len(rest) >= 2:
+        # Same grammar C uses, which is what git emits here: \n, \t, \\, \", and \ooo octal bytes.
+        rest = rest[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
+    sys.stdout.write("%s\t%s\n" % (xy, base64.b64encode(rest.encode("utf-8", "surrogateescape")).decode("ascii")))
+'
+}
+
 lens2_status="ok"
 lens2_deg="null"
 lens2_cands="[]"
@@ -74,10 +125,10 @@ rc2=$?
 set -e
 if [[ $rc2 -eq 0 ]]; then
   cands="[]"
-  while IFS= read -r line; do
-    [[ -z "$line" ]] && continue
-    st="${line:0:2}"
-    path="${line:3}"
+  while IFS=$'\t' read -r st b64; do
+    [[ -z "${b64:-}" ]] && continue
+    path="$(printf '%s' "$b64" | base64 -d 2>/dev/null)"
+    [[ -n "$path" ]] || { lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break; }
     # exclude untracked paths under PARKED/
     if [[ "$st" == "??" && "$path" == PARKED/* ]]; then
       continue
@@ -89,13 +140,10 @@ if [[ $rc2 -eq 0 ]]; then
     # worth the risk: emit the item (never drop it — that is the silent-ok failure) but downgrade its
     # close to the contract's permitted `inspect:` form, which asks a human to look rather than
     # handing them a command that addresses the wrong path.
-    if [[ "$path" == '"'* ]]; then
-      close_str="inspect: $path (name required quoting; resolve the path by hand)"
-      close_k="inspect"
-    else
-      close_str="git add $(shq "$path") && git commit -m $(shq "updated $path")"
-      close_k="command"
-    fi
+    # `path` is now the DECODED filename, so a `git add` built from it addresses the real file
+    # whatever bytes it contains — single-quoting makes any `$(...)`, backtick or quote inert.
+    close_str="git add $(shq "$path") && git commit -m $(shq "updated $path")"
+    close_k="command"
     # The lens table requires FILE MTIME as this candidate's staleness. It is not optional and it is
     # not allowed to quietly become null: an absent measure sorts to the very end of its tier
     # (UNKNOWN_AGE), so a silently-unmeasured item is a silently-deprioritised one.
@@ -137,7 +185,7 @@ if [[ $rc2 -eq 0 ]]; then
         live_state: $lstate
       }')
     cands=$(echo "$cands" | jq --argjson c "$cand" '. + [$c]')
-  done <<< "$out"
+  done < <(printf '%s\n' "$out" | porcelain_rows)
   [[ "$lens2_status" == "ok" ]] && lens2_cands="$cands"
 else
   lens2_status="degraded"
@@ -199,6 +247,12 @@ if [[ "$lens3_status" == "ok" ]]; then
     rc_status=$?
     set -e
     if [[ $rc_status -ne 0 ]]; then
+      lens3_status="degraded"
+      lens3_deg="\"D5\""
+      lens3_cands="[]"
+    elif (( BRANCH_KNOWN == 0 )); then
+      # The candidate's key IS `branch:<name>`, and the no-upstream close names the branch. Without a
+      # branch there are not six honest fields, so this is D5 — not an item keyed `branch:unknown`.
       lens3_status="degraded"
       lens3_deg="\"D5\""
       lens3_cands="[]"
@@ -275,7 +329,15 @@ if [[ $rc7 -eq 0 ]]; then
   # count extraction fall back to 0 — so unrecognised output produced a confident `counts:+0~0-0`
   # candidate claiming a divergence of size zero. Unparseable output is D4 ("no ROADMAP / no ledger"),
   # never a fabricated finding.
-  if [[ "$out" =~ roadmap\ sync:\ [0-9]+\ in\ .*\ -\>\ \+([0-9]+)\ added,\ ~([0-9]+)\ updated,\ -([0-9]+)\ removed,\ ([0-9]+)\ unchanged ]]; then
+  # ANCHORED to the whole first line, and to the literal filename and one of the producer's two real
+  # suffixes. The previous form searched for an unanchored fragment with `.*` where the filename
+  # belongs, so a line like
+  #   `diagnostic: roadmap sync: 21 in not-ROADMAP -> +2 added, ~1 updated, -0 removed, 18 unchanged`
+  # still produced a confident `ok` `+2~1-0` candidate. Finding a convenient substring inside
+  # arbitrary text is not validating the producer's summary — it is the same fabrication the anchor is
+  # here to stop, one layer in.
+  first_line="${out%%$'\n'*}"
+  if [[ "$first_line" =~ ^roadmap\ sync:\ [0-9]+\ in\ ROADMAP\.md\ -\>\ \+([0-9]+)\ added,\ ~([0-9]+)\ updated,\ -([0-9]+)\ removed,\ [0-9]+\ unchanged\ —\ (already\ in\ sync\;\ no\ write,\ generation\ unchanged|DRY\ RUN,\ nothing\ written)$ ]]; then
     a="${BASH_REMATCH[1]}"; u="${BASH_REMATCH[2]}"; r="${BASH_REMATCH[3]}"
     if [[ "$a" -gt 0 || "$u" -gt 0 || "$r" -gt 0 ]]; then
       evpay="+${a}~${u}-${r}"
