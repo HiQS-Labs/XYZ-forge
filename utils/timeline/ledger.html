@@ -187,7 +187,7 @@ article[hidden]{display:none}
   <div class="banner" id="banner" hidden>
     <div class="hz"></div>
     <div style="padding:8px 12px 9px">
-      <h3>⚠ stale — source file has unsynced edits</h3>
+      <h3 id="banner-h">⚠ stale — source file has unsynced edits</h3>
       <p id="banner-body"></p>
     </div>
   </div>
@@ -322,7 +322,9 @@ article[hidden]{display:none}
 
     if(data.sync&&data.sync.stale){
       document.getElementById('banner').hidden=false;
-      document.getElementById('banner-body').innerHTML=
+      if(data.sync.heading) document.getElementById('banner-h').textContent=data.sync.heading;
+      if(data.sync.message){document.getElementById('banner-body').textContent=data.sync.message;}
+      else document.getElementById('banner-body').innerHTML=
         esc(data.sync.sourceFile)+' was modified <b style="color:var(--ink)">'+esc(data.sync.sourceModifiedDisplay)+'</b>, '+
         esc(data.sync.lagDisplay)+' after the last database sync. '+data.sync.rowsDiffer+' rows differ. '+
         'Everything below this line reflects the database, not the file you edited. Run <code>'+esc(data.sync.fixCommand)+'</code> before trusting this page.';

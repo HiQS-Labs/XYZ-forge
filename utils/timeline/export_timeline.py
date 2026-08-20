@@ -128,6 +128,7 @@ def release_columns(cx, repo_url, roadmap_idx, today):
         )
     )
     for (rid, version, codename, status, target, shipped, descr, exit_c, milestone, mar_id, ref_url) in rows:
+        db_status = status
         cards = manifest_cards(cx, rid, roadmap_idx, today)
         n_total = len(cards)
         n_open = sum(1 for c in cards if c["section"] in ("queue", "wip"))
@@ -193,7 +194,8 @@ def release_columns(cx, repo_url, roadmap_idx, today):
                 "exit": exit_text,
                 "detours": [],   # no detour concept in releases.db yet
                 "roadmap": roadmap,
-                "_raw": {"status": badge["type"], "shipped": shipped, "target": target, "ref": ref_url},
+                "_raw": {"status": badge["type"], "db_status": db_status, "codename": codename,
+                         "shipped": shipped, "target": target, "ref": ref_url},
             }
         )
     return columns, n_open_releases, n_overdue
@@ -225,12 +227,62 @@ def strip_entries(columns, today):
     return jf, wn
 
 
-def build_payload(cx, today):
+def parse_releases_md(path):
+    """RELEASES.md 'Release:' blocks -> {version: {status, codename}}. None if unreadable."""
+    if not path.is_file():
+        return None
+    blocks, cur = {}, None
+    for line in path.read_text().splitlines():
+        if m := re.match(r"^Release:\s*(\S+)", line):
+            cur = blocks.setdefault(m.group(1), {})
+        elif cur is not None and (m := re.match(r"^(Status|Codename):\s*(.+?)\s*$", line)):
+            cur.setdefault(m.group(1).lower(), m.group(2))
+    return blocks
+
+
+def md_drift(md, columns):
+    """Compare RELEASES.md (canonical during the GH-32 shadow phase) with the DB rows.
+
+    Only shipped-ness is compared — the md vocabulary (Shipped/Draft) has no
+    'active' state, so draft-vs-active is not drift. The real drift classes are
+    releases existing on one side only, and shipped/unshipped disagreement.
+    """
+    if md is None:
+        return None
+    db = {c["version"]: c["_raw"] for c in columns}
+    db_only = [v for v in db if v not in md]
+    md_only = [v for v in md if v not in db]
+    flipped = [
+        v for v in db.keys() & md.keys()
+        if (md[v].get("status", "").lower() == "shipped") != (db[v]["db_status"] in ("shipped", "cut"))
+    ]
+    if not (db_only or md_only or flipped):
+        return None
+    parts = []
+    if db_only:
+        names = ", ".join(f"{v} ({db[v]['codename']})" for v in sorted(db_only))
+        parts.append(f"{len(db_only)} release(s) exist only in releases.db — no RELEASES.md block was ever written: {names}.")
+    if md_only:
+        parts.append(f"{len(md_only)} release(s) exist only in RELEASES.md: {', '.join(sorted(md_only))}.")
+    if flipped:
+        parts.append(f"shipped-status disagreement on: {', '.join(sorted(flipped))}.")
+    return {
+        "stale": True,
+        "sourceFile": "RELEASES.md",
+        "rowsDiffer": len(db_only) + len(md_only) + len(flipped),
+        "heading": "⚠ ledger drift — RELEASES.md (canonical) and releases.db disagree",
+        "message": " ".join(parts) + " Everything below reflects the DB. Fix at the source: author the missing "
+        "Release: blocks in RELEASES.md, or record the state through the CLI (/releases) — never in this page.",
+    }
+
+
+def build_payload(cx, today, md_path=None):
     settings = dict(cx.execute("SELECT key, value FROM settings"))
     repo_url = repo_url_from_refs(cx.execute("SELECT url FROM issue_refs WHERE url IS NOT NULL"))
     roadmap_idx = load_roadmap_index(cx)
     columns, n_open, n_overdue = release_columns(cx, repo_url, roadmap_idx, today)
     jf, wn = strip_entries(columns, today)
+    sync = md_drift(parse_releases_md(md_path) if md_path else None, columns)
 
     (receipts,) = cx.execute("SELECT COUNT(*) FROM op_receipts").fetchone()
     (last_op,) = cx.execute(  # `at` is free-form in old rows; only trust date-shaped values
@@ -249,7 +301,8 @@ def build_payload(cx, today):
             "generatedAtDisplay": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%SZ"),
             "sourceLabel": f"releases.db · schema v{schema_v}",
         },
-        # sync-staleness banner + ROADMAP.md row parity: deliberately out of spike scope
+        "sync": sync,  # RELEASES.md-vs-DB drift banner; None (no banner) when they agree
+        # ROADMAP.md row parity: still out of spike scope
         "telemetry": {
             "dbGeneration": int(settings.get("generation", 0)),
             "receipts": receipts,
@@ -278,15 +331,17 @@ def bake_static(template_html, payload):
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--db", default="releases.db", type=Path)
+    ap.add_argument("--md", type=Path, help="RELEASES.md for drift check (default: next to --db)")
     ap.add_argument("--template", default=HERE / "ledger.html", type=Path)
     ap.add_argument("--out", default=Path("temp/timeline"), type=Path)
     args = ap.parse_args(argv)
 
     if not args.db.is_file():
         sys.exit(f"releases DB not found: {args.db}")
+    md_path = args.md if args.md else args.db.resolve().parent / "RELEASES.md"
     cx = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
     try:
-        payload = build_payload(cx, date.today())
+        payload = build_payload(cx, date.today(), md_path)
     finally:
         cx.close()
 

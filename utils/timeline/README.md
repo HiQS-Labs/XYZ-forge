@@ -25,7 +25,11 @@ open temp/timeline/index.html                        # self-contained, works fro
   bump, no receipt — safe to run mid-merge.
 - Card titles/doc links are enriched from the GH-69 `roadmap_items` shadow by issue
   number; unshadowed issues degrade to bare links.
-- Not rendered yet (no DB concept / out of spike scope): detour lane, sync-staleness
-  banner, ROADMAP row parity, per-card pri/sev metrics.
+- Drift banner: the exporter parses RELEASES.md `Release:` blocks (canonical during
+  the GH-32 shadow phase) and shows a red banner when the two ledgers disagree —
+  releases existing on one side only, or shipped-status flips (draft-vs-active is
+  not drift; the md vocabulary has no `active`). `--md` overrides the file location.
+- Not rendered yet (no DB concept / out of spike scope): detour lane, ROADMAP row
+  parity, per-card pri/sev metrics.
 
 `ledger.html` is adapted from the `timeline-ui` repo (© Neochrome, AGPL-3.0).
