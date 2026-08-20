@@ -1,0 +1,16 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash githooks/install.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T13:45:59+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+githooks: installed — /home/arnoldadero/XYZ-forge/.git/hooks/pre-push
+  It runs the gate before any push, on EVERY branch in this clone (and its worktrees),
+  including branches with no githooks/ directory (GH-549).
+  Bypass: git push --no-verify   or   XYZ_SKIP_PREPUSH=1 git push
+  Verify: bash githooks/install.sh --check
+=== END OUTPUT ===
+end      : 2026-08-20T13:45:59+03:00
+duration : 0s
+EXIT_CODE: 0

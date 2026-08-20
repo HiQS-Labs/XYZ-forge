@@ -1,0 +1,14 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : ./validate.sh --print-mode
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T13:54:15+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+validate.sh: suite workers run under nice -n 10 — an interactive-session hint, not a CPU limit (GH-35)
+validate.sh: PARALLEL mode 2-wide — auto-detected 4 cores — balanced default cores/2 (floor 2, cap 4; --burst restores full width, GH-35)
+  NOT promotion evidence: the qualifying gate is ci-local.sh's sequential run (GH-509).
+=== END OUTPUT ===
+end      : 2026-08-20T13:54:16+03:00
+duration : 1s
+EXIT_CODE: 0

@@ -1,0 +1,24 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash utils/marathon-plan.sh --help
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T13:54:04+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+Usage: utils/py/marathon_plan.py [--dry-run | --check] [--policy quick-wins|derisk-first]
+                           [--deep] [--require-gh] [--format text|json]
+
+  (default)        Print the validation report and write PROJECT/2-WORKING/MARATHON-PLAN-<today>.md.
+  --dry-run        Print the report; write no marathon-plan doc.
+  --check          Re-render and compare against today's marathon-plan doc; non-zero on drift. Writes nothing.
+  --policy P       quick-wins (default; momentum, low-cost first) | derisk-first (high-risk first).
+  --deep           Additionally delegate to utils/swarm-preflight.sh --dry-run per ready item
+                   (authoritative ref-based freshness/probe verdict; slower, needs network).
+  --require-gh     Treat an unavailable/offline `gh` as a hard error (exit 6) instead of degrading.
+  --format F       text (default) | json (findings as one JSON object per line).
+
+Exit: 0 clean · 2 usage · 3 ROADMAP unparseable · 4 drift present · 5 items held · 6 gh required-but-absent.
+=== END OUTPUT ===
+end      : 2026-08-20T13:54:04+03:00
+duration : 0s
+EXIT_CODE: 0
