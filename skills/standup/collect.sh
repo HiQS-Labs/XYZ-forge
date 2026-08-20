@@ -48,6 +48,10 @@ BRANCH_KNOWN=1
 if [[ -n "$FIXTURE_DIR" ]]; then
   if [[ -f "$FIXTURE_DIR/branch.txt" ]]; then
     branch=$(cat "$FIXTURE_DIR/branch.txt")
+    # A present-but-EMPTY file is not a branch name. Without this the live read's own non-empty check
+    # was applied to one path and not the other, and lens 3 emitted an `ok` candidate keyed `branch:`
+    # whose no-upstream close read `inspect: branch  (push state unknown, no upstream)`.
+    [[ -n "$branch" ]] || BRANCH_KNOWN=0
   else
     branch="unknown"; BRANCH_KNOWN=0
   fi
@@ -109,9 +113,19 @@ for line in sys.stdin.read().split("\n"):
     if xy and xy[0] in ("R", "C") and " -> " in rest:
         rest = rest.split(" -> ", 1)[1]
     if rest.startswith("\"") and rest.endswith("\"") and len(rest) >= 2:
-        # Same grammar C uses, which is what git emits here: \n, \t, \\, \", and \ooo octal bytes.
-        rest = rest[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
-    sys.stdout.write("%s\t%s\n" % (xy, base64.b64encode(rest.encode("utf-8", "surrogateescape")).decode("ascii")))
+        # Same grammar C uses, which is what git emits here: \n, \t, \\, \", and \ooo octal BYTES.
+        # The octal escapes are the subtle part. git quotes a UTF-8 filename byte by byte, so `é.txt`
+        # arrives as "\303\251.txt". `unicode_escape` turns those into the CODE POINTS U+00C3 U+00A9;
+        # encoding that back as UTF-8 gives four bytes (C3 83 C2 A9), not the two the filename
+        # actually has. The path then does not exist, the stat misses, and the lens degrades — the
+        # exact failure this decoder was written to remove, one layer deeper.
+        # `latin-1` is the inverse map: it takes code points 0x00-0xFF straight back to the single
+        # bytes git escaped, recovering the original byte string. Then decode it as UTF-8 once.
+        raw = rest[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
+        pathbytes = raw.encode("latin-1", "surrogateescape")
+    else:
+        pathbytes = rest.encode("utf-8", "surrogateescape")
+    sys.stdout.write("%s\t%s\n" % (xy, base64.b64encode(pathbytes).decode("ascii")))
 '
 }
 
@@ -142,7 +156,9 @@ if [[ $rc2 -eq 0 ]]; then
     # handing them a command that addresses the wrong path.
     # `path` is now the DECODED filename, so a `git add` built from it addresses the real file
     # whatever bytes it contains — single-quoting makes any `$(...)`, backtick or quote inert.
-    close_str="git add $(shq "$path") && git commit -m $(shq "updated $path")"
+    # `--` ends option parsing: a legal path beginning with `-` is otherwise read by git as a flag,
+    # which makes the recommendation unusable for exactly the file it names.
+    close_str="git add -- $(shq "$path") && git commit -m $(shq "updated $path")"
     close_k="command"
     # The lens table requires FILE MTIME as this candidate's staleness. It is not optional and it is
     # not allowed to quietly become null: an absent measure sorts to the very end of its tier
@@ -215,9 +231,12 @@ elif [[ $rc3 -eq 128 ]]; then
   rc_fall=$?
   set -e
   if [[ $rc_fall -eq 0 ]]; then
-    behind=$(echo "$out" | awk '{print $1}')
-    ahead=$(echo "$out" | awk '{print $2}')
-    if [[ -n "${ahead:-}" && -n "${behind:-}" && "$behind" =~ ^[0-9]+$ && "$ahead" =~ ^[0-9]+$ ]]; then
+    # `git rev-list --left-right --count` has a two-integer result contract. Taking $1 and $2 and
+    # ignoring the rest let `1 2 trailing-garbage` pass both integer checks and emit a confident
+    # `counts:2/1@tracked` -- a bounded read parsed incompletely is still a malformed read, and the
+    # rule is that it degrades rather than becoming a finding.
+    read -r behind ahead extra_fields <<<"$(printf '%s' "$out" | tr -s '[:space:]' ' ')"
+    if [[ -z "${extra_fields:-}" && -n "${ahead:-}" && -n "${behind:-}" && "$behind" =~ ^[0-9]+$ && "$ahead" =~ ^[0-9]+$ ]]; then
       up_state="no-upstream"
     else
       lens3_status="degraded"

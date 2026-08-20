@@ -372,5 +372,35 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --nope >/dev/null 2>&1
 is "  as is an unknown argument" "$?" "2"
 
 echo
+# ── 16. Round-5 review: the decoder corrupted the very case it was written to preserve ───────────
+# Section 15's C-quoted fixture used only ASCII escapes (\" and \t), which round-trip through
+# `unicode_escape` unharmed. The OCTAL escapes do not, and octal is how git quotes every non-ASCII
+# filename — the common case, not the exotic one. Third round running where the fixture was shaped
+# like the finding rather than like the failure.
+is "an octal-escaped UTF-8 filename decodes to the real bytes, not mojibake" \
+   "$(F lens-2-utf8 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "é.txt"
+is "  so the lens stays ok instead of degrading on an ordinary accented filename" \
+   "$(F lens-2-utf8 'd["lenses"]["2"]["status"]')" "ok"
+is "  and its stat resolves against the decoded name" \
+   "$(F lens-2-utf8 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1740000000"
+
+# `git rev-list --left-right --count` has a TWO-INTEGER contract. Reading $1 and $2 and ignoring the
+# rest let `1 2 trailing-garbage` satisfy both integer checks and emit a confident
+# `counts:2/1@tracked`. A bounded read parsed incompletely is still a malformed read.
+is "a rev-list result with an extra field degrades rather than becoming a finding" \
+   "$(F lens-3-trailing 'd["lenses"]["3"]["degraded_id"]')" "D5"
+
+# The missing-branch.txt case was pinned in section 15; the PRESENT-but-EMPTY case was not, and it
+# took the other branch — emitting an ok candidate keyed `branch:` whose close read
+# `inspect: branch  (push state unknown, no upstream)`.
+is "an empty branch.txt degrades too, not just an absent one" \
+   "$(F lens-3-empty-branch 'd["lenses"]["3"]["degraded_id"]')" "D5"
+
+# A legal path beginning with `-` is read by git as an option, so the close command was unusable for
+# exactly the file it named. `--` ends option parsing.
+has "a leading-dash path is protected by -- in the close command" \
+    "$(F lens-2-dash-path 'd["lenses"]["2"]["candidates"][0]["close"]')" "git add -- '-weird.md'"
+
+echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
