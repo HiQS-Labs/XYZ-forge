@@ -86,111 +86,66 @@ run_mock() {
 # closed and reopened around an escaped literal.
 shq() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
 
-# Decode one `git status --porcelain` stream into `XY<TAB>base64(path)` lines.
+# Decode a `git status --porcelain -z` stream into `XY<TAB>flag<TAB>base64(path)` lines.
 #
-# Slicing `${line:3}` in bash is wrong for two ordinary cases, and both were shipped:
-#   * C-QUOTING — a name containing a quote, backslash, newline or non-ASCII byte arrives wrapped in
-#     double quotes with backslash escapes. The slice yields the ESCAPED DISPLAY STRING, so every
-#     downstream use addresses a file that does not exist: the fixture stat lookup misses, a live
-#     getmtime fails, and the lens degrades D5 — clearing EVERY candidate it had already collected.
-#     One oddly-named file could therefore blank the whole working-tree lens.
-#   * RENAMES — `R  old -> new` is one field to the slice, so the "path" is the literal string
-#     `old -> new`, which cannot be statted either, with the same blast radius.
-# Both contradict the lens-2 predicate ("any modified or untracked non-ignored path") by dropping
-# items the contract requires, and they do it by degrading rather than visibly.
+# ROUND 8 — this now reads the -z format, which is what should have happened in round 4. The reviewer
+# recommended a machine-safe representation then and again now; I took the cheaper path twice, and
+# rounds 4, 5 and 7 were each spent on a different bug in hand-parsing the TEXT format\'s C-quoting.
+# That is the whole argument: git provides -z precisely so tools do not parse that grammar.
 #
-# Decode in python, which has the C-escape grammar built in, and hand back base64 so a path
-# containing any byte at all survives the trip through the shell. (Filenames cannot contain NUL, so a
-# bash variable can hold the decoded result safely.)
+# What -z removes, permanently rather than case by case:
+#   * NO C-QUOTING. Pathnames are raw bytes, so there is no escape grammar to implement, no octal
+#     round-trip to get wrong, no core.quotePath dependence, and no unterminated-quote case.
+#   * UNAMBIGUOUS RENAMES. A rename/copy is two NUL-terminated fields, destination first. The text
+#     format joins them with " -> ", which is legal INSIDE a pathname — so `old -> part.md` split in
+#     the wrong place, and no amount of care in a splitter fixes an ambiguous grammar.
+#   * The XY field is read positionally, so an UNSTAGED rename (" R") is handled by the same code as
+#     a staged one ("R "). Testing `xy[0]` alone silently missed the unstaged form entirely.
 #
-# ROUND 6 — this is now a STRICT, ERROR-PROPAGATING boundary, not a best-effort translator. That
-# change was the reviewer's structural recommendation over three more edge-case patches, and it is
-# the right one: every previous round added a case, and every added case left a neighbouring one
-# open. A parser that returns "nothing" for input it does not understand is indistinguishable from a
-# parser that correctly found nothing, and this whole lens exists to make that distinction.
-#
-# The contract is now: EVERY row is understood and emitted, or the decoder FAILS and the lens
-# degrades. There is no third outcome. Three inputs used to take one:
-#   * a row with a status field and no pathname (` M`) emitted nothing and left the lens `ok`;
-#   * an undecodable quoted name (`"\400.txt"`) crashed the decoder, whose exit status was swallowed
-#     by process substitution, so the lens read as a clean tree;
-#   * a legal NEWLINE-containing pathname decoded correctly and then broke the one-line output
-#     contract downstream — triage.py escapes the em-dash delimiter but not newlines, so a single
-#     candidate rendered as several physical lines and could fabricate apparent output lines.
-# The first two now exit non-zero. The third is emitted with a sanitised single-line display and an
-# `inspect:` close, because the contract says never drop an item — the operator still learns the file
-# is there, and gets asked to look at it rather than handed a command built from an unrenderable name.
+# The contract is unchanged and now much easier to hold: every entry is understood and emitted, or
+# this exits non-zero and the lens degrades. There is no third outcome.
 porcelain_rows() {
   python3 -c '
 import base64, re, sys
 
-# ROUND 7 -- an EXACT byte-level parser for git C-quoting, replacing unicode_escape.
-#
-# The boundary was the right shape; unicode_escape was the wrong implementation for it, and it was
-# wrong in both directions at once:
-#   * TOO NARROW -- it forced a latin-1 round trip, so with core.quotePath=false a quoted name
-#     holding literal UTF-8 bytes had its C3 A9 collapsed to E9. The stat then missed and the whole
-#     lens falsely degraded D5 on a perfectly good name. A false D5 on valid input is a regression in
-#     the opposite direction from the one this decoder was written to fix.
-#   * TOO WIDE -- it accepts escapes git never emits. A quoted \000x produced a NUL-containing byte
-#     string that passed the non-empty check; bash then truncated at the NUL, so an unrelated
-#     existing file x could yield an ok candidate fabricated out of malformed collector output.
-#
-# Parsing on BYTES, accepting exactly the grammar git emits and nothing else, closes both. NUL cannot
-# occur in a real pathname, so it is a hard error rather than something to sanitise.
-ESCAPES = {b"a": b"\a", b"b": b"\b", b"f": b"\f", b"n": b"\n", b"r": b"\r",
-           b"t": b"\t", b"v": b"\v", b"\\": b"\\", b"\"": b"\""}
 UNRENDERABLE = re.compile(rb"[\x00-\x1f\x7f]")   # newline, CR, tab, and every other control byte
+STATUS = re.compile(rb"^[ MADRCU?!][ MADRCU?!]$")
 
-def unquote(raw):   # raw: the bytes BETWEEN the surrounding double quotes
-    out = bytearray(); i = 0; n = len(raw)
-    while i < n:
-        if raw[i:i+1] != b"\\":
-            out += raw[i:i+1]; i += 1; continue
-        i += 1
-        if i >= n:
-            raise ValueError("trailing backslash")
-        e = raw[i:i+1]
-        if e in ESCAPES:
-            out += ESCAPES[e]; i += 1
-        elif len(raw) >= i + 3 and all(0x30 <= b <= 0x37 for b in raw[i:i+3]):
-            out.append(int(raw[i:i+3], 8)); i += 3
-        else:
-            raise ValueError("escape git does not emit: backslash-%s" % e.decode("latin-1", "replace"))
-    return bytes(out)
+data = sys.stdin.buffer.read()
+fields = data.split(b"\0")
+if fields and fields[-1] == b"":
+    fields.pop()            # trailing NUL after the last entry
 
 out = []
-for line in sys.stdin.buffer.read().split(b"\n"):
-    if not line.strip():
-        continue
-    # Porcelain is exactly XY<space>PATH. Anything shorter, or without the separator, is not a row
-    # this parser understands -- and understanding it is the whole job.
-    if len(line) < 4 or line[2:3] != b" ":
-        sys.stderr.write("porcelain_rows: malformed row: %r\n" % line)
+i = 0
+while i < len(fields):
+    entry = fields[i]; i += 1
+    if entry == b"":
+        sys.stderr.write("porcelain_rows: empty entry in stream\n")
         sys.exit(1)
-    xy, rest = line[:2], line[3:]
-    # A rename/copy record names both sides; the CURRENT path is what an operator acts on.
-    if xy[0:1] in (b"R", b"C") and b" -> " in rest:
-        rest = rest.split(b" -> ", 1)[1]
-    if rest.startswith(b"\"") and rest.endswith(b"\"") and len(rest) >= 2:
-        try:
-            pathbytes = unquote(rest[1:-1])
-        except ValueError as exc:
-            sys.stderr.write("porcelain_rows: unparseable quoted path %r (%s)\n" % (rest, exc))
+    # Every entry is exactly XY<space>PATH. A whitespace-only or truncated record is NOT a clean
+    # tree; it is input this parser does not understand, and understanding it is the whole job.
+    if len(entry) < 4 or entry[2:3] != b" ":
+        sys.stderr.write("porcelain_rows: malformed entry: %r\n" % entry)
+        sys.exit(1)
+    xy, path = entry[:2], entry[3:]
+    if not STATUS.match(xy):
+        sys.stderr.write("porcelain_rows: unrecognised status field %r\n" % xy)
+        sys.exit(1)
+    # A rename/copy carries its SOURCE as the next NUL-terminated field. Consume it: the destination
+    # is what an operator acts on, and leaving the source in the stream would parse it as an entry.
+    # Positional, so an unstaged " R" is handled identically to a staged "R ".
+    if b"R" in xy or b"C" in xy:
+        if i >= len(fields):
+            sys.stderr.write("porcelain_rows: rename entry %r with no source field\n" % entry)
             sys.exit(1)
-    else:
-        pathbytes = rest
-    if not pathbytes:
-        sys.stderr.write("porcelain_rows: row carries a status but no pathname: %r\n" % line)
+        i += 1
+    if not path:
+        sys.stderr.write("porcelain_rows: entry carries a status but no pathname: %r\n" % entry)
         sys.exit(1)
-    if b"\x00" in pathbytes:
-        # Bash would silently truncate at a NUL, turning malformed input into a confident candidate
-        # naming a DIFFERENT, possibly existing, file.
-        sys.stderr.write("porcelain_rows: NUL in decoded path %r\n" % rest)
-        sys.exit(1)
-    flag = "unrenderable" if UNRENDERABLE.search(pathbytes) else "ok"
+    flag = "unrenderable" if UNRENDERABLE.search(path) else "ok"
     out.append("%s\t%s\t%s\n" % (xy.decode("latin-1"), flag,
-                                 base64.b64encode(pathbytes).decode("ascii")))
+                                 base64.b64encode(path).decode("ascii")))
 sys.stdout.write("".join(out))
 '
 }
@@ -211,8 +166,13 @@ lens2_status="ok"
 lens2_deg="null"
 lens2_cands="[]"
 
+# The -z stream is NUL-separated, and command substitution CANNOT carry a NUL — bash strips them
+# silently, which would rejoin adjacent entries into one nonsense path. So the raw stream goes to a
+# file and only the decoder's base64 output (NUL-free by construction) ever enters a variable.
+LENS2_Z="$(mktemp "${TMPDIR:-/tmp}/standup-lens2.XXXXXX")"
+trap 'rm -f "$LENS2_Z"' EXIT
 set +e
-out=$(run_mock "lens2" git status --porcelain)
+run_mock "lens2" git status --porcelain -z >"$LENS2_Z" 2>/dev/null
 rc2=$?
 set -e
 if [[ $rc2 -eq 0 ]]; then
@@ -221,7 +181,7 @@ if [[ $rc2 -eq 0 ]]; then
   # discarded the status, so a decoder that died on malformed input produced an empty stream that the
   # loop read as "clean tree" — a parse failure wearing the same face as a clean result.
   set +e
-  rows="$(printf '%s\n' "$out" | porcelain_rows 2>/dev/null)"
+  rows="$(porcelain_rows <"$LENS2_Z" 2>/dev/null)"
   rc_rows=$?
   set +e
   if [[ $rc_rows -ne 0 ]]; then
@@ -278,6 +238,13 @@ if [[ $rc2 -eq 0 ]]; then
       if [[ -z "$mtime" ]]; then
         lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break
       fi
+    fi
+    # Validate BEFORE jq sees it. A non-integer mtime (a corrupt fixture, a stat that printed
+    # something unexpected) made jq's `tonumber` fail; `set +e` is active here, so `cand` and `cands`
+    # silently became EMPTY while the lens stayed `ok` — and the final heredoc then emitted invalid
+    # JSON at exit 0. Malformed input must degrade, never leak past the boundary as broken output.
+    if [[ ! "$mtime" =~ ^[0-9]+$ ]]; then
+      lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break
     fi
     cand=$(jq -n \
       --arg key "path:$disp" \
@@ -411,7 +378,21 @@ if [[ "$lens3_status" == "ok" ]]; then
         # at all. That is the silent-ok failure in its purest form (the consumer reads empty stdin as
         # a clean session), reintroduced by the fix for the staleness ordering. Let the empty value
         # through so the degradation check below can do its job.
-        if [[ "$ahead" -gt 0 ]]; then
+        # Validate the COMPLETE result before choosing a value from it. Filtering with `grep` and
+        # taking an end silently DISCARDED malformed lines: a truncated or partly-garbage `git log`
+        # then yielded a confident staleness for a branch whose history was never fully read. Every
+        # line must be a timestamp, and there must be at least as many as the counts claim — fewer
+        # means the read was cut short, which is a failed bounded read, not a finding.
+        want=$(( ahead > 0 ? ahead : behind ))
+        n_lines=0; n_ok=0
+        while IFS= read -r _line; do
+          [[ -z "$_line" ]] && continue
+          n_lines=$((n_lines+1))
+          [[ "$_line" =~ ^[0-9]+$ ]] && n_ok=$((n_ok+1))
+        done <<<"$dates"
+        if (( n_lines != n_ok || n_ok < want )); then
+          d=""
+        elif [[ "$ahead" -gt 0 ]]; then
           d="$(printf '%s\n' "$dates" | grep -E '^[0-9]+$' | tail -1 || true)"   # oldest unpushed
         else
           d="$(printf '%s\n' "$dates" | grep -E '^[0-9]+$' | head -1 || true)"   # newest upstream

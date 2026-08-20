@@ -341,146 +341,75 @@ is "a count-shaped fragment inside a non-summary line degrades to D4" \
 is "  and yields no candidate from the decoy counts" \
    "$(F lens-7-decoy 'len(d["lenses"]["7"]["candidates"])')" "0"
 
-# B4-again — the C-quoted name. Section 14's "adversarial path" fixture was an ordinary unquoted
-# porcelain pathname, so it never entered this branch at all. git C-quotes any name containing a
-# quote, backslash, newline or non-ASCII byte; `${line:3}` then yields the ESCAPED DISPLAY STRING,
-# and every use of it addresses a file that does not exist — which degraded the lens and cleared
-# EVERY candidate already collected. One oddly-named file could blank the whole working-tree lens.
-is "a C-quoted porcelain name is decoded to the real filename" \
-   "$(F lens-2-cquoted 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" \
-   'we"ird.md'
-is "  so the lens stays ok rather than degrading on one odd filename" \
-   "$(F lens-2-cquoted 'd["lenses"]["2"]["status"]')" "ok"
-is "  and it still carries its required mtime" \
-   "$(F lens-2-cquoted 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1730000000"
+# ROUND 8 — the C-quote grammar is GONE, not fixed. The collector reads `--porcelain -z`, which git
+# provides precisely so tools do not parse that grammar. Three separate rounds (4, 5, 7) were each
+# spent on a different bug in hand-parsing it, and round 8 found two more; the reviewer recommended a
+# machine-safe format in round 4 and again in round 8. The assertions below are for the boundary that
+# replaced it, and the ones written against escape sequences are deleted rather than kept passing —
+# a test for a code path that no longer exists is worse than no test, because it reads as coverage.
 
-# Renames had the identical parse bug: `R  old -> new` was one field, so the "path" was the literal
-# string `old -> new`, unstattable, same blast radius. The CURRENT path is what an operator acts on.
-is "a rename record yields the destination path, not 'old -> new'" \
+# The two rename shapes the text format could not express unambiguously. In -z a rename is two
+# NUL-terminated fields, destination first, and the status field is read POSITIONALLY.
+is "a staged rename yields the destination path" \
    "$(F lens-2-rename 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "new/name.md"
+# An UNSTAGED rename puts R in the SECOND position. Testing xy[0] alone missed this shape entirely,
+# so a perfectly ordinary record fell through and falsely degraded the lens.
+is "an UNSTAGED rename (\" R\") is handled by the same path as a staged one" \
+   "$(F lens-2-rename-unstaged 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "new/name.md"
+# " -> " is LEGAL INSIDE a pathname, so the text format was ambiguous and no splitter could fix it.
+# Here the source is its own field and simply gets consumed.
+is "a rename whose SOURCE contains \" -> \" is still parsed correctly" \
+   "$(F lens-2-rename-arrow-src 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "dest.md"
+is "  and a rename entry with no source field degrades rather than misreading the next entry" \
+   "$(F lens-2-rename-no-source 'd["lenses"]["2"]["degraded_id"]')" "D5"
 
-# S — --fixture must be hermetic for the branch too. Falling through to a live `git rev-parse` let a
-# lens-3 candidate take its key and no-upstream close from the reviewer's own checkout.
-is "a fixture with no branch.txt degrades lens 3 rather than reading the live branch" \
-   "$(F lens-3-no-branch 'd["lenses"]["3"]["degraded_id"]')" "D5"
-
-# S — the published interface: "2 usage or a contract violation". A bare --fixture used to abort on
-# an unbound variable under `set -u`, which is exit 1 and a bash error, not the documented contract.
-bash "$ROOT_DIR/skills/standup/collect.sh" --fixture >/dev/null 2>&1
-is "a bare --fixture is a usage error with the published exit 2" "$?" "2"
-bash "$ROOT_DIR/skills/standup/collect.sh" --nope >/dev/null 2>&1
-is "  as is an unknown argument" "$?" "2"
-
-echo
-# ── 16. Round-5 review: the decoder corrupted the very case it was written to preserve ───────────
-# Section 15's C-quoted fixture used only ASCII escapes (\" and \t), which round-trip through
-# `unicode_escape` unharmed. The OCTAL escapes do not, and octal is how git quotes every non-ASCII
-# filename — the common case, not the exotic one. Third round running where the fixture was shaped
-# like the finding rather than like the failure.
-is "an octal-escaped UTF-8 filename decodes to the real bytes, not mojibake" \
+# Bytes are raw in -z, so the cases that needed an escape grammar are now simply data.
+is "a UTF-8 pathname needs no decoding and arrives intact" \
    "$(F lens-2-utf8 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "é.txt"
-is "  so the lens stays ok instead of degrading on an ordinary accented filename" \
-   "$(F lens-2-utf8 'd["lenses"]["2"]["status"]')" "ok"
-is "  and its stat resolves against the decoded name" \
-   "$(F lens-2-utf8 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1740000000"
+is "  as does a pathname containing a double quote" \
+   "$(F lens-2-quote-in-name 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" 'we"ird.md'
 
-# `git rev-list --left-right --count` has a TWO-INTEGER contract. Reading $1 and $2 and ignoring the
-# rest let `1 2 trailing-garbage` satisfy both integer checks and emit a confident
-# `counts:2/1@tracked`. A bounded read parsed incompletely is still a malformed read.
-is "a rev-list result with an extra field degrades rather than becoming a finding" \
-   "$(F lens-3-trailing 'd["lenses"]["3"]["degraded_id"]')" "D5"
-
-# The missing-branch.txt case was pinned in section 15; the PRESENT-but-EMPTY case was not, and it
-# took the other branch — emitting an ok candidate keyed `branch:` whose close read
-# `inspect: branch  (push state unknown, no upstream)`.
-is "an empty branch.txt degrades too, not just an absent one" \
-   "$(F lens-3-empty-branch 'd["lenses"]["3"]["degraded_id"]')" "D5"
-
-# A legal path beginning with `-` is read by git as an option, so the close command was unusable for
-# exactly the file it named. `--` ends option parsing.
-has "a leading-dash path is protected by -- in the close command" \
-    "$(F lens-2-dash-path 'd["lenses"]["2"]["candidates"][0]["close"]')" "git add -- '-weird.md'"
-
-echo
-# ── 17. Round-6: the parse boundary is strict, and its failures are visible ──────────────────────
-# The reviewer's round-6 verdict was structural rather than another list of cases: make
-# `porcelain_rows` a strict, error-propagating boundary instead of patching one more edge case. Every
-# prior round had added a case and left a neighbouring one open. These assertions pin the CONTRACT —
-# every row is understood and emitted, or the decoder fails and the lens degrades, with no third
-# outcome — rather than pinning three more inputs.
-
-# A row with a status field and no pathname was a successful read that emitted nothing and left the
-# lens `ok`: a parse failure wearing the same face as a clean tree.
-is "a porcelain row with no pathname degrades rather than reading as a clean tree" \
+# Malformed entries must degrade, never read as a clean tree. A whitespace-only record was silently
+# skipped by a `strip()` guard, which contradicted the boundary's own promise.
+is "an entry with a status and no pathname degrades" \
    "$(F lens-2-no-path 'd["lenses"]["2"]["degraded_id"]')" "D5"
-# An undecodable quoted name crashed the decoder, whose exit status process substitution discarded.
-is "an undecodable quoted name propagates the decoder's failure as D5" \
-   "$(F lens-2-undecodable 'd["lenses"]["2"]["degraded_id"]')" "D5"
-is "  and neither one is reported as a successful collection" \
-   "$(C lens-2-undecodable >/dev/null; echo $?)" "3"
+is "a whitespace-only entry degrades rather than being skipped as blank" \
+   "$(F lens-2-whitespace-entry 'd["lenses"]["2"]["degraded_id"]')" "D5"
+is "an unrecognised status field degrades" \
+   "$(F lens-2-bad-status 'd["lenses"]["2"]["degraded_id"]')" "D5"
+is "  and none of them is reported as a successful collection" \
+   "$(C lens-2-whitespace-entry >/dev/null; echo $?)" "3"
 
-# A newline in a pathname is LEGAL. Decoding it correctly (round 5) then made it breach the skill's
-# one-line output contract: triage.py escapes the em-dash delimiter and nothing else, so one
-# candidate would render as several physical lines and could fabricate apparent output lines.
-# triage.py is out of scope and should be — the collector is what knows the path is unrenderable.
+# A newline in a pathname is legal and survives -z intact — which makes it the collector's problem to
+# render, not triage.py's. Escaped display, inspect close, never dropped.
 is "a newline pathname is emitted with an escaped one-line display" \
    "$(F lens-2-newline-path 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" 'a\nb.txt'
 is "  as an inspect action, not a command built from an unrenderable name" \
    "$(F lens-2-newline-path 'd["lenses"]["2"]["candidates"][0]["close_kind"]')" "inspect"
 is "  and it is never dropped — the operator still learns the file is there" \
    "$(F lens-2-newline-path 'len(d["lenses"]["2"]["candidates"])')" "1"
-# THE PIN for this section: the rendered screen stays one line per item.
 C lens-2-newline-path > "$W/nl.json" 2>/dev/null
 is "  so the rendered screen keeps one physical line per item" \
    "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "5"
 
-# The round-5 trailing-field pin passed for the WRONG REASON: its fixture supplied no date, so the
-# malformed count was caught by the later missing-date degradation rather than by the count guard.
-# The fixture now carries a valid date, so this measures the primary parse — which was still using
-# `awk $1/$2` while only the fallback had the exact-field guard.
-is "the PRIMARY rev-list parse rejects an extra field, not just the fallback" \
-   "$(F lens-3-trailing 'd["lenses"]["3"]["degraded_id"]')" "D5"
+# The required mtime is validated BEFORE jq sees it. A non-integer made jq's `tonumber` fail; with
+# `set +e` active the candidate silently became EMPTY while the lens stayed `ok`, and the final
+# heredoc emitted INVALID JSON at exit 0 — malformed input leaking past the boundary as broken output.
+is "a non-integer mtime degrades instead of producing invalid JSON at exit 0" \
+   "$(F lens-2-bad-mtime 'd["lenses"]["2"]["degraded_id"]')" "D5"
 
-echo
-# ── 18. Round-7: an exact C-quote grammar, and a close that matches the divergence direction ─────
-# The boundary shape was right; `unicode_escape` was the wrong implementation for it, and wrong in
-# BOTH directions — too narrow on valid input and too wide on invalid. Both directions are pinned,
-# because fixing one by breaking the other is the failure this review keeps producing.
+# The lens-2 predicate excludes only UNTRACKED paths under PARKED/ — the settled decision.
+is "an untracked PARKED/ path is excluded without degrading the lens" \
+   "$(F lens-2-parked 'd["lenses"]["2"]["status"] + ":" + str(len(d["lenses"]["2"]["candidates"]))')" "ok:0"
 
-# TOO NARROW: with core.quotePath=false a quoted name carries literal UTF-8 bytes. The latin-1 round
-# trip collapsed C3 A9 to E9, the stat missed, and the whole lens falsely degraded — a false D5 on a
-# perfectly good name is a regression in the opposite direction from the one being fixed.
-is "a quoted name holding literal UTF-8 bytes survives byte-exact" \
-   "$(F lens-2-quotepath-false 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" 'é".txt'
-is "  so valid input is never falsely degraded" \
-   "$(F lens-2-quotepath-false 'd["lenses"]["2"]["status"]')" "ok"
+# Lens 3 validates its COMPLETE date stream. Filtering with grep and taking an end silently discarded
+# malformed lines, so a truncated or partly-garbage `git log` yielded a confident staleness for a
+# branch whose history was never fully read.
+is "a date stream with a malformed line degrades rather than filtering it away" \
+   "$(F lens-3-bad-dates 'd["lenses"]["3"]["degraded_id"]')" "D5"
+is "a date stream shorter than the divergence count degrades" \
+   "$(F lens-3-short-dates 'd["lenses"]["3"]["degraded_id"]')" "D5"
 
-# TOO WIDE: unicode_escape accepts escapes git never emits. `\000x` produced a NUL-containing byte
-# string that passed the non-empty check; bash truncates at NUL, so an unrelated existing file `x`
-# could yield an `ok` candidate fabricated out of malformed collector output.
-is "a NUL-producing escape is rejected, not truncated into a different filename" \
-   "$(F lens-2-nul-escape 'd["lenses"]["2"]["degraded_id"]')" "D5"
-is "an escape git never emits is rejected" \
-   "$(F lens-2-bad-escape 'd["lenses"]["2"]["degraded_id"]')" "D5"
-
-# The close must follow the DIRECTION of the divergence. Selecting on upstream-state alone sent a
-# behind-only branch to `git push` — a non-fast-forward that cannot close the finding. A
-# recommendation that cannot work is worse than none, because the operator runs it first.
-is "a behind-only branch is told to pull, not push" \
-   "$(F lens-3-behind-only 'd["lenses"]["3"]["candidates"][0]["close"]')" "git pull --rebase"
-is "an ahead-and-behind branch gets both, in the order that works" \
-   "$(F lens-3-both-ways 'd["lenses"]["3"]["candidates"][0]["close"]')" "git pull --rebase && git push"
-
-# Staleness for an AHEAD branch is the OLDEST unpushed commit — the one sitting unpublished longest.
-# `git log` is newest-first, so `-1` took the wrong end, which would make a branch look fresh the
-# moment you commit to it and hide exactly the rot being ranked. Two distinct dates per fixture, so
-# the assertion can fail.
-is "an ahead branch takes the OLDEST unpushed commit date, not the newest" \
-   "$(F lens-3-both-ways 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "1751000000"
-is "  while a behind-only branch takes the newest upstream commit" \
-   "$(F lens-3-behind-only 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "1755000000"
-
-echo
 # ── 19. THE GENERIC GUARD: no input makes the collector emit nothing ─────────────────────────────
 # Written after the round-7 staleness fix silently reintroduced the founding failure. A no-match
 # `grep` exits 1, `set -e` is active in collect.sh, and the script aborted MID-DOCUMENT — emitting no
