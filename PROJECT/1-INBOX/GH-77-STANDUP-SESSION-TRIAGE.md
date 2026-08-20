@@ -31,6 +31,26 @@ phases: 4
 > state sources.
 >
 > Sections marked **FROZEN** carry operator decisions.
+>
+> ---
+>
+> **Review closed ESCALATED at the round cap; the build started instead.** Per-round finding counts
+> were 11 → 13 → 10 → 10 — flat, where a converging review goes 11 → 5 → 2. The document was being
+> pushed past what prose can hold, so `skills/standup/triage.py` now owns the mechanics and
+> `test/gh77-standup-triage.sh` (29 assertions) pins them. **Where this document and the code
+> disagree, the code and its tests win**; treat the sections below as design rationale.
+>
+> Two of the four escalation items are resolved **in code**, both without amending a frozen decision:
+> the session store moved to `PARKED/.standup-session-<id>.json` (inside frozen decision 2, and safe
+> in linked worktrees where `.git` is a file), and the uncapped `--all` became deterministic
+> `--page N` paging (compatible with the frozen cap). Lens 6 now classifies corruption from **both**
+> emission shapes, `FAIL: rule=` and `warn: rule=` — matching only `warn:` made the founding incident
+> class produce no candidate at all.
+>
+> **Two still need the operator, and are not decided here:** (1) lens 4's `gh pr list` is *discovery*,
+> which frozen decision 1 excludes — ratify a bounded open-PR inventory as the one exception, or
+> restrict lens 4 to already-named PR numbers and accept weaker rot detection; (2) confirm the
+> `PARKED/` session-store relocation is the wanted resolution rather than amending decision 2.
 
 ## Problem
 

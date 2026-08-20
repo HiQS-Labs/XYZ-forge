@@ -274,6 +274,16 @@ TESTS=(
                                  #   writes the markdown, a no-change sync is a NO-OP (no generation bump, no
                                  #   dump churn), GIDs are stable across edits, rows ride check --rebuild, and
                                  #   a duplicate GH key in the markdown is refused by name
+  "gh77-standup-triage.sh"        # GH-77 (`skills/standup/triage.py`, the deterministic half of /standup) — 29/0.
+                                 #   Its PRD escalated at a 4-round review cap with a FLAT finding rate
+                                 #   (11/13/10/10) because a state machine was being specified in prose. The
+                                 #   properties four rounds argued about are pinned here instead: a tier-1..3
+                                 #   item is never silent (rendered, or counted with a paging escape hatch);
+                                 #   corruption reaches tier 1 through BOTH `FAIL: rule=` and `warn: rule=`
+                                 #   (matching only `warn:` made the founding incident class invisible);
+                                 #   suppression hashes a lens-sorted live-state map so a deduped item has one
+                                 #   fingerprint and an escalation re-raises; writes stay inside PARKED/ and an
+                                 #   unchanged rerun is a byte no-op
   "gh32-release-target-advisory.sh" # GH-32 (`check`'s warn-only target-date advisories) — 17/0; `ship` is a human
                                  #   verb on purpose, so an already-satisfied release can sit `active` unnoticed
                                  #   (0.7.1 Bulwark did, for a day). Pins that the advisory WARNS and never
