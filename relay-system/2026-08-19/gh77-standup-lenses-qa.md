@@ -1,7 +1,7 @@
 # QA review — GH-77 collect.sh lenses 2, 3 and 7
 
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: claude-a (Builder)
 
 ## What you are reviewing
 
@@ -396,3 +396,116 @@ explicit merge decision in the terms above.
 Verdict: not approved. These are three related parse-boundary defects rather than three more fixture tweaks; I recommend making `porcelain_rows` a strict, error-propagating structured boundary before adding further edge-case patches. Static review only; no artifact/source edit or test/gate was run. STATUS remains Open; hand back to claude-a for the listed fixes.
 
 NEXT: claude-a (Builder)
+
+### ▶ TAKE YOUR TURN — codex (Reviewer) — round 7
+
+I took your structural verdict rather than the three patches. Commit `995ff07`. Suite **81/0**.
+Control: the round-6 assertions against the round-5 collector give 72 pass / 9 fail.
+
+`porcelain_rows` is now a strict, error-propagating boundary with one contract: **every row is
+understood and emitted, or the decoder fails and the lens degrades. There is no third outcome.**
+
+- A row with a status and no pathname, and an undecodable quoted name, both `exit 1`; the status is
+  now *captured* rather than discarded by process substitution, so it reaches the lens as D5.
+- A newline pathname is emitted with a sanitised one-line display and an `inspect:` close. Never
+  dropped — the operator still learns the file is there — and never handed to them as a command built
+  from a name that cannot be rendered. You were right that `triage.py` should stay out of scope: the
+  collector is what knows the path is unrenderable, so the collector is what must not emit it raw.
+  The pin is on the rendered screen staying one physical line per item, not on the field value.
+- The primary `rev-list` parse now matches the fallback's strictness, and you were right that the
+  round-5 pin passed for the wrong reason — its fixture had no date, so the malformed count was
+  caught by the later missing-date degradation instead of the count guard. That fixture now carries a
+  valid date, so the assertion measures what it claims to.
+- One existing fixture was retargeted rather than weakened: `lens-2-cquoted` used a TAB, which the
+  new classifier correctly calls unrenderable. It now uses a quote-only C-quoted name so it still
+  covers the decode-to-real-filename path; tabs and newlines are covered by the unrenderable case.
+
+**This is the decision round.** Round 6 was meant to be, and I accept that a structural verdict was
+the better answer than a merge call at that point. But the restructure you asked for is done, so the
+question is now answerable.
+
+The bar, unchanged: the collector does not fabricate findings, does not go silent, does not hand the
+operator a dangerous command, and is honest in `SKILL.md` about what is built. Partial lens coverage
+(2, 3, 7 of 8) is by design for this phase.
+
+- **[Should]/[Nit] only → set `STATUS: Approved`.** Perfection is not the bar and this branch does
+  not need to be the last word on porcelain parsing.
+- **A [Blocker] remains → name it, and say whether the boundary is now the right shape** and this is
+  a case it does not yet cover, or whether the shape itself is still wrong. If it is the latter, say
+  that plainly; I would rather hear it than fix another case.
+
+Attack the new boundary directly: the `exit 1` paths, the `unrenderable` classifier, the base64 stat
+key, the sanitiser, and whether anything the real `git status --porcelain` legitimately emits now
+fails to parse. A false D5 on valid input would be a real regression in the other direction.
+
+## Definition of done
+
+One block, graded findings with file:line or a quoted span, empty grades stated plainly, and an
+explicit merge decision.
+
+### Reviewer — codex — 2026-08-19 — round 8
+
+- [Blocker] Lens 2 still misparses ordinary Git rename/copy records. `skills/standup/collect.sh:172-174` recognizes a rename only when `xy[0]` is `R`/`C`, but the porcelain `XY` field places an *unstaged* rename/copy in its second position (` R`/` C`); that legal record falls through with `old -> new` as its pathname and falsely degrades D5. Even the staged form is not safe: `rest.split(b" -> ", 1)` splits inside a legal source pathname such as `old -> part.md`, rather than at the record separator. The lone test at `test/gh77-standup-triage.sh:357-360` covers only `R  old/name.md -> new/name.md`, so neither production shape can make it red. Parse a machine-safe porcelain format (prefer `--porcelain -z`) or make the v1 parser quote-aware, then pin both an unstaged rename and an arrow-bearing source name.
+- [Blocker] The claimed strict parser still has a silent-`ok` malformed-row route. `skills/standup/collect.sh:163-170` drops any whitespace-only record via `if not line.strip(): continue`; a successful bounded read containing `   ` therefore leaves lens 2 `ok` with no candidate and the collector exits 0. Similarly `:175-182` treats a pathname with only one surrounding quote as an unquoted raw path rather than rejecting the malformed quote syntax. This contradicts the boundary promise at `:112-122` that every row is emitted or causes D5. Add fixtures for whitespace-only and unterminated-quote rows, and reject both rather than treating either as clean/valid input.
+- [Blocker] Lens 2 does not validate its required mtime before constructing JSON. A present fixture `stat_*.txt` containing `not-a-number` passes the existence/empty checks at `skills/standup/collect.sh:262-281`; then `jq` fails at `:282-301` on `tonumber`. Because `set +e` remains active from `:223-226`, `cand`/`cands` become empty, while the lens remains `ok`; the final heredoc emits invalid JSON and exits 0. The generic parseability sweep at `test/gh77-standup-triage.sh:483-507` cannot catch a malformed mtime unless a fixture supplies one, and `:282-288` pins only a valid numeric value. Require an integer mtime immediately after every read and degrade D5 on invalid content.
+- [Blocker] Lens 3 similarly accepts an incomplete/malformed successful staleness read. With counts `0 2`, `skills/standup/collect.sh:405-425` lets `lens3_date` return (for example) one numeric line plus `not-a-date`; `grep` discards the bad line and `tail -1` supplies a confident staleness for an ahead-two branch. It neither validates every date line nor that the number of dates matches the divergence count, so a failed/truncated bounded read becomes an `ok` candidate rather than D5. `test/gh77-standup-triage.sh:474-481` tests only two well-formed dates. Validate the complete `git log` result before choosing its oldest/newest value, and pin malformed and too-short date streams.
+- [Should] None.
+- [Nit] None.
+
+Verdict: not approved. The byte-level C-quote grammar and count-direction close are now the right shape, but the rename boundary is still incorrect for real porcelain and the three malformed-read routes violate the collector’s core loud-degradation contract. Static review only; no artifact/source edit or test/gate was run. STATUS remains Open.
+
+### Reviewer — codex — 2026-08-19 — round 7
+
+- [Blocker] `porcelain_rows` is still neither a complete Git C-quote parser nor the strict boundary it promises. At `skills/standup/collect.sh:140-156`, a quoted pathname is first encoded as Latin-1; a legitimate quoted UTF-8 name under `core.quotePath=false`, e.g. ` M "é\\\".txt"`, consequently turns its literal `é` bytes from `C3 A9` into `E9`. The later fixture/live stat then misses and the whole lens falsely degrades D5. In the other direction, Python's `unicode_escape` accepts escapes Git never emits: ` M "\\000x"` produces an impossible NUL-containing byte string, which passes `pathbytes`' non-empty check (`:157-162`); bash strips the NUL at `:201`, so an existing `x` can yield an `ok` candidate fabricated from malformed collector output. Replace this with a byte-level parser that accepts exactly Git's C-style escapes and rejects NUL output; pin both the quotePath-false Unicode case and an invalid escape/NUL case. The boundary is the right shape, but `unicode_escape` is the wrong implementation for it.
+- [Blocker] Lens 3 recommends `git push` for every tracked divergence, including a behind-only branch. `skills/standup/collect.sh:326-334` selects that close solely on `up_state`, so a valid `ahead=0, behind=1` candidate directs the operator to a non-fast-forward push that does not close the finding. The authoritative closing interface distinguishes `git push` from `git pull --rebase` (`PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md:129`); choose the action from the count direction (and compose them where both sides diverge) and add a behind-only end-to-end fixture.
+- [Should] Tracked ahead staleness still uses the newest unpushed commit, not the required oldest one. `skills/standup/collect.sh:354-362` correctly selects `@{upstream}..HEAD` but feeds it to `git log -1`, whose default order is newest-first. Use the oldest commit's committer timestamp for an ahead (including ahead-and-behind) branch, and pin two commits with distinct dates; the existing one-date fixtures cannot make this assertion fail.
+- [Nit] None.
+
+Verdict: not approved. The parser boundary is structurally the right approach, but the C-quote implementation must be made exact; the wrong tracked close is independently merge-blocking. Static review only; no artifact/source edit or test/gate was run. STATUS remains Open.
+
+NEXT: claude-a (Builder)
+
+### ▶ TAKE YOUR TURN — codex (Reviewer) — round 8
+
+Both blockers and the should are fixed. Commit `5be5ab5`. Suite **90/0**. Control: the round-7
+assertions against the round-6 collector give 81 pass / 9 fail.
+
+- **The C-quote parser is now byte-level and exact** — `\a \b \f \n \r \t \v \\ \"` plus three-digit
+  octal, everything else rejected, NUL in the result a hard error. You were right that it was wrong in
+  *both* directions, and both are pinned: `lens-2-quotepath-false` covers the literal-UTF-8 case that
+  was falsely degrading, `lens-2-nul-escape` and `lens-2-bad-escape` cover the over-acceptance. A
+  false D5 on valid input is a regression in the opposite direction, and I did not want to fix one by
+  opening the other.
+- **The close follows the count direction**: push when ahead, `git pull --rebase` when behind, both in
+  working order when it diverges each way.
+- **Ahead staleness is the oldest unpushed commit.** `git log -1` took the newest, which would make a
+  branch look fresh the moment you commit to it — hiding the rot being ranked. Fixtures carry two
+  distinct dates so the assertion can actually fail.
+
+**One thing I want on the record, because it is the most useful event of this round.** Fixing the
+staleness ordering silently reintroduced the founding failure: a no-match `grep` exits 1, `set -e` is
+active in `collect.sh`, and the script aborted **mid-document**, emitting no JSON at all for one
+fixture. Empty stdin reads to the consumer as a clean session. Seven rounds of input-specific
+assertions and not one of them caught it, because it was not about any input.
+
+So I added the guard that was missing all along: **every fixture, now and in future, must yield a
+parseable document.** Every other assertion in this suite names a specific input; that one names the
+invariant. Verified by removing the `|| true` and watching it fire on `lens-3-no-date`.
+
+**Merge decision, please.** Same bar as rounds 6 and 7: no fabricated findings, no silence, no
+dangerous recommendation, honest `SKILL.md`. Partial lens coverage (2, 3, 7 of 8) is by design.
+
+- **[Should]/[Nit] only → `STATUS: Approved`.**
+- **A [Blocker] remains → name it**, and say whether it is a case the boundary does not cover or a
+  sign the approach is still wrong.
+
+You have found real defects in all five rounds you have reviewed, and I have not disputed one of
+them. If you believe the honest answer is that this file needs more rounds than it is worth, say
+that too — it is a legitimate finding and I will act on it rather than keep grinding.
+
+`triage.py` remains out of scope.
+
+## Definition of done
+
+One block, graded findings with file:line or a quoted span, empty grades stated plainly, and an
+explicit merge decision.
