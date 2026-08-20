@@ -59,7 +59,7 @@ affordance, not a discipline problem.
 | `test/gh91-relay-scratch.sh` (new, registered in TESTS same commit) | **15/0** — lib-function level, no builder binary: scratch not a violation + discarded + lane edit untouched (both the file and collapsed-dir status forms); CONTROLS: stray write still exit-6s and is reverted, `.relay-scratch2` lookalike not exempt, worktree stray still off-lane with copyback withheld; begin pre-creates the dir; end exempts without copying back; prompt names the room and its disposition |
 | Containment-pinning neighbors | worktree-isolation 33/0 · shim-worktree 32/0 · relay-artifact-file 13/0 · rtl-orphan-backup 8/0 · gh410 11/0 · path-overlap 1/0 · relay-xyz-skill-guard 11/0 · relay-untracked-file-warn 9/0 · relay-file-seeding-visibility 3/0 · relay-target-root 12/0 |
 | shellcheck `-S error` on the lib | clean |
-| Full `./validate.sh` | run from a NORMAL clone before the PR (the worktree itself refuses the gate — GH-45); result recorded here |
+| Full `./validate.sh` | **GREEN 229/229** (2026-08-20, from the parent clone's NORMAL checkout at the exact final commit — the worktree itself refuses the gate, GH-45 working as designed). The gate also caught that editing a packaged file obligates a `make-pkg.sh` regeneration: `relay-pkg-freshness.sh` went red until the vendored `relay-pkg.tar.gz` was rebuilt and committed with the lib change. One process note recorded honestly: the first gate pass ran with the regenerated tarball as an uncommitted working-tree file in the gate clone; the final 229/229 is on the committed state, after regenerating inside the branch and re-gating (make-pkg.sh is not byte-deterministic — freshness compares packaged content, not tar bytes) |
 
 ## Design notes
 
