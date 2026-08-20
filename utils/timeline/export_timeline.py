@@ -116,9 +116,17 @@ def release_columns(cx, repo_url, roadmap_idx, today):
     rows = cx.execute(
         "SELECT r.id, r.version, r.codename, r.status, r.target_date, r.shipped_date, "
         "       r.description, r.exit_criterion, r.milestone, r.marathon_id, ir.url "
-        "FROM releases r JOIN issue_refs ir ON ir.id = r.tracking_ref_id "
-        "ORDER BY COALESCE(r.target_date, r.shipped_date, '9999-12-31'), r.version"
+        "FROM releases r JOIN issue_refs ir ON ir.id = r.tracking_ref_id"
     ).fetchall()
+    # Rail order: shipped/cut history on the far left (by ship date), then the
+    # open releases by target date. The viewer auto-scrolls to the active node,
+    # so history sits off-screen left until the reader pages back with ‹.
+    rows.sort(
+        key=lambda r: (
+            (0, r[5] or r[4] or "") if r[3] in ("shipped", "cut") else (1, r[4] or "9999-12-31"),
+            r[1],
+        )
+    )
     for (rid, version, codename, status, target, shipped, descr, exit_c, milestone, mar_id, ref_url) in rows:
         cards = manifest_cards(cx, rid, roadmap_idx, today)
         n_total = len(cards)
