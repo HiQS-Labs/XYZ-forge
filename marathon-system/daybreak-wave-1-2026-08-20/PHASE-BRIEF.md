@@ -62,6 +62,19 @@ All three lenses implemented, three fixture directories, six new assertions, and
 `bash validate.sh --subsystem releases` green. `triage.py` is **not** modified by this phase — if a
 lens seems to need a change there, that is a finding to report, not an edit to make.
 
+## Working rules for the BUILDER
+
+The first fire of this phase (2026-08-20) escalated at exit 6 before any review ran, and two of the
+three causes were things nobody told the builder:
+
+- **`skills/standup/fixtures/` is a DIRECTORY lane** — spelled with the trailing slash, so the whole
+  tree beneath it is yours this turn. The first fire spelled it without one, which was unmatchable by
+  construction and reverted the fixtures as off-lane (GH-90, fixed in `a350b2d`).
+- **Do not leave scratch files in the tree.** Probe files, scratch scripts, and one-off outputs are
+  off-lane no matter how harmless, and a single stray path at the repo root fails the whole turn. Use
+  `$TMPDIR`. The reviewer has always been told this; the builder had not been, and the first fire
+  littered the repo root as a result.
+
 ## What this phase is actually testing
 
 Three lanes editing **one shared `collect.sh` and one shared suite**. That collision surface is why
