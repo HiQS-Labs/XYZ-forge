@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 2 / 4
 
@@ -256,5 +256,106 @@ what *becomes* an item. That made the rest inevitable. Rewrote rather than patch
 than diffing. The highest-value checks: does the lens table actually yield a decidable item for all
 eight lenses; is lens 5 genuinely bounded (session-mentioned and ledger-cited numbers only) or has it
 drifted into a sweep; and can the suppression rule hide a tier-1 finding.
+
+### Reviewer · Round 2
+
+swept file: yes
+
+**Verdict: Changes requested**
+
+- **[Blocker] Suppression both contradicts idempotence and can hide an unresolved tier-1 item.** An
+  unchanged reported key must not reappear (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:199`),
+  but the second run must emit the same list (`:332`); both cannot pass. Worse, unchanged evidence
+  suppresses every tier, so persistent corruption disappears on the next invocation, and a tier
+  escalation is invisible because tier is not part of evidence (`:199-202`). Fix: freeze one exact
+  second-run transcript, specify suppression's place relative to ranking/capping/parking, use a
+  semantic fingerprint containing tier and live state rather than the display evidence string, and
+  exempt unresolved tiers 1-3 (or require explicit resolution) from suppression.
+- **[Blocker] The priority ladder still has no decidable tier classifier.** Candidate predicates are
+  defined per lens (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:95-104`), but nothing maps their
+  fields to tiers 1-6; “reachable,” “customer-facing,” “one step,” “stale,” and “visibly cleared”
+  remain judgement calls (`:127-136`). The PRD then concedes tier 4 is not unit-testable (`:318-319`),
+  while promising a helper will test tier assignment (`:311`). Fix: add mutually exclusive,
+  evidence-backed classification predicates and thresholds (including stale PR age and cleared-park
+  proof), plus a deterministic fallback tier; put subjective promotion behind an explicit cited
+  override that fixtures can represent.
+- **[Blocker] Three lens rows cannot produce the facts they claim.** Branch divergence from trunk
+  does not establish “unpushed” commits, and a behind-only branch has no “oldest unpushed commit”
+  staleness source (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:99`). Lens 5 sorts on
+  `updatedAt` but does not request that field (`:101`). Lens 6's three readers cannot compare stored
+  manifest state with live issue state, and its required `rule=` evidence does not exist for the two
+  non-warning predicates (`:102`); `list` prints only an item count
+  (`utils/py/releases_app.py:1719-1731`), while manifest states require `show`
+  (`utils/py/releases_app.py:1787-1793`). Fix each row with the exact reads, derived fields, evidence,
+  and command/action needed: upstream divergence for push state, `updatedAt` in issue JSON, and a
+  `show` + bounded issue-state join for manifest drift.
+- **[Blocker] The working-tree closing interface is unsafe and sometimes impossible.** Every
+  untracked path is a candidate, but `git restore` cannot remove an untracked path
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:98`); for tracked paths it can overwrite peer
+  work, exactly the destructive class this repo forbids (`AGENTS.md:126-137`). Fix: make the close
+  action non-destructive and ownership-aware (inspect, claim/coordinate, then named commit or manual
+  file action); never recommend restore/discard from porcelain status alone.
+- **[Blocker] The canonical evidence schema rejects most lens evidence.** The only allowed forms are
+  `file:line`, issue number, rule, or quote
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:160-165`), while the lens table emits a bare path,
+  branch counts, PR number plus merge state, issue state/location, dry-run counts, and a park key
+  (`:98-104`). Those candidates therefore either violate the schema or degrade instead of appearing.
+  Fix: define one typed evidence grammar covering every lens and use those exact serialized forms in
+  both the table and fixtures.
+- **[Blocker] The claimed deterministic test seam still stops before the behavior under test.**
+  `collect.sh` performs “the eight lens reads and nothing else” and tests must never use model output
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:302-305`), yet the proposed assertions require an
+  unnamed ranking helper, running “the procedure,” writing PARKED, suppression state, and counting an
+  emitted transcript (`:309-316`). There is no executable component that owns those behaviors, and
+  the install DoD is not mapped to any assertion despite “each bullet maps” (`:321-326`). Fix: name
+  and specify a deterministic rank/render/park state-machine interface (inputs, outputs, exit codes,
+  session-state fixture, and dry-run/apply modes); keep only final prose judgement in `SKILL.md`, then
+  map every DoD bullet to a concrete test.
+- **[Blocker] The hard line cap does not add up.** The allocated maxima are 1 + 7 + 1 + 6 = 15, while
+  the declared total is 17, and the Part 1 heading is neither allocated nor defined for an empty
+  tactical half (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:174-184`). The no-PARKED question
+  also has no charged line (`:289`). Fix: enumerate every mandatory line, including both headings,
+  zero-item text, overflow/question, and degradation replacement rules; make their arithmetic equal
+  the total and fixture all maximum/empty/degraded shapes.
+- **[Blocker] The keys are not stable enough to support deduplication or suppression.** Two unrelated
+  conversation items can share the first eight words (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:97`),
+  and the same logical item changes key when an earlier contributing lens appears because the first
+  lens wins (`:122-123`). That can merge unrelated work or re-raise parked work under a new key. Fix:
+  define collision-resistant canonical keys by entity (issue/PR/path) and a normalized full-candidate
+  digest for conversation-only items; choose keys independently of lens presence and add collision
+  and disappearing-lens fixtures.
+- **[Blocker] The ROADMAP catalogue still states a stricter grammar than the parser.** It prints
+  `- **<bold name>** — anything else` and calls that the whole grammar
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:249-258`), but the parser only requires the
+  `^- **...**` prefix; no dash or trailing content is required
+  (`utils/py/_marathon_plan.py:521-531`). Fix the minimum form to
+  `- **<bold name>**[optional remainder]`, then keep the richer GH pointer solely as convention.
+- **[Blocker] The frozen input boundary is still ambiguous, and the strategic verdict can overclaim
+  what it observed.** “Session + local state” (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:79`)
+  conflicts literally with remote PR/issue reads (`:100-101`), while Part 2 may say “the plan looks
+  sound” from this bounded snapshot (`:189-193`). `/radar` is the sibling that actually compares the
+  plan with activity over a 21-day trunk window (`skills/radar/SKILL.md:36-40` and `:225-237`). Fix:
+  freeze an explicit allowlist that says whether current GitHub metadata belongs to “local state,”
+  and use a bounded verdict such as “no contradiction found in the available snapshot”; reserve
+  plan/activity alignment for `/radar`.
+- **[Should] Bound truncation and same-minute parking explicitly.** `gh pr list --limit 50` silently
+  misses PR 51 (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:100`), and the minute-only PARKED name
+  calls `-standup-` a collision rule even though two standup runs in one minute still collide
+  (`:210-223`). Fix: probe one past the PR bound and degrade on truncation; state whether an existing
+  minute file is appended atomically, assigned a run ID, or refused, and fixture that case.
+- **[Pass] The finite RELEASES command catalogue now matches the implementation.** Status choices are
+  exactly `draft|active|shipped|cut` (`utils/py/releases_app.py:102` and `:2777-2780`), the enumerated
+  update flags match the parser (`utils/py/releases_app.py:2744-2751`), and ship evidence plus roadmap
+  dry-run are real (`utils/py/releases_app.py:2753-2757` and `:2807-2812`).
+- **[Pass] The sibling gap remains real after the rewrite.** Finish Line freezes one checkpoint's
+  done list (`/Users/noelsaw/.claude/skills/finish-line/SKILL.md:51-77`), Rabbit Hole consolidates one
+  task and waits for a nod (`/Users/noelsaw/.claude/skills/rabbit-hole/SKILL.md:14-23`), and Radar owns
+  history-backed strategic analysis (`skills/radar/SKILL.md:36-40`). None supplies this bounded
+  session triage state machine.
+
+Whole-file note: the entire revision 2 PRD and every required sibling/constraint source were swept;
+the findings above include pre-existing interface defects, not only changes since round 1.
+
+Handing off to Producer — go to the claude-a window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
