@@ -5,6 +5,21 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [1.1.6] - 2026-08-20
 
 ### Added
+- **GH-103: in-band releases 0.7.1 and 0.7.2 recorded here, per the RELEASES.md band rule.**
+  Both live inside Ballast's reserved `0.7.0-0.7.4` iteration band, so they get CHANGELOG
+  entries, not RELEASES.md blocks (the file's admission rule; confirmed unanimously by a
+  codex+agy consult 2026-08-20). **0.7.1 Bulwark SHIPPED 2026-08-19** — the RELEASES ledger
+  survives a git merge (#52 read-only check no longer mutates clone artifacts, #53
+  .gitattributes contract + one-command resolver, #54 `check --rebuild` refuses a
+  merge-mangled dump by name); tracking #32. **0.7.2 Daybreak CUT 2026-08-19, ACTIVE, target
+  2026-08-26** — the /standup skill completes (collect.sh's eight bounded lens reads feeding
+  triage.py); manifest #79–#87, tracking #77. Both were CLI-born DB rows with no CHANGELOG or
+  RELEASES.md trace until this entry — the GH-103 drift finding. Status of record lives in
+  `releases.db` (`releases_app.py show`); the `utils/timeline/` viewer renders it.
+- **GH-103: read-only RELEASES→timeline viewer spike** — `utils/timeline/export_timeline.py`
+  projects `releases.db` onto the timeline-ui rail (`data.json` contract + baked static
+  `temp/timeline/index.html`), with a band-aware RELEASES.md-vs-DB drift banner and a
+  standalone `--check-drift` guard mode. Zero DB writes (SQLite `mode=ro`).
 - **GH-102: Unified telemetry schema (1.0) and universal inspection CLI across fuzzing and ATE.**
   Standardized shared data contract (`schema_version: "1.0"`); instrumented `utils/fuzzing/fuzz-loop.sh` with
   argv-safe JSONL emission and sub-second millisecond duration timing; updated `utils/ate/scripts/run_variations.py`
