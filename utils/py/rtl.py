@@ -1,5 +1,6 @@
 import atexit
 import os
+import re
 import shlex
 import subprocess
 import tempfile
@@ -34,7 +35,51 @@ AGY_AUTH_TIMEOUT_DEFAULT_S = 20
 WORST_OBSERVED_WHOAMI_S = 2.3   # 1.3 / 1.9 / 2.3 measured idle, 2026-08-09
 
 AGY_AUTH_ERROR_PREFIXES = ("cli error:", "error:", "panic:", "fatal:")
-AGY_AUTH_TTY_MARKERS = ("could not open tty", "error opening tty")
+# "error entering raw mode" is the same TTY failure spelled differently. agy 1.1.16 dropped the
+# bubbletea wording; measured on Linux 2026-08-20, `agy whoami` eventually prints
+# "CLI error: error entering raw mode: input/output error" instead. Same cause, same verdict.
+AGY_AUTH_TTY_MARKERS = ("could not open tty", "error opening tty", "error entering raw mode")
+
+# The control sequences a full-screen TUI writes when it SEIZES the terminal: enable the alternate
+# screen buffer, hide the cursor, enable bracketed paste. Nothing but a terminal takeover emits
+# these, which is what makes them positive evidence of the TTY cause rather than a broad "looks
+# odd" test.
+AGY_TUI_TAKEOVER_MARKERS = ("\x1b[?1049h", "\x1b[?25l", "\x1b[?2004h")
+
+#: CSI / OSC / two-character escape sequences, so what a human would actually have read is what is
+#: left behind.
+_ANSI_ESCAPE_RE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\)|[@-Z\\-_])")
+
+
+def strip_ansi(text):
+    """Remove terminal escape sequences, leaving only what was legible on screen."""
+    return _ANSI_ESCAPE_RE.sub("", text)
+
+
+def agy_tui_takeover_only(output):
+    """True when the capture is a TUI seizing the terminal and NOTHING readable.
+
+    agy 1.1.16 (measured on Linux, 2026-08-20) changed the shape of the headless `whoami` failure
+    that GH-375 and its follow-up were written against. It no longer exits 0 with a TTY error and it
+    no longer prints one promptly. `whoami` is not a subcommand in this version at all — the
+    subcommand list is agent/agents/changelog/help/install/mcp/models/plugin/plugins/update — so the
+    argument falls through to the INTERACTIVE TUI, which writes its terminal-takeover sequences and
+    then blocks. It also ignores SIGTERM: `timeout 8 agy whoami` was measured still alive at 248s.
+
+    So the capture at timeout is a run of escape codes and no text. Under the pre-existing rule that
+    is "a timeout with no TTY diagnostic" -> fatal, and the agy lane is blocked on a machine where
+    `agy -p` answers correctly in 14s. That is precisely the false-block direction GH-375 and its
+    follow-up both exist to prevent, arriving a third time through a new spelling.
+
+    The rule the follow-up pinned is kept exactly: reclassify ONLY on positive evidence of the TTY
+    cause. A terminal takeover IS that evidence — it is the TTY failure, written in control codes
+    instead of English. The second half of the test is what keeps case (3) intact: if anything
+    READABLE survives stripping, this is not a mute takeover. A device-code login prompt has
+    readable text, so it still lands on fatal, which is the branch's original purpose.
+    """
+    if not any(marker in output for marker in AGY_TUI_TAKEOVER_MARKERS):
+        return False
+    return not strip_ansi(output).strip()
 
 
 def agy_auth_output_verdict(out_file):
@@ -138,6 +183,13 @@ def agy_auth_timeout_verdict(out_file):
             return ("unverifiable",
                     "agy could not open a TTY and then exceeded the probe timeout, so auth was not "
                     f"verified (the timeout is the same TTY failure, slower): {line}")
+    # agy 1.1.16: the diagnostic is control codes, not prose. See agy_tui_takeover_only — a mute
+    # terminal takeover is the TTY cause, so it belongs with the case above, not with silence.
+    if agy_tui_takeover_only(output):
+        return ("unverifiable",
+                "the probe emitted a terminal-takeover escape sequence and no readable output, then "
+                "exceeded its timeout — agy fell through to its interactive TUI, which cannot run "
+                "headless, so auth was not verified either way")
     return ("failed", "the probe timed out with no TTY diagnostic, which is the shape of a genuine "
                       "hang on an interactive login prompt")
 
