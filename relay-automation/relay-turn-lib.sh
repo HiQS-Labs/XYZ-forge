@@ -348,8 +348,26 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
   # for that case — it stays absolute as intended.
   local _rtl_root_phys
   _rtl_root_phys="$(cd "$RTL_ROOT" 2>/dev/null && pwd -P)" || _rtl_root_phys="$RTL_ROOT"
-  local _n=() a                       # normalize to repo-root-relative (git status emits relative)
+  local _n=() _d=() a _isdir          # normalize to repo-root-relative (git status emits relative)
   for a in "${RTL_ALLOW[@]}"; do
+    # GH-90: a DIRECTORY lane entry. Before this, an entry naming a directory was unmatchable BY
+    # CONSTRUCTION: git collapses an all-untracked new dir to `dir/` in porcelain output, which fails
+    # rtl_in_allow's exact compare (trailing slash) AND its GH-59 ancestor rule (which requires a
+    # concrete allowlisted FILE beneath the dir, and a bare dir entry has nothing beneath it). The
+    # turn therefore did real work, had it reverted, and reported a *containment violation* — which
+    # reads as a misbehaving builder rather than a malformed lane spec. Cost a full marathon turn on
+    # 2026-08-20 (Daybreak wave 1, `--artifact "…,skills/standup/fixtures,…"`).
+    # Dir-ness is declared two ways, because the two cases are genuinely different:
+    #   • trailing slash  — explicit, and the ONLY signal available when the directory does not exist
+    #                       yet because the turn is about to create it;
+    #   • names an existing directory — the operator's obvious intent, no new syntax to remember.
+    # The slash is stripped here so RTL_ALLOW keeps clean paths: the seed/copyback/signature loops all
+    # do dirname/basename/`cp -R` on these entries and a trailing slash breaks `mv src dst/`.
+    # Dir-ness rides in the PARALLEL RTL_ALLOW_ISDIR array, index-aligned with RTL_ALLOW exactly as
+    # the seedsig sidecar is. Anything without either signal keeps byte-identical FILE semantics, so
+    # GH-59's ban on bare prefixes (`green` must never match `greenfield/output.txt`) is untouched.
+    _isdir=0
+    if [[ "$a" == */ ]]; then _isdir=1; a="${a%/}"; fi
     if [[ "$a" == /* && -e "$a" ]]; then
       local _a_dir
       _a_dir="$(cd "$(dirname "$a")" 2>/dev/null && pwd -P)"
@@ -360,9 +378,13 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
     else
       a="${a#"$RTL_ROOT"/}"
     fi
+    if ((_isdir == 0)) && [[ "$a" != /* && -n "$a" && -d "$RTL_ROOT/$a" ]]; then _isdir=1; fi
+    ((_isdir == 1)) && printf 'relay-turn: allowlist entry %s is a DIRECTORY lane — it and everything beneath it are writable this turn.\n' "$a" >&2
     _n+=("$a")
+    _d+=("$_isdir")
   done
   RTL_ALLOW=("${_n[@]}")
+  RTL_ALLOW_ISDIR=("${_d[@]}")
   # GH-30 Phase 3 (Model A): the relay file may live in a SEPARATE git repo (the ARCHIVE) when
   # XYZ_ARCHIVE_ROOT redirected the transcript out of RTL_ROOT. Detect that here so rtl_enforce
   # commits the transcript INTO the archive repo (never RTL_ROOT), while the code artifacts AND the
@@ -402,6 +424,25 @@ rtl_init() {  # <root> <relay_file> <allow_csv>
 
 rtl_in_allow() {  # <path> — is <path> on the allowlist? Case-insensitive when RTL_IGNORECASE=true (GH-17).
   local x="$1" a
+  # GH-90: DIRECTORY lane entries (declared by a trailing slash, or by naming an existing directory —
+  # see rtl_init) match the directory itself, its collapsed `dir/` porcelain form, and everything
+  # beneath it. This is the ONLY prefix match in this function and it is opt-in per entry, so the
+  # GH-59 rule below still governs every FILE entry: a bare `green` cannot reach `greenfield/…`.
+  local _i _n _xs="${x%/}"
+  _n=${#RTL_ALLOW[@]}
+  for ((_i = 0; _i < _n; _i++)); do
+    [[ "${RTL_ALLOW_ISDIR[_i]:-0}" == 1 ]] || continue
+    a="${RTL_ALLOW[_i]}"
+    [[ -n "$a" ]] || continue
+    if [[ "${RTL_IGNORECASE:-false}" == "true" ]]; then
+      local _dxl _dal
+      _dxl="$(printf '%s' "$_xs" | tr '[:upper:]' '[:lower:]')"
+      _dal="$(printf '%s' "$a" | tr '[:upper:]' '[:lower:]')"
+      [[ "$_dxl" == "$_dal" || "$_dxl" == "$_dal"/* ]] && return 0
+    else
+      [[ "$_xs" == "$a" || "$_xs" == "$a"/* ]] && return 0
+    fi
+  done
   # GH-59: git collapses an all-untracked new dir to `dir/` in porcelain output. Treat that as
   # allowlisted ONLY when it is a TRUE ancestor of a concrete allowlisted file entry (e.g.
   # greenfield/ -> greenfield/output.txt). This generalizes the old .relay-artifacts dir exemption
@@ -429,6 +470,23 @@ rtl_in_allow() {  # <path> — is <path> on the allowlist? Case-insensitive when
   fi
   for a in "${RTL_ALLOW[@]}"; do [[ "$x" == "$a" ]] && return 0; done
   return 1
+}
+
+# GH-90: one case stays undetectable at rtl_init — an entry that names a directory the turn has not
+# created YET and that carries no trailing slash. It is byte-identical to a mistyped file path, so it
+# cannot be refused up front. It can be NAMED at the moment it costs something: when an off-lane path
+# turns out to sit beneath an allowlist entry being treated as a file, say so instead of letting
+# "containment violation" stand as the whole explanation. Advisory only — never changes the verdict.
+rtl_offlane_hint() {  # <off-lane path>
+  local p="${1%/}" a
+  for a in "${RTL_ALLOW[@]}"; do
+    [[ -n "$a" && "$p" == "$a"/* ]] || continue
+    printf '%s-turn: hint: %s sits under allowlist entry "%s", which is being treated as a FILE. If "%s" is a DIRECTORY lane, spell it "%s/" (trailing slash) in ALLOW_PATHS / --artifact.\n' \
+      "${RTL_TOOL:-relay}" "$p" "$a" "$a" "$a" >&2
+    rtl_log_always "rtl_offlane_hint: path=$p under file-entry=$a (GH-90 — declare it \"$a/\")"
+    return 0
+  done
+  return 0
 }
 
 # GH-107: opt-in tool-cache exemption for rtl_worktree_end's off-lane loop. A builder's own tooling
@@ -728,6 +786,7 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     esac
     rtl_in_allow "$path" && continue
     rtl_is_containment_ignored "$path" && continue   # GH-107: opt-in tool-cache exemption
+    rtl_offlane_hint "$path"                         # GH-90: name a file-vs-directory lane-spec mistake
     rtl_trace "rtl_worktree_end: OFFLANE path=$path"
     RTL_WT_OFFLANE=1                    # a non-allowlist, non-.tick change → off-lane
   done < <(git -C "$wt" status --porcelain -z 2>/dev/null)
@@ -910,6 +969,7 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   fi
   printf '%s-turn: OFF-ALLOWLIST change: %s — reverting\n' "$RTL_TOOL" "$p" >&2
   rtl_log_always "rtl_check: OFF-ALLOWLIST path=$p tool=$RTL_TOOL — reverting"
+  rtl_offlane_hint "$p"    # GH-90: name a file-vs-directory lane-spec mistake before the revert
   rtl_orphan_backup "$p"   # GH-141: recoverable copy BEFORE the destructive revert below
   git -C "$RTL_ROOT" checkout -- "$p" 2>/dev/null || rm -rf "$RTL_ROOT/${p%/}"
   RTL_VIOLATION=1
