@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -357,5 +357,102 @@ Whole-file note: the entire revision 2 PRD and every required sibling/constraint
 the findings above include pre-existing interface defects, not only changes since round 1.
 
 Handing off to Producer — go to the claude-a window and say “take your turn”.
+
+### Producer — claude-a · round 3
+
+Round 3. Both reviewers ran independently again; 13 further findings, nearly all against material r2
+introduced. All implemented, none declined. Highlights of what changed structurally:
+
+- **A tier classifier now exists.** r1 and r2 both listed tiers and never said how a candidate
+  reaches one. There is now a first-match table keyed on lens output (corruption rule set; quoted
+  traceback; operator label; `mergeStateStatus: CLEAN`; PR older than 7 days; …), a deterministic
+  tier-6 fallback, and exactly one promotion path — a cited operator statement, which becomes the
+  item's evidence so a fixture can represent it.
+- **Tiers 1–3 are exempt from suppression AND from parking.** They render every run until closed.
+- **Suppression compares a semantic fingerprint** — `sha256(key + tier + live-state)` — not the
+  display string, so an escalation re-raises and a changed defect re-raises.
+- **The second-run contract is frozen as one exact transcript**, replacing the contradictory pair
+  ("same list" + "do not re-raise") that could not both hold.
+- **Keys are entity-canonical** (`issue:`/`pr:`/`path:`/`rel:`/`rule:`/`branch:`, and a sha256 digest
+  for conversation-only items), so they no longer depend on which lens fired or collide on an
+  eight-word prefix.
+- **One typed evidence grammar** covering all eight lenses, replacing four forms that rejected most
+  of what the table emitted.
+- **`triage.py` joins `collect.sh`** as a second named executable owning ranking, suppression,
+  parking, and rendering, with `--dry-run`/`--apply`. `SKILL.md` keeps only the prose judgement.
+  Every DoD bullet now names its assertion.
+- **The line table is enumerated** and the total is the sum of its parts: 1+1+7+1+1+4 = 15.
+
+**Dispositions — your round-2 findings**
+
+- **[Blocker] Suppression contradicts idempotence and can hide an unresolved tier-1 item** —
+  **Implemented, all four sub-points.** One exact second-run transcript is frozen (same opening line,
+  same tier-1–3 items, same Part 2, a notices line whose suppressed count equals run 1's tier-4–6
+  items, no park write) — that replaces the contradictory pair. Suppression's place is stated: after
+  ranking, before capping. The comparison is a semantic fingerprint, `sha256(item-key + tier +
+  live-state-payload)`, not the display string, so a tier escalation is a fingerprint change. And
+  tiers 1–3 are exempt outright, from suppression *and* from parking.
+- **[Blocker] No decidable tier classifier** — **Implemented.** A first-match table maps lens output
+  to tier: the corruption rule set and the persisted-artifact path set for tier 1; a session-quoted
+  traceback or non-zero suite exit for tier 2; an operator label for tier 3 (never inferred); PR
+  `mergeStateStatus: CLEAN`, ahead-with-clean-tree, or an S-bin close for tier 4; PR `updatedAt`
+  older than 7 days and the other rot predicates for tier 5; **tier 6 as the deterministic
+  fallback**. Subjective promotion is behind a single cited-override path whose citation becomes the
+  evidence field, so fixtures can represent it. The "tier 4 not unit-testable" concession is now
+  scoped to *judgement about phrasing*, not to classification.
+- **[Blocker] Three lens rows cannot produce the facts they claim** — **Implemented, each.** Lens 3
+  now reads `git rev-list --left-right --count @{upstream}...HEAD` — trunk divergence never
+  established *unpushed* — with a trunk fallback carrying `no-upstream` in the evidence, and a
+  behind-only branch takes its staleness from the newest upstream commit rather than a nonexistent
+  unpushed commit. Lens 5 now requests `updatedAt` in its `--json` field list. Lens 6 reads `$R show
+  --version <v>` per non-shipped release rather than `list` (verified: `list` prints `items=%d`,
+  `utils/py/releases_app.py:1728`), and the stored-state-vs-issue comparison moved to lens 5, which
+  is the only lens that can see issue state.
+- **[Blocker] The working-tree closing interface is unsafe and sometimes impossible** —
+  **Implemented.** `git restore` is gone. The close for a dirty path is `git add <path>` + commit, or
+  `inspect: <path>`, and the item schema carries an explicit standing rule that closing interfaces
+  are never destructive — never restore, never discard, never clean — citing `AGENTS.md`. You are
+  right that it could not have removed an untracked path anyway; recommending it on a tracked path
+  was the more serious half.
+- **[Blocker] The canonical evidence schema rejects most lens evidence** — **Implemented.** One typed
+  grammar, `<type>:<payload>`, with eight types (`line path quote counts pr issue rule park`) and the
+  exact serialized form each lens emits, stated in both the lens table and the grammar table so the
+  fixtures have one source.
+- **[Blocker] The deterministic test seam stops before the behavior under test** — **Implemented.**
+  `skills/standup/triage.py` is named and specified: consumes `collect.sh` JSON plus a session-state
+  fixture (prior fingerprints, `PARKED/` contents), emits the ranked list, notices line, and park
+  delta; modes `--dry-run` / `--apply`; exits 0 / 2 / 3. `collect.sh` keeps reads only. `SKILL.md`
+  keeps only prose judgement. Every DoD bullet now names its assertion in a table, including the
+  install check.
+- **[Blocker] The hard line cap does not add up** — **Implemented.** Every mandatory line is
+  enumerated with its count, both headings charged, zero-item text specified (`Nothing open.`), and
+  the missing-`PARKED/` question folded onto the notices line so it is charged. Total is now the sum:
+  1+1+7+1+1+4 = 15. Fixtures for the maximum, empty, and degraded shapes are in the test table.
+- **[Blocker] Keys are not stable enough** — **Implemented.** Keys are canonical **by entity**
+  (`issue:` `pr:` `path:` `rel:` `rule:` `branch:`), so they no longer depend on which lens fired —
+  your disappearing-lens case cannot arise. Conversation-only items key on
+  `sha256(normalized quoted span)[:12]` rather than an 8-word prefix. Dedup collapses on identical
+  key, which is now the whole rule.
+- **[Blocker] The ROADMAP catalogue still states a stricter grammar** — **Implemented**, and
+  verified independently at `utils/py/_marathon_plan.py:521`: `re.match(r"^- \*\*", line)`, the
+  prefix alone. The minimum form is now `- **<bold name>**[optional remainder]`; the dash and
+  trailing content are explicitly not required. Second round running that this line was wrong, which
+  is why Phase 1 now carries the note that the catalogue has shipped an error into every review.
+- **[Blocker] The frozen input boundary is ambiguous and Part 2 can overclaim** — **Implemented.**
+  Frozen decision 1 now reads "the session, the local repo, **and current-state GitHub metadata for
+  entities the session or the ledgers already name**", with the lens table named as the explicit
+  allowlist and discovery excluded. Part 2's permitted positive form is bounded exactly as you
+  proposed — *"no contradiction found in the available snapshot"* — with plan-versus-activity
+  alignment reserved to `/radar` by name.
+- **[Should] Bound truncation and same-minute parking** — **Implemented.** `gh pr list --limit 51`
+  probes one past the bound and emits a truncation degradation row when 51 come back. Two runs in the
+  same minute append to the existing file under a `## run <HHMMSS>` heading rather than colliding.
+
+**Handing off to the Reviewer (codex)** — third read of a substantially changed document. Highest
+value: does the tier classifier terminate on every candidate the lens table can produce; can a tier-1
+item still reach a suppressed or parked state by any path; is the enumerated line table consistent
+under the empty, maximum, and fully-degraded shapes at once; and does `triage.py`'s stated interface
+actually cover every assertion the DoD table claims for it. Approve if sound — round 4 is the
+escalation cap.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

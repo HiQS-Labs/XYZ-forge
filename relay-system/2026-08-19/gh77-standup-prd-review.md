@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 2 / 4
+ROUND: 3 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -205,5 +205,82 @@ accurate and still check the wrong proposition.
 whole artifact rather than diffing: verify the lens table produces a decidable item for each of the
 eight lenses, that the caps are now falsifiable, and that the suppression rule cannot itself hide a
 tier-1 finding.
+
+### Producer — claude-a · round 3
+
+Round 3. Both reviewers ran independently again; 13 further findings, nearly all against material r2
+introduced. All implemented, none declined. Highlights of what changed structurally:
+
+- **A tier classifier now exists.** r1 and r2 both listed tiers and never said how a candidate
+  reaches one. There is now a first-match table keyed on lens output (corruption rule set; quoted
+  traceback; operator label; `mergeStateStatus: CLEAN`; PR older than 7 days; …), a deterministic
+  tier-6 fallback, and exactly one promotion path — a cited operator statement, which becomes the
+  item's evidence so a fixture can represent it.
+- **Tiers 1–3 are exempt from suppression AND from parking.** They render every run until closed.
+- **Suppression compares a semantic fingerprint** — `sha256(key + tier + live-state)` — not the
+  display string, so an escalation re-raises and a changed defect re-raises.
+- **The second-run contract is frozen as one exact transcript**, replacing the contradictory pair
+  ("same list" + "do not re-raise") that could not both hold.
+- **Keys are entity-canonical** (`issue:`/`pr:`/`path:`/`rel:`/`rule:`/`branch:`, and a sha256 digest
+  for conversation-only items), so they no longer depend on which lens fired or collide on an
+  eight-word prefix.
+- **One typed evidence grammar** covering all eight lenses, replacing four forms that rejected most
+  of what the table emitted.
+- **`triage.py` joins `collect.sh`** as a second named executable owning ranking, suppression,
+  parking, and rendering, with `--dry-run`/`--apply`. `SKILL.md` keeps only the prose judgement.
+  Every DoD bullet now names its assertion.
+- **The line table is enumerated** and the total is the sum of its parts: 1+1+7+1+1+4 = 15.
+
+**Dispositions — your round-2 findings**
+
+- **[Blocker] Segment caps do not reconcile with the total** — **Implemented.** Every permitted line
+  is now enumerated in a table with its own count, Part 1's heading is charged explicitly, and the
+  total is stated as *the sum of the segment caps, not a separate number*: 1+1+7+1+1+4 = 15. Your
+  observation that no reading produced 17 was exactly right; the DoD cites 15.
+- **[Blocker] Suppression can hide a live tier-1 finding** — **Implemented, both halves.** (a)
+  Within-session: tiers 1–3 are now exempt from suppression outright — they render every run until
+  closed. (b) Across sessions: they are also exempt from *parking*, which closes the route you
+  traced; if eight tier-1 items exist the cap truncates the list but never silences one. And lens 8's
+  predicate is redefined over a field the record actually carries — the record's own `close` field
+  being a no-op — instead of the "blocking condition" the schema never had. That was the detail that
+  made the trap permanent, and it is the sharpest thing either reviewer found this round.
+- **[Blocker] Lens 2 turns the skill's own park write into a self-feeding loop** — **Implemented.**
+  Verified your premise before accepting it: `git check-ignore PARKED/` returns rc 1 (not ignored)
+  and `git ls-files PARKED/` lists two tracked files, so a fresh park file is untracked and lens 2
+  would have emitted it. Lens 2's read is now
+  `git status --porcelain -- . ':(exclude)PARKED'`, and "a park file is never itself emitted as an
+  item" is a DoD bullet with its own fixture. This is the best finding of the relay: it is a defect
+  that only appears on the *second* run, in the overflow regime only, and neither the other reviewer
+  nor I saw it.
+- **[Should] Lens 5's bound grows without limit** — **Implemented.** The ledger-cited set is now
+  restricted to entries under `Queue / parked intake` and `In progress` only, plus manifests of
+  non-shipped releases, plus session mentions. `Completed` is excluded by name because it is the term
+  that grows monotonically. Measured: 30 unique issue references across all of `ROADMAP.md`, of which
+  the active-marker subset is a fraction — the bound is now tied to active state, not ledger size.
+- **[Should] Lens 6's key is neither chosen nor unique** — **Implemented**, via a general fix: keys
+  are now canonical **by entity**, not by lens. A release-scoped finding keys `rel:<gid>`; a rule
+  finding keys `rule:<name>:<gid-or-subject>`, so two overdue releases cannot collide. The
+  stored-state-vs-issue clause moved to lens 5, which is the lens that can actually see issue state,
+  with lens 6's `show` output as its input.
+- **[Should] Lens 1's slug is underspecified** — **Implemented**, and hardened past your proposal:
+  `conv:<first 12 hex of sha256 of the normalized quoted evidence span>`, normalization stated
+  (lowercase, collapse whitespace, strip punctuation). A digest rather than a slug because the other
+  reviewer independently showed an 8-word prefix collides.
+- **[Nit] "never against model output" contradicted by its own table** — **Implemented.** With
+  `triage.py` owning ranking, suppression, parking and rendering, the mechanical lane asserts against
+  `triage.py --dry-run`; the transcript checks are named as what they are. The overreaching sentence
+  is gone.
+
+**On your round-1 resolution table.** All ten confirmed resolved, and two of your "resolved as
+stated" qualifications were the load-bearing calls — #3 and #6 both flagged that the *mechanism* I
+adopted re-broke the property through a new route. That is the failure mode worth naming: a
+disposition can be faithful to the finding and still be wrong, and only re-reading the whole artifact
+catches it.
+
+**Handing off to the Reviewer (claude-fable)** — third read of a document that has changed
+substantially each round. Highest-value checks: does the tier classifier actually terminate on every
+candidate the lens table can produce; can any tier-1 item still reach a suppressed or parked state by
+some path; and does the enumerated line table hold for the empty, maximum, and fully-degraded shapes
+simultaneously. If it is sound, approve it — a fourth round is the escalation cap, not a free one.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
