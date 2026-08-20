@@ -39,14 +39,30 @@ EXEMPT_MARKER='gh1-adoption-guard: exempt'
 
 # Derive the offenders live. The pattern is the issue's step 1: mktemp AND (git -C | cd), minus
 # adopted, minus declared exemptions. Read-only against the repo's own tree.
+setup_adopts() {  # <setup-path> — central adoption is REAL: a source statement plus an init call
+  grep -qE '^\s*(\.|source)\s.*fixture-guard\.sh' "$1" 2>/dev/null \
+    && grep -q 'fixture_guard_init' "$1" 2>/dev/null
+}
+
 derive_offenders() {  # <test-dir> -> prints offending suite basenames
-  local d="$1" f
+  local d="$1" f central=0
+  # PR #89 review, finding 2: the _setup.sh indirection is TRUSTED ONLY AFTER verifying
+  # _setup.sh itself, live, on every run — stripping the two central lines must re-flag
+  # every consumer, not silently classify them as adopted.
+  [ -f "$d/_setup.sh" ] && setup_adopts "$d/_setup.sh" && central=1
   for f in "$d"/*.sh; do
     [ -f "$f" ] || continue
     grep -q "mktemp" "$f" || continue
     grep -qE 'git -C| cd ' "$f" || continue
-    grep -q "fixture-guard.sh" "$f" && continue
-    grep -qE '^\s*(\.|source)\s.*_setup\.sh' "$f" && continue
+    # (a) direct adoption: a REAL source statement plus an init call — a comment that
+    #     merely mentions the lib's name satisfies neither (review finding 2).
+    if grep -qE '^\s*(\.|source)\s.*fixture-guard\.sh' "$f" && grep -q 'fixture_guard_init' "$f"; then
+      continue
+    fi
+    # (b) central adoption via _setup.sh, honored only while (b) is verified above.
+    if [ "$central" -eq 1 ] && grep -qE '^\s*(\.|source)\s.*_setup\.sh' "$f"; then
+      continue
+    fi
     grep -q "$EXEMPT_MARKER" "$f" && continue
     printf '%s\n' "$(basename "$f")"
   done
@@ -97,6 +113,32 @@ ok "CONTROL B: an adopted suite with its guard stripped is DETECTED" \
    "printf '%s' \"\$ctrl_b\" | grep -q 'hq-park.sh'"
 ok "  and Control A's file is still named alongside it (both sins in one pass)" \
    "printf '%s' \"\$ctrl_b\" | grep -q 'ctrl-unguarded.sh'"
+
+# Control D (review finding 2) — the _setup.sh indirection is VERIFIED, not trusted: with an
+# intact _setup.sh a consumer is adopted; strip the two central lines from the _setup COPY and
+# the consumer must reappear on the offenders list. Uses take.sh, a real _setup sourcer.
+mkdir -p "$CTRL_DIR/setupd"
+cp "$HERE/_setup.sh" "$CTRL_DIR/setupd/_setup.sh"
+cp "$HERE/gh331-cost-summary.sh" "$CTRL_DIR/setupd/gh331-cost-summary.sh"
+ctrl_d_intact="$(derive_offenders "$CTRL_DIR/setupd" | grep -c 'gh331-cost-summary.sh' || true)"
+ok "CONTROL D: an _setup consumer is adopted while central adoption is INTACT" \
+   "[ \"\$ctrl_d_intact\" -eq 0 ]"
+sed '/fixture-guard\.sh/d; /fixture_guard_init/d' "$CTRL_DIR/setupd/_setup.sh" > "$CTRL_DIR/setupd/_setup.stripped" \
+  && mv "$CTRL_DIR/setupd/_setup.stripped" "$CTRL_DIR/setupd/_setup.sh"
+ctrl_d_stripped="$(derive_offenders "$CTRL_DIR/setupd" | grep -c 'gh331-cost-summary.sh' || true)"
+ok "  and stripping _setup.sh's central adoption RE-FLAGS the consumer" \
+   "[ \"\$ctrl_d_stripped\" -ge 1 ]"
+
+# Control E — a comment mentioning the lib is NOT adoption: a file whose only "adoption" is
+# a comment must stay on the offenders list (the pre-fix derivation let it through).
+cat > "$CTRL_DIR/ctrl-comment-only.sh" <<'EOF'
+#!/usr/bin/env bash
+# we totally source test/lib/fixture-guard.sh somewhere else, honest
+W="$(mktemp -d "${TMPDIR:-/tmp}/ctrl2.XXXXXX")"
+git -C "$W" init -q
+EOF
+ctrl_e="$(derive_offenders "$CTRL_DIR" | grep -c 'ctrl-comment-only.sh' || true)"
+ok "CONTROL E: a comment naming the lib does NOT count as adoption" "[ \"\$ctrl_e\" -ge 1 ]"
 
 # Control C — the exemption marker is honored ONLY with the marker present; removing it from an
 # otherwise-exempt file must put the file back on the offenders list.

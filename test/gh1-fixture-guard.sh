@@ -21,6 +21,10 @@ ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL:
 echo "== test: gh1-fixture-guard =="
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh1-guard.XXXXXX")"
+# GH-10: file-scope adoption so the derivation sees the standard shape (the per-case
+# subshells below re-source and re-init against the SAME root — idempotent).
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"
+fixture_guard_init "$WORK"
 [ -n "$WORK" ] && [ -d "$WORK" ] || { echo "mktemp failed" >&2; exit 1; }
 cleanup(){ [ -n "${WORK:-}" ] && [ -d "$WORK" ] && rm -rf "$WORK"; }
 trap cleanup EXIT
