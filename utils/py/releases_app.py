@@ -816,6 +816,28 @@ def _atomic_write(final_path, content):
 
 # ── the writer protocol (PRD Git story 2-3): journal -> txn -> stage -> rename -> clear ─────────
 
+def refresh_preview(root):
+    """GH-106: after a successful write, refresh RELEASES-PREVIEW.html — but only when the
+    repo has ADOPTED it (the file already exists at root; presence is the opt-in signal, so
+    fixtures and non-adopting repos are silent no-ops). Best-effort by design: the write is
+    already durable with its receipt when this runs, so a preview failure WARNS on stderr
+    and never fails the operation. Success is silent (the exporter's stdout is captured)."""
+    preview = os.path.join(root, "RELEASES-PREVIEW.html")
+    exporter = os.path.join(root, "utils", "timeline", "export_timeline.py")
+    if not (os.path.exists(preview) and os.path.exists(exporter)):
+        return
+    try:
+        r = subprocess.run([sys.executable, exporter, "--preview", preview],
+                           cwd=root, capture_output=True, text=True, timeout=60)
+        if r.returncode != 0:
+            print("warning: RELEASES-PREVIEW.html refresh failed (the write itself is "
+                  "committed): %s" % (r.stderr.strip() or r.stdout.strip() or
+                                      "exit %d" % r.returncode), file=sys.stderr)
+    except Exception as exc:  # never let the preview break a committed write
+        print("warning: RELEASES-PREVIEW.html refresh failed (the write itself is "
+              "committed): %s" % exc, file=sys.stderr)
+
+
 def perform_write(root, conn, op, target_gid, mutate):
     """Run one CLI transaction under the full multi-artifact protocol:
 
@@ -896,6 +918,7 @@ def perform_write(root, conn, op, target_gid, mutate):
         _crash("post-rename")
 
         os.unlink(lock.journal_path)
+        refresh_preview(root)  # GH-106: adoption-gated, best-effort — after full durability
         return txn_id
     finally:
         lock.release()
