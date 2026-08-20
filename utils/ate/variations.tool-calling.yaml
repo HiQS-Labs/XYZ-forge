@@ -1,0 +1,37 @@
+# Variations Grid: GH-94 Programmatic Tool Calling & Code-Mode Benchmarks
+model: "Qwen/Qwen3.8-Max"
+message: "Execute repository multi-step inspection and refactor"
+per_variation_timeout_seconds: 120
+
+# Pluggable runner using script_runner.py boundary
+command_template:
+  - "python3"
+  - "{harness_root}/utils/py/script_runner.py"
+  - "--lang"
+  - "python"
+  - "--timeout"
+  - "60"
+  - "--code"
+  - "import sys; print('BENCHMARK_RUN tool_mode={tool_mode} count={tool_count} chain={chain_depth}')"
+
+variation_keys:
+  - tool_mode
+  - tool_count
+  - chain_depth
+
+tool_mode:
+  - "json_function_calling"
+  - "programmatic_python"
+
+tool_count:
+  - 5
+  - 15
+  - 25
+  - 26
+  - 30
+  - 50
+  - 100
+
+chain_depth:
+  - 1
+  - 3

@@ -10,6 +10,8 @@ Read `PROJECT/PDDA.md` when the task touches project docs, `ROADMAP.md`, or `CHA
 
 Read `HARNESS-MODELS-REGISTRY.md` for evaluated agent harnesses, model compatibility grades, and CLI flags.
 
+Read `TESTS-RESULTS/README.md` for committed test artifacts, telemetry receipts, and benchmark logs.
+
 ## Runtime default
 
 Entry-point shims run their **Python** implementation by default (`XYZ_PYTHON` unset → Python). To

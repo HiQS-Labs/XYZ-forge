@@ -290,13 +290,13 @@ def build_aider_cmd(model: str, variation: dict, message: str,
     return cmd
 
 
-def build_templated_cmd(template: list, variation: dict, model: str, message: str) -> list[str]:
+def build_templated_cmd(template: list, variation: dict, model: str, message: str, harness_root: str = "") -> list[str]:
     """GH-191: build argv for a pluggable, non-Aider harness from
     variations.yaml's `command_template` — a list of argv tokens, each
     substituted via str.format against the variation dict plus {model}/
-    {message}. This is list-based (never a shell string), so a variation
+    {message}/{harness_root}. This is list-based (never a shell string), so a variation
     value can't inject shell metacharacters."""
-    context = {"model": model, "message": message, **variation}
+    context = {"model": model, "message": message, "harness_root": harness_root, **variation}
     return [str(tok).format(**context) for tok in template]
 
 
@@ -368,11 +368,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo", required=True, help="scratch git repo to run the harness in")
     ap.add_argument("--variations", required=True, help="path to variations.yaml")
-    ap.add_argument("--log", default="error_log.jsonl")
+    ap.add_argument("--log", "--log-file", dest="log", default="error_log.jsonl")
     ap.add_argument("--control", default="control.json")
     ap.add_argument("--lmstudio-url", default="http://localhost:1234/v1")
-    ap.add_argument("--lmstudio-model", required=True,
-                     help="exact model id as shown in LM Studio's /v1/models")
+    ap.add_argument("--lmstudio-model", default=None,
+                     help="exact model id as shown in LM Studio's /v1/models (optional with --mock-classifier)")
+    ap.add_argument("--mock-classifier", action="store_true",
+                     help="use deterministic pass/fail rule instead of calling LM Studio")
     ap.add_argument("--minutes", type=float, default=180)
     ap.add_argument("--per-variation-timeout", type=int, default=None,
                      help="overrides per_variation_timeout_seconds in the yaml")
@@ -398,10 +400,12 @@ def main():
     aider_openai_api_base = os.environ.get("AIDER_OPENAI_API_BASE")
     aider_openai_api_key = os.environ.get("AIDER_OPENAI_API_KEY", "dummy")
 
+    run_id = f"run-{time.strftime('%Y%m%d%H%M%S')}-{os.getpid()}"
+
     # Gate the destructive per-variation reset BEFORE anything runs — refuse the
     # harness repo itself, and refuse a remote-having (real-looking) repo unless
     # the operator explicitly opted in (GH-195 review blocker).
-    harness_root = str(Path(__file__).resolve().parent)
+    harness_root = str(Path(__file__).resolve().parent.parent.parent.parent)
     try:
         assert_disposable_repo(args.repo, harness_root, args.allow_destructive_reset)
     except RepoGuardError as e:
@@ -442,7 +446,7 @@ def main():
         # exact Aider argv (build_aider_cmd) so existing configs are unaffected.
         command_template = grid.get("command_template")
         if command_template:
-            cmd = build_templated_cmd(command_template, variation, grid["model"], grid["message"])
+            cmd = build_templated_cmd(command_template, variation, grid["model"], grid["message"], harness_root=harness_root)
         else:
             cmd = build_aider_cmd(grid["model"], variation, grid["message"],
                                    openai_api_base=aider_openai_api_base, openai_api_key=aider_openai_api_key)
@@ -459,20 +463,47 @@ def main():
                 "likely_cause": f"the harness did not finish within {timeout}s",
             }
         else:
-            prompt = CLASSIFY_PROMPT.format(
-                pipeline_name=args.pipeline_name,
-                command=result["command"],
-                exit_code=result["exit_code"],
-                edit_applied=result["edited"],
-                stdout=result["stdout"][-1500:],
-                stderr=result["stderr"][-1500:],
-            )
-            classification = ask_gemma(args.lmstudio_url, args.lmstudio_model, prompt)
+            if args.mock_classifier or not args.lmstudio_model:
+                classification = {
+                    "status": "pass" if result["exit_code"] == 0 else "fail",
+                    "severity": "none" if result["exit_code"] == 0 else "medium",
+                    "category": "ok" if result["exit_code"] == 0 else "command_error",
+                    "likely_cause": "clean execution" if result["exit_code"] == 0 else f"exit code {result['exit_code']}",
+                }
+            else:
+                prompt = CLASSIFY_PROMPT.format(
+                    pipeline_name=args.pipeline_name,
+                    command=result["command"],
+                    exit_code=result["exit_code"],
+                    edit_applied=result["edited"],
+                    stdout=result["stdout"][-1500:],
+                    stderr=result["stderr"][-1500:],
+                )
+                classification = ask_gemma(args.lmstudio_url, args.lmstudio_model, prompt)
+
+        # Compute structured telemetry fields (GH-94)
+        duration_ms = int(result.get("wall_seconds", 0.0) * 1000)
+        prompt_tokens = variation.get("prompt_tokens", None)
+        completion_tokens = variation.get("completion_tokens", None)
+        total_tokens = None
+        if prompt_tokens is not None and completion_tokens is not None:
+            total_tokens = prompt_tokens + completion_tokens
+            tokens_source = "api_usage"
+        else:
+            tokens_source = "unsupported"
 
         record = {
+            "schema_version": "1.0",
+            "run_id": run_id,
             "iteration": i,
             "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
             "variation": variation,
+            "duration_ms": duration_ms,
+            "turn_count": variation.get("turn_count", 1),
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "tokens_source": tokens_source,
             **result,
             "classification": classification,
         }

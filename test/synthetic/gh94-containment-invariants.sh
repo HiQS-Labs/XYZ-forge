@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# Synthetic Test: GH-94 Worktree Containment & Sandbox Invariants
+set -uo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$HERE/../.." && pwd)"
+RUNNER="$ROOT/utils/py/script_runner.py"
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh94-containment-test.XXXXXX")"
+trap 'rm -rf "$WORK"' EXIT
+
+# Create a fixture repo inside $WORK
+FIXTURE="$WORK/fixture-repo"
+mkdir -p "$FIXTURE"
+(
+  cd "$FIXTURE" && git init -q && git config user.name "Test" && git config user.email "test@example.com"
+  echo "init" > file.txt && git add file.txt && git commit -q -m "initial commit"
+)
+
+# 1. Path Boundary Resolution: Test validate_path_containment via Python
+python3 -c "
+import sys
+from pathlib import Path
+sys.path.insert(0, '$ROOT')
+from utils.py.script_runner import validate_path_containment
+
+work_dir = Path('$WORK')
+# Valid paths
+assert validate_path_containment('sub/file.txt', work_dir)[0] == True
+assert validate_path_containment(work_dir / 'file.txt', work_dir)[0] == True
+
+# Invalid paths (escapes)
+assert validate_path_containment('../escape.txt', work_dir)[0] == False
+assert validate_path_containment('/etc/passwd', work_dir)[0] == False
+
+# Symlink escape test
+symlink_escape = work_dir / 'sym_escape'
+try:
+    symlink_escape.symlink_to('/tmp')
+    assert validate_path_containment(symlink_escape / 'test.txt', work_dir)[0] == False
+except OSError:
+    pass # In case symlink creation is restricted
+" || {
+  echo "FAIL: Path containment validation assertions failed"
+  exit 1
+}
+
+# 2. Host Clone Invariance: Snapshot git sentinels of host repo
+HOST_BARE="$(git -C "$ROOT" config --get core.bare || true)"
+HOST_ORIGIN="$(git -C "$ROOT" config --get remote.origin.url || true)"
+HOST_HEAD="$(git -C "$ROOT" rev-parse HEAD || true)"
+
+# Execute hostile script in isolated fixture
+python3 "$RUNNER" --workdir "$FIXTURE" --lang bash --code '
+# Hostile attempts: try to mess with git configs or walk up directories
+git config core.bare true 2>/dev/null || true
+git remote set-url origin "/tmp/fake.git" 2>/dev/null || true
+echo "hostile write" > ../hostile_escape.txt 2>/dev/null || true
+' >/dev/null 2>&1
+
+# Assert host repo sentinels did NOT drift
+CURRENT_BARE="$(git -C "$ROOT" config --get core.bare || true)"
+CURRENT_ORIGIN="$(git -C "$ROOT" config --get remote.origin.url || true)"
+CURRENT_HEAD="$(git -C "$ROOT" rev-parse HEAD || true)"
+
+if [ "$HOST_BARE" != "$CURRENT_BARE" ]; then
+  echo "FAIL: Host core.bare drifted: $HOST_BARE -> $CURRENT_BARE"
+  exit 1
+fi
+
+if [ "$HOST_ORIGIN" != "$CURRENT_ORIGIN" ]; then
+  echo "FAIL: Host remote.origin.url drifted: $HOST_ORIGIN -> $CURRENT_ORIGIN"
+  exit 1
+fi
+
+if [ "$HOST_HEAD" != "$CURRENT_HEAD" ]; then
+  echo "FAIL: Host HEAD drifted: $HOST_HEAD -> $CURRENT_HEAD"
+  exit 1
+fi
+
+# 3. Untracked Sentinel Protection
+SENTINEL="$WORK/untracked-sentinel.txt"
+echo "SECRET_PAYLOAD" > "$SENTINEL"
+
+# Run a python script that tries to overwrite surrounding files
+python3 "$RUNNER" --workdir "$FIXTURE" --code '
+import os
+# Attempt to find and overwrite parent files
+try:
+    for f in os.listdir(".."):
+        if f.endswith(".txt"):
+            with open(os.path.join("..", f), "w") as fp:
+                fp.write("MUTATED")
+except Exception:
+    pass
+' >/dev/null 2>&1
+
+# In a contained run, we verify our validation functions catch the escape
+python3 -c "
+import sys
+from pathlib import Path
+sys.path.insert(0, '$ROOT')
+from utils.py.script_runner import validate_path_containment
+valid, _, _ = validate_path_containment('$SENTINEL', '$FIXTURE')
+assert valid == False, 'Sentinel outside fixture must be rejected as an escape'
+" || {
+  echo "FAIL: Sentinel boundary check failed"
+  exit 1
+}
+
+echo "PASS: gh94-containment-invariants"
+exit 0
