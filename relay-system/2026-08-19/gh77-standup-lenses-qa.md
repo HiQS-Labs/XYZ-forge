@@ -219,3 +219,66 @@ plainly if a grade is empty. Set `STATUS: Approved` if you would merge this as-i
 Verdict: not approved. [Nit] is otherwise empty. Static review only; no artifact, source edit, or test/gate run was performed. STATUS remains Open; hand back to claude-a for the listed fixes.
 
 NEXT: claude-a (Builder)
+
+### ▶ TAKE YOUR TURN — codex (Reviewer) — round 4
+
+I took the builder turn myself. All four blockers and all three shoulds from round 3 are fixed, plus
+your nit and two things I found while fixing it. Commit `3c966d8`.
+
+**What changed, so you can go straight at it:**
+
+- **B1** — lens 7 now matches the complete summary the real producer emits
+  (`utils/py/releases_app.py:2073-2076`); unparseable output is `D4`. The `roadmap_diverged` fixture is
+  gone, replaced by a real in-sync line and a real dry-run diverged line.
+- **B2** — any degraded lens exits 3, matching what `SKILL.md` already published.
+- **B3** — lens 2's mtime is hermetic under `--fixture` (a fixture that supplies no
+  `stat_<path>.txt` degrades `D5`), and a real stat failure degrades rather than emitting a
+  null-staleness item.
+- **B4** — paths are single-quoted through a `shq` helper; a C-quoted porcelain name degrades to the
+  contract's `inspect:` close rather than a command addressing the escaped form.
+- **S1/S2/S3** — no-upstream is pinned end to end; lens 3 tracked carries the committer date and lens
+  7 carries `ROADMAP.md`'s mtime; lens 7's close now runs the dashboard refresh after the sync.
+
+**Two things I am telling you rather than letting you find, because they bear on trust:**
+
+1. My *previous* commit had a fault your round-3 pass did not catch and neither did I at the time:
+   section 13 restored `set -e` in a file running under `set -uo pipefail`, which truncated the suite
+   at the first deliberately-non-zero collector call. It printed PASS lines and exited 3 with
+   everything after section 13 never running — indistinguishable from a green run to anything reading
+   only the tail. Fixed, and commented at the site.
+2. Your suggested grep for an unquoted `$(` cannot decide B4 — inside `'updated $(touch …)'` the
+   character before `$(` is a space, so the pattern fails a *correct* string. I replaced it with a
+   `shlex.split` assertion that the path survives as one literal token, which is the actual property.
+
+Suite **58/0**. Control: replacing `collect.sh` with `exit 0` gives 30 pass / 28 fail. Every fixture
+is isolated to one subject, so a lens can no longer degrade incidentally inside another lens's case.
+
+**What to attack:**
+
+1. Whether each round-3 finding is *closed* or *moved*. The lens-7 regex, the `shq` quoting, and the
+   C-quoted-name branch are the three most likely to be subtly wrong.
+2. A sixth silent-ok route. Five have now been found; assume a sixth.
+3. Whether the exit-3-on-degradation change breaks any existing caller or assertion that relied on
+   exit 0.
+4. The staleness units. Lens 2, 3 and 7 all now emit epoch seconds, on the reasoning that
+   `triage.py` sorts ascending so an older timestamp ranks earlier. Confirm that is the convention
+   `triage.py` actually implements — if it is not, that is a finding, not an edit.
+
+`triage.py` remains out of scope to edit.
+
+## Definition of done
+
+One block, findings graded, file:line or quoted span each. Say plainly if a grade is empty. Set
+`STATUS: Approved` if you would merge as-is; otherwise leave `Open` and say what remains.
+
+### Reviewer — codex — 2026-08-19 — round 4
+
+- [Blocker] B1 has moved but is not closed: lens 7 still accepts malformed successful output as a real ledger result. `skills/standup/collect.sh:278` searches for an unanchored substring and uses `.*` for the supposedly fixed filename, so (for example) `diagnostic: roadmap sync: 21 in not-ROADMAP -> +2 added, ~1 updated, -0 removed, 18 unchanged` produces an `ok` `+2~1-0` candidate instead of D4. That is not validation of the complete producer summary described at `:272-277`; it only finds a convenient fragment. `test/gh77-standup-triage.sh:266-274` pins the one-token `roadmap_diverged` case, but not a malformed line containing the count-shaped substring. Parse the first summary line exactly (including `ROADMAP.md` and one of the two real suffixes) and add that adversarial fixture.
+- [Blocker] B4's C-quoted-name path does not deliver the candidate it promises. For any normal filename Git C-quotes (a quote, backslash, newline, or non-ASCII byte), `skills/standup/collect.sh:85-96` switches only the close to `inspect:`, but `:105-118` still looks up the C-quoted display string rather than the actual pathname. The fixture-mode lookup will miss `stat_...`; a live `getmtime` will fail; in both cases the code clears every lens-2 candidate and returns D5. Ordinary rename/copy porcelain records have the same basic parse problem at `:79-80`: `old -> new` is treated as one filename and cannot be statted. This contradicts both the comment's “emit the item (never drop it)” (`:89-90`) and the lens-2 predicate's “any modified … path” (`PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md:128`). Use a machine-safe porcelain representation (or correctly decode it) before mtime/close construction, and add a C-quoted-path plus rename fixture. The present `$()` fixture/test (`test/gh77-standup-triage.sh:290-305`) is an ordinary unquoted porcelain pathname and cannot cover this branch.
+- [Should] `--fixture` is still not hermetic for the branch read. `skills/standup/collect.sh:35-39` falls through to `git rev-parse` whenever a fixture omits `branch.txt`; a lens-3 candidate can therefore take its key and no-upstream close from the reviewer's current checkout rather than its fixture. Missing bounded fixture input elsewhere degrades, so this path should do likewise (D5) and be pinned.
+- [Should] A bare `--fixture` is an unhandled contract/usage error: `skills/standup/collect.sh:5-9` dereferences `$2` under `set -u`, rather than reporting usage with the published exit 2 (`skills/standup/SKILL.md:62`). Validate the operand before assignment and add the small interface assertion.
+- [Nit] None. The epoch-second staleness convention is correct: `triage.py:162-168` sorts ascending, so older known timestamps rank first and `null` ranks last.
+
+Verdict: not approved. Static review only; no artifact/source edit or test/gate was run. STATUS remains Open; the two blockers above must be fixed before merge.
+
+NEXT: claude-a (Builder)
