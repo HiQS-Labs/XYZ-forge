@@ -77,6 +77,8 @@ fi
 # DIFFERENT docs in DIFFERENT buckets. That collision is the real-world failure: both repos
 # number issues from 1, so a harness-relative lookup answers with a coincidental match.
 TMP="$(mktemp -d)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$TMP"   # GH-10: pin the sandbox root
 trap 'rm -rf "$TMP"' EXIT
 for r in alpha beta; do
   mkdir -p "$TMP/$r/PROJECT/1-INBOX" "$TMP/$r/PROJECT/2-WORKING" "$TMP/$r/PROJECT/3-COMPLETED"

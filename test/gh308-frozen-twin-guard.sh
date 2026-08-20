@@ -376,6 +376,8 @@ fi
 
 # Demonstrate the range guard against an actual throwaway commit, not merely a staged diff.
 tmp="$(mktemp -d "${TMPDIR:-/tmp}/gh308-frozen-twin.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$tmp"   # GH-10: pin the sandbox root
 cleanup() { rm -rf "$tmp"; }
 trap cleanup EXIT
 mkdir -p "$tmp/relay-automation" "$tmp/test"
@@ -408,7 +410,8 @@ fi
 # Every case below is driven through the real guard in a throwaway repo with TWO frozen twins,
 # because the defect only exists when a PR touches more than one: with a single twin, range scoping
 # and file scoping are indistinguishable, which is how it shipped.
-exc="$(mktemp -d "${TMPDIR:-/tmp}/gh308-exceptions.XXXXXX")"
+exc="$(mktemp -d "$tmp/gh308-exceptions.XXXXXX")"
+require_fixture "$exc" "exceptions fixture"  # GH-10
 cleanup_exc() { rm -rf "$exc"; }
 trap 'cleanup; cleanup_exc' EXIT
 mkdir -p "$exc/relay-automation" "$exc/test"

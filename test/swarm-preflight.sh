@@ -13,6 +13,8 @@ ROOT="$(cd "$HERE/.." && pwd)"
 SP="$ROOT/utils/swarm-preflight.sh"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/swarm-preflight.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0
@@ -689,7 +691,8 @@ printf '#!/usr/bin/env bash\n' >"$R/relay-automation/agy-turn.sh"
 printf '#!/usr/bin/env bash\nexit 0\n' >"$R/validate.sh"
 cat >"$R/test/agy-turn.sh" <<'EOF'
 #!/usr/bin/env bash
-TMP="$(mktemp -d)"
+TMP="$(mktemp -d "$WORK/preflight-scratch.XXXXXX")"
+require_fixture "$TMP" "scratch fixture"  # GH-10
 printf 'x\n' >"$TMP/out"
 AGY_SHIM="$(cd "$(dirname "$0")/.." && pwd)/relay-automation/agy-turn.sh"
 EOF

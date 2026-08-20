@@ -15,6 +15,8 @@ echo "== test: hq-park (GH-128 intake writer) =="
 command -v git >/dev/null 2>&1 || { echo "  SKIP: git absent"; echo "== hq-park: 0 passed, 0 failed =="; exit 0; }
 
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$TMP"   # GH-10: pin the sandbox root
 
 # --- fixture: git-pulse PDDA registry (marks beta-app as PDDA-governed) ---
 PDDA_DIR="$TMP/gitpulse/pdda"; mkdir -p "$PDDA_DIR"

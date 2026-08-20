@@ -289,6 +289,17 @@ validate_suite() {
   return $rc
 }
 
+# ── 10. GH-10: the identity bracket's assert half — the record this run writes must be
+# attributable to a clone that is still the clone it started as (see validate.sh's GH-1 block
+# for the incident). Runs as a step so its verdict lands in the summary like every other.
+ci_local_identity_assert() {
+  [ -n "$IDENTITY_SNAPSHOT" ] || { echo "  no snapshot captured (internal error)" >&2; return 1; }
+  bash "$HERE/test/lib/clone-identity.sh" assert "$IDENTITY_SNAPSHOT" "$HERE"
+  local rc=$?
+  rm -f "$IDENTITY_SNAPSHOT"
+  return $rc
+}
+
 # ── run ──────────────────────────────────────────────────────────────────────────────────────────
 printf '\033[1mci-local — mirroring .github/workflows/ci.yml tier1\033[0m\n'
 printf 'repo: %s\n' "$HERE"
@@ -307,8 +318,22 @@ else
   printf '\n\033[33mSKIP: frozen twin guard — CI runs it on pull_request only. Pass --base <ref> to run it.\033[0m\n'
 fi
 step "npm ci + acorn-extract"       npm_and_acorn
+# GH-10/GH-1: the qualifying run writes the gate-evidence record, so it carries the same
+# clone-identity bracket validate.sh has — captured BEFORE the suite runs and asserted after,
+# so a suite that escapes its fixture and rewrites this clone's git identity (the GH-564
+# incident) fails THIS run detectably instead of leaving an unattributable green record.
+IDENTITY_SNAPSHOT=""
 if [ "$FAST" -eq 0 ]; then
+  IDENTITY_SNAPSHOT="$(mktemp "${TMPDIR:-/tmp}/ci-local-identity.XXXXXX")"
+  if [ -n "$IDENTITY_SNAPSHOT" ] && bash "$HERE/test/lib/clone-identity.sh" capture "$IDENTITY_SNAPSHOT" "$HERE" 2>/dev/null; then
+    :
+  else
+    echo "ci-local: could not capture clone identity — refusing to run the suite blind (GH-1)" >&2
+    rm -f "$IDENTITY_SNAPSHOT"; IDENTITY_SNAPSHOT=""
+    exit 1
+  fi
   RELAY_SELF_SUFFICIENCY_SKIP=1 step "validate.sh suite" validate_suite
+  step "clone-identity invariant (GH-1)" ci_local_identity_assert
 fi
 
 # ── report ───────────────────────────────────────────────────────────────────────────────────────

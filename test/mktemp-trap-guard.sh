@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# gh1-adoption-guard: exempt — static source audit only; mentions mktemp/git patterns as
+# DATA, creates no filesystem fixtures, so there are no fixture paths to guard.
 # test/mktemp-trap-guard.sh — GH-177 regression guard: static audit for the pattern that rm -rf'd
 # this repo TWICE (2026-07-07, 2026-07-17).
 #

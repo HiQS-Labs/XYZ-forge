@@ -84,7 +84,8 @@ printf 'aider-stub: edited for %s\n' "${RELAY_AGENT:-?}"   # stdout -> non-empty
 mkdir -p "$(dirname "$chf")" 2>/dev/null || true; printf 'stub chat history\n' >>"$chf"
 relay="${files[0]:-relay.md}"
 if [ "${STUB_MODE:-good}" = approve ]; then
-  tmp="$(mktemp)"; sed 's/^STATUS:.*/STATUS: Approved/' "$relay" > "$tmp" && mv "$tmp" "$relay"
+  tmp="$(mktemp)"; require_fixture_file "$tmp" "status swap tempfile"  # GH-10
+  sed 's/^STATUS:.*/STATUS: Approved/' "$relay" > "$tmp" && mv "$tmp" "$relay"
   printf '\n### Round 1 · Builder · aider-stub\n**Verdict:** Approved\n' >>"$relay"
 else
   printf '\n### Round 1 · Builder · aider-stub\nDid the work.\n' >>"$relay"

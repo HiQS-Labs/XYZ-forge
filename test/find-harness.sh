@@ -48,7 +48,11 @@ ok "harness clone: --check exits 0"                 "[ '$rc1' -eq 0 ]"
 ok "harness clone: no concurrency warning"          "! printf '%s' \"\$out1\" | grep -qi concurrency"
 
 # --- Case 2: from a FOREIGN repo with NO .xyz/ → warns + vendor command, still exit 0 (fail-open) ---
-FR="$(mktemp -d "${TMPDIR:-/tmp}/fh-foreign.XXXXXX")"; git -C "$FR" init -q
+FHWORK="$(mktemp -d "${TMPDIR:-/tmp}/find-harness.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$FHWORK"   # GH-10: pin the sandbox root (FR below is deleted between cases)
+FR="$(mktemp -d "$FHWORK/fh-foreign.XXXXXX")"; require_fixture "$FR" "foreign fixture"  # GH-10
+git -C "$FR" init -q
 out2="$( cd "$FR" && bash "$FH" --check 2>&1 )"; rc2=$?
 ok "foreign no-.xyz: --check still exits 0 (fail-open)"  "[ '$rc2' -eq 0 ]"
 ok "foreign no-.xyz: emits the concurrency warning"      "printf '%s' \"\$out2\" | grep -qi 'concurrency'"
@@ -59,7 +63,8 @@ ok "foreign no-.xyz: hint omits the bogus vendor subcommand" "! printf '%s' \"\$
 rm -rf "$FR"
 
 # --- Case 3: foreign repo WITH a local .xyz/ harness → resolves to it, NO concurrency warning ---
-FV="$(mktemp -d "${TMPDIR:-/tmp}/fh-vendored.XXXXXX")"; git -C "$FV" init -q
+FV="$(mktemp -d "$FHWORK/fh-vendored.XXXXXX")"; require_fixture "$FV" "vendored harness fixture"  # GH-10
+git -C "$FV" init -q
 seed_vendored_harness "$FV"
 out3="$( cd "$FV" && bash "$FH" --check 2>&1 )"; rc3=$?
 ok "vendored .xyz: --check exits 0"                 "[ '$rc3' -eq 0 ]"

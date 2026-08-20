@@ -28,8 +28,13 @@ echo "== test: gh536-evidence-detail =="
 
 # Fixtures live OUTSIDE the repo under test on purpose: gate-record refuses on a dirty tree, so a
 # transcript written inside it would trip the refusal instead of exercising the record.
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh536.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
+
 mkrepo() {
-  _r="$(mktemp -d "${TMPDIR:-/tmp}/gh536-repo.XXXXXX")"
+  _r="$(mktemp -d "$WORK/repo.XXXXXX")"
+  require_fixture "$_r" "record fixture"  # GH-10
   git -C "$_r" init -q
   git -C "$_r" config user.email t@t
   git -C "$_r" config user.name t
@@ -39,7 +44,8 @@ mkrepo() {
   printf '%s' "$_r"
 }
 
-LOGS="$(mktemp -d "${TMPDIR:-/tmp}/gh536-logs.XXXXXX")"
+LOGS="$(mktemp -d "$WORK/gh536-logs.XXXXXX")"
+require_fixture "$LOGS" "log fixture"  # GH-10
 printf '=== foo.sh ===\n  PASS: something\n' > "$LOGS/suite.log"
 printf 'foo.sh\tpass\nbar.sh\tpass\nbaz.sh\tskip\n' > "$LOGS/verdicts.txt"
 EXPECT="$(shasum -a 256 "$LOGS/suite.log" | awk '{print $1}')"
