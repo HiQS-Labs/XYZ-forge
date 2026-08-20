@@ -1,0 +1,20 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash evidence/_env/try-deps.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:41:53+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== sudo cached? ===
+SUDO: NOT cached (password still required)
+
+=== verify ===
+sqlite3    MISSING
+jq         MISSING
+
+=== codex auth now? ===
+auth.json PRESENT (3923 bytes)
+=== END OUTPUT ===
+end      : 2026-08-20T16:41:53+03:00
+duration : 0s
+EXIT_CODE: 0

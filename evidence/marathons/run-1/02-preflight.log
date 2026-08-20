@@ -1,0 +1,35 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash utils/swarm-preflight.sh --project-doc /home/arnoldadero/marathon-target/PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS.md --target-root /home/arnoldadero/marathon-target --dry-run
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:12:40+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+swarm-preflight · project-doc · slug=run1-ledger-exports
+  target-root : /home/arnoldadero/marathon-target (main @ 599e87f63)
+  branch      : suggested=marathon/run1-ledger-exports-2026-08-20 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=none ahead=0 behind=0 dirty=0
+  ref-probed  : main @ 599e87f63 (checkout matches)
+  candidate   : ready
+  inlined-acc : 0 criterion(a) from the whole-document
+  source-url  : not-applicable — capture doc names no gh_issue — no source URL is required
+  acceptance  : unknown [cause: no-gh-issue] — capture doc has no gh_issue — nothing to compare against
+  issue-state : unknown — capture doc has no gh_issue — issue state cannot be determined
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+DRY-RUN: ready, but packet not written. Would emit to: /home/arnoldadero/XYZ-forge/relay-system/preflight/2026-08-20/run1-ledger-exports
+Would suggest:
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=run1-ledger-exports RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact src/parse.js,src/validate.js,src/index.js,package.json,src/export-csv.js,test/export-csv.test.js,src/fx.js,test/fx.test.js,src/cli.js,test/cli.test.js,src/dedupe.js,test/dedupe.test.js \
+  --target-root /home/arnoldadero/marathon-target \
+  --pre-advance-cmd 'npm test' \
+  --require-clean
+=== END OUTPUT ===
+end      : 2026-08-20T16:12:41+03:00
+duration : 1s
+EXIT_CODE: 0

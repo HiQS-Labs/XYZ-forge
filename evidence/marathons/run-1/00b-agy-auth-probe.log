@@ -1,0 +1,28 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/agy-whoami-probe.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T15:55:22+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+agy version: 1.1.16
+
+--- 1. plain SIGTERM timeout (what a naive caller does) ---
+/tmp/agy-whoami-probe.sh: line 11:  5124 Killed                  timeout 8 agy whoami < /dev/null > /tmp/w1.out 2>&1
+rc=137 elapsed=248s  (rc=124 means timeout fired; >8s elapsed means SIGTERM was ignored)
+output bytes: 55
+CLI error: error entering raw mode: input/output error
+
+--- 2. SIGKILL timeout (what rtl_run_bounded actually does) ---
+/tmp/agy-whoami-probe.sh: line 21:  5406 Killed                  timeout -s KILL 8 agy whoami < /dev/null > /tmp/w2.out 2>&1
+rc=137 elapsed=8s  (rc=137 = SIGKILLed -> rtl_run_bounded maps to 7)
+output bytes: 0
+
+--- 3. is 'whoami' in the subcommand list? ---
+ABSENT — 'whoami' is not a subcommand of agy 1.1.16
+--- 4. is 'login' in the subcommand list? (the remedy the shim prints) ---
+ABSENT — 'agy login' is not a subcommand either
+=== END OUTPUT ===
+end      : 2026-08-20T15:59:43+03:00
+duration : 261s
+EXIT_CODE: 0

@@ -1,0 +1,16 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash skills/relay-xyz/find-harness.sh --check
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T15:47:06+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+relay harness readiness:
+  ok  harness  (/home/arnoldadero/XYZ-forge)
+  ok  tick CLI  (/home/arnoldadero/XYZ-forge/bin/tick)
+  ok  codex CLI (Path A worker)  (/home/arnoldadero/.nvm/versions/node/v22.23.2/bin/codex)
+  --  agy CLI   (Path A worker)  (not found)
+=== END OUTPUT ===
+end      : 2026-08-20T15:47:06+03:00
+duration : 0s
+EXIT_CODE: 0

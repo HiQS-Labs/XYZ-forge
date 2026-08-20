@@ -1,0 +1,21 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash evidence/_env/fix-gh-default.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T15:40:03+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
++ gh repo set-default HiQS-Suite/XYZ-forge
++ rc_set=0
++ gh repo set-default --view
+HiQS-Suite/XYZ-forge
++ rc_view=0
++ gh issue view 544 --json number,state,title
+GraphQL: Could not resolve to an issue or pull request with the number of 544. (repository.issue)
++ rc_issue=1
++ set +x
+SET_RC=0 VIEW_RC=0 ISSUE_RC=1
+=== END OUTPUT ===
+end      : 2026-08-20T15:40:08+03:00
+duration : 5s
+EXIT_CODE: 0

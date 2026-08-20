@@ -1,0 +1,52 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/verify-agy-fix.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:09:13+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+############ 1. regression: the two GH-375 suites ############
+--- test/gh375-agy-auth-preflight.sh ---
+  PASS: agy-turn.py branches on the unverifiable state (a working lane is not blocked)
+  PASS: consult.py branches on it too (headless is the normal path there as well)
+RC=0
+
+--- test/gh375-auth-timeout-verdict.sh ---
+  PASS: consult.py reads the shared AGY_AUTH_TIMEOUT_DEFAULT_S, so the two callers cannot drift
+gh375-auth-timeout-verdict: 14 pass, 0 fail
+RC=0
+
+--- test/agy-tui-takeover-verdict.sh ---
+  PASS: pre-fix replay: without the takeover markers the same capture blocks the lane (exit 5)
+agy-tui-takeover-verdict: 8 pass, 0 fail
+RC=0
+
+REGRESSION_OVERALL_RC=0
+
+############ 2. live preflight against real agy 1.1.16 ############
+agy_bin = /home/arnoldadero/.local/bin/agy
+AGY_AUTH_TIMEOUT_DEFAULT_S = 20
+
+AGY_AUTH_TIMEOUT_S=  5  ->  returned True  [PROCEED]  in 5.1s
+      | agy-turn: NOTE — agy auth is unverifiable headless (expected, via timeout); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+      | agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth check here. If the turn fails on credentials, run `agy login` in a normal terminal.
+
+AGY_AUTH_TIMEOUT_S= 15  ->  returned True  [PROCEED]  in 15.1s
+      | agy-turn: NOTE — agy auth is unverifiable headless (expected, via timeout); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+      | agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth check here. If the turn fails on credentials, run `agy login` in a normal terminal.
+
+AGY_AUTH_TIMEOUT_S= 30  ->  returned True  [PROCEED]  in 30.1s
+      | agy-turn: NOTE — agy auth is unverifiable headless (expected, via timeout); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+      | agy-turn: continuing; `agy whoami` cannot run headless, so it is not a usable auth check here. If the turn fails on credentials, run `agy login` in a normal terminal.
+
+LIVE_VERDICT_RC=0
+
+############ 3. python syntax / import sanity ############
+rtl imports OK
+markers: ('could not open tty', 'error opening tty', 'error entering raw mode')
+takeover: ["'\\x1b[?1049h'", "'\\x1b[?25l'", "'\\x1b[?2004h'"]
+IMPORT_RC=0
+=== END OUTPUT ===
+end      : 2026-08-20T16:10:15+03:00
+duration : 62s
+EXIT_CODE: 0

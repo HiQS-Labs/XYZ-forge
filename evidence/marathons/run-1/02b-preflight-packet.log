@@ -1,0 +1,54 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/run1-packet.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:13:14+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+############ codex auth state (the reviewer seat) ############
+auth.json PRESENT (3923 bytes)
+OPENAI_API_KEY set: no
+--- can codex actually take a turn? ---
+codex exec rc=0 elapsed=7s
+      | reasoning effort: none
+      | reasoning summaries: none
+      | session id: 01a01f4d-f169-7ee2-b1ba-a889d00f2f9f
+      | --------
+      | user
+      | Reply with exactly: CODEX-PROBE-OK
+      | warning: Codex could not find bubblewrap on PATH. Install bubblewrap with your OS package manager. See the sandbox prerequisites: https://developers.openai.com/codex/concepts/sandboxing#prerequisites. Codex will use the bundled bubblewrap in the meantime.
+      | codex
+      | CODEX-PROBE-OK
+      | tokens used
+      | 9,941
+      | CODEX-PROBE-OK
+
+############ preflight — emit the REAL packet ############
+swarm-preflight · project-doc · slug=run1-ledger-exports
+  target-root : /home/arnoldadero/marathon-target (main @ 599e87f63)
+  branch      : suggested=marathon/run1-ledger-exports-2026-08-20 branch_ready=false skip_branch_prompt=true
+  freshness   : fetch_ok=1 upstream=none ahead=0 behind=0 dirty=0
+  ref-probed  : main @ 599e87f63 (checkout matches)
+  candidate   : ready
+  inlined-acc : 0 criterion(a) from the whole-document
+  source-url  : not-applicable — capture doc names no gh_issue — no source URL is required
+  acceptance  : unknown [cause: no-gh-issue] — capture doc has no gh_issue — nothing to compare against
+  issue-state : unknown — capture doc has no gh_issue — issue state cannot be determined
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+Packet written: /home/arnoldadero/XYZ-forge/relay-system/preflight/2026-08-20/run1-ledger-exports
+PREFLIGHT_PACKET_RC=0
+
+############ packet contents ############
+relay-system/preflight/2026-08-20/run1-ledger-exports/freshness.json
+relay-system/preflight/2026-08-20/run1-ledger-exports/lane-plan.json
+relay-system/preflight/2026-08-20/run1-ledger-exports/marathon-invocation.txt
+relay-system/preflight/2026-08-20/run1-ledger-exports/packet.md
+relay-system/preflight/2026-08-20/run1-ledger-exports/readiness.json
+relay-system/preflight/2026-08-20/run1-ledger-exports/run-candidate.json
+=== END OUTPUT ===
+end      : 2026-08-20T16:13:23+03:00
+duration : 9s
+EXIT_CODE: 0

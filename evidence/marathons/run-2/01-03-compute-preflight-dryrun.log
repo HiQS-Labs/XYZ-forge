@@ -1,0 +1,72 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/run2-lifecycle.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:37:21+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+############ 1. COMPUTE ############
+--- 1a. in the TARGET repo, via the vendored harness ---
+ROADMAP not found: /home/arnoldadero/marathon-target/ROADMAP.md
+TARGET_COMPUTE_RC=3
+
+--- 1b. in the HARNESS repo, where the ledger actually lives ---
+        → promote to a 2-WORKING capture doc with a preflight contract
+  INFO [unrated]  GH-42 · relay automation: supported Commandcode turn-taker
+        project doc missing rating key(s): complexity, risk, effort
+        → add complexity/risk/effort frontmatter (see PDDA.md)
+
+SUMMARY [marathon-plan] items=22 active=0 waves=0 drift=true held=11 (exit 4)
+HARNESS_COMPUTE_RC=1
+
+############ 2. PREFLIGHT ############
+swarm-preflight · project-doc · slug=run2-reconcile-chain
+  target-root : /home/arnoldadero/marathon-target (main @ 71ef6b76f)
+  branch      : suggested=marathon/run2-reconcile-chain-2026-08-20 branch_ready=false skip_branch_prompt=false
+  freshness   : fetch_ok=1 upstream=none ahead=0 behind=0 dirty=0
+  ref-probed  : main @ 71ef6b76f (checkout matches)
+  candidate   : ready
+  inlined-acc : 0 criterion(a) from the whole-document
+  source-url  : not-applicable — capture doc names no gh_issue — no source URL is required
+  acceptance  : unknown [cause: no-gh-issue] — capture doc has no gh_issue — nothing to compare against
+  issue-state : unknown — capture doc has no gh_issue — issue state cannot be determined
+  readiness   : ready=1
+  lane-cli    : codex=present agy=present (advisory)
+  verdict     : ready (exit 0)
+
+Packet written: /home/arnoldadero/marathon-target/relay-system/preflight/2026-08-20/run2-reconcile-chain
+PREFLIGHT_RC=0
+
+############ 3. DRY RUN ############
+
+---
+
+▶ TAKE YOUR TURN (codex — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: src/report.js,test/report.test.js. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /home/arnoldadero/marathon-target/.xyz/bin/tick release MARATHON-R2P4-TURN --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /home/arnoldadero/marathon-target/.xyz/bin/tick done MARATHON-R2P4-TURN --agent codex
+4. Use this exact tick binary (run it from any directory) for all token operations: /home/arnoldadero/marathon-target/.xyz/bin/tick
+   Edit ONLY marathon-system/run2-reconcile-chain--r2p4/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to agy —
+   agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+--- END RENDERED RELAY ---
+tick seed: log task.created MARATHON-R2P4-TURN + claim --agent marathon + release --to agy
+marathon: dry-run complete: 4 phase(s) would run in order
+DRYRUN_RC=0
+
+############ 4. dependency order the dry run resolved ############
+=== END OUTPUT ===
+end      : 2026-08-20T16:38:07+03:00
+duration : 46s
+EXIT_CODE: 0

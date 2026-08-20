@@ -1,0 +1,28 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/install-deps-nosudo.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:52:59+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+workdir: /tmp/tmp.yXh0jC0k8C
+
+=== jq (official jqlang release) ===
+curl rc=0
+jq-1.7.1
+installed -> /home/arnoldadero/.local/bin/jq
+
+=== sqlite3 (official sqlite.org precompiled tools) ===
+resolved: 2026/sqlite-tools-linux-x64-3530400.zip
+curl rc=0 size=4265665
+extracted: sqlite3
+3.53.4 2026-07-24 19:02:57 bf7c7f30031888f4e796e429ab3978879485813aaca6f641c7b33e4e09459bcc (64-bit)
+installed -> /home/arnoldadero/.local/bin/sqlite3
+
+=== verify from a NON-INTERACTIVE login shell (the shape that matters) ===
+jq        /home/arnoldadero/.local/bin/jq
+sqlite3   /home/arnoldadero/.local/bin/sqlite3
+=== END OUTPUT ===
+end      : 2026-08-20T16:53:07+03:00
+duration : 8s
+EXIT_CODE: 0

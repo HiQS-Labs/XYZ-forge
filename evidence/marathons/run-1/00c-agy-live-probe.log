@@ -1,0 +1,37 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/agy-live-probe.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T15:59:31+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== 1. kill stuck agy whoami probes (approved) ===
+kill -9 3834 : bash -lc cd ~/XYZ-forge && . evidence/_env/prelude.sh echo "=== agy binary ===";
+kill -9 3858 : timeout 30 agy whoami
+kill -9 3860 : agy whoami
+kill -9 5124 : timeout 8 agy whoami
+kill -9 5125 : agy whoami
+kill -9 3834 : 
+kill -9 3858 : 
+kill -9 5124 : 
+remaining agy whoami procs: 2
+
+=== 2. candidate auth probes (rc=137 means SIGKILLed = hung) ===
+agy --version                rc=0    elapsed=1   s bytes=7
+      | 1.1.16
+agy models                   rc=0    elapsed=9   s bytes=672
+      | Fetching available models...
+      | gemini-3.7-flash-high	Gemini 3.7 Flash (High)
+      | gemini-3.7-flash-medium	Gemini 3.7 Flash (Medium)
+      | gemini-3.7-flash-low	Gemini 3.7 Flash (Low)
+      | gemini-3.6-flash-high	Gemini 3.6 Flash (High)
+      | gemini-3.6-flash-medium	Gemini 3.6 Flash (Medium)
+agy agents                   rc=0    elapsed=5   s bytes=0
+
+=== 3. print mode — does it reach the backend? ===
+print rc=0 elapsed=14s bytes=18
+      | MARATHON-PROBE-OK
+=== END OUTPUT ===
+end      : 2026-08-20T16:00:02+03:00
+duration : 31s
+EXIT_CODE: 0

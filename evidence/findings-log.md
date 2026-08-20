@@ -548,3 +548,420 @@ Lesson worth keeping: never mutate the environment while the source-of-truth run
 even with a change that looks unrelated.
 
 ---
+
+## F-015 — agy 1.1.16 removed `whoami`; the auth preflight then hard-blocks the whole agy lane
+
+**Tag: LINUX** · Severity: **critical** — makes `--builder agy` unusable · **FIXED** (`a4706d1`)
+
+`relay-automation/agy-turn.sh:147` (and the authoritative `utils/py/agy-turn.py`) gate every agy turn
+behind `agy_auth_preflight`, which runs `agy whoami`. On agy **1.1.16** that subcommand does not
+exist:
+
+```bash
+agy --help </dev/null
+```
+Exit: **0**. Subcommands: `agent agents changelog help install mcp models plugin plugins update`.
+No `whoami`. **And no `login`** — which is the remedy every failure path in this file tells the
+operator to run.
+
+The argument therefore falls through to agy's **interactive TUI**, which writes its terminal-takeover
+escape sequence and blocks. It also ignores SIGTERM:
+
+```bash
+timeout 8 agy whoami </dev/null      # rc=137, elapsed 248s
+timeout -s KILL 8 agy whoami </dev/null   # rc=137, elapsed 8s
+```
+Measured twice from the process table: `timeout 30 agy whoami` was still alive at **6m43s**;
+`timeout 8 agy whoami` at **2m26s**. Only SIGKILL ends it. (`rtl_run_bounded` uses `kill -9`, so the
+harness itself does not hang — but every naive `timeout` caller does.)
+
+The capture at timeout is therefore **escape codes and no prose**:
+
+```
+\e[?2026$p\e[?2027$p\e[>4m\e[=0;1u\e[?1049h\e[?25l\e[?5W\e[?2004h\e[>4;2m\e[=1;1u\e[?u\e[H\e[2J
+```
+
+`rtl.agy_auth_timeout_verdict` matched TTY failures by **prose** only
+(`AGY_AUTH_TTY_MARKERS = ("could not open tty", "error opening tty")`), so it read that as "timed out
+with no TTY diagnostic" → `failed` → lane blocked. Measured against the authoritative Python path
+(`evidence/marathons/run-1/00e-agy-preflight-verdict.log`):
+
+| `AGY_AUTH_TIMEOUT_S` | `agy_auth_preflight()` | verdict |
+|---|---|---|
+| 5  | `False` | BLOCKED (exit 5) |
+| 15 | `False` | BLOCKED (exit 5) |
+| 30 | `False` | BLOCKED (exit 5) |
+
+**Raising the timeout does not help** — the probe can never complete. Meanwhile the lane demonstrably
+works (`evidence/marathons/run-1/00c-agy-live-probe.log`):
+
+```
+agy -p "Reply with exactly: MARATHON-PROBE-OK"   -> rc=0, 14s, "MARATHON-PROBE-OK"
+agy models                                        -> rc=0, 7.6-8.5s, real model list from the backend
+```
+
+So this is the **third** arrival of the false-block direction that GH-375 and its follow-up were both
+written to prevent — reaching it through a new spelling rather than a new branch.
+
+**Fix applied** (`fix/agy-tui-takeover-auth-verdict`, merged to `linux-bringup`): treat a **mute**
+terminal takeover as positive evidence of the TTY cause. The follow-up's rule is preserved verbatim —
+reclassify ONLY on positive evidence — because a terminal takeover *is* that evidence, written in
+control codes rather than English. The second half of the predicate keeps the fatal cases fatal: the
+capture must also carry nothing readable after escape-stripping, so a device-code login prompt (which
+has readable text) still blocks, and silence still blocks. Also adds `"error entering raw mode"` to
+`AGY_AUTH_TTY_MARKERS` — the same TTY failure in 1.1.16's wording.
+
+Verified:
+
+| Check | Result |
+|---|---|
+| `test/agy-tui-takeover-verdict.sh` (new, includes a pre-fix replay) | 8 pass / 0 fail |
+| `test/gh375-auth-timeout-verdict.sh` | 14 pass / 0 fail — no regression |
+| `test/gh375-agy-auth-preflight.sh` | pass — no regression |
+| live `agy_auth_preflight()` at 5s / 15s / 30s | `False` → **`True`** |
+| live marathon run 1 | `agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding` |
+
+**Not fixed, deliberately:** the preflight still burns its full timeout (default 20s) on every agy
+turn, because `agy whoami` can never complete. That is a cost question, not a correctness one, and
+choosing a replacement probe is a maintainer's design decision — `agy models` is a real candidate at
+rc=0 in ~8s, but `AGY_AUTH_TIMEOUT_DEFAULT_S` would have to rise from 20s only if it were used, and
+GH-492 criterion 4 explicitly prefers recording the finding over shipping a weaker probe.
+
+Repro: `repro.sh probe-agy-auth`.
+
+---
+
+## F-016 — `swarm-preflight` reports `agy=present` from a bare `command -v`, disagreeing with `find-harness.sh`
+
+**Tag: LINUX** · Severity: low (advisory line only) but it is a readiness signal that can read green
+while the lane is dead
+
+`utils/swarm-preflight.sh:780`:
+
+```bash
+GH39_LANE_NOTE="codex=$(command -v codex >/dev/null 2>&1 && echo present || echo absent) agy=$(command -v agy >/dev/null 2>&1 && echo present || echo absent)"
+```
+
+A bare `command -v` establishes only that a file is on `PATH`. It says nothing about whether the
+binary runs, is authenticated, or — as F-015 shows — whether the harness's own preflight will refuse
+the lane. During this bring-up `swarm-preflight` printed `lane-cli : codex=present agy=present` in
+the same minute that `agy-turn.py`'s preflight returned `False` at every timeout tried.
+
+`skills/relay-xyz/find-harness.sh` is the better-behaved sibling: it resolves through `AGY_BIN`, falls
+back to the well-known `~/.local/bin/agy` location (`:192-196`), and reports a clear
+`-- agy CLI (Path A worker) (not found)`. The two tools answered differently about the same machine
+within one run — earlier, before agy was installed, `find-harness.sh` said not-found while a bare
+`command -v` in a different shell said present, purely because of PATH differences between the
+prelude-sourced and non-prelude shells.
+
+Not a blocker; recorded because "lane-cli: agy=present" is exactly the line an operator would scan to
+decide whether a lane is safe to fire.
+
+Log: `evidence/marathons/run-1/02-preflight.log`, `evidence/marathons/run-1/00-guard-proof.log`.
+
+---
+
+## F-017 — `marathon.sh --plan` is checked against the process CWD, not `--target-root`, contradicting its own help
+
+**Tag: LINUX** · Severity: medium — a documented invocation fails with a misleading error
+
+```bash
+relay-automation/marathon.sh \
+  --plan PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/MARATHON.yaml \
+  --target-root "$HOME/marathon-target" --builder agy --dry-run
+```
+Exit: **2** · `marathon: plan not found: PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/MARATHON.yaml`
+
+The plan exists at exactly that path **inside the target root**, and `marathon.sh`'s own help
+(`:96`) states:
+
+> `Plan and brief paths resolve against DIR when set.`
+
+The cause is an ordering bug, visible in the source:
+
+```
+relay-automation/marathon.sh:136   [[ -f "$PLAN" ]] || die "plan not found: $PLAN"
+relay-automation/marathon.sh:155   _plan_base="${TARGET_ROOT:-$ROOT}"
+```
+
+The existence check runs **19 lines before** the base it is documented to resolve against is
+computed. `_plan_base` is used for the GH-212 location *policy* check, but by then the file has
+already had to exist relative to the process CWD. The brief path has the same shape at `:271`
+(`brief_base="${TARGET_ROOT:-$ROOT}"`), which is computed later still.
+
+The error message compounds it: "plan not found: <relative path>" gives no hint that the path was
+resolved against a different root than the flag implies.
+
+Workaround: pass `--plan` as an absolute path. Verified — the same invocation with an absolute plan
+path reached `marathon: dry-run complete: 4 phase(s) would run in order`, exit **0**
+(`evidence/marathons/run-1/03-dryrun.log`).
+
+Repro: `repro.sh probe-plan-resolution`.
+
+---
+
+## F-018 — `--target-root` is recommended for exactly the case `relay-drive` then refuses
+
+**Tag: DOC** · Severity: **high** — the documented remedy for a gitignoring target cannot run a build turn
+
+`marathon.sh`'s `--target-root` help says, verbatim:
+
+> Use this when the target repo cannot track harness output (e.g. a public repo that gitignores
+> `marathon-system/` and `relay-system/` on purpose): without it, marathon-drive's `git add` of
+> RELAY.md / ESCALATION.md / the transcript fails and the phase HALTs.
+
+That described this bring-up's target repo exactly — its `.gitignore` carried `marathon-system/` and
+`relay-system/`. So `--target-root` was used, as documented. The run then halted on phase 1:
+
+```bash
+relay-automation/marathon.sh --plan <abs>/MARATHON.yaml --target-root "$HOME/marathon-target" \
+  --builder agy --pre-advance-cmd "npm test"
+```
+Exit: **2** (marathon-drive exit 2) · elapsed 2s · no builder turn spent
+
+```
+relay-drive: --target-root build turn cannot report: relay file
+  '<harness>/marathon-system/run1-ledger-exports--r1p1/RELAY.md' resolves outside the target root
+  '/home/arnoldadero/marathon-target', so a build turn (ALLOW_PATHS="") has no writable path for its
+  findings and the turn would be discarded after full cost. Vendor the harness into the target repo
+  (relay-automation/xyz-vendor.sh '/home/arnoldadero/marathon-target') and drop --target-root, or
+  move the relay thread under the target root.
+```
+
+Both statements are individually correct and they contradict each other. `--target-root` keeps the
+relay thread in the harness repo *by design* (the help says so in its second sentence), and that is
+precisely what makes a build turn unable to report.
+
+**Credit where due — the refusal is exemplary.** It fires before any builder turn is spent, states
+the cause in one sentence, and names two concrete remedies. `marathon: HALT: phase r1p1 failed
+(marathon-drive exit 2) — chain stops; later phases NOT started` behaved exactly as documented. The
+defect is the help text promising a combination the driver rejects, not the driver.
+
+Resolution used (the first remedy it names): `relay-automation/xyz-vendor.sh <target>` (exit **0**),
+drop `--target-root`, un-ignore `marathon-system/` and `relay-system/` in the target, and invoke
+`.xyz/relay-automation/marathon.sh` from the target root. That path works —
+`evidence/marathons/run-1/04-fullrun.log`.
+
+Note the second-order consequence the help does not mention: taking the remedy means the target repo
+must now **track** `marathon-system/` and `relay-system/`, which is the exact thing the help offered
+`--target-root` to avoid. For a genuinely public repo that gitignores harness output on purpose,
+neither branch of the advice is available.
+
+Logs: `evidence/marathons/run-1/04-fullrun-take1-halt.log`, `evidence/marathons/run-1/04b-vendor-target.log`.
+
+---
+
+## F-019 — `artifacts_new` is mandatory for greenfield lanes and absent from the example the error points at
+
+**Tag: DOC** · Severity: medium — a hard exit-3 whose named remedy does not contain the answer
+
+A contract listing not-yet-existing files in `artifacts[]` fails readiness:
+
+```bash
+utils/swarm-preflight.sh --project-doc <doc> --target-root <target> --dry-run
+```
+Exit: **5** · `readiness : ready=0 — next: artifact path not found at target.ref: src/export-csv.js
+— fix the contract artifacts[] or push the file`
+
+The correct field is `artifacts_new` (GH-89) — a **subset marker over** `artifacts[]`, exempting those
+paths from the GH-39 A2 existence check, gated on a matching `fix_probes` `path_absent` entry. Getting
+there took two more failed attempts, each a separate exit code:
+
+1. `artifacts_new` as a **parallel** list (not also in `artifacts[]`) → exit **3**,
+   `artifacts_new entry not present in artifacts[]: src/export-csv.js`
+2. Only then does the subset relationship become apparent — from the source, not the docs.
+
+The exit-3 message says:
+
+> To fix, add a minimal valid contract in <doc> (copy `relay-automation/CONTRACT.example.md` for a
+> detailed example)
+
+```bash
+grep -q 'artifacts_new' relay-automation/CONTRACT.example.md
+```
+Exit: **1** — the field appears **nowhere** in the file the error tells you to copy. Nor in
+`README.md`, `ROUTER.md`, `AGENTS.md`, or anywhere under `relay-automation/`. Outside PROJECT capture
+docs and the CHANGELOG, the only prose mention in the repo is one line in
+`skills/marathon-triage/SKILL.md:93`, which references the field without defining it.
+
+So a first-time operator building anything greenfield — which is the normal case for a marathon —
+hits a hard exit 3 and is pointed at a document that cannot resolve it. The semantics are recoverable
+only by reading `utils/swarm-preflight.sh:181-190` and `:228-243`.
+
+Repro: `repro.sh probe-artifacts-new-doc`.
+
+---
+
+## F-020 — the agent's Bash tool is sandboxed; the GH-177 guard blocks every suite run until it is disabled
+
+**Tag: WSL** (agent-harness artefact, not a repo defect) · Severity: high friction
+
+The brief asks explicitly whether this shell is sandboxed. **It is.** Any attempt to run a test:
+
+```bash
+bash test/agy-tui-takeover-verdict.sh
+```
+is intercepted before execution by `relay-automation/hooks/gh177-sandbox-test-guard.sh`:
+
+```
+GH-177 guard: refusing to run the test suite under a SANDBOXED Bash call.
+Sandbox-broken mktemp fed the destructive EXIT trap that wiped this repo twice
+(see PROJECT/3-COMPLETED/GH-177-MKTEMP-TRAP-REPO-WIPE.md).
+```
+
+This is the repo protecting itself correctly, and it is the good outcome: the guard converts the
+failure mode the brief warned about — "prints nothing for minutes and then fails, and it looks exactly
+like a hang" — into an immediate, explanatory refusal. Every test and marathon invocation in this
+bring-up therefore ran with the sandbox explicitly disabled, which is the second option the guard
+itself offers.
+
+Worth stating plainly for anyone reproducing this: `mktemp -d` works fine *inside* WSL
+(`evidence/00-environment.md` proved it, exit 0). The sandbox is imposed by the **agent harness**
+around the Bash tool, not by WSL, and the two are easy to confuse.
+
+---
+
+## F-021 — a background-task notification reported exit 0 for a run whose real exit was 2
+
+**Tag: WSL** (agent-harness artefact) · Severity: medium — this is how a red run gets reported green
+
+The run-1 take-1 marathon halted:
+
+```
+marathon: HALT: phase r1p1 failed (marathon-drive exit 2) — chain stops; later phases NOT started
+MARATHON_FULLRUN_RC=2
+EXIT_CODE: 2
+```
+
+The agent harness's completion notification for that same background task read
+`completed (exit code 0)`.
+
+`evidence/_env/run.sh` records the truth because it takes `PIPESTATUS[0]` rather than the pipeline's
+status — the same trap already recorded in F-014, arriving from a different direction. Recorded again
+because it fired twice in this bring-up on two different mechanisms, and because "the notification
+said it passed" is not evidence. Only the logged `EXIT_CODE:` trailer is.
+
+---
+
+## F-022 — the compute/ranking step cannot run in a vendored repo at all
+
+**Tag: LINUX** · Severity: medium — the lifecycle's first step is unavailable in the documented
+deployment shape
+
+```bash
+cd ~/marathon-target && bash .xyz/utils/marathon-plan.sh --check
+```
+Exit: **3** · `ROADMAP not found: /home/arnoldadero/marathon-target/ROADMAP.md`
+
+`utils/marathon-plan.sh` is the planner/ranker — the nearest thing this repo has to the brief's
+"compute" step (F-002). It reads the **harness's own PDDA `ROADMAP.md` ledger**, scores it into waves,
+and writes `PROJECT/2-WORKING/MARATHON-PLAN-<date>.md`. A consuming repo has no such ledger.
+
+That matters because a vendored install is not an edge case — it is what `relay-automation/xyz-vendor.sh`
+creates, what `README.md`'s "`marathon.sh` roots" section documents
+(`cd /path/to/target-repo && ./.xyz/relay-automation/marathon.sh ...`), and — per **F-018** — the only
+configuration in which a build turn can report at all. So in the one deployment shape that actually
+works end to end, the ranking step does not run.
+
+The same command in the harness repo works as designed:
+
+```bash
+cd ~/XYZ-forge && bash utils/marathon-plan.sh --check
+```
+Exit: **4** (drift present) · `SUMMARY [marathon-plan] items=22 active=0 waves=0 drift=true held=11`
+— a real ranking pass with per-item held reasons.
+
+Not a blocker for a hand-written plan: preflight and dry-run are the steps that gate a fire, and both
+work fine vendored. Recorded because an operator following the lifecycle in order will hit exit 3 on
+step one and have no way to tell whether they mis-configured something or the step simply does not
+apply to them. Nothing in the output says "this step is harness-only".
+
+Log: `evidence/marathons/run-2/01-03-compute-preflight-dryrun.log`.
+
+---
+
+## F-023 — the GH-68 drift detector fires on every path that exists at neither rev
+
+**Tag: LINUX** · Severity: medium — warn-only, but it pollutes **every** agent turn brief and buries
+the real signal
+
+`relay-automation/relay-turn-lib.sh:1350-1353` watches a hardcoded list of shared surfaces:
+
+```bash
+for _surf in relay-automation/relay-turn-lib.sh src/project.js src/events.js; do
+  _psha="$(git -C "$RTL_ROOT" rev-parse "$RTL_BEFORE_HEAD:$_surf" 2>/dev/null || true)"
+  _csha="$(git -C "$RTL_ROOT" rev-parse "$_newhead:$_surf"        2>/dev/null || true)"
+  [[ "$_psha" == "$_csha" ]] && continue   # unchanged (or absent at both revs) — no drift
+```
+
+The comment states the intended behaviour for a path absent at both revisions. That is exactly the case
+it gets wrong.
+
+**Why.** `git rev-parse <sha>:<missing-path>` exits 128 **but echoes its argument back on stdout** —
+the standard rev-parse fallback for an unresolvable argument. Measured directly
+(`evidence/07-drift-probe.log`):
+
+```
+--- src/project.js ---            (exists in worktree: NO)
+  _psha=[3daa280311ae05710b24daf2d65af5b907c981b6:src/project.js]
+  _csha=[a7222a5de42d20a6aa177691c17e2912de6418ac:src/project.js]
+  => DIFFERENT -> drift WOULD be emitted
+  raw rev-parse: rc=128 stdout=[3daa280...:src/project.js]
+
+--- src/parse.js ---              (exists in worktree: yes)
+  _psha=[ceadf4b6621a4d9b36d7ae6bcdacef1ee075800f]
+  _csha=[ceadf4b6621a4d9b36d7ae6bcdacef1ee075800f]
+  => equal -> continue (NO drift emitted)
+```
+
+The two echoed strings differ because the SHA prefixes differ, so the `continue` guard never fires and
+drift is emitted with `--diff-lines 0`. The `(0 lines)` in the operator output is the tell: a genuine
+drift always has a non-zero diff.
+
+**Blast radius.** In this bring-up's target repo none of the three watched paths exists — the vendored
+harness lives at `.xyz/relay-automation/relay-turn-lib.sh`, and `src/project.js` / `src/events.js` are
+xyz's own files that no consuming repo has. So **all three fire on every commit**:
+
+```
+marathon-drive log, per turn:
+  agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+  agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+  agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+```
+
+**42 `dependency.drift` events in a single four-phase run**, every one false.
+
+This is not merely log noise. GH-68's entire purpose is to inject the notice into the **next agent's
+turn brief**, and it does — captured live from the process table during run 1:
+
+```
+agy --dangerously-skip-permissions --print-timeout 900s -p [cross-agent dependency drift —
+informational, warn-only; re-...
+```
+
+So every builder and reviewer turn after the first opens with a heads-up about three files that do not
+exist in the repository it is working on. In a vendored install — again, the deployment shape that
+actually works — the signal is **100% false positives by construction**, which means a real drift event
+would be indistinguishable from the noise it arrives in.
+
+**Suggested fix** (not applied — evidence gathering, not redesign; and changing it mid-bring-up would
+make run 3's transcripts inconsistent with runs 1 and 2):
+
+```diff
+-  _psha="$(git -C "$RTL_ROOT" rev-parse "$RTL_BEFORE_HEAD:$_surf" 2>/dev/null || true)"
+-  _csha="$(git -C "$RTL_ROOT" rev-parse "$_newhead:$_surf"        2>/dev/null || true)"
++  _psha="$(git -C "$RTL_ROOT" rev-parse --verify --quiet "$RTL_BEFORE_HEAD:$_surf" 2>/dev/null || true)"
++  _csha="$(git -C "$RTL_ROOT" rev-parse --verify --quiet "$_newhead:$_surf"        2>/dev/null || true)"
+```
+
+`--verify --quiet` suppresses the echo-back, so an absent path yields `""` at both revs and the existing
+`continue` guard works as its comment already promises. One flag pair, no logic change.
+
+Worth noting separately: the watch list is **hardcoded to xyz's own filenames**
+(`src/project.js`, `src/events.js`). `utils/marathon-plan.sh` already solved this general problem — it
+takes a repo-specific zone model via `--zones-config` / `QUEUE_PLAN_ZONES_FILE` precisely so foreign
+repos are not matched against xyz's filenames. The drift watcher has the same need and no such lever.
+
+Repro: `repro.sh probe-drift-false-positive`.
+
+---
