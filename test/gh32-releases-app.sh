@@ -106,12 +106,12 @@ echo "-- B: import the real RELEASES.md; grandfather ledger; side-by-side gen"
 R="$(mkrepo b)"
 rout init --slug xyz-forge
 LEDGER_HASH="$(md5 -q "$REAL_LEDGER")"
-V="$(rlog import "$REAL_LEDGER")"; if has "$V" "imported 8 block(s)"; then ok "import brings in all 8 blocks of the real ledger" 0; else ok "import 8 blocks" 1; fi
+V="$(rlog import "$REAL_LEDGER")"; if has "$V" "imported 9 block(s)"; then ok "import brings in all 9 blocks of the real ledger (9th = Cargo 0.9.0, cut 2026-08-20)" 0; else ok "import 9 blocks" 1; fi
 N="$(sql "SELECT COUNT(*) FROM doc_lines")"; ok "the 86-line preamble lands verbatim in doc_lines (release-less document content)" "$(is "$N" "86"; echo $?)"
 N="$(sql "SELECT COUNT(*) FROM doc_lines WHERE content = '# Major Releases'")"; ok "doc_lines hold the verbatim first line" "$(is "$N" "1"; echo $?)"
 N="$(sql 'SELECT COUNT(*) FROM grandfather_entries WHERE disposition IS NULL')"; if [ "$N" -gt 0 ] 2>/dev/null; then ok "every tolerated violation is recorded in grandfather_entries (import is not a silent fill)" 0; else ok "grandfather entries exist" 1; fi
-N="$(sql "SELECT COUNT(*) FROM issue_refs WHERE temp_id GLOB 'MIG-*'")"; ok "all 8 legacy blocks got import-only MIG- placeholder refs (SOP 1 postdates them)" "$(is "$N" "8"; echo $?)"
-N="$(sql "SELECT COUNT(*) FROM grandfather_entries WHERE rule = 'tracking-issue-missing'")"; ok "each MIG- ref is a tracked grandfather entry (rule=tracking-issue-missing)" "$(is "$N" "8"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM issue_refs WHERE temp_id GLOB 'MIG-*'")"; ok "all 9 imported blocks got import-only MIG- placeholder refs (importer is uniform; GH_URL lines land in legacy_lines)" "$(is "$N" "9"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM grandfather_entries WHERE rule = 'tracking-issue-missing'")"; ok "each MIG- ref is a tracked grandfather entry (rule=tracking-issue-missing)" "$(is "$N" "9"; echo $?)"
 N="$(sql "SELECT COUNT(*) FROM legacy_lines")"; N2="$(sql "SELECT COUNT(*) FROM legacy_lines l JOIN releases r ON r.id = l.release_id WHERE l.content LIKE 'Iterations:%'")"
 if [ "$N" -gt 0 ] 2>/dev/null && [ "$N2" -ge 8 ] 2>/dev/null; then ok "unmapped lines (Iterations bands, Shipped prose, manifest prose) survive in legacy_lines" 0; else ok "legacy_lines survive" 1; fi
 V="$(rlog check)"; if has "$V" "check: clean"; then ok "check is green right after import (DB<->dump consistent, chain intact)" 0; else ok "post-import check" 1; fi
