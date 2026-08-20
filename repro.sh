@@ -378,7 +378,19 @@ probe_drift_false_positive() {
   fi
 
   # 3. Demonstrate the mechanism on a fresh throwaway repo.
-  local d; d="$(mktemp -d)" || { bad "mktemp failed"; return; }
+  # GH-177: a non-zero check on mktemp is NOT enough. mktemp can exit 0 and print
+  # nothing (a broken/sandboxed TMPDIR), and `cd ""` is a silent no-op returning 0 —
+  # so `cd "$d" || exit 1` would carry on in the CALLER'S directory. Guard on the
+  # value being non-empty AND a real directory before anything uses it.
+  # Each guard is its OWN statement with no braces: test/mktemp-trap-guard.sh splits
+  # on ';', so a `|| { bad "..."; return; }` form has its abort split away from the
+  # -n/-d test and reads as unguarded. Two plain lines per condition keep the test
+  # and its abort in one segment.
+  local d; d="$(mktemp -d)"
+  [ -n "$d" ] || bad "mktemp -d returned an empty path — refusing to continue"
+  [ -n "$d" ] || return
+  [ -d "$d" ] || bad "mktemp -d path is not a directory: '$d' — refusing to continue"
+  [ -d "$d" ] || return
   (
     cd "$d" || exit 1
     git init -q -b main
