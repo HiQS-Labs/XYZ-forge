@@ -167,7 +167,20 @@ while i < len(fields):
     if not path:
         sys.stderr.write("porcelain_rows: entry carries a status but no pathname: %r\n" % entry)
         sys.exit(1)
-    flag = "unrenderable" if UNRENDERABLE.search(path) else "ok"
+    # A legal git pathname is a byte string, NOT necessarily valid UTF-8. Classifying on control
+    # bytes alone let `name\xff` take the ordinary command path, where the raw byte reached
+    # `jq --arg` in the key, the evidence and the CLOSE COMMAND -- producing a normalised or invalid
+    # JSON string and a runnable command addressing a DIFFERENT pathname. That is the same dangerous-
+    # addressing class the -z rewrite and the trailing-LF sentinel each removed, re-entering at the
+    # byte-to-text crossing, which is where every one of these has appeared.
+    # A name that cannot be rendered as text is unrenderable for the same reason a newline is: it
+    # gets an escaped display and an inspect close, never a command built from it.
+    try:
+        path.decode("utf-8")
+    except UnicodeDecodeError:
+        flag = "unrenderable"
+    else:
+        flag = "unrenderable" if UNRENDERABLE.search(path) else "ok"
     out.append("%s\t%s\t%s\n" % (xy.decode("latin-1"), flag,
                                  base64.b64encode(path).decode("ascii")))
 sys.stdout.write("".join(out))
@@ -176,10 +189,13 @@ sys.stdout.write("".join(out))
 
 # One-line display for a path that cannot be shown as it is. Control bytes become their escapes, so
 # the item still names the file recognisably without ever emitting a physical newline.
+# `backslashreplace`, NOT `replace`: the latter maps every undecodable byte to U+FFFD, so two
+# different pathnames render identically — acceptable for a glyph, useless for naming a file the
+# operator has to go and find. Escaped as \xNN, the display identifies exactly one path.
 sanitize_path() {
   printf '%s' "$1" | python3 -c '
 import sys
-s = sys.stdin.buffer.read().decode("utf-8", "replace")
+s = sys.stdin.buffer.read().decode("utf-8", "backslashreplace")
 sys.stdout.write("".join(
     {"\n": "\\n", "\r": "\\r", "\t": "\\t"}.get(c, "\\x%02x" % ord(c)) if (ord(c) < 32 or ord(c) == 127) else c
     for c in s))
@@ -233,7 +249,7 @@ if [[ $rc2 -eq 0 ]]; then
       # the collector is what knows the path is unrenderable, so the collector is what must not emit
       # it raw. Never dropped (that is the silent-ok failure) — shown escaped, with an inspect close.
       disp="$(sanitize_path "$path")"
-      close_str="inspect: $disp (name contains control characters; resolve the path by hand)"
+      close_str="inspect: $disp (name is not renderable as one line of text; resolve the path by hand)"
       close_k="inspect"
     else
       # `path` is the DECODED filename, so a `git add` built from it addresses the real file whatever

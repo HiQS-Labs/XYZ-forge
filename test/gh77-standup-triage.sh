@@ -457,6 +457,28 @@ is "a pathname ending in LF keeps its trailing byte through the shell handoff" \
 is "  and its stat resolves on the exact bytes, not the stripped name" \
    "$(F lens-2-trailing-lf 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1800000002"
 
+# ── 18d. Round-11: a legal pathname is BYTES, not text ───────────────────────────────────────────
+# The last finding, and the fifth appearance of one pattern worth naming: every remaining safety bug
+# in this file has lived at a BYTE-TO-TEXT CROSSING. The C-quote decoder, the base64 handoff, the
+# trailing-LF strip, and now the JSON boundary — each was a sound parser undone where bytes became a
+# string. A git pathname is a byte string and need not be valid UTF-8.
+#
+# Classifying on control bytes alone let `name\xff` take the ordinary COMMAND path, so the raw byte
+# reached `jq --arg` in the key, the evidence and the close — producing a normalised or invalid JSON
+# string and a runnable command addressing a DIFFERENT pathname. A name that cannot be rendered as
+# text is unrenderable for exactly the reason a newline is.
+is "a non-UTF-8 pathname is escaped unambiguously, not normalised away" \
+   "$(F lens-2-non-utf8 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" 'name\xff'
+is "  and gets an inspect close, never a runnable command built from it" \
+   "$(F lens-2-non-utf8 'd["lenses"]["2"]["candidates"][0]["close_kind"]')" "inspect"
+is "  while the lens stays ok — the item is escaped, not dropped or degraded" \
+   "$(F lens-2-non-utf8 'd["lenses"]["2"]["status"]')" "ok"
+# Keyed on the exact bytes, so this proves the byte identity survived to the stat lookup. Note the
+# display uses backslashreplace, not replace: U+FFFD would render two different paths identically,
+# which is fine for a glyph and useless for naming a file the operator has to go and find.
+is "  and its stat resolves on the exact bytes" \
+   "$(F lens-2-non-utf8 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1810000000"
+
 # ── 19. THE GENERIC GUARD: no input makes the collector emit nothing ─────────────────────────────
 # Written after the round-7 staleness fix silently reintroduced the founding failure. A no-match
 # `grep` exits 1, `set -e` is active in collect.sh, and the script aborted MID-DOCUMENT — emitting no
