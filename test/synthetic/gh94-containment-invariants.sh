@@ -101,5 +101,19 @@ grep -q "SECRET_PAYLOAD" "$SENTINEL" || {
   exit 1
 }
 
+# 5. Runtime Code Execution Filesystem Containment
+OUTSIDE_CANARY="$WORK/outside-canary.txt"
+echo "SAFE_CANARY" > "$OUTSIDE_CANARY"
+
+# Execute a hostile in-script write trying to escape $FIXTURE to write into $OUTSIDE_CANARY
+out=$(python3 "$RUNNER" --workdir "$FIXTURE" --containment-root "$FIXTURE" \
+  --code "open('$OUTSIDE_CANARY', 'w').write('PWNED')" --json 2>&1 || true)
+
+# Assert that outside canary file was NOT mutated
+grep -q "SAFE_CANARY" "$OUTSIDE_CANARY" || {
+  echo "FAIL: Runtime script escaped containment and mutated outside file: $(cat "$OUTSIDE_CANARY")"
+  exit 1
+}
+
 echo "PASS: gh94-containment-invariants"
 exit 0

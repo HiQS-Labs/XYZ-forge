@@ -76,6 +76,34 @@ def validate_path_containment(path: str | Path, root_dir: str | Path) -> Tuple[b
         return False, None, f"Path resolution error: {e}"
 
 
+def build_sandboxed_cmd(cmd: list[str], containment_root: Optional[str | Path]) -> list[str]:
+    """
+    Wraps execution command with OS-level sandbox isolation when containment_root is specified.
+    On macOS (darwin), applies seatbelt sandbox-exec profile restricting write operations strictly
+    to containment_root and /dev.
+    On Linux, wraps with bubblewrap (bwrap) if available.
+    """
+    import shutil
+
+    if not containment_root:
+        return cmd
+
+    resolved_root = str(Path(containment_root).resolve())
+    if sys.platform == "darwin" and shutil.which("sandbox-exec"):
+        seatbelt_profile = (
+            f'(version 1) '
+            f'(allow default) '
+            f'(deny file-write* (regex #"^/")) '
+            f'(allow file-write* (subpath "{resolved_root}")) '
+            f'(allow file-write* (subpath "/private{resolved_root}")) '
+            f'(allow file-write* (subpath "/dev"))'
+        )
+        return ["sandbox-exec", "-p", seatbelt_profile] + cmd
+    elif sys.platform.startswith("linux") and shutil.which("bwrap"):
+        return ["bwrap", "--ro-bind", "/", "/", "--bind", resolved_root, resolved_root, "--dev", "/dev", "--proc", "/proc"] + cmd
+    return cmd
+
+
 def run_script_safely(
     code_or_file: str,
     is_file: bool = False,
@@ -143,6 +171,10 @@ def run_script_safely(
             cmd = [sys.executable, "-c", normalized_code]
         else:
             cmd = ["bash", "-c", code_or_file]
+
+    # Wrap with OS-level seatbelt/bwrap sandbox if containment_root is specified
+    if containment_root:
+        cmd = build_sandboxed_cmd(cmd, containment_root)
 
     run_env = os.environ.copy()
     if env:

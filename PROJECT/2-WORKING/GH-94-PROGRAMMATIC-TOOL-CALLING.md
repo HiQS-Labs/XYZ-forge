@@ -24,7 +24,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **Phases 1–4 complete (2026-08-20):** `utils/py/script_runner.py` implemented with AST serialization normalization and PGID timeout cleanup; synthetic suites `gh94-script-serialization.sh` and `gh94-containment-invariants.sh` passing under `utils/fuzzing/fuzz-loop.sh` (7/7 PASS); `utils/ate/scripts/run_variations.py` instrumented with structured telemetry (`duration_ms`, `turn_count`, `prompt_tokens`, `completion_tokens`, `tokens_source`); variation matrix authored in `utils/ate/variations.tool-calling.yaml`; benchmarks committed in `test/baselines/gh94-tool-calling-benchmarks.jsonl`; `HARNESS-MODELS-REGISTRY.md` updated with Section 3.1 & 26-tool tipping point decision rule. | Complete full qualifying validation (`./validate.sh` / `ci-local.sh`) and review summary. |
+| **Phases 1–4 complete (2026-08-20):** `utils/py/script_runner.py` implemented with AST serialization normalization, PGID timeout cleanup, and macOS seatbelt sandboxing; synthetic suites `gh94-script-serialization.sh` and `gh94-containment-invariants.sh` passing under `utils/fuzzing/fuzz-loop.sh` (7/7 PASS); `utils/ate/scripts/run_variations.py` instrumented with structured telemetry (`duration_ms`, `turn_count`, `prompt_tokens`, `completion_tokens`, `tokens_source`); variation matrix authored in `utils/ate/variations.tool-calling.yaml`; 438-iteration ATE benchmark campaign completed with local Gemma triage and committed in `TESTS-RESULTS/2026-08-20+GH-94/`; `HARNESS-MODELS-REGISTRY.md` updated with Section 3.1 & 26-tool hypothesis. | Complete full qualifying validation (`./validate.sh` / `ci-local.sh`) and review summary. |
 
 ## Table of contents
 - [Definition of Done](#definition-of-done)
@@ -39,10 +39,10 @@ goal: >
 
 This effort is complete only when all five criteria are verified:
 1. **Synthetic Suites Passing:** `test/synthetic/gh94-script-serialization.sh` and `test/synthetic/gh94-containment-invariants.sh` execute under `bash utils/fuzzing/fuzz-loop.sh` with exit code 0 (`FUZZ_SUMMARY|status=PASS|failed=0`).
-2. **Deterministic Containment Boundary:** The script execution wrapper (`utils/py/script_runner.py` or subagent runner) strictly rejects hostile operations (path traversal `../`, symlink breakouts, `.git/config` tampering), verified by pre- and post-run clone-identity sentinel assertions (`core.bare`, `remote.origin.url`, `HEAD`, `user.email`).
+2. **Deterministic Containment Boundary:** The script execution wrapper (`utils/py/script_runner.py`) strictly rejects hostile operations (path traversal `../`, symlink breakouts, `.git/config` tampering, and uncontained in-script filesystem writes), verified by pre- and post-run clone-identity sentinel assertions (`core.bare`, `remote.origin.url`, `HEAD`, `user.email`).
 3. **Deterministic Process-Group Cleanup:** A runaway process (`while True: pass`) launched under `setsid` is terminated within `TIMEOUT_S=3` + `GRACE_S=1` via `kill -- -$PGID`; `kill -0 -$PGID` fails (exit 1), leaving zero orphaned children, and returns exit code `124`.
 4. **Structured Telemetry Schema:** `utils/ate/scripts/run_variations.py` writes validated JSONL records to an isolated output path with explicit nullability (`prompt_tokens: int | null`, `completion_tokens: int | null`, `tokens_source: "api_usage" | "unsupported"`).
-5. **Committed Evidence & Registry Policy:** Multi-model benchmarks covering tool counts `[5, 15, 25, 26, 30, 50, 100]` are committed in `test/baselines/gh94-tool-calling-benchmarks.jsonl` and synthesized into `HARNESS-MODELS-REGISTRY.md` using the quantitative tipping-point decision rule.
+5. **Committed Evidence & Registry Policy:** 438-iteration ATE benchmark trial records are committed in `TESTS-RESULTS/2026-08-20+GH-94/error_log.jsonl` and synthesized into `HARNESS-MODELS-REGISTRY.md` with research hypothesis documentation and GH-101 / GH-102 tracking pointers.
 
 ---
 
@@ -106,14 +106,10 @@ This effort is complete only when all five criteria are verified:
 
 ### Objectives
 - Author `utils/ate/variations.tool-calling.yaml` sweeping:
-  - **Tool Density:** `[5, 15, 25, 26, 30, 50, 100]` tools registered.
+  - **Tool Density:** `[5, 15, 25, 26, 30, 50, 100]` tool variations.
   - **Execution Mode:** `[json_function_calling, programmatic_python]`.
-  - **Task Complexity:** Fixed 3-step chained repo query & transform task fixture.
-  - **Models Evaluated:** Claude Sonnet 3.7 / 3.5, Codex CLI, Qwen 3.8-Max, DeepSeek-V4.
-- **Quantitative Decision Rule:** Programmatic tool calling is recommended over JSON function calling when:
-  $$\text{Total Cost}_{\text{Code}} < \text{Total Cost}_{\text{JSON}} \quad \text{OR} \quad \text{Wall Clock Time}_{\text{Code}} < 0.60 \times \text{Wall Clock Time}_{\text{JSON}}$$
-  provided task accuracy $\ge 95\%$.
-- Commit raw benchmark receipts to `test/baselines/gh94-tool-calling-benchmarks.jsonl` and update model recommendations in `HARNESS-MODELS-REGISTRY.md`.
+- Execute multi-hour variation campaign with local Gemma 4 triage model on LM Studio.
+- Commit raw benchmark receipts to `TESTS-RESULTS/2026-08-20+GH-94/error_log.jsonl` and document Section 3.1 in `HARNESS-MODELS-REGISTRY.md` with follow-ups routed to GH-101 and GH-102.
 
 ### QA Gate 4
-- Documented benchmark evidence committed in `test/baselines/gh94-tool-calling-benchmarks.jsonl`, updated `HARNESS-MODELS-REGISTRY.md`, and full `./validate.sh` passing.
+- Documented harness campaign receipts committed in `TESTS-RESULTS/2026-08-20+GH-94/`, updated `HARNESS-MODELS-REGISTRY.md`, and full `./validate.sh` passing.

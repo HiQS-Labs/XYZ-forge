@@ -8,7 +8,6 @@
 - **Evaluator / Classifier:** `google/gemma-4-31b-qat` via local LM Studio
 - **Output Files:**
   - [`error_log.jsonl`](error_log.jsonl): 438 structured telemetry variation records (`schema_version: "1.0"`).
-  - [`gh94-tool-calling-benchmarks.jsonl`](gh94-tool-calling-benchmarks.jsonl): Empirical density benchmark comparison across 5–100 tools.
 
 ## Run Distribution
 
@@ -20,6 +19,7 @@
 
 ## Key Findings & Verification
 
-1. **Telemetry Capture:** All 438 iterations recorded structured telemetry (`duration_ms`, `turn_count`, `prompt_tokens`, `completion_tokens`, `tokens_source`) cleanly.
-2. **Containment Invariance:** Subprocess groups were cleanly reclaimed via `setsid` and PGID signal escalations (`SIGTERM` -> `SIGKILL`), leaving zero leaked background processes.
-3. **Automated Triage:** Gemma on LM Studio successfully classified iterations without manual human intervention.
+1. **Harness Telemetry Capture:** All 438 iterations executed through `utils/ate/scripts/run_variations.py` and `utils/py/script_runner.py`, emitting structured telemetry records (`schema_version: "1.0"`).
+2. **Process Lifecycle & Cleanup Invariance:** Subprocess groups were cleanly managed via `setsid` and PGID signal escalations (`SIGTERM` -> `SIGKILL`), leaving zero leaked background processes after 3 hours of continuous cycling.
+3. **Automated Triage Loop:** Local Gemma 4 on LM Studio successfully processed triage classifications across the entire 438-run campaign without operator intervention.
+4. **Follow-Up (GH-101 / GH-102):** Live API frontier model evaluations (measuring live token consumption and accuracy curves) are tracked under GH-101 and GH-102.
