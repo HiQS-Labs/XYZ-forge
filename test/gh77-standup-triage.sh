@@ -410,6 +410,29 @@ is "a date stream with a malformed line degrades rather than filtering it away" 
 is "a date stream shorter than the divergence count degrades" \
    "$(F lens-3-short-dates 'd["lenses"]["3"]["degraded_id"]')" "D5"
 
+# ── 18b. Round-9: the -z boundary rejects truncation and impossible status pairs ─────────────────
+# -z TERMINATES each entry with NUL rather than separating them, so a stream whose last entry has no
+# terminator is a TRUNCATED read — and a truncated bounded read is a failed one, not a shorter list
+# of findings. The final partial entry used to be accepted whole.
+is "an unterminated final entry is a truncated read, not a finding" \
+   "$(F lens-2-unterminated 'd["lenses"]["2"]["degraded_id"]')" "D5"
+# A rename's source field is required. Consuming it without looking let `R  dest\0\0` through as a
+# confident candidate whose required source was absent.
+is "a rename with an empty source field degrades" \
+   "$(F lens-2-empty-rename-src 'd["lenses"]["2"]["degraded_id"]')" "D5"
+# `?` and `!` occur ONLY as the doubled pairs. Treating XY as two independently permissive characters
+# accepted pairs git cannot emit (`?M`, `M?`, `?!`), which reached the candidate builder and produced
+# an ok lens with a fabricated live_state.
+is "a status pair git cannot emit degrades" \
+   "$(F lens-2-impossible-status 'd["lenses"]["2"]["degraded_id"]')" "D5"
+# THE CONTROLS, and the reason this section is not just three more rejections: tightening a validator
+# until it rejects valid input is a regression in the other direction, and a false D5 on a real
+# working tree is worse than the over-acceptance it replaced. Both pairs below are legal porcelain.
+is "  but the ignored pair (!!) is legal and still yields a candidate" \
+   "$(F lens-2-ignored 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "build/out.o"
+is "  and the unmerged pair (UU) is legal too" \
+   "$(F lens-2-unmerged 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "conflict.md"
+
 # ── 19. THE GENERIC GUARD: no input makes the collector emit nothing ─────────────────────────────
 # Written after the round-7 staleness fix silently reintroduced the founding failure. A no-match
 # `grep` exits 1, `set -e` is active in collect.sh, and the script aborted MID-DOCUMENT — emitting no

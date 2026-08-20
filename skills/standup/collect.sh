@@ -109,9 +109,25 @@ porcelain_rows() {
 import base64, re, sys
 
 UNRENDERABLE = re.compile(rb"[\x00-\x1f\x7f]")   # newline, CR, tab, and every other control byte
-STATUS = re.compile(rb"^[ MADRCU?!][ MADRCU?!]$")
+# Porcelain v1 status grammar, not two independently permissive characters. `?` and `!` occur ONLY
+# as the doubled pairs `??` (untracked) and `!!` (ignored); a pair like `?M`, `M?` or `?!` is
+# something git cannot emit, and accepting it let a fabricated live_state reach an ok candidate.
+# Everything else is X=index, Y=worktree, each drawn from the code set, and never both blank.
+CODES = b" MADRCU"
+def valid_status(xy):
+    if xy in (b"??", b"!!"):
+        return True
+    if xy == b"  ":
+        return False
+    return xy[0:1] in [bytes([c]) for c in CODES] and xy[1:2] in [bytes([c]) for c in CODES]
 
 data = sys.stdin.buffer.read()
+# -z TERMINATES every entry with NUL; it does not separate them. A stream whose last entry has no
+# terminator is TRUNCATED -- the read was cut short -- and a truncated bounded read is a failed one,
+# not a shorter list of findings. Without this check the final partial entry was accepted whole.
+if data and not data.endswith(b"\0"):
+    sys.stderr.write("porcelain_rows: stream does not end with NUL (truncated read)\n")
+    sys.exit(1)
 fields = data.split(b"\0")
 if fields and fields[-1] == b"":
     fields.pop()            # trailing NUL after the last entry
@@ -129,7 +145,7 @@ while i < len(fields):
         sys.stderr.write("porcelain_rows: malformed entry: %r\n" % entry)
         sys.exit(1)
     xy, path = entry[:2], entry[3:]
-    if not STATUS.match(xy):
+    if not valid_status(xy):
         sys.stderr.write("porcelain_rows: unrecognised status field %r\n" % xy)
         sys.exit(1)
     # A rename/copy carries its SOURCE as the next NUL-terminated field. Consume it: the destination
@@ -138,6 +154,11 @@ while i < len(fields):
     if b"R" in xy or b"C" in xy:
         if i >= len(fields):
             sys.stderr.write("porcelain_rows: rename entry %r with no source field\n" % entry)
+            sys.exit(1)
+        # The source field is REQUIRED and cannot be empty. Consuming it without looking let
+        # `R  dest\0\0` through as a confident candidate whose required source was absent.
+        if fields[i] == b"":
+            sys.stderr.write("porcelain_rows: rename entry %r with an empty source field\n" % entry)
             sys.exit(1)
         i += 1
     if not path:
