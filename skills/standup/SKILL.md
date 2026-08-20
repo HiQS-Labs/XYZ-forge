@@ -18,7 +18,7 @@ original focus quietly got diverted six times. This skill answers one question i
 
 **Status: partial. The deterministic half is built; the collector is partially built.** `triage.py` (ranking,
 tiering, suppression, parking, rendering) is implemented and pinned by `test/gh77-standup-triage.sh`
-(73 assertions). `collect.sh` — currently implements lenses 2, 3, and 7. The remaining offline lenses and network-dependent lenses are not yet written, so this
+(81 assertions). `collect.sh` — currently implements lenses 2, 3, and 7. The remaining offline lenses and network-dependent lenses are not yet written, so this
 skill cannot run completely end-to-end today. `collect.sh` requires **`jq`** in addition to git and
 python3; without it every lens degrades to `D5` and the collector exits 3 rather than emitting nothing. Design and remaining work:
 [PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md](../../PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md)

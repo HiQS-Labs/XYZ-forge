@@ -1,1 +1,1 @@
- M "we\"ird\tname.md"
+ M "we\"ird.md"

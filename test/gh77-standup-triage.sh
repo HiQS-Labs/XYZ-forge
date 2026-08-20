@@ -347,8 +347,8 @@ is "  and yields no candidate from the decoy counts" \
 # and every use of it addresses a file that does not exist — which degraded the lens and cleared
 # EVERY candidate already collected. One oddly-named file could blank the whole working-tree lens.
 is "a C-quoted porcelain name is decoded to the real filename" \
-   "$(F lens-2-cquoted 'd["lenses"][chr(50)]["candidates"][0]["evidence_payload"]')" \
-   "$(printf 'we"ird\tname.md')"
+   "$(F lens-2-cquoted 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" \
+   'we"ird.md'
 is "  so the lens stays ok rather than degrading on one odd filename" \
    "$(F lens-2-cquoted 'd["lenses"]["2"]["status"]')" "ok"
 is "  and it still carries its required mtime" \
@@ -400,6 +400,46 @@ is "an empty branch.txt degrades too, not just an absent one" \
 # exactly the file it named. `--` ends option parsing.
 has "a leading-dash path is protected by -- in the close command" \
     "$(F lens-2-dash-path 'd["lenses"]["2"]["candidates"][0]["close"]')" "git add -- '-weird.md'"
+
+echo
+# ── 17. Round-6: the parse boundary is strict, and its failures are visible ──────────────────────
+# The reviewer's round-6 verdict was structural rather than another list of cases: make
+# `porcelain_rows` a strict, error-propagating boundary instead of patching one more edge case. Every
+# prior round had added a case and left a neighbouring one open. These assertions pin the CONTRACT —
+# every row is understood and emitted, or the decoder fails and the lens degrades, with no third
+# outcome — rather than pinning three more inputs.
+
+# A row with a status field and no pathname was a successful read that emitted nothing and left the
+# lens `ok`: a parse failure wearing the same face as a clean tree.
+is "a porcelain row with no pathname degrades rather than reading as a clean tree" \
+   "$(F lens-2-no-path 'd["lenses"]["2"]["degraded_id"]')" "D5"
+# An undecodable quoted name crashed the decoder, whose exit status process substitution discarded.
+is "an undecodable quoted name propagates the decoder's failure as D5" \
+   "$(F lens-2-undecodable 'd["lenses"]["2"]["degraded_id"]')" "D5"
+is "  and neither one is reported as a successful collection" \
+   "$(C lens-2-undecodable >/dev/null; echo $?)" "3"
+
+# A newline in a pathname is LEGAL. Decoding it correctly (round 5) then made it breach the skill's
+# one-line output contract: triage.py escapes the em-dash delimiter and nothing else, so one
+# candidate would render as several physical lines and could fabricate apparent output lines.
+# triage.py is out of scope and should be — the collector is what knows the path is unrenderable.
+is "a newline pathname is emitted with an escaped one-line display" \
+   "$(F lens-2-newline-path 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" 'a\nb.txt'
+is "  as an inspect action, not a command built from an unrenderable name" \
+   "$(F lens-2-newline-path 'd["lenses"]["2"]["candidates"][0]["close_kind"]')" "inspect"
+is "  and it is never dropped — the operator still learns the file is there" \
+   "$(F lens-2-newline-path 'len(d["lenses"]["2"]["candidates"])')" "1"
+# THE PIN for this section: the rendered screen stays one line per item.
+C lens-2-newline-path > "$W/nl.json" 2>/dev/null
+is "  so the rendered screen keeps one physical line per item" \
+   "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "5"
+
+# The round-5 trailing-field pin passed for the WRONG REASON: its fixture supplied no date, so the
+# malformed count was caught by the later missing-date degradation rather than by the count guard.
+# The fixture now carries a valid date, so this measures the primary parse — which was still using
+# `awk $1/$2` while only the fallback had the exact-field guard.
+is "the PRIMARY rev-list parse rejects an extra field, not just the fallback" \
+   "$(F lens-3-trailing 'd["lenses"]["3"]["degraded_id"]')" "D5"
 
 echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"

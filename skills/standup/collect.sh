@@ -102,12 +102,37 @@ shq() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
 # Decode in python, which has the C-escape grammar built in, and hand back base64 so a path
 # containing any byte at all survives the trip through the shell. (Filenames cannot contain NUL, so a
 # bash variable can hold the decoded result safely.)
+#
+# ROUND 6 — this is now a STRICT, ERROR-PROPAGATING boundary, not a best-effort translator. That
+# change was the reviewer's structural recommendation over three more edge-case patches, and it is
+# the right one: every previous round added a case, and every added case left a neighbouring one
+# open. A parser that returns "nothing" for input it does not understand is indistinguishable from a
+# parser that correctly found nothing, and this whole lens exists to make that distinction.
+#
+# The contract is now: EVERY row is understood and emitted, or the decoder FAILS and the lens
+# degrades. There is no third outcome. Three inputs used to take one:
+#   * a row with a status field and no pathname (` M`) emitted nothing and left the lens `ok`;
+#   * an undecodable quoted name (`"\400.txt"`) crashed the decoder, whose exit status was swallowed
+#     by process substitution, so the lens read as a clean tree;
+#   * a legal NEWLINE-containing pathname decoded correctly and then broke the one-line output
+#     contract downstream — triage.py escapes the em-dash delimiter but not newlines, so a single
+#     candidate rendered as several physical lines and could fabricate apparent output lines.
+# The first two now exit non-zero. The third is emitted with a sanitised single-line display and an
+# `inspect:` close, because the contract says never drop an item — the operator still learns the file
+# is there, and gets asked to look at it rather than handed a command built from an unrenderable name.
 porcelain_rows() {
   python3 -c '
-import base64, sys
+import base64, re, sys
+UNRENDERABLE = re.compile(r"[\x00-\x1f\x7f]")   # newline, CR, tab, and every other control byte
+out = []
 for line in sys.stdin.read().split("\n"):
     if not line.strip():
         continue
+    # Porcelain is exactly "XY<space>PATH". Anything shorter, or without the separator, is not a row
+    # this parser understands -- and understanding it is the whole job.
+    if len(line) < 4 or line[2] != " ":
+        sys.stderr.write("porcelain_rows: malformed row: %r\n" % line)
+        sys.exit(1)
     xy, rest = line[:2], line[3:]
     # A rename/copy record names both sides; the CURRENT path is what an operator acts on.
     if xy and xy[0] in ("R", "C") and " -> " in rest:
@@ -121,11 +146,33 @@ for line in sys.stdin.read().split("\n"):
         # exact failure this decoder was written to remove, one layer deeper.
         # `latin-1` is the inverse map: it takes code points 0x00-0xFF straight back to the single
         # bytes git escaped, recovering the original byte string. Then decode it as UTF-8 once.
-        raw = rest[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
-        pathbytes = raw.encode("latin-1", "surrogateescape")
+        try:
+            raw = rest[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
+            pathbytes = raw.encode("latin-1")
+        except (UnicodeDecodeError, UnicodeEncodeError) as exc:
+            sys.stderr.write("porcelain_rows: undecodable quoted path %r (%s)\n" % (rest, exc))
+            sys.exit(1)
     else:
         pathbytes = rest.encode("utf-8", "surrogateescape")
-    sys.stdout.write("%s\t%s\n" % (xy, base64.b64encode(pathbytes).decode("ascii")))
+    if not pathbytes:
+        sys.stderr.write("porcelain_rows: row carries a status but no pathname: %r\n" % line)
+        sys.exit(1)
+    display = pathbytes.decode("utf-8", "replace")
+    flag = "unrenderable" if UNRENDERABLE.search(display) else "ok"
+    out.append("%s\t%s\t%s\n" % (xy, flag, base64.b64encode(pathbytes).decode("ascii")))
+sys.stdout.write("".join(out))
+'
+}
+
+# One-line display for a path that cannot be shown as it is. Control bytes become their escapes, so
+# the item still names the file recognisably without ever emitting a physical newline.
+sanitize_path() {
+  printf '%s' "$1" | python3 -c '
+import sys
+s = sys.stdin.buffer.read().decode("utf-8", "replace")
+sys.stdout.write("".join(
+    {"\n": "\\n", "\r": "\\r", "\t": "\\t"}.get(c, "\\x%02x" % ord(c)) if (ord(c) < 32 or ord(c) == 127) else c
+    for c in s))
 '
 }
 
@@ -139,7 +186,17 @@ rc2=$?
 set -e
 if [[ $rc2 -eq 0 ]]; then
   cands="[]"
-  while IFS=$'\t' read -r st b64; do
+  # Capture the decoder's output AND its exit status. Reading it through process substitution
+  # discarded the status, so a decoder that died on malformed input produced an empty stream that the
+  # loop read as "clean tree" — a parse failure wearing the same face as a clean result.
+  set +e
+  rows="$(printf '%s\n' "$out" | porcelain_rows 2>/dev/null)"
+  rc_rows=$?
+  set +e
+  if [[ $rc_rows -ne 0 ]]; then
+    lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"
+  else
+  while IFS=$'\t' read -r st flag b64; do
     [[ -z "${b64:-}" ]] && continue
     path="$(printf '%s' "$b64" | base64 -d 2>/dev/null)"
     [[ -n "$path" ]] || { lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break; }
@@ -147,19 +204,24 @@ if [[ $rc2 -eq 0 ]]; then
     if [[ "$st" == "??" && "$path" == PARKED/* ]]; then
       continue
     fi
-    # Default porcelain C-QUOTES any name it cannot render literally — a path containing a quote,
-    # backslash, newline or non-ASCII byte arrives wrapped in double quotes with backslash escapes.
-    # `${line:3}` is then the ESCAPED form, not the repo-relative filename, so neither the stat nor a
-    # `git add` built from it would address the real file. Decoding C-quoting correctly in bash is not
-    # worth the risk: emit the item (never drop it — that is the silent-ok failure) but downgrade its
-    # close to the contract's permitted `inspect:` form, which asks a human to look rather than
-    # handing them a command that addresses the wrong path.
-    # `path` is now the DECODED filename, so a `git add` built from it addresses the real file
-    # whatever bytes it contains — single-quoting makes any `$(...)`, backtick or quote inert.
-    # `--` ends option parsing: a legal path beginning with `-` is otherwise read by git as a flag,
-    # which makes the recommendation unusable for exactly the file it names.
-    close_str="git add -- $(shq "$path") && git commit -m $(shq "updated $path")"
-    close_k="command"
+    disp="$path"
+    if [[ "$flag" == "unrenderable" ]]; then
+      # A legal pathname may contain a newline. Decoding it correctly is right; then EMITTING it
+      # breaks the skill's one-line output contract, because triage.py escapes the em-dash delimiter
+      # and nothing else — one candidate would render as several physical lines and could fabricate
+      # apparent output lines or blow the screen cap. triage.py is out of scope, and it should be:
+      # the collector is what knows the path is unrenderable, so the collector is what must not emit
+      # it raw. Never dropped (that is the silent-ok failure) — shown escaped, with an inspect close.
+      disp="$(sanitize_path "$path")"
+      close_str="inspect: $disp (name contains control characters; resolve the path by hand)"
+      close_k="inspect"
+    else
+      # `path` is the DECODED filename, so a `git add` built from it addresses the real file whatever
+      # bytes it contains — single-quoting makes any `$(...)`, backtick or quote inert, and `--` ends
+      # option parsing so a legal path beginning with `-` is not read as a flag.
+      close_str="git add -- $(shq "$path") && git commit -m $(shq "updated $path")"
+      close_k="command"
+    fi
     # The lens table requires FILE MTIME as this candidate's staleness. It is not optional and it is
     # not allowed to quietly become null: an absent measure sorts to the very end of its tier
     # (UNKNOWN_AGE), so a silently-unmeasured item is a silently-deprioritised one.
@@ -167,7 +229,12 @@ if [[ $rc2 -eq 0 ]]; then
     # depend on whether the reviewer's checkout happened to contain the named path — the fixture
     # asserted nothing about the collector, only about the machine it ran on.
     if [[ -n "$FIXTURE_DIR" ]]; then
-      if [[ -f "$FIXTURE_DIR/stat_${path//\//_}.txt" ]]; then
+      # `stat_b64_<base64>.txt` first: a path with a newline or a slash-heavy name cannot always be
+      # spelled as a readable fixture filename, and the base64 key always can. The readable form is
+      # kept because it is the common case and a fixture should be legible.
+      if [[ -f "$FIXTURE_DIR/stat_b64_${b64}.txt" ]]; then
+        mtime=$(cat "$FIXTURE_DIR/stat_b64_${b64}.txt")
+      elif [[ -f "$FIXTURE_DIR/stat_${path//\//_}.txt" ]]; then
         mtime=$(cat "$FIXTURE_DIR/stat_${path//\//_}.txt")
       else
         lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break
@@ -182,10 +249,10 @@ if [[ $rc2 -eq 0 ]]; then
       fi
     fi
     cand=$(jq -n \
-      --arg key "path:$path" \
-      --arg what "commit or discard $path" \
+      --arg key "path:$disp" \
+      --arg what "commit or discard $disp" \
       --arg evtype "path" \
-      --arg evpay "$path" \
+      --arg evpay "$disp" \
       --arg close "$close_str" \
       --arg close_kind "$close_k" \
       --arg lstate "$st" \
@@ -201,8 +268,9 @@ if [[ $rc2 -eq 0 ]]; then
         live_state: $lstate
       }')
     cands=$(echo "$cands" | jq --argjson c "$cand" '. + [$c]')
-  done < <(printf '%s\n' "$out" | porcelain_rows)
+  done <<< "$rows"
   [[ "$lens2_status" == "ok" ]] && lens2_cands="$cands"
+  fi
 else
   lens2_status="degraded"
   lens2_deg="\"D5\""
@@ -217,9 +285,13 @@ out=$(run_mock "lens3" git rev-list --left-right --count "@{upstream}...HEAD" 2>
 rc3=$?
 set -e
 if [[ $rc3 -eq 0 ]]; then
-  behind=$(echo "$out" | awk '{print $1}')
-  ahead=$(echo "$out" | awk '{print $2}')
-  if [[ -n "${ahead:-}" && -n "${behind:-}" && "$behind" =~ ^[0-9]+$ && "$ahead" =~ ^[0-9]+$ ]]; then
+  # Identical strictness to the fallback below. Taking $1 and $2 and ignoring the rest let
+  # `1 2 trailing-garbage` through as a confident `counts:2/1@tracked`. The round-5 pin for this
+  # passed for the WRONG REASON — its fixture supplied no date, so the malformed result was caught
+  # later by the missing-date degradation rather than here. That fixture now carries a valid date, so
+  # this guard is what the assertion actually measures.
+  read -r behind ahead extra_fields <<<"$(printf '%s' "$out" | tr -s '[:space:]' ' ')"
+  if [[ -z "${extra_fields:-}" && -n "${ahead:-}" && -n "${behind:-}" && "$behind" =~ ^[0-9]+$ && "$ahead" =~ ^[0-9]+$ ]]; then
     up_state="tracked"
   else
     lens3_status="degraded"
