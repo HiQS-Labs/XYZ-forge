@@ -69,7 +69,12 @@ b{font-weight:700;color:var(--ink2)}
 #track::-webkit-scrollbar-thumb{background:var(--line2)}
 .col{display:grid;grid-template-rows:subgrid;grid-row:1/4;scroll-snap-align:start;scroll-margin-left:14px;min-width:0}
 .lane{position:relative;padding-left:22px;display:grid;gap:3px;align-content:start;min-height:0;height:100%;align-self:stretch;overflow-y:hidden;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.lane-t{align-content:end}
+/* bottom-anchor via auto margin, not align-content:end — end-alignment puts overflow
+   above the scroll origin where it is unreachable; the auto margin collapses to 0 on
+   overflow so the lane scrolls normally from the top */
+.lane-t{display:flex;flex-direction:column}
+.lane-t > *{flex-shrink:0}
+.lane-t > :first-child{margin-top:auto}
 .lane-b{padding-top:10px}
 .lane::before{content:"";position:absolute;left:8px;border-left:1px solid var(--line2)}
 .lane-t::before{top:11px;bottom:0}
