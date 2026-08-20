@@ -172,5 +172,43 @@ is "an embedded delimiter is escaped, so the line keeps exactly 2 top-level sepa
 has "  and the payload text survives the escape (lossless)" "$line" "then B"
 
 echo
+# ── 11. Lens 2, 3, 7 classification and degradation ──────────────────────────────────────────
+mk "$W/lens2.json" \
+  '{"lens":2,"key":"file:releases.db","kind":"file","what":"commit or discard releases.db","evidence_type":"status","evidence_payload":"releases.db","staleness":null,"live_state":" M releases.db","close":"git add \"releases.db\"","close_kind":"command"}'
+out="$(T "$W/lens2.json" --dry-run 2>&1)"
+has "lens 2 artifact classifies to tier 1" "$out" "1 · commit or discard releases.db"
+
+python3 - "$W/deg2.json" <<'PY'
+import json, sys
+json.dump({"repo": {"branch": "dev"}, "lenses": {"2": {"status": "degraded", "degraded_id": "D5", "candidates": []}}}, open(sys.argv[1], "w"))
+PY
+out="$(T "$W/deg2.json" --dry-run 2>&1)" || true
+has "lens 2 degrades loudly with D5" "$out" "D5"
+
+mk "$W/lens3.json" \
+  '{"lens":3,"key":"branch:dev","kind":"branch","what":"sync branch","evidence_type":"branch","evidence_payload":"1 behind","staleness":null,"live_state":"1_0_tracked","close":"git push","close_kind":"command","ahead":0,"behind":1,"upstream_state":"tracked","clean_tree":true}'
+out="$(T "$W/lens3.json" --dry-run 2>&1)"
+has "lens 3 behind classifies to tier 5" "$out" "5 · sync branch"
+
+python3 - "$W/deg3.json" <<'PY'
+import json, sys
+json.dump({"repo": {"branch": "dev"}, "lenses": {"3": {"status": "degraded", "degraded_id": "D5", "candidates": []}}}, open(sys.argv[1], "w"))
+PY
+out="$(T "$W/deg3.json" --dry-run 2>&1)" || true
+has "lens 3 degrades loudly with D5" "$out" "D5"
+
+mk "$W/lens7.json" \
+  '{"lens":7,"key":"ledger:roadmap","kind":"ledger","what":"sync ROADMAP ledger","evidence_type":"ledger","evidence_payload":"roadmap_diverged","staleness":null,"live_state":"+1 added","close":"python3 utils/py/releases_app.py roadmap sync","close_kind":"command"}'
+out="$(T "$W/lens7.json" --dry-run 2>&1)"
+has "lens 7 diverged classifies to tier 5" "$out" "5 · sync ROADMAP ledger"
+
+python3 - "$W/deg7.json" <<'PY'
+import json, sys
+json.dump({"repo": {"branch": "dev"}, "lenses": {"7": {"status": "degraded", "degraded_id": "D4", "candidates": []}}}, open(sys.argv[1], "w"))
+PY
+out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
+has "lens 7 degrades loudly with D4" "$out" "D4"
+
+echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
