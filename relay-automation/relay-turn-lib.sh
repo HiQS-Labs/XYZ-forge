@@ -731,6 +731,13 @@ rtl_worktree_begin() {
     cp "$RTL_ARTIFACT" "$wt/$RTL_ARTIFACT_REL"
     _rtl_sig "$wt/.relay-artifacts" >"${wt}.artifactsig"
   fi
+  # GH-91: the sanctioned scratch dir. The harness REQUIRES the builder to verify its work by
+  # running commands that produce output, so it owes the turn a place inside the tree to put
+  # that output — the 0.7.2 daybreak re-fire reverted four green probe JSONs as off-lane and
+  # failed a complete, passing turn at exit 6. Pre-created (the affordance physically exists),
+  # named in rtl_turn_prompt, exempted by rtl_worktree_end/rtl_check, never copied back, and
+  # discarded with the worktree.
+  mkdir -p "$wt/.relay-scratch"
   RTL_WT="$wt"; RTL_WT_USED=1   # GH-13: mark the turn worktree-isolated so rtl_enforce won't reset a concurrent peer's ROOT commit
   printf '%s\n' "$wt"
 }
@@ -768,6 +775,10 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
     xy="${entry:0:2}"; path="${entry:3}"
     case "$xy" in R*|C*) IFS= read -r -d '' _ || true ;; esac   # rename/copy: consume 2nd NUL field
     case "$path" in .tick/*|.tick) continue ;; esac
+    # GH-91: builder scratch / verification output — sanctioned, writable by design, exempt with
+    # NO signature check (unlike .relay-artifacts above: scratch is meant to be written), never
+    # copied back (the copyback loop iterates RTL_ALLOW only), discarded with the worktree.
+    case "$path" in .relay-scratch|.relay-scratch/|.relay-scratch/*) continue ;; esac
     # GH-266: git collapses an all-untracked dir to one line (same reasoning as .relay-artifacts
     # below) — match both the bare transcript-log directory name and any path under it.
     if [[ -n "$_rtl_log_top" ]]; then
@@ -903,8 +914,11 @@ rtl_turn_prompt() {  # <agent> <relay_file> <task> <allow_csv> [peer]
   # writable edit target — an edit fails the turn).
   local art_note=""
   [[ -n "${RTL_ARTIFACT_REL:-}" ]] && art_note=" The artifact under review is at ${RTL_ARTIFACT_REL} — READ it for your review, but do NOT edit it (any edit fails your turn)."
-  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.' \
-    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note"
+  # GH-91: name the scratch affordance at the point of use — prose in a phase brief ("use \$TMPDIR")
+  # is exactly what the daybreak builder ignored while doing precisely what it was asked to.
+  local scratch_note=" Verification output (probe results, generated JSON, logs) goes under .relay-scratch/ — pre-created for you, exempt from containment, never copied back; scratch files anywhere else in the tree are reverted and FAIL your turn."
+  printf 'You are agent %s, taking your turn in a file-based relay. Read %s and follow its embedded "\xe2\x96\xb6 TAKE YOUR TURN" steps for your role. For the %s token ALWAYS use the absolute, env-pinned tick — a bare or ./bin/tick from a worktree/foreign CWD silently no-ops and DEADLOCKS the relay: TICK_REPO_ROOT="%s" "%s". Token sequence: (1) claim it FIRST — claim %s --agent %s --paths %s — the --paths flag is MANDATORY; without it the claim silently fails (prints usage) and your later release errors "task ... is open". (2) ping is optional. (3) when finished, %s (or done + set STATUS: Approved when approving). Edit ONLY %s%s.%s%s NEVER run git yourself — no add/commit/push/reset; a self-commit FAILS your whole turn. Do NOT touch any other file. The harness makes the one file-scoped commit for you after you hand off the token. Do NOT run the full project test/gate suite (e.g. validate.sh) yourself — running it can create files that trip containment and DISCARD your whole turn; verify ONLY with the specific test for the file(s) you changed. The harness runs the gate after your turn.%s' \
+    "$agent" "$f_rel" "$task" "$tickroot" "$tickbin" "$task" "$agent" "$f_rel" "$handoff" "$f_rel" "${csv_rel:+ and: $csv_rel}" "$role_note" "$art_note" "$scratch_note"
 }
 
 rtl_before() {
@@ -953,6 +967,14 @@ rtl_check() {  # <path> — reads RTL_ROOT/RTL_LOG_REL/RTL_TOOL, sets RTL_VIOLAT
   # tick's own state dir is coordination state the turn legitimately writes — exempt it intrinsically,
   # independent of whether the HOST repo gitignores .tick (field report MBP16 [2]).
   case "$p" in .tick/*|.tick) return 0 ;; esac
+  # GH-91: same sanction on the non-worktree path, but here the dir lives in RTL_ROOT itself —
+  # exempt AND discard (the transcript-log drop below is the precedent, not the .tick leave-in):
+  # scratch is consumed by the turn that wrote it and must neither ride into a commit nor linger
+  # in the tree. ${RTL_ROOT:?} because rm -rf on an empty-prefix path would target /. — GH-567.
+  case "$p" in .relay-scratch|.relay-scratch/|.relay-scratch/*)
+    rm -rf "${RTL_ROOT:?}/.relay-scratch"
+    return 0
+  ;; esac
   # the shim's own transcript log, if it lands in the tree, is not an agent edit — drop it, don't flag
   if [[ -n "$RTL_LOG_REL" && "$p" == "$RTL_LOG_REL" ]]; then rm -f "$RTL_ROOT/$p"; return 0; fi
   # GH-261: the exact-match exemption above only fires for the ONE transcript file itself; when the
@@ -1173,6 +1195,10 @@ rtl_enforce() {  # <task> <agent> <log> <tool>
         ;;
     esac
   done < <(git -C "$RTL_ROOT" status --porcelain -z)
+  # GH-91 (PR #93 review): scratch must not survive the turn EVEN WHEN the host repo gitignores
+  # it — porcelain omits ignored paths, so the per-path rtl_check discard above never fires and
+  # the dir lingered in ROOT forever. Sweep unconditionally, independent of git visibility.
+  [[ -d "${RTL_ROOT:?}/.relay-scratch" ]] && rm -rf "${RTL_ROOT:?}/.relay-scratch"
   rtl_trace "rtl_enforce: RTL_VIOLATION=$RTL_VIOLATION"
   ((RTL_VIOLATION == 0)) || { printf '%s-turn: off-lane edits reverted; failing the turn\n' "$RTL_TOOL" >&2; rtl_log_always "rtl_enforce: VIOLATION off-lane edits reverted; failing the turn"; exit 6; }
   # GH-173 B3: downgrade any uncited [Pass]/verified Reviewer finding BEFORE staging, so the fix lands

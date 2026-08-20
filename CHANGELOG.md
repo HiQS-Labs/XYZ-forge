@@ -5,6 +5,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [Unreleased]
 
 ### Added
+- **GH-91: `.relay-scratch/` — a sanctioned home for builder verification output.** A build
+  turn must run commands that produce output, and had nowhere inside the tree to put it: the
+  daybreak wave-1 re-fire reverted four green probe JSONs at exit 6 and failed a complete,
+  passing turn. The new intrinsic write category is pre-created by worktree isolation, exempted
+  in containment (never copied back; discarded rather than committed on the non-worktree path),
+  and named in the turn prompt at the point of use. Containment otherwise unchanged — stray
+  writes and lookalike prefixes still fail the turn (pinned by `test/gh91-relay-scratch.sh`
+  15/0).
 - **GH-10: require_fixture adopted across every fixture-creating suite + an enforcement guard
   + the ci-local identity bracket — the prevent-half of containment.** `test/_setup.sh` adopts
   centrally for all its sourcers; 35 suites mechanically; 7 by hand where fixtures lived outside
