@@ -57,6 +57,13 @@ run_mock() {
   "$@"
 }
 
+# Single-quote a value for safe use inside a shell command line. A `close` is never executed by this
+# collector, but it is a recommendation the operator (or an agent) may run verbatim — so a path
+# containing `$(...)`, a backtick or a quote must not become executable substitution when they do.
+# Single quotes disable every expansion; the only character needing care is the single quote itself,
+# closed and reopened around an escaped literal.
+shq() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
+
 lens2_status="ok"
 lens2_deg="null"
 lens2_cands="[]"
@@ -75,17 +82,48 @@ if [[ $rc2 -eq 0 ]]; then
     if [[ "$st" == "??" && "$path" == PARKED/* ]]; then
       continue
     fi
-    if [[ -n "$FIXTURE_DIR" && -f "$FIXTURE_DIR/stat_${path//\//_}.txt" ]]; then
-      mtime=$(cat "$FIXTURE_DIR/stat_${path//\//_}.txt")
+    # Default porcelain C-QUOTES any name it cannot render literally — a path containing a quote,
+    # backslash, newline or non-ASCII byte arrives wrapped in double quotes with backslash escapes.
+    # `${line:3}` is then the ESCAPED form, not the repo-relative filename, so neither the stat nor a
+    # `git add` built from it would address the real file. Decoding C-quoting correctly in bash is not
+    # worth the risk: emit the item (never drop it — that is the silent-ok failure) but downgrade its
+    # close to the contract's permitted `inspect:` form, which asks a human to look rather than
+    # handing them a command that addresses the wrong path.
+    if [[ "$path" == '"'* ]]; then
+      close_str="inspect: $path (name required quoting; resolve the path by hand)"
+      close_k="inspect"
     else
-      mtime=$(python3 -c "import os, sys; print(int(os.path.getmtime(sys.argv[1])))" "$path" 2>/dev/null || echo null)
+      close_str="git add $(shq "$path") && git commit -m $(shq "updated $path")"
+      close_k="command"
+    fi
+    # The lens table requires FILE MTIME as this candidate's staleness. It is not optional and it is
+    # not allowed to quietly become null: an absent measure sorts to the very end of its tier
+    # (UNKNOWN_AGE), so a silently-unmeasured item is a silently-deprioritised one.
+    # Under --fixture the read must be HERMETIC. Reading the real CWD there made a fixture's result
+    # depend on whether the reviewer's checkout happened to contain the named path — the fixture
+    # asserted nothing about the collector, only about the machine it ran on.
+    if [[ -n "$FIXTURE_DIR" ]]; then
+      if [[ -f "$FIXTURE_DIR/stat_${path//\//_}.txt" ]]; then
+        mtime=$(cat "$FIXTURE_DIR/stat_${path//\//_}.txt")
+      else
+        lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break
+      fi
+    else
+      mtime=$(python3 -c "import os, sys; print(int(os.path.getmtime(sys.argv[1])))" "$path" 2>/dev/null) || mtime=""
+      # A real stat failure is the normal status/stat race (the file was removed between the two
+      # reads) or a permission error. Either way the lens cannot supply all six fields for this
+      # candidate, which is D5 by definition — not an item with unknown staleness.
+      if [[ -z "$mtime" ]]; then
+        lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break
+      fi
     fi
     cand=$(jq -n \
       --arg key "path:$path" \
       --arg what "commit or discard $path" \
       --arg evtype "path" \
       --arg evpay "$path" \
-      --arg close "git add \"$path\" && git commit -m \"updated $path\"" \
+      --arg close "$close_str" \
+      --arg close_kind "$close_k" \
       --arg lstate "$st" \
       --arg mtime "$mtime" \
       '{
@@ -93,14 +131,14 @@ if [[ $rc2 -eq 0 ]]; then
         what: $what,
         evidence_type: $evtype,
         evidence_payload: $evpay,
-        staleness: ($mtime | if . == "null" then null else tonumber end),
+        staleness: ($mtime | tonumber),
         close: $close,
-        close_kind: "command",
+        close_kind: $close_kind,
         live_state: $lstate
       }')
     cands=$(echo "$cands" | jq --argjson c "$cand" '. + [$c]')
   done <<< "$out"
-  lens2_cands="$cands"
+  [[ "$lens2_status" == "ok" ]] && lens2_cands="$cands"
 else
   lens2_status="degraded"
   lens2_deg="\"D5\""
@@ -168,6 +206,28 @@ if [[ "$lens3_status" == "ok" ]]; then
       if [[ -n "$out_status" ]]; then
         clean_tree=false
       fi
+      # Lens-table staleness for lens 3: with an upstream, the committer date of the oldest unpushed
+      # commit, or for behind-only the newest upstream commit. NO-UPSTREAM IS UNKNOWN — that is the
+      # settled decision, not a gap: divergence from the trunk does not establish push state, so
+      # there is no honest date to report.
+      stale3="null"
+      if [[ "$up_state" == "tracked" ]]; then
+        if [[ "$ahead" -gt 0 ]]; then rev="@{upstream}..HEAD"; else rev="HEAD..@{upstream}"; fi
+        set +e
+        d=$(run_mock "lens3_date" git log -1 --format=%ct "$rev" 2>/dev/null)
+        rc_d=$?
+        set -e
+        if [[ $rc_d -ne 0 || ! "$d" =~ ^[0-9]+$ ]]; then
+          # The counts said there IS a divergent commit, so its date must be readable. If it is not,
+          # the lens cannot supply all six fields — degrade rather than emit an item whose required
+          # staleness is quietly absent.
+          lens3_status="degraded"; lens3_deg="\"D5\""; lens3_cands="[]"
+        else
+          stale3="$d"
+        fi
+      fi
+    fi
+    if [[ "$lens3_status" == "ok" ]]; then
       cand=$(jq -n \
         --arg key "branch:$branch" \
         --arg what "sync branch" \
@@ -179,13 +239,14 @@ if [[ "$lens3_status" == "ok" ]]; then
         --arg behind "$behind" \
         --arg upstate "$up_state" \
         --arg close_kind "$close_kind" \
+        --arg stale "$stale3" \
         --argjson clt "$clean_tree" \
         '{
           key: $key,
           what: $what,
           evidence_type: $evtype,
           evidence_payload: $evpay,
-          staleness: null,
+          staleness: ($stale | if . == "null" then null else tonumber end),
           close: $close,
           close_kind: $close_kind,
           live_state: $lstate,
@@ -208,29 +269,48 @@ out=$(run_mock "lens7" python3 utils/py/releases_app.py roadmap sync --dry-run 2
 rc7=$?
 set -e
 if [[ $rc7 -eq 0 ]]; then
-  if ! echo "$out" | grep -q "already in sync" && [[ -n "$out" ]]; then
-    a=$(echo "$out" | grep -E -o '\+[0-9]+ added' | grep -E -o '[0-9]+' || echo "0")
-    u=$(echo "$out" | grep -E -o '~[0-9]+ updated' | grep -E -o '[0-9]+' || echo "0")
-    r=$(echo "$out" | grep -E -o -- '-[0-9]+ removed' | grep -E -o '[0-9]+' || echo "0")
-    evpay="+${a}~${u}-${r}"
-    cand=$(jq -n \
-      --arg key "ledger:roadmap" \
-      --arg what "sync ROADMAP ledger" \
-      --arg evtype "counts" \
-      --arg evpay "$evpay" \
-      --arg close "python3 utils/py/releases_app.py roadmap sync" \
-      --arg lstate "$evpay" \
-      '{
-        key: $key,
-        what: $what,
-        evidence_type: $evtype,
-        evidence_payload: $evpay,
-        staleness: null,
-        close: $close,
-        close_kind: "command",
-        live_state: $lstate
-      }')
-    lens7_cands="[$cand]"
+  # Validate the COMPLETE summary line the real producer emits (utils/py/releases_app.py:2073-2076):
+  #   roadmap sync: N in ROADMAP.md -> +A added, ~U updated, -R removed, K unchanged
+  # The previous form accepted any nonempty stdout that merely lacked "already in sync", then let each
+  # count extraction fall back to 0 — so unrecognised output produced a confident `counts:+0~0-0`
+  # candidate claiming a divergence of size zero. Unparseable output is D4 ("no ROADMAP / no ledger"),
+  # never a fabricated finding.
+  if [[ "$out" =~ roadmap\ sync:\ [0-9]+\ in\ .*\ -\>\ \+([0-9]+)\ added,\ ~([0-9]+)\ updated,\ -([0-9]+)\ removed,\ ([0-9]+)\ unchanged ]]; then
+    a="${BASH_REMATCH[1]}"; u="${BASH_REMATCH[2]}"; r="${BASH_REMATCH[3]}"
+    if [[ "$a" -gt 0 || "$u" -gt 0 || "$r" -gt 0 ]]; then
+      evpay="+${a}~${u}-${r}"
+      # Lens-table staleness: ROADMAP.md mtime. Same rule as lens 2 — required, so an unreadable
+      # mtime degrades rather than silently becoming unknown.
+      set +e
+      m7=$(run_mock "lens7_mtime" python3 -c 'import os;print(int(os.path.getmtime("ROADMAP.md")))' 2>/dev/null)
+      rc_m7=$?
+      set -e
+      if [[ $rc_m7 -ne 0 || ! "$m7" =~ ^[0-9]+$ ]]; then
+        lens7_status="degraded"; lens7_deg="\"D4\""
+      else
+        cand=$(jq -n \
+          --arg key "ledger:roadmap" \
+          --arg what "sync ROADMAP ledger" \
+          --arg evtype "counts" \
+          --arg evpay "$evpay" \
+          --arg close "python3 utils/py/releases_app.py roadmap sync && bash utils/roadmap-dashboard.sh" \
+          --arg lstate "$evpay" \
+          --arg stale "$m7" \
+          '{
+            key: $key,
+            what: $what,
+            evidence_type: $evtype,
+            evidence_payload: $evpay,
+            staleness: ($stale | tonumber),
+            close: $close,
+            close_kind: "command",
+            live_state: $lstate
+          }')
+        lens7_cands="[$cand]"
+      fi
+    fi
+  else
+    lens7_status="degraded"; lens7_deg="\"D4\""
   fi
 else
   lens7_status="degraded"
@@ -248,3 +328,12 @@ cat <<EOF
  }
 }
 EOF
+
+# `skills/standup/SKILL.md` publishes "Exit 0 clean · 2 usage or a contract violation · 3 one or more
+# lenses degraded". Only the jq preflight honoured that; an ordinary degraded lens set its status in
+# the document and then exited 0, so a caller checking the exit code was told the collection
+# succeeded after a bounded read had failed. The document is the same either way — this is about the
+# out-of-band signal a caller can act on without parsing JSON.
+if [[ "$lens2_status" != "ok" || "$lens3_status" != "ok" || "$lens7_status" != "ok" ]]; then
+  exit 3
+fi

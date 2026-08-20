@@ -232,7 +232,11 @@ set +e
 PATH="$NOJQ" bash "$ROOT_DIR/skills/standup/collect.sh" \
   --fixture "$ROOT_DIR/skills/standup/fixtures/lens-2" > "$W/nojq.json" 2>/dev/null
 nojq_rc=$?
-set -e
+# NOT `set -e`: this file runs under `set -uo pipefail` (line 17) and deliberately calls the collector
+# in states where a non-zero exit is the expected result. Restoring -e here silently truncated the
+# suite at the first such call — it printed PASS lines and exited 3 with everything after section 13
+# never running, which reads exactly like a green run to anything checking only the tail.
+set +e
 if [ "$nojq_rc" -ne 0 ]; then
   pass=$((pass+1)); echo "  PASS: collector exits non-zero when jq is unavailable (got $nojq_rc)"
 else
@@ -245,6 +249,82 @@ else
 fi
 out="$(T "$W/nojq.json" --dry-run 2>&1)" || true
 has "every lens degrades loudly with D5 when jq is unavailable" "$out" "D5"
+
+echo
+# ── 14. Round-3 review: what the collector must not fabricate, hide, or hand you to run ──────────
+# Every case below is a finding from the codex round-3 review of this branch. They share one shape:
+# the collector produced something that LOOKED like a valid result. A fabricated count, a degraded
+# lens reported through a success exit code, a required measure quietly absent, and a recommendation
+# that executes shell substitution when followed. A green suite is not evidence against any of them,
+# which is why each gets a direct assertion rather than being inferred from a rendered line.
+C() { bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/$1" 2>/dev/null; }
+# <fixture> <python expr over `d` (the parsed document)>
+F() { C "$1" | python3 -c "import json,sys
+d=json.load(sys.stdin)
+print($2)"; }
+
+# B1 — unparseable `roadmap sync` output is D4, never a confident divergence of size zero.
+# The old code accepted any nonempty stdout lacking 'already in sync', then let each count extraction
+# fall back to 0, emitting `counts:+0~0-0`: a finding asserting there is nothing to find.
+is "an unparseable roadmap-sync summary degrades to D4" \
+   "$(F lens-7-malformed 'd["lenses"]["7"]["degraded_id"]')" "D4"
+is "  and fabricates no candidate from it" \
+   "$(F lens-7-malformed 'len(d["lenses"]["7"]["candidates"])')" "0"
+is "a real diverged summary yields the canonical counts payload" \
+   "$(F lens-7 'd["lenses"]["7"]["candidates"][0]["evidence_payload"]')" "+2~1-0"
+
+# B2 — a degraded lens must be visible in the EXIT CODE, not only in the document. SKILL.md publishes
+# "3 one or more lenses degraded"; only the jq preflight honoured it, so a caller checking $? was told
+# a failed bounded read had succeeded.
+C lens-7-fail >/dev/null; is "an ordinary degraded lens exits 3, as SKILL.md publishes" "$?" "3"
+C lens-2      >/dev/null; is "  and a fully clean collection still exits 0" "$?" "0"
+
+# B3 — the lens table requires FILE MTIME for a lens-2 candidate. Absent, it is not an item with
+# unknown staleness; it is a lens that cannot supply all six fields. Under --fixture the read must
+# also be hermetic: reading the real CWD made the result depend on the reviewer's checkout.
+is "a fixture that supplies no mtime degrades D5 rather than emitting a null-staleness item" \
+   "$(F lens-2-no-stat 'd["lenses"]["2"]["degraded_id"]')" "D5"
+is "  and a supplied mtime is carried as the candidate's staleness" \
+   "$(F lens-2 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1700000000"
+
+# B4 — THE SECURITY PIN. `close` is never executed by collection, but it is a recommendation a human
+# or an agent may run verbatim. A path containing $(...) must be inert when they do.
+adv="$(F lens-2-adversarial-path 'd["lenses"]["2"]["candidates"][0]["close"]')"
+has "an adversarial path is single-quoted in the close command" "$adv" "'\$(touch /tmp/pwned).txt'"
+# A grep for an unquoted `$(` cannot decide this — inside `'updated $(touch …)'` the character before
+# `$(` is a space, which any "not a quote" pattern matches, so the naive check fails a correct string.
+# Ask the real question instead: does a shell-word splitter recover the path as ONE literal token,
+# byte-for-byte? It does exactly when the quoting is sound, and cannot when it is not.
+if python3 -c '
+import shlex, sys
+want = sys.argv[1]
+print("YES" if want in shlex.split(sys.argv[2]) else "NO")' '$(touch /tmp/pwned).txt' "$adv" | grep -q YES; then
+  pass_ "  the path survives shell word-splitting as one literal token (substitution is inert)"
+else
+  fail_ "the adversarial path does not survive as a literal token — it would expand if followed"
+fi
+
+# S1 — the no-upstream contract, which was the original lens-3 regression. Divergence from the trunk
+# does not establish push state, so: unknown staleness, and an inspect action rather than `git push`.
+is "no upstream (exit 128) falls back to the trunk and says so" \
+   "$(F lens-3-no-upstream 'd["lenses"]["3"]["candidates"][0]["evidence_payload"]')" "3/0@no-upstream"
+is "  its staleness is unknown, never a fabricated date" \
+   "$(F lens-3-no-upstream 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "None"
+is "  and its close is an inspect action, never a bare git push" \
+   "$(F lens-3-no-upstream 'd["lenses"]["3"]["candidates"][0]["close_kind"]')" "inspect"
+
+# S2 — a TRACKED lens-3 candidate does have an honest date available, so null is not acceptable there.
+is "a tracked divergence carries the committer date as staleness" \
+   "$(F lens-3 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "1710000000"
+is "  and an unreadable date degrades rather than emitting a dateless item" \
+   "$(F lens-3-no-date 'd["lenses"]["3"]["degraded_id"]')" "D5"
+is "lens 7 carries the ROADMAP.md mtime as staleness" \
+   "$(F lens-7 'd["lenses"]["7"]["candidates"][0]["staleness"]')" "1750000000"
+
+# S3 — the lens table's close for lens 7 is sync THEN the dashboard refresh. Half of it leaves the
+# committed dashboard stale, which is the exact drift GH-27's --check gate exists to catch.
+has "lens 7's close refreshes the dashboard after syncing" \
+    "$(F lens-7 'd["lenses"]["7"]["candidates"][0]["close"]')" "roadmap-dashboard.sh"
 
 echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
