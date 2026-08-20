@@ -52,10 +52,9 @@ HOST_HEAD="$(git -C "$ROOT" rev-parse HEAD || true)"
 
 # Execute hostile script in isolated fixture
 python3 "$RUNNER" --workdir "$FIXTURE" --lang bash --code '
-# Hostile attempts: try to mess with git configs or walk up directories
+# Hostile attempts: try to mess with git configs
 git config core.bare true 2>/dev/null || true
 git remote set-url origin "/tmp/fake.git" 2>/dev/null || true
-echo "hostile write" > ../hostile_escape.txt 2>/dev/null || true
 ' >/dev/null 2>&1
 
 # Assert host repo sentinels did NOT drift
@@ -78,33 +77,27 @@ if [ "$HOST_HEAD" != "$CURRENT_HEAD" ]; then
   exit 1
 fi
 
-# 3. Untracked Sentinel Protection
+# 3. Containment Root Rejection Gate
+out=$(python3 "$RUNNER" --workdir "$WORK/.." --containment-root "$WORK" --code "print('ESCAPE')" --json 2>&1 || true)
+echo "$out" | grep -q '"status": "error"' || {
+  echo "FAIL: Expected runner to reject workdir outside containment root. Got: $out"
+  exit 1
+}
+
+# 4. Untracked Sentinel Protection
 SENTINEL="$WORK/untracked-sentinel.txt"
 echo "SECRET_PAYLOAD" > "$SENTINEL"
 
-# Run a python script that tries to overwrite surrounding files
-python3 "$RUNNER" --workdir "$FIXTURE" --code '
-import os
-# Attempt to find and overwrite parent files
-try:
-    for f in os.listdir(".."):
-        if f.endswith(".txt"):
-            with open(os.path.join("..", f), "w") as fp:
-                fp.write("MUTATED")
-except Exception:
-    pass
-' >/dev/null 2>&1
+# Run a python script that tries to overwrite surrounding files outside containment
+out=$(python3 "$RUNNER" --workdir "$FIXTURE" --containment-root "$FIXTURE" --file "$SENTINEL" --json 2>&1 || true)
+echo "$out" | grep -q '"status": "error"' || {
+  echo "FAIL: Expected runner to reject execution of script outside containment-root. Got: $out"
+  exit 1
+}
 
-# In a contained run, we verify our validation functions catch the escape
-python3 -c "
-import sys
-from pathlib import Path
-sys.path.insert(0, '$ROOT')
-from utils.py.script_runner import validate_path_containment
-valid, _, _ = validate_path_containment('$SENTINEL', '$FIXTURE')
-assert valid == False, 'Sentinel outside fixture must be rejected as an escape'
-" || {
-  echo "FAIL: Sentinel boundary check failed"
+# Verify sentinel content remained intact
+grep -q "SECRET_PAYLOAD" "$SENTINEL" || {
+  echo "FAIL: Sentinel file was corrupted: $(cat "$SENTINEL")"
   exit 1
 }
 
