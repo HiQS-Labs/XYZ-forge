@@ -16,10 +16,10 @@ Two failure modes make long agent sessions expensive: a wall of text, and a rabb
 original focus quietly got diverted six times. This skill answers one question in under a screen —
 **what did I leave open, what is about to rot, and is the plan still right?**
 
-**Status: partial. The deterministic half is built; the collector is not.** `triage.py` (ranking,
+**Status: partial. The deterministic half is built; the collector is partially built.** `triage.py` (ranking,
 tiering, suppression, parking, rendering) is implemented and pinned by `test/gh77-standup-triage.sh`
-(29 assertions). `collect.sh` — the eight lens reads that feed it — is **not yet written**, so this
-skill cannot run end-to-end today. Design and remaining work:
+(39 assertions). `collect.sh` — currently implements lenses 2, 3, and 7. The remaining offline lenses and network-dependent lenses are not yet written, so this
+skill cannot run completely end-to-end today. Design and remaining work:
 [PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md](../../PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md)
 · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77).
 
@@ -52,7 +52,7 @@ instead of argued in Markdown.
 ## Usage
 
 ```bash
-skills/standup/collect.sh --session <transcript.json> > /tmp/lenses.json   # NOT YET BUILT
+skills/standup/collect.sh > /tmp/lenses.json   # Partially built (lenses 2, 3, 7 only)
 python3 skills/standup/triage.py --lenses /tmp/lenses.json --dry-run
 python3 skills/standup/triage.py --lenses /tmp/lenses.json --apply --session-state PARKED/.standup-session-$$.json
 python3 skills/standup/triage.py --lenses /tmp/lenses.json --dry-run --page 2   # beyond the cap

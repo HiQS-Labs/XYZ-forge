@@ -28,8 +28,8 @@ run_mock() {
       cat "$FIXTURE_DIR/$id.txt"
       return 0
     fi
-    # Assume ok but empty output for unspecified mocks to avoid crashing other lenses
-    return 0
+    echo "Missing fixture: $id" >&2
+    return 1
   fi
   "$@"
 }
@@ -38,7 +38,11 @@ lens2_status="ok"
 lens2_deg="null"
 lens2_cands="[]"
 
-if out=$(run_mock "lens2" git status --porcelain); then
+set +e
+out=$(run_mock "lens2" git status --porcelain)
+rc2=$?
+set -e
+if [[ $rc2 -eq 0 ]]; then
   cands="[]"
   while IFS= read -r line; do
     [[ -z "$line" ]] && continue
@@ -48,19 +52,25 @@ if out=$(run_mock "lens2" git status --porcelain); then
     if [[ "$st" == "??" && "$path" == PARKED/* ]]; then
       continue
     fi
+    if [[ -n "$FIXTURE_DIR" && -f "$FIXTURE_DIR/stat_${path//\//_}.txt" ]]; then
+      mtime=$(cat "$FIXTURE_DIR/stat_${path//\//_}.txt")
+    else
+      mtime=$(python3 -c "import os, sys; print(int(os.path.getmtime(sys.argv[1])))" "$path" 2>/dev/null || echo null)
+    fi
     cand=$(jq -n \
-      --arg key "file:$path" \
+      --arg key "path:$path" \
       --arg what "commit or discard $path" \
-      --arg evtype "status" \
+      --arg evtype "path" \
       --arg evpay "$path" \
       --arg close "git add \"$path\" && git commit -m \"updated $path\"" \
-      --arg lstate "$line" \
+      --arg lstate "$st" \
+      --arg mtime "$mtime" \
       '{
         key: $key,
         what: $what,
         evidence_type: $evtype,
         evidence_payload: $evpay,
-        staleness: null,
+        staleness: ($mtime | if . == "null" then null else tonumber end),
         close: $close,
         close_kind: "command",
         live_state: $lstate
@@ -77,58 +87,92 @@ lens3_status="ok"
 lens3_deg="null"
 lens3_cands="[]"
 
-if out=$(run_mock "lens3" git rev-list --left-right --count "@{upstream}...HEAD" 2>/dev/null); then
+set +e
+out=$(run_mock "lens3" git rev-list --left-right --count "@{upstream}...HEAD" 2>/dev/null)
+rc3=$?
+set -e
+if [[ $rc3 -eq 0 ]]; then
   behind=$(echo "$out" | awk '{print $1}')
   ahead=$(echo "$out" | awk '{print $2}')
-  up_state="tracked"
-else
-  if out=$(run_mock "lens3_fallback" git rev-list --left-right --count "main...HEAD" 2>/dev/null); then
-    behind=$(echo "$out" | awk '{print $1}')
-    ahead=$(echo "$out" | awk '{print $2}')
-    up_state="no-upstream"
+  if [[ -n "${ahead:-}" && -n "${behind:-}" && "$behind" =~ ^[0-9]+$ && "$ahead" =~ ^[0-9]+$ ]]; then
+    up_state="tracked"
   else
     lens3_status="degraded"
     lens3_deg="\"D5\""
   fi
+elif [[ $rc3 -eq 128 ]]; then
+  set +e
+  out=$(run_mock "lens3_fallback" git rev-list --left-right --count "development...HEAD" 2>/dev/null)
+  rc_fall=$?
+  set -e
+  if [[ $rc_fall -eq 0 ]]; then
+    behind=$(echo "$out" | awk '{print $1}')
+    ahead=$(echo "$out" | awk '{print $2}')
+    if [[ -n "${ahead:-}" && -n "${behind:-}" && "$behind" =~ ^[0-9]+$ && "$ahead" =~ ^[0-9]+$ ]]; then
+      up_state="no-upstream"
+    else
+      lens3_status="degraded"
+      lens3_deg="\"D5\""
+    fi
+  else
+    lens3_status="degraded"
+    lens3_deg="\"D5\""
+  fi
+else
+  lens3_status="degraded"
+  lens3_deg="\"D5\""
 fi
 
 if [[ "$lens3_status" == "ok" ]]; then
   if [[ -n "${ahead:-}" && -n "${behind:-}" ]] && [[ "$ahead" -gt 0 || "$behind" -gt 0 ]]; then
     if [[ "$up_state" == "no-upstream" ]]; then
-      close="inspect: git push?"
+      close="inspect: branch $branch (push state unknown, no upstream)"
+      close_kind="inspect"
     else
       close="git push"
+      close_kind="command"
     fi
     clean_tree=true
-    if [[ -n "$(run_mock "lens3_status" git status --porcelain 2>/dev/null)" ]]; then
-      clean_tree=false
+    set +e
+    out_status=$(run_mock "lens3_status" git status --porcelain 2>/dev/null)
+    rc_status=$?
+    set -e
+    if [[ $rc_status -ne 0 ]]; then
+      lens3_status="degraded"
+      lens3_deg="\"D5\""
+      lens3_cands="[]"
+    else
+      if [[ -n "$out_status" ]]; then
+        clean_tree=false
+      fi
+      cand=$(jq -n \
+        --arg key "branch:$branch" \
+        --arg what "sync branch" \
+        --arg evtype "counts" \
+        --arg evpay "${ahead}/${behind}@${up_state}" \
+        --arg close "$close" \
+        --arg lstate "${ahead}/${behind}/${up_state}" \
+        --arg ahead "$ahead" \
+        --arg behind "$behind" \
+        --arg upstate "$up_state" \
+        --arg close_kind "$close_kind" \
+        --argjson clt "$clean_tree" \
+        '{
+          key: $key,
+          what: $what,
+          evidence_type: $evtype,
+          evidence_payload: $evpay,
+          staleness: null,
+          close: $close,
+          close_kind: $close_kind,
+          live_state: $lstate,
+          ahead: ($ahead | tonumber),
+          behind: ($behind | tonumber),
+          upstream_state: $upstate,
+          clean_tree: $clt
+        }')
+      lens3_cands="[$cand]"
     fi
-    cand=$(jq -n \
-      --arg key "branch:$branch" \
-      --arg what "sync branch" \
-      --arg evtype "branch" \
-      --arg evpay "${behind} behind, ${ahead} ahead" \
-      --arg close "$close" \
-      --arg lstate "${behind}_${ahead}_${up_state}" \
-      --arg ahead "$ahead" \
-      --arg behind "$behind" \
-      --arg upstate "$up_state" \
-      --argjson clt "$clean_tree" \
-      '{
-        key: $key,
-        what: $what,
-        evidence_type: $evtype,
-        evidence_payload: $evpay,
-        staleness: null,
-        close: $close,
-        close_kind: "command",
-        live_state: $lstate,
-        ahead: ($ahead | tonumber),
-        behind: ($behind | tonumber),
-        upstream_state: $upstate,
-        clean_tree: $clt
-      }')
-    lens3_cands="[$cand]"
   fi
 fi
 
@@ -136,15 +180,23 @@ lens7_status="ok"
 lens7_deg="null"
 lens7_cands="[]"
 
-if out=$(run_mock "lens7" python3 utils/py/releases_app.py roadmap sync --dry-run 2>/dev/null); then
+set +e
+out=$(run_mock "lens7" python3 utils/py/releases_app.py roadmap sync --dry-run 2>/dev/null)
+rc7=$?
+set -e
+if [[ $rc7 -eq 0 ]]; then
   if ! echo "$out" | grep -q "already in sync" && [[ -n "$out" ]]; then
+    a=$(echo "$out" | grep -E -o '\+[0-9]+ added' | grep -E -o '[0-9]+' || echo "0")
+    u=$(echo "$out" | grep -E -o '~[0-9]+ updated' | grep -E -o '[0-9]+' || echo "0")
+    r=$(echo "$out" | grep -E -o -- '-[0-9]+ removed' | grep -E -o '[0-9]+' || echo "0")
+    evpay="+${a}~${u}-${r}"
     cand=$(jq -n \
       --arg key "ledger:roadmap" \
       --arg what "sync ROADMAP ledger" \
-      --arg evtype "ledger" \
-      --arg evpay "roadmap_diverged" \
+      --arg evtype "counts" \
+      --arg evpay "$evpay" \
       --arg close "python3 utils/py/releases_app.py roadmap sync" \
-      --arg lstate "$out" \
+      --arg lstate "$evpay" \
       '{
         key: $key,
         what: $what,
@@ -162,8 +214,10 @@ else
   lens7_deg="\"D4\""
 fi
 
+branch_json=$(jq -Rn --arg b "$branch" '$b')
+
 cat <<EOF
-{"repo": {"branch": "$branch"},
+{"repo": {"branch": $branch_json},
  "lenses": {
    "2": {"status": "$lens2_status", "degraded_id": $lens2_deg, "candidates": $lens2_cands},
    "3": {"status": "$lens3_status", "degraded_id": $lens3_deg, "candidates": $lens3_cands},
