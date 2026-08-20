@@ -10,23 +10,29 @@ horizontal trunk, manifest cards in lanes). See
 From the repo root:
 
 ```bash
-python3 utils/timeline/export_timeline.py            # reads ./releases.db → temp/timeline/
-open temp/timeline/index.html                        # self-contained, works from file://
+python3 utils/timeline/export_timeline.py --preview     # bake ./RELEASES-PREVIEW.html (one file, opens from disk)
+python3 utils/timeline/export_timeline.py --serve 8103  # live: http://127.0.0.1:8103/RELEASES.html
+python3 utils/timeline/export_timeline.py               # full export → temp/timeline/
+python3 utils/timeline/export_timeline.py --check-drift # exit 1 if RELEASES.md and the DB disagree
 ```
 
-- `index.html` — static page with the data baked inline (the shareable artifact).
-- `data.json` — the viewer's data contract, for the served mode:
-  `python3 -m http.server -d temp/timeline 8080` → `http://localhost:8080/ledger.html`.
-- **Live mode:** `python3 utils/timeline/export_timeline.py --serve 8103` →
-  `http://127.0.0.1:8103/ledger.html`. `/data.json` re-queries the DB (read-only) on
-  every request — no stale file, no re-export step. The browser cannot read SQLite
-  directly; this is the one-source equivalent.
-- `--db`, `--template`, `--out` override the defaults.
+- `--preview [PATH]` — the on-demand snapshot: current DB state baked into one
+  self-contained `RELEASES-PREVIEW.html` (default: repo root). Generated artifact —
+  regenerate rather than edit.
+- `--serve PORT` — live mode: `/data.json` re-queries the DB (read-only) on every
+  request; no stale file in the path. The browser cannot read SQLite directly; this
+  is the one-source equivalent.
+- Full export writes `temp/timeline/`: `data.json` (the viewer's data contract),
+  `index.html` (baked, opens from `file://`), and `RELEASES.html` (the fetch-mode
+  template copy).
+- `--db`, `--md`, `--template`, `--out` override the defaults.
 
 ## Guarantees & limits
 
 - Opens the DB with SQLite's read-only URI (`mode=ro`): no writer lock, no generation
   bump, no receipt — safe to run mid-merge.
+- Cards lead with the release's own sentence (first sentence of
+  `releases.description`); the exit criterion renders below as the machine contract.
 - Card titles/doc links are enriched from the GH-69 `roadmap_items` shadow by issue
   number; unshadowed issues degrade to bare links.
 - Drift banner: the exporter parses RELEASES.md `Release:` blocks (canonical during
@@ -34,9 +40,9 @@ open temp/timeline/index.html                        # self-contained, works fro
   releases existing on one side only, or shipped-status flips (draft-vs-active is
   not drift; the md vocabulary has no `active`). Band-aware per the RELEASES.md
   contract: a DB release inside a block's `Iterations:` band is accounted for, not
-  drift. `--md` overrides the file location; `--check-drift` runs it standalone
-  (exit 1 on drift) for hook/check wiring.
+  drift.
 - Not rendered yet (no DB concept / out of spike scope): detour lane, ROADMAP row
   parity, per-card pri/sev metrics.
 
-`ledger.html` is adapted from the `timeline-ui` repo (© Neochrome, AGPL-3.0).
+`RELEASES.html` is adapted from the `timeline-ui` repo's `ledger.html`
+(© Neochrome, AGPL-3.0).

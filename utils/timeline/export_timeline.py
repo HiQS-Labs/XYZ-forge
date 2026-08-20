@@ -4,9 +4,13 @@
 Read-only exporter: queries releases.db (releases, manifest_items, issue_refs,
 marathons, roadmap_items, settings, op_receipts) and emits
 
-  <out>/data.json    — the viewer's data contract (ledger.html fetches this when served)
-  <out>/index.html   — self-contained static page (data baked inline; opens from file://)
-  <out>/ledger.html  — copy of the template, for the served/fetch mode
+  <out>/data.json     — the viewer's data contract (RELEASES.html fetches this when served)
+  <out>/index.html    — self-contained static page (data baked inline; opens from file://)
+  <out>/RELEASES.html — copy of the template, for the served/fetch mode
+
+Or, on demand: --preview [PATH] bakes the current DB state into a single
+self-contained RELEASES-PREVIEW.html (default: repo root), and --serve PORT
+answers /data.json live from the DB on every request.
 
 Never writes to the database (opens it with SQLite's read-only URI mode).
 
@@ -232,6 +236,37 @@ def strip_entries(columns, today):
     return jf, wn
 
 
+def roadmap_detours(path, manifest_ghs):
+    """ROADMAP.md '### In progress' entries not in any release manifest -> ad-hoc
+    detour cards for the ACTIVE release column (work in flight during its window
+    that isn't part of its goalpost — the timeline's ad-hoc lane, merges down)."""
+    if not path.is_file():
+        return []
+    cards, section = [], None
+    for line in path.read_text().splitlines():
+        if line.startswith("### "):
+            section = line[4:].strip()
+            continue
+        m = re.match(r"^- \*\*GH-(\d+) · (.+?)\*\*", line)
+        if not m or section != "In progress":
+            continue
+        gh = int(m.group(1))
+        if gh in manifest_ghs:
+            continue
+        url = re.search(r"https://github\.com/[^\s)]+/issues/\d+", line)
+        cards.append(
+            {
+                "id": f"GH-{gh}",
+                "title": m.group(2),
+                "marker": "wip",
+                "section": "adhoc",
+                "sectionLabel": "ad-hoc detour",
+                "links": {"issue": url.group(0)} if url else None,
+            }
+        )
+    return cards
+
+
 def parse_releases_md(path):
     """RELEASES.md 'Release:' blocks -> {version: {status, codename}}. None if unreadable."""
     if not path.is_file():
@@ -315,6 +350,21 @@ def build_payload(cx, today, md_path=None):
     jf, wn = strip_entries(columns, today)
     sync = md_drift(parse_releases_md(md_path) if md_path else None, columns)
 
+    # Ad-hoc lane: in-flight non-manifest ROADMAP work attaches to the active release.
+    active = next((c for c in columns if c["flags"].get("now")), None)
+    if active and md_path:
+        manifest_ghs = {
+            int(m.group(2))
+            for (url,) in cx.execute(
+                "SELECT url FROM issue_refs WHERE url IS NOT NULL AND id IN ("
+                "  SELECT issue_ref_id FROM manifest_items"
+                "  UNION SELECT tracking_ref_id FROM releases"
+                "  UNION SELECT tracking_ref_id FROM marathons)"
+            )
+            if (m := GH_URL_RE.match(url))
+        }
+        active["detours"] = roadmap_detours(md_path.parent / "ROADMAP.md", manifest_ghs)
+
     (receipts,) = cx.execute("SELECT COUNT(*) FROM op_receipts").fetchone()
     (last_op,) = cx.execute(  # `at` is free-form in old rows; only trust date-shaped values
         "SELECT MAX(at) FROM op_receipts WHERE at GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]*'"
@@ -361,7 +411,7 @@ def serve(db_path, md_path, template_dir, port):
             path = self.path.split("?")[0]
             if path == "/":
                 self.send_response(302)
-                self.send_header("Location", "/ledger.html")
+                self.send_header("Location", "/RELEASES.html")
                 self.end_headers()
                 return
             if path != "/data.json":
@@ -379,7 +429,7 @@ def serve(db_path, md_path, template_dir, port):
             self.wfile.write(body)
 
     with http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler) as srv:
-        print(f"live on http://127.0.0.1:{port}/ledger.html — every refresh re-queries {db_path}")
+        print(f"live on http://127.0.0.1:{port}/RELEASES.html — every refresh re-queries {db_path}")
         srv.serve_forever()
 
 
@@ -397,12 +447,15 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--db", default="releases.db", type=Path)
     ap.add_argument("--md", type=Path, help="RELEASES.md for drift check (default: next to --db)")
-    ap.add_argument("--template", default=HERE / "ledger.html", type=Path)
+    ap.add_argument("--template", default=HERE / "RELEASES.html", type=Path)
     ap.add_argument("--out", default=Path("temp/timeline"), type=Path)
     ap.add_argument("--check-drift", action="store_true",
                     help="no files written: exit 1 listing RELEASES.md-vs-DB drift, exit 0 when aligned")
     ap.add_argument("--serve", type=int, metavar="PORT", default=None,
                     help="serve live: /data.json re-queries the DB on every request (no files written)")
+    ap.add_argument("--preview", nargs="?", const=Path("RELEASES-PREVIEW.html"), default=None,
+                    type=Path, metavar="PATH",
+                    help="bake current DB state into one self-contained HTML (default: ./RELEASES-PREVIEW.html)")
     args = ap.parse_args(argv)
 
     if not args.db.is_file():
@@ -426,11 +479,17 @@ def main(argv=None):
         print("releases.db and RELEASES.md agree (releases present on both sides, shipped-status aligned)")
         return
 
+    if args.preview:
+        args.preview.write_text(bake_static(args.template.read_text(), payload))
+        print(f"wrote {args.preview} ({payload['telemetry']['releasesTotal']} releases, "
+              f"self-contained, read-only snapshot of {args.db})")
+        return
+
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "data.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
     template = args.template.read_text()
     (args.out / "index.html").write_text(bake_static(template, payload))
-    shutil.copyfile(args.template, args.out / "ledger.html")
+    shutil.copyfile(args.template, args.out / "RELEASES.html")
     print(
         f"wrote {args.out}/data.json + index.html "
         f"({payload['telemetry']['releasesTotal']} releases, "
