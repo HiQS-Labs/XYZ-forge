@@ -24,7 +24,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **CUT from Ballast 0.7.0, 2026-08-17** — a driven marathon (agy/codex, round-cap 5) escalated without landing: scope grew from ~31 to 73 suites, zero mechanically adopted, builder self-issued a scope waiver instead of flagging the blocker. Invokes the pre-declared contingency (RELEASES.md: "#10 is the designated cut if scope slips"). Issue stays open — the underlying gap is real, just descoped from this release. | Un-scheduled. #1's clone-identity bracket remains the interim (detect-half) protection. Re-approach as its own release/lane whenever picked back up, ideally scoped per-batch rather than all-73-at-once. |
+| **BUILT 2026-08-19 (standalone clone `XYZ-forge-gh10`, branch off `development`)** — the prevent-half landed for real, resolving the marathon's enforcement-without-adoption failure: `test/_setup.sh` adopts centrally for every sourcer (shared `$WORK` pinned, `$A`/`$B`/`$REMOTE` guarded); 35 suites mechanically (source + `fixture_guard_init` after the sandbox root, `require_fixture` after every per-suite `mktemp -d`); 7 by hand where fixtures lived outside their suite's root (nested under it — find-harness `FHWORK` restructure, gh308 `exc`, gh536 suite-level `WORK`, meter mutate `TMP`, swarm-preflight late `TMP`, relay-dep-drift + relay-turn-handoff new roots, aider-turn `require_fixture_file`); `test/gh1-adoption-guard.sh` (registered in TESTS) derives the offender list FROM SOURCE on every run and fails naming stragglers, with in-suite controls proving it fires on an unguarded new suite, a stripped adoption, and a removed exemption marker; `ci-local.sh` carries the GH-1 clone-identity bracket around its suite step; ledger `test/baselines/GH-1-adoption-ledger.md` records **Unaudited suites: 0** and the one declared exemption (`mktemp-trap-guard.sh`, static audit, marker in-file). Drive-by fix: `fixture-guard.sh`'s dynamic test-operator idiom was an `-S error` shellcheck failure on `ci-local` (pre-existing, found by this lane's `--fast` verification) — rewritten as explicit branches. | Full `./validate.sh` in this disposable clone, then PR into `development`. Not done here (out of scope): per-suite re-init shape in gh527/meter-release (function-scoped `fixture_guard_init`, functionally verified green, recorded in the ledger); `.github/workflows` alignment if CI ever wires the shellcheck step differently. |
 
 ## Marathon attempt evidence (2026-08-17, not merged)
 
@@ -52,10 +52,10 @@ remains live in each of them.
 
 ## Acceptance
 
-- [ ] Adoption ledger lists 0 unaudited suites.
-- [ ] `gh1-adoption-guard.sh` fails on both a removed guard and an unguarded new suite (negative control recorded under `test/baselines/`).
-- [ ] `ci-local.sh` carries the clone-identity bracket.
-- [ ] Full `./validate.sh` green in a disposable full clone, with the clone-identity invariant line passing.
+- [x] Adoption ledger lists 0 unaudited suites.
+- [x] `gh1-adoption-guard.sh` fails on both a removed guard and an unguarded new suite (negative controls in-suite; recorded under `test/baselines/GH-1-adoption-ledger.md`).
+- [x] `ci-local.sh` carries the clone-identity bracket (capture before the suite step, assert as a summary step after; `--fast` verified green).
+- [x] Full `./validate.sh` green in a disposable full clone, with the clone-identity invariant line passing — **228/228** (2026-08-19, clone `XYZ-forge-gh10`, 4-wide balanced).
 
 ## Swarm Preflight Contract
 
