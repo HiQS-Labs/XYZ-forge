@@ -119,3 +119,13 @@ All canonical IDs are exact for use with `cmd -p "<prompt>" -m <id> --tools-all 
 | **2026-07-23** | Aider + Qwen 3.8-Max | Conditional builder route recorded | Production-scale evidence attributed the major failure to Aider’s unlisted-model `whole` format; `--edit-format diff` restored substantive edits, while timeout sensitivity remained. [#280](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/280) |
 | **2026-07-23–24** | Pi | Builder route recorded | Real isolated end-to-end turns were recorded via OpenRouter and direct Alibaba; later routing work did not qualify Pi as a reviewer. [#295](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/295), [#414](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/414) |
 | **2026-08-12–13** | SmallCode + Qwen 2.5 Coder 32B | Retained **C** | Four-run experiment made a real fix but repeatedly entered tool-call/read loops; unattended use is unsafe. [#522](https://github.com/Claude-AI-Tools-Ventura-County/xyz-3-agents-swarm/issues/522) |
+
+## 6. Resources
+
+External tools useful when operating or debugging the harnesses above. Listed for reference — not
+graded, not evaluated lanes; an entry here is a pointer, not an endorsement of unattended use.
+
+- **[Agent-Devtools](https://github.com/Jacopos311/Agent-Devtools)** — local-first debugger for AI
+  agents ("why did my agent behave this way?"): visual replay, behavior diff, and full visibility
+  into prompts, context, memory, retrieval, and tool calls. Python/FastAPI/SQLite, open source,
+  LangChain/LangGraph integration. Added 2026-08-20, untested against this repo's harnesses.
