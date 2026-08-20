@@ -216,5 +216,36 @@ out="$(T "$W/quote_branch.json" --dry-run 2>&1)" || true
 has "JSON encoding handles branch name with double quotes" "$out" "commit or discard releases.db"
 
 echo
+# ── 13. The collector's own dependency is not allowed to fail silently ───────────────────
+# Blocker 4's fix made `jq` load-bearing: every candidate and the branch name are encoded through it,
+# which is what stops a quote in a path or ref from producing invalid JSON at exit 0. But jq is a NEW
+# dependency — nothing else under skills/, utils/ or relay-automation/ uses it, and the repo's
+# quickstart asks only for Node and git. On a clone without it the collector died at the first `jq -n`
+# with exit 127 and printed NOTHING, and an empty stdin is indistinguishable to the consumer from
+# "the session is clean" — the exact silent-ok class this suite exists to close, arriving by a new
+# route. Pin the loud path: valid JSON, every lens D5, and a non-zero exit.
+NOJQ="$W/nojq-bin"; mkdir -p "$NOJQ"
+for _b in bash git python3 sed grep cat date wc printf sort head tail mkdir rm ls tr awk stat; do
+  _p="$(command -v "$_b" 2>/dev/null)" && ln -sf "$_p" "$NOJQ/$_b"
+done
+set +e
+PATH="$NOJQ" bash "$ROOT_DIR/skills/standup/collect.sh" \
+  --fixture "$ROOT_DIR/skills/standup/fixtures/lens-2" > "$W/nojq.json" 2>/dev/null
+nojq_rc=$?
+set -e
+if [ "$nojq_rc" -ne 0 ]; then
+  pass=$((pass+1)); echo "  PASS: collector exits non-zero when jq is unavailable (got $nojq_rc)"
+else
+  fail=$((fail+1)); echo "  FAIL: collector exited 0 with jq unavailable — the caller cannot tell" >&2
+fi
+if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$W/nojq.json" 2>/dev/null; then
+  pass=$((pass+1)); echo "  PASS: it still emits VALID JSON with jq unavailable — never an empty stdin"
+else
+  fail=$((fail+1)); echo "  FAIL: jq-unavailable output is not valid JSON — consumer sees silence" >&2
+fi
+out="$(T "$W/nojq.json" --dry-run 2>&1)" || true
+has "every lens degrades loudly with D5 when jq is unavailable" "$out" "D5"
+
+echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

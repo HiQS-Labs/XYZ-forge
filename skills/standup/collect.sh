@@ -9,6 +9,29 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# `jq` is this collector's only external dependency beyond git and coreutils, and it is load-bearing:
+# every candidate and the branch name are JSON-encoded through it, precisely so a path or ref
+# containing a quote cannot produce invalid JSON at exit 0. Nothing else under skills/, utils/ or
+# relay-automation/ uses jq, and the repo's own quickstart asks only for Node and git — so on a clone
+# where it is absent the collector would die at the first `jq -n` with exit 127 and print NOTHING.
+#
+# That is the failure this whole design exists to prevent, one level up: the consumer reads stdin, and
+# an empty stdin is indistinguishable from "the session is clean". Degrade LOUDLY instead — emit a
+# well-formed document that triage.py can still consume, with every lens carrying D5 ("a lens cannot
+# supply all six fields", the spec's degradation table), and exit non-zero so a caller that checks
+# knows. Hand-written rather than built with jq for the obvious reason.
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' '{"repo": {"branch": "unknown"},' \
+    ' "lenses": {' \
+    '   "2": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "3": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "7": {"status": "degraded", "degraded_id": "D5", "candidates": []}' \
+    ' }' \
+    '}'
+  echo "collect.sh: jq is required and was not found on PATH — every lens degraded (D5)." >&2
+  exit 3
+fi
+
 if [[ -n "$FIXTURE_DIR" && -f "$FIXTURE_DIR/branch.txt" ]]; then
   branch=$(cat "$FIXTURE_DIR/branch.txt")
 else
