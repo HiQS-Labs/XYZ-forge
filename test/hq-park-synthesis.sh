@@ -13,6 +13,8 @@ echo "== test: hq-park-synthesis (GH-164 Phase 1) =="
 command -v git >/dev/null 2>&1 || { echo "  SKIP: git absent"; echo "== hq-park-synthesis: 0 passed, 0 failed =="; exit 0; }
 
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$TMP"   # GH-10: pin the sandbox root
 
 PDDA_DIR="$TMP/gitpulse/pdda"; mkdir -p "$PDDA_DIR"
 printf 'beta-app\t2026-07-04T00:00:00Z\tobserve\tabc1234\tyes\n' > "$PDDA_DIR/registry-testdev.tsv"

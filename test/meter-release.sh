@@ -382,6 +382,8 @@ run_stranger_path() {  # <artifact root> — sets STR_PASS / STR_FAIL / STR_MISS
 
   local work
   work="$(mktemp -d -t xyz-stranger.XXXXXX)" || { STR_FAIL=$((STR_FAIL+1)); bad "could not create a scratch directory for the stranger's clone"; return 1; }
+  . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+  fixture_guard_init "$work"   # GH-10: pin the sandbox root
   case "$work" in
     "") STR_FAIL=$((STR_FAIL+1)); bad "mktemp returned an EMPTY path — refusing (#564)"; return 1 ;;
   esac
@@ -467,7 +469,8 @@ manifest_matches_releases_md() {
 # ── Mutation mode: the negative control for this audit ────────────────────────────────────────────
 if [ "$MODE" = mutate ]; then
   echo "== meter-release --mutate-evidence =="
-  TMP="$(mktemp -d -t meter-mutate.XXXXXX)"
+  TMP="$(mktemp -d "$work/meter-mutate.XXXXXX")"
+  require_fixture "$TMP" "mutate-evidence fixture"  # GH-10
   case "$TMP" in "") echo "mktemp returned EMPTY — refusing (#564)" >&2; exit 2 ;; esac
   trap 'rm -rf "$TMP"' EXIT
 

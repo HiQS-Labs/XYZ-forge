@@ -20,9 +20,14 @@ LIB="$HARNESS/relay-turn-lib.sh"
 pass=0; fail=0
 ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL: $1"; fail=$((fail+1)); fi; }
 
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/relay-turn-handoff.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
+
 run_case() { # <name> <relay-status> <expect: release|done>
   local name="$1" status="$2" expect="$3"
-  local dir; dir="$(mktemp -d "${TMPDIR:-/tmp}/relay-handoff.XXXXXX")"
+  local dir; dir="$(mktemp -d "$WORK/relay-handoff.XXXXXX")"
+  require_fixture "$dir" "handoff case fixture"  # GH-10
   git -C "$dir" init -q
   git -C "$dir" config user.email t@example.com; git -C "$dir" config user.name test
   # Production shape: bin/tick + src co-located with .tick under TICK_REPO_ROOT.

@@ -8,6 +8,8 @@ set -u
 HERE="$(cd "$(dirname "$0")" && pwd)"
 DR="$HERE/../relay-automation/deep-research.mjs"
 WORK="$(mktemp -d -t deep-research-test.XXXXXX)"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0

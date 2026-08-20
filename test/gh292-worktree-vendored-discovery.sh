@@ -7,6 +7,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd -P)"
 FH="$REPO/skills/relay-xyz/find-harness.sh"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh292-worktree.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 # GH-177: $WORK is `rm -rf`'d by the EXIT trap below, so it must be proven a real,
 # non-empty directory BEFORE the re-capture — an empty $WORK would make that trap
 # the historical repo-wipe.

@@ -16,6 +16,8 @@ fail(){ echo "  FAIL: $*" >&2; FAIL=$((FAIL+1)); }
 echo "== test: gh4-ungated-clone-warning =="
 
 W="$(mktemp -d -t gh4-ungated-clone-warning.XXXXXX)" || { echo "  FAIL: mktemp failed" >&2; exit 1; }
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$W"   # GH-10: pin the sandbox root
 case "$W" in "") echo "  FAIL: mktemp returned EMPTY — refusing" >&2; exit 1 ;; esac
 trap 'rm -rf "$W"' EXIT
 

@@ -20,8 +20,13 @@ ok(){ if eval "$2"; then echo "  PASS: $1"; pass=$((pass+1)); else echo "  FAIL:
 # A fixture repo whose bin/tick is co-located with .tick (production shape). bin/tick resolves its own
 # ../src (the REAL harness src) regardless of a symlink, so a fixture-tracked src/project.js is
 # independent of the tick binary's logic — exactly what the detection test needs.
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/relay-dep-drift.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
+
 mkfixture() {
-  local dir; dir="$(mktemp -d "${TMPDIR:-/tmp}/dep-drift.XXXXXX")"
+  local dir; dir="$(mktemp -d "$WORK/fixture.XXXXXX")"
+  require_fixture "$dir" "dep-drift case fixture"  # GH-10
   git -C "$dir" init -q
   git -C "$dir" config user.email t@example.com; git -C "$dir" config user.name test
   ln -s "$HARNESS/bin" "$dir/bin"
