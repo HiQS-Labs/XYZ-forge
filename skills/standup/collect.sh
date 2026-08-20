@@ -123,43 +123,74 @@ shq() { printf "'%s'" "${1//\'/\'\\\'\'}"; }
 porcelain_rows() {
   python3 -c '
 import base64, re, sys
-UNRENDERABLE = re.compile(r"[\x00-\x1f\x7f]")   # newline, CR, tab, and every other control byte
+
+# ROUND 7 -- an EXACT byte-level parser for git C-quoting, replacing unicode_escape.
+#
+# The boundary was the right shape; unicode_escape was the wrong implementation for it, and it was
+# wrong in both directions at once:
+#   * TOO NARROW -- it forced a latin-1 round trip, so with core.quotePath=false a quoted name
+#     holding literal UTF-8 bytes had its C3 A9 collapsed to E9. The stat then missed and the whole
+#     lens falsely degraded D5 on a perfectly good name. A false D5 on valid input is a regression in
+#     the opposite direction from the one this decoder was written to fix.
+#   * TOO WIDE -- it accepts escapes git never emits. A quoted \000x produced a NUL-containing byte
+#     string that passed the non-empty check; bash then truncated at the NUL, so an unrelated
+#     existing file x could yield an ok candidate fabricated out of malformed collector output.
+#
+# Parsing on BYTES, accepting exactly the grammar git emits and nothing else, closes both. NUL cannot
+# occur in a real pathname, so it is a hard error rather than something to sanitise.
+ESCAPES = {b"a": b"\a", b"b": b"\b", b"f": b"\f", b"n": b"\n", b"r": b"\r",
+           b"t": b"\t", b"v": b"\v", b"\\": b"\\", b"\"": b"\""}
+UNRENDERABLE = re.compile(rb"[\x00-\x1f\x7f]")   # newline, CR, tab, and every other control byte
+
+def unquote(raw):   # raw: the bytes BETWEEN the surrounding double quotes
+    out = bytearray(); i = 0; n = len(raw)
+    while i < n:
+        if raw[i:i+1] != b"\\":
+            out += raw[i:i+1]; i += 1; continue
+        i += 1
+        if i >= n:
+            raise ValueError("trailing backslash")
+        e = raw[i:i+1]
+        if e in ESCAPES:
+            out += ESCAPES[e]; i += 1
+        elif len(raw) >= i + 3 and all(0x30 <= b <= 0x37 for b in raw[i:i+3]):
+            out.append(int(raw[i:i+3], 8)); i += 3
+        else:
+            raise ValueError("escape git does not emit: backslash-%s" % e.decode("latin-1", "replace"))
+    return bytes(out)
+
 out = []
-for line in sys.stdin.read().split("\n"):
+for line in sys.stdin.buffer.read().split(b"\n"):
     if not line.strip():
         continue
-    # Porcelain is exactly "XY<space>PATH". Anything shorter, or without the separator, is not a row
+    # Porcelain is exactly XY<space>PATH. Anything shorter, or without the separator, is not a row
     # this parser understands -- and understanding it is the whole job.
-    if len(line) < 4 or line[2] != " ":
+    if len(line) < 4 or line[2:3] != b" ":
         sys.stderr.write("porcelain_rows: malformed row: %r\n" % line)
         sys.exit(1)
     xy, rest = line[:2], line[3:]
     # A rename/copy record names both sides; the CURRENT path is what an operator acts on.
-    if xy and xy[0] in ("R", "C") and " -> " in rest:
-        rest = rest.split(" -> ", 1)[1]
-    if rest.startswith("\"") and rest.endswith("\"") and len(rest) >= 2:
-        # Same grammar C uses, which is what git emits here: \n, \t, \\, \", and \ooo octal BYTES.
-        # The octal escapes are the subtle part. git quotes a UTF-8 filename byte by byte, so `é.txt`
-        # arrives as "\303\251.txt". `unicode_escape` turns those into the CODE POINTS U+00C3 U+00A9;
-        # encoding that back as UTF-8 gives four bytes (C3 83 C2 A9), not the two the filename
-        # actually has. The path then does not exist, the stat misses, and the lens degrades — the
-        # exact failure this decoder was written to remove, one layer deeper.
-        # `latin-1` is the inverse map: it takes code points 0x00-0xFF straight back to the single
-        # bytes git escaped, recovering the original byte string. Then decode it as UTF-8 once.
+    if xy[0:1] in (b"R", b"C") and b" -> " in rest:
+        rest = rest.split(b" -> ", 1)[1]
+    if rest.startswith(b"\"") and rest.endswith(b"\"") and len(rest) >= 2:
         try:
-            raw = rest[1:-1].encode("latin-1", "backslashreplace").decode("unicode_escape")
-            pathbytes = raw.encode("latin-1")
-        except (UnicodeDecodeError, UnicodeEncodeError) as exc:
-            sys.stderr.write("porcelain_rows: undecodable quoted path %r (%s)\n" % (rest, exc))
+            pathbytes = unquote(rest[1:-1])
+        except ValueError as exc:
+            sys.stderr.write("porcelain_rows: unparseable quoted path %r (%s)\n" % (rest, exc))
             sys.exit(1)
     else:
-        pathbytes = rest.encode("utf-8", "surrogateescape")
+        pathbytes = rest
     if not pathbytes:
         sys.stderr.write("porcelain_rows: row carries a status but no pathname: %r\n" % line)
         sys.exit(1)
-    display = pathbytes.decode("utf-8", "replace")
-    flag = "unrenderable" if UNRENDERABLE.search(display) else "ok"
-    out.append("%s\t%s\t%s\n" % (xy, flag, base64.b64encode(pathbytes).decode("ascii")))
+    if b"\x00" in pathbytes:
+        # Bash would silently truncate at a NUL, turning malformed input into a confident candidate
+        # naming a DIFFERENT, possibly existing, file.
+        sys.stderr.write("porcelain_rows: NUL in decoded path %r\n" % rest)
+        sys.exit(1)
+    flag = "unrenderable" if UNRENDERABLE.search(pathbytes) else "ok"
+    out.append("%s\t%s\t%s\n" % (xy.decode("latin-1"), flag,
+                                 base64.b64encode(pathbytes).decode("ascii")))
 sys.stdout.write("".join(out))
 '
 }
@@ -329,8 +360,16 @@ if [[ "$lens3_status" == "ok" ]]; then
       close="inspect: branch $branch (push state unknown, no upstream)"
       close_kind="inspect"
     else
-      close="git push"
+      # The close must follow the DIRECTION of the divergence. Selecting on up_state alone sent a
+      # behind-only branch to `git push`, which is a non-fast-forward that does not close the finding
+      # — a recommendation that cannot work is worse than none, because the operator runs it first.
+      # The lens table names both actions for the tracked case; when both sides diverge, the order
+      # matters (rebase onto upstream, then publish).
       close_kind="command"
+      if   [[ "$ahead" -gt 0 && "$behind" -gt 0 ]]; then close="git pull --rebase && git push"
+      elif [[ "$behind" -gt 0 ]];                   then close="git pull --rebase"
+      else                                               close="git push"
+      fi
     fi
     clean_tree=true
     set +e
@@ -357,11 +396,26 @@ if [[ "$lens3_status" == "ok" ]]; then
       # there is no honest date to report.
       stale3="null"
       if [[ "$up_state" == "tracked" ]]; then
+        # AHEAD (including ahead-and-behind): the OLDEST unpushed commit. That is the one that has
+        # been sitting unpublished longest, which is what staleness means here; the newest one would
+        # make a branch look fresh the moment you commit to it, hiding exactly the rot being ranked.
+        # `git log` is newest-first, so `-1` returned the wrong end — take the last line instead.
+        # BEHIND-only: the newest upstream commit, i.e. how long you have been out of date.
         if [[ "$ahead" -gt 0 ]]; then rev="@{upstream}..HEAD"; else rev="HEAD..@{upstream}"; fi
         set +e
-        d=$(run_mock "lens3_date" git log -1 --format=%ct "$rev" 2>/dev/null)
+        dates=$(run_mock "lens3_date" git log --format=%ct "$rev" 2>/dev/null)
         rc_d=$?
         set -e
+        # `|| true` is load-bearing, not defensive noise: a no-match `grep` exits 1, and `set -e` is
+        # active here, so an unreadable date aborted the whole script mid-document — emitting NO JSON
+        # at all. That is the silent-ok failure in its purest form (the consumer reads empty stdin as
+        # a clean session), reintroduced by the fix for the staleness ordering. Let the empty value
+        # through so the degradation check below can do its job.
+        if [[ "$ahead" -gt 0 ]]; then
+          d="$(printf '%s\n' "$dates" | grep -E '^[0-9]+$' | tail -1 || true)"   # oldest unpushed
+        else
+          d="$(printf '%s\n' "$dates" | grep -E '^[0-9]+$' | head -1 || true)"   # newest upstream
+        fi
         if [[ $rc_d -ne 0 || ! "$d" =~ ^[0-9]+$ ]]; then
           # The counts said there IS a divergent commit, so its date must be readable. If it is not,
           # the lens cannot supply all six fields — degrade rather than emit an item whose required

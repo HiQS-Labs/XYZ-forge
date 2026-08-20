@@ -314,8 +314,8 @@ is "  and its close is an inspect action, never a bare git push" \
    "$(F lens-3-no-upstream 'd["lenses"]["3"]["candidates"][0]["close_kind"]')" "inspect"
 
 # S2 — a TRACKED lens-3 candidate does have an honest date available, so null is not acceptable there.
-is "a tracked divergence carries the committer date as staleness" \
-   "$(F lens-3 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "1710000000"
+is "a tracked divergence carries a committer date as staleness" \
+   "$(F lens-3 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "1712000000"
 is "  and an unreadable date degrades rather than emitting a dateless item" \
    "$(F lens-3-no-date 'd["lenses"]["3"]["degraded_id"]')" "D5"
 is "lens 7 carries the ROADMAP.md mtime as staleness" \
@@ -440,6 +440,71 @@ is "  so the rendered screen keeps one physical line per item" \
 # `awk $1/$2` while only the fallback had the exact-field guard.
 is "the PRIMARY rev-list parse rejects an extra field, not just the fallback" \
    "$(F lens-3-trailing 'd["lenses"]["3"]["degraded_id"]')" "D5"
+
+echo
+# ── 18. Round-7: an exact C-quote grammar, and a close that matches the divergence direction ─────
+# The boundary shape was right; `unicode_escape` was the wrong implementation for it, and wrong in
+# BOTH directions — too narrow on valid input and too wide on invalid. Both directions are pinned,
+# because fixing one by breaking the other is the failure this review keeps producing.
+
+# TOO NARROW: with core.quotePath=false a quoted name carries literal UTF-8 bytes. The latin-1 round
+# trip collapsed C3 A9 to E9, the stat missed, and the whole lens falsely degraded — a false D5 on a
+# perfectly good name is a regression in the opposite direction from the one being fixed.
+is "a quoted name holding literal UTF-8 bytes survives byte-exact" \
+   "$(F lens-2-quotepath-false 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" 'é".txt'
+is "  so valid input is never falsely degraded" \
+   "$(F lens-2-quotepath-false 'd["lenses"]["2"]["status"]')" "ok"
+
+# TOO WIDE: unicode_escape accepts escapes git never emits. `\000x` produced a NUL-containing byte
+# string that passed the non-empty check; bash truncates at NUL, so an unrelated existing file `x`
+# could yield an `ok` candidate fabricated out of malformed collector output.
+is "a NUL-producing escape is rejected, not truncated into a different filename" \
+   "$(F lens-2-nul-escape 'd["lenses"]["2"]["degraded_id"]')" "D5"
+is "an escape git never emits is rejected" \
+   "$(F lens-2-bad-escape 'd["lenses"]["2"]["degraded_id"]')" "D5"
+
+# The close must follow the DIRECTION of the divergence. Selecting on upstream-state alone sent a
+# behind-only branch to `git push` — a non-fast-forward that cannot close the finding. A
+# recommendation that cannot work is worse than none, because the operator runs it first.
+is "a behind-only branch is told to pull, not push" \
+   "$(F lens-3-behind-only 'd["lenses"]["3"]["candidates"][0]["close"]')" "git pull --rebase"
+is "an ahead-and-behind branch gets both, in the order that works" \
+   "$(F lens-3-both-ways 'd["lenses"]["3"]["candidates"][0]["close"]')" "git pull --rebase && git push"
+
+# Staleness for an AHEAD branch is the OLDEST unpushed commit — the one sitting unpublished longest.
+# `git log` is newest-first, so `-1` took the wrong end, which would make a branch look fresh the
+# moment you commit to it and hide exactly the rot being ranked. Two distinct dates per fixture, so
+# the assertion can fail.
+is "an ahead branch takes the OLDEST unpushed commit date, not the newest" \
+   "$(F lens-3-both-ways 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "1751000000"
+is "  while a behind-only branch takes the newest upstream commit" \
+   "$(F lens-3-behind-only 'd["lenses"]["3"]["candidates"][0]["staleness"]')" "1755000000"
+
+echo
+# ── 19. THE GENERIC GUARD: no input makes the collector emit nothing ─────────────────────────────
+# Written after the round-7 staleness fix silently reintroduced the founding failure. A no-match
+# `grep` exits 1, `set -e` is active in collect.sh, and the script aborted MID-DOCUMENT — emitting no
+# JSON at all for one fixture. The consumer reads empty stdin as a clean session, so that is the
+# silent-ok failure in its purest form, arriving through a one-word change in an unrelated fix.
+#
+# Every assertion above names a specific input. This one names the INVARIANT, over every fixture that
+# exists now or is added later: whatever the input, the collector emits a parseable document. It cost
+# nothing to write and it would have caught that regression on the first run.
+bad_json=""
+for fx in "$ROOT_DIR"/skills/standup/fixtures/*/; do
+  # Capture, THEN validate. Piping the collector straight into python fails the whole pipeline under
+  # `pipefail` on the collector's own deliberate exit 3 (a degraded lens), which is not what this
+  # asserts — the claim is about the DOCUMENT, not the exit code, and those are checked separately.
+  doc="$(bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$fx" 2>/dev/null)"
+  if ! printf '%s' "$doc" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null; then
+    bad_json="$bad_json $(basename "$fx")"
+  fi
+done
+if [ -z "$bad_json" ]; then
+  pass_ "every fixture yields a parseable document — no input silences the collector"
+else
+  fail_ "these fixtures produced no/invalid JSON (the consumer would read them as a clean session):$bad_json"
+fi
 
 echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
