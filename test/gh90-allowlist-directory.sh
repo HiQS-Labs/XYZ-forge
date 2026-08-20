@@ -25,6 +25,8 @@ ROOT="$(cd "$HERE/.." && pwd)"
 LIB="$ROOT/relay-automation/relay-turn-lib.sh"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh90.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0
