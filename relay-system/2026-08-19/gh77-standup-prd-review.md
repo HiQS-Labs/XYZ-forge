@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: — (closed)
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -358,6 +358,90 @@ candidate the lens table can produce; can any tier-1 item still reach a suppress
 some path; and does the enumerated line table hold for the empty, maximum, and fully-degraded shapes
 simultaneously. If it is sound, approve it — a fourth round is the escalation cap, not a free one.
 
+### Reviewer — claude-fable · round 3
+
+> **Restored 2026-08-19 by the orchestrator (claude-a), out of order.** Second occurrence of the
+> same defect the r2 restoration note above describes — one round after that note was written. The
+> Log jumped Producer r3 → Producer r4. Recorded verbatim; the Producer's r4 dispositions were
+> written against this block.
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+**Round-2 findings — resolution check**
+
+| # | Round-2 finding (short) | Status | Evidence |
+|---|---|---|---|
+| B1 | Line caps don't reconcile (declared 17) | Resolved | Every line enumerated; "1+1+7+1+1+4 = 15, hard" (PRD:214); DoD "total ≤ 15" (:373) |
+| B2 | Suppression can hide a live tier-1 | **Partial** | Named routes closed (:233-234); lens 8 predicate over the record's own `close` field (:97). The fix opens a **new route via cap truncation** — see Blocker below. Third instance of the r1-#3/#6 pattern. |
+| B3 | Lens 2 self-feeds on its own park write | Resolved | `':(exclude)PARKED'` (:91); DoD bullet (:379) + fixture (:359). Verified by execution in a scratch repo. Side effect filed as a new [Should]. |
+| S1 | Lens 5's bound grows without limit | Resolved | Bounded to session mentions + Queue/In progress + non-shipped manifests; "not `Completed`, which grows without limit" (:116-118) |
+| S2 | Lens 6's key neither chosen nor unique | Resolved | Entity-canonical key table (:130-138); `rule:<name>:<gid-or-subject>` (:136) |
+| S3 | Lens 1's slug underspecified | Resolved | `conv:<sha256 …, first 12 hex>` with normalization (:138) |
+| N1 | "never against model output" self-contradicted | Resolved | Sentence gone (:336-351); residual seam gap filed as [Should] |
+
+**New findings**
+
+- **[Blocker]** Ranking is referenced everywhere and defined nowhere — `triage.py` "emits the ranked
+  list" (:345), suppression runs "after ranking" (:246), the test table asserts "tie-break ordering"
+  (:354), the DoD demands a total order (:375) — yet no within-tier ordering rule survives in rev 3.
+  Grep confirms: no tie-break, no staleness ordering, no lexicographic key rule; **`S-bin` is used
+  once (:156) and never defined**. The r3 rewrite dropped the r2-era ranking spec, which now exists
+  only in the Producer's disposition text, not the artifact — **Fix:** restore the ranking section:
+  tier ascending, staleness per the lens table (unknown sorts after known), S/M/L effort bins with S
+  defined, then item key lexicographic — that also defines `S-bin` — `PRD:156,354,375`
+- **[Blocker]** A tier-1 item ranked 8th is silenced with zero trace — the exact property B2
+  protected, re-broken through the truncation route. "Items 8+ never appear; they park (subject to
+  the tier exemption below) and are represented only by the notices line: *'N parked, M suppressed.'*"
+  (:219-221): a tier-1 item beyond the cap is exempt from parking, exempt from suppression, and
+  appears in **neither count**. PRD:234's own claim that the cap "never silences a corruption
+  finding" is contradicted two sections up, and the frozen second-run transcript (:254-255) makes it
+  invisible on every subsequent run — **Fix:** the cap is frozen, so extend the notices line and the
+  frozen transcript to carry a truncated-critical count, and fixture 8 tier-1 items → 7 rendered +
+  K=1 — `PRD:219-221,233-235,254-257`
+- **[Should]** Two test-table rows assert against output `triage.py` does not emit — it emits "the
+  ranked list, the notices line, and the park delta" (:344-346), but the caps row counts rendered
+  lines against the enumerated table (:360) whose rows 1, 2, 5, 6 are SKILL.md prose, and the
+  second-run row asserts a transcript including Part 2 (:357, :254-255) — **Fix:** have
+  `triage.py --dry-run` emit the full six-row skeleton, or split the assertions into two lanes
+- **[Should]** The degradation table charges only one of six rows to a segment — "gh unavailable" is
+  charged (:329); truncation (:330), the six-field refusal (:333), the no-ledger statement (:332) and
+  the empty-session statement (:334) name no segment. In a reachable state the verdict plus 3–4
+  mandatory statements compete for Part 2's 1–4 lines with no combine-or-drop rule, so "loud, never
+  silent" (:327) collides with the hard cap — **Fix:** charge every row and state a share-a-line or
+  priority rule — `PRD:327-334`
+- **[Should]** The lens-2 exclusion also hides **modified tracked** `PARKED/` files, forever —
+  verified by execution: with `':(exclude)PARKED'`, ` M PARKED/tracked-park.md` disappears from
+  porcelain output, and this repo has two tracked PARKED files. An operator's uncommitted edit to a
+  parked file is permanently invisible. The exclusion only needs to cover **untracked** paths — a
+  modified tracked path cannot loop, it closes with `git add` + commit — **Fix:** narrow the rule, or
+  state the blind spot as an accepted trade-off — `PRD:91,101-102`
+- **[Nit]** Row 3's "0–7" lower bound is unreachable — zero items emits `Nothing open.` (1 line), so
+  it is 1–7; the other counts hold: empty = 5–8, maximum = 15 — `PRD:210,214`
+- **[Nit]** The corruption set omits `dump-missing`, which the checker groups with the other three —
+  `resolved = {"dump-divergence", "dump-missing", "generation-mismatch", "receipt-chain"}`
+  (`utils/py/releases_app.py:2366-2367`) — a missing dump would classify tier 6 — `PRD:153`
+- **[Pass]** The tier classifier terminates on every candidate — all six fields required (:88), tier 6
+  is the deterministic fallback (:158), first-match stated (:149-150); live probe: this repo's PR #51
+  returns `mergeStateStatus: "UNKNOWN"`, which falls past tier 4 into 5/6 rather than a dead end
+- **[Pass]** Lens-2 pathspec works as claimed — ran it in a scratch repo: the untracked park file is
+  present without the exclude, absent with it; `M src/tracked.txt` unaffected
+- **[Pass]** Lens 3's no-upstream case is real and detectable — `fatal: no upstream configured`, exit
+  128; trunk resolution citation verified verbatim at `skills/releases/SKILL.md:81`
+- **[Pass]** New interface claims verified live — the four corruption rules exist; `releases.db`/
+  `releases.sql` at root; `update`'s twelve flags match `update --help` exactly; `show --full` help
+  verbatim; `list` prints `items=%d` (`:1728`); ROADMAP grammar `^- \*\*` (`_marathon_plan.py:521`)
+  and four headings (`:31`); the `gh pr list` field set returns valid data
+- **[Pass]** Pre-existing sweep: one transcript-integrity gap in the thread itself — the Reviewer r2
+  block is absent from the Log, so ground rule 1's "single source of truth" depends on the Producer's
+  summaries; an orchestrator issue, not the artifact's. No other defects found
+
+**Handing off** — to the Producer (claude-a): two surgical fixes, not a rewrite — restore the
+ranking/tie-break section (defining `S-bin`) and add the truncated-critical count to the notices line
++ frozen transcript + a DoD fixture; the two Shoulds are one-line charges/scopes. Round 4 should
+close this.
+
 ### Producer — claude-a · round 4
 
 Round 4 — the last before the escalation cap. **Edited surgically, not rewritten.** That is a direct
@@ -415,5 +499,156 @@ the person enforcing it.
 new material introduces nothing, approve and close the relay. If a real defect remains, say so and
 let it escalate — `STATUS: Escalated` at the cap is an honest outcome and I will report it as one
 rather than press for an approval.
+
+### Reviewer — claude-fable · round 4
+
+swept file: yes
+
+**Verdict:** Changes requested — round 4 ends without Approved, so **`STATUS: Escalated`** is the
+honest outcome.
+
+**Round-3 findings — resolution check**
+
+| # | Round-3 finding (short) | Status | Evidence |
+|---|---|---|---|
+| 1 | [B] Ranking referenced everywhere, defined nowhere | Resolved | *Ranking — the total order* (PRD:187-209): tier → staleness (unknown after known, :197-199) → S/M/L (S defined :201-203) → key lex (:205) |
+| 2 | [B] Tier-1 ranked 8th silenced | Resolved on the truncation route — re-broken on a new route (Blocker below) | `K critical beyond cap` mandatory when non-zero, `--all` escape hatch (:296-300); `K` in the frozen transcript (:353-356); DoD (:499,:521) |
+| 3 | [S] Test rows assert output `triage.py` doesn't emit | Resolved | `triage.py` renders "all six rows of the line table" (:470,:477-479); finite verdict vocabulary (:483-486) |
+| 4 | [S] Degradation table charges one of six rows | Resolved (new fixture defect below) | `D1`–`D6` each charged (:437-443); `D3` on the notices line (:440,:449); aggregation rule (:445-449) |
+| 5 | [S] Lens-2 exclusion hides modified tracked park files | Resolved | "except an **untracked** path under `PARKED/`" (:96); both directions tested (:502) |
+| 6 | [N] Row 3's `0–7` lower bound unreachable | Resolved | "**1–7**" (:283) |
+| 7 | [N] Corruption set omits `dump-missing` | Resolved | PRD:171; verified live at `utils/py/releases_app.py:2366-2367` |
+
+**New findings**
+
+- **[Blocker]** The tier-1 corruption path is unreachable through lens 6 — the **fourth** instance of
+  the named pattern. Lens 6's predicate is "any `warn: rule=…`" (PRD:100), but the corruption rules
+  emit via `fail()`, which prints `FAIL: rule=%s: %s` (`utils/py/releases_app.py:2166-2167`), not
+  `warn:` (`:166`). `FAIL: rule=dump-divergence` therefore matches no predicate: no candidate, no
+  `D5` (the lens ran fine), no `K`. Two further gates block it even with the predicate fixed — the
+  evidence grammar requires `rule:<name>@<gid>` (:223) but corruption rules are DB-wide and carry no
+  release gid (the key table already concedes `<gid-or-subject>`, :154 — an internal inconsistency),
+  and the staleness source "release `target_date`" (:100) is undefined for them, so the six-field
+  rule (:90) refuses emission. **The skill's founding incident class is silently invisible** —
+  **Fix:** predicate = any `FAIL: rule=…` **or** `warn: rule=…`; evidence payload
+  `<name>@<gid-or-db>` matching the key table; staleness `unknown` for DB-wide rules (ranking
+  :197-199 already handles it); add a `FAIL`-line fixture — `PRD:90,100,154,171,223` ·
+  `utils/py/releases_app.py:166,2166-2167`
+- **[Blocker]** The `.git/standup-session-*.json` store violates the frozen write authority and is
+  unimplementable as written. (a) FROZEN decision 2 is "**Write authority:** `PARKED/` only" (:80),
+  unamended, while the DoD reads "No write outside `PARKED/` and `.git/standup-session-*.json`"
+  (:519) and the no-write test carves the same exception (:497) — the DoD quietly rewrites an
+  operator decision the FROZEN section never ratified, which is DoD-1's named Blocker class.
+  (b) `XYZ_SESSION_ID` (:335) is defined nowhere; repo-wide grep returns zero matches outside the PRD
+  and relay files. (c) The literal `.git/` path breaks in linked worktrees, where `.git` is a file,
+  and this repo has active worktrees now — **Fix:** amend FROZEN decision 2 by operator ratification,
+  or relocate to `PARKED/.standup-session-<id>.json`, which stays inside the frozen authority and is
+  already invisible to lens 2 via the untracked exclusion (:96); resolve the dir via
+  `git rev-parse --git-dir` if `.git` is kept; name the session-ID source — `PRD:80,334-338,497,519`
+- **[Should]** The required all-six-simultaneous degradation fixture is unrealizable: `D1` is "`gh`
+  unavailable" and `D2` is "`gh pr list` returns 51 rows" (:438-439) — mutually exclusive, yet :451
+  and :503 demand one fixture exercising all six — **Fix:** require the maximal consistent set
+  (`D2`–`D6` together, `D1` separately), or state that `D1` substitutes for `D2`
+- **[Should]** The Reviewer r3 block is missing from the Log — the exact defect the r2 restoration
+  note describes, recurring one round after that note was written: the Log jumps Producer r3 →
+  Producer r4 — **Fix:** restore the r3 block verbatim, as was done for r2
+- **[Nit]** Lens 7's staleness source, "`ROADMAP.md` mtime vs last sync" (:101), is a comparison, not
+  an age — say which timestamp is the staleness value and where "last sync" is read from
+- **[Nit]** The frozen transcript pins `M` to "the tier-4–6 items shown in run 1" (:354-355), implying
+  parked-key suppressions (:344) do **not** count in `M` — state it, or a builder who counts both
+  rules fails the byte-comparison
+- **[Pass]** The restored ranking section is complete and consistent with everything referencing it:
+  the tuple (:194-206) covers `triage.py`'s contract (:470), the DoD's totality bullet (:518), the
+  test table's fixtures (:495), and tier 4's `S-bin` (:174) resolves to :203
+- **[Pass]** The narrowed lens-2 exclusion survives the commit-between-runs trace: a committed,
+  unmodified park file is absent from porcelain output entirely, so no candidate; a park file the
+  skill's own `REVISED` append dirties is emitted once as designed, closes with `git add` + commit,
+  and its unchanged `M` payload (:238) suppresses re-parking — no unbounded loop — `PRD:96,106-109,238`
+- **[Pass]** The `REVISED` rule keeps the byte no-op: unchanged state means no new keys and no changed
+  fingerprints, so neither branch writes (:377-378)
+- **[Pass]** The arithmetic closes at all three shapes: max 15 (:287), empty 5 (:281-286), and the
+  collapsed degradation line fits Part 2's 3 free body lines (:445-449)
+- **[Pass]** Tier-5 advisory names are the emitted rule names — `warn("temp-ref-stale" …)` prints as
+  `warn: rule=temp-ref-stale:` (`utils/py/releases_app.py:166`); the internal tally
+  `warnings.append("stale-ref")` (`:2304`) is not the emitted name, so PRD:175,:397 are correct
+- **[Pass]** ROADMAP grammar citations hold live — `SECTIONS` (`_marathon_plan.py:31`), `^- \*\*`
+  (`:521`), unknown heading → `current=None` (`:518-519`)
+- **[Pass]** Pre-existing sweep of the thread: beyond the missing r3 block (filed above), header,
+  rubric, restored r2 block and all Producer dispositions resolve; no other defects
+
+**Handing off** — round 4 ends without Approved: **`STATUS: Escalated`**. Escalation needs three
+things: (1) fix the lens-6 tier-1 path — `FAIL: rule=` predicate, gid-free evidence form, unknown
+staleness — it is the founding incident class and currently fully silent; (2) resolve the
+session-state store against FROZEN decision 2 with operator ratification, or relocate under
+`PARKED/`; (3) restore the Reviewer r3 block. Everything else in revision 4 is sound — both r3
+Blocker dispositions were faithful, and the second was re-broken only by the pattern this relay has
+now hit four times: a new route, not a bad fix.
+
+### Orchestrator — relay closed ESCALATED · 2026-08-19
+
+Round cap reached. **Both threads escalate**, independently: Codex returned *Blocked*, Fable returned
+*Changes requested* and named `STATUS: Escalated` as the honest outcome. Neither reviewer approved,
+and neither was asked to soften a finding to land one. No fifth cycle was opened — Codex's own
+handoff said to resolve this with the operator instead, and that is what happens next.
+
+**What the relay produced.** Four revisions of the artifact, eight review turns across two
+independent models, 44 graded findings. All dispositioned; none declined.
+
+| Round | Findings | Character |
+|---|---|---|
+| 1 | 11 blockers | r1 named its inputs and never said what *becomes* an item |
+| 2 | 13 | almost all against material the r1→r2 rewrite introduced |
+| 3 | 10 | including a **regression** — the r2 ranking spec deleted by rewriting around it |
+| 4 | 10 | two structural, both unresolved at the cap |
+
+**The convergence signal, stated plainly.** 11 → 13 → 10 → 10 is not a converging review. A
+converging one goes 11 → 5 → 2. The rate held flat because the document was being pushed past what
+prose can hold: a state machine — ranking tuples, fingerprints, evidence grammars, line arithmetic —
+specified in Markdown, where every gap needs a human reader to find it. `triage.py` would have
+failed on eight of these in a second.
+
+**One pattern recurred four times**, and it is the most transferable thing in this thread: a
+disposition faithful to the finding re-broke the same property through a new route.
+
+1. r1 idempotence fix → re-broken by the lens-2 park self-feed.
+2. r1 re-litigation fix → suppression could bury a tier-1 item.
+3. r2 tier-1 exemption → re-broken by cap truncation (exempt from parking *and* suppression = counted
+   in neither).
+4. r3 `K` + `--all` fix → closed truncation, while lens 6's `warn:`-only predicate meant a corruption
+   finding never became a candidate at all.
+
+Each fix was correct about what it fixed. The property still failed.
+
+**Two blockers stand at the cap, and both need the operator, not another round:**
+
+1. **The founding incident class is invisible.** Lens 6 matches `warn: rule=…`; the corruption rules
+   emit through `fail()` → `FAIL: rule=…` (`utils/py/releases_app.py:2166`, vs `:166`). A
+   `dump-divergence` produces no candidate, no degradation, no `K`. Verified independently by the
+   orchestrator before recording. Mechanically small to fix; it is here because it was found at the
+   cap, not because it is hard.
+2. **The session-state store contradicts a FROZEN operator decision.** Decision 2 is `PARKED/` only;
+   the DoD grants `.git/standup-session-*.json`. A spec cannot amend its own frozen decision — that
+   needs ratification or relocation under `PARKED/`. Secondary: `XYZ_SESSION_ID` is undefined
+   repo-wide, and a literal `.git/` path breaks in linked worktrees, which this repo uses.
+
+Plus two frozen-decision conflicts Codex raised that are likewise the operator's: lens 4's
+`gh pr list` is *discovery*, which frozen decision 1 excludes; and `--all` is uncapped output in a
+spec whose DoD says rendered output *never* exceeds 15 lines.
+
+**Orchestrator defects, recorded because the thread is the source of truth.** Two reviewer blocks
+were never appended — Fable r2, then Fable r3 one round *after* the r2 restoration note warned about
+exactly that. Both restored above, verbatim, marked out of order. A missing reviewer block silently
+demotes this file from the record to the Producer's summary of the record. Also: the r4 briefing
+miscounted Fable's r3 Shoulds as four; there were three. Fable correctly refused to reconcile a
+finding that did not exist rather than inventing one — the right call, and the miscount was the
+orchestrator's.
+
+**Recommendation to the operator: stop reviewing the PRD. Build `triage.py`.** Revision 4 is a sound
+foundation — both reviewers confirmed the sibling boundary, the interface catalogue, the ranking
+tuple, the arithmetic, and the lens-2 fix all hold. The remaining precision belongs in code where a
+test falsifies it in a second, not in a document where a fifth reviewer finds it in six minutes.
+Take the two blockers above as the first two commits.
+
+STATUS: Escalated. No further turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

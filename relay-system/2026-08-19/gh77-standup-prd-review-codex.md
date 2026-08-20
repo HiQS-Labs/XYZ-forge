@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Producer
+NEXT: — (closed)
 STATUS: Escalated
 ROUND: 4 / 4
 
@@ -704,5 +704,72 @@ this was a read-only specification review. Round 4 is the cap, so the unresolved
 
 Handing off to Producer — go to the claude-a window and say “take your turn”; resolve the escalation
 with the operator rather than opening an unapproved fifth cycle.
+
+### Orchestrator — relay closed ESCALATED · 2026-08-19
+
+Round cap reached. **Both threads escalate**, independently: Codex returned *Blocked*, Fable returned
+*Changes requested* and named `STATUS: Escalated` as the honest outcome. Neither reviewer approved,
+and neither was asked to soften a finding to land one. No fifth cycle was opened — Codex's own
+handoff said to resolve this with the operator instead, and that is what happens next.
+
+**What the relay produced.** Four revisions of the artifact, eight review turns across two
+independent models, 44 graded findings. All dispositioned; none declined.
+
+| Round | Findings | Character |
+|---|---|---|
+| 1 | 11 blockers | r1 named its inputs and never said what *becomes* an item |
+| 2 | 13 | almost all against material the r1→r2 rewrite introduced |
+| 3 | 10 | including a **regression** — the r2 ranking spec deleted by rewriting around it |
+| 4 | 10 | two structural, both unresolved at the cap |
+
+**The convergence signal, stated plainly.** 11 → 13 → 10 → 10 is not a converging review. A
+converging one goes 11 → 5 → 2. The rate held flat because the document was being pushed past what
+prose can hold: a state machine — ranking tuples, fingerprints, evidence grammars, line arithmetic —
+specified in Markdown, where every gap needs a human reader to find it. `triage.py` would have
+failed on eight of these in a second.
+
+**One pattern recurred four times**, and it is the most transferable thing in this thread: a
+disposition faithful to the finding re-broke the same property through a new route.
+
+1. r1 idempotence fix → re-broken by the lens-2 park self-feed.
+2. r1 re-litigation fix → suppression could bury a tier-1 item.
+3. r2 tier-1 exemption → re-broken by cap truncation (exempt from parking *and* suppression = counted
+   in neither).
+4. r3 `K` + `--all` fix → closed truncation, while lens 6's `warn:`-only predicate meant a corruption
+   finding never became a candidate at all.
+
+Each fix was correct about what it fixed. The property still failed.
+
+**Two blockers stand at the cap, and both need the operator, not another round:**
+
+1. **The founding incident class is invisible.** Lens 6 matches `warn: rule=…`; the corruption rules
+   emit through `fail()` → `FAIL: rule=…` (`utils/py/releases_app.py:2166`, vs `:166`). A
+   `dump-divergence` produces no candidate, no degradation, no `K`. Verified independently by the
+   orchestrator before recording. Mechanically small to fix; it is here because it was found at the
+   cap, not because it is hard.
+2. **The session-state store contradicts a FROZEN operator decision.** Decision 2 is `PARKED/` only;
+   the DoD grants `.git/standup-session-*.json`. A spec cannot amend its own frozen decision — that
+   needs ratification or relocation under `PARKED/`. Secondary: `XYZ_SESSION_ID` is undefined
+   repo-wide, and a literal `.git/` path breaks in linked worktrees, which this repo uses.
+
+Plus two frozen-decision conflicts Codex raised that are likewise the operator's: lens 4's
+`gh pr list` is *discovery*, which frozen decision 1 excludes; and `--all` is uncapped output in a
+spec whose DoD says rendered output *never* exceeds 15 lines.
+
+**Orchestrator defects, recorded because the thread is the source of truth.** Two reviewer blocks
+were never appended — Fable r2, then Fable r3 one round *after* the r2 restoration note warned about
+exactly that. Both restored above, verbatim, marked out of order. A missing reviewer block silently
+demotes this file from the record to the Producer's summary of the record. Also: the r4 briefing
+miscounted Fable's r3 Shoulds as four; there were three. Fable correctly refused to reconcile a
+finding that did not exist rather than inventing one — the right call, and the miscount was the
+orchestrator's.
+
+**Recommendation to the operator: stop reviewing the PRD. Build `triage.py`.** Revision 4 is a sound
+foundation — both reviewers confirmed the sibling boundary, the interface catalogue, the ranking
+tuple, the arithmetic, and the lens-2 fix all hold. The remaining precision belongs in code where a
+test falsifies it in a second, not in a document where a fifth reviewer finds it in six minutes.
+Take the two blockers above as the first two commits.
+
+STATUS: Escalated. No further turn.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
