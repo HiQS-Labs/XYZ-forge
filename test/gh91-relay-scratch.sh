@@ -123,6 +123,52 @@ printf '%s' "$out" | grep -q '.relay-scratch' \
 printf '%s' "$out" | grep -q 'never copied back' \
   && pass "rtl_turn_prompt: and says what happens to it (never copied back)" \
   || fail "rtl_turn_prompt: scratch disposition not stated"
+# PR #93 review, finding 1: the format string must carry a conversion for EVERY argument —
+# bash printf RECYCLES the format when args outnumber conversions, printing the whole ~13-
+# sentence template a second time with $scratch_note garbled into the agent slot. The old
+# substring-only assertions passed right through that; these pin cardinality and position.
+[ "$(printf '%s' "$out" | grep -c 'You are agent')" -eq 1 ] \
+  && pass "rtl_turn_prompt: the template renders EXACTLY once (no printf recycling)" \
+  || fail "rtl_turn_prompt: template rendered $(printf '%s' "$out" | grep -c 'You are agent') times — arg/conversion mismatch"
+[ "$(printf '%s' "$out" | grep -c '.relay-scratch')" -eq 1 ] \
+  && pass "rtl_turn_prompt: the scratch note appears exactly once" \
+  || fail "rtl_turn_prompt: scratch note appears $(printf '%s' "$out" | grep -c '.relay-scratch') times"
+printf '%s' "$out" | grep -q 'gate after your turn. Verification output' \
+  && pass "rtl_turn_prompt: the note lands in its own slot at the end of the template" \
+  || fail "rtl_turn_prompt: scratch note is not in the intended position"
+
+# ── (6) INTEGRATION (PR #93 review, finding 2): through rtl_enforce, ignore rule in place ───────
+# The reviewer's exact reproduction: a repo whose .gitignore hides .relay-scratch/ never shows
+# the dir in porcelain, so rtl_check's per-path discard cannot fire. rtl_enforce must still
+# discard it (the unconditional sweep) and the turn must not fail.
+E="$WORK/enforce-repo"
+mkdir -p "$E"
+require_fixture "$E" "enforce repo"
+git -C "$E" init -q
+git -C "$E" config user.email t@example.com
+git -C "$E" config user.name t
+printf 'lane v1\n' >"$E/lane.md"
+printf '.relay-scratch/\n' >"$E/.gitignore"
+git -C "$E" add -A
+git -C "$E" commit -qm init
+RTL_ROOT="$E"; RTL_ALLOW=("lane.md"); RTL_LOG=""; RTL_LOG_REL=""; RTL_ARTIFACT=""
+RTL_WT_USED=0; RTL_WAS_REVIEWER_TURN=0; unset RTL_WT
+rtl_before
+printf 'lane v2\n' >"$E/lane.md"                       # the legitimate edit
+mkdir -p "$E/.relay-scratch"; printf 'probe\n' >"$E/.relay-scratch/out.json"
+[ -z "$(git -C "$E" status --porcelain -- .relay-scratch)" ] \
+  && pass "INTEGRATION precondition: the ignore rule really hides scratch from porcelain" \
+  || fail "INTEGRATION precondition: scratch visible despite ignore rule"
+rtl_enforce TASK builder "" test; erc=$?
+[ "$erc" -eq 0 ] && pass "rtl_enforce: the turn PASSES with ignored scratch present (exit 0, not 6)" \
+  || fail "rtl_enforce: turn failed (exit $erc) over ignored scratch"
+[ ! -d "$E/.relay-scratch" ] && pass "rtl_enforce: ignored scratch is STILL discarded (unconditional sweep)" \
+  || fail "rtl_enforce: ignored scratch survived the turn"
+# .tick/ is the harness's own coordination state (exempt by design) — everything ELSE must be
+# clean: the lane edit committed file-scoped, scratch swept, nothing else lingering.
+[ -z "$(git -C "$E" status --porcelain | grep -v '^?? \.tick/')" ] \
+  && pass "rtl_enforce: the lane edit was committed file-scoped; nothing lingers but .tick/ (exempt coordination state)" \
+  || fail "rtl_enforce: tree dirty after enforce: $(git -C "$E" status --porcelain | head -3)"
 
 echo "  gh91-relay-scratch: $PASS pass, $FAIL fail"
 [ "$FAIL" -eq 0 ]
