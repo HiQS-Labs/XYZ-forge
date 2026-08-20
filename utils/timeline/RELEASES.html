@@ -17,12 +17,20 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:linear-gradient(to bottom,#000 0%,#000 50%,#020617 100%);color:var(--ink)}
+html{height:100%}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;text-wrap:pretty;-webkit-text-size-adjust:100%}
 a{color:var(--blue);text-decoration:none;border-bottom:1px solid transparent}
 a:hover{border-bottom-color:currentColor}
 b{font-weight:700;color:var(--ink2)}
 .r,b.r{color:var(--red);font-weight:700}
-.wrap{padding:12px 14px 8px;max-width:1480px;margin:0 auto}
+.wrap{padding:12px 14px 8px;max-width:1480px;margin:0 auto;width:100%;flex:none}
+/* header collapse (caret in the title row) */
+body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip,body.hdr-collapsed #fbar{display:none}
+#hdr-toggle{font-size:11px;line-height:1;padding:2px 8px;min-height:22px;cursor:pointer;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--ink2);
+  background:var(--card);border:1px solid var(--line2)}
+#hdr-toggle:hover{border-color:var(--blue);color:var(--blue)}
 .mono,.meta,.tiny{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .tiny{font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .meta{font-size:10px;color:var(--ink3);font-variant-numeric:tabular-nums}
@@ -57,11 +65,12 @@ b{font-weight:700;color:var(--ink2)}
 .nav button{width:34px;min-height:30px;font-size:13px;line-height:1;padding:0}
 
 /* graph */
-.rail{position:relative}
+.rail{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
 .rail::before,.rail::after{content:"";position:absolute;top:0;bottom:0;width:26px;pointer-events:none;z-index:30}
 .rail::before{left:0;background:linear-gradient(to right,var(--bg),transparent)}
 .rail::after{right:0;background:linear-gradient(to left,var(--bg),transparent)}
-#track{display:grid;grid-auto-flow:column;grid-auto-columns:352px;grid-template-rows:112px auto 292px;column-gap:26px;
+#track{display:grid;grid-auto-flow:column;grid-auto-columns:352px;flex:1;min-height:0;
+  grid-template-rows:minmax(112px,1fr) auto minmax(292px,2.2fr);column-gap:26px;
   overflow-x:auto;overflow-y:hidden;padding:2px 14px 14px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;
   -webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;scrollbar-width:thin;cursor:grab}
 #track.drag{cursor:grabbing;scroll-snap-type:none;user-select:none;-webkit-user-select:none}
@@ -160,13 +169,15 @@ b{font-weight:700;color:var(--ink2)}
 #track[data-focus="rel"] .lane a,#track[data-focus="rel"] .lane button,
 #track[data-focus="road"] .tr a{pointer-events:none}
 article[hidden]{display:none}
-.foot{border-top:1px solid var(--line);margin:4px 14px 0;padding-top:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;color:var(--ink3);display:flex;gap:14px;flex-wrap:wrap}
+.foot{flex:none;border-top:1px solid var(--line);margin:4px 14px 0;padding:6px 0 8px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10px;color:var(--ink3);display:flex;gap:14px;flex-wrap:wrap}
 
 @media print{
   :root{--bg:#fff;--card:#fff;--sunk:#fff;--line:#c8c8c8;--line2:#999;--ink:#000;--ink2:#333;--ink3:#555;--red:#8a0f0f;--amber:#6b4a00;--blue:#123a8a;--green:#14502e}
   html,body{background:#fff}
-  #fbar,.rail::before,.rail::after,.scrim{display:none}
-  #track{display:block;overflow:visible;padding:0;grid-template-rows:auto auto auto}
+  #fbar,.rail::before,.rail::after,.scrim,#hdr-toggle{display:none}
+  body{display:block;min-height:0}
+  body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip{display:grid}
+  #track{display:block;overflow:visible;padding:0;height:auto;grid-template-rows:auto auto auto}
   .lane{height:auto!important;overflow:visible!important;filter:none!important}
   .tr{filter:none!important}
   .lc[data-sec="done"] .pills{display:flex}
@@ -189,7 +200,10 @@ article[hidden]{display:none}
       <span class="ttl" id="pg-title">Planning ledgers</span>
       <span class="mono" id="pg-subtitle" style="font-size:10px;letter-spacing:0.09em;text-transform:uppercase;color:var(--ink3)"></span>
     </div>
-    <span class="mono" id="pg-generated" style="font-size:10px;color:var(--ink3)"></span>
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <span class="mono" id="pg-generated" style="font-size:10px;color:var(--ink3)"></span>
+      <button id="hdr-toggle" type="button" aria-expanded="true" title="collapse header">▴</button>
+    </div>
   </div>
 
   <div class="banner" id="banner" hidden>
@@ -237,6 +251,25 @@ article[hidden]{display:none}
 </div>
 
 <!--LEDGER_DATA-->
+<script>
+/* ---- header collapse caret — pure chrome, no data dependency ---- */
+(function(){
+  var KEY='ledger-hdr-collapsed',btn=document.getElementById('hdr-toggle');
+  function set(collapsed){
+    document.body.classList.toggle('hdr-collapsed',collapsed);
+    btn.setAttribute('aria-expanded',String(!collapsed));
+    btn.textContent=collapsed?'▾':'▴';
+    btn.title=collapsed?'expand header':'collapse header';
+    try{localStorage.setItem(KEY,collapsed?'1':'0');}catch(e){}
+    /* rail height changed — let gauge()/bands() re-measure */
+    dispatchEvent(new Event('resize'));
+  }
+  btn.addEventListener('click',function(){
+    set(!document.body.classList.contains('hdr-collapsed'));});
+  var saved=null;try{saved=localStorage.getItem(KEY);}catch(e){}
+  if(saved==='1')set(true);
+})();
+</script>
 <script>
 /* ---- data loading + rendering ---- */
 (function(){
