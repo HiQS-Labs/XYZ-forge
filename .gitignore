@@ -1,4 +1,5 @@
 .tick/
+.relay-scratch/
 node_modules/
 .vscode/
 # GH-480: tools/vscode-cockpit ships its own F5 debug launch config as part of the extension.
