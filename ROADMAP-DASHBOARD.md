@@ -6,13 +6,12 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · 🔮 0 · 🔲 0
+Summary: 10 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-10 · prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | ✅ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
+| GH-10 · prevent-half of containment: adopt require_fixture across the ~31 (found: 73) unaudited suites + adoption guard + ci-local identity bracket | ⏸️ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
 | GH-75 · single-page HTML dashboard: releases (mid/long term) + roadmap (immediate) in one read-only view | — | [#75](https://github.com/HiQS-Suite/XYZ-forge/issues/75) |
-| GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) |
 | GH-61 · RELEASES ledger durability hardening (GH-57 follow-up) | — | [#62](https://github.com/HiQS-Suite/XYZ-forge/issues/62) · [#63](https://github.com/HiQS-Suite/XYZ-forge/issues/63) · [#64](https://github.com/HiQS-Suite/XYZ-forge/issues/64) · [#65](https://github.com/HiQS-Suite/XYZ-forge/issues/65) · [#61](https://github.com/HiQS-Suite/XYZ-forge/issues/61) |
 | GH-67 · Commandcode builder default widened to --yolo — closer evaluation → possible build | — | [#67](https://github.com/HiQS-Suite/XYZ-forge/issues/67) |
 | GH-35 · 3-tier test suite selection (docs / utility subsystems / core) + CPU governance | — | [GH-35-TEST-TIER-ROUTING.md](PROJECT/2-WORKING/GH-35-TEST-TIER-ROUTING.md) · [#35](https://github.com/HiQS-Suite/XYZ-forge/issues/35) |
@@ -24,11 +23,11 @@ Summary: 11 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 1 · �
 
 ## In progress
 
-Summary: 3 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 1 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 3 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-10 · prevent-half of containment: adopt require_fixture across the ~31 (found: 73) unaudited suites + adoption guard + ci-local identity bracket | ⏸️ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
+| GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
 | GH-1 · suite-wide fixture containment + clone-identity invariant gate | — | [GH-1-SUITE-CONTAINMENT-GATE.md](PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md) · [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
 

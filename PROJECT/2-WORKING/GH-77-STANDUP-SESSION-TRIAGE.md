@@ -2,14 +2,20 @@
 gh_issue: 77
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/77
 title: "/standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right?"
-status: Proposed (1-INBOX — not yet active)
+status: Active (2-WORKING — THE MARATHON as of 2026-08-19)
 created: 2026-08-19
 updated: 2026-08-19
+owner: noelsaw1
 doc_type: prd
 effort: 3
 complexity: 4
 risk: 1
 phases: 4
+goal: >
+  Give the operator one instrument that answers "what did I leave open, what is rotting, and is the
+  plan still right?" in under a screen — so the ROADMAP and RELEASES ledgers become trustworthy by
+  being looked at, not by being asserted. Deterministic half (triage.py) built and merged; the
+  marathon completes collect.sh's eight lenses under release 0.7.2 Daybreak.
 ---
 
 # GH-77: `/standup` — Session-Scoped Triage (PRD)
@@ -51,6 +57,12 @@ phases: 4
 > which frozen decision 1 excludes — ratify a bounded open-PR inventory as the one exception, or
 > restrict lens 4 to already-named PR numbers and accept weaker rot detection; (2) confirm the
 > `PARKED/` session-store relocation is the wanted resolution rather than amending decision 2.
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **2026-08-19 — `triage.py` BUILT and merged (PR #78)**, with `test/gh77-standup-triage.sh` at 29/0. It owns everything mechanical: cross-lens dedup, tier classification, the total-order ranking tuple, suppression by fingerprint, capping, parking, and rendering the whole transcript. The PRD reached this state the hard way — two independent reviewers, four rounds each, 44 graded findings, escalated at the cap with a **flat** rate (11 → 13 → 10 → 10). The lesson is recorded in the revision header: a state machine specified in prose needs a human to find every gap, so the properties four rounds argued about are now executable assertions instead. Three escalation blockers are closed in code — corruption classifies from **both** `FAIL: rule=` and `warn: rule=` (matching only `warn:` made the founding incident class invisible), session state moved inside the frozen `PARKED/` authority and out of `.git/` (a *file* in linked worktrees, which this repo uses), and uncapped `--all` became `--page N`. | **THE MARATHON: `collect.sh`, eight lens work units in four waves** ([#79](https://github.com/HiQS-Suite/XYZ-forge/issues/79)–[#87](https://github.com/HiQS-Suite/XYZ-forge/issues/87)), shipping as release **0.7.2 “Daybreak”** (target 2026-08-26). Wave 1 is the three offline lenses (2, 3, 7) — the cheapest proof the harness holds. Two items still need an operator decision and are **not** decided in this doc: lens 4's `gh pr list` is *discovery*, which FROZEN decision 1 excludes; and whether the `PARKED/` session-store relocation is the wanted resolution or decision 2 should be amended instead. |
 
 ## Problem
 
@@ -558,3 +570,50 @@ Phase 4. Everything above is.
   across needs a store and can wait for evidence the same pivot recurs.
 - Does `triage.py` warrant being Python rather than Bash? Assumed yes (JSON, sha256, sorting); the
   repo's Python-authoritative convention agrees.
+
+## Marathon decomposition — the eight lenses
+
+Promoted to THE MARATHON on 2026-08-19, replacing GH-10 (operator call). It qualifies on the
+marathon-shaped filter in `AGENTS.md` → Repo-specific rails: **eight near-identical work units**, one
+per lens, each with the same transform and a machine-checkable pass condition.
+
+Per lens the transform is identical:
+
+1. implement the bounded read in `collect.sh`, honouring `--fixture`;
+2. emit candidates carrying all six required fields (plus `check` when parkable);
+3. add a fixture directory under `skills/standup/fixtures/lens-<n>/`;
+4. add assertions to `test/gh77-standup-triage.sh` — the candidate classifies to its expected tier,
+   and the lens degrades loudly with its `D<n>` id when its read is unavailable.
+
+**Pass condition, machine-checkable per unit:** `collect.sh --fixture skills/standup/fixtures/lens-<n>`
+emits valid JSON, `triage.py` consumes it without a `D5`, and the suite stays green.
+
+| Wave | Units | Note |
+|---|---|---|
+| 1 | lenses 2, 3, 7 | pure-local reads, no network, no `gh` — the cheapest proof the harness holds |
+| 2 | lenses 1, 6, 8 | session transcript, RELEASES CLI, PARKED — still offline |
+| 3 | lenses 4, 5 | the two `gh` lenses; both must degrade loudly when `gh` is absent |
+| 4 | wiring | `collect.sh` end-to-end, the all-degradations fixture, `ci-route.sh` registration |
+
+**Why this is the marathon and not just work.** It taxes the parts of the system a short task never
+reaches: eight parallel lanes touching one shared file (`collect.sh`) and one shared suite, which is
+exactly the path-claim and collision surface the harness exists to manage. A lane that clobbers
+another's `collect.sh` edit is the failure this run is meant to surface — and surfacing it is the
+deliverable, per rail 4.
+
+## Swarm Preflight Contract
+
+```json
+{
+  "target":      { "repo": ".", "ref": "development" },
+  "gate":        "bash validate.sh --subsystem releases",
+  "fix_probes":  [ { "type": "grep_absent", "path": "skills/standup/collect.sh", "pattern": "lens" } ],
+  "artifacts":   [
+    "skills/standup/collect.sh",
+    "skills/standup/triage.py",
+    "test/gh77-standup-triage.sh"
+  ],
+  "remediation": { "source": "issue#77", "criteria": "collect.sh emits all eight lenses against fixtures and triage.py consumes them with no D5" },
+  "lanes":       { "agy_safe": [], "orchestrator_only": [] }
+}
+```
