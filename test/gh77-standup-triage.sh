@@ -171,6 +171,26 @@ is "an embedded delimiter is escaped, so the line keeps exactly 2 top-level sepa
    "$(printf '%s' "$line" | grep -o ' — ' | wc -l | tr -d ' ')" "2"
 has "  and the payload text survives the escape (lossless)" "$line" "then B"
 
+
+# ── 11. Lenses 2, 3, 7 asserts ──────────────────────────────────────────────────────────────────
+"$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-2" > "$W/l2.json"
+out="$(T "$W/l2.json" --dry-run 2>&1)"
+has "Lens 2 classifies to expected tier (1)" "$out" "1 · commit or stash releases.db"
+has "Lens 2 degrades loudly with its D id when read is unavailable" "$out" "D5"
+
+"$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-3" > "$W/l3.json"
+out="$(T "$W/l3.json" --dry-run 2>&1)"
+has "Lens 3 classifies to expected tier (4)" "$out" "4 · push or rebase branch"
+has "Lens 3 degrades loudly with its D id when read is unavailable" "$out" "D5"
+
+"$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-7" > "$W/l7.json"
+out="$(T "$W/l7.json" --dry-run 2>&1)"
+has "Lens 7 classifies to expected tier (5)" "$out" "5 · sync roadmap items"
+
+"$ROOT_DIR/skills/standup/collect.sh" --fixture "$W/empty-fixture" > "$W/l7_empty.json"
+out="$(T "$W/l7_empty.json" --dry-run 2>&1)"
+has "Lens 7 degrades loudly with its D id when read is unavailable" "$out" "D4"
+
 echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

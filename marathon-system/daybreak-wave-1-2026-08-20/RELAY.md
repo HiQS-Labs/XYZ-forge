@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-1-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-1-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -117,3 +117,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+Implemented Lenses 2, 3, and 7 in `skills/standup/collect.sh`.
+- **Lens 2:** Reads `git status --porcelain` and ignores untracked paths under `PARKED/`. Corresponds to Tier 1 corruption when targeting `releases.db`.
+- **Lens 3:** Emits branch divergence utilizing `git rev-list --left-right --count @{upstream}...HEAD`, safely fallbacking to `main` with `upstream-state: no-upstream` and `inspect` command for unpushed changes when no upstream is tracked.
+- **Lens 7:** Syncs with `ROADMAP.md` via `python3 utils/py/releases_app.py roadmap sync --dry-run` and classifies items to Tier 5.
+- Added mock file responses to `skills/standup/fixtures/lens-2`, `skills/standup/fixtures/lens-3`, and `skills/standup/fixtures/lens-7` directories.
+- Updated `test/gh77-standup-triage.sh` to include 6 new assertions validating each of the lenses' expected tier and their ability to degrade loudly (D4, D5) when readings are unavailable.
