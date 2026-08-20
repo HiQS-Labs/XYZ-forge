@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
+#
+# install.sh — make consult discoverable to Claude Code, Codex, and Gemini / Antigravity from THIS clone.
 set -euo pipefail
-
-# Install this skill by symlinking its directory into ~/.claude/skills/<skill-name>.
 
 _src="${BASH_SOURCE[0]}"
 while [ -h "$_src" ]; do
@@ -13,29 +13,41 @@ while [ -h "$_src" ]; do
   esac
 done
 SELF_DIR="$(cd -P "$(dirname "$_src")" >/dev/null 2>&1 && pwd)"
-
 SKILL_NAME="consult"
-DEST_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
-LINK="$DEST_DIR/$SKILL_NAME"
 
-if [ -e "$DEST_DIR" ] && [ ! -d "$DEST_DIR" ]; then
-  echo "$SKILL_NAME: $DEST_DIR exists and is not a directory — not installing." >&2
-  exit 1
-fi
+install_one() {
+  _label="$1"
+  _dest="$2"
+  _link="$_dest/$SKILL_NAME"
 
-mkdir -p "$DEST_DIR"
-
-if [ -L "$LINK" ]; then
-  if [ -e "$LINK" ] && [ "$(cd -P "$LINK" >/dev/null 2>&1 && pwd)" = "$SELF_DIR" ]; then
-    echo "$SKILL_NAME: already installed → $LINK -> $SELF_DIR"
-    exit 0
+  if [ -e "$_dest" ] && [ ! -d "$_dest" ]; then
+    echo "$SKILL_NAME: $_dest exists and is not a directory — skipping $_label." >&2
+    return 1
   fi
-  rm -f "$LINK"
-elif [ -e "$LINK" ]; then
-  echo "$SKILL_NAME: $LINK exists as a real file or directory — not overwriting." >&2
-  echo "  Move it aside and re-run, or set CLAUDE_SKILLS_DIR." >&2
-  exit 1
-fi
+  mkdir -p "$_dest"
 
-ln -s "$SELF_DIR" "$LINK"
-echo "$SKILL_NAME: installed → $LINK -> $SELF_DIR"
+  if [ -L "$_link" ]; then
+    if [ -e "$_link" ] && [ "$(cd -P "$_link" >/dev/null 2>&1 && pwd)" = "$SELF_DIR" ]; then
+      echo "$SKILL_NAME: already installed for $_label → $_link -> $SELF_DIR"
+      return 0
+    fi
+    rm -f "$_link"
+  elif [ -e "$_link" ]; then
+    _backup="${_link}.bak-$(date +%Y%m%d%H%M%S)"
+    echo "$SKILL_NAME: $_link exists as a real directory/file — backing up to $_backup before linking."
+    mv "$_link" "$_backup"
+  fi
+
+  ln -s "$SELF_DIR" "$_link"
+  echo "$SKILL_NAME: installed for $_label → $_link -> $SELF_DIR"
+}
+
+# One unusable destination must SKIP that runtime, not abort the rest — `set -e` would turn
+# install_one's `return 1` into an exit, silently stranding every runtime after the first bad one.
+rc=0
+install_one "Claude Code" "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" || rc=1
+install_one "Codex" "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}" || rc=1
+install_one "Gemini (Config)" "${GEMINI_CONFIG_SKILLS_DIR:-$HOME/.gemini/config/skills}" || rc=1
+install_one "Gemini (Antigravity)" "${ANTIGRAVITY_SKILLS_DIR:-$HOME/.gemini/antigravity/skills}" || rc=1
+install_one "Gemini (Antigravity CLI)" "${ANTIGRAVITY_CLI_SKILLS_DIR:-$HOME/.gemini/antigravity-cli/skills}" || rc=1
+exit "$rc"

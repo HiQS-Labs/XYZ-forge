@@ -22,6 +22,10 @@ Resolve the installed skill from stable install roots; do not assume the session
 L=""
 for candidate in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/relay-xyz/find-harness.sh}" \
                  "$HOME/.claude/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.codex/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
+                 "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/relay-xyz/find-harness.sh" \
                  "$(git rev-parse --show-toplevel 2>/dev/null)/skills/relay-xyz/find-harness.sh"; do
   [ -n "$candidate" ] && [ -f "$candidate" ] && { L="$candidate"; break; }
@@ -93,6 +97,10 @@ harness, and prints a one-glance readiness line:
 # the CWD, never an absolute machine path:
 for L in "${XYZ_HARNESS:+$XYZ_HARNESS/skills/relay-xyz/find-harness.sh}" \
          "$HOME/.claude/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.codex/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.gemini/config/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.gemini/antigravity/skills/relay-xyz/find-harness.sh" \
+         "$HOME/.gemini/antigravity-cli/skills/relay-xyz/find-harness.sh" \
          "./.claude/skills/relay-xyz/find-harness.sh" \
          "$(git rev-parse --show-toplevel 2>/dev/null)/skills/relay-xyz/find-harness.sh"; do
   [ -n "$L" ] && [ -x "$L" ] && break
