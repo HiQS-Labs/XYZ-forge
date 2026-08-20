@@ -112,11 +112,16 @@ def summarize_records(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         if cause:
             causes[cause] += 1
 
-    # Drift signal: same likely_cause 3+ times in a row at the tail
+    # Drift signal: same failure likely_cause 3+ times in a row at the tail
     drift = False
     if len(records) >= 3:
-        last_causes = [(r.get("classification") or {}).get("likely_cause") for r in records[-3:]]
-        drift = len(set(last_causes)) == 1 and last_causes[0] is not None
+        last_3 = records[-3:]
+        failed_tail = [
+            (r.get("classification") or {}).get("likely_cause")
+            for r in last_3
+            if (r.get("status") or (r.get("classification") or {}).get("status")) != "pass"
+        ]
+        drift = len(failed_tail) == 3 and len(set(failed_tail)) == 1 and failed_tail[0] is not None
 
     # Suspicious passes
     suspicious = [
@@ -141,6 +146,7 @@ def summarize_records(records: List[Dict[str, Any]]) -> Dict[str, Any]:
         "statuses": dict(statuses),
         "categories": dict(categories.most_common(5)),
         "top_causes": causes.most_common(5),
+        "tool_modes": dict(Counter(r.get("tool_mode") for r in records if r.get("tool_mode"))),
         "drift_detected": drift,
         "suspicious_pass_count": len(suspicious),
     }
@@ -167,6 +173,10 @@ def format_table_summary(summary: Dict[str, Any], title: str = "Telemetry Summar
     cats = summary.get("categories") or {}
     if cats:
         lines.append(f"Categories:    " + ", ".join(f"{k}: {v}" for k, v in cats.items()))
+
+    tool_modes = summary.get("tool_modes") or {}
+    if tool_modes:
+        lines.append(f"Tool Modes:    " + ", ".join(f"{k}: {v}" for k, v in tool_modes.items()))
 
     if summary.get("drift_detected"):
         lines.append(f"⚠ DRIFT:       Repeated failure cluster detected at tail.")

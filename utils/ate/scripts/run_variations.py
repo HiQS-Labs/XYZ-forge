@@ -515,6 +515,9 @@ def main():
             "completion_tokens": completion_tokens,
             "total_tokens": total_tokens,
             "tokens_source": tokens_source,
+            "tool_count": variation.get("tool_count"),
+            "tool_schema_bytes": variation.get("tool_schema_bytes"),
+            "tool_mode": variation.get("tool_mode"),
             **result,
             "classification": classification,
         }

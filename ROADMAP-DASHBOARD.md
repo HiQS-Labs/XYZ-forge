@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
+Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -22,14 +22,14 @@ Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 | GH-28 · RELEASES.md ledger discipline: deterministic bloat checks + per-release tracking issue | — | [GH-28-RELEASES-LEDGER-DISCIPLINE.md](PROJECT/1-INBOX/GH-28-RELEASES-LEDGER-DISCIPLINE.md) · [#28](https://github.com/HiQS-Suite/XYZ-forge/issues/28) |
 | GH-17 · SOP for evaluating new agent harnesses and frontier models | — | [GH-17-SOP-HARNESS-MODEL-EVAL.md](PROJECT/1-INBOX/GH-17-SOP-HARNESS-MODEL-EVAL.md) · [#17](https://github.com/HiQS-Suite/XYZ-forge/issues/17) |
 | GH-18 · Harness evaluation: Command Code (cmd) and model matrix | — | [GH-18-COMMANDCODE-EVAL.md](PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md) · [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) |
-| GH-101 · Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core Relay & Consult Runtimes | — | [GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md](PROJECT/1-INBOX/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md) · [#101](https://github.com/HiQS-Suite/XYZ-forge/issues/101) |
 
 ## In progress
 
-Summary: 4 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 5 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-101 · Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core Relay & Consult Runtimes | — | [GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md](PROJECT/2-WORKING/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md) · [#101](https://github.com/HiQS-Suite/XYZ-forge/issues/101) |
 | GH-103 · technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view) | — | [GH-103-TIMELINE-LEDGER-SPIKE.md](PROJECT/1-INBOX/GH-103-TIMELINE-LEDGER-SPIKE.md) · [#103](https://github.com/HiQS-Suite/XYZ-forge/issues/103) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
 | GH-1 · suite-wide fixture containment + clone-identity invariant gate | — | [GH-1-SUITE-CONTAINMENT-GATE.md](PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md) · [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1) |

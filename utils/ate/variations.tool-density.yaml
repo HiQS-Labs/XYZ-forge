@@ -1,0 +1,47 @@
+# Variations Grid: GH-101 / GH-102 Tool Density & 26-Tool Hypothesis Benchmark
+model: "Qwen/Qwen3.8-Max"
+message: "Run diagnostic tool probe suite across density tiers"
+per_variation_timeout_seconds: 60
+
+# Pluggable runner exercising script_runner.py with containment
+command_template:
+  - "python3"
+  - "{harness_root}/utils/py/script_runner.py"
+  - "--lang"
+  - "python"
+  - "--timeout"
+  - "30"
+  - "--code"
+  - "import sys; print('BENCHMARK_PROBE mode={tool_mode} tools={tool_count} schema_bytes={tool_schema_bytes} control={control_type}')"
+
+variation_keys:
+  - tool_mode
+  - tool_count
+  - tool_schema_bytes
+  - control_type
+
+tool_mode:
+  - "json_function_calling"
+  - "programmatic_python"
+
+tool_count:
+  - 5
+  - 15
+  - 25
+  - 26
+  - 30
+  - 50
+  - 100
+
+tool_schema_bytes:
+  - 2250   # ~450B per JSON tool schema baseline
+  - 6750
+  - 11250
+  - 11700  # 26 tools inflection boundary
+  - 13500
+  - 22500
+  - 45000
+
+control_type:
+  - "standard"
+  - "corrupted_schema_negative_control"

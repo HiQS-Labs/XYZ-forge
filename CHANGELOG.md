@@ -5,6 +5,12 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [1.1.6] - 2026-08-20
 
 ### Added
+- **GH-101: Feasibility Study Test 2 (Consult programmatic tool mode dogfooding & paired density benchmark).**
+  Wired `--tool-mode programmatic` (default off / standard) in `utils/py/consult.py` with fail-closed OS sandbox
+  assertions, throwaway worktree isolation, and sanitized `.relay-scratch/` output paths; added synthetic test
+  `test/synthetic/gh101-consult-programmatic.sh` (9/9 PASS under `utils/fuzzing/fuzz-loop.sh`); authored
+  `utils/ate/variations.tool-density.yaml` covering tool density tiers [5, 15, 25, 26, 30, 50, 100] with negative
+  controls; generated 1,935-iteration trial receipts archived in `TESTS-RESULTS/2026-08-20+GH-101/`.
 - **GH-103: in-band releases 0.7.1 and 0.7.2 recorded here, per the RELEASES.md band rule.**
   Both live inside Ballast's reserved `0.7.0-0.7.4` iteration band, so they get CHANGELOG
   entries, not RELEASES.md blocks (the file's admission rule; confirmed unanimously by a

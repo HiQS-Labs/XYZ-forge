@@ -366,6 +366,7 @@ def main():
     out_dir = ""
     models_str = "codex,agy"
     label = "consult"
+    tool_mode = os.environ.get("CONSULT_TOOL_MODE", "standard")
     
     args = sys.argv[1:]
     i = 0
@@ -386,11 +387,23 @@ def main():
         elif arg == "--label" and i + 1 < len(args):
             label = args[i+1]
             i += 2
+        elif arg == "--tool-mode" and i + 1 < len(args):
+            tool_mode = args[i+1]
+            i += 2
         elif arg == "--help":
-            print("Usage: consult.sh --prompt \"question\" [--out DIR] [--models codex,agy] [--label SLUG]")
+            print("Usage: consult.sh --prompt \"question\" [--out DIR] [--models codex,agy] [--label SLUG] [--tool-mode standard|programmatic]")
             sys.exit(0)
         else:
             die(f"unknown argument: {arg}")
+
+    if tool_mode not in ("standard", "programmatic"):
+        die(f"invalid --tool-mode '{tool_mode}'; must be 'standard' or 'programmatic'")
+
+    if tool_mode == "programmatic":
+        # Fail-closed check: require sandbox-exec (macOS) or bwrap (Linux)
+        has_sandbox = bool(shutil.which("sandbox-exec") or shutil.which("bwrap"))
+        if not has_sandbox:
+            die("Containment failure (fail-closed): OS sandbox backend (sandbox-exec or bwrap) unavailable for --tool-mode programmatic")
             
     if not prompt_file and not prompt_text:
         die("one of --prompt-file or --prompt is required")
@@ -419,7 +432,17 @@ def main():
     run_dir = os.path.join(out_dir, f"{label}-{datetime.now().strftime('%H%M%S')}")
     os.makedirs(run_dir, exist_ok=True)
     
-    preamble = "You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: (1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text; do not rely on writing files (you are running in a throwaway copy)."
+    if tool_mode == "programmatic":
+        preamble = (
+            "You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question "
+            "separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge "
+            "toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: "
+            "(1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line "
+            "RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text. Diagnostic probe scripts may be executed "
+            "programmatically via script_runner.py with output directed to .relay-scratch/ inside the isolation worktree."
+        )
+    else:
+        preamble = "You are an INDEPENDENT advisor in a one-shot cross-model consult. Another model is answering the SAME question separately and a coordinator will reconcile both answers, so give your own honest, specific read — do not hedge toward a consensus you cannot see. Read any repo files the question references (cite file:line). Respond with: (1) a short direct ANSWER; (2) graded FINDINGS — [Blocker]/[Should]/[Nit]/[Pass] — where applicable; (3) a one-line RECOMMENDATION. You are ADVISORY ONLY: output your analysis as text; do not rely on writing files (you are running in a throwaway copy)."
     full_prompt = f"{preamble}\n\n=== CONSULT QUESTION ===\n{prompt_text}"
     # GH-235 A4 v0: persist ONLY the operator's PROMPT_TEXT (never the PREAMBLE) so the prompt-trace
     # classifier below can tell an echoed citation from a firsthand one. Written with no trailing
@@ -456,6 +479,16 @@ def main():
         except Exception:
             pass
             
+        if tool_mode == "programmatic":
+            os.makedirs(os.path.join(wt, ".relay-scratch"), exist_ok=True)
+            
+        base_env = dict(os.environ)
+        if tool_mode == "programmatic":
+            base_env["XYZ_CONTAINMENT_ROOT"] = wt
+            base_env["XYZ_TOOL_MODE"] = "programmatic"
+            base_env["CONSULT_TOOL_MODE"] = "programmatic"
+            base_env["RELAY_SCRATCH_DIR"] = os.path.join(wt, ".relay-scratch")
+
         timeout_s = int(os.environ.get("CONSULT_TIMEOUT", 300))
         models = [m.strip() for m in models_str.split(",") if m.strip()]
         
@@ -465,7 +498,7 @@ def main():
             if m == "codex":
                 f_out = os.path.join(run_dir, f"{label}.codex.md")
                 cflags = os.environ.get("CODEX_FLAGS", "-s read-only").split()
-                cenv = dict(os.environ)
+                cenv = dict(base_env)
                 if os.environ.get("CODEX_ALLOW_API_KEY", "0") != "1":
                     cenv.pop("OPENAI_API_KEY", None)
                 cmd = [codex_bin, "exec"] + cflags + [full_prompt]
@@ -477,12 +510,12 @@ def main():
                     procs.append((None, "agy", f_out, time.time(), None))
                     continue
                 cmd = [agy_bin, "--dangerously-skip-permissions", "--print-timeout", f"{timeout_s}s", "-p", full_prompt]
-                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(os.environ))
+                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(base_env))
                 procs.append((proc, "agy", f_out, time.time(), cmd))
             elif m == "gemini":
                 ext = "json" if os.environ.get("CONSULT_GEMINI_JSON", "0") == "1" else "md"
                 f_out = os.path.join(run_dir, f"{label}.gemini.{ext}")
-                cenv = dict(os.environ)
+                cenv = dict(base_env)
                 cenv["GOOGLE_GENAI_USE_GCA"] = cenv.get("GOOGLE_GENAI_USE_GCA", "true")
                 cmd = [gemini_bin, "--yolo", "--skip-trust"]
                 if ext == "json": cmd += ["-o", "json"]
@@ -506,7 +539,7 @@ def main():
                         continue
                     aider_model = os.environ.get("AIDER_MODEL", "openrouter/anthropic/claude-sonnet-5")
                 cmd = [aider_bin, "--model", aider_model] + auth_args + ["--message", full_prompt, "--yes-always", "--no-auto-commits", "--no-gitignore", "--no-check-update", "--no-analytics", "--no-show-model-warnings", "--no-stream", "--map-tokens", "0"]
-                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(os.environ))
+                proc = guarded_with_timeout(cmd, wt, f_out, timeout_s, dict(base_env))
                 procs.append((proc, "aider", f_out, time.time(), cmd))
             else:
                 warn(f"unknown model '{m}' — skipping")
