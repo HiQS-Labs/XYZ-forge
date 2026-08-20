@@ -113,7 +113,10 @@ UNRENDERABLE = re.compile(rb"[\x00-\x1f\x7f]")   # newline, CR, tab, and every o
 # as the doubled pairs `??` (untracked) and `!!` (ignored); a pair like `?M`, `M?` or `?!` is
 # something git cannot emit, and accepting it let a fabricated live_state reach an ok candidate.
 # Everything else is X=index, Y=worktree, each drawn from the code set, and never both blank.
-CODES = b" MADRCU"
+# The code set INCLUDES `T` (type changed, e.g. a file replaced by a symlink). Leaving it out made a
+# legitimate record degrade the lens -- a false D5 on valid input, which is the regression in the
+# opposite direction and strictly worse than the over-acceptance the validator was added to stop.
+CODES = b" MTADRCU"
 def valid_status(xy):
     if xy in (b"??", b"!!"):
         return True
@@ -210,7 +213,12 @@ if [[ $rc2 -eq 0 ]]; then
   else
   while IFS=$'\t' read -r st flag b64; do
     [[ -z "${b64:-}" ]] && continue
-    path="$(printf '%s' "$b64" | base64 -d 2>/dev/null)"
+    # The sentinel is load-bearing. Command substitution strips ALL trailing newlines from its
+    # output, so a legal pathname ending in LF silently lost it here -- undoing the whole raw-byte
+    # boundary at the last step, and addressing a DIFFERENT (possibly existing) file. Appending a
+    # byte and removing it again is the only way to carry a trailing newline through `$( )`.
+    path="$(printf '%s' "$b64" | base64 -d 2>/dev/null; printf 'X')"
+    path="${path%X}"
     [[ -n "$path" ]] || { lens2_status="degraded"; lens2_deg="\"D5\""; lens2_cands="[]"; break; }
     # exclude untracked paths under PARKED/
     if [[ "$st" == "??" && "$path" == PARKED/* ]]; then

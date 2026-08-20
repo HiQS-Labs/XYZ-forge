@@ -433,6 +433,30 @@ is "  but the ignored pair (!!) is legal and still yields a candidate" \
 is "  and the unmerged pair (UU) is legal too" \
    "$(F lens-2-unmerged 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "conflict.md"
 
+# ── 18c. Round-10: the validator must not reject valid input, and the bytes must survive Bash ────
+# Both findings are the SAME regression direction — the one I said I cared most about while adding
+# the round-9 validator, and then introduced anyway. A false D5 on a real working tree is worse than
+# the over-acceptance it replaced, because it makes the collector wrong about a repo that is fine.
+
+# `T` (type changed — a file replaced by a symlink, say) is ordinary porcelain v1. Omitting it from
+# the code set degraded a legitimate record. The round-9 `!!` and `UU` controls did not cover it,
+# which is the argument for controls that span the grammar rather than one example of it.
+is "a staged type-change (T) is valid porcelain, not a degradation" \
+   "$(F lens-2-typechange 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "swapped.md"
+is "  as is an unstaged one" \
+   "$(F lens-2-typechange-wt 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" "swapped.md"
+
+# THE BASH HANDOFF. Command substitution strips ALL trailing newlines from its output, so a legal
+# pathname ending in LF lost it at the very last step — undoing the raw-byte boundary that the whole
+# -z rewrite exists to provide, and addressing a DIFFERENT (possibly existing) file. The interior-
+# newline fixture could not exercise this: only a TRAILING newline is stripped.
+is "a pathname ending in LF keeps its trailing byte through the shell handoff" \
+   "$(F lens-2-trailing-lf 'd["lenses"]["2"]["candidates"][0]["evidence_payload"]')" 'name\n'
+# The mtime is keyed on the exact bytes, so resolving it proves the trailing byte reached the stat
+# lookup — not just the display string.
+is "  and its stat resolves on the exact bytes, not the stripped name" \
+   "$(F lens-2-trailing-lf 'd["lenses"]["2"]["candidates"][0]["staleness"]')" "1800000002"
+
 # ── 19. THE GENERIC GUARD: no input makes the collector emit nothing ─────────────────────────────
 # Written after the round-7 staleness fix silently reintroduced the founding failure. A no-match
 # `grep` exits 1, `set -e` is active in collect.sh, and the script aborted MID-DOCUMENT — emitting no
