@@ -32,13 +32,19 @@ install_one() {
     fi
     rm -f "$_link"
   elif [ -e "$_link" ]; then
-    echo "$SKILL_NAME: $_link exists as a real file or directory — not overwriting." >&2
-    return 1
+    _backup="${_link}.bak-$(date +%Y%m%d%H%M%S)"
+    echo "$SKILL_NAME: $_link exists as a real directory/file — backing up to $_backup before linking."
+    mv "$_link" "$_backup"
   fi
 
   ln -s "$SELF_DIR" "$_link"
   echo "$SKILL_NAME: installed for $_label → $_link -> $SELF_DIR"
 }
 
-install_one "Claude Code" "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
-install_one "Codex" "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}"
+rc=0
+install_one "Claude Code" "${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}" || rc=1
+install_one "Codex" "${CODEX_SKILLS_DIR:-$HOME/.codex/skills}" || rc=1
+install_one "Gemini (Config)" "${GEMINI_CONFIG_SKILLS_DIR:-$HOME/.gemini/config/skills}" || rc=1
+install_one "Gemini (Antigravity)" "${ANTIGRAVITY_SKILLS_DIR:-$HOME/.gemini/antigravity/skills}" || rc=1
+install_one "Gemini (Antigravity CLI)" "${ANTIGRAVITY_CLI_SKILLS_DIR:-$HOME/.gemini/antigravity-cli/skills}" || rc=1
+exit "$rc"
