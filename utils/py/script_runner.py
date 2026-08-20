@@ -76,17 +76,20 @@ def validate_path_containment(path: str | Path, root_dir: str | Path) -> Tuple[b
         return False, None, f"Path resolution error: {e}"
 
 
-def build_sandboxed_cmd(cmd: list[str], containment_root: Optional[str | Path]) -> list[str]:
+def build_sandboxed_cmd(cmd: list[str], containment_root: Optional[str | Path]) -> Tuple[list[str], Optional[str]]:
     """
     Wraps execution command with OS-level sandbox isolation when containment_root is specified.
     On macOS (darwin), applies seatbelt sandbox-exec profile restricting write operations strictly
     to containment_root and /dev.
     On Linux, wraps with bubblewrap (bwrap) if available.
+    
+    FAILS CLOSED: If containment_root is specified but no supported OS sandbox engine is available,
+    returns an error instead of executing uncontained.
     """
     import shutil
 
     if not containment_root:
-        return cmd
+        return cmd, None
 
     resolved_root = str(Path(containment_root).resolve())
     if sys.platform == "darwin" and shutil.which("sandbox-exec"):
@@ -98,10 +101,11 @@ def build_sandboxed_cmd(cmd: list[str], containment_root: Optional[str | Path]) 
             f'(allow file-write* (subpath "/private{resolved_root}")) '
             f'(allow file-write* (subpath "/dev"))'
         )
-        return ["sandbox-exec", "-p", seatbelt_profile] + cmd
+        return ["sandbox-exec", "-p", seatbelt_profile] + cmd, None
     elif sys.platform.startswith("linux") and shutil.which("bwrap"):
-        return ["bwrap", "--ro-bind", "/", "/", "--bind", resolved_root, resolved_root, "--dev", "/dev", "--proc", "/proc"] + cmd
-    return cmd
+        return ["bwrap", "--ro-bind", "/", "/", "--bind", resolved_root, resolved_root, "--dev", "/dev", "--proc", "/proc"] + cmd, None
+
+    return [], f"OS sandbox backend unavailable: --containment-root requested, but neither sandbox-exec nor bwrap was found on {sys.platform}"
 
 
 def run_script_safely(
@@ -117,7 +121,13 @@ def run_script_safely(
 ) -> Dict[str, Any]:
     """
     Executes a script safely inside a process group with deterministic timeout handling
-    and optional containment validation against a sandbox root.
+    and optional fail-closed write containment against a sandbox root.
+
+    Containment Scope:
+    - Write Operations: Strictly restricted to containment_root and /dev via OS kernel sandboxing.
+    - Process Lifecycle: Subprocess tree managed via process group (setsid) with SIGTERM/SIGKILL escalation.
+    - Note on Read/Network: Reads and network are unconfined in this utility runner. Untrusted model code
+      requiring complete isolation must be run in a disposable full clone (GH-564).
     """
     if timeout_s <= 0:
         raise ValueError("timeout_s must be strictly positive")
@@ -172,9 +182,18 @@ def run_script_safely(
         else:
             cmd = ["bash", "-c", code_or_file]
 
-    # Wrap with OS-level seatbelt/bwrap sandbox if containment_root is specified
+    # Wrap with OS-level seatbelt/bwrap sandbox if containment_root is specified (fails closed)
     if containment_root:
-        cmd = build_sandboxed_cmd(cmd, containment_root)
+        cmd, sandbox_err = build_sandboxed_cmd(cmd, containment_root)
+        if sandbox_err:
+            return {
+                "status": "error",
+                "exit_code": 2,
+                "duration_ms": 0,
+                "stdout": "",
+                "stderr": f"Containment failure (fail-closed): {sandbox_err}",
+                "timed_out": False,
+            }
 
     run_env = os.environ.copy()
     if env:

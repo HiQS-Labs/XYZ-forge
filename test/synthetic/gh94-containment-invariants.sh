@@ -115,5 +115,31 @@ grep -q "SAFE_CANARY" "$OUTSIDE_CANARY" || {
   exit 1
 }
 
+# 6. Fail-Closed Verification when Sandbox Backend is Missing
+out=$(python3 -c "
+import sys
+sys.path.insert(0, '$ROOT')
+from utils.py.script_runner import run_script_safely
+
+# Simulate missing sandbox engine by mocking shutil.which
+import shutil
+shutil.which = lambda cmd: None
+
+res = run_script_safely(
+    code_or_file=\"print('UNCONTAINED')\",
+    containment_root=\"$WORK\",
+    work_dir=\"$WORK\",
+)
+assert res['status'] == 'error', f'Expected status error, got {res}'
+assert res['exit_code'] == 2, f'Expected exit code 2, got {res}'
+assert 'OS sandbox backend unavailable' in res['stderr'], f'Expected fail-closed error message, got {res}'
+print('FAIL_CLOSED_VERIFIED')
+" 2>&1 || true)
+
+echo "$out" | grep -q "FAIL_CLOSED_VERIFIED" || {
+  echo "FAIL: Expected runner to fail closed when sandbox backend is missing. Got: $out"
+  exit 1
+}
+
 echo "PASS: gh94-containment-invariants"
 exit 0
