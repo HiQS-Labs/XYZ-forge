@@ -6,7 +6,7 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
+Summary: 14 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
@@ -23,6 +23,7 @@ Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 | GH-18 · Harness evaluation: Command Code (cmd) and model matrix | — | [GH-18-COMMANDCODE-EVAL.md](PROJECT/1-INBOX/GH-18-COMMANDCODE-EVAL.md) · [#18](https://github.com/HiQS-Suite/XYZ-forge/issues/18) |
 | GH-94 · research: programmatic tool calling & code-mode execution for harnesses, telemetry, and containment | — | [GH-94-PROGRAMMATIC-TOOL-CALLING.md](PROJECT/2-WORKING/GH-94-PROGRAMMATIC-TOOL-CALLING.md) · [#94](https://github.com/HiQS-Suite/XYZ-forge/issues/94) |
 | GH-101 · Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core Relay & Consult Runtimes | — | [GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md](PROJECT/1-INBOX/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md) · [#101](https://github.com/HiQS-Suite/XYZ-forge/issues/101) |
+| GH-102 · Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | — | [GH-102-UNIFIED-TELEMETRY-TOOLING.md](PROJECT/1-INBOX/GH-102-UNIFIED-TELEMETRY-TOOLING.md) · [#102](https://github.com/HiQS-Suite/XYZ-forge/issues/102) |
 
 ## In progress
 
