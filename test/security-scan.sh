@@ -29,6 +29,8 @@ fail() { echo "  FAIL: $*" >&2; FAIL=$((FAIL + 1)); }
 
 # Use TMPDIR for all fixture files — hermetic, never touches the real repo tree.
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/sec-scan-test.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 echo "== test: $TEST_NAME =="

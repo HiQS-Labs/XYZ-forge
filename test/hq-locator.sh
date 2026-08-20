@@ -22,6 +22,8 @@ echo "== test: hq-locator (GH-128 find-hq.sh) =="
 # trap; canonicalize only as a separate step afterward.
 TMP="$(mktemp -d)" || { echo "FAIL: mktemp -d failed" >&2; exit 1; }
 [ -n "$TMP" ] && [ -d "$TMP" ] || { echo "FAIL: mktemp -d returned an invalid path" >&2; exit 1; }
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$TMP"   # GH-10: pin the sandbox root
 trap 'rm -rf "$TMP"' EXIT
 TMP="$(cd "$TMP" && pwd -P)"
 

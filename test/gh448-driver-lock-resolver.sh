@@ -26,6 +26,8 @@ FH="$ROOT/skills/relay-xyz/find-harness.sh"
 . "$LIB"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh448-driver-lock.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 # GH-177: guard BEFORE the re-capture below and BEFORE the rm -rf trap is armed. A failed mktemp
 # leaves $WORK empty, `cd ""` succeeds (it is a no-op), and `pwd -P` would then hand back the
 # script's own cwd — the repository root — straight into `rm -rf`. That is the historical repo-wipe

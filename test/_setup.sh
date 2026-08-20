@@ -49,6 +49,8 @@ TICK="$(cd "$HERE/.." && pwd)/bin/tick"
 export TICK
 
 WORK="$(mktemp -d -t "tick-${TEST_NAME}.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 export WORK
 # Most tests end with a bare `exit 0`, which is correct under fail-fast (a failed
 # assertion exits 1 before reaching it). Under TEST_SOFT_FAIL=1 that would report

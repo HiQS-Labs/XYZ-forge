@@ -25,6 +25,8 @@ PY="$ROOT/utils/py/swarm_preflight.py"
 export SP_PY_DIR="$ROOT/utils/py"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh400-srcurl.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0

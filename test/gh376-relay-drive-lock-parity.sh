@@ -49,6 +49,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/.." && pwd)"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh376.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 # GH-177: guard BEFORE the physical re-capture and BEFORE the rm -rf trap is armed. A failed mktemp
 # leaves $WORK empty, `cd ""` is a no-op, and `pwd -P` would then hand back the repository root
 # straight into `rm -rf`. Same shape (and the same `&& exit 1` inside the braces, which the scanner

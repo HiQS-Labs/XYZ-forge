@@ -61,6 +61,8 @@ if [ -z "$LIVE_AGENT_BIN" ]; then
 fi
 
 WORK="$(mktemp -d -t "tick-relay-self-sufficiency.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 REPO="$WORK/repo"

@@ -27,6 +27,8 @@ TICK="$REPO/bin/tick"
 MD_BIN="$REPO/relay-automation/marathon-drive.sh"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh387.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 A="$WORK/repo"
 trap 'rm -rf "$WORK"' EXIT
 

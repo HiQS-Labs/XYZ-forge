@@ -7,6 +7,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 PY="$ROOT/utils/py/swarm_preflight.py"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/gh425-source-url-slug.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 PASS=0; FAIL=0

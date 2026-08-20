@@ -2,6 +2,26 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [Unreleased]
+
+### Added
+- **GH-10: require_fixture adopted across every fixture-creating suite + an enforcement guard
+  + the ci-local identity bracket — the prevent-half of containment.** `test/_setup.sh` adopts
+  centrally for all its sourcers; 35 suites mechanically; 7 by hand where fixtures lived outside
+  their suite's sandbox (now nested under it). `test/gh1-adoption-guard.sh` derives the offender
+  list from source on every gate run — exemptions are declared in the exempt file, not a
+  permanent hand-maintained list — and its controls prove it fires on an unguarded new suite, a
+  stripped adoption, and a removed exemption marker. `ci-local.sh` now brackets its qualifying
+  suite run with the GH-1 clone-identity capture/assert. Ledger:
+  `test/baselines/GH-1-adoption-ledger.md` — **Unaudited suites: 0**.
+
+### Fixed
+- `test/lib/fixture-guard.sh` used a dynamic test operator (`[ "$type_flag" "$resolved" ]`) that
+  is a shellcheck `-S error` parse failure (SC1072/SC1073) — pre-existing, surfaced by this
+  lane's `ci-local --fast` verification; rewritten as explicit `-f`/`-d` branches, same
+  semantics.
+
+
 ## [1.1.5] - 2026-08-19
 
 ### Added

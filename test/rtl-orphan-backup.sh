@@ -21,6 +21,8 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LIB="$HERE/relay-automation/relay-turn-lib.sh"
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/rtl-orphan-backup.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 [[ -n "$WORK" && -d "$WORK" && "$WORK" != "/" ]] || { echo "FATAL: mktemp -d failed"; exit 1; }
 trap 'rm -rf "$WORK"' EXIT
 

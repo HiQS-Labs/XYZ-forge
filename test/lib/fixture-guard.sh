@@ -54,9 +54,19 @@ _fixture_check() {  # <path> <label> <type-flag> — shared body of require_fixt
     "$FIXTURE_GUARD_RESOLVED"/*) ;;
     *) echo "fixture-guard: REFUSING — $what path '$p' resolves to '$resolved', OUTSIDE the resolved fixture root $FIXTURE_GUARD_RESOLVED (traversal or symlink escape — the lexical check alone would have accepted it)" >&2; exit 2 ;;
   esac
-  [ "$type_flag" "$resolved" ] || {
-    echo "fixture-guard: REFUSING — $what path '$p' is not a $type_name" >&2; exit 2;
-  }
+  # The type check is branched explicitly rather than `[ "$type_flag" "$resolved" ]`: a test
+  # operator in a variable is unparseable to shellcheck (SC1072/SC1073, an -S error that fails
+  # ci-local's shellcheck step — found by the GH-10 lane), and an explicit pair says the same
+  # thing without a parser guess.
+  if [ "$type_flag" = "-f" ]; then
+    [ -f "$resolved" ] || {
+      echo "fixture-guard: REFUSING — $what path '$p' is not a $type_name" >&2; exit 2;
+    }
+  else
+    [ -d "$resolved" ] || {
+      echo "fixture-guard: REFUSING — $what path '$p' is not a $type_name" >&2; exit 2;
+    }
+  fi
 }
 
 require_fixture()      { _fixture_check "${1:-}" "${2:-fixture}" -d; }

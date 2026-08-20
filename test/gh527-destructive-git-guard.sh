@@ -27,6 +27,8 @@ echo "== test: gh527-destructive-git-guard =="
 
 mkrepo() {
   _r="$(mktemp -d "${TMPDIR:-/tmp}/gh527.XXXXXX")"
+  . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+  fixture_guard_init "$_r"   # GH-10: pin the sandbox root
   git -C "$_r" init -q
   git -C "$_r" config user.email t@t
   git -C "$_r" config user.name t

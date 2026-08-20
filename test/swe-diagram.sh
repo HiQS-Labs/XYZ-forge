@@ -16,6 +16,8 @@ echo "== test: swe-diagram =="
 [ -f "$GENERATOR" ] || { echo "  FAIL: Git history generator not found at $GENERATOR" >&2; exit 1; }
 
 WORK="$(mktemp -d -t "swe-diagram.XXXXXX")"
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib/fixture-guard.sh"   # GH-10: shared fixture containment
+fixture_guard_init "$WORK"   # GH-10: pin the sandbox root
 trap 'rm -rf "$WORK"' EXIT
 
 cat > "$WORK/fixtures.js" <<'JSEOF'
