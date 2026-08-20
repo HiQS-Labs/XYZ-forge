@@ -1,0 +1,35 @@
+{
+  "orchestrator_owned": [],
+  "codex_lane": [
+    "src/parse.js",
+    "src/index.js",
+    "src/sort.js",
+    "test/sort.test.js",
+    "src/decimal.js",
+    "test/decimal.test.js",
+    "src/fuzzy-match.js",
+    "test/fuzzy-match.test.js",
+    "src/stats.js",
+    "test/stats.test.js"
+  ],
+  "agy_lane": [],
+  "effective_artifacts": [
+    "src/parse.js",
+    "src/index.js",
+    "src/sort.js",
+    "test/sort.test.js",
+    "src/decimal.js",
+    "test/decimal.test.js",
+    "src/fuzzy-match.js",
+    "test/fuzzy-match.test.js",
+    "src/stats.js",
+    "test/stats.test.js"
+  ],
+  "inferred_test_artifacts": [],
+  "inferred_test_helpers": [],
+  "fs_touching_tests": [],
+  "agy_review_default": true,
+  "coupling_warning": null,
+  "parallelizable": true,
+  "single_lane_only": false
+}

@@ -1,0 +1,38 @@
+# RUN 1 — four INDEPENDENT tasks, no interdependencies. Baseline shape.
+#
+# Every phase writes a disjoint file set, so nothing here needs `depends_on`.
+# Per GH-241 the phases still run strictly one at a time, in plan order; the
+# disjoint write-set buys correctness of review, not parallelism.
+name: run1-ledger-exports
+phases:
+  - id: r1p1
+    name: CSV export
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p1-csv.md
+    artifact: src/export-csv.js,test/export-csv.test.js
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: r1p2
+    name: Currency normalization
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p2-fx.md
+    artifact: src/fx.js,test/fx.test.js
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: r1p3
+    name: CLI with JSON output
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p3-cli.md
+    artifact: src/cli.js,test/cli.test.js
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: r1p4
+    name: Duplicate-entry detection
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p4-dedupe.md
+    artifact: src/dedupe.js,test/dedupe.test.js
+    turn_timeout_s: 900
+    max_review_rounds: 2

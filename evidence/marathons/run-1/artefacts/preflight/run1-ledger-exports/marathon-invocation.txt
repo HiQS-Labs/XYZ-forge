@@ -1,0 +1,8 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=run1-ledger-exports RELAY_WORKTREE_ISOLATION=1 relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact src/parse.js,src/validate.js,src/index.js,package.json,src/export-csv.js,test/export-csv.test.js,src/fx.js,test/fx.test.js,src/cli.js,test/cli.test.js,src/dedupe.js,test/dedupe.test.js \
+  --target-root /home/arnoldadero/marathon-target \
+  --pre-advance-cmd 'npm test' \
+  --require-clean

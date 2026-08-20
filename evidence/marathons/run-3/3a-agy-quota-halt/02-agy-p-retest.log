@@ -1,0 +1,36 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/agy-p-retest.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:04:36+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== controlling terminal in THIS process ===
+tty: not a tty
+/dev/tty: openable
+
+=== agy -p, three attempts ===
+attempt 1: rc=1   15s  out=Error: Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 166h55m7s. 
+attempt 2: rc=1   15s  out=Error: Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 166h54m53s. 
+attempt 3: rc=1   15s  out=Error: Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 166h54m38s. 
+
+=== agy models (backend reachability / quota) ===
+Fetching available models...
+gemini-3.7-flash-high	Gemini 3.7 Flash (High)
+gemini-3.7-flash-medium	Gemini 3.7 Flash (Medium)
+gemini-3.7-flash-low	Gemini 3.7 Flash (Low)
+models rc=1
+
+=== how many agy processes are lingering? ===
+0
+0
+your 131072x1 screen size is bogus. expect trouble
+
+=== memory / load ===
+               total        used        free      shared  buff/cache   available
+Mem:            19Gi       678Mi        18Gi       2.4Mi       1.1Gi        18Gi
+ 17:05:28 up  2:21,  0 user,  load average: 0.08, 0.25, 0.30
+=== END OUTPUT ===
+end      : 2026-08-20T17:05:28+03:00
+duration : 52s
+EXIT_CODE: 0

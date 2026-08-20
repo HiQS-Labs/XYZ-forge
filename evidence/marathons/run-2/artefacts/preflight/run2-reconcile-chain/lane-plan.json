@@ -1,0 +1,35 @@
+{
+  "orchestrator_owned": [],
+  "codex_lane": [
+    "src/parse.js",
+    "src/validate.js",
+    "src/money.js",
+    "test/money.test.js",
+    "src/balance.js",
+    "test/balance.test.js",
+    "src/reconcile.js",
+    "test/reconcile.test.js",
+    "src/report.js",
+    "test/report.test.js"
+  ],
+  "agy_lane": [],
+  "effective_artifacts": [
+    "src/parse.js",
+    "src/validate.js",
+    "src/money.js",
+    "test/money.test.js",
+    "src/balance.js",
+    "test/balance.test.js",
+    "src/reconcile.js",
+    "test/reconcile.test.js",
+    "src/report.js",
+    "test/report.test.js"
+  ],
+  "inferred_test_artifacts": [],
+  "inferred_test_helpers": [],
+  "fs_touching_tests": [],
+  "agy_review_default": true,
+  "coupling_warning": null,
+  "parallelizable": true,
+  "single_lane_only": false
+}

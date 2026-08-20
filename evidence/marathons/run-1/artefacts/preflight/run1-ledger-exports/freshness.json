@@ -1,0 +1,57 @@
+{
+  "fetch_ok": true,
+  "upstream": null,
+  "ahead": 0,
+  "behind": 0,
+  "dirty": false,
+  "stale_index_lock": false,
+  "stale_index_lock_path": null,
+  "stale_index_lock_warning": null,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "599e87f63058865110b1dd96a77315b73885cfc9",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "path_absent",
+      "path": "src/export-csv.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/export-csv.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/fx.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/fx.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/cli.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/cli.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/dedupe.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/dedupe.test.js",
+      "verdict": "unfixed"
+    }
+  ]
+}

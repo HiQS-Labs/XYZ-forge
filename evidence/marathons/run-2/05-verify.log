@@ -1,0 +1,62 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash evidence/_env/verify-run.sh 2 run2 71ef6b7
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:02:14+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== 1. exit code + wall clock (the LOGGED one, not a notification) ===
+WALL_CLOCK_START=2026-08-20T16:42:23+03:00 epoch=1787233343
+WALL_CLOCK_END=2026-08-20T17:00:18+03:00 epoch=1787234418
+duration : 46s
+EXIT_CODE: 0
+MARATHON_FULLRUN_RC=0
+duration : 1077s
+EXIT_CODE: 0
+
+=== 2. the gate, run independently now ===
+# tests 96
+# pass 96
+# fail 0
+NPM_TEST_RC=0
+
+=== 3. every phase's terminal STATUS and round count ===
+  run2-reconcile-chain--r2p1                 STATUS: Approved     rounds=4
+  run2-reconcile-chain--r2p2                 STATUS: Approved     rounds=2
+  run2-reconcile-chain--r2p3                 STATUS: Approved     rounds=2
+  run2-reconcile-chain--r2p4                 STATUS: Approved     rounds=2
+
+=== 4. escalations / interruptions ===
+  count: 0
+
+=== 5. containment: any commit touching a path outside its lane? ===
+  (no OFF-LANE? lines above = containment held)
+
+=== 6. no push; branch/HEAD ===
+  target : main @ 8973823
+  harness: linux-bringup @ 5691781
+  remotes: 0 configured
+  push entries in reflog: 22
+
+=== 7. tick events for this run ===
+  exit-code-bearing events (6=containment 7=watchdog 8=parked 108=gate-killed):
+
+=== 8. transcripts ===
+relay-system/2026-08-20/marathon-r2p1-134950.md
+relay-system/2026-08-20/marathon-r2p2-135246.md
+relay-system/2026-08-20/marathon-r2p3-135555.md
+relay-system/2026-08-20/marathon-r2p4-140017.md
+  relay-system/2026-08-20/marathon-r1p1-132208.md
+  relay-system/2026-08-20/marathon-r1p2-132507.md
+  relay-system/2026-08-20/marathon-r1p3-133240.md
+  relay-system/2026-08-20/marathon-r1p4-133547.md
+  relay-system/2026-08-20/marathon-r2p1-134950.md
+  relay-system/2026-08-20/marathon-r2p2-135246.md
+  relay-system/2026-08-20/marathon-r2p3-135555.md
+  relay-system/2026-08-20/marathon-r2p4-140017.md
+
+=== 9. cost / token telemetry ===
+=== END OUTPUT ===
+end      : 2026-08-20T17:02:15+03:00
+duration : 1s
+EXIT_CODE: 0

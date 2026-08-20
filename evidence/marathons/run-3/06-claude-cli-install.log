@@ -1,0 +1,35 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/install-claude-cli.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:11:38+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== before ===
+claude -> /mnt/c/Users/Askyla/AppData/Roaming/npm/claude
+
+=== npm install -g @anthropic-ai/claude-code ===
+
+added 2 packages in 24s
+NPM_RC=0
+
+=== after: does the LINUX binary win on PATH? ===
+claude -> /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/claude
+OK: Linux binary
+2.1.237 (Claude Code)
+
+=== auth state (contents never printed) ===
+WSL  ~/.claude/.credentials.json: ABSENT
+WIN  .credentials.json: PRESENT (808 bytes)
+ANTHROPIC_API_KEY: unset
+
+=== what auth subcommands exist ===
+                                        CLAUDE_CODE_SIMPLE=1. Anthropic auth is
+                                        apiKeyHelper via --settings (OAuth and
+                                        settings still apply. Auth, model
+  auth                                  Manage authentication
+  gateway [options]                     Run the enterprise auth/telemetry
+=== END OUTPUT ===
+end      : 2026-08-20T17:12:04+03:00
+duration : 26s
+EXIT_CODE: 0

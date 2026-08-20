@@ -1,0 +1,59 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/spend-report.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:06:51+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== turns dispatched, by builder/reviewer, across all runs ===
+     11 agy
+     11 codex
+
+=== per-run turn counts ===
+  R1: agy=6 codex=6
+  R2: agy=5 codex=5
+  R3: agy=0 codex=0
+
+=== codex token usage recorded in transcripts ===
+  codex turns with a token line: 0
+  total tokens: 0
+  mean/turn: 0
+--- also check the persistent shim logs ---
+  log-side turns: 0  tokens: 0
+
+=== what the harness's OWN cost telemetry reports ===
+wall-clock (run window): 38m 13s
+per done-task: ≥0 tokens, 5m 28s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 287MB peak RSS
+--
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/8 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 42m 36s
+per done-task: ≥0 tokens, 5m 19s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 289MB peak RSS
+--
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/8 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 42m 36s
+per done-task: ≥0 tokens, 5m 19s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 289MB peak RSS
+
+=== agy quota state ===
+Error: Individual quota reached. Please upgrade your subscription to increase your limits. Resets in 166h52m52s.
+
+=== peak RSS per agent (from tick events) ===
+  codex    289 MB peak
+  agy      197 MB peak
+=== END OUTPUT ===
+end      : 2026-08-20T17:07:07+03:00
+duration : 16s
+EXIT_CODE: 0

@@ -1,0 +1,37 @@
+marathon: run log: /home/arnoldadero/marathon-target/relay-system/run-logs/2026-08-20/marathon-MARATHON_-170208-18916.log
+marathon: plan: PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/MARATHON.yaml — 4 phase(s) in execution order
+marathon: ── phase 1/4: r3p1 (reviewer=codex, round-cap=5, artifact=src/sort.js,test/sort.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/preflight/2026-08-20/run3-hard-ambiguous/
+marathon-drive:   • relay-system/run-logs/2026-08-20/marathon-MARATHON_-170208-18916.log
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/marathon-target/marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+marathon-drive: tick token seeded: MARATHON-R3P1-TURN → agy
+marathon-drive: memory-telemetry: phase r3p1-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.qhGr1P)
+agy-turn: agy -p failed (exit 1)
+agy-turn: auth was NEVER VERIFIED for this turn, and the turn failed — agy could not run headless, so auth was not verified: CLI error: bubbletea: error opening TTY: bubbletea: could not open TTY: open /dev/tty: no such device or address
+agy-turn: No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: agy turn produced no tracked changes (token-only move?)
+agy-turn: handed off token MARATHON-R3P1-TURN → codex (tick release --to)
+marathon-drive: relay escalated: relay-failed-before-gate (gate: not-run)
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/marathon-target/relay-system/2026-08-20/marathon-r3p1-140238.md
+marathon-drive: memory-telemetry: phase r3p1-escalated boundary — swap_free=8192MB
+marathon-drive: escalation written: /home/arnoldadero/marathon-target/marathon-system/run3-hard-ambiguous--r3p1/ESCALATION.md (reason: relay-failed-before-gate)
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/8 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 42m 36s
+per done-task: ≥0 tokens, 5m 19s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 289MB peak RSS
+
+marathon: HALT: phase r3p1 failed (marathon-drive exit 5) — chain stops; later phases NOT started

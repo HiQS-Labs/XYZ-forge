@@ -1,0 +1,49 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/r3p3-examine.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:31:25+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== ESCALATION ===
+# ESCALATION — Marathon Phase r3p3
+
+phase: r3p3
+task: MARATHON-R3P3-TURN
+relay-drive-exit: 4
+reason: cap-or-close-mismatch
+gate: not-run
+relay-file: marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+
+=== round headers + verdicts across all 7 rounds ===
+81:### Round 1 · Builder · claude
+101:### Round 1 · Reviewer · codex
+103:swept file: yes
+109:**Verdict:** Changes requested
+113:### Round 2 · Builder · claude
+129:### Round 2 · Reviewer · codex
+131:swept file: yes
+137:**Verdict:** Changes requested
+143:### Round 3 · Builder · claude
+162:### Round 4 · Builder · claude
+177:### Round 3 · Reviewer · codex
+179:swept file: yes
+185:**Verdict:** Changes requested
+
+=== every reviewer verdict, in order ===
+     1	**Verdict:** Changes requested
+     2	**Verdict:** Changes requested
+     3	**Verdict:** Changes requested
+
+=== the FINAL reviewer block (what it was still objecting to at the cap) ===
+
+=== did the artifact get built anyway? ===
+-rw-r--r-- 1 arnoldadero arnoldadero  3952 Aug 20 17:30 src/fuzzy-match.js
+-rw-r--r-- 1 arnoldadero arnoldadero 10698 Aug 20 17:30 test/fuzzy-match.test.js
+  # tests 22
+  # pass 22
+  # fail 0
+=== END OUTPUT ===
+end      : 2026-08-20T17:31:26+03:00
+duration : 1s
+EXIT_CODE: 0

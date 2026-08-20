@@ -1,0 +1,216 @@
+{
+  "schema": "swarm-preflight/run-candidate@1",
+  "generated_at": "2026-08-20T14:02:06Z",
+  "mode": "project-doc",
+  "candidate": {
+    "slug": "run3-hard-ambiguous"
+  },
+  "provenance": {
+    "source_docs": [
+      "/home/arnoldadero/marathon-target/PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS.md"
+    ],
+    "issues": [],
+    "target_root": "/home/arnoldadero/marathon-target",
+    "branch": "main",
+    "commit": "a642bbcd67a0884c94f07040e5cb87e15d8eca70",
+    "suggested_branch": "marathon/run3-hard-ambiguous-2026-08-20",
+    "branch_ready": false,
+    "skip_branch_prompt": false
+  },
+  "contract": {
+    "target": {
+      "repo": ".",
+      "ref": "main"
+    },
+    "gate": "npm test",
+    "fix_probes": [
+      {
+        "type": "path_absent",
+        "path": "src/sort.js"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/sort.test.js"
+      },
+      {
+        "type": "path_absent",
+        "path": "src/decimal.js"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/decimal.test.js"
+      },
+      {
+        "type": "path_absent",
+        "path": "src/fuzzy-match.js"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/fuzzy-match.test.js"
+      },
+      {
+        "type": "path_absent",
+        "path": "src/stats.js"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/stats.test.js"
+      }
+    ],
+    "artifacts": [
+      "src/parse.js",
+      "src/index.js",
+      "src/sort.js",
+      "test/sort.test.js",
+      "src/decimal.js",
+      "test/decimal.test.js",
+      "src/fuzzy-match.js",
+      "test/fuzzy-match.test.js",
+      "src/stats.js",
+      "test/stats.test.js"
+    ],
+    "artifacts_new": [
+      "src/sort.js",
+      "test/sort.test.js",
+      "src/decimal.js",
+      "test/decimal.test.js",
+      "src/fuzzy-match.js",
+      "test/fuzzy-match.test.js",
+      "src/stats.js",
+      "test/stats.test.js"
+    ],
+    "remediation": {
+      "source": "self#run3",
+      "criteria": "four phases of uneven difficulty land with npm test green; the weak/ambiguous phases are judged on what the reviewer says, not only on the gate"
+    },
+    "lanes": {
+      "agy_safe": [],
+      "orchestrator_only": []
+    }
+  },
+  "freshness": {
+    "fetch_ok": true,
+    "upstream": null,
+    "ahead": 0,
+    "behind": 0,
+    "dirty": false,
+    "stale_index_lock": false,
+    "stale_index_lock_path": null,
+    "stale_index_lock_warning": null,
+    "evaluated_ref": "main",
+    "evaluated_ref_commit": "a642bbcd67a0884c94f07040e5cb87e15d8eca70",
+    "checkout_matches_ref": true,
+    "head_behind_ref": 0,
+    "candidate_state": "ready",
+    "probes": [
+      {
+        "type": "path_absent",
+        "path": "src/sort.js",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/sort.test.js",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "src/decimal.js",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/decimal.test.js",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "src/fuzzy-match.js",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/fuzzy-match.test.js",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "src/stats.js",
+        "verdict": "unfixed"
+      },
+      {
+        "type": "path_absent",
+        "path": "test/stats.test.js",
+        "verdict": "unfixed"
+      }
+    ]
+  },
+  "readiness": {
+    "ready": true,
+    "next_action": null,
+    "unscoped_index_only": [],
+    "issue_state": {
+      "status": "unknown",
+      "closed_at": null,
+      "detail": "capture doc has no gh_issue \u2014 issue state cannot be determined"
+    },
+    "frozen_artifacts": [],
+    "acceptance_fidelity": {
+      "status": "unknown",
+      "cause": "no-gh-issue",
+      "detail": "capture doc has no gh_issue \u2014 nothing to compare against",
+      "issue": null,
+      "dropped": [],
+      "added": [],
+      "declared": 0
+    },
+    "source_url": {
+      "status": "not-applicable",
+      "detail": "capture doc names no gh_issue \u2014 no source URL is required",
+      "issue": null,
+      "url": null,
+      "slug": null
+    },
+    "acceptance_inline": {
+      "criteria": 0,
+      "scope": "whole-document",
+      "over_cap": 0,
+      "lossless": true
+    }
+  },
+  "lane_plan": {
+    "orchestrator_owned": [],
+    "codex_lane": [
+      "src/parse.js",
+      "src/index.js",
+      "src/sort.js",
+      "test/sort.test.js",
+      "src/decimal.js",
+      "test/decimal.test.js",
+      "src/fuzzy-match.js",
+      "test/fuzzy-match.test.js",
+      "src/stats.js",
+      "test/stats.test.js"
+    ],
+    "agy_lane": [],
+    "effective_artifacts": [
+      "src/parse.js",
+      "src/index.js",
+      "src/sort.js",
+      "test/sort.test.js",
+      "src/decimal.js",
+      "test/decimal.test.js",
+      "src/fuzzy-match.js",
+      "test/fuzzy-match.test.js",
+      "src/stats.js",
+      "test/stats.test.js"
+    ],
+    "inferred_test_artifacts": [],
+    "inferred_test_helpers": [],
+    "fs_touching_tests": [],
+    "agy_review_default": true,
+    "coupling_warning": null,
+    "parallelizable": true,
+    "single_lane_only": false
+  }
+}

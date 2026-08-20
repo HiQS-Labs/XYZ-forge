@@ -1,0 +1,7 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=run3-hard-ambiguous RELAY_WORKTREE_ISOLATION=1 .xyz/relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact src/parse.js,src/index.js,src/sort.js,test/sort.test.js,src/decimal.js,test/decimal.test.js,src/fuzzy-match.js,test/fuzzy-match.test.js,src/stats.js,test/stats.test.js \
+  --pre-advance-cmd 'npm test' \
+  --require-clean

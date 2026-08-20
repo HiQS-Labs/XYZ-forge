@@ -1003,3 +1003,1205 @@ marathon-drive: memory-telemetry: phase r2p3-start boundary — swap_free=8192MB
 marathon-drive: phase start: running relay-drive --round-cap 7
 agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
 agy-turn: worktree isolation ON (/tmp/rtl-wt.AsUnEI)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.pUwXdN)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+relay-drive: relay terminated (STATUS: Approved, token done) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: npm test
+
+> ledgerkit@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: a balanced day returns zero totalMinor and empty unbalanced list
+ok 1 - a balanced day returns zero totalMinor and empty unbalanced list
+  ---
+  duration_ms: 6.3857
+  type: 'test'
+  ...
+# Subtest: an unbalanced day asserts the exact totalMinor delta
+ok 2 - an unbalanced day asserts the exact totalMinor delta
+  ---
+  duration_ms: 0.712
+  type: 'test'
+  ...
+# Subtest: currencies on the same day are tracked independently and sorted by currency
+ok 3 - currencies on the same day are tracked independently and sorted by currency
+  ---
+  duration_ms: 49.8863
+  type: 'test'
+  ...
+# Subtest: floating-point drift case: three entries of 0.10 against -0.30 proves exact zero
+ok 4 - floating-point drift case: three entries of 0.10 against -0.30 proves exact zero
+  ---
+  duration_ms: 0.5649
+  type: 'test'
+  ...
+# Subtest: groups are sorted by date ascending, then currency ascending
+ok 5 - groups are sorted by date ascending, then currency ascending
+  ---
+  duration_ms: 5.911
+  type: 'test'
+  ...
+# Subtest: empty entries list returns empty groups and unbalanced array
+ok 6 - empty entries list returns empty groups and unbalanced array
+  ---
+  duration_ms: 0.5022
+  type: 'test'
+  ...
+# Subtest: supports string amounts in addition to number amounts
+ok 7 - supports string amounts in addition to number amounts
+  ---
+  duration_ms: 0.638
+  type: 'test'
+  ...
+# Subtest: rejects invalid inputs with E_INVALID or E_PRECISION
+ok 8 - rejects invalid inputs with E_INVALID or E_PRECISION
+  ---
+  duration_ms: 2.4441
+  type: 'test'
+  ...
+# Subtest: exit code 0: default mode on balanced ledger prints OK summary
+ok 9 - exit code 0: default mode on balanced ledger prints OK summary
+  ---
+  duration_ms: 45.0853
+  type: 'test'
+  ...
+# Subtest: exit code 0: default mode on empty file prints OK: 0 entries
+ok 10 - exit code 0: default mode on empty file prints OK: 0 entries
+  ---
+  duration_ms: 0.5766
+  type: 'test'
+  ...
+# Subtest: exit code 1: default mode on unbalanced ledger prints problem line
+ok 11 - exit code 1: default mode on unbalanced ledger prints problem line
+  ---
+  duration_ms: 2.9225
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file argument is missing
+ok 12 - exit code 2: usage error when file argument is missing
+  ---
+  duration_ms: 0.7239
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when unknown flag is provided
+ok 13 - exit code 2: usage error when unknown flag is provided
+  ---
+  duration_ms: 2.276
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when multiple file arguments are passed
+ok 14 - exit code 2: usage error when multiple file arguments are passed
+  ---
+  duration_ms: 2.7421
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file does not exist
+ok 15 - exit code 2: usage error when file does not exist
+  ---
+  duration_ms: 0.9121
+  type: 'test'
+  ...
+# Subtest: exit code 3: parse error (E_PARSE) reports failing line number on stderr
+ok 16 - exit code 3: parse error (E_PARSE) reports failing line number on stderr
+  ---
+  duration_ms: 0.7651
+  type: 'test'
+  ...
+# Subtest: non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+ok 17 - non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+  ---
+  duration_ms: 1.978
+  type: 'test'
+  ...
+# Subtest: mode --summary: prints summarize table one line per row (clean)
+ok 18 - mode --summary: prints summarize table one line per row (clean)
+  ---
+  duration_ms: 1.5342
+  type: 'test'
+  ...
+# Subtest: mode --summary: returns exit code 1 when ledger has validation problems
+ok 19 - mode --summary: returns exit code 1 when ledger has validation problems
+  ---
+  duration_ms: 0.8554
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+ok 20 - mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+  ---
+  duration_ms: 2.5494
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object and returns 1 when problems exist
+ok 21 - mode --json: prints single JSON object and returns 1 when problems exist
+  ---
+  duration_ms: 5.1929
+  type: 'test'
+  ...
+# Subtest: mode --json wins over --summary flag when both are passed
+ok 22 - mode --json wins over --summary flag when both are passed
+  ---
+  duration_ms: 0.5985
+  type: 'test'
+  ...
+# Subtest: supports functional io.stdout and io.stderr
+ok 23 - supports functional io.stdout and io.stderr
+  ---
+  duration_ms: 0.448
+  type: 'test'
+  ...
+# Subtest: returns empty array when no duplicates exist
+ok 24 - returns empty array when no duplicates exist
+  ---
+  duration_ms: 4.4858
+  type: 'test'
+  ...
+# Subtest: handles empty input gracefully
+ok 25 - handles empty input gracefully
+  ---
+  duration_ms: 0.4968
+  type: 'test'
+  ...
+# Subtest: detects an exact duplicate pair
+ok 26 - detects an exact duplicate pair
+  ---
+  duration_ms: 0.6995
+  type: 'test'
+  ...
+# Subtest: detects a duplicate triple
+ok 27 - detects a duplicate triple
+  ---
+  duration_ms: 0.7901
+  type: 'test'
+  ...
+# Subtest: normalizes memo whitespace and case matching "Coffee  Beans" with "coffee beans"
+ok 28 - normalizes memo whitespace and case matching "Coffee  Beans" with "coffee beans"
+  ---
+  duration_ms: 0.5583
+  type: 'test'
+  ...
+# Subtest: normalizeMemo helper function behavior
+ok 29 - normalizeMemo helper function behavior
+  ---
+  duration_ms: 0.529
+  type: 'test'
+  ...
+# Subtest: keeps non-matching amounts separate
+ok 30 - keeps non-matching amounts separate
+  ---
+  duration_ms: 0.7982
+  type: 'test'
+  ...
+# Subtest: drops memo from match key when ignoreMemo is true
+ok 31 - drops memo from match key when ignoreMemo is true
+  ---
+  duration_ms: 3.8807
+  type: 'test'
+  ...
+# Subtest: sorts groups by the line number of their first member ascending (input-order sort)
+ok 32 - sorts groups by the line number of their first member ascending (input-order sort)
+  ---
+  duration_ms: 1.3561
+  type: 'test'
+  ...
+# Subtest: preserves input order of entries within duplicate groups
+ok 33 - preserves input order of entries within duplicate groups
+  ---
+  duration_ms: 1.5338
+  type: 'test'
+  ...
+# Subtest: plain case: single entry with default header
+ok 34 - plain case: single entry with default header
+  ---
+  duration_ms: 3.7793
+  type: 'test'
+  ...
+# Subtest: memo containing a comma
+ok 35 - memo containing a comma
+  ---
+  duration_ms: 0.7339
+  type: 'test'
+  ...
+# Subtest: memo containing a double quote
+ok 36 - memo containing a double quote
+  ---
+  duration_ms: 0.8529
+  type: 'test'
+  ...
+# Subtest: memo containing newlines (LF and CRLF)
+ok 37 - memo containing newlines (LF and CRLF)
+  ---
+  duration_ms: 0.5334
+  type: 'test'
+  ...
+# Subtest: two-decimal formatting of integer amount and fractional amounts
+ok 38 - two-decimal formatting of integer amount and fractional amounts
+  ---
+  duration_ms: 0.7661
+  type: 'test'
+  ...
+# Subtest: header: false suppresses the header row
+ok 39 - header: false suppresses the header row
+  ---
+  duration_ms: 0.4916
+  type: 'test'
+  ...
+# Subtest: empty entries list handling
+ok 40 - empty entries list handling
+  ---
+  duration_ms: 7.1927
+  type: 'test'
+  ...
+# Subtest: multiple entries preserve order and have no trailing CRLF
+ok 41 - multiple entries preserve order and have no trailing CRLF
+  ---
+  duration_ms: 0.5068
+  type: 'test'
+  ...
+# Subtest: amounts with magnitude >= 1e21 format in fixed-point with two decimals
+ok 42 - amounts with magnitude >= 1e21 format in fixed-point with two decimals
+  ---
+  duration_ms: 1.0641
+  type: 'test'
+  ...
+# Subtest: straight conversion: converts entries into target currency
+ok 43 - straight conversion: converts entries into target currency
+  ---
+  duration_ms: 6.304
+  type: 'test'
+  ...
+# Subtest: identity case: entry already in target passes through unchanged with rate 1
+ok 44 - identity case: entry already in target passes through unchanged with rate 1
+  ---
+  duration_ms: 0.6771
+  type: 'test'
+  ...
+# Subtest: input immutability: returns new array and new entry objects without mutating inputs
+ok 45 - input immutability: returns new array and new entry objects without mutating inputs
+  ---
+  duration_ms: 0.5545
+  type: 'test'
+  ...
+# Subtest: missing rate throws Error with code E_RATE and currency property
+ok 46 - missing rate throws Error with code E_RATE and currency property
+  ---
+  duration_ms: 1.4302
+  type: 'test'
+  ...
+# Subtest: negative half-way rounding case: rounds half away from zero symmetrically
+ok 47 - negative half-way rounding case: rounds half away from zero symmetrically
+  ---
+  duration_ms: 1.1328
+  type: 'test'
+  ...
+# Subtest: empty entries array returns empty array
+ok 48 - empty entries array returns empty array
+  ---
+  duration_ms: 0.4772
+  type: 'test'
+  ...
+# Subtest: fromString: parses positive and negative decimal strings into integer minor units
+ok 49 - fromString: parses positive and negative decimal strings into integer minor units
+  ---
+  duration_ms: 4.9944
+  type: 'test'
+  ...
+# Subtest: fromString: rejects numbers with more than 2 decimal places with E_PRECISION
+ok 50 - fromString: rejects numbers with more than 2 decimal places with E_PRECISION
+  ---
+  duration_ms: 5.1013
+  type: 'test'
+  ...
+# Subtest: fromString: direct digit parsing avoids JavaScript floating point inaccuracies
+ok 51 - fromString: direct digit parsing avoids JavaScript floating point inaccuracies
+  ---
+  duration_ms: 0.5097
+  type: 'test'
+  ...
+# Subtest: fromString: rejects invalid string formats with E_INVALID
+ok 52 - fromString: rejects invalid string formats with E_INVALID
+  ---
+  duration_ms: 1.0816
+  type: 'test'
+  ...
+# Subtest: toString: formats minor units into 2-decimal string with sign preserved
+ok 53 - toString: formats minor units into 2-decimal string with sign preserved
+  ---
+  duration_ms: 0.7245
+  type: 'test'
+  ...
+# Subtest: toString: rejects non-integer input with E_INVALID
+ok 54 - toString: rejects non-integer input with E_INVALID
+  ---
+  duration_ms: 0.5259
+  type: 'test'
+  ...
+# Subtest: round-tripping: fromString and toString round trip accurately
+ok 55 - round-tripping: fromString and toString round trip accurately
+  ---
+  duration_ms: 1.3813
+  type: 'test'
+  ...
+# Subtest: arithmetic: add, sub, neg, sum operate on minor units
+ok 56 - arithmetic: add, sub, neg, sum operate on minor units
+  ---
+  duration_ms: 1.6709
+  type: 'test'
+  ...
+# Subtest: arithmetic: validates inputs with E_INVALID
+ok 57 - arithmetic: validates inputs with E_INVALID
+  ---
+  duration_ms: 3.6884
+  type: 'test'
+  ...
+# Subtest: allocate: splits 1000 minor units over [1, 1, 1] without losing cents
+ok 58 - allocate: splits 1000 minor units over [1, 1, 1] without losing cents
+  ---
+  duration_ms: 2.7041
+  type: 'test'
+  ...
+# Subtest: allocate: splits 1 minor unit over [1, 1, 1] without losing cents
+ok 59 - allocate: splits 1 minor unit over [1, 1, 1] without losing cents
+  ---
+  duration_ms: 3.587
+  type: 'test'
+  ...
+# Subtest: allocate: distributes remainders to largest remainders first
+ok 60 - allocate: distributes remainders to largest remainders first
+  ---
+  duration_ms: 0.5641
+  type: 'test'
+  ...
+# Subtest: allocate: handles zero amount and negative amounts symmetrically
+ok 61 - allocate: handles zero amount and negative amounts symmetrically
+  ---
+  duration_ms: 0.5551
+  type: 'test'
+  ...
+# Subtest: allocate: handles zero ratio components
+ok 62 - allocate: handles zero ratio components
+  ---
+  duration_ms: 0.4331
+  type: 'test'
+  ...
+# Subtest: allocate: single ratio gets entire amount
+ok 63 - allocate: single ratio gets entire amount
+  ---
+  duration_ms: 0.3637
+  type: 'test'
+  ...
+# Subtest: allocate: validates inputs with E_INVALID
+ok 64 - allocate: validates inputs with E_INVALID
+  ---
+  duration_ms: 0.9352
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: fromString rejects amounts beyond safe integer range
+ok 65 - safe integer boundaries: fromString rejects amounts beyond safe integer range
+  ---
+  duration_ms: 5.3469
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: toString formats boundary values and rejects unsafe integers
+ok 66 - safe integer boundaries: toString formats boundary values and rejects unsafe integers
+  ---
+  duration_ms: 0.7768
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: arithmetic detects overflow and rejects unsafe integers
+ok 67 - safe integer boundaries: arithmetic detects overflow and rejects unsafe integers
+  ---
+  duration_ms: 1.0476
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: allocate handles large safe integer amounts and ratios exactly
+ok 68 - safe integer boundaries: allocate handles large safe integer amounts and ratios exactly
+  ---
+  duration_ms: 7.1676
+  type: 'test'
+  ...
+# Subtest: parses a well-formed line
+ok 69 - parses a well-formed line
+  ---
+  duration_ms: 4.4059
+  type: 'test'
+  ...
+# Subtest: skips blanks and comments
+ok 70 - skips blanks and comments
+  ---
+  duration_ms: 0.4052
+  type: 'test'
+  ...
+# Subtest: rejects a malformed line with E_PARSE
+ok 71 - rejects a malformed line with E_PARSE
+  ---
+  duration_ms: 1.2405
+  type: 'test'
+  ...
+# Subtest: parses a multi-line document
+ok 72 - parses a multi-line document
+  ---
+  duration_ms: 0.8097
+  type: 'test'
+  ...
+# Subtest: identical ledgers produce only matched groups and isReconciled true
+ok 73 - identical ledgers produce only matched groups and isReconciled true
+  ---
+  duration_ms: 44.742001
+  type: 'test'
+  ...
+# Subtest: a one-sided date appears in onlyInA or onlyInB
+ok 74 - a one-sided date appears in onlyInA or onlyInB
+  ---
+  duration_ms: 1.3354
+  type: 'test'
+  ...
+# Subtest: a same-date total mismatch asserts the exact deltaMinor
+ok 75 - a same-date total mismatch asserts the exact deltaMinor
+  ---
+  duration_ms: 3.2653
+  type: 'test'
+  ...
+# Subtest: a negative deltaMinor when ledger B has a larger amount than ledger A
+ok 76 - a negative deltaMinor when ledger B has a larger amount than ledger A
+  ---
+  duration_ms: 0.6356
+  type: 'test'
+  ...
+# Subtest: a currency present on only one side on the same date
+ok 77 - a currency present on only one side on the same date
+  ---
+  duration_ms: 1.0981
+  type: 'test'
+  ...
+# Subtest: determinism: running reconcile twice yields byte-identical results and deep equality
+ok 78 - determinism: running reconcile twice yields byte-identical results and deep equality
+  ---
+  duration_ms: 0.8825
+  type: 'test'
+  ...
+# Subtest: all output arrays are sorted chronologically by date, then currency ascending
+ok 79 - all output arrays are sorted chronologically by date, then currency ascending
+  ---
+  duration_ms: 1.2867
+  type: 'test'
+  ...
+# Subtest: floating-point drift case: 0.10 + 0.10 + 0.10 vs 0.30 reconciles to exact zero mismatch
+ok 80 - floating-point drift case: 0.10 + 0.10 + 0.10 vs 0.30 reconciles to exact zero mismatch
+  ---
+  duration_ms: 0.5377
+  type: 'test'
+  ...
+# Subtest: empty ledgers reconcile with all empty arrays and isReconciled true
+ok 81 - empty ledgers reconcile with all empty arrays and isReconciled true
+  ---
+  duration_ms: 0.8885
+  type: 'test'
+  ...
+# Subtest: isReconciled returns false for non-empty discrepancies or invalid result objects
+ok 82 - isReconciled returns false for non-empty discrepancies or invalid result objects
+  ---
+  duration_ms: 3.5152
+  type: 'test'
+  ...
+# Subtest: reconcile throws E_INVALID if inputs are not iterables
+ok 83 - reconcile throws E_INVALID if inputs are not iterables
+  ---
+  duration_ms: 1.5529
+  type: 'test'
+  ...
+# Subtest: summarize totals per account and currency
+ok 84 - summarize totals per account and currency
+  ---
+  duration_ms: 61.5416
+  type: 'test'
+  ...
+# Subtest: a balanced day validates
+ok 85 - a balanced day validates
+  ---
+  duration_ms: 10.5535
+  type: 'test'
+  ...
+# Subtest: an unbalanced day is reported
+ok 86 - an unbalanced day is reported
+  ---
+  duration_ms: 0.622
+  type: 'test'
+  ...
+# Subtest: currencies are balanced independently
+ok 87 - currencies are balanced independently
+  ---
+  duration_ms: 0.6266
+  type: 'test'
+  ...
+1..87
+# tests 87
+# suites 0
+# pass 87
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 888.864802
+marathon-drive: gate-guard: gate exit 0 after 2s — peak group RSS 235MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/marathon-target/relay-system/2026-08-20/marathon-r2p3-135555.md
+marathon-drive: memory-telemetry: phase r2p3-complete boundary — swap_free=8192MB
+marathon-drive: phase r2p3 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/7 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 38m 13s
+per done-task: ≥0 tokens, 5m 28s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 287MB peak RSS
+
+marathon: ── phase 4/4: r2p4 (reviewer=codex, round-cap=5, artifact=src/report.js,test/report.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/preflight/
+marathon-drive:   • relay-system/run-logs/2026-08-20/marathon-MARATHON_-164223-30219.log
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/marathon-target/marathon-system/run2-reconcile-chain--r2p4/RELAY.md
+marathon-drive: tick token seeded: MARATHON-R2P4-TURN → agy
+marathon-drive: memory-telemetry: phase r2p4-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.gbG0bi)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.2oxpoN)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+relay-drive: relay terminated (STATUS: Approved, token done) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: npm test
+
+> ledgerkit@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: a balanced day returns zero totalMinor and empty unbalanced list
+ok 1 - a balanced day returns zero totalMinor and empty unbalanced list
+  ---
+  duration_ms: 7.5531
+  type: 'test'
+  ...
+# Subtest: an unbalanced day asserts the exact totalMinor delta
+ok 2 - an unbalanced day asserts the exact totalMinor delta
+  ---
+  duration_ms: 0.7921
+  type: 'test'
+  ...
+# Subtest: currencies on the same day are tracked independently and sorted by currency
+ok 3 - currencies on the same day are tracked independently and sorted by currency
+  ---
+  duration_ms: 39.3061
+  type: 'test'
+  ...
+# Subtest: floating-point drift case: three entries of 0.10 against -0.30 proves exact zero
+ok 4 - floating-point drift case: three entries of 0.10 against -0.30 proves exact zero
+  ---
+  duration_ms: 0.8827
+  type: 'test'
+  ...
+# Subtest: groups are sorted by date ascending, then currency ascending
+ok 5 - groups are sorted by date ascending, then currency ascending
+  ---
+  duration_ms: 4.8953
+  type: 'test'
+  ...
+# Subtest: empty entries list returns empty groups and unbalanced array
+ok 6 - empty entries list returns empty groups and unbalanced array
+  ---
+  duration_ms: 0.3597
+  type: 'test'
+  ...
+# Subtest: supports string amounts in addition to number amounts
+ok 7 - supports string amounts in addition to number amounts
+  ---
+  duration_ms: 0.5182
+  type: 'test'
+  ...
+# Subtest: rejects invalid inputs with E_INVALID or E_PRECISION
+ok 8 - rejects invalid inputs with E_INVALID or E_PRECISION
+  ---
+  duration_ms: 1.9404
+  type: 'test'
+  ...
+# Subtest: exit code 0: default mode on balanced ledger prints OK summary
+ok 9 - exit code 0: default mode on balanced ledger prints OK summary
+  ---
+  duration_ms: 46.5389
+  type: 'test'
+  ...
+# Subtest: exit code 0: default mode on empty file prints OK: 0 entries
+ok 10 - exit code 0: default mode on empty file prints OK: 0 entries
+  ---
+  duration_ms: 4.7753
+  type: 'test'
+  ...
+# Subtest: exit code 1: default mode on unbalanced ledger prints problem line
+ok 11 - exit code 1: default mode on unbalanced ledger prints problem line
+  ---
+  duration_ms: 3.8384
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file argument is missing
+ok 12 - exit code 2: usage error when file argument is missing
+  ---
+  duration_ms: 0.7181
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when unknown flag is provided
+ok 13 - exit code 2: usage error when unknown flag is provided
+  ---
+  duration_ms: 0.5309
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when multiple file arguments are passed
+ok 14 - exit code 2: usage error when multiple file arguments are passed
+  ---
+  duration_ms: 0.5825
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file does not exist
+ok 15 - exit code 2: usage error when file does not exist
+  ---
+  duration_ms: 1.9138
+  type: 'test'
+  ...
+# Subtest: exit code 3: parse error (E_PARSE) reports failing line number on stderr
+ok 16 - exit code 3: parse error (E_PARSE) reports failing line number on stderr
+  ---
+  duration_ms: 0.6053
+  type: 'test'
+  ...
+# Subtest: non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+ok 17 - non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+  ---
+  duration_ms: 1.987
+  type: 'test'
+  ...
+# Subtest: mode --summary: prints summarize table one line per row (clean)
+ok 18 - mode --summary: prints summarize table one line per row (clean)
+  ---
+  duration_ms: 1.6094
+  type: 'test'
+  ...
+# Subtest: mode --summary: returns exit code 1 when ledger has validation problems
+ok 19 - mode --summary: returns exit code 1 when ledger has validation problems
+  ---
+  duration_ms: 0.8124
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+ok 20 - mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+  ---
+  duration_ms: 6.6455
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object and returns 1 when problems exist
+ok 21 - mode --json: prints single JSON object and returns 1 when problems exist
+  ---
+  duration_ms: 0.8705
+  type: 'test'
+  ...
+# Subtest: mode --json wins over --summary flag when both are passed
+ok 22 - mode --json wins over --summary flag when both are passed
+  ---
+  duration_ms: 1.1849
+  type: 'test'
+  ...
+# Subtest: supports functional io.stdout and io.stderr
+ok 23 - supports functional io.stdout and io.stderr
+  ---
+  duration_ms: 0.5249
+  type: 'test'
+  ...
+# Subtest: returns empty array when no duplicates exist
+ok 24 - returns empty array when no duplicates exist
+  ---
+  duration_ms: 5.2663
+  type: 'test'
+  ...
+# Subtest: handles empty input gracefully
+ok 25 - handles empty input gracefully
+  ---
+  duration_ms: 0.7421
+  type: 'test'
+  ...
+# Subtest: detects an exact duplicate pair
+ok 26 - detects an exact duplicate pair
+  ---
+  duration_ms: 0.6776
+  type: 'test'
+  ...
+# Subtest: detects a duplicate triple
+ok 27 - detects a duplicate triple
+  ---
+  duration_ms: 0.7622
+  type: 'test'
+  ...
+# Subtest: normalizes memo whitespace and case matching "Coffee  Beans" with "coffee beans"
+ok 28 - normalizes memo whitespace and case matching "Coffee  Beans" with "coffee beans"
+  ---
+  duration_ms: 0.5787
+  type: 'test'
+  ...
+# Subtest: normalizeMemo helper function behavior
+ok 29 - normalizeMemo helper function behavior
+  ---
+  duration_ms: 0.4177
+  type: 'test'
+  ...
+# Subtest: keeps non-matching amounts separate
+ok 30 - keeps non-matching amounts separate
+  ---
+  duration_ms: 1.6026
+  type: 'test'
+  ...
+# Subtest: drops memo from match key when ignoreMemo is true
+ok 31 - drops memo from match key when ignoreMemo is true
+  ---
+  duration_ms: 0.5242
+  type: 'test'
+  ...
+# Subtest: sorts groups by the line number of their first member ascending (input-order sort)
+ok 32 - sorts groups by the line number of their first member ascending (input-order sort)
+  ---
+  duration_ms: 2.0196
+  type: 'test'
+  ...
+# Subtest: preserves input order of entries within duplicate groups
+ok 33 - preserves input order of entries within duplicate groups
+  ---
+  duration_ms: 1.4992
+  type: 'test'
+  ...
+# Subtest: plain case: single entry with default header
+ok 34 - plain case: single entry with default header
+  ---
+  duration_ms: 3.1154
+  type: 'test'
+  ...
+# Subtest: memo containing a comma
+ok 35 - memo containing a comma
+  ---
+  duration_ms: 0.776
+  type: 'test'
+  ...
+# Subtest: memo containing a double quote
+ok 36 - memo containing a double quote
+  ---
+  duration_ms: 0.6055
+  type: 'test'
+  ...
+# Subtest: memo containing newlines (LF and CRLF)
+ok 37 - memo containing newlines (LF and CRLF)
+  ---
+  duration_ms: 0.4796
+  type: 'test'
+  ...
+# Subtest: two-decimal formatting of integer amount and fractional amounts
+ok 38 - two-decimal formatting of integer amount and fractional amounts
+  ---
+  duration_ms: 0.866
+  type: 'test'
+  ...
+# Subtest: header: false suppresses the header row
+ok 39 - header: false suppresses the header row
+  ---
+  duration_ms: 0.4312
+  type: 'test'
+  ...
+# Subtest: empty entries list handling
+ok 40 - empty entries list handling
+  ---
+  duration_ms: 2.7872
+  type: 'test'
+  ...
+# Subtest: multiple entries preserve order and have no trailing CRLF
+ok 41 - multiple entries preserve order and have no trailing CRLF
+  ---
+  duration_ms: 0.4452
+  type: 'test'
+  ...
+# Subtest: amounts with magnitude >= 1e21 format in fixed-point with two decimals
+ok 42 - amounts with magnitude >= 1e21 format in fixed-point with two decimals
+  ---
+  duration_ms: 1.003
+  type: 'test'
+  ...
+# Subtest: straight conversion: converts entries into target currency
+ok 43 - straight conversion: converts entries into target currency
+  ---
+  duration_ms: 4.6046
+  type: 'test'
+  ...
+# Subtest: identity case: entry already in target passes through unchanged with rate 1
+ok 44 - identity case: entry already in target passes through unchanged with rate 1
+  ---
+  duration_ms: 0.6813
+  type: 'test'
+  ...
+# Subtest: input immutability: returns new array and new entry objects without mutating inputs
+ok 45 - input immutability: returns new array and new entry objects without mutating inputs
+  ---
+  duration_ms: 0.6057
+  type: 'test'
+  ...
+# Subtest: missing rate throws Error with code E_RATE and currency property
+ok 46 - missing rate throws Error with code E_RATE and currency property
+  ---
+  duration_ms: 1.9397
+  type: 'test'
+  ...
+# Subtest: negative half-way rounding case: rounds half away from zero symmetrically
+ok 47 - negative half-way rounding case: rounds half away from zero symmetrically
+  ---
+  duration_ms: 2.7932
+  type: 'test'
+  ...
+# Subtest: empty entries array returns empty array
+ok 48 - empty entries array returns empty array
+  ---
+  duration_ms: 1.373
+  type: 'test'
+  ...
+# Subtest: fromString: parses positive and negative decimal strings into integer minor units
+ok 49 - fromString: parses positive and negative decimal strings into integer minor units
+  ---
+  duration_ms: 4.494
+  type: 'test'
+  ...
+# Subtest: fromString: rejects numbers with more than 2 decimal places with E_PRECISION
+ok 50 - fromString: rejects numbers with more than 2 decimal places with E_PRECISION
+  ---
+  duration_ms: 4.3198
+  type: 'test'
+  ...
+# Subtest: fromString: direct digit parsing avoids JavaScript floating point inaccuracies
+ok 51 - fromString: direct digit parsing avoids JavaScript floating point inaccuracies
+  ---
+  duration_ms: 0.5975
+  type: 'test'
+  ...
+# Subtest: fromString: rejects invalid string formats with E_INVALID
+ok 52 - fromString: rejects invalid string formats with E_INVALID
+  ---
+  duration_ms: 1.0741
+  type: 'test'
+  ...
+# Subtest: toString: formats minor units into 2-decimal string with sign preserved
+ok 53 - toString: formats minor units into 2-decimal string with sign preserved
+  ---
+  duration_ms: 0.763
+  type: 'test'
+  ...
+# Subtest: toString: rejects non-integer input with E_INVALID
+ok 54 - toString: rejects non-integer input with E_INVALID
+  ---
+  duration_ms: 0.5412
+  type: 'test'
+  ...
+# Subtest: round-tripping: fromString and toString round trip accurately
+ok 55 - round-tripping: fromString and toString round trip accurately
+  ---
+  duration_ms: 0.8822
+  type: 'test'
+  ...
+# Subtest: arithmetic: add, sub, neg, sum operate on minor units
+ok 56 - arithmetic: add, sub, neg, sum operate on minor units
+  ---
+  duration_ms: 1.1974
+  type: 'test'
+  ...
+# Subtest: arithmetic: validates inputs with E_INVALID
+ok 57 - arithmetic: validates inputs with E_INVALID
+  ---
+  duration_ms: 2.1147
+  type: 'test'
+  ...
+# Subtest: allocate: splits 1000 minor units over [1, 1, 1] without losing cents
+ok 58 - allocate: splits 1000 minor units over [1, 1, 1] without losing cents
+  ---
+  duration_ms: 2.4609
+  type: 'test'
+  ...
+# Subtest: allocate: splits 1 minor unit over [1, 1, 1] without losing cents
+ok 59 - allocate: splits 1 minor unit over [1, 1, 1] without losing cents
+  ---
+  duration_ms: 0.8285
+  type: 'test'
+  ...
+# Subtest: allocate: distributes remainders to largest remainders first
+ok 60 - allocate: distributes remainders to largest remainders first
+  ---
+  duration_ms: 0.5706
+  type: 'test'
+  ...
+# Subtest: allocate: handles zero amount and negative amounts symmetrically
+ok 61 - allocate: handles zero amount and negative amounts symmetrically
+  ---
+  duration_ms: 0.9214
+  type: 'test'
+  ...
+# Subtest: allocate: handles zero ratio components
+ok 62 - allocate: handles zero ratio components
+  ---
+  duration_ms: 0.3424
+  type: 'test'
+  ...
+# Subtest: allocate: single ratio gets entire amount
+ok 63 - allocate: single ratio gets entire amount
+  ---
+  duration_ms: 0.312
+  type: 'test'
+  ...
+# Subtest: allocate: validates inputs with E_INVALID
+ok 64 - allocate: validates inputs with E_INVALID
+  ---
+  duration_ms: 0.6746
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: fromString rejects amounts beyond safe integer range
+ok 65 - safe integer boundaries: fromString rejects amounts beyond safe integer range
+  ---
+  duration_ms: 0.6758
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: toString formats boundary values and rejects unsafe integers
+ok 66 - safe integer boundaries: toString formats boundary values and rejects unsafe integers
+  ---
+  duration_ms: 0.5838
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: arithmetic detects overflow and rejects unsafe integers
+ok 67 - safe integer boundaries: arithmetic detects overflow and rejects unsafe integers
+  ---
+  duration_ms: 0.95
+  type: 'test'
+  ...
+# Subtest: safe integer boundaries: allocate handles large safe integer amounts and ratios exactly
+ok 68 - safe integer boundaries: allocate handles large safe integer amounts and ratios exactly
+  ---
+  duration_ms: 2.3006
+  type: 'test'
+  ...
+# Subtest: parses a well-formed line
+ok 69 - parses a well-formed line
+  ---
+  duration_ms: 4.4198
+  type: 'test'
+  ...
+# Subtest: skips blanks and comments
+ok 70 - skips blanks and comments
+  ---
+  duration_ms: 0.4222
+  type: 'test'
+  ...
+# Subtest: rejects a malformed line with E_PARSE
+ok 71 - rejects a malformed line with E_PARSE
+  ---
+  duration_ms: 2.5898
+  type: 'test'
+  ...
+# Subtest: parses a multi-line document
+ok 72 - parses a multi-line document
+  ---
+  duration_ms: 0.7939
+  type: 'test'
+  ...
+# Subtest: identical ledgers produce only matched groups and isReconciled true
+ok 73 - identical ledgers produce only matched groups and isReconciled true
+  ---
+  duration_ms: 46.010899
+  type: 'test'
+  ...
+# Subtest: a one-sided date appears in onlyInA or onlyInB
+ok 74 - a one-sided date appears in onlyInA or onlyInB
+  ---
+  duration_ms: 2.2925
+  type: 'test'
+  ...
+# Subtest: a same-date total mismatch asserts the exact deltaMinor
+ok 75 - a same-date total mismatch asserts the exact deltaMinor
+  ---
+  duration_ms: 3.6193
+  type: 'test'
+  ...
+# Subtest: a negative deltaMinor when ledger B has a larger amount than ledger A
+ok 76 - a negative deltaMinor when ledger B has a larger amount than ledger A
+  ---
+  duration_ms: 0.6495
+  type: 'test'
+  ...
+# Subtest: a currency present on only one side on the same date
+ok 77 - a currency present on only one side on the same date
+  ---
+  duration_ms: 1.1984
+  type: 'test'
+  ...
+# Subtest: determinism: running reconcile twice yields byte-identical results and deep equality
+ok 78 - determinism: running reconcile twice yields byte-identical results and deep equality
+  ---
+  duration_ms: 0.8781
+  type: 'test'
+  ...
+# Subtest: all output arrays are sorted chronologically by date, then currency ascending
+ok 79 - all output arrays are sorted chronologically by date, then currency ascending
+  ---
+  duration_ms: 1.0327
+  type: 'test'
+  ...
+# Subtest: floating-point drift case: 0.10 + 0.10 + 0.10 vs 0.30 reconciles to exact zero mismatch
+ok 80 - floating-point drift case: 0.10 + 0.10 + 0.10 vs 0.30 reconciles to exact zero mismatch
+  ---
+  duration_ms: 0.6651
+  type: 'test'
+  ...
+# Subtest: empty ledgers reconcile with all empty arrays and isReconciled true
+ok 81 - empty ledgers reconcile with all empty arrays and isReconciled true
+  ---
+  duration_ms: 0.9156
+  type: 'test'
+  ...
+# Subtest: isReconciled returns false for non-empty discrepancies or invalid result objects
+ok 82 - isReconciled returns false for non-empty discrepancies or invalid result objects
+  ---
+  duration_ms: 1.4117
+  type: 'test'
+  ...
+# Subtest: reconcile throws E_INVALID if inputs are not iterables
+ok 83 - reconcile throws E_INVALID if inputs are not iterables
+  ---
+  duration_ms: 2.9233
+  type: 'test'
+  ...
+# Subtest: empty reconcile result renders all four sections with (none)
+ok 84 - empty reconcile result renders all four sections with (none)
+  ---
+  duration_ms: 3.2075
+  type: 'test'
+  ...
+# Subtest: fully reconciled result renders matched entries and (none) for discrepancies
+ok 85 - fully reconciled result renders matched entries and (none) for discrepancies
+  ---
+  duration_ms: 0.9754
+  type: 'test'
+  ...
+# Subtest: mismatch rows show both sides and delta with exact money formatting
+ok 86 - mismatch rows show both sides and delta with exact money formatting
+  ---
+  duration_ms: 1.596
+  type: 'test'
+  ...
+# Subtest: column alignment holds across a wide magnitude range, signs, and date/currency lengths
+ok 87 - column alignment holds across a wide magnitude range, signs, and date/currency lengths
+  ---
+  duration_ms: 3.3892
+  type: 'test'
+  ...
+# Subtest: summaryOnly option returns one-line verdict
+ok 88 - summaryOnly option returns one-line verdict
+  ---
+  duration_ms: 0.6151
+  type: 'test'
+  ...
+# Subtest: end-to-end integration: parses ledgers, reconciles, and renders report
+ok 89 - end-to-end integration: parses ledgers, reconciles, and renders report
+  ---
+  duration_ms: 55.3332
+  type: 'test'
+  ...
+# Subtest: determinism: running renderReport multiple times produces identical output without mutating input
+ok 90 - determinism: running renderReport multiple times produces identical output without mutating input
+  ---
+  duration_ms: 3.1331
+  type: 'test'
+  ...
+# Subtest: error handling: throws E_INVALID if result is not an object
+ok 91 - error handling: throws E_INVALID if result is not an object
+  ---
+  duration_ms: 3.4598
+  type: 'test'
+  ...
+# Subtest: gracefully handles missing result arrays by treating them as empty
+ok 92 - gracefully handles missing result arrays by treating them as empty
+  ---
+  duration_ms: 1.8579
+  type: 'test'
+  ...
+# Subtest: summarize totals per account and currency
+ok 93 - summarize totals per account and currency
+  ---
+  duration_ms: 53.4521
+  type: 'test'
+  ...
+# Subtest: a balanced day validates
+ok 94 - a balanced day validates
+  ---
+  duration_ms: 3.3853
+  type: 'test'
+  ...
+# Subtest: an unbalanced day is reported
+ok 95 - an unbalanced day is reported
+  ---
+  duration_ms: 0.3918
+  type: 'test'
+  ...
+# Subtest: currencies are balanced independently
+ok 96 - currencies are balanced independently
+  ---
+  duration_ms: 0.3359
+  type: 'test'
+  ...
+1..96
+# tests 96
+# suites 0
+# pass 96
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 940.842898
+marathon-drive: gate-guard: gate exit 0 after 2s — peak group RSS 207MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/marathon-target/relay-system/2026-08-20/marathon-r2p4-140017.md
+marathon-drive: memory-telemetry: phase r2p4-complete boundary — swap_free=8192MB
+marathon-drive: phase r2p4 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/8 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 42m 36s
+per done-task: ≥0 tokens, 5m 19s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 289MB peak RSS
+
+marathon: marathon complete — all 4 phase(s) approved
+WALL_CLOCK_END=2026-08-20T17:00:18+03:00 epoch=1787234418
+
+MARATHON_FULLRUN_RC=0
+=== END OUTPUT ===
+end      : 2026-08-20T17:00:18+03:00
+duration : 1077s
+EXIT_CODE: 0

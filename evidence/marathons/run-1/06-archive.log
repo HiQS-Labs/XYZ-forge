@@ -1,0 +1,50 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash evidence/_env/archive-run.sh 1 run1-ledger-exports marathon-r1p*
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:13:27+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== 1. live relay threads + escalations + state files ===
+  run1-ledger-exports--r1p1 -> RELAY.md 
+  run1-ledger-exports--r1p2 -> RELAY.md 
+  run1-ledger-exports--r1p3 -> RELAY.md 
+  run1-ledger-exports--r1p4 -> RELAY.md 
+
+=== 2. saved transcripts (raw) ===
+  marathon-r1p1-132208.md
+  marathon-r1p2-132507.md
+  marathon-r1p3-133240.md
+  marathon-r1p4-133547.md
+
+=== 3. per-turn shim logs (agy/codex transcripts, GH-161 persistent path) ===
+  files: 6
+
+=== 4. preflight packet ===
+
+=== 5. tick events for this run ===
+  event files: 2
+
+=== 6. the plan, briefs and capture doc that drove the run ===
+  PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p3-cli.md
+  PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p2-fx.md
+  PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p1-csv.md
+  PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p4-dedupe.md
+  PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/MARATHON.yaml
+  PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS.md
+
+=== 7. the built artefacts, as they stand after this run ===
+  src:  11 files
+  test: 11 files
+
+=== 8. git history of the run (target repo) ===
+  git-log.tsv: 53 commits
+
+=== TOTAL ===
+  files: 46
+  bytes: 305043
+488K	/home/arnoldadero/XYZ-forge/evidence/marathons/run-1/artefacts
+=== END OUTPUT ===
+end      : 2026-08-20T17:13:28+03:00
+duration : 1s
+EXIT_CODE: 0

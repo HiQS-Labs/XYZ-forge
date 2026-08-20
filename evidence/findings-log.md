@@ -965,3 +965,170 @@ repos are not matched against xyz's filenames. The drift watcher has the same ne
 Repro: `repro.sh probe-drift-false-positive`.
 
 ---
+
+## F-024 — a builder quota limit is reported to the operator as an auth failure, with an impossible remedy
+
+**Tag: LINUX** · Severity: **high** — the operator is pointed at a non-existent command while the real
+cause is a limit that resets in seven days
+
+### What happened
+
+Runs 1 and 2 (8 phases, ~30 turns) consumed the agy individual quota. Run 3's first builder turn then
+failed:
+
+```
+agy-turn: agy -p failed (exit 1)
+agy-turn: auth was NEVER VERIFIED for this turn, and the turn failed — agy could not run headless,
+  so auth was not verified: CLI error: bubbletea: error opening TTY: bubbletea: could not open TTY:
+  open /dev/tty: no such device or address
+agy-turn: No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test
+  and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+marathon-drive: relay escalated: relay-failed-before-gate (gate: not-run)
+marathon: HALT: phase r3p1 failed (marathon-drive exit 5) — chain stops; later phases NOT started
+```
+
+marathon-drive exit **5**, reason `relay-failed-before-gate`, gate `not-run`, 0 rounds.
+
+### The actual cause
+
+Probed directly, three consecutive attempts (`evidence/marathons/run-3/02-agy-p-retest.log`):
+
+```
+attempt 1: rc=1  15s  Error: Individual quota reached. Please upgrade your subscription to
+                      increase your limits. Resets in 166h55m7s.
+attempt 2: rc=1  15s  (same)
+attempt 3: rc=1  15s  (same)
+```
+
+Nothing to do with a TTY. Nothing to do with auth. The account is authenticated and simply out of
+quota for another ~7 days.
+
+### Why it presents as a TTY error
+
+agy renders the quota message through its interactive TUI. Under worktree isolation the turn has no
+openable `/dev/tty`, so bubbletea fails first and its TTY error is the only thing that reaches the
+shim. Three layers sit between the operator and the truth:
+
+```
+quota exhausted  ->  TUI cannot open /dev/tty  ->  shim reports "auth was never verified"
+                                               ->  printed remedy: `agy login`
+```
+
+`agy login` is **not a subcommand of agy 1.1.16** (F-015). So an operator following the printed advice
+runs a command that does not exist, learns nothing, and has no reason to suspect a quota window.
+
+Note this is a *different* failure from F-015 with a *similar* signature, which makes it harder, not
+easier: F-015 is `whoami` hanging during the pre-flight; F-024 is `agy -p` — the real turn — failing
+after the pre-flight already waved it through.
+
+### What the harness got right
+
+Worth stating, because the design is doing real work here:
+
+- It refused to advance: `gate: not-run`. It did not run the gate against an unbuilt artifact.
+- It halted the chain and did not start r3p2–r3p4, exactly as `marathon.sh:4-8` documents.
+- It wrote `ESCALATION.md` carrying the relay-drive exit code and reason.
+- It saved a transcript anyway, so the failed turn is inspectable.
+- It said "auth was **NEVER VERIFIED**" rather than "auth is bad" — the GH-492 hedge is correct. The
+  defect is the layer above, which converts a correctly-hedged observation into a confident wrong
+  remedy.
+
+### Suggested resolution
+
+Match agy's own error text before attributing anything to auth. `Individual quota reached` /
+`upgrade your subscription` / `Resets in` are stable, greppable strings, and they are present in the
+turn's captured output whenever the TUI manages to emit anything at all. A quota failure should
+surface as "builder out of quota, resets in X" — a completely different operator action from
+re-authenticating.
+
+### Consequence for F-015
+
+F-015's write-up floated `agy models` as a candidate replacement auth probe (rc=0 in ~8s). **That
+suggestion is withdrawn.** Measured during this failure, `agy models` also returns **rc=1** under
+quota exhaustion, so it would report "not authenticated" for an account that is authenticated and
+merely out of quota — swapping one misdiagnosis for another.
+
+Full record: `evidence/marathons/run-3/3a-agy-quota-halt/`.
+
+---
+
+## F-025 — cost telemetry records nothing for the agy and codex lanes
+
+**Tag: LINUX** · Severity: medium — the run's own cost report cannot answer "what did this cost?"
+
+Every marathon ends with a cost summary. After a complete four-phase run:
+
+```
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/8 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 42m 36s
+per done-task: ≥0 tokens, 5m 19s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 289MB peak RSS
+```
+
+**`0/8 done-tasks instrumented`** — eight completed tasks, zero token records. The summary is honest
+about it (`≥0`, `PARTIAL, floor only`), which is the right way to report missing data, but the
+practical result is that a completed campaign cannot report its own spend.
+
+What *is* captured and useful: wall-clock per done-task, and peak RSS per agent — the latter is
+genuinely good data (agy 197 MB, codex 289 MB) and directly answers the sizing question in
+`evidence/00-environment.md`.
+
+This appears to be known rather than broken: `relay-automation/README.md:29` describes the Pi lane as
+*"the first non-Claude lane with actual `tick cost --tool pi` capture"*, implying agy and codex have
+none. Recorded because the gap is invisible until a run finishes and the summary reads `≥0`, and
+because "report the spend" is a normal thing to ask of a long-horizon campaign.
+
+Workable substitute, used in this bring-up: turn counts from the commit log
+(`git log --oneline | grep -oE 'relay\(MARATHON-R[0-9]P[0-9]-TURN\): (agy|codex)'`) plus wall clock,
+plus the builders' own quota state.
+
+---
+
+## F-026 — the claude builder lane can never have a trusted workspace
+
+**Tag: LINUX** · Severity: low (warn-only, turn still proceeds) but it silently drops project permissions
+
+With `--builder claude` and `RELAY_WORKTREE_ISOLATION=1` (the default for marathon turns), every turn
+runs in a fresh throwaway worktree with a random name:
+
+```
+claude-turn: worktree isolation ON (/tmp/rtl-wt.Qzd3vw)
+claude-turn: WARNING: workspace '/tmp/rtl-wt.Qzd3vw' is not trusted; Claude may ignore project
+  permissions. Run Claude Code interactively in this directory and accept the trust dialog, or set
+  projects['/tmp/rtl-wt.Qzd3vw']["hasTrustDialogAccepted"] to true in /home/arnoldadero/.claude.json.
+```
+
+Both remedies are impossible by construction. The directory is created for that turn, has a random
+`mktemp` suffix, and is destroyed afterwards — so it cannot be visited interactively beforehand, and
+cannot be pre-listed in `~/.claude.json`. The next turn gets a different random path.
+
+Consequence: the claude builder lane always runs with `permissions.allow` from the project's
+`.claude/settings.json` **silently ignored**. On this host that was 16 dropped entries, observed
+directly:
+
+```
+Ignoring 16 permissions.allow entries from .claude/settings.json: this workspace has not been
+trusted.
+```
+
+The warning is correct and the turn proceeds, so this is not a blocker — the shim passes
+`--dangerously-skip-permissions` for exactly this reason. But it means a repo cannot narrow what a
+claude builder may do via `permissions.allow`: the setting has no effect in an isolated worktree, and
+the only working posture is the blanket skip.
+
+Two observations rather than a fix:
+
+1. Trusting the worktree's **parent** template (`RTL_ROOT`) does not help — Claude Code keys trust on
+   the exact workspace path.
+2. `xyz-vendor`-style installs make this worse, not better, because the worktree is seeded from the
+   target repo whose `.claude/settings.json` is the one being ignored.
+
+Recorded because "set `hasTrustDialogAccepted` for this path" is advice a reader will try, waste time
+on, and find cannot be followed.
+
+---

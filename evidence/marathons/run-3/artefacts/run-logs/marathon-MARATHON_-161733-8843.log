@@ -1,0 +1,993 @@
+marathon: run log: /home/arnoldadero/marathon-target/relay-system/run-logs/2026-08-20/marathon-MARATHON_-161733-8843.log
+marathon: plan: PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/MARATHON.yaml — 4 phase(s) in execution order
+marathon: ── phase 1/4: r1p1 (reviewer=codex, round-cap=5, artifact=src/export-csv.js,test/export-csv.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/marathon-target/marathon-system/run1-ledger-exports--r1p1/RELAY.md
+marathon-drive: tick token seeded: MARATHON-R1P1-TURN → agy
+marathon-drive: memory-telemetry: phase r1p1-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.tKRNwn)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.aVZeV9)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.rrCs3H)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.NzMo2t)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+relay-drive: relay terminated (STATUS: Approved, token done) after 4 turn(s)
+marathon-drive: relay approved — running pre-advance gate: npm test
+
+> ledgerkit@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: plain case: single entry with default header
+ok 1 - plain case: single entry with default header
+  ---
+  duration_ms: 6.5158
+  type: 'test'
+  ...
+# Subtest: memo containing a comma
+ok 2 - memo containing a comma
+  ---
+  duration_ms: 0.664
+  type: 'test'
+  ...
+# Subtest: memo containing a double quote
+ok 3 - memo containing a double quote
+  ---
+  duration_ms: 0.6296
+  type: 'test'
+  ...
+# Subtest: memo containing newlines (LF and CRLF)
+ok 4 - memo containing newlines (LF and CRLF)
+  ---
+  duration_ms: 0.4996
+  type: 'test'
+  ...
+# Subtest: two-decimal formatting of integer amount and fractional amounts
+ok 5 - two-decimal formatting of integer amount and fractional amounts
+  ---
+  duration_ms: 0.819
+  type: 'test'
+  ...
+# Subtest: header: false suppresses the header row
+ok 6 - header: false suppresses the header row
+  ---
+  duration_ms: 0.4661
+  type: 'test'
+  ...
+# Subtest: empty entries list handling
+ok 7 - empty entries list handling
+  ---
+  duration_ms: 2.736
+  type: 'test'
+  ...
+# Subtest: multiple entries preserve order and have no trailing CRLF
+ok 8 - multiple entries preserve order and have no trailing CRLF
+  ---
+  duration_ms: 0.4623
+  type: 'test'
+  ...
+# Subtest: amounts with magnitude >= 1e21 format in fixed-point with two decimals
+ok 9 - amounts with magnitude >= 1e21 format in fixed-point with two decimals
+  ---
+  duration_ms: 1.0923
+  type: 'test'
+  ...
+# Subtest: parses a well-formed line
+ok 10 - parses a well-formed line
+  ---
+  duration_ms: 3.2984
+  type: 'test'
+  ...
+# Subtest: skips blanks and comments
+ok 11 - skips blanks and comments
+  ---
+  duration_ms: 0.394
+  type: 'test'
+  ...
+# Subtest: rejects a malformed line with E_PARSE
+ok 12 - rejects a malformed line with E_PARSE
+  ---
+  duration_ms: 2.460701
+  type: 'test'
+  ...
+# Subtest: parses a multi-line document
+ok 13 - parses a multi-line document
+  ---
+  duration_ms: 0.8738
+  type: 'test'
+  ...
+# Subtest: summarize totals per account and currency
+ok 14 - summarize totals per account and currency
+  ---
+  duration_ms: 49.549302
+  type: 'test'
+  ...
+# Subtest: a balanced day validates
+ok 15 - a balanced day validates
+  ---
+  duration_ms: 3.964
+  type: 'test'
+  ...
+# Subtest: an unbalanced day is reported
+ok 16 - an unbalanced day is reported
+  ---
+  duration_ms: 0.51
+  type: 'test'
+  ...
+# Subtest: currencies are balanced independently
+ok 17 - currencies are balanced independently
+  ---
+  duration_ms: 0.4682
+  type: 'test'
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 344.526711
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 3MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/marathon-target/relay-system/2026-08-20/marathon-r1p1-132208.md
+marathon-drive: memory-telemetry: phase r1p1-complete boundary — swap_free=8192MB
+marathon-drive: phase r1p1 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/1 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 4m 29s
+per done-task: ≥0 tokens, 4m 29s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 287MB peak RSS
+
+marathon: ── phase 2/4: r1p2 (reviewer=codex, round-cap=5, artifact=src/fx.js,test/fx.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/run-logs/
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/marathon-target/marathon-system/run1-ledger-exports--r1p2/RELAY.md
+marathon-drive: tick token seeded: MARATHON-R1P2-TURN → agy
+marathon-drive: memory-telemetry: phase r1p2-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.8OfWdW)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.v8Xhnm)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+relay-drive: relay terminated (STATUS: Approved, token done) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: npm test
+
+> ledgerkit@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: plain case: single entry with default header
+ok 1 - plain case: single entry with default header
+  ---
+  duration_ms: 3.3245
+  type: 'test'
+  ...
+# Subtest: memo containing a comma
+ok 2 - memo containing a comma
+  ---
+  duration_ms: 0.7638
+  type: 'test'
+  ...
+# Subtest: memo containing a double quote
+ok 3 - memo containing a double quote
+  ---
+  duration_ms: 1.8547
+  type: 'test'
+  ...
+# Subtest: memo containing newlines (LF and CRLF)
+ok 4 - memo containing newlines (LF and CRLF)
+  ---
+  duration_ms: 0.5329
+  type: 'test'
+  ...
+# Subtest: two-decimal formatting of integer amount and fractional amounts
+ok 5 - two-decimal formatting of integer amount and fractional amounts
+  ---
+  duration_ms: 0.7471
+  type: 'test'
+  ...
+# Subtest: header: false suppresses the header row
+ok 6 - header: false suppresses the header row
+  ---
+  duration_ms: 0.4443
+  type: 'test'
+  ...
+# Subtest: empty entries list handling
+ok 7 - empty entries list handling
+  ---
+  duration_ms: 2.7567
+  type: 'test'
+  ...
+# Subtest: multiple entries preserve order and have no trailing CRLF
+ok 8 - multiple entries preserve order and have no trailing CRLF
+  ---
+  duration_ms: 0.4763
+  type: 'test'
+  ...
+# Subtest: amounts with magnitude >= 1e21 format in fixed-point with two decimals
+ok 9 - amounts with magnitude >= 1e21 format in fixed-point with two decimals
+  ---
+  duration_ms: 1.135
+  type: 'test'
+  ...
+# Subtest: straight conversion: converts entries into target currency
+ok 10 - straight conversion: converts entries into target currency
+  ---
+  duration_ms: 6.2518
+  type: 'test'
+  ...
+# Subtest: identity case: entry already in target passes through unchanged with rate 1
+ok 11 - identity case: entry already in target passes through unchanged with rate 1
+  ---
+  duration_ms: 0.6034
+  type: 'test'
+  ...
+# Subtest: input immutability: returns new array and new entry objects without mutating inputs
+ok 12 - input immutability: returns new array and new entry objects without mutating inputs
+  ---
+  duration_ms: 0.5595
+  type: 'test'
+  ...
+# Subtest: missing rate throws Error with code E_RATE and currency property
+ok 13 - missing rate throws Error with code E_RATE and currency property
+  ---
+  duration_ms: 1.3736
+  type: 'test'
+  ...
+# Subtest: negative half-way rounding case: rounds half away from zero symmetrically
+ok 14 - negative half-way rounding case: rounds half away from zero symmetrically
+  ---
+  duration_ms: 1.0923
+  type: 'test'
+  ...
+# Subtest: empty entries array returns empty array
+ok 15 - empty entries array returns empty array
+  ---
+  duration_ms: 0.4184
+  type: 'test'
+  ...
+# Subtest: parses a well-formed line
+ok 16 - parses a well-formed line
+  ---
+  duration_ms: 3.444
+  type: 'test'
+  ...
+# Subtest: skips blanks and comments
+ok 17 - skips blanks and comments
+  ---
+  duration_ms: 0.4325
+  type: 'test'
+  ...
+# Subtest: rejects a malformed line with E_PARSE
+ok 18 - rejects a malformed line with E_PARSE
+  ---
+  duration_ms: 1.3967
+  type: 'test'
+  ...
+# Subtest: parses a multi-line document
+ok 19 - parses a multi-line document
+  ---
+  duration_ms: 0.6363
+  type: 'test'
+  ...
+# Subtest: summarize totals per account and currency
+ok 20 - summarize totals per account and currency
+  ---
+  duration_ms: 41.1477
+  type: 'test'
+  ...
+# Subtest: a balanced day validates
+ok 21 - a balanced day validates
+  ---
+  duration_ms: 4.4401
+  type: 'test'
+  ...
+# Subtest: an unbalanced day is reported
+ok 22 - an unbalanced day is reported
+  ---
+  duration_ms: 0.5508
+  type: 'test'
+  ...
+# Subtest: currencies are balanced independently
+ok 23 - currencies are balanced independently
+  ---
+  duration_ms: 0.5008
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 397.803101
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 3MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/marathon-target/relay-system/2026-08-20/marathon-r1p2-132507.md
+marathon-drive: memory-telemetry: phase r1p2-complete boundary — swap_free=8192MB
+marathon-drive: phase r1p2 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/2 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 7m 27s
+per done-task: ≥0 tokens, 3m 44s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 287MB peak RSS
+
+marathon: ── phase 3/4: r1p3 (reviewer=codex, round-cap=5, artifact=src/cli.js,test/cli.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/run-logs/
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/marathon-target/marathon-system/run1-ledger-exports--r1p3/RELAY.md
+marathon-drive: tick token seeded: MARATHON-R1P3-TURN → agy
+marathon-drive: memory-telemetry: phase r1p3-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.Rojgqm)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.AAarIq)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.rsmQWx)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.UV7f1c)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+relay-drive: relay terminated (STATUS: Approved, token done) after 4 turn(s)
+marathon-drive: relay approved — running pre-advance gate: npm test
+
+> ledgerkit@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: exit code 0: default mode on balanced ledger prints OK summary
+ok 1 - exit code 0: default mode on balanced ledger prints OK summary
+  ---
+  duration_ms: 70.299801
+  type: 'test'
+  ...
+# Subtest: exit code 0: default mode on empty file prints OK: 0 entries
+ok 2 - exit code 0: default mode on empty file prints OK: 0 entries
+  ---
+  duration_ms: 0.8059
+  type: 'test'
+  ...
+# Subtest: exit code 1: default mode on unbalanced ledger prints problem line
+ok 3 - exit code 1: default mode on unbalanced ledger prints problem line
+  ---
+  duration_ms: 14.1297
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file argument is missing
+ok 4 - exit code 2: usage error when file argument is missing
+  ---
+  duration_ms: 0.7253
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when unknown flag is provided
+ok 5 - exit code 2: usage error when unknown flag is provided
+  ---
+  duration_ms: 0.6678
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when multiple file arguments are passed
+ok 6 - exit code 2: usage error when multiple file arguments are passed
+  ---
+  duration_ms: 0.6027
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file does not exist
+ok 7 - exit code 2: usage error when file does not exist
+  ---
+  duration_ms: 0.8576
+  type: 'test'
+  ...
+# Subtest: exit code 3: parse error (E_PARSE) reports failing line number on stderr
+ok 8 - exit code 3: parse error (E_PARSE) reports failing line number on stderr
+  ---
+  duration_ms: 0.7131
+  type: 'test'
+  ...
+# Subtest: non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+ok 9 - non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+  ---
+  duration_ms: 5.4147
+  type: 'test'
+  ...
+# Subtest: mode --summary: prints summarize table one line per row (clean)
+ok 10 - mode --summary: prints summarize table one line per row (clean)
+  ---
+  duration_ms: 1.6495
+  type: 'test'
+  ...
+# Subtest: mode --summary: returns exit code 1 when ledger has validation problems
+ok 11 - mode --summary: returns exit code 1 when ledger has validation problems
+  ---
+  duration_ms: 0.9263
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+ok 12 - mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+  ---
+  duration_ms: 2.4406
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object and returns 1 when problems exist
+ok 13 - mode --json: prints single JSON object and returns 1 when problems exist
+  ---
+  duration_ms: 0.8254
+  type: 'test'
+  ...
+# Subtest: mode --json wins over --summary flag when both are passed
+ok 14 - mode --json wins over --summary flag when both are passed
+  ---
+  duration_ms: 0.5931
+  type: 'test'
+  ...
+# Subtest: supports functional io.stdout and io.stderr
+ok 15 - supports functional io.stdout and io.stderr
+  ---
+  duration_ms: 0.4907
+  type: 'test'
+  ...
+# Subtest: plain case: single entry with default header
+ok 16 - plain case: single entry with default header
+  ---
+  duration_ms: 4.7738
+  type: 'test'
+  ...
+# Subtest: memo containing a comma
+ok 17 - memo containing a comma
+  ---
+  duration_ms: 0.975
+  type: 'test'
+  ...
+# Subtest: memo containing a double quote
+ok 18 - memo containing a double quote
+  ---
+  duration_ms: 0.7224
+  type: 'test'
+  ...
+# Subtest: memo containing newlines (LF and CRLF)
+ok 19 - memo containing newlines (LF and CRLF)
+  ---
+  duration_ms: 0.464
+  type: 'test'
+  ...
+# Subtest: two-decimal formatting of integer amount and fractional amounts
+ok 20 - two-decimal formatting of integer amount and fractional amounts
+  ---
+  duration_ms: 0.6725
+  type: 'test'
+  ...
+# Subtest: header: false suppresses the header row
+ok 21 - header: false suppresses the header row
+  ---
+  duration_ms: 2.5837
+  type: 'test'
+  ...
+# Subtest: empty entries list handling
+ok 22 - empty entries list handling
+  ---
+  duration_ms: 2.706
+  type: 'test'
+  ...
+# Subtest: multiple entries preserve order and have no trailing CRLF
+ok 23 - multiple entries preserve order and have no trailing CRLF
+  ---
+  duration_ms: 0.5051
+  type: 'test'
+  ...
+# Subtest: amounts with magnitude >= 1e21 format in fixed-point with two decimals
+ok 24 - amounts with magnitude >= 1e21 format in fixed-point with two decimals
+  ---
+  duration_ms: 8.5286
+  type: 'test'
+  ...
+# Subtest: straight conversion: converts entries into target currency
+ok 25 - straight conversion: converts entries into target currency
+  ---
+  duration_ms: 7.407501
+  type: 'test'
+  ...
+# Subtest: identity case: entry already in target passes through unchanged with rate 1
+ok 26 - identity case: entry already in target passes through unchanged with rate 1
+  ---
+  duration_ms: 0.5398
+  type: 'test'
+  ...
+# Subtest: input immutability: returns new array and new entry objects without mutating inputs
+ok 27 - input immutability: returns new array and new entry objects without mutating inputs
+  ---
+  duration_ms: 4.1892
+  type: 'test'
+  ...
+# Subtest: missing rate throws Error with code E_RATE and currency property
+ok 28 - missing rate throws Error with code E_RATE and currency property
+  ---
+  duration_ms: 1.3384
+  type: 'test'
+  ...
+# Subtest: negative half-way rounding case: rounds half away from zero symmetrically
+ok 29 - negative half-way rounding case: rounds half away from zero symmetrically
+  ---
+  duration_ms: 1.0001
+  type: 'test'
+  ...
+# Subtest: empty entries array returns empty array
+ok 30 - empty entries array returns empty array
+  ---
+  duration_ms: 0.3324
+  type: 'test'
+  ...
+# Subtest: parses a well-formed line
+ok 31 - parses a well-formed line
+  ---
+  duration_ms: 9.1802
+  type: 'test'
+  ...
+# Subtest: skips blanks and comments
+ok 32 - skips blanks and comments
+  ---
+  duration_ms: 0.3538
+  type: 'test'
+  ...
+# Subtest: rejects a malformed line with E_PARSE
+ok 33 - rejects a malformed line with E_PARSE
+  ---
+  duration_ms: 3.8482
+  type: 'test'
+  ...
+# Subtest: parses a multi-line document
+ok 34 - parses a multi-line document
+  ---
+  duration_ms: 0.7165
+  type: 'test'
+  ...
+# Subtest: summarize totals per account and currency
+ok 35 - summarize totals per account and currency
+  ---
+  duration_ms: 136.0886
+  type: 'test'
+  ...
+# Subtest: a balanced day validates
+ok 36 - a balanced day validates
+  ---
+  duration_ms: 6.3659
+  type: 'test'
+  ...
+# Subtest: an unbalanced day is reported
+ok 37 - an unbalanced day is reported
+  ---
+  duration_ms: 0.562
+  type: 'test'
+  ...
+# Subtest: currencies are balanced independently
+ok 38 - currencies are balanced independently
+  ---
+  duration_ms: 0.5141
+  type: 'test'
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 38
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 796.488205
+marathon-drive: gate-guard: gate exit 0 after 2s — peak group RSS 214MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/marathon-target/relay-system/2026-08-20/marathon-r1p3-133240.md
+marathon-drive: memory-telemetry: phase r1p3-complete boundary — swap_free=8192MB
+marathon-drive: phase r1p3 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/3 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 14m 58s
+per done-task: ≥0 tokens, 4m 59s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 287MB peak RSS
+
+marathon: ── phase 4/4: r1p4 (reviewer=codex, round-cap=5, artifact=src/dedupe.js,test/dedupe.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/run-logs/
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/marathon-target/marathon-system/run1-ledger-exports--r1p4/RELAY.md
+marathon-drive: tick token seeded: MARATHON-R1P4-TURN → agy
+marathon-drive: memory-telemetry: phase r1p4-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+agy-turn: NOTE — agy auth is unverifiable headless (expected); proceeding. No reliable headless auth probe for agy exists (GH-375); `agy -p` is the only honest test and it IS the turn. If this turn fails on credentials, run `agy login` in a real terminal.
+agy-turn: worktree isolation ON (/tmp/rtl-wt.tgjfPQ)
+agy-turn: committed agy turn (file-scoped, no push)
+agy-turn: dependency.drift — agy changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/project.js (0 lines); signalled for the next turn
+agy-turn: dependency.drift — agy changed src/events.js (0 lines); signalled for the next turn
+codex-turn: worktree isolation ON (/tmp/rtl-wt.QjxGg9)
+codex-turn: committed codex turn (file-scoped, no push)
+codex-turn: dependency.drift — codex changed relay-automation/relay-turn-lib.sh (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/project.js (0 lines); signalled for the next turn
+codex-turn: dependency.drift — codex changed src/events.js (0 lines); signalled for the next turn
+relay-drive: relay terminated (STATUS: Approved, token done) after 2 turn(s)
+marathon-drive: relay approved — running pre-advance gate: npm test
+
+> ledgerkit@0.1.0 test
+> node --test
+
+TAP version 13
+# Subtest: exit code 0: default mode on balanced ledger prints OK summary
+ok 1 - exit code 0: default mode on balanced ledger prints OK summary
+  ---
+  duration_ms: 43.4985
+  type: 'test'
+  ...
+# Subtest: exit code 0: default mode on empty file prints OK: 0 entries
+ok 2 - exit code 0: default mode on empty file prints OK: 0 entries
+  ---
+  duration_ms: 1.7731
+  type: 'test'
+  ...
+# Subtest: exit code 1: default mode on unbalanced ledger prints problem line
+ok 3 - exit code 1: default mode on unbalanced ledger prints problem line
+  ---
+  duration_ms: 4.2658
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file argument is missing
+ok 4 - exit code 2: usage error when file argument is missing
+  ---
+  duration_ms: 0.7514
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when unknown flag is provided
+ok 5 - exit code 2: usage error when unknown flag is provided
+  ---
+  duration_ms: 1.8983
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when multiple file arguments are passed
+ok 6 - exit code 2: usage error when multiple file arguments are passed
+  ---
+  duration_ms: 0.6698
+  type: 'test'
+  ...
+# Subtest: exit code 2: usage error when file does not exist
+ok 7 - exit code 2: usage error when file does not exist
+  ---
+  duration_ms: 1.0848
+  type: 'test'
+  ...
+# Subtest: exit code 3: parse error (E_PARSE) reports failing line number on stderr
+ok 8 - exit code 3: parse error (E_PARSE) reports failing line number on stderr
+  ---
+  duration_ms: 0.8142
+  type: 'test'
+  ...
+# Subtest: non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+ok 9 - non-E_PARSE error thrown during parse is not caught as code 3 and propagates
+  ---
+  duration_ms: 2.1418
+  type: 'test'
+  ...
+# Subtest: mode --summary: prints summarize table one line per row (clean)
+ok 10 - mode --summary: prints summarize table one line per row (clean)
+  ---
+  duration_ms: 3.69
+  type: 'test'
+  ...
+# Subtest: mode --summary: returns exit code 1 when ledger has validation problems
+ok 11 - mode --summary: returns exit code 1 when ledger has validation problems
+  ---
+  duration_ms: 0.9402
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+ok 12 - mode --json: prints single JSON object with ok, entries, problems, summary (clean)
+  ---
+  duration_ms: 2.654
+  type: 'test'
+  ...
+# Subtest: mode --json: prints single JSON object and returns 1 when problems exist
+ok 13 - mode --json: prints single JSON object and returns 1 when problems exist
+  ---
+  duration_ms: 0.842
+  type: 'test'
+  ...
+# Subtest: mode --json wins over --summary flag when both are passed
+ok 14 - mode --json wins over --summary flag when both are passed
+  ---
+  duration_ms: 0.8317
+  type: 'test'
+  ...
+# Subtest: supports functional io.stdout and io.stderr
+ok 15 - supports functional io.stdout and io.stderr
+  ---
+  duration_ms: 0.5062
+  type: 'test'
+  ...
+# Subtest: returns empty array when no duplicates exist
+ok 16 - returns empty array when no duplicates exist
+  ---
+  duration_ms: 6.3994
+  type: 'test'
+  ...
+# Subtest: handles empty input gracefully
+ok 17 - handles empty input gracefully
+  ---
+  duration_ms: 0.6423
+  type: 'test'
+  ...
+# Subtest: detects an exact duplicate pair
+ok 18 - detects an exact duplicate pair
+  ---
+  duration_ms: 0.7022
+  type: 'test'
+  ...
+# Subtest: detects a duplicate triple
+ok 19 - detects a duplicate triple
+  ---
+  duration_ms: 0.8509
+  type: 'test'
+  ...
+# Subtest: normalizes memo whitespace and case matching "Coffee  Beans" with "coffee beans"
+ok 20 - normalizes memo whitespace and case matching "Coffee  Beans" with "coffee beans"
+  ---
+  duration_ms: 0.8267
+  type: 'test'
+  ...
+# Subtest: normalizeMemo helper function behavior
+ok 21 - normalizeMemo helper function behavior
+  ---
+  duration_ms: 0.4809
+  type: 'test'
+  ...
+# Subtest: keeps non-matching amounts separate
+ok 22 - keeps non-matching amounts separate
+  ---
+  duration_ms: 0.6415
+  type: 'test'
+  ...
+# Subtest: drops memo from match key when ignoreMemo is true
+ok 23 - drops memo from match key when ignoreMemo is true
+  ---
+  duration_ms: 0.4913
+  type: 'test'
+  ...
+# Subtest: sorts groups by the line number of their first member ascending (input-order sort)
+ok 24 - sorts groups by the line number of their first member ascending (input-order sort)
+  ---
+  duration_ms: 1.1418
+  type: 'test'
+  ...
+# Subtest: preserves input order of entries within duplicate groups
+ok 25 - preserves input order of entries within duplicate groups
+  ---
+  duration_ms: 1.4369
+  type: 'test'
+  ...
+# Subtest: plain case: single entry with default header
+ok 26 - plain case: single entry with default header
+  ---
+  duration_ms: 3.5025
+  type: 'test'
+  ...
+# Subtest: memo containing a comma
+ok 27 - memo containing a comma
+  ---
+  duration_ms: 0.6979
+  type: 'test'
+  ...
+# Subtest: memo containing a double quote
+ok 28 - memo containing a double quote
+  ---
+  duration_ms: 0.6853
+  type: 'test'
+  ...
+# Subtest: memo containing newlines (LF and CRLF)
+ok 29 - memo containing newlines (LF and CRLF)
+  ---
+  duration_ms: 0.4789
+  type: 'test'
+  ...
+# Subtest: two-decimal formatting of integer amount and fractional amounts
+ok 30 - two-decimal formatting of integer amount and fractional amounts
+  ---
+  duration_ms: 2.9659
+  type: 'test'
+  ...
+# Subtest: header: false suppresses the header row
+ok 31 - header: false suppresses the header row
+  ---
+  duration_ms: 6.3031
+  type: 'test'
+  ...
+# Subtest: empty entries list handling
+ok 32 - empty entries list handling
+  ---
+  duration_ms: 2.8421
+  type: 'test'
+  ...
+# Subtest: multiple entries preserve order and have no trailing CRLF
+ok 33 - multiple entries preserve order and have no trailing CRLF
+  ---
+  duration_ms: 0.5415
+  type: 'test'
+  ...
+# Subtest: amounts with magnitude >= 1e21 format in fixed-point with two decimals
+ok 34 - amounts with magnitude >= 1e21 format in fixed-point with two decimals
+  ---
+  duration_ms: 1.1744
+  type: 'test'
+  ...
+# Subtest: straight conversion: converts entries into target currency
+ok 35 - straight conversion: converts entries into target currency
+  ---
+  duration_ms: 5.5675
+  type: 'test'
+  ...
+# Subtest: identity case: entry already in target passes through unchanged with rate 1
+ok 36 - identity case: entry already in target passes through unchanged with rate 1
+  ---
+  duration_ms: 1.906
+  type: 'test'
+  ...
+# Subtest: input immutability: returns new array and new entry objects without mutating inputs
+ok 37 - input immutability: returns new array and new entry objects without mutating inputs
+  ---
+  duration_ms: 0.6234
+  type: 'test'
+  ...
+# Subtest: missing rate throws Error with code E_RATE and currency property
+ok 38 - missing rate throws Error with code E_RATE and currency property
+  ---
+  duration_ms: 1.4302
+  type: 'test'
+  ...
+# Subtest: negative half-way rounding case: rounds half away from zero symmetrically
+ok 39 - negative half-way rounding case: rounds half away from zero symmetrically
+  ---
+  duration_ms: 1.1361
+  type: 'test'
+  ...
+# Subtest: empty entries array returns empty array
+ok 40 - empty entries array returns empty array
+  ---
+  duration_ms: 0.3968
+  type: 'test'
+  ...
+# Subtest: parses a well-formed line
+ok 41 - parses a well-formed line
+  ---
+  duration_ms: 6.4458
+  type: 'test'
+  ...
+# Subtest: skips blanks and comments
+ok 42 - skips blanks and comments
+  ---
+  duration_ms: 0.4269
+  type: 'test'
+  ...
+# Subtest: rejects a malformed line with E_PARSE
+ok 43 - rejects a malformed line with E_PARSE
+  ---
+  duration_ms: 1.8615
+  type: 'test'
+  ...
+# Subtest: parses a multi-line document
+ok 44 - parses a multi-line document
+  ---
+  duration_ms: 0.7045
+  type: 'test'
+  ...
+# Subtest: summarize totals per account and currency
+ok 45 - summarize totals per account and currency
+  ---
+  duration_ms: 37.2312
+  type: 'test'
+  ...
+# Subtest: a balanced day validates
+ok 46 - a balanced day validates
+  ---
+  duration_ms: 3.3586
+  type: 'test'
+  ...
+# Subtest: an unbalanced day is reported
+ok 47 - an unbalanced day is reported
+  ---
+  duration_ms: 0.3809
+  type: 'test'
+  ...
+# Subtest: currencies are balanced independently
+ok 48 - currencies are balanced independently
+  ---
+  duration_ms: 0.3407
+  type: 'test'
+  ...
+1..48
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 616.033897
+marathon-drive: gate-guard: gate exit 0 after 1s — peak group RSS 0MB (tier full; caps: RSS 8192MB, wall 1800s, CPU 1200s)
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/marathon-target/relay-system/2026-08-20/marathon-r1p4-133547.md
+marathon-drive: memory-telemetry: phase r1p4-complete boundary — swap_free=8192MB
+marathon-drive: phase r1p4 complete — STATUS: Approved, gate passed
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: ≥0 total (≥0 in / ≥0 out) — PARTIAL, floor only: 0/4 done-tasks instrumented
+human minutes (self-reported): 0
+wall-clock (run window): 18m 6s
+per done-task: ≥0 tokens, 4m 32s wall-clock
+memory: swap free min: 8192MB
+  turn peak RSS: agy: 197MB peak RSS, codex: 287MB peak RSS
+
+marathon: marathon complete — all 4 phase(s) approved

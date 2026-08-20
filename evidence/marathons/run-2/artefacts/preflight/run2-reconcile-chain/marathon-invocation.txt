@@ -1,0 +1,7 @@
+XYZ_HARNESS_CONTEXT=swarm XYZ_SESSION_ID=run2-reconcile-chain RELAY_WORKTREE_ISOLATION=1 .xyz/relay-automation/marathon-drive.sh \
+  --phase-brief <packet>/packet.md \
+  --reviewer agy \
+  --builder codex \
+  --artifact src/parse.js,src/validate.js,src/money.js,test/money.test.js,src/balance.js,test/balance.test.js,src/reconcile.js,test/reconcile.test.js,src/report.js,test/report.test.js \
+  --pre-advance-cmd 'npm test' \
+  --require-clean
