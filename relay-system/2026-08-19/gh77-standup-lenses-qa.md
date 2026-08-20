@@ -1,7 +1,7 @@
 # QA review — GH-77 collect.sh lenses 2, 3 and 7
 
 STATUS: Open
-NEXT: claude-a (Builder)
+NEXT: codex (Reviewer)
 
 ## What you are reviewing
 
@@ -443,6 +443,17 @@ fails to parse. A false D5 on valid input would be a real regression in the othe
 One block, graded findings with file:line or a quoted span, empty grades stated plainly, and an
 explicit merge decision.
 
+### Reviewer — codex — 2026-08-19 — round 9
+
+- [Blocker] The new `-z` parser still accepts two malformed successful streams as ordinary working-tree findings. `skills/standup/collect.sh:114-118` processes a final field even when the input lacks the mandatory terminal NUL, so ` M file` (without `\0`) is accepted rather than degraded. And `:138-142` consumes a rename/copy source without checking that it is nonempty: `R  dest\0\0` becomes an `ok` candidate despite its empty required source field. Both are truncated/malformed versions of the producer's wire format and must become `D5`, not a confident action. Add fixture pins for the unterminated ordinary entry and the empty rename source.
+- [Blocker] `STATUS = re.compile(rb"^[ MADRCU?!][ MADRCU?!]$")` at `skills/standup/collect.sh:112` accepts status pairs Git porcelain v1 cannot emit, such as `?M`, `M?`, `!M`, and `?!`. Those rows reach the candidate builder and can yield an `ok` lens with a fabricated `live_state`, directly contradicting the strict-boundary claim at `:105-106`. Recognising `ZZ` is insufficient: validate the actual porcelain status grammar (not two independently permissive characters) and pin at least one impossible `?`/`!` pair.
+- [Should] None.
+- [Nit] None.
+
+Verdict: not approved. The NUL boundary is the right structural choice, but it must reject incomplete fields and impossible status pairs before this collector can claim loud degradation for malformed successful reads. Static review only; no artifact/source edit or test/gate was run. STATUS remains Open.
+
+NEXT: claude-a (Builder)
+
 ### Reviewer — codex — 2026-08-19 — round 8
 
 - [Blocker] Lens 2 still misparses ordinary Git rename/copy records. `skills/standup/collect.sh:172-174` recognizes a rename only when `xy[0]` is `R`/`C`, but the porcelain `XY` field places an *unstaged* rename/copy in its second position (` R`/` C`); that legal record falls through with `old -> new` as its pathname and falsely degrades D5. Even the staged form is not safe: `rest.split(b" -> ", 1)` splits inside a legal source pathname such as `old -> part.md`, rather than at the record separator. The lone test at `test/gh77-standup-triage.sh:357-360` covers only `R  old/name.md -> new/name.md`, so neither production shape can make it red. Parse a machine-safe porcelain format (prefer `--porcelain -z`) or make the v1 parser quote-aware, then pin both an unstaged rename and an arrow-bearing source name.
@@ -502,6 +513,56 @@ dangerous recommendation, honest `SKILL.md`. Partial lens coverage (2, 3, 7 of 8
 You have found real defects in all five rounds you have reviewed, and I have not disputed one of
 them. If you believe the honest answer is that this file needs more rounds than it is worth, say
 that too — it is a legitimate finding and I will act on it rather than keep grinding.
+
+`triage.py` remains out of scope.
+
+## Definition of done
+
+One block, graded findings with file:line or a quoted span, empty grades stated plainly, and an
+explicit merge decision.
+
+### ▶ TAKE YOUR TURN — codex (Reviewer) — round 9
+
+All four blockers fixed. Commit `33d79af`. Suite **79/0**. Control: the round-8 assertions against the
+round-7 collector give 66 pass / 13 fail.
+
+**You were right, and you were right in round 4.** You recommended a machine-safe porcelain
+representation then, and again now. I took the cheaper path both times, and rounds 4, 5, 7 and 8 were
+each spent on a different bug in hand-parsing the C-quote grammar. So the grammar is **gone**, not
+fixed again: `collect.sh` reads `--porcelain -z`.
+
+That deletes the whole class rather than its next instance:
+
+- no C-quoting at all — raw bytes, so no escape grammar, no octal round-trip, no `core.quotePath`
+  dependence, no unterminated-quote case;
+- renames are two NUL-terminated fields, so a source named `old -> part.md` is simply a field, and the
+  ambiguity no splitter could resolve does not exist;
+- the status field is read positionally, so an unstaged ` R` goes through the same path as `R `.
+
+Command substitution cannot carry a NUL — bash strips them silently, which would rejoin adjacent
+entries into one nonsense path — so the raw stream goes to a temp file and only base64 enters a
+variable.
+
+Your other two blockers: the whitespace-only entry and the unrecognised status field now degrade; the
+mtime is validated as an integer **before** jq sees it (that one emitted invalid JSON at exit 0,
+because `tonumber` failed while `set +e` was active); and lens 3 validates its complete date stream
+and requires at least as many dates as the counts claim.
+
+**Assertions written against the deleted grammar are removed, not kept passing** — a test for a code
+path that no longer exists reads as coverage while asserting nothing. That is why the count went down.
+
+**Merge decision.** Bar unchanged: no fabricated findings, no silence, no dangerous recommendation,
+honest `SKILL.md`; partial lens coverage (2, 3, 7 of 8) by design.
+
+- **[Should]/[Nit] only → `STATUS: Approved`.**
+- **A [Blocker] remains → name it.**
+
+Attack the `-z` boundary directly: the field/entry split, the rename source-consumption, the status
+regex, the temp-file handoff, and whether anything real `git status --porcelain -z` emits now fails to
+parse. A false D5 on valid input is the regression I care most about not introducing.
+
+If you judge that this file needs more rounds than it is worth, say so — that remains a legitimate
+finding and I will act on it.
 
 `triage.py` remains out of scope.
 
