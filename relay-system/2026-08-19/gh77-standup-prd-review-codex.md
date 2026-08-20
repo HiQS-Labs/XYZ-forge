@@ -4,7 +4,7 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Reviewer
+NEXT: Producer
 STATUS: Open
 ROUND: 3 / 4
 
@@ -454,5 +454,94 @@ item still reach a suppressed or parked state by any path; is the enumerated lin
 under the empty, maximum, and fully-degraded shapes at once; and does `triage.py`'s stated interface
 actually cover every assertion the DoD table claims for it. Approve if sound — round 4 is the
 escalation cap.
+
+### Reviewer · Round 3
+
+swept file: yes
+
+**Verdict: Changes requested**
+
+- **[Blocker] Revision 3 has a tier classifier but no ranking algorithm.** The document goes from
+  deduplication to first-match tier assignment (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:140`
+  and `:146`) and later claims tie-break ordering and total ranking are tested (`:354` and `:375`),
+  but never orders candidates within a tier. Staleness is collected but never used, and `S-bin` is
+  referenced without any bin definition (`:88-97` and `:156`). Fix: restore one total tuple such as
+  tier ascending, known age descending (with an explicit unknown-age position), finite S/M/L effort
+  predicates, then canonical key; fixture every tie and unknown case.
+- **[Blocker] More than seven tier-1–3 findings are neither parked nor eventually visible.** The PRD
+  says those tiers always render and are never silenced, then says eight tier-1 items are truncated
+  by the cap (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:233-235`). Because the frozen second
+  run repeats the same ranked tier-1–3 items (`:254-257`), item 8 starves forever. The current test
+  asserts only “not suppressed/not parked,” not that every finding is exposed (`:358`). Fix: define a
+  cap-compatible overflow protocol that reports severity/count plus an exact read-only way to inspect
+  every omitted high-tier item (or deterministic paging), and test that no tier-1–3 key can starve.
+- **[Blocker] Suppression cannot be implemented from the persisted record.** Comparison requires
+  `sha256(key + tier + live-state-payload)` (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:237-249`),
+  but no lens defines its canonical live-state payload and the PARKED record stores neither payload
+  nor fingerprint (`:266-274`). A changed fingerprint for an already-parked key must re-raise, yet
+  the append rule rejects every already-present key. “Previously reported fingerprints” also has no
+  runtime source or schema (`:344-347`). Fix: define each lens's canonical payload, the within-session
+  state source, persist the fingerprint in each park record, and specify an append-only revision rule
+  for a known key whose fingerprint changes.
+- **[Blocker] The deterministic seam still cannot assert the rendered contract it claims to own.**
+  `triage.py` is specified to emit only ranked items, notices, and a park delta, while opening line,
+  headings, and Part 2 are in the 15-line contract and Part 2 remains model-authored prose
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:204-225` and `:341-350`). Nevertheless the tests
+  count its output against all 15 lines and require a byte-identical second-run transcript including
+  Part 2 (`:254-257` and `:352-363`). Neither executable has an exact invocation, input JSON schema,
+  or a way for `collect.sh` to receive the session transcript. Fix: specify concrete CLI/JSON
+  contracts and make a deterministic renderer own the entire transcript (including a finite Part-2
+  verdict vocabulary), leaving the skill to pass through or tightly transform it.
+- **[Blocker] Lens 6 cannot enumerate the records it promises, and its advisories fall into the
+  wrong tier.** It calls `show` “for each non-shipped release” without first reading the set
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:95` and `:107-109`); `list` is the reader that
+  exposes every GID/status/version (`utils/py/releases_app.py:1715-1731`) and `show` supplies manifest
+  states (`utils/py/releases_app.py:1770-1793`), so both are required. The catalogue labels
+  `release-overdue`, `release-target-passed`, and `temp-ref-stale` tier 5
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:290-292`), but the classifier gives no lens-6
+  condition except corruption and therefore sends them to tier 6 (`:151-158`). Fix: enumerate with
+  `list`, inspect each non-shipped GID with `show`, and add the named advisory rules to tier 5.
+- **[Blocker] The no-upstream branch fallback again overclaims “unpushed.”** Ahead of trunk does not
+  prove a branch is unpushed when no upstream exists, yet the fallback retains that predicate and a
+  `git push` close (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:92` and `:103-106`). It also says
+  `no-upstream` is carried in evidence, while the only legal counts payload is `<ahead>/<behind>`
+  (`:173`). Fix: classify this as trunk divergence with unknown push state, add a typed upstream-state
+  field, and emit an inspect or fully resolved `git push --set-upstream <remote> <branch>` action only
+  after the remote is known.
+- **[Blocker] Lens 8 requires executing an arbitrary close action during a read-only triage.** A park
+  becomes a candidate when its stored `close` command “reports nothing to do,” and the lens returns
+  that same command as the close interface (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:97`).
+  Nothing requires that command to be a read-only probe; running it conflicts with “Not an executor”
+  and PARKED-only write authority (`:52-58` and `:70-77`). Fix: give park records a separate mandatory
+  read-only `check` operation (or a typed path/state predicate), validate it against an allowlist, and
+  never execute `close` while collecting.
+- **[Blocker] Loud degradation can exceed the hard cap with no aggregation rule.** Part 2 has at most
+  four body lines (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:204-214`), but each unavailable or
+  incomplete lens must be named and eight lenses can degrade together (`:325-334`). The zero-item row
+  is also specified as `0-7` even though `Nothing open.` consumes one line (`:210`). Fix: define a
+  deterministic, lossless aggregation of all degradation IDs into at most four lines, change the item
+  allocation to 1-7 rendered lines, and add one simultaneous fully-degraded fixture rather than only
+  one fixture per row.
+- **[Should] Make the one-line item grammar delimiter-safe.** Session quotes, paths, PR actions, and
+  commands may themselves contain the literal ` — ` delimiter, but the schema requires every line to
+  parse into four fields without defining escaping (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:164-177`
+  and `:182-192`). Fix: define escaping/encoding for payload and close fields, or render from a
+  structured object with a parser that splits only validated top-level separators; fixture a quote
+  and path containing the delimiter.
+- **[Pass] The ROADMAP catalogue now matches the actual minimum parser surface.** The PRD gives the
+  `- **...**` prefix and four exact headings (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:294-305`),
+  matching `SECTIONS` and the prefix check (`utils/py/_marathon_plan.py:30-33` and `:516-522`).
+- **[Pass] The sibling boundary remains genuine.** The PRD is bounded current-session triage and
+  explicitly reserves history-backed alignment for Radar (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:52-68`
+  and `:222-226`); Radar requires a trunk window (`skills/radar/SKILL.md:36-40`), Finish Line freezes
+  one checkpoint's source (`/Users/noelsaw/.claude/skills/finish-line/SKILL.md:51-77`), and Rabbit
+  Hole consolidates one task then waits for a nod
+  (`/Users/noelsaw/.claude/skills/rabbit-hole/SKILL.md:14-23`).
+
+Whole-file note: the entire revision 3 PRD and all required sibling/interface sources were swept;
+the findings above include regressions and pre-existing defects, not only the producer's round-3
+diff. No project test was run because this was a read-only specification review.
+
+Handing off to Producer — go to the claude-a window and say “take your turn”.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
