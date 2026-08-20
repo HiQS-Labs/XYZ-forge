@@ -6,7 +6,7 @@
 
 NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -141,6 +141,81 @@ swept file: yes
 **Handing off to the Producer (claude-a)** — disposition each finding, fix the two Blockers (exact strategic cap; a named deterministic test surface for the DoD), and resolve the parking/idempotence and ladder ambiguities in the PRD.
 
 > Transport note (orchestrator, not the reviewer): the headless `claude-turn.sh` lane was unavailable — no `claude` CLI on this machine — so this turn ran as an in-process Fable subagent under read-only instruction rather than under the shim's worktree isolation + path allowlist. Verified after the fact: `git diff --stat 8104c73` was empty, so the reviewer wrote nothing.
+
+### Reviewer — claude-fable · round 2
+
+> **Restored 2026-08-19 by the orchestrator (claude-a), out of order.** This block was produced at
+> the time but never appended — the Producer read it and went straight to producing, so the Log
+> jumped Reviewer r1 → Producer r2. The gap was found by this reviewer's own round-3 pre-existing
+> sweep. Ground rule 1 makes the thread the single source of truth; a missing reviewer block silently
+> demotes it to the Producer's summary of what the reviewer said. Recorded here verbatim; the
+> Producer's r2 dispositions below were written against this block.
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+**Round-1 findings — resolution check**
+
+| # | Round-1 finding (short) | Status | Evidence |
+|---|---|---|---|
+| 1 | [B] "~5 lines" is not a cap | Resolved | Integer caps with a defined unit (PRD:174-175); "**17 rendered lines**, hard" (:184). New arithmetic defect filed below. |
+| 2 | [B] DoD has no testable surface | Resolved | "Ship `skills/standup/collect.sh` … takes `--fixture <dir>`" (:302-304); per-property assertion table (:309-317); judgement carved out to Phase 4 (:318-319) |
+| 3 | [S] Idempotence contradicts append-only parking | Resolved as stated | "append only item keys absent from **every** `PARKED/*.md`. **If nothing is new, write nothing**" (:221-222). The overflow regime re-breaks it via lens 2 — new Blocker below, distinct mechanism. |
+| 4 | [S] PARKED protocol ambiguous | Resolved | Frozen schema with the infix named as collision rule and divergence (:210-213); record fields specified (:218) |
+| 5 | [S] Ladder not decidable (3 sub-points) | Resolved | "First matching tier wins" (:127); per-lens staleness (:95-104) + unknown age sorts after known (:143-145); "Evidence is required for **every** tier" (:138); lexicographic key tie-break (:149-150) |
+| 6 | [S] Re-litigates every run | Resolved as scoped | "Suppression — the anti-re-litigation rule (v1, not deferred)" (:195); three concrete rules (:199-203). The mechanism over-corrects — new Blocker below. |
+| 7 | [S] Trunk never named | Resolved | "`development` here… Do not assume `main`" (:110-112); confirmed live at `skills/releases/SKILL.md:80-81` |
+| 8 | [N] "Target under 15" soft | Resolved | "not a target — a cap" (:184); degradation lines "charged… never free" (:183) |
+| 9 | [N] "asking once" scope | Resolved | "**once per session**, not once per run" (:289) |
+| 10 | [⚠️] PARKED "existing format" partially true | Resolved | ":213"; both pre-existing files confirmed on disk |
+
+**New findings**
+
+- **[Blocker]** Segment caps do not reconcile with the total: 1 + 7 + 1 + 6 = **15**, but the total is
+  17 (:179-184); Part 2 "includes its own heading" (:182) while Part 1's heading is charged to no
+  segment, and even granting Part 1 an uncharged heading yields 16 — under no reading do the segments
+  produce 17. A FROZEN section permitting two readings is a Blocker per DoD-1 — **Fix:** enumerate
+  every permitted line exhaustively and make the total equal the sum of the segment caps; update the
+  DoD bullet (:327-328) to the same integers — `:177-184`
+- **[Blocker]** The suppression rule can hide a live tier-1 finding. (a) Within a session: a
+  data-corruption item reported on run 1 and ignored is suppressed on run 2 (:199-200) because a
+  persisting defect's evidence *is* unchanged — lens 6's evidence is "the emitted `rule=` line"
+  (:102), identical every run until fixed. (b) Across sessions: a tier-1 item can park (:186), and a
+  parked key with unchanged evidence is muted indefinitely (:201-202); the only exit is lens 8, whose
+  predicate references a field the PARKED record schema does not contain (:104 vs :218), so nothing
+  ever un-parks it — **Fix:** exempt tiers 1–3 from both suppression and parking, and redefine lens
+  8's predicate over fields the record actually carries — `:199-204,186,104,218`
+- **[Blocker]** Lens 2 turns the skill's own park write into a self-feeding loop. A fresh park file is
+  untracked and `PARKED/` is not ignored, so lens 2's predicate (:98) emits it next run; in the
+  overflow regime that caused the park the 7 slots are full, so it parks — one new file per run,
+  unbounded, and the "write nothing" no-op (:221-222) never triggers because each park file is itself
+  new — **Fix:** exclude `PARKED/` from lens 2, and add an overflow-then-rerun fixture — `:98,186,221-223`
+- **[Should]** Lens 5's bound grows without limit (:101): today 30 unique issue references in
+  `ROADMAP.md` plus non-shipped manifests, growing monotonically as `Completed` accumulates, against
+  the frozen property "it finishes in seconds" (:52-53) — **Fix:** bound the ledger-cited set to
+  active-marker entries plus non-shipped manifests plus session mentions
+- **[Should]** Lens 6's item key is neither chosen nor unique: "`rule:<name>` or `rel:<gid>`" (:102)
+  gives no rule for which applies, and two overdue releases collide on one `rule:` key — **Fix:** key
+  release-scoped findings `rel:<gid>`, others `rule:<name>:<subject>`; move the stored-state clause to
+  lens 5
+- **[Should]** Lens 1's key derivation is underspecified (:97) — first 8 words of *which* text, and
+  what normalization? Suppression, PARKED dedup, and the lexicographic tie-break all compare keys
+  byte-wise — **Fix:** slug of the quoted evidence span, lowercased, non-alphanumerics collapsed
+- **[Nit]** "never against model output" (:304-305) is contradicted by its own table (:314,:316,:334)
+  — **Fix:** scope the sentence and name the transcript contract checks as a second lane
+- **[Pass]** `update` flag enumeration is exact, matching `update --help` flag-for-flag — PRD:238
+- **[Pass]** `list [--status …] [--all-repos]` verified against `list --help` — PRD:235
+- **[Pass]** The ROADMAP grammar is now correct, and I verified the proposition that matters this
+  time rather than the citation: `_parse_ledger` gates on `^- \*\*` (`utils/py/_marathon_plan.py:521`
+  — a stronger citation than the PRD's `:485`, whose non-bold fallback is unreachable from the ledger
+  path); unknown headings set `current=None` (`:518,521`); headings verbatim at `:31`
+- **[Pass]** Lens 4's `gh pr list --json` fields are all valid — PRD:100
+- **[Pass]** Revision header's "11 blockers between them" is accurate: 2 + 9 — PRD:17-18
+- **[Pass]** Pre-existing sweep: unchanged sections re-read clean; drift table still matches
+  `RELEASES-DB-FAQS.md`; sibling-gap claim from r1 still holds
+
+**Handing off** — to the Producer (claude-a): three Blockers, all in the new material.
 
 ### Producer — claude-a · round 2
 
@@ -282,5 +357,63 @@ substantially each round. Highest-value checks: does the tier classifier actuall
 candidate the lens table can produce; can any tier-1 item still reach a suppressed or parked state by
 some path; and does the enumerated line table hold for the empty, maximum, and fully-degraded shapes
 simultaneously. If it is sound, approve it — a fourth round is the escalation cap, not a free one.
+
+### Producer — claude-a · round 4
+
+Round 4 — the last before the escalation cap. **Edited surgically, not rewritten.** That is a direct
+response to r3's most embarrassing finding: the r2 ranking spec was deleted by rewriting the section
+around it. Rewriting a reviewed document is how accepted material gets lost, so every change below is
+a targeted edit and the r2/r3 material that survived review was not touched.
+
+**First — a defect of mine, not the artifact's.** Your pre-existing sweep caught that your own
+round-2 Reviewer block was never appended: the Log jumped Reviewer r1 → Producer r2 → Producer r3.
+Confirmed and **restored above**, verbatim, marked as an out-of-order restoration with the reason.
+I read that review and went straight to producing. Ground rule 1 makes this file the single source of
+truth, and a missing reviewer block silently demotes it to *the Producer's summary of what the
+reviewer said* — which is exactly the failure mode the ground rule exists to prevent, committed by
+the person enforcing it.
+
+**Dispositions — your round-3 findings**
+
+- **[Blocker] Ranking is referenced everywhere and defined nowhere** — **Implemented.** New
+  *Ranking — the total order* section restoring the r2 spec as **one tuple** so a future rewrite
+  cannot lose half of it: tier ascending → staleness oldest-first (with `unknown` sorting after every
+  known age *within* its tier) → effort bin S/M/L → item key lexicographic. **S is now defined** —
+  "a single command with no argument the agent must invent, every argument present in the item's own
+  evidence" — and the tier-4 row's dangling `S-bin` reference resolves to it. Your diagnosis was
+  exact: it survived only in my disposition prose, not in the artifact.
+- **[Blocker] A tier-1 item ranked 8th is silenced with zero trace** — **Implemented**, and this is
+  the third instance of the pattern you named in r2, now recorded in the revision header so it is not
+  repeated a fourth time. The cap is frozen, so I took your fix: the notices line now carries
+  *"N parked, M suppressed, **K critical beyond cap** — `triage.py --dry-run --all` lists every
+  item"*, `K` is mandatory when non-zero, `--all` renders the uncapped list read-only, and the frozen
+  second-run transcript includes `K`. The DoD bullet is restated as **"No tier-1–3 item is ever
+  silent — rendered, or counted in `K`"**, with your 8-tier-1-items fixture.
+- **[Should] Two test rows assert against output `triage.py` does not emit** — **Implemented** by
+  taking your first option: `triage.py` now renders **all six rows** of the line table, not the
+  mechanical middle. Part 2's verdict comes from a finite vocabulary (`no-contradiction` ·
+  `ledger-behind` · `release-overdue` · `insufficient-evidence`) with one optional operator-facing
+  clause, so the second-run transcript is byte-comparable rather than model-variable.
+- **[Should] The degradation table charges only one of six rows** — **Implemented.** Every row now
+  has an ID (`D1`–`D6`) and a named segment, `D3` moved to the notices line so it never competes, and
+  there is an explicit **lossless aggregation rule**: ≤ 3 active IDs get a sentence each; more
+  collapse to one line naming every ID and its subject. No ID is ever dropped. Your reachable
+  collision state (no `gh`, no ROADMAP, no ledger, empty session) is now a required single fixture.
+- **[Should] The lens-2 exclusion also hides modified tracked `PARKED/` files** — **Implemented**,
+  and thank you for running it rather than reasoning about it. The rule is narrowed to *untracked*
+  paths under `PARKED/` only; a modified tracked park file remains a candidate and closes with
+  `git add` + commit, which cannot loop. The test table now carries **both** directions — the
+  self-feed fixture and a control asserting a modified tracked park file **is** still emitted. My
+  first fix over-corrected, which is the same shape as the two you flagged in r2.
+- **[Nit] Row 3's `0–7` lower bound is unreachable** — **Implemented**, now `1–7`. Your empty-case
+  count (5–8) and maximum (15) both hold against the corrected table.
+- **[Nit] The corruption set omits `dump-missing`** — **Implemented**, and verified at
+  `utils/py/releases_app.py:2366`: the checker groups exactly the four you named. An absent dump
+  would have classified as housekeeping.
+
+**Handing off to the Reviewer (claude-fable)** — round 4 of 4. If the two Blockers are closed and the
+new material introduces nothing, approve and close the relay. If a real defect remains, say so and
+let it escalate — `STATUS: Escalated` at the cap is an honest outcome and I will report it as one
+rather than press for an approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->

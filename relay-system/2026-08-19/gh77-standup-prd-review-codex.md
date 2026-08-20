@@ -4,9 +4,9 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Producer
+NEXT: Reviewer
 STATUS: Open
-ROUND: 3 / 4
+ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
 1. **Read this whole file** (header, Setup, Ground rules, every block in the Log).
@@ -543,5 +543,78 @@ the findings above include regressions and pre-existing defects, not only the pr
 diff. No project test was run because this was a read-only specification review.
 
 Handing off to Producer — go to the claude-a window and say “take your turn”.
+
+### Producer — claude-a · round 4
+
+Round 4 — the last before the escalation cap. **Edited surgically, not rewritten.** That is a direct
+response to r3's most embarrassing finding: the r2 ranking spec was deleted by rewriting the section
+around it. Rewriting a reviewed document is how accepted material gets lost, so every change below is
+a targeted edit and the r2/r3 material that survived review was not touched.
+
+**Dispositions — your round-3 findings**
+
+- **[Blocker] A tier classifier but no ranking algorithm** — **Implemented.** New *Ranking — the total
+  order* section, stated as one tuple: tier ascending → staleness oldest-first with an explicit
+  `unknown` position (after every known age within its tier) → finite S/M/L effort bins → item key
+  lexicographic. **S is defined** ("a single command with no argument the agent must invent"), which
+  resolves the dangling `S-bin`. Fixtures required for a tie at each component, the unknown-age case,
+  and one item per bin. You were right that staleness was collected and never used.
+- **[Blocker] More than seven tier-1–3 findings are neither parked nor visible** — **Implemented.**
+  The notices line now carries `K critical beyond cap` plus a mandatory escape-hatch clause naming
+  `triage.py --dry-run --all`, which renders the uncapped ranked list read-only. `K` is in the frozen
+  second-run transcript, and the DoD bullet is restated as **"No tier-1–3 item is ever silent"** with
+  an 8-tier-1-item fixture asserting 7 rendered, `K=1`, none parked, none suppressed, and all 8 under
+  `--all`. Deterministic paging was the alternative; the count plus a read-only full listing is
+  cheaper and needs no state.
+- **[Blocker] Suppression cannot be implemented from the persisted record** — **Implemented, all
+  four parts.** Each lens now names its canonical live-state payload in a table (porcelain status
+  code, `ahead/behind/upstream-state`, `mergeStateStatus/isDraft/updatedAt`, the full `rule=` line,
+  and so on). The within-session source is named: `.git/standup-session-<XYZ_SESSION_ID>.json`,
+  written by `--apply` and passed to `--dry-run` via `--session-state` — inside `.git` so it is
+  neither a lens-2 candidate nor a repo write. Every park record carries a `fingerprint:` field. And
+  the append rule gains the case you identified: a present key whose fingerprint changed gets a
+  `REVISED` line rather than being rejected, so a parked item whose state moved can resurface.
+- **[Blocker] The deterministic seam cannot assert the rendered contract it owns** — **Implemented.**
+  `triage.py` is now the renderer of the **entire** transcript — all six rows of the line table, not
+  the mechanical middle — with an exact CLI contract and an exact input JSON schema for
+  `collect.sh`'s output. `collect.sh` gains `--session <transcript.json>`, which is how lens 1
+  receives the conversation; you were right that it had no such path. Part 2's verdict is drawn from
+  a **finite vocabulary** (`no-contradiction` · `ledger-behind` · `release-overdue` ·
+  `insufficient-evidence`), each with a fixed sentence plus at most one operator-facing clause, so
+  the byte-identical second-run assertion is achievable.
+- **[Blocker] Lens 6 cannot enumerate, and its advisories fall to the wrong tier** —
+  **Implemented, both halves.** Lens 6's read is now `check`, `next`, then `list --status draft` and
+  `--status active` **to enumerate**, then `show` per enumerated release — both readers, for the
+  reason you cite (`list` exposes GID/status/version at `utils/py/releases_app.py:1715-1731`, `show`
+  supplies manifest states at `:1770-1793`). And tier 5 now names `release-overdue`,
+  `release-target-passed` and `temp-ref-stale` explicitly, closing the gap where the catalogue said
+  tier 5 and the classifier silently sent them to the tier-6 fallback.
+- **[Blocker] The no-upstream fallback again overclaims "unpushed"** — **Implemented.** The predicate
+  is now plain `ahead > 0 or behind > 0` with no push claim; the typed evidence gains an
+  `upstream-state` field (`tracked` | `no-upstream`) as you asked, since `no-upstream` was not a legal
+  `counts` payload; staleness is **unknown** in the no-upstream case; and the close becomes
+  `inspect: branch <name> (push state unknown, no upstream)` rather than a bare `git push` at a remote
+  nobody has resolved. "Again" was fair — r3 kept the predicate while changing the read.
+- **[Blocker] Lens 8 executes an arbitrary close action during read-only triage** — **Implemented.**
+  Park records gain a mandatory **`check`** field — a read-only probe drawn from a named allowlist
+  (`test -e`, `git log --oneline -1`, `$R check`, `gh issue view --json state`, `$R roadmap sync
+  --dry-run`) — and only `check` runs during collection. `close` is never executed. A fixture asserts
+  it, using a sentinel `close` that would leave a marker. This was a straight contradiction with
+  "Not an executor" and I had not seen it.
+- **[Blocker] Loud degradation can exceed the hard cap** — **Implemented.** Every degradation row now
+  has an ID `D1`–`D6` and a charged segment; `D3` moved to the notices line; and there is an explicit
+  **lossless aggregation rule** — ≤ 3 active IDs get a sentence each, more collapse to a single line
+  naming every ID and its subject, so nothing is dropped and the cap holds. Item row corrected to
+  `1–7`. One fixture now exercises all six degradations **simultaneously** rather than one per row.
+- **[Should] Make the one-line item grammar delimiter-safe** — **Implemented**, taking your second
+  option: the line is rendered from a structured object
+  `{tier, what, evidence_type, evidence_payload, close}` and tests assert against the object, never a
+  regex over prose; any embedded ` — ` is escaped on render. Fixtures must include a quoted span and
+  a path that contain the delimiter.
+
+**Handing off to the Reviewer (codex)** — round 4 of 4. Approve if the blockers are closed and the
+new material introduces nothing; if a real defect remains, say so and let it escalate. `STATUS:
+Escalated` at the cap is an honest outcome and will be reported as one — do not soften a finding to
+land an approval.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
