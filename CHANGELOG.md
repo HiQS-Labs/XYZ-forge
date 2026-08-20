@@ -5,6 +5,14 @@ All notable changes to this repo. Newest first. Dates are PDT.
 ## [1.1.6] - 2026-08-20
 
 ### Added
+- **GH-102: Unified telemetry schema (1.0) and universal inspection CLI across fuzzing and ATE.**
+  Standardized shared data contract (`schema_version: "1.0"`); instrumented `utils/fuzzing/fuzz-loop.sh` with
+  argv-safe JSONL emission and sub-second millisecond duration timing; updated `utils/ate/scripts/run_variations.py`
+  to honestly distinguish `tokens_source` (`api_usage` vs `config_provided` vs `unsupported`); upgraded
+  `utils/ate/scripts/checkin.py` into a universal inspector supporting nearest-rank percentiles, `--tail`, `--json`,
+  and side-by-side `--compare` mode; added synthetic test `test/synthetic/gh102-telemetry-schema.sh` (8/8 PASS under
+  `fuzz-loop.sh`); verified by 2-round `/relay-xyz` with CommandCode (GLM-5.2) and published receipts in
+  `TESTS-RESULTS/2026-08-20+GH-102/`.
 - **GH-94: Programmatic tool calling execution runner, ATE structured telemetry, test receipts retention, and SOP.**
   Implemented `utils/py/script_runner.py` with AST normalization for newline serialization defects, process-group
   session isolation (`setsid` + PGID cleanup), and macOS seatbelt sandboxing; added synthetic test suites

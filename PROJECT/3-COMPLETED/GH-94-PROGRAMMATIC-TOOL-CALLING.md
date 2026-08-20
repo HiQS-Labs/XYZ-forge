@@ -2,7 +2,7 @@
 gh_issue: 94
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/94
 title: "GH-94: Programmatic Tool Calling & Code-Mode Execution for Harnesses, Telemetry, and Containment"
-status: Active
+status: Complete
 created: 2026-08-19
 updated: 2026-08-19
 owner: orchestrator

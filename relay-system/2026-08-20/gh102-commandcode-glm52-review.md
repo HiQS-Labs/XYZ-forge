@@ -4,7 +4,7 @@
   Scaffolded on 2026-08-20.
 -->
 
-NEXT: Claude
+NEXT: None
 STATUS: Approved
 ROUND: 2 / 2
 

@@ -481,23 +481,34 @@ def main():
                 )
                 classification = ask_gemma(args.lmstudio_url, args.lmstudio_model, prompt)
 
-        # Compute structured telemetry fields (GH-94)
+        # Compute structured telemetry fields (GH-94 / GH-102)
         duration_ms = int(result.get("wall_seconds", 0.0) * 1000)
-        prompt_tokens = variation.get("prompt_tokens", None)
-        completion_tokens = variation.get("completion_tokens", None)
-        total_tokens = None
-        if prompt_tokens is not None and completion_tokens is not None:
+        
+        usage = result.get("usage")
+        if isinstance(usage, dict) and "prompt_tokens" in usage and "completion_tokens" in usage:
+            prompt_tokens = usage.get("prompt_tokens")
+            completion_tokens = usage.get("completion_tokens")
             total_tokens = prompt_tokens + completion_tokens
             tokens_source = "api_usage"
+        elif variation.get("prompt_tokens") is not None and variation.get("completion_tokens") is not None:
+            prompt_tokens = variation.get("prompt_tokens")
+            completion_tokens = variation.get("completion_tokens")
+            total_tokens = prompt_tokens + completion_tokens
+            tokens_source = "config_provided"
         else:
+            prompt_tokens = None
+            completion_tokens = None
+            total_tokens = None
             tokens_source = "unsupported"
 
         record = {
             "schema_version": "1.0",
             "run_id": run_id,
             "iteration": i,
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "engine": "ate_variations",
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "variation": variation,
+            "status": classification.get("status", "pass" if result.get("exit_code") == 0 else "fail"),
             "duration_ms": duration_ms,
             "turn_count": variation.get("turn_count", 1),
             "prompt_tokens": prompt_tokens,
