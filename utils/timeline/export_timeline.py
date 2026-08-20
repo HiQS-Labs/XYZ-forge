@@ -158,7 +158,11 @@ def release_columns(cx, repo_url, roadmap_idx, today):
                 n_open_releases += 1
                 badge = {"type": "draft", "label": "draft"}
 
-        exit_text = f"Exit: {exit_c}" if exit_c else (descr[:280] + ("…" if len(descr) > 280 else ""))
+        # The card leads with the release's own sentence (human answer to "what IS
+        # this release"); the exit criterion is the machine contract, shown after.
+        plain = descr.replace("**", "").strip() if descr else ""
+        blurb = re.split(r"(?<=[.!?])\s+", plain, maxsplit=1)[0] if plain else None
+        exit_text = (f"Exit: {exit_c}" if exit_c else plain[:280] + ("…" if len(plain) > 280 else "")).replace("**", "")
         milestone_ref = milestone if milestone and len(milestone) <= 24 else "milestones"
 
         roadmap = cards
@@ -191,6 +195,7 @@ def release_columns(cx, repo_url, roadmap_idx, today):
                 "itemsOpen": n_open,
                 "milestoneUrl": f"{repo_url}/milestones" if repo_url else "#",
                 "milestoneRef": milestone_ref,
+                "blurb": blurb,
                 "exit": exit_text,
                 "detours": [],   # no detour concept in releases.db yet
                 "roadmap": roadmap,
@@ -235,9 +240,34 @@ def parse_releases_md(path):
     for line in path.read_text().splitlines():
         if m := re.match(r"^Release:\s*(\S+)", line):
             cur = blocks.setdefault(m.group(1), {})
-        elif cur is not None and (m := re.match(r"^(Status|Codename):\s*(.+?)\s*$", line)):
+        elif cur is not None and (m := re.match(r"^(Status|Codename|Iterations):\s*(.+?)\s*$", line)):
             cur.setdefault(m.group(1).lower(), m.group(2))
     return blocks
+
+
+def _ver(v):
+    try:
+        return tuple(int(p) for p in v.split("."))
+    except ValueError:
+        return None
+
+
+def in_md_band(version, md):
+    """True when an md block's Iterations band (e.g. 0.7.0-0.7.4) covers this version.
+
+    The RELEASES.md contract: versions inside a reserved band ship freely, are
+    recorded in CHANGELOG.md only, and never get a block — so a DB release inside
+    a band is accounted for, NOT drift.
+    """
+    v = _ver(version)
+    if v is None:
+        return False
+    for block in md.values():
+        if m := re.match(r"^(\S+)-(\S+)$", block.get("iterations", "")):
+            lo, hi = _ver(m.group(1)), _ver(m.group(2))
+            if lo and hi and lo <= v <= hi:
+                return True
+    return False
 
 
 def md_drift(md, columns):
@@ -250,7 +280,7 @@ def md_drift(md, columns):
     if md is None:
         return None
     db = {c["version"]: c["_raw"] for c in columns}
-    db_only = [v for v in db if v not in md]
+    db_only = [v for v in db if v not in md and not in_md_band(v, md)]
     md_only = [v for v in md if v not in db]
     flipped = [
         v for v in db.keys() & md.keys()
@@ -261,7 +291,7 @@ def md_drift(md, columns):
     parts = []
     if db_only:
         names = ", ".join(f"{v} ({db[v]['codename']})" for v in sorted(db_only))
-        parts.append(f"{len(db_only)} release(s) exist only in releases.db — no RELEASES.md block was ever written: {names}.")
+        parts.append(f"{len(db_only)} release(s) exist only in releases.db, outside every RELEASES.md Iterations band: {names}.")
     if md_only:
         parts.append(f"{len(md_only)} release(s) exist only in RELEASES.md: {', '.join(sorted(md_only))}.")
     if flipped:
@@ -271,8 +301,9 @@ def md_drift(md, columns):
         "sourceFile": "RELEASES.md",
         "rowsDiffer": len(db_only) + len(md_only) + len(flipped),
         "heading": "⚠ ledger drift — RELEASES.md (canonical) and releases.db disagree",
-        "message": " ".join(parts) + " Everything below reflects the DB. Fix at the source: author the missing "
-        "Release: blocks in RELEASES.md, or record the state through the CLI (/releases) — never in this page.",
+        "message": " ".join(parts) + " Everything below reflects the DB. Fix at the source per the RELEASES.md "
+        "contract: a band-opening release gets a block, an in-band version is covered by its band (CHANGELOG.md "
+        "records it) — never fix it in this page.",
     }
 
 
@@ -318,6 +349,40 @@ def build_payload(cx, today, md_path=None):
     }
 
 
+def serve(db_path, md_path, template_dir, port):
+    """Live mode: /data.json re-queries releases.db on every request — no stale file."""
+    import http.server
+
+    class Handler(http.server.SimpleHTTPRequestHandler):
+        def __init__(self, *a, **kw):
+            super().__init__(*a, directory=str(template_dir), **kw)
+
+        def do_GET(self):
+            path = self.path.split("?")[0]
+            if path == "/":
+                self.send_response(302)
+                self.send_header("Location", "/ledger.html")
+                self.end_headers()
+                return
+            if path != "/data.json":
+                return super().do_GET()
+            cx = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+            try:
+                body = json.dumps(build_payload(cx, date.today(), md_path)).encode()
+            finally:
+                cx.close()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+    with http.server.ThreadingHTTPServer(("127.0.0.1", port), Handler) as srv:
+        print(f"live on http://127.0.0.1:{port}/ledger.html — every refresh re-queries {db_path}")
+        srv.serve_forever()
+
+
 def bake_static(template_html, payload):
     marker = "<!--LEDGER_DATA-->"
     if marker not in template_html:
@@ -334,16 +399,32 @@ def main(argv=None):
     ap.add_argument("--md", type=Path, help="RELEASES.md for drift check (default: next to --db)")
     ap.add_argument("--template", default=HERE / "ledger.html", type=Path)
     ap.add_argument("--out", default=Path("temp/timeline"), type=Path)
+    ap.add_argument("--check-drift", action="store_true",
+                    help="no files written: exit 1 listing RELEASES.md-vs-DB drift, exit 0 when aligned")
+    ap.add_argument("--serve", type=int, metavar="PORT", default=None,
+                    help="serve live: /data.json re-queries the DB on every request (no files written)")
     args = ap.parse_args(argv)
 
     if not args.db.is_file():
         sys.exit(f"releases DB not found: {args.db}")
     md_path = args.md if args.md else args.db.resolve().parent / "RELEASES.md"
+
+    if args.serve:
+        serve(args.db.resolve(), md_path, args.template.resolve().parent, args.serve)
+        return
     cx = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
     try:
         payload = build_payload(cx, date.today(), md_path)
     finally:
         cx.close()
+
+    if args.check_drift:
+        sync = payload.get("sync")
+        if sync:
+            print(f"DRIFT ({sync['rowsDiffer']}): {sync['message']}")
+            sys.exit(1)
+        print("releases.db and RELEASES.md agree (releases present on both sides, shipped-status aligned)")
+        return
 
     args.out.mkdir(parents=True, exist_ok=True)
     (args.out / "data.json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")

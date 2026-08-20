@@ -17,6 +17,10 @@ open temp/timeline/index.html                        # self-contained, works fro
 - `index.html` — static page with the data baked inline (the shareable artifact).
 - `data.json` — the viewer's data contract, for the served mode:
   `python3 -m http.server -d temp/timeline 8080` → `http://localhost:8080/ledger.html`.
+- **Live mode:** `python3 utils/timeline/export_timeline.py --serve 8103` →
+  `http://127.0.0.1:8103/ledger.html`. `/data.json` re-queries the DB (read-only) on
+  every request — no stale file, no re-export step. The browser cannot read SQLite
+  directly; this is the one-source equivalent.
 - `--db`, `--template`, `--out` override the defaults.
 
 ## Guarantees & limits
@@ -28,7 +32,10 @@ open temp/timeline/index.html                        # self-contained, works fro
 - Drift banner: the exporter parses RELEASES.md `Release:` blocks (canonical during
   the GH-32 shadow phase) and shows a red banner when the two ledgers disagree —
   releases existing on one side only, or shipped-status flips (draft-vs-active is
-  not drift; the md vocabulary has no `active`). `--md` overrides the file location.
+  not drift; the md vocabulary has no `active`). Band-aware per the RELEASES.md
+  contract: a DB release inside a block's `Iterations:` band is accounted for, not
+  drift. `--md` overrides the file location; `--check-drift` runs it standalone
+  (exit 1 on drift) for hook/check wiring.
 - Not rendered yet (no DB concept / out of spike scope): detour lane, ROADMAP row
   parity, per-card pri/sev metrics.
 

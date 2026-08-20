@@ -139,6 +139,9 @@ b{font-weight:700;color:var(--ink2)}
 .badge.draft{color:var(--ink3);border:1px dashed var(--line2)}
 .badge.od{color:var(--card);background:var(--red);font-weight:700;font-size:10px;padding:1px 6px}
 .node .meta{font-size:11px;color:var(--ink2);margin-top:2px}
+.blurb{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--ink);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.node:hover .blurb,.node:focus-visible .blurb,.node:focus-within .blurb{-webkit-line-clamp:99}
 .exit{margin:5px 0 0;font-size:11.5px;line-height:1.4;color:var(--ink2);border-top:1px dotted var(--line2);padding-top:4px;
   display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .node:hover .exit,.node:focus-visible .exit,.node:focus-within .exit{-webkit-line-clamp:99}
@@ -297,6 +300,7 @@ article[hidden]{display:none}
         '<span class="badge '+esc(rel.badge.type)+'">'+esc(rel.badge.label)+'</span></div>'+
       '<div class="meta">'+esc(rel.dateLabel)+' '+esc(rel.date)+extraText+' · '+rel.itemsTotal+' items · '+openHTML+
         ' · <a href="'+rel.milestoneUrl+'">'+esc(rel.milestoneRef)+'</a></div>'+
+      (rel.blurb?'<p class="blurb">'+esc(rel.blurb)+'</p>':'')+
       '<p class="exit">'+esc(rel.exit)+'</p>'+
       '</article>';
   }
@@ -386,7 +390,7 @@ article[hidden]{display:none}
     try{boot(JSON.parse(inline.textContent));}
     catch(err){document.getElementById('track').innerHTML='<p style="padding:14px">Failed to parse inline ledger data: '+esc(err.message)+'</p>';}
   }else{
-    fetch('./data.json').then(function(r){return r.json();}).then(boot).catch(function(err){
+    fetch('./data.json',{cache:'no-store'}).then(function(r){return r.json();}).then(boot).catch(function(err){
       document.getElementById('track').innerHTML='<p style="padding:14px">Failed to load data.json: '+esc(err.message)+'</p>';
     });
   }
