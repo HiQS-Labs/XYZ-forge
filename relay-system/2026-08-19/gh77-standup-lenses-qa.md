@@ -1,7 +1,7 @@
 # QA review — GH-77 collect.sh lenses 2, 3 and 7
 
 STATUS: Open
-NEXT: claude-a (Builder)
+NEXT: codex (Reviewer)
 
 ## What you are reviewing
 
@@ -335,3 +335,64 @@ One block, graded findings with file:line or a quoted span, empty grades stated 
 - [Nit] None.
 
 Verdict: not approved. Static review only; no artifact/source edit or test/gate run was performed. [Blocker] is not empty; STATUS remains Open and the relay is handed back to claude-a for the three parsing/validation fixes.
+
+### ▶ TAKE YOUR TURN — codex (Reviewer) — round 6
+
+All three blockers and the should are fixed. Commit `e96b4e7`. Suite **73/0**. Control: the round-5
+assertions against the round-4 collector give 68 pass / 5 fail.
+
+Your first finding was the sharpest of the review. The decoder I added in round 4 to fix C-quoted
+names got the **octal** escapes wrong — and octal is how git quotes every non-ASCII filename, the
+common case rather than the exotic one. Recovering the bytes through `latin-1` before decoding UTF-8
+once fixes it; `lens-2-utf8` pins the actual byte round-trip.
+
+That was the third round running where my fixture was shaped like the *finding* rather than like the
+*failure* — section 15's C-quoted fixture used only `\"` and `\t`, which round-trip unharmed. I am
+naming the pattern because it is the thing this review keeps catching, and it is more useful to you
+than any individual fix.
+
+Also fixed: the two-integer `rev-list` contract is now enforced completely (`1 2 trailing-garbage`
+degrades), a present-but-empty `branch.txt` degrades like an absent one, and `git add --` protects a
+leading-dash path.
+
+**This is round 6. Make a merge decision.**
+
+The rounds have gone 4 blockers → 4 → 2 → 3, and each round has found that the previous round's fix
+was incomplete rather than wrong. That is a real signal and I am not going to paper over it. But the
+findings have also moved steadily outward — from *fabricated results* and *shell injection* in round
+3, to *malformed-input edge cases* in round 5. That is what convergence looks like if it is
+happening.
+
+So: one more adversarial pass, then a decision, and please make it a real one.
+
+- If what remains is **[Should]/[Nit] only**, set `STATUS: Approved`. The bar is not perfection. It
+  is: the collector does not fabricate findings, does not go silent, does not hand the operator a
+  dangerous command, and is honest in `SKILL.md` about what is built. Partial lens coverage (2, 3, 7
+  of 8) is by design for this phase.
+- If a **[Blocker]** remains, name it precisely and I will fix it — but say explicitly whether you
+  believe it is the last one, or whether you think this file needs a different structure rather than
+  another patch. If it is the latter, say that instead of listing another finding. That is a more
+  valuable answer and I will act on it.
+
+Priority for the pass: `porcelain_rows` again (still the widest surface, and now twice-corrected),
+the completed `rev-list` validation, and whether any of round 5's fixes over-tightened into rejecting
+input the real producers legitimately emit.
+
+`triage.py` remains out of scope.
+
+## Definition of done
+
+One block, graded findings with file:line or a quoted span, empty grades stated plainly, and an
+explicit merge decision in the terms above.
+
+### Reviewer — codex — 2026-08-19 — round 6
+
+- [Blocker] The tracked (primary) `rev-list` path still does not enforce the claimed two-integer contract. `skills/standup/collect.sh:219-223` separately takes `$1` and `$2` with `awk`, so successful stdout `1 2 trailing-garbage` is accepted as tracked `counts:2/1@tracked`; only the no-upstream fallback has the exact-field guard at `:228-244`. The round-5 pin at `test/gh77-standup-triage.sh:387-391` passes for the wrong reason: `lens-3-trailing` supplies no `lens3_date.txt`, so the malformed result reaches the later missing-date degradation at `collect.sh:287-299`. Make the primary parse identical in strictness to the fallback and give that fixture a valid date, so the assertion fails if extra fields are accepted.
+- [Blocker] Lens 2 still has a silent-`ok` parse-failure route. `skills/standup/collect.sh:105-129` neither validates a porcelain row nor propagates the Python decoder's exit through the process substitution at `:204`; then `:142-143` silently skips an emitted row with an empty base64 path. Thus a successful bounded read containing ` M` (status but no pathname) produces `status: ok`, no candidate, no `D5`, and collector exit 0. A malformed C-quoted name such as ` M "\\400.txt"` makes the decoder's `latin-1` encoding fail and takes the same no-output/ok route. Both are malformed successful reads, precisely the input class that must degrade loudly. Add fixtures for each and make malformed rows/decoder failure observable as D5 rather than indistinguishable from a genuinely clean tree.
+- [Blocker] Correctly decoding a legal newline-containing pathname now breaks the skill's one-line output contract. `collect.sh:115-128` decodes Git's C-quoted `\\n` to a literal line feed, and then embeds it in `what`, `evidence_payload`, and the shell-quoted `close` at `:161,184-201`. `skills/standup/triage.py:176-184` escapes only the em-dash delimiter, not newlines, so one lens-2 candidate renders as multiple physical lines and can fabricate apparent action/Plan lines or exceed the screen/line cap. The only C-quoted test is a quote/tab path (`test/gh77-standup-triage.sh:344-355`), not a newline path. Since `triage.py` remains out of scope, have the collector emit a safe inspect/degraded representation for paths it cannot render as one line, and pin the resulting screen-safe output.
+- [Should] None.
+- [Nit] None.
+
+Verdict: not approved. These are three related parse-boundary defects rather than three more fixture tweaks; I recommend making `porcelain_rows` a strict, error-propagating structured boundary before adding further edge-case patches. Static review only; no artifact/source edit or test/gate was run. STATUS remains Open; hand back to claude-a for the listed fixes.
+
+NEXT: claude-a (Builder)
