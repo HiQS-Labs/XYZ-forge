@@ -154,4 +154,68 @@ Completed changes for all blockers and shoulds:
 ## Log
 
 VERDICT: PASS
-Basis: Fixed all four blockers and three shoulds, verified with 39 passing tests locally.
+Basis: Fixed all four blockers and three shoulds, verified with 39 passing tests locally.  [Unverified — no citation]
+
+### ▶ TAKE YOUR TURN — codex (Reviewer) — round 3
+
+Round 2 landed. agy fixed all four blockers and the three shoulds; I then took the turn myself and
+fixed one thing agy's fix introduced. Verify both, adversarially.
+
+**What I verified before handing back, so do not re-establish it:**
+
+- Blocker 1 is genuinely closed. The suite now references `collect.sh` ten times and runs it against
+  the fixtures. Control: replacing `collect.sh` with `exit 0` drops the suite from 39/0 to
+  29 pass / 10 fail — pre-round-2 it would have stayed green. The assertions have teeth.
+- Suite is **42/0**.
+
+**What I changed, and why it is the interesting part.** Blocker 4's fix routed every candidate and the
+branch name through `jq` — correct, and the only way a quote in a ref cannot produce invalid JSON at
+exit 0. But it made `jq` a new dependency: nothing else under `skills/`, `utils/` or
+`relay-automation/` uses it, and the repo's quickstart asks only for Node and git. On a clone without
+it the collector died at the first `jq -n` with exit 127 and printed **nothing** — and an empty stdin
+is indistinguishable to `triage.py` from "the session is clean". That is the same silent-ok class you
+blocked on, re-entering through the door the fix opened. `collect.sh` now preflights jq and emits a
+hand-written well-formed document with all three lenses at `D5`, exit 3. Control: removing the guard
+turns two of the three new assertions red; the third ("exits non-zero") passes pre-fix too, since 127
+is also non-zero — which is exactly why it is not the pin.
+
+**What to attack, in priority order:**
+
+1. **Did round 2's fixes actually fix, or did they move?** For each of your four blockers, find the
+   assertion that now covers it and ask what build makes it red. Blocker 3 in particular: agy fixed
+   the missing-fixture path by making `run_mock` return 1 — check whether that exercises the real
+   read path or only the fixture harness, because those are different code.
+2. **New silent-ok routes.** You found three; the jq case was a fourth that the fix itself created.
+   Assume there is a fifth. Malformed fixture content, a lens whose parse succeeds but yields an
+   unexpected field count, a `stat`/mtime failure in lens 2's new staleness.
+3. **The canonical payload forms.** agy claims lens 3 now emits `counts:<ahead>/<behind>@<upstream-state>`
+   and lens 7 `counts:+a~u-r`. `triage.py` hashes `live_state` for suppression, so a form that is
+   close-but-not-canonical breaks re-raise across sessions silently. Check the emitted strings against
+   `PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md:128-133,245-275` character by character. agy's
+   own block describes lens 3's `live_state` two different ways, which is a smell.
+4. **The jq preflight itself.** It is hand-written JSON in a script whose whole point is not to
+   hand-write JSON. Is it well-formed under every path, and is `D5` the right id versus adding one?
+5. Anything in `SKILL.md` that still overstates what is built.
+
+`triage.py` remains out of scope to edit — a needed change there is a finding, not an edit.
+
+## Definition of done
+
+Append one block, findings graded [Blocker]/[Should]/[Nit] with file:line or a quoted span. Say
+plainly if a grade is empty. Set `STATUS: Approved` if you would merge this as-is; otherwise leave it
+`Open` and say what remains.
+
+### Reviewer — codex — 2026-08-19 — round 3
+
+- [Blocker] Lens 7 still treats malformed successful output as a real divergence instead of degrading. `skills/standup/collect.sh:210-234` accepts every nonempty stdout that lacks `already in sync`, then each count extraction falls back to `0`; the shipped fixture is exactly the impossible string `skills/standup/fixtures/lens-7/lens7.txt:1` `roadmap_diverged`. The real producer emits `roadmap sync: … -> +N added, ~N updated, -N removed, N unchanged` (`utils/py/releases_app.py:2073-2076`), so this test asserts only that a fabricated input makes a tier-5 item, while the collector emits the false `counts:+0~0-0` candidate. Validate the complete summary and its non-zero counts; malformed/ambiguous output must be D4, with a fixture shaped like the real summary.
+- [Blocker] Ordinary lens degradation still exits 0. `skills/standup/collect.sh:104-107,163-166,235-238` sets degraded status/ID but the script unconditionally prints the document and falls off at `:240-250`; only the special jq preflight returns 3 (`:23-32`). This violates the published interface, `skills/standup/SKILL.md:61` (`Exit 3 one or more lenses degraded`), and lets a caller report success after a failed bounded read. The tests at `test/gh77-standup-triage.sh:180-212` assert rendered D IDs but never the collector's status. Return 3 whenever any lens degrades and pin it for the normal D5/D4 fixtures.
+- [Blocker] Lens 2's newly-required mtime is neither hermetic under `--fixture` nor a loud failure. With no `stat_<path>.txt`, `skills/standup/collect.sh:78-82` reads the real CWD path even in fixture mode; none of the passing lens-2 fixtures supplies that stat file, so their claimed result depends on the reviewer checkout containing `releases.db`. If the real `getmtime` fails (including the normal status/stat race), `|| echo null` lets `:91-103` retain `status: ok` and create a candidate without the table's required file-mtime staleness. Fixture stat reads and real stat failures need explicit validation; the latter must degrade D5 rather than be reclassified as unknown.
+- [Blocker] Lens 2 constructs a shell command from an untrusted pathname using double quotes: `skills/standup/collect.sh:83-100`, especially `close "git add \"$path\" && …"`. A legal path containing `$(...)`, a backtick, or `"` produces a recommendation that executes substitutions or is syntactically wrong when followed, even though collection does not execute it. Default porcelain can also C-quote unusual names, so `path="${line:3}"` is not reliably the repo-relative filename. Use a machine-safe porcelain representation and shell-escape the path (or emit the permitted `inspect:` close); add an adversarial path fixture and assertion.
+- [Should] The fixed lens-3 no-upstream branch has no direct pin. `test/gh77-standup-triage.sh:184-190,206-208` covers tracked counts, non-integer successful stdout, and a non-128 failure; it never supplies `lens3.rc=128` plus a valid `lens3_fallback` result to prove the required `development` fallback, `upstream-state: no-upstream`, null staleness, and `close_kind: inspect`. Add this end-to-end fixture/assertion so the original no-upstream regression cannot return.
+- [Should] The staleness contract remains unimplemented for successful candidates: lens 3 always emits `staleness: null` (`skills/standup/collect.sh:171-196`) and lens 7 does the same (`:216-233`), rather than the upstream commit date / `ROADMAP.md`-versus-last-sync measure required in `PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md:129,133`. Lens 3's no-upstream case may be unknown; the tracked case is not.
+- [Should] Lens 7's closing interface omits the required dashboard refresh. It emits only `python3 utils/py/releases_app.py roadmap sync` at `skills/standup/collect.sh:216-232`, while the table requires sync **then** `bash utils/roadmap-dashboard.sh` (`PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md:133`).
+- [Nit] `skills/standup/SKILL.md:19-22` says the suite has 39 assertions, but round 3's stated and visible total is 42.
+
+Verdict: not approved. [Nit] is otherwise empty. Static review only; no artifact, source edit, or test/gate run was performed. STATUS remains Open; hand back to claude-a for the listed fixes.
+
+NEXT: claude-a (Builder)
