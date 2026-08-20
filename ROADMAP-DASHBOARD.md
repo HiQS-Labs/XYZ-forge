@@ -6,10 +6,11 @@ Read-only derived view of the root [ROADMAP.md](ROADMAP.md) ledger.
 
 ## Queue / parked intake
 
-Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 1 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
+Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 1 · ⛔ 0 · ✅ 2 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-103 · technical spike: RELEASES SQLite → timeline-ui ledger viewer | — | [GH-103-TIMELINE-LEDGER-SPIKE.md](PROJECT/1-INBOX/GH-103-TIMELINE-LEDGER-SPIKE.md) · [#103](https://github.com/HiQS-Suite/XYZ-forge/issues/103) |
 | GH-91 · a build turn has nowhere to write verification output — containment kills a complete, green turn | ✅ | [GH-91-RELAY-SCRATCH-DIR.md](PROJECT/2-WORKING/GH-91-RELAY-SCRATCH-DIR.md) · [#91](https://github.com/HiQS-Suite/XYZ-forge/issues/91) |
 | GH-10 · prevent-half of containment: require_fixture adoption across the fixture-creating suites + adoption guard + ci-local identity bracket | ✅ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
 | GH-10 · prevent-half of containment: adopt require_fixture across the ~31 (found: 73) unaudited suites + adoption guard + ci-local identity bracket | ⏸️ | [GH-10-REQUIRE-FIXTURE-ADOPTION.md](PROJECT/2-WORKING/GH-10-REQUIRE-FIXTURE-ADOPTION.md) · [#10](https://github.com/HiQS-Suite/XYZ-forge/issues/10) |
