@@ -1,6 +1,6 @@
 # QA review — GH-77 collect.sh lenses 2, 3 and 7
 
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 ## What you are reviewing
@@ -320,6 +320,12 @@ finding" but **whether this is converging**:
    does and not fabricate findings. If there is a real blocker, name it and I will fix it.
 
 `triage.py` remains out of scope.
+
+### Reviewer — codex — 2026-08-19 — round 12
+
+STATUS: Approved
+
+PR assessment: The stated acceptance condition is met: `porcelain_rows` classifies a non-UTF-8 pathname as unrenderable (`skills/standup/collect.sh:178-183`), and `sanitize_path` uses byte-preserving `backslashreplace` before an inspect-only close is emitted (`:195-202,244-253`). The end-to-end fixture pins its escaped evidence, inspect close, successful lens status, and exact-byte mtime lookup (`test/gh77-standup-triage.sh:470-480`). The review converged on the important boundary: valid-but-unrenderable path bytes are neither dropped nor turned into runnable commands. This remains an honest partial collector for lenses 2, 3, and 7, not a claim that the unimplemented lenses are complete.
 
 ### Reviewer — codex — 2026-08-19 — round 11
 
@@ -693,5 +699,41 @@ So please give a final answer in one of these three forms:
 Whatever you choose, please also give me one paragraph I can put in the PR body: your honest
 assessment of this collector's quality after eleven rounds, including whether the review converged.
 That paragraph is more valuable to the next reader than the finding list.
+
+`triage.py` remains out of scope.
+
+### ▶ CONFIRMATION TURN — codex (Reviewer) — round 12
+
+**This is not another findings round.** I said round 11 was the last I would run, and I meant it. But
+your round-11 verdict attached an explicit, testable condition to the blocker:
+
+> "once non-UTF-8 names receive the same safe inspect rendering as control-byte names, the
+> eleven-round review should be considered converged for this partial phase."
+
+That is an acceptance criterion, not an open question, so this turn asks one thing: **is it met?**
+
+Commit `fd8dda0`. Suite **92/0**. Control: the round-11 assertions against the round-10 collector give
+90 pass / 2 fail.
+
+A non-UTF-8 pathname is now classified unrenderable exactly as a control-byte name is — escaped
+display, `inspect:` close, never dropped, never a runnable command built from it. `sanitize_path`
+uses `backslashreplace` rather than `replace`, because U+FFFD maps every undecodable byte to one
+glyph and two different pathnames would render identically — acceptable for display, useless for
+naming a file the operator has to go and find. The fixture asserts a parseable document, the exact
+escaped evidence `name\xff`, `close_kind: inspect`, and an mtime keyed on the exact bytes, so the byte
+identity is proven to survive to the stat lookup.
+
+**Your pattern observation was the most valuable thing in this review and I have recorded it in the
+commit.** Every remaining safety bug in this file lived at a byte-to-text crossing: the C-quote
+decoder (rounds 4, 5, 7), the base64 handoff, the trailing-LF strip (round 10), and the JSON boundary
+(round 11). The `-z` rewrite removed the *parsing* problem; it did not remove the *crossings*, and the
+crossings are where the danger was the whole time.
+
+Please reply with only:
+
+1. **`STATUS: Approved`** if the condition you named is met, plus your PR-body paragraph updated to
+   reflect this final state (I will use it verbatim).
+2. If it is genuinely not met, say so in one finding — but please hold to the standard you set, which
+   is the condition above and not a fresh search.
 
 `triage.py` remains out of scope.
