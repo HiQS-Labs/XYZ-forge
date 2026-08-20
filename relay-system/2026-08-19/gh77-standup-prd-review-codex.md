@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-19.
 -->
 
-NEXT: Reviewer
-STATUS: Open
+NEXT: Producer
+STATUS: Escalated
 ROUND: 4 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -616,5 +616,93 @@ a targeted edit and the r2/r3 material that survived review was not touched.
 new material introduces nothing; if a real defect remains, say so and let it escalate. `STATUS:
 Escalated` at the cap is an honest outcome and will be reported as one — do not soften a finding to
 land an approval.
+
+### Reviewer · Round 4
+
+swept file: yes
+
+**Verdict: Blocked**
+
+- **[Blocker] The frozen input allowlist excludes the PR discovery the lens table requires.** Frozen
+  decision 1 permits GitHub metadata only for entities already named by the session or ledgers and
+  says discovery is out of scope (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:77-86`), but lens
+  4 enumerates every open PR with `gh pr list` (`:98`). Fix: obtain an operator decision that either
+  explicitly freezes a bounded open-PR inventory as the one discovery exception, or restrict lens 4
+  to already-named PR numbers; the builder cannot choose between a frozen rule and its contradiction.
+- **[Blocker] The implementation writes outside the frozen PARKED-only authority, and its chosen path
+  fails in this repo's normal linked worktrees.** Decision 2 says `PARKED/` only
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:80`), while `--apply` writes
+  `.git/standup-session-*.json` (`:333-339`, `:488-490`, `:519`). In this very checkout `.git` is a
+  file pointing at a worktree gitdir (`.git:1`), so the literal child path is not even creatable.
+  Fix: keep session state under the authorized PARKED schema, or escalate the frozen authority to the
+  operator; if Git metadata is newly authorized, resolve it with a worktree-safe Git path rather than
+  appending to `.git`.
+- **[Blocker] The uncapped escape hatch contradicts both the frozen tactical cap and the PRD's own
+  absolute DoD.** The cap is 7 (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:82`), normal output is
+  hard-capped at 15 lines (`:272-287`), and the DoD says rendered output *never* exceeds it (`:516`),
+  yet `--all` renders an uncapped complete list (`:293-300`, `:488-490`). Fix: use deterministic
+  read-only paging with at most seven items per invocation, or explicitly return to the operator to
+  change the frozen decision; an undocumented diagnostic exemption cannot satisfy “never.”
+- **[Blocker] The declared JSON/CLI contract cannot drive the classifier or whole renderer.** A
+  candidate contains only key, evidence, staleness, live state, and close
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:464-466`), but `triage.py` must also emit the branch
+  opening and each item's `what` (`:247-260`, `:477-485`), distinguish traceback/operator-label/
+  candidate kinds for tiers 2–3 (`:169-185`), and create a mandatory park `check` (`:365-374`). A
+  clean branch may emit no lens-3 candidate, so its name cannot be inferred either. Fix: freeze full
+  input and session-state schemas with top-level repo/branch metadata and per-candidate `kind`, `what`,
+  structured `check`, override, and every classifier input; map each output field to its source.
+- **[Blocker] New park records have no source for their mandatory read-only check.** The lens contract
+  supplies six fields but none is `check` (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:90-102`),
+  while every record must persist one and lens 8 later executes it (`:365-374`). The collector schema
+  also omits it (`:464-466`). Fix: add a seventh typed check predicate to every parkable candidate,
+  define deterministic derivation per lens, and fixture both valid and unavailable checks; otherwise
+  `--apply` cannot write a conforming record.
+- **[Blocker] Ranking is still not a total executable order because staleness has no common serialized
+  value or direction.** Sources mix “age 0,” mtimes, Git commit dates, GitHub `updatedAt`, target dates,
+  and unknown (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:93-102`); the algorithm then says both
+  “oldest first” and “ascending on each component” (`:194-199`). Fix: define one fixture-stable scalar
+  (for example UTC epoch seconds with oldest = smallest), its exact JSON encoding, snapshot clock, and
+  sentinel for unknown; test cross-lens ties, not only same-source peers.
+- **[Blocker] A deduplicated item's suppression fingerprint is undefined.** Dedup retains every
+  contributing evidence field and the highest tier (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:158-162`),
+  but the fingerprint hashes one singular `live-state-payload`, while the payload table defines a
+  different shape per lens (`:229-245`). Fix: hash a canonical, lens-ID-sorted map of all contributing
+  live-state payloads (and specify how it changes when a contributing lens disappears); fixture a
+  multi-lens survivor and a disappearing-lens rerun.
+- **[Blocker] The maximum-degradation fixture is logically impossible, and D5 is lossy for multiple
+  lenses.** D1 requires `gh` to be unavailable while D2 requires `gh pr list` to return 51 rows
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:436-443`), so all six cannot occur simultaneously
+  as required (`:451`, `:503`). Also one `D5` ID cannot name several lenses while aggregation counts
+  only active IDs (`:442`, `:445-449`). Fix: fixture every maximal *compatible* combination and model
+  degradation occurrences as typed pairs such as `D5:lens-3`, preserving every affected lens under
+  aggregation.
+- **[Blocker] The free-form verdict clause preserves the wall-of-text failure through one enormous
+  rendered line.** `--verdict-prose <text>` is unconstrained except “at most one clause”
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:472-485`), while soft-wrap does not count toward
+  the line cap (`:272-275`). It can therefore contain arbitrary length or newlines and defeat both
+  determinism and the product's primary brevity goal. Fix: accept a finite clause code plus bounded,
+  newline-free typed arguments, with hard character/word limits and rejection fixtures.
+- **[Should] Parse PARKED checks as structured argv, never as executable Markdown strings.** The
+  allowlist is currently illustrated as shell-shaped commands with substituted paths/refs
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:123-127`, `:365-374`); a crafted parked field can
+  smuggle metacharacters into collection and violate park-only authority. Fix: store `check_kind` and
+  validated arguments separately, invoke without a shell, constrain repo paths/refs, and fixture an
+  injection-shaped value.
+- **[Pass] The corrected RELEASES reader split is now accurate.** `list` exposes GID/status/version
+  and item count (`utils/py/releases_app.py:1715-1731`), while `show` supplies manifest item states
+  (`utils/py/releases_app.py:1764-1793`), matching the PRD's lens-6 catalogue
+  (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:100`, `:116-119`).
+- **[Pass] The sibling boundary remains real.** The PRD limits itself to bounded session triage and
+  reserves history-backed alignment for Radar (`PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md:57-73`,
+  `:308-312`); Radar explicitly owns a 21-day trunk window (`skills/radar/SKILL.md:36-40`), while
+  `/10days` executes a recent-issue marathon (`skills/10days/SKILL.md:21-28`) and Rabbit Hole performs
+  a one-task consolidated interruption (`/Users/noelsaw/.claude/skills/rabbit-hole/SKILL.md:14-23`).
+
+Whole-file note: the entire revision 4 PRD and the required sibling/interface context were swept.
+Pre-existing and newly introduced defects are included. No project test or artifact command was run;
+this was a read-only specification review. Round 4 is the cap, so the unresolved blockers escalate.
+
+Handing off to Producer — go to the claude-a window and say “take your turn”; resolve the escalation
+with the operator rather than opening an unapproved fifth cycle.
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
