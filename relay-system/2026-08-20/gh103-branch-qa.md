@@ -4,8 +4,8 @@
   Scaffolded by relay-automation/new-relay.sh on 2026-08-20.
 -->
 
-NEXT: Producer
-STATUS: Open
+NEXT: done
+STATUS: Approved
 ROUND: 1 / 4
 
 ## ▶ TAKE YOUR TURN — read this first (works for ANY agent: Claude, Codex, agy)
@@ -87,5 +87,33 @@ swept file: yes
   - `utils/timeline/export_timeline.py:1153`
 
 **Verdict:** Changes requested
+
+### Producer (claude-a) r2
+
+Adjudicated against GUIDING-PRINCIPLES.md / AGENTS.md / repo patterns; all four findings accepted on substance, three applied, one deferred with a recorded reason:
+
+- **[Blocker] href injection — APPLIED.** All seven sites now wrap the URL in `esc()` (`utils/timeline/RELEASES.html`: cardHTML issue/doc links, marathonHTML `m.url`, nodeHTML `milestoneUrl`, strip `jf.issueUrl` / `wn.marathon.url` / `wn.issueUrl`). Verified: served page contains the escaped forms; viewer renders unchanged.
+- **[Blocker] committed-preview staleness — ACCEPTED as a hazard, DEFERRED as wiring; recorded, not silent.** Your gitignore option is foreclosed by an explicit operator decision to track the file (AGENTS conflict order: current user request). The dashboard-pattern gate check cannot be copied verbatim: the bake embeds `generatedAtDisplay`, so `git diff --exit-code` always fails — a deterministic bake mode is the prerequisite. Parked with that analysis in `PARKED/2026-08-20-gh103-timeline-spike.md` (new bullet), which is this repo's documented home for adjudicated deferrals.
+- **[Should] SQLite URI interpolation — APPLIED.** Both connect sites use `Path.resolve().as_uri()` + `?mode=ro`. Proven live on this clone's own spaced path (`…/GH Repos/…`).
+- **[Nit] band-regex spaces — APPLIED.** `^\s*(\S+?)\s*-\s*(\S+?)\s*$`.
+
+Re-verified after fixes: `--check-drift` green, `--preview` regenerates, live `--serve` answers `/data.json` with all 10 releases.
+
+Requesting re-review: confirm the three applied fixes and whether the recorded deferral (with its stated prerequisite and parking) satisfies the staleness finding for this spike branch. Approve or list what remains.
+
+### Reviewer (agy) r3
+swept file: yes
+
+- **[Blocker] HTML injection via unescaped URLs in `href` attributes (DoD #4):** `[Pass]` Verified. All 7 links in `utils/timeline/RELEASES.html:265,266,286,302,361,372,377` correctly wrap the URLs in `esc()`.
+- **[Blocker] Staleness hazard from committed generated artifact (DoD #5):** `[Pass]` Verified. The deferral is properly documented and parked in `PARKED/2026-08-20-gh103-timeline-spike.md:12-16`. This appropriately tracks the prerequisite for deterministic bake mode without stalling the spike branch.
+- **[Should] SQLite URI string interpolation hazard (DoD #1):** `[Pass]` Verified. `Path.resolve().as_uri()` + `?mode=ro` correctly applied in `utils/timeline/export_timeline.py:419,468`.
+- **[Nit] Band parsing fails on spaces around the hyphen (DoD #3):** `[Pass]` Verified. Updated regex `r"^\s*(\S+?)\s*-\s*(\S+?)\s*$"` correctly deployed in `utils/timeline/export_timeline.py:301`.
+
+**Verdict:** Approved
+
+VERDICT: PASS
+Basis: All findings have been applied or documented and parked.
+
+relay closed (Approved), no further turn needed
 
 <!-- ↓↓↓ NEXT TURN goes here (append above nothing — this marker stays last) ↓↓↓ -->
