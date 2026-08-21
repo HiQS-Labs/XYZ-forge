@@ -1,5 +1,48 @@
 name: CI
 
+# ── READ THIS BEFORE CONCLUDING "CI IS GREEN" (GH-123, 2026-08-21) ──────────────────────────────
+#
+# Two things about this file have now been re-litigated more than once. Both are recorded here so
+# the next person does not rediscover them from scratch.
+#
+# 1. THE `pull_request` TRIGGER PRODUCES NO RUNS — this is GH-59, open since 2026-08-19, NOT a new
+#    discovery. It was re-derived from scratch on 2026-08-21, which is the waste this note exists to
+#    prevent: check #59 first. The triggers below are correct, Actions is enabled, the workflow is
+#    `state=active`, and the repo is not a fork — yet as of 2026-08-21 the ENTIRE run history of this
+#    repository is workflow_dispatch runs. PRs #116, #121 and #122 all merged with ZERO checks.
+#    A clean `mergeStateStatus` on a PR here therefore means "no checks exist", NOT "checks passed" —
+#    do not read a green PR page as evidence anything ran.
+#    Until #59 is fixed, fire this workflow by hand and read the result:
+#
+#        gh workflow run ci.yml --ref <branch>
+#        gh run watch <run-id>
+#
+#    Ruled out on 2026-08-21, so #59 need not re-check these: billing/spending limit (a dispatch on
+#    the same branch runs fine), workflow disabled (`state=active`), repo is a fork (it is not),
+#    Actions disabled (`enabled: true, allowed_actions: all`), the base-branch filter (#116 targeted
+#    `development`, which is listed), the workflow missing from the PR head (`d09bdb6` is an ancestor
+#    of every branch tested), and fork-PR approval (zero runs sit in `action_required`).
+#    The settings that would explain it are not readable from a token without `admin:org`
+#    (`/actions/permissions/access` 422s on public repos; the org policy endpoint 403s), so
+#    diagnosing it needs the repo's Settings → Actions → General page, by eye.
+#
+# 2. AN ADVISORY JOB THAT DIES EARLY STILL REPORTS THE RUN GREEN. The ubuntu canary below is
+#    advisory by design ("never breakage") and ends in a verdict step that always passes. That
+#    means a FAILING canary is invisible at the run level. It happened: from the 2026-08-17 re-arm
+#    until 2026-08-21, `utils/fuzzing/fuzz-loop.sh` had no shebang, shellcheck raised SC2148 at
+#    severity=error, the FIRST step of the job exited 1, and every later step — the PDDA gate, the
+#    frozen-twin guard, acorn-extract, Fast Gate, validate.sh — silently never ran, for four days,
+#    under a green ✓. Fixed in #121 (e9b9b07).
+#
+#    The lesson is structural, not about that one file: when this job is red, open the JOB and look
+#    for steps marked `-`. A short green run is the symptom to distrust. Steps here are ordered
+#    cheapest-first, so an early failure hides the most.
+#
+#    Run 32504570094 (2026-08-21, against 02ce229) is the first end-to-end execution. Baseline:
+#    shellcheck / bash+node syntax / settings JSON / PDDA gate / acorn-extract all PASS on Linux;
+#    7 assertions across 5 suites fail. Tracked in GH-123 — read it before assuming any of them is
+#    environment noise, and see the GH-232 note further down for why that assumption is expensive.
+#
 # GH-216 cut `development` as the WIP branch that all work targets, but these
 # triggers stayed pinned to `main` — so no PR into `development` ran CI at all.
 # Both branches are gated here; add any future long-lived integration branch too.
