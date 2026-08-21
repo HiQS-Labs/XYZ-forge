@@ -91,7 +91,7 @@ if [ $RC -ne 0 ] && has "$OUT" "CHECK constraint failed"; then ok "schema refuse
 OUT="$(sqlite3 "$R/releases.db" "INSERT INTO releases(global_id, repo_id, version, status, description, tracking_ref_id) SELECT 'rel-01IIIIIIIIIIIIIIIIIIIIIIII', id, '9.9.8', 'draft', 'x', (SELECT id FROM issue_refs LIMIT 1) FROM repos LIMIT 1" 2>&1)"; RC=$?
 if [ $RC -ne 0 ] && has "$OUT" "CHECK constraint failed"; then ok "schema refuses a wrong-alphabet global_id (Crockford excludes I/L/O/U)" 0; else ok "schema refuses a wrong-alphabet global_id" 1; fi
 sqlite3 "$R/releases.db" "INSERT INTO releases(global_id, repo_id, version, status, description, tracking_ref_id) SELECT 'rel-01ARZ3NDEKTSV4RRFFQ69G5FAV', id, '9.9.7', 'draft', 'x', (SELECT id FROM issue_refs LIMIT 1) FROM repos LIMIT 1" 2>/dev/null
-sqlite3 "$R/releases.db" "INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state) SELECT 'mfi-01ARZ3NDEKTSV4RRFFQ69G5FAV', id, (SELECT id FROM issue_refs LIMIT 1), 'open' FROM releases LIMIT 1" 2>/dev/null
+sqlite3 "$R/releases.db" "INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state) SELECT 'mfi-01ARZ3NDEKTSV4RRFFQ69G5FAV', id, (SELECT id FROM issue_refs LIMIT 1), 'dialed_in' FROM releases LIMIT 1" 2>/dev/null
 sqlite3 "$R/releases.db" "INSERT INTO manifest_state_events(item_id, from_state, to_state, at, reason) VALUES((SELECT id FROM manifest_items LIMIT 1), 'open', 'cut', '2026-01-01T00:00:00Z', 'direct seed')" 2>/dev/null
 OUT="$(sqlite3 "$R/releases.db" "UPDATE manifest_state_events SET reason='y'" 2>&1)"; RC=$?
 if [ $RC -ne 0 ] && has "$OUT" "append-only"; then ok "manifest_state_events is append-only (UPDATE refused by trigger)" 0; else ok "manifest_state_events append-only" 1; fi
@@ -184,15 +184,25 @@ rout add --version 2.0.0 --status draft --description "Two." --tracking-issue "h
 E1="$(sql "SELECT global_id FROM releases WHERE version = '1.0.0'")"
 E2="$(sql "SELECT global_id FROM releases WHERE version = '2.0.0'")"
 rout manifest add --gid "$E1" "https://github.com/A/B/issues/30"
+# GH-111 REVERSES the pre-2026-08-20 "handoff precedent", under which one issue could sit on
+# several releases at once and `add` merely WARNED (rule=shared-manifest-issue). A task is now
+# dialed into exactly ONE release at a time. Handoffs are still first-class — they are expressed
+# as cut-then-dial-in, which RECORDS the move instead of leaving the task on two ledgers silently.
+V="$(rlog manifest add --gid "$E2" "https://github.com/A/B/issues/30")"
+N="$(sql "SELECT COUNT(*) FROM manifest_items mi JOIN issue_refs t ON t.id = mi.issue_ref_id WHERE t.url LIKE '%/30' AND mi.state='dialed_in'")"
+if has "$V" "rule=dialed-in-elsewhere" && [ "$N" = "1" ]; then ok "a task dialed into a second release is REFUSED, naming the holder (GH-111 exclusivity)" 0; else ok "exclusivity refusal" 1; fi
+rout manifest cut --gid "$E1" "https://github.com/A/B/issues/30" --reason "handed off to $E2"
 V="$(rlog manifest add --gid "$E2" "https://github.com/A/B/issues/30")"
 N="$(sql "SELECT COUNT(*) FROM manifest_items mi JOIN issue_refs t ON t.id = mi.issue_ref_id WHERE t.url LIKE '%/30'")"
-if has "$V" "warn: rule=shared-manifest-issue" && [ "$N" = "2" ]; then ok "the same issue in a second non-cut release WARNS, never refuses (handoff precedent)" 0; else ok "shared issue warn" 1; fi
-rout manifest cut --gid "$E1" "https://github.com/A/B/issues/30" --reason "descoped at freeze"
-ST="$(sql "SELECT mi.state FROM manifest_items mi JOIN releases r ON r.id = mi.release_id WHERE r.global_id = '$E1'")"
-EV="$(sql 'SELECT reason FROM manifest_state_events')"
+if has "$V" "dialed into" && [ "$N" = "2" ]; then ok "cut-then-dial-in re-homes a task to another release, leaving BOTH rows as history" 0; else ok "handoff via cut+dial-in" 1; fi
+rout manifest cut --gid "$E2" "https://github.com/A/B/issues/30" --reason "descoped at freeze"
+ST="$(sql "SELECT mi.state FROM manifest_items mi JOIN releases r ON r.id = mi.release_id WHERE r.global_id = '$E2'")"
+EV="$(sql 'SELECT reason FROM manifest_state_events ORDER BY id DESC LIMIT 1')"
 if [ "$ST" = "cut" ] && [ "$EV" = "descoped at freeze" ]; then ok "cut with a reason flips state AND appends the event in one transaction" 0; else ok "cut+event" 1; fi
-V="$(rlog manifest cut --gid "$E1" "https://github.com/A/B/issues/30" --reason "again")"; if has "$V" "rule=transition"; then ok "cut is terminal: a second cut is refused with the transition rule" 0; else ok "cut terminal" 1; fi
-sqlite3 "$R/releases.db" "UPDATE manifest_items SET state='open' WHERE state='cut'" 2>/dev/null
+V="$(rlog manifest cut --gid "$E2" "https://github.com/A/B/issues/30" --reason "again")"; if has "$V" "rule=transition"; then ok "cut is terminal for that row: a second cut is refused with the transition rule" 0; else ok "cut terminal" 1; fi
+# Exactly ONE row: both cut rows share an issue_ref_id, so flipping both would trip GH-111's
+# active-exclusivity index and the direct write would never land — the bypass this asserts.
+sqlite3 "$R/releases.db" "UPDATE manifest_items SET state='dialed_in' WHERE id = (SELECT id FROM manifest_items WHERE state='cut' ORDER BY id LIMIT 1)" 2>/dev/null
 refresh_dump
 V="$(rlog check)"; if has "$V" "FAIL: rule=receipt-chain"; then ok "a direct writer flipping item state WITHOUT an event is caught by the digest chain" 0; else ok "coupling detected" 1; fi
 

@@ -103,10 +103,12 @@ STATUSES = ("draft", "active", "shipped", "cut")
 STATUS_RENDER = {"draft": "Draft", "active": "Active", "shipped": "Shipped", "cut": "Cut"}
 MARATHON_STATUSES = ("planned", "running", "done", "escalated", "abandoned")
 ITEM_STATES = ("open", "shipped", "cut")
-# manifest-state transition legality is CLI-enforced (PRD schema note): open/shipped may move
-# between each other and into cut; cut is terminal.
-LEGAL_ITEM_TRANSITIONS = {("open", "shipped"), ("open", "cut"),
-                          ("shipped", "open"), ("shipped", "cut")}
+# manifest-state transition legality is CLI-enforced (PRD schema note). GH-111 retires FREEZE for
+# DIALED-IN membership: a task is dialed into a release, ships, or is cut. `shipped` is no longer a
+# dead end that only the schema knew about — `manifest ship` writes it. Both `shipped` and `cut` are
+# terminal FOR THAT ROW: re-admitting an item is a NEW dial-in row, which keeps the trail append-only
+# and readable rather than flipping one row back and forth.
+LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut")}
 GH_ISSUE_URL_RE = re.compile(r"^https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+$")
 TMP_RE = re.compile(r"^TMP-[A-Z0-9]{6}$")
 MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
@@ -1736,28 +1738,124 @@ def cmd_manifest_add(args):
         def mutate(conn):
             ref = issue_ref_for_token(conn, args.issue)
             if conn.execute("""SELECT 1 FROM manifest_items
-                               WHERE release_id=? AND issue_ref_id=?""",
+                               WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
                             (rel["id"], ref["id"])).fetchone():
                 refuse("manifest-duplicate",
-                       "issue already in this release's manifest (UNIQUE(release_id, "
-                       "issue_ref_id), refused in both modes)")
-            shared = conn.execute("""SELECT r.global_id FROM manifest_items mi
-                                     JOIN releases r ON r.id = mi.release_id
-                                     WHERE mi.issue_ref_id = ? AND mi.release_id != ?
-                                       AND mi.state != 'cut'""",
-                                  (ref["id"], rel["id"])).fetchall()
-            if shared:
-                warn("shared-manifest-issue",
-                     "issue also sits in non-cut release(s) %s — warn, never refuse (handoffs "
-                     "are legitimate; the Meter->Sundown transfer is the recorded precedent)"
-                     % ", ".join(s["global_id"] for s in shared))
-            conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state)
-                         VALUES (?, ?, ?, 'open')""", (gid, rel["id"], ref["id"]))
-            print("manifest item %s added to %s (state=open)" % (gid, args.gid))
+                       "issue is already dialed into this release (refused in both modes). A cut "
+                       "row for the same issue does NOT block a redial — only a live one does.")
+            # GH-111 EXCLUSIVITY: a task is dialed into exactly one release at a time. This REVERSES
+            # the former `shared-manifest-issue` warning, which allowed one issue to sit on several
+            # releases at once and called handoffs legitimate. Handoffs are still legitimate — they
+            # are now expressed as `cut --reason "handed off to X"` then `dial-in` on the target,
+            # which records the move instead of leaving the task silently on both ledgers.
+            held = conn.execute("""SELECT r.global_id, r.codename FROM manifest_items mi
+                                   JOIN releases r ON r.id = mi.release_id
+                                   WHERE mi.issue_ref_id = ? AND mi.release_id != ?
+                                     AND mi.state = 'dialed_in'""",
+                                (ref["id"], rel["id"])).fetchall()
+            if held:
+                refuse("dialed-in-elsewhere",
+                       "issue is already dialed into %s — a task belongs to ONE release at a time. "
+                       "To hand it over: `manifest cut --gid %s <issue> --reason \"handed off\"` "
+                       "then dial it in here."
+                       % (", ".join("%s (%s)" % (h["global_id"], h["codename"] or "?")
+                                    for h in held), held[0]["global_id"]))
+            marathon_id = None
+            if getattr(args, "marathon", None):
+                mar = conn.execute("SELECT id FROM marathons WHERE global_id = ?",
+                                   (args.marathon,)).fetchone()
+                if not mar:
+                    refuse("unknown-marathon", "no marathon with gid %r" % args.marathon)
+                # The two marathon links are independent FKs, so nothing in the schema stops an item
+                # on release B carrying release A's marathon. That would let the viewer assert a
+                # membership the data never claimed (GH-109). CLI-enforced, since SQLite cannot
+                # express a cross-table CHECK.
+                if rel["marathon_id"] != mar["id"]:
+                    refuse("marathon-not-this-release",
+                           "marathon %s does not belong to release %s; an item's marathon must be "
+                           "its own release's marathon" % (args.marathon, args.gid))
+                marathon_id = mar["id"]
+            conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
+                                                       dialed_in_at, dial_reason, marathon_id)
+                         VALUES (?, ?, ?, 'dialed_in', ?, ?, ?)""",
+                         (gid, rel["id"], ref["id"], now_iso(),
+                          getattr(args, "reason", None), marathon_id))
+            print("manifest item %s dialed into %s (state=dialed_in)" % (gid, args.gid))
 
         perform_write(root, conn, "manifest-add", gid, mutate)
     finally:
         conn.close()
+
+
+def cmd_manifest_ship(args):
+    """GH-110/GH-111: move a dialed-in member to shipped.
+
+    Before this verb, `shipped` was a state the schema allowed and no code path ever wrote, so a
+    manifest member could never be marked done and mid-release progress was unreportable. The
+    event table's `reason` is NOT NULL, so shipping carries `--evidence` for the same reason
+    `releases ship` does: a claim that work landed should cite what landed.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        rel = find_release(conn, args.gid)
+        evidence = (args.evidence or "").strip()
+        if not evidence:
+            refuse("ship-needs-evidence",
+                   "marking a manifest item shipped without evidence is refused (structural, "
+                   "both modes) — cite the commit, PR, or test receipt")
+        kind, value = check_tracking_token(args.issue)
+
+        def mutate(conn):
+            column = "url" if kind == "url" else "temp_id"
+            ref = conn.execute("SELECT * FROM issue_refs WHERE %s = ?" % column,
+                               (value,)).fetchone()
+            if not ref:
+                refuse("unknown-issue", "no issue_refs row for %r" % value)
+            item = _live_manifest_item(conn, rel, ref, value, args.gid, "shipped")
+            conn.execute("UPDATE manifest_items SET state='shipped' WHERE id=?", (item["id"],))
+            # State and event land in ONE transaction — the coupling the digest chain checks.
+            conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at,
+                         reason) VALUES (?, ?, 'shipped', ?, ?)""",
+                         (item["id"], item["state"], now_iso(), evidence))
+            print("manifest item %s shipped (%s -> shipped); evidence recorded"
+                  % (item["global_id"], item["state"]))
+
+        perform_write(root, conn, "manifest-ship", args.gid, mutate)
+    finally:
+        conn.close()
+
+
+def _live_manifest_item(conn, rel, ref, token, gid_arg, target_state):
+    """Select the ONE live (dialed_in) manifest row for this (release, issue), or refuse.
+
+    GH-111: dropping UNIQUE(release_id, issue_ref_id) means a (release, issue) pair can now
+    hold several rows — a cut row plus a later redial. The old lookup had no state predicate
+    and was correct ONLY while that UNIQUE guaranteed a single row; left as-is it could pick
+    the historical cut row and refuse "cut is terminal" while a live row sat beside it.
+    """
+    item = conn.execute("""SELECT * FROM manifest_items
+                           WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
+                        (rel["id"], ref["id"])).fetchone()
+    if item:
+        if (item["state"], target_state) not in LEGAL_ITEM_TRANSITIONS:
+            refuse("transition",
+                   "cannot move an item from %r to %r (legality is CLI-enforced)"
+                   % (item["state"], target_state))
+        return item
+    # No live row. Distinguish "never here" from "here, but already terminal" — the second is a
+    # transition error, and saying so is how the operator learns the item's actual state.
+    prior = conn.execute("""SELECT state FROM manifest_items
+                            WHERE release_id=? AND issue_ref_id=?
+                            ORDER BY id DESC LIMIT 1""",
+                         (rel["id"], ref["id"])).fetchone()
+    if prior:
+        refuse("transition",
+               "issue %r is in release %s at state %r, not dialed_in; %s and cut are terminal for "
+               "that row (re-admitting is a new dial-in)" % (token, gid_arg, prior["state"],
+                                                             prior["state"]))
+    refuse("unknown-issue", "issue %r is not in release %s's manifest" % (token, gid_arg))
 
 
 def cmd_manifest_cut(args):
@@ -1780,16 +1878,7 @@ def cmd_manifest_cut(args):
                                    (value,)).fetchone()
             if not ref:
                 refuse("unknown-issue", "no issue_refs row for %r" % value)
-            item = conn.execute("""SELECT * FROM manifest_items
-                                   WHERE release_id=? AND issue_ref_id=?""",
-                                (rel["id"], ref["id"])).fetchone()
-            if not item:
-                refuse("unknown-issue",
-                       "issue %r is not in release %s's manifest" % (value, args.gid))
-            if (item["state"], "cut") not in LEGAL_ITEM_TRANSITIONS:
-                refuse("transition",
-                       "cannot cut an item in state %r (cut is terminal; legality is "
-                       "CLI-enforced)" % item["state"])
+            item = _live_manifest_item(conn, rel, ref, value, args.gid, "cut")
             conn.execute("UPDATE manifest_items SET state='cut' WHERE id=?", (item["id"],))
             # item state and its event land in ONE transaction (PRD: the coupling is
             # CLI-enforced; a direct writer that skips the event is caught by the digest chain)
@@ -2931,9 +3020,23 @@ def build_parser():
 
     sp = sub.add_parser("manifest", help="manifest items")
     msub = sp.add_subparsers(dest="manifest_cmd", required=True)
-    sp_add = msub.add_parser("add", help="add an issue to a release's manifest")
-    sp_add.add_argument("--gid", required=True)
-    sp_add.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    # GH-111: `dial-in` is the verb; `add` stays as a back-compatible alias so existing scripts
+    # and the vendored payload keep working while the vocabulary moves.
+    for _name, _help in (("dial-in", "dial an issue into a release (one release at a time)"),
+                         ("add", "alias for dial-in (pre-GH-111 name)")):
+        _p = msub.add_parser(_name, help=_help)
+        _p.add_argument("--gid", required=True)
+        _p.add_argument("issue", help="issue URL or TMP-XXXXXX")
+        _p.add_argument("--reason", default=None,
+                        help="the case for committing this task to this release")
+        _p.add_argument("--marathon", default=None,
+                        help="marathon gid; must be THIS release's marathon")
+    sp_ship = msub.add_parser("ship",
+                              help="mark a dialed-in item shipped (REQUIRES --evidence)")
+    sp_ship.add_argument("--gid", required=True)
+    sp_ship.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    sp_ship.add_argument("--evidence", default="",
+                         help="commit, PR, or test receipt (empty is refused)")
     sp_cut = msub.add_parser("cut",
                              help="cut an item from a release's manifest (REQUIRES --reason)")
     sp_cut.add_argument("--gid", required=True)
@@ -2999,8 +3102,8 @@ def main(argv=None):
     handlers = {
         "init": cmd_init, "import": cmd_import, "add": cmd_add, "update": cmd_update,
         "ship": cmd_ship,
-        "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd == "add"
-        else cmd_manifest_cut(a),
+        "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd in ("dial-in", "add")
+        else (cmd_manifest_ship(a) if a.manifest_cmd == "ship" else cmd_manifest_cut(a)),
         "marathon": lambda a: cmd_marathon_add(a) if a.marathon_cmd == "add"
         else cmd_marathon_list(a),
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,
