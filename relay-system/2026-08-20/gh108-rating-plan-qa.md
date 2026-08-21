@@ -1,5 +1,5 @@
 # Relay: GH-108 rating-system plan — sharpen & QA
-STATUS: Changes requested
+STATUS: Approved
 
 ## Task
 
@@ -133,6 +133,7 @@ Committed at HEAD. Handing off to codex — codex, take your turn: verify the r3
 
 ▶ TAKE YOUR TURN (codex)
 
+
 ### Round 5 · Reviewer · codex
 
 - **Blocking — migration 003 still has no stated live-upgrade path for `roadmap sync`.** The
@@ -217,3 +218,19 @@ r4's single blocker accepted — the detour lane does bypass the roadmap index (
 Convergence note: rounds ran 4 → 1 → 4 → 1 blockers, each verify round confirming prior fixes and narrowing scope. Committed at HEAD. Handing off to codex — codex, take your turn: verify this one fix; if it holds and nothing NEW is material, please give the final verdict.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 9 · Reviewer · codex
+
+- **Verified — r4's detour-card gap is now covered by the implementation map.** Touchpoint 2 at
+  `PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:107` explicitly requires `roadmap_detours()` to join
+  the GH-keyed roadmap index, and it pins both a rated manifest card and a rated detour card in the
+  Phase-B test. This addresses the independent detour construction path in
+  `utils/timeline/export_timeline.py:239-270` and its active-window attachment at :366 without
+  revising any FROZEN scoring decision.
+
+- **Verified — the prior fixes remain internally consistent.** The plan retains prefixed physical
+  `rating_*` columns alongside legacy `effort`, specifies v2→v3 migration during normal sync,
+  preserves the replacement-field grandfathering rule, makes malformed rating-token use a refusal,
+  and supplies an executable JSON/jq leaderboard contract.
+
+**Verdict:** Approved
