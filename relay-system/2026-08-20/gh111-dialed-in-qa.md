@@ -233,6 +233,45 @@ Committed at HEAD. Handing off to codex — codex, take your turn: verify these 
 
 ▶ TAKE YOUR TURN (codex)
 
+### Round 13 · Reviewer · codex
+
+Round 12 corrects the earlier hard-coded rebuild range: the registry now consistently owns both
+schema materialization and the rebuilt migration ledger, and the GH-111-first fixture exercises
+both required entry points. I cannot approve yet because the registry has no transaction-safety
+contract for migration 003 when it and 004 are pending together.
+
+#### Blocking
+
+1. **The `perform_migration()` atomicity rule bans `executescript()` only for 004, but a v2→003+004
+   upgrade runs 003 inside that same transaction too.** The plan requires one `BEGIN IMMEDIATE` around
+   the pending registry migrations and says 004 must issue individual `execute()` calls because
+   Python `sqlite3.executescript()` commits the pending transaction. Yet 003 is only described as a
+   registry entry; no rule stops its implementation from using the established DDL idiom
+   (`_ensure_roadmap_schema()` currently calls `conn.executescript()`). If 003 does so on a v2 DB with
+   both versions pending, it commits the writer transaction before 004 begins. A subsequent 004 swap
+   failure can then leave 003's schema/ledger changes durable while the journal, generation,
+   receipt, and dump still describe an interrupted all-or-nothing migration. Require every registry
+   callback invoked by `perform_migration()` to be transaction-safe — specifically, no
+   `executescript()` (or any implicit-commit API) for 003 as well as 004 — and add a v2 fixture with
+   both versions pending that injects a 004 failure and proves neither 003 nor 004 schema/ledger
+   changes, generation bump, receipt, or dump survives.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:241-266,290-297,305-316`;
+   `PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:109`;
+   `utils/py/releases_app.py:608-615,841-904`.
+
+#### Optional
+
+1. After imposing that registry-wide contract, retain the present 004-specific failure-injection
+   test and add the combined-pending case above; the former still covers the parent/child table-swap
+   rollback while the latter protects the shared registry protocol.
+
+#### Out-of-scope
+
+1. The locked operator decisions, the adopted baseline design, and the resolved state/history and
+   marathon invariants are not reopened.
+
+**Verdict:** Changes requested
+
 ### Round 7 · Reviewer · codex
 
 Round 6 correctly resolves the five prior findings in principle: the baseline now has a sound non-empty, all-or-nothing, reactivation-safe lifecycle; the release dump fields are specified; and the transition lookup, fixed 003/004 allocation, and parent-before-child rebuild are all necessary corrections. I cannot approve yet: the live migration and rebuild paths still contradict the existing writer/dump protocol, and marathon membership remains unenforced across the two new links.
