@@ -2,9 +2,9 @@
 gh_issue: 111
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/111
 title: "Retire manifest FREEZE; tasks and marathons are DIALED-IN to exactly one release, as a database state"
-status: Active (2-WORKING as of 2026-08-20)
+status: Complete (3-COMPLETED as of 2026-08-21)
 created: 2026-08-20
-updated: 2026-08-20
+updated: 2026-08-21
 owner: noelsaw1
 doc_type: plan
 roadmap_exempt: true
@@ -31,7 +31,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **PHASES A, B and C BUILT 2026-08-20** on `feat/gh111-phase-a-dialed-in` (clone `XYZ-forge-gh108-rating-system`). A: migration registry + migration 004 (table rebuild of `manifest_items` and `manifest_state_events`), `manifest dial-in` / `ship` / `cut` / `marathon`, exclusivity by partial unique index, `perform_migration()` + `releases migrate`, the extended dump grammar both directions, `_rebuild()` ledger ownership, the duplicate-version refusal, and baselines (auto-capture on `draft -> active`, trigger-enforced write-once and all-NULL-or-all-populated). B: exporter groups by `marathon_id` (#109), renders shipped members (#110), counts `dialed_in + shipped` only, and emits baseline + growth. C: the RELEASES.md preamble rule and the three active/draft blocks converted; shipped blocks and the GH-308 frozen-twin prose untouched. The LIVE ledger is migrated (schema {1,2,3,4}); Daybreak carries a backfilled baseline of 9, its nine marathon members are linked, and #79-81 are `shipped` with evidence. gh32 99 -> 138, new gh103 suite 37/0, all 18 releases-subsystem suites green. | Merge into `development`. Then close #109 and #110 with pointers, and decide where #108 lands (its own release, Meter, or unassigned) — the one operator decision this plan still owes. |
+| **SHIPPED 2026-08-21 — merged to `development` via PR #116** (`c271be3`), issues #109, #110 and #111 closed. Phases A, B and C built on `feat/gh111-phase-a-dialed-in` (clone `XYZ-forge-gh108-rating-system`). A: migration registry + migration 004 (table rebuild of `manifest_items` and `manifest_state_events`), `manifest dial-in` / `ship` / `cut` / `marathon`, exclusivity by partial unique index, `perform_migration()` + `releases migrate`, the extended dump grammar both directions, `_rebuild()` ledger ownership, the duplicate-version refusal, and baselines (auto-capture on `draft -> active`, trigger-enforced write-once and all-NULL-or-all-populated). B: exporter groups by `marathon_id` (#109), renders shipped members (#110), counts `dialed_in + shipped` only, and emits baseline + growth. C: the RELEASES.md preamble rule and the three active/draft blocks converted; shipped blocks and the GH-308 frozen-twin prose untouched. The LIVE ledger is migrated — schema {1,2,3,4,5}, migration 005 added by the aider/qwen3.8-max QA round to make `baseline_at` and `baseline_source` write-once alongside `baseline_count`. Daybreak carries a backfilled baseline of 9, its nine marathon members are linked, and #79-81 are `shipped` with evidence. Final suite counts: gh32 140/0, gh69 53/0, gh103 38/0; all 18 releases-subsystem suites green. | Nothing — this plan is closed. One operator decision it raised remains genuinely open and is NOT blocking: where #108 lands as a release (its own, Meter, or unassigned). That is a `manifest dial-in` call whenever the operator wants it. |
 
 ## The decision
 

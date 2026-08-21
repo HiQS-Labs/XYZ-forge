@@ -2,9 +2,9 @@
 gh_issue: 108
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/108
 title: "pri/sev/appeal/effort — the canonical task rating system (calc sum + operator override)"
-status: Active (2-WORKING as of 2026-08-20)
+status: Complete (3-COMPLETED as of 2026-08-21)
 created: 2026-08-20
-updated: 2026-08-20
+updated: 2026-08-21
 owner: noelsaw1
 doc_type: plan
 roadmap_exempt: true
@@ -30,7 +30,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| **ALL FOUR PHASES BUILT 2026-08-20** on `feat/gh111-phase-a-dialed-in`. A: migration 003 (five nullable `rating_*` columns, transaction-safe, registry-driven), the one canonical `rated N/N/N/N` + ` ovr N` grammar in `roadmap sync` with a named refusal for every malformed shape, and the dump grammar both directions. B: exporter emits `metrics` + `effectiveScore` under the public axis names, joins detour cards to the roadmap index, flags `sev >= 80` hot, and gained `--json`; the viewer renames `app` -> `appeal`, adds `effort` to both metric loops, and flips the footer legend in the same commit. C: the intake scaffold takes the rating line and the 15 active-window ROADMAP entries are rated. D: `utils/leaderboard.sh` -> `LEADERBOARD.md`, `--leaderboard` -> `LEADERBOARD.html` from the SAME template via a `view` field, cross-linked from `.top`, all three refreshed by the GH-106 hook. gh69 24 -> 50, gh103 37/0. | Merge into `development`. The backfilled scores are a defensible FIRST PASS read off what the ledger already says (operator front-of-line calls, built-vs-unstarted, blast radius) — they are the operator's to revise, one `rated` edit plus a sync. Deferred as named: GH label mirroring, re-weighting, and machine-parsed doc frontmatter. |
+| **SHIPPED 2026-08-21 — merged to `development` via PR #116** (`c271be3`), issue #108 closed. All four phases built on `feat/gh111-phase-a-dialed-in`. A: migration 003 (five nullable `rating_*` columns, transaction-safe, registry-driven), the one canonical `rated N/N/N/N` + ` ovr N` grammar in `roadmap sync` with a named refusal for every malformed shape, and the dump grammar both directions. B: exporter emits `metrics` + `effectiveScore` under the public axis names, joins detour cards to the roadmap index, flags `sev >= 80` hot, and gained `--json`; the viewer renames `app` -> `appeal`, adds `effort` to both metric loops, and flips the footer legend in the same commit. C: the intake scaffold takes the rating line and the 15 active-window ROADMAP entries are rated. D: `utils/leaderboard.sh` -> `LEADERBOARD.md`, `--leaderboard` -> `LEADERBOARD.html` from the SAME template via a `view` field, cross-linked from `.top`, all three refreshed by the GH-106 hook. Final suite counts after the aider/qwen3.8-max QA round: gh32 140/0, gh69 53/0, gh103 38/0. | Nothing — this plan is closed. The backfilled scores remain a defensible FIRST PASS read off what the ledger already says (operator front-of-line calls, built-vs-unstarted, blast radius); revising one is a `rated` edit plus a sync, not a reopen. Deferred as named, and still deferred: GH label mirroring, re-weighting, and machine-parsed doc frontmatter. |
 
 ## Problem
 
