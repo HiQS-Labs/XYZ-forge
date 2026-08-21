@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -147,3 +147,15 @@ handing off to agy — agy, take your turn.
 - Added a regression test in `test/gh77-standup-triage.sh` that mocks the `PATH` without the `gh` executable and verifies that both Lens 4 and Lens 5 loudly degrade to `D1` instead of exiting cleanly with invalid/empty candidates.
 
 handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+- **P1 — The newly added missing-`gh` regression cannot reach either lens.** The restricted `NOGH` `PATH` in `test/gh77-standup-triage.sh` omits `mktemp`, but `collect.sh` invokes `mktemp` for Lens 2 before it reaches the Lens 4 `gh` probe or Lens 5's Python `gh --version` probe. With `set -e`, the collector exits at that missing prerequisite and produces no JSON; the following assertions therefore fail for an empty output rather than prove D1 behavior. Add `mktemp` (and retain every collector prerequisite) to the constrained `PATH`, then run the targeted suite and report its result. The `OSError` handling itself is the correct Lens 5 fix.
+
+Verification: read-only whole-file sweep completed for `skills/standup/collect.sh` and `test/gh77-standup-triage.sh`, plus every Lens 4/5 fixture file. No artifact was run, per reviewer-turn containment. No other in-scope pre-existing defect was identified.
+
+handing off to agy — agy, take your turn.
