@@ -87,8 +87,16 @@ def reap_trash(repo_root, max_age_hours=72, force_all=False):
         if not os.path.isdir(p):
             continue
         try:
-            mtime = os.path.getmtime(p)
-            age_hours = (now - mtime) / 3600.0
+            age_hours = None
+            if len(name) >= 16 and name[8] == "T" and name[15] == "Z":
+                try:
+                    dt = datetime.datetime.strptime(name[:16], "%Y%m%dT%H%M%SZ").replace(tzinfo=datetime.timezone.utc)
+                    age_hours = (datetime.datetime.now(datetime.timezone.utc) - dt).total_seconds() / 3600.0
+                except Exception:
+                    pass
+            if age_hours is None:
+                mtime = os.path.getmtime(p)
+                age_hours = (now - mtime) / 3600.0
             if force_all or age_hours >= max_age_hours:
                 shutil.rmtree(p, ignore_errors=True)
                 reaped += 1
