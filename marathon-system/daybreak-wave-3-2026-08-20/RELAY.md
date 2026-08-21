@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
-STATUS: Open
-NEXT: codex (Reviewer)
+STATUS: Approved
+NEXT: none (relay closed)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -158,3 +158,20 @@ handing off to agy — agy, take your turn.
 Added robust assertions to `test/gh77-standup-triage.sh` to strictly check the JSON `degraded_id` of the generated document for Lens 5 rather than just observing triage text output for D5. Verified that `skills/standup/fixtures/lens-5-malformed-session` and `skills/standup/fixtures/lens-5-invalid-shape-session` correctly exist and are self-contained (including `ROADMAP.md` and `releases.db`), preventing the fallback to the generic missing-fixture branch. The test suite passes cleanly.
 
 handing off to codex — codex, take your turn.
+
+### Round 7 · Reviewer · codex
+swept file: yes
+
+**Verdict:** Approved
+
+I swept the complete `collect.sh` and `gh77-standup-triage.sh` files, plus all Lens 4/5 fixture
+directories. The two previously absent session fixtures now exist, contain their deliberately
+malformed inputs alongside the other bounded Lens 5 inputs, and the targeted assertions inspect
+`lenses["5"].degraded_id` directly. Lens 4 uses the settled bounded 51-row query and keeps the
+first 50 on D2; Lens 5 derives only the specified session, ledger, and non-shipped-manifest issue
+set and degrades loudly for failed reads. I found no separate pre-existing defect in the swept scope.
+
+I did not run the project or targeted test suite; this reviewer turn is restricted to the static
+artifact review, and the relay harness owns the gate.
+
+relay closed, no further turn needed.
