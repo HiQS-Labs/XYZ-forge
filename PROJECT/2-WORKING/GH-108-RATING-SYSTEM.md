@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Initial design plan drafted and locked on 4-axis 1-100 rating model (pri/sev/appeal/effort). | Implement database schema migration, sync exporter, and ranking calculation under GH-108. |
+| **Plan Authored (2026-08-20):** Operator locked 4-axis 1-100 rating model. | Complete review and implementation steps. |
 
 > **Operator decisions in this doc are LOCKED (2026-08-20, two rounds).** Sections marked FROZEN
 > restate them; everything else is implementation planning and may be revised by review.

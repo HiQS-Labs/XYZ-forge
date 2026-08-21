@@ -2,6 +2,16 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.1.9] - 2026-08-20
+
+### Added
+- **GH-101: Feasibility Study Test 3 & Production Promotion (`script_runner.py`).**
+  Completed 3-stage qualification ladder for programmatic tool execution. Exposed `--tool-mode [standard|programmatic]`
+  in `utils/py/relay_drive.py` and `relay-automation/relay-turn-lib.sh` (defaulting off to standard mode).
+  Added fail-closed OS sandboxing verification (`sandbox-exec`/`bwrap`), pre-created `.relay-scratch/` isolation,
+  and process-group lifecycle cleanup under load; authored synthetic suite `test/synthetic/gh101-relay-programmatic-stress.sh`
+  (10/10 synthetic fuzz pass); promoted `script_runner.py` to Production-Ready (A-Grade) in `HARNESS-MODELS-REGISTRY.md`.
+
 ## [1.1.8] - 2026-08-20
 
 ### Changed

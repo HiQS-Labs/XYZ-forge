@@ -21,7 +21,7 @@ goal: >
 
 | What was just completed | What's next |
 |---|---|
-| Operator decisions locked on retiring manifest FREEZE and adopting per-task DIALED-IN state. | Implement schema updates and gate checks to enforce single-release exclusivity under GH-111. |
+| **Plan Authored (2026-08-20):** Operator locked DIALED-IN database state model. | Complete implementation & verification. |
 
 > **Operator decision 2026-08-20 — LOCKED.** *"Let's remove the concept of a build's manifest being
 > frozen. On the flip side, we can say tasks (and by extension marathons) are dialed-into

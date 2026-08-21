@@ -99,6 +99,8 @@ HARNESS_ENV = {
     "AIDER_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "PI_AGENT": (SCRUB, "See CLAUDE_AGENT."),
     "SMALLCODE_AGENT": (SCRUB, "See CLAUDE_AGENT."),
+    "RELAY_TOOL_MODE": (SCRUB, "Turn tool mode (standard vs programmatic); suites set this per-invocation."),
+    "XYZ_TOOL_MODE": (SCRUB, "Harness tool execution mode; suites set this per-invocation."),
     # ── PASS: load-bearing for the gate or for the drivers a suite legitimately spawns ─────────────
     "RELAY_DRIVER_LOCKED": (
         PASS,
