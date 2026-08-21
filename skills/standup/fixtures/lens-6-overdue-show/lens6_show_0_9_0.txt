@@ -1,0 +1,4 @@
+GID: rel-123
+Release: 0.9.0
+Status: active
+Target Date: 2026-08-01

@@ -1,0 +1,3 @@
+- [issue:1] text — check: {"kind": "test-e", "args": ["/tmp/foo"]} — close: close 1
+- [issue:2] text — check: {"kind": "git-log", "args": ["HEAD"]} — close: close 2
+- [issue:3] text — check: {"kind": "releases-check"} — close: close 3
