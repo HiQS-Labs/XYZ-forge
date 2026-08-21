@@ -25,10 +25,11 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 2 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 3 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-124 · eliminate end-of-day closeout friction — automated phase QA receipts, auto-PR creation, and clone lifecycle hygiene | — | [GH-124-CLOSEOUT-AUTOMATION.md](PROJECT/2-WORKING/GH-124-CLOSEOUT-AUTOMATION.md) · [#124](https://github.com/HiQS-Suite/XYZ-forge/issues/124) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
 
