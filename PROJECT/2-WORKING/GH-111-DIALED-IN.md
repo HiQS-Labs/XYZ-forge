@@ -256,14 +256,25 @@ previously assumed a mechanism that does not exist.
   write. Receipt and dump ordering are unchanged from `perform_write()`; only the pragma bracket is
   new.
 
-  **Implementation constraint — no `executescript()` (Codex r4 B2).** Every existing migration
-  materializes DDL through `conn.executescript()` (`releases_app.py:612, 624, 2649`), and Python's
-  `sqlite3` wrapper **issues a COMMIT before running that script**. Reusing the house idiom for 004
-  would silently split the transaction and make every guarantee above false — the FK bracket, the
-  rollback, the digest chain, and the receipt coupling — while appearing to work. **004's DDL is
-  issued as individual `execute()` calls** (or via a helper proven not to commit). Pinned by a
-  failure-injection test: force an error mid-swap and assert that neither the rebuilt tables nor the
-  generation bump nor the op_receipt survives the rollback.
+  **Implementation constraint — no implicit-commit APIs in ANY registry callback (Codex r4 B2,
+  widened by r6 B1).** Every existing migration materializes DDL through `conn.executescript()`
+  (`releases_app.py:612, 624, 2649`), and Python's `sqlite3` wrapper **issues a COMMIT before running
+  that script**. Reusing the house idiom would silently split the transaction and make every
+  guarantee above false — the FK bracket, the rollback, the digest chain, and the receipt coupling —
+  while appearing to work.
+
+  The constraint is therefore on **the protocol, not on migration 004**: *every callback
+  `perform_migration()` invokes must be transaction-safe*, issuing DDL as individual `execute()`
+  calls (or via a helper proven not to commit). This matters immediately because a v2 database with
+  **both 003 and 004 pending** runs them inside one `BEGIN IMMEDIATE`, and 003's natural
+  implementation is `_ensure_roadmap_schema()`, which calls `executescript()` today. If 003 commits
+  mid-flight, a later 004 failure leaves 003's schema and ledger rows **durable** while the journal,
+  generation, receipt, and dump all describe an interrupted all-or-nothing migration — the ledger
+  would be lying about its own recovery state.
+
+  Two failure-injection tests pin it: (a) an error mid-swap in 004 alone, and (b) **a v2 fixture with
+  003 and 004 both pending that fails inside 004**, asserting that neither migration's schema
+  changes, neither ledger row, nor the generation bump, receipt, or staged dump survives.
 - It is idempotent: with nothing pending it is a clean no-op that still reports the current version.
 - Feature commands do **not** self-migrate. (GH-108's plan sketched a per-feature "sync detects
   version 3 missing and runs a 003 helper" path; with a real `migrate` verb that special case should

@@ -1,5 +1,5 @@
 # Relay: GH-111 dialed-in plan — sharpen & QA
-STATUS: Changes requested
+STATUS: Changes requested (review paused by producer — see Round 14; fixes applied, no further round fired)
 NEXT: aider (Reviewer)
 
 ## Task
@@ -423,3 +423,13 @@ Blocker accepted and fixed; optional adopted.
 Convergence: **7 → 5 → 3 → 2 → 1**, monotonic, nothing reopened across five rounds, and this round's single finding was internal consistency rather than a new subsystem. Committed at HEAD. Handing off to codex — codex, take your turn: verify and give a final verdict.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 14 · Producer · claude-a — fix applied; RECOMMENDING STOP
+
+Blocker accepted and fixed, in both plans.
+
+**The `executescript()` ban was scoped to migration 004; it should have been scoped to the protocol.** A v2 database with 003 and 004 both pending runs them inside one `BEGIN IMMEDIATE`, and 003's natural implementation is `_ensure_roadmap_schema()`, which calls `executescript()` today. A mid-flight commit there leaves 003 durable after a 004 failure while the journal, generation, receipt, and dump all describe an interrupted all-or-nothing migration — the ledger lying about its own recovery state. The constraint now reads: *every callback `perform_migration()` invokes must be transaction-safe*, with two failure-injection tests (004 alone; 003+004 both pending, failing inside 004). The same constraint is written into `GH-108-RATING-SYSTEM.md` so 003's implementer cannot miss it.
+
+**Recommendation to the operator: stop the review here and build Phase A.** Counts ran **7 → 5 → 3 → 2 → 1 → 1** over six rounds with nothing reopened, which is genuine convergence — but the last three rounds have all been the same layer (migration transaction safety), each finding one more place to state a rule that already exists in the doc. That is the tail, and per the GH-77 lesson it is where prose stops paying: a property like "no callback may commit mid-transaction" is worth one executable assertion far more than another paragraph, and Phase A's suite is where it belongs. The plan is materially stronger than when this thread opened — it now carries a live-DB upgrade path that did not exist, a corrected writer protocol, a migration registry, an exclusivity model with real history semantics, and a transaction-safety contract — and every remaining risk is the kind a test catches on the first run.
+
+This turn does not hand the token back. If the operator wants one more round, the next token is `RELAY-gh111-codex-r7`.
