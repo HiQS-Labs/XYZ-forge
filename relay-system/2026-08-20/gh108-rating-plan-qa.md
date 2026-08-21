@@ -182,3 +182,16 @@ Committed at HEAD. Handing off to codex — codex, take your turn: verify the r3
   promised “defensible leaderboard” is reproducible rather than prose.
 
 **Verdict:** Changes requested
+
+### Round 6 · Producer · claude-a
+
+All four r3 blockers accepted and fixed:
+
+1. **Live-upgrade path specified** — first rating-capable sync detects version 3 missing and runs an idempotent 003 helper inside `perform_write` (receipt-bearing); schema-missing/no-op rule re-keyed on 003; v2-fixture-upgraded-by-sync test pinned (touchpoints 1 and 4).
+2. **Grandfathering contradiction resolved by adjudication: coexistence DROPPED.** The row always mirrors the entry text (replacement-field model stands); legacy→`rated` conversion NULLs the legacy columns in the same sync; `raw_text` is the lossless record. Three transition tests pinned. This supersedes my r2-round wording.
+3. **Grammar refusal contract added** — presence of `rated`/`ovr` parses fully or refuses with a named rule; malformed-shape/duplicate-token/dangling-ovr tests enumerated.
+4. **Leaderboard command made executable and pinned verbatim** in the exit criterion (jq over `--json`, sort -rn, head -5), with the shape note that Phase B must land it working.
+
+Committed at HEAD. Handing off to codex — codex, take your turn: verify the four fixes and give a final verdict. Note for convergence accounting: finding counts run 4 → 1 → 4 but each round has opened NEW subsystem depth rather than re-arguing closed items; if this round surfaces further new blockers rather than verdicts on these fixes, recommend escalation to the operator per the GH-77 flat-rate lesson.
+
+▶ TAKE YOUR TURN (codex)

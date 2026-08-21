@@ -103,10 +103,10 @@ derived value invites the drift class this repo already fights everywhere else.
 
 | # | Component | Change | Size |
 |---|---|---|---|
-| 1 | `utils/py/releases_app.py` (roadmap sync) | parse `rated N/N/N/N` + `ovr N` from entry text; **migration 003** adding the 5 nullable `rating_*` columns to `roadmap_items` (prefixed — the bare `effort` name is taken by the legacy vocabulary) — wired into the migration chain the rebuild path executes (currently 001/002 only), with the hard-coded column lists in the canonical dump writer AND `load_dump()` extended to carry them; reject out-of-range values loudly at sync time | M+ |
+| 1 | `utils/py/releases_app.py` (roadmap sync) | parse `rated N/N/N/N` + `ovr N` from entry text; **migration 003** adding the 5 nullable `rating_*` columns to `roadmap_items` (prefixed — the bare `effort` name is taken by the legacy vocabulary) — wired into the migration chain the rebuild path executes (currently 001/002 only), with the hard-coded column lists in the canonical dump writer AND `load_dump()` extended to carry them. **Live-upgrade path (Codex r3):** the normal sync path never runs generic migrations — `cmd_roadmap_sync` checks only migration 002 and `_ensure_roadmap_schema()` can only install 002 — so the first rating-capable sync must detect version 3 as missing and run an idempotent 003 helper INSIDE `perform_write` (receipt-bearing), with the schema-missing/no-op rule updated to key on 003; pinned by the v2-fixture-upgraded-by-sync test. **Grammar refusal contract:** the presence of a `rated` (or `ovr`) token either parses as the one full grammar or refuses with a named rule — malformed shapes never silently read as unrated. Reject out-of-range values loudly at sync time | M+ |
 | 2 | `utils/timeline/export_timeline.py` | select the rating columns into the roadmap index (today's query selects none); map → card `metrics` + `override`; derive `calc` and emit `effectiveScore` (= `ovr` if set, else `calc`) so consumers never reimplement the precedence rule; add stdout `--json`; sev hot flag | S |
 | 3 | `utils/timeline/RELEASES.html` | more than legend text (Codex r1): the metric loops hard-code `pri/sev/app/calc` in BOTH the card renderer and the what's-next strip — rename legacy `app` → `appeal`, add `effort`, then flip the footer legend | S |
-| 4 | `test/gh69-roadmap-shadow.sh` (owns `roadmap sync` parser behavior) | happy path, `ovr`, out-of-range rejection, absent-rating rows unchanged, both-vocabularies-on-one-entry error, a row carrying legacy `cx/risk/eff` column values ALONGSIDE new `rating_*` values (grandfathered columns untouched by a rating write), and a dump→rebuild round trip preserving ratings; `test/gh32-releases-app.sh` keeps cross-ledger/migration-chain coverage only | S |
+| 4 | `test/gh69-roadmap-shadow.sh` (owns `roadmap sync` parser behavior) | happy path, `ovr`, out-of-range rejection, absent-rating rows unchanged, both-vocabularies-on-one-entry refusal, the legacy→`rated` transition (legacy columns NULLed, ratings populated, next sync a no-op), **malformed-shape refusals** (three or five numbers, duplicate `rated`, duplicate or dangling `ovr` — each refuses with a named rule rather than silently parsing as unrated), a v2-schema fixture upgraded in place by the first rating-capable sync, and a dump→rebuild round trip preserving ratings; `test/gh32-releases-app.sh` keeps cross-ledger/migration-chain coverage only | S |
 | 5 | Intake template / PDDA scaffold | replace cx/risk/eff with the rating line | XS |
 | 6 | `PROJECT/1-INBOX`+ROADMAP authoring | backfill ACTIVE WINDOW ONLY (Daybreak + Cargo manifest and detour items, ~12 tasks) | S (operator judgment) |
 
@@ -121,8 +121,15 @@ frontmatter ratings, a dedicated leaderboard page (rides #75), and any write pat
   populated row (GH-5) cost nothing.
 - An entry carrying BOTH vocabularies is a sync error (loud, not silent preference).
 - The vocabularies never share storage: legacy values live in `complexity/risk/effort`, new ratings
-  in the `rating_*` columns (Codex r2 — the bare `effort` name is already taken). A rating write
-  never touches the legacy columns; a row may legitimately carry both sets while grandfathered.
+  in the `rating_*` columns (Codex r2 — the bare `effort` name is already taken).
+- **The row always mirrors the entry text — no row-level coexistence** (Codex r3; supersedes the
+  earlier coexistence claim). The sync's replacement-field model stands: converting an entry from
+  `cx/risk/eff` to `rated` populates the `rating_*` columns and clears the legacy columns to NULL in
+  the same sync — the entry's lossless `raw_text` is the historical record, the row is a mirror, and
+  a mirror that disagrees with its source would re-update on every sync forever. "Grandfathered"
+  means: entries still WRITTEN in cx/risk/eff keep their values; it never means one row carries both.
+  Pinned by three tests: legacy → `rated` transition (legacy columns NULLed, ratings populated),
+  a subsequent sync is a no-op, and the forbidden both-on-one-entry form refuses.
 - Intake docs switch to the rating line on their next edit; no sweep.
 - The columns are removed only when the last cx/risk/eff row is gone — tracked as a checklist tail on
   #108, not a phase.
@@ -146,8 +153,20 @@ Each phase is independently shippable; a stall after any phase leaves the repo b
 `releases.db` (generation bump; gh69 + gh32 suites green, including the dump→rebuild round trip
 preserving ratings); `export_timeline.py --json` (the Phase-B flag) emits `effectiveScore` for those
 cards; the served and baked pages render score lines — `appeal` and `effort` included — with the
-flipped legend; and sorting the `--json` output by `effectiveScore` prints a defensible leaderboard
-with no ties in the top five (the resolution argument, demonstrated).
+flipped legend; and the pinned leaderboard command prints a defensible top five with no ties (the
+resolution argument, demonstrated). The command is part of the contract, not prose (Codex r3 — bare
+`sort` cannot order nested JSON):
+
+```
+python3 utils/timeline/export_timeline.py --json \
+  | jq -r '.releases[] | .detours[]?, .roadmap[]? | select(.metrics.effectiveScore?) 
+           | [.metrics.effectiveScore, .id, .title] | @tsv' \
+  | sort -rn | head -5
+```
+
+(`--json` emits the same single-object shape as `data.json`; `effectiveScore` rides inside each
+card's `metrics`. The exact jq path is Phase B's to finalize against the emitted shape — but Phase B
+must land THIS command working, and the Phase-C exit test runs it verbatim.)
 
 ## Review verdicts (Codex relay r1, 2026-08-20 — all three open items resolved)
 
