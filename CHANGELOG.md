@@ -2,6 +2,30 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.1.8] - 2026-08-20
+
+### Changed
+- **GH-108 CUT from the Daybreak 0.7.2 manifest — corrects the 1.1.7 entry below.** Adding it was
+  an admission error, not a re-scope: it does not make Daybreak's exit command fail, falsifies no
+  named invariant, and carries no reproducer, and Daybreak's manifest is the nine /standup marathon
+  work units (#79–#87). Cut recorded on `mfi-01M0GT694QQ7Q952E5ZJ6SY1G8` with reason; the 9-item
+  denominator is restored under a live marathon run. Where #108 lands is an open operator decision.
+  The 1.1.7 entry stands as the record of what happened at the time — corrected here, not rewritten.
+
+### Discovered
+- **[#109](https://github.com/HiQS-Suite/XYZ-forge/issues/109): the timeline viewer asserts false
+  marathon membership.** `export_timeline.py:172-183` wraps *every* manifest card into a release's
+  marathon group when one exists, because `manifest_items` carries no link to `marathons`. Latent
+  until a non-marathon item joined a marathon release; #108 rendered as a GH-77 work unit.
+- **[#110](https://github.com/HiQS-Suite/XYZ-forge/issues/110): `manifest_items.state = 'shipped'`
+  is a dead state.** The schema permits it; no CLI path writes it. #79–#81 closed on GitHub with
+  work landed, yet remain `open` on the manifest — a manifest member can never be marked done, so
+  mid-release progress is structurally unreportable.
+- **[#111](https://github.com/HiQS-Suite/XYZ-forge/issues/111): freeze vs. "dialed-in" framing.**
+  Freeze is prose in a RELEASES.md `Manifest:` line with no database field, which in-band releases
+  (Daybreak among them) structurally cannot carry. Operator is debating a per-task committed state
+  in its place.
+
 ## [1.1.7] - 2026-08-20
 
 ### Added
