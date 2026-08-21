@@ -2119,6 +2119,54 @@ def cmd_manifest_ship(args):
         conn.close()
 
 
+def cmd_manifest_marathon(args):
+    """Link an ALREADY dialed-in item to its release's marathon.
+
+    Migration 004 leaves `marathon_id` NULL on every migrated row, deliberately: the only fact
+    available at migration time is "this release has a marathon", and inferring membership from
+    that is precisely the defect #109 names. So membership on pre-existing manifests is recorded
+    the same way a baseline is — witnessed by an operator, one item at a time — rather than
+    guessed by a migration and then indistinguishable from the real thing.
+    """
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        rel = find_release(conn, args.gid)
+        kind, value = check_tracking_token(args.issue)
+
+        def mutate(conn):
+            column = "url" if kind == "url" else "temp_id"
+            ref = conn.execute("SELECT * FROM issue_refs WHERE %s = ?" % column,
+                               (value,)).fetchone()
+            if not ref:
+                refuse("unknown-issue", "no issue_refs row for %r" % value)
+            item = conn.execute("""SELECT * FROM manifest_items
+                                   WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
+                                (rel["id"], ref["id"])).fetchone()
+            if not item:
+                refuse("unknown-issue",
+                       "issue %r is not dialed into release %s" % (value, args.gid))
+            mar = conn.execute("SELECT id FROM marathons WHERE global_id = ?",
+                               (args.marathon,)).fetchone()
+            if not mar:
+                refuse("unknown-marathon", "no marathon with gid %r" % args.marathon)
+            if rel["marathon_id"] != mar["id"]:
+                refuse("marathon-not-this-release",
+                       "marathon %s does not belong to release %s; an item's marathon must be "
+                       "its own release's marathon" % (args.marathon, args.gid))
+            if item["marathon_id"] is not None and item["marathon_id"] != mar["id"]:
+                refuse("marathon-link-permanent",
+                       "manifest item %s already belongs to another marathon; marathon links are "
+                       "historical and permanent" % item["global_id"])
+            conn.execute("UPDATE manifest_items SET marathon_id=? WHERE id=?",
+                         (mar["id"], item["id"]))
+            print("manifest item %s linked to marathon %s" % (item["global_id"], args.marathon))
+
+        perform_write(root, conn, "manifest-marathon", args.gid, mutate)
+    finally:
+        conn.close()
+
+
 def _live_manifest_item(conn, rel, ref, token, gid_arg, target_state):
     """Select the ONE live (dialed_in) manifest row for this (release, issue), or refuse.
 
@@ -3488,6 +3536,11 @@ def build_parser():
     sp_ship.add_argument("issue", help="issue URL or TMP-XXXXXX")
     sp_ship.add_argument("--evidence", default="",
                          help="commit, PR, or test receipt (empty is refused)")
+    sp_mar = msub.add_parser("marathon",
+                             help="link an already dialed-in item to its release's marathon")
+    sp_mar.add_argument("--gid", required=True)
+    sp_mar.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    sp_mar.add_argument("--marathon", required=True, help="marathon gid; must be THIS release's")
     sp_cut = msub.add_parser("cut",
                              help="cut an item from a release's manifest (REQUIRES --reason)")
     sp_cut.add_argument("--gid", required=True)
@@ -3554,7 +3607,9 @@ def main(argv=None):
         "init": cmd_init, "import": cmd_import, "add": cmd_add, "update": cmd_update,
         "ship": cmd_ship, "migrate": cmd_migrate, "baseline": cmd_baseline,
         "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd in ("dial-in", "add")
-        else (cmd_manifest_ship(a) if a.manifest_cmd == "ship" else cmd_manifest_cut(a)),
+        else (cmd_manifest_ship(a) if a.manifest_cmd == "ship"
+              else (cmd_manifest_marathon(a) if a.manifest_cmd == "marathon"
+                    else cmd_manifest_cut(a))),
         "marathon": lambda a: cmd_marathon_add(a) if a.marathon_cmd == "add"
         else cmd_marathon_list(a),
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,

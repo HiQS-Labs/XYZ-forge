@@ -55,22 +55,22 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 ## GH-111 Phase B — exporter + viewer
 
-- [ ] C1 Group marathon members by `manifest_items.marathon_id`; non-members render as siblings
+- [x] C1 Group marathon members by `manifest_items.marathon_id`; non-members render as siblings
       (closes #109)
-- [ ] C2 Render `shipped` members with the done marker; `dialed_in` takes today's `open` branch
-- [ ] C3 Denominator `dialed_in + shipped`, cut excluded
-- [ ] C4 Emit `baseline: {count, at, source}` + derived growth; baseline-less releases show
+- [x] C2 Render `shipped` members with the done marker; `dialed_in` takes today's `open` branch
+- [x] C3 Denominator `dialed_in + shipped`, cut excluded
+- [x] C4 Emit `baseline: {count, at, source}` + derived growth; baseline-less releases show
       progress only
-- [ ] C5 Viewer renders the baseline/growth pair
+- [x] C5 Viewer renders the baseline/growth pair
 
 ## GH-108 Phase B — exporter + viewer
 
-- [ ] D1 Select the rating columns into the roadmap index; map to card `metrics` + `override`;
+- [x] D1 Select the rating columns into the roadmap index; map to card `metrics` + `override`;
       derive `calc` and `effectiveScore`
-- [ ] D2 Join detour cards to the GH-keyed roadmap index (Codex r4)
-- [ ] D3 `--json` stdout flag
-- [ ] D4 `sev >= 80` hot flag
-- [ ] D5 `RELEASES.html`: `app` → `appeal` rename + `effort` in BOTH metric loops; legend flip in
+- [x] D2 Join detour cards to the GH-keyed roadmap index (Codex r4)
+- [x] D3 `--json` stdout flag
+- [x] D4 `sev >= 80` hot flag
+- [x] D5 `RELEASES.html`: `app` → `appeal` rename + `effort` in BOTH metric loops; legend flip in
       the same commit as first metric emission
 
 ## Phase C — prose

@@ -153,6 +153,7 @@ body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip,bod
 .badge.draft{color:var(--ink3);border:1px dashed var(--line2)}
 .badge.od{color:var(--card);background:var(--red);font-weight:700;font-size:10px;padding:1px 6px}
 .node .meta{font-size:11px;color:var(--ink2);margin-top:2px}
+.node .base{white-space:nowrap}
 .blurb{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--ink);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .node:hover .blurb,.node:focus-visible .blurb,.node:focus-within .blurb{-webkit-line-clamp:99}
@@ -247,7 +248,7 @@ article[hidden]{display:none}
   <span>← older &nbsp; newer → &nbsp;·&nbsp; swipe or drag the trunk</span>
   <span>ad-hoc merges down · roadmap merges up · ⟦marathon⟧ = gated phase chain, runs in order</span>
   <span>○ queued &nbsp; ◑ in progress &nbsp; ‖ paused &nbsp; ✓ done</span>
-  <span>pri / sev / app ranked 1–100 (1 = strongest) · calc = weighted · ovr = manual override</span>
+  <span>pri / sev / appeal / effort 1–100 (100 = strongest; effort scores cheapness) · calc = sum /400 · ovr = operator override, wins over calc</span>
 </div>
 
 <!--LEDGER_DATA-->
@@ -289,7 +290,7 @@ article[hidden]{display:none}
 
   function cardHTML(c){
     var flags=c.metricFlags||{},parts=[];
-    ['pri','sev','app','calc'].forEach(function(k){
+    ['pri','sev','appeal','effort','calc'].forEach(function(k){
       if(c.metrics&&c.metrics[k]!=null) parts.push(metricPart(k,c.metrics[k],flags[k]));
     });
     var overrideHTML=c.override
@@ -333,11 +334,21 @@ article[hidden]{display:none}
     if(rel.flags&&rel.flags.overdue) extraCls.push('od');
     var extraText=rel.extra?(' · <b>'+esc(rel.extra)+'</b>'):'';
     var openHTML=(rel.itemsOpen>0?'<span class="r">':'<span>')+rel.itemsOpen+' open</span>';
+    // Two numbers when the release has a kickoff baseline: what it committed to, and how much
+    // that commitment has moved since. A baseline-less release shows neither — no placeholder
+    // zero, which would read as "no scope creep" rather than "never measured".
+    var baseHTML='';
+    if(rel.baseline){
+      var g=rel.baseline.growth,gTxt=(g>0?'+'+g:String(g))+' since kickoff';
+      baseHTML=' · <span class="base" title="baseline '+esc(rel.baseline.source)+
+        ' at '+esc(String(rel.baseline.at||'').slice(0,10))+'">baseline '+rel.baseline.count+
+        (g===0?'':' · '+(g>0?'<b class="r">'+gTxt+'</b>':gTxt))+'</span>';
+    }
     return '<article class="node '+rel.status+(extraCls.length?' '+extraCls.join(' '):'')+'" tabindex="0">'+
       '<div class="nh"><span class="cn">'+esc(rel.name)+'</span><span class="ver">'+esc(rel.version)+'</span>'+
         '<span class="badge '+esc(rel.badge.type)+'">'+esc(rel.badge.label)+'</span></div>'+
       '<div class="meta">'+esc(rel.dateLabel)+' '+esc(rel.date)+extraText+' · '+rel.itemsTotal+' items · '+openHTML+
-        ' · <a href="'+esc(rel.milestoneUrl)+'">'+esc(rel.milestoneRef)+'</a></div>'+
+        baseHTML+' · <a href="'+esc(rel.milestoneUrl)+'">'+esc(rel.milestoneRef)+'</a></div>'+
       (rel.blurb?'<p class="blurb">'+esc(rel.blurb)+'</p>':'')+
       '<p class="exit">'+esc(rel.exit)+'</p>'+
       '</article>';
@@ -402,7 +413,7 @@ article[hidden]{display:none}
     var wnHTML='<div></div>';
     if(wn){
       var wnFlags=wn.metricFlags||{},wnParts=[];
-      ['pri','sev','app','calc'].forEach(function(k){
+      ['pri','sev','appeal','effort','calc'].forEach(function(k){
         if(wn.metrics&&wn.metrics[k]!=null) wnParts.push(metricPart(k,wn.metrics[k],wnFlags[k]));
       });
       if(wn.note) wnParts.unshift(esc(wn.note));
