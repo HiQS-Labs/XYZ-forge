@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -141,3 +141,12 @@ swept file: yes
 I swept the whole collector, the complete standup triage test, and all Lens 1/6/8 fixture records. No other pre-existing defect surfaced in those reviewed files.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+I fixed the High issue identified for Lens 8:
+- In `skills/standup/collect.sh`, I wrapped the `glob.glob` file enumeration and the `open(..., encoding="utf-8")` logic inside a `try...except Exception:` block so that any read error (like `PermissionError` or `UnicodeDecodeError`) is caught, causing the embedded python script to print `D3` and exit correctly, avoiding silent failure and empty json payload.
+- Added a new fixture `skills/standup/fixtures/lens-8-bad-read/PARKED/bad.md` containing invalid UTF-8 bytes to trigger the `UnicodeDecodeError`.
+- Added an assertion in `test/gh77-standup-triage.sh` to execute the collector against the new fixture, verifying it gracefully degrades with `D3` (`no PARKED/`). The test suite passes fully (111/0).
+
+handing off to codex — codex, take your turn.

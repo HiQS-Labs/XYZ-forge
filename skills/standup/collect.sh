@@ -855,49 +855,53 @@ def run_probe(chk, key):
         sys.exit(0)
 
 cands = []
-for path in glob.glob(os.path.join(parked_dir, "*.md")):
-    with open(path, "r", encoding="utf-8") as fh:
-        for line in fh:
-            line_str = line.strip()
-            if not line_str.startswith("- ["):
-                continue
-            m = PARK_RE.match(line_str)
-            if not m:
-                print("D3")
-                sys.exit(0)
-            key, rest, check_str, close_str = m.groups()
-            try:
-                chk = json.loads(check_str)
-                if not isinstance(chk, dict) or "kind" not in chk:
-                    raise ValueError()
-                if "args" in chk and not isinstance(chk["args"], list):
-                    raise ValueError()
-            except Exception:
-                print("D3")
-                sys.exit(0)
-            
-            first_seen = None
-            fs_m = re.search(r"first seen: ([0-9]+)", line_str)
-            if fs_m:
-                first_seen = int(fs_m.group(1))
-            
-            try:
-                is_done, state_str = run_probe(chk, key)
-            except Exception:
-                print("D3")
-                sys.exit(0)
+try:
+    for path in glob.glob(os.path.join(parked_dir, "*.md")):
+        with open(path, "r", encoding="utf-8") as fh:
+            for line in fh:
+                line_str = line.strip()
+                if not line_str.startswith("- ["):
+                    continue
+                m = PARK_RE.match(line_str)
+                if not m:
+                    print("D3")
+                    sys.exit(0)
+                key, rest, check_str, close_str = m.groups()
+                try:
+                    chk = json.loads(check_str)
+                    if not isinstance(chk, dict) or "kind" not in chk:
+                        raise ValueError()
+                    if "args" in chk and not isinstance(chk["args"], list):
+                        raise ValueError()
+                except Exception:
+                    print("D3")
+                    sys.exit(0)
                 
-            if is_done:
-                cands.append({
-                    "key": f"park:{key}",
-                    "what": f"close parked item {key}",
-                    "evidence_type": "park",
-                    "evidence_payload": key,
-                    "staleness": first_seen,
-                    "close": close_str,
-                    "close_kind": "command" if not close_str.startswith("inspect:") else "inspect",
-                    "live_state": state_str
-                })
+                first_seen = None
+                fs_m = re.search(r"first seen: ([0-9]+)", line_str)
+                if fs_m:
+                    first_seen = int(fs_m.group(1))
+                
+                try:
+                    is_done, state_str = run_probe(chk, key)
+                except Exception:
+                    print("D3")
+                    sys.exit(0)
+                    
+                if is_done:
+                    cands.append({
+                        "key": f"park:{key}",
+                        "what": f"close parked item {key}",
+                        "evidence_type": "park",
+                        "evidence_payload": key,
+                        "staleness": first_seen,
+                        "close": close_str,
+                        "close_kind": "command" if not close_str.startswith("inspect:") else "inspect",
+                        "live_state": state_str
+                    })
+except Exception:
+    print("D3")
+    sys.exit(0)
 print(json.dumps(cands))
 ')
 if [[ "$out8" == "D3" ]]; then

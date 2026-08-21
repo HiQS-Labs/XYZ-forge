@@ -573,6 +573,10 @@ is "lens 8 explicit state is preserved in live_state for test-e" "$(F lens-8-con
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-fail-controls" > "$W/lens8_fail_controls.json" 2>/dev/null
 is "lens 8 failure controls yield zero candidates" "$(F lens-8-fail-controls 'len(d["lenses"]["8"]["candidates"])')" "0"
 
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-bad-read" > "$W/lens8_bad_read.json" 2>/dev/null
+out="$(T "$W/lens8_bad_read.json" --dry-run 2>&1)" || true
+has "lens 8 degrades loudly with D3 on unreadable PARKED record" "$out" "no PARKED/"
+
 echo
 # ── 21. Lens 1 non-fixture control ─────────────────────────────────────────────────────────────
 echo '[{"quote":"test quote","what":"test what","close":"inspect: test"}]' > "$W/.standup-transcript.json"
