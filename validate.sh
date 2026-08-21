@@ -1043,6 +1043,7 @@ if [ "${#FAILED[@]}" -gt 0 ]; then
   echo "failed:"
   for t in "${FAILED[@]}"; do echo "  - $t"; done
   exit 1
+fi
 if [ "${TIER:-3}" -eq 3 ] && [ -z "${SUBSYSTEM:-}" ] && [ -z "$(git status --porcelain 2>/dev/null)" ]; then
   _val_sha="$(git rev-parse --verify HEAD 2>/dev/null || true)"
   if [ -n "$_val_sha" ] && [ -f "$HERE/utils/py/gate_receipt.py" ]; then

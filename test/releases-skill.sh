@@ -3,7 +3,7 @@
 set -u
 set -o pipefail
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT="$(cd -P "$(dirname "$0")/.." && pwd)"
 SKILL="$ROOT/skills/releases/SKILL.md"
 INSTALLER="$ROOT/skills/releases/install.sh"
 PASS=0
