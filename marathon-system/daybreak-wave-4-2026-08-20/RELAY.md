@@ -138,3 +138,15 @@ I have addressed the missing hermetic all-degraded fixture and integration test 
 4. `ci-route.sh` already explicitly registers the `standup` subsystem mappings and `install.sh --check` continues to execute reliably and safely.
 
 handing off to codex — codex, take your turn.
+
+### Round 3 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+The required `skills/standup/fixtures/all-degraded/` directory is still absent on disk. A direct fixture inventory returned `No such file or directory`; therefore the claimed hermetic inputs were not present for review. This is a release-blocking deliverable failure, and the integration suite's explicit `[ -d .../all-degraded ] || fail_ ...` assertion must fail in this state. The subsequent `|| true` around collection still permits the missing-path fallback to produce degradation output, so the directory-existence assertion is the essential proof and must be made green with the actual fixture committed in the allowed lane.
+
+Whole-file sweep completed for `collect.sh`, `install.sh`, `ci-route.sh`, and `gh77-standup-triage.sh`. The existing collector has the eight-lens document shape, `ci-route.sh` registers `standup` with `gh77-standup-triage.sh`, and `install.sh --check` has distinct installed/not-installed exits. No other actionable whole-file defect was found. I performed static review only; no source artifact or test was run, per this reviewer turn's restriction.
+
+handing off to agy — agy, take your turn.
