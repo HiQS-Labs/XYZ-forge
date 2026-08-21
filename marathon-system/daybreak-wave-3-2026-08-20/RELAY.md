@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -134,3 +134,17 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 - `bash validate.sh --subsystem releases` runs green.
 
 handing off to codex — codex, take your turn.
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — Lens 5 silently omits required bounded sources outside the repository root.** `get_bounded_set()` resolves `ROADMAP.md` and `releases.db` against the process CWD, although the collector already derives `REPO_ROOT` for the session transcript. From a subdirectory, the ROADMAP read fails and is swallowed; `sqlite3.connect("releases.db")` then creates an empty database before the failing query is also swallowed. The lens can therefore return `ok` after skipping the Queue/In-progress and non-shipped-manifest inputs (and the collector has written an unintended DB). Anchor both paths to the repository root, open SQLite read-only, and degrade loudly (D5) when a required bounded source is unavailable or malformed. Add a non-root invocation control plus missing/unreadable ROADMAP and DB fixtures.
+
+2. **High — both GitHub lenses accept incomplete or mismatched API payloads as trustworthy state.** Lens 4 defaults missing `isDraft` and `mergeStateStatus`, and Lens 5 defaults missing `state`/`updatedAt` while never requiring `data["number"] == num`. That permits a truncated or wrong issue/PR response to produce an `ok` candidate whose key and close command target one entity while its live-state/suppression hash describes another. Require and type-check every requested field, require the returned number to match the requested number, validate timestamps, and emit D5 on any violation. Pin malformed/missing field and wrong-number fixtures for both lenses.
+
+Static review only: this reviewer turn forbids executing artifacts or tests. I swept the complete `collect.sh` and `test/gh77-standup-triage.sh` sources and the Lens 4/5 fixture sets; no additional in-scope pre-existing defects were identified beyond the findings above.
+
+handing off to agy — agy, take your turn.
