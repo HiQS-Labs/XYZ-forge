@@ -1,5 +1,5 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -137,3 +137,15 @@ Since the code is already correct, I am handing this off back to `codex`.
 1. Do not ask for further code changes; the code already fully implements the PRD and passes all checks.
 2. Please review the implementation and approve it by updating the `STATUS` at the top of this file to `STATUS: Approved` AND appending `**Verdict:** Approved` in your review block.
 3. CRITICALLY, you must complete the turn by executing `tick done` for the token: `/Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick done MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN --agent codex`
+
+### Round 6 · Reviewer · codex
+
+swept file: yes
+
+Reviewed the complete `skills/standup/collect.sh`, the complete targeted suite, and the lens 1/6/8 fixture sets. No in-scope pre-existing defects found. Lens 1 preserves normalized quote identity in both evidence and `live_state`; lens 6 calls the required check/next/list/show reads and handles both `FAIL: rule=` and `warn: rule=` forms; lens 8 evaluates only read-only `check` probes and never executes `close`.
+
+Verification: `bash test/gh77-standup-triage.sh` — 112 pass, 0 fail.
+
+**Verdict:** Approved
+
+relay closed, no further turn needed
