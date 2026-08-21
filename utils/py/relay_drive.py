@@ -37,6 +37,7 @@ def main():
     parser.add_argument("--review-once", dest="review_once", action="store_true")
     parser.add_argument("--force", dest="force", action="store_true")
     parser.add_argument("--dry-run", dest="dry_run", action="store_true")
+    parser.add_argument("--tool-mode", dest="tool_mode", default=get_env("RELAY_TOOL_MODE", "standard"), choices=["standard", "programmatic"])
     parser.add_argument("--help", action="store_true")
     
     args, unknown = parser.parse_known_args()
@@ -57,6 +58,13 @@ def main():
         die("--relay-file is required")
     if not args.agent_cmd and not args.dry_run:
         die("--agent-cmd is required")
+
+    if args.tool_mode == "programmatic":
+        has_sandbox = bool(shutil.which("sandbox-exec") or shutil.which("bwrap"))
+        if not has_sandbox:
+            die("Containment failure (fail-closed): OS sandbox backend (sandbox-exec or bwrap) unavailable for --tool-mode programmatic")
+        os.environ["XYZ_TOOL_MODE"] = "programmatic"
+        os.environ["RELAY_TOOL_MODE"] = "programmatic"
 
     if args.review_once:
         args.round_cap = 1

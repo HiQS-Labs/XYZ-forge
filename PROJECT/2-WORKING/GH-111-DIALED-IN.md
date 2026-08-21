@@ -7,6 +7,7 @@ created: 2026-08-20
 updated: 2026-08-20
 owner: noelsaw1
 doc_type: plan
+roadmap_exempt: true
 rating: "pri/sev/appeal/effort 80/55/70/45 · calc 250"
 goal: >
   Replace a prose-only release-level FREEZE with a per-task, per-marathon DIALED-IN state that
@@ -15,6 +16,12 @@ goal: >
 ---
 
 # GH-111: Retire FREEZE, adopt DIALED-IN (Plan)
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **Plan Authored (2026-08-20):** Operator locked DIALED-IN database state model. | Complete implementation & verification. |
 
 > **Operator decision 2026-08-20 — LOCKED.** *"Let's remove the concept of a build's manifest being
 > frozen. On the flip side, we can say tasks (and by extension marathons) are dialed-into

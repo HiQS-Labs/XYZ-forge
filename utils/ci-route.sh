@@ -21,7 +21,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # and list its suites in SUBSYSTEM_TESTS_<name>. Every listed suite must exist in test/ AND
 # be registered in validate.sh's TESTS array — test/gh35-test-tiers.sh enforces both, because
 # a registry naming a suite that never runs is a green lie (the releases-skill lesson).
-SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent2agent"
+SUBSYSTEMS="hq releases telemetry ate swe-diagram pdda agent2agent standup"
 SUBSYSTEM_TESTS_hq="hq.sh hq-park.sh hq-park-synthesis.sh hq-dispatch.sh hq-next.sh hq-locator.sh hq-hardening.sh hq-promote.sh hq-marathon-scan.sh hq-rollup.sh hq-marathon-live.sh roadmap-dashboard.sh"
 SUBSYSTEM_TESTS_releases="gh32-releases-app.sh gh103-timeline-exporter.sh gh32-releases-artifacts.sh gh53-releases-merge-resolve.sh gh54-merged-dump-refusals.sh gh57-live-merge-resolve.sh gh69-roadmap-shadow.sh gh32-release-target-advisory.sh gh39-releases-project-sync.sh releases-skill.sh gh284-p3-release-milestone.sh gh284-p4-release-lanes.sh litmus-release.sh nightwatch-release.sh meter-release.sh ballast-release.sh gh57-releases-fuzz.sh"
 SUBSYSTEM_TESTS_telemetry="xyz-completion.sh gh358-lock-instrumentation.sh archive-telemetry.sh"
@@ -29,6 +29,7 @@ SUBSYSTEM_TESTS_ate="ate-run-variations.sh"
 SUBSYSTEM_TESTS_swe_diagram="swe-diagram.sh"
 SUBSYSTEM_TESTS_pdda="pdda-roadmap-coverage.sh pdda-repo-contract.sh pdda-local-checks.sh gh400-acceptance-fidelity.sh gh400-source-url.sh gh422-backfill-source-url.sh gh425-source-url-slug.sh"
 SUBSYSTEM_TESTS_agent2agent="agent2agent.sh"
+SUBSYSTEM_TESTS_standup="gh77-standup-triage.sh"
 
 subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
   case "$1" in
@@ -39,6 +40,7 @@ subsystem_of() {  # <path> -> subsystem name, or nothing when unmapped
     utils/swe-diagram/*)                                                                   printf '%s\n' swe-diagram ;;
     utils/pdda/*|utils/pdda-local-checks.sh|utils/pdda-catchup.sh|utils/pdda-doc-ready.sh) printf '%s\n' pdda ;;
     skills/agent2agent/*)                                                                  printf '%s\n' agent2agent ;;
+    skills/standup/*)                                                                      printf '%s\n' standup ;;
   esac
 }
 
