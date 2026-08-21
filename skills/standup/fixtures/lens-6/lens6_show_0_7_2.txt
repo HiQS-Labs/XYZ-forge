@@ -1,1 +1,3 @@
-details
+GID:           rel-01M0EC3AGK2DWYAC1WV7FMG2Q6
+Release:       0.7.2
+Status:        active
