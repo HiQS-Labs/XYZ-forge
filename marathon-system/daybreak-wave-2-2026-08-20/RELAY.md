@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -129,3 +129,15 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 ### Round 1 · Builder · agy
 
 Verified the implementation of lenses 1, 6, and 8. The existing code passed all 110 tests in `test/gh77-standup-triage.sh`. However, I discovered a latent crash bug in `collect.sh` for lens 8: the `releases-check` probe ran `subprocess.run` without `capture_output=True`, meaning any output from `releases_app.py check` would leak into standard output and corrupt the JSON response. I added `capture_output=True` to the `subprocess.run` call to ensure the collector's output remains well-formed JSON under all conditions.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — Lens 8 fails open when a PARKED record cannot be read.** In the embedded Lens 8 Python, `glob.glob()` results are opened outside a `try` block. A `PermissionError`, `UnicodeDecodeError`, or other read failure from `open(path, "r", encoding="utf-8")` terminates Python without printing `D3`; the surrounding command substitution then assigns an empty value to `out8`, leaves `lens8_status="ok"`, and emits an invalid/empty `candidates` field. This violates the phase requirement that an unavailable bounded read degrades loudly with D3 and the collector invariant that every input emits parseable JSON. Catch PARKED enumeration/open/decode failures at the Lens 8 boundary and print D3 (then add a fixture/assertion that exercises the failure path).
+
+I swept the whole collector, the complete standup triage test, and all Lens 1/6/8 fixture records. No other pre-existing defect surfaced in those reviewed files.
+
+handing off to agy — agy, take your turn.
