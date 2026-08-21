@@ -2,6 +2,71 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.2.0] - 2026-08-20
+
+### Changed
+- **GH-111: manifest FREEZE is retired; tasks and marathons are DIALED IN to exactly one release,
+  as a database state.** `manifest_items.state` becomes `dialed_in|shipped|cut` (migration 004,
+  a table rebuild — SQLite cannot alter a CHECK in place), with exclusivity enforced by a UNIQUE
+  index over ACTIVE membership only (`WHERE state='dialed_in'`). That predicate is what makes the
+  constraint safe: a task cut from one release is free to be dialed into another, and ordinary
+  release history never trips it. The former `shared-manifest-issue` WARNING is reversed into a
+  `dialed-in-elsewhere` REFUSAL that names the holding release and the two-command handoff, so a
+  handoff is recorded instead of leaving the task quietly on both ledgers.
+- **`itemsTotal` now counts committed work only** — `dialed_in + shipped`, cut excluded. The old
+  count included cut rows, contradicting this ledger's own prose that a cut *"reduced the manifest
+  from 5 to 4 entries."*
+- **RELEASES.md's preamble rule is rewritten** for the dialed-in model, and the three active/draft
+  blocks converted. Shipped blocks keep their `Manifest: FROZEN …` lines VERBATIM — they are the
+  record of how those releases were actually run. GH-308's "frozen Bash twins" prose is a homonym
+  and is untouched.
+- **The intake scaffold takes `rating:` instead of `complexity`/`risk`/`effort`** (GH-108).
+
+### Added
+- **GH-111: `releases migrate`** — the live-ledger upgrade path, which did not exist:
+  `apply_migrations()` ran from `releases init` only, so an existing database silently stayed at
+  whatever version it was created with. It runs under a new `perform_migration()` — `perform_write()`'s
+  durability contract with the foreign-key pragma bracketed OUTSIDE `BEGIN`, because SQLite ignores
+  a `PRAGMA foreign_keys` change inside an open transaction and a table-rebuild migration therefore
+  has no executable path through the ordinary writer. `PRAGMA foreign_key_check` gates the commit;
+  on failure the journal is left in place so `check` treats it as an interrupted write.
+- **An ordered migration REGISTRY** replaces the hardcoded if-chain. Apply and rebuild stamp exactly
+  the versions the registry defines — never a hardcoded range — so a deliberate gap is safe: a build
+  carrying 004 but not 003 stamps `{1,2,4}` and correctly does not claim 3.
+- **GH-111: baselines.** `releases.baseline_count` + `baseline_at` + `baseline_source` record what a
+  release was committed to at kickoff, captured automatically on `draft -> active` **only when the
+  manifest is non-empty** — releases here are created first and dialed in afterwards, so a naive
+  snapshot-on-activate would hand most of them a 0 and report every real commitment as scope growth.
+  Write-once and all-NULL-or-all-populated are enforced by trigger. `releases baseline` fills the
+  activate-first case. Progress is measured against the live manifest, growth against the baseline;
+  a release with no baseline shows progress alone, never a placeholder zero.
+- **GH-110: `manifest ship --evidence`** — `shipped` was a state the schema allowed and no code path
+  ever wrote, so mid-release progress was structurally unreportable. Daybreak now reports #79-81 done.
+- **GH-109 closed: marathon grouping follows `manifest_items.marathon_id` and nothing else.** The
+  exporter used to wrap EVERY manifest card whenever a release had a marathon at all, asserting a
+  membership the data never claimed; it stayed latent until a non-marathon item joined a marathon
+  release. New `manifest marathon` links an existing member, because inferring membership in the
+  migration would re-encode exactly that defect.
+- **GH-108: the canonical task rating system.** Four axes 1-100 authored as `rated N/N/N/N` (+ optional
+  ` ovr N`) on a ROADMAP entry; **higher is better on every axis**, effort included — it scores
+  cheapness, so the four combine without sign-flipping. `calc` is the equal-weighted sum (4-400),
+  DERIVED at read time and never stored; `ovr` replaces it for ranking while the axes keep their
+  honest values underneath. Migration 003 adds five nullable `rating_*` columns (prefixed — the bare
+  `effort` name belongs to the legacy vocabulary). A malformed `rated`/`ovr` token is refused by
+  name, never read as unrated.
+- **GH-108: the leaderboard.** `bash utils/leaderboard.sh` renders `LEADERBOARD.md`;
+  `export_timeline.py --leaderboard` bakes `LEADERBOARD.html` from the SAME template as the timeline
+  via a `view` field in the payload. One scorer: both consume the exporter's `effectiveScore` rather
+  than re-deriving it. Both cross-link from the page's `.top` row — never `#fbar`, which collapses
+  with the header caret. The GH-106 post-write hook refreshes all three artifacts.
+- **`export_timeline.py --json`** — the payload on stdout, with a `ratedTasks` array carrying every
+  rated task once. Ranking off the release cards alone would silently omit every rated task still in
+  the queue, which is most of the candidates for "what goes to the front of the line".
+- **New suite `test/gh103-timeline-exporter.sh` (37/0)** — the exporter had no suite at all, which is
+  how #109 survived. Registered in the releases subsystem. `test/gh32-releases-app.sh` 99 -> 138
+  (registry-gap control through BOTH entry points, failure injection across two pending migrations,
+  the baseline lifecycle, cut->redial->cut, the extended dump round trip); `test/gh69-roadmap-shadow.sh`
+  24 -> 51 (the full grammar refusal contract).
 ## [1.1.9] - 2026-08-20
 
 ### Added

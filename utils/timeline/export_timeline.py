@@ -34,6 +34,46 @@ GH_URL_RE = re.compile(r"https://github\.com/([^/]+/[^/]+)/issues/(\d+)")
 # roadmap_items.status_marker emoji -> viewer marker keys (wip|done|paused|queued)
 MARKER_BY_EMOJI = {"✅": "done", "🚧": "wip", "⏸": "paused", "‖": "paused"}
 
+# GH-108. The DB columns are physically prefixed (`rating_effort`, because the legacy cx/risk/eff
+# vocabulary already owns the bare `effort` name); the prefix is translated away here and never
+# appears in data.json or the viewer. `calc` is DERIVED — the equal-weighted sum of the four axes,
+# range 4-400 — and `effectiveScore` applies the override-wins-over-calc rule once, here, so no
+# consumer (viewer, leaderboard, /radar) ever reimplements the precedence.
+RATING_AXES = ("pri", "sev", "appeal", "effort")
+RATING_COLUMNS = tuple("rating_" + a for a in RATING_AXES)
+HOT_SEV = 80        # one constant, not a threshold system: severity this high renders red
+
+
+def table_columns(cx, table):
+    return {r[1] for r in cx.execute(f"PRAGMA table_info({table})")}
+
+
+def derive_metrics(row):
+    """The four axes + derived calc + effectiveScore, or None for an unrated item."""
+    values = [row.get(c) for c in RATING_COLUMNS]
+    if any(v is None for v in values):
+        return None
+    metrics = dict(zip(RATING_AXES, values))
+    metrics["calc"] = sum(values)
+    override = row.get("rating_ovr")
+    metrics["effectiveScore"] = override if override is not None else metrics["calc"]
+    return metrics
+
+
+def apply_rating(card, road):
+    """Attach a rated task's scores to a card. An unrated card gets NO metrics key at all —
+    the viewer then renders it exactly as today, with no placeholder and no '0/400' noise."""
+    metrics = road.get("metrics") if road else None
+    if not metrics:
+        return card
+    card["metrics"] = metrics
+    if metrics["sev"] >= HOT_SEV:
+        card["metricFlags"] = {"sev": "hot"}
+    if road.get("rating_ovr") is not None:
+        card["override"] = {"value": road["rating_ovr"],
+                            "hot": road["rating_ovr"] > metrics["calc"]}
+    return card
+
 
 def humanize_days(n):
     if n == 0:
@@ -56,30 +96,46 @@ def repo_url_from_refs(rows):
 
 
 def load_roadmap_index(cx):
-    """roadmap_items keyed by gh_number: enrichment for manifest cards."""
+    """roadmap_items keyed by gh_number: enrichment for manifest AND detour cards."""
+    have = table_columns(cx, "roadmap_items")
+    rated = "rating_pri" in have          # a ledger that predates migration 003 simply has none
+    extra = ", " + ", ".join(RATING_COLUMNS + ("rating_ovr",)) if rated else ""
     idx = {}
-    for gh, title, marker, section, doc_path, issue_url in cx.execute(
-        "SELECT gh_number, title, status_marker, section, doc_path, issue_url "
-        "FROM roadmap_items WHERE gh_number IS NOT NULL"
+    for row in cx.execute(
+        "SELECT gh_number, title, status_marker, section, doc_path, issue_url" + extra +
+        " FROM roadmap_items WHERE gh_number IS NOT NULL"
     ):
-        idx[gh] = {
+        gh, title, marker, section, doc_path, issue_url = row[:6]
+        entry = {
             "title": re.sub(r"^GH-\d+\s*·\s*", "", title),
             "marker": MARKER_BY_EMOJI.get((marker or "").strip()),
             "section": section,
             "doc_path": doc_path,
             "issue_url": issue_url,
+            "rating_ovr": row[10] if rated else None,
         }
+        if rated:
+            entry.update(dict(zip(RATING_COLUMNS, row[6:10])))
+        entry["metrics"] = derive_metrics(entry) if rated else None
+        idx[gh] = entry
     return idx
 
 
 def manifest_cards(cx, release_id, roadmap_idx, today):
+    """Manifest members as viewer cards, each tagged with the marathon it actually belongs to.
+
+    GH-109: membership is now a fact the row carries (`manifest_items.marathon_id`), not an
+    inference. `dialed_in` takes the branch `open` had — queued or wip depending on roadmap
+    enrichment — and `shipped` renders the done marker the card renderer has always handled and
+    simply never received, because no code path wrote that state until GH-110.
+    """
+    has_marathon = "marathon_id" in table_columns(cx, "manifest_items")
+    select = ("SELECT mi.state, ir.url, ir.temp_id, "
+              + ("mi.marathon_id" if has_marathon else "NULL") +
+              " FROM manifest_items mi JOIN issue_refs ir ON ir.id = mi.issue_ref_id "
+              "WHERE mi.release_id = ? ORDER BY mi.id")
     cards = []
-    for state, url, temp_id in cx.execute(
-        "SELECT mi.state, ir.url, ir.temp_id FROM manifest_items mi "
-        "JOIN issue_refs ir ON ir.id = mi.issue_ref_id "
-        "WHERE mi.release_id = ? ORDER BY mi.id",
-        (release_id,),
-    ):
+    for state, url, temp_id, marathon_id in cx.execute(select, (release_id,)):
         gh = int(m.group(2)) if url and (m := GH_URL_RE.match(url)) else None
         road = roadmap_idx.get(gh, {})
         if state == "shipped":
@@ -95,7 +151,7 @@ def manifest_cards(cx, release_id, roadmap_idx, today):
             links["issue"] = url
         if road.get("doc_path"):
             links["doc"] = road["doc_path"]
-        cards.append(
+        cards.append(apply_rating(
             {
                 "id": f"GH-{gh}" if gh else (temp_id or "?"),
                 "title": road.get("title") or f"issue GH-{gh}" if gh else (temp_id or "untracked item"),
@@ -103,8 +159,9 @@ def manifest_cards(cx, release_id, roadmap_idx, today):
                 "section": section,
                 "sectionLabel": label,
                 "links": links or None,
-            }
-        )
+                "_marathon_id": marathon_id,
+                "_state": state,
+            }, road))
     return cards
 
 
@@ -117,10 +174,14 @@ def release_columns(cx, repo_url, roadmap_idx, today):
         )
     }
     columns, n_open_releases, n_overdue = [], 0, 0
+    has_baseline = "baseline_count" in table_columns(cx, "releases")
+    baseline_cols = ("r.baseline_count, r.baseline_at, r.baseline_source"
+                     if has_baseline else "NULL, NULL, NULL")
     rows = cx.execute(
         "SELECT r.id, r.version, r.codename, r.status, r.target_date, r.shipped_date, "
-        "       r.description, r.exit_criterion, r.milestone, r.marathon_id, ir.url "
-        "FROM releases r JOIN issue_refs ir ON ir.id = r.tracking_ref_id"
+        "       r.description, r.exit_criterion, r.milestone, r.marathon_id, ir.url, "
+        + baseline_cols +
+        " FROM releases r JOIN issue_refs ir ON ir.id = r.tracking_ref_id"
     ).fetchall()
     # Rail order: shipped/cut history on the far left (by ship date), then the
     # open releases by target date. The viewer auto-scrolls to the active node,
@@ -131,10 +192,15 @@ def release_columns(cx, repo_url, roadmap_idx, today):
             r[1],
         )
     )
-    for (rid, version, codename, status, target, shipped, descr, exit_c, milestone, mar_id, ref_url) in rows:
+    for (rid, version, codename, status, target, shipped, descr, exit_c, milestone, mar_id,
+         ref_url, base_count, base_at, base_source) in rows:
         db_status = status
         cards = manifest_cards(cx, rid, roadmap_idx, today)
-        n_total = len(cards)
+        # GH-111 denominator: COMMITTED work only — dialed_in + shipped, cut excluded. The old
+        # count included cut rows, which contradicted the ledger's own prose that a cut "reduced
+        # the manifest from 5 to 4 entries". Cut items still render (as deferred); they just stop
+        # inflating the total, or "N of M" is not a commitment figure.
+        n_total = sum(1 for c in cards if c["_state"] != "cut")
         n_open = sum(1 for c in cards if c["section"] in ("queue", "wip"))
 
         flags, extra = {}, None
@@ -169,19 +235,37 @@ def release_columns(cx, repo_url, roadmap_idx, today):
         exit_text = (f"Exit: {exit_c}" if exit_c else plain[:280] + ("…" if len(plain) > 280 else "")).replace("**", "")
         milestone_ref = milestone if milestone and len(milestone) <= 24 else "milestones"
 
+        # GH-109: group ONLY the items whose row names this marathon. The old code wrapped EVERY
+        # manifest card whenever the release had a marathon at all — the viewer then asserted a
+        # membership the data never claimed, latent until a non-marathon item joined a marathon
+        # release. Non-members render as siblings beside the box, in manifest order.
         roadmap = cards
-        if mar_id in marathons and cards:
-            m = marathons[mar_id]
-            gh = GH_URL_RE.match(m["gh"] or "")
-            roadmap = [{
-                "type": "marathon",
-                "id": f"GH-{gh.group(2)}" if gh else "marathon",
-                "url": m["gh"],
-                "title": f"{codename} marathon",
-                "meta": m["status"],
-                "state": "done" if m["status"] == "done" else "run",
-                "cards": cards,
-            }]
+        if mar_id in marathons:
+            members = [c for c in cards if c["_marathon_id"] == mar_id]
+            if members:
+                m = marathons[mar_id]
+                gh = GH_URL_RE.match(m["gh"] or "")
+                group = {
+                    "type": "marathon",
+                    "id": f"GH-{gh.group(2)}" if gh else "marathon",
+                    "url": m["gh"],
+                    "title": f"{codename} marathon",
+                    "meta": m["status"],
+                    "state": "done" if m["status"] == "done" else "run",
+                    "cards": members,
+                }
+                roadmap = [group] + [c for c in cards if c["_marathon_id"] != mar_id]
+        for card in cards:
+            del card["_marathon_id"]
+            del card["_state"]
+
+        # Two numbers, not one: progress against what was committed at kickoff, and how much the
+        # commitment itself grew. A release with no baseline shows progress alone — no growth
+        # figure and no placeholder zero, because a zero would read as "no scope creep".
+        baseline = None
+        if base_count is not None:
+            baseline = {"count": base_count, "at": base_at, "source": base_source,
+                        "growth": n_total - base_count}
 
         columns.append(
             {
@@ -197,6 +281,7 @@ def release_columns(cx, repo_url, roadmap_idx, today):
                 "extra": extra,
                 "itemsTotal": n_total,
                 "itemsOpen": n_open,
+                "baseline": baseline,
                 "milestoneUrl": f"{repo_url}/milestones" if repo_url else "#",
                 "milestoneRef": milestone_ref,
                 "blurb": blurb,
@@ -236,10 +321,17 @@ def strip_entries(columns, today):
     return jf, wn
 
 
-def roadmap_detours(path, manifest_ghs):
+def roadmap_detours(path, manifest_ghs, roadmap_idx=None):
     """ROADMAP.md '### In progress' entries not in any release manifest -> ad-hoc
     detour cards for the ACTIVE release column (work in flight during its window
-    that isn't part of its goalpost — the timeline's ad-hoc lane, merges down)."""
+    that isn't part of its goalpost — the timeline's ad-hoc lane, merges down).
+
+    This function reparses the markdown rather than reading the ledger, so it must be handed the
+    GH-keyed roadmap index too: an in-progress RATED task on no manifest is exactly the kind of
+    thing an operator scores highly, and it would otherwise render scoreless — the leaderboard
+    would then silently omit the very work in flight.
+    """
+    roadmap_idx = roadmap_idx or {}
     if not path.is_file():
         return []
     cards, section = [], None
@@ -254,7 +346,7 @@ def roadmap_detours(path, manifest_ghs):
         if gh in manifest_ghs:
             continue
         url = re.search(r"https://github\.com/[^\s)]+/issues/\d+", line)
-        cards.append(
+        cards.append(apply_rating(
             {
                 "id": f"GH-{gh}",
                 "title": m.group(2),
@@ -262,8 +354,7 @@ def roadmap_detours(path, manifest_ghs):
                 "section": "adhoc",
                 "sectionLabel": "ad-hoc detour",
                 "links": {"issue": url.group(0)} if url else None,
-            }
-        )
+            }, roadmap_idx.get(gh, {})))
     return cards
 
 
@@ -363,7 +454,8 @@ def build_payload(cx, today, md_path=None):
             )
             if (m := GH_URL_RE.match(url))
         }
-        active["detours"] = roadmap_detours(md_path.parent / "ROADMAP.md", manifest_ghs)
+        active["detours"] = roadmap_detours(md_path.parent / "ROADMAP.md", manifest_ghs,
+                                            roadmap_idx)
 
     (receipts,) = cx.execute("SELECT COUNT(*) FROM op_receipts").fetchone()
     (last_op,) = cx.execute(  # `at` is free-form in old rows; only trust date-shaped values
@@ -371,6 +463,36 @@ def build_payload(cx, today, md_path=None):
     ).fetchone()
     (schema_v,) = cx.execute("SELECT MAX(version) FROM schema_migrations").fetchone()
     last_ago = days_since(last_op, today) if last_op else None
+
+    # ── the complete ranking set ────────────────────────────────────────────────────────────────
+    # The timeline only shows work that is ON a release (manifest members) or in flight beside one
+    # (detours). A rated task sitting in the QUEUE appears nowhere — and a high-scoring queued task
+    # is exactly what "what should go to the front of the line" is asking about, so ranking off the
+    # cards alone would answer the question by hiding most of the candidates. ratedTasks is
+    # therefore every rated roadmap row, once, annotated with where it currently sits.
+    placement = {}
+    for c in columns:
+        for item in c["detours"] + c["roadmap"]:
+            group = item.get("type") == "marathon"
+            for card in (item["cards"] if group else [item]):
+                placement[card["id"]] = (c["name"],
+                                         "marathon" if group else card["sectionLabel"])
+    rated_tasks = []
+    for gh, road in roadmap_idx.items():
+        metrics = road.get("metrics")
+        if not metrics:
+            continue
+        cid = f"GH-{gh}"
+        release, lane = placement.get(cid, (None, road.get("section") or "roadmap"))
+        entry = {"id": cid, "title": road["title"], "release": release, "lane": lane,
+                 "metrics": metrics,
+                 "links": {"issue": road["issue_url"]} if road.get("issue_url") else None}
+        if road.get("rating_ovr") is not None:
+            entry["override"] = {"value": road["rating_ovr"],
+                                 "hot": road["rating_ovr"] > metrics["calc"]}
+        rated_tasks.append(entry)
+    # ties break on id, so the ranking is deterministic rather than dict-iteration order
+    rated_tasks.sort(key=lambda r: (-r["metrics"]["effectiveScore"], r["id"]))
 
     for c in columns:
         del c["_raw"]
@@ -393,6 +515,8 @@ def build_payload(cx, today, md_path=None):
             "releasesTotal": len(columns),
             "releasesOverdue": n_overdue,
         },
+        # every rated task in the ledger, ranked — the leaderboard's single input
+        "ratedTasks": rated_tasks,
         "justFinished": jf,
         "whatsNext": wn,
         "releases": columns,
@@ -449,6 +573,9 @@ def main(argv=None):
     ap.add_argument("--md", type=Path, help="RELEASES.md for drift check (default: next to --db)")
     ap.add_argument("--template", default=HERE / "RELEASES.html", type=Path)
     ap.add_argument("--out", default=Path("temp/timeline"), type=Path)
+    ap.add_argument("--json", action="store_true",
+                    help="print the payload (same single-object shape as data.json) to stdout; "
+                         "no files written — the input the leaderboard and /radar consume")
     ap.add_argument("--check-drift", action="store_true",
                     help="no files written: exit 1 listing RELEASES.md-vs-DB drift, exit 0 when aligned")
     ap.add_argument("--serve", type=int, metavar="PORT", default=None,
@@ -456,6 +583,9 @@ def main(argv=None):
     ap.add_argument("--preview", nargs="?", const=Path("RELEASES-PREVIEW.html"), default=None,
                     type=Path, metavar="PATH",
                     help="bake current DB state into one self-contained HTML (default: ./RELEASES-PREVIEW.html)")
+    ap.add_argument("--leaderboard", nargs="?", const=Path("LEADERBOARD.html"), default=None,
+                    type=Path, metavar="PATH",
+                    help="bake the ranked view from the SAME template (default: ./LEADERBOARD.html)")
     args = ap.parse_args(argv)
 
     if not args.db.is_file():
@@ -471,12 +601,26 @@ def main(argv=None):
     finally:
         cx.close()
 
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False))
+        return
+
     if args.check_drift:
         sync = payload.get("sync")
         if sync:
             print(f"DRIFT ({sync['rowsDiffer']}): {sync['message']}")
             sys.exit(1)
         print("releases.db and RELEASES.md agree (releases present on both sides, shipped-status aligned)")
+        return
+
+    if args.leaderboard:
+        # ONE template, TWO baked artifacts. The only difference is the payload's `view` field —
+        # no second copy of the design system, no second baker, one data contract, and both
+        # files stay standalone and openable from a plain git checkout with no server.
+        args.leaderboard.write_text(
+            bake_static(args.template.read_text(), dict(payload, view="leaderboard")))
+        print(f"wrote {args.leaderboard} "
+              f"({len(payload['ratedTasks'])} rated task(s), self-contained)")
         return
 
     if args.preview:

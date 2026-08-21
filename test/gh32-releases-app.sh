@@ -91,7 +91,7 @@ if [ $RC -ne 0 ] && has "$OUT" "CHECK constraint failed"; then ok "schema refuse
 OUT="$(sqlite3 "$R/releases.db" "INSERT INTO releases(global_id, repo_id, version, status, description, tracking_ref_id) SELECT 'rel-01IIIIIIIIIIIIIIIIIIIIIIII', id, '9.9.8', 'draft', 'x', (SELECT id FROM issue_refs LIMIT 1) FROM repos LIMIT 1" 2>&1)"; RC=$?
 if [ $RC -ne 0 ] && has "$OUT" "CHECK constraint failed"; then ok "schema refuses a wrong-alphabet global_id (Crockford excludes I/L/O/U)" 0; else ok "schema refuses a wrong-alphabet global_id" 1; fi
 sqlite3 "$R/releases.db" "INSERT INTO releases(global_id, repo_id, version, status, description, tracking_ref_id) SELECT 'rel-01ARZ3NDEKTSV4RRFFQ69G5FAV', id, '9.9.7', 'draft', 'x', (SELECT id FROM issue_refs LIMIT 1) FROM repos LIMIT 1" 2>/dev/null
-sqlite3 "$R/releases.db" "INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state) SELECT 'mfi-01ARZ3NDEKTSV4RRFFQ69G5FAV', id, (SELECT id FROM issue_refs LIMIT 1), 'open' FROM releases LIMIT 1" 2>/dev/null
+sqlite3 "$R/releases.db" "INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state) SELECT 'mfi-01ARZ3NDEKTSV4RRFFQ69G5FAV', id, (SELECT id FROM issue_refs LIMIT 1), 'dialed_in' FROM releases LIMIT 1" 2>/dev/null
 sqlite3 "$R/releases.db" "INSERT INTO manifest_state_events(item_id, from_state, to_state, at, reason) VALUES((SELECT id FROM manifest_items LIMIT 1), 'open', 'cut', '2026-01-01T00:00:00Z', 'direct seed')" 2>/dev/null
 OUT="$(sqlite3 "$R/releases.db" "UPDATE manifest_state_events SET reason='y'" 2>&1)"; RC=$?
 if [ $RC -ne 0 ] && has "$OUT" "append-only"; then ok "manifest_state_events is append-only (UPDATE refused by trigger)" 0; else ok "manifest_state_events append-only" 1; fi
@@ -107,7 +107,10 @@ R="$(mkrepo b)"
 rout init --slug xyz-forge
 LEDGER_HASH="$(md5 -q "$REAL_LEDGER")"
 V="$(rlog import "$REAL_LEDGER")"; if has "$V" "imported 9 block(s)"; then ok "import brings in all 9 blocks of the real ledger (9th = Cargo 0.9.0, cut 2026-08-20)" 0; else ok "import 9 blocks" 1; fi
-N="$(sql "SELECT COUNT(*) FROM doc_lines")"; ok "the 86-line preamble lands verbatim in doc_lines (release-less document content)" "$(is "$N" "86"; echo $?)"
+# The count tracks the REAL ledger's preamble and moves when the preamble is edited (86 -> 100 on
+# 2026-08-20, when GH-111 replaced the freeze rule with the dialed-in one). The assertion is that
+# EVERY release-less line lands verbatim, not that the number is 86.
+N="$(sql "SELECT COUNT(*) FROM doc_lines")"; ok "the 100-line preamble lands verbatim in doc_lines (release-less document content)" "$(is "$N" "100"; echo $?)"
 N="$(sql "SELECT COUNT(*) FROM doc_lines WHERE content = '# Major Releases'")"; ok "doc_lines hold the verbatim first line" "$(is "$N" "1"; echo $?)"
 N="$(sql 'SELECT COUNT(*) FROM grandfather_entries WHERE disposition IS NULL')"; if [ "$N" -gt 0 ] 2>/dev/null; then ok "every tolerated violation is recorded in grandfather_entries (import is not a silent fill)" 0; else ok "grandfather entries exist" 1; fi
 N="$(sql "SELECT COUNT(*) FROM issue_refs WHERE temp_id GLOB 'MIG-*'")"; ok "all 9 imported blocks got import-only MIG- placeholder refs (importer is uniform; GH_URL lines land in legacy_lines)" "$(is "$N" "9"; echo $?)"
@@ -184,15 +187,25 @@ rout add --version 2.0.0 --status draft --description "Two." --tracking-issue "h
 E1="$(sql "SELECT global_id FROM releases WHERE version = '1.0.0'")"
 E2="$(sql "SELECT global_id FROM releases WHERE version = '2.0.0'")"
 rout manifest add --gid "$E1" "https://github.com/A/B/issues/30"
+# GH-111 REVERSES the pre-2026-08-20 "handoff precedent", under which one issue could sit on
+# several releases at once and `add` merely WARNED (rule=shared-manifest-issue). A task is now
+# dialed into exactly ONE release at a time. Handoffs are still first-class — they are expressed
+# as cut-then-dial-in, which RECORDS the move instead of leaving the task on two ledgers silently.
+V="$(rlog manifest add --gid "$E2" "https://github.com/A/B/issues/30")"
+N="$(sql "SELECT COUNT(*) FROM manifest_items mi JOIN issue_refs t ON t.id = mi.issue_ref_id WHERE t.url LIKE '%/30' AND mi.state='dialed_in'")"
+if has "$V" "rule=dialed-in-elsewhere" && [ "$N" = "1" ]; then ok "a task dialed into a second release is REFUSED, naming the holder (GH-111 exclusivity)" 0; else ok "exclusivity refusal" 1; fi
+rout manifest cut --gid "$E1" "https://github.com/A/B/issues/30" --reason "handed off to $E2"
 V="$(rlog manifest add --gid "$E2" "https://github.com/A/B/issues/30")"
 N="$(sql "SELECT COUNT(*) FROM manifest_items mi JOIN issue_refs t ON t.id = mi.issue_ref_id WHERE t.url LIKE '%/30'")"
-if has "$V" "warn: rule=shared-manifest-issue" && [ "$N" = "2" ]; then ok "the same issue in a second non-cut release WARNS, never refuses (handoff precedent)" 0; else ok "shared issue warn" 1; fi
-rout manifest cut --gid "$E1" "https://github.com/A/B/issues/30" --reason "descoped at freeze"
-ST="$(sql "SELECT mi.state FROM manifest_items mi JOIN releases r ON r.id = mi.release_id WHERE r.global_id = '$E1'")"
-EV="$(sql 'SELECT reason FROM manifest_state_events')"
+if has "$V" "dialed into" && [ "$N" = "2" ]; then ok "cut-then-dial-in re-homes a task to another release, leaving BOTH rows as history" 0; else ok "handoff via cut+dial-in" 1; fi
+rout manifest cut --gid "$E2" "https://github.com/A/B/issues/30" --reason "descoped at freeze"
+ST="$(sql "SELECT mi.state FROM manifest_items mi JOIN releases r ON r.id = mi.release_id WHERE r.global_id = '$E2'")"
+EV="$(sql 'SELECT reason FROM manifest_state_events ORDER BY id DESC LIMIT 1')"
 if [ "$ST" = "cut" ] && [ "$EV" = "descoped at freeze" ]; then ok "cut with a reason flips state AND appends the event in one transaction" 0; else ok "cut+event" 1; fi
-V="$(rlog manifest cut --gid "$E1" "https://github.com/A/B/issues/30" --reason "again")"; if has "$V" "rule=transition"; then ok "cut is terminal: a second cut is refused with the transition rule" 0; else ok "cut terminal" 1; fi
-sqlite3 "$R/releases.db" "UPDATE manifest_items SET state='open' WHERE state='cut'" 2>/dev/null
+V="$(rlog manifest cut --gid "$E2" "https://github.com/A/B/issues/30" --reason "again")"; if has "$V" "rule=transition"; then ok "cut is terminal for that row: a second cut is refused with the transition rule" 0; else ok "cut terminal" 1; fi
+# Exactly ONE row: both cut rows share an issue_ref_id, so flipping both would trip GH-111's
+# active-exclusivity index and the direct write would never land — the bypass this asserts.
+sqlite3 "$R/releases.db" "UPDATE manifest_items SET state='dialed_in' WHERE id = (SELECT id FROM manifest_items WHERE state='cut' ORDER BY id LIMIT 1)" 2>/dev/null
 refresh_dump
 V="$(rlog check)"; if has "$V" "FAIL: rule=receipt-chain"; then ok "a direct writer flipping item state WITHOUT an event is caught by the digest chain" 0; else ok "coupling detected" 1; fi
 
@@ -398,6 +411,257 @@ if has "$(rlog show --gid "$G" --full)" "word word word" && ! has "$(rlog show -
 DB_HASH="$(md5 -q "$R/releases.db")"
 rout show --gid "$G" >/dev/null; rout next >/dev/null
 if [ "$(md5 -q "$R/releases.db")" = "$DB_HASH" ] && [ ! -f "$R/.git/releases-app-journal.json" ]; then ok "the readers take no lock and mutate nothing (DB byte-identical, no journal)" 0; else ok "readers are read-only" 1; fi
+
+# ── N. GH-111 + GH-108: the migrate verb, the registry, baselines, extended dump grammar ────────
+# The migration REGISTRY is the truth: apply and rebuild stamp exactly the versions it defines,
+# never a hard-coded range. That is what makes a deliberate GAP safe — GH-111 owns 004 and GH-108
+# owns 003, and whichever lands first must not claim the other's number.
+echo "-- N: releases migrate, migration registry, baseline capture, extended dump grammar"
+
+# the registry's versions, read from the code under test rather than restated here
+REGISTRY="$(python3 - "$APP" <<'PYEOF'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("releases_app", sys.argv[1])
+ra = importlib.util.module_from_spec(spec); spec.loader.exec_module(ra)
+print(",".join(str(v) for v in ra.registry_versions()))
+PYEOF
+)"
+ledger(){ sql "SELECT group_concat(version, ',') FROM (SELECT version FROM schema_migrations ORDER BY version)"; }
+
+# A genuinely pre-004 ledger: the registry is restricted to {1,2} while it is built, so its
+# manifest rows carry the OLD `open` vocabulary and its schema predates every GH-111 column.
+# Seeded through perform_write, so the receipt chain is honest and `check` can be asserted on it.
+build_v2(){
+  python3 - "$1" "$APP" <<'PYEOF' >/dev/null
+import importlib.util, sys, os, argparse
+root, app = sys.argv[1], sys.argv[2]
+spec = importlib.util.spec_from_file_location("releases_app", app)
+ra = importlib.util.module_from_spec(spec); spec.loader.exec_module(ra)
+ra.MIGRATIONS = {k: v for k, v in ra.MIGRATIONS.items() if k in (1, 2)}
+ra.cmd_init(argparse.Namespace(root=root, slug="nu"))
+conn = ra.connect(os.path.join(root, "releases.db"))
+def seed(c):
+    repo_id = c.execute("SELECT id FROM repos LIMIT 1").fetchone()["id"]
+    tref = ra.issue_ref_for_token(c, "https://github.com/A/B/issues/1")
+    c.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status, description,
+                 tracking_ref_id) VALUES (?,?,?,?,?,?,?)""",
+              (ra.new_gid("rel-"), repo_id, "1.0.0", "Nu", "active", "Seed release.", tref["id"]))
+    rel_id = c.execute("SELECT id FROM releases WHERE version='1.0.0'").fetchone()["id"]
+    for n in (11, 12, 13):
+        ref = ra.issue_ref_for_token(c, "https://github.com/A/B/issues/%d" % n)
+        c.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state)
+                     VALUES (?,?,?,'open')""", (ra.new_gid("mfi-"), rel_id, ref["id"]))
+    item = c.execute("SELECT id FROM manifest_items ORDER BY id LIMIT 1").fetchone()["id"]
+    c.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at, reason)
+                 VALUES (?,'open','open',?,'seed event')""", (item, ra.now_iso()))
+ra.perform_write(root, conn, "seed", None, seed)
+conn.close()
+PYEOF
+}
+
+R="$(mkrepo n)"; build_v2 "$R"
+ok "the v2 fixture starts at ledger {1,2} — pre-004 by construction, not by assumption" "$(is "$(ledger)" "1,2"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM manifest_items WHERE state = 'open'")"
+ok "its manifest rows carry the pre-GH-111 'open' vocabulary" "$(is "$N" "3"; echo $?)"
+
+# THE CONTROL: 004 applied with 003 absent from the registry. A hard-coded "stamp 001->004" would
+# claim v3 here while roadmap_items had none of 003's columns — the false-v3 defect this rule exists
+# to prevent.
+python3 - "$R" "$APP" <<'PYEOF' >/dev/null
+import importlib.util, sys, os
+root, app = sys.argv[1], sys.argv[2]
+spec = importlib.util.spec_from_file_location("releases_app", app)
+ra = importlib.util.module_from_spec(spec); spec.loader.exec_module(ra)
+ra.MIGRATIONS = {k: v for k, v in ra.MIGRATIONS.items() if k in (1, 2, 4)}
+conn = ra.connect(os.path.join(root, "releases.db"))
+ra.perform_migration(root, conn)
+conn.close()
+PYEOF
+ok "GH-111-first: a registry without 003 stamps {1,2,4} and never claims 3" "$(is "$(ledger)" "1,2,4"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM pragma_table_info('roadmap_items') WHERE name LIKE 'rating_%'")"
+ok "and the gap is REAL — roadmap_items has none of 003's rating columns" "$(is "$N" "0"; echo $?)"
+V="$(rlog check)"; if has "$V" "check: clean"; then ok "the migrated ledger checks clean (dump regenerated, digest chain intact)" 0; else ok "post-migrate check" 1; fi
+N="$(sql "SELECT COUNT(*) FROM manifest_items WHERE state = 'dialed_in'")"
+ok "every 'open' row became 'dialed_in' — a vocabulary rename, not a state change" "$(is "$N" "3"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM manifest_state_events WHERE from_state = 'open'")"
+ok "historical EVENTS still say 'open' — copied verbatim, never rewritten (no silent history edit)" "$(is "$N" "1"; echo $?)"
+BC="$(sql "SELECT baseline_count || '/' || baseline_source FROM releases WHERE version = '1.0.0'")"
+ok "an already-active release is backfilled to its current count, flagged 'backfilled' not 'observed'" "$(is "$BC" "3/backfilled"; echo $?)"
+
+# 003 lands on a database already at 004 — pending migrations apply in ascending order, gaps filled
+# whenever the missing one arrives.
+V="$(rlog migrate)"
+ok "003 applies cleanly ON TOP of 004; the ledger reaches the full registry" "$(is "$(ledger)" "$REGISTRY"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM pragma_table_info('roadmap_items') WHERE name LIKE 'rating_%'")"
+ok "and the rating columns now exist (5 of them)" "$(is "$N" "5"; echo $?)"
+GEN_BEFORE="$(sql "SELECT value FROM settings WHERE key='generation'")"
+V="$(rlog migrate)"
+GEN_AFTER="$(sql "SELECT value FROM settings WHERE key='generation'")"
+if has "$V" "nothing to migrate" && [ "$GEN_BEFORE" = "$GEN_AFTER" ]; then ok "migrate is idempotent: nothing pending is a clean no-op that does not bump the generation" 0; else ok "migrate idempotent" 1; fi
+
+# BOTH entry points reach the registry — they get there by different paths and only one of them
+# was ever specified.
+R="$(mkrepo n2)"; build_v2 "$R"
+rout check --rebuild
+ok "the OTHER entry point agrees: a rebuilt v2 dump reports the registry's versions, not {1,2}" "$(is "$(ledger)" "$REGISTRY"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM manifest_items WHERE state = 'dialed_in'")"
+ok "a pre-migration dump carrying state='open' still loads and maps to dialed_in" "$(is "$N" "3"; echo $?)"
+V="$(rlog check)"; if has "$V" "check: clean"; then ok "the rebuilt v2 ledger checks clean" 0; else ok "rebuilt v2 check" 1; fi
+
+# Failure injection. The transaction is all-or-nothing across BOTH pending migrations: if 003 could
+# commit mid-flight (the executescript() trap), it would survive a 004 failure while the journal,
+# generation and receipt all described an interrupted all-or-nothing migration.
+R="$(mkrepo n3)"; build_v2 "$R"
+DUMP_HASH="$(md5 -q "$R/releases.sql")"; GEN_BEFORE="$(sql "SELECT value FROM settings WHERE key='generation'")"
+FKOUT="$(python3 - "$R" "$APP" <<'PYEOF' 2>&1
+import importlib.util, sys, os
+root, app = sys.argv[1], sys.argv[2]
+spec = importlib.util.spec_from_file_location("releases_app", app)
+ra = importlib.util.module_from_spec(spec); spec.loader.exec_module(ra)
+real = ra._migration_004
+def boom(conn):
+    real(conn)
+    raise RuntimeError("injected failure inside migration 004")
+ra.MIGRATIONS[4] = {"apply": boom, "txn_safe": True}
+conn = ra.connect(os.path.join(root, "releases.db"))
+try:
+    ra.perform_migration(root, conn)
+    print("NO-RAISE")
+except RuntimeError:
+    print("raised")
+print("fk=%d" % conn.execute("PRAGMA foreign_keys").fetchone()[0])
+PYEOF
+)"
+if has "$FKOUT" "raised" && has "$FKOUT" "fk=1"; then ok "a failure mid-migration propagates and RESTORES foreign-key enforcement on the connection" 0; else ok "migration failure restores FK" 1; fi
+ok "neither pending migration survives: the ledger is still {1,2} (003 did NOT commit mid-flight)" "$(is "$(ledger)" "1,2"; echo $?)"
+N="$(sql "SELECT COUNT(*) FROM pragma_table_info('roadmap_items') WHERE name LIKE 'rating_%'")"
+N2="$(sql "SELECT COUNT(*) FROM pragma_table_info('releases') WHERE name = 'baseline_count'")"
+if [ "$N" = "0" ] && [ "$N2" = "0" ]; then ok "neither migration's SCHEMA survives either (all-or-nothing across both)" 0; else ok "no schema survives" 1; fi
+GEN_AFTER="$(sql "SELECT value FROM settings WHERE key='generation'")"
+if [ "$GEN_BEFORE" = "$GEN_AFTER" ] && [ "$(md5 -q "$R/releases.sql")" = "$DUMP_HASH" ]; then ok "no generation bump and no staged dump: the receipt/artifact protocol never reached its stamp" 0; else ok "no generation bump" 1; fi
+if [ -f "$R/.git/releases-app-journal.json" ]; then ok "the journal is LEFT IN PLACE — an interrupted migration stops the world, unlike a refused write" 0; else ok "journal left" 1; fi
+rout check
+V="$(rlog check)"; if has "$V" "check: clean" && [ ! -f "$R/.git/releases-app-journal.json" ]; then ok "plain check recovers the interrupted migration (pre-COMMIT: discarded) and clears the journal" 0; else ok "migration recovery" 1; fi
+rout migrate
+ok "after recovery the same migration succeeds and reaches the registry" "$(is "$(ledger)" "$REGISTRY"; echo $?)"
+
+# ── baselines: the kickoff denominator ──────────────────────────────────────────────────────────
+R="$(mkrepo n4)"
+rout init --slug nu4
+rout add --version 1.0.0 --status draft --description "Dial first." --tracking-issue "https://github.com/A/B/issues/1"
+B1="$(sql "SELECT global_id FROM releases WHERE version='1.0.0'")"
+rout manifest dial-in --gid "$B1" "https://github.com/A/B/issues/21" --reason "first"
+rout manifest dial-in --gid "$B1" "https://github.com/A/B/issues/22" --reason "second"
+rout update --gid "$B1" --status active
+BC="$(sql "SELECT baseline_count || '/' || baseline_source FROM releases WHERE global_id='$B1'")"
+ok "draft -> active with a NON-EMPTY manifest captures the baseline automatically, flagged observed" "$(is "$BC" "2/observed"; echo $?)"
+rout manifest dial-in --gid "$B1" "https://github.com/A/B/issues/23" --reason "scope growth"
+rout update --gid "$B1" --status draft
+rout update --gid "$B1" --status active
+BC="$(sql "SELECT baseline_count FROM releases WHERE global_id='$B1'")"
+ok "active -> draft -> active preserves the ORIGINAL snapshot silently (a legitimate round trip must not fail)" "$(is "$BC" "2"; echo $?)"
+V="$(rlog baseline --gid "$B1")"
+if has "$V" "rule=baseline-already-set"; then ok "the EXPLICIT verb refuses a second capture — write-once, because overwriting erases what it measures" 0; else ok "baseline write-once" 1; fi
+OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_count = 99 WHERE global_id='$B1'" 2>&1)"; RC=$?
+if [ $RC -ne 0 ] && has "$OUT" "write-once"; then ok "write-once is STRUCTURAL: a direct DB writer is refused by trigger, not merely detected" 0; else ok "write-once trigger" 1; fi
+# The shape guard is asserted on INSERT — the case that actually matters, a partial baseline
+# ENTERING the table. (An UPDATE that nulls baseline_at is now caught first by migration 005's
+# provenance write-once trigger below; both refusals are correct, so exercise each on its own case.)
+OUT="$(sqlite3 "$R/releases.db" "INSERT INTO releases(global_id, repo_id, version, status, description, tracking_ref_id, baseline_count) SELECT 'rel-01ARZ3NDEKTSV4RRFFQ69G5FAV', repo_id, '8.8.8', 'draft', 'partial baseline', tracking_ref_id, 5 FROM releases WHERE global_id='$B1'" 2>&1)"; RC=$?
+if [ $RC -ne 0 ] && has "$OUT" "all-NULL or all-populated"; then ok "a PARTIAL baseline is refused by trigger (count without provenance can never reach rendering)" 0; else ok "baseline shape trigger" 1; fi
+# Migration 005: the PROVENANCE is write-once too. 004 guarded the count alone, so a direct writer
+# could relabel a `backfilled` baseline as `observed` — a count whose source can be quietly
+# rewritten is worth less than no count (aider/qwen3.8-max QA r1).
+OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_source = 'observed' WHERE global_id='$B1' AND baseline_source = 'backfilled'" 2>&1)"; RC=$?
+if [ $RC -eq 0 ]; then OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_source = 'backfilled' WHERE global_id='$B1'" 2>&1)"; RC=$?; fi
+if [ $RC -ne 0 ] && has "$OUT" "write-once (baseline provenance)"; then ok "baseline PROVENANCE is write-once too — 'observed' cannot be quietly rewritten" 0; else ok "baseline provenance write-once" 1; fi
+OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_at = '2020-01-01T00:00:00Z' WHERE global_id='$B1'" 2>&1)"; RC=$?
+if [ $RC -ne 0 ] && has "$OUT" "write-once (baseline provenance)"; then ok "and so is baseline_at — the snapshot cannot be back-dated" 0; else ok "baseline_at write-once" 1; fi
+
+# the activate-first path: no draft->active transition to hook, so it lands baseline-less
+rout add --version 2.0.0 --status active --description "Activate first." --tracking-issue "https://github.com/A/B/issues/2"
+B2="$(sql "SELECT global_id FROM releases WHERE version='2.0.0'")"
+N="$(sql "SELECT COUNT(*) FROM releases WHERE global_id='$B2' AND baseline_count IS NULL")"
+ok "\`add --status active\` lands BASELINE-LESS (not a misleading zero) — there is no transition to hook" "$(is "$N" "1"; echo $?)"
+V="$(rlog baseline --gid "$B2")"
+if has "$V" "rule=baseline-empty-manifest"; then ok "capturing a baseline on an EMPTY manifest is refused — zero would report every later commitment as growth" 0; else ok "empty baseline refusal" 1; fi
+rout manifest dial-in --gid "$B2" "https://github.com/A/B/issues/24" --reason "late dial"
+rout baseline --gid "$B2"
+BC="$(sql "SELECT baseline_count || '/' || baseline_source FROM releases WHERE global_id='$B2'")"
+ok "the explicit verb fills the activate-first case afterwards (1/observed)" "$(is "$BC" "1/observed"; echo $?)"
+# a release activated with an empty manifest takes NO baseline rather than a zero
+rout add --version 3.0.0 --status draft --description "Empty at activation." --tracking-issue "https://github.com/A/B/issues/3"
+B3="$(sql "SELECT global_id FROM releases WHERE version='3.0.0'")"
+rout update --gid "$B3" --status active
+N="$(sql "SELECT COUNT(*) FROM releases WHERE global_id='$B3' AND baseline_count IS NULL")"
+ok "activating an EMPTY manifest takes no baseline at all — baseline-less is the honest state" "$(is "$N" "1"; echo $?)"
+
+# ── the live-row rule: cut -> redial -> cut on ONE release ──────────────────────────────────────
+rout manifest cut --gid "$B1" "https://github.com/A/B/issues/21" --reason "descoped"
+rout manifest dial-in --gid "$B1" "https://github.com/A/B/issues/21" --reason "re-admitted"
+V="$(rlog manifest cut --gid "$B1" "https://github.com/A/B/issues/21" --reason "descoped again")"
+N="$(sql "SELECT COUNT(*) FROM manifest_items mi JOIN issue_refs t ON t.id=mi.issue_ref_id WHERE t.url='https://github.com/A/B/issues/21' AND mi.state='cut'")"
+if [ "$N" = "2" ]; then ok "cut -> redial -> cut on ONE release works: transitions select the LIVE row, not the historical one" 0; else ok "cut-redial-cut" 1; fi
+rout manifest ship --gid "$B1" "https://github.com/A/B/issues/22" --evidence "landed in abc1234"
+N="$(sql "SELECT COUNT(*) FROM manifest_items WHERE state='shipped'")"
+ok "manifest ship moves a dialed-in member to shipped (mid-release progress is finally reportable)" "$(is "$N" "1"; echo $?)"
+
+# ── the marathon invariant SQLite cannot express ────────────────────────────────────────────────
+R="$(mkrepo n5)"
+rout init --slug nu5
+rout marathon add --tracking-issue "https://github.com/A/B/issues/70"
+M1="$(sql "SELECT global_id FROM marathons LIMIT 1")"
+rout add --version 1.0.0 --status draft --description "With a marathon." --marathon "$M1" --tracking-issue "https://github.com/A/B/issues/1"
+rout add --version 2.0.0 --status draft --description "Without one." --tracking-issue "https://github.com/A/B/issues/2"
+MR1="$(sql "SELECT global_id FROM releases WHERE version='1.0.0'")"
+MR2="$(sql "SELECT global_id FROM releases WHERE version='2.0.0'")"
+V="$(rlog manifest dial-in --gid "$MR2" "https://github.com/A/B/issues/31" --reason x --marathon "$M1")"
+if has "$V" "rule=marathon-not-this-release"; then ok "dialing in with ANOTHER release's marathon is refused by name (the door #109 came through)" 0; else ok "marathon-not-this-release" 1; fi
+OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET marathon_id = (SELECT id FROM marathons LIMIT 1) WHERE global_id='$MR2'" 2>&1)"; RC=$?
+if [ $RC -ne 0 ] && has "$OUT" "UNIQUE"; then ok "a marathon cannot be named by two releases (partial unique index; links are permanent)" 0; else ok "marathon exclusivity" 1; fi
+
+# ── the extended dump grammar survives a round trip ─────────────────────────────────────────────
+rout manifest dial-in --gid "$MR1" "https://github.com/A/B/issues/32" --reason "carries a marathon" --marathon "$M1"
+if grep -qE '^INSERT INTO manifest_items\(global_id, release_gid, issue_ref_gid, state, dialed_in_at, dial_reason, marathon_gid\)' "$R/releases.sql"; then ok "the manifest record's three new fields ride the dump in fixed trailing order, marathon by GID" 0; else ok "manifest dump grammar" 1; fi
+if ! grep -qE 'INSERT INTO manifest_items\([^)]*marathon_id' "$R/releases.sql"; then ok "and marathon_id (an integer FK) never appears as a dump value" 0; else ok "no integer FK in dump" 1; fi
+BD_BEFORE="$(python3 - "$R" "$APP" <<'PYEOF4'
+import importlib.util, sys, os
+spec = importlib.util.spec_from_file_location("releases_app", sys.argv[2])
+ra = importlib.util.module_from_spec(spec); spec.loader.exec_module(ra)
+print(ra.business_digest(ra.connect(os.path.join(sys.argv[1], "releases.db"))))
+PYEOF4
+)"
+DIAL_BEFORE="$(sql "SELECT dial_reason FROM manifest_items ORDER BY id DESC LIMIT 1")"
+rout check --rebuild
+BD_AFTER="$(python3 - "$R" "$APP" <<'PYEOF5'
+import importlib.util, sys, os
+spec = importlib.util.spec_from_file_location("releases_app", sys.argv[2])
+ra = importlib.util.module_from_spec(spec); spec.loader.exec_module(ra)
+print(ra.business_digest(ra.connect(os.path.join(sys.argv[1], "releases.db"))))
+PYEOF5
+)"
+DIAL_AFTER="$(sql "SELECT dial_reason FROM manifest_items ORDER BY id DESC LIMIT 1")"
+MG_AFTER="$(sql "SELECT COUNT(*) FROM manifest_items WHERE marathon_id IS NOT NULL")"
+if [ "$BD_BEFORE" = "$BD_AFTER" ] && [ "$DIAL_AFTER" = "$DIAL_BEFORE" ] && [ "$MG_AFTER" = "1" ]; then ok "a dump -> rebuild round trip preserves every new column AND the business digest" 0; else ok "round trip preserves new columns" 1; fi
+V="$(rlog check)"; if has "$V" "check: clean"; then ok "the rebuilt ledger's manifest event digest chain still verifies" 0; else ok "digest chain after rebuild" 1; fi
+
+# ── a merged dump that stamped the same migration twice ─────────────────────────────────────────
+python3 - "$R/releases.sql" <<'PYEOF6'
+import sys
+path = sys.argv[1]
+lines = open(path).read().splitlines()
+out = []
+doubled = False
+for line in lines:
+    out.append(line)
+    if not doubled and line.startswith("INSERT INTO schema_migrations("):
+        out.append(line)     # the union merge's signature damage: the same version twice
+        doubled = True
+assert doubled, "no schema_migrations row found in the dump"
+open(path, "w").write("\n".join(out) + "\n")
+PYEOF6
+V="$(rlog check --rebuild)"
+if has "$V" "rule=dump-duplicate-migration"; then ok "a merged dump carrying a duplicate schema_migrations version is refused BY NAME, before anything is written" 0; else ok "duplicate migration refusal" 1; fi
 
 echo
 echo "== gh32-releases-app: $pass passed, $fail failed =="

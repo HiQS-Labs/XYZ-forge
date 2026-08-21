@@ -103,10 +103,12 @@ STATUSES = ("draft", "active", "shipped", "cut")
 STATUS_RENDER = {"draft": "Draft", "active": "Active", "shipped": "Shipped", "cut": "Cut"}
 MARATHON_STATUSES = ("planned", "running", "done", "escalated", "abandoned")
 ITEM_STATES = ("open", "shipped", "cut")
-# manifest-state transition legality is CLI-enforced (PRD schema note): open/shipped may move
-# between each other and into cut; cut is terminal.
-LEGAL_ITEM_TRANSITIONS = {("open", "shipped"), ("open", "cut"),
-                          ("shipped", "open"), ("shipped", "cut")}
+# manifest-state transition legality is CLI-enforced (PRD schema note). GH-111 retires FREEZE for
+# DIALED-IN membership: a task is dialed into a release, ships, or is cut. `shipped` is no longer a
+# dead end that only the schema knew about — `manifest ship` writes it. Both `shipped` and `cut` are
+# terminal FOR THAT ROW: re-admitting an item is a NEW dial-in row, which keeps the trail append-only
+# and readable rather than flipping one row back and forth.
+LEGAL_ITEM_TRANSITIONS = {("dialed_in", "shipped"), ("dialed_in", "cut")}
 GH_ISSUE_URL_RE = re.compile(r"^https://github\.com/[^/\s]+/[^/\s]+/issues/[0-9]+$")
 TMP_RE = re.compile(r"^TMP-[A-Z0-9]{6}$")
 MIG_RE = re.compile(r"^MIG-[A-Z0-9]{6}$")
@@ -600,32 +602,287 @@ CREATE INDEX IF NOT EXISTS idx_roadmap_repo ON roadmap_items(repo_id);
 """.format(rmi_gid=_gid_check("global_id", "rmi-"))
 
 
+def _ddl_statements(script):
+    """Split a trigger-free DDL script into individual statements.
+
+    GH-111: exists so migrations can avoid executescript(), which commits the caller's
+    transaction. Deliberately NOT general — it would mis-split a CREATE TRIGGER body, whose
+    BEGIN…END contains its own semicolons. Only trigger-free scripts may use it; migration
+    004 issues its trigger DDL as explicit single execute() calls instead.
+    """
+    if "CREATE TRIGGER" in script.upper():
+        raise ValueError("_ddl_statements cannot split trigger bodies; issue them individually")
+    # sqlite3.complete_statement() is comment- and string-literal-aware; a naive split(";")
+    # cuts mid-statement on the first `--` comment containing a semicolon.
+    statements, buffer = [], ""
+    for line in script.splitlines(keepends=True):
+        buffer += line
+        if sqlite3.complete_statement(buffer):
+            statements.append(buffer.strip())
+            buffer = ""
+    if buffer.strip():
+        statements.append(buffer.strip())
+    return statements
+
+
 def _table_exists(conn, name):
     return conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
                         (name,)).fetchone() is not None
 
 
-def _ensure_roadmap_schema(conn):
+def _col(row, name, default=None):
+    """Read a column that may not exist yet on an un-migrated ledger. sqlite3.Row raises
+    IndexError for an absent key, so a bare row["baseline_count"] would turn "you have not run
+    `releases migrate`" into a traceback."""
+    try:
+        return row[name]
+    except (IndexError, KeyError):
+        return default
+
+
+def _has_column(conn, table, column):
+    """Schema probe. The dump writer uses it so a PRE-migration database can still be dumped
+    (and therefore digested) — `perform_migration` needs `business_digest` on the old shape
+    before it touches anything, and the dump grammar's absent-trailing-fields-read-as-NULL rule
+    makes the shorter record a legal dump rather than a lossy one."""
+    if not _table_exists(conn, table):
+        return False
+    return any(r["name"] == column for r in conn.execute("PRAGMA table_info(%s)" % table))
+
+
+def _ensure_roadmap_schema(conn, stamp=True):
     """Apply migration 002 idempotently. MUST run inside a perform_write mutate when the DB
     predates it: the new schema_migrations row is business state, and a schema change outside a
-    receipt would trip check's receipt-vs-change bypass detection — correctly."""
-    conn.executescript(MIGRATION_002_DDL)
-    if conn.execute("SELECT 1 FROM schema_migrations WHERE version = 2").fetchone() is None:
+    receipt would trip check's receipt-vs-change bypass detection — correctly.
+
+    GH-111: issued as individual execute() calls, NOT executescript(). Python's sqlite3
+    COMMITs any open transaction before running a script, so the old idiom would silently
+    split perform_migration()'s single transaction when 002 and 004 are both pending —
+    leaving 002 durable after a 004 failure while the journal still claims all-or-nothing.
+
+    stamp=False is the REGISTRY entry point: `apply_migrations` owns the ledger row there, and
+    `_rebuild` calls it with stamping suppressed entirely so it can write the ledger itself
+    afterwards. A self-stamping callback would collide with that on the primary key.
+    """
+    for statement in _ddl_statements(MIGRATION_002_DDL):
+        conn.execute(statement)
+    if stamp and conn.execute("SELECT 1 FROM schema_migrations WHERE version = 2").fetchone() is None:
         conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (2, ?)",
                      (now_iso(),))
 
 
-def apply_migrations(conn):
+MIGRATION_004_ITEMS_NEW = """
+CREATE TABLE manifest_items_new (
+  id INTEGER PRIMARY KEY,
+  global_id TEXT NOT NULL UNIQUE {mfi_gid},
+  release_id INTEGER NOT NULL REFERENCES releases(id),
+  issue_ref_id INTEGER NOT NULL REFERENCES issue_refs(id),
+  state TEXT NOT NULL CHECK (state IN ('dialed_in','shipped','cut')),
+  dialed_in_at TEXT,
+  dial_reason TEXT,
+  marathon_id INTEGER REFERENCES marathons(id)
+)"""
+
+MIGRATION_004_EVENTS_NEW = """
+CREATE TABLE manifest_state_events_new (
+  id INTEGER PRIMARY KEY,
+  item_id INTEGER NOT NULL REFERENCES manifest_items(id),
+  from_state TEXT NOT NULL CHECK (from_state IN ('open','dialed_in','shipped','cut')),
+  to_state   TEXT NOT NULL CHECK (to_state   IN ('open','dialed_in','shipped','cut')),
+  at TEXT NOT NULL,
+  reason TEXT NOT NULL CHECK (length(trim(reason)) > 0)
+)"""
+
+
+def _migration_004(conn):
+    """GH-111: retire FREEZE for DIALED-IN membership.
+
+    TRANSACTION-SAFE BY CONSTRUCTION — every statement goes through execute(), never
+    executescript(), which would COMMIT the caller's transaction and silently void
+    perform_migration()'s FK bracket, rollback, digest chain and receipt coupling.
+
+    Parent (manifest_items) is rebuilt before child (manifest_state_events), and `id`
+    values are carried across verbatim so the child's item_id linkage — and with it the
+    event digest chain — still resolves. Both CHECK vocabularies change, which SQLite
+    cannot do in place, hence the rebuilds. `open` stays legal in the EVENT table forever:
+    historical rows are copied unchanged rather than remapped, because rewriting them
+    would be the silent history edit this repo forbids everywhere else.
+    """
+    # ── parent: manifest_items ────────────────────────────────────────────────────────
+    conn.execute(MIGRATION_004_ITEMS_NEW.format(mfi_gid=_gid_check("global_id", "mfi-")))
+    conn.execute("""INSERT INTO manifest_items_new
+                      (id, global_id, release_id, issue_ref_id, state,
+                       dialed_in_at, dial_reason, marathon_id)
+                    SELECT id, global_id, release_id, issue_ref_id,
+                           CASE state WHEN 'open' THEN 'dialed_in' ELSE state END,
+                           NULL, NULL, NULL
+                      FROM manifest_items""")
+    conn.execute("DROP TABLE manifest_items")
+    conn.execute("ALTER TABLE manifest_items_new RENAME TO manifest_items")
+    # The old UNIQUE (release_id, issue_ref_id) is deliberately NOT recreated: re-admitting a
+    # cut item is a NEW row, which that constraint would refuse. Exclusivity now applies to
+    # ACTIVE membership only, so cut history never blocks a redial here or on another release.
+    conn.execute("""CREATE UNIQUE INDEX idx_mfi_active_exclusive
+                      ON manifest_items(issue_ref_id) WHERE state = 'dialed_in'""")
+    conn.execute("CREATE INDEX idx_mfi_release ON manifest_items(release_id)")
+
+    # ── child: manifest_state_events (DROP TABLE also drops its triggers) ─────────────
+    conn.execute(MIGRATION_004_EVENTS_NEW)
+    conn.execute("""INSERT INTO manifest_state_events_new (id, item_id, from_state, to_state, at, reason)
+                    SELECT id, item_id, from_state, to_state, at, reason
+                      FROM manifest_state_events""")
+    conn.execute("DROP TABLE manifest_state_events")
+    conn.execute("ALTER TABLE manifest_state_events_new RENAME TO manifest_state_events")
+    conn.execute("""CREATE TRIGGER mse_no_update BEFORE UPDATE ON manifest_state_events
+                      BEGIN SELECT RAISE(ABORT, 'manifest_state_events is append-only'); END""")
+    conn.execute("""CREATE TRIGGER mse_no_delete BEFORE DELETE ON manifest_state_events
+                      BEGIN SELECT RAISE(ABORT, 'manifest_state_events is append-only'); END""")
+    conn.execute("CREATE INDEX idx_mse_item ON manifest_state_events(item_id)")
+
+    # ── releases: baseline (one count field + two provenance fields) ──────────────────
+    conn.execute("ALTER TABLE releases ADD COLUMN baseline_count INTEGER")
+    conn.execute("ALTER TABLE releases ADD COLUMN baseline_at TEXT")
+    conn.execute("ALTER TABLE releases ADD COLUMN baseline_source TEXT "
+                 "CHECK (baseline_source IS NULL OR baseline_source IN ('observed','backfilled'))")
+    # A marathon belongs to at most one release; links are historical and permanent.
+    conn.execute("""CREATE UNIQUE INDEX idx_rel_marathon_exclusive
+                      ON releases(marathon_id) WHERE marathon_id IS NOT NULL""")
+    # The plan calls for a table CHECK on the baseline trio (all-NULL or all-populated) and for
+    # write-once. SQLite cannot add a CHECK in place, and `releases` is the most-referenced table
+    # in the schema — rebuilding it costs more risk than the invariant is worth — so the same two
+    # rules are expressed as triggers. Structural either way: a direct DB writer is refused, not
+    # merely detected. A partial baseline must never reach rendering, and overwriting one would
+    # erase the exact thing it exists to measure.
+    for name, event, when in (
+        ("rel_baseline_shape_ins", "BEFORE INSERT ON releases",
+         "(NEW.baseline_count IS NULL) + (NEW.baseline_at IS NULL) + "
+         "(NEW.baseline_source IS NULL) NOT IN (0, 3)"),
+        ("rel_baseline_shape_upd", "BEFORE UPDATE ON releases",
+         "(NEW.baseline_count IS NULL) + (NEW.baseline_at IS NULL) + "
+         "(NEW.baseline_source IS NULL) NOT IN (0, 3)"),
+    ):
+        conn.execute("CREATE TRIGGER %s %s WHEN %s BEGIN SELECT RAISE(ABORT, "
+                     "'releases baseline fields are all-NULL or all-populated'); END"
+                     % (name, event, when))
+    conn.execute("""CREATE TRIGGER rel_baseline_write_once BEFORE UPDATE OF baseline_count
+                      ON releases
+                      WHEN OLD.baseline_count IS NOT NULL
+                       AND NEW.baseline_count IS NOT OLD.baseline_count
+                      BEGIN SELECT RAISE(ABORT, 'releases.baseline_count is write-once'); END""")
+    # Backfill releases already underway. Flagged 'backfilled', never 'observed': the count is
+    # inferred from today's manifest, not witnessed at the kickoff it claims to describe.
+    stamp = now_iso()
+    for row in conn.execute("SELECT id FROM releases WHERE status = 'active'").fetchall():
+        n = conn.execute("""SELECT COUNT(*) FROM manifest_items
+                             WHERE release_id = ? AND state IN ('dialed_in','shipped')""",
+                         (row["id"],)).fetchone()[0]
+        if n:
+            conn.execute("""UPDATE releases SET baseline_count = ?, baseline_at = ?,
+                             baseline_source = 'backfilled' WHERE id = ?""", (n, stamp, row["id"]))
+
+
+RATING_COLUMNS = ("rating_pri", "rating_sev", "rating_appeal", "rating_effort", "rating_ovr")
+
+
+def _migration_003(conn):
+    """GH-108: the pri/sev/appeal/effort rating columns on roadmap_items.
+
+    Physically prefixed `rating_` because the table already carries a legacy `effort` column
+    (cx/risk/eff's third field), which SQLite cannot duplicate and whose grandfathered data must
+    not share storage with the new vocabulary. The prefix never leaks past this module — the
+    exporter translates to the frozen public axis names.
+
+    TRANSACTION-SAFE: plain execute() calls, never executescript(), because a v2 database runs
+    this and 004 inside ONE BEGIN IMMEDIATE — a mid-flight commit here would leave 003 durable
+    after a 004 failure while the journal still described an all-or-nothing migration.
+    Idempotent by SCHEMA PROBE, not by version number, so a residual version/DDL mismatch
+    degrades to a no-op rather than an error.
+    """
+    ranges = {"rating_ovr": (4, 400)}       # calc's own 4-400 scale; the four axes are 1-100
+    for column in RATING_COLUMNS:
+        if _has_column(conn, "roadmap_items", column):
+            continue
+        low, high = ranges.get(column, (1, 100))
+        conn.execute("ALTER TABLE roadmap_items ADD COLUMN %s INTEGER "
+                     "CHECK (%s IS NULL OR (%s BETWEEN %d AND %d))"
+                     % (column, column, column, low, high))
+
+
+def _has_trigger(conn, name):
+    return conn.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND name=?",
+                        (name,)).fetchone() is not None
+
+
+def _migration_005(conn):
+    """GH-111 follow-up: extend baseline write-once to the PROVENANCE fields.
+
+    Migration 004 guarded `baseline_count` only, so a direct writer could relabel a `backfilled`
+    baseline as `observed`, or move `baseline_at`, without tripping anything (aider/qwen3.8-max QA
+    r1). The provenance is what makes the count trustworthy — a count whose source can be quietly
+    rewritten is worth less than no count — so it gets the same structural guarantee.
+
+    This is a NEW version rather than an edit to 004 because 004 has already been applied to live
+    ledgers. Amending an applied migration would leave two databases at the same stamped version
+    with different schemas, which is the one thing the registry rule exists to prevent.
+
+    TRANSACTION-SAFE and idempotent by schema probe.
+    """
+    for column in ("baseline_at", "baseline_source"):
+        name = "rel_baseline_%s_write_once" % column.split("_", 1)[1]
+        if _has_trigger(conn, name):
+            continue
+        conn.execute("""CREATE TRIGGER %s BEFORE UPDATE OF %s ON releases
+                          WHEN OLD.%s IS NOT NULL AND NEW.%s IS NOT OLD.%s
+                          BEGIN SELECT RAISE(ABORT,
+                            'releases.%s is write-once (baseline provenance)'); END"""
+                     % (name, column, column, column, column, column))
+
+
+# The migration REGISTRY is the truth (GH-111). apply/rebuild stamp exactly the versions
+# present here — never a hard-coded range — so a deliberate gap (e.g. GH-111's 004 landing
+# before GH-108's 003) yields a ledger of {1,2,4} rather than a false claim to 3. Pending
+# migrations apply in ascending numeric order; gaps are safe only because migrations are
+# mutually INDEPENDENT, a standing constraint on every future entry.
+#
+# `txn_safe` marks a callback that may run inside perform_migration()'s single transaction:
+# it must never use executescript() or any other implicit-commit API. 001 is exempt because
+# it is reachable only on a fresh database (cmd_init) or a rebuild, never alongside other
+# pending versions on a live ledger.
+MIGRATIONS = {
+    1: {"apply": lambda conn: conn.executescript(MIGRATION_001), "txn_safe": False},
+    2: {"apply": lambda conn: _ensure_roadmap_schema(conn, stamp=False), "txn_safe": True},
+    3: {"apply": _migration_003, "txn_safe": True},
+    4: {"apply": _migration_004, "txn_safe": True},
+    5: {"apply": _migration_005, "txn_safe": True},
+}
+
+
+def registry_versions():
+    """Ordered versions this codebase defines. The ledger never claims more than this."""
+    return sorted(MIGRATIONS)
+
+
+def pending_versions(conn):
     try:
         applied = {r["version"] for r in conn.execute("SELECT version FROM schema_migrations")}
     except sqlite3.OperationalError:
         applied = set()   # fresh DB: the tracker table itself is created by migration 001
-    if 1 not in applied:
-        conn.executescript(MIGRATION_001)
-        conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (1, ?)",
-                     (now_iso(),))
-    if 2 not in applied:
-        _ensure_roadmap_schema(conn)
+    return [v for v in registry_versions() if v not in applied]
+
+
+def apply_migrations(conn, stamp_ledger=True):
+    """Apply pending registry migrations in ascending order.
+
+    stamp_ledger=False is the rebuild path: _rebuild() materializes DDL here and writes the
+    ledger rows itself AFTER load_dump() (which skips the dump's schema_migrations records),
+    so DDL and ledger agree by construction instead of colliding on the primary key.
+    """
+    for version in pending_versions(conn):
+        MIGRATIONS[version]["apply"](conn)
+        if stamp_ledger and conn.execute("SELECT 1 FROM schema_migrations WHERE version = ?",
+                                         (version,)).fetchone() is None:
+            conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                         (version, now_iso()))
 
 
 # ── canonical dump (PRD Git story 6) ────────────────────────────────────────────────────────────
@@ -690,25 +947,44 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
                          FROM marathons m JOIN repos r ON r.id = m.repo_id
                          JOIN issue_refs t ON t.id = m.tracking_ref_id ORDER BY m.id"""))
 
-    _emit(w, "releases",
-          ["global_id", "repo_gid", "version", "codename", "status", "target_date",
-           "shipped_date", "description", "exit_criterion", "tracking_ref_gid", "marathon_gid",
-           "gh_release_url", "milestone", "front_door_reviewed", "shakedown_reviewed",
-           "license_file"],
-          _rows(conn, """SELECT rel.global_id, r.global_id AS repo_gid, rel.version, rel.codename,
-                         rel.status, rel.target_date, rel.shipped_date, rel.description,
-                         rel.exit_criterion, t.global_id AS tracking_ref_gid,
-                         mar.global_id AS marathon_gid, rel.gh_release_url, rel.milestone,
-                         rel.front_door_reviewed, rel.shakedown_reviewed, rel.license_file
-                         FROM releases rel JOIN repos r ON r.id = rel.repo_id
-                         JOIN issue_refs t ON t.id = rel.tracking_ref_id
-                         LEFT JOIN marathons mar ON mar.id = rel.marathon_id ORDER BY rel.id"""))
+    # GH-111 appends three baseline fields to the RELEASE record and three membership fields to
+    # the MANIFEST ITEM record, both in fixed trailing order. They are emitted only when the
+    # schema has them, so a pre-004 database still dumps (and digests) cleanly; on the way back
+    # in, absent trailing fields read as NULL.
+    rel_cols = ["global_id", "repo_gid", "version", "codename", "status", "target_date",
+                "shipped_date", "description", "exit_criterion", "tracking_ref_gid",
+                "marathon_gid", "gh_release_url", "milestone", "front_door_reviewed",
+                "shakedown_reviewed", "license_file"]
+    rel_select = """SELECT rel.global_id, r.global_id AS repo_gid, rel.version, rel.codename,
+                    rel.status, rel.target_date, rel.shipped_date, rel.description,
+                    rel.exit_criterion, t.global_id AS tracking_ref_gid,
+                    mar.global_id AS marathon_gid, rel.gh_release_url, rel.milestone,
+                    rel.front_door_reviewed, rel.shakedown_reviewed, rel.license_file{extra}
+                    FROM releases rel JOIN repos r ON r.id = rel.repo_id
+                    JOIN issue_refs t ON t.id = rel.tracking_ref_id
+                    LEFT JOIN marathons mar ON mar.id = rel.marathon_id ORDER BY rel.id"""
+    if _has_column(conn, "releases", "baseline_count"):
+        rel_cols += ["baseline_count", "baseline_at", "baseline_source"]
+        rel_extra = ", rel.baseline_count, rel.baseline_at, rel.baseline_source"
+    else:
+        rel_extra = ""
+    _emit(w, "releases", rel_cols, _rows(conn, rel_select.format(extra=rel_extra)))
 
-    _emit(w, "manifest_items", ["global_id", "release_gid", "issue_ref_gid", "state"],
-          _rows(conn, """SELECT mi.global_id, rel.global_id AS release_gid,
-                         t.global_id AS issue_ref_gid, mi.state
-                         FROM manifest_items mi JOIN releases rel ON rel.id = mi.release_id
-                         JOIN issue_refs t ON t.id = mi.issue_ref_id ORDER BY mi.id"""))
+    mfi_cols = ["global_id", "release_gid", "issue_ref_gid", "state"]
+    mfi_select = """SELECT mi.global_id, rel.global_id AS release_gid,
+                    t.global_id AS issue_ref_gid, mi.state{extra}
+                    FROM manifest_items mi JOIN releases rel ON rel.id = mi.release_id
+                    JOIN issue_refs t ON t.id = mi.issue_ref_id{join} ORDER BY mi.id"""
+    if _has_column(conn, "manifest_items", "dialed_in_at"):
+        # marathon_id is an integer FK, and integer FKs never appear as dump VALUES — the row
+        # carries its marathon's GID, exactly as the release record does.
+        mfi_cols += ["dialed_in_at", "dial_reason", "marathon_gid"]
+        mfi_extra = ", mi.dialed_in_at, mi.dial_reason, mar.global_id AS marathon_gid"
+        mfi_join = " LEFT JOIN marathons mar ON mar.id = mi.marathon_id"
+    else:
+        mfi_extra, mfi_join = "", ""
+    _emit(w, "manifest_items", mfi_cols,
+          _rows(conn, mfi_select.format(extra=mfi_extra, join=mfi_join)))
 
     _emit(w, "manifest_state_events", ["item_gid", "from_state", "to_state", "at", "reason"],
           _rows(conn, """SELECT mi.global_id AS item_gid, e.from_state, e.to_state, e.at, e.reason
@@ -745,16 +1021,25 @@ def dump_text(conn, generation, include_receipts=True, include_generation=True):
               "supplied_value, disposition) VALUES(%s);" % values)
 
     if _table_exists(conn, "roadmap_items"):
-        _emit(w, "roadmap_items",
-              ["global_id", "repo_gid", "gh_number", "title", "section", "position",
-               "status_marker", "complexity", "risk", "effort", "doc_path", "issue_url",
-               "raw_text", "first_seen", "updated_at"],
-              _rows(conn, """SELECT ri.global_id, r.global_id AS repo_gid, ri.gh_number, ri.title,
-                             ri.section, ri.position, ri.status_marker, ri.complexity, ri.risk,
-                             ri.effort, ri.doc_path, ri.issue_url, ri.raw_text, ri.first_seen,
-                             ri.updated_at
-                             FROM roadmap_items ri JOIN repos r ON r.id = ri.repo_id
-                             ORDER BY ri.id"""))
+        # GH-108's five rating columns are appended in fixed trailing order, emitted only when the
+        # schema has them (same absent-reads-as-NULL rule as the GH-111 fields above). `calc` is
+        # NEVER dumped: it is derived at read time from the four axes, and storing a derived value
+        # invites the drift class this grammar exists to prevent.
+        rmi_cols = ["global_id", "repo_gid", "gh_number", "title", "section", "position",
+                    "status_marker", "complexity", "risk", "effort", "doc_path", "issue_url",
+                    "raw_text", "first_seen", "updated_at"]
+        rmi_select = """SELECT ri.global_id, r.global_id AS repo_gid, ri.gh_number, ri.title,
+                        ri.section, ri.position, ri.status_marker, ri.complexity, ri.risk,
+                        ri.effort, ri.doc_path, ri.issue_url, ri.raw_text, ri.first_seen,
+                        ri.updated_at{extra}
+                        FROM roadmap_items ri JOIN repos r ON r.id = ri.repo_id
+                        ORDER BY ri.id"""
+        if _has_column(conn, "roadmap_items", "rating_pri"):
+            rmi_cols += list(RATING_COLUMNS)
+            rmi_extra = "".join(", ri.%s" % c for c in RATING_COLUMNS)
+        else:
+            rmi_extra = ""
+        _emit(w, "roadmap_items", rmi_cols, _rows(conn, rmi_select.format(extra=rmi_extra)))
 
     if include_receipts:
         _emit(w, "op_receipts",
@@ -817,25 +1102,45 @@ def _atomic_write(final_path, content):
 # ── the writer protocol (PRD Git story 2-3): journal -> txn -> stage -> rename -> clear ─────────
 
 def refresh_preview(root):
-    """GH-106: after a successful write, refresh RELEASES-PREVIEW.html — but only when the
-    repo has ADOPTED it (the file already exists at root; presence is the opt-in signal, so
+    """GH-106: after a successful write, refresh the baked viewer artifacts — but only the ones
+    the repo has ADOPTED (the file already exists at root; presence is the opt-in signal, so
     fixtures and non-adopting repos are silent no-ops). Best-effort by design: the write is
-    already durable with its receipt when this runs, so a preview failure WARNS on stderr
-    and never fails the operation. Success is silent (the exporter's stdout is captured)."""
-    preview = os.path.join(root, "RELEASES-PREVIEW.html")
+    already durable with its receipt when this runs, so a refresh failure WARNS on stderr and
+    never fails the operation. Success is silent (the exporter's stdout is captured).
+
+    GH-108 adds LEADERBOARD.html on the same terms — one template, two baked artifacts, both
+    regenerated by the same hook so a ranking can never lag the ledger it ranks."""
     exporter = os.path.join(root, "utils", "timeline", "export_timeline.py")
-    if not (os.path.exists(preview) and os.path.exists(exporter)):
+    if not os.path.exists(exporter):
         return
-    try:
-        r = subprocess.run([sys.executable, exporter, "--preview", preview],
-                           cwd=root, capture_output=True, text=True, timeout=60)
-        if r.returncode != 0:
-            print("warning: RELEASES-PREVIEW.html refresh failed (the write itself is "
-                  "committed): %s" % (r.stderr.strip() or r.stdout.strip() or
-                                      "exit %d" % r.returncode), file=sys.stderr)
-    except Exception as exc:  # never let the preview break a committed write
-        print("warning: RELEASES-PREVIEW.html refresh failed (the write itself is "
-              "committed): %s" % exc, file=sys.stderr)
+    for name, flag in (("RELEASES-PREVIEW.html", "--preview"),
+                       ("LEADERBOARD.html", "--leaderboard")):
+        target = os.path.join(root, name)
+        if not os.path.exists(target):
+            continue
+        try:
+            r = subprocess.run([sys.executable, exporter, flag, target],
+                               cwd=root, capture_output=True, text=True, timeout=60)
+            if r.returncode != 0:
+                print("warning: %s refresh failed (the write itself is committed): %s"
+                      % (name, r.stderr.strip() or r.stdout.strip() or
+                         "exit %d" % r.returncode), file=sys.stderr)
+        except Exception as exc:  # never let a rendered artifact break a committed write
+            print("warning: %s refresh failed (the write itself is committed): %s"
+                  % (name, exc), file=sys.stderr)
+    # LEADERBOARD.md rides the same adoption signal — generated, never hand-edited.
+    board = os.path.join(root, "LEADERBOARD.md")
+    script = os.path.join(root, "utils", "leaderboard.sh")
+    if os.path.exists(board) and os.path.exists(script):
+        try:
+            r = subprocess.run(["bash", script], cwd=root, capture_output=True, text=True,
+                               timeout=60)
+            if r.returncode != 0:
+                print("warning: LEADERBOARD.md refresh failed (the write itself is committed): %s"
+                      % (r.stderr.strip() or "exit %d" % r.returncode), file=sys.stderr)
+        except Exception as exc:
+            print("warning: LEADERBOARD.md refresh failed (the write itself is committed): %s"
+                  % exc, file=sys.stderr)
 
 
 def perform_write(root, conn, op, target_gid, mutate):
@@ -922,6 +1227,129 @@ def perform_write(root, conn, op, target_gid, mutate):
         return txn_id
     finally:
         lock.release()
+
+
+def perform_migration(root, conn):
+    """Upgrade a LIVE ledger to the registry's current schema, under perform_write's durability
+    contract plus one step it structurally cannot host.
+
+    `perform_write` issues BEGIN IMMEDIATE on a connection where `connect()` already turned
+    foreign keys on, and SQLite IGNORES a `PRAGMA foreign_keys` change while a transaction is
+    open. A table-rebuild migration therefore has no executable path through it — the pragma
+    would silently fail to take effect and the swap would trip enforcement mid-flight. The one
+    difference is where the bracket goes:
+
+        acquire writer lock -> write intent journal
+        -> PRAGMA foreign_keys = OFF          [after the journal, BEFORE BEGIN]
+        -> BEGIN IMMEDIATE
+        -> apply pending registry migrations, ascending, parent-before-child
+        -> PRAGMA foreign_key_check           [fails the migration if it returns any row]
+        -> stamp generation + op_receipt -> COMMIT
+        -> PRAGMA foreign_keys = ON           [restored only after commit]
+        -> stage dump -> atomic renames -> clear journal
+
+    On any error the transaction rolls back, enforcement is restored, and the journal is LEFT IN
+    PLACE so `releases check` sees an interrupted migration exactly as it sees an interrupted
+    write. That is deliberately louder than perform_write's error path, which clears the journal:
+    a half-considered schema change is worth stopping the world for.
+    """
+    paths = artifact_paths(root)
+    lock = WriterLock(root)
+    lock.acquire()
+    try:
+        if os.path.exists(lock.journal_path):
+            refuse("journal-live",
+                   "an intent journal from an interrupted write exists (%s); run `releases check` "
+                   "to recover before migrating" % lock.journal_path)
+
+        pending = pending_versions(conn)
+        if not pending:
+            applied = [r["version"] for r in
+                       conn.execute("SELECT version FROM schema_migrations ORDER BY version")]
+            print("schema is current at version %d (registry: %s); nothing to migrate"
+                  % (max(applied) if applied else 0,
+                     ", ".join(str(v) for v in registry_versions())))
+            return None
+        unsafe = [v for v in pending if not MIGRATIONS[v]["txn_safe"]]
+        if unsafe:
+            refuse("migration-not-transaction-safe",
+                   "migration(s) %s are not marked transaction-safe and cannot run against a live "
+                   "ledger; they are reachable only from `releases init` or `check --rebuild`"
+                   % ", ".join(str(v) for v in unsafe))
+
+        generation = get_generation(conn) + 1
+        txn_id = new_txn_id()
+        planned = [paths["dump"]]
+        if os.path.exists(paths["gen"]):
+            planned.append(paths["gen"])
+        journal = {
+            "app": APP, "txn_id": txn_id, "session_id": session_id(), "op": "migrate",
+            "generation": generation, "planned_outputs": planned, "db": paths["db"],
+            "started_at": now_iso(), "pending_migrations": pending,
+        }
+        _atomic_write(lock.journal_path, json.dumps(journal, indent=2) + "\n")
+
+        digest_before = business_digest(conn)
+        conn.execute("PRAGMA foreign_keys = OFF")
+        try:
+            conn.execute("BEGIN IMMEDIATE")
+            apply_migrations(conn)
+            violations = conn.execute("PRAGMA foreign_key_check").fetchall()
+            if violations:
+                refuse("migration-fk-violation",
+                       "the migrated schema has %d foreign-key violation(s) (first: %s); the "
+                       "migration is rolled back and the ledger is untouched"
+                       % (len(violations), tuple(violations[0])))
+            cur = conn.execute("UPDATE settings SET value = ? WHERE key = ?",
+                               (str(generation), GENERATION_KEY))
+            if cur.rowcount == 0:
+                conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)",
+                             (GENERATION_KEY, str(generation)))
+            digest_after = business_digest(conn)
+            conn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
+                             state_digest_before, state_digest_after)
+                             VALUES ('migrate', ?, ?, ?, ?, ?, ?)""",
+                         ("migrations: %s" % ",".join(str(v) for v in pending), now_iso(),
+                          txn_id, session_id(), digest_before, digest_after))
+            _crash("pre-commit")
+            conn.commit()
+        except BaseException:
+            try:
+                conn.rollback()
+            except sqlite3.Error:
+                pass
+            conn.execute("PRAGMA foreign_keys = ON")
+            raise      # journal deliberately left in place
+        conn.execute("PRAGMA foreign_keys = ON")
+        _crash("post-commit")
+
+        staged = [(_stage_write(paths["dump"], dump_text(conn, generation)), paths["dump"])]
+        if os.path.exists(paths["gen"]):
+            staged.append((_stage_write(paths["gen"],
+                                        gen_marker(generation) + "\n" + render_ledger(conn)),
+                           paths["gen"]))
+        _crash("post-stage")
+        for i, (tmp, final) in enumerate(staged):
+            os.replace(tmp, final)
+            if i == 0 and len(staged) > 1:
+                _crash("mid-rename")
+        _crash("post-rename")
+        os.unlink(lock.journal_path)
+        refresh_preview(root)
+        print("migrated %s to schema version %d (applied %s; generation %d)"
+              % (DB_NAME, max(pending), ", ".join(str(v) for v in pending), generation))
+        return txn_id
+    finally:
+        lock.release()
+
+
+def cmd_migrate(args):
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        perform_migration(root, conn)
+    finally:
+        conn.close()
 
 
 def recover_from_journal(root, conn):
@@ -1531,9 +1959,76 @@ def cmd_update(args):
                           _qa(args.license) if args.license is not None
                           else row["license_file"],
                           args.gid))
+            # GH-111 baseline auto-capture, in the SAME writer-locked transaction as the status
+            # flip — a dial-in landing between the two would pin a manifest state that never
+            # existed. Only on draft -> active, only when nothing is captured yet: an
+            # active -> draft -> active round trip is a SILENT no-op here (the explicit
+            # `releases baseline` verb is the one that refuses), because a legitimate status
+            # round trip must not fail while an accidental second capture stays impossible.
+            new_status = args.status if args.status is not None else row["status"]
+            if (row["status"] == "draft" and new_status == "active"
+                    and _col(row, "baseline_count") is None
+                    and _has_column(conn, "releases", "baseline_count")):
+                count = _capture_baseline(conn, row["id"], "observed")
+                if count:
+                    print("baseline for %s captured at %d (observed)" % (args.gid, count))
             print("updated release %s" % args.gid)
 
         perform_write(root, conn, "update", args.gid, mutate)
+    finally:
+        conn.close()
+
+
+def _live_manifest_count(conn, release_id):
+    """The commitment denominator: dialed-in plus shipped. Cut rows are history, not scope —
+    counting them contradicts the repo's own prose that a cut REDUCES the manifest."""
+    return conn.execute("""SELECT COUNT(*) FROM manifest_items
+                            WHERE release_id = ? AND state IN ('dialed_in','shipped')""",
+                        (release_id,)).fetchone()[0]
+
+
+def _capture_baseline(conn, release_id, source):
+    """Write the kickoff snapshot. Returns the count, or 0 when the manifest is empty.
+
+    An empty manifest yields NO baseline rather than a baseline of zero. Releases here are
+    created as a row first and dialed in afterwards, so a naive snapshot-on-activate would give
+    most releases a 0 and then report every real commitment as scope growth — the metric would
+    lie in the common case. Baseline-less is the honest state, and `releases baseline` fills it
+    in later."""
+    count = _live_manifest_count(conn, release_id)
+    if not count:
+        return 0
+    conn.execute("""UPDATE releases SET baseline_count = ?, baseline_at = ?, baseline_source = ?
+                     WHERE id = ?""", (count, now_iso(), source, release_id))
+    return count
+
+
+def cmd_baseline(args):
+    """Capture a release's baseline explicitly — the path for a release that was activated with
+    an empty manifest (`releases add --status active` has no draft->active transition to hook)."""
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        row = find_release(conn, args.gid)
+        if not _has_column(conn, "releases", "baseline_count"):
+            refuse("schema-behind",
+                   "this ledger predates the baseline columns; run `releases migrate` first")
+        if row["baseline_count"] is not None:
+            refuse("baseline-already-set",
+                   "release %s already has a baseline of %d (%s, taken %s). A baseline is "
+                   "write-once: overwriting it would erase the very thing it measures."
+                   % (args.gid, row["baseline_count"], row["baseline_source"], row["baseline_at"]))
+        if not _live_manifest_count(conn, row["id"]):
+            refuse("baseline-empty-manifest",
+                   "release %s has no dialed-in or shipped members; a baseline of zero would "
+                   "report every later commitment as scope growth. Dial the work in first."
+                   % args.gid)
+
+        def mutate(conn):
+            count = _capture_baseline(conn, row["id"], "observed")
+            print("baseline for %s captured at %d (observed)" % (args.gid, count))
+
+        perform_write(root, conn, "baseline", args.gid, mutate)
     finally:
         conn.close()
 
@@ -1586,28 +2081,172 @@ def cmd_manifest_add(args):
         def mutate(conn):
             ref = issue_ref_for_token(conn, args.issue)
             if conn.execute("""SELECT 1 FROM manifest_items
-                               WHERE release_id=? AND issue_ref_id=?""",
+                               WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
                             (rel["id"], ref["id"])).fetchone():
                 refuse("manifest-duplicate",
-                       "issue already in this release's manifest (UNIQUE(release_id, "
-                       "issue_ref_id), refused in both modes)")
-            shared = conn.execute("""SELECT r.global_id FROM manifest_items mi
-                                     JOIN releases r ON r.id = mi.release_id
-                                     WHERE mi.issue_ref_id = ? AND mi.release_id != ?
-                                       AND mi.state != 'cut'""",
-                                  (ref["id"], rel["id"])).fetchall()
-            if shared:
-                warn("shared-manifest-issue",
-                     "issue also sits in non-cut release(s) %s — warn, never refuse (handoffs "
-                     "are legitimate; the Meter->Sundown transfer is the recorded precedent)"
-                     % ", ".join(s["global_id"] for s in shared))
-            conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state)
-                         VALUES (?, ?, ?, 'open')""", (gid, rel["id"], ref["id"]))
-            print("manifest item %s added to %s (state=open)" % (gid, args.gid))
+                       "issue is already dialed into this release (refused in both modes). A cut "
+                       "row for the same issue does NOT block a redial — only a live one does.")
+            # GH-111 EXCLUSIVITY: a task is dialed into exactly one release at a time. This REVERSES
+            # the former `shared-manifest-issue` warning, which allowed one issue to sit on several
+            # releases at once and called handoffs legitimate. Handoffs are still legitimate — they
+            # are now expressed as `cut --reason "handed off to X"` then `dial-in` on the target,
+            # which records the move instead of leaving the task silently on both ledgers.
+            held = conn.execute("""SELECT r.global_id, r.codename FROM manifest_items mi
+                                   JOIN releases r ON r.id = mi.release_id
+                                   WHERE mi.issue_ref_id = ? AND mi.release_id != ?
+                                     AND mi.state = 'dialed_in'""",
+                                (ref["id"], rel["id"])).fetchall()
+            if held:
+                refuse("dialed-in-elsewhere",
+                       "issue is already dialed into %s — a task belongs to ONE release at a time. "
+                       "To hand it over: `manifest cut --gid %s <issue> --reason \"handed off\"` "
+                       "then dial it in here."
+                       % (", ".join("%s (%s)" % (h["global_id"], h["codename"] or "?")
+                                    for h in held), held[0]["global_id"]))
+            marathon_id = None
+            if getattr(args, "marathon", None):
+                mar = conn.execute("SELECT id FROM marathons WHERE global_id = ?",
+                                   (args.marathon,)).fetchone()
+                if not mar:
+                    refuse("unknown-marathon", "no marathon with gid %r" % args.marathon)
+                # The two marathon links are independent FKs, so nothing in the schema stops an item
+                # on release B carrying release A's marathon. That would let the viewer assert a
+                # membership the data never claimed (GH-109). CLI-enforced, since SQLite cannot
+                # express a cross-table CHECK.
+                if rel["marathon_id"] != mar["id"]:
+                    refuse("marathon-not-this-release",
+                           "marathon %s does not belong to release %s; an item's marathon must be "
+                           "its own release's marathon" % (args.marathon, args.gid))
+                marathon_id = mar["id"]
+            conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
+                                                       dialed_in_at, dial_reason, marathon_id)
+                         VALUES (?, ?, ?, 'dialed_in', ?, ?, ?)""",
+                         (gid, rel["id"], ref["id"], now_iso(),
+                          getattr(args, "reason", None), marathon_id))
+            print("manifest item %s dialed into %s (state=dialed_in)" % (gid, args.gid))
 
         perform_write(root, conn, "manifest-add", gid, mutate)
     finally:
         conn.close()
+
+
+def cmd_manifest_ship(args):
+    """GH-110/GH-111: move a dialed-in member to shipped.
+
+    Before this verb, `shipped` was a state the schema allowed and no code path ever wrote, so a
+    manifest member could never be marked done and mid-release progress was unreportable. The
+    event table's `reason` is NOT NULL, so shipping carries `--evidence` for the same reason
+    `releases ship` does: a claim that work landed should cite what landed.
+    """
+    root = resolve_root(args.root)
+    paths = artifact_paths(root)
+    conn = connect(paths["db"])
+    try:
+        rel = find_release(conn, args.gid)
+        evidence = (args.evidence or "").strip()
+        if not evidence:
+            refuse("ship-needs-evidence",
+                   "marking a manifest item shipped without evidence is refused (structural, "
+                   "both modes) — cite the commit, PR, or test receipt")
+        kind, value = check_tracking_token(args.issue)
+
+        def mutate(conn):
+            column = "url" if kind == "url" else "temp_id"
+            ref = conn.execute("SELECT * FROM issue_refs WHERE %s = ?" % column,
+                               (value,)).fetchone()
+            if not ref:
+                refuse("unknown-issue", "no issue_refs row for %r" % value)
+            item = _live_manifest_item(conn, rel, ref, value, args.gid, "shipped")
+            conn.execute("UPDATE manifest_items SET state='shipped' WHERE id=?", (item["id"],))
+            # State and event land in ONE transaction — the coupling the digest chain checks.
+            conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at,
+                         reason) VALUES (?, ?, 'shipped', ?, ?)""",
+                         (item["id"], item["state"], now_iso(), evidence))
+            print("manifest item %s shipped (%s -> shipped); evidence recorded"
+                  % (item["global_id"], item["state"]))
+
+        perform_write(root, conn, "manifest-ship", args.gid, mutate)
+    finally:
+        conn.close()
+
+
+def cmd_manifest_marathon(args):
+    """Link an ALREADY dialed-in item to its release's marathon.
+
+    Migration 004 leaves `marathon_id` NULL on every migrated row, deliberately: the only fact
+    available at migration time is "this release has a marathon", and inferring membership from
+    that is precisely the defect #109 names. So membership on pre-existing manifests is recorded
+    the same way a baseline is — witnessed by an operator, one item at a time — rather than
+    guessed by a migration and then indistinguishable from the real thing.
+    """
+    root = resolve_root(args.root)
+    conn = connect(artifact_paths(root)["db"])
+    try:
+        rel = find_release(conn, args.gid)
+        kind, value = check_tracking_token(args.issue)
+
+        def mutate(conn):
+            column = "url" if kind == "url" else "temp_id"
+            ref = conn.execute("SELECT * FROM issue_refs WHERE %s = ?" % column,
+                               (value,)).fetchone()
+            if not ref:
+                refuse("unknown-issue", "no issue_refs row for %r" % value)
+            item = conn.execute("""SELECT * FROM manifest_items
+                                   WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
+                                (rel["id"], ref["id"])).fetchone()
+            if not item:
+                refuse("unknown-issue",
+                       "issue %r is not dialed into release %s" % (value, args.gid))
+            mar = conn.execute("SELECT id FROM marathons WHERE global_id = ?",
+                               (args.marathon,)).fetchone()
+            if not mar:
+                refuse("unknown-marathon", "no marathon with gid %r" % args.marathon)
+            if rel["marathon_id"] != mar["id"]:
+                refuse("marathon-not-this-release",
+                       "marathon %s does not belong to release %s; an item's marathon must be "
+                       "its own release's marathon" % (args.marathon, args.gid))
+            if item["marathon_id"] is not None and item["marathon_id"] != mar["id"]:
+                refuse("marathon-link-permanent",
+                       "manifest item %s already belongs to another marathon; marathon links are "
+                       "historical and permanent" % item["global_id"])
+            conn.execute("UPDATE manifest_items SET marathon_id=? WHERE id=?",
+                         (mar["id"], item["id"]))
+            print("manifest item %s linked to marathon %s" % (item["global_id"], args.marathon))
+
+        perform_write(root, conn, "manifest-marathon", args.gid, mutate)
+    finally:
+        conn.close()
+
+
+def _live_manifest_item(conn, rel, ref, token, gid_arg, target_state):
+    """Select the ONE live (dialed_in) manifest row for this (release, issue), or refuse.
+
+    GH-111: dropping UNIQUE(release_id, issue_ref_id) means a (release, issue) pair can now
+    hold several rows — a cut row plus a later redial. The old lookup had no state predicate
+    and was correct ONLY while that UNIQUE guaranteed a single row; left as-is it could pick
+    the historical cut row and refuse "cut is terminal" while a live row sat beside it.
+    """
+    item = conn.execute("""SELECT * FROM manifest_items
+                           WHERE release_id=? AND issue_ref_id=? AND state='dialed_in'""",
+                        (rel["id"], ref["id"])).fetchone()
+    if item:
+        if (item["state"], target_state) not in LEGAL_ITEM_TRANSITIONS:
+            refuse("transition",
+                   "cannot move an item from %r to %r (legality is CLI-enforced)"
+                   % (item["state"], target_state))
+        return item
+    # No live row. Distinguish "never here" from "here, but already terminal" — the second is a
+    # transition error, and saying so is how the operator learns the item's actual state.
+    prior = conn.execute("""SELECT state FROM manifest_items
+                            WHERE release_id=? AND issue_ref_id=?
+                            ORDER BY id DESC LIMIT 1""",
+                         (rel["id"], ref["id"])).fetchone()
+    if prior:
+        refuse("transition",
+               "issue %r is in release %s at state %r, not dialed_in; %s and cut are terminal for "
+               "that row (re-admitting is a new dial-in)" % (token, gid_arg, prior["state"],
+                                                             prior["state"]))
+    refuse("unknown-issue", "issue %r is not in release %s's manifest" % (token, gid_arg))
 
 
 def cmd_manifest_cut(args):
@@ -1630,16 +2269,7 @@ def cmd_manifest_cut(args):
                                    (value,)).fetchone()
             if not ref:
                 refuse("unknown-issue", "no issue_refs row for %r" % value)
-            item = conn.execute("""SELECT * FROM manifest_items
-                                   WHERE release_id=? AND issue_ref_id=?""",
-                                (rel["id"], ref["id"])).fetchone()
-            if not item:
-                refuse("unknown-issue",
-                       "issue %r is not in release %s's manifest" % (value, args.gid))
-            if (item["state"], "cut") not in LEGAL_ITEM_TRANSITIONS:
-                refuse("transition",
-                       "cannot cut an item in state %r (cut is terminal; legality is "
-                       "CLI-enforced)" % item["state"])
+            item = _live_manifest_item(conn, rel, ref, value, args.gid, "cut")
             conn.execute("UPDATE manifest_items SET state='cut' WHERE id=?", (item["id"],))
             # item state and its event land in ONE transaction (PRD: the coupling is
             # CLI-enforced; a direct writer that skips the event is caught by the digest chain)
@@ -1985,6 +2615,99 @@ _ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F",
                            "\U0001F534", "\U0001F41E"]
 
 
+# ── GH-108: the one canonical rating grammar ────────────────────────────────────────────────────
+# `rated N/N/N/N` — exactly four slash-separated integers 1-100, axis order fixed as
+# pri/sev/appeal/effort — optionally followed by ` ovr N` (an integer 4-400 on calc's own scale).
+# There is no labeled long form: the axis NAMES live in PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md,
+# not in the entry line. Higher is better on every axis, effort included (it scores CHEAPNESS), so
+# the four combine without sign-flipping.
+#
+# The refusal contract matters as much as the grammar: the PRESENCE of a `rated` or `ovr` token
+# either parses as the full form or refuses with a named rule. A malformed shape must never read
+# as "unrated" — that would silently drop an operator's prioritisation and look like they never
+# scored the task.
+# The TOKEN test requires a digit after the word, so ordinary prose ("a highly rated entry",
+# "underrated") is not mistaken for a score — while a genuinely malformed `rated 70/40/55` still
+# counts as a token and is refused rather than read as unrated.
+_RATED_TOKEN_RE = re.compile(r"\brated\s+\d")
+# The DUPLICATE test is deliberately NARROWER than the presence test: it counts only
+# slash-bearing matches. "the rated 3rd priority item ... rated 90/90/90/90" is ONE rating
+# beside prose, and refusing it as a duplicate rejects a correctly-scored entry
+# (aider/qwen3.8-max QA r1, [Should] #1 — reproduced before fixing). The PRESENCE test stays
+# broad on purpose: a bare `rated 70` is a truncated score, and reading it as "unrated" would
+# be exactly the silent drop this contract exists to prevent. Prose shaped "rated <int> <word>"
+# with no real score beside it therefore still refuses — loudly, and fixable in one edit, which
+# is the trade this repo prefers over an invisible drop.
+_RATED_SCORE_TOKEN_RE = re.compile(r"\brated\s+\d+/")
+_RATED_RE = re.compile(r"\brated\s+(\d+)/(\d+)/(\d+)/(\d+)(?![\w/])")
+# `ovr` requires a DIGIT, not merely a following token. Unbackticked prose — "the ovr wins over
+# calc" — otherwise refuses an entry carrying a perfectly good rating (aider/qwen3.8-max QA r1,
+# [Should] #2 — reproduced before fixing). The asymmetry with `rated` above is deliberate and is
+# what makes it safe: the override is OPTIONAL, so a dropped `ovr` degrades to "no override"
+# while the four axes still land, whereas a dropped `rated` loses the whole score. A real typo
+# is still caught, because the SHAPE test needs the integer to end cleanly: `ovr 35O` matches
+# the token and then fails the shape.
+_OVR_TOKEN_RE = re.compile(r"\bovr\s+\d")
+_OVR_RE = re.compile(r"\bovr\s+(\d+)(?![\w/])")
+_LEGACY_CRE_RE = re.compile(r"cx/risk/eff (\d+)/(\d+)/(\d+)")
+
+_RATING_GRAMMAR = "the grammar is `rated N/N/N/N` (pri/sev/appeal/effort, 1-100) with an " \
+                  "optional ` ovr N` (4-400)"
+
+
+def parse_rating(raw, title):
+    """Parse the rating tokens out of one ROADMAP entry. Returns the five column values."""
+    blank = dict.fromkeys(RATING_COLUMNS)
+    rated_tokens = _RATED_TOKEN_RE.findall(raw)
+    ovr_tokens = _OVR_TOKEN_RE.findall(raw)
+    if not rated_tokens and not ovr_tokens:
+        return blank
+    where = "entry %r" % title[:60]
+
+    if _LEGACY_CRE_RE.search(raw) and rated_tokens:
+        refuse("rating-vocabulary-clash",
+               "%s carries BOTH `cx/risk/eff` and `rated`. The two vocabularies measure different "
+               "things and never share a row; convert the entry to `rated` and delete the legacy "
+               "triple." % where)
+    score_tokens = _RATED_SCORE_TOKEN_RE.findall(raw)
+    if len(score_tokens) > 1:
+        refuse("rating-duplicate", "%s carries %d `rated` scores; exactly one is allowed"
+               % (where, len(score_tokens)))
+    if len(ovr_tokens) > 1:
+        refuse("ovr-duplicate", "%s carries %d `ovr` tokens; at most one is allowed"
+               % (where, len(ovr_tokens)))
+    if ovr_tokens and not rated_tokens:
+        refuse("ovr-orphan",
+               "%s carries `ovr` with no `rated` scores. The override replaces the computed score "
+               "for ranking; it does not stand in for the four axes, which keep their honest "
+               "values underneath. %s" % (where, _RATING_GRAMMAR))
+
+    m = _RATED_RE.search(raw)
+    if not m:
+        refuse("rating-shape",
+               "%s carries a `rated` token that does not parse — %s. A malformed rating is refused "
+               "rather than read as unrated, so a mistyped score is never silently dropped."
+               % (where, _RATING_GRAMMAR))
+    values = [int(g) for g in m.groups()]
+    for axis, value in zip(("pri", "sev", "appeal", "effort"), values):
+        if not 1 <= value <= 100:
+            refuse("rating-range", "%s scores %s at %d; every axis is 1-100 (100 = strongest, "
+                                   "effort included — it scores cheapness)" % (where, axis, value))
+    out = dict(zip(RATING_COLUMNS[:4], values))
+    out["rating_ovr"] = None
+    if ovr_tokens:
+        mo = _OVR_RE.search(raw)
+        if not mo:
+            refuse("ovr-shape", "%s carries an `ovr` token with no integer after it; %s"
+                   % (where, _RATING_GRAMMAR))
+        ovr = int(mo.group(1))
+        if not 4 <= ovr <= 400:
+            refuse("ovr-range", "%s overrides to %d; the override is on calc's own 4-400 scale"
+                   % (where, ovr))
+        out["rating_ovr"] = ovr
+    return out
+
+
 def parse_roadmap_ledger(path):
     """ROADMAP.md -> [entry dict], file order. Same block boundaries as the planner: an entry runs
     from its `- **` line to the next `- **`, `###`, or `##`."""
@@ -2024,7 +2747,7 @@ def parse_roadmap_ledger(path):
             doc = re.search(r"\]\((PROJECT/[^)]+\.md)", raw)
             issue = re.search(r"https://github\.com/HiQS-Suite/XYZ-forge/(?:issues|pull)/\d+", raw)
             pos[sec] = pos.get(sec, 0) + 1
-            entries.append({
+            entry = {
                 "gh_number": int(gh.group(1)) if gh else None,
                 "title": title, "section": sec, "position": pos[sec],
                 "status_marker": marker,
@@ -2034,7 +2757,9 @@ def parse_roadmap_ledger(path):
                 "doc_path": doc.group(1) if doc else None,
                 "issue_url": issue.group(0) if issue else None,
                 "raw_text": raw,
-            })
+            }
+            entry.update(parse_rating(raw, title))
+            entries.append(entry)
             i = j
             continue
         i += 1
@@ -2042,7 +2767,8 @@ def parse_roadmap_ledger(path):
 
 
 _ROADMAP_FIELDS = ("gh_number", "title", "section", "position", "status_marker",
-                   "complexity", "risk", "effort", "doc_path", "issue_url", "raw_text")
+                   "complexity", "risk", "effort", "doc_path", "issue_url", "raw_text") \
+                  + RATING_COLUMNS
 
 
 def cmd_roadmap_sync(args):
@@ -2069,11 +2795,24 @@ def cmd_roadmap_sync(args):
         if repo is None:
             refuse("no-repo", "the DB has no repos row; run `releases init` first")
 
+        # GH-108/GH-111: feature commands do NOT self-migrate. Rating storage arrives through
+        # `releases migrate` (migration 003); sync refuses clearly when a rated entry meets a
+        # ledger that cannot hold it, rather than installing schema of its own or — worse —
+        # writing the entry with its scores silently dropped.
+        rating_ok = _has_column(conn, "roadmap_items", "rating_pri")
+        if not rating_ok and any(e["rating_pri"] is not None for e in parsed):
+            refuse("schema-behind",
+                   "%s carries `rated` scores but this ledger has no rating columns. Run "
+                   "`releases migrate` first — sync mirrors ROADMAP.md, it never installs schema."
+                   % ROADMAP_NAME)
+
         have = {}
         if _table_exists(conn, "roadmap_items"):
             for r in conn.execute("SELECT * FROM roadmap_items WHERE repo_id = ?", (repo["id"],)):
                 key = ("gh", r["gh_number"]) if r["gh_number"] is not None else ("title", r["title"])
-                have[key] = dict(r)
+                have[key] = {c: _col(r, c) for c in r.keys()}
+                for c in RATING_COLUMNS:
+                    have[key].setdefault(c, None)
         schema_missing = not _table_exists(conn, "roadmap_items") or conn.execute(
             "SELECT 1 FROM schema_migrations WHERE version = 2").fetchone() is None
 
@@ -2108,24 +2847,25 @@ def cmd_roadmap_sync(args):
                 print("  - [%s] %s" % (row["section"], row["title"][:70]))
             return
 
+        # The row MIRRORS the entry text: converting an entry from cx/risk/eff to `rated` populates
+        # the rating columns and NULLs the legacy ones in the SAME sync. A mirror that disagreed
+        # with its source would re-update on every sync forever; the entry's lossless raw_text is
+        # the historical record, not the row.
+        fields = [f for f in _ROADMAP_FIELDS if rating_ok or f not in RATING_COLUMNS]
+
         def mutate(c):
             _ensure_roadmap_schema(c)
             ts = now_iso()
+            ins_cols = ["global_id", "repo_id"] + fields + ["first_seen", "updated_at"]
+            ins_sql = "INSERT INTO roadmap_items(%s) VALUES (%s)" % (
+                ", ".join(ins_cols), ", ".join("?" for _ in ins_cols))
+            upd_sql = "UPDATE roadmap_items SET %s, updated_at=? WHERE id=?" % (
+                ", ".join("%s=?" % f for f in fields))
             for e in adds:
-                c.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title,
-                             section, position, status_marker, complexity, risk, effort,
-                             doc_path, issue_url, raw_text, first_seen, updated_at)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                          (new_gid("rmi-"), repo["id"], e["gh_number"], e["title"], e["section"],
-                           e["position"], e["status_marker"], e["complexity"], e["risk"],
-                           e["effort"], e["doc_path"], e["issue_url"], e["raw_text"], ts, ts))
+                c.execute(ins_sql,
+                          [new_gid("rmi-"), repo["id"]] + [e[f] for f in fields] + [ts, ts])
             for row, e in updates:
-                c.execute("""UPDATE roadmap_items SET gh_number=?, title=?, section=?, position=?,
-                             status_marker=?, complexity=?, risk=?, effort=?, doc_path=?,
-                             issue_url=?, raw_text=?, updated_at=? WHERE id=?""",
-                          (e["gh_number"], e["title"], e["section"], e["position"],
-                           e["status_marker"], e["complexity"], e["risk"], e["effort"],
-                           e["doc_path"], e["issue_url"], e["raw_text"], ts, row["id"]))
+                c.execute(upd_sql, [e[f] for f in fields] + [ts, row["id"]])
             for row in removes:
                 c.execute("DELETE FROM roadmap_items WHERE id = ?", (row["id"],))
 
@@ -2142,14 +2882,20 @@ def cmd_roadmap_list(args):
         if not _table_exists(conn, "roadmap_items"):
             print("(no roadmap shadow yet — run `releases roadmap sync`)")
             return
-        for r in conn.execute("""SELECT global_id, gh_number, title, section, position,
-                                 status_marker, complexity, risk, effort, updated_at
-                                 FROM roadmap_items ORDER BY section, position"""):
+        for r in conn.execute("""SELECT * FROM roadmap_items ORDER BY section, position"""):
             gh = ("GH-%d" % r["gh_number"]) if r["gh_number"] is not None else "-"
             cre = ("%s/%s/%s" % (r["complexity"], r["risk"], r["effort"])
                    if r["complexity"] is not None else "-")
-            print("%s  %-7s %-22s #%-3d cre=%-6s %s %s" % (
-                r["global_id"], gh, (r["section"] or "")[:22], r["position"], cre,
+            # calc is DERIVED here, never stored — the equal-weighted sum of the four axes, and
+            # the override wins over it for ranking wherever both exist.
+            score = "-"
+            if _col(r, "rating_pri") is not None:
+                calc = sum(_col(r, c) for c in RATING_COLUMNS[:4])
+                score = str(calc)
+                if _col(r, "rating_ovr") is not None:
+                    score = "%s>%d" % (score, r["rating_ovr"])
+            print("%s  %-7s %-22s #%-3d cre=%-6s calc=%-8s %s %s" % (
+                r["global_id"], gh, (r["section"] or "")[:22], r["position"], cre, score,
                 r["status_marker"] or " ", r["title"][:64]))
     finally:
         conn.close()
@@ -2499,6 +3245,22 @@ def validate_merged_dump(text, tables):
                "silently understate the generation. Keep the HIGHEST header, delete the rest, then "
                "rebuild." % (len(headers), ", ".join(h.split()[-1] for h in headers)))
 
+    # GH-111: two branches that each authored a migration and then union-merged their dumps leave
+    # the SAME version number twice in the ledger. Scope this honestly — it catches a merged DUMP,
+    # not two source branches that both numbered a migration 003. Source-level collision surfaces
+    # as an ordinary releases_app.py merge conflict, and is pinned separately by the ordered
+    # v2 -> 003 -> 004 fixture.
+    seen_versions = set()
+    for row in tables.get("schema_migrations", []):
+        version = row.get("version")
+        if version in seen_versions:
+            refuse("dump-duplicate-migration",
+                   "schema_migrations version %s appears more than once. Each migration is applied "
+                   "once, so two rows sharing a version means both branches stamped that number — "
+                   "the two sides may not even be the same migration. Decide which row is true, "
+                   "delete the other, then rebuild." % version)
+        seen_versions.add(version)
+
     seen_keys = set()
     for row in tables.get("settings", []):
         key = row.get("key")
@@ -2524,12 +3286,21 @@ def validate_merged_dump(text, tables):
             seen_gids.add(gid)
 
 
-def load_dump(conn, tables):
+def load_dump(conn, tables, skip_schema_migrations=False):
     """Insert parsed dump rows into the (already-migrated, empty) DB, resolving the grammar's
-    natural keys to physical ids in dump order."""
-    for row in tables.get("schema_migrations", []):
-        conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
-                     (int(row["version"]), row["applied_at"]))
+    natural keys to physical ids in dump order.
+
+    skip_schema_migrations=True is the rebuild path (GH-111). The migration LEDGER is owned by
+    exactly one writer there — `_rebuild`, which stamps the registry's versions after this
+    returns — so loading the dump's own rows would either collide on the primary key or leave a
+    v2 ledger describing a v4 schema. The dump's other tables load normally."""
+    def _int_or_none(v):
+        return None if v in (None, "") else int(v)
+
+    if not skip_schema_migrations:
+        for row in tables.get("schema_migrations", []):
+            conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                         (int(row["version"]), row["applied_at"]))
     for row in tables.get("settings", []):
         conn.execute("INSERT INTO settings(key, value) VALUES (?, ?)", (row["key"], row["value"]))
     repo_ids = {}
@@ -2556,8 +3327,9 @@ def load_dump(conn, tables):
         cur = conn.execute("""INSERT INTO releases(global_id, repo_id, version, codename, status,
                               target_date, shipped_date, description, exit_criterion,
                               tracking_ref_id, marathon_id, gh_release_url, milestone,
-                              front_door_reviewed, shakedown_reviewed, license_file)
-                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                              front_door_reviewed, shakedown_reviewed, license_file,
+                              baseline_count, baseline_at, baseline_source)
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                            (row["global_id"], repo_ids[row["repo_gid"]], row.get("version"),
                             row.get("codename"), row["status"], row.get("target_date"),
                             row.get("shipped_date"), row["description"], row.get("exit_criterion"),
@@ -2565,14 +3337,24 @@ def load_dump(conn, tables):
                             mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None,
                             row.get("gh_release_url"), row.get("milestone"),
                             row.get("front_door_reviewed"), row.get("shakedown_reviewed"),
-                            row.get("license_file")))
+                            row.get("license_file"),
+                            # absent trailing fields read as NULL — a pre-004 dump is still loadable
+                            _int_or_none(row.get("baseline_count")), row.get("baseline_at"),
+                            row.get("baseline_source")))
         rel_ids[row["global_id"]] = cur.lastrowid
     item_ids = {}
     for row in tables.get("manifest_items", []):
-        cur = conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state)
-                              VALUES (?, ?, ?, ?)""",
+        # `open` is the pre-2026-08-20 name for `dialed_in`. Old dumps stay loadable — they are the
+        # git-merge surface, and a colleague's branch may carry one for weeks — but only the new
+        # vocabulary is ever emitted.
+        state = "dialed_in" if row["state"] == "open" else row["state"]
+        cur = conn.execute("""INSERT INTO manifest_items(global_id, release_id, issue_ref_id, state,
+                              dialed_in_at, dial_reason, marathon_id)
+                              VALUES (?, ?, ?, ?, ?, ?, ?)""",
                            (row["global_id"], rel_ids[row["release_gid"]],
-                            ref_ids[row["issue_ref_gid"]], row["state"]))
+                            ref_ids[row["issue_ref_gid"]], state,
+                            row.get("dialed_in_at"), row.get("dial_reason"),
+                            mar_ids.get(row["marathon_gid"]) if row.get("marathon_gid") else None))
         item_ids[row["global_id"]] = cur.lastrowid
     for row in tables.get("manifest_state_events", []):
         conn.execute("""INSERT INTO manifest_state_events(item_id, from_state, to_state, at, reason)
@@ -2597,19 +3379,19 @@ def load_dump(conn, tables):
                         supplied_value, disposition) VALUES (?, ?, ?, ?, ?, ?)""",
                      (row["import_run"], rgid, row["rule"], row.get("source_value"),
                       row.get("supplied_value"), row.get("disposition")))
-    def _int_or_none(v):
-        return None if v in (None, "") else int(v)
     for row in tables.get("roadmap_items", []):
         conn.execute("""INSERT INTO roadmap_items(global_id, repo_id, gh_number, title, section,
                         position, status_marker, complexity, risk, effort, doc_path, issue_url,
-                        raw_text, first_seen, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                        raw_text, first_seen, updated_at,
+                        rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                      (row["global_id"], repo_ids[row["repo_gid"]], _int_or_none(row.get("gh_number")),
                       row["title"], row["section"], int(row["position"]),
                       row.get("status_marker"), _int_or_none(row.get("complexity")),
                       _int_or_none(row.get("risk")), _int_or_none(row.get("effort")),
                       row.get("doc_path"), row.get("issue_url"), row["raw_text"],
-                      row["first_seen"], row["updated_at"]))
+                      row["first_seen"], row["updated_at"],
+                      *[_int_or_none(row.get(c)) for c in RATING_COLUMNS]))
     for row in tables.get("op_receipts", []):
         conn.execute("""INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id,
                         state_digest_before, state_digest_after) VALUES (?, ?, ?, ?, ?, ?, ?)""",
@@ -2646,16 +3428,21 @@ def _rebuild(root, conn):
         try:
             tconn.row_factory = sqlite3.Row
             tconn.execute("PRAGMA foreign_keys = ON")
-            tconn.executescript(MIGRATION_001)
-            tconn.executescript(MIGRATION_002_DDL)   # schema only; the version row rides the dump
-            # the dump itself carries the schema_migrations row (every canonical dump does);
-            # load_dump resolves the grammar's GID/natural keys onto fresh physical ids
+            # GH-111 — ONE rule, three steps, so DDL and ledger agree by construction:
+            #   1. materialize DDL for the versions THE REGISTRY defines (never a hard-coded
+            #      range), writing no ledger rows;
+            #   2. load everything from the dump EXCEPT its schema_migrations records;
+            #   3. stamp exactly those same registry versions, ascending.
+            # A GH-111-first build therefore materializes and stamps {1, 2, 4} and never claims 3.
+            # Pre-stamping and then loading a v2 dump's rows would collide on the primary key;
+            # deferring to the dump would leave a v2 ledger describing a v4 schema.
+            apply_migrations(tconn, stamp_ledger=False)
             parsed = parse_dump(dump_content)
             # #54: name the merge damage BEFORE loading. Without this the duplicate rows a union
             # merge leaves surface as a bare sqlite3.IntegrityError traceback from inside load_dump.
             validate_merged_dump(dump_content, parsed)
             try:
-                load_dump(tconn, parsed)
+                load_dump(tconn, parsed, skip_schema_migrations=True)
             except sqlite3.IntegrityError as exc:
                 # backstop for damage validate_merged_dump does not yet name: still a refusal with a
                 # rule and a pointer, never a traceback.
@@ -2663,6 +3450,17 @@ def _rebuild(root, conn):
                        "the dump could not be loaded: %s. This usually means the merged dump "
                        "contains a row twice, or a reference to a row that is not in it. Fix "
                        "%s and rebuild; the live DB has not been touched." % (exc, DUMP_NAME))
+            # Step 3: stamp exactly the registry's versions. Each keeps the dump's own applied_at
+            # where the dump had it — the ledger row is business state that feeds the digest, so
+            # restamping an unchanged migration with "now" would make every rebuild look like a
+            # content change. Versions the dump did NOT carry are genuinely new here and take the
+            # current time, which is the honest record of when this schema actually arrived.
+            dump_applied = {int(r["version"]): r["applied_at"]
+                            for r in parsed.get("schema_migrations", [])}
+            stamped_at = now_iso()
+            for version in registry_versions():
+                tconn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                              (version, dump_applied.get(version, stamped_at)))
             tconn.execute("UPDATE settings SET value = ? WHERE key = ?",
                           (str(new_gen), GENERATION_KEY))
             if tconn.execute("SELECT 1 FROM settings WHERE key = ?",
@@ -2773,6 +3571,14 @@ def build_parser():
         sp.add_argument(flag, choices=["Yes", "No"])
     sp.add_argument("--tracking-issue", help=argparse.SUPPRESS)
 
+    sp = sub.add_parser("migrate",
+                        help="upgrade a LIVE ledger to the registry's schema version "
+                             "(idempotent; feature commands never self-migrate)")
+
+    sp = sub.add_parser("baseline",
+                        help="capture a release's kickoff commitment count (write-once)")
+    sp.add_argument("--gid", required=True)
+
     sp = sub.add_parser("ship", help="mark a release shipped, with evidence")
     sp.add_argument("--gid", required=True)
     sp.add_argument("--evidence", default="",
@@ -2781,9 +3587,28 @@ def build_parser():
 
     sp = sub.add_parser("manifest", help="manifest items")
     msub = sp.add_subparsers(dest="manifest_cmd", required=True)
-    sp_add = msub.add_parser("add", help="add an issue to a release's manifest")
-    sp_add.add_argument("--gid", required=True)
-    sp_add.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    # GH-111: `dial-in` is the verb; `add` stays as a back-compatible alias so existing scripts
+    # and the vendored payload keep working while the vocabulary moves.
+    for _name, _help in (("dial-in", "dial an issue into a release (one release at a time)"),
+                         ("add", "alias for dial-in (pre-GH-111 name)")):
+        _p = msub.add_parser(_name, help=_help)
+        _p.add_argument("--gid", required=True)
+        _p.add_argument("issue", help="issue URL or TMP-XXXXXX")
+        _p.add_argument("--reason", default=None,
+                        help="the case for committing this task to this release")
+        _p.add_argument("--marathon", default=None,
+                        help="marathon gid; must be THIS release's marathon")
+    sp_ship = msub.add_parser("ship",
+                              help="mark a dialed-in item shipped (REQUIRES --evidence)")
+    sp_ship.add_argument("--gid", required=True)
+    sp_ship.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    sp_ship.add_argument("--evidence", default="",
+                         help="commit, PR, or test receipt (empty is refused)")
+    sp_mar = msub.add_parser("marathon",
+                             help="link an already dialed-in item to its release's marathon")
+    sp_mar.add_argument("--gid", required=True)
+    sp_mar.add_argument("issue", help="issue URL or TMP-XXXXXX")
+    sp_mar.add_argument("--marathon", required=True, help="marathon gid; must be THIS release's")
     sp_cut = msub.add_parser("cut",
                              help="cut an item from a release's manifest (REQUIRES --reason)")
     sp_cut.add_argument("--gid", required=True)
@@ -2848,9 +3673,11 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
     handlers = {
         "init": cmd_init, "import": cmd_import, "add": cmd_add, "update": cmd_update,
-        "ship": cmd_ship,
-        "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd == "add"
-        else cmd_manifest_cut(a),
+        "ship": cmd_ship, "migrate": cmd_migrate, "baseline": cmd_baseline,
+        "manifest": lambda a: cmd_manifest_add(a) if a.manifest_cmd in ("dial-in", "add")
+        else (cmd_manifest_ship(a) if a.manifest_cmd == "ship"
+              else (cmd_manifest_marathon(a) if a.manifest_cmd == "marathon"
+                    else cmd_manifest_cut(a))),
         "marathon": lambda a: cmd_marathon_add(a) if a.marathon_cmd == "add"
         else cmd_marathon_list(a),
         "list": cmd_list, "show": cmd_show, "next": cmd_next, "gen": cmd_gen,

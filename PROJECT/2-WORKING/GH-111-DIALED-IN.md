@@ -27,6 +27,12 @@ goal: >
 > frozen. On the flip side, we can say tasks (and by extension marathons) are dialed-into
 > (associated) a particular build... I agree with your idea to make it a database state."*
 
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **PHASES A, B and C BUILT 2026-08-20** on `feat/gh111-phase-a-dialed-in` (clone `XYZ-forge-gh108-rating-system`). A: migration registry + migration 004 (table rebuild of `manifest_items` and `manifest_state_events`), `manifest dial-in` / `ship` / `cut` / `marathon`, exclusivity by partial unique index, `perform_migration()` + `releases migrate`, the extended dump grammar both directions, `_rebuild()` ledger ownership, the duplicate-version refusal, and baselines (auto-capture on `draft -> active`, trigger-enforced write-once and all-NULL-or-all-populated). B: exporter groups by `marathon_id` (#109), renders shipped members (#110), counts `dialed_in + shipped` only, and emits baseline + growth. C: the RELEASES.md preamble rule and the three active/draft blocks converted; shipped blocks and the GH-308 frozen-twin prose untouched. The LIVE ledger is migrated (schema {1,2,3,4}); Daybreak carries a backfilled baseline of 9, its nine marathon members are linked, and #79-81 are `shipped` with evidence. gh32 99 -> 138, new gh103 suite 37/0, all 18 releases-subsystem suites green. | Merge into `development`. Then close #109 and #110 with pointers, and decide where #108 lands (its own release, Meter, or unassigned) — the one operator decision this plan still owes. |
+
 ## The decision
 
 1. **FREEZE is retired.** A release's manifest is no longer locked at creation, and the
