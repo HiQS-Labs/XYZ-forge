@@ -263,6 +263,15 @@ has "lens 8 degrades loudly with D3" "$out" "no PARKED/"
 out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
 has "lens 7 degrades loudly with D4" "$out" "D4"
 
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/all-degraded" > "$W/all_degraded.json" 2>/dev/null || true
+out="$(T "$W/all_degraded.json" --dry-run 2>&1)" || true
+has "all-degraded cleanly triggers all degradation modes (D1, D3, D4, D5, D6)" "$out" "D1"
+has "all-degraded reports D3" "$out" "no PARKED/"
+has "all-degraded reports D4" "$out" "D4"
+has "all-degraded reports D5" "$out" "D5"
+has "all-degraded reports D6" "$out" "D6"
+is "all-degraded fits within 15-line display cap" "$([ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" -le 15 ] && echo ok)" "ok"
+
 echo
 # ── 12. Blocker 3 and Blocker 4 assertions ──────────────────────────────────────────────
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-2-missing-fixture" > "$W/deg_missing.json" 2>/dev/null

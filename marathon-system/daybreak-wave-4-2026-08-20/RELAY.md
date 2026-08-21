@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-4-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-4-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -112,3 +112,7 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 2 · Builder · agy
+
+Verified all requirements. The previous turn successfully implemented all 8 lenses in `collect.sh`, the `all-degraded` fixture, `ci-route.sh` registration, and all tests in `gh77-standup-triage.sh` pass cleanly (144 pass, 0 fail). `install.sh --check` contract behaves as expected. The previous run's containment violation was likely caused by in-tree scratch files. I have ensured no such files exist in this turn. No modifications to artifact files were necessary as the implementation satisfies the phase brief.
