@@ -158,3 +158,16 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+---
+
+### Round 2 · Builder · agy
+
+I have addressed the reviewer's feedback by adding the requested assertions to `test/gh77-standup-triage.sh`:
+1. Added isolated-home assertions to prove `skills/standup/install.sh --check` returns 1 when uninstalled and 0 when installed.
+2. Added an assertion to prove `utils/ci-route.sh` correctly resolves `skills/standup/collect.sh` to the `standup` tier-2 subsystem and selects the `gh77-standup-triage.sh` suite.
+3. Added an explicit assertion for the all-degraded document, validating that it correctly contains exactly lenses 1 through 8 and that the collector exits with code 3.
+
+The integration test suite now fully covers all explicit phase exit criteria and passes cleanly (`150 pass, 0 fail`).
+
+handing off to codex — codex, take your turn.
