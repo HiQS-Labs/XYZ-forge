@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -119,3 +119,11 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+Implemented lenses 4 (Open PRs) and 5 (Issue state) within `skills/standup/collect.sh`.
+- Lens 4 reads open PRs via `gh pr list --limit 51`, and uses `python3` to parse the output, computing `staleness` and formatting the `live_state`. Degradation `D1` correctly handles `gh` absence/failure, and `D2` correctly fires when 51 PRs return.
+- Lens 5 reads issue state using `gh issue view` over a strict bounded set. The set is compiled by scanning `session.json`, `ROADMAP.md`, and `releases.db` securely inside a hermetic Python script in `collect.sh`. In fixture mode, this correctly uses `lens5_bounded_set.txt` to maintain tests isolation without reading repo-root files.
+- Fixtures for both lenses, as well as failure scenarios, were created under `skills/standup/fixtures/`. Specifically, I ensured that missing mocks for Lenses 4 and 5 in the other ~50 fixture directories correctly returned empty candidates rather than degrading the whole collect pipeline.
+- Tests were added to `test/gh77-standup-triage.sh` ensuring lenses 4 and 5 emit the expected JSON, handle degradation gracefully, and integrate fully without breaking existing tests (117 pass, 0 fail).

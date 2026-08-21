@@ -200,6 +200,25 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/f
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-fail" > "$W/deg6.json"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8" > "$W/lens8.json"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-fail" > "$W/deg8.json"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4" > "$W/lens4.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4-fail" > "$W/deg4.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4-truncated" > "$W/lens4_trunc.json"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5" > "$W/lens5.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-fail" > "$W/deg5.json"
+
+out="$(T "$W/lens4.json" --dry-run 2>&1)" || true
+has "lens 4 finds open PR" "$out" "review PR 51"
+out="$(T "$W/deg4.json" --dry-run 2>&1)" || true
+has "lens 4 degrades loudly with D1" "$out" "D1"
+out="$(T "$W/lens4_trunc.json" --dry-run 2>&1)" || true
+has "lens 4 truncates at 50 and degrades with D2" "$out" "D2"
+
+out="$(T "$W/lens5.json" --dry-run 2>&1)" || true
+has "lens 5 finds triage issue" "$out" "triage issue 200"
+out="$(T "$W/deg5.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D1" "$out" "D1"
 out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
 out="$(T "$W/lens1.json" --dry-run 2>&1)" || true
 has "lens 1 finds session mention" "$out" "re-file 77"
@@ -283,14 +302,14 @@ if python3 -c '
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))
-    expected_keys = {"1", "2", "3", "6", "7", "8"}
+    expected_keys = {"1", "2", "3", "4", "5", "6", "7", "8"}
     keys = set(d.get("lenses", {}).keys())
     if keys != expected_keys: sys.exit(1)
     if any(l.get("degraded_id") != "D5" for l in d["lenses"].values()): sys.exit(2)
 except Exception:
     sys.exit(3)
 ' "$W/nojq.json"; then
-  pass=$((pass+1)); echo "  PASS: fallback document contains exactly lenses 1, 2, 3, 6, 7, 8 all as D5"
+  pass=$((pass+1)); echo "  PASS: fallback document contains exactly lenses 1-8 all as D5"
 else
   fail=$((fail+1)); echo "  FAIL: fallback document keys or degraded_id mismatch" >&2
 fi
