@@ -747,14 +747,16 @@ def get_bounded_set(fx, session_file, repo_root):
         try:
             with open(session_file) as f:
                 data = json.load(f)
-                if isinstance(data, list):
-                    for item in data:
-                        for k in ["quote", "what", "close"]:
-                            v = str(item.get(k, ""))
-                            for m in re.finditer(r"(?:#|GH-|issue\s+)(\d+)", v, re.IGNORECASE):
-                                nums.add(int(m.group(1)))
+            if not isinstance(data, list):
+                raise ValueError()
+            for item in data:
+                for k in ["quote", "what", "close"]:
+                    v = str(item.get(k, ""))
+                    for m in re.finditer(r"(?:#|GH-|issue\s+)(\d+)", v, re.IGNORECASE):
+                        nums.add(int(m.group(1)))
         except Exception:
-            pass
+            print("D5")
+            sys.exit(0)
 
     roadmap_path = os.path.join(fx, "ROADMAP.md") if fx else os.path.join(repo_root, "ROADMAP.md")
     try:

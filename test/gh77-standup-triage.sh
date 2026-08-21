@@ -728,5 +728,16 @@ has "lens 5 degrades loudly with D5 on missing/unreadable ROADMAP" "$out" "D5"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-missing-db" > "$W/lens5_missing_db.json" 2>/dev/null
 out="$(T "$W/lens5_missing_db.json" --dry-run 2>&1)" || true
 has "lens 5 degrades loudly with D5 on missing/unreadable releases.db" "$out" "D5"
+
+# Lens 5: malformed session.json degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-malformed-session" > "$W/lens5_malformed_session.json" 2>/dev/null
+out="$(T "$W/lens5_malformed_session.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on malformed session.json" "$out" "D5"
+
+# Lens 5: invalid shape session.json degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-invalid-shape-session" > "$W/lens5_invalid_shape_session.json" 2>/dev/null
+out="$(T "$W/lens5_invalid_shape_session.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on invalid shape session.json" "$out" "D5"
+
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
