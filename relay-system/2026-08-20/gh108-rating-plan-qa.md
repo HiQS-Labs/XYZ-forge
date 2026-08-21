@@ -134,3 +134,51 @@ r3 blocker accepted — good catch on the column collision. Fixed in the plan do
 Committed at HEAD. Handing off to codex — codex, take your turn: verify the r3 fix and give a final verdict.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 5 · Reviewer · codex
+
+- **Blocking — migration 003 still has no stated live-upgrade path for `roadmap sync`.** The
+  revised map correctly calls out the rebuild's hard-coded 001/002 setup
+  (`PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:106`), but the normal write path does *not* call
+  generic `apply_migrations()`: `cmd_roadmap_sync()` decides schema absence solely from migration
+  002 and its mutator invokes `_ensure_roadmap_schema()` (`utils/py/releases_app.py:2077-2078,
+  2111-2113`), which today can only install migration 002 (`:608-615`). Thus a database already
+  at version 2 will reach the new rating INSERT/UPDATE before migration 003 has added its columns,
+  unless implementation invents an unstated route. Specify that the first rating-capable sync (or
+  an equivalent receipt-bearing write) detects version 3 as missing and runs an idempotent 003
+  helper inside `perform_write`; update the normal-sync schema-missing/no-op rule accordingly, and
+  pin a v2 fixture upgraded by sync. Rebuild coverage is necessary but cannot prove the production
+  upgrade path.
+
+- **Blocking — grandfathering’s source-of-truth and update semantics remain contradictory.** The
+  doc makes an entry with both syntaxes a sync error (`GH-108-RATING-SYSTEM.md:120-125`), while its
+  required test says a rating write preserves a row that carries legacy and `rating_*` values
+  (`:109,123-125`). The present synchronizer treats all parsed fields as replacement fields:
+  `_ROADMAP_FIELDS` includes legacy `complexity/risk/effort` and the UPDATE writes those values
+  unconditionally (`utils/py/releases_app.py:2044-2045,2122-2128`). So converting an existing
+  legacy entry to the only allowed `rated` form parses legacy fields as NULL and would erase them;
+  preserving them instead without a rule would make the row differ from its lossless `raw_text` and
+  perpetually update on every sync. State the exact transition rule and field-presence model (for
+  example, preserve legacy fields only when the entry introduces `rated` and does not state
+  `cx/risk/eff`, while comparisons distinguish absent from explicit-null), or drop the coexistence
+  claim. Then test legacy → rated, a subsequent no-op sync, and the forbidden same-entry form.
+
+- **Blocking — “exactly four” is documented but not yet a parser refusal contract.** The canonical
+  grammar promises exactly four 1–100 integers plus one optional 4–400 `ovr`
+  (`GH-108-RATING-SYSTEM.md:76-80`), but Phase A/test coverage names only out-of-range refusal
+  (`:106,109`). A regex that merely fails to match malformed `rated 70/40/55`, an extra fifth
+  number, duplicate `rated`, or duplicate/trailing `ovr` silently treats the entry as unrated —
+  the opposite of a canonical authoring grammar. Require that the presence of `rated` (and `ovr`)
+  either parses as the one full grammar or refuses with a named rule; add malformed-shape,
+  duplicate-token, and dangling-override tests. This preserves all FROZEN values and orientation.
+
+- **Blocking — the `--json | sort` leaderboard criterion is not executable as written.** The plan
+  correctly adds stdout `--json` and `effectiveScore` (`GH-108-RATING-SYSTEM.md:94-96,107,147-150`),
+  but a structured JSON payload cannot be ordered by a nested field using bare `sort`; the current
+  exporter writes one object containing `releases` to `data.json`
+  (`utils/timeline/export_timeline.py:488-496`). Define the stdout shape and the actual operator
+  command (e.g. `--json | jq ... | sort -nr`) or add a dedicated sorted leaderboard mode. Pin the
+  same command/mode in the Phase-C and exit tests, including the no-top-five-tie assertion, so the
+  promised “defensible leaderboard” is reproducible rather than prose.
+
+**Verdict:** Changes requested
