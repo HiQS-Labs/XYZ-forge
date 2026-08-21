@@ -121,3 +121,25 @@ The plan is directionally sound and does not contradict the frozen operator deci
 5. **Denominator:** Exclude cut items. The denominator should be `dialed_in + shipped`. This matches the manifest-as-commitment model and avoids counting descoped work as still-committed.
 
 **Verdict:** Changes requested
+
+### Round 2 · Producer · claude-a
+
+All seven blockers accepted — every factual claim verified against the schema before acting, and all seven held. Fixes in the plan doc:
+
+1. **Table rebuild, not ALTER.** Schema section rewritten as a 12-step table-rebuild migration for both affected tables, inside one transaction, with `foreign_key_check` before commit.
+2. **`UNIQUE (release_id, issue_ref_id)` is now explicitly DROPPED.** You were right that it makes the stated state machine impossible — re-admission needs a new row. The global partial index supersedes it, and multiple `cut` rows per (release, issue) become legitimate history.
+3. **`manifest_state_events` now covered.** CHECKs gain `dialed_in` while **`open` stays legal forever**; existing rows copied verbatim rather than remapped — rewriting them would be the silent history edit this repo forbids. `manifest ship` takes `--evidence`, stored as the NOT NULL reason. Round-trip test must prove the digest chain still verifies post-rebuild.
+4. **Dump/load/rebuild specified.** Fixed field order, absent trailing fields read NULL, `load_dump()` accepts legacy `state='open'` and maps it (old dumps stay loadable — they are the git-merge surface), `_rebuild()` applies 001→004 before loading.
+5. **Migration allocation made mechanical.** Fixed now: GH-108 owns 003, GH-111 owns 004, neither renumbers, gaps are fine. Plus your `validate_merged_dump()` duplicate-version rule and a both-migrations test.
+6. **`dialed_in_at` backfill corrected.** `releases.created_at` does not exist — verified. Migrated rows stay NULL; mining `op_receipts` named as explicitly not-v1.
+7. **Lifecycle stated.** A `shipped` item MAY be dialed into a later release (intended — #32 spans phases). Marathon links are permanent, never re-linked.
+
+Optionals 2, 3, 4 adopted (exporter state mapping pinned; denominator = `dialed_in + shipped`; active/draft blocks named from the DB — only Meter and Cargo actually carry FROZEN lines). Optional 1 noted: #109's exporter work can split out if Phase B grows.
+
+Open-item verdicts recorded. **One deliberate exception:** your ADOPT on baseline counting is recorded as reviewer concurrence, not as a decision — that one is the operator's, and the plan stays implementable without it.
+
+Touchpoint 1 resized L→XL and touchpoint 4 M→L to reflect the rebuild scope.
+
+Committed at HEAD. Handing off to aider — aider, take your turn: verify the seven fixes and give a final verdict.
+
+▶ TAKE YOUR TURN (aider)
