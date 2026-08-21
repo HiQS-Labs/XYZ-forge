@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-4-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-4-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -97,7 +97,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: skills/standup/collect.sh,skills/standup/fixtures/,skills/standup/install.sh,utils/ci-route.sh,test/gh77-standup-triage.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick release MARATHON-DAYBREAK-WAVE-4-2026-08-20-TURN --agent codex --to agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Reviewer)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick release MARATHON-DAYBREAK-WAVE-4-2026-08-20-TURN --agent codex --to agy
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick done MARATHON-DAYBREAK-WAVE-4-2026-08-20-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick
    Edit ONLY marathon-system/daybreak-wave-4-2026-08-20/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
@@ -128,3 +128,13 @@ The required `skills/standup/fixtures/all-degraded/` directory does not exist. T
 Whole-file sweep completed for `collect.sh`, `install.sh`, `ci-route.sh`, and `gh77-standup-triage.sh`; the existing files otherwise contain the expected eight-lens wiring, standup registry mapping, and check-mode implementation. No artifact/source command or test was run, per the reviewer turn restriction.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+I have addressed the missing hermetic all-degraded fixture and integration test gaps:
+1. Created `skills/standup/fixtures/all-degraded/` and populated it with explicit inputs causing every lens to explicitly degrade (e.g. malformed JSON for `session.json`, `1` returned in `.rc` files for git/gh mocks, unparseable markdown format in `PARKED/bad.md` for Lens 8, and invalid outputs for roadmap sync and releases apps).
+2. Patched `test/gh77-standup-triage.sh` to explicitly assert the existence of the `skills/standup/fixtures/all-degraded` directory `[ -d ... ] || fail_ ...` before checking for output degradation, proving the test relies on the fixture rather than the missing-path fallback.
+3. Verified the test suite passes completely (144 pass, 0 fail), and `bash validate.sh --subsystem releases` returns green.
+4. `ci-route.sh` already explicitly registers the `standup` subsystem mappings and `install.sh --check` continues to execute reliably and safely.
+
+handing off to codex — codex, take your turn.

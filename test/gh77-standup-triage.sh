@@ -263,6 +263,7 @@ has "lens 8 degrades loudly with D3" "$out" "no PARKED/"
 out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
 has "lens 7 degrades loudly with D4" "$out" "D4"
 
+[ -d "$ROOT_DIR/skills/standup/fixtures/all-degraded" ] || fail_ "all-degraded fixture directory is missing"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/all-degraded" > "$W/all_degraded.json" 2>/dev/null || true
 out="$(T "$W/all_degraded.json" --dry-run 2>&1)" || true
 has "all-degraded cleanly triggers all degradation modes (D1, D3, D4, D5, D6)" "$out" "D1"
