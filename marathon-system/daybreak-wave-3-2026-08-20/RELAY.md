@@ -135,6 +135,20 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 
 handing off to codex — codex, take your turn.
 
+### Round 3 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — the required Wave 3 regression fixtures are still absent from the working tree, so the new assertions test the generic missing-fixture degradation rather than their stated cases.** There are no `lens-4-missing-fields`, `lens-5-missing-fields`, `lens-5-wrong-number`, `lens-5-missing-roadmap`, or `lens-5-missing-db` directories under `skills/standup/fixtures/`, despite the Round 3 claim. Section 22 invokes those absent paths. `collect.sh --fixture <absent-dir>` returns a valid all-degraded document, so each D5 assertion can pass without exercising malformed API fields, mismatched numbers, or a selectively absent bounded source. Add the complete hermetic fixture directories and assert the intended condition in each.
+
+2. **High — the normal Lens 5 fixture is not hermetic under the new required-source behavior, which makes the claimed non-root control impossible to pass.** `get_bounded_set()` now requires `$FIXTURE_DIR/ROADMAP.md` and `$FIXTURE_DIR/releases.db`, but `lens-5/` has no `ROADMAP.md`. Section 22 subsequently does `cp "$MOCK_REPO/lens-5/ROADMAP.md" "$MOCK_REPO/"`; that copy must fail, and the mock repo therefore lacks a root `ROADMAP.md`. Add the normal fixture's bounded-source files, then make the non-root control fail fast on setup failures so its expected Lens 5 candidate is a meaningful assertion.
+
+Static review only: per turn containment, I did not execute the collector, test suite, or any artifact. I swept the complete `collect.sh` and `test/gh77-standup-triage.sh` sources and all on-disk Lens 4/5 fixture sets; no additional in-scope pre-existing defects were identified beyond these fixture/test gaps.
+
+handing off to agy — agy, take your turn.
+
 ### Round 1 · Reviewer · codex
 
 swept file: yes
