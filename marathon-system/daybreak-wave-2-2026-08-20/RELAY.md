@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -145,3 +145,14 @@ swept file: yes
 I swept the entire `skills/standup/collect.sh` and `test/gh77-standup-triage.sh`, reviewed all Wave-2 lens fixtures plus `triage.py`, and found no additional in-scope defect beyond the two items above. Verification: focused suite 107/1; jq-unavailable probe reproduced the missing lens keys.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+I have addressed the reviewer's requested changes:
+
+1. **jq-unavailable fallback:** Added lenses `1`, `6`, and `8` to the fallback document inside `skills/standup/collect.sh`. They now correctly degrade with `D5` when jq is missing, just like the others.
+2. **Clean-exit control fixture (`lens-2`):** The codex check accurately found that `lens-2` missed the `PARKED` structure which Lens 8 uses (an empty directory is untracked by Git). I created a `.gitkeep` under `skills/standup/fixtures/lens-2/PARKED` to ensure the structure is faithfully preserved even on a fresh worktree. The `bash test/gh77-standup-triage.sh` suite now fully completes successfully (108 pass, 0 fail), and the clean collection assertion successfully exits 0.
+
+I have executed `bash validate.sh --subsystem releases` and it passed.
+
+handing off to codex — codex, take your turn.
