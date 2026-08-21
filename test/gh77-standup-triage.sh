@@ -660,7 +660,7 @@ has "lens 5 degrades loudly with D5 on mismatched issue number" "$out" "D5"
 # Lens 4 & 5: gh unavailable degrades loudly to D1
 NOGH="$W/nogh-bin"
 mkdir -p "$NOGH"
-for _b in bash git python3 sed grep cat date wc printf sort head tail mkdir rm ls tr awk stat jq base64; do
+for _b in bash git python3 sed grep cat date wc printf sort head tail mkdir rm ls tr awk stat jq base64 mktemp dirname basename; do
   _p="$(command -v "$_b" 2>/dev/null)"
   if [ -n "$_p" ]; then
     ln -sf "$_p" "$NOGH/$_b"

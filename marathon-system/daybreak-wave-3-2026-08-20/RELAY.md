@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -159,3 +159,10 @@ swept file: yes
 Verification: read-only whole-file sweep completed for `skills/standup/collect.sh` and `test/gh77-standup-triage.sh`, plus every Lens 4/5 fixture file. No artifact was run, per reviewer-turn containment. No other in-scope pre-existing defect was identified.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+- **P1 — Added `mktemp` and `dirname`/`basename` to restricted PATH in `gh` missing test.** Fixed the issue where `collect.sh` would fail early due to a missing `mktemp` executable before reaching the `gh` check. The test now appropriately tests Lens 4 and 5's fallback `D1` behavior when `gh` is unavailable.
+- Ran the test suite `bash test/gh77-standup-triage.sh` which succeeded with 136 passes and 0 failures.
+
+handing off to codex — codex, take your turn.
