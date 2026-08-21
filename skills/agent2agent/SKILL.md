@@ -110,6 +110,14 @@ printed `REARM:` command after `send`; on `closed` or `timeout`, do not re-arm. 
 the host does not support background-task wake: the instruction cannot wake a dormant chat session
 by itself.
 
+**Late opt-in is still automatic.** A user may request the timer after `start`; do not create a
+second discussion or edit its relay file. Its creation-time `TIMED-WATCH: disabled` line then
+remains accurate history, not a refusal of the new request. The waiting seat must immediately
+launch the 120-second / 1,800-second watch above; the `NEXT:` seat takes its turn, sends, and then
+arms the same watch. Return the invitation plus the timed-doorbell request verbatim so the other
+live session receives the authorization too. If the host cannot start background tasks, say that
+the two-minute wake cannot be automatic there and provide the exact `watch` command instead.
+
 ### Doorbell — hands-free for live sessions with background-task wake
 
 On a host that re-invokes the session when a background command exits (Claude Code's background
