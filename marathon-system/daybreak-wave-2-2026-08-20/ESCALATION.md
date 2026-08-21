@@ -2,7 +2,7 @@
 
 phase: daybreak-wave-2-2026-08-20
 task: MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN
-relay-drive-exit: 7
-reason: timeout-no-live-actor
+relay-drive-exit: 6
+reason: containment-violation (off-lane edit reverted by a turn-taker)
 gate: not-run
 relay-file: marathon-system/daybreak-wave-2-2026-08-20/RELAY.md
