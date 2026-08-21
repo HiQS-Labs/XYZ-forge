@@ -157,3 +157,24 @@ Two known-hazard notes from the shim itself apply and are worth recording for wh
 Retrying the same lane once. Handing off to aider — aider, take your turn: verify the seven Round 2 fixes and give a final verdict. Append a `### Round 4 · Reviewer · aider` block with your findings and set the `STATUS:` line. Do NOT echo the file back; append your block only, and keep reasoning brief.
 
 ▶ TAKE YOUR TURN (aider)
+
+### Round 4 · Producer · claude-a — lane change to Codex
+
+The aider/qwen lane is retired for this thread by operator instruction; the route is now graded **C** for reviewer use in `HARNESS-MODELS-REGISTRY.md` (both halves recorded — r1's review content was excellent, the delivery seam is not). Harness cleanup done the sanctioned way: stray `rtl-wt` worktree removed, stuck `aider` claim cleared with `tick reap` (auditable `task.released`), fresh token `RELAY-gh111-codex-verify` for this round.
+
+**Since Round 1, two things changed and NEITHER has been read by a second reviewer:**
+
+1. **Round 2 applied all seven of r1's blockers** — table-rebuild migration for both `manifest_items` and `manifest_state_events`, the `UNIQUE (release_id, issue_ref_id)` drop, event-table CHECK vocabulary keeping `open` legal forever, `manifest ship --evidence` for the NOT NULL reason, dump/load/rebuild compatibility incl. legacy `state='open'` mapping, fixed migration allocation (108→003, 111→004) plus a duplicate-version validation rule, and the `dialed_in_at` backfill correction (`releases.created_at` does not exist).
+2. **Baseline counting was ADOPTED by the operator and specified from scratch** — three write-once columns, auto-capture on `draft → active` only when the manifest is non-empty, no-capture (never zero) when empty, a `releases baseline` verb for that case, progress-plus-growth reporting where negative growth is legitimate, and a flagged `backfilled` migration for currently-active releases.
+
+▶ TAKE YOUR TURN (codex — REVIEWER)
+
+Verify the seven r1 fixes landed correctly AND review the baseline design, which no second reader has seen. Highest-value angles:
+
+- **The baseline kickoff-ordering rule.** The naive "snapshot on activate" would have given Daybreak a baseline of 0 (release rows are created before manifests are dialed in). Does the non-empty-manifest condition actually close that, or does it just move the hazard? What happens on `active → draft → active`, or if a release is created directly as `active`?
+- **Write-once enforcement** — is refusal the right behavior when a legitimate re-baseline is wanted, and is there a code path that could set it twice?
+- **The table-rebuild migration** for two tables in one transaction, including recreating the append-only triggers on `manifest_state_events` while preserving the digest chain.
+- **Migration allocation** 003/004 across two in-flight plans, and whether the `validate_merged_dump()` duplicate-version rule is sufficient.
+- Anything r1 got wrong that I accepted too readily.
+
+Constraints: the four decisions under "## The decision" and the adopted baseline are FROZEN operator calls — flag contradictions WITH them, do not relitigate them. REVIEW turn: report in this relay file only, do not edit the plan doc. Rank Blocking / Optional / Out-of-scope, cite doc lines or repo files. End with `**Verdict:** Approved` or `**Verdict:** Changes requested` and set the `STATUS:` line at the top.
