@@ -200,7 +200,51 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/f
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-fail" > "$W/deg6.json"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8" > "$W/lens8.json"
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-fail" > "$W/deg8.json"
-out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4" > "$W/lens4.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4-fail" > "$W/deg4.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4-truncated" > "$W/lens4_trunc.json"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5" > "$W/lens5.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-fail" > "$W/deg5.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-manifest" > "$W/lens5_manifest.json"
+
+out="$(T "$W/lens4.json" --dry-run 2>&1)" || true
+has "lens 4 finds open PR 51" "$out" "review PR 51"
+has "lens 4 pin classification for CLEAN" "$out" "4 · review PR 51"
+has "lens 4 pin classification for non-CLEAN (BLOCKED goes to 6)" "$out" "6 · review PR 52"
+is "lens 4 structured candidate emits merge_state" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["4"]["candidates"][0]["merge_state"])' "$W/lens4.json")" "CLEAN"
+
+out="$(T "$W/deg4.json" --dry-run 2>&1)" || true
+has "lens 4 degrades loudly with D1" "$out" "D1"
+out="$(T "$W/lens4_trunc.json" --dry-run 2>&1)" || true
+has "lens 4 truncates at 50 and degrades with D2" "$out" "D2"
+is "lens 4 D2 case still emits its 50 candidates" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(len(d["lenses"]["4"]["candidates"]))' "$W/lens4_trunc.json")" "50"
+is "lens 4 D2 case expected first candidate remains present" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["4"]["candidates"][0]["what"])' "$W/lens4_trunc.json")" "review PR 1"
+
+out="$(T "$W/lens5.json" --dry-run 2>&1)" || true
+has "lens 5 finds triage issue" "$out" "triage issue 200"
+is "lens 5 structured candidate emits live_state with updatedAt" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["5"]["candidates"][0]["live_state"])' "$W/lens5.json")" "OPEN/2026-08-19"
+out="$(T "$W/deg5.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D1" "$out" "D1"
+
+out="$(T "$W/lens5_manifest.json" --dry-run 2>&1)" || true
+has "lens 5 manifest source contributes exactly its issue number" "$out" "triage issue 999"
+
+# Rerun/fingerprint regression test for Lens 5
+rm -f "$W/sess_lens5.json"
+T "$W/lens5.json" --apply --session-state "$W/sess_lens5.json" >/dev/null 2>&1
+out="$(T "$W/lens5.json" --dry-run --session-state "$W/sess_lens5.json" 2>&1)" || true
+has "unchanged lens 5 item is suppressed on rerun" "$out" "1 suppressed"
+hasnt "  and does not re-render" "$out" "triage issue 200"
+
+cp -r "$ROOT_DIR/skills/standup/fixtures/lens-5" "$W/lens-5-copy"
+python3 -c 'import json; print(json.dumps({"number": 200, "state": "OPEN", "title": "An Issue", "updatedAt": "2026-08-20T14:00:00Z"}))' > "$W/lens-5-copy/lens5_gh_issue_200.txt"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$W/lens-5-copy" > "$W/lens5_updated.json"
+
+out="$(T "$W/lens5_updated.json" --dry-run --session-state "$W/sess_lens5.json" 2>&1)" || true
+has "  but a changed live state (updatedAt) re-raises it" "$out" "triage issue 200"
+
 out="$(T "$W/lens1.json" --dry-run 2>&1)" || true
 has "lens 1 finds session mention" "$out" "re-file 77"
 out="$(T "$W/deg1.json" --dry-run 2>&1)" || true
@@ -215,6 +259,8 @@ out="$(T "$W/lens8.json" --dry-run 2>&1)" || true
 has "lens 8 finds done work" "$out" "close parked item issue:301"
 out="$(T "$W/deg8.json" --dry-run 2>&1)" || true
 has "lens 8 degrades loudly with D3" "$out" "no PARKED/"
+
+out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
 has "lens 7 degrades loudly with D4" "$out" "D4"
 
 echo
@@ -283,14 +329,14 @@ if python3 -c '
 import json, sys
 try:
     d = json.load(open(sys.argv[1]))
-    expected_keys = {"1", "2", "3", "6", "7", "8"}
+    expected_keys = {"1", "2", "3", "4", "5", "6", "7", "8"}
     keys = set(d.get("lenses", {}).keys())
     if keys != expected_keys: sys.exit(1)
     if any(l.get("degraded_id") != "D5" for l in d["lenses"].values()): sys.exit(2)
 except Exception:
     sys.exit(3)
 ' "$W/nojq.json"; then
-  pass=$((pass+1)); echo "  PASS: fallback document contains exactly lenses 1, 2, 3, 6, 7, 8 all as D5"
+  pass=$((pass+1)); echo "  PASS: fallback document contains exactly lenses 1-8 all as D5"
 else
   fail=$((fail+1)); echo "  FAIL: fallback document keys or degraded_id mismatch" >&2
 fi
@@ -590,5 +636,106 @@ out="$(T "$W/live_lens1_nonfixture.json" --dry-run 2>&1)" || true
 has "Lens 1 works outside fixture mode when .standup-transcript.json is present at repo root" "$out" "test what"
 
 echo
+
+
+echo
+# ── 22. Daybreak Wave 3: Lens 4 & 5 validation and bounds regression ──────────────────────────────
+export STANDUP_STAMP=2026-08-19-1200
+
+# Lens 4: malformed/missing fields (D5)
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4-missing-fields" > "$W/lens4_missing.json" 2>/dev/null
+out="$(T "$W/lens4_missing.json" --dry-run 2>&1)" || true
+has "lens 4 degrades loudly with D5 on missing/malformed API fields" "$out" "D5"
+
+# Lens 5: malformed/missing fields (D5)
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-missing-fields" > "$W/lens5_missing.json" 2>/dev/null
+out="$(T "$W/lens5_missing.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on missing/malformed API fields" "$out" "D5"
+
+# Lens 5: wrong issue number from API (D5)
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-wrong-number" > "$W/lens5_wrong_num.json" 2>/dev/null
+out="$(T "$W/lens5_wrong_num.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on mismatched issue number" "$out" "D5"
+
+# Lens 4 & 5: gh unavailable degrades loudly to D1
+NOGH="$W/nogh-bin"
+mkdir -p "$NOGH"
+for _b in bash git python3 sed grep cat date wc printf sort head tail mkdir rm ls tr awk stat jq base64 mktemp dirname basename; do
+  _p="$(command -v "$_b" 2>/dev/null)"
+  if [ -n "$_p" ]; then
+    ln -sf "$_p" "$NOGH/$_b"
+  fi
+done
+echo '[]' > "$W/dummy_session.json"
+PATH="$NOGH" bash "$ROOT_DIR/skills/standup/collect.sh" --session "$W/dummy_session.json" > "$W/nogh.json" 2>/dev/null
+if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$W/nogh.json" 2>/dev/null; then
+  pass_ "collector still emits valid JSON when gh is missing"
+else
+  fail_ "collector emitted invalid JSON when gh is missing"
+fi
+out="$(T "$W/nogh.json" --dry-run 2>&1)" || true
+has "lens 4 degrades loudly with D1 when gh is missing" "$out" "D1"
+has "lens 5 degrades loudly with D1 when gh is missing" "$out" "D1"
+
+
+# Lens 5: non-root invocation control (must find ROADMAP and DB at REPO_ROOT)
+# We test this by creating a mock repository inside $W
+MOCK_REPO="$W/mock-repo"
+mkdir -p "$MOCK_REPO/subdir"
+cp -r "$ROOT_DIR/skills/standup/fixtures/lens-5" "$MOCK_REPO/lens-5"
+# Make it look like a repo
+(cd "$MOCK_REPO" && git init >/dev/null && git config user.email "a@b.com" && git config user.name "A B" && touch dummy && git add dummy && git commit -m "init" >/dev/null)
+# Provide bounded sources at repo root
+cp "$MOCK_REPO/lens-5/ROADMAP.md" "$MOCK_REPO/"
+cp "$MOCK_REPO/lens-5/releases.db" "$MOCK_REPO/"
+echo "[{\"what\": \"GH-200\"}]" > "$MOCK_REPO/.standup-transcript.json"
+
+# We run collect.sh WITHOUT --fixture, from the subdirectory, maskinggh with a mock on PATH
+MOCK_BIN="$W/mock_bin"
+mkdir -p "$MOCK_BIN"
+cat << 'MOCK' > "$MOCK_BIN/gh"
+#!/usr/bin/env bash
+if [[ "$1" == "--version" ]]; then exit 0; fi
+if [[ "$1" == "issue" && "$2" == "view" ]]; then
+  # Just return the same static payload for any issue
+  echo '{"number":'"$3"',"state":"OPEN","title":"An Issue","updatedAt":"2026-08-20T14:00:00Z"}'
+  exit 0
+fi
+if [[ "$1" == "pr" && "$2" == "list" ]]; then
+  echo '[]'
+  exit 0
+fi
+exit 1
+MOCK
+chmod +x "$MOCK_BIN/gh"
+
+# We need to mock jq too, wait jq is required by collect.sh
+ln -s "$(command -v jq)" "$MOCK_BIN/jq"
+ln -s "$(command -v git)" "$MOCK_BIN/git"
+ln -s "$(command -v python3)" "$MOCK_BIN/python3"
+ln -s "$(command -v base64)" "$MOCK_BIN/base64"
+
+(cd "$MOCK_REPO/subdir" && PATH="$MOCK_BIN:$PATH" bash "$ROOT_DIR/skills/standup/collect.sh") > "$W/lens5_subdir.json" 2>/dev/null
+out="$(T "$W/lens5_subdir.json" --dry-run 2>&1)" || true
+has "lens 5 non-root invocation finds repo root ROADMAP and DB bounded inputs" "$out" "triage issue 200"
+
+# Lens 5: missing ROADMAP degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-missing-roadmap" > "$W/lens5_missing_roadmap.json" 2>/dev/null
+out="$(T "$W/lens5_missing_roadmap.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on missing/unreadable ROADMAP" "$out" "D5"
+
+# Lens 5: missing releases.db degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-missing-db" > "$W/lens5_missing_db.json" 2>/dev/null
+out="$(T "$W/lens5_missing_db.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on missing/unreadable releases.db" "$out" "D5"
+
+# Lens 5: malformed session.json degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-malformed-session" > "$W/lens5_malformed_session.json" 2>/dev/null
+is "lens 5 degrades loudly with D5 on malformed session.json" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["5"]["degraded_id"])' "$W/lens5_malformed_session.json")" "D5"
+
+# Lens 5: invalid shape session.json degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-invalid-shape-session" > "$W/lens5_invalid_shape_session.json" 2>/dev/null
+is "lens 5 degrades loudly with D5 on invalid shape session.json" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["5"]["degraded_id"])' "$W/lens5_invalid_shape_session.json")" "D5"
+
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

@@ -22,8 +22,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 if [[ -z "$SESSION_FILE" && -z "$FIXTURE_DIR" ]]; then
-  REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
   SESSION_FILE="$REPO_ROOT/.standup-transcript.json"
 fi
 
@@ -44,6 +44,8 @@ if ! command -v jq >/dev/null 2>&1; then
     '   "1": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "2": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "3": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "4": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "5": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "6": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "7": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "8": {"status": "degraded", "degraded_id": "D5", "candidates": []}' \
@@ -628,6 +630,252 @@ else
   lens1_status="degraded"; lens1_deg="\"D6\""
 fi
 
+# ── Lens 4: Open PRs ──────────────────────────────────────────────────────────────────────────────
+lens4_status="ok"
+lens4_deg="null"
+lens4_cands="[]"
+
+set +e
+out4=$(run_mock "lens4" gh pr list --limit 51 --json number,title,updatedAt,isDraft,mergeStateStatus 2>/dev/null)
+rc4=$?
+set -e
+
+if [[ $rc4 -ne 0 ]]; then
+  lens4_status="degraded"
+  lens4_deg="\"D1\""
+else
+  out4_processed=$(python3 -c '
+import sys, json, time, datetime, os
+try:
+    data = json.loads(sys.argv[1])
+except Exception:
+    print("D5")
+    sys.exit(0)
+
+if not isinstance(data, list):
+    print("D5")
+    sys.exit(0)
+
+is_truncated = False
+if len(data) == 51:
+    is_truncated = True
+    data = data[:50]
+
+cands = []
+now_ts = time.time()
+env_now = os.environ.get("STANDUP_STAMP", "")
+if env_now and len(env_now) >= 10:
+    try:
+        now_ts = datetime.datetime.strptime(env_now[:10], "%Y-%m-%d").timestamp()
+    except Exception:
+        pass
+
+for pr in data:
+    try:
+        if "number" not in pr or "title" not in pr or "updatedAt" not in pr or "isDraft" not in pr or "mergeStateStatus" not in pr:
+            raise ValueError()
+        num = pr["number"]
+        if not isinstance(num, int): raise ValueError()
+        title = pr["title"]
+        if not isinstance(title, str): raise ValueError()
+        is_draft = pr["isDraft"]
+        if not isinstance(is_draft, bool): raise ValueError()
+        merge_state = pr["mergeStateStatus"]
+        if not isinstance(merge_state, str): raise ValueError()
+        updated_at = pr["updatedAt"]
+        if not isinstance(updated_at, str): raise ValueError()
+        
+        dt = datetime.datetime.strptime(updated_at, "%Y-%m-%dT%H:%M:%SZ")
+        stale_ts = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
+        
+        stale_days = int((now_ts - stale_ts) / 86400)
+        updated_date = updated_at[:10]
+        
+        cands.append({
+            "key": f"pr:{num}",
+            "what": f"review PR {num}",
+            "evidence_type": "pr",
+            "evidence_payload": f"{num}+{merge_state}",
+            "staleness": int(stale_ts),
+            "stale_days": stale_days,
+            "merge_state": merge_state,
+            "live_state": f"{merge_state}/{str(is_draft).lower()}/{updated_date}",
+            "close": f"gh pr review {num}",
+            "close_kind": "command"
+        })
+    except Exception:
+        print("D5")
+        sys.exit(0)
+
+res = {"cands": cands, "trunc": is_truncated}
+print(json.dumps(res))
+' "$out4")
+
+  if [[ "$out4_processed" == "D5" ]]; then
+    lens4_status="degraded"
+    lens4_deg="\"D5\""
+  else
+    trunc=$(echo "$out4_processed" | jq -r '.trunc')
+    lens4_cands=$(echo "$out4_processed" | jq -c '.cands')
+    if [[ "$trunc" == "true" ]]; then
+      lens4_status="degraded"
+      lens4_deg="\"D2\""
+    fi
+  fi
+fi
+
+# ── Lens 5: Issue state ───────────────────────────────────────────────────────────────────────────
+lens5_status="ok"
+lens5_deg="null"
+lens5_cands="[]"
+
+out5_processed=$(python3 -c '
+import sys, os, json, re, sqlite3, time, datetime
+
+def get_bounded_set(fx, session_file, repo_root):
+    nums = set()
+    
+    if fx:
+        mock_set = os.path.join(fx, "lens5_bounded_set.txt")
+        if os.path.exists(mock_set):
+            with open(mock_set) as f:
+                for line in f:
+                    if line.strip().isdigit():
+                        nums.add(int(line.strip()))
+        
+    if os.path.exists(session_file):
+        try:
+            with open(session_file) as f:
+                data = json.load(f)
+            if not isinstance(data, list):
+                raise ValueError()
+            for item in data:
+                for k in ["quote", "what", "close"]:
+                    v = str(item.get(k, ""))
+                    for m in re.finditer(r"(?:#|GH-|issue\s+)(\d+)", v, re.IGNORECASE):
+                        nums.add(int(m.group(1)))
+        except Exception:
+            print("D5")
+            sys.exit(0)
+
+    roadmap_path = os.path.join(fx, "ROADMAP.md") if fx else os.path.join(repo_root, "ROADMAP.md")
+    try:
+        with open(roadmap_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+        in_sec = False
+        for line in lines:
+            if line.startswith("### "):
+                in_sec = ("Queue / parked intake" in line or "In progress" in line)
+            elif in_sec and line.startswith("- **"):
+                m = re.search(r"GH-(\d+)", line)
+                if m:
+                    nums.add(int(m.group(1)))
+    except Exception:
+        print("D5")
+        sys.exit(0)
+
+    db_path = os.path.join(fx, "releases.db") if fx else os.path.join(repo_root, "releases.db")
+    try:
+        db_uri = f"file:{db_path}?mode=ro"
+        c = sqlite3.connect(db_uri, uri=True)
+        rows = c.execute("SELECT i.url FROM manifest_items mi JOIN releases r ON r.id = mi.release_id JOIN issue_refs i ON i.id = mi.issue_ref_id WHERE r.status != ? AND i.url IS NOT NULL", ("shipped",)).fetchall()
+        for r in rows:
+            m = re.search(r"issues/(\d+)$", r[0])
+            if m:
+                nums.add(int(m.group(1)))
+    except Exception:
+        print("D5")
+        sys.exit(0)
+    
+    return sorted(list(nums))
+
+def run_mock(id, cmd, fx):
+    import subprocess
+    if fx:
+        rc_file = os.path.join(fx, f"{id}.rc")
+        txt_file = os.path.join(fx, f"{id}.txt")
+        if os.path.exists(rc_file):
+            with open(rc_file) as f: rc = int(f.read().strip())
+            out = ""
+            if os.path.exists(txt_file):
+                with open(txt_file) as f: out = f.read()
+            return rc, out
+        if os.path.exists(txt_file):
+            with open(txt_file) as f: out = f.read()
+            return 0, out
+        return 1, f"Missing fixture: {id}\n"
+    try:
+        proc = subprocess.run(cmd, shell=False, capture_output=True, text=True)
+        return proc.returncode, proc.stdout + proc.stderr
+    except OSError:
+        return 127, "command not found\n"
+
+fx = sys.argv[1]
+session_file = sys.argv[2]
+repo_root = sys.argv[3]
+
+rc_gh, out_gh = run_mock("lens5_gh_check", ["gh", "--version"], fx)
+if rc_gh != 0:
+    print("D1")
+    sys.exit(0)
+
+cands = []
+nums = get_bounded_set(fx, session_file, repo_root)
+
+for num in nums:
+    rc, out = run_mock(f"lens5_gh_issue_{num}", ["gh", "issue", "view", str(num), "--json", "number,state,title,updatedAt"], fx)
+    if rc != 0:
+        print("D1")
+        sys.exit(0)
+    try:
+        data = json.loads(out)
+        if "number" not in data or "state" not in data or "title" not in data or "updatedAt" not in data:
+            print("D5")
+            sys.exit(0)
+        if data["number"] != num:
+            print("D5")
+            sys.exit(0)
+        
+        number_val = data["number"]
+        if not isinstance(number_val, int): raise ValueError()
+        state = data["state"]
+        if not isinstance(state, str): raise ValueError()
+        title = data["title"]
+        if not isinstance(title, str): raise ValueError()
+        updated_at = data["updatedAt"]
+        if not isinstance(updated_at, str): raise ValueError()
+        
+        dt = datetime.datetime.strptime(updated_at, "%Y-%m-%dT%H:%M:%SZ")
+        stale_ts = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
+        stale_ts = int(stale_ts)
+            
+        updated_date = updated_at[:10]
+        cands.append({
+            "key": f"issue:{num}",
+            "what": f"triage issue {num}",
+            "evidence_type": "issue",
+            "evidence_payload": f"{num}+{state}@none",
+            "staleness": stale_ts,
+            "live_state": f"{state}/{updated_date}",
+            "close": f"gh issue view {num}",
+            "close_kind": "command"
+        })
+    except Exception:
+        print("D5")
+        sys.exit(0)
+
+print(json.dumps(cands))
+' "${FIXTURE_DIR:-}" "${SESSION_FILE:-}" "$REPO_ROOT")
+if [[ "$out5_processed" == "D1" ]]; then
+  lens5_status="degraded"
+  lens5_deg="\"D1\""
+elif [[ "$out5_processed" == "D5" ]]; then
+  lens5_status="degraded"
+  lens5_deg="\"D5\""
+else
+  lens5_cands="$out5_processed"
+fi
+
 # ── Lens 6: RELEASES ledger ───────────────────────────────────────────────────────────────────────
 lens6_status="ok"
 lens6_deg="null"
@@ -926,6 +1174,8 @@ cat <<EOF
    "1": {"status": "$lens1_status", "degraded_id": $lens1_deg, "candidates": $lens1_cands},
    "2": {"status": "$lens2_status", "degraded_id": $lens2_deg, "candidates": $lens2_cands},
    "3": {"status": "$lens3_status", "degraded_id": $lens3_deg, "candidates": $lens3_cands},
+   "4": {"status": "$lens4_status", "degraded_id": $lens4_deg, "candidates": $lens4_cands},
+   "5": {"status": "$lens5_status", "degraded_id": $lens5_deg, "candidates": $lens5_cands},
    "6": {"status": "$lens6_status", "degraded_id": $lens6_deg, "candidates": $lens6_cands},
    "7": {"status": "$lens7_status", "degraded_id": $lens7_deg, "candidates": $lens7_cands},
    "8": {"status": "$lens8_status", "degraded_id": $lens8_deg, "candidates": $lens8_cands}
@@ -938,6 +1188,6 @@ EOF
 # the document and then exited 0, so a caller checking the exit code was told the collection
 # succeeded after a bounded read had failed. The document is the same either way — this is about the
 # out-of-band signal a caller can act on without parsing JSON.
-if [[ "$lens1_status" != "ok" || "$lens2_status" != "ok" || "$lens3_status" != "ok" || "$lens6_status" != "ok" || "$lens7_status" != "ok" || "$lens8_status" != "ok" ]]; then
+if [[ "$lens1_status" != "ok" || "$lens2_status" != "ok" || "$lens3_status" != "ok" || "$lens4_status" != "ok" || "$lens5_status" != "ok" || "$lens6_status" != "ok" || "$lens7_status" != "ok" || "$lens8_status" != "ok" ]]; then
   exit 3
 fi
