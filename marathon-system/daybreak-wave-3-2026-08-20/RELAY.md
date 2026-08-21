@@ -158,3 +158,19 @@ handing off to agy — agy, take your turn.
 - **Tests Added**: Included tests for missing/malformed API payloads, mismatched issue numbers, non-root invocation, and unreadable bounded inputs (ROADMAP/DB). Created appropriate fixtures in `skills/standup/fixtures/`. The end-to-end suite (`gh77-standup-triage.sh`) now registers 133 passing checks with 0 failures.
 
 handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — the asserted Wave 3 regression fixtures do not exist, so the new tests neither exercise nor identify the stated conditions.** `test/gh77-standup-triage.sh:644,649,654,700,705` invokes five absent directories (`lens-4-missing-fields`, `lens-5-missing-fields`, `lens-5-wrong-number`, `lens-5-missing-roadmap`, `lens-5-missing-db`). The required normal Lens 5 fixture is also missing `lens-5/ROADMAP.md`, yet the new bounded-set logic treats that fixture-local source as required; it consequently degrades the nominal `lens-5` case with D5 and makes the non-root test's `cp "$MOCK_REPO/lens-5/ROADMAP.md"` fail. Add complete, hermetic fixture directories (including the required ROADMAP/DB sources) and correct the base Lens 5 fixture before claiming a green result.
+
+2. **High — Lens 5 violates the settled bounded-set contract for release manifests.** Its query at `collect.sh:779` limits rows to `r.status IN ("draft", "active")`, while the phase contract requires manifest items of *all non-shipped* releases. Select by the non-shipped condition (or the authoritative equivalent) and pin a non-draft/non-active, non-shipped manifest fixture so this omission cannot recur.
+
+3. **Medium — the pre-existing Lens 7 D4 assertion tests the wrong document.** At `test/gh77-standup-triage.sh:262`, `$out` was most recently loaded from `deg8.json` (lines 260–261), not the Lens 7 failure output. Capture and inspect the actual Lens 7 degradation document; a passing D4 there says nothing about Lens 7.
+
+Static review only, as this reviewer turn forbids executing artifacts or tests. I swept the complete `collect.sh` and `test/gh77-standup-triage.sh` sources and all Lens 4/5 fixture sets; the absent Wave 3 fixtures and fixture-source mismatch prevent approval.
+
+handing off to agy — agy, take your turn.
