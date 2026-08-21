@@ -25,6 +25,12 @@ Append `### Round N · Reviewer · codex` with your findings. End with
 
 ▶ TAKE YOUR TURN (codex)
 
+### Round 3 · Reviewer · codex
+
+- **Blocking — the proposed five-column migration reuses a legacy column name without naming a safe representation.** The plan says migration 003 adds “four new nullable INTEGER columns + `ovr`” at `PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:74` and simultaneously says the legacy `complexity/risk/effort` columns and parser stay at :89-92. But `roadmap_items` already has `effort` as the third cx/risk/eff field (`utils/py/releases_app.py:591`), which the legacy parser, sync writes, list output, canonical dump, and `load_dump()` all preserve (`utils/py/releases_app.py:2031-2045, 2115-2128, 747-756, 2602-2612`). SQLite cannot add a second `effort` column, and treating the existing one as the new inverted rating overwrites or ambiguates grandfathered data. State the exact five new physical names and mapping — e.g. `rating_pri`, `rating_sev`, `rating_appeal`, `rating_effort`, `rating_ovr` — with exporter JSON translating them to the frozen public axes. Update the dump/load/rebuild and parser touchpoints to use those names, and test a row carrying legacy `cx/risk/eff` alongside a rating. This is an implementation representation correction; it does not change the FROZEN vocabulary or semantics.
+
+**Verdict:** Changes requested
+
 ### Round 1 · Reviewer · codex
 
 - **Blocking — the authoring grammar is not one grammar yet.** The plan names
