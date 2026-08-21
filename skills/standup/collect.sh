@@ -634,137 +634,102 @@ lens6_deg="null"
 lens6_cands="[]"
 out6=$(python3 -c '
 import sys, os, time, json, re, calendar, datetime
-def parse_date(d):
-    try:
-        dt = datetime.datetime.strptime(d, "%Y-%m-%d")
-        return calendar.timegm(dt.utctimetuple())
-    except Exception:
-        return None
 
-def run_mock(id, cmd):
-    import os, subprocess
-    fx = os.environ.get("FIXTURE_DIR", "")
-    if fx:
-        rc_file = os.path.join(fx, f"{id}.rc")
-        txt_file = os.path.join(fx, f"{id}.txt")
-        if os.path.exists(rc_file):
-            with open(rc_file) as f: rc = int(f.read().strip())
-            out = ""
+def main():
+    def parse_date(d):
+        try:
+            dt = datetime.datetime.strptime(d, "%Y-%m-%d")
+            return calendar.timegm(dt.utctimetuple())
+        except Exception:
+            return None
+
+    def run_mock(id, cmd):
+        import os, subprocess
+        fx = os.environ.get("FIXTURE_DIR", "")
+        if fx:
+            rc_file = os.path.join(fx, f"{id}.rc")
+            txt_file = os.path.join(fx, f"{id}.txt")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f: rc = int(f.read().strip())
+                out = ""
+                if os.path.exists(txt_file):
+                    with open(txt_file) as f: out = f.read()
+                return rc, out
             if os.path.exists(txt_file):
                 with open(txt_file) as f: out = f.read()
-            return rc, out
-        if os.path.exists(txt_file):
-            with open(txt_file) as f: out = f.read()
-            return 0, out
-        return 1, f"Missing fixture: {id}\n"
-    proc = subprocess.run(cmd, shell=False, capture_output=True, text=True)
-    return proc.returncode, proc.stdout + proc.stderr
+                return 0, out
+            return 1, f"Missing fixture: {id}\n"
+        proc = subprocess.run(cmd, shell=False, capture_output=True, text=True)
+        return proc.returncode, proc.stdout + proc.stderr
 
-rc_chk, out_chk = run_mock("lens6_check", ["python3", "utils/py/releases_app.py", "check"])
-rc_nxt, out_nxt = run_mock("lens6_next", ["python3", "utils/py/releases_app.py", "next"])
-rc_drf, out_drf = run_mock("lens6_draft", ["python3", "utils/py/releases_app.py", "list", "--status", "draft"])
-rc_act, out_act = run_mock("lens6_active", ["python3", "utils/py/releases_app.py", "list", "--status", "active"])
+    rc_chk, out_chk = run_mock("lens6_check", ["python3", "utils/py/releases_app.py", "check"])
+    rc_nxt, out_nxt = run_mock("lens6_next", ["python3", "utils/py/releases_app.py", "next"])
+    rc_drf, out_drf = run_mock("lens6_draft", ["python3", "utils/py/releases_app.py", "list", "--status", "draft"])
+    rc_act, out_act = run_mock("lens6_active", ["python3", "utils/py/releases_app.py", "list", "--status", "active"])
 
-if (rc_chk not in (0, 1, 2)) or (rc_nxt != 0) or (rc_drf != 0) or (rc_act != 0):
-    print("D5")
-    sys.exit(0)
-
-cands = []
-versions = []
-
-def parse_list(out):
-    for line in out.splitlines():
-        if not line.strip(): continue
-        parts = line.split()
-        if len(parts) >= 2 and parts[0].startswith("rel-") and parts[1] != "-":
-            versions.append(parts[1])
-        else:
-            print("D5")
-            sys.exit(0)
-
-parse_list(out_drf)
-parse_list(out_act)
-
-seen_keys = set()
-
-for v in versions:
-    rc_show, out_show = run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", ["python3", "utils/py/releases_app.py", "show", "--version", v])
-    if rc_show != 0 or not out_show.startswith("GID:"):
+    if (rc_chk not in (0, 1, 2)) or (rc_nxt != 0) or (rc_drf != 0) or (rc_act != 0):
         print("D5")
         sys.exit(0)
-        
-    show_fields = {}
-    for line in out_show.splitlines():
-        if ":" in line:
-            k, val = line.split(":", 1)
-            show_fields[k.strip()] = val.strip()
-            
-    st = show_fields.get("Status")
-    td = show_fields.get("Target Date")
-    if st == "active" and td and td != "None" and parse_date(td):
-        target_ts = parse_date(td)
-        now_ts = int(time.time())
-        env_now = os.environ.get("RELEASES_APP_NOW", "")
-        if env_now:
-            now_ts = parse_date(env_now[:10]) or now_ts
-        if now_ts > target_ts:
-            rule_name = "release-target-passed"
-            key = f"rule:{rule_name}:{v}"
-            if key not in seen_keys:
-                cands.append({
-                    "key": key,
-                    "what": f"ship {v}",
-                    "evidence_type": "rule",
-                    "evidence_payload": f"{rule_name}@{v}",
-                    "rule_name": rule_name,
-                    "staleness": target_ts,
-                    "close": f"python3 utils/py/releases_app.py ship {v}",
-                    "close_kind": "command",
-                    "live_state": f"warn: rule={rule_name}: release {v} is active past target of {td}"
-                })
-                seen_keys.add(key)
 
-for line in out_chk.splitlines():
-    if line.startswith("FAIL: rule="):
-        rule_str = line.split(":", 2)[1].strip()
-        rule_name = rule_str[5:]
-        key = f"rule:{rule_name}:db"
-        if key not in seen_keys:
-            cands.append({
-                "key": key,
-                "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
-                "evidence_type": "rule",
-                "evidence_payload": f"{rule_name}@db",
-                "rule_name": rule_name,
-                "staleness": None,
-                "close": "python3 utils/py/releases_app.py check --rebuild",
-                "close_kind": "command",
-                "live_state": line.strip()
-            })
-            seen_keys.add(key)
-    elif line.startswith("warn: rule="):
-        m = re.search(r"warn: rule=([^:]+):\s*([^\s]+)\s+.*?target of ([0-9]{4}-[0-9]{2}-[0-9]{2})", line)
-        if m:
-            rule_name = m.group(1)
-            v = m.group(2)
-            td = parse_date(m.group(3))
-            key = f"rule:{rule_name}:{v}"
-            if key not in seen_keys:
-                cands.append({
-                    "key": key,
-                    "what": f"ship {v}" if "overdue" in rule_name or "target" in rule_name else f"resolve {rule_name.replace(chr(45), chr(32))}",
-                    "evidence_type": "rule",
-                    "evidence_payload": f"{rule_name}@{v}",
-                    "rule_name": rule_name,
-                    "staleness": td,
-                    "close": f"python3 utils/py/releases_app.py ship {v}",
-                    "close_kind": "command",
-                    "live_state": line.strip()
-                })
-                seen_keys.add(key)
-        else:
-            parts = line.split(":", 2)
-            rule_name = parts[1].strip()[5:]
+    cands = []
+    versions = []
+
+    def parse_list(out):
+        for line in out.splitlines():
+            if not line.strip(): continue
+            parts = line.split()
+            if len(parts) >= 2 and parts[0].startswith("rel-") and parts[1] != "-":
+                versions.append(parts[1])
+            else:
+                print("D5")
+                sys.exit(0)
+
+    parse_list(out_drf)
+    parse_list(out_act)
+
+    seen_keys = set()
+
+    for v in versions:
+        rc_show, out_show = run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", ["python3", "utils/py/releases_app.py", "show", "--version", v])
+        if rc_show != 0 or not out_show.startswith("GID:"):
+            print("D5")
+            sys.exit(0)
+            
+        show_fields = {}
+        for line in out_show.splitlines():
+            if ":" in line:
+                k, val = line.split(":", 1)
+                show_fields[k.strip()] = val.strip()
+                
+        st = show_fields.get("Status")
+        td = show_fields.get("Target Date")
+        if st == "active" and td and td != "None" and parse_date(td):
+            target_ts = parse_date(td)
+            now_ts = int(time.time())
+            env_now = os.environ.get("RELEASES_APP_NOW", "")
+            if env_now:
+                now_ts = parse_date(env_now[:10]) or now_ts
+            if now_ts > target_ts:
+                rule_name = "release-target-passed"
+                key = f"rule:{rule_name}:{v}"
+                if key not in seen_keys:
+                    cands.append({
+                        "key": key,
+                        "what": f"ship {v}",
+                        "evidence_type": "rule",
+                        "evidence_payload": f"{rule_name}@{v}",
+                        "rule_name": rule_name,
+                        "staleness": target_ts,
+                        "close": f"python3 utils/py/releases_app.py ship {v}",
+                        "close_kind": "command",
+                        "live_state": f"warn: rule={rule_name}: release {v} is active past target of {td}"
+                    })
+                    seen_keys.add(key)
+
+    for line in out_chk.splitlines():
+        if line.startswith("FAIL: rule="):
+            rule_str = line.split(":", 2)[1].strip()
+            rule_name = rule_str[5:]
             key = f"rule:{rule_name}:db"
             if key not in seen_keys:
                 cands.append({
@@ -774,12 +739,55 @@ for line in out_chk.splitlines():
                     "evidence_payload": f"{rule_name}@db",
                     "rule_name": rule_name,
                     "staleness": None,
-                    "close": "python3 utils/py/releases_app.py check",
+                    "close": "python3 utils/py/releases_app.py check --rebuild",
                     "close_kind": "command",
                     "live_state": line.strip()
                 })
                 seen_keys.add(key)
-print(json.dumps(cands))
+        elif line.startswith("warn: rule="):
+            m = re.search(r"warn: rule=([^:]+):\s*([^\s]+)\s+.*?target of ([0-9]{4}-[0-9]{2}-[0-9]{2})", line)
+            if m:
+                rule_name = m.group(1)
+                v = m.group(2)
+                td = parse_date(m.group(3))
+                key = f"rule:{rule_name}:{v}"
+                if key not in seen_keys:
+                    cands.append({
+                        "key": key,
+                        "what": f"ship {v}" if "overdue" in rule_name or "target" in rule_name else f"resolve {rule_name.replace(chr(45), chr(32))}",
+                        "evidence_type": "rule",
+                        "evidence_payload": f"{rule_name}@{v}",
+                        "rule_name": rule_name,
+                        "staleness": td,
+                        "close": f"python3 utils/py/releases_app.py ship {v}",
+                        "close_kind": "command",
+                        "live_state": line.strip()
+                    })
+                    seen_keys.add(key)
+            else:
+                parts = line.split(":", 2)
+                rule_name = parts[1].strip()[5:]
+                key = f"rule:{rule_name}:db"
+                if key not in seen_keys:
+                    cands.append({
+                        "key": key,
+                        "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
+                        "evidence_type": "rule",
+                        "evidence_payload": f"{rule_name}@db",
+                        "rule_name": rule_name,
+                        "staleness": None,
+                        "close": "python3 utils/py/releases_app.py check",
+                        "close_kind": "command",
+                        "live_state": line.strip()
+                    })
+                    seen_keys.add(key)
+    print(json.dumps(cands))
+
+try:
+    main()
+except Exception:
+    print("D5")
+    sys.exit(0)
 ')
 if [[ "$out6" == "D5" ]]; then
   lens6_status="degraded"; lens6_deg="\"D5\""

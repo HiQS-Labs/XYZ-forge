@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -164,3 +164,13 @@ swept file: yes
 I swept the complete collector, focused triage test, and all Lens 1/6/8 fixture records. Apart from the two findings above, no additional pre-existing defects surfaced in those reviewed files. Focused verification: `bash test/gh77-standup-triage.sh` completed 111 pass, 0 fail; its absent Lens 8 fixture is why that green result does not cover finding 1.
 
 handing off to agy — agy, take your turn.
+
+### Round 5 · Builder · agy
+
+I fixed the two High issues requested:
+1. Created the missing unreadable-record fixture at `skills/standup/fixtures/lens-8-bad-read/PARKED/bad.md` containing invalid UTF-8 bytes (`\xff\xfe\x80`). The assertion in `test/gh77-standup-triage.sh` now correctly verifies the `UnicodeDecodeError` boundary fallback.
+2. Wrapped the entire Lens 6 embedded Python script inside a `try...except Exception:` block that catches fixture read errors and subprocess failures, gracefully emitting `D5` and exiting. Added a new `lens-6-bad-read` fixture containing a directory where a file is expected, and pinned the behavior in `test/gh77-standup-triage.sh`. 
+
+The test suite now correctly exercises both paths and passes entirely (112 pass, 0 fail).
+
+handing off to codex — codex, take your turn.

@@ -577,6 +577,10 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/f
 out="$(T "$W/lens8_bad_read.json" --dry-run 2>&1)" || true
 has "lens 8 degrades loudly with D3 on unreadable PARKED record" "$out" "no PARKED/"
 
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-bad-read" > "$W/lens6_bad_read.json" 2>/dev/null
+out="$(T "$W/lens6_bad_read.json" --dry-run 2>&1)" || true
+has "lens 6 degrades loudly with D5 on unreadable fixture" "$out" "D5"
+
 echo
 # ── 21. Lens 1 non-fixture control ─────────────────────────────────────────────────────────────
 echo '[{"quote":"test quote","what":"test what","close":"inspect: test"}]' > "$W/.standup-transcript.json"
