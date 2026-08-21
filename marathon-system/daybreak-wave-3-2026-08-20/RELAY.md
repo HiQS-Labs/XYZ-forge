@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -81,10 +81,10 @@ rails, rule 4. **Report what broke; do not smooth it.** A clean run that teaches
 weaker result.
 
 
-## Debug mantra (auto-triggered — 2 prior attempt(s) on this phase did not reach Approved)
+## Debug mantra (auto-triggered — 3 prior attempt(s) on this phase did not reach Approved)
 
 Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
-Last recorded reason (`marathon-system/daybreak-wave-3-2026-08-20/ESCALATION.md`): `timeout-during-review-recovery`. Read it before re-guessing.
+Last recorded reason (`marathon-system/daybreak-wave-3-2026-08-20/ESCALATION.md`): `cap-or-close-mismatch`. Read it before re-guessing.
 
 ---
 
@@ -124,45 +124,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · agy
-
-The implementation for Lenses 4 and 5 is already complete and passing all tests (`bash test/gh77-standup-triage.sh` runs 133/0). All tests in `validate.sh --subsystem releases` are also passing. The previous reviewer turn timed out (`timeout-during-review-recovery`), so I am handing this back for review.
-
-### Round 1 · Reviewer · codex
-
-swept file: yes
-
-**Verdict:** Changes requested
-
-- **P1 — Lens 5 silently loses the required D1 degradation when `gh` is absent.** In `collect.sh:790-806`, Lens 5's Python `run_mock()` calls `subprocess.run()` without catching `FileNotFoundError`; the first call is `gh --version` at lines 812-815. If `gh` is not on `PATH`, the inline Python exits before printing `D1`. Bash then receives an empty `out5_processed`, matches neither the `D1` nor `D5` branches, and leaves Lens 5 `ok` with no candidates (possibly exiting 0). This violates the settled contract that unavailable `gh` degrades both new lenses loudly with D1. Catch `OSError`/`FileNotFoundError` in the helper and return a non-zero result, then add a regression that removes `gh` from the collector's `PATH` (the current fixture only exercises a non-zero mocked issue command, not a missing executable).
-
-Verification: required whole-file sweep of `collect.sh` and `gh77-standup-triage.sh`, plus all Wave 3 Lens 4/5 fixture files; no artifact was run, per reviewer-turn containment. No other pre-existing finding was identified in that sweep.
-
-handing off to agy — agy, take your turn.
-
-### Round 2 · Builder · agy
-
-- **P1 — Fixed Lens 5 silent failure when `gh` is absent.** Modified the Python `run_mock` in `collect.sh` to explicitly catch `OSError` (e.g. `FileNotFoundError`) on `subprocess.run()`, returning a `127` exit code to trigger the `D1` degradation as expected.
-- Added a regression test in `test/gh77-standup-triage.sh` that mocks the `PATH` without the `gh` executable and verifies that both Lens 4 and Lens 5 loudly degrade to `D1` instead of exiting cleanly with invalid/empty candidates.
-
-handing off to codex — codex, take your turn.
-
-### Round 2 · Reviewer · codex
-
-swept file: yes
-
-**Verdict:** Changes requested
-
-- **P1 — The newly added missing-`gh` regression cannot reach either lens.** The restricted `NOGH` `PATH` in `test/gh77-standup-triage.sh` omits `mktemp`, but `collect.sh` invokes `mktemp` for Lens 2 before it reaches the Lens 4 `gh` probe or Lens 5's Python `gh --version` probe. With `set -e`, the collector exits at that missing prerequisite and produces no JSON; the following assertions therefore fail for an empty output rather than prove D1 behavior. Add `mktemp` (and retain every collector prerequisite) to the constrained `PATH`, then run the targeted suite and report its result. The `OSError` handling itself is the correct Lens 5 fix.
-
-Verification: read-only whole-file sweep completed for `skills/standup/collect.sh` and `test/gh77-standup-triage.sh`, plus every Lens 4/5 fixture file. No artifact was run, per reviewer-turn containment. No other in-scope pre-existing defect was identified.
-
-handing off to agy — agy, take your turn.
-
-### Round 3 · Builder · agy
-
-- **P1 — Added `mktemp` and `dirname`/`basename` to restricted PATH in `gh` missing test.** Fixed the issue where `collect.sh` would fail early due to a missing `mktemp` executable before reaching the `gh` check. The test now appropriately tests Lens 4 and 5's fallback `D1` behavior when `gh` is unavailable.
-- Ran the test suite `bash test/gh77-standup-triage.sh` which succeeded with 136 passes and 0 failures.
-
-handing off to codex — codex, take your turn.
