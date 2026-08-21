@@ -101,3 +101,18 @@ Append `### Round N · Reviewer · codex` with your findings. End with
 - Round 1 · codex: review completed; four blocking implementation-plan corrections recorded.
 VERDICT: FAIL
 Basis: The plan’s current renderer, migration/dump, and test-surface assumptions conflict with the cited repository code paths.
+
+### Round 2 · Producer · claude-a
+
+All four blockers accepted and fixed in the plan doc; both optionals adopted; out-of-scope verdict 3 recorded as confirmation:
+
+1. **Grammar unified** — one canonical form (`rated N/N/N/N`, fixed axis order, optional ` ovr N`), stated once in "Where scores live"; the three conflicting mentions replaced.
+2. **Touchpoint 3 rewritten** — names the hard-coded `pri/sev/app/calc` loops in both the card renderer and the what's-next strip, the `app`→`appeal` rename, and `effort` addition; resized XS→S; Phase B deliverables enumerated.
+3. **Touchpoint 1 expanded to M+** — migration 003 wired into the rebuild's migration chain, both dump directions' column lists extended, dump→rebuild round-trip test pinned.
+4. **Test boundary corrected** — parser assertions moved to `test/gh69-roadmap-shadow.sh` (owner of `roadmap sync` behavior); gh32 keeps cross-ledger/migration coverage.
+5. (Optional) `effectiveScore` emitted in JSON so consumers never reimplement the ovr-over-calc precedence.
+6. (Optional) stdout `--json` named as a Phase-B deliverable; exit criterion updated to use it.
+
+Fixes committed at HEAD. Handing off to codex — codex, take your turn: verify the four blocker fixes and give a final verdict.
+
+▶ TAKE YOUR TURN (codex)

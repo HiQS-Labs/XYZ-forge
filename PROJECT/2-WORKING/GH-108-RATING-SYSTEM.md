@@ -68,10 +68,16 @@ One rule: **scores are authored where the task is authored, and stored where the
 
 | Surface | Form | Consumed by |
 |---|---|---|
-| ROADMAP.md entry line | `rated pri/sev/appeal/effort 70/40/55/60` (+ optional `ovr 350`) | `roadmap sync` parser |
+| ROADMAP.md entry line | `rated 70/40/55/60` (+ optional ` ovr 350`) — see grammar below | `roadmap sync` parser |
 | PROJECT doc frontmatter | `rating: "pri/sev/appeal/effort 70/40/55/60 · calc 225"` | humans; not machine-parsed in v1 |
 | `releases.db` | four new nullable INTEGER columns + `ovr` on `roadmap_items` | exporter, future `releases dashboard` |
-| `data.json` / `--json` | `metrics: {pri, sev, appeal, effort, calc}` + `override` per card | timeline viewer, /radar, /10days (#107) |
+| `data.json` / `--json` | `metrics: {pri, sev, appeal, effort, calc}` + `override` + `effectiveScore` per card | timeline viewer, /radar, /10days (#107) |
+
+**The one canonical grammar (Codex r1 — the doc previously stated three forms):**
+`rated N/N/N/N` — exactly four slash-separated integers 1–100, axis order fixed as
+**pri/sev/appeal/effort**, optionally followed by ` ovr N` (integer 4–400). No labeled long form is
+accepted; the axis names live in this doc, not in the entry line. Codex verified `rated` followed by
+the four-number shape collides with nothing in today's ROADMAP.md or PROJECT/**.
 
 `calc` is **never stored** — it is derived at read time (exporter/CLI) from the four axes. Storing a
 derived value invites the drift class this repo already fights everywhere else.
@@ -97,10 +103,10 @@ derived value invites the drift class this repo already fights everywhere else.
 
 | # | Component | Change | Size |
 |---|---|---|---|
-| 1 | `utils/py/releases_app.py` (roadmap sync) | parse `rated P/S/A/E` + `ovr N` from entry text; 5 new nullable columns on `roadmap_items` (schema migration); reject out-of-range values loudly at sync time | M |
-| 2 | `utils/timeline/export_timeline.py` | map DB columns → card `metrics` + `override`; derive `calc`; sev hot flag; legend flip | S |
-| 3 | `utils/timeline/RELEASES.html` | footer legend text only (metric rendering already exists) | XS |
-| 4 | `test/gh32-releases-app.sh` | parser assertions: happy path, `ovr`, out-of-range rejection, absent-rating rows unchanged | S |
+| 1 | `utils/py/releases_app.py` (roadmap sync) | parse `rated N/N/N/N` + `ovr N` from entry text; **migration 003** adding 5 nullable columns to `roadmap_items` — wired into the migration chain the rebuild path executes (currently 001/002 only), with the hard-coded column lists in the canonical dump writer AND `load_dump()` extended to carry them; reject out-of-range values loudly at sync time | M+ |
+| 2 | `utils/timeline/export_timeline.py` | select the rating columns into the roadmap index (today's query selects none); map → card `metrics` + `override`; derive `calc` and emit `effectiveScore` (= `ovr` if set, else `calc`) so consumers never reimplement the precedence rule; add stdout `--json`; sev hot flag | S |
+| 3 | `utils/timeline/RELEASES.html` | more than legend text (Codex r1): the metric loops hard-code `pri/sev/app/calc` in BOTH the card renderer and the what's-next strip — rename legacy `app` → `appeal`, add `effort`, then flip the footer legend | S |
+| 4 | `test/gh69-roadmap-shadow.sh` (owns `roadmap sync` parser behavior) | happy path, `ovr`, out-of-range rejection, absent-rating rows unchanged, both-vocabularies error, and a dump→rebuild round trip preserving ratings; `test/gh32-releases-app.sh` keeps cross-ledger/migration-chain coverage only | S |
 | 5 | Intake template / PDDA scaffold | replace cx/risk/eff with the rating line | XS |
 | 6 | `PROJECT/1-INBOX`+ROADMAP authoring | backfill ACTIVE WINDOW ONLY (Daybreak + Cargo manifest and detour items, ~12 tasks) | S (operator judgment) |
 
@@ -122,8 +128,10 @@ frontmatter ratings, a dedicated leaderboard page (rides #75), and any write pat
 
 1. **Phase A (one PR): parser + columns + tests** (touchpoints 1, 4). Ships dark — no consumer reads
    the columns yet, so the blast radius is the sync path, which the gh32 suite pins.
-2. **Phase B (one PR): exporter + legend** (touchpoints 2, 3). The legend flips in the same commit
-   that first emits metrics. Preview regenerates via the GH-106 hook on the next CLI write.
+2. **Phase B (one PR): exporter + viewer** (touchpoints 2, 3). Named deliverables: rating-column
+   selection, `effectiveScore`, the stdout `--json` flag, the viewer's `app`→`appeal` rename +
+   `effort` in both metric loops, and the legend flip — legend and first metric emission in the SAME
+   commit. Preview regenerates via the GH-106 hook on the next CLI write.
 3. **Phase C (no code): backfill + template** (touchpoints 5, 6). Operator scores ~12 active-window
    items; first leaderboard read comes free via `--json | sort`.
 
@@ -132,15 +140,20 @@ Each phase is independently shippable; a stall after any phase leaves the repo b
 ## Exit criterion
 
 `ROADMAP.md` carries `rated` lines on the active-window items; `roadmap sync` lands them in
-`releases.db` (generation bump, gh32 suite green); `export_timeline.py --json` emits `calc` for those
-cards; the served and baked pages render score lines with the flipped legend; and
-`python3 -c "…sort by effective score…"` over `--json` output prints a defensible leaderboard with no
-ties in the top five (the resolution argument, demonstrated).
+`releases.db` (generation bump; gh69 + gh32 suites green, including the dump→rebuild round trip
+preserving ratings); `export_timeline.py --json` (the Phase-B flag) emits `effectiveScore` for those
+cards; the served and baked pages render score lines — `appeal` and `effort` included — with the
+flipped legend; and sorting the `--json` output by `effectiveScore` prints a defensible leaderboard
+with no ties in the top five (the resolution argument, demonstrated).
 
-## Open items for review (Codex relay)
+## Review verdicts (Codex relay r1, 2026-08-20 — all three open items resolved)
 
-- Is `rated P/S/A/E` the right entry-line token, or does it collide with prose in existing entries?
-- Schema migration mechanics: `roadmap_items` gains columns — confirm the GID-keyed dump + merge
-  resolver need no changes beyond the schema_migrations row.
-- Does `ovr` belong on `roadmap_items` (per-task) or is a task ever rated differently per release?
-  (Plan says per-task; challenge welcome.)
+- **Entry-line token:** `rated` + the four-number shape collides with nothing in today's ROADMAP.md
+  or PROJECT/**; canonical grammar fixed to the single bare-number form above.
+- **Migration mechanics:** "no changes beyond the schema_migrations row" was FALSE — the rebuild
+  path executes a hard-coded migration list and both dump directions carry hard-coded column lists;
+  all three must learn migration 003 (folded into touchpoint 1, pinned by the round-trip test). The
+  shell merge resolver itself needs no logic change.
+- **`ovr` placement:** per-task on `roadmap_items` confirmed — the exporter enriches manifest cards
+  by GH number, so one rating correctly follows a task everywhere; a per-release rating would be a
+  new operator decision, not a v1 shape.
