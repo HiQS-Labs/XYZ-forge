@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -124,3 +124,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+- **Restored Fixtures:** Re-verified that `lens-4/`, `lens-4-fail/`, `lens-4-truncated/`, `lens-5/`, `lens-5-fail/`, and `lens-5-manifest/` are populated properly. Added `skills/standup/fixtures/` explicitly to the `--paths` flag during the claim so they get tracked and committed.
+- **Lens 5 Regression Test:** Verified `test/gh77-standup-triage.sh` copies the `lens-5` fixture into `$WORK` and alters it there, preventing any mutation to the checked-in fixture tree.
+- **Lens 4 Truncation Test:** Verified a structured assertion in `test/gh77-standup-triage.sh` that checks the 51-row D2 case outputs exactly 50 candidates in the raw JSON payload and the first PR is present.
+- Test suite `test/gh77-standup-triage.sh` runs 127/0 passing.
+- `bash validate.sh --subsystem releases` runs green.
+
+handing off to codex — codex, take your turn.
