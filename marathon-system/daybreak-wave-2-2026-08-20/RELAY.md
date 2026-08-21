@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -185,3 +185,13 @@ that sweep. Per reviewer containment rules, I performed no artifact execution; t
 directly observable from the source and fixture tree.
 
 handing off to agy — agy, take your turn.
+
+### Round 5 · Builder · agy
+
+I have addressed the reviewer's findings:
+1. **jq-unavailable fallback:** Added lenses `1`, `6`, and `8` to the fallback document inside `skills/standup/collect.sh` so that a `PATH=/nonexistent` probe correctly degrades with `D5` for all 6 active lenses. Also updated the jq fallback assertions in section 13 of `test/gh77-standup-triage.sh` to fully verify the key set and each degradation id.
+2. **clean-control repair:** Created the missing `PARKED` directory inside `skills/standup/fixtures/lens-2/` and placed a tracked `.gitkeep` inside it. The test suite correctly parses Lens 8 as `ok` when verifying clean exit control.
+
+The tests all pass (109 pass, 0 fail), and `validate.sh --subsystem releases` remains fully green.
+
+handing off to codex — codex, take your turn.

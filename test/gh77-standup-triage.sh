@@ -279,6 +279,21 @@ if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$W/nojq.json" 2>/
 else
   fail=$((fail+1)); echo "  FAIL: jq-unavailable output is not valid JSON — consumer sees silence" >&2
 fi
+if python3 -c '
+import json, sys
+try:
+    d = json.load(open(sys.argv[1]))
+    expected_keys = {"1", "2", "3", "6", "7", "8"}
+    keys = set(d.get("lenses", {}).keys())
+    if keys != expected_keys: sys.exit(1)
+    if any(l.get("degraded_id") != "D5" for l in d["lenses"].values()): sys.exit(2)
+except Exception:
+    sys.exit(3)
+' "$W/nojq.json"; then
+  pass=$((pass+1)); echo "  PASS: fallback document contains exactly lenses 1, 2, 3, 6, 7, 8 all as D5"
+else
+  fail=$((fail+1)); echo "  FAIL: fallback document keys or degraded_id mismatch" >&2
+fi
 out="$(T "$W/nojq.json" --dry-run 2>&1)" || true
 has "every lens degrades loudly with D5 when jq is unavailable" "$out" "D5"
 

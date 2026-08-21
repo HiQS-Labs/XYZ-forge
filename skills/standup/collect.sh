@@ -36,9 +36,12 @@ done
 if ! command -v jq >/dev/null 2>&1; then
   printf '%s\n' '{"repo": {"branch": "unknown"},' \
     ' "lenses": {' \
+    '   "1": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "2": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
     '   "3": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
-    '   "7": {"status": "degraded", "degraded_id": "D5", "candidates": []}' \
+    '   "6": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "7": {"status": "degraded", "degraded_id": "D5", "candidates": []},' \
+    '   "8": {"status": "degraded", "degraded_id": "D5", "candidates": []}' \
     ' }' \
     '}'
   echo "collect.sh: jq is required and was not found on PATH — every lens degraded (D5)." >&2
