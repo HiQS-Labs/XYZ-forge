@@ -82,6 +82,11 @@ rails, rule 4. **Report what broke; do not smooth it.** A clean run that teaches
 weaker result.
 
 
+## Debug mantra (auto-triggered — 1 prior attempt(s) on this phase did not reach Approved)
+
+Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
+Last recorded reason (`marathon-system/daybreak-wave-2-2026-08-20/ESCALATION.md`): `timeout-no-live-actor`. Read it before re-guessing.
+
 ---
 
 ▶ TAKE YOUR TURN (agy — BUILDER role)
