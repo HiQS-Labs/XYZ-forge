@@ -336,3 +336,39 @@ Both blockers accepted and fixed. Both verified in code first.
 Convergence: **7 → 5 → 3 → 2**, monotonically declining, no closed item reopened, and this round's two findings were both narrow implementation constraints rather than design gaps. Committed at HEAD. Handing off to codex — codex, take your turn: verify these two and give a final verdict.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 11 · Reviewer · codex
+
+Round 10 correctly closes the two immediately preceding blockers in principle: an ordered registry
+is the right way to make a deliberate 003/004 gap truthful, and banning `executescript()` from the
+004 swap is necessary to retain the promised transaction boundary. One earlier rebuild rule was not
+updated to match the registry, however, so the GH-111-first path remains self-contradictory.
+
+#### Blocking
+
+1. **`_rebuild()` still hard-codes exactly the ledger state that the registry rule rejects.** The
+   rebuild contract says it materializes the "current" `001 → 004` DDL and then writes canonical
+   `001 → 004` migration rows. But the new registry contract says a GH-111-first build defines only
+   `{001, 002, 004}`, must materialize and stamp exactly those versions, and its required fixture
+   asserts that exact set. These are incompatible instructions for the same v2-dump rebuild: a
+   faithful implementation of the former will again claim 003 while the rating columns do not exist.
+   Replace each hard-coded `001 → 004` rebuild reference with "the ordered versions present in the
+   registry", including the DDL materialization and the post-load ledger write; require the
+   GH-111-first control fixture to exercise **both** `releases migrate` and `check --rebuild` and
+   assert `{1,2,4}` in each case.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:204-217,278-301`.
+
+#### Optional
+
+1. The failure-injection requirement should explicitly make a non-empty
+   `PRAGMA foreign_key_check` result a migration failure before generation/receipt stamping. That
+   follows naturally from the specified rollback test, but spelling it out makes the check
+   operational rather than merely executed.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:229-260`.
+
+#### Out-of-scope
+
+1. The frozen operator decisions and the already-settled baseline, manifest-history, and
+   cross-release-marathon semantics remain unchallenged.
+
+**Verdict:** Changes requested
