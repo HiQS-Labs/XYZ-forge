@@ -600,6 +600,29 @@ CREATE INDEX IF NOT EXISTS idx_roadmap_repo ON roadmap_items(repo_id);
 """.format(rmi_gid=_gid_check("global_id", "rmi-"))
 
 
+def _ddl_statements(script):
+    """Split a trigger-free DDL script into individual statements.
+
+    GH-111: exists so migrations can avoid executescript(), which commits the caller's
+    transaction. Deliberately NOT general — it would mis-split a CREATE TRIGGER body, whose
+    BEGIN…END contains its own semicolons. Only trigger-free scripts may use it; migration
+    004 issues its trigger DDL as explicit single execute() calls instead.
+    """
+    if "CREATE TRIGGER" in script.upper():
+        raise ValueError("_ddl_statements cannot split trigger bodies; issue them individually")
+    # sqlite3.complete_statement() is comment- and string-literal-aware; a naive split(";")
+    # cuts mid-statement on the first `--` comment containing a semicolon.
+    statements, buffer = [], ""
+    for line in script.splitlines(keepends=True):
+        buffer += line
+        if sqlite3.complete_statement(buffer):
+            statements.append(buffer.strip())
+            buffer = ""
+    if buffer.strip():
+        statements.append(buffer.strip())
+    return statements
+
+
 def _table_exists(conn, name):
     return conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
                         (name,)).fetchone() is not None
@@ -608,24 +631,151 @@ def _table_exists(conn, name):
 def _ensure_roadmap_schema(conn):
     """Apply migration 002 idempotently. MUST run inside a perform_write mutate when the DB
     predates it: the new schema_migrations row is business state, and a schema change outside a
-    receipt would trip check's receipt-vs-change bypass detection — correctly."""
-    conn.executescript(MIGRATION_002_DDL)
+    receipt would trip check's receipt-vs-change bypass detection — correctly.
+
+    GH-111: issued as individual execute() calls, NOT executescript(). Python's sqlite3
+    COMMITs any open transaction before running a script, so the old idiom would silently
+    split perform_migration()'s single transaction when 002 and 004 are both pending —
+    leaving 002 durable after a 004 failure while the journal still claims all-or-nothing.
+    """
+    for statement in _ddl_statements(MIGRATION_002_DDL):
+        conn.execute(statement)
     if conn.execute("SELECT 1 FROM schema_migrations WHERE version = 2").fetchone() is None:
         conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (2, ?)",
                      (now_iso(),))
 
 
-def apply_migrations(conn):
+MIGRATION_004_ITEMS_NEW = """
+CREATE TABLE manifest_items_new (
+  id INTEGER PRIMARY KEY,
+  global_id TEXT NOT NULL UNIQUE {mfi_gid},
+  release_id INTEGER NOT NULL REFERENCES releases(id),
+  issue_ref_id INTEGER NOT NULL REFERENCES issue_refs(id),
+  state TEXT NOT NULL CHECK (state IN ('dialed_in','shipped','cut')),
+  dialed_in_at TEXT,
+  dial_reason TEXT,
+  marathon_id INTEGER REFERENCES marathons(id)
+)"""
+
+MIGRATION_004_EVENTS_NEW = """
+CREATE TABLE manifest_state_events_new (
+  id INTEGER PRIMARY KEY,
+  item_id INTEGER NOT NULL REFERENCES manifest_items(id),
+  from_state TEXT NOT NULL CHECK (from_state IN ('open','dialed_in','shipped','cut')),
+  to_state   TEXT NOT NULL CHECK (to_state   IN ('open','dialed_in','shipped','cut')),
+  at TEXT NOT NULL,
+  reason TEXT NOT NULL CHECK (length(trim(reason)) > 0)
+)"""
+
+
+def _migration_004(conn):
+    """GH-111: retire FREEZE for DIALED-IN membership.
+
+    TRANSACTION-SAFE BY CONSTRUCTION — every statement goes through execute(), never
+    executescript(), which would COMMIT the caller's transaction and silently void
+    perform_migration()'s FK bracket, rollback, digest chain and receipt coupling.
+
+    Parent (manifest_items) is rebuilt before child (manifest_state_events), and `id`
+    values are carried across verbatim so the child's item_id linkage — and with it the
+    event digest chain — still resolves. Both CHECK vocabularies change, which SQLite
+    cannot do in place, hence the rebuilds. `open` stays legal in the EVENT table forever:
+    historical rows are copied unchanged rather than remapped, because rewriting them
+    would be the silent history edit this repo forbids everywhere else.
+    """
+    # ── parent: manifest_items ────────────────────────────────────────────────────────
+    conn.execute(MIGRATION_004_ITEMS_NEW.format(mfi_gid=_gid_check("global_id", "mfi-")))
+    conn.execute("""INSERT INTO manifest_items_new
+                      (id, global_id, release_id, issue_ref_id, state,
+                       dialed_in_at, dial_reason, marathon_id)
+                    SELECT id, global_id, release_id, issue_ref_id,
+                           CASE state WHEN 'open' THEN 'dialed_in' ELSE state END,
+                           NULL, NULL, NULL
+                      FROM manifest_items""")
+    conn.execute("DROP TABLE manifest_items")
+    conn.execute("ALTER TABLE manifest_items_new RENAME TO manifest_items")
+    # The old UNIQUE (release_id, issue_ref_id) is deliberately NOT recreated: re-admitting a
+    # cut item is a NEW row, which that constraint would refuse. Exclusivity now applies to
+    # ACTIVE membership only, so cut history never blocks a redial here or on another release.
+    conn.execute("""CREATE UNIQUE INDEX idx_mfi_active_exclusive
+                      ON manifest_items(issue_ref_id) WHERE state = 'dialed_in'""")
+    conn.execute("CREATE INDEX idx_mfi_release ON manifest_items(release_id)")
+
+    # ── child: manifest_state_events (DROP TABLE also drops its triggers) ─────────────
+    conn.execute(MIGRATION_004_EVENTS_NEW)
+    conn.execute("""INSERT INTO manifest_state_events_new (id, item_id, from_state, to_state, at, reason)
+                    SELECT id, item_id, from_state, to_state, at, reason
+                      FROM manifest_state_events""")
+    conn.execute("DROP TABLE manifest_state_events")
+    conn.execute("ALTER TABLE manifest_state_events_new RENAME TO manifest_state_events")
+    conn.execute("""CREATE TRIGGER mse_no_update BEFORE UPDATE ON manifest_state_events
+                      BEGIN SELECT RAISE(ABORT, 'manifest_state_events is append-only'); END""")
+    conn.execute("""CREATE TRIGGER mse_no_delete BEFORE DELETE ON manifest_state_events
+                      BEGIN SELECT RAISE(ABORT, 'manifest_state_events is append-only'); END""")
+    conn.execute("CREATE INDEX idx_mse_item ON manifest_state_events(item_id)")
+
+    # ── releases: baseline (one count field + two provenance fields) ──────────────────
+    conn.execute("ALTER TABLE releases ADD COLUMN baseline_count INTEGER")
+    conn.execute("ALTER TABLE releases ADD COLUMN baseline_at TEXT")
+    conn.execute("ALTER TABLE releases ADD COLUMN baseline_source TEXT "
+                 "CHECK (baseline_source IS NULL OR baseline_source IN ('observed','backfilled'))")
+    # A marathon belongs to at most one release; links are historical and permanent.
+    conn.execute("""CREATE UNIQUE INDEX idx_rel_marathon_exclusive
+                      ON releases(marathon_id) WHERE marathon_id IS NOT NULL""")
+    # Backfill releases already underway. Flagged 'backfilled', never 'observed': the count is
+    # inferred from today's manifest, not witnessed at the kickoff it claims to describe.
+    stamp = now_iso()
+    for row in conn.execute("SELECT id FROM releases WHERE status = 'active'").fetchall():
+        n = conn.execute("""SELECT COUNT(*) FROM manifest_items
+                             WHERE release_id = ? AND state IN ('dialed_in','shipped')""",
+                         (row["id"],)).fetchone()[0]
+        if n:
+            conn.execute("""UPDATE releases SET baseline_count = ?, baseline_at = ?,
+                             baseline_source = 'backfilled' WHERE id = ?""", (n, stamp, row["id"]))
+
+
+# The migration REGISTRY is the truth (GH-111). apply/rebuild stamp exactly the versions
+# present here — never a hard-coded range — so a deliberate gap (e.g. GH-111's 004 landing
+# before GH-108's 003) yields a ledger of {1,2,4} rather than a false claim to 3. Pending
+# migrations apply in ascending numeric order; gaps are safe only because migrations are
+# mutually INDEPENDENT, a standing constraint on every future entry.
+#
+# `txn_safe` marks a callback that may run inside perform_migration()'s single transaction:
+# it must never use executescript() or any other implicit-commit API. 001 is exempt because
+# it is reachable only on a fresh database (cmd_init) or a rebuild, never alongside other
+# pending versions on a live ledger.
+MIGRATIONS = {
+    1: {"apply": lambda conn: conn.executescript(MIGRATION_001), "txn_safe": False},
+    2: {"apply": _ensure_roadmap_schema, "txn_safe": True},
+    4: {"apply": _migration_004, "txn_safe": True},
+}
+
+
+def registry_versions():
+    """Ordered versions this codebase defines. The ledger never claims more than this."""
+    return sorted(MIGRATIONS)
+
+
+def pending_versions(conn):
     try:
         applied = {r["version"] for r in conn.execute("SELECT version FROM schema_migrations")}
     except sqlite3.OperationalError:
         applied = set()   # fresh DB: the tracker table itself is created by migration 001
-    if 1 not in applied:
-        conn.executescript(MIGRATION_001)
-        conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (1, ?)",
-                     (now_iso(),))
-    if 2 not in applied:
-        _ensure_roadmap_schema(conn)
+    return [v for v in registry_versions() if v not in applied]
+
+
+def apply_migrations(conn, stamp_ledger=True):
+    """Apply pending registry migrations in ascending order.
+
+    stamp_ledger=False is the rebuild path: _rebuild() materializes DDL here and writes the
+    ledger rows itself AFTER load_dump() (which skips the dump's schema_migrations records),
+    so DDL and ledger agree by construction instead of colliding on the primary key.
+    """
+    for version in pending_versions(conn):
+        MIGRATIONS[version]["apply"](conn)
+        if stamp_ledger and conn.execute("SELECT 1 FROM schema_migrations WHERE version = ?",
+                                         (version,)).fetchone() is None:
+            conn.execute("INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                         (version, now_iso()))
 
 
 # ── canonical dump (PRD Git story 6) ────────────────────────────────────────────────────────────
