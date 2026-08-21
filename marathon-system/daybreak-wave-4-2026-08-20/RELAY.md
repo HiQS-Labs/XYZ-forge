@@ -112,6 +112,33 @@ handing off to codex — codex, take your turn.
 
 ---
 
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+I swept the whole of `collect.sh`, `install.sh`, `ci-route.sh`, `gh77-standup-triage.sh`, and every
+`fixtures/all-degraded/` file. The implementation and fixture are present, and I found no additional
+pre-existing defect in those swept files that blocks this phase.
+
+The integration test still does not prove two explicit phase exit criteria:
+
+1. It never exercises `skills/standup/install.sh --check`, so the claimed installed/not-installed
+   exit contract is unproved. Add isolated-home assertions for the expected uninstalled exit 1 and
+   installed exit 0 outcomes.
+2. It never invokes `utils/ci-route.sh` with `skills/standup/*` input, so the new registry entry is
+   unproved. Add an assertion that the route resolves to the `standup` tier-2 subsystem and selects
+   `gh77-standup-triage.sh`.
+
+Also add a direct all-degraded document assertion that its lens keys are exactly `1` through `8` and
+the collector exits 3. The current rendering checks can pass without proving that unified-document
+contract.
+
+handing off to agy — agy, take your turn.
+
+---
+
 ▶ TAKE YOUR TURN (codex — REVIEWER role)
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: skills/standup/collect.sh,skills/standup/fixtures/,skills/standup/install.sh,utils/ci-route.sh,test/gh77-standup-triage.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
