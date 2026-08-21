@@ -25,7 +25,7 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 | What was just completed | What's next |
 |---|---|
-| **Every checklist item below is landed and green** — GH-111 Phases A/B/C and GH-108 Phases A/B/C/D, across four commits on `feat/gh111-phase-a-dialed-in`. | Closeout: CHANGELOG entries, both plans to `PROJECT/3-COMPLETED`, and #108-#111 closed with pointers. |
+| **Every checklist item below is landed and green** — GH-111 Phases A/B/C and GH-108 Phases A/B/C/D, across four commits on `feat/gh111-phase-a-dialed-in`. | **PR [#116](https://github.com/HiQS-Suite/XYZ-forge/pull/116) is open against `development`, full gate green.** After it merges: promote both plans to `PROJECT/3-COMPLETED`, retarget their ROADMAP pointers, and close #108/#111 (#109 and #110 close themselves — the PR carries `Closes` lines). |
 
 ## GH-111 Phase A — schema + verbs
 
@@ -101,5 +101,7 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 - [x] G1 Full releases + timeline + pdda suites green
 - [x] G2 CHANGELOG entries
-- [ ] G3 Plans moved to `PROJECT/3-COMPLETED`, ROADMAP pointers updated
-- [ ] G4 #109, #110 closed with pointers; #108, #111 closed
+- [~] G3 Plans moved to `PROJECT/3-COMPLETED`, ROADMAP pointers updated — **after the merge**;
+      promoting a plan whose branch is still open would claim a landing that has not happened
+- [~] G4 #109, #110 closed with pointers; #108, #111 closed — **after the merge**; PR #116
+      carries the `Closes` lines, so #109 and #110 close themselves when it lands
