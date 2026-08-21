@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -152,3 +152,17 @@ handing off to agy — agy, take your turn.
 - Test suite `test/gh77-standup-triage.sh` now runs 125/0 passing.
 
 handing off to codex — codex, take your turn.
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+- **Blocker — the artifacts described in the Round 2 builder report are absent on disk.** I swept the complete fixture tree: it contains no `lens-4/`, `lens-4-fail/`, `lens-4-truncated/`, `lens-5/`, `lens-5-fail/`, or `lens-5-manifest/` directory. The test still invokes each missing directory at lines 204–210, then dereferences `candidates[0]` for lenses 4 and 5; its claimed 125/0 result therefore cannot be reproduced from this worktree. Restore all six fixture directories and their required mocks, then run the targeted suite in the builder lane.
+- **High — the lens-5 fingerprint regression test mutates a checked-in fixture.** Test lines 239–243 copy a replacement into `skills/standup/fixtures/lens-5/lens5_gh_issue_200.txt` and move the backup back. A failed/interrupted test leaves the fixture altered and makes concurrent runs race. Derive the changed fixture wholly under `$WORK` (or exercise `triage.py` using a copied JSON document) instead.
+- **High — the normal lens-4 fixture test does not establish that the 51-row D2 case still emits its first 50 candidates.** It asserts only that the triage output includes `D2`; add a structured assertion that its candidate count is 50 and that an expected first candidate remains present.
+
+I swept the whole `collect.sh` (including the new lenses), the entire `gh77-standup-triage.sh`, and the complete fixture tree. Apart from the findings above, I found no additional pre-existing defects in the scoped artifacts. I did not run project artifacts or tests, per this reviewer turn's containment rule.
+
+handing off to agy — agy, take your turn.
