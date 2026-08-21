@@ -5,26 +5,44 @@ name: CI
 # Two things about this file have now been re-litigated more than once. Both are recorded here so
 # the next person does not rediscover them from scratch.
 #
-# 1. THE `pull_request` TRIGGER PRODUCES NO RUNS — this is GH-59, open since 2026-08-19, NOT a new
-#    discovery. It was re-derived from scratch on 2026-08-21, which is the waste this note exists to
-#    prevent: check #59 first. The triggers below are correct, Actions is enabled, the workflow is
-#    `state=active`, and the repo is not a fork — yet as of 2026-08-21 the ENTIRE run history of this
-#    repository is workflow_dispatch runs. PRs #116, #121 and #122 all merged with ZERO checks.
-#    A clean `mergeStateStatus` on a PR here therefore means "no checks exist", NOT "checks passed" —
-#    do not read a green PR page as evidence anything ran.
-#    Until #59 is fixed, fire this workflow by hand and read the result:
+# 1. THE AUTOMATIC TRIGGERS WERE DEAD FROM 2026-08-17 TO 2026-08-21 (GH-59). This is HISTORY, not a
+#    live warning — they work now — but it is written down because it silently voided four days of
+#    merges and will be misread later if it isn't.
+#
+#    From the 2026-08-17 re-arm until 17:09 UTC on 2026-08-21, the ENTIRE run history of this
+#    repository was `workflow_dispatch` runs. PRs #116, #121 and #122 all merged with ZERO checks.
+#    Then, with no change to this file's triggers, both automatic events began firing normally:
+#    run 32506672733 (`pull_request`, branch `docs/gh123-ci-canary-codify`) and run 32506697196
+#    (`push`, `development`), minutes apart.
+#
+#    WHY IT STARTED WORKING IS NOT ESTABLISHED. The only honest statement available from a normal
+#    token is that it changed between 16:45 and 17:09 UTC on 2026-08-21. If a repository setting was
+#    flipped in that window, say so on #59 — the answer is cheap to record now and expensive to
+#    reconstruct later. The audit log needs `admin:org`.
+#
+#    Ruled out during the outage, with evidence, so nobody re-tests them: billing/spending limit (a
+#    dispatch on the same branch ran fine — this was the leading theory and it was wrong), workflow
+#    disabled (`state=active`), repo is a fork (it is not), Actions disabled (`enabled: true,
+#    allowed_actions: all`), the base-branch filter (#116 targeted `development`, which is listed),
+#    the workflow missing from the PR head (`d09bdb6` is an ancestor of every branch tested), and
+#    fork-PR approval (zero runs ever sat in `action_required`, so nothing was being created).
+#
+#    A CONFLICTING PR STILL GETS NO RUN, AND THAT IS NORMAL GITHUB BEHAVIOUR — NOT A RELAPSE.
+#    `pull_request` workflows are built against the merge ref (`refs/pull/N/merge`), which GitHub
+#    does not create while a PR has conflicts, so a conflicted PR shows ZERO checks — visually
+#    identical to the outage above. Measured directly on #126: no run for the 9 minutes it was
+#    CONFLICTING, then a `pull_request` run within seconds of a rebase clearing it. It is also why
+#    #116 got no checks. Before concluding the triggers have broken again, check
+#    `gh pr view <n> --json mergeable` — if it says CONFLICTING, rebase and the run appears.
+#
+#    THE READING RULE THAT OUTLIVES ALL OF THIS: a clean `mergeStateStatus` means "no *failing
+#    required* checks", which is also what it says when no checks exist at all. Confirm a run
+#    actually exists before treating a green PR page as evidence — `gh pr view <n> --json
+#    statusCheckRollup` names the jobs, and an empty array is the tell. To fire this workflow by
+#    hand at any time:
 #
 #        gh workflow run ci.yml --ref <branch>
 #        gh run watch <run-id>
-#
-#    Ruled out on 2026-08-21, so #59 need not re-check these: billing/spending limit (a dispatch on
-#    the same branch runs fine), workflow disabled (`state=active`), repo is a fork (it is not),
-#    Actions disabled (`enabled: true, allowed_actions: all`), the base-branch filter (#116 targeted
-#    `development`, which is listed), the workflow missing from the PR head (`d09bdb6` is an ancestor
-#    of every branch tested), and fork-PR approval (zero runs sit in `action_required`).
-#    The settings that would explain it are not readable from a token without `admin:org`
-#    (`/actions/permissions/access` 422s on public repos; the org policy endpoint 403s), so
-#    diagnosing it needs the repo's Settings → Actions → General page, by eye.
 #
 # 2. AN ADVISORY JOB THAT DIES EARLY STILL REPORTS THE RUN GREEN. The ubuntu canary below is
 #    advisory by design ("never breakage") and ends in a verdict step that always passes. That
@@ -42,6 +60,13 @@ name: CI
 #    shellcheck / bash+node syntax / settings JSON / PDDA gate / acorn-extract all PASS on Linux;
 #    7 assertions across 5 suites fail. Tracked in GH-123 — read it before assuming any of them is
 #    environment noise, and see the GH-232 note further down for why that assumption is expensive.
+#
+#    THIS IS STILL TRUE NOW THAT THE AUTOMATIC TRIGGERS WORK, and that is the point. Runs
+#    32506672733 (`pull_request`) and 32506697196 (`push` on `development`) both concluded
+#    **success** while this job concluded **failure** on the same 7 assertions. So the trap did not
+#    end with the outage in note 1 — restoring the triggers restored a green checkmark on every PR
+#    that is reporting a red canary underneath it. Until GH-123 is cleared, treat this job's own
+#    conclusion as the signal and the run's conclusion as decoration.
 #
 # GH-216 cut `development` as the WIP branch that all work targets, but these
 # triggers stayed pinned to `main` — so no PR into `development` ran CI at all.
