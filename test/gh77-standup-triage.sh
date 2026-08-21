@@ -219,6 +219,8 @@ out="$(T "$W/deg4.json" --dry-run 2>&1)" || true
 has "lens 4 degrades loudly with D1" "$out" "D1"
 out="$(T "$W/lens4_trunc.json" --dry-run 2>&1)" || true
 has "lens 4 truncates at 50 and degrades with D2" "$out" "D2"
+is "lens 4 D2 case still emits its 50 candidates" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(len(d["lenses"]["4"]["candidates"]))' "$W/lens4_trunc.json")" "50"
+is "lens 4 D2 case expected first candidate remains present" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["4"]["candidates"][0]["what"])' "$W/lens4_trunc.json")" "review PR 1"
 
 out="$(T "$W/lens5.json" --dry-run 2>&1)" || true
 has "lens 5 finds triage issue" "$out" "triage issue 200"
@@ -236,11 +238,9 @@ out="$(T "$W/lens5.json" --dry-run --session-state "$W/sess_lens5.json" 2>&1)" |
 has "unchanged lens 5 item is suppressed on rerun" "$out" "1 suppressed"
 hasnt "  and does not re-render" "$out" "triage issue 200"
 
-python3 -c 'import json; print(json.dumps({"number": 200, "state": "OPEN", "title": "An Issue", "updatedAt": "2026-08-20T14:00:00Z"}))' > "$W/lens5_issue_200_updated.json"
-cp "$ROOT_DIR/skills/standup/fixtures/lens-5/lens5_gh_issue_200.txt" "$W/lens5_issue_200_bak.txt"
-cp "$W/lens5_issue_200_updated.json" "$ROOT_DIR/skills/standup/fixtures/lens-5/lens5_gh_issue_200.txt"
-bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5" > "$W/lens5_updated.json"
-mv "$W/lens5_issue_200_bak.txt" "$ROOT_DIR/skills/standup/fixtures/lens-5/lens5_gh_issue_200.txt"
+cp -r "$ROOT_DIR/skills/standup/fixtures/lens-5" "$W/lens-5-copy"
+python3 -c 'import json; print(json.dumps({"number": 200, "state": "OPEN", "title": "An Issue", "updatedAt": "2026-08-20T14:00:00Z"}))' > "$W/lens-5-copy/lens5_gh_issue_200.txt"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$W/lens-5-copy" > "$W/lens5_updated.json"
 
 out="$(T "$W/lens5_updated.json" --dry-run --session-state "$W/sess_lens5.json" 2>&1)" || true
 has "  but a changed live state (updatedAt) re-raises it" "$out" "triage issue 200"

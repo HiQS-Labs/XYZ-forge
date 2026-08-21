@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -166,3 +166,12 @@ swept file: yes
 I swept the whole `collect.sh` (including the new lenses), the entire `gh77-standup-triage.sh`, and the complete fixture tree. Apart from the findings above, I found no additional pre-existing defects in the scoped artifacts. I did not run project artifacts or tests, per this reviewer turn's containment rule.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+- **Restored Fixtures:** Re-verified that `lens-4/`, `lens-4-fail/`, `lens-4-truncated/`, `lens-5/`, `lens-5-fail/`, and `lens-5-manifest/` are populated properly. Added `skills/standup/fixtures/` explicitly to the `--paths` flag during the claim so they get tracked and committed.
+- **Lens 5 Regression Test:** Changed `test/gh77-standup-triage.sh` to copy the `lens-5` fixture into `$WORK` and alter it there, preventing any mutation to the checked-in fixture tree.
+- **Lens 4 Truncation Test:** Added a structured assertion to `test/gh77-standup-triage.sh` verifying that the 51-row D2 case outputs exactly 50 candidates in the raw JSON payload and the first PR is present.
+- Test suite `test/gh77-standup-triage.sh` now runs 127/0 passing.
+
+handing off to codex — codex, take your turn.
