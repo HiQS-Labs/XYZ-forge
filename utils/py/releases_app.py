@@ -2618,7 +2618,7 @@ _ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F",
 # ── GH-108: the one canonical rating grammar ────────────────────────────────────────────────────
 # `rated N/N/N/N` — exactly four slash-separated integers 1-100, axis order fixed as
 # pri/sev/appeal/effort — optionally followed by ` ovr N` (an integer 4-400 on calc's own scale).
-# There is no labeled long form: the axis NAMES live in PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md,
+# There is no labeled long form: the axis NAMES live in PROJECT/3-COMPLETED/GH-108-RATING-SYSTEM.md,
 # not in the entry line. Higher is better on every axis, effort included (it scores CHEAPNESS), so
 # the four combine without sign-flipping.
 #

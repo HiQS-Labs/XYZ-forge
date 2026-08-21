@@ -2,9 +2,9 @@
 gh_issue: 111
 source: https://github.com/HiQS-Suite/XYZ-forge/issues/111
 title: "Execution checklist — GH-111 (dialed-in) and GH-108 (rating system) to done"
-status: Active (2-WORKING as of 2026-08-20)
+status: Complete (3-COMPLETED as of 2026-08-21)
 created: 2026-08-20
-updated: 2026-08-20
+updated: 2026-08-21
 owner: noelsaw1
 doc_type: checklist
 rating: "pri/sev/appeal/effort 85/50/60/40 · calc 235"
@@ -25,7 +25,7 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 | What was just completed | What's next |
 |---|---|
-| **Every checklist item below is landed and green** — GH-111 Phases A/B/C and GH-108 Phases A/B/C/D, across four commits on `feat/gh111-phase-a-dialed-in`. | **PR [#116](https://github.com/HiQS-Suite/XYZ-forge/pull/116) is open against `development`, full gate green.** After it merges: promote both plans to `PROJECT/3-COMPLETED`, retarget their ROADMAP pointers, and close #108/#111 (#109 and #110 close themselves — the PR carries `Closes` lines). |
+| **Every item below is landed and green, and the work is merged.** GH-111 Phases A/B/C and GH-108 Phases A/B/C/D shipped to `development` via PR [#116](https://github.com/HiQS-Suite/XYZ-forge/pull/116) (`c271be3`, 2026-08-21). The two closing items G3 and G4 — the ones this list carried as `[~]` pending the merge — are done: both plans are in `PROJECT/3-COMPLETED`, their ROADMAP pointers retargeted, and #108/#111 closed (#109 and #110 closed themselves on the PR's `Closes` lines). | Nothing — this checklist is retired. It existed to keep the next move unambiguous while the two plans were in flight; both are now complete, which was its stated end condition. |
 
 ## GH-111 Phase A — schema + verbs
 
@@ -101,7 +101,9 @@ Legend: `[x]` landed and green · `[~]` in progress · `[ ]` not started.
 
 - [x] G1 Full releases + timeline + pdda suites green
 - [x] G2 CHANGELOG entries
-- [~] G3 Plans moved to `PROJECT/3-COMPLETED`, ROADMAP pointers updated — **after the merge**;
-      promoting a plan whose branch is still open would claim a landing that has not happened
-- [~] G4 #109, #110 closed with pointers; #108, #111 closed — **after the merge**; PR #116
-      carries the `Closes` lines, so #109 and #110 close themselves when it lands
+- [x] G3 Plans moved to `PROJECT/3-COMPLETED`, ROADMAP pointers updated — done 2026-08-21, after
+      PR #116 merged as `c271be3`. Held until then on purpose: promoting a plan whose branch is
+      still open would claim a landing that has not happened
+- [x] G4 #109, #110 closed with pointers; #108, #111 closed — done 2026-08-21. PR #116 carried the
+      `Closes` lines, so #109 and #110 closed themselves when it landed; #108 and #111 were closed
+      by hand with pointers to the merge
