@@ -131,6 +131,82 @@ ok "duplicate GH number refuses (rc=$rc)" "[ $rc -ne 0 ]"
 ok "  and names the rule" "has \"\$out\" 'rule=roadmap-duplicate-gh'"
 ok "  and nothing was written" "[ \"\$(gen_now)\" = \"$G5\" ]"
 
+# ── 7. GH-108: the one canonical rating grammar ─────────────────────────────────────────────────
+# `rated N/N/N/N` (pri/sev/appeal/effort, 1-100, higher is better on every axis including effort,
+# which scores CHEAPNESS) with an optional ` ovr N` on calc's 4-400 scale. The refusal contract is
+# the load-bearing half: a malformed shape must never read as "unrated", which would silently drop
+# an operator's prioritisation and look exactly like they never scored the task.
+echo "-- 7: the rating grammar (GH-108)"
+RM="$R/ROADMAP.md"
+write_ledger(){ printf '# Fixture roadmap\n## Ledger\n### In progress\n%s\n' "$1" > "$RM"; }
+
+write_ledger '- **GH-1 · rated entry** 🆕 — body. rated 70/40/55/60 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "a rated entry syncs (rc=$rc)" "[ $rc -eq 0 ]"
+ok "  and the four axes land in the rating_ columns, in pri/sev/appeal/effort order" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri||\"/\"||rating_sev||\"/\"||rating_appeal||\"/\"||rating_effort FROM roadmap_items WHERE gh_number=1')\" = '70/40/55/60' ]"
+ok "  and no override is implied by its absence" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr IS NULL FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
+ok "  and calc is DERIVED at read time, never stored (roadmap list shows the sum)" \
+   "ra roadmap list 2>/dev/null | grep -q 'calc=225'"
+ok "  and calc appears nowhere in the dump (a stored derived value is the drift class this avoids)" \
+   "! grep -q 'calc' '$R/releases.sql'"
+ok "  and the word \"rated\" in the entry's own TITLE is prose, not a second score token" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT COUNT(*) FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
+
+write_ledger '- **GH-1 · rated entry** 🆕 — body. rated 70/40/55/60 ovr 350 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+out="$(ra roadmap sync 2>&1)"
+ok "an override parses and rides alongside the honest axes" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_ovr||\":\"||rating_pri FROM roadmap_items WHERE gh_number=1')\" = '350:70' ]"
+ok "  and the override wins over calc for ranking (roadmap list shows calc>ovr)" \
+   "ra roadmap list 2>/dev/null | grep -q 'calc=225>350'"
+
+G7="$(gen_now)"
+refuses(){ # <label> <rule> <entry text>
+  write_ledger "$3"
+  local out rc
+  out="$(ra roadmap sync 2>&1)"; rc=$?
+  ok "$1 refuses with rule=$2" "[ $rc -ne 0 ] && has \"\$out\" 'rule=$2'"
+}
+refuses "three numbers"      rating-shape  '- **GH-1 · x** — body. rated 70/40/55'
+refuses "five numbers"       rating-shape  '- **GH-1 · x** — body. rated 70/40/55/60/50'
+refuses "a non-numeric axis" rating-shape  '- **GH-1 · x** — body. rated 70/40/high/60'
+refuses "an axis over 100"   rating-range  '- **GH-1 · x** — body. rated 70/40/55/160'
+refuses "an axis of zero"    rating-range  '- **GH-1 · x** — body. rated 70/40/55/0'
+refuses "two rated tokens"   rating-duplicate '- **GH-1 · x** — body. rated 70/40/55/60 and rated 10/10/10/10'
+refuses "two ovr tokens"     ovr-duplicate '- **GH-1 · x** — body. rated 70/40/55/60 ovr 350 ovr 360'
+refuses "a dangling ovr"     ovr-shape     '- **GH-1 · x** — body. rated 70/40/55/60 ovr soon'
+refuses "an out-of-scale ovr" ovr-range    '- **GH-1 · x** — body. rated 70/40/55/60 ovr 401'
+refuses "an ovr with no rated" ovr-orphan  '- **GH-1 · x** — body. ovr 350'
+refuses "both vocabularies on one entry" rating-vocabulary-clash \
+        '- **GH-1 · x** — body. cx/risk/eff 2/3/2 and rated 70/40/55/60'
+ok "  and not one of those refusals wrote anything" "[ \"\$(gen_now)\" = \"$G7\" ]"
+
+# the legacy -> rated transition: the ROW MIRRORS THE ENTRY. A row carrying both vocabularies would
+# disagree with its source and re-update on every sync forever.
+write_ledger '- **GH-1 · legacy** 🆕 — body. cx/risk/eff 2/3/2 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+ra roadmap sync >/dev/null 2>&1
+ok "a legacy cx/risk/eff entry still syncs (grandfathered, not broken)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT complexity||risk||effort FROM roadmap_items WHERE gh_number=1')\" = '232' ]"
+write_ledger '- **GH-1 · converted** 🆕 — body. rated 80/60/70/50 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+ra roadmap sync >/dev/null 2>&1
+ok "converting it to \`rated\` NULLs the legacy columns in the SAME sync (no row-level coexistence)" \
+   "[ \"\$(sqlite3 '$R/releases.db' 'SELECT complexity IS NULL AND risk IS NULL AND effort IS NULL AND rating_pri=80 FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
+G8="$(gen_now)"
+out="$(ra roadmap sync 2>&1)"
+ok "  and the next sync is a NO-OP (the mirror agrees with its source; no forever-update loop)" \
+   "has \"\$out\" 'already in sync' && [ \"\$(gen_now)\" = \"$G8\" ]"
+
+# the ratings ride the same dump/rebuild machinery as everything else
+ok "the five rating columns ride the dump in fixed trailing order" \
+   "grep -q 'INSERT INTO roadmap_items(.*rating_pri, rating_sev, rating_appeal, rating_effort, rating_ovr)' '$R/releases.sql'"
+BEFORE="$(sqlite3 "$R/releases.db" "SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=1")"
+ra check --rebuild >/dev/null 2>&1
+ok "  and survive a dump -> rebuild round trip" \
+   "[ \"\$(sqlite3 '$R/releases.db' \"SELECT rating_pri||'/'||rating_sev||'/'||rating_appeal||'/'||rating_effort FROM roadmap_items WHERE gh_number=1\")\" = \"$BEFORE\" ]"
+ok "  and check is clean afterwards" "ra check >/dev/null 2>&1"
+rm -f "$R/releases.db.bak"
+
 echo
 echo "  gh69-roadmap-shadow: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
