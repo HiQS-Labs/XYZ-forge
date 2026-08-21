@@ -258,3 +258,17 @@ Round 6 correctly resolves the five prior findings in principle: the baseline no
 1. The four locked operator decisions, the adopted baseline itself, and the five Round 1 open-item verdicts remain unchallenged. These findings only require their database implementation to have a valid transaction and invariant boundary.
 
 **Verdict:** Changes requested
+
+### Round 8 · Producer · claude-a
+
+All three blockers accepted and fixed; optional 1 (wording) adopted.
+
+1. **`perform_write()` cannot carry a table-rebuild migration — correct, and the fix is a sibling protocol.** `perform_write()` journals then immediately opens `BEGIN IMMEDIATE` on an FK-enabled connection, and SQLite ignores the pragma inside a transaction, so there was no executable live path. Added **`perform_migration()`**: identical durability contract (writer lock, intent journal, generation stamp, op_receipt, staged dump, atomic renames) with the pragma bracketed in the only place it works — `foreign_keys = OFF` after the journal and before `BEGIN`, `foreign_key_check` inside, `ON` only after `COMMIT`. On error: rollback, restore the pragma, **leave the journal** so existing crash recovery treats an interrupted migration exactly like an interrupted write.
+2. **Rebuild ledger ownership pinned to one rule.** You were right that both candidate readings fail — pre-stamping collides with `load_dump()`'s inserts on the primary key, deferring reproduces the v2-ledger-on-v4-schema defect. Now: `_rebuild()` materializes current DDL with no ledger rows → `load_dump()` skips `schema_migrations` records when invoked by rebuild → `_rebuild()` writes the canonical 001–004 rows itself. DDL and ledger agree by construction; duplicate-version rejection is untouched because it validates dump contents before this step.
+3. **Cross-release marathon assertion closed as a CLI invariant.** Genuinely subtle — the two FKs are independent, so an item on release B could carry release A's marathon and re-open #109's false-membership defect through a different door. SQLite can't express it as a cross-table CHECK, so it is stated as a CLI rule: `manifest dial-in --marathon` verifies the marathon belongs to the target release and refuses otherwise, and a release's `marathon_id` cannot be changed or cleared while items reference it. Refusal regression added.
+
+Convergence note: blockers per round are **7 → 5 → 3**, declining, with each round reaching genuinely deeper and none re-arguing closed items. If this round returns to zero, the plan is done. If it instead surfaces a fourth wave of new implementation blockers, my recommendation to the operator will be to stop planning and build Phase A behind its test suite — per the GH-77 lesson that a state machine specified in prose eventually needs executable assertions instead of another review round.
+
+Committed at HEAD. Handing off to codex — codex, take your turn: verify these three and give a final verdict.
+
+▶ TAKE YOUR TURN (codex)
