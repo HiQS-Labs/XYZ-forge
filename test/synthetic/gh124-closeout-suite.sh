@@ -129,7 +129,39 @@ python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" --purge
   echo "FAIL: --purge-trash failed to empty .xyz/trash/"
   exit 1
 }
-echo "PASS: workspace_manager clone safety, quarantine, and trash reaper verified"
+# Test detached-HEAD worktree with unpushed commit (data-loss regression guard)
+DETACHED_WT="$WORK/detached-worktree"
+git -C "$LOCAL_MAIN" worktree add --detach "$DETACHED_WT" HEAD >/dev/null 2>&1
+echo "detached secret edit" >> "$DETACHED_WT/file.txt"
+git -C "$DETACHED_WT" add file.txt
+git -C "$DETACHED_WT" commit -m "unpushed detached commit" >/dev/null 2>&1
+
+python3 "$ROOT/utils/py/workspace_manager.py" register --repo "$LOCAL_MAIN" --path "$DETACHED_WT" --type worktree >/dev/null 2>&1
+out="$(python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" 2>&1)"
+echo "$out" | grep -q "REFUSED.*detached HEAD.*unpushed commits" || {
+  echo "FAIL: workspace_manager failed to refuse detached HEAD worktree with unpushed commits"
+  echo "Output was: $out"
+  exit 1
+}
+git -C "$LOCAL_MAIN" worktree remove --force "$DETACHED_WT" >/dev/null 2>&1 || rm -rf "$DETACHED_WT"
+echo "PASS: workspace_manager detached HEAD push verification verified"
+
+# Test dry-run sweep preserves trash (does not reap trash during dry run)
+TRASH_DIR="$LOCAL_MAIN/.xyz/trash"
+mkdir -p "$TRASH_DIR/20260101T000000Z-old-trash"
+# Dry run should NOT delete old trash
+python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" >/dev/null 2>&1
+[ -d "$TRASH_DIR/20260101T000000Z-old-trash" ] || {
+  echo "FAIL: dry-run sweep deleted trash before --execute or --purge-trash"
+  exit 1
+}
+# --purge-trash SHOULD delete it
+python3 "$ROOT/utils/py/workspace_manager.py" sweep --repo "$LOCAL_MAIN" --purge-trash >/dev/null 2>&1
+[ ! -d "$TRASH_DIR/20260101T000000Z-old-trash" ] || {
+  echo "FAIL: --purge-trash failed to delete old trash"
+  exit 1
+}
+echo "PASS: workspace_manager trash preservation in dry-run verified"
 
 echo "=== 3. Testing marathon-closeout.sh hardening ==="
 # Test refusal of --base main
@@ -150,4 +182,4 @@ echo "$auto_out" | grep -q "gh pr create" || {
 }
 echo "PASS: marathon-closeout.sh hardening assertions verified"
 
-echo "ALL GH-124 SYNTHETIC CHECKS PASSED (4/4)"
+echo "ALL GH-124 SYNTHETIC CHECKS PASSED (6/6)"

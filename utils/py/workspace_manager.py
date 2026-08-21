@@ -94,6 +94,12 @@ def reap_trash(repo_root, max_age_hours=72, force_all=False):
                     age_hours = (datetime.datetime.now(datetime.timezone.utc) - dt).total_seconds() / 3600.0
                 except Exception:
                     pass
+            elif len(name) >= 15 and name[8] == "-":
+                try:
+                    dt = datetime.datetime.strptime(name[:15], "%Y%m%d-%H%M%S").replace(tzinfo=datetime.timezone.utc)
+                    age_hours = (datetime.datetime.now(datetime.timezone.utc) - dt).total_seconds() / 3600.0
+                except Exception:
+                    pass
             if age_hours is None:
                 mtime = os.path.getmtime(p)
                 age_hours = (now - mtime) / 3600.0
@@ -159,15 +165,34 @@ def evaluate_workspace_safety(repo_root, target_path):
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         branch = br_res.stdout.strip() if br_res.returncode == 0 else ""
         if not branch or branch == "HEAD":
-            # Detached HEAD in worktree: check against upstream
-            pass
+            # Detached HEAD in worktree: check if HEAD is an ancestor of ANY remote tracking branch
+            head_sha_res = subprocess.run(["git", "-C", target_abs, "rev-parse", "HEAD"],
+                                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            head_sha = head_sha_res.stdout.strip() if head_sha_res.returncode == 0 else ""
+            if not head_sha:
+                return False, ws_type, "detached", "could not determine HEAD commit"
+            
+            # Query all remote tracking refs
+            rem_refs_res = subprocess.run(["git", "-C", target_abs, "for-each-ref", "--format=%(refname:short)", "refs/remotes/"],
+                                          stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            rem_refs = [r.strip() for r in rem_refs_res.stdout.splitlines() if r.strip()]
+            is_pushed = False
+            for rref in rem_refs:
+                anc = subprocess.run(["git", "-C", target_abs, "merge-base", "--is-ancestor", head_sha, rref],
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                if anc.returncode == 0:
+                    is_pushed = True
+                    break
+            if not is_pushed:
+                return False, ws_type, f"detached:{head_sha[:8]}", f"detached HEAD ({head_sha[:8]}) has unpushed commits"
+            return True, ws_type, f"detached:{head_sha[:8]}", "clean & pushed"
         else:
             # Check if HEAD is pushed to origin/<branch>
             anc = subprocess.run(["git", "-C", target_abs, "merge-base", "--is-ancestor", "HEAD", f"origin/{branch}"],
                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             if anc.returncode != 0:
                 return False, ws_type, branch, f"HEAD on branch '{branch}' has unpushed commits"
-        return True, ws_type, branch, "clean & pushed"
+            return True, ws_type, branch, "clean & pushed"
 
     else:
         # Full Clone: Check all local branches
@@ -187,9 +212,10 @@ def evaluate_workspace_safety(repo_root, target_path):
 
 def sweep_workspaces(repo_root, execute=False, purge_trash=False):
     """Audit and sweep eligible ephemeral workspaces."""
-    reaped = reap_trash(repo_root, force_all=purge_trash)
-    if reaped > 0:
-        print(f"workspace-sweep: reaped {reaped} expired trash entries")
+    if execute or purge_trash:
+        reaped = reap_trash(repo_root, force_all=purge_trash)
+        if reaped > 0:
+            print(f"workspace-sweep: reaped {reaped} expired trash entries")
 
     # Discover candidate paths from manifest + git worktree list
     candidates = {}
@@ -198,15 +224,16 @@ def sweep_workspaces(repo_root, execute=False, purge_trash=False):
         if p and os.path.exists(p):
             candidates[os.path.abspath(p)] = entry.get("type", "unknown")
 
-    # Discover linked worktrees
-    wt_list = subprocess.run(["git", "-C", repo_root, "worktree", "list", "--porcelain"],
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    if wt_list.returncode == 0:
-        for line in wt_list.stdout.splitlines():
+    # Also discover linked worktrees via git worktree list
+    wt_out = subprocess.run(["git", "-C", repo_root, "worktree", "list", "--porcelain"],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if wt_out.returncode == 0:
+        for line in wt_out.stdout.splitlines():
             if line.startswith("worktree "):
-                p = line.split(" ", 1)[1].strip()
-                if os.path.exists(p) and os.path.realpath(p) != os.path.realpath(repo_root):
-                    candidates[os.path.abspath(p)] = "worktree"
+                wt_path = line[len("worktree "):].strip()
+                abs_wt = os.path.abspath(wt_path)
+                if abs_wt not in candidates:
+                    candidates[abs_wt] = "worktree"
 
     if not candidates:
         print("workspace-sweep: no candidate ephemeral workspaces found.")
@@ -214,7 +241,7 @@ def sweep_workspaces(repo_root, execute=False, purge_trash=False):
 
     print(f"workspace-sweep: auditing {len(candidates)} candidate workspace(s)...")
     print("-" * 80)
-    print(f"{'TYPE':<10} {'STATUS':<15} {'PATH':<55}")
+    print(f"{'TYPE':<10} {'STATUS':<25} {'PATH'}")
     print("-" * 80)
 
     to_remove = []
@@ -237,7 +264,7 @@ def sweep_workspaces(repo_root, execute=False, purge_trash=False):
     # Execute removal
     trash_dir = get_trash_dir(repo_root)
     os.makedirs(trash_dir, exist_ok=True)
-    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
 
     for p, ws_type, _ in to_remove:
         # Soft-quarantine untracked / scratch files

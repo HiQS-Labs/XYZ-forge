@@ -1082,6 +1082,8 @@ def main():
 
     def marathon_emit_phase_qa_attestation(head_sha, gate_name, duration_s=None):
         """GH-124 QW1: Driver-owned post-gate issue comment with opaque HTML idempotency marker."""
+        if not (args.log_github and drive_started[0]):
+            return
         if not shutil.which("gh") or subprocess.run(
                 ["gh", "auth", "status"], stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL).returncode != 0:
@@ -1090,20 +1092,22 @@ def main():
         if not issue:
             return
         try:
-            url = _cmd_out(["git", "-C", root, "remote", "get-url", "origin"])
+            target_repo = args.target_root or root
+            url = _cmd_out(["git", "-C", target_repo, "remote", "get-url", "origin"])
             repo = re.sub(r'\.git$', '', re.sub(r'^https?://[^/]+/', '', re.sub(r'^git@[^:]+:', '', url)))
             if not re.fullmatch(r'[A-Za-z0-9._-]+/[A-Za-z0-9._-]+', repo):
-                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=root)
+                repo = _cmd_out(["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"], cwd=target_repo)
             if not repo:
                 return
 
             marker = f"<!-- xyz-qa-receipt: issue={issue} phase={args.phase_id} sha={head_sha} -->"
-            comments = _cmd_out(["gh", "api", "--paginate", "--slurp",
-                                 f"repos/{repo}/issues/{issue}/comments?per_page=100"])
-            if comments and marker in comments:
+            res = subprocess.run(["gh", "api", "--paginate", "--slurp",
+                                 f"repos/{repo}/issues/{issue}/comments?per_page=100"],
+                                 capture_output=True, text=True)
+            if res.returncode == 0 and marker in res.stdout:
                 return
 
-            changed = _cmd_out(["git", "-C", root, "diff-tree", "--no-commit-id", "--name-only", "-r", head_sha])
+            changed = _cmd_out(["git", "-C", target_repo, "diff-tree", "--no-commit-id", "--name-only", "-r", head_sha])
             lines = changed.splitlines() if changed else []
             file_list = ", ".join(f"`{f}`" for f in lines[:5])
             if len(lines) > 5:
@@ -2013,6 +2017,17 @@ relay-file: {rel_relay}
         xyz_marathon_emit("green", success_text)
         head_sha = _cmd_out(["git", "-C", root, "rev-parse", "HEAD"])
         if head_sha:
+            try:
+                receipt_py = os.path.join(xyz_harness, "utils", "py", "gate_receipt.py")
+                if os.path.isfile(receipt_py):
+                    subprocess.run(
+                        ["python3", receipt_py, "write", "--repo", root, "--sha", head_sha,
+                         "--gate", pre_advance_cmd or "pre-advance-gate", "--mode", "marathon",
+                         "--exit-code", "0"],
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False
+                    )
+            except Exception:
+                pass
             marathon_emit_phase_qa_attestation(head_sha, pre_advance_cmd)
         refresh_remote_tracking_ref()
         if args.post_approve_cmd:

@@ -11,6 +11,7 @@
 # sequence without invoking git or gh, including read-only discovery commands.
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DRY_RUN=0
 OPEN_ONLY=0
 NO_COMMIT=0
@@ -80,6 +81,10 @@ done
 [[ -d "$REPO" ]] || die_usage "repository directory not found: $REPO"
 cd -- "$REPO"
 
+if [[ "${XYZ_SKIP_GATE_CHECK:-0}" == "1" ]]; then
+  SKIP_GATE_CHECK=1
+fi
+
 # GH-124 QW2: Hard-lock base branch against main
 if [[ "$BASE_BRANCH" == "main" ]]; then
   die_usage "refusing to target 'main' directly — 'development' is the required WIP base branch"
@@ -141,17 +146,20 @@ fi
 [[ -n "$HEAD_BRANCH" ]] || die_usage "detached HEAD is not supported; pass --head"
 [[ "$HEAD_BRANCH" != "$BASE_BRANCH" ]] || die_usage "refusing to close out the base branch itself"
 
-# GH-124 QW2: Deterministic local gate receipt verification before pushing or PR creation
-if ((! SKIP_GATE_CHECK)); then
-  head_sha="$(git rev-parse HEAD)"
-  if [[ -f "utils/py/gate_receipt.py" ]]; then
-    if ! python3 utils/py/gate_receipt.py check --repo . --sha "$head_sha" >/dev/null 2>&1; then
-      printf 'marathon-closeout.sh: REFUSED — commit %s has no passing local gate receipt in .xyz/receipts/ or .gate-evidence/\n' "${head_sha:0:8}" >&2
+verify_gate_receipt() {
+  local sha="$1"
+  if ((SKIP_GATE_CHECK)); then
+    return 0
+  fi
+  local receipt_tool="$SCRIPT_DIR/utils/py/gate_receipt.py"
+  if [[ -f "$receipt_tool" ]]; then
+    if ! python3 "$receipt_tool" check --repo "$REPO" --sha "$sha" >/dev/null 2>&1; then
+      printf 'marathon-closeout.sh: REFUSED — commit %s has no passing local gate receipt in .xyz/receipts/ or .gate-evidence/\n' "${sha:0:8}" >&2
       printf 'Run validate.sh or ci-local.sh first, or pass --skip-gate-check to bypass.\n' >&2
       exit 2
     fi
   fi
-fi
+}
 
 run_closeout() {
   local label="$1"
@@ -164,6 +172,7 @@ run_closeout() {
 
 if ((NO_COMMIT)); then
   printf 'marathon-closeout.sh: --no-commit; pushing the branch as committed\n'
+  verify_gate_receipt "$(git rev-parse HEAD)"
 else
   # GH-124 QW2: Purge indiscriminate git add -A
   if git diff --cached --quiet; then
@@ -175,6 +184,7 @@ else
   else
     run_closeout "commit" git commit -m "$COMMIT_MESSAGE"
   fi
+  verify_gate_receipt "$(git rev-parse HEAD)"
 fi
 run_closeout "push" git push -u "$REMOTE" "$HEAD_BRANCH"
 

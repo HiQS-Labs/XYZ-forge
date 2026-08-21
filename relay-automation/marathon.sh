@@ -343,7 +343,7 @@ if ((CLOSEOUT_PR)); then
   closeout_notes="Marathon plan: $closeout_plan
 Phases approved: $phase_count/$phase_count
 Tick events: $closeout_event_count${closeout_event_types:+ ($closeout_event_types)}"
-  if ! bash "$CLOSEOUT_BIN" --repo "$ROOT" --open-only --title "Marathon: $closeout_plan" --notes "$closeout_notes"; then
+  if ! bash "$CLOSEOUT_BIN" --repo "$ROOT" --auto-pr --title "Marathon: $closeout_plan" --notes "$closeout_notes"; then
     log "closeout PR failed after successful marathon; leaving marathon successful"
   fi
 fi

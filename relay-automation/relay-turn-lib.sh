@@ -868,6 +868,9 @@ rtl_worktree_end() {  # [<wt>] — sets RTL_WT_OFFLANE (0|1); copies allowlist b
   rm -f "${wt}.seedsig" "${wt}.artifactsig"   # GH-22 + GH-31: clean up the sidecar signature files
   git -C "$RTL_ROOT" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"
   git -C "$RTL_ROOT" worktree prune >/dev/null 2>&1 || true
+  if [ -n "${RTL_ROOT:-}" ] && [ -f "$RTL_ROOT/utils/py/workspace_manager.py" ]; then
+    python3 "$RTL_ROOT/utils/py/workspace_manager.py" deregister --repo "$RTL_ROOT" --path "$wt" >/dev/null 2>&1 || true
+  fi
   RTL_WT=""
 }
 
