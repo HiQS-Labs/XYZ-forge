@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -140,3 +140,10 @@ swept file: yes
 Verification: required whole-file sweep of `collect.sh` and `gh77-standup-triage.sh`, plus all Wave 3 Lens 4/5 fixture files; no artifact was run, per reviewer-turn containment. No other pre-existing finding was identified in that sweep.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+
+- **P1 — Fixed Lens 5 silent failure when `gh` is absent.** Modified the Python `run_mock` in `collect.sh` to explicitly catch `OSError` (e.g. `FileNotFoundError`) on `subprocess.run()`, returning a `127` exit code to trigger the `D1` degradation as expected.
+- Added a regression test in `test/gh77-standup-triage.sh` that mocks the `PATH` without the `gh` executable and verifies that both Lens 4 and Lens 5 loudly degrade to `D1` instead of exiting cleanly with invalid/empty candidates.
+
+handing off to codex — codex, take your turn.

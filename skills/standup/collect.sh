@@ -802,8 +802,11 @@ def run_mock(id, cmd, fx):
             with open(txt_file) as f: out = f.read()
             return 0, out
         return 1, f"Missing fixture: {id}\n"
-    proc = subprocess.run(cmd, shell=False, capture_output=True, text=True)
-    return proc.returncode, proc.stdout + proc.stderr
+    try:
+        proc = subprocess.run(cmd, shell=False, capture_output=True, text=True)
+        return proc.returncode, proc.stdout + proc.stderr
+    except OSError:
+        return 127, "command not found\n"
 
 fx = sys.argv[1]
 session_file = sys.argv[2]

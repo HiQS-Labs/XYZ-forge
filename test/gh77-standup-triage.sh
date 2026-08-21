@@ -657,6 +657,27 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/f
 out="$(T "$W/lens5_wrong_num.json" --dry-run 2>&1)" || true
 has "lens 5 degrades loudly with D5 on mismatched issue number" "$out" "D5"
 
+# Lens 4 & 5: gh unavailable degrades loudly to D1
+NOGH="$W/nogh-bin"
+mkdir -p "$NOGH"
+for _b in bash git python3 sed grep cat date wc printf sort head tail mkdir rm ls tr awk stat jq base64; do
+  _p="$(command -v "$_b" 2>/dev/null)"
+  if [ -n "$_p" ]; then
+    ln -sf "$_p" "$NOGH/$_b"
+  fi
+done
+echo '[]' > "$W/dummy_session.json"
+PATH="$NOGH" bash "$ROOT_DIR/skills/standup/collect.sh" --session "$W/dummy_session.json" > "$W/nogh.json" 2>/dev/null
+if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$W/nogh.json" 2>/dev/null; then
+  pass_ "collector still emits valid JSON when gh is missing"
+else
+  fail_ "collector emitted invalid JSON when gh is missing"
+fi
+out="$(T "$W/nogh.json" --dry-run 2>&1)" || true
+has "lens 4 degrades loudly with D1 when gh is missing" "$out" "D1"
+has "lens 5 degrades loudly with D1 when gh is missing" "$out" "D1"
+
+
 # Lens 5: non-root invocation control (must find ROADMAP and DB at REPO_ROOT)
 # We test this by creating a mock repository inside $W
 MOCK_REPO="$W/mock-repo"
