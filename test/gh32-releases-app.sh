@@ -564,8 +564,19 @@ V="$(rlog baseline --gid "$B1")"
 if has "$V" "rule=baseline-already-set"; then ok "the EXPLICIT verb refuses a second capture — write-once, because overwriting erases what it measures" 0; else ok "baseline write-once" 1; fi
 OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_count = 99 WHERE global_id='$B1'" 2>&1)"; RC=$?
 if [ $RC -ne 0 ] && has "$OUT" "write-once"; then ok "write-once is STRUCTURAL: a direct DB writer is refused by trigger, not merely detected" 0; else ok "write-once trigger" 1; fi
-OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_at = NULL WHERE global_id='$B1'" 2>&1)"; RC=$?
+# The shape guard is asserted on INSERT — the case that actually matters, a partial baseline
+# ENTERING the table. (An UPDATE that nulls baseline_at is now caught first by migration 005's
+# provenance write-once trigger below; both refusals are correct, so exercise each on its own case.)
+OUT="$(sqlite3 "$R/releases.db" "INSERT INTO releases(global_id, repo_id, version, status, description, tracking_ref_id, baseline_count) SELECT 'rel-01ARZ3NDEKTSV4RRFFQ69G5FAV', repo_id, '8.8.8', 'draft', 'partial baseline', tracking_ref_id, 5 FROM releases WHERE global_id='$B1'" 2>&1)"; RC=$?
 if [ $RC -ne 0 ] && has "$OUT" "all-NULL or all-populated"; then ok "a PARTIAL baseline is refused by trigger (count without provenance can never reach rendering)" 0; else ok "baseline shape trigger" 1; fi
+# Migration 005: the PROVENANCE is write-once too. 004 guarded the count alone, so a direct writer
+# could relabel a `backfilled` baseline as `observed` — a count whose source can be quietly
+# rewritten is worth less than no count (aider/qwen3.8-max QA r1).
+OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_source = 'observed' WHERE global_id='$B1' AND baseline_source = 'backfilled'" 2>&1)"; RC=$?
+if [ $RC -eq 0 ]; then OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_source = 'backfilled' WHERE global_id='$B1'" 2>&1)"; RC=$?; fi
+if [ $RC -ne 0 ] && has "$OUT" "write-once (baseline provenance)"; then ok "baseline PROVENANCE is write-once too — 'observed' cannot be quietly rewritten" 0; else ok "baseline provenance write-once" 1; fi
+OUT="$(sqlite3 "$R/releases.db" "UPDATE releases SET baseline_at = '2020-01-01T00:00:00Z' WHERE global_id='$B1'" 2>&1)"; RC=$?
+if [ $RC -ne 0 ] && has "$OUT" "write-once (baseline provenance)"; then ok "and so is baseline_at — the snapshot cannot be back-dated" 0; else ok "baseline_at write-once" 1; fi
 
 # the activate-first path: no draft->active transition to hook, so it lands baseline-less
 rout add --version 2.0.0 --status active --description "Activate first." --tracking-issue "https://github.com/A/B/issues/2"

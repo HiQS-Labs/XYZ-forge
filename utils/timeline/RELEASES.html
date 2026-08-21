@@ -155,6 +155,10 @@ body.hdr-collapsed #banner,body.hdr-collapsed #bar,body.hdr-collapsed #strip,bod
 .node .meta{font-size:11px;color:var(--ink2);margin-top:2px}
 .node .base{white-space:nowrap}
 /* ---- leaderboard view: same page, same chrome, one different body ---- */
+/* #fbar carries search + focus + prev/next, all wired by initInteractions(), which the leaderboard
+   view never calls — leaving an inert search box that looks broken (aider/qwen3.8-max QA r1). Hide
+   it rather than wire a second interaction model for a table that is already sorted. */
+body[data-view="leaderboard"] #fbar,
 body[data-view="leaderboard"] #strip,body[data-view="leaderboard"] .rail::before,
 body[data-view="leaderboard"] .rail::after,body[data-view="leaderboard"] .scrim,
 body[data-view="leaderboard"] .nav{display:none}

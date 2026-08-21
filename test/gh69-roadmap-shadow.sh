@@ -179,12 +179,27 @@ refuses "an axis over 100"   rating-range  '- **GH-1 · x** — body. rated 70/4
 refuses "an axis of zero"    rating-range  '- **GH-1 · x** — body. rated 70/40/55/0'
 refuses "two rated tokens"   rating-duplicate '- **GH-1 · x** — body. rated 70/40/55/60 and rated 10/10/10/10'
 refuses "two ovr tokens"     ovr-duplicate '- **GH-1 · x** — body. rated 70/40/55/60 ovr 350 ovr 360'
-refuses "a dangling ovr"     ovr-shape     '- **GH-1 · x** — body. rated 70/40/55/60 ovr soon'
+refuses "a mistyped ovr"     ovr-shape     '- **GH-1 · x** — body. rated 70/40/55/60 ovr 35O'
 refuses "an out-of-scale ovr" ovr-range    '- **GH-1 · x** — body. rated 70/40/55/60 ovr 401'
-refuses "an ovr with no rated" ovr-orphan  '- **GH-1 · x** — body. ovr 350'
-refuses "both vocabularies on one entry" rating-vocabulary-clash \
+refuses "an ovr with no rated" ovr-orphan  '- **GH-1 · x** — body. ovr 350'refuses "both vocabularies on one entry" rating-vocabulary-clash \
         '- **GH-1 · x** — body. cx/risk/eff 2/3/2 and rated 70/40/55/60'
 ok "  and not one of those refusals wrote anything" "[ \"\$(gen_now)\" = \"$G7\" ]"
+# The two false positives an independent QA pass (aider/qwen3.8-max r1) reproduced. Both refused a
+# CORRECTLY scored entry because prose elsewhere in it used the token word — the opposite failure
+# from a silent drop, but still a refusal the operator cannot act on.
+write_ledger '- **GH-1 · x** 🆕 — the rated 3rd priority item. rated 90/90/90/90 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "prose \"rated 3rd\" beside a real score is ONE rating, not a duplicate (rc=$rc)" \
+   "[ $rc -eq 0 ] && [ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri FROM roadmap_items WHERE gh_number=1')\" = '90' ]"
+write_ledger '- **GH-1 · x** 🆕 — the ovr wins over calc. rated 70/40/55/60 → [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1)'
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "unbackticked prose naming ovr does not refuse an entry that carries a real score (rc=$rc)" \
+   "[ $rc -eq 0 ] && [ \"\$(sqlite3 '$R/releases.db' 'SELECT rating_pri = 70 AND rating_ovr IS NULL FROM roadmap_items WHERE gh_number=1')\" = '1' ]"
+# ...and the presence test stays broad, so a TRUNCATED score is still refused rather than dropped
+write_ledger '- **GH-1 · x** 🆕 — body. rated 70'
+out="$(ra roadmap sync 2>&1)"; rc=$?
+ok "a bare truncated \`rated 70\` still refuses — the presence test was not weakened" \
+   "[ $rc -ne 0 ] && has \"\$out\" 'rule=rating-shape'"
 
 # the legacy -> rated transition: the ROW MIRRORS THE ENTRY. A row carrying both vocabularies would
 # disagree with its source and re-update on every sync forever.

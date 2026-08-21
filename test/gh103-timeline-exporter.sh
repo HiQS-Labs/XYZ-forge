@@ -210,6 +210,9 @@ if grep -q '"view": *"leaderboard"\|"view":"leaderboard"' "$LB_HTML"; then ok "t
 if grep -q 'leaderboardHTML' "$WORK/preview.html" && grep -q 'columnHTML' "$LB_HTML"; then ok "both artifacts share ONE renderer bundle (no second copy of the design system)" 0; else ok "shared bundle" 1; fi
 if grep -q 'id="view-link"' "$TEMPLATE"; then ok "the cross-link lives in .top, which never collapses" 0; else ok "cross-link placement" 1; fi
 if ! rg -q 'id="fbar"[^>]*>[^<]*<a id="view-link"' "$TEMPLATE"; then ok "and NOT in #fbar, which disappears with the header caret" 0; else ok "cross-link not in fbar" 1; fi
+# The leaderboard view never calls initInteractions(), so #fbar's search + focus + prev/next are
+# all inert there — a search box that looks broken (aider/qwen3.8-max QA r1).
+if grep -q 'body\[data-view="leaderboard"\] #fbar' "$TEMPLATE"; then ok "the leaderboard view hides #fbar rather than shipping an inert search box" 0; else ok "leaderboard hides fbar" 1; fi
 
 echo
 echo "== gh103-timeline-exporter: $pass passed, $fail failed =="

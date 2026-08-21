@@ -808,6 +808,36 @@ def _migration_003(conn):
                      % (column, column, column, low, high))
 
 
+def _has_trigger(conn, name):
+    return conn.execute("SELECT 1 FROM sqlite_master WHERE type='trigger' AND name=?",
+                        (name,)).fetchone() is not None
+
+
+def _migration_005(conn):
+    """GH-111 follow-up: extend baseline write-once to the PROVENANCE fields.
+
+    Migration 004 guarded `baseline_count` only, so a direct writer could relabel a `backfilled`
+    baseline as `observed`, or move `baseline_at`, without tripping anything (aider/qwen3.8-max QA
+    r1). The provenance is what makes the count trustworthy — a count whose source can be quietly
+    rewritten is worth less than no count — so it gets the same structural guarantee.
+
+    This is a NEW version rather than an edit to 004 because 004 has already been applied to live
+    ledgers. Amending an applied migration would leave two databases at the same stamped version
+    with different schemas, which is the one thing the registry rule exists to prevent.
+
+    TRANSACTION-SAFE and idempotent by schema probe.
+    """
+    for column in ("baseline_at", "baseline_source"):
+        name = "rel_baseline_%s_write_once" % column.split("_", 1)[1]
+        if _has_trigger(conn, name):
+            continue
+        conn.execute("""CREATE TRIGGER %s BEFORE UPDATE OF %s ON releases
+                          WHEN OLD.%s IS NOT NULL AND NEW.%s IS NOT OLD.%s
+                          BEGIN SELECT RAISE(ABORT,
+                            'releases.%s is write-once (baseline provenance)'); END"""
+                     % (name, column, column, column, column, column))
+
+
 # The migration REGISTRY is the truth (GH-111). apply/rebuild stamp exactly the versions
 # present here — never a hard-coded range — so a deliberate gap (e.g. GH-111's 004 landing
 # before GH-108's 003) yields a ledger of {1,2,4} rather than a false claim to 3. Pending
@@ -823,6 +853,7 @@ MIGRATIONS = {
     2: {"apply": lambda conn: _ensure_roadmap_schema(conn, stamp=False), "txn_safe": True},
     3: {"apply": _migration_003, "txn_safe": True},
     4: {"apply": _migration_004, "txn_safe": True},
+    5: {"apply": _migration_005, "txn_safe": True},
 }
 
 
@@ -2599,11 +2630,24 @@ _ROADMAP_STATUS_MARKERS = ["\U0001F195", "\U0001F6A7", "\u2705", "\u23F8\uFE0F",
 # "underrated") is not mistaken for a score — while a genuinely malformed `rated 70/40/55` still
 # counts as a token and is refused rather than read as unrated.
 _RATED_TOKEN_RE = re.compile(r"\brated\s+\d")
+# The DUPLICATE test is deliberately NARROWER than the presence test: it counts only
+# slash-bearing matches. "the rated 3rd priority item ... rated 90/90/90/90" is ONE rating
+# beside prose, and refusing it as a duplicate rejects a correctly-scored entry
+# (aider/qwen3.8-max QA r1, [Should] #1 — reproduced before fixing). The PRESENCE test stays
+# broad on purpose: a bare `rated 70` is a truncated score, and reading it as "unrated" would
+# be exactly the silent drop this contract exists to prevent. Prose shaped "rated <int> <word>"
+# with no real score beside it therefore still refuses — loudly, and fixable in one edit, which
+# is the trade this repo prefers over an invisible drop.
+_RATED_SCORE_TOKEN_RE = re.compile(r"\brated\s+\d+/")
 _RATED_RE = re.compile(r"\brated\s+(\d+)/(\d+)/(\d+)/(\d+)(?![\w/])")
-# Same shape as the `rated` token test: `ovr` counts only when something FOLLOWS it after
-# whitespace. Prose that names the term (an `ovr` override, "the ovr, wins over calc") is not
-# a score, while a genuinely dangling `ovr soon` still counts and is refused by shape.
-_OVR_TOKEN_RE = re.compile(r"\bovr\s+\S")
+# `ovr` requires a DIGIT, not merely a following token. Unbackticked prose — "the ovr wins over
+# calc" — otherwise refuses an entry carrying a perfectly good rating (aider/qwen3.8-max QA r1,
+# [Should] #2 — reproduced before fixing). The asymmetry with `rated` above is deliberate and is
+# what makes it safe: the override is OPTIONAL, so a dropped `ovr` degrades to "no override"
+# while the four axes still land, whereas a dropped `rated` loses the whole score. A real typo
+# is still caught, because the SHAPE test needs the integer to end cleanly: `ovr 35O` matches
+# the token and then fails the shape.
+_OVR_TOKEN_RE = re.compile(r"\bovr\s+\d")
 _OVR_RE = re.compile(r"\bovr\s+(\d+)(?![\w/])")
 _LEGACY_CRE_RE = re.compile(r"cx/risk/eff (\d+)/(\d+)/(\d+)")
 
@@ -2625,9 +2669,10 @@ def parse_rating(raw, title):
                "%s carries BOTH `cx/risk/eff` and `rated`. The two vocabularies measure different "
                "things and never share a row; convert the entry to `rated` and delete the legacy "
                "triple." % where)
-    if len(rated_tokens) > 1:
-        refuse("rating-duplicate", "%s carries %d `rated` tokens; exactly one is allowed"
-               % (where, len(rated_tokens)))
+    score_tokens = _RATED_SCORE_TOKEN_RE.findall(raw)
+    if len(score_tokens) > 1:
+        refuse("rating-duplicate", "%s carries %d `rated` scores; exactly one is allowed"
+               % (where, len(score_tokens)))
     if len(ovr_tokens) > 1:
         refuse("ovr-duplicate", "%s carries %d `ovr` tokens; at most one is allowed"
                % (where, len(ovr_tokens)))

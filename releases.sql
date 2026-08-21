@@ -1,14 +1,15 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 57
+-- generation: 58
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('3', '2026-08-21T04:21:29Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('4', '2026-08-21T04:21:29Z');
+INSERT INTO schema_migrations(version, applied_at) VALUES('5', '2026-08-21T05:37:00Z');
 -- table: settings
 INSERT INTO settings(key, value) VALUES('enforcement', 'lenient');
-INSERT INTO settings(key, value) VALUES('generation', '57');
+INSERT INTO settings(key, value) VALUES('generation', '58');
 INSERT INTO settings(key, value) VALUES('repo_slug', 'XYZ-forge');
 -- table: repos
 INSERT INTO repos(global_id, slug) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge');
@@ -328,3 +329,4 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-ship', 'rel-01M0EC3AGK2DWYAC1WV7FMG2Q6', '2026-08-21T04:22:07Z', 'f48fa659d6f94570b3fd0b4f24ae5a1b', 'default', '0b82ef765151fd156feb9010d14854b7c1d189bca55a67f340438e0ac088c8ea', '42091050fc148e2f623eaeb2cdabce9d465c9969d569066482d0524a457839e2');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-ship', 'rel-01M0EC3AGK2DWYAC1WV7FMG2Q6', '2026-08-21T04:22:08Z', '2cf81ed474394f37a7cd71ecdd737db2', 'default', '42091050fc148e2f623eaeb2cdabce9d465c9969d569066482d0524a457839e2', '39b24e59ec078e67afcc6204708daa492bea0d846494be001e989354ea8c4017');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-21T04:31:03Z', '07c6a25ef8424876896fa856e92e83ee', 'default', '39b24e59ec078e67afcc6204708daa492bea0d846494be001e989354ea8c4017', 'b724bb01792a1c39fa50220a7b2acd90590989fd06560fc94c00f7cd5177988e');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('migrate', 'migrations: 5', '2026-08-21T05:37:00Z', 'a9e18507d0ee4fe4872b62f2944c626e', 'default', 'b724bb01792a1c39fa50220a7b2acd90590989fd06560fc94c00f7cd5177988e', '445f4d93c78f27f1bf88b6770f4c6036f5cfc02c5e128a3c945e180a0ce24702');
