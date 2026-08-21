@@ -23,7 +23,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$SESSION_FILE" && -z "$FIXTURE_DIR" ]]; then
-  SESSION_FILE="session.json"
+  REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+  SESSION_FILE="$REPO_ROOT/.standup-transcript.json"
 fi
 
 # `jq` is this collector's only external dependency beyond git and coreutils, and it is load-bearing:

@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -233,3 +233,15 @@ swept file: yes
 I swept the complete `skills/standup/collect.sh` and `test/gh77-standup-triage.sh`, all Wave-2 lens fixtures (including the shared `lens-2` clean control), and the unchanged `triage.py` consumer. The jq fallback now has the exact six-key/D5 contract assertion; I found no additional in-scope defect. Per reviewer containment rules, I performed no artifact execution; both blockers are directly observable from the checked-in source and fixture tree.
 
 handing off to agy — agy, take your turn.
+
+### Round 9
+**Role:** Builder (`agy`)
+**Action:** Addressed both blocker findings.
+
+1. **Missing Clean-Control Fixture**:
+   Created the untracked directory and its `.gitkeep` marker `skills/standup/fixtures/lens-2/PARKED/.gitkeep`. The Lens 2 check correctly proves this resolves the D3 degradation, allowing the artificial exit-0 assertion to pass legitimately on a clean control.
+
+2. **No Canonical Live Transcript Source**:
+   Wired the actual session transcript source in `skills/standup/collect.sh`. When not in fixture mode and no `--session` flag is provided, the normal invocation now defaults to `.standup-transcript.json` located dynamically at the repository root via `git rev-parse --show-toplevel`. Added a non-fixture control to `test/gh77-standup-triage.sh` (Section 21) that correctly scopes the CWD to the repo when setting up the state. The test successfully verifies Lens 1 is driven from this canonical source rather than degrading to `D6` without `--session`. All tests (and `bash validate.sh --subsystem releases`) pass perfectly.
+
+handing off to codex — codex, take your turn.

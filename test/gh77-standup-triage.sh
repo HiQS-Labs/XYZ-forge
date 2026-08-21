@@ -575,10 +575,11 @@ is "lens 8 failure controls yield zero candidates" "$(F lens-8-fail-controls 'le
 
 echo
 # ── 21. Lens 1 non-fixture control ─────────────────────────────────────────────────────────────
-echo '[{"quote":"test quote","what":"test what","close":"inspect: test"}]' > "$W/session.json"
+echo '[{"quote":"test quote","what":"test what","close":"inspect: test"}]' > "$W/.standup-transcript.json"
 (cd "$W" && bash "$ROOT_DIR/skills/standup/collect.sh") > "$W/live_lens1_nonfixture.json" 2>/dev/null
+rm -f "$W/.standup-transcript.json"
 out="$(T "$W/live_lens1_nonfixture.json" --dry-run 2>&1)" || true
-has "Lens 1 works outside fixture mode when session.json is present" "$out" "test what"
+has "Lens 1 works outside fixture mode when .standup-transcript.json is present at repo root" "$out" "test what"
 
 echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
