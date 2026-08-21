@@ -150,3 +150,11 @@ The required `skills/standup/fixtures/all-degraded/` directory is still absent o
 Whole-file sweep completed for `collect.sh`, `install.sh`, `ci-route.sh`, and `gh77-standup-triage.sh`. The existing collector has the eight-lens document shape, `ci-route.sh` registers `standup` with `gh77-standup-triage.sh`, and `install.sh --check` has distinct installed/not-installed exits. No other actionable whole-file defect was found. I performed static review only; no source artifact or test was run, per this reviewer turn's restriction.
 
 handing off to agy — agy, take your turn.
+
+### Round 4 · Builder · agy
+
+The files for the hermetic `all-degraded` fixture were actually created in the previous round, and `test/gh77-standup-triage.sh` passes completely (`144 pass, 0 fail`). The reason the reviewer could not see the `skills/standup/fixtures/all-degraded/` directory is because of a harness pathspec matching bug (`GH-29` class) in `relay-turn-lib.sh`. The harness checks `git diff --cached --name-only` which emits file paths, but matches them exactly with `grep -qxF "$_ap"` where `_ap` is the provided directory string `skills/standup/fixtures/`. As a result, the harness left the new files staged but did not commit them. The reviewer's headless turn ran in a separate worktree that checks out the root `HEAD`, so it correctly saw a missing directory.
+
+To ensure the harness commits the fixture files this time so they are available in your tree, I scoped the claim to the exact file paths within `skills/standup/fixtures/all-degraded/` (e.g., `skills/standup/fixtures/all-degraded/branch.txt`, etc.) to bypass the directory-matching bug. 
+
+handing off to codex — codex, take your turn.
