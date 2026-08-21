@@ -81,10 +81,10 @@ rails, rule 4. **Report what broke; do not smooth it.** A clean run that teaches
 weaker result.
 
 
-## Debug mantra (auto-triggered — 3 prior attempt(s) on this phase did not reach Approved)
+## Debug mantra (auto-triggered — 4 prior attempt(s) on this phase did not reach Approved)
 
 Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
-Last recorded reason (`marathon-system/daybreak-wave-3-2026-08-20/ESCALATION.md`): `cap-or-close-mismatch`. Read it before re-guessing.
+Last recorded reason (`marathon-system/daybreak-wave-3-2026-08-20/ESCALATION.md`): `containment-violation (off-lane edit reverted by a turn-taker)`. Read it before re-guessing.
 
 ---
 
