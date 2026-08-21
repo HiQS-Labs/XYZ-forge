@@ -235,6 +235,14 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/f
 out="$(T "$W/quote_branch.json" --dry-run 2>&1)" || true
 has "JSON encoding handles branch name with double quotes" "$out" "commit or discard releases.db"
 
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1-bad-schema" > "$W/deg_lens1_schema.json" 2>/dev/null
+out="$(T "$W/deg_lens1_schema.json" --dry-run 2>&1)" || true
+has "lens 1 degrades loudly on malformed session schema" "$out" "D6"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-bad-check" > "$W/deg_lens8_schema.json" 2>/dev/null
+out="$(T "$W/deg_lens8_schema.json" --dry-run 2>&1)" || true
+has "lens 8 degrades loudly on malformed check object" "$out" "no PARKED/"
+
 echo
 # ── 13. The collector's own dependency is not allowed to fail silently ───────────────────
 # Blocker 4's fix made `jq` load-bearing: every candidate and the branch name are encoded through it,

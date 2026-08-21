@@ -570,6 +570,11 @@ import sys, json, hashlib, re
 try:
     with open(sys.argv[1], "r") as f:
         data = json.load(f)
+    if not isinstance(data, list):
+        raise ValueError()
+    for item in data:
+        if not isinstance(item, dict):
+            raise ValueError()
 except Exception:
     print("D6")
     sys.exit(0)
@@ -635,13 +640,13 @@ def run_mock(id, cmd):
             with open(txt_file) as f: out = f.read()
             return 0, out
         return 1, f"Missing fixture: {id}\n"
-    proc = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    proc = subprocess.run(cmd, shell=False, capture_output=True, text=True)
     return proc.returncode, proc.stdout + proc.stderr
 
-rc_chk, out_chk = run_mock("lens6_check", "python3 utils/py/releases_app.py check")
-rc_nxt, out_nxt = run_mock("lens6_next", "python3 utils/py/releases_app.py next")
-rc_drf, out_drf = run_mock("lens6_draft", "python3 utils/py/releases_app.py list --status draft")
-rc_act, out_act = run_mock("lens6_active", "python3 utils/py/releases_app.py list --status active")
+rc_chk, out_chk = run_mock("lens6_check", ["python3", "utils/py/releases_app.py", "check"])
+rc_nxt, out_nxt = run_mock("lens6_next", ["python3", "utils/py/releases_app.py", "next"])
+rc_drf, out_drf = run_mock("lens6_draft", ["python3", "utils/py/releases_app.py", "list", "--status", "draft"])
+rc_act, out_act = run_mock("lens6_active", ["python3", "utils/py/releases_app.py", "list", "--status", "active"])
 
 if (rc_chk not in (0, 1, 2)) or (rc_nxt != 0) or (rc_drf != 0) or (rc_act != 0):
     print("D5")
@@ -664,7 +669,7 @@ parse_list(out_drf)
 parse_list(out_act)
 
 for v in versions:
-    rc_show, out_show = run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", f"python3 utils/py/releases_app.py show --version {v}")
+    rc_show, out_show = run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", ["python3", "utils/py/releases_app.py", "show", "--version", v])
     if rc_show != 0 or not out_show.startswith("GID:"):
         print("D5")
         sys.exit(0)
@@ -791,6 +796,8 @@ for path in glob.glob(os.path.join(parked_dir, "*.md")):
                 chk = json.loads(check_str)
                 if not isinstance(chk, dict) or "kind" not in chk:
                     raise ValueError()
+                if "args" in chk and not isinstance(chk["args"], list):
+                    raise ValueError()
             except Exception:
                 print("D3")
                 sys.exit(0)
@@ -800,7 +807,13 @@ for path in glob.glob(os.path.join(parked_dir, "*.md")):
             if fs_m:
                 first_seen = int(fs_m.group(1))
             
-            if run_probe(chk, key):
+            try:
+                probe_res = run_probe(chk, key)
+            except Exception:
+                print("D3")
+                sys.exit(0)
+                
+            if probe_res:
                 cands.append({
                     "key": f"park:{key}",
                     "what": f"close parked item {key}",

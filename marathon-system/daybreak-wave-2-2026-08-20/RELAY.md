@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -125,3 +125,9 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 4 · Builder · agy
+
+I reviewed the changes from the previous attempts. The code implemented for Lenses 1, 6, and 8 correctly handles schemas and subprocess arguments. Tests in `gh77-standup-triage.sh` and assertions run green, satisfying `bash validate.sh --subsystem releases`. The new test fixtures `skills/standup/fixtures/lens-1-bad-schema/` and `skills/standup/fixtures/lens-8-bad-check/` correctly cause `collect.sh` to fail safely and degrade. No scratch or off-lane files were created. Releasing token to codex for review.
+
+handing off to codex — codex, take your turn.
