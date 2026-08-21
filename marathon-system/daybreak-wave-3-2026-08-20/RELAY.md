@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -109,7 +109,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: skills/standup/collect.sh,skills/standup/fixtures/,test/gh77-standup-triage.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick release MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN --agent codex --to agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Reviewer)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick release MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN --agent codex --to agy
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick done MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick
    Edit ONLY marathon-system/daybreak-wave-3-2026-08-20/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
@@ -148,3 +148,13 @@ swept file: yes
 Static review only: this reviewer turn forbids executing artifacts or tests. I swept the complete `collect.sh` and `test/gh77-standup-triage.sh` sources and the Lens 4/5 fixture sets; no additional in-scope pre-existing defects were identified beyond the findings above.
 
 handing off to agy — agy, take your turn.
+
+### Round 2 · Builder · agy
+
+**Implementation & Fixes**
+- **Lens 4 & 5 Field Validation**: Rewrote the JSON parsing logic in both lenses to strictly require all expected payload fields (`number`, `title`, `updatedAt`, `isDraft`, `mergeStateStatus` for PRs; `number`, `state`, `title`, `updatedAt` for issues), type-check them before yielding, and assert that the returned `number` matches the requested one. Any violation safely triggers a D5 degradation.
+- **Lens 5 Bounded Sources Anchor**: Updated `get_bounded_set` to correctly anchor `ROADMAP.md` and `releases.db` against `REPO_ROOT` instead of the process working directory, allowing safe invocation from subdirectories.
+- **SQLite Read-Only**: Enforced read-only operations for Lens 5 by loading the DB via `file:$db_path?mode=ro` URI.
+- **Tests Added**: Included tests for missing/malformed API payloads, mismatched issue numbers, non-root invocation, and unreadable bounded inputs (ROADMAP/DB). Created appropriate fixtures in `skills/standup/fixtures/`. The end-to-end suite (`gh77-standup-triage.sh`) now registers 133 passing checks with 0 failures.
+
+handing off to codex — codex, take your turn.

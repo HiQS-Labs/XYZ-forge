@@ -22,8 +22,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 if [[ -z "$SESSION_FILE" && -z "$FIXTURE_DIR" ]]; then
-  REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
   SESSION_FILE="$REPO_ROOT/.standup-transcript.json"
 fi
 
@@ -672,10 +672,18 @@ if env_now and len(env_now) >= 10:
 
 for pr in data:
     try:
+        if "number" not in pr or "title" not in pr or "updatedAt" not in pr or "isDraft" not in pr or "mergeStateStatus" not in pr:
+            raise ValueError()
         num = pr["number"]
-        is_draft = str(pr.get("isDraft", False)).lower()
-        merge_state = pr.get("mergeStateStatus", "UNKNOWN")
-        updated_at = pr.get("updatedAt", "")
+        if not isinstance(num, int): raise ValueError()
+        title = pr["title"]
+        if not isinstance(title, str): raise ValueError()
+        is_draft = pr["isDraft"]
+        if not isinstance(is_draft, bool): raise ValueError()
+        merge_state = pr["mergeStateStatus"]
+        if not isinstance(merge_state, str): raise ValueError()
+        updated_at = pr["updatedAt"]
+        if not isinstance(updated_at, str): raise ValueError()
         
         dt = datetime.datetime.strptime(updated_at, "%Y-%m-%dT%H:%M:%SZ")
         stale_ts = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
@@ -691,7 +699,7 @@ for pr in data:
             "staleness": int(stale_ts),
             "stale_days": stale_days,
             "merge_state": merge_state,
-            "live_state": f"{merge_state}/{is_draft}/{updated_date}",
+            "live_state": f"{merge_state}/{str(is_draft).lower()}/{updated_date}",
             "close": f"gh pr review {num}",
             "close_kind": "command"
         })
@@ -724,7 +732,7 @@ lens5_cands="[]"
 out5_processed=$(python3 -c '
 import sys, os, json, re, sqlite3, time, datetime
 
-def get_bounded_set(fx, session_file):
+def get_bounded_set(fx, session_file, repo_root):
     nums = set()
     
     if fx:
@@ -748,7 +756,7 @@ def get_bounded_set(fx, session_file):
         except Exception:
             pass
 
-    roadmap_path = os.path.join(fx, "ROADMAP.md") if fx else "ROADMAP.md"
+    roadmap_path = os.path.join(fx, "ROADMAP.md") if fx else os.path.join(repo_root, "ROADMAP.md")
     try:
         with open(roadmap_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
@@ -761,18 +769,21 @@ def get_bounded_set(fx, session_file):
                 if m:
                     nums.add(int(m.group(1)))
     except Exception:
-        pass
+        print("D5")
+        sys.exit(0)
 
-    db_path = os.path.join(fx, "releases.db") if fx else "releases.db"
+    db_path = os.path.join(fx, "releases.db") if fx else os.path.join(repo_root, "releases.db")
     try:
-        c = sqlite3.connect(db_path)
-        rows = c.execute("SELECT i.url FROM manifest_items mi JOIN releases r ON r.id = mi.release_id JOIN issue_refs i ON i.id = mi.issue_ref_id WHERE r.status IN ('\''draft'\'', '\''active'\'') AND i.url IS NOT NULL").fetchall()
+        db_uri = f"file:{db_path}?mode=ro"
+        c = sqlite3.connect(db_uri, uri=True)
+        rows = c.execute("SELECT i.url FROM manifest_items mi JOIN releases r ON r.id = mi.release_id JOIN issue_refs i ON i.id = mi.issue_ref_id WHERE r.status IN (?, ?) AND i.url IS NOT NULL", ("draft", "active")).fetchall()
         for r in rows:
             m = re.search(r"issues/(\d+)$", r[0])
             if m:
                 nums.add(int(m.group(1)))
     except Exception:
-        pass
+        print("D5")
+        sys.exit(0)
     
     return sorted(list(nums))
 
@@ -796,6 +807,7 @@ def run_mock(id, cmd, fx):
 
 fx = sys.argv[1]
 session_file = sys.argv[2]
+repo_root = sys.argv[3]
 
 rc_gh, out_gh = run_mock("lens5_gh_check", ["gh", "--version"], fx)
 if rc_gh != 0:
@@ -803,7 +815,7 @@ if rc_gh != 0:
     sys.exit(0)
 
 cands = []
-nums = get_bounded_set(fx, session_file)
+nums = get_bounded_set(fx, session_file, repo_root)
 
 for num in nums:
     rc, out = run_mock(f"lens5_gh_issue_{num}", ["gh", "issue", "view", str(num), "--json", "number,state,title,updatedAt"], fx)
@@ -812,26 +824,34 @@ for num in nums:
         sys.exit(0)
     try:
         data = json.loads(out)
-        if "number" not in data or "title" not in data:
+        if "number" not in data or "state" not in data or "title" not in data or "updatedAt" not in data:
             print("D5")
             sys.exit(0)
-        state = data.get("state", "UNKNOWN")
-        updated_at = data.get("updatedAt", "")
+        if data["number"] != num:
+            print("D5")
+            sys.exit(0)
         
-        stale_ts = None
-        if updated_at:
-            dt = datetime.datetime.strptime(updated_at, "%Y-%m-%dT%H:%M:%SZ")
-            stale_ts = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
-            stale_ts = int(stale_ts)
+        number_val = data["number"]
+        if not isinstance(number_val, int): raise ValueError()
+        state = data["state"]
+        if not isinstance(state, str): raise ValueError()
+        title = data["title"]
+        if not isinstance(title, str): raise ValueError()
+        updated_at = data["updatedAt"]
+        if not isinstance(updated_at, str): raise ValueError()
+        
+        dt = datetime.datetime.strptime(updated_at, "%Y-%m-%dT%H:%M:%SZ")
+        stale_ts = dt.replace(tzinfo=datetime.timezone.utc).timestamp()
+        stale_ts = int(stale_ts)
             
-        updated_date = updated_at[:10] if updated_at else ""
+        updated_date = updated_at[:10]
         cands.append({
             "key": f"issue:{num}",
             "what": f"triage issue {num}",
             "evidence_type": "issue",
             "evidence_payload": f"{num}+{state}@none",
             "staleness": stale_ts,
-            "live_state": f"{state}/{updated_date}" if updated_date else state,
+            "live_state": f"{state}/{updated_date}",
             "close": f"gh issue view {num}",
             "close_kind": "command"
         })
@@ -840,7 +860,7 @@ for num in nums:
         sys.exit(0)
 
 print(json.dumps(cands))
-' "${FIXTURE_DIR:-}" "${SESSION_FILE:-}")
+' "${FIXTURE_DIR:-}" "${SESSION_FILE:-}" "$REPO_ROOT")
 if [[ "$out5_processed" == "D1" ]]; then
   lens5_status="degraded"
   lens5_deg="\"D1\""

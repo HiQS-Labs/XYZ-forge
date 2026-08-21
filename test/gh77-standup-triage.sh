@@ -634,5 +634,76 @@ out="$(T "$W/live_lens1_nonfixture.json" --dry-run 2>&1)" || true
 has "Lens 1 works outside fixture mode when .standup-transcript.json is present at repo root" "$out" "test what"
 
 echo
+
+
+echo
+# ── 22. Daybreak Wave 3: Lens 4 & 5 validation and bounds regression ──────────────────────────────
+export STANDUP_STAMP=2026-08-19-1200
+
+# Lens 4: malformed/missing fields (D5)
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-4-missing-fields" > "$W/lens4_missing.json" 2>/dev/null
+out="$(T "$W/lens4_missing.json" --dry-run 2>&1)" || true
+has "lens 4 degrades loudly with D5 on missing/malformed API fields" "$out" "D5"
+
+# Lens 5: malformed/missing fields (D5)
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-missing-fields" > "$W/lens5_missing.json" 2>/dev/null
+out="$(T "$W/lens5_missing.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on missing/malformed API fields" "$out" "D5"
+
+# Lens 5: wrong issue number from API (D5)
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-wrong-number" > "$W/lens5_wrong_num.json" 2>/dev/null
+out="$(T "$W/lens5_wrong_num.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on mismatched issue number" "$out" "D5"
+
+# Lens 5: non-root invocation control (must find ROADMAP and DB at REPO_ROOT)
+# We test this by creating a mock repository inside $W
+MOCK_REPO="$W/mock-repo"
+mkdir -p "$MOCK_REPO/subdir"
+cp -r "$ROOT_DIR/skills/standup/fixtures/lens-5" "$MOCK_REPO/lens-5"
+# Make it look like a repo
+(cd "$MOCK_REPO" && git init >/dev/null && git config user.email "a@b.com" && git config user.name "A B" && touch dummy && git add dummy && git commit -m "init" >/dev/null)
+# Provide bounded sources at repo root
+cp "$MOCK_REPO/lens-5/ROADMAP.md" "$MOCK_REPO/"
+cp "$MOCK_REPO/lens-5/releases.db" "$MOCK_REPO/"
+echo "[{\"what\": \"GH-200\"}]" > "$MOCK_REPO/.standup-transcript.json"
+
+# We run collect.sh WITHOUT --fixture, from the subdirectory, maskinggh with a mock on PATH
+MOCK_BIN="$W/mock_bin"
+mkdir -p "$MOCK_BIN"
+cat << 'MOCK' > "$MOCK_BIN/gh"
+#!/usr/bin/env bash
+if [[ "$1" == "--version" ]]; then exit 0; fi
+if [[ "$1" == "issue" && "$2" == "view" ]]; then
+  # Just return the same static payload for any issue
+  echo '{"number":'"$3"',"state":"OPEN","title":"An Issue","updatedAt":"2026-08-20T14:00:00Z"}'
+  exit 0
+fi
+if [[ "$1" == "pr" && "$2" == "list" ]]; then
+  echo '[]'
+  exit 0
+fi
+exit 1
+MOCK
+chmod +x "$MOCK_BIN/gh"
+
+# We need to mock jq too, wait jq is required by collect.sh
+ln -s "$(command -v jq)" "$MOCK_BIN/jq"
+ln -s "$(command -v git)" "$MOCK_BIN/git"
+ln -s "$(command -v python3)" "$MOCK_BIN/python3"
+ln -s "$(command -v base64)" "$MOCK_BIN/base64"
+
+(cd "$MOCK_REPO/subdir" && PATH="$MOCK_BIN:$PATH" bash "$ROOT_DIR/skills/standup/collect.sh") > "$W/lens5_subdir.json" 2>/dev/null
+out="$(T "$W/lens5_subdir.json" --dry-run 2>&1)" || true
+has "lens 5 non-root invocation finds repo root ROADMAP and DB bounded inputs" "$out" "triage issue 200"
+
+# Lens 5: missing ROADMAP degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-missing-roadmap" > "$W/lens5_missing_roadmap.json" 2>/dev/null
+out="$(T "$W/lens5_missing_roadmap.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on missing/unreadable ROADMAP" "$out" "D5"
+
+# Lens 5: missing releases.db degrades to D5
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-missing-db" > "$W/lens5_missing_db.json" 2>/dev/null
+out="$(T "$W/lens5_missing_db.json" --dry-run 2>&1)" || true
+has "lens 5 degrades loudly with D5 on missing/unreadable releases.db" "$out" "D5"
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
