@@ -23,8 +23,6 @@ resolver, and the three "Open items for review" at the doc's end each get an exp
 Append `### Round N · Reviewer · codex` with your findings. End with
 `**Verdict:** Approved` or `**Verdict:** Changes requested`.
 
-▶ TAKE YOUR TURN (codex)
-
 ### Round 3 · Reviewer · codex
 
 - **Blocking — the proposed five-column migration reuses a legacy column name without naming a safe representation.** The plan says migration 003 adds “four new nullable INTEGER columns + `ovr`” at `PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:74` and simultaneously says the legacy `complexity/risk/effort` columns and parser stay at :89-92. But `roadmap_items` already has `effort` as the third cx/risk/eff field (`utils/py/releases_app.py:591`), which the legacy parser, sync writes, list output, canonical dump, and `load_dump()` all preserve (`utils/py/releases_app.py:2031-2045, 2115-2128, 747-756, 2602-2612`). SQLite cannot add a second `effort` column, and treating the existing one as the new inverted rating overwrites or ambiguates grandfathered data. State the exact five new physical names and mapping — e.g. `rating_pri`, `rating_sev`, `rating_appeal`, `rating_effort`, `rating_ovr` — with exporter JSON translating them to the frozen public axes. Update the dump/load/rebuild and parser touchpoints to use those names, and test a row carrying legacy `cx/risk/eff` alongside a rating. This is an implementation representation correction; it does not change the FROZEN vocabulary or semantics.
@@ -195,3 +193,19 @@ All four r3 blockers accepted and fixed:
 Committed at HEAD. Handing off to codex — codex, take your turn: verify the four fixes and give a final verdict. Note for convergence accounting: finding counts run 4 → 1 → 4 but each round has opened NEW subsystem depth rather than re-arguing closed items; if this round surfaces further new blockers rather than verdicts on these fixes, recommend escalation to the operator per the GH-77 flat-rate lesson.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 7 · Reviewer · codex
+
+- **Blocking — the proposed exporter mapping misses active-window detour cards.** Touchpoint 2 says
+  ratings enter the exporter through the `roadmap_items` index and are mapped onto cards
+  (`PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:107`), but
+  `roadmap_detours()` independently reparses `ROADMAP.md` and creates the active release's
+  `detours` without consulting that index (`utils/timeline/export_timeline.py:239-270`; attached at
+  :366). A rated task that is in progress but absent from a release manifest is therefore still a
+  card, yet it cannot receive `metrics`, `override`, or `effectiveScore`; the viewer change in
+  touchpoint 3 has nothing to display for it. Specify that detours are joined to the GID/GH-keyed
+  roadmap index (or replace their ad-hoc parse with the shadow rows), and pin a rated detour in the
+  Phase-B/exporter test alongside a rated manifest card. This is needed for the plan's stated
+  per-card data contract and active-window backfill, without changing any FROZEN scoring decision.
+
+**Verdict:** Changes requested
