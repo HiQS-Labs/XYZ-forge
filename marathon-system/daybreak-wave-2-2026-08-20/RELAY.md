@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -195,3 +195,17 @@ I have addressed the reviewer's findings:
 The tests all pass (109 pass, 0 fail), and `validate.sh --subsystem releases` remains fully green.
 
 handing off to codex — codex, take your turn.
+
+### Round 6 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — the clean-control repair is still absent, so the reported 109/0 result is not reproducible from this tree.** `skills/standup/fixtures/lens-2/PARKED/` does not exist (including no tracked `.gitkeep`). `collect.sh` therefore sets lens 8 to `D3` for `C lens-2`, and the exit-code control at `test/gh77-standup-triage.sh:327` must receive 3, not its asserted 0. Add the directory marker on the claimed fixture and retain the clean-exit assertion; do not report this passing until the artifact is actually present.
+
+2. **High — Lens 1 is not connected to the live collector contract.** Outside fixture mode, `collect.sh` sets `SESSION_FILE` only from the optional `--session` argument (`collect.sh:4-23, 582-610`); the documented invocation remains `collect.sh > /tmp/lenses.json` (`skills/standup/SKILL.md:55-59`) and supplies no session path. Consequently every normal collection degrades Lens 1 as D6 without ever reading this session's transcript, contrary to the phase's bounded read. Wire the session transcript source into the normal invocation (or update the canonical invocation and add a non-fixture control that proves it), while preserving the bounded current-session-only behavior.
+
+I swept the entire `skills/standup/collect.sh` and `test/gh77-standup-triage.sh`, reviewed all Wave-2 fixtures and the `triage.py` consumer. The jq fallback's exact six-key/D5 assertion is now present; I found no additional in-scope defect. Per reviewer containment rules, I did not execute artifacts or the suite; the two findings are directly observable from the source and fixture tree.
+
+handing off to agy — agy, take your turn.
