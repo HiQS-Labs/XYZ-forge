@@ -7,6 +7,7 @@ created: 2026-08-20
 updated: 2026-08-20
 owner: noelsaw1
 doc_type: plan
+roadmap_exempt: true
 rating: "pri/sev/appeal/effort 70/40/55/60 · calc 225"  # dogfood: this doc scored under its own system
 goal: >
   One scoring vocabulary for every task in the ledger, oriented so a single glance answers "what
@@ -15,6 +16,12 @@ goal: >
 ---
 
 # GH-108: pri/sev/appeal/effort — Canonical Task Rating System (Plan)
+
+## Status
+
+| What was just completed | What's next |
+|---|---|
+| **Plan Authored (2026-08-20):** Operator locked 4-axis 1-100 rating model. | Complete review and implementation steps. |
 
 > **Operator decisions in this doc are LOCKED (2026-08-20, two rounds).** Sections marked FROZEN
 > restate them; everything else is implementation planning and may be revised by review.

@@ -25,20 +25,20 @@ Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 2 · �
 
 ## In progress
 
-Summary: 3 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
+Summary: 2 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 0 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
-| GH-101 · Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core Relay & Consult Runtimes | — | [GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md](PROJECT/2-WORKING/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md) · [#101](https://github.com/HiQS-Suite/XYZ-forge/issues/101) |
 | GH-77 · /standup — session-scoped triage: what did I leave open, what is rotting, is the plan still right? | — | [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/1-INBOX/GH-77-STANDUP-SESSION-TRIAGE.md) · [#77](https://github.com/HiQS-Suite/XYZ-forge/issues/77) · [GH-77-STANDUP-SESSION-TRIAGE.md](PROJECT/2-WORKING/GH-77-STANDUP-SESSION-TRIAGE.md) |
 | GH-5 · kernel robustness: node:test unit runner | — | [GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md](PROJECT/2-WORKING/GH-5-EVENTS-QUARANTINE-UNIT-TESTS.md) · [#5](https://github.com/HiQS-Suite/XYZ-forge/issues/5) |
 
 ## Completed
 
-Summary: 12 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 12 · 🔮 0 · 🔲 0
+Summary: 13 items | Tally: 🟢 0 · 🟡 0 · ⏸️ 0 · ⛔ 0 · ✅ 13 · 🔮 0 · 🔲 0
 
 | Item | Status | Links |
 | --- | --- | --- |
+| GH-101 · Feasibility Study: Promoting Programmatic Script Runner (script_runner.py) into Core Relay & Consult Runtimes | ✅ | [GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md](PROJECT/3-COMPLETED/GH-101-FEASIBILITY-STUDY-SCRIPT-RUNNER.md) · [#101](https://github.com/HiQS-Suite/XYZ-forge/issues/101) |
 | GH-103 · technical spike: RELEASES SQLite → timeline-ui ledger viewer (RELEASES dashboard view) | ✅ | [GH-103-TIMELINE-LEDGER-SPIKE.md](PROJECT/1-INBOX/GH-103-TIMELINE-LEDGER-SPIKE.md) · [#103](https://github.com/HiQS-Suite/XYZ-forge/issues/103) |
 | GH-1 · suite-wide fixture containment + clone-identity invariant gate | ✅ | [GH-1-SUITE-CONTAINMENT-GATE.md](PROJECT/2-WORKING/GH-1-SUITE-CONTAINMENT-GATE.md) · [#1](https://github.com/HiQS-Suite/XYZ-forge/issues/1) |
 | GH-102 · Unify Telemetry Schema & Inspection Tooling Across Fuzzing and ATE | ✅ | [GH-102-UNIFIED-TELEMETRY-TOOLING.md](PROJECT/3-COMPLETED/GH-102-UNIFIED-TELEMETRY-TOOLING.md) · [#102](https://github.com/HiQS-Suite/XYZ-forge/issues/102) |
