@@ -263,6 +263,16 @@ has "lens 8 degrades loudly with D3" "$out" "no PARKED/"
 out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
 has "lens 7 degrades loudly with D4" "$out" "D4"
 
+[ -d "$ROOT_DIR/skills/standup/fixtures/all-degraded" ] || fail_ "all-degraded fixture directory is missing"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/all-degraded" > "$W/all_degraded.json" 2>/dev/null || true
+out="$(T "$W/all_degraded.json" --dry-run 2>&1)" || true
+has "all-degraded cleanly triggers all degradation modes (D1, D3, D4, D5, D6)" "$out" "D1"
+has "all-degraded reports D3" "$out" "no PARKED/"
+has "all-degraded reports D4" "$out" "D4"
+has "all-degraded reports D5" "$out" "D5"
+has "all-degraded reports D6" "$out" "D6"
+is "all-degraded fits within 15-line display cap" "$([ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" -le 15 ] && echo ok)" "ok"
+
 echo
 # ── 12. Blocker 3 and Blocker 4 assertions ──────────────────────────────────────────────
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-2-missing-fixture" > "$W/deg_missing.json" 2>/dev/null
@@ -736,6 +746,40 @@ is "lens 5 degrades loudly with D5 on malformed session.json" "$(python3 -c 'imp
 # Lens 5: invalid shape session.json degrades to D5
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-5-invalid-shape-session" > "$W/lens5_invalid_shape_session.json" 2>/dev/null
 is "lens 5 degrades loudly with D5 on invalid shape session.json" "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["lenses"]["5"]["degraded_id"])' "$W/lens5_invalid_shape_session.json")" "D5"
+
+echo
+# ── 23. install.sh --check and ci-route.sh assertions ───────────────────────────────────────────
+TEST_HOME="$W/test-home"
+mkdir -p "$TEST_HOME"
+HOME="$TEST_HOME" bash "$ROOT_DIR/skills/standup/install.sh" --check >/dev/null 2>&1
+is "install.sh --check exits 1 when uninstalled" "$?" "1"
+
+HOME="$TEST_HOME" bash "$ROOT_DIR/skills/standup/install.sh" >/dev/null 2>&1
+HOME="$TEST_HOME" bash "$ROOT_DIR/skills/standup/install.sh" --check >/dev/null 2>&1
+is "install.sh --check exits 0 when installed" "$?" "0"
+
+out="$(echo "skills/standup/collect.sh" | bash "$ROOT_DIR/utils/ci-route.sh" push)"
+has "ci-route.sh resolves skills/standup/* to standup subsystem" "$out" "tier2_subsystems=standup"
+has "ci-route.sh selects gh77-standup-triage.sh for standup subsystem" "$out" "tier2_tests=gh77-standup-triage.sh"
+
+echo
+# ── 24. All-degraded document assertion ─────────────────────────────────────────────────────────
+out="$(bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/all-degraded" 2>/dev/null)" || rc=$?
+is "all-degraded collector exits 3" "$rc" "3"
+if python3 -c '
+import json, sys
+try:
+    d = json.load(sys.stdin)
+    expected_keys = {"1", "2", "3", "4", "5", "6", "7", "8"}
+    keys = set(d.get("lenses", {}).keys())
+    if keys != expected_keys: sys.exit(1)
+except Exception:
+    sys.exit(2)
+' <<< "$out"; then
+  pass_ "all-degraded document contains exactly lenses 1 through 8"
+else
+  fail_ "all-degraded document keys mismatch or invalid JSON" >&2
+fi
 
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
