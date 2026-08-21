@@ -178,3 +178,41 @@ Verify the seven r1 fixes landed correctly AND review the baseline design, which
 - Anything r1 got wrong that I accepted too readily.
 
 Constraints: the four decisions under "## The decision" and the adopted baseline are FROZEN operator calls — flag contradictions WITH them, do not relitigate them. REVIEW turn: report in this relay file only, do not edit the plan doc. Rank Blocking / Optional / Out-of-scope, cite doc lines or repo files. End with `**Verdict:** Approved` or `**Verdict:** Changes requested` and set the `STATUS:` line at the top.
+
+### Round 5 · Reviewer · codex
+
+The seven Round 1 corrections are real improvements: the partial active-membership index has the right historical shape; the old event vocabulary is retained; the old-dump `open` mapping, fixed 003/004 allocation, and `manifest ship --evidence` are all correctly called out. The adopted baseline also correctly refuses a misleading zero at the normal activate-before-membership ordering. I cannot approve yet because the plan still leaves five implementation-critical paths unspecified or contradictory.
+
+#### Blocking
+
+1. **The plan has no execution/ledger path to migrate an existing live database.** `apply_migrations()` is currently invoked only by `cmd_init`, while ordinary existing-DB commands merely call `connect()`; `check --rebuild` is explicitly merge resolution, not a normal upgrade. The plan must define the command/entry point that runs 003 then 004 for an existing DB, does so through the normal receipt/dump transaction, and records those versions. It must also say how a rebuilt v2 dump gets 003 and 004 `schema_migrations` rows: today `_rebuild()` prepares schema DDL before `load_dump()`, but the dump is what supplies migration rows. Otherwise the rebuilt DB can have v4 columns while still claim only v2, making a later migration attempt re-run DDL against an already-v4 schema.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:159-180,280-284`; `utils/py/releases_app.py:618-629,1285-1288,2527-2532,2646-2653`.
+
+2. **Baseline fields are omitted from the specified dump grammar.** The plan fixes the field order and legacy-null handling only for the three new `manifest_items` fields. It adds three `releases` baseline fields, but does not give their release-record order or legacy default rule. The current dump and loader both enumerate `releases` independently, so an implementation following the stated grammar can silently discard observed/backfilled baselines on `check --rebuild`. Specify the three appended release fields and require dump/load round-trip preservation for them as well.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:144-148,161-169,217-220`; `utils/py/releases_app.py:691-705,2551-2569`.
+
+3. **The baseline lifecycle needs an idempotent rule for every legal activation path.** The planned capture rule needs an explicit guard: capture only when all three baseline fields are unset, otherwise preserve the existing snapshot without refusing a legitimate `active → draft → active` update. It must also define direct `releases add --status active`: that path has no `draft → active` transition and necessarily starts empty, so it must be declared baseline-less and eligible for the later `releases baseline` verb (or be forbidden). Finally, require the count and the baseline update to occur in the same writer-locked transaction as the status transition, and require the three fields to be all-NULL or all-populated; otherwise a partial baseline can leak into rendering.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:222-241`; `utils/py/releases_app.py:1424-1453,1462-1498`.
+
+4. **Dropping the per-release UNIQUE means `manifest cut` cannot remain unchanged.** After cut-then-redial on the same release there are deliberately multiple rows for one `(release_id, issue_ref_id)`. The current cut lookup selects that pair with no state predicate, so it can select the historical `cut` row and refuse instead of operating on the live `dialed_in` row. The plan calls `manifest cut` “unchanged,” which contradicts this new data shape. Specify that transition commands select the unique `dialed_in` row (and refuse clearly if absent), and add the regression case “cut → redial → cut” on the same release.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:65-68,111-124,263-266`; `utils/py/releases_app.py:1633-1648`.
+
+5. **The table-rebuild FK sequence is not executable as written.** SQLite does not change `PRAGMA foreign_keys` while a transaction is open. The plan says the two-table swap is inside one transaction with foreign keys off “for the swap,” but must say that FK enforcement is disabled *before* `BEGIN`, then restored after commit; `foreign_key_check` may run before commit while enforcement is off. It must also prescribe the dependency-safe order for rebuilding `manifest_state_events` and `manifest_items`, then recreating both append-only triggers. This is necessary to preserve the event rows and their digest-chain proof rather than relying on an order-sensitive drop.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:102-107,126-135`; `utils/py/releases_app.py:395-410,493-518`.
+
+#### Optional
+
+1. **The fixed allocation is sufficient for the two named plans once the v2→003→004 upgrade assertion is made exact.** The new duplicate-version check correctly names a union-merged dump defect, but it does not itself detect two different source migrations that were both authored as the same number. State that normal source integration relies on the shared `releases_app.py` conflict plus the ordered-v2-fixture test; do not represent the dump validator as broader collision prevention.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:171-180,282-284`; `utils/py/releases_app.py:2479-2525`.
+
+2. **Write-once refusal is the right operator behavior.** A legitimate re-baseline should be a separate, explicitly authorized future operation, not an accidental second capture; the required reactivation no-op above preserves that without weakening the adopted rule.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:222-223`.
+
+#### Out-of-scope
+
+1. The four frozen operator decisions, including adoption of a baseline, remain unchallenged. These findings make their implementation durable rather than reopening the policy calls.
+
+2. Round 1’s five open-item verdicts remain explicit and sound: no v1 candidate tier; keep the marathon pointer direction; require `dial_reason`; retain the adopted baseline; and exclude cut rows from the denominator.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:318-330`.
+
+**Verdict:** Changes requested
