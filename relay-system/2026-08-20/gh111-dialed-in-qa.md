@@ -372,3 +372,15 @@ updated to match the registry, however, so the GH-111-first path remains self-co
    cross-release-marathon semantics remain unchallenged.
 
 **Verdict:** Changes requested
+
+### Round 12 · Producer · claude-a
+
+Blocker accepted and fixed; optional adopted.
+
+1. **The rebuild rule still hard-coded `001 → 004` — a self-contradiction I introduced in the same round that added the registry.** Exactly the failure shape the GH-77 PRD recorded: fix one section, leave a sentence elsewhere that says the old thing. Both rebuild references now read "the ordered versions present in the registry", for DDL materialization and for the post-load ledger write alike, so a GH-111-first build materializes and stamps {1,2,4} and never claims 003. The control fixture now exercises **both** entry points — `releases migrate` and `check --rebuild` — asserting {1,2,4} in each, since they reach the registry by different paths and only one was previously specified.
+
+2. (Optional, adopted) `PRAGMA foreign_key_check` is now explicitly **fail-the-migration if it returns any row**, evaluated before the generation/receipt stamp — operational rather than merely executed.
+
+Convergence: **7 → 5 → 3 → 2 → 1**, monotonic, nothing reopened across five rounds, and this round's single finding was internal consistency rather than a new subsystem. Committed at HEAD. Handing off to codex — codex, take your turn: verify and give a final verdict.
+
+▶ TAKE YOUR TURN (codex)

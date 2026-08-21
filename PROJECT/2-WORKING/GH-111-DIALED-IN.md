@@ -207,11 +207,16 @@ cut → redial → cut on one release.
   rows fails on the primary key, while deferring to the loader reproduces the v2-ledger-on-v4-schema
   defect. The rule:
 
-  1. `_rebuild()` materializes DDL for the **current** schema version (001 → 004), writing **no**
-     ledger rows.
+  1. `_rebuild()` materializes DDL for **the ordered versions present in the registry** — never a
+     hard-coded range — writing **no** ledger rows.
   2. `load_dump()` loads all dump data **except `schema_migrations` records**, which it skips when
      invoked by rebuild.
-  3. `_rebuild()` then writes the canonical 001 → 004 ledger rows itself.
+  3. `_rebuild()` then writes ledger rows for **exactly those same registry versions**, in ascending
+     order.
+
+  Both steps read the registry, so a GH-111-first build materializes and stamps {001, 002, 004} and
+  never claims 003 (Codex r5 B1 — the earlier "001 → 004" wording contradicted the registry rule
+  added in the same round and would have re-introduced the false-v3 claim).
 
   DDL and ledger therefore always agree by construction. Duplicate-version rejection is unaffected —
   it validates the dump's contents before this step, not after.
@@ -238,7 +243,8 @@ previously assumed a mechanism that does not exist.
   → PRAGMA foreign_keys = OFF          ← the added step, AFTER the journal, BEFORE BEGIN
   → BEGIN IMMEDIATE
   → apply pending migration DDL (parent-before-child order above)
-  → PRAGMA foreign_key_check           ← meaningful here, enforcement is off
+  → PRAGMA foreign_key_check           ← MUST FAIL THE MIGRATION if it returns any row,
+                                          before the generation/receipt stamp below
   → stamp generation + op_receipt
   → COMMIT
   → PRAGMA foreign_keys = ON           ← restored only after commit
@@ -298,7 +304,9 @@ plans contradicting each other is how the wrong one gets built.
 
 **Control fixture, not just the happy path:** test **GH-111-first** — a v2 database, 004 applied with
 003 absent from the registry, asserting the ledger reads {1, 2, 4} and `roadmap_items` has no rating
-columns; then introduce 003 and assert it applies cleanly on top of 004.
+columns; then introduce 003 and assert it applies cleanly on top of 004. **The fixture must exercise
+BOTH entry points** — `releases migrate` and `check --rebuild` — asserting {1, 2, 4} in each, since
+they reach the registry by different paths and only one of them was previously specified.
 - `validate_merged_dump()` gains a rule **refusing duplicate `schema_migrations.version` values** in
   a merged dump — the failure a git merge of two independently-numbered branches would otherwise
   produce silently. **Scope it honestly (Codex r2 optional 1):** this catches a union-merged *dump*,
