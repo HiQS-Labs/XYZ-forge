@@ -1,0 +1,39 @@
+{
+  "orchestrator_owned": [],
+  "codex_lane": [
+    "src/parse.js",
+    "src/validate.js",
+    "src/index.js",
+    "package.json",
+    "src/export-csv.js",
+    "test/export-csv.test.js",
+    "src/fx.js",
+    "test/fx.test.js",
+    "src/cli.js",
+    "test/cli.test.js",
+    "src/dedupe.js",
+    "test/dedupe.test.js"
+  ],
+  "agy_lane": [],
+  "effective_artifacts": [
+    "src/parse.js",
+    "src/validate.js",
+    "src/index.js",
+    "package.json",
+    "src/export-csv.js",
+    "test/export-csv.test.js",
+    "src/fx.js",
+    "test/fx.test.js",
+    "src/cli.js",
+    "test/cli.test.js",
+    "src/dedupe.js",
+    "test/dedupe.test.js"
+  ],
+  "inferred_test_artifacts": [],
+  "inferred_test_helpers": [],
+  "fs_touching_tests": [],
+  "agy_review_default": true,
+  "coupling_warning": null,
+  "parallelizable": true,
+  "single_lane_only": false
+}

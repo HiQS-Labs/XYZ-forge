@@ -1,0 +1,1 @@
+{"schema_version":"0.2.0","ts":"2026-08-20T13:59:27.927Z","type":"task.claimed","task":"MARATHON-R2P4-TURN","agent":"codex","paths":["marathon-system/run2-reconcile-chain--r2p4/RELAY.md","src/report.js","test/report.test.js"],"epoch":3}

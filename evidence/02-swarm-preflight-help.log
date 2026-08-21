@@ -1,0 +1,12 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash utils/swarm-preflight.sh --help
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T13:54:04+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+Usage: utils/swarm-preflight.sh (--project-doc DOC | --gh-issue N [--gh-issue N ...]) [options]
+=== END OUTPUT ===
+end      : 2026-08-20T13:54:04+03:00
+duration : 0s
+EXIT_CODE: 0

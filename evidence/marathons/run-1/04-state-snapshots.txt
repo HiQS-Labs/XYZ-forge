@@ -1,0 +1,101 @@
+### PRE-RUN — 2026-08-20T16:14:58+03:00 (1787231698) ###
+-- harness (/home/arnoldadero/XYZ-forge) --
+branch: linux-bringup
+HEAD:   30c1d172cf3fa7feb450b87fda6af8fe466ea3a6
+status:
+?? evidence/03-fix-gh-default.log
+?? evidence/_env/fix-gh-default.sh
+?? evidence/_env/probe-agy.sh
+?? evidence/_env/probe-agy2.sh
+?? evidence/_env/probe-agy3.sh
+?? evidence/_env/probe-agy4.sh
+?? evidence/_env/probe-agy5.sh
+?? evidence/_env/probe-agy6.sh
+?? evidence/_env/probe-agy7.sh
+?? evidence/_env/probe-auth.sh
+?? evidence/_env/probe-builder-auth.sh
+?? evidence/_env/probe-contract.sh
+?? evidence/_env/probe-plan.sh
+?? evidence/_env/probe-state.sh
+?? evidence/_env/try-deps.sh
+?? evidence/marathons/
+-- target (/home/arnoldadero/marathon-target) --
+branch: main
+HEAD:   599e87f63058865110b1dd96a77315b73885cfc9
+status:
+
+### POST-RUN — 2026-08-20T16:14:59+03:00 (1787231699) ###
+-- harness (/home/arnoldadero/XYZ-forge) --
+branch: linux-bringup
+HEAD:   1e0beeed57192bd2ced085753eb5aeb85c5b57a7
+status:
+?? evidence/03-fix-gh-default.log
+?? evidence/_env/fix-gh-default.sh
+?? evidence/_env/probe-agy.sh
+?? evidence/_env/probe-agy2.sh
+?? evidence/_env/probe-agy3.sh
+?? evidence/_env/probe-agy4.sh
+?? evidence/_env/probe-agy5.sh
+?? evidence/_env/probe-agy6.sh
+?? evidence/_env/probe-agy7.sh
+?? evidence/_env/probe-auth.sh
+?? evidence/_env/probe-builder-auth.sh
+?? evidence/_env/probe-contract.sh
+?? evidence/_env/probe-plan.sh
+?? evidence/_env/probe-state.sh
+?? evidence/_env/try-deps.sh
+?? evidence/marathons/
+?? marathon-system/run1-ledger-exports--r1p1/PHASE-INTERRUPTED.md
+?? relay-system/run-logs/
+-- target (/home/arnoldadero/marathon-target) --
+branch: main
+HEAD:   599e87f63058865110b1dd96a77315b73885cfc9
+status:
+
+### PRE-RUN (take 2) — 2026-08-20T16:17:33+03:00 (1787231853) ###
+-- harness (/home/arnoldadero/XYZ-forge) --  branch=linux-bringup HEAD=1e0beeed57192bd2ced085753eb5aeb85c5b57a7
+?? evidence/03-fix-gh-default.log
+?? evidence/_env/fix-gh-default.sh
+?? evidence/_env/probe-agy.sh
+?? evidence/_env/probe-agy2.sh
+?? evidence/_env/probe-agy3.sh
+?? evidence/_env/probe-agy4.sh
+?? evidence/_env/probe-agy5.sh
+?? evidence/_env/probe-agy6.sh
+?? evidence/_env/probe-agy7.sh
+?? evidence/_env/probe-auth.sh
+?? evidence/_env/probe-builder-auth.sh
+?? evidence/_env/probe-contract.sh
+?? evidence/_env/probe-plan.sh
+?? evidence/_env/probe-state.sh
+?? evidence/_env/try-deps.sh
+?? evidence/marathons/
+?? marathon-system/run1-ledger-exports--r1p1/PHASE-INTERRUPTED.md
+?? relay-system/run-logs/
+-- target (/home/arnoldadero/marathon-target) --  branch=main HEAD=c83c6d668b68ab08b40c1fa6323de1319ee5aaf6
+
+### POST-RUN (take 2) — 2026-08-20T16:35:47+03:00 (1787232947) ###
+-- harness (/home/arnoldadero/XYZ-forge) --  branch=linux-bringup HEAD=1e0beeed57192bd2ced085753eb5aeb85c5b57a7
+ M evidence/findings-log.md
+ M repro.sh
+?? evidence/03-fix-gh-default.log
+?? evidence/05-repro-new-probes.log
+?? evidence/_env/fix-gh-default.sh
+?? evidence/_env/probe-agy.sh
+?? evidence/_env/probe-agy2.sh
+?? evidence/_env/probe-agy3.sh
+?? evidence/_env/probe-agy4.sh
+?? evidence/_env/probe-agy5.sh
+?? evidence/_env/probe-agy6.sh
+?? evidence/_env/probe-agy7.sh
+?? evidence/_env/probe-auth.sh
+?? evidence/_env/probe-builder-auth.sh
+?? evidence/_env/probe-contract.sh
+?? evidence/_env/probe-plan.sh
+?? evidence/_env/probe-state.sh
+?? evidence/_env/try-deps.sh
+?? evidence/marathons/
+?? marathon-system/run1-ledger-exports--r1p1/PHASE-INTERRUPTED.md
+-- target (/home/arnoldadero/marathon-target) --  branch=main HEAD=0cd30e8630ee26a2b6602e1000a90f3e4698a786
+?? relay-system/run-logs/
+

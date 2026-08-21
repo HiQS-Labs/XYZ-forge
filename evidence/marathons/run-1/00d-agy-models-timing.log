@@ -1,0 +1,28 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/agy-models-timing.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:00:48+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== leftover agy processes ===
+your 131072x1 screen size is bogus. expect trouble
+ 5766       00:50 agy whoami
+
+=== agy models — 5 timed runs ===
+run 1: rc=0     8081ms  lines=15
+run 2: rc=0     8140ms  lines=15
+run 3: rc=0     8537ms  lines=15
+run 4: rc=0     7605ms  lines=15
+run 5: rc=0     8478ms  lines=15
+WORST=8537ms
+
+=== does it prove AUTH, or just reach the network? ===
+(a models list fetched from the backend requires a valid session)
+Fetching available models...
+gemini-3.7-flash-high	Gemini 3.7 Flash (High)
+gemini-3.7-flash-medium	Gemini 3.7 Flash (Medium)
+=== END OUTPUT ===
+end      : 2026-08-20T16:01:38+03:00
+duration : 50s
+EXIT_CODE: 0

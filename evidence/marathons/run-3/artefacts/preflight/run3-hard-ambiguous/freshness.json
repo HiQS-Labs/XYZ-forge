@@ -1,0 +1,57 @@
+{
+  "fetch_ok": true,
+  "upstream": null,
+  "ahead": 0,
+  "behind": 0,
+  "dirty": false,
+  "stale_index_lock": false,
+  "stale_index_lock_path": null,
+  "stale_index_lock_warning": null,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "a642bbcd67a0884c94f07040e5cb87e15d8eca70",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "path_absent",
+      "path": "src/sort.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/sort.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/decimal.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/decimal.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/fuzzy-match.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/fuzzy-match.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/stats.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/stats.test.js",
+      "verdict": "unfixed"
+    }
+  ]
+}

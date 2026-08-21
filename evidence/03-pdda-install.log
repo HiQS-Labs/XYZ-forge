@@ -1,0 +1,87 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /home/arnoldadero/marathon-lab/pdda/install.sh /tmp/marathon-lab/logstat
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T14:02:35+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+Installing PDDA into: /tmp/marathon-lab/logstat
+
+Runtime + contract:
+  runtime   PROJECT/PDDA.md
+  runtime   utils/pdda/PDDA-INSTALL.md
+  runtime   utils/pdda/PDDA-SOURCE.md
+  runtime   utils/pdda/pdda-catchup.sh
+  runtime   utils/pdda/pdda-doc-ready.sh
+  runtime   utils/pdda/pdda-edit-doc-hook.sh
+  runtime   utils/pdda/pdda-gh-refresh.sh
+  runtime   utils/pdda/pdda-lib.sh
+  runtime   utils/pdda/pdda-stop-doc-health.sh
+  runtime   utils/pdda/pdda.sh
+
+Lifecycle buckets:
+  seed      PROJECT/1-INBOX/blank.md
+  seed      PROJECT/2-WORKING/blank.md
+  seed      PROJECT/3-COMPLETED/blank.md
+  seed      PROJECT/4-MISC/blank.md
+
+Zero-state seeds:
+  seed      ROADMAP.md
+  seed      CHANGELOG.md
+  seed      RELEASES.md
+  seed      PROJECT/PDDA-ACTIVITY.jsonl
+  ignore    .gitignore += PROJECT/PDDA-ACTIVITY.jsonl
+  ignore    .gitignore += .pdda-gh-state.tsv
+  seed      .pdda-mode
+  seed      .pdda-quad
+
+Registry:
+  register  /tmp/marathon-lab/logstat -> /home/arnoldadero/.config/pdda/registry.tsv
+
+Verifying install (utils/pdda/pdda.sh run):
+
+PDDA run starting — mode: observe (report-only; never blocks)
+
+== pdda-check-frontmatter ==
+SUMMARY [pdda-check-frontmatter] errors=0 warns=0 info=0
+
+== pdda-check-status-table ==
+SUMMARY [pdda-check-status-table] errors=0 warns=0 info=0
+
+== pdda-check-hardcoded-paths ==
+SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+== pdda-check-roadmap ==
+SUMMARY [pdda-check-roadmap] errors=0 warns=0 info=0
+
+== pdda-check-roadmap-coverage ==
+SUMMARY [pdda-check-roadmap-coverage] errors=0 warns=0 info=0
+
+== pdda-check-changelog ==
+SUMMARY [pdda-check-changelog] errors=0 warns=0 info=0
+
+== pdda-stale-working-docs ==
+SUMMARY [pdda-stale-working-docs] errors=0 warns=0 info=0
+
+== pdda-check-issue-doc-sync ==
+SUMMARY [pdda-check-issue-doc-sync] errors=0 warns=0 info=0
+
+== pdda-check-releases ==
+SUMMARY [pdda-check-releases] errors=0 warns=0 info=0
+
+== pdda-check-governance ==
+INFO [pdda-check-governance] ROUTER.md governance index doc 'ROUTER.md' not found; skipping orphan-doc check
+SUMMARY [pdda-check-governance] errors=0 warns=0 info=1
+
+== pdda-doc-ready ==
+INFO [pdda-doc-ready] . LLM readiness review skipped (set PDDA_LLM_BIN to a model CLI such as agy/codex/claude to enable)
+SUMMARY [pdda-doc-ready] errors=0 warns=0 info=1
+
+PDDA run complete: all checks passed
+
+PDDA installed. Mode: observe (report-only; graduate to light → full as you clear doc debt).
+Next: read PROJECT/PDDA.md, then start a doc in PROJECT/2-WORKING and point ROADMAP.md at it.
+=== END OUTPUT ===
+end      : 2026-08-20T14:03:20+03:00
+duration : 45s
+EXIT_CODE: 0

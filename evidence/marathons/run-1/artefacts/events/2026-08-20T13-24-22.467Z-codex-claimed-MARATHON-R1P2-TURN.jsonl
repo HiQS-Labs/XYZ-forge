@@ -1,0 +1,1 @@
+{"schema_version":"0.2.0","ts":"2026-08-20T13:24:22.467Z","type":"task.claimed","task":"MARATHON-R1P2-TURN","agent":"codex","paths":["marathon-system/run1-ledger-exports--r1p2/RELAY.md","src/fx.js","test/fx.test.js"],"epoch":3}

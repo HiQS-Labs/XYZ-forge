@@ -1,0 +1,79 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/run1-verify.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:36:37+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== 1. marathon exit + wall clock ===
+WALL_CLOCK_START=2026-08-20T16:17:33+03:00 epoch=1787231853
+WALL_CLOCK_END=2026-08-20T16:35:47+03:00 epoch=1787232947
+MARATHON_FULLRUN_RC=0
+
+=== 2. the gate, run independently now ===
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 605.520902
+NPM_TEST_RC=0
+
+=== 3. every phase's terminal STATUS ===
+run1-ledger-exports--r1p1                  STATUS: Approved
+run1-ledger-exports--r1p2                  STATUS: Approved
+run1-ledger-exports--r1p3                  STATUS: Approved
+run1-ledger-exports--r1p4                  STATUS: Approved
+
+=== 4. escalations / interruptions (should be none) ===
+(count: 0)
+
+=== 5. containment: did any commit touch a path outside its lane? ===
+  (no OFF-LANE lines above = containment held)
+
+=== 6. no push, and HEAD is where we left it ===
+target branch: main   HEAD: 0cd30e8
+harness branch: linux-bringup  HEAD: 1e0beee
+HEAD@{1} commit: relay(MARATHON-R1P4-TURN): codex turn (codex headless; no push)
+HEAD@{2} commit: relay(MARATHON-R1P4-TURN): agy turn (agy headless; no push)
+HEAD@{5} commit: relay(MARATHON-R1P3-TURN): codex turn (codex headless; no push)
+
+=== 7. tick events ===
+2026-08-20T13-35-45.404Z-codex-dependency.drift-MARATHON-R1P4-TURN.jsonl
+2026-08-20T13-35-45.688Z-codex-memory-MARATHON-R1P4-TURN.jsonl
+2026-08-20T13-35-47.040Z-marathon-marathon.phase.approved-MARATHON-R1P4-TURN.jsonl
+2026-08-20T13-35-47.155Z-marathon-memory-MARATHON-R1P4-TURN.jsonl
+2026-08-20T13-35-47.437Z-marathon-marathon.complete-MARATHON-RUN.jsonl
+     36 "type":"dependency.drift"
+     20 "type":"cost.memory"
+     16 "type":"task.claimed"
+     12 "type":"task.released"
+     12 "type":"task.heartbeat"
+      4 "type":"task.done"
+      4 "type":"task.created"
+      4 "type":"marathon.phase.start"
+      4 "type":"marathon.phase.approved"
+      1 "type":"marathon.complete"
+
+=== 8. transcripts written ===
+relay-system/2026-08-20/marathon-r1p1-132208.md
+relay-system/2026-08-20/marathon-r1p2-132507.md
+relay-system/2026-08-20/marathon-r1p3-133240.md
+relay-system/2026-08-20/marathon-r1p4-133547.md
+(count: 4)
+
+=== 9. what the run actually built ===
+src/export-csv.js         52 lines
+src/fx.js                 74 lines
+src/cli.js               128 lines
+src/dedupe.js            103 lines
+test/export-csv.test.js        157 lines
+test/fx.test.js                192 lines
+test/cli.test.js               255 lines
+test/dedupe.test.js            132 lines
+=== END OUTPUT ===
+end      : 2026-08-20T16:36:39+03:00
+duration : 2s
+EXIT_CODE: 0

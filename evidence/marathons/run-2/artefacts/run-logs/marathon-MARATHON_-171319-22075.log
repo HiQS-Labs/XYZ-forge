@@ -1,0 +1,14 @@
+marathon: run log: /home/arnoldadero/marathon-target/relay-system/run-logs/2026-08-20/marathon-MARATHON_-171319-22075.log
+marathon: plan: PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/MARATHON.yaml — 4 phase(s) in execution order
+marathon: ── phase 1/4: r3p1 (reviewer=codex, round-cap=5, artifact=src/sort.js,test/sort.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • relay-system/run-logs/2026-08-20/marathon-MARATHON_-171319-22075.log
+/home/arnoldadero/marathon-target/.xyz/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/marathon-target/marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+marathon-drive: reconciled leaked open handoff: MARATHON-R3P1-TURN (cleared stale reservation for codex)
+marathon-drive: tick token seeded: MARATHON-R3P1-TURN → claude
+marathon-drive: memory-telemetry: phase r3p1-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+claude-turn: worktree isolation ON (/tmp/rtl-wt.Qzd3vw)
+claude-turn: WARNING: workspace '/tmp/rtl-wt.Qzd3vw' is not trusted; Claude may ignore project permissions. Run Claude Code interactively in this directory and accept the trust dialog, or set projects['/tmp/rtl-wt.Qzd3vw']["hasTrustDialogAccepted"] to true in /home/arnoldadero/.claude.json.

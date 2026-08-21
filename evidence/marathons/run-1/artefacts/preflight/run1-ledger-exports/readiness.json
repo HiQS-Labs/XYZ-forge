@@ -1,0 +1,33 @@
+{
+  "ready": true,
+  "next_action": null,
+  "unscoped_index_only": [],
+  "issue_state": {
+    "status": "unknown",
+    "closed_at": null,
+    "detail": "capture doc has no gh_issue \u2014 issue state cannot be determined"
+  },
+  "frozen_artifacts": [],
+  "acceptance_fidelity": {
+    "status": "unknown",
+    "cause": "no-gh-issue",
+    "detail": "capture doc has no gh_issue \u2014 nothing to compare against",
+    "issue": null,
+    "dropped": [],
+    "added": [],
+    "declared": 0
+  },
+  "source_url": {
+    "status": "not-applicable",
+    "detail": "capture doc names no gh_issue \u2014 no source URL is required",
+    "issue": null,
+    "url": null,
+    "slug": null
+  },
+  "acceptance_inline": {
+    "criteria": 0,
+    "scope": "whole-document",
+    "over_cap": 0,
+    "lossless": true
+  }
+}

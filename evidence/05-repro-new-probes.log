@@ -1,0 +1,38 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash repro.sh probe-lane-cli-probe probe-plan-resolution probe-target-root-contradiction probe-artifacts-new-doc
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:33:55+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+
+== probe-lane-cli-probe — F-016 swarm-preflight's lane-cli check is a bare command -v
+  expected: lane readiness decided by 'command -v', with no exec or auth check
+  actual  : 780:GH39_LANE_NOTE="codex=$(command -v codex >/dev/null 2>&1 && echo present || echo absent) agy=$(command -v agy >/dev/null 2>&1 && echo present || e
+  [32mPASS[0m  agy lane readiness is a bare PATH lookup
+  [32mPASS[0m  find-harness.sh resolves via AGY_BIN/well-known path — the two tools disagree by construction
+
+== probe-plan-resolution — F-017 --plan is checked before --target-root is applied
+  expected: the existence check line number is LOWER than the _plan_base line number
+  actual  : existence check at :136, _plan_base at :155
+  [32mPASS[0m  the plan is existence-checked 19 lines before its documented base is computed
+  [32mPASS[0m  the help still promises 'Plan and brief paths resolve against DIR when set'
+
+== probe-target-root-contradiction — F-018 --target-root recommended for the case relay-drive refuses
+  expected: the help recommends --target-root for a gitignoring target, AND a driver refuses it
+  actual  : help mentions gitignoring target: 1x; refusal lives in: <none>
+  [32mPASS[0m  marathon.sh --target-root help recommends it for a gitignoring target
+  [31mFAIL[0m  no 'build turn cannot report' refusal found — finding may be fixed
+
+== probe-artifacts-new-doc — F-019 artifacts_new is undocumented in the example the error names
+  expected: swarm-preflight enforces artifacts_new, and relay-automation/CONTRACT.example.md never mentions it
+  [32mPASS[0m  swarm-preflight.sh enforces artifacts_new (hard exit 3)
+  [32mPASS[0m  relay-automation/CONTRACT.example.md — the file the exit-3 message says to copy — never mentions artifacts_new
+  actual  : operator-facing docs mentioning artifacts_new: 0
+  [32mPASS[0m  no operator-facing doc defines artifacts_new
+
+== repro summary: 8 reproduced, 1 diverged
+=== END OUTPUT ===
+end      : 2026-08-20T16:33:56+03:00
+duration : 1s
+EXIT_CODE: 1

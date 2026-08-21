@@ -1,0 +1,26 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : python3 /tmp/agy-preflight-verdict.py
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:03:16+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+agy_bin = /home/arnoldadero/.local/bin/agy
+AGY_AUTH_TIMEOUT_DEFAULT_S = 20
+
+AGY_AUTH_TIMEOUT_S=  5  ->  returned False  [BLOCKED (exit 5)]  in 5.1s
+      | agy-turn: agy auth pre-flight timed out after 5s; the probe timed out with no TTY diagnostic, which is the shape of a genuine hang on an interactive login prompt. Run `agy login` in a normal terminal, then retry.
+      | agy-turn: auth pre-flight: [?2026$p[?2027$p[>4m[=0;1u[?1049h[?25l[?5W[?2004h[>4;2m[=1;1u[?u[H[2J
+
+AGY_AUTH_TIMEOUT_S= 15  ->  returned False  [BLOCKED (exit 5)]  in 15.1s
+      | agy-turn: agy auth pre-flight timed out after 15s; the probe timed out with no TTY diagnostic, which is the shape of a genuine hang on an interactive login prompt. Run `agy login` in a normal terminal, then retry.
+      | agy-turn: auth pre-flight: [?2026$p[?2027$p[>4m[=0;1u[?1049h[?25l[?5W[?2004h[>4;2m[=1;1u[?u[H[2J[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m
+
+AGY_AUTH_TIMEOUT_S= 30  ->  returned False  [BLOCKED (exit 5)]  in 30.1s
+      | agy-turn: agy auth pre-flight timed out after 30s; the probe timed out with no TTY diagnostic, which is the shape of a genuine hang on an interactive login prompt. Run `agy login` in a normal terminal, then retry.
+      | agy-turn: auth pre-flight: [?2026$p[?2027$p[>4m[=0;1u[?1049h[?25l[?5W[?2004h[>4;2m[=1;1u[?u[H[2J[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m[?2004h[>4;2m
+
+=== END OUTPUT ===
+end      : 2026-08-20T16:04:07+03:00
+duration : 51s
+EXIT_CODE: 0

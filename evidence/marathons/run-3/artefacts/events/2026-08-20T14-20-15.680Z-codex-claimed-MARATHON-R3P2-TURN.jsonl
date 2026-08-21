@@ -1,0 +1,1 @@
+{"schema_version":"0.2.0","ts":"2026-08-20T14:20:15.680Z","type":"task.claimed","task":"MARATHON-R3P2-TURN","agent":"codex","paths":["marathon-system/run3-hard-ambiguous--r3p2/RELAY.md","src/decimal.js","test/decimal.test.js"],"epoch":3}

@@ -1,0 +1,57 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash evidence/_env/archive-run.sh 2 run2-reconcile-chain marathon-r2p*
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:14:12+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== 1. live relay threads + escalations + state files ===
+  run2-reconcile-chain--r2p1 -> RELAY.md 
+  run2-reconcile-chain--r2p2 -> RELAY.md 
+  run2-reconcile-chain--r2p3 -> RELAY.md 
+  run2-reconcile-chain--r2p4 -> RELAY.md 
+
+=== 2. saved transcripts (raw) ===
+  marathon-r2p1-134950.md
+  marathon-r2p2-135246.md
+  marathon-r2p3-135555.md
+  marathon-r2p4-140017.md
+
+=== 3. per-turn shim logs (agy/codex transcripts, GH-161 persistent path) ===
+  files: 7
+
+=== 4. preflight packet ===
+  /run2-reconcile-chain/run-candidate.json
+  /run2-reconcile-chain/lane-plan.json
+  /run2-reconcile-chain/marathon-invocation.txt
+  /run2-reconcile-chain/readiness.json
+  /run2-reconcile-chain/freshness.json
+  /run2-reconcile-chain/packet.md
+
+=== 5. tick events for this run ===
+  event token: MARATHON-R2P*
+  event files: 100
+
+=== 6. the plan, briefs and capture doc that drove the run ===
+  PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN.md
+  PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p2-balance.md
+  PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p3-reconcile.md
+  PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p4-report.md
+  PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p1-money.md
+  PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/MARATHON.yaml
+
+=== 7. the built artefacts, as they stand after this run ===
+  src:  11 files
+  test: 11 files
+
+=== 8. git history of the run (target repo) ===
+  git-log.tsv: 53 commits
+
+=== TOTAL ===
+  files: 151
+  bytes: 349119
+928K	/home/arnoldadero/XYZ-forge/evidence/marathons/run-2/artefacts
+=== END OUTPUT ===
+end      : 2026-08-20T17:14:12+03:00
+duration : 0s
+EXIT_CODE: 0

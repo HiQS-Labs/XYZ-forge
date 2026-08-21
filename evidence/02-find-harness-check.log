@@ -1,0 +1,17 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash skills/relay-xyz/find-harness.sh --check
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T13:54:04+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+relay harness readiness:
+  ok  harness  (/home/arnoldadero/XYZ-forge)
+  ok  tick CLI  (/home/arnoldadero/XYZ-forge/bin/tick)
+  --  codex CLI (Path A worker)  (not found)
+  --  agy CLI   (Path A worker)  (not found)
+  !   no cross-model headless worker on PATH — only Path B (all-Claude poll) is available
+=== END OUTPUT ===
+end      : 2026-08-20T13:54:05+03:00
+duration : 1s
+EXIT_CODE: 0

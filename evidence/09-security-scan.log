@@ -1,0 +1,135 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/security-scan.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:25:03+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+############################################################
+# 1. WHAT WOULD BE PUSHED
+############################################################
+branch: linux-bringup
+remotes:
+  origin	https://github.com/arnoldadero/XYZ-forge.git (fetch)
+  origin	https://github.com/arnoldadero/XYZ-forge.git (push)
+  upstream	https://github.com/HiQS-Suite/XYZ-forge.git (fetch)
+  upstream	https://github.com/HiQS-Suite/XYZ-forge.git (push)
+
+commits ahead of cd0f5bd:
+  5691781 evidence: phase 4-5 — agy fix verified live, run 1 complete, findings F-015..F-023
+  1e0beee marathon: phase r1p1 transcript saved (MARATHON-R1P1-TURN)
+  6f3c77f marathon: render phase r1p1 relay (MARATHON-R1P1-TURN)
+  30c1d17 merge: agy TUI-takeover auth verdict fix into linux-bringup
+  a4706d1 fix(agy): a mute terminal takeover is the TTY cause, not a silent hang
+  50f7b6c evidence: Linux bring-up phases 0-3 (env, command map, baseline suite, findings F-001..F-014)
+
+files changed vs cd0f5bd: 66
+top-level areas:
+       61 evidence
+        1 utils
+        1 test
+        1 repro.sh
+        1 relay-system
+        1 marathon-system
+
+############################################################
+# 2. SECRET SCAN over every file that would be pushed
+############################################################
+  ok Anthropic keys (sk-ant-) — none
+  ok OpenAI keys (sk-proj-/sk-) — none
+  ok GitHub tokens (gh[pousr]_) — none
+  ok Google API keys (AIza) — none
+  ok AWS access key ids — none
+  ok Slack tokens — none
+  ok OpenRouter keys — none
+  ok Bearer tokens — none
+  ok PEM private keys — none
+  ok JWTs — none
+  ok password/secret assignments — none
+
+############################################################
+# 3. CREDENTIAL FILES — are any tracked or stageable?
+############################################################
+  .credentials.json    tracked=0  present=none
+  auth.json            tracked=0  present=none
+  .netrc               tracked=0  present=none
+  id_rsa               tracked=0  present=none
+  id_ed25519           tracked=0  present=none
+  .env                 tracked=26  present=none
+
+  credential stores OUTSIDE the repo (not pushable, but worth knowing):
+    /home/arnoldadero/.claude/.credentials.json (808 bytes, mode 600)
+    /home/arnoldadero/.codex/auth.json (3923 bytes, mode 600)
+    /home/arnoldadero/.config/gh/hosts.yml (214 bytes, mode 600)
+
+############################################################
+# 4. IS THE REPO ROOT CLEAN OF UNTRACKED SECRETS?
+############################################################
+ M evidence/findings-log.md
+ M evidence/marathons/run-2/04-fullrun.log
+ M evidence/marathons/run-2/04-state-snapshots.txt
+ M evidence/marathons/run-2/04-wallclock.txt
+?? evidence/08-spend-report.log
+?? evidence/09-security-scan.log
+?? evidence/FINDINGS.md
+?? evidence/_env/archive-run.sh
+?? evidence/_env/package-evidence.sh
+?? evidence/_env/verify-run.sh
+?? evidence/marathons/run-1/06-archive.log
+?? evidence/marathons/run-1/artefacts/
+?? evidence/marathons/run-2/05-verify.log
+?? evidence/marathons/run-2/06-archive.log
+?? evidence/marathons/run-2/artefacts/
+?? evidence/marathons/run-3/
+?? marathon-system/run1-ledger-exports--r1p1/PHASE-INTERRUPTED.md
+?? relay-system/run-logs/
+  untracked/modified count: 18
+
+############################################################
+# 5. MACHINE-SPECIFIC ABSOLUTE PATHS (PDDA hardcoded-paths gate)
+############################################################
+  files containing a machine-specific absolute path: 90
+    evidence/02-marathon-plan-help.log
+    evidence/03-probe-git-identity.log
+    evidence/07-drift-probe.log
+    evidence/03-pdda-install.log
+    evidence/09-security-scan.log
+    evidence/02-validate-sequential.log
+    evidence/04-codex-install.log
+    evidence/marathons/run-1/04b-vendor-target.log
+  NOTE: PDDA's hardcoded-paths check targets PROJECT/2-WORKING docs, not evidence/.
+  Running the real check:
+    SUMMARY [pdda-check-hardcoded-paths] errors=0 warns=0 info=0
+
+############################################################
+# 6. SIZE / BINARY CONTENT
+############################################################
+  largest files in the push set:
+       340.3 KB  evidence/02-validate-sequential.log
+        74.2 KB  evidence/marathons/run-2/04-fullrun.log
+        51.6 KB  evidence/findings-log.md
+        39.2 KB  utils/py/rtl.py
+        37.1 KB  evidence/marathons/run-1/04-fullrun.log
+        24.3 KB  evidence/marathons/run-1/03-dryrun.log
+        23.1 KB  repro.sh
+        14.3 KB  evidence/LINUX-SETUP.md
+  binary files in the push set:
+  total push-set size: 0.7 MB
+
+############################################################
+# 7. PERSONAL DATA
+############################################################
+  email addresses appearing in the push set (excluding the committer's own):
+    arnold.adero@gmail.com
+    noel@neochro.me
+  (arnold.adero@gmail.com is the git committer identity and already appears in commit metadata)
+
+############################################################
+# SUMMARY
+############################################################
+  secret-pattern categories with hits: 0
+  VERDICT: no secret patterns found in the push set
+=== END OUTPUT ===
+end      : 2026-08-20T17:25:06+03:00
+duration : 3s
+EXIT_CODE: 0

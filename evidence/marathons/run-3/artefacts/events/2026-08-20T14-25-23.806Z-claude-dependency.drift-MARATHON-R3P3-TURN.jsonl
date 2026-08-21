@@ -1,0 +1,1 @@
+{"schema_version":"0.2.0","ts":"2026-08-20T14:25:23.806Z","type":"dependency.drift","task":"MARATHON-R3P3-TURN","agent":"claude","surface":"src/events.js","prior_sha":"914320df0a5076c42692b566110ee7c03de98a1a:src/events.js","current_sha":"087700f7aeb4fdba976c75451d57c4be89bceb06:src/events.js","diff_lines":0}

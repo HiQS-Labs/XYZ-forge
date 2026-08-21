@@ -1,0 +1,41 @@
+# RUN 3 — four phases, deliberately UNEVEN in difficulty.
+#
+# r3p1 is routine. r3p2 is genuinely hard (exact decimal arithmetic, easy to get
+# subtly wrong). r3p3 is DELIBERATELY UNDER-SPECIFIED — it asks for "sensible"
+# behaviour without defining it, which is the case this run exists to observe:
+# what does the reviewer do when the builder produces something weak or when the
+# brief itself cannot be satisfied as written? r3p4 is routine again, so the run
+# has somewhere to go after the hard middle.
+name: run3-hard-ambiguous
+phases:
+  - id: r3p1
+    name: Stable multi-key sort
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p1-sort.md
+    artifact: src/sort.js,test/sort.test.js
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: r3p2
+    name: Exact decimal arithmetic without floats
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p2-decimal.md
+    artifact: src/decimal.js,test/decimal.test.js
+    turn_timeout_s: 1800
+    max_review_rounds: 3
+
+  - id: r3p3
+    name: Fuzzy transaction matching (under-specified on purpose)
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p3-fuzzy.md
+    artifact: src/fuzzy-match.js,test/fuzzy-match.test.js
+    turn_timeout_s: 1800
+    max_review_rounds: 3
+
+  - id: r3p4
+    name: Ledger statistics
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p4-stats.md
+    artifact: src/stats.js,test/stats.test.js
+    turn_timeout_s: 900
+    max_review_rounds: 2

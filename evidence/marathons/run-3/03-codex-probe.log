@@ -1,0 +1,16 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/codex-probe.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:06:00+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== codex still usable? ===
+attempt 1: rc=0   10s  tail=tokens used 9,939 CODEX-OK-1 
+attempt 2: rc=0   6s  tail=tokens used 723 CODEX-OK-2 
+
+=== quota/limit words in codex output? ===
+=== END OUTPUT ===
+end      : 2026-08-20T17:06:16+03:00
+duration : 16s
+EXIT_CODE: 0

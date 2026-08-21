@@ -1,0 +1,1 @@
+{"schema_version":"0.2.0","ts":"2026-08-20T13:48:55.571Z","type":"dependency.drift","task":"MARATHON-R2P1-TURN","agent":"agy","surface":"src/project.js","prior_sha":"a7222a5de42d20a6aa177691c17e2912de6418ac:src/project.js","current_sha":"187d602527906619474a8762ae2b5e0dd2bca803:src/project.js","diff_lines":0}

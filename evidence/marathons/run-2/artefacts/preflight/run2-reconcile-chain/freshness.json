@@ -1,0 +1,57 @@
+{
+  "fetch_ok": true,
+  "upstream": null,
+  "ahead": 0,
+  "behind": 0,
+  "dirty": false,
+  "stale_index_lock": false,
+  "stale_index_lock_path": null,
+  "stale_index_lock_warning": null,
+  "evaluated_ref": "main",
+  "evaluated_ref_commit": "71ef6b76fa9b878dd64ba02d3bf9153d4566ed06",
+  "checkout_matches_ref": true,
+  "head_behind_ref": 0,
+  "candidate_state": "ready",
+  "probes": [
+    {
+      "type": "path_absent",
+      "path": "src/money.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/money.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/balance.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/balance.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/reconcile.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/reconcile.test.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "src/report.js",
+      "verdict": "unfixed"
+    },
+    {
+      "type": "path_absent",
+      "path": "test/report.test.js",
+      "verdict": "unfixed"
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+COMMIT a456f5246fc0c61159cc634283801d31a9f73d11 2026-08-20 17:30:32 +0300 marathon: phase r3p3 transcript saved (MARATHON-R3P3-TURN)
+
+relay-system/2026-08-20/marathon-r3p3-143032.md
+COMMIT 8d2f29f3d95e254e2045b9b106757bc8ccf49782 2026-08-20 17:30:32 +0300 marathon: phase r3p3 escalation (cap-or-close-mismatch)
+
+marathon-system/run3-hard-ambiguous--r3p3/ESCALATION.md
+COMMIT f9039f8836acefc69e1111f9be74a3fc98ff5f1e 2026-08-20 17:30:31 +0300 relay(MARATHON-R3P3-TURN): claude turn (claude headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+src/fuzzy-match.js
+test/fuzzy-match.test.js
+COMMIT 26eb3a8c4446d0e7d8598d02108f21a60c0112b0 2026-08-20 17:28:52 +0300 relay(MARATHON-R3P3-TURN): codex turn (codex headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+COMMIT 754006c7edb0ed5e0524e44ac41f6ab1f93e5fad 2026-08-20 17:28:01 +0300 relay(MARATHON-R3P3-TURN): claude turn (claude headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+src/fuzzy-match.js
+test/fuzzy-match.test.js
+COMMIT a487ae0001b6a7ab4ccfb7bfe8a3b452c41f4eba 2026-08-20 17:26:14 +0300 relay(MARATHON-R3P3-TURN): codex turn (codex headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+COMMIT 087700f7aeb4fdba976c75451d57c4be89bceb06 2026-08-20 17:25:23 +0300 relay(MARATHON-R3P3-TURN): claude turn (claude headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+src/fuzzy-match.js
+test/fuzzy-match.test.js
+COMMIT 914320df0a5076c42692b566110ee7c03de98a1a 2026-08-20 17:24:06 +0300 relay(MARATHON-R3P3-TURN): codex turn (codex headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+COMMIT 35ef91135e8fd2d42539e6d75f1fc1705a1bb428 2026-08-20 17:23:17 +0300 relay(MARATHON-R3P3-TURN): claude turn (claude headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+src/fuzzy-match.js
+test/fuzzy-match.test.js
+COMMIT a5f5bbcaac360d2bd1e7d9cff201f9fb2fbbf15e 2026-08-20 17:21:18 +0300 marathon: render phase r3p3 relay (MARATHON-R3P3-TURN)
+
+marathon-system/run3-hard-ambiguous--r3p3/RELAY.md
+COMMIT a564d68f01ededc1730f02cb0851421a6c33eeb3 2026-08-20 17:21:17 +0300 marathon: phase r3p2 transcript saved (MARATHON-R3P2-TURN)
+
+relay-system/2026-08-20/marathon-r3p2-142117.md
+COMMIT e5a505cdd3f6fed4dc191acfef4aefce04344ec3 2026-08-20 17:21:12 +0300 relay(MARATHON-R3P2-TURN): codex turn (codex headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p2/RELAY.md
+COMMIT d93ab462072cbf8db8f24a2e88199420074b884d 2026-08-20 17:20:14 +0300 relay(MARATHON-R3P2-TURN): claude turn (claude headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p2/RELAY.md
+src/decimal.js
+test/decimal.test.js
+COMMIT 898ba77092490477f7888779a8ecfd9a8c890410 2026-08-20 17:18:04 +0300 marathon: render phase r3p2 relay (MARATHON-R3P2-TURN)
+
+marathon-system/run3-hard-ambiguous--r3p2/RELAY.md
+COMMIT 49b35507b7311aabaa809b7ee06ffe13ac76c013 2026-08-20 17:18:03 +0300 marathon: phase r3p1 transcript saved (MARATHON-R3P1-TURN)
+
+relay-system/2026-08-20/marathon-r3p1-141803.md
+COMMIT c62cb7b52794b8e8effd2b4334ca3b8ba5172ddf 2026-08-20 17:17:59 +0300 relay(MARATHON-R3P1-TURN): codex turn (codex headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+COMMIT 94f7219d067e0727eb8d6a8b65b004810e3be623 2026-08-20 17:17:15 +0300 relay(MARATHON-R3P1-TURN): claude turn (claude headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+src/sort.js
+test/sort.test.js
+COMMIT ffa30c9dc4380404c02b702b5614f6c2ce1f306b 2026-08-20 17:16:05 +0300 relay(MARATHON-R3P1-TURN): codex turn (codex headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+COMMIT f9cf9d7053ace4956c5f9ebad8686e1e733ad928 2026-08-20 17:15:23 +0300 relay(MARATHON-R3P1-TURN): claude turn (claude headless; no push)
+
+marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+src/sort.js
+test/sort.test.js
+COMMIT d604ccc6a4db389b6ebf3ad8bda7590422a71fe9 2026-08-20 17:13:19 +0300 marathon: render phase r3p1 relay (MARATHON-R3P1-TURN)
+
+marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+COMMIT 806b793c081b6632b178636ba809b7fd959cdc5c 2026-08-20 17:13:18 +0300 run3: clear phase state from the two aborted attempts
+
+relay-system/run-logs/2026-08-20/marathon-MARATHON_-170847-21412.log
+COMMIT 3ec16780078bd74f1534a2830191dc0b5776233e 2026-08-20 17:08:47 +0300 run3: preserve the agy quota-exhaustion halt before retrying with codex
+
+marathon-system/run3-hard-ambiguous--r3p1.agy-quota-halt/ESCALATION.md
+marathon-system/run3-hard-ambiguous--r3p1.agy-quota-halt/RELAY.md
+relay-system/preflight/2026-08-20/run3-hard-ambiguous/freshness.json
+relay-system/preflight/2026-08-20/run3-hard-ambiguous/lane-plan.json
+relay-system/preflight/2026-08-20/run3-hard-ambiguous/marathon-invocation.txt
+relay-system/preflight/2026-08-20/run3-hard-ambiguous/packet.md
+relay-system/preflight/2026-08-20/run3-hard-ambiguous/readiness.json
+relay-system/preflight/2026-08-20/run3-hard-ambiguous/run-candidate.json
+relay-system/run-logs/2026-08-20/marathon-MARATHON_-170208-18916.log
+COMMIT 3e0b0c062c2a5e9feb06b9a69d084dfec1eca5e2 2026-08-20 17:02:38 +0300 marathon: phase r3p1 transcript saved (MARATHON-R3P1-TURN)
+
+relay-system/2026-08-20/marathon-r3p1-140238.md
+COMMIT 8f929ecd8c831c8a9bcfab4489de226010bbb342 2026-08-20 17:02:38 +0300 marathon: phase r3p1 escalation (relay-failed-before-gate)
+
+marathon-system/run3-hard-ambiguous--r3p1/ESCALATION.md
+COMMIT 897382394babee674a387c87c4dd093fb184502b 2026-08-20 17:02:09 +0300 marathon: render phase r3p1 relay (MARATHON-R3P1-TURN)
+
+marathon-system/run3-hard-ambiguous--r3p1/RELAY.md
+COMMIT a642bbcd67a0884c94f07040e5cb87e15d8eca70 2026-08-20 17:01:42 +0300 run3: uneven-difficulty marathon plan, four briefs and capture doc
+
+PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS.md
+PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/MARATHON.yaml
+PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p1-sort.md
+PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p2-decimal.md
+PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p3-fuzzy.md
+PROJECT/2-WORKING/RUN3-HARD-AMBIGUOUS/phases-briefs/p4-stats.md
+relay-system/preflight/2026-08-20/run2-reconcile-chain/freshness.json
+relay-system/preflight/2026-08-20/run2-reconcile-chain/lane-plan.json
+relay-system/preflight/2026-08-20/run2-reconcile-chain/marathon-invocation.txt
+relay-system/preflight/2026-08-20/run2-reconcile-chain/packet.md
+relay-system/preflight/2026-08-20/run2-reconcile-chain/readiness.json
+relay-system/preflight/2026-08-20/run2-reconcile-chain/run-candidate.json
+relay-system/run-logs/2026-08-20/marathon-MARATHON_-164223-30219.log
+COMMIT a9cd5010209f002de44276c8928b812010f32ca8 2026-08-20 17:00:17 +0300 marathon: phase r2p4 transcript saved (MARATHON-R2P4-TURN)
+
+relay-system/2026-08-20/marathon-r2p4-140017.md
+COMMIT b2ad3da5cf8a60e2d01a9480b544ab5619101a5d 2026-08-20 17:00:13 +0300 relay(MARATHON-R2P4-TURN): codex turn (codex headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p4/RELAY.md
+COMMIT 758924d094774daf779adbca23ebe1fdee780f06 2026-08-20 16:59:25 +0300 relay(MARATHON-R2P4-TURN): agy turn (agy headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p4/RELAY.md
+src/report.js
+test/report.test.js
+COMMIT 29252a89fddadb2532e295bde800ed426f7c7763 2026-08-20 16:55:56 +0300 marathon: render phase r2p4 relay (MARATHON-R2P4-TURN)
+
+marathon-system/run2-reconcile-chain--r2p4/RELAY.md
+COMMIT 0b3b57618f3658477293291ecdd20d328a3f66e9 2026-08-20 16:55:55 +0300 marathon: phase r2p3 transcript saved (MARATHON-R2P3-TURN)
+
+relay-system/2026-08-20/marathon-r2p3-135555.md
+COMMIT 42e83c7fe2dd517e60179930f8b5b05b11d6307f 2026-08-20 16:55:51 +0300 relay(MARATHON-R2P3-TURN): codex turn (codex headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p3/RELAY.md
+COMMIT f9561b90909dfbd46a032b5ba36d055dc299edad 2026-08-20 16:55:07 +0300 relay(MARATHON-R2P3-TURN): agy turn (agy headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p3/RELAY.md
+src/reconcile.js
+test/reconcile.test.js
+COMMIT a6b9a21012d85cecf4dbe7efcea81da35083409d 2026-08-20 16:52:47 +0300 marathon: render phase r2p3 relay (MARATHON-R2P3-TURN)
+
+marathon-system/run2-reconcile-chain--r2p3/RELAY.md
+COMMIT 20ae784b57237c3de41b9613f012c60f09d1cff4 2026-08-20 16:52:46 +0300 marathon: phase r2p2 transcript saved (MARATHON-R2P2-TURN)
+
+relay-system/2026-08-20/marathon-r2p2-135246.md
+COMMIT 17e080d613be135ecceb4acf95fa2b6afbcafb88 2026-08-20 16:52:42 +0300 relay(MARATHON-R2P2-TURN): codex turn (codex headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p2/RELAY.md
+COMMIT 914c48110be6efde16a8915d74e82823133cd5aa 2026-08-20 16:51:54 +0300 relay(MARATHON-R2P2-TURN): agy turn (agy headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p2/RELAY.md
+src/balance.js
+test/balance.test.js
+COMMIT a02815c7ff24dfc08e0f4c219a3c8ce578339b84 2026-08-20 16:49:51 +0300 marathon: render phase r2p2 relay (MARATHON-R2P2-TURN)
+
+marathon-system/run2-reconcile-chain--r2p2/RELAY.md
+COMMIT 46c90bf4fa585b10354b681a254ff70d9f009029 2026-08-20 16:49:50 +0300 marathon: phase r2p1 transcript saved (MARATHON-R2P1-TURN)
+
+relay-system/2026-08-20/marathon-r2p1-134950.md
+COMMIT 2df8a6ce6758719c84003784316958cbac2c5be2 2026-08-20 16:49:47 +0300 relay(MARATHON-R2P1-TURN): codex turn (codex headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p1/RELAY.md
+COMMIT 187d602527906619474a8762ae2b5e0dd2bca803 2026-08-20 16:48:55 +0300 relay(MARATHON-R2P1-TURN): agy turn (agy headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p1/RELAY.md
+src/money.js
+test/money.test.js
+COMMIT a7222a5de42d20a6aa177691c17e2912de6418ac 2026-08-20 16:46:24 +0300 relay(MARATHON-R2P1-TURN): codex turn (codex headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p1/RELAY.md
+COMMIT 3daa280311ae05710b24daf2d65af5b907c981b6 2026-08-20 16:45:29 +0300 relay(MARATHON-R2P1-TURN): agy turn (agy headless; no push)
+
+marathon-system/run2-reconcile-chain--r2p1/RELAY.md
+src/money.js
+test/money.test.js
+COMMIT 9ab28b558c008a03e9af1b3d9ad4731f70e0776b 2026-08-20 16:42:23 +0300 marathon: render phase r2p1 relay (MARATHON-R2P1-TURN)
+
+marathon-system/run2-reconcile-chain--r2p1/RELAY.md
+COMMIT 71ef6b76fa9b878dd64ba02d3bf9153d4566ed06 2026-08-20 16:37:21 +0300 run2: dependency-chain marathon plan, four briefs and capture doc
+
+PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN.md
+PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/MARATHON.yaml
+PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p1-money.md
+PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p2-balance.md
+PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p3-reconcile.md
+PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p4-report.md
+relay-system/run-logs/2026-08-20/marathon-MARATHON_-161733-8843.log
+COMMIT 0cd30e8630ee26a2b6602e1000a90f3e4698a786 2026-08-20 16:35:47 +0300 marathon: phase r1p4 transcript saved (MARATHON-R1P4-TURN)
+
+relay-system/2026-08-20/marathon-r1p4-133547.md
+COMMIT 1c845bfcb4d153449409604cd8223b2e2ae87747 2026-08-20 16:35:44 +0300 relay(MARATHON-R1P4-TURN): codex turn (codex headless; no push)
+
+marathon-system/run1-ledger-exports--r1p4/RELAY.md
+COMMIT 77e914e1ee72596a12b9d2e2f55478dd666c0969 2026-08-20 16:35:00 +0300 relay(MARATHON-R1P4-TURN): agy turn (agy headless; no push)
+
+marathon-system/run1-ledger-exports--r1p4/RELAY.md
+src/dedupe.js
+test/dedupe.test.js
+COMMIT deb6c760e8c5c49b0f0f0952efb2005c244e886b 2026-08-20 16:32:41 +0300 marathon: render phase r1p4 relay (MARATHON-R1P4-TURN)
+
+marathon-system/run1-ledger-exports--r1p4/RELAY.md
+COMMIT f3e6bcc6aad9952e864c0426f6642fc238661517 2026-08-20 16:32:40 +0300 marathon: phase r1p3 transcript saved (MARATHON-R1P3-TURN)
+
+relay-system/2026-08-20/marathon-r1p3-133240.md
+COMMIT a257c960cae9b5c1f6d3be0b24251321415aef3a 2026-08-20 16:32:36 +0300 relay(MARATHON-R1P3-TURN): codex turn (codex headless; no push)
+
+marathon-system/run1-ledger-exports--r1p3/RELAY.md
+COMMIT 209d579d67c160e23d4021ebf9cf079e5e2ab146 2026-08-20 16:31:46 +0300 relay(MARATHON-R1P3-TURN): agy turn (agy headless; no push)
+
+marathon-system/run1-ledger-exports--r1p3/RELAY.md
+src/cli.js
+test/cli.test.js
+COMMIT 466f92ca01c88d45f796c04697bdf68a6529b406 2026-08-20 16:30:02 +0300 relay(MARATHON-R1P3-TURN): codex turn (codex headless; no push)
+
+marathon-system/run1-ledger-exports--r1p3/RELAY.md
+COMMIT 34ee3b439201cce80f63f012054acfbfb4e09697 2026-08-20 16:29:10 +0300 relay(MARATHON-R1P3-TURN): agy turn (agy headless; no push)
+
+marathon-system/run1-ledger-exports--r1p3/RELAY.md
+src/cli.js
+test/cli.test.js
+COMMIT 20c368407a94fc57aa5a910fb196b2b0ba79fdd2 2026-08-20 16:25:08 +0300 marathon: render phase r1p3 relay (MARATHON-R1P3-TURN)
+
+marathon-system/run1-ledger-exports--r1p3/RELAY.md
+COMMIT 70a05919435e0205316b2c4d5052c8570d9cb3b6 2026-08-20 16:25:07 +0300 marathon: phase r1p2 transcript saved (MARATHON-R1P2-TURN)
+
+relay-system/2026-08-20/marathon-r1p2-132507.md
+COMMIT 6e172b13b532ddde929d924f8f5244c4424e05f5 2026-08-20 16:25:05 +0300 relay(MARATHON-R1P2-TURN): codex turn (codex headless; no push)
+
+marathon-system/run1-ledger-exports--r1p2/RELAY.md
+COMMIT bc9e935e7222bf37f77658f35adb6acf91c45ea7 2026-08-20 16:24:21 +0300 relay(MARATHON-R1P2-TURN): agy turn (agy headless; no push)
+
+marathon-system/run1-ledger-exports--r1p2/RELAY.md
+src/fx.js
+test/fx.test.js
+COMMIT 1ec3dcb369a030fb2f70d8fa2db04240dc7dbe27 2026-08-20 16:22:09 +0300 marathon: render phase r1p2 relay (MARATHON-R1P2-TURN)
+
+marathon-system/run1-ledger-exports--r1p2/RELAY.md
+COMMIT a5e1b98aef75e854a17f1d20850023548c9ce9c0 2026-08-20 16:22:08 +0300 marathon: phase r1p1 transcript saved (MARATHON-R1P1-TURN)
+
+relay-system/2026-08-20/marathon-r1p1-132208.md
+COMMIT 085befa3e0ab35748bab6dbe74cf580dfd471cef 2026-08-20 16:22:06 +0300 relay(MARATHON-R1P1-TURN): codex turn (codex headless; no push)
+
+marathon-system/run1-ledger-exports--r1p1/RELAY.md
+COMMIT 781d818983d2f47b54949e81c01a7861741e5c68 2026-08-20 16:21:25 +0300 relay(MARATHON-R1P1-TURN): agy turn (agy headless; no push)
+
+marathon-system/run1-ledger-exports--r1p1/RELAY.md
+src/export-csv.js
+test/export-csv.test.js
+COMMIT 7fbb70beea2e3f174646439ceded5bbccd8b109d 2026-08-20 16:19:59 +0300 relay(MARATHON-R1P1-TURN): codex turn (codex headless; no push)
+
+marathon-system/run1-ledger-exports--r1p1/RELAY.md
+COMMIT db4ad76ea6ce79c635e0d74961f4452f2ff6d013 2026-08-20 16:19:11 +0300 relay(MARATHON-R1P1-TURN): agy turn (agy headless; no push)
+
+marathon-system/run1-ledger-exports--r1p1/RELAY.md
+src/export-csv.js
+test/export-csv.test.js
+COMMIT 3cb056ccc80cf68fdf720bdbea1691b17cf9bb94 2026-08-20 16:17:34 +0300 marathon: render phase r1p1 relay (MARATHON-R1P1-TURN)
+
+marathon-system/run1-ledger-exports--r1p1/RELAY.md
+COMMIT c83c6d668b68ab08b40c1fa6323de1319ee5aaf6 2026-08-20 16:17:07 +0300 vendor: xyz harness into .xyz/; track marathon-system/ and relay-system/ so relay turns can report
+
+.gitignore
+COMMIT 599e87f63058865110b1dd96a77315b73885cfc9 2026-08-20 16:12:39 +0300 run1: artifacts_new is a subset marker over artifacts[], not a parallel list
+
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS.md
+COMMIT 3d8bd281c0c87009d27eaed4581f9e9db8ccfd78 2026-08-20 16:00:10 +0300 run1: contract uses artifacts_new for the eight greenfield paths
+
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS.md
+COMMIT a6140c423e0edd122e3017650ceae66871f972e7 2026-08-20 15:50:21 +0300 run1: capture doc with swarm preflight contract
+
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS.md
+COMMIT e11d7fb8ddd8e1542f55b1204af315e2517553ce 2026-08-20 15:46:39 +0300 run1: marathon plan and four independent phase briefs
+
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/MARATHON.yaml
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p1-csv.md
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p2-fx.md
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p3-cli.md
+PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/phases-briefs/p4-dedupe.md
+COMMIT 2ca570c987520eb0e25f3b38a91eb236f5371191 2026-08-20 15:46:39 +0300 test: node --test auto-discovery (node 22 rejects a bare dir arg)
+
+package.json
+COMMIT 1b985089bd45f48cb777e262d15adc50fb14187b 2026-08-20 15:45:10 +0300 ledgerkit: parse, validate and summarize double-entry ledger records
+
+.gitignore
+README.md
+package.json
+src/index.js
+src/parse.js
+src/validate.js
+test/parse.test.js
+test/summarize.test.js
+test/validate.test.js

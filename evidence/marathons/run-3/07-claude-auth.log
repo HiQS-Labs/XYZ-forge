@@ -1,0 +1,34 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/claude-auth.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:12:30+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== claude auth subcommands ===
+Usage: claude auth [options] [command]
+
+Manage authentication
+
+Options:
+  -h, --help        Display help for command
+
+Commands:
+  help [command]    display help for command
+  login [options]   Sign in to your Anthropic account
+  logout            Log out from your Anthropic account
+  status [options]  Show authentication status
+
+=== copy the operator's own credentials Windows-home -> WSL-home ===
+copied (808 bytes), mode 600
+
+=== does a headless turn actually work? ===
+claude -p rc=0 elapsed=8s
+Ignoring 16 permissions.allow entries from .claude/settings.json: this workspace has not been trusted. Run Claude Code interactively here once and accept the trust dialog, or set projects["/home/arnoldadero/XYZ-forge"].hasTrustDialogAccepted: true in /home/arnoldadero/.claude.json.
+CLAUDE-BUILDER-OK
+
+--- auth-ish words in the output ---
+=== END OUTPUT ===
+end      : 2026-08-20T17:12:40+03:00
+duration : 10s
+EXIT_CODE: 0

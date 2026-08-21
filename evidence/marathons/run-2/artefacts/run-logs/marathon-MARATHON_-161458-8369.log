@@ -1,0 +1,44 @@
+marathon: run log: /home/arnoldadero/XYZ-forge/relay-system/run-logs/2026-08-20/marathon-MARATHON_-161458-8369.log
+marathon: plan: /home/arnoldadero/marathon-target/PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/MARATHON.yaml — 4 phase(s) in execution order
+marathon: ── phase 1/4: r1p1 (reviewer=codex, round-cap=5, artifact=src/export-csv.js,test/export-csv.test.js, turn-timeout=900s) ──
+marathon-drive: WARNING: workspace is not clean — an autonomous builder can be distracted by stray files.
+marathon-drive:   • evidence/03-fix-gh-default.log
+marathon-drive:   • evidence/_env/fix-gh-default.sh
+marathon-drive:   • evidence/_env/probe-agy.sh
+marathon-drive:   • evidence/_env/probe-agy2.sh
+marathon-drive:   • evidence/_env/probe-agy3.sh
+marathon-drive:   • evidence/_env/probe-agy4.sh
+marathon-drive:   • evidence/_env/probe-agy5.sh
+marathon-drive:   • evidence/_env/probe-agy6.sh
+marathon-drive:   • evidence/_env/probe-agy7.sh
+marathon-drive:   • evidence/_env/probe-auth.sh
+marathon-drive:   • evidence/_env/probe-builder-auth.sh
+marathon-drive:   • evidence/_env/probe-contract.sh
+marathon-drive:   • evidence/_env/probe-plan.sh
+marathon-drive:   • evidence/_env/probe-state.sh
+marathon-drive:   • evidence/_env/try-deps.sh
+marathon-drive:   • evidence/marathons/
+marathon-drive:   • relay-system/run-logs/
+/home/arnoldadero/XYZ-forge/utils/py/marathon_drive.py:2254: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  _ts_base, _dt.datetime.utcnow().strftime("%Y-%m-%d"), _probe_name))
+marathon-drive: relay file committed: /home/arnoldadero/XYZ-forge/marathon-system/run1-ledger-exports--r1p1/RELAY.md
+marathon-drive: tick token seeded: MARATHON-R1P1-TURN → agy
+marathon-drive: memory-telemetry: phase r1p1-start boundary — swap_free=8192MB
+marathon-drive: phase start: running relay-drive --round-cap 5
+relay-drive: --target-root build turn cannot report: relay file '/home/arnoldadero/XYZ-forge/marathon-system/run1-ledger-exports--r1p1/RELAY.md' resolves outside the target root '/home/arnoldadero/marathon-target', so a build turn (ALLOW_PATHS="") has no writable path for its findings and the turn would be discarded after full cost. Vendor the harness into the target repo (relay-automation/xyz-vendor.sh '/home/arnoldadero/marathon-target') and drop --target-root, or move the relay thread under the target root.
+marathon-drive: relay-drive exited with unexpected code 2
+marathon-drive: interrupted-phase record written: /home/arnoldadero/XYZ-forge/marathon-system/run1-ledger-exports--r1p1/PHASE-INTERRUPTED.md (reason: usage or configuration error)
+/home/arnoldadero/XYZ-forge/utils/py/marathon_drive.py:1531: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  now = datetime.datetime.utcnow()
+marathon-drive: transcript saved: /home/arnoldadero/XYZ-forge/relay-system/2026-08-20/marathon-r1p1-131459.md
+
+marathon-drive: end-of-run cost summary (tick analyze) —
+--- cost ---
+run type: unspecified
+tokens: 0 total (0 in / 0 out)
+human minutes (self-reported): 0
+wall-clock (run window): 0s
+per done-task: n/a (0 tasks done)
+memory: swap free min: 8192MB
+
+marathon: HALT: phase r1p1 failed (marathon-drive exit 2) — chain stops; later phases NOT started

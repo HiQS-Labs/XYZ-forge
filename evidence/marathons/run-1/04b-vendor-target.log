@@ -1,0 +1,51 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/vendor-target.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:17:07+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== the contradiction, stated precisely ===
+--- marathon.sh --target-root help ---
+    --target-root DIR       Foreign git repo the BUILD lands in; forwarded to marathon-drive.sh (GH-11).
+                            The relay thread, tick token, marathon-system/ and relay-system/ transcripts all stay
+                            in THIS harness repo — only code changes land in DIR. Use this when the target
+                            repo cannot track harness output (e.g. a public repo that gitignores marathon-system/
+                            and relay-system/ on purpose): without it, marathon-drive's `git add` of
+                            RELAY.md / ESCALATION.md / the transcript fails and the phase HALTs.
+                            Plan and brief paths resolve against DIR when set.
+--- relay-drive's refusal of that same combination ---
+
+=== target .gitignore BEFORE ===
+node_modules/
+marathon-system/
+relay-system/
+.tick/
+
+=== un-ignore harness output so the vendored install can commit its relay thread ===
+node_modules/
+.tick/
+
+=== vendor the harness into the target ===
+registry: updated /home/arnoldadero/.config/xyz/registry.tsv
+vendored harness -> /home/arnoldadero/marathon-target/.xyz
+VENDOR_RC=0
+
+=== what landed ===
+  PROJECT
+  README.md
+  package.json
+  src
+  test
+--- .xyz entry points ---
+  /home/arnoldadero/marathon-target/.xyz/bin/tick
+  /home/arnoldadero/marathon-target/.xyz/relay-automation/marathon.sh
+  /home/arnoldadero/marathon-target/.xyz/utils/swarm-preflight.sh
+
+=== commit the vendored harness in the target ===
+COMMIT_RC=0
+c83c6d6 vendor: xyz harness into .xyz/; track marathon-system/ and relay-system/ so relay turns can report
+=== END OUTPUT ===
+end      : 2026-08-20T16:17:07+03:00
+duration : 0s
+EXIT_CODE: 0

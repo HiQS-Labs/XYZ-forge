@@ -1,0 +1,41 @@
+# RUN 2 — a deliberate DEPENDENCY CHAIN. Each phase consumes the previous phase's
+# module, so ordering is load-bearing and a halt must strand every later phase.
+#
+# depends_on is SCALAR (one phase id, unquoted). A list parses as the literal
+# string "[id]" and aborts the plan. Chained p1 -> p2 -> p3 -> p4 to express order.
+name: run2-reconcile-chain
+phases:
+  - id: r2p1
+    name: Exact money as integer minor units
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p1-money.md
+    artifact: src/money.js,test/money.test.js
+    turn_timeout_s: 900
+    max_review_rounds: 2
+
+  - id: r2p2
+    name: Balance sheets built on Money
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p2-balance.md
+    artifact: src/balance.js,test/balance.test.js
+    turn_timeout_s: 900
+    depends_on: r2p1
+    max_review_rounds: 2
+
+  - id: r2p3
+    name: Two-ledger reconciler over balances
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p3-reconcile.md
+    artifact: src/reconcile.js,test/reconcile.test.js
+    turn_timeout_s: 1200
+    depends_on: r2p2
+    max_review_rounds: 3
+
+  - id: r2p4
+    name: Reconciliation report renderer
+    reviewer: codex
+    brief: PROJECT/2-WORKING/RUN2-RECONCILE-CHAIN/phases-briefs/p4-report.md
+    artifact: src/report.js,test/report.test.js
+    turn_timeout_s: 900
+    depends_on: r2p3
+    max_review_rounds: 2

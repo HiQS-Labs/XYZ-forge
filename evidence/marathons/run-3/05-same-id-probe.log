@@ -1,0 +1,55 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/same-id-probe.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T17:10:09+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== 1. the constraint in source ===
+/home/arnoldadero/XYZ-forge/relay-automation/marathon-drive.sh:786:[[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"
+/home/arnoldadero/XYZ-forge/utils/py/marathon_drive.py:1378:        die(f"builder and reviewer must be different agent ids (got '{args.builder}' for both)")
+
+=== 2. DRY RUN with builder==reviewer (both codex) ===
+DRYRUN_RC=2
+--- does the dry-run output mention the conflict? ---
+1
+marathon: ── phase 1/4: r3p1 (reviewer=codex, round-cap=5, artifact=src/sort.js,test/sort.test.js, turn-timeout=900s) ──
+marathon-drive: builder and reviewer must be different agent ids (got 'codex' for both)
+marathon: HALT: phase r3p1 failed (marathon-drive exit 2) — chain stops; later phases NOT started
+
+=== 3. so: dry-run verdict vs real-run verdict ===
+  dry-run  exit: 2
+  full-run exit: 2  (marathon-drive: builder and reviewer must be different agent ids)
+
+=== 4. which agent ids does the reviewer field accept? ===
+43:#   reviewer           codex* or agy* — the model that reviews this phase                 (required)
+59:    reviewer: codex
+67:    reviewer: agy
+629:REVIEWER=""
+650:    --reviewer)        REVIEWER="${2:-}"; shift 2 ;;
+671:[[ -n "$REVIEWER"         ]] || { usage; die "--reviewer AGENT required"; }
+775:export MARATHON_REVIEWER="$REVIEWER"
+786:[[ "$BUILDER" == "$REVIEWER" ]] && die "builder and reviewer must be different agent ids (got '$BUILDER' for both)"
+788:route_agent "$REVIEWER"
+790:case "$REVIEWER" in codex*|gemini*|agy*) ;; *) die "reviewer '$REVIEWER' must start with codex/gemini/agy" ;; esac
+824:_probe_agent_bin "$REVIEWER" reviewer
+
+=== 5. what builders does marathon-agent.sh dispatch? ===
+20:#   MARATHON_BUILDER  — builder agent id; when RELAY_AGENT matches this, RELAY_PEER = MARATHON_REVIEWER
+21:#   MARATHON_REVIEWER — reviewer agent id; when RELAY_AGENT is the reviewer, RELAY_PEER = MARATHON_BUILDER
+42:if [[ -n "${MARATHON_BUILDER:-}" && -n "${MARATHON_REVIEWER:-}" ]]; then
+43:  if [[ "$me" == "$MARATHON_BUILDER" ]]; then
+46:    export RELAY_PEER="$MARATHON_BUILDER"
+
+=== 6. builder availability right now ===
+  codex    /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/codex
+  agy      /home/arnoldadero/.local/bin/agy
+  claude   /mnt/c/Users/Askyla/AppData/Roaming/npm/claude
+  pi       MISSING
+  aider    MISSING
+  ANTHROPIC_API_KEY: unset
+  OPENROUTER_API_KEY: unset
+=== END OUTPUT ===
+end      : 2026-08-20T17:10:10+03:00
+duration : 1s
+EXIT_CODE: 0

@@ -1,0 +1,45 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash evidence/_env/probe-deps.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T13:49:09+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+--- builders / harness workers (Path A) ---
+codex          MISSING
+agy            MISSING
+claude         /mnt/c/Users/Askyla/AppData/Roaming/npm/claude       2.1.237 (Claude Code)
+aider          MISSING
+
+--- runtime + suite dependencies ---
+node           /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm            /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+python3        /usr/bin/python3                                     Python 3.12.3
+git            /usr/bin/git                                         git version 2.43.0
+bash           /usr/bin/bash                                        GNU bash, version 5.2.21(1)-release (x86_64-pc-linux-gnu)
+jq             MISSING
+yq             MISSING
+gh             /usr/bin/gh                                          gh version 2.97.0 (2026-07-31)
+sqlite3        MISSING
+timeout        /usr/bin/timeout                                     timeout (GNU coreutils) 9.4
+flock          /usr/bin/flock                                       flock from util-linux 2.39.3
+shellcheck     MISSING
+
+--- in-repo entrypoints ---
+bin/tick                     present  exec=yes
+bin/marathon-yaml            present  exec=yes
+bin/validate-relay-block     present  exec=yes
+validate.sh                  present  exec=yes
+ci-local.sh                  present  exec=yes
+utils/pdda/pdda.sh           present  exec=yes
+
+--- python module deps (marathon runtime is dual-runtime, XYZ_PYTHON) ---
+python: 3.12.3
+  yaml       OK
+  json       OK
+  sqlite3    OK
+  tomllib    OK
+=== END OUTPUT ===
+end      : 2026-08-20T13:49:13+03:00
+duration : 4s
+EXIT_CODE: 0

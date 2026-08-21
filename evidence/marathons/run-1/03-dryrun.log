@@ -1,0 +1,358 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/run1-dryrun.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:14:23+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+marathon: plan: /home/arnoldadero/marathon-target/PROJECT/2-WORKING/RUN1-LEDGER-EXPORTS/MARATHON.yaml — 4 phase(s) in execution order
+marathon: ── phase 1/4: r1p1 (reviewer=codex, round-cap=5, artifact=src/export-csv.js,test/export-csv.test.js, turn-timeout=900s) ──
+marathon-drive: dry-run: relay file would be rendered at /home/arnoldadero/XYZ-forge/marathon-system/run1-ledger-exports--r1p1/RELAY.md
+--- BEGIN RENDERED RELAY ---
+# Marathon Phase r1p1
+STATUS: Open
+NEXT: agy (Builder)
+
+<!-- marathon-drive: task=MARATHON-R1P1-TURN builder=agy reviewer=codex round-cap=5 -->
+
+## Phase Brief
+
+# r1p1 — CSV export
+
+## Goal
+
+Add `src/export-csv.js` exporting `toCSV(entries, options)`, which renders parsed
+ledger entries (the shape `src/parse.js` produces) as RFC 4180 CSV.
+
+## Requirements
+
+1. Header row, exactly: `date,account,amount,currency,memo`.
+2. One row per entry, in the order given.
+3. Amounts render with exactly two decimal places (`-125.4` becomes `-125.40`).
+4. RFC 4180 quoting, and this is the part that matters: a field containing a
+   comma, a double quote, CR or LF must be wrapped in double quotes, and any
+   embedded double quote must be doubled (`"` becomes `""`). Memos are free text
+   and will contain all of these.
+5. Line terminator is CRLF (`\r\n`), per RFC 4180. Do not emit a trailing CRLF
+   after the final row.
+6. `options.header === false` suppresses the header row. Default is to emit it.
+
+## Acceptance
+
+Add `test/export-csv.test.js` using `node:test` + `node:assert`, covering at
+minimum: the plain case, a memo containing a comma, a memo containing a double
+quote, a memo containing a newline, two-decimal formatting of an integer amount,
+and `header: false`. `npm test` must be green.
+
+## Out of scope
+
+Do not modify `src/parse.js`, `src/validate.js`, or `src/index.js`. Do not add
+dependencies — this repo has none and must keep none.
+
+
+---
+
+▶ TAKE YOUR TURN (agy — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+1. Implement the brief by creating/editing the artifact file(s): src/export-csv.js,test/export-csv.test.js
+2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /home/arnoldadero/XYZ-forge/bin/tick
+   - /home/arnoldadero/XYZ-forge/bin/tick claim MARATHON-R1P1-TURN --agent agy --paths "marathon-system/run1-ledger-exports--r1p1/RELAY.md,src/export-csv.js,test/export-csv.test.js"
+   - /home/arnoldadero/XYZ-forge/bin/tick ping MARATHON-R1P1-TURN --agent agy
+   - /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P1-TURN --agent agy --to codex
+4. Edit ONLY these paths: marathon-system/run1-ledger-exports--r1p1/RELAY.md and src/export-csv.js,test/export-csv.test.js. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to codex — codex, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: codex (Reviewer)`
+
+---
+
+▶ TAKE YOUR TURN (codex — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: src/export-csv.js,test/export-csv.test.js. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P1-TURN --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /home/arnoldadero/XYZ-forge/bin/tick done MARATHON-R1P1-TURN --agent codex
+4. Use this exact tick binary (run it from any directory) for all token operations: /home/arnoldadero/XYZ-forge/bin/tick
+   Edit ONLY marathon-system/run1-ledger-exports--r1p1/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to agy —
+   agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+--- END RENDERED RELAY ---
+tick seed: log task.created MARATHON-R1P1-TURN + claim --agent marathon + release --to agy
+marathon: ── phase 2/4: r1p2 (reviewer=codex, round-cap=5, artifact=src/fx.js,test/fx.test.js, turn-timeout=900s) ──
+marathon-drive: dry-run: relay file would be rendered at /home/arnoldadero/XYZ-forge/marathon-system/run1-ledger-exports--r1p2/RELAY.md
+--- BEGIN RENDERED RELAY ---
+# Marathon Phase r1p2
+STATUS: Open
+NEXT: agy (Builder)
+
+<!-- marathon-drive: task=MARATHON-R1P2-TURN builder=agy reviewer=codex round-cap=5 -->
+
+## Phase Brief
+
+# r1p2 — Currency normalization
+
+## Goal
+
+Add `src/fx.js` exporting `normalize(entries, rates, target)`, converting every
+entry into a single target currency so cross-currency ledgers can be totalled.
+
+## Requirements
+
+1. `rates` is a plain object of `{ CUR: <units of target per 1 CUR> }`, e.g.
+   `{ USD: 1, EUR: 1.08 }` when `target` is `'USD'`.
+2. Return NEW entry objects. Do not mutate the input array or its members —
+   the caller still needs the originals.
+3. Each returned entry keeps every original field, sets `currency` to `target`,
+   sets `amount` to the converted value, and additionally carries
+   `originalAmount` and `originalCurrency`.
+4. An entry already in `target` passes through with `amount` unchanged and a rate
+   of exactly 1 — do not multiply it by a supplied rate that disagrees.
+5. A missing rate is an error, not a silent skip: throw an `Error` with
+   `code === 'E_RATE'` and a `currency` property naming the offender.
+6. Converted amounts round to 2 decimal places, half away from zero. Note that
+   JavaScript's `Math.round` is half-UP, not half-away-from-zero, so `-1.005`
+   and `1.005` must not round in opposite magnitudes. Handle this deliberately.
+
+## Acceptance
+
+Add `test/fx.test.js` (`node:test`), covering: a straight conversion, the
+identity case, input immutability, the `E_RATE` throw, and the negative
+half-way rounding case from requirement 6. `npm test` green.
+
+## Out of scope
+
+Do not modify existing `src/` files. No new dependencies. No network — rates are
+always passed in by the caller.
+
+
+---
+
+▶ TAKE YOUR TURN (agy — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+1. Implement the brief by creating/editing the artifact file(s): src/fx.js,test/fx.test.js
+2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /home/arnoldadero/XYZ-forge/bin/tick
+   - /home/arnoldadero/XYZ-forge/bin/tick claim MARATHON-R1P2-TURN --agent agy --paths "marathon-system/run1-ledger-exports--r1p2/RELAY.md,src/fx.js,test/fx.test.js"
+   - /home/arnoldadero/XYZ-forge/bin/tick ping MARATHON-R1P2-TURN --agent agy
+   - /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P2-TURN --agent agy --to codex
+4. Edit ONLY these paths: marathon-system/run1-ledger-exports--r1p2/RELAY.md and src/fx.js,test/fx.test.js. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to codex — codex, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: codex (Reviewer)`
+
+---
+
+▶ TAKE YOUR TURN (codex — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: src/fx.js,test/fx.test.js. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P2-TURN --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /home/arnoldadero/XYZ-forge/bin/tick done MARATHON-R1P2-TURN --agent codex
+4. Use this exact tick binary (run it from any directory) for all token operations: /home/arnoldadero/XYZ-forge/bin/tick
+   Edit ONLY marathon-system/run1-ledger-exports--r1p2/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to agy —
+   agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+--- END RENDERED RELAY ---
+tick seed: log task.created MARATHON-R1P2-TURN + claim --agent marathon + release --to agy
+marathon: ── phase 3/4: r1p3 (reviewer=codex, round-cap=5, artifact=src/cli.js,test/cli.test.js, turn-timeout=900s) ──
+marathon-drive: dry-run: relay file would be rendered at /home/arnoldadero/XYZ-forge/marathon-system/run1-ledger-exports--r1p3/RELAY.md
+--- BEGIN RENDERED RELAY ---
+# Marathon Phase r1p3
+STATUS: Open
+NEXT: agy (Builder)
+
+<!-- marathon-drive: task=MARATHON-R1P3-TURN builder=agy reviewer=codex round-cap=5 -->
+
+## Phase Brief
+
+# r1p3 — CLI with JSON output
+
+## Goal
+
+Add `src/cli.js` exposing `run(argv, io)` — a testable command-line entry point
+over the existing parse/validate/summarize functions.
+
+## Requirements
+
+1. Signature `run(argv, io)` where `argv` is the argument array (no `node`/script
+   prefix) and `io` is `{ stdout, stderr, readFile }`. Injecting `io` is what
+   makes this testable — do not read `process.argv` or call `console.log`
+   directly inside `run`.
+2. Usage: `ledgerkit <file> [--json] [--summary]`.
+3. Default (no flags): validate the file and print a human-readable report — one
+   line per problem, or `OK: N entries, balanced` when clean.
+4. `--summary`: print the `summarize()` table instead, one line per row.
+5. `--json`: print a single JSON object to stdout instead of any human text:
+   `{ ok, entries, problems, summary }`. `--json` wins over `--summary`.
+6. Return an exit code, do not call `process.exit`: `0` clean, `1` validation
+   problems, `2` usage error (missing file argument, unknown flag), `3` parse
+   error (`E_PARSE` from the parser — report the failing line number on stderr).
+
+## Acceptance
+
+Add `test/cli.test.js` (`node:test`) driving `run()` with a fake `io` that
+captures output into strings and serves file contents from memory. Cover each of
+the four exit codes and both output modes. `npm test` green.
+
+## Out of scope
+
+Do not modify existing `src/` files. No dependencies. No `bin` entry in
+package.json — this phase delivers the library-side entry point only.
+
+
+---
+
+▶ TAKE YOUR TURN (agy — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+1. Implement the brief by creating/editing the artifact file(s): src/cli.js,test/cli.test.js
+2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /home/arnoldadero/XYZ-forge/bin/tick
+   - /home/arnoldadero/XYZ-forge/bin/tick claim MARATHON-R1P3-TURN --agent agy --paths "marathon-system/run1-ledger-exports--r1p3/RELAY.md,src/cli.js,test/cli.test.js"
+   - /home/arnoldadero/XYZ-forge/bin/tick ping MARATHON-R1P3-TURN --agent agy
+   - /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P3-TURN --agent agy --to codex
+4. Edit ONLY these paths: marathon-system/run1-ledger-exports--r1p3/RELAY.md and src/cli.js,test/cli.test.js. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to codex — codex, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: codex (Reviewer)`
+
+---
+
+▶ TAKE YOUR TURN (codex — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: src/cli.js,test/cli.test.js. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P3-TURN --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /home/arnoldadero/XYZ-forge/bin/tick done MARATHON-R1P3-TURN --agent codex
+4. Use this exact tick binary (run it from any directory) for all token operations: /home/arnoldadero/XYZ-forge/bin/tick
+   Edit ONLY marathon-system/run1-ledger-exports--r1p3/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to agy —
+   agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+--- END RENDERED RELAY ---
+tick seed: log task.created MARATHON-R1P3-TURN + claim --agent marathon + release --to agy
+marathon: ── phase 4/4: r1p4 (reviewer=codex, round-cap=5, artifact=src/dedupe.js,test/dedupe.test.js, turn-timeout=900s) ──
+marathon-drive: dry-run: relay file would be rendered at /home/arnoldadero/XYZ-forge/marathon-system/run1-ledger-exports--r1p4/RELAY.md
+--- BEGIN RENDERED RELAY ---
+# Marathon Phase r1p4
+STATUS: Open
+NEXT: agy (Builder)
+
+<!-- marathon-drive: task=MARATHON-R1P4-TURN builder=agy reviewer=codex round-cap=5 -->
+
+## Phase Brief
+
+# r1p4 — Duplicate-entry detection
+
+## Goal
+
+Add `src/dedupe.js` exporting `findDuplicates(entries, options)` — flag ledger
+entries that look like the same transaction recorded twice.
+
+## Requirements
+
+1. Two entries are duplicates when `date`, `account`, `amount`, `currency` AND
+   the NORMALIZED memo all match. Normalizing a memo means: lowercase, collapse
+   internal whitespace runs to one space, and trim.
+2. Return an array of groups. Each group is
+   `{ key, entries: [...], count }`, where `entries` holds every member in input
+   order and `count >= 2`. Entries appearing only once are not returned at all.
+3. Groups come back sorted by the line number of their first member, ascending —
+   so the report reads in file order.
+4. `options.ignoreMemo === true` drops the memo from the match key entirely.
+5. A legitimate repeat is not a duplicate: two entries that match on everything
+   but sit on different `lineNo` values ARE still duplicates — `lineNo` is
+   deliberately not part of the key. Say so in a comment so the next reader does
+   not "fix" it.
+
+## Acceptance
+
+Add `test/dedupe.test.js` (`node:test`) covering: no duplicates, an exact
+duplicate pair, a triple, memo normalization matching `"Coffee  Beans"` with
+`"coffee beans"`, non-matching amounts staying separate, `ignoreMemo`, and the
+input-order sort. `npm test` green.
+
+## Out of scope
+
+Do not modify existing `src/` files. No dependencies.
+
+
+---
+
+▶ TAKE YOUR TURN (agy — BUILDER role)
+
+You are the BUILDER for this phase. Read the phase brief above and implement it.
+1. Implement the brief by creating/editing the artifact file(s): src/dedupe.js,test/dedupe.test.js
+2. Append a build block to this relay file: `### Round N · Builder · agy` summarizing what you did (files touched, key decisions).
+3. Use this exact tick binary (run it from any directory): /home/arnoldadero/XYZ-forge/bin/tick
+   - /home/arnoldadero/XYZ-forge/bin/tick claim MARATHON-R1P4-TURN --agent agy --paths "marathon-system/run1-ledger-exports--r1p4/RELAY.md,src/dedupe.js,test/dedupe.test.js"
+   - /home/arnoldadero/XYZ-forge/bin/tick ping MARATHON-R1P4-TURN --agent agy
+   - /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P4-TURN --agent agy --to codex
+4. Edit ONLY these paths: marathon-system/run1-ledger-exports--r1p4/RELAY.md and src/dedupe.js,test/dedupe.test.js. Do NOT run git. Do NOT touch any other file — the harness commits for you.
+5. HAND OFF EXPLICITLY (GH-268): after releasing the token, end your turn by naming who acts next —
+   "handing off to codex — codex, take your turn." A turn that ends without that line
+   leaves a human guessing whether the relay is waiting on them or has stalled. Do this EVERY round,
+   not just the first. ALSO, you MUST update the `NEXT:` line at the top of this file to exactly: `NEXT: codex (Reviewer)`
+
+---
+
+▶ TAKE YOUR TURN (codex — REVIEWER role)
+
+You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: src/dedupe.js,test/dedupe.test.js. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
+1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /home/arnoldadero/XYZ-forge/bin/tick release MARATHON-R1P4-TURN --agent codex --to agy
+3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /home/arnoldadero/XYZ-forge/bin/tick done MARATHON-R1P4-TURN --agent codex
+4. Use this exact tick binary (run it from any directory) for all token operations: /home/arnoldadero/XYZ-forge/bin/tick
+   Edit ONLY marathon-system/run1-ledger-exports--r1p4/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
+4b. TO VERIFY A FINDING, WRITE PROBE FILES OUTSIDE THE REPO — under $TMPDIR, never inside the
+   working tree. Creating even one scratch file in the repo is an off-lane write: containment
+   reverts it and FAILS YOUR WHOLE TURN, discarding the review you just did (GH-441). Observed
+   2026-08-08: a reviewer found a real latent crash, wrote two probe files in-tree to demonstrate
+   it, and lost the turn for doing so — the finding survived only because RELAY.md happens to be
+   on your allowlist. `cp` what you need to "$TMPDIR/probe.$$/" and work there instead. Verifying
+   is wanted; verifying in-tree is what costs you the turn.
+5. HAND OFF EXPLICITLY (GH-268): end your turn by naming who acts next — "handing off to agy —
+   agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
+   approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
+   Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+--- END RENDERED RELAY ---
+tick seed: log task.created MARATHON-R1P4-TURN + claim --agent marathon + release --to agy
+marathon: dry-run complete: 4 phase(s) would run in order
+
+MARATHON_DRYRUN_RC=0
+=== END OUTPUT ===
+end      : 2026-08-20T16:14:24+03:00
+duration : 1s
+EXIT_CODE: 0

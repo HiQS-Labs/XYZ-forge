@@ -1,0 +1,31 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash evidence/_env/probe-git-identity.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T14:19:36+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+global user.email : <UNSET>
+global user.name  : <UNSET>
+
+git commit exit: 128
+--- git said:
+    Author identity unknown
+    
+    *** Please tell me who you are.
+    
+    Run
+    
+      git config --global user.email "you@example.com"
+      git config --global user.name "Your Name"
+    
+    to set your account's default identity.
+    Omit --global to set the identity only in this repository.
+    
+    fatal: empty ident name (for <arnoldadero@DESKTOP-NVQQIAE.>) not allowed
+
+RESULT: a fresh repo CANNOT commit — undocumented prerequisite reproduces
+=== END OUTPUT ===
+end      : 2026-08-20T14:19:37+03:00
+duration : 1s
+EXIT_CODE: 0

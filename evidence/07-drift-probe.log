@@ -1,0 +1,45 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/drift-probe.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T16:48:30+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+BEFORE=3daa280311ae05710b24daf2d65af5b907c981b6  NEW=a7222a5de42d20a6aa177691c17e2912de6418ac
+
+--- relay-automation/relay-turn-lib.sh ---
+  exists in worktree: NO
+  _psha=[3daa280311ae05710b24daf2d65af5b907c981b6:relay-automation/relay-turn-lib.sh]
+  _csha=[a7222a5de42d20a6aa177691c17e2912de6418ac:relay-automation/relay-turn-lib.sh]
+  => DIFFERENT -> drift WOULD be emitted
+  raw rev-parse exit/stdout: rc=128 stdout=[3daa280311ae05710b24daf2d65af5b907c981b6:relay-automation/relay-turn-lib.sh]
+
+--- src/project.js ---
+  exists in worktree: NO
+  _psha=[3daa280311ae05710b24daf2d65af5b907c981b6:src/project.js]
+  _csha=[a7222a5de42d20a6aa177691c17e2912de6418ac:src/project.js]
+  => DIFFERENT -> drift WOULD be emitted
+  raw rev-parse exit/stdout: rc=128 stdout=[3daa280311ae05710b24daf2d65af5b907c981b6:src/project.js]
+
+--- src/events.js ---
+  exists in worktree: NO
+  _psha=[3daa280311ae05710b24daf2d65af5b907c981b6:src/events.js]
+  _csha=[a7222a5de42d20a6aa177691c17e2912de6418ac:src/events.js]
+  => DIFFERENT -> drift WOULD be emitted
+  raw rev-parse exit/stdout: rc=128 stdout=[3daa280311ae05710b24daf2d65af5b907c981b6:src/events.js]
+
+--- src/parse.js ---
+  exists in worktree: yes
+  _psha=[ceadf4b6621a4d9b36d7ae6bcdacef1ee075800f]
+  _csha=[ceadf4b6621a4d9b36d7ae6bcdacef1ee075800f]
+  => equal -> continue (NO drift emitted)
+  raw rev-parse exit/stdout: rc=0 stdout=[ceadf4b6621a4d9b36d7ae6bcdacef1ee075800f]
+
+=== the count of spurious events in run 1 ===
+total dependency.drift events: 42
+
+=== does the spurious notice reach the NEXT agent's turn brief? ===
+=== END OUTPUT ===
+end      : 2026-08-20T16:48:30+03:00
+duration : 0s
+EXIT_CODE: 0

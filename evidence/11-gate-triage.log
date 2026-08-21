@@ -1,0 +1,67 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/gate-triage.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T18:01:48+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== headline ===
+duration : 1618s
+EXIT_CODE: 1
+Summary
+  passed: 41
+  PASS: unsafe-edit: summary records the revert
+  PASS: F: json includes a summary record
+    AUDIT total stale-ref=3 repeat-explore=1 unbounded-stall=1 total=5
+Summary
+passed: 221 / 230
+  + gh331-cost-summary.sh
+
+=== every failing suite ===
+      4 relay-self-sufficiency
+      3 gh69-roadmap-shadow
+      2 gh358-lock-instrumentation
+      1 relay-file-seeding-visibility
+      1 mktemp-trap-guard
+      1 gh382-marathon-memory-telemetry
+      1 gh35-test-tiers
+      1 claude-turn
+      1 archive-writers
+
+=== the FAIL lines themselves ===
+1037:  FAIL: expected exit 0, got 5
+2353:  FAIL: low-swap warning missing when free swap is low
+3136:  FAIL: the suite worker ran 10 below its caller (caller nice=10, worker nice=19, wanted 20)
+4098:  FAIL: dry run names the pending update (rc=0)
+4101:  FAIL: edit+removal sync applies both (rc=0)
+4103:  FAIL:   and the removed row is gone
+4420:  FAIL: consult (unset) exited non-zero
+4512:  FAIL: same-repo uncommitted relay file: rtl_worktree_begin failed or file absent (rc=1, wt=)
+5534:      FAIL: concurrent mismatch: missing sessionId=conc-1; terminal state=lock acquired, record lost. test wait=60s; writer XYZ_LOCK_WAIT_S=30s (default=30s)
+5541:      FAIL: appender sessionId=conc-1; terminal state=lock never acquired; writer XYZ_LOCK_WAIT_S=1s exhausted. test wait=60s; writer XYZ_LOCK_WAIT_S=1s (default=30s)
+5971:  FAIL: repro.sh:381 $d assigned from mktemp, then BARE 'cd "$d"' at repro.sh:383 (not scoped inside a subshell) with no non-empty/is-directory guard first — changes the script's own cwd unconditionally if mktemp failed, same failure class as GH-177
+6307:  FAIL: (C) agy shim exited 5
+6310:  FAIL: (A) relay file not modified — agent may have failed to claim/release (path assumptions wrong)
+6313:  FAIL: (B1) VERDICT: field missing or invalid (found: '<none>')
+6316:  FAIL: (B2) Basis: field missing or empty (found: '<none>')
+
+=== compare to the FIRST (contaminated) baseline ===
+  first run  : passed 216/230, 14 failing suites
+  this run   : failing suites = 9
+
+=== did the deps fixes land? (F-010 sqlite3 / F-011 jq / F-012 identity) ===
+  gh32-releases-app                          now green
+  gh53-releases-merge-resolve                now green
+  gh54-merged-dump-refusals                  now green
+  gh57-releases-fuzz                         now green
+  gh57-live-merge-resolve                    now green
+  gh69-roadmap-shadow                        STILL FAILING
+  gh77-standup-triage                        now green
+  gh399-packet-acceptance-continuation       now green
+
+=== F-013: the Linux nice ceiling ===
+3136:  FAIL: the suite worker ran 10 below its caller (caller nice=10, worker nice=19, wanted 20)
+=== END OUTPUT ===
+end      : 2026-08-20T18:01:48+03:00
+duration : 0s
+EXIT_CODE: 0
