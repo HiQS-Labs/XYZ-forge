@@ -194,7 +194,27 @@ out="$(T "$W/lens7.json" --dry-run 2>&1)"
 has "lens 7 diverged classifies to tier 5" "$out" "5 · sync ROADMAP ledger"
 
 bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-7-fail" > "$W/deg7.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1" > "$W/lens1.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1-fail" > "$W/deg1.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6" > "$W/lens6.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-fail" > "$W/deg6.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8" > "$W/lens8.json"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-fail" > "$W/deg8.json"
 out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
+out="$(T "$W/lens1.json" --dry-run 2>&1)" || true
+has "lens 1 finds session mention" "$out" "re-file 77"
+out="$(T "$W/deg1.json" --dry-run 2>&1)" || true
+has "lens 1 degrades loudly with D6" "$out" "D6"
+
+out="$(T "$W/lens6.json" --dry-run 2>&1)" || true
+has "lens 6 finds overdue release" "$out" "ship 0.7.2"
+out="$(T "$W/deg6.json" --dry-run 2>&1)" || true
+has "lens 6 degrades loudly with D5" "$out" "D5"
+
+out="$(T "$W/lens8.json" --dry-run 2>&1)" || true
+has "lens 8 finds done work" "$out" "close parked item issue:301"
+out="$(T "$W/deg8.json" --dry-run 2>&1)" || true
+has "lens 8 degrades loudly with D3" "$out" "no PARKED/"
 has "lens 7 degrades loudly with D4" "$out" "D4"
 
 echo
@@ -390,7 +410,7 @@ is "  and it is never dropped — the operator still learns the file is there" \
    "$(F lens-2-newline-path 'len(d["lenses"]["2"]["candidates"])')" "1"
 C lens-2-newline-path > "$W/nl.json" 2>/dev/null
 is "  so the rendered screen keeps one physical line per item" \
-   "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "5"
+   "$(T "$W/nl.json" --dry-run 2>&1 | wc -l | tr -d ' ')" "7"
 
 # The required mtime is validated BEFORE jq sees it. A non-integer made jq's `tonumber` fail; with
 # `set +e` active the candidate silently became EMPTY while the lens stayed `ok`, and the final

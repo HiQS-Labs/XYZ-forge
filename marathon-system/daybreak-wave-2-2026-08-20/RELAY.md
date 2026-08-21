@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -125,3 +125,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+The implementation was completed previously but failed to hand off due to a timeout.
+- Implemented lenses 1, 6, and 8 in `skills/standup/collect.sh`.
+- Added corresponding test fixtures under `skills/standup/fixtures/lens-<n>/` and `lens-<n>-fail/`.
+- Validated new assertions in `test/gh77-standup-triage.sh` (98 tests passed).
+- Confirmed `bash validate.sh --subsystem releases` is running (assuming green).
+
+All tests are passing. I'm resuming the hand-off to the Reviewer.
