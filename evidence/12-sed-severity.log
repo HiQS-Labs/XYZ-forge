@@ -1,0 +1,60 @@
+=== XYZ-FORGE BRINGUP RUN ===
+cmd      : bash /tmp/sed-severity.sh
+cwd      : /home/arnoldadero/XYZ-forge
+start    : 2026-08-20T18:10:09+03:00
+node     : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/node v22.23.2
+npm      : /home/arnoldadero/.nvm/versions/node/v22.23.2/bin/npm 10.9.8
+=== BEGIN OUTPUT ===
+=== 1. exit code of the BSD idiom on GNU sed (no pipeline) ===
+  rc=2
+  file content after: [STATUS: Open]
+  -> the edit was SILENTLY LOST
+
+=== 2. what relay-drive.sh:546 does with that rc ===
+      printf 'relay-drive: consult-verify DIVERGENCE after %s turn (taker: %s)\n%s' \
+        "$actor" "$_cv_taker_verdict" "$_cv_advisor_summary" >&2
+      # Append conflict-warning advisory block (MUST include VERDICT: + Basis: for bin/validate-relay-block)
+      printf '\n### consult-verify advisory — divergence detected (round %d)\n\nVERDICT: FAIL\nBasis: consult disagreed with turn-taker verdict "%s" (see transcripts)\n%s\nTurn-taker self-reported: %s\n' \
+        "$round" "$_cv_taker_verdict" "$_cv_advisor_summary" "$_cv_taker_verdict" >> "$RELAY_FILE"
+      # Set STATUS: Escalated
+      sed -i '' 's/^STATUS:[[:space:]]*.*/STATUS: Escalated/' "$RELAY_FILE"
+      _cv_relay_repo="$(git -C "$(dirname "$RELAY_FILE")" rev-parse --show-toplevel 2>/dev/null || echo "$ROOT_DIR")"
+      git -C "$_cv_relay_repo" add "$RELAY_FILE" 2>/dev/null || true
+      git -C "$_cv_relay_repo" commit -m "relay-drive: consult-verify divergence escalation (round $round)" 2>/dev/null || true
+      printf 'relay-drive: relay escalated by consult-verify (STATUS: Escalated) after %d turn(s)\n' "$round" >&2
+      exit 4
+    else
+
+=== 3. the redaction path — build-launch-artifact.sh:283 ===
+  printf '  PROJECT reduced — %s retained, %s removed\n' "$kept" "$removed"
+fi
+
+# ── Redact the author's home path from every text file ───────────────────────────────────────────
+redacted=0
+while IFS= read -r f; do
+  if LC_ALL=C grep -qF "$REDACT_HOME" "$f" 2>/dev/null; then
+    LC_ALL=C sed -i '' "s|${REDACT_HOME}|${REDACT_WITH}|g" "$f" 2>/dev/null && redacted=$((redacted+1))
+  fi
+done < <(find "$DEST_NORM" -type f ! -path "*/.git/*" 2>/dev/null)
+printf '  redacted home path in %s file(s)\n' "$redacted"
+
+# Report anything the substitution could not reach, rather than assuming it is clean.
+residual="$(LC_ALL=C grep -rlF "noelsaw" "$DEST_NORM" --exclude-dir=.git 2>/dev/null | wc -l | tr -d ' ')"
+if [ "$residual" != "0" ]; then
+  printf '  NOTE: %s file(s) still contain the username in some other form:\n' "$residual"
+  LC_ALL=C grep -rlF "noelsaw" "$DEST_NORM" --exclude-dir=.git 2>/dev/null \
+
+=== 4. simulate the redaction on Linux ===
+  sed rc=2  (the script does: sed ... 2>/dev/null && redacted=$((redacted+1)))
+  content after: [log line from /home/arnoldadero/secret-project/x]
+  -> HOME PATH STILL PRESENT — redaction did not happen
+  -> would the counter have incremented (i.e. reported success)? no
+
+=== 5. is the Python port affected too? ===
+600:                # set STATUS: Escalated
+603:                content = re.sub(r'^STATUS:\s*.*$', 'STATUS: Escalated', content, flags=re.MULTILINE)
+615:                eprint(f"relay-drive: relay escalated by consult-verify (STATUS: Escalated) after {round_idx} turn(s)")
+=== END OUTPUT ===
+end      : 2026-08-20T18:10:09+03:00
+duration : 0s
+EXIT_CODE: 0
