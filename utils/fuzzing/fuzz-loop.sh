@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Autonomous Fuzzing Loop — execute every synthetic shell test and leave a concise, parseable log.
 # Supports --jsonl <path> to emit structured telemetry conforming to schema_version: "1.0".
 set -uo pipefail
