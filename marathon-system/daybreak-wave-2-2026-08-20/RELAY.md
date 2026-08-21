@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -125,3 +125,7 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
+
+### Round 1 · Builder · agy
+
+Verified the implementation of lenses 1, 6, and 8. The existing code passed all 110 tests in `test/gh77-standup-triage.sh`. However, I discovered a latent crash bug in `collect.sh` for lens 8: the `releases-check` probe ran `subprocess.run` without `capture_output=True`, meaning any output from `releases_app.py check` would leak into standard output and corrupt the JSON response. I added `capture_output=True` to the `subprocess.run` call to ensure the collector's output remains well-formed JSON under all conditions.

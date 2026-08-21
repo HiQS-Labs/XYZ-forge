@@ -833,7 +833,7 @@ def run_probe(chk, key):
                     return rc == 0, f"exit {rc}"
             return False, "missing fixture"
         try:
-            rc = subprocess.run(["python3", "utils/py/releases_app.py", "check"]).returncode
+            rc = subprocess.run(["python3", "utils/py/releases_app.py", "check"], capture_output=True).returncode
             return rc == 0, f"exit {rc}"
         except Exception:
             return False, "error"
