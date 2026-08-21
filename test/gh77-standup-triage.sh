@@ -574,5 +574,12 @@ bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/f
 is "lens 8 failure controls yield zero candidates" "$(F lens-8-fail-controls 'len(d["lenses"]["8"]["candidates"])')" "0"
 
 echo
+# ── 21. Lens 1 non-fixture control ─────────────────────────────────────────────────────────────
+echo '[{"quote":"test quote","what":"test what","close":"inspect: test"}]' > "$W/session.json"
+(cd "$W" && bash "$ROOT_DIR/skills/standup/collect.sh") > "$W/live_lens1_nonfixture.json" 2>/dev/null
+out="$(T "$W/live_lens1_nonfixture.json" --dry-run 2>&1)" || true
+has "Lens 1 works outside fixture mode when session.json is present" "$out" "test what"
+
+echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]

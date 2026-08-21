@@ -22,6 +22,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ -z "$SESSION_FILE" && -z "$FIXTURE_DIR" ]]; then
+  SESSION_FILE="session.json"
+fi
+
 # `jq` is this collector's only external dependency beyond git and coreutils, and it is load-bearing:
 # every candidate and the branch name are JSON-encoded through it, precisely so a path or ref
 # containing a quote cannot produce invalid JSON at exit 0. Nothing else under skills/, utils/ or
