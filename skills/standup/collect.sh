@@ -572,6 +572,8 @@ try:
         data = json.load(f)
     if not isinstance(data, list):
         raise ValueError()
+    if len(data) == 0:
+        raise ValueError()
     for item in data:
         if not isinstance(item, dict):
             raise ValueError()
@@ -755,11 +757,8 @@ def run_probe(chk, arg):
                 with open(txt_file) as f: out = f.read()
                 return "CLOSED" in out
             return False
-        try:
-            res = subprocess.run(["gh", "issue", "view", str(args[0]), "--json", "state"], capture_output=True, text=True)
-            return json.loads(res.stdout).get("state") == "CLOSED"
-        except Exception:
-            return False
+        print("D3")
+        sys.exit(0)
     elif kind == "releases-check":
         if fx:
             txt_file = os.path.join(fx, "lens8_releases_check.txt")

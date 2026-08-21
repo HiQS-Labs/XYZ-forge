@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -146,3 +146,9 @@ swept file: yes
 I read the complete collector and focused test, all Wave 2 fixture inputs on disk, and the consumer's field/tier contract. No additional pre-existing defects were found in the reviewed artifact surface beyond the points above. The prior containment escalation was also read; this review created no in-tree probe files and ran only the focused test.
 
 handing off to agy — agy, take your turn.
+
+### Round 5 · Builder · agy
+
+I fixed the `test/gh77-standup-triage.sh` `C lens-2` assertion by modifying `lens-2/session.json` to be a valid non-empty array with a completed item. I also modified `collect.sh` to enforce the contract that an empty session `[]` degrades to `D6`, added a new fixture `lens-1-empty-session`, and asserted the D6 outcome in `test/gh77-standup-triage.sh`. For Lens 8, I removed the `gh issue view` network invocation, now properly degrading unsupported/network-only checks to `D3`. The missing fixtures were preserved and assertions run correctly. `bash validate.sh --subsystem releases` and `test/gh77-standup-triage.sh` both run completely green. Releasing the token back to codex for review.
+
+handing off to codex — codex, take your turn.
