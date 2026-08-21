@@ -1,5 +1,5 @@
 # Relay: GH-108 rating-system plan — sharpen & QA
-STATUS: Open
+STATUS: Changes requested
 
 ## Task
 
@@ -24,3 +24,80 @@ Append `### Round N · Reviewer · codex` with your findings. End with
 `**Verdict:** Approved` or `**Verdict:** Changes requested`.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 1 · Reviewer · codex
+
+- **Blocking — the authoring grammar is not one grammar yet.** The plan names
+  `rated pri/sev/appeal/effort 70/40/55/60` at
+  `PROJECT/2-WORKING/GH-108-RATING-SYSTEM.md:71`, but calls the one-line form
+  `rated 70/40/55/60` at :93; :100 and :142 use the third description
+  `rated P/S/A/E`. Choose and state one canonical accepted form (or explicitly
+  state that both are accepted), including the precise `ovr` attachment grammar.
+  This does not alter the FROZEN axes or orientation. **Open-item verdict 1:**
+  the `rated` token has no existing numeric-form collision in `ROADMAP.md` or
+  `PROJECT/`; the bare numeric form is safe if its four-slash-number shape is
+  required, but the documentation contradiction must be fixed.
+
+- **Blocking — touchpoint 3 is materially more than “footer legend text only.”**
+  The proposed data contract requires `appeal` and `effort`
+  (`GH-108-RATING-SYSTEM.md:74,81-86`), while
+  `utils/timeline/RELEASES.html:292-293` and :405-406 hard-code only
+  `pri`, `sev`, `app`, and `calc`. It therefore neither displays `effort` nor
+  uses the FROZEN `appeal` key. `utils/timeline/export_timeline.py:59-76` also
+  selects no rating columns into its roadmap index, so the planned exporter
+  mapping needs that query/object change. Amend touchpoint 3 and phase B’s
+  size/tests to cover both score-line loops (cards and “what’s next”), and
+  either rename the legacy `app` rendering or explicitly map it. This is a
+  contradiction with the FROZEN vocabulary, not a request to revisit it.
+
+- **Blocking — migration mechanics require dump/rebuild changes, not only a
+  `schema_migrations` row.** `roadmap_items` is currently declared in
+  `utils/py/releases_app.py:581-599`; its canonical dump has a hard-coded
+  column list at :747-756, `load_dump()` has another at :2602-2612, and the
+  rebuild path executes only migrations 001/002 at :2649-2650. A third
+  migration must be applied on existing DBs and in rebuilds, and both logical
+  dump directions must carry the five nullable columns; otherwise a
+  `check --rebuild` loses ratings or cannot load a version-3 dump. The shell
+  merge resolver itself is generic and likely needs no logic change once that
+  app work lands. **Open-item verdict 2:** no — “no changes beyond the
+  schema_migrations row” is false; keep the GID-keyed grammar, but update the
+  migration chain plus dump/load/rebuild column handling and test a
+  dump→rebuild round trip.
+
+- **Blocking — parser coverage belongs in the existing GH-69 shadow suite as
+  well as any GH-32 coverage.** The plan maps parser assertions solely to
+  `test/gh32-releases-app.sh` (`GH-108-RATING-SYSTEM.md:103`), but
+  `test/gh69-roadmap-shadow.sh:1-14` owns `releases roadmap sync`, parser
+  behavior, no-op semantics, and its dump/rebuild round trip. Add the happy,
+  override, range-refusal, absence, both-vocabularies, and rebuild assertions
+  there (GH-32 may retain cross-ledger/migration coverage). Without that, the
+  stated touchpoint map does not match the repository’s actual test boundary.
+
+- **Optional — specify the effective-score field now.** The plan consistently
+  says `ovr` replaces `calc` for ranking (`GH-108-RATING-SYSTEM.md:57-60`),
+  but the proposed JSON exposes only `calc` plus `override` (:74) and calls
+  `sort_by(effective_score)` (:89) without defining a field. Either emit an
+  `effectiveScore` (recommended for consumers) or say consumers must compute
+  `override.value ?? calc`; this keeps the FROZEN rule intact.
+
+- **Optional — align the JSON invocation with the current exporter.** The exit
+  criterion names `export_timeline.py --json` (:135), but the current CLI has
+  no `--json` flag (`utils/timeline/export_timeline.py:442-489`); its normal
+  mode writes `<out>/data.json`. Make adding a stdout `--json` a named Phase-B
+  deliverable/test, or change the criterion to inspect the emitted data file.
+
+- **Out-of-scope — release-specific ratings are not needed for v1.**
+  `roadmap_items` is the per-task shadow, and the exporter enriches manifest
+  cards by `gh_number` (`utils/timeline/export_timeline.py:59-76`), so one task
+  rating correctly follows that task wherever it appears. **Open-item verdict
+  3:** keep `ovr` on `roadmap_items`; only introduce a release-manifest rating
+  if a future operator decision requires deliberately different scores for the
+  same task in different releases.
+
+**Verdict:** Changes requested
+
+## Log
+
+- Round 1 · codex: review completed; four blocking implementation-plan corrections recorded.
+VERDICT: FAIL
+Basis: The plan’s current renderer, migration/dump, and test-surface assumptions conflict with the cited repository code paths.
