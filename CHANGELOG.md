@@ -2,6 +2,17 @@
 
 All notable changes to this repo. Newest first. Dates are PDT.
 
+## [1.1.7] - 2026-08-20
+
+### Added
+- **GH-108: pri/sev/appeal/effort locked as the canonical task rating system (operator decision).**
+  Four axes, 1–100, higher = stronger reason to do it now; effort inverted (100 = easiest) so all
+  axes share one orientation; risk dropped (absorbed by effort + severity); supersedes cx/risk/eff
+  as the authoring convention. Added to the Daybreak 0.7.2 manifest via the CLI
+  (`mfi-01M0GT694QQ7Q952E5ZJ6SY1G8`) — Daybreak is in-band, so this entry is its canonical record
+  per the band rule. Next steps and open questions (calc weighting) tracked in
+  [#108](https://github.com/HiQS-Suite/XYZ-forge/issues/108).
+
 ## [1.1.6] - 2026-08-20
 
 ### Added

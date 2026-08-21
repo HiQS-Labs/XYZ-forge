@@ -1,12 +1,12 @@
 -- releases-app canonical dump (GH-32 grammar: GID-keyed rows, natural keys elsewhere,
 -- no integer PKs/FKs as values; rebuild renumbers deterministically)
--- generation: 40
+-- generation: 41
 -- table: schema_migrations
 INSERT INTO schema_migrations(version, applied_at) VALUES('1', '2026-08-19T01:32:22Z');
 INSERT INTO schema_migrations(version, applied_at) VALUES('2', '2026-08-19T18:55:40Z');
 -- table: settings
 INSERT INTO settings(key, value) VALUES('enforcement', 'lenient');
-INSERT INTO settings(key, value) VALUES('generation', '40');
+INSERT INTO settings(key, value) VALUES('generation', '41');
 INSERT INTO settings(key, value) VALUES('repo_slug', 'XYZ-forge');
 -- table: repos
 INSERT INTO repos(global_id, slug) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'XYZ-forge');
@@ -35,6 +35,7 @@ INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M0EC59
 INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M0EC5TSKTTCWHT85VARPQ79H', 'https://github.com/HiQS-Suite/XYZ-forge/issues/87', NULL, '2026-08-20T01:22:11Z');
 INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M0GKP4YK2HZHWG6VZ95WGZ1G', 'https://github.com/HiQS-Suite/XYZ-forge/issues/105', NULL, '2026-08-20T22:11:54Z');
 INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M0GRR1QGQ1GSY9E2ZMNZRBKY', 'https://github.com/HiQS-Suite/XYZ-forge/issues/107', NULL, '2026-08-20T23:40:20Z');
+INSERT INTO issue_refs(global_id, url, temp_id, created_at) VALUES('ref-01M0GT694W4DAYT0PEEAGFV4E4', 'https://github.com/HiQS-Suite/XYZ-forge/issues/108', NULL, '2026-08-21T00:05:35Z');
 -- table: marathons
 INSERT INTO marathons(global_id, repo_gid, tracking_ref_gid, status, created_at) VALUES('mar-01M0EC2ZXJCCJ88KASQPDBTBJ9', 'repo-01M0BTBRJ0PZF51EK6PCRJ20FS', 'ref-01M0EC2ZXN2SS1XD2N3E56GT18', 'planned', '2026-08-20T01:20:38Z');
 -- table: releases
@@ -64,6 +65,7 @@ INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state) VALUES(
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state) VALUES('mfi-01M0EC5TSHMQJC6B0N2CREPFP9', 'rel-01M0EC3AGK2DWYAC1WV7FMG2Q6', 'ref-01M0EC5TSKTTCWHT85VARPQ79H', 'open');
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state) VALUES('mfi-01M0GKPJYETS26BJH82XQ3QXAN', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M0GKP4YK2HZHWG6VZ95WGZ1G', 'open');
 INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state) VALUES('mfi-01M0GRR1QA591H5JEVF0TKXY9H', 'rel-01M0GKP4YGTHVTXHVV5WAP08B5', 'ref-01M0GRR1QGQ1GSY9E2ZMNZRBKY', 'open');
+INSERT INTO manifest_items(global_id, release_gid, issue_ref_gid, state) VALUES('mfi-01M0GT694QQ7Q952E5ZJ6SY1G8', 'rel-01M0EC3AGK2DWYAC1WV7FMG2Q6', 'ref-01M0GT694W4DAYT0PEEAGFV4E4', 'open');
 -- table: doc_lines
 INSERT INTO doc_lines(repo_gid, position, content) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '0', '# Major Releases');
 INSERT INTO doc_lines(repo_gid, position, content) VALUES('repo-01M0BTBRJ0PZF51EK6PCRJ20FS', '1', '');
@@ -299,3 +301,4 @@ INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_bef
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-20T22:33:24Z', '548de1c630af45f8b107e44e86187cf3', 'default', 'd362e2199b9c79351213b2f51910e6c8ff20e35f089274ddc3719437e34f6115', 'e665d8fd846ac5b9cc6073bdebfcc6b4b2f7d34e27525debb9d0404ff4f87fb1');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-add', 'mfi-01M0GRR1QA591H5JEVF0TKXY9H', '2026-08-20T23:40:20Z', 'e479f767f1834a349d33291da18bccbb', 'default', 'e665d8fd846ac5b9cc6073bdebfcc6b4b2f7d34e27525debb9d0404ff4f87fb1', '9451e25f6efd71339c8945ef8689409715b49c3b93fadda213b450b918e61b5d');
 INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('roadmap-sync', NULL, '2026-08-20T23:50:06Z', 'b56d0b67d6914c179f3d0362ffa80f30', 'default', '9451e25f6efd71339c8945ef8689409715b49c3b93fadda213b450b918e61b5d', '1dcbfe146e608b8a5e9af3200541c62b68678f53a180a31b94d72184423a5a19');
+INSERT INTO op_receipts(op, target_gid, at, txn_id, session_id, state_digest_before, state_digest_after) VALUES('manifest-add', 'mfi-01M0GT694QQ7Q952E5ZJ6SY1G8', '2026-08-21T00:05:35Z', '3969d61e2727448b97c8eb95a835b227', 'default', '1dcbfe146e608b8a5e9af3200541c62b68678f53a180a31b94d72184423a5a19', '5951537ad41be056bdfde3e639b0ff64c01da81b4dd09e8f6bc6233fd4c89df8');
