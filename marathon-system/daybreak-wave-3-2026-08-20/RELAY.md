@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-3-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -81,7 +81,7 @@ rails, rule 4. **Report what broke; do not smooth it.** A clean run that teaches
 weaker result.
 
 
-## Debug mantra (auto-triggered — 4 prior attempt(s) on this phase did not reach Approved)
+## Debug mantra (auto-triggered — 5 prior attempt(s) on this phase did not reach Approved)
 
 Before trying again, read `relay-automation/DEBUG-MANTRA.md` (relative to the harness root) and follow its four-step discipline: reproduce reliably, know the fail path, question the hypothesis, treat this round as a breadcrumb for the next one.
 Last recorded reason (`marathon-system/daybreak-wave-3-2026-08-20/ESCALATION.md`): `containment-violation (off-lane edit reverted by a turn-taker)`. Read it before re-guessing.
@@ -109,7 +109,7 @@ You are the BUILDER for this phase. Read the phase brief above and implement it.
 
 You are the REVIEWER for this phase. Read the latest builder block above AND review the artifact file(s) on disk: skills/standup/collect.sh,skills/standup/fixtures/,test/gh77-standup-triage.sh. REVIEW THE WHOLE FILE, NOT JUST THE DIFF (GH-268): a beta test had this loop reach 'Approved' in two rounds while an independent audit of the same branch found 20 issues (1 critical, 4 high) — every one of them in the pre-existing code the change sat on, which nobody had read. Pre-existing defects in a file you are touching are IN SCOPE; say so explicitly if you find none. DECLARE IT: your review block MUST contain a literal 'swept file: yes' or 'swept file: no' line — without it a reviewer that skipped the sweep is indistinguishable in the transcript from one that did it and found nothing, which is exactly how those 20 issues stayed invisible.
 1. Append a review block: `### Round N · Reviewer · codex` followed by your assessment.
-2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: codex (Reviewer)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick release MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN --agent codex --to agy
+2. If changes needed: add `**Verdict:** Changes requested`, update the `NEXT:` line to exactly `NEXT: agy (Builder)`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick release MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN --agent codex --to agy
 3. If satisfied: add `**Verdict:** Approved`, set `STATUS: Approved`, then: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick done MARATHON-DAYBREAK-WAVE-3-2026-08-20-TURN --agent codex
 4. Use this exact tick binary (run it from any directory) for all token operations: /Users/noelsaw/Documents/GH Repos/XYZ-forge/bin/tick
    Edit ONLY marathon-system/daybreak-wave-3-2026-08-20/RELAY.md (your review block + STATUS). Do NOT edit the artifact yourself — request changes instead. Do NOT run git.
@@ -124,19 +124,3 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
    agy, take your turn" when requesting changes, or "relay closed, no further turn needed" when
    approving. The beta report singled this out: the Reviewer turn did not tell the user to go back to the
    Producer, so the relay looked stalled when it was simply waiting. Do this EVERY round.
-
-### Round 1 · Builder · agy
-
-The implementation for Lens 4 (Open PRs) and Lens 5 (Issue state) is fully complete in `skills/standup/collect.sh`. All required test fixtures under `skills/standup/fixtures/lens-4/` and `skills/standup/fixtures/lens-5/` are present. 
-The test suite `test/gh77-standup-triage.sh` was run and it passes successfully (136 pass, 0 fail), covering all truncation limits, bounded reads, and degradations (D1, D2, D5) accurately.
-Cleaned up untracked temporary folders that tripped containment previously. Ready for review.
-
-### Round 1 · Reviewer · codex
-
-swept file: yes
-
-**Verdict:** Changes requested
-
-1. **High — Lens 5 silently omits session-derived issue numbers when `session.json` is malformed.** In `get_bounded_set`, the `json.load()`/walk failure is caught with `except Exception: pass`; the lens then returns `ok` using only the other sources. This violates the bounded-read rule: a failed session source must degrade loudly rather than silently produce an incomplete candidate set. Propagate this as the appropriate degraded result (D5 for an incomplete lens) and add a fixture/assertion for malformed session JSON (and, if distinct, invalid session shape) proving Lens 5 does not report `ok` after dropping those citations.
-
-The full `collect.sh` and `test/gh77-standup-triage.sh` files and the Lens 4/5 fixture trees were swept. I found no additional in-scope defects in the pre-existing portions reviewed. Static review only: I did not execute the collector or suite, per this reviewer turn's constraints.
