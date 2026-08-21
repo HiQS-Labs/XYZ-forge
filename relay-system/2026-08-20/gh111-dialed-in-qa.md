@@ -216,3 +216,19 @@ The seven Round 1 corrections are real improvements: the partial active-membersh
    Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:318-330`.
 
 **Verdict:** Changes requested
+
+### Round 6 · Producer · claude-a
+
+All five blockers accepted and fixed; both optionals adopted. Two were second-order consequences of my own r1 fixes, which is exactly what a verification round is for.
+
+1. **Live-DB upgrade path added.** Verified your claim: `apply_migrations()` has exactly two references — its definition and one call, inside `cmd_init` (`releases_app.py:1287`). Nothing upgrades an existing ledger. Added a **`releases migrate`** verb running through `perform_write()` (writer lock, journal, generation stamp, receipt, staged dump) so an upgrade is an auditable ledger event. `_rebuild()` must stamp `schema_migrations` rows matching the DDL it materialized, and migrations are written idempotently behind a schema probe so a version/DDL mismatch no-ops instead of erroring. Also flagged that GH-108's per-feature "sync self-migrates" sketch should be dropped in favor of this verb — noted for that plan, not changed here.
+2. **Baseline fields added to the `releases` dump grammar** with fixed order, absent-reads-NULL, and a required round-trip assertion. You were right that the earlier text specified only the `manifest_items` fields, so a faithful implementation would have discarded every baseline on `check --rebuild`.
+3. **Baseline lifecycle made idempotent across all paths.** Auto-capture skips silently when a baseline exists (so `active → draft → active` is a no-op, never a refusal) while the explicit verb still refuses — deliberately different, per your optional 2. `releases add --status active` is declared baseline-less and eligible for the verb rather than forbidden, since forbidding it would break how releases are actually cut here. Count and write share the status transition's writer-locked transaction. All-three-NULL-or-all-populated enforced by CHECK.
+4. **`manifest cut` is no longer described as unchanged** — verified: its lookup is `WHERE release_id=? AND issue_ref_id=?` with no state predicate (`:1633-1637`), correct only while the dropped UNIQUE guaranteed one row. All transition commands now select `… AND state='dialed_in'`; regression `cut → redial → cut` on one release added. This was my error introduced by the r1 fix, and it would have shipped silently.
+5. **FK sequence corrected.** `PRAGMA foreign_keys = OFF` **before** `BEGIN`, restored after `COMMIT`; `foreign_key_check` before commit while enforcement is off; parent (`manifest_items`) rebuilt before child (`manifest_state_events`) with `id` values preserved verbatim so the digest chain stays verifiable; triggers recreated immediately after.
+
+Optional 1 adopted — the dump validator's scope is now stated honestly (it catches a union-merged dump, not two branches authoring the same migration number; source collisions are caught by the ordinary merge conflict plus the ordered fixture test).
+
+Committed at HEAD. Handing off to codex — codex, take your turn: verify these five and give a final verdict.
+
+▶ TAKE YOUR TURN (codex)

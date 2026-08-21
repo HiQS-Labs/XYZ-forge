@@ -100,11 +100,25 @@ cheaper and safer than doing them in sequence:
 ## Schema changes — migration 004 (GH-108 owns 003; allocation is FIXED, see below)
 
 **This is a TABLE-REBUILD migration, not a set of `ALTER`s** (Aider/Qwen r1 B1). SQLite cannot alter
-a CHECK constraint in place, and two of the changes below rewrite CHECK vocabularies. Both affected
-tables use the standard 12-step procedure inside one transaction: create `*_new` with the final
-shape, `INSERT … SELECT` with the state mapping applied, drop the old table, rename, then recreate
-every index, trigger, and FK. `PRAGMA foreign_keys` off for the swap, `PRAGMA foreign_key_check`
-before commit.
+a CHECK constraint in place, and two of the changes below rewrite CHECK vocabularies.
+
+**Exact procedure (Codex r2 B5 — the earlier wording was not executable).** SQLite **ignores
+`PRAGMA foreign_keys` while a transaction is open**, so "off for the swap, inside the transaction"
+would silently leave enforcement on. The order is:
+
+1. `PRAGMA foreign_keys = OFF` — **before** `BEGIN`.
+2. `BEGIN IMMEDIATE`.
+3. Rebuild the **parent first**: `manifest_items` → create `_new` with the final shape, `INSERT …
+   SELECT` mapping `open` → `dialed_in` **and preserving `id` values verbatim** (the child's
+   `item_id` references them), drop, rename.
+4. Rebuild the **child**: `manifest_state_events` → same pattern, rows copied byte-for-byte with no
+   state remapping, then recreate `mse_no_update` / `mse_no_delete` and `idx_mse_item`.
+5. Recreate every index on `manifest_items`, add the new partial indexes.
+6. `PRAGMA foreign_key_check` — legal here, and meaningful, while enforcement is off.
+7. `COMMIT`, then `PRAGMA foreign_keys = ON`.
+
+Preserving the child's rows verbatim and its `item_id` linkage is what keeps the event digest chain
+verifiable across the rebuild; the round-trip test asserts the chain still verifies afterwards.
 
 ### `manifest_items`
 
@@ -122,6 +136,15 @@ before commit.
 6. `CREATE UNIQUE INDEX … ON manifest_items(issue_ref_id) WHERE state = 'dialed_in'` — exclusivity,
    active membership only. Cut rows never block a redial, on this release or another; multiple `cut`
    rows for one (release, issue) pair are legitimate history and are now permitted by dropping 2.
+
+**Consequence the earlier draft missed (Codex r2 B4): `manifest cut` is NOT unchanged.** Its row
+lookup is `SELECT * FROM manifest_items WHERE release_id=? AND issue_ref_id=?` with **no state
+predicate** (`releases_app.py:1633-1637`) — correct only because the dropped UNIQUE guaranteed one
+row. After cut-then-redial on the same release there are several, so `fetchone()` can return the
+historical `cut` row and the verb then refuses with "cut is terminal" while a live `dialed_in` row
+sits right there. **Every transition command (`cut`, `ship`) must select the unique
+`… AND state = 'dialed_in'` row** and refuse clearly when none exists. Regression case:
+cut → redial → cut on one release.
 
 ### `manifest_state_events` (r1 B3 — the plan previously ignored this table)
 
@@ -158,13 +181,39 @@ before commit.
 
 ### Dump / load / rebuild compatibility (r1 B4)
 
-- Dump grammar: the three new `manifest_items` columns are appended to that record's field order,
+- Dump grammar, `manifest_items`: the three new columns are appended to that record's field order,
   fixed, in the order listed above. Absent trailing fields read as NULL so a v3 dump still loads.
+- **Dump grammar, `releases` (Codex r2 B2 — previously omitted entirely):** `baseline_count`,
+  `baseline_at`, `baseline_source` are appended to the *release* record's field order, in that order,
+  with the same absent-reads-as-NULL rule. The dump writer and `load_dump()` enumerate `releases`
+  independently, so an implementation that followed the earlier text would have silently dropped
+  every baseline on `check --rebuild`. Round-trip preservation of these three is a required
+  assertion, not an implied one.
 - `load_dump()` **accepts `state='open'` from older dumps and maps it to `dialed_in`** on the way in;
   it emits only the new vocabulary. Old dumps therefore stay loadable — required, because dumps are
   the git-merge surface and a colleague's branch may carry a pre-migration dump for weeks.
 - `_rebuild()` applies the full migration chain (001 → 004) **before** loading, so the target schema
-  exists no matter which dump version arrives.
+  exists no matter which dump version arrives — **and must stamp `schema_migrations` rows matching
+  the DDL it actually materialized** (Codex r2 B1). Otherwise rebuilding a v2 dump yields a database
+  with v4 columns that still claims v2, and the next upgrade re-runs 003/004 DDL against a schema
+  that already has it. Belt and braces: every migration is written **idempotently** (guarded by a
+  schema probe, not by the version number alone) so a version/DDL mismatch degrades to a no-op
+  instead of an error.
+
+### The live-database upgrade path (Codex r2 B1 — the plan had none)
+
+`apply_migrations()` is called from **exactly one place: `cmd_init` (`releases_app.py:1287`)**.
+Ordinary commands on an existing database just `connect()`, and `check --rebuild` is merge
+resolution, not an upgrade. So nothing in the current CLI upgrades a live ledger, and the plan
+previously assumed a mechanism that does not exist.
+
+- Add an explicit **`releases migrate`** verb: applies every pending migration through
+  `perform_write()` — writer lock, intent journal, generation stamp, op_receipt, staged dump — so an
+  upgrade is an auditable ledger event like any other write, not a silent schema mutation.
+- It is idempotent: with nothing pending it is a clean no-op that still reports the current version.
+- Feature commands do **not** self-migrate. (GH-108's plan sketched a per-feature "sync detects
+  version 3 missing and runs a 003 helper" path; with a real `migrate` verb that special case should
+  be dropped there rather than duplicated here — flagged for that plan, not changed by this one.)
 - All three hard-coded column lists must learn the new fields (`releases_app.py:747-756`,
   `:2602-2612`, `:2649-2650`) — the same trap GH-108's review found.
 
@@ -176,7 +225,10 @@ before commit.
   first simply leaves a gap the other fills.
 - `validate_merged_dump()` gains a rule **refusing duplicate `schema_migrations.version` values** in
   a merged dump — the failure a git merge of two independently-numbered branches would otherwise
-  produce silently.
+  produce silently. **Scope it honestly (Codex r2 optional 1):** this catches a union-merged *dump*,
+  not two source branches that both authored a migration numbered 003. Source-level collision is
+  caught by the ordinary `releases_app.py` merge conflict plus the ordered v2→003→004 fixture test;
+  the dump validator must not be described as broader collision prevention than it is.
 - A test lands both migrations together and asserts the chain applies in order from a v2 fixture.
 
 ## Prose migration — and the homonym trap
@@ -232,13 +284,30 @@ actively lie in the common case.
 
 The rule instead:
 
-1. **Auto-capture on the `draft → active` transition when the manifest is non-empty.** This is the
-   intended path: dial the work in, then activate.
+1. **Auto-capture on the `draft → active` transition when the manifest is non-empty**, and only when
+   all three baseline fields are currently unset. This is the intended path: dial the work in, then
+   activate.
 2. **If the manifest is empty at that transition, no baseline is taken** and the release is left
    explicitly baseline-less rather than being given a misleading 0.
 3. **`releases baseline --gid <rel>`** captures it later for case 2 — one command, refused if a
    baseline already exists. This is the only new ceremony the model introduces, it is optional, and
    skipping it degrades to "no baseline shown" rather than to a wrong number.
+
+**Idempotency and the other activation paths (Codex r2 B3):**
+
+- **Re-activation is a silent no-op, not a refusal.** `active → draft → active` must preserve the
+  original snapshot without erroring — the auto-capture path *skips* when a baseline exists, while
+  the explicit `releases baseline` verb *refuses*. Those are deliberately different: an accidental
+  second capture should be impossible, but a legitimate status round-trip must not fail.
+- **`releases add --status active` starts empty by construction** — there is no `draft → active`
+  transition to hook, and no manifest yet. That path is declared **baseline-less**, eligible for
+  `releases baseline` afterwards. It is not forbidden; forbidding it would break the way releases are
+  actually cut in this repo.
+- **The count and the baseline write happen in the SAME writer-locked transaction as the status
+  transition** — otherwise a concurrent dial-in between the two lands a baseline that never existed
+  as a real manifest state.
+- **All three fields are all-NULL or all-populated**, enforced by a table CHECK. A partial baseline
+  (count without provenance, say) must not be able to leak into rendering.
 
 ### Reporting
 
@@ -260,10 +329,10 @@ the mechanism did not witness it. Draft releases get no baseline; they have not 
 
 | # | Component | Change | Size |
 |---|---|---|---|
-| 1 | `utils/py/releases_app.py` | migration 004 as a **table rebuild** of BOTH `manifest_items` and `manifest_state_events` (CHECK vocabularies cannot be altered in place), plus the `releases` marathon index; wired into the chain + both dump directions + `load_dump()`'s `open`→`dialed_in` acceptance; `validate_merged_dump()` duplicate-version rule; `manifest dial-in` (renamed from `add`, `--reason` required), `manifest ship` (`--evidence`, stored as the NOT NULL event reason), `manifest cut` unchanged; transition legality enforced; state/event coupling preserved in ONE transaction per `:515-518`; **baseline capture** — three `releases` columns, auto-capture on `draft → active` when the manifest is non-empty, write-once refusal, `releases baseline` verb for the activate-first case, and the flagged backfill for currently-active releases | **XL** |
+| 1 | `utils/py/releases_app.py` | migration 004 as a **table rebuild** of BOTH `manifest_items` and `manifest_state_events` (CHECK vocabularies cannot be altered in place), plus the `releases` marathon index; wired into the chain + both dump directions + `load_dump()`'s `open`→`dialed_in` acceptance; `validate_merged_dump()` duplicate-version rule; `manifest dial-in` (renamed from `add`, `--reason` required), `manifest ship` (`--evidence`, stored as the NOT NULL event reason), **`manifest cut` amended to select the `dialed_in` row** (it currently has no state predicate and breaks once the UNIQUE is dropped); **`releases migrate` — the live-DB upgrade path, which does not exist today (`apply_migrations()` is `cmd_init`-only)** — run through `perform_write()`, idempotent, with `_rebuild()` stamping migration rows to match the DDL it materialized; transition legality enforced; state/event coupling preserved in ONE transaction per `:515-518`; **baseline capture** — three `releases` columns, auto-capture on `draft → active` when the manifest is non-empty, write-once refusal, `releases baseline` verb for the activate-first case, and the flagged backfill for currently-active releases | **XL** |
 | 2 | `utils/timeline/export_timeline.py` | group marathon members by the new `marathon_id`, non-members as siblings (#109); render `shipped` members with the done marker; denominator decision (below); emit `baseline: {count, at, source}` and the derived growth figure per release, and render both numbers on the card — a baseline-less release shows progress only, with no placeholder | **M** |
 | 3 | `RELEASES.md` | preamble rule rewritten; active/draft blocks converted; **shipped blocks untouched**; GH-308 "frozen twins" prose untouched | M (prose) |
-| 4 | `test/gh32-releases-app.sh` (+ `test/gh69-roadmap-shadow.sh` where sync is involved) | transitions incl. illegal ones; exclusivity refusal (dial a task into a second release → refused **by name**, citing the holding release); cut-then-redial on the SAME release allowed (proves the dropped UNIQUE); cut-then-redial elsewhere allowed; shipped-then-dial-elsewhere allowed; marathon exclusivity; ship-without-evidence refused; **v2 fixture → 003+004 chain applied in order**; **merged dump with duplicate `schema_migrations.version` refused**; old dump carrying `state='open'` loads and maps; dump→rebuild round trip preserving every new column **and the event digest chain**; a release with a marathon plus a non-member item renders the non-member outside the box; **baseline: auto-capture on activate with a non-empty manifest, NO capture (not zero) when the manifest is empty, second-capture refused, `releases baseline` fills the empty case, growth goes negative when cuts exceed additions, and the migration backfill flags `backfilled` not `observed`** | **L** |
+| 4 | `test/gh32-releases-app.sh` (+ `test/gh69-roadmap-shadow.sh` where sync is involved) | transitions incl. illegal ones; exclusivity refusal (dial a task into a second release → refused **by name**, citing the holding release); cut-then-redial on the SAME release allowed (proves the dropped UNIQUE); cut-then-redial elsewhere allowed; shipped-then-dial-elsewhere allowed; marathon exclusivity; ship-without-evidence refused; **v2 fixture → 003+004 chain applied in order**; **merged dump with duplicate `schema_migrations.version` refused**; old dump carrying `state='open'` loads and maps; dump→rebuild round trip preserving every new column **and the event digest chain**; a release with a marathon plus a non-member item renders the non-member outside the box; **baseline: auto-capture on activate with a non-empty manifest, NO capture (not zero) when the manifest is empty, `active→draft→active` preserves the original silently, explicit second capture refused, `releases add --status active` lands baseline-less, all-NULL-or-all-populated enforced, `releases baseline` fills the empty case, growth goes negative when cuts exceed additions, baseline fields survive a dump round trip, and the migration backfill flags `backfilled` not `observed`**; **cut → redial → cut on ONE release** (proves transition commands select the live row); **`releases migrate` upgrades a v2 fixture and is a no-op on a current DB; a rebuilt v2 dump reports v4, not v2** | **L** |
 | 5 | `RELEASES-DB-FAQS.md` | document the model (currently zero freeze mentions — it never described the old one) | S |
 
 **Denominator — DECIDED (r1 optional 3, adopted):** `itemsTotal = dialed_in + shipped`, **cut rows
