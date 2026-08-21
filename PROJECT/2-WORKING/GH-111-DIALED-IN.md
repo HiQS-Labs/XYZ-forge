@@ -141,6 +141,11 @@ before commit.
 
 9. `CREATE UNIQUE INDEX … ON releases(marathon_id) WHERE marathon_id IS NOT NULL` — a marathon
    belongs to at most one release.
+10. `baseline_count INTEGER`, `baseline_at TEXT`, `baseline_source TEXT CHECK (baseline_source IN
+    ('observed','backfilled'))` — the adopted baseline (see "Measuring commitment growth"). These are
+    plain column additions and do **not** require rebuilding `releases`; only the marathon index is
+    new alongside them. Write-once: a second capture is refused. Backfilled for currently-`active`
+    releases during the migration, flagged as such.
 
 ### Lifecycle rules the indexes imply (r1 B7 — state them, don't leave them emergent)
 
@@ -200,25 +205,65 @@ Migration rule for RELEASES.md:
 - **The preamble rule at :50** is rewritten to describe dialed-in membership, with one sentence
   recording that pre-2026-08-20 releases used a freeze model and their blocks reflect it.
 
-## Measuring commitment growth (RECOMMENDED — operator has not ruled)
+## Measuring commitment growth — BASELINE COUNT (operator ADOPTED 2026-08-20)
 
 Freeze bought a fixed denominator, which is what made "N of M" honest. Dialed-in gives that up unless
-something pins a baseline. Proposal: record `baseline_dialed_in_count` on the release when it goes
-active, then report two numbers — **progress against commitment** and **commitment growth since
-baseline**. That is strictly more information than freeze provided: scope creep becomes a measured
-fact instead of something forbidden-then-worked-around.
+something pins a baseline. The release records what it was committed to at kickoff, and thereafter
+reports **two** numbers: progress against that commitment, and how much the commitment itself grew.
+Scope creep becomes a measured fact instead of something forbidden-then-worked-around.
 
-This is my recommendation, not a locked decision. It is separable — the plan works without it, and it
-can be added later without touching the state machine. Flagged for the operator, and for the review.
+### Storage
+
+- `releases.baseline_count INTEGER` — dialed-in + shipped members at the kickoff moment.
+- `releases.baseline_at TEXT` — when the snapshot was taken.
+- `releases.baseline_source TEXT CHECK (baseline_source IN ('observed','backfilled'))` — how the
+  number was obtained. See Backfill.
+
+Both count columns are **write-once**. Overwriting a baseline would erase the exact thing it exists
+to measure, so a second capture is refused, not silently applied.
+
+### When the snapshot is taken — and the ordering hazard it must avoid
+
+The naive rule ("snapshot when the release goes active") is **wrong for this repo, and would have
+produced a baseline of 0 for Daybreak.** Releases are created as a row first and have their manifest
+dialed in afterwards, so at the instant status flips to `active` the manifest is typically still
+empty. A 0 baseline would then report every real commitment as scope growth — the metric would
+actively lie in the common case.
+
+The rule instead:
+
+1. **Auto-capture on the `draft → active` transition when the manifest is non-empty.** This is the
+   intended path: dial the work in, then activate.
+2. **If the manifest is empty at that transition, no baseline is taken** and the release is left
+   explicitly baseline-less rather than being given a misleading 0.
+3. **`releases baseline --gid <rel>`** captures it later for case 2 — one command, refused if a
+   baseline already exists. This is the only new ceremony the model introduces, it is optional, and
+   skipping it degrades to "no baseline shown" rather than to a wrong number.
+
+### Reporting
+
+- **Progress:** `shipped / (dialed_in + shipped)` — against the live denominator (cut excluded, per
+  the decision above).
+- **Growth:** `(dialed_in + shipped) − baseline_count`. Positive is scope added since kickoff;
+  **negative is legitimate and meaningful** — it means more was cut than added, i.e. scope shrank.
+- A release with no baseline shows progress only, with no growth figure and no placeholder zero.
+
+### Backfill for releases already underway
+
+Releases that are `active` at migration time get `baseline_count` = their current dialed-in + shipped
+count, with `baseline_source = 'backfilled'` — recorded as **inferred, not observed**, so nobody
+later reads it as evidence of what was actually committed at kickoff. Today that means Daybreak gets
+a baseline of 9, which happens to be exactly right (#79–#87), but the flag stays `backfilled` because
+the mechanism did not witness it. Draft releases get no baseline; they have not kicked off.
 
 ## Touchpoints
 
 | # | Component | Change | Size |
 |---|---|---|---|
-| 1 | `utils/py/releases_app.py` | migration 004 as a **table rebuild** of BOTH `manifest_items` and `manifest_state_events` (CHECK vocabularies cannot be altered in place), plus the `releases` marathon index; wired into the chain + both dump directions + `load_dump()`'s `open`→`dialed_in` acceptance; `validate_merged_dump()` duplicate-version rule; `manifest dial-in` (renamed from `add`, `--reason` required), `manifest ship` (`--evidence`, stored as the NOT NULL event reason), `manifest cut` unchanged; transition legality enforced; state/event coupling preserved in ONE transaction per `:515-518` | **XL** |
-| 2 | `utils/timeline/export_timeline.py` | group marathon members by the new `marathon_id`, non-members as siblings (#109); render `shipped` members with the done marker; denominator decision (below) | S+ |
+| 1 | `utils/py/releases_app.py` | migration 004 as a **table rebuild** of BOTH `manifest_items` and `manifest_state_events` (CHECK vocabularies cannot be altered in place), plus the `releases` marathon index; wired into the chain + both dump directions + `load_dump()`'s `open`→`dialed_in` acceptance; `validate_merged_dump()` duplicate-version rule; `manifest dial-in` (renamed from `add`, `--reason` required), `manifest ship` (`--evidence`, stored as the NOT NULL event reason), `manifest cut` unchanged; transition legality enforced; state/event coupling preserved in ONE transaction per `:515-518`; **baseline capture** — three `releases` columns, auto-capture on `draft → active` when the manifest is non-empty, write-once refusal, `releases baseline` verb for the activate-first case, and the flagged backfill for currently-active releases | **XL** |
+| 2 | `utils/timeline/export_timeline.py` | group marathon members by the new `marathon_id`, non-members as siblings (#109); render `shipped` members with the done marker; denominator decision (below); emit `baseline: {count, at, source}` and the derived growth figure per release, and render both numbers on the card — a baseline-less release shows progress only, with no placeholder | **M** |
 | 3 | `RELEASES.md` | preamble rule rewritten; active/draft blocks converted; **shipped blocks untouched**; GH-308 "frozen twins" prose untouched | M (prose) |
-| 4 | `test/gh32-releases-app.sh` (+ `test/gh69-roadmap-shadow.sh` where sync is involved) | transitions incl. illegal ones; exclusivity refusal (dial a task into a second release → refused **by name**, citing the holding release); cut-then-redial on the SAME release allowed (proves the dropped UNIQUE); cut-then-redial elsewhere allowed; shipped-then-dial-elsewhere allowed; marathon exclusivity; ship-without-evidence refused; **v2 fixture → 003+004 chain applied in order**; **merged dump with duplicate `schema_migrations.version` refused**; old dump carrying `state='open'` loads and maps; dump→rebuild round trip preserving every new column **and the event digest chain**; a release with a marathon plus a non-member item renders the non-member outside the box | **L** |
+| 4 | `test/gh32-releases-app.sh` (+ `test/gh69-roadmap-shadow.sh` where sync is involved) | transitions incl. illegal ones; exclusivity refusal (dial a task into a second release → refused **by name**, citing the holding release); cut-then-redial on the SAME release allowed (proves the dropped UNIQUE); cut-then-redial elsewhere allowed; shipped-then-dial-elsewhere allowed; marathon exclusivity; ship-without-evidence refused; **v2 fixture → 003+004 chain applied in order**; **merged dump with duplicate `schema_migrations.version` refused**; old dump carrying `state='open'` loads and maps; dump→rebuild round trip preserving every new column **and the event digest chain**; a release with a marathon plus a non-member item renders the non-member outside the box; **baseline: auto-capture on activate with a non-empty manifest, NO capture (not zero) when the manifest is empty, second-capture refused, `releases baseline` fills the empty case, growth goes negative when cuts exceed additions, and the migration backfill flags `backfilled` not `observed`** | **L** |
 | 5 | `RELEASES-DB-FAQS.md` | document the model (currently zero freeze mentions — it never described the old one) | S |
 
 **Denominator — DECIDED (r1 optional 3, adopted):** `itemsTotal = dialed_in + shipped`, **cut rows
@@ -254,9 +299,21 @@ through the 003+004 chain in order; a merged dump carrying duplicate `schema_mig
 values is refused; a pre-migration dump with `state='open'` still loads and maps to `dialed_in`; a
 `check --rebuild` round trip preserves every new column **and leaves the manifest event digest chain
 verifying**; the timeline renders a non-marathon manifest item outside the marathon box (closing
-#109) and counts `dialed_in + shipped` only; no `Manifest: FROZEN` line remains on an active or draft
-release, every shipped block still carries its original line verbatim, and
+#109) and counts `dialed_in + shipped` only; **a release activated with a non-empty manifest captures
+its baseline automatically and one activated empty captures none rather than zero, Daybreak carries a
+backfilled baseline of 9 flagged `backfilled`, and the timeline shows progress plus growth for
+baselined releases and progress alone for the rest**; no `Manifest: FROZEN` line remains on an active
+or draft release, every shipped block still carries its original line verbatim, and
 `test/gh308-frozen-twin-guard.sh` is untouched and green.
+
+## Review status
+
+**Round 1 (Aider · Qwen 3.8 Max) delivered seven blockers; all were verified against the live schema
+and applied.** The verification round FAILED — the lane produced no findings and its salvage appended
+~1,200 lines of raw reasoning to the relay file; the operator stopped the lane and the route is now
+graded **C** for reviewer use in `HARNESS-MODELS-REGISTRY.md`. **The r1 fixes, and the baseline design
+added after them, are therefore UNVERIFIED by any second reader.** Routing a verification round to
+Codex is the outstanding recommendation.
 
 ## Review verdicts (Aider · Qwen 3.8 Max, r1 2026-08-20 — all five open items resolved)
 
@@ -267,14 +324,11 @@ release, every shipped block still carries its original line verbatim, and
    ambiguity the reviewer flagged is now stated explicitly above (links are permanent).
 3. **`dial_reason`: keep it required** on new dial-ins — it carries the deliberateness the admission
    rule used to supply. Migrated rows stay NULL.
-4. **Baseline counting: reviewer says ADOPT** — losing freeze's fixed denominator is a real
-   regression risk and a baseline makes scope growth measurable instead of forbidden. **Still
-   pending the operator**, who has not ruled on this; a reviewer's concurrence is not an operator
-   decision, and this plan does not treat it as one. Until then it stays a recommendation, and the
-   plan is implementable without it.
+4. **Baseline counting: ADOPTED by the operator 2026-08-20**, with the reviewer concurring. Now a
+   locked part of this plan — see "Measuring commitment growth" for the full design, including the
+   kickoff-ordering hazard that the naive "snapshot on activate" rule would have walked into.
 5. **Denominator: exclude cut items** — decided and folded into touchpoint 2 above.
 
 ## Still open for the operator
 
-- **Baseline counting** (item 4 above) — adopt, defer, or drop.
-- **Where #108 lands**, unrelated to this plan but blocked behind the same framing question.
+- **Where #108 lands** — unrelated to this plan's mechanics, but waiting on the same framing work.
