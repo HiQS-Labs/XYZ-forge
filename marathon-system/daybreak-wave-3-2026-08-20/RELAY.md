@@ -130,3 +130,13 @@ You are the REVIEWER for this phase. Read the latest builder block above AND rev
 The implementation for Lens 4 (Open PRs) and Lens 5 (Issue state) is fully complete in `skills/standup/collect.sh`. All required test fixtures under `skills/standup/fixtures/lens-4/` and `skills/standup/fixtures/lens-5/` are present. 
 The test suite `test/gh77-standup-triage.sh` was run and it passes successfully (136 pass, 0 fail), covering all truncation limits, bounded reads, and degradations (D1, D2, D5) accurately.
 Cleaned up untracked temporary folders that tripped containment previously. Ready for review.
+
+### Round 1 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — Lens 5 silently omits session-derived issue numbers when `session.json` is malformed.** In `get_bounded_set`, the `json.load()`/walk failure is caught with `except Exception: pass`; the lens then returns `ok` using only the other sources. This violates the bounded-read rule: a failed session source must degrade loudly rather than silently produce an incomplete candidate set. Propagate this as the appropriate degraded result (D5 for an incomplete lens) and add a fixture/assertion for malformed session JSON (and, if distinct, invalid session shape) proving Lens 5 does not report `ok` after dropping those citations.
+
+The full `collect.sh` and `test/gh77-standup-triage.sh` files and the Lens 4/5 fixture trees were swept. I found no additional in-scope defects in the pre-existing portions reviewed. Static review only: I did not execute the collector or suite, per this reviewer turn's constraints.
