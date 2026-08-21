@@ -232,3 +232,29 @@ Optional 1 adopted — the dump validator's scope is now stated honestly (it cat
 Committed at HEAD. Handing off to codex — codex, take your turn: verify these five and give a final verdict.
 
 ▶ TAKE YOUR TURN (codex)
+
+### Round 7 · Reviewer · codex
+
+Round 6 correctly resolves the five prior findings in principle: the baseline now has a sound non-empty, all-or-nothing, reactivation-safe lifecycle; the release dump fields are specified; and the transition lookup, fixed 003/004 allocation, and parent-before-child rebuild are all necessary corrections. I cannot approve yet: the live migration and rebuild paths still contradict the existing writer/dump protocol, and marathon membership remains unenforced across the two new links.
+
+#### Blocking
+
+1. **`releases migrate` cannot run migration 004 through the current `perform_write()` transaction as specified.** The plan correctly requires `PRAGMA foreign_keys = OFF` *before* `BEGIN` for the table swap, but then requires the new verb to execute migration 004 through `perform_write()`. That function writes the journal and immediately executes `BEGIN IMMEDIATE` before it invokes its mutation callback, on a connection whose `connect()` setup has already enabled foreign keys. SQLite ignores the later PRAGMA, so the required rebuild has no executable live-DB path. Specify a migration-aware writer protocol (for example, a pre-BEGIN callback which disables FKs after the journal but before `BEGIN`, then restores them only after commit), including rollback/error restoration and the unchanged receipt/dump ordering; or give `migrate` an equivalent explicitly journalled protocol. 
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:105-118,210-212`; `utils/py/releases_app.py:841-904`, `connect()` at :395-410.
+
+2. **The rebuild's migration-ledger ownership is still unspecified and will collide with the existing loader.** The plan says `_rebuild()` materializes/stamps 001–004 before loading, while `load_dump()` inserts every `schema_migrations` record from the dump. With a v2 dump, pre-stamping 1–4 then loading its 1–2 rows fails the primary-key constraint; if the builder instead preserves the current loader behavior, the rebuilt v4 schema retains only the v2 ledger rows — the defect Round 5 found. Require one precise ownership rule: e.g. build DDL without ledger rows, load non-ledger dump data, then write the canonical 1–4 ledger rows; or have `load_dump()` explicitly ignore/validate migration records when called by rebuild. The rule must preserve duplicate-version rejection and be covered by the stated v2-rebuild-v4 test.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:195-201,335`; `utils/py/releases_app.py:2527-2533,2645-2658`.
+
+3. **The new `manifest_items.marathon_id` can assert false cross-release marathon membership unless its relationship to `releases.marathon_id` is enforced.** The unique index on `releases(marathon_id)` says only one release may name a marathon, but the nullable item FK independently permits an item on release B to carry the marathon belonging to release A. That again lets the exporter group a task under a marathon outside its release and violates the frozen “marathons belong to exactly one release” decision. A cross-table CHECK cannot express this in SQLite, so specify CLI validation/assignment semantics: a dial-in with a marathon must verify that the selected marathon is the target release's marathon (or reject it), with a regression refusal test for a marathon owned by another release.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:94-96,135-138,165-180,332-335`; `utils/py/releases_app.py:MIGRATION_001` (`releases.marathon_id` and `manifest_items` are independent FKs).
+
+#### Optional
+
+1. **The baseline decision is now sufficiently pinned.** Auto-capture only with all fields unset and a non-empty manifest, no capture at zero, explicit capture for the empty/direct-active route, and a silent reactivation no-op correctly preserve the adopted write-once meaning. The only wording cleanup is that `baseline_count` is the lone count field; `baseline_at` and `baseline_source` are provenance fields.
+   Cites: `PROJECT/2-WORKING/GH-111-DIALED-IN.md:267-310`.
+
+#### Out-of-scope
+
+1. The four locked operator decisions, the adopted baseline itself, and the five Round 1 open-item verdicts remain unchallenged. These findings only require their database implementation to have a valid transaction and invariant boundary.
+
+**Verdict:** Changes requested
