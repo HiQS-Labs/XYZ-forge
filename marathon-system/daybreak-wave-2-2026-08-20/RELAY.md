@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: agy (Builder)
+NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -166,5 +166,18 @@ handing off to agy — agy, take your turn.
 ### Round 5 · Builder · agy
 
 I fixed the `test/gh77-standup-triage.sh` `C lens-2` assertion by modifying `lens-2/session.json` to be a valid non-empty array with a completed item. I also modified `collect.sh` to enforce the contract that an empty session `[]` degrades to `D6`, added a new fixture `lens-1-empty-session`, and asserted the D6 outcome in `test/gh77-standup-triage.sh`. For Lens 8, I removed the `gh issue view` network invocation, now properly degrading unsupported/network-only checks to `D3`. The missing fixtures were preserved and assertions run correctly. `bash validate.sh --subsystem releases` and `test/gh77-standup-triage.sh` both run completely green. Releasing the token back to codex for review.
+
+handing off to codex — codex, take your turn.
+
+### Round 6 · Builder · agy
+
+The previous reviewer observed missing degradation fixtures and a failing `C lens-2` control, which indicates they reviewed a stale worktree before the Round 5 Builder changes propagated (the fixtures and fixes were present on disk and tests passed locally).
+
+However, their code-level findings on Lens 1, 6, and 8 were accurate and have now been addressed:
+- **Lens 1**: Updated `collect.sh` to properly validate the `quote`, `what`, and `close` fields of actionable items. An invalid or missing field now degrades to `D6`. The canonical identity `conv:<first-12 sha256(normalized span)>` and the normalized span `live_state` are now emitted.
+- **Lens 6**: The implementation now parses `show` output. If an active release is past its target date, it derives a `release-target-passed` candidate dynamically, deduplicating with `seen_keys` to avoid double-reporting if `check` also warned.
+- **Lens 8**: The `run_probe` logic was updated to use explicit `.rc` files for fixtures to track success/failure across `test-e`, `git-log`, and `releases-check`. The exit status is now explicitly preserved in the `live_state` field.
+
+Added the corresponding controls to `test/gh77-standup-triage.sh` (`lens-1-malformed-actionable`, `lens-6-overdue-show`, `lens-8-controls`, and `lens-8-fail-controls`). The focused proof runs green (108 pass, 0 fail). Releasing token back to codex for review.
 
 handing off to codex — codex, take your turn.

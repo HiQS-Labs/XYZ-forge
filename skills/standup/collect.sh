@@ -585,22 +585,29 @@ cands = []
 for item in data:
     if item.get("completed") or item.get("parked"):
         continue
-    quote = item.get("quote", "")
-    what = item.get("what", "")
-    close = item.get("close", "")
+    quote = item.get("quote")
+    what = item.get("what")
+    close = item.get("close")
+    if not isinstance(quote, str) or not isinstance(what, str) or not isinstance(close, str):
+        print("D6")
+        sys.exit(0)
+        
     norm = re.sub(r"[^\w\s]", "", quote.lower())
     norm = re.sub(r"\s+", " ", norm).strip()
     if not norm:
-        continue
+        print("D6")
+        sys.exit(0)
+        
+    sha = hashlib.sha256(norm.encode("utf-8")).hexdigest()[:12]
     cands.append({
-        "key": f"quote:{norm}",
+        "key": f"conv:{sha}",
         "what": what,
         "evidence_type": "quote",
         "evidence_payload": norm,
         "staleness": 0,
         "close": close,
         "close_kind": "inspect" if close.startswith("inspect:") else "command",
-        "live_state": "session-mention"
+        "live_state": norm
     })
 print(json.dumps(cands))
 ' "$SESSION_FILE")
@@ -618,7 +625,7 @@ lens6_status="ok"
 lens6_deg="null"
 lens6_cands="[]"
 out6=$(python3 -c '
-import sys, json, re, calendar, datetime
+import sys, os, time, json, re, calendar, datetime
 def parse_date(d):
     try:
         dt = datetime.datetime.strptime(d, "%Y-%m-%d")
@@ -670,58 +677,100 @@ def parse_list(out):
 parse_list(out_drf)
 parse_list(out_act)
 
+seen_keys = set()
+
 for v in versions:
     rc_show, out_show = run_mock(f"lens6_show_{v.replace(chr(46), chr(95))}", ["python3", "utils/py/releases_app.py", "show", "--version", v])
     if rc_show != 0 or not out_show.startswith("GID:"):
         print("D5")
         sys.exit(0)
+        
+    show_fields = {}
+    for line in out_show.splitlines():
+        if ":" in line:
+            k, val = line.split(":", 1)
+            show_fields[k.strip()] = val.strip()
+            
+    st = show_fields.get("Status")
+    td = show_fields.get("Target Date")
+    if st == "active" and td and td != "None" and parse_date(td):
+        target_ts = parse_date(td)
+        now_ts = int(time.time())
+        env_now = os.environ.get("RELEASES_APP_NOW", "")
+        if env_now:
+            now_ts = parse_date(env_now[:10]) or now_ts
+        if now_ts > target_ts:
+            rule_name = "release-target-passed"
+            key = f"rule:{rule_name}:{v}"
+            if key not in seen_keys:
+                cands.append({
+                    "key": key,
+                    "what": f"ship {v}",
+                    "evidence_type": "rule",
+                    "evidence_payload": f"{rule_name}@{v}",
+                    "rule_name": rule_name,
+                    "staleness": target_ts,
+                    "close": f"python3 utils/py/releases_app.py ship {v}",
+                    "close_kind": "command",
+                    "live_state": f"warn: rule={rule_name}: release {v} is active past target of {td}"
+                })
+                seen_keys.add(key)
 
 for line in out_chk.splitlines():
     if line.startswith("FAIL: rule="):
         rule_str = line.split(":", 2)[1].strip()
         rule_name = rule_str[5:]
-        cands.append({
-            "key": f"rule:{rule_name}:db",
-            "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
-            "evidence_type": "rule",
-            "evidence_payload": f"{rule_name}@db",
-            "rule_name": rule_name,
-            "staleness": None,
-            "close": "python3 utils/py/releases_app.py check --rebuild",
-            "close_kind": "command",
-            "live_state": line.strip()
-        })
+        key = f"rule:{rule_name}:db"
+        if key not in seen_keys:
+            cands.append({
+                "key": key,
+                "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
+                "evidence_type": "rule",
+                "evidence_payload": f"{rule_name}@db",
+                "rule_name": rule_name,
+                "staleness": None,
+                "close": "python3 utils/py/releases_app.py check --rebuild",
+                "close_kind": "command",
+                "live_state": line.strip()
+            })
+            seen_keys.add(key)
     elif line.startswith("warn: rule="):
         m = re.search(r"warn: rule=([^:]+):\s*([^\s]+)\s+.*?target of ([0-9]{4}-[0-9]{2}-[0-9]{2})", line)
         if m:
             rule_name = m.group(1)
             v = m.group(2)
             td = parse_date(m.group(3))
-            cands.append({
-                "key": f"rule:{rule_name}:{v}",
-                "what": f"ship {v}" if "overdue" in rule_name or "target" in rule_name else f"resolve {rule_name.replace(chr(45), chr(32))}",
-                "evidence_type": "rule",
-                "evidence_payload": f"{rule_name}@{v}",
-                "rule_name": rule_name,
-                "staleness": td,
-                "close": f"python3 utils/py/releases_app.py ship {v}",
-                "close_kind": "command",
-                "live_state": line.strip()
-            })
+            key = f"rule:{rule_name}:{v}"
+            if key not in seen_keys:
+                cands.append({
+                    "key": key,
+                    "what": f"ship {v}" if "overdue" in rule_name or "target" in rule_name else f"resolve {rule_name.replace(chr(45), chr(32))}",
+                    "evidence_type": "rule",
+                    "evidence_payload": f"{rule_name}@{v}",
+                    "rule_name": rule_name,
+                    "staleness": td,
+                    "close": f"python3 utils/py/releases_app.py ship {v}",
+                    "close_kind": "command",
+                    "live_state": line.strip()
+                })
+                seen_keys.add(key)
         else:
             parts = line.split(":", 2)
             rule_name = parts[1].strip()[5:]
-            cands.append({
-                "key": f"rule:{rule_name}:db",
-                "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
-                "evidence_type": "rule",
-                "evidence_payload": f"{rule_name}@db",
-                "rule_name": rule_name,
-                "staleness": None,
-                "close": "python3 utils/py/releases_app.py check",
-                "close_kind": "command",
-                "live_state": line.strip()
-            })
+            key = f"rule:{rule_name}:db"
+            if key not in seen_keys:
+                cands.append({
+                    "key": key,
+                    "what": f"resolve {rule_name.replace(chr(45), chr(32))}",
+                    "evidence_type": "rule",
+                    "evidence_payload": f"{rule_name}@db",
+                    "rule_name": rule_name,
+                    "staleness": None,
+                    "close": "python3 utils/py/releases_app.py check",
+                    "close_kind": "command",
+                    "live_state": line.strip()
+                })
+                seen_keys.add(key)
 print(json.dumps(cands))
 ')
 if [[ "$out6" == "D5" ]]; then
@@ -744,37 +793,55 @@ if not os.path.isdir(parked_dir):
     sys.exit(0)
 
 PARK_RE = re.compile(r"^- \[([^\]]+)\](.*)— check: (\{.*?\}) — close: (.*?)(?: —|$)")
-def run_probe(chk, arg):
+def run_probe(chk, key):
     import subprocess
     kind = chk.get("kind")
     args = chk.get("args", [])
     if kind == "test-e" and args:
-        return os.path.exists(args[0])
+        if fx:
+            rc_file = os.path.join(fx, f"lens8_test_e_{key.replace(chr(58), chr(95))}.rc")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f:
+                    rc = int(f.read().strip())
+                    return rc == 0, f"exit {rc}"
+            return False, "missing fixture"
+        ex = os.path.exists(args[0])
+        return ex, "exists" if ex else "missing"
     elif kind == "gh-issue-state" and args:
         if fx:
             txt_file = os.path.join(fx, f"lens8_gh_{args[0]}.txt")
             if os.path.exists(txt_file):
                 with open(txt_file) as f: out = f.read()
-                return "CLOSED" in out
-            return False
+                return "CLOSED" in out, "CLOSED" if "CLOSED" in out else "OPEN"
+            return False, "missing fixture"
         print("D3")
         sys.exit(0)
     elif kind == "releases-check":
         if fx:
-            txt_file = os.path.join(fx, "lens8_releases_check.txt")
-            return os.path.exists(txt_file)
+            rc_file = os.path.join(fx, "lens8_releases_check.rc")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f:
+                    rc = int(f.read().strip())
+                    return rc == 0, f"exit {rc}"
+            return False, "missing fixture"
         try:
-            return 0 == subprocess.run(["python3", "utils/py/releases_app.py", "check"]).returncode
+            rc = subprocess.run(["python3", "utils/py/releases_app.py", "check"]).returncode
+            return rc == 0, f"exit {rc}"
         except Exception:
-            return False
+            return False, "error"
     elif kind == "git-log" and args:
         if fx:
-            txt_file = os.path.join(fx, "lens8_git_log.txt")
-            return os.path.exists(txt_file)
+            rc_file = os.path.join(fx, f"lens8_git_log.rc")
+            if os.path.exists(rc_file):
+                with open(rc_file) as f:
+                    rc = int(f.read().strip())
+                    return rc == 0, f"exit {rc}"
+            return False, "missing fixture"
         try:
-            return 0 == subprocess.run(["git", "log", "--oneline", "-1", str(args[0])], capture_output=True).returncode
+            rc = subprocess.run(["git", "log", "--oneline", "-1", str(args[0])], capture_output=True).returncode
+            return rc == 0, f"exit {rc}"
         except Exception:
-            return False
+            return False, "error"
     else:
         print("D3")
         sys.exit(0)
@@ -807,12 +874,12 @@ for path in glob.glob(os.path.join(parked_dir, "*.md")):
                 first_seen = int(fs_m.group(1))
             
             try:
-                probe_res = run_probe(chk, key)
+                is_done, state_str = run_probe(chk, key)
             except Exception:
                 print("D3")
                 sys.exit(0)
                 
-            if probe_res:
+            if is_done:
                 cands.append({
                     "key": f"park:{key}",
                     "what": f"close parked item {key}",
@@ -821,7 +888,7 @@ for path in glob.glob(os.path.join(parked_dir, "*.md")):
                     "staleness": first_seen,
                     "close": close_str,
                     "close_kind": "command" if not close_str.startswith("inspect:") else "inspect",
-                    "live_state": "done"
+                    "live_state": state_str
                 })
 print(json.dumps(cands))
 ')

@@ -537,5 +537,27 @@ else
 fi
 
 echo
+# ── 20. Round-5 Reviewer: Lens 1 canonical identity, Lens 6 show parse, Lens 8 controls ─────────
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-1-malformed-actionable" > "$W/deg_lens1_malformed.json" 2>/dev/null
+out="$(T "$W/deg_lens1_malformed.json" --dry-run 2>&1)" || true
+has "lens 1 degrades loudly (D6) if actionable item has missing/malformed quote/what/close" "$out" "D6"
+
+export RELEASES_APP_NOW="2026-08-20T12:00:00Z"
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-6-overdue-show" > "$W/lens6_overdue.json" 2>/dev/null
+out="$(T "$W/lens6_overdue.json" --dry-run 2>&1)" || true
+has "lens 6 extracts overdue candidate from show output even without check warning" "$out" "ship 0.9.0"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-controls" > "$W/lens8_controls.json" 2>/dev/null
+out="$(T "$W/lens8_controls.json" --dry-run 2>&1)" || true
+has "lens 8 success control for test-e yields candidate" "$out" "close parked item issue:1"
+has "lens 8 success control for git-log yields candidate" "$out" "close parked item issue:2"
+has "lens 8 success control for releases-check yields candidate" "$out" "close parked item issue:3"
+is "lens 8 explicit state is preserved in live_state for test-e" "$(F lens-8-controls 'next((c["live_state"] for c in d["lenses"]["8"]["candidates"] if c["evidence_payload"]=="issue:1"), None)')" "exit 0"
+
+bash "$ROOT_DIR/skills/standup/collect.sh" --fixture "$ROOT_DIR/skills/standup/fixtures/lens-8-fail-controls" > "$W/lens8_fail_controls.json" 2>/dev/null
+is "lens 8 failure controls yield zero candidates" "$(F lens-8-fail-controls 'len(d["lenses"]["8"]["candidates"])')" "0"
+
+echo
 echo "  gh77-standup-triage: $pass pass, $fail fail"
 [ "$fail" -eq 0 ]
