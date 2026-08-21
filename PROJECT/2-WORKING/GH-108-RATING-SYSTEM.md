@@ -91,9 +91,12 @@ derived value invites the drift class this repo already fights everywhere else.
    strongest)". It becomes: `pri / sev / appeal / effort 1–100 (100 = strongest) · calc = sum /400 ·
    ovr = operator override, wins over calc`. The flip ships in the SAME commit as the first real
    metric emission — the legend and the data must never disagree in a committed artifact.
-3. **A leaderboard exists.** First home: `export_timeline.py --json` (already queued in #107) emits
-   cards with `calc`/`ovr`, so `sort_by(effective_score)` is a one-liner for any consumer; the #75
-   `releases dashboard` verb inherits it as a sorted view later. No new page is built for v1.
+3. **A leaderboard exists, in three forms.** The command (pinned in the exit criterion) answers
+   "what's highest-scored right now" from a terminal; `LEADERBOARD.md` is the committed, diffable
+   ranking an agent or a GitHub reader can consume without a browser; `LEADERBOARD.html` is the
+   rendered report, reachable from a "leaderboard →" link in the timeline page's title row and
+   linking back. All three read the same `effectiveScore` from the same exporter — see "The
+   leaderboard pipeline". The #75 `releases dashboard` verb inherits this rather than rebuilding it.
 4. **Hot-flag threshold.** One constant in the exporter: `sev >= 80` renders the severity red (the
    viewer's existing `hot` flag). One constant, not a threshold system.
 5. **Authoring stays one line.** Rating a task = appending `rated 70/40/55/60` to its ROADMAP entry.
@@ -109,11 +112,63 @@ derived value invites the drift class this repo already fights everywhere else.
 | 4 | `test/gh69-roadmap-shadow.sh` (owns `roadmap sync` parser behavior) | happy path, `ovr`, out-of-range rejection, absent-rating rows unchanged, both-vocabularies-on-one-entry refusal, the legacy→`rated` transition (legacy columns NULLed, ratings populated, next sync a no-op), **malformed-shape refusals** (three or five numbers, duplicate `rated`, duplicate or dangling `ovr` — each refuses with a named rule rather than silently parsing as unrated), a v2-schema fixture upgraded in place by the first rating-capable sync, and a dump→rebuild round trip preserving ratings; `test/gh32-releases-app.sh` keeps cross-ledger/migration-chain coverage only | S |
 | 5 | Intake template / PDDA scaffold | replace cx/risk/eff with the rating line | XS |
 | 6 | `PROJECT/1-INBOX`+ROADMAP authoring | backfill ACTIVE WINDOW ONLY (Daybreak + Cargo manifest and detour items, ~12 tasks) | S (operator judgment) |
+| 7 | `utils/leaderboard.sh` + `LEADERBOARD.md` + `LEADERBOARD.html` | the ranked-report pipeline — see "The leaderboard pipeline" below | M |
 
 Out of v1 scope, named so they stop resurfacing: GH label mirroring (future), re-weighting (future
 amendment), historical backfill (never — closed items don't need scores), machine-parsing doc
-frontmatter ratings, a dedicated leaderboard page (rides #75), and any write path from viewer to DB
-(the page stays a pure consumer, per GH-103's founding rule).
+frontmatter ratings, and any write path from viewer to DB (the page stays a pure consumer, per
+GH-103's founding rule). *(The "leaderboard rides #75" deferral was reversed by operator instruction
+2026-08-20 — it is now touchpoint 7 and Phase D below.)*
+
+## The leaderboard pipeline (touchpoint 7 — operator-specified 2026-08-20)
+
+```
+releases.db ──▶ export_timeline.py --json ──▶ utils/leaderboard.sh ──▶ LEADERBOARD.md
+                        (the ONLY scorer)               │
+                                                        ▼
+                        export_timeline.py --leaderboard ──▶ LEADERBOARD.html
+```
+
+Three rules make this cheap instead of a second system to maintain:
+
+**1. One scorer, never two.** `leaderboard.sh` does NOT compute `calc` or apply the ovr-over-calc
+rule — it consumes `export_timeline.py --json` (Phase B) and sorts on the `effectiveScore` the
+exporter already derives. A shell script re-deriving scores is the exact drift class the "`calc` is
+never stored" rule exists to prevent, one layer up. The script's whole job is sort, rank, format.
+
+**2. `LEADERBOARD.md` is the git-native artifact, and it is generated — never hand-edited.** It
+follows the established `ROADMAP.md → utils/roadmap-dashboard.sh → ROADMAP-DASHBOARD.md` pattern
+already in this repo: committed so ranking changes show up in diffs and code review, greppable by
+agents that never open a browser, and readable on GitHub. Regenerating it is idempotent; a stale
+checked-in copy is a review signal, not a hazard.
+
+**3. One template, two baked artifacts.** `LEADERBOARD.html` is produced by the SAME
+`bake_static(template, payload)` path that produces `RELEASES-PREVIEW.html`, from the SAME
+`utils/timeline/RELEASES.html` template — the payload gains a `view` field (`"timeline"` |
+`"leaderboard"`) and the page's boot function renders one or the other. This is the maximum
+available reuse: no second copy of the ~200 lines of design-system CSS, no second baker, one data
+contract, and still two standalone self-contained files that open from a git checkout with no
+server. The GH-106 post-write hook regenerates both.
+
+**Navbar link placement:** the cross-link belongs in the `.top` header row (title line), NOT in
+`#fbar` — `#fbar` is inside the collapsible header shipped in GH-103, so a link there disappears
+when the operator collapses the chrome. Each page links to the other: `RELEASES-PREVIEW.html` gets
+"leaderboard →", `LEADERBOARD.html` gets "← timeline".
+
+### Rejected alternative: a React SPA (operator raised it, 2026-08-20)
+
+**Rejected.** The one reason that decides it: today's artifacts are zero-dependency single files
+that open from a plain `git checkout` with no build step, and the deterministic GH-106 regeneration
+hook depends on that property. A React SPA introduces a build toolchain (`node_modules`, bundler,
+lockfile) into a repo whose gate philosophy is fast and deterministic — the pre-push gate would
+either have to run a bundler or accept committed build output that silently drifts from source.
+
+The premise behind the SPA question — "multiple HTML files to maintain" — dissolves under rule 3
+above: there is one template and one generator, producing two rendered views. If a *third* view is
+ever wanted, the first move is extracting the shared chrome into a template partial, not adopting a
+framework. Revisit only if the viewer ever needs genuine client-side state (routing, filtering
+across pages, live editing) — and note that live editing would violate GH-103's founding rule that
+the page is a pure consumer.
 
 ## Grandfathering cx/risk/eff
 
@@ -137,15 +192,25 @@ frontmatter ratings, a dedicated leaderboard page (rides #75), and any write pat
 ## Sequencing
 
 1. **Phase A (one PR): parser + columns + tests** (touchpoints 1, 4). Ships dark — no consumer reads
-   the columns yet, so the blast radius is the sync path, which the gh32 suite pins.
+   the columns yet, so the blast radius is the sync path, which the **gh69** suite pins (per
+   touchpoint 4's corrected test boundary; gh32 keeps only cross-ledger/migration coverage).
 2. **Phase B (one PR): exporter + viewer** (touchpoints 2, 3). Named deliverables: rating-column
    selection, `effectiveScore`, the stdout `--json` flag, the viewer's `app`→`appeal` rename +
    `effort` in both metric loops, and the legend flip — legend and first metric emission in the SAME
    commit. Preview regenerates via the GH-106 hook on the next CLI write.
 3. **Phase C (no code): backfill + template** (touchpoints 5, 6). Operator scores ~12 active-window
-   items; first leaderboard read comes free via `--json | sort`.
+   items; the first ranked read comes free via the pinned `--json` command below — no leaderboard
+   artifact needed yet, which is what keeps C independent of D.
+4. **Phase D (one PR): the leaderboard pipeline** (touchpoint 7). `utils/leaderboard.sh` consuming
+   `--json`; generated `LEADERBOARD.md`; the `view` field + leaderboard rendering in the shared
+   template; `--leaderboard` baking `LEADERBOARD.html`; the two-way navbar cross-link in `.top`;
+   both artifacts added to the GH-106 refresh hook. Tests: the script's ranking matches the pinned
+   `--json` ordering exactly (one scorer, proven), and a rated detour appears in the ranking, not
+   just manifest cards.
 
-Each phase is independently shippable; a stall after any phase leaves the repo better than before it.
+Each phase is independently shippable; a stall after any phase leaves the repo better than before
+it. D depends on B (it consumes `--json`) but not on C — an empty leaderboard from unrated data is a
+valid, correct artifact.
 
 ## Exit criterion
 
@@ -167,6 +232,12 @@ python3 utils/timeline/export_timeline.py --json \
 (`--json` emits the same single-object shape as `data.json`; `effectiveScore` rides inside each
 card's `metrics`. The exact jq path is Phase B's to finalize against the emitted shape — but Phase B
 must land THIS command working, and the Phase-C exit test runs it verbatim.)
+
+**Phase D adds to the exit criterion:** `utils/leaderboard.sh` regenerates `LEADERBOARD.md`
+idempotently (a second run produces a byte-identical file), its top five matches the pinned command's
+top five exactly — the one-scorer property, proven rather than asserted — `LEADERBOARD.html` bakes
+from the shared template with the `view` field set, the two pages cross-link from their title rows,
+and the GH-106 hook refreshes both artifacts after a CLI write.
 
 ## Review verdicts (Codex relay r1, 2026-08-20 — all three open items resolved)
 
