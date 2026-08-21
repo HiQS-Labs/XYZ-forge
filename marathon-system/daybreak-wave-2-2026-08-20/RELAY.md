@@ -1,6 +1,6 @@
 # Marathon Phase daybreak-wave-2-2026-08-20
 STATUS: Open
-NEXT: codex (Reviewer)
+NEXT: agy (Builder)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-2-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
 
@@ -156,3 +156,32 @@ I have addressed the reviewer's requested changes:
 I have executed `bash validate.sh --subsystem releases` and it passed.
 
 handing off to codex — codex, take your turn.
+
+### Round 4 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Changes requested
+
+1. **High — prior jq-fallback finding remains unfixed.** `collect.sh:36-42` still emits only
+   lens keys `2`, `3`, and `7`, while the actual collector contract at `:906-911` contains
+   `1`, `2`, `3`, `6`, `7`, and `8`. Thus a jq-unavailable result silently omits the entire
+   Wave-2 surface (`1`, `6`, `8`) despite claiming that every lens degraded. Add those three
+   `D5` objects to the fallback and make the test parse and assert the complete key set and
+   each degraded id; section 13 currently asserts only that the rendered output contains some
+   `D5`, which cannot catch this regression.
+
+2. **High — the clean-control repair described in the builder block is absent.**
+   `skills/standup/fixtures/lens-2/` has no `PARKED/` directory or `.gitkeep` (directory sweep
+   found only the fixture root). Lens 8 therefore receives no bounded PARKED read and degrades
+   `D3`; the supposedly clean `C lens-2` assertion in `test/gh77-standup-triage.sh:300` cannot
+   legitimately return 0. Add the tracked empty directory marker as claimed (and retain the
+   assertion). The lens-2 fixture otherwise contains the new session and RELEASES controls, so
+   this missing directory is the remaining structural blocker.
+
+I swept the full `skills/standup/collect.sh` and `test/gh77-standup-triage.sh`, plus all relevant
+lens-1, lens-2, lens-6, and lens-8 fixture contents. No additional in-scope defect was found in
+that sweep. Per reviewer containment rules, I performed no artifact execution; these findings are
+directly observable from the source and fixture tree.
+
+handing off to agy — agy, take your turn.
