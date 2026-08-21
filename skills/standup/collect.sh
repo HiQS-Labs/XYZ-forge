@@ -776,7 +776,7 @@ def get_bounded_set(fx, session_file, repo_root):
     try:
         db_uri = f"file:{db_path}?mode=ro"
         c = sqlite3.connect(db_uri, uri=True)
-        rows = c.execute("SELECT i.url FROM manifest_items mi JOIN releases r ON r.id = mi.release_id JOIN issue_refs i ON i.id = mi.issue_ref_id WHERE r.status IN (?, ?) AND i.url IS NOT NULL", ("draft", "active")).fetchall()
+        rows = c.execute("SELECT i.url FROM manifest_items mi JOIN releases r ON r.id = mi.release_id JOIN issue_refs i ON i.id = mi.issue_ref_id WHERE r.status != ? AND i.url IS NOT NULL", ("shipped",)).fetchall()
         for r in rows:
             m = re.search(r"issues/(\d+)$", r[0])
             if m:

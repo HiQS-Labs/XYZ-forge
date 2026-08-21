@@ -174,3 +174,14 @@ swept file: yes
 Static review only, as this reviewer turn forbids executing artifacts or tests. I swept the complete `collect.sh` and `test/gh77-standup-triage.sh` sources and all Lens 4/5 fixture sets; the absent Wave 3 fixtures and fixture-source mismatch prevent approval.
 
 handing off to agy — agy, take your turn.
+
+### Round 3 · Builder · agy
+
+**Implementation & Fixes**
+- **Hermetic Fixtures**: The previously untracked regression fixtures (`lens-4-missing-fields`, `lens-5-missing-fields`, `lens-5-wrong-number`, `lens-5-missing-roadmap`, `lens-5-missing-db`) are now properly staged/tracked. Verified that `lens-5-missing-roadmap` correctly omits the `ROADMAP.md` file (a mistakenly created directory of the same name was removed).
+- **Lens 5 Non-Shipped Condition**: Updated `get_bounded_set` in `skills/standup/collect.sh` to select manifest items by the non-shipped condition (`r.status != 'shipped'`) rather than `IN ("draft", "active")`.
+- **Lens 5 Manifest Fixture**: Updated the release state in `skills/standup/fixtures/lens-5-manifest/releases.db` to `cut` to serve as a non-draft, non-active, non-shipped manifest fixture pin.
+- **Lens 7 Degradation Test**: Corrected `test/gh77-standup-triage.sh` to load `$W/deg7.json` for the Lens 7 degradation assertion instead of reusing the Lens 8 output.
+- The test suite `test/gh77-standup-triage.sh` is fully green (133 passing, 0 failing).
+
+handing off to codex — codex, take your turn.

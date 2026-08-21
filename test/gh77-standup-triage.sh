@@ -259,6 +259,8 @@ out="$(T "$W/lens8.json" --dry-run 2>&1)" || true
 has "lens 8 finds done work" "$out" "close parked item issue:301"
 out="$(T "$W/deg8.json" --dry-run 2>&1)" || true
 has "lens 8 degrades loudly with D3" "$out" "no PARKED/"
+
+out="$(T "$W/deg7.json" --dry-run 2>&1)" || true
 has "lens 7 degrades loudly with D4" "$out" "D4"
 
 echo
