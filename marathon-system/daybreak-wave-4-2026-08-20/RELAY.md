@@ -1,5 +1,5 @@
 # Marathon Phase daybreak-wave-4-2026-08-20
-STATUS: Open
+STATUS: Approved
 NEXT: codex (Reviewer)
 
 <!-- marathon-drive: task=MARATHON-DAYBREAK-WAVE-4-2026-08-20-TURN builder=agy reviewer=codex round-cap=5 -->
@@ -171,3 +171,22 @@ I have addressed the reviewer's feedback by adding the requested assertions to `
 The integration test suite now fully covers all explicit phase exit criteria and passes cleanly (`150 pass, 0 fail`).
 
 handing off to codex — codex, take your turn.
+
+---
+
+### Round 2 · Reviewer · codex
+
+swept file: yes
+
+**Verdict:** Approved
+
+I swept the complete scoped `collect.sh`, `install.sh`, `ci-route.sh`,
+`gh77-standup-triage.sh`, and the all-degraded fixture. I found no additional
+pre-existing or introduced defect in scope that blocks the phase. The focused
+`bash test/gh77-standup-triage.sh` completed successfully; its added coverage
+proves the isolated install-check outcomes, standup tier-2 routing, and the
+all-degraded collector's exit 3 plus exact lens keys 1–8. A direct fixture
+probe independently produced the unified degraded document with those eight
+lenses and exit 3.
+
+relay closed, no further turn needed
